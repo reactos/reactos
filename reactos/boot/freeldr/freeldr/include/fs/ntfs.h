@@ -214,11 +214,14 @@ typedef struct
 	NTFS_ATTR_RECORD	Record;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 
+typedef struct _NTFS_VOLUME_INFO *PNTFS_VOLUME_INFO;
+
 #include <pshpack1.h>
 typedef struct
 {
 	PNTFS_ATTR_CONTEXT	DataContext;
 	ULONGLONG			Offset;
+	PNTFS_VOLUME_INFO	Volume;
 } NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 #include <poppack.h>
 

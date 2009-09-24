@@ -6,9 +6,6 @@
  * NOTE      :  this file is not really translated (only scrap yet)
  */
 
-#include "windows.h"
-#include "resource.h"
-
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN

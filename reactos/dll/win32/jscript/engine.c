@@ -356,6 +356,26 @@ static HRESULT literal_to_var(literal_t *literal, VARIANT *v)
     return S_OK;
 }
 
+static BOOL lookup_global_members(script_ctx_t *ctx, BSTR identifier, exprval_t *ret)
+{
+    named_item_t *item;
+    DISPID id;
+    HRESULT hres;
+
+    for(item = ctx->named_items; item; item = item->next) {
+        if(item->flags & SCRIPTITEM_GLOBALMEMBERS) {
+            hres = disp_get_id(item->disp, identifier, 0, &id);
+            if(SUCCEEDED(hres)) {
+                if(ret)
+                    exprval_set_idref(ret, item->disp, id);
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
 HRESULT exec_source(exec_ctx_t *ctx, parser_ctx_t *parser, source_elements_t *source, jsexcept_t *ei, VARIANT *retv)
 {
     script_ctx_t *script = parser->script;
@@ -387,8 +407,15 @@ HRESULT exec_source(exec_ctx_t *ctx, parser_ctx_t *parser, source_elements_t *so
 
     for(var = source->variables; var; var = var->next) {
         DISPID id = 0;
+        BSTR name;
 
-        hres = jsdisp_get_id(ctx->var_disp, var->identifier, fdexNameEnsure, &id);
+        name = SysAllocString(var->identifier);
+        if(!name)
+            return E_OUTOFMEMORY;
+
+        if(!lookup_global_members(parser->script, name, NULL))
+            hres = jsdisp_get_id(ctx->var_disp, var->identifier, fdexNameEnsure, &id);
+        SysFreeString(name);
         if(FAILED(hres))
             return hres;
     }
@@ -493,24 +520,14 @@ static HRESULT identifier_eval(exec_ctx_t *ctx, BSTR identifier, DWORD flags, js
         }
     }
 
-    for(item = ctx->parser->script->named_items; item; item = item->next) {
-        if(item->flags & SCRIPTITEM_GLOBALMEMBERS) {
-            hres = disp_get_id(item->disp, identifier, 0, &id);
-            if(SUCCEEDED(hres))
-                break;
-        }
-    }
-
-    if(item) {
-        exprval_set_idref(ret, item->disp, id);
-        return S_OK;
-    }
-
     hres = jsdisp_get_id(ctx->parser->script->script_disp, identifier, 0, &id);
     if(SUCCEEDED(hres)) {
         exprval_set_idref(ret, (IDispatch*)_IDispatchEx_(ctx->parser->script->script_disp), id);
         return S_OK;
     }
+
+    if(lookup_global_members(ctx->parser->script, identifier, ret))
+        return S_OK;
 
     if(flags & EXPR_NEWREF) {
         hres = jsdisp_get_id(ctx->var_disp, identifier, fdexNameEnsure, &id);

@@ -154,6 +154,7 @@ WsSetupCatalogProtection(IN HKEY CatalogKey,
     /* Start loop */
     do
     {
+#if 0
         /* Ask for notifications */
         ErrorCode = RegNotifyChangeKeyValue(CatalogKey,
                                             FALSE,
@@ -166,6 +167,7 @@ WsSetupCatalogProtection(IN HKEY CatalogKey,
             ErrorCode = WSASYSCALLFAILURE;
             break;
         }
+#endif
 
         /* Read the current ID */
         ErrorCode = RegQueryValueEx(CatalogKey,

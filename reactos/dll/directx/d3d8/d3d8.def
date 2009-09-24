@@ -1,6 +1,0 @@
-LIBRARY d3d8
-EXPORTS
-	ValidatePixelShader
-	ValidateVertexShader
-	DebugSetMute
-	Direct3DCreate8

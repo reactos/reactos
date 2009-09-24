@@ -11,7 +11,6 @@
 #include <catalog.h>
 #include <handle.h>
 
-
 /*
  * @implemented
  */
@@ -935,5 +934,22 @@ BOOL EXPORT WSApSetPostRoutine(PVOID Routine)
 
     return FALSE;
 }
+
+/*
+ * @unimplemented
+ */
+INT
+EXPORT
+GetAddrInfoW(IN PCWSTR pszNodeName,
+             IN PCWSTR pszServiceName,
+             IN const ADDRINFOW *ptHints,
+             OUT PADDRINFOW *pptResult)
+{
+    UNIMPLEMENTED
+
+    WSASetLastError(EAI_FAIL);
+    return EAI_FAIL;
+}
+
 
 /* EOF */

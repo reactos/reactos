@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 #if defined(_TDI_)
-  #define TDIKRNLAPI DECLSPEC_EXPORT
+  #define TDIKRNLAPI
 #else
   #define TDIKRNLAPI DECLSPEC_IMPORT
 #endif

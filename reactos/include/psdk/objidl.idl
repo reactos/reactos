@@ -2454,4 +2454,21 @@ interface IContext : IUnknown
         [out] IEnumContextProps **ppEnumContextProps);
 }
 
+[
+    local,
+    object,
+    uuid(000001c6-0000-0000-c000-000000000046),
+    pointer_default(unique)
+]
+interface IObjContext : IContext
+{
+    void Reserved1();
+    void Reserved2();
+    void Reserved3();
+    void Reserved4();
+    void Reserved5();
+    void Reserved6();
+    void Reserved7();
+}
+
 cpp_quote("#endif /* defined USE_COM_CONTEXT_DEF */")

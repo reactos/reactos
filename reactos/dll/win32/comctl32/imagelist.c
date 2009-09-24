@@ -6,6 +6,7 @@
  *  Copyright 2001, 2004 Michael Stefaniuc
  *  Copyright 2001 Charles Loep for CodeWeavers
  *  Copyright 2002 Dimitrie O. Paun
+ *  Copyright 2009 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -155,7 +156,7 @@ static inline void imagelist_copy_images( HIMAGELIST himl, HDC hdcSrc, HDC hdcDe
  *     This function CANNOT be used to reduce the number of images.
  */
 static void
-IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cy)
+IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cx, INT cy)
 {
     HDC     hdcBitmap;
     HBITMAP hbmNewBitmap, hbmNull;
@@ -166,14 +167,15 @@ IMAGELIST_InternalExpandBitmaps (HIMAGELIST himl, INT nImageCount, INT cy)
         && (himl->cy >= cy))
 	return;
 
+    if (cx == 0) cx = himl->cx;
     nNewCount = himl->cCurImage + nImageCount + himl->cGrow;
 
-    imagelist_get_bitmap_size(himl, nNewCount, himl->cx, &sz);
+    imagelist_get_bitmap_size(himl, nNewCount, cx, &sz);
 
     TRACE("Create expanded bitmaps : himl=%p x=%d y=%d count=%d\n", himl, sz.cx, cy, nNewCount);
     hdcBitmap = CreateCompatibleDC (0);
 
-    hbmNewBitmap = ImageList_CreateImage(hdcBitmap, himl, nNewCount, himl->cx);
+    hbmNewBitmap = ImageList_CreateImage(hdcBitmap, himl, nNewCount, cx);
 
     if (hbmNewBitmap == 0)
         ERR("creating new image bitmap (x=%d y=%d)!\n", sz.cx, cy);
@@ -247,7 +249,7 @@ ImageList_Add (HIMAGELIST himl,	HBITMAP hbmImage, HBITMAP hbmMask)
 
     nImageCount = bmp.bmWidth / himl->cx;
 
-    IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmHeight);
+    IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmWidth, bmp.bmHeight);
 
     hdcBitmap = CreateCompatibleDC(0);
 
@@ -349,7 +351,7 @@ ImageList_AddMasked (HIMAGELIST himl, HBITMAP hBitmap, COLORREF clrMask)
     else
 	nImageCount = 0;
 
-    IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmHeight);
+    IMAGELIST_InternalExpandBitmaps (himl, nImageCount, bmp.bmWidth, bmp.bmHeight);
 
     nIndex = himl->cCurImage;
     himl->cCurImage += nImageCount;
@@ -2303,7 +2305,7 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT nIndex, HICON hIcon)
 
     if (nIndex == -1) {
         if (himl->cCurImage + 1 > himl->cMaxImage)
-            IMAGELIST_InternalExpandBitmaps (himl, 1, 0);
+            IMAGELIST_InternalExpandBitmaps (himl, 1, 0, 0);
 
         nIndex = himl->cCurImage;
         himl->cCurImage++;
@@ -2904,4 +2906,48 @@ UINT WINAPI
 ImageList_SetColorTable (HIMAGELIST himl, UINT uStartIndex, UINT cEntries, CONST RGBQUAD * prgb)
 {
     return SetDIBColorTable(himl->hdcImage, uStartIndex, cEntries, prgb);
+}
+
+/*************************************************************************
+ * ImageList_CoCreateInstance [COMCTL32.@]
+ *
+ * Creates a new imagelist instance and returns an interface pointer to it.
+ *
+ * PARAMS
+ *     rclsid      [I] A reference to the CLSID (CLSID_ImageList).
+ *     punkOuter   [I] Pointer to IUnknown interface for aggregation, if desired
+ *     riid        [I] Identifier of the requested interface.
+ *     ppv         [O] Returns the address of the pointer requested, or NULL.
+ *
+ * RETURNS
+ *     Success: S_OK.
+ *     Failure: Error value.
+ */
+HRESULT WINAPI
+ImageList_CoCreateInstance (REFCLSID rclsid, const IUnknown *punkOuter, REFIID riid, void **ppv)
+{
+    FIXME("STUB: %s %p %s %p\n", debugstr_guid(rclsid), punkOuter, debugstr_guid(riid), ppv);
+    return E_NOINTERFACE;
+}
+
+/*************************************************************************
+ * HIMAGELIST_QueryInterface [COMCTL32.@]
+ *
+ * Returns a pointer to an IImageList or IImageList2 object for the given
+ * HIMAGELIST.
+ *
+ * PARAMS
+ *     himl        [I] Image list handle.
+ *     riid        [I] Identifier of the requested interface.
+ *     ppv         [O] Returns the address of the pointer requested, or NULL.
+ *
+ * RETURNS
+ *     Success: S_OK.
+ *     Failure: Error value.
+ */
+HRESULT WINAPI
+HIMAGELIST_QueryInterface (HIMAGELIST himl, REFIID riid, void **ppv)
+{
+    FIXME("STUB: %p %s %p\n", himl, debugstr_guid(riid), ppv);
+    return E_NOINTERFACE;
 }

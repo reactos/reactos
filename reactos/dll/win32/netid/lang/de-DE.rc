@@ -75,8 +75,12 @@ BEGIN
     22 "Willkommen in der Arbeitsgruppe %1"
     23 "Willkommen in der Domäne %1"
     24 "Sie müssen den Computer neustarten, damit die Änderungen wirksam werden."
+	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Hinweis: Nur Administratoren können die Identifikation des Computers ändern."
     1022 "Hinweis: Die Identifikation des Computers kann aus folgendem Grund nicht geändert werden:"
+	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / and ?"
     3210 "&Details >>"
     3220 "<< &Details"
+	4000 "Information"
+	4001 "Can't set new a computer name!"
 END

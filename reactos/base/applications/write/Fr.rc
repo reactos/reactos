@@ -28,3 +28,4 @@ STRINGTABLE
 {
     IDS_FAILED, "Wordpad n'a pas pu être démarré"
 }
+#pragma code_page(default)

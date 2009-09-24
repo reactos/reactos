@@ -1257,6 +1257,7 @@ const DEVVTBL Ext2FuncTable =
 	Ext2Open,
 	Ext2Read,
 	Ext2Seek,
+	L"ext2",
 };
 
 const DEVVTBL* Ext2Mount(ULONG DeviceId)
@@ -1290,7 +1291,7 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
 		ULONGLONG StartSector;
 		ULONGLONG SectorCount;
 		int Type;
-		if (!MachDiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
+		if (!DiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
 			return NULL;
 		Ext2OpenVolume(DriveNumber, StartSector, SectorCount);
 		return &Ext2FuncTable;

@@ -609,7 +609,7 @@ NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
             /* Check if the pointer is valid */
             ProbeForWriteUlong(PreviousFlags);
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* It isn't -- fail */
             _SEH2_YIELD(return _SEH2_GetExceptionCode());

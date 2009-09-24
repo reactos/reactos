@@ -311,6 +311,29 @@ void free_string(string_t *str)
     free( str );
 }
 
+/* check if the string is valid utf8 despite a different codepage being in use */
+int check_valid_utf8( const string_t *str, int codepage )
+{
+    unsigned int i;
+
+    if (!check_utf8) return 0;
+    if (!codepage) return 0;
+    if (!wine_cp_get_table( codepage )) return 0;
+
+    for (i = 0; i < str->size; i++)
+    {
+        if ((unsigned char)str->str.cstr[i] >= 0xf5) goto done;
+        if ((unsigned char)str->str.cstr[i] >= 0xc2) break;
+        if ((unsigned char)str->str.cstr[i] >= 0x80) goto done;
+    }
+    if (i == str->size) return 0;  /* no 8-bit chars at all */
+
+    if (wine_utf8_mbstowcs( MB_ERR_INVALID_CHARS, str->str.cstr, str->size, NULL, 0 ) >= 0) return 1;
+
+done:
+    check_utf8 = 0;  /* at least one 8-bit non-utf8 string found, stop checking */
+    return 0;
+}
 
 int check_unicode_conversion( const string_t *str_a, const string_t *str_w, int codepage )
 {

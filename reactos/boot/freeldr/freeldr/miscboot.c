@@ -51,12 +51,6 @@ VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 		return;
 	}
 
-	if (!MachDiskGetSystemVolume(FileName, FileName, NULL))
-	{
-		UiMessageBox("Failed to get system volume.");
-		return;
-	}
-
 	FilePointer = FsOpenFile(FileName);
 	if (!FilePointer)
 	{

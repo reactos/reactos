@@ -1,6 +1,6 @@
 /*
  * Spanish Language resource file
- * Traducido por: gabriel ilardi febrero 2009
+ * Traducido por: Gabriel Ilardi febrero 2009
  */
  
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -33,11 +33,11 @@ BEGIN
         MENUITEM "Invertir selección", IDM_EDITINVERTSELECTION
         MENUITEM "Seleccionar todo\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Copiar en...", IDM_EDITCOPYTO
+        MENUITEM "Copiar a...", IDM_EDITCOPYTO
         MENUITEM "Pegar desde...", IDM_EDITPASTEFROM
     END
 
-    POPUP "&Vista"
+    POPUP "&Ver"
     BEGIN
         MENUITEM "Caja de herramientas\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
         MENUITEM "Paleta de colores\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
@@ -46,7 +46,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Zoom"
         BEGIN
-            POPUP "User defined"
+            POPUP "Definido por el usuario"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -57,8 +57,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Mostrar cuadrícula\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "Mostrar miniatura", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Ver en pantalla completa\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -71,7 +71,7 @@ BEGIN
         MENUITEM "Invertir colores\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atributos...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Borrar imagen\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Opaco", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "Dibujar figuras opacas", IDM_IMAGEDRAWOPAQUE
     END
     
     POPUP "&Colores"
@@ -79,11 +79,11 @@ BEGIN
         MENUITEM "Editar paleta...", IDM_COLORSEDITPALETTE
     END
     
-    POPUP "&?"
+    POPUP "Ay&uda"
     BEGIN
         MENUITEM "Ayuda", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Acerca", IDM_HELPINFO
+        MENUITEM "Acerca de", IDM_HELPINFO
     END
 END
 
@@ -101,6 +101,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE
@@ -114,7 +115,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Rotar e invertir"
 BEGIN
-    GROUPBOX "Rotar e invertir", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    GROUPBOX "Rotar e invertir ", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
     AUTORADIOBUTTON "Invertir horizontalmente", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Invertir verticalmente", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Rotar", IDD_MIRRORROTATERB3, 12, 42, 100, 10
@@ -132,19 +133,19 @@ CAPTION "Atributos"
 BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
-    LTEXT "Ancho:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
-    LTEXT "Altura:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
-    LTEXT "Fecha modificación:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Ancho:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
+    LTEXT "Alto:", IDD_ATTRIBUTESTEXT2, 85, 42, 23, 10
+    LTEXT "Fecha modificación:", IDD_ATTRIBUTESTEXT3, 10, 5, 80, 10
     LTEXT "Espacio en disco:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Resolución:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "No disponible", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
-    LTEXT "No disponible", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
-    LTEXT "No disponible", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
-    GROUPBOX "Unidades", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
+    LTEXT "No disponible", IDD_ATTRIBUTESTEXT6, 73, 5, 60, 10
+    LTEXT "No disponible", IDD_ATTRIBUTESTEXT7, 73, 15, 60, 10
+    LTEXT "No disponible", IDD_ATTRIBUTESTEXT8, 73, 25, 60, 10
+    GROUPBOX "Unidades ", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "Pulgadas", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
-    AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
-    AUTORADIOBUTTON "Pixels", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
-    GROUPBOX "Colores", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
+    AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 60, 69, 35, 10
+    AUTORADIOBUTTON "Píxeles", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
+    GROUPBOX "Colores ", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
     AUTORADIOBUTTON "Blanco y negro", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
     AUTORADIOBUTTON "Colores", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "Aceptar", IDOK, 155, 8, 48, 14
@@ -157,13 +158,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Redimensionar"
 BEGIN
-    GROUPBOX "Redimensionar", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
+    GROUPBOX "Redimensionar ", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
     ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
-    LTEXT "Horizontalmente:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
+    LTEXT "Horizontal:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
     ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
-    LTEXT "Verticalmente:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
+    LTEXT "Vertical:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
     DEFPUSHBUTTON "Aceptar", IDOK, 155, 8, 48, 14
@@ -174,27 +175,27 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint for ReactOS"
-    IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Do you want to save the changes to %s?"
-    IDS_DEFAULTFILENAME, "Unnamed.bmp"
-    IDS_MINIATURETITLE, "Miniature"
-    IDS_TOOLTIP1, "Free selection"
-    IDS_TOOLTIP2, "Selection"
-    IDS_TOOLTIP3, "Rubber"
-    IDS_TOOLTIP4, "Fill with color"
-    IDS_TOOLTIP5, "Select color"
-    IDS_TOOLTIP6, "Zoom"
-    IDS_TOOLTIP7, "Pencil"
-    IDS_TOOLTIP8, "Brush"
-    IDS_TOOLTIP9, "Airbrush"
-    IDS_TOOLTIP10, "Text"
-    IDS_TOOLTIP11, "Line"
-    IDS_TOOLTIP12, "Bezier curve"
-    IDS_TOOLTIP13, "Rectangle"
-    IDS_TOOLTIP14, "Polygon"
-    IDS_TOOLTIP15, "Ellipse"
-    IDS_TOOLTIP16, "Rounded rectangle"
-    IDS_OPENFILTER, "Bitmap files (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_INFOTITLE, "Paint para ReactOS"
+    IDS_INFOTEXT, "Paint para ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (ver www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "¿Guardar cambios cambios a %s?"
+    IDS_DEFAULTFILENAME, "Sin titulo.bmp"
+    IDS_MINIATURETITLE, "Miniatura"
+    IDS_TOOLTIP1, "Selección de forma libre"
+    IDS_TOOLTIP2, "Selección"
+    IDS_TOOLTIP3, "Borrador"
+    IDS_TOOLTIP4, "Relleno de color"
+    IDS_TOOLTIP5, "Seleccionar color"
+    IDS_TOOLTIP6, "Ampliación"
+    IDS_TOOLTIP7, "Lápiz"
+    IDS_TOOLTIP8, "Brocha"
+    IDS_TOOLTIP9, "Aerógrafo"
+    IDS_TOOLTIP10, "Texto"
+    IDS_TOOLTIP11, "Línea"
+    IDS_TOOLTIP12, "Curva"
+    IDS_TOOLTIP13, "Rectángulo"
+    IDS_TOOLTIP14, "Polígono"
+    IDS_TOOLTIP15, "Elipse"
+    IDS_TOOLTIP16, "Rectángulo redondeado"
+    IDS_OPENFILTER, "Archivos de mapa de bits (*.bmp;*.dib)\1*.bmp;*.dib\1Todos los archivos (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "Mapa de bits de 24 bits (*.bmp;*.dib)\1*.bmp;*.dib\1"
 END

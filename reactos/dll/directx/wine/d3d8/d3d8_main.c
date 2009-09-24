@@ -24,15 +24,6 @@
 #include "d3d8_private.h"
 #include "wine/debug.h"
 
-static CRITICAL_SECTION_DEBUG d3d8_cs_debug =
-{
-    0, 0, &d3d8_cs,
-    { &d3d8_cs_debug.ProcessLocksList,
-      &d3d8_cs_debug.ProcessLocksList },
-    0, 0, { (DWORD_PTR)(__FILE__ ": d3d8_cs") }
-};
-CRITICAL_SECTION d3d8_cs = { &d3d8_cs_debug, -1, 0, 0, 0, 0 };
-
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
 HRESULT WINAPI D3D8GetSWInfo(void) {
@@ -48,7 +39,8 @@ IDirect3D8* WINAPI Direct3DCreate8(UINT SDKVersion) {
     IDirect3D8Impl* object;
     TRACE("SDKVersion = %x\n", SDKVersion);
 
-    EnterCriticalSection(&d3d8_cs);
+    wined3d_mutex_lock();
+
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3D8Impl));
 
     object->lpVtbl = &Direct3D8_Vtbl;
@@ -56,7 +48,8 @@ IDirect3D8* WINAPI Direct3DCreate8(UINT SDKVersion) {
     object->WineD3D = WineDirect3DCreate(8, (IUnknown *)object);
 
     TRACE("Created Direct3D object @ %p, WineObj @ %p\n", object, object->WineD3D);
-    LeaveCriticalSection(&d3d8_cs);
+
+    wined3d_mutex_unlock();
 
     if (!object->WineD3D)
     {
@@ -77,14 +70,14 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 }
 
 /***********************************************************************
- *		ValidateVertexShader (D3D8.@)
+ *              ValidateVertexShader (D3D8.@)
  *
  * I've seen reserved1 and reserved2 always passed as 0's
- * bool seems always passed as 0 or 1, but other values work as well.... 
+ * bool seems always passed as 0 or 1, but other values work as well...
  * toto       result?
  */
 HRESULT WINAPI ValidateVertexShader(DWORD* vertexshader, DWORD* reserved1, DWORD* reserved2, BOOL bool, DWORD* toto)
-{ 
+{
   HRESULT ret;
   FIXME("(%p %p %p %d %p): stub\n", vertexshader, reserved1, reserved2, bool, toto);
 
@@ -96,7 +89,7 @@ HRESULT WINAPI ValidateVertexShader(DWORD* vertexshader, DWORD* reserved1, DWORD
 
   switch(*vertexshader) {
         case 0xFFFE0101:
-        case 0xFFFE0100: 
+        case 0xFFFE0100:
             ret=S_OK;
             break;
         default:
@@ -108,7 +101,7 @@ HRESULT WINAPI ValidateVertexShader(DWORD* vertexshader, DWORD* reserved1, DWORD
 }
 
 /***********************************************************************
- *		ValidatePixelShader (D3D8.@)
+ *              ValidatePixelShader (D3D8.@)
  *
  * PARAMS
  * toto       result?
@@ -117,12 +110,12 @@ HRESULT WINAPI ValidatePixelShader(DWORD* pixelshader, DWORD* reserved1, BOOL bo
 {
   HRESULT ret;
   FIXME("(%p %p %d %p): stub\n", pixelshader, reserved1, bool, toto);
-  
+
   if (!pixelshader)
       return E_FAIL;
 
   if (reserved1)
-      return E_FAIL;   
+      return E_FAIL;
 
   switch(*pixelshader) {
         case 0xFFFF0100:

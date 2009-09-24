@@ -1654,6 +1654,17 @@ BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
     return FALSE;
 }
 
+BOOL _ILIsPrinter(LPCITEMIDLIST pidl)
+{
+    REFIID iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n",pidl);
+
+    if (iid)
+        return IsEqualIID(iid, &CLSID_Printers);
+    return FALSE;
+}
+
 BOOL _ILIsBitBucket(LPCITEMIDLIST pidl)
 {
     REFIID iid = _ILGetGUIDPointer(pidl);

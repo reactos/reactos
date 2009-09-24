@@ -7,6 +7,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<define name="USE_WIN32_OPENGL" />
+	<compilerflag compilerset="msc">/FIwine/typeof.h</compilerflag>
 
 	<library>advapi32</library>
 	<library>dxguid</library>

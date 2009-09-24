@@ -56,7 +56,7 @@ typedef struct
 static ITEMS *ItemsArray[N_CACHED_ITEMS] = {NULL};
 #define CurProfile (ItemsArray[0])
 #define IS_ENTRY_COMMENT(str)  ((str)[0] == ';')
-#define ParserIsSpace(c) (isspace(c) || c == 0x1a)
+#define ParserIsSpace(c) (iswspace(c) || c == 0x1a)
 
 
 static

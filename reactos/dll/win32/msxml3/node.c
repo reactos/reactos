@@ -247,25 +247,6 @@ static HRESULT WINAPI xmlnode_get_nodeName(
     return S_OK;
 }
 
-BSTR bstr_from_xmlChar( const xmlChar *buf )
-{
-    DWORD len;
-    LPWSTR str;
-    BSTR bstr;
-
-    if ( !buf )
-        return NULL;
-
-    len = MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) buf, -1, NULL, 0 );
-    str = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
-    if ( !str )
-        return NULL;
-    MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) buf, -1, str, len );
-    bstr = SysAllocString( str );
-    HeapFree( GetProcessHeap(), 0, str );
-    return bstr;
-}
-
 static HRESULT WINAPI xmlnode_get_nodeValue(
     IXMLDOMNode *iface,
     VARIANT* value)
@@ -1561,7 +1542,7 @@ static const struct IUnknownVtbl internal_unk_vtbl =
     Internal_Release
 };
 
-IUnknown *create_basic_node( xmlNodePtr node, IUnknown *pUnkOuter )
+xmlnode *create_basic_node( xmlNodePtr node, IUnknown *pUnkOuter, dispex_static_data_t *dispex_data )
 {
     xmlnode *This;
 
@@ -1580,10 +1561,13 @@ IUnknown *create_basic_node( xmlNodePtr node, IUnknown *pUnkOuter )
     else
         This->pUnkOuter = (IUnknown *)&This->lpInternalUnkVtbl;
 
+    if(dispex_data)
+        init_dispex(&This->dispex, This->pUnkOuter, dispex_data);
+
     This->ref = 1;
     This->node = node;
 
-    return (IUnknown*)&This->lpInternalUnkVtbl;
+    return This;
 }
 
 IXMLDOMNode *create_node( xmlNodePtr node )
@@ -1599,7 +1583,7 @@ IXMLDOMNode *create_node( xmlNodePtr node )
     switch(node->type)
     {
     case XML_ELEMENT_NODE:
-        pUnk = create_element( node, NULL );
+        pUnk = create_element( node );
         break;
     case XML_ATTRIBUTE_NODE:
         pUnk = create_attribute( node );
@@ -1618,7 +1602,7 @@ IXMLDOMNode *create_node( xmlNodePtr node )
         break;
     default:
         FIXME("only creating basic node for type %d\n", node->type);
-        pUnk = create_basic_node( node, NULL );
+        pUnk = (IUnknown*)&create_basic_node( node, NULL, NULL )->lpInternalUnkVtbl;
     }
 
     hr = IUnknown_QueryInterface(pUnk, &IID_IXMLDOMNode, (LPVOID*)&ret);

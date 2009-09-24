@@ -286,19 +286,6 @@ interface nsIInputStream : nsISupports
 
 [
     object,
-    uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53),
-    local
-    /* NOT_FROZEN */
-]
-interface nsIStringInputStream : nsIInputStream
-{
-    nsresult SetData(const char *data, PRInt32 dataLen);
-    nsresult AdoptData(char *data, PRInt32 dataLen);
-    nsresult ShareData(const char *data, PRInt32 dataLen);
-}
-
-[
-    object,
     uuid(07a22cc0-0ce5-11d3-9331-00104ba0fd40),
     local
     /* FROZEN */
@@ -331,6 +318,34 @@ interface nsIURI : nsISupports
     nsresult GetAsciiSpec(nsACString *aAsciiSpec);
     nsresult GetAsciiHost(nsACString *aAsciiHost);
     nsresult GetOriginCharset(nsACString *aOriginCharset);
+}
+
+[
+    object,
+    uuid(d6116970-8034-11d3-9399-00104ba0fd40),
+    local
+    /* FROZEN */
+]
+interface nsIURL : nsIURI
+{
+    nsresult GetFilePath(nsACString *aFilePath);
+    nsresult SetFilePath(const nsACString *aFilePath);
+    nsresult GetParam(nsACString *aParam);
+    nsresult SetParam(const nsACString *aParam);
+    nsresult GetQuery(nsACString *aQuery);
+    nsresult SetQuery(const nsACString *aQuery);
+    nsresult GetRef(nsACString *aRef);
+    nsresult SetRef(const nsACString *aRef);
+    nsresult GetDirectory(nsACString *aDirectory);
+    nsresult SetDirectory(const nsACString *aDirectory);
+    nsresult GetFileName(nsACString *aFileName);
+    nsresult SetFileName(const nsACString *aFileName);
+    nsresult GetFileBaseName(nsACString *aFileBaseName);
+    nsresult SetFileBaseName(const nsACString *aFileBaseName);
+    nsresult GetFileExtension(nsACString *aFileExtension);
+    nsresult SetFileExtension(const nsACString *aFileExtension);
+    nsresult GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString *_retval);
+    nsresult GetRelativeSpec(nsIURI *aURIToCompare, nsACString *_retval);
 }
 
 [
@@ -450,6 +465,24 @@ interface nsIHttpChannel : nsIChannel
     nsresult VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor);
     nsresult IsNoStoreResponse(PRBool *_retval);
     nsresult IsNoCacheResponse(PRBool *_retval);
+}
+
+[
+    object,
+    uuid(0eb66361-faaa-4e52-8c7e-6c25f11f8e3c),
+    local
+    /* NOT_FROZEN */
+]
+interface nsIHttpChannelInternal : nsISupports
+{
+    nsresult GetDocumentURI(nsIURI **aDocumentURI);
+    nsresult SetDocumentURI(nsIURI *aDocumentURI);
+    nsresult GetRequestVersion(PRUint32 *major, PRUint32 *minor);
+    nsresult GetResponseVersion(PRUint32 *major, PRUint32 *minor);
+    nsresult SetCookie(const char *aCookieHeader);
+    nsresult SetupFallbackChannel(const char *aFallbackKey);
+    nsresult GetForceAllowThirdPartyCookie(PRBool *aForceAllowThirdPartyCookie);
+    nsresult SetForceAllowThirdPartyCookie(PRBool aForceAllowThirdPartyCookie);
 }
 
 [
@@ -2547,7 +2580,7 @@ interface nsIDocumentObserver : nsIMutationObserver
     local
     /* INTERNAL */
 ]
-interface nsIWineURI : nsIURI
+interface nsIWineURI : nsIURL
 {
     typedef struct NSContainer NSContainer;
 

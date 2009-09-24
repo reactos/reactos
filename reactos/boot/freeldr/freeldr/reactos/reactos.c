@@ -758,7 +758,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     /*
      * Try to get system volume
      */
-    if (!MachDiskGetSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
+    if (!DiskGetSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
     {
         UiMessageBox("Failed to get system volume.");
         return;

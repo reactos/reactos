@@ -29,6 +29,7 @@
 
 #include "objbase.h"
 #include "ocidl.h"
+#include "wine/list.h"
 
 #include "gdiplus.h"
 
@@ -67,12 +68,20 @@ static inline INT roundr(REAL x)
     return (INT) floorf(x + 0.5);
 }
 
+static inline INT ceilr(REAL x)
+{
+    return (INT) ceilf(x);
+}
+
 static inline REAL deg2rad(REAL degrees)
 {
     return M_PI * degrees / 180.0;
 }
 
 extern const char *debugstr_rectf(CONST RectF* rc);
+
+extern void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
+    BYTE *dst_bits, INT dst_stride, const BYTE *src_bits, INT src_stride);
 
 struct GpPen{
     UINT style;
@@ -109,6 +118,8 @@ struct GpGraphics{
     BOOL busy;      /* hdc handle obtained by GdipGetDC */
     GpRegion *clip;
     UINT textcontrast; /* not used yet. get/set only */
+    struct list containers;
+    GraphicsContainer contid; /* last-issued container ID */
 };
 
 struct GpBrush{
@@ -214,14 +225,25 @@ struct GpBitmap{
     ImageLockMode lockmode;
     INT numlocks;
     BYTE *bitmapbits;   /* pointer to the buffer we passed in BitmapLockBits */
+    HBITMAP hbitmap;
+    HDC hdc;
+    BYTE *bits; /* actual image bits if this is a DIB */
+    INT stride; /* stride of bits if this is a DIB */
 };
 
 struct GpCachedBitmap{
     GpImage *image;
 };
 
+struct color_key{
+    BOOL enabled;
+    ARGB low;
+    ARGB high;
+};
+
 struct GpImageAttributes{
     WrapMode wrap;
+    struct color_key colorkeys[ColorAdjustTypeCount];
 };
 
 struct GpFont{

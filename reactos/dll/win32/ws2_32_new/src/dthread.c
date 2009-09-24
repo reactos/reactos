@@ -9,10 +9,6 @@
 /* INCLUDES ******************************************************************/
 #include "ws2_32.h"
 
-/* DATA **********************************************************************/
-
-DWORD TlsIndex;
-
 /* FUNCTIONS *****************************************************************/
 
 DWORD
@@ -156,16 +152,7 @@ WsThreadStartup(VOID)
     INT ErrorCode = WSASYSCALLFAILURE;
     
     /* Check if we have a valid TLS */
-    if (TlsIndex == TLS_OUT_OF_INDEXES)
-    {
-        /* Set the global one */
-        if ((TlsIndex = GlobalTlsIndex) != TLS_OUT_OF_INDEXES)
-        {
-            /* Success! */
-            ErrorCode = ERROR_SUCCESS;
-        }
-    }
-    else
+    if (TlsIndex != TLS_OUT_OF_INDEXES)
     {
         /* TLS was already OK */
         ErrorCode = ERROR_SUCCESS;
@@ -179,12 +166,6 @@ VOID
 WSAAPI
 WsThreadCleanup(VOID)
 {
-    /* Check if we have a valid TLS */
-    if (TlsIndex != TLS_OUT_OF_INDEXES)
-    {
-        /* We do, invalidate it */
-        TlsIndex = TLS_OUT_OF_INDEXES;
-    }
 }
 
 DWORD
@@ -250,6 +231,7 @@ WsThreadDestroyCurrentThread(VOID)
         {
             /* Delete it */
             WsThreadDelete(Thread);
+			TlsSetValue(TlsIndex, 0);
         }
     }
 }

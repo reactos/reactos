@@ -31,6 +31,9 @@
 <directory name="avifil32">
 	<xi:include href="avifil32/avifil32.rbuild" />
 </directory>
+<directory name="bcrypt">
+	<xi:include href="bcrypt/bcrypt.rbuild" />
+</directory>
 <directory name="beepmidi">
 	<xi:include href="beepmidi/beepmidi.rbuild" />
 </directory>
@@ -126,6 +129,9 @@
 </directory>
 <directory name="hlink">
 	<xi:include href="hlink/hlink.rbuild" />
+</directory>
+<directory name="hnetcfg">
+	<xi:include href="hnetcfg/hnetcfg.rbuild" />
 </directory>
 <directory name="httpapi">
 	<xi:include href="httpapi/httpapi.rbuild" />
@@ -252,6 +258,9 @@
 </directory>
 <directory name="msgina">
 	<xi:include href="msgina/msgina.rbuild" />
+</directory>
+<directory name="msgsm32.acm">
+	<xi:include href="msgsm32.acm/msgsm32.acm.rbuild" />
 </directory>
 <directory name="mshtml">
 	<xi:include href="mshtml/mshtml.rbuild" />
@@ -574,6 +583,9 @@
 <directory name="wdmaud.drv">
 	<xi:include href="wdmaud.drv/wdmaud.rbuild" />
 </directory>
+<directory name="windowscodecs">
+	<xi:include href="windowscodecs/windowscodecs.rbuild" />
+</directory>
 <directory name="winemp3.acm">
 	<xi:include href="winemp3.acm/winemp3.acm.rbuild" />
 </directory>
@@ -616,9 +628,12 @@
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.rbuild" />
 </directory>
+<!--directory name="ws2_32_new">
+	<xi:include href="ws2_32_new/ws2_32.rbuild" />
+</directory>
 <directory name="ws2help">
 	<xi:include href="ws2help/ws2help.rbuild" />
-</directory>
+</directory-->
 <directory name="wshirda">
 	<xi:include href="wshirda/wshirda.rbuild" />
 </directory>
@@ -645,5 +660,8 @@
 </directory>
 <directory name="xinput9_1_0">
 	<xi:include href="xinput9_1_0/xinput9_1_0.rbuild" />
+</directory>
+<directory name="xmllite">
+	<xi:include href="xmllite/xmllite.rbuild" />
 </directory>
 </group>

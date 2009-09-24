@@ -33,7 +33,6 @@
 #include "shlwapi.h"
 #include "shlguid.h"
 #include "comcat.h"
-#include "initguid.h"
 #include "msctf.h"
 
 #include "msctf_internal.h"
@@ -74,8 +73,10 @@ static UINT activated = 0;
 
 DWORD tlsIndex = 0;
 TfClientId processId = 0;
+ITfCompartmentMgr *globalCompartmentMgr = NULL;
 
 const WCHAR szwSystemTIPKey[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t','\\','C','T','F','\\','T','I','P',0};
+const WCHAR szwSystemCTFKey[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t','\\','C','T','F',0};
 
 typedef HRESULT (*LPFNCONSTRUCTOR)(IUnknown *pUnkOuter, IUnknown **ppvOut);
 
@@ -597,4 +598,13 @@ HRESULT WINAPI SetInputScopes(HWND hwnd, const INT *pInputScopes,
         TRACE("\tPhrase[%i] = %s\n",i,debugstr_w(ppszPhraseList[i]));
 
     return S_OK;
+}
+
+/***********************************************************************
+ *              TF_CreateInputProcessorProfiles(MSCTF.@)
+ */
+HRESULT WINAPI TF_CreateInputProcessorProfiles(
+                        ITfInputProcessorProfiles **ppipr)
+{
+    return InputProcessorProfiles_Constructor(NULL,(IUnknown**)ppipr);
 }

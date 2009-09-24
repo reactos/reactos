@@ -56,6 +56,40 @@ PSID SeAnonymousLogonSid = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+NTAPI
+FreeInitializedSids(VOID)
+{
+    if (SeNullSid) ExFreePool(SeNullSid);
+    if (SeWorldSid) ExFreePool(SeWorldSid);
+    if (SeLocalSid) ExFreePool(SeLocalSid);
+    if (SeCreatorOwnerSid) ExFreePool(SeCreatorOwnerSid);
+    if (SeCreatorGroupSid) ExFreePool(SeCreatorGroupSid);
+    if (SeCreatorOwnerServerSid) ExFreePool(SeCreatorOwnerServerSid);
+    if (SeCreatorGroupServerSid) ExFreePool(SeCreatorGroupServerSid);
+    if (SeNtAuthoritySid) ExFreePool(SeNtAuthoritySid);
+    if (SeDialupSid) ExFreePool(SeDialupSid);
+    if (SeNetworkSid) ExFreePool(SeNetworkSid);
+    if (SeBatchSid) ExFreePool(SeBatchSid);
+    if (SeInteractiveSid) ExFreePool(SeInteractiveSid);
+    if (SeServiceSid) ExFreePool(SeServiceSid);
+    if (SePrincipalSelfSid) ExFreePool(SePrincipalSelfSid);
+    if (SeLocalSystemSid) ExFreePool(SeLocalSystemSid);
+    if (SeAuthenticatedUserSid) ExFreePool(SeAuthenticatedUserSid);
+    if (SeRestrictedCodeSid) ExFreePool(SeRestrictedCodeSid);
+    if (SeAliasAdminsSid) ExFreePool(SeAliasAdminsSid);
+    if (SeAliasUsersSid) ExFreePool(SeAliasUsersSid);
+    if (SeAliasGuestsSid) ExFreePool(SeAliasGuestsSid);
+    if (SeAliasPowerUsersSid) ExFreePool(SeAliasPowerUsersSid);
+    if (SeAliasAccountOpsSid) ExFreePool(SeAliasAccountOpsSid);
+    if (SeAliasSystemOpsSid) ExFreePool(SeAliasSystemOpsSid);
+    if (SeAliasPrintOpsSid) ExFreePool(SeAliasPrintOpsSid);
+    if (SeAliasBackupOpsSid) ExFreePool(SeAliasBackupOpsSid);
+    if (SeAuthenticatedUsersSid) ExFreePool(SeAuthenticatedUsersSid);
+    if (SeRestrictedSid) ExFreePool(SeRestrictedSid);
+    if (SeAnonymousLogonSid) ExFreePool(SeAnonymousLogonSid);
+}
+
 BOOLEAN
 INIT_FUNCTION
 NTAPI
@@ -99,7 +133,7 @@ SepInitSecurityIDs(VOID)
     SeAuthenticatedUsersSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
     SeRestrictedSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
     SeAnonymousLogonSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
-    
+
     if (SeNullSid == NULL || SeWorldSid == NULL ||
         SeLocalSid == NULL || SeCreatorOwnerSid == NULL ||
         SeCreatorGroupSid == NULL || SeCreatorOwnerServerSid == NULL ||
@@ -115,7 +149,7 @@ SepInitSecurityIDs(VOID)
         SeAuthenticatedUsersSid == NULL || SeRestrictedSid == NULL ||
         SeAnonymousLogonSid == NULL)
     {
-        /* FIXME: We're leaking memory here. */
+        FreeInitializedSids();
         return(FALSE);
     }
     
@@ -232,11 +266,11 @@ SepCaptureSid(IN PSID InputSid,
 {
     ULONG SidSize = 0;
     PISID NewSid, Sid = (PISID)InputSid;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     PAGED_CODE();
     
-    if(AccessMode != KernelMode)
+    if (AccessMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -251,36 +285,35 @@ SepCaptureSid(IN PSID InputSid,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
         
-        if(NT_SUCCESS(Status))
+        /* allocate a SID and copy it */
+        NewSid = ExAllocatePool(PoolType,
+                                SidSize);
+        if(NewSid != NULL)
         {
-            /* allocate a SID and copy it */
-            NewSid = ExAllocatePool(PoolType,
-                                    SidSize);
-            if(NewSid != NULL)
+            _SEH2_TRY
             {
-                _SEH2_TRY
-                {
-                    RtlCopyMemory(NewSid,
-                                  Sid,
-                                  SidSize);
-                    
-                    *CapturedSid = NewSid;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    ExFreePool(NewSid);
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
+                RtlCopyMemory(NewSid,
+                              Sid,
+                              SidSize);
+
+                *CapturedSid = NewSid;
             }
-            else
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
+                /* Free the SID and return the exception code */
+                ExFreePool(NewSid);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
+            _SEH2_END;
+        }
+        else
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
         }
     }
     else if(!CaptureIfKernel)

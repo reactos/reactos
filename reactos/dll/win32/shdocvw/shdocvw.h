@@ -78,6 +78,7 @@ struct DocHost {
     const IOleDocumentSiteVtbl    *lpOleDocumentSiteVtbl;
     const IOleCommandTargetVtbl   *lpOleCommandTargetVtbl;
     const IDispatchVtbl           *lpDispatchVtbl;
+    const IPropertyNotifySinkVtbl *lpIPropertyNotifySinkVtbl;
     const IServiceProviderVtbl    *lpServiceProviderVtbl;
 
     /* Interfaces of InPlaceFrame object */
@@ -100,6 +101,10 @@ struct DocHost {
     VARIANT_BOOL silent;
     VARIANT_BOOL offline;
     VARIANT_BOOL busy;
+
+    READYSTATE ready_state;
+    DWORD prop_notif_cookie;
+    BOOL is_prop_notif;
 
     ConnectionPointContainer cps;
 };
@@ -184,6 +189,7 @@ struct InternetExplorer {
 #define DOCHOSTUI2(x)   ((IDocHostUIHandler2*)          &(x)->lpDocHostUIHandlerVtbl)
 #define DOCSITE(x)      ((IOleDocumentSite*)            &(x)->lpOleDocumentSiteVtbl)
 #define CLDISP(x)       ((IDispatch*)                   &(x)->lpDispatchVtbl)
+#define PROPNOTIF(x)    ((IPropertyNotifySink*)         &(x)->lpIPropertyNotifySinkVtbl)
 #define SERVPROV(x)     ((IServiceProvider*)            &(x)->lpServiceProviderVtbl)
 
 #define INPLACEFRAME(x) ((IOleInPlaceFrame*)            &(x)->lpOleInPlaceFrameVtbl)
@@ -211,7 +217,7 @@ HRESULT WebBrowserV2_Create(IUnknown*,REFIID,void**);
 
 void create_doc_view_hwnd(DocHost*);
 void deactivate_document(DocHost*);
-void object_available(DocHost*);
+HRESULT dochost_object_available(DocHost*,IUnknown*);
 void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*);
 HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VARIANT*);
 HRESULT go_home(DocHost*);

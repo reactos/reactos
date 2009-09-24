@@ -7,6 +7,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
+	<compilerflag compilerset="msc">/FIwine/typeof.h</compilerflag>
 	<file>imm.c</file>
 	<file>version.rc</file>
 	<library>wine</library>

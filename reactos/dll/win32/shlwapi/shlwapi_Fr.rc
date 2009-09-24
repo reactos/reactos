@@ -18,11 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_ERR_DIALOG DIALOG MOVEABLE DISCARDABLE 0, 0, 220, 60
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Erreur!"
+CAPTION "Erreur !"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
@@ -41,3 +46,4 @@ STRINGTABLE DISCARDABLE
     IDS_TIME_INTERVAL_MINUTES  " min"
     IDS_TIME_INTERVAL_SECONDS  " sec"
 }
+#pragma code_page(default)

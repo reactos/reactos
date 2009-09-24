@@ -31,7 +31,7 @@ GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString)
 
 
 BOOL
-IsInstalledApplication(LPWSTR lpRegName)
+IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey)
 {
     DWORD dwSize = MAX_PATH, dwType;
     WCHAR szName[MAX_PATH];
@@ -39,7 +39,7 @@ IsInstalledApplication(LPWSTR lpRegName)
     HKEY hKey, hSubKey;
     INT ItemIndex = 0;
 
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE,
+    if (RegOpenKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
                     &hKey) != ERROR_SUCCESS)
     {
@@ -84,6 +84,7 @@ UninstallApplication(INT Index, BOOL bModify)
     WCHAR szModify[] = L"ModifyPath";
     WCHAR szUninstall[] = L"UninstallString";
     WCHAR szPath[MAX_PATH];
+    WCHAR szAppName[MAX_STR_LEN];
     DWORD dwType, dwSize;
     INT ItemIndex;
     LVITEM Item;
@@ -102,6 +103,9 @@ UninstallApplication(INT Index, BOOL bModify)
     {
         ItemIndex = Index;
     }
+
+    ListView_GetItemText(hListView, ItemIndex, 0, szAppName, sizeof(szAppName) / sizeof(WCHAR));
+    WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szAppName);
 
     ZeroMemory(&Item, sizeof(LVITEM));
 
@@ -172,7 +176,7 @@ ShowInstalledAppInfo(INT Index)
 
 
 BOOL
-EnumInstalledApplications(INT EnumType, APPENUMPROC lpEnumProc)
+EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
 {
     DWORD dwSize = MAX_PATH, dwType, dwValue;
     BOOL bIsSystemComponent, bIsUpdate;
@@ -182,7 +186,7 @@ EnumInstalledApplications(INT EnumType, APPENUMPROC lpEnumProc)
     HKEY hKey, hSubKey;
     LONG ItemIndex = 0;
 
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE,
+    if (RegOpenKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
                     &hKey) != ERROR_SUCCESS)
     {
@@ -247,7 +251,6 @@ EnumInstalledApplications(INT EnumType, APPENUMPROC lpEnumProc)
         ItemIndex++;
     }
 
-    RegCloseKey(hSubKey);
     RegCloseKey(hKey);
 
     return TRUE;

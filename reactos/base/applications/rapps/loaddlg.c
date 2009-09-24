@@ -37,6 +37,7 @@
 #include <urlmon.h>
 
 static PAPPLICATION_INFO AppInfo;
+static HICON hIcon = NULL;
 
 typedef struct _IBindStatusCallbackImpl
 {
@@ -220,31 +221,11 @@ ThreadFunc(LPVOID Context)
     DWORD r;
     BOOL bCancelled = FALSE;
     BOOL bTempfile = FALSE;
-    HKEY hKey = NULL;
-    DWORD dwSize = MAX_PATH;
+    BOOL bCab = FALSE;
 
     /* built the path for the download */
     p = wcsrchr(AppInfo->szUrlDownload, L'/');
     if (!p) goto end;
-
-    /* Create default download path */
-    if (GetWindowsDirectoryW(path, sizeof(path) / sizeof(WCHAR)))
-    {
-        WCHAR DPath[MAX_PATH];
-        int i;
-        for (i = 0; i < 4; i++)
-        {
-            if (i == 3)
-            {
-                DPath[i] = '\0';
-                break;
-            }
-            DPath[i] = path[i];
-        }
-        LoadStringW(hInst, IDS_DOWNLOAD_FOLDER, path, sizeof(path) / sizeof(WCHAR));
-        wcscat(DPath, path);
-        wcscpy(path, DPath);
-    }
 
     if (wcslen(AppInfo->szUrlDownload) > 4)
     {
@@ -253,32 +234,18 @@ ThreadFunc(LPVOID Context)
             AppInfo->szUrlDownload[wcslen(AppInfo->szUrlDownload) - 2] == 'a' &&
             AppInfo->szUrlDownload[wcslen(AppInfo->szUrlDownload) - 1] == 'b')
         {
+            bCab = TRUE;
             if (!GetCurrentDirectoryW(MAX_PATH, path))
                 goto end;
         }
         else
         {
-            if (RegOpenKeyW(HKEY_LOCAL_MACHINE,
-                            L"Software\\ReactOS\\rappmgr",
-                            &hKey) == ERROR_SUCCESS)
-            {
-                if ((RegQueryValueExW(hKey,
-                                      L"DownloadFolder",
-                                      NULL,
-                                      NULL,
-                                      (LPBYTE)&path,
-                                      &dwSize) != ERROR_SUCCESS) && (path[0] == 0))
-                {
-                    RegCloseKey(hKey);
-                    goto end;
-                }
-                RegCloseKey(hKey);
-            }
+            wcscpy(path, SettingsInfo.szDownloadDir);
         }
     }
     else goto end;
 
-    if (GetFileAttributesW(path) == 0xFFFFFFFF)
+    if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES)
     {
         if (!CreateDirectoryW(path, NULL))
             goto end;
@@ -292,36 +259,30 @@ ThreadFunc(LPVOID Context)
     dl = CreateDl(Context, &bCancelled);
     r = URLDownloadToFileW(NULL, AppInfo->szUrlDownload, path, 0, dl);
     if (dl) IBindStatusCallback_Release(dl);
-    if (S_OK != r)
-    {
-        MessageBoxW(0, L"Download error!", NULL, 0);
-        goto end;
-    }
-    else if (bCancelled)
-    {
-        goto end;
-    }
+    if (S_OK != r) goto end;
+    else if (bCancelled) goto end;
+
     ShowWindow(Dlg, SW_HIDE);
 
     /* run it */
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
     r = CreateProcessW(path, NULL, NULL, NULL, 0, 0, NULL, NULL, &si, &pi);
-    if (0 == r)
-    {
-        goto end;
-    }
+    if (0 == r) goto end;
+
     CloseHandle(pi.hThread);
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
 
-    end:
-        if (bTempfile)
-        {
-            if (bCancelled)
-                DeleteFileW(path);
-        }
+end:
+    if (bTempfile)
+    {
+        if (bCancelled || (SettingsInfo.bDelInstaller && !bCab))
+            DeleteFileW(path);
+    }
+
     EndDialog(Dlg, 0);
+
     return 0;
 }
 
@@ -336,6 +297,13 @@ DownloadDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     switch (Msg)
     {
         case WM_INITDIALOG:
+
+            hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+            if (hIcon)
+            {
+                SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIcon);
+                SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIcon);
+            }
 
             SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
             Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
@@ -359,6 +327,7 @@ DownloadDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
             return FALSE;
 
         case WM_CLOSE:
+            if (hIcon) DestroyIcon(hIcon);
             EndDialog(Dlg, 0);
             return TRUE;
 
@@ -375,6 +344,8 @@ DownloadApplication(INT Index)
 
     AppInfo = (PAPPLICATION_INFO) ListViewGetlParam(Index);
     if (!AppInfo) return FALSE;
+
+    WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_INSTALL, AppInfo->szName);
 
     DialogBoxW(hInst,
                MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),

@@ -177,6 +177,7 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_CA "Zwischenzertifizierungsstellen"
     IDS_LOCALIZEDNAME_ADDRESSBOOK "Andere Personen"
     IDS_LOCALIZEDNAME_TRUSTEDPUBLISHER "Vertrauenswürdige Herausgeber"
+    IDS_LOCALIZEDNAME_DISALLOWED "Nicht Vertrauenswürdige Zertifikate"
 }
 
 STRINGTABLE DISCARDABLE

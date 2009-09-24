@@ -42,6 +42,22 @@ double exp (double __x)
 
   return __value;
 #else
-#error IMPLEMENT ME
+  register double __val;
+  __asm
+  {
+    fld1                        // store 1.0 for later use
+    fld __x
+    fldl2e                      // e^x = 2^(x * log2(e))
+    fmul    st,st(1)            // x * log2(e)
+    fld     st(0)
+    frndint                     // int(x * log2(e))
+    fsub    st,st(1)            // fract(x * log2(e))
+    fxch
+    f2xm1                       // 2^(fract(x * log2(e))) - 1
+    fadd    st,st(3)            // + 1.0
+    fscale
+    fstp __val
+  }
+  return __val;
 #endif /*__GNUC__*/
 }

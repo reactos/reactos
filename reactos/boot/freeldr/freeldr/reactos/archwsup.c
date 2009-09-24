@@ -20,6 +20,12 @@ PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
 BOOLEAN UseRealHeap = FALSE;
 
+VOID
+NTAPI
+FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
+                         IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+                         IN ULONG Size);
+
 /* FUNCTIONS ******************************************************************/
 
 PVOID
@@ -139,6 +145,8 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
                        IN ULONG Key,
                        IN ULONG Affinity,
                        IN PCHAR IdentifierString,
+                       IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+                       IN ULONG Size,
                        OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey)
 {
     PCONFIGURATION_COMPONENT_DATA ComponentData;
@@ -152,7 +160,8 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     ComponentData->Parent = SystemNode;
     
     /* Link us to the parent */
-    FldrLinkToParent(SystemNode, ComponentData);
+    if (SystemNode)
+        FldrLinkToParent(SystemNode, ComponentData);
     
     /* Set us up */
     Component = &ComponentData->ComponentEntry;
@@ -165,6 +174,10 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     /* Set identifier */
     if (IdentifierString)
         FldrSetIdentifier(ComponentData, IdentifierString);
+    
+    /* Set configuration data */
+    if (ResourceList)
+        FldrSetConfigurationData(ComponentData, ResourceList, Size);
     
     /* Return the child */
     *ComponentKey = ComponentData; 

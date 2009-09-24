@@ -571,24 +571,24 @@ static const builtin_prop_t Math_props[] = {
     {PIW,       Math_PI,       0},
     {SQRT1_2W,  Math_SQRT1_2,  0},
     {SQRT2W,    Math_SQRT2,    0},
-    {absW,      Math_abs,      PROPF_METHOD},
-    {acosW,     Math_acos,     PROPF_METHOD},
-    {asinW,     Math_asin,     PROPF_METHOD},
-    {atanW,     Math_atan,     PROPF_METHOD},
-    {atan2W,    Math_atan2,    PROPF_METHOD},
-    {ceilW,     Math_ceil,     PROPF_METHOD},
-    {cosW,      Math_cos,      PROPF_METHOD},
-    {expW,      Math_exp,      PROPF_METHOD},
-    {floorW,    Math_floor,    PROPF_METHOD},
-    {logW,      Math_log,      PROPF_METHOD},
-    {maxW,      Math_max,      PROPF_METHOD},
-    {minW,      Math_min,      PROPF_METHOD},
-    {powW,      Math_pow,      PROPF_METHOD},
+    {absW,      Math_abs,      PROPF_METHOD|1},
+    {acosW,     Math_acos,     PROPF_METHOD|1},
+    {asinW,     Math_asin,     PROPF_METHOD|1},
+    {atanW,     Math_atan,     PROPF_METHOD|1},
+    {atan2W,    Math_atan2,    PROPF_METHOD|2},
+    {ceilW,     Math_ceil,     PROPF_METHOD|1},
+    {cosW,      Math_cos,      PROPF_METHOD|1},
+    {expW,      Math_exp,      PROPF_METHOD|1},
+    {floorW,    Math_floor,    PROPF_METHOD|1},
+    {logW,      Math_log,      PROPF_METHOD|1},
+    {maxW,      Math_max,      PROPF_METHOD|2},
+    {minW,      Math_min,      PROPF_METHOD|2},
+    {powW,      Math_pow,      PROPF_METHOD|2},
     {randomW,   Math_random,   PROPF_METHOD},
-    {roundW,    Math_round,    PROPF_METHOD},
-    {sinW,      Math_sin,      PROPF_METHOD},
-    {sqrtW,     Math_sqrt,     PROPF_METHOD},
-    {tanW,      Math_tan,      PROPF_METHOD}
+    {roundW,    Math_round,    PROPF_METHOD|1},
+    {sinW,      Math_sin,      PROPF_METHOD|1},
+    {sqrtW,     Math_sqrt,     PROPF_METHOD|1},
+    {tanW,      Math_tan,      PROPF_METHOD|1}
 };
 
 static const builtin_info_t Math_info = {
@@ -602,5 +602,19 @@ static const builtin_info_t Math_info = {
 
 HRESULT create_math(script_ctx_t *ctx, DispatchEx **ret)
 {
-    return create_dispex(ctx, &Math_info, NULL, ret);
+    DispatchEx *math;
+    HRESULT hres;
+
+    math = heap_alloc_zero(sizeof(DispatchEx));
+    if(!math)
+        return E_OUTOFMEMORY;
+
+    hres = init_dispex_from_constr(math, ctx, &Math_info, ctx->object_constr);
+    if(FAILED(hres)) {
+        heap_free(math);
+        return hres;
+    }
+
+    *ret = math;
+    return S_OK;
 }

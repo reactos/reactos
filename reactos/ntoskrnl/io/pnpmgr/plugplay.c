@@ -197,14 +197,11 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        if (Name.Buffer) ExFreePool(Name.Buffer);
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
     
-    if (!NT_SUCCESS(Status) && Name.Buffer)
-    {   
-	ExFreePool(Name.Buffer);
-    }
     return Status;
 }
 
@@ -212,7 +209,7 @@ static NTSTATUS
 IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
 {
     PDEVICE_OBJECT DeviceObject = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     UNICODE_STRING DeviceInstance;
     ULONG BufferSize;
     ULONG Property = 0;
@@ -237,16 +234,11 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        ExFreePool(DeviceInstance.Buffer);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
     
-    if (!NT_SUCCESS(Status))
-    {
-	ExFreePool(DeviceInstance.Buffer);
-	return Status;
-    }
-
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     ExFreePool(DeviceInstance.Buffer);
@@ -319,15 +311,10 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        ExFreePool(TargetDeviceInstance.Buffer);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(TargetDeviceInstance.Buffer);
-	return Status;
-    }
 
     RtlInitUnicodeString(&RootDeviceName,
                          L"HTREE\\ROOT\\0");
@@ -426,7 +413,7 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     ULONG DeviceStatus = 0;
     ULONG DeviceProblem = 0;
     UNICODE_STRING DeviceInstance;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     DPRINT("IopDeviceStatus() called\n");
 
@@ -446,16 +433,10 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        if (DeviceInstance.Buffer) ExFreePool(DeviceInstance.Buffer);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        if (DeviceInstance.Buffer)
-            ExFreePool(DeviceInstance.Buffer);
-        return Status;
-    }
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
@@ -766,8 +747,6 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                   IN OUT PVOID Buffer,
                   IN ULONG BufferLength)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-
     DPRINT("NtPlugPlayControl(%lu %p %lu) called\n",
            PlugPlayControlClass, Buffer, BufferLength);
 
@@ -795,14 +774,9 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
 
     switch (PlugPlayControlClass)
     {

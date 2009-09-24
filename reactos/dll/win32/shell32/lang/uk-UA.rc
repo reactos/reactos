@@ -749,4 +749,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Інсталювати новий шрифт..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Розмір кластера за промовчанням"
+	IDS_COPY_OF                 "Copy of"
 END

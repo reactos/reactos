@@ -20,6 +20,8 @@
 
 #include "cryptuires.h"
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
@@ -75,7 +77,7 @@ STRINGTABLE DISCARDABLE
     IDS_IMPORT_FILTER_PFX "Persoonlijke informatie uitwisseling (*.pfx; *.p12)"
     IDS_IMPORT_FILTER_CRL "Certificaat terugroeplijst (*.crl)"
     IDS_IMPORT_FILTER_CTL "Certificaat vertrouwenslijst (*.stl)"
-    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft seriële certificatenopslag (*.sst)"
+    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft seriÃ«le certificatenopslag (*.sst)"
     IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 berichten (*.spc; *.p7b)"
     IDS_IMPORT_FILTER_ALL "Alle bestanden (*.*)"
     IDS_IMPORT_EMPTY_FILE "Selecteer een bestand."
@@ -97,7 +99,7 @@ STRINGTABLE DISCARDABLE
     IDS_IMPORT_FAILED "Het importeren is mislukt."
     IDS_WIZARD_TITLE_FONT "Arial"
     IDS_PURPOSE_ALL "<Alle>"
-    IDS_PURPOSE_ADVANCED "<Geadvanceerde doeleinden>"
+    IDS_PURPOSE_ADVANCED "<Geavanceerde doeleinden>"
     IDS_SUBJECT_COLUMN "Verstrekt aan"
     IDS_ISSUER_COLUMN "Uitgegeven door"
     IDS_EXPIRATION_COLUMN "Verloop datum"
@@ -106,8 +108,8 @@ STRINGTABLE DISCARDABLE
     IDS_ALLOWED_PURPOSE_NONE "<Geen>"
     IDS_WARN_REMOVE_MY "U kunt niet langer berichten ontcijferen of ondertekenen met dit certificaat.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
     IDS_WARN_REMOVE_PLURAL_MY "U kunt niet langer berichten ontcijferen of ondertekenen met deze certificaten.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiëren met dit certificaat.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiëren met deze certificaten.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiÃ«ren met dit certificaat.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiÃ«ren met deze certificaten.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
     IDS_WARN_REMOVE_CA "Certificaten uitgegeven door deze certificaten autoriteit zullen niet meer vertrouwd worden.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
     IDS_WARN_REMOVE_PLURAL_CA "Certificaten uitgegeven door deze certificaten autoriteiten zullen niet meer vertrouwd worden.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
     IDS_WARN_REMOVE_ROOT "Certificaten uitgegeven door deze basic certificaten autoriteit, alsmede enige certificatie autoriteit die hij verstrekt, zullen niet meer vertrouwd worden.\nWeet u zeker dat u dit vertrouwde basic certificaat wilt verwijderen?"
@@ -150,12 +152,12 @@ STRINGTABLE DISCARDABLE
     IDS_EXPORT_FILE_SUBTITLE "Geef de naam van het bestand waarin de inhoud zal worden opgeslagen."
     IDS_EXPORT_FILE_EXISTS "Het gekozen bestand bestaat reeds. Wilt u het overschrijven?"
     IDS_EXPORT_FILTER_CERT "DER-Encoded Binary X.509 (*.cer)"
-    IDS_EXPORT_FILTER_BASE64_CERT "Base64-geëncodeerd X.509 (*.cer)"
+    IDS_EXPORT_FILTER_BASE64_CERT "Base64-geÃ«ncodeerd X.509 (*.cer)"
     IDS_EXPORT_FILTER_CRL "Certificaat terugroeplijst (*.crl)"
     IDS_EXPORT_FILTER_CTL "Certificaat vertrouwenslijst (*.stl)"
     IDS_EXPORT_FILTER_CMS "CMS/PKCS #7 berichten (*.p7b)"
     IDS_EXPORT_FILTER_PFX "Persoonlijke informatie uitwisseling (*.pfx)"
-    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Seriële certificatenopslag (*.sst)"
+    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "SeriÃ«le certificatenopslag (*.sst)"
     IDS_EXPORT_FORMAT "Bestandsformaat"
     IDS_EXPORT_INCLUDE_CHAIN "Neem alle certificaten in het certificatiepad op"
     IDS_EXPORT_KEYS "Exporteer sleutels"
@@ -164,12 +166,12 @@ STRINGTABLE DISCARDABLE
     IDS_EXPORT_SUCCEEDED "Het exporteren is gelukt."
     IDS_EXPORT_FAILED "Het exporteren is mislukt."
     IDS_EXPORT_PRIVATE_KEY_TITLE "Exporteer persoonlijke sleutel"
-    IDS_EXPORT_PRIVATE_KEY_SUBTITLE "Het certificaat bevat een persoonlijke sleutel die mee kan worden geëxporteerd met het certificaat."
+    IDS_EXPORT_PRIVATE_KEY_SUBTITLE "Het certificaat bevat een persoonlijke sleutel die mee kan worden geÃ«xporteerd met het certificaat."
     IDS_EXPORT_PASSWORD_TITLE "Voer wachtwoord in"
     IDS_EXPORT_PASSWORD_SUBTITLE "U kunt een persoonlijke sleutel beveiligen met een wachtwoord."
     IDS_EXPORT_PASSWORD_MISMATCH "De wachtwoorden zijn niet gelijk."
     IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "NB: De persoonlijke sleutel voor dit certificaat kon niet geopend worden."
-    IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Note: De persoonlijke sleutel voor dit certificaat kan niet geëxporteerd worden."
+    IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Note: De persoonlijke sleutel voor dit certificaat kan niet geÃ«xporteerd worden."
 }
 
 IDD_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
@@ -286,12 +288,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welkom bij de certificaat importeerhulp", IDC_IMPORT_TITLE,
     115,1,195,40
-  LTEXT "Deze hulp helps u met het importeren van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten uit een bestand naar een certificatenopslag.",
-    -1, 115,33,195,16
+  LTEXT "Deze hulp assisteert u met het importeren van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten uit een bestand naar een certificatenopslag.",
+    -1, 115,33,195,24
   LTEXT "Een certificaat kan gebruikt worden om u of de computer waarmee u werkt te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Certificatenopslagen zijn verzamelingen van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten.",
-    -1, 115,56,195,40
-  LTEXT "Om verder te gaan, click op Volgende.",
-    -1, 115,103,195,8
+    -1, 115,64,195,48
+  LTEXT "Klik op Volgende om verder te gaan.",
+    -1, 115,119,195,8
 END
 
 IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,143
@@ -301,13 +303,13 @@ BEGIN
   LTEXT "Bestands&naam:", -1, 21,1,195,10
   EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "B&laderen...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
-  LTEXT "NB: De volgende bestandsformaten kunnen meer dan één certificaat, certificaat terugroeplijst of certificaat vertrouwenslijst bevatten:",
+  LTEXT "NB: De volgende bestandsformaten kunnen meer dan Ã©Ã©n certificaat, certificaat terugroeplijst of certificaat vertrouwenslijst bevatten:",
     -1, 21,26,265,16
   LTEXT "Cryptographisch berichtsyntaxis standaard/PKCS #7 berichten (.p7b)",
     -1, 31,49,265,10
   LTEXT "Persoonlijke informatie uitwisseling/PKCS #12 (.pfx, .p12)",
     -1, 31,64,265,10
-  LTEXT "Microsoft seriële certificatenopslag (.sst)",
+  LTEXT "Microsoft seriÃ«le certificatenopslag (.sst)",
     -1, 31,79,265,10
 END
 
@@ -354,7 +356,7 @@ BEGIN
   PUSHBUTTON "&Importeer...", IDC_MGR_IMPORT, 7,172,51,14
   PUSHBUTTON "&Exporteer...", IDC_MGR_EXPORT, 62,172,51,14, WS_DISABLED
   PUSHBUTTON "&Verwijder", IDC_MGR_REMOVE, 117,172,51,14, WS_DISABLED
-  PUSHBUTTON "Ge&avanceerd...", IDC_MGR_ADVANCED, 277,172,51,14
+  PUSHBUTTON "Ge&avanceerd...", IDC_MGR_ADVANCED, 271,172,57,14
   GROUPBOX "Certificaat doeleinden", -1,7,194,321,47, BS_GROUPBOX
   LTEXT "", IDC_MGR_PURPOSES, 13,208,252,30
   PUSHBUTTON "&Bekijken...", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
@@ -382,12 +384,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welkom bij de Certificaat exporteerhulp", IDC_EXPORT_TITLE,
     115,1,195,40
-  LTEXT "Deze hulp assisteerd u bij het exporteren van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten vanuit een certificatenopslag naar een bestand.",
-    -1, 115,33,195,16
+  LTEXT "Deze hulp assisteert u bij het exporteren van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten vanuit een certificatenopslag naar een bestand.",
+    -1, 115,33,195,24
   LTEXT "Een certificaat kan gebruikt worden om u of de computer waarmee u werkt te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Certificatenopslagen zijn verzamelingen van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten.",
-    -1, 115,56,195,40
-  LTEXT "Om verder te gaan, click op Volgende.",
-    -1, 115,103,195,8
+    -1, 115,64,195,48
+  LTEXT "Klik op Volgende om verder te gaan.",
+    -1, 115,119,195,8
 END
 
 IDD_EXPORT_PRIVATE_KEY DIALOG DISCARDABLE 0,0,317,143
@@ -419,22 +421,22 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Selecteer het formaat dat u wilt gebruiken:", -1, 21,1,195,10
   AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
-    IDC_EXPORT_FORMAT_DER, 31,18,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
-    IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_DER, 31,18,240,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer)",
+    IDC_EXPORT_FORMAT_BASE64, 31,30,240,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "&Cryptographisch berichtsyntaxis standaard/PKCS #7 berichten (.p7b)",
-    IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_CMS, 31,42,240,12, BS_AUTORADIOBUTTON
   CHECKBOX "Neem &alle certificaten in het certificatiepad op indien mogelijk",
-    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "&Persoonlijke informatie uitwisseling/PKCS #12 (.pfx)",
-    IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
+    IDC_EXPORT_FORMAT_PFX, 31,72,240,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Nee&m alle certificaten in het certificatiepad op indien mogelijk",
-    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "&Gebruikt sterke encryptie",
-    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,200,8,
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,240,8,
     BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "Verwijder de persoonlijke s&leutel als de export succesvol is",
-    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,200,8,
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,240,8,
     BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 

@@ -59,7 +59,7 @@ static LPTSTR lpLeadNumFmtSamples[MAX_LEAD_ZEROES_SAMPLES] =
 static LPTSTR lpListSepSamples[MAX_LIST_SEP_SAMPLES] =
     {_T(";")};
 static LPTSTR lpUnitsSysSamples[MAX_UNITS_SYS_SAMPLES] =
-    {_T("Metrics"), _T("Americans")};
+    {_T("Metric"), _T("Imperial")};
 
 
 /* Init num decimal separator control box */

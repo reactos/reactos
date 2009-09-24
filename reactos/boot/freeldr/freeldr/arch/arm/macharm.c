@@ -201,8 +201,6 @@ MachInit(IN PCCH CommandLine)
     //
     // Now set default disk handling routines -- we don't need to override
     //
-    MachVtbl.DiskGetBootVolume = DiskGetBootVolume;
-    MachVtbl.DiskGetSystemVolume = DiskGetSystemVolume;
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskGetBootDevice = DiskGetBootDevice;
     MachVtbl.DiskBootingFromFloppy = DiskBootingFromFloppy;

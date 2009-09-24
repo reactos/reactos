@@ -25,7 +25,7 @@
 @ stdcall CoGetCallerTID(ptr)
 @ stdcall CoGetClassObject(ptr long ptr ptr ptr)
 @ stdcall CoGetContextToken(ptr)
-@ stub CoGetCurrentLogicalThreadId
+@ stdcall CoGetCurrentLogicalThreadId(ptr)
 @ stdcall CoGetCurrentProcess()
 @ stub CoGetInstanceFromFile      #@ stdcall (ptr ptr ptr long wstr long ptr) return 0,ERR_NOTIMPLEMENTED
 @ stub CoGetInstanceFromIStorage  #@ stdcall (ptr ptr ptr long ptr long ptr) return 0,ERR_NOTIMPLEMENTED
@@ -180,7 +180,7 @@
 @ stub OleConvertOLESTREAMToIStorageEx
 @ stdcall OleCreate(ptr ptr long ptr ptr ptr ptr)
 @ stdcall OleCreateDefaultHandler(ptr ptr ptr ptr)
-@ stub OleCreateEmbeddingHelper
+@ stdcall OleCreateEmbeddingHelper(ptr ptr long ptr ptr ptr)
 @ stub OleCreateEx
 @ stdcall OleCreateFromData(ptr ptr long ptr ptr ptr ptr)
 @ stdcall OleCreateFromDataEx(ptr ptr long long long ptr ptr ptr ptr ptr ptr ptr)

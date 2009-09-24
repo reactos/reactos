@@ -22,7 +22,7 @@ BEGIN
 	BEGIN
 		MENUITEM "&Refresh",                  IDM_REFRESH
 	END
-	MENUITEM "&Options",                    ID_OPTIONS
+	MENUITEM "&Options",                          ID_OPTIONS
 	POPUP "&Help"
 	BEGIN
 		MENUITEM "H&elp",                     IDM_HELP

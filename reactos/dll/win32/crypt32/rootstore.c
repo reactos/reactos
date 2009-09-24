@@ -339,9 +339,9 @@ static BOOL import_certs_from_dir(LPCSTR path, HCERTSTORE store)
                         ret = TRUE;
                 }
             }
-            closedir(dir);
             CryptMemFree(filebuf);
         }
+        closedir(dir);
     }
     return ret;
 #else

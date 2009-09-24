@@ -82,7 +82,7 @@ typedef PVOID PKSWORKER;
 
 #if defined(__cplusplus) && _MSC_VER >= 1100
     #define DEFINE_GUIDSTRUCT(guid, name) struct __declspec(uuid(guid)) name
-    #define DEFINE_GUIDNAMED(name) __uidof(struct name)
+    #define DEFINE_GUIDNAMED(name) __uuidof(struct name)
 #else
     #define DEFINE_GUIDSTRUCT(guid, name) DEFINE_GUIDEX(name)
     #define DEFINE_GUIDNAMED(name) name
@@ -607,15 +607,12 @@ typedef enum
 DEFINE_GUIDSTRUCT("720D4AC0-7533-11D0-A5D6-28DB04C10000", KSPROPSETID_Topology);
 #define KSPROPSETID_Topology DEFINE_GUIDNAMED(KSPROPSETID_Topology)
 
-typedef enum
-{
+typedef enum {
     KSPROPERTY_TOPOLOGY_CATEGORIES,
+    KSPROPERTY_TOPOLOGY_NODES,
     KSPROPERTY_TOPOLOGY_CONNECTIONS,
-    KSPROPERTY_TOPOLOGY_NAME,
-    KSPROPERTY_TOPOLOGY_NODES
+    KSPROPERTY_TOPOLOGY_NAME
 } KSPROPERTY_TOPOLOGY;
-
-
 
 /* ===============================================================
     Property Sets for audio drivers - TODO
@@ -1808,6 +1805,30 @@ typedef struct
     ULONG                   Flags;
 } KSMETHOD_ITEM, *PKSMETHOD_ITEM;
 
+#ifndef _MSC_VER
+
+#define DEFINE_KSMETHOD_ITEM(MethodId, Flags,\
+                             MethodHandler,\
+                             MinMethod, MinData, SupportHandler)\
+{\
+    MethodId, {(PFNKSHANDLER)MethodHandler}, MinMethod, MinData,\
+    SupportHandler, Flags\
+}
+
+#else
+
+#define DEFINE_KSMETHOD_ITEM(MethodId, Flags,\
+                             MethodHandler,\
+                             MinMethod, MinData, SupportHandler)\
+{\
+    MethodId, (PFNKSHANDLER)MethodHandler, MinMethod, MinData,\
+    SupportHandler, Flags\
+}
+
+
+
+#endif
+
 
 typedef struct
 {
@@ -1818,6 +1839,12 @@ typedef struct
     };
 } KSFASTMETHOD_ITEM, *PKSFASTMETHOD_ITEM;
 
+#define DEFINE_KSFASTMETHOD_ITEM(MethodId, MethodHandler)\
+{\
+    MethodId, (PFNKSFASTHANDLER)MethodHandler\
+}
+
+	
 typedef struct
 {
     const GUID*             Set;
@@ -1826,6 +1853,20 @@ typedef struct
     ULONG                   FastIoCount;
     const KSFASTMETHOD_ITEM*FastIoTable;
 } KSMETHOD_SET, *PKSMETHOD_SET;
+
+
+#define DEFINE_KSMETHOD_SET(Set,\
+                            MethodsCount,\
+                            MethodItem,\
+                            FastIoCount,\
+                            FastIoTable)\
+{\
+    Set,\
+    MethodsCount,\
+    MethodItem,\
+    FastIoCount,\
+    FastIoTable\
+}
 
 #endif
 /* ===============================================================
@@ -2548,9 +2589,23 @@ typedef struct
     ULONG DataUsed;
     PVOID Data;
     ULONG OptionsFlags;
+#ifdef _WIN64
+  ULONG  Reserved;
+#endif
 } KSSTREAM_HEADER, *PKSSTREAM_HEADER;
 
-
+#define KSSTREAM_HEADER_OPTIONSF_SPLICEPOINT        0x00000001
+#define KSSTREAM_HEADER_OPTIONSF_PREROLL            0x00000002
+#define KSSTREAM_HEADER_OPTIONSF_DATADISCONTINUITY  0x00000004
+#define KSSTREAM_HEADER_OPTIONSF_TYPECHANGED        0x00000008
+#define KSSTREAM_HEADER_OPTIONSF_TIMEVALID          0x00000010
+#define KSSTREAM_HEADER_OPTIONSF_TIMEDISCONTINUITY  0x00000040
+#define KSSTREAM_HEADER_OPTIONSF_FLUSHONPAUSE       0x00000080
+#define KSSTREAM_HEADER_OPTIONSF_DURATIONVALID      0x00000100
+#define KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM        0x00000200
+#define KSSTREAM_HEADER_OPTIONSF_BUFFEREDTRANSFER   0x00000400
+#define KSSTREAM_HEADER_OPTIONSF_VRAM_DATA_TRANSFER 0x00000800
+#define KSSTREAM_HEADER_OPTIONSF_LOOPEDDATA         0x80000000
 
 /* ===============================================================
     XP / DX8
@@ -3041,6 +3096,7 @@ KsFastPropertyHandler(
 /* ===============================================================
     Event Functions
 */
+
 #if defined(_NTDDK_)
 
 #define KSPROBE_STREAMREAD      0x00000000
@@ -3200,6 +3256,11 @@ KsPinDataIntersectionEx(
 
 KSDDKAPI PKSFILTER NTAPI
 KsPinGetParentFilter(
+    IN PKSPIN Pin
+    );
+
+KSDDKAPI PKSPIN NTAPI
+KsPinGetNextSiblingPin(
     IN PKSPIN Pin
     );
 
@@ -3640,6 +3701,18 @@ KsPinGetConnectedPinFileObject(
     IN PKSPIN Pin
     );
 
+#else
+
+KSDDKAPI
+DWORD
+WINAPI
+KsCreatePin(
+    IN HANDLE FilterHandle,
+    IN PKSPIN_CONNECT Connect,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PHANDLE ConnectionHandle
+    );
+
 
 #endif
 
@@ -3650,6 +3723,17 @@ KsPinGetConnectedPinFileObject(
 */
 
 #if defined(_NTDDK_)
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsMergeAutomationTables(
+    OUT PKSAUTOMATION_TABLE* AutomationTableAB,
+    IN PKSAUTOMATION_TABLE AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE AutomationTableB OPTIONAL,
+    IN KSOBJECT_BAG Bag OPTIONAL
+    );
+
 KSDDKAPI
 NTSTATUS
 NTAPI

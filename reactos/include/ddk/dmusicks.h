@@ -45,12 +45,7 @@ DEFINE_GUID(CLSID_MiniportDriverDMusUARTCapture, 0xD3F0CE1D, 0xFFFC, 0x11D1, 0x8
 
 DECLARE_INTERFACE_(IMasterClock,IUnknown)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-        ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    DEFINE_ABSTRACT_UNKNOWN()
 
     STDMETHOD_(NTSTATUS,GetTime)( THIS_
         OUT     REFERENCE_TIME  * pTime
@@ -58,6 +53,11 @@ DECLARE_INTERFACE_(IMasterClock,IUnknown)
 };
 
 typedef IMasterClock *PMASTERCLOCK;
+
+#define IMP_IMasterClock                    \
+    STDMETHODIMP_(NTSTATUS) GetTime(        \
+        OUT     REFERENCE_TIME  * pTime     \
+    )
 
 /* ===============================================================
     IMXF Interface
@@ -69,30 +69,47 @@ typedef IMasterClock *PMASTERCLOCK;
 struct IMXF;
 typedef struct IMXF *PMXF;
 
+#define DEFINE_ABSTRACT_IMXF()                 \
+    STDMETHOD_(NTSTATUS,SetState)(THIS_        \
+        IN      KSSTATE State                  \
+    ) PURE;                                    \
+    STDMETHOD_(NTSTATUS,PutMessage)            \
+    (   THIS_                                  \
+        IN      PDMUS_KERNEL_EVENT  pDMKEvt    \
+    ) PURE;                                    \
+    STDMETHOD_(NTSTATUS,ConnectOutput)         \
+    (   THIS_                                  \
+        IN      PMXF    sinkMXF                \
+    ) PURE;                                    \
+    STDMETHOD_(NTSTATUS,DisconnectOutput)      \
+    (   THIS_                                  \
+        IN      PMXF    sinkMXF                \
+    ) PURE;
+
+#define IMP_IMXF                                \
+    STDMETHODIMP_(NTSTATUS) SetState            \
+    (                                           \
+        IN      KSSTATE State                   \
+    );                                          \
+    STDMETHODIMP_(NTSTATUS) PutMessage          \
+    (   THIS_                                   \
+        IN      PDMUS_KERNEL_EVENT  pDMKEvt     \
+    );                                          \
+    STDMETHODIMP_(NTSTATUS) ConnectOutput       \
+    (   THIS_                                   \
+        IN      PMXF    sinkMXF                 \
+    );                                          \
+    STDMETHODIMP_(NTSTATUS) DisconnectOutput    \
+    (   THIS_                                   \
+        IN      PMXF    sinkMXF                 \
+    )
+
+
 DECLARE_INTERFACE_(IMXF,IUnknown)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-        ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(NTSTATUS,SetState)(THIS_
-        IN      KSSTATE State
-    ) PURE;
-    STDMETHOD_(NTSTATUS,PutMessage)
-    (   THIS_
-        IN      PDMUS_KERNEL_EVENT  pDMKEvt
-    ) PURE;
-    STDMETHOD_(NTSTATUS,ConnectOutput)
-    (   THIS_
-        IN      PMXF    sinkMXF
-    ) PURE;
-    STDMETHOD_(NTSTATUS,DisconnectOutput)
-    (   THIS_
-        IN      PMXF    sinkMXF
-    ) PURE;
+    DEFINE_ABSTRACT_IMXF()
 };
 
 /* ===============================================================
@@ -105,30 +122,17 @@ DECLARE_INTERFACE_(IMXF,IUnknown)
 struct  IAllocatorMXF;
 typedef struct IAllocatorMXF *PAllocatorMXF;
 
-DECLARE_INTERFACE_(IAllocatorMXF,IMXF)
-{
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-        ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+#define STATIC_IID_IAllocatorMXF\
+    0xa5f0d62c, 0xb30f, 0x11d2, 0xb7, 0xa3, 0x00, 0x60, 0x08, 0x33, 0x16, 0xc1
+DEFINE_GUIDSTRUCT("a5f0d62c-b30f-11d2-b7a3-0060083316c1", IID_IAllocatorMXF);
+#define IID_IAllocatorMXF DEFINE_GUIDNAMED(IID_IAllocatorMXF)
 
-    STDMETHOD_(NTSTATUS,SetState)(THIS_
-        IN      KSSTATE State
-    ) PURE;
-    STDMETHOD_(NTSTATUS,PutMessage)
-    (   THIS_
-        IN      PDMUS_KERNEL_EVENT  pDMKEvt
-    ) PURE;
-    STDMETHOD_(NTSTATUS,ConnectOutput)
-    (   THIS_
-        IN      PMXF    sinkMXF
-    ) PURE;
-    STDMETHOD_(NTSTATUS,DisconnectOutput)
-    (   THIS_
-        IN      PMXF    sinkMXF
-    ) PURE;
+
+DECLARE_INTERFACE_(IAllocatorMXF, IMXF)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IMXF()
 
     STDMETHOD_(NTSTATUS,GetMessage)(THIS_
         OUT     PDMUS_KERNEL_EVENT * ppDMKEvt
@@ -145,6 +149,21 @@ DECLARE_INTERFACE_(IAllocatorMXF,IMXF)
     )   PURE;
 };
 
+#define IMP_IAllocatorMXF                               \
+    IMP_IMXF;                                           \
+    STDMETHODIMP_(NTSTATUS) GetMessage(                 \
+        OUT     PDMUS_KERNEL_EVENT * ppDMKEvt           \
+    );                                                  \
+                                                        \
+    STDMETHODIMP_(USHORT) GetBufferSize(void);          \
+                                                        \
+    STDMETHODIMP_(NTSTATUS) GetBuffer(                  \
+        OUT     PBYTE * ppBuffer                        \
+    );                                                  \
+                                                        \
+    STDMETHODIMP_(NTSTATUS) PutBuffer(                  \
+        IN      PBYTE   pBuffer                         \
+    )
 
 #undef INTERFACE
 #define INTERFACE IPortDMus
@@ -154,35 +173,10 @@ DEFINE_GUID(CLSID_PortDMus, 0xb7902fe9, 0xfb0a, 0x11d1, 0x81, 0xb0, 0x00, 0x60, 
 
 DECLARE_INTERFACE_(IPortDMus, IPort)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-        ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(NTSTATUS,Init)(THIS_
-        IN      PDEVICE_OBJECT  DeviceObject,
-        IN      PIRP            Irp,
-        IN      PUNKNOWN        UnknownMiniport,
-        IN      PUNKNOWN        UnknownAdapter      OPTIONAL,
-        IN      PRESOURCELIST   ResourceList 
-    )PURE;
-    STDMETHOD_(NTSTATUS,GetDeviceProperty)(THIS_
-        IN      DEVICE_REGISTRY_PROPERTY    DeviceProperty,
-        IN      ULONG                       BufferLength,
-        OUT     PVOID                       PropertyBuffer,
-        OUT     PULONG                      ResultLength
-    )PURE;
-    STDMETHOD_(NTSTATUS,NewRegistryKey)(THIS_
-        OUT     PREGISTRYKEY *      OutRegistryKey,
-        IN      PUNKNOWN            OuterUnknown,
-        IN      ULONG               RegistryKeyType,
-        IN      ACCESS_MASK         DesiredAccess,
-        IN      POBJECT_ATTRIBUTES  ObjectAttributes    OPTIONAL,
-        IN      ULONG               CreateOptions       OPTIONAL,
-        OUT     PULONG              Disposition         OPTIONAL 
-    )PURE;
+    DEFINE_ABSTRACT_PORT()
+
     STDMETHOD_(void,Notify)(THIS_
         IN PSERVICEGROUP ServiceGroup OPTIONAL
     )PURE;
@@ -193,7 +187,15 @@ DECLARE_INTERFACE_(IPortDMus, IPort)
 };
 typedef IPortDMus *PPORTDMUS;
 
-
+#define IMP_IPortDMus                                 \
+    IMP_IPort;                                        \
+    STDMETHODIMP_(void) Notify(                       \
+        IN PSERVICEGROUP ServiceGroup OPTIONAL        \
+    );                                                \
+                                                      \
+    STDMETHODIMP_(void) RegisterServiceGroup(         \
+        IN PSERVICEGROUP ServiceGroup                 \
+    )
 
 #undef INTERFACE
 #define INTERFACE IMiniportDMus
@@ -201,24 +203,10 @@ typedef IPortDMus *PPORTDMUS;
 DEFINE_GUID(IID_IMiniportDMus, 0xc096df9d, 0xfb09, 0x11d1, 0x81, 0xb0, 0x00, 0x60, 0x08, 0x33, 0x16, 0xc1);
 DECLARE_INTERFACE_(IMiniportDMus, IMiniport)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-    ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(NTSTATUS,GetDescription)(THIS_
-        OUT     PPCFILTER_DESCRIPTOR *  Description
-    ) PURE;
-    STDMETHOD_(NTSTATUS,DataRangeIntersection)(THIS_
-        IN      ULONG           PinId,
-        IN      PKSDATARANGE    DataRange,
-        IN      PKSDATARANGE    MatchingDataRange,
-        IN      ULONG           OutputBufferLength,
-        OUT     PVOID           ResultantFormat     OPTIONAL,
-        OUT     PULONG          ResultantFormatLength
-    ) PURE;
+    DEFINE_ABSTRACT_MINIPORT()
+  
 
     STDMETHOD_(NTSTATUS,Init)(THIS_
         IN      PUNKNOWN        UnknownAdapter,
@@ -246,9 +234,28 @@ DECLARE_INTERFACE_(IMiniportDMus, IMiniport)
 typedef IMiniportDMus *PMINIPORTDMUS;
 #undef INTERFACE
 
-#define STATIC_IID_IAllocatorMXF\
-    0xa5f0d62c, 0xb30f, 0x11d2, 0xb7, 0xa3, 0x00, 0x60, 0x08, 0x33, 0x16, 0xc1
-DEFINE_GUIDSTRUCT("a5f0d62c-b30f-11d2-b7a3-0060083316c1", IID_IAllocatorMXF);
-#define IID_IAllocatorMXF DEFINE_GUIDNAMED(IID_IAllocatorMXF)
+#define IMP_IMiniportDMus                              \
+    IMP_IMiniport;                                     \
+    STDMETHODIMP_(NTSTATUS) Init(                      \
+        IN      PUNKNOWN        UnknownAdapter,        \
+        IN      PRESOURCELIST   ResourceList,          \
+        IN      PPORTDMUS       Port,                  \
+        OUT     PSERVICEGROUP * ServiceGroup           \
+    );                                                 \
+                                                       \
+    STDMETHODIMP_(void) Service(THIS);                 \
+                                                       \
+    STDMETHODIMP_(NTSTATUS) NewStream(                 \
+        OUT     PMXF              * MXF,               \
+        IN      PUNKNOWN          OuterUnknown,        \
+        IN      POOL_TYPE         PoolType,            \
+        IN      ULONG             PinID,               \
+        IN      DMUS_STREAM_TYPE  StreamType,          \
+        IN      PKSDATAFORMAT     DataFormat,          \
+        OUT     PSERVICEGROUP     * ServiceGroup,      \
+        IN      PAllocatorMXF     AllocatorMXF,        \
+        IN      PMASTERCLOCK      MasterClock,         \
+        OUT     PULONGLONG        SchedulePreFetch     \
+    )
 
 #endif

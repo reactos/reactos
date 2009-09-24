@@ -183,7 +183,7 @@ struct oletls
     LONG             pending_call_count_client; /* number of client calls pending */
     LONG             pending_call_count_server; /* number of server calls pending */
     DWORD            unknown;
-    ULONG_PTR        context_token; /* (+38h on x86) */
+    IObjContext     *context_token; /* (+38h on x86) */
     IUnknown        *call_state;    /* current call context (+3Ch on x86) */
     DWORD            unknown2[46];
     IUnknown        *cancel_object; /* cancel object set by CoSetCancelObject (+F8h on x86) */
@@ -203,7 +203,6 @@ HRESULT FTMarshalCF_Create(REFIID riid, LPVOID *ppv);
 
 /* Stub Manager */
 
-ULONG stub_manager_int_addref(struct stub_manager *This);
 ULONG stub_manager_int_release(struct stub_manager *This);
 struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object);
 ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak);
@@ -253,7 +252,6 @@ void OLEDD_UnInitialize(void);
 
 APARTMENT *apartment_findfromoxid(OXID oxid, BOOL ref);
 APARTMENT *apartment_findfromtid(DWORD tid);
-DWORD apartment_addref(struct apartment *apt);
 DWORD apartment_release(struct apartment *apt);
 HRESULT apartment_disconnectproxies(struct apartment *apt);
 void apartment_disconnectobject(struct apartment *apt, void *object);

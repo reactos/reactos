@@ -215,6 +215,7 @@ static ULONG WINAPI HTMLDocument_Release(IHTMLDocument2 *iface)
         detach_selection(This);
         detach_ranges(This);
         release_nodes(This);
+        release_dispex(&This->dispex);
 
         ConnectionPointContainer_Destroy(&This->cp_container);
 
@@ -900,16 +901,13 @@ static HRESULT WINAPI HTMLDocument_get_nameProp(IHTMLDocument2 *iface, BSTR *p)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLDocument_write(IHTMLDocument2 *iface, SAFEARRAY *psarray)
+static HRESULT document_write(HTMLDocument *This, SAFEARRAY *psarray, BOOL ln)
 {
-    HTMLDocument *This = HTMLDOC_THIS(iface);
     nsAString nsstr;
     VARIANT *var;
-    ULONG i;
+    ULONG i, argc;
     nsresult nsres;
     HRESULT hres;
-
-    TRACE("(%p)->(%p)\n", iface, psarray);
 
     if(!This->nsdoc) {
         WARN("NULL nsdoc\n");
@@ -929,10 +927,14 @@ static HRESULT WINAPI HTMLDocument_write(IHTMLDocument2 *iface, SAFEARRAY *psarr
 
     nsAString_Init(&nsstr, NULL);
 
-    for(i=0; i < psarray->rgsabound[0].cElements; i++) {
+    argc = psarray->rgsabound[0].cElements;
+    for(i=0; i < argc; i++) {
         if(V_VT(var+i) == VT_BSTR) {
             nsAString_SetData(&nsstr, V_BSTR(var+i));
-            nsres = nsIDOMHTMLDocument_Write(This->nsdoc, &nsstr);
+            if(!ln || i != argc-1)
+                nsres = nsIDOMHTMLDocument_Write(This->nsdoc, &nsstr);
+            else
+                nsres = nsIDOMHTMLDocument_Writeln(This->nsdoc, &nsstr);
             if(NS_FAILED(nsres))
                 ERR("Write failed: %08x\n", nsres);
         }else {
@@ -946,11 +948,22 @@ static HRESULT WINAPI HTMLDocument_write(IHTMLDocument2 *iface, SAFEARRAY *psarr
     return S_OK;
 }
 
+static HRESULT WINAPI HTMLDocument_write(IHTMLDocument2 *iface, SAFEARRAY *psarray)
+{
+    HTMLDocument *This = HTMLDOC_THIS(iface);
+
+    TRACE("(%p)->(%p)\n", iface, psarray);
+
+    return document_write(This, psarray, FALSE);
+}
+
 static HRESULT WINAPI HTMLDocument_writeln(IHTMLDocument2 *iface, SAFEARRAY *psarray)
 {
     HTMLDocument *This = HTMLDOC_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, psarray);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, psarray);
+
+    return document_write(This, psarray, TRUE);
 }
 
 static HRESULT WINAPI HTMLDocument_open(IHTMLDocument2 *iface, BSTR url, VARIANT name,

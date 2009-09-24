@@ -52,8 +52,7 @@ Win32kProcessCallout(PEPROCESS Process,
         /* Allocate one if needed */
         /* FIXME - lock the process */
         Win32Process = ExAllocatePoolWithTag(NonPagedPool,
-            sizeof(PROCESSINFO),
-            TAG('W', '3', '2', 'p'));
+            sizeof(PROCESSINFO), 'p23W');
 
         if (!Win32Process) return STATUS_NO_MEMORY;
 
@@ -114,7 +113,7 @@ Win32kThreadCallout(PETHREAD Thread,
         /* FIXME - lock the process */
         Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(THREADINFO),
-                                            TAG('W', '3', '2', 't'));
+                                            't23W');
 
         if (!Win32Thread)
             return STATUS_NO_MEMORY;

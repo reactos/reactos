@@ -839,7 +839,7 @@ static HRESULT WINAPI HTMLInputTextElement_get_value(IHTMLInputTextElement *ifac
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    return IHTMLInputTextElement_get_value(HTMLINPUT(This), p);
+    return IHTMLInputElement_get_value(HTMLINPUT(This), p);
 }
 
 static HRESULT WINAPI HTMLInputTextElement_put_name(IHTMLInputTextElement *iface, BSTR v)

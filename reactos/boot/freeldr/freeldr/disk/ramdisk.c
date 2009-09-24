@@ -16,7 +16,6 @@
 
 PVOID gRamDiskBase;
 ULONG gRamDiskSize;
-extern BOOLEAN gCacheEnabled;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -172,11 +171,6 @@ RamDiskSwitchFromBios(VOID)
         MachVtbl.DiskReadLogicalSectors = RamDiskReadLogicalSectors;
         MachVtbl.DiskGetDriveGeometry = RamDiskGetDriveGeometry;
         MachVtbl.DiskGetCacheableBlockCount = RamDiskGetCacheableBlockCount;
-        
-        //
-        // Also disable cached FAT reads
-        //
-        gCacheEnabled = FALSE;
         
         //
         // Switch to ramdisk boot partition

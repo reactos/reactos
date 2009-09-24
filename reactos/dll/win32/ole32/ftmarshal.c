@@ -110,7 +110,7 @@ FTMarshalImpl_QueryInterface (LPMARSHAL iface, REFIID riid, LPVOID * ppv)
 
     FTMarshalImpl *This = impl_from_IMarshal(iface);
 
-    TRACE ("(%p)->(\n\tIID:\t%s,%p)\n", This, debugstr_guid (riid), ppv);
+    TRACE ("(%p)->(%s,%p)\n", This, debugstr_guid (riid), ppv);
     return IUnknown_QueryInterface (This->pUnkOuter, riid, ppv);
 }
 

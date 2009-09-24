@@ -494,8 +494,8 @@ KspFreeCreateItems(
         Entry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(RemoveHeadList(ListHead), CREATE_ITEM_ENTRY, Entry);
 
         /* caller shouldnt have any references */
-        ASSERT(Entry->ReferenceCount == 0);
-        ASSERT(IsListEmpty(&Entry->ObjectItemList));
+        //ASSERT(Entry->ReferenceCount == 0);
+        //ASSERT(IsListEmpty(&Entry->ObjectItemList));
 
         /* does the creator wish notification */
         if (Entry->ItemFreeCallback)
@@ -687,8 +687,7 @@ KsAllocateObjectHeader(
         }
     }
     /* store the object in the file object */
-    ASSERT(IoStack->FileObject->FsContext == NULL);
-    IoStack->FileObject->FsContext = ObjectHeader;
+    IoStack->FileObject->FsContext2 = ObjectHeader;
 
     /* store parent device */
     ObjectHeader->ParentDeviceObject = IoGetRelatedDeviceObject(IoStack->FileObject);
@@ -719,6 +718,8 @@ KsFreeObjectHeader(
     IN  PVOID Header)
 {
     PKSIOBJECT_HEADER ObjectHeader = (PKSIOBJECT_HEADER) Header;
+
+    DPRINT1("KsFreeObjectHeader Header %p Class %wZ\n", Header, &ObjectHeader->ObjectClass);
 
     if (ObjectHeader->ObjectClass.Buffer)
     {
@@ -825,7 +826,7 @@ KsAddObjectCreateItemToDeviceHeader(
         /* increment create item count */
         InterlockedIncrement(&Header->ItemListCount);
     }
-
+    DPRINT("KsAddObjectCreateItemToDeviceHeader Status %x\n", Status);
     return Status;
 }
 
@@ -898,7 +899,7 @@ KsAllocateObjectCreateItem(
         return STATUS_INVALID_PARAMETER_2;
 
     /* first allocate a create entry */
-    CreateEntry = AllocateItem(NonPagedPool, sizeof(PCREATE_ITEM_ENTRY));
+    CreateEntry = AllocateItem(NonPagedPool, sizeof(CREATE_ITEM_ENTRY));
 
     /* check for allocation success */
     if (!CreateEntry)
@@ -1121,7 +1122,7 @@ KsSynchronousIoControlDevice(
 
 
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext2;
 
     /* check if there is fast device io function */
     if (ObjectHeader && ObjectHeader->DispatchTable.FastDeviceIoControl)
@@ -1129,7 +1130,7 @@ KsSynchronousIoControlDevice(
         IoStatusBlock.Status = STATUS_UNSUCCESSFUL;
         IoStatusBlock.Information = 0;
 
-        /* it is send the request */
+        /* send the request */
         Status = ObjectHeader->DispatchTable.FastDeviceIoControl(FileObject, TRUE, InBuffer, InSize, OutBuffer, OutSize, IoControl, &IoStatusBlock, DeviceObject);
         /* check if the request was handled */
         //DPRINT("Handled %u Status %x Length %u\n", Status, IoStatusBlock.Status, IoStatusBlock.Information);
@@ -1155,9 +1156,18 @@ KsSynchronousIoControlDevice(
     }
 
 
-    /* HACK */
+    /* Store Fileobject */
     IoStack = IoGetNextIrpStackLocation(Irp);
     IoStack->FileObject = FileObject;
+
+    if (IoControl == IOCTL_KS_WRITE_STREAM)
+    {
+        Irp->AssociatedIrp.SystemBuffer = OutBuffer;
+    }
+    else if (IoControl == IOCTL_KS_READ_STREAM)
+    {
+        Irp->AssociatedIrp.SystemBuffer = InBuffer;
+    }
 
     IoSetCompletionRoutine(Irp, KspSynchronousIoControlDeviceCompletion, (PVOID)&IoStatusBlock, TRUE, TRUE, TRUE);
 
@@ -1709,7 +1719,7 @@ KsCompletePendingRequest(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1722,8 +1732,118 @@ KsCreateBusEnumObject(
     IN REFGUID InterfaceGuid OPTIONAL,
     IN PWCHAR ServiceRelativePath OPTIONAL)
 {
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    ULONG Length;
+    NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING ServiceKeyPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\");
+    PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    /* calculate sizeof bus enum device extension */
+    Length = wcslen(BusIdentifier) * sizeof(WCHAR);
+    Length += sizeof(BUS_ENUM_DEVICE_EXTENSION);
+
+    BusDeviceExtension = ExAllocatePool(NonPagedPool, Length);
+    if (!BusDeviceExtension)
+    {
+        /* not enough memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* zero device extension */
+    RtlZeroMemory(BusDeviceExtension, sizeof(BUS_ENUM_DEVICE_EXTENSION));
+
+    /* initialize bus device extension */
+    wcscpy(BusDeviceExtension->BusIdentifier, BusIdentifier);
+
+    /* allocate service path string */
+    Length = ServiceKeyPath.MaximumLength;
+    Length += BusDeviceObject->DriverObject->DriverExtension->ServiceKeyName.MaximumLength;
+
+    if (ServiceRelativePath)
+    {
+        /* relative path for devices */
+        Length += wcslen(ServiceRelativePath) + 2 * sizeof(WCHAR);
+    }
+
+    BusDeviceExtension->ServicePath.Length = 0;
+    BusDeviceExtension->ServicePath.MaximumLength = Length;
+    BusDeviceExtension->ServicePath.Buffer = ExAllocatePool(NonPagedPool, Length);
+
+    if (!BusDeviceExtension->ServicePath.Buffer)
+    {
+        /* not enough memory */
+        ExFreePool(BusDeviceExtension);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&BusDeviceExtension->ServicePath, &ServiceKeyPath);
+    RtlAppendUnicodeStringToString(&BusDeviceExtension->ServicePath, &BusDeviceObject->DriverObject->DriverExtension->ServiceKeyName);
+
+    if (ServiceRelativePath)
+    {
+        RtlAppendUnicodeToString(&BusDeviceExtension->ServicePath, L"\\");
+        RtlAppendUnicodeToString(&BusDeviceExtension->ServicePath, ServiceRelativePath);
+    }
+
+    if (InterfaceGuid)
+    {
+        /* register an device interface */
+        Status = IoRegisterDeviceInterface(PhysicalDeviceObject, InterfaceGuid, NULL, &BusDeviceExtension->SymbolicLinkName);
+
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
+            ExFreePool(BusDeviceExtension);
+            return Status;
+        }
+
+        /* now enable device interface */
+        Status = IoSetDeviceInterfaceState(&BusDeviceExtension->SymbolicLinkName, TRUE);
+
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
+            ExFreePool(BusDeviceExtension);
+            return Status;
+        }
+
+        /* set state enabled */
+        BusDeviceExtension->Enabled = TRUE;
+    }
+
+    /* store device objects */
+    BusDeviceExtension->BusDeviceObject = BusDeviceObject;
+    BusDeviceExtension->PnpDeviceObject = PnpDeviceObject;
+    BusDeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+
+    if (!PnpDeviceObject)
+    {
+        BusDeviceExtension->PnpDeviceObject = IoAttachDeviceToDeviceStack(BusDeviceObject, PhysicalDeviceObject);
+
+        if (!BusDeviceExtension->PnpDeviceObject)
+        {
+            /* failed to attach device */
+            if (BusDeviceExtension->Enabled)
+            {
+                IoSetDeviceInterfaceState(&BusDeviceExtension->SymbolicLinkName, FALSE);
+                RtlFreeUnicodeString(&BusDeviceExtension->SymbolicLinkName);
+            }
+
+            /* free device extension */
+            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
+            ExFreePool(BusDeviceExtension);
+
+            return STATUS_DEVICE_REMOVED;
+        }
+    }
+
+    /* attach device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)BusDeviceObject->DeviceExtension;
+    DeviceExtension->DeviceHeader = (PKSIDEVICE_HEADER)BusDeviceExtension;
+
+    /* FIXME scan bus and invalidate device relations */
+    return Status;
 }
 
  NTSTATUS
@@ -1891,7 +2011,7 @@ KsGetBusEnumPnpDeviceObject(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PVOID
@@ -1899,12 +2019,19 @@ NTAPI
 KsGetFirstChild(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader;
+
+    /* get the basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* type has to be either a device or a filter factory */
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory);
+
+    return (PVOID)BasicHeader->FirstChild.Filter;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PVOID
@@ -1912,8 +2039,15 @@ NTAPI
 KsGetNextSibling(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader;
+
+    /* get the basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+           BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    return (PVOID)BasicHeader->Next.Pin;
 }
 
 /*

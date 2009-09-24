@@ -576,7 +576,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         /* Allocate the IOPM save area. */
         Ki386IopmSaveArea = ExAllocatePoolWithTag(PagedPool,
                                                   PAGE_SIZE * 2,
-                                                  TAG('K', 'e', ' ', ' '));
+                                                  '  eK');
         if (!Ki386IopmSaveArea)
         {
             /* Bugcheck. We need this for V86/VDM support. */
@@ -607,20 +607,20 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIPCR *Pcr,
                          IN PKTSS *Tss)
 {
-    KDESCRIPTOR GdtDescriptor = { 0, 0, 0 }, IdtDescriptor = { 0, 0, 0 };
+    KDESCRIPTOR GdtDescriptor, IdtDescriptor;
     KGDTENTRY TssSelector, PcrSelector;
-    USHORT Tr = 0, Fs;
+    USHORT Tr, Fs;
 
     /* Get GDT and IDT descriptors */
-    Ke386GetGlobalDescriptorTable(*(PKDESCRIPTOR)&GdtDescriptor.Limit);
-    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
+    Ke386GetGlobalDescriptorTable(&GdtDescriptor.Limit);
+    __sidt(&IdtDescriptor.Limit);
 
     /* Save IDT and GDT */
     *Gdt = (PKGDTENTRY)GdtDescriptor.Base;
     *Idt = (PKIDTENTRY)IdtDescriptor.Base;
 
     /* Get TSS and FS Selectors */
-    Ke386GetTr(Tr);
+    Ke386GetTr(&Tr);
     if (Tr != KGDT_TSS) Tr = KGDT_TSS; // FIXME: HACKHACK
     Fs = Ke386GetFs();
 

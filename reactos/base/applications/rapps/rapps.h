@@ -5,9 +5,14 @@
 #include <commctrl.h>
 #include <richedit.h>
 #include <shlwapi.h>
+#include <shlobj.h>
 #include <wchar.h>
 
+#include <rappsmsg.h>
+
 #include "resource.h"
+
+#define APPLICATION_DATEBASE_URL L"http://opendn.org/rappmgr.cab"
 
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256
@@ -53,9 +58,9 @@ typedef struct
 {
     INT Category;
     WCHAR szName[MAX_PATH];
-	WCHAR szRegName[MAX_PATH];
+    WCHAR szRegName[MAX_PATH];
     WCHAR szVersion[MAX_PATH];
-	WCHAR szLicence[MAX_PATH];
+    WCHAR szLicence[MAX_PATH];
     WCHAR szDesc[MAX_PATH];
     WCHAR szSize[MAX_PATH];
     WCHAR szUrlSite[MAX_PATH];
@@ -64,26 +69,46 @@ typedef struct
 
 } APPLICATION_INFO, *PAPPLICATION_INFO;
 
+typedef struct
+{
+    BOOL bSaveWndPos;
+    BOOL bUpdateAtStart;
+    BOOL bLogEnabled;
+    WCHAR szDownloadDir[MAX_PATH];
+    BOOL bDelInstaller;
+    /* Window Pos */
+    BOOL Maximized;
+    INT Left;
+    INT Top;
+    INT Right;
+    INT Bottom;
+
+} SETTINGS_INFO, *PSETTINGS_INFO;
+
 /* available.c */
 typedef BOOL (CALLBACK *AVAILENUMPROC)(APPLICATION_INFO Info);
 BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
 BOOL ShowAvailableAppInfo(INT Index);
+BOOL UpdateAppsDB(VOID);
 
 /* installdlg.c */
 BOOL InstallApplication(INT Index);
 
 /* installed.c */
 typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, LPWSTR lpName, LPWSTR lpKeyName, LPARAM lParam);
-BOOL EnumInstalledApplications(INT EnumType, APPENUMPROC lpEnumProc);
+BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
 BOOL GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString);
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
-BOOL IsInstalledApplication(LPWSTR lpRegName);
+BOOL IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey);
 
 /* winmain.c */
 extern HWND hMainWnd;
 extern HINSTANCE hInst;
 extern INT SelectedEnumType;
+extern SETTINGS_INFO SettingsInfo;
+VOID SaveSettings(HWND hwnd);
+VOID FillDafaultSettings(PSETTINGS_INFO pSettingsInfo);
 
 /* listview.c */
 extern HWND hListView;
@@ -109,6 +134,9 @@ VOID SetWelcomeText(VOID);
 VOID ShowPopupMenu(HWND hwnd, UINT MenuID);
 BOOL StartProcess(LPWSTR lpPath, BOOL Wait);
 BOOL ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath);
+VOID InitLogs(VOID);
+VOID FreeLogs(VOID);
+BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
 
 /* parser.c */
 INT ParserGetString(LPCWSTR section, LPCWSTR entry, LPWSTR buffer, UINT len, LPCWSTR filename);

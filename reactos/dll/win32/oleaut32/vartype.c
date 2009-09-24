@@ -5788,6 +5788,16 @@ HRESULT WINAPI VarDecCmp(const DECIMAL* pDecLeft, const DECIMAL* pDecRight)
   HRESULT hRet;
   DECIMAL result;
 
+  if (!pDecLeft || !pDecRight)
+    return VARCMP_NULL;
+
+  if ((!(DEC_SIGN(pDecLeft) & DECIMAL_NEG)) && (DEC_SIGN(pDecRight) & DECIMAL_NEG) &&
+      (DEC_HI32(pDecLeft) | DEC_MID32(pDecLeft) | DEC_LO32(pDecLeft)))
+    return VARCMP_GT;
+  else if ((DEC_SIGN(pDecLeft) & DECIMAL_NEG) && (!(DEC_SIGN(pDecRight) & DECIMAL_NEG)) &&
+      (DEC_HI32(pDecLeft) | DEC_MID32(pDecLeft) | DEC_LO32(pDecLeft)))
+    return VARCMP_LT;
+
   /* Subtract right from left, and compare the result to 0 */
   hRet = VarDecSub(pDecLeft, pDecRight, &result);
 

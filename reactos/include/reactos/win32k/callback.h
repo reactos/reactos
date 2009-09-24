@@ -8,7 +8,8 @@
 #define USER32_CALLBACK_HOOKPROC              (4)
 #define USER32_CALLBACK_EVENTPROC             (5)
 #define USER32_CALLBACK_LOADMENU              (6)
-#define USER32_CALLBACK_MAXIMUM               (6)
+#define USER32_CALLBACK_CLIENTTHREADSTARTUP   (7)
+#define USER32_CALLBACK_MAXIMUM               (7)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -84,5 +85,7 @@ NTSTATUS WINAPI
 User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength);
 
 #endif /* __INCLUDE_USER32_CALLBACK_H */

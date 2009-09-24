@@ -100,7 +100,6 @@
 		<compilerflag>/Zl</compilerflag>
 		<compilerflag>/Zi</compilerflag>
 		<compilerflag>/W1</compilerflag>
-		<compilerflag>/FIwine/typeof.h</compilerflag>
 	</group>
 
 	<group compilerset="gcc">

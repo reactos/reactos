@@ -62,13 +62,26 @@ typedef struct
     KMUTEX ControlMutex;
     LIST_ENTRY EventList;
     KSPIN_LOCK EventListLock;
-
     union
     {
         PKSDEVICE KsDevice;
         PKSFILTERFACTORY KsFilterFactory;
         PKSFILTER KsFilter;
     }Parent;
+
+    union
+    {
+        PKSFILTERFACTORY FilterFactory;
+        PKSFILTER Filter;
+        PKSPIN Pin;
+    }Next;
+
+    union
+    {
+        PKSFILTERFACTORY FilterFactory;
+        PKSFILTER Filter;
+    }FirstChild;
+
 }KSBASIC_HEADER, *PKSBASIC_HEADER;
 
 typedef struct
@@ -131,5 +144,20 @@ typedef struct
 }KSEVENT_CTX, *PKSEVENT_CTX;
 
 typedef BOOLEAN (NTAPI *PKSEVENT_SYNCHRONIZED_ROUTINE)(PKSEVENT_CTX Context);
+
+typedef struct
+{
+    BOOLEAN Enabled;
+
+    PDEVICE_OBJECT PnpDeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT BusDeviceObject;
+
+    UNICODE_STRING ServicePath;
+    UNICODE_STRING SymbolicLinkName;
+
+    WCHAR BusIdentifier[1];
+}BUS_ENUM_DEVICE_EXTENSION, *PBUS_ENUM_DEVICE_EXTENSION;
+
 
 #endif

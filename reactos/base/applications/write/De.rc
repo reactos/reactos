@@ -27,3 +27,4 @@ STRINGTABLE
 {
     IDS_FAILED, "Der Start von Wordpad ist fehlgeschlagen"
 }
+#pragma code_page(default)

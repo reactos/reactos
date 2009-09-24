@@ -754,31 +754,31 @@ static HRESULT init_constructors(script_ctx_t *ctx, DispatchEx *object_prototype
     if(FAILED(hres))
         return hres;
 
-    hres = create_array_constr(ctx, &ctx->array_constr);
+    hres = create_array_constr(ctx, object_prototype, &ctx->array_constr);
     if(FAILED(hres))
         return hres;
 
-    hres = create_bool_constr(ctx, &ctx->bool_constr);
+    hres = create_bool_constr(ctx, object_prototype, &ctx->bool_constr);
     if(FAILED(hres))
         return hres;
 
-    hres = create_date_constr(ctx, &ctx->date_constr);
+    hres = create_date_constr(ctx, object_prototype, &ctx->date_constr);
     if(FAILED(hres))
         return hres;
 
-    hres = init_error_constr(ctx);
+    hres = init_error_constr(ctx, object_prototype);
     if(FAILED(hres))
         return hres;
 
-    hres = create_number_constr(ctx, &ctx->number_constr);
+    hres = create_number_constr(ctx, object_prototype, &ctx->number_constr);
     if(FAILED(hres))
         return hres;
 
-    hres = create_regexp_constr(ctx, &ctx->regexp_constr);
+    hres = create_regexp_constr(ctx, object_prototype, &ctx->regexp_constr);
     if(FAILED(hres))
         return hres;
 
-    hres = create_string_constr(ctx, &ctx->string_constr);
+    hres = create_string_constr(ctx, object_prototype, &ctx->string_constr);
     if(FAILED(hres))
         return hres;
 

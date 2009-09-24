@@ -22,7 +22,6 @@
 #include "winerror.h"
 #include "wine/debug.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include "wined3d_private.h"
@@ -78,7 +77,9 @@ DWORD IWineD3DPaletteImpl_Size(DWORD dwFlags) {
         case WINEDDPCAPS_2BIT: return 4;
         case WINEDDPCAPS_4BIT: return 16;
         case WINEDDPCAPS_8BIT: return 256;
-        default: assert(0); return 256;
+        default:
+            FIXME("Unhandled size bits %#x.\n", dwFlags & SIZE_BITS);
+            return 256;
     }
 }
 

@@ -164,7 +164,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                     /* Allocate space for the buffer */
                     Buffer = ExAllocatePoolWithTag(PagedPool,
                                                    Dest->Length + sizeof(WCHAR),
-                                                   TAG('U', 'S', 'T', 'R'));
+                                                   'RTSU');
                     if (Buffer == NULL)
                     {
                         Status = STATUS_INSUFFICIENT_RESOURCES;

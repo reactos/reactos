@@ -2855,7 +2855,7 @@ typedef struct {
 extern NTSYSAPI PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #else
-extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;
+extern __declspec(dllexport) HAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH (&HalDispatchTable)
 #endif
 
@@ -2876,14 +2876,6 @@ extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;
 #define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
 #define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
 #define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
-
-#ifndef _NTOSKRNL_
-#define HalDeviceControl                HALDISPATCH->HalDeviceControl
-#define HalIoAssignDriveLetters         HALDISPATCH->HalIoAssignDriveLetters
-#define HalIoReadPartitionTable         HALDISPATCH->HalIoReadPartitionTable
-#define HalIoSetPartitionInformation    HALDISPATCH->HalIoSetPartitionInformation
-#define HalIoWritePartitionTable        HALDISPATCH->HalIoWritePartitionTable
-#endif
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
@@ -4948,7 +4940,7 @@ typedef struct _PHYSICAL_MEMORY_RANGE {
 } PHYSICAL_MEMORY_RANGE, *PPHYSICAL_MEMORY_RANGE;
 
 typedef ULONG_PTR
-(*PDRIVER_VERIFIER_THUNK_ROUTINE)(
+(NTAPI *PDRIVER_VERIFIER_THUNK_ROUTINE)(
   IN PVOID  Context);
 
 typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
@@ -5593,7 +5585,7 @@ typedef VOID
     IN ULONG Length
 );
 
-#define PCI_DATA_TAG TAG('P', 'C', 'I', ' ')
+#define PCI_DATA_TAG ' ICP'
 #define PCI_DATA_VERSION 1
 
 typedef struct _PCIBUSDATA

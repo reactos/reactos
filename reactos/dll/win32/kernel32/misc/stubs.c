@@ -1047,7 +1047,7 @@ AddLocalAlternateComputerNameW(LPWSTR lpName, PNTSTATUS Status)
 
 NTSTATUS
 WINAPI
-BaseCleanupAppcompatCache()
+BaseCleanupAppcompatCache(VOID)
 {
     STUB;
     return STATUS_NOT_IMPLEMENTED;

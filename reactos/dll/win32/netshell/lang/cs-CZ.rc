@@ -10,7 +10,6 @@ BEGIN
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Nastavit", IDC_CONFIGURE, 189, 38, 50, 14
     LTEXT "Vybrané komponenty jsou používány tímto pøipojením:", -1, 9, 59, 217, 8
-    LISTBOX IDC_COMPONENTSLIST, 9, 71, 230, 55, LBS_NOTIFY | WS_VSCROLL | WS_BORDER | LBS_NOINTEGRALHEIGHT
     PUSHBUTTON "&Instalovat", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Odstranit", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES, 174, 130, 65, 14
@@ -43,7 +42,7 @@ BEGIN
     LTEXT "Bytù:", -1, 17, 115, 32, 8
     RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
-    PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES, 10, 150, 50, 14
+    PUSHBUTTON "&Vlastnosti", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
     PUSHBUTTON "&Zakázat", IDC_ENDISABLE, 66, 150, 50, 14
     RTEXT "",IDC_STATUS,83,20,98,8
     RTEXT "",IDC_DURATION,83,34,98,8
@@ -113,6 +112,7 @@ BEGIN
     IDS_NET_REPAIR              "Repair"
     IDS_NET_CREATELINK          "Create Shortcut"
     IDS_NET_DELETE              "Delete"
+    IDS_NET_RENAME              "Rename"
     IDS_NET_PROPERTIES          "Properties"
 
     IDS_FORMAT_BIT              "%u Bit/s"
@@ -124,4 +124,3 @@ BEGIN
     IDS_ASSIGNED_DHCP           "Pøiøazeno DHCP"
     IDS_ASSIGNED_MANUAL         "Ruènì nastaveno"
 END
-

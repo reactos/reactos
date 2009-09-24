@@ -108,6 +108,7 @@ const char *string_of_type(unsigned char type)
     case RPC_FC_CARRAY: return "FC_CARRAY";
     case RPC_FC_CVARRAY: return "FC_CVARRAY";
     case RPC_FC_BOGUS_ARRAY: return "FC_BOGUS_ARRAY";
+    case RPC_FC_ALIGNM2: return "FC_ALIGNM2";
     case RPC_FC_ALIGNM4: return "FC_ALIGNM4";
     case RPC_FC_ALIGNM8: return "FC_ALIGNM8";
     case RPC_FC_POINTER: return "FC_POINTER";
@@ -221,6 +222,64 @@ enum typegen_type typegen_detect_type(const type_t *type, const attr_list_t *att
     return TGT_INVALID;
 }
 
+static type_t *get_user_type(const type_t *t, const char **pname);
+
+static int type_contains_iface(const type_t *type)
+{
+  enum typegen_type typegen_type;
+  var_list_t *fields;
+  const var_t *field;
+
+  typegen_type = typegen_detect_type(type, type->attrs, TDT_IGNORE_STRINGS);
+
+  switch(typegen_type)
+  {
+  case TGT_USER_TYPE:
+    return type_contains_iface(get_user_type(type, NULL));
+
+  case TGT_BASIC:
+  case TGT_ENUM:
+    return FALSE;
+
+  case TGT_POINTER:
+    return type_contains_iface(type_pointer_get_ref(type));
+
+  case TGT_ARRAY:
+    return type_contains_iface(type_array_get_element(type));
+
+  case TGT_IFACE_POINTER:
+    return TRUE;
+
+  case TGT_STRUCT:
+    fields = type_struct_get_fields(type);
+    if (fields) LIST_FOR_EACH_ENTRY( field, fields, const var_t, entry )
+    {
+      if(type_contains_iface(field->type))
+        return TRUE;
+    }
+    return FALSE;
+
+  case TGT_UNION:
+    fields = type_union_get_cases(type);
+    if (fields) LIST_FOR_EACH_ENTRY( field, fields, const var_t, entry )
+    {
+      if(field->type && type_contains_iface(field->type))
+        return TRUE;
+    }
+    return FALSE;
+
+    case TGT_STRING:
+        /* shouldn't get here because of TDT_IGNORE_STRINGS above. fall through */
+    case TGT_INVALID:
+    case TGT_CTXT_HANDLE:
+    case TGT_CTXT_HANDLE_POINTER:
+        /* checking after parsing should mean that we don't get here. if we do,
+         * it's a checker bug */
+      assert(0);
+  }
+  return FALSE;
+}
+
 unsigned char get_struct_fc(const type_t *type)
 {
   int has_pointer = 0;
@@ -279,8 +338,10 @@ unsigned char get_struct_fc(const type_t *type)
         if (get_enum_fc(t) == RPC_FC_ENUM16)
             return RPC_FC_BOGUS_STRUCT;
         break;
-    case TGT_POINTER:
     case TGT_ARRAY:
+        if(type_contains_iface(type_array_get_element(t)))
+            return RPC_FC_BOGUS_STRUCT;
+    case TGT_POINTER:
         if (get_pointer_fc(t, field->attrs, FALSE) == RPC_FC_RP || pointer_size != 4)
             return RPC_FC_BOGUS_STRUCT;
         has_pointer = 1;
@@ -1094,6 +1155,7 @@ static unsigned int field_memsize(const type_t *type, unsigned int *offset)
 static unsigned int fields_memsize(const var_list_t *fields, unsigned int *align)
 {
     unsigned int size = 0;
+    unsigned int max_align;
     const var_t *v;
 
     if (!fields) return 0;
@@ -1102,11 +1164,15 @@ static unsigned int fields_memsize(const var_list_t *fields, unsigned int *align
         unsigned int falign = 0;
         unsigned int fsize = type_memsize(v->type, &falign);
         if (*align < falign) *align = falign;
+        if (falign > packing) falign = packing;
         size = ROUND_SIZE(size, falign);
         size += fsize;
     }
 
-    size = ROUND_SIZE(size, *align);
+    max_align = *align;
+    if(max_align > packing) max_align = packing;
+    size = ROUND_SIZE(size, max_align);
+
     return size;
 }
 
@@ -1144,6 +1210,7 @@ int get_padding(const var_list_t *fields)
         type_t *ft = f->type;
         unsigned int align = 0;
         unsigned int size = type_memsize(ft, &align);
+        if (align > packing) align = packing;
         if (align > salign) salign = align;
         offset = ROUND_SIZE(offset, align);
         offset += size;
@@ -1409,12 +1476,14 @@ static void write_user_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
     unsigned int align = 0, ualign = 0;
     const char *name = NULL;
     type_t *utype = get_user_type(type, &name);
-    unsigned int usize = user_type_has_variable_size(utype) ? 0 : type_memsize(utype, &ualign);
+    unsigned int usize = type_memsize(utype, &ualign);
     unsigned int size = type_memsize(type, &align);
     unsigned short funoff = user_type_offset(name);
     short reloff;
 
     guard_rec(type);
+
+    if(user_type_has_variable_size(utype)) usize = 0;
 
     if (type_get_type(utype) == TYPE_BASIC ||
         type_get_type(utype) == TYPE_ENUM)
@@ -1451,7 +1520,7 @@ static void write_user_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
     print_start_tfs_comment(file, type, start);
     print_file(file, 2, "0x%x,\t/* FC_USER_MARSHAL */\n", RPC_FC_USER_MARSHAL);
     print_file(file, 2, "0x%x,\t/* Alignment= %d, Flags= %02x */\n",
-               flags | (align - 1), align - 1, flags);
+               flags | (ualign - 1), ualign - 1, flags);
     print_file(file, 2, "NdrFcShort(0x%hx),\t/* Function offset= %hu */\n", funoff, funoff);
     print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", size, size);
     print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", usize, usize);
@@ -2210,6 +2279,7 @@ static void write_struct_members(FILE *file, const type_t *type,
         type_t *ft = field->type;
         unsigned int align = 0;
         unsigned int size = type_memsize(ft, &align);
+        if(align > packing) align = packing;
         if (salign < align) salign = align;
 
         if (!is_conformant_array(ft) || type_array_is_decl_as_ptr(ft))
@@ -2219,6 +2289,9 @@ static void write_struct_members(FILE *file, const type_t *type,
                 unsigned char fc = 0;
                 switch (align)
                 {
+                case 2:
+                    fc = RPC_FC_ALIGNM2;
+                    break;
                 case 4:
                     fc = RPC_FC_ALIGNM4;
                     break;

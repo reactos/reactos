@@ -821,9 +821,9 @@ CmpMarkIndexDirty(IN PHHIVE Hive,
         SearchName.Length = CmpCompressedNameSize(Node->Name,
                                                   Node->NameLength);
         SearchName.MaximumLength = SearchName.Length;
-        SearchName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                  SearchName.Length,
-                                                  TAG_CM);
+        SearchName.Buffer = CmpAllocate(SearchName.Length,
+                                        TRUE,
+                                        TAG_CM);
         if (!SearchName.Buffer)
         {
             /* Fail */
@@ -917,7 +917,7 @@ CmpMarkIndexDirty(IN PHHIVE Hive,
             if (Child != HCELL_NIL)
             {
                 /* We found it, free the name now */
-                if (IsCompressed) ExFreePool(SearchName.Buffer);
+                if (IsCompressed) CmpFree(SearchName.Buffer, 0);
 
                 /* Release the parent key */
                 HvReleaseCell(Hive, ParentKey);
@@ -942,7 +942,7 @@ Quickie:
     if (CellToRelease != HCELL_NIL) HvReleaseCell(Hive, CellToRelease);
 
     /* Free the search name and return failure */
-    if (IsCompressed) ExFreePool(SearchName.Buffer);
+    if (IsCompressed) CmpFree(SearchName.Buffer, 0);
     return FALSE;
 }
 
@@ -1758,9 +1758,9 @@ CmpRemoveSubKey(IN PHHIVE Hive,
         if (SearchName.MaximumLength > sizeof(Buffer))
         {
             /* Allocate one */
-            SearchName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                      SearchName.Length,
-                                                      TAG_CM);
+            SearchName.Buffer = CmpAllocate(SearchName.Length,
+                                            TRUE,
+                                            TAG_CM);
             if (!SearchName.Buffer) return FALSE;
         }
         else
@@ -1899,7 +1899,7 @@ Exit:
     if ((IsCompressed) && (SearchName.MaximumLength > sizeof(Buffer)))
     {
         /* Free the buffer we allocated */
-        ExFreePool(SearchName.Buffer);
+        CmpFree(SearchName.Buffer, 0);
     }
 
     /* Return the result */

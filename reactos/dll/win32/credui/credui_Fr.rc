@@ -17,6 +17,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#include "credui_resources.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
@@ -49,5 +52,4 @@ STRINGTABLE DISCARDABLE
     IDS_CAPSLOCKONTITLE "VERR.MAJ est activé"
     IDS_CAPSLOCKON      "Le verrouillage majuscule étant activé, cela pourrait provoquer une erreur lors de la saisie de votre mot de passe.\n\nAppuyez sur la touche VERR.MAJ de votre clavier afin de désactiver le verrouilage majuscule avant\nde saisir votre mot de passe."
 }
-
 #pragma code_page(default)

@@ -47,8 +47,6 @@ XboxMachInit(const char *CmdLine)
   MachVtbl.Beep = PcBeep;
   MachVtbl.PrepareForReactOS = XboxPrepareForReactOS;
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
-  MachVtbl.DiskGetBootVolume = DiskGetBootVolume;
-  MachVtbl.DiskGetSystemVolume = DiskGetSystemVolume;
   MachVtbl.DiskGetBootPath = DiskGetBootPath;
   MachVtbl.DiskGetBootDevice = DiskGetBootDevice;
   MachVtbl.DiskBootingFromFloppy = DiskBootingFromFloppy;

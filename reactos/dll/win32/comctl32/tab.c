@@ -1445,7 +1445,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
 
 
 static void
-TAB_EraseTabInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect)
+TAB_EraseTabInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, const RECT *drawRect)
 {
     LONG     lStyle  = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
     HBRUSH   hbr = CreateSolidBrush (comctl32_color.clrBtnFace);
@@ -2810,8 +2810,16 @@ TAB_GetItemT (TAB_INFO *infoPtr, INT iItem, LPTCITEMW tabItem, BOOL bUnicode)
 
   TRACE("(%p,%d,%p,%s)\n", infoPtr, iItem, tabItem, bUnicode ? "true" : "false");
 
+  if (!tabItem) return FALSE;
+
   if (iItem < 0 || iItem >= infoPtr->uNumItem)
+  {
+    /* init requested fields */
+    if (tabItem->mask & TCIF_IMAGE) tabItem->iImage  = 0;
+    if (tabItem->mask & TCIF_PARAM) tabItem->lParam  = 0;
+    if (tabItem->mask & TCIF_STATE) tabItem->dwState = 0;
     return FALSE;
+  }
 
   wineItem = TAB_GetItem(infoPtr, iItem);
 
@@ -3223,7 +3231,7 @@ TAB_SetExtendedStyle (TAB_INFO *infoPtr, DWORD exMask, DWORD exStyle)
 }
 
 static inline LRESULT
-TAB_GetExtendedStyle (TAB_INFO *infoPtr)
+TAB_GetExtendedStyle (const TAB_INFO *infoPtr)
 {
   return infoPtr->exStyle;
 }

@@ -1346,7 +1346,7 @@ MUI_ERROR esESErrorEntries[] =
         "\n"
         "Crear o borrar particiones puede destruir la tabla de particiones.\n"
         "\n"
-        "  \x07  Presione F3 para salir del instalador."
+        "  \x07  Presione F3 para salir del instalador.\n"
         "  \x07  Presione ENTER para continuar.",
         "F3= Salir  ENTER = Continuar"
     },

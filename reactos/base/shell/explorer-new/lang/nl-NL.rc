@@ -53,28 +53,20 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_START             "&Start"
-    IDS_PROPERTIES        "&Eigenschappen"
-    IDS_OPEN_ALL_USERS    "&Alle Gebruikers weergeven"
-    IDS_EXPLORE_ALL_USERS "Alle Gebruikers V&erkennen"
-END
-
 
 IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Taakbalk"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Taakbalkweergave", IDC_STATIC, 6,6,240,121, WS_DISABLED
-    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21, WS_DISABLED
-    AUTOCHECKBOX    "Taakbalk &vergrendelen", IDC_TASKBARPROP_LOCK, 13,45,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Taakbalk a&utomatisch verbergen", IDC_TASKBARPROP_HIDE, 13,58,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Taakbalk altijd o&p voorgrond weergeven", IDC_TASKBARPROP_ONTOP, 13,71,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Gelijksoortige knoppen gegroepeerd weergeven", IDC_TASKBARPROP_GROUP, 13,84,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Werkbalk &Snel starten weergeven", IDC_TASKBARPROP_SHOWQL, 13,97,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Venstervoorbeelden (miniatuurweergaven) &weergeven", IDC_TASKBARPROP_WNDPREV, 13,110,200,10, WS_DISABLED
+    GROUPBOX        "Taakbalkweergave", IDC_STATIC, 6,6,240,121
+    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
+    AUTOCHECKBOX    "Taakbalk &vergrendelen", IDC_TASKBARPROP_LOCK, 13,45,200,10
+    AUTOCHECKBOX    "Taakbalk a&utomatisch verbergen", IDC_TASKBARPROP_HIDE, 13,58,200,10
+    AUTOCHECKBOX    "Taakbalk altijd o&p voorgrond weergeven", IDC_TASKBARPROP_ONTOP, 13,71,200,10
+    AUTOCHECKBOX    "&Gelijksoortige knoppen gegroepeerd weergeven", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX    "Werkbalk &Snel starten weergeven", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    AUTOCHECKBOX    "Venstervoorbeelden (miniatuurweergaven) &weergeven", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -121,6 +113,14 @@ BEGIN
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
 END
 
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_START             "&Start"
+    IDS_PROPERTIES        "&Eigenschappen"
+    IDS_OPEN_ALL_USERS    "&Alle Gebruikers weergeven"
+    IDS_EXPLORE_ALL_USERS "Alle Gebruikers V&erkennen"
+END
 
 STRINGTABLE DISCARDABLE
 BEGIN

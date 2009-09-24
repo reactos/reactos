@@ -120,20 +120,6 @@ KsDispatchSetSecurity(
 KSDDKAPI
 NTSTATUS
 NTAPI
-KsDispatchSpecificProperty(
-    IN  PIRP Irp,
-    IN  PFNKSHANDLER Handler)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
 KsDispatchSpecificMethod(
     IN  PIRP Irp,
     IN  PFNKSHANDLER Handler)
@@ -569,7 +555,7 @@ KsStreamIo(
     if (RequestorMode || ExGetPreviousMode() == KernelMode)
     {
         /* requestor is from kernel land */
-        ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+        ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext2;
 
         if (ObjectHeader)
         {
@@ -649,7 +635,7 @@ KsStreamIo(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -659,8 +645,403 @@ KsProbeStreamIrp(
     IN  ULONG ProbeFlags,
     IN  ULONG HeaderSize)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PMDL Mdl;
+    PVOID Buffer;
+    LOCK_OPERATION Operation;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PKSSTREAM_HEADER StreamHeader;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Length;
+    BOOLEAN AllocateMdl = FALSE;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    Length = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+    if (Irp->RequestorMode == KernelMode || Irp->AssociatedIrp.SystemBuffer)
+    {
+AllocMdl:
+        /* check if alloc mdl flag is passed */
+        if (!(ProbeFlags & KSPROBE_ALLOCATEMDL))
+        {
+            /* nothing more to do */
+            return STATUS_SUCCESS;
+        }
+        if (Irp->MdlAddress)
+        {
+ProbeMdl:
+            if (ProbeFlags & KSPROBE_PROBEANDLOCK)
+            {
+                if (Irp->MdlAddress->MdlFlags & (MDL_PAGES_LOCKED | MDL_SOURCE_IS_NONPAGED_POOL))
+                {
+                    if (ProbeFlags & KSPROBE_SYSTEMADDRESS)
+                    {
+                        _SEH2_TRY
+                        {
+                            /* loop through all mdls and probe them */
+                            Mdl = Irp->MdlAddress;
+                            do
+                            {
+                                /* the mapping can fail */
+                                Mdl->MdlFlags |= MDL_MAPPING_CAN_FAIL;
+
+                                if (Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | MDL_SOURCE_IS_NONPAGED_POOL))
+                                {
+                                    /* no need to probe these pages */
+                                    Buffer = Mdl->MappedSystemVa;
+                                }
+                                else
+                                {
+                                    /* probe that mdl */
+                                    Buffer = MmMapLockedPages(Mdl, KernelMode);
+                                }
+
+                                /* check if the mapping succeeded */
+                                if (!Buffer)
+                                {
+                                    /* raise exception we'll catch */
+                                    ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                                }
+
+                                /* iterate to next mdl */
+                                Mdl = Mdl->Next;
+
+                            }while(Mdl);
+                        }
+                        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                        {
+                            /* Exception, get the error code */
+                            Status = _SEH2_GetExceptionCode();
+                        } _SEH2_END;
+                    }
+                }
+                else
+                {
+                    _SEH2_TRY
+                    {
+                        /* loop through all mdls and probe them */
+                        Mdl = Irp->MdlAddress;
+
+                        /* determine operation */
+                        Operation = (ProbeFlags & KSPROBE_STREAMWRITE) ? IoWriteAccess : IoReadAccess;
+
+                        do
+                        {
+                            /* probe the pages */
+                            MmProbeAndLockPages(Mdl, Irp->RequestorMode, Operation);
+
+                            if (ProbeFlags & KSPROBE_SYSTEMADDRESS)
+                            {
+                                /* the mapping can fail */
+                                Mdl->MdlFlags |= MDL_MAPPING_CAN_FAIL;
+
+                                if (Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | MDL_SOURCE_IS_NONPAGED_POOL))
+                                {
+                                    /* no need to probe these pages */
+                                    Buffer = Mdl->MappedSystemVa;
+                                }
+                                else
+                                {
+                                    /* probe that mdl */
+                                    Buffer = MmMapLockedPages(Mdl, KernelMode);
+                                }
+
+                                /* check if the mapping succeeded */
+                                if (!Buffer)
+                                {
+                                    /* raise exception we'll catch */
+                                    ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                                }
+                            }
+
+                            /* iterate to next mdl */
+                            Mdl = Mdl->Next;
+
+                        }while(Mdl);
+                    }
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        /* Exception, get the error code */
+                        Status = _SEH2_GetExceptionCode();
+                    } _SEH2_END;
+                }
+            }
+            return Status;
+        }
+
+        /* check all stream headers */
+        StreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+        ASSERT(StreamHeader);
+        _SEH2_TRY
+        {
+            do
+            {
+                if (HeaderSize)
+                {
+                    /* does the supplied header size match stream header size and no type changed */
+                    if (StreamHeader->Size != HeaderSize && !(StreamHeader->OptionsFlags & KSSTREAM_HEADER_OPTIONSF_TYPECHANGED))
+                    {
+                        /* invalid stream header */
+                        ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                    }
+                }
+                else
+                {
+                    /* stream must be at least of size KSSTREAM_HEADER and size must be 8-byte block aligned */
+                    if (StreamHeader->Size < sizeof(KSSTREAM_HEADER) || (StreamHeader->Size & 7))
+                    {
+                        /* invalid stream header */
+                        ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                    }
+                }
+
+                if (Length < StreamHeader->Size)
+                {
+                    /* length is too short */
+                    ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                }
+
+                if (ProbeFlags & KSPROBE_STREAMWRITE)
+                {
+                    if (StreamHeader->DataUsed > StreamHeader->FrameExtent)
+                    {
+                        /* frame extend can never be smaller */
+                        ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                    }
+
+                    /* is this stream change packet */
+                    if (StreamHeader->OptionsFlags & KSSTREAM_HEADER_OPTIONSF_TYPECHANGED)
+                    {
+                        if (Length != sizeof(KSSTREAM_HEADER) || (PVOID)StreamHeader != Irp->AssociatedIrp.SystemBuffer)
+                        {
+                            /* stream changed - must be send in a single packet */
+                            ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                        }
+
+                        if (!(ProbeFlags & KSPROBE_ALLOWFORMATCHANGE))
+                        {
+                            /* caller does not permit format changes */
+                            ExRaiseStatus(STATUS_INVALID_PARAMETER);
+                        }
+
+                        if (StreamHeader->FrameExtent)
+                        {
+                            /* allocate an mdl */
+                            Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtent, FALSE, TRUE, Irp);
+
+                            if (!Mdl)
+                            {
+                                /* not enough memory */
+                                ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                            }
+
+                            /* break-out to probe for the irp */
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    if (StreamHeader->DataUsed)
+                    {
+                        /* DataUsed must be zero for stream read operation */
+                        ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                    }
+
+                    if (StreamHeader->OptionsFlags)
+                    {
+                        /* no flags supported for reading */
+                        ExRaiseStatus(STATUS_INVALID_PARAMETER);
+                    }
+                }
+
+                if (StreamHeader->FrameExtent)
+                {
+                    /* allocate an mdl */
+                    Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtent, Irp->MdlAddress != NULL, TRUE, Irp);
+                    if (!Mdl)
+                    {
+                        /* not enough memory */
+                        ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                    }
+                }
+
+                /* move to next stream header */
+                Length -= StreamHeader->Size;
+                StreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamHeader + StreamHeader->Size);
+            }while(Length);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Exception, get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }_SEH2_END;
+
+        /* now probe the allocated mdl's */
+        if (!NT_SUCCESS(Status))
+		{
+            DPRINT("Status %x\n", Status);
+            return Status;
+		}
+        else
+            goto ProbeMdl;
+    }
+
+    /* probe user mode buffers */
+    if (Length && ( (!HeaderSize) || (Length % HeaderSize == 0) || ((ProbeFlags & KSPROBE_ALLOWFORMATCHANGE) && (Length == sizeof(KSSTREAM_HEADER))) ) )
+    {
+        /* allocate stream header buffer */
+        Irp->AssociatedIrp.SystemBuffer = ExAllocatePool(NonPagedPool, Length);
+
+        if (!Irp->AssociatedIrp.SystemBuffer)
+        {
+            /* no memory */
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        _SEH2_TRY
+        {
+            if (ProbeFlags & KSPROBE_STREAMWRITE)
+            {
+                if (ProbeFlags & KSPROBE_MODIFY)
+                    ProbeForWrite(Irp->UserBuffer, Length, sizeof(UCHAR));
+                else
+                    ProbeForRead(Irp->UserBuffer, Length, sizeof(UCHAR));
+            }
+            else
+            {
+                /* stream reads means writing */
+                ProbeForWrite(Irp->UserBuffer, Length, sizeof(UCHAR));
+            }
+
+            /* copy stream buffer */
+            RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer, Irp->UserBuffer, Length);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Exception, get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }_SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* failed */
+            return Status;
+        }
+
+        if (ProbeFlags & KSPROBE_ALLOCATEMDL)
+        {
+            /* alloc mdls */
+            goto AllocMdl;
+        }
+
+        /* check all stream headers */
+        StreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+
+        _SEH2_TRY
+        {
+            do
+            {
+                if (HeaderSize)
+                {
+                    /* does the supplied header size match stream header size and no type changed */
+                    if (StreamHeader->Size != HeaderSize && !(StreamHeader->OptionsFlags & KSSTREAM_HEADER_OPTIONSF_TYPECHANGED))
+                    {
+                        /* invalid stream header */
+                        ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                    }
+                }
+                else
+                {
+                    /* stream must be at least of size KSSTREAM_HEADER and size must be 8-byte block aligned */
+                    if (StreamHeader->Size < sizeof(KSSTREAM_HEADER) || (StreamHeader->Size & 7))
+                    {
+                        /* invalid stream header */
+                        ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                    }
+                }
+
+                if (Length < StreamHeader->Size)
+                {
+                    /* length is too short */
+                    ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                }
+
+                if (ProbeFlags & KSPROBE_STREAMWRITE)
+                {
+                    if (StreamHeader->DataUsed > StreamHeader->FrameExtent)
+                    {
+                        /* frame extend can never be smaller */
+                        ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                    }
+
+                    /* is this stream change packet */
+                    if (StreamHeader->OptionsFlags & KSSTREAM_HEADER_OPTIONSF_TYPECHANGED)
+                    {
+                        if (Length != sizeof(KSSTREAM_HEADER) || (PVOID)StreamHeader != Irp->AssociatedIrp.SystemBuffer)
+                        {
+                            /* stream changed - must be send in a single packet */
+                            ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                        }
+
+                        if (!(ProbeFlags & KSPROBE_ALLOWFORMATCHANGE))
+                        {
+                            /* caller does not permit format changes */
+                            ExRaiseStatus(STATUS_INVALID_PARAMETER);
+                        }
+
+                        if (StreamHeader->FrameExtent)
+                        {
+                            /* allocate an mdl */
+                            Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtent, FALSE, TRUE, Irp);
+
+                            if (!Mdl)
+                            {
+                                /* not enough memory */
+                                ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                            }
+
+                            /* break out to probe for the irp */
+                            AllocateMdl = TRUE;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    if (StreamHeader->DataUsed)
+                    {
+                        /* DataUsed must be zero for stream read operation */
+                        ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
+                    }
+
+                    if (StreamHeader->OptionsFlags)
+                    {
+                        /* no flags supported for reading */
+                        ExRaiseStatus(STATUS_INVALID_PARAMETER);
+                    }
+                }
+
+                /* move to next stream header */
+                Length -= StreamHeader->Size;
+                StreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamHeader + StreamHeader->Size);
+            }while(Length);
+
+        }_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Exception, get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }_SEH2_END;
+
+        /* now probe the allocated mdl's */
+        if (NT_SUCCESS(Status))
+            goto AllocMdl;
+        else
+            return Status;
+    }
+
+    return STATUS_INVALID_BUFFER_SIZE;
 }
 
 /*
@@ -970,6 +1351,8 @@ KsRemoveIrpFromCancelableQueue(
     PLIST_ENTRY CurEntry;
     KIRQL OldIrql;
 
+    DPRINT("KsRemoveIrpFromCancelableQueue ListHead %p SpinLock %p ListLocation %x RemovalOperation %x\n", QueueHead, SpinLock, ListLocation, RemovalOperation);
+
     /* check parameters */
     if (!QueueHead || !SpinLock)
         return NULL;
@@ -1194,6 +1577,8 @@ KsRemoveSpecificIrpFromCancelableQueue(
     PKSPIN_LOCK SpinLock;
     KIRQL OldLevel;
 
+    DPRINT("KsRemoveSpecificIrpFromCancelableQueue %p\n", Irp);
+
     /* get internal queue lock */
     SpinLock = KSQUEUE_SPINLOCK_IRP_STORAGE(Irp);
 
@@ -1225,6 +1610,7 @@ KsAddIrpToCancelableQueue(
     PIO_STACK_LOCATION IoStack;
     KIRQL OldLevel;
 
+    DPRINT("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
     /* check for required parameters */
     if (!QueueHead || !SpinLock || !Irp)
         return;
@@ -1403,9 +1789,10 @@ KspCreate(
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
-    /* hack for bug 4566 */
+
     if (IoStack->FileObject->FileName.Buffer == NULL)
     {
+        /* FIXME Pnp-Issue */
         DPRINT("Using reference string hack\n");
         Irp->IoStatus.Information = 0;
         /* set return status */
@@ -1417,7 +1804,7 @@ KspCreate(
     if (IoStack->FileObject->RelatedFileObject != NULL)
     {
         /* request is to instantiate a pin / node / clock / allocator */
-        ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->RelatedFileObject->FsContext;
+        ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->RelatedFileObject->FsContext2;
 
         /* sanity check */
         ASSERT(ObjectHeader);
@@ -1456,116 +1843,6 @@ KspCreate(
 }
 
 NTSTATUS
-RosDeviceInterfaceReferenceStringHack(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIDEVICE_HEADER DeviceHeader;
-    PDEVICE_EXTENSION DeviceExtension;
-    PCREATE_ITEM_ENTRY CreateItemEntry;
-    PLIST_ENTRY Entry;
-    LPWSTR Buffer;
-    ULONG Length;
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
-    /* get device header */
-    DeviceHeader = DeviceExtension->DeviceHeader;
-
-    /* retrieve all available reference strings registered */
-    Length = 0;
-    Entry = DeviceHeader->ItemList.Flink;
-    while(Entry != &DeviceHeader->ItemList)
-    {
-        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
-
-        ASSERT(CreateItemEntry->CreateItem);
-        if (CreateItemEntry->CreateItem->Create && CreateItemEntry->CreateItem->ObjectClass.Buffer)
-            Length += wcslen(CreateItemEntry->CreateItem->ObjectClass.Buffer) + 1;
-
-        Entry = Entry->Flink;
-    }
-
-    /* add extra zero */
-    Length += 1;
-
-    /* allocate the buffer */
-    Buffer = ExAllocatePool(NonPagedPool, Length * sizeof(WCHAR));
-    if (!Buffer)
-    {
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-
-    *((LPWSTR*)Irp->UserBuffer) = Buffer;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = sizeof(LPWSTR);
-
-    Entry = DeviceHeader->ItemList.Flink;
-    while(Entry != &DeviceHeader->ItemList)
-    {
-        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
-
-        ASSERT(CreateItemEntry->CreateItem);
-        if (CreateItemEntry->CreateItem->Create && CreateItemEntry->CreateItem->ObjectClass.Buffer)
-        {
-            wcscpy(Buffer, CreateItemEntry->CreateItem->ObjectClass.Buffer);
-            Buffer += wcslen(Buffer) + 1;
-        }
-        Entry = Entry->Flink;
-    }
-
-
-
-    *Buffer = L'\0';
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
-
-}
-
-NTSTATUS
-NTAPI
-KspDeviceControl(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIOBJECT_HEADER ObjectHeader;
-    PKSIDEVICE_HEADER DeviceHeader;
-    PDEVICE_EXTENSION DeviceExtension;
-
-
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
-    /* get device header */
-    DeviceHeader = DeviceExtension->DeviceHeader;
-
-    if (IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL && IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_OBJECT_CLASS)
-    {
-        /* hack for bug 4566 */
-        return RosDeviceInterfaceReferenceStringHack(DeviceObject, Irp);
-    }
-
-    ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
-
-    ASSERT(ObjectHeader);
-    //KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
-
-    return ObjectHeader->DispatchTable.DeviceIoControl(DeviceObject, Irp);
-}
-
-NTSTATUS
 NTAPI
 KspDispatchIrp(
     IN  PDEVICE_OBJECT DeviceObject,
@@ -1586,12 +1863,14 @@ KspDispatchIrp(
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
+    ASSERT(IoStack->FileObject);
+
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext2;
 
     if (!ObjectHeader)
     {
-        /* hack for bug 4566 */
+        /* FIXME Pnp-Issue*/
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         /* complete and forget */
@@ -1660,15 +1939,20 @@ KsSetMajorFunctionHandler(
     IN  PDRIVER_OBJECT DriverObject,
     IN  ULONG MajorFunction)
 {
+    DPRINT("KsSetMajorFunctionHandler Function %x\n", MajorFunction);
+#if 0
+    // HACK
+    // for MS PORTCLS
+    //
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = KspCreate;
+#endif
+
     switch ( MajorFunction )
     {
         case IRP_MJ_CREATE:
             DriverObject->MajorFunction[MajorFunction] = KspCreate;
             break;
-            break;
         case IRP_MJ_DEVICE_CONTROL:
-            DriverObject->MajorFunction[MajorFunction] = KspDeviceControl;
-            break;
         case IRP_MJ_CLOSE:
         case IRP_MJ_READ:
         case IRP_MJ_WRITE:
@@ -1678,6 +1962,7 @@ KsSetMajorFunctionHandler(
             DriverObject->MajorFunction[MajorFunction] = KspDispatchIrp;
             break;
         default:
+            DPRINT1("NotSupported %x\n", MajorFunction);
             return STATUS_INVALID_PARAMETER;
     };
 
@@ -1697,6 +1982,8 @@ KsDispatchIrp(
     PIO_STACK_LOCATION IoStack;
     PKSIDEVICE_HEADER DeviceHeader;
     PDEVICE_EXTENSION DeviceExtension;
+
+    DPRINT("KsDispatchIrp DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -1724,12 +2011,6 @@ KsDispatchIrp(
             }
         }
 
-        if (IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL)
-        {
-            /* handle device requests */
-            return KspDeviceControl(DeviceObject, Irp);
-        }
-
         switch (IoStack->MajorFunction)
         {
             case IRP_MJ_CLOSE:
@@ -1739,6 +2020,7 @@ KsDispatchIrp(
             case IRP_MJ_QUERY_SECURITY:
             case IRP_MJ_SET_SECURITY:
             case IRP_MJ_PNP:
+            case IRP_MJ_DEVICE_CONTROL:
                 return KspDispatchIrp(DeviceObject, Irp);
             default:
                 return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);

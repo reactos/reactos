@@ -493,7 +493,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         Length = GuidString.Length + 32;
         Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                        Length,
-                                       TAG('R', 'a', 'm', 'd'));
+                                       'dmaR');
         if (!Buffer)
         {
             //
@@ -542,7 +542,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
             SymbolicLinkName.Length = GuidString.Length + 34;
             Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                            SymbolicLinkName.MaximumLength,
-                                           TAG('R', 'a', 'm', 'd'));
+                                           'dmaR');
             SymbolicLinkName.Buffer = Buffer;
             if (Buffer)
             {
@@ -618,7 +618,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DiskLength = Input->DiskLength;
 		ExInitializeFastMutex(&DriveExtension->DiskListLock);
 	    IoInitializeRemoveLock(&DriveExtension->RemoveLock,
-                               TAG('R', 'a', 'm', 'd'),
+                               'dmaR',
                                0,
                                1);
         DriveExtension->DriveDeviceName = DeviceName;
@@ -1811,7 +1811,7 @@ RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
                                                             Objects) +
                                                FinalCount *
                                                sizeof(PDEVICE_OBJECT),
-                                               TAG('R', 'a', 'm', 'd'));
+                                               'dmaR');
     if (!OurDeviceRelations)
     {
         //
@@ -2231,7 +2231,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 	    DeviceExtension->Type = RamdiskBus;
 		ExInitializeFastMutex(&DeviceExtension->DiskListLock);
 	    IoInitializeRemoveLock(&DeviceExtension->RemoveLock,
-                               TAG('R', 'a', 'm', 'd'),
+                               'dmaR',
                                0,
                                1);
 		InitializeListHead(&DeviceExtension->DiskList);
@@ -2322,7 +2322,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverRegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                       RegistryPath->Length +
                                                       sizeof(WCHAR),
-                                                      TAG('R', 'a', 'm', 'd'));
+                                                      'dmaR');
     if (!DriverRegistryPath.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
     RtlCopyUnicodeString(&DriverRegistryPath, RegistryPath);
     

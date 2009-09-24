@@ -193,7 +193,6 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
 // Done the same way as in windef.h for now
 #define DECLSPEC_IMPORT __declspec(dllimport)
-#define DECLSPEC_EXPORT __declspec(dllexport)
 #define DECLSPEC_NORETURN __declspec(noreturn)
 
 

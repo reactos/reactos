@@ -608,7 +608,7 @@ static BOOL CRYPT_DownloadObject(DWORD dwRetrievalFlags, HINTERNET hHttp,
  * creates a new cache entry for the object and writes the object to it.
  * Sets the expiration time of the cache entry to expires.
  */
-static void CRYPT_CacheURL(LPCWSTR pszURL, PCRYPT_BLOB_ARRAY pObject,
+static void CRYPT_CacheURL(LPCWSTR pszURL, const CRYPT_BLOB_ARRAY *pObject,
  DWORD dwRetrievalFlags, FILETIME expires)
 {
     WCHAR cacheFileName[MAX_PATH];
@@ -692,7 +692,7 @@ static void CALLBACK CRYPT_InetStatusCallback(HINTERNET hInt,
     }
 }
 
-static BOOL CRYPT_Connect(URL_COMPONENTSW *components,
+static BOOL CRYPT_Connect(const URL_COMPONENTSW *components,
  struct InetContext *context, PCRYPT_CREDENTIALS pCredentials,
  HINTERNET *phInt, HINTERNET *phHost)
 {
@@ -1049,7 +1049,7 @@ static BOOL CRYPT_GetRetrieveFunction(LPCWSTR pszURL,
 }
 
 static BOOL WINAPI CRYPT_CreateBlob(LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, PCRYPT_BLOB_ARRAY pObject, void **ppvContext)
+ DWORD dwRetrievalFlags, const CRYPT_BLOB_ARRAY *pObject, void **ppvContext)
 {
     DWORD size, i;
     CRYPT_BLOB_ARRAY *context;
@@ -1086,7 +1086,7 @@ static BOOL WINAPI CRYPT_CreateBlob(LPCSTR pszObjectOid,
 typedef BOOL (WINAPI *AddContextToStore)(HCERTSTORE hCertStore,
  const void *pContext, DWORD dwAddDisposition, const void **ppStoreContext);
 
-static BOOL CRYPT_CreateContext(PCRYPT_BLOB_ARRAY pObject,
+static BOOL CRYPT_CreateContext(const CRYPT_BLOB_ARRAY *pObject,
  DWORD dwExpectedContentTypeFlags, AddContextToStore addFunc, void **ppvContext)
 {
     BOOL ret = TRUE;
@@ -1142,28 +1142,28 @@ static BOOL CRYPT_CreateContext(PCRYPT_BLOB_ARRAY pObject,
 }
 
 static BOOL WINAPI CRYPT_CreateCert(LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, PCRYPT_BLOB_ARRAY pObject, void **ppvContext)
+ DWORD dwRetrievalFlags, const CRYPT_BLOB_ARRAY *pObject, void **ppvContext)
 {
     return CRYPT_CreateContext(pObject, CERT_QUERY_CONTENT_FLAG_CERT,
      (AddContextToStore)CertAddCertificateContextToStore, ppvContext);
 }
 
 static BOOL WINAPI CRYPT_CreateCRL(LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, PCRYPT_BLOB_ARRAY pObject, void **ppvContext)
+ DWORD dwRetrievalFlags, const CRYPT_BLOB_ARRAY *pObject, void **ppvContext)
 {
     return CRYPT_CreateContext(pObject, CERT_QUERY_CONTENT_FLAG_CRL,
      (AddContextToStore)CertAddCRLContextToStore, ppvContext);
 }
 
 static BOOL WINAPI CRYPT_CreateCTL(LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, PCRYPT_BLOB_ARRAY pObject, void **ppvContext)
+ DWORD dwRetrievalFlags, const CRYPT_BLOB_ARRAY *pObject, void **ppvContext)
 {
     return CRYPT_CreateContext(pObject, CERT_QUERY_CONTENT_FLAG_CTL,
      (AddContextToStore)CertAddCTLContextToStore, ppvContext);
 }
 
 static BOOL WINAPI CRYPT_CreatePKCS7(LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, PCRYPT_BLOB_ARRAY pObject, void **ppvContext)
+ DWORD dwRetrievalFlags, const CRYPT_BLOB_ARRAY *pObject, void **ppvContext)
 {
     BOOL ret;
 
@@ -1187,7 +1187,7 @@ static BOOL WINAPI CRYPT_CreatePKCS7(LPCSTR pszObjectOid,
 }
 
 static BOOL WINAPI CRYPT_CreateAny(LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, PCRYPT_BLOB_ARRAY pObject, void **ppvContext)
+ DWORD dwRetrievalFlags, const CRYPT_BLOB_ARRAY *pObject, void **ppvContext)
 {
     BOOL ret;
 
@@ -1273,7 +1273,7 @@ static BOOL WINAPI CRYPT_CreateAny(LPCSTR pszObjectOid,
 }
 
 typedef BOOL (WINAPI *ContextDllCreateObjectContext)(LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, PCRYPT_BLOB_ARRAY pObject, void **ppvContext);
+ DWORD dwRetrievalFlags, const CRYPT_BLOB_ARRAY *pObject, void **ppvContext);
 
 static BOOL CRYPT_GetCreateFunction(LPCSTR pszObjectOid,
  ContextDllCreateObjectContext *pFunc, HCRYPTOIDFUNCADDR *phFunc)
@@ -1322,10 +1322,10 @@ static BOOL CRYPT_GetCreateFunction(LPCSTR pszObjectOid,
     return ret;
 }
 
-typedef BOOL (*get_object_expiration_func)(void *pvContext,
+typedef BOOL (*get_object_expiration_func)(const void *pvContext,
  FILETIME *expiration);
 
-static BOOL CRYPT_GetExpirationFromCert(void *pvObject, FILETIME *expiration)
+static BOOL CRYPT_GetExpirationFromCert(const void *pvObject, FILETIME *expiration)
 {
     PCCERT_CONTEXT cert = pvObject;
 
@@ -1333,7 +1333,7 @@ static BOOL CRYPT_GetExpirationFromCert(void *pvObject, FILETIME *expiration)
     return TRUE;
 }
 
-static BOOL CRYPT_GetExpirationFromCRL(void *pvObject, FILETIME *expiration)
+static BOOL CRYPT_GetExpirationFromCRL(const void *pvObject, FILETIME *expiration)
 {
     PCCRL_CONTEXT cert = pvObject;
 
@@ -1341,7 +1341,7 @@ static BOOL CRYPT_GetExpirationFromCRL(void *pvObject, FILETIME *expiration)
     return TRUE;
 }
 
-static BOOL CRYPT_GetExpirationFromCTL(void *pvObject, FILETIME *expiration)
+static BOOL CRYPT_GetExpirationFromCTL(const void *pvObject, FILETIME *expiration)
 {
     PCCTL_CONTEXT cert = pvObject;
 

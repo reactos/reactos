@@ -1,11 +1,10 @@
 /*
 * COPYRIGHT:   See COPYING in the top level directory
-* PROJECT:     ReactOS system libraries
-* FILE:        lib/crt/??????
-* PURPOSE:     Unknown
-* PROGRAMER:   Unknown
-* UPDATE HISTORY:
-*              25/11/05: Created
+* PROJECT:     ReactOS C runtime library
+* FILE:        lib/sdk/crt/stdio/popen.c
+* PURPOSE:     Pipe Functions
+* PROGRAMERS:  Eric Kohl
+               Hartmut Birr
 */
 
 #include <precomp.h>

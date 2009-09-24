@@ -60,6 +60,9 @@ static HRESULT WINAPI ClientSite_QueryInterface(IOleClientSite *iface, REFIID ri
     }else if(IsEqualGUID(&IID_IDispatch, riid)) {
         TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
         *ppv = CLDISP(This);
+    }else if(IsEqualGUID(&IID_IPropertyNotifySink, riid)) {
+        TRACE("(%p)->(IID_IPropertyNotifySink %p)\n", This, ppv);
+        *ppv = PROPNOTIF(This);
     }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
         TRACE("(%p)->(IID_IServiceProvider %p)\n", This, ppv);
         *ppv = SERVPROV(This);

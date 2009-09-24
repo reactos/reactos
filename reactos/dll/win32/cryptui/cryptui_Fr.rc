@@ -74,12 +74,12 @@ STRINGTABLE DISCARDABLE
     IDS_IMPORT_FILE_SUBTITLE "Spécifiez le fichier à importer."
     IDS_IMPORT_STORE_TITLE "Magasin de certificats"
     IDS_IMPORT_STORE_SUBTITLE "Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance."
-    IDS_IMPORT_FILTER_CERT "Certificat X.509 (*.cer; *.crt)"
-    IDS_IMPORT_FILTER_PFX "Échange d'informations personnelles (*.pfx; *.p12)"
+    IDS_IMPORT_FILTER_CERT "Certificat X.509 (*.cer ; *.crt)"
+    IDS_IMPORT_FILTER_PFX "Échange d'informations personnelles (*.pfx ; *.p12)"
     IDS_IMPORT_FILTER_CRL "Liste de révocation de certificats (*.crl)"
     IDS_IMPORT_FILTER_CTL "Liste de certificats de confiance (*.stl)"
     IDS_IMPORT_FILTER_SERIALIZED_STORE "Magasin de certificats sérialisés Microsoft (*.sst)"
-    IDS_IMPORT_FILTER_CMS "Messages CMS/PKCS #7 (*.spc; *.p7b)"
+    IDS_IMPORT_FILTER_CMS "Messages CMS/PKCS #7 (*.spc ; *.p7b)"
     IDS_IMPORT_FILTER_ALL "Tous les fichiers (*.*)"
     IDS_IMPORT_EMPTY_FILE "Sélectionnez un fichier."
     IDS_IMPORT_BAD_FORMAT "Le format du fichier n'est pas reconnu. Sélectionnez un autre fichier."
@@ -146,7 +146,7 @@ STRINGTABLE DISCARDABLE
     IDS_PURPOSE_CA_EXCHANGE "Archivage de clé privée"
     IDS_PURPOSE_KEY_RECOVERY_AGENT "Agent de recouvrement de clé"
     IDS_PURPOSE_DS_EMAIL_REPLICATION "Réplication de courriers électroniques du service d'annuaire"
-    IDS_EXPORT_WIZARD "Assistant Exportation de certificat"
+    IDS_EXPORT_WIZARD "Assistant Exportation de certificats"
     IDS_EXPORT_FORMAT_TITLE "Format d'export"
     IDS_EXPORT_FORMAT_SUBTITLE "Choisissez le format dans lequel le contenu sera sauvé."
     IDS_EXPORT_FILE_TITLE "Nom du fichier à exporter"
@@ -191,8 +191,8 @@ BEGIN
   CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
   CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
     ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
-  PUSHBUTTON "&Installer un certificat...", IDC_ADDTOSTORE,103,216,70,14
-  PUSHBUTTON "&Déclaration de l'émetteur", IDC_ISSUERSTATEMENT,177,216,70,14
+  PUSHBUTTON "&Installer un certificat...", IDC_ADDTOSTORE,73,216,86,14
+  PUSHBUTTON "&Déclaration de l'émetteur", IDC_ISSUERSTATEMENT,161,216,86,14
 END
 
 IDD_DETAIL DIALOG DISCARDABLE 0, 0, 255, 236
@@ -200,16 +200,16 @@ CAPTION "Détails"
 STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Afficher :", -1, 6,12,40,14
-  COMBOBOX IDC_DETAIL_SELECT, 28,10,100,14,
+  LTEXT "&Afficher :", -1, 6,11,33,14
+  COMBOBOX IDC_DETAIL_SELECT, 39,10,100,14,
     CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_DETAIL_LIST, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     6,28,241,100
   CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W",
     ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
-  PUSHBUTTON "É&diter les propriétés...", IDC_EDITPROPERTIES,103,216,70,14
-  PUSHBUTTON "&Copier dans le fichier...", IDC_EXPORT,177,216,70,14
+  PUSHBUTTON "É&diter les propriétés...", IDC_EDITPROPERTIES,83,216,80,14
+  PUSHBUTTON "&Copier dans le fichier...", IDC_EXPORT,167,216,80,14
 END
 
 IDD_HIERARCHY DIALOG DISCARDABLE 0, 0, 255, 236
@@ -221,7 +221,7 @@ BEGIN
   CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
     13,22,231,130
   PUSHBUTTON "&Voir le certificat", IDC_VIEWCERTIFICATE,175,156,70,14
-  LTEXT "É&tant du certificat :", IDC_CERTIFICATESTATUS,6,183,70,14
+  LTEXT "É&tat du certificat :", IDC_CERTIFICATESTATUS,6,183,70,14
   CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
@@ -233,8 +233,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
-  PUSHBUTTON "Fermer", IDOK,103,216,70,14
-  PUSHBUTTON "&Informations complémentaires", IDC_CPS,177,216,70,14
+  PUSHBUTTON "Fermer", IDOK,77,216,83,14
+  PUSHBUTTON "&Infos complémentaires", IDC_CPS,164,216,83,14
 END
 
 IDD_CERT_PROPERTIES_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
@@ -244,7 +244,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Nom convivial :", -1, 6,14,60,14
   EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
-  LTEXT "&Description:", -1, 6,32,60,14
+  LTEXT "&Description :", -1, 6,32,60,14
   EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Rôles du certificat", -1,6,48,245,165, BS_GROUPBOX
   AUTORADIOBUTTON "Activer &tous les rôles prévus pour ce certificat",
@@ -256,7 +256,7 @@ BEGIN
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     24,100,220,90
-  PUSHBUTTON "&Ajouter un rôle...", IDC_ADD_PURPOSE,184,194,60,14
+  PUSHBUTTON "&Ajouter un rôle...", IDC_ADD_PURPOSE,180,194,64,14
 END
 
 IDD_ADD_CERT_PURPOSE DIALOG DISCARDABLE 0,0,200,68
@@ -277,7 +277,7 @@ BEGIN
   LTEXT "Sélectionnez le magasin de certificats à utiliser :", IDC_STORE_TEXT, 6,6,190,28
   CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
     6,28,188,70
-  CHECKBOX "&Montrer les magasins (emplacements de stockage) physiques", IDC_SHOW_PHYSICAL_STORES, 6,102,90,14,
+  CHECKBOX "&Montrer les magasins physiques", IDC_SHOW_PHYSICAL_STORES, 6,102,117,14,
     BS_AUTOCHECKBOX|WS_TABSTOP
   PUSHBUTTON "OK", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
   PUSHBUTTON "Annuler", IDCANCEL, 144,118,50,14
@@ -288,13 +288,13 @@ CAPTION "Assistant d'importation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Bienvenue dans l'assistant d'importation de certificats", IDC_IMPORT_TITLE,
-    115,1,195,40
+    115,6,195,12
   LTEXT "Cet assistant vous aide à importer des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un magasin de certificats à partir d'un fichier.",
-    -1, 115,33,195,16
+    -1, 115,22,195,25
   LTEXT "Un certificat peut être utilisé pour vous identifier, ou pour identifier l'ordinateur avec lequel vous communiquez. Il peut également être utilisé à des fins d'authentification ou de signature de messages. Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance.",
-    -1, 115,56,195,40
-  LTEXT "Pour continuer, cliquez Suivant.",
-    -1, 115,103,195,8
+    -1, 115,56,195,49
+  LTEXT "Pour continuer, cliquez sur Suivant.",
+    -1, 115,114,195,8
 END
 
 IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,143
@@ -319,23 +319,23 @@ CAPTION "Assistant Importation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wine peut sélectionner automatiquement un magasin de certificats, ou vous pouvez spécifier l'emplacement des certificats.",
-    -1, 21,1,195,20
+    -1, 21,1,212,18
   AUTORADIOBUTTON "Sélectionner &automatiquement un magasin de certificats",
-    IDC_IMPORT_AUTO_STORE, 31,18,180,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_IMPORT_AUTO_STORE, 31,18,194,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "Placer tous les certificats dans le &magasin suivant :",
-    IDC_IMPORT_SPECIFY_STORE, 31,30,180,12, BS_AUTORADIOBUTTON
+    IDC_IMPORT_SPECIFY_STORE, 31,30,194,12, BS_AUTORADIOBUTTON
   EDITTEXT IDC_IMPORT_STORE, 44,49,185,14, ES_READONLY
   PUSHBUTTON "&Parcourir...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
 END
 
-IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
-CAPTION "Assistant Importation de certificat"
+IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,179
+CAPTION "Assistant Importation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Clôturer l'assistant d'importation de certificat", IDC_IMPORT_TITLE,
-    115,1,195,40
-  LTEXT "Vous avez terminé avec succès l'assistant d'importation de certificat.",
-    -1, 115,33,195,24
+  LTEXT "Clôture de l'assistant d'importation de certificats", IDC_IMPORT_TITLE,
+    115,10,195,12
+  LTEXT "Vous avez terminé avec succès l'assistant d'importation de certificats.",
+    -1, 115,31,195,18
   LTEXT "Vous avez spécifié les paramètres suivants :",
     -1, 115,57,195,12
   CONTROL "", IDC_IMPORT_SETTINGS, "SysListView32",
@@ -369,7 +369,7 @@ CAPTION "Options avancées"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Rôle du certificat", -1, 7,7,234,141, BS_GROUPBOX
-  LTEXT "Sélectionnez un ou plusieurs rôles à lister quand les options avancées sont sélectionnées.",
+  LTEXT "Sélectionnez un ou plusieurs rôles à afficher quand les options avancées sont sélectionnées.",
     -1, 14,18,220,16
   LTEXT "&Rôles du certificat :", -1, 14,41,90,12, WS_TABSTOP
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
@@ -384,21 +384,21 @@ CAPTION "Assistant d'exportation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Bienvenue dans l'assistant d'exportation de certificats", IDC_EXPORT_TITLE,
-    115,1,195,40
+    115,6,195,12
   LTEXT "Cet assistant vous aide à exporter des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un fichier à partir d'un magasin de certificats.",
-    -1, 115,33,195,16
+    -1, 115,22,195,25
   LTEXT "Un certificat peut être utilisé pour vous identifier, ou pour identifier l'ordinateur avec lequel vous communiquez. Il peut également être utilisé à des fins d'authentification ou de signature de messages. Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance.",
-    -1, 115,56,195,40
-  LTEXT "Pour continuer, cliquez Suivant.",
-    -1, 115,103,195,8
+    -1, 115,56,195,49
+  LTEXT "Pour continuer, cliquez sur Suivant.",
+    -1, 115,114,195,8
 END
 
 IDD_EXPORT_PRIVATE_KEY DIALOG DISCARDABLE 0,0,317,143
-CAPTION "Assistant Exportation de certificat"
+CAPTION "Assistant Exportation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Si vous choisissez d'exporter la clé privée, on vous demandera un mot de passe pour protéger la clé privée dans une page ultérieure.", -1, 21,1,195,23
-  LTEXT "Voulez-vous exporter la clé privée ?", -1, 21,24,195,15
+  LTEXT "Si vous choisissez d'exporter la clé privée, on vous demandera un mot de passe pour protéger la clé privée dans une page ultérieure.", -1, 21,1,195,25
+  LTEXT "Voulez-vous exporter la clé privée ?", -1, 21,27,195,10
   AUTORADIOBUTTON "&Oui, exporter la clé privée",
     IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "&Non, ne pas exporter la clé privée",
@@ -407,32 +407,32 @@ BEGIN
 END
 
 IDD_EXPORT_PASSWORD DIALOG DISCARDABLE 0,0,317,143
-CAPTION "Assistant Exportation de certificat"
+CAPTION "Assistant Exportation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Mot de passe :", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
-  LTEXT "&Confirmez le mot de passe:", -1, 21,35,195,10
+  LTEXT "&Confirmez le mot de passe :", -1, 21,35,195,10
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
 END
 
 IDD_EXPORT_FORMAT DIALOG DISCARDABLE 0,0,317,143
-CAPTION "Assistant Exportation de certificat"
+CAPTION "Assistant Exportation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sélectionnez le format à utiliser :", -1, 21,1,195,10
   AUTORADIOBUTTON "Binaire codé &DER X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Binaire codé Ba&se64 X.509 (.cer):",
+  AUTORADIOBUTTON "Binaire codé Ba&se64 X.509 (.cer) :",
     IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "Standard de syntaxe de message cryptographique - Messages PKCS #7 (.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Inclure tous les certificats dans le chemin de certification si possible"
-    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,230,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "Échange d'informations &Personnelles - PKCS #12 (.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Inclure &tous les certificats dans le chemin de certification si possible",
-    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,230,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "&Activer le chiffrement fort",
     IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,200,8,
     BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
@@ -442,7 +442,7 @@ BEGIN
 END
 
 IDD_EXPORT_FILE DIALOG DISCARDABLE 0,0,317,143
-CAPTION "Assistant Exportation de certificat"
+CAPTION "Assistant Exportation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Nom du fichier :", -1, 21,1,195,10
@@ -450,14 +450,14 @@ BEGIN
   PUSHBUTTON "Parco&urir...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
-IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
-CAPTION "Assistant Exportation de certificat"
+IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,179
+CAPTION "Assistant Exportation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Clôturer l'assistant d'exportation de certificat", IDC_EXPORT_TITLE,
-    115,1,195,40
-  LTEXT "Vous avez terminé avec succès l'assistant d'importation de certificat.",
-    -1, 115,33,195,24
+  LTEXT "Clôture de l'assistant d'exportation de certificats", IDC_EXPORT_TITLE,
+    115,10,195,12
+  LTEXT "Vous avez terminé avec succès l'assistant d'exportation de certificats.",
+    -1, 115,31,195,18
   LTEXT "Vous avez spécifié les paramètres suivants :",
     -1, 115,57,195,12
   CONTROL "", IDC_EXPORT_SETTINGS, "SysListView32",

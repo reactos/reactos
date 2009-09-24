@@ -15,8 +15,6 @@
 //#define NDEBUG
 #include <debug.h>
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, ScsiClassGetInquiryData)
 #pragma alloc_text(PAGE, ScsiClassInitialize)
@@ -4635,7 +4633,7 @@ Return Value:
                                     NULL,
                                     NonPagedPoolMustSucceed,
                                     SCSI_REQUEST_BLOCK_SIZE,
-                                    TAG('H','s','c','S'),
+                                    'ScsH',
                                     (USHORT)NumberElements);
 
 }

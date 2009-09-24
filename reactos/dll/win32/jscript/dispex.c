@@ -844,6 +844,23 @@ HRESULT jsdisp_call(DispatchEx *disp, DISPID id, LCID lcid, WORD flags, DISPPARA
     return invoke_prop_func(disp, disp, prop, lcid, flags, dp, retv, ei, caller);
 }
 
+HRESULT jsdisp_call_name(DispatchEx *disp, const WCHAR *name, LCID lcid, WORD flags, DISPPARAMS *dp, VARIANT *retv,
+        jsexcept_t *ei, IServiceProvider *caller)
+{
+    dispex_prop_t *prop;
+    HRESULT hres;
+
+    hres = find_prop_name_prot(disp, name, TRUE, &prop);
+    if(FAILED(hres))
+        return hres;
+
+    memset(ei, 0, sizeof(*ei));
+    if(retv)
+        V_VT(retv) = VT_EMPTY;
+
+    return invoke_prop_func(disp, disp, prop, lcid, flags, dp, retv, ei, caller);
+}
+
 HRESULT disp_call(IDispatch *disp, DISPID id, LCID lcid, WORD flags, DISPPARAMS *dp, VARIANT *retv,
         jsexcept_t *ei, IServiceProvider *caller)
 {

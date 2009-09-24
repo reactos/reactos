@@ -67,8 +67,6 @@ InitializeListHead(
 
 /***********************************************************/
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
 #define DS_SOLIDBRUSH  0x00000001
 #define DS_GREYBRUSH   0x00000002
 #define DS_BRUSH       0x00000004
@@ -249,7 +247,7 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst); // screen.c: initialize VGA mode
 BOOL DeinitVGA(PPDEV ppdev); // screen.c: Free resources allocated in InitVGA
 
 #define DRIVER_EXTRA_SIZE 0
-#define ALLOC_TAG  TAG('D', 'v', 'g', 'a') // Dvga tag
+#define ALLOC_TAG  'agvD' // Dvga tag
 #define DLL_NAME  L"vga" // DLL name in Unicode
 
 #define MAX_SCAN_WIDTH              2048  // pixels

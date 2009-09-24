@@ -570,7 +570,7 @@ IKsDevice_Create(
     if (IoStack->FileObject->RelatedFileObject != NULL)
     {
         /* request is to instantiate a pin / node / clock / allocator */
-        ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->RelatedFileObject->FsContext;
+        ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->RelatedFileObject->FsContext2;
 
         /* sanity check */
         ASSERT(ObjectHeader);
@@ -717,7 +717,7 @@ KsReferenceSoftwareBusObject(
      PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
      /* get device interface */
-     Device = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+     Device = (IKsDevice*)DeviceHeader->lpVtblIKsDevice;
 
      if (Device)
      {
@@ -741,7 +741,7 @@ KsReferenceBusObject(
      PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
      /* get device interface */
-     Device = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+     Device = (IKsDevice*)DeviceHeader->lpVtblIKsDevice;
 
      if (Device)
      {
@@ -766,7 +766,7 @@ KsDereferenceBusObject(
      PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
      /* get device interface */
-     Device = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+     Device = (IKsDevice*)DeviceHeader->lpVtblIKsDevice;
 
      if (Device)
      {
@@ -783,11 +783,14 @@ VOID
 NTAPI
 KsDereferenceSoftwareBusObject(
     IN KSDEVICE_HEADER  Header)
-{     IKsDevice * Device;
+{
+     IKsDevice * Device;
      PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
+     DPRINT1("KsDereferenceSoftwareBusObject DeviceHeader %p\n", Header);
+
      /* get device interface */
-     Device = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+     Device = (IKsDevice*)DeviceHeader->lpVtblIKsDevice;
 
      if (Device)
      {

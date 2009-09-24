@@ -63,11 +63,16 @@ void (*bootp_packet_handler)(struct interface_info *,
 void
 dispatch(void)
 {
-    int count, i, to_msec, nfds, err;
+    int count, to_msec, err;
     struct protocol *l;
     fd_set fds;
     time_t howlong, cur_time;
     struct timeval timeval;
+
+    if (!AdapterDiscover()) {
+         AdapterStop();
+         return;
+    }
 
     ApiLock();
 
@@ -76,17 +81,6 @@ dispatch(void)
          * Call any expired timeouts, and then if there's still
          * a timeout registered, time out the select call then.
          */
-    another:
-        if (!AdapterDiscover()) {
-            AdapterStop();
-            break;
-        }
-
-        for (l = protocols, nfds = 0; l; l = l->next)
-            nfds++;
-
-        FD_ZERO(&fds);
-
         time(&cur_time);
 
         if (timeouts) {
@@ -98,7 +92,7 @@ dispatch(void)
                 (*(t->func))(t->what);
                 t->next = free_timeouts;
                 free_timeouts = t;
-                goto another;
+                continue;
             }
 
             /*
@@ -112,49 +106,30 @@ dispatch(void)
                 howlong = INT_MAX / 1000;
             to_msec = howlong * 1000;
         } else
-            to_msec = -1;
+            to_msec = 5000;
 
         /* Set up the descriptors to be polled. */
-        for (i = 0, l = protocols; l; l = l->next) {
-            struct interface_info *ip = l->local;
+        FD_ZERO(&fds);
 
-            if (ip && (l->handler != got_one || !ip->dead)) {
-                FD_SET(l->fd, &fds);
-                i++;
-            }
-        }
+        for (l = protocols; l; l = l->next)
+             FD_SET(l->fd, &fds);
 
-        if (i == 0) {
-            /* Wait for 5 seconds before looking for more interfaces */
-            Sleep(5000);
-            continue;
-        } else {
-            /* Wait for a packet or a timeout... XXX */
-            timeval.tv_sec = to_msec / 1000;
-            timeval.tv_usec = (to_msec % 1000) * 1000;
-        }
+        /* Wait for a packet or a timeout... XXX */
+        timeval.tv_sec = to_msec / 1000;
+        timeval.tv_usec = to_msec % 1000;
 
         ApiUnlock();
 
-        count = select(nfds, &fds, NULL, NULL, &timeval);
-
-        DH_DbgPrint(MID_TRACE,("Select: %d\n", count));
-
-        /* Review poll output */
-        for (i = 0, l = protocols; l; l = l->next) {
-            struct interface_info *ip = l->local;
-
-            if (ip && (l->handler != got_one || !ip->dead)) {
-                DH_DbgPrint
-                    (MID_TRACE,
-                     ("set(%d) -> %s\n",
-                      l->fd, FD_ISSET(l->fd, &fds) ? "true" : "false"));
-                i++;
-            }
+        if (protocols)
+            count = select(0, &fds, NULL, NULL, &timeval);
+        else {
+            Sleep(to_msec);
+            count = 0;
         }
 
-
         ApiLock();
+
+        DH_DbgPrint(MID_TRACE,("Select: %d\n", count));
 
         /* Not likely to be transitory... */
         if (count == SOCKET_ERROR) {
@@ -163,7 +138,6 @@ dispatch(void)
             break;
         }
 
-        i = 0;
         for (l = protocols; l; l = l->next) {
             struct interface_info *ip;
             ip = l->local;
@@ -173,7 +147,6 @@ dispatch(void)
                     DH_DbgPrint(MID_TRACE,("Handling %x\n", l));
                     (*(l->handler))(l);
                 }
-                i++;
             }
         }
     } while (1);
@@ -269,8 +242,10 @@ add_timeout(time_t when, void (*where)(void *), void *what)
             q->what = what;
         } else {
             q = malloc(sizeof(struct timeout));
-            if (!q)
+            if (!q) {
                 error("Can't allocate timeout structure!");
+                return;
+            }
             q->func = where;
             q->what = what;
         }

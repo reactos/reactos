@@ -184,6 +184,10 @@ typedef struct _SOUND_OVERLAPPED
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
     PWAVEHDR Header;
     BOOL PerformCompletion;
+
+    DWORD OriginalBufferSize;
+    LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
+
 } SOUND_OVERLAPPED, *PSOUND_OVERLAPPED;
 
 typedef MMRESULT (*WAVE_COMMIT_FUNC)(
@@ -329,6 +333,7 @@ typedef struct _SOUND_DEVICE_INSTANCE
     DWORD LoopsRemaining;
     DWORD FrameSize;
     DWORD BufferCount;
+    WAVEFORMATEX WaveFormatEx;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */

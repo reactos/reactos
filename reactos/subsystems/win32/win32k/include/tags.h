@@ -1,20 +1,20 @@
 #ifndef _WIN32K_TAGS_H
 #define _WIN32K_TAGS_H
 
-#define TAG_BRUSHOBJ    TAG('B', 'R', 'H', 'O') /* brush object */
-#define TAG_CLIP        TAG('C', 'L', 'I', 'P') /* clipping */
-#define TAG_CLIPOBJ     TAG('C', 'L', 'P', 'O') /* clip object */
-#define TAG_COLORMAP    TAG('C', 'O', 'L', 'M') /* color map */
-#define TAG_DC          TAG('D', 'C', ' ', ' ') /* DC */
-#define TAG_DFSM        TAG('D', 'f', 's', 'm') /* Eng event allocation */
-#define TAG_DIB         TAG('D', 'I', 'B', ' ') /* dib */
-#define TAG_DRIVER      TAG('G', 'D', 'R', 'V') /* video drivers */
-#define TAG_GDIHNDTBLE  TAG('G', 'D', 'I', 'H') /* gdi handle table */
-#define TAG_GSEM        TAG('G', 's', 'e', 'm') /* Gdi Semaphore */
-#define TAG_STRING      TAG('S', 'T', 'R', ' ')
-#define TAG_SURFOBJ     TAG('S', 'R', 'F', 'O') /* surface object */
-#define TAG_PALETTE     TAG('G', 'l', 'a', '8')
-#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v') /* RTL registry */
-#define TAG_XLATEOBJ    TAG('X', 'L', 'A', 'O') /* xlate object */
+#define TAG_BRUSHOBJ    'OHRB' /* brush object */
+#define TAG_CLIP        'PILC' /* clipping */
+#define TAG_CLIPOBJ     'OPLC' /* clip object */
+#define TAG_COLORMAP    'MLOC' /* color map */
+#define TAG_DC          '  CD' /* DC */
+#define TAG_DFSM        'msfD' /* Eng event allocation */
+#define TAG_DIB         ' BID' /* dib */
+#define TAG_DRIVER      'VRDG' /* video drivers */
+#define TAG_GDIHNDTBLE  'HIDG' /* gdi handle table */
+#define TAG_GSEM        'mesG' /* Gdi Semaphore */
+#define TAG_STRING      ' RTS'
+#define TAG_SURFOBJ     'OFRS' /* surface object */
+#define TAG_PALETTE     '8alG'
+#define TAG_RTLREGISTRY 'vrqR' /* RTL registry */
+#define TAG_XLATEOBJ    'OALX' /* xlate object */
 
 #endif /* _WIN32K_TAGS_H */

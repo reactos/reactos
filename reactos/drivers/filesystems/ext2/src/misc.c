@@ -2111,7 +2111,7 @@ LONGLONG NTAPI Ext2Align64( LONGLONG NumberToBeAligned, LONGLONG Alignment )
 }
 
 
-ULONG Ext2GetCurrentTime()
+ULONG NTAPI Ext2GetCurrentTime()
 {
 	LARGE_INTEGER  CurrentTime;
 	ULONG Time;

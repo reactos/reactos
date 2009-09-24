@@ -749,7 +749,7 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Install New Font..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
-
+	IDS_COPY_OF                 "Copy of"
 END
 
 #pragma code_page(default)

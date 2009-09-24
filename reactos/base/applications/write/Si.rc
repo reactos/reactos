@@ -28,3 +28,4 @@ STRINGTABLE
 {
     IDS_FAILED, "Zagon programa Wordpad ni uspel"
 }
+#pragma code_page(default)

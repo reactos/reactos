@@ -931,8 +931,26 @@ static HRESULT WINAPI HTMLElement_put_outerHTML(IHTMLElement *iface, BSTR v)
 static HRESULT WINAPI HTMLElement_get_outerHTML(IHTMLElement *iface, BSTR *p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString html_str;
+    HRESULT hres;
+
+    WARN("(%p)->(%p) semi-stub\n", This, p);
+
+    nsAString_Init(&html_str, NULL);
+    hres = nsnode_to_nsstring(This->node.nsnode, &html_str);
+    if(SUCCEEDED(hres)) {
+        const PRUnichar *html;
+
+        nsAString_GetData(&html_str, &html);
+        *p = SysAllocString(html);
+        if(!*p)
+            hres = E_OUTOFMEMORY;
+    }
+
+    nsAString_Finish(&html_str);
+
+    TRACE("ret %s\n", debugstr_w(*p));
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement_put_outerText(IHTMLElement *iface, BSTR v)

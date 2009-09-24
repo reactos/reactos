@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "credui_resources.h"
+
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
@@ -82,5 +84,3 @@ STRINGTABLE DISCARDABLE
     IDS_CAPSLOCKONTITLE "大寫鎖定開著"
     IDS_CAPSLOCKON      "開著大寫鎖定可能導致你輸入錯誤的密碼."
 }
-
-#pragma code_page(default)

@@ -47,7 +47,7 @@ extern "C" {
 #endif
 
 #if defined(NDIS_WRAPPER)
-  #define NDISAPI DECLSPEC_EXPORT
+  #define NDISAPI
 #else
   #define NDISAPI DECLSPEC_IMPORT
 #endif
@@ -306,25 +306,6 @@ typedef struct _GEN_GET_TIME_CAPS {
 typedef struct _GEN_GET_NETCARD_TIME {
   ULONGLONG  ReadTime;
 } GEN_GET_NETCARD_TIME, *PGEN_GET_NETCARD_TIME;
-
-/* NDIS driver medium (OID_GEN_MEDIA_SUPPORTED / OID_GEN_MEDIA_IN_USE) */
-typedef enum _NDIS_MEDIUM {
-  NdisMedium802_3,
-  NdisMedium802_5,
-  NdisMediumFddi,
-  NdisMediumWan,
-  NdisMediumLocalTalk,
-  NdisMediumDix,
-  NdisMediumArcnetRaw,
-  NdisMediumArcnet878_2,
-  NdisMediumAtm,
-  NdisMediumWirelessWan,
-  NdisMediumIrda,
-  NdisMediumBpc,
-  NdisMediumCoWan,
-  NdisMedium1394,
-  NdisMediumMax
-} NDIS_MEDIUM, *PNDIS_MEDIUM;
 
 /* NDIS packet filter bits (OID_GEN_CURRENT_PACKET_FILTER) */
 #define NDIS_PACKET_TYPE_DIRECTED               0x00000001
@@ -849,12 +830,6 @@ typedef enum _NDIS_PER_PACKET_INFO {
 typedef struct _NDIS_PACKET_EXTENSION {
   PVOID  NdisPacketInfo[MaxPerPacketInfo];
 } NDIS_PACKET_EXTENSION, *PNDIS_PACKET_EXTENSION;
-
-typedef struct _NDIS_OBJECT_HEADER {
-  UCHAR  Type;
-  UCHAR  Revision;
-  USHORT  Size;
-} NDIS_OBJECT_HEADER, *PNDIS_OBJECT_HEADER;
 
 typedef struct _NDIS_GENERIC_OBJECT {
   NDIS_OBJECT_HEADER  Header;

@@ -235,7 +235,7 @@ KsRemoveItemFromObjectBag(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -244,8 +244,55 @@ KsCopyObjectBagItems(
     IN KSOBJECT_BAG ObjectBagDestination,
     IN KSOBJECT_BAG ObjectBagSource)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PKSIOBJECT_BAG ObjectBagDest, ObjectBagSrc;
+    PLIST_ENTRY Entry;
+    PKSIOBJECT_BAG_ENTRY BagEntry;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* get object bag src */
+    ObjectBagSrc = (PKSIOBJECT_BAG)ObjectBagSource;
+
+    /* get object bag dst */
+    ObjectBagDest = (PKSIOBJECT_BAG)ObjectBagDestination;
+
+    /* acquire source mutex */
+    KeWaitForSingleObject(ObjectBagSrc->BagMutex, Executive, KernelMode, FALSE, NULL);
+
+    if (ObjectBagSrc->BagMutex != ObjectBagDest->BagMutex)
+    {
+        /* acquire destination mutex */
+        KeWaitForSingleObject(ObjectBagDest->BagMutex, Executive, KernelMode, FALSE, NULL);
+    }
+
+    /* point to first item */
+    Entry = ObjectBagSrc->ObjectList.Flink;
+    /* first scan the list if the item is already inserted */
+    while(Entry != &ObjectBagSrc->ObjectList)
+    {
+        /* get bag entry */
+        BagEntry = (PKSIOBJECT_BAG_ENTRY)CONTAINING_RECORD(Entry, KSIOBJECT_BAG_ENTRY, Entry);
+
+        /* add the item */
+        Status = KsAddItemToObjectBag(ObjectBagDestination, BagEntry->Item, BagEntry->Free);
+
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+            break;
+
+        /* move to next entry */
+        Entry = Entry->Flink;
+    }
+
+    if (ObjectBagSrc->BagMutex != ObjectBagDest->BagMutex)
+    {
+        /* release destination mutex */
+        KeReleaseMutex(ObjectBagDest->BagMutex, FALSE);
+    }
+
+    /* release source mutex */
+     KeReleaseMutex(ObjectBagSrc->BagMutex, FALSE);
+
+    return Status;
 }
 
 /*

@@ -452,7 +452,7 @@ static int get_rect_cy(const REBAR_INFO *infoPtr, const RECT *lpRect)
     return lpRect->bottom - lpRect->top;
 }
 
-static int round_child_height(REBAR_BAND *lpBand, int cyHeight)
+static int round_child_height(const REBAR_BAND *lpBand, int cyHeight)
 {
     int cy = 0;
     if (lpBand->cyIntegral == 0)
@@ -1699,11 +1699,11 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
     if( (lprbbi->fMask & RBBIM_CHILDSIZE) &&
         ( (lpBand->cxMinChild != lprbbi->cxMinChild) ||
           (lpBand->cyMinChild != lprbbi->cyMinChild ) ||
-          ( (lprbbi->cbSize >= sizeof (REBARBANDINFOA) && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) &&
+          ( (lprbbi->cbSize >= REBARBANDINFOA_V6_SIZE && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) &&
             ( (lpBand->cyChild    != lprbbi->cyChild ) ||
               (lpBand->cyMaxChild != lprbbi->cyMaxChild ) ||
               (lpBand->cyIntegral != lprbbi->cyIntegral ) ) ) ||
-          ( (lprbbi->cbSize < sizeof (REBARBANDINFOA)) &&
+          ( (lprbbi->cbSize < REBARBANDINFOA_V6_SIZE) &&
             ( (lpBand->cyChild || 
                lpBand->cyMaxChild || 
                lpBand->cyIntegral ) ) ) ) )
@@ -1711,7 +1711,7 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
 	lpBand->cxMinChild = lprbbi->cxMinChild;
 	lpBand->cyMinChild = lprbbi->cyMinChild;
         /* These fields where added in WIN32_IE == 0x400 and are set only for RBBS_VARIABLEHEIGHT bands */
-        if (lprbbi->cbSize >= sizeof (REBARBANDINFOA) && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
+        if (lprbbi->cbSize >= REBARBANDINFOA_V6_SIZE && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
 	    lpBand->cyMaxChild = lprbbi->cyMaxChild;
             lpBand->cyIntegral = lprbbi->cyIntegral;
 
@@ -1747,7 +1747,7 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
     }
 
     /* check for additional data */
-    if (lprbbi->cbSize >= sizeof (REBARBANDINFOA)) {
+    if (lprbbi->cbSize >= REBARBANDINFOA_V6_SIZE) {
 	if( (lprbbi->fMask & RBBIM_IDEALSIZE) &&
             ( lpBand->cxIdeal != lprbbi->cxIdeal ) )
         {
@@ -2167,7 +2167,7 @@ REBAR_GetBandInfoT(const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL
 	lprbbi->cyMinChild = lpBand->cyMinChild;
         /* to make tests pass we follow Windows behaviour and allow to read these fields only
          * for RBBS_VARIABLEHEIGHTS bands */
-        if (lprbbi->cbSize >= sizeof (REBARBANDINFOA) && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
+        if (lprbbi->cbSize >= REBARBANDINFOW_V6_SIZE && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
 	    lprbbi->cyChild    = lpBand->cyChild;
 	    lprbbi->cyMaxChild = lpBand->cyMaxChild;
 	    lprbbi->cyIntegral = lpBand->cyIntegral;
@@ -2184,7 +2184,7 @@ REBAR_GetBandInfoT(const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL
 	lprbbi->wID = lpBand->wID;
 
     /* check for additional data */
-    if (lprbbi->cbSize >= sizeof (REBARBANDINFOA)) {
+    if (lprbbi->cbSize >= REBARBANDINFOW_V6_SIZE) {
 	if (lprbbi->fMask & RBBIM_IDEALSIZE)
 	    lprbbi->cxIdeal = lpBand->cxIdeal;
 
@@ -2424,7 +2424,7 @@ REBAR_InsertBandT(REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL bUnico
     REBAR_CommonSetupBand(infoPtr->hwndSelf, lprbbi, lpBand);
 
     /* Make sure the defaults for these are correct */
-    if (lprbbi->cbSize < sizeof (REBARBANDINFOA) || !(lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
+    if (lprbbi->cbSize < REBARBANDINFOA_V6_SIZE || !(lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
         lpBand->cyChild    = lpBand->cyMinChild;
         lpBand->cyMaxChild = 0x7fffffff;
         lpBand->cyIntegral = 0;

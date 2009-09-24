@@ -18,6 +18,8 @@ extern "C" {
 #pragma warning(disable:4820)
 #endif
 
+#define PROCESS_NAME_NATIVE      1
+
 #define FILE_ENCRYPTABLE         0
 #define FILE_IS_ENCRYPTED        1
 #define FILE_SYSTEM_ATTR         2

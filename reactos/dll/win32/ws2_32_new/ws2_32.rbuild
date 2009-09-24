@@ -1,6 +1,7 @@
 <module name="ws2_32_new" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32_new.dll">
 	<importlibrary definition="ws2_32.spec" />
 	<include base="ws2_32_new">inc</include>
+	<include base="ReactOS">include/reactos/winsock</include>
 	<define name="LE" />
 	<library>wine</library>
 	<library>ntdll</library>

@@ -25,6 +25,7 @@ typedef struct
     KSBASIC_HEADER BasicHeader;
     KSPIN Pin;
     PKSIOBJECT_HEADER ObjectHeader;
+    KSPROCESSPIN ProcessPin;
     LIST_ENTRY Entry;
 
     IKsPinVtbl *lpVtbl;
@@ -370,17 +371,15 @@ KsPinGetConnectedFilterInterface(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 PDEVICE_OBJECT
 NTAPI
 KsPinGetConnectedPinDeviceObject(
     IN PKSPIN Pin)
 {
-    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
-
-    /* return related file object */
-    return IoGetRelatedDeviceObject(This->FileObject);
+    UNIMPLEMENTED
+    return NULL;
 }
 
 /*
@@ -391,11 +390,12 @@ NTAPI
 KsPinGetConnectedPinFileObject(
     IN PKSPIN Pin)
 {
+    UNIMPLEMENTED
     return NULL;
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 NTSTATUS
 NTAPI
@@ -404,14 +404,8 @@ KsPinGetConnectedPinInterface(
     IN const GUID*  InterfaceId,
     OUT PVOID*  Interface)
 {
-    IKsPin * KsPin;
-    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
-
-    /* get pin interface */
-    KsPin = (IKsPin*)&This->lpVtbl;
-
-    /* query pin interface for the requested interface */
-    return KsPin->lpVtbl->QueryInterface(KsPin, InterfaceId, Interface);
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -554,7 +548,7 @@ KsGetPinFromIrp(
     PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
     /* return object type */
     return (PKSPIN)ObjectHeader->ObjectType;
 
@@ -910,10 +904,10 @@ IKsPin_DispatchDeviceIoControl(
 
     /* sanity check */
     ASSERT(IoStack->FileObject);
-    ASSERT(IoStack->FileObject->FsContext);
+    ASSERT(IoStack->FileObject->FsContext2);
 
     /* get the object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
     /* locate ks pin implemention fro KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
@@ -967,10 +961,10 @@ IKsPin_Close(
 
     /* sanity check */
     ASSERT(IoStack->FileObject);
-    ASSERT(IoStack->FileObject->FsContext);
+    ASSERT(IoStack->FileObject->FsContext2);
 
     /* get the object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
     /* locate ks pin implemention fro KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
@@ -1186,6 +1180,30 @@ KspCreatePin(
     This->ObjectHeader->Unknown = (PUNKNOWN)&This->lpVtbl;
     This->ObjectHeader->ObjectType = (PVOID)&This->Pin;
 
+    /* setup process pin */
+    This->ProcessPin.Pin = &This->Pin;
+    This->ProcessPin.StreamPointer = (PKSSTREAM_POINTER)This->LeadingEdgeStreamPointer;
+
+    if (!Descriptor->Dispatch || !Descriptor->Dispatch->Process)
+    {
+        /* the pin is part of filter-centric processing filter
+         * add process pin to filter
+         */
+
+        Status = Filter->lpVtbl->AddProcessPin(Filter, &This->ProcessPin);
+        if (!NT_SUCCESS(Status))
+        {
+            /* failed to add process pin */
+            KsFreeObjectBag((KSOBJECT_BAG)This->Pin.Bag);
+            KsFreeObjectHeader(&This->ObjectHeader);
+
+            /* return failure code */
+            return Status;
+        }
+    }
+
+    /* FIXME add pin instance to filter instance */
+
     /* does the driver have a pin dispatch */
     if (Descriptor->Dispatch && Descriptor->Dispatch->Create)
     {
@@ -1203,8 +1221,6 @@ KspCreatePin(
         /* return failure code */
         return Status;
     }
-
-    /* FIXME add pin instance to filter instance */
 
     return Status;
 }

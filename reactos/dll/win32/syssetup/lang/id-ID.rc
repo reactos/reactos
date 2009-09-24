@@ -260,7 +260,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Command Prompt.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_SERVICE    "Service Manager.lnk"
     IDS_SHORT_DEVICE     "Device Manager.lnk"
     IDS_SHORT_MPLAY32    "Multimedia Player.lnk"

@@ -904,7 +904,7 @@ static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, const PropSheetInfo* psInfo
    */
   hwndButton = GetDlgItem(hwndParent, IDCANCEL);
 
-  x = rcSheet.right - ((padding.x + buttonWidth) * (num_buttons - 1));
+  x += padding.x + buttonWidth;
 
   SetWindowPos(hwndButton, 0, x, y, 0, 0,
                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -914,34 +914,25 @@ static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, const PropSheetInfo* psInfo
    */
   hwndButton = GetDlgItem(hwndParent, IDC_APPLY_BUTTON);
 
-  if (psInfo->hasApply)
-  {
-    if (psInfo->hasHelp)
-      x = rcSheet.right - ((padding.x + buttonWidth) * 2);
-    else
-      x = rcSheet.right - (padding.x + buttonWidth);
-
-    SetWindowPos(hwndButton, 0, x, y, 0, 0,
-                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-    EnableWindow(hwndButton, FALSE);
-  }
+  if(psInfo->hasApply)
+    x += padding.x + buttonWidth;
   else
     ShowWindow(hwndButton, SW_HIDE);
+
+  SetWindowPos(hwndButton, 0, x, y, 0, 0,
+              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+  EnableWindow(hwndButton, FALSE);
 
   /*
    * Position Help button.
    */
   hwndButton = GetDlgItem(hwndParent, IDHELP);
 
-  if (psInfo->hasHelp)
-  {
-    x = rcSheet.right - (padding.x + buttonWidth);
+  x += padding.x + buttonWidth;
+  SetWindowPos(hwndButton, 0, x, y, 0, 0,
+              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 
-    SetWindowPos(hwndButton, 0, x, y, 0, 0,
-                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-  }
-  else
+  if(!psInfo->hasHelp)
     ShowWindow(hwndButton, SW_HIDE);
 
   return TRUE;
@@ -1549,6 +1540,7 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 {
   HWND hwndTabCtrl;
   HWND hwndLineHeader;
+  HWND control;
   LPCPROPSHEETPAGEW ppshpage;
 
   TRACE("active_page %d, index %d\n", psInfo->active_page, index);
@@ -1569,6 +1561,10 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
   {
      PROPSHEET_SetTitleW(hwndDlg, psInfo->ppshheader.dwFlags,
                          psInfo->proppage[index].pszText);
+
+     control = GetNextDlgTabItem(psInfo->proppage[index].hwndPage, NULL, FALSE);
+     if(control != NULL)
+         SetFocus(control);
   }
 
   if (psInfo->active_page != -1)
@@ -1631,7 +1627,11 @@ static BOOL PROPSHEET_Back(HWND hwndDlg)
   if (idx >= 0 && idx < psInfo->nPages)
   {
      if (PROPSHEET_CanSetCurSel(hwndDlg))
+     {
+        SetFocus(GetDlgItem(hwndDlg, IDC_BACK_BUTTON));
+        SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
         PROPSHEET_SetCurSel(hwndDlg, idx, -1, 0);
+     }
   }
   return TRUE;
 }
@@ -1669,7 +1669,11 @@ static BOOL PROPSHEET_Next(HWND hwndDlg)
   if (idx < psInfo->nPages )
   {
      if (PROPSHEET_CanSetCurSel(hwndDlg) != FALSE)
+     {
+        SetFocus(GetDlgItem(hwndDlg, IDC_NEXT_BUTTON));
+        SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
         PROPSHEET_SetCurSel(hwndDlg, idx, 1, 0);
+     }
   }
 
   return TRUE;
@@ -3444,6 +3448,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       /* set up the Next and Back buttons by default */
       PROPSHEET_SetWizButtons(hwnd, PSWIZB_BACK|PSWIZB_NEXT);
+      SetFocus(GetDlgItem(hwnd, IDC_NEXT_BUTTON));
 
       /* Set up fonts */
       SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
@@ -3528,7 +3533,11 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
        * from which to switch to the next page */
       SendMessageW(hwndTabCtrl, TCM_SETCURSEL, psInfo->active_page, 0);
 
-      PROPSHEET_UnChanged(hwnd, (HWND)wParam);
+      PROPSHEET_UnChanged(hwnd, NULL);
+
+      /* wizards set their focus during init */
+      if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
+          return FALSE;
 
       return TRUE;
     }

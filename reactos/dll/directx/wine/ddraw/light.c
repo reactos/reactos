@@ -179,17 +179,17 @@ IDirect3DLightImpl_SetLight(IDirect3DLight *iface,
 
     if ( (lpLight->dltType == 0) || (lpLight->dltType > D3DLIGHT_PARALLELPOINT) )
          return DDERR_INVALIDPARAMS;
-    
+
     if ( lpLight->dltType == D3DLIGHT_PARALLELPOINT )
-	 FIXME("D3DLIGHT_PARALLELPOINT no supported\n");
-    
+        FIXME("D3DLIGHT_PARALLELPOINT no supported\n");
+
     /* Translate D3DLIGH2 structure to D3DLIGHT7 */
     light7->dltType        = lpLight->dltType;
     light7->dcvDiffuse     = lpLight->dcvColor;
-    if ((((LPD3DLIGHT2)lpLight)->dwFlags & D3DLIGHT_NO_SPECULAR) != 0)	    
+    if ((((LPD3DLIGHT2)lpLight)->dwFlags & D3DLIGHT_NO_SPECULAR) != 0)
       light7->dcvSpecular    = lpLight->dcvColor;
     else
-      light7->dcvSpecular    = *(const D3DCOLORVALUE*)zero_value;	    
+      light7->dcvSpecular    = *(const D3DCOLORVALUE*)zero_value;
     light7->dcvAmbient     = lpLight->dcvColor;
     light7->dvPosition     = lpLight->dvPosition;
     light7->dvDirection    = lpLight->dvDirection;
@@ -204,7 +204,7 @@ IDirect3DLightImpl_SetLight(IDirect3DLight *iface,
     EnterCriticalSection(&ddraw_cs);
     memcpy(&This->light, lpLight, lpLight->dwSize);
     if ((This->light.dwFlags & D3DLIGHT_ACTIVE) != 0) {
-        This->update(This);        
+        This->update(This);
     }
     LeaveCriticalSection(&ddraw_cs);
     return D3D_OK;
@@ -274,7 +274,7 @@ void light_activate(IDirect3DLightImpl* This)
     if (!This->active_viewport || !This->active_viewport->active_device)
         return;
     device =  This->active_viewport->active_device;
-    
+
     light_update(This);
     /* If was not active, activate it */
     if ((This->light.dwFlags & D3DLIGHT_ACTIVE) == 0) {
@@ -299,7 +299,7 @@ void light_desactivate(IDirect3DLightImpl* This)
     if (!This->active_viewport || !This->active_viewport->active_device)
         return;
     device =  This->active_viewport->active_device;
-    
+
     /* If was not active, activate it */
     if ((This->light.dwFlags & D3DLIGHT_ACTIVE) != 0) {
         IDirect3DDevice7_LightEnable((IDirect3DDevice7 *)device, This->dwLightIndex, FALSE);

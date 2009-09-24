@@ -36,9 +36,7 @@ typedef unsigned int dev_t;
 # endif
 #endif
 
-#ifdef _WINE
-#ifndef _PID_T_
-#define	_PID_T_
+#if defined(_WINE)
 #ifndef _WIN64
 typedef int	_pid_t;
 #else
@@ -50,7 +48,6 @@ typedef __int64	_pid_t;
 typedef _pid_t	pid_t;
 #endif /* __pid_t_defined */
 #endif
-#endif	/* Not _PID_T_ */
 #endif
 
 #endif /* !_INC_TYPES */

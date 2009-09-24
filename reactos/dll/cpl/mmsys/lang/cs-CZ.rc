@@ -239,6 +239,7 @@ BEGIN
     IDS_CPLNAME "Zvuky a zvuková zaøízení"
     IDS_CPLDESCRIPTION "Upraví zvukové schéma Vašeho poèítaèe, nebo nastaví reproduktory a nahrávací zaøízení."
     IDS_NO_SOUND "(Není)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Chyba programu"
     5826 "Ukonèení programu"
@@ -269,4 +270,5 @@ BEGIN
     5851 "Otevøení nabídky Start"
     5852 "Odhlášení od systému ReactOS"
     5853 "Pøihlášení k systému ReactOS"
+	5854 "ReactOS Explorer"
 END

@@ -1,5 +1,5 @@
 /*
- * British English Language resource file
+ * British English language resource file
  * Translated by: Benedikt Freisen
  */
 
@@ -9,16 +9,16 @@ ID_MENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILENEW
-        MENUITEM "Open...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "Save\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Save as...", IDM_FILESAVEAS
+        MENUITEM "&New\tCtrl+N", IDM_FILENEW
+        MENUITEM "&Open...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&Save\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Save &as...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Set as wallpaper (tiled)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Set as wallpaper (centered)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Set as wallpaper (stretched)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Quit\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&Quit\tAlt+F4", IDM_FILEEXIT
     END
 
     POPUP "&Edit"
@@ -70,7 +70,7 @@ BEGIN
         MENUITEM "Crop", IDM_IMAGECROP
         MENUITEM "Invert colours\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attributes...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Delete image", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Delete image\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Draw opaque", IDM_IMAGEDRAWOPAQUE
     END
     

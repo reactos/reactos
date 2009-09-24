@@ -31,9 +31,6 @@ static LOCAL_KEYBOARD_INDICATOR_TRANSLATION IndicatorTranslation = { 3, {
 
 /* FUNCTIONS *****************************************************************/
 
-/* Debug stuff */
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
 static VOID NTAPI
 i8042DebugWorkItem(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -48,7 +45,7 @@ i8042DebugWorkItem(
 	/* We hope kernel would understand this. If
 	 * that's not the case, nothing would happen.
 	 */
-	KdSystemDebugControl(TAG('R', 'o', 's', ' '), Key, 0, NULL, 0, NULL, KernelMode);
+	KdSystemDebugControl(' soR', Key, 0, NULL, 0, NULL, KernelMode);
 }
 
 /*

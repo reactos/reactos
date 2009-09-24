@@ -9,6 +9,9 @@
 #include <debug.h>
 #include <ksmedia.h>
 #include <mmsystem.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <wchar.h>
 
 #include "interface.h"
 

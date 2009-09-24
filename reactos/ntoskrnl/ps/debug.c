@@ -103,7 +103,7 @@ PsGetContextThread(IN PETHREAD Thread,
 {
     GET_SET_CTX_CONTEXT GetSetContext;
     ULONG Size = 0, Flags = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     /* Enter SEH */
     _SEH2_TRY
@@ -133,13 +133,10 @@ PsGetContextThread(IN PETHREAD Thread,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Get exception code */
-        Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-
-    /* Check if we got success */
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Initialize the wait event */
     KeInitializeEvent(&GetSetContext.Event, NotificationEvent, FALSE);
@@ -167,6 +164,9 @@ PsGetContextThread(IN PETHREAD Thread,
 
         /* Leave the guarded region */
         KeLeaveGuardedRegion();
+
+        /* We are done */
+        Status = STATUS_SUCCESS;
     }
     else
     {
@@ -204,6 +204,7 @@ PsGetContextThread(IN PETHREAD Thread,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        /* Get the exception code */
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
@@ -223,7 +224,7 @@ PsSetContextThread(IN PETHREAD Thread,
 {
     GET_SET_CTX_CONTEXT GetSetContext;
     ULONG Size = 0, Flags = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     /* Enter SEH */
     _SEH2_TRY
@@ -256,13 +257,10 @@ PsSetContextThread(IN PETHREAD Thread,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Get exception code */
-        Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-
-    /* Check if we got success */
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Initialize the wait event */
     KeInitializeEvent(&GetSetContext.Event, NotificationEvent, FALSE);
@@ -290,6 +288,9 @@ PsSetContextThread(IN PETHREAD Thread,
 
         /* Leave the guarded region */
         KeLeaveGuardedRegion();
+
+        /* We are done */
+        Status = STATUS_SUCCESS;
     }
     else
     {

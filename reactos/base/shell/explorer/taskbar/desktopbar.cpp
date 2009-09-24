@@ -147,13 +147,13 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	rbBand.cyMaxChild = (ULONG)-1;
 	rbBand.cyMinChild = REBARBAND_HEIGHT;
 	rbBand.cyIntegral = REBARBAND_HEIGHT + 3;	//@@ OK?
-	rbBand.cxMinChild = rbBand.cyIntegral * 3;
 	rbBand.fStyle = RBBS_VARIABLEHEIGHT|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE;
 
 	TCHAR QuickLaunchBand[] = _T("Quicklaunch");
 	rbBand.lpText = QuickLaunchBand;
 	rbBand.hwndChild = _hwndQuickLaunch;
-	rbBand.cx = 120;
+	rbBand.cx = 100;
+	rbBand.cxMinChild = 100;
 	rbBand.wID = IDW_QUICKLAUNCHBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
@@ -161,6 +161,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	rbBand.lpText = TaskbarBand;
 	rbBand.hwndChild = _hwndTaskBar;
 	rbBand.cx = 200;	//pcs->cx-_taskbar_pos-quicklaunch_width-(notifyarea_width+1);
+	rbBand.cxMinChild = 50;
 	rbBand.wID = IDW_TASKTOOLBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 #endif

@@ -250,7 +250,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "Mapa znakù.lnk"
     IDS_SHORT_CMD        "Pøíkazový øádek.lnk"
     IDS_SHORT_DEVICE     "Správce zaøízení.lnk"
-    IDS_SHORT_DOWNLOADER "Download!.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
     IDS_SHORT_EVENTVIEW  "Prohlížeè událostí.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Prùzkumník.lnk"

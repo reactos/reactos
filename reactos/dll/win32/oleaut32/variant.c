@@ -588,7 +588,7 @@ void WINAPI VariantInit(VARIANTARG* pVarg)
  *
  * RETURNS
  *  Success: S_OK. Any previous value in pVarg is freed and its type is set to VT_EMPTY.
- *  Failure: DISP_E_BADVARTYPE, if the variant is a not a valid variant type.
+ *  Failure: DISP_E_BADVARTYPE, if the variant is not a valid variant type.
  */
 HRESULT WINAPI VariantClear(VARIANTARG* pVarg)
 {
@@ -5571,7 +5571,9 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     V_VT(result) = VT_I8;
     V_I8(result) = V_I8(&lv) % V_I8(&rv);
 
-    TRACE("V_I8(left) == %ld, V_I8(right) == %ld, V_I8(result) == %ld\n", (long)V_I8(&lv), (long)V_I8(&rv), (long)V_I8(result));
+    TRACE("V_I8(left) == %s, V_I8(right) == %s, V_I8(result) == %s\n",
+          wine_dbgstr_longlong(V_I8(&lv)), wine_dbgstr_longlong(V_I8(&rv)),
+          wine_dbgstr_longlong(V_I8(result)));
 
     /* convert left and right to the destination type */
     rc = VariantChangeType(result, result, 0, resT);

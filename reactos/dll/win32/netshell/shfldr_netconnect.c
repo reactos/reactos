@@ -644,6 +644,11 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
                 psd->str.uType = STRRET_WSTR;
                 hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
             }
+            else
+            {
+                psd->str.u.cStr[0] = '\0';
+                psd->str.uType = STRRET_CSTR;
+            }
             break;
         case COLUMN_PHONE:
         case COLUMN_OWNER:
@@ -651,9 +656,8 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
             psd->str.uType = STRRET_CSTR;
             break;
     }
-#if 0
+
     NcFreeNetconProperties(pProperties);
-#endif
     return hr;
 }
 

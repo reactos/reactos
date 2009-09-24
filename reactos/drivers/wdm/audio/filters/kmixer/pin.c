@@ -127,13 +127,13 @@ PerformSampleRateConversion(
     {
         PUSHORT Res = (PUSHORT)ResultOut;
 
-        src_float_to_short_array(FloatIn, (short*)Res, Data.output_frames_gen * NumChannels);
+        src_float_to_short_array(FloatOut, (short*)Res, Data.output_frames_gen * NumChannels);
     }
     else if (BytesPerSample == 4)
     {
         PULONG Res = (PULONG)ResultOut;
 
-        src_float_to_int_array(FloatIn, (int*)Res, Data.output_frames_gen * NumChannels);
+        src_float_to_int_array(FloatOut, (int*)Res, Data.output_frames_gen * NumChannels);
     }
 
 

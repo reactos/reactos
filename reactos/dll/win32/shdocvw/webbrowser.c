@@ -724,6 +724,7 @@ static HRESULT WINAPI WebBrowser_Navigate2(IWebBrowser2 *iface, VARIANT *URL, VA
         VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
+    LPCWSTR url;
 
     TRACE("(%p)->(%p %p %p %p %p)\n", This, URL, Flags, TargetFrameName, PostData, Headers);
 
@@ -733,12 +734,20 @@ static HRESULT WINAPI WebBrowser_Navigate2(IWebBrowser2 *iface, VARIANT *URL, VA
     if(!URL)
         return S_OK;
 
-    if(V_VT(URL) != VT_BSTR) {
+    switch (V_VT(URL))
+    {
+    case VT_BSTR:
+        url = V_BSTR(URL);
+        break;
+    case VT_BSTR|VT_BYREF:
+        url = *V_BSTRREF(URL);
+        break;
+    default:
         FIXME("Unsupported V_VT(URL) %d\n", V_VT(URL));
         return E_INVALIDARG;
     }
 
-    return navigate_url(&This->doc_host, V_BSTR(URL), Flags, TargetFrameName, PostData, Headers);
+    return navigate_url(&This->doc_host, url, Flags, TargetFrameName, PostData, Headers);
 }
 
 static HRESULT WINAPI WebBrowser_QueryStatusWB(IWebBrowser2 *iface, OLECMDID cmdID, OLECMDF *pcmdf)
@@ -767,9 +776,10 @@ static HRESULT WINAPI WebBrowser_ShowBrowserBar(IWebBrowser2 *iface, VARIANT *pv
 static HRESULT WINAPI WebBrowser_get_ReadyState(IWebBrowser2 *iface, READYSTATE *lpReadyState)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, lpReadyState);
 
-    *lpReadyState = READYSTATE_COMPLETE;
+    TRACE("(%p)->(%p)\n", This, lpReadyState);
+
+    *lpReadyState = This->doc_host.ready_state;
     return S_OK;
 }
 

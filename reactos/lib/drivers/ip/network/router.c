@@ -219,7 +219,7 @@ PFIB_ENTRY RouterAddRoute(
         return NULL;
     }
 
-    INIT_TAG(Router, TAG('R','O','U','T'));
+    INIT_TAG(Router, 'TUOR');
 
     RtlCopyMemory( &FIBE->NetworkAddress, NetworkAddress,
 		   sizeof(FIBE->NetworkAddress) );
@@ -274,7 +274,8 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 	TI_DbgPrint(DEBUG_ROUTER,("This-Route: %s (Sharing %d bits)\n",
 				  A2S(&NCE->Address), Length));
 
-	if(Length >= MaskLength && (Length > BestLength || !BestLength)) {
+	if(Length >= MaskLength && (Length > BestLength || !BestNCE) &&
+           (!(State & NUD_STALE) || !BestNCE)) {
 	    /* This seems to be a better router */
 	    BestNCE    = NCE;
 	    BestLength = Length;

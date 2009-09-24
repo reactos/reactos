@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 #if defined(_SCSIPORT_)
-  #define SCSIPORTAPI DECLSPEC_EXPORT
+  #define SCSIPORTAPI
 #else
   #define SCSIPORTAPI DECLSPEC_IMPORT
 #endif

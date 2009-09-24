@@ -317,6 +317,9 @@ static void put_string(res_t *res, const string_t *str, enum str_e type, int ist
             if (!check_unicode_conversion( str, newstr, codepage ))
                 error( "String %s does not convert identically to Unicode and back in codepage %d. "
                        "Try using a Unicode string instead\n", str->str.cstr, codepage );
+            if (check_valid_utf8( str, codepage ))
+                warning( "string \"%s\" seems to be UTF-8 but codepage %u is in use.\n",
+                         str->str.cstr, codepage );
         }
         if (!isterm) put_word(res, newstr->size);
         for(cnt = 0; cnt < newstr->size; cnt++)

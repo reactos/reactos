@@ -969,6 +969,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
 
     /* Allocate the APC */
     Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
+    if (!Apc) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Set the Terminated Flag */
     Flags = Thread->CrossThreadFlags | CT_TERMINATED_BIT;
@@ -1298,7 +1299,7 @@ NtRegisterThreadTerminatePort(IN HANDLE PortHandle)
     /* Allocate the Port and make sure it suceeded */
     TerminationPort = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(TERMINATION_PORT),
-                                            TAG('P', 's', 'T', '='));
+                                            '=TsP');
     if(TerminationPort)
     {
         /* Associate the Port */

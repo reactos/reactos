@@ -1,1 +1,1 @@
-e:\cabman.exe -M raw -S rapps.cab \rapps\*.txt
+c:\cabman.exe -M raw -S rappmgr.cab \rapps\*.txt

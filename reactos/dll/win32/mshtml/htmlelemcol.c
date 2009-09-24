@@ -132,6 +132,7 @@ static ULONG WINAPI HTMLElementCollection_Release(IHTMLElementCollection *iface)
 
     if(!ref) {
         IUnknown_Release(This->ref_unk);
+        release_dispex(&This->dispex);
         heap_free(This->elems);
         heap_free(This);
     }
@@ -428,6 +429,7 @@ static const IHTMLElementCollectionVtbl HTMLElementCollectionVtbl = {
 };
 
 static const dispex_static_data_vtbl_t HTMLElementColection_dispex_vtbl = {
+    NULL,
     HTMLElementCollection_get_dispid,
     HTMLElementCollection_invoke
 };

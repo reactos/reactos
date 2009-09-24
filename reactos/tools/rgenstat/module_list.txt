@@ -68,7 +68,6 @@ imagehlp dll\win32\imagehlp
 imm32 dll\win32\imm32
 iphlpapi dll\win32\iphlpapi
 kernel32 dll\win32\kernel32
-ks drivers\ksfilter\ks
 lsasrv dll\win32\lsasrv
 lz32 dll\win32\lz32
 mapi32 dll\win32\mapi32
@@ -96,7 +95,6 @@ olepro32 dll\win32\olepro32
 opengl32 dll\win32\opengl32
 powrprof dll\win32\powrprof
 psapi dll\win32\psapi
-portcls drivers\wdm\audio\backpln\portcls
 riched20 dll\win32\riched20
 riched32 dll\win32\riched32
 rpcrt4 dll\win32\rpcrt4
@@ -132,5 +130,8 @@ ws2help dll\win32\ws2help
 wshirda dll\win32\wshirda
 wsock32 dll\win32\wsock32
 wshtcpip dll\win32\wshtcpip
+bda drivers\multimedia\bdasup
 framebuf drivers\video\displays\framebuf
+ks drivers\ksfilter\ks
+portcls drivers\wdm\audio\backpln\portcls
 vgaddi drivers\video\displays\vga

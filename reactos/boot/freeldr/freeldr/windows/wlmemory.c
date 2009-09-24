@@ -401,33 +401,24 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 }
 
 #ifdef _M_IX86
-
-BOOLEAN LocalAPIC = FALSE;
-ULONG_PTR APICAddress = 0;
-
 VOID
 WinLdrpMapApic()
 {
+	BOOLEAN LocalAPIC;
+	LARGE_INTEGER MsrValue;
+	ULONG APICAddress, CpuInfo[4];
+
 	/* Check if we have a local APIC */
-	asm(".intel_syntax noprefix\n");
-		asm("mov eax, 1\n");
-		asm("cpuid\n");
-		asm("shr edx, 9\n");
-		asm("and edx, 0x1\n");
-		asm("mov _LocalAPIC, edx\n");
-	asm(".att_syntax\n");
+	__cpuid((int*)CpuInfo, 1);
+	LocalAPIC = (((CpuInfo[3] >> 9) & 1) != 0);
 
 	/* If there is no APIC, just return */
 	if (!LocalAPIC)
 		return;
 
-	asm(".intel_syntax noprefix\n");
-		asm("mov ecx, 0x1B\n");
-		asm("rdmsr\n");
-		asm("mov edx, eax\n");
-		asm("and edx, 0xFFFFF000\n");
-		asm("mov _APICAddress, edx");
-	asm(".att_syntax\n");
+	/* Read the APIC Address */
+	MsrValue.QuadPart = __readmsr(0x1B);
+	APICAddress = (MsrValue.LowPart & 0xFFFFF000);
 
 	DPRINTM(DPRINT_WINDOWS, "Local APIC detected at address 0x%x\n",
 		APICAddress);
@@ -643,7 +634,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	_disable();
 
 	// Re-initalize EFLAGS
-	Ke386EraseFlags();
+	__writeeflags(0);
 
 	// Set the PDBR
 	__writecr3((ULONG_PTR)PDE);
@@ -743,8 +734,8 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	RtlZeroMemory((PVOID)Pcr, MM_PAGE_SIZE); //FIXME: Why zero only 1 page when we allocate 2?
 
 	// Get old values of GDT and IDT
-	Ke386GetGlobalDescriptorTable(GdtDesc);
-	Ke386GetInterruptDescriptorTable(IdtDesc);
+	Ke386GetGlobalDescriptorTable(&GdtDesc);
+	__sidt(&IdtDesc);
 
 	// Save old IDT
 	OldIdt.Base = IdtDesc.Base;
@@ -918,18 +909,28 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	//asm("cli\n"); // they are already masked before enabling paged mode
 
 	// Load GDT+IDT
-	Ke386SetGlobalDescriptorTable(GdtDesc);
-	Ke386SetInterruptDescriptorTable(IdtDesc);
+	Ke386SetGlobalDescriptorTable(&GdtDesc);
+	__lidt(&IdtDesc);
 
 	// Jump to proper CS and clear prefetch queue
+#if defined(__GNUC__)
 	asm("ljmp	$0x08, $1f\n"
 		"1:\n");
+#elif defined(_MSC_VER)
+	/* We can't express the above in MASM so we use this far return instead */
+	DbgPrint("WinLdrSetProcessorContext: Performing untested far-return\n");
+	__asm {
+		push 8
+		push offset resume
+		retf
+		resume:
+		};
+#else
+#error
+#endif
 
 	// Set SS selector
-	asm(".intel_syntax noprefix\n");
-		asm("mov ax, 0x10\n"); // DataSelector=0x10
-		asm("mov ss, ax\n");
-	asm(".att_syntax\n");
+	Ke386SetSs(0x10); // DataSelector=0x10
 
 	// Set DS and ES selectors
 	Ke386SetDs(0x10);
@@ -942,10 +943,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	Ke386SetTr(0x28);
 
 	// Clear GS
-	asm(".intel_syntax noprefix\n");
-		asm("push 0\n");
-		asm("pop gs\n");
-	asm(".att_syntax\n");
+	Ke386SetGs(0);
 
 	// Set FS to PCR
 	Ke386SetFs(0x30);

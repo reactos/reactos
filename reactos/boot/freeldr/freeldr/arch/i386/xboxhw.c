@@ -29,15 +29,19 @@ extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 extern char reactos_arc_strings[32][256];
 
-static VOID
-SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
-			     ULONG DriveNumber)
+static PCM_PARTIAL_RESOURCE_LIST
+GetHarddiskConfigurationData(ULONG DriveNumber, ULONG* pSize)
 {
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
   EXTENDED_GEOMETRY ExtGeometry;
   GEOMETRY Geometry;
   ULONG Size;
+
+    //
+    // Initialize returned size
+    //
+    *pSize = 0;
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -47,7 +51,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
     {
       DPRINTM(DPRINT_HWDETECT,
 		"Failed to allocate a full resource descriptor\n");
-      return;
+      return NULL;
     }
 
   memset(PartialResourceList, 0, Size);
@@ -78,7 +82,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
     {
       DPRINTM(DPRINT_HWDETECT, "Reading disk geometry failed\n");
       MmHeapFree(PartialResourceList);
-      return;
+      return NULL;
     }
   DPRINTM(DPRINT_HWDETECT,
 	   "Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
@@ -88,10 +92,130 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
 	   DiskGeometry->SectorsPerTrack,
 	   DiskGeometry->BytesPerSector);
 
-  FldrSetConfigurationData(DiskKey, PartialResourceList, Size);
-  MmHeapFree(PartialResourceList);
+    //
+    // Return configuration data
+    //
+    *pSize = Size;
+    return PartialResourceList;
 }
 
+typedef struct tagDISKCONTEXT
+{
+    ULONG DriveNumber;
+    ULONG SectorSize;
+    ULONGLONG SectorOffset;
+    ULONGLONG SectorCount;
+    ULONGLONG SectorNumber;
+} DISKCONTEXT;
+
+static LONG DiskClose(ULONG FileId)
+{
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+
+    MmHeapFree(Context);
+    return ESUCCESS;
+}
+
+static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+
+    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    Information->EndingAddress.QuadPart = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
+    Information->CurrentAddress.LowPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
+
+    return ESUCCESS;
+}
+
+static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+{
+    DISKCONTEXT* Context;
+    ULONG DriveNumber, DrivePartition, SectorSize;
+    ULONGLONG SectorOffset = 0;
+    ULONGLONG SectorCount = 0;
+    PARTITION_TABLE_ENTRY PartitionTableEntry;
+    CHAR FileName[1];
+
+    if (!DissectArcPath(Path, FileName, &DriveNumber, &DrivePartition))
+        return EINVAL;
+    SectorSize = (DrivePartition == 0xff ? 2048 : 512);
+    if (DrivePartition != 0xff && DrivePartition != 0)
+    {
+        if (!MachDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
+            return EINVAL;
+        SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
+        SectorCount = PartitionTableEntry.PartitionSectorCount;
+    }
+    else
+    {
+        SectorCount = 0; /* FIXME */
+    }
+
+    Context = MmHeapAlloc(sizeof(DISKCONTEXT));
+    if (!Context)
+        return ENOMEM;
+    Context->DriveNumber = DriveNumber;
+    Context->SectorSize = SectorSize;
+    Context->SectorOffset = SectorOffset;
+    Context->SectorCount = SectorCount;
+    Context->SectorNumber = 0;
+    FsSetDeviceSpecific(*FileId, Context);
+
+    return ESUCCESS;
+}
+
+static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+{
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+    UCHAR* Ptr = (UCHAR*)Buffer;
+    ULONG i, Length;
+    BOOLEAN ret;
+
+    *Count = 0;
+    i = 0;
+    while (N > 0)
+    {
+        Length = N;
+        if (Length > Context->SectorSize)
+            Length = Context->SectorSize;
+        ret = MachDiskReadLogicalSectors(
+            Context->DriveNumber,
+            Context->SectorNumber + Context->SectorOffset + i,
+            1,
+            (PVOID)DISKREADBUFFER);
+        if (!ret)
+            return EIO;
+        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Length);
+        Ptr += Length;
+        *Count += Length;
+        N -= Length;
+        i++;
+    }
+
+    return ESUCCESS;
+}
+
+static LONG DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+{
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+
+    if (SeekMode != SeekAbsolute)
+        return EINVAL;
+    if (Position->LowPart & (Context->SectorSize - 1))
+        return EINVAL;
+
+    /* FIXME: take HighPart into account */
+    Context->SectorNumber = Position->LowPart / Context->SectorSize;
+    return ESUCCESS;
+}
+
+static const DEVVTBL DiskVtbl = {
+    DiskClose,
+    DiskGetFileInformation,
+    DiskOpen,
+    DiskRead,
+    DiskSeek,
+};
 
 static VOID
 GetHarddiskIdentifier(PCHAR Identifier,
@@ -103,6 +227,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   ULONG Checksum;
   ULONG Signature;
   CHAR ArcName[256];
+  PARTITION_TABLE_ENTRY PartitionTableEntry;
 
   /* Read the MBR */
   if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
@@ -134,6 +259,23 @@ GetHarddiskIdentifier(PCHAR Identifier,
   reactos_arc_disk_info[reactos_disk_count].ArcName =
       reactos_arc_strings[reactos_disk_count];
   reactos_disk_count++;
+
+  sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(0)", DriveNumber - 0x80);
+  FsRegisterDevice(ArcName, &DiskVtbl);
+
+  /* Add partitions */
+  i = 1;
+  DiskReportError(FALSE);
+  while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
+  {
+    if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
+    {
+      sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)partition(%lu)", DriveNumber - 0x80, i);
+      FsRegisterDevice(ArcName, &DiskVtbl);
+    }
+    i++;
+  }
+  DiskReportError(TRUE);
 
   /* Convert checksum and signature to identifier string */
   Identifier[0] = Hex[(Checksum >> 28) & 0x0F];
@@ -202,17 +344,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     DPRINTM(DPRINT_HWDETECT, "BIOS reports %d harddisk%s\n",
               (int)DiskCount, (DiskCount == 1) ? "": "s");
     
-    FldrCreateComponentKey(BusKey,
-                           ControllerClass,
-                           DiskController,
-                           Output | Input | Removable,
-                           0,
-                           0xFFFFFFFF,
-                           NULL,
-                           &ControllerKey);
-    DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
-    
-    //DetectBiosFloppyController(BusKey, ControllerKey);
+    //DetectBiosFloppyController(BusKey);
     
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -258,16 +390,29 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         }
     }
     
-    /* Set 'Configuration Data' value */
-    FldrSetConfigurationData(SystemKey, PartialResourceList, Size);
+    FldrCreateComponentKey(BusKey,
+                           ControllerClass,
+                           DiskController,
+                           Output | Input,
+                           0,
+                           0xFFFFFFFF,
+                           NULL,
+                           PartialResourceList,
+                           Size,
+                           &ControllerKey);
+    DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
+    
     MmHeapFree(PartialResourceList);
     
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
+        PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+        ULONG Size;
         CHAR Identifier[20];
 
         /* Get disk values */
+        PartialResourceList = GetHarddiskConfigurationData(0x80 + i, &Size);
         GetHarddiskIdentifier(Identifier, 0x80 + i);
 
         /* Create disk key */
@@ -278,10 +423,12 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                                0,
                                0xFFFFFFFF,
                                Identifier,
+                               PartialResourceList,
+                               Size,
                                &DiskKey);
-        
-        /* Set disk values */
-        SetHarddiskConfigurationData(DiskKey, 0x80 + i);
+
+        if (PartialResourceList)
+            MmHeapFree(PartialResourceList);
     }
 }
 
@@ -291,19 +438,6 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCONFIGURATION_COMPONENT_DATA BusKey;
   ULONG Size;
-
-  /* Create new bus key */
-  FldrCreateComponentKey(SystemKey,
-                         AdapterClass,
-                         MultiFunctionAdapter,
-                         0x0,
-                         0x0,
-                         0xFFFFFFFF,
-                         "ISA",
-                         &BusKey);
-
-  /* Increment bus number */
-  (*BusNumber)++;
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
@@ -322,10 +456,22 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   PartialResourceList->Revision = 1;
   PartialResourceList->Count = 0;
 
-  /* Set 'Configuration Data' value */
-  FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-  MmHeapFree(PartialResourceList);
+    /* Create new bus key */
+    FldrCreateComponentKey(SystemKey,
+                           AdapterClass,
+                           MultiFunctionAdapter,
+                           0x0,
+                           0x0,
+                           0xFFFFFFFF,
+                           "ISA",
+                           PartialResourceList,
+                           Size,
+                           &BusKey);
 
+    /* Increment bus number */
+    (*BusNumber)++;
+
+  MmHeapFree(PartialResourceList);
 
   /* Detect ISA/BIOS devices */
   DetectBiosDisks(SystemKey, BusKey);

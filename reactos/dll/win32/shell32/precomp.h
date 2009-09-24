@@ -60,6 +60,7 @@
 #include "version.h"
 #include "shellfolder.h"
 #include "xdg.h"
+#include "shellapi.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -67,6 +68,7 @@
 extern const GUID CLSID_AdminFolderShortcut;
 extern const GUID CLSID_FontsFolderShortcut;
 extern const GUID CLSID_StartMenu;
+extern const GUID CLSID_MenuBandSite;
 extern const GUID CLSID_OpenWith;
 extern const GUID CLSID_UnixFolder;
 extern const GUID CLSID_UnixDosFolder;

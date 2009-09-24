@@ -44,7 +44,6 @@
 #include "header.h"
 
 /* future options to reserve characters for: */
-/* a = alignment of structures */
 /* A = ACF input filename */
 /* J = do not search standard include path */
 /* O = generate interpreted stubs */
@@ -53,6 +52,7 @@
 static const char usage[] =
 "Usage: widl [options...] infile.idl\n"
 "   or: widl [options...] --dlldata-only name1 [name2...]\n"
+"   -a n               Set structure alignment to 'n'\n"
 "   -b arch            Set the target architecture\n"
 "   -c                 Generate client stub\n"
 "   -C file            Name of client stub file (default is infile_c.c)\n"
@@ -111,6 +111,7 @@ int no_preprocess = 0;
 int old_names = 0;
 int do_win32 = 1;
 int do_win64 = 1;
+int packing = 8;
 
 char *input_name;
 char *header_name;
@@ -153,7 +154,7 @@ enum {
 };
 
 static const char short_options[] =
-    "b:cC:d:D:EhH:I:m:NpP:sS:tT:uU:VW";
+    "a:b:cC:d:D:EhH:I:m:NpP:sS:tT:uU:VW";
 static const struct option long_options[] = {
     { "dlldata", 1, 0, DLLDATA_OPTION },
     { "dlldata-only", 0, 0, DLLDATA_ONLY_OPTION },
@@ -520,6 +521,11 @@ int main(int argc,char *argv[])
     case WIN64_OPTION:
       do_win32 = 0;
       do_win64 = 1;
+      break;
+    case 'a':
+      packing = strtol(optarg, NULL, 0);
+      if(packing != 2 && packing != 4 && packing != 8)
+          error("Packing must be one of 2, 4 or 8\n");
       break;
     case 'b':
       set_target( optarg );

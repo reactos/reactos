@@ -21,6 +21,8 @@
 
 #include "xcopy.h"
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -77,3 +79,4 @@ Parameters:\n\
 \t\tdatum. Als geen detum wordt gegeven, copiëer alleen als bron nieuwer is.\n\n"
 
 }
+#pragma code_page(default)

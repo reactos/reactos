@@ -570,7 +570,7 @@ HRESULT WINAPI OleQueryLinkFromData(
   IDataObject* pSrcDataObject)
 {
   FIXME("(%p),stub!\n", pSrcDataObject);
-  return S_OK;
+  return S_FALSE;
 }
 
 /***********************************************************************

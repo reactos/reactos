@@ -31,6 +31,7 @@
 #include "ole2.h"
 
 #include "initguid.h"
+#include "wincodec.h"
 #include "gdiplus.h"
 #include "gdiplus_private.h"
 #include "wine/debug.h"
@@ -167,8 +168,25 @@ GpStatus WINGDIPAPI GdipBitmapLockBits(GpBitmap* bitmap, GDIPCONST GpRect* rect,
     if(bitmap->lockmode)
         return WrongState;
 
-    IPicture_get_Handle(bitmap->image.picture, (OLE_HANDLE*)&hbm);
-    IPicture_get_CurDC(bitmap->image.picture, &hdc);
+    if (bitmap->bits && bitmap->format == format)
+    {
+        /* no conversion is necessary; just use the bits directly */
+        lockeddata->Width = act_rect.Width;
+        lockeddata->Height = act_rect.Height;
+        lockeddata->PixelFormat = format;
+        lockeddata->Reserved = flags;
+        lockeddata->Stride = bitmap->stride;
+        lockeddata->Scan0 = bitmap->bits + (bitspp / 8) * act_rect.X +
+                            bitmap->stride * act_rect.Y;
+
+        bitmap->lockmode = flags;
+        bitmap->numlocks++;
+
+        return Ok;
+    }
+
+    hbm = bitmap->hbitmap;
+    hdc = bitmap->hdc;
     bm_is_selected = (hdc != 0);
 
     pbmi = GdipAlloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
@@ -263,8 +281,15 @@ GpStatus WINGDIPAPI GdipBitmapUnlockBits(GpBitmap* bitmap,
         return Ok;
     }
 
-    IPicture_get_Handle(bitmap->image.picture, (OLE_HANDLE*)&hbm);
-    IPicture_get_CurDC(bitmap->image.picture, &hdc);
+    if (!bitmap->bitmapbits)
+    {
+        /* we passed a direct reference; no need to do anything */
+        bitmap->lockmode = 0;
+        return Ok;
+    }
+
+    hbm = bitmap->hbitmap;
+    hdc = bitmap->hdc;
     bm_is_selected = (hdc != 0);
 
     pbmi = GdipAlloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
@@ -312,10 +337,6 @@ GpStatus WINGDIPAPI GdipCloneBitmapAreaI(INT x, INT y, INT width, INT height,
 
 GpStatus WINGDIPAPI GdipCloneImage(GpImage *image, GpImage **cloneImage)
 {
-    IStream* stream;
-    HRESULT hr;
-    INT size;
-    LARGE_INTEGER move;
     GpStatus stat = GenericError;
 
     TRACE("%p, %p\n", image, cloneImage);
@@ -323,29 +344,82 @@ GpStatus WINGDIPAPI GdipCloneImage(GpImage *image, GpImage **cloneImage)
     if (!image || !cloneImage)
         return InvalidParameter;
 
-    hr = CreateStreamOnHGlobal(0, TRUE, &stream);
-    if (FAILED(hr))
-        return GenericError;
-
-    hr = IPicture_SaveAsFile(image->picture, stream, FALSE, &size);
-    if(FAILED(hr))
+    if (image->picture)
     {
-        WARN("Failed to save image on stream\n");
-        goto out;
+        IStream* stream;
+        HRESULT hr;
+        INT size;
+        LARGE_INTEGER move;
+
+        hr = CreateStreamOnHGlobal(0, TRUE, &stream);
+        if (FAILED(hr))
+            return GenericError;
+
+        hr = IPicture_SaveAsFile(image->picture, stream, FALSE, &size);
+        if(FAILED(hr))
+        {
+            WARN("Failed to save image on stream\n");
+            goto out;
+        }
+
+        /* Set seek pointer back to the beginning of the picture */
+        move.QuadPart = 0;
+        hr = IStream_Seek(stream, move, STREAM_SEEK_SET, NULL);
+        if (FAILED(hr))
+            goto out;
+
+        stat = GdipLoadImageFromStream(stream, cloneImage);
+        if (stat != Ok) WARN("Failed to load image from stream\n");
+
+    out:
+        IStream_Release(stream);
+        return stat;
     }
+    else if (image->type == ImageTypeBitmap)
+    {
+        GpBitmap *bitmap = (GpBitmap*)image;
+        BitmapData lockeddata_src, lockeddata_dst;
+        int i;
+        UINT row_size;
 
-    /* Set seek pointer back to the beginning of the picture */
-    move.QuadPart = 0;
-    hr = IStream_Seek(stream, move, STREAM_SEEK_SET, NULL);
-    if (FAILED(hr))
-        goto out;
+        stat = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, bitmap->format,
+            &lockeddata_src);
+        if (stat != Ok) return stat;
 
-    stat = GdipLoadImageFromStream(stream, cloneImage);
-    if (stat != Ok) WARN("Failed to load image from stream\n");
+        stat = GdipCreateBitmapFromScan0(lockeddata_src.Width, lockeddata_src.Height,
+            0, lockeddata_src.PixelFormat, NULL, (GpBitmap**)cloneImage);
+        if (stat == Ok)
+        {
+            stat = GdipBitmapLockBits((GpBitmap*)*cloneImage, NULL, ImageLockModeWrite,
+                lockeddata_src.PixelFormat, &lockeddata_dst);
 
-out:
-    IStream_Release(stream);
-    return stat;
+            if (stat == Ok)
+            {
+                /* copy the image data */
+                row_size = (lockeddata_src.Width * PIXELFORMATBPP(lockeddata_src.PixelFormat) +7)/8;
+                for (i=0; i<lockeddata_src.Height; i++)
+                    memcpy((BYTE*)lockeddata_dst.Scan0+lockeddata_dst.Stride*i,
+                           (BYTE*)lockeddata_src.Scan0+lockeddata_src.Stride*i,
+                           row_size);
+
+                GdipBitmapUnlockBits((GpBitmap*)*cloneImage, &lockeddata_dst);
+            }
+
+            GdipBitmapUnlockBits(bitmap, &lockeddata_src);
+        }
+
+        if (stat != Ok)
+        {
+            GdipDisposeImage(*cloneImage);
+            *cloneImage = NULL;
+        }
+        return stat;
+    }
+    else
+    {
+        ERR("GpImage with no IPicture or bitmap?!\n");
+        return NotImplemented;
+    }
 }
 
 GpStatus WINGDIPAPI GdipCreateBitmapFromFile(GDIPCONST WCHAR* filename,
@@ -447,11 +521,69 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromResource(HINSTANCE hInstance,
 GpStatus WINGDIPAPI GdipCreateHBITMAPFromBitmap(GpBitmap* bitmap,
     HBITMAP* hbmReturn, ARGB background)
 {
-    FIXME("stub\n");
+    GpStatus stat;
+    HBITMAP result, oldbitmap;
+    UINT width, height;
+    HDC hdc;
+    GpGraphics *graphics;
+    BITMAPINFOHEADER bih;
+    void *bits;
+    TRACE("(%p,%p,%x)\n", bitmap, hbmReturn, background);
 
-    hbmReturn = NULL;
+    if (!bitmap || !hbmReturn) return InvalidParameter;
 
-    return NotImplemented;
+    GdipGetImageWidth((GpImage*)bitmap, &width);
+    GdipGetImageHeight((GpImage*)bitmap, &height);
+
+    bih.biSize = sizeof(bih);
+    bih.biWidth = width;
+    bih.biHeight = height;
+    bih.biPlanes = 1;
+    bih.biBitCount = 32;
+    bih.biCompression = BI_RGB;
+    bih.biSizeImage = 0;
+    bih.biXPelsPerMeter = 0;
+    bih.biYPelsPerMeter = 0;
+    bih.biClrUsed = 0;
+    bih.biClrImportant = 0;
+
+    hdc = CreateCompatibleDC(NULL);
+    if (!hdc) return GenericError;
+
+    result = CreateDIBSection(hdc, (BITMAPINFO*)&bih, DIB_RGB_COLORS, &bits,
+        NULL, 0);
+
+    if (result)
+    {
+        oldbitmap = SelectObject(hdc, result);
+
+        stat = GdipCreateFromHDC(hdc, &graphics);
+        if (stat == Ok)
+        {
+            stat = GdipGraphicsClear(graphics, background);
+
+            if (stat == Ok)
+                stat = GdipDrawImage(graphics, (GpImage*)bitmap, 0, 0);
+
+            GdipDeleteGraphics(graphics);
+        }
+
+        SelectObject(hdc, oldbitmap);
+    }
+    else
+        stat = GenericError;
+
+    DeleteDC(hdc);
+
+    if (stat != Ok && result)
+    {
+        DeleteObject(result);
+        result = NULL;
+    }
+
+    *hbmReturn = result;
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipConvertToEmfPlus(const GpGraphics* ref,
@@ -494,44 +626,169 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromGraphics(INT width, INT height,
 
 GpStatus WINGDIPAPI GdipCreateBitmapFromHICON(HICON hicon, GpBitmap** bitmap)
 {
-    HICON icon_copy;
+    GpStatus stat;
     ICONINFO iinfo;
-    PICTDESC desc;
+    BITMAP bm;
+    int ret;
+    UINT width, height;
+    GpRect rect;
+    BitmapData lockeddata;
+    HDC screendc;
+    BOOL has_alpha;
+    int x, y;
+    BYTE *bits;
+    BITMAPINFOHEADER bih;
+    DWORD *src;
+    BYTE *dst_row;
+    DWORD *dst;
 
     TRACE("%p, %p\n", hicon, bitmap);
 
     if(!bitmap || !GetIconInfo(hicon, &iinfo))
-        return InvalidParameter;
-
-    *bitmap = GdipAlloc(sizeof(GpBitmap));
-    if(!*bitmap)    return OutOfMemory;
-
-    icon_copy = CreateIconIndirect(&iinfo);
-
-    if(!icon_copy){
-        GdipFree(*bitmap);
+    {
+        DeleteObject(iinfo.hbmColor);
+        DeleteObject(iinfo.hbmMask);
         return InvalidParameter;
     }
 
-    desc.cbSizeofstruct = sizeof(PICTDESC);
-    desc.picType = PICTYPE_ICON;
-    desc.u.icon.hicon = icon_copy;
-
-    if(OleCreatePictureIndirect(&desc, &IID_IPicture, TRUE,
-                                (LPVOID*) &((*bitmap)->image.picture)) != S_OK){
-        DestroyIcon(icon_copy);
-        GdipFree(*bitmap);
+    /* get the size of the icon */
+    ret = GetObjectA(iinfo.hbmColor ? iinfo.hbmColor : iinfo.hbmMask, sizeof(bm), &bm);
+    if (ret == 0) {
+        DeleteObject(iinfo.hbmColor);
+        DeleteObject(iinfo.hbmMask);
         return GenericError;
     }
 
-    (*bitmap)->format = PixelFormat32bppARGB;
-    (*bitmap)->image.type  = ImageTypeBitmap;
-    (*bitmap)->image.flags = ImageFlagsNone;
-    (*bitmap)->width  = ipicture_pixel_width((*bitmap)->image.picture);
-    (*bitmap)->height = ipicture_pixel_height((*bitmap)->image.picture);
+    width = bm.bmWidth;
+
+    if (iinfo.hbmColor)
+        height = abs(bm.bmHeight);
+    else /* combined bitmap + mask */
+        height = abs(bm.bmHeight) / 2;
+
+    bits = HeapAlloc(GetProcessHeap(), 0, 4*width*height);
+    if (!bits) {
+        DeleteObject(iinfo.hbmColor);
+        DeleteObject(iinfo.hbmMask);
+        return OutOfMemory;
+    }
+
+    stat = GdipCreateBitmapFromScan0(width, height, 0, PixelFormat32bppARGB, NULL, bitmap);
+    if (stat != Ok) {
+        DeleteObject(iinfo.hbmColor);
+        DeleteObject(iinfo.hbmMask);
+        HeapFree(GetProcessHeap(), 0, bits);
+        return stat;
+    }
+
+    rect.X = 0;
+    rect.Y = 0;
+    rect.Width = width;
+    rect.Height = height;
+
+    stat = GdipBitmapLockBits(*bitmap, &rect, ImageLockModeWrite, PixelFormat32bppARGB, &lockeddata);
+    if (stat != Ok) {
+        DeleteObject(iinfo.hbmColor);
+        DeleteObject(iinfo.hbmMask);
+        HeapFree(GetProcessHeap(), 0, bits);
+        GdipDisposeImage((GpImage*)*bitmap);
+        return stat;
+    }
+
+    bih.biSize = sizeof(bih);
+    bih.biWidth = width;
+    bih.biHeight = -height;
+    bih.biPlanes = 1;
+    bih.biBitCount = 32;
+    bih.biCompression = BI_RGB;
+    bih.biSizeImage = 0;
+    bih.biXPelsPerMeter = 0;
+    bih.biYPelsPerMeter = 0;
+    bih.biClrUsed = 0;
+    bih.biClrImportant = 0;
+
+    screendc = GetDC(0);
+    if (iinfo.hbmColor)
+    {
+        GetDIBits(screendc, iinfo.hbmColor, 0, height, bits, (BITMAPINFO*)&bih, DIB_RGB_COLORS);
+
+        if (bm.bmBitsPixel == 32)
+        {
+            has_alpha = FALSE;
+
+            /* If any pixel has a non-zero alpha, ignore hbmMask */
+            src = (DWORD*)bits;
+            for (x=0; x<width && !has_alpha; x++)
+                for (y=0; y<height && !has_alpha; y++)
+                    if ((*src++ & 0xff000000) != 0)
+                        has_alpha = TRUE;
+        }
+        else has_alpha = FALSE;
+    }
+    else
+    {
+        GetDIBits(screendc, iinfo.hbmMask, 0, height, bits, (BITMAPINFO*)&bih, DIB_RGB_COLORS);
+        has_alpha = FALSE;
+    }
+
+    /* copy the image data to the Bitmap */
+    src = (DWORD*)bits;
+    dst_row = lockeddata.Scan0;
+    for (y=0; y<height; y++)
+    {
+        memcpy(dst_row, src, width*4);
+        src += width;
+        dst_row += lockeddata.Stride;
+    }
+
+    if (!has_alpha)
+    {
+        if (iinfo.hbmMask)
+        {
+            /* read alpha data from the mask */
+            if (iinfo.hbmColor)
+                GetDIBits(screendc, iinfo.hbmMask, 0, height, bits, (BITMAPINFO*)&bih, DIB_RGB_COLORS);
+            else
+                GetDIBits(screendc, iinfo.hbmMask, height, height, bits, (BITMAPINFO*)&bih, DIB_RGB_COLORS);
+
+            src = (DWORD*)bits;
+            dst_row = lockeddata.Scan0;
+            for (y=0; y<height; y++)
+            {
+                dst = (DWORD*)dst_row;
+                for (x=0; x<height; x++)
+                {
+                    DWORD src_value = *src++;
+                    if (src_value)
+                        *dst++ = 0;
+                    else
+                        *dst++ |= 0xff000000;
+                }
+                dst_row += lockeddata.Stride;
+            }
+        }
+        else
+        {
+            /* set constant alpha of 255 */
+            dst_row = bits;
+            for (y=0; y<height; y++)
+            {
+                dst = (DWORD*)dst_row;
+                for (x=0; x<height; x++)
+                    *dst++ |= 0xff000000;
+                dst_row += lockeddata.Stride;
+            }
+        }
+    }
+
+    ReleaseDC(0, screendc);
 
     DeleteObject(iinfo.hbmColor);
     DeleteObject(iinfo.hbmMask);
+
+    GdipBitmapUnlockBits(*bitmap, &lockeddata);
+
+    HeapFree(GetProcessHeap(), 0, bits);
 
     return Ok;
 }
@@ -539,11 +796,12 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHICON(HICON hicon, GpBitmap** bitmap)
 GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     PixelFormat format, BYTE* scan0, GpBitmap** bitmap)
 {
-    BITMAPFILEHEADER *bmfh;
-    BITMAPINFOHEADER *bmih;
-    BYTE *buff;
-    INT datalen, size;
-    IStream *stream;
+    BITMAPINFOHEADER bmih;
+    HBITMAP hbitmap;
+    INT row_size, dib_stride;
+    HDC hdc;
+    BYTE *bits;
+    int i;
 
     TRACE("%d %d %d %d %p %p\n", width, height, stride, format, scan0, bitmap);
 
@@ -557,71 +815,46 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     if(scan0 && !stride)
         return InvalidParameter;
 
-    *bitmap = GdipAlloc(sizeof(GpBitmap));
-    if(!*bitmap)    return OutOfMemory;
+    row_size = (width * PIXELFORMATBPP(format)+7) / 8;
+    dib_stride = (row_size + 3) & ~3;
 
-    if(stride == 0){
-        stride = width * (PIXELFORMATBPP(format) / 8);
-        stride = (stride + 3) & ~3;
-    }
+    if(stride == 0)
+        stride = dib_stride;
 
-    datalen = abs(stride * height);
-    size = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + datalen;
-    buff = GdipAlloc(size);
-    if(!buff){
-        GdipFree(*bitmap);
-        return OutOfMemory;
-    }
-
-    bmfh = (BITMAPFILEHEADER*) buff;
-    bmih = (BITMAPINFOHEADER*) (bmfh + 1);
-
-    bmfh->bfType    = (((WORD)'M') << 8) + (WORD)'B';
-    bmfh->bfSize    = size;
-    bmfh->bfOffBits = size - datalen;
-
-    bmih->biSize            = sizeof(BITMAPINFOHEADER);
-    bmih->biWidth           = width;
+    bmih.biSize = sizeof(BITMAPINFOHEADER);
+    bmih.biWidth = width;
+    bmih.biHeight = -height;
+    bmih.biPlanes = 1;
     /* FIXME: use the rest of the data from format */
-    bmih->biBitCount        = PIXELFORMATBPP(format);
-    bmih->biCompression     = BI_RGB;
-    bmih->biSizeImage       = datalen;
+    bmih.biBitCount = PIXELFORMATBPP(format);
+    bmih.biCompression = BI_RGB;
+    bmih.biSizeImage = 0;
+    bmih.biXPelsPerMeter = 0;
+    bmih.biYPelsPerMeter = 0;
+    bmih.biClrUsed = 0;
+    bmih.biClrImportant = 0;
 
+    hdc = CreateCompatibleDC(NULL);
+    if (!hdc) return GenericError;
+
+    hbitmap = CreateDIBSection(hdc, (BITMAPINFO*)&bmih, DIB_RGB_COLORS, (void**)&bits,
+        NULL, 0);
+
+    DeleteDC(hdc);
+
+    if (!hbitmap) return GenericError;
+
+    /* copy bits to the dib if necessary */
+    /* FIXME: should reference the bits instead of copying them */
     if (scan0)
-    {
-        if (stride > 0)
-        {
-            bmih->biHeight = -height;
-            memcpy(bmih + 1, scan0, datalen);
-        }
-        else
-        {
-            bmih->biHeight = height;
-            memcpy(bmih + 1, scan0 + stride * (height - 1), datalen);
-        }
-    }
-    else
-    {
-        bmih->biHeight = height;
-        memset(bmih + 1, 0, datalen);
-    }
+        for (i=0; i<height; i++)
+            memcpy(bits+i*dib_stride, scan0+i*stride, row_size);
 
-    if(CreateStreamOnHGlobal(buff, TRUE, &stream) != S_OK){
-        ERR("could not make stream\n");
-        GdipFree(*bitmap);
-        GdipFree(buff);
-        *bitmap = NULL;
-        return GenericError;
-    }
-
-    if(OleLoadPicture(stream, 0, FALSE, &IID_IPicture,
-        (LPVOID*) &((*bitmap)->image.picture)) != S_OK){
-        TRACE("Could not load picture\n");
-        IStream_Release(stream);
-        GdipFree(*bitmap);
-        GdipFree(buff);
-        *bitmap = NULL;
-        return GenericError;
+    *bitmap = GdipAlloc(sizeof(GpBitmap));
+    if(!*bitmap)
+    {
+        DeleteObject(hbitmap);
+        return OutOfMemory;
     }
 
     (*bitmap)->image.type = ImageTypeBitmap;
@@ -629,6 +862,11 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     (*bitmap)->width = width;
     (*bitmap)->height = height;
     (*bitmap)->format = format;
+    (*bitmap)->image.picture = NULL;
+    (*bitmap)->hbitmap = hbitmap;
+    (*bitmap)->hdc = NULL;
+    (*bitmap)->bits = bits;
+    (*bitmap)->stride = dib_stride;
 
     return Ok;
 }
@@ -646,8 +884,8 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromStream(IStream* stream,
         return stat;
 
     if((*bitmap)->image.type != ImageTypeBitmap){
-        IPicture_Release((*bitmap)->image.picture);
-        GdipFree(bitmap);
+        GdipDisposeImage(&(*bitmap)->image);
+        *bitmap = NULL;
         return GenericError; /* FIXME: what error to return? */
     }
 
@@ -726,18 +964,18 @@ GpStatus WINGDIPAPI GdipEmfToWmfBits(HENHMETAFILE hemf, UINT cbData16,
 
 GpStatus WINGDIPAPI GdipDisposeImage(GpImage *image)
 {
-    HDC hdc;
-
     TRACE("%p\n", image);
 
     if(!image)
         return InvalidParameter;
 
-    IPicture_get_CurDC(image->picture, &hdc);
-    DeleteDC(hdc);
-    IPicture_Release(image->picture);
+    if (image->picture)
+        IPicture_Release(image->picture);
     if (image->type == ImageTypeBitmap)
+    {
         GdipFree(((GpBitmap*)image)->bitmapbits);
+        DeleteDC(((GpBitmap*)image)->hdc);
+    }
     GdipFree(image);
 
     return Ok;
@@ -829,11 +1067,12 @@ GpStatus WINGDIPAPI GdipGetImageGraphicsContext(GpImage *image,
         return NotImplemented;
     }
 
-    IPicture_get_CurDC(image->picture, &hdc);
+    hdc = ((GpBitmap*)image)->hdc;
 
     if(!hdc){
         hdc = CreateCompatibleDC(0);
-        IPicture_SelectPicture(image->picture, hdc, NULL, NULL);
+        SelectObject(hdc, ((GpBitmap*)image)->hbitmap);
+        ((GpBitmap*)image)->hdc = hdc;
     }
 
     return GdipCreateFromHDC(hdc, graphics);
@@ -1143,10 +1382,148 @@ GpStatus WINGDIPAPI GdipLoadImageFromFileICM(GDIPCONST WCHAR* filename,GpImage *
     return GdipLoadImageFromFile(filename, image);
 }
 
-GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream* stream, GpImage **image)
+static const WICPixelFormatGUID *wic_pixel_formats[] = {
+    &GUID_WICPixelFormat16bppBGR555,
+    &GUID_WICPixelFormat24bppBGR,
+    &GUID_WICPixelFormat32bppBGR,
+    &GUID_WICPixelFormat32bppBGRA,
+    &GUID_WICPixelFormat32bppPBGRA,
+    NULL
+};
+
+static const PixelFormat wic_gdip_formats[] = {
+    PixelFormat16bppRGB555,
+    PixelFormat24bppRGB,
+    PixelFormat32bppRGB,
+    PixelFormat32bppARGB,
+    PixelFormat32bppPARGB,
+};
+
+static GpStatus decode_image_wic(IStream* stream, REFCLSID clsid, GpImage **image)
+{
+    GpStatus status=Ok;
+    GpBitmap *bitmap;
+    HRESULT hr;
+    IWICBitmapDecoder *decoder;
+    IWICBitmapFrameDecode *frame;
+    IWICBitmapSource *source=NULL;
+    WICPixelFormatGUID wic_format;
+    PixelFormat gdip_format=0;
+    int i;
+    UINT width, height;
+    BitmapData lockeddata;
+    WICRect wrc;
+    HRESULT initresult;
+
+    initresult = CoInitialize(NULL);
+
+    hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IWICBitmapDecoder, (void**)&decoder);
+    if (FAILED(hr)) goto end;
+
+    hr = IWICBitmapDecoder_Initialize(decoder, (IStream*)stream, WICDecodeMetadataCacheOnLoad);
+    if (SUCCEEDED(hr))
+        hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
+
+    if (SUCCEEDED(hr)) /* got frame */
+    {
+        hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &wic_format);
+
+        if (SUCCEEDED(hr))
+        {
+            for (i=0; wic_pixel_formats[i]; i++)
+            {
+                if (IsEqualGUID(&wic_format, wic_pixel_formats[i]))
+                {
+                    source = (IWICBitmapSource*)frame;
+                    IWICBitmapSource_AddRef(source);
+                    gdip_format = wic_gdip_formats[i];
+                    break;
+                }
+            }
+            if (!source)
+            {
+                /* unknown format; fall back on 32bppARGB */
+                hr = WICConvertBitmapSource(&GUID_WICPixelFormat32bppBGRA, (IWICBitmapSource*)frame, &source);
+                gdip_format = PixelFormat32bppARGB;
+            }
+        }
+
+        if (SUCCEEDED(hr)) /* got source */
+        {
+            hr = IWICBitmapSource_GetSize(source, &width, &height);
+
+            if (SUCCEEDED(hr))
+                status = GdipCreateBitmapFromScan0(width, height, 0, gdip_format,
+                    NULL, &bitmap);
+
+            if (SUCCEEDED(hr) && status == Ok) /* created bitmap */
+            {
+                status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeWrite,
+                    gdip_format, &lockeddata);
+                if (status == Ok) /* locked bitmap */
+                {
+                    wrc.X = 0;
+                    wrc.Width = width;
+                    wrc.Height = 1;
+                    for (i=0; i<height; i++)
+                    {
+                        wrc.Y = i;
+                        hr = IWICBitmapSource_CopyPixels(source, &wrc, abs(lockeddata.Stride),
+                            abs(lockeddata.Stride), (BYTE*)lockeddata.Scan0+lockeddata.Stride*i);
+                        if (FAILED(hr)) break;
+                    }
+
+                    GdipBitmapUnlockBits(bitmap, &lockeddata);
+                }
+
+                if (SUCCEEDED(hr) && status == Ok)
+                    *image = (GpImage*)bitmap;
+                else
+                {
+                    *image = NULL;
+                    GdipDisposeImage((GpImage*)bitmap);
+                }
+            }
+
+            IWICBitmapSource_Release(source);
+        }
+
+        IWICBitmapFrameDecode_Release(frame);
+    }
+
+    IWICBitmapDecoder_Release(decoder);
+
+end:
+    if (SUCCEEDED(initresult)) CoUninitialize();
+
+    if (FAILED(hr) && status == Ok) status = hresult_to_status(hr);
+
+    return status;
+}
+
+static GpStatus decode_image_icon(IStream* stream, REFCLSID clsid, GpImage **image)
+{
+    return decode_image_wic(stream, &CLSID_WICIcoDecoder, image);
+}
+
+static GpStatus decode_image_jpeg(IStream* stream, REFCLSID clsid, GpImage **image)
+{
+    return decode_image_wic(stream, &CLSID_WICJpegDecoder, image);
+}
+
+static GpStatus decode_image_gif(IStream* stream, REFCLSID clsid, GpImage **image)
+{
+    return decode_image_wic(stream, &CLSID_WICGifDecoder, image);
+}
+
+static GpStatus decode_image_olepicture_bitmap(IStream* stream, REFCLSID clsid, GpImage **image)
 {
     IPicture *pic;
-    short type;
+    BITMAPINFO *pbmi;
+    BITMAPCOREHEADER* bmch;
+    HBITMAP hbm;
+    HDC hdc;
 
     TRACE("%p %p\n", stream, image);
 
@@ -1159,92 +1536,186 @@ GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream* stream, GpImage **image)
         return GenericError;
     }
 
-    IPicture_get_Type(pic, &type);
-
-    if(type == PICTYPE_BITMAP){
-        BITMAPINFO *pbmi;
-        BITMAPCOREHEADER* bmch;
-        HBITMAP hbm;
-        HDC hdc;
-
-        pbmi = GdipAlloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-        if (!pbmi)
-            return OutOfMemory;
-        *image = GdipAlloc(sizeof(GpBitmap));
-        if(!*image){
-            GdipFree(pbmi);
-            return OutOfMemory;
-        }
-        (*image)->type = ImageTypeBitmap;
-
-        (*((GpBitmap**) image))->width = ipicture_pixel_width(pic);
-        (*((GpBitmap**) image))->height = ipicture_pixel_height(pic);
-
-        /* get the pixel format */
-        IPicture_get_Handle(pic, (OLE_HANDLE*)&hbm);
-        IPicture_get_CurDC(pic, &hdc);
-
-        bmch = (BITMAPCOREHEADER*) (&pbmi->bmiHeader);
-        bmch->bcSize = sizeof(BITMAPCOREHEADER);
-
-        if(!hdc){
-            HBITMAP old;
-            hdc = CreateCompatibleDC(0);
-            old = SelectObject(hdc, hbm);
-            GetDIBits(hdc, hbm, 0, 0, NULL, pbmi, DIB_RGB_COLORS);
-            SelectObject(hdc, old);
-            DeleteDC(hdc);
-        }
-        else
-            GetDIBits(hdc, hbm, 0, 0, NULL, pbmi, DIB_RGB_COLORS);
-
-        switch(bmch->bcBitCount)
-        {
-            case 1:
-                (*((GpBitmap**) image))->format = PixelFormat1bppIndexed;
-                break;
-            case 4:
-                (*((GpBitmap**) image))->format = PixelFormat4bppIndexed;
-                break;
-            case 8:
-                (*((GpBitmap**) image))->format = PixelFormat8bppIndexed;
-                break;
-            case 16:
-                (*((GpBitmap**) image))->format = PixelFormat16bppRGB565;
-                break;
-            case 24:
-                (*((GpBitmap**) image))->format = PixelFormat24bppRGB;
-                break;
-            case 32:
-                (*((GpBitmap**) image))->format = PixelFormat32bppRGB;
-                break;
-            case 48:
-                (*((GpBitmap**) image))->format = PixelFormat48bppRGB;
-                break;
-            default:
-                FIXME("Bit depth %d is not fully supported yet\n", bmch->bcBitCount);
-                (*((GpBitmap**) image))->format = (bmch->bcBitCount << 8) | PixelFormatGDI;
-                break;
-        }
-
+    pbmi = GdipAlloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    if (!pbmi)
+        return OutOfMemory;
+    *image = GdipAlloc(sizeof(GpBitmap));
+    if(!*image){
         GdipFree(pbmi);
+        return OutOfMemory;
     }
-    else if(type == PICTYPE_METAFILE || type == PICTYPE_ENHMETAFILE){
-        /* FIXME: missing initialization code */
-        *image = GdipAlloc(sizeof(GpMetafile));
-        if(!*image) return OutOfMemory;
-        (*image)->type = ImageTypeMetafile;
+    (*image)->type = ImageTypeBitmap;
+
+    (*((GpBitmap**) image))->width = ipicture_pixel_width(pic);
+    (*((GpBitmap**) image))->height = ipicture_pixel_height(pic);
+
+    /* get the pixel format */
+    IPicture_get_Handle(pic, (OLE_HANDLE*)&hbm);
+    IPicture_get_CurDC(pic, &hdc);
+
+    (*((GpBitmap**) image))->hbitmap = hbm;
+    (*((GpBitmap**) image))->hdc = hdc;
+    (*((GpBitmap**) image))->bits = NULL;
+
+    bmch = (BITMAPCOREHEADER*) (&pbmi->bmiHeader);
+    bmch->bcSize = sizeof(BITMAPCOREHEADER);
+
+    if(!hdc){
+        HBITMAP old;
+        hdc = CreateCompatibleDC(0);
+        old = SelectObject(hdc, hbm);
+        GetDIBits(hdc, hbm, 0, 0, NULL, pbmi, DIB_RGB_COLORS);
+        SelectObject(hdc, old);
+        DeleteDC(hdc);
     }
-    else{
-        *image = GdipAlloc(sizeof(GpImage));
-        if(!*image) return OutOfMemory;
-        (*image)->type = ImageTypeUnknown;
+    else
+        GetDIBits(hdc, hbm, 0, 0, NULL, pbmi, DIB_RGB_COLORS);
+
+    switch(bmch->bcBitCount)
+    {
+        case 1:
+            (*((GpBitmap**) image))->format = PixelFormat1bppIndexed;
+            break;
+        case 4:
+            (*((GpBitmap**) image))->format = PixelFormat4bppIndexed;
+            break;
+        case 8:
+            (*((GpBitmap**) image))->format = PixelFormat8bppIndexed;
+            break;
+        case 16:
+            (*((GpBitmap**) image))->format = PixelFormat16bppRGB565;
+            break;
+        case 24:
+            (*((GpBitmap**) image))->format = PixelFormat24bppRGB;
+            break;
+        case 32:
+            (*((GpBitmap**) image))->format = PixelFormat32bppRGB;
+            break;
+        case 48:
+            (*((GpBitmap**) image))->format = PixelFormat48bppRGB;
+            break;
+        default:
+            FIXME("Bit depth %d is not fully supported yet\n", bmch->bcBitCount);
+            (*((GpBitmap**) image))->format = (bmch->bcBitCount << 8) | PixelFormatGDI;
+            break;
     }
+
+    GdipFree(pbmi);
 
     (*image)->picture = pic;
     (*image)->flags   = ImageFlagsNone;
 
     return Ok;
+}
+
+static GpStatus decode_image_olepicture_metafile(IStream* stream, REFCLSID clsid, GpImage **image)
+{
+    IPicture *pic;
+
+    TRACE("%p %p\n", stream, image);
+
+    if(!stream || !image)
+        return InvalidParameter;
+
+    if(OleLoadPicture(stream, 0, FALSE, &IID_IPicture,
+        (LPVOID*) &pic) != S_OK){
+        TRACE("Could not load picture\n");
+        return GenericError;
+    }
+
+    /* FIXME: missing initialization code */
+    *image = GdipAlloc(sizeof(GpMetafile));
+    if(!*image) return OutOfMemory;
+    (*image)->type = ImageTypeMetafile;
+    (*image)->picture = pic;
+    (*image)->flags   = ImageFlagsNone;
+
+    return Ok;
+}
+
+typedef GpStatus (*encode_image_func)(GpImage *image, IStream* stream,
+    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params);
+
+typedef GpStatus (*decode_image_func)(IStream *stream, REFCLSID clsid, GpImage** image);
+
+typedef struct image_codec {
+    ImageCodecInfo info;
+    encode_image_func encode_func;
+    decode_image_func decode_func;
+} image_codec;
+
+typedef enum {
+    BMP,
+    JPEG,
+    GIF,
+    EMF,
+    WMF,
+    PNG,
+    ICO,
+    NUM_CODECS
+} ImageFormat;
+
+static const struct image_codec codecs[NUM_CODECS];
+
+static GpStatus get_decoder_info(IStream* stream, const struct image_codec **result)
+{
+    BYTE signature[8];
+    LARGE_INTEGER seek;
+    HRESULT hr;
+    UINT bytesread;
+    int i, j;
+
+    /* seek to the start of the stream */
+    seek.QuadPart = 0;
+    hr = IStream_Seek(stream, seek, STREAM_SEEK_SET, NULL);
+    if (FAILED(hr)) return hresult_to_status(hr);
+
+    /* read the first 8 bytes */
+    /* FIXME: This assumes all codecs have one signature <= 8 bytes in length */
+    hr = IStream_Read(stream, signature, 8, &bytesread);
+    if (FAILED(hr)) return hresult_to_status(hr);
+    if (hr == S_FALSE || bytesread == 0) return GenericError;
+
+    for (i = 0; i < NUM_CODECS; i++) {
+        if ((codecs[i].info.Flags & ImageCodecFlagsDecoder) &&
+            bytesread >= codecs[i].info.SigSize)
+        {
+            for (j=0; j<codecs[i].info.SigSize; j++)
+                if ((signature[j] & codecs[i].info.SigMask[j]) != codecs[i].info.SigPattern[j])
+                    break;
+            if (j == codecs[i].info.SigSize)
+            {
+                *result = &codecs[i];
+                return Ok;
+            }
+        }
+    }
+
+    TRACE("no match for %i byte signature %x %x %x %x %x %x %x %x\n", bytesread,
+        signature[0],signature[1],signature[2],signature[3],
+        signature[4],signature[5],signature[6],signature[7]);
+
+    return GenericError;
+}
+
+GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream* stream, GpImage **image)
+{
+    GpStatus stat;
+    LARGE_INTEGER seek;
+    HRESULT hr;
+    const struct image_codec *codec=NULL;
+
+    /* choose an appropriate image decoder */
+    stat = get_decoder_info(stream, &codec);
+    if (stat != Ok) return stat;
+
+    /* seek to the start of the stream */
+    seek.QuadPart = 0;
+    hr = IStream_Seek(stream, seek, STREAM_SEEK_SET, NULL);
+    if (FAILED(hr)) return hresult_to_status(hr);
+
+    /* call on the image decoder to do the real work */
+    return codec->decode_func(stream, &codec->info.Clsid, image);
 }
 
 /* FIXME: no ICM */
@@ -1290,9 +1761,6 @@ GpStatus WINGDIPAPI GdipSaveImageToFile(GpImage *image, GDIPCONST WCHAR* filenam
     if (!image || !filename|| !clsidEncoder)
         return InvalidParameter;
 
-    if (!(image->picture))
-        return InvalidParameter;
-
     stat = GdipCreateStreamOnFile(filename, GENERIC_WRITE, &stream);
     if (stat != Ok)
         return GenericError;
@@ -1313,62 +1781,139 @@ GpStatus WINGDIPAPI GdipSaveImageToFile(GpImage *image, GDIPCONST WCHAR* filenam
 #define BITMAP_FORMAT_PNG   0x5089
 #define BITMAP_FORMAT_APM   0xcdd7
 
-static GpStatus encode_image_BMP(LPVOID bitmap_bits, LPBITMAPINFO bitmap_info,
-                                 void **output, unsigned int *output_size)
+static GpStatus encode_image_WIC(GpImage *image, IStream* stream,
+    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)
 {
-    int num_palette_entries;
-    BITMAPFILEHEADER *bmp_file_hdr;
-    BITMAPINFO *bmp_info_hdr;
+    GpStatus stat;
+    GpBitmap *bitmap;
+    IWICBitmapEncoder *encoder;
+    IWICBitmapFrameEncode *frameencode;
+    IPropertyBag2 *encoderoptions;
+    HRESULT hr;
+    UINT width, height;
+    PixelFormat gdipformat=0;
+    WICPixelFormatGUID wicformat;
+    GpRect rc;
+    BitmapData lockeddata;
+    HRESULT initresult;
+    UINT i;
 
-    if (bitmap_info->bmiHeader.biClrUsed) {
-        num_palette_entries = bitmap_info->bmiHeader.biClrUsed;
-        if (num_palette_entries > 256) num_palette_entries = 256;
-    } else {
-        if (bitmap_info->bmiHeader.biBitCount <= 8)
-            num_palette_entries = 1 << bitmap_info->bmiHeader.biBitCount;
-        else
-            num_palette_entries = 0;
+    if (image->type != ImageTypeBitmap)
+        return GenericError;
+
+    bitmap = (GpBitmap*)image;
+
+    GdipGetImageWidth(image, &width);
+    GdipGetImageHeight(image, &height);
+
+    rc.X = 0;
+    rc.Y = 0;
+    rc.Width = width;
+    rc.Height = height;
+
+    initresult = CoInitialize(NULL);
+
+    hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IWICBitmapEncoder, (void**)&encoder);
+    if (FAILED(hr))
+    {
+        if (SUCCEEDED(initresult)) CoUninitialize();
+        return hresult_to_status(hr);
     }
 
-    *output_size =
-        sizeof(BITMAPFILEHEADER) +
-        sizeof(BITMAPINFOHEADER) +
-        num_palette_entries * sizeof(RGBQUAD) +
-        bitmap_info->bmiHeader.biSizeImage;
+    hr = IWICBitmapEncoder_Initialize(encoder, stream, WICBitmapEncoderNoCache);
 
-    *output = GdipAlloc(*output_size);
+    if (SUCCEEDED(hr))
+    {
+        hr = IWICBitmapEncoder_CreateNewFrame(encoder, &frameencode, &encoderoptions);
+    }
 
-    bmp_file_hdr = *output;
-    bmp_file_hdr->bfType = BITMAP_FORMAT_BMP;
-    bmp_file_hdr->bfSize = *output_size;
-    bmp_file_hdr->bfOffBits =
-        sizeof(BITMAPFILEHEADER) +
-        sizeof(BITMAPINFOHEADER) +
-        num_palette_entries * sizeof (RGBQUAD);
+    if (SUCCEEDED(hr)) /* created frame */
+    {
+        hr = IWICBitmapFrameEncode_Initialize(frameencode, encoderoptions);
 
-    bmp_info_hdr = (BITMAPINFO*) ((unsigned char*)(*output) + sizeof(BITMAPFILEHEADER));
-    memcpy(bmp_info_hdr, bitmap_info, sizeof(BITMAPINFOHEADER) + num_palette_entries * sizeof(RGBQUAD));
-    memcpy((unsigned char *)(*output) +
-           sizeof(BITMAPFILEHEADER) +
-           sizeof(BITMAPINFOHEADER) +
-           num_palette_entries * sizeof(RGBQUAD),
-           bitmap_bits, bitmap_info->bmiHeader.biSizeImage);
+        if (SUCCEEDED(hr))
+            hr = IWICBitmapFrameEncode_SetSize(frameencode, width, height);
 
-    return Ok;
+        if (SUCCEEDED(hr))
+            /* FIXME: use the resolution from the image */
+            hr = IWICBitmapFrameEncode_SetResolution(frameencode, 96.0, 96.0);
+
+        if (SUCCEEDED(hr))
+        {
+            for (i=0; wic_pixel_formats[i]; i++)
+            {
+                if (wic_gdip_formats[i] == bitmap->format)
+                    break;
+            }
+            if (wic_pixel_formats[i])
+                memcpy(&wicformat, wic_pixel_formats[i], sizeof(GUID));
+            else
+                memcpy(&wicformat, &GUID_WICPixelFormat32bppBGRA, sizeof(GUID));
+
+            hr = IWICBitmapFrameEncode_SetPixelFormat(frameencode, &wicformat);
+
+            for (i=0; wic_pixel_formats[i]; i++)
+            {
+                if (IsEqualGUID(&wicformat, wic_pixel_formats[i]))
+                    break;
+            }
+            if (wic_pixel_formats[i])
+                gdipformat = wic_gdip_formats[i];
+            else
+            {
+                ERR("cannot provide pixel format %s\n", debugstr_guid(&wicformat));
+                hr = E_FAIL;
+            }
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            stat = GdipBitmapLockBits(bitmap, &rc, ImageLockModeRead, gdipformat,
+                &lockeddata);
+
+            if (stat == Ok)
+            {
+                UINT row_size = (lockeddata.Width * PIXELFORMATBPP(gdipformat) + 7)/8;
+                BYTE *row;
+
+                /* write one row at a time in case stride is negative */
+                row = lockeddata.Scan0;
+                for (i=0; i<lockeddata.Height; i++)
+                {
+                    hr = IWICBitmapFrameEncode_WritePixels(frameencode, 1, row_size, row_size, row);
+                    if (FAILED(hr)) break;
+                    row += lockeddata.Stride;
+                }
+
+                GdipBitmapUnlockBits(bitmap, &lockeddata);
+            }
+            else
+                hr = E_FAIL;
+        }
+
+        if (SUCCEEDED(hr))
+            hr = IWICBitmapFrameEncode_Commit(frameencode);
+
+        IWICBitmapFrameEncode_Release(frameencode);
+        IPropertyBag2_Release(encoderoptions);
+    }
+
+    if (SUCCEEDED(hr))
+        hr = IWICBitmapEncoder_Commit(encoder);
+
+    IWICBitmapEncoder_Release(encoder);
+
+    if (SUCCEEDED(initresult)) CoUninitialize();
+
+    return hresult_to_status(hr);
 }
 
-typedef GpStatus encode_image_func(LPVOID bitmap_bits, LPBITMAPINFO bitmap_info,
-                                   void **output, unsigned int *output_size);
-
-typedef enum {
-    BMP,
-    NUM_ENCODERS_SUPPORTED
-} ImageFormat;
-
-static const ImageCodecInfo codecs[NUM_ENCODERS_SUPPORTED];
-static encode_image_func *const encode_image_funcs[NUM_ENCODERS_SUPPORTED] = {
-    encode_image_BMP,
-};
+static GpStatus encode_image_BMP(GpImage *image, IStream* stream,
+    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)
+{
+    return encode_image_WIC(image, stream, &CLSID_WICBmpEncoder, params);
+}
 
 /*****************************************************************************
  * GdipSaveImageToStream [GDIPLUS.@]
@@ -1377,84 +1922,43 @@ GpStatus WINGDIPAPI GdipSaveImageToStream(GpImage *image, IStream* stream,
     GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)
 {
     GpStatus stat;
-    HRESULT hr;
-    short type;
-    HBITMAP hbmp;
-    HBITMAP old_hbmp;
-    HDC hdc;
-    int bm_is_selected;
-    BITMAPINFO bmp_info;
-    LPVOID bmp_bits;
-    encode_image_func* encode_image;
-    LPVOID output;
-    unsigned int output_size;
-    unsigned int dummy;
+    encode_image_func encode_image;
     int i;
-
-    old_hbmp = 0;
-    output = NULL;
-    output_size = 0;
 
     TRACE("%p %p %p %p\n", image, stream, clsid, params);
 
     if(!image || !stream)
         return InvalidParameter;
 
-    if (!image->picture)
-        return GenericError;
-
-    hr = IPicture_get_Type(image->picture, &type);
-    if (FAILED(hr) || type != PICTYPE_BITMAP)
-        return GenericError;
-
     /* select correct encoder */
     encode_image = NULL;
-    for (i = 0; i < NUM_ENCODERS_SUPPORTED; i++) {
-        if (IsEqualCLSID(clsid, &codecs[i].Clsid))
-            encode_image = encode_image_funcs[i];
+    for (i = 0; i < NUM_CODECS; i++) {
+        if ((codecs[i].info.Flags & ImageCodecFlagsEncoder) &&
+            IsEqualCLSID(clsid, &codecs[i].info.Clsid))
+            encode_image = codecs[i].encode_func;
     }
     if (encode_image == NULL)
         return UnknownImageFormat;
 
-    /* extract underlying hbitmap representation from the IPicture */
-    hr = IPicture_get_Handle(image->picture, (OLE_HANDLE*)&hbmp);
-    if (FAILED(hr) || !hbmp)
-        return GenericError;
-    hr = IPicture_get_CurDC(image->picture, &hdc);
-    if (FAILED(hr))
-        return GenericError;
-    bm_is_selected = (hdc != 0);
-    if (!bm_is_selected) {
-        hdc = CreateCompatibleDC(0);
-        old_hbmp = SelectObject(hdc, hbmp);
-    }
-
-    /* get bits from HBITMAP */
-    bmp_info.bmiHeader.biSize = sizeof(bmp_info.bmiHeader);
-    bmp_info.bmiHeader.biBitCount = 0;
-    GetDIBits(hdc, hbmp, 0, 0, NULL, &bmp_info, DIB_RGB_COLORS);
-
-    bmp_bits = GdipAlloc(bmp_info.bmiHeader.biSizeImage);
-
-    if (bmp_bits)
-        GetDIBits(hdc, hbmp, 0, abs(bmp_info.bmiHeader.biHeight), bmp_bits, &bmp_info, DIB_RGB_COLORS);
-
-    if (!bm_is_selected) {
-        SelectObject(hdc, old_hbmp);
-        DeleteDC(hdc);
-    }
-
-    if (!bmp_bits)
-        return OutOfMemory;
-
-    stat = encode_image(bmp_bits, &bmp_info, &output, &output_size);
-    if (stat == Ok)
-        IStream_Write(stream, output, output_size, &dummy);
-
-    GdipFree(output);
-    GdipFree(bmp_bits);
+    stat = encode_image(image, stream, clsid, params);
 
     return stat;
+}
+
+/*****************************************************************************
+ * GdipGetImagePalette [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipGetImagePalette(GpImage *image, ColorPalette *palette, INT size)
+{
+    static int calls = 0;
+
+    if(!image)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
 }
 
 /*****************************************************************************
@@ -1487,7 +1991,49 @@ static const WCHAR bmp_format[] = {'B', 'M', 'P', 0}; /* BMP */
 static const BYTE bmp_sig_pattern[] = { 0x42, 0x4D };
 static const BYTE bmp_sig_mask[] = { 0xFF, 0xFF };
 
-static const ImageCodecInfo codecs[NUM_ENCODERS_SUPPORTED] =
+static const WCHAR jpeg_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'J','P','E','G', 0};
+static const WCHAR jpeg_extension[] = {'*','.','J','P','G',';', '*','.','J','P','E','G',';', '*','.','J','P','E',';', '*','.','J','F','I','F',0};
+static const WCHAR jpeg_mimetype[] = {'i','m','a','g','e','/','j','p','e','g', 0};
+static const WCHAR jpeg_format[] = {'J','P','E','G',0};
+static const BYTE jpeg_sig_pattern[] = { 0xFF, 0xD8 };
+static const BYTE jpeg_sig_mask[] = { 0xFF, 0xFF };
+
+static const WCHAR gif_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'G','I','F', 0};
+static const WCHAR gif_extension[] = {'*','.','G','I','F',0};
+static const WCHAR gif_mimetype[] = {'i','m','a','g','e','/','g','i','f', 0};
+static const WCHAR gif_format[] = {'G','I','F',0};
+static const BYTE gif_sig_pattern[4] = "GIF8";
+static const BYTE gif_sig_mask[] = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+static const WCHAR emf_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'E','M','F', 0};
+static const WCHAR emf_extension[] = {'*','.','E','M','F',0};
+static const WCHAR emf_mimetype[] = {'i','m','a','g','e','/','x','-','e','m','f', 0};
+static const WCHAR emf_format[] = {'E','M','F',0};
+static const BYTE emf_sig_pattern[] = { 0x01, 0x00, 0x00, 0x00 };
+static const BYTE emf_sig_mask[] = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+static const WCHAR wmf_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'W','M','F', 0};
+static const WCHAR wmf_extension[] = {'*','.','W','M','F',0};
+static const WCHAR wmf_mimetype[] = {'i','m','a','g','e','/','x','-','w','m','f', 0};
+static const WCHAR wmf_format[] = {'W','M','F',0};
+static const BYTE wmf_sig_pattern[] = { 0xd7, 0xcd };
+static const BYTE wmf_sig_mask[] = { 0xFF, 0xFF };
+
+static const WCHAR png_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'P','N','G', 0};
+static const WCHAR png_extension[] = {'*','.','P','N','G',0};
+static const WCHAR png_mimetype[] = {'i','m','a','g','e','/','p','n','g', 0};
+static const WCHAR png_format[] = {'P','N','G',0};
+static const BYTE png_sig_pattern[] = { 137, 80, 78, 71, 13, 10, 26, 10, };
+static const BYTE png_sig_mask[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+static const WCHAR ico_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'I','C','O', 0};
+static const WCHAR ico_extension[] = {'*','.','I','C','O',0};
+static const WCHAR ico_mimetype[] = {'i','m','a','g','e','/','x','-','i','c','o','n', 0};
+static const WCHAR ico_format[] = {'I','C','O',0};
+static const BYTE ico_sig_pattern[] = { 0x00, 0x00, 0x01, 0x00 };
+static const BYTE ico_sig_mask[] = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+static const struct image_codec codecs[NUM_CODECS] = {
     {
         { /* BMP */
             /* Clsid */              { 0x557cf400, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
@@ -1504,20 +2050,145 @@ static const ImageCodecInfo codecs[NUM_ENCODERS_SUPPORTED] =
             /* SigPattern */         bmp_sig_pattern,
             /* SigMask */            bmp_sig_mask,
         },
-    };
+        encode_image_BMP,
+        decode_image_olepicture_bitmap
+    },
+    {
+        { /* JPEG */
+            /* Clsid */              { 0x557cf401, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3caeU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          jpeg_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  jpeg_format,
+            /* FilenameExtension */  jpeg_extension,
+            /* MimeType */           jpeg_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportBitmap | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           1,
+            /* SigSize */            2,
+            /* SigPattern */         jpeg_sig_pattern,
+            /* SigMask */            jpeg_sig_mask,
+        },
+        NULL,
+        decode_image_jpeg
+    },
+    {
+        { /* GIF */
+            /* Clsid */              { 0x557cf402, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cb0U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          gif_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  gif_format,
+            /* FilenameExtension */  gif_extension,
+            /* MimeType */           gif_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportBitmap | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           1,
+            /* SigSize */            4,
+            /* SigPattern */         gif_sig_pattern,
+            /* SigMask */            gif_sig_mask,
+        },
+        NULL,
+        decode_image_gif
+    },
+    {
+        { /* EMF */
+            /* Clsid */              { 0x557cf403, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cacU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          emf_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  emf_format,
+            /* FilenameExtension */  emf_extension,
+            /* MimeType */           emf_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportVector | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           1,
+            /* SigSize */            4,
+            /* SigPattern */         emf_sig_pattern,
+            /* SigMask */            emf_sig_mask,
+        },
+        NULL,
+        decode_image_olepicture_metafile
+    },
+    {
+        { /* WMF */
+            /* Clsid */              { 0x557cf404, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cadU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          wmf_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  wmf_format,
+            /* FilenameExtension */  wmf_extension,
+            /* MimeType */           wmf_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportVector | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           1,
+            /* SigSize */            2,
+            /* SigPattern */         wmf_sig_pattern,
+            /* SigMask */            wmf_sig_mask,
+        },
+        NULL,
+        decode_image_olepicture_metafile
+    },
+    {
+        { /* PNG */
+            /* Clsid */              { 0x557cf406, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cafU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          png_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  png_format,
+            /* FilenameExtension */  png_extension,
+            /* MimeType */           png_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportBitmap | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           1,
+            /* SigSize */            8,
+            /* SigPattern */         png_sig_pattern,
+            /* SigMask */            png_sig_mask,
+        },
+        NULL,
+        decode_image_olepicture_bitmap
+    },
+    {
+        { /* ICO */
+            /* Clsid */              { 0x557cf407, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cabU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          ico_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  ico_format,
+            /* FilenameExtension */  ico_extension,
+            /* MimeType */           ico_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportBitmap | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           1,
+            /* SigSize */            4,
+            /* SigPattern */         ico_sig_pattern,
+            /* SigMask */            ico_sig_mask,
+        },
+        NULL,
+        decode_image_icon
+    },
+};
 
 /*****************************************************************************
  * GdipGetImageDecodersSize [GDIPLUS.@]
  */
 GpStatus WINGDIPAPI GdipGetImageDecodersSize(UINT *numDecoders, UINT *size)
 {
-    FIXME("%p %p stub!\n", numDecoders, size);
+    int decoder_count=0;
+    int i;
+    TRACE("%p %p\n", numDecoders, size);
 
     if (!numDecoders || !size)
         return InvalidParameter;
 
-    *numDecoders = 0;
-    *size = 0;
+    for (i=0; i<NUM_CODECS; i++)
+    {
+        if (codecs[i].info.Flags & ImageCodecFlagsDecoder)
+            decoder_count++;
+    }
+
+    *numDecoders = decoder_count;
+    *size = decoder_count * sizeof(ImageCodecInfo);
 
     return Ok;
 }
@@ -1527,12 +2198,26 @@ GpStatus WINGDIPAPI GdipGetImageDecodersSize(UINT *numDecoders, UINT *size)
  */
 GpStatus WINGDIPAPI GdipGetImageDecoders(UINT numDecoders, UINT size, ImageCodecInfo *decoders)
 {
-    FIXME("%u %u %p stub!\n", numDecoders, size, decoders);
+    int i, decoder_count=0;
+    TRACE("%u %u %p\n", numDecoders, size, decoders);
 
-    if (!decoders)
+    if (!decoders ||
+        size != numDecoders * sizeof(ImageCodecInfo))
         return GenericError;
 
-    return NotImplemented;
+    for (i=0; i<NUM_CODECS; i++)
+    {
+        if (codecs[i].info.Flags & ImageCodecFlagsDecoder)
+        {
+            if (decoder_count == numDecoders) return GenericError;
+            memcpy(&decoders[decoder_count], &codecs[i].info, sizeof(ImageCodecInfo));
+            decoder_count++;
+        }
+    }
+
+    if (decoder_count < numDecoders) return GenericError;
+
+    return Ok;
 }
 
 /*****************************************************************************
@@ -1540,13 +2225,21 @@ GpStatus WINGDIPAPI GdipGetImageDecoders(UINT numDecoders, UINT size, ImageCodec
  */
 GpStatus WINGDIPAPI GdipGetImageEncodersSize(UINT *numEncoders, UINT *size)
 {
+    int encoder_count=0;
+    int i;
     TRACE("%p %p\n", numEncoders, size);
 
     if (!numEncoders || !size)
         return InvalidParameter;
 
-    *numEncoders = NUM_ENCODERS_SUPPORTED;
-    *size = sizeof (codecs);
+    for (i=0; i<NUM_CODECS; i++)
+    {
+        if (codecs[i].info.Flags & ImageCodecFlagsEncoder)
+            encoder_count++;
+    }
+
+    *numEncoders = encoder_count;
+    *size = encoder_count * sizeof(ImageCodecInfo);
 
     return Ok;
 }
@@ -1556,14 +2249,24 @@ GpStatus WINGDIPAPI GdipGetImageEncodersSize(UINT *numEncoders, UINT *size)
  */
 GpStatus WINGDIPAPI GdipGetImageEncoders(UINT numEncoders, UINT size, ImageCodecInfo *encoders)
 {
+    int i, encoder_count=0;
     TRACE("%u %u %p\n", numEncoders, size, encoders);
 
     if (!encoders ||
-        (numEncoders != NUM_ENCODERS_SUPPORTED) ||
-        (size != sizeof (codecs)))
+        size != numEncoders * sizeof(ImageCodecInfo))
         return GenericError;
 
-    memcpy(encoders, codecs, sizeof (codecs));
+    for (i=0; i<NUM_CODECS; i++)
+    {
+        if (codecs[i].info.Flags & ImageCodecFlagsEncoder)
+        {
+            if (encoder_count == numEncoders) return GenericError;
+            memcpy(&encoders[encoder_count], &codecs[i].info, sizeof(ImageCodecInfo));
+            encoder_count++;
+        }
+    }
+
+    if (encoder_count < numEncoders) return GenericError;
 
     return Ok;
 }

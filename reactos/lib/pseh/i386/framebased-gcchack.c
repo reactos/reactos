@@ -42,6 +42,34 @@ extern DECLSPEC_NORETURN int __SEH2Handle(void *, void *, void *, void *, void *
 extern int __cdecl __SEH2FrameHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
 extern int __cdecl __SEH2UnwindHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
 
+typedef struct __SEHTrampoline
+{
+	unsigned char STR_MovEcx;
+	unsigned char * STR_Closure;
+	unsigned char STR_Jmp;
+	unsigned char * STR_Function;
+}
+__attribute__((packed))
+_SEHTrampoline_t;
+
+FORCEINLINE
+int _SEHIsTrampoline(_SEHTrampoline_t * trampoline_)
+{
+	return trampoline_->STR_MovEcx == 0xb9 && trampoline_->STR_Jmp == 0xe9;
+}
+
+FORCEINLINE
+void * _SEHFunctionFromTrampoline(_SEHTrampoline_t * trampoline_)
+{
+	return (int)(trampoline_ + 1) + trampoline_->STR_Function;
+}
+
+FORCEINLINE
+void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
+{
+	return trampoline_->STR_Closure;
+}
+
 FORCEINLINE
 _SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void)
 {

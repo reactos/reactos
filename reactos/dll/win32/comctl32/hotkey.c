@@ -239,10 +239,9 @@ HOTKEY_Create (HOTKEY_INFO *infoPtr, const CREATESTRUCTW *lpcs)
 static LRESULT
 HOTKEY_Destroy (HOTKEY_INFO *infoPtr)
 {
-    HWND hwnd = infoPtr->hwndSelf;
     /* free hotkey info data */
+    SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
     Free (infoPtr);
-    SetWindowLongPtrW (hwnd, 0, 0);
     return 0;
 }
 

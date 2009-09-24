@@ -48,7 +48,7 @@ NTAPI
 PsSuspendThread(IN PETHREAD Thread,
                 OUT PULONG PreviousCount OPTIONAL)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ULONG OldCount = 0;
     PAGED_CODE();
 
@@ -60,6 +60,9 @@ PsSuspendThread(IN PETHREAD Thread,
         {
             /* Do the suspend */
             OldCount = KeSuspendThread(&Thread->Tcb);
+
+            /* We are done */
+            Status = STATUS_SUCCESS;
         }
         else
         {
@@ -89,6 +92,9 @@ PsSuspendThread(IN PETHREAD Thread,
 
                 /* Release rundown protection */
                 ExReleaseRundownProtection(&Thread->RundownProtect);
+
+                /* We are done */
+                Status = STATUS_SUCCESS;
             }
             else
             {
@@ -99,6 +105,7 @@ PsSuspendThread(IN PETHREAD Thread,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        /* Get the exception code */
         Status = _SEH2_GetExceptionCode();
 
         /* Don't fail if we merely couldn't write the handle back */
@@ -216,7 +223,7 @@ NtAlertResumeThread(IN HANDLE ThreadHandle,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PETHREAD Thread;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ULONG PreviousState;
 
     /* Check if we came from user mode with a suspend count */
@@ -230,11 +237,10 @@ NtAlertResumeThread(IN HANDLE ThreadHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Reference the Object */
@@ -282,7 +288,7 @@ NtResumeThread(IN HANDLE ThreadHandle,
     PETHREAD Thread;
     ULONG Prev;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check if caller gave a suspend count from user mode */
@@ -296,11 +302,10 @@ NtResumeThread(IN HANDLE ThreadHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get the Thread Object */
@@ -345,7 +350,7 @@ NtSuspendThread(IN HANDLE ThreadHandle,
     PETHREAD Thread;
     ULONG Prev;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check if caller gave a suspend count from user mode */
@@ -359,11 +364,10 @@ NtSuspendThread(IN HANDLE ThreadHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get the Thread Object */

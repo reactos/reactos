@@ -35,7 +35,7 @@ typedef struct _THREADINFO
     obj_handle_t        desktop;       /* desktop handle */
     int                 desktop_users; /* number of objects using the thread desktop */
     struct _KBL*        KeyboardLayout;
-} THREADINFO, *PTHREADINFO;
+} THREADINFO;
 
 #include <poppack.h>
 

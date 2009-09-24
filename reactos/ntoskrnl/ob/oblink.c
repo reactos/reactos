@@ -123,6 +123,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     PWSTR NewTargetPath;
     ULONG LengthUsed, MaximumLength;
     NTSTATUS Status;
+    PAGED_CODE();
 
     /* Assume failure */
     *NextObject = NULL;
@@ -169,6 +170,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
         NewTargetPath = ExAllocatePoolWithTag(NonPagedPool,
                                               MaximumLength,
                                               TAG_SYMLINK_TTARGET);
+        if (!NewTargetPath) return STATUS_INSUFFICIENT_RESOURCES;
     }
     else
     {
@@ -238,11 +240,11 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
     POBJECT_SYMBOLIC_LINK SymbolicLink;
     UNICODE_STRING CapturedLinkTarget;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check if we need to probe parameters */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -257,13 +259,10 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Exception, get the error code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Probing failed, return the error code */
-        if(!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -380,11 +379,11 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
 {
     HANDLE hLink;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check if we need to probe parameters */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -393,13 +392,10 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Exception, get the error code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Probing failed, return the error code */
-        if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Open the object */
@@ -458,11 +454,11 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
     UNICODE_STRING SafeLinkTarget = { 0, 0, NULL };
     POBJECT_SYMBOLIC_LINK SymlinkObject;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ULONG LengthUsed;
     PAGED_CODE();
 
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -476,17 +472,14 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                           sizeof(WCHAR));
 
             /* Probe the return length */
-            if(ResultLength) ProbeForWriteUlong(ResultLength);
+            if (ResultLength) ProbeForWriteUlong(ResultLength);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Probe failure: get exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Probe failed, return status */
-        if(!NT_SUCCESS(Status)) return Status;
     }
     else
     {

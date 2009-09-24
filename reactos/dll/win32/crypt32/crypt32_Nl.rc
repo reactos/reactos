@@ -20,6 +20,8 @@
 
 #include "cryptres.h"
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
@@ -174,6 +176,7 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_CA "Certificatie Tussen-Autoriteiten"
     IDS_LOCALIZEDNAME_ADDRESSBOOK "Overige Personen"
     IDS_LOCALIZEDNAME_TRUSTEDPUBLISHER "Vertrouwde uitgevers"
+    IDS_LOCALIZEDNAME_DISALLOWED "Niet-vertrouwde certificaten"
 }
 
 STRINGTABLE DISCARDABLE

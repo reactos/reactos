@@ -232,6 +232,7 @@ DWORD	_ILGetDrive		(LPCITEMIDLIST, LPSTR, UINT);
 BOOL	_ILIsUnicode		(LPCITEMIDLIST pidl);
 BOOL	_ILIsDesktop		(LPCITEMIDLIST pidl);
 BOOL	_ILIsMyComputer		(LPCITEMIDLIST pidl);
+BOOL	_ILIsPrinter		(LPCITEMIDLIST pidl);
 BOOL    _ILIsMyDocuments       (LPCITEMIDLIST pidl);
 BOOL    _ILIsControlPanel       (LPCITEMIDLIST pidl);
 BOOL    _ILIsBitBucket      (LPCITEMIDLIST pidl);

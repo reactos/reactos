@@ -233,3 +233,16 @@ CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExW(PULONG len, LPGUID class,
     FIXME("%p %p %s 0x%08x %p: stub\n", len, class, debugstr_w(id), flags, machine);
     return CR_FAILURE;
 }
+
+WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceAlias(IN HDEVINFO  DeviceInfoSet, IN PSP_DEVICE_INTERFACE_DATA  DeviceInterfaceData, IN CONST GUID *AliasInterfaceClassGuid, OUT PSP_DEVICE_INTERFACE_DATA  AliasDeviceInterfaceData)
+{
+    FIXME("%p %p %p %p %p stub\n", DeviceInfoSet, DeviceInterfaceData, AliasInterfaceClassGuid, AliasDeviceInterfaceData);
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+HKEY WINAPI SetupDiOpenDeviceInterfaceRegKey(IN HDEVINFO  DeviceInfoSet, IN PSP_DEVICE_INTERFACE_DATA  DeviceInterfaceData, IN DWORD  Reserved, IN REGSAM  samDesired)
+{
+    FIXME("%p %p %p 0x%08x 0x%08x: stub\n", DeviceInfoSet, DeviceInterfaceData, Reserved, samDesired);
+    return INVALID_HANDLE_VALUE;
+}

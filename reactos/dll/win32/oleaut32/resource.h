@@ -20,6 +20,8 @@
 #ifndef WINE_OLEAUT32_RESOURCE_H
 #define WINE_OLEAUT32_RESOURCE_H
 
+#include <windef.h>
+
 /* Localised boolean text */
 #define IDS_TRUE  100
 #define IDS_FALSE 101

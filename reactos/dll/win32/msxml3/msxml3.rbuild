@@ -10,6 +10,7 @@
 	<define name="_WINE" />
 	<redefine name="_WIN32_WINNT">0x601</redefine>
 	<define name="LIBXML_STATIC" />
+	<compilerflag compilerset="msc">/FIwine/typeof.h</compilerflag>
 	<library>libxml2</library>
 	<library>libxslt</library>
 	<library>wine</library>

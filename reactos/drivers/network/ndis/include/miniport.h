@@ -41,7 +41,8 @@ typedef struct _NDIS_M_DEVICE_BLOCK {
 } NDIS_M_DEVICE_BLOCK, *PNDIS_M_DEVICE_BLOCK;
 
 /* resources allocated on behalf on the miniport */
-#define MINIPORT_RESOURCE_TYPE_MEMORY 0
+#define MINIPORT_RESOURCE_TYPE_REGISTRY_DATA 0
+#define MINIPORT_RESOURCE_TYPE_MEMORY        1
 typedef struct _MINIPORT_RESOURCE {
     LIST_ENTRY     ListEntry;
     ULONG          ResourceType;

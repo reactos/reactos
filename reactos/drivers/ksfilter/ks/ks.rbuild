@@ -29,6 +29,7 @@
 	<file>pin.c</file>
 	<file>property.c</file>
 	<file>topology.c</file>
+	<file>unknown.c</file>
 	<file>worker.c</file>
 	<file>kcom.c</file>
 </module>

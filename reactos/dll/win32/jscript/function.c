@@ -40,12 +40,8 @@ static const WCHAR prototypeW[] = {'p','r','o','t','o','t', 'y', 'p','e',0};
 
 static const WCHAR lengthW[] = {'l','e','n','g','t','h',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
-static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
 static const WCHAR applyW[] = {'a','p','p','l','y',0};
 static const WCHAR callW[] = {'c','a','l','l',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] = {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
 static IDispatch *get_this(DISPPARAMS *dp)
 {
@@ -290,13 +286,6 @@ static HRESULT Function_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISP
     return S_OK;
 }
 
-static HRESULT Function_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT Function_apply(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
@@ -305,27 +294,6 @@ static HRESULT Function_apply(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
 }
 
 static HRESULT Function_call(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Function_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Function_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Function_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
@@ -394,11 +362,7 @@ static void Function_destructor(DispatchEx *dispex)
 static const builtin_prop_t Function_props[] = {
     {applyW,                 Function_apply,                 PROPF_METHOD},
     {callW,                  Function_call,                  PROPF_METHOD},
-    {hasOwnPropertyW,        Function_hasOwnProperty,        PROPF_METHOD},
-    {isPrototypeOfW,         Function_isPrototypeOf,         PROPF_METHOD},
     {lengthW,                Function_length,                0},
-    {propertyIsEnumerableW,  Function_propertyIsEnumerable,  PROPF_METHOD},
-    {toLocaleStringW,        Function_toLocaleString,        PROPF_METHOD},
     {toStringW,              Function_toString,              PROPF_METHOD}
 };
 

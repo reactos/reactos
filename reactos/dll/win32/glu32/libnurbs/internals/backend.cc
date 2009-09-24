@@ -246,7 +246,7 @@ Backend::evalVStrip(int n_left, REAL u_left, REAL* left_val,
  *-------------------------------------------------------------------------
  */
 void
-Backend::bgntmesh( char * )		
+Backend::bgntmesh( const char * )		
 {
 #ifndef NOWIREFRAME
 

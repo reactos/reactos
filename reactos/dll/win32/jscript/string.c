@@ -62,10 +62,6 @@ static const WCHAR toUpperCaseW[] = {'t','o','U','p','p','e','r','C','a','s','e'
 static const WCHAR toLocaleLowerCaseW[] = {'t','o','L','o','c','a','l','e','L','o','w','e','r','C','a','s','e',0};
 static const WCHAR toLocaleUpperCaseW[] = {'t','o','L','o','c','a','l','e','U','p','p','e','r','C','a','s','e',0};
 static const WCHAR localeCompareW[] = {'l','o','c','a','l','e','C','o','m','p','a','r','e',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 static const WCHAR fromCharCodeW[] = {'f','r','o','m','C','h','a','r','C','o','d','e',0};
 
 static HRESULT String_length(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -802,7 +798,7 @@ static HRESULT String_replace(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
     DWORD parens_cnt = 0, parens_size=0, rep_len=0, length;
     BSTR rep_str = NULL, match_str = NULL, ret_str, val_str = NULL;
     DispatchEx *rep_func = NULL, *regexp = NULL;
-    match_result_t *parens = NULL, match;
+    match_result_t *parens = NULL, match, **parens_ptr = &parens;
     strbuf_t ret = {NULL,0,0};
     BOOL gcheck = FALSE;
     VARIANT *arg_var;
@@ -884,12 +880,9 @@ static HRESULT String_replace(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
             if(FAILED(hres))
                 break;
 
-            if(strchrW(rep_str, '$')) {
-                FIXME("unsupported $ in replace string\n");
-                hres = E_NOTIMPL;
-            }
-
             rep_len = SysStringLen(rep_str);
+            if(!strchrW(rep_str, '$'))
+                parens_ptr = NULL;
         }
     }
 
@@ -900,7 +893,7 @@ static HRESULT String_replace(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
 
         while(1) {
             if(regexp) {
-                hres = regexp_match_next(regexp, gcheck, str, length, &cp, rep_func ? &parens : NULL,
+                hres = regexp_match_next(regexp, gcheck, str, length, &cp, parens_ptr,
                                          &parens_size, &parens_cnt, &match);
                 gcheck = TRUE;
 
@@ -932,6 +925,64 @@ static HRESULT String_replace(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
 
                 hres = strbuf_append(&ret, cstr, SysStringLen(cstr));
                 SysFreeString(cstr);
+                if(FAILED(hres))
+                    break;
+            }else if(rep_str && regexp) {
+                const WCHAR *ptr = rep_str, *ptr2;
+
+                while((ptr2 = strchrW(ptr, '$'))) {
+                    hres = strbuf_append(&ret, ptr, ptr2-ptr);
+                    if(FAILED(hres))
+                        break;
+
+                    switch(ptr2[1]) {
+                    case '$':
+                        hres = strbuf_append(&ret, ptr2, 1);
+                        ptr = ptr2+2;
+                        break;
+                    case '&':
+                        hres = strbuf_append(&ret, match.str, match.len);
+                        ptr = ptr2+2;
+                        break;
+                    case '`':
+                        hres = strbuf_append(&ret, str, match.str-str);
+                        ptr = ptr2+2;
+                        break;
+                    case '\'':
+                        hres = strbuf_append(&ret, ecp, (str+length)-ecp);
+                        ptr = ptr2+2;
+                        break;
+                    default: {
+                        DWORD idx;
+
+                        if(!isdigitW(ptr2[1])) {
+                            hres = strbuf_append(&ret, ptr2, 1);
+                            ptr = ptr2+1;
+                            break;
+                        }
+
+                        idx = ptr2[1] - '0';
+                        if(isdigitW(ptr[3]) && idx*10 + (ptr[2]-'0') <= parens_cnt) {
+                            idx = idx*10 + (ptr[2]-'0');
+                            ptr = ptr2+3;
+                        }else if(idx && idx <= parens_cnt) {
+                            ptr = ptr2+2;
+                        }else {
+                            hres = strbuf_append(&ret, ptr2, 1);
+                            ptr = ptr2+1;
+                            break;
+                        }
+
+                        hres = strbuf_append(&ret, parens[idx-1].str, parens[idx-1].len);
+                    }
+                    }
+
+                    if(FAILED(hres))
+                        break;
+                }
+
+                if(SUCCEEDED(hres))
+                    hres = strbuf_append(&ret, ptr, (rep_str+rep_len)-ptr);
                 if(FAILED(hres))
                     break;
             }else if(rep_str) {
@@ -1456,27 +1507,6 @@ static HRESULT String_localeCompare(DispatchEx *dispex, LCID lcid, WORD flags, D
     return E_NOTIMPL;
 }
 
-static HRESULT String_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT String_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT String_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT String_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
@@ -1513,35 +1543,32 @@ static void String_destructor(DispatchEx *dispex)
 }
 
 static const builtin_prop_t String_props[] = {
-    {anchorW,                String_anchor,                PROPF_METHOD},
+    {anchorW,                String_anchor,                PROPF_METHOD|1},
     {bigW,                   String_big,                   PROPF_METHOD},
     {blinkW,                 String_blink,                 PROPF_METHOD},
     {boldW,                  String_bold,                  PROPF_METHOD},
-    {charAtW,                String_charAt,                PROPF_METHOD},
-    {charCodeAtW,            String_charCodeAt,            PROPF_METHOD},
-    {concatW,                String_concat,                PROPF_METHOD},
+    {charAtW,                String_charAt,                PROPF_METHOD|1},
+    {charCodeAtW,            String_charCodeAt,            PROPF_METHOD|1},
+    {concatW,                String_concat,                PROPF_METHOD|1},
     {fixedW,                 String_fixed,                 PROPF_METHOD},
-    {fontcolorW,             String_fontcolor,             PROPF_METHOD},
-    {fontsizeW,              String_fontsize,              PROPF_METHOD},
-    {hasOwnPropertyW,        String_hasOwnProperty,        PROPF_METHOD},
-    {indexOfW,               String_indexOf,               PROPF_METHOD},
-    {isPrototypeOfW,         String_isPrototypeOf,         PROPF_METHOD},
+    {fontcolorW,             String_fontcolor,             PROPF_METHOD|1},
+    {fontsizeW,              String_fontsize,              PROPF_METHOD|1},
+    {indexOfW,               String_indexOf,               PROPF_METHOD|2},
     {italicsW,               String_italics,               PROPF_METHOD},
-    {lastIndexOfW,           String_lastIndexOf,           PROPF_METHOD},
+    {lastIndexOfW,           String_lastIndexOf,           PROPF_METHOD|2},
     {lengthW,                String_length,                0},
-    {linkW,                  String_link,                  PROPF_METHOD},
-    {localeCompareW,         String_localeCompare,         PROPF_METHOD},
-    {matchW,                 String_match,                 PROPF_METHOD},
-    {propertyIsEnumerableW,  String_propertyIsEnumerable,  PROPF_METHOD},
-    {replaceW,               String_replace,               PROPF_METHOD},
+    {linkW,                  String_link,                  PROPF_METHOD|1},
+    {localeCompareW,         String_localeCompare,         PROPF_METHOD|1},
+    {matchW,                 String_match,                 PROPF_METHOD|1},
+    {replaceW,               String_replace,               PROPF_METHOD|1},
     {searchW,                String_search,                PROPF_METHOD},
     {sliceW,                 String_slice,                 PROPF_METHOD},
     {smallW,                 String_small,                 PROPF_METHOD},
-    {splitW,                 String_split,                 PROPF_METHOD},
+    {splitW,                 String_split,                 PROPF_METHOD|2},
     {strikeW,                String_strike,                PROPF_METHOD},
     {subW,                   String_sub,                   PROPF_METHOD},
-    {substrW,                String_substr,                PROPF_METHOD},
-    {substringW,             String_substring,             PROPF_METHOD},
+    {substrW,                String_substr,                PROPF_METHOD|2},
+    {substringW,             String_substring,             PROPF_METHOD|2},
     {supW,                   String_sup,                   PROPF_METHOD},
     {toLocaleLowerCaseW,     String_toLocaleLowerCase,     PROPF_METHOD},
     {toLocaleUpperCaseW,     String_toLocaleUpperCase,     PROPF_METHOD},
@@ -1648,7 +1675,7 @@ static HRESULT StringConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DIS
     return S_OK;
 }
 
-static HRESULT string_alloc(script_ctx_t *ctx, BOOL use_constr, StringInstance **ret)
+static HRESULT string_alloc(script_ctx_t *ctx, DispatchEx *object_prototype, StringInstance **ret)
 {
     StringInstance *string;
     HRESULT hres;
@@ -1657,10 +1684,10 @@ static HRESULT string_alloc(script_ctx_t *ctx, BOOL use_constr, StringInstance *
     if(!string)
         return E_OUTOFMEMORY;
 
-    if(use_constr)
-        hres = init_dispex_from_constr(&string->dispex, ctx, &String_info, ctx->string_constr);
+    if(object_prototype)
+        hres = init_dispex(&string->dispex, ctx, &String_info, object_prototype);
     else
-        hres = init_dispex(&string->dispex, ctx, &String_info, NULL);
+        hres = init_dispex_from_constr(&string->dispex, ctx, &String_info, ctx->string_constr);
     if(FAILED(hres)) {
         heap_free(string);
         return hres;
@@ -1683,12 +1710,12 @@ static const builtin_info_t StringConstr_info = {
     NULL
 };
 
-HRESULT create_string_constr(script_ctx_t *ctx, DispatchEx **ret)
+HRESULT create_string_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
 {
     StringInstance *string;
     HRESULT hres;
 
-    hres = string_alloc(ctx, FALSE, &string);
+    hres = string_alloc(ctx, object_prototype, &string);
     if(FAILED(hres))
         return hres;
 
@@ -1703,7 +1730,7 @@ HRESULT create_string(script_ctx_t *ctx, const WCHAR *str, DWORD len, DispatchEx
     StringInstance *string;
     HRESULT hres;
 
-    hres = string_alloc(ctx, TRUE, &string);
+    hres = string_alloc(ctx, NULL, &string);
     if(FAILED(hres))
         return hres;
 

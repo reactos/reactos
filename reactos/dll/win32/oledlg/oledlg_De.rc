@@ -16,11 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+#pragma code_page(65001)
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Objekt einfügen"
+CAPTION "Objekt einfÃ¼gen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
@@ -37,7 +41,7 @@ BEGIN
     CONTROL         "A&us Datei erstellen",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,67,10
     LTEXT           "",IDC_RESULTDESC,49,112,159,23
-    PUSHBUTTON      "Steuerung hin&zufügen",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Steuerung hin&zufÃ¼gen",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
     CONTROL         "Als &Symbol anzeigen",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
     PUSHBUTTON      "D&urchsuchen...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
@@ -47,22 +51,22 @@ END
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_RESULTOBJDESC	"Fügt ein neues %s - Objekt in Ihr Dokument ein."
-  IDS_RESULTFILEOBJDESC	"Fügt den Inhalt der Datei als Objekt so in Ihr Dokument ein, dass Sie es mit dem Programm aktivieren können, mit dem es erstellt wurde."
+  IDS_RESULTOBJDESC	"FÃ¼gt ein neues %s - Objekt in Ihr Dokument ein."
+  IDS_RESULTFILEOBJDESC	"FÃ¼gt den Inhalt der Datei als Objekt so in Ihr Dokument ein, dass Sie es mit dem Programm aktivieren kÃ¶nnen, mit dem es erstellt wurde."
   IDS_BROWSE            "Durchsuchen"
-  IDS_NOTOLEMOD         "Die Datei ist offenbar kein gültiges OLE - Steuermodul. Die OLE - Steuerung konnte nicht registiert werden."
-  IDS_NOTOLEMODCAPTION  "Steuerung hinzufügen"
+  IDS_NOTOLEMOD         "Die Datei ist offenbar kein gÃ¼ltiges OLE - Steuermodul. Die OLE - Steuerung konnte nicht registiert werden."
+  IDS_NOTOLEMODCAPTION  "Steuerung hinzufÃ¼gen"
 }
 
 IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Inhalte einfügen"
+CAPTION "Inhalte einfÃ¼gen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT         "Quelle:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
-    CONTROL       "&Einfügen", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+    CONTROL       "&EinfÃ¼gen", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
                   6, 38, 55, 10
-    CONTROL       "&Verknüpfung einfügen", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+    CONTROL       "&VerknÃ¼pfung einfÃ¼gen", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
                   6, 63, 55, 10
     LTEXT         "&Als:", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
     LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
@@ -73,7 +77,7 @@ BEGIN
     CONTROL       "&Hilfe", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
     CONTROL       "Als Symbol &darstellen", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
     CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
-    CONTROL       "&Symbol ändern...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "&Symbol Ã¤ndern...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
     CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
     CONTROL       "<< result text goes here >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
     CONTROL       "Ergebnis", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
@@ -82,14 +86,15 @@ END
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_PS_PASTE_DATA                     "Fügt den Inhalt der Zwischenablage in Ihr Dokument als %s ein."
-    IDS_PS_PASTE_OBJECT                   "Fügt den Inhalt der Zwischenablage so in Ihr Dokument ein dass Sie es mit %s aktivieren können."
-    IDS_PS_PASTE_OBJECT_AS_ICON           "Fügt den Inhalt der Zwischenablage so in Ihr Dokument ein dass Sie es mit %s aktivieren können.  Wird als Symbol dargestellt."
-    IDS_PS_PASTE_LINK_DATA                "Fügt den Inhalt der Zwischenablage in Ihr Dokument als %s ein.  Die Daten sind mit der Ursprungsdatei verknüpft so dass Änderungen an dieser in Ihrem Dokument erscheinen."
-    IDS_PS_PASTE_LINK_OBJECT              "Fügt ein Bild des Zwischenablagen-Inhalts in Ihr Dokument ein.  Das Bild ist mit der Ursprungsdatei verknüpft so dass Änderungen an dieser in Ihrem Dokument erscheinen."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Fügt eine Verknüpfung ein die auf den Ort des Zwischenablagen-Inhalts zeigt.  Die Verknüpfung ist mit der Ursprungsdatei verknüpft so dass Änderungen an dieser in Ihrem Dokument erscheinen."
-    IDS_PS_NON_OLE                        "Fügt den Inhalt der Zwischenablage in Ihr Dokument als ein."
+    IDS_PS_PASTE_DATA                     "FÃ¼gt den Inhalt der Zwischenablage in Ihr Dokument als %s ein."
+    IDS_PS_PASTE_OBJECT                   "FÃ¼gt den Inhalt der Zwischenablage so in Ihr Dokument ein dass Sie es mit %s aktivieren kÃ¶nnen."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "FÃ¼gt den Inhalt der Zwischenablage so in Ihr Dokument ein dass Sie es mit %s aktivieren kÃ¶nnen.  Wird als Symbol dargestellt."
+    IDS_PS_PASTE_LINK_DATA                "FÃ¼gt den Inhalt der Zwischenablage in Ihr Dokument als %s ein.  Die Daten sind mit der Ursprungsdatei verknÃ¼pft so dass Ã„nderungen an dieser in Ihrem Dokument erscheinen."
+    IDS_PS_PASTE_LINK_OBJECT              "FÃ¼gt ein Bild des Zwischenablagen-Inhalts in Ihr Dokument ein.  Das Bild ist mit der Ursprungsdatei verknÃ¼pft so dass Ã„nderungen an dieser in Ihrem Dokument erscheinen."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "FÃ¼gt eine VerknÃ¼pfung ein die auf den Ort des Zwischenablagen-Inhalts zeigt.  Die VerknÃ¼pfung ist mit der Ursprungsdatei verknÃ¼pft so dass Ã„nderungen an dieser in Ihrem Dokument erscheinen."
+    IDS_PS_NON_OLE                        "FÃ¼gt den Inhalt der Zwischenablage in Ihr Dokument als ein."
     IDS_PS_UNKNOWN_TYPE                   "Unbekannter Typ"
     IDS_PS_UNKNOWN_SRC                    "Unbekannte Quelle"
     IDS_PS_UNKNOWN_APP                    "dem Erzeugerprogramm"
 }
+#pragma code_page(default)

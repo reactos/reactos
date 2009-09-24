@@ -48,7 +48,7 @@ VOID TiWriteErrorLog(
  *     DumpData         = Pointer to dump data for the log entry
  */
 {
-#ifdef _MSC_VER
+#if 0
     PIO_ERROR_LOG_PACKET LogEntry;
     UCHAR EntrySize;
     ULONG StringSize;
@@ -481,7 +481,7 @@ TiDispatch(
 
   Irp->IoStatus.Information = 0;
 
-#ifdef _MSC_VER
+#if 0
   Status = TdiMapUserRequest(DeviceObject, Irp, IrpSp);
   if (NT_SUCCESS(Status)) {
     TiDispatchInternal(DeviceObject, Irp);

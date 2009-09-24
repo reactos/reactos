@@ -37,21 +37,21 @@
 
 static unsigned char keyb_layout[2][128] =
 {
-	"\000\0331234567890-=\177\t"			/* 0x00 - 0x0f */
-	"qwertyuiop[]\r\000as"				/* 0x10 - 0x1f */
-	"dfghjkl;'`\000\\zxcv"				/* 0x20 - 0x2f */
-	"bnm,./\000*\000 \000\201\202\203\204\205"	/* 0x30 - 0x3f */
-	"\206\207\210\211\212\000\000789-456+1"		/* 0x40 - 0x4f */
-	"230\177\000\000\213\214\000\000\000\000\000\000\000\000\000\000" /* 0x50 - 0x5f */
-	"\r\000/"					/* 0x60 - 0x6f */
-	,
-	"\000\033!@#$%^&*()_+\177\t"			/* 0x00 - 0x0f */
-	"QWERTYUIOP{}\r\000AS"				/* 0x10 - 0x1f */
-	"DFGHJKL:\"`\000\\ZXCV"				/* 0x20 - 0x2f */
-	"BNM<>?\000*\000 \000\201\202\203\204\205"	/* 0x30 - 0x3f */
-	"\206\207\210\211\212\000\000789-456+1"		/* 0x40 - 0x4f */
-	"230\177\000\000\213\214\000\000\000\000\000\000\000\000\000\000" /* 0x50 - 0x5f */
-	"\r\000/"					/* 0x60 - 0x6f */
+    "\000\0331234567890-=\177\t"                                        /* 0x00 - 0x0f */
+    "qwertyuiop[]\r\000as"                                              /* 0x10 - 0x1f */
+    "dfghjkl;'`\000\\zxcv"                                              /* 0x20 - 0x2f */
+    "bnm,./\000*\000 \000\201\202\203\204\205"                          /* 0x30 - 0x3f */
+    "\206\207\210\211\212\000\000789-456+1"                             /* 0x40 - 0x4f */
+    "230\177\000\000\213\214\000\000\000\000\000\000\000\000\000\000"   /* 0x50 - 0x5f */
+    "\r\000/"                                                           /* 0x60 - 0x6f */
+    ,
+    "\000\033!@#$%^&*()_+\177\t"                                        /* 0x00 - 0x0f */
+    "QWERTYUIOP{}\r\000AS"                                              /* 0x10 - 0x1f */
+    "DFGHJKL:\"`\000\\ZXCV"                                             /* 0x20 - 0x2f */
+    "BNM<>?\000*\000 \000\201\202\203\204\205"                          /* 0x30 - 0x3f */
+    "\206\207\210\211\212\000\000789-456+1"                             /* 0x40 - 0x4f */
+    "230\177\000\000\213\214\000\000\000\000\000\000\000\000\000\000"   /* 0x50 - 0x5f */
+    "\r\000/"                                                           /* 0x60 - 0x6f */
 };
 
 typedef UCHAR byte_t;
@@ -86,6 +86,7 @@ KbdSendCommandToMouse(UCHAR Command)
         KeStallExecutionProcessor(50);
 
     if (kbd_read_input() != MOUSE_ACK) { ; }
+
     return;
 }
 
@@ -108,29 +109,40 @@ KdbpTryGetCharKeyboard(PULONG ScanCode, ULONG Retry)
     static byte_t shift = 0;
     char c;
     BOOLEAN KeepRetrying = (Retry == 0);
-    while (KeepRetrying || Retry-- > 0) {
-	unsigned char status = kbd_read_status();
-	while (status & KBD_STAT_OBF) {
-	    byte_t scancode;
-	    scancode = kbd_read_input();
-	    /* check for SHIFT-keys */
-	    if (((scancode & 0x7F) == 42) || ((scancode & 0x7F) == 54))
-	    {
-		shift = !(scancode & 0x80);
-		continue;
-	    }
-	    /* ignore all other RELEASED-codes */
-	    if (scancode & 0x80)
-		last_key = 0;
-	    else if (last_key != scancode)
-	    {
-		//printf("kbd: %d, %d, %c\n", scancode, last_key, keyb_layout[shift][scancode]);
-		last_key = scancode;
-		c = keyb_layout[shift][scancode];
-		*ScanCode = scancode;
-		if (c > 0) return c;
-	    }
-	}
+
+    while (KeepRetrying || Retry-- > 0)
+    {
+        unsigned char status = kbd_read_status();
+
+        while (status & KBD_STAT_OBF)
+        {
+            byte_t scancode;
+
+            scancode = kbd_read_input();
+
+            /* check for SHIFT-keys */
+            if (((scancode & 0x7F) == 42) || ((scancode & 0x7F) == 54))
+            {
+                shift = !(scancode & 0x80);
+                continue;
+            }
+
+            /* ignore all other RELEASED-codes */
+            if (scancode & 0x80)
+            {
+                last_key = 0;
+            }
+            else if (last_key != scancode)
+            {
+                //printf("kbd: %d, %d, %c\n", scancode, last_key, keyb_layout[shift][scancode]);
+                last_key = scancode;
+                c = keyb_layout[shift][scancode];
+                *ScanCode = scancode;
+
+                if (c > 0)
+                    return c;
+            }
+        }
     }
 
     return -1;

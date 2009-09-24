@@ -45,8 +45,8 @@
 //
 // CM_KEY_CONTROL_BLOCK Signatures
 //
-#define CM_KCB_SIGNATURE                                TAG('C', 'm', 'K', 'b')
-#define CM_KCB_INVALID_SIGNATURE                        TAG('C', 'm', 'F', '4')
+#define CM_KCB_SIGNATURE                                'bKmC'
+#define CM_KCB_INVALID_SIGNATURE                        '4FmC'
 
 //
 // CM_KEY_CONTROL_BLOCK Flags

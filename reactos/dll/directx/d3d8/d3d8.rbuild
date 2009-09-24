@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="d3d8" type="win32dll" entrypoint="0" installbase="system32" installname="d3d8.dll">
-	<importlibrary definition="d3d8.def" />
+	<importlibrary definition="d3d8.spec.def" />
 	<file>d3d8.c</file>
 	<file>d3d8.rc</file>
+	<file>d3d8.spec</file>
 </module>
