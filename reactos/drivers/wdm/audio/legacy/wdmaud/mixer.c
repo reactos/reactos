@@ -36,14 +36,11 @@ GetSysAudioDeviceCount(
 }
 
 NTSTATUS
-OpenSysAudioDeviceByIndex(
+GetSysAudioDevicePnpName(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  ULONG DeviceIndex,
-    IN  PHANDLE DeviceHandle,
-    IN  PFILE_OBJECT * FileObject)
+    OUT LPWSTR * Device)
 {
-    LPWSTR Device;
-    HANDLE hDevice;
     ULONG BytesReturned;
     KSP_PIN Pin;
     NTSTATUS Status;
@@ -59,7 +56,6 @@ OpenSysAudioDeviceByIndex(
     Pin.Property.Flags = KSPROPERTY_TYPE_GET;
     Pin.PinId = DeviceIndex;
 
-
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* query sysaudio for the device path */
@@ -70,19 +66,37 @@ OpenSysAudioDeviceByIndex(
         return STATUS_UNSUCCESSFUL;
 
     /* allocate buffer for the device */
-    Device = ExAllocatePool(NonPagedPool, BytesReturned);
+    *Device = ExAllocatePool(NonPagedPool, BytesReturned);
     if (!Device)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* query sysaudio again for the device path */
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), (PVOID)Device, BytesReturned, &BytesReturned);
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), (PVOID)*Device, BytesReturned, &BytesReturned);
 
     if (!NT_SUCCESS(Status))
     {
         /* failed */
-        ExFreePool(Device);
+        ExFreePool(*Device);
         return Status;
     }
+
+    return Status;
+}
+
+NTSTATUS
+OpenSysAudioDeviceByIndex(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  ULONG DeviceIndex,
+    IN  PHANDLE DeviceHandle,
+    IN  PFILE_OBJECT * FileObject)
+{
+    LPWSTR Device = NULL;
+    NTSTATUS Status;
+    HANDLE hDevice;
+
+    Status = GetSysAudioDevicePnpName(DeviceObject, DeviceIndex, &Device);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* now open the device */
     Status = WdmAudOpenSysAudioDevice(Device, &hDevice);
@@ -227,6 +241,122 @@ GetNumOfMixerDevices(
 
     return Count;
 }
+
+ULONG
+IsOutputMixer(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DeviceIndex)
+{
+    ULONG DeviceCount, Index, Count;
+    NTSTATUS Status;
+    HANDLE hDevice;
+    PFILE_OBJECT FileObject;
+    PKSMULTIPLE_ITEM MultipleItem;
+
+    /* get number of devices */
+    DeviceCount = GetSysAudioDeviceCount(DeviceObject);
+
+    if (!DeviceCount)
+        return 0;
+
+    Index = 0;
+    Count = 0;
+    do
+    {
+        /* open the virtual audio device */
+        Status = OpenSysAudioDeviceByIndex(DeviceObject, Index, &hDevice, &FileObject);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* retrieve all available node types */
+            Status = GetFilterNodeTypes(FileObject, &MultipleItem);
+            if (NT_SUCCESS(Status))
+            {
+                if (CountNodeType(MultipleItem, (LPGUID)&KSNODETYPE_DAC))
+                {
+                    /* increment (output) mixer count */
+                    if (DeviceIndex == Count)
+                    {
+                        ExFreePool(MultipleItem);
+                        ObDereferenceObject(FileObject);
+                        ZwClose(hDevice);
+                        return TRUE;
+                    }
+
+                    Count++;
+                }
+
+                if (CountNodeType(MultipleItem, (LPGUID)&KSNODETYPE_ADC))
+                {
+                    /* increment (input) mixer count */
+                    if (DeviceIndex == Count)
+                    {
+                        ExFreePool(MultipleItem);
+                        ObDereferenceObject(FileObject);
+                        ZwClose(hDevice);
+                        return FALSE;
+                    }
+                    Count++;
+                }
+                ExFreePool(MultipleItem);
+            }
+            ObDereferenceObject(FileObject);
+            ZwClose(hDevice);
+        }
+
+        Index++;
+    }while(Index < DeviceCount);
+
+    ASSERT(0);
+    return FALSE;
+}
+
+
+
+
+NTSTATUS
+WdmAudMixerCapabilities(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    NTSTATUS Status;
+    LPWSTR Device;
+    WCHAR Buffer[100];
+
+    Status = GetSysAudioDevicePnpName(DeviceObject, DeviceInfo->DeviceIndex,&Device);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get device name %x\n", Status);
+        return Status;
+    }
+
+    DeviceInfo->u.MixCaps.cDestinations = 1; //FIXME
+
+    Status = FindProductName(Device, sizeof(Buffer) / sizeof(WCHAR), Buffer);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        DeviceInfo->u.MixCaps.szPname[0] = L'\0';
+    }
+    else
+    {
+        if (IsOutputMixer(DeviceObject, DeviceInfo->DeviceIndex))
+        {
+            wcscat(Buffer, L" output");
+        }
+        else
+        {
+            wcscat(Buffer, L" Input");
+        }
+        RtlMoveMemory(DeviceInfo->u.MixCaps.szPname, Buffer, min(MAXPNAMELEN, wcslen(Buffer)+1) * sizeof(WCHAR));
+        DeviceInfo->u.MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+    }
+
+    return Status;
+}
+
 
 NTSTATUS
 WdmAudControlOpenMixer(

@@ -125,6 +125,19 @@ GetWdmDeviceCapabilities(
     /* This is pretty much a big hack right now */
     switch ( DeviceType )
     {
+        case MIXER_DEVICE_TYPE:
+        {
+            LPMIXERCAPS MixerCaps = (LPMIXERCAPS) Capabilities;
+
+            CopyWideString(MixerCaps->szPname, DeviceInfo.u.WaveOutCaps.szPname);
+
+            MixerCaps->cDestinations = DeviceInfo.u.MixCaps.cDestinations;
+            MixerCaps->fdwSupport = DeviceInfo.u.MixCaps.fdwSupport;
+            MixerCaps->vDriverVersion = DeviceInfo.u.MixCaps.vDriverVersion;
+            MixerCaps->wMid = DeviceInfo.u.MixCaps.wMid;
+            MixerCaps->wPid = DeviceInfo.u.MixCaps.wPid;
+            break;
+        }
         case WAVE_OUT_DEVICE_TYPE :
         {
             LPWAVEOUTCAPS WaveOutCaps = (LPWAVEOUTCAPS) Capabilities;

@@ -34,6 +34,7 @@ typedef struct
 
     union
     {
+        MIXERCAPSW    MixCaps;
         MIXERCONTROLDETAILS MixDetails;
         MIXERLINECONTROLSW MixControls;
         MIXERLINEW MixLine;

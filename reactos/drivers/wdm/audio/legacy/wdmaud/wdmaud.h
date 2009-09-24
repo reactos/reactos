@@ -108,4 +108,16 @@ WdmAudOpenSysAudioDevice(
     IN LPWSTR DeviceName,
     OUT PHANDLE Handle);
 
+NTSTATUS
+FindProductName(
+    IN LPWSTR PnpName,
+    IN ULONG ProductNameSize,
+    OUT LPWSTR ProductName);
+
+NTSTATUS
+WdmAudMixerCapabilities(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo);
+
 #endif

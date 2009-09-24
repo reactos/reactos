@@ -706,6 +706,13 @@ WdmAudCapabilities(
 
     DPRINT("WdmAudCapabilities entered\n");
 
+    if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
+    {
+        Status = WdmAudMixerCapabilities(DeviceObject, DeviceInfo, ClientInfo);
+        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
+
     Status = GetFilterIdAndPinId(DeviceObject, DeviceInfo, ClientInfo, &FilterId, &PinId);
     if (!NT_SUCCESS(Status))
     {
