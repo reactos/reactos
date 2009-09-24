@@ -327,8 +327,9 @@ WdmAudControlDeviceType(
 
     if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
     {
-        DPRINT1("FIXME: Unsupported device type %x\n", DeviceInfo->DeviceType);
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+        DPRINT("FIXME: Unsupported device type %x\n", DeviceInfo->DeviceType);
+        DeviceInfo->DeviceCount = 0;
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
 
     Pin.Property.Set = KSPROPSETID_Sysaudio;
@@ -393,7 +394,7 @@ WdmAudControlDeviceType(
     /* store result count */
     DeviceInfo->DeviceCount = Result;
 
-    DPRINT1("WdmAudControlDeviceType Status %x Devices %u\n", Status, DeviceInfo->DeviceCount);
+    DPRINT("WdmAudControlDeviceType Status %x Devices %u\n", Status, DeviceInfo->DeviceCount);
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
 }
 
@@ -415,7 +416,7 @@ WdmAudControlDeviceState(
     Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: invalid device handle provided %p\n", DeviceInfo->hDevice);
+        DPRINT1("Error: invalid device handle provided %p Type %x\n", DeviceInfo->hDevice, DeviceInfo->DeviceType);
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
@@ -1037,14 +1038,14 @@ WdmAudWrite(
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
-    Packet->Header.FrameExtent = DeviceInfo->BufferSize;
-    Packet->Header.DataUsed = DeviceInfo->BufferSize;
+    Packet->Header.FrameExtent = DeviceInfo->Header.FrameExtent;
+    Packet->Header.DataUsed = DeviceInfo->Header.DataUsed;
     Packet->Header.Size = sizeof(KSSTREAM_HEADER);
     Packet->Header.PresentationTime.Numerator = 1;
     Packet->Header.PresentationTime.Denominator = 1;
     Packet->Irp = Irp;
 
-    Buffer = ExAllocatePool(NonPagedPool, DeviceInfo->BufferSize);
+    Buffer = ExAllocatePool(NonPagedPool, DeviceInfo->Header.DataUsed);
     if (!Buffer)
     {
         /* no memory */
@@ -1054,7 +1055,7 @@ WdmAudWrite(
     }
     Packet->Header.Data = Buffer;
 
-    Mdl = IoAllocateMdl(DeviceInfo->Buffer, DeviceInfo->BufferSize, FALSE, FALSE, FALSE);
+    Mdl = IoAllocateMdl(DeviceInfo->Header.Data, DeviceInfo->Header.DataUsed, FALSE, FALSE, FALSE);
     if (!Mdl)
     {
         /* no memory */
@@ -1096,7 +1097,7 @@ WdmAudWrite(
         return SetIrpIoStatus(Irp, STATUS_INSUFFICIENT_RESOURCES, 0);
     }
 
-    RtlMoveMemory(Buffer, SystemBuffer, DeviceInfo->BufferSize);
+    RtlMoveMemory(Buffer, SystemBuffer, DeviceInfo->Header.DataUsed);
     MmUnlockPages(Mdl);
     IoFreeMdl(Mdl);
 

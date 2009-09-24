@@ -238,6 +238,8 @@ WdmAudControlOpenMixer(
     ULONG Index;
     PWDMAUD_HANDLE Handels;
 
+    DPRINT("WdmAudControlOpenMixer\n");
+
     if (DeviceInfo->DeviceIndex >= GetNumOfMixerDevices(DeviceObject))
     {
         /* mixer index doesnt exist */

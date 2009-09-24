@@ -520,8 +520,12 @@ WriteFileEx_Remixer(
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.hDevice = Handle;
     DeviceInfo.DeviceType = WAVE_OUT_DEVICE_TYPE; //FIXME
-    DeviceInfo.Buffer = BufferOut;
-    DeviceInfo.BufferSize = BufferLength;
+    DeviceInfo.Header.FrameExtent = BufferLength;
+    DeviceInfo.Header.DataUsed = BufferLength;
+    DeviceInfo.Header.Data = BufferOut;
+    DeviceInfo.Header.Size = sizeof(KSSTREAM_HEADER);
+    DeviceInfo.Header.PresentationTime.Numerator = 1;
+    DeviceInfo.Header.PresentationTime.Denominator = 1;
 
     Overlap->OriginalBufferSize = Length;
     Overlap->OriginalCompletionRoutine = CompletionRoutine;

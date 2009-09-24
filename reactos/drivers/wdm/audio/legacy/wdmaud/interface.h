@@ -25,17 +25,18 @@ typedef enum
 
 typedef struct
 {
+    KSSTREAM_HEADER Header;
     SOUND_DEVICE_TYPE DeviceType;
     ULONG DeviceIndex;
 
     HANDLE hDevice;
     ULONG DeviceCount;
 
-    ULONG BufferSize;
-    PUCHAR Buffer;
-
     union
     {
+        MIXERCONTROLDETAILS MixDetails;
+        MIXERLINECONTROLSW MixControls;
+        MIXERLINEW MixLine;
         WAVEFORMATEX WaveFormatEx;
         WAVEOUTCAPSW WaveOutCaps;
         AUXCAPSW     AuxCaps;

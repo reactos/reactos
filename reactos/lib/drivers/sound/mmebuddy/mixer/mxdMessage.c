@@ -15,8 +15,102 @@
 
 #include <ntddsnd.h>
 #include <sndtypes.h>
-
+#undef NDEBUG
 #include <mmebuddy.h>
+
+
+MMRESULT
+MmeCloseMixerDevice(
+    IN  DWORD PrivateHandle)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_DEVICE SoundDevice;
+
+    SND_TRACE(L"Closing mixer device \n");
+
+    VALIDATE_MMSYS_PARAMETER( PrivateHandle );
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
+
+    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
+        return MMSYSERR_INVALHANDLE;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+
+    Result = DestroySoundDeviceInstance(SoundDeviceInstance);
+
+    return Result;
+}
+
+MMRESULT
+MmeOpenMixerDevice(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPMIXEROPENDESC OpenParameters,
+    IN  DWORD Flags,
+    OUT DWORD* PrivateHandle)
+{
+    MMRESULT Result;
+    PMMFUNCTION_TABLE FunctionTable;
+    PSOUND_DEVICE SoundDevice;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+
+    SND_TRACE(L"Opening mixer device");
+
+    VALIDATE_MMSYS_PARAMETER( OpenParameters );
+
+    Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    /* Check that winmm gave us a private handle to fill */
+    VALIDATE_MMSYS_PARAMETER( PrivateHandle );
+
+    /* Create a sound device instance and open the sound device */
+    Result = CreateSoundDeviceInstance(SoundDevice, &SoundDeviceInstance);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    if ( ! FunctionTable->SetWaveFormat )
+        return MMSYSERR_NOTSUPPORTED;
+
+    Result = FunctionTable->SetWaveFormat(SoundDeviceInstance, DeviceId, NULL, 0);
+    if ( ! MMSUCCESS(Result) )
+    {
+        /* TODO: Destroy sound instance */
+        return TranslateInternalMmResult(Result);
+    }
+
+    /* Store the device instance pointer in the private handle - is DWORD safe here? */
+    *PrivateHandle = (DWORD) SoundDeviceInstance;
+
+    /* Store the additional information we were given - FIXME: Need flags! */
+    SetSoundDeviceInstanceMmeData(SoundDeviceInstance,
+                                  (HDRVR)OpenParameters->hmx,
+                                  OpenParameters->dwCallback,
+                                  OpenParameters->dwInstance,
+                                  Flags);
+
+    /* Let the application know the device is open */
+    ReleaseEntrypointMutex(DeviceType);
+#if 0
+    NotifyMmeClient(SoundDeviceInstance,
+                    DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_OPEN : WIM_OPEN,
+                    0);
+#endif
+    AcquireEntrypointMutex(DeviceType);
+
+    SND_TRACE(L"Mixer device now open\n");
+
+    return MMSYSERR_NOERROR;
+}
 
 /*
     Standard MME driver entry-point for messages relating to mixers.
@@ -60,11 +154,19 @@ mxdMessage(
 
         case MXDM_OPEN :
         {
+            Result = MmeOpenMixerDevice(MIXER_DEVICE_TYPE,
+                                       DeviceId,
+                                       (LPMIXEROPENDESC) Parameter1,
+                                       Parameter2,
+                                       (DWORD*) PrivateHandle);
+
             break;
         }
 
         case MXDM_CLOSE :
         {
+            Result = MmeCloseMixerDevice(PrivateHandle);
+
             break;
         }
 
