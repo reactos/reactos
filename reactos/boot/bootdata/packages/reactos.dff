@@ -454,7 +454,7 @@ dll\win32\wintrust\wintrust.dll                     1
 dll\win32\wldap32\wldap32.dll                       1
 dll\win32\wmi\wmi.dll                               1
 dll\win32\ws2_32\ws2_32.dll                         1
-;dll\win32\ws2help\ws2help.dll                       1
+dll\win32\ws2help\ws2help.dll                       1
 dll\win32\wshirda\wshirda.dll                       1
 dll\win32\wshtcpip\wshtcpip.dll                     1
 dll\win32\wsock32\wsock32.dll                       1
