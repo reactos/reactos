@@ -981,6 +981,29 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
         DiskIsDriveRemovable(BootDrive))
     {
         /* TODO: Check if it's really a cdrom drive */
+        ULONG* Buffer;
+        ULONG Checksum = 0;
+
+        /* Read the MBR */
+        if (!MachDiskReadLogicalSectors(BootDrive, 16ULL, 1, (PVOID)DISKREADBUFFER))
+        {
+          DPRINTM(DPRINT_HWDETECT, "Reading MBR failed\n");
+          return;
+        }
+
+        Buffer = (ULONG*)DISKREADBUFFER;
+
+        /* Calculate the MBR checksum */
+        for (i = 0; i < 2048 / sizeof(ULONG); i++) Checksum += Buffer[i];
+        DPRINTM(DPRINT_HWDETECT, "Checksum: %x\n", Checksum);
+
+        /* Fill out the ARC disk block */
+        reactos_arc_disk_info[reactos_disk_count].CheckSum = Checksum;
+        strcpy(reactos_arc_strings[reactos_disk_count], BootPath);
+        reactos_arc_disk_info[reactos_disk_count].ArcName =
+            reactos_arc_strings[reactos_disk_count];
+        reactos_disk_count++;
+
         FsRegisterDevice(BootPath, &DiskVtbl);
     }
 }
