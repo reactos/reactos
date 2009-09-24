@@ -23,107 +23,6 @@ PCHAR IoLoaderArcBootDeviceName;
 BOOLEAN
 INIT_FUNCTION
 NTAPI
-IopApplyRosCdromArcHack(IN ULONG i)
-{
-    ULONG DeviceNumber = -1;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    ANSI_STRING InstallName;
-    UNICODE_STRING DeviceName;
-    CHAR Buffer[128], RosSysPath[16];
-    FILE_BASIC_INFORMATION FileInfo;
-    NTSTATUS Status;
-    PCHAR p, q;
-    PCONFIGURATION_INFORMATION ConfigInfo = IoGetConfigurationInformation();
-    extern BOOLEAN InitIsWinPEMode, ExpInTextModeSetup;
-
-    /* Change this if you want ROS to boot properly from another directory */
-    sprintf(RosSysPath, "%s", "reactos");
-
-    /* Only ARC Name left - Build full ARC Name */
-    p = strstr(KeLoaderBlock->ArcBootDeviceName, "cdrom");
-    if (p)
-    {
-        /* Build installer name */
-        sprintf(Buffer, "\\Device\\CdRom%lu\\%s\\ntoskrnl.exe", i, RosSysPath);
-        RtlInitAnsiString(&InstallName, Buffer);
-        Status = RtlAnsiStringToUnicodeString(&DeviceName, &InstallName, TRUE);
-        if (!NT_SUCCESS(Status)) return FALSE;
-
-        /* Try to find the installer */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &DeviceName,
-                                   0,
-                                   NULL,
-                                   NULL);
-        Status = ZwQueryAttributesFile(&ObjectAttributes, &FileInfo);
-
-        /* Free the string */
-        RtlFreeUnicodeString(&DeviceName);
-
-        /* Check if we found the file */
-        if (NT_SUCCESS(Status))
-        {
-            /* We did, save the device number */
-            DeviceNumber = i;
-        }
-        else
-        {
-            /* Build live CD kernel name */
-            sprintf(Buffer,
-                    "\\Device\\CdRom%lu\\%s\\system32\\ntoskrnl.exe",
-                    i, RosSysPath);
-            RtlInitAnsiString(&InstallName, Buffer);
-            Status = RtlAnsiStringToUnicodeString(&DeviceName,
-                                                  &InstallName,
-                                                  TRUE);
-            if (!NT_SUCCESS(Status)) return FALSE;
-
-            /* Try to find it */
-            InitializeObjectAttributes(&ObjectAttributes,
-                                       &DeviceName,
-                                       0,
-                                       NULL,
-                                       NULL);
-            Status = ZwQueryAttributesFile(&ObjectAttributes, &FileInfo);
-            if (NT_SUCCESS(Status)) DeviceNumber = i;
-
-            /* Free the string */
-            RtlFreeUnicodeString(&DeviceName);
-        }
-
-        if (!InitIsWinPEMode)
-        {
-            /* Build the name */
-            sprintf(p, "cdrom(%lu)", DeviceNumber);
-
-            /* Adjust original command line */
-            q = strchr(p, ')');
-            if (q)
-            {
-                q++;
-                strcpy(Buffer, q);
-                sprintf(p, "cdrom(%lu)", DeviceNumber);
-                strcat(p, Buffer);
-            }
-        }
-    }
-
-    /* OK, how many disks are there? */
-    DeviceNumber += ConfigInfo->DiskCount;
-
-    /* Return whether this is the CD or not */
-    if ((InitIsWinPEMode) || (ExpInTextModeSetup))
-    {
-        return TRUE;
-    }
-
-    /* Failed */
-    return FALSE;
-}
-
-BOOLEAN
-INIT_FUNCTION
-NTAPI
 IopGetDiskInformation(IN ULONG i,
                       OUT PULONG CheckSum,
                       OUT PULONG Signature,
@@ -278,7 +177,8 @@ IopGetDiskInformation(IN ULONG i,
 BOOLEAN
 INIT_FUNCTION
 NTAPI
-IopAssignArcNamesToCdrom(IN PULONG Buffer,
+IopAssignArcNamesToCdrom(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                         IN PULONG Buffer,
                          IN ULONG DiskNumber)
 {
     CHAR ArcBuffer[128];
@@ -292,6 +192,10 @@ IopAssignArcNamesToCdrom(IN PULONG Buffer,
     ULONG i, CheckSum = 0;
     PDEVICE_OBJECT DeviceObject;
     PFILE_OBJECT FileObject;
+    PARC_DISK_INFORMATION ArcDiskInfo = LoaderBlock->ArcDiskInformation;
+    PLIST_ENTRY NextEntry;
+    PARC_DISK_SIGNATURE ArcDiskEntry;
+    BOOLEAN IsBootCdRom = FALSE;
 
     /* Build the device name */
     sprintf(ArcBuffer, "\\Device\\CdRom%lu", DiskNumber);
@@ -348,22 +252,24 @@ IopAssignArcNamesToCdrom(IN PULONG Buffer,
     /* Now calculate the checksum */
     for (i = 0; i < 2048 / sizeof(ULONG); i++) CheckSum += Buffer[i];
 
-    /*
-     * FIXME: In normal conditions, NTLDR/FreeLdr sends the *proper* CDROM
-     * ARC Path name, and what happens here is a comparision of both checksums
-     * in order to see if this is the actual boot CD.
-     *
-     * In ReactOS this doesn't currently happen, instead we have a hack on top
-     * of this file which scans the CD for the ntoskrnl.exe file, then modifies
-     * the LoaderBlock's ARC Path with the right CDROM path. Consequently, we
-     * get the same state as if NTLDR had properly booted us, except that we do
-     * not actually need to check the signature, since the hack already did the
-     * check for ntoskrnl.exe, which is just as good.
-     *
-     * The signature code stays however, because eventually FreeLDR will work
-     * like NTLDR, and, conversly, we do want to be able to be booted by NTLDR.
-     */
-    if (IopApplyRosCdromArcHack(DiskNumber))
+    /* Search if this device is the actual boot CD */
+    for (NextEntry = ArcDiskInfo->DiskSignatureListHead.Flink;
+         NextEntry != &ArcDiskInfo->DiskSignatureListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Get the current ARC disk signature entry */
+        ArcDiskEntry = CONTAINING_RECORD(NextEntry,
+                                         ARC_DISK_SIGNATURE,
+                                         ListEntry);
+        if (CheckSum == ArcDiskEntry->CheckSum &&
+            strcmp(KeLoaderBlock->ArcBootDeviceName, ArcDiskEntry->ArcName) == 0)
+        {
+            IsBootCdRom = TRUE;
+            break;
+        }
+    }
+
+    if (IsBootCdRom)
     {
         /* This is the boot CD-ROM, build the ARC name */
         sprintf(ArcBuffer, "\\ArcName\\%s", KeLoaderBlock->ArcBootDeviceName);
@@ -583,7 +489,7 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         for (i = 0; i < ConfigInfo->CdRomCount; i++)
         {
             /* Give it an ARC name */
-            if (IopAssignArcNamesToCdrom(PartitionBuffer, i)) break;
+            if (IopAssignArcNamesToCdrom(LoaderBlock, PartitionBuffer, i)) break;
         }
 
         /* Free the buffer */
