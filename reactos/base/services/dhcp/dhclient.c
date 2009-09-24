@@ -581,8 +581,10 @@ bind_lease(struct interface_info *ip)
     Adapter = AdapterFindInfo( ip );
 
     if( Adapter )  setup_adapter( Adapter, new_lease );
-    else warning("Could not find adapter for info %p\n", ip);
-
+    else {
+        warning("Could not find adapter for info %p\n", ip);
+        return;
+    }
     set_name_servers( Adapter, new_lease );
 }
 
