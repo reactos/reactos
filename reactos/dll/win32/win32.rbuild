@@ -628,12 +628,12 @@
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.rbuild" />
 </directory>
-<!--directory name="ws2_32_new">
+<directory name="ws2_32_new">
 	<xi:include href="ws2_32_new/ws2_32.rbuild" />
 </directory>
 <directory name="ws2help">
 	<xi:include href="ws2help/ws2help.rbuild" />
-</directory-->
+</directory>
 <directory name="wshirda">
 	<xi:include href="wshirda/wshirda.rbuild" />
 </directory>
