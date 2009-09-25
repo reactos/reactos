@@ -18,33 +18,36 @@
 
 #include "resources.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 {
- MENUITEM "&Восстановить", 61728
- MENUITEM "&Переместить", 61456
- MENUITEM "Раз&мер", 61440
- MENUITEM "&Свернуть", 61472
- MENUITEM "&Развернуть", 61488
+ MENUITEM "&Р’РѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ", 61728
+ MENUITEM "&РџРµСЂРµРјРµСЃС‚РёС‚СЊ", 61456
+ MENUITEM "Р Р°Р·&РјРµСЂ", 61440
+ MENUITEM "&РЎРІРµСЂРЅСѓС‚СЊ", 61472
+ MENUITEM "&Р Р°Р·РІРµСЂРЅСѓС‚СЊ", 61488
  MENUITEM SEPARATOR
- MENUITEM "&Закрыть\tAlt-F4", 61536
+ MENUITEM "&Р—Р°РєСЂС‹С‚СЊ\tAlt-F4", 61536
  MENUITEM SEPARATOR
- MENUITEM "&О проекте Wine...", 61761
+ MENUITEM "&Рћ РїСЂРѕРµРєС‚Рµ Wine...", 61761
 }
 
 EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 {
 	POPUP ""
 	BEGIN
-		MENUITEM "&Отменить", EM_UNDO
+		MENUITEM "&РћС‚РјРµРЅРёС‚СЊ", EM_UNDO
 		MENUITEM SEPARATOR
-		MENUITEM "&Вырезать", WM_CUT
-		MENUITEM "&Копировать", WM_COPY
-		MENUITEM "Вст&авить", WM_PASTE
-		MENUITEM "&Удалить", WM_CLEAR
+		MENUITEM "&Р’С‹СЂРµР·Р°С‚СЊ", WM_CUT
+		MENUITEM "&РљРѕРїРёСЂРѕРІР°С‚СЊ", WM_COPY
+		MENUITEM "Р’СЃС‚&Р°РІРёС‚СЊ", WM_PASTE
+		MENUITEM "&РЈРґР°Р»РёС‚СЊ", WM_CLEAR
 		MENUITEM SEPARATOR
-		MENUITEM "Выделить в&се", EM_SETSEL
+		MENUITEM "Р’С‹РґРµР»РёС‚СЊ РІ&СЃРµ", EM_SETSEL
 	END
 }
 
@@ -54,15 +57,15 @@ BEGIN
         ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
         LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
         PUSHBUTTON "&OK", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "О&тмена", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "&Отменить", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "По&втор", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "&Пропустить", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "&Да", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "&Нет", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "По&вторить", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "П&роложить", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "Помощь", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Рћ&С‚РјРµРЅР°", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&РћС‚РјРµРЅРёС‚СЊ", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "РџРѕ&РІС‚РѕСЂ", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&РџСЂРѕРїСѓСЃС‚РёС‚СЊ", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Р”Р°", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&РќРµС‚", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "РџРѕ&РІС‚РѕСЂРёС‚СЊ", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Рџ&СЂРѕР»РѕР¶РёС‚СЊ", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "РџРѕРјРѕС‰СЊ", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122
@@ -72,12 +75,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
     DEFPUSHBUTTON   "OK", IDOK, 75, 100, 35, 14
-    PUSHBUTTON      "Отменить", IDCANCEL, 120, 100, 35, 14
+    PUSHBUTTON      "РћС‚РјРµРЅРёС‚СЊ", IDCANCEL, 120, 100, 35, 14
 END
 
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_ERROR "ОШИБКА"
-    IDS_MDI_MOREWINDOWS "&Ещё окна..."
+    IDS_ERROR "РћРЁРР‘РљРђ"
+    IDS_MDI_MOREWINDOWS "&Р•С‰С‘ РѕРєРЅР°..."
 }

@@ -673,7 +673,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     dlgInfo->hMenu       = hMenu;
     dlgInfo->xBaseUnit   = xBaseUnit;
     dlgInfo->yBaseUnit   = yBaseUnit;
-    dlgInfo->idResult    = 0;
+    dlgInfo->idResult    = IDOK;
     dlgInfo->flags       = flags;
     dlgInfo->hDialogHeap = 0;
 
@@ -808,7 +808,7 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                 if (!GetMessageW( &msg, 0, 0, 0 )) break;
             }
 
-            if (!IsWindow( hwnd )) return -1;
+            if (!IsWindow( hwnd )) return 0;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
             {
                 TranslateMessage( &msg );

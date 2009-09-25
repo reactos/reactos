@@ -168,7 +168,7 @@ static HDC WINAPI wglGetPbufferDCARB(void *pbuffer)
 
     TRACE("(%p)\n", pbuffer);
 
-    if (!dc) return FALSE;
+    if (!dc) return 0;
 
     /* The display driver has to do the rest of the work because
      * we need access to lowlevel datatypes which we can't access here
@@ -338,7 +338,7 @@ PROC WINAPI wglGetProcAddress(LPCSTR func)
 
     /* Retrieve the global hDC to get access to the driver.  */
     dc = OPENGL_GetDefaultDC();
-    if (!dc) return FALSE;
+    if (!dc) return NULL;
 
     if (!dc->funcs->pwglGetProcAddress) FIXME(" :stub\n");
     else ret = dc->funcs->pwglGetProcAddress(func);

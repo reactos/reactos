@@ -345,7 +345,10 @@ DIALOGINFO *DIALOG_get_info( HWND hwnd, BOOL create )
 
     wndPtr = WIN_GetPtr( hwnd );
     if (!wndPtr || wndPtr == WND_OTHER_PROCESS || wndPtr == WND_DESKTOP)
+    {
+        SetLastError( ERROR_INVALID_WINDOW_HANDLE );
         return NULL;
+    }
 
     dlgInfo = wndPtr->dlgInfo;
 
@@ -383,7 +386,7 @@ LRESULT WINAPI DefDlgProc16( HWND16 hwnd, UINT16 msg, WPARAM16 wParam,
     BOOL result = FALSE;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info(hwnd32, TRUE))) return -1;
+    if(!(dlgInfo = DIALOG_get_info(hwnd32, TRUE))) return 0;
 
     SetWindowLongPtrW( hwnd32, DWLP_MSGRESULT, 0 );
 
@@ -435,7 +438,7 @@ LRESULT WINAPI DefDlgProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
     BOOL result = FALSE;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info( hwnd, TRUE ))) return -1;
+    if(!(dlgInfo = DIALOG_get_info( hwnd, TRUE ))) return 0;
 
     SetWindowLongPtrW( hwnd, DWLP_MSGRESULT, 0 );
 
@@ -486,7 +489,7 @@ LRESULT WINAPI DefDlgProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
     DLGPROC dlgproc;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info( hwnd, TRUE ))) return -1;
+    if(!(dlgInfo = DIALOG_get_info( hwnd, TRUE ))) return 0;
 
     SetWindowLongPtrW( hwnd, DWLP_MSGRESULT, 0 );
 

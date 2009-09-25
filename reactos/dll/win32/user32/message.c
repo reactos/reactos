@@ -3016,12 +3016,23 @@ BOOL WINAPI TranslateMessage( const MSG *msg )
     if (msg->message < WM_KEYFIRST || msg->message > WM_KEYLAST) return FALSE;
     if (msg->message != WM_KEYDOWN && msg->message != WM_SYSKEYDOWN) return TRUE;
 
-    TRACE_(key)("Translating key %s (%04lx), scancode %02x\n",
-                 SPY_GetVKeyName(msg->wParam), msg->wParam, LOBYTE(HIWORD(msg->lParam)));
+    TRACE_(key)("Translating key %s (%04lx), scancode %04x\n",
+                SPY_GetVKeyName(msg->wParam), msg->wParam, HIWORD(msg->lParam));
+
+    switch (msg->wParam)
+    {
+    case VK_PACKET:
+        message = (msg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
+        TRACE_(key)("PostMessageW(%p,%s,%04x,%08x)\n",
+                    msg->hwnd, SPY_GetMsgName(message, msg->hwnd), HIWORD(msg->lParam), LOWORD(msg->lParam));
+        PostMessageW( msg->hwnd, message, HIWORD(msg->lParam), LOWORD(msg->lParam));
+        return TRUE;
 #if 0
-    if ( msg->wParam == VK_PROCESSKEY )
+    case VK_PROCESSKEY:
         return ImmTranslateMessage(msg->hwnd, msg->message, msg->wParam, msg->lParam);
 #endif
+    }
+
     GetKeyboardState( state );
     /* FIXME : should handle ToUnicode yielding 2 */
     switch (ToUnicode(msg->wParam, HIWORD(msg->lParam), state, wp, 2, 0))

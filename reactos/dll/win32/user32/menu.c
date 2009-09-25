@@ -113,7 +113,7 @@ typedef struct {
     DWORD	dwContextHelpID;
     DWORD	dwMenuData;	/* application defined value */
     HMENU       hSysMenuOwner;  /* Handle to the dummy sys menu holder */
-    SIZE        maxBmpSize;     /* Maximum size of the bitmap items */
+    WORD        textOffset;     /* Offset of text when items have both bitmaps and text */
 } POPUPMENU, *LPPOPUPMENU;
 
 /* internal flags for menu tracking */
@@ -147,6 +147,11 @@ typedef struct
   /*  top and bottom margins for popup menus */
 #define MENU_TOP_MARGIN 3
 #define MENU_BOTTOM_MARGIN 2
+
+/* maximum allowed depth of any branch in the menu tree.
+ * This value is slightly larger than in windows (25) to
+ * stay on the safe side. */
+#define MAXMENUDEPTH 30
 
   /* (other menu->FocusedItem values give the position of the focused item) */
 #define NO_SELECTED_ITEM  0xffff
@@ -185,6 +190,8 @@ static BOOL fEndMenu = FALSE;
 static LRESULT WINAPI PopupMenuWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 DWORD WINAPI DrawMenuBarTemp(HWND hwnd, HDC hDC, LPRECT lprect, HMENU hMenu, HFONT hFont);
+
+static BOOL SetMenuItemInfo_common( MENUITEM *, const MENUITEMINFOW *, BOOL);
 
 /*********************************************************************
  * menu class descriptor
@@ -1065,8 +1072,7 @@ static void MENU_CalcItemSize( HDC hdc, MENUITEM *lpitem, HWND hwndOwner,
             /* Keep the size of the bitmap in callback mode to be able
              * to draw it correctly */
             lpitem->bmpsize = size;
-            lppop->maxBmpSize.cx = max( lppop->maxBmpSize.cx, size.cx);
-            lppop->maxBmpSize.cy = max( lppop->maxBmpSize.cy, size.cy);
+            lppop->textOffset = max( lppop->textOffset, size.cx);
             lpitem->rect.right += size.cx + 2;
             itemheight = size.cy + 2;
         }
@@ -1160,6 +1166,7 @@ static void MENU_PopupMenuCalcSize( LPPOPUPMENU lppop )
     MENUITEM *lpitem;
     HDC hdc;
     UINT start, i;
+    int textandbmp = FALSE;
     int orgX, orgY, maxX, maxTab, maxTabWidth, maxHeight;
 
     lppop->Width = lppop->Height = 0;
@@ -1171,8 +1178,7 @@ static void MENU_PopupMenuCalcSize( LPPOPUPMENU lppop )
     start = 0;
     maxX = 2 + 1;
 
-    lppop->maxBmpSize.cx = 0;
-    lppop->maxBmpSize.cy = 0;
+    lppop->textOffset = 0;
 
     while (start < lppop->nItems)
     {
@@ -1197,6 +1203,7 @@ static void MENU_PopupMenuCalcSize( LPPOPUPMENU lppop )
 		maxTab = max( maxTab, lpitem->xTab );
 		maxTabWidth = max(maxTabWidth,lpitem->rect.right-lpitem->xTab);
 	    }
+            if( lpitem->text && lpitem->hbmpItem) textandbmp = TRUE;
 	}
 
 	  /* Finish the column (set all items to the largest width found) */
@@ -1212,6 +1219,12 @@ static void MENU_PopupMenuCalcSize( LPPOPUPMENU lppop )
     }
 
     lppop->Width  = maxX;
+    /* if none of the items have both text and bitmap then
+     * the text and bitmaps are all aligned on the left. If there is at
+     * least one item with both text and bitmap then bitmaps are
+     * on the left and texts left aligned with the right hand side
+     * of the bitmaps */
+    if( !textandbmp) lppop->textOffset = 0;
 
     /* space for 3d border */
     lppop->Height += MENU_BOTTOM_MARGIN;
@@ -1258,8 +1271,7 @@ static void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect,
     maxY = lprect->top+1;
     start = 0;
     helpPos = ~0U;
-    lppop->maxBmpSize.cx = 0;
-    lppop->maxBmpSize.cy = 0;
+    lppop->textOffset = 0;
     while (start < lppop->nItems)
     {
 	lpitem = &lppop->items[start];
@@ -1652,7 +1664,7 @@ static void MENU_DrawMenuItem( HWND hwnd, HMENU hmenu, HWND hwndOwner, HDC hdc, 
 			DT_LEFT | DT_VCENTER | DT_SINGLELINE;
 
         if( !(menu->dwStyle & MNS_CHECKORBMP))
-            rect.left += menu->maxBmpSize.cx;
+            rect.left += menu->textOffset;
 
 	if ( lpitem->fState & MFS_DEFAULT )
 	{
@@ -1754,6 +1766,7 @@ static void MENU_DrawPopupMenu( HWND hwnd, HDC hdc, HMENU hmenu )
 
             if( (menu = MENU_GetMenu( hmenu )))
             {
+                TRACE("hmenu %p Style %08x\n", hmenu, menu->dwStyle);
                 /* draw menu items */
                 if( menu->nItems)
                 {
@@ -2049,92 +2062,6 @@ static void MENU_MoveSelection( HWND hwndOwner, HMENU hmenu, INT offset )
 
 
 /**********************************************************************
- *         MENU_SetItemData
- *
- * Set an item's flags, id and text ptr. Called by InsertMenu() and
- * ModifyMenu().
- */
-static BOOL MENU_SetItemData( MENUITEM *item, UINT flags, UINT_PTR id,
-                                LPCWSTR str )
-{
-    debug_print_menuitem("MENU_SetItemData from: ", item, "");
-    TRACE("flags=%x str=%p\n", flags, str);
-
-    if (IS_STRING_ITEM(flags))
-    {
-        LPWSTR prevText = item->text;
-        if (!str)
-        {
-            flags |= MF_SEPARATOR;
-            item->text = NULL;
-        }
-        else
-        {
-            LPWSTR text;
-            /* Item beginning with a backspace is a help item */
-            if (*str == '\b')
-            {
-                flags |= MF_HELP;
-                str++;
-            }
-            if (!(text = HeapAlloc( GetProcessHeap(), 0, (strlenW(str)+1) * sizeof(WCHAR) )))
-                return FALSE;
-            strcpyW( text, str );
-            item->text = text;
-        }
-        item->hbmpItem = NULL;
-        HeapFree( GetProcessHeap(), 0, prevText );
-    }
-    else if(( flags & MFT_BITMAP)) {
-        item->hbmpItem = (HBITMAP)(LOWORD(str));
-        /* setting bitmap clears text */
-        HeapFree( GetProcessHeap(), 0, item->text );
-        item->text = NULL;
-    }
-
-    if (flags & MF_SEPARATOR) flags |= MF_GRAYED | MF_DISABLED;
-
-    if (flags & MF_OWNERDRAW)
-        item->dwItemData = (DWORD_PTR)str;
-    else
-        item->dwItemData = 0;
-
-    if ((item->fType & MF_POPUP) && (flags & MF_POPUP) && (item->hSubMenu != (HMENU)id) )
-	DestroyMenu( item->hSubMenu );   /* ModifyMenu() spec */
-
-    if (flags & MF_POPUP)
-    {
-	POPUPMENU *menu = MENU_GetMenu((HMENU)id);
-        if (menu) menu->wFlags |= MF_POPUP;
-	else
-        {
-            item->wID = 0;
-            item->hSubMenu = 0;
-            item->fType = 0;
-            item->fState = 0;
-	    return FALSE;
-        }
-    }
-
-    item->wID = id;
-    if (flags & MF_POPUP) item->hSubMenu = (HMENU)id;
-
-    if ((item->fType & MF_POPUP) && !(flags & MF_POPUP) )
-      flags |= MF_POPUP; /* keep popup */
-
-    item->fType = flags & TYPE_MASK;
-    /* MFS_DEFAULT is not accepted. MF_HILITE is not listed as a valid flag
-       for ModifyMenu, but Windows accepts it */
-    item->fState = flags & MENUITEMINFO_STATE_MASK & ~MFS_DEFAULT;
-
-    /* Don't call SetRectEmpty here! */
-
-    debug_print_menuitem("MENU_SetItemData to  : ", item, "");
-    return TRUE;
-}
-
-
-/**********************************************************************
  *         MENU_InsertItem
  *
  * Insert (allocate) a new item into a menu.
@@ -2165,8 +2092,7 @@ static MENUITEM *MENU_InsertItem( HMENU hMenu, UINT pos, UINT flags )
      * Note: XP treats only bitmap handles 1 - 6 as "magic" ones
      * regardless of their id.
      */
-    while (pos > 0 && (menu->items[pos - 1].fType & MFT_BITMAP) &&
-           (INT_PTR)menu->items[pos - 1].hbmpItem >= (INT_PTR)HBMMENU_SYSTEM &&
+    while (pos > 0 && (INT_PTR)menu->items[pos - 1].hbmpItem >= (INT_PTR)HBMMENU_SYSTEM &&
            (INT_PTR)menu->items[pos - 1].hbmpItem <= (INT_PTR)HBMMENU_MBAR_CLOSE_D)
         pos--;
 
@@ -3547,6 +3473,14 @@ static LRESULT WINAPI PopupMenuWndProc( HWND hwnd, UINT message, WPARAM wParam, 
 	    EndPaint( hwnd, &ps );
             return 0;
 	}
+
+    case WM_PRINTCLIENT:
+	{
+	    MENU_DrawPopupMenu( hwnd, (HDC)wParam,
+                                (HMENU)GetWindowLongPtrW( hwnd, 0 ) );
+            return 0;
+        }
+
     case WM_ERASEBKGND:
         return 1;
 
@@ -3828,6 +3762,49 @@ UINT WINAPI GetMenuItemID( HMENU hMenu, INT nPos )
 }
 
 
+/**********************************************************************
+ *         MENU_mnu2mnuii
+ *
+ * Uses flags, id and text ptr, passed by InsertMenu() and
+ * ModifyMenu() to setup a MenuItemInfo structure.
+ */
+static void MENU_mnu2mnuii( UINT flags, UINT_PTR id, LPCWSTR str,
+        LPMENUITEMINFOW pmii)
+{
+    ZeroMemory( pmii, sizeof( MENUITEMINFOW));
+    pmii->cbSize = sizeof( MENUITEMINFOW);
+    pmii->fMask = MIIM_STATE | MIIM_ID | MIIM_FTYPE;
+    /* setting bitmap clears text and vice versa */
+    if( IS_STRING_ITEM(flags)) {
+        pmii->fMask |= MIIM_STRING | MIIM_BITMAP;
+        if( !str)
+            flags |= MF_SEPARATOR;
+        /* Item beginning with a backspace is a help item */
+        /* FIXME: wrong place, this is only true in win16 */
+        else if( *str == '\b') {
+            flags |= MF_HELP;
+            str++;
+        }
+        pmii->dwTypeData = (LPWSTR)str;
+    } else if( flags & MFT_BITMAP){
+        pmii->fMask |= MIIM_BITMAP | MIIM_STRING;
+        pmii->hbmpItem = (HBITMAP)(ULONG_PTR)(LOWORD(str));
+    }
+    if( flags & MF_OWNERDRAW){
+        pmii->fMask |= MIIM_DATA;
+        pmii->dwItemData = (ULONG_PTR) str;
+    }
+    if( flags & MF_POPUP) {
+        pmii->fMask |= MIIM_SUBMENU;
+        pmii->hSubMenu = (HMENU)id;
+    }
+    if( flags & MF_SEPARATOR) flags |= MF_GRAYED | MF_DISABLED;
+    pmii->fState = flags & MENUITEMINFO_STATE_MASK & ~MFS_DEFAULT;
+    pmii->fType = flags & MENUITEMINFO_TYPE_MASK;
+    pmii->wID = (UINT)id;
+}
+
+
 /*******************************************************************
  *         InsertMenuW    (USER32.@)
  */
@@ -3835,6 +3812,7 @@ BOOL WINAPI InsertMenuW( HMENU hMenu, UINT pos, UINT flags,
                          UINT_PTR id, LPCWSTR str )
 {
     MENUITEM *item;
+    MENUITEMINFOW mii;
 
     if (IS_STRING_ITEM(flags) && str)
         TRACE("hMenu %p, pos %d, flags %08x, id %04lx, str %s\n",
@@ -3843,8 +3821,8 @@ BOOL WINAPI InsertMenuW( HMENU hMenu, UINT pos, UINT flags,
                hMenu, pos, flags, id, str );
 
     if (!(item = MENU_InsertItem( hMenu, pos, flags ))) return FALSE;
-
-    if (!(MENU_SetItemData( item, flags, id, str )))
+    MENU_mnu2mnuii( flags, id, str, &mii);
+    if (!(SetMenuItemInfo_common( item, &mii, TRUE)))
     {
         RemoveMenu( hMenu, pos, flags );
         return FALSE;
@@ -3956,6 +3934,7 @@ BOOL WINAPI ModifyMenuW( HMENU hMenu, UINT pos, UINT flags,
                          UINT_PTR id, LPCWSTR str )
 {
     MENUITEM *item;
+    MENUITEMINFOW mii;
 
     if (IS_STRING_ITEM(flags))
         TRACE("%p %d %04x %04lx %s\n", hMenu, pos, flags, id, debugstr_w(str) );
@@ -3964,7 +3943,8 @@ BOOL WINAPI ModifyMenuW( HMENU hMenu, UINT pos, UINT flags,
 
     if (!(item = MENU_FindItem( &hMenu, &pos, flags ))) return FALSE;
     MENU_GetMenu(hMenu)->Height = 0; /* force size recalculate */
-    return MENU_SetItemData( item, flags, id, str );
+    MENU_mnu2mnuii( flags, id, str, &mii);
+    return SetMenuItemInfo_common( item, &mii, TRUE);
 }
 
 
@@ -4671,7 +4651,38 @@ static inline void set_menu_item_text( MENUITEM *menu, LPCWSTR text, BOOL unicod
 
 
 /**********************************************************************
+ *		MENU_depth
+ *
+ * detect if there are loops in the menu tree (or the depth is too large)
+ */
+static int MENU_depth( POPUPMENU *pmenu, int depth)
+{
+    int i;
+    MENUITEM *item;
+    int subdepth;
+
+    depth++;
+    if( depth > MAXMENUDEPTH) return depth;
+    item = pmenu->items;
+    subdepth = depth;
+    for( i = 0; i < pmenu->nItems && subdepth <= MAXMENUDEPTH; i++, item++){
+        POPUPMENU *psubmenu =  item->hSubMenu ? MENU_GetMenu( item->hSubMenu) : NULL;
+        if( psubmenu){
+            int bdepth = MENU_depth( psubmenu, depth);
+            if( bdepth > subdepth) subdepth = bdepth;
+        }
+        if( subdepth > MAXMENUDEPTH)
+            TRACE("<- hmenu %p\n", item->hSubMenu);
+    }
+    return subdepth;
+}
+
+
+/**********************************************************************
  *		SetMenuItemInfo_common
+ *
+ * Note: does not support the MIIM_TYPE flag. Use the MIIM_FTYPE,
+ * MIIM_BITMAP and MIIM_STRING flags instead.
  */
 
 static BOOL SetMenuItemInfo_common(MENUITEM * menu,
@@ -4682,30 +4693,7 @@ static BOOL SetMenuItemInfo_common(MENUITEM * menu,
 
     debug_print_menuitem("SetMenuItemInfo_common from: ", menu, "");
 
-    if (lpmii->fMask & MIIM_TYPE ) {
-        if( lpmii->fMask & ( MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP)) {
-            WARN("invalid combination of fMask bits used\n");
-            /* this does not happen on Win9x/ME */
-            SetLastError( ERROR_INVALID_PARAMETER);
-            return FALSE;
-        }
-
-        /* Remove the old type bits and replace them with the new ones */
-        menu->fType &= ~MENUITEMINFO_TYPE_MASK;
-        menu->fType |= lpmii->fType & MENUITEMINFO_TYPE_MASK;
-
-        if (IS_STRING_ITEM(menu->fType)) {
-	    HeapFree(GetProcessHeap(), 0, menu->text);
-            set_menu_item_text( menu, lpmii->dwTypeData, unicode );
-        } else if( (menu->fType) & MFT_BITMAP)
-                menu->hbmpItem = (HBITMAP)(ULONG_PTR)(LOWORD(lpmii->dwTypeData));
-    }
-
     if (lpmii->fMask & MIIM_FTYPE ) {
-        if(( lpmii->fType & MFT_BITMAP)) {
-            SetLastError( ERROR_INVALID_PARAMETER);
-            return FALSE;
-        }
         menu->fType &= ~MENUITEMINFO_TYPE_MASK;
         menu->fType |= lpmii->fType & MENUITEMINFO_TYPE_MASK;
     }
@@ -4716,11 +4704,9 @@ static BOOL SetMenuItemInfo_common(MENUITEM * menu,
     }
 
     if (lpmii->fMask & MIIM_STATE)
-    {
          /* Other menu items having MFS_DEFAULT are not converted
            to normal items */
          menu->fState = lpmii->fState & MENUITEMINFO_STATE_MASK;
-    }
 
     if (lpmii->fMask & MIIM_ID)
 	menu->wID = lpmii->wID;
@@ -4730,10 +4716,14 @@ static BOOL SetMenuItemInfo_common(MENUITEM * menu,
 	if (menu->hSubMenu) {
 	    POPUPMENU *subMenu = MENU_GetMenu(menu->hSubMenu);
 	    if (subMenu) {
+                if( MENU_depth( subMenu, 0) > MAXMENUDEPTH) {
+                    ERR( "Loop detected in menu hierarchy or maximum menu depth exceeded!\n");
+                    menu->hSubMenu = 0;
+                    return FALSE;
+                }
 		subMenu->wFlags |= MF_POPUP;
 		menu->fType |= MF_POPUP;
-	    }
-	    else {
+	    } else {
                 SetLastError( ERROR_INVALID_PARAMETER);
                 return FALSE;
             }
@@ -4761,27 +4751,63 @@ static BOOL SetMenuItemInfo_common(MENUITEM * menu,
 }
 
 /**********************************************************************
+ *		MENU_NormalizeMenuItemInfoStruct
+ *
+ * Helper for SetMenuItemInfo and InsertMenuItemInfo:
+ * check, copy and extend the MENUITEMINFO struct from the version that the application
+ * supplied to the version used by wine source. */
+static BOOL MENU_NormalizeMenuItemInfoStruct( const MENUITEMINFOW *pmii_in,
+                                              MENUITEMINFOW *pmii_out )
+{
+    /* do we recognize the size? */
+    if( pmii_in->cbSize != sizeof( MENUITEMINFOW) &&
+            pmii_in->cbSize != sizeof( MENUITEMINFOW) - sizeof( pmii_in->hbmpItem)) {
+        SetLastError( ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    /* copy the fields that we have */
+    memcpy( pmii_out, pmii_in, pmii_in->cbSize);
+    /* if the hbmpItem member is missing then extend */
+    if( pmii_in->cbSize != sizeof( MENUITEMINFOW)) {
+        pmii_out->cbSize = sizeof( MENUITEMINFOW);
+        pmii_out->hbmpItem = NULL;
+    }
+    /* test for invalid bit combinations */
+    if( (pmii_out->fMask & MIIM_TYPE &&
+         pmii_out->fMask & (MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP)) ||
+        (pmii_out->fMask & MIIM_FTYPE && pmii_out->fType & MFT_BITMAP)) {
+        WARN("invalid combination of fMask bits used\n");
+        /* this does not happen on Win9x/ME */
+        SetLastError( ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    /* convert old style (MIIM_TYPE) to the new */
+    if( pmii_out->fMask & MIIM_TYPE){
+        pmii_out->fMask |= MIIM_FTYPE;
+        if( IS_STRING_ITEM(pmii_out->fType)){
+            pmii_out->fMask |= MIIM_STRING;
+        } else if( (pmii_out->fType) & MFT_BITMAP){
+            pmii_out->fMask |= MIIM_BITMAP;
+            pmii_out->hbmpItem = (HBITMAP)(ULONG_PTR)(LOWORD(pmii_out->dwTypeData));
+        }
+    }
+    return TRUE;
+}
+
+/**********************************************************************
  *		SetMenuItemInfoA    (USER32.@)
  */
 BOOL WINAPI SetMenuItemInfoA(HMENU hmenu, UINT item, BOOL bypos,
                                  const MENUITEMINFOA *lpmii)
 {
-    MENUITEMINFOA mii;
+    MENUITEMINFOW mii;
 
     TRACE("hmenu %p, item %u, by pos %d, info %p\n", hmenu, item, bypos, lpmii);
 
-    if( lpmii->cbSize != sizeof( mii) &&
-            lpmii->cbSize != sizeof( mii) - sizeof ( mii.hbmpItem)) {
-        SetLastError( ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    memcpy( &mii, lpmii, lpmii->cbSize);
-    if( lpmii->cbSize != sizeof( mii)) {
-        mii.cbSize = sizeof( mii);
-        mii.hbmpItem = NULL;
-    }
+    if (!MENU_NormalizeMenuItemInfoStruct( (MENUITEMINFOW *)lpmii, &mii )) return FALSE;
+
     return SetMenuItemInfo_common(MENU_FindItem(&hmenu, &item, bypos? MF_BYPOSITION : 0),
-				    (const MENUITEMINFOW *)&mii, FALSE);
+                                  &mii, FALSE);
 }
 
 /**********************************************************************
@@ -4794,16 +4820,7 @@ BOOL WINAPI SetMenuItemInfoW(HMENU hmenu, UINT item, BOOL bypos,
 
     TRACE("hmenu %p, item %u, by pos %d, info %p\n", hmenu, item, bypos, lpmii);
 
-    if( lpmii->cbSize != sizeof( mii) &&
-            lpmii->cbSize != sizeof( mii) - sizeof ( mii.hbmpItem)) {
-        SetLastError( ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    memcpy( &mii, lpmii, lpmii->cbSize);
-    if( lpmii->cbSize != sizeof( mii)) {
-        mii.cbSize = sizeof( mii);
-        mii.hbmpItem = NULL;
-    }
+    if (!MENU_NormalizeMenuItemInfoStruct( lpmii, &mii )) return FALSE;
     return SetMenuItemInfo_common(MENU_FindItem(&hmenu,
                 &item, bypos? MF_BYPOSITION : 0), &mii, TRUE);
 }
@@ -4906,23 +4923,14 @@ BOOL WINAPI InsertMenuItemA(HMENU hMenu, UINT uItem, BOOL bypos,
                                 const MENUITEMINFOA *lpmii)
 {
     MENUITEM *item;
-    MENUITEMINFOA mii;
+    MENUITEMINFOW mii;
 
     TRACE("hmenu %p, item %04x, by pos %d, info %p\n", hMenu, uItem, bypos, lpmii);
 
-    if( lpmii->cbSize != sizeof( mii) &&
-            lpmii->cbSize != sizeof( mii) - sizeof ( mii.hbmpItem)) {
-        SetLastError( ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    memcpy( &mii, lpmii, lpmii->cbSize);
-    if( lpmii->cbSize != sizeof( mii)) {
-        mii.cbSize = sizeof( mii);
-        mii.hbmpItem = NULL;
-    }
+    if (!MENU_NormalizeMenuItemInfoStruct( (MENUITEMINFOW *)lpmii, &mii )) return FALSE;
 
     item = MENU_InsertItem(hMenu, uItem, bypos ? MF_BYPOSITION : 0 );
-    return SetMenuItemInfo_common(item, (const MENUITEMINFOW *)&mii, FALSE);
+    return SetMenuItemInfo_common(item, &mii, FALSE);
 }
 
 
@@ -4937,16 +4945,7 @@ BOOL WINAPI InsertMenuItemW(HMENU hMenu, UINT uItem, BOOL bypos,
 
     TRACE("hmenu %p, item %04x, by pos %d, info %p\n", hMenu, uItem, bypos, lpmii);
 
-    if( lpmii->cbSize != sizeof( mii) &&
-            lpmii->cbSize != sizeof( mii) - sizeof ( mii.hbmpItem)) {
-        SetLastError( ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    memcpy( &mii, lpmii, lpmii->cbSize);
-    if( lpmii->cbSize != sizeof( mii)) {
-        mii.cbSize = sizeof( mii);
-        mii.hbmpItem = NULL;
-    }
+    if (!MENU_NormalizeMenuItemInfoStruct( lpmii, &mii )) return FALSE;
 
     item = MENU_InsertItem(hMenu, uItem, bypos ? MF_BYPOSITION : 0 );
     return SetMenuItemInfo_common(item, &mii, TRUE);

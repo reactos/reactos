@@ -731,7 +731,7 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
 };
 
 
-#define SPY_MAX_LVMMSGNUM   140
+#define SPY_MAX_LVMMSGNUM   182
 static const char * const LVMMessageTypeNames[SPY_MAX_LVMMSGNUM + 1] =
 {
     "LVM_GETBKCOLOR",           /* 1000 */
@@ -872,9 +872,51 @@ static const char * const LVMMessageTypeNames[SPY_MAX_LVMMSGNUM + 1] =
     NULL,
     NULL,
     NULL,
-    NULL,
     "LVM_SETBKIMAGEW",
-    "LVM_GETBKIMAGEW"   /* 0x108B */
+    "LVM_GETBKIMAGEW",   /* 0x108B */
+    "LVM_SETSELECTEDCOLUMN",
+    "LVM_SETTILEWIDTH",
+    "LVM_SETVIEW",
+    "LVM_GETVIEW",
+    NULL,
+    "LVM_INSERTGROUP",
+    NULL,
+    "LVM_SETGROUPINFO",
+    NULL,
+    "LVM_GETGROUPINFO",
+    "LVM_REMOVEGROUP",
+    "LVM_MOVEGROUP",
+    NULL,
+    NULL,
+    "LVM_MOVEITEMTOGROUP",
+    "LVM_SETGROUPMETRICS",
+    "LVM_GETGROUPMETRICS",
+    "LVM_ENABLEGROUPVIEW",
+    "LVM_SORTGROUPS",
+    "LVM_INSERTGROUPSORTED",
+    "LVM_REMOVEALLGROUPS",
+    "LVM_HASGROUP",
+    "LVM_SETTILEVIEWINFO",
+    "LVM_GETTILEVIEWINFO",
+    "LVM_SETTILEINFO",
+    "LVM_GETTILEINFO",
+    "LVM_SETINSERTMARK",
+    "LVM_GETINSERTMARK",
+    "LVM_INSERTMARKHITTEST",
+    "LVM_GETINSERTMARKRECT",
+    "LVM_SETINSERTMARKCOLOR",
+    "LVM_GETINSERTMARKCOLOR",
+    NULL,
+    "LVM_SETINFOTIP",
+    "LVM_GETSELECTEDCOLUMN",
+    "LVM_ISGROUPVIEWENABLED",
+    "LVM_GETOUTLINECOLOR",
+    "LVM_SETOUTLINECOLOR",
+    NULL,
+    "LVM_CANCELEDITLABEL",
+    "LVM_MAPINDEXTOID",
+    "LVM_MAPIDTOINDEX",
+    "LVM_ISITEMVISIBLE"
 };
 
 
@@ -1328,7 +1370,7 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     "VK_ICO_00",        /* 0xE4 */
     "VK_PROCESSKEY",    /* 0xE5 */
     NULL,               /* 0xE6 */
-    NULL,               /* 0xE7 */
+    "VK_PACKET",        /* 0xE7 */
     NULL,               /* 0xE8 */
     NULL,               /* 0xE9 */
     NULL,               /* 0xEA */

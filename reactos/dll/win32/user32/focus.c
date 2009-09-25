@@ -193,7 +193,7 @@ static BOOL set_foreground_window( HWND hwnd, BOOL mouse )
     }
     SERVER_END_REQ;
 
-    if (ret)
+    if (ret && previous != hwnd)
     {
         if (send_msg_old)  /* old window belongs to other thread */
             SendNotifyMessageW( previous, WM_WINE_SETACTIVEWINDOW, 0, 0 );

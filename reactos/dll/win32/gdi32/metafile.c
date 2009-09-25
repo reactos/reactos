@@ -1222,6 +1222,26 @@ end:
     return ret;
 }
 
+/*******************************************************************
+ *        muldiv
+ *
+ * Behaves somewhat differently to MulDiv when the answer is -ve
+ * and also rounds n.5 towards zero
+ */
+static INT muldiv(INT m1, INT m2, INT d)
+{
+    LONGLONG ret;
+
+    ret = ((LONGLONG)m1 * m2 + d/2) / d; /* Always add d/2 even if ret will be -ve */
+
+    if((LONGLONG)m1 * m2 * 2 == (2 * ret - 1) * d) /* If the answer is exactly n.5 round towards zero */
+    {
+        if(ret > 0) ret--;
+        else ret++;
+    }
+    return ret;
+}
+
 /******************************************************************
  *         set_window
  *
@@ -1247,28 +1267,28 @@ static BOOL set_window(HDC hdc, HENHMETAFILE emf, HDC ref_dc, INT map_mode)
     case MM_TEXT:
     case MM_ISOTROPIC:
     case MM_ANISOTROPIC:
-        pt.y = MulDiv(header.rclFrame.top, vert_res, vert_size * 100);
-        pt.x = MulDiv(header.rclFrame.left, horz_res, horz_size * 100);
+        pt.y = muldiv(header.rclFrame.top, vert_res, vert_size * 100);
+        pt.x = muldiv(header.rclFrame.left, horz_res, horz_size * 100);
         break;
     case MM_LOMETRIC:
-        pt.y = MulDiv(-header.rclFrame.top, 1, 10) + 1;
-        pt.x = MulDiv( header.rclFrame.left, 1, 10);
+        pt.y = muldiv(-header.rclFrame.top, 1, 10) + 1;
+        pt.x = muldiv( header.rclFrame.left, 1, 10);
         break;
     case MM_HIMETRIC:
         pt.y = -header.rclFrame.top + 1;
-        pt.x = header.rclFrame.left;
+        pt.x = (header.rclFrame.left >= 0) ? header.rclFrame.left : header.rclFrame.left + 1; /* See the tests */
         break;
     case MM_LOENGLISH:
-        pt.y = MulDiv(-header.rclFrame.top, 10, 254) + 1;
-        pt.x = MulDiv( header.rclFrame.left, 10, 254);
+        pt.y = muldiv(-header.rclFrame.top, 10, 254) + 1;
+        pt.x = muldiv( header.rclFrame.left, 10, 254);
         break;
     case MM_HIENGLISH:
-        pt.y = MulDiv(-header.rclFrame.top, 100, 254) + 1;
-        pt.x = MulDiv( header.rclFrame.left, 100, 254);
+        pt.y = muldiv(-header.rclFrame.top, 100, 254) + 1;
+        pt.x = muldiv( header.rclFrame.left, 100, 254);
         break;
     case MM_TWIPS:
-        pt.y = MulDiv(-header.rclFrame.top, 72 * 20, 2540) + 1;
-        pt.x = MulDiv( header.rclFrame.left, 72 * 20, 2540);
+        pt.y = muldiv(-header.rclFrame.top, 72 * 20, 2540) + 1;
+        pt.x = muldiv( header.rclFrame.left, 72 * 20, 2540);
         break;
     default:
         WARN("Unknown map mode %d\n", map_mode);
@@ -1276,8 +1296,8 @@ static BOOL set_window(HDC hdc, HENHMETAFILE emf, HDC ref_dc, INT map_mode)
     }
     SetWindowOrgEx(hdc, pt.x, pt.y, NULL);
 
-    pt.x = MulDiv(header.rclFrame.right - header.rclFrame.left, horz_res, horz_size * 100);
-    pt.y = MulDiv(header.rclFrame.bottom - header.rclFrame.top, vert_res, vert_size * 100);
+    pt.x = muldiv(header.rclFrame.right - header.rclFrame.left, horz_res, horz_size * 100);
+    pt.y = muldiv(header.rclFrame.bottom - header.rclFrame.top, vert_res, vert_size * 100);
     SetWindowExtEx(hdc, pt.x, pt.y, NULL);
     return TRUE;
 }

@@ -322,7 +322,7 @@ void *get_hook_proc( void *proc, const WCHAR *module )
     {
         TRACE( "loading %s\n", debugstr_w(module) );
         /* FIXME: the library will never be freed */
-        if (!(mod = LoadLibraryW(module))) return NULL;
+        if (!(mod = LoadLibraryExW(module, NULL, LOAD_WITH_ALTERED_SEARCH_PATH))) return NULL;
     }
     return (char *)mod + (ULONG_PTR)proc;
 }

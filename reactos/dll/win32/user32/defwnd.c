@@ -66,11 +66,16 @@ static void DEFWND_HandleWindowPosChanged( HWND hwnd, const WINDOWPOS *winpos )
 
     if (!(winpos->flags & SWP_NOCLIENTSIZE) || (winpos->flags & SWP_STATECHANGED))
     {
-        WPARAM wp = SIZE_RESTORED;
-        if (IsZoomed(hwnd)) wp = SIZE_MAXIMIZED;
-        else if (IsIconic(hwnd)) wp = SIZE_MINIMIZED;
+        if (IsIconic( hwnd ))
+        {
+            SendMessageW( hwnd, WM_SIZE, SIZE_MINIMIZED, 0 );
+        }
+        else
+        {
+            WPARAM wp = IsZoomed( hwnd ) ? SIZE_MAXIMIZED : SIZE_RESTORED;
 
-        SendMessageW( hwnd, WM_SIZE, wp, MAKELONG(rect.right-rect.left, rect.bottom-rect.top) );
+            SendMessageW( hwnd, WM_SIZE, wp, MAKELONG(rect.right-rect.left, rect.bottom-rect.top) );
+        }
     }
 }
 
@@ -216,7 +221,7 @@ static void DEFWND_Print( HWND hwnd, HDC hdc, ULONG uFlags)
    * Client area
    */
   if ( uFlags & PRF_CLIENT)
-    SendMessageW(hwnd, WM_PRINTCLIENT, (WPARAM)hdc, PRF_CLIENT);
+    SendMessageW(hwnd, WM_PRINTCLIENT, (WPARAM)hdc, uFlags);
 }
 
 

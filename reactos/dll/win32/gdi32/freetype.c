@@ -1737,7 +1737,7 @@ static BOOL init_system_links(void)
             if(psub)
             {
                 TRACE("%s: SystemLink entry for substituted font, ignoring\n", debugstr_w(value));
-                continue;
+                goto next;
             }
             font_link = HeapAlloc(GetProcessHeap(), 0, sizeof(*font_link));
             font_link->font_name = strdupW(value);
@@ -1786,6 +1786,7 @@ static BOOL init_system_links(void)
                 }
             }
             list_add_tail(&system_links, &font_link->entry);
+        next:
             val_len = max_val + 1;
             data_len = max_data;
         }
@@ -5661,7 +5662,19 @@ UINT WineEngGetOutlineTextMetrics(GdiFont *font, UINT cbSize,
         TM.tmAveCharWidth = 1; 
     }
     TM.tmMaxCharWidth = (pFT_MulFix(ft_face->bbox.xMax - ft_face->bbox.xMin, x_scale) + 32) >> 6;
-    TM.tmWeight = (font->fake_bold || (ft_face->style_flags & FT_STYLE_FLAG_BOLD)) ? FW_BOLD : FW_REGULAR;
+    TM.tmWeight = FW_REGULAR;
+    if (font->fake_bold)
+        TM.tmWeight = FW_BOLD;
+    else
+    {
+        if (ft_face->style_flags & FT_STYLE_FLAG_BOLD)
+        {
+            if (pOS2->usWeightClass > FW_MEDIUM)
+                TM.tmWeight = pOS2->usWeightClass;
+        }
+        else if (pOS2->usWeightClass <= FW_MEDIUM)
+            TM.tmWeight = pOS2->usWeightClass;
+    }
     TM.tmOverhang = 0;
     TM.tmDigitizedAspectX = 300;
     TM.tmDigitizedAspectY = 300;
@@ -5868,6 +5881,7 @@ static BOOL load_child_font(GdiFont *font, CHILD_FONT *child)
     child->font->scale_y = font->scale_y;
     hfontlist = HeapAlloc(GetProcessHeap(), 0, sizeof(*hfontlist));
     hfontlist->hfont = CreateFontIndirectW(&font->font_desc.lf);
+    child->font->name = strdupW(child->face->family->FamilyName);
     list_add_head(&child->font->hfontlist, &hfontlist->entry);
     child->font->base_font = font;
     list_add_head(&child_font_list, &child->font->entry);
