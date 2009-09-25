@@ -312,7 +312,16 @@ WSHNotify(
     IN  HANDLE TdiConnectionObjectHandle,
     IN  DWORD NotifyEvent)
 {
-    UNIMPLEMENTED
+    switch (NotifyEvent)
+    {
+        case WSH_NOTIFY_CLOSE:
+        HeapFree(GetProcessHeap(), 0, HelperDllSocketContext);
+        break;
+
+        default:
+        DPRINT1("Unwanted notification received! (%d)\n", NotifyEvent);
+        break;
+    }
 
     return 0;
 }
@@ -446,6 +455,7 @@ WSHOpenSocket2(
     Context->Flags         = Flags;
 
     *HelperDllSocketContext = Context;
+    *NotificationEvents = WSH_NOTIFY_CLOSE;
 
     return NO_ERROR;
 }
