@@ -943,6 +943,15 @@ WdmAudDeviceControl(
             return WdmAudIoctlClose(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETFRAMESIZE:
             return WdmAudFrameSize(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_GETLINEINFO:
+            return WdmAudGetLineInfo(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_GETLINECONTROLS:
+            return WdmAudGetLineControls(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_SETCONTROLDETAILS:
+            return WdmAudSetControlDetails(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_GETCONTROLDETAILS:
+            return WdmAudGetControlDetails(DeviceObject, Irp, DeviceInfo, ClientInfo);
+
         case IOCTL_GETPOS:
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:

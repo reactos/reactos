@@ -281,24 +281,7 @@ SetWdmMixerDeviceFormat(
     IN  DWORD WaveFormatSize)
 {
     MMRESULT Result;
-    PSOUND_DEVICE SoundDevice;
-    PVOID Identifier;
     WDMAUD_DEVICE_INFO DeviceInfo;
-    MMDEVICE_TYPE DeviceType;
-
-    Result = GetSoundDeviceFromInstance(Instance, &SoundDevice);
-
-    if ( ! MMSUCCESS(Result) )
-    {
-        return TranslateInternalMmResult(Result);
-    }
-
-    Result = GetSoundDeviceIdentifier(SoundDevice, &Identifier);
-
-    if ( ! MMSUCCESS(Result) )
-    {
-        return TranslateInternalMmResult(Result);
-    }
 
     if (Instance->Handle != KernelHandle)
     {
@@ -307,11 +290,8 @@ SetWdmMixerDeviceFormat(
     }
 
 
-    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
-    SND_ASSERT( Result == MMSYSERR_NOERROR );
-
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
-    DeviceInfo.DeviceType = DeviceType;
+    DeviceInfo.DeviceType = MIXER_DEVICE_TYPE;
     DeviceInfo.DeviceIndex = DeviceId;
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
@@ -539,6 +519,82 @@ GetWdmPosition(
     return MMSYSERR_NOERROR;
 }
 
+MMRESULT
+QueryMixerInfo(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN UINT uMsg,
+    IN LPVOID Parameter,
+    IN DWORD Flags)
+{
+    MMRESULT Result;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    HANDLE Handle;
+    DWORD IoControlCode;
+    LPMIXERLINEW MixLine;
+    LPMIXERLINECONTROLSW MixControls;
+    LPMIXERCONTROLDETAILS MixDetails;
+
+    SND_TRACE(L"uMsg %x Flags %x\n", uMsg, Flags);
+
+    Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.hDevice = Handle;
+    DeviceInfo.DeviceType = MIXER_DEVICE_TYPE;
+    DeviceInfo.Flags = Flags;
+
+    MixLine = (LPMIXERLINEW)Parameter;
+    MixControls = (LPMIXERLINECONTROLSW)Parameter;
+    MixDetails = (LPMIXERCONTROLDETAILS)Parameter;
+
+    switch(uMsg)
+    {
+        case MXDM_GETLINEINFO:
+            RtlCopyMemory(&DeviceInfo.u.MixLine, MixLine, sizeof(MIXERLINEW));
+            IoControlCode = IOCTL_GETLINEINFO;
+            break;
+        case MXDM_GETLINECONTROLS:
+            RtlCopyMemory(&DeviceInfo.u.MixControls, MixControls, sizeof(MIXERLINECONTROLSW));
+            IoControlCode = IOCTL_GETLINECONTROLS;
+            break;
+       case MXDM_SETCONTROLDETAILS:
+            RtlCopyMemory(&DeviceInfo.u.MixDetails, MixDetails, sizeof(MIXERCONTROLDETAILS));
+            IoControlCode = IOCTL_SETCONTROLDETAILS;
+            break;
+       case MXDM_GETCONTROLDETAILS:
+            RtlCopyMemory(&DeviceInfo.u.MixDetails, MixDetails, sizeof(MIXERCONTROLDETAILS));
+            IoControlCode = IOCTL_GETCONTROLDETAILS;
+            break;
+       default:
+           SND_ASSERT(0);
+    }
+
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IoControlCode,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    switch(uMsg)
+    {
+        case MXDM_GETLINEINFO:
+        {
+            RtlCopyMemory(MixLine, &DeviceInfo.u.MixLine, sizeof(MIXERLINEW));
+            break;
+        }
+    }
+
+    return Result;
+}
+
 
 MMRESULT
 PopulateWdmDeviceList(
@@ -582,6 +638,7 @@ PopulateWdmDeviceList(
         if (DeviceType == MIXER_DEVICE_TYPE)
         {
             FuncTable.SetWaveFormat = SetWdmMixerDeviceFormat;
+            FuncTable.QueryMixerInfo = QueryMixerInfo;
         }
         else
         {

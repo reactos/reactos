@@ -18,6 +18,39 @@
 #undef NDEBUG
 #include <mmebuddy.h>
 
+MMRESULT
+MmeGetLineInfo(
+    IN  DWORD Message,
+    IN  DWORD PrivateHandle,
+    IN  DWORD Parameter1,
+    IN  DWORD Parameter2)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE FunctionTable;
+
+    SND_TRACE(L"Getting mixer info %u\n", Message);
+
+    VALIDATE_MMSYS_PARAMETER( PrivateHandle );
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    if ( ! FunctionTable->QueryMixerInfo )
+        return MMSYSERR_NOTSUPPORTED;
+
+    Result = FunctionTable->QueryMixerInfo(SoundDeviceInstance, Message, (LPVOID)Parameter1, Parameter2);
+
+    return Result;
+}
+
 
 MMRESULT
 MmeCloseMixerDevice(
@@ -172,21 +205,41 @@ mxdMessage(
 
         case MXDM_GETCONTROLDETAILS :
         {
+            Result = MmeGetLineInfo(Message,
+                                    PrivateHandle,
+                                    Parameter1,
+                                    Parameter2);
+
             break;
         }
 
         case MXDM_SETCONTROLDETAILS :
         {
+            Result = MmeGetLineInfo(Message,
+                                    PrivateHandle,
+                                    Parameter1,
+                                    Parameter2);
+
             break;
         }
 
         case MXDM_GETLINECONTROLS :
         {
+            Result = MmeGetLineInfo(Message,
+                                    PrivateHandle,
+                                    Parameter1,
+                                    Parameter2);
+
             break;
         }
 
         case MXDM_GETLINEINFO :
         {
+            Result = MmeGetLineInfo(Message,
+                                    PrivateHandle,
+                                    Parameter1,
+                                    Parameter2);
+
             break;
         }
     }

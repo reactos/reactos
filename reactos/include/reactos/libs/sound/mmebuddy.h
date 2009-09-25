@@ -197,6 +197,11 @@ typedef MMRESULT (*WAVE_COMMIT_FUNC)(
     IN  PSOUND_OVERLAPPED Overlap,
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
+typedef MMRESULT (*MMMIXERQUERY_FUNC) (
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN UINT uMsg,
+    IN LPVOID Parameter,
+    IN DWORD Flags);
 
 
 typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
@@ -247,6 +252,8 @@ typedef struct _MMFUNCTION_TABLE
 
     MMWAVEQUERYFORMATSUPPORT_FUNC   QueryWaveFormatSupport;
     MMWAVESETFORMAT_FUNC            SetWaveFormat;
+
+    MMMIXERQUERY_FUNC               QueryMixerInfo;
 
     WAVE_COMMIT_FUNC                CommitWaveBuffer;
 

@@ -191,6 +191,29 @@ CountNodeType(
 }
 
 ULONG
+GetNodeTypeIndex(
+    PKSMULTIPLE_ITEM MultipleItem,
+    LPGUID NodeType)
+{
+    ULONG Index;
+    LPGUID Guid;
+
+    Guid = (LPGUID)(MultipleItem+1);
+
+    /* iterate through node type array */
+    for(Index = 0; Index < MultipleItem->Count; Index++)
+    {
+        if (IsEqualGUIDAligned(NodeType, Guid))
+        {
+            /* found matching guid */
+            return Index;
+        }
+        Guid++;
+    }
+    return (ULONG)-1;
+}
+
+ULONG
 GetNumOfMixerDevices(
     IN  PDEVICE_OBJECT DeviceObject)
 {
@@ -314,6 +337,7 @@ IsOutputMixer(
 
 
 
+
 NTSTATUS
 WdmAudMixerCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
@@ -408,5 +432,61 @@ WdmAudControlOpenMixer(
     DeviceInfo->hDevice = (HANDLE)DeviceInfo->DeviceIndex;
 
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+}
+
+NTSTATUS
+NTAPI
+WdmAudGetLineInfo(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    UNIMPLEMENTED;
+    //DbgBreakPoint();
+    return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+
+}
+
+NTSTATUS
+NTAPI
+WdmAudGetLineControls(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    UNIMPLEMENTED;
+    //DbgBreakPoint();
+    return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+
+}
+
+NTSTATUS
+NTAPI
+WdmAudSetControlDetails(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    UNIMPLEMENTED;
+    //DbgBreakPoint();
+    return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+
+}
+
+NTSTATUS
+NTAPI
+WdmAudGetControlDetails(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    UNIMPLEMENTED;
+    //DbgBreakPoint();
+    return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+
 }
 
