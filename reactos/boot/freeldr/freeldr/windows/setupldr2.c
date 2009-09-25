@@ -157,7 +157,10 @@ VOID LoadReactOSSetup2(VOID)
     CHAR  SystemPath[512], SearchPath[512];
     CHAR  FileName[512];
     CHAR  BootPath[512];
-    LPCSTR LoadOptions, DbgOptions, BootOptions;
+    LPCSTR LoadOptions, BootOptions;
+#if DBG
+    LPCSTR DbgOptions;
+#endif
     PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
     BOOLEAN Status;
     ULONG i, ErrorLine;
