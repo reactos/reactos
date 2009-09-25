@@ -107,51 +107,39 @@ WSHGetSockaddrType(
 {
     PSOCKADDR_IN ipv4 = (PSOCKADDR_IN)Sockaddr;
 
-    if ((ipv4 != NULL)
-	&& (SockaddrLength == sizeof(SOCKADDR_IN))
-	&& (ipv4->sin_family == AF_INET)
-	&& (SockaddrInfo != NULL))
+    if (!ipv4 || !SockaddrInfo || SockaddrLength < sizeof(SOCKADDR_IN) ||
+        ipv4->sin_family != AF_INET)
     {
-
-      switch (ntohl(ipv4->sin_addr.s_addr))
-      {
-        case INADDR_ANY:
-             SockaddrInfo->AddressInfo = SockaddrAddressInfoWildcard;
-             break;
-
-        case INADDR_BROADCAST:
-             SockaddrInfo->AddressInfo = SockaddrAddressInfoBroadcast;
-             break;
-
-        case INADDR_LOOPBACK:
-             SockaddrInfo->AddressInfo = SockaddrAddressInfoLoopback;
-             break;
-
-        default:
-             SockaddrInfo->AddressInfo = SockaddrAddressInfoNormal;
-	     break;
-      }
-
-      if (ntohs(ipv4->sin_port) == 0)
-	  SockaddrInfo->EndpointInfo = SockaddrEndpointInfoWildcard;
-      else if (ntohs(ipv4->sin_port) < IPPORT_RESERVED)
-	  SockaddrInfo->EndpointInfo = SockaddrEndpointInfoReserved;
-      else
-          SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
-
-      return 0;
+        DPRINT1("Invalid parameter: %x %x %d %u\n", ipv4, SockaddrInfo, SockaddrLength, (ipv4 ? ipv4->sin_family : 0));
+        return WSAEINVAL;
     }
 
-    DPRINT1("FIXME WSHGetSockaddrType Unsupported Address Family or bad parameters\n");
-    if (SockaddrInfo != NULL)
+    switch (ntohl(ipv4->sin_addr.s_addr))
     {
-      SockaddrInfo->AddressInfo = SockaddrAddressInfoNormal;
-      SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
+      case INADDR_ANY:
+           SockaddrInfo->AddressInfo = SockaddrAddressInfoWildcard;
+           break;
+
+      case INADDR_BROADCAST:
+           SockaddrInfo->AddressInfo = SockaddrAddressInfoBroadcast;
+           break;
+
+      case INADDR_LOOPBACK:
+           SockaddrInfo->AddressInfo = SockaddrAddressInfoLoopback;
+           break;
+
+      default:
+           SockaddrInfo->AddressInfo = SockaddrAddressInfoNormal;
+	   break;
     }
 
-    DPRINT1("Size of Address Family %d \n",SockaddrLength);
+    if (ntohs(ipv4->sin_port) == 0)
+ 	SockaddrInfo->EndpointInfo = SockaddrEndpointInfoWildcard;
+    else if (ntohs(ipv4->sin_port) < IPPORT_RESERVED)
+	SockaddrInfo->EndpointInfo = SockaddrEndpointInfoReserved;
+    else
+        SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
 
-    DPRINT1("FIXME WSHGetSockaddrType return Winsock error, but we do not return any error\n");
     return 0;
 }
 
@@ -196,7 +184,41 @@ WSHGetWinsockMapping(
     OUT PWINSOCK_MAPPING Mapping,
     IN  DWORD MappingLength)
 {
-    UNIMPLEMENTED
+    DWORD Rows = 6;
+    DWORD Columns = 3;
+    DWORD Size = 2 * sizeof(DWORD) + Columns * Rows * sizeof(DWORD);
+
+    if (MappingLength < Size)
+    {
+        return Size;
+    }
+
+    Mapping->Rows = Rows;
+    Mapping->Columns = Columns;
+
+    Mapping->Mapping[0].AddressFamily = AF_INET;
+    Mapping->Mapping[0].SocketType = SOCK_STREAM;
+    Mapping->Mapping[0].Protocol = 0;
+
+    Mapping->Mapping[1].AddressFamily = AF_INET;
+    Mapping->Mapping[1].SocketType = SOCK_STREAM;
+    Mapping->Mapping[1].Protocol = IPPROTO_TCP;
+
+    Mapping->Mapping[2].AddressFamily = AF_INET;
+    Mapping->Mapping[2].SocketType = SOCK_DGRAM;
+    Mapping->Mapping[2].Protocol = 0;
+
+    Mapping->Mapping[3].AddressFamily = AF_INET;
+    Mapping->Mapping[3].SocketType = SOCK_DGRAM;
+    Mapping->Mapping[3].Protocol = IPPROTO_UDP;
+
+    Mapping->Mapping[4].AddressFamily = AF_INET;
+    Mapping->Mapping[4].SocketType = SOCK_RAW;
+    Mapping->Mapping[4].Protocol = 0;
+
+    Mapping->Mapping[5].AddressFamily = AF_INET;
+    Mapping->Mapping[5].SocketType = SOCK_RAW;
+    Mapping->Mapping[5].Protocol = IPPROTO_ICMP;
 
     return 0;
 }
