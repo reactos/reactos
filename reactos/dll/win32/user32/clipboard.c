@@ -188,6 +188,21 @@ static BOOL CLIPBOARD_CloseClipboard(void)
     return bRet;
 }
 
+static HWND CLIPBOARD_SetClipboardViewer( HWND hWnd )
+{
+    HWND hwndPrev = 0;
+
+    SERVER_START_REQ( set_clipboard_info )
+    {
+        req->flags = SET_CB_VIEWER;
+        req->viewer = wine_server_user_handle( hWnd );
+        if (!wine_server_call_err( req ))
+            hwndPrev = wine_server_ptr_handle( reply->old_viewer );
+    }
+    SERVER_END_REQ;
+
+    return hwndPrev;
+}
 
 /**************************************************************************
  *                WIN32 Clipboard implementation
@@ -285,7 +300,7 @@ BOOL WINAPI CloseClipboard(void)
             USER_Driver->pEndClipboardUpdate();
 
             if (hWndViewer)
-                SendMessageW(hWndViewer, WM_DRAWCLIPBOARD, 0, 0);
+                SendMessageW(hWndViewer, WM_DRAWCLIPBOARD, (WPARAM) GetClipboardOwner(), 0);
 
             bCBHasChanged = FALSE;
         }
@@ -390,17 +405,10 @@ HWND WINAPI GetOpenClipboardWindow(void)
  */
 HWND WINAPI SetClipboardViewer( HWND hWnd )
 {
-    HWND hwndPrev = 0;
+    HWND hwndPrev = CLIPBOARD_SetClipboardViewer(hWnd);
 
-    SERVER_START_REQ( set_clipboard_info )
-    {
-        req->flags = SET_CB_VIEWER;
-        req->viewer = wine_server_user_handle( hWnd );
-        if (!wine_server_call_err( req ))
-            hwndPrev = wine_server_ptr_handle( reply->old_viewer );
-    }
-    SERVER_END_REQ;
-
+    if (hWnd)
+        SendMessageW(hWnd, WM_DRAWCLIPBOARD, (WPARAM) GetClipboardOwner(), 0);
     TRACE("(%p): returning %p\n", hWnd, hwndPrev);
 
     return hwndPrev;
@@ -438,7 +446,7 @@ BOOL WINAPI ChangeClipboardChain(HWND hWnd, HWND hWndNext)
     if (hWndViewer)
     {
         if (WIN_GetFullHandle(hWnd) == hWndViewer)
-            SetClipboardViewer(WIN_GetFullHandle(hWndNext));
+            CLIPBOARD_SetClipboardViewer(WIN_GetFullHandle(hWndNext));
         else
             bRet = !SendMessageW(hWndViewer, WM_CHANGECBCHAIN, (WPARAM)hWnd, (LPARAM)hWndNext);
     }

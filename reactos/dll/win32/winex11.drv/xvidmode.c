@@ -30,6 +30,9 @@
 #ifdef HAVE_X11_EXTENSIONS_XF86VMODE_H
 #include <X11/extensions/xf86vmode.h>
 #endif
+#ifdef HAVE_X11_EXTENSIONS_XF86VMPROTO_H
+#include <X11/extensions/xf86vmproto.h>
+#endif
 
 #include "xvidmode.h"
 

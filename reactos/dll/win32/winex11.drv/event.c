@@ -512,6 +512,7 @@ static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
         if (IsWindowEnabled(hwnd))
         {
             HMENU hSysMenu;
+            POINT pt;
 
             if (GetClassLongW(hwnd, GCL_STYLE) & CS_NOCLOSE) return;
             hSysMenu = GetSystemMenu(hwnd, FALSE);
@@ -525,7 +526,7 @@ static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
             {
                 LRESULT ma = SendMessageW( hwnd, WM_MOUSEACTIVATE,
                                            (WPARAM)GetAncestor( hwnd, GA_ROOT ),
-                                           MAKELONG(HTCLOSE,WM_LBUTTONDOWN) );
+                                           MAKELPARAM( HTCLOSE, WM_NCLBUTTONDOWN ) );
                 switch(ma)
                 {
                     case MA_NOACTIVATEANDEAT:
@@ -542,7 +543,10 @@ static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
                         break;
                 }
             }
-            PostMessageW( hwnd, WM_X11DRV_DELETE_WINDOW, 0, 0 );
+            /* Simulate clicking the caption Close button */
+            GetCursorPos( &pt );
+            PostMessageW( hwnd, WM_NCLBUTTONDOWN, HTCLOSE, MAKELPARAM( pt.x, pt.y ) );
+            PostMessageW( hwnd, WM_LBUTTONUP, HTCLOSE, MAKELPARAM( pt.x, pt.y ) );
         }
     }
     else if (protocol == x11drv_atom(WM_TAKE_FOCUS))
@@ -566,6 +570,14 @@ static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
                 set_focus( event->display, hwnd, event_time );
                 return;
             }
+        }
+        else if (hwnd == GetDesktopWindow())
+        {
+            hwnd = GetForegroundWindow();
+            if (!hwnd) hwnd = last_focus;
+            if (!hwnd) hwnd = GetDesktopWindow();
+            set_focus( event->display, hwnd, event_time );
+            return;
         }
         /* try to find some other window to give the focus to */
         hwnd = GetFocus();

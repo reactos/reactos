@@ -487,6 +487,8 @@ static XcursorImage *create_cursor_image( CURSORICONINFO *ptr )
     xor_ptr = xor_bits = and_ptr + and_size;
 
     image = pXcursorImageCreate( ptr->nWidth, ptr->nHeight );
+    if (!image) return NULL;
+
     pixel_ptr = image->pixels;
 
     alpha_zero = check_alpha_zero(ptr, xor_bits);

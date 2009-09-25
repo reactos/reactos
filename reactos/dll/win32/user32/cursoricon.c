@@ -1719,7 +1719,9 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
             /* Do the alpha blending render */
             premultiply_alpha_channel(dibBits, xorBitmapBits, dibLength);
             hBitTemp = SelectObject( hMemDC, hXorBits );
-            GdiAlphaBlend(hdc, x, y, ptr->nWidth, ptr->nHeight, hMemDC,
+	    /* Destination width/height has to be "System Large" size */
+            GdiAlphaBlend(hdc, x, y, GetSystemMetrics(SM_CXICON),
+	                    GetSystemMetrics(SM_CYICON), hMemDC,
                             0, 0, ptr->nWidth, ptr->nHeight, pixelblend);
             SelectObject( hMemDC, hBitTemp );
         }
@@ -1733,9 +1735,13 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
         if (hXorBits && hAndBits)
         {
             hBitTemp = SelectObject( hMemDC, hAndBits );
-            BitBlt( hdc, x, y, ptr->nWidth, ptr->nHeight, hMemDC, 0, 0, SRCAND );
+            StretchBlt( hdc, x, y, GetSystemMetrics(SM_CXICON),
+	                    GetSystemMetrics(SM_CYICON), hMemDC, 0, 0,
+			    ptr->nWidth, ptr->nHeight, SRCAND );
             SelectObject( hMemDC, hXorBits );
-            BitBlt(hdc, x, y, ptr->nWidth, ptr->nHeight, hMemDC, 0, 0,SRCINVERT);
+            StretchBlt( hdc, x, y, GetSystemMetrics(SM_CXICON),
+	                    GetSystemMetrics(SM_CYICON), hMemDC, 0, 0,
+			    ptr->nWidth, ptr->nHeight, SRCINVERT );
             SelectObject( hMemDC, hBitTemp );
         }
     }

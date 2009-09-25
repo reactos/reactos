@@ -2512,41 +2512,10 @@ INT CDECL X11DRV_GetClipboardFormatName(UINT wFormat, LPWSTR retStr, INT maxlen)
     return strlenW(retStr);
 }
 
-
-/**************************************************************************
- *		AcquireClipboard (X11DRV.@)
- */
-int CDECL X11DRV_AcquireClipboard(HWND hWndClipWindow)
+static void selection_acquire(void)
 {
-    DWORD procid;
     Window owner;
     Display *display;
-
-    TRACE(" %p\n", hWndClipWindow);
-
-    /*
-     * It's important that the selection get acquired from the thread
-     * that owns the clipboard window. The primary reason is that we know 
-     * it is running a message loop and therefore can process the 
-     * X selection events.
-     */
-    if (hWndClipWindow &&
-        GetCurrentThreadId() != GetWindowThreadProcessId(hWndClipWindow, &procid))
-    {
-        if (procid != GetCurrentProcessId())
-        {
-            WARN("Setting clipboard owner to other process is not supported\n");
-            hWndClipWindow = NULL;
-        }
-        else
-        {
-            TRACE("Thread %x is acquiring selection with thread %x's window %p\n",
-                GetCurrentThreadId(),
-                GetWindowThreadProcessId(hWndClipWindow, NULL), hWndClipWindow);
-
-            return SendMessageW(hWndClipWindow, WM_X11DRV_ACQUIRE_SELECTION, 0, 0);
-        }
-    }
 
     owner = thread_selection_wnd();
     display = thread_display();
@@ -2575,6 +2544,70 @@ int CDECL X11DRV_AcquireClipboard(HWND hWndClipWindow)
     {
         selectionWindow = owner;
         TRACE("Grabbed X selection, owner=(%08x)\n", (unsigned) owner);
+    }
+}
+
+static DWORD WINAPI selection_thread_proc(LPVOID unused)
+{
+    selection_acquire();
+
+    while (selectionAcquired)
+    {
+        MsgWaitForMultipleObjectsEx(0, NULL, INFINITE, QS_SENDMESSAGE, 0);
+    }
+
+    return 0;
+}
+
+/**************************************************************************
+ *		AcquireClipboard (X11DRV.@)
+ */
+int CDECL X11DRV_AcquireClipboard(HWND hWndClipWindow)
+{
+    DWORD procid;
+    HANDLE selectionThread;
+
+    TRACE(" %p\n", hWndClipWindow);
+
+    /*
+     * It's important that the selection get acquired from the thread
+     * that owns the clipboard window. The primary reason is that we know 
+     * it is running a message loop and therefore can process the 
+     * X selection events.
+     */
+    if (hWndClipWindow &&
+        GetCurrentThreadId() != GetWindowThreadProcessId(hWndClipWindow, &procid))
+    {
+        if (procid != GetCurrentProcessId())
+        {
+            WARN("Setting clipboard owner to other process is not supported\n");
+            hWndClipWindow = NULL;
+        }
+        else
+        {
+            TRACE("Thread %x is acquiring selection with thread %x's window %p\n",
+                GetCurrentThreadId(),
+                GetWindowThreadProcessId(hWndClipWindow, NULL), hWndClipWindow);
+
+            return SendMessageW(hWndClipWindow, WM_X11DRV_ACQUIRE_SELECTION, 0, 0);
+        }
+    }
+
+    if (hWndClipWindow)
+    {
+        selection_acquire();
+    }
+    else
+    {
+        selectionThread = CreateThread(NULL, 0, &selection_thread_proc, NULL, 0, NULL);
+
+        if (!selectionThread)
+        {
+            WARN("Could not start clipboard thread\n");
+            return 0;
+        }
+
+        CloseHandle(selectionThread);
     }
 
     return 1;

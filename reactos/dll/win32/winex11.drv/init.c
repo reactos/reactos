@@ -138,6 +138,7 @@ BOOL CDECL X11DRV_CreateDC( HDC hdc, X11DRV_PDEVICE **pdev, LPCWSTR driver, LPCW
         physDev->bitmap    = &BITMAP_stock_phys_bitmap;
         physDev->drawable  = BITMAP_stock_phys_bitmap.pixmap;
         physDev->depth     = 1;
+        physDev->color_shifts = NULL;
         SetRect( &physDev->drawable_rect, 0, 0, 1, 1 );
         physDev->dc_rect = physDev->drawable_rect;
     }
@@ -146,6 +147,7 @@ BOOL CDECL X11DRV_CreateDC( HDC hdc, X11DRV_PDEVICE **pdev, LPCWSTR driver, LPCW
         physDev->bitmap    = NULL;
         physDev->drawable  = root_window;
         physDev->depth     = screen_depth;
+        physDev->color_shifts = &X11DRV_PALETTE_default_shifts;
         physDev->drawable_rect = virtual_screen_rect;
         SetRect( &physDev->dc_rect, 0, 0, virtual_screen_rect.right - virtual_screen_rect.left,
                  virtual_screen_rect.bottom - virtual_screen_rect.top );

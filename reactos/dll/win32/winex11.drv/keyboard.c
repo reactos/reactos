@@ -1156,6 +1156,7 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
     UINT message;
     KBDLLHOOKSTRUCT hook;
     WORD flags, wVkStripped, wVkL, wVkR, vk_hook = wVk;
+    LPARAM lParam = 0;
 
     wVk = LOBYTE(wVk);
     flags = LOBYTE(wScan);
@@ -1217,11 +1218,16 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
             message = WM_SYSKEYDOWN;
             TrackSysKey = wVkStripped;
         }
-        if (key_state_table[wVk] & 0x80) flags |= KF_REPEAT;
+        if (!(event_flags & KEYEVENTF_UNICODE) && key_state_table[wVk] & 0x80) flags |= KF_REPEAT;
     }
 
-    TRACE_(key)(" wParam=%04x, lParam=%08lx, InputKeyState=%x\n",
-                wVk, MAKELPARAM( 1, flags ), key_state_table[wVk] );
+    if (event_flags & KEYEVENTF_UNICODE)
+    {
+        vk_hook = wVk = VK_PACKET;
+        lParam = MAKELPARAM(1 /* repeat count */, wScan);
+        TRACE_(key)(" message=0x%04x wParam=0x%04x lParam=0x%08lx\n",
+                    message, wVk, lParam);
+    }
 
     /* Hook gets whatever key was sent. */
     hook.vkCode      = vk_hook;
@@ -1231,21 +1237,29 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
     hook.dwExtraInfo = dwExtraInfo;
     if (HOOK_CallHooks( WH_KEYBOARD_LL, HC_ACTION, message, (LPARAM)&hook, TRUE )) return;
 
-    if (event_flags & KEYEVENTF_KEYUP)
+    if (!(event_flags & KEYEVENTF_UNICODE))
     {
-        key_state_table[wVk] &= ~0x80;
-        key_state_table[wVkStripped] = key_state_table[wVkL] | key_state_table[wVkR];
-    }
-    else
-    {
-        if (!(key_state_table[wVk] & 0x80)) key_state_table[wVk] ^= 0x01;
-        key_state_table[wVk] |= 0xc0;
-        key_state_table[wVkStripped] = key_state_table[wVkL] | key_state_table[wVkR];
-    }
+        if (event_flags & KEYEVENTF_KEYUP)
+        {
+            key_state_table[wVk] &= ~0x80;
+            key_state_table[wVkStripped] = key_state_table[wVkL] | key_state_table[wVkR];
+        }
+        else
+        {
+            if (!(key_state_table[wVk] & 0x80)) key_state_table[wVk] ^= 0x01;
+            key_state_table[wVk] |= 0xc0;
+            key_state_table[wVkStripped] = key_state_table[wVkL] | key_state_table[wVkR];
+        }
 
-    if (key_state_table[VK_MENU] & 0x80) flags |= KF_ALTDOWN;
+        if (key_state_table[VK_MENU] & 0x80) flags |= KF_ALTDOWN;
 
-    if (wVkStripped == VK_SHIFT) flags &= ~KF_EXTENDED;
+        if (wVkStripped == VK_SHIFT) flags &= ~KF_EXTENDED;
+
+        lParam = MAKELPARAM(1 /* repeat count */, flags);
+
+        TRACE_(key)(" message=0x%04x wParam=0x%04x, lParam=0x%08lx, InputKeyState=0x%x\n",
+                    message, wVk, lParam, key_state_table[wVk]);
+    }
 
     SERVER_START_REQ( send_hardware_message )
     {
@@ -1253,7 +1267,7 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
         req->win      = 0;
         req->msg      = message;
         req->wparam   = wVk;
-        req->lparam   = MAKELPARAM( 1 /* repeat count */, flags );
+        req->lparam   = lParam;
         req->x        = cursor_pos.x;
         req->y        = cursor_pos.y;
         req->time     = time;

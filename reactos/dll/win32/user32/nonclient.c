@@ -1316,7 +1316,7 @@ static void NC_TrackMinMaxBox( HWND hwnd, WORD wParam )
  *
  * Track a mouse button press on the Win95 close button.
  */
-static void NC_TrackCloseButton (HWND hwnd, WORD wParam)
+static void NC_TrackCloseButton (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     MSG msg;
     HDC hdc;
@@ -1364,7 +1364,7 @@ static void NC_TrackCloseButton (HWND hwnd, WORD wParam)
     ReleaseDC( hwnd, hdc );
     if (!pressed) return;
 
-    SendMessageW( hwnd, WM_SYSCOMMAND, SC_CLOSE, MAKELONG(msg.pt.x,msg.pt.y) );
+    SendMessageW( hwnd, WM_SYSCOMMAND, SC_CLOSE, lParam );
 }
 
 
@@ -1442,7 +1442,7 @@ LRESULT NC_HandleNCLButtonDown( HWND hwnd, WPARAM wParam, LPARAM lParam )
         break;
 
     case HTCLOSE:
-        NC_TrackCloseButton (hwnd, wParam);
+        NC_TrackCloseButton (hwnd, wParam, lParam);
         break;
 
     case HTLEFT:
@@ -1600,7 +1600,9 @@ LRESULT NC_HandleSysCommand( HWND hwnd, WPARAM wParam, LPARAM lParam )
             HMODULE hmodule = LoadLibraryA( "shell32.dll" );
             if (hmodule)
             {
-                FARPROC aboutproc = GetProcAddress( hmodule, "ShellAboutA" );
+                BOOL (WINAPI *aboutproc)(HWND, LPCSTR, LPCSTR, HICON);
+
+                aboutproc = (void *)GetProcAddress( hmodule, "ShellAboutA" );
                 if (aboutproc) aboutproc( hwnd, PACKAGE_STRING, NULL, 0 );
                 FreeLibrary( hmodule );
             }

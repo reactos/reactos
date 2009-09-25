@@ -275,15 +275,12 @@ MAKE_FUNCPTR(glFlush)
 static BOOL infoInitialized = FALSE;
 static BOOL X11DRV_WineGL_InitOpenglInfo(void)
 {
-
     int screen = DefaultScreen(gdi_display);
     Window win = RootWindow(gdi_display, screen);
     const char* str;
-    Visual *visual;
-    XVisualInfo template;
     XVisualInfo *vis;
-    int num;
     GLXContext ctx = NULL;
+    int attribList[] = {GLX_RGBA, GLX_DOUBLEBUFFER, None};
 
     if (infoInitialized)
         return TRUE;
@@ -291,9 +288,7 @@ static BOOL X11DRV_WineGL_InitOpenglInfo(void)
 
     wine_tsx11_lock();
 
-    visual = DefaultVisual(gdi_display, screen);
-    template.visualid = XVisualIDFromVisual(visual);
-    vis = XGetVisualInfo(gdi_display, VisualIDMask, &template, &num);
+    vis = pglXChooseVisual(gdi_display, screen, attribList);
     if (vis) {
         WORD old_fs = wine_get_fs();
         /* Create a GLX Context. Without one we can't query GL information */

@@ -92,6 +92,25 @@ typedef struct
     Pixmap       pixmap;
 } X_PHYSBRUSH;
 
+enum x11drv_shm_mode
+{
+    X11DRV_SHM_NONE = 0,
+    X11DRV_SHM_PIXMAP,
+    X11DRV_SHM_IMAGE,
+};
+
+typedef struct {
+    int shift;
+    int scale;
+    int max;
+} ChannelShift;
+
+typedef struct
+{
+    ChannelShift physicalRed, physicalBlue, physicalGreen;
+    ChannelShift logicalRed, logicalBlue, logicalGreen;
+} ColorShifts;
+
   /* X physical bitmap */
 typedef struct
 {
@@ -99,12 +118,15 @@ typedef struct
     Pixmap       pixmap;
     XID          glxpixmap;
     int          pixmap_depth;
+    ColorShifts  pixmap_color_shifts;
     /* the following fields are only used for DIB section bitmaps */
     int          status, p_status;  /* mapping status */
     XImage      *image;             /* cached XImage */
     int         *colorMap;          /* color map info */
     int          nColorMap;
+    BOOL         trueColor;
     CRITICAL_SECTION lock;          /* GDI access lock */
+    enum x11drv_shm_mode shm_mode;
 #ifdef HAVE_LIBXXSHM
     XShmSegmentInfo shminfo;        /* shared memory segment info */
 #endif
@@ -135,6 +157,7 @@ typedef struct
     int           backgroundPixel;
     int           textPixel;
     int           depth;       /* bit depth of the DC */
+    ColorShifts  *color_shifts; /* color shifts of the DC */
     int           exposures;   /* count of graphics exposures operations */
     int           current_pf;
     Drawable      gl_drawable;
@@ -144,11 +167,10 @@ typedef struct
 } X11DRV_PDEVICE;
 
 
-  /* GCs used for B&W and color bitmap operations */
-extern GC BITMAP_monoGC, BITMAP_colorGC;
 extern X_PHYSBITMAP BITMAP_stock_phys_bitmap;  /* phys bitmap for the default stock bitmap */
 
-#define BITMAP_GC(physBitmap) (((physBitmap)->pixmap_depth == 1) ? BITMAP_monoGC : BITMAP_colorGC)
+/* Retrieve the GC used for bitmap operations */
+extern GC get_bitmap_gc(int depth);
 
 /* Wine driver X11 functions */
 
@@ -265,9 +287,15 @@ extern void X11DRV_XRender_Init(void);
 extern void X11DRV_XRender_Finalize(void);
 extern BOOL X11DRV_XRender_SelectFont(X11DRV_PDEVICE*, HFONT);
 extern void X11DRV_XRender_DeleteDC(X11DRV_PDEVICE*);
+extern void X11DRV_XRender_CopyBrush(X11DRV_PDEVICE *physDev, X_PHYSBITMAP *physBitmap, int width, int height);
 extern BOOL X11DRV_XRender_ExtTextOut(X11DRV_PDEVICE *physDev, INT x, INT y, UINT flags,
 				      const RECT *lprect, LPCWSTR wstr,
 				      UINT count, const INT *lpDx);
+BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE *physDevDst,
+                                      Pixmap pixmap, GC gc,
+                                      INT widthSrc, INT heightSrc,
+                                      INT widthDst, INT heightDst,
+                                      RECT *visRectSrc, RECT *visRectDst);
 extern void X11DRV_XRender_UpdateDrawable(X11DRV_PDEVICE *physDev);
 
 extern Drawable get_glxdrawable(X11DRV_PDEVICE *physDev);
@@ -456,6 +484,7 @@ extern UINT16 X11DRV_PALETTE_PaletteFlags;
 
 extern int *X11DRV_PALETTE_PaletteToXPixel;
 extern int *X11DRV_PALETTE_XPixelToPalette;
+extern ColorShifts X11DRV_PALETTE_default_shifts;
 
 extern int X11DRV_PALETTE_mapEGAPixel[16];
 
@@ -463,8 +492,10 @@ extern int X11DRV_PALETTE_Init(void);
 extern void X11DRV_PALETTE_Cleanup(void);
 extern BOOL X11DRV_IsSolidColor(COLORREF color);
 
-extern COLORREF X11DRV_PALETTE_ToLogical(int pixel);
+extern COLORREF X11DRV_PALETTE_ToLogical(X11DRV_PDEVICE *physDev, int pixel);
 extern int X11DRV_PALETTE_ToPhysical(X11DRV_PDEVICE *physDev, COLORREF color);
+extern int X11DRV_PALETTE_LookupPixel(COLORREF color);
+extern void X11DRV_PALETTE_ComputeColorShifts(ColorShifts *shifts, unsigned long redMask, unsigned long greenMask, unsigned long blueMask);
 
 extern unsigned int depth_to_bpp( unsigned int depth );
 
@@ -672,7 +703,6 @@ extern DWORD EVENT_x11_time_to_win32_time(Time time);
 enum x11drv_window_messages
 {
     WM_X11DRV_ACQUIRE_SELECTION = 0x80001000,
-    WM_X11DRV_DELETE_WINDOW,
     WM_X11DRV_SET_WIN_FORMAT,
     WM_X11DRV_SET_WIN_REGION,
     WM_X11DRV_RESIZE_DESKTOP
@@ -784,8 +814,5 @@ extern void X11DRV_ForceXIMReset(HWND hwnd) DECLSPEC_HIDDEN;
 extern LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL unicode );
 
 #define XEMBED_MAPPED  (1 << 0)
-
-#define XBUTTON1            0x0001
-#define XBUTTON2            0x0002
 
 #endif  /* __WINE_X11DRV_H */

@@ -233,7 +233,7 @@ BOOL X11DRV_SetupGCForPatBlt( X11DRV_PDEVICE *physDev, GC gc, BOOL fMapColors )
             register int x, y;
             XImage *image;
             wine_tsx11_lock();
-            pixmap = XCreatePixmap( gdi_display, root_window, 8, 8, screen_depth );
+            pixmap = XCreatePixmap( gdi_display, root_window, 8, 8, physDev->depth );
             image = XGetImage( gdi_display, physDev->brush.pixmap, 0, 0, 8, 8,
                                AllPlanes, ZPixmap );
             for (y = 0; y < 8; y++)
@@ -1036,7 +1036,7 @@ X11DRV_SetPixel( X11DRV_PDEVICE *physDev, INT x, INT y, COLORREF color )
     /* Update the DIBSection from the pixmap */
     X11DRV_UnlockDIBSection(physDev, TRUE);
 
-    return X11DRV_PALETTE_ToLogical(pixel);
+    return X11DRV_PALETTE_ToLogical(physDev, pixel);
 }
 
 
@@ -1072,7 +1072,7 @@ X11DRV_GetPixel( X11DRV_PDEVICE *physDev, INT x, INT y )
         /* to avoid a BadMatch error */
         if (!pixmap) pixmap = XCreatePixmap( gdi_display, root_window,
                                              1, 1, physDev->depth );
-        XCopyArea( gdi_display, physDev->drawable, pixmap, BITMAP_colorGC,
+        XCopyArea( gdi_display, physDev->drawable, pixmap, get_bitmap_gc(physDev->depth),
                    physDev->dc_rect.left + pt.x, physDev->dc_rect.top + pt.y, 1, 1, 0, 0 );
         image = XGetImage( gdi_display, pixmap, 0, 0, 1, 1, AllPlanes, ZPixmap );
     }
@@ -1083,7 +1083,7 @@ X11DRV_GetPixel( X11DRV_PDEVICE *physDev, INT x, INT y )
     /* Update the DIBSection from the pixmap */
     X11DRV_UnlockDIBSection(physDev, FALSE);
     if( physDev->depth > 1)
-        pixel = X11DRV_PALETTE_ToLogical(pixel);
+        pixel = X11DRV_PALETTE_ToLogical(physDev, pixel);
     else
         /* monochrome bitmaps return black or white */
         if( pixel) pixel = 0xffffff;

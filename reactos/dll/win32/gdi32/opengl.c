@@ -193,7 +193,15 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
     /* When the context hglrc is NULL, the HDC is ignored and can be NULL.
      * In that case use the global hDC to get access to the driver.  */
     if(hglrc == NULL)
+    {
+        if( hdc == NULL && !wglGetCurrentContext() )
+        {
+            WARN( "Current context is NULL\n");
+            SetLastError( ERROR_INVALID_HANDLE );
+            return FALSE;
+        }
         dc = OPENGL_GetDefaultDC();
+    }
     else
         dc = get_dc_ptr( hdc );
 

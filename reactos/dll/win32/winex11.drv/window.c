@@ -1039,7 +1039,7 @@ static void set_wm_hints( Display *display, struct x11drv_win_data *data )
     if (data->wm_hints)
     {
         data->wm_hints->flags |= InputHint | StateHint | WindowGroupHint;
-        data->wm_hints->input = !(style & WS_DISABLED);
+        data->wm_hints->input = !use_take_focus && !(style & WS_DISABLED);
         data->wm_hints->initial_state = (style & WS_MINIMIZE) ? IconicState : NormalState;
         data->wm_hints->window_group = group_leader;
         XSetWMHints( display, data->whole_window, data->wm_hints );
@@ -2309,8 +2309,6 @@ LRESULT CDECL X11DRV_WindowMessage( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
     {
     case WM_X11DRV_ACQUIRE_SELECTION:
         return X11DRV_AcquireClipboard( hwnd );
-    case WM_X11DRV_DELETE_WINDOW:
-        return SendMessageW( hwnd, WM_SYSCOMMAND, SC_CLOSE, 0 );
     case WM_X11DRV_SET_WIN_FORMAT:
         return set_win_format( hwnd, (XID)wp );
     case WM_X11DRV_SET_WIN_REGION:

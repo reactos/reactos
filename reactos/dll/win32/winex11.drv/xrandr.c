@@ -178,16 +178,11 @@ static LONG X11DRV_XRandR_SetCurrentMode(int mode)
     short rate;
     unsigned int i;
     int j;
-    DWORD dwBpp = screen_bpp;
 
     wine_tsx11_lock();
     root = RootWindow (gdi_display, DefaultScreen(gdi_display));
     sc = pXRRGetScreenInfo (gdi_display, root);
     size = pXRRConfigCurrentConfiguration (sc, &rot);
-    if (dwBpp != dd_modes[mode].dwBPP)
-    {
-        FIXME("Cannot change screen BPP from %d to %d\n", dwBpp, dd_modes[mode].dwBPP);
-    }
     mode = mode%real_xrandr_modes_count;
 
     TRACE("Changing Resolution to %dx%d @%d Hz\n", 

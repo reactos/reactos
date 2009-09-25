@@ -1405,10 +1405,11 @@ INT WINAPI ScrollWindowEx( HWND hwnd, INT dx, INT dy,
     hwnd = WIN_GetFullHandle( hwnd );
 
     GetClientRect(hwnd, &rc);
-    if (rect) IntersectRect(&rc, &rc, rect);
 
     if (clipRect) IntersectRect(&cliprc,&rc,clipRect);
     else cliprc = rc;
+
+    if (rect) IntersectRect(&rc, &rc, rect);
 
     if( hrgnUpdate ) bOwnRgn = FALSE;
     else if( bUpdate ) hrgnUpdate = CreateRectRgn( 0, 0, 0, 0 );

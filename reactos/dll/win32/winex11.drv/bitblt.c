@@ -1436,14 +1436,20 @@ static BOOL BITBLT_InternalStretchBlt( X11DRV_PDEVICE *physDevDst, INT xDst, INT
         pixmaps[SRC] = XCreatePixmap( gdi_display, root_window, width, height,
                                       physDevDst->depth );
         wine_tsx11_unlock();
-        if (fStretch)
-            BITBLT_GetSrcAreaStretch( physDevSrc, physDevDst, pixmaps[SRC], tmpGC,
-                                      xSrc, ySrc, widthSrc, heightSrc,
-                                      xDst, yDst, widthDst, heightDst,
-                                      &visRectSrc, &visRectDst );
-        else
-            BITBLT_GetSrcArea( physDevSrc, physDevDst, pixmaps[SRC], tmpGC,
-                               &visRectSrc );
+
+        if(!X11DRV_XRender_GetSrcAreaStretch( physDevSrc, physDevDst, pixmaps[SRC], tmpGC,
+                                              widthSrc, heightSrc, widthDst, heightDst,
+                                              &visRectSrc, &visRectDst))
+        {
+            if (fStretch)
+                BITBLT_GetSrcAreaStretch( physDevSrc, physDevDst, pixmaps[SRC], tmpGC,
+                                          xSrc, ySrc, widthSrc, heightSrc,
+                                          xDst, yDst, widthDst, heightDst,
+                                          &visRectSrc, &visRectDst );
+            else
+                BITBLT_GetSrcArea( physDevSrc, physDevDst, pixmaps[SRC], tmpGC,
+                                  &visRectSrc );
+        }
     }
 
     if (useDst) BITBLT_GetDstArea( physDevDst, pixmaps[DST], tmpGC, &visRectDst );

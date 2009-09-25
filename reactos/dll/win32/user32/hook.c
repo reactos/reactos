@@ -85,7 +85,7 @@ WINE_DECLARE_DEBUG_CHANNEL(relay);
 struct hook_info
 {
     INT id;
-    FARPROC proc;
+    void *proc;
     void *handle;
     DWORD pid, tid;
     BOOL prev_unicode, next_unicode;
@@ -844,24 +844,25 @@ void WINAPI NotifyWinEvent(DWORD event, HWND hwnd, LONG object_id, LONG child_id
 
     do
     {
-        if (info.proc)
+        WINEVENTPROC proc = info.proc;
+        if (proc)
         {
             TRACE( "calling WH_WINEVENT hook %p event %x hwnd %p %x %x module %s\n",
-                   info.proc, event, hwnd, object_id, child_id, debugstr_w(info.module) );
+                   proc, event, hwnd, object_id, child_id, debugstr_w(info.module) );
 
-            if (!info.module[0] || (info.proc = get_hook_proc( info.proc, info.module )) != NULL)
+            if (!info.module[0] || (proc = get_hook_proc( proc, info.module )) != NULL)
             {
                 if (TRACE_ON(relay))
                     DPRINTF( "%04x:Call winevent hook proc %p (hhook=%p,event=%x,hwnd=%p,object_id=%x,child_id=%x,tid=%04x,time=%x)\n",
-                             GetCurrentThreadId(), info.proc, info.handle, event, hwnd, object_id,
+                             GetCurrentThreadId(), proc, info.handle, event, hwnd, object_id,
                              child_id, GetCurrentThreadId(), GetCurrentTime());
 
-                info.proc(info.handle, event, hwnd, object_id, child_id,
-                          GetCurrentThreadId(), GetCurrentTime());
+                proc( info.handle, event, hwnd, object_id, child_id,
+                      GetCurrentThreadId(), GetCurrentTime());
 
                 if (TRACE_ON(relay))
                     DPRINTF( "%04x:Ret  winevent hook proc %p (hhook=%p,event=%x,hwnd=%p,object_id=%x,child_id=%x,tid=%04x,time=%x)\n",
-                             GetCurrentThreadId(), info.proc, info.handle, event, hwnd, object_id,
+                             GetCurrentThreadId(), proc, info.handle, event, hwnd, object_id,
                              child_id, GetCurrentThreadId(), GetCurrentTime());
             }
         }

@@ -518,9 +518,11 @@ BOOL WINAPI GdiAlphaBlend(HDC hdcDst, int xDst, int yDst, int widthDst, int heig
     DC *dcDst, *dcSrc;
 
     dcSrc = get_dc_ptr( hdcSrc );
+    if (!dcSrc) return FALSE;
+
     if ((dcDst = get_dc_ptr( hdcDst )))
     {
-        if (dcSrc) update_dc( dcSrc );
+        update_dc( dcSrc );
         update_dc( dcDst );
         TRACE("%p %d,%d %dx%d -> %p %d,%d %dx%d op=%02x flags=%02x srcconstalpha=%02x alphafmt=%02x\n",
               hdcSrc, xSrc, ySrc, widthSrc, heightSrc,
@@ -529,11 +531,11 @@ BOOL WINAPI GdiAlphaBlend(HDC hdcDst, int xDst, int yDst, int widthDst, int heig
               blendFunction.SourceConstantAlpha, blendFunction.AlphaFormat);
         if (dcDst->funcs->pAlphaBlend)
             ret = dcDst->funcs->pAlphaBlend( dcDst->physDev, xDst, yDst, widthDst, heightDst,
-                                             dcSrc ? dcSrc->physDev : NULL,
-                                             xSrc, ySrc, widthSrc, heightSrc, blendFunction );
+                                             dcSrc->physDev, xSrc, ySrc, widthSrc, heightSrc,
+                                             blendFunction );
         release_dc_ptr( dcDst );
     }
-    if (dcSrc) release_dc_ptr( dcSrc );
+    release_dc_ptr( dcSrc );
     return ret;
 }
 
