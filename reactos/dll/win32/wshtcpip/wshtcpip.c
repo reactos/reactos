@@ -75,7 +75,17 @@ WSHGetBroadcastSockaddr(
     OUT PSOCKADDR Sockaddr,
     OUT PINT SockaddrLength)
 {
-    UNIMPLEMENTED
+    DWORD Size = 2 * sizeof(UINT);
+
+    if (*SockaddrLength < Size)
+        return WSAEFAULT;
+
+    RtlZeroMemory(Sockaddr, *SockaddrLength);
+
+    Sockaddr->sa_family = AF_INET;
+    *((PUINT)Sockaddr->sa_data) = INADDR_BROADCAST;
+
+    *SockaddrLength = Size;
 
     return 0;
 }
@@ -172,8 +182,18 @@ WSHGetWildcardSockaddr(
     OUT PSOCKADDR Sockaddr,
     OUT PINT SockaddrLength)
 {
-    RtlZeroMemory((PVOID)Sockaddr, *SockaddrLength);
+    DWORD Size = 2 * sizeof(UINT);
+
+    if (*SockaddrLength < Size)
+        return WSAEFAULT;
+
+    RtlZeroMemory(Sockaddr, *SockaddrLength);
+
     Sockaddr->sa_family = AF_INET;
+    *((PUINT)Sockaddr->sa_data) = INADDR_ANY;
+
+    *SockaddrLength = Size;
+
     return 0;
 }
 
