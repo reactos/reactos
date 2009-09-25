@@ -132,11 +132,12 @@ WSHGetSockaddrType(
 	     break;
       }
 
-      SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
       if (ntohs(ipv4->sin_port) == 0)
 	  SockaddrInfo->EndpointInfo = SockaddrEndpointInfoWildcard;
-      if (ntohs(ipv4->sin_port) < IPPORT_RESERVED)
+      else if (ntohs(ipv4->sin_port) < IPPORT_RESERVED)
 	  SockaddrInfo->EndpointInfo = SockaddrEndpointInfoReserved;
+      else
+          SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
 
       return 0;
     }
