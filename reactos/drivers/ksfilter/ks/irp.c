@@ -1742,7 +1742,7 @@ FindMatchingCreateItem(
 
         ASSERT(CreateItemEntry->CreateItem->ObjectClass.Buffer);
 
-        DPRINT1("CreateItem %S Length %u Request %S %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
+        DPRINT("CreateItem %S Length %u Request %S %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
                                                            CreateItemEntry->CreateItem->ObjectClass.Length,
                                                            Buffer,
                                                            BufferSize);

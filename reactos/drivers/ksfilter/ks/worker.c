@@ -272,7 +272,7 @@ KsQueueWorkItem(
         /* clear event */
         KeClearEvent(&KsWorker->Event);
         /* it is, queue it */
-        ExQueueWorkItem(WorkItem, KsWorker->Type);
+        ExQueueWorkItem(&KsWorker->WorkItem, KsWorker->Type);
     }
     /* release lock */
     KeReleaseSpinLock(&KsWorker->Lock, OldIrql);
