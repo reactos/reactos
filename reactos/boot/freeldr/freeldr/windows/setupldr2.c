@@ -157,7 +157,7 @@ VOID LoadReactOSSetup2(VOID)
     CHAR  SystemPath[512], SearchPath[512];
     CHAR  FileName[512];
     CHAR  BootPath[512];
-    LPCSTR BootOptions;
+    LPCSTR LoadOptions, DbgOptions, BootOptions;
     PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
     BOOLEAN Status;
     ULONG i, ErrorLine;
@@ -204,7 +204,7 @@ VOID LoadReactOSSetup2(VOID)
         }
     }
 
-    /* Load options */
+    /* Get Load options - debug and non-debug */
     if (!InfFindFirstLine(InfHandle,
                           "SetupData",
                           "OsLoadOptions",
@@ -214,11 +214,29 @@ VOID LoadReactOSSetup2(VOID)
         return;
     }
 
-    if (!InfGetDataField (&InfContext, 1, &BootOptions))
+    if (!InfGetDataField (&InfContext, 1, &LoadOptions))
     {
         printf("Failed to get load options\n");
         return;
     }
+
+    BootOptions = LoadOptions;
+
+#if DBG
+    /* Get debug load options and use them */
+    if (InfFindFirstLine(InfHandle,
+                         "SetupData",
+                         "DbgOsLoadOptions",
+                         &InfContext))
+    {
+        if (!InfGetDataField(&InfContext, 1, &DbgOptions))
+            DbgOptions = "";
+        else
+            BootOptions = DbgOptions;
+    }
+#endif
+
+    DPRINTM(DPRINT_WINDOWS,"BootOptions: '%s'\n", BootOptions);
 
     SetupUiInitialize();
     UiDrawStatusText("");
