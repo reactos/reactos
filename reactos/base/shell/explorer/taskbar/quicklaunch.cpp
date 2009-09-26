@@ -252,9 +252,7 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (entry) {	// entry is NULL for desktop switch buttons
 			HRESULT hr = entry->do_context_menu(_hwnd, screen_pt, _cm_ifs);
 
-			if (SUCCEEDED(hr))
-				AddShortcuts();	//refresh();
-			else
+			if (!SUCCEEDED(hr))
 				CHECKERROR(hr);
 		} else
 			goto def;
