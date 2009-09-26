@@ -46,6 +46,7 @@
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
 	<compilerflag>-Wno-multichar</compilerflag>
+	<compilerflag>-Wno-format</compilerflag>
 	<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
 	<linkerflag>-disable-stdcall-fixup</linkerflag>
 	<linkerflag>-static</linkerflag>
