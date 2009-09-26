@@ -125,6 +125,7 @@
 @ stdcall DestroyPropertySheetPage(long)
 @ stdcall -private DllGetVersion(ptr)
 @ stdcall -private DllInstall(long wstr)
+@ stdcall DPA_GetSize(ptr)
 @ stdcall DrawShadowText(long wstr long ptr long long long long long)
 @ stdcall DrawStatusText(long ptr ptr long) DrawStatusTextA
 @ stdcall DrawStatusTextW(long ptr wstr long)
