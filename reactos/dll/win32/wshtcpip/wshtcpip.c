@@ -88,7 +88,7 @@ WSHGetBroadcastSockaddr(
     Sockaddr->sa_family = AF_INET;
     *((PUINT)Sockaddr->sa_data) = INADDR_BROADCAST;
 
-    *SockaddrLength = Size;
+    /* *SockaddrLength = Size; */
 
     return NO_ERROR;
 }
@@ -198,7 +198,7 @@ WSHGetWildcardSockaddr(
     Sockaddr->sa_family = AF_INET;
     *((PUINT)Sockaddr->sa_data) = INADDR_ANY;
 
-    *SockaddrLength = Size;
+    /* *SockaddrLength = Size; */
 
     return NO_ERROR;
 }
