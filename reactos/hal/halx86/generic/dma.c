@@ -1991,7 +1991,7 @@ HalAllocateCrashDumpRegisters(IN PADAPTER_OBJECT AdapterObject,
                                                    0);
 
         /* Check if nothing was found */
-        if (MapRegisterNumber == -1U)
+        if (MapRegisterNumber == (ULONG)-1)
         {
             /* No free registers found, so use the base registers */
             RtlSetBits(MasterAdapter->MapRegisters,

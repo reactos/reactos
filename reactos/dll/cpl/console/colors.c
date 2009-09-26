@@ -116,7 +116,7 @@ ColorsProc(
 				break;
 			}
 
-			if (red == -1U)
+			if (red == (DWORD)-1)
 			{
 				red = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_RED), UDM_GETPOS, 0, 0);
 				if (HIWORD(red))
@@ -127,7 +127,7 @@ ColorsProc(
 				red = LOBYTE(red);
 			}
 
-			if (green == -1U)
+			if (green == (DWORD)-1)
 			{
 				green = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_GREEN), UDM_GETPOS, 0, 0);
 				if (HIWORD(green))
@@ -138,7 +138,7 @@ ColorsProc(
 				green = LOBYTE(green);
 			}
 
-			if (blue == -1U)
+			if (blue == (DWORD)-1)
 			{
 				blue = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_BLUE), UDM_GETPOS, 0, 0);
 				if (HIWORD(blue))

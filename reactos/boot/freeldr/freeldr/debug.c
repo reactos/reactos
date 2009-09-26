@@ -311,7 +311,7 @@ MsgBoxPrint(const char *Format, ...)
 	Length = _vsnprintf(Buffer, 512, Format, ap);
 
 	/* Check if we went past the buffer */
-	if (Length == -1U)
+	if (Length == (ULONG)-1)
 	{
 		/* Terminate it if we went over-board */
 		Buffer[sizeof(Buffer) - 1] = '\n';

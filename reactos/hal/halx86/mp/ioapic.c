@@ -661,7 +661,7 @@ HaliReconfigurePciInterrupts(VOID)
 
 VOID Disable8259AIrq(ULONG irq)
 {
-    ULONG tmp;
+    UCHAR tmp;
 
     if (irq >= 8) 
     {
