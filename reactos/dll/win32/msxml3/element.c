@@ -74,6 +74,10 @@ static HRESULT WINAPI domelem_QueryInterface(
     {
         *ppvObject = IXMLDOMNode_from_impl(This->node);
     }
+    else if(dispex_query_interface(&This->node->dispex, riid, ppvObject))
+    {
+        return *ppvObject ? S_OK : E_NOINTERFACE;
+    }
     else
     {
         FIXME("interface %s not implemented\n", debugstr_guid(riid));
@@ -751,6 +755,18 @@ static const struct IXMLDOMElementVtbl domelem_vtbl =
     domelem_normalize,
 };
 
+static const tid_t domelem_iface_tids[] = {
+    IXMLDOMElement_tid,
+    0
+};
+
+static dispex_static_data_t domelem_dispex = {
+    NULL,
+    IXMLDOMElement_tid,
+    NULL,
+    domelem_iface_tids
+};
+
 IUnknown* create_element( xmlNodePtr element )
 {
     domelem *This;
@@ -762,7 +778,7 @@ IUnknown* create_element( xmlNodePtr element )
     This->lpVtbl = &domelem_vtbl;
     This->ref = 1;
 
-    This->node = create_basic_node( element, (IUnknown*)&This->lpVtbl, NULL );
+    This->node = create_basic_node( element, (IUnknown*)&This->lpVtbl, &domelem_dispex );
     if(!This->node)
     {
         HeapFree(GetProcessHeap(), 0, This);

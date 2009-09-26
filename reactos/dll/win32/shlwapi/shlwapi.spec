@@ -228,7 +228,7 @@
 228 stub -noname ZoneCheckUrlA
 229 stub -noname ZoneCheckUrlW
 230 stub -noname ZoneCheckUrlExA
-231 stub -noname ZoneCheckUrlExW
+231 stdcall -noname ZoneCheckUrlExW(wstr ptr long long long long long long)
 232 stub -noname ZoneCheckUrlExCacheA
 233 stub -noname ZoneCheckUrlExCacheW
 234 stub -noname ZoneCheckHost
@@ -350,8 +350,8 @@
 350 stdcall -noname GetFileVersionInfoSizeWrapW(wstr ptr)
 351 stdcall -noname GetFileVersionInfoWrapW(wstr long long ptr)
 352 stdcall -noname VerQueryValueWrapW(ptr wstr ptr ptr)
-353 stub -noname SHFormatDateTimeA
-354 stub -noname SHFormatDateTimeW
+353 stdcall -noname SHFormatDateTimeA(ptr ptr str long)
+354 stdcall -noname SHFormatDateTimeW(ptr ptr wstr long)
 355 stdcall -noname IUnknown_EnableModeless(ptr long)
 356 stdcall -noname CreateAllAccessSecurityAttributes(ptr ptr long)
 357 stdcall -noname SHGetNewLinkInfoWrapW(wstr wstr wstr long long)
@@ -459,7 +459,7 @@
 459 stdcall -noname SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
 460 stdcall -noname SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
 461 stdcall -noname SHGetAppCompatFlags(long)
-462 stub -noname UrlFixupW
+462 stdcall -noname UrlFixupW(wstr wstr long)
 463 stub -noname SHExpandEnvironmentStringsForUserA
 464 stub -noname SHExpandEnvironmentStringsForUserW
 465 stub -noname PathUnExpandEnvStringsForUserA
@@ -468,7 +468,7 @@
 468 stub -noname RunIndirectRegCommand
 469 stub -noname RunRegCommand
 470 stub -noname IUnknown_ProfferServiceOld
-471 stub -noname SHCreatePropertyBagOnRegKey
+471 stdcall -noname SHCreatePropertyBagOnRegKey(long wstr long ptr ptr)
 472 stub -noname SHCreatePropertyBagOnProfileSelection
 473 stub -noname SHGetIniStringUTF7W
 474 stub -noname SHSetIniStringUTF7W
@@ -476,7 +476,7 @@
 476 stub -noname SHGetObjectCompatFlags
 477 stub -noname SHCreatePropertyBagOnMemory
 478 stdcall -noname IUnknown_TranslateAcceleratorIO(ptr ptr)
-479 stub -noname IUnknown_UIActivateIO
+479 stdcall -noname IUnknown_UIActivateIO(ptr long ptr)
 480 stdcall -noname UrlCrackW(wstr long long ptr) wininet.InternetCrackUrlW
 481 stdcall -noname IUnknown_HasFocusIO(ptr)
 482 stub -noname SHMessageBoxHelpA
@@ -508,7 +508,7 @@
 512 stub -noname IStream_ReadPidl
 513 stub -noname IStream_WritePidl
 514 stdcall -noname IUnknown_ProfferService(ptr ptr ptr ptr)
-515 stub -noname SHGetViewStatePropertyBag
+515 stdcall -noname SHGetViewStatePropertyBag(ptr wstr long ptr ptr)
 516 stdcall -noname SKGetValueW(long wstr wstr long long long)
 517 stub -noname SKSetValueW
 518 stub -noname SKDeleteValueW
@@ -757,6 +757,7 @@
 @ stdcall StrChrA (str long)
 @ stdcall StrChrIA (str long)
 @ stdcall StrChrIW (wstr long)
+@ stdcall StrChrNW(wstr long long)
 @ stdcall StrChrW (wstr long)
 @ stdcall StrCmpIW (wstr wstr)
 @ stdcall StrCmpLogicalW(wstr wstr)

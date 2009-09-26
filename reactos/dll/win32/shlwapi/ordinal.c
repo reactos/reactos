@@ -1475,6 +1475,43 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
 }
 
 /*************************************************************************
+ *      @	[SHLWAPI.479]
+ *
+ * Call an object's UIActivateIO method.
+ *
+ * PARAMS
+ *  unknown  [I] Object to call the UIActivateIO method on
+ *  activate [I] Parameter for UIActivateIO call
+ *  msg      [I] Parameter for UIActivateIO call
+ *
+ * RETURNS
+ *  Success: Value of UI_ActivateIO call
+ *  Failure: An HRESULT error code
+ *
+ * NOTES
+ *  unknown is expected to support the IInputObject interface.
+ */
+HRESULT WINAPI IUnknown_UIActivateIO(IUnknown *unknown, BOOL activate, LPMSG msg)
+{
+    IInputObject* object = NULL;
+    HRESULT ret;
+
+    if (!unknown)
+        return E_FAIL;
+
+    /* Get an IInputObject interface from the object */
+    ret = IUnknown_QueryInterface(unknown, &IID_IInputObject, (LPVOID*) &object);
+
+    if (ret == S_OK)
+    {
+        ret = IInputObject_UIActivateIO(object, activate, msg);
+        IUnknown_Release(object);
+    }
+
+    return ret;
+}
+
+/*************************************************************************
  *      @	[SHLWAPI.177]
  *
  * Loads a popup menu.
@@ -4531,4 +4568,132 @@ free_sids:
     HeapFree(GetProcessHeap(), 0, sidlist);
 
     return psd;
+}
+
+/***********************************************************************
+ *             SHCreatePropertyBagOnRegKey [SHLWAPI.471]
+ *
+ * Creates a property bag from a registry key
+ *
+ * PARAMS
+ *  hKey       [I] Handle to the desired registry key
+ *  subkey     [I] Name of desired subkey, or NULL to open hKey directly
+ *  grfMode    [I] Optional flags
+ *  riid       [I] IID of requested property bag interface
+ *  ppv        [O] Address to receive pointer to the new interface
+ *
+ * RETURNS
+ *  success: 0
+ *  failure: error code
+ *
+ */
+HRESULT WINAPI SHCreatePropertyBagOnRegKey (HKEY hKey, LPCWSTR subkey,
+    DWORD grfMode, REFIID riid, void **ppv)
+{
+    FIXME("%p %s %d %s %p STUB\n", hKey, debugstr_w(subkey), grfMode,
+          debugstr_guid(riid), ppv);
+
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *             SHGetViewStatePropertyBag [SHLWAPI.515]
+ *
+ * Retrieves a property bag in which the view state information of a folder
+ * can be stored.
+ *
+ * PARAMS
+ *  pidl        [I] PIDL of the folder requested
+ *  bag_name    [I] Name of the property bag requested
+ *  flags       [I] Optional flags
+ *  riid        [I] IID of requested property bag interface
+ *  ppv         [O] Address to receive pointer to the new interface
+ *
+ * RETURNS
+ *  success: S_OK
+ *  failure: error code
+ *
+ */
+HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name,
+    DWORD flags, REFIID riid, void **ppv)
+{
+    FIXME("%p %s %d %s %p STUB\n", pidl, debugstr_w(bag_name), flags,
+          debugstr_guid(riid), ppv);
+
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *             SHFormatDateTimeW [SHLWAPI.354]
+ *
+ * Produces a string representation of a time.
+ *
+ * PARAMS
+ *  fileTime   [I] Pointer to FILETIME structure specifying the time
+ *  flags      [I] Flags specifying the desired output
+ *  buf        [O] Pointer to buffer for output
+ *  bufSize    [I] Number of characters that can be contained in buffer
+ *
+ * RETURNS
+ *  success: number of characters written to the buffer
+ *  failure: 0
+ *
+ */
+INT WINAPI SHFormatDateTimeW(const FILETIME UNALIGNED *fileTime, DWORD *flags,
+    LPWSTR buf, UINT bufSize)
+{
+    FIXME("%p %p %s %d STUB\n", fileTime, flags, debugstr_w(buf), bufSize);
+    return 0;
+}
+
+/***********************************************************************
+ *             SHFormatDateTimeA [SHLWAPI.353]
+ *
+ * See SHFormatDateTimeW.
+ *
+ */
+INT WINAPI SHFormatDateTimeA(const FILETIME UNALIGNED *fileTime, DWORD *flags,
+    LPCSTR buf, UINT bufSize)
+{
+    WCHAR *bufW;
+    DWORD buflenW, convlen;
+    INT retval;
+
+    if (!buf || !bufSize)
+        return 0;
+
+    buflenW = bufSize;
+    bufW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * buflenW);
+    retval = SHFormatDateTimeW(fileTime, flags, bufW, buflenW);
+
+    if (retval != 0)
+        convlen = WideCharToMultiByte(CP_ACP, 0, bufW, -1, (LPSTR) buf, bufSize, NULL, NULL);
+
+    HeapFree(GetProcessHeap(), 0, bufW);
+    return retval;
+}
+
+/***********************************************************************
+ *             ZoneCheckUrlExW [SHLWAPI.231]
+ *
+ * Checks the details of the security zone for the supplied site. (?)
+ *
+ * PARAMS
+ *
+ *  szURL   [I] Pointer to the URL to check
+ *
+ *  Other parameters currently unknown.
+ *
+ * RETURNS
+ *  unknown
+ */
+
+INT WINAPI ZoneCheckUrlExW(LPWSTR szURL, PVOID pUnknown, DWORD dwUnknown2,
+    DWORD dwUnknown3, DWORD dwUnknown4, DWORD dwUnknown5, DWORD dwUnknown6,
+    DWORD dwUnknown7)
+{
+    FIXME("(%s,%p,%x,%x,%x,%x,%x,%x) STUB\n", debugstr_w(szURL), pUnknown, dwUnknown2,
+        dwUnknown3, dwUnknown4, dwUnknown5, dwUnknown6, dwUnknown7);
+
+    return 0;
 }
