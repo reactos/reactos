@@ -49,6 +49,14 @@ static ULONG WINAPI IDirect3DCubeTexture9Impl_AddRef(LPDIRECT3DCUBETEXTURE9 ifac
 
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
+    if (ref == 1)
+    {
+        IDirect3DDevice9Ex_AddRef(This->parentDevice);
+        wined3d_mutex_lock();
+        IWineD3DCubeTexture_AddRef(This->wineD3DCubeTexture);
+        wined3d_mutex_unlock();
+    }
+
     return ref;
 }
 
@@ -61,12 +69,10 @@ static ULONG WINAPI IDirect3DCubeTexture9Impl_Release(LPDIRECT3DCUBETEXTURE9 ifa
     if (ref == 0) {
         TRACE("Releasing child %p\n", This->wineD3DCubeTexture);
 
-        wined3d_mutex_lock();
-        IWineD3DCubeTexture_Destroy(This->wineD3DCubeTexture, D3D9CB_DestroySurface);
         IDirect3DDevice9Ex_Release(This->parentDevice);
+        wined3d_mutex_lock();
+        IWineD3DCubeTexture_Release(This->wineD3DCubeTexture);
         wined3d_mutex_unlock();
-
-        HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
 }
@@ -352,48 +358,37 @@ static const IDirect3DCubeTexture9Vtbl Direct3DCubeTexture9_Vtbl =
     IDirect3DCubeTexture9Impl_AddDirtyRect
 };
 
+static void STDMETHODCALLTYPE cubetexture_wined3d_object_destroyed(void *parent)
+{
+    HeapFree(GetProcessHeap(), 0, parent);
+}
 
+static const struct wined3d_parent_ops d3d9_cubetexture_wined3d_parent_ops =
+{
+    cubetexture_wined3d_object_destroyed,
+};
 
+HRESULT cubetexture_init(IDirect3DCubeTexture9Impl *texture, IDirect3DDevice9Impl *device,
+        UINT edge_length, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
+{
+    HRESULT hr;
 
-/* IDirect3DDevice9 IDirect3DCubeTexture9 Methods follow: */
-HRESULT  WINAPI  IDirect3DDevice9Impl_CreateCubeTexture(LPDIRECT3DDEVICE9EX iface,
-                                                        UINT EdgeLength, UINT Levels, DWORD Usage,
-                                                        D3DFORMAT Format, D3DPOOL Pool,
-                                                        IDirect3DCubeTexture9** ppCubeTexture, HANDLE* pSharedHandle) {
-
-    IDirect3DCubeTexture9Impl *object;
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    HRESULT hr = D3D_OK;
-
-    TRACE("(%p) : ELen(%d) Lvl(%d) Usage(%d) fmt(%u), Pool(%d)  Shared(%p)\n", This, EdgeLength, Levels, Usage, Format, Pool, pSharedHandle);
-
-    /* Allocate the storage for the device */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
-
-    if (NULL == object) {
-        ERR("(%p) allocation of CubeTexture failed\n", This);
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
-    object->lpVtbl = &Direct3DCubeTexture9_Vtbl;
-    object->ref = 1;
+    texture->lpVtbl = &Direct3DCubeTexture9_Vtbl;
+    texture->ref = 1;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateCubeTexture(This->WineD3DDevice, EdgeLength, Levels, Usage,
-            wined3dformat_from_d3dformat(Format), Pool, &object->wineD3DCubeTexture, (IUnknown *)object);
+    hr = IWineD3DDevice_CreateCubeTexture(device->WineD3DDevice, edge_length, levels, usage,
+            wined3dformat_from_d3dformat(format), pool, &texture->wineD3DCubeTexture,
+            (IUnknown *)texture, &d3d9_cubetexture_wined3d_parent_ops);
     wined3d_mutex_unlock();
-
-    if (hr != D3D_OK){
-
-        /* free up object */
-        WARN("(%p) call to IWineD3DDevice_CreateCubeTexture failed\n", This);
-        HeapFree(GetProcessHeap(), 0, object);
-    } else {
-        IDirect3DDevice9Ex_AddRef(iface);
-        object->parentDevice = iface;
-        *ppCubeTexture = (LPDIRECT3DCUBETEXTURE9) object;
-        TRACE("(%p) : Created cube texture %p\n", This, object);
+    if (FAILED(hr))
+    {
+        WARN("Failed to create wined3d cube texture, hr %#x.\n", hr);
+        return hr;
     }
 
-    TRACE("(%p) returning %p\n",This, *ppCubeTexture);
-    return hr;
+    texture->parentDevice = (IDirect3DDevice9Ex *)device;
+    IDirect3DDevice9Ex_AddRef(texture->parentDevice);
+
+    return D3D_OK;
 }

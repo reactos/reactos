@@ -842,8 +842,9 @@ should really perform a delta so that only the changes get updated*/
                 This->wineD3DDevice->updateStateBlock->gl_primitive_type = This->gl_primitive_type;
         }
 
-        if (This->changed.indices) {
-            IWineD3DDevice_SetIndices(pDevice, This->pIndexData, This->IndexFmt);
+        if (This->changed.indices)
+        {
+            IWineD3DDevice_SetIndexBuffer(pDevice, This->pIndexData, This->IndexFmt);
             IWineD3DDevice_SetBaseVertexIndex(pDevice, This->baseVertexIndex);
         }
 
@@ -1025,7 +1026,7 @@ should really perform a delta so that only the changes get updated*/
             IWineD3DDevice_SetTransform(pDevice, i, &This->transforms[i]);
         }
         This->wineD3DDevice->updateStateBlock->gl_primitive_type = This->gl_primitive_type;
-        IWineD3DDevice_SetIndices(pDevice, This->pIndexData, This->IndexFmt);
+        IWineD3DDevice_SetIndexBuffer(pDevice, This->pIndexData, This->IndexFmt);
         IWineD3DDevice_SetBaseVertexIndex(pDevice, This->baseVertexIndex);
         IWineD3DDevice_SetVertexDeclaration(pDevice, This->vertexDecl);
         IWineD3DDevice_SetMaterial(pDevice, &This->material);

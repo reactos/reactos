@@ -5,6 +5,7 @@
  * Copyright 2003-2004 Raphael Junqueira
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +29,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 HRESULT resource_init(IWineD3DResource *iface, WINED3DRESOURCETYPE resource_type,
         IWineD3DDeviceImpl *device, UINT size, DWORD usage, const struct GlPixelFormatDesc *format_desc,
-        WINED3DPOOL pool, IUnknown *parent)
+        WINED3DPOOL pool, IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
 {
     struct IWineD3DResourceClass *resource = &((IWineD3DResourceImpl *)iface)->resource;
 
@@ -41,6 +42,7 @@ HRESULT resource_init(IWineD3DResource *iface, WINED3DRESOURCETYPE resource_type
     resource->usage = usage;
     resource->size = size;
     resource->priority = 0;
+    resource->parent_ops = parent_ops;
     list_init(&resource->privateData);
 
     if (size)

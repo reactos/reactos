@@ -337,6 +337,7 @@ void filter_caps(D3DCAPS9* pCaps)
         D3DPTEXTURECAPS_CUBEMAP_POW2   | D3DPTEXTURECAPS_VOLUMEMAP_POW2| D3DPTEXTURECAPS_NOPROJECTEDBUMPENV;
 
     pCaps->MaxVertexShaderConst = min(D3D9_MAX_VERTEX_SHADER_CONSTANTF, pCaps->MaxVertexShaderConst);
+    pCaps->NumSimultaneousRTs = min(D3D9_MAX_SIMULTANEOUS_RENDERTARGETS, pCaps->NumSimultaneousRTs);
 }
 
 static HRESULT WINAPI IDirect3D9Impl_GetDeviceCaps(LPDIRECT3D9EX iface, UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps) {
@@ -383,16 +384,6 @@ static HMONITOR WINAPI IDirect3D9Impl_GetAdapterMonitor(LPDIRECT3D9EX iface, UIN
     return ret;
 }
 
-ULONG WINAPI D3D9CB_DestroyRenderTarget(IWineD3DSurface *pSurface) {
-    IDirect3DSurface9Impl* surfaceParent;
-    TRACE("(%p) call back\n", pSurface);
-
-    IWineD3DSurface_GetParent(pSurface, (IUnknown **) &surfaceParent);
-    surfaceParent->isImplicit = FALSE;
-    /* Surface had refcount of 0 GetParent addrefed to 1, so 1 Release is enough */
-    return IDirect3DSurface9_Release((IDirect3DSurface9*) surfaceParent);
-}
-
 ULONG WINAPI D3D9CB_DestroySwapChain(IWineD3DSwapChain *pSwapChain) {
     IDirect3DSwapChain9Impl* swapChainParent;
     TRACE("(%p) call back\n", pSwapChain);
@@ -401,16 +392,6 @@ ULONG WINAPI D3D9CB_DestroySwapChain(IWineD3DSwapChain *pSwapChain) {
     swapChainParent->isImplicit = FALSE;
     /* Swap chain had refcount of 0 GetParent addrefed to 1, so 1 Release is enough */
     return IDirect3DSwapChain9_Release((IDirect3DSwapChain9*) swapChainParent);
-}
-
-ULONG WINAPI D3D9CB_DestroyDepthStencilSurface(IWineD3DSurface *pSurface) {
-    IDirect3DSurface9Impl* surfaceParent;
-    TRACE("(%p) call back\n", pSurface);
-
-    IWineD3DSurface_GetParent(pSurface, (IUnknown **) &surfaceParent);
-    surfaceParent->isImplicit = FALSE;
-    /* Surface had refcount of 0 GetParent addrefed to 1, so 1 Release is enough */
-    return IDirect3DSurface9_Release((IDirect3DSurface9*) surfaceParent);
 }
 
 static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9EX iface, UINT Adapter, D3DDEVTYPE DeviceType,
