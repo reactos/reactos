@@ -133,6 +133,9 @@ typedef const struct _WAVEFORMATEX *LPCWAVEFORMATEX;
 #define  WAVE_FORMAT_OLISBC			0x1003	/*  Ing C. Olivetti & C., S.p.A.  */
 #define  WAVE_FORMAT_OLIOPR			0x1004	/*  Ing C. Olivetti & C., S.p.A.  */
 
+#define   MM_UNMAPPED                   0xffff
+#define   MM_PID_UNMAPPED               MM_UNMAPPED
+
 #if !defined(WAVE_FORMAT_EXTENSIBLE)
 #define  WAVE_FORMAT_EXTENSIBLE			0xFFFE  /* Microsoft */
 #endif
