@@ -50,7 +50,7 @@ WSHAddressToString(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -64,7 +64,7 @@ WSHEnumProtocols(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -78,7 +78,10 @@ WSHGetBroadcastSockaddr(
     DWORD Size = 2 * sizeof(UINT);
 
     if (*SockaddrLength < Size)
+    {
+        DPRINT1("Socket address length too small: %d\n", *SockaddrLength);
         return WSAEFAULT;
+    }
 
     RtlZeroMemory(Sockaddr, *SockaddrLength);
 
@@ -87,7 +90,7 @@ WSHGetBroadcastSockaddr(
 
     *SockaddrLength = Size;
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -99,7 +102,7 @@ WSHGetProviderGuid(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -150,7 +153,7 @@ WSHGetSockaddrType(
     else
         SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -171,7 +174,7 @@ WSHGetSocketInformation(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -185,7 +188,10 @@ WSHGetWildcardSockaddr(
     DWORD Size = 2 * sizeof(UINT);
 
     if (*SockaddrLength < Size)
+    {
+        DPRINT1("Socket address length too small: %d\n", *SockaddrLength);
         return WSAEFAULT;
+    }
 
     RtlZeroMemory(Sockaddr, *SockaddrLength);
 
@@ -194,7 +200,7 @@ WSHGetWildcardSockaddr(
 
     *SockaddrLength = Size;
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -210,6 +216,7 @@ WSHGetWinsockMapping(
 
     if (MappingLength < Size)
     {
+        DPRINT1("Mapping length too small: %d\n", MappingLength);
         return Size;
     }
 
@@ -240,7 +247,7 @@ WSHGetWinsockMapping(
     Mapping->Mapping[5].SocketType = SOCK_RAW;
     Mapping->Mapping[5].Protocol = IPPROTO_ICMP;
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -253,7 +260,7 @@ WSHGetWSAProtocolInfo(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -276,7 +283,7 @@ WSHIoctl(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -299,7 +306,7 @@ WSHJoinLeaf(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -323,7 +330,7 @@ WSHNotify(
         break;
     }
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -386,7 +393,7 @@ WSHOpenSocket2(
     UNICODE_STRING RawDeviceName = RTL_CONSTANT_STRING(DD_RAW_IP_DEVICE_NAME);
     NTSTATUS Status;
 
-    DPRINT("");
+    DPRINT("WSHOpenSocket2 called\n");
 
     switch (*SocketType) {
     case SOCK_STREAM:
@@ -475,7 +482,7 @@ WSHSetSocketInformation(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 
@@ -490,7 +497,7 @@ WSHStringToAddress(
 {
     UNIMPLEMENTED
 
-    return 0;
+    return NO_ERROR;
 }
 
 /* EOF */
