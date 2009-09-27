@@ -170,6 +170,19 @@ struct IIrpTargetFactory;
 
 typedef struct
 {
+    LIST_ENTRY Entry;
+    UNICODE_STRING SymbolicLink;
+}SYMBOLICLINK_ENTRY, *PSYMBOLICLINK_ENTRY;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    ULONG FromPin;
+    KSPIN_PHYSICALCONNECTION Connection;
+}PHYSICAL_CONNECTION_ENTRY, *PPHYSICAL_CONNECTION_ENTRY;
+
+typedef struct
+{
     ULONG MaxGlobalInstanceCount;
     ULONG MaxFilterInstanceCount;
     ULONG MinFilterInstanceCount;
@@ -202,6 +215,9 @@ typedef struct
 
     PPCFILTER_DESCRIPTOR DeviceDescriptor;
     KSTOPOLOGY*  Topology;
+    LIST_ENTRY SymbolicLinkList;
+    LIST_ENTRY PhysicalConnectionList;
+    UNICODE_STRING RefString;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE

@@ -174,32 +174,10 @@ PortClsShutdown(
     IN  PIRP Irp)
 {
     PPCLASS_DEVICE_EXTENSION DeviceExtension;
-    PLIST_ENTRY Entry;
-    PPHYSICAL_CONNECTION Connection;
     DPRINT("PortClsShutdown called\n");
 
     // get device extension
     DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    while(!IsListEmpty(&DeviceExtension->PhysicalConnectionList))
-    {
-        // get connection entry
-        Entry = RemoveHeadList(&DeviceExtension->PhysicalConnectionList);
-        Connection = (PPHYSICAL_CONNECTION)CONTAINING_RECORD(Entry, PHYSICAL_CONNECTION, Entry);
-
-        if (Connection->FromSubDevice)
-        {
-            // release subdevice
-            Connection->FromSubDevice->Release();
-        }
-
-        if (Connection->ToSubDevice)
-        {
-            // release subdevice
-            Connection->ToSubDevice->Release();
-        }
-        FreeItem(Connection, TAG_PORTCLASS);
-    }
 
     if (DeviceExtension->AdapterPowerManagement)
     {

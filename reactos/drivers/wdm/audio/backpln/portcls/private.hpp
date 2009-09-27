@@ -348,32 +348,6 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
 
 typedef struct
 {
-    LIST_ENTRY Entry;
-    UNICODE_STRING SymbolicLink;
-}SYMBOLICLINK_ENTRY, *PSYMBOLICLINK_ENTRY;
-
-
-typedef struct
-{
-    LIST_ENTRY Entry;
-    ISubdevice *SubDevice;
-    UNICODE_STRING Name;
-    LIST_ENTRY SymbolicLinkList;
-}SUBDEVICE_ENTRY, *PSUBDEVICE_ENTRY;
-
-typedef struct
-{
-    LIST_ENTRY Entry;
-    ISubdevice * FromSubDevice;
-    UNICODE_STRING FromUnicodeString;
-    ULONG FromPin;
-    ISubdevice * ToSubDevice;
-    UNICODE_STRING ToUnicodeString;
-    ULONG ToPin;
-}PHYSICAL_CONNECTION, *PPHYSICAL_CONNECTION;
-
-typedef struct
-{
     KSDEVICE_HEADER KsDeviceHeader;
     PDEVICE_OBJECT PhysicalDeviceObject;
     PDEVICE_OBJECT PrevDeviceObject;
@@ -384,8 +358,6 @@ typedef struct
     KSOBJECT_CREATE_ITEM * CreateItems;
 
     IResourceList* resources;
-    LIST_ENTRY SubDeviceList;
-    LIST_ENTRY PhysicalConnectionList;
 
     LIST_ENTRY TimerList;
     KSPIN_LOCK TimerListLock;

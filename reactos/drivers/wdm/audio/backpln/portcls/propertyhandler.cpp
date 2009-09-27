@@ -114,6 +114,71 @@ HandleDataIntersection(
     return Status;
 }
 
+NTSTATUS
+HandlePhysicalConnection(
+    IN PIO_STATUS_BLOCK IoStatus,
+    IN PKSIDENTIFIER Request,
+    IN ULONG RequestLength,
+    IN OUT PVOID  Data,
+    IN ULONG DataLength,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor)
+{
+    PKSP_PIN Pin;
+    PLIST_ENTRY Entry;
+    PKSPIN_PHYSICALCONNECTION Connection;
+    PPHYSICAL_CONNECTION_ENTRY ConEntry;
+
+    // get pin
+    Pin = (PKSP_PIN)Request;
+
+    if (RequestLength < sizeof(KSP_PIN))
+    {
+        // input buffer must be at least sizeof KSP_PIN
+        DPRINT1("input length too small\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (IsListEmpty(&Descriptor->PhysicalConnectionList))
+    {
+        DPRINT1("no connection\n");
+        return STATUS_NOT_FOUND;
+    }
+
+    // get first item
+    Entry = Descriptor->PhysicalConnectionList.Flink;
+
+    do
+    {
+        ConEntry = (PPHYSICAL_CONNECTION_ENTRY)CONTAINING_RECORD(Entry, PHYSICAL_CONNECTION_ENTRY, Entry);
+
+        if (ConEntry->FromPin == Pin->PinId)
+        {
+            Connection = (PKSPIN_PHYSICALCONNECTION)Data;
+            DPRINT("FoundEntry %S Size %u\n", ConEntry->Connection.SymbolicLinkName, ConEntry->Connection.Size);
+            IoStatus->Information = ConEntry->Connection.Size;
+
+            if (!DataLength)
+            {
+                IoStatus->Information = ConEntry->Connection.Size;
+                return STATUS_MORE_ENTRIES;
+            }
+
+            if (DataLength < ConEntry->Connection.Size)
+            {
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            RtlMoveMemory(Data, &ConEntry->Connection, ConEntry->Connection.Size);
+            return STATUS_SUCCESS;
+       }
+
+        // move to next item
+        Entry = Entry->Flink;
+    }while(Entry != &Descriptor->PhysicalConnectionList);
+
+    IoStatus->Information = 0;
+    return STATUS_NOT_FOUND;
+}
 
 NTSTATUS
 NTAPI
@@ -188,6 +253,8 @@ PinPropertyHandler(
             Status = HandleDataIntersection(&Irp->IoStatus, Request, Data, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Descriptor, SubDevice);
             break;
         case KSPROPERTY_PIN_PHYSICALCONNECTION:
+            Status = HandlePhysicalConnection(&Irp->IoStatus, Request, IoStack->Parameters.DeviceIoControl.InputBufferLength, Data, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Descriptor);
+            break;
         case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
             UNIMPLEMENTED
             Status = STATUS_NOT_IMPLEMENTED;

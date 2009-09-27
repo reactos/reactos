@@ -81,107 +81,8 @@ UnRegisterConnection(
     IN PUNICODE_STRING ToString,
     IN ULONG ToPin)
 {
-    PLIST_ENTRY Entry;
-    PPHYSICAL_CONNECTION Connection;
-    PPCLASS_DEVICE_EXTENSION DeviceExt;
-    NTSTATUS Status;
-    ISubdevice * FromSubDevice = NULL;
-    ISubdevice * ToSubDevice = NULL;
-    ULONG bFound;
-
-    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    if (FromUnknown)
-    {
-        // get our private interface
-        Status = FromUnknown->QueryInterface(IID_ISubdevice, (PVOID*)&FromSubDevice);
-        if (!NT_SUCCESS(Status))
-            return STATUS_INVALID_PARAMETER;
-    }
-
-    if (ToUnknown)
-    {
-        Status = ToUnknown->QueryInterface(IID_ISubdevice, (PVOID*)&ToSubDevice);
-        if (!NT_SUCCESS(Status))
-            goto cleanup;
-    }
-
-
-    Entry = DeviceExt->PhysicalConnectionList.Flink;
-    bFound = FALSE;
-    // loop physical connection list
-    while(Entry != &DeviceExt->PhysicalConnectionList)
-    {
-        Connection = (PPHYSICAL_CONNECTION)CONTAINING_RECORD(Entry, PHYSICAL_CONNECTION, Entry);
-         // compare current entry
-        if (Connection->FromPin == FromPin && Connection->ToPin == ToPin &&
-            Connection->FromSubDevice == FromSubDevice && Connection->ToSubDevice == ToSubDevice)
-        {
-            if (FromString && Connection->FromUnicodeString.Buffer)
-            {
-                if (!RtlCompareUnicodeString(FromString, &Connection->FromUnicodeString, TRUE))
-                {
-                    // UnregisterPhysicalConnectionFromExternal
-                    bFound = TRUE;
-                    break;
-                }
-            }
-            else if (ToString && Connection->ToUnicodeString.Buffer)
-            {
-                if (!RtlCompareUnicodeString(ToString, &Connection->ToUnicodeString, TRUE))
-                {
-                    // UnregisterPhysicalConnectionToExternal
-                    bFound = TRUE;
-                    break;
-                }
-            }
-            else
-            {
-                // UnregisterPhysicalConnection
-                bFound = TRUE;
-                break;
-            }
-        }
-        Entry = Entry->Flink;
-    }
-
-    if (!bFound)
-    {
-         // not found
-         Status = STATUS_NOT_FOUND;
-         goto cleanup;
-    }
-
-    // remove list entry
-    RemoveEntryList(&Connection->Entry);
-
-    // release resources
-    if (Connection->FromSubDevice)
-        Connection->FromSubDevice->Release();
-
-
-    if (Connection->ToSubDevice)
-        Connection->ToSubDevice->Release();
-
-    if (Connection->FromUnicodeString.Buffer)
-        RtlFreeUnicodeString(&Connection->FromUnicodeString);
-
-    if (Connection->ToUnicodeString.Buffer)
-        RtlFreeUnicodeString(&Connection->ToUnicodeString);
-
-    FreeItem(Connection, TAG_PORTCLASS);
-    Status = STATUS_SUCCESS;
-
-cleanup:
-
-    if (FromSubDevice)
-        FromSubDevice->Release();
-
-    if (ToSubDevice)
-        ToSubDevice->Release();
-
-    return Status;
-
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -255,67 +156,100 @@ RegisterConnection(
     IN PUNICODE_STRING ToString,
     IN ULONG ToPin)
 {
-    PHYSICAL_CONNECTION *NewConnection;
-    PPCLASS_DEVICE_EXTENSION DeviceExt;
+    PSUBDEVICE_DESCRIPTOR FromSubDeviceDescriptor, ToSubDeviceDescriptor;
+    PSYMBOLICLINK_ENTRY SymEntry;
+    ISubdevice * FromSubDevice = NULL, *ToSubDevice = NULL;
     NTSTATUS Status;
-
-    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    NewConnection = (PPHYSICAL_CONNECTION)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION), TAG_PORTCLASS);
-    if (!NewConnection)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
+    PPHYSICAL_CONNECTION_ENTRY FromEntry = NULL, ToEntry = NULL;
 
     if (FromUnknown)
     {
-        Status = FromUnknown->QueryInterface(IID_ISubdevice, (PVOID*)&NewConnection->FromSubDevice);
+        Status = FromUnknown->QueryInterface(IID_ISubdevice, (PVOID*)&FromSubDevice);
         if (!NT_SUCCESS(Status))
             goto cleanup;
-    }
-    else
-    {
-        if (!RtlCreateUnicodeString(&NewConnection->FromUnicodeString, (PCWSTR)FromString))
+
+        Status = FromSubDevice->GetDescriptor(&FromSubDeviceDescriptor);
+        if (!NT_SUCCESS(Status))
+            goto cleanup;
+
+        if (IsListEmpty(&FromSubDeviceDescriptor->SymbolicLinkList))
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            Status = STATUS_UNSUCCESSFUL;
             goto cleanup;
         }
+
+        SymEntry = (PSYMBOLICLINK_ENTRY)CONTAINING_RECORD(FromSubDeviceDescriptor->SymbolicLinkList.Flink, SYMBOLICLINK_ENTRY, Entry);
+        FromString = &SymEntry->SymbolicLink;
     }
+
 
     if (ToUnknown)
     {
-        Status = ToUnknown->QueryInterface(IID_ISubdevice, (PVOID*)&NewConnection->ToSubDevice);
+        Status = ToUnknown->QueryInterface(IID_ISubdevice, (PVOID*)&ToSubDevice);
         if (!NT_SUCCESS(Status))
             goto cleanup;
-    }
-    else
-    {
-        if (!RtlCreateUnicodeString(&NewConnection->ToUnicodeString, (PCWSTR)ToString))
+
+        Status = ToSubDevice->GetDescriptor(&ToSubDeviceDescriptor);
+        if (!NT_SUCCESS(Status))
+            goto cleanup;
+
+        if (IsListEmpty(&ToSubDeviceDescriptor->SymbolicLinkList))
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            Status = STATUS_UNSUCCESSFUL;
             goto cleanup;
         }
+
+
+        SymEntry = (PSYMBOLICLINK_ENTRY)CONTAINING_RECORD(ToSubDeviceDescriptor->SymbolicLinkList.Flink, SYMBOLICLINK_ENTRY, Entry);
+        ToString = &SymEntry->SymbolicLink;
+
     }
 
-    InsertTailList(&DeviceExt->PhysicalConnectionList, &NewConnection->Entry);
+    FromEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + ToString->MaximumLength, TAG_PORTCLASS);
+    if (!FromEntry)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    ToEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + FromString->MaximumLength, TAG_PORTCLASS);
+    if (!ToEntry)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    FromEntry->FromPin = FromPin;
+    FromEntry->Connection.Pin = ToPin;
+    FromEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + ToString->MaximumLength;
+    RtlMoveMemory(&FromEntry->Connection.SymbolicLinkName, ToString->Buffer, ToString->MaximumLength);
+    FromEntry->Connection.SymbolicLinkName[ToString->Length / sizeof(WCHAR)] = L'\0';
+
+    ToEntry->FromPin = ToPin;
+    ToEntry->Connection.Pin = FromPin;
+    ToEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + FromString->MaximumLength;
+    RtlMoveMemory(&ToEntry->Connection.SymbolicLinkName, FromString->Buffer, FromString->MaximumLength);
+    ToEntry->Connection.SymbolicLinkName[FromString->Length /  sizeof(WCHAR)] = L'\0';
+
+
+    InsertTailList(&FromSubDeviceDescriptor->PhysicalConnectionList, &FromEntry->Entry);
+    InsertTailList(&ToSubDeviceDescriptor->PhysicalConnectionList, &ToEntry->Entry);
+
     return STATUS_SUCCESS;
 
 cleanup:
 
-    if (NewConnection->FromSubDevice)
-        NewConnection->FromSubDevice->Release();
+    if (FromSubDevice)
+        FromSubDevice->Release();
 
-    if (NewConnection->ToSubDevice)
-        NewConnection->ToSubDevice->Release();
+    if (ToSubDevice)
+        ToSubDevice->Release();
 
-    if (NewConnection->FromUnicodeString.Buffer)
-        RtlFreeUnicodeString(&NewConnection->FromUnicodeString);
+    if (FromEntry)
+        FreeItem(FromEntry, TAG_PORTCLASS);
 
-    if (NewConnection->ToUnicodeString.Buffer)
-        RtlFreeUnicodeString(&NewConnection->ToUnicodeString);
-
-     FreeItem(NewConnection, TAG_PORTCLASS);
+    if (ToEntry)
+        FreeItem(ToEntry, TAG_PORTCLASS);
 
     return Status;
 }

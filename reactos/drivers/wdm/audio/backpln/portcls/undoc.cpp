@@ -165,6 +165,10 @@ PcCreateSubdeviceDescriptor(
     if (!Descriptor)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    // initialize physical / symbolic link connection list 
+    InitializeListHead(&Descriptor->SymbolicLinkList);
+    InitializeListHead(&Descriptor->PhysicalConnectionList);
+
     Descriptor->Interfaces = (GUID*)AllocateItem(NonPagedPool, sizeof(GUID) * InterfaceCount, TAG_PORTCLASS);
     if (!Descriptor->Interfaces)
         goto cleanup;

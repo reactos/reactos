@@ -135,10 +135,6 @@ PcAddAdapterDevice(
     portcls_ext->PhysicalDeviceObject = PhysicalDeviceObject;
     // set up the start device function
     portcls_ext->StartDevice = StartDevice;
-    // prepare the subdevice list
-    InitializeListHead(&portcls_ext->SubDeviceList);
-    // prepare the physical connection list
-    InitializeListHead(&portcls_ext->PhysicalConnectionList);
     // initialize timer lock
     KeInitializeSpinLock(&portcls_ext->TimerListLock);
     // initialize timer list
@@ -214,10 +210,9 @@ PcRegisterSubdevice(
     NTSTATUS Status;
     ISubdevice *SubDevice;
     UNICODE_STRING SymbolicLinkName;
-    SUBDEVICE_DESCRIPTOR * SubDeviceDescriptor;
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
     ULONG Index;
     UNICODE_STRING RefName;
-    PSUBDEVICE_ENTRY Entry;
     PSYMBOLICLINK_ENTRY SymEntry;
 
     DPRINT1("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
@@ -259,36 +254,19 @@ PcRegisterSubdevice(
         return STATUS_UNSUCCESSFUL;
     }
 
-    // allocate subdevice entry
-    Entry = (PSUBDEVICE_ENTRY)AllocateItem(NonPagedPool, sizeof(SUBDEVICE_ENTRY), TAG_PORTCLASS);
-    if (!Entry)
-    {
-        // Insufficient memory
-        SubDevice->Release();
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
     // add an create item to the device header
     Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PcCreateItemDispatch, (PVOID)SubDevice, Name, NULL);
     if (!NT_SUCCESS(Status))
     {
         // failed to attach
         SubDevice->Release();
-        FreeItem(Entry, TAG_PORTCLASS);
         DPRINT1("KsAddObjectCreateItemToDeviceHeader failed with %x\n", Status);
         return Status;
     }
 
     // initialize reference string
     RtlInitUnicodeString(&RefName, Name);
-
-    // initialize subdevice entry
-    Entry->SubDevice = SubDevice;
-    RtlInitUnicodeString(&Entry->Name, Name);
-    InitializeListHead(&Entry->SymbolicLinkList);
-
-    // store subdevice entry
-    InsertTailList(&DeviceExt->SubDeviceList, &Entry->Entry);
+    RtlInitUnicodeString(&SubDeviceDescriptor->RefString, Name);
 
     for(Index = 0; Index < SubDeviceDescriptor->InterfaceCount; Index++)
     {
@@ -311,7 +289,7 @@ PcRegisterSubdevice(
                 // initialize symbolic link item
                 RtlInitUnicodeString(&SymEntry->SymbolicLink, SymbolicLinkName.Buffer);
                 // store item
-                InsertTailList(&Entry->SymbolicLinkList, &SymEntry->Entry);
+                InsertTailList(&SubDeviceDescriptor->SymbolicLinkList, &SymEntry->Entry);
             }
             else
             {

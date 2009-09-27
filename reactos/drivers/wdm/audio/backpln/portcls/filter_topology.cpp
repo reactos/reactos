@@ -91,6 +91,17 @@ CPortFilterTopology::DeviceIoControl(
     PIO_STACK_LOCATION IoStack;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
+    {
+        DPRINT1("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
+        
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
     PC_ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
 
     return PcPropertyHandler(Irp, m_Descriptor);

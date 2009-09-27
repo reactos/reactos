@@ -66,10 +66,9 @@ CUnregisterSubdevice::UnregisterSubdevice(
 {
     PPCLASS_DEVICE_EXTENSION DeviceExtension;
     PLIST_ENTRY Entry;
-    PSUBDEVICE_ENTRY SubDeviceEntry;
     PSYMBOLICLINK_ENTRY SymLinkEntry;
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
     ISubdevice *SubDevice;
-    ULONG Found;
     ULONG Index;
     NTSTATUS Status;
 
@@ -93,32 +92,18 @@ CUnregisterSubdevice::UnregisterSubdevice(
         return STATUS_INVALID_PARAMETER;
     }
 
-    Entry = DeviceExtension->SubDeviceList.Flink;
-    Found = FALSE;
-    // loop subdevice entry list and search for the subdevice
-    while(Entry != &DeviceExtension->SubDeviceList)
+    Status = SubDevice->GetDescriptor(&SubDeviceDescriptor);
+    if (!NT_SUCCESS(Status))
     {
-        SubDeviceEntry = (PSUBDEVICE_ENTRY)CONTAINING_RECORD(Entry, SUBDEVICE_ENTRY, Entry);
-        if (SubDeviceEntry->SubDevice == SubDevice)
-        {
-            Found = TRUE;
-            break;
-        }
-        Entry = Entry->Flink;
+        DPRINT1("Failed to retrieve subdevice descriptor %x\n", Status);
+        // the provided port driver doesnt support ISubdevice
+        return STATUS_INVALID_PARAMETER;
     }
-    // release the subdevice
-    SubDevice->Release();
-
-    if (!Found)
-        return STATUS_NOT_FOUND;
-
-    // remove subdevice entry
-    RemoveEntryList(&SubDeviceEntry->Entry);
 
     // loop our create items and disable the create handler
     for(Index = 0; Index < DeviceExtension->MaxSubDevices; Index++)
     {
-        if (!RtlCompareUnicodeString(&SubDeviceEntry->Name, &DeviceExtension->CreateItems[Index].ObjectClass, TRUE))
+        if (!RtlCompareUnicodeString(&SubDeviceDescriptor->RefString, &DeviceExtension->CreateItems[Index].ObjectClass, TRUE))
         {
             DeviceExtension->CreateItems[Index].Create = NULL;
             RtlInitUnicodeString(&DeviceExtension->CreateItems[Index].ObjectClass, NULL);
@@ -127,10 +112,10 @@ CUnregisterSubdevice::UnregisterSubdevice(
     }
 
     // now unregister device interfaces
-    while(!IsListEmpty(&SubDeviceEntry->SymbolicLinkList))
+    while(!IsListEmpty(&SubDeviceDescriptor->SymbolicLinkList))
     {
         // remove entry
-        Entry = RemoveHeadList(&SubDeviceEntry->SymbolicLinkList);
+        Entry = RemoveHeadList(&SubDeviceDescriptor->SymbolicLinkList);
         // get symlink entry
         SymLinkEntry = (PSYMBOLICLINK_ENTRY)CONTAINING_RECORD(Entry, SYMBOLICLINK_ENTRY, Entry);
 
@@ -141,9 +126,6 @@ CUnregisterSubdevice::UnregisterSubdevice(
         // free sym entry
         FreeItem(SymLinkEntry, TAG_PORTCLASS);
     }
-
-    // free subdevice entry
-    ExFreePool(SubDeviceEntry);
 
     return STATUS_SUCCESS;
 }
