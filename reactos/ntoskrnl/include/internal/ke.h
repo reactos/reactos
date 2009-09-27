@@ -276,8 +276,11 @@ KiSelectNextThread(
 VOID
 NTAPI
 CPUID(
-    OUT ULONG CpuInfo[4],
-    IN ULONG InfoType
+    IN ULONG InfoType,
+    OUT PULONG CpuInfoEax,
+    OUT PULONG CpuInfoEbx,
+    OUT PULONG CpuInfoEcx,
+    OUT PULONG CpuInfoEdx
 );
 
 BOOLEAN
@@ -478,6 +481,16 @@ KeInitThread(
     IN PCONTEXT Context,
     IN PVOID Teb,
     IN PKPROCESS Process
+);
+
+VOID
+NTAPI
+KiInitializeContextThread(
+    PKTHREAD Thread,
+    PKSYSTEM_ROUTINE SystemRoutine,
+    PKSTART_ROUTINE StartRoutine,
+    PVOID StartContext,
+    PCONTEXT Context
 );
 
 VOID

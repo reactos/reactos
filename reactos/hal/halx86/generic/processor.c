@@ -70,7 +70,7 @@ HalProcessorIdle(VOID)
 {
     /* Enable interrupts and halt the processor */
     _enable();
-    Ke386HaltProcessor();
+    __halt();
 }
 
 /*

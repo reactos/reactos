@@ -238,7 +238,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     HANDLE KeyHandle, BiosHandle, SystemHandle, FpuHandle, SectionHandle;
     CONFIGURATION_COMPONENT_DATA ConfigData;
     CHAR Buffer[128];
-    ULONG ExtendedId, CpuInfo[4];
+    ULONG ExtendedId, Dummy;
     PKPRCB Prcb;
     USHORT IndexTable[MaximumType + 1] = {0};
     ANSI_STRING TempString;
@@ -428,8 +428,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 else
                 {
                     /* Check if we have extended CPUID that supports name ID */
-                    CPUID(CpuInfo, 0x80000000);
-                    ExtendedId = CpuInfo[0];
+                    CPUID(0x80000000, &ExtendedId, &Dummy, &Dummy, &Dummy);
                     if (ExtendedId >= 0x80000004)
                     {
                         /* Do all the CPUIDs required to get the full name */
@@ -437,8 +436,11 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                         for (ExtendedId = 2; ExtendedId <= 4; ExtendedId++)
                         {
                             /* Do the CPUID and save the name string */
-                            CPUID((PULONG)PartialString,
-                                  0x80000000 | ExtendedId);
+                            CPUID(0x80000000 | ExtendedId,
+                                  (PULONG)PartialString,
+                                  (PULONG)PartialString + 1,
+                                  (PULONG)PartialString + 2,
+                                  (PULONG)PartialString + 3);
 
                             /* Go to the next name string */
                             PartialString += 16;

@@ -648,8 +648,8 @@ KdbpCmdRegs(
     else if (Argv[0][0] == 'c') /* cregs */
     {
         ULONG Cr0, Cr2, Cr3, Cr4;
-        KDESCRIPTOR Gdtr, Ldtr, Idtr;
-        ULONG Tr;
+        KDESCRIPTOR Gdtr, Idtr;
+        USHORT Ldtr;
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                            " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
@@ -666,11 +666,8 @@ KdbpCmdRegs(
 
         /* Get descriptor table regs */
         Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
-        Ke386GetLocalDescriptorTable(&Ldtr.Limit);
+        Ldtr = Ke386GetLocalDescriptorTable();
         __sidt(&Idtr.Limit);
-
-        /* Get the task register */
-        Ke386GetTr((PUSHORT)&Tr);
 
         /* Display the control registers */
         KdbpPrint("CR0  0x%08x ", Cr0);
@@ -700,7 +697,7 @@ KdbpCmdRegs(
 
         /* Display the descriptor table regs */
         KdbpPrint("\nGDTR  Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
-        KdbpPrint("LDTR  Base 0x%08x  Size 0x%04x\n", Ldtr.Base, Ldtr.Limit);
+        KdbpPrint("LDTR  0x%04x\n", Ldtr);
         KdbpPrint("IDTR  Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
     }
     else if (Argv[0][0] == 's') /* sregs */
@@ -1619,7 +1616,8 @@ KdbpCmdGdtLdtIdt(
             ASSERT(Argv[0][0] == 'l');
 
             /* Read LDTR */
-            Ke386GetLocalDescriptorTable(&Reg.Limit);
+            Reg.Limit = Ke386GetLocalDescriptorTable();
+            Reg.Base = 0;
             i = 0;
             ul = 1 << 2;
         }

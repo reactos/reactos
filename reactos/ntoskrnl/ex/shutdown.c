@@ -14,26 +14,30 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID NTAPI
+VOID
+NTAPI
 KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
-			  IN PVOID DeferredContext,
-			  IN PVOID SystemArgument1,
-			  IN PVOID SystemArgument2)
+                          IN PVOID DeferredContext,
+                          IN PVOID SystemArgument1,
+                          IN PVOID SystemArgument2)
 {
-   KIRQL OldIrql;
-   if (DeferredContext)
-     {
-       ExFreePool(DeferredContext);
-     }
-   while (TRUE)
-     {
-       KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
-#if defined(_M_IX86)
-       Ke386HaltProcessor();
+    KIRQL OldIrql;
+    if (DeferredContext)
+    {
+        ExFreePool(DeferredContext);
+    }
+
+    while (TRUE)
+    {
+        KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
+#if defined(_M_IX86) || defined(_M_AMD64)
+        __halt();
+#elif defined(_M_ARM)
+        KeArmHaltProcessor();
 #else
-       HalProcessorIdle();
+        HalProcessorIdle();
 #endif
-     }
+    }
 }
 
 VOID NTAPI

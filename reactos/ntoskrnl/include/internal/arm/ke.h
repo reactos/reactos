@@ -7,18 +7,6 @@
 #define PCR_ENTRY            0
 #define PDR_ENTRY            2
 
-#define KeArchHaltProcessor() KeArmHaltProcessor()
-
-VOID
-NTAPI
-KeArmInitThreadWithContext(
-    IN PKTHREAD Thread,
-    IN PKSYSTEM_ROUTINE SystemRoutine,
-    IN PKSTART_ROUTINE StartRoutine,
-    IN PVOID StartContext,
-    IN PCONTEXT Context
-);
-
 VOID
 KiPassiveRelease(
     VOID
@@ -44,7 +32,6 @@ KeFlushTb(
     VOID
 );
 
-#define KeArchInitThreadWithContext KeArmInitThreadWithContext
 #define KiSystemStartupReal KiSystemStartup
 
 #define KiGetPreviousMode(tf) \

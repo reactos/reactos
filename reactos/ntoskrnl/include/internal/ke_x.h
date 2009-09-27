@@ -392,7 +392,7 @@ KiRundownThread(IN PKTHREAD Thread)
     {
         /* Clear it */
         KeGetCurrentPrcb()->NpxThread = NULL;
-        KeArchFnInit();
+        Ke386FnInit();
     }
 #endif
 }

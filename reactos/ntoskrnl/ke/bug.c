@@ -552,7 +552,13 @@ NTAPI
 KiBugCheckDebugBreak(IN ULONG StatusCode)
 {
     /* If KDBG isn't connected, freeze the CPU, otherwise, break */
-    if (KdDebuggerNotPresent) for (;;) KeArchHaltProcessor();
+#if defined(_M_IX86) || defined(_M_AMD64)
+    if (KdDebuggerNotPresent) for (;;) __halt();
+#elif defined(_M_ARM)
+    if (KdDebuggerNotPresent) for (;;) KeArmHaltProcessor();
+#else
+#error
+#endif
     DbgBreakPointWithStatus(StatusCode);
     while (TRUE);
 }
@@ -1176,7 +1182,13 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         else if (KeBugCheckOwnerRecursionCount > 2)
         {
             /* Halt the CPU */
-            for (;;) KeArchHaltProcessor();
+#if defined(_M_IX86) || defined(_M_AMD64)
+            for (;;) __halt();
+#elif defined(_M_ARM)
+            for (;;) KeArmHaltProcessor();
+#else
+#error
+#endif
         }
     }
 

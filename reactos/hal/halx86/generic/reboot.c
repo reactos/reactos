@@ -67,7 +67,7 @@ HalpReboot(VOID)
     HalpWriteResetCommand();
 
     /* Halt the CPU */
-    Ke386HaltProcessor();
+    __halt();
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

@@ -1,12 +1,6 @@
 #ifndef _INTRIN_INTERNAL_
 #define _INTRIN_INTERNAL_
 
-#ifdef CONFIG_SMP
-#define LOCK "lock ; "
-#else
-#define LOCK ""
-#endif
-
 #if defined(__GNUC__)
 
 #define Ke386SetGlobalDescriptorTable(X) \
@@ -20,11 +14,17 @@
     : /* no input */ \
     : "memory");
 
-#define Ke386GetLocalDescriptorTable(X) \
-    __asm__("sldt %0\n\t" \
-    : "=m" (*X) \
-    : /* no input */ \
+FORCEINLINE
+USHORT
+Ke386GetLocalDescriptorTable()
+{
+    USHORT Ldt;
+    __asm__("sldt %0\n\t"
+    : "=m" (Ldt)
+    : /* no input */
     : "memory");
+    return Ldt;
+}
 
 #define Ke386SetLocalDescriptorTable(X) \
     __asm__("lldt %w0\n\t" \
@@ -33,19 +33,23 @@
 
 #define Ke386SetTr(X)                   __asm__ __volatile__("ltr %%ax" : :"a" (X));
 
-#define Ke386GetTr(X) \
-    __asm__("str %0\n\t" \
-    : "=m" (*X));
+FORCEINLINE
+USHORT
+Ke386GetTr(VOID)
+{
+    USHORT Tr;
+    __asm__("str %0\n\t"
+    : "=m" (Tr));
+    return Tr;
+}
 
 #define _Ke386GetSeg(N)           ({ \
                                      unsigned int __d; \
                                      __asm__("movl %%" #N ",%0\n\t" :"=r" (__d)); \
                                      __d; \
-                                 })
+                                  })
 
 #define _Ke386SetSeg(N,X)         __asm__ __volatile__("movl %0,%%" #N : :"r" (X));
-
-#define Ke386HaltProcessor()        __asm__("hlt\n\t");
 
 #define Ke386FnInit()               __asm__("fninit\n\t");
 
@@ -77,13 +81,6 @@ Ke386FnInit(VOID)
 
 FORCEINLINE
 VOID
-Ke386HaltProcessor(VOID)
-{
-    __asm hlt;
-}
-
-FORCEINLINE
-VOID
 Ke386GetGlobalDescriptorTable(OUT PVOID Descriptor)
 {
     __asm sgdt [Descriptor];
@@ -97,12 +94,10 @@ Ke386SetGlobalDescriptorTable(IN PVOID Descriptor)
 }
 
 FORCEINLINE
-VOID
-Ke386GetLocalDescriptorTable(OUT PUSHORT Descriptor)
+USHORT
+Ke386GetLocalDescriptorTable(VOID)
 {
-    USHORT _Descriptor;
-    __asm sldt _Descriptor;
-    *Descriptor = _Descriptor;
+    __asm sldt ax;
 }
 
 FORCEINLINE
@@ -121,11 +116,9 @@ Ke386SetTr(IN USHORT Tr)
 
 FORCEINLINE
 USHORT
-Ke386GetTr(OUT PUSHORT Tr)
+Ke386GetTr(VOID)
 {
-    USHORT _Tr;
-    __asm str _Tr;
-    *Tr = _Tr;
+    __asm str ax;
 }
 
 //
