@@ -97,7 +97,7 @@ static void AddTextButton(HWND hRebarWnd, UINT string, UINT command, UINT id)
                             WS_VISIBLE | WS_CHILD, 5, 5, 100, 15,
                             hRebarWnd, ULongToHandle(command), hInstance, NULL);
 
-    rb.cbSize = sizeof(rb);
+    rb.cbSize = REBARBANDINFOW_V6_SIZE;
     rb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_STYLE | RBBIM_CHILD | RBBIM_IDEALSIZE | RBBIM_ID;
     rb.fStyle = RBBS_NOGRIPPER | RBBS_VARIABLEHEIGHT;
     rb.hwndChild = hButton;
@@ -448,7 +448,7 @@ static void preview_bar_show(HWND hMainWnd, BOOL show)
                                 WS_VISIBLE | WS_CHILD, 0, 0, 0, 0,
                                 hReBar, NULL, NULL, NULL);
 
-        rb.cbSize = sizeof(rb);
+        rb.cbSize = REBARBANDINFOW_V6_SIZE;
         rb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_STYLE | RBBIM_CHILD | RBBIM_IDEALSIZE | RBBIM_ID;
         rb.fStyle = RBBS_NOGRIPPER | RBBS_VARIABLEHEIGHT;
         rb.hwndChild = hStatic;
