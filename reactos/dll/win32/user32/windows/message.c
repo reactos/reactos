@@ -390,7 +390,10 @@ MsgiKMToUMReply(PMSG KMMsg, PMSG UMMsg, LRESULT *Result)
 static BOOL FASTCALL
 MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
 {
+  UNICODE_STRING UnicodeString;
+
   *UnicodeMsg = *AnsiMsg;
+
   switch (AnsiMsg->message)
     {
     case WM_GETTEXT:
@@ -415,7 +418,9 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_ADDFILE:
     case EM_REPLACESEL:
       {
-        goto ConvertLParamString;
+        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
+        UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
+        break;
       }
 
     case LB_ADDSTRING:
@@ -432,7 +437,8 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
         if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & LBS_HASSTRINGS))
           {
-            goto ConvertLParamString;
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
+            UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
           }
         break;
       }
@@ -447,9 +453,6 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
         if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & CBS_HASSTRINGS))
           {
-            UNICODE_STRING UnicodeString;
-
-ConvertLParamString:
             RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
             UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
           }
@@ -459,13 +462,13 @@ ConvertLParamString:
     case WM_NCCREATE:
     case WM_CREATE:
       {
-        UNICODE_STRING UnicodeBuffer;
         struct s
         {
            CREATESTRUCTW cs;    /* new structure */
            LPCWSTR lpszName;    /* allocated Name */
            LPCWSTR lpszClass;   /* allocated Class */
         };
+
         struct s *xs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct s));
         if (!xs)
           {
@@ -474,13 +477,13 @@ ConvertLParamString:
         xs->cs = *(CREATESTRUCTW *)AnsiMsg->lParam;
         if (!IS_INTRESOURCE(xs->cs.lpszName))
           {
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)xs->cs.lpszName);
-            xs->lpszName = xs->cs.lpszName = UnicodeBuffer.Buffer;
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)xs->cs.lpszName);
+            xs->lpszName = xs->cs.lpszName = UnicodeString.Buffer;
           }
         if (!IS_ATOM(xs->cs.lpszClass))
           {
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)xs->cs.lpszClass);
-            xs->lpszClass = xs->cs.lpszClass = UnicodeBuffer.Buffer;
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)xs->cs.lpszClass);
+            xs->lpszClass = xs->cs.lpszClass = UnicodeString.Buffer;
           }
         UnicodeMsg->lParam = (LPARAM)xs;
         break;
@@ -488,7 +491,6 @@ ConvertLParamString:
 
     case WM_MDICREATE:
       {
-        UNICODE_STRING UnicodeBuffer;
         MDICREATESTRUCTW *cs =
             (MDICREATESTRUCTW *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
 
@@ -501,12 +503,12 @@ ConvertLParamString:
 
         if (!IS_ATOM(cs->szClass))
           {
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)cs->szClass);
-            cs->szClass = UnicodeBuffer.Buffer;
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)cs->szClass);
+            cs->szClass = UnicodeString.Buffer;
           }
 
-        RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)cs->szTitle);
-        cs->szTitle = UnicodeBuffer.Buffer;
+        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)cs->szTitle);
+        cs->szTitle = UnicodeString.Buffer;
 
         UnicodeMsg->lParam = (LPARAM)cs;
         break;
@@ -520,6 +522,8 @@ ConvertLParamString:
 static BOOL FASTCALL
 MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
 {
+  UNICODE_STRING UnicodeString;
+
   switch (AnsiMsg->message)
     {
     case WM_GETTEXT:
@@ -537,7 +541,9 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_ADDFILE:
     case EM_REPLACESEL:
       {
-        goto FreeLParamString;
+        RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
+        RtlFreeUnicodeString(&UnicodeString);
+        break;
       }
 
     case LB_ADDSTRING:
@@ -554,7 +560,8 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
         if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & LBS_HASSTRINGS))
           {
-            goto FreeLParamString;
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
+            RtlFreeUnicodeString(&UnicodeString);
           }
         break;
       }
@@ -569,26 +576,22 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
         if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & CBS_HASSTRINGS))
           {
-            UNICODE_STRING UnicodeString;
-
-FreeLParamString:
             RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
             RtlFreeUnicodeString(&UnicodeString);
           }
         break;
       }
 
-
     case WM_NCCREATE:
     case WM_CREATE:
       {
-	UNICODE_STRING UnicodeString;
         struct s
         {
            CREATESTRUCTW cs;	/* new structure */
            LPWSTR lpszName;	/* allocated Name */
            LPWSTR lpszClass;	/* allocated Class */
         };
+
         struct s *xs = (struct s *)UnicodeMsg->lParam;
         if (xs->lpszName)
           {
@@ -601,12 +604,11 @@ FreeLParamString:
             RtlFreeUnicodeString(&UnicodeString);
           }
         HeapFree(GetProcessHeap(), 0, xs);
+        break;
       }
-      break;
 
     case WM_MDICREATE:
       {
-	UNICODE_STRING UnicodeString;
         MDICREATESTRUCTW *cs = (MDICREATESTRUCTW *)UnicodeMsg->lParam;
         RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szTitle);
         RtlFreeUnicodeString(&UnicodeString);
@@ -616,9 +618,10 @@ FreeLParamString:
             RtlFreeUnicodeString(&UnicodeString);
           }
         HeapFree(GetProcessHeap(), 0, cs);
+        break;
       }
-      break;
     }
+
   return(TRUE);
 }
 
@@ -652,6 +655,9 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
 static BOOL FASTCALL
 MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
 {
+  ANSI_STRING AnsiString;
+  UNICODE_STRING UnicodeString;
+
   *AnsiMsg = *UnicodeMsg;
 
   switch(UnicodeMsg->message)
@@ -661,8 +667,6 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
         {
           CREATESTRUCTA* CsA;
           CREATESTRUCTW* CsW;
-          UNICODE_STRING UString;
-          ANSI_STRING AString;
           NTSTATUS Status;
 
           CsW = (CREATESTRUCTW*)(UnicodeMsg->lParam);
@@ -673,26 +677,26 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
             }
           memcpy(CsA, CsW, sizeof(CREATESTRUCTW));
 
-          RtlInitUnicodeString(&UString, CsW->lpszName);
-          Status = RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
+          RtlInitUnicodeString(&UnicodeString, CsW->lpszName);
+          Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
           if (! NT_SUCCESS(Status))
             {
               RtlFreeHeap(GetProcessHeap(), 0, CsA);
               return FALSE;
             }
-          CsA->lpszName = AString.Buffer;
+          CsA->lpszName = AnsiString.Buffer;
           if (HIWORD((ULONG)CsW->lpszClass) != 0)
             {
-              RtlInitUnicodeString(&UString, CsW->lpszClass);
-              Status = RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
+              RtlInitUnicodeString(&UnicodeString, CsW->lpszClass);
+              Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
               if (! NT_SUCCESS(Status))
                 {
-                  RtlInitAnsiString(&AString, CsA->lpszName);
-                  RtlFreeAnsiString(&AString);
+                  RtlInitAnsiString(&AnsiString, CsA->lpszName);
+                  RtlFreeAnsiString(&AnsiString);
                   RtlFreeHeap(GetProcessHeap(), 0, CsA);
                   return FALSE;
                 }
-              CsA->lpszClass = AString.Buffer;
+              CsA->lpszClass = AnsiString.Buffer;
             }
           AnsiMsg->lParam = (LPARAM)CsA;
           break;
@@ -713,8 +717,16 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case LB_DIR:
       case LB_ADDFILE:
         {
-          goto ConvertLParamString;
-	}
+          RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
+          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+                                                        &UnicodeString,
+                                                        TRUE)))
+            {
+              return FALSE;
+            }
+          AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
+          break;
+        }
 
       case LB_ADDSTRING:
       case LB_ADDSTRING_LOWER:
@@ -730,7 +742,14 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
               (dwStyle & LBS_HASSTRINGS))
             {
-              goto ConvertLParamString;
+              RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
+              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+                                                            &UnicodeString,
+                                                            TRUE)))
+                {
+                  return FALSE;
+                }
+              AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
             }
           break;
         }
@@ -745,10 +764,6 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
                (dwStyle & CBS_HASSTRINGS))
             {
-              ANSI_STRING AnsiString;
-              UNICODE_STRING UnicodeString;
-
-ConvertLParamString:
               RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
               if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
                                                             &UnicodeString,
@@ -763,8 +778,6 @@ ConvertLParamString:
 
       case WM_MDICREATE:
         {
-          ANSI_STRING AnsiBuffer;
-          UNICODE_STRING UnicodeString;
           MDICREATESTRUCTA *cs =
               (MDICREATESTRUCTA *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
 
@@ -778,28 +791,28 @@ ConvertLParamString:
           if (!IS_ATOM(cs->szClass))
             {
               RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szClass);
-              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiBuffer,
+              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
                                                             &UnicodeString,
                                                             TRUE)))
                 {
                   return FALSE;
                 }
-              cs->szClass = AnsiBuffer.Buffer;
+              cs->szClass = AnsiString.Buffer;
             }
 
           RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szTitle);
-          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiBuffer,
+          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
                                                         &UnicodeString,
                                                         TRUE)))
             {
               if (!IS_ATOM(cs->szClass))
                 {
-                  RtlInitAnsiString(&AnsiBuffer, cs->szClass);
-                  RtlFreeAnsiString(&AnsiBuffer);
+                  RtlInitAnsiString(&AnsiString, cs->szClass);
+                  RtlFreeAnsiString(&AnsiString);
                 }
               return FALSE;
             }
-          cs->szTitle = AnsiBuffer.Buffer;
+          cs->szTitle = AnsiString.Buffer;
 
           AnsiMsg->lParam = (LPARAM)cs;
           break;
@@ -813,6 +826,8 @@ ConvertLParamString:
 static BOOL FASTCALL
 MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
 {
+  ANSI_STRING AnsiString;
+
   switch(UnicodeMsg->message)
     {
       case WM_GETTEXT:
@@ -822,21 +837,22 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
         }
       case WM_SETTEXT:
         {
-          goto FreeLParamString;
+          RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
+          RtlFreeAnsiString(&AnsiString);
+          break;
         }
       case WM_CREATE:
       case WM_NCCREATE:
         {
           CREATESTRUCTA* Cs;
-          ANSI_STRING AString;
 
           Cs = (CREATESTRUCTA*) AnsiMsg->lParam;
-          RtlInitAnsiString(&AString, Cs->lpszName);
-          RtlFreeAnsiString(&AString);
+          RtlInitAnsiString(&AnsiString, Cs->lpszName);
+          RtlFreeAnsiString(&AnsiString);
           if (HIWORD((ULONG)Cs->lpszClass) != 0)
             {
-              RtlInitAnsiString(&AString, Cs->lpszClass);
-              RtlFreeAnsiString(&AString);
+              RtlInitAnsiString(&AnsiString, Cs->lpszClass);
+              RtlFreeAnsiString(&AnsiString);
             }
           RtlFreeHeap(GetProcessHeap(), 0, Cs);
           break;
@@ -856,7 +872,8 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
               (dwStyle & LBS_HASSTRINGS))
             {
-              goto FreeLParamString;
+              RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
+              RtlFreeAnsiString(&AnsiString);
             }
           break;
         }
@@ -871,18 +888,14 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
                (dwStyle & CBS_HASSTRINGS))
             {
-              ANSI_STRING AString;
-
-FreeLParamString:
-              RtlInitAnsiString(&AString, (PSTR) AnsiMsg->lParam);
-              RtlFreeAnsiString(&AString);
+              RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
+              RtlFreeAnsiString(&AnsiString);
             }
           break;
         }
 
       case WM_MDICREATE:
         {
-          ANSI_STRING AnsiString;
           MDICREATESTRUCTA *cs = (MDICREATESTRUCTA *)AnsiMsg->lParam;
           RtlInitAnsiString(&AnsiString, (PCSTR)cs->szTitle);
           RtlFreeAnsiString(&AnsiString);
