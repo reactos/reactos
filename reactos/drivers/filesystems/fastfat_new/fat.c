@@ -445,7 +445,8 @@ FatiInitializeVcb(PVCB Vcb)
 }
 
 NTSTATUS
-FatInitializeVcb(IN PVCB Vcb,
+FatInitializeVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                 IN PVCB Vcb,
                  IN PDEVICE_OBJECT TargetDeviceObject,
                  IN PVPB Vpb)
 {
@@ -533,8 +534,11 @@ FatInitializeVcb(IN PVCB Vcb,
     /* Call helper function */
     FatiInitializeVcb(Vcb);
 
-    /* Add this Vcb to grobal Vcb list. */
+    /* Add this Vcb to global Vcb list */
+    (VOID)FatAcquireExclusiveGlobal(IrpContext);
     InsertTailList(&FatGlobalData.VcbListHead, &Vcb->VcbLinks);
+    FatReleaseGlobal(IrpContext);
+
     return STATUS_SUCCESS;
 
 FatInitializeVcbCleanup:

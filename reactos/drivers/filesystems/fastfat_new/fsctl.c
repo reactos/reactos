@@ -121,7 +121,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     Vpb->DeviceObject = (PDEVICE_OBJECT)VolumeDevice;
 
     /* Initialize VCB for this volume */
-    Status = FatInitializeVcb(&VolumeDevice->Vcb, TargetDeviceObject, Vpb);
+    Status = FatInitializeVcb(IrpContext, &VolumeDevice->Vcb, TargetDeviceObject, Vpb);
     if (!NT_SUCCESS(Status)) goto FatMountVolumeCleanup;
 
     /* Keep trace of media changes */

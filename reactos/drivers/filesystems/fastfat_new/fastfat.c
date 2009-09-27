@@ -108,6 +108,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     /* Initialize synchronization resource for the global data */
     ExInitializeResourceLite(&FatGlobalData.Resource);
 
+    /* Initialize global VCB list */
+    InitializeListHead(&FatGlobalData.VcbListHead);
+
     /* Register and reference our filesystem */
     IoRegisterFileSystem(DeviceObject);
     ObReferenceObject(DeviceObject);

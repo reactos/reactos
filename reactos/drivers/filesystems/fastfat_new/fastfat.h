@@ -13,6 +13,27 @@
 #define TAG_FCB  'BCFV'
 #define TAG_IRP  'PRIV'
 #define TAG_VFAT 'TAFV'
+
+
+/* Global resource acquire/release */
+#define FatAcquireExclusiveGlobal(IrpContext) \
+( \
+    ExAcquireResourceExclusiveLite(&FatGlobalData.Resource, \
+                                   (IrpContext)->Flags & IRPCONTEXT_CANWAIT) \
+)
+
+#define FatAcquireSharedGlobal(IrpContext) \
+( \
+    ExAcquireResourceSharedLite(&FatGlobalData.Resource, \
+                                (IrpContext)->Flags & IRPCONTEXT_CANWAIT) \
+)
+
+#define FatReleaseGlobal(IrpContext) \
+{ \
+    ExReleaseResourceLite(&(FatGlobalData.Resource)); \
+}
+
+
 /*  ------------------------------------------------------  shutdown.c  */
 
 DRIVER_DISPATCH FatShutdown;
@@ -145,6 +166,7 @@ FatPinNextPage(
 
 NTSTATUS
 FatInitializeVcb(
+    IN PFAT_IRP_CONTEXT IrpContext,
     IN PVCB Vcb,
     IN PDEVICE_OBJECT TargetDeviceObject,
     IN PVPB Vpb);
