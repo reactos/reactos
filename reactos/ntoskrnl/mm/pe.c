@@ -159,11 +159,13 @@ static __inline BOOLEAN AlignUp(OUT PULONG AlignedAddress, IN ULONG Address, IN 
 
 
 
+
 //
 // FIXME: All this whitespace is "padding" so the C_ASSERTs aren't on the same lines as asserts in other headers.
 // This is necessary because of the way we define C_ASSERT in a gcc compatible way.
 // This can be removed once we upgrade to gcc 4.3.x or later (which implements __COUNTER__).
 //
+
 
 
 
