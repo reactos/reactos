@@ -43,7 +43,7 @@
 #include <locale.h>
 #include <time.h>
 
-#include <shellapi.h>   /* for ShellExecute() */
+#include <shellapi.h>   /* for ShellExecuteW() */
 #include <shlobj.h>     /* for SHFormatDrive() */
 
 #ifndef _NO_EXTENSIONS
@@ -128,11 +128,11 @@ typedef struct
   HWND      hdrivebar;
   HFONT     hfont;
 
-  TCHAR     num_sep;
+  WCHAR     num_sep;
   SIZE      spaceSize;
   HIMAGELIST himl;
 
-  TCHAR     drives[BUFFER_LEN];
+  WCHAR     drives[BUFFER_LEN];
   BOOL      prescan_node;   /*TODO*/
   BOOL      saveSettings;
   
@@ -145,18 +145,4 @@ typedef struct
 
 extern WINEFILE_GLOBALS Globals;
 
-#ifdef __WINE__
-
-#ifdef UNICODE
 extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
-#define _tsplitpath _wsplitpath
-#else
-extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
-#define _tsplitpath _splitpath
-#endif
-
-#else
-
-#include <tchar.h>	/* for _tsplitpath() */
-
-#endif

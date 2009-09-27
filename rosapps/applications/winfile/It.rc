@@ -164,7 +164,7 @@ FONT 8, "MS Shell Dlg"
 
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Select destination"
+CAPTION "Seleziona destinazione"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
@@ -177,6 +177,6 @@ FONT 8, "MS Shell Dlg"
 
 STRINGTABLE
 {
-    IDS_FONT_SEL_DLG_NAME   "Applica le impostazioni dei font"
-    IDS_FONT_SEL_ERROR      "Si è verificato un errore durante la selezione del nuovo font."
+    IDS_FONT_SEL_DLG_NAME   "Applica le impostazioni dei caratteri"
+    IDS_FONT_SEL_ERROR      "Si è verificato un errore durante la selezione del nuovo carattere."
 }
