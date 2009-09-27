@@ -579,6 +579,7 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2829, 8086, 0x00, ATA_SA300, "Intel ICH8M"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 282a, 8086, 0x00, ATA_SA300, "Intel ICH8M"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2850, 8086, 0x00, ATA_UDMA5, "Intel ICH8M"      , 0                                       ),
+
     PCI_DEV_HW_SPEC_BM( 2920, 8086, 0x00, ATA_UDMA5, "Intel ICH9R/DO/DH", 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2921, 8086, 0x00, ATA_UDMA5, "Intel ICH9"       , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2922, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
@@ -587,6 +588,8 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2928, 8086, 0x00, ATA_UDMA5, "Intel ICH9M/M-E"  , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2929, 8086, 0x00, ATA_SA300, "Intel ICH9M/M-E"  , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 292d, 8086, 0x00, ATA_UDMA5, "Intel ICH9M/M-E"  , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 292e, 8086, 0x00, ATA_UDMA5, "Intel ICH9M/M-E"  , 0                                       ),
+
     PCI_DEV_HW_SPEC_BM( 3a00, 8086, 0x00, ATA_UDMA5, "Intel ICH10"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 3a02, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 3a03, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
@@ -595,6 +598,17 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 3a22, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 3a23, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 3a26, 8086, 0x00, ATA_UDMA5, "Intel ICH10"      , 0                                       ),
+
+    PCI_DEV_HW_SPEC_BM( 3b20, 8086, 0x00, ATA_UDMA5, "Intel PCH"        , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 3b21, 8086, 0x00, ATA_UDMA5, "Intel PCH"        , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 3b22, 8086, 0x00, ATA_SA300, "Intel PCH"        , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 3b23, 8086, 0x00, ATA_SA300, "Intel PCH"        , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 3b26, 8086, 0x00, ATA_UDMA5, "Intel PCH"        , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 3b28, 8086, 0x00, ATA_UDMA5, "Intel PCH"        , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 3b29, 8086, 0x00, ATA_SA300, "Intel PCH"        , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 3b2D, 8086, 0x00, ATA_UDMA5, "Intel PCH"        , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 3b2E, 8086, 0x00, ATA_UDMA5, "Intel PCH"        , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 3b2F, 8086, 0x00, ATA_SA300, "Intel PCH"        , UNIATA_SATA | UNIATA_AHCI               ),
 
 //    PCI_DEV_HW_SPEC_BM( 3200, 8086, 0x00, ATA_SA150, "Intel 31244"      , UNIATA_SATA                             ),
 /*    
