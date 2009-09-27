@@ -75,7 +75,7 @@ Beep (DWORD dwFreq, DWORD dwDuration)
 
             /* do an alertable wait if necessary */
             if (NT_SUCCESS(Status) &&
-                (dwFreq != 0x0 || dwDuration != 0x0) && dwDuration != (DWORD)-1)
+                (dwFreq != 0x0 || dwDuration != 0x0) && dwDuration != MAXDWORD)
             {
                 SleepEx(dwDuration,
                         TRUE);

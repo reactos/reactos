@@ -447,9 +447,9 @@ KdbpCmdFilter(
         else
         {
             if (*p == '-')
-                clear = ~0;
+                clear = MAXULONG;
             else
-                set = ~0;
+                set = MAXULONG;
         }
         if (*p == '+' || *p == '-')
             p++;

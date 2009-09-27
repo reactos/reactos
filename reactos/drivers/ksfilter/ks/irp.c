@@ -2078,6 +2078,6 @@ KsGetNodeIdFromIrp(
     IN PIRP Irp)
 {
     UNIMPLEMENTED
-    return (ULONG)-1;
+    return KSFILTER_NODE;
 }
 

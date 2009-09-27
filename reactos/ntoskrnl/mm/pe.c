@@ -16,10 +16,6 @@
 
 #include <reactos/exeformat.h>
 
-#ifndef MAXULONG
-#define MAXULONG ((ULONG)(~1))
-#endif
-
 static ULONG SectionCharacteristicsToProtect[16] =
 {
     PAGE_NOACCESS,          /* 0 = NONE */
@@ -453,7 +449,7 @@ l_ReadHeaderFromFile:
 		if(pioh64OptHeader->ImageBase > MAXULONG_PTR)
 		    DIE(("ImageBase exceeds the address space\n"));
 
-		ImageSectionObject->ImageBase = pioh64OptHeader->ImageBase;
+		ImageSectionObject->ImageBase = (ULONG_PTR)pioh64OptHeader->ImageBase;
 	    }
 
 	    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfImage))

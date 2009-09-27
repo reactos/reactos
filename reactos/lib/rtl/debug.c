@@ -61,7 +61,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Check if we should print it or not */
-    if ((ComponentId != (ULONG)-1) &&
+    if ((ComponentId != MAXULONG) &&
         !(NtQueryDebugFilterState(ComponentId, Level)))
     {
         /* This message is masked */
@@ -96,7 +96,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     _SEH2_END;
 
     /* Check if we went past the buffer */
-    if (Length == (ULONG)-1)
+    if (Length == MAXULONG)
     {
         /* Terminate it if we went over-board */
         Buffer[sizeof(Buffer) - 1] = '\n';

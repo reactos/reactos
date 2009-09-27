@@ -210,7 +210,7 @@ GetNodeTypeIndex(
         }
         Guid++;
     }
-    return (ULONG)-1;
+    return MAXULONG;
 }
 
 ULONG

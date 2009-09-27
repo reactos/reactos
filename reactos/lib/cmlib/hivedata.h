@@ -80,7 +80,7 @@ typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 //
 // Cell Magic Values
 //
-#define HCELL_NIL                                       (ULONG)-1
+#define HCELL_NIL                                       MAXULONG
 #define HCELL_CACHED                                    1
 
 #define HCELL_TYPE_MASK                0x80000000

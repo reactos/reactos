@@ -16,8 +16,8 @@
 
 #undef MAILSLOT_NO_MESSAGE
 #undef MAILSLOT_WAIT_FOREVER
-#define MAILSLOT_NO_MESSAGE	((ULONG)-1)
-#define MAILSLOT_WAIT_FOREVER	((ULONG)-1)
+#define MAILSLOT_NO_MESSAGE   MAXULONG
+#define MAILSLOT_WAIT_FOREVER MAXULONG
 
 
 /* FUNCTIONS *****************************************************************/

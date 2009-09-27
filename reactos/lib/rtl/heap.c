@@ -110,7 +110,7 @@ typedef struct tagARENA_FREE
 /* Max size of the blocks on the free lists */
 static const DWORD HEAP_freeListSizes[HEAP_NB_FREE_LISTS] =
 {
-    0x10, 0x20, 0x80, 0x200, ~0UL
+    0x10, 0x20, 0x80, 0x200, MAXULONG
 };
 
 typedef struct
@@ -1612,7 +1612,7 @@ RtlSizeHeap(
     if (!heapPtr)
     {
         RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_HANDLE );
-        return ~0UL;
+        return MAXULONG;
     }
     flags &= HEAP_NO_SERIALIZE;
     flags |= heapPtr->flags;
@@ -1620,7 +1620,7 @@ RtlSizeHeap(
     if (!HEAP_IsRealArena( heapPtr, HEAP_NO_SERIALIZE, ptr, QUIET ))
     {
         RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_PARAMETER );
-        ret = ~0UL;
+        ret = MAXULONG;
     }
     else
     {

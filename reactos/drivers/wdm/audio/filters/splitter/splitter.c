@@ -133,7 +133,7 @@ AllocatorFraming =
         0,
         {
             0,
-            (ULONG)-1,
+            MAXULONG,
             1
         },
         {
@@ -173,7 +173,7 @@ PinDescriptors[] =
         },
         KSPIN_FLAG_DISPATCH_LEVEL_PROCESSING | KSPIN_FLAG_INITIATE_PROCESSING_ON_EVERY_ARRIVAL |
         KSPIN_FLAG_FRAMES_NOT_REQUIRED_FOR_PROCESSING | KSPIN_FLAG_PROCESS_IF_ANY_IN_RUN_STATE,
-        (ULONG)-1,
+        MAXULONG,
         1,
         NULL, //&AllocatorFraming,
         PinIntersectHandler

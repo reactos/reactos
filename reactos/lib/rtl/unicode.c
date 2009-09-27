@@ -1065,7 +1065,7 @@ RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
     static const WCHAR byterev_control_chars[] = {0x0d00,0x0a00,0x0900,0x2000,0};
     const WCHAR *s = buf;
     int i;
-    unsigned int flags = ~0U, out_flags = 0;
+    unsigned int flags = MAXULONG, out_flags = 0;
 
     if (len < sizeof(WCHAR))
     {

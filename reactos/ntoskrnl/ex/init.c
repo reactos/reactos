@@ -466,7 +466,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Make sure the buffer is a valid string which within the given length */
     if ((NtInitialUserProcessBufferType != REG_SZ) ||
-        ((NtInitialUserProcessBufferLength != (ULONG)-1) &&
+        ((NtInitialUserProcessBufferLength != MAXULONG) &&
          ((NtInitialUserProcessBufferLength < sizeof(WCHAR)) ||
           (NtInitialUserProcessBufferLength >
            sizeof(NtInitialUserProcessBuffer) - sizeof(WCHAR)))))
@@ -1429,7 +1429,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         if (!ExpRealTimeIsUniversal)
         {
             /* Check if we don't have a valid bias */
-            if (ExpLastTimeZoneBias == (ULONG)-1)
+            if (ExpLastTimeZoneBias == MAXULONG)
             {
                 /* Reset */
                 ResetBias = TRUE;

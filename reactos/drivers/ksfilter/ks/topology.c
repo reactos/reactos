@@ -122,7 +122,7 @@ KsValidateTopologyNodeCreateRequest(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    if (NodeCreate->CreateFlags != 0 || (NodeCreate->Node >= Topology->TopologyNodesCount && NodeCreate->Node != (ULONG)-1))
+    if (NodeCreate->CreateFlags != 0 || (NodeCreate->Node >= Topology->TopologyNodesCount && NodeCreate->Node != MAXULONG))
     {
         /* invalid node create */
         FreeItem(NodeCreate);

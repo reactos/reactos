@@ -173,7 +173,7 @@ WdmAudControlOpen(
     }
 
     /* close pin handle which uses same virtual audio device id and pin id */
-    FreeIndex = (ULONG)-1;
+    FreeIndex = MAXULONG;
     for(Index = 0; Index < ClientInfo->NumPins; Index++)
     {
         if (ClientInfo->hPins[Index].FilterId == FilterId && ClientInfo->hPins[Index].PinId == PinId && ClientInfo->hPins[Index].Handle && ClientInfo->hPins[Index].Type == DeviceInfo->DeviceType)
@@ -266,7 +266,7 @@ WdmAudControlOpen(
     {
         PWDMAUD_HANDLE Handels;
 
-        if (FreeIndex != (ULONG)-1)
+        if (FreeIndex != MAXULONG)
         {
             /* re-use a free index */
             ClientInfo->hPins[Index].Handle = PinHandle;
