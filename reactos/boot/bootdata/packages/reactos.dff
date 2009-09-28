@@ -631,6 +631,7 @@ media\inf\layout.inf                                6
 media\inf\machine.inf                               6
 media\inf\msmouse.inf                               6
 media\inf\keyboard.inf                              6
+media\inf\ks.inf                                    6
 media\inf\NET_NIC.inf                               6
 media\inf\netamd.inf                                6
 media\inf\netisa.inf                                6
