@@ -489,6 +489,12 @@ FatInitializeVcb(IN PFAT_IRP_CONTEXT IrpContext,
     Vcb->Header.ValidDataLength.HighPart = MAXLONG;
     Vcb->Header.ValidDataLength.LowPart = MAXULONG;
 
+    /* Set VCB to a good condition */
+    Vcb->Condition = VcbGood;
+
+    /* Initialize VCB's resource */
+    ExInitializeResourceLite(&Vcb->Resource);
+
     /* Initialize CC */
     CcInitializeCacheMap(Vcb->StreamFileObject,
                          (PCC_FILE_SIZES)&Vcb->Header.AllocationSize,

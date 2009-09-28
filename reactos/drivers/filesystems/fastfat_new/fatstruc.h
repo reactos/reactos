@@ -8,6 +8,18 @@ typedef PVOID PBCB;
 
 typedef NTSTATUS (*PFAT_OPERATION_HANDLER) (PFAT_IRP_CONTEXT);
 
+/* Node type stuff */
+typedef CSHORT FAT_NODE_TYPE;
+typedef FAT_NODE_TYPE *PFAT_NODE_TYPE;
+
+#define FatNodeType(Ptr) (*((PFAT_NODE_TYPE)(Ptr)))
+
+/* Node type codes */
+#define FAT_NTC_VCB      (CSHORT) '00VF'
+#define FAT_NTC_FCB      (CSHORT)   'CF'
+#define FAT_NTC_DCB      (CSHORT)   'DF'
+#define FAT_NTC_ROOT_DCB (CSHORT)  'RFD'
+
 typedef struct _FAT_GLOBAL_DATA
 {
     ERESOURCE Resource;
@@ -116,7 +128,14 @@ typedef struct _FAT_METHODS {
     PFAT_SETFAT_VALUE_RUN_ROUTINE SetValueRun;
 } FAT_METHODS, *PFAT_METHODS;
 
-#define FAT_NTC_VCB  (USHORT) '00VF'
+#define VCB_STATE_FLAG_LOCKED 0x01
+
+typedef enum _VCB_CONDITION
+{
+    VcbGood,
+    VcbNotMounted,
+    VcbBad
+} VCB_CONDITION;
 
 /* Volume Control Block */
 typedef struct _VCB
@@ -129,6 +148,9 @@ typedef struct _VCB
     PDEVICE_OBJECT TargetDeviceObject;
     LIST_ENTRY VcbLinks;
     PVPB Vpb;
+    ULONG State;
+    VCB_CONDITION Condition;
+    ERESOURCE Resource;
 
     /* Notifications support */
     PNOTIFY_SYNC NotifySync;
@@ -196,9 +218,6 @@ typedef struct _FCB_NAME_LINK {
     UCHAR Type;
 } FCB_NAME_LINK, *PFCB_NAME_LINK;
 
-#define FAT_NTC_FCB	(USHORT) 'CF'
-#define FAT_NTC_DCB	(USHORT) 'DF'
-
 typedef struct _FCB
 {
     FSRTL_ADVANCED_FCB_HEADER Header;
@@ -225,6 +244,8 @@ typedef struct _FCB
     FCB_NAME_LINK FileName[0x2];
     /* Buffer for the short name */
     WCHAR ShortNameBuffer[0xc];
+    /* Full file name */
+    UNICODE_STRING FullFileName;
     /* File basic info */
     FILE_BASIC_INFORMATION BasicInfo;
     union
@@ -285,6 +306,16 @@ typedef struct _CCB
     UCHAR Flags;
 } CCB, *PCCB;
 
+typedef enum _TYPE_OF_OPEN
+{
+    UnopenedFileObject,
+    UserFileOpen,
+    UserDirectoryOpen,
+    UserVolumeOpen,
+    VirtualVolumeFile,
+    DirectoryFile,
+    EaFile
+} TYPE_OF_OPEN;
 
 #define CCB_SEARCH_RETURN_SINGLE_ENTRY      0x01
 #define CCB_SEARCH_PATTERN_LEGAL_8DOT3      0x02

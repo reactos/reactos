@@ -33,7 +33,9 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     ULONG CreateDisposition;
 
     /* Control blocks */
-    PVCB Vcb;
+    PVCB Vcb, DecodedVcb;
+    PFCB Fcb;
+    PCCB Ccb;
 
     /* IRP data */
     PFILE_OBJECT FileObject;
@@ -48,8 +50,8 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     ULONG EaLength;
 
     /* Misc */
-    //NTSTATUS Status;
-    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+    //IO_STATUS_BLOCK Iosb;
     PIO_STACK_LOCATION IrpSp;
 
     /* Get current IRP stack location */
@@ -75,14 +77,14 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         (IrpSp->FileObject->FileName.Buffer[1] == L'\\') &&
         (IrpSp->FileObject->FileName.Buffer[0] == L'\\'))
     {
-        /* Remove two leading slashes */
+        /* Remove a leading slash */
         IrpSp->FileObject->FileName.Length -= sizeof(WCHAR);
-
         RtlMoveMemory(&IrpSp->FileObject->FileName.Buffer[0],
                       &IrpSp->FileObject->FileName.Buffer[1],
                       IrpSp->FileObject->FileName.Length );
 
-        /* If there are two leading slashes again, exit */
+        /* Check again: if there are still two leading slashes,
+           exit with an error */
         if ((IrpSp->FileObject->FileName.Length > sizeof(WCHAR)) &&
             (IrpSp->FileObject->FileName.Buffer[1] == L'\\') &&
             (IrpSp->FileObject->FileName.Buffer[0] == L'\\'))
@@ -145,6 +147,55 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     OpenDirectory   = (BOOLEAN)(DirectoryFile &&
                                 ((CreateDisposition == FILE_OPEN) ||
                                  (CreateDisposition == FILE_OPEN_IF)));
+
+    /* Validate parameters: directory/nondirectory mismatch and
+       AllocationSize being more than 4GB */
+    if ((DirectoryFile && NonDirectoryFile) ||
+        Irp->Overlay.AllocationSize.HighPart != 0)
+    {
+        FatCompleteRequest(IrpContext, Irp, STATUS_INVALID_PARAMETER);
+
+        DPRINT1("FatiCreate: STATUS_INVALID_PARAMETER\n", 0);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Acquire the VCB lock exclusively */
+    if (!FatAcquireExclusiveVcb(IrpContext, Vcb))
+    {
+        // TODO: Postpone the IRP for later processing
+        ASSERT(FALSE);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    // TODO: Verify the VCB
+
+    /* If VCB is locked, then no file openings are possible */
+    if (Vcb->State & VCB_STATE_FLAG_LOCKED)
+    {
+        DPRINT1("This volume is locked\n");
+        Status = STATUS_ACCESS_DENIED;
+
+        /* Cleanup and return */
+        FatReleaseVcb(IrpContext, Vcb);
+        return Status;
+    }
+
+    // TODO: Check if the volume is write protected and disallow DELETE_ON_CLOSE
+
+    // TODO: Make sure EAs aren't supported on FAT32
+
+    if (FileName.Length == 0)
+    {
+        /* It is a volume open request, check related FO to be sure */
+
+        if (!RelatedFO ||
+            FatDecodeFileObject(RelatedFO, &DecodedVcb, &Fcb, &Ccb) == UserVolumeOpen)
+        {
+            /* It is indeed a volume open request */
+            DPRINT1("Volume open request, not implemented now!\n");
+            UNIMPLEMENTED;
+        }
+    }
 
     //return Iosb.Status;
     return STATUS_SUCCESS;

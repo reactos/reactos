@@ -271,4 +271,99 @@ FatQueueRequest(IN PFAT_IRP_CONTEXT IrpContext,
     ExQueueWorkItem(&IrpContext->WorkQueueItem,
         DelayedWorkQueue);
 }
+
+TYPE_OF_OPEN
+NTAPI
+FatDecodeFileObject(IN PFILE_OBJECT FileObject,
+                    OUT PVCB *Vcb,
+                    OUT PFCB *FcbOrDcb,
+                    OUT PCCB *Ccb)
+{
+    TYPE_OF_OPEN TypeOfOpen = UnopenedFileObject;
+    PVOID FsContext = FileObject->FsContext;
+    PVOID FsContext2 = FileObject->FsContext2;
+
+    /* If FsContext is NULL, then everything is NULL */
+    if (!FsContext)
+    {
+        *Ccb = NULL;
+        *FcbOrDcb = NULL;
+        *Vcb = NULL;
+
+        return TypeOfOpen;
+    }
+
+    /* CCB is always stored in FsContext2 */
+    *Ccb = FsContext2;
+
+    /* Switch according to the NodeType */
+    switch (FatNodeType(FsContext))
+    {
+        /* Volume */
+        case FAT_NTC_VCB:
+            *FcbOrDcb = NULL;
+            *Vcb = FsContext;
+
+            TypeOfOpen = ( *Ccb == NULL ? VirtualVolumeFile : UserVolumeOpen );
+
+            break;
+
+        /* Root or normal directory*/
+        case FAT_NTC_ROOT_DCB:
+        case FAT_NTC_DCB:
+            *FcbOrDcb = FsContext;
+            *Vcb = (*FcbOrDcb)->Vcb;
+
+            TypeOfOpen = (*Ccb == NULL ? DirectoryFile : UserDirectoryOpen);
+
+            DPRINT1("Referencing a directory: %Z\n", &(*FcbOrDcb)->FullFileName);
+            break;
+
+        /* File */
+        case FAT_NTC_FCB:
+            *FcbOrDcb = FsContext;
+            *Vcb = (*FcbOrDcb)->Vcb;
+
+            TypeOfOpen = (*Ccb == NULL ? EaFile : UserFileOpen);
+
+            DPRINT1("Referencing a file: %Z\n", &(*FcbOrDcb)->FullFileName);
+
+            break;
+
+        default:
+            DPRINT1("Unknown node type %x\n", FatNodeType(FsContext));
+            ASSERT(FALSE);
+    }
+
+    return TypeOfOpen;
+}
+
+
+BOOLEAN
+NTAPI
+FatAcquireExclusiveVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PVCB Vcb)
+{
+    /* Acquire VCB's resource if possible */
+    if (ExAcquireResourceExclusiveLite(&Vcb->Resource,
+                                       BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+VOID
+NTAPI
+FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PVCB Vcb)
+{
+    /* Release VCB's resource */
+    ExReleaseResourceLite(&Vcb->Resource);
+}
+
+
 /* EOF */

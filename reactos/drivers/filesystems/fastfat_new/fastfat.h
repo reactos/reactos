@@ -132,6 +132,20 @@ FatCompleteRequest(PFAT_IRP_CONTEXT IrpContext OPTIONAL,
                    PIRP Irp OPTIONAL,
                    NTSTATUS Status);
 
+BOOLEAN NTAPI
+FatAcquireExclusiveVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PVCB Vcb);
+
+VOID NTAPI
+FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PVCB Vcb);
+
+TYPE_OF_OPEN
+NTAPI
+FatDecodeFileObject(IN PFILE_OBJECT FileObject,
+                    OUT PVCB *Vcb,
+                    OUT PFCB *FcbOrDcb,
+                    OUT PCCB *Ccb);
 
 /* ---------------------------------------------------------  lock.c */
 
