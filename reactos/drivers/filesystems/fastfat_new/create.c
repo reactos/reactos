@@ -13,6 +13,24 @@
 
 /* FUNCTIONS *****************************************************************/
 
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
+                IN PFILE_OBJECT FileObject,
+                IN PVCB Vcb,
+                IN PACCESS_MASK DesiredAccess,
+                IN USHORT ShareAccess,
+                IN ULONG CreateDisposition)
+{
+    IO_STATUS_BLOCK Iosb;
+
+    DPRINT1("Opening root directory\n");
+
+    Iosb.Status = STATUS_NOT_IMPLEMENTED;
+
+    return Iosb;
+}
+
 NTSTATUS
 NTAPI
 FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
@@ -36,6 +54,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     PVCB Vcb, DecodedVcb;
     PFCB Fcb;
     PCCB Ccb;
+    PFCB ParentDcb;
 
     /* IRP data */
     PFILE_OBJECT FileObject;
@@ -51,7 +70,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
 
     /* Misc */
     NTSTATUS Status;
-    //IO_STATUS_BLOCK Iosb;
+    IO_STATUS_BLOCK Iosb;
     PIO_STACK_LOCATION IrpSp;
 
     /* Get current IRP stack location */
@@ -184,16 +203,68 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
 
     // TODO: Make sure EAs aren't supported on FAT32
 
+    /* Check if it's a volume open request */
     if (FileName.Length == 0)
     {
-        /* It is a volume open request, check related FO to be sure */
-
+        /* Test related FO to be sure */
         if (!RelatedFO ||
             FatDecodeFileObject(RelatedFO, &DecodedVcb, &Fcb, &Ccb) == UserVolumeOpen)
         {
             /* It is indeed a volume open request */
             DPRINT1("Volume open request, not implemented now!\n");
             UNIMPLEMENTED;
+        }
+    }
+
+    /* Check if this is a relative open */
+    if (RelatedFO)
+    {
+        // RelatedFO will be a parent directory
+        UNIMPLEMENTED;
+    }
+    else
+    {
+        /* Absolute open */
+        if ((FileName.Length == sizeof(WCHAR)) &&
+            (FileName.Buffer[0] == L'\\'))
+        {
+            /* Check if it's ok to open it */
+            if (NonDirectoryFile)
+            {
+                DPRINT1("Trying to open root dir as a file\n");
+
+                /* Cleanup and return */
+                FatReleaseVcb(IrpContext, Vcb);
+                return STATUS_FILE_IS_A_DIRECTORY;
+            }
+
+            /* Check delete on close on a root dir */
+            if (DeleteOnClose)
+            {
+                /* Cleanup and return */
+                FatReleaseVcb(IrpContext, Vcb);
+                return STATUS_CANNOT_DELETE;
+            }
+
+            /* Call root directory open routine */
+            Iosb = FatiOpenRootDcb(IrpContext,
+                                   FileObject,
+                                   Vcb,
+                                   DesiredAccess,
+                                   ShareAccess,
+                                   CreateDisposition);
+
+            Irp->IoStatus.Information = Iosb.Information;
+
+            /* Cleanup and return */
+            FatReleaseVcb(IrpContext, Vcb);
+            return Iosb.Status;
+        }
+        else
+        {
+            /* Not a root dir */
+            ParentDcb = Vcb->RootDcb;
+            DPRINT1("ParentDcb %p\n", ParentDcb);
         }
     }
 

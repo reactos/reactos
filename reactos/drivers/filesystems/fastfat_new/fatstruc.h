@@ -170,8 +170,9 @@ typedef struct _VCB
     ULONG RootDirentSectors;
     LONGLONG BeyondLastClusterInFat;
     FAT_METHODS Methods;
-    /*  Root Directory Fcb: */
-    struct _FCB *RootFcb;
+
+    /*  Root Directory Control block */
+    struct _FCB *RootDcb;
 
     ULONG MediaChangeCount;
 } VCB, *PVCB;
