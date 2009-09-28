@@ -124,6 +124,9 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     Status = FatInitializeVcb(IrpContext, &VolumeDevice->Vcb, TargetDeviceObject, Vpb);
     if (!NT_SUCCESS(Status)) goto FatMountVolumeCleanup;
 
+    /* Create root DCB for it */
+    FatCreateRootDcb(IrpContext, &VolumeDevice->Vcb);
+
     /* Keep trace of media changes */
     VolumeDevice->Vcb.MediaChangeCount = MediaChangeCount;
 

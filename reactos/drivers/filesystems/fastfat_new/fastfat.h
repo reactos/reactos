@@ -72,6 +72,10 @@ FatMapUserBuffer(
 NTSTATUS NTAPI
 FatDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+VOID NTAPI
+FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
+                 IN PVCB Vcb);
+
 /*  --------------------------------------------------------  create.c  */
 
 NTSTATUS NTAPI

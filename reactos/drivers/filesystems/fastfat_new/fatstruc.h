@@ -215,9 +215,20 @@ enum _FCB_NAME_TYPE {
 
 typedef struct _FCB_NAME_LINK {
     RTL_SPLAY_LINKS Links;
-    UNICODE_STRING String;
+    union
+    {
+        OEM_STRING Ansi;
+        UNICODE_STRING String;
+    } Name;
     UCHAR Type;
 } FCB_NAME_LINK, *PFCB_NAME_LINK;
+
+typedef enum _FCB_CONDITION
+{
+    FcbGood,
+    FcbBad,
+    FcbNeedsToBeVerified
+} FCB_CONDITION;
 
 typedef struct _FCB
 {
@@ -228,35 +239,47 @@ typedef struct _FCB
     * FCB into paged and non paged parts
     * (as it is done in MS implementation
     */
-    FAST_MUTEX HeaderMutex;
+    FAST_MUTEX HeaderMutex; // nonpaged!
     SECTION_OBJECT_POINTERS SectionObjectPointers;
-    ERESOURCE Resource;
-    ERESOURCE PagingIoResource;
+    ERESOURCE Resource; // nonpaged!
+    ERESOURCE PagingIoResource; // nonpaged!
 
     FILE_LOCK Lock;
+    /* First cluster in the fat allocation chain */
+    ULONG FirstClusterOfFile;
+    /* A list of all FCBs of that DCB */
+    LIST_ENTRY ParentDcbLinks;
     /* Reference to the Parent Dcb*/
     struct _FCB *ParentFcb;
     /* Pointer to a Vcb */
     PVCB Vcb;
+    /* Fcb state */
+    ULONG State;
+    /* Fcb condition */
+    FCB_CONDITION Condition;
     /* Mcb mapping Vbo->Lbo */
     LARGE_MCB Mcb;
     ULONG FirstCluster;
     /* Links into FCB Trie */
-    FCB_NAME_LINK FileName[0x2];
+    FCB_NAME_LINK FileName;
     /* Buffer for the short name */
     WCHAR ShortNameBuffer[0xc];
     /* Full file name */
     UNICODE_STRING FullFileName;
+    /* A copy of fat attribute byte */
+    UCHAR DirentFatFlags;
     /* File basic info */
     FILE_BASIC_INFORMATION BasicInfo;
     union
     {
         struct
         {
+            /* A list of all FCBs/DCBs opened under this DCB */
+            LIST_ENTRY ParentDcbList;
             /* Directory data stream (just handy to have it). */
             PFILE_OBJECT StreamFileObject;
             /* Bitmap to search for free dirents. */
-            /* RTL_BITMAP Bitmap; */
+            RTL_BITMAP FreeBitmap;
             PRTL_SPLAY_LINKS SplayLinks;
         } Dcb;
     };
