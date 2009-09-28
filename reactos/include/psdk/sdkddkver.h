@@ -151,7 +151,7 @@ Abstract:
 #endif
 #endif
 
-/* Make Sure NTDDI_VERSION and _WIN32_WINNT Matches */
+/* Make Sure NTDDI_VERSION and _WIN32_WINNT Match */
 #if ((OSVER(NTDDI_VERSION) == NTDDI_WIN2K) && (_WIN32_WINNT != _WIN32_WINNT_WIN2K)) || \
     ((OSVER(NTDDI_VERSION) == NTDDI_WINXP) && (_WIN32_WINNT != _WIN32_WINNT_WINXP)) || \
     ((OSVER(NTDDI_VERSION) == NTDDI_WS03) && (_WIN32_WINNT != _WIN32_WINNT_WS03))   || \
