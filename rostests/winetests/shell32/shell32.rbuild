@@ -3,7 +3,8 @@
 <group>
 <module name="shell32_winetest" type="win32cui" installbase="bin" installname="shell32_winetest.exe" allowwarnings="true">
 	<include base="shell32_winetest">.</include>
-    <define name="__ROS_LONG64__" />
+	<define name="__ROS_LONG64__" />
+	<redefine name="_WIN32_WINNT">0x0501</redefine>
 	<library>wine</library>
 	<library>shell32</library>
 	<library>ole32</library>

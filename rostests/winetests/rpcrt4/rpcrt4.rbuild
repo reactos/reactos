@@ -11,6 +11,7 @@
 		<include base="rpcrt4_winetest">.</include>
 		<include root="intermediate" base="rpcrt4_winetest">.</include>
 		<define name="__ROS_LONG64__" />
+		<redefine name="_WIN32_WINNT">0x0500</redefine>
 		<library>wine</library>
 		<library>pseh</library>
 		<library>ole32</library>
