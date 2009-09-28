@@ -921,7 +921,7 @@ GetDiskCount(PCONFIGURATION_COMPONENT_DATA BusKey)
     //
     // Return number of disks
     //
-    DPRINTM(DPRINT_HWDETECT, "Retrieving %lu INT13 disks\\0\n");
+    DPRINTM(DPRINT_HWDETECT, "Retrieving %lu INT13 disks\\0\n", DiskCount);
     return DiskCount;
 };
 
