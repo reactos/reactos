@@ -13,7 +13,6 @@
 	<define name="_KERNEL32_" />
 	<redefine name="_WIN32_WINNT">0x0600</redefine>
 	<define name="__NO_CTYPE_INLINES" />
-	<define name="NTDDI_VERSION">0x05020100</define>
 	<dependency>errcodes</dependency>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>k32.h</pch>
