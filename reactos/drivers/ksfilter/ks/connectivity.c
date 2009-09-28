@@ -378,8 +378,11 @@ KsPinPropertyHandler(
                 Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
+            if (Descriptor[Pin->PinId].Category)
+            {
+                RtlMoveMemory(Buffer, Descriptor[Pin->PinId].Category, sizeof(GUID));
+            }
 
-            RtlMoveMemory(Buffer, &Descriptor[Pin->PinId].Category, sizeof(GUID));
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;
