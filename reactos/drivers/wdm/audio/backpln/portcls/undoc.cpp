@@ -160,6 +160,7 @@ PcCreateSubdeviceDescriptor(
     ULONG Index, SubIndex;
     PKSDATARANGE DataRange;
     NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
+    PPCPIN_DESCRIPTOR SrcDescriptor;
 
     Descriptor = (PSUBDEVICE_DESCRIPTOR)AllocateItem(NonPagedPool, sizeof(SUBDEVICE_DESCRIPTOR), TAG_PORTCLASS);
     if (!Descriptor)
@@ -234,7 +235,7 @@ PcCreateSubdeviceDescriptor(
 
     if (FilterDescription->PinCount)
     {
-        Descriptor->Factory.KsPinDescriptor = (PKSPIN_DESCRIPTOR)AllocateItem(NonPagedPool, FilterDescription->PinSize * FilterDescription->PinCount, TAG_PORTCLASS);
+        Descriptor->Factory.KsPinDescriptor = (PKSPIN_DESCRIPTOR)AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * FilterDescription->PinCount, TAG_PORTCLASS);
         if (!Descriptor->Factory.KsPinDescriptor)
             goto cleanup;
 
@@ -243,40 +244,44 @@ PcCreateSubdeviceDescriptor(
             goto cleanup;
 
         Descriptor->Factory.PinDescriptorCount = FilterDescription->PinCount;
-        Descriptor->Factory.PinDescriptorSize = FilterDescription->PinSize;
+        Descriptor->Factory.PinDescriptorSize = sizeof(KSPIN_DESCRIPTOR);
+
+        SrcDescriptor = (PPCPIN_DESCRIPTOR)FilterDescription->Pins;
+        DPRINT("Size %u Expected %u Ex Size %u\n", FilterDescription->PinSize, sizeof(KSPIN_DESCRIPTOR), sizeof(KSPIN_DESCRIPTOR_EX));
 
         // copy pin factories
         for(Index = 0; Index < FilterDescription->PinCount; Index++)
         {
-            RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &FilterDescription->Pins[Index].KsPinDescriptor, FilterDescription->PinSize);
+            RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &SrcDescriptor->KsPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
 
-            if (FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount)
+            if (SrcDescriptor->KsPinDescriptor.DataRangesCount)
             {
-                Descriptor->Factory.KsPinDescriptor[Index].DataRanges = (const PKSDATARANGE*)AllocateItem(NonPagedPool, FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount * sizeof(PKSDATARANGE), TAG_PORTCLASS);
+                Descriptor->Factory.KsPinDescriptor[Index].DataRanges = (const PKSDATARANGE*)AllocateItem(NonPagedPool, SrcDescriptor->KsPinDescriptor.DataRangesCount * sizeof(PKSDATARANGE), TAG_PORTCLASS);
                 if(!Descriptor->Factory.KsPinDescriptor[Index].DataRanges)
                     goto cleanup;
 
                 for (SubIndex = 0; SubIndex < FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount; SubIndex++)
                 {
-                    DataRange = (PKSDATARANGE)AllocateItem(NonPagedPool, FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex]->FormatSize, TAG_PORTCLASS);
+                    DataRange = (PKSDATARANGE)AllocateItem(NonPagedPool, SrcDescriptor->KsPinDescriptor.DataRanges[SubIndex]->FormatSize, TAG_PORTCLASS);
                     if (!DataRange)
                         goto cleanup;
 
                     RtlMoveMemory(DataRange,
-                                  FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex],
-                                  FilterDescription->Pins[Index].KsPinDescriptor.DataRanges[SubIndex]->FormatSize);
+                                  SrcDescriptor->KsPinDescriptor.DataRanges[SubIndex],
+                                  SrcDescriptor->KsPinDescriptor.DataRanges[SubIndex]->FormatSize);
 
                     ((PKSDATAFORMAT*)Descriptor->Factory.KsPinDescriptor[Index].DataRanges)[SubIndex] = DataRange;
 
                 }
 
-                Descriptor->Factory.KsPinDescriptor[Index].DataRangesCount = FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount;
+                Descriptor->Factory.KsPinDescriptor[Index].DataRangesCount = SrcDescriptor->KsPinDescriptor.DataRangesCount;
             }
 
             Descriptor->Factory.Instances[Index].CurrentPinInstanceCount = 0;
             Descriptor->Factory.Instances[Index].MaxFilterInstanceCount = FilterDescription->Pins[Index].MaxFilterInstanceCount;
             Descriptor->Factory.Instances[Index].MaxGlobalInstanceCount = FilterDescription->Pins[Index].MaxGlobalInstanceCount;
             Descriptor->Factory.Instances[Index].MinFilterInstanceCount = FilterDescription->Pins[Index].MinFilterInstanceCount;
+            SrcDescriptor = (PPCPIN_DESCRIPTOR)((ULONG_PTR)SrcDescriptor + FilterDescription->PinSize);
         }
     }
     Descriptor->DeviceDescriptor = FilterDescription;
