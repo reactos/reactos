@@ -201,17 +201,11 @@ typedef struct
 
 typedef struct
 {
-    ULONG MaxKsPropertySetCount;
-    ULONG FreeKsPropertySetOffset;
-    PKSPROPERTY_SET Properties;
-}KSPROPERTY_SET_LIST;
-
-typedef struct
-{
     ULONG InterfaceCount;
     GUID *Interfaces;
     KSPIN_FACTORY Factory;
-    KSPROPERTY_SET_LIST FilterPropertySet;
+    ULONG FilterPropertySetCount;
+    PKSPROPERTY_SET FilterPropertySet;
 
     PPCFILTER_DESCRIPTOR DeviceDescriptor;
     KSTOPOLOGY*  Topology;

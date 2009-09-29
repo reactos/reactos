@@ -43,6 +43,18 @@ KsoGetIrpTargetFromIrp(
     return (IIrpTarget*)CreateItem->Context;
 }
 
+NTSTATUS
+NTAPI
+PcHandlePropertyWithTable(
+    IN PIRP Irp,
+    IN ULONG PropertySetCount,
+    IN PKSPROPERTY_SET PropertySet,
+    IN PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor)
+{
+    KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PKSPROPERTY_ITEM)SubDeviceDescriptor;
+    return KsPropertyHandler(Irp, PropertySetCount, PropertySet);
+}
+
 VOID
 NTAPI
 PcAcquireFormatResources(
@@ -93,52 +105,6 @@ PcCaptureFormat(
 }
 
 NTSTATUS
-AddToPropertyTable(
-    IN OUT SUBDEVICE_DESCRIPTOR * Descriptor,
-    IN KSPROPERTY_SET * FilterProperty)
-{
-    if (Descriptor->FilterPropertySet.FreeKsPropertySetOffset >= Descriptor->FilterPropertySet.MaxKsPropertySetCount)
-    {
-        DPRINT1("FIXME\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    RtlMoveMemory(&Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset],
-                  FilterProperty,
-                  sizeof(KSPROPERTY_SET));
-
-    if (FilterProperty->PropertiesCount)
-    {
-        Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertyItem = (const KSPROPERTY_ITEM*)AllocateItem(NonPagedPool,
-                                                                                                                                    sizeof(KSPROPERTY_ITEM) * FilterProperty->PropertiesCount,
-                                                                                                                                   TAG_PORTCLASS);
-
-        if (!Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertyItem)
-        {
-            Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertiesCount = 0;
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        RtlMoveMemory((PVOID)Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].PropertyItem,
-                      FilterProperty->PropertyItem,
-                      sizeof(KSPROPERTY_ITEM) * FilterProperty->PropertiesCount);
-
-    }
-    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set = (const GUID *)AllocateItem(NonPagedPool, sizeof(GUID), TAG_PORTCLASS);
-    if (!Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    RtlCopyMemory((PVOID)Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].Set, FilterProperty->Set, sizeof(GUID));
-
-    // ignore fast io table for now
-    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].FastIoCount = 0;
-    Descriptor->FilterPropertySet.Properties[Descriptor->FilterPropertySet.FreeKsPropertySetOffset].FastIoTable = NULL;
-
-    Descriptor->FilterPropertySet.FreeKsPropertySetOffset++;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
 NTAPI
 PcCreateSubdeviceDescriptor(
     OUT SUBDEVICE_DESCRIPTOR ** OutSubdeviceDescriptor,
@@ -157,8 +123,7 @@ PcCreateSubdeviceDescriptor(
     IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
     SUBDEVICE_DESCRIPTOR * Descriptor;
-    ULONG Index, SubIndex;
-    PKSDATARANGE DataRange;
+    ULONG Index;
     NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
     PPCPIN_DESCRIPTOR SrcDescriptor;
 
@@ -182,16 +147,14 @@ PcCreateSubdeviceDescriptor(
     {
        /// FIXME
        /// handle driver properties
-       Descriptor->FilterPropertySet.Properties = (PKSPROPERTY_SET)AllocateItem(NonPagedPool, sizeof(KSPROPERTY_SET) * FilterPropertiesCount, TAG_PORTCLASS);
-       if (! Descriptor->FilterPropertySet.Properties)
+       Descriptor->FilterPropertySet = (PKSPROPERTY_SET)AllocateItem(NonPagedPool, sizeof(KSPROPERTY_SET) * FilterPropertiesCount, TAG_PORTCLASS);
+       if (! Descriptor->FilterPropertySet)
            goto cleanup;
 
-       Descriptor->FilterPropertySet.MaxKsPropertySetCount = FilterPropertiesCount;
+       Descriptor->FilterPropertySetCount = FilterPropertiesCount;
        for(Index = 0; Index < FilterPropertiesCount; Index++)
        {
-           Status = AddToPropertyTable(Descriptor, &FilterProperties[Index]);
-           if (!NT_SUCCESS(Status))
-               goto cleanup;
+           RtlMoveMemory(&Descriptor->FilterPropertySet[Index], &FilterProperties[Index], sizeof(KSPROPERTY_SET));
        }
     }
 
@@ -253,29 +216,6 @@ PcCreateSubdeviceDescriptor(
         for(Index = 0; Index < FilterDescription->PinCount; Index++)
         {
             RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &SrcDescriptor->KsPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
-
-            if (SrcDescriptor->KsPinDescriptor.DataRangesCount)
-            {
-                Descriptor->Factory.KsPinDescriptor[Index].DataRanges = (const PKSDATARANGE*)AllocateItem(NonPagedPool, SrcDescriptor->KsPinDescriptor.DataRangesCount * sizeof(PKSDATARANGE), TAG_PORTCLASS);
-                if(!Descriptor->Factory.KsPinDescriptor[Index].DataRanges)
-                    goto cleanup;
-
-                for (SubIndex = 0; SubIndex < FilterDescription->Pins[Index].KsPinDescriptor.DataRangesCount; SubIndex++)
-                {
-                    DataRange = (PKSDATARANGE)AllocateItem(NonPagedPool, SrcDescriptor->KsPinDescriptor.DataRanges[SubIndex]->FormatSize, TAG_PORTCLASS);
-                    if (!DataRange)
-                        goto cleanup;
-
-                    RtlMoveMemory(DataRange,
-                                  SrcDescriptor->KsPinDescriptor.DataRanges[SubIndex],
-                                  SrcDescriptor->KsPinDescriptor.DataRanges[SubIndex]->FormatSize);
-
-                    ((PKSDATAFORMAT*)Descriptor->Factory.KsPinDescriptor[Index].DataRanges)[SubIndex] = DataRange;
-
-                }
-
-                Descriptor->Factory.KsPinDescriptor[Index].DataRangesCount = SrcDescriptor->KsPinDescriptor.DataRangesCount;
-            }
 
             Descriptor->Factory.Instances[Index].CurrentPinInstanceCount = 0;
             Descriptor->Factory.Instances[Index].MaxFilterInstanceCount = FilterDescription->Pins[Index].MaxFilterInstanceCount;

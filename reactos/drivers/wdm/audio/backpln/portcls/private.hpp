@@ -286,26 +286,6 @@ PcCreateItemDispatch(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
-NTSTATUS
-NTAPI
-PcPropertyHandler(
-    IN PIRP Irp,
-    IN PSUBDEVICE_DESCRIPTOR Descriptor);
-
-NTSTATUS
-NTAPI
-FastPropertyHandler(
-    IN PFILE_OBJECT  FileObject,
-    IN PKSPROPERTY UNALIGNED  Property,
-    IN ULONG  PropertyLength,
-    IN OUT PVOID UNALIGNED  Data,
-    IN ULONG  DataLength,
-    OUT PIO_STATUS_BLOCK  IoStatus,
-    IN ULONG  PropertySetsCount,
-    IN const KSPROPERTY_SET *PropertySet,
-    IN PSUBDEVICE_DESCRIPTOR Descriptor,
-    IN ISubdevice *SubDevice);
-
 PDEVICE_OBJECT
 GetDeviceObject(
     IPortWaveCyclic* iface);
@@ -325,6 +305,14 @@ NTSTATUS
 NTAPI
 NewIUnregisterPhysicalConnection(
     OUT PUNREGISTERPHYSICALCONNECTION *OutConnection);
+
+NTSTATUS
+NTAPI
+PcHandlePropertyWithTable(
+    IN PIRP Irp,
+    IN ULONG PropertySetCount,
+    IN PKSPROPERTY_SET PropertySet,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor);
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\
