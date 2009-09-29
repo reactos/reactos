@@ -8,6 +8,7 @@
 #define NDEBUG
 #include <debug.h>
 #include <ksmedia.h>
+#include <mmreg.h>
 #include <mmsystem.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,6 +36,29 @@ typedef struct
 typedef struct
 {
     LIST_ENTRY Entry;
+    ULONG PinId;
+    PFILE_OBJECT FileObject;
+    MIXERLINEW Line;
+    LPMIXERCONTROLW LineControls;
+}MIXERLINE_SOURCE, *LPMIXERLINE_SOURCE;
+
+
+typedef struct
+{
+    HANDLE        hMixer;
+    PFILE_OBJECT  MixerFileObject;
+
+    MIXERCAPSW    MixCaps;
+    MIXERLINEW    DestinationLine;
+
+    LIST_ENTRY    SourceLineList;
+
+}MIXER_INFO, *LPMIXER_INFO;
+
+
+typedef struct
+{
+    LIST_ENTRY Entry;
     UNICODE_STRING SymbolicLink;
 }SYSAUDIO_ENTRY, *PSYSAUDIO_ENTRY;
 
@@ -50,6 +74,10 @@ typedef struct
     LIST_ENTRY SysAudioDeviceList;
     HANDLE hSysAudio;
     PFILE_OBJECT FileObject;
+
+    ULONG MixerInfoCount;
+    LPMIXER_INFO MixerInfo;
+
 
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
@@ -118,7 +146,8 @@ NTSTATUS
 WdmAudMixerCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
-    IN  PWDMAUD_CLIENT ClientInfo);
+    IN  PWDMAUD_CLIENT ClientInfo,
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension);
 
 NTSTATUS
 NTAPI
@@ -160,6 +189,9 @@ WdmAudGetControlDetails(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo);
 
+NTSTATUS
+WdmAudMixerInitialize(
+    IN PDEVICE_OBJECT DeviceObject);
 
 
 #endif

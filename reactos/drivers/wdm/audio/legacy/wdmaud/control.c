@@ -319,9 +319,11 @@ WdmAudControlDeviceType(
     KSPIN_DATAFLOW DataFlow;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
-        DeviceInfo->DeviceCount = GetNumOfMixerDevices(DeviceObject);
+        DeviceInfo->DeviceCount = DeviceExtension->MixerInfoCount;
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
 
@@ -336,7 +338,7 @@ WdmAudControlDeviceType(
     Pin.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_COUNT;
     Pin.Property.Flags = KSPROPERTY_TYPE_GET;
 
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
     Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
     if (!NT_SUCCESS(Status))
     {
@@ -706,9 +708,11 @@ WdmAudCapabilities(
 
     DPRINT("WdmAudCapabilities entered\n");
 
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
-        Status = WdmAudMixerCapabilities(DeviceObject, DeviceInfo, ClientInfo);
+        Status = WdmAudMixerCapabilities(DeviceObject, DeviceInfo, ClientInfo, DeviceExtension);
         return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
     }
 
@@ -727,7 +731,7 @@ WdmAudCapabilities(
 
     RtlZeroMemory(&ComponentId, sizeof(KSCOMPONENTID));
 
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
     Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
     if (NT_SUCCESS(Status))
     {

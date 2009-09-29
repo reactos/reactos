@@ -10,6 +10,88 @@
 
 const GUID KSNODETYPE_DAC = {0x507AE360L, 0xC554, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 const GUID KSNODETYPE_ADC = {0x4D837FE0L, 0xC555, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_AGC = {0xE88C9BA0L, 0xC557, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_LOUDNESS = {0x41887440L, 0xC558, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_MUTE =     {0x02B223C0L, 0xC557, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_TONE =     {0x7607E580L, 0xC557, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_VOLUME =   {0x3A5ACC00L, 0xC557, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_PEAKMETER = {0xa085651e, 0x5f0d, 0x4b36, {0xa8, 0x69, 0xd1, 0x95, 0xd6, 0xab, 0x4b, 0x9e}};
+const GUID KSNODETYPE_MUX =       {0x2CEAF780, 0xC556, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_STEREO_WIDE = {0xA9E69800L, 0xC558, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_CHORUS =      {0x20173F20L, 0xC559, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_REVERB =      {0xEF0328E0L, 0xC558, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_SUPERMIX =    {0xE573ADC0L, 0xC555, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+
+
+LPMIXERLINE_SOURCE
+GetSourceMixerLine(
+    LPMIXER_INFO MixerInfo,
+    DWORD dwSource)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERLINE_SOURCE MixerLineSrc;
+
+    /* get first entry */
+    Entry = MixerInfo->SourceLineList.Flink;
+
+    while(Entry != &MixerInfo->SourceLineList)
+    {
+        MixerLineSrc = (LPMIXERLINE_SOURCE)CONTAINING_RECORD(Entry, MIXERLINE_SOURCE, Entry);
+        DPRINT("dwSource %x dwSource %x\n", MixerLineSrc->Line.dwSource, dwSource);
+        if (MixerLineSrc->Line.dwSource == dwSource)
+            return MixerLineSrc;
+
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
+LPMIXERLINE_SOURCE
+GetSourceMixerLineByLineId(
+    LPMIXER_INFO MixerInfo,
+    DWORD dwLineID)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERLINE_SOURCE MixerLineSrc;
+
+    /* get first entry */
+    Entry = MixerInfo->SourceLineList.Flink;
+
+    while(Entry != &MixerInfo->SourceLineList)
+    {
+        MixerLineSrc = (LPMIXERLINE_SOURCE)CONTAINING_RECORD(Entry, MIXERLINE_SOURCE, Entry);
+        DPRINT("dwLineID %x dwLineID %x\n", MixerLineSrc->Line.dwLineID, dwLineID);
+        if (MixerLineSrc->Line.dwLineID == dwLineID)
+            return MixerLineSrc;
+
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
+
+
+ULONG
+GetPinCount(
+    IN PFILE_OBJECT FileObject)
+{
+    KSPROPERTY Pin;
+    NTSTATUS Status;
+    ULONG NumPins, BytesReturned;
+
+    Pin.Flags = KSPROPERTY_TYPE_GET;
+    Pin.Set = KSPROPSETID_Pin;
+    Pin.Id = KSPROPERTY_PIN_CTYPES;
+
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&NumPins, sizeof(ULONG), &BytesReturned);
+    if (!NT_SUCCESS(Status))
+        return 0;
+
+    return NumPins;
+}
+
 
 ULONG
 GetSysAudioDeviceCount(
@@ -84,25 +166,16 @@ GetSysAudioDevicePnpName(
 }
 
 NTSTATUS
-OpenSysAudioDeviceByIndex(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  ULONG DeviceIndex,
-    IN  PHANDLE DeviceHandle,
-    IN  PFILE_OBJECT * FileObject)
+OpenDevice(
+    IN LPWSTR Device,
+    OUT PHANDLE DeviceHandle,
+    OUT PFILE_OBJECT * FileObject)
 {
-    LPWSTR Device = NULL;
     NTSTATUS Status;
     HANDLE hDevice;
 
-    Status = GetSysAudioDevicePnpName(DeviceObject, DeviceIndex, &Device);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
     /* now open the device */
     Status = WdmAudOpenSysAudioDevice(Device, &hDevice);
-
-    /* free device buffer */
-    ExFreePool(Device);
 
     if (!NT_SUCCESS(Status))
     {
@@ -122,11 +195,36 @@ OpenSysAudioDeviceByIndex(
     }
 
     return Status;
+
+}
+
+
+NTSTATUS
+OpenSysAudioDeviceByIndex(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  ULONG DeviceIndex,
+    IN  PHANDLE DeviceHandle,
+    IN  PFILE_OBJECT * FileObject)
+{
+    LPWSTR Device = NULL;
+    NTSTATUS Status;
+
+    Status = GetSysAudioDevicePnpName(DeviceObject, DeviceIndex, &Device);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = OpenDevice(Device, DeviceHandle, FileObject);
+
+    /* free device buffer */
+    ExFreePool(Device);
+
+    return Status;
 }
 
 NTSTATUS
-GetFilterNodeTypes(
-    PFILE_OBJECT FileObject,
+GetFilterNodeProperty(
+    IN PFILE_OBJECT FileObject,
+    IN ULONG PropertyId,
     PKSMULTIPLE_ITEM * Item)
 {
     NTSTATUS Status;
@@ -135,7 +233,7 @@ GetFilterNodeTypes(
     KSPROPERTY Property;
 
     /* setup query request */
-    Property.Id = KSPROPERTY_TOPOLOGY_NODES;
+    Property.Id = PropertyId;
     Property.Flags = KSPROPERTY_TYPE_GET;
     Property.Set = KSPROPSETID_Topology;
 
@@ -214,73 +312,803 @@ GetNodeTypeIndex(
 }
 
 ULONG
-GetNumOfMixerDevices(
-    IN  PDEVICE_OBJECT DeviceObject)
+GetControlTypeFromTopologyNode(
+    IN LPGUID NodeType)
 {
-    ULONG DeviceCount, Index, Count;
-    NTSTATUS Status;
-    HANDLE hDevice;
-    PFILE_OBJECT FileObject;
-    PKSMULTIPLE_ITEM MultipleItem;
-
-    /* get number of devices */
-    DeviceCount = GetSysAudioDeviceCount(DeviceObject);
-
-    if (!DeviceCount)
-        return 0;
-
-    Index = 0;
-    Count = 0;
-    do
+    if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_AGC))
     {
-        /* open the virtual audio device */
-        Status = OpenSysAudioDeviceByIndex(DeviceObject, Index, &hDevice, &FileObject);
-
-        if (NT_SUCCESS(Status))
-        {
-            /* retrieve all available node types */
-            Status = GetFilterNodeTypes(FileObject, &MultipleItem);
-            if (NT_SUCCESS(Status))
-            {
-                if (CountNodeType(MultipleItem, (LPGUID)&KSNODETYPE_DAC))
-                {
-                    /* increment (output) mixer count */
-                    Count++;
-                }
-
-                if (CountNodeType(MultipleItem, (LPGUID)&KSNODETYPE_ADC))
-                {
-                    /* increment (input) mixer count */
-                    Count++;
-                }
-                ExFreePool(MultipleItem);
-            }
-            ObDereferenceObject(FileObject);
-            ZwClose(hDevice);
-        }
-
-        Index++;
-    }while(Index < DeviceCount);
-
-    return Count;
+        // automatic gain control
+        return MIXERCONTROL_CONTROLTYPE_ONOFF;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_LOUDNESS))
+    {
+        // loudness control
+        return MIXERCONTROL_CONTROLTYPE_LOUDNESS;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUTE ))
+    {
+        // mute control
+        return MIXERCONTROL_CONTROLTYPE_MUTE;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_TONE))
+    {
+        // tpne control
+        //FIXME
+        // MIXERCONTROL_CONTROLTYPE_ONOFF if KSPROPERTY_AUDIO_BASS_BOOST is supported
+        // MIXERCONTROL_CONTROLTYPE_BASS if KSPROPERTY_AUDIO_BASS is supported
+        // MIXERCONTROL_CONTROLTYPE_TREBLE if KSPROPERTY_AUDIO_TREBLE is supported
+        UNIMPLEMENTED;
+        return MIXERCONTROL_CONTROLTYPE_ONOFF;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_VOLUME))
+    {
+        // volume control
+        return MIXERCONTROL_CONTROLTYPE_VOLUME;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_PEAKMETER))
+    {
+        // peakmeter control
+        return MIXERCONTROL_CONTROLTYPE_PEAKMETER;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUX))
+    {
+        // mux control
+        return MIXERCONTROL_CONTROLTYPE_MUX;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUX))
+    {
+        // mux control
+        return MIXERCONTROL_CONTROLTYPE_MUX;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_STEREO_WIDE))
+    {
+        // stero wide control
+        return MIXERCONTROL_CONTROLTYPE_FADER;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_CHORUS))
+    {
+        // chorus control
+        return MIXERCONTROL_CONTROLTYPE_FADER;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_REVERB))
+    {
+        // reverb control
+        return MIXERCONTROL_CONTROLTYPE_FADER;
+    }
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_SUPERMIX))
+    {
+        // supermix control
+        // MIXERCONTROL_CONTROLTYPE_MUTE if KSPROPERTY_AUDIO_MUTE is supported 
+        UNIMPLEMENTED;
+        return MIXERCONTROL_CONTROLTYPE_VOLUME;
+    }
+    UNIMPLEMENTED
+    return 0;
 }
 
-ULONG
-IsOutputMixer(
+NTSTATUS
+GetPhysicalConnection(
+    IN PFILE_OBJECT FileObject,
+    IN ULONG PinId,
+    OUT PKSPIN_PHYSICALCONNECTION *OutConnection)
+{
+    KSP_PIN Pin;
+    NTSTATUS Status;
+    ULONG BytesReturned;
+    PKSPIN_PHYSICALCONNECTION Connection;
+
+    /* setup the request */
+    Pin.Property.Flags = KSPROPERTY_TYPE_GET;
+    Pin.Property.Id = KSPROPERTY_PIN_PHYSICALCONNECTION;
+    Pin.Property.Set = KSPROPSETID_Pin;
+    Pin.PinId = PinId;
+
+    /* query the pin for the physical connection */
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
+
+    if (Status == STATUS_NOT_FOUND)
+    {
+        /* pin does not have a physical connection */
+        return Status;
+    }
+
+    Connection = ExAllocatePool(NonPagedPool, BytesReturned);
+    if (!Connection)
+    {
+        /* not enough memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* query the pin for the physical connection */
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)Connection, BytesReturned, &BytesReturned);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed to query the physical connection */
+        ExFreePool(Connection);
+        return Status;
+    }
+
+    /* store connection */
+    *OutConnection = Connection;
+    return Status;
+}
+
+NTSTATUS
+GetNodeIndexes(
+    IN PKSMULTIPLE_ITEM MultipleItem,
+    IN ULONG NodeIndex,
+    IN ULONG bNode,
+    IN ULONG bFrom,
+    OUT PULONG NodeReferenceCount,
+    OUT PULONG *NodeReference)
+{
+    ULONG Index, Count = 0;
+    PKSTOPOLOGY_CONNECTION Connection;
+    PULONG Refs;
+
+    /* KSMULTIPLE_ITEM is followed by several KSTOPOLOGY_CONNECTION */
+    Connection = (PKSTOPOLOGY_CONNECTION)(MultipleItem + 1);
+
+    /* first count all referenced nodes */
+    for(Index = 0; Index < MultipleItem->Count; Index++)
+    {
+        //DPRINT1("FromPin %u FromNode %u ToPin %u ToNode %u\n", Connection->FromNodePin, Connection->FromNode, Connection->ToNodePin, Connection->ToNode);
+        if (bNode)
+        {
+            if (bFrom)
+            {
+                if (Connection->FromNode == NodeIndex)
+                {
+                    /* node id has a connection */
+                    Count++;
+                }
+            }
+            else
+            {
+                if (Connection->ToNode == NodeIndex)
+                {
+                    /* node id has a connection */
+                    Count++;
+                }
+            }
+        }
+        else
+        {
+            if (bFrom)
+            {
+                if (Connection->FromNodePin == NodeIndex)
+                {
+                    /* node id has a connection */
+                    Count++;
+                }
+            }
+            else
+            {
+                if (Connection->ToNodePin == NodeIndex)
+                {
+                    /* node id has a connection */
+                    Count++;
+                }
+            }
+        }
+
+
+        /* move to next connection */
+        Connection++;
+    }
+
+    ASSERT(Count != 0);
+
+    /* now allocate node index array */
+    Refs = ExAllocatePool(NonPagedPool, sizeof(ULONG) * Count);
+    if (!Refs)
+    {
+        /* not enough memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Count = 0;
+    Connection = (PKSTOPOLOGY_CONNECTION)(MultipleItem + 1);
+    for(Index = 0; Index < MultipleItem->Count; Index++)
+    {
+        if (bNode)
+        {
+            if (bFrom)
+            {
+                if (Connection->FromNode == NodeIndex)
+                {
+                    /* node id has a connection */
+                    Refs[Count] = Index;
+                    Count++;
+                }
+            }
+            else
+            {
+                if (Connection->ToNode == NodeIndex)
+                {
+                    /* node id has a connection */
+                    Refs[Count] = Index;
+                    Count++;
+                }
+            }
+        }
+        else
+        {
+            if (bFrom)
+            {
+                if (Connection->FromNodePin == NodeIndex)
+                {
+                    /* node id has a connection */
+                    Refs[Count] = Index;
+                    Count++;
+                }
+            }
+            else
+            {
+                if (Connection->ToNodePin == NodeIndex)
+                {
+                    /* node id has a connection */
+                    Refs[Count] = Index;
+                    Count++;
+                }
+            }
+        }
+
+        /* move to next connection */
+        Connection++;
+    }
+
+    /* store result */
+    *NodeReference = Refs;
+    *NodeReferenceCount = Count;
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+GetTargetPinsByNodeConnectionIndex(
+    IN PKSMULTIPLE_ITEM NodeConnections,
+    IN PKSMULTIPLE_ITEM NodeTypes,
+    IN ULONG bUpDirection,
+    IN ULONG NodeConnectionIndex,
+    OUT PULONG Pins)
+{
+    PKSTOPOLOGY_CONNECTION Connection;
+    ULONG PinId, NodeConnectionCount, Index;
+    PULONG NodeConnection;
+    NTSTATUS Status;
+
+
+    /* sanity check */
+    ASSERT(NodeConnectionIndex < NodeConnections->Count);
+
+    Connection = (PKSTOPOLOGY_CONNECTION)(NodeConnections + 1);
+
+    DPRINT("FromNode %u FromNodePin %u -> ToNode %u ToNodePin %u\n", Connection[NodeConnectionIndex].FromNode, Connection[NodeConnectionIndex].FromNodePin, Connection[NodeConnectionIndex].ToNode, Connection[NodeConnectionIndex].ToNodePin );
+
+    if ((Connection[NodeConnectionIndex].ToNode == KSFILTER_NODE && bUpDirection == FALSE) ||
+        (Connection[NodeConnectionIndex].FromNode == KSFILTER_NODE && bUpDirection == TRUE))
+    {
+        /* iteration stops here */
+       if (bUpDirection)
+           PinId = Connection[NodeConnectionIndex].FromNodePin;
+       else
+           PinId = Connection[NodeConnectionIndex].ToNodePin;
+
+       DPRINT("GetTargetPinsByNodeIndex FOUND Target Pin %u Parsed %u\n", PinId, Pins[PinId]);
+
+       /* mark pin index as a target pin */
+       Pins[PinId] = TRUE;
+       return STATUS_SUCCESS;
+    }
+
+    /* get all node indexes referenced by that node */
+    if (bUpDirection)
+    {
+        Status = GetNodeIndexes(NodeConnections, Connection[NodeConnectionIndex].FromNode, TRUE, FALSE, &NodeConnectionCount, &NodeConnection);
+    }
+    else
+    {
+        Status = GetNodeIndexes(NodeConnections, Connection[NodeConnectionIndex].ToNode, TRUE, TRUE, &NodeConnectionCount, &NodeConnection);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        for(Index = 0; Index < NodeConnectionCount; Index++)
+        {
+            /* iterate recursively into the nodes */
+            Status = GetTargetPinsByNodeConnectionIndex(NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], Pins);
+            ASSERT(Status == STATUS_SUCCESS);
+        }
+        /* free node connection indexes */
+        ExFreePool(NodeConnection);
+    }
+
+    return Status;
+}
+
+
+
+NTSTATUS
+GetTargetPins(
+    PKSMULTIPLE_ITEM NodeTypes,
+    PKSMULTIPLE_ITEM NodeConnections,
+    IN ULONG NodeIndex,
+    IN ULONG bUpDirection,
+    PULONG Pins,
+    ULONG PinCount)
+{
+    ULONG NodeConnectionCount, Index;
+    NTSTATUS Status;
+    PULONG NodeConnection;
+
+    /* sanity check */
+    ASSERT(NodeIndex != (ULONG)-1);
+
+    /* get all node indexes referenced by that pin */
+    if (bUpDirection)
+        Status = GetNodeIndexes(NodeConnections, NodeIndex, TRUE, FALSE, &NodeConnectionCount, &NodeConnection);
+    else
+        Status = GetNodeIndexes(NodeConnections, NodeIndex, TRUE, TRUE, &NodeConnectionCount, &NodeConnection);
+
+    DPRINT("NodeIndex %u Status %x Count %u\n", NodeIndex, Status, NodeConnectionCount);
+
+    if (NT_SUCCESS(Status))
+    {
+        for(Index = 0; Index < NodeConnectionCount; Index++)
+        {
+            Status = GetTargetPinsByNodeConnectionIndex(NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], Pins);
+            ASSERT(Status == STATUS_SUCCESS);
+        }
+        ExFreePool(NodeConnection);
+    }
+
+    return Status;
+}
+
+PULONG
+AllocatePinArray(
+    ULONG PinCount)
+{
+    PULONG Pins = ExAllocatePool(NonPagedPool, PinCount * sizeof(ULONG));
+    if (!Pins)
+        return NULL;
+
+    RtlZeroMemory(Pins, sizeof(ULONG) * PinCount);
+
+    return Pins;
+}
+
+NTSTATUS
+AddMixerSourceLine(
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN PFILE_OBJECT FileObject,
+    IN ULONG PinId)
+{
+    LPMIXERLINE_SOURCE SrcLine;
+    NTSTATUS Status;
+    KSP_PIN Pin;
+    LPWSTR PinName;
+    GUID NodeType;
+    ULONG BytesReturned;
+
+    /* allocate src mixer line */
+    SrcLine = (LPMIXERLINE_SOURCE)ExAllocatePool(NonPagedPool, sizeof(MIXERLINE_SOURCE));
+    if (!SrcLine)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* zero struct */
+    RtlZeroMemory(SrcLine, sizeof(MIXERLINE_SOURCE));
+
+    /* initialize mixer src line */
+    SrcLine->FileObject = FileObject;
+    SrcLine->PinId = PinId;
+    SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
+
+    /* initialize mixer destination line */
+    SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
+    SrcLine->Line.dwDestination = 0;
+    SrcLine->Line.dwSource = MixerInfo->DestinationLine.cConnections;
+    SrcLine->Line.dwLineID = (MixerInfo->DestinationLine.cConnections * 0x10000);
+    SrcLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE | MIXERLINE_LINEF_SOURCE;
+    SrcLine->Line.dwUser = 0;
+    SrcLine->Line.cChannels = MixerInfo->DestinationLine.cChannels;
+    SrcLine->Line.cConnections = 0;
+    SrcLine->Line.cControls = 1; //FIXME
+
+    //HACK
+    SrcLine->LineControls = ExAllocatePool(NonPagedPool, SrcLine->Line.cControls * sizeof(MIXERCONTROLW));
+    if (!SrcLine->LineControls)
+    {
+        /* not enough memory */
+        ExFreePool(SrcLine);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* clear line controls */
+    RtlZeroMemory(SrcLine->LineControls, sizeof(MIXERCONTROLW));
+
+    /* fill in pseudo mixer control */
+    SrcLine->LineControls->dwControlID = 1; //FIXME
+    SrcLine->LineControls->cbStruct = sizeof(MIXERCONTROLW);
+    SrcLine->LineControls->fdwControl = 0;
+    SrcLine->LineControls->cMultipleItems = 0;
+    wcscpy(SrcLine->LineControls->szName, L"test");
+    wcscpy(SrcLine->LineControls->szShortName, L"test");
+
+
+    /* get pin category */
+    Pin.PinId = PinId;
+    Pin.Reserved = 0;
+    Pin.Property.Flags = KSPROPERTY_TYPE_GET;
+    Pin.Property.Set = KSPROPSETID_Pin;
+    Pin.Property.Id = KSPROPERTY_PIN_CATEGORY;
+
+    /* try get pin category */
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (LPVOID)&NodeType, sizeof(GUID), &BytesReturned);
+    if (NT_SUCCESS(Status))
+    {
+        //FIXME
+        //map component type
+    }
+
+    /* retrieve pin name */
+    Pin.PinId = PinId;
+    Pin.Reserved = 0;
+    Pin.Property.Flags = KSPROPERTY_TYPE_GET;
+    Pin.Property.Set = KSPROPSETID_Pin;
+    Pin.Property.Id = KSPROPERTY_PIN_NAME;
+
+    /* try get pin name size */
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
+
+    if (Status != STATUS_MORE_ENTRIES)
+    {
+        SrcLine->Line.szShortName[0] = L'\0';
+        SrcLine->Line.szName[0] = L'\0';
+    }
+    else
+    {
+        PinName = (LPWSTR)ExAllocatePool(NonPagedPool, BytesReturned);
+        if (PinName)
+        {
+            /* try get pin name */
+            Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (LPVOID)PinName, BytesReturned, &BytesReturned);
+
+            if (NT_SUCCESS(Status))
+            {
+                RtlMoveMemory(SrcLine->Line.szShortName, PinName, (min(MIXER_SHORT_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
+                SrcLine->Line.szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
+
+                RtlMoveMemory(SrcLine->Line.szName, PinName, (min(MIXER_LONG_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
+                SrcLine->Line.szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
+            }
+            ExFreePool(PinName);
+        }
+    }
+
+    SrcLine->Line.Target.dwType = 1;
+    SrcLine->Line.Target.dwDeviceID = MixerInfo->DestinationLine.Target.dwDeviceID;
+    SrcLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
+    SrcLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
+    SrcLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
+    wcscpy(SrcLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
+
+
+    /* insert src line */
+    InsertTailList(&MixerInfo->SourceLineList, &SrcLine->Entry);
+    MixerInfo->DestinationLine.cConnections++;
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+AddMixerSourceLines(
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN PFILE_OBJECT FileObject,
+    IN ULONG PinsCount,
+    IN PULONG Pins)
+{
+    ULONG Index;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    for(Index = PinsCount; Index > 0; Index--)
+    {
+        if (Pins[Index-1])
+        {
+            AddMixerSourceLine(MixerInfo, FileObject, Index-1);
+        }
+    }
+    return Status;
+}
+
+
+
+NTSTATUS
+HandlePhysicalConnection(
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN ULONG bInput,
+    IN PKSPIN_PHYSICALCONNECTION OutConnection)
+{
+    PULONG PinsRef = NULL, PinConnectionIndex = NULL, PinsSrcRef;
+    ULONG PinsRefCount, Index, PinConnectionIndexCount;
+    NTSTATUS Status;
+    HANDLE hDevice = NULL;
+    PFILE_OBJECT FileObject = NULL;
+    PKSMULTIPLE_ITEM NodeTypes = NULL;
+    PKSMULTIPLE_ITEM NodeConnections = NULL;
+    PULONG MixerControls;
+    ULONG MixerControlsCount;
+
+
+    /* open the connected filter */
+    Status = OpenDevice(OutConnection->SymbolicLinkName, &hDevice, &FileObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("OpenDevice failed with %x\n", Status);
+        return Status;
+    }
+
+    /* get connected filter pin count */
+    PinsRefCount = GetPinCount(FileObject);
+    ASSERT(PinsRefCount);
+
+    PinsRef = AllocatePinArray(PinsRefCount);
+    if (!PinsRef)
+    {
+        /* no memory */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    /* get topology node types */
+    Status = GetFilterNodeProperty(FileObject, KSPROPERTY_TOPOLOGY_NODES, &NodeTypes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("GetFilterNodeProperty failed with %x\n", Status);
+        goto cleanup;
+    }
+
+    /* get topology connections */
+    Status = GetFilterNodeProperty(FileObject, KSPROPERTY_TOPOLOGY_CONNECTIONS, &NodeConnections);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("GetFilterNodeProperty failed with %x\n", Status);
+        goto cleanup;
+    }
+    /*  gets connection index of the bridge pin which connects to a node */
+    DPRINT("Pin %u\n", OutConnection->Pin);
+    Status = GetNodeIndexes(NodeConnections, OutConnection->Pin, FALSE, !bInput, &PinConnectionIndexCount, &PinConnectionIndex);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("GetNodeIndexes failed with %x\n", Status);
+        goto cleanup;
+    }
+
+    /* there should be no split in the bride pin */
+    ASSERT(PinConnectionIndexCount == 1);
+
+    /* find all target pins of this connection */
+    Status = GetTargetPinsByNodeConnectionIndex(NodeConnections, NodeTypes, FALSE, PinConnectionIndex[0], PinsRef);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("GetTargetPinsByNodeConnectionIndex failed with %x\n", Status);
+        goto cleanup;
+    }
+
+    for(Index = 0; Index < PinsRefCount; Index++)
+    {
+        if (PinsRef[Index])
+        {
+
+            /* found a target pin, now get all references */
+            Status = GetNodeIndexes(NodeConnections, Index, FALSE, FALSE, &MixerControlsCount, &MixerControls);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            /* sanity check */
+            ASSERT(MixerControlsCount == 1);
+
+
+            PinsSrcRef = AllocatePinArray(PinsRefCount);
+            if (!PinsSrcRef)
+            {
+                /* no memory */
+                ExFreePool(MixerControls);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto cleanup;
+            }
+            /* now get all connected source pins */
+            Status = GetTargetPinsByNodeConnectionIndex(NodeConnections, NodeTypes, TRUE, MixerControls[0], PinsSrcRef);
+            if (!NT_SUCCESS(Status))
+            {
+                /* no memory */
+                ExFreePool(MixerControls);
+                ExFreePool(PinsSrcRef);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto cleanup;
+            }
+
+            /* add pins from target line */
+            if (!bInput)
+            {
+                // dont add bridge pin for input mixers
+                PinsSrcRef[Index] = TRUE;
+                PinsSrcRef[OutConnection->Pin] = TRUE;
+            }
+
+            Status = AddMixerSourceLines(MixerInfo, FileObject, PinsRefCount, PinsSrcRef);
+
+            ExFreePool(MixerControls);
+            ExFreePool(PinsSrcRef);
+        }
+    }
+
+cleanup:
+
+    if (PinsRef)
+        ExFreePool(PinsRef);
+
+    if (NodeConnections)
+        ExFreePool(NodeConnections);
+
+    if (NodeTypes)
+        ExFreePool(NodeTypes);
+
+    if (FileObject)
+        ObDereferenceObject(FileObject);
+
+    if (hDevice)
+        ZwClose(hDevice);
+
+    if (PinConnectionIndex)
+        ExFreePool(PinConnectionIndex);
+
+
+    return Status;
+}
+
+
+
+NTSTATUS
+InitializeMixer(
     IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG DeviceIndex)
+    IN ULONG DeviceIndex,
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN HANDLE hDevice,
+    IN PFILE_OBJECT FileObject,
+    IN ULONG PinCount,
+    IN PKSMULTIPLE_ITEM NodeTypes,
+    IN PKSMULTIPLE_ITEM NodeConnections,
+    IN ULONG NodeIndex,
+    IN ULONG bInput)
 {
-    ULONG DeviceCount, Index, Count;
+    WCHAR Buffer[100];
+    LPWSTR Device;
+    NTSTATUS Status;
+    PULONG Pins;
+    ULONG Index;
+    PKSPIN_PHYSICALCONNECTION OutConnection;
+
+    /* initialize mixer info */
+    MixerInfo->hMixer = hDevice;
+    MixerInfo->MixerFileObject = FileObject;
+
+    /* intialize mixer caps */
+    MixerInfo->MixCaps.wMid = MM_MICROSOFT; //FIXME
+    MixerInfo->MixCaps.wPid = MM_PID_UNMAPPED; //FIXME
+    MixerInfo->MixCaps.vDriverVersion = 1; //FIXME
+    MixerInfo->MixCaps.fdwSupport = 0;
+    MixerInfo->MixCaps.cDestinations = 1;
+
+    /* get target pnp name */
+    Status = GetSysAudioDevicePnpName(DeviceObject, DeviceIndex, &Device);
+    if (NT_SUCCESS(Status))
+    {
+        /* find product name */
+        Status = FindProductName(Device, sizeof(Buffer) / sizeof(WCHAR), Buffer);
+        if (NT_SUCCESS(Status))
+        {
+            if (bInput)
+                wcscat(Buffer, L" Input");
+            else
+                wcscat(Buffer, L" output");
+            RtlMoveMemory(MixerInfo->MixCaps.szPname, Buffer, min(MAXPNAMELEN, wcslen(Buffer)+1) * sizeof(WCHAR));
+            MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+        }
+        ExFreePool(Device);
+    }
+
+    /* initialize mixer destination line */
+    MixerInfo->DestinationLine.cbStruct = sizeof(MIXERLINEW);
+    MixerInfo->DestinationLine.dwSource = MAXULONG;
+    MixerInfo->DestinationLine.dwLineID = 0xFFFF0000;
+    MixerInfo->DestinationLine.fdwLine = MIXERLINE_LINEF_ACTIVE;
+    MixerInfo->DestinationLine.dwUser = 0;
+    MixerInfo->DestinationLine.dwComponentType = (bInput == 0 ? MIXERLINE_COMPONENTTYPE_DST_SPEAKERS : MIXERLINE_COMPONENTTYPE_DST_WAVEIN);
+    MixerInfo->DestinationLine.cChannels = 2; //FIXME
+    MixerInfo->DestinationLine.cControls = 0; //FIXME
+    wcscpy(MixerInfo->DestinationLine.szShortName, L"Summe"); //FIXME
+    wcscpy(MixerInfo->DestinationLine.szName, L"Summe"); //FIXME
+    MixerInfo->DestinationLine.Target.dwType = (bInput == 0 ? MIXERLINE_TARGETTYPE_WAVEOUT : MIXERLINE_TARGETTYPE_WAVEIN);
+    MixerInfo->DestinationLine.Target.dwDeviceID = !bInput;
+    MixerInfo->DestinationLine.Target.wMid = MixerInfo->MixCaps.wMid;
+    MixerInfo->DestinationLine.Target.wPid = MixerInfo->MixCaps.wPid;
+    MixerInfo->DestinationLine.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
+    wcscpy(MixerInfo->DestinationLine.Target.szPname, MixerInfo->MixCaps.szPname);
+
+
+    /* initialize source line list */
+    InitializeListHead(&MixerInfo->SourceLineList);
+
+    Pins = AllocatePinArray(PinCount);
+    if (!Pins)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (bInput)
+    {
+        Status = GetTargetPins(NodeTypes, NodeConnections, NodeIndex, TRUE, Pins, PinCount);
+    }
+    else
+    {
+        Status = GetTargetPins(NodeTypes, NodeConnections, NodeIndex, FALSE, Pins, PinCount);
+    }
+
+    for(Index = 0; Index < PinCount; Index++)
+    {
+        if (Pins[Index])
+        {
+            Status = GetPhysicalConnection(FileObject, Index, &OutConnection);
+            if (NT_SUCCESS(Status))
+            {
+                Status = HandlePhysicalConnection(MixerInfo, bInput, OutConnection);
+            }
+        }
+    }
+    ExFreePool(Pins);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+WdmAudMixerInitialize(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    ULONG DeviceCount, Index, Count, NodeIndex, PinCount;
     NTSTATUS Status;
     HANDLE hDevice;
     PFILE_OBJECT FileObject;
-    PKSMULTIPLE_ITEM MultipleItem;
+    PKSMULTIPLE_ITEM NodeTypes, NodeConnections;
+    BOOL bCloseHandle;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
 
     /* get number of devices */
     DeviceCount = GetSysAudioDeviceCount(DeviceObject);
 
     if (!DeviceCount)
-        return 0;
+    {
+        /* no audio devices available atm */
+        DeviceExtension->MixerInfoCount = 0;
+        DeviceExtension->MixerInfo = NULL;
+        return STATUS_SUCCESS;
+    }
+
+    /* each virtual audio device can at most have an input + output mixer */
+    DeviceExtension->MixerInfo = ExAllocatePool(NonPagedPool, sizeof(MIXER_INFO) * DeviceCount * 2);
+    if (!DeviceExtension->MixerInfo)
+    {
+        /* not enough memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* clear mixer info */
+    RtlZeroMemory(DeviceExtension->MixerInfo, sizeof(MIXER_INFO) * DeviceCount * 2);
 
     Index = 0;
     Count = 0;
@@ -292,49 +1120,72 @@ IsOutputMixer(
         if (NT_SUCCESS(Status))
         {
             /* retrieve all available node types */
-            Status = GetFilterNodeTypes(FileObject, &MultipleItem);
-            if (NT_SUCCESS(Status))
+            Status = GetFilterNodeProperty(FileObject, KSPROPERTY_TOPOLOGY_NODES, &NodeTypes);
+            if (!NT_SUCCESS(Status))
             {
-                if (CountNodeType(MultipleItem, (LPGUID)&KSNODETYPE_DAC))
-                {
-                    /* increment (output) mixer count */
-                    if (DeviceIndex == Count)
-                    {
-                        ExFreePool(MultipleItem);
-                        ObDereferenceObject(FileObject);
-                        ZwClose(hDevice);
-                        return TRUE;
-                    }
-
-                    Count++;
-                }
-
-                if (CountNodeType(MultipleItem, (LPGUID)&KSNODETYPE_ADC))
-                {
-                    /* increment (input) mixer count */
-                    if (DeviceIndex == Count)
-                    {
-                        ExFreePool(MultipleItem);
-                        ObDereferenceObject(FileObject);
-                        ZwClose(hDevice);
-                        return FALSE;
-                    }
-                    Count++;
-                }
-                ExFreePool(MultipleItem);
+                ObDereferenceObject(FileObject);
+                ZwClose(hDevice);
+                break;
             }
-            ObDereferenceObject(FileObject);
-            ZwClose(hDevice);
-        }
 
+            Status = GetFilterNodeProperty(FileObject, KSPROPERTY_TOPOLOGY_CONNECTIONS, &NodeConnections);
+            if (!NT_SUCCESS(Status))
+            {
+                ObDereferenceObject(FileObject);
+                ZwClose(hDevice);
+                ExFreePool(NodeTypes);
+                break;
+            }
+
+            /* get num of pins */
+            PinCount = GetPinCount(FileObject);
+            bCloseHandle = TRUE;
+            /* get the first available dac node index */
+            NodeIndex = GetNodeTypeIndex(NodeTypes, (LPGUID)&KSNODETYPE_DAC);
+            if (NodeIndex != (ULONG)-1)
+            {
+                Status = InitializeMixer(DeviceObject, Index, &DeviceExtension->MixerInfo[Count], hDevice, FileObject, PinCount, NodeTypes, NodeConnections, NodeIndex, FALSE);
+                if (NT_SUCCESS(Status))
+                {
+                    /* increment mixer offset */
+                    Count++;
+                    bCloseHandle = FALSE;
+                }
+            }
+
+            /* get the first available adc node index */
+            NodeIndex = GetNodeTypeIndex(NodeTypes, (LPGUID)&KSNODETYPE_ADC);
+            if (NodeIndex != (ULONG)-1)
+            {
+                Status = InitializeMixer(DeviceObject, Index, &DeviceExtension->MixerInfo[Count], hDevice, FileObject, PinCount, NodeTypes, NodeConnections, NodeIndex, TRUE);
+                if (NT_SUCCESS(Status))
+                {
+                    /* increment mixer offset */
+                    Count++;
+                    bCloseHandle = FALSE;
+                }
+            }
+
+            /* free node connections array */
+            ExFreePool(NodeTypes);
+            ExFreePool(NodeConnections);
+
+            if (bCloseHandle)
+            {
+                /* close virtual audio device */
+                ObDereferenceObject(FileObject);
+                ZwClose(hDevice);
+            }
+        }
+        /* increment virtual audio device index */
         Index++;
     }while(Index < DeviceCount);
 
-    ASSERT(0);
-    return FALSE;
+    /* store mixer count */
+    DeviceExtension->MixerInfoCount = Count;
+
+    return Status;
 }
-
-
 
 
 
@@ -342,43 +1193,19 @@ NTSTATUS
 WdmAudMixerCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
-    IN  PWDMAUD_CLIENT ClientInfo)
+    IN  PWDMAUD_CLIENT ClientInfo,
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension)
 {
-    NTSTATUS Status;
-    LPWSTR Device;
-    WCHAR Buffer[100];
-
-    Status = GetSysAudioDevicePnpName(DeviceObject, DeviceInfo->DeviceIndex,&Device);
-    if (!NT_SUCCESS(Status))
+    if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
     {
-        DPRINT1("Failed to get device name %x\n", Status);
-        return Status;
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
     }
 
-    DeviceInfo->u.MixCaps.cDestinations = 1; //FIXME
+    /* copy cached mixer caps */
+    RtlMoveMemory(&DeviceInfo->u.MixCaps, &DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice].MixCaps, sizeof(MIXERCAPSW));
 
-    Status = FindProductName(Device, sizeof(Buffer) / sizeof(WCHAR), Buffer);
-
-    /* check for success */
-    if (!NT_SUCCESS(Status))
-    {
-        DeviceInfo->u.MixCaps.szPname[0] = L'\0';
-    }
-    else
-    {
-        if (IsOutputMixer(DeviceObject, DeviceInfo->DeviceIndex))
-        {
-            wcscat(Buffer, L" output");
-        }
-        else
-        {
-            wcscat(Buffer, L" Input");
-        }
-        RtlMoveMemory(DeviceInfo->u.MixCaps.szPname, Buffer, min(MAXPNAMELEN, wcslen(Buffer)+1) * sizeof(WCHAR));
-        DeviceInfo->u.MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
-    }
-
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 
@@ -391,10 +1218,14 @@ WdmAudControlOpenMixer(
 {
     ULONG Index;
     PWDMAUD_HANDLE Handels;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
     DPRINT("WdmAudControlOpenMixer\n");
 
-    if (DeviceInfo->DeviceIndex >= GetNumOfMixerDevices(DeviceObject))
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+
+    if (DeviceInfo->DeviceIndex >= DeviceExtension->MixerInfoCount)
     {
         /* mixer index doesnt exist */
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
@@ -442,7 +1273,57 @@ WdmAudGetLineInfo(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    LPMIXERLINE_SOURCE MixerLineSrc;
+
+    /* get device extension */
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    if (DeviceInfo->Flags == MIXER_GETLINEINFOF_DESTINATION)
+    {
+        if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
+        {
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
+
+        if (DeviceInfo->u.MixLine.dwDestination != 0)
+        {
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
+
+        /* copy cached data */
+        RtlCopyMemory(&DeviceInfo->u.MixLine, &DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice].DestinationLine, sizeof(MIXERLINEW));
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+    else if (DeviceInfo->Flags == MIXER_GETLINEINFOF_SOURCE)
+    {
+        if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
+        {
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
+
+        if (DeviceInfo->u.MixLine.dwSource >= DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice].DestinationLine.cConnections)
+        {
+            DPRINT1("dwSource %u Destinations %u\n", DeviceInfo->u.MixLine.dwSource, DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice].DestinationLine.cConnections);
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
+
+        MixerLineSrc = GetSourceMixerLine(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixLine.dwSource);
+        if (MixerLineSrc)
+        {
+            DPRINT("Line %u Name %S\n", MixerLineSrc->Line.dwSource, MixerLineSrc->Line.szName);
+            RtlCopyMemory(&DeviceInfo->u.MixLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+        }
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
+    DPRINT1("Flags %x\n", DeviceInfo->Flags);
     UNIMPLEMENTED;
+
     //DbgBreakPoint();
     return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
 
@@ -456,6 +1337,32 @@ WdmAudGetLineControls(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
+    LPMIXERLINE_SOURCE MixerLineSrc;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    if (DeviceInfo->Flags == MIXER_GETLINECONTROLSF_ALL)
+    {
+        if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
+        {
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
+
+        MixerLineSrc = GetSourceMixerLineByLineId(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixControls.dwLineID);
+        ASSERT(MixerLineSrc);
+        if (MixerLineSrc)
+        {
+            RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, MixerLineSrc->LineControls, min(MixerLineSrc->Line.cControls, DeviceInfo->u.MixControls.cControls) * sizeof(MIXERLINECONTROLSW));
+        }
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+
+
+
+    }
+
     UNIMPLEMENTED;
     //DbgBreakPoint();
     return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
