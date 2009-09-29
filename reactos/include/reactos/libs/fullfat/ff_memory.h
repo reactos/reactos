@@ -52,5 +52,8 @@ void			FF_putChar	(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT8 Value);
 void			FF_putShort	(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT16 Value);
 void			FF_putLong	(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT32 Value);
 
+void			*FF_Malloc(FF_T_UINT32 allocSize);
+void			FF_Free(void *pBuffer);
+
 #endif
 

@@ -89,7 +89,7 @@ FF_IOMAN *FF_CreateIOMAN(FF_T_UINT8 *pCacheMem, FF_T_UINT32 Size, FF_T_UINT16 Bl
 		return NULL;	// Memory Size not a multiple of BlkSize > 0
 	}
 
-	pIoman = (FF_IOMAN *) malloc(sizeof(FF_IOMAN));
+	pIoman = (FF_IOMAN *) FF_Malloc(sizeof(FF_IOMAN));
 
 	if(!pIoman) {		// Ensure malloc() succeeded.
 		if(pError) {
@@ -106,7 +106,7 @@ FF_IOMAN *FF_CreateIOMAN(FF_T_UINT8 *pCacheMem, FF_T_UINT32 Size, FF_T_UINT16 Bl
 	pIoman->pPartition	= NULL;
 	pIoman->pSemaphore	= NULL;
 
-	pIoman->pPartition	= (FF_PARTITION  *) malloc(sizeof(FF_PARTITION));
+	pIoman->pPartition	= (FF_PARTITION  *) FF_Malloc(sizeof(FF_PARTITION));
 	if(pIoman->pPartition) {	// If succeeded, flag that allocation.
 		pIoman->MemAllocation |= FF_IOMAN_ALLOC_PART;
 		pIoman->pPartition->LastFreeCluster = 0;
@@ -127,7 +127,7 @@ FF_IOMAN *FF_CreateIOMAN(FF_T_UINT8 *pCacheMem, FF_T_UINT32 Size, FF_T_UINT16 Bl
 		return NULL;
 	}
 
-	pIoman->pBlkDevice	= (FF_BLK_DEVICE *) malloc(sizeof(FF_BLK_DEVICE));
+	pIoman->pBlkDevice	= (FF_BLK_DEVICE *) FF_Malloc(sizeof(FF_BLK_DEVICE));
 	if(pIoman->pBlkDevice) {	// If succeeded, flag that allocation.
 		pIoman->MemAllocation |= FF_IOMAN_ALLOC_BLKDEV;
 
@@ -145,7 +145,7 @@ FF_IOMAN *FF_CreateIOMAN(FF_T_UINT8 *pCacheMem, FF_T_UINT32 Size, FF_T_UINT16 Bl
 	if(pCacheMem) {
 		pIoman->pCacheMem = pCacheMem;
 	}else {	// No-Cache buffer provided (malloc)
-		pLong = (FF_T_UINT32 *) malloc(Size);
+		pLong = (FF_T_UINT32 *) FF_Malloc(Size);
 		pIoman->pCacheMem = (FF_T_UINT8 *) pLong;
 		if(!pIoman->pCacheMem) {
 			pIoman->MemAllocation |= FF_IOMAN_ALLOC_BUFFERS;
@@ -163,7 +163,7 @@ FF_IOMAN *FF_CreateIOMAN(FF_T_UINT8 *pCacheMem, FF_T_UINT32 Size, FF_T_UINT16 Bl
 	/*	Malloc() memory for buffer objects. (FullFAT never refers to a buffer directly
 		but uses buffer objects instead. Allows us to provide thread safety.
 	*/
-	pIoman->pBuffers = (FF_BUFFER *) malloc(sizeof(FF_BUFFER) * pIoman->CacheSize);
+	pIoman->pBuffers = (FF_BUFFER *) FF_Malloc(sizeof(FF_BUFFER) * pIoman->CacheSize);
 
 	if(pIoman->pBuffers) {
 		pIoman->MemAllocation |= FF_IOMAN_ALLOC_BUFDESCR;
@@ -196,22 +196,22 @@ FF_ERROR FF_DestroyIOMAN(FF_IOMAN *pIoman) {
 
 	// Ensure pPartition pointer was allocated.
 	if((pIoman->MemAllocation & FF_IOMAN_ALLOC_PART)) {
-		free(pIoman->pPartition);
+		FF_Free(pIoman->pPartition);
 	}
 
 	// Ensure pBlkDevice pointer was allocated.
 	if((pIoman->MemAllocation & FF_IOMAN_ALLOC_BLKDEV)) {
-		free(pIoman->pBlkDevice);
+		FF_Free(pIoman->pBlkDevice);
 	}
 
 	// Ensure pBuffers pointer was allocated.
 	if((pIoman->MemAllocation & FF_IOMAN_ALLOC_BUFDESCR)) {
-		free(pIoman->pBuffers);
+		FF_Free(pIoman->pBuffers);
 	}
 
 	// Ensure pCacheMem pointer was allocated.
 	if((pIoman->MemAllocation & FF_IOMAN_ALLOC_BUFFERS)) {
-		free(pIoman->pCacheMem);
+		FF_Free(pIoman->pCacheMem);
 	}
 
 	// Destroy any Semaphore that was created.
@@ -220,7 +220,7 @@ FF_ERROR FF_DestroyIOMAN(FF_IOMAN *pIoman) {
 	}
 
 	// Finally free the FF_IOMAN object.
-	free(pIoman);
+	FF_Free(pIoman);
 
 	return FF_ERR_NONE;
 }

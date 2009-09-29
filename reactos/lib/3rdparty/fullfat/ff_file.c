@@ -163,7 +163,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 		}
 		return (FF_FILE *)NULL;
 	}
-	pFile = malloc(sizeof(FF_FILE));
+	pFile = FF_Malloc(sizeof(FF_FILE));
 	if(!pFile) {
 		if(pError) {
 			*pError = FF_ERR_NOT_ENOUGH_MEMORY;

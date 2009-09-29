@@ -53,7 +53,7 @@ struct _FF_HASH_TABLE {
  *
  **/
 FF_HASH_TABLE FF_CreateHashTable() {
-	FF_HASH_TABLE pHash = (FF_HASH_TABLE) malloc(sizeof(struct _FF_HASH_TABLE));
+	FF_HASH_TABLE pHash = (FF_HASH_TABLE) FF_Malloc(sizeof(struct _FF_HASH_TABLE));
 
 	if(pHash) {
 		FF_ClearHashTable(pHash);
