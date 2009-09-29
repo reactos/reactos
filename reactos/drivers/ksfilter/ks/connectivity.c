@@ -487,14 +487,14 @@ KsPinPropertyHandler(
                 break;
             }
 
-            if (!Descriptor[Pin->PinId].Category)
+            if (!Descriptor[Pin->PinId].Name)
             {
                 Irp->IoStatus.Information = 0;
                 Status = STATUS_SUCCESS;
                 break;
             }
 
-            Status = KspReadMediaCategory((LPGUID)Descriptor[Pin->PinId].Category, &KeyInfo);
+            Status = KspReadMediaCategory((LPGUID)Descriptor[Pin->PinId].Name, &KeyInfo);
             if (!NT_SUCCESS(Status))
             {
                 Irp->IoStatus.Information = 0;
