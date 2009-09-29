@@ -153,6 +153,14 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
                     OUT PFCB *FcbOrDcb,
                     OUT PCCB *Ccb);
 
+/* --------------------------------------------------------- fcb.c */
+
+PFCB NTAPI
+FatFindFcb(PFAT_IRP_CONTEXT IrpContext,
+           PRTL_SPLAY_LINKS *RootNode,
+           PSTRING AnsiName,
+           PBOOLEAN IsDosName);
+
 /* --------------------------------------------------------- fullfat.c */
 
 FF_T_SINT32

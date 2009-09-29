@@ -11,6 +11,16 @@
 #define NDEBUG
 #include "fastfat.h"
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeStringToCountedOemString(
+    IN OUT POEM_STRING DestinationString,
+    IN PCUNICODE_STRING SourceString,
+    IN BOOLEAN AllocateDestinationString
+);
+
+
 /* FUNCTIONS *****************************************************************/
 
 IO_STATUS_BLOCK
@@ -52,7 +62,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
 
     /* Control blocks */
     PVCB Vcb, DecodedVcb;
-    PFCB Fcb;
+    PFCB Fcb, NextFcb;
     PCCB Ccb;
     PFCB ParentDcb;
 
@@ -72,6 +82,11 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     NTSTATUS Status;
     IO_STATUS_BLOCK Iosb;
     PIO_STACK_LOCATION IrpSp;
+    BOOLEAN EndBackslash = FALSE, OpenedAsDos;
+    UNICODE_STRING RemainingPart, FirstName, NextName;
+    OEM_STRING AnsiFirstName;
+
+    Iosb.Status = STATUS_SUCCESS;
 
     /* Get current IRP stack location */
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -266,10 +281,178 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             ParentDcb = Vcb->RootDcb;
             DPRINT1("ParentDcb %p\n", ParentDcb);
         }
+
+        /* Check for backslash at the end */
+        if (FileName.Length &&
+            FileName.Buffer[FileName.Length / sizeof(WCHAR) - 1] == L'\\')
+        {
+            /* Cut it out */
+            FileName.Length -= sizeof(WCHAR);
+
+            /* Remember we cut it */
+            EndBackslash = TRUE;
+        }
+
+        /* Ensure the name is set */
+        if (!ParentDcb->FullFileName.Buffer)
+        {
+            DPRINT1("ParentDcb->FullFileName.Buffer is NULL\n");
+        }
+
+        /* Check max path length */
+        if (ParentDcb->FullFileName.Length + FileName.Length + sizeof(WCHAR) <= FileName.Length)
+        {
+            DPRINT1("Max length is way off\n");
+            Iosb.Status = STATUS_OBJECT_NAME_INVALID;
+            ASSERT(FALSE);
+        }
+
+        /* Loop through FCBs to find a good one */
+        while (TRUE)
+        {
+            Fcb = ParentDcb;
+
+            /* Dissect the name */
+            RemainingPart = FileName;
+            while (RemainingPart.Length)
+            {
+                FsRtlDissectName(RemainingPart, &FirstName, &NextName);
+
+                /* Check for validity */
+                if ((NextName.Length && NextName.Buffer[0] == L'\\') ||
+                    (NextName.Length > 255 * sizeof(WCHAR)))
+                {
+                    /* The name is invalid */
+                    DPRINT1("Invalid name found\n");
+                    Iosb.Status = STATUS_OBJECT_NAME_INVALID;
+                    ASSERT(FALSE);
+                }
+
+                /* Convert the name to ANSI */
+                AnsiFirstName.Buffer = ExAllocatePool(PagedPool, FirstName.Length);
+                AnsiFirstName.Length = 0;
+                AnsiFirstName.MaximumLength = FirstName.Length;
+                Status = RtlUpcaseUnicodeStringToCountedOemString(&AnsiFirstName, &FirstName, FALSE);
+
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("RtlUpcaseUnicodeStringToCountedOemString() failed with 0x%08x\n", Status);
+                    ASSERT(FALSE);
+                    NextFcb = NULL;
+                    AnsiFirstName.Length = 0;
+                }
+                else
+                {
+                    /* Find the coresponding FCB */
+                    NextFcb = FatFindFcb(IrpContext,
+                                         &Fcb->Dcb.SplayLinksAnsi,
+                                        (PSTRING)&AnsiFirstName,
+                                         &OpenedAsDos);
+                }
+
+                /* Check if we found anything */
+                if (!NextFcb && Fcb->Dcb.SplayLinksUnicode)
+                {
+                    ASSERT(FALSE);
+                }
+
+                /* Move to the next FCB */
+                if (NextFcb)
+                {
+                    Fcb = NextFcb;
+                    RemainingPart = NextName;
+                }
+
+                /* Break out of this loop if nothing can be found */
+                if (!NextFcb ||
+                    NextName.Length == 0 ||
+                    FatNodeType(NextFcb) == FAT_NTC_FCB)
+                {
+                    break;
+                }
+            }
+
+            /* Ensure remaining name doesn't start from a backslash */
+            if (RemainingPart.Length &&
+                RemainingPart.Buffer[0] == L'\\')
+            {
+                /* Cut it */
+                RemainingPart.Buffer++;
+                RemainingPart.Length -= sizeof(WCHAR);
+            }
+
+            if (Fcb->Condition == FcbGood)
+            {
+                /* Good FCB, break out of the loop */
+                break;
+            }
+            else
+            {
+                ASSERT(FALSE);
+            }
+        }
+
+        /* We have a valid FCB now */
+        if (!RemainingPart.Length)
+        {
+            DPRINT1("It's possible to open an existing FCB\n");
+            ASSERT(FALSE);
+        }
+
+        /* During parsing we encountered a part which has no attached FCB/DCB.
+           Check that the parent is really DCB and not FCB */
+        if (FatNodeType(Fcb) != FAT_NTC_ROOT_DCB &&
+            FatNodeType(Fcb) != FAT_NTC_DCB)
+        {
+            DPRINT1("Weird FCB node type %x, expected DCB or root DCB\n", FatNodeType(Fcb));
+            ASSERT(FALSE);
+        }
+
+        /* Create additional DCBs for all path items */
+        ParentDcb = Fcb;
+        while (TRUE)
+        {
+            FsRtlDissectName(RemainingPart, &FirstName, &RemainingPart);
+
+            /* Check for validity */
+            if ((RemainingPart.Length && RemainingPart.Buffer[0] == L'\\') ||
+                (NextName.Length > 255 * sizeof(WCHAR)))
+            {
+                /* The name is invalid */
+                DPRINT1("Invalid name found\n");
+                Iosb.Status = STATUS_OBJECT_NAME_INVALID;
+                ASSERT(FALSE);
+            }
+
+            /* Convert the name to ANSI */
+            AnsiFirstName.Buffer = ExAllocatePool(PagedPool, FirstName.Length);
+            AnsiFirstName.Length = 0;
+            AnsiFirstName.MaximumLength = FirstName.Length;
+            Status = RtlUpcaseUnicodeStringToCountedOemString(&AnsiFirstName, &FirstName, FALSE);
+
+            if (!NT_SUCCESS(Status))
+            {
+                ASSERT(FALSE);
+            }
+
+            DPRINT1("FirstName %wZ, RemainingPart %wZ\n", &FirstName, &RemainingPart);
+
+            /* Break if came to the end */
+            if (!RemainingPart.Length) break;
+
+            // TODO: Create a DCB for this entry
+        }
+
+        // Simulate that we opened the file
+        //Iosb.Information = FILE_OPENED;
+        Irp->IoStatus.Information = FILE_OPENED;
+        FileObject->SectionObjectPointer = (PSECTION_OBJECT_POINTERS)0x1;
     }
 
-    //return Iosb.Status;
-    return STATUS_SUCCESS;
+    /* Complete the request */
+    FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+
+    return Iosb.Status;
 }
 
 NTSTATUS

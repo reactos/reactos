@@ -221,13 +221,14 @@ enum _FCB_NAME_TYPE {
 } FCB_NAME_TYPE;
 
 typedef struct _FCB_NAME_LINK {
+    struct _FCB *Fcb;
     RTL_SPLAY_LINKS Links;
     union
     {
         OEM_STRING Ansi;
         UNICODE_STRING String;
     } Name;
-    UCHAR Type;
+    BOOLEAN IsDosName;
 } FCB_NAME_LINK, *PFCB_NAME_LINK;
 
 typedef enum _FCB_CONDITION
@@ -287,7 +288,9 @@ typedef struct _FCB
             PFILE_OBJECT StreamFileObject;
             /* Bitmap to search for free dirents. */
             RTL_BITMAP FreeBitmap;
-            PRTL_SPLAY_LINKS SplayLinks;
+            /* Names */
+            PRTL_SPLAY_LINKS SplayLinksAnsi;
+            PRTL_SPLAY_LINKS SplayLinksUnicode;
         } Dcb;
     };
 } FCB, *PFCB;
