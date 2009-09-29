@@ -3,9 +3,11 @@
 <module name="fastfatn" type="kernelmodedriver" installbase="system32/drivers" installname="fastfatn.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="fastfatn">.</include>
+	<include base="ReactOS">include/reactos/libs/fullfat</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>pseh</library>
+	<library>fullfat</library>
 	<file>blockdev.c</file>
 	<file>cleanup.c</file>
 	<file>close.c</file>
@@ -21,6 +23,7 @@
 	<file>finfo.c</file>
 	<file>flush.c</file>
 	<file>fsctl.c</file>
+	<file>fullfat.c</file>
 	<file>lock.c</file>
 	<file>rw.c</file>
 	<file>shutdown.c</file>

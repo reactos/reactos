@@ -35,6 +35,10 @@ typedef struct _FAT_GLOBAL_DATA
     BOOLEAN Win31FileSystem;
     /* Jan 1, 1980 System Time */
     LARGE_INTEGER DefaultFileTime;
+
+    /* FullFAT integration */
+    FF_IOMAN *Ioman;
+    FF_ERROR FF_Error;
 } FAT_GLOBAL_DATA;
 
 typedef struct _FAT_PAGE_CONTEXT
@@ -175,6 +179,9 @@ typedef struct _VCB
     struct _FCB *RootDcb;
 
     ULONG MediaChangeCount;
+
+    /* FullFAT integration */
+    FF_IOMAN *Ioman;
 } VCB, *PVCB;
 
 #define VcbToVolumeDeviceObject(xVcb) \

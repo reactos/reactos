@@ -3,6 +3,8 @@
 #include <debug.h>
 #include <pseh/pseh2.h>
 
+#include "fullfat.h"
+
 #include <fat.h>
 #include <fatstruc.h>
 
@@ -150,6 +152,14 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
                     OUT PVCB *Vcb,
                     OUT PFCB *FcbOrDcb,
                     OUT PCCB *Ccb);
+
+/* --------------------------------------------------------- fullfat.c */
+
+FF_T_SINT32
+FatWriteBlocks(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count, void *pParam);
+
+FF_T_SINT32
+FatReadBlocks(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count, void *pParam);
 
 /* ---------------------------------------------------------  lock.c */
 

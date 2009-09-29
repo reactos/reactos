@@ -12,7 +12,7 @@
 #include "fastfat.h"
 
 /* FUNCTIONS ****************************************************************/
-
+#if 0
 /**
  * Locates FCB by the supplied name in the cache trie of fcbs.
  *
@@ -325,4 +325,5 @@ FatOpenFcb(
         &Context.ShortName, &LongFileName);
     return Status;
 }
+#endif
 /* EOF */

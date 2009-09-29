@@ -58,6 +58,8 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     DISK_GEOMETRY DiskGeometry;
     ULONG MediaChangeCount = 0;
     PVOLUME_DEVICE_OBJECT VolumeDevice;
+    VCB *Vcb;
+    FF_ERROR Error;
 
     DPRINT1("FatMountVolume()\n");
 
@@ -81,6 +83,9 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     /* Remove unmounted VCBs */
     FatiCleanVcbs(IrpContext);
 
+    /* Acquire the global exclusive lock */
+    FatAcquireExclusiveGlobal(IrpContext);
+
     /* Create a new volume device object */
     Status = IoCreateDevice(FatGlobalData.DriverObject,
                             sizeof(VOLUME_DEVICE_OBJECT) - sizeof(DEVICE_OBJECT),
@@ -90,7 +95,13 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
                             FALSE,
                             (PDEVICE_OBJECT *)&VolumeDevice);
 
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Release the global lock */
+        FatReleaseGlobal(IrpContext);
+
+        return Status;
+    }
 
     /* Match alignment requirements */
     if (TargetDeviceObject->AlignmentRequirement > VolumeDevice->DeviceObject.AlignmentRequirement)
@@ -124,14 +135,53 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     Status = FatInitializeVcb(IrpContext, &VolumeDevice->Vcb, TargetDeviceObject, Vpb);
     if (!NT_SUCCESS(Status)) goto FatMountVolumeCleanup;
 
+    Vcb = &VolumeDevice->Vcb;
+
+    /* Initialize FullFAT library */
+    Vcb->Ioman = FF_CreateIOMAN(NULL,
+                                8192,
+                                VolumeDevice->DeviceObject.SectorSize,
+                                &Error);
+
+    ASSERT(Vcb->Ioman);
+
+    /* Register block device read/write functions */
+    Error = FF_RegisterBlkDevice(Vcb->Ioman,
+                                 VolumeDevice->DeviceObject.SectorSize,
+                                 (FF_WRITE_BLOCKS)FatWriteBlocks,
+                                 (FF_READ_BLOCKS)FatReadBlocks,
+                                 Vcb);
+
+    if (Error)
+    {
+        DPRINT1("Registering block device with FullFAT failed with error %d\n", Error);
+        FF_DestroyIOMAN(Vcb->Ioman);
+        goto FatMountVolumeCleanup;
+    }
+
+    /* Mount the volume using FullFAT */
+    if(FF_MountPartition(Vcb->Ioman, 0))
+    {
+        DPRINT1("Partition mounting failed\n");
+        FF_DestroyIOMAN(Vcb->Ioman);
+        goto FatMountVolumeCleanup;
+    }
+
+    // TODO: Read BPB and store it in Vcb->Bpb
+
     /* Create root DCB for it */
     FatCreateRootDcb(IrpContext, &VolumeDevice->Vcb);
 
     /* Keep trace of media changes */
     VolumeDevice->Vcb.MediaChangeCount = MediaChangeCount;
 
+    //ObDereferenceObject(TargetDeviceObject);
+
+    /* Release the global lock */
+    FatReleaseGlobal(IrpContext);
+
     /* Notify about volume mount */
-    FsRtlNotifyVolumeEvent(VolumeDevice->Vcb.StreamFileObject, FSRTL_VOLUME_MOUNT);
+    //FsRtlNotifyVolumeEvent(VolumeDevice->Vcb.StreamFileObject, FSRTL_VOLUME_MOUNT);
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -141,6 +191,10 @@ FatMountVolumeCleanup:
 
     /* Unwind the routine actions */
     IoDeleteDevice((PDEVICE_OBJECT)VolumeDevice);
+
+    /* Release the global lock */
+    FatReleaseGlobal(IrpContext);
+
     return Status;
 }
 
