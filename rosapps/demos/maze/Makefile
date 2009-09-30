@@ -12,7 +12,7 @@ TARGET_SDKLIBS = kernel32.a gdi32.a
 
 TARGET_OBJECTS = maze.o
 
-TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
+TARGET_CFLAGS = -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 
