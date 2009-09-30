@@ -522,7 +522,6 @@ sendorfree:
 	    error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
 					  (OSK_PCHAR)new_m->m_data, new_m->m_len );
 	    m_free( new_m );
-	    goto done;
 	}
 
 	OS_DbgPrint(OSK_MID_TRACE,("Error from upper layer: %d\n", error));
