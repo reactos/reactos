@@ -36,39 +36,6 @@ static DWORD    VertBufSize;
 static DWORD    VertBufIndex;
 static GLenum   TessErrorOccurred;
 
-
-/*****************************************************************************
-* InitLineBuf
-*
-* Initializes the global LineBuf and its associated size and current-element
-* counters.
-*****************************************************************************/
-
-INT InitLineBuf(VOID)
-{
-    if (!(LineBuf = (FLOAT*)
-        HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (LineBufSize = LINE_BUF_QUANT) * sizeof(FLOAT))))
-        return 0;
-    LineBufIndex = 0;
-    return 1;
-}
-
-/*****************************************************************************
-* InitVertBuf
-*
-* Initializes the global VertBuf and its associated size and current-element
-* counters.
-*****************************************************************************/
-
-INT InitVertBuf(VOID)
-{
-    if (!(VertBuf = (FLOAT*)
-        HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (VertBufSize = VERT_BUF_QUANT) * sizeof(FLOAT))))
-        return 0;
-    VertBufIndex = 0;
-    return 1;
-}
-
 /*****************************************************************************
 * AppendToLineBuf
 *
@@ -81,8 +48,9 @@ INT AppendToLineBuf(FLOAT value)
     if (LineBufIndex >= LineBufSize)
     {
         FLOAT* f;
+        LineBufSize += LINE_BUF_QUANT;
 
-        f = (FLOAT*) HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,  LineBuf, (LineBufSize += LINE_BUF_QUANT) * sizeof(FLOAT));
+        f = (FLOAT*) HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,  LineBuf, (LineBufSize) * sizeof(FLOAT));
         if (!f)
             return 0;
         LineBuf = f;
@@ -107,36 +75,6 @@ INT AppendToVertBuf(FLOAT value)
         return 0;
     VertBuf[VertBufIndex++] = value;
     return 1;
-}
-
-/*****************************************************************************
-* FreeLineBuf
-*
-* Cleans up vertex buffer structure.
-*****************************************************************************/
-
-VOID FreeLineBuf(VOID)
-{
-    if (LineBuf)
-    {
-        HeapFree(GetProcessHeap(), 0, LineBuf);
-        LineBuf = NULL;
-    }
-}
-
-/*****************************************************************************
-* FreeVertBuf
-*
-* Cleans up vertex buffer structure.
-*****************************************************************************/
-
-VOID FreeVertBuf(VOID)
-{
-    if (VertBuf)
-    {
-        HeapFree(GetProcessHeap(), 0, VertBuf);
-        VertBuf = NULL;
-    }
 }
 
 /*****************************************************************************
@@ -634,8 +572,13 @@ INT DrawGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation, FLOAT ex
     /*
     * Initialize the global buffer into which we place the outlines:
     */
-    if (!InitLineBuf())
+    LineBuf = (FLOAT*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (LINE_BUF_QUANT) * sizeof(FLOAT));
+
+    if(!LineBuf)
         goto exit;
+
+    LineBufSize = LINE_BUF_QUANT;
+    LineBufIndex = 0;
 
     /*
     * Convert the glyph outlines to a set of polyline loops.
@@ -681,8 +624,14 @@ INT DrawGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation, FLOAT ex
         * auxiliary routines for drawing.
         */
 
-        if (!InitVertBuf())
+        VertBuf = (FLOAT*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (VERT_BUF_QUANT) * sizeof(FLOAT));
+
+        if (!VertBuf)
             goto exit;
+
+        VertBufSize = VERT_BUF_QUANT;
+        VertBufIndex = 0;
+
         if (!(tess = gluNewTess()))
             goto exit;
 
@@ -799,11 +748,16 @@ INT DrawGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation, FLOAT ex
 
 
 exit:
-    FreeLineBuf();
+
+    if(LineBuf)
+        HeapFree(GetProcessHeap(), 0, LineBuf);
+
+    if(VertBuf)
+        HeapFree(GetProcessHeap(), 0, VertBuf);
+
     if (tess)
         gluDeleteTess(tess);
 
-    FreeVertBuf();
     return status;
 }
 
