@@ -288,6 +288,8 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 {
    NTSTATUS Status;
    PFN_TYPE AllocatedPage;
+   KIRQL OldIrql;
+
    Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
    if (!NT_SUCCESS(Status))
    {
@@ -303,7 +305,9 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
                              1);
    if (Locked)
    {
+      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       MmLockPage(AllocatedPage);
+      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
    return(Status);
 }

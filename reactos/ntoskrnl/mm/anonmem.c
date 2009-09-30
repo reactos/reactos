@@ -258,6 +258,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    PMM_PAGEOP PageOp;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+   KIRQL OldIrql;
     
    /*
     * There is a window between taking the page fault and locking the
@@ -268,7 +269,9 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
    {
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(MmGetPfnForProcess(NULL, Address));
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
       return(STATUS_SUCCESS);
    }
@@ -362,7 +365,9 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
       MmLockAddressSpace(AddressSpace);
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(MmGetPfnForProcess(NULL, Address));
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
@@ -437,7 +442,9 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
     */
    if (Locked)
    {
+      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       MmLockPage(Page);
+      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
    PageOp->Status = STATUS_SUCCESS;
    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);

@@ -1095,32 +1095,11 @@ MmLockPage(PFN_TYPE Page);
 
 VOID
 NTAPI
-MmLockPageUnsafe(PFN_TYPE Page);
-
-VOID
-NTAPI
 MmUnlockPage(PFN_TYPE Page);
 
 ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
-
-static
-__inline
-KIRQL
-NTAPI
-MmAcquirePageListLock()
-{
-	return KeAcquireQueuedSpinLock(LockQueuePfnLock);
-}
-
-FORCEINLINE
-VOID
-NTAPI
-MmReleasePageListLock(KIRQL oldIrql)
-{
-	KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
 
 VOID
 NTAPI
@@ -1342,10 +1321,6 @@ MmDereferencePage(PFN_TYPE Page);
 VOID
 NTAPI
 MmReferencePage(PFN_TYPE Page);
-
-VOID
-NTAPI
-MmReferencePageUnsafe(PFN_TYPE Page);
 
 ULONG
 NTAPI
