@@ -41,6 +41,54 @@ FatiOpenRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
     return Iosb;
 }
 
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
+                     IN PFILE_OBJECT FileObject,
+                     IN PVCB Vcb,
+                     IN PFCB ParentDcb,
+                     IN PACCESS_MASK DesiredAccess,
+                     IN USHORT ShareAccess,
+                     IN ULONG AllocationSize,
+                     IN PFILE_FULL_EA_INFORMATION EaBuffer,
+                     IN ULONG EaLength,
+                     IN UCHAR FileAttributes,
+                     IN ULONG CreateDisposition,
+                     IN BOOLEAN IsPagingFile,
+                     IN BOOLEAN DeleteOnClose,
+                     IN BOOLEAN IsDosName)
+{
+    IO_STATUS_BLOCK Iosb = {{0}};
+    PFCB Fcb;
+
+    /* Check for create file option and fail */
+    if (CreateDisposition == FILE_CREATE)
+    {
+        Iosb.Status = STATUS_OBJECT_NAME_COLLISION;
+        return Iosb;
+    }
+
+    // TODO: Check more params
+
+    /* Create a new FCB for this file */
+    Fcb = FatCreateFcb(IrpContext, Vcb, ParentDcb);
+
+    // TODO: Check if overwrite is needed
+
+    // This is usual file open branch, without overwriting!
+    /* Set context and section object pointers */
+    FatSetFileObject(FileObject,
+                     UserFileOpen,
+                     Fcb,
+                     FatCreateCcb());
+    FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+
+    Iosb.Status = STATUS_SUCCESS;
+    Iosb.Information = FILE_OPENED;
+
+    return Iosb;
+}
+
 NTSTATUS
 NTAPI
 FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
@@ -443,10 +491,35 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             // TODO: Create a DCB for this entry
         }
 
-        // Simulate that we opened the file
-        //Iosb.Information = FILE_OPENED;
-        Irp->IoStatus.Information = FILE_OPENED;
-        FileObject->SectionObjectPointer = (PSECTION_OBJECT_POINTERS)0x1;
+        // TODO: Try to open directory
+
+        /* If end backslash here, then it's definately not permitted,
+           since we're opening files here */
+        if (EndBackslash)
+        {
+            /* Complete the request */
+            Iosb.Status = STATUS_OBJECT_NAME_INVALID;
+            FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+            return Iosb.Status;
+        }
+
+        /* Try to open the file */
+        Iosb = FatiOpenExistingFile(IrpContext,
+                                    FileObject,
+                                    Vcb,
+                                    ParentDcb,
+                                    DesiredAccess,
+                                    ShareAccess,
+                                    AllocationSize,
+                                    EaBuffer,
+                                    EaLength,
+                                    FileAttributes,
+                                    CreateDisposition,
+                                    FALSE,
+                                    DeleteOnClose,
+                                    OpenedAsDos);
+
+        Irp->IoStatus.Information = Iosb.Information;
     }
 
     /* Complete the request */

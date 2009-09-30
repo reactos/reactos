@@ -153,13 +153,11 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
                     OUT PFCB *FcbOrDcb,
                     OUT PCCB *Ccb);
 
-/* --------------------------------------------------------- fcb.c */
-
-PFCB NTAPI
-FatFindFcb(PFAT_IRP_CONTEXT IrpContext,
-           PRTL_SPLAY_LINKS *RootNode,
-           PSTRING AnsiName,
-           PBOOLEAN IsDosName);
+VOID NTAPI
+FatSetFileObject(PFILE_OBJECT FileObject,
+                 TYPE_OF_OPEN TypeOfOpen,
+                 PVOID Fcb,
+                 PCCB Ccb);
 
 /* --------------------------------------------------------- fullfat.c */
 
@@ -263,14 +261,11 @@ FatUnlinkFcbNames(
 	IN PFCB ParentFcb,
 	IN PFCB Fcb);
 
-NTSTATUS
+PFCB NTAPI
 FatCreateFcb(
-    OUT PFCB* CreatedFcb,
     IN PFAT_IRP_CONTEXT IrpContext,
-    IN PFCB ParentFcb,
-	IN PDIR_ENTRY Dirent,
-    IN PUNICODE_STRING FileName,
-	IN PUNICODE_STRING LongFileName OPTIONAL);
+    IN PVCB Vcb,
+    IN PFCB ParentDcb);
 
 NTSTATUS
 FatOpenFcb(
@@ -278,6 +273,15 @@ FatOpenFcb(
     IN PFAT_IRP_CONTEXT IrpContext,
     IN PFCB ParentFcb,
     IN PUNICODE_STRING FileName);
+
+PFCB NTAPI
+FatFindFcb(PFAT_IRP_CONTEXT IrpContext,
+           PRTL_SPLAY_LINKS *RootNode,
+           PSTRING AnsiName,
+           PBOOLEAN IsDosName);
+
+PCCB NTAPI
+FatCreateCcb();
 
 /*  ------------------------------------------------------------  rw.c  */
 

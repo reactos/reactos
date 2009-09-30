@@ -137,6 +137,7 @@ FatBuildIrpContext(PIRP Irp,
 
     /* Save IRP, MJ and MN */
     IrpContext->Irp = Irp;
+    IrpContext->Stack = IrpSp;
     IrpContext->MajorFunction = IrpSp->MajorFunction;
     IrpContext->MinorFunction = IrpSp->MinorFunction;
 
@@ -336,6 +337,34 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
     }
 
     return TypeOfOpen;
+}
+
+VOID
+NTAPI
+FatSetFileObject(PFILE_OBJECT FileObject,
+                 TYPE_OF_OPEN TypeOfOpen,
+                 PVOID Fcb,
+                 PCCB Ccb)
+{
+    if (Fcb)
+    {
+        /* Check Fcb's type  */
+        if (FatNodeType(Fcb) == FAT_NTC_VCB)
+        {
+            FileObject->Vpb = ((PVCB)Fcb)->Vpb;
+        }
+        else
+        {
+            FileObject->Vpb = ((PFCB)Fcb)->Vcb->Vpb;
+        }
+    }
+
+    /* Set FsContext */
+    if (FileObject)
+    {
+        FileObject->FsContext  = Fcb;
+        FileObject->FsContext2 = Ccb;
+    }
 }
 
 

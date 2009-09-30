@@ -19,6 +19,7 @@ typedef FAT_NODE_TYPE *PFAT_NODE_TYPE;
 #define FAT_NTC_FCB      (CSHORT)   'CF'
 #define FAT_NTC_DCB      (CSHORT)   'DF'
 #define FAT_NTC_ROOT_DCB (CSHORT)  'RFD'
+#define FAT_NTC_CCB      (CSHORT)  'BCC'
 
 typedef struct _FAT_GLOBAL_DATA
 {
@@ -334,6 +335,9 @@ typedef struct _FAT_FIND_DIRENT_CONTEXT
 
 typedef struct _CCB
 {
+    CSHORT NodeTypeCode;
+    CSHORT NodeByteSize;
+
     LARGE_INTEGER CurrentByteOffset;
     ULONG Entry;
     UNICODE_STRING SearchPattern;

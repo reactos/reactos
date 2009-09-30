@@ -18,19 +18,28 @@ NTSTATUS
 NTAPI
 FatiRead(PFAT_IRP_CONTEXT IrpContext)
 {
-    CSHORT FcbType;
     ULONG NumberOfBytes;
+    LARGE_INTEGER ByteOffset;
+    PFILE_OBJECT FileObject;
+    TYPE_OF_OPEN OpenType;
+    PIO_STACK_LOCATION IrpSp = IrpContext->Stack;
+    PFCB Fcb;
+    PVCB Vcb;
+    PCCB Ccb;
 
-    FcbType = *((PCSHORT) IrpContext->FileObject->FsContext);
-    NumberOfBytes = IrpContext->Stack->Parameters.Read.Length;
+    FileObject = IrpSp->FileObject;
+    NumberOfBytes = IrpSp->Parameters.Read.Length;
+    ByteOffset = IrpSp->Parameters.Read.ByteOffset;
     if (NumberOfBytes == 0)
     {
         FatCompleteRequest(IrpContext, IrpContext->Irp, STATUS_SUCCESS);
         return STATUS_SUCCESS;
     }
-    //if (FcbType == FAT_NTC_VCB)
+    
+    OpenType = FatDecodeFileObject(FileObject, &Vcb, &Fcb, &Ccb);
 
-    DPRINT1("FatiRead()\n");
+    DPRINT1("FatiRead() Fcb %p, Name %wZ, Offset %d, Length %d\n",
+        Fcb, &FileObject->FileName, ByteOffset.LowPart, NumberOfBytes);
     return STATUS_NOT_IMPLEMENTED;
 }
 
