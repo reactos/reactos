@@ -37,7 +37,7 @@ typedef struct
 {
     LIST_ENTRY Entry;
     ULONG PinId;
-    PFILE_OBJECT FileObject;
+    ULONG DeviceIndex;
     MIXERLINEW Line;
     LPMIXERCONTROLW LineControls;
 }MIXERLINE_EXT, *LPMIXERLINE_EXT;

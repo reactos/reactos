@@ -166,6 +166,41 @@ GetSysAudioDevicePnpName(
     return Status;
 }
 
+ULONG
+GetDeviceIndexFromPnpName(
+    IN PDEVICE_OBJECT DeviceObject,
+    LPWSTR Device)
+{
+    ULONG Count, Index;
+    LPWSTR DeviceName;
+    NTSTATUS Status;
+
+    /* get device count */
+    Count = GetSysAudioDeviceCount(DeviceObject);
+
+    if (!Count)
+        return MAXULONG;
+
+    for(Index = 0; Index < Count; Index++)
+    {
+        /* get device name */
+        Status = GetSysAudioDevicePnpName(DeviceObject, Index, &DeviceName);
+        if (NT_SUCCESS(Status))
+        {
+            if (!wcsicmp(Device, DeviceName))
+            {
+                /* found device index */
+                ExFreePool(DeviceName);
+                return Index;
+            }
+            ExFreePool(DeviceName);
+        }
+    }
+
+    return MAXULONG;
+}
+
+
 NTSTATUS
 OpenDevice(
     IN LPWSTR Device,
@@ -453,7 +488,7 @@ GetNodeIndexes(
     /* first count all referenced nodes */
     for(Index = 0; Index < MultipleItem->Count; Index++)
     {
-        //DPRINT1("FromPin %u FromNode %u ToPin %u ToNode %u\n", Connection->FromNodePin, Connection->FromNode, Connection->ToNodePin, Connection->ToNode);
+        //DbgPrint("FromPin %u FromNode %u ToPin %u ToNode %u\n", Connection->FromNodePin, Connection->FromNode, Connection->ToNodePin, Connection->ToNode);
         if (bNode)
         {
             if (bFrom)
@@ -477,7 +512,7 @@ GetNodeIndexes(
         {
             if (bFrom)
             {
-                if (Connection->FromNodePin == NodeIndex)
+                if (Connection->FromNodePin == NodeIndex && Connection->FromNode == KSFILTER_NODE)
                 {
                     /* node id has a connection */
                     Count++;
@@ -485,7 +520,7 @@ GetNodeIndexes(
             }
             else
             {
-                if (Connection->ToNodePin == NodeIndex)
+                if (Connection->ToNodePin == NodeIndex && Connection->ToNode == KSFILTER_NODE)
                 {
                     /* node id has a connection */
                     Count++;
@@ -507,6 +542,9 @@ GetNodeIndexes(
         /* not enough memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    /* clear node index array */
+    RtlZeroMemory(Refs, Count * sizeof(ULONG));
 
     Count = 0;
     Connection = (PKSTOPOLOGY_CONNECTION)(MultipleItem + 1);
@@ -537,7 +575,7 @@ GetNodeIndexes(
         {
             if (bFrom)
             {
-                if (Connection->FromNodePin == NodeIndex)
+                if (Connection->FromNodePin == NodeIndex && Connection->FromNode == KSFILTER_NODE)
                 {
                     /* node id has a connection */
                     Refs[Count] = Index;
@@ -546,7 +584,7 @@ GetNodeIndexes(
             }
             else
             {
-                if (Connection->ToNodePin == NodeIndex)
+                if (Connection->ToNodePin == NodeIndex && Connection->ToNode == KSFILTER_NODE)
                 {
                     /* node id has a connection */
                     Refs[Count] = Index;
@@ -685,6 +723,7 @@ NTSTATUS
 AddMixerSourceLine(
     IN OUT LPMIXER_INFO MixerInfo,
     IN PFILE_OBJECT FileObject,
+    IN ULONG DeviceIndex,
     IN ULONG PinId)
 {
     LPMIXERLINE_EXT SrcLine, DstLine;
@@ -703,7 +742,7 @@ AddMixerSourceLine(
     RtlZeroMemory(SrcLine, sizeof(MIXERLINE_EXT));
 
     /* initialize mixer src line */
-    SrcLine->FileObject = FileObject;
+    SrcLine->DeviceIndex = DeviceIndex;
     SrcLine->PinId = PinId;
     SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
 
@@ -812,6 +851,7 @@ NTSTATUS
 AddMixerSourceLines(
     IN OUT LPMIXER_INFO MixerInfo,
     IN PFILE_OBJECT FileObject,
+    IN ULONG DeviceIndex,
     IN ULONG PinsCount,
     IN PULONG Pins)
 {
@@ -822,7 +862,7 @@ AddMixerSourceLines(
     {
         if (Pins[Index-1])
         {
-            AddMixerSourceLine(MixerInfo, FileObject, Index-1);
+            AddMixerSourceLine(MixerInfo, FileObject, DeviceIndex, Index-1);
         }
     }
     return Status;
@@ -833,11 +873,12 @@ AddMixerSourceLines(
 NTSTATUS
 HandlePhysicalConnection(
     IN OUT LPMIXER_INFO MixerInfo,
+    IN PDEVICE_OBJECT DeviceObject,
     IN ULONG bInput,
     IN PKSPIN_PHYSICALCONNECTION OutConnection)
 {
     PULONG PinsRef = NULL, PinConnectionIndex = NULL, PinsSrcRef;
-    ULONG PinsRefCount, Index, PinConnectionIndexCount;
+    ULONG PinsRefCount, Index, PinConnectionIndexCount, DeviceIndex;
     NTSTATUS Status;
     HANDLE hDevice = NULL;
     PFILE_OBJECT FileObject = NULL;
@@ -854,6 +895,9 @@ HandlePhysicalConnection(
         DPRINT1("OpenDevice failed with %x\n", Status);
         return Status;
     }
+
+    /* get device index */
+    DeviceIndex = GetDeviceIndexFromPnpName(DeviceObject, OutConnection->SymbolicLinkName);
 
     /* get connected filter pin count */
     PinsRefCount = GetPinCount(FileObject);
@@ -943,7 +987,7 @@ HandlePhysicalConnection(
                 PinsSrcRef[OutConnection->Pin] = TRUE;
             }
 
-            Status = AddMixerSourceLines(MixerInfo, FileObject, PinsRefCount, PinsSrcRef);
+            Status = AddMixerSourceLines(MixerInfo, FileObject, DeviceIndex, PinsRefCount, PinsSrcRef);
 
             ExFreePool(MixerControls);
             ExFreePool(PinsSrcRef);
@@ -1075,7 +1119,8 @@ InitializeMixer(
             Status = GetPhysicalConnection(FileObject, Index, &OutConnection);
             if (NT_SUCCESS(Status))
             {
-                Status = HandlePhysicalConnection(MixerInfo, bInput, OutConnection);
+                Status = HandlePhysicalConnection(MixerInfo, DeviceObject, bInput, OutConnection);
+                ExFreePool(OutConnection);
             }
         }
     }
@@ -1093,7 +1138,6 @@ WdmAudMixerInitialize(
     HANDLE hDevice;
     PFILE_OBJECT FileObject;
     PKSMULTIPLE_ITEM NodeTypes, NodeConnections;
-    BOOL bCloseHandle;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
@@ -1151,7 +1195,6 @@ WdmAudMixerInitialize(
 
             /* get num of pins */
             PinCount = GetPinCount(FileObject);
-            bCloseHandle = TRUE;
             /* get the first available dac node index */
             NodeIndex = GetNodeTypeIndex(NodeTypes, (LPGUID)&KSNODETYPE_DAC);
             if (NodeIndex != (ULONG)-1)
@@ -1161,7 +1204,6 @@ WdmAudMixerInitialize(
                 {
                     /* increment mixer offset */
                     Count++;
-                    bCloseHandle = FALSE;
                 }
             }
 
@@ -1174,7 +1216,6 @@ WdmAudMixerInitialize(
                 {
                     /* increment mixer offset */
                     Count++;
-                    bCloseHandle = FALSE;
                 }
             }
 
@@ -1182,12 +1223,10 @@ WdmAudMixerInitialize(
             ExFreePool(NodeTypes);
             ExFreePool(NodeConnections);
 
-            if (bCloseHandle)
-            {
-                /* close virtual audio device */
-                ObDereferenceObject(FileObject);
-                ZwClose(hDevice);
-            }
+            /* close virtual audio device */
+            ObDereferenceObject(FileObject);
+            ZwClose(hDevice);
+
         }
         /* increment virtual audio device index */
         Index++;
