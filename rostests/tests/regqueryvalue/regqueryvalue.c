@@ -1,4 +1,3 @@
-#define _DISABLE_TIDENTS
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
