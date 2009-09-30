@@ -40,7 +40,7 @@ typedef struct
     PFILE_OBJECT FileObject;
     MIXERLINEW Line;
     LPMIXERCONTROLW LineControls;
-}MIXERLINE_SOURCE, *LPMIXERLINE_SOURCE;
+}MIXERLINE_EXT, *LPMIXERLINE_EXT;
 
 
 typedef struct
@@ -49,9 +49,8 @@ typedef struct
     PFILE_OBJECT  MixerFileObject;
 
     MIXERCAPSW    MixCaps;
-    MIXERLINEW    DestinationLine;
 
-    LIST_ENTRY    SourceLineList;
+    LIST_ENTRY    LineList;
 
 }MIXER_INFO, *LPMIXER_INFO;
 

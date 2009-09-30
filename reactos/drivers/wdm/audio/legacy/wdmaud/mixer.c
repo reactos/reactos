@@ -22,21 +22,22 @@ const GUID KSNODETYPE_CHORUS =      {0x20173F20L, 0xC559, 0x11D0, {0x8A, 0x2B, 0
 const GUID KSNODETYPE_REVERB =      {0xEF0328E0L, 0xC558, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 const GUID KSNODETYPE_SUPERMIX =    {0xE573ADC0L, 0xC555, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 
+#define DESTINATION_LINE 0xFFFF0000
 
-LPMIXERLINE_SOURCE
+LPMIXERLINE_EXT
 GetSourceMixerLine(
     LPMIXER_INFO MixerInfo,
     DWORD dwSource)
 {
     PLIST_ENTRY Entry;
-    LPMIXERLINE_SOURCE MixerLineSrc;
+    LPMIXERLINE_EXT MixerLineSrc;
 
     /* get first entry */
-    Entry = MixerInfo->SourceLineList.Flink;
+    Entry = MixerInfo->LineList.Flink;
 
-    while(Entry != &MixerInfo->SourceLineList)
+    while(Entry != &MixerInfo->LineList)
     {
-        MixerLineSrc = (LPMIXERLINE_SOURCE)CONTAINING_RECORD(Entry, MIXERLINE_SOURCE, Entry);
+        MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
         DPRINT("dwSource %x dwSource %x\n", MixerLineSrc->Line.dwSource, dwSource);
         if (MixerLineSrc->Line.dwSource == dwSource)
             return MixerLineSrc;
@@ -47,20 +48,20 @@ GetSourceMixerLine(
     return NULL;
 }
 
-LPMIXERLINE_SOURCE
+LPMIXERLINE_EXT
 GetSourceMixerLineByLineId(
     LPMIXER_INFO MixerInfo,
     DWORD dwLineID)
 {
     PLIST_ENTRY Entry;
-    LPMIXERLINE_SOURCE MixerLineSrc;
+    LPMIXERLINE_EXT MixerLineSrc;
 
     /* get first entry */
-    Entry = MixerInfo->SourceLineList.Flink;
+    Entry = MixerInfo->LineList.Flink;
 
-    while(Entry != &MixerInfo->SourceLineList)
+    while(Entry != &MixerInfo->LineList)
     {
-        MixerLineSrc = (LPMIXERLINE_SOURCE)CONTAINING_RECORD(Entry, MIXERLINE_SOURCE, Entry);
+        MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
         DPRINT("dwLineID %x dwLineID %x\n", MixerLineSrc->Line.dwLineID, dwLineID);
         if (MixerLineSrc->Line.dwLineID == dwLineID)
             return MixerLineSrc;
@@ -686,7 +687,7 @@ AddMixerSourceLine(
     IN PFILE_OBJECT FileObject,
     IN ULONG PinId)
 {
-    LPMIXERLINE_SOURCE SrcLine;
+    LPMIXERLINE_EXT SrcLine, DstLine;
     NTSTATUS Status;
     KSP_PIN Pin;
     LPWSTR PinName;
@@ -694,26 +695,29 @@ AddMixerSourceLine(
     ULONG BytesReturned;
 
     /* allocate src mixer line */
-    SrcLine = (LPMIXERLINE_SOURCE)ExAllocatePool(NonPagedPool, sizeof(MIXERLINE_SOURCE));
+    SrcLine = (LPMIXERLINE_EXT)ExAllocatePool(NonPagedPool, sizeof(MIXERLINE_EXT));
     if (!SrcLine)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* zero struct */
-    RtlZeroMemory(SrcLine, sizeof(MIXERLINE_SOURCE));
+    RtlZeroMemory(SrcLine, sizeof(MIXERLINE_EXT));
 
     /* initialize mixer src line */
     SrcLine->FileObject = FileObject;
     SrcLine->PinId = PinId;
     SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
 
+    /* get destination line */
+    DstLine = GetSourceMixerLineByLineId(MixerInfo, DESTINATION_LINE);
+
     /* initialize mixer destination line */
     SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
     SrcLine->Line.dwDestination = 0;
-    SrcLine->Line.dwSource = MixerInfo->DestinationLine.cConnections;
-    SrcLine->Line.dwLineID = (MixerInfo->DestinationLine.cConnections * 0x10000);
+    SrcLine->Line.dwSource = DstLine->Line.cConnections;
+    SrcLine->Line.dwLineID = (DstLine->Line.cConnections * 0x10000);
     SrcLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE | MIXERLINE_LINEF_SOURCE;
     SrcLine->Line.dwUser = 0;
-    SrcLine->Line.cChannels = MixerInfo->DestinationLine.cChannels;
+    SrcLine->Line.cChannels = DstLine->Line.cChannels;
     SrcLine->Line.cConnections = 0;
     SrcLine->Line.cControls = 1; //FIXME
 
@@ -789,7 +793,7 @@ AddMixerSourceLine(
     }
 
     SrcLine->Line.Target.dwType = 1;
-    SrcLine->Line.Target.dwDeviceID = MixerInfo->DestinationLine.Target.dwDeviceID;
+    SrcLine->Line.Target.dwDeviceID = DstLine->Line.Target.dwDeviceID;
     SrcLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
     SrcLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
     SrcLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
@@ -797,8 +801,8 @@ AddMixerSourceLine(
 
 
     /* insert src line */
-    InsertTailList(&MixerInfo->SourceLineList, &SrcLine->Entry);
-    MixerInfo->DestinationLine.cConnections++;
+    InsertTailList(&MixerInfo->LineList, &SrcLine->Entry);
+    DstLine->Line.cConnections++;
 
     return STATUS_SUCCESS;
 }
@@ -991,6 +995,11 @@ InitializeMixer(
     PULONG Pins;
     ULONG Index;
     PKSPIN_PHYSICALCONNECTION OutConnection;
+    LPMIXERLINE_EXT DestinationLine;
+
+    DestinationLine = ExAllocatePool(NonPagedPool, sizeof(MIXERLINE_EXT));
+    if (!DestinationLine)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
     /* initialize mixer info */
     MixerInfo->hMixer = hDevice;
@@ -1022,26 +1031,29 @@ InitializeMixer(
     }
 
     /* initialize mixer destination line */
-    MixerInfo->DestinationLine.cbStruct = sizeof(MIXERLINEW);
-    MixerInfo->DestinationLine.dwSource = MAXULONG;
-    MixerInfo->DestinationLine.dwLineID = 0xFFFF0000;
-    MixerInfo->DestinationLine.fdwLine = MIXERLINE_LINEF_ACTIVE;
-    MixerInfo->DestinationLine.dwUser = 0;
-    MixerInfo->DestinationLine.dwComponentType = (bInput == 0 ? MIXERLINE_COMPONENTTYPE_DST_SPEAKERS : MIXERLINE_COMPONENTTYPE_DST_WAVEIN);
-    MixerInfo->DestinationLine.cChannels = 2; //FIXME
-    MixerInfo->DestinationLine.cControls = 0; //FIXME
-    wcscpy(MixerInfo->DestinationLine.szShortName, L"Summe"); //FIXME
-    wcscpy(MixerInfo->DestinationLine.szName, L"Summe"); //FIXME
-    MixerInfo->DestinationLine.Target.dwType = (bInput == 0 ? MIXERLINE_TARGETTYPE_WAVEOUT : MIXERLINE_TARGETTYPE_WAVEIN);
-    MixerInfo->DestinationLine.Target.dwDeviceID = !bInput;
-    MixerInfo->DestinationLine.Target.wMid = MixerInfo->MixCaps.wMid;
-    MixerInfo->DestinationLine.Target.wPid = MixerInfo->MixCaps.wPid;
-    MixerInfo->DestinationLine.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
-    wcscpy(MixerInfo->DestinationLine.Target.szPname, MixerInfo->MixCaps.szPname);
-
+    RtlZeroMemory(DestinationLine, sizeof(MIXERLINEW));
+    DestinationLine->Line.cbStruct = sizeof(MIXERLINEW);
+    DestinationLine->Line.dwSource = MAXULONG;
+    DestinationLine->Line.dwLineID = DESTINATION_LINE;
+    DestinationLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE;
+    DestinationLine->Line.dwUser = 0;
+    DestinationLine->Line.dwComponentType = (bInput == 0 ? MIXERLINE_COMPONENTTYPE_DST_SPEAKERS : MIXERLINE_COMPONENTTYPE_DST_WAVEIN);
+    DestinationLine->Line.cChannels = 2; //FIXME
+    DestinationLine->Line.cControls = 0; //FIXME
+    wcscpy(DestinationLine->Line.szShortName, L"Summe"); //FIXME
+    wcscpy(DestinationLine->Line.szName, L"Summe"); //FIXME
+    DestinationLine->Line.Target.dwType = (bInput == 0 ? MIXERLINE_TARGETTYPE_WAVEOUT : MIXERLINE_TARGETTYPE_WAVEIN);
+    DestinationLine->Line.Target.dwDeviceID = !bInput;
+    DestinationLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
+    DestinationLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
+    DestinationLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
+    wcscpy(DestinationLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
 
     /* initialize source line list */
-    InitializeListHead(&MixerInfo->SourceLineList);
+    InitializeListHead(&MixerInfo->LineList);
+
+    /* insert destination line */
+    InsertHeadList(&MixerInfo->LineList, &DestinationLine->Entry);
 
     Pins = AllocatePinArray(PinCount);
     if (!Pins)
@@ -1274,7 +1286,7 @@ WdmAudGetLineInfo(
     IN  PWDMAUD_CLIENT ClientInfo)
 {
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
-    LPMIXERLINE_SOURCE MixerLineSrc;
+    LPMIXERLINE_EXT MixerLineSrc;
 
     /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -1292,9 +1304,11 @@ WdmAudGetLineInfo(
             /* invalid parameter */
             return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
         }
+        MixerLineSrc = GetSourceMixerLineByLineId(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DESTINATION_LINE);
+        ASSERT(MixerLineSrc);
 
         /* copy cached data */
-        RtlCopyMemory(&DeviceInfo->u.MixLine, &DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice].DestinationLine, sizeof(MIXERLINEW));
+        RtlCopyMemory(&DeviceInfo->u.MixLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
     else if (DeviceInfo->Flags == MIXER_GETLINEINFOF_SOURCE)
@@ -1305,9 +1319,12 @@ WdmAudGetLineInfo(
             return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
         }
 
-        if (DeviceInfo->u.MixLine.dwSource >= DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice].DestinationLine.cConnections)
+        MixerLineSrc = GetSourceMixerLineByLineId(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DESTINATION_LINE);
+        ASSERT(MixerLineSrc);
+
+        if (DeviceInfo->u.MixLine.dwSource >= MixerLineSrc->Line.cConnections)
         {
-            DPRINT1("dwSource %u Destinations %u\n", DeviceInfo->u.MixLine.dwSource, DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice].DestinationLine.cConnections);
+            DPRINT1("dwSource %u Destinations %u\n", DeviceInfo->u.MixLine.dwSource, MixerLineSrc->Line.cConnections);
             /* invalid parameter */
             return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
         }
@@ -1320,6 +1337,22 @@ WdmAudGetLineInfo(
         }
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
+    else if (DeviceInfo->Flags == MIXER_GETLINEINFOF_LINEID)
+    {
+        if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
+        {
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
+
+        MixerLineSrc = GetSourceMixerLineByLineId(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixLine.dwLineID);
+        ASSERT(MixerLineSrc);
+
+        /* copy cached data */
+        RtlCopyMemory(&DeviceInfo->u.MixLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
 
     DPRINT1("Flags %x\n", DeviceInfo->Flags);
     UNIMPLEMENTED;
@@ -1337,7 +1370,7 @@ WdmAudGetLineControls(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    LPMIXERLINE_SOURCE MixerLineSrc;
+    LPMIXERLINE_EXT MixerLineSrc;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
@@ -1358,9 +1391,25 @@ WdmAudGetLineControls(
             RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, MixerLineSrc->LineControls, min(MixerLineSrc->Line.cControls, DeviceInfo->u.MixControls.cControls) * sizeof(MIXERLINECONTROLSW));
         }
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+    else if (DeviceInfo->Flags == MIXER_GETLINECONTROLSF_ONEBYTYPE)
+    {
+        DPRINT1("dwLineID %u\n",DeviceInfo->u.MixControls.dwLineID);
+        UNIMPLEMENTED
+        //HACK
+        if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
+        {
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
 
-
-
+        MixerLineSrc = GetSourceMixerLineByLineId(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixControls.dwLineID);
+        ASSERT(MixerLineSrc);
+        if (MixerLineSrc)
+        {
+            RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, MixerLineSrc->LineControls, min(MixerLineSrc->Line.cControls, DeviceInfo->u.MixControls.cControls) * sizeof(MIXERLINECONTROLSW));
+        }
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
 
     UNIMPLEMENTED;
