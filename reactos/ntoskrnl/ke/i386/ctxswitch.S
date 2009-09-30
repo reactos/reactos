@@ -351,8 +351,8 @@ GetSwapLock:
     jz NotBusy
     pause
     jmp GetSwapLock
-#endif
 NotBusy:
+#endif
     /* Increase context switches (use ES for lazy load) */
     inc dword ptr es:[ebx+KPCR_CONTEXT_SWITCHES]
 
@@ -381,9 +381,9 @@ AfterTrace:
     /* Check NPX State */
     cmp byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_LOADED
     jz NpxLoaded
+SetStack:
 #endif
 
-SetStack:
     /* Set new stack */
     mov [edi+KTHREAD_KERNEL_STACK], esp
 
@@ -423,7 +423,7 @@ StackOk:
     test [ebp+KPROCESS_ACTIVE_PROCESSORS], ecx
     jz WrongActiveCpu
     test [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
-    jz WrongActiveCpu
+    jnz WrongActiveCpu
 #endif
 #endif
 
@@ -563,8 +563,29 @@ NewCr0:
 #ifdef CONFIG_SMP
 NpxLoaded:
 
-    /* FIXME: TODO */
-    int 3
+    /* Mask out FPU flags */
+    and edx, ~(CR0_MP + CR0_EM + CR0_TS)
+
+    /* Get the NPX Frame */
+    mov ecx, [edi+KTHREAD_INITIAL_STACK]
+    sub ecx, NPX_FRAME_LENGTH
+
+    /* Check if we have a new CR0 */
+    cmp ebp, edx
+    jz Cr0Equal
+
+    /* We do, update it */
+    mov cr0, edx
+    mov ebp, edx
+
+Cr0Equal:
+
+    /* Save the NPX State */
+    fxsave [ecx]
+    mov byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+
+    /* Clear the NPX Thread */
+    mov dword ptr [ebx+KPCR_NPX_THREAD], 0
 
     /* Jump back */
     jmp SetStack
@@ -762,7 +783,7 @@ SwapContext:
 
 #ifdef CONFIG_SMP
 SameThread:
-    /* Clear the next thread, and put the thready as ready after lock release */
+    /* Clear the next thread, and put the thread as ready after lock release */
     and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
     and dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
     and byte ptr [edi+KTHREAD_STATE_], Ready
@@ -837,9 +858,9 @@ _KiSwapProcess@8:
 
     /* Sanity check */
 #if DBG
-    test dword ptr [edx+KPROCESS_ACTIVE_PROCESSORS], 0
+    test [edx+KPROCESS_ACTIVE_PROCESSORS], ecx
     jz WrongCpu1
-    test dword ptr [eax+KPROCESS_ACTIVE_PROCESSORS], 0
+    test [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
     jnz WrongCpu2
 #endif
 #endif

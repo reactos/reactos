@@ -245,7 +245,7 @@ FASTCALL
 KiExitDispatcher(KIRQL OldIrql);
 
 VOID
-NTAPI
+FASTCALL
 KiDeferredReadyThread(IN PKTHREAD Thread);
 
 PKTHREAD

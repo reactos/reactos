@@ -437,12 +437,20 @@ FORCEINLINE
 VOID
 KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 {
+    /* Make sure that we don't own the lock already */
+    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
+    {
+        /* We do, bugcheck! */
+        KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
+    }
+
+    /* Start acquire loop */
     for (;;)
     {
         /* Try to acquire it */
         if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
         {
-            /* Value changed... wait until it's locked */
+            /* Value changed... wait until it's unlocked */
             while (*(volatile KSPIN_LOCK *)SpinLock == 1)
             {
 #if DBG
@@ -553,7 +561,8 @@ VOID
 KiAcquireDispatcherLockAtDpcLevel(VOID)
 {
     /* Acquire the dispatcher lock */
-    KeAcquireQueuedSpinLockAtDpcLevel(LockQueueDispatcherLock);
+    KeAcquireQueuedSpinLockAtDpcLevel(&KeGetCurrentPrcb()->
+                                      LockQueue[LockQueueDispatcherLock]);
 }
 
 FORCEINLINE
@@ -561,11 +570,12 @@ VOID
 KiReleaseDispatcherLockFromDpcLevel(VOID)
 {
     /* Release the dispatcher lock */
-    KeReleaseQueuedSpinLockFromDpcLevel(LockQueueDispatcherLock);
+    KeReleaseQueuedSpinLockFromDpcLevel(&KeGetCurrentPrcb()->
+                                        LockQueue[LockQueueDispatcherLock]);
 }
 
 //
-// This routine inserts a thread into the deferred ready list of the given CPU
+// This routine inserts a thread into the deferred ready list of the current CPU
 //
 FORCEINLINE
 VOID
@@ -613,7 +623,7 @@ KiSetThreadSwapBusy(IN PKTHREAD Thread)
 // This routine acquires the PRCB lock so that only one caller can touch
 // volatile PRCB data.
 //
-// Since this is a simple optimized spin-lock, it must be be only acquired
+// Since this is a simple optimized spin-lock, it must only be acquired
 // at dispatcher level or higher!
 //
 FORCEINLINE
@@ -649,7 +659,8 @@ FORCEINLINE
 VOID
 KiReleasePrcbLock(IN PKPRCB Prcb)
 {
-    /* Make sure it's acquired! */
+    /* Make sure we are above dispatch and the lock is acquired! */
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
     ASSERT(Prcb->PrcbLock != 0);
 
     /* Release it */
@@ -696,6 +707,9 @@ FORCEINLINE
 VOID
 KiReleaseThreadLock(IN PKTHREAD Thread)
 {
+    /* Make sure we are still above dispatch */
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
     /* Release it */
     InterlockedAnd((PLONG)&Thread->ThreadLock, 0);
 }
@@ -729,10 +743,8 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
-#if defined(_M_IX86) || defined(_M_AMD64)
-    /* FIXME: TODO */
-    ASSERTMSG("Not yet implemented\n", FALSE);
-#endif
+    /* Nothing to do */
+    return;
 }
 
 FORCEINLINE

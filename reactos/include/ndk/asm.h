@@ -568,7 +568,21 @@ Author:
 #define APC_LEVEL                               0x1
 #define DISPATCH_LEVEL                          0x2
 #define CLOCK2_LEVEL                            0x1C
+#define IPI_LEVEL                               0x1D
 #define HIGH_LEVEL                              0x1F
+
+//
+// Synchronization-level IRQL
+//
+#ifndef CONFIG_SMP
+#define SYNCH_LEVEL                             DISPATCH_LEVEL
+#else
+#if (NTDDI_VERSION < NTDDI_WS03)
+#define SYNCH_LEVEL                             (IPI_LEVEL - 0x1)
+#else
+#define SYNCH_LEVEL                             (IPI_LEVEL - 0x2)
+#endif
+#endif
 
 //
 // Quantum Decrements

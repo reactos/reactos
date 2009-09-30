@@ -718,7 +718,7 @@
 @ fastcall KiReleaseSpinLock(ptr)
 @ cdecl KiUnexpectedInterrupt()
 #ifdef _M_IX86
-;Kii386SpinOnSpinLock
+@ stdcall Kii386SpinOnSpinLock(ptr long)
 #endif
 @ stdcall LdrAccessResource(ptr ptr ptr ptr)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
