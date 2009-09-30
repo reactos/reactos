@@ -3,11 +3,9 @@
 <module name="libcntpr" type="staticlibrary">
 	<include base="crt">.</include>
 	<include base="crt">include</include>
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
-	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_LIBCNT_" />
 	<if property="ARCH" value="i386">
 		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>

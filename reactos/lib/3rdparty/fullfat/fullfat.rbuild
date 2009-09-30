@@ -3,7 +3,6 @@
 <module name="fullfat" type="staticlibrary">
 	<include base="ReactOS">include/reactos/libs/fullfat</include>
 	<define name="__NTDRIVER__" />
-	<define name="__NO_CTYPE_INLINES" />
 
 	<file>ff_blk.c</file>
 	<file>ff_crc.c</file>

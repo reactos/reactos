@@ -6,7 +6,6 @@
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="_IN_KERNEL_" />
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />

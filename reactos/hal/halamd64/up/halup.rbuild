@@ -5,7 +5,6 @@
 	<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
 	<include base="halup">../include</include>
 	<include base="ntoskrnl">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="_NTHAL_" />
 	<library>hal_generic_amd64</library>
 	<library>hal_generic</library>

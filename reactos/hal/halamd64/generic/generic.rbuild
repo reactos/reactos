@@ -4,7 +4,6 @@
 	<module name="hal_generic" type="objectlibrary">
 		<include base="hal_generic">../include</include>
 		<include base="ntoskrnl">include</include>
-		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
 		<file>halinit.c</file>
 		<file>irq.S</file>
