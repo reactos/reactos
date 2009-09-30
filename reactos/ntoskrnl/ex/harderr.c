@@ -58,10 +58,12 @@ ExpSystemErrorHandler(IN NTSTATUS ErrorStatus,
                       IN PULONG_PTR Parameters,
                       IN BOOLEAN Shutdown)
 {
+    ULONG_PTR Dummy[4] = {0, 0, 0, 0};
+
     /* FIXME: STUB */
     KeBugCheckEx(FATAL_UNHANDLED_HARD_ERROR,
                  ErrorStatus,
-                 0,
+                 (ULONG_PTR)Dummy,
                  0,
                  0);
     return STATUS_SUCCESS;
