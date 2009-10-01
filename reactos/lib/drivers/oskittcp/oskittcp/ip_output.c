@@ -517,8 +517,8 @@ sendorfree:
 		error = ENOBUFS;
 		goto done;
 	    }
-	    m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
-	    new_m->m_len = htons(ip->ip_len);
+	    m_copydata( m, 0, m->m_pkthdr.len, new_m->m_data );
+	    new_m->m_len = m->m_pkthdr.len;
 	    error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
 					  (OSK_PCHAR)new_m->m_data, new_m->m_len );
 	    m_free( new_m );
