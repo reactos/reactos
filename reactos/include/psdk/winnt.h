@@ -4965,20 +4965,16 @@ MemoryBarrier(VOID)
 #error Unknown architecture
 #endif
 
-VOID
-_mm_pause (
-    VOID
-    );
-
-
 #if defined(_M_IX86)
 #ifdef _MSC_VER
 #pragma intrinsic(_mm_pause)
+#define YieldProcessor _mm_pause
 #else
 #define YieldProcessor() __asm__ __volatile__("pause");
 #endif
 #elif defined (_M_AMD64)
 #ifdef _MSC_VER
+#pragma intrinsic(_mm_pause)
 #define YieldProcessor _mm_pause
 #else
 #define YieldProcessor() __asm__ __volatile__("pause");
