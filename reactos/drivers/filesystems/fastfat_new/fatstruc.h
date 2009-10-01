@@ -279,6 +279,8 @@ typedef struct _FCB
     UCHAR DirentFatFlags;
     /* File basic info */
     FILE_BASIC_INFORMATION BasicInfo;
+    /* FullFAT file handle */
+    FF_FILE *FatHandle;
     union
     {
         struct

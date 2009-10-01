@@ -4,10 +4,10 @@
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="fastfatn">.</include>
 	<include base="ReactOS">include/reactos/libs/fullfat</include>
+	<library>fullfat</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>pseh</library>
-	<library>fullfat</library>
 	<file>blockdev.c</file>
 	<file>cleanup.c</file>
 	<file>close.c</file>

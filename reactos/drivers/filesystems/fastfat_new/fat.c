@@ -484,10 +484,13 @@ FatInitializeVcb(IN PFAT_IRP_CONTEXT IrpContext,
     Vcb->StreamFileObject->SectionObjectPointer = &Vcb->SectionObjectPointers;
 
     /* At least full boot sector should be available */
-    Vcb->Header.FileSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
-    Vcb->Header.AllocationSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
+    //Vcb->Header.FileSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
+    //Vcb->Header.AllocationSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
     Vcb->Header.ValidDataLength.HighPart = MAXLONG;
     Vcb->Header.ValidDataLength.LowPart = MAXULONG;
+
+    Vcb->Header.AllocationSize.QuadPart = Int32x32To64(5*1024, 1024*1024); //HACK: 5 Gb
+    Vcb->Header.FileSize.QuadPart = Vcb->Header.AllocationSize.QuadPart;
 
     /* Set VCB to a good condition */
     Vcb->Condition = VcbGood;

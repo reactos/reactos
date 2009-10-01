@@ -38,8 +38,8 @@ FatiRead(PFAT_IRP_CONTEXT IrpContext)
     
     OpenType = FatDecodeFileObject(FileObject, &Vcb, &Fcb, &Ccb);
 
-    DPRINT1("FatiRead() Fcb %p, Name %wZ, Offset %d, Length %d\n",
-        Fcb, &FileObject->FileName, ByteOffset.LowPart, NumberOfBytes);
+    DPRINT1("FatiRead() Fcb %p, Name %wZ, Offset %d, Length %d, Handle %p\n",
+        Fcb, &FileObject->FileName, ByteOffset.LowPart, NumberOfBytes, Fcb->FatHandle);
     return STATUS_NOT_IMPLEMENTED;
 }
 

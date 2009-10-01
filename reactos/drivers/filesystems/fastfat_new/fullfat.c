@@ -58,6 +58,7 @@ FatReadBlocks(FF_T_UINT8 *DestBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Cou
                   &Bcb,
                   &Buffer))
     {
+        ASSERT(FALSE);
         /* Mapping failed */
         return 0;
     }

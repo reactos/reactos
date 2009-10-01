@@ -59,7 +59,10 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
                      IN BOOLEAN IsDosName)
 {
     IO_STATUS_BLOCK Iosb = {{0}};
+    OEM_STRING AnsiName;
+    CHAR AnsiNameBuf[512];
     PFCB Fcb;
+    NTSTATUS Status;
 
     /* Check for create file option and fail */
     if (CreateDisposition == FILE_CREATE)
@@ -72,6 +75,20 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
 
     /* Create a new FCB for this file */
     Fcb = FatCreateFcb(IrpContext, Vcb, ParentDcb);
+
+    /* Convert the name to ANSI */
+    AnsiName.Buffer = AnsiNameBuf;
+    AnsiName.Length = 0;
+    AnsiName.MaximumLength = sizeof(AnsiNameBuf);
+    RtlZeroMemory(AnsiNameBuf, sizeof(AnsiNameBuf));
+    Status = RtlUpcaseUnicodeStringToCountedOemString(&AnsiName, &FileObject->FileName, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+
+    /* Open the file with FullFAT */
+    Fcb->FatHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_READ, NULL);
 
     // TODO: Check if overwrite is needed
 
