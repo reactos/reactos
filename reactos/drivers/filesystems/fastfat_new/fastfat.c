@@ -394,5 +394,14 @@ FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
     ExReleaseResourceLite(&Vcb->Resource);
 }
 
+PVOID
+FASTCALL
+FatMapUserBuffer(PIRP Irp)
+{
+    if (!Irp->MdlAddress)
+        return Irp->UserBuffer;
+    else
+        return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+}
 
 /* EOF */

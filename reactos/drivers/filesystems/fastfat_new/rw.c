@@ -26,6 +26,8 @@ FatiRead(PFAT_IRP_CONTEXT IrpContext)
     PFCB Fcb;
     PVCB Vcb;
     PCCB Ccb;
+    PVOID Buffer;
+    LONG BytesRead;
 
     FileObject = IrpSp->FileObject;
     NumberOfBytes = IrpSp->Parameters.Read.Length;
@@ -40,7 +42,29 @@ FatiRead(PFAT_IRP_CONTEXT IrpContext)
 
     DPRINT1("FatiRead() Fcb %p, Name %wZ, Offset %d, Length %d, Handle %p\n",
         Fcb, &FileObject->FileName, ByteOffset.LowPart, NumberOfBytes, Fcb->FatHandle);
-    return STATUS_NOT_IMPLEMENTED;
+
+    /* Perform actual read */
+
+    if (IrpContext->MinorFunction & IRP_MN_MDL)
+    {
+        DPRINT1("MDL read\n");
+    }
+    else
+    {
+        Buffer = FatMapUserBuffer(IrpContext->Irp);
+        DPRINT1("Normal cached read, buffer %p\n");
+
+        BytesRead = FF_Read(Fcb->FatHandle, NumberOfBytes, 1, Buffer);
+        DPRINT1("Read %d bytes\n", BytesRead);
+
+        /* Indicate we read requested amount of bytes */
+        IrpContext->Irp->IoStatus.Information = BytesRead;
+        IrpContext->Irp->IoStatus.Status = STATUS_SUCCESS;
+    }
+
+    /* Complete the request */
+    FatCompleteRequest(IrpContext, IrpContext->Irp, STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

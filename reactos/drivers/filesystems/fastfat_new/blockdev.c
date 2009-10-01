@@ -56,30 +56,6 @@ FatDiskIoControl_(
     return Status;
 }
 
-PVOID
-FatMapUserBuffer(
-    IN OUT PIRP Irp)
-/*
- * FUNCTION:
- *      
- *      
- * ARGUMENTS:
- *      IrpContext = Pointer to FCB structure for the file.
- *      Irp = Pointer to the IRP structure
- * RETURNS: Status Value.
- * NOTES:
- */
-{
-    PVOID Address;
-
-    if (Irp->MdlAddress == NULL)
-        return Irp->UserBuffer;
-    Address = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
-    if (Address == NULL)
-        ExRaiseStatus( STATUS_INVALID_USER_BUFFER );
-    return Address;
-}
-
 NTSTATUS
 FatLockUserBuffer (
     IN PFAT_IRP_CONTEXT IrpContext,

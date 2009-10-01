@@ -65,10 +65,6 @@ FatPerformVirtualNonCachedIo(
     IN PLARGE_INTEGER Offset,
     IN SIZE_T Length);
 
-PVOID
-FatMapUserBuffer(
-    IN OUT PIRP Irp);
-
 /*  -----------------------------------------------------------  dir.c  */
 
 NTSTATUS NTAPI
@@ -158,6 +154,9 @@ FatSetFileObject(PFILE_OBJECT FileObject,
                  TYPE_OF_OPEN TypeOfOpen,
                  PVOID Fcb,
                  PCCB Ccb);
+
+PVOID FASTCALL
+FatMapUserBuffer(PIRP Irp);
 
 /* --------------------------------------------------------- fullfat.c */
 
