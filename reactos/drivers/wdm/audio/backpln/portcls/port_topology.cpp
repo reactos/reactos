@@ -273,6 +273,12 @@ CPortTopology::Init(
 
 
     DPRINT("IPortTopology_fnInit success\n");
+    if (NT_SUCCESS(Status))
+    {
+        // store for node property requests
+        m_SubDeviceDescriptor->UnknownMiniport = UnknownMiniport;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -455,7 +461,7 @@ CreatePinWorkerRoutine(
     DPRINT("CreatePinWorkerRoutine called\n");
     // create the pin
     Status = WorkerContext->Filter->NewIrpTarget(&Pin,
-                                                 NULL,
+                                                 KSSTRING_Pin,
                                                  NULL,
                                                  NonPagedPool,
                                                  DeviceObject,

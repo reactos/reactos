@@ -913,12 +913,6 @@ CPortPinWaveCyclic::Init(
 
     DPRINT("CPortPinWaveCyclic::Init entered Size %u\n", DataFormat->FormatSize);
 
-    m_Format = (PKSDATAFORMAT)ExAllocatePoolWithTag(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
-    if (!m_Format)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    RtlMoveMemory(m_Format, DataFormat, DataFormat->FormatSize);
-
     Status = NewIrpQueue(&m_IrpQueue);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -943,7 +937,7 @@ CPortPinWaveCyclic::Init(
                                    NonPagedPool,
                                    ConnectDetails->PinId,
                                    Capture,
-                                   m_Format,
+                                   DataFormat,
                                    &m_DmaChannel,
                                    &m_ServiceGroup);
 #if 0
@@ -998,6 +992,13 @@ CPortPinWaveCyclic::Init(
        m_IrpQueue->Release();
        return Status;
     }
+
+    m_Format = (PKSDATAFORMAT)ExAllocatePoolWithTag(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+    if (!m_Format)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlMoveMemory(m_Format, DataFormat, DataFormat->FormatSize);
+
 
     Port->AddRef();
     Filter->AddRef();

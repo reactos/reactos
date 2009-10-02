@@ -161,6 +161,8 @@ DECLARE_INTERFACE_(IIrpTarget, IUnknown)
     DEFINE_ABSTRACT_IRPTARGET()
 };
 
+typedef IIrpTarget *PIRPTARGET;
+
 /*****************************************************************************
  * ISubdevice
  *****************************************************************************
@@ -212,6 +214,7 @@ typedef struct
     LIST_ENTRY SymbolicLinkList;
     LIST_ENTRY PhysicalConnectionList;
     UNICODE_STRING RefString;
+    PUNKNOWN UnknownMiniport;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
