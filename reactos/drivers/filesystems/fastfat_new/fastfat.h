@@ -74,6 +74,11 @@ VOID NTAPI
 FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
                  IN PVCB Vcb);
 
+PFCB NTAPI
+FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PVCB Vcb,
+             IN PFCB ParentDcb);
+
 /*  --------------------------------------------------------  create.c  */
 
 NTSTATUS NTAPI
@@ -264,7 +269,8 @@ PFCB NTAPI
 FatCreateFcb(
     IN PFAT_IRP_CONTEXT IrpContext,
     IN PVCB Vcb,
-    IN PFCB ParentDcb);
+    IN PFCB ParentDcb,
+    IN FF_FILE *FileHandle);
 
 NTSTATUS
 FatOpenFcb(
@@ -281,6 +287,10 @@ FatFindFcb(PFAT_IRP_CONTEXT IrpContext,
 
 PCCB NTAPI
 FatCreateCcb();
+
+VOID NTAPI
+FatSetFullNameInFcb(PFCB Fcb,
+                    PUNICODE_STRING Name);
 
 /*  ------------------------------------------------------------  rw.c  */
 

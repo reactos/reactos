@@ -11,6 +11,8 @@
 #define NDEBUG
 #include "fastfat.h"
 
+#define TAG_FILENAME 'fBnF'
+
 /* FUNCTIONS ****************************************************************/
 
 FSRTL_COMPARISON_RESULT
@@ -109,7 +111,8 @@ PFCB
 NTAPI
 FatCreateFcb(IN PFAT_IRP_CONTEXT IrpContext,
              IN PVCB Vcb,
-             IN PFCB ParentDcb)
+             IN PFCB ParentDcb,
+             IN FF_FILE *FileHandle)
 {
     PFCB Fcb;
 
@@ -141,6 +144,11 @@ FatCreateFcb(IN PFAT_IRP_CONTEXT IrpContext,
     Fcb->ParentFcb = ParentDcb;
     Fcb->Vcb = Vcb;
 
+    /* Set file handle and sizes */
+    Fcb->Header.FileSize.LowPart = FileHandle->Filesize;
+    Fcb->Header.ValidDataLength.LowPart = FileHandle->Filesize;
+    Fcb->FatHandle = FileHandle;
+
     return Fcb;
 }
 
@@ -159,6 +167,78 @@ FatCreateCcb()
     Ccb->NodeByteSize = sizeof(CCB);
 
     return Ccb;
+}
+
+VOID
+NTAPI
+FatSetFullNameInFcb(PFCB Fcb,
+                    PUNICODE_STRING Name)
+{
+    PUNICODE_STRING ParentName;
+
+    /* Make sure this FCB's name wasn't already set */
+    ASSERT(Fcb->FullFileName.Buffer == NULL);
+
+    /* First of all, check exact case name */
+    if (Fcb->ExactCaseLongName.Buffer)
+    {
+        ASSERT(Fcb->ExactCaseLongName.Length != 0);
+
+        /* Use exact case name */
+        Name = &Fcb->ExactCaseLongName;
+    }
+
+    /* Treat root dir different */
+    if (FatNodeType(Fcb->ParentFcb) == FAT_NTC_ROOT_DCB)
+    {
+        /* Set lengths */
+        Fcb->FullFileName.MaximumLength = sizeof(WCHAR) + Name->Length;
+        Fcb->FullFileName.Length = Fcb->FullFileName.MaximumLength;
+
+        /* Allocate a buffer */
+        Fcb->FullFileName.Buffer = FsRtlAllocatePoolWithTag(PagedPool,
+                                                            Fcb->FullFileName.Length,
+                                                            TAG_FILENAME);
+
+        /* Prefix with a backslash */
+        Fcb->FullFileName.Buffer[0] = L'\\';
+
+        /* Copy the name here */
+        RtlCopyMemory(&Fcb->FullFileName.Buffer[1],
+                      &Name->Buffer[0],
+                       Name->Length );
+    }
+    else
+    {
+        ParentName = &Fcb->ParentFcb->FullFileName;
+
+        /* Check if parent's name is set */
+        if (!ParentName->Buffer)
+            return;
+
+        /* Set lengths */
+        Fcb->FullFileName.MaximumLength =
+            ParentName->Length + sizeof(WCHAR) + Name->Length;
+        Fcb->FullFileName.Length = Fcb->FullFileName.MaximumLength;
+
+        /* Allocate a buffer */
+        Fcb->FullFileName.Buffer = FsRtlAllocatePoolWithTag(PagedPool,
+                                                            Fcb->FullFileName.Length,
+                                                            TAG_FILENAME );
+
+        /* Copy parent's name here */
+        RtlCopyMemory(&Fcb->FullFileName.Buffer[0],
+                      &ParentName->Buffer[0],
+                      ParentName->Length );
+
+        /* Add a backslash */
+        Fcb->FullFileName.Buffer[ParentName->Length / sizeof(WCHAR)] = L'\\';
+
+        /* Copy given name here */
+        RtlCopyMemory(&Fcb->FullFileName.Buffer[(ParentName->Length / sizeof(WCHAR)) + 1],
+                      &Name->Buffer[0],
+                      Name->Length );
+    }
 }
 
 /* EOF */

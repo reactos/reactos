@@ -123,5 +123,46 @@ FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
     //FatCheckFreeDirentBitmap( IrpContext, Dcb );
 }
 
+PFCB
+NTAPI
+FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PVCB Vcb,
+             IN PFCB ParentDcb)
+{
+    PFCB Fcb;
+
+    /* Allocate it and zero it */
+    Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(FCB), TAG_FCB);
+    RtlZeroMemory(Fcb, sizeof(FCB));
+
+    /* Set node types */
+    Fcb->Header.NodeTypeCode = FAT_NTC_DCB;
+    Fcb->Header.NodeByteSize = sizeof(FCB);
+    Fcb->Condition = FcbGood;
+
+    /* Initialize resources */
+    Fcb->Header.Resource = &Fcb->Resource;
+    ExInitializeResourceLite(Fcb->Header.Resource);
+
+    Fcb->Header.PagingIoResource = &Fcb->PagingIoResource;
+    ExInitializeResourceLite(Fcb->Header.PagingIoResource);
+
+    /* Initialize mutexes */
+    Fcb->Header.FastMutex = &Fcb->HeaderMutex;
+    ExInitializeFastMutex(&Fcb->HeaderMutex);
+    FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
+
+    /* Insert into parent's DCB list */
+    InsertHeadList(&ParentDcb->Dcb.ParentDcbList, &Fcb->ParentDcbLinks);
+
+    /* Set backlinks */
+    Fcb->ParentFcb = ParentDcb;
+    Fcb->Vcb = Vcb;
+
+    /* Initialize parent dcb list */
+    InitializeListHead(&Fcb->Dcb.ParentDcbList);
+
+    return Fcb;
+}
 
 /* EOF */

@@ -275,6 +275,8 @@ typedef struct _FCB
     WCHAR ShortNameBuffer[0xc];
     /* Full file name */
     UNICODE_STRING FullFileName;
+    /* Long name with exact case */
+    UNICODE_STRING ExactCaseLongName;
     /* A copy of fat attribute byte */
     UCHAR DirentFatFlags;
     /* File basic info */

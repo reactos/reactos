@@ -63,6 +63,7 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
     CHAR AnsiNameBuf[512];
     PFCB Fcb;
     NTSTATUS Status;
+    FF_FILE *FileHandle;
 
     /* Check for create file option and fail */
     if (CreateDisposition == FILE_CREATE)
@@ -72,9 +73,6 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
     }
 
     // TODO: Check more params
-
-    /* Create a new FCB for this file */
-    Fcb = FatCreateFcb(IrpContext, Vcb, ParentDcb);
 
     /* Convert the name to ANSI */
     AnsiName.Buffer = AnsiNameBuf;
@@ -88,7 +86,16 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
     }
 
     /* Open the file with FullFAT */
-    Fcb->FatHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_READ, NULL);
+    FileHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_READ, NULL);
+
+    if (!FileHandle)
+    {
+        Iosb.Status = STATUS_OBJECT_NAME_NOT_FOUND; // FIXME: A shortcut for now
+        return Iosb;
+    }
+
+    /* Create a new FCB for this file */
+    Fcb = FatCreateFcb(IrpContext, Vcb, ParentDcb, FileHandle);
 
     // TODO: Check if overwrite is needed
 
@@ -505,7 +512,13 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             /* Break if came to the end */
             if (!RemainingPart.Length) break;
 
-            // TODO: Create a DCB for this entry
+            /* Create a DCB for this entry */
+            ParentDcb = FatCreateDcb(IrpContext,
+                                     Vcb,
+                                     ParentDcb);
+
+            /* Set its name */
+            FatSetFullNameInFcb(ParentDcb, &FirstName);
         }
 
         // TODO: Try to open directory
