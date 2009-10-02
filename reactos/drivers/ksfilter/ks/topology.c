@@ -241,6 +241,13 @@ KsTopologyPropertyHandler(
         case KSPROPERTY_TOPOLOGY_NAME:
             Node = (KSP_NODE*)Property;
 
+            if (Node->NodeId >= Topology->TopologyNodesCount)
+            {
+                Irp->IoStatus.Information = 0;
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
             Status = RtlStringFromGUID(&Topology->TopologyNodesNames[Node->NodeId], &GuidString);
             if (!NT_SUCCESS(Status))
             {
@@ -254,6 +261,7 @@ KsTopologyPropertyHandler(
             if (!KeyName.Buffer)
             {
                 Irp->IoStatus.Information = 0;
+                Status = STATUS_INSUFFICIENT_RESOURCES;
                 break;
             }
 
