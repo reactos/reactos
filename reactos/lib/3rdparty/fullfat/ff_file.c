@@ -222,7 +222,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 			if(Object.Attrib == FF_FAT_ATTR_DIR) {
 				if(!(pFile->Mode & FF_MODE_DIR)) {
 					// Not the object, File Not Found!
-					free(pFile);
+					FF_Free(pFile);
 					if(pError) {
 						*pError = FF_ERR_FILE_OBJECT_IS_A_DIR;
 					}
@@ -233,7 +233,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 			//---------- Ensure Read-Only files don't get opened for Writing.
 			if((pFile->Mode & FF_MODE_WRITE) || (pFile->Mode & FF_MODE_APPEND)) {
 				if((Object.Attrib & FF_FAT_ATTR_READONLY)) {
-					free(pFile);
+					FF_Free(pFile);
 					if(pError) {
 						*pError = FF_ERR_FILE_IS_READ_ONLY;
 					}
@@ -276,7 +276,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 						if(pFileChain->ObjectCluster == pFile->ObjectCluster) {
 							// File is already open! DON'T ALLOW IT!
 							FF_ReleaseSemaphore(pIoman->pSemaphore);
-							free(pFile);
+							FF_Free(pFile);
 							if(pError) {
 								*pError = FF_ERR_FILE_ALREADY_OPEN;
 							}
@@ -294,7 +294,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 
 			return pFile;
 		}else {
-			free(pFile);
+			FF_Free(pFile);
 			if(pError) {
 				*pError = FF_ERR_FILE_NOT_FOUND;
 			}
@@ -305,7 +305,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 		*pError = FF_ERR_FILE_INVALID_PATH;
 	}
 
-	free(pFile);
+	FF_Free(pFile);
 
 	return (FF_FILE *)NULL;
 }
@@ -1405,7 +1405,7 @@ FF_ERROR FF_Close(FF_FILE *pFile) {
 	FF_ReleaseSemaphore(pFile->pIoman->pSemaphore);
 
 	// If file written, flush to disk
-	free(pFile);
+	FF_Free(pFile);
 	// Simply free the pointer!
 	return FF_ERR_NONE;
 }
