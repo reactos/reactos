@@ -527,6 +527,9 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
            since we're opening files here */
         if (EndBackslash)
         {
+            /* Unlock VCB */
+            FatReleaseVcb(IrpContext, Vcb);
+
             /* Complete the request */
             Iosb.Status = STATUS_OBJECT_NAME_INVALID;
             FatCompleteRequest(IrpContext, Irp, Iosb.Status);
@@ -552,6 +555,9 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         Irp->IoStatus.Information = Iosb.Information;
     }
 
+    /* Unlock VCB */
+    FatReleaseVcb(IrpContext, Vcb);
+
     /* Complete the request */
     FatCompleteRequest(IrpContext, Irp, Iosb.Status);
 
@@ -564,7 +570,6 @@ FatCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PFAT_IRP_CONTEXT IrpContext;
     NTSTATUS Status;
-    //PVOLUME_DEVICE_OBJECT VolumeDO = (PVOLUME_DEVICE_OBJECT)DeviceObject;
 
     DPRINT1("FatCreate()\n");
 
