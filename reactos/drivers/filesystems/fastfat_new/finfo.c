@@ -13,6 +13,49 @@
 
 /* FUNCTIONS ****************************************************************/
 
+VOID
+NTAPI
+FatiQueryStandardInformation(IN PFAT_IRP_CONTEXT IrpContext,
+                             IN PFCB Fcb,
+                             IN PFILE_OBJECT FileObject,
+                             IN OUT PFILE_STANDARD_INFORMATION Buffer,
+                             IN OUT PLONG Length)
+{
+    /* Zero the buffer */
+    RtlZeroMemory(Buffer, sizeof(FILE_STANDARD_INFORMATION));
+
+    /* Deduct the written length */
+    *Length -= sizeof(FILE_STANDARD_INFORMATION);
+
+    Buffer->NumberOfLinks = 1;
+    Buffer->DeletePending = FALSE; // FIXME
+
+    /* Check if it's a dir or a file */
+    if (FatNodeType(Fcb) == FAT_NTC_FCB)
+    {
+        Buffer->Directory = FALSE;
+
+        Buffer->EndOfFile.LowPart = Fcb->FatHandle->Filesize;
+        Buffer->AllocationSize = Buffer->EndOfFile;
+        DPRINT1("Filesize %d, chain length %d\n", Fcb->FatHandle->Filesize, Fcb->FatHandle->iChainLength);
+    }
+    else
+    {
+        Buffer->Directory = TRUE;
+    }
+}
+
+VOID
+NTAPI
+FatiQueryInternalInformation(IN PFAT_IRP_CONTEXT IrpContext,
+                             IN PFCB Fcb,
+                             IN PFILE_OBJECT FileObject,
+                             IN OUT PFILE_INTERNAL_INFORMATION Buffer,
+                             IN OUT PLONG Length)
+{
+    UNIMPLEMENTED;
+}
+
 NTSTATUS
 NTAPI
 FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
@@ -25,6 +68,9 @@ FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
     PVCB Vcb;
     PFCB Fcb;
     PCCB Ccb;
+    LONG Length;
+    PVOID Buffer;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     /* Get IRP stack location */
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -32,19 +78,51 @@ FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
     /* Get the file object */
     FileObject = IrpSp->FileObject;
 
+    /* Copy variables to something with shorter names */
     InfoClass = IrpSp->Parameters.QueryFile.FileInformationClass;
+    Length = IrpSp->Parameters.QueryFile.Length;
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
 
-    DPRINT1("FatCommonQueryInformation\n", 0);
+    DPRINT1("FatiQueryInformation\n", 0);
     DPRINT1("\tIrp                  = %08lx\n", Irp);
-    DPRINT1("\tLength               = %08lx\n", IrpSp->Parameters.QueryFile.Length);
+    DPRINT1("\tLength               = %08lx\n", Length);
     DPRINT1("\tFileInformationClass = %08lx\n", InfoClass);
-    DPRINT1("\tBuffer               = %08lx\n", Irp->AssociatedIrp.SystemBuffer);
+    DPRINT1("\tBuffer               = %08lx\n", Buffer);
 
     FileType = FatDecodeFileObject(FileObject, &Vcb, &Fcb, &Ccb);
 
     DPRINT1("Vcb %p, Fcb %p, Ccb %p, open type %d\n", Vcb, Fcb, Ccb, FileType);
 
-    return STATUS_SUCCESS;
+    // TODO: Acquire FCB locks
+
+    switch (InfoClass)
+    {
+    case FileStandardInformation:
+        FatiQueryStandardInformation(IrpContext, Fcb, FileObject, Buffer, &Length);
+        break;
+    case FileInternalInformation:
+        FatiQueryInternalInformation(IrpContext, Fcb, FileObject, Buffer, &Length);
+        break;
+    default:
+        DPRINT1("Unimplemented information class %d requested\n", InfoClass);
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check for buffer overflow */
+    if (Length < 0)
+    {
+        Status = STATUS_BUFFER_OVERFLOW;
+        Length = 0;
+    }
+
+    /* Set IoStatus.Information to amount of filled bytes */
+    Irp->IoStatus.Information = IrpSp->Parameters.QueryFile.Length - Length;
+
+    // TODO: Release FCB locks
+
+    /* Complete request and return status */
+    FatCompleteRequest(IrpContext, Irp, Status);
+    return Status;
 }
 
 NTSTATUS

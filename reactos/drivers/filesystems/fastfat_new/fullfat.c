@@ -41,16 +41,17 @@ FF_T_SINT32
 FatReadBlocks(FF_T_UINT8 *DestBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count, void *pParam)
 {
     LARGE_INTEGER Offset;
-    PVOID Buffer;
+    //PVOID Buffer;
     PVCB Vcb = (PVCB)pParam;
-    PBCB Bcb;
+    //PBCB Bcb;
     ULONG SectorSize = 512; // FIXME: hardcoding 512 is bad
+    IO_STATUS_BLOCK IoSb;
 
     DPRINT("FatReadBlocks %p %d %d %p\n", DestBuffer, SectorAddress, Count, pParam);
 
     /* Calculate the offset */
     Offset.QuadPart = Int32x32To64(SectorAddress, SectorSize);
-
+#if 0
     if (!CcMapData(Vcb->StreamFileObject,
                   &Offset,
                   Count * SectorSize,
@@ -68,6 +69,9 @@ FatReadBlocks(FF_T_UINT8 *DestBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Cou
 
     /* Unpin unneeded data */
     CcUnpinData(Bcb);
+#else
+    CcCopyRead(Vcb->StreamFileObject, &Offset, Count * SectorSize, TRUE, DestBuffer, &IoSb);
+#endif
 
     /* Return amount of read data in sectors */
     return Count;

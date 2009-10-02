@@ -54,6 +54,10 @@ FatiRead(PFAT_IRP_CONTEXT IrpContext)
         Buffer = FatMapUserBuffer(IrpContext->Irp);
         DPRINT1("Normal cached read, buffer %p\n");
 
+        /* Set offset */
+        FF_Seek(Fcb->FatHandle, ByteOffset.LowPart, FF_SEEK_SET);
+
+        /* Read */
         BytesRead = FF_Read(Fcb->FatHandle, NumberOfBytes, 1, Buffer);
         DPRINT1("Read %d bytes\n", BytesRead);
 
