@@ -21,6 +21,7 @@ const GUID KSNODETYPE_STEREO_WIDE = {0xA9E69800L, 0xC558, 0x11D0, {0x8A, 0x2B, 0
 const GUID KSNODETYPE_CHORUS =      {0x20173F20L, 0xC559, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 const GUID KSNODETYPE_REVERB =      {0xEF0328E0L, 0xC558, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 const GUID KSNODETYPE_SUPERMIX =    {0xE573ADC0L, 0xC555, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSNODETYPE_SUM = {0xDA441A60L, 0xC556, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 
 #define DESTINATION_LINE 0xFFFF0000
 
@@ -62,7 +63,7 @@ GetSourceMixerLineByLineId(
     while(Entry != &MixerInfo->LineList)
     {
         MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
-        DPRINT("dwLineID %x dwLineID %x\n", MixerLineSrc->Line.dwLineID, dwLineID);
+        DPRINT1("dwLineID %x dwLineID %x\n", MixerLineSrc->Line.dwLineID, dwLineID);
         if (MixerLineSrc->Line.dwLineID == dwLineID)
             return MixerLineSrc;
 
@@ -719,67 +720,369 @@ AllocatePinArray(
     return Pins;
 }
 
+PKSTOPOLOGY_CONNECTION
+GetConnectionByIndex(
+    IN PKSMULTIPLE_ITEM MultipleItem,
+    IN ULONG Index)
+{
+    PKSTOPOLOGY_CONNECTION Descriptor;
+
+    ASSERT(Index < MultipleItem->Count);
+
+    Descriptor = (PKSTOPOLOGY_CONNECTION)(MultipleItem + 1);
+    return &Descriptor[Index];
+}
+
+LPGUID
+GetNodeType(
+    IN PKSMULTIPLE_ITEM MultipleItem,
+    IN ULONG Index)
+{
+    LPGUID NodeType;
+
+    ASSERT(Index < MultipleItem->Count);
+
+    NodeType = (LPGUID)(MultipleItem + 1);
+    return &NodeType[Index];
+}
+
+NTSTATUS
+GetControlsFromPinByConnectionIndex(
+    IN PKSMULTIPLE_ITEM NodeConnections,
+    IN PKSMULTIPLE_ITEM NodeTypes,
+    IN ULONG bUpDirection,
+    IN ULONG NodeConnectionIndex,
+    OUT PULONG Nodes)
+{
+    PKSTOPOLOGY_CONNECTION CurConnection;
+    LPGUID NodeType;
+    ULONG NodeIndex;
+    NTSTATUS Status;
+    ULONG NodeConnectionCount, Index;
+    PULONG NodeConnection;
+
+
+    /* get current connection */
+    CurConnection = GetConnectionByIndex(NodeConnections, NodeConnectionIndex);
+
+    if (bUpDirection)
+        NodeIndex = CurConnection->FromNode;
+    else
+        NodeIndex = CurConnection->ToNode;
+
+    /* get target node type of current connection */
+    NodeType = GetNodeType(NodeTypes, NodeIndex);
+
+    if (IsEqualGUIDAligned(NodeType, &KSNODETYPE_SUM) || IsEqualGUIDAligned(NodeType, &KSNODETYPE_MUX))
+    {
+        if (bUpDirection)
+        {
+            /* add the sum / mux node to destination line */
+            //Nodes[NodeIndex] = TRUE;
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    /* now add the node */
+    Nodes[NodeIndex] = TRUE;
+
+
+    /* get all node indexes referenced by that node */
+    if (bUpDirection)
+    {
+        Status = GetNodeIndexes(NodeConnections, NodeIndex, TRUE, FALSE, &NodeConnectionCount, &NodeConnection);
+    }
+    else
+    {
+        Status = GetNodeIndexes(NodeConnections, NodeIndex, TRUE, TRUE, &NodeConnectionCount, &NodeConnection);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        for(Index = 0; Index < NodeConnectionCount; Index++)
+        {
+            /* iterate recursively into the nodes */
+            Status = GetControlsFromPinByConnectionIndex(NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], Nodes);
+            ASSERT(Status == STATUS_SUCCESS);
+        }
+        /* free node connection indexes */
+        ExFreePool(NodeConnection);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+GetControlsFromPin(
+    IN PKSMULTIPLE_ITEM NodeConnections,
+    IN PKSMULTIPLE_ITEM NodeTypes,
+    IN ULONG PinId,
+    IN ULONG bUpDirection,
+    OUT PULONG Nodes)
+{
+    ULONG NodeConnectionCount, Index;
+    NTSTATUS Status;
+    PULONG NodeConnection;
+
+    /* sanity check */
+    ASSERT(PinId != (ULONG)-1);
+
+    /* get all node indexes referenced by that pin */
+    if (bUpDirection)
+        Status = GetNodeIndexes(NodeConnections, PinId, FALSE, FALSE, &NodeConnectionCount, &NodeConnection);
+    else
+        Status = GetNodeIndexes(NodeConnections, PinId, FALSE, TRUE, &NodeConnectionCount, &NodeConnection);
+
+    for(Index = 0; Index < NodeConnectionCount; Index++)
+    {
+        /* get all associated controls */
+        Status = GetControlsFromPinByConnectionIndex(NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], Nodes);
+    }
+
+    ExFreePool(NodeConnection);
+
+    return Status;
+}
+
+NTSTATUS
+AddMixerControl(
+    IN LPMIXER_INFO MixerInfo,
+    IN PFILE_OBJECT FileObject,
+    IN PKSMULTIPLE_ITEM NodeTypes,
+    IN ULONG NodeIndex,
+    OUT LPMIXERCONTROLW MixerControl)
+{
+    LPGUID NodeType;
+    KSP_NODE Node;
+    ULONG BytesReturned;
+    NTSTATUS Status;
+    LPWSTR Name;
+
+
+    /* initialize mixer control */
+    MixerControl->cbStruct = sizeof(MIXERCONTROLW);
+    MixerControl->dwControlID = MixerInfo->ControlId;
+
+    /* get node type */
+    NodeType = GetNodeType(NodeTypes, NodeIndex);
+    /* store control type */
+    MixerControl->dwControlType = GetControlTypeFromTopologyNode(NodeType);
+
+    MixerControl->fdwControl = MIXERCONTROL_CONTROLF_UNIFORM; //FIXME
+    MixerControl->cMultipleItems = 0; //FIXME
+
+    if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
+    {
+        MixerControl->Bounds.dwMinimum = 0;
+        MixerControl->Bounds.dwMaximum = 1;
+    }
+    else if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
+    {
+        MixerControl->Bounds.dwMinimum = 0;
+        MixerControl->Bounds.dwMaximum = 0xFFFF;
+        MixerControl->Metrics.cSteps = 0xC0; //FIXME
+    }
+
+    /* setup request to retrieve name */
+    Node.NodeId = NodeIndex;
+    Node.Property.Id = KSPROPERTY_TOPOLOGY_NAME;
+    Node.Property.Flags = KSPROPERTY_TYPE_GET;
+    Node.Property.Set = KSPROPSETID_Topology;
+    Node.Reserved = 0;
+
+    /* get node name size */
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), NULL, 0, &BytesReturned);
+
+    if (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        ASSERT(BytesReturned != 0);
+        Name = ExAllocatePool(NonPagedPool, BytesReturned);
+        if (!Name)
+        {
+            /* not enough memory */
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* get node name */
+        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), (LPVOID)Name, BytesReturned, &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            RtlMoveMemory(MixerControl->szShortName, Name, (min(MIXER_SHORT_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
+            MixerControl->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
+
+            RtlMoveMemory(MixerControl->szName, Name, (min(MIXER_LONG_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
+            MixerControl->szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
+        }
+
+        /* free name buffer */
+        ExFreePool(Name);
+    }
+
+    MixerInfo->ControlId++;
+
+    DPRINT("Status %x Name %S\n", Status, MixerControl->szName);
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 AddMixerSourceLine(
     IN OUT LPMIXER_INFO MixerInfo,
     IN PFILE_OBJECT FileObject,
+    IN PKSMULTIPLE_ITEM NodeConnections,
+    IN PKSMULTIPLE_ITEM NodeTypes,
     IN ULONG DeviceIndex,
-    IN ULONG PinId)
+    IN ULONG PinId,
+    IN ULONG bBridgePin,
+    IN ULONG bTargetPin)
 {
     LPMIXERLINE_EXT SrcLine, DstLine;
     NTSTATUS Status;
     KSP_PIN Pin;
     LPWSTR PinName;
     GUID NodeType;
-    ULONG BytesReturned;
+    ULONG BytesReturned, ControlCount, Index;
+    PULONG Nodes;
 
-    /* allocate src mixer line */
-    SrcLine = (LPMIXERLINE_EXT)ExAllocatePool(NonPagedPool, sizeof(MIXERLINE_EXT));
-    if (!SrcLine)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    if (!bTargetPin)
+    {
+        /* allocate src mixer line */
+        SrcLine = (LPMIXERLINE_EXT)ExAllocatePool(NonPagedPool, sizeof(MIXERLINE_EXT));
 
-    /* zero struct */
-    RtlZeroMemory(SrcLine, sizeof(MIXERLINE_EXT));
+        if (!SrcLine)
+            return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* initialize mixer src line */
-    SrcLine->DeviceIndex = DeviceIndex;
-    SrcLine->PinId = PinId;
-    SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
+        /* zero struct */
+        RtlZeroMemory(SrcLine, sizeof(MIXERLINE_EXT));
+
+    }
+    else
+    {
+        ASSERT(!IsListEmpty(&MixerInfo->LineList));
+        SrcLine = GetSourceMixerLineByLineId(MixerInfo, DESTINATION_LINE);
+    }
 
     /* get destination line */
     DstLine = GetSourceMixerLineByLineId(MixerInfo, DESTINATION_LINE);
+    ASSERT(DstLine);
 
-    /* initialize mixer destination line */
-    SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
-    SrcLine->Line.dwDestination = 0;
-    SrcLine->Line.dwSource = DstLine->Line.cConnections;
-    SrcLine->Line.dwLineID = (DstLine->Line.cConnections * 0x10000);
-    SrcLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE | MIXERLINE_LINEF_SOURCE;
-    SrcLine->Line.dwUser = 0;
-    SrcLine->Line.cChannels = DstLine->Line.cChannels;
-    SrcLine->Line.cConnections = 0;
-    SrcLine->Line.cControls = 1; //FIXME
 
-    //HACK
-    SrcLine->LineControls = ExAllocatePool(NonPagedPool, SrcLine->Line.cControls * sizeof(MIXERCONTROLW));
-    if (!SrcLine->LineControls)
+    if (!bTargetPin)
+    {
+        /* initialize mixer src line */
+        SrcLine->DeviceIndex = DeviceIndex;
+        SrcLine->PinId = PinId;
+        SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
+
+        /* initialize mixer destination line */
+        SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
+        SrcLine->Line.dwDestination = 0;
+        SrcLine->Line.dwSource = DstLine->Line.cConnections;
+        SrcLine->Line.dwLineID = (DstLine->Line.cConnections * 0x10000);
+        SrcLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE | MIXERLINE_LINEF_SOURCE;
+        SrcLine->Line.dwUser = 0;
+        SrcLine->Line.cChannels = DstLine->Line.cChannels;
+        SrcLine->Line.cConnections = 0;
+        SrcLine->Line.Target.dwType = 1;
+        SrcLine->Line.Target.dwDeviceID = DstLine->Line.Target.dwDeviceID;
+        SrcLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
+        SrcLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
+        SrcLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
+        wcscpy(SrcLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
+
+    }
+
+    /* allocate a node arrary */
+    Nodes = ExAllocatePool(NonPagedPool, sizeof(ULONG) * NodeTypes->Count);
+
+    if (!Nodes)
     {
         /* not enough memory */
-        ExFreePool(SrcLine);
+        if (!bTargetPin)
+        {
+            ExFreePool(SrcLine);
+        }
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* clear line controls */
-    RtlZeroMemory(SrcLine->LineControls, sizeof(MIXERCONTROLW));
+    /* clear nodes array */
+    RtlZeroMemory(Nodes, sizeof(ULONG) * NodeTypes->Count);
 
-    /* fill in pseudo mixer control */
-    SrcLine->LineControls->dwControlID = 1; //FIXME
-    SrcLine->LineControls->cbStruct = sizeof(MIXERCONTROLW);
-    SrcLine->LineControls->fdwControl = 0;
-    SrcLine->LineControls->cMultipleItems = 0;
-    wcscpy(SrcLine->LineControls->szName, L"test");
-    wcscpy(SrcLine->LineControls->szShortName, L"test");
+    Status = GetControlsFromPin(NodeConnections, NodeTypes, PinId, bTargetPin, Nodes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* something went wrong */
+        if (!bTargetPin)
+        {
+            ExFreePool(SrcLine);
+        }
+        ExFreePool(Nodes);
+        return Status;
+    }
 
+    /* now count all nodes controlled by that pin */
+    ControlCount = 0;
+    for(Index = 0; Index < NodeTypes->Count; Index++)
+    {
+        if (Nodes[Index])
+            ControlCount++;
+    }
+
+    /* now allocate the line controls */
+    if (ControlCount)
+    {
+        SrcLine->LineControls = ExAllocatePool(NonPagedPool, sizeof(MIXERCONTROLW) * ControlCount);
+
+        if (!SrcLine->LineControls)
+        {
+            /* no memory available */
+            if (!bTargetPin)
+            {
+                ExFreePool(SrcLine);
+            }
+            ExFreePool(Nodes);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        SrcLine->NodeIds = ExAllocatePool(NonPagedPool, sizeof(ULONG) * ControlCount);
+        if (!SrcLine->NodeIds)
+        {
+            /* no memory available */
+            ExFreePool(SrcLine->LineControls);
+            if (!bTargetPin)
+            {
+                ExFreePool(SrcLine);
+            }
+            ExFreePool(Nodes);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* zero line controls */
+        RtlZeroMemory(SrcLine->LineControls, sizeof(MIXERCONTROLW) * ControlCount);
+        RtlZeroMemory(SrcLine->NodeIds, sizeof(ULONG) * ControlCount);
+
+        ControlCount = 0;
+        for(Index = 0; Index < NodeTypes->Count; Index++)
+        {
+            if (Nodes[Index])
+            {
+                /* store the node index for retrieving / setting details */
+                SrcLine->NodeIds[ControlCount] = Index;
+
+                Status = AddMixerControl(MixerInfo, FileObject, NodeTypes, Index, &SrcLine->LineControls[ControlCount]);
+                if (NT_SUCCESS(Status))
+                {
+                    /* increment control count on success */
+                    ControlCount++;
+                }
+            }
+        }
+        /* store control count */
+        SrcLine->Line.cControls = ControlCount;
+    }
+
+    /* release nodes array */
+    ExFreePool(Nodes);
 
     /* get pin category */
     Pin.PinId = PinId;
@@ -831,17 +1134,12 @@ AddMixerSourceLine(
         }
     }
 
-    SrcLine->Line.Target.dwType = 1;
-    SrcLine->Line.Target.dwDeviceID = DstLine->Line.Target.dwDeviceID;
-    SrcLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
-    SrcLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
-    SrcLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
-    wcscpy(SrcLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
-
-
     /* insert src line */
-    InsertTailList(&MixerInfo->LineList, &SrcLine->Entry);
-    DstLine->Line.cConnections++;
+    if (!bTargetPin)
+    {
+        InsertTailList(&MixerInfo->LineList, &SrcLine->Entry);
+        DstLine->Line.cConnections++;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -851,8 +1149,12 @@ NTSTATUS
 AddMixerSourceLines(
     IN OUT LPMIXER_INFO MixerInfo,
     IN PFILE_OBJECT FileObject,
+    IN PKSMULTIPLE_ITEM NodeConnections,
+    IN PKSMULTIPLE_ITEM NodeTypes,
     IN ULONG DeviceIndex,
     IN ULONG PinsCount,
+    IN ULONG BridgePinIndex,
+    IN ULONG TargetPinIndex,
     IN PULONG Pins)
 {
     ULONG Index;
@@ -862,7 +1164,7 @@ AddMixerSourceLines(
     {
         if (Pins[Index-1])
         {
-            AddMixerSourceLine(MixerInfo, FileObject, DeviceIndex, Index-1);
+            AddMixerSourceLine(MixerInfo, FileObject, NodeConnections, NodeTypes, DeviceIndex, Index-1, (Index -1 == BridgePinIndex), (Index -1 == TargetPinIndex));
         }
     }
     return Status;
@@ -987,7 +1289,7 @@ HandlePhysicalConnection(
                 PinsSrcRef[OutConnection->Pin] = TRUE;
             }
 
-            Status = AddMixerSourceLines(MixerInfo, FileObject, DeviceIndex, PinsRefCount, PinsSrcRef);
+            Status = AddMixerSourceLines(MixerInfo, FileObject, NodeConnections, NodeTypes, DeviceIndex, PinsRefCount, OutConnection->Pin, Index, PinsSrcRef);
 
             ExFreePool(MixerControls);
             ExFreePool(PinsSrcRef);
@@ -1045,10 +1347,6 @@ InitializeMixer(
     if (!DestinationLine)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* initialize mixer info */
-    MixerInfo->hMixer = hDevice;
-    MixerInfo->MixerFileObject = FileObject;
-
     /* intialize mixer caps */
     MixerInfo->MixCaps.wMid = MM_MICROSOFT; //FIXME
     MixerInfo->MixCaps.wPid = MM_PID_UNMAPPED; //FIXME
@@ -1083,7 +1381,6 @@ InitializeMixer(
     DestinationLine->Line.dwUser = 0;
     DestinationLine->Line.dwComponentType = (bInput == 0 ? MIXERLINE_COMPONENTTYPE_DST_SPEAKERS : MIXERLINE_COMPONENTTYPE_DST_WAVEIN);
     DestinationLine->Line.cChannels = 2; //FIXME
-    DestinationLine->Line.cControls = 0; //FIXME
     wcscpy(DestinationLine->Line.szShortName, L"Summe"); //FIXME
     wcscpy(DestinationLine->Line.szName, L"Summe"); //FIXME
     DestinationLine->Line.Target.dwType = (bInput == 0 ? MIXERLINE_TARGETTYPE_WAVEOUT : MIXERLINE_TARGETTYPE_WAVEIN);
@@ -1411,6 +1708,7 @@ WdmAudGetLineControls(
 {
     LPMIXERLINE_EXT MixerLineSrc;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    ULONG Index;
 
     /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -1427,15 +1725,12 @@ WdmAudGetLineControls(
         ASSERT(MixerLineSrc);
         if (MixerLineSrc)
         {
-            RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, MixerLineSrc->LineControls, min(MixerLineSrc->Line.cControls, DeviceInfo->u.MixControls.cControls) * sizeof(MIXERLINECONTROLSW));
+            RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, MixerLineSrc->LineControls, min(MixerLineSrc->Line.cControls, DeviceInfo->u.MixControls.cControls) * sizeof(MIXERCONTROLW));
         }
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
     else if (DeviceInfo->Flags == MIXER_GETLINECONTROLSF_ONEBYTYPE)
     {
-        DPRINT1("dwLineID %u\n",DeviceInfo->u.MixControls.dwLineID);
-        UNIMPLEMENTED
-        //HACK
         if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
         {
             /* invalid parameter */
@@ -1444,11 +1739,18 @@ WdmAudGetLineControls(
 
         MixerLineSrc = GetSourceMixerLineByLineId(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixControls.dwLineID);
         ASSERT(MixerLineSrc);
-        if (MixerLineSrc)
+
+        Index = 0;
+        for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
         {
-            RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, MixerLineSrc->LineControls, min(MixerLineSrc->Line.cControls, DeviceInfo->u.MixControls.cControls) * sizeof(MIXERLINECONTROLSW));
+            if (DeviceInfo->u.MixControls.dwControlType == MixerLineSrc->LineControls[Index].dwControlType)
+            {
+                RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, &MixerLineSrc->LineControls[Index], sizeof(MIXERCONTROLW));
+                return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+            }
         }
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+        DPRINT1("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x\n", DeviceInfo->u.MixControls.dwControlType, DeviceInfo->u.MixControls.dwLineID);
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(WDMAUD_DEVICE_INFO));
     }
 
     UNIMPLEMENTED;

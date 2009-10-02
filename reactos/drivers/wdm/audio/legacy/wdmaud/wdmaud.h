@@ -40,19 +40,31 @@ typedef struct
     ULONG DeviceIndex;
     MIXERLINEW Line;
     LPMIXERCONTROLW LineControls;
+    PULONG          NodeIds;
 }MIXERLINE_EXT, *LPMIXERLINE_EXT;
 
 
 typedef struct
 {
-    HANDLE        hMixer;
-    PFILE_OBJECT  MixerFileObject;
-
     MIXERCAPSW    MixCaps;
 
     LIST_ENTRY    LineList;
-
+    ULONG ControlId;
 }MIXER_INFO, *LPMIXER_INFO;
+
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    ULONG FilterId;
+    ULONG PinId;
+    ULONG bInput;
+    union
+    {
+        WAVEOUTCAPSW OutCaps;
+        WAVEINCAPSW  InCaps;
+    }u;
+}WAVE_INFO, *LPWAVE_INFO;
 
 
 typedef struct
@@ -77,6 +89,12 @@ typedef struct
     ULONG MixerInfoCount;
     LPMIXER_INFO MixerInfo;
 
+    ULONG WaveInDeviceCount;
+    LIST_ENTRY WaveInList;
+
+    ULONG WaveOutDeviceCount;
+    LIST_ENTRY WaveOutList;
+
 
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
@@ -85,6 +103,16 @@ typedef struct
     KSSTREAM_HEADER Header;
     PIRP Irp;
 }CONTEXT_WRITE, *PCONTEXT_WRITE;
+
+NTSTATUS
+NTAPI
+OpenWavePin(
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension,
+    IN ULONG FilterId,
+    IN ULONG PinId,
+    IN LPWAVEFORMATEX WaveFormatEx,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PHANDLE PinHandle);
 
 NTSTATUS
 WdmAudRegisterDeviceInterface(
@@ -120,6 +148,14 @@ WdmAudControlOpenMixer(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo);
 
+NTSTATUS
+WdmAudControlOpenWave(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo);
+
+
 ULONG
 GetNumOfMixerDevices(
     IN  PDEVICE_OBJECT DeviceObject);
@@ -143,6 +179,13 @@ FindProductName(
 
 NTSTATUS
 WdmAudMixerCapabilities(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo,
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+WdmAudWaveCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo,
@@ -191,6 +234,27 @@ WdmAudGetControlDetails(
 NTSTATUS
 WdmAudMixerInitialize(
     IN PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+NTAPI
+WdmAudWaveInitialize(
+    IN PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+ClosePin(
+    IN  PWDMAUD_CLIENT ClientInfo,
+    IN  ULONG FilterId,
+    IN  ULONG PinId,
+    IN  SOUND_DEVICE_TYPE DeviceType);
+
+NTSTATUS
+InsertPinHandle(
+    IN  PWDMAUD_CLIENT ClientInfo,
+    IN  ULONG FilterId,
+    IN  ULONG PinId,
+    IN  SOUND_DEVICE_TYPE DeviceType,
+    IN  HANDLE PinHandle,
+    IN  ULONG FreeIndex);
 
 
 #endif

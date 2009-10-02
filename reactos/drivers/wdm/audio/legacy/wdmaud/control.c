@@ -19,114 +19,6 @@ const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, 
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
 const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
-NTSTATUS
-SetIrpIoStatus(
-    IN PIRP Irp,
-    IN NTSTATUS Status,
-    IN ULONG Length)
-{
-    Irp->IoStatus.Information = Length;
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
-
-}
-
-NTSTATUS
-GetFilterIdAndPinId(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
-    IN  PWDMAUD_CLIENT ClientInfo,
-    IN PULONG FilterId,
-    IN PULONG PinId)
-{
-    KSP_PIN Pin;
-    ULONG Count, BytesReturned, Index, SubIndex, Result, NumPins;
-    NTSTATUS Status;
-    KSPIN_COMMUNICATION Communication;
-    KSPIN_DATAFLOW DataFlow;
-    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
-
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
-    {
-        DPRINT1("FIXME: Unsupported device type %x\n", DeviceInfo->DeviceType);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Pin.Property.Set = KSPROPSETID_Sysaudio;
-    Pin.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_COUNT;
-    Pin.Property.Flags = KSPROPERTY_TYPE_GET;
-
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
-    if (!NT_SUCCESS(Status))
-        return STATUS_UNSUCCESSFUL;
-
-    Result = 0;
-    for(Index = 0; Index < Count; Index++)
-    {
-        /* query number of pins */
-        Pin.Reserved = Index; // see sysaudio
-        Pin.Property.Flags = KSPROPERTY_TYPE_GET;
-        Pin.Property.Set = KSPROPSETID_Pin;
-        Pin.Property.Id = KSPROPERTY_PIN_CTYPES;
-        Pin.PinId = 0;
-
-        Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&NumPins, sizeof(ULONG), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            /* enumerate now all pins */
-            for(SubIndex = 0; SubIndex < NumPins; SubIndex++)
-            {
-                Pin.PinId = SubIndex;
-                Pin.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
-                Communication = KSPIN_COMMUNICATION_NONE;
-
-                /* get pin communication type */
-                KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
-
-                Pin.Property.Id = KSPROPERTY_PIN_DATAFLOW;
-                DataFlow = 0;
-
-                /* get pin dataflow type */
-                KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
-
-                if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
-                {
-                    if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
-                    {
-                        if(DeviceInfo->DeviceIndex == Result)
-                        {
-                            /* found the index */
-                            *FilterId = Index;
-                            *PinId = SubIndex;
-                            return STATUS_SUCCESS;
-                        }
-
-                        Result++;
-                    }
-                }
-                else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
-                {
-                    if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
-                    {
-                        if(DeviceInfo->DeviceIndex == Result)
-                        {
-                            /* found the index */
-                            *FilterId = Index;
-                            *PinId = SubIndex;
-                            return STATUS_SUCCESS;
-                        }
-                        Result++;
-                    }
-                }
-            }
-        }
-    }
-
-    return STATUS_UNSUCCESSFUL;
-}
 
 NTSTATUS
 WdmAudControlOpen(
@@ -135,174 +27,17 @@ WdmAudControlOpen(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    SYSAUDIO_INSTANCE_INFO InstanceInfo;
-    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
-    ULONG BytesReturned;
-    NTSTATUS Status;
-    ACCESS_MASK DesiredAccess = 0;
-    HANDLE PinHandle;
-    KSPIN_CONNECT * PinConnect;
-    ULONG Length, Index;
-    KSDATAFORMAT_WAVEFORMATEX * DataFormat;
-    ULONG FilterId;
-    ULONG PinId;
-    ULONG FreeIndex;
-
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
         return WdmAudControlOpenMixer(DeviceObject, Irp, DeviceInfo, ClientInfo);
     }
 
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
+    if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE || DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
     {
-        DPRINT1("FIXME: only waveout / wavein devices are supported\n");
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+        return WdmAudControlOpenWave(DeviceObject, Irp, DeviceInfo, ClientInfo);
     }
 
-    if (DeviceInfo->u.WaveFormatEx.wFormatTag != WAVE_FORMAT_PCM)
-    {
-        DPRINT("FIXME: Only WAVE_FORMAT_PCM is supported RequestFormat %x\n", DeviceInfo->u.WaveFormatEx.wFormatTag);
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
-
-    Status = GetFilterIdAndPinId(DeviceObject, DeviceInfo, ClientInfo, &FilterId, &PinId);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Invalid device index %u\n", DeviceInfo->DeviceIndex);
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
-
-    /* close pin handle which uses same virtual audio device id and pin id */
-    FreeIndex = MAXULONG;
-    for(Index = 0; Index < ClientInfo->NumPins; Index++)
-    {
-        if (ClientInfo->hPins[Index].FilterId == FilterId && ClientInfo->hPins[Index].PinId == PinId && ClientInfo->hPins[Index].Handle && ClientInfo->hPins[Index].Type == DeviceInfo->DeviceType)
-        {
-            ZwClose(ClientInfo->hPins[Index].Handle);
-            ClientInfo->hPins[Index].Handle = NULL;
-            FreeIndex = Index;
-        }
-    }
-
-
-    Length = sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT);
-    PinConnect = ExAllocatePool(NonPagedPool, Length);
-    if (!PinConnect)
-    {
-        /* no memory */
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE ||
-        DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE ||
-        DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
-    {
-        DesiredAccess |= GENERIC_READ;
-    }
-
-    if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE ||
-        DeviceInfo->DeviceType == MIDI_OUT_DEVICE_TYPE ||
-        DeviceInfo->DeviceType == AUX_DEVICE_TYPE ||
-        DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
-    {
-        DesiredAccess |= GENERIC_WRITE;
-    }
-
-    PinConnect->Interface.Set = KSINTERFACESETID_Standard;
-    PinConnect->Interface.Id = KSINTERFACE_STANDARD_STREAMING;
-    PinConnect->Interface.Flags = 0;
-    PinConnect->Medium.Set = KSMEDIUMSETID_Standard;
-    PinConnect->Medium.Id = KSMEDIUM_TYPE_ANYINSTANCE;
-    PinConnect->Medium.Flags = 0;
-    PinConnect->PinToHandle = NULL;
-    PinConnect->PinId = PinId;
-    PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
-    PinConnect->Priority.PrioritySubClass = 1;
-
-
-    DataFormat = (KSDATAFORMAT_WAVEFORMATEX*) (PinConnect + 1);
-    DataFormat->WaveFormatEx.wFormatTag = DeviceInfo->u.WaveFormatEx.wFormatTag;
-    DataFormat->WaveFormatEx.nChannels = DeviceInfo->u.WaveFormatEx.nChannels;
-    DataFormat->WaveFormatEx.nSamplesPerSec = DeviceInfo->u.WaveFormatEx.nSamplesPerSec;
-    DataFormat->WaveFormatEx.nBlockAlign = DeviceInfo->u.WaveFormatEx.nBlockAlign;
-    DataFormat->WaveFormatEx.nAvgBytesPerSec = DeviceInfo->u.WaveFormatEx.nAvgBytesPerSec;
-    DataFormat->WaveFormatEx.wBitsPerSample = DeviceInfo->u.WaveFormatEx.wBitsPerSample;
-    DataFormat->WaveFormatEx.cbSize = 0;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
-    DataFormat->DataFormat.Flags = 0;
-    DataFormat->DataFormat.Reserved = 0;
-    DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-
-    DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-    DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
-    DataFormat->DataFormat.SampleSize = 4;
-
-    /* setup property request */
-    InstanceInfo.Property.Set = KSPROPSETID_Sysaudio;
-    InstanceInfo.Property.Id = KSPROPERTY_SYSAUDIO_INSTANCE_INFO;
-    InstanceInfo.Property.Flags = KSPROPERTY_TYPE_SET;
-    InstanceInfo.Flags = 0;
-    InstanceInfo.DeviceNumber = FilterId;
-
-    /* first open the virtual device */
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&InstanceInfo, sizeof(SYSAUDIO_INSTANCE_INFO), NULL, 0, &BytesReturned);
-
-    if (!NT_SUCCESS(Status))
-    {
-        /* failed */
-        ExFreePool(PinConnect);
-        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
-    }
-
-    /* now create the pin */
-    Status = KsCreatePin(DeviceExtension->hSysAudio, PinConnect, DesiredAccess, &PinHandle);
-
-    /* free create info */
-    ExFreePool(PinConnect);
-
-    if (NT_SUCCESS(Status))
-    {
-        PWDMAUD_HANDLE Handels;
-
-        if (FreeIndex != MAXULONG)
-        {
-            /* re-use a free index */
-            ClientInfo->hPins[Index].Handle = PinHandle;
-            ClientInfo->hPins[Index].FilterId = FilterId;
-            ClientInfo->hPins[Index].PinId = PinId;
-            ClientInfo->hPins[Index].Type = DeviceInfo->DeviceType;
-
-            DeviceInfo->hDevice = PinHandle;
-            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
-        }
-
-        Handels = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
-
-        if (Handels)
-        {
-            if (ClientInfo->NumPins)
-            {
-                RtlMoveMemory(Handels, ClientInfo->hPins, sizeof(WDMAUD_HANDLE) * ClientInfo->NumPins);
-                ExFreePool(ClientInfo->hPins);
-            }
-
-            ClientInfo->hPins = Handels;
-            ClientInfo->hPins[ClientInfo->NumPins].Handle = PinHandle;
-            ClientInfo->hPins[ClientInfo->NumPins].Type = DeviceInfo->DeviceType;
-            ClientInfo->hPins[ClientInfo->NumPins].FilterId = FilterId;
-            ClientInfo->hPins[ClientInfo->NumPins].PinId = PinId;
-            ClientInfo->NumPins++;
-        }
-        DeviceInfo->hDevice = PinHandle;
-    }
-    else
-    {
-        DeviceInfo->hDevice = NULL;
-    }
-
-    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    return SetIrpIoStatus(Irp, STATUS_NOT_SUPPORTED, sizeof(WDMAUD_DEVICE_INFO));
 }
 
 NTSTATUS
@@ -312,85 +47,23 @@ WdmAudControlDeviceType(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    KSP_PIN Pin;
-    ULONG Count, BytesReturned, Index, SubIndex, Result, NumPins;
+    ULONG Result = 0;
     NTSTATUS Status;
-    KSPIN_COMMUNICATION Communication;
-    KSPIN_DATAFLOW DataFlow;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
-        DeviceInfo->DeviceCount = DeviceExtension->MixerInfoCount;
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+        Result = DeviceExtension->MixerInfoCount;
     }
-
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
+    else if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        DPRINT("FIXME: Unsupported device type %x\n", DeviceInfo->DeviceType);
-        DeviceInfo->DeviceCount = 0;
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+        Result = DeviceExtension->WaveOutDeviceCount;
     }
-
-    Pin.Property.Set = KSPROPSETID_Sysaudio;
-    Pin.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_COUNT;
-    Pin.Property.Flags = KSPROPERTY_TYPE_GET;
-
-
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
-    if (!NT_SUCCESS(Status))
+    else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
     {
-        DPRINT1("KSPROPERTY_SYSAUDIO_DEVICE_COUNT failed with %x\n", Status);
-        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
-    }
-    Result = 0;
-    /* now enumerate all available filters */
-    for(Index = 0; Index < Count; Index++)
-    {
-        /* query number of pins */
-        Pin.Reserved = Index; // see sysaudio
-        Pin.Property.Flags = KSPROPERTY_TYPE_GET;
-        Pin.Property.Set = KSPROPSETID_Pin;
-        Pin.Property.Id = KSPROPERTY_PIN_CTYPES;
-        Pin.PinId = 0;
-
-        Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&NumPins, sizeof(ULONG), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            /* enumerate now all pins */
-            for(SubIndex = 0; SubIndex < NumPins; SubIndex++)
-            {
-                Pin.PinId = SubIndex;
-                Pin.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
-                Communication = KSPIN_COMMUNICATION_NONE;
-
-                /* get pin communication type */
-                Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
-                if (!NT_SUCCESS(Status))
-                    continue;
-
-                Pin.Property.Id = KSPROPERTY_PIN_DATAFLOW;
-                DataFlow = 0;
-
-                /* get pin dataflow type */
-                Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
-                if (!NT_SUCCESS(Status))
-                    continue;
-
-                if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
-                {
-                    if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
-                        Result++;
-                }
-                else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
-                {
-                    if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
-                        Result++;
-                }
-            }
-        }
+        Result = DeviceExtension->WaveInDeviceCount;
     }
 
     /* store result count */
@@ -436,253 +109,6 @@ WdmAudControlDeviceState(
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 
-ULONG
-CheckFormatSupport(
-    IN PKSDATARANGE_AUDIO DataRangeAudio,
-    ULONG SampleFrequency,
-    ULONG Mono8Bit,
-    ULONG Stereo8Bit,
-    ULONG Mono16Bit,
-    ULONG Stereo16Bit)
-{
-    ULONG Result = 0;
-
-    if (DataRangeAudio->MinimumSampleFrequency <= SampleFrequency && DataRangeAudio->MaximumSampleFrequency >= SampleFrequency)
-    {
-        if (DataRangeAudio->MinimumBitsPerSample <= 8 && DataRangeAudio->MaximumBitsPerSample >= 8)
-        {
-            Result |= Mono8Bit;
-            if (DataRangeAudio->MaximumChannels >= 2)
-            {
-                Result |= Stereo8Bit;
-            }
-        }
-
-        if (DataRangeAudio->MinimumBitsPerSample <= 16 && DataRangeAudio->MaximumBitsPerSample >= 16)
-        {
-            Result |= Mono16Bit;
-            if (DataRangeAudio->MaximumChannels >= 2)
-            {
-                Result |= Stereo8Bit;
-            }
-        }
-    }
-    return Result;
-
-}
-
-PKEY_VALUE_PARTIAL_INFORMATION
-ReadKeyValue(
-    IN HANDLE hSubKey,
-    IN PUNICODE_STRING KeyName)
-{
-    NTSTATUS Status;
-    ULONG Length;
-    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
-
-    /* now query MatchingDeviceId key */
-    Status = ZwQueryValueKey(hSubKey, KeyName, KeyValuePartialInformation, NULL, 0, &Length);
-
-    /* check for success */
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-        return NULL;
-
-    /* allocate a buffer for key data */
-    PartialInformation = ExAllocatePool(NonPagedPool, Length);
-
-    if (!PartialInformation)
-        return NULL;
-
-
-    /* now query MatchingDeviceId key */
-    Status = ZwQueryValueKey(hSubKey, KeyName, KeyValuePartialInformation, PartialInformation, Length, &Length);
-
-    /* check for success */
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(PartialInformation);
-        return NULL;
-    }
-
-    if (PartialInformation->Type != REG_SZ)
-    {
-        /* invalid key type */
-        ExFreePool(PartialInformation);
-        return NULL;
-    }
-
-    return PartialInformation;
-}
-
-
-NTSTATUS
-CompareProductName(
-    IN HANDLE hSubKey,
-    IN LPWSTR PnpName,
-    IN ULONG ProductNameSize,
-    OUT LPWSTR ProductName)
-{
-    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
-    UNICODE_STRING DriverDescName = RTL_CONSTANT_STRING(L"DriverDesc");
-    UNICODE_STRING MatchingDeviceIdName = RTL_CONSTANT_STRING(L"MatchingDeviceId");
-    ULONG Length;
-    LPWSTR DeviceName;
-
-    /* read MatchingDeviceId value */
-    PartialInformation = ReadKeyValue(hSubKey, &MatchingDeviceIdName);
-
-    if (!PartialInformation)
-        return STATUS_UNSUCCESSFUL;
-
-
-    /* extract last '&' */
-    DeviceName = wcsrchr((LPWSTR)PartialInformation->Data, L'&');
-    ASSERT(DeviceName);
-    /* terminate it */
-    DeviceName[0] = L'\0';
-
-    Length = wcslen((LPWSTR)PartialInformation->Data);
-
-    DPRINT("DeviceName %S PnpName %S Length %u\n", (LPWSTR)PartialInformation->Data, PnpName, Length);
-
-    if (_wcsnicmp((LPWSTR)PartialInformation->Data, &PnpName[4], Length))
-    {
-        ExFreePool(PartialInformation);
-        return STATUS_NO_MATCH;
-    }
-
-    /* free buffer */
-    ExFreePool(PartialInformation);
-
-    /* read DriverDescName value */
-    PartialInformation = ReadKeyValue(hSubKey, &DriverDescName);
-
-    if (!PartialInformation)
-    {
-        /* failed to read driver desc key */
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* copy key name */
-    Length = min(ProductNameSize * sizeof(WCHAR), PartialInformation->DataLength);
-    RtlMoveMemory(ProductName, (PVOID)PartialInformation->Data, Length);
-
-    /* zero terminate it */
-    ProductName[ProductNameSize-1] = L'\0';
-
-    /* free buffer */
-    ExFreePool(PartialInformation);
-
-    return STATUS_SUCCESS;
-}
-
-
-
-NTSTATUS
-FindProductName(
-    IN LPWSTR PnpName,
-    IN ULONG ProductNameSize,
-    OUT LPWSTR ProductName)
-{
-    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class\\{4D36E96C-E325-11CE-BFC1-08002BE10318}");
-
-    UNICODE_STRING SubKeyName;
-    WCHAR SubKey[20];
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE hKey, hSubKey;
-    NTSTATUS Status;
-    ULONG Length, Index;
-    PKEY_FULL_INFORMATION KeyInformation;
-
-    for(Index = 0; Index < wcslen(PnpName); Index++)
-    {
-        if (PnpName[Index] == '#')
-            PnpName[Index] = L'\\';
-    }
-
-
-    /* initialize key attributes */
-    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
-
-    /* open the key */
-    Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
-
-    /* check for success */
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    /* query num of subkeys */
-    Status = ZwQueryKey(hKey, KeyFullInformation, NULL, 0, &Length);
-
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-    {
-        DPRINT1("ZwQueryKey failed with %x\n", Status);
-        /* failed */
-        ZwClose(hKey);
-        return Status;
-    }
-
-    /* allocate key information struct */
-    KeyInformation = ExAllocatePool(NonPagedPool, Length);
-    if (!KeyInformation)
-    {
-        /* no memory */
-        ZwClose(hKey);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* query num of subkeys */
-    Status = ZwQueryKey(hKey, KeyFullInformation, (PVOID)KeyInformation, Length, &Length);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwQueryKey failed with %x\n", Status);
-        ExFreePool(KeyInformation);
-        ZwClose(hKey);
-        return Status;
-    }
-
-    /* now iterate through all subkeys */
-    for(Index = 0; Index < KeyInformation->SubKeys; Index++)
-    {
-        /* subkeys are always in the format 0000-XXXX */
-        swprintf(SubKey, L"%04u", Index);
-
-        /* initialize subkey name */
-        RtlInitUnicodeString(&SubKeyName, SubKey);
-
-        /* initialize key attributes */
-        InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, hKey, NULL);
-
-        /* open the sub key */
-        Status = ZwOpenKey(&hSubKey, GENERIC_READ, &ObjectAttributes);
-
-        /* check for success */
-        if (NT_SUCCESS(Status))
-        {
-            /* compare product name */
-            Status = CompareProductName(hSubKey, PnpName, ProductNameSize, ProductName);
-
-            /* close subkey */
-            ZwClose(hSubKey);
-
-            if (NT_SUCCESS(Status))
-                break;
-        }
-    }
-
-    /* free buffer */
-    ExFreePool(KeyInformation);
-
-    /* close key */
-    ZwClose(hKey);
-
-    /* no matching key found */
-    return Status;
-}
-
-
-
 NTSTATUS
 WdmAudCapabilities(
     IN  PDEVICE_OBJECT DeviceObject,
@@ -692,19 +118,6 @@ WdmAudCapabilities(
 {
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
-    KSP_PIN PinProperty;
-    KSCOMPONENTID ComponentId;
-    KSMULTIPLE_ITEM * MultipleItem;
-    ULONG BytesReturned;
-    PKSDATARANGE_AUDIO DataRangeAudio;
-    PKSDATARANGE DataRange;
-    ULONG Index;
-    ULONG wChannels = 0;
-    ULONG dwFormats = 0;
-    ULONG dwSupport = 0;
-    ULONG FilterId;
-    ULONG PinId;
-    WCHAR DeviceName[MAX_PATH];
 
     DPRINT("WdmAudCapabilities entered\n");
 
@@ -713,114 +126,11 @@ WdmAudCapabilities(
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
         Status = WdmAudMixerCapabilities(DeviceObject, DeviceInfo, ClientInfo, DeviceExtension);
-        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
     }
-
-
-    Status = GetFilterIdAndPinId(DeviceObject, DeviceInfo, ClientInfo, &FilterId, &PinId);
-    if (!NT_SUCCESS(Status))
+    else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE || DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        DPRINT1("Invalid device index provided %u\n", DeviceInfo->DeviceIndex);
-        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        Status = WdmAudWaveCapabilities(DeviceObject, DeviceInfo, ClientInfo, DeviceExtension);
     }
-
-    PinProperty.PinId = FilterId;
-    PinProperty.Property.Set = KSPROPSETID_Sysaudio;
-    PinProperty.Property.Id = KSPROPERTY_SYSAUDIO_COMPONENT_ID;
-    PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
-
-    RtlZeroMemory(&ComponentId, sizeof(KSCOMPONENTID));
-
-
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
-    if (NT_SUCCESS(Status))
-    {
-        DeviceInfo->u.WaveOutCaps.wMid = ComponentId.Manufacturer.Data1 - 0xd5a47fa7;
-        DeviceInfo->u.WaveOutCaps.vDriverVersion = MAKELONG(ComponentId.Version, ComponentId.Revision);
-    }
-
-    /* retrieve pnp base name */
-    PinProperty.PinId = FilterId;
-    PinProperty.Property.Set = KSPROPSETID_Sysaudio;
-    PinProperty.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_INTERFACE_NAME;
-    PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
-
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)DeviceName, sizeof(DeviceName), &BytesReturned);
-    if (NT_SUCCESS(Status))
-    {
-        /* find product name */
-        Status = FindProductName(DeviceName, MAXPNAMELEN, DeviceInfo->u.WaveOutCaps.szPname);
-
-        /* check for success */
-        if (!NT_SUCCESS(Status))
-        {
-            DeviceInfo->u.WaveOutCaps.szPname[0] = L'\0';
-        }
-    }
-
-    PinProperty.Reserved = DeviceInfo->DeviceIndex;
-    PinProperty.PinId = PinId;
-    PinProperty.Property.Set = KSPROPSETID_Pin;
-    PinProperty.Property.Id = KSPROPERTY_PIN_DATARANGES;
-    PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
-
-    BytesReturned = 0;
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)NULL, 0, &BytesReturned);
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-    {
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
-    MultipleItem = ExAllocatePool(NonPagedPool, BytesReturned);
-    if (!MultipleItem)
-    {
-        /* no memory */
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(MultipleItem);
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
-    DataRange = (PKSDATARANGE) (MultipleItem + 1);
-    for(Index = 0; Index < MultipleItem->Count; Index++)
-    {
-        if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE || DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
-        {
-            if (DataRange->FormatSize == sizeof(KSDATARANGE_AUDIO))
-            {
-                DataRangeAudio = (PKSDATARANGE_AUDIO)DataRange;
-                
-                if (IsEqualGUIDAligned(&DataRangeAudio->DataRange.MajorFormat, &KSDATAFORMAT_TYPE_AUDIO) &&
-                    IsEqualGUIDAligned(&DataRangeAudio->DataRange.SubFormat, &KSDATAFORMAT_SUBTYPE_PCM) &&
-                    IsEqualGUIDAligned(&DataRangeAudio->DataRange.Specifier, &KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
-                {
-                    DPRINT("Min Sample %u Max Sample %u Min Bits %u Max Bits %u Max Channel %u\n", DataRangeAudio->MinimumSampleFrequency, DataRangeAudio->MaximumSampleFrequency,
-                                                             DataRangeAudio->MinimumBitsPerSample, DataRangeAudio->MaximumBitsPerSample, DataRangeAudio->MaximumChannels);
-
-                    dwFormats |= CheckFormatSupport(DataRangeAudio, 11025, WAVE_FORMAT_1M08, WAVE_FORMAT_1S08, WAVE_FORMAT_1M16, WAVE_FORMAT_1S16);
-                    dwFormats |= CheckFormatSupport(DataRangeAudio, 22050, WAVE_FORMAT_2M08, WAVE_FORMAT_2S08, WAVE_FORMAT_2M16, WAVE_FORMAT_2S16);
-                    dwFormats |= CheckFormatSupport(DataRangeAudio, 44100, WAVE_FORMAT_4M08, WAVE_FORMAT_4S08, WAVE_FORMAT_4M16, WAVE_FORMAT_4S16);
-                    dwFormats |= CheckFormatSupport(DataRangeAudio, 48000, WAVE_FORMAT_48M08, WAVE_FORMAT_48S08, WAVE_FORMAT_48M16, WAVE_FORMAT_48S16);
-                    dwFormats |= CheckFormatSupport(DataRangeAudio, 96000, WAVE_FORMAT_96M08, WAVE_FORMAT_96S08, WAVE_FORMAT_96M16, WAVE_FORMAT_96S16);
-
-
-                    wChannels = DataRangeAudio->MaximumChannels;
-                    dwSupport = WAVECAPS_VOLUME; //FIXME get info from nodes
-                }
-            }
-        }
-        DataRange = (PKSDATARANGE)((PUCHAR)DataRange + DataRange->FormatSize);
-    }
-
-    DeviceInfo->u.WaveOutCaps.dwFormats = dwFormats;
-    DeviceInfo->u.WaveOutCaps.dwSupport = dwSupport;
-    DeviceInfo->u.WaveOutCaps.wChannels = wChannels;
-
-    ExFreePool(MultipleItem);
 
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
@@ -846,6 +156,7 @@ WdmAudIoctlClose(
             return STATUS_SUCCESS;
         }
     }
+
     SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, sizeof(WDMAUD_DEVICE_INFO));
     return STATUS_INVALID_PARAMETER;
 }
