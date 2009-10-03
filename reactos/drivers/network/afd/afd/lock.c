@@ -302,6 +302,7 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
 	SocketStateUnlock( FCB );
     } else {
 	if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
+        (void)IoSetCancelRoutine(Irp, NULL);
 	SocketStateUnlock( FCB );
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     }
@@ -322,7 +323,7 @@ NTSTATUS LostSocket( PIRP Irp ) {
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
     InsertTailList( &FCB->PendingIrpList[Function],
 		    &Irp->Tail.Overlay.ListEntry );
-	IoMarkIrpPending(Irp);
-	Irp->IoStatus.Status = STATUS_PENDING;
+    IoMarkIrpPending(Irp);
+    (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
     return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0 );
 }

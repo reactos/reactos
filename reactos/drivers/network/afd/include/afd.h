@@ -279,6 +279,8 @@ VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 VOID OskitDumpBuffer( PCHAR Buffer, UINT Len );
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function );
 VOID DestroySocket( PAFD_FCB FCB );
+VOID NTAPI AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
+                 PIRP Irp);
 
 /* read.c */
 

@@ -505,6 +505,78 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return (Status);
 }
 
+VOID NTAPI
+AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
+                 PIRP Irp)
+{
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    UINT Function;
+    PAFD_RECV_INFO RecvReq;
+    PAFD_SEND_INFO SendReq;
+    PLIST_ENTRY CurrentEntry;
+    PIRP CurrentIrp;
+
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+    if (!SocketAcquireStateLock(FCB))
+        return;
+
+    ASSERT(IrpSp->MajorFunction == IRP_MJ_DEVICE_CONTROL);
+
+    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
+    {
+        case IOCTL_AFD_RECV:
+        RecvReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+	UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
+        /* Fall through */
+
+        case IOCTL_AFD_RECV_DATAGRAM:
+        Function = FUNCTION_RECV;
+        break;
+
+        case IOCTL_AFD_SEND:
+        SendReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+        UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+        /* Fall through */
+
+        case IOCTL_AFD_SEND_DATAGRAM:
+        Function = FUNCTION_SEND;
+        break;
+
+        case IOCTL_AFD_CONNECT:
+        Function = FUNCTION_CONNECT;
+        break;
+
+        case IOCTL_AFD_WAIT_FOR_LISTEN:
+        Function = FUNCTION_PREACCEPT;
+        break;
+
+        default:
+        ASSERT(FALSE);
+        break;
+    }
+
+    CurrentEntry = FCB->PendingIrpList[Function].Flink;
+    while (CurrentEntry != &FCB->PendingIrpList[Function])
+    {
+        CurrentIrp = CONTAINING_RECORD(CurrentEntry, IRP, Tail.Overlay.ListEntry);
+
+        if (CurrentIrp == Irp)
+        {
+            RemoveEntryList(CurrentEntry);
+            break;
+        }
+        else
+        {
+            CurrentEntry = CurrentEntry->Flink;
+        }
+    }
+    
+    UnlockAndMaybeComplete(FCB, STATUS_CANCELLED, Irp, 0);
+}
+
 static VOID NTAPI
 AfdUnload(PDRIVER_OBJECT DriverObject)
 {
