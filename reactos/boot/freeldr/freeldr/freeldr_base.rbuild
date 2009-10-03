@@ -31,7 +31,6 @@
 		<file>ext2.c</file>
 		<file>fat.c</file>
 		<file>fs.c</file>
-		<file>fsrec.c</file>
 		<file>iso.c</file>
 		<file>ntfs.c</file>
 	</directory>

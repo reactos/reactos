@@ -37,7 +37,6 @@
 #undef MachBeep
 #undef MachPrepareForReactOS
 #undef MachDiskGetBootPath
-#undef MachDiskGetBootDevice
 #undef MachDiskNormalizeSystemPath
 #undef MachDiskReadLogicalSectors
 #undef MachDiskGetPartitionEntry
@@ -153,12 +152,6 @@ BOOLEAN
 MachDiskGetBootPath(char *BootPath, unsigned Size)
 {
   return MachVtbl.DiskGetBootPath(BootPath, Size);
-}
-
-VOID
-MachDiskGetBootDevice(PULONG BootDevice)
-{
-  MachVtbl.DiskGetBootDevice(BootDevice);
 }
 
 BOOLEAN

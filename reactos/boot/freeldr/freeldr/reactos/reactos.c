@@ -755,14 +755,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     //
     RamDiskSwitchFromBios();
 
-    /*
-     * Try to get system volume
-     */
-    if (!DiskGetSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
-    {
-        UiMessageBox("Failed to get system volume.");
-        return;
-    }
+    /* Get boot path */
+    if (strchr(SystemPath, '\\') != NULL)
+        strcpy(szBootPath, strchr(SystemPath, '\\'));
+    else
+        szBootPath[0] = '\0';
 
     /* append a backslash */
     if ((strlen(szBootPath)==0) ||

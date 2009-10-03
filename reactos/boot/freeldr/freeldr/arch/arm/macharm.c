@@ -202,7 +202,6 @@ MachInit(IN PCCH CommandLine)
     // Now set default disk handling routines -- we don't need to override
     //
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
-    MachVtbl.DiskGetBootDevice = DiskGetBootDevice;
     MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
     MachVtbl.DiskGetPartitionEntry = DiskGetPartitionEntry;
     

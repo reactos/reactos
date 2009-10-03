@@ -48,7 +48,6 @@ XboxMachInit(const char *CmdLine)
   MachVtbl.PrepareForReactOS = XboxPrepareForReactOS;
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
   MachVtbl.DiskGetBootPath = DiskGetBootPath;
-  MachVtbl.DiskGetBootDevice = DiskGetBootDevice;
   MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
   MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
