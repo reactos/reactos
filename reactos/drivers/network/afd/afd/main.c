@@ -517,6 +517,10 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
     PAFD_SEND_INFO SendReq;
     PLIST_ENTRY CurrentEntry;
     PIRP CurrentIrp;
+    PAFD_DEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+    KIRQL OldIrql;
+    PAFD_ACTIVE_POLL Poll;
+    PAFD_POLL_INFO PollReq;
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
@@ -553,9 +557,38 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
         Function = FUNCTION_PREACCEPT;
         break;
 
+        case IOCTL_AFD_SELECT:
+        KeAcquireSpinLock(&DeviceExt->Lock, &OldIrql);
+
+        CurrentEntry = DeviceExt->Polls.Flink;
+        while (CurrentEntry != &DeviceExt->Polls)
+        {
+            Poll = CONTAINING_RECORD(CurrentEntry, AFD_ACTIVE_POLL, ListEntry);
+            CurrentIrp = Poll->Irp;
+            PollReq = CurrentIrp->AssociatedIrp.SystemBuffer;
+
+            if (CurrentIrp == Irp)
+            {
+                ZeroEvents(PollReq->Handles, PollReq->HandleCount);
+                SignalSocket(Poll, NULL, PollReq, STATUS_CANCELLED);
+                break;
+            }
+            else
+            {
+                CurrentEntry = CurrentEntry->Flink;
+            }
+        }
+
+        KeReleaseSpinLock(&DeviceExt->Lock, OldIrql);
+
+        /* IRP already completed by SignalSocket */
+        SocketStateUnlock(FCB);
+        return;
+            
         default:
         ASSERT(FALSE);
-        break;
+        UnlockAndMaybeComplete(FCB, STATUS_CANCELLED, Irp, 0);
+        return;
     }
 
     CurrentEntry = FCB->PendingIrpList[Function].Flink;
