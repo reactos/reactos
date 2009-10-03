@@ -9,8 +9,10 @@
 /* INCLUDES *********************************************************/
 
 #include <windows.h>
+#include <commctrl.h>
 #include "globalvar.h"
 #include "drawing.h"
+#include "winproc.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -18,6 +20,11 @@ LRESULT CALLBACK SettingsWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 {
     switch (message)
     {
+        case WM_VSCROLL:
+            {
+                ZoomTo(125<<SendMessage(hTrackbarZoom, TBM_GETPOS, 0, 0));
+            }
+            break;
         case WM_PAINT:
             {
                 HDC hdc = GetDC(hwnd);
@@ -25,8 +32,11 @@ LRESULT CALLBACK SettingsWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 int rectang2[4] = {0, 70, 42, 136};
 
                 DefWindowProc (hwnd, message, wParam, lParam);
-                
-                DrawEdge(hdc, (LPRECT)&rectang, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
+
+                if (activeTool!=6)
+                    DrawEdge(hdc, (LPRECT)&rectang, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
+                else
+                    DrawEdge(hdc, (LPRECT)&rectang, BDR_SUNKENOUTER, BF_RECT);
                 if (activeTool>=13)
                     DrawEdge(hdc, (LPRECT)&rectang2, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
                 else

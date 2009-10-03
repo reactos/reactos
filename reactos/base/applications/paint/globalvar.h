@@ -9,6 +9,7 @@
 /* INCLUDES *********************************************************/
 
 #include <windows.h>
+#include "definitions.h"
 
 /* VARIABLES declared in main.c *************************************/
 
@@ -19,10 +20,11 @@ extern BITMAPINFO bitmapinfo;
 extern int imgXRes;
 extern int imgYRes;
 
-extern HBITMAP hBms[4];
+extern HBITMAP hBms[HISTORYSIZE];
 extern int currInd;
 extern int undoSteps;
 extern int redoSteps;
+extern BOOL imageSaved;
 
 extern short startX;
 extern short startY;
@@ -85,6 +87,8 @@ extern HWND hSizeboxRightCenter;
 extern HWND hSizeboxLeftBottom;
 extern HWND hSizeboxCenterBottom;
 extern HWND hSizeboxRightBottom;
+
+extern HWND hTrackbarZoom;
 
 /* VARIABLES declared in mouse.c *************************************/
 

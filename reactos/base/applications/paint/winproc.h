@@ -7,4 +7,6 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+void ZoomTo(int newZoom);
+
 LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
