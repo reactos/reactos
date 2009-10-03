@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  *  Entry Point for win32k.sys
  */
 
@@ -285,6 +284,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
       Win32Thread->IsExiting = TRUE;
+      Win32Thread->TIF_flags |= TIF_INCLEANUP;
       HOOK_DestroyThreadHooks(Thread);
       UnregisterThreadHotKeys(Thread);
       /* what if this co_ func crash in umode? what will clean us up then? */
