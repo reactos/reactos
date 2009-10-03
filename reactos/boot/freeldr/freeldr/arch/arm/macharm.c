@@ -203,7 +203,6 @@ MachInit(IN PCCH CommandLine)
     //
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskGetBootDevice = DiskGetBootDevice;
-    MachVtbl.DiskBootingFromFloppy = DiskBootingFromFloppy;
     MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
     MachVtbl.DiskGetPartitionEntry = DiskGetPartitionEntry;
     

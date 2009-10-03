@@ -38,7 +38,6 @@
 #undef MachPrepareForReactOS
 #undef MachDiskGetBootPath
 #undef MachDiskGetBootDevice
-#undef MachDiskBootingFromFloppy
 #undef MachDiskNormalizeSystemPath
 #undef MachDiskReadLogicalSectors
 #undef MachDiskGetPartitionEntry
@@ -332,12 +331,6 @@ VOID
 MachDiskGetBootDevice(PULONG BootDevice)
 {
   MachVtbl.DiskGetBootDevice(BootDevice);
-}
-
-BOOLEAN
-MachDiskBootingFromFloppy()
-{
-  return MachVtbl.DiskBootingFromFloppy();
 }
 
 BOOLEAN

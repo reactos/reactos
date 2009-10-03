@@ -133,7 +133,6 @@ BOOLEAN DiskGetSystemVolume(char *SystemPath, char *RemainingPath,
                             PULONG Device);
 BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
 VOID DiskGetBootDevice(PULONG BootDevice);
-BOOLEAN DiskBootingFromFloppy(VOID);
 BOOLEAN DiskNormalizeSystemPath(char *SystemPath, unsigned Size);
 
 

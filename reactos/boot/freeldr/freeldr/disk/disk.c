@@ -219,12 +219,6 @@ DiskGetBootDevice(PULONG BootDevice)
     ((char *)BootDevice)[1] = (char)BootPartition;
 }
 
-BOOLEAN
-DiskBootingFromFloppy(VOID)
-{
-    return BootDrive < 0x80;
-}
-
 #define IsRecognizedPartition(P)  \
     ((P) == PARTITION_FAT_12       || \
      (P) == PARTITION_FAT_16       || \
@@ -344,7 +338,7 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 		return FALSE;
 	}
 	strcpy(BootPath, Path);
-	strcat(BootPath, MachDiskBootingFromFloppy() ? "fdisk" : "cdrom");
+	strcat(BootPath, BootDrive < 0x80 ? "fdisk" : "cdrom");
 	strcat(strcat(strcat(BootPath, "("), Device), ")");
     
 	if (strcmp(BootPath, "multi(0)disk(0)cdrom(128)") == 0)

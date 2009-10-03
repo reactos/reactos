@@ -46,7 +46,6 @@ PcMachInit(const char *CmdLine)
     MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskGetBootDevice = DiskGetBootDevice;
-    MachVtbl.DiskBootingFromFloppy = DiskBootingFromFloppy;
     MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
     MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
     MachVtbl.DiskGetPartitionEntry = DiskGetPartitionEntry;

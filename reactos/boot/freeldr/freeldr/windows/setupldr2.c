@@ -158,6 +158,7 @@ VOID LoadReactOSSetup2(VOID)
     CHAR  FileName[512];
     CHAR  BootPath[512];
     LPCSTR LoadOptions, BootOptions;
+    BOOLEAN BootFromFloppy;
 #if DBG
     LPCSTR DbgOptions;
 #endif
@@ -189,9 +190,14 @@ VOID LoadReactOSSetup2(VOID)
         NULL
     };
 
-    /* Open 'txtsetup.sif' from any of source paths */
+    /* Get boot path */
     MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
-    for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)
+
+    /* And check if we booted from floppy */
+    BootFromFloppy = strstr(SystemPath, "fdisk");
+
+    /* Open 'txtsetup.sif' from any of source paths */
+    for (i = BootFromFloppy ? 0 : 1; ; i++)
     {
         SourcePath = SourcePaths[i];
         if (!SourcePath)

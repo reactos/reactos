@@ -47,6 +47,7 @@ VOID LoadReactOSSetup(VOID)
     ULONG i;
     LPCSTR SourcePath;
     LPCSTR LoadOptions, DbgLoadOptions = "";
+    BOOLEAN BootFromFloppy;
     LPCSTR sourcePaths[] = {
       "", /* Only for floppy boot */
 #if defined(_M_IX86)
@@ -116,12 +117,13 @@ VOID LoadReactOSSetup(VOID)
   LoaderBlock.ArchExtra = (ULONG_PTR)MachHwDetect();
   UiDrawStatusText("");
 
-  /* set boot device */
-  MachDiskGetBootDevice(&LoaderBlock.BootDevice);
+  /* Check if we booted from floppy */
+  MachDiskGetBootPath(reactos_kernel_cmdline, sizeof(reactos_kernel_cmdline));
+  BootFromFloppy = strstr(reactos_kernel_cmdline, "fdisk");
 
   UiDrawStatusText("Loading txtsetup.sif...");
   /* Open 'txtsetup.sif' */
-  for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)
+  for (i = BootFromFloppy ? 0 : 1; ; i++)
   {
     SourcePath = sourcePaths[i];
     if (!SourcePath)
@@ -191,7 +193,7 @@ VOID LoadReactOSSetup(VOID)
     LoaderBlock.KernelBase = KernelBase;
 
   /* Insert boot disk 2 */
-  if (MachDiskBootingFromFloppy())
+  if (BootFromFloppy)
     {
       UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
 

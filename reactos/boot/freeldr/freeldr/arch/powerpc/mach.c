@@ -256,10 +256,6 @@ VOID PpcDiskGetBootDevice( PULONG BootDevice ) {
     BootDevice[0] = BootDevice[1] = 0;
 }
 
-BOOLEAN PpcDiskBootingFromFloppy(VOID) {
-    return FALSE;
-}
-
 BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
 				   ULONG SectorCount, PVOID Buffer ) {
     int rlen = 0;
@@ -495,7 +491,6 @@ void PpcDefaultMachVtbl()
     MachVtbl.DiskNormalizeSystemPath = PpcDiskNormalizeSystemPath;
     MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
     MachVtbl.DiskGetBootDevice = PpcDiskGetBootDevice;
-    MachVtbl.DiskBootingFromFloppy = PpcDiskBootingFromFloppy;
     MachVtbl.DiskReadLogicalSectors = PpcDiskReadLogicalSectors;
     MachVtbl.DiskGetPartitionEntry = PpcDiskGetPartitionEntry;
     MachVtbl.DiskGetDriveGeometry = PpcDiskGetDriveGeometry;
