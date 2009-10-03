@@ -22,6 +22,8 @@ BEGIN
 		MENUITEM "&Видалити",ID_UNINSTALL
 		MENUITEM "&Змінити",   ID_MODIFY
 		MENUITEM SEPARATOR
+		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM SEPARATOR
 		MENUITEM "&Оновити",  ID_REFRESH
 	END
 	POPUP "Довідка"
@@ -47,6 +49,8 @@ BEGIN
 		MENUITEM "&Встановити",   ID_INSTALL
 		MENUITEM "&Видалити", ID_UNINSTALL
 		MENUITEM "&Змінити",    ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Remove from Registry", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Оновити",   ID_REFRESH
 	END
@@ -191,4 +195,7 @@ BEGIN
 	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will be used for downloading of programs:"
 	IDS_CHOOSE_FOLDER_ERROR "You have specified a nonexistent folder!"
 	IDS_USER_NOT_ADMIN "You should be administrator for start ""ReactOS Applications Manager""!"
+	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
+	IDS_INFORMATION "Information"
+	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
 END

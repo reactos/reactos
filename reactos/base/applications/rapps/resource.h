@@ -69,6 +69,7 @@
 #define ID_COPY_LINK             557
 #define ID_SETTINGS              558
 #define ID_REFRESH               559
+#define ID_REGREMOVE             560
 
 /* Strings */
 #define IDS_APPTITLE             100
@@ -87,6 +88,9 @@
 #define IDS_CHOOSE_FOLDER_TEXT   113
 #define IDS_CHOOSE_FOLDER_ERROR  114
 #define IDS_USER_NOT_ADMIN       115
+#define IDS_APP_REG_REMOVE       116
+#define IDS_INFORMATION          117
+#define IDS_UNABLE_TO_REMOVE     118
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

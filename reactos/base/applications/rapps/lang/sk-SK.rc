@@ -19,6 +19,8 @@ BEGIN
 		MENUITEM "O&dinötalovaù", ID_UNINSTALL
 		MENUITEM "&Zmeniù",       ID_MODIFY
 		MENUITEM SEPARATOR
+		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM SEPARATOR
 		MENUITEM "&Obnoviù",      ID_REFRESH
 	END
 	POPUP "PomocnÌk"
@@ -44,6 +46,8 @@ BEGIN
 		MENUITEM "&Inötalovaù",   ID_INSTALL
 		MENUITEM "O&dinötalovaù", ID_UNINSTALL
 		MENUITEM "&Zmeniù",       ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Remove from Registry", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Obnoviù",      ID_REFRESH
 	END
@@ -188,4 +192,7 @@ BEGIN
 	IDS_CHOOSE_FOLDER_TEXT "Vyberte prieËinok, ktor˝ sa pouûije pre sùahovanie programov:"
 	IDS_CHOOSE_FOLDER_ERROR "Zvolili ste si neexistuj˙ci prieËinok!"
 	IDS_USER_NOT_ADMIN "Mali by ste byù administr·tor pre spustenie ""ManaûÈra aplik·ciÌ systÈmu ReactOS""!"
+	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
+	IDS_INFORMATION "Information"
+	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
 END

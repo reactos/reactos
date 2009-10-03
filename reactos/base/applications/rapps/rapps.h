@@ -71,6 +71,14 @@ typedef struct
 
 typedef struct
 {
+    HKEY hRootKey;
+    HKEY hSubKey;
+    WCHAR szKeyName[MAX_PATH];
+
+} INSTALLED_INFO, *PINSTALLED_INFO;
+
+typedef struct
+{
     BOOL bSaveWndPos;
     BOOL bUpdateAtStart;
     BOOL bLogEnabled;
@@ -95,12 +103,13 @@ BOOL UpdateAppsDB(VOID);
 BOOL InstallApplication(INT Index);
 
 /* installed.c */
-typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, LPWSTR lpName, LPWSTR lpKeyName, LPARAM lParam);
+typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, LPWSTR lpName, INSTALLED_INFO Info);
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
 BOOL GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString);
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
 BOOL IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey);
+VOID RemoveAppFromRegistry(INT Index);
 
 /* winmain.c */
 extern HWND hMainWnd;
