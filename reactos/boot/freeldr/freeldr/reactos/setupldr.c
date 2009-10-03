@@ -119,7 +119,7 @@ VOID LoadReactOSSetup(VOID)
 
   /* Check if we booted from floppy */
   MachDiskGetBootPath(reactos_kernel_cmdline, sizeof(reactos_kernel_cmdline));
-  BootFromFloppy = strstr(reactos_kernel_cmdline, "fdisk");
+  BootFromFloppy = strstr(reactos_kernel_cmdline, "fdisk") != NULL;
 
   UiDrawStatusText("Loading txtsetup.sif...");
   /* Open 'txtsetup.sif' */
