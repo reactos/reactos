@@ -213,6 +213,9 @@ SpiUpdatePerUserSystemParameters()
     gspv.im.iTitleWrap = SpiLoadMetric(L"IconTitleWrap", 0);
     SpiLoadFont(&gspv.im.lfFont, L"IconFont", &lf1);
 
+    /* Load desktop settings */
+    gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
+
     /* Some hardcoded values for now */
     gspv.tmCaptionFont.tmAveCharWidth = 6;
     gspv.bBeep = TRUE;
