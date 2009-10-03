@@ -117,7 +117,6 @@ typedef struct _THREADINFO
   /* ReactOS */
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
-  BOOLEAN IsExiting;          // Use TIF_INCLEANUP
   SINGLE_LIST_ENTRY  ReferencesList;
 } THREADINFO;
 
