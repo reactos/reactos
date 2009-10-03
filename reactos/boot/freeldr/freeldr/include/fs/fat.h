@@ -144,12 +144,15 @@ typedef struct
 } FATX_DIRENTRY, * PFATX_DIRENTRY;
 #include <poppack.h>
 
+typedef struct _FAT_VOLUME_INFO *PFAT_VOLUME_INFO;
+
 typedef struct
 {
 	ULONG	FileSize;		/* File size */
 	ULONG	FilePointer;		/* File pointer */
 	ULONG*	FileFatChain;		/* File fat chain array */
 	ULONG	DriveNumber;
+	PFAT_VOLUME_INFO	Volume;
 } FAT_FILE_INFO, * PFAT_FILE_INFO;
 
 #define	ATTR_NORMAL		0x00
