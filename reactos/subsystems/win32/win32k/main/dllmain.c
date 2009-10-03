@@ -264,7 +264,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
           }
         }
       }
-      Win32Thread->IsExiting = FALSE;
+      Win32Thread->TIF_flags &= ~TIF_INCLEANUP;
       co_IntDestroyCaret(Win32Thread);
       Win32Thread->ppi = PsGetCurrentProcessWin32Process();
       pTeb = NtCurrentTeb();
@@ -283,7 +283,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
       DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
-      Win32Thread->IsExiting = TRUE;
       Win32Thread->TIF_flags |= TIF_INCLEANUP;
       HOOK_DestroyThreadHooks(Thread);
       UnregisterThreadHotKeys(Thread);

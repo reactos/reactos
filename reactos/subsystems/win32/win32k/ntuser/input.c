@@ -1008,7 +1008,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    PTHREADINFO OldBlock;
    ASSERT(W32Thread);
 
-   if(!W32Thread->Desktop || (W32Thread->IsExiting && BlockIt))
+   if(!W32Thread->Desktop || ((W32Thread->TIF_flags & TIF_INCLEANUP) && BlockIt))
    {
       /*
        * fail blocking if exiting the thread
