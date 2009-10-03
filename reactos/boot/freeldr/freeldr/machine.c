@@ -39,7 +39,6 @@
 #undef MachDiskGetBootPath
 #undef MachDiskNormalizeSystemPath
 #undef MachDiskReadLogicalSectors
-#undef MachDiskGetPartitionEntry
 #undef MachDiskGetDriveGeometry
 #undef MachDiskGetCacheableBlockCount
 #undef MachHwDetect
@@ -164,12 +163,6 @@ BOOLEAN
 MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
   return MachVtbl.DiskReadLogicalSectors(DriveNumber, SectorNumber, SectorCount, Buffer);
-}
-
-BOOLEAN
-MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
-{
-  return MachVtbl.DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 BOOLEAN

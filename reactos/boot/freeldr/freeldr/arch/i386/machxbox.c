@@ -50,7 +50,6 @@ XboxMachInit(const char *CmdLine)
   MachVtbl.DiskGetBootPath = DiskGetBootPath;
   MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
   MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
-  MachVtbl.DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
   MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
   MachVtbl.GetTime = XboxGetTime;

@@ -440,7 +440,7 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     SectorSize = (DrivePartition == 0xff ? 2048 : 512);
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
-        if (!MachDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
+        if (!DiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
         SectorCount = PartitionTableEntry.PartitionSectorCount;
@@ -565,7 +565,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   /* Add partitions */
   i = 1;
   DiskReportError(FALSE);
-  while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
+  while (DiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
   {
     if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
     {

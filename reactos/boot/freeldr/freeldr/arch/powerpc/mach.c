@@ -281,12 +281,6 @@ BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
     return rlen > 0;
 }
 
-BOOLEAN PpcDiskGetPartitionEntry( ULONG DriveNumber, ULONG PartitionNumber,
-                               PPARTITION_TABLE_ENTRY PartitionTableEntry ) {
-    printf("GetPartitionEntry(%d,%d)\n", DriveNumber, PartitionNumber);
-    return FALSE;
-}
-
 BOOLEAN PpcDiskGetDriveGeometry( ULONG DriveNumber, PGEOMETRY DriveGeometry ) {
     printf("GetGeometry(%d)\n", DriveNumber);
     DriveGeometry->BytesPerSector = 512;
@@ -420,44 +414,6 @@ PCONFIGURATION_COMPONENT_DATA PpcHwDetect() {
     return RootKey;
 }
 
-BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
-	CHAR BootPath[256];
-	ULONG PartitionNumber;
-	ULONG DriveNumber;
-	PARTITION_TABLE_ENTRY PartEntry;
-	char *p;
-
-	if (!DissectArcPath(SystemPath, BootPath, &DriveNumber, &PartitionNumber))
-	{
-		return FALSE;
-	}
-
-	if (0 != PartitionNumber)
-	{
-		return TRUE;
-	}
-
-	if (! DiskGetActivePartitionEntry(DriveNumber,
-	                                  &PartEntry,
-	                                  &PartitionNumber) ||
-	    PartitionNumber < 1 || 9 < PartitionNumber)
-	{
-		return FALSE;
-	}
-
-	p = SystemPath;
-	while ('\0' != *p && 0 != _strnicmp(p, "partition(", 10)) {
-		p++;
-	}
-	p = strchr(p, ')');
-	if (NULL == p || '0' != *(p - 1)) {
-		return FALSE;
-	}
-	*(p - 1) = '0' + PartitionNumber;
-
-	return TRUE;
-}
-
 /* Compatibility functions that don't do much */
 VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
 }
@@ -484,10 +440,9 @@ void PpcDefaultMachVtbl()
 
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
-    MachVtbl.DiskNormalizeSystemPath = PpcDiskNormalizeSystemPath;
+    MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
     MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = PpcDiskReadLogicalSectors;
-    MachVtbl.DiskGetPartitionEntry = PpcDiskGetPartitionEntry;
     MachVtbl.DiskGetDriveGeometry = PpcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PpcDiskGetCacheableBlockCount;
 

@@ -47,7 +47,6 @@ PcMachInit(const char *CmdLine)
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
     MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
-    MachVtbl.DiskGetPartitionEntry = DiskGetPartitionEntry;
     MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
     MachVtbl.GetTime = PcGetTime;

@@ -65,7 +65,6 @@ typedef struct tagMACHVTBL
   BOOLEAN (*DiskGetBootPath)(char *BootPath, unsigned Size);
   BOOLEAN (*DiskNormalizeSystemPath)(char *SystemPath, unsigned Size);
   BOOLEAN (*DiskReadLogicalSectors)(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-  BOOLEAN (*DiskGetPartitionEntry)(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
   BOOLEAN (*DiskGetDriveGeometry)(ULONG DriveNumber, PGEOMETRY DriveGeometry);
   ULONG (*DiskGetCacheableBlockCount)(ULONG DriveNumber);
 
@@ -99,7 +98,6 @@ MEMORY_DESCRIPTOR* ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current);
 BOOLEAN MachDiskGetBootPath(char *BootPath, unsigned Size);
 BOOLEAN MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size);
 BOOLEAN MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOLEAN MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG MachDiskGetCacheableBlockCount(ULONG DriveNumber);
 TIMEINFO* ArcGetTime(VOID);
@@ -127,7 +125,6 @@ VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 #define MachDiskGetBootPath(Path, Size)		MachVtbl.DiskGetBootPath((Path), (Size))
 #define MachDiskNormalizeSystemPath(Path, Size)	MachVtbl.DiskNormalizeSystemPath((Path), (Size))
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)	MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
-#define MachDiskGetPartitionEntry(Drive, Part, Entry)	MachVtbl.DiskGetPartitionEntry((Drive), (Part), (Entry))
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
 #define MachHwDetect()				MachVtbl.HwDetect()

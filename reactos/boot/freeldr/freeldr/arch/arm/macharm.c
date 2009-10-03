@@ -203,7 +203,6 @@ MachInit(IN PCCH CommandLine)
     //
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
-    MachVtbl.DiskGetPartitionEntry = DiskGetPartitionEntry;
     
     //
     // We can now print to the console
