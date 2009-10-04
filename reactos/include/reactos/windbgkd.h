@@ -178,7 +178,7 @@
 // Fill Memory Flags
 //
 #define DBGKD_FILL_MEMORY_VIRTUAL           0x01
-#define DBGKD_FILL_MEMORY_PHYSICAL          0x002
+#define DBGKD_FILL_MEMORY_PHYSICAL          0x02
 
 //
 // Physical Memory Caching Flags

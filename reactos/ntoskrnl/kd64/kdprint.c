@@ -61,6 +61,7 @@ KdpCommandString(IN ULONG Length,
                  IN PKEXCEPTION_FRAME ExceptionFrame)
 {
     /* FIXME */
+    KdpDprintf("KdpCommandString called\n");
     while (TRUE);
 }
 
@@ -118,6 +119,7 @@ KdpPrompt(IN LPSTR InString,
           IN PKEXCEPTION_FRAME ExceptionFrame)
 {
     /* FIXME */
+    KdpDprintf("KdpPrompt called\n");
     while (TRUE);
     return FALSE;
 }

@@ -30,7 +30,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     /* Check if this is INT1 or 3, or if we're forced to handle it */
     if ((ExceptionCode == STATUS_BREAKPOINT) ||
         (ExceptionCode == STATUS_SINGLE_STEP) ||
-        //(ExceptionCode == STATUS_ASSERTION_FAILURE) ||
+        (ExceptionCode == STATUS_ASSERTION_FAILURE) ||
         (NtGlobalFlag & FLG_STOP_ON_EXCEPTION))
     {
         /* Check if we can't really handle this */

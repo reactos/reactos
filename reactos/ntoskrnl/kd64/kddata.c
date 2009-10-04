@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include "../mm/arm3/miarm.h"
 #define NDEBUG
 #include <debug.h>
 
@@ -51,7 +52,7 @@ BREAKPOINT_ENTRY KdpBreakpointTable[20];
 #if defined(_M_IX86) || defined(_M_AMD64)
 ULONG KdpBreakpointInstruction = 0xCC; // INT3
 #else
-#error TODO
+#error Define the breakpoint instruction for this architecture
 #endif
 BOOLEAN KdpOweBreakpoint;
 BOOLEAN BreakpointsSuspended;
@@ -367,23 +368,23 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {0},                                                        // MmSystemCacheStart
     {0},                                                        // MmSystemCacheEnd
     {0},                                                        // MmSystemCacheWs
-    {0},                                                        // MmPfnDatabase
-    {0},                                                        // MmSystemPtesStart
-    {0},                                                        // MmSystemPtesEnd
+    {PtrToUlong(&MmPfnDatabase)},
+    {PtrToUlong(MmSystemPtesStart)},
+    {PtrToUlong(MmSystemPtesEnd)},
     {0},                                                        // MmSubsectionBase
     {0},                                                        // MmNumberOfPagingFiles
-    {0},                                                        // MmLowestPhysicalPage
-    {0},                                                        // MmHighestPhysicalPage
-    {0},                                                        // MmNumberOfPhysicalPages
-    {0},                                                        // MmMaximumNonPagedPoolInBytes
-    {0},                                                        // MmNonPagedSystemStart
-    {0},                                                        // MmNonPagedPoolStart
-    {0},                                                        // MmNonPagedPoolEnd
-    {0},                                                        // MmPagedPoolStart
-    {0},                                                        // MmPagedPoolEnd
-    {0},                                                        // MmPagedPoolInfo
+    {PtrToUlong(&MmLowestPhysicalPage)},
+    {PtrToUlong(&MmHighestPhysicalPage)},
+    {PtrToUlong(&MmNumberOfPhysicalPages)},
+    {PtrToUlong(&MmMaximumNonPagedPoolInBytes)},
+    {PtrToUlong(&MmNonPagedSystemStart)},
+    {PtrToUlong(&MmNonPagedPoolStart)},
+    {PtrToUlong(&MmNonPagedPoolEnd)},
+    {PtrToUlong(&MmPagedPoolStart)},
+    {PtrToUlong(&MmPagedPoolEnd)},
+    {PtrToUlong(&MmPagedPoolInfo)},
     PAGE_SIZE,
-    {0},                                                        // MmSizeOfPagedPoolInBytes
+    {PtrToUlong(&MmSizeOfPagedPoolInBytes)},
     {0},                                                        // MmTotalCommitLimit
     {0},                                                        // MmTotalCommittedPages
     {0},                                                        // MmSharedCommit
@@ -399,7 +400,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {0},                                                        // MmAvailablePages
     {0},                                                        // MmResidentAvailablePages
     {0},                                                        // PoolTrackTable
-    {0},                                                        // NonPagedPoolDescriptor
+    {PtrToUlong(&NonPagedPoolDescriptor)},
     {PtrToUlong(&MmHighestUserAddress)},
     {PtrToUlong(&MmSystemRangeStart)},
     {PtrToUlong(&MmUserProbeAddress)},
@@ -421,9 +422,9 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {0},                                                        // MmPeakCommitment
     {0},                                                        // MmtotalCommitLimitMaximum
     {PtrToUlong(&CmNtCSDVersion)},
-    {0},                                                        // MmPhysicalMemoryBlock
-    {0},                                                        // MmSessionBase
-    {0},                                                        // MmSessionSize
+    {PtrToUlong(&MmPhysicalMemoryBlock)},
+    {PtrToUlong(&MmSessionBase)},
+    {PtrToUlong(&MmSessionSize)},
     {0},
     {0},
     FIELD_OFFSET(KTHREAD, NextProcessor),
@@ -471,6 +472,6 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     KGDT_TSS,
     0,
     0,
-    {0},                                                        // IopNumTriagDumpDataBlocks
+    {0},                                                        // IopNumTriageDumpDataBlocks
     {0},                                                        // IopTriageDumpDataBlocks
 };

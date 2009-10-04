@@ -282,7 +282,8 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 #if 0
     if (!MmIsAddressValid((PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress))
     {
-        Ke386SetCr2(State->u.ReadMemory.TargetBaseAddress);
+        KdpDprintf("Tried to read invalid address %p\n",
+                   (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress);
         while (TRUE);
     }
 #endif
@@ -484,6 +485,7 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         else
         {
             /* SMP not yet handled */
+            KdpDprintf("SMP UNHANDLED\n");
             ControlStart = NULL;
             while (TRUE);
         }
@@ -534,6 +536,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         else
         {
             /* SMP not yet handled */
+            KdpDprintf("SMP UNHANDLED\n");
             ControlStart = NULL;
             while (TRUE);
         }
@@ -620,7 +623,7 @@ SendPacket:
             case DbgKdWriteVirtualMemoryApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteVirtualMemoryApi);
+                KdpDprintf("DbgKdWriteVirtualMemoryApi called\n");
                 while (TRUE);
                 break;
 
@@ -668,14 +671,14 @@ SendPacket:
             case DbgKdReadIoSpaceApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdReadIoSpaceApi);
+                KdpDprintf("DbgKdReadIoSpaceApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdWriteIoSpaceApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteIoSpaceApi);
+                KdpDprintf("DbgKdWriteIoSpaceApi called\n");
                 while (TRUE);
                 break;
 
@@ -704,64 +707,65 @@ SendPacket:
             case DbgKdReadPhysicalMemoryApi:
 
                 /* FIXME: TODO */
-                goto fail;
-                Ke386SetCr2(DbgKdReadPhysicalMemoryApi);
+                KdpDprintf("DbgKdReadPhysicalMemoryApi called for address %I64X\n",
+                           ManipulateState.u.ReadMemory.TargetBaseAddress);
+                goto Hack;
                 while (TRUE);
                 break;
 
             case DbgKdWritePhysicalMemoryApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWritePhysicalMemoryApi);
+                KdpDprintf("DbgKdWritePhysicalMemoryApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdQuerySpecialCallsApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdQuerySpecialCallsApi);
+                KdpDprintf("DbgKdQuerySpecialCallsApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdSetSpecialCallApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSetSpecialCallApi);
+                KdpDprintf("DbgKdSetSpecialCallApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdClearSpecialCallsApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdClearSpecialCallsApi);
+                KdpDprintf("DbgKdClearSpecialCallsApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdSetInternalBreakPointApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSetInternalBreakPointApi);
+                KdpDprintf("DbgKdSetInternalBreakPointApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdGetInternalBreakPointApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdGetInternalBreakPointApi);
+                KdpDprintf("DbgKdGetInternalBreakPointApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdReadIoSpaceExtendedApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdReadIoSpaceExtendedApi);
+                KdpDprintf("DbgKdReadIoSpaceExtendedApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdWriteIoSpaceExtendedApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteIoSpaceExtendedApi);
+                KdpDprintf("DbgKdWriteIoSpaceExtendedApi called\n");
                 while (TRUE);
                 break;
 
@@ -774,14 +778,14 @@ SendPacket:
             case DbgKdWriteBreakPointExApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteBreakPointExApi);
+                KdpDprintf("DbgKdWriteBreakPointExApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdRestoreBreakPointExApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdRestoreBreakPointExApi);
+                KdpDprintf("DbgKdRestoreBreakPointExApi called\n");
                 while (TRUE);
                 break;
 
@@ -794,70 +798,70 @@ SendPacket:
             case DbgKdSwitchProcessor:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSwitchProcessor);
+                KdpDprintf("DbgKdSwitchProcessor called\n");
                 while (TRUE);
                 break;
 
             case DbgKdPageInApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdPageInApi);
+                KdpDprintf("DbgKdPageInApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdReadMachineSpecificRegister:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdReadMachineSpecificRegister);
+                KdpDprintf("DbgKdReadMachineSpecificRegister called\n");
                 while (TRUE);
                 break;
 
             case DbgKdWriteMachineSpecificRegister:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteMachineSpecificRegister);
+                KdpDprintf("DbgKdWriteMachineSpecificRegister called\n");
                 while (TRUE);
                 break;
 
             case OldVlm1:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(OldVlm1);
+                KdpDprintf("OldVlm1 called\n");
                 while (TRUE);
                 break;
 
             case OldVlm2:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(OldVlm2);
+                KdpDprintf("OldVlm2 called\n");
                 while (TRUE);
                 break;
 
             case DbgKdSearchMemoryApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSearchMemoryApi);
+                KdpDprintf("DbgKdSearchMemoryApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdGetBusDataApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdGetBusDataApi);
+                KdpDprintf("DbgKdGetBusDataApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdSetBusDataApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSetBusDataApi);
+                KdpDprintf("DbgKdSetBusDataApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdCheckLowMemoryApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdCheckLowMemoryApi);
+                KdpDprintf("DbgKdCheckLowMemoryApi called\n");
                 while (TRUE);
                 break;
 
@@ -870,7 +874,7 @@ SendPacket:
             case DbgKdFillMemoryApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdFillMemoryApi);
+                KdpDprintf("DbgKdFillMemoryApi called\n");
                 while (TRUE);
                 break;
 
@@ -883,7 +887,7 @@ SendPacket:
             case DbgKdSwitchPartition:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSwitchPartition);
+                KdpDprintf("DbgKdSwitchPartition called\n");
                 while (TRUE);
                 break;
 
@@ -891,8 +895,9 @@ SendPacket:
             default:
 
                 /* Setup an empty message, with failure */
+                KdpDprintf("Received unknown API Number %lx\n", ManipulateState.ApiNumber);
                 while (TRUE);
-fail:
+Hack:
                 Data.Length = 0;
                 ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
 
@@ -1247,6 +1252,7 @@ NTAPI
 KdEnableDebugger(VOID)
 {
     /* Use the internal routine */
+    KdpDprintf("KdEnableDebugger called\n");
     while (TRUE);
     return KdEnableDebuggerWithLock(TRUE);
 }

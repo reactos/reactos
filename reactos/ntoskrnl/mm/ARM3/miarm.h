@@ -83,6 +83,8 @@ typedef struct _POOL_HEADER
 C_ASSERT(sizeof(POOL_HEADER) == 8);
 C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
 
+extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
+
 //
 // END FIXFIX
 //
@@ -119,9 +121,15 @@ extern MMPTE HyperTemplatePte;
 
 extern ULONG MmSizeOfNonPagedPoolInBytes;
 extern ULONG MmMaximumNonPagedPoolInBytes;
+extern PVOID MmNonPagedSystemStart;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
 extern PVOID MmNonPagedPoolEnd;
+extern ULONG MmSizeOfPagedPoolInBytes;
+extern PVOID MmPagedPoolStart;
+extern PVOID MmPagedPoolEnd;
+extern PVOID MmSessionBase;
+extern ULONG MmSessionSize;
 extern PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 extern PMMPTE MiFirstReservedZeroingPte;
 extern MI_PFN_CACHE_ATTRIBUTE MiPlatformCacheAttributes[2][MmMaximumCacheType];
