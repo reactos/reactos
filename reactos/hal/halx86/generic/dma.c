@@ -1487,9 +1487,7 @@ HalpCopyBufferMap(
        * NOTE: On real NT a mechanism with reserved pages is implemented
        * to handle this case in a slow, but graceful non-fatal way.
        */
-      /* FIXME: The correct bug check code isn't defined. */
-      /* KEBUGCHECKEX(HAL_MEMORY_ALLOCATION, PAGE_SIZE, 0, (ULONG_PTR)__FILE__, 0); */
-      ASSERT(FALSE);
+      KeBugCheckEx(HAL_MEMORY_ALLOCATION, PAGE_SIZE, 0, (ULONG_PTR)__FILE__, 0);
    }
 
    CurrentAddress = (ULONG_PTR)VirtualAddress +

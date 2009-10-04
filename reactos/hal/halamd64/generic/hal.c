@@ -120,7 +120,7 @@ VOID
 NTAPI
 HalStopProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(0);
     return;
 }
 
@@ -131,7 +131,7 @@ VOID
 NTAPI
 HalStartProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(0);
     return;
 }
 
@@ -142,7 +142,7 @@ ULONG_PTR
 NTAPI
 HalSetProfileInterval(IN ULONG_PTR Interval)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(0);
     return Interval;
 }
 
