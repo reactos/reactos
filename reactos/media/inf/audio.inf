@@ -73,6 +73,9 @@ AUDIOClassName = "Audio & Videocontroller"
 [Strings.0407]
 AUDIOClassName = "Audio-, Video- und Gamecontroller"
 
+[Strings.040a]
+AUDIOClassName = "Dispositivos de sonido, vídeo y juegos"
+
 [Strings.0416]
 AUDIOClassName = "Controladores de som, vídeo e jogo"
 
