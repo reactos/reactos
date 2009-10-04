@@ -86,15 +86,14 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     return OSK_EADDRNOTAVAIL;
     }
 
-    NdisStatus = AllocatePacketWithBuffer( &Packet.NdisPacket, NULL,
-                       MaxLLHeaderSize + len );
+    NdisStatus = AllocatePacketWithBuffer( &Packet.NdisPacket, NULL, len );
 
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
     TI_DbgPrint(DEBUG_TCP, ("Error from NDIS: %08x\n", NdisStatus));
     return OSK_ENOBUFS;
     }
 
-    GetDataPtr( Packet.NdisPacket, MaxLLHeaderSize,
+    GetDataPtr( Packet.NdisPacket, 0,
         (PCHAR *)&Packet.Header, &Packet.ContigSize );
 
     RtlCopyMemory( Packet.Header, data, len );

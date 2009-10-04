@@ -115,10 +115,9 @@ VOID DisplayTCPPacket(
 
     if (IPPacket->NdisPacket) {
         NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
-        Length -= MaxLLHeaderSize;
         Buffer = exAllocatePool(NonPagedPool, Length);
         if (Buffer) {
-            Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
+            Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, 0, Length);
             DisplayTCPHeader(Buffer, Length);
             exFreePool(Buffer);
         }

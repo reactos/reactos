@@ -55,7 +55,7 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
 	NCE->Interface->Transmit
 	    ( NCE->Interface->Context,
 	      Packet->Packet,
-	      MaxLLHeaderSize,
+	      0,
 	      NCE->LinkAddress,
 	      LAN_PROTO_IPv4 );
     }

@@ -94,7 +94,7 @@ NTSTATUS BuildUDPPacket(
     /* Prepare packet */
     Status = AllocatePacketWithBuffer( &Packet->NdisPacket,
 				       NULL,
-				       Packet->TotalSize + MaxLLHeaderSize );
+				       Packet->TotalSize );
 
     if( !NT_SUCCESS(Status) ) return Status;
 

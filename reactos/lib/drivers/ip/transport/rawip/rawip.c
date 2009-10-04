@@ -37,10 +37,10 @@ NTSTATUS AddGenericHeaderIPv4(
     TI_DbgPrint(MID_TRACE, ("Packet: %x NdisPacket %x\n",
 			    IPPacket, IPPacket->NdisPacket));
 
-    BufferSize = MaxLLHeaderSize + sizeof(IPv4_HEADER) + ExtraLength;
+    BufferSize = sizeof(IPv4_HEADER) + ExtraLength;
 
     GetDataPtr( IPPacket->NdisPacket,
-		MaxLLHeaderSize,
+		0,
 		(PCHAR *)&IPPacket->Header,
 		&IPPacket->ContigSize );
 
@@ -113,7 +113,7 @@ NTSTATUS BuildRawIpPacket(
     /* Prepare packet */
     Status = AllocatePacketWithBuffer( &Packet->NdisPacket,
 				       NULL,
-				       Packet->TotalSize + MaxLLHeaderSize );
+				       Packet->TotalSize );
 
     if( !NT_SUCCESS(Status) ) return Status;
 

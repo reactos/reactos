@@ -15,8 +15,6 @@ LIST_ENTRY InterfaceListHead;
 KSPIN_LOCK InterfaceListLock;
 LIST_ENTRY NetTableListHead;
 KSPIN_LOCK NetTableListLock;
-UINT MaxLLHeaderSize; /* Largest maximum header size */
-UINT MinLLFrameSize;  /* Largest minimum frame size */
 BOOLEAN IPInitialized = FALSE;
 BOOLEAN IpWorkItemQueued = FALSE;
 /* Work around calling timer at Dpc level */
@@ -153,13 +151,7 @@ PIP_INTERFACE IPCreateInterface(
     IF->Free       = FreeIF;
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
-	  if (IF->HeaderSize > MaxLLHeaderSize)
-	  	MaxLLHeaderSize = IF->HeaderSize;
-
     IF->MinFrameSize = BindInfo->MinFrameSize;
-	  if (IF->MinFrameSize > MinLLFrameSize)
-  		MinLLFrameSize = IF->MinFrameSize;
-
     IF->MTU           = BindInfo->MTU;
     IF->Address       = BindInfo->Address;
     IF->AddressLength = BindInfo->AddressLength;
@@ -360,9 +352,6 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
     UINT i;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    MaxLLHeaderSize = 0;
-    MinLLFrameSize  = 0;
 
     /* Initialize lookaside lists */
     ExInitializeNPagedLookasideList(
