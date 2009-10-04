@@ -22,6 +22,7 @@ const GUID KSNODETYPE_CHORUS =      {0x20173F20L, 0xC559, 0x11D0, {0x8A, 0x2B, 0
 const GUID KSNODETYPE_REVERB =      {0xEF0328E0L, 0xC558, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 const GUID KSNODETYPE_SUPERMIX =    {0xE573ADC0L, 0xC555, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 const GUID KSNODETYPE_SUM = {0xDA441A60L, 0xC556, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
+const GUID KSPROPSETID_Audio = {0x45FFAAA0L, 0x6E1B, 0x11D0, {0xBC, 0xF2, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00}};
 
 #define DESTINATION_LINE 0xFFFF0000
 
@@ -48,6 +49,43 @@ GetSourceMixerLine(
 
     return NULL;
 }
+
+NTSTATUS
+GetMixerControlById(
+    LPMIXER_INFO MixerInfo,
+    DWORD dwControlID,
+    LPMIXERLINE_EXT *MixerLine,
+    LPMIXERCONTROLW *MixerControl,
+    PULONG NodeId)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERLINE_EXT MixerLineSrc;
+    ULONG Index;
+
+    /* get first entry */
+    Entry = MixerInfo->LineList.Flink;
+
+    while(Entry != &MixerInfo->LineList)
+    {
+        MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
+
+        for(Index = 0; Index < MixerLineSrc->Line.cConnections; Index++)
+        {
+            if (MixerLineSrc->LineControls[Index].dwControlID == dwControlID)
+            {
+                *MixerLine = MixerLineSrc;
+                *MixerControl = &MixerLineSrc->LineControls[Index];
+                *NodeId = MixerLineSrc->NodeIds[Index];
+                return STATUS_SUCCESS;
+            }
+        }
+        Entry = Entry->Flink;
+    }
+
+    return STATUS_NOT_FOUND;
+}
+
+
 
 LPMIXERLINE_EXT
 GetSourceMixerLineByLineId(
@@ -1760,6 +1798,74 @@ WdmAudGetLineControls(
 }
 
 NTSTATUS
+SetGetMuteControlDetails(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DeviceId,
+    IN ULONG NodeId,
+    IN PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN ULONG bSet)
+{
+    KSNODEPROPERTY_AUDIO_CHANNEL Property;
+    NTSTATUS Status;
+    HANDLE hDevice;
+    PFILE_OBJECT FileObject;
+    BOOL Value;
+    ULONG BytesReturned;
+    LPMIXERCONTROLDETAILS_BOOLEAN Input;
+
+    if (DeviceInfo->u.MixDetails.cbDetails != sizeof(MIXERCONTROLDETAILS_BOOLEAN))
+        return STATUS_INVALID_PARAMETER;
+
+    /* get input */
+    Input = (LPMIXERCONTROLDETAILS_BOOLEAN)DeviceInfo->u.MixDetails.paDetails;
+
+
+    //
+    // FIXME SEH!!!
+    //
+    if (bSet)
+        Value = Input->fValue;
+
+    /* open virtual audio device */
+    Status = OpenSysAudioDeviceByIndex(DeviceObject, DeviceId, &hDevice, &FileObject);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        return Status;
+    }
+
+    /* setup the request */
+    RtlZeroMemory(&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL));
+
+    Property.NodeProperty.NodeId = NodeId;
+    Property.NodeProperty.Property.Id = KSPROPERTY_AUDIO_MUTE;
+    Property.NodeProperty.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY;
+    Property.NodeProperty.Property.Set = KSPROPSETID_Audio;
+    Property.Channel = MAXULONG;
+
+    if (bSet)
+        Property.NodeProperty.Property.Flags |= KSPROPERTY_TYPE_SET;
+    else
+        Property.NodeProperty.Property.Flags |= KSPROPERTY_TYPE_GET;
+
+    /* send the request */
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL), (PVOID)&Value, sizeof(BOOL), &BytesReturned);
+
+    ObDereferenceObject(FileObject);
+    ZwClose(hDevice);
+
+    if (!bSet)
+    {
+        // FIXME SEH !!!
+        Input->fValue = Value;
+    }
+
+    DPRINT("Status %x bSet %u NodeId %u Value %u\n", Status, bSet, NodeId, Value);
+    return Status;
+}
+
+NTSTATUS
 NTAPI
 WdmAudSetControlDetails(
     IN  PDEVICE_OBJECT DeviceObject,
@@ -1767,9 +1873,41 @@ WdmAudSetControlDetails(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    UNIMPLEMENTED;
-    //DbgBreakPoint();
-    return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+    LPMIXERLINE_EXT MixerLine;
+    LPMIXERCONTROLW MixerControl;
+    ULONG NodeId;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+
+    DPRINT1("cbStruct %u Expected %u dwControlID %u cChannels %u cMultipleItems %u cbDetails %u paDetails %p Flags %x\n", 
+            DeviceInfo->u.MixDetails.cbStruct, sizeof(MIXERCONTROLDETAILS), DeviceInfo->u.MixDetails.dwControlID, DeviceInfo->u.MixDetails.cChannels, DeviceInfo->u.MixDetails.cMultipleItems, DeviceInfo->u.MixDetails.cbDetails, DeviceInfo->u.MixDetails.paDetails, DeviceInfo->Flags);
+
+    if (DeviceInfo->Flags & MIXER_GETCONTROLDETAILSF_LISTTEXT)
+    {
+        UNIMPLEMENTED;
+        return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+    }
+
+    /* get device extension */
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get mixer control */
+     Status = GetMixerControlById(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixDetails.dwControlID, &MixerLine, &MixerControl, &NodeId);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MixerControl %x not found\n", DeviceInfo->u.MixDetails.dwControlID);
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    Status = STATUS_NOT_IMPLEMENTED;
+    if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
+    {
+        /* send the request */
+        Status = SetGetMuteControlDetails(DeviceObject, MixerLine->DeviceIndex, NodeId, DeviceInfo, TRUE);
+    }
+
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 
 }
 
@@ -1781,8 +1919,40 @@ WdmAudGetControlDetails(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    UNIMPLEMENTED;
-    //DbgBreakPoint();
+    LPMIXERLINE_EXT MixerLine;
+    LPMIXERCONTROLW MixerControl;
+    ULONG NodeId;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+
+    DPRINT1("cbStruct %u Expected %u dwControlID %u cChannels %u cMultipleItems %u cbDetails %u paDetails %p Flags %x\n", 
+            DeviceInfo->u.MixDetails.cbStruct, sizeof(MIXERCONTROLDETAILS), DeviceInfo->u.MixDetails.dwControlID, DeviceInfo->u.MixDetails.cChannels, DeviceInfo->u.MixDetails.cMultipleItems, DeviceInfo->u.MixDetails.cbDetails, DeviceInfo->u.MixDetails.paDetails, DeviceInfo->Flags);
+
+    if (DeviceInfo->Flags & MIXER_GETCONTROLDETAILSF_LISTTEXT)
+    {
+        UNIMPLEMENTED;
+        return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+    }
+
+    /* get device extension */
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get mixer control */
+     Status = GetMixerControlById(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixDetails.dwControlID, &MixerLine, &MixerControl, &NodeId);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MixerControl %x not found\n", DeviceInfo->u.MixDetails.dwControlID);
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    Status = STATUS_NOT_IMPLEMENTED;
+    if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
+    {
+        /* send the request */
+        Status = SetGetMuteControlDetails(DeviceObject, MixerLine->DeviceIndex, NodeId, DeviceInfo, FALSE);
+    }
+
     return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
 
 }
