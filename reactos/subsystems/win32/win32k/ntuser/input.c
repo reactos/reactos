@@ -1120,7 +1120,8 @@ IntMouseInput(MOUSEINPUT *mi)
       mi->time = MsqCalculateMessageTime(&LargeTickCount);
    }
 
-   SwapButtons = CurInfo->SwapButtons;
+   // FIXME: CurInfo->SwapButtons doesn't contain the correct value yet
+   SwapButtons = UserGetSystemMetrics(SM_SWAPBUTTON);//CurInfo->SwapButtons;
    DoMove = FALSE;
 
    IntGetCursorLocation(WinSta, &MousePos);
