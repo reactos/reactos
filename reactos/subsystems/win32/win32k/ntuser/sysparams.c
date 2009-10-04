@@ -216,30 +216,31 @@ SpiUpdatePerUserSystemParameters()
     /* Load desktop settings */
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
 
+    /* Load mouse settings */
+    gspv.bMouseBtnSwap = SpiLoadInt(KEY_MOUSE, VAL_SWAP, 0);
+    gspv.iMouseSpeed = SpiLoadInt(KEY_MOUSE, VAL_MOUSE3, 1);
+    gspv.iDblClickTime = SpiLoadInt(KEY_MOUSE, VAL_DBLCLKTIME, 500);
+    gspv.iDblClickWidth = SpiLoadInt(KEY_MOUSE, VAL_DBLCLKWIDTH, 4);
+    gspv.iDblClickHeight = SpiLoadInt(KEY_MOUSE, VAL_DBLCLKHEIGHT, 4);
+
     /* Some hardcoded values for now */
+    gspv.iMouseHoverTime = 80;
+    gspv.iMouseHoverWidth = 4;
+    gspv.iMouseHoverHeight = 4;
+    gspv.iWheelScrollLines = 3;
+#if (_WIN32_WINNT >= 0x0600)
+    gspv.uiWheelScrollChars = 1;
+#endif
+
     gspv.tmCaptionFont.tmAveCharWidth = 6;
     gspv.bBeep = TRUE;
     gspv.bFlatMenu = FALSE;
-    gspv.iDblClickTime = 500;
     gspv.uiFocusBorderWidth = 1;
     gspv.uiFocusBorderHeight = 1;
     gspv.bMenuDropAlign = 1;
     gspv.bDropShadow = 1;
     gspv.dwUserPrefMask = UPM_DEFAULT;
     gspv.dwMenuShowDelay = 100;
-
-    gspv.bMouseBtnSwap = FALSE;
-    gspv.iMouseSpeed = 10;
-    gspv.iMouseHoverTime = 80;
-    gspv.iMouseHoverWidth = 4;
-    gspv.iMouseHoverHeight = 4;
-    gspv.iDblClickTime = 500;
-    gspv.iDblClickWidth = 4;
-    gspv.iDblClickHeight = 4;
-    gspv.iWheelScrollLines = 3;
-#if (_WIN32_WINNT >= 0x0600)
-    gspv.uiWheelScrollChars = 1;
-#endif
 
     gspv.iScrSaverTimeout = 10;
     gspv.bScrSaverActive = FALSE;
