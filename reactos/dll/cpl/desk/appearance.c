@@ -138,8 +138,12 @@ LoadCurrentTheme(GLOBALS* g)
     g->Theme.Effects.bTooltipAnimation  = g->Theme.Effects.bMenuAnimation;
     g->Theme.Effects.bTooltipFade       = g->Theme.Effects.bMenuFade;
 
+    /* show content of windows during dragging */
+    //SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, g->Theme.Effects.bDragFullWindows, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    SystemParametersInfoW(SPI_GETDRAGFULLWINDOWS, 0, &g->Theme.Effects.bDragFullWindows, 0);
+
     /* "Hide underlined letters for keyboard navigation until I press the Alt key" */
-    SystemParametersInfo(SPI_GETKEYBOARDCUES, sizeof(BOOL), &g->Theme.Effects.bKeyboardCues, 0);
+    //SystemParametersInfo(SPI_GETKEYBOARDCUES, sizeof(BOOL), &g->Theme.Effects.bKeyboardCues, 0);
 }
 
 
@@ -359,7 +363,8 @@ ApplyTheme(GLOBALS* g)
      */
     g->Theme.Effects.bTooltipAnimation  = g->Theme.Effects.bMenuAnimation;
     g->Theme.Effects.bTooltipFade       = g->Theme.Effects.bMenuFade;
-    UPDATE_USERPREF(KEYBOARDCUES, &g->Theme.Effects.bKeyboardCues);
+    SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, g->Theme.Effects.bDragFullWindows, (PVOID)&g->Theme.Effects.bDragFullWindows, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+    //UPDATE_USERPREF(KEYBOARDCUES, &g->Theme.Effects.bKeyboardCues);
     //UPDATE_USERPREF(ACTIVEWINDOWTRACKING, &g->Theme.Effects.bActiveWindowTracking);
     UPDATE_USERPREF(MENUANIMATION, &g->Theme.Effects.bMenuAnimation);
     //UPDATE_USERPREF(COMBOBOXANIMATION, &g->Theme.Effects.bComboBoxAnimation);
@@ -536,6 +541,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						i = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETCURSEL, 0, 0);
 						g->Theme.Id = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETITEMDATA, (WPARAM)i, 0);
 						LoadThemeFromReg(g);
+						//SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, WM_PAINT, 0, 0);
 					}
 					break;
 

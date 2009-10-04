@@ -25,7 +25,10 @@ UpdateControls(HWND hwndDlg, GLOBALS *g)
     SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_SETCURSEL, (WPARAM)g->ThemeAdv.Effects.bMenuFade, 0);
 
     state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_KEYBOARDCUES, BM_GETCHECK, 0, 0);
-    g->ThemeAdv.Effects.bKeyboardCues = (state == BST_CHECKED) ? FALSE : TRUE;
+    g->ThemeAdv.Effects.bKeyboardCues = (state == BST_CHECKED) ? TRUE : FALSE;
+    state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, BM_GETCHECK, 0, 0);
+    g->ThemeAdv.Effects.bDragFullWindows = (state == BST_CHECKED) ? TRUE : FALSE;
+
 }
 
 
@@ -62,8 +65,11 @@ EffAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
     state = g->ThemeAdv.Effects.bMenuAnimation ? BST_CHECKED : BST_UNCHECKED;
     SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATION, BM_SETCHECK, state, 0);
 
-    state = g->ThemeAdv.Effects.bKeyboardCues ? BST_UNCHECKED : BST_CHECKED;
+    state = g->ThemeAdv.Effects.bKeyboardCues ? BST_CHECKED : BST_UNCHECKED;
     SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_KEYBOARDCUES, BM_SETCHECK, state, 0);
+
+    state = g->ThemeAdv.Effects.bDragFullWindows ? BST_CHECKED : BST_UNCHECKED;
+    SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, BM_SETCHECK, state, 0);
 
     /* Update the controls */
     UpdateControls(hwndDlg, g);
@@ -109,6 +115,7 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				case IDC_EFFAPPEARANCE_ANIMATION:
 				case IDC_EFFAPPEARANCE_KEYBOARDCUES:
+				case IDC_EFFAPPEARANCE_DRAGFULLWINDOWS:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
 						UpdateControls(hwndDlg, g);

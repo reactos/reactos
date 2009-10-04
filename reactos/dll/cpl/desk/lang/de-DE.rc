@@ -110,9 +110,9 @@ BEGIN
     CONTROL         "Ve&rwende große Icons",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
     CONTROL         "Zeige Menüsch&atten",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED,  10, 95, 285, 19
     CONTROL         "Zeige &Fensterinhalt beim Verschieben",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "Ver&stecke Unterstrich der Tastaturnavigation bis zum Druck der Alt-Taste",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 250, 19
     PUSHBUTTON "Abbrechen", IDCANCEL, 226, 165, 50, 14
