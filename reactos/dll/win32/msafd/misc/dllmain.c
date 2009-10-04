@@ -1740,6 +1740,7 @@ WSPIoctl(IN  SOCKET Handle,
                 *lpErrno = WSAEFAULT;
                 return SOCKET_ERROR;
             }
+            Socket->SharedData.NonBlocking = *((PULONG)lpvInBuffer) ? 1 : 0;
             return SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, (PULONG)lpvInBuffer, NULL);
         case FIONREAD:
             if( cbOutBuffer < sizeof(INT) || IS_INTRESOURCE(lpvOutBuffer) )
