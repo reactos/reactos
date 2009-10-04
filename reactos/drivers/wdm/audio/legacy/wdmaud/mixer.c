@@ -1953,7 +1953,7 @@ WdmAudGetControlDetails(
         Status = SetGetMuteControlDetails(DeviceObject, MixerLine->DeviceIndex, NodeId, DeviceInfo, FALSE);
     }
 
-    return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 
 }
 
