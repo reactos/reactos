@@ -279,7 +279,7 @@ KiGetFeatureBits(VOID)
         /* Intel CPUs */
         case CPU_INTEL:
 
-            /* Check if it's a P6 or higher */
+            /* Check if it's a P6 */
             if (Prcb->CpuType == 6)
             {
                 /* Perform the special sequence to get the MicroCode Signature */
@@ -737,7 +737,11 @@ VOID
 NTAPI
 KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
 {
-    /* Restore the CR registers */
+    PKGDTENTRY TssEntry;
+
+    //
+    // Restore the CR registers
+    //
     __writecr0(ProcessorState->SpecialRegisters.Cr0);
     Ke386SetCr2(ProcessorState->SpecialRegisters.Cr2);
     __writecr3(ProcessorState->SpecialRegisters.Cr3);
@@ -754,10 +758,21 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     __writedr(7, ProcessorState->SpecialRegisters.KernelDr7);
 
     //
-    // Restore GDT, IDT, LDT and TSS
+    // Restore GDT and IDT
     //
     Ke386SetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
     __lidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
+
+    //
+    // Clear the busy flag so we don't crash if we reload the same selector
+    //
+    TssEntry = (PKGDTENTRY)(ProcessorState->SpecialRegisters.Gdtr.Base +
+                            ProcessorState->SpecialRegisters.Tr);
+    TssEntry->HighWord.Bytes.Flags1 &= ~0x2;
+
+    //
+    // Restore TSS and LDT
+    //
     Ke386SetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386SetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }

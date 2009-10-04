@@ -20,7 +20,7 @@ KdpPrintString(IN PSTRING Output)
 {
     STRING Data, Header;
     DBGKD_DEBUG_IO DebugIo;
-    ULONG Length = Output->Length;
+    USHORT Length = Output->Length;
 
     /* Copy the string */
     RtlMoveMemory(KdpMessageBuffer, Output->Buffer, Length);
@@ -51,7 +51,7 @@ KdpPrintString(IN PSTRING Output)
     return KdpPollBreakInWithPortLock();
 }
 
-ULONG
+VOID
 NTAPI
 KdpCommandString(IN ULONG Length,
                  IN LPSTR String,
@@ -61,10 +61,10 @@ KdpCommandString(IN ULONG Length,
                  IN PKEXCEPTION_FRAME ExceptionFrame)
 {
     /* FIXME */
-    return FALSE;
+    while (TRUE);
 }
 
-ULONG
+VOID
 NTAPI
 KdpSymbol(IN PSTRING DllPath,
           IN PKD_SYMBOLS_INFO DllBase,
@@ -79,7 +79,7 @@ KdpSymbol(IN PSTRING DllPath,
     ULONG Status;
 
     /* Check if we need to do anything */
-    if ((PreviousMode != KernelMode) || (KdDebuggerNotPresent)) return 0;
+    if ((PreviousMode != KernelMode) || (KdDebuggerNotPresent)) return;
 
     /* Enter the debugger */
     Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
@@ -101,39 +101,39 @@ KdpSymbol(IN PSTRING DllPath,
     RtlCopyMemory(ContextRecord,
                   &Prcb->ProcessorState.ContextFrame,
                   sizeof(CONTEXT));
-    //KiRestoreProcessorControlState(&Prcb->ProcessorState);
+    KiRestoreProcessorControlState(&Prcb->ProcessorState);
 
     /* Exit the debugger and clear the CTRL-C state */
     KdExitDebugger(Entered);
-    return 0;
 }
 
-ULONG
+BOOLEAN
 NTAPI
 KdpPrompt(IN LPSTR InString,
-          IN ULONG InStringLength,
+          IN USHORT InStringLength,
           OUT LPSTR OutString,
-          IN ULONG OutStringLength,
+          IN USHORT OutStringLength,
           IN KPROCESSOR_MODE PreviousMode,
           IN PKTRAP_FRAME TrapFrame,
           IN PKEXCEPTION_FRAME ExceptionFrame)
 {
     /* FIXME */
+    while (TRUE);
     return FALSE;
 }
 
-ULONG
+NTSTATUS
 NTAPI
 KdpPrint(IN ULONG ComponentId,
          IN ULONG ComponentMask,
          IN LPSTR String,
-         IN ULONG Length,
+         IN USHORT Length,
          IN KPROCESSOR_MODE PreviousMode,
          IN PKTRAP_FRAME TrapFrame,
          IN PKEXCEPTION_FRAME ExceptionFrame,
          OUT PBOOLEAN Status)
 {
-    NTSTATUS ReturnValue;
+    NTSTATUS ReturnStatus;
     BOOLEAN Entered;
     ANSI_STRING AnsiString;
 
@@ -141,7 +141,7 @@ KdpPrint(IN ULONG ComponentId,
     *Status = FALSE;
 
     /* Validate the mask */
-    if (ComponentMask <= 0x1F) ComponentMask = 1 << ComponentMask;
+    if (ComponentMask < 0x20) ComponentMask = 1 << ComponentMask;
     if (!(Kd_WIN2000_Mask & ComponentMask) ||
         ((ComponentId < KdComponentTableSize) &&
         !(*KdComponentTable[ComponentId] & ComponentMask)))
@@ -162,7 +162,7 @@ KdpPrint(IN ULONG ComponentId,
 
     /* Setup the ANSI string */
     AnsiString.Buffer = String;
-    AnsiString.Length = (USHORT)Length;
+    AnsiString.Length = Length;
 
     /* Log the print */
     //KdLogDbgPrint(&AnsiString);
@@ -172,7 +172,7 @@ KdpPrint(IN ULONG ComponentId,
     {
         /* Fail */
         *Status = TRUE;
-        return (ULONG)STATUS_DEVICE_NOT_CONNECTED;
+        return STATUS_DEVICE_NOT_CONNECTED;
     }
 
     /* Enter the debugger */
@@ -182,17 +182,42 @@ KdpPrint(IN ULONG ComponentId,
     if (KdpPrintString(&AnsiString))
     {
         /* User pressed CTRL-C, breakpoint on return */
-        ReturnValue = STATUS_BREAKPOINT;
+        ReturnStatus = STATUS_BREAKPOINT;
     }
     else
     {
         /* String was printed */
-        ReturnValue = STATUS_SUCCESS;
+        ReturnStatus = STATUS_SUCCESS;
     }
 
     /* Exit the debugger and return */
     KdExitDebugger(Entered);
     *Status = TRUE;
-    return ReturnValue;
+    return ReturnStatus;
 }
 
+VOID
+__cdecl
+KdpDprintf(IN PCHAR Format,
+           ...)
+{
+    STRING String;
+    CHAR Buffer[100];
+    USHORT Length;
+    va_list ap;
+
+    /* Format the string */
+    va_start(ap, Format);
+    Length = (USHORT)_vsnprintf(Buffer,
+                                sizeof(Buffer),
+                                Format,
+                                ap);
+
+    /* Set it up */
+    String.Buffer = Buffer;
+    String.Length = Length + 1;
+
+    /* Send it to the debugger directly */
+    KdpPrintString(&String);
+    va_end(ap);
+}

@@ -341,6 +341,8 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             Stack = TrapFrame->Ebp;
 #elif defined(_M_PPC)
             Stack = TrapFrame->Gpr1;
+#else
+#error Unknown architecture
 #endif
 
             /* Validate them */

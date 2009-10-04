@@ -14,6 +14,15 @@
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NTAPI
+KdUpdateDataBlock(VOID)
+{
+    /* Update the KeUserCallbackDispatcher pointer */
+    KdDebuggerDataBlock.KeUserCallbackDispatcher =
+        (ULONG64)(LONG_PTR)KeUserCallbackDispatcher;
+}
+
 BOOLEAN
 NTAPI
 KdRegisterDebuggerDataBlock(IN ULONG Tag,
@@ -133,7 +142,7 @@ KdInitSystem(IN ULONG BootPhase,
                                      InLoadOrderLinks);
 
         /* Save the Kernel Base */
-        PsNtosImageBase = (ULONG)LdrEntry->DllBase;
+        PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
         KdVersionBlock.KernBase = (ULONGLONG)(LONG_PTR)LdrEntry->DllBase;
 
         /* Check if we have a command line */

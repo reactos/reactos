@@ -106,9 +106,6 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
 {
     KD_CONTINUE_TYPE Return = kdHandleException;
     ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
-#ifdef _M_IX86
-    ULONG EipOld;
-#endif
 
     /* Check if this was a breakpoint due to DbgPrint or Load/UnloadSymbols */
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
@@ -125,13 +122,9 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             KdpServiceDispatcher(BREAKPOINT_PRINT,
                                  (PVOID)ExceptionRecord->ExceptionInformation[1],
                                  ExceptionRecord->ExceptionInformation[2]);
-#ifdef _M_IX86
-            Context->Eax = STATUS_SUCCESS;
-#elif _M_ARM
-            Context->R0 = STATUS_SUCCESS;
-#else
-#error Please be portable when modifying code
-#endif
+
+            /* Return success */
+            KeSetContextReturnRegister(Context, STATUS_SUCCESS);
         }
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
@@ -144,22 +137,13 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
 #endif
         }
 
-        /* This we can handle: simply bump EIP */
-#ifdef _M_IX86
-        Context->Eip++;
-#elif _M_ARM
-        Context->Pc += sizeof(ULONG);
-#endif
+        /* This we can handle: simply bump the Program Counter */
+        KeSetContextPc(Context, KeGetContextPc(Context) + KD_BREAKPOINT_SIZE);
         return TRUE;
     }
 
     /* Get out of here if the Debugger isn't connected */
     if (KdDebuggerNotPresent) return FALSE;
-
-    /* Save old EIP value */
-#ifdef _M_IX86
-    EipOld = Context->Eip;
-#endif
 
 #ifdef KDBG
     /* Call KDBG if available */
@@ -177,12 +161,6 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                                                   TrapFrame);
     }
 #endif /* not KDBG */
-
-    /* Bump EIP over int 3 if debugger did not already change it */
-    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
-    {
-        //DPRINT1("Address: %p. Return: %d\n", EipOld, Return);
-    }
 
     /* Debugger didn't handle it, please handle! */
     if (Return == kdHandleException) return FALSE;

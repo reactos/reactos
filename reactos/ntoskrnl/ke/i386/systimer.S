@@ -276,7 +276,7 @@ _KeUpdateSystemTime@0:
     /* Put tick count back in EBX */
     mov ebx, eax
 
-    /* Copyit in ECX and get hich count */
+    /* Copy it in ECX and get high count */
     mov ecx, eax
     mov edx, _KeTickCount + 4
 
@@ -372,7 +372,7 @@ DebuggerEnabled:
     jz NoDebug
 
     /* Break-in requested! */
-    push 1
+    push DBG_STATUS_CONTROL_C
     call _DbgBreakPointWithStatus@4
     jmp NoDebug
 

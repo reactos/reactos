@@ -37,13 +37,13 @@ UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
 
 PVOID
 NTAPI
-KiPcToFileHeader(IN PVOID Eip,
+KiPcToFileHeader(IN PVOID Pc,
                  OUT PLDR_DATA_TABLE_ENTRY *LdrEntry,
                  IN BOOLEAN DriversOnly,
                  OUT PBOOLEAN InKernel)
 {
     ULONG i = 0;
-    PVOID ImageBase, EipBase = NULL;
+    PVOID ImageBase, PcBase = NULL;
     PLDR_DATA_TABLE_ENTRY Entry;
     PLIST_ENTRY ListHead, NextEntry;
 
@@ -82,12 +82,12 @@ KiPcToFileHeader(IN PVOID Eip,
             ImageBase = Entry->DllBase;
 
             /* Check if this is the right one */
-            if (((ULONG_PTR)Eip >= (ULONG_PTR)Entry->DllBase) &&
-                ((ULONG_PTR)Eip < ((ULONG_PTR)Entry->DllBase + Entry->SizeOfImage)))
+            if (((ULONG_PTR)Pc >= (ULONG_PTR)Entry->DllBase) &&
+                ((ULONG_PTR)Pc < ((ULONG_PTR)Entry->DllBase + Entry->SizeOfImage)))
             {
                 /* Return this entry */
                 *LdrEntry = Entry;
-                EipBase = ImageBase;
+                PcBase = ImageBase;
 
                 /* Check if this was a kernel or HAL entry */
                 if (i <= 2) *InKernel = TRUE;
@@ -97,7 +97,7 @@ KiPcToFileHeader(IN PVOID Eip,
     }
 
     /* Return the base address */
-    return EipBase;
+    return PcBase;
 }
 
 BOOLEAN
@@ -138,10 +138,10 @@ KiRosPrintAddress(PVOID address)
 
 PVOID
 NTAPI
-KiRosPcToUserFileHeader(IN PVOID Eip,
+KiRosPcToUserFileHeader(IN PVOID Pc,
                         OUT PLDR_DATA_TABLE_ENTRY *LdrEntry)
 {
-    PVOID ImageBase, EipBase = NULL;
+    PVOID ImageBase, PcBase = NULL;
     PLDR_DATA_TABLE_ENTRY Entry;
     PLIST_ENTRY ListHead, NextEntry;
 
@@ -170,19 +170,19 @@ KiRosPcToUserFileHeader(IN PVOID Eip,
             ImageBase = Entry->DllBase;
 
             /* Check if this is the right one */
-            if (((ULONG_PTR)Eip >= (ULONG_PTR)Entry->DllBase) &&
-                ((ULONG_PTR)Eip < ((ULONG_PTR)Entry->DllBase + Entry->SizeOfImage)))
+            if (((ULONG_PTR)Pc >= (ULONG_PTR)Entry->DllBase) &&
+                ((ULONG_PTR)Pc < ((ULONG_PTR)Entry->DllBase + Entry->SizeOfImage)))
             {
                 /* Return this entry */
                 *LdrEntry = Entry;
-                EipBase = ImageBase;
+                PcBase = ImageBase;
                 break;
             }
         }
     }
 
     /* Return the base address */
-    return EipBase;
+    return PcBase;
 }
 
 USHORT
@@ -770,7 +770,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     CHAR AnsiName[128];
     BOOLEAN IsSystem, IsHardError = FALSE, Reboot = FALSE;
     PCHAR HardErrCaption = NULL, HardErrMessage = NULL;
-    PVOID Eip = NULL, Memory;
+    PVOID Pc = NULL, Memory;
     PVOID DriverBase;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PULONG_PTR HardErrorParameters;
@@ -880,16 +880,12 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                 if (BugCheckParameter3) TrapFrame = (PVOID)BugCheckParameter3;
             }
 
-            /* Check if we got one now and if we need to get EIP */
+            /* Check if we got one now and if we need to get the Program Counter */
             if ((TrapFrame) &&
                 (BugCheckCode != KERNEL_MODE_EXCEPTION_NOT_HANDLED))
             {
-#ifdef _M_IX86
-                /* Get EIP */
-                Eip = (PVOID)TrapFrame->Eip;
-#elif defined(_M_PPC)
-                Eip = (PVOID)TrapFrame->Dr0; /* srr0 */
-#endif
+                /* Get the Program Counter */
+                Pc = (PVOID)KeGetTrapFramePc(TrapFrame);
             }
             break;
 
@@ -903,11 +899,14 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
              * and provide a more detailed analysis. For now, we don't.
              */
 
-            /* Eip is in parameter 4 */
-            Eip = (PVOID)BugCheckParameter4;
+            /* Program Counter is in parameter 4 */
+            Pc = (PVOID)BugCheckParameter4;
 
             /* Get the driver base */
-            DriverBase = KiPcToFileHeader(Eip, &LdrEntry, FALSE, &IsSystem);
+            DriverBase = KiPcToFileHeader(Pc,
+                                          &LdrEntry,
+                                          FALSE,
+                                          &IsSystem);
             if (IsSystem)
             {
                 /*
@@ -947,8 +946,8 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                 KiBugCheckData[0] = DRIVER_IRQL_NOT_LESS_OR_EQUAL;
             }
 
-            /* Clear EIP so we don't look it up later */
-            Eip = NULL;
+            /* Clear Pc so we don't look it up later */
+            Pc = NULL;
             break;
 
         /* Hard error */
@@ -984,17 +983,12 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
             /* Check if we have a frame now */
             if (TrapFrame)
             {
-#ifdef _M_IX86
-                /* Get EIP */
-                Eip = (PVOID)TrapFrame->Eip;
-                KiBugCheckData[3] = (ULONG)Eip;
-#elif defined(_M_PPC)
-                Eip = (PVOID)TrapFrame->Dr0; /* srr0 */
-                KiBugCheckData[3] = (ULONG)Eip;
-#endif
+                /* Get the Program Counter */
+                Pc = (PVOID)KeGetTrapFramePc(TrapFrame);
+                KiBugCheckData[3] = (ULONG_PTR)Pc;
 
                 /* Find out if was in the kernel or drivers */
-                DriverBase = KiPcToFileHeader(Eip,
+                DriverBase = KiPcToFileHeader(Pc,
                                               &LdrEntry,
                                               FALSE,
                                               &IsSystem);
@@ -1024,8 +1018,8 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         /* Check if the driver forgot to unlock pages */
         case DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS:
 
-            /* EIP is in parameter 1 */
-            Eip = (PVOID)BugCheckParameter1;
+            /* Program Counter is in parameter 1 */
+            Pc = (PVOID)BugCheckParameter1;
             break;
 
         /* Check if the driver consumed too many PTEs */
@@ -1056,12 +1050,12 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     }
     else
     {
-        /* Do we have an EIP? */
-        if (Eip)
+        /* Do we have a Program Counter? */
+        if (Pc)
         {
             /* Dump image name */
             KiDumpParameterImages(AnsiName,
-                                  (PULONG_PTR)&Eip,
+                                  (PULONG_PTR)&Pc,
                                   1,
                                   KeBugCheckUnicodeToAnsi);
         }

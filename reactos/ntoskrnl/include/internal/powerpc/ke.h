@@ -35,6 +35,26 @@ typedef struct _KIRQ_TRAPFRAME
 
 extern ULONG KePPCCacheAlignment;
 
+#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_POWERPC
+
+//
+// Macros for getting and setting special purpose registers in portable code
+//
+#define KeGetContextPc(Context) \
+    ((Context)->Dr0)
+
+#define KeSetContextPc(Context, ProgramCounter) \
+    ((Context)->Dr0 = (ProgramCounter))
+
+#define KeGetTrapFramePc(TrapFrame) \
+    ((TrapFrame)->Dr0)
+
+#define KeGetContextReturnRegister(Context) \
+    ((Context)->Gpr3)
+
+#define KeSetContextReturnRegister(Context, ReturnValue) \
+    ((Context)->Gpr3 = (ReturnValue))
+
 #define KePPCRdmsr(msr,val1,val2) __asm__ __volatile__("mfmsr 3")
 
 #define KePPCWrmsr(msr,val1,val2) __asm__ __volatile__("mtmsr 3")

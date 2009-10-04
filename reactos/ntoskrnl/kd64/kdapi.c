@@ -172,8 +172,8 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->ProcessorLevel = KeProcessorLevel;
     WaitStateChange->Processor = (USHORT)KeGetCurrentPrcb()->Number;
     WaitStateChange->NumberProcessors = (ULONG)KeNumberProcessors;
-    WaitStateChange->Thread = (ULONG)(LONG_PTR)KeGetCurrentThread();
-    WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Eip;
+    WaitStateChange->Thread = (ULONG64)(LONG_PTR)KeGetCurrentThread();
+    WaitStateChange->ProgramCounter = (ULONG64)(LONG_PTR)KeGetContextPc(Context);
 
     /* Zero out the Control Report */
     RtlZeroMemory(&WaitStateChange->ControlReport,
@@ -189,7 +189,7 @@ KdpSetCommonState(IN ULONG NewState,
     /* Clear all the breakpoints in this region */
     HadBreakpoints =
         KdpDeleteBreakpointRange((PVOID)(LONG_PTR)WaitStateChange->ProgramCounter,
-                                 (PVOID)((ULONG)WaitStateChange->ProgramCounter +
+                                 (PVOID)((ULONG_PTR)WaitStateChange->ProgramCounter +
                                          WaitStateChange->ControlReport.InstructionCount - 1));
     if (HadBreakpoints)
     {
@@ -557,6 +557,14 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
                  &KdpContext);
 }
 
+VOID
+NTAPI
+KdpCauseBugCheck(IN PDBGKD_MANIPULATE_STATE64 State)
+{
+    /* Crash with the special code */
+    KeBugCheck(MANUALLY_INITIATED_CRASH);
+}
+
 KCONTINUE_STATUS
 NTAPI
 KdpSendWaitContinue(IN ULONG PacketType,
@@ -636,7 +644,7 @@ SendPacket:
 
             case DbgKdRestoreBreakPointApi:
 
-                /* FIXME: TODO */
+                /* Restore the breakpoint */
                 KdpRestoreBreakpoint(&ManipulateState, &Data, Context);
                 break;
 
@@ -653,7 +661,7 @@ SendPacket:
 
             case DbgKdWriteControlSpaceApi:
 
-                /* FIXME: TODO */
+                /* Write control space */
                 KdpWriteControlSpace(&ManipulateState, &Data, Context);
                 break;
 
@@ -673,9 +681,8 @@ SendPacket:
 
             case DbgKdRebootApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdRebootApi);
-                while (TRUE);
+                /* Reboot the system */
+                HalReturnToFirmware(HalRebootRoutine);
                 break;
 
             case DbgKdContinueApi2:
@@ -780,9 +787,8 @@ SendPacket:
 
             case DbgKdCauseBugCheckApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdCauseBugCheckApi);
-                while (TRUE);
+                /* Crash the system */
+                KdpCauseBugCheck(&ManipulateState);
                 break;
 
             case DbgKdSwitchProcessor:
@@ -956,7 +962,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
                                      &Header,
                                      ExtraData,
                                      Context);
-    } while(Status == ContinueProcessorReselected);
+    } while (Status == ContinueProcessorReselected);
 
     /* Return status */
     return Status;
@@ -998,7 +1004,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
                                      &Header,
                                      &Data,
                                      Context);
-    } while (Status == KdPacketNeedsResend);
+    } while (Status == ContinueProcessorReselected);
 
     /* Return */
     return Status;
@@ -1126,18 +1132,18 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     if (KiFreezeFlag & 1)
     {
         /* Print out errror */
-        DbgPrint("FreezeLock was jammed!  Backup SpinLock was used!\n");
+        KdpDprintf("FreezeLock was jammed!  Backup SpinLock was used!\n");
     }
 
     /* Check processor state */
     if (KiFreezeFlag & 2)
     {
         /* Print out errror */
-        DbgPrint("Some processors not frozen in debugger!\n");
+        KdpDprintf("Some processors not frozen in debugger!\n");
     }
 
     /* Make sure we acquired the port */
-    if (!KdpPortLocked) DbgPrint("Port lock was not acquired!\n");
+    if (!KdpPortLocked) KdpDprintf("Port lock was not acquired!\n");
 
     /* Return enter state */
     return Entered;

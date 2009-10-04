@@ -1226,21 +1226,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->NtMinorVersion = NtMinorVersion;
 
     /* Set the machine type */
-#if defined(_X86_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_I386;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_I386;
-#elif defined(_PPC_) // <3 Arty
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_POWERPC;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_POWERPC;
-#elif defined(_MIPS_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_R4000;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_R4000;
-#elif defined(_ARM_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARM;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARM;
-#else
-#error "Unsupported ReactOS Target"
-#endif
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARCHITECTURE;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARCHITECTURE;
 }
 
 VOID

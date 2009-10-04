@@ -60,20 +60,15 @@ KdInitSystem(
     PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-//
-// Debug and Multi-Processor Switch Routines
-//
-BOOLEAN
+VOID
 NTAPI
-KdpEnterDebuggerException(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame,
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN BOOLEAN SecondChance
+KdUpdateDataBlock(
+    VOID
 );
 
+//
+// Multi-Processor Switch Support
+//
 BOOLEAN
 NTAPI
 KdpSwitchProcessor(
@@ -171,25 +166,48 @@ KdEnableDebuggerWithLock(
 //
 // Debug Event Handlers
 //
-ULONG
+NTSTATUS
 NTAPI
 KdpPrint(
     IN ULONG ComponentId,
     IN ULONG ComponentMask,
     IN LPSTR String,
-    IN ULONG Length,
+    IN USHORT Length,
     IN KPROCESSOR_MODE PreviousMode,
     IN PKTRAP_FRAME TrapFrame,
     IN PKEXCEPTION_FRAME ExceptionFrame,
     OUT PBOOLEAN Status
 );
 
-ULONG
+BOOLEAN
+NTAPI
+KdpPrompt(
+    IN LPSTR InString,
+    IN USHORT InStringLength,
+    OUT LPSTR OutString,
+    IN USHORT OutStringLength,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame
+);
+
+VOID
 NTAPI
 KdpSymbol(
     IN PSTRING DllPath,
     IN PKD_SYMBOLS_INFO DllBase,
     IN BOOLEAN Unload,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PCONTEXT ContextRecord,
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame
+);
+
+VOID
+NTAPI
+KdpCommandString(
+    IN ULONG Length,
+    IN LPSTR String,
     IN KPROCESSOR_MODE PreviousMode,
     IN PCONTEXT ContextRecord,
     IN PKTRAP_FRAME TrapFrame,
@@ -242,6 +260,16 @@ ULONG
 NTAPI
 KdpAddBreakpoint(
     IN PVOID Address
+);
+
+//
+// Internal routine for sending strings directly to the debugger
+//
+VOID
+__cdecl
+KdpDprintf(
+    IN PCHAR Format,
+    ...
 );
 
 //

@@ -523,7 +523,7 @@ Author:
 #define CBSTACK_RESULT_LENGTH                   0x24
 
 //
-// NTSTATUS and Bugcheck Codes
+// NTSTATUS, Bugcheck Codes and Debug Codes
 //
 #ifdef __ASM__
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
@@ -560,6 +560,7 @@ Author:
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
 #define ATTEMPTED_SWITCH_FROM_DPC               0xB8
 #define HARDWARE_INTERRUPT_STORM                0xF2
+#define DBG_STATUS_CONTROL_C                    0x01
 
 //
 // IRQL Levels

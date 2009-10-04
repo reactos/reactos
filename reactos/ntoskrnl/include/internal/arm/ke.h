@@ -7,6 +7,31 @@
 #define PCR_ENTRY            0
 #define PDR_ENTRY            2
 
+#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_ARM
+
+//
+// BKPT is 4 bytes long
+//
+#define KD_BREAKPOINT_SIZE 4
+
+//
+// Macros for getting and setting special purpose registers in portable code
+//
+#define KeGetContextPc(Context) \
+    ((Context)->Pc)
+
+#define KeSetContextPc(Context, ProgramCounter) \
+    ((Context)->Pc = (ProgramCounter))
+
+#define KeGetTrapFramePc(TrapFrame) \
+    ((TrapFrame)->Pc)
+
+#define KeGetContextReturnRegister(Context) \
+    ((Context)->R0)
+
+#define KeSetContextReturnRegister(Context, ReturnValue) \
+    ((Context)->R0 = (ReturnValue))
+
 VOID
 KiPassiveRelease(
     VOID
