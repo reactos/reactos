@@ -77,7 +77,7 @@ FtfdEnablePDEV(
     IN HANDLE hDriver)
 {
     DbgPrint("FtfdEnablePDEV(hdev=%p)\n", hdev);
-    EngDebugBreak();
+    __debugbreak();
 
 
     /* Return a dummy DHPDEV */
