@@ -179,7 +179,7 @@ KsRegisterCountedWorker(
     if (NT_SUCCESS(Status))
     {
         /* get ks worker implementation */
-        KsWorker = (PKSIWORKER)Worker;
+        KsWorker = *(PKSIWORKER*)Worker;
         /* store counted work item */
         KsWorker->CountedWorkItem = CountedWorkItem;
     }
