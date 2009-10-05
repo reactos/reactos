@@ -50,6 +50,29 @@ GetSourceMixerLine(
     return NULL;
 }
 
+LPMIXERCONTROL_DATA
+GetMixerControlDataById(
+    PLIST_ENTRY ListHead,
+    DWORD dwControlId)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERCONTROL_DATA Control;
+
+    /* get first entry */
+    Entry = ListHead->Flink;
+
+    while(Entry != ListHead)
+    {
+        Control = (LPMIXERCONTROL_DATA)CONTAINING_RECORD(Entry, MIXERCONTROL_DATA, Entry);
+        DPRINT("dwSource %x dwSource %x\n", Control->dwControlID, dwControlId);
+        if (Control->dwControlID == dwControlId)
+            return Control;
+
+        Entry = Entry->Flink;
+    }
+    return NULL;
+}
+
 NTSTATUS
 GetMixerControlById(
     LPMIXER_INFO MixerInfo,
@@ -101,7 +124,7 @@ GetSourceMixerLineByLineId(
     while(Entry != &MixerInfo->LineList)
     {
         MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
-        DPRINT1("dwLineID %x dwLineID %x\n", MixerLineSrc->Line.dwLineID, dwLineID);
+        DPRINT("dwLineID %x dwLineID %x\n", MixerLineSrc->Line.dwLineID, dwLineID);
         if (MixerLineSrc->Line.dwLineID == dwLineID)
             return MixerLineSrc;
 
@@ -889,6 +912,7 @@ AddMixerControl(
     IN PFILE_OBJECT FileObject,
     IN PKSMULTIPLE_ITEM NodeTypes,
     IN ULONG NodeIndex,
+    IN LPMIXERLINE_EXT MixerLine,
     OUT LPMIXERCONTROLW MixerControl)
 {
     LPGUID NodeType;
@@ -896,7 +920,6 @@ AddMixerControl(
     ULONG BytesReturned;
     NTSTATUS Status;
     LPWSTR Name;
-
 
     /* initialize mixer control */
     MixerControl->cbStruct = sizeof(MIXERCONTROLW);
@@ -958,6 +981,77 @@ AddMixerControl(
     }
 
     MixerInfo->ControlId++;
+
+    if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
+    {
+        KSNODEPROPERTY_AUDIO_CHANNEL Property;
+        ULONG Length;
+        PKSPROPERTY_DESCRIPTION Desc;
+        PKSPROPERTY_MEMBERSHEADER Members;
+        PKSPROPERTY_STEPPING_LONG Range;
+
+        Length = sizeof(KSPROPERTY_DESCRIPTION) + sizeof(KSPROPERTY_MEMBERSHEADER) + sizeof(KSPROPERTY_STEPPING_LONG);
+        Desc = ExAllocatePool(NonPagedPool, Length);
+        ASSERT(Desc);
+        RtlZeroMemory(Desc, Length);
+
+        /* setup the request */
+        RtlZeroMemory(&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL));
+
+        Property.NodeProperty.NodeId = NodeIndex;
+        Property.NodeProperty.Property.Id = KSPROPERTY_AUDIO_VOLUMELEVEL;
+        Property.NodeProperty.Property.Flags = KSPROPERTY_TYPE_BASICSUPPORT;
+        Property.NodeProperty.Property.Set = KSPROPSETID_Audio;
+
+        /* get node volume level info */
+        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL), Desc, Length, &BytesReturned);
+
+        if (NT_SUCCESS(Status))
+        {
+            LPMIXERVOLUME_DATA VolumeData;
+            ULONG Steps, MaxRange, Index;
+            LONG Value;
+
+            Members = (PKSPROPERTY_MEMBERSHEADER)(Desc + 1);
+            Range = (PKSPROPERTY_STEPPING_LONG)(Members + 1); //98304
+
+            DPRINT("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
+
+            VolumeData = ExAllocatePool(NonPagedPool, sizeof(MIXERVOLUME_DATA));
+            if (!VolumeData)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            MaxRange = (abs(Range->Bounds.SignedMinimum) + abs(Range->Bounds.SignedMaximum));
+            Steps = MaxRange / Range->SteppingDelta + 1;
+
+            /* store mixer control info there */
+            VolumeData->Header.dwControlID = MixerControl->dwControlID;
+            VolumeData->SignedMaximum = Range->Bounds.SignedMaximum;
+            VolumeData->SignedMinimum = Range->Bounds.SignedMinimum;
+            VolumeData->SteppingDelta = Range->SteppingDelta;
+            VolumeData->ValuesCount = Steps;
+            VolumeData->InputSteppingDelta = 0x10000 / Steps;
+
+            VolumeData->Values = ExAllocatePool(NonPagedPool, sizeof(LONG) * Steps);
+            if (!VolumeData->Values)
+            {
+                ExFreePool(Desc);
+                ExFreePool(VolumeData);
+
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Value = Range->Bounds.SignedMinimum;
+            for(Index = 0; Index < Steps; Index++)
+            {
+                VolumeData->Values[Index] = Value;
+                Value += Range->SteppingDelta;
+            }
+            InsertTailList(&MixerLine->LineControlsExtraData, &VolumeData->Header.Entry);
+       }
+       ExFreePool(Desc);
+    }
+
 
     DPRINT("Status %x Name %S\n", Status, MixerControl->szName);
     return STATUS_SUCCESS;
@@ -1026,6 +1120,7 @@ AddMixerSourceLine(
         SrcLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
         SrcLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
         SrcLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
+        InitializeListHead(&SrcLine->LineControlsExtraData);
         wcscpy(SrcLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
 
     }
@@ -1107,7 +1202,7 @@ AddMixerSourceLine(
                 /* store the node index for retrieving / setting details */
                 SrcLine->NodeIds[ControlCount] = Index;
 
-                Status = AddMixerControl(MixerInfo, FileObject, NodeTypes, Index, &SrcLine->LineControls[ControlCount]);
+                Status = AddMixerControl(MixerInfo, FileObject, NodeTypes, Index, SrcLine, &SrcLine->LineControls[ControlCount]);
                 if (NT_SUCCESS(Status))
                 {
                     /* increment control count on success */
@@ -1430,6 +1525,7 @@ InitializeMixer(
 
     /* initialize source line list */
     InitializeListHead(&MixerInfo->LineList);
+    InitializeListHead(&DestinationLine->LineControlsExtraData);
 
     /* insert destination line */
     InsertHeadList(&MixerInfo->LineList, &DestinationLine->Entry);
@@ -1781,13 +1877,14 @@ WdmAudGetLineControls(
         Index = 0;
         for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
         {
+            DPRINT1("dwControlType %x\n", MixerLineSrc->LineControls[Index].dwControlType);
             if (DeviceInfo->u.MixControls.dwControlType == MixerLineSrc->LineControls[Index].dwControlType)
             {
                 RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, &MixerLineSrc->LineControls[Index], sizeof(MIXERCONTROLW));
                 return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
             }
         }
-        DPRINT1("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x\n", DeviceInfo->u.MixControls.dwControlType, DeviceInfo->u.MixControls.dwLineID);
+        DPRINT1("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x cControls %u \n", DeviceInfo->u.MixControls.dwControlType, DeviceInfo->u.MixControls.dwLineID, MixerLineSrc->Line.cControls);
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(WDMAUD_DEVICE_INFO));
     }
 
@@ -1798,33 +1895,25 @@ WdmAudGetLineControls(
 }
 
 NTSTATUS
-SetGetMuteControlDetails(
+SetGetControlDetails(
     IN PDEVICE_OBJECT DeviceObject,
     IN ULONG DeviceId,
     IN ULONG NodeId,
     IN PWDMAUD_DEVICE_INFO DeviceInfo,
-    IN ULONG bSet)
+    IN ULONG bSet,
+    IN ULONG PropertyId,
+    IN ULONG Channel,
+    IN PLONG InputValue)
 {
     KSNODEPROPERTY_AUDIO_CHANNEL Property;
     NTSTATUS Status;
     HANDLE hDevice;
     PFILE_OBJECT FileObject;
-    BOOL Value;
+    LONG Value;
     ULONG BytesReturned;
-    LPMIXERCONTROLDETAILS_BOOLEAN Input;
 
-    if (DeviceInfo->u.MixDetails.cbDetails != sizeof(MIXERCONTROLDETAILS_BOOLEAN))
-        return STATUS_INVALID_PARAMETER;
-
-    /* get input */
-    Input = (LPMIXERCONTROLDETAILS_BOOLEAN)DeviceInfo->u.MixDetails.paDetails;
-
-
-    //
-    // FIXME SEH!!!
-    //
     if (bSet)
-        Value = Input->fValue;
+        Value = *InputValue;
 
     /* open virtual audio device */
     Status = OpenSysAudioDeviceByIndex(DeviceObject, DeviceId, &hDevice, &FileObject);
@@ -1839,10 +1928,10 @@ SetGetMuteControlDetails(
     RtlZeroMemory(&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL));
 
     Property.NodeProperty.NodeId = NodeId;
-    Property.NodeProperty.Property.Id = KSPROPERTY_AUDIO_MUTE;
+    Property.NodeProperty.Property.Id = PropertyId;
     Property.NodeProperty.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY;
     Property.NodeProperty.Property.Set = KSPROPSETID_Audio;
-    Property.Channel = MAXULONG;
+    Property.Channel = Channel;
 
     if (bSet)
         Property.NodeProperty.Property.Flags |= KSPROPERTY_TYPE_SET;
@@ -1850,18 +1939,119 @@ SetGetMuteControlDetails(
         Property.NodeProperty.Property.Flags |= KSPROPERTY_TYPE_GET;
 
     /* send the request */
-    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL), (PVOID)&Value, sizeof(BOOL), &BytesReturned);
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL), (PVOID)&Value, sizeof(LONG), &BytesReturned);
 
     ObDereferenceObject(FileObject);
     ZwClose(hDevice);
 
     if (!bSet)
     {
-        // FIXME SEH !!!
-        Input->fValue = Value;
+        *InputValue = Value;
     }
 
-    DPRINT("Status %x bSet %u NodeId %u Value %u\n", Status, bSet, NodeId, Value);
+    DPRINT1("Status %x bSet %u NodeId %u Value %d PropertyId %u\n", Status, bSet, NodeId, Value, PropertyId);
+    return Status;
+}
+
+NTSTATUS
+SetGetMuteControlDetails(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DeviceId,
+    IN ULONG NodeId,
+    IN PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN ULONG bSet)
+{
+    LPMIXERCONTROLDETAILS_BOOLEAN Input;
+    LONG Value;
+    NTSTATUS Status;
+
+    if (DeviceInfo->u.MixDetails.cbDetails != sizeof(MIXERCONTROLDETAILS_BOOLEAN))
+        return STATUS_INVALID_PARAMETER;
+
+    /* get input */
+    Input = (LPMIXERCONTROLDETAILS_BOOLEAN)DeviceInfo->u.MixDetails.paDetails;
+
+    /* FIXME SEH */
+    if (bSet)
+        Value = Input->fValue;
+
+    /* set control details */
+    Status = SetGetControlDetails(DeviceObject, DeviceId, NodeId, DeviceInfo, bSet, KSPROPERTY_AUDIO_MUTE, MAXULONG, &Value);
+
+    /* FIXME SEH */
+    if (!bSet)
+        Input->fValue = Value;
+
+    return Status;
+}
+
+NTSTATUS
+SetGetVolumeControlDetails(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DeviceId,
+    IN ULONG NodeId,
+    IN PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN ULONG bSet,
+    LPMIXERCONTROLW MixerControl,
+    LPMIXERLINE_EXT MixerLine)
+{
+    LPMIXERCONTROLDETAILS_UNSIGNED Input;
+    LONG Value, Index, Channel = 0;
+    NTSTATUS Status;
+    LPMIXERVOLUME_DATA VolumeData;
+
+    if (DeviceInfo->u.MixDetails.cbDetails != sizeof(MIXERCONTROLDETAILS_SIGNED))
+        return STATUS_INVALID_PARAMETER;
+
+    VolumeData = (LPMIXERVOLUME_DATA)GetMixerControlDataById(&MixerLine->LineControlsExtraData, MixerControl->dwControlID);
+    if (!VolumeData)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+
+    /* get input */
+    Input = (LPMIXERCONTROLDETAILS_UNSIGNED)DeviceInfo->u.MixDetails.paDetails;
+
+    if (bSet)
+    {
+        /* FIXME SEH */
+        Value = Input->dwValue;
+        Index = Value / VolumeData->InputSteppingDelta;
+
+        if (Index >= VolumeData->ValuesCount)
+        {
+            DPRINT1("Index %u out of bounds %u \n", Index, VolumeData->ValuesCount);
+            DbgBreakPoint();
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        Value = VolumeData->Values[Index];
+    }
+
+    /* set control details */
+    if (bSet)
+    {
+        Status = SetGetControlDetails(DeviceObject, DeviceId, NodeId, DeviceInfo, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
+        Status = SetGetControlDetails(DeviceObject, DeviceId, NodeId, DeviceInfo, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
+    }
+    else
+    {
+        Status = SetGetControlDetails(DeviceObject, DeviceId, NodeId, DeviceInfo, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
+    }
+
+    if (!bSet)
+    {
+        for(Index = 0; Index < VolumeData->ValuesCount; Index++)
+        {
+            if (VolumeData->Values[Index] < Value)
+            {
+                /* FIXME SEH */
+                Input->dwValue = VolumeData->InputSteppingDelta * Index;
+                return Status;
+            }
+        }
+        Input->dwValue = VolumeData->InputSteppingDelta * (VolumeData->ValuesCount-1);
+    }
+
     return Status;
 }
 
@@ -1879,7 +2069,7 @@ WdmAudSetControlDetails(
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
 
-    DPRINT1("cbStruct %u Expected %u dwControlID %u cChannels %u cMultipleItems %u cbDetails %u paDetails %p Flags %x\n", 
+    DPRINT("cbStruct %u Expected %u dwControlID %u cChannels %u cMultipleItems %u cbDetails %u paDetails %p Flags %x\n", 
             DeviceInfo->u.MixDetails.cbStruct, sizeof(MIXERCONTROLDETAILS), DeviceInfo->u.MixDetails.dwControlID, DeviceInfo->u.MixDetails.cChannels, DeviceInfo->u.MixDetails.cMultipleItems, DeviceInfo->u.MixDetails.cbDetails, DeviceInfo->u.MixDetails.paDetails, DeviceInfo->Flags);
 
     if (DeviceInfo->Flags & MIXER_GETCONTROLDETAILSF_LISTTEXT)
@@ -1901,12 +2091,16 @@ WdmAudSetControlDetails(
     }
 
     Status = STATUS_NOT_IMPLEMENTED;
+    DPRINT("dwLineId %x dwControlID %x dwControlType %x\n", MixerLine->Line.dwLineID, MixerControl->dwControlID, MixerControl->dwControlType);
     if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
     {
         /* send the request */
         Status = SetGetMuteControlDetails(DeviceObject, MixerLine->DeviceIndex, NodeId, DeviceInfo, TRUE);
     }
-
+    else if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
+    {
+        Status = SetGetVolumeControlDetails(DeviceObject, MixerLine->DeviceIndex, NodeId, DeviceInfo, TRUE, MixerControl, MixerLine);
+    }
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 
 }
@@ -1925,7 +2119,7 @@ WdmAudGetControlDetails(
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
 
-    DPRINT1("cbStruct %u Expected %u dwControlID %u cChannels %u cMultipleItems %u cbDetails %u paDetails %p Flags %x\n", 
+    DPRINT("cbStruct %u Expected %u dwControlID %u cChannels %u cMultipleItems %u cbDetails %u paDetails %p Flags %x\n", 
             DeviceInfo->u.MixDetails.cbStruct, sizeof(MIXERCONTROLDETAILS), DeviceInfo->u.MixDetails.dwControlID, DeviceInfo->u.MixDetails.cChannels, DeviceInfo->u.MixDetails.cMultipleItems, DeviceInfo->u.MixDetails.cbDetails, DeviceInfo->u.MixDetails.paDetails, DeviceInfo->Flags);
 
     if (DeviceInfo->Flags & MIXER_GETCONTROLDETAILSF_LISTTEXT)
@@ -1951,6 +2145,10 @@ WdmAudGetControlDetails(
     {
         /* send the request */
         Status = SetGetMuteControlDetails(DeviceObject, MixerLine->DeviceIndex, NodeId, DeviceInfo, FALSE);
+    }
+    else if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
+    {
+        Status = SetGetVolumeControlDetails(DeviceObject, MixerLine->DeviceIndex, NodeId, DeviceInfo, FALSE, MixerControl, MixerLine);
     }
 
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));

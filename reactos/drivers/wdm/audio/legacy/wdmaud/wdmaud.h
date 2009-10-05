@@ -36,11 +36,31 @@ typedef struct
 typedef struct
 {
     LIST_ENTRY Entry;
+    ULONG dwControlID;
+}MIXERCONTROL_DATA, *LPMIXERCONTROL_DATA;
+
+typedef struct
+{
+    MIXERCONTROL_DATA Header;
+    LONG SignedMinimum;
+    LONG SignedMaximum;
+    LONG SteppingDelta;
+    ULONG InputSteppingDelta;
+    ULONG ValuesCount;
+    PLONG Values;
+}MIXERVOLUME_DATA, *LPMIXERVOLUME_DATA;
+
+
+
+typedef struct
+{
+    LIST_ENTRY Entry;
     ULONG PinId;
     ULONG DeviceIndex;
     MIXERLINEW Line;
     LPMIXERCONTROLW LineControls;
     PULONG          NodeIds;
+    LIST_ENTRY LineControlsExtraData;
 }MIXERLINE_EXT, *LPMIXERLINE_EXT;
 
 
