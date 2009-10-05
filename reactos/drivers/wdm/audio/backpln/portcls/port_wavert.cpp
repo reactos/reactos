@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:			ReactOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/port_wavert.cpp
  * PURPOSE:         WaveRT Port Driver
  * PROGRAMMER:      Johannes Anderwald
@@ -339,7 +339,7 @@ NTSTATUS
 NTAPI
 CPortWaveRT::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,

@@ -437,7 +437,7 @@ NTSTATUS
 NTAPI
 CPortWaveCyclic::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
