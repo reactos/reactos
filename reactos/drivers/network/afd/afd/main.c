@@ -172,6 +172,38 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 static NTSTATUS NTAPI
+AfdCleanupSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                 PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PLIST_ENTRY CurrentEntry, NextEntry;
+    UINT Function;
+    PIRP CurrentIrp;
+
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket(Irp);
+
+    for (Function = 0; Function < MAX_FUNCTIONS; Function++)
+    {
+        CurrentEntry = FCB->PendingIrpList[Function].Flink;
+        while (CurrentEntry != &FCB->PendingIrpList[Function])
+        {
+           NextEntry = CurrentEntry->Flink;
+           CurrentIrp = CONTAINING_RECORD(CurrentEntry, IRP, Tail.Overlay.ListEntry);
+
+           /* The cancel routine will remove the IRP from the list */
+           IoCancelIrp(CurrentIrp);
+
+           CurrentEntry = NextEntry;
+        }
+    }
+
+    KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, 0);
+}
+
+static NTSTATUS NTAPI
 AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp)
 {
@@ -346,6 +378,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     case IRP_MJ_CLOSE:
 	/* Ditto the borrowing */
 	return AfdCloseSocket(DeviceObject, Irp, IrpSp);
+
+    case IRP_MJ_CLEANUP:
+        return AfdCleanupSocket(DeviceObject, Irp, IrpSp);
 
     /* write data */
     case IRP_MJ_WRITE:
@@ -626,6 +661,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     /* register driver routines */
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = AfdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_WRITE] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_READ] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatch;
