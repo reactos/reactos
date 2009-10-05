@@ -52,6 +52,10 @@ static const WCHAR* VAL_DBLCLKHEIGHT = L"DoubleClickHeight";
 static const WCHAR* VAL_DBLCLKTIME = L"DoubleClickSpeed";
 static const WCHAR* VAL_SNAPDEFBTN = L"SnapToDefaultButton";
 static const WCHAR* VAL_SWAP = L"SwapMouseButtons";
+static const WCHAR* VAL_HOVERTIME = L"MouseHoverTime";
+static const WCHAR* VAL_HOVERWIDTH = L"MouseHoverWidth";
+static const WCHAR* VAL_HOVERHEIGHT = L"MouseHoverHeight";
+//static const WCHAR* VAL_SENSITIVITY = L"MouseSensitivity";
 
 static const WCHAR* KEY_DESKTOP = L"Control Panel\\Desktop";
 static const WCHAR* VAL_SCRTO = L"ScreenSaveTimeOut";
@@ -61,6 +65,10 @@ static const WCHAR* VAL_DRAG = L"DragFullWindows";
 static const WCHAR* VAL_DRAGHEIGHT = L"DragHeight";
 static const WCHAR* VAL_DRAGWIDTH = L"DragWidth";
 static const WCHAR* VAL_FNTSMOOTH = L"FontSmoothing";
+static const WCHAR* VAL_SCRLLLINES = L"WheelScrollLines";
+#if (_WIN32_WINNT >= 0x0600)
+static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
+#endif
 
 static const WCHAR* KEY_MDALIGN = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
 static const WCHAR* VAL_MDALIGN = L"MenuDropAlignment";
@@ -179,14 +187,16 @@ SpiUpdatePerUserSystemParameters()
     /* Load mouse settings */
     gspv.caiMouse.FirstThreshold = SpiLoadMouse(VAL_MOUSE1, 6);
     gspv.caiMouse.SecondThreshold = SpiLoadMouse(VAL_MOUSE2, 10);
-    gspv.caiMouse.Acceleration = SpiLoadMouse(VAL_MOUSE3, 1);
+    gspv.caiMouse.Acceleration = gspv.iMouseSpeed = SpiLoadMouse(VAL_MOUSE3, 1);
     gspv.bMouseBtnSwap = SpiLoadMouse(VAL_SWAP, 0);
     gspv.bSnapToDefBtn = SpiLoadMouse(VAL_SNAPDEFBTN, 0);
     gspv.iMouseTrails = SpiLoadMouse(VAL_MOUSETRAILS, 0);
-    gspv.iMouseSpeed = SpiLoadMouse(VAL_MOUSE3, 1);
-    gspv.iDblClickTime = SpiLoadMouse(VAL_DBLCLKTIME, 480);
+    gspv.iDblClickTime = SpiLoadMouse(VAL_DBLCLKTIME, 500);
     gspv.iDblClickWidth = SpiLoadMouse(VAL_DBLCLKWIDTH, 4);
     gspv.iDblClickHeight = SpiLoadMouse(VAL_DBLCLKHEIGHT, 4);
+    gspv.iMouseHoverTime = SpiLoadMouse(VAL_HOVERTIME, 400);
+    gspv.iMouseHoverWidth = SpiLoadMouse(VAL_HOVERWIDTH, 4);
+    gspv.iMouseHoverHeight = SpiLoadMouse(VAL_HOVERHEIGHT, 4);
 
     /* Load NONCLIENTMETRICS */
     gspv.ncm.cbSize = sizeof(NONCLIENTMETRICSW);
@@ -224,15 +234,12 @@ SpiUpdatePerUserSystemParameters()
 
     /* Load desktop settings */
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
+    gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
+#if (_WIN32_WINNT >= 0x0600)
+    gspv.iWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
+#endif
 
     /* Some hardcoded values for now */
-    gspv.iMouseHoverTime = 80;
-    gspv.iMouseHoverWidth = 4;
-    gspv.iMouseHoverHeight = 4;
-    gspv.iWheelScrollLines = 3;
-#if (_WIN32_WINNT >= 0x0600)
-    gspv.uiWheelScrollChars = 1;
-#endif
 
     gspv.tmCaptionFont.tmAveCharWidth = 6;
     gspv.bBeep = TRUE;
@@ -1083,13 +1090,13 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseTrails, fl);
 
         case SPI_SETMOUSETRAILS:
-            return SpiSetInt(&gspv.iMouseTrails, uiParam, KEY_MOUSE, L"MouseTrails", fl);
+            return SpiSetInt(&gspv.iMouseTrails, uiParam, KEY_MOUSE, VAL_MOUSETRAILS, fl);
 
         case SPI_GETSNAPTODEFBUTTON:
             return SpiGetInt(pvParam, &gspv.bSnapToDefBtn, fl);
 
         case SPI_SETSNAPTODEFBUTTON:
-            return SpiSetBool(&gspv.bSnapToDefBtn, uiParam, KEY_MOUSE, L"SnapToDefaultButton", fl);
+            return SpiSetBool(&gspv.bSnapToDefBtn, uiParam, KEY_MOUSE, VAL_SNAPDEFBTN, fl);
 
         case SPI_GETMOUSEHOVERWIDTH:
             return SpiGetInt(pvParam, &gspv.iMouseHoverWidth, fl);

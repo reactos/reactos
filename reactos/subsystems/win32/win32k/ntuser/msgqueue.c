@@ -251,7 +251,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 
    CurInfo = IntGetSysCursorInfo(WinStaObject);
    Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) &&
-         ((Msg->time - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
+         ((Msg->time - CurInfo->LastBtnDown) < gspv.iDblClickTime);
    if(Res)
    {
 
@@ -262,8 +262,8 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
       if(dY < 0)
          dY = -dY;
 
-      Res = (dX <= CurInfo->DblClickWidth) &&
-            (dY <= CurInfo->DblClickHeight);
+      Res = (dX <= gspv.iDblClickWidth) &&
+            (dY <= gspv.iDblClickHeight);
 
       if(Res)
       {
