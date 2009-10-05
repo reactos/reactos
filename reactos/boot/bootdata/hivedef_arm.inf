@@ -6,13 +6,13 @@ Signature="$ReactOS$
 HKCU,"Control Panel",,0x00000012
 HKCU,"Control Panel\Accessibility",,0x00000012
 HKCU,"Control Panel\Appearance",,0x00000012
-HKCU,"Control Panel\Mouse","MouseTrails",0x00010001,0x00000000
-HKCU,"Control Panel\Mouse","SnapToDefaultButton",0x00010001,0x00000000
-HKCU,"Control Panel\Mouse","MouseSpeed",0x00010001,0x00000001
-HKCU,"Control Panel\Mouse","MouseThreshold1",0x00010001,0x00000006
-HKCU,"Control Panel\Mouse","MouseThreshold2",0x00010001,0x0000000A
-HKCU,"Control Panel\Mouse","DoubleClickSpeed",0x00010001,0x000001E0
-HKCU,"Control Panel\Mouse","SwapMouseButtons",0x00010001,0x00000000
+HKCU,"Control Panel\Mouse","MouseTrails",0x00000002,"0"
+HKCU,"Control Panel\Mouse","SnapToDefaultButton",0x00000002,"0"
+HKCU,"Control Panel\Mouse","MouseSpeed",0x00000002,"1"
+HKCU,"Control Panel\Mouse","MouseThreshold1",0x00000002,"6"
+HKCU,"Control Panel\Mouse","MouseThreshold2",0x00000002,"10"
+HKCU,"Control Panel\Mouse","DoubleClickSpeed",0x00000002,"480"
+HKCU,"Control Panel\Mouse","SwapMouseButtons",0x00000002,"0"
 
 HKCU,"Control Panel\Desktop","AutoEndTasks",0x00000002,"0"
 HKCU,"Control Panel\Desktop","CursorBlinkRate",0x00000002,"530"
