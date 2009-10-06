@@ -129,6 +129,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
       }
 
+      Win32Process->peProcess = Process;
       /* setup process flags */
       Win32Process->W32PF_flags = 0;
     }

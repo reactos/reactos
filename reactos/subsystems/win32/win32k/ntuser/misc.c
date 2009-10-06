@@ -492,6 +492,7 @@ GetW32ThreadInfo(VOID)
         pci->pClientThreadInfo = NULL; // FIXME Need to set it in desktop.c!
         pci->ppi = ppi;
         pci->fsHooks = pti->fsHooks;
+        pci->hKL = pti->KeyboardLayout->hkl;
         /* CI may not have been initialized. */
         if (!pci->pDeskInfo && pti->pDeskInfo)
         {
