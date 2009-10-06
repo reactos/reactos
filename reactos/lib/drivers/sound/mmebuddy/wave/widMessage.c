@@ -53,6 +53,42 @@ widMessage(
                                                    Parameter2);
             break;
         }
+        case WIDM_OPEN :
+        {
+            Result = MmeOpenWaveDevice(WAVE_IN_DEVICE_TYPE,
+                                       DeviceId,
+                                       (LPWAVEOPENDESC) Parameter1,
+                                       Parameter2,
+                                       (DWORD*) PrivateHandle);
+            break;
+        }
+
+        case WIDM_CLOSE :
+        {
+            Result = MmeCloseDevice(PrivateHandle);
+
+            break;
+        }
+
+        case WIDM_PREPARE :
+        {
+            /* TODO: Do we need to pass 2nd parameter? */
+            Result = MmePrepareWaveHeader(PrivateHandle, Parameter1);
+            break;
+        }
+
+        case WIDM_UNPREPARE :
+        {
+            Result = MmeUnprepareWaveHeader(PrivateHandle, Parameter1);
+            break;
+        }
+
+        case WIDM_RESET :
+        {
+            /* Stop playback, reset position to zero */
+            Result = MmeResetWavePlayback(PrivateHandle);
+            break;
+        }
     }
 
     SND_TRACE(L"widMessage returning MMRESULT %d\n", Result);
