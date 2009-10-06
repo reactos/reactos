@@ -333,6 +333,7 @@ ButtonProc(IN HWND hwndDlg,
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                         SendDlgItemMessage(hwndDlg, IDC_IMAGE_SWAP_MOUSE, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pButtonData->hButtonRight);
                     }
+                    //SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_SwapMouseButtons, NULL, 0);
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
@@ -379,6 +380,8 @@ ButtonProc(IN HWND hwndDlg,
                     SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_OrigSwapMouseButtons, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
                     
                 }
+                SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+                //SetDoubleClickTime(pButtonData->g_DoubleClickSpeed);
 
 #if (WINVER >= 0x0500)
                 SystemParametersInfo(SPI_SETMOUSECLICKLOCK, pButtonData->g_ClickLockEnabled, NULL, SPIF_SENDCHANGE);
@@ -392,8 +395,8 @@ ButtonProc(IN HWND hwndDlg,
                 SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_OrigSwapMouseButtons, NULL, 0);
 
                 /* Reset double click speed setting */
-//                SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_OrigDoubleClickSpeed, NULL, 0);
-                SetDoubleClickTime(pButtonData->g_OrigDoubleClickSpeed);
+                SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_OrigDoubleClickSpeed, NULL, 0);
+                //SetDoubleClickTime(pButtonData->g_OrigDoubleClickSpeed);
             }
             return TRUE;
 
@@ -411,14 +414,14 @@ ButtonProc(IN HWND hwndDlg,
                     case TB_ENDTRACK:
                         lResult = SendDlgItemMessage(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED, TBM_GETPOS, 0, 0);
                         pButtonData->g_DoubleClickSpeed = (14 - (INT)lResult) * 50 + 200;
-//                        SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, 0);
+                	//SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
                         SetDoubleClickTime(pButtonData->g_DoubleClickSpeed);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         break;
 
                     case TB_THUMBTRACK:
                         pButtonData->g_DoubleClickSpeed = (14 - (INT)HIWORD(wParam)) * 50 + 200;
-//                        SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, 0);
+                        //SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_DoubleClickSpeed, NULL, 0);
                         SetDoubleClickTime(pButtonData->g_DoubleClickSpeed);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         break;
@@ -1412,23 +1415,19 @@ OptionProc(IN HWND hwndDlg,
             pOptionData->OrigMouseAccel.nThreshold2 = pOptionData->MouseAccel.nThreshold2;
 
             /* snap to default button */
-            if (SystemParametersInfo(SPI_GETSNAPTODEFBUTTON, 0, &pOptionData->bSnapToDefaultButton, 0))
-                pOptionData->bSnapToDefaultButton = FALSE;
+            SystemParametersInfo(SPI_GETSNAPTODEFBUTTON, 0, &pOptionData->bSnapToDefaultButton, 0);
             pOptionData->bOrigSnapToDefaultButton = pOptionData->bSnapToDefaultButton;
 
             /* mouse trails */
-            if (!SystemParametersInfo(SPI_GETMOUSETRAILS, 0, &pOptionData->uMouseTrails, 0))
-                pOptionData->uMouseTrails = 0;
+            SystemParametersInfo(SPI_GETMOUSETRAILS, 0, &pOptionData->uMouseTrails, 0);
             pOptionData->uOrigMouseTrails = pOptionData->uMouseTrails;
 
             /* hide pointer while typing */
-            if (!SystemParametersInfo(SPI_GETMOUSEVANISH, 0, &pOptionData->bMouseVanish, 0))
-                pOptionData->bMouseVanish = FALSE;
+            SystemParametersInfo(SPI_GETMOUSEVANISH, 0, &pOptionData->bMouseVanish, 0);
             pOptionData->bOrigMouseVanish = pOptionData->bMouseVanish;
 
             /* show pointer with Ctrl-Key */
-            if (!SystemParametersInfo(SPI_GETMOUSESONAR, 0, &pOptionData->bMouseSonar, 0))
-                pOptionData->bMouseSonar = FALSE;
+            SystemParametersInfo(SPI_GETMOUSESONAR, 0, &pOptionData->bMouseSonar, 0);
             pOptionData->bOrigMouseSonar = pOptionData->bMouseSonar;
 
             /* Set mouse speed */
@@ -1744,10 +1743,7 @@ WheelProc(IN HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pWheelData);
 
             /* Get wheel scroll lines */
-            if (!SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &pWheelData->uWheelScrollLines, 0))
-            {
-                pWheelData->uWheelScrollLines = DEFAULT_WHEEL_SCROLL_LINES;
-            }
+            SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &pWheelData->uWheelScrollLines, 0);
 
             ShowDialogWheelControls(hwndDlg, pWheelData->uWheelScrollLines, TRUE);
             SendDlgItemMessage(hwndDlg, IDC_UPDOWN_WHEEL_SCROLL_LINES, UDM_SETRANGE, 0, MAKELONG((short)100, (short)0));

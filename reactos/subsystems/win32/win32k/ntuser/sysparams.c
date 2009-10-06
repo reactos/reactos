@@ -66,6 +66,7 @@ static const WCHAR* VAL_DRAGHEIGHT = L"DragHeight";
 static const WCHAR* VAL_DRAGWIDTH = L"DragWidth";
 static const WCHAR* VAL_FNTSMOOTH = L"FontSmoothing";
 static const WCHAR* VAL_SCRLLLINES = L"WheelScrollLines";
+static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
 #if (_WIN32_WINNT >= 0x0600)
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
@@ -94,6 +95,18 @@ static const WCHAR* VAL_ON = L"On";
 
 
 /** Loading the settings ******************************************************/
+
+static
+INT
+SpiLoadDWord(PCWSTR pwszKey, PCWSTR pwszValue, INT iValue)
+{
+    DWORD Result;
+    if (!RegReadUserSetting(pwszKey, pwszValue, REG_DWORD, &Result, sizeof(Result)))
+    {
+        return iValue;
+    }
+    return Result;
+}
 
 static
 INT
@@ -235,6 +248,7 @@ SpiUpdatePerUserSystemParameters()
     /* Load desktop settings */
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
+    gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
 #if (_WIN32_WINNT >= 0x0600)
     gspv.iWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
 #endif
@@ -296,6 +310,17 @@ NtUserUpdatePerUserSystemParameters(
 
 
 /** Storing the settings ******************************************************/
+
+static
+VOID
+SpiStoreDWord(PCWSTR pwszKey, PCWSTR pwszValue, DWORD Value)
+{
+    RegWriteUserSetting(pwszKey,
+                        pwszValue,
+                        REG_DWORD,
+                        &Value,
+                        sizeof(Value));
+}
 
 static
 VOID
@@ -442,6 +467,19 @@ SpiSetBool(BOOL *pbData, INT iValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl)
     if (fl & SPIF_UPDATEINIFILE)
     {
         SpiStoreSzInt(pwszKey, pwszValue, iValue);
+    }
+    return (UINT_PTR)pwszKey;
+}
+
+static inline
+UINT_PTR
+SpiSetDWord(PVOID pvData, INT iValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl)
+{
+    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    *(INT*)pvData = iValue;
+    if (fl & SPIF_UPDATEINIFILE)
+    {
+        SpiStoreDWord(pwszKey, pwszValue, iValue);
     }
     return (UINT_PTR)pwszKey;
 }
@@ -1268,10 +1306,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetBool(&gspv.bMouseSonar, uiParam, KEY_MOUSE, L"", fl);
 
         case SPI_GETMOUSECLICKLOCK:
-            return SpiGetInt(pvParam, &gspv.bMouseClickLock, fl);
+            return SpiGetUserPref(UPM_CLICKLOCK, pvParam, fl);
 
         case SPI_SETMOUSECLICKLOCK:
-            return SpiSetBool(&gspv.bMouseClickLock, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetUserPref(UPM_CLICKLOCK, pvParam, fl);
 
         case SPI_GETMOUSEVANISH:
             return SpiGetInt(pvParam, &gspv.bMouseVanish, fl);
@@ -1351,7 +1389,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.dwMouseClickLockTime, fl);
 
         case SPI_SETMOUSECLICKLOCKTIME:
-            return SpiSetInt(&gspv.dwMouseClickLockTime, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetDWord(&gspv.dwMouseClickLockTime, uiParam, KEY_DESKTOP, VAL_CLICKLOCKTIME, fl);
 
         case SPI_GETFONTSMOOTHINGTYPE:
             return SpiGetInt(pvParam, &gspv.uiFontSmoothingType, fl);
