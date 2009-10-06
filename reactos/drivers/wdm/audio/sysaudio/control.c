@@ -227,7 +227,7 @@ ComputeCompatibleFormat(
     /* Query pin data ranges */
     Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)PinRequest, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
 
-    if (Status != STATUS_BUFFER_TOO_SMALL)
+    if (Status != STATUS_MORE_ENTRIES)
     {
         /* Failed to data ranges */
         return Status;
