@@ -96,9 +96,12 @@ GetMixerControlById(
         {
             if (MixerLineSrc->LineControls[Index].dwControlID == dwControlID)
             {
-                *MixerLine = MixerLineSrc;
-                *MixerControl = &MixerLineSrc->LineControls[Index];
-                *NodeId = MixerLineSrc->NodeIds[Index];
+                if (MixerLine)
+                    *MixerLine = MixerLineSrc;
+                if (MixerControl)
+                    *MixerControl = &MixerLineSrc->LineControls[Index];
+                if (NodeId)
+                    *NodeId = MixerLineSrc->NodeIds[Index];
                 return STATUS_SUCCESS;
             }
         }
@@ -108,7 +111,28 @@ GetMixerControlById(
     return STATUS_NOT_FOUND;
 }
 
+LPMIXERLINE_EXT
+GetSourceMixerLineByComponentType(
+    LPMIXER_INFO MixerInfo,
+    DWORD dwComponentType)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERLINE_EXT MixerLineSrc;
 
+    /* get first entry */
+    Entry = MixerInfo->LineList.Flink;
+
+    while(Entry != &MixerInfo->LineList)
+    {
+        MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
+        if (MixerLineSrc->Line.dwComponentType == dwComponentType)
+            return MixerLineSrc;
+
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
 
 LPMIXERLINE_EXT
 GetSourceMixerLineByLineId(
@@ -1761,6 +1785,8 @@ WdmAudGetLineInfo(
     /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+    DeviceInfo->Flags &= ~MIXER_OBJECTF_HMIXER;
+
     if (DeviceInfo->Flags == MIXER_GETLINEINFOF_DESTINATION)
     {
         if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
@@ -1822,7 +1848,21 @@ WdmAudGetLineInfo(
         RtlCopyMemory(&DeviceInfo->u.MixLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
+    else if (DeviceInfo->Flags == MIXER_GETLINEINFOF_COMPONENTTYPE)
+    {
+        if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
+        {
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
 
+        MixerLineSrc = GetSourceMixerLineByComponentType(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixLine.dwComponentType);
+        ASSERT(MixerLineSrc);
+
+        /* copy cached data */
+        RtlCopyMemory(&DeviceInfo->u.MixLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
 
     DPRINT1("Flags %x\n", DeviceInfo->Flags);
     UNIMPLEMENTED;
@@ -1841,11 +1881,15 @@ WdmAudGetLineControls(
     IN  PWDMAUD_CLIENT ClientInfo)
 {
     LPMIXERLINE_EXT MixerLineSrc;
+    LPMIXERCONTROLW MixerControl;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     ULONG Index;
+    NTSTATUS Status;
 
     /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    DeviceInfo->Flags &= ~MIXER_OBJECTF_HMIXER;
 
     if (DeviceInfo->Flags == MIXER_GETLINECONTROLSF_ALL)
     {
@@ -1887,6 +1931,22 @@ WdmAudGetLineControls(
         DPRINT1("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x cControls %u \n", DeviceInfo->u.MixControls.dwControlType, DeviceInfo->u.MixControls.dwLineID, MixerLineSrc->Line.cControls);
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(WDMAUD_DEVICE_INFO));
     }
+    else if (DeviceInfo->Flags == MIXER_GETLINECONTROLSF_ONEBYID)
+    {
+        if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
+        {
+            /* invalid parameter */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
+
+        Status = GetMixerControlById(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixControls.dwControlID, NULL, &MixerControl, NULL);
+        if (NT_SUCCESS(Status))
+        {
+            RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, MixerControl, sizeof(MIXERCONTROLW));
+        }
+        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
 
     UNIMPLEMENTED;
     //DbgBreakPoint();
@@ -2042,7 +2102,7 @@ SetGetVolumeControlDetails(
     {
         for(Index = 0; Index < VolumeData->ValuesCount; Index++)
         {
-            if (VolumeData->Values[Index] < Value)
+            if (VolumeData->Values[Index] > Value)
             {
                 /* FIXME SEH */
                 Input->dwValue = VolumeData->InputSteppingDelta * Index;
@@ -2068,6 +2128,8 @@ WdmAudSetControlDetails(
     ULONG NodeId;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
+
+    DeviceInfo->Flags &= ~MIXER_OBJECTF_HMIXER;
 
     DPRINT("cbStruct %u Expected %u dwControlID %u cChannels %u cMultipleItems %u cbDetails %u paDetails %p Flags %x\n", 
             DeviceInfo->u.MixDetails.cbStruct, sizeof(MIXERCONTROLDETAILS), DeviceInfo->u.MixDetails.dwControlID, DeviceInfo->u.MixDetails.cChannels, DeviceInfo->u.MixDetails.cMultipleItems, DeviceInfo->u.MixDetails.cbDetails, DeviceInfo->u.MixDetails.paDetails, DeviceInfo->Flags);
@@ -2118,6 +2180,8 @@ WdmAudGetControlDetails(
     ULONG NodeId;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
+
+    DeviceInfo->Flags &= ~MIXER_OBJECTF_HMIXER;
 
     DPRINT("cbStruct %u Expected %u dwControlID %u cChannels %u cMultipleItems %u cbDetails %u paDetails %p Flags %x\n", 
             DeviceInfo->u.MixDetails.cbStruct, sizeof(MIXERCONTROLDETAILS), DeviceInfo->u.MixDetails.dwControlID, DeviceInfo->u.MixDetails.cChannels, DeviceInfo->u.MixDetails.cMultipleItems, DeviceInfo->u.MixDetails.cbDetails, DeviceInfo->u.MixDetails.paDetails, DeviceInfo->Flags);
