@@ -47,6 +47,7 @@ widMessage(
 
         case WIDM_GETDEVCAPS :
         {
+
             Result = MmeGetSoundDeviceCapabilities(WAVE_IN_DEVICE_TYPE,
                                                    DeviceId,
                                                    (PVOID) Parameter1,
@@ -89,6 +90,13 @@ widMessage(
             Result = MmeResetWavePlayback(PrivateHandle);
             break;
         }
+
+        case WIDM_ADDBUFFER :
+        {
+            Result = MmeWriteWaveHeader(PrivateHandle, Parameter1);
+            break;
+        }
+
     }
 
     SND_TRACE(L"widMessage returning MMRESULT %d\n", Result);
