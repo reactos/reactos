@@ -300,6 +300,14 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             /* It is indeed a volume open request */
             DPRINT1("Volume open request, not implemented now!\n");
             UNIMPLEMENTED;
+
+            /* Unlock VCB */
+            FatReleaseVcb(IrpContext, Vcb);
+
+            /* Complete the request */
+            FatCompleteRequest(IrpContext, Irp, STATUS_NOT_IMPLEMENTED);
+
+            return STATUS_NOT_IMPLEMENTED;
         }
     }
 
