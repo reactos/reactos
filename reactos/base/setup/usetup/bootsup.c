@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
@@ -305,7 +305,7 @@ CreateFreeLoaderIniForDos(PWCHAR IniPath,
 		    L"SystemPath",
 		    ArcPath);
 
-  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS*/
+  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
@@ -430,6 +430,12 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
         L"ReactOS_KdSerial", L"\"ReactOS (RosDbg)\"",
         L"ReactOS", ArcPath,
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL");
+
+    /* ReactOS_LogFile */
+    CreateFreeLoaderEntry(IniCache, IniSection,
+        L"ReactOS_LogFile", L"\"ReactOS (Log file)\"",
+        L"Windows2003", ArcPath,
+        L"/DEBUG /DEBUGPORT=FILE /SOS");
 
     /* ReactOS_Ram */
     CreateFreeLoaderEntry(IniCache, IniSection,
