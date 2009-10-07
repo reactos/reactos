@@ -17,8 +17,29 @@ static const WCHAR* KEY_DESKTOP = L"Control Panel\\Desktop";
 //static const WCHAR* VAL_DRAGWIDTH = L"DragWidth";
 //static const WCHAR* VAL_FNTSMOOTH = L"FontSmoothing";
 static const WCHAR* VAL_PREFMASK = L"UserPreferencesMask";
-#define PREFMASK_MENUANIM 0x2
-#define PREFMASK_KBDCUES 0x20
+
+enum
+{
+    UPM_ACTIVEWINDOWTRACKING = 0x01,
+    UPM_MENUANIMATION = 0x02,
+    UPM_COMBOBOXANIMATION = 0x04,
+    UPM_LISTBOXSMOOTHSCROLLING = 0x08,
+    UPM_GRADIENTCAPTIONS = 0x10,
+    UPM_KEYBOARDCUES = 0x20,
+    UPM_ACTIVEWNDTRKZORDER = 0x40,
+    UPM_HOTTRACKING = 0x80,
+    UPM_RESERVED = 0x100,
+    UPM_MENUFADE = 0x200,
+    UPM_SELECTIONFADE = 0x400,
+    UPM_TOOLTIPANIMATION = 0x800,
+    UPM_TOOLTIPFADE = 0x1000,
+    UPM_CURSORSHADOW = 0x2000,
+    UPM_CLICKLOCK = 0x8000,
+    // room for more
+    UPM_UIEFFECTS = 0x80000000,
+    UPM_DEFAULT = 0x80003E9E
+} USERPREFMASKS;
+
 
 //static const WCHAR* KEY_MDALIGN = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
 //static const WCHAR* VAL_MDALIGN = L"MenuDropAlignment";
@@ -394,6 +415,15 @@ Test_UserPref(PTESTINFO pti, UINT uiGet, UINT uiSet, DWORD dwPrefMask)
 
 	/* Value 1 without Registry */
 	NtUserSystemParametersInfo(uiSet, 0, (PVOID)1, 0);
+	NtUserSystemParametersInfo(uiGet, 0, &bTemp, 0);
+	TEST(bTemp == 1);
+	cbSize = sizeof(dwUserPref);
+	TEST(QueryUserRegValueW(KEY_DESKTOP, VAL_PREFMASK, &dwUserPref, &cbSize, NULL) == ERROR_SUCCESS);
+	TEST((dwUserPref & dwPrefMask) == 0);
+	TEST((dwUserPref & (~dwPrefMask)) == (dwUserPrefOrg & (~dwPrefMask)));
+
+	/* Value 2 without Registry */
+	NtUserSystemParametersInfo(uiSet, 0, (PVOID)2, 0);
 	NtUserSystemParametersInfo(uiGet, 0, &bTemp, 0);
 	TEST(bTemp == 1);
 	cbSize = sizeof(dwUserPref);
@@ -942,7 +972,7 @@ Test_SPI_SETMENUANIMATION(PTESTINFO pti)
 	TEST(bTemp == 0);
 	cbSize = sizeof(dwUserPrefMask);
 	TEST(QueryUserRegValueW(KEY_DESKTOP, VAL_PREFMASK, &dwUserPrefMask, &cbSize, NULL) == ERROR_SUCCESS);
-	TEST((dwUserPrefMask & PREFMASK_MENUANIM) == 0);
+	TEST((dwUserPrefMask & UPM_MENUANIMATION) == 0);
 
 	/* Value 1 */
 	NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, (PVOID)1, SPIF_UPDATEINIFILE);
@@ -950,7 +980,7 @@ Test_SPI_SETMENUANIMATION(PTESTINFO pti)
 	TEST(bTemp == 1);
 	cbSize = sizeof(dwUserPrefMask);
 	TEST(QueryUserRegValueW(KEY_DESKTOP, VAL_PREFMASK, &dwUserPrefMask, &cbSize, NULL) == ERROR_SUCCESS);
-	TEST((dwUserPrefMask & PREFMASK_MENUANIM) != 0);
+	TEST((dwUserPrefMask & UPM_MENUANIMATION) != 0);
 
 
 	/* Restore original values */
@@ -966,7 +996,7 @@ Test_SPI_SETMENUANIMATION(PTESTINFO pti)
 INT
 Test_SPI_SETKEYBOARDCUES(PTESTINFO pti)
 {
-    return Test_UserPref(pti, SPI_GETKEYBOARDCUES, SPI_SETKEYBOARDCUES, PREFMASK_KBDCUES);
+    return Test_UserPref(pti, SPI_GETKEYBOARDCUES, SPI_SETKEYBOARDCUES, UPM_KEYBOARDCUES);
 }
 
 //	Test_SPI_SETACTIVEWNDTRKZORDER(pti);
@@ -977,7 +1007,13 @@ Test_SPI_SETKEYBOARDCUES(PTESTINFO pti)
 //	Test_SPI_SETTOOLTIPFADE(pti);
 //	Test_SPI_SETCURSORSHADOW(pti);
 //	Test_SPI_SETMOUSESONAR(pti);
-//	Test_SPI_SETMOUSECLICKLOCK(pti);
+
+INT
+Test_SPI_SETMOUSECLICKLOCK(PTESTINFO pti)
+{
+    return Test_UserPref(pti, SPI_GETMOUSECLICKLOCK, SPI_SETMOUSECLICKLOCK, UPM_CLICKLOCK);
+}
+
 //	Test_SPI_SETMOUSEVANISH(pti);
 //	Test_SPI_SETFLATMENU(pti);
 //	Test_SPI_SETDROPSHADOW(pti);
@@ -1091,7 +1127,7 @@ Test_NtUserSystemParametersInfo(PTESTINFO pti)
 //	Test_SPI_SETTOOLTIPFADE(pti);
 //	Test_SPI_SETCURSORSHADOW(pti);
 //	Test_SPI_SETMOUSESONAR(pti);
-//	Test_SPI_SETMOUSECLICKLOCK(pti);
+	Test_SPI_SETMOUSECLICKLOCK(pti);
 //	Test_SPI_SETMOUSEVANISH(pti);
 //	Test_SPI_SETFLATMENU(pti);
 //	Test_SPI_SETDROPSHADOW(pti);
