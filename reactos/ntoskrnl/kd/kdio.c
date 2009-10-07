@@ -14,16 +14,17 @@
 
 /* GLOBALS *******************************************************************/
 
-#define BufferSize 32*1024
+#define KdpBufferSize  (1024 * 512)
+BOOLEAN KdpLoggingEnabled = FALSE;
+PCHAR KdpDebugBuffer = NULL;
+volatile ULONG KdpCurrentPosition = 0;
+volatile ULONG KdpFreeBytes = 0;
+KSPIN_LOCK KdpDebugLogSpinLock;
+KEVENT KdpLoggerThreadEvent;
+HANDLE KdpLogFileHandle;
 
-HANDLE KdbLogFileHandle;
-BOOLEAN KdpLogInitialized;
-CHAR DebugBuffer[BufferSize];
-ULONG CurrentPosition;
-WORK_QUEUE_ITEM KdpDebugLogQueue;
 KSPIN_LOCK KdpSerialSpinLock;
-BOOLEAN ItemQueued;
-KD_PORT_INFORMATION SerialPortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0};
+KD_PORT_INFORMATION SerialPortInfo = { DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0 };
 
 /* Current Port in use. FIXME: Do we support more then one? */
 ULONG KdpPort;
@@ -32,56 +33,103 @@ ULONG KdpPort;
 
 VOID
 NTAPI
-KdpPrintToLogInternal(PVOID Context)
+KdpLoggerThread(PVOID Context)
 {
+    ULONG beg, end, num;
     IO_STATUS_BLOCK Iosb;
 
-    /* Write to the Debug Log */
-    NtWriteFile(KdbLogFileHandle,
-                NULL,
-                NULL,
-                NULL,
-                &Iosb,
-                DebugBuffer,
-                CurrentPosition,
-                NULL,
-                NULL);
+    KdpLoggingEnabled = TRUE;
 
-    /* Clear the Current Position */
-    CurrentPosition = 0;
+    while (TRUE)
+    {
+        KeWaitForSingleObject(&KdpLoggerThreadEvent, 0, KernelMode, FALSE, NULL);
 
-    /* A new item can be queued now */
-    ItemQueued = FALSE;
+        /* Bug */
+        end = KdpCurrentPosition;
+        num = KdpFreeBytes;
+        beg = (end + num) % KdpBufferSize;
+        num = KdpBufferSize - num;
+
+        /* Nothing to do? */
+        if (num == 0)
+            continue;
+
+        if (end > beg)
+        {
+            NtWriteFile(KdpLogFileHandle, NULL, NULL, NULL, &Iosb,
+                        KdpDebugBuffer + beg, num, NULL, NULL);
+        }
+        else
+        {
+            NtWriteFile(KdpLogFileHandle, NULL, NULL, NULL, &Iosb,
+                        KdpDebugBuffer + beg, KdpBufferSize - beg, NULL, NULL);
+
+            NtWriteFile(KdpLogFileHandle, NULL, NULL, NULL, &Iosb,
+                        KdpDebugBuffer, end, NULL, NULL);
+        }
+
+        InterlockedExchangeAddUL(&KdpFreeBytes, num);
+    }
 }
 
 VOID
 NTAPI
-KdpPrintToLog(PCH String,
-              ULONG StringLength)
+KdpPrintToLogFile(PCH String,
+                  ULONG StringLength)
 {
-    /* Don't overflow */
-    if ((CurrentPosition + StringLength) > BufferSize) return;
+    ULONG beg, end, num;
+    KIRQL OldIrql;
 
-    /* Add the string to the buffer */
-    RtlCopyMemory(&DebugBuffer[CurrentPosition], String, StringLength);
+    if (KdpDebugBuffer == NULL) return;
 
-    /* Update the Current Position */
-    CurrentPosition += StringLength;
-
-    /* Make sure we are initialized and can queue */
-    if (!KdpLogInitialized || (ItemQueued)) return;
-
-    /*
-     * Queue the work item
-     * Note that we don't want to queue if we are > DISPATCH_LEVEL...
-     * The message is in the buffer and will simply be taken care of at
-     * the next time we are at <= DISPATCH, so it won't be lost.
-     */
-    if (KeGetCurrentIrql() <= DISPATCH_LEVEL)
+    /* Acquire the printing spinlock without waiting at raised IRQL */
+    while (TRUE)
     {
-        ExQueueWorkItem(&KdpDebugLogQueue, HyperCriticalWorkQueue);
-        ItemQueued = TRUE;
+        /* Wait when the spinlock becomes available */
+        while (!KeTestSpinLock(&KdpDebugLogSpinLock));
+
+        /* Spinlock was free, raise IRQL */
+        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+        /* Try to get the spinlock */
+        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpDebugLogSpinLock))
+            break;
+
+        /* Someone else got the spinlock, lower IRQL back */
+        KeLowerIrql(OldIrql);
     }
+
+    beg = KdpCurrentPosition;
+    num = KdpFreeBytes;
+    if (StringLength < num)
+        num = StringLength;
+
+    if (num != 0)
+    {
+        end = (beg + num) % KdpBufferSize;
+        KdpCurrentPosition = end;
+        KdpFreeBytes -= num;
+
+        if (end > beg)
+        {
+            RtlCopyMemory(KdpDebugBuffer + beg, String, num);
+        }
+        else
+        {
+            RtlCopyMemory(KdpDebugBuffer + beg, String, KdpBufferSize - beg);
+            RtlCopyMemory(KdpDebugBuffer, String + KdpBufferSize - beg, end);
+        }
+    }
+
+    /* Release spinlock */
+    KiReleaseSpinLock(&KdpDebugLogSpinLock);
+
+    /* Lower IRQL */
+    KeLowerIrql(OldIrql);
+
+    /* Signal the logger thread */
+    if (OldIrql <= DISPATCH_LEVEL && KdpLoggingEnabled)
+        KeSetEvent(&KdpLoggerThreadEvent, 0, FALSE);
 }
 
 VOID
@@ -90,9 +138,11 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                 ULONG BootPhase)
 {
     NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING FileName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK Iosb;
+    HANDLE ThreadHandle;
+    KPRIORITY Priority;
 
     if (!KdpDebugMode.File) return;
 
@@ -102,10 +152,20 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpInitDebugLog;
-        DispatchTable->KdpPrintRoutine = KdpPrintToLog;
+        DispatchTable->KdpPrintRoutine = KdpPrintToLogFile;
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
+
+    }
+    else if (BootPhase == 1)
+    {
+        /* Allocate a buffer for debug log */
+        KdpDebugBuffer = ExAllocatePool(NonPagedPool, KdpBufferSize);
+        KdpFreeBytes = KdpBufferSize;
+
+        /* Initialize spinlock */
+        KeInitializeSpinLock(&KdpDebugLogSpinLock);
 
         /* Display separator + ReactOS version at start of the debug log */
         DPRINT1("---------------------------------------------------------------\n");
@@ -117,7 +177,7 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 3)
     {
-        /* Setup the Log Name */
+        /* Setup the log name */
         RtlInitUnicodeString(&FileName, L"\\SystemRoot\\debug.log");
         InitializeObjectAttributes(&ObjectAttributes,
                                    &FileName,
@@ -125,9 +185,9 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                                    NULL,
                                    NULL);
 
-        /* Create the Log File */
-        Status = NtCreateFile(&KdbLogFileHandle,
-                              FILE_ALL_ACCESS,
+        /* Create the log file */
+        Status = NtCreateFile(&KdpLogFileHandle,
+                              FILE_APPEND_DATA | SYNCHRONIZE,
                               &ObjectAttributes,
                               &Iosb,
                               NULL,
@@ -138,9 +198,26 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                               NULL,
                               0);
 
-        /* Allow it to be used */
-        ExInitializeWorkItem(&KdpDebugLogQueue, &KdpPrintToLogInternal, NULL);
-        KdpLogInitialized = TRUE;
+        if (!NT_SUCCESS(Status)) return;
+
+        KeInitializeEvent(&KdpLoggerThreadEvent, SynchronizationEvent, TRUE);
+
+        /* Create the logger thread */
+        Status = PsCreateSystemThread(&ThreadHandle,
+                                      THREAD_ALL_ACCESS,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      KdpLoggerThread,
+                                      NULL);
+
+        if (!NT_SUCCESS(Status)) return;
+
+        Priority = 7;
+        NtSetInformationThread(ThreadHandle,
+                               ThreadPriority,
+                               &Priority,
+                               sizeof(Priority));
     }
 }
 
@@ -160,7 +237,7 @@ KdpSerialDebugPrint(LPSTR Message,
         /* Wait when the spinlock becomes available */
         while (!KeTestSpinLock(&KdpSerialSpinLock));
 
-        /* Spinlock was free, raise irql */
+        /* Spinlock was free, raise IRQL */
         KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
         /* Try to get the spinlock */
