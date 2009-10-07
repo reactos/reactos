@@ -68,7 +68,7 @@ KdpLoggerThread(PVOID Context)
                         KdpDebugBuffer, end, NULL, NULL);
         }
 
-        InterlockedExchangeAddUL(&KdpFreeBytes, num);
+        (VOID)InterlockedExchangeAddUL(&KdpFreeBytes, num);
     }
 }
 
