@@ -90,6 +90,13 @@ PcHandlePropertyWithTable(
 
             Node = (PPCNODE_DESCRIPTOR)((ULONG_PTR)SubDeviceDescriptor->DeviceDescriptor->Nodes + (Property->NodeId * SubDeviceDescriptor->DeviceDescriptor->NodeSize));
 
+            if (!Node->AutomationTable)
+            {
+                // request is out of bounds
+                Irp->IoStatus.Information = 0;
+                return STATUS_INVALID_PARAMETER;
+            }
+
             PC_ASSERT(Node->AutomationTable);
             PC_ASSERT(Node->AutomationTable->PropertyCount);
             PC_ASSERT(Node->AutomationTable->PropertyItemSize);
@@ -125,6 +132,13 @@ PcHandlePropertyWithTable(
             }
 
             Node = (PPCNODE_DESCRIPTOR)((ULONG_PTR)SubDeviceDescriptor->DeviceDescriptor->Nodes + (Property->NodeId * SubDeviceDescriptor->DeviceDescriptor->NodeSize));
+
+            if (!Node->AutomationTable)
+            {
+                // request is out of bounds
+                Irp->IoStatus.Information = 0;
+                return STATUS_INVALID_PARAMETER;
+            }
 
             PC_ASSERT(Node->AutomationTable);
             PC_ASSERT(Node->AutomationTable->PropertyCount);

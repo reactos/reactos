@@ -118,12 +118,6 @@ typedef struct
 
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
-typedef struct
-{
-    KSSTREAM_HEADER Header;
-    PIRP Irp;
-}CONTEXT_WRITE, *PCONTEXT_WRITE;
-
 NTSTATUS
 NTAPI
 OpenWavePin(
@@ -152,6 +146,12 @@ WdmAudOpenSysaudio(
 NTSTATUS
 NTAPI
 WdmAudDeviceControl(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp);
+
+NTSTATUS
+NTAPI
+WdmAudReadWrite(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 

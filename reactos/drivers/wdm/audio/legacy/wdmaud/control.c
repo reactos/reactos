@@ -266,7 +266,6 @@ WdmAudDeviceControl(
             return WdmAudSetControlDetails(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETCONTROLDETAILS:
             return WdmAudGetControlDetails(DeviceObject, Irp, DeviceInfo, ClientInfo);
-
         case IOCTL_GETPOS:
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
@@ -279,206 +278,93 @@ WdmAudDeviceControl(
     return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
 }
 
-NTSTATUS
-NTAPI
-WdmAudWriteCompletion(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PIRP LowerIrp,
-    IN PVOID  Context)
-{
-    //PIRP Irp;
-    ASSERT(LowerIrp->PendingReturned == FALSE);
-    /* get original irp */
-    //Irp = (PIRP)Context;
-
-    /* save status */
-    //Irp->IoStatus.Status = LowerIrp->IoStatus.Status;
-    //Irp->IoStatus.Information = LowerIrp->IoStatus.Information;
-    /* complete request */
-    //IoCompleteRequest(Irp, IO_SOUND_INCREMENT);
-    /* return success to free irp */
-    return STATUS_SUCCESS;
-}
-
 
 NTSTATUS
 NTAPI
-WdmAudWrite(
+WdmAudReadWrite(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
     PWDMAUD_DEVICE_INFO DeviceInfo;
-    PWDMAUD_CLIENT ClientInfo;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PUCHAR Buffer;
     PFILE_OBJECT FileObject;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Length;
     PMDL Mdl;
-    //PIRP LowerIrp;
-    PCONTEXT_WRITE Packet;
-    PVOID SystemBuffer;
-    //LARGE_INTEGER Offset;
-    IO_STATUS_BLOCK IoStatusBlock;
 
+    /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    //DPRINT("WdmAudWrite entered\n");
+    /* store the input buffer in UserBuffer - as KsProbeStreamIrp operates on IRP_MJ_DEVICE_CONTROL */
+    Irp->UserBuffer = MmGetMdlVirtualAddress(Irp->MdlAddress);
 
-    if (IoStack->Parameters.Write.Length < sizeof(WDMAUD_DEVICE_INFO))
+    /* sanity check */
+    ASSERT(Irp->UserBuffer);
+
+    /* get the length of the request length */
+    Length = IoStack->Parameters.Write.Length;
+
+    /* store outputbuffer length */
+    IoStack->Parameters.DeviceIoControl.OutputBufferLength = Length;
+
+    /* store mdl address */
+    Mdl = Irp->MdlAddress;
+
+    /* remove mdladdress as KsProbeStreamIrp will interprete it as an already probed audio buffer */
+    Irp->MdlAddress = NULL;
+
+    /* check for success */
+
+    if (IoStack->MajorFunction == IRP_MJ_WRITE)
     {
-        /* invalid parameter */
-        DPRINT1("Input buffer too small size %u expected %u\n", IoStack->Parameters.Write.Length, sizeof(WDMAUD_DEVICE_INFO));
-        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        /* probe the write stream irp */
+        Status = KsProbeStreamIrp(Irp, KSPROBE_STREAMWRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK, Length);
+    }
+    else
+    {
+        /* probe the read stream irp */
+        Status = KsProbeStreamIrp(Irp, KSPROBE_STREAMREAD | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK, Length);
     }
 
-    DeviceInfo = (PWDMAUD_DEVICE_INFO)MmGetMdlVirtualAddress(Irp->MdlAddress);
+    /* now free the mdl */
+    IoFreeMdl(Mdl);
 
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("KsProbeStreamIrp failed with Status %x\n", Status);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
 
+    /* get device info */
+    DeviceInfo = (PWDMAUD_DEVICE_INFO)Irp->AssociatedIrp.SystemBuffer;
+    ASSERT(DeviceInfo);
+
+    /* now get sysaudio file object */
     Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
+        DPRINT1("Invalid pin handle %x\n", DeviceInfo->hDevice);
         return SetIrpIoStatus(Irp, Status, 0);
     }
 
-
-    //DPRINT("DeviceInfo %p %p %p\n", DeviceInfo, Irp->MdlAddress->StartVa, Irp->MdlAddress->MappedSystemVa);
-    if (DeviceInfo->DeviceType < MIN_SOUND_DEVICE_TYPE || DeviceInfo->DeviceType > MAX_SOUND_DEVICE_TYPE)
-    {
-        /* invalid parameter */
-        DPRINT1("Error: device type not set\n");
-        ObDereferenceObject(FileObject);
-        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
-    }
-
-    if (!IoStack->FileObject)
-    {
-        /* file object parameter */
-        DPRINT1("Error: file object is not attached\n");
-        ObDereferenceObject(FileObject);
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
-    ClientInfo = (PWDMAUD_CLIENT)IoStack->FileObject->FsContext;
-
-
-    /* setup stream context */
-    Packet = (PCONTEXT_WRITE)ExAllocatePool(NonPagedPool, sizeof(CONTEXT_WRITE));
-    if (!Packet)
-    {
-        /* no memory */
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    Packet->Header.FrameExtent = DeviceInfo->Header.FrameExtent;
-    Packet->Header.DataUsed = DeviceInfo->Header.DataUsed;
-    Packet->Header.Size = sizeof(KSSTREAM_HEADER);
-    Packet->Header.PresentationTime.Numerator = 1;
-    Packet->Header.PresentationTime.Denominator = 1;
-    Packet->Irp = Irp;
-
-    Buffer = ExAllocatePool(NonPagedPool, DeviceInfo->Header.DataUsed);
-    if (!Buffer)
-    {
-        /* no memory */
-        ExFreePool(Packet);
-        ObDereferenceObject(FileObject);
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-    Packet->Header.Data = Buffer;
-
-    Mdl = IoAllocateMdl(DeviceInfo->Header.Data, DeviceInfo->Header.DataUsed, FALSE, FALSE, FALSE);
-    if (!Mdl)
-    {
-        /* no memory */
-        ExFreePool(Packet);
-        ObDereferenceObject(FileObject);
-        ExFreePool(Buffer);
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    _SEH2_TRY
-    {
-        MmProbeAndLockPages(Mdl, UserMode, IoReadAccess);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Exception, get the error code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Invalid buffer supplied\n");
-        ExFreePool(Buffer);
-        ExFreePool(Packet);
-        IoFreeMdl(Mdl);
-        ObDereferenceObject(FileObject);
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
-    SystemBuffer = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority );
-    if (!SystemBuffer)
-    {
-        DPRINT1("Invalid buffer supplied\n");
-        ExFreePool(Buffer);
-        ExFreePool(Packet);
-        IoFreeMdl(Mdl);
-        ObDereferenceObject(FileObject);
-        return SetIrpIoStatus(Irp, STATUS_INSUFFICIENT_RESOURCES, 0);
-    }
-
-    RtlMoveMemory(Buffer, SystemBuffer, DeviceInfo->Header.DataUsed);
-    MmUnlockPages(Mdl);
-    IoFreeMdl(Mdl);
-
-#if 1
-    KsStreamIo(FileObject, NULL, NULL, NULL, NULL, 0, &IoStatusBlock, Packet, sizeof(CONTEXT_WRITE), KSSTREAM_WRITE, UserMode);
-    /* dereference file object */
-    ObDereferenceObject(FileObject);
-    return IoStatusBlock.Status;
-#else
-    Offset.QuadPart = 0L;
-
-    /* now build the irp */
-    LowerIrp = IoBuildAsynchronousFsdRequest (IRP_MJ_WRITE,
-                                              IoGetRelatedDeviceObject(FileObject),
-                                              Packet,
-                                              sizeof(KSSTREAM_HEADER),
-                                              &Offset,
-                                              NULL);
-
-    if (!LowerIrp)
-    {
-        /* failed to create an associated irp */
-        ExFreePool(Buffer);
-        ExFreePool(Packet);
-        ObDereferenceObject(FileObject);
-
-        return SetIrpIoStatus(Irp, STATUS_INSUFFICIENT_RESOURCES, 0);
-    }
+    /* skip current irp stack location */
+    IoSkipCurrentIrpStackLocation(Irp);
 
     /* get next stack location */
-    IoStack = IoGetNextIrpStackLocation(LowerIrp);
+    IoStack = IoGetNextIrpStackLocation(Irp);
 
     /* attach file object */
     IoStack->FileObject = FileObject;
-
-    /* set a completion routine */
-    IoSetCompletionRoutine(LowerIrp, WdmAudWriteCompletion, (PVOID)Irp, TRUE, TRUE, TRUE);
+    IoStack->Parameters.Write.Length = sizeof(KSSTREAM_HEADER);
+    IoStack->MajorFunction = IRP_MJ_WRITE;
 
     /* mark irp as pending */
-    //IoMarkIrpPending(Irp);
-    Irp->IoStatus.Information = DeviceInfo->BufferSize;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    DPRINT1("Wrote %u\n", DeviceInfo->BufferSize);
+    IoMarkIrpPending(Irp);
     /* call the driver */
-    Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), LowerIrp);
+    Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);
 
     /* dereference file object */
     ObDereferenceObject(FileObject);
 
-    return STATUS_SUCCESS;
-#endif
+    return Status;
 }

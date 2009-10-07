@@ -244,14 +244,14 @@ DriverEntry(
 
     Driver->DriverUnload = WdmAudUnload;
 
-
     Driver->MajorFunction[IRP_MJ_CREATE] = WdmAudCreate;
     Driver->MajorFunction[IRP_MJ_CLOSE] = WdmAudClose;
     Driver->MajorFunction[IRP_MJ_PNP] = WdmAudPnp;
     Driver->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = KsDefaultForwardIrp; 
     Driver->MajorFunction[IRP_MJ_CLEANUP] = WdmAudCleanup;
     Driver->MajorFunction[IRP_MJ_DEVICE_CONTROL] = WdmAudDeviceControl;
-    Driver->MajorFunction[IRP_MJ_WRITE] = WdmAudWrite;
+    Driver->MajorFunction[IRP_MJ_WRITE] = WdmAudReadWrite;
+    Driver->MajorFunction[IRP_MJ_READ] = WdmAudReadWrite;
     Driver->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;
 
     return WdmAudInstallDevice(Driver);

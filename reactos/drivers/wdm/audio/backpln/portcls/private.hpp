@@ -355,12 +355,6 @@ typedef struct
 
 typedef struct
 {
-    KSSTREAM_HEADER Header;
-    PIRP Irp;
-}CONTEXT_WRITE, *PCONTEXT_WRITE;
-
-typedef struct
-{
     PVOID Pin;
     PIO_WORKITEM WorkItem;
     PIRP Irp;

@@ -578,7 +578,7 @@ CPortPinWaveCyclic::HandleKsStream(
 {
     InterlockedIncrement((PLONG)&m_TotalPackets);
 
-    DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u Pre %u Post %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
+    DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
 
     m_IrpQueue->AddMapping(NULL, 0, Irp);
 
@@ -730,6 +730,8 @@ CPortPinWaveCyclic::Close(
 {
     PCLOSESTREAM_CONTEXT Ctx;
 
+    DPRINT1("CPortPinWaveCyclic::Close entered\n");
+
     if (m_Stream)
     {
         // allocate a close context
@@ -828,27 +830,7 @@ CPortPinWaveCyclic::FastRead(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    NTSTATUS Status;
-    PCONTEXT_WRITE Packet;
-    PIRP Irp;
-
-    // HACK to be removed
-
-    DPRINT("CPortPinWaveCyclic::FastRead entered\n");
-
-    Packet = (PCONTEXT_WRITE)Buffer;
-
-    Irp = Packet->Irp;
-    StatusBlock->Status = STATUS_PENDING;
-
-    Status = m_IrpQueue->AddMapping((PUCHAR)Buffer, Length, Irp);
-
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    StatusBlock->Status = STATUS_PENDING;
-
-    return TRUE;
+    return KsDispatchFastReadFailure(FileObject, FileOffset, Length, Wait, LockKey, Buffer, StatusBlock, DeviceObject);
 }
 
 
@@ -864,27 +846,7 @@ CPortPinWaveCyclic::FastWrite(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    NTSTATUS Status;
-    PCONTEXT_WRITE Packet;
-    PIRP Irp;
-
-    // HACK to be removed
-
-    InterlockedIncrement((PLONG)&m_TotalPackets);
-
-    DPRINT("CPortPinWaveCyclic::FastWrite entered Total %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
-
-    Packet = (PCONTEXT_WRITE)Buffer;
-    Irp = Packet->Irp;
-
-    Status = m_IrpQueue->AddMapping((PUCHAR)Buffer, Length, Irp);
-
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    StatusBlock->Status = STATUS_PENDING;
-
-    return TRUE;
+    return KsDispatchFastReadFailure(FileObject, FileOffset, Length, Wait, LockKey, Buffer, StatusBlock, DeviceObject);
 }
 
 
