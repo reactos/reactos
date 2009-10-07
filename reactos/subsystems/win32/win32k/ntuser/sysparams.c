@@ -263,6 +263,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
+    gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
 #if (_WIN32_WINNT >= 0x0600)
     gspv.iWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
 #endif
@@ -1322,6 +1323,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetUserPref(UPM_CLICKLOCK, pvParam, fl);
 
         case SPI_SETMOUSECLICKLOCK:
+            gspv.bMouseClickLock = *(BOOL*) pvParam;
             return SpiSetUserPref(UPM_CLICKLOCK, pvParam, fl);
 
         case SPI_GETMOUSEVANISH:

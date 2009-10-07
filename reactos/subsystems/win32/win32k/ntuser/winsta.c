@@ -537,6 +537,8 @@ NtUserCreateWindowStation(
    CurInfo->LastBtnDown = 0;
    CurInfo->CurrentCursorObject = NULL;
    CurInfo->ShowingCursor = 0;
+   CurInfo->ClickLockActive = FALSE;
+   CurInfo->ClickLockTime = 0;
 
 /*
    // not used anymore

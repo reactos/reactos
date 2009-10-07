@@ -41,6 +41,8 @@ typedef struct _CURSORACCELERATION_INFO
 typedef struct _SYSTEM_CURSORINFO
 {
   BOOL Enabled;
+  BOOL ClickLockActive;
+  DWORD ClickLockTime;
 //  BOOL SwapButtons;
   UINT ButtonsDown;
   CURSORCLIP_INFO CursorClipInfo;
