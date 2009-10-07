@@ -274,21 +274,18 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 
    if(Remove)
    {
+      CurInfo->LastBtnDownX = Msg->pt.x;
+      CurInfo->LastBtnDownY = Msg->pt.y;
+      CurInfo->ButtonsDown = Msg->message;
       if (Res)
       {
          CurInfo->LastBtnDown = 0;
-         CurInfo->LastBtnDownX = Msg->pt.x;
-         CurInfo->LastBtnDownY = Msg->pt.y;
          CurInfo->LastClkWnd = NULL;
-		 CurInfo->ButtonsDown = Msg->message;
       }
       else
       {
-         CurInfo->LastBtnDownX = Msg->pt.x;
-         CurInfo->LastBtnDownY = Msg->pt.y;
          CurInfo->LastClkWnd = (HANDLE)Msg->hwnd;
          CurInfo->LastBtnDown = Msg->time;
-		 CurInfo->ButtonsDown = Msg->message;
       }
    }
 

@@ -384,7 +384,7 @@ ButtonProc(IN HWND hwndDlg,
                 //SetDoubleClickTime(pButtonData->g_DoubleClickSpeed);
 
 #if (WINVER >= 0x0500)
-                SystemParametersInfo(SPI_SETMOUSECLICKLOCK, 0, &pButtonData->g_ClickLockEnabled, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+                SystemParametersInfo(SPI_SETMOUSECLICKLOCK, 0, (PVOID)pButtonData->g_ClickLockEnabled, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
                 if (pButtonData->g_ClickLockEnabled)
                    SystemParametersInfo(SPI_SETMOUSECLICKLOCKTIME, pButtonData->g_ClickLockTime, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 #endif

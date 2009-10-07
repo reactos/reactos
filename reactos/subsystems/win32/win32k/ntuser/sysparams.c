@@ -529,7 +529,7 @@ UINT_PTR
 SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
 {
     DWORD dwRegMask;
-    BOOL bValue = *(BOOL *)pvValue;
+    BOOL bValue = (BOOL)pvValue;
 
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
 
@@ -1323,7 +1323,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetUserPref(UPM_CLICKLOCK, pvParam, fl);
 
         case SPI_SETMOUSECLICKLOCK:
-            gspv.bMouseClickLock = *(BOOL*) pvParam;
+            gspv.bMouseClickLock = (BOOL)pvParam;
             return SpiSetUserPref(UPM_CLICKLOCK, pvParam, fl);
 
         case SPI_GETMOUSEVANISH:
