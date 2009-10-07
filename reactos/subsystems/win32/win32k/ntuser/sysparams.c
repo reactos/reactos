@@ -125,6 +125,18 @@ SpiLoadInt(PCWSTR pwszKey, PCWSTR pwszValue, INT iValue)
 }
 
 static
+DWORD
+SpiLoadUserPrefMask(DWORD dValue)
+{
+    DWORD Result;
+    if (!RegReadUserSetting(KEY_DESKTOP, VAL_USERPREFMASK, REG_BINARY, &Result, sizeof(Result)))
+    {
+        return dValue;
+    }
+    return Result;
+}
+
+static
 INT
 SpiLoadMouse(PCWSTR pwszValue, INT iValue)
 {
@@ -250,6 +262,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
+    gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
 #if (_WIN32_WINNT >= 0x0600)
     gspv.iWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
 #endif
@@ -263,7 +276,6 @@ SpiUpdatePerUserSystemParameters()
     gspv.uiFocusBorderHeight = 1;
     gspv.bMenuDropAlign = 1;
     gspv.bDropShadow = 1;
-    gspv.dwUserPrefMask = UPM_DEFAULT;
     gspv.dwMenuShowDelay = 100;
 
     gspv.iScrSaverTimeout = 10;
