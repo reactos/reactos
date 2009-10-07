@@ -170,12 +170,26 @@ MiReserveSystemPtes(IN ULONG NumberOfPtes,
                     IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType)
 {
     PMMPTE PointerPte;
-    
+
     //
     // Use the extended function
     //
     PointerPte = MiReserveAlignedSystemPtes(NumberOfPtes, SystemPtePoolType, 0);
-    ASSERT(PointerPte != NULL);
+
+    //
+    // Check if allocation failed
+    //
+    if (!PointerPte)
+    {
+        //
+        // Warn that we are out of memory
+        //
+        DPRINT1("MiReserveSystemPtes: Failed to reserve %lu PTE(s)!\n", NumberOfPtes);
+    }
+
+    //
+    // Return the PTE Pointer
+    //
     return PointerPte;
 }
 
