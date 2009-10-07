@@ -440,7 +440,6 @@ WriteFileEx_Committer2(
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
     BOOL Ret;
-    DWORD BytesTransferred;
 
     VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
     VALIDATE_MMSYS_PARAMETER( OffsetPtr );
