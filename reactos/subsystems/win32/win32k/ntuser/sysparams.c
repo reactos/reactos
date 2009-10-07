@@ -70,6 +70,7 @@ static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
 #if (_WIN32_WINNT >= 0x0600)
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
+static const WCHAR* VAL_USERPREFMASK = L"UserPreferencesMask";
 
 static const WCHAR* KEY_MDALIGN = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
 static const WCHAR* VAL_MDALIGN = L"MenuDropAlignment";
@@ -515,7 +516,7 @@ UINT_PTR
 SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
 {
     DWORD dwRegMask;
-    BOOL bValue = pvValue ? 1 : 0;
+    BOOL bValue = *(BOOL *)pvValue;
 
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
 
@@ -527,7 +528,7 @@ SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
     {
         /* Read current value */
         RegReadUserSetting(KEY_DESKTOP,
-                           L"UserPreferencesMask",
+                           VAL_USERPREFMASK,
                            REG_BINARY,
                            &dwRegMask,
                            sizeof(DWORD));
@@ -537,7 +538,7 @@ SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
 
         /* write back value */
         RegWriteUserSetting(KEY_DESKTOP,
-                            L"UserPreferencesMask",
+                            VAL_USERPREFMASK,
                             REG_BINARY,
                             &dwRegMask,
                             sizeof(DWORD));
