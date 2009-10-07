@@ -5,6 +5,7 @@
 #include <reactos/version.rc>
 
 #include "windows.h"
+#include "errcodes.rc"
 
 #include "locale_rc.rc"
 
