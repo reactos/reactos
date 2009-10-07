@@ -56,6 +56,17 @@ FatiQueryInternalInformation(IN PFAT_IRP_CONTEXT IrpContext,
     UNIMPLEMENTED;
 }
 
+VOID
+NTAPI
+FatiQueryNameInformation(IN PFAT_IRP_CONTEXT IrpContext,
+                             IN PFCB Fcb,
+                             IN PFILE_OBJECT FileObject,
+                             IN OUT PFILE_INTERNAL_INFORMATION Buffer,
+                             IN OUT PLONG Length)
+{
+    UNIMPLEMENTED;
+}
+
 NTSTATUS
 NTAPI
 FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
@@ -70,6 +81,7 @@ FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
     PCCB Ccb;
     LONG Length;
     PVOID Buffer;
+    BOOLEAN VcbLocked = FALSE, FcbLocked = FALSE;
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Get IRP stack location */
@@ -93,7 +105,26 @@ FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
 
     DPRINT1("Vcb %p, Fcb %p, Ccb %p, open type %d\n", Vcb, Fcb, Ccb, FileType);
 
-    // TODO: Acquire FCB locks
+    /* Acquire VCB lock */
+    if (InfoClass == FileNameInformation ||
+        InfoClass == FileAllInformation)
+    {
+        if (!FatAcquireExclusiveVcb(IrpContext, Vcb))
+        {
+            ASSERT(FALSE);
+        }
+
+        /* Remember we locked the VCB */
+        VcbLocked = TRUE;
+    }
+
+    /* Acquire FCB lock */
+    // FIXME: If not paging file
+    if (!FatAcquireSharedFcb(IrpContext, Fcb))
+    {
+        ASSERT(FALSE);
+    }
+    FcbLocked = TRUE;
 
     switch (InfoClass)
     {
@@ -102,6 +133,9 @@ FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
         break;
     case FileInternalInformation:
         FatiQueryInternalInformation(IrpContext, Fcb, FileObject, Buffer, &Length);
+        break;
+    case FileNameInformation:
+        FatiQueryNameInformation(IrpContext, Fcb, FileObject, Buffer, &Length);
         break;
     default:
         DPRINT1("Unimplemented information class %d requested\n", InfoClass);
@@ -118,7 +152,9 @@ FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
     /* Set IoStatus.Information to amount of filled bytes */
     Irp->IoStatus.Information = IrpSp->Parameters.QueryFile.Length - Length;
 
-    // TODO: Release FCB locks
+    /* Release FCB locks */
+    if (FcbLocked) FatReleaseFcb(IrpContext, Fcb);
+    if (VcbLocked) FatReleaseVcb(IrpContext, Vcb);
 
     /* Complete request and return status */
     FatCompleteRequest(IrpContext, Irp, Status);

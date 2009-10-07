@@ -111,7 +111,6 @@ FatRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* Leave FsRtl critical region */
     FsRtlExitFileSystem();
 
-    DPRINT1("FatRead()\n");
     return Status;
 }
 

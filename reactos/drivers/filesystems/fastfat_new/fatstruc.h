@@ -283,6 +283,10 @@ typedef struct _FCB
     FILE_BASIC_INFORMATION BasicInfo;
     /* FullFAT file handle */
     FF_FILE *FatHandle;
+    /* The file has outstanding async writes */
+    ULONG OutstandingAsyncWrites;
+    /* The outstanding async writes sync event */
+    PKEVENT OutstandingAsyncEvent;
     union
     {
         struct

@@ -163,20 +163,20 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     /* Get current IRP stack location */
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("FatCommonCreate\n", 0 );
-    DPRINT1("Irp                       = %08lx\n",   Irp );
-    DPRINT1("\t->Flags                   = %08lx\n", Irp->Flags );
-    DPRINT1("\t->FileObject              = %08lx\n", IrpSp->FileObject );
-    DPRINT1("\t->RelatedFileObject       = %08lx\n", IrpSp->FileObject->RelatedFileObject );
-    DPRINT1("\t->FileName                = %wZ\n",   &IrpSp->FileObject->FileName );
-    DPRINT1("\t->AllocationSize.LowPart  = %08lx\n", Irp->Overlay.AllocationSize.LowPart );
-    DPRINT1("\t->AllocationSize.HighPart = %08lx\n", Irp->Overlay.AllocationSize.HighPart );
-    DPRINT1("\t->SystemBuffer            = %08lx\n", Irp->AssociatedIrp.SystemBuffer );
-    DPRINT1("\t->DesiredAccess           = %08lx\n", IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
-    DPRINT1("\t->Options                 = %08lx\n", IrpSp->Parameters.Create.Options );
-    DPRINT1("\t->FileAttributes          = %04x\n",  IrpSp->Parameters.Create.FileAttributes );
-    DPRINT1("\t->ShareAccess             = %04x\n",  IrpSp->Parameters.Create.ShareAccess );
-    DPRINT1("\t->EaLength                = %08lx\n", IrpSp->Parameters.Create.EaLength );
+    DPRINT("FatCommonCreate\n", 0 );
+    DPRINT("Irp                       = %08lx\n",   Irp );
+    DPRINT("\t->Flags                   = %08lx\n", Irp->Flags );
+    DPRINT("\t->FileObject              = %08lx\n", IrpSp->FileObject );
+    DPRINT("\t->RelatedFileObject       = %08lx\n", IrpSp->FileObject->RelatedFileObject );
+    DPRINT("\t->FileName                = %wZ\n",   &IrpSp->FileObject->FileName );
+    DPRINT("\t->AllocationSize.LowPart  = %08lx\n", Irp->Overlay.AllocationSize.LowPart );
+    DPRINT("\t->AllocationSize.HighPart = %08lx\n", Irp->Overlay.AllocationSize.HighPart );
+    DPRINT("\t->SystemBuffer            = %08lx\n", Irp->AssociatedIrp.SystemBuffer );
+    DPRINT("\t->DesiredAccess           = %08lx\n", IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
+    DPRINT("\t->Options                 = %08lx\n", IrpSp->Parameters.Create.Options );
+    DPRINT("\t->FileAttributes          = %04x\n",  IrpSp->Parameters.Create.FileAttributes );
+    DPRINT("\t->ShareAccess             = %04x\n",  IrpSp->Parameters.Create.ShareAccess );
+    DPRINT("\t->EaLength                = %08lx\n", IrpSp->Parameters.Create.EaLength );
 
     /* Apply a special hack for Win32, idea taken from FASTFAT reference driver from WDK */
     if ((IrpSp->FileObject->FileName.Length > sizeof(WCHAR)) &&
@@ -359,7 +359,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         {
             /* Not a root dir */
             ParentDcb = Vcb->RootDcb;
-            DPRINT1("ParentDcb %p\n", ParentDcb);
+            DPRINT("ParentDcb %p\n", ParentDcb);
         }
 
         /* Check for backslash at the end */
@@ -515,7 +515,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
                 ASSERT(FALSE);
             }
 
-            DPRINT1("FirstName %wZ, RemainingPart %wZ\n", &FirstName, &RemainingPart);
+            DPRINT("FirstName %wZ, RemainingPart %wZ\n", &FirstName, &RemainingPart);
 
             /* Break if came to the end */
             if (!RemainingPart.Length) break;
@@ -578,8 +578,6 @@ FatCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PFAT_IRP_CONTEXT IrpContext;
     NTSTATUS Status;
-
-    DPRINT1("FatCreate()\n");
 
     /* If it's called with our Disk FS device object - it's always open */
     // TODO: Add check for CDROM FS device object

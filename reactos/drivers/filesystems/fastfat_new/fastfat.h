@@ -147,6 +147,18 @@ VOID NTAPI
 FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
               IN PVCB Vcb);
 
+BOOLEAN NTAPI
+FatAcquireExclusiveFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PFCB Fcb);
+
+BOOLEAN NTAPI
+FatAcquireSharedFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PFCB Fcb);
+
+VOID NTAPI
+FatReleaseFcb(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PFCB Fcb);
+
 TYPE_OF_OPEN
 NTAPI
 FatDecodeFileObject(IN PFILE_OBJECT FileObject,

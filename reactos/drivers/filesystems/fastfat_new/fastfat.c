@@ -327,7 +327,7 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
 
             TypeOfOpen = (*Ccb == NULL ? EaFile : UserFileOpen);
 
-            DPRINT1("Referencing a file: %Z\n", &(*FcbOrDcb)->FullFileName);
+            DPRINT("Referencing a file: %Z\n", &(*FcbOrDcb)->FullFileName);
 
             break;
 
@@ -392,6 +392,95 @@ FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
 {
     /* Release VCB's resource */
     ExReleaseResourceLite(&Vcb->Resource);
+}
+
+BOOLEAN
+NTAPI
+FatAcquireExclusiveFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PFCB Fcb)
+{
+RetryLockingE:
+    /* Try to acquire the exclusive lock*/
+    if (ExAcquireResourceExclusiveLite(Fcb->Header.Resource,
+        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        /* Wait same way MS's FASTFAT wait, i.e.
+           checking that there are outstanding async writes,
+           or someone is waiting on it*/
+        if (Fcb->OutstandingAsyncWrites &&
+            ((IrpContext->MajorFunction != IRP_MJ_WRITE) ||
+             !FlagOn(IrpContext->Irp->Flags, IRP_NOCACHE) ||
+             ExGetSharedWaiterCount(Fcb->Header.Resource) ||
+             ExGetExclusiveWaiterCount(Fcb->Header.Resource)))
+        {
+            KeWaitForSingleObject(Fcb->OutstandingAsyncEvent,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+
+            /* Release the lock */
+            FatReleaseFcb(IrpContext, Fcb);
+
+            /* Retry */
+            goto RetryLockingE;
+        }
+
+        /* Return success */
+        return TRUE;
+    }
+
+    /* Return failure */
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+FatAcquireSharedFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFCB Fcb)
+{
+RetryLockingS:
+    /* Try to acquire the shared lock*/
+    if (ExAcquireResourceSharedLite(Fcb->Header.Resource,
+        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        /* Wait same way MS's FASTFAT wait, i.e.
+           checking that there are outstanding async writes,
+           or someone is waiting on it*/
+        if (Fcb->OutstandingAsyncWrites &&
+            ((IrpContext->MajorFunction != IRP_MJ_WRITE) ||
+             !FlagOn(IrpContext->Irp->Flags, IRP_NOCACHE) ||
+             ExGetSharedWaiterCount(Fcb->Header.Resource) ||
+             ExGetExclusiveWaiterCount(Fcb->Header.Resource)))
+        {
+            KeWaitForSingleObject(Fcb->OutstandingAsyncEvent,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+
+            /* Release the lock */
+            FatReleaseFcb(IrpContext, Fcb);
+
+            /* Retry */
+            goto RetryLockingS;
+        }
+
+        /* Return success */
+        return TRUE;
+    }
+
+    /* Return failure */
+    return FALSE;
+}
+
+VOID
+NTAPI
+FatReleaseFcb(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PFCB Fcb)
+{
+    /* Release FCB's resource */
+    ExReleaseResourceLite(Fcb->Header.Resource);
 }
 
 PVOID
