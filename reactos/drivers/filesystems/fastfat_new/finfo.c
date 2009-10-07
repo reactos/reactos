@@ -61,10 +61,51 @@ NTAPI
 FatiQueryNameInformation(IN PFAT_IRP_CONTEXT IrpContext,
                              IN PFCB Fcb,
                              IN PFILE_OBJECT FileObject,
-                             IN OUT PFILE_INTERNAL_INFORMATION Buffer,
+                             IN OUT PFILE_NAME_INFORMATION Buffer,
                              IN OUT PLONG Length)
 {
-    UNIMPLEMENTED;
+    ULONG ByteSize;
+    ULONG Trim = 0;
+    BOOLEAN Overflow = FALSE;
+
+    /* Deduct the minimum written length */
+    *Length -= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]);
+
+    // Build full name if needed
+    //if (!Fcb->FullFileName.Buffer)
+
+    DPRINT1("FullFileName %wZ\n", &Fcb->FullFileName);
+
+    if (*Length < Fcb->FullFileName.Length - Trim)
+    {
+        /* Buffer can't fit all data */
+        ByteSize = *Length;
+        Overflow = TRUE;
+    }
+    else
+    {
+        /* Deduct the amount of bytes we are going to write */
+        ByteSize = Fcb->FullFileName.Length - Trim;
+        *Length -= ByteSize;
+    }
+
+    /* Copy the name */
+    RtlCopyMemory(Buffer->FileName,
+                  Fcb->FullFileName.Buffer,
+                  ByteSize);
+
+    /* Set the length */
+    Buffer->FileNameLength = Fcb->FullFileName.Length - Trim;
+
+    /* Is this a shortname query? */
+    if (Trim)
+    {
+        /* Yes, not supported atm */
+        ASSERT(FALSE);
+    }
+
+    /* Indicate overflow by passing -1 as the length */
+    if (Overflow) *Length = -1;
 }
 
 NTSTATUS

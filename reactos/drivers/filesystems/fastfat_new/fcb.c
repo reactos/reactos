@@ -149,6 +149,9 @@ FatCreateFcb(IN PFAT_IRP_CONTEXT IrpContext,
     Fcb->Header.ValidDataLength.LowPart = FileHandle->Filesize;
     Fcb->FatHandle = FileHandle;
 
+    /* Set names */
+    FatSetFcbNames(IrpContext, Fcb);
+
     return Fcb;
 }
 
@@ -239,6 +242,15 @@ FatSetFullNameInFcb(PFCB Fcb,
                       &Name->Buffer[0],
                       Name->Length );
     }
+}
+
+VOID
+NTAPI
+FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PFCB Fcb)
+{
+    // Set the short name first
+    UNIMPLEMENTED;
 }
 
 /* EOF */

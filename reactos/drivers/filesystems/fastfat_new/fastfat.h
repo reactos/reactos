@@ -304,6 +304,10 @@ VOID NTAPI
 FatSetFullNameInFcb(PFCB Fcb,
                     PUNICODE_STRING Name);
 
+VOID NTAPI
+FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PFCB Fcb);
+
 /*  ------------------------------------------------------------  rw.c  */
 
 NTSTATUS NTAPI
