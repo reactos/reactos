@@ -435,8 +435,12 @@ WriteFileEx_Committer2(
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
 {
     HANDLE Handle;
+    MMRESULT Result;
     WDMAUD_DEVICE_INFO DeviceInfo;
-
+    PSOUND_DEVICE SoundDevice;
+    MMDEVICE_TYPE DeviceType;
+    BOOL Ret;
+    DWORD BytesTransferred;
 
     VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
     VALIDATE_MMSYS_PARAMETER( OffsetPtr );
@@ -445,28 +449,46 @@ WriteFileEx_Committer2(
 
     GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
 
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
     SND_ASSERT(Handle);
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+
     DeviceInfo.Header.FrameExtent = Length;
-    DeviceInfo.Header.DataUsed = Length;
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        DeviceInfo.Header.DataUsed = Length;
+    }
     DeviceInfo.Header.Data = OffsetPtr;
-    DeviceInfo.Header.Size = sizeof(KSSTREAM_HEADER);
+    DeviceInfo.Header.Size = sizeof(WDMAUD_DEVICE_INFO);
     DeviceInfo.Header.PresentationTime.Numerator = 1;
     DeviceInfo.Header.PresentationTime.Denominator = 1;
     DeviceInfo.hDevice = Handle;
-    DeviceInfo.DeviceType = WAVE_OUT_DEVICE_TYPE; //FIXME
+    DeviceInfo.DeviceType = DeviceType;
 
     Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
-    if ( ! WriteFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine))
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        SND_TRACE(L"WriteFileEx failed with %x\n", GetLastError());
+        Ret = WriteFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
+        if (Ret)
+            WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
     }
-    else
+    else if (DeviceType == WAVE_IN_DEVICE_TYPE)
     {
-        WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
-
+        Ret = ReadFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
+        if (Ret)
+            WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
     }
 
     return MMSYSERR_NOERROR;
