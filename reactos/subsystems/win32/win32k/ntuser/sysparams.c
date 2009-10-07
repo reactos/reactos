@@ -264,6 +264,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
+    gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
 #if (_WIN32_WINNT >= 0x0600)
     gspv.iWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
 #endif
@@ -1305,6 +1306,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetUserPref(UPM_CURSORSHADOW, pvParam, fl);
 
         case SPI_SETCURSORSHADOW:
+            gspv.bMouseCursorShadow = (BOOL)pvParam;
             return SpiSetUserPref(UPM_CURSORSHADOW, pvParam, fl);
 
         case SPI_GETUIEFFECTS:

@@ -67,6 +67,7 @@ typedef struct _SPIVALUES
     CURSORACCELERATION_INFO caiMouse;
     MOUSEKEYS mousekeys;
     BOOL bMouseClickLock;
+    BOOL bMouseCursorShadow;
     DWORD dwMouseClickLockTime;
     BOOL bMouseSonar;
     BOOL bMouseVanish;

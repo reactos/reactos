@@ -75,8 +75,8 @@ typedef struct _BUTTON_DATA
 
 typedef struct _POINTER_DATA
 {
-    BOOL bDropShadow;
-    BOOL bOrigDropShadow;
+    BOOL bCursorShadow;
+    BOOL bOrigCursorShadow;
 
     INT cxCursor;
     INT cyCursor;
@@ -1223,15 +1223,13 @@ PointerProc(IN HWND hwndDlg,
             EnumerateCursorSchemes(hwndDlg);
             LoadInitialCursorScheme(hwndDlg);
 
-            /* Get drop shadow setting */
-            if (!SystemParametersInfo(SPI_GETDROPSHADOW, 0, &pPointerData->bDropShadow, 0))
-                pPointerData->bDropShadow = FALSE;
+            /* Get cursor shadow setting */
+            SystemParametersInfo(SPI_GETCURSORSHADOW, 0, &pPointerData->bCursorShadow, 0);
+            pPointerData->bOrigCursorShadow = pPointerData->bCursorShadow;
 
-            pPointerData->bOrigDropShadow = pPointerData->bDropShadow;
-
-            if (pPointerData->bDropShadow)
+            if (pPointerData->bCursorShadow)
             {
-                SendDlgItemMessage(hwndDlg, IDC_CHECK_DROP_SHADOW, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                SendDlgItemMessage(hwndDlg, IDC_CHECK_CURSOR_SHADOW, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
             }
 
             if ((INT)wParam == IDC_LISTBOX_CURSOR)
@@ -1258,10 +1256,10 @@ PointerProc(IN HWND hwndDlg,
             {
                 ApplyCursorScheme(hwndDlg);
 //#if (WINVER >= 0x0500)
-                if (pPointerData->bOrigDropShadow != pPointerData->bDropShadow)
+                if (pPointerData->bOrigCursorShadow != pPointerData->bCursorShadow)
                 {
-                    SystemParametersInfo(SPI_SETDROPSHADOW, 0, IntToPtr(pPointerData->bDropShadow), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-                    pPointerData->bOrigDropShadow = pPointerData->bDropShadow;
+                    SystemParametersInfo(SPI_SETCURSORSHADOW, 0, (PVOID)pPointerData->bCursorShadow, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+                    pPointerData->bOrigCursorShadow = pPointerData->bCursorShadow;
                 }
 //#endif
                 return TRUE;
@@ -1269,7 +1267,7 @@ PointerProc(IN HWND hwndDlg,
             else if (lppsn->hdr.code == PSN_RESET)
             {
 //#if (WINVER >= 0x0500)
-                SystemParametersInfo(SPI_SETDROPSHADOW, 0, IntToPtr(pPointerData->bOrigDropShadow), 0);
+                SystemParametersInfo(SPI_SETCURSORSHADOW, 0, (PVOID)pPointerData->bOrigCursorShadow, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 //#endif
             }
             break;
@@ -1352,23 +1350,23 @@ PointerProc(IN HWND hwndDlg,
                     DeleteUserCursorScheme(hwndDlg);
                     break;
 
-                case IDC_CHECK_DROP_SHADOW:
-                    if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_DROP_SHADOW))
+                case IDC_CHECK_CURSOR_SHADOW:
+                    if(IsDlgButtonChecked(hwndDlg, IDC_CHECK_CURSOR_SHADOW))
                     {
-                        pPointerData->bDropShadow = FALSE;
+                        pPointerData->bCursorShadow = FALSE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
 //#if (WINVER >= 0x0500)
-//                        SystemParametersInfo(SPI_SETDROPSHADOW, 0, (PVOID)pPointerData->bDropShadow, 0);
+//                        SystemParametersInfo(SPI_SETCURSORSHADOW, 0, (PVOID)pPointerData->bCursorShadow, 0);
 //#endif
 //                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     else
                     {
-                        pPointerData->bDropShadow = TRUE;
+                        pPointerData->bCursorShadow = TRUE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
 //#if (WINVER >= 0x0500)
-                    SystemParametersInfo(SPI_SETDROPSHADOW, 0, IntToPtr(pPointerData->bDropShadow), 0);
+                    //SystemParametersInfo(SPI_SETCURSORSHADOW, 0, (PVOID)pPointerData->bCursorShadow, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 //#endif
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
