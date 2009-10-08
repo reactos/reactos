@@ -92,7 +92,7 @@ GetMixerControlById(
     {
         MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
 
-        for(Index = 0; Index < MixerLineSrc->Line.cConnections; Index++)
+        for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
         {
             if (MixerLineSrc->LineControls[Index].dwControlID == dwControlID)
             {
@@ -1530,7 +1530,7 @@ InitializeMixer(
     }
 
     /* initialize mixer destination line */
-    RtlZeroMemory(DestinationLine, sizeof(MIXERLINEW));
+    RtlZeroMemory(DestinationLine, sizeof(MIXERLINE_EXT));
     DestinationLine->Line.cbStruct = sizeof(MIXERLINEW);
     DestinationLine->Line.dwSource = MAXULONG;
     DestinationLine->Line.dwLineID = DESTINATION_LINE;
@@ -1702,14 +1702,14 @@ WdmAudMixerCapabilities(
     IN  PWDMAUD_CLIENT ClientInfo,
     IN PWDMAUD_DEVICE_EXTENSION DeviceExtension)
 {
-    if ((ULONG)DeviceInfo->hDevice >= DeviceExtension->MixerInfoCount)
+    if ((ULONG)DeviceInfo->DeviceIndex >= DeviceExtension->MixerInfoCount)
     {
         /* invalid parameter */
         return STATUS_INVALID_PARAMETER;
     }
 
     /* copy cached mixer caps */
-    RtlMoveMemory(&DeviceInfo->u.MixCaps, &DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice].MixCaps, sizeof(MIXERCAPSW));
+    RtlMoveMemory(&DeviceInfo->u.MixCaps, &DeviceExtension->MixerInfo[(ULONG)DeviceInfo->DeviceIndex].MixCaps, sizeof(MIXERCAPSW));
 
     return STATUS_SUCCESS;
 }
@@ -1842,7 +1842,11 @@ WdmAudGetLineInfo(
         }
 
         MixerLineSrc = GetSourceMixerLineByLineId(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixLine.dwLineID);
-        ASSERT(MixerLineSrc);
+        if (!MixerLineSrc)
+        {
+            DPRINT1("Failed to find Line with id %u\n", DeviceInfo->u.MixLine.dwLineID);
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+        }
 
         /* copy cached data */
         RtlCopyMemory(&DeviceInfo->u.MixLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
@@ -1938,7 +1942,7 @@ WdmAudGetLineControls(
             /* invalid parameter */
             return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
         }
-
+        DPRINT1("MixerId %u ControlId %u\n",(ULONG)DeviceInfo->hDevice,  DeviceInfo->u.MixControls.dwControlID);
         Status = GetMixerControlById(&DeviceExtension->MixerInfo[(ULONG)DeviceInfo->hDevice], DeviceInfo->u.MixControls.dwControlID, NULL, &MixerControl, NULL);
         if (NT_SUCCESS(Status))
         {
@@ -1946,7 +1950,6 @@ WdmAudGetLineControls(
         }
         return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
     }
-
 
     UNIMPLEMENTED;
     //DbgBreakPoint();
