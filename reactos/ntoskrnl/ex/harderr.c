@@ -58,12 +58,26 @@ ExpSystemErrorHandler(IN NTSTATUS ErrorStatus,
                       IN PULONG_PTR Parameters,
                       IN BOOLEAN Shutdown)
 {
-    ULONG_PTR Dummy[4] = {0, 0, 0, 0};
+    ULONG_PTR BugCheckParameters[MAXIMUM_HARDERROR_PARAMETERS] = {0, 0, 0, 0};
+    ULONG i;
+
+    /* Sanity check */
+    ASSERT(NumberOfParameters <= MAXIMUM_HARDERROR_PARAMETERS);
+
+    /*
+     * KeBugCheck expects MAXIMUM_HARDERROR_PARAMETERS parameters,
+     * but we might get called with less, so use a local buffer here.
+     */
+    for (i = 0; i < NumberOfParameters; i++)
+    {
+        /* Copy them over */
+        BugCheckParameters[i] = Parameters[i];
+    }
 
     /* FIXME: STUB */
     KeBugCheckEx(FATAL_UNHANDLED_HARD_ERROR,
                  ErrorStatus,
-                 (ULONG_PTR)Dummy,
+                 (ULONG_PTR)BugCheckParameters,
                  0,
                  0);
     return STATUS_SUCCESS;
@@ -507,7 +521,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
  *        Optional string parameter (can be only one per error code)
  *
  * @param Parameters
- *        Array of ULONG parameters for use in error message string
+ *        Array of ULONG_PTR parameters for use in error message string
  *
  * @param ValidResponseOptions
  *        See HARDERROR_RESPONSE_OPTION for possible values description
