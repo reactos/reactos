@@ -44,15 +44,18 @@ write_if_change(char* outbuf, char* filename)
     {
       fprintf(stderr, "Failed to read data\n");
       fclose(out);
+      free(cmpbuf);
       return(1);
     }
   if (end == strlen(outbuf) && memcmp(cmpbuf, outbuf, end) == 0)
     {
       fclose(out);
+      free(cmpbuf);
       return(0);
     }
 
   fclose(out);
+  free(cmpbuf);
   out = fopen(filename, "wb");
   if (out == NULL)
     {
