@@ -945,10 +945,10 @@ typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
     UCHAR Revision;
     UCHAR Sbz1;
     SECURITY_DESCRIPTOR_CONTROL Control;
-    DWORD_PTR Owner;
-    DWORD_PTR Group;
-    DWORD_PTR Sacl;
-    DWORD_PTR Dacl;
+    ULONG Owner;
+    ULONG Group;
+    ULONG Sacl;
+    ULONG Dacl;
 } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
