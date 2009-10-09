@@ -1690,7 +1690,7 @@ KsCancelRoutine(
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
     /* release spinlock */
-    KeReleaseSpinLockFromDpcLevel(SpinLock);
+    KeReleaseSpinLock(SpinLock, Irp->CancelIrql);
 
     /* has the irp already been canceled */
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
