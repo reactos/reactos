@@ -12,6 +12,35 @@
 #include <debug.h>
 #include <route.h>
 
+PVOID GetContext(TDIEntityID ID)
+{
+    UINT i;
+    KIRQL OldIrql;
+    PVOID Context;
+
+    TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
+
+    for (i = 0; i < EntityCount; i++)
+    {
+        if (EntityList[i].tei_entity == ID.tei_entity &&
+            EntityList[i].tei_instance == ID.tei_instance)
+            break;
+    }
+
+    if (i == EntityCount)
+    {
+        TcpipReleaseSpinLock(&EntityListLock, OldIrql);
+        DbgPrint("WARNING: Unable to get context for %d %d\n", ID.tei_entity, ID.tei_instance);
+        return NULL;
+    }
+
+    Context = EntityList[i].context;
+
+    TcpipReleaseSpinLock(&EntityListLock, OldIrql);
+
+    return Context;
+}
+
 TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,
 			PNDIS_BUFFER ClientBuf, PUINT ClientBufSize ) {
     UINT RememberedCBSize = *ClientBufSize;
@@ -27,60 +56,38 @@ TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,
     }
 }
 
-VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
+TDI_STATUS InfoTdiQueryEntityType(TDIEntityID ID,
+                                  PNDIS_BUFFER Buffer,
+				  PUINT BufferSize)
+{
     KIRQL OldIrql;
-    UINT Count = 0, i;
+    UINT i, Flags = 0;
 
-    TI_DbgPrint(DEBUG_INFO,
-		("Inserting interface %08x (%d entities already)\n",
-		 Interface, EntityCount));
+    TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
 
-    TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
-
-    /* Count IP Entities */
-    for( i = 0; i < EntityCount; i++ )
-	if( EntityList[i].tei_entity == IF_ENTITY ) {
-	    Count++;
-	    TI_DbgPrint(DEBUG_INFO, ("Entity %d is an IF.  Found %d\n",
-				    i, Count));
-	}
-
-    EntityList[EntityCount].tei_entity = IF_ENTITY;
-    EntityList[EntityCount].tei_instance = Count;
-    EntityList[EntityCount].context  = Interface;
-    EntityList[EntityCount].info_req = InfoInterfaceTdiQueryEx;
-    EntityList[EntityCount].info_set = InfoInterfaceTdiSetEx;
-
-    EntityCount++;
-
-    TcpipReleaseSpinLock( &EntityListLock, OldIrql );
-}
-
-VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
-    KIRQL OldIrql;
-    UINT i;
-
-    TI_DbgPrint(DEBUG_INFO,("Removing TDI entry 0x%x\n", Interface));
-
-    TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
-
-    /* Remove entities that have this interface as context
-     * In the future, this might include AT_ENTITY types, too
-     */
-    for( i = 0; i < EntityCount; i++ ) {
-	TI_DbgPrint(DEBUG_INFO,("--> examining TDI entry 0x%x\n", EntityList[i].context));
-	if( EntityList[i].context == Interface ) {
-	    if( i != EntityCount-1 ) {
-		memcpy( &EntityList[i],
-			&EntityList[--EntityCount],
-			sizeof(EntityList[i]) );
-	    } else {
-		EntityCount--;
-	    }
-	}
+    for (i = 0; i < EntityCount; i++)
+    {
+        if (EntityList[i].tei_entity == ID.tei_entity &&
+            EntityList[i].tei_instance == ID.tei_instance)
+            break;
     }
 
-    TcpipReleaseSpinLock( &EntityListLock, OldIrql );
+    if (i == EntityCount)
+    {
+        TcpipReleaseSpinLock(&EntityListLock, OldIrql);
+        return TDI_INVALID_PARAMETER;
+    }
+
+    Flags = EntityList[i].flags;
+
+    InfoCopyOut((PCHAR)&Flags,
+                sizeof(ULONG),
+                Buffer,
+                BufferSize);
+
+    TcpipReleaseSpinLock(&EntityListLock, OldIrql);
+
+    return TDI_SUCCESS;
 }
 
 TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
@@ -139,12 +146,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
  *   Status of operation
  */
 {
-    KIRQL OldIrql;
-    UINT i;
-    PVOID context = NULL;
-    NTSTATUS Status = TDI_INVALID_PARAMETER;
-    BOOLEAN FoundEntity = FALSE;
-    InfoRequest_f InfoRequest = NULL;
+    PVOID EntityListContext;
 
     TI_DbgPrint(DEBUG_INFO,
 		("InfoEx Req: %x %x %x!%04x:%d\n",
@@ -154,79 +156,83 @@ TDI_STATUS InfoTdiQueryInformationEx(
 		 ID->toi_entity.tei_entity,
 		 ID->toi_entity.tei_instance));
 
-    /* Check wether it is a query for a list of entities */
-    if (ID->toi_entity.tei_entity == GENERIC_ENTITY)
+    switch (ID->toi_class)
     {
-	if ((ID->toi_class != INFO_CLASS_GENERIC) ||
-	    (ID->toi_type != INFO_TYPE_PROVIDER) ||
-	    (ID->toi_id != ENTITY_LIST_ID)) {
-	    TI_DbgPrint(DEBUG_INFO,("Invalid parameter\n"));
-	    Status = TDI_INVALID_PARAMETER;
-        } else
-	    Status = InfoTdiQueryListEntities(Buffer, BufferSize);
-    } else if (ID->toi_entity.tei_entity == AT_ENTITY) {
-	TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
+        case INFO_CLASS_GENERIC:
+           switch (ID->toi_id)
+           {
+              case ENTITY_LIST_ID:
+                 if (ID->toi_type != INFO_TYPE_PROVIDER)
+                     return TDI_INVALID_PARAMETER;
 
-	for( i = 0; i < EntityCount; i++ ) {
-	    if( EntityList[i].tei_entity == IF_ENTITY &&
-		EntityList[i].tei_instance == ID->toi_entity.tei_instance ) {
-		InfoRequest = EntityList[i].info_req;
-		context = EntityList[i].context;
-		FoundEntity = TRUE;
-		break;
-	    }
-	}
+                 return InfoTdiQueryListEntities(Buffer, BufferSize);
 
-	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
+              case ENTITY_TYPE_ID:
+                 if (ID->toi_type != INFO_TYPE_PROVIDER)
+                     return TDI_INVALID_PARAMETER;
 
-	if( FoundEntity ) {
-	    TI_DbgPrint(DEBUG_INFO,
-			("Calling AT Entity %d (%04x:%d) InfoEx (%x,%x,%x)\n",
-			 i, ID->toi_entity.tei_entity,
-			 ID->toi_entity.tei_instance,
-			 ID->toi_class, ID->toi_type, ID->toi_id));
-	    Status = InfoRequest( ID->toi_class,
-				  ID->toi_type,
-				  ID->toi_id,
-				  context,
-				  &ID->toi_entity,
-				  Buffer,
-				  BufferSize );
-	}
-    } else {
-	TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
+                 return InfoTdiQueryEntityType(ID->toi_entity, Buffer, BufferSize);
 
-	for( i = 0; i < EntityCount; i++ ) {
-	    if( EntityList[i].tei_entity == ID->toi_entity.tei_entity &&
-		EntityList[i].tei_instance == ID->toi_entity.tei_instance ) {
-		InfoRequest = EntityList[i].info_req;
-		context = EntityList[i].context;
-		FoundEntity = TRUE;
-		break;
-	    }
-	}
+              default:
+                 return TDI_INVALID_REQUEST;
+           }
 
-	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
+        case INFO_CLASS_PROTOCOL:
+           switch (ID->toi_id)
+           {
+              case IF_MIB_STATS_ID:
+                 if (ID->toi_entity.tei_entity == IF_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetInterfaceMIB(ID->toi_entity, EntityListContext, Buffer, BufferSize);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                 else if (ID->toi_entity.tei_entity == CL_NL_ENTITY ||
+                          ID->toi_entity.tei_entity == CO_NL_ENTITY)
+                     return InfoTdiQueryGetIPSnmpInfo(ID->toi_entity, Buffer, BufferSize);
+                 else
+                     return TDI_INVALID_PARAMETER;
 
-	if( FoundEntity ) {
-	    TI_DbgPrint(DEBUG_INFO,
-			("Calling Entity %d (%04x:%d) InfoEx (%x,%x,%x)\n",
-			 i, ID->toi_entity.tei_entity,
-			 ID->toi_entity.tei_instance,
-			 ID->toi_class, ID->toi_type, ID->toi_id));
-	    Status = InfoRequest( ID->toi_class,
-				  ID->toi_type,
-				  ID->toi_id,
-				  context,
-				  &ID->toi_entity,
-				  Buffer,
-				  BufferSize );
-	}
+              case IP_MIB_ADDRTABLE_ENTRY_ID:
+                 if (ID->toi_entity.tei_entity != CL_NL_ENTITY && 
+                     ID->toi_entity.tei_entity != CO_NL_ENTITY)
+                     return TDI_INVALID_PARAMETER;
+
+                 if (ID->toi_type != INFO_TYPE_PROVIDER)
+                     return TDI_INVALID_PARAMETER;
+
+                 return InfoTdiQueryGetAddrTable(ID->toi_entity, Buffer, BufferSize);
+
+              case IP_MIB_ARPTABLE_ENTRY_ID:
+                 if (ID->toi_type != INFO_TYPE_PROVIDER)
+                     return TDI_INVALID_PARAMETER;
+
+                 if (ID->toi_entity.tei_entity == AT_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetArptableMIB(ID->toi_entity, EntityListContext,
+                                                           Buffer, BufferSize);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                 else if (ID->toi_entity.tei_entity == CO_NL_ENTITY ||
+                          ID->toi_entity.tei_entity == CL_NL_ENTITY)
+                     return InfoTdiQueryGetRouteTable(Buffer, BufferSize);
+                 else
+                     return TDI_INVALID_PARAMETER;
+
+#if 0
+              case IP_INTFC_INFO_ID:
+                 if (ID->toi_type != INFO_TYPE_PROVIDER)
+                     return TDI_INVALID_PARAMETER;
+
+                 return InfoTdiQueryGetIFInfo(Context, Buffer, BufferSize);
+#endif
+
+              default:
+                 return TDI_INVALID_REQUEST;
+           }
+
+        default:
+           return TDI_INVALID_REQUEST;
     }
-
-    TI_DbgPrint(DEBUG_INFO,("Status: %08x\n", Status));
-
-    return Status;
 }
 
 TDI_STATUS InfoTdiSetInformationEx
@@ -245,24 +251,26 @@ TDI_STATUS InfoTdiSetInformationEx
  *   Status of operation
  */
 {
-    switch( ID->toi_class ) {
-    case INFO_CLASS_PROTOCOL:
-	switch( ID->toi_type ) {
-	case INFO_TYPE_PROVIDER:
-	    switch( ID->toi_id ) {
-	    case IP_MIB_ROUTETABLE_ENTRY_ID:
-		return InfoNetworkLayerTdiSetEx
-		    ( ID->toi_class,
-		      ID->toi_type,
-		      ID->toi_id,
-		      NULL,
-		      &ID->toi_entity,
-		      Buffer,
-		      BufferSize );
-	    }
-	}
-	break;
-    }
+    switch (ID->toi_class)
+    {
+       case INFO_CLASS_PROTOCOL:
+	  switch (ID->toi_id)
+          {
+	      case IP_MIB_ARPTABLE_ENTRY_ID:
+                 if (ID->toi_id != INFO_TYPE_PROVIDER)
+                     return TDI_INVALID_PARAMETER;
 
-    return TDI_INVALID_PARAMETER;
+                 if (ID->toi_entity.tei_entity != CL_NL_ENTITY &&
+                     ID->toi_entity.tei_entity != CO_NL_ENTITY)
+                     return TDI_INVALID_PARAMETER;
+
+	         return InfoTdiSetRoute((PIPROUTE_ENTRY)Buffer);
+
+              default:
+                return TDI_INVALID_REQUEST;
+	  }
+
+       default:
+          return TDI_INVALID_REQUEST;
+    }
 }

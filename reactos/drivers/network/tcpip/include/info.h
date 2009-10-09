@@ -7,6 +7,8 @@
 #ifndef __INFO_H
 #define __INFO_H
 
+#include <tcpioctl.h>
+
 #define MAX_PHYSADDR_LEN 8
 #define MAX_IFDESCR_LEN  256
 
@@ -100,23 +102,6 @@ typedef struct IFENTRY {
     ULONG DescrLen;
 } IFENTRY, *PIFENTRY;
 
-#define	IP_MIB_STATS_ID           1
-#define IF_MIB_STATS_ID           1
-
-#ifndef IP_MIB_ROUTETABLE_ENTRY_ID
-#define IP_MIB_ROUTETABLE_ENTRY_ID 0x101
-#endif
-#ifndef IP_MIB_ADDRTABLE_ENTRY_ID
-#define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
-#endif
-#ifndef IP_MIB_ARPTABLE_ENTRY_ID
-#define IP_MIB_ARPTABLE_ENTRY_ID 0x101
-#endif
-#ifndef MAX_PHYSADDR_SIZE
-#define	MAX_PHYSADDR_SIZE 8
-#endif
-
-
 /* Only UDP is supported */
 #define TDI_SERVICE_FLAGS (TDI_SERVICE_CONNECTIONLESS_MODE | \
                            TDI_SERVICE_BROADCAST_SUPPORTED)
@@ -157,54 +142,28 @@ TDI_STATUS InfoTdiSetInformationEx(
     PVOID Buffer,
     UINT BufferSize);
 
-/* Network layer info functions */
-TDI_STATUS InfoNetworkLayerTdiQueryEx( UINT InfoClass,
-				       UINT InfoType,
-				       UINT InfoId,
-				       PVOID Context,
-				       TDIEntityID *id,
-				       PNDIS_BUFFER Buffer,
-				       PUINT BufferSize );
-
-TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
-				     UINT InfoType,
-				     UINT InfoId,
-				     PVOID Context,
-				     TDIEntityID *id,
-				     PCHAR Buffer,
-				     UINT BufferSize );
-
-TDI_STATUS InfoTransportLayerTdiQueryEx( UINT InfoClass,
-					 UINT InfoType,
-					 UINT InfoId,
-					 PVOID Context,
-					 TDIEntityID *id,
-					 PNDIS_BUFFER Buffer,
-					 PUINT BufferSize );
-
-TDI_STATUS InfoTransportLayerTdiSetEx( UINT InfoClass,
-				       UINT InfoType,
-				       UINT InfoId,
-				       PVOID Context,
-				       TDIEntityID *id,
-				       PCHAR Buffer,
-				       UINT BufferSize );
-
-TDI_STATUS InfoInterfaceTdiQueryEx( UINT InfoClass,
-				    UINT InfoType,
-				    UINT InfoId,
-				    PVOID Context,
-				    TDIEntityID *id,
+TDI_STATUS InfoTdiQueryGetAddrTable(TDIEntityID ID,
 				    PNDIS_BUFFER Buffer,
-				    PUINT BufferSize );
+				    PUINT BufferSize);
 
-TDI_STATUS InfoInterfaceTdiSetEx( UINT InfoClass,
-				  UINT InfoType,
-				  UINT InfoId,
-				  PVOID Context,
-				  TDIEntityID *id,
-				  PCHAR Buffer,
-				  UINT BufferSize );
+TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID ID,
+				       PIP_INTERFACE Interface,
+				       PNDIS_BUFFER Buffer,
+				       PUINT BufferSize);
+
+TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
+				      PNDIS_BUFFER Buffer,
+				      PUINT BufferSize );
+
+TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer,
+                                      PUINT BufferSize );
+
+TDI_STATUS InfoTdiSetRoute(PIPROUTE_ENTRY Route);
+
+TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID ID,
+				      PIP_INTERFACE Interface,
+				      PNDIS_BUFFER Buffer,
+				      PUINT BufferSize);
 
 /* Insert and remove interface entities */
 VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface );

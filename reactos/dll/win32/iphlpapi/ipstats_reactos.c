@@ -62,30 +62,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 #endif
 
 BOOL isIpEntity( HANDLE tcpFile, TDIEntityID *ent ) {
-    DWORD entityType, returnedLen;
-    NTSTATUS status;
-    TCP_REQUEST_QUERY_INFORMATION_EX req;
-
-    req.ID.toi_class = INFO_CLASS_GENERIC;
-    req.ID.toi_type = INFO_TYPE_PROVIDER;
-    req.ID.toi_id = ENTITY_TYPE_ID;
-    req.ID.toi_entity = *ent;
-
-    status =
-        DeviceIoControl
-        ( tcpFile,
-          IOCTL_TCP_QUERY_INFORMATION_EX,
-          &req,
-          sizeof(req),
-          &entityType,
-          sizeof(entityType),
-          &returnedLen,
-          NULL );
-
-    TRACE("Ent: %04x:d -> %04x\n",
-           ent->tei_entity, ent->tei_instance, entityType );
-
-    return NT_SUCCESS(status) && entityType == CL_NL_IP;
+    return (ent->tei_entity == CL_NL_ENTITY ||
+            ent->tei_entity == CO_NL_ENTITY);
 }
 
 NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
@@ -182,9 +160,9 @@ NTSTATUS tdiGetRoutesForIpEntity
     status = tdiGetSetOfThings( tcpFile,
                                 INFO_CLASS_PROTOCOL,
                                 INFO_TYPE_PROVIDER,
-                                IP_MIB_ROUTETABLE_ENTRY_ID,
-                                ent->tei_entity,
-				0,
+                                IP_MIB_ARPTABLE_ENTRY_ID,
+                                CL_NL_ENTITY,
+				ent->tei_instance,
                                 0,
                                 sizeof(IPRouteEntry),
                                 (PVOID *)routes,
@@ -204,8 +182,8 @@ NTSTATUS tdiGetIpAddrsForIpEntity
                                 INFO_CLASS_PROTOCOL,
                                 INFO_TYPE_PROVIDER,
                                 IP_MIB_ADDRTABLE_ENTRY_ID,
-                                ent->tei_entity,
-				0,
+                                CL_NL_ENTITY,
+				ent->tei_instance,
                                 0,
                                 sizeof(IPAddrEntry),
                                 (PVOID *)addrs,

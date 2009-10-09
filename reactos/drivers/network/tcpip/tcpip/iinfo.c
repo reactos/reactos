@@ -10,21 +10,26 @@
 
 #include "precomp.h"
 
-TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
+TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID ID,
 				       PIP_INTERFACE Interface,
 				       PNDIS_BUFFER Buffer,
 				       PUINT BufferSize) {
     TDI_STATUS Status = TDI_INVALID_REQUEST;
     PIFENTRY OutData;
-    PLAN_ADAPTER IF = (PLAN_ADAPTER)Interface->Context;
+    PLAN_ADAPTER IF;
     PCHAR IFDescr;
     ULONG Size;
     UINT DescrLenMax = MAX_IFDESCR_LEN - 1;
     NDIS_STATUS NdisStatus;
 
+    if (!Interface)
+        return TDI_INVALID_PARAMETER;
+
+    IF = (PLAN_ADAPTER)Interface->Context;
+
     TI_DbgPrint(DEBUG_INFO,
 		("Getting IFEntry MIB (IF %08x LA %08x) (%04x:%d)\n",
-		 Interface, IF, ID->tei_entity, ID->tei_instance));
+		 Interface, IF, ID.tei_entity, ID.tei_instance));
 
     OutData =
 	(PIFENTRY)exAllocatePool( NonPagedPool,
@@ -91,7 +96,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     Size = IFDescr - (PCHAR)OutData + 1;
 
     TI_DbgPrint(DEBUG_INFO, ("Finished IFEntry MIB (%04x:%d) size %d\n",
-			    ID->tei_entity, ID->tei_instance, Size));
+			    ID.tei_entity, ID.tei_instance, Size));
 
     Status = InfoCopyOut( (PCHAR)OutData, Size, Buffer, BufferSize );
     exFreePool( OutData );
@@ -101,7 +106,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     return Status;
 }
 
-TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID *ID,
+TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID ID,
 				      PIP_INTERFACE Interface,
 				      PNDIS_BUFFER Buffer,
 				      PUINT BufferSize) {
@@ -122,58 +127,106 @@ TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID *ID,
     return Status;
 }
 
-TDI_STATUS InfoTdiQueryGetArpCapability(TDIEntityID *ID,
-					PIP_INTERFACE Interface,
-					PNDIS_BUFFER Buffer,
-					PUINT BufferSize) {
-    NTSTATUS Status;
-    ULONG Capability = 0x280;
+VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
+    KIRQL OldIrql;
+    UINT IFCount = 0, CLNLCount = 0, CLTLCount = 0, COTLCount = 0, ATCount = 0, ERCount = 0, i;
 
-    TI_DbgPrint(MID_TRACE,("Copying out %d bytes (AT_ENTITY capability)\n",
-			   sizeof(Capability)));
-    Status = InfoCopyOut
-	( (PVOID)&Capability, sizeof(Capability), Buffer, BufferSize );
+    TI_DbgPrint(DEBUG_INFO,
+		("Inserting interface %08x (%d entities already)\n",
+		 Interface, EntityCount));
 
-    return Status;
+    TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
+
+    /* Count IP Entities */
+    for( i = 0; i < EntityCount; i++ )
+	switch( EntityList[i].tei_entity )
+        {
+           case IF_ENTITY:
+              IFCount++;
+              break;
+
+           case CL_NL_ENTITY:
+              CLNLCount++;
+              break;
+
+           case CL_TL_ENTITY:
+              CLTLCount++;
+              break;
+
+           case CO_TL_ENTITY:
+              COTLCount++;
+              break;
+
+           case AT_ENTITY:
+              ATCount++;
+              break;
+
+           case ER_ENTITY:
+              ERCount++;
+              break;
+
+           default:
+              break;
+       }
+
+    EntityList[EntityCount].tei_entity   = IF_ENTITY;
+    EntityList[EntityCount].tei_instance = IFCount;
+    EntityList[EntityCount].context      = Interface;
+    EntityList[EntityCount].flags        = IF_MIB;
+    EntityCount++;
+    EntityList[EntityCount].tei_entity   = CL_NL_ENTITY;
+    EntityList[EntityCount].tei_instance = CLNLCount;
+    EntityList[EntityCount].context      = Interface;
+    EntityList[EntityCount].flags        = CL_NL_IP;
+    EntityCount++;
+    EntityList[EntityCount].tei_entity   = CL_TL_ENTITY;
+    EntityList[EntityCount].tei_instance = CLTLCount;
+    EntityList[EntityCount].context      = Interface;
+    EntityList[EntityCount].flags        = CL_TL_UDP;
+    EntityCount++;
+    EntityList[EntityCount].tei_entity   = CO_TL_ENTITY;
+    EntityList[EntityCount].tei_instance = COTLCount;
+    EntityList[EntityCount].context      = Interface;
+    EntityList[EntityCount].flags        = CO_TL_TCP;
+    EntityCount++;
+    EntityList[EntityCount].tei_entity   = ER_ENTITY;
+    EntityList[EntityCount].tei_instance = ERCount;
+    EntityList[EntityCount].context      = Interface;
+    EntityList[EntityCount].flags        = ER_ICMP;
+    EntityCount++;
+    EntityList[EntityCount].tei_entity   = AT_ENTITY;
+    EntityList[EntityCount].tei_instance = ATCount;
+    EntityList[EntityCount].context      = Interface;
+    EntityList[EntityCount].flags        = AT_ARP;
+    EntityCount++;
+
+    TcpipReleaseSpinLock( &EntityListLock, OldIrql );
 }
 
-TDI_STATUS InfoInterfaceTdiQueryEx( UINT InfoClass,
-				    UINT InfoType,
-				    UINT InfoId,
-				    PVOID Context,
-				    TDIEntityID *id,
-				    PNDIS_BUFFER Buffer,
-				    PUINT BufferSize ) {
-    if( InfoClass == INFO_CLASS_GENERIC &&
-	InfoType == INFO_TYPE_PROVIDER &&
-	InfoId == ENTITY_TYPE_ID &&
-	id->tei_entity == AT_ENTITY ) {
-	return InfoTdiQueryGetArpCapability( id, Context, Buffer, BufferSize );
-    } else if( InfoClass == INFO_CLASS_PROTOCOL &&
-	       InfoType == INFO_TYPE_PROVIDER &&
-	       InfoId == IF_MIB_STATS_ID ) {
-	return InfoTdiQueryGetInterfaceMIB( id, Context, Buffer, BufferSize );
-    } else if( InfoClass == INFO_CLASS_GENERIC &&
-	       InfoType == INFO_TYPE_PROVIDER &&
-	       InfoId == ENTITY_TYPE_ID ) {
-	ULONG Temp = IF_MIB;
-	return InfoCopyOut( (PCHAR)&Temp, sizeof(Temp), Buffer, BufferSize );
-    } else if( InfoClass == INFO_CLASS_PROTOCOL &&
-	       InfoType == INFO_TYPE_PROVIDER &&
-	       InfoId == IP_MIB_ARPTABLE_ENTRY_ID ) {
-	return InfoTdiQueryGetArptableMIB( id, Context, Buffer, BufferSize );
-    } else
-	return TDI_INVALID_REQUEST;
+VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
+    KIRQL OldIrql;
+    UINT i;
+
+    TI_DbgPrint(DEBUG_INFO,("Removing TDI entry 0x%x\n", Interface));
+
+    TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
+
+    /* Remove entities that have this interface as context
+     * In the future, this might include AT_ENTITY types, too
+     */
+    for( i = 0; i < EntityCount; i++ ) {
+	TI_DbgPrint(DEBUG_INFO,("--> examining TDI entry 0x%x\n", EntityList[i].context));
+	if( EntityList[i].context == Interface ) {
+	    if( i != EntityCount-1 ) {
+		memcpy( &EntityList[i],
+			&EntityList[--EntityCount],
+			sizeof(EntityList[i]) );
+	    } else {
+		EntityCount--;
+	    }
+	}
+    }
+
+    TcpipReleaseSpinLock( &EntityListLock, OldIrql );
 }
 
-TDI_STATUS InfoInterfaceTdiSetEx( UINT InfoClass,
-				  UINT InfoType,
-				  UINT InfoId,
-				  PVOID Context,
-				  TDIEntityID *id,
-				  PCHAR Buffer,
-				  UINT BufferSize ) {
-    TI_DbgPrint(DEBUG_INFO, ("Got Request: Class %x Type %x Id %x, EntityID %x:%x\n",
-                InfoClass, InfoId, id->tei_entity, id->tei_instance));
-    return TDI_INVALID_REQUEST;
-}
