@@ -317,7 +317,7 @@ DbgSetDebugFilterState(IN ULONG ComponentId,
 /*
  * @implemented
  */
-NTSTATUS
+VOID
 NTAPI
 DbgLoadImageSymbols(IN PANSI_STRING Name,
                     IN PVOID Base,
@@ -346,7 +346,6 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
 
     /* Load the symbols */
     DebugService2(Name, &SymbolInfo, BREAKPOINT_LOAD_SYMBOLS);
-    return STATUS_SUCCESS;
 }
 
 /*
