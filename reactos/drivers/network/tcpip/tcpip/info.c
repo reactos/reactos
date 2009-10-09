@@ -188,7 +188,10 @@ TDI_STATUS InfoTdiQueryInformationEx(
                          return TDI_INVALID_PARAMETER;
                  else if (ID->toi_entity.tei_entity == CL_NL_ENTITY ||
                           ID->toi_entity.tei_entity == CO_NL_ENTITY)
-                     return InfoTdiQueryGetIPSnmpInfo(ID->toi_entity, Buffer, BufferSize);
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetIPSnmpInfo(ID->toi_entity, EntityListContext, Buffer, BufferSize);
+                     else
+                         return TDI_INVALID_PARAMETER;
                  else
                      return TDI_INVALID_PARAMETER;
 
@@ -214,7 +217,10 @@ TDI_STATUS InfoTdiQueryInformationEx(
                          return TDI_INVALID_PARAMETER;
                  else if (ID->toi_entity.tei_entity == CO_NL_ENTITY ||
                           ID->toi_entity.tei_entity == CL_NL_ENTITY)
-                     return InfoTdiQueryGetRouteTable(Buffer, BufferSize);
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetRouteTable(EntityListContext, Buffer, BufferSize);
+                     else
+                         return TDI_INVALID_PARAMETER;
                  else
                      return TDI_INVALID_PARAMETER;
 
@@ -251,20 +257,25 @@ TDI_STATUS InfoTdiSetInformationEx
  *   Status of operation
  */
 {
+    PVOID EntityListContext;
+
     switch (ID->toi_class)
     {
        case INFO_CLASS_PROTOCOL:
 	  switch (ID->toi_id)
           {
 	      case IP_MIB_ARPTABLE_ENTRY_ID:
-                 if (ID->toi_id != INFO_TYPE_PROVIDER)
+                 if (ID->toi_type != INFO_TYPE_PROVIDER)
                      return TDI_INVALID_PARAMETER;
 
                  if (ID->toi_entity.tei_entity != CL_NL_ENTITY &&
                      ID->toi_entity.tei_entity != CO_NL_ENTITY)
                      return TDI_INVALID_PARAMETER;
 
-	         return InfoTdiSetRoute((PIPROUTE_ENTRY)Buffer);
+                 if ((EntityListContext = GetContext(ID->toi_entity)))
+	             return InfoTdiSetRoute(EntityListContext, (PIPROUTE_ENTRY)Buffer);
+                 else
+                     return TDI_INVALID_PARAMETER;
 
               default:
                 return TDI_INVALID_REQUEST;

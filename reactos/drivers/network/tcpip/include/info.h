@@ -152,13 +152,15 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID ID,
 				       PUINT BufferSize);
 
 TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
+                                      PIP_INTERFACE IF,
 				      PNDIS_BUFFER Buffer,
 				      PUINT BufferSize );
 
-TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer,
+TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF,
+                                      PNDIS_BUFFER Buffer,
                                       PUINT BufferSize );
 
-TDI_STATUS InfoTdiSetRoute(PIPROUTE_ENTRY Route);
+TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PIPROUTE_ENTRY Route);
 
 TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID ID,
 				      PIP_INTERFACE Interface,

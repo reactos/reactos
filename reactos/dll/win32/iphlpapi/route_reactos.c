@@ -64,14 +64,14 @@ DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     TRACE("Called.\n");
 
     if( NT_SUCCESS(status) ) {
-        status = getNthIpEntity( tcpFile, 0, &id );
+        status = getNthIpEntity( tcpFile, pRoute->dwForwardIfIndex, &id );
 
         if( NT_SUCCESS(status) ) {
             req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;
             req.Req.ID.toi_type                 = INFO_TYPE_PROVIDER;
             req.Req.ID.toi_id                   = IP_MIB_ARPTABLE_ENTRY_ID;
             req.Req.ID.toi_entity.tei_instance  = id.tei_instance;
-            req.Req.ID.toi_entity.tei_instance  = CL_NL_ENTITY;
+            req.Req.ID.toi_entity.tei_entity    = CL_NL_ENTITY;
             req.Req.BufferSize                  = sizeof(*rte);
             rte                                 =
                 (IPRouteEntry *)&req.Req.Buffer[0];
@@ -129,7 +129,7 @@ DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     TRACE("Called.\n");
 
     if( NT_SUCCESS(status) ) {
-        status = getNthIpEntity( tcpFile, 0, &id );
+        status = getNthIpEntity( tcpFile, pRoute->dwForwardIfIndex, &id );
 
         if( NT_SUCCESS(status) ) {
             req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;

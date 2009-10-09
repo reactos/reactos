@@ -423,7 +423,6 @@ RouteTable *getRouteTable(void)
 {
     RouteTable *out_route_table;
     DWORD numRoutes = getNumRoutes(), routesAdded = 0;
-    IPSNMPInfo snmpInfo;
     TDIEntityID ent;
     HANDLE tcpFile;
     NTSTATUS status = openTcpFile( &tcpFile );
@@ -444,31 +443,28 @@ RouteTable *getRouteTable(void)
 
     out_route_table->numRoutes = numRoutes;
 
-    for( i = 0; routesAdded < numRoutes; i++ ) {
+    for( i = 0; routesAdded < out_route_table->numRoutes; i++ ) {
         int j;
         IPRouteEntry *route_set;
 
         getNthIpEntity( tcpFile, i, &ent );
-        tdiGetMibForIpEntity( tcpFile, &ent, &snmpInfo );
-
-        TRACE( "%d routes in instance %d\n", snmpInfo.ipsi_numroutes, i );
 
         tdiGetRoutesForIpEntity( tcpFile, &ent, &route_set, &numRoutes );
-
+        
         if( !route_set ) {
             closeTcpFile( tcpFile );
             HeapFree( GetProcessHeap(), 0, out_route_table );
             return 0;
         }
 
-        TRACE("Route set returned\n");
+        TRACE( "%d routes in instance %d\n", numRoutes, i );
 #if 0
         HexDump( route_set,
                  sizeof( IPRouteEntry ) *
                  snmpInfo.ipsi_numroutes );
 #endif
 
-        for( j = 0; j < snmpInfo.ipsi_numroutes; j++ ) {
+        for( j = 0; j < numRoutes; j++ ) {
             int routeNum = j + routesAdded;
             out_route_table->routes[routeNum].dest =
                 route_set[j].ire_dest;
@@ -484,7 +480,7 @@ RouteTable *getRouteTable(void)
 
         if( route_set ) tdiFreeThingSet( route_set );
 
-        routesAdded += snmpInfo.ipsi_numroutes;
+        routesAdded += numRoutes;
     }
 
     closeTcpFile( tcpFile );

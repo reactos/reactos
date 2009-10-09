@@ -16,16 +16,17 @@
 
 
 /* Get IPRouteEntry s for each of the routes in the system */
-TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
+TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     TDI_STATUS Status;
     KIRQL OldIrql;
-    UINT RtCount = CountFIBs();
+    UINT RtCount = CountFIBs(IF);
     UINT Size = sizeof( IPROUTE_ENTRY ) * RtCount;
     PFIB_ENTRY RCache =
 	exAllocatePool( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount ),
 	RCacheCur = RCache;
     PIPROUTE_ENTRY RouteEntries = exAllocatePool( NonPagedPool, Size ),
 	RtCurrent = RouteEntries;
+    UINT i;
 
     TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d, RCache = %08x\n",
 			    RtCount, RCache));
@@ -38,7 +39,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 
     RtlZeroMemory( RouteEntries, Size );
 
-    RtCount = CopyFIBs( RCache );
+    RtCount = CopyFIBs( IF, RCache );
 
     while( RtCurrent < RouteEntries + RtCount ) {
 	ASSERT(RCacheCur->Router);
@@ -66,13 +67,15 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 	      RtCurrent->Metric1 ));
 
 	TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
-	for( RtCurrent->Index = EntityCount;
-	     RtCurrent->Index > 0 &&
-		 RCacheCur->Router->Interface !=
-		 EntityList[RtCurrent->Index - 1].context;
-	     RtCurrent->Index-- );
+	for (i = 0; i < EntityCount; i++)
+             if (EntityList[i].context == IF)
+                 break;
 
-        RtCurrent->Index = EntityList[RtCurrent->Index - 1].tei_instance;
+        if (i < EntityCount)
+            RtCurrent->Index = EntityList[i].tei_instance;
+        else
+            RtCurrent->Index = 0;
+
 	TcpipReleaseSpinLock(&EntityListLock, OldIrql);
 
 	RtCurrent++; RCacheCur++;
@@ -146,11 +149,12 @@ TDI_STATUS InfoTdiQueryGetAddrTable(TDIEntityID ID,
 }
 
 TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
+                                      PIP_INTERFACE IF,
 				      PNDIS_BUFFER Buffer,
 				      PUINT BufferSize ) {
     IPSNMP_INFO SnmpInfo;
     UINT IfCount = CountInterfaces();
-    UINT RouteCount = CountFIBs();
+    UINT RouteCount = CountFIBs(IF);
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
@@ -169,10 +173,9 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
     return Status;
 }
 
-TDI_STATUS InfoTdiSetRoute(PIPROUTE_ENTRY Route)
+TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PIPROUTE_ENTRY Route)
 {
     IP_ADDRESS Address, Netmask, Router;
-    PNEIGHBOR_CACHE_ENTRY NCE;
 
     AddrInitIPv4( &Address, Route->Dest );
     AddrInitIPv4( &Netmask, Route->Mask );
@@ -180,13 +183,8 @@ TDI_STATUS InfoTdiSetRoute(PIPROUTE_ENTRY Route)
 
     if( Route->Type == IP_ROUTE_TYPE_ADD ) { /* Add the route */
         TI_DbgPrint(DEBUG_INFO,("Adding route (%s)\n", A2S(&Address)));
-        /* Find the existing route this belongs to */
-        NCE = RouterGetRoute( &Router );
-        if (!NCE) return TDI_INVALID_PARAMETER;
-
-        /* Really add the route */
 	if (!RouterCreateRoute( &Address, &Netmask, &Router,
-			       NCE->Interface, Route->Metric1))
+			       IF, Route->Metric1))
 	    return TDI_NO_RESOURCES;
 
         return TDI_SUCCESS;
