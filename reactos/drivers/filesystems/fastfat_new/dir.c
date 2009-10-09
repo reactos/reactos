@@ -71,9 +71,9 @@ FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
     Dcb->FullFileName.Length = 1 * sizeof(WCHAR);
     Dcb->FullFileName.MaximumLength = 2 * sizeof(WCHAR);
 
-    Dcb->FileName.Name.Ansi.Buffer = "\\";
-    Dcb->FileName.Name.Ansi.Length = 1;
-    Dcb->FileName.Name.Ansi.MaximumLength = 2 * sizeof(CHAR);
+    Dcb->ShortName.Name.Ansi.Buffer = "\\";
+    Dcb->ShortName.Name.Ansi.Length = 1;
+    Dcb->ShortName.Name.Ansi.MaximumLength = 2 * sizeof(CHAR);
 
     /* Fill dirent attribute byte copy */
     Dcb->DirentFatFlags = FILE_ATTRIBUTE_DIRECTORY;

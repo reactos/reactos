@@ -306,7 +306,13 @@ FatSetFullNameInFcb(PFCB Fcb,
 
 VOID NTAPI
 FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PUNICODE_STRING Lfn,
                IN PFCB Fcb);
+
+VOID NTAPI
+Fati8dot3ToString(IN PCHAR FileName,
+                  IN BOOLEAN DownCase,
+                  OUT POEM_STRING OutString);
 
 /*  ------------------------------------------------------------  rw.c  */
 

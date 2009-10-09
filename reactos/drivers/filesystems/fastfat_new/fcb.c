@@ -150,7 +150,7 @@ FatCreateFcb(IN PFAT_IRP_CONTEXT IrpContext,
     Fcb->FatHandle = FileHandle;
 
     /* Set names */
-    FatSetFcbNames(IrpContext, Fcb);
+    FatSetFcbNames(IrpContext, NULL, Fcb);
 
     return Fcb;
 }
@@ -247,10 +247,125 @@ FatSetFullNameInFcb(PFCB Fcb,
 VOID
 NTAPI
 FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PUNICODE_STRING Lfn,
                IN PFCB Fcb)
 {
-    // Set the short name first
-    UNIMPLEMENTED;
+    FF_DIRENT DirEnt;
+    FF_ERROR Err;
+    POEM_STRING ShortName;
+
+    /* Get the dir entry */
+    Err = FF_GetEntry(Fcb->Vcb->Ioman,
+                      Fcb->FatHandle->DirEntry,
+                      Fcb->FatHandle->DirCluster,
+                      &DirEnt);
+
+    if (Err != FF_ERR_NONE)
+    {
+        DPRINT1("Error %d getting dirent of a file\n", Err);
+        return;
+    }
+
+    /* Initialize short name string */
+    ShortName = &Fcb->ShortName.Name.Ansi;
+    ShortName->Buffer = Fcb->ShortNameBuffer;
+    ShortName->Length = 0;
+    ShortName->MaximumLength = sizeof(Fcb->ShortNameBuffer);
+
+    /* Convert dirent to the proper string */
+    Fati8dot3ToString(DirEnt.FileName, FALSE, ShortName);
+
+    // Unicode name
+
+    // Add names to the splay tree
 }
+
+VOID
+NTAPI
+Fati8dot3ToString(IN PCHAR FileName,
+                  IN BOOLEAN DownCase,
+                  OUT POEM_STRING OutString)
+{
+#if 0
+    ULONG BaseLen, ExtLen;
+    CHAR  *cString = OutString->Buffer;
+    ULONG i;
+
+    /* Calc base and ext lens */
+    for (BaseLen = 8; BaseLen > 0; BaseLen--)
+    {
+        if (FileName[BaseLen - 1] != ' ') break;
+    }
+
+    for (ExtLen = 3; ExtLen > 0; ExtLen--)
+    {
+        if (FileName[8 + ExtLen - 1] != ' ') break;
+    }
+
+    /* Process base name */
+    if (BaseLen)
+    {
+        RtlCopyMemory(cString, FileName, BaseLen);
+
+        /* Substitute the e5 thing */
+        if (cString[0] == 0x05) cString[0] = 0xe5;
+
+        /* Downcase if asked to */
+        if (DownCase)
+        {
+            /* Do it manually */
+            for (i = 0; i < BaseLen; i++)
+            {
+                if (cString[i] >= 'A' &&
+                    cString[i] <= 'Z')
+                {
+                    /* Lowercase it */
+                    cString[i] += 'a' - 'A';
+                }
+
+            }
+        }
+    }
+
+    /* Process extension */
+    if (ExtLen)
+    {
+        /* Add the dot */
+        cString[BaseLen] = '.';
+        BaseLen++;
+
+        /* Copy the extension */
+        for (i = 0; i < ExtLen; i++)
+        {
+            cString[BaseLen + i] = FileName[8 + i];
+        }
+
+        /* Lowercase the extension if asked to */
+        if (DownCase)
+        {
+            /* Do it manually */
+            for (i = BaseLen; i < BaseLen + ExtLen; i++)
+            {
+                if (cString[i] >= 'A' &&
+                    cString[i] <= 'Z')
+                {
+                    /* Lowercase it */
+                    cString[i] += 'a' - 'A';
+                }
+            }
+        }
+    }
+
+    /* Set the length */
+    OutString->Length = BaseLen + ExtLen;
+#else
+    RtlCopyMemory(OutString->Buffer, FileName, 11);
+    OutString->Length = strlen(FileName);
+    ASSERT(OutString->Length <= 12);
+#endif
+
+    DPRINT1("'%s', len %d\n", OutString->Buffer, OutString->Length);
+}
+
 
 /* EOF */

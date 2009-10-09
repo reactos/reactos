@@ -269,10 +269,11 @@ typedef struct _FCB
     /* Mcb mapping Vbo->Lbo */
     LARGE_MCB Mcb;
     ULONG FirstCluster;
-    /* Links into FCB Trie */
-    FCB_NAME_LINK FileName;
+    /* Links into FCB Tree */
+    FCB_NAME_LINK ShortName;
+    FCB_NAME_LINK LongName;
     /* Buffer for the short name */
-    WCHAR ShortNameBuffer[0xc];
+    CHAR ShortNameBuffer[0xc];
     /* Full file name */
     UNICODE_STRING FullFileName;
     /* Long name with exact case */
