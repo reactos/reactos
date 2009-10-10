@@ -1,23 +1,4 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
@@ -42,6 +23,7 @@ extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
 PTHREADINFO ptiRawInput;
 PKTIMER MasterTimer;
+PATTACHINFO gpai = NULL;
 
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
@@ -1322,6 +1304,57 @@ BOOL FASTCALL
 IntKeyboardInput(KEYBDINPUT *ki)
 {
    return FALSE;
+}
+
+BOOL FASTCALL
+UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
+{
+   PATTACHINFO pai;
+
+   /* Can not be the same thread.*/
+   if (pti == ptiTo) return FALSE;
+
+   /* Do not attach if IMM is in activate mode or between different desktops. */
+   if ( pti->pClientInfo->CI_flags & CI_IMMACTIVATE ||
+        ptiTo->pClientInfo->CI_flags & CI_IMMACTIVATE ||
+        pti->Desktop != ptiTo->Desktop )
+      return FALSE;
+
+   /* If Attach set, allocate and link. */
+   if ( fAttach )
+   {
+      pai = ExAllocatePoolWithTag(PagedPool, sizeof(ATTACHINFO), TAG_ATTACHINFO);
+      if ( !pai ) return FALSE;
+
+      pai->paiNext = gpai;
+      pai->pti1 = pti;
+      pai->pti2 = ptiTo;
+      gpai = pai;
+   }
+   else /* If clear, unlink and free it. */
+   {
+      PATTACHINFO paiprev = NULL;
+
+      if ( !gpai ) return FALSE;
+
+      pai = gpai;
+
+      /* Search list and free if found or return false. */
+      do
+      {
+        if ( pai->pti2 == ptiTo && pai->pti1 == pti ) break;
+        paiprev = pai;
+        pai = pai->paiNext;
+      } while (pai);
+
+      if ( !pai ) return FALSE;
+
+      if (paiprev) paiprev->paiNext = pai->paiNext;
+
+      ExFreePoolWithTag(pai, TAG_ATTACHINFO);
+  }
+
+  return TRUE;
 }
 
 UINT

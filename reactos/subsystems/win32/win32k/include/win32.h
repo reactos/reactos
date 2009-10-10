@@ -105,10 +105,18 @@ typedef struct _THREADINFO
     PDESKTOPINFO        pDeskInfo;
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
+    PUNICODE_STRING     pstrAppName;
     LONG                timeLast;
+    ULONG_PTR           idLast;
+    INT                 exitCode;
     HANDLE              hDesktop;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
+    DWORD               dwExpWinVer;
+    DWORD               dwCompatFlags;
+    DWORD               dwCompatFlags2;
+    struct _USER_MESSAGE_QUEUE* pqAttach;
+    PTHREADINFO         ptiSibling;
     ULONG               fsHooks;
     PHOOK               sphkCurrent;
     LIST_ENTRY          PtiLink;

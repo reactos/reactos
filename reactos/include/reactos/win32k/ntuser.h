@@ -124,7 +124,13 @@ typedef struct _CALLBACKWND
      PVOID pvWnd;
 } CALLBACKWND, *PCALLBACKWND;
 
-#define CI_CURTHPRHOOK    0x00000010
+#define CI_TRANSACTION       0x00000001
+#define CI_QUEUEMSG          0x00000002
+#define CI_WOW               0x00000004
+#define CI_INITTHREAD        0x00000008
+#define CI_CURTHPRHOOK       0x00000010
+#define CI_CLASSESREGISTERED 0x00000020
+#define CI_IMMACTIVATE       0x00000040
 
 typedef struct _CLIENTINFO
 {
