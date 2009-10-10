@@ -764,7 +764,7 @@ KeyboardThreadMain(PVOID StartContext)
                }
                else
                {
-                  RepeatCount = 0;
+                  RepeatCount = 1;
                   LastFlags = KeyInput.Flags & (KEY_E0 | KEY_E1);
                   LastMakeCode = KeyInput.MakeCode;
                }
