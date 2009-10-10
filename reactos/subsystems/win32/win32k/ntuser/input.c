@@ -1314,9 +1314,9 @@ UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
    /* Can not be the same thread.*/
    if (pti == ptiTo) return FALSE;
 
-   /* Do not attach if IMM is in activate mode or between different desktops. */
-   if ( pti->pClientInfo->CI_flags & CI_IMMACTIVATE ||
-        ptiTo->pClientInfo->CI_flags & CI_IMMACTIVATE ||
+   /* Do not attach to system threads or between different desktops. */
+   if ( pti->TIF_flags & TIF_DONTATTACHQUEUE ||
+        ptiTo->TIF_flags & TIF_DONTATTACHQUEUE ||
         pti->Desktop != ptiTo->Desktop )
       return FALSE;
 
