@@ -12,6 +12,34 @@
 #define NDEBUG
 #include <debug.h>
 
+//
+// Retrieves the ComponentId and Level for BREAKPOINT_PRINT
+// and OutputString and OutputStringLength for BREAKPOINT_PROMPT.
+//
+#if defined(_M_IX86)
+
+//
+// EBX/EDI on x86
+//
+#define KdpGetFirstParameter(Context)  ((Context)->Ebx)
+#define KdpGetSecondParameter(Context) ((Context)->Edi)
+
+#elif defined(_M_AMD64)
+
+//
+// R8/R9 on AMD64
+//
+#define KdpGetFirstParameter(Context)  ((Context)->R8)
+#define KdpGetSecondParameter(Context) ((Context)->R9)
+
+#elif defined(_M_ARM)
+
+#error Yo Ninjas!
+
+#else
+#error Unsupported Architecture
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -27,7 +55,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     PKPRCB Prcb;
     NTSTATUS ExceptionCode = ExceptionRecord->ExceptionCode;
 
-    /* Check if this is INT1 or 3, or if we're forced to handle it */
+    /* Check if this is single step or a breakpoint, or if we're forced to handle it */
     if ((ExceptionCode == STATUS_BREAKPOINT) ||
         (ExceptionCode == STATUS_SINGLE_STEP) ||
         (ExceptionCode == STATUS_ASSERTION_FAILURE) ||
@@ -109,8 +137,8 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_PRINT:
 
                 /* Call the worker routine */
-                ReturnValue = KdpPrint((ULONG)ContextRecord->Ebx,
-                                       (ULONG)ContextRecord->Edi,
+                ReturnValue = KdpPrint((ULONG)KdpGetFirstParameter(ContextRecord),
+                                       (ULONG)KdpGetSecondParameter(ContextRecord),
                                        (LPSTR)ExceptionRecord->
                                        ExceptionInformation[1],
                                        (USHORT)ExceptionRecord->
@@ -132,8 +160,8 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                                         ExceptionInformation[1],
                                         (USHORT)ExceptionRecord->
                                         ExceptionInformation[2],
-                                        (LPSTR)ContextRecord->Ebx,
-                                        (USHORT)ContextRecord->Edi,
+                                        (LPSTR)KdpGetFirstParameter(ContextRecord),
+                                        (USHORT)KdpGetSecondParameter(ContextRecord),
                                         PreviousMode,
                                         TrapFrame,
                                         ExceptionFrame);
@@ -143,7 +171,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                 KeSetContextReturnRegister(ContextRecord, ReturnValue);
                 break;
 
-            /* DbgUnloadImageSymbols */
+            /* DbgUnLoadImageSymbols */
             case BREAKPOINT_UNLOAD_SYMBOLS:
 
                 /* Drop into the load case below, with the unload parameter */

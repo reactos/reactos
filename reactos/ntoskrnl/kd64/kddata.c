@@ -15,6 +15,35 @@
 
 VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 
+//
+// Apply the KIPCR WDK workaround for x86 and AMD64
+//
+#if defined(_M_IX86) || defined(_M_AMD64)
+#define KPCR KIPCR
+#endif
+
+#if defined(_M_IX86)
+
+#define KPCR_SELF_OFFSET               FIELD_OFFSET(KPCR, Self)
+#define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
+#define KPCR_CONTAINED_PRCB_OFFSET     FIELD_OFFSET(KPCR, PrcbData)
+
+#elif defined(_M_AMD64)
+
+#define KPCR_SELF_OFFSET               FIELD_OFFSET(KPCR, Self)
+#define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, CurrentPrcb)
+#define KPCR_CONTAINED_PRCB_OFFSET     FIELD_OFFSET(KPCR, Prcb)
+
+#elif defined(_M_ARM)
+
+//#define KPCR_SELF_OFFSET
+#define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
+//#define KPCR_CONTAINED_PRCB_OFFSET
+
+#else
+#error Unsupported Architecture
+#endif
+
 /* GLOBALS *******************************************************************/
 
 //
@@ -48,12 +77,8 @@ LARGE_INTEGER KdPerformanceCounterRate;
 //
 // Breakpoint Data
 //
-BREAKPOINT_ENTRY KdpBreakpointTable[20];
-#if defined(_M_IX86) || defined(_M_AMD64)
-ULONG KdpBreakpointInstruction = 0xCC; // INT3
-#else
-#error Define the breakpoint instruction for this architecture
-#endif
+BREAKPOINT_ENTRY KdpBreakpointTable[KD_BREAKPOINT_MAX];
+KD_BREAKPOINT_TYPE KdpBreakpointInstruction = KD_BREAKPOINT_VALUE;
 BOOLEAN KdpOweBreakpoint;
 BOOLEAN BreakpointsSuspended;
 ULONG KdpNumInternalBreakpoints;
@@ -329,8 +354,12 @@ DBGKD_GET_VERSION64 KdVersionBlock =
     0,
     0,
     DBGKD_64BIT_PROTOCOL_VERSION2,
-    KD_SECONDARY_VERSION_DEFAULT,
+    CURRENT_KD_SECONDARY_VERSION,
+#if defined(_M_AMD64)
+    DBGKD_VERS_FLAG_DATA | DBGKD_VERS_FLAG_PTR64,
+#else
     DBGKD_VERS_FLAG_DATA,
+#endif
     IMAGE_FILE_MACHINE_ARCHITECTURE,
     PACKET_TYPE_MAX,
     0,
@@ -345,46 +374,46 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
 {
     {{0}},
     0,
-    {PtrToUlong(RtlpBreakWithStatusInstruction)},
+    {(ULONG_PTR)RtlpBreakWithStatusInstruction},
     0,
     FIELD_OFFSET(KTHREAD, CallbackStack),
     CBSTACK_CALLBACK_STACK,
-    CBSTACK_EBP,
+    CBSTACK_FRAME_POINTER,
     FALSE,
-    {PtrToUlong(KiCallUserMode)},
+    {(ULONG_PTR)KiCallUserMode},
     0,
-    {PtrToUlong(&PsLoadedModuleList)},
-    {PtrToUlong(&PsActiveProcessHead)},
-    {PtrToUlong(&PspCidTable)},
-    {PtrToUlong(&ExpSystemResourcesList)},
+    {(ULONG_PTR)&PsLoadedModuleList},
+    {(ULONG_PTR)&PsActiveProcessHead},
+    {(ULONG_PTR)&PspCidTable},
+    {(ULONG_PTR)&ExpSystemResourcesList},
     {0},                                                        // ExpPagedPoolDescriptor
     {0},                                                        // ExpNumberOfPagedPools
-    {PtrToUlong(&KeTimeIncrement)},
-    {PtrToUlong(&KeBugcheckCallbackListHead)},
-    {PtrToUlong(KiBugCheckData)},
-    {PtrToUlong(&IopErrorLogListHead)},
-    {PtrToUlong(&ObpRootDirectoryObject)},
-    {PtrToUlong(&ObpTypeObjectType)},
+    {(ULONG_PTR)&KeTimeIncrement},
+    {(ULONG_PTR)&KeBugcheckCallbackListHead},
+    {(ULONG_PTR)KiBugCheckData},
+    {(ULONG_PTR)&IopErrorLogListHead},
+    {(ULONG_PTR)&ObpRootDirectoryObject},
+    {(ULONG_PTR)&ObpTypeObjectType},
     {0},                                                        // MmSystemCacheStart
     {0},                                                        // MmSystemCacheEnd
     {0},                                                        // MmSystemCacheWs
-    {PtrToUlong(&MmPfnDatabase)},
-    {PtrToUlong(MmSystemPtesStart)},
-    {PtrToUlong(MmSystemPtesEnd)},
+    {(ULONG_PTR)&MmPfnDatabase},
+    {(ULONG_PTR)MmSystemPtesStart},
+    {(ULONG_PTR)MmSystemPtesEnd},
     {0},                                                        // MmSubsectionBase
     {0},                                                        // MmNumberOfPagingFiles
-    {PtrToUlong(&MmLowestPhysicalPage)},
-    {PtrToUlong(&MmHighestPhysicalPage)},
-    {PtrToUlong(&MmNumberOfPhysicalPages)},
-    {PtrToUlong(&MmMaximumNonPagedPoolInBytes)},
-    {PtrToUlong(&MmNonPagedSystemStart)},
-    {PtrToUlong(&MmNonPagedPoolStart)},
-    {PtrToUlong(&MmNonPagedPoolEnd)},
-    {PtrToUlong(&MmPagedPoolStart)},
-    {PtrToUlong(&MmPagedPoolEnd)},
-    {PtrToUlong(&MmPagedPoolInfo)},
+    {(ULONG_PTR)&MmLowestPhysicalPage},
+    {(ULONG_PTR)&MmHighestPhysicalPage},
+    {(ULONG_PTR)&MmNumberOfPhysicalPages},
+    {(ULONG_PTR)&MmMaximumNonPagedPoolInBytes},
+    {(ULONG_PTR)&MmNonPagedSystemStart},
+    {(ULONG_PTR)&MmNonPagedPoolStart},
+    {(ULONG_PTR)&MmNonPagedPoolEnd},
+    {(ULONG_PTR)&MmPagedPoolStart},
+    {(ULONG_PTR)&MmPagedPoolEnd},
+    {(ULONG_PTR)&MmPagedPoolInfo},
     PAGE_SIZE,
-    {PtrToUlong(&MmSizeOfPagedPoolInBytes)},
+    {(ULONG_PTR)&MmSizeOfPagedPoolInBytes},
     {0},                                                        // MmTotalCommitLimit
     {0},                                                        // MmTotalCommittedPages
     {0},                                                        // MmSharedCommit
@@ -400,18 +429,18 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {0},                                                        // MmAvailablePages
     {0},                                                        // MmResidentAvailablePages
     {0},                                                        // PoolTrackTable
-    {PtrToUlong(&NonPagedPoolDescriptor)},
-    {PtrToUlong(&MmHighestUserAddress)},
-    {PtrToUlong(&MmSystemRangeStart)},
-    {PtrToUlong(&MmUserProbeAddress)},
-    {PtrToUlong(KdPrintDefaultCircularBuffer)},
-    {PtrToUlong(KdPrintDefaultCircularBuffer + 1)},
-    {PtrToUlong(&KdPrintWritePointer)},
-    {PtrToUlong(&KdPrintRolloverCount)},
+    {(ULONG_PTR)&NonPagedPoolDescriptor},
+    {(ULONG_PTR)&MmHighestUserAddress},
+    {(ULONG_PTR)&MmSystemRangeStart},
+    {(ULONG_PTR)&MmUserProbeAddress},
+    {(ULONG_PTR)KdPrintDefaultCircularBuffer},
+    {(ULONG_PTR)KdPrintDefaultCircularBuffer + 1},
+    {(ULONG_PTR)&KdPrintWritePointer},
+    {(ULONG_PTR)&KdPrintRolloverCount},
     {0},                                                        // MmLoadedUserImageList
-    {PtrToUlong(&NtBuildLab)},
+    {(ULONG_PTR)&NtBuildLab},
     {0},
-    {PtrToUlong(KiProcessorBlock)},
+    {(ULONG_PTR)KiProcessorBlock},
     {0},                                                        // MmUnloadedDrivers
     {0},                                                        // MmLastUnloadedDrivers
     {0},                                                        // MmTriageActionTaken
@@ -421,10 +450,10 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {0},                                                        // MmAllocatedNonPagedPool
     {0},                                                        // MmPeakCommitment
     {0},                                                        // MmtotalCommitLimitMaximum
-    {PtrToUlong(&CmNtCSDVersion)},
-    {PtrToUlong(&MmPhysicalMemoryBlock)},
-    {PtrToUlong(&MmSessionBase)},
-    {PtrToUlong(&MmSessionSize)},
+    {(ULONG_PTR)&CmNtCSDVersion},
+    {(ULONG_PTR)&MmPhysicalMemoryBlock},
+    {(ULONG_PTR)&MmSessionBase},
+    {(ULONG_PTR)&MmSessionSize},
     {0},
     {0},
     FIELD_OFFSET(KTHREAD, NextProcessor),
@@ -448,20 +477,24 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     FIELD_OFFSET(KPRCB, ProcessorState.ContextFrame),
     FIELD_OFFSET(KPRCB, Number),
     sizeof(ETHREAD),
-    {PtrToUlong(KdPrintDefaultCircularBuffer)},
-    {PtrToUlong(&KdPrintBufferSize)},
-    {PtrToUlong(&KeLoaderBlock)},
-    sizeof(KIPCR) + sizeof(KPRCB),
-    FIELD_OFFSET(KIPCR, Self),
-    FIELD_OFFSET(KPCR, Prcb),
-    FIELD_OFFSET(KIPCR, PrcbData),
+    {(ULONG_PTR)KdPrintDefaultCircularBuffer},
+    {(ULONG_PTR)&KdPrintBufferSize},
+    {(ULONG_PTR)&KeLoaderBlock},
+    sizeof(KPCR) + sizeof(KPRCB),
+    KPCR_SELF_OFFSET,
+    KPCR_CURRENT_PRCB_OFFSET,
+    KPCR_CONTAINED_PRCB_OFFSET,
     0,
     0,
     0,
     0,
     0,
-    FIELD_OFFSET(KIPCR, PrcbData) +
+    KPCR_CONTAINED_PRCB_OFFSET +
     FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
+#if defined(_M_IX86)
+    //
+    // x86 GDT/LDT/TSS constants
+    //
     KGDT_R0_CODE,
     KGDT_R0_DATA,
     KGDT_R0_PCR,
@@ -472,6 +505,35 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     KGDT_TSS,
     0,
     0,
+#elif defined(_M_AMD64)
+    //
+    // AMD64 GDT/LDT/TSS constants
+    //
+    KGDT_64_R0_CODE,
+    KGDT_64_DATA,
+    KGDT_64_DATA,
+    KGDT_64_R3_CODE,
+    KGDT_64_DATA,
+    KGDT_64_DATA,
+    0,
+    KGDT_TSS,
+    0,
+    0,
+#else
+    //
+    // No GDT/LDT/TSS on other architectures
+    //
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+#endif
     {0},                                                        // IopNumTriageDumpDataBlocks
     {0},                                                        // IopTriageDumpDataBlocks
 };

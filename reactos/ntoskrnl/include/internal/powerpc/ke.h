@@ -37,6 +37,10 @@ extern ULONG KePPCCacheAlignment;
 
 #define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_POWERPC
 
+//#define KD_BREAKPOINT_TYPE
+//#define KD_BREAKPOINT_SIZE
+//#define KD_BREAKPOINT_VALUE
+
 //
 // Macros for getting and setting special purpose registers in portable code
 //
@@ -54,6 +58,12 @@ extern ULONG KePPCCacheAlignment;
 
 #define KeSetContextReturnRegister(Context, ReturnValue) \
     ((Context)->Gpr3 = (ReturnValue))
+
+//
+// Returns the Interrupt State from a Trap Frame.
+// ON = TRUE, OFF = FALSE
+//
+//#define KeGetTrapFrameInterruptState(TrapFrame) \
 
 #define KePPCRdmsr(msr,val1,val2) __asm__ __volatile__("mfmsr 3")
 

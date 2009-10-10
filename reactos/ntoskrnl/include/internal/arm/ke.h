@@ -12,7 +12,9 @@
 //
 // BKPT is 4 bytes long
 //
-#define KD_BREAKPOINT_SIZE 4
+#define KD_BREAKPOINT_TYPE        ULONG
+#define KD_BREAKPOINT_SIZE        sizeof(ULONG)
+//#define KD_BREAKPOINT_VALUE
 
 //
 // Macros for getting and setting special purpose registers in portable code
@@ -31,6 +33,12 @@
 
 #define KeSetContextReturnRegister(Context, ReturnValue) \
     ((Context)->R0 = (ReturnValue))
+
+//
+// Returns the Interrupt State from a Trap Frame.
+// ON = TRUE, OFF = FALSE
+//
+//#define KeGetTrapFrameInterruptState(TrapFrame) \
 
 VOID
 KiPassiveRelease(

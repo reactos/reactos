@@ -7,6 +7,11 @@
  */
 
 //
+// Maximum supported number of breakpoints
+//
+#define KD_BREAKPOINT_MAX                               32
+
+//
 // Breakpoint Status Flags
 //
 typedef enum _KDP_BREAKPOINT_FLAGS
@@ -25,7 +30,7 @@ typedef struct _BREAKPOINT_ENTRY
     ULONG Flags;
     PKPROCESS Process;
     PVOID Address;
-    UCHAR Content;
+    KD_BREAKPOINT_TYPE Content;
 } BREAKPOINT_ENTRY, *PBREAKPOINT_ENTRY;
 
 //
@@ -263,6 +268,139 @@ KdpAddBreakpoint(
 );
 
 //
+// Architecture dependent support routines
+//
+
+//
+// Version
+//
+VOID
+NTAPI
+KdpSysGetVersion(
+    IN PDBGKD_GET_VERSION64 Version
+);
+
+//
+// Context
+//
+VOID
+NTAPI
+KdpGetStateChange(
+    IN PDBGKD_MANIPULATE_STATE64 State,
+    IN PCONTEXT Context
+);
+
+VOID
+NTAPI
+KdpSetContextState(
+    IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
+    IN PCONTEXT Context
+);
+
+//
+// MSR
+//
+NTSTATUS
+NTAPI
+KdpSysReadMsr(
+    IN ULONG Msr,
+    OUT PLARGE_INTEGER MsrValue
+);
+
+NTSTATUS
+NTAPI
+KdpSysWriteMsr(
+    IN ULONG Msr,
+    IN PLARGE_INTEGER MsrValue
+);
+
+//
+// Bus
+//
+NTSTATUS
+NTAPI
+KdpSysReadBusData(
+    IN ULONG BusDataType,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length,
+    OUT PULONG ActualLength
+);
+
+NTSTATUS
+NTAPI
+KdpSysWriteBusData(
+    IN ULONG BusDataType,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length,
+    OUT PULONG ActualLength
+);
+
+//
+// Control Space
+//
+NTSTATUS
+NTAPI
+KdpSysReadControlSpace(
+    IN ULONG Processor,
+    IN ULONG64 BaseAddress,
+    IN PVOID Buffer,
+    IN ULONG Length,
+    OUT PULONG ActualLength
+);
+
+NTSTATUS
+NTAPI
+KdpSysWriteControlSpace(
+    IN ULONG Processor,
+    IN ULONG64 BaseAddress,
+    IN PVOID Buffer,
+    IN ULONG Length,
+    OUT PULONG ActualLength
+);
+
+//
+// I/O Space
+//
+NTSTATUS
+NTAPI
+KdpSysReadIoSpace(
+    IN ULONG InterfaceType,
+    IN ULONG BusNumber,
+    IN ULONG AddressSpace,
+    IN ULONG64 IoAddress,
+    IN PULONG DataValue,
+    IN ULONG DataSize,
+    OUT PULONG ActualDataSize
+);
+
+NTSTATUS
+NTAPI
+KdpSysWriteIoSpace(
+    IN ULONG InterfaceType,
+    IN ULONG BusNumber,
+    IN ULONG AddressSpace,
+    IN ULONG64 IoAddress,
+    IN PULONG DataValue,
+    IN ULONG DataSize,
+    OUT PULONG ActualDataSize
+);
+
+//
+// Low Memory
+//
+NTSTATUS
+NTAPI
+KdpSysCheckLowMemory(
+    IN ULONG Flags
+);
+
+//
 // Internal routine for sending strings directly to the debugger
 //
 VOID
@@ -307,8 +445,8 @@ extern ULONG KdComponentTableSize;
 extern ULONG Kd_WIN2000_Mask;
 extern PULONG KdComponentTable[104];
 extern CHAR KdpMessageBuffer[4096], KdpPathBuffer[4096];
-extern BREAKPOINT_ENTRY KdpBreakpointTable[20];
-extern ULONG KdpBreakpointInstruction;
+extern BREAKPOINT_ENTRY KdpBreakpointTable[KD_BREAKPOINT_MAX];
+extern KD_BREAKPOINT_TYPE KdpBreakpointInstruction;
 extern BOOLEAN KdpOweBreakpoint;
 extern BOOLEAN BreakpointsSuspended;
 extern ULONG KdpNumInternalBreakpoints;

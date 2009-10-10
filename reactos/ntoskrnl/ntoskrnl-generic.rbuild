@@ -321,6 +321,21 @@
 	</if>
 	<if property="_WINKD_" value ="1">
 		<directory name="kd64">
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>kdsup.c</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>kdsup.c</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="arm">
+				<directory name="arm">
+					<file>kdsup.c</file>
+				</directory>
+			</if>
 			<file>kdapi.c</file>
 			<file>kdbreak.c</file>
 			<file>kddata.c</file>

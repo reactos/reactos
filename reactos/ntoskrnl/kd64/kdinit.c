@@ -20,7 +20,7 @@ KdUpdateDataBlock(VOID)
 {
     /* Update the KeUserCallbackDispatcher pointer */
     KdDebuggerDataBlock.KeUserCallbackDispatcher =
-        (ULONG64)(LONG_PTR)KeUserCallbackDispatcher;
+        (ULONG_PTR)KeUserCallbackDispatcher;
 }
 
 BOOLEAN
@@ -119,8 +119,8 @@ KdInitSystem(IN ULONG BootPhase,
 #endif
 
         /* Save Pointers to Loaded Module List and Debugger Data */
-        KdVersionBlock.PsLoadedModuleList = (ULONGLONG)(LONG_PTR)&PsLoadedModuleList;
-        KdVersionBlock.DebuggerDataList = (ULONGLONG)(LONG_PTR)&KdpDebuggerDataListHead;
+        KdVersionBlock.PsLoadedModuleList = (ULONG64)(LONG_PTR)&PsLoadedModuleList;
+        KdVersionBlock.DebuggerDataList = (ULONG64)(LONG_PTR)&KdpDebuggerDataListHead;
 
         /* Set protocol limits */
         KdVersionBlock.MaxStateChange = DbgKdMaximumStateChange -
@@ -143,7 +143,7 @@ KdInitSystem(IN ULONG BootPhase,
 
         /* Save the Kernel Base */
         PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
-        KdVersionBlock.KernBase = (ULONGLONG)(LONG_PTR)LdrEntry->DllBase;
+        KdVersionBlock.KernBase = (ULONG64)(LONG_PTR)LdrEntry->DllBase;
 
         /* Check if we have a command line */
         CommandLine = LoaderBlock->LoadOptions;
@@ -183,14 +183,14 @@ KdInitSystem(IN ULONG BootPhase,
     else
     {
         /* Called from a bugcheck...Save the Kernel Base */
-        KdVersionBlock.KernBase = (ULONGLONG)(LONG_PTR)PsNtosImageBase;
+        KdVersionBlock.KernBase = (ULONG64)(LONG_PTR)PsNtosImageBase;
 
         /* Unconditionally enable KD */
         EnableKd = TRUE;
     }
 
     /* Set the Kernel Base in the Data Block */
-    KdDebuggerDataBlock.KernBase = (ULONGLONG)(LONG_PTR)KdVersionBlock.KernBase;
+    KdDebuggerDataBlock.KernBase = (ULONG_PTR)KdVersionBlock.KernBase;
 
     /* Initialize the debugger if requested */
     if ((EnableKd) && (NT_SUCCESS(KdDebuggerInitialize0(LoaderBlock))))
