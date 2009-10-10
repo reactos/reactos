@@ -150,7 +150,7 @@ FatCreateFcb(IN PFAT_IRP_CONTEXT IrpContext,
     Fcb->FatHandle = FileHandle;
 
     /* Set names */
-    FatSetFcbNames(IrpContext, NULL, Fcb);
+    FatSetFcbNames(IrpContext, Fcb);
 
     return Fcb;
 }
@@ -247,12 +247,17 @@ FatSetFullNameInFcb(PFCB Fcb,
 VOID
 NTAPI
 FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
-               IN PUNICODE_STRING Lfn,
                IN PFCB Fcb)
 {
     FF_DIRENT DirEnt;
     FF_ERROR Err;
     POEM_STRING ShortName;
+    CHAR ShortNameRaw[13];
+    UCHAR EntryBuffer[32];
+    UCHAR NumLFNs;
+    PUNICODE_STRING UnicodeName;
+    OEM_STRING LongNameOem;
+    NTSTATUS Status;
 
     /* Get the dir entry */
     Err = FF_GetEntry(Fcb->Vcb->Ioman,
@@ -266,18 +271,51 @@ FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
         return;
     }
 
+    /* Read the dirent to fetch the raw short name */
+    FF_FetchEntry(Fcb->Vcb->Ioman,
+                  Fcb->FatHandle->DirCluster,
+                  Fcb->FatHandle->DirEntry,
+                  EntryBuffer);
+    NumLFNs = (UCHAR)(EntryBuffer[0] & ~0x40);
+    RtlCopyMemory(ShortNameRaw, EntryBuffer, 11);
+
     /* Initialize short name string */
     ShortName = &Fcb->ShortName.Name.Ansi;
     ShortName->Buffer = Fcb->ShortNameBuffer;
     ShortName->Length = 0;
     ShortName->MaximumLength = sizeof(Fcb->ShortNameBuffer);
 
-    /* Convert dirent to the proper string */
-    Fati8dot3ToString(DirEnt.FileName, FALSE, ShortName);
+    /* Convert raw short name to a proper string */
+    Fati8dot3ToString(ShortNameRaw, FALSE, ShortName);
 
-    // Unicode name
+    /* Get the long file name (if any) */
+    if (NumLFNs > 0)
+    {
+        /* Prepare the oem string */
+        LongNameOem.Buffer = DirEnt.FileName;
+        LongNameOem.MaximumLength = FF_MAX_FILENAME;
+        LongNameOem.Length = strlen(DirEnt.FileName);
 
-    // Add names to the splay tree
+        /* Prepare the unicode string */
+        UnicodeName = &Fcb->LongName.Name.String;
+        UnicodeName->Length = (LongNameOem.Length + 1) * sizeof(WCHAR);
+        UnicodeName->MaximumLength = UnicodeName->Length;
+        UnicodeName->Buffer = FsRtlAllocatePool(PagedPool, UnicodeName->Length);
+
+        /* Convert it to unicode */
+        Status = RtlOemStringToUnicodeString(UnicodeName, &LongNameOem, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            ASSERT(FALSE);
+        }
+
+        RtlDowncaseUnicodeString(UnicodeName, UnicodeName, FALSE);
+        RtlUpcaseUnicodeString(UnicodeName, UnicodeName, FALSE);
+
+        DPRINT1("Converted long name: %wZ\n", UnicodeName);
+    }
+
+    // TODO: Add names to the splay tree
 }
 
 VOID
@@ -286,7 +324,7 @@ Fati8dot3ToString(IN PCHAR FileName,
                   IN BOOLEAN DownCase,
                   OUT POEM_STRING OutString)
 {
-#if 0
+#if 1
     ULONG BaseLen, ExtLen;
     CHAR  *cString = OutString->Buffer;
     ULONG i;

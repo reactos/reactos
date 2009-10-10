@@ -40,7 +40,7 @@ FatiRead(PFAT_IRP_CONTEXT IrpContext)
     
     OpenType = FatDecodeFileObject(FileObject, &Vcb, &Fcb, &Ccb);
 
-    DPRINT1("FatiRead() Fcb %p, Name %wZ, Offset %d, Length %d, Handle %p\n",
+    DPRINT("FatiRead() Fcb %p, Name %wZ, Offset %d, Length %d, Handle %p\n",
         Fcb, &FileObject->FileName, ByteOffset.LowPart, NumberOfBytes, Fcb->FatHandle);
 
     /* Perform actual read */
@@ -52,14 +52,14 @@ FatiRead(PFAT_IRP_CONTEXT IrpContext)
     else
     {
         Buffer = FatMapUserBuffer(IrpContext->Irp);
-        DPRINT1("Normal cached read, buffer %p\n");
+        DPRINT("Normal cached read, buffer %p\n");
 
         /* Set offset */
         FF_Seek(Fcb->FatHandle, ByteOffset.LowPart, FF_SEEK_SET);
 
         /* Read */
         BytesRead = FF_Read(Fcb->FatHandle, NumberOfBytes, 1, Buffer);
-        DPRINT1("Read %d bytes\n", BytesRead);
+        DPRINT("Read %d bytes\n", BytesRead);
 
         /* Indicate we read requested amount of bytes */
         IrpContext->Irp->IoStatus.Information = BytesRead;
