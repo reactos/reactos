@@ -203,7 +203,8 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
 {
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
 
-    ARPTransmit(&NCE->Address, NCE->LinkAddress,
+    ARPTransmit(&NCE->Address,
+                (NCE->State & NUD_INCOMPLETE) ? NULL : NCE->LinkAddress,
                 NCE->Interface);
 }
 
