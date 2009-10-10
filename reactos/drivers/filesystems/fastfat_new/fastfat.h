@@ -284,18 +284,20 @@ FatCreateFcb(
     IN PFCB ParentDcb,
     IN FF_FILE *FileHandle);
 
-NTSTATUS
-FatOpenFcb(
-    OUT PFCB* Fcb,
-    IN PFAT_IRP_CONTEXT IrpContext,
-    IN PFCB ParentFcb,
-    IN PUNICODE_STRING FileName);
-
 PFCB NTAPI
 FatFindFcb(PFAT_IRP_CONTEXT IrpContext,
            PRTL_SPLAY_LINKS *RootNode,
            PSTRING AnsiName,
            PBOOLEAN IsDosName);
+
+VOID NTAPI
+FatInsertName(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PRTL_SPLAY_LINKS *RootNode,
+              IN PFCB_NAME_LINK Name);
+
+VOID NTAPI
+FatRemoveNames(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PFCB Fcb);
 
 PCCB NTAPI
 FatCreateCcb();

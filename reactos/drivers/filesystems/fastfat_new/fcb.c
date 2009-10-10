@@ -313,9 +313,16 @@ FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
         RtlUpcaseUnicodeString(UnicodeName, UnicodeName, FALSE);
 
         DPRINT1("Converted long name: %wZ\n", UnicodeName);
+
+        /* Indicate that this FCB has a unicode long name */
+        SetFlag(Fcb->State, FCB_STATE_HAS_UNICODE_NAME);
     }
 
-    // TODO: Add names to the splay tree
+    // TODO: Add both names to the splay tree */
+    //FatInsertName(
+
+    /* Mark the fact that names were added to splay trees*/
+    SetFlag(Fcb->State, FCB_STATE_HAS_NAMES);
 }
 
 VOID
@@ -324,7 +331,6 @@ Fati8dot3ToString(IN PCHAR FileName,
                   IN BOOLEAN DownCase,
                   OUT POEM_STRING OutString)
 {
-#if 1
     ULONG BaseLen, ExtLen;
     CHAR  *cString = OutString->Buffer;
     ULONG i;
@@ -396,13 +402,121 @@ Fati8dot3ToString(IN PCHAR FileName,
 
     /* Set the length */
     OutString->Length = BaseLen + ExtLen;
-#else
-    RtlCopyMemory(OutString->Buffer, FileName, 11);
-    OutString->Length = strlen(FileName);
-    ASSERT(OutString->Length <= 12);
-#endif
 
     DPRINT1("'%s', len %d\n", OutString->Buffer, OutString->Length);
+}
+
+VOID
+NTAPI
+FatInsertName(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PRTL_SPLAY_LINKS *RootNode,
+              IN PFCB_NAME_LINK Name)
+{
+    PFCB_NAME_LINK NameLink;
+    FSRTL_COMPARISON_RESULT Comparison;
+
+    /* Initialize the splay links */
+    RtlInitializeSplayLinks(&Name->Links);
+
+    /* Is this the first entry? */
+    if (*RootNode == NULL)
+    {
+        /* Yes, become root and return */
+        *RootNode = &Name->Links;
+        return;
+    }
+
+    /* Get the name link */
+    NameLink = CONTAINING_RECORD(*RootNode, FCB_NAME_LINK, Links);
+    while (TRUE)
+    {
+        /* Compare prefixes */
+        Comparison = FatiCompareNames(&NameLink->Name.Ansi, &Name->Name.Ansi);
+
+        /* Check the bad case first */
+        if (Comparison == EqualTo)
+        {
+            /* Must not happen */
+            ASSERT(FALSE);
+        }
+
+        /* Check comparison result */
+        if (Comparison == GreaterThan)
+        {
+            /* Go to the left child */
+            if (!RtlLeftChild(&NameLink->Links))
+            {
+                /* It's absent, insert here and break */
+                RtlInsertAsLeftChild(&NameLink->Links, &NameLink->Links);
+                break;
+            }
+            else
+            {
+                /* It's present, go inside it */
+                NameLink = CONTAINING_RECORD(RtlLeftChild(&NameLink->Links),
+                                             FCB_NAME_LINK,
+                                             Links);
+            }
+        }
+        else
+        {
+            /* Go to the right child */
+            if (!RtlRightChild(&NameLink->Links))
+            {
+                /* It's absent, insert here and break */
+                RtlInsertAsRightChild(&NameLink->Links, &Name->Links);
+                break;
+            }
+            else
+            {
+                /* It's present, go inside it */
+                NameLink = CONTAINING_RECORD(RtlRightChild(&NameLink->Links),
+                                             FCB_NAME_LINK,
+                                             Links);
+            }
+        }
+    }
+}
+
+VOID
+NTAPI
+FatRemoveNames(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PFCB Fcb)
+{
+    PRTL_SPLAY_LINKS RootNew;
+    PFCB Parent;
+
+    /* Reference the parent for simplicity */
+    Parent = Fcb->ParentFcb;
+
+    /* If this FCB hasn't been added to splay trees - just return */
+    if (!FlagOn( Fcb->State, FCB_STATE_HAS_NAMES ))
+        return;
+
+    /* Delete the short name link */
+    RootNew = RtlDelete(&Fcb->ShortName.Links);
+
+    /* Set the new root */
+    Parent->Dcb.SplayLinksAnsi = RootNew;
+
+    /* Deal with a unicode name if it exists */
+    if (FlagOn( Fcb->State, FCB_STATE_HAS_UNICODE_NAME ))
+    {
+        /* Delete the long unicode name link */
+        RootNew = RtlDelete(&Fcb->LongName.Links);
+
+        /* Set the new root */
+        Parent->Dcb.SplayLinksUnicode = RootNew;
+
+        /* Free the long name string's buffer*/
+        RtlFreeUnicodeString(&Fcb->LongName.Name.String);
+
+        /* Clear the "has unicode name" flag */
+        ClearFlag(Fcb->State, FCB_STATE_HAS_UNICODE_NAME);
+    }
+
+    /* This FCB has no names added to splay trees now */
+    ClearFlag(Fcb->State, FCB_STATE_HAS_NAMES);
 }
 
 

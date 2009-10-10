@@ -239,6 +239,9 @@ typedef enum _FCB_CONDITION
     FcbNeedsToBeVerified
 } FCB_CONDITION;
 
+#define FCB_STATE_HAS_NAMES        0x01
+#define FCB_STATE_HAS_UNICODE_NAME 0x02
+
 typedef struct _FCB
 {
     FSRTL_ADVANCED_FCB_HEADER Header;
