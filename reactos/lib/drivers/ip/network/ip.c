@@ -93,10 +93,12 @@ VOID IPDispatchProtocol(
  */
 {
     UINT Protocol;
+    IP_ADDRESS SrcAddress;
 
     switch (IPPacket->Type) {
     case IP_ADDRESS_V4:
         Protocol = ((PIPv4_HEADER)(IPPacket->Header))->Protocol;
+        AddrInitIPv4(&SrcAddress, ((PIPv4_HEADER)(IPPacket->Header))->SrcAddr);
         break;
     case IP_ADDRESS_V6:
         /* FIXME: IPv6 adresses not supported */
@@ -106,6 +108,8 @@ VOID IPDispatchProtocol(
         TI_DbgPrint(MIN_TRACE, ("Unrecognized datagram discarded.\n"));
         return;
     }
+
+    NBResetNeighborTimeout(&SrcAddress);
 
     if (Protocol < IP_PROTOCOL_TABLE_SIZE)
     {
@@ -219,7 +223,7 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
     /* Send a gratuitous ARP packet to update the route caches of
      * other computers */
     if (IF != Loopback)
-       ARPTransmit(NULL, IF);
+       ARPTransmit(NULL, NULL, IF);
 }
 
 BOOLEAN IPRegisterInterface(

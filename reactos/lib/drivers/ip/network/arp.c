@@ -108,7 +108,8 @@ VOID ARPTransmitComplete(
 }
 
 
-BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
+BOOLEAN ARPTransmit(PIP_ADDRESS Address, PVOID LinkAddress,
+                    PIP_INTERFACE Interface)
 /*
  * FUNCTION: Creates an ARP request and transmits it on a network
  * ARGUMENTS:
@@ -152,7 +153,7 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
         (UCHAR)ProtoAddrLen,             /* Protocol address length */
         Interface->Address,              /* Sender's (local) hardware address */
         &Interface->Unicast.Address.IPv4Address,/* Sender's (local) protocol address */
-        NULL,                            /* Don't care */
+        LinkAddress,                     /* Target's (remote) hardware address */
         &Address->Address.IPv4Address,   /* Target's (remote) protocol address */
         ARP_OPCODE_REQUEST);             /* ARP request */
 
@@ -225,7 +226,8 @@ VOID ARPReceive(
             Header->HWAddrLen, 0, ARP_TIMEOUT);
     }
 
-    if (Header->Opcode != ARP_OPCODE_REQUEST)
+    if (Header->Opcode != ARP_OPCODE_REQUEST ||
+        !AddrIsEqual(&Address, &Interface->Unicast))
         return;
 
     /* This is a request for our address. Swap the addresses and

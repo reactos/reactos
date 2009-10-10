@@ -105,20 +105,35 @@ VOID NBTimeout(VOID)
         TcpipAcquireSpinLock(&NeighborCache[i].Lock, &OldIrql);
 
         for (PrevNCE = &NeighborCache[i].Cache;
-             (NCE = *PrevNCE) != NULL;
-             PrevNCE = &NCE->Next) {
+             (NCE = *PrevNCE) != NULL;) {
             /* Check if event timer is running */
             if (NCE->EventTimer > 0)  {
                 ASSERT(!(NCE->State & NUD_PERMANENT));
                 NCE->EventCount++;
-                if (NCE->EventCount % ARP_RATE == 0)
-                    NBSendSolicit(NCE);
-                if (NCE->EventTimer - NCE->EventCount == 0) {
+                if ((NCE->EventCount > ARP_RATE &&
+                     NCE->EventCount % ARP_TIMEOUT_RETRANSMISSION == 0) ||
+                    (NCE->EventCount == ARP_RATE))
+                {
+                    /* We haven't gotten a packet from them in
+                     * EventCount seconds so we mark them as stale
+                     * and solicit now */
                     NCE->State |= NUD_STALE;
+                    NBSendSolicit(NCE);
+                }
+                if (NCE->EventTimer - NCE->EventCount == 0) {
+                    /* Solicit one last time */
+                    NBSendSolicit(NCE);
 
-                    NCE->EventCount = 0;
+                    /* Unlink and destroy the NCE */
+                    *PrevNCE = NCE->Next;
+
+                    NBFlushPacketQueue(NCE, NDIS_STATUS_REQUEST_ABORTED);
+                    exFreePool(NCE);
+
+                    continue;
                 }
             }
+            PrevNCE = &NCE->Next;
         }
 
         TcpipReleaseSpinLock(&NeighborCache[i].Lock, OldIrql);
@@ -188,7 +203,8 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
 {
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
 
-    ARPTransmit(&NCE->Address, NCE->Interface);
+    ARPTransmit(&NCE->Address, NCE->LinkAddress,
+                NCE->Interface);
 }
 
 PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
@@ -300,6 +316,37 @@ VOID NBUpdateNeighbor(
 
     if( !(NCE->State & NUD_INCOMPLETE) )
 	NBSendPackets( NCE );
+}
+
+VOID
+NBResetNeighborTimeout(PIP_ADDRESS Address)
+{
+    KIRQL OldIrql;
+    UINT HashValue;
+    PNEIGHBOR_CACHE_ENTRY NCE;
+
+    TI_DbgPrint(DEBUG_NCACHE, ("Resetting NCE timout for 0x%s\n", A2S(Address)));
+
+    HashValue  = *(PULONG)(&Address->Address);
+    HashValue ^= HashValue >> 16;
+    HashValue ^= HashValue >> 8;
+    HashValue ^= HashValue >> 4;
+    HashValue &= NB_HASHMASK;
+
+    TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
+
+    for (NCE = NeighborCache[HashValue].Cache;
+         NCE != NULL;
+         NCE = NCE->Next)
+    {
+         if (AddrIsEqual(Address, &NCE->Address))
+         {
+             NCE->EventCount = 0;
+             break;
+         }
+    }
+
+    TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 }
 
 PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(

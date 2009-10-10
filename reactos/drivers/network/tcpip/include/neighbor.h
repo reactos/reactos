@@ -44,11 +44,14 @@ typedef struct NEIGHBOR_CACHE_ENTRY {
 #define NUD_PERMANENT  0x02
 #define NUD_STALE      0x04
 
-/* Number of seconds before the NCE times out */
-#define ARP_TIMEOUT 30
-
 /* Number of seconds between ARP transmissions */
-#define ARP_RATE 10
+#define ARP_RATE 900
+
+/* Number of seconds before the NCE times out */
+#define ARP_TIMEOUT ARP_RATE + 15
+
+/* Number of seconds before retransmission */
+#define ARP_TIMEOUT_RETRANSMISSION 5
 
 extern NEIGHBOR_CACHE_TABLE NeighborCache[NB_HASHMASK + 1];
 
@@ -97,6 +100,9 @@ VOID NBRemoveNeighbor(
 ULONG NBCopyNeighbors(
     PIP_INTERFACE Interface,
     PIPARP_ENTRY ArpTable);
+
+VOID NBResetNeighborTimeout(
+    PIP_ADDRESS Address);
 
 #endif /* __NEIGHBOR_H */
 
