@@ -23,6 +23,9 @@ extern BOOLEAN NlsMbCodePageTag;
 extern BOOLEAN NlsMbOemCodePageTag;
 extern PUSHORT NlsLeadByteInfo;
 
+extern USHORT NlsOemDefaultChar;
+extern USHORT NlsUnicodeDefaultChar;
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -393,6 +396,45 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
         RtlpFreeStringMemory(UnicodeString->Buffer, TAG_USTR);
         RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
     }
+}
+
+
+/*
+ * @implemented
+ * 
+ * NOTES
+ *  Check the oem-string to match the uincoded-string.
+ *
+ *  Functions who convert unicode strings to oem strings will set a DefaultChar from 
+ *  the OemCodepage when the character are unknown. So check it against the unicode string
+ *  and return false when the unicode string not contain an TransDefaultChar.
+ */
+BOOLEAN
+NTAPI
+RtlpDidUnicodeToOemWork(IN PCUNICODE_STRING UnicodeString,
+                        IN POEM_STRING OemString)
+{
+   ULONG i = 0;
+
+   /* Go through all characters of a string */
+   while ((OemString->Buffer[i] != 0) &&
+          (i < OemString->Length))
+   {
+       /* Check if it got translated into '?', but source char
+          wasn't '?' equivalent */
+       if ((OemString->Buffer[i] == NlsOemDefaultChar) &&
+           (UnicodeString->Buffer[i] != NlsUnicodeDefaultChar))
+       {
+           /* Yes, it means unmappable characters were found */
+           return FALSE;
+       }
+
+       /* Move to the next char */
+       i++;
+   }
+
+   /* All chars were translated successfuly */
+   return TRUE;
 }
 
 /*
@@ -1534,8 +1576,9 @@ RtlUnicodeStringToCountedOemString(
                               UniSource->Buffer,
                               UniSource->Length);
 
-    /* FIXME: Check if everything mapped correctly and
-     * return STATUS_UNMAPPABLE_CHARACTER */
+    /* Check for unmapped character */
+    if (NT_SUCCESS(Status) && !RtlpDidUnicodeToOemWork(UniSource, OemDest))
+        Status = STATUS_UNMAPPABLE_CHARACTER;
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
@@ -1763,7 +1806,9 @@ RtlUpcaseUnicodeStringToCountedOemString(
                                     UniSource->Buffer,
                                     UniSource->Length);
 
-    /* FIXME: Special check needed and return STATUS_UNMAPPABLE_CHARACTER */
+    /* Check for unmapped characters */
+    if (NT_SUCCESS(Status) && !RtlpDidUnicodeToOemWork(UniSource, OemDest))
+        Status = STATUS_UNMAPPABLE_CHARACTER;
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
@@ -1816,7 +1861,9 @@ RtlUpcaseUnicodeStringToOemString (
                                     UniSource->Buffer,
                                     UniSource->Length);
 
-    /* FIXME: Special check needed and return STATUS_UNMAPPABLE_CHARACTER */
+    /* Check for unmapped characters */
+    if (NT_SUCCESS(Status) && !RtlpDidUnicodeToOemWork(UniSource, OemDest))
+        Status = STATUS_UNMAPPABLE_CHARACTER;
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
