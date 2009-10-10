@@ -14,6 +14,11 @@
 
 /* GLOBALS *******************************************************************/
 
+/* time to wait */
+#define MICROSECOND_TO_WAIT 1000
+/* the tick count for 1 ms is 1193.182 (1193182 Hz) round it up */
+#define TICKCOUNT_TO_WAIT  1194
+
 BOOLEAN HalpClockSetMSRate;
 ULONG HalpCurrentTimeIncrement;
 ULONG HalpCurrentRollOver;
@@ -129,5 +134,162 @@ HalSetTimeIncrement(IN ULONG Increment)
     /* Return the increment */
     return HalpRolloverTable[Increment - 1].HighPart;
 }
+
+ULONG
+WaitFor8254Wraparound(VOID)
+{
+    ULONG StartTicks;
+    ULONG PrevTicks;
+    LONG Delta;
+
+    StartTicks = HalpQuery8254Counter();
+
+    do
+    {
+        PrevTicks = StartTicks;
+        StartTicks = HalpQuery8254Counter();
+        Delta = StartTicks - PrevTicks;
+
+        /*
+         * This limit for delta seems arbitrary, but it isn't, it's
+         * slightly above the level of error a buggy Mercury/Neptune
+         * chipset timer can cause.
+         */
+
+    }
+    while (Delta < 300);
+
+    return StartTicks;
+}
+
+VOID
+NTAPI
+HalpCalibrateStallExecution(VOID)
+{
+    ULONG CalibrationBit;
+    ULONG EndTicks;
+    ULONG StartTicks;
+    ULONG OverheadTicks;
+    PKIPCR Pcr;
+
+    Pcr = (PKIPCR)KeGetPcr();
+
+    /* Measure the delay for the minimum call overhead in ticks */
+    Pcr->StallScaleFactor = 1;
+    StartTicks = WaitFor8254Wraparound();
+    KeStallExecutionProcessor(1);
+    EndTicks = HalpQuery8254Counter();
+    OverheadTicks = (StartTicks - EndTicks);
+
+    do
+    {
+        /* Increase the StallScaleFactor */
+        Pcr->StallScaleFactor = Pcr->StallScaleFactor * 2;
+
+        if (Pcr->StallScaleFactor == 0)
+        {
+           /* Nothing found */
+           break;
+        }
+
+        /* Get the start ticks */
+        StartTicks = WaitFor8254Wraparound();
+
+        /* Wait for a defined time */
+        KeStallExecutionProcessor(MICROSECOND_TO_WAIT);
+
+        /* Get the end ticks */
+        EndTicks = HalpQuery8254Counter();
+
+        DPRINT("Pcr->StallScaleFactor: %d\n", Pcr->StallScaleFactor);
+        DPRINT("Time1 : StartTicks %i - EndTicks %i = %i\n",
+            StartTicks, EndTicks, StartTicks - EndTicks);
+    } while ((StartTicks - EndTicks) <= (TICKCOUNT_TO_WAIT + OverheadTicks));
+
+    /* A StallScaleFactor lesser than INITIAL_STALL_COUNT makes no sense */
+    if (Pcr->StallScaleFactor >= (INITIAL_STALL_COUNT * 2))
+    {
+        /* Adjust the StallScaleFactor */
+        Pcr->StallScaleFactor  = Pcr->StallScaleFactor / 2;
+
+        /* Setup the CalibrationBit */
+        CalibrationBit = Pcr->StallScaleFactor;
+
+        for (;;)
+        {
+            /* Lower the CalibrationBit */
+            CalibrationBit = CalibrationBit / 2;
+            if (CalibrationBit == 0)
+            {
+                break;
+            }
+
+            /* Add the CalibrationBit */
+            Pcr->StallScaleFactor = Pcr->StallScaleFactor + CalibrationBit;
+
+            /* Get the start ticks */
+            StartTicks = WaitFor8254Wraparound();
+
+            /* Wait for a defined time */
+            KeStallExecutionProcessor(MICROSECOND_TO_WAIT);
+
+            /* Get the end ticks */
+            EndTicks = HalpQuery8254Counter();
+
+            DPRINT("Pcr->StallScaleFactor: %d\n", Pcr->StallScaleFactor);
+            DPRINT("Time2 : StartTicks %i - EndTicks %i = %i\n",
+                StartTicks, EndTicks, StartTicks - EndTicks);
+
+            if ((StartTicks-EndTicks) > (TICKCOUNT_TO_WAIT+OverheadTicks))
+            {
+                /* Too big so subtract the CalibrationBit */
+                Pcr->StallScaleFactor = Pcr->StallScaleFactor - CalibrationBit;
+            }
+        }
+        DPRINT("New StallScaleFactor: %d\n", Pcr->StallScaleFactor);
+    }
+    else
+    {
+       /* Set StallScaleFactor to the default */
+       Pcr->StallScaleFactor = INITIAL_STALL_COUNT;
+    }
+
+#if 0
+    /* For debugging */
+    ULONG i;
+
+    DPRINT1("About to start delay loop test\n");
+    DPRINT1("Waiting for a minute...");
+    for (i = 0; i < (60*1000*20); i++)
+    {
+        KeStallExecutionProcessor(50);
+    }
+    DPRINT1("finished\n");
+
+
+    DPRINT1("About to start delay loop test\n");
+    DPRINT1("Waiting for a minute...");
+    for (i = 0; i < (60*1000); i++)
+    {
+        KeStallExecutionProcessor(1000);
+    }
+    DPRINT1("finished\n");
+
+
+    DPRINT1("About to start delay loop test\n");
+    DPRINT1("Waiting for a minute...");
+    for (i = 0; i < (60*1000*1000); i++)
+    {
+        KeStallExecutionProcessor(1);
+    }
+    DPRINT1("finished\n");
+
+    DPRINT1("About to start delay loop test\n");
+    DPRINT1("Waiting for a minute...");
+    KeStallExecutionProcessor(60*1000000);
+    DPRINT1("finished\n");
+#endif
+}
+
 
 /* EOF */

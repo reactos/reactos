@@ -101,7 +101,7 @@ HalInitSystem(IN ULONG BootPhase,
         HalpInitializeClock();
 
         /* Setup busy waiting */
-        //HalpCalibrateStallExecution();
+        HalpCalibrateStallExecution();
 
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
