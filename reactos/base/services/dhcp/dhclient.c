@@ -519,6 +519,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         Adapter->RouterMib.dwForwardDest = 0; /* Default route */
         Adapter->RouterMib.dwForwardMask = 0;
         Adapter->RouterMib.dwForwardMetric1 = 1;
+        Adapter->RouterMib.dwForwardIfIndex = Adapter->IfMib.dwIndex;
 
         if( Adapter->RouterMib.dwForwardNextHop ) {
             /* If we set a default route before, delete it before continuing */

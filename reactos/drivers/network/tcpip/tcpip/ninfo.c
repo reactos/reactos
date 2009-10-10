@@ -181,6 +181,12 @@ TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PIPROUTE_ENTRY Route)
     AddrInitIPv4( &Netmask, Route->Mask );
     AddrInitIPv4( &Router,  Route->Gw );
 
+    if (IF == Loopback)
+    {
+        DbgPrint("Failing attempt to add route to loopback adapter\n");
+        return TDI_INVALID_PARAMETER;
+    }
+
     if( Route->Type == IP_ROUTE_TYPE_ADD ) { /* Add the route */
         TI_DbgPrint(DEBUG_INFO,("Adding route (%s)\n", A2S(&Address)));
 	if (!RouterCreateRoute( &Address, &Netmask, &Router,
