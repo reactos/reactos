@@ -288,6 +288,10 @@ FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
     /* Convert raw short name to a proper string */
     Fati8dot3ToString(ShortNameRaw, FALSE, ShortName);
 
+    /* Add the short name link */
+    FatInsertName(IrpContext, &Fcb->ParentFcb->Dcb.SplayLinksAnsi, &Fcb->ShortName);
+    Fcb->ShortName.Fcb = Fcb;
+
     /* Get the long file name (if any) */
     if (NumLFNs > 0)
     {
@@ -314,12 +318,13 @@ FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
 
         DPRINT1("Converted long name: %wZ\n", UnicodeName);
 
+        /* Add the long unicode name link */
+        FatInsertName(IrpContext, &Fcb->ParentFcb->Dcb.SplayLinksUnicode, &Fcb->LongName);
+        Fcb->LongName.Fcb = Fcb;
+
         /* Indicate that this FCB has a unicode long name */
         SetFlag(Fcb->State, FCB_STATE_HAS_UNICODE_NAME);
     }
-
-    // TODO: Add both names to the splay tree */
-    //FatInsertName(
 
     /* Mark the fact that names were added to splay trees*/
     SetFlag(Fcb->State, FCB_STATE_HAS_NAMES);
