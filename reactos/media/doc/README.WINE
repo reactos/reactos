@@ -174,7 +174,7 @@ reactos/dll/win32/wintab32        # Autosync
 reactos/dll/win32/wintrust        # Out of sync
 reactos/dll/win32/wldap32         # Autosync
 reactos/dll/win32/wmi             # Autosync
-reactos/dll/win32/wtsapi32        # Autosync
+reactos/dll/win32/wtsapi32        # Forked
 reactos/dll/win32/wuapi           # Autosync
 reactos/dll/win32/xinput1_1       # Autosync
 reactos/dll/win32/xinput1_2       # Autosync
