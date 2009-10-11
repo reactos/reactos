@@ -14,12 +14,10 @@ struct test
 };
 
 extern void func_power(void);
-extern void func_ros_init(void);
 
 const struct test winetest_testlist[] =
 {
 	{ "power", func_power },
-	{ "ros_init", func_ros_init },
 	{ 0, 0 }
 };
 
