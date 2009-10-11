@@ -145,8 +145,8 @@ bool CARDLIBPROC StackDragProc(CardRegion &stackobj, int numDragCards)
                 case IDC_DIF_ONECOLOR:
                     break;
                 case IDC_DIF_TWOCOLORS:
-                    if (mystack[i].IsBlack() && mystack[i + 1].IsBlack() ||
-                        mystack[i].IsRed() && mystack[i + 1].IsRed())
+                    if ((mystack[i].IsBlack() && mystack[i + 1].IsBlack()) ||
+                        (mystack[i].IsRed() && mystack[i + 1].IsRed()))
                     {
                        return false;
                     }
@@ -236,8 +236,8 @@ bool CARDLIBPROC StackDropProc(CardRegion &stackobj, CardStack &dragcards)
             case IDC_DIF_ONECOLOR:
                 break;
             case IDC_DIF_TWOCOLORS:
-                if (mystack[0].IsBlack() && dragcard.IsRed() ||
-                    mystack[0].IsRed() && dragcard.IsBlack())
+                if ((mystack[0].IsBlack() && dragcard.IsRed()) ||
+                    (mystack[0].IsRed() && dragcard.IsBlack()))
                 {
                    return false;
                 }
