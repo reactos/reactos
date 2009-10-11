@@ -1,9 +1,10 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/arch/i386/ramdisk.c
+ * FILE:            boot/freeldr/freeldr/disk/ramdisk.c
  * PURPOSE:         Implements routines to support booting from a RAM Disk
  * PROGRAMMERS:     ReactOS Portable Systems Group
+ *                  Hervé Poussineau
  */
 
 /* INCLUDES *******************************************************************/
@@ -16,78 +17,108 @@
 
 PVOID gRamDiskBase;
 ULONG gRamDiskSize;
+ULONG gRamDiskOffset;
 
 /* FUNCTIONS ******************************************************************/
 
-FORCEINLINE
-PVOID
-RamDiskGetDataAtOffset(IN PVOID Offset)
+static LONG RamDiskClose(ULONG FileId)
 {
     //
-    // Return data from our RAM Disk
+    // Nothing to do
     //
-    ASSERT(((ULONG_PTR)gRamDiskBase + (ULONG_PTR)Offset) <
-           ((ULONG_PTR)gRamDiskBase + (ULONG_PTR)gRamDiskSize));
-    return (PVOID)((ULONG_PTR)gRamDiskBase + (ULONG_PTR)(Offset));
+    return ESUCCESS;
 }
 
-ULONG
-RamDiskGetCacheableBlockCount(IN ULONG Reserved)
+static LONG RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     //
-    // Allow 32KB transfers (64 sectors), emulating BIOS LBA
+    // Give current seek offset and ram disk size to caller
     //
-    ASSERT(Reserved == 0x49);
-    return 64;
+    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    Information->EndingAddress.LowPart = gRamDiskSize;
+    Information->CurrentAddress.LowPart = gRamDiskOffset;
+
+    return ESUCCESS;
 }
 
-BOOLEAN
-RamDiskGetDriveGeometry(IN ULONG Reserved,
-                        OUT PGEOMETRY Geometry)
+static LONG RamDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     //
-    // Should never be called when the caller expects valid Geometry!
+    // Always return success, as contents are already in memory
     //
-    ASSERT(Reserved == 0x49);
-    return TRUE;
+    return ESUCCESS;
 }
 
-BOOLEAN
-RamDiskReadLogicalSectors(IN ULONG Reserved,
-                          IN ULONGLONG SectorNumber,
-                          IN ULONG SectorCount,
-                          IN PVOID Buffer)
+static LONG RamDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PVOID StartAddress;
-    ULONG Length;
-    ASSERT(Reserved == 0x49);
 
     //
-    // Get actual pointers and lengths
+    // Get actual pointer
     //
-    StartAddress = (PVOID)((ULONG_PTR)SectorNumber * 512);
-    Length = SectorCount * 512;
-    
+    StartAddress = (PVOID)((ULONG_PTR)gRamDiskBase + gRamDiskOffset);
+
     //
     // Don't allow reads past our image
     //
-    if (((ULONG_PTR)StartAddress + Length) > gRamDiskSize) return FALSE;
+    if (gRamDiskOffset + N > gRamDiskSize)
+    {
+        *Count = 0;
+        return EIO;
+    }
 
     //
     // Do the read
     //
-    RtlCopyMemory(Buffer, RamDiskGetDataAtOffset(StartAddress), Length);
-    return TRUE;
+    RtlCopyMemory(Buffer, StartAddress, N);
+    *Count = N;
+
+    return ESUCCESS;
 }
+
+static LONG RamDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+{
+    //
+    // Only accept absolute mode now
+    //
+    if (SeekMode != SeekAbsolute)
+        return EINVAL;
+
+    //
+    // Check if we're in the ramdisk
+    //
+    if (Position->HighPart != 0)
+        return EINVAL;
+    if (Position->LowPart >= gRamDiskSize)
+        return EINVAL;
+
+    //
+    // OK, remember seek position
+    //
+    gRamDiskOffset = Position->LowPart;
+
+    return ESUCCESS;
+}
+
+static const DEVVTBL RamDiskVtbl = {
+    RamDiskClose,
+    RamDiskGetFileInformation,
+    RamDiskOpen,
+    RamDiskRead,
+    RamDiskSeek,
+};
 
 VOID
 NTAPI
 RamDiskLoadVirtualFile(IN PCHAR FileName)
 {
-    PFILE RamFile;
-    ULONG TotalRead, ChunkSize;
-	PCHAR MsgBuffer = "Loading ramdisk...";
+    ULONG RamFile;
+    ULONG TotalRead, ChunkSize, Count;
+    PCHAR MsgBuffer = "Loading ramdisk...";
     ULONG PercentPerChunk, Percent;
+    FILEINFORMATION Information;
+    LARGE_INTEGER Position;
+    LONG ret;
 
     //
     // Display progress
@@ -95,25 +126,45 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     UiDrawProgressBarCenter(1, 100, MsgBuffer);
 
     //
-    // Try opening the ramdisk file (this assumes the boot volume was opened)
-    //    
-    RamFile = FsOpenFile(FileName);
-    if (RamFile)
+    // Try opening the ramdisk file
+    //
+    ret = ArcOpen(FileName, OpenReadOnly, &RamFile);
+    if (ret == ESUCCESS)
     {
         //
         // Get the file size
         //
-        gRamDiskSize = FsGetFileSize(RamFile);
-        if (!gRamDiskSize) return;
-        
+        ret = ArcGetFileInformation(RamFile, &Information);
+        if (ret != ESUCCESS)
+        {
+            ArcClose(RamFile);
+            return;
+        }
+
+        //
+        // For now, limit RAM disks to 4GB
+        //
+        if (Information.EndingAddress.HighPart != 0)
+        {
+            UiMessageBox("RAM disk too big\n");
+            ArcClose(RamFile);
+            return;
+        }
+        gRamDiskSize = Information.EndingAddress.LowPart;
+
         //
         // Allocate memory for it
         //
         ChunkSize = 8 * 1024 * 1024;
         Percent = PercentPerChunk = 100 / (gRamDiskSize / ChunkSize);
         gRamDiskBase = MmAllocateMemory(gRamDiskSize);
-        if (!gRamDiskBase) return;
-                
+        if (!gRamDiskBase)
+        {
+            UiMessageBox("Failed to allocate memory for RAM disk\n");
+            ArcClose(RamFile);
+            return;
+        }
+
         //
         // Read it in chunks
         //
@@ -139,43 +190,34 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
             //
             // Copy the contents
             //
-            
-            if (!FsReadFile(RamFile,
-                            ChunkSize,
-                            NULL,
-                            (PVOID)((ULONG_PTR)gRamDiskBase + TotalRead)))
+            Position.HighPart = 0;
+            Position.LowPart = TotalRead;
+            ret = ArcSeek(RamFile, &Position, SeekAbsolute);
+            if (ret == ESUCCESS)
             {
-                //
-                // Fail
-                //
+                ret = ArcRead(RamFile,
+                              (PVOID)((ULONG_PTR)gRamDiskBase + TotalRead),
+                              ChunkSize,
+                              &Count);
+            }
+
+            //
+            // Check for success
+            //
+            if (ret != ESUCCESS || Count != ChunkSize)
+            {
+                MmFreeMemory(gRamDiskBase);
+                gRamDiskBase = NULL;
+                gRamDiskSize = 0;
+                ArcClose(RamFile);
                 UiMessageBox("Failed to read ramdisk\n");
+                return;
             }
         }
-    }
-}
 
-VOID
-NTAPI
-RamDiskSwitchFromBios(VOID)
-{
-    extern ULONG BootDrive, BootPartition;
+        ArcClose(RamFile);
 
-    //
-    // Check if we have a ramdisk, in which case we need to switch routines
-    //
-    if (gRamDiskBase)
-    {
-        //
-        // Don't use the BIOS for reads anymore
-        //
-        MachVtbl.DiskReadLogicalSectors = RamDiskReadLogicalSectors;
-        MachVtbl.DiskGetDriveGeometry = RamDiskGetDriveGeometry;
-        MachVtbl.DiskGetCacheableBlockCount = RamDiskGetCacheableBlockCount;
-        
-        //
-        // Switch to ramdisk boot partition
-        //
-        BootDrive = 0x49;
-        BootPartition = 0;
+        // Register a new device for the ramdisk
+        FsRegisterDevice("ramdisk(0)", &RamDiskVtbl);
     }
 }

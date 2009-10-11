@@ -71,7 +71,6 @@ BOOLEAN
 ArmDiskGetDriveGeometry(IN ULONG DriveNumber,
                         OUT PGEOMETRY Geometry)
 {
-    ASSERT(gRamDiskBase == NULL);
     return FALSE;
 }
 
@@ -81,15 +80,13 @@ ArmDiskReadLogicalSectors(IN ULONG DriveNumber,
                           IN ULONG SectorCount,
                           IN PVOID Buffer)
 {
-    ASSERT(gRamDiskBase == NULL);
     return FALSE;
 }
 
 ULONG
 ArmDiskGetCacheableBlockCount(IN ULONG DriveNumber)
 {
-    ASSERT(gRamDiskBase == NULL);
-    return FALSE;
+    return 0;
 }
 
 PCONFIGURATION_COMPONENT_DATA
@@ -191,12 +188,11 @@ MachInit(IN PCCH CommandLine)
     MachVtbl.HwDetect = ArmHwDetect;
     
     //
-    // Setup disk I/O routines, switch to ramdisk ones for non-NAND boot
+    // Setup disk I/O routines
     //
     MachVtbl.DiskReadLogicalSectors = ArmDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = ArmDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = ArmDiskGetCacheableBlockCount;
-    RamDiskSwitchFromBios();
     
     //
     // Now set default disk handling routines -- we don't need to override

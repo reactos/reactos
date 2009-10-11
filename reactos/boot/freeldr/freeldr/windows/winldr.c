@@ -390,6 +390,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	CHAR  FullPath[MAX_PATH], SystemRoot[MAX_PATH], BootPath[MAX_PATH];
 	CHAR  FileName[MAX_PATH];
 	CHAR  BootOptions[256];
+	PCHAR File;
 	PCHAR PathSeparator;
 	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
@@ -443,6 +444,28 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	{
 		/* Nothing read, make the string empty */
 		strcpy(BootOptions, "");
+	}
+
+	//
+	// Check if a ramdisk file was given
+	//
+	File = strstr(BootOptions, "/RDPATH=");
+	if (File)
+	{
+		//
+		// Copy the file name and everything else after it
+		//
+		strcpy(FileName, File + 8);
+
+		//
+		// Null-terminate
+		//
+		*strstr(FileName, " ") = ANSI_NULL;
+
+		//
+		// Load the ramdisk
+		//
+		RamDiskLoadVirtualFile(FileName);
 	}
 
 	/* Let user know we started loading */
