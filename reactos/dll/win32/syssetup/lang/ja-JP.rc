@@ -222,6 +222,7 @@ BEGIN
     IDS_GAMES           "ゲーム"
     IDS_CMT_SOLITAIRE   "ソ\リティア"
     IDS_CMT_WINEMINE    "WineMine"
+	IDS_CMT_SPIDER      "Spider Solitaire"
 END
 
 STRINGTABLE
@@ -282,6 +283,7 @@ BEGIN
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "ワードパッド.lnk"
     IDS_SHORT_PAINT      "ペイント.lnk"
+	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE
