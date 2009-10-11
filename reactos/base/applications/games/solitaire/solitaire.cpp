@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "resource.h"
-#include "cardlib/cardlib.h"
+#include "cardlib.h"
 
 #include "solitaire.h"
 

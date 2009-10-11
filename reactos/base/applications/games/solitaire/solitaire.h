@@ -41,9 +41,9 @@ extern CardRegion *pRowStack[];
 
 
 bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumCards);
-bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragcards);
+bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  CardStack &dragcards);
 
-bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, const CardStack &dragcards);
+bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, CardStack &dragcards);
 void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added);
 
 void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked);
