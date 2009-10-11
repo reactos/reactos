@@ -14,7 +14,7 @@ BEGIN
 		MENUITEM "アンインストール(&U)",ID_UNINSTALL
 		MENUITEM "変更(&M)",            ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "レジストリから削除(&R)",ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "更新(&R)",            ID_REFRESH
 	END
@@ -42,7 +42,7 @@ BEGIN
 		MENUITEM "アンインストール(&U)", ID_UNINSTALL
 		MENUITEM "変更(&M)",             ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "レジストリから削除(&R)", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "更新(&R)",             ID_REFRESH
 	END
@@ -187,7 +187,7 @@ BEGIN
 	IDS_CHOOSE_FOLDER_TEXT  "プログラムのダウンロードに使用するフォルダを選択してください:"
 	IDS_CHOOSE_FOLDER_ERROR "指定されたフォルダは存在しません!"
 	IDS_USER_NOT_ADMIN      """ReactOS アプリケーション マネージャー"" を起動するには管理者権限である必要があります!"
-	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
-	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
+	IDS_APP_REG_REMOVE "レジストリからインストールされたプログラムに関するデータを削除してもよろしいですか?"
+	IDS_INFORMATION "情報"
+	IDS_UNABLE_TO_REMOVE "レジストリからこのプログラムに関するデータを削除できません!"
 END
