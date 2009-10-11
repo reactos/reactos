@@ -3,7 +3,7 @@
  * LICENSE:      See COPYING in top level directory
  * FILE:         base/applications/games/spider/lang/en-US.rc
  * PURPOSE:      German Language File for Spider Solitaire
- * PROGRAMMER:   Gregor Schneider
+ * TRANSLATOR:   Gregor Schneider
  */
  
 #include "resource.h"
