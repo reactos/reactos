@@ -25,6 +25,8 @@
 #include <ddk/ntddk.h>
 #include <ntifs.h>
 #include <ndk/ntndk.h>
+/* SEH support with PSEH */
+#include <pseh/pseh2.h>
 #include "kmtest.h"
 
 //#define NDEBUG
@@ -125,10 +127,61 @@ PoolsTest()
     FinishTest("NTOSKRNL Pools Tests");
 }
 
+VOID
+PoolsCorruption()
+{
+    PULONG Ptr, TestPtr;
+    ULONG AllocSize;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    StartTest();
+
+    // start with non-paged pool
+    AllocSize = 4096 + 0x10;
+    Ptr = ExAllocatePoolWithTag(NonPagedPool, AllocSize, TAG_POOLTEST);
+
+    // touch all bytes, it shouldn't cause an exception
+    RtlZeroMemory(Ptr, AllocSize);
+
+    // test buffer overrun, right after our allocation ends
+    _SEH2_TRY
+    {
+        TestPtr = (PULONG)((PUCHAR)Ptr + AllocSize);
+        //Ptr[4] = 0xd33dbeef;
+        *TestPtr = 0xd33dbeef;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Get the status */
+        Status = _SEH2_GetExceptionCode();
+    } _SEH2_END;
+
+    ok(Status == STATUS_ACCESS_VIOLATION, "Exception should occur, but got Status 0x%08lX\n", Status);
+
+    // test overrun in a distant byte range, but within 4096KB
+    _SEH2_TRY
+    {
+        Ptr[2020] = 0xdeadb33f;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Get the status */
+        Status = _SEH2_GetExceptionCode();
+    } _SEH2_END;
+
+    ok(Status == STATUS_ACCESS_VIOLATION, "Exception should occur, but got Status 0x%08lX\n", Status);
+
+    // free the pool
+    ExFreePoolWithTag(Ptr, TAG_POOLTEST);
+
+    FinishTest("NTOSKRNL Pool Corruption");
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
 NtoskrnlPoolsTest()
 {
     PoolsTest();
+    //PoolsCorruption();
 }
