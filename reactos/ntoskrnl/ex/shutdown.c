@@ -30,13 +30,7 @@ KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
     while (TRUE)
     {
         KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
-#if defined(_M_IX86) || defined(_M_AMD64)
-        __halt();
-#elif defined(_M_ARM)
-        KeArmHaltProcessor();
-#else
-        HalProcessorIdle();
-#endif
+        HalHaltSystem();
     }
 }
 

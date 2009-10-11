@@ -164,6 +164,15 @@ HalpTrap06(
     VOID
 );
 
+//
+// Processor Halt Routine
+//
+VOID
+NTAPI
+HaliHaltSystem(
+    VOID
+);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #ifndef CONFIG_SMP

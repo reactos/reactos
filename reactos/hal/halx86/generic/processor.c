@@ -15,6 +15,17 @@
 LONG HalpActiveProcessors;
 KAFFINITY HalpDefaultInterruptAffinity;
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+HaliHaltSystem(VOID)
+{
+    /* Disable interrupts and halt the CPU */
+    _disable();
+    __halt();
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*

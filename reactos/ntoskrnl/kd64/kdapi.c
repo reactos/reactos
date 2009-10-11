@@ -66,6 +66,28 @@ KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
+KdpSearchMemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                IN PSTRING Data,
+                IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpSearchMemory called\n");
+    while (TRUE);
+}
+
+VOID
+NTAPI
+KdpFillMemory(IN PDBGKD_MANIPULATE_STATE64 State,
+              IN PSTRING Data,
+              IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpFillMemory called\n");
+    while (TRUE);
+}
+
+VOID
+NTAPI
 KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
                    IN PSTRING Data,
                    IN PCONTEXT Context)
@@ -97,6 +119,62 @@ KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
                  &Header,
                  NULL,
                  &KdpContext);
+}
+
+VOID
+NTAPI
+KdpRestoreBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
+                     IN PSTRING Data,
+                     IN PCONTEXT Context)
+{
+    PDBGKD_RESTORE_BREAKPOINT RestoreBp = &State->u.RestoreBreakPoint;
+    STRING Header;
+
+    /* Fill out the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Get the version block */
+    if (KdpDeleteBreakpoint(RestoreBp->BreakPointHandle))
+    {
+        /* We're all good */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* We failed */
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+NTSTATUS
+NTAPI
+KdpWriteBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
+                     IN PSTRING Data,
+                     IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpWriteBreakPointEx called\n");
+    while (TRUE);
+    return STATUS_UNSUCCESSFUL;
+}
+
+VOID
+NTAPI
+KdpRestoreBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
+                       IN PSTRING Data,
+                       IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpRestoreBreakPointEx called\n");
+    while (TRUE);
 }
 
 VOID
@@ -236,6 +314,71 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
+KdpWriteVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                      IN PSTRING Data,
+                      IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpWriteVirtualMemory called for Address: %p Length %x\n",
+               (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
+               State->u.ReadMemory.TransferCount);
+    while (TRUE);
+}
+
+VOID
+NTAPI
+KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                      IN PSTRING Data,
+                      IN PCONTEXT Context)
+{
+    STRING Header;
+
+    /* FIXME: STUB */
+    KdpDprintf("KdpWritePhysicalMemory called for Address %I64x Length: %x\n",
+               State->u.ReadMemory.TargetBaseAddress,
+               State->u.ReadMemory.TransferCount);
+
+    /* Setup an empty message, with failure */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    Data->Length = 0;
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+
+    /* Send it */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpWritePhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                       IN PSTRING Data,
+                       IN PCONTEXT Context)
+{
+    STRING Header;
+
+    /* FIXME: STUB */
+    KdpDprintf("KdpWritePhysicalMemory called for Address %I64x Length: %x\n",
+               State->u.ReadMemory.TargetBaseAddress,
+               State->u.ReadMemory.TransferCount);
+
+    /* Setup an empty message, with failure */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    Data->Length = 0;
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+
+    /* Send it */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
 KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                     IN PSTRING Data,
                     IN PCONTEXT Context)
@@ -302,39 +445,6 @@ KdpWriteControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
                  Data,
-                 &KdpContext);
-}
-
-VOID
-NTAPI
-KdpRestoreBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
-                     IN PSTRING Data,
-                     IN PCONTEXT Context)
-{
-    PDBGKD_RESTORE_BREAKPOINT RestoreBp = &State->u.RestoreBreakPoint;
-    STRING Header;
-
-    /* Fill out the header */
-    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
-    Header.Buffer = (PCHAR)State;
-    ASSERT(Data->Length == 0);
-
-    /* Get the version block */
-    if (KdpDeleteBreakpoint(RestoreBp->BreakPointHandle))
-    {
-        /* We're all good */
-        State->ReturnStatus = STATUS_SUCCESS;
-    }
-    else
-    {
-        /* We failed */
-        State->ReturnStatus = STATUS_UNSUCCESSFUL;
-    }
-
-    /* Send the packet */
-    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
-                 &Header,
-                 NULL,
                  &KdpContext);
 }
 
@@ -788,9 +898,8 @@ SendPacket:
 
             case DbgKdWriteVirtualMemoryApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdWriteVirtualMemoryApi called\n");
-                while (TRUE);
+                /* Write virtual memory */
+                KdpWriteVirtualMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdGetContextApi:
@@ -866,22 +975,17 @@ SendPacket:
                     /* Return an error */
                     return ContinueError;
                 }
-                break;
 
             case DbgKdReadPhysicalMemoryApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdReadPhysicalMemoryApi called for address %I64X\n",
-                           ManipulateState.u.ReadMemory.TargetBaseAddress);
-                goto Hack;
-                while (TRUE);
+                /* Read  physical memory */
+                KdpReadPhysicalmemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWritePhysicalMemoryApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdWritePhysicalMemoryApi called\n");
-                while (TRUE);
+                /* Write  physical memory */
+                KdpWritePhysicalmemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdQuerySpecialCallsApi:
@@ -939,16 +1043,20 @@ SendPacket:
 
             case DbgKdWriteBreakPointExApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdWriteBreakPointExApi called\n");
-                while (TRUE);
+                /* Write the breakpoint and check if it failed */
+                if (!NT_SUCCESS(KdpWriteBreakPointEx(&ManipulateState,
+                                                     &Data,
+                                                     Context)))
+                {
+                    /* Return an error */
+                    return ContinueError;
+                }
                 break;
 
             case DbgKdRestoreBreakPointExApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdRestoreBreakPointExApi called\n");
-                while (TRUE);
+                /* Restore the breakpoint */
+                KdpRestoreBreakPointEx(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdCauseBugCheckApi:
@@ -983,25 +1091,10 @@ SendPacket:
                 KdpWriteMachineSpecificRegister(&ManipulateState, &Data, Context);
                 break;
 
-            case OldVlm1:
-
-                /* FIXME: TODO */
-                KdpDprintf("OldVlm1 called\n");
-                while (TRUE);
-                break;
-
-            case OldVlm2:
-
-                /* FIXME: TODO */
-                KdpDprintf("OldVlm2 called\n");
-                while (TRUE);
-                break;
-
             case DbgKdSearchMemoryApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdSearchMemoryApi called\n");
-                while (TRUE);
+                /* Search memory */
+                KdpSearchMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdGetBusDataApi:
@@ -1030,9 +1123,8 @@ SendPacket:
 
             case DbgKdFillMemoryApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdFillMemoryApi called\n");
-                while (TRUE);
+                /* Fill memory */
+                KdpFillMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdQueryMemoryApi:
@@ -1052,9 +1144,7 @@ SendPacket:
             default:
 
                 /* Setup an empty message, with failure */
-                KdpDprintf("Received unknown API Number %lx\n", ManipulateState.ApiNumber);
-                while (TRUE);
-Hack:
+                KdpDprintf("Received Unhandled API %lx\n", ManipulateState.ApiNumber);
                 Data.Length = 0;
                 ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
 

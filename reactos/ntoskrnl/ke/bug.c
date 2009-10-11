@@ -546,21 +546,29 @@ KiDoBugCheckCallbacks(VOID)
     }
 }
 
-DECLSPEC_NORETURN
 VOID
 NTAPI
 KiBugCheckDebugBreak(IN ULONG StatusCode)
 {
-    /* If KDBG isn't connected, freeze the CPU, otherwise, break */
-#if defined(_M_IX86) || defined(_M_AMD64)
-    if (KdDebuggerNotPresent) for (;;) __halt();
-#elif defined(_M_ARM)
-    if (KdDebuggerNotPresent) for (;;) KeArmHaltProcessor();
-#else
-#error
-#endif
-    DbgBreakPointWithStatus(StatusCode);
-    while (TRUE);
+    /*
+     * Wrap this in SEH so we don't crash if
+     * there is no debugger or if it disconnected
+     */
+DoBreak:
+    _SEH2_TRY
+    {
+        /* Breakpoint */
+        DbgBreakPointWithStatus(StatusCode);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* No debugger, halt the CPU */
+        HalHaltSystem();
+    }
+    _SEH2_END;
+
+    /* Break again if this wasn't first try */
+    if (StatusCode != DBG_STATUS_BUGCHECK_FIRST) goto DoBreak;
 }
 
 PCHAR
@@ -1175,14 +1183,8 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         }
         else if (KeBugCheckOwnerRecursionCount > 2)
         {
-            /* Halt the CPU */
-#if defined(_M_IX86) || defined(_M_AMD64)
-            for (;;) __halt();
-#elif defined(_M_ARM)
-            for (;;) KeArmHaltProcessor();
-#else
-#error
-#endif
+            /* Halt execution */
+            while (TRUE);
         }
     }
 
@@ -1201,6 +1203,9 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
     /* Attempt to break in the debugger (otherwise halt CPU) */
     KiBugCheckDebugBreak(DBG_STATUS_BUGCHECK_SECOND);
+
+    /* Shouldn't get here */
+    while (TRUE);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -1421,7 +1426,7 @@ KeEnterKernelDebugger(VOID)
         }
     }
 
-    /* Bugcheck */
+    /* Break in the debugger */
     KiBugCheckDebugBreak(DBG_STATUS_FATAL);
 }
 
