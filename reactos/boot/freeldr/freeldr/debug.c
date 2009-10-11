@@ -159,7 +159,7 @@ VOID DebugPrintHeader(ULONG Mask)
 	    DbgPrint("CACHE: ");
 		break;
 	case DPRINT_REGISTRY:
-	    DbgPrint("REGISTER: ");
+	    DbgPrint("REGISTRY: ");
 		break;
 	case DPRINT_REACTOS:
 	    DbgPrint("REACTOS: ");
