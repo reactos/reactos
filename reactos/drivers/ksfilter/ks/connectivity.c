@@ -291,7 +291,7 @@ KsPinPropertyHandler(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Buffer = Irp->UserBuffer;
 
-    DPRINT("KsPinPropertyHandler Irp %p Property %p Data %p DescriptorsCount %u Descriptor %p OutputLength %u Id %x\n", Irp, Property, Data, DescriptorsCount, Descriptor, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
+    DPRINT("KsPinPropertyHandler Irp %p Property %p Data %p DescriptorsCount %u Descriptor %p OutputLength %u Id %u\n", Irp, Property, Data, DescriptorsCount, Descriptor, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
 
     switch(Property->Id)
     {
@@ -585,6 +585,24 @@ KsPinPropertyHandler(
 }
 
 /*
+    @unimplemented
+*/
+KSDDKAPI NTSTATUS NTAPI
+KsPinDataIntersectionEx(
+    IN  PIRP Irp,
+    IN  PKSP_PIN Pin,
+    OUT PVOID Data,
+    IN  ULONG DescriptorsCount,
+    IN  const KSPIN_DESCRIPTOR* Descriptor,
+    IN  ULONG DescriptorSize,
+    IN  PFNKSINTERSECTHANDLEREX IntersectHandler OPTIONAL,
+    IN  PVOID HandlerContext OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
     @implemented
 */
 KSDDKAPI
@@ -627,7 +645,7 @@ KsPinDataIntersection(
     }
 
     /* get start item */
-    Item = (KSMULTIPLE_ITEM*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+    Item = (KSMULTIPLE_ITEM*)(Pin + 1);
     /* get first data range */
     DataRange = (KSDATARANGE*)(Item + 1);
     /* iterate through all data ranges */

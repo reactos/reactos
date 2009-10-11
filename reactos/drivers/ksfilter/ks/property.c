@@ -18,7 +18,8 @@ FindPropertyHandler(
     IN ULONG InputBufferLength,
     IN ULONG OutputBufferLength,
     OUT PVOID OutputBuffer,
-    OUT PFNKSHANDLER *PropertyHandler)
+    OUT PFNKSHANDLER *PropertyHandler,
+    OUT PKSPROPERTY_SET * Set)
 {
     ULONG Index, ItemIndex;
     //PULONG Flags;
@@ -93,6 +94,7 @@ FindPropertyHandler(
                     if (Property->Flags & KSPROPERTY_TYPE_GET)
                         *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].GetPropertyHandler;
 
+                    *Set = (PKSPROPERTY_SET)&PropertySet[Index];
                     return STATUS_SUCCESS;
                 }
             }
@@ -111,6 +113,7 @@ KspPropertyHandler(
     IN  ULONG PropertyItemSize OPTIONAL)
 {
     PKSPROPERTY Property;
+    PKSPROPERTY_SET Set;
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
     PFNKSHANDLER PropertyHandler = NULL;
@@ -139,11 +142,12 @@ KspPropertyHandler(
     ASSERT(PropertyItemSize == 0 || PropertyItemSize == sizeof(KSPROPERTY_ITEM));
 
     /* find the property handler */
-    Status = FindPropertyHandler(&Irp->IoStatus, PropertySet, PropertySetsCount, Property, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Irp->UserBuffer, &PropertyHandler);
+    Status = FindPropertyHandler(&Irp->IoStatus, PropertySet, PropertySetsCount, Property, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Irp->UserBuffer, &PropertyHandler, &Set);
 
     if (NT_SUCCESS(Status) && PropertyHandler)
     {
         /* call property handler */
+        KSPROPERTY_SET_IRP_STORAGE(Irp) = Set;
         Status = PropertyHandler(Irp, Property, Irp->UserBuffer);
 
         if (Status == STATUS_BUFFER_TOO_SMALL)
