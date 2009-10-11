@@ -178,7 +178,7 @@ BEGIN
 	IDS_MODIFY "Modify"
 	IDS_APPS_COUNT "Applications count: %d"
 	IDS_WELCOME_TITLE "Welcome to ReactOS Applications Manager!\n\n"
-	IDS_WELCOME_TEXT "Choose a category on the left, then choose a application for install or uninstall.\nReactOS Web Site: "
+	IDS_WELCOME_TEXT "Choose a category on the left, then choose an application to install or uninstall.\nReactOS Web Site: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installed"
 	IDS_AVAILABLEFORINST "Available for installation"
