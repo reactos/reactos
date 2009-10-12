@@ -104,13 +104,6 @@ typedef struct
     BOOL       dialogEx;
 } DLG_TEMPLATE;
 
-/* GetDlgItem structure */
-typedef struct
-{
-    INT        nIDDlgItem;
-    HWND       control;
-} GETDLGITEMINFO;
-
 /* CheckRadioButton structure */
 typedef struct
 {
@@ -1461,22 +1454,6 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
     return ret;
 }
 
-/***********************************************************************
- *           GetDlgItemEnumProc
- *
- * Callback for GetDlgItem
- */
-BOOL CALLBACK GetDlgItemEnumProc (HWND hwnd, LPARAM lParam )
-{
-    GETDLGITEMINFO * info = (GETDLGITEMINFO *)lParam;
-    if(info->nIDDlgItem == GetWindowLongPtrW( hwnd, GWL_ID ))
-    {
-        info->control = hwnd;
-        return FALSE;
-    }
-    return TRUE;
-}
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -2029,13 +2006,16 @@ GetDlgItem(
   HWND hDlg,
   int nIDDlgItem)
 {
-    GETDLGITEMINFO info;
-    info.nIDDlgItem = nIDDlgItem;
-    info.control = 0;
-    if(hDlg && !EnumChildWindows(hDlg, (WNDENUMPROC)&GetDlgItemEnumProc, (LPARAM)&info))
-        return info.control;
-    else
-        return 0;
+    int i;
+    HWND *list = WIN_ListChildren(hDlg);
+    HWND ret = 0;
+
+    if (!list) return 0;
+
+    for (i = 0; list[i]; i++) if (GetWindowLongPtrW(list[i], GWLP_ID) == nIDDlgItem) break;
+    ret = list[i];
+    HeapFree(GetProcessHeap(), 0, list);
+    return ret;
 }
 
 
