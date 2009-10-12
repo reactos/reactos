@@ -363,10 +363,10 @@ ApplyTheme(GLOBALS* g)
      */
     g->Theme.Effects.bTooltipAnimation  = g->Theme.Effects.bMenuAnimation;
     g->Theme.Effects.bTooltipFade       = g->Theme.Effects.bMenuFade;
-    SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, g->Theme.Effects.bDragFullWindows, (PVOID)&g->Theme.Effects.bDragFullWindows, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+    SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, g->Theme.Effects.bDragFullWindows, NULL, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
     //UPDATE_USERPREF(KEYBOARDCUES, &g->Theme.Effects.bKeyboardCues);
     //UPDATE_USERPREF(ACTIVEWINDOWTRACKING, &g->Theme.Effects.bActiveWindowTracking);
-    UPDATE_USERPREF(MENUANIMATION, &g->Theme.Effects.bMenuAnimation);
+    //UPDATE_USERPREF(MENUANIMATION, &g->Theme.Effects.bMenuAnimation);
     //UPDATE_USERPREF(COMBOBOXANIMATION, &g->Theme.Effects.bComboBoxAnimation);
     //UPDATE_USERPREF(LISTBOXSMOOTHSCROLLING, &g->Theme.Effects.bListBoxSmoothScrolling);
     //UPDATE_USERPREF(GRADIENTCAPTIONS, &g->Theme.Effects.bGradientCaptions);
