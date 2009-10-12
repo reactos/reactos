@@ -172,7 +172,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 VOID
 NTAPI
 MmFreeNonCachedMemory(IN PVOID BaseAddress,
-                      IN ULONG NumberOfBytes)
+                      IN SIZE_T NumberOfBytes)
 {
     PMDL Mdl;
     PMMPTE PointerPte;

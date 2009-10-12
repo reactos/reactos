@@ -428,7 +428,7 @@ MmFreeContiguousMemory(IN PVOID BaseAddress)
 VOID
 NTAPI
 MmFreeContiguousMemorySpecifyCache(IN PVOID BaseAddress,
-                                   IN ULONG NumberOfBytes,
+                                   IN SIZE_T NumberOfBytes,
                                    IN MEMORY_CACHING_TYPE CacheType)
 {
     //

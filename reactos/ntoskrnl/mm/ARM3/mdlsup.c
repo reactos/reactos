@@ -25,9 +25,9 @@ PMDL
 NTAPI
 MmCreateMdl(IN PMDL Mdl,
             IN PVOID Base,
-            IN ULONG Length)
+            IN SIZE_T Length)
 {
-    ULONG Size;
+    SIZE_T Size;
     
     //
     // Check if we don't have an MDL built
@@ -52,10 +52,10 @@ MmCreateMdl(IN PMDL Mdl,
 /*
  * @implemented
  */
-ULONG
+SIZE_T
 NTAPI
 MmSizeOfMdl(IN PVOID Base,
-            IN ULONG Length)
+            IN SIZE_T Length)
 {
     //
     // Return the MDL size
@@ -566,7 +566,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                     IN KPROCESSOR_MODE AccessMode,
                     IN LOCK_OPERATION Operation)
 {
-    PPFN_TYPE MdlPages;
+    PPFN_NUMBER MdlPages;
     PVOID Base, Address, LastAddress, StartAddress;
     ULONG LockPages, TotalPages;
     NTSTATUS Status = STATUS_SUCCESS;
