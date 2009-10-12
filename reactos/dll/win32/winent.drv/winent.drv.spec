@@ -2,7 +2,6 @@
 
 @ cdecl AlphaBlend(ptr long long long long ptr long long long long long) RosDrv_AlphaBlend
 @ cdecl Arc(ptr long long long long long long long long) RosDrv_Arc
-@ cdecl BitBlt(ptr long long long long ptr long long long) RosDrv_BitBlt
 @ cdecl ChoosePixelFormat(ptr ptr) RosDrv_ChoosePixelFormat
 @ cdecl Chord(ptr long long long long long long long long) RosDrv_Chord
 @ cdecl CreateBitmap(ptr long ptr) RosDrv_CreateBitmap
@@ -31,7 +30,6 @@
 @ cdecl GetTextMetrics(ptr ptr) RosDrv_GetTextMetrics
 @ cdecl LineTo(ptr long long) RosDrv_LineTo
 @ cdecl PaintRgn(ptr long) RosDrv_PaintRgn
-@ cdecl PatBlt(ptr long long long long long) RosDrv_PatBlt
 @ cdecl Pie(ptr long long long long long long long long) RosDrv_Pie
 @ cdecl PolyPolygon(ptr ptr ptr long) RosDrv_PolyPolygon
 @ cdecl PolyPolyline(ptr ptr ptr long) RosDrv_PolyPolyline

@@ -40,6 +40,7 @@ BOOL CDECL RosDrv_Arc( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT
     return FALSE;
 }
 
+#if 0
 BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
                     INT width, INT height, NTDRV_PDEVICE *physDevSrc,
                     INT xSrc, INT ySrc, DWORD rop )
@@ -75,6 +76,7 @@ BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
     return RosGdiBitBlt(physDevDst->hKernelDC, xDst, yDst, width, height,
         physDevSrc->hKernelDC, xSrc, ySrc, rop);
 }
+#endif
 
 int CDECL RosDrv_ChoosePixelFormat(NTDRV_PDEVICE *physDev,
                                    const PIXELFORMATDESCRIPTOR *ppfd)
@@ -396,6 +398,7 @@ BOOL CDECL RosDrv_PaintRgn( NTDRV_PDEVICE *physDev, HRGN hrgn )
     return FALSE;
 }
 
+#if 0
 BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, INT height, DWORD rop )
 {
     POINT pts[2], ptBrush;
@@ -418,6 +421,7 @@ BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, 
 
     return RosGdiPatBlt(physDev->hKernelDC, left, top, width, height, rop);
 }
+#endif
 
 BOOL CDECL RosDrv_Pie( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
             INT xstart, INT ystart, INT xend, INT yend )
