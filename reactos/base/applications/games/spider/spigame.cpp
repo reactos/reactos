@@ -1,7 +1,7 @@
 /*
  * PROJECT:      Spider Solitaire
  * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/lang/spigame.cpp
+ * FILE:         base/applications/games/spider/spigame.cpp
  * PURPOSE:      Spider Solitaire game functions
  * PROGRAMMER:   Gregor Schneider
  */
@@ -121,7 +121,7 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int NumDragCards)
     SpiderWnd.Redraw();
 }
 
-/* Cards dragged friom a stack */
+/* Cards dragged from a stack */
 bool CARDLIBPROC StackDragProc(CardRegion &stackobj, int numDragCards)
 {
     int numfacedown, numcards, i;
