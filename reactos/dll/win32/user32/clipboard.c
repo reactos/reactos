@@ -188,6 +188,9 @@ static BOOL CLIPBOARD_CloseClipboard(void)
     return bRet;
 }
 
+/**************************************************************************
+ *		CLIPBOARD_SetClipboardViewer
+ */
 static HWND CLIPBOARD_SetClipboardViewer( HWND hWnd )
 {
     HWND hwndPrev = 0;

@@ -2321,8 +2321,15 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
     WINE_SPI_FIXME(SPI_SETMOUSESONAR);          /* 0x101D  _WIN32_WINNT >= 0x510 || _WIN32_WINDOW >= 0x490*/
     WINE_SPI_FIXME(SPI_GETMOUSECLICKLOCK);      /* 0x101E  _WIN32_WINNT >= 0x510 || _WIN32_WINDOW >= 0x490*/
     WINE_SPI_FIXME(SPI_SETMOUSECLICKLOCK);      /* 0x101F  _WIN32_WINNT >= 0x510 || _WIN32_WINDOW >= 0x490*/
-    WINE_SPI_FIXME(SPI_GETMOUSEVANISH);         /* 0x1020  _WIN32_WINNT >= 0x510 || _WIN32_WINDOW >= 0x490*/
-    WINE_SPI_FIXME(SPI_SETMOUSEVANISH);         /* 0x1021  _WIN32_WINNT >= 0x510 || _WIN32_WINDOW >= 0x490*/
+
+    case SPI_GETMOUSEVANISH:
+        ret = get_user_pref_param( 2, 0x01, pvParam );
+        break;
+
+    case SPI_SETMOUSEVANISH:
+        ret = set_user_pref_param( 2, 0x01, PtrToUlong(pvParam), fWinIni );
+        break;
+
     case SPI_GETFLATMENU:
         ret = get_user_pref_param( 2, 0x02, pvParam );
         break;
@@ -2331,8 +2338,14 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
         ret = set_user_pref_param( 2, 0x02, PtrToUlong(pvParam), fWinIni );
         break;
 
-    WINE_SPI_FIXME(SPI_GETDROPSHADOW);          /* 0x1024  _WIN32_WINNT >= 0x510 */
-    WINE_SPI_FIXME(SPI_SETDROPSHADOW);          /* 0x1025  _WIN32_WINNT >= 0x510 */
+    case SPI_GETDROPSHADOW:
+        ret = get_user_pref_param( 2, 0x04, pvParam );
+        break;
+
+    case SPI_SETDROPSHADOW:
+        ret = set_user_pref_param( 2, 0x04, PtrToUlong(pvParam), fWinIni );
+        break;
+
     WINE_SPI_FIXME(SPI_GETBLOCKSENDINPUTRESETS);
     WINE_SPI_FIXME(SPI_SETBLOCKSENDINPUTRESETS);
     case SPI_GETUIEFFECTS:

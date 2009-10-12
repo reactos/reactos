@@ -44,6 +44,7 @@
 #include "win.h"
 #include "controls.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msg);
 WINE_DECLARE_DEBUG_CHANNEL(relay);
@@ -3067,8 +3068,20 @@ LRESULT WINAPI DispatchMessageA( const MSG* msg )
       /* Process timer messages */
     if ((msg->message == WM_TIMER) || (msg->message == WM_SYSTIMER))
     {
-        if (msg->lParam) return CallWindowProcA( (WNDPROC)msg->lParam, msg->hwnd,
-                                                 msg->message, msg->wParam, GetTickCount() );
+        if (msg->lParam)
+        {
+            __TRY
+            {
+                retval = CallWindowProcA( (WNDPROC)msg->lParam, msg->hwnd,
+                                          msg->message, msg->wParam, GetTickCount() );
+            }
+            __EXCEPT_PAGE_FAULT
+            {
+                retval = 0;
+            }
+            __ENDTRY
+            return retval;
+        }
     }
     if (!msg->hwnd) return 0;
 
@@ -3105,7 +3118,8 @@ LRESULT WINAPI DispatchMessageA( const MSG* msg )
  * If the lpMsg parameter points to a WM_TIMER message and the
  * parameter of the WM_TIMER message is not NULL, the lParam parameter
  * points to the function that is called instead of the window
- * procedure.
+ * procedure. The function stored in lParam (timer callback) is protected
+ * from causing page-faults.
  *
  * The message must be valid.
  *
@@ -3125,8 +3139,20 @@ LRESULT WINAPI DispatchMessageW( const MSG* msg )
       /* Process timer messages */
     if ((msg->message == WM_TIMER) || (msg->message == WM_SYSTIMER))
     {
-        if (msg->lParam) return CallWindowProcW( (WNDPROC)msg->lParam, msg->hwnd,
-                                                 msg->message, msg->wParam, GetTickCount() );
+        if (msg->lParam)
+        {
+            __TRY
+            {
+                retval = CallWindowProcW( (WNDPROC)msg->lParam, msg->hwnd,
+                                          msg->message, msg->wParam, GetTickCount() );
+            }
+            __EXCEPT_PAGE_FAULT
+            {
+                retval = 0;
+            }
+            __ENDTRY
+            return retval;
+        }
     }
     if (!msg->hwnd) return 0;
 

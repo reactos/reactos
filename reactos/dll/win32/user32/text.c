@@ -855,6 +855,7 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     int tabwidth /* to keep gcc happy */ = 0;
     int prefix_offset;
     ellipsis_data ellip;
+    int invert_y=0;
 
     TRACE("%s, %d, [%s] %08x\n", debugstr_wn (str, count), count,
         wine_dbgstr_rect(rect), flags);
@@ -898,6 +899,15 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
         }
     }
 
+    if (GetGraphicsMode(hdc) == GM_COMPATIBLE)
+    {
+        SIZE window_ext, viewport_ext;
+        GetWindowExtEx(hdc, &window_ext);
+        GetViewportExtEx(hdc, &viewport_ext);
+        if ((window_ext.cy > 0) != (viewport_ext.cy > 0))
+            invert_y = 1;
+    }
+
     if (dtp)
     {
         lmargin = dtp->iLeftMargin;
@@ -932,7 +942,10 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     do
     {
 	len = sizeof(line)/sizeof(line[0]);
-        last_line = !(flags & DT_NOCLIP) && y + ((flags & DT_EDITCONTROL) ? 2*lh-1 : lh) > rect->bottom;
+	if (invert_y)
+            last_line = !(flags & DT_NOCLIP) && y - ((flags & DT_EDITCONTROL) ? 2*lh-1 : lh) < rect->bottom;
+	else
+            last_line = !(flags & DT_NOCLIP) && y + ((flags & DT_EDITCONTROL) ? 2*lh-1 : lh) > rect->bottom;
 	strPtr = TEXT_NextLineW(hdc, strPtr, &count, line, &len, width, flags, &size, last_line, &p_retstr, tabwidth, &prefix_offset, &ellip);
 
 	if (flags & DT_CENTER) x = (rect->left + rect->right -
@@ -1001,7 +1014,10 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
 	else if (size.cx > max_width)
 	    max_width = size.cx;
 
-	y += lh;
+        if (invert_y)
+	    y -= lh;
+        else
+	    y += lh;
         if (dtp)
             dtp->uiLengthDrawn += len;
     }
