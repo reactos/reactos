@@ -18,14 +18,21 @@ MmGetPageDirectory(VOID)
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 
 /* Base addresses of PTE and PDE */
-#define PAGETABLE_MAP       (0xc0000000)
-#define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
+//#define PAGETABLE_MAP       PTE_BASE
+//#define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
 
 /* Converting address to a corresponding PDE or PTE entry */
+#define MiAddressToPxe(x) \
+    ((PMMPTE)(((((ULONG64)(x)) >> PXI_SHIFT) << 3) + PXE_BASE))
+#define MiAddressToPpe(x) \
+    ((PMMPTE)(((((ULONG64)(x)) >> PPI_SHIFT) << 3) + PPE_BASE))
 #define MiAddressToPde(x) \
-    ((PMMPTE)(((((ULONG64)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
+    ((PMMPTE)(((((ULONG64)(x)) >> PDI_SHIFT) << 3) + PDE_BASE))
 #define MiAddressToPte(x) \
-    ((PMMPTE)(((((ULONG64)(x)) >> 12) << 2) + PAGETABLE_MAP))
+    ((PMMPTE)(((((ULONG64)(x)) >> PTI_SHIFT) << 3) + PTE_BASE))
+
+/* Convert a PTE into a corresponding address */
+#define MiPteToAddress(PTE) ((PVOID)((ULONG64)(PTE) << 9))
 
 //#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
 //#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
