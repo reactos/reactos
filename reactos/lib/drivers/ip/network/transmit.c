@@ -166,7 +166,7 @@ NTSTATUS SendFragments(
     PIPFRAGMENT_CONTEXT IFC;
     NDIS_STATUS NdisStatus;
     PVOID Data;
-    UINT BufferSize = MaxLLHeaderSize + PathMTU, InSize;
+    UINT BufferSize = PathMTU, InSize;
     PCHAR InData;
 
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)  PathMTU (%d).\n",
@@ -193,7 +193,7 @@ NTSTATUS SendFragments(
 
     GetDataPtr( IFC->NdisPacket, 0, (PCHAR *)&Data, &InSize );
 
-    IFC->Header       = ((PCHAR)Data) + MaxLLHeaderSize;
+    IFC->Header       = ((PCHAR)Data);
     IFC->Datagram     = IPPacket->NdisPacket;
     IFC->DatagramData = ((PCHAR)IPPacket->Header) + IPPacket->HeaderSize;
     IFC->HeaderSize   = IPPacket->HeaderSize;

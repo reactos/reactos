@@ -208,8 +208,6 @@ extern LIST_ENTRY InterfaceListHead;
 extern KSPIN_LOCK InterfaceListLock;
 extern LIST_ENTRY NetTableListHead;
 extern KSPIN_LOCK NetTableListLock;
-extern UINT MaxLLHeaderSize;
-extern UINT MinLLFrameSize;
 extern BOOLEAN IpWorkItemQueued;
 
 PIP_PACKET IPCreatePacket(

@@ -1513,7 +1513,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    if (NULL != Win32Thread &&
        Window->MessageQueue == Win32Thread->MessageQueue)
    {
-      if (Win32Thread->IsExiting)
+      if (Win32Thread->TIF_flags & TIF_INCLEANUP)
       {
          /* Never send messages to exiting threads */
           RETURN( FALSE);

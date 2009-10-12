@@ -3,6 +3,8 @@
 #include <debug.h>
 #include <pseh/pseh2.h>
 
+#include "fullfat.h"
+
 #include <fat.h>
 #include <fatstruc.h>
 
@@ -13,6 +15,27 @@
 #define TAG_FCB  'BCFV'
 #define TAG_IRP  'PRIV'
 #define TAG_VFAT 'TAFV'
+
+
+/* Global resource acquire/release */
+#define FatAcquireExclusiveGlobal(IrpContext) \
+( \
+    ExAcquireResourceExclusiveLite(&FatGlobalData.Resource, \
+                                   (IrpContext)->Flags & IRPCONTEXT_CANWAIT) \
+)
+
+#define FatAcquireSharedGlobal(IrpContext) \
+( \
+    ExAcquireResourceSharedLite(&FatGlobalData.Resource, \
+                                (IrpContext)->Flags & IRPCONTEXT_CANWAIT) \
+)
+
+#define FatReleaseGlobal(IrpContext) \
+{ \
+    ExReleaseResourceLite(&(FatGlobalData.Resource)); \
+}
+
+
 /*  ------------------------------------------------------  shutdown.c  */
 
 DRIVER_DISPATCH FatShutdown;
@@ -42,14 +65,19 @@ FatPerformVirtualNonCachedIo(
     IN PLARGE_INTEGER Offset,
     IN SIZE_T Length);
 
-PVOID
-FatMapUserBuffer(
-    IN OUT PIRP Irp);
-
 /*  -----------------------------------------------------------  dir.c  */
 
 NTSTATUS NTAPI
 FatDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+VOID NTAPI
+FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
+                 IN PVCB Vcb);
+
+PFCB NTAPI
+FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PVCB Vcb,
+             IN PFCB ParentDcb);
 
 /*  --------------------------------------------------------  create.c  */
 
@@ -111,6 +139,49 @@ FatCompleteRequest(PFAT_IRP_CONTEXT IrpContext OPTIONAL,
                    PIRP Irp OPTIONAL,
                    NTSTATUS Status);
 
+BOOLEAN NTAPI
+FatAcquireExclusiveVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PVCB Vcb);
+
+VOID NTAPI
+FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PVCB Vcb);
+
+BOOLEAN NTAPI
+FatAcquireExclusiveFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PFCB Fcb);
+
+BOOLEAN NTAPI
+FatAcquireSharedFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PFCB Fcb);
+
+VOID NTAPI
+FatReleaseFcb(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PFCB Fcb);
+
+TYPE_OF_OPEN
+NTAPI
+FatDecodeFileObject(IN PFILE_OBJECT FileObject,
+                    OUT PVCB *Vcb,
+                    OUT PFCB *FcbOrDcb,
+                    OUT PCCB *Ccb);
+
+VOID NTAPI
+FatSetFileObject(PFILE_OBJECT FileObject,
+                 TYPE_OF_OPEN TypeOfOpen,
+                 PVOID Fcb,
+                 PCCB Ccb);
+
+PVOID FASTCALL
+FatMapUserBuffer(PIRP Irp);
+
+/* --------------------------------------------------------- fullfat.c */
+
+FF_T_SINT32
+FatWriteBlocks(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count, void *pParam);
+
+FF_T_SINT32
+FatReadBlocks(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count, void *pParam);
 
 /* ---------------------------------------------------------  lock.c */
 
@@ -145,6 +216,7 @@ FatPinNextPage(
 
 NTSTATUS
 FatInitializeVcb(
+    IN PFAT_IRP_CONTEXT IrpContext,
     IN PVCB Vcb,
     IN PDEVICE_OBJECT TargetDeviceObject,
     IN PVPB Vpb);
@@ -205,21 +277,47 @@ FatUnlinkFcbNames(
 	IN PFCB ParentFcb,
 	IN PFCB Fcb);
 
-NTSTATUS
+PFCB NTAPI
 FatCreateFcb(
-    OUT PFCB* CreatedFcb,
     IN PFAT_IRP_CONTEXT IrpContext,
-    IN PFCB ParentFcb,
-	IN PDIR_ENTRY Dirent,
-    IN PUNICODE_STRING FileName,
-	IN PUNICODE_STRING LongFileName OPTIONAL);
+    IN PVCB Vcb,
+    IN PFCB ParentDcb,
+    IN FF_FILE *FileHandle);
 
-NTSTATUS
-FatOpenFcb(
-    OUT PFCB* Fcb,
-    IN PFAT_IRP_CONTEXT IrpContext,
-    IN PFCB ParentFcb,
-    IN PUNICODE_STRING FileName);
+PFCB NTAPI
+FatFindFcb(PFAT_IRP_CONTEXT IrpContext,
+           PRTL_SPLAY_LINKS *RootNode,
+           PSTRING AnsiName,
+           PBOOLEAN IsDosName);
+
+VOID NTAPI
+FatInsertName(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PRTL_SPLAY_LINKS *RootNode,
+              IN PFCB_NAME_LINK Name);
+
+VOID NTAPI
+FatRemoveNames(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PFCB Fcb);
+
+PCCB NTAPI
+FatCreateCcb();
+
+VOID NTAPI
+FatSetFullNameInFcb(PFCB Fcb,
+                    PUNICODE_STRING Name);
+
+VOID NTAPI
+FatSetFullFileNameInFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                        IN PFCB Fcb);
+
+VOID NTAPI
+FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PFCB Fcb);
+
+VOID NTAPI
+Fati8dot3ToString(IN PCHAR FileName,
+                  IN BOOLEAN DownCase,
+                  OUT POEM_STRING OutString);
 
 /*  ------------------------------------------------------------  rw.c  */
 

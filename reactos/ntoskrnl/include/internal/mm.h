@@ -14,13 +14,14 @@ extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 extern ULONG MmNumberOfPhysicalPages;
+extern ULONG MmLowestPhysicalPage;
+extern ULONG MmHighestPhysicalPage;
 
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
 
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
-extern ULONG MmHighestPhysicalPage;
 
 struct _KTRAP_FRAME;
 struct _EPROCESS;
@@ -1095,32 +1096,11 @@ MmLockPage(PFN_TYPE Page);
 
 VOID
 NTAPI
-MmLockPageUnsafe(PFN_TYPE Page);
-
-VOID
-NTAPI
 MmUnlockPage(PFN_TYPE Page);
 
 ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
-
-static
-__inline
-KIRQL
-NTAPI
-MmAcquirePageListLock()
-{
-	return KeAcquireQueuedSpinLock(LockQueuePfnLock);
-}
-
-FORCEINLINE
-VOID
-NTAPI
-MmReleasePageListLock(KIRQL oldIrql)
-{
-	KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
 
 VOID
 NTAPI
@@ -1342,10 +1322,6 @@ MmDereferencePage(PFN_TYPE Page);
 VOID
 NTAPI
 MmReferencePage(PFN_TYPE Page);
-
-VOID
-NTAPI
-MmReferencePageUnsafe(PFN_TYPE Page);
 
 ULONG
 NTAPI

@@ -33,6 +33,10 @@ PCHAR NlsUnicodeToOemTable =NULL;
 PWCHAR NlsDbcsUnicodeToOemTable = NULL;
 PUSHORT _NlsOemLeadByteInfo = NULL; /* exported */
 
+USHORT NlsOemDefaultChar = '\0';
+USHORT NlsUnicodeDefaultChar = 0;
+
+
 #define NlsOemLeadByteInfo              _NlsOemLeadByteInfo
 #define INIT_FUNCTION
 
@@ -435,6 +439,10 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
    /* Set Unicode case map data */
    NlsUnicodeUpcaseTable = NlsTable->UpperCaseTable;
    NlsUnicodeLowercaseTable = NlsTable->LowerCaseTable;
+
+   /* set the default characters for RtlpDidUnicodeToOemWork */
+   NlsOemDefaultChar = NlsTable->OemTableInfo.DefaultChar;
+   NlsUnicodeDefaultChar = NlsTable->OemTableInfo.TransDefaultChar;
 }
 
 

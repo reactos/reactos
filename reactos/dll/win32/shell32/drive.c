@@ -17,6 +17,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#define LARGEINT_PROTOS
+#define LargeIntegerDivide RtlLargeIntegerDivide
+#define ExtendedIntegerMultiply RtlExtendedIntegerMultiply
+#define ConvertUlongToLargeInteger RtlConvertUlongToLargeInteger
+#define LargeIntegerSubtract RtlLargeIntegerSubtract
 #define MAX_PROPERTY_SHEET_PAGE 32
 
 #define WIN32_NO_STATUS
@@ -27,6 +33,7 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 #include <fmifs/fmifs.h>
+#include <largeint.h>
 
 #include <precomp.h>
 
@@ -287,21 +294,20 @@ static
 LARGE_INTEGER
 GetFreeBytesShare(LARGE_INTEGER TotalNumberOfFreeBytes, LARGE_INTEGER TotalNumberOfBytes)
 {
-   LARGE_INTEGER Temp, Result;
+   LARGE_INTEGER Temp, Result, Remainder;
 
    if (TotalNumberOfFreeBytes.QuadPart == 0LL)
    {
-      Result.QuadPart = 1;
-      return Result;
+      return ConvertUlongToLargeInteger(0);
    }
 
-   Temp.QuadPart = TotalNumberOfBytes.QuadPart / 100;
+   Temp = LargeIntegerDivide(TotalNumberOfBytes, ConvertUlongToLargeInteger(100), &Remainder);
    if (Temp.QuadPart >= TotalNumberOfFreeBytes.QuadPart)
    {
-      Result.QuadPart = 1;
+      Result = ConvertUlongToLargeInteger(1);
    }else
    {
-      Result.QuadPart = TotalNumberOfFreeBytes.QuadPart / Temp.QuadPart;
+      Result = LargeIntegerDivide(TotalNumberOfFreeBytes, Temp, &Remainder);
    }
 
    return Result;
@@ -426,7 +432,7 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
          swprintf(szResult, L"%02d%%", Result.QuadPart);
          SendDlgItemMessageW(hwndDlg, 14006, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
          /* store used share amount */
-         Result.QuadPart = 100 - Result.QuadPart;
+         Result = LargeIntegerSubtract(ConvertUlongToLargeInteger(100), Result);
          swprintf(szResult, L"%02d%%", Result.QuadPart);
          SendDlgItemMessageW(hwndDlg, 14004, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
          if (DriveType == DRIVE_FIXED)
@@ -1172,7 +1178,7 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 }
 
 
-INT_PTR 
+BOOL 
 CALLBACK 
 FormatDriveDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

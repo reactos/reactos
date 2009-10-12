@@ -51,7 +51,7 @@ HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
     (pHalSetWakeAlarm)NULL,
     (pHalTranslateBusAddress)NULL,
     (pHalAssignSlotResources)NULL,
-    (pHalHaltSystem)NULL,
+    xHalHaltSystem,
     (pHalFindBusAddressTranslation)NULL,
     (pHalResetDisplay)NULL,
     (pHalAllocateMapRegisters)NULL,
@@ -66,5 +66,10 @@ HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
 
 /* FUNCTIONS *****************************************************************/
 
-
-/* EOF */
+VOID
+NTAPI
+xHalHaltSystem(VOID)
+{
+    /* Halt execution */
+    while (TRUE);
+}

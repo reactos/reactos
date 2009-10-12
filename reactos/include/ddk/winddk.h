@@ -10317,8 +10317,16 @@ DbgPrintReturnControlC(
   IN PCH  Format,
   IN ...);
 
+ULONG
+NTAPI
+DbgPrompt(
+    IN PCCH Prompt,
+    OUT PCH Response,
+    IN ULONG MaximumResponseLength
+);
+
 NTKERNELAPI
-BOOLEAN
+NTSTATUS
 NTAPI
 DbgQueryDebugFilterState(
   IN ULONG  ComponentId,

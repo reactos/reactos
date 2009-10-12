@@ -466,7 +466,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Make sure the buffer is a valid string which within the given length */
     if ((NtInitialUserProcessBufferType != REG_SZ) ||
-        ((NtInitialUserProcessBufferLength != -1U) &&
+        ((NtInitialUserProcessBufferLength != MAXULONG) &&
          ((NtInitialUserProcessBufferLength < sizeof(WCHAR)) ||
           (NtInitialUserProcessBufferLength >
            sizeof(NtInitialUserProcessBuffer) - sizeof(WCHAR)))))
@@ -1226,24 +1226,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->NtMinorVersion = NtMinorVersion;
 
     /* Set the machine type */
-#if defined(_X86_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_I386;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_I386;
-#elif defined(_PPC_) // <3 Arty
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_POWERPC;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_POWERPC;
-#elif defined(_MIPS_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_R4000;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_R4000;
-#elif defined(_ARM_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARM;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARM;
-#elif defined(_AMD64_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_AMD64;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_AMD64;
-#else
-#error "Unsupported ReactOS Target"
-#endif
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARCHITECTURE;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARCHITECTURE;
 }
 
 VOID
@@ -1433,7 +1417,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         if (!ExpRealTimeIsUniversal)
         {
             /* Check if we don't have a valid bias */
-            if (ExpLastTimeZoneBias == -1U)
+            if (ExpLastTimeZoneBias == MAXULONG)
             {
                 /* Reset */
                 ResetBias = TRUE;

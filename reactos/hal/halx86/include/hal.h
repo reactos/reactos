@@ -25,12 +25,7 @@
 #include <bugcodes.h>
 #include <ntdddisk.h>
 #include <arc/arc.h>
-#include <iotypes.h>
-#include <kefuncs.h>
-#include <halfuncs.h>
-#include <iofuncs.h>
-#include <ldrtypes.h>
-#include <obfuncs.h>
+#include <ntndk.h>
 
 /* Internal kernel headers */
 #include "internal/pci.h"

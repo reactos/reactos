@@ -215,6 +215,7 @@ MmFreePagesFromMdl(IN PMDL Mdl)
     PPFN_NUMBER Pages;
     LONG NumberOfPages;
     PMMPFN Pfn1;
+    KIRQL OldIrql;
     DPRINT("Freeing MDL: %p\n", Mdl);
     
     //
@@ -229,7 +230,12 @@ MmFreePagesFromMdl(IN PMDL Mdl)
     //
     Base = (PVOID)((ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset);
     NumberOfPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
-    
+
+    //
+    // Acquire PFN lock
+    //
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
     //
     // Loop all the MDL pages
     //
@@ -268,7 +274,12 @@ MmFreePagesFromMdl(IN PMDL Mdl)
         //
         *Pages++ = -1;
     } while (--NumberOfPages != 0);
-    
+
+    //
+    // Release the lock
+    //
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
     //
     // Remove the pages locked flag
     //

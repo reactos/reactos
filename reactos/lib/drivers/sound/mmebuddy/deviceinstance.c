@@ -273,12 +273,15 @@ DestroySoundDeviceInstance(
         return MMSYSERR_NOTSUPPORTED;
     }
 
-    /* Stop the streaming thread (TODO - is this for wave only?) */
-    Result = DestroySoundThread(SoundDeviceInstance->Thread);
-    SND_ASSERT( MMSUCCESS(Result) );    /* It should succeed! */
-    if ( ! MMSUCCESS(Result ) )
+    /* Stop the streaming thread */
+    if ( SoundDeviceInstance->Thread )
     {
-        return TranslateInternalMmResult(Result);
+        Result = DestroySoundThread(SoundDeviceInstance->Thread);
+        SND_ASSERT( MMSUCCESS(Result) );    /* It should succeed! */
+        if ( ! MMSUCCESS(Result ) )
+        {
+            return TranslateInternalMmResult(Result);
+        }
     }
 
     /* Blank this out here */

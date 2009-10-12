@@ -25,7 +25,6 @@ public:
     STDMETHODIMP_(ULONG) Release()
     {
         InterlockedDecrement(&m_Ref);
-        DPRINT1("Release %u\n", m_Ref);
         if (!m_Ref)
         {
             //delete this;
@@ -61,16 +60,16 @@ GUID KSPROPERTY_SETID_Topology                = {0x720D4AC0L, 0x7533, 0x11D0, {0
 static GUID InterfaceGuids[4] = 
 {
     {
+         //KS_CATEGORY_AUDIO
+        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
         /// KSCATEGORY_RENDER
         0x65E8773EL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     },
     {
         /// KSCATEGORY_CAPTURE
         0x65E8773DL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
-    },
-    {
-         //KS_CATEGORY_AUDIO
-        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     },
     {
         ///KSCATEGORY_AUDIO_DEVICE
@@ -299,6 +298,9 @@ CPortWaveCyclic::Init(
         return Status;
     }
 
+    // store for node property requests
+    m_SubDeviceDescriptor->UnknownMiniport = UnknownMiniport;
+
     // check if it supports IPinCount interface
     Status = UnknownMiniport->QueryInterface(IID_IPinCount, (PVOID*)&PinCount);
     if (NT_SUCCESS(Status))
@@ -435,7 +437,7 @@ NTSTATUS
 NTAPI
 CPortWaveCyclic::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,

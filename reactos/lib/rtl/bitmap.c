@@ -58,14 +58,14 @@ NTDLL_FindRuns(PRTL_BITMAP lpBits,
   ULONG ulPos = 0, ulRuns = 0;
 
   if (!ulCount)
-    return ~0U;
+    return MAXULONG;
 
   while (ulPos < lpBits->SizeOfBitMap)
   {
     /* Find next set/clear run */
     ULONG ulSize, ulNextPos = fn(lpBits, ulPos, &ulSize);
 
-    if (ulNextPos == ~0U)
+    if (ulNextPos == MAXULONG)
       break;
 
     if (bLongest && ulRuns == ulCount)
@@ -158,7 +158,7 @@ NTDLL_FindSetRun(PRTL_BITMAP lpBits,
     ulStart = (ulStart & ~7u) + 8;
     lpOut++;
     if (ulStart >= lpBits->SizeOfBitMap)
-      return ~0U;
+      return MAXULONG;
   }
 
   /* Count blocks of 8 set bits */
@@ -248,7 +248,7 @@ NTDLL_FindClearRun(PRTL_BITMAP lpBits,
     ulStart = (ulStart & ~7u) + 8;
     lpOut++;
     if (ulStart >= lpBits->SizeOfBitMap)
-      return ~0U;
+      return MAXULONG;
   }
 
   /* Count blocks of 8 clear bits */
@@ -513,7 +513,7 @@ RtlFindClearBits(PRTL_BITMAP BitMapHeader,
   ULONG ulPos, ulEnd;
 
   if (!BitMapHeader || !NumberToFind || NumberToFind > BitMapHeader->SizeOfBitMap)
-    return ~0U;
+    return MAXULONG;
 
   ulEnd = BitMapHeader->SizeOfBitMap;
 
@@ -537,7 +537,7 @@ RtlFindClearBits(PRTL_BITMAP BitMapHeader,
     else
       ulPos++;
   }
-  return ~0U;
+  return MAXULONG;
 }
 
 /*
@@ -596,7 +596,7 @@ RtlFindFirstRunSet(IN PRTL_BITMAP BitMapHeader,
   Size = BitMapHeader->SizeOfBitMap;
   if (*StartingIndex > Size)
   {
-    *StartingIndex = (ULONG)-1;
+    *StartingIndex = MAXULONG;
     return 0;
   }
 
@@ -619,7 +619,7 @@ RtlFindFirstRunSet(IN PRTL_BITMAP BitMapHeader,
   /* Return index of first set bit */
   if (Index >= Size)
   {
-    *StartingIndex = (ULONG)-1;
+    *StartingIndex = MAXULONG;
     return 0;
   }
   else
@@ -695,7 +695,7 @@ RtlFindSetBits(PRTL_BITMAP BitMapHeader,
   ULONG ulPos, ulEnd;
 
   if (!BitMapHeader || !NumberToFind || NumberToFind > BitMapHeader->SizeOfBitMap)
-    return ~0U;
+    return MAXULONG;
 
   ulEnd = BitMapHeader->SizeOfBitMap;
 
@@ -719,7 +719,7 @@ RtlFindSetBits(PRTL_BITMAP BitMapHeader,
     else
       ulPos++;
   }
-  return ~0U;
+  return MAXULONG;
 }
 
 
@@ -734,7 +734,7 @@ RtlFindSetBitsAndClear(PRTL_BITMAP BitMapHeader,
   ULONG ulPos;
 
   ulPos = RtlFindSetBits(BitMapHeader, NumberToFind, HintIndex);
-  if (ulPos != ~0U)
+  if (ulPos != MAXULONG)
     RtlClearBits(BitMapHeader, ulPos, NumberToFind);
   return ulPos;
 }
@@ -906,7 +906,7 @@ RtlFindClearBitsAndSet(PRTL_BITMAP BitMapHeader,
   ULONG ulPos;
 
   ulPos = RtlFindClearBits(BitMapHeader, NumberToFind, HintIndex);
-  if (ulPos != ~0U)
+  if (ulPos != MAXULONG)
     RtlSetBits(BitMapHeader, ulPos, NumberToFind);
   return ulPos;
 }

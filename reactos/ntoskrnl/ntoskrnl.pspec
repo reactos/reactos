@@ -742,7 +742,9 @@
 @ stdcall KiIpiServiceRoutine(ptr ptr)
 @ FASTCALL KiReleaseSpinLock(ptr)
 @ cdecl KiUnexpectedInterrupt()
-;-arch=i386 Kii386SpinOnSpinLock
+#ifdef _M_IX86
+@ stdcall Kii386SpinOnSpinLock(ptr long)
+#endif
 @ stdcall LdrAccessResource(ptr ptr ptr ptr)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
 @ stdcall LdrFindResourceDirectory_U(ptr ptr long ptr)

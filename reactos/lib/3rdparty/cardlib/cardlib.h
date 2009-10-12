@@ -74,7 +74,7 @@ class CardStack;
 class CardWindow;
 
 typedef bool (CARDLIBPROC *pCanDragProc)    (CardRegion &stackobj, int iNumDragging);
-typedef bool (CARDLIBPROC *pCanDropProc)    (CardRegion &stackobj, const CardStack &cards);
+typedef bool (CARDLIBPROC *pCanDropProc)    (CardRegion &stackobj, CardStack &cards);
 typedef void (CARDLIBPROC *pClickProc)      (CardRegion &stackobj, int iNumCards);
 typedef void (CARDLIBPROC *pAddProc)        (CardRegion &stackobj, const CardStack &cards);
 typedef void (CARDLIBPROC *pRemoveProc)     (CardRegion &stackobj, int iNumRemoved);

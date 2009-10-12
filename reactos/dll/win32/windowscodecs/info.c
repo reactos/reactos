@@ -952,7 +952,7 @@ HRESULT CreateComponentEnumerator(DWORD componentTypes, DWORD options, IEnumUnkn
                             list_add_tail(&This->objects, &item->entry);
                     }
 
-                    if (!SUCCEEDED(hr))
+                    if (FAILED(hr))
                     {
                         HeapFree(GetProcessHeap(), 0, item);
                         hr = S_OK;

@@ -41,7 +41,7 @@ VOID LoopTransmit(
 
     TI_DbgPrint(MAX_TRACE, ("Called (NdisPacket = %x)\n", NdisPacket));
 
-    GetDataPtr( NdisPacket, MaxLLHeaderSize, &PacketBuffer, &PacketLength );
+    GetDataPtr( NdisPacket, 0, &PacketBuffer, &PacketLength );
 
     NdisStatus = AllocatePacketWithBuffer
         ( &XmitPacket, PacketBuffer, PacketLength );

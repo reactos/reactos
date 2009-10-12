@@ -8,6 +8,9 @@
  
 /* DEFINES **********************************************************/
 
+#define HISTORYSIZE 11
+/* HISTORYSIZE = number of possible undo-steps + 1 */
+
 #define SIZEOF(a)  (sizeof(a) / sizeof((a)[0]))
 
 #define IDI_APPICON 500

@@ -61,7 +61,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Check if we should print it or not */
-    if ((ComponentId != -1U) &&
+    if ((ComponentId != MAXULONG) &&
         !(NtQueryDebugFilterState(ComponentId, Level)))
     {
         /* This message is masked */
@@ -96,7 +96,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     _SEH2_END;
 
     /* Check if we went past the buffer */
-    if (Length == -1U)
+    if (Length == MAXULONG)
     {
         /* Terminate it if we went over-board */
         Buffer[sizeof(Buffer) - 1] = '\n';
@@ -317,7 +317,7 @@ DbgSetDebugFilterState(IN ULONG ComponentId,
 /*
  * @implemented
  */
-NTSTATUS
+VOID
 NTAPI
 DbgLoadImageSymbols(IN PANSI_STRING Name,
                     IN PVOID Base,
@@ -346,7 +346,6 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
 
     /* Load the symbols */
     DebugService2(Name, &SymbolInfo, BREAKPOINT_LOAD_SYMBOLS);
-    return STATUS_SUCCESS;
 }
 
 /*

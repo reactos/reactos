@@ -830,19 +830,16 @@ MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmReferencePageUnsafe(PFN_TYPE Pfn)
+MmReferencePage(PFN_TYPE Pfn)
 {
-   KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
-   DPRINT("MmReferencePageUnsafe(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
+   DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
    if (Pfn == 0 || Pfn > MmHighestPhysicalPage)
    {
       return;
    }
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
@@ -853,16 +850,6 @@ MmReferencePageUnsafe(PFN_TYPE Pfn)
    }
 
    Page->ReferenceCount++;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
-
-VOID
-NTAPI
-MmReferencePage(PFN_TYPE Pfn)
-{
-   DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   MmReferencePageUnsafe(Pfn);
 }
 
 ULONG
@@ -904,13 +891,10 @@ VOID
 NTAPI
 MmDereferencePage(PFN_TYPE Pfn)
 {
-   KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
    DPRINT("MmDereferencePage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
 
@@ -962,7 +946,6 @@ MmDereferencePage(PFN_TYPE Pfn)
          KeSetEvent(&ZeroPageThreadEvent, IO_NO_INCREMENT, FALSE);
       }
    }
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
 ULONG
@@ -993,14 +976,11 @@ MmGetLockCountPage(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmLockPageUnsafe(PFN_TYPE Pfn)
+MmLockPage(PFN_TYPE Pfn)
 {
-   KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
-   DPRINT("MmLockPageUnsafe(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+   DPRINT("MmLockPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
@@ -1011,28 +991,15 @@ MmLockPageUnsafe(PFN_TYPE Pfn)
    }
 
    Page->LockCount++;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
-
-VOID
-NTAPI
-MmLockPage(PFN_TYPE Pfn)
-{
-   DPRINT("MmLockPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   MmLockPageUnsafe(Pfn);
 }
 
 VOID
 NTAPI
 MmUnlockPage(PFN_TYPE Pfn)
 {
-   KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
    DPRINT("MmUnlockPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
@@ -1043,7 +1010,6 @@ MmUnlockPage(PFN_TYPE Pfn)
    }
 
    Page->LockCount--;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
 PFN_TYPE
@@ -1053,12 +1019,10 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
    PFN_TYPE PfnOffset;
    PLIST_ENTRY ListEntry;
    PPHYSICAL_PAGE PageDescriptor;
-   KIRQL oldIrql;
    BOOLEAN NeedClear = FALSE;
 
    DPRINT("MmAllocPage()\n");
 
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
    if (IsListEmpty(&FreeZeroedPageListHead))
    {
       if (IsListEmpty(&FreeUnzeroedPageListHead))
@@ -1070,7 +1034,6 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
          }
 
          DPRINT1("MmAllocPage(): Out of memory\n");
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
          return 0;
       }
       ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
@@ -1105,8 +1068,6 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
 
    MmStats.NrSystemPages++;
    MmStats.NrFreePages--;
-
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 
    PfnOffset = PageDescriptor - MmPfnDatabase;
    if ((NeedClear) && (Consumer != MC_SYSTEM))

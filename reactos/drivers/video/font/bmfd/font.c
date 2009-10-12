@@ -247,7 +247,7 @@ BmfdLoadFontFile(
     ULONG cjView;
 
     DbgPrint("BmfdLoadFontFile()\n");
-    DbgBreakPoint();
+    __debugbreak();
 
     /* Check parameters */
     if (cFiles != 1)
@@ -323,7 +323,7 @@ BmfdQueryFontFile(
     PBMFD_FILE pfile = (PBMFD_FILE)iFile;
 
     DbgPrint("BmfdQueryFontFile()\n");
-//    DbgBreakPoint();
+//    __debugbreak();
 
     switch (ulMode)
     {
@@ -397,7 +397,7 @@ BmfdQueryFontTree(
     HGLYPH * phglyphs;
 
     DbgPrint("DrvQueryFontTree(iMode=%ld)\n", iMode);
-//    DbgBreakPoint();
+//    __debugbreak();
 
     /* Check parameters, we only support QFT_GLYPHSET */
     if (!iFace || iFace > pfile->cNumFaces || iMode != QFT_GLYPHSET)
@@ -521,7 +521,7 @@ BmfdQueryFont(
     PANOSE panose = {0};
 
     DbgPrint("BmfdQueryFont()\n");
-//    DbgBreakPoint();
+//    __debugbreak();
 
     /* Validate parameters */
     if (iFace > pfile->cNumFaces || !pid)

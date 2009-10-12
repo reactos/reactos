@@ -294,10 +294,11 @@ ExFreePoolWithTag(
     else if (Block) ExFreeArmPoolWithTag(Block, Tag);
     else
     {
-        /* Warn only for NULL pointers */
+        /* Only warn and break for NULL pointers */
         if (Block == NULL)
         {
             DPRINT1("Warning: Trying to free a NULL pointer!\n");
+            ASSERT(FALSE);
             return;
         }
 

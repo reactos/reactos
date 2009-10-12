@@ -599,7 +599,7 @@ static ULONG WINAPI Source_Release(ITfSource *iface)
 /*****************************************************
  * ITfSource functions
  *****************************************************/
-static WINAPI HRESULT ContextSource_AdviseSink(ITfSource *iface,
+static HRESULT WINAPI ContextSource_AdviseSink(ITfSource *iface,
         REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
     ContextSink *es;
@@ -632,7 +632,7 @@ static WINAPI HRESULT ContextSource_AdviseSink(ITfSource *iface,
     return S_OK;
 }
 
-static WINAPI HRESULT ContextSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
+static HRESULT WINAPI ContextSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
     ContextSink *sink;
     Context *This = impl_from_ITfSourceVtbl(iface);
@@ -683,7 +683,7 @@ static ULONG WINAPI InsertAtSelection_Release(ITfInsertAtSelection *iface)
     return Context_Release((ITfContext *)This);
 }
 
-static WINAPI HRESULT InsertAtSelection_InsertTextAtSelection(
+static HRESULT WINAPI InsertAtSelection_InsertTextAtSelection(
         ITfInsertAtSelection *iface, TfEditCookie ec, DWORD dwFlags,
         const WCHAR *pchText, LONG cch, ITfRange **ppRange)
 {
@@ -719,7 +719,7 @@ static WINAPI HRESULT InsertAtSelection_InsertTextAtSelection(
     return hr;
 }
 
-static WINAPI HRESULT InsertAtSelection_InsertEmbeddedAtSelection(
+static HRESULT WINAPI InsertAtSelection_InsertEmbeddedAtSelection(
         ITfInsertAtSelection *iface, TfEditCookie ec, DWORD dwFlags,
         IDataObject *pDataObject, ITfRange **ppRange)
 {
@@ -759,7 +759,7 @@ static ULONG WINAPI SourceSingle_Release(ITfSourceSingle *iface)
     return Context_Release((ITfContext *)This);
 }
 
-static WINAPI HRESULT SourceSingle_AdviseSingleSink( ITfSourceSingle *iface,
+static HRESULT WINAPI SourceSingle_AdviseSingleSink( ITfSourceSingle *iface,
     TfClientId tid, REFIID riid, IUnknown *punk)
 {
     Context *This = impl_from_ITfSourceSingleVtbl(iface);
@@ -767,7 +767,7 @@ static WINAPI HRESULT SourceSingle_AdviseSingleSink( ITfSourceSingle *iface,
     return E_NOTIMPL;
 }
 
-static WINAPI HRESULT SourceSingle_UnadviseSingleSink( ITfSourceSingle *iface,
+static HRESULT WINAPI SourceSingle_UnadviseSingleSink( ITfSourceSingle *iface,
     TfClientId tid, REFIID riid)
 {
     Context *This = impl_from_ITfSourceSingleVtbl(iface);

@@ -57,7 +57,7 @@ static ULONG WINAPI IDirect3DSwapChain8Impl_Release(LPDIRECT3DSWAPCHAIN8 iface) 
 
     if (ref == 0) {
         wined3d_mutex_lock();
-        IWineD3DSwapChain_Destroy(This->wineD3DSwapChain, D3D8CB_DestroyRenderTarget);
+        IWineD3DSwapChain_Destroy(This->wineD3DSwapChain);
         wined3d_mutex_unlock();
 
         if (This->parentDevice) IUnknown_Release(This->parentDevice);

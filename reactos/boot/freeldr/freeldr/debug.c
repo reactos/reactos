@@ -159,7 +159,7 @@ VOID DebugPrintHeader(ULONG Mask)
 	    DbgPrint("CACHE: ");
 		break;
 	case DPRINT_REGISTRY:
-	    DbgPrint("REGISTER: ");
+	    DbgPrint("REGISTRY: ");
 		break;
 	case DPRINT_REACTOS:
 	    DbgPrint("REACTOS: ");
@@ -311,7 +311,7 @@ MsgBoxPrint(const char *Format, ...)
 	Length = _vsnprintf(Buffer, 512, Format, ap);
 
 	/* Check if we went past the buffer */
-	if (Length == -1U)
+	if (Length == MAXULONG)
 	{
 		/* Terminate it if we went over-board */
 		Buffer[sizeof(Buffer) - 1] = '\n';

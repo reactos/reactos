@@ -445,7 +445,8 @@ FatiInitializeVcb(PVCB Vcb)
 }
 
 NTSTATUS
-FatInitializeVcb(IN PVCB Vcb,
+FatInitializeVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                 IN PVCB Vcb,
                  IN PDEVICE_OBJECT TargetDeviceObject,
                  IN PVPB Vpb)
 {
@@ -483,10 +484,19 @@ FatInitializeVcb(IN PVCB Vcb,
     Vcb->StreamFileObject->SectionObjectPointer = &Vcb->SectionObjectPointers;
 
     /* At least full boot sector should be available */
-    Vcb->Header.FileSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
-    Vcb->Header.AllocationSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
+    //Vcb->Header.FileSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
+    //Vcb->Header.AllocationSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
     Vcb->Header.ValidDataLength.HighPart = MAXLONG;
     Vcb->Header.ValidDataLength.LowPart = MAXULONG;
+
+    Vcb->Header.AllocationSize.QuadPart = Int32x32To64(5*1024, 1024*1024); //HACK: 5 Gb
+    Vcb->Header.FileSize.QuadPart = Vcb->Header.AllocationSize.QuadPart;
+
+    /* Set VCB to a good condition */
+    Vcb->Condition = VcbGood;
+
+    /* Initialize VCB's resource */
+    ExInitializeResourceLite(&Vcb->Resource);
 
     /* Initialize CC */
     CcInitializeCacheMap(Vcb->StreamFileObject,
@@ -533,8 +543,11 @@ FatInitializeVcb(IN PVCB Vcb,
     /* Call helper function */
     FatiInitializeVcb(Vcb);
 
-    /* Add this Vcb to grobal Vcb list. */
+    /* Add this Vcb to global Vcb list */
+    (VOID)FatAcquireExclusiveGlobal(IrpContext);
     InsertTailList(&FatGlobalData.VcbListHead, &Vcb->VcbLinks);
+    FatReleaseGlobal(IrpContext);
+
     return STATUS_SUCCESS;
 
 FatInitializeVcbCleanup:

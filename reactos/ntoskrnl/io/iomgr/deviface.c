@@ -498,7 +498,8 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                     goto cleanup;
                 }
                 RtlCopyMemory(NewBuffer, ReturnBuffer.Buffer, ReturnBuffer.Length);
-                ExFreePool(ReturnBuffer.Buffer);
+                if (ReturnBuffer.Buffer)
+                    ExFreePool(ReturnBuffer.Buffer);
                 ReturnBuffer.Buffer = NewBuffer;
             }
             DPRINT("Adding symbolic link %wZ\n", &KeyName);
@@ -563,7 +564,7 @@ NextReferenceString:
     Status = STATUS_SUCCESS;
 
 cleanup:
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && ReturnBuffer.Buffer)
         ExFreePool(ReturnBuffer.Buffer);
     if (InterfaceKey != INVALID_HANDLE_VALUE)
         ZwClose(InterfaceKey);
@@ -573,9 +574,12 @@ cleanup:
         ZwClose(ReferenceKey);
     if (ControlKey != INVALID_HANDLE_VALUE)
         ZwClose(ControlKey);
-    ExFreePool(DeviceBi);
-    ExFreePool(ReferenceBi);
-    ExFreePool(bip);
+    if (DeviceBi)
+        ExFreePool(DeviceBi);
+    if (ReferenceBi)
+        ExFreePool(ReferenceBi);
+    if (bip)
+        ExFreePool(bip);
     return Status;
 }
 
@@ -888,7 +892,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
     if (!NT_SUCCESS(Status) && ReferenceString == NULL)
     {
-        DPRINT("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
+        DPRINT1("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
         ZwClose(SubKey);
         ZwClose(InterfaceKey);
         ZwClose(ClassKey);
@@ -917,7 +921,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
         SymbolicLinkName->Length);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+        DPRINT1("ZwSetValueKey() failed with status 0x%08lx\n", Status);
         ExFreePool(SymbolicLinkName->Buffer);
     }
     else
@@ -973,7 +977,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     if (SymbolicLinkName == NULL)
         return STATUS_INVALID_PARAMETER_1;
 
-    DPRINT("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
+    DPRINT1("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
 
     /* Symbolic link name is \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
     /* Get GUID from SymbolicLinkName */
@@ -981,7 +985,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
     if (!StartPosition ||!EndPosition || StartPosition > EndPosition)
     {
-        DPRINT("IoSetDeviceInterfaceState() returning STATUS_INVALID_PARAMETER_1\n");
+        DPRINT1("IoSetDeviceInterfaceState() returning STATUS_INVALID_PARAMETER_1\n");
         return STATUS_INVALID_PARAMETER_1;
     }
     GuidString.Buffer = StartPosition;
@@ -989,8 +993,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 
     SymLink.Buffer = SymbolicLinkName->Buffer;
     SymLink.MaximumLength = SymLink.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)SymLink.Buffer);
-
-
+    DPRINT1("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
     /* Get pointer to the PDO */
     Status = IoGetDeviceObjectPointer(
         &SymLink,
@@ -999,7 +1002,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         &PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
+        DPRINT1("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
         return Status;
     }
 
@@ -1012,7 +1015,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         (PVOID)SymbolicLinkName);
 
     ObDereferenceObject(FileObject);
-
+DPRINT1("Status %x\n", Status);
     return STATUS_SUCCESS;
 }
 

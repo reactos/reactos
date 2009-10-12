@@ -1259,7 +1259,10 @@ static void pass(void)
       size = ftell(file);
       fseek(file, 0, SEEK_SET);
       if (size == 0 || (size % 2048))
+      {
+        fclose(file);
         error_exit("Invalid boot image size (%lu bytes)\n", size);
+      }
       boot_image_size = size / 512;
       while (size > 0)
       {

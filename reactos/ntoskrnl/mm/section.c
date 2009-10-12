@@ -771,6 +771,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    BOOLEAN HasSwapEntry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+   KIRQL OldIrql;
     
    /*
     * There is a window between taking the page fault and locking the
@@ -781,7 +782,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    {
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(MmGetPfnForProcess(Process, Address));
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
       return(STATUS_SUCCESS);
    }
@@ -908,7 +911,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(Page);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
       MmUnlockSectionSegment(Segment);
       PageOp->Status = STATUS_SUCCESS;
@@ -978,7 +983,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
        */
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(Page);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -1013,7 +1020,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
        */
       if (Locked)
       {
-         MmLockPageUnsafe(Page);
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+         MmLockPage(Page);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
 
       /*
@@ -1056,7 +1065,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmInsertRmap(Page, Process, (PVOID)PAddress);
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(Page);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
 
       /*
@@ -1156,7 +1167,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(Page);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -1230,7 +1243,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmInsertRmap(Page, Process, (PVOID)PAddress);
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(Page);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -1262,7 +1277,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmInsertRmap(Page, Process, (PVOID)PAddress);
       if (Locked)
       {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmLockPage(Page);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -1289,6 +1306,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    ULONG Entry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+   KIRQL OldIrql;
     
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
@@ -1429,8 +1447,10 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    }
    if (Locked)
    {
+      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       MmLockPage(NewPage);
       MmUnlockPage(OldPage);
+      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
 
    /*
@@ -1511,6 +1531,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+   KIRQL OldIrql;
     
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -1599,7 +1620,9 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    }
    else
    {
+      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       MmReferencePage(Page);
+      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
 
    MmDeleteAllRmaps(Page, (PVOID)&Context, MmPageOutDeleteMapping);

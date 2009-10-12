@@ -1,10 +1,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #define X86_EFLAGS_TF           0x00000100 /* Trap flag */
 #define X86_EFLAGS_IF           0x00000200 /* Interrupt Enable flag */
 #define X86_EFLAGS_IOPL         0x00003000 /* I/O Privilege Level bits */
@@ -70,6 +66,16 @@ typedef struct _KIDT_INIT
 #define KfReleaseSpinLock KeReleaseSpinLock
 
 extern ULONG Ke386CacheAlignment;
+
+#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_I386
+
+//
+// INT3 is 1 byte long
+//
+#define KD_BREAKPOINT_TYPE        UCHAR
+#define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
+#define KD_BREAKPOINT_VALUE       0xCC
+
 
 struct _KPCR;
 VOID
@@ -154,11 +160,6 @@ VOID
 KeApplicationProcessorInitDispatcher(VOID);
 VOID
 KeCreateApplicationProcessorIdleThread(ULONG Id);
-
-typedef
-VOID
-(NTAPI*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
-                    PVOID StartContext);
 
 VOID
 NTAPI

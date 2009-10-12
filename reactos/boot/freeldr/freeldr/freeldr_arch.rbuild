@@ -100,4 +100,12 @@
 		</if>
 
 	</directory>
+
+	<directory name="windows">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>ntsetup.c</file>
+			</directory>
+		</if>
+	</directory>
 </module>

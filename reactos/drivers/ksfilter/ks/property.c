@@ -8,6 +8,7 @@
 
 #include "priv.h"
 
+const GUID KSPROPTYPESETID_General = {0x97E99BA0L, 0xBDEA, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 NTSTATUS
 FindPropertyHandler(
@@ -18,10 +19,10 @@ FindPropertyHandler(
     IN ULONG InputBufferLength,
     IN ULONG OutputBufferLength,
     OUT PVOID OutputBuffer,
-    OUT PFNKSHANDLER *PropertyHandler)
+    OUT PFNKSHANDLER *PropertyHandler,
+    OUT PKSPROPERTY_SET * Set)
 {
     ULONG Index, ItemIndex;
-    //PULONG Flags;
 
     for(Index = 0; Index < PropertySetCount; Index++)
     {
@@ -46,9 +47,11 @@ FindPropertyHandler(
                         IoStatus->Information = PropertySet[Index].PropertyItem[ItemIndex].MinData;
                         return STATUS_MORE_ENTRIES;
                     }
-#if 0
                     if (Property->Flags & KSPROPERTY_TYPE_BASICSUPPORT)
                     {
+                        PULONG Flags;
+                        PKSPROPERTY_DESCRIPTION Description;
+
                         if (sizeof(ULONG) > OutputBufferLength)
                         {
                             /* too small buffer */
@@ -59,7 +62,7 @@ FindPropertyHandler(
                         Flags = (PULONG)OutputBuffer;
 
                         /* clear flags */
-                        *Flags = KSPROPERTY_TYPE_BASICSUPPORT;
+                        *Flags = 0;
 
                         if (PropertySet[Index].PropertyItem[ItemIndex].GetSupported)
                             *Flags |= KSPROPERTY_TYPE_GET;
@@ -84,15 +87,15 @@ FindPropertyHandler(
 
                             IoStatus->Information = sizeof(KSPROPERTY_DESCRIPTION);
                         }
+                        return STATUS_SUCCESS;
                     }
-#endif
-
                     if (Property->Flags & KSPROPERTY_TYPE_SET)
                         *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].SetPropertyHandler;
 
                     if (Property->Flags & KSPROPERTY_TYPE_GET)
                         *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].GetPropertyHandler;
 
+                    *Set = (PKSPROPERTY_SET)&PropertySet[Index];
                     return STATUS_SUCCESS;
                 }
             }
@@ -111,6 +114,7 @@ KspPropertyHandler(
     IN  ULONG PropertyItemSize OPTIONAL)
 {
     PKSPROPERTY Property;
+    PKSPROPERTY_SET Set;
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
     PFNKSHANDLER PropertyHandler = NULL;
@@ -139,11 +143,12 @@ KspPropertyHandler(
     ASSERT(PropertyItemSize == 0 || PropertyItemSize == sizeof(KSPROPERTY_ITEM));
 
     /* find the property handler */
-    Status = FindPropertyHandler(&Irp->IoStatus, PropertySet, PropertySetsCount, Property, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Irp->UserBuffer, &PropertyHandler);
+    Status = FindPropertyHandler(&Irp->IoStatus, PropertySet, PropertySetsCount, Property, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Irp->UserBuffer, &PropertyHandler, &Set);
 
     if (NT_SUCCESS(Status) && PropertyHandler)
     {
         /* call property handler */
+        KSPROPERTY_SET_IRP_STORAGE(Irp) = Set;
         Status = PropertyHandler(Irp, Property, Irp->UserBuffer);
 
         if (Status == STATUS_BUFFER_TOO_SMALL)
@@ -173,7 +178,7 @@ KspPropertyHandler(
         if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GUID) * PropertySetsCount)
         {
             // buffer too small
-            return STATUS_BUFFER_OVERFLOW;
+            return STATUS_MORE_ENTRIES;
         }
 
         // get output buffer

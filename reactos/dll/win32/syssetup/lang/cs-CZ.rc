@@ -207,6 +207,7 @@ BEGIN
     IDS_GAMES           "Hry"
     IDS_CMT_SOLITAIRE   "Solitaire"
     IDS_CMT_WINEMINE    "WineMine"
+	IDS_CMT_SPIDER      "Spider Solitaire"
 END
 
 STRINGTABLE
@@ -268,6 +269,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
+	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

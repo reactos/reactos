@@ -104,13 +104,6 @@ typedef struct
     BOOL       dialogEx;
 } DLG_TEMPLATE;
 
-/* GetDlgItem structure */
-typedef struct
-{
-    INT        nIDDlgItem;
-    HWND       control;
-} GETDLGITEMINFO;
-
 /* CheckRadioButton structure */
 typedef struct
 {
@@ -689,7 +682,59 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     return (LPCSTR)((((UINT_PTR)p) + 3) & ~3);
 }
 
- /***********************************************************************
+/***********************************************************************
+ *           DEFDLG_SetFocus
+ *
+ * Set the focus to a control of the dialog, selecting the text if
+ * the control is an edit dialog.
+ */
+static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
+{
+    if (SendMessageW( hwndCtrl, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
+        SendMessageW( hwndCtrl, EM_SETSEL, 0, -1 );
+    SetFocus( hwndCtrl );
+}
+
+
+/***********************************************************************
+ *           DEFDLG_SaveFocus
+ */
+static void DEFDLG_SaveFocus( HWND hwnd )
+{
+    DIALOGINFO *infoPtr;
+    HWND hwndFocus = GetFocus();
+
+    if (!hwndFocus || !IsChild( hwnd, hwndFocus )) return;
+    if (!(infoPtr = GETDLGINFO(hwnd))) return;
+    infoPtr->hwndFocus = hwndFocus;
+    /* Remove default button */
+}
+
+
+/***********************************************************************
+ *           DEFDLG_RestoreFocus
+ */
+static void DEFDLG_RestoreFocus( HWND hwnd )
+{
+    DIALOGINFO *infoPtr;
+
+    if (IsIconic( hwnd )) return;
+    if (!(infoPtr = GETDLGINFO(hwnd))) return;
+    /* Don't set the focus back to controls if EndDialog is already called.*/
+    if (infoPtr->flags & DF_END) return;
+    if (!IsWindow(infoPtr->hwndFocus) || infoPtr->hwndFocus == hwnd) {
+        /* If no saved focus control exists, set focus to the first visible,
+           non-disabled, WS_TABSTOP control in the dialog */
+        infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
+       if (!IsWindow( infoPtr->hwndFocus )) return;
+    }
+    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
+
+    /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
+       sometimes losing focus when receiving WM_SETFOCUS messages. */
+}
+
+/***********************************************************************
  *           DIALOG_CreateIndirect
  *       Creates a dialog box window
  *
@@ -930,6 +975,9 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                 if( dlgInfo->hwndFocus )
                     SetFocus( dlgInfo->hwndFocus );
             }
+//// ReactOS
+            DEFDLG_SaveFocus( hwnd );
+////
         }
 //// ReactOS Rev 30613 & 30644
         if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_CHILD))
@@ -945,60 +993,6 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
     return 0;
 }
-
-
-/***********************************************************************
- *           DEFDLG_SetFocus
- *
- * Set the focus to a control of the dialog, selecting the text if
- * the control is an edit dialog.
- */
-static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
-{
-    if (SendMessageW( hwndCtrl, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
-        SendMessageW( hwndCtrl, EM_SETSEL, 0, -1 );
-    SetFocus( hwndCtrl );
-}
-
-
-/***********************************************************************
- *           DEFDLG_SaveFocus
- */
-static void DEFDLG_SaveFocus( HWND hwnd )
-{
-    DIALOGINFO *infoPtr;
-    HWND hwndFocus = GetFocus();
-
-    if (!hwndFocus || !IsChild( hwnd, hwndFocus )) return;
-    if (!(infoPtr = GETDLGINFO(hwnd))) return;
-    infoPtr->hwndFocus = hwndFocus;
-    /* Remove default button */
-}
-
-
-/***********************************************************************
- *           DEFDLG_RestoreFocus
- */
-static void DEFDLG_RestoreFocus( HWND hwnd )
-{
-    DIALOGINFO *infoPtr;
-
-    if (IsIconic( hwnd )) return;
-    if (!(infoPtr = GETDLGINFO(hwnd))) return;
-    /* Don't set the focus back to controls if EndDialog is already called.*/
-    if (infoPtr->flags & DF_END) return;
-    if (!IsWindow(infoPtr->hwndFocus) || infoPtr->hwndFocus == hwnd) {
-        /* If no saved focus control exists, set focus to the first visible,
-           non-disabled, WS_TABSTOP control in the dialog */
-        infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
-       if (!IsWindow( infoPtr->hwndFocus )) return;
-    }
-    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
-
-    /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
-       sometimes losing focus when receiving WM_SETFOCUS messages. */
-}
-
 
 /***********************************************************************
  *           DEFDLG_FindDefButton
@@ -1459,22 +1453,6 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
     HeapFree( GetProcessHeap(), 0, buffer );
     TRACE("Returning %d %s\n", ret, unicode ? debugstr_w(str) : debugstr_a((LPSTR)str) );
     return ret;
-}
-
-/***********************************************************************
- *           GetDlgItemEnumProc
- *
- * Callback for GetDlgItem
- */
-BOOL CALLBACK GetDlgItemEnumProc (HWND hwnd, LPARAM lParam )
-{
-    GETDLGITEMINFO * info = (GETDLGITEMINFO *)lParam;
-    if(info->nIDDlgItem == GetWindowLongPtrW( hwnd, GWL_ID ))
-    {
-        info->control = hwnd;
-        return FALSE;
-    }
-    return TRUE;
 }
 
 
@@ -2029,13 +2007,16 @@ GetDlgItem(
   HWND hDlg,
   int nIDDlgItem)
 {
-    GETDLGITEMINFO info;
-    info.nIDDlgItem = nIDDlgItem;
-    info.control = 0;
-    if(hDlg && !EnumChildWindows(hDlg, (WNDENUMPROC)&GetDlgItemEnumProc, (LPARAM)&info))
-        return info.control;
-    else
-        return 0;
+    int i;
+    HWND *list = WIN_ListChildren(hDlg);
+    HWND ret = 0;
+
+    if (!list) return 0;
+
+    for (i = 0; list[i]; i++) if (GetWindowLongPtrW(list[i], GWLP_ID) == nIDDlgItem) break;
+    ret = list[i];
+    HeapFree(GetProcessHeap(), 0, list);
+    return ret;
 }
 
 

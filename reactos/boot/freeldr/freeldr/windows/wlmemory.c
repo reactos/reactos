@@ -77,27 +77,6 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss);
 	} GDTIDT;
 #pragma pack(4)
 
-// this is needed for new IDT filling
-#if 0
-extern ULONG_PTR i386DivideByZero;
-extern ULONG_PTR i386DebugException;
-extern ULONG_PTR i386NMIException;
-extern ULONG_PTR i386Breakpoint;
-extern ULONG_PTR i386Overflow;
-extern ULONG_PTR i386BoundException;
-extern ULONG_PTR i386InvalidOpcode;
-extern ULONG_PTR i386FPUNotAvailable;
-extern ULONG_PTR i386DoubleFault;
-extern ULONG_PTR i386CoprocessorSegment;
-extern ULONG_PTR i386InvalidTSS;
-extern ULONG_PTR i386SegmentNotPresent;
-extern ULONG_PTR i386StackException;
-extern ULONG_PTR i386GeneralProtectionFault;
-extern ULONG_PTR i386PageFault; // exc 14
-extern ULONG_PTR i386CoprocessorError; // exc 16
-extern ULONG_PTR i386AlignmentCheck; // exc 17
-#endif
-
 /* GLOBALS ***************************************************************/
 
 PHARDWARE_PTE PDE;

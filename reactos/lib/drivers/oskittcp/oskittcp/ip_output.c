@@ -301,7 +301,7 @@ ip_output(m0, opt, ro, flags, imo)
 	}
 #endif
 
-#ifdef notdef
+#ifdef __REACTOS__
 	/*
 	 * If source address not specified yet, use address
 	 * of outgoing interface.
@@ -517,12 +517,11 @@ sendorfree:
 		error = ENOBUFS;
 		goto done;
 	    }
-	    m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
-	    new_m->m_len = htons(ip->ip_len);
+	    m_copydata( m, 0, m->m_pkthdr.len, new_m->m_data );
+	    new_m->m_len = m->m_pkthdr.len;
 	    error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
 					  (OSK_PCHAR)new_m->m_data, new_m->m_len );
 	    m_free( new_m );
-	    goto done;
 	}
 
 	OS_DbgPrint(OSK_MID_TRACE,("Error from upper layer: %d\n", error));

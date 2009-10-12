@@ -26,6 +26,7 @@
 #define TAG_CALLBACK    'KCBC' /* callback memory */
 #define TAG_WINSTA      'ATSW' /* window station */
 #define TAG_PDCE        'cdsU' /* dce */
+#define TAG_ATTACHINFO  'iasU' /* Attach Info Input */
 #define TAG_INPUT       'yssU' /* Input */
 
 /* gdi objects from the handle table */

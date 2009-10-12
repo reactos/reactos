@@ -24,7 +24,6 @@
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
-	<define name="__NO_CTYPE_INLINES" />
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>

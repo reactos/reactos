@@ -59,7 +59,7 @@ BEGIN
 		MENUITEM SEPARATOR
         MENUITEM "&Anslut Nätverksregister...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
-        , GRAYED
+
         MENUITEM "&Koppla ifrån Nätverksregister...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
@@ -103,10 +103,8 @@ BEGIN
     END
     POPUP "&Favoriter"
     BEGIN
-        MENUITEM "&Lägg till i Favoriter",     ID_FAVOURITES_ADDTOFAVOURITES
-        , GRAYED
-        MENUITEM "&Ta bort från Favoriter",    ID_FAVOURITES_REMOVEFAVOURITE
-        , GRAYED
+        MENUITEM "&Lägg till i Favoriter",     ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Ta bort från Favoriter",    ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "&Hjälp"
     BEGIN
@@ -160,7 +158,7 @@ BEGIN
         MENUITEM "&Export",                         ID_TREE_EXPORT
         MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Kopiera nyckelnamn",                  ID_EDIT_COPYKEYNAME, GRAYED
+        MENUITEM "&Kopiera nyckelnamn",                  ID_EDIT_COPYKEYNAME
   END
 END
 
@@ -376,8 +374,7 @@ END
  */
 
 IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-    WS_BORDER
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
    GROUPBOX "Export Range",IDC_STATIC,2,0,366,48

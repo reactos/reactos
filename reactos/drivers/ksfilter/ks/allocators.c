@@ -668,7 +668,7 @@ KsValidateAllocatorFramingEx(
 
     /* verify framing */
     if ((Framing->FramingItem[0].Flags & KSALLOCATOR_FLAG_PARTIAL_READ_SUPPORT) &&
-         Framing->OutputCompression.RatioNumerator != (ULONG)-1 &&
+         Framing->OutputCompression.RatioNumerator != MAXULONG &&
          Framing->OutputCompression.RatioDenominator != 0 &&
          Framing->OutputCompression.RatioDenominator < Framing->OutputCompression.RatioNumerator)
     {

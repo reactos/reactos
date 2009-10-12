@@ -1,8 +1,8 @@
 /*
- * desk (Spanish resources)
+ * ReactOS Display Panel (Spanish resources)
  *
  * Translated by Patricio Martínez Ros
- * Actualizado por Javier Remacha 2008
+ * Actualizado por Javier Remacha 2009
  *
  */
 
@@ -13,16 +13,16 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Escritorio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,
+    CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70,WS_EX_STATICEDGE
     CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 7, 99, 173, 71
     LTEXT           "&Fondo:",
                     IDC_STATIC, 8, 87, 180, 8
-    PUSHBUTTON      "E&xaminar...",IDC_BROWSE_BUTTON, 187, 135, 50, 14
-    PUSHBUTTON      "C&olor...",IDC_COLOR_BUTTON, 187, 155, 50, 14
-    LTEXT           "Po&sición",IDC_STATIC, 187, 98, 36, 8
+    PUSHBUTTON      "E&xaminar...", IDC_BROWSE_BUTTON, 187, 135, 50, 14
+    PUSHBUTTON      "C&olor...", IDC_COLOR_BUTTON, 187, 155, 50, 14
+    LTEXT           "Po&sición", IDC_STATIC, 187, 98, 36, 8
     COMBOBOX        IDC_PLACEMENT_COMBO, 187, 108, 50, 90,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
@@ -34,13 +34,13 @@ FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Protector de pantalla ",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "&Protector de pantalla ", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "C&onfiguración",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "&Vista previa",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Esperar",IDC_WAITTEXT, 14, 125, 25, 9 //16
+    PUSHBUTTON      "C&onfiguración", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "&Vista previa", IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "&Esperar", IDC_WAITTEXT, 14, 125, 25, 9 //16
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 41, 123, 29, 13, ES_RIGHT | WS_GROUP
-    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
+    CONTROL         "", IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 61, 123, 12, 13
     LTEXT           "minutos", IDC_MINTEXT, 72, 125, 26, 9
@@ -60,7 +60,7 @@ BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Com&binación de colores:", IDC_STATIC, 7, 160, 90, 7 //84
-    COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 169, 120, 54, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Efectos...", IDC_APPEARANCE_EFFECTS, 162, 185, 76, 15
     PUSHBUTTON      "Opciones &avanzadas", IDC_APPEARANCE_ADVANCED, 162, 205, 76, 15
 END
@@ -120,7 +120,7 @@ BEGIN
     CONTROL         "Mostrar som&bras bajo los menús",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "&Mostrar el contenido de la ventana mientras se arrastra",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "&Ocultar las letrar subrayadas de acceso rápido hasta que presione la tecla Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 290, 19
     PUSHBUTTON "Cancelar", IDCANCEL, 241, 165, 50, 14
@@ -131,7 +131,7 @@ IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Configuración"
 FONT 8, "MS Shell Dlg"
-BEGIN	
+BEGIN
     LTEXT           "Arrastre los iconos para ajustar el orden físico de sus monitores.",-1,3,3,240,10
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
     LTEXT           "Mostrar",1820,3,100,30,8

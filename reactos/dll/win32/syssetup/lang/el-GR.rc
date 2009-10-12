@@ -222,6 +222,7 @@ BEGIN
     IDS_GAMES		    "Παιχνίδια"
     IDS_CMT_SOLITAIRE	"Πασιέντζα"
     IDS_CMT_WINEMINE	"Ναρκαλιευτής"
+	IDS_CMT_SPIDER      "Spider Solitaire"
 END
 
 STRINGTABLE
@@ -283,6 +284,7 @@ BEGIN
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
+	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

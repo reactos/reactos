@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:			ReactOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/port_wavert.cpp
  * PURPOSE:         WaveRT Port Driver
  * PROGRAMMER:      Johannes Anderwald
@@ -58,16 +58,16 @@ protected:
 static GUID InterfaceGuids[3] = 
 {
     {
+        /// KS_CATEGORY_AUDIO
+        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
         /// KSCATEGORY_RENDER
         0x65E8773EL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     },
     {
         /// KSCATEGORY_CAPTURE
         0x65E8773DL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
-    },
-    {
-        /// KS_CATEGORY_AUDIO
-        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     }
 };
 
@@ -339,7 +339,7 @@ NTSTATUS
 NTAPI
 CPortWaveRT::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,

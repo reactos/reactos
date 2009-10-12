@@ -23,6 +23,7 @@
 #include "winuser.h"
 #include "wineacm.h"
 
+#include "msacm_Bg.rc"
 #include "msacm_Cs.rc"
 #include "msacm_Da.rc"
 #include "msacm_De.rc"

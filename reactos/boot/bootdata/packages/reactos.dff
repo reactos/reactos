@@ -43,10 +43,17 @@ Signature = "$ReactOS$"
 ;base\applications\cmdutils\xcopy\xcopy.exe              1
 ;base\applications\control\control.exe                   1
 ;base\applications\dxdiag\dxdiag.exe                     1
+;base\applications\fontview\fontview.exe                 1
+;base\applications\mscutils\devmgmt\devmgmt.exe          1
 ;base\applications\mscutils\eventvwr\eventvwr.exe        1
+;base\applications\games\solitaire\sol.exe               1
+;base\applications\games\spider\spider.exe               1
 ;base\applications\games\winemine\winemine.exe           1
+;base\applications\hh\hh.exe                             4
 ;base\applications\kbswitch\kbswitch.exe                 1
+;base\applications\kbswitch\kbsdll\kbsdll.dll            1
 ;base\applications\logoff\logoff.exe                     1
+;base\applications\magnify\magnify.exe                   1
 ;base\applications\mplay32\mplay32.exe                   1
 ;base\applications\msconfig\msconfig.exe                 1
 ;base\applications\mstsc\mstsc.exe                       1
@@ -54,6 +61,13 @@ Signature = "$ReactOS$"
 ;base\applications\network\dwnl\dwnl.exe                 1
 ;base\applications\network\route\route.exe               1
 ;base\applications\network\finger\finger.exe             1
+;base\applications\network\ftp\ftp.exe                   1
+;base\applications\network\ipconfig\ipconfig.exe         1
+;base\applications\network\netstat\netstat.exe           1
+;base\applications\network\ping\ping.exe                 1
+;base\applications\network\telnet\telnet.exe             1
+;base\applications\network\tracert\tracert.exe           1
+;base\applications\network\whois\whois.exe               1
 ;base\applications\network\ftp\ftp.exe                   1
 ;base\applications\network\ipconfig\ipconfig.exe         1
 ;base\applications\network\netstat\netstat.exe           1
@@ -554,6 +568,7 @@ base\services\svchost\svchost.exe                   1
 ;media\fonts\tahomabd.ttf                            3
 
 ;media\nls\c_037.nls                                 1
+;media\nls\c_424.nls                                 1
 ;media\nls\c_500.nls                                 1
 ;media\nls\c_737.nls                                 1
 ;media\nls\c_775.nls                                 1
@@ -622,6 +637,7 @@ base\services\svchost\svchost.exe                   1
 ;media\inf\machine.inf                               6
 ;media\inf\msmouse.inf                               6
 ;media\inf\keyboard.inf                              6
+;media\inf\ks.inf                                    6
 ;media\inf\NET_NIC.inf                               6
 ;media\inf\netamd.inf                                6
 ;media\inf\netisa.inf                                6

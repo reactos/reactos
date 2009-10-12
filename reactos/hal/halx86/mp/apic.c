@@ -827,7 +827,7 @@ APICCalibrateTimer(ULONG CPU)
    if (TSCPresent)
    {
       t2.QuadPart = (LONGLONG)__rdtsc();
-      CPUMap[CPU].CoreSpeed = (HZ * (t2.QuadPart - t1.QuadPart));
+      CPUMap[CPU].CoreSpeed = (HZ * (ULONG)(t2.QuadPart - t1.QuadPart));
       DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	     CPUMap[CPU].CoreSpeed/1000000,
 	     CPUMap[CPU].CoreSpeed%1000000);
@@ -877,10 +877,11 @@ SetInterruptGate(ULONG index, ULONG_PTR address)
   Access.SegmentType = I386_INTERRUPT_GATE;
   
   idt = (KIDTENTRY*)((ULONG)KeGetPcr()->IDT + index * sizeof(KIDTENTRY));
-  idt->Offset = address & 0xffff;
+  idt->Offset = (USHORT)(address & 0xffff);
   idt->Selector = KGDT_R0_CODE;
   idt->Access = Access.Value;
-  idt->ExtendedOffset = address >> 16;
+  idt->ExtendedOffset = (USHORT)(address >> 16);
+#endif
 #endif
 }
 

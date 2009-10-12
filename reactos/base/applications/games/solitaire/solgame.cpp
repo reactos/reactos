@@ -3,8 +3,7 @@
 #include <tchar.h>
 #include <stdio.h>
 #include "resource.h"
-#include "cardlib/cardlib.h"
-//#include "../catch22lib/trace.h"
+#include "cardlib.h"
 #include "solitaire.h"
 
 #if 1
@@ -92,7 +91,7 @@ bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumDragCards)
 //    Row a row-stack, we can only drop cards
 //    that are lower / different colour
 //
-bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragcards)
+bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj, CardStack &dragcards)
 {
     TRACE("ENTER RowStackDropProc()\n");
     Card dragcard = dragcards[dragcards.NumCards() - 1];
@@ -172,7 +171,7 @@ bool CanDrop(CardRegion &stackobj, Card card)
 //
 //    Can only drop a card onto suit stack if it is same suit, and 1 higher
 //
-bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, const CardStack &dragcards)
+bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, CardStack &dragcards)
 {
     TRACE("ENTER SuitStackDropProc()\n");
     //only drop 1 card at a time

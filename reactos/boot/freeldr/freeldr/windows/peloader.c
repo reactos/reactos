@@ -270,6 +270,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 
 	/* Inform user we are loading files */
 	sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
+	UiDrawBackdrop();
 	UiDrawProgressBarCenter(1, 100, ProgressString);
 
 	/* Open the image file */

@@ -1010,7 +1010,7 @@ KdbpDisableBreakPoint(
             }
         }
 
-        if (i != (ULONG)-1) /* not found */
+        if (i != MAXULONG) /* not found */
             ASSERT(0);
     }
     else
@@ -1035,7 +1035,7 @@ KdbpDisableBreakPoint(
             }
         }
 
-        if (i != (ULONG)-1) /* not found */
+        if (i != MAXULONG) /* not found */
             ASSERT(0);
     }
 

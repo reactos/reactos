@@ -129,13 +129,12 @@ static HRESULT WINAPI StreamOnMemory_Seek(IStream *iface,
     LARGE_INTEGER NewPosition;
     TRACE("(%p)\n", This);
 
-    if (dlibMove.QuadPart > 0xFFFFFFFF) return HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
-
     if (dwOrigin == STREAM_SEEK_SET) NewPosition.QuadPart = dlibMove.QuadPart;
     else if (dwOrigin == STREAM_SEEK_CUR) NewPosition.QuadPart = This->dwCurPos + dlibMove.QuadPart;
     else if (dwOrigin == STREAM_SEEK_END) NewPosition.QuadPart = This->dwMemsize + dlibMove.QuadPart;
     else return E_INVALIDARG;
 
+    if (NewPosition.u.HighPart) return HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
     if (NewPosition.QuadPart > This->dwMemsize) return E_INVALIDARG;
     if (NewPosition.QuadPart < 0) return E_INVALIDARG;
     This->dwCurPos = NewPosition.u.LowPart;

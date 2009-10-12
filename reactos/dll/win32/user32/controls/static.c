@@ -53,7 +53,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintRectfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintBitmapfn( HWND hwnd, HDC hdc, DWORD style );
-//static void STATIC_PaintEnhMetafn( HWND hwnd, HDC hdc, DWORD style );
+static void STATIC_PaintEnhMetafn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style );
 //static LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 //static LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
@@ -85,7 +85,7 @@ static const pfPaint staticPaintFunc[SS_TYPEMASK+1] =
     STATIC_PaintTextfn,      /* SS_LEFTNOWORDWRAP */
     STATIC_PaintOwnerDrawfn, /* SS_OWNERDRAW */
     STATIC_PaintBitmapfn,    /* SS_BITMAP */
-    NULL,                    /* STATIC_PaintEnhMetafn, SS_ENHMETAFILE */
+    STATIC_PaintEnhMetafn,   /* SS_ENHMETAFILE */
     STATIC_PaintEtchedfn,    /* SS_ETCHEDHORZ */
     STATIC_PaintEtchedfn,    /* SS_ETCHEDVERT */
     STATIC_PaintEtchedfn,    /* SS_ETCHEDFRAME */
@@ -255,15 +255,15 @@ static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
  *
  * Set the enhanced metafile for an SS_ENHMETAFILE control.
  */
-//static HENHMETAFILE STATIC_SetEnhMetaFile( HWND hwnd, HENHMETAFILE hEnhMetaFile, DWORD style )
-//{
-//    if ((style & SS_TYPEMASK) != SS_ENHMETAFILE) return 0;
-//    if (hEnhMetaFile && GetObjectType(hEnhMetaFile) != OBJ_ENHMETAFILE) {
-//        WARN("hEnhMetaFile != 0, but it's not an enhanced metafile\n");
-//        return 0;
-//    }
-//    return (HENHMETAFILE)SetWindowLongPtrW( hwnd, HICON_GWL_OFFSET, (LONG_PTR)hEnhMetaFile );
-//}
+static HENHMETAFILE STATIC_SetEnhMetaFile( HWND hwnd, HENHMETAFILE hEnhMetaFile, DWORD style )
+{
+    if ((style & SS_TYPEMASK) != SS_ENHMETAFILE) return 0;
+    if (hEnhMetaFile && GetObjectType(hEnhMetaFile) != OBJ_ENHMETAFILE) {
+        WARN("hEnhMetaFile != 0, but it's not an enhanced metafile\n");
+        return 0;
+    }
+    return (HENHMETAFILE)SetWindowLongPtrW( hwnd, HICON_GWL_OFFSET, (LONG_PTR)hEnhMetaFile );
+}
 
 /***********************************************************************
  *           STATIC_GetImage
@@ -617,13 +617,16 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
     case STM_SETIMAGE:
         switch(wParam) {
 	case IMAGE_BITMAP:
+	    if (style != SS_BITMAP) return 0;
 	    lResult = (LRESULT)STATIC_SetBitmap( hwnd, (HBITMAP)lParam, full_style );
 	    break;
-//	case IMAGE_ENHMETAFILE:
-//	    lResult = (LRESULT)STATIC_SetEnhMetaFile( hwnd, (HENHMETAFILE)lParam, full_style );
-//	    break;
+	case IMAGE_ENHMETAFILE:
+	    if (style != SS_ENHMETAFILE) return 0;
+	    lResult = (LRESULT)STATIC_SetEnhMetaFile( hwnd, (HENHMETAFILE)lParam, full_style );
+	    break;
 	case IMAGE_ICON:
 	case IMAGE_CURSOR:
+	    if (style != SS_ICON) return 0;
 	    lResult = (LRESULT)STATIC_SetIcon( hwnd, (HICON)lParam, full_style );
 	    break;
 	default:
@@ -929,23 +932,23 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
 }
 
 
-//static void STATIC_PaintEnhMetafn(HWND hwnd, HDC hdc, DWORD style )
-//{
-//    HENHMETAFILE hEnhMetaFile;
-//    RECT rc;
-//    HBRUSH hbrush;
-//
-//    GetClientRect(hwnd, &rc);
-//    hbrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
-//    FillRect(hdc, &rc, hbrush);
-//    if ((hEnhMetaFile = (HENHMETAFILE)GetWindowLongPtrW( hwnd, HICON_GWL_OFFSET )))
-//    {
-//        /* The control's current font is not selected into the
-//           device context! */
-//        if (GetObjectType(hEnhMetaFile) == OBJ_ENHMETAFILE)
-//            PlayEnhMetaFile(hdc, hEnhMetaFile, &rc);
-//    }
-//}
+static void STATIC_PaintEnhMetafn(HWND hwnd, HDC hdc, DWORD style )
+{
+    HENHMETAFILE hEnhMetaFile;
+    RECT rc;
+    HBRUSH hbrush;
+
+    GetClientRect(hwnd, &rc);
+    hbrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
+    FillRect(hdc, &rc, hbrush);
+    if ((hEnhMetaFile = (HENHMETAFILE)GetWindowLongPtrW( hwnd, HICON_GWL_OFFSET )))
+    {
+        /* The control's current font is not selected into the
+           device context! */
+        if (GetObjectType(hEnhMetaFile) == OBJ_ENHMETAFILE)
+            PlayEnhMetaFile(hdc, hEnhMetaFile, &rc);
+    }
+}
 
 
 static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style )

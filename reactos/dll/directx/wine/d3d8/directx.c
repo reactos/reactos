@@ -312,16 +312,6 @@ static HMONITOR WINAPI  IDirect3D8Impl_GetAdapterMonitor(LPDIRECT3D8 iface, UINT
     return ret;
 }
 
-ULONG WINAPI D3D8CB_DestroyRenderTarget(IWineD3DSurface *pSurface) {
-    IDirect3DSurface8Impl* surfaceParent;
-    TRACE("(%p) call back\n", pSurface);
-
-    IWineD3DSurface_GetParent(pSurface, (IUnknown **) &surfaceParent);
-    surfaceParent->isImplicit = FALSE;
-    /* Surface had refcount of 0 GetParent addrefed to 1, so 1 Release is enough */
-    return IDirect3DSurface8_Release((IDirect3DSurface8*) surfaceParent);
-}
-
 ULONG WINAPI D3D8CB_DestroySwapChain(IWineD3DSwapChain *pSwapChain) {
     IUnknown* swapChainParent;
     TRACE("(%p) call back\n", pSwapChain);
@@ -329,16 +319,6 @@ ULONG WINAPI D3D8CB_DestroySwapChain(IWineD3DSwapChain *pSwapChain) {
     IWineD3DSwapChain_GetParent(pSwapChain, &swapChainParent);
     IUnknown_Release(swapChainParent);
     return IUnknown_Release(swapChainParent);
-}
-
-ULONG WINAPI D3D8CB_DestroyDepthStencilSurface(IWineD3DSurface *pSurface) {
-    IDirect3DSurface8Impl* surfaceParent;
-    TRACE("(%p) call back\n", pSurface);
-
-    IWineD3DSurface_GetParent(pSurface, (IUnknown **) &surfaceParent);
-    surfaceParent->isImplicit = FALSE;
-    /* Surface had refcount of 0 GetParent addrefed to 1, so 1 Release is enough */
-    return IDirect3DSurface8_Release((IDirect3DSurface8*) surfaceParent);
 }
 
 static HRESULT WINAPI IDirect3D8Impl_CreateDevice(LPDIRECT3D8 iface, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow,

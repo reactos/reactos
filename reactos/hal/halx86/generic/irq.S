@@ -7,6 +7,9 @@
 
 /* INCLUDES ******************************************************************/
 
+/* Enable this (and the define in spinlock.c) to make UP HAL work for MP Kernel */
+/* #define CONFIG_SMP */
+
 #include <asm.h>
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
@@ -600,20 +603,20 @@ _KeRaiseIrqlToSynchLevel@0:
     cli
 
     /* Mask out interrupts */
-    mov eax, KiI8259MaskTable[DISPATCH_LEVEL*4]
+    mov eax, KiI8259MaskTable[SYNCH_LEVEL*4]
     or eax, PCR[KPCR_IDR]
     out 0x21, al
     shr eax, 8
     out 0xA1, al
 
-    /* Return the old IRQL, enable interrupts and set to DISPATCH */
+    /* Return the old IRQL, enable interrupts and set to SYNCH */
     mov eax, PCR[KPCR_IRQL]
-    mov dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
+    mov dword ptr PCR[KPCR_IRQL], SYNCH_LEVEL
     popf
 
 #if DBG
     /* Validate raise */
-    cmp eax, DISPATCH_LEVEL
+    cmp eax, SYNCH_LEVEL
     ja InvalidSyRaise
 #endif
 
@@ -625,7 +628,7 @@ InvalidSyRaise:
     /* Bugcheck the system */
     push 2
     push 0
-    push DISPATCH_LEVEL
+    push SYNCH_LEVEL
     push eax
     push IRQL_NOT_GREATER_OR_EQUAL
     call _KeBugCheckEx@20

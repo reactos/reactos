@@ -6,6 +6,7 @@
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
  * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -61,6 +62,7 @@ static const struct {
     {"GL_ARB_draw_buffers",                 ARB_DRAW_BUFFERS,               0                           },
     {"GL_ARB_fragment_program",             ARB_FRAGMENT_PROGRAM,           0                           },
     {"GL_ARB_fragment_shader",              ARB_FRAGMENT_SHADER,            0                           },
+    {"GL_ARB_framebuffer_object",           ARB_FRAMEBUFFER_OBJECT,         0                           },
     {"GL_ARB_geometry_shader4",             ARB_GEOMETRY_SHADER4,           0                           },
     {"GL_ARB_half_float_pixel",             ARB_HALF_FLOAT_PIXEL,           0                           },
     {"GL_ARB_imaging",                      ARB_IMAGING,                    0                           },
@@ -70,6 +72,7 @@ static const struct {
     {"GL_ARB_pixel_buffer_object",          ARB_PIXEL_BUFFER_OBJECT,        0                           },
     {"GL_ARB_point_parameters",             ARB_POINT_PARAMETERS,           0                           },
     {"GL_ARB_point_sprite",                 ARB_POINT_SPRITE,               0                           },
+    {"GL_ARB_provoking_vertex",             ARB_PROVOKING_VERTEX,           0                           },
     {"GL_ARB_texture_border_clamp",         ARB_TEXTURE_BORDER_CLAMP,       0                           },
     {"GL_ARB_texture_compression",          ARB_TEXTURE_COMPRESSION,        0                           },
     {"GL_ARB_texture_cube_map",             ARB_TEXTURE_CUBE_MAP,           0                           },
@@ -376,11 +379,9 @@ static ULONG WINAPI IWineD3DImpl_Release(IWineD3D *iface) {
     return ref;
 }
 
-/* Set the shader type for this device, depending on the given capabilities,
- * the device type, and the user preferences in wined3d_settings */
-
-static void select_shader_mode(const struct wined3d_gl_info *gl_info,
-        WINED3DDEVTYPE DeviceType, int *ps_selected, int *vs_selected)
+/* Set the shader type for this device, depending on the given capabilities
+ * and the user preferences in wined3d_settings. */
+static void select_shader_mode(const struct wined3d_gl_info *gl_info, int *ps_selected, int *vs_selected)
 {
     if (wined3d_settings.vs_mode == VS_NONE) {
         *vs_selected = SHADER_NONE;
@@ -789,7 +790,7 @@ struct driver_quirk
     const char *description;
 };
 
-struct driver_quirk quirk_table[] =
+static const struct driver_quirk quirk_table[] =
 {
     {
         match_ati_r300_to_500,
@@ -987,7 +988,8 @@ static GL_Vendors wined3d_guess_vendor(const char *gl_vendor, const char *gl_ren
         return VENDOR_INTEL;
 
     if (strstr(gl_vendor, "Mesa")
-            || strstr(gl_vendor, "Tungsten Graphics, Inc."))
+            || strstr(gl_vendor, "DRI R300 Project")
+            || strstr(gl_vendor, "Tungsten Graphics, Inc"))
         return VENDOR_MESA;
 
     FIXME_(d3d_caps)("Received unrecognized GL_VENDOR %s. Returning VENDOR_WINE.\n", debugstr_a(gl_vendor));
@@ -1872,10 +1874,63 @@ static BOOL IWineD3DImpl_FillGLCaps(struct wined3d_gl_info *gl_info)
      * shaders), but 8 texture stages (register combiners). */
     gl_info->max_sampler_stages = max(gl_info->max_fragment_samplers, gl_info->max_texture_stages);
 
-    /* We can only use ORM_FBO when the hardware supports it. */
-    if (wined3d_settings.offscreen_rendering_mode == ORM_FBO && !gl_info->supported[EXT_FRAMEBUFFER_OBJECT]) {
-        WARN_(d3d_caps)("GL_EXT_framebuffer_object not supported, falling back to backbuffer offscreen rendering mode.\n");
-        wined3d_settings.offscreen_rendering_mode = ORM_BACKBUFFER;
+    if (gl_info->supported[ARB_FRAMEBUFFER_OBJECT])
+    {
+        gl_info->fbo_ops.glIsRenderbuffer = gl_info->glIsRenderbuffer;
+        gl_info->fbo_ops.glBindRenderbuffer = gl_info->glBindRenderbuffer;
+        gl_info->fbo_ops.glDeleteRenderbuffers = gl_info->glDeleteRenderbuffers;
+        gl_info->fbo_ops.glGenRenderbuffers = gl_info->glGenRenderbuffers;
+        gl_info->fbo_ops.glRenderbufferStorage = gl_info->glRenderbufferStorage;
+        gl_info->fbo_ops.glRenderbufferStorageMultisample = gl_info->glRenderbufferStorageMultisample;
+        gl_info->fbo_ops.glGetRenderbufferParameteriv = gl_info->glGetRenderbufferParameteriv;
+        gl_info->fbo_ops.glIsFramebuffer = gl_info->glIsFramebuffer;
+        gl_info->fbo_ops.glBindFramebuffer = gl_info->glBindFramebuffer;
+        gl_info->fbo_ops.glDeleteFramebuffers = gl_info->glDeleteFramebuffers;
+        gl_info->fbo_ops.glGenFramebuffers = gl_info->glGenFramebuffers;
+        gl_info->fbo_ops.glCheckFramebufferStatus = gl_info->glCheckFramebufferStatus;
+        gl_info->fbo_ops.glFramebufferTexture1D = gl_info->glFramebufferTexture1D;
+        gl_info->fbo_ops.glFramebufferTexture2D = gl_info->glFramebufferTexture2D;
+        gl_info->fbo_ops.glFramebufferTexture3D = gl_info->glFramebufferTexture3D;
+        gl_info->fbo_ops.glFramebufferRenderbuffer = gl_info->glFramebufferRenderbuffer;
+        gl_info->fbo_ops.glGetFramebufferAttachmentParameteriv = gl_info->glGetFramebufferAttachmentParameteriv;
+        gl_info->fbo_ops.glBlitFramebuffer = gl_info->glBlitFramebuffer;
+        gl_info->fbo_ops.glGenerateMipmap = gl_info->glGenerateMipmap;
+    }
+    else
+    {
+        if (gl_info->supported[EXT_FRAMEBUFFER_OBJECT])
+        {
+            gl_info->fbo_ops.glIsRenderbuffer = gl_info->glIsRenderbufferEXT;
+            gl_info->fbo_ops.glBindRenderbuffer = gl_info->glBindRenderbufferEXT;
+            gl_info->fbo_ops.glDeleteRenderbuffers = gl_info->glDeleteRenderbuffersEXT;
+            gl_info->fbo_ops.glGenRenderbuffers = gl_info->glGenRenderbuffersEXT;
+            gl_info->fbo_ops.glRenderbufferStorage = gl_info->glRenderbufferStorageEXT;
+            gl_info->fbo_ops.glGetRenderbufferParameteriv = gl_info->glGetRenderbufferParameterivEXT;
+            gl_info->fbo_ops.glIsFramebuffer = gl_info->glIsFramebufferEXT;
+            gl_info->fbo_ops.glBindFramebuffer = gl_info->glBindFramebufferEXT;
+            gl_info->fbo_ops.glDeleteFramebuffers = gl_info->glDeleteFramebuffersEXT;
+            gl_info->fbo_ops.glGenFramebuffers = gl_info->glGenFramebuffersEXT;
+            gl_info->fbo_ops.glCheckFramebufferStatus = gl_info->glCheckFramebufferStatusEXT;
+            gl_info->fbo_ops.glFramebufferTexture1D = gl_info->glFramebufferTexture1DEXT;
+            gl_info->fbo_ops.glFramebufferTexture2D = gl_info->glFramebufferTexture2DEXT;
+            gl_info->fbo_ops.glFramebufferTexture3D = gl_info->glFramebufferTexture3DEXT;
+            gl_info->fbo_ops.glFramebufferRenderbuffer = gl_info->glFramebufferRenderbufferEXT;
+            gl_info->fbo_ops.glGetFramebufferAttachmentParameteriv = gl_info->glGetFramebufferAttachmentParameterivEXT;
+            gl_info->fbo_ops.glGenerateMipmap = gl_info->glGenerateMipmapEXT;
+        }
+        else if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
+        {
+            WARN_(d3d_caps)("Framebuffer objects not supported, falling back to backbuffer offscreen rendering mode.\n");
+            wined3d_settings.offscreen_rendering_mode = ORM_BACKBUFFER;
+        }
+        if (gl_info->supported[EXT_FRAMEBUFFER_BLIT])
+        {
+            gl_info->fbo_ops.glBlitFramebuffer = gl_info->glBlitFramebufferEXT;
+        }
+        if (gl_info->supported[EXT_FRAMEBUFFER_MULTISAMPLE])
+        {
+            gl_info->fbo_ops.glRenderbufferStorageMultisample = gl_info->glRenderbufferStorageMultisampleEXT;
+        }
     }
 
     /* MRTs are currently only supported when FBOs are used. */
@@ -2021,15 +2076,15 @@ static UINT     WINAPI IWineD3DImpl_GetAdapterModeCount(IWineD3D *iface, UINT Ad
                     if (mode.dmBitsPerPel == 32 || mode.dmBitsPerPel == 16) ++i;
                     break;
 
-                case WINED3DFMT_X8R8G8B8:
+                case WINED3DFMT_B8G8R8X8_UNORM:
                     if (mode.dmBitsPerPel == 32) ++i;
                     break;
 
-                case WINED3DFMT_R5G6B5:
+                case WINED3DFMT_B5G6R5_UNORM:
                     if (mode.dmBitsPerPel == 16) ++i;
                     break;
 
-                case WINED3DFMT_P8:
+                case WINED3DFMT_P8_UINT:
                     if (mode.dmBitsPerPel == 8) ++i;
                     break;
 
@@ -2081,13 +2136,13 @@ static HRESULT WINAPI IWineD3DImpl_EnumAdapterModes(IWineD3D *iface, UINT Adapte
                     if (DevModeW.dmBitsPerPel == 32 ||
                         DevModeW.dmBitsPerPel == 16) i++;
                     break;
-                case WINED3DFMT_X8R8G8B8:
+                case WINED3DFMT_B8G8R8X8_UNORM:
                     if (DevModeW.dmBitsPerPel == 32) i++;
                     break;
-                case WINED3DFMT_R5G6B5:
+                case WINED3DFMT_B5G6R5_UNORM:
                     if (DevModeW.dmBitsPerPel == 16) i++;
                     break;
-                case WINED3DFMT_P8:
+                case WINED3DFMT_P8_UINT:
                     if (DevModeW.dmBitsPerPel == 8) i++;
                     break;
                 default:
@@ -2312,7 +2367,7 @@ static BOOL IWineD3DImpl_IsPixelFormatCompatibleWithDepthFmt(const struct wined3
         return FALSE;
     }
 
-    if ((format_desc->format == WINED3DFMT_D16_LOCKABLE) || (format_desc->format == WINED3DFMT_D32F_LOCKABLE))
+    if ((format_desc->format == WINED3DFMT_D16_LOCKABLE) || (format_desc->format == WINED3DFMT_D32_FLOAT))
         lockable = TRUE;
 
     /* On some modern cards like the Geforce8/9 GLX doesn't offer some dephthstencil formats which D3D9 reports.
@@ -2495,10 +2550,10 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceType(IWineD3D *iface, UINT Adapter
      * At the moment we assume that fullscreen and windowed have the same capabilities */
 
     /* There are only 4 display formats */
-    if(!((DisplayFormat == WINED3DFMT_R5G6B5) ||
-         (DisplayFormat == WINED3DFMT_X1R5G5B5) ||
-         (DisplayFormat == WINED3DFMT_X8R8G8B8) ||
-         (DisplayFormat == WINED3DFMT_A2R10G10B10)))
+    if (!(DisplayFormat == WINED3DFMT_B5G6R5_UNORM
+            || DisplayFormat == WINED3DFMT_B5G5R5X1_UNORM
+            || DisplayFormat == WINED3DFMT_B8G8R8X8_UNORM
+            || DisplayFormat == WINED3DFMT_B10G10R10A2_UNORM))
     {
         TRACE_(d3d_caps)("Format %s unsupported as display format\n", debug_d3dformat(DisplayFormat));
         return WINED3DERR_NOTAVAILABLE;
@@ -2518,25 +2573,32 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceType(IWineD3D *iface, UINT Adapter
     }
 
     /* In FULLSCREEN mode R5G6B5 can only be mixed with backbuffer format R5G6B5 */
-    if( (DisplayFormat == WINED3DFMT_R5G6B5) && (BackBufferFormat != WINED3DFMT_R5G6B5) ) {
+    if (DisplayFormat == WINED3DFMT_B5G6R5_UNORM && BackBufferFormat != WINED3DFMT_B5G6R5_UNORM)
+    {
         TRACE_(d3d_caps)("Unsupported display/backbuffer format combination %s/%s\n", debug_d3dformat(DisplayFormat), debug_d3dformat(BackBufferFormat));
         return WINED3DERR_NOTAVAILABLE;
     }
 
     /* In FULLSCREEN mode X1R5G5B5 can only be mixed with backbuffer format *1R5G5B5 */
-    if( (DisplayFormat == WINED3DFMT_X1R5G5B5) && !((BackBufferFormat == WINED3DFMT_X1R5G5B5) || (BackBufferFormat == WINED3DFMT_A1R5G5B5)) ) {
+    if (DisplayFormat == WINED3DFMT_B5G5R5X1_UNORM
+            && !(BackBufferFormat == WINED3DFMT_B5G5R5X1_UNORM || BackBufferFormat == WINED3DFMT_B5G5R5A1_UNORM))
+    {
         TRACE_(d3d_caps)("Unsupported display/backbuffer format combination %s/%s\n", debug_d3dformat(DisplayFormat), debug_d3dformat(BackBufferFormat));
         return WINED3DERR_NOTAVAILABLE;
     }
 
     /* In FULLSCREEN mode X8R8G8B8 can only be mixed with backbuffer format *8R8G8B8 */
-    if( (DisplayFormat == WINED3DFMT_X8R8G8B8) && !((BackBufferFormat == WINED3DFMT_X8R8G8B8) || (BackBufferFormat == WINED3DFMT_A8R8G8B8)) ) {
+    if (DisplayFormat == WINED3DFMT_B8G8R8X8_UNORM
+            && !(BackBufferFormat == WINED3DFMT_B8G8R8X8_UNORM || BackBufferFormat == WINED3DFMT_B8G8R8A8_UNORM))
+    {
         TRACE_(d3d_caps)("Unsupported display/backbuffer format combination %s/%s\n", debug_d3dformat(DisplayFormat), debug_d3dformat(BackBufferFormat));
         return WINED3DERR_NOTAVAILABLE;
     }
 
     /* A2R10G10B10 is only allowed in fullscreen mode and it can only be mixed with backbuffer format A2R10G10B10 */
-    if( (DisplayFormat == WINED3DFMT_A2R10G10B10) && ((BackBufferFormat != WINED3DFMT_A2R10G10B10) || Windowed)) {
+    if (DisplayFormat == WINED3DFMT_B10G10R10A2_UNORM
+            && (BackBufferFormat != WINED3DFMT_B10G10R10A2_UNORM || Windowed))
+    {
         TRACE_(d3d_caps)("Unsupported display/backbuffer format combination %s/%s\n", debug_d3dformat(DisplayFormat), debug_d3dformat(BackBufferFormat));
         return WINED3DERR_NOTAVAILABLE;
     }
@@ -2560,8 +2622,8 @@ static BOOL CheckBumpMapCapability(struct WineD3DAdapter *adapter,
     {
         case WINED3DFMT_R8G8_SNORM:
         case WINED3DFMT_R16G16_SNORM:
-        case WINED3DFMT_L6V5U5:
-        case WINED3DFMT_X8L8V8U8:
+        case WINED3DFMT_R5G5_SNORM_L6_UNORM:
+        case WINED3DFMT_R8G8_SNORM_L8X8_UNORM:
         case WINED3DFMT_R8G8B8A8_SNORM:
             /* Ask the fixed function pipeline implementation if it can deal
              * with the conversion. If we've got a GL extension giving native
@@ -2685,11 +2747,11 @@ static BOOL CheckSrgbReadCapability(struct WineD3DAdapter *adapter, const struct
 
     switch (format_desc->format)
     {
-        case WINED3DFMT_A8R8G8B8:
-        case WINED3DFMT_X8R8G8B8:
-        case WINED3DFMT_A4R4G4B4:
-        case WINED3DFMT_L8:
-        case WINED3DFMT_A8L8:
+        case WINED3DFMT_B8G8R8A8_UNORM:
+        case WINED3DFMT_B8G8R8X8_UNORM:
+        case WINED3DFMT_B4G4R4A4_UNORM:
+        case WINED3DFMT_L8_UNORM:
+        case WINED3DFMT_L8A8_UNORM:
         case WINED3DFMT_DXT1:
         case WINED3DFMT_DXT2:
         case WINED3DFMT_DXT3:
@@ -2711,11 +2773,11 @@ static BOOL CheckSrgbWriteCapability(struct WineD3DAdapter *adapter,
     /* Only offer SRGB writing on X8R8G8B8/A8R8G8B8 when we use ARB or GLSL shaders as we are
      * doing the color fixup in shaders.
      * Note Windows drivers (at least on the Geforce 8800) also offer this on R5G6B5. */
-    if ((format_desc->format == WINED3DFMT_X8R8G8B8) || (format_desc->format == WINED3DFMT_A8R8G8B8))
+    if ((format_desc->format == WINED3DFMT_B8G8R8X8_UNORM) || (format_desc->format == WINED3DFMT_B8G8R8A8_UNORM))
     {
         int vs_selected_mode;
         int ps_selected_mode;
-        select_shader_mode(&adapter->gl_info, DeviceType, &ps_selected_mode, &vs_selected_mode);
+        select_shader_mode(&adapter->gl_info, &ps_selected_mode, &vs_selected_mode);
 
         if((ps_selected_mode == SHADER_ARB) || (ps_selected_mode == SHADER_GLSL)) {
             TRACE_(d3d_caps)("[OK]\n");
@@ -2764,48 +2826,48 @@ static BOOL CheckTextureCapability(struct WineD3DAdapter *adapter,
         /*****
          *  supported: RGB(A) formats
          */
-        case WINED3DFMT_R8G8B8: /* Enable for dx7, blacklisted for 8 and 9 above */
-        case WINED3DFMT_A8R8G8B8:
-        case WINED3DFMT_X8R8G8B8:
-        case WINED3DFMT_R5G6B5:
-        case WINED3DFMT_X1R5G5B5:
-        case WINED3DFMT_A1R5G5B5:
-        case WINED3DFMT_A4R4G4B4:
+        case WINED3DFMT_B8G8R8_UNORM: /* Enable for dx7, blacklisted for 8 and 9 above */
+        case WINED3DFMT_B8G8R8A8_UNORM:
+        case WINED3DFMT_B8G8R8X8_UNORM:
+        case WINED3DFMT_B5G6R5_UNORM:
+        case WINED3DFMT_B5G5R5X1_UNORM:
+        case WINED3DFMT_B5G5R5A1_UNORM:
+        case WINED3DFMT_B4G4R4A4_UNORM:
         case WINED3DFMT_A8_UNORM:
-        case WINED3DFMT_X4R4G4B4:
+        case WINED3DFMT_B4G4R4X4_UNORM:
         case WINED3DFMT_R8G8B8A8_UNORM:
-        case WINED3DFMT_X8B8G8R8:
-        case WINED3DFMT_A2R10G10B10:
+        case WINED3DFMT_R8G8B8X8_UNORM:
+        case WINED3DFMT_B10G10R10A2_UNORM:
         case WINED3DFMT_R10G10B10A2_UNORM:
         case WINED3DFMT_R16G16_UNORM:
             TRACE_(d3d_caps)("[OK]\n");
             return TRUE;
 
-        case WINED3DFMT_R3G3B2:
+        case WINED3DFMT_B2G3R3_UNORM:
             TRACE_(d3d_caps)("[FAILED] - Not supported on Windows\n");
             return FALSE;
 
         /*****
          *  supported: Palettized
          */
-        case WINED3DFMT_P8:
+        case WINED3DFMT_P8_UINT:
             TRACE_(d3d_caps)("[OK]\n");
             return TRUE;
-        /* No Windows driver offers A8P8, so don't offer it either */
-        case WINED3DFMT_A8P8:
+        /* No Windows driver offers WINED3DFMT_P8_UINT_A8_UNORM, so don't offer it either */
+        case WINED3DFMT_P8_UINT_A8_UNORM:
             return FALSE;
 
         /*****
          *  Supported: (Alpha)-Luminance
          */
-        case WINED3DFMT_L8:
-        case WINED3DFMT_A8L8:
-        case WINED3DFMT_L16:
+        case WINED3DFMT_L8_UNORM:
+        case WINED3DFMT_L8A8_UNORM:
+        case WINED3DFMT_L16_UNORM:
             TRACE_(d3d_caps)("[OK]\n");
             return TRUE;
 
         /* Not supported on Windows, thus disabled */
-        case WINED3DFMT_A4L4:
+        case WINED3DFMT_L4A4_UNORM:
             TRACE_(d3d_caps)("[FAILED] - not supported on windows\n");
             return FALSE;
 
@@ -2814,13 +2876,13 @@ static BOOL CheckTextureCapability(struct WineD3DAdapter *adapter,
          */
         case WINED3DFMT_D16_LOCKABLE:
         case WINED3DFMT_D16_UNORM:
-        case WINED3DFMT_D15S1:
-        case WINED3DFMT_D24X8:
-        case WINED3DFMT_D24X4S4:
-        case WINED3DFMT_D24S8:
-        case WINED3DFMT_D24FS8:
-        case WINED3DFMT_D32:
-        case WINED3DFMT_D32F_LOCKABLE:
+        case WINED3DFMT_S1_UINT_D15_UNORM:
+        case WINED3DFMT_X8D24_UNORM:
+        case WINED3DFMT_S4X4_UINT_D24_UNORM:
+        case WINED3DFMT_S8_UINT_D24_UNORM:
+        case WINED3DFMT_S8_UINT_D24_FLOAT:
+        case WINED3DFMT_D32_UNORM:
+        case WINED3DFMT_D32_FLOAT:
             return TRUE;
 
         /*****
@@ -2828,8 +2890,8 @@ static BOOL CheckTextureCapability(struct WineD3DAdapter *adapter,
          *  GL_NV_texture_shader). Emulated by shaders
          */
         case WINED3DFMT_R8G8_SNORM:
-        case WINED3DFMT_X8L8V8U8:
-        case WINED3DFMT_L6V5U5:
+        case WINED3DFMT_R8G8_SNORM_L8X8_UNORM:
+        case WINED3DFMT_R5G5_SNORM_L6_UNORM:
         case WINED3DFMT_R8G8B8A8_SNORM:
         case WINED3DFMT_R16G16_SNORM:
             /* Ask the shader backend if it can deal with the conversion. If
@@ -2864,15 +2926,15 @@ static BOOL CheckTextureCapability(struct WineD3DAdapter *adapter,
         case WINED3DFMT_R16_UINT:
         case WINED3DFMT_R32_UINT:
         case WINED3DFMT_R16G16B16A16_SNORM:
-        case WINED3DFMT_A2W10V10U10:
-        case WINED3DFMT_W11V11U10:
+        case WINED3DFMT_R10G10B10_SNORM_A2_UNORM:
+        case WINED3DFMT_R10G11B11_SNORM:
             TRACE_(d3d_caps)("[FAILED]\n"); /* Enable when implemented */
             return FALSE;
 
         /*****
-         *  WINED3DFMT_CxV8U8: Not supported right now
+         *  WINED3DFMT_R8G8_SNORM_Cx: Not supported right now
          */
-        case WINED3DFMT_CxV8U8:
+        case WINED3DFMT_R8G8_SNORM_Cx:
             TRACE_(d3d_caps)("[FAILED]\n"); /* Enable when implemented */
             return FALSE;
 
@@ -2891,7 +2953,7 @@ static BOOL CheckTextureCapability(struct WineD3DAdapter *adapter,
 
             /* Not supported */
         case WINED3DFMT_R16G16B16A16_UNORM:
-        case WINED3DFMT_A8R3G3B2:
+        case WINED3DFMT_B2G3R3A8_UNORM:
             TRACE_(d3d_caps)("[FAILED]\n"); /* Enable when implemented */
             return FALSE;
 
@@ -2989,24 +3051,24 @@ static BOOL CheckSurfaceCapability(struct WineD3DAdapter *adapter, const struct 
     if(SurfaceType == SURFACE_GDI) {
         switch(check_format_desc->format)
         {
-            case WINED3DFMT_R8G8B8:
-            case WINED3DFMT_A8R8G8B8:
-            case WINED3DFMT_X8R8G8B8:
-            case WINED3DFMT_R5G6B5:
-            case WINED3DFMT_X1R5G5B5:
-            case WINED3DFMT_A1R5G5B5:
-            case WINED3DFMT_A4R4G4B4:
-            case WINED3DFMT_R3G3B2:
+            case WINED3DFMT_B8G8R8_UNORM:
+            case WINED3DFMT_B8G8R8A8_UNORM:
+            case WINED3DFMT_B8G8R8X8_UNORM:
+            case WINED3DFMT_B5G6R5_UNORM:
+            case WINED3DFMT_B5G5R5X1_UNORM:
+            case WINED3DFMT_B5G5R5A1_UNORM:
+            case WINED3DFMT_B4G4R4A4_UNORM:
+            case WINED3DFMT_B2G3R3_UNORM:
             case WINED3DFMT_A8_UNORM:
-            case WINED3DFMT_A8R3G3B2:
-            case WINED3DFMT_X4R4G4B4:
+            case WINED3DFMT_B2G3R3A8_UNORM:
+            case WINED3DFMT_B4G4R4X4_UNORM:
             case WINED3DFMT_R10G10B10A2_UNORM:
             case WINED3DFMT_R8G8B8A8_UNORM:
-            case WINED3DFMT_X8B8G8R8:
+            case WINED3DFMT_R8G8B8X8_UNORM:
             case WINED3DFMT_R16G16_UNORM:
-            case WINED3DFMT_A2R10G10B10:
+            case WINED3DFMT_B10G10R10A2_UNORM:
             case WINED3DFMT_R16G16B16A16_UNORM:
-            case WINED3DFMT_P8:
+            case WINED3DFMT_P8_UINT:
                 TRACE_(d3d_caps)("[OK]\n");
                 return TRUE;
             default:
@@ -3496,12 +3558,12 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceFormat(IWineD3D *iface, UINT Adapt
          * except of R32F.
          */
         switch(CheckFormat) {
-            case WINED3DFMT_P8:
-            case WINED3DFMT_A4L4:
+            case WINED3DFMT_P8_UINT:
+            case WINED3DFMT_L4A4_UNORM:
             case WINED3DFMT_R32_FLOAT:
             case WINED3DFMT_R16_FLOAT:
-            case WINED3DFMT_X8L8V8U8:
-            case WINED3DFMT_L6V5U5:
+            case WINED3DFMT_R8G8_SNORM_L8X8_UNORM:
+            case WINED3DFMT_R5G5_SNORM_L6_UNORM:
             case WINED3DFMT_R16G16_UNORM:
                 TRACE_(d3d_caps)("[FAILED] - No converted formats on volumes\n");
                 return WINED3DERR_NOTAVAILABLE;
@@ -3576,7 +3638,7 @@ static const shader_backend_t *select_shader_backend(struct WineD3DAdapter *adap
     int vs_selected_mode;
     int ps_selected_mode;
 
-    select_shader_mode(&adapter->gl_info, DeviceType, &ps_selected_mode, &vs_selected_mode);
+    select_shader_mode(&adapter->gl_info, &ps_selected_mode, &vs_selected_mode);
     if (vs_selected_mode == SHADER_GLSL || ps_selected_mode == SHADER_GLSL) {
         ret = &glsl_shader_backend;
     } else if (vs_selected_mode == SHADER_ARB || ps_selected_mode == SHADER_ARB) {
@@ -3594,7 +3656,7 @@ static const struct fragment_pipeline *select_fragment_implementation(struct Win
     int vs_selected_mode;
     int ps_selected_mode;
 
-    select_shader_mode(&adapter->gl_info, DeviceType, &ps_selected_mode, &vs_selected_mode);
+    select_shader_mode(&adapter->gl_info, &ps_selected_mode, &vs_selected_mode);
     if((ps_selected_mode == SHADER_ARB || ps_selected_mode == SHADER_GLSL) && GL_SUPPORT(ARB_FRAGMENT_PROGRAM)) {
         return &arbfp_fragment_pipeline;
     } else if(ps_selected_mode == SHADER_ATI) {
@@ -3614,7 +3676,7 @@ static const struct blit_shader *select_blit_implementation(struct WineD3DAdapte
     int vs_selected_mode;
     int ps_selected_mode;
 
-    select_shader_mode(&adapter->gl_info, DeviceType, &ps_selected_mode, &vs_selected_mode);
+    select_shader_mode(&adapter->gl_info, &ps_selected_mode, &vs_selected_mode);
     if((ps_selected_mode == SHADER_ARB || ps_selected_mode == SHADER_GLSL) && GL_SUPPORT(ARB_FRAGMENT_PROGRAM)) {
         return &arbfp_blit;
     } else {
@@ -3644,7 +3706,7 @@ static HRESULT WINAPI IWineD3DImpl_GetDeviceCaps(IWineD3D *iface, UINT Adapter, 
         return WINED3DERR_INVALIDCALL;
     }
 
-    select_shader_mode(&adapter->gl_info, DeviceType, &ps_selected_mode, &vs_selected_mode);
+    select_shader_mode(&adapter->gl_info, &ps_selected_mode, &vs_selected_mode);
 
     /* This function should *not* be modifying GL caps
      * TODO: move the functionality where it belongs */
@@ -4262,8 +4324,7 @@ static HRESULT WINAPI IWineD3DImpl_CreateDevice(IWineD3D *iface, UINT Adapter,
     object->adapterNo                    = Adapter;
     object->devType                      = DeviceType;
 
-    select_shader_mode(&adapter->gl_info, DeviceType,
-            &object->ps_selected_mode, &object->vs_selected_mode);
+    select_shader_mode(&adapter->gl_info, &object->ps_selected_mode, &object->vs_selected_mode);
     object->shader_backend = select_shader_backend(adapter, DeviceType);
 
     memset(&shader_caps, 0, sizeof(shader_caps));
@@ -4314,16 +4375,6 @@ static HRESULT WINAPI IWineD3DImpl_GetParent(IWineD3D *iface, IUnknown **pParent
     IUnknown_AddRef(This->parent);
     *pParent = This->parent;
     return WINED3D_OK;
-}
-
-ULONG WINAPI D3DCB_DefaultDestroySurface(IWineD3DSurface *pSurface) {
-    IUnknown* surfaceParent;
-    TRACE("(%p) call back\n", pSurface);
-
-    /* Now, release the parent, which will take care of cleaning up the surface for us */
-    IWineD3DSurface_GetParent(pSurface, &surfaceParent);
-    IUnknown_Release(surfaceParent);
-    return IUnknown_Release(surfaceParent);
 }
 
 ULONG WINAPI D3DCB_DefaultDestroyVolume(IWineD3DVolume *pVolume) {
@@ -4771,7 +4822,7 @@ BOOL InitAdapters(IWineD3DImpl *This)
 
         WineD3D_ReleaseFakeGLContext(&fake_gl_ctx);
 
-        select_shader_mode(&adapter->gl_info, WINED3DDEVTYPE_HAL, &ps_selected_mode, &vs_selected_mode);
+        select_shader_mode(&adapter->gl_info, &ps_selected_mode, &vs_selected_mode);
         select_shader_max_constants(ps_selected_mode, vs_selected_mode, &adapter->gl_info);
         fillGLAttribFuncs(&adapter->gl_info);
         adapter->opengl = TRUE;
@@ -4829,4 +4880,11 @@ const IWineD3DVtbl IWineD3D_Vtbl =
     IWineD3DImpl_CheckDeviceFormatConversion,
     IWineD3DImpl_GetDeviceCaps,
     IWineD3DImpl_CreateDevice
+};
+
+static void STDMETHODCALLTYPE wined3d_null_wined3d_object_destroyed(void *parent) {}
+
+const struct wined3d_parent_ops wined3d_null_parent_ops =
+{
+    wined3d_null_wined3d_object_destroyed,
 };

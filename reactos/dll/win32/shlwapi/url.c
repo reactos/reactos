@@ -2382,3 +2382,35 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
   }
   return hRet;
 }
+
+/***********************************************************************
+ *             UrlFixupW [SHLWAPI.462]
+ *
+ * Checks the scheme part of a URL and attempts to correct misspellings.
+ *
+ * PARAMS
+ *  lpszUrl           [I] Pointer to the URL to be corrected
+ *  lpszTranslatedUrl [O] Pointer to a buffer to store corrected URL
+ *  dwMaxChars        [I] Maximum size of corrected URL
+ *
+ * RETURNS
+ *  success: S_OK if URL corrected or already correct
+ *  failure: S_FALSE if unable to correct / COM error code if other error
+ *
+ */
+HRESULT WINAPI UrlFixupW(LPCWSTR url, LPWSTR translatedUrl, DWORD maxChars)
+{
+    DWORD srcLen;
+
+    FIXME("(%s,%p,%d) STUB\n", debugstr_w(url), translatedUrl, maxChars);
+
+    if (!url)
+        return E_FAIL;
+
+    srcLen = lstrlenW(url);
+
+    /* For now just copy the URL directly */
+    lstrcpynW(translatedUrl, url, (maxChars < srcLen) ? maxChars : srcLen);
+
+    return S_OK;
+}

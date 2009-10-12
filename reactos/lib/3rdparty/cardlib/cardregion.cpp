@@ -638,10 +638,7 @@ bool CardRegion::SimulateDrag(CardRegion *pDestStack, int iNumDragCards, bool fA
 
     if(CanDragCards(iNumDragCards) != false)
     {
-        //make a list of the cards that would be in the drag list
-        CardStack tempstack = cardstack.Top(iNumDragCards);
-
-        if(pDestStack->CanDropCards(tempstack))
+        if(pDestStack->CanDropCards(cardstack))
         {
             MoveCard(pDestStack, iNumDragCards, fAnimate);
 

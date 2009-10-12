@@ -818,11 +818,11 @@ KeInitThread(IN OUT PKTHREAD Thread,
     _SEH2_TRY
     {
         /* Initalize the Thread Context */
-        KeArchInitThreadWithContext(Thread,
-                                    SystemRoutine,
-                                    StartRoutine,
-                                    StartContext,
-                                    Context);
+        KiInitializeContextThread(Thread,
+                                  SystemRoutine,
+                                  StartRoutine,
+                                  StartContext,
+                                  Context);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

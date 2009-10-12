@@ -550,6 +550,9 @@ KiRetireDpcList(IN PKPRCB Prcb)
     PKDEFERRED_ROUTINE DeferredRoutine;
     PVOID DeferredContext, SystemArgument1, SystemArgument2;
     ULONG_PTR TimerHand;
+#ifdef CONFIG_SMP
+    KIRQL OldIrql;
+#endif
 
     /* Get data and list variables before starting anything else */
     DpcData = &Prcb->DpcData[DPC_NORMAL];
@@ -631,12 +634,23 @@ KiRetireDpcList(IN PKPRCB Prcb)
         Prcb->DpcRoutineActive = FALSE;
         Prcb->DpcInterruptRequested = FALSE;
 
+#ifdef CONFIG_SMP
         /* Check if we have deferred threads */
         if (Prcb->DeferredReadyListHead.Next)
         {
-            /* FIXME: 2K3-style scheduling not implemeted */
-            ASSERT(FALSE);
+
+            /* Re-enable interrupts and raise to synch */
+            _enable();
+            OldIrql = KeRaiseIrqlToSynchLevel();
+
+            /* Process deferred threads */
+            KiProcessDeferredReadyList(Prcb);
+
+            /* Lower IRQL back and disable interrupts */
+            KeLowerIrql(OldIrql);
+            _disable();
         }
+#endif
     } while (DpcData->DpcQueueDepth != 0);
 }
 

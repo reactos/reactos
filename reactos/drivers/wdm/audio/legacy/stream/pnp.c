@@ -315,7 +315,7 @@ StreamClassStartDevice(
         DeviceDesc.InterfaceType = Config->AdapterInterfaceType;
         DeviceDesc.DmaWidth = Width32Bits;
         DeviceDesc.DmaSpeed = Compatible;
-        DeviceDesc.MaximumLength = (ULONG)-1;
+        DeviceDesc.MaximumLength = MAXULONG;
         DeviceDesc.Dma32BitAddresses = DriverObjectExtension->Data.Dma24BitAddresses;
 
         Adapter = IoGetDmaAdapter(DeviceExtension->PhysicalDeviceObject, &DeviceDesc, &MapRegisters);

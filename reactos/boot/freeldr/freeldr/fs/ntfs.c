@@ -292,7 +292,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_VOLUME_INFO Volume, PNTFS_ATTR_CONTEXT 
         {
             CurrentOffset += DataRunLength * Volume->ClusterSize;
             DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-            if (DataRunLength != (ULONGLONG)-1)
+            if (DataRunLength != MAXULONGLONG)
             {
                 DataRunStartLCN = LastLCN + DataRunOffset;
                 LastLCN = DataRunStartLCN;
@@ -836,6 +836,7 @@ const DEVVTBL NtfsFuncTable =
     NtfsOpen,
     NtfsRead,
     NtfsSeek,
+    L"ntfs",
 };
 
 const DEVVTBL* NtfsMount(ULONG DeviceId)

@@ -496,7 +496,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
                            IN ULONG Slot,
                            IN OUT PCM_RESOURCE_LIST *pAllocatedResources)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(0);
     return STATUS_SUCCESS;
 }
 

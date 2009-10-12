@@ -7,11 +7,17 @@
 	<directory name="bzip2">
 		<xi:include href="bzip2/bzip2.rbuild" />
 	</directory>
+	<directory name="cardlib">
+		<xi:include href="cardlib/cardlib.rbuild" />
+	</directory>
 	<directory name="expat">
 		<xi:include href="expat/expat.rbuild" />
 	</directory>
 	<directory name="freetype">
 		<xi:include href="freetype/freetype.rbuild" />
+	</directory>
+	<directory name="fullfat">
+		<xi:include href="fullfat/fullfat.rbuild" />
 	</directory>
 	<directory name="icu4ros">
 		<xi:include href="icu4ros/icu4ros.rbuild" />

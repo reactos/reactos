@@ -216,7 +216,7 @@ KfLowerIrql (KIRQL	NewIrql)
     {
       DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
 		__FILE__, __LINE__, NewIrql, KeGetPcr()->Irql);
-      KEBUGCHECK(0);
+      KeBugCheck(0);
       for(;;);
     }
 
@@ -251,7 +251,7 @@ KfRaiseIrql (KIRQL	NewIrql)
     {
       DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
 		__FILE__,__LINE__,KeGetPcr()->Irql,NewIrql);
-      KEBUGCHECK (0);
+      KeBugCheck (0);
       for(;;);
     }
 
@@ -424,7 +424,7 @@ HalRequestSoftwareInterrupt(
       break;
 
     default:
-      KEBUGCHECK(0);
+      KeBugCheck(0);
   }
 }
 
@@ -443,7 +443,7 @@ HalClearSoftwareInterrupt(
       break;
 
     default:
-      KEBUGCHECK(0);
+      KeBugCheck(0);
   }
 }
 

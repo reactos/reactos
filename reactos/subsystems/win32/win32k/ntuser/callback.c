@@ -326,6 +326,14 @@ co_IntCallHookProc(INT HookId,
    UNICODE_STRING ClassName;
    PANSI_STRING asWindowName;
    PANSI_STRING asClassName;
+   PTHREADINFO pti;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->TIF_flags & TIF_INCLEANUP)
+   {
+      DPRINT1("Thread is in cleanup and trying to call hook %d\n", Code);
+      return 0;
+   }
 
    ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
                     + ModuleName->Length;

@@ -646,6 +646,16 @@ static HLPFILE_LINK* WINHELP_FindLink(WINHELP_WINDOW* win, LPARAM pos)
                          (LPARAM)&char_ptl, cp);
             SendMessageW(GetDlgItem(win->hMainWnd, CTL_ID_TEXT), EM_POSFROMCHAR,
                          (LPARAM)&char_next_ptl, cp + 1);
+            if (link->bHotSpot)
+            {
+                HLPFILE_HOTSPOTLINK*    hslink = (HLPFILE_HOTSPOTLINK*)link;
+                if ((mouse_ptl.x < char_ptl.x + hslink->x) ||
+                    (mouse_ptl.x >= char_ptl.x + hslink->x + hslink->width) ||
+                    (mouse_ptl.y < char_ptl.y + hslink->y) ||
+                    (mouse_ptl.y >= char_ptl.y + hslink->y + hslink->height))
+                    continue;
+                break;
+            }
             if (char_next_ptl.y != char_ptl.y || mouse_ptl.x >= char_next_ptl.x)
                 link = NULL;
             break;

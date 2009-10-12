@@ -145,6 +145,7 @@ void __debugbreak(void);
 void __int2c(void);
 void _disable(void);
 void _enable(void);
+void __halt(void);
 
 /*** Protected memory management ***/
 void __writecr0(const unsigned __int64 Data);

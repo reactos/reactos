@@ -94,8 +94,8 @@ VOID DisplayTCPPacket(
     UINT Length;
     PCHAR Buffer;
 
-    if (!DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK) ||
-        !DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_TCP | DPFLTR_MASK)) {
+    if (!(DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK)) ||
+        !(DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_TCP | DPFLTR_MASK))) {
         return;
     }
 
@@ -115,10 +115,9 @@ VOID DisplayTCPPacket(
 
     if (IPPacket->NdisPacket) {
         NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
-        Length -= MaxLLHeaderSize;
         Buffer = exAllocatePool(NonPagedPool, Length);
         if (Buffer) {
-            Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
+            Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, 0, Length);
             DisplayTCPHeader(Buffer, Length);
             exFreePool(Buffer);
         }
@@ -140,8 +139,8 @@ VOID DisplayIPPacket(
     PNDIS_BUFFER NextBuffer;
     PCHAR CharBuffer;
 
-    if (!DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK) ||
-        !DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_IP | DPFLTR_MASK)) {
+    if (!(DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK)) ||
+        !(DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_IP | DPFLTR_MASK))) {
         return;
     }
 

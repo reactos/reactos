@@ -104,7 +104,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
     ULONG Log2 = 0;
-    PVOID Segment = NULL;
+    ULONG_PTR Segment = 0;
     PAGED_CODE();
 
     /* Easy way out */
@@ -117,7 +117,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
         if (BufferSize < sizeof(ULONG)) return STATUS_INVALID_PARAMETER_7;
 
         /* This will become a segmented profile object */
-        Segment = RangeBase;
+        Segment = (ULONG_PTR)RangeBase;
         RangeBase = 0;
 
         /* Recalculate the bucket size */

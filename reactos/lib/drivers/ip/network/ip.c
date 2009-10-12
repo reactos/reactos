@@ -15,8 +15,6 @@ LIST_ENTRY InterfaceListHead;
 KSPIN_LOCK InterfaceListLock;
 LIST_ENTRY NetTableListHead;
 KSPIN_LOCK NetTableListLock;
-UINT MaxLLHeaderSize; /* Largest maximum header size */
-UINT MinLLFrameSize;  /* Largest minimum frame size */
 BOOLEAN IPInitialized = FALSE;
 BOOLEAN IpWorkItemQueued = FALSE;
 /* Work around calling timer at Dpc level */
@@ -95,10 +93,12 @@ VOID IPDispatchProtocol(
  */
 {
     UINT Protocol;
+    IP_ADDRESS SrcAddress;
 
     switch (IPPacket->Type) {
     case IP_ADDRESS_V4:
         Protocol = ((PIPv4_HEADER)(IPPacket->Header))->Protocol;
+        AddrInitIPv4(&SrcAddress, ((PIPv4_HEADER)(IPPacket->Header))->SrcAddr);
         break;
     case IP_ADDRESS_V6:
         /* FIXME: IPv6 adresses not supported */
@@ -108,6 +108,8 @@ VOID IPDispatchProtocol(
         TI_DbgPrint(MIN_TRACE, ("Unrecognized datagram discarded.\n"));
         return;
     }
+
+    NBResetNeighborTimeout(&SrcAddress);
 
     if (Protocol < IP_PROTOCOL_TABLE_SIZE)
     {
@@ -153,13 +155,7 @@ PIP_INTERFACE IPCreateInterface(
     IF->Free       = FreeIF;
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
-	  if (IF->HeaderSize > MaxLLHeaderSize)
-	  	MaxLLHeaderSize = IF->HeaderSize;
-
     IF->MinFrameSize = BindInfo->MinFrameSize;
-	  if (IF->MinFrameSize > MinLLFrameSize)
-  		MinLLFrameSize = IF->MinFrameSize;
-
     IF->MTU           = BindInfo->MTU;
     IF->Address       = BindInfo->Address;
     IF->AddressLength = BindInfo->AddressLength;
@@ -227,7 +223,7 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
     /* Send a gratuitous ARP packet to update the route caches of
      * other computers */
     if (IF != Loopback)
-       ARPTransmit(NULL, IF);
+       ARPTransmit(NULL, NULL, IF);
 }
 
 BOOLEAN IPRegisterInterface(
@@ -360,9 +356,6 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
     UINT i;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    MaxLLHeaderSize = 0;
-    MinLLFrameSize  = 0;
 
     /* Initialize lookaside lists */
     ExInitializeNPagedLookasideList(

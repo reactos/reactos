@@ -1690,7 +1690,7 @@ KsCancelRoutine(
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
     /* release spinlock */
-    KeReleaseSpinLockFromDpcLevel(SpinLock);
+    KeReleaseSpinLock(SpinLock, Irp->CancelIrql);
 
     /* has the irp already been canceled */
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
@@ -1742,7 +1742,7 @@ FindMatchingCreateItem(
 
         ASSERT(CreateItemEntry->CreateItem->ObjectClass.Buffer);
 
-        DPRINT1("CreateItem %S Length %u Request %S %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
+        DPRINT("CreateItem %S Length %u Request %S %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
                                                            CreateItemEntry->CreateItem->ObjectClass.Length,
                                                            Buffer,
                                                            BufferSize);
@@ -2078,6 +2078,6 @@ KsGetNodeIdFromIrp(
     IN PIRP Irp)
 {
     UNIMPLEMENTED
-    return (ULONG)-1;
+    return KSFILTER_NODE;
 }
 

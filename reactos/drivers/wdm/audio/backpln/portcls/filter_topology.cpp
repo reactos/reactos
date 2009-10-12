@@ -69,7 +69,7 @@ NTSTATUS
 NTAPI
 CPortFilterTopology::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
@@ -89,11 +89,29 @@ CPortFilterTopology::DeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    PC_ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
 
-    return PcPropertyHandler(Irp, m_Descriptor);
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
+    {
+        DPRINT1("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
+        
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    Status = PcHandlePropertyWithTable(Irp, m_Descriptor->FilterPropertySetCount, m_Descriptor->FilterPropertySet, m_Descriptor);
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        DPRINT("Result %x Length %u\n", Status, Irp->IoStatus.Information);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    return Status;
+
 }
 
 NTSTATUS

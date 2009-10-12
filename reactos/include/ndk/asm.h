@@ -523,9 +523,10 @@ Author:
 #define CBSTACK_EBP                             0x18
 #define CBSTACK_RESULT                          0x20
 #define CBSTACK_RESULT_LENGTH                   0x24
+#define CBSTACK_FRAME_POINTER                   CBSTACK_EBP
 
 //
-// NTSTATUS and Bugcheck Codes
+// NTSTATUS, Bugcheck Codes and Debug Codes
 //
 #ifdef __ASM__
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
@@ -562,6 +563,7 @@ Author:
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
 #define ATTEMPTED_SWITCH_FROM_DPC               0xB8
 #define HARDWARE_INTERRUPT_STORM                0xF2
+#define DBG_STATUS_CONTROL_C                    0x01
 
 //
 // IRQL Levels
@@ -570,7 +572,21 @@ Author:
 #define APC_LEVEL                               0x1
 #define DISPATCH_LEVEL                          0x2
 #define CLOCK2_LEVEL                            0x1C
+#define IPI_LEVEL                               0x1D
 #define HIGH_LEVEL                              0x1F
+
+//
+// Synchronization-level IRQL
+//
+#ifndef CONFIG_SMP
+#define SYNCH_LEVEL                             DISPATCH_LEVEL
+#else
+#if (NTDDI_VERSION < NTDDI_WS03)
+#define SYNCH_LEVEL                             (IPI_LEVEL - 0x1)
+#else
+#define SYNCH_LEVEL                             (IPI_LEVEL - 0x2)
+#endif
+#endif
 
 //
 // Quantum Decrements

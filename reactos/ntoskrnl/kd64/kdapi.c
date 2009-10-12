@@ -27,7 +27,7 @@ KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     if (Memory->AddressSpace == DBGKD_QUERY_MEMORY_VIRTUAL)
     {
         /* Check if this is process memory */
-        if ((PVOID)(LONG_PTR)Memory->Address < MmHighestUserAddress)
+        if ((PVOID)(ULONG_PTR)Memory->Address < MmHighestUserAddress)
         {
             /* It is */
             Memory->AddressSpace = DBGKD_QUERY_MEMORY_PROCESS;
@@ -66,6 +66,28 @@ KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
+KdpSearchMemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                IN PSTRING Data,
+                IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpSearchMemory called\n");
+    while (TRUE);
+}
+
+VOID
+NTAPI
+KdpFillMemory(IN PDBGKD_MANIPULATE_STATE64 State,
+              IN PSTRING Data,
+              IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpFillMemory called\n");
+    while (TRUE);
+}
+
+VOID
+NTAPI
 KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
                    IN PSTRING Data,
                    IN PCONTEXT Context)
@@ -80,7 +102,7 @@ KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
 
     /* Create the breakpoint */
     Breakpoint->BreakPointHandle =
-        KdpAddBreakpoint((PVOID)(LONG_PTR)Breakpoint->BreakPointAddress);
+        KdpAddBreakpoint((PVOID)(ULONG_PTR)Breakpoint->BreakPointAddress);
     if (!Breakpoint->BreakPointHandle)
     {
         /* We failed */
@@ -101,7 +123,63 @@ KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-DumpTraceData(OUT PSTRING TraceData)
+KdpRestoreBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
+                     IN PSTRING Data,
+                     IN PCONTEXT Context)
+{
+    PDBGKD_RESTORE_BREAKPOINT RestoreBp = &State->u.RestoreBreakPoint;
+    STRING Header;
+
+    /* Fill out the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Get the version block */
+    if (KdpDeleteBreakpoint(RestoreBp->BreakPointHandle))
+    {
+        /* We're all good */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* We failed */
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+NTSTATUS
+NTAPI
+KdpWriteBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
+                     IN PSTRING Data,
+                     IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpWriteBreakPointEx called\n");
+    while (TRUE);
+    return STATUS_UNSUCCESSFUL;
+}
+
+VOID
+NTAPI
+KdpRestoreBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
+                       IN PSTRING Data,
+                       IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpRestoreBreakPointEx called\n");
+    while (TRUE);
+}
+
+VOID
+NTAPI
+DumpTraceData(IN PSTRING TraceData)
 {
     /* Update the buffer */
     TraceDataBuffer[0] = TraceDataBufferPosition;
@@ -116,53 +194,9 @@ DumpTraceData(OUT PSTRING TraceData)
 
 VOID
 NTAPI
-KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
-                  IN PCONTEXT Context)
-{
-    PKPRCB Prcb;
-    ULONG i;
-
-    /* Check for success */
-    if (NT_SUCCESS(State->u.Continue2.ContinueStatus))
-    {
-        /* Check if we're tracing */
-        if (State->u.Continue2.ControlSet.TraceFlag)
-        {
-            /* Enable TF */
-            Context->EFlags |= EFLAGS_TF;
-        }
-        else
-        {
-            /* Remove it */
-            Context->EFlags &= ~EFLAGS_TF;
-        }
-
-        /* Loop all processors */
-        for (i = 0; i < KeNumberProcessors; i++)
-        {
-            /* Get the PRCB and update DR7 and DR6 */
-            Prcb = KiProcessorBlock[i];
-            Prcb->ProcessorState.SpecialRegisters.KernelDr7 =
-                State->u.Continue2.ControlSet.Dr7;
-            Prcb->ProcessorState.SpecialRegisters.KernelDr6 = 0;
-        }
-
-        /* Check if we have new symbol information */
-        if (State->u.Continue2.ControlSet.CurrentSymbolStart != 1)
-        {
-            /* Update it */
-            KdpCurrentSymbolStart =
-                State->u.Continue2.ControlSet.CurrentSymbolStart;
-            KdpCurrentSymbolEnd= State->u.Continue2.ControlSet.CurrentSymbolEnd;
-        }
-    }
-}
-
-VOID
-NTAPI
 KdpSetCommonState(IN ULONG NewState,
                   IN PCONTEXT Context,
-                  OUT PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
+                  IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
 {
     USHORT InstructionCount;
     BOOLEAN HadBreakpoints;
@@ -172,14 +206,8 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->ProcessorLevel = KeProcessorLevel;
     WaitStateChange->Processor = (USHORT)KeGetCurrentPrcb()->Number;
     WaitStateChange->NumberProcessors = (ULONG)KeNumberProcessors;
-    WaitStateChange->Thread = (LONG_PTR)KeGetCurrentThread();
-#if defined(_M_X86_)
-    WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Eip;
-#elif defined(_M_AMD64)
-    WaitStateChange->ProgramCounter = (LONG_PTR)Context->Rip;
-#else
-#error Unknown platform
-#endif
+    WaitStateChange->Thread = (ULONG64)(LONG_PTR)KeGetCurrentThread();
+    WaitStateChange->ProgramCounter = (ULONG64)(LONG_PTR)KeGetContextPc(Context);
 
     /* Zero out the Control Report */
     RtlZeroMemory(&WaitStateChange->ControlReport,
@@ -194,7 +222,7 @@ KdpSetCommonState(IN ULONG NewState,
 
     /* Clear all the breakpoints in this region */
     HadBreakpoints =
-        KdpDeleteBreakpointRange((PVOID)(LONG_PTR)WaitStateChange->ProgramCounter,
+        KdpDeleteBreakpointRange((PVOID)(ULONG_PTR)WaitStateChange->ProgramCounter,
                                  (PVOID)((ULONG_PTR)WaitStateChange->ProgramCounter +
                                          WaitStateChange->ControlReport.InstructionCount - 1));
     if (HadBreakpoints)
@@ -239,7 +267,6 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     STRING Header;
     ULONG Length = State->u.ReadMemory.TransferCount;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG64 TargetBaseAddress = State->u.ReadMemory.TargetBaseAddress;
 
     /* Validate length */
     if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
@@ -251,20 +278,13 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 #if 0
     if (!MmIsAddressValid((PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress))
     {
-        Ke386SetCr2(State->u.ReadMemory.TargetBaseAddress);
+        KdpDprintf("Tried to read invalid address %p\n",
+                   (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress);
         while (TRUE);
     }
 #endif
 
-    // HACK for x64, until KD stops sending bogus addresses to WinDbg
-    if (TargetBaseAddress < (ULONG_PTR)MM_LOWEST_SYSTEM_ADDRESS)
-    {
-        FrLdrDbgPrint("Trying to read memory at 0x%p\n", TargetBaseAddress);
-//        DPRINT1("Trying to read memory at 0x%p\n", TargetBaseAddress);
-        TargetBaseAddress = 0;
-    }
-
-    if (!TargetBaseAddress)
+    if (!State->u.ReadMemory.TargetBaseAddress)
     {
         Length = 0;
         Status = STATUS_UNSUCCESSFUL;
@@ -294,14 +314,78 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
+KdpWriteVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                      IN PSTRING Data,
+                      IN PCONTEXT Context)
+{
+    /* FIXME: STUB */
+    KdpDprintf("KdpWriteVirtualMemory called for Address: %p Length %x\n",
+               (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
+               State->u.ReadMemory.TransferCount);
+    while (TRUE);
+}
+
+VOID
+NTAPI
+KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                      IN PSTRING Data,
+                      IN PCONTEXT Context)
+{
+    STRING Header;
+
+    /* FIXME: STUB */
+    KdpDprintf("KdpWritePhysicalMemory called for Address %I64x Length: %x\n",
+               State->u.ReadMemory.TargetBaseAddress,
+               State->u.ReadMemory.TransferCount);
+
+    /* Setup an empty message, with failure */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    Data->Length = 0;
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+
+    /* Send it */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpWritePhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
+                       IN PSTRING Data,
+                       IN PCONTEXT Context)
+{
+    STRING Header;
+
+    /* FIXME: STUB */
+    KdpDprintf("KdpWritePhysicalMemory called for Address %I64x Length: %x\n",
+               State->u.ReadMemory.TargetBaseAddress,
+               State->u.ReadMemory.TransferCount);
+
+    /* Setup an empty message, with failure */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    Data->Length = 0;
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+
+    /* Send it */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
 KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                     IN PSTRING Data,
                     IN PCONTEXT Context)
 {
     PDBGKD_READ_MEMORY64 ReadMemory = &State->u.ReadMemory;
     STRING Header;
-    ULONG Length, RealLength;
-    PVOID ControlStart;
+    ULONG Length;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -316,79 +400,15 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
         Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
     }
 
-#if defined (_M_AMD64)
-    if ((ULONG)ReadMemory->TargetBaseAddress <= 2)
-    {
-        PKPRCB Prcb = KiProcessorBlock[State->Processor];
-        PKIPCR Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysReadControlSpace(State->Processor,
+                                                 ReadMemory->TargetBaseAddress,
+                                                 Data->Buffer,
+                                                 Length,
+                                                 &Length);
 
-        switch ((ULONG_PTR)ReadMemory->TargetBaseAddress)
-        {
-            case 0:
-                /* Copy a pointer to the Pcr */
-                ControlStart = &Pcr;
-                RealLength = sizeof(PVOID);
-                break;
-
-            case 1:
-                /* Copy a pointer to the Prcb */
-                ControlStart = &Prcb;
-                RealLength = sizeof(PVOID);
-                break;
-
-            case 2:
-                /* Copy SpecialRegisters */
-                ControlStart = &Prcb->ProcessorState.SpecialRegisters;
-                RealLength = sizeof(KSPECIAL_REGISTERS);
-                break;
-
-            default:
-                RealLength = 0;
-                ControlStart = NULL;
-                ASSERT(FALSE);
-        }
-
-        if (RealLength < Length) Length = RealLength;
-
-        /* Copy the memory */
-        RtlCopyMemory(Data->Buffer, ControlStart, Length);
-        Data->Length = Length;
-
-        /* Finish up */
-        State->ReturnStatus = STATUS_SUCCESS;
-        ReadMemory->ActualBytesRead = Data->Length;
-    }
-#else
-    /* Make sure that this is a valid request */
-    if (((ULONG)ReadMemory->TargetBaseAddress < sizeof(KPROCESSOR_STATE)) &&
-        (State->Processor < KeNumberProcessors))
-    {
-        /* Get the actual length */
-        RealLength = sizeof(KPROCESSOR_STATE) -
-                     (ULONG_PTR)ReadMemory->TargetBaseAddress;
-        if (RealLength < Length) Length = RealLength;
-
-        /* Set the proper address */
-        ControlStart = (PVOID)((ULONG_PTR)ReadMemory->TargetBaseAddress +
-                               (ULONG_PTR)&KiProcessorBlock[State->Processor]->
-                                           ProcessorState);
-
-        /* Copy the memory */
-        RtlCopyMemory(Data->Buffer, ControlStart, Length);
-        Data->Length = Length;
-
-        /* Finish up */
-        State->ReturnStatus = STATUS_SUCCESS;
-        ReadMemory->ActualBytesRead = Data->Length;
-    }
-#endif
-    else
-    {
-        /* Invalid request */
-        Data->Length = 0;
-        State->ReturnStatus = STATUS_UNSUCCESSFUL;
-        ReadMemory->ActualBytesRead = 0;
-    }
+    /* Return the actual length read */
+    Data->Length = ReadMemory->ActualBytesRead = Length;
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -406,76 +426,25 @@ KdpWriteControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
     PDBGKD_WRITE_MEMORY64 WriteMemory = &State->u.WriteMemory;
     STRING Header;
     ULONG Length;
-    PVOID ControlStart;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
 
-    /* Make sure that this is a valid request */
-    Length = WriteMemory->TransferCount;
-    if ((((ULONG)WriteMemory->TargetBaseAddress + Length) <=
-          sizeof(KPROCESSOR_STATE)) &&
-        (State->Processor < KeNumberProcessors))
-    {
-        /* Set the proper address */
-        ControlStart = (PVOID)((ULONG_PTR)WriteMemory->TargetBaseAddress +
-                               (ULONG_PTR)&KiProcessorBlock[State->Processor]->
-                                           ProcessorState);
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysWriteControlSpace(State->Processor,
+                                                  WriteMemory->TargetBaseAddress,
+                                                  Data->Buffer,
+                                                  Data->Length,
+                                                  &Length);
 
-        /* Copy the memory */
-        RtlCopyMemory(ControlStart, Data->Buffer, Data->Length);
-        Length = Data->Length;
-
-        /* Finish up */
-        State->ReturnStatus = STATUS_SUCCESS;
-        WriteMemory->ActualBytesWritten = Length;
-    }
-    else
-    {
-        /* Invalid request */
-        Data->Length = 0;
-        State->ReturnStatus = STATUS_UNSUCCESSFUL;
-        WriteMemory->ActualBytesWritten = 0;
-    }
+    /* Return the length written */
+    WriteMemory->ActualBytesWritten = Length;
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
                  Data,
-                 &KdpContext);
-}
-
-VOID
-NTAPI
-KdpRestoreBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
-                     IN PSTRING Data,
-                     IN PCONTEXT Context)
-{
-    PDBGKD_RESTORE_BREAKPOINT RestoreBp = &State->u.RestoreBreakPoint;
-    STRING Header;
-
-    /* Fill out the header */
-    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
-    Header.Buffer = (PCHAR)State;
-    ASSERT(Data->Length == 0);
-
-    /* Get the version block */
-    if (KdpDeleteBreakpoint(RestoreBp->BreakPointHandle))
-    {
-        /* We're all good */
-        State->ReturnStatus = STATUS_SUCCESS;
-    }
-    else
-    {
-        /* We failed */
-        State->ReturnStatus = STATUS_UNSUCCESSFUL;
-    }
-
-    /* Send the packet */
-    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
-                 &Header,
-                 NULL,
                  &KdpContext);
 }
 
@@ -505,6 +474,7 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         else
         {
             /* SMP not yet handled */
+            KdpDprintf("SMP UNHANDLED\n");
             ControlStart = NULL;
             while (TRUE);
         }
@@ -555,6 +525,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         else
         {
             /* SMP not yet handled */
+            KdpDprintf("SMP UNHANDLED\n");
             ControlStart = NULL;
             while (TRUE);
         }
@@ -580,32 +551,39 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
+KdpCauseBugCheck(IN PDBGKD_MANIPULATE_STATE64 State)
+{
+    /* Crash with the special code */
+    KeBugCheck(MANUALLY_INITIATED_CRASH);
+}
+
+VOID
+NTAPI
 KdpReadMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
                                IN PSTRING Data,
                                IN PCONTEXT Context)
 {
     STRING Header;
-    PDBGKD_READ_WRITE_MSR ReadMsr;
-    LARGE_INTEGER Value;
+    PDBGKD_READ_WRITE_MSR ReadMsr = &State->u.ReadWriteMsr;
+    LARGE_INTEGER MsrValue;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
 
-    /* Get a shortcut */
-    ReadMsr = &State->u.ReadWriteMsr;
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysReadMsr(ReadMsr->Msr,
+                                        &MsrValue);
 
-    /* Read the msr */
-    Value.QuadPart = __readmsr(ReadMsr->Msr);
-
-    /* Set fields */
-    ReadMsr->DataValueLow = Value.LowPart;
-    ReadMsr->DataValueHigh = Value.HighPart;
+    /* Return the data */
+    ReadMsr->DataValueLow = MsrValue.LowPart;
+    ReadMsr->DataValueHigh = MsrValue.HighPart;
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data,
+                 NULL,
                  &KdpContext);
 }
 
@@ -616,27 +594,253 @@ KdpWriteMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
                                 IN PCONTEXT Context)
 {
     STRING Header;
-    PDBGKD_READ_WRITE_MSR WriteMsr;
-    LARGE_INTEGER Value;
+    PDBGKD_READ_WRITE_MSR WriteMsr = &State->u.ReadWriteMsr;
+    LARGE_INTEGER MsrValue;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
 
-    /* Get a shortcut */
-    WriteMsr = &State->u.ReadWriteMsr;
+    /* Call the internal routine */
+    MsrValue.LowPart = WriteMsr->DataValueLow;
+    MsrValue.HighPart = WriteMsr->DataValueHigh;
+    State->ReturnStatus = KdpSysWriteMsr(WriteMsr->Msr,
+                                         &MsrValue);
 
-    /* Set fields */
-    Value.LowPart = WriteMsr->DataValueLow;
-    Value.HighPart = WriteMsr->DataValueHigh;
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
 
-    /* Write the msr */
-     __writemsr(WriteMsr->Msr, Value.QuadPart);
+VOID
+NTAPI
+KdpGetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
+              IN PSTRING Data,
+              IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_GET_SET_BUS_DATA GetBusData = &State->u.GetSetBusData;
+    ULONG Length;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Check the length requested */
+    Length = GetBusData->Length;
+    if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
+    {
+        /* Use maximum allowed */
+        Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
+    }
+
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysReadBusData(GetBusData->BusDataType,
+                                            GetBusData->BusNumber,
+                                            GetBusData->SlotNumber,
+                                            Data->Buffer,
+                                            GetBusData->Offset,
+                                            Length,
+                                            &Length);
+
+    /* Return the actual length read */
+    Data->Length = GetBusData->Length = Length;
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
                  Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpSetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
+              IN PSTRING Data,
+              IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_GET_SET_BUS_DATA SetBusData = &State->u.GetSetBusData;
+    ULONG Length;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysWriteBusData(SetBusData->BusDataType,
+                                             SetBusData->BusNumber,
+                                             SetBusData->SlotNumber,
+                                             Data->Buffer,
+                                             SetBusData->Offset,
+                                             SetBusData->Length,
+                                             &Length);
+
+    /* Return the actual length written */
+    SetBusData->Length = Length;
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpReadIoSpace(IN PDBGKD_MANIPULATE_STATE64 State,
+               IN PSTRING Data,
+               IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_READ_WRITE_IO64 ReadIo = &State->u.ReadWriteIo;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /*
+     * Clear the value so 1 or 2 byte reads
+     * don't leave the higher bits unmodified 
+     */
+    ReadIo->DataValue = 0;
+
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysReadIoSpace(Isa,
+                                            0,
+                                            1,
+                                            ReadIo->IoAddress,
+                                            &ReadIo->DataValue,
+                                            ReadIo->DataSize,
+                                            &ReadIo->DataSize);
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpWriteIoSpace(IN PDBGKD_MANIPULATE_STATE64 State,
+                IN PSTRING Data,
+                IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_READ_WRITE_IO64 WriteIo = &State->u.ReadWriteIo;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysWriteIoSpace(Isa,
+                                             0,
+                                             1,
+                                             WriteIo->IoAddress,
+                                             &WriteIo->DataValue,
+                                             WriteIo->DataSize,
+                                             &WriteIo->DataSize);
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpReadIoSpaceExtended(IN PDBGKD_MANIPULATE_STATE64 State,
+                       IN PSTRING Data,
+                       IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_READ_WRITE_IO_EXTENDED64 ReadIoExtended = &State->u.
+                                                      ReadWriteIoExtended;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /*
+     * Clear the value so 1 or 2 byte reads
+     * don't leave the higher bits unmodified 
+     */
+    ReadIoExtended->DataValue = 0;
+
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysReadIoSpace(ReadIoExtended->InterfaceType,
+                                            ReadIoExtended->BusNumber,
+                                            ReadIoExtended->AddressSpace,
+                                            ReadIoExtended->IoAddress,
+                                            &ReadIoExtended->DataValue,
+                                            ReadIoExtended->DataSize,
+                                            &ReadIoExtended->DataSize);
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpWriteIoSpaceExtended(IN PDBGKD_MANIPULATE_STATE64 State,
+                        IN PSTRING Data,
+                        IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_READ_WRITE_IO_EXTENDED64 WriteIoExtended = &State->u.
+                                                       ReadWriteIoExtended;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
+
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysReadIoSpace(WriteIoExtended->InterfaceType,
+                                            WriteIoExtended->BusNumber,
+                                            WriteIoExtended->AddressSpace,
+                                            WriteIoExtended->IoAddress,
+                                            &WriteIoExtended->DataValue,
+                                            WriteIoExtended->DataSize,
+                                            &WriteIoExtended->DataSize);
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpCheckLowMemory(IN PDBGKD_MANIPULATE_STATE64 State)
+{
+    STRING Header;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Call the internal routine */
+    State->ReturnStatus = KdpSysCheckLowMemory(0x4);
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
                  &KdpContext);
 }
 
@@ -694,9 +898,8 @@ SendPacket:
 
             case DbgKdWriteVirtualMemoryApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteVirtualMemoryApi);
-                while (TRUE);
+                /* Write virtual memory */
+                KdpWriteVirtualMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdGetContextApi:
@@ -719,7 +922,7 @@ SendPacket:
 
             case DbgKdRestoreBreakPointApi:
 
-                /* FIXME: TODO */
+                /* Restore the breakpoint */
                 KdpRestoreBreakpoint(&ManipulateState, &Data, Context);
                 break;
 
@@ -736,29 +939,26 @@ SendPacket:
 
             case DbgKdWriteControlSpaceApi:
 
-                /* FIXME: TODO */
+                /* Write control space */
                 KdpWriteControlSpace(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdReadIoSpaceApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdReadIoSpaceApi);
-                while (TRUE);
+                /* Read I/O Space */
+                KdpReadIoSpace(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWriteIoSpaceApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteIoSpaceApi);
-                while (TRUE);
+                /* Write I/O Space */
+                KdpWriteIoSpace(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdRebootApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdRebootApi);
-                while (TRUE);
+                /* Reboot the system */
+                HalReturnToFirmware(HalRebootRoutine);
                 break;
 
             case DbgKdContinueApi2:
@@ -775,70 +975,64 @@ SendPacket:
                     /* Return an error */
                     return ContinueError;
                 }
-                break;
 
             case DbgKdReadPhysicalMemoryApi:
 
-                /* FIXME: TODO */
-                goto fail;
-                Ke386SetCr2(DbgKdReadPhysicalMemoryApi);
-                while (TRUE);
+                /* Read  physical memory */
+                KdpReadPhysicalmemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWritePhysicalMemoryApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWritePhysicalMemoryApi);
-                while (TRUE);
+                /* Write  physical memory */
+                KdpWritePhysicalmemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdQuerySpecialCallsApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdQuerySpecialCallsApi);
+                KdpDprintf("DbgKdQuerySpecialCallsApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdSetSpecialCallApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSetSpecialCallApi);
+                KdpDprintf("DbgKdSetSpecialCallApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdClearSpecialCallsApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdClearSpecialCallsApi);
+                KdpDprintf("DbgKdClearSpecialCallsApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdSetInternalBreakPointApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSetInternalBreakPointApi);
+                KdpDprintf("DbgKdSetInternalBreakPointApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdGetInternalBreakPointApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdGetInternalBreakPointApi);
+                KdpDprintf("DbgKdGetInternalBreakPointApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdReadIoSpaceExtendedApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdReadIoSpaceExtendedApi);
-                while (TRUE);
+                /* Read I/O Space */
+                KdpReadIoSpaceExtended(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWriteIoSpaceExtendedApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteIoSpaceExtendedApi);
-                while (TRUE);
+                /* Write I/O Space */
+                KdpWriteIoSpaceExtended(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdGetVersionApi:
@@ -849,91 +1043,76 @@ SendPacket:
 
             case DbgKdWriteBreakPointExApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteBreakPointExApi);
-                while (TRUE);
+                /* Write the breakpoint and check if it failed */
+                if (!NT_SUCCESS(KdpWriteBreakPointEx(&ManipulateState,
+                                                     &Data,
+                                                     Context)))
+                {
+                    /* Return an error */
+                    return ContinueError;
+                }
                 break;
 
             case DbgKdRestoreBreakPointExApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdRestoreBreakPointExApi);
-                while (TRUE);
+                /* Restore the breakpoint */
+                KdpRestoreBreakPointEx(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdCauseBugCheckApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdCauseBugCheckApi);
-                while (TRUE);
+                /* Crash the system */
+                KdpCauseBugCheck(&ManipulateState);
                 break;
 
             case DbgKdSwitchProcessor:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSwitchProcessor);
+                KdpDprintf("DbgKdSwitchProcessor called\n");
                 while (TRUE);
                 break;
 
             case DbgKdPageInApi:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdPageInApi);
+                KdpDprintf("DbgKdPageInApi called\n");
                 while (TRUE);
                 break;
 
             case DbgKdReadMachineSpecificRegister:
 
-                /* Read the specified MSR */
+                /* Read from the specified MSR */
                 KdpReadMachineSpecificRegister(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWriteMachineSpecificRegister:
 
-                /* Write the specified MSR */
+                /* Write to the specified MSR */
                 KdpWriteMachineSpecificRegister(&ManipulateState, &Data, Context);
-                break;
-
-            case OldVlm1:
-
-                /* FIXME: TODO */
-                Ke386SetCr2(OldVlm1);
-                while (TRUE);
-                break;
-
-            case OldVlm2:
-
-                /* FIXME: TODO */
-                Ke386SetCr2(OldVlm2);
-                while (TRUE);
                 break;
 
             case DbgKdSearchMemoryApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSearchMemoryApi);
-                while (TRUE);
+                /* Search memory */
+                KdpSearchMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdGetBusDataApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdGetBusDataApi);
-                while (TRUE);
+                /* Read from the bus */
+                KdpGetBusData(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdSetBusDataApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSetBusDataApi);
-                while (TRUE);
+                /* Write to the bus */
+                KdpSetBusData(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdCheckLowMemoryApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdCheckLowMemoryApi);
-                while (TRUE);
+                /* Check for memory corruption in the lower 4 GB */
+                KdpCheckLowMemory(&ManipulateState);
                 break;
 
             case DbgKdClearAllInternalBreakpointsApi:
@@ -944,9 +1123,8 @@ SendPacket:
 
             case DbgKdFillMemoryApi:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdFillMemoryApi);
-                while (TRUE);
+                /* Fill memory */
+                KdpFillMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdQueryMemoryApi:
@@ -958,7 +1136,7 @@ SendPacket:
             case DbgKdSwitchPartition:
 
                 /* FIXME: TODO */
-                Ke386SetCr2(DbgKdSwitchPartition);
+                KdpDprintf("DbgKdSwitchPartition called\n");
                 while (TRUE);
                 break;
 
@@ -966,8 +1144,7 @@ SendPacket:
             default:
 
                 /* Setup an empty message, with failure */
-                while (TRUE);
-fail:
+                KdpDprintf("Received Unhandled API %lx\n", ManipulateState.ApiNumber);
                 Data.Length = 0;
                 ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
 
@@ -1006,7 +1183,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
 
         /* Fill out load data */
         WaitStateChange.u.LoadSymbols.UnloadSymbols = Unload;
-        WaitStateChange.u.LoadSymbols.BaseOfDll = (ULONGLONG)(LONG_PTR)SymbolInfo->BaseOfDll;
+        WaitStateChange.u.LoadSymbols.BaseOfDll = (ULONG64)(LONG_PTR)SymbolInfo->BaseOfDll;
         WaitStateChange.u.LoadSymbols.ProcessId = SymbolInfo->ProcessId;
         WaitStateChange.u.LoadSymbols.CheckSum = SymbolInfo->CheckSum;
         WaitStateChange.u.LoadSymbols.SizeOfImage = SymbolInfo->SizeOfImage;
@@ -1037,7 +1214,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
                                      &Header,
                                      ExtraData,
                                      Context);
-    } while(Status == ContinueProcessorReselected);
+    } while (Status == ContinueProcessorReselected);
 
     /* Return status */
     return Status;
@@ -1051,7 +1228,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
 {
     STRING Header, Data;
     DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
-    BOOLEAN Status;
+    KCONTINUE_STATUS Status;
 
     /* Start report loop */
     do
@@ -1059,8 +1236,8 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Build the architecture common parts of the message */
         KdpSetCommonState(DbgKdExceptionStateChange, Context, &WaitStateChange);
 
-        /* Convert the exception record to 64-bits and set First Chance flag */
-        ExceptionRecordTo64(ExceptionRecord,
+        /* Copy the Exception Record and set First Chance flag */
+        CopyExceptionRecord(ExceptionRecord,
                             &WaitStateChange.u.Exception.ExceptionRecord);
         WaitStateChange.u.Exception.FirstChance = !SecondChanceException;
 
@@ -1068,7 +1245,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
         KdpSetContextState(&WaitStateChange, Context);
 
         /* Setup the actual header to send to KD */
-        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64) - sizeof(CONTEXT);
+        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
         Header.Buffer = (PCHAR)&WaitStateChange;
 
         /* Setup the trace data */
@@ -1079,7 +1256,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
                                      &Header,
                                      &Data,
                                      Context);
-    } while (Status == KdPacketNeedsResend);
+    } while (Status == ContinueProcessorReselected);
 
     /* Return */
     return Status;
@@ -1161,7 +1338,7 @@ KdpQueryPerformanceCounter(IN PKTRAP_FRAME TrapFrame)
     LARGE_INTEGER Null = {{0}};
 
     /* Check if interrupts were disabled */
-    if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
+    if (!KeGetTrapFrameInterruptState(TrapFrame))
     {
         /* Nothing to return */
         return Null;
@@ -1207,18 +1384,18 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     if (KiFreezeFlag & 1)
     {
         /* Print out errror */
-        DbgPrint("FreezeLock was jammed!  Backup SpinLock was used!\n");
+        KdpDprintf("FreezeLock was jammed!  Backup SpinLock was used!\n");
     }
 
     /* Check processor state */
     if (KiFreezeFlag & 2)
     {
         /* Print out errror */
-        DbgPrint("Some processors not frozen in debugger!\n");
+        KdpDprintf("Some processors not frozen in debugger!\n");
     }
 
     /* Make sure we acquired the port */
-    if (!KdpPortLocked) DbgPrint("Port lock was not acquired!\n");
+    if (!KdpPortLocked) KdpDprintf("Port lock was not acquired!\n");
 
     /* Return enter state */
     return Entered;
@@ -1261,9 +1438,14 @@ KdExitDebugger(IN BOOLEAN Entered)
 
 NTSTATUS
 NTAPI
-KdEnableDebuggerWithLock(BOOLEAN NeedLock)
+KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
 {
-    KIRQL OldIrql = PASSIVE_LEVEL;
+    KIRQL OldIrql;
+
+#if defined(__GNUC__)
+    /* Make gcc happy */
+    OldIrql = PASSIVE_LEVEL;
+#endif
 
     /* Check if we need to acquire the lock */
     if (NeedLock)
@@ -1322,6 +1504,7 @@ NTAPI
 KdEnableDebugger(VOID)
 {
     /* Use the internal routine */
+    KdpDprintf("KdEnableDebugger called\n");
     while (TRUE);
     return KdEnableDebuggerWithLock(TRUE);
 }

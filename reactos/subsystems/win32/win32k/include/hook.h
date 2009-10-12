@@ -17,7 +17,6 @@ typedef struct tagEVENTHOOK
 {
   THROBJHEAD     head;
   LIST_ENTRY     Chain;      /* Event chain entry */
-  PETHREAD       Thread;     /* Thread owning the event */
   UINT           eventMin;
   UINT           eventMax; 
   DWORD          idProcess;

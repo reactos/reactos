@@ -824,7 +824,8 @@ IDirect3DImpl_7_CreateDevice(IDirect3D7 *iface,
      * takes the pointer and avoids the memcpy
      */
     hr = IWineD3DDevice_CreateIndexBuffer(This->wineD3DDevice, 0x40000 /* Length. Don't know how long it should be */,
-            WINED3DUSAGE_DYNAMIC /* Usage */, WINED3DPOOL_DEFAULT, &object->indexbuffer, (IUnknown *)IndexBufferParent);
+            WINED3DUSAGE_DYNAMIC /* Usage */, WINED3DPOOL_DEFAULT, &object->indexbuffer, (IUnknown *)IndexBufferParent,
+            &ddraw_null_wined3d_parent_ops);
 
     if(FAILED(hr))
     {
@@ -1023,7 +1024,7 @@ IDirect3DImpl_7_CreateVertexBuffer(IDirect3D7 *iface,
             get_flexible_vertex_size(Desc->dwFVF) * Desc->dwNumVertices,
             Desc->dwCaps & D3DVBCAPS_WRITEONLY ? WINED3DUSAGE_WRITEONLY : 0, Desc->dwFVF,
             Desc->dwCaps & D3DVBCAPS_SYSTEMMEMORY ? WINED3DPOOL_SYSTEMMEM : WINED3DPOOL_DEFAULT,
-            &object->wineD3DVertexBuffer, (IUnknown *)object);
+            &object->wineD3DVertexBuffer, (IUnknown *)object, &ddraw_null_wined3d_parent_ops);
     if(hr != D3D_OK)
     {
         ERR("(%p) IWineD3DDevice::CreateVertexBuffer failed with hr=%08x\n", This, hr);
@@ -1111,12 +1112,12 @@ IDirect3DImpl_7_EnumZBufferFormats(IDirect3D7 *iface,
     /* Order matters. Specifically, BattleZone II (full version) expects the
      * 16-bit depth formats to be listed before the 24 and 32 ones. */
     WINED3DFORMAT FormatList[] = {
-        WINED3DFMT_D15S1,
+        WINED3DFMT_S1_UINT_D15_UNORM,
         WINED3DFMT_D16_UNORM,
-        WINED3DFMT_D24X8,
-        WINED3DFMT_D24X4S4,
-        WINED3DFMT_D24S8,
-        WINED3DFMT_D32
+        WINED3DFMT_X8D24_UNORM,
+        WINED3DFMT_S4X4_UINT_D24_UNORM,
+        WINED3DFMT_S8_UINT_D24_UNORM,
+        WINED3DFMT_D32_UNORM,
     };
 
     TRACE("(%p)->(%s,%p,%p): Relay\n", iface, debugstr_guid(refiidDevice), Callback, Context);

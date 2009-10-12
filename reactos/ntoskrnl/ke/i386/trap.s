@@ -2736,11 +2736,25 @@ _KeSynchronizeExecution@12:
     /* Go to DIRQL */
     mov cl, [ebx+KINTERRUPT_SYNCHRONIZE_IRQL]
     call @KfRaiseIrql@4
+    push eax
+
+#ifdef CONFIG_SMP
+    /* Acquire the interrupt spinlock FIXME: Write this in assembly */
+    mov ecx, [ebx+KINTERRUPT_ACTUAL_LOCK]
+    call @KefAcquireSpinLockAtDpcLevel@4
+#endif
 
     /* Call the routine */
-    push eax
     push [esp+20]
     call [esp+20]
+
+#ifdef CONFIG_SMP
+    /* Release the interrupt spinlock FIXME: Write this in assembly */
+    push eax
+    mov ecx, [ebx+KINTERRUPT_ACTUAL_LOCK]
+    call @KefReleaseSpinLockFromDpcLevel@4
+    pop eax
+#endif
 
     /* Lower IRQL */
     mov ebx, eax
@@ -2751,4 +2765,33 @@ _KeSynchronizeExecution@12:
     mov eax, ebx
     pop ebx
     ret 12
+.endfunc
+
+/*++
+ * Kii386SpinOnSpinLock 
+ *
+ *     FILLMEIN
+ *
+ * Params:
+ *     SpinLock - FILLMEIN
+ *
+ *     Flags - FILLMEIN
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     FILLMEIN
+ *
+ *--*/
+.globl _Kii386SpinOnSpinLock@8
+.func Kii386SpinOnSpinLock@8
+_Kii386SpinOnSpinLock@8:
+
+#ifdef CONFIG_SMP
+    /* FIXME: TODO */
+    int 3
+#endif
+
+    ret 8
 .endfunc

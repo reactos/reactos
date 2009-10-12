@@ -29,14 +29,15 @@ void setImgXYRes(int x, int y)
 
 void newReversible()
 {
-    DeleteObject(hBms[(currInd+1)%4]);
-    hBms[(currInd+1)%4] = CopyImage( hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
-    currInd = (currInd+1)%4;
-    if (undoSteps<3) undoSteps++;
+    DeleteObject(hBms[(currInd+1)%HISTORYSIZE]);
+    hBms[(currInd+1)%HISTORYSIZE] = CopyImage( hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    currInd = (currInd+1)%HISTORYSIZE;
+    if (undoSteps<HISTORYSIZE-1) undoSteps++;
     redoSteps = 0;
     SelectObject(hDrawingDC, hBms[currInd]);
     imgXRes = GetDIBWidth(hBms[currInd]);
     imgYRes = GetDIBHeight(hBms[currInd]);
+    imageSaved = FALSE;
 }
 
 void undo()
@@ -44,10 +45,10 @@ void undo()
     if (undoSteps>0)
     {
         ShowWindow(hSelection, SW_HIDE);
-        currInd = (currInd+3)%4;
+        currInd = (currInd+HISTORYSIZE-1)%HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         undoSteps--;
-        if (redoSteps<3) redoSteps++;
+        if (redoSteps<HISTORYSIZE-1) redoSteps++;
         setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
     }
 }
@@ -57,10 +58,10 @@ void redo()
     if (redoSteps>0)
     {
         ShowWindow(hSelection, SW_HIDE);
-        currInd = (currInd+1)%4;
+        currInd = (currInd+1)%HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         redoSteps--;
-        if (undoSteps<3) undoSteps++;
+        if (undoSteps<HISTORYSIZE-1) undoSteps++;
         setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
     }
 }
@@ -68,7 +69,7 @@ void redo()
 void resetToU1()
 {
     DeleteObject(hBms[currInd]);
-    hBms[currInd] = CopyImage( hBms[(currInd+3)%4], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    hBms[currInd] = CopyImage( hBms[(currInd+HISTORYSIZE-1)%HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
     SelectObject(hDrawingDC, hBms[currInd]);
     imgXRes = GetDIBWidth(hBms[currInd]);
     imgYRes = GetDIBHeight(hBms[currInd]);
@@ -82,10 +83,10 @@ void clearHistory()
 
 void insertReversible(HBITMAP hbm)
 {
-    DeleteObject(hBms[(currInd+1)%4]);
-    hBms[(currInd+1)%4] = hbm;
-    currInd = (currInd+1)%4;
-    if (undoSteps<3) undoSteps++;
+    DeleteObject(hBms[(currInd+1)%HISTORYSIZE]);
+    hBms[(currInd+1)%HISTORYSIZE] = hbm;
+    currInd = (currInd+1)%HISTORYSIZE;
+    if (undoSteps<HISTORYSIZE-1) undoSteps++;
     redoSteps = 0;
     SelectObject(hDrawingDC, hBms[currInd]);
     setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
@@ -98,10 +99,10 @@ void cropReversible(int width, int height, int xOffset, int yOffset)
     HBRUSH oldBrush;
 
     SelectObject(hDrawingDC, hBms[currInd]);
-    DeleteObject(hBms[(currInd+1)%4]);
-    hBms[(currInd+1)%4] = CreateDIBWithProperties(width, height);
-    currInd = (currInd+1)%4;
-    if (undoSteps<3) undoSteps++;
+    DeleteObject(hBms[(currInd+1)%HISTORYSIZE]);
+    hBms[(currInd+1)%HISTORYSIZE] = CreateDIBWithProperties(width, height);
+    currInd = (currInd+1)%HISTORYSIZE;
+    if (undoSteps<HISTORYSIZE-1) undoSteps++;
     redoSteps = 0;
     
     hdc = CreateCompatibleDC(hDrawingDC);

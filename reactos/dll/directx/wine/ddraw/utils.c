@@ -55,7 +55,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
     DDPixelFormat->dwSize = Size;
     switch(WineD3DFormat)
     {
-        case WINED3DFMT_R8G8B8:
+        case WINED3DFMT_B8G8R8_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 24;
@@ -65,7 +65,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_A8R8G8B8:
+        case WINED3DFMT_B8G8R8A8_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB | DDPF_ALPHAPIXELS;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 32;
@@ -75,7 +75,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0xff000000;
             break;
 
-        case WINED3DFMT_X8R8G8B8:
+        case WINED3DFMT_B8G8R8X8_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 32;
@@ -85,7 +85,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_X8B8G8R8:
+        case WINED3DFMT_R8G8B8X8_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 32;
@@ -95,7 +95,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_R5G6B5:
+        case WINED3DFMT_B5G6R5_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 16;
@@ -105,7 +105,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_X1R5G5B5:
+        case WINED3DFMT_B5G5R5X1_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 16;
@@ -115,7 +115,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_A1R5G5B5:
+        case WINED3DFMT_B5G5R5A1_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB | DDPF_ALPHAPIXELS;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 16;
@@ -125,7 +125,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x8000;
             break;
 
-        case WINED3DFMT_A4R4G4B4:
+        case WINED3DFMT_B4G4R4A4_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB | DDPF_ALPHAPIXELS;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 16;
@@ -135,7 +135,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0xF000;
             break;
 
-        case WINED3DFMT_R3G3B2:
+        case WINED3DFMT_B2G3R3_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 8;
@@ -145,7 +145,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_P8:
+        case WINED3DFMT_P8_UINT:
             DDPixelFormat->dwFlags = DDPF_PALETTEINDEXED8 | DDPF_RGB;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 8;
@@ -164,7 +164,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_A8R3G3B2:
+        case WINED3DFMT_B2G3R3A8_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB | DDPF_ALPHAPIXELS;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 16;
@@ -174,7 +174,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0xF000;
             break;
 
-        case WINED3DFMT_X4R4G4B4:
+        case WINED3DFMT_B4G4R4X4_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwRGBBitCount = 16;
@@ -196,7 +196,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBZBitMask = 0x00000000;
             break;
 
-        case WINED3DFMT_D32:
+        case WINED3DFMT_D32_UNORM:
             DDPixelFormat->dwFlags = DDPF_ZBUFFER;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwZBufferBitDepth = 32;
@@ -206,7 +206,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBZBitMask = 0x00000000;
             break;
 
-        case WINED3DFMT_D24X4S4:
+        case WINED3DFMT_S4X4_UINT_D24_UNORM:
             DDPixelFormat->dwFlags = DDPF_ZBUFFER | DDPF_STENCILBUFFER;
             DDPixelFormat->dwFourCC = 0;
             /* Should I set dwZBufferBitDepth to 32 here? */
@@ -217,7 +217,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_D24S8:
+        case WINED3DFMT_S8_UINT_D24_UNORM:
             DDPixelFormat->dwFlags = DDPF_ZBUFFER | DDPF_STENCILBUFFER;
             DDPixelFormat->dwFourCC = 0;
             /* Should I set dwZBufferBitDepth to 32 here? */
@@ -228,7 +228,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_D24X8:
+        case WINED3DFMT_X8D24_UNORM:
             DDPixelFormat->dwFlags = DDPF_ZBUFFER;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwZBufferBitDepth = 32;
@@ -238,7 +238,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
 
             break;
-        case WINED3DFMT_D15S1:
+        case WINED3DFMT_S1_UINT_D15_UNORM:
             DDPixelFormat->dwFlags = DDPF_ZBUFFER | DDPF_STENCILBUFFER;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwZBufferBitDepth = 16;
@@ -274,7 +274,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             break;
 
         /* Luminance */
-        case WINED3DFMT_L8:
+        case WINED3DFMT_L8_UNORM:
             DDPixelFormat->dwFlags = DDPF_LUMINANCE;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwLuminanceBitCount = 8;
@@ -284,7 +284,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_A4L4:
+        case WINED3DFMT_L4A4_UNORM:
             DDPixelFormat->dwFlags = DDPF_ALPHAPIXELS | DDPF_LUMINANCE;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwLuminanceBitCount = 4;
@@ -294,7 +294,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0xf0;
             break;
 
-        case WINED3DFMT_A8L8:
+        case WINED3DFMT_L8A8_UNORM:
             DDPixelFormat->dwFlags = DDPF_ALPHAPIXELS | DDPF_LUMINANCE;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwLuminanceBitCount = 16;
@@ -315,13 +315,23 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
             break;
 
-        case WINED3DFMT_L6V5U5:
+        case WINED3DFMT_R5G5_SNORM_L6_UNORM:
             DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwBumpBitCount = 16;
             DDPixelFormat->u2.dwBumpDuBitMask =         0x0000001f;
             DDPixelFormat->u3.dwBumpDvBitMask =         0x000003e0;
             DDPixelFormat->u4.dwBumpLuminanceBitMask =  0x0000fc00;
+            DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
+            break;
+
+        case WINED3DFMT_R8G8_SNORM_L8X8_UNORM:
+            DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
+            DDPixelFormat->dwFourCC = 0;
+            DDPixelFormat->u1.dwBumpBitCount = 32;
+            DDPixelFormat->u2.dwBumpDuBitMask =         0x000000ff;
+            DDPixelFormat->u3.dwBumpDvBitMask =         0x0000ff00;
+            DDPixelFormat->u4.dwBumpLuminanceBitMask =  0x00ff0000;
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
             break;
 
@@ -357,12 +367,12 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
 
     if(DDPixelFormat->dwFlags & DDPF_PALETTEINDEXED8)
     {
-        return WINED3DFMT_P8;
+        return WINED3DFMT_P8_UINT;
     }
     else if(DDPixelFormat->dwFlags & (DDPF_PALETTEINDEXED1 | DDPF_PALETTEINDEXED2 | DDPF_PALETTEINDEXED4) )
     {
         FIXME("DDPF_PALETTEINDEXED1 to DDPF_PALETTEINDEXED4 are not supported by WineD3D (yet). Returning WINED3DFMT_P8\n");
-        return WINED3DFMT_P8;
+        return WINED3DFMT_P8_UINT;
     }
     else if(DDPixelFormat->dwFlags & DDPF_RGB)
     {
@@ -370,7 +380,7 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
         {
             case 8:
                 /* This is the only format that can match here */
-                return WINED3DFMT_R3G3B2;
+                return WINED3DFMT_B2G3R3_UNORM;
 
             case 16:
                 /* Read the Color masks */
@@ -378,7 +388,7 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
                     (DDPixelFormat->u3.dwGBitMask == 0x07E0) &&
                     (DDPixelFormat->u4.dwBBitMask == 0x001F) )
                 {
-                    return WINED3DFMT_R5G6B5;
+                    return WINED3DFMT_B5G6R5_UNORM;
                 }
 
                 if( (DDPixelFormat->u2.dwRBitMask == 0x7C00) &&
@@ -387,9 +397,9 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
                 {
                     if( (DDPixelFormat->dwFlags & DDPF_ALPHAPIXELS) &&
                         (DDPixelFormat->u5.dwRGBAlphaBitMask == 0x8000))
-                        return WINED3DFMT_A1R5G5B5;
+                        return WINED3DFMT_B5G5R5A1_UNORM;
                     else
-                        return WINED3DFMT_X1R5G5B5;
+                        return WINED3DFMT_B5G5R5X1_UNORM;
                 }
 
                 if( (DDPixelFormat->u2.dwRBitMask == 0x0F00) &&
@@ -398,9 +408,9 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
                 {
                     if( (DDPixelFormat->dwFlags & DDPF_ALPHAPIXELS) &&
                         (DDPixelFormat->u5.dwRGBAlphaBitMask == 0xF000))
-                        return WINED3DFMT_A4R4G4B4;
+                        return WINED3DFMT_B4G4R4A4_UNORM;
                     else
-                        return WINED3DFMT_X4R4G4B4;
+                        return WINED3DFMT_B4G4R4X4_UNORM;
                 }
 
                 if( (DDPixelFormat->dwFlags & DDPF_ALPHAPIXELS) &&
@@ -409,13 +419,13 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
                     (DDPixelFormat->u3.dwGBitMask == 0x001C) &&
                     (DDPixelFormat->u4.dwBBitMask == 0x0003) )
                 {
-                    return WINED3DFMT_A8R3G3B2;
+                    return WINED3DFMT_B2G3R3A8_UNORM;
                 }
                 ERR("16 bit RGB Pixel format does not match\n");
                 return WINED3DFMT_UNKNOWN;
 
             case 24:
-                return WINED3DFMT_R8G8B8;
+                return WINED3DFMT_B8G8R8_UNORM;
 
             case 32:
                 /* Read the Color masks */
@@ -425,9 +435,9 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
                 {
                     if( (DDPixelFormat->dwFlags & DDPF_ALPHAPIXELS) &&
                         (DDPixelFormat->u5.dwRGBAlphaBitMask == 0xFF000000))
-                        return WINED3DFMT_A8R8G8B8;
+                        return WINED3DFMT_B8G8R8A8_UNORM;
                     else
-                        return WINED3DFMT_X8R8G8B8;
+                        return WINED3DFMT_B8G8R8X8_UNORM;
 
                 }
                 ERR("32 bit RGB pixel format does not match\n");
@@ -464,17 +474,17 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
             {
                 case 4:
                     if(DDPixelFormat->u1.dwAlphaBitDepth == 4)
-                        return WINED3DFMT_A4L4;
+                        return WINED3DFMT_L4A4_UNORM;
                     ERR("Unknown Alpha / Luminance bit depth combination\n");
                     return WINED3DFMT_UNKNOWN;
 
                 case 6:
                     ERR("A luminance Pixelformat shouldn't have 6 luminance bits. Returning D3DFMT_L6V5U5 for now!!\n");
-                    return WINED3DFMT_L6V5U5;
+                    return WINED3DFMT_R5G5_SNORM_L6_UNORM;
 
                 case 8:
                     if(DDPixelFormat->u1.dwAlphaBitDepth == 8)
-                        return WINED3DFMT_A8L8;
+                        return WINED3DFMT_L8A8_UNORM;
                     ERR("Unknown Alpha / Lumincase bit depth combination\n");
                     return WINED3DFMT_UNKNOWN;
             }
@@ -486,10 +496,10 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
             {
                 case 6:
                     ERR("A luminance Pixelformat shouldn't have 6 luminance bits. Returning D3DFMT_L6V5U5 for now!!\n");
-                    return WINED3DFMT_L6V5U5;
+                    return WINED3DFMT_R5G5_SNORM_L6_UNORM;
 
                 case 8:
-                    return WINED3DFMT_L8;
+                    return WINED3DFMT_L8_UNORM;
 
                 default:
                     ERR("Unknown luminance-only bit depth 0x%x\n", DDPixelFormat->u1.dwLuminanceBitCount);
@@ -512,20 +522,20 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
                     FIXME("15 bit depth buffer not handled yet, assuming 16 bit\n");
                 case 16:
                     if(DDPixelFormat->u2.dwStencilBitDepth == 1)
-                        return WINED3DFMT_D15S1;
+                        return WINED3DFMT_S1_UINT_D15_UNORM;
 
                     FIXME("Don't know how to handle a 16 bit Z buffer with %d bit stencil buffer pixelformat\n", DDPixelFormat->u2.dwStencilBitDepth);
                     return WINED3DFMT_UNKNOWN;
 
                 case 24:
                     FIXME("Don't know how to handle a 24 bit depth buffer with stencil bits\n");
-                    return WINED3DFMT_D24S8;
+                    return WINED3DFMT_S8_UINT_D24_UNORM;
 
                 case 32:
                     if(DDPixelFormat->u2.dwStencilBitDepth == 8)
-                        return WINED3DFMT_D24S8;
+                        return WINED3DFMT_S8_UINT_D24_UNORM;
                     else
-                        return WINED3DFMT_D24X4S4;
+                        return WINED3DFMT_S4X4_UINT_D24_UNORM;
 
                 default:
                     ERR("Unknown Z buffer depth %d\n", DDPixelFormat->u1.dwZBufferBitDepth);
@@ -547,12 +557,12 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
                     FIXME("24 Bit depth buffer, treating like a 32 bit one\n");
                 case 32:
                     if(DDPixelFormat->u3.dwZBitMask == 0x00FFFFFF) {
-                        return WINED3DFMT_D24X8;
+                        return WINED3DFMT_X8D24_UNORM;
                     } else if(DDPixelFormat->u3.dwZBitMask == 0xFFFFFFFF) {
-                        return WINED3DFMT_D32;
+                        return WINED3DFMT_D32_UNORM;
                     }
                     FIXME("Unhandled 32 bit depth buffer bitmasks, returning WINED3DFMT_D24X8\n");
-                    return WINED3DFMT_D24X8; /* That's most likely to make games happy */
+                    return WINED3DFMT_X8D24_UNORM; /* That's most likely to make games happy */
 
                 default:
                     ERR("Unsupported Z buffer depth %d\n", DDPixelFormat->u1.dwZBufferBitDepth);
@@ -618,7 +628,14 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
                   (DDPixelFormat->u3.dwBumpDvBitMask        == 0x000003e0) &&
                   (DDPixelFormat->u4.dwBumpLuminanceBitMask == 0x0000fc00) )
         {
-            return WINED3DFMT_L6V5U5;
+            return WINED3DFMT_R5G5_SNORM_L6_UNORM;
+        }
+        else if ( (DDPixelFormat->u1.dwBumpBitCount         == 32        ) &&
+                  (DDPixelFormat->u2.dwBumpDuBitMask        == 0x000000ff) &&
+                  (DDPixelFormat->u3.dwBumpDvBitMask        == 0x0000ff00) &&
+                  (DDPixelFormat->u4.dwBumpLuminanceBitMask == 0x00ff0000) )
+        {
+            return WINED3DFMT_R8G8_SNORM_L8X8_UNORM;
         }
     }
 

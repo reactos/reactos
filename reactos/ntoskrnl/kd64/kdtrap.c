@@ -12,6 +12,34 @@
 #define NDEBUG
 #include <debug.h>
 
+//
+// Retrieves the ComponentId and Level for BREAKPOINT_PRINT
+// and OutputString and OutputStringLength for BREAKPOINT_PROMPT.
+//
+#if defined(_M_IX86)
+
+//
+// EBX/EDI on x86
+//
+#define KdpGetFirstParameter(Context)  ((Context)->Ebx)
+#define KdpGetSecondParameter(Context) ((Context)->Edi)
+
+#elif defined(_M_AMD64)
+
+//
+// R8/R9 on AMD64
+//
+#define KdpGetFirstParameter(Context)  ((Context)->R8)
+#define KdpGetSecondParameter(Context) ((Context)->R9)
+
+#elif defined(_M_ARM)
+
+#error Yo Ninjas!
+
+#else
+#error Unsupported Architecture
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -27,10 +55,10 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     PKPRCB Prcb;
     NTSTATUS ExceptionCode = ExceptionRecord->ExceptionCode;
 
-    /* Check if this is INT1 or 3, or if we're forced to handle it */
+    /* Check if this is single step or a breakpoint, or if we're forced to handle it */
     if ((ExceptionCode == STATUS_BREAKPOINT) ||
         (ExceptionCode == STATUS_SINGLE_STEP) ||
-        //(ExceptionCode == STATUS_ASSERTION_FAILURE) ||
+        (ExceptionCode == STATUS_ASSERTION_FAILURE) ||
         (NtGlobalFlag & FLG_STOP_ON_EXCEPTION))
     {
         /* Check if we can't really handle this */
@@ -44,7 +72,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     }
     else if (SecondChanceException)
     {
-        /* We won't bother unless this is second chance */
+        /* We won't bother unless this is first chance */
         return FALSE;
     }
 
@@ -71,11 +99,144 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     RtlCopyMemory(ContextRecord,
                   &Prcb->ProcessorState.ContextFrame,
                   sizeof(CONTEXT));
-    //KiRestoreProcessorControlState(&Prcb->ProcessorState);
+    KiRestoreProcessorControlState(&Prcb->ProcessorState);
 
     /* Exit the debugger and clear the CTRL-C state */
     KdExitDebugger(Entered);
     KdpControlCPressed = FALSE;
+    return Status;
+}
+
+BOOLEAN
+NTAPI
+KdpTrap(IN PKTRAP_FRAME TrapFrame,
+        IN PKEXCEPTION_FRAME ExceptionFrame,
+        IN PEXCEPTION_RECORD ExceptionRecord,
+        IN PCONTEXT ContextRecord,
+        IN KPROCESSOR_MODE PreviousMode,
+        IN BOOLEAN SecondChanceException)
+{
+    BOOLEAN Unload = FALSE;
+    ULONG_PTR ProgramCounter, ReturnValue;
+    BOOLEAN Status = FALSE;
+
+    /*
+     * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
+     * Load/Unload symbols.
+     */
+    if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
+        (ExceptionRecord->ExceptionInformation[0] != BREAKPOINT_BREAK))
+    {
+        /* Save Program Counter */
+        ProgramCounter = KeGetContextPc(ContextRecord);
+
+        /* Check what kind of operation was requested from us */
+        switch (ExceptionRecord->ExceptionInformation[0])
+        {
+            /* DbgPrint */
+            case BREAKPOINT_PRINT:
+
+                /* Call the worker routine */
+                ReturnValue = KdpPrint((ULONG)KdpGetFirstParameter(ContextRecord),
+                                       (ULONG)KdpGetSecondParameter(ContextRecord),
+                                       (LPSTR)ExceptionRecord->
+                                       ExceptionInformation[1],
+                                       (USHORT)ExceptionRecord->
+                                       ExceptionInformation[2],
+                                       PreviousMode,
+                                       TrapFrame,
+                                       ExceptionFrame,
+                                       &Status);
+
+                /* Update the return value for the caller */
+                KeSetContextReturnRegister(ContextRecord, ReturnValue);
+                break;
+
+            /* DbgPrompt */
+            case BREAKPOINT_PROMPT:
+
+                /* Call the worker routine */
+                ReturnValue = KdpPrompt((LPSTR)ExceptionRecord->
+                                        ExceptionInformation[1],
+                                        (USHORT)ExceptionRecord->
+                                        ExceptionInformation[2],
+                                        (LPSTR)KdpGetFirstParameter(ContextRecord),
+                                        (USHORT)KdpGetSecondParameter(ContextRecord),
+                                        PreviousMode,
+                                        TrapFrame,
+                                        ExceptionFrame);
+                Status = TRUE;
+
+                /* Update the return value for the caller */
+                KeSetContextReturnRegister(ContextRecord, ReturnValue);
+                break;
+
+            /* DbgUnLoadImageSymbols */
+            case BREAKPOINT_UNLOAD_SYMBOLS:
+
+                /* Drop into the load case below, with the unload parameter */
+                Unload = TRUE;
+
+            /* DbgLoadImageSymbols */
+            case BREAKPOINT_LOAD_SYMBOLS:
+
+                /* Call the worker routine */
+                KdpSymbol((PSTRING)ExceptionRecord->
+                          ExceptionInformation[1],
+                          (PKD_SYMBOLS_INFO)ExceptionRecord->
+                          ExceptionInformation[2],
+                          Unload,
+                          PreviousMode,
+                          ContextRecord,
+                          TrapFrame,
+                          ExceptionFrame);
+                Status = TRUE;
+                break;
+
+            /* DbgCommandString */
+            case BREAKPOINT_COMMAND_STRING:
+
+                /* Call the worker routine */
+                KdpCommandString((ULONG)ExceptionRecord->
+                                 ExceptionInformation[1],
+                                 (LPSTR)ExceptionRecord->
+                                 ExceptionInformation[2],
+                                 PreviousMode,
+                                 ContextRecord,
+                                 TrapFrame,
+                                 ExceptionFrame);
+                Status = TRUE;
+
+            /* Anything else, do nothing */
+            default:
+
+                /* Get out */
+                break;
+        }
+
+        /*
+         * If the PC was not updated, we'll increment it ourselves so execution
+         * continues past the breakpoint.
+         */
+        if (ProgramCounter == KeGetContextPc(ContextRecord))
+        {
+            /* Update it */
+            KeSetContextPc(ContextRecord,
+                           ProgramCounter + KD_BREAKPOINT_SIZE);
+        }
+    }
+    else
+    {
+        /* Call the worker routine */
+        Status = KdpReport(TrapFrame,
+                           ExceptionFrame,
+                           ExceptionRecord,
+                           ContextRecord,
+                           PreviousMode,
+                           SecondChanceException);
+    }
+
+    /* Return TRUE or FALSE to caller */
     return Status;
 }
 
@@ -98,14 +259,9 @@ KdpStub(IN PKTRAP_FRAME TrapFrame,
          (ExceptionCommand == BREAKPOINT_COMMAND_STRING) ||
          (ExceptionCommand == BREAKPOINT_PRINT)))
     {
-        /* This we can handle: simply bump EIP */
-#if defined (_M_X86)
-        ContextRecord->Eip++;
-#elif defined (_M_AMD64)
-        ContextRecord->Rip++;
-#else
-#error Unknown platform
-#endif
+        /* This we can handle: simply bump the Program Counter */
+        KeSetContextPc(ContextRecord,
+                       KeGetContextPc(ContextRecord) + KD_BREAKPOINT_SIZE);
         return TRUE;
     }
     else if (KdPitchDebugger)
@@ -116,7 +272,7 @@ KdpStub(IN PKTRAP_FRAME TrapFrame,
     else if ((KdAutoEnableOnEvent) &&
              (KdPreviouslyEnabled) &&
              !(KdDebuggerEnabled) &&
-             (KdEnableDebugger()) &&
+             (NT_SUCCESS(KdEnableDebugger())) &&
              (KdDebuggerEnabled))
     {
         /* Debugging was Auto-Enabled. We can now send this to KD. */

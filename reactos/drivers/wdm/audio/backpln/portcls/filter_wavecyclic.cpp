@@ -68,7 +68,7 @@ NTSTATUS
 NTAPI
 CPortFilterWaveCyclic::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
@@ -135,6 +135,7 @@ CPortFilterWaveCyclic::DeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -148,9 +149,14 @@ CPortFilterWaveCyclic::DeviceIoControl(
         return STATUS_SUCCESS;
     }
 
-    PC_ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
-
-    return PcPropertyHandler(Irp, m_Descriptor);
+    Status = PcHandlePropertyWithTable(Irp, m_Descriptor->FilterPropertySetCount, m_Descriptor->FilterPropertySet, m_Descriptor);
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        DPRINT("Result %x Length %u\n", Status, Irp->IoStatus.Information);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    return Status;
 }
 
 NTSTATUS
@@ -244,8 +250,7 @@ CPortFilterWaveCyclic::FastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
-    return FALSE;
+    return KsDispatchFastIoDeviceControlFailure(FileObject, Wait, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, IoControlCode, StatusBlock, DeviceObject);
 }
 
 BOOLEAN

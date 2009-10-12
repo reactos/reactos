@@ -1,6 +1,8 @@
 #ifndef __WIN32K_PDEVOBJ_H
 #define __WIN32K_PDEVOBJ_H
 
+#include <drivers/directx/directxint.h>
+
 /* PDEVOBJ flags */
 #define PDEV_DISPLAY             0x00000001 /* Display device */
 #define PDEV_HARDWARE_POINTER    0x00000002 /* Supports hardware cursor */
@@ -133,5 +135,14 @@ typedef struct _PDEVOBJ
     UINT SafetyRemoveCount;
     struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
 } PDEVOBJ, *PPDEVOBJ;
+
+/* PDEV and EDDX extra data container.*/
+typedef struct _PDEVEDD
+{
+    PDEVOBJ pdevobj;
+    EDD_DIRECTDRAW_GLOBAL EDDgpl;
+} PDEVEDD, *PPDEVEDD;
+
+extern ULONG gdwDirectDrawContext;
 
 #endif /* !__WIN32K_PDEVOBJ_H */

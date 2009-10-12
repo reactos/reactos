@@ -152,7 +152,7 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
   RTL_QUERY_REGISTRY_TABLE QueryTable[7];
   PSERVICE Service;
   NTSTATUS Status;
-  ULONG DefaultTag = ~0;
+  ULONG DefaultTag = MAXULONG;
 
   DPRINT("ServiceName: '%wZ'\n", ServiceName);
 

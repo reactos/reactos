@@ -112,46 +112,6 @@ EnumICMProfilesW(
  */
 BOOL
 WINAPI
-wglUseFontBitmapsW(
-	HDC		a0,
-	DWORD		a1,
-	DWORD		a2,
-	DWORD		a3
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-wglUseFontOutlinesW(
-	HDC			a0,
-	DWORD			a1,
-	DWORD			a2,
-	DWORD			a3,
-	FLOAT			a4,
-	FLOAT			a5,
-	int			a6,
-	LPGLYPHMETRICSFLOAT	a7
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
 UpdateICMRegKeyW(
 	DWORD	a0,
 	LPWSTR	a1,

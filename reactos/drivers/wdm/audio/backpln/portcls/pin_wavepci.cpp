@@ -289,7 +289,7 @@ NTSTATUS
 NTAPI
 CPortPinWavePci::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
@@ -751,7 +751,7 @@ CPortPinWavePci::Init(
 
     DPRINT("IPortPinWavePci_fnInit entered\n");
 
-    m_Format = (PKSDATAFORMAT)ExAllocatePoolWithTag(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+    m_Format = (PKSDATAFORMAT)AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
     if (!m_Format)
         return STATUS_INSUFFICIENT_RESOURCES;
 

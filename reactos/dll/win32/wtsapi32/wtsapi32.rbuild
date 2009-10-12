@@ -8,6 +8,7 @@
 	<define name="__WINESRC__" />
 	<file>wtsapi32.c</file>
 	<library>wine</library>
+	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
 </module>

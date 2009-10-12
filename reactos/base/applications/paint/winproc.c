@@ -31,6 +31,10 @@ void selectTool(int tool)
     activeTool = tool;
     pointSP = 0; // resets the point-buffer of the polygon and bezier functions
     SendMessage(hToolSettings, WM_PAINT, 0, 0);
+    if (tool==6)
+        ShowWindow(hTrackbarZoom, SW_SHOW);
+    else
+        ShowWindow(hTrackbarZoom, SW_HIDE);
 }
 
 void updateCanvasAndScrollbars()
@@ -48,6 +52,14 @@ void ZoomTo(int newZoom)
 {
     zoom = newZoom;
     updateCanvasAndScrollbars();
+    int tbPos = 0;
+    int tempZoom = newZoom;
+    while (tempZoom>125)
+    {
+        tbPos++;
+        tempZoom = tempZoom>>1;
+    }
+    SendMessage(hTrackbarZoom, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)tbPos);
 }
 
 HDC hdc;
@@ -67,7 +79,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 showMiniature = FALSE;
                 break;
             }
-            if (undoSteps>0)
+            if (!imageSaved)
             {
                 TCHAR programname[20];
                 TCHAR saveprompttext[100];
@@ -503,7 +515,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     break;
                 case IDM_FILESAVE:
                     if (isAFile)
+                    {
                         SaveDIBToFile(hBms[currInd], filepathname, hDrawingDC);
+                        imageSaved = TRUE;
+                    }
                     else
                         SendMessage(hwnd, WM_COMMAND, IDM_FILESAVEAS, 0);
                     break;
@@ -514,11 +529,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         TCHAR resstr[100];
                         SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC);
                         CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
-                        CopyMemory(filepathname, sfn.lpstrFileTitle, sizeof(filepathname));
+                        CopyMemory(filepathname, sfn.lpstrFile, sizeof(filepathname));
                         LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
                         _stprintf(tempstr, resstr, filename);
                         SetWindowText(hMainWnd, tempstr);
                         isAFile = TRUE;
+                        imageSaved = TRUE;
                     }
                     break;
                 case IDM_FILEASWALLPAPERPLANE:

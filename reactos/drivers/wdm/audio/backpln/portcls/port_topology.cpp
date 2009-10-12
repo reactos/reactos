@@ -65,12 +65,12 @@ typedef struct
 static GUID InterfaceGuids[2] = 
 {
     {
-        /// KS_CATEGORY_TOPOLOGY
-        0xDDA54A40, 0x1E4C, 0x11D1, {0xA0, 0x50, 0x40, 0x57, 0x05, 0xC1, 0x00, 0x00}
-    },
-    {
         /// KS_CATEGORY_AUDIO
         0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        /// KS_CATEGORY_TOPOLOGY
+        0xDDA54A40, 0x1E4C, 0x11D1, {0xA0, 0x50, 0x40, 0x57, 0x05, 0xC1, 0x00, 0x00}
     }
 };
 
@@ -273,6 +273,12 @@ CPortTopology::Init(
 
 
     DPRINT("IPortTopology_fnInit success\n");
+    if (NT_SUCCESS(Status))
+    {
+        // store for node property requests
+        m_SubDeviceDescriptor->UnknownMiniport = UnknownMiniport;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -314,7 +320,7 @@ NTSTATUS
 NTAPI
 CPortTopology::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
@@ -455,7 +461,7 @@ CreatePinWorkerRoutine(
     DPRINT("CreatePinWorkerRoutine called\n");
     // create the pin
     Status = WorkerContext->Filter->NewIrpTarget(&Pin,
-                                                 NULL,
+                                                 KSSTRING_Pin,
                                                  NULL,
                                                  NonPagedPool,
                                                  DeviceObject,

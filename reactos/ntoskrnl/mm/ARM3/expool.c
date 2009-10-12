@@ -381,7 +381,7 @@ ExFreeArmPoolWithTag(IN PVOID P,
     //
     if (PAGE_ALIGN(P) == P)
     {
-        (VOID)MiFreePoolPages(P);
+        MiFreePoolPages(P);
         return;
     }
     
@@ -501,7 +501,7 @@ ExFreeArmPoolWithTag(IN PVOID P,
         // In this case, release the nonpaged pool lock, and free the page
         //
         KeReleaseQueuedSpinLock(LockQueueNonPagedPoolLock, OldIrql);
-        (VOID)MiFreePoolPages(Entry);
+        MiFreePoolPages(Entry);
         return;
     }
 

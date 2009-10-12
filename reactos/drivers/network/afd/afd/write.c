@@ -57,6 +57,7 @@ static NTSTATUS NTAPI SendComplete
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );
@@ -82,7 +83,7 @@ static NTSTATUS NTAPI SendComplete
 			NextIrp->IoStatus.Information = 0;
 
 			if ( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
-
+                        (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		}
 
@@ -197,6 +198,7 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
 	       NextIrp->IoStatus.Information = 0;
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );

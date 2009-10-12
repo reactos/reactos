@@ -694,7 +694,7 @@ static ULONG WINAPI IPPSource_Release(ITfSource *iface)
     return InputProcessorProfiles_Release((ITfInputProcessorProfiles *)This);
 }
 
-static WINAPI HRESULT IPPSource_AdviseSink(ITfSource *iface,
+static HRESULT WINAPI IPPSource_AdviseSink(ITfSource *iface,
         REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
     InputProcessorProfilesSink *ipps;
@@ -729,7 +729,7 @@ static WINAPI HRESULT IPPSource_AdviseSink(ITfSource *iface,
     return S_OK;
 }
 
-static WINAPI HRESULT IPPSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
+static HRESULT WINAPI IPPSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
     InputProcessorProfilesSink *sink;
     InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);

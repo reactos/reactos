@@ -572,7 +572,7 @@ static ULONG WINAPI Source_Release(ITfSource *iface)
     return Compartment_Release((ITfCompartment *)This);
 }
 
-static WINAPI HRESULT CompartmentSource_AdviseSink(ITfSource *iface,
+static HRESULT WINAPI CompartmentSource_AdviseSink(ITfSource *iface,
         REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
     CompartmentSink *cs;
@@ -607,7 +607,7 @@ static WINAPI HRESULT CompartmentSource_AdviseSink(ITfSource *iface,
     return S_OK;
 }
 
-static WINAPI HRESULT CompartmentSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
+static HRESULT WINAPI CompartmentSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
     CompartmentSink *sink;
     Compartment *This = impl_from_ITfSourceVtbl(iface);

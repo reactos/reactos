@@ -43,9 +43,9 @@ NTSTATUS RouterStartup(
 NTSTATUS RouterShutdown(
     VOID);
 
-UINT CountFIBs(VOID);
+UINT CountFIBs(PIP_INTERFACE IF);
 
-UINT CopyFIBs( PFIB_ENTRY Target );
+UINT CopyFIBs( PIP_INTERFACE IF, PFIB_ENTRY Target );
 
 #endif /* __ROUTER_H */
 

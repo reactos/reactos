@@ -54,6 +54,34 @@ Done:
     ret 4
 .endfunc
 
+
+.globl _HalpQuery8254Counter@0
+.func HalpQuery8254Counter@0
+_HalpQuery8254Counter@0:
+
+    /* Save EFLAGS and disable interrupts */
+    pushfd
+    cli
+    
+    /* Set timer data */
+    mov al, 0
+    out 0x43, al
+    jmp $+2
+
+    /* Read current timer */
+    in al, 0x40
+    jmp $+2
+    movzx ecx, al
+    in al, 0x40
+    mov ch, al
+
+    /* Return it and restore interrupt state */
+    mov eax, ecx
+    popfd
+    ret
+.endfunc
+
+
 .global _KeQueryPerformanceCounter@4
 .func KeQueryPerformanceCounter@4
 _KeQueryPerformanceCounter@4:

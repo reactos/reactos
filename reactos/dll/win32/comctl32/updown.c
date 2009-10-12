@@ -86,6 +86,7 @@ typedef struct
 #define FLAG_DECR	0x02
 #define FLAG_MOUSEIN	0x04
 #define FLAG_PRESSED	0x08
+#define FLAG_BUDDYINT	0x10 /* UDS_SETBUDDYINT was set on creation */
 #define FLAG_ARROW	(FLAG_INCR | FLAG_DECR)
 
 #define BUDDY_TYPE_UNKNOWN 0
@@ -267,7 +268,7 @@ static BOOL UPDOWN_GetBuddyInt (UPDOWN_INFO *infoPtr)
     WCHAR txt[20], sep, *src, *dst;
     int newVal;
 
-    if (!((infoPtr->dwStyle & UDS_SETBUDDYINT) && IsWindow(infoPtr->Buddy)))
+    if (!((infoPtr->Flags & FLAG_BUDDYINT) && IsWindow(infoPtr->Buddy)))
         return FALSE;
 
     /*if the buddy is a list window, we must set curr index */
@@ -312,7 +313,7 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
     WCHAR txt[20];
     int len;
 
-    if (!((infoPtr->dwStyle & UDS_SETBUDDYINT) && IsWindow(infoPtr->Buddy))) 
+    if (!((infoPtr->Flags & FLAG_BUDDYINT) && IsWindow(infoPtr->Buddy)))
         return FALSE;
 
     TRACE("set new value(%d) to buddy.\n", infoPtr->CurVal);
@@ -328,7 +329,7 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
 
 
     /* Do thousands separation if necessary */
-    if (!(infoPtr->dwStyle & UDS_NOTHOUSANDS) && (len > 3)) {
+    if ((infoPtr->Base == 10) && !(infoPtr->dwStyle & UDS_NOTHOUSANDS) && (len > 3)) {
         WCHAR tmp[COUNT_OF(txt)], *src = tmp, *dst = txt;
         WCHAR sep = UPDOWN_GetThousandSep();
 	int start = len % 3;
@@ -520,20 +521,25 @@ static LRESULT CALLBACK
 UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC superClassWndProc = (WNDPROC)GetPropW(hwnd, BUDDY_SUPERCLASS_WNDPROC);
+    HWND upDownHwnd = GetPropW(hwnd, BUDDY_UPDOWN_HWND);
+    UPDOWN_INFO *infoPtr = UPDOWN_GetInfoPtr(upDownHwnd);
 
     TRACE("hwnd=%p, wndProc=%p, uMsg=%04x, wParam=%08lx, lParam=%08lx\n",
           hwnd, superClassWndProc, uMsg, wParam, lParam);
 
-    if (uMsg == WM_KEYDOWN) {
-        HWND upDownHwnd = GetPropW(hwnd, BUDDY_UPDOWN_HWND);
-
-	UPDOWN_KeyPressed(UPDOWN_GetInfoPtr(upDownHwnd), (int)wParam);
+    switch(uMsg)
+    {
+    case WM_KEYDOWN:
+	UPDOWN_KeyPressed(infoPtr, (int)wParam);
 	if ((wParam == VK_UP) || (wParam == VK_DOWN)) return 0;
-    }
-    else if (uMsg == WM_MOUSEWHEEL) {
-        HWND upDownHwnd = GetPropW(hwnd, BUDDY_UPDOWN_HWND);
+	break;
 
-       UPDOWN_MouseWheel(UPDOWN_GetInfoPtr(upDownHwnd), (int)wParam);
+    case WM_MOUSEWHEEL:
+	UPDOWN_MouseWheel(infoPtr, (int)wParam);
+	break;
+
+    default:
+	break;
     }
 
     return CallWindowProcW( superClassWndProc, hwnd, uMsg, wParam, lParam);
@@ -586,7 +592,7 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
                 infoPtr->BuddyType = BUDDY_TYPE_LISTBOX;
         }
 
-        if(infoPtr->dwStyle & UDS_ARROWKEYS){
+        if (infoPtr->dwStyle & UDS_ARROWKEYS) {
             /* Note that I don't clear the BUDDY_SUPERCLASS_WNDPROC property
                when we reset the upDown ctrl buddy to another buddy because it is not
                good to break the window proc chain. */
@@ -865,7 +871,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    infoPtr->MaxVal = 0;
 	    infoPtr->Base  = 10; /* Default to base 10  */
 	    infoPtr->Buddy = 0;  /* No buddy window yet */
-	    infoPtr->Flags = 0;  /* And no flags        */
+	    infoPtr->Flags = (infoPtr->dwStyle & UDS_SETBUDDYINT) ? FLAG_BUDDYINT : 0;
 
             SetWindowLongW (hwnd, GWL_STYLE, infoPtr->dwStyle & ~WS_BORDER);
 
@@ -1031,9 +1037,13 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	case UDM_SETBASE:
 	    TRACE("UpDown Ctrl new base(%ld), hwnd=%p\n", wParam, hwnd);
 	    if (wParam==10 || wParam==16) {
-		WPARAM temp = infoPtr->Base;
+		WPARAM old_base = infoPtr->Base;
 		infoPtr->Base = wParam;
-		return temp;
+
+		if (old_base != infoPtr->Base)
+		    UPDOWN_SetBuddyInt(infoPtr);
+
+		return old_base;
 	    }
 	    break;
 
@@ -1045,8 +1055,8 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 
 	case UDM_GETPOS:
 	{
-	    int temp = UPDOWN_GetBuddyInt (infoPtr);
-	    return MAKELONG(infoPtr->CurVal, temp ? 0 : 1);
+	    BOOL ret = UPDOWN_GetBuddyInt (infoPtr);
+	    return MAKELONG(infoPtr->CurVal, ret ? 0 : 1);
 	}
 	case UDM_SETPOS:
 	{
@@ -1083,9 +1093,11 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    break;
 
 	case UDM_GETPOS32:
-	    if ((LPBOOL)lParam != NULL) *((LPBOOL)lParam) = TRUE;
+	{
+	    BOOL ret = UPDOWN_GetBuddyInt (infoPtr);
+	    if ((LPBOOL)lParam) *((LPBOOL)lParam) = !ret;
 	    return infoPtr->CurVal;
-
+	}
 	case UDM_SETPOS32:
 	{
 	    int temp;

@@ -42,6 +42,7 @@ IDI_WINHELP ICON DISCARDABLE winhelp.ico
 #include "Pl.rc"
 #include "Pt.rc"
 #include "Rm.rc"
+#include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"
 #include "Sk.rc"

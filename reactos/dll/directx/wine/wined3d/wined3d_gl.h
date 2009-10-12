@@ -802,343 +802,361 @@ typedef void            GLvoid;
 #define GL_SAMPLE_COVERAGE_INVERT         0x80AB
 #define GL_MULTISAMPLE_BIT                0x20000000
 
-void (WINE_GLAPI *glAccum) (GLenum op, GLfloat value);
-void (WINE_GLAPI *glAlphaFunc) (GLenum func, GLclampf ref);
-GLboolean (WINE_GLAPI *glAreTexturesResident) (GLsizei n, const GLuint* textures, GLboolean* residences);
-void (WINE_GLAPI *glArrayElement) (GLint i);
-void (WINE_GLAPI *glBegin) (GLenum mode);
-void (WINE_GLAPI *glBindTexture) (GLenum target, GLuint texture);
-void (WINE_GLAPI *glBitmap) (GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte* bitmap);
-void (WINE_GLAPI *glBlendFunc) (GLenum sfactor, GLenum dfactor);
-void (WINE_GLAPI *glCallList) (GLuint list);
-void (WINE_GLAPI *glCallLists) (GLsizei n, GLenum type, const GLvoid* lists);
-void (WINE_GLAPI *glClear) (GLbitfield mask);
-void (WINE_GLAPI *glClearAccum) (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-void (WINE_GLAPI *glClearColor) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-void (WINE_GLAPI *glClearDepth) (GLclampd depth);
-void (WINE_GLAPI *glClearIndex) (GLfloat c);
-void (WINE_GLAPI *glClearStencil) (GLint s);
-void (WINE_GLAPI *glClipPlane) (GLenum plane, const GLdouble* equation);
-void (WINE_GLAPI *glColor3b) (GLbyte red, GLbyte green, GLbyte blue);
-void (WINE_GLAPI *glColor3bv) (const GLbyte* v);
-void (WINE_GLAPI *glColor3d) (GLdouble red, GLdouble green, GLdouble blue);
-void (WINE_GLAPI *glColor3dv) (const GLdouble* v);
-void (WINE_GLAPI *glColor3f) (GLfloat red, GLfloat green, GLfloat blue);
-void (WINE_GLAPI *glColor3fv) (const GLfloat* v);
-void (WINE_GLAPI *glColor3i) (GLint red, GLint green, GLint blue);
-void (WINE_GLAPI *glColor3iv) (const GLint* v);
-void (WINE_GLAPI *glColor3s) (GLshort red, GLshort green, GLshort blue);
-void (WINE_GLAPI *glColor3sv) (const GLshort* v);
-void (WINE_GLAPI *glColor3ub) (GLubyte red, GLubyte green, GLubyte blue);
-void (WINE_GLAPI *glColor3ubv) (const GLubyte* v);
-void (WINE_GLAPI *glColor3ui) (GLuint red, GLuint green, GLuint blue);
-void (WINE_GLAPI *glColor3uiv) (const GLuint* v);
-void (WINE_GLAPI *glColor3us) (GLushort red, GLushort green, GLushort blue);
-void (WINE_GLAPI *glColor3usv) (const GLushort* v);
-void (WINE_GLAPI *glColor4b) (GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha);
-void (WINE_GLAPI *glColor4bv) (const GLbyte* v);
-void (WINE_GLAPI *glColor4d) (GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha);
-void (WINE_GLAPI *glColor4dv) (const GLdouble* v);
-void (WINE_GLAPI *glColor4f) (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-void (WINE_GLAPI *glColor4fv) (const GLfloat* v);
-void (WINE_GLAPI *glColor4i) (GLint red, GLint green, GLint blue, GLint alpha);
-void (WINE_GLAPI *glColor4iv) (const GLint* v);
-void (WINE_GLAPI *glColor4s) (GLshort red, GLshort green, GLshort blue, GLshort alpha);
-void (WINE_GLAPI *glColor4sv) (const GLshort* v);
-void (WINE_GLAPI *glColor4ub) (GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
-void (WINE_GLAPI *glColor4ubv) (const GLubyte* v);
-void (WINE_GLAPI *glColor4ui) (GLuint red, GLuint green, GLuint blue, GLuint alpha);
-void (WINE_GLAPI *glColor4uiv) (const GLuint* v);
-void (WINE_GLAPI *glColor4us) (GLushort red, GLushort green, GLushort blue, GLushort alpha);
-void (WINE_GLAPI *glColor4usv) (const GLushort* v);
-void (WINE_GLAPI *glColorMask) (GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-void (WINE_GLAPI *glColorMaterial) (GLenum face, GLenum mode);
-void (WINE_GLAPI *glColorPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
-void (WINE_GLAPI *glCopyPixels) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum type);
-void (WINE_GLAPI *glCopyTexImage1D) (GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border);
-void (WINE_GLAPI *glCopyTexImage2D) (GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
-void (WINE_GLAPI *glCopyTexSubImage1D) (GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width);
-void (WINE_GLAPI *glCopyTexSubImage2D) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
-void (WINE_GLAPI *glCullFace) (GLenum mode);
-void (WINE_GLAPI *glDeleteLists) (GLuint list, GLsizei range);
-void (WINE_GLAPI *glDeleteTextures) (GLsizei n, const GLuint* textures);
-void (WINE_GLAPI *glDepthFunc) (GLenum func);
-void (WINE_GLAPI *glDepthMask) (GLboolean flag);
-void (WINE_GLAPI *glDepthRange) (GLclampd nearParam, GLclampd farParam);
-void (WINE_GLAPI *glDisable) (GLenum cap);
-void (WINE_GLAPI *glDisableWINE) (GLenum cap);
-void (WINE_GLAPI *glDisableClientState) (GLenum array);
-void (WINE_GLAPI *glDrawArrays) (GLenum mode, GLint first, GLsizei count);
-void (WINE_GLAPI *glDrawBuffer) (GLenum mode);
-void (WINE_GLAPI *glDrawElements) (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
-void (WINE_GLAPI *glDrawPixels) (GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels);
-void (WINE_GLAPI *glEdgeFlag) (GLboolean flag);
-void (WINE_GLAPI *glEdgeFlagPointer) (GLsizei stride, const GLvoid* pointer);
-void (WINE_GLAPI *glEdgeFlagv) (const GLboolean* flag);
-void (WINE_GLAPI *glEnable) (GLenum cap);
-void (WINE_GLAPI *glEnableWINE) (GLenum cap);
-void (WINE_GLAPI *glEnableClientState) (GLenum array);
-void (WINE_GLAPI *glEnd) ();
-void (WINE_GLAPI *glEndList) ();
-void (WINE_GLAPI *glEvalCoord1d) (GLdouble u);
-void (WINE_GLAPI *glEvalCoord1dv) (const GLdouble* u);
-void (WINE_GLAPI *glEvalCoord1f) (GLfloat u);
-void (WINE_GLAPI *glEvalCoord1fv) (const GLfloat* u);
-void (WINE_GLAPI *glEvalCoord2d) (GLdouble u, GLdouble v);
-void (WINE_GLAPI *glEvalCoord2dv) (const GLdouble* u);
-void (WINE_GLAPI *glEvalCoord2f) (GLfloat u, GLfloat v);
-void (WINE_GLAPI *glEvalCoord2fv) (const GLfloat* u);
-void (WINE_GLAPI *glEvalMesh1) (GLenum mode, GLint i1, GLint i2);
-void (WINE_GLAPI *glEvalMesh2) (GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2);
-void (WINE_GLAPI *glEvalPoint1) (GLint i);
-void (WINE_GLAPI *glEvalPoint2) (GLint i, GLint j);
-void (WINE_GLAPI *glFeedbackBuffer) (GLsizei size, GLenum type, GLfloat* buffer);
-void (WINE_GLAPI *glFogf) (GLenum pname, GLfloat param);
-void (WINE_GLAPI *glFogfv) (GLenum pname, const GLfloat* params);
-void (WINE_GLAPI *glFogi) (GLenum pname, GLint param);
-void (WINE_GLAPI *glFogiv) (GLenum pname, const GLint* params);
-void (WINE_GLAPI *glFrontFace) (GLenum mode);
-void (WINE_GLAPI *glFrustum) (GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
-GLuint (WINE_GLAPI *glGenLists) (GLsizei range);
-void (WINE_GLAPI *glGenTextures) (GLsizei n, GLuint* textures);
-void (WINE_GLAPI *glGetBooleanv) (GLenum pname, GLboolean* params);
-void (WINE_GLAPI *glGetClipPlane) (GLenum plane, GLdouble* equation);
-void (WINE_GLAPI *glGetDoublev) (GLenum pname, GLdouble* params);
-GLenum (WINE_GLAPI *glGetError) ();
-void (WINE_GLAPI *glGetFloatv) (GLenum pname, GLfloat* params);
-void (WINE_GLAPI *glGetIntegerv) (GLenum pname, GLint* params);
-void (WINE_GLAPI *glGetLightfv) (GLenum light, GLenum pname, GLfloat* params);
-void (WINE_GLAPI *glGetLightiv) (GLenum light, GLenum pname, GLint* params);
-void (WINE_GLAPI *glGetMapdv) (GLenum target, GLenum query, GLdouble* v);
-void (WINE_GLAPI *glGetMapfv) (GLenum target, GLenum query, GLfloat* v);
-void (WINE_GLAPI *glGetMapiv) (GLenum target, GLenum query, GLint* v);
-void (WINE_GLAPI *glGetMaterialfv) (GLenum face, GLenum pname, GLfloat* params);
-void (WINE_GLAPI *glGetMaterialiv) (GLenum face, GLenum pname, GLint* params);
-void (WINE_GLAPI *glGetPixelMapfv) (GLenum map, GLfloat* values);
-void (WINE_GLAPI *glGetPixelMapuiv) (GLenum map, GLuint* values);
-void (WINE_GLAPI *glGetPixelMapusv) (GLenum map, GLushort* values);
-void (WINE_GLAPI *glGetPointerv) (GLenum pname, GLvoid** params);
-void (WINE_GLAPI *glGetPolygonStipple) (GLubyte* mask);
-const GLubyte * (WINE_GLAPI *glGetString) (GLenum name);
-void (WINE_GLAPI *glGetTexEnvfv) (GLenum target, GLenum pname, GLfloat* params);
-void (WINE_GLAPI *glGetTexEnviv) (GLenum target, GLenum pname, GLint* params);
-void (WINE_GLAPI *glGetTexGendv) (GLenum coord, GLenum pname, GLdouble* params);
-void (WINE_GLAPI *glGetTexGenfv) (GLenum coord, GLenum pname, GLfloat* params);
-void (WINE_GLAPI *glGetTexGeniv) (GLenum coord, GLenum pname, GLint* params);
-void (WINE_GLAPI *glGetTexImage) (GLenum target, GLint level, GLenum format, GLenum type, GLvoid* pixels);
-void (WINE_GLAPI *glGetTexLevelParameterfv) (GLenum target, GLint level, GLenum pname, GLfloat* params);
-void (WINE_GLAPI *glGetTexLevelParameteriv) (GLenum target, GLint level, GLenum pname, GLint* params);
-void (WINE_GLAPI *glGetTexParameterfv) (GLenum target, GLenum pname, GLfloat* params);
-void (WINE_GLAPI *glGetTexParameteriv) (GLenum target, GLenum pname, GLint* params);
-void (WINE_GLAPI *glHint) (GLenum target, GLenum mode);
-void (WINE_GLAPI *glIndexMask) (GLuint mask);
-void (WINE_GLAPI *glIndexPointer) (GLenum type, GLsizei stride, const GLvoid* pointer);
-void (WINE_GLAPI *glIndexd) (GLdouble c);
-void (WINE_GLAPI *glIndexdv) (const GLdouble* c);
-void (WINE_GLAPI *glIndexf) (GLfloat c);
-void (WINE_GLAPI *glIndexfv) (const GLfloat* c);
-void (WINE_GLAPI *glIndexi) (GLint c);
-void (WINE_GLAPI *glIndexiv) (const GLint* c);
-void (WINE_GLAPI *glIndexs) (GLshort c);
-void (WINE_GLAPI *glIndexsv) (const GLshort* c);
-void (WINE_GLAPI *glIndexub) (GLubyte c);
-void (WINE_GLAPI *glIndexubv) (const GLubyte* c);
-void (WINE_GLAPI *glInitNames) ();
-void (WINE_GLAPI *glInterleavedArrays) (GLenum format, GLsizei stride, const GLvoid* pointer);
-GLboolean (WINE_GLAPI *glIsEnabled) (GLenum cap);
-GLboolean (WINE_GLAPI *glIsList) (GLuint list);
-GLboolean (WINE_GLAPI *glIsTexture) (GLuint texture);
-void (WINE_GLAPI *glLightModelf) (GLenum pname, GLfloat param);
-void (WINE_GLAPI *glLightModelfv) (GLenum pname, const GLfloat* params);
-void (WINE_GLAPI *glLightModeli) (GLenum pname, GLint param);
-void (WINE_GLAPI *glLightModeliv) (GLenum pname, const GLint* params);
-void (WINE_GLAPI *glLightf) (GLenum light, GLenum pname, GLfloat param);
-void (WINE_GLAPI *glLightfv) (GLenum light, GLenum pname, const GLfloat* params);
-void (WINE_GLAPI *glLighti) (GLenum light, GLenum pname, GLint param);
-void (WINE_GLAPI *glLightiv) (GLenum light, GLenum pname, const GLint* params);
-void (WINE_GLAPI *glLineStipple) (GLint factor, GLushort pattern);
-void (WINE_GLAPI *glLineWidth) (GLfloat width);
-void (WINE_GLAPI *glListBase) (GLuint base);
-void (WINE_GLAPI *glLoadIdentity) ();
-void (WINE_GLAPI *glLoadMatrixd) (const GLdouble* m);
-void (WINE_GLAPI *glLoadMatrixf) (const GLfloat* m);
-void (WINE_GLAPI *glLoadName) (GLuint name);
-void (WINE_GLAPI *glLogicOp) (GLenum opcode);
-void (WINE_GLAPI *glMap1d) (GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble* points);
-void (WINE_GLAPI *glMap1f) (GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat* points);
-void (WINE_GLAPI *glMap2d) (GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble* points);
-void (WINE_GLAPI *glMap2f) (GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat* points);
-void (WINE_GLAPI *glMapGrid1d) (GLint un, GLdouble u1, GLdouble u2);
-void (WINE_GLAPI *glMapGrid1f) (GLint un, GLfloat u1, GLfloat u2);
-void (WINE_GLAPI *glMapGrid2d) (GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2);
-void (WINE_GLAPI *glMapGrid2f) (GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2);
-void (WINE_GLAPI *glMaterialf) (GLenum face, GLenum pname, GLfloat param);
-void (WINE_GLAPI *glMaterialfv) (GLenum face, GLenum pname, const GLfloat* params);
-void (WINE_GLAPI *glMateriali) (GLenum face, GLenum pname, GLint param);
-void (WINE_GLAPI *glMaterialiv) (GLenum face, GLenum pname, const GLint* params);
-void (WINE_GLAPI *glMatrixMode) (GLenum mode);
-void (WINE_GLAPI *glMultMatrixd) (const GLdouble* m);
-void (WINE_GLAPI *glMultMatrixf) (const GLfloat* m);
-void (WINE_GLAPI *glNewList) (GLuint list, GLenum mode);
-void (WINE_GLAPI *glNormal3b) (GLbyte nx, GLbyte ny, GLbyte nz);
-void (WINE_GLAPI *glNormal3bv) (const GLbyte* v);
-void (WINE_GLAPI *glNormal3d) (GLdouble nx, GLdouble ny, GLdouble nz);
-void (WINE_GLAPI *glNormal3dv) (const GLdouble* v);
-void (WINE_GLAPI *glNormal3f) (GLfloat nx, GLfloat ny, GLfloat nz);
-void (WINE_GLAPI *glNormal3fv) (const GLfloat* v);
-void (WINE_GLAPI *glNormal3i) (GLint nx, GLint ny, GLint nz);
-void (WINE_GLAPI *glNormal3iv) (const GLint* v);
-void (WINE_GLAPI *glNormal3s) (GLshort nx, GLshort ny, GLshort nz);
-void (WINE_GLAPI *glNormal3sv) (const GLshort* v);
-void (WINE_GLAPI *glNormalPointer) (GLenum type, GLsizei stride, const GLvoid* pointer);
-void (WINE_GLAPI *glOrtho) (GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
-void (WINE_GLAPI *glPassThrough) (GLfloat token);
-void (WINE_GLAPI *glPixelMapfv) (GLenum map, GLint mapsize, const GLfloat* values);
-void (WINE_GLAPI *glPixelMapuiv) (GLenum map, GLint mapsize, const GLuint* values);
-void (WINE_GLAPI *glPixelMapusv) (GLenum map, GLint mapsize, const GLushort* values);
-void (WINE_GLAPI *glPixelStoref) (GLenum pname, GLfloat param);
-void (WINE_GLAPI *glPixelStorei) (GLenum pname, GLint param);
-void (WINE_GLAPI *glPixelTransferf) (GLenum pname, GLfloat param);
-void (WINE_GLAPI *glPixelTransferi) (GLenum pname, GLint param);
-void (WINE_GLAPI *glPixelZoom) (GLfloat xfactor, GLfloat yfactor);
-void (WINE_GLAPI *glPointSize) (GLfloat size);
-void (WINE_GLAPI *glPolygonMode) (GLenum face, GLenum mode);
-void (WINE_GLAPI *glPolygonOffset) (GLfloat factor, GLfloat units);
-void (WINE_GLAPI *glPolygonStipple) (const GLubyte* mask);
-void (WINE_GLAPI *glPopAttrib) ();
-void (WINE_GLAPI *glPopClientAttrib) ();
-void (WINE_GLAPI *glPopMatrix) ();
-void (WINE_GLAPI *glPopName) ();
-void (WINE_GLAPI *glPrioritizeTextures) (GLsizei n, const GLuint* textures, const GLclampf* priorities);
-void (WINE_GLAPI *glPushAttrib) (GLbitfield mask);
-void (WINE_GLAPI *glPushClientAttrib) (GLbitfield mask);
-void (WINE_GLAPI *glPushMatrix) ();
-void (WINE_GLAPI *glPushName) (GLuint name);
-void (WINE_GLAPI *glRasterPos2d) (GLdouble x, GLdouble y);
-void (WINE_GLAPI *glRasterPos2dv) (const GLdouble* v);
-void (WINE_GLAPI *glRasterPos2f) (GLfloat x, GLfloat y);
-void (WINE_GLAPI *glRasterPos2fv) (const GLfloat* v);
-void (WINE_GLAPI *glRasterPos2i) (GLint x, GLint y);
-void (WINE_GLAPI *glRasterPos2iv) (const GLint* v);
-void (WINE_GLAPI *glRasterPos2s) (GLshort x, GLshort y);
-void (WINE_GLAPI *glRasterPos2sv) (const GLshort* v);
-void (WINE_GLAPI *glRasterPos3d) (GLdouble x, GLdouble y, GLdouble z);
-void (WINE_GLAPI *glRasterPos3dv) (const GLdouble* v);
-void (WINE_GLAPI *glRasterPos3f) (GLfloat x, GLfloat y, GLfloat z);
-void (WINE_GLAPI *glRasterPos3fv) (const GLfloat* v);
-void (WINE_GLAPI *glRasterPos3i) (GLint x, GLint y, GLint z);
-void (WINE_GLAPI *glRasterPos3iv) (const GLint* v);
-void (WINE_GLAPI *glRasterPos3s) (GLshort x, GLshort y, GLshort z);
-void (WINE_GLAPI *glRasterPos3sv) (const GLshort* v);
-void (WINE_GLAPI *glRasterPos4d) (GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-void (WINE_GLAPI *glRasterPos4dv) (const GLdouble* v);
-void (WINE_GLAPI *glRasterPos4f) (GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void (WINE_GLAPI *glRasterPos4fv) (const GLfloat* v);
-void (WINE_GLAPI *glRasterPos4i) (GLint x, GLint y, GLint z, GLint w);
-void (WINE_GLAPI *glRasterPos4iv) (const GLint* v);
-void (WINE_GLAPI *glRasterPos4s) (GLshort x, GLshort y, GLshort z, GLshort w);
-void (WINE_GLAPI *glRasterPos4sv) (const GLshort* v);
-void (WINE_GLAPI *glReadBuffer) (GLenum mode);
-void (WINE_GLAPI *glReadPixels) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
-void (WINE_GLAPI *glRectd) (GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2);
-void (WINE_GLAPI *glRectdv) (const GLdouble* v1, const GLdouble* v2);
-void (WINE_GLAPI *glRectf) (GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
-void (WINE_GLAPI *glRectfv) (const GLfloat* v1, const GLfloat* v2);
-void (WINE_GLAPI *glRecti) (GLint x1, GLint y1, GLint x2, GLint y2);
-void (WINE_GLAPI *glRectiv) (const GLint* v1, const GLint* v2);
-void (WINE_GLAPI *glRects) (GLshort x1, GLshort y1, GLshort x2, GLshort y2);
-void (WINE_GLAPI *glRectsv) (const GLshort* v1, const GLshort* v2);
-GLint (WINE_GLAPI *glRenderMode) (GLenum mode);
-void (WINE_GLAPI *glRotated) (GLdouble angle, GLdouble x, GLdouble y, GLdouble z);
-void (WINE_GLAPI *glRotatef) (GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
-void (WINE_GLAPI *glScaled) (GLdouble x, GLdouble y, GLdouble z);
-void (WINE_GLAPI *glScalef) (GLfloat x, GLfloat y, GLfloat z);
-void (WINE_GLAPI *glScissor) (GLint x, GLint y, GLsizei width, GLsizei height);
-void (WINE_GLAPI *glSelectBuffer) (GLsizei size, GLuint* buffer);
-void (WINE_GLAPI *glShadeModel) (GLenum mode);
-void (WINE_GLAPI *glStencilFunc) (GLenum func, GLint ref, GLuint mask);
-void (WINE_GLAPI *glStencilMask) (GLuint mask);
-void (WINE_GLAPI *glStencilOp) (GLenum fail, GLenum zfail, GLenum zpass);
-void (WINE_GLAPI *glTexCoord1d) (GLdouble s);
-void (WINE_GLAPI *glTexCoord1dv) (const GLdouble* v);
-void (WINE_GLAPI *glTexCoord1f) (GLfloat s);
-void (WINE_GLAPI *glTexCoord1fv) (const GLfloat* v);
-void (WINE_GLAPI *glTexCoord1i) (GLint s);
-void (WINE_GLAPI *glTexCoord1iv) (const GLint* v);
-void (WINE_GLAPI *glTexCoord1s) (GLshort s);
-void (WINE_GLAPI *glTexCoord1sv) (const GLshort* v);
-void (WINE_GLAPI *glTexCoord2d) (GLdouble s, GLdouble t);
-void (WINE_GLAPI *glTexCoord2dv) (const GLdouble* v);
-void (WINE_GLAPI *glTexCoord2f) (GLfloat s, GLfloat t);
-void (WINE_GLAPI *glTexCoord2fv) (const GLfloat* v);
-void (WINE_GLAPI *glTexCoord2i) (GLint s, GLint t);
-void (WINE_GLAPI *glTexCoord2iv) (const GLint* v);
-void (WINE_GLAPI *glTexCoord2s) (GLshort s, GLshort t);
-void (WINE_GLAPI *glTexCoord2sv) (const GLshort* v);
-void (WINE_GLAPI *glTexCoord3d) (GLdouble s, GLdouble t, GLdouble r);
-void (WINE_GLAPI *glTexCoord3dv) (const GLdouble* v);
-void (WINE_GLAPI *glTexCoord3f) (GLfloat s, GLfloat t, GLfloat r);
-void (WINE_GLAPI *glTexCoord3fv) (const GLfloat* v);
-void (WINE_GLAPI *glTexCoord3i) (GLint s, GLint t, GLint r);
-void (WINE_GLAPI *glTexCoord3iv) (const GLint* v);
-void (WINE_GLAPI *glTexCoord3s) (GLshort s, GLshort t, GLshort r);
-void (WINE_GLAPI *glTexCoord3sv) (const GLshort* v);
-void (WINE_GLAPI *glTexCoord4d) (GLdouble s, GLdouble t, GLdouble r, GLdouble q);
-void (WINE_GLAPI *glTexCoord4dv) (const GLdouble* v);
-void (WINE_GLAPI *glTexCoord4f) (GLfloat s, GLfloat t, GLfloat r, GLfloat q);
-void (WINE_GLAPI *glTexCoord4fv) (const GLfloat* v);
-void (WINE_GLAPI *glTexCoord4i) (GLint s, GLint t, GLint r, GLint q);
-void (WINE_GLAPI *glTexCoord4iv) (const GLint* v);
-void (WINE_GLAPI *glTexCoord4s) (GLshort s, GLshort t, GLshort r, GLshort q);
-void (WINE_GLAPI *glTexCoord4sv) (const GLshort* v);
-void (WINE_GLAPI *glTexCoordPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
-void (WINE_GLAPI *glTexEnvf) (GLenum target, GLenum pname, GLfloat param);
-void (WINE_GLAPI *glTexEnvfv) (GLenum target, GLenum pname, const GLfloat* params);
-void (WINE_GLAPI *glTexEnvi) (GLenum target, GLenum pname, GLint param);
-void (WINE_GLAPI *glTexEnviv) (GLenum target, GLenum pname, const GLint* params);
-void (WINE_GLAPI *glTexGend) (GLenum coord, GLenum pname, GLdouble param);
-void (WINE_GLAPI *glTexGendv) (GLenum coord, GLenum pname, const GLdouble* params);
-void (WINE_GLAPI *glTexGenf) (GLenum coord, GLenum pname, GLfloat param);
-void (WINE_GLAPI *glTexGenfv) (GLenum coord, GLenum pname, const GLfloat* params);
-void (WINE_GLAPI *glTexGeni) (GLenum coord, GLenum pname, GLint param);
-void (WINE_GLAPI *glTexGeniv) (GLenum coord, GLenum pname, const GLint* params);
-void (WINE_GLAPI *glTexImage1D) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid* pixels);
-void (WINE_GLAPI *glTexImage2D) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels);
-void (WINE_GLAPI *glTexParameterf) (GLenum target, GLenum pname, GLfloat param);
-void (WINE_GLAPI *glTexParameterfv) (GLenum target, GLenum pname, const GLfloat* params);
-void (WINE_GLAPI *glTexParameteri) (GLenum target, GLenum pname, GLint param);
-void (WINE_GLAPI *glTexParameteriv) (GLenum target, GLenum pname, const GLint* params);
-void (WINE_GLAPI *glTexSubImage1D) (GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid* pixels);
-void (WINE_GLAPI *glTexSubImage2D) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels);
-void (WINE_GLAPI *glTranslated) (GLdouble x, GLdouble y, GLdouble z);
-void (WINE_GLAPI *glTranslatef) (GLfloat x, GLfloat y, GLfloat z);
-void (WINE_GLAPI *glVertex2d) (GLdouble x, GLdouble y);
-void (WINE_GLAPI *glVertex2dv) (const GLdouble* v);
-void (WINE_GLAPI *glVertex2f) (GLfloat x, GLfloat y);
-void (WINE_GLAPI *glVertex2fv) (const GLfloat* v);
-void (WINE_GLAPI *glVertex2i) (GLint x, GLint y);
-void (WINE_GLAPI *glVertex2iv) (const GLint* v);
-void (WINE_GLAPI *glVertex2s) (GLshort x, GLshort y);
-void (WINE_GLAPI *glVertex2sv) (const GLshort* v);
-void (WINE_GLAPI *glVertex3d) (GLdouble x, GLdouble y, GLdouble z);
-void (WINE_GLAPI *glVertex3dv) (const GLdouble* v);
-void (WINE_GLAPI *glVertex3f) (GLfloat x, GLfloat y, GLfloat z);
-void (WINE_GLAPI *glVertex3fv) (const GLfloat* v);
-void (WINE_GLAPI *glVertex3i) (GLint x, GLint y, GLint z);
-void (WINE_GLAPI *glVertex3iv) (const GLint* v);
-void (WINE_GLAPI *glVertex3s) (GLshort x, GLshort y, GLshort z);
-void (WINE_GLAPI *glVertex3sv) (const GLshort* v);
-void (WINE_GLAPI *glVertex4d) (GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-void (WINE_GLAPI *glVertex4dv) (const GLdouble* v);
-void (WINE_GLAPI *glVertex4f) (GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void (WINE_GLAPI *glVertex4fv) (const GLfloat* v);
-void (WINE_GLAPI *glVertex4i) (GLint x, GLint y, GLint z, GLint w);
-void (WINE_GLAPI *glVertex4iv) (const GLint* v);
-void (WINE_GLAPI *glVertex4s) (GLshort x, GLshort y, GLshort z, GLshort w);
-void (WINE_GLAPI *glVertex4sv) (const GLshort* v);
-void (WINE_GLAPI *glVertexPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
-void (WINE_GLAPI *glViewport) (GLint x, GLint y, GLsizei width, GLsizei height);
-void (WINE_GLAPI *glPointParameterfv) (GLenum pname, const GLfloat *params);
+void (WINE_GLAPI *glAccum)(GLenum op, GLfloat value) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glAlphaFunc)(GLenum func, GLclampf ref) DECLSPEC_HIDDEN;
+GLboolean (WINE_GLAPI *glAreTexturesResident)(GLsizei n, const GLuint *textures, GLboolean *residences) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glArrayElement)(GLint i) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glBegin)(GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glBindTexture)(GLenum target, GLuint texture) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glBitmap)(GLsizei width, GLsizei height, GLfloat xorig,
+        GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glBlendFunc)(GLenum sfactor, GLenum dfactor) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glCallList)(GLuint list) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glCallLists)(GLsizei n, GLenum type, const GLvoid *lists) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glClear)(GLbitfield mask) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glClearAccum)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glClearColor)(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glClearDepth)(GLclampd depth) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glClearIndex)(GLfloat c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glClearStencil)(GLint s) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glClipPlane)(GLenum plane, const GLdouble *equation) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3b)(GLbyte red, GLbyte green, GLbyte blue) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3bv)(const GLbyte *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3d)(GLdouble red, GLdouble green, GLdouble blue) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3f)(GLfloat red, GLfloat green, GLfloat blue) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3i)(GLint red, GLint green, GLint blue) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3s)(GLshort red, GLshort green, GLshort blue) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3ub)(GLubyte red, GLubyte green, GLubyte blue) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3ubv)(const GLubyte *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3ui)(GLuint red, GLuint green, GLuint blue) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3uiv)(const GLuint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3us)(GLushort red, GLushort green, GLushort blue) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor3usv)(const GLushort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4b)(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4bv)(const GLbyte *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4d)(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4f)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4i)(GLint red, GLint green, GLint blue, GLint alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4s)(GLshort red, GLshort green, GLshort blue, GLshort alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4ub)(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4ubv)(const GLubyte *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4ui)(GLuint red, GLuint green, GLuint blue, GLuint alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4uiv)(const GLuint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4us)(GLushort red, GLushort green, GLushort blue, GLushort alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColor4usv)(const GLushort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColorMask)(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColorMaterial)(GLenum face, GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glColorPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glCopyPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glCopyTexImage1D)(GLenum target, GLint level,
+        GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glCopyTexImage2D)(GLenum target, GLint level,
+        GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glCopyTexSubImage1D)(GLenum target, GLint level,
+        GLint xoffset, GLint x, GLint y, GLsizei width) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glCopyTexSubImage2D)(GLenum target, GLint level,
+        GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glCullFace)(GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDeleteLists)(GLuint list, GLsizei range) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDeleteTextures)(GLsizei n, const GLuint *textures) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDepthFunc)(GLenum func) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDepthMask)(GLboolean flag) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDepthRange)(GLclampd nearParam, GLclampd farParam) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDisable)(GLenum cap) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDisableWINE)(GLenum cap) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDisableClientState)(GLenum array) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDrawArrays)(GLenum mode, GLint first, GLsizei count) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDrawBuffer)(GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDrawElements)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glDrawPixels)(GLsizei width, GLsizei height, GLenum format,
+        GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEdgeFlag)(GLboolean flag) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEdgeFlagPointer)(GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEdgeFlagv)(const GLboolean *flag) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEnable)(GLenum cap) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEnableWINE)(GLenum cap) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEnableClientState)(GLenum array) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEnd)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEndList)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalCoord1d)(GLdouble u) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalCoord1dv)(const GLdouble *u) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalCoord1f)(GLfloat u) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalCoord1fv)(const GLfloat *u) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalCoord2d)(GLdouble u, GLdouble v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalCoord2dv)(const GLdouble *u) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalCoord2f)(GLfloat u, GLfloat v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalCoord2fv)(const GLfloat *u) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalMesh1)(GLenum mode, GLint i1, GLint i2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalMesh2)(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalPoint1)(GLint i) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glEvalPoint2)(GLint i, GLint j) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glFeedbackBuffer)(GLsizei size, GLenum type, GLfloat *buffer) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glFogf)(GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glFogfv)(GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glFogi)(GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glFogiv)(GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glFrontFace)(GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glFrustum)(GLdouble left, GLdouble right, GLdouble bottom,
+        GLdouble top, GLdouble zNear, GLdouble zFar) DECLSPEC_HIDDEN;
+GLuint (WINE_GLAPI *glGenLists)(GLsizei range) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGenTextures)(GLsizei n, GLuint *textures) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetBooleanv)(GLenum pname, GLboolean *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetClipPlane)(GLenum plane, GLdouble *equation) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetDoublev)(GLenum pname, GLdouble *params) DECLSPEC_HIDDEN;
+GLenum (WINE_GLAPI *glGetError)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetFloatv)(GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetIntegerv)(GLenum pname, GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetLightfv)(GLenum light, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetLightiv)(GLenum light, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetMapdv)(GLenum target, GLenum query, GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetMapfv)(GLenum target, GLenum query, GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetMapiv)(GLenum target, GLenum query, GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetMaterialfv)(GLenum face, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetMaterialiv)(GLenum face, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetPixelMapfv)(GLenum map, GLfloat *values) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetPixelMapuiv)(GLenum map, GLuint *values) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetPixelMapusv)(GLenum map, GLushort *values) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetPointerv)(GLenum pname, GLvoid **params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetPolygonStipple)(GLubyte *mask) DECLSPEC_HIDDEN;
+const GLubyte * (WINE_GLAPI *glGetString)(GLenum name) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexEnvfv)(GLenum target, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexEnviv)(GLenum target, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexGendv)(GLenum coord, GLenum pname, GLdouble *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexGenfv)(GLenum coord, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexGeniv)(GLenum coord, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexImage)(GLenum target, GLint level, GLenum format,
+        GLenum type, GLvoid *pixels) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexLevelParameterfv)(GLenum target, GLint level, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexLevelParameteriv)(GLenum target, GLint level, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexParameterfv)(GLenum target, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glGetTexParameteriv)(GLenum target, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glHint)(GLenum target, GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexMask)(GLuint mask) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexPointer)(GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexd)(GLdouble c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexdv)(const GLdouble *c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexf)(GLfloat c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexfv)(const GLfloat *c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexi)(GLint c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexiv)(const GLint *c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexs)(GLshort c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexsv)(const GLshort *c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexub)(GLubyte c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glIndexubv)(const GLubyte *c) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glInitNames)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glInterleavedArrays)(GLenum format, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
+GLboolean (WINE_GLAPI *glIsEnabled)(GLenum cap) DECLSPEC_HIDDEN;
+GLboolean (WINE_GLAPI *glIsList)(GLuint list) DECLSPEC_HIDDEN;
+GLboolean (WINE_GLAPI *glIsTexture)(GLuint texture) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLightModelf)(GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLightModelfv)(GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLightModeli)(GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLightModeliv)(GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLightf)(GLenum light, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLightfv)(GLenum light, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLighti)(GLenum light, GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLightiv)(GLenum light, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLineStipple)(GLint factor, GLushort pattern) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLineWidth)(GLfloat width) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glListBase)(GLuint base) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLoadIdentity)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLoadMatrixd)(const GLdouble *m) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLoadMatrixf)(const GLfloat *m) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLoadName)(GLuint name) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glLogicOp)(GLenum opcode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMap1d)(GLenum target, GLdouble u1, GLdouble u2,
+        GLint stride, GLint order, const GLdouble *points) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMap1f)(GLenum target, GLfloat u1, GLfloat u2, GLint stride,
+        GLint order, const GLfloat *points) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMap2d)(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder,
+        GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble *points) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMap2f)(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder,
+        GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMapGrid1d)(GLint un, GLdouble u1, GLdouble u2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMapGrid1f)(GLint un, GLfloat u1, GLfloat u2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMapGrid2d)(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMapGrid2f)(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMaterialf)(GLenum face, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMaterialfv)(GLenum face, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMateriali)(GLenum face, GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMaterialiv)(GLenum face, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMatrixMode)(GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMultMatrixd)(const GLdouble *m) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glMultMatrixf)(const GLfloat *m) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNewList)(GLuint list, GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3b)(GLbyte nx, GLbyte ny, GLbyte nz) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3bv)(const GLbyte *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3d)(GLdouble nx, GLdouble ny, GLdouble nz) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3f)(GLfloat nx, GLfloat ny, GLfloat nz) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3i)(GLint nx, GLint ny, GLint nz) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3s)(GLshort nx, GLshort ny, GLshort nz) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormal3sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glNormalPointer)(GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glOrtho)(GLdouble left, GLdouble right, GLdouble bottom,
+        GLdouble top, GLdouble zNear, GLdouble zFar) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPassThrough)(GLfloat token) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPixelMapfv)(GLenum map, GLint mapsize, const GLfloat *values) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPixelMapuiv)(GLenum map, GLint mapsize, const GLuint *values) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPixelMapusv)(GLenum map, GLint mapsize, const GLushort *values) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPixelStoref)(GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPixelStorei)(GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPixelTransferf)(GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPixelTransferi)(GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPixelZoom)(GLfloat xfactor, GLfloat yfactor) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPointSize)(GLfloat size) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPolygonMode)(GLenum face, GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPolygonOffset)(GLfloat factor, GLfloat units) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPolygonStipple)(const GLubyte *mask) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPopAttrib)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPopClientAttrib)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPopMatrix)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPopName)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPrioritizeTextures)(GLsizei n, const GLuint *textures, const GLclampf *priorities) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPushAttrib)(GLbitfield mask) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPushClientAttrib)(GLbitfield mask) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPushMatrix)(void) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPushName)(GLuint name) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos2d)(GLdouble x, GLdouble y) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos2dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos2f)(GLfloat x, GLfloat y) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos2fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos2i)(GLint x, GLint y) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos2iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos2s)(GLshort x, GLshort y) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos2sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos3d)(GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos3f)(GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos3i)(GLint x, GLint y, GLint z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos3iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos3s)(GLshort x, GLshort y, GLshort z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos3sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos4d)(GLdouble x, GLdouble y, GLdouble z, GLdouble w) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos4dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos4fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos4i)(GLint x, GLint y, GLint z, GLint w) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos4iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos4s)(GLshort x, GLshort y, GLshort z, GLshort w) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRasterPos4sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glReadBuffer)(GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height,
+        GLenum format, GLenum type, GLvoid *pixels) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRectd)(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRectdv)(const GLdouble *v1, const GLdouble *v2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRectf)(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRectfv)(const GLfloat *v1, const GLfloat *v2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRecti)(GLint x1, GLint y1, GLint x2, GLint y2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRectiv)(const GLint *v1, const GLint *v2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRects)(GLshort x1, GLshort y1, GLshort x2, GLshort y2) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRectsv)(const GLshort *v1, const GLshort *v2) DECLSPEC_HIDDEN;
+GLint (WINE_GLAPI *glRenderMode)(GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRotated)(GLdouble angle, GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glRotatef)(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glScaled)(GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glScalef)(GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glScissor)(GLint x, GLint y, GLsizei width, GLsizei height) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glSelectBuffer)(GLsizei size, GLuint *buffer) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glShadeModel)(GLenum mode) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glStencilFunc)(GLenum func, GLint ref, GLuint mask) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glStencilMask)(GLuint mask) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glStencilOp)(GLenum fail, GLenum zfail, GLenum zpass) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord1d)(GLdouble s) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord1dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord1f)(GLfloat s) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord1fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord1i)(GLint s) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord1iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord1s)(GLshort s) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord1sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord2d)(GLdouble s, GLdouble t) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord2dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord2f)(GLfloat s, GLfloat t) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord2fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord2i)(GLint s, GLint t) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord2iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord2s)(GLshort s, GLshort t) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord2sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord3d)(GLdouble s, GLdouble t, GLdouble r) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord3f)(GLfloat s, GLfloat t, GLfloat r) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord3i)(GLint s, GLint t, GLint r) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord3iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord3s)(GLshort s, GLshort t, GLshort r) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord3sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord4d)(GLdouble s, GLdouble t, GLdouble r, GLdouble q) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord4dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord4f)(GLfloat s, GLfloat t, GLfloat r, GLfloat q) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord4fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord4i)(GLint s, GLint t, GLint r, GLint q) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord4iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord4s)(GLshort s, GLshort t, GLshort r, GLshort q) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoord4sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexEnvf)(GLenum target, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexEnvfv)(GLenum target, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexEnvi)(GLenum target, GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexEnviv)(GLenum target, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexGend)(GLenum coord, GLenum pname, GLdouble param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexGendv)(GLenum coord, GLenum pname, const GLdouble *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexGenf)(GLenum coord, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexGenfv)(GLenum coord, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexGeni)(GLenum coord, GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexGeniv)(GLenum coord, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexImage1D)(GLenum target, GLint level, GLint internalformat, GLsizei width,
+        GLint border, GLenum format, GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexImage2D)(GLenum target, GLint level, GLint internalformat, GLsizei width,
+        GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexParameterf)(GLenum target, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexParameterfv)(GLenum target, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexParameteri)(GLenum target, GLenum pname, GLint param) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexParameteriv)(GLenum target, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexSubImage1D)(GLenum target, GLint level, GLint xoffset,
+        GLsizei width, GLenum format, GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTexSubImage2D)(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+        GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTranslated)(GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glTranslatef)(GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex2d)(GLdouble x, GLdouble y) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex2dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex2f)(GLfloat x, GLfloat y) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex2fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex2i)(GLint x, GLint y) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex2iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex2s)(GLshort x, GLshort y) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex2sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex3d)(GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex3f)(GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex3i)(GLint x, GLint y, GLint z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex3iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex3s)(GLshort x, GLshort y, GLshort z) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex3sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex4d)(GLdouble x, GLdouble y, GLdouble z, GLdouble w) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex4dv)(const GLdouble *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex4fv)(const GLfloat *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex4i)(GLint x, GLint y, GLint z, GLint w) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex4iv)(const GLint *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex4s)(GLshort x, GLshort y, GLshort z, GLshort w) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertex4sv)(const GLshort *v) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glVertexPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glViewport)(GLint x, GLint y, GLsizei width, GLsizei height) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPointParameterfv)(GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
 
 /* glFinish and glFlush are always loaded from opengl32.dll, thus they always have
  * __stdcall calling convention.
@@ -1146,17 +1164,17 @@ void (WINE_GLAPI *glPointParameterfv) (GLenum pname, const GLfloat *params);
  * They are wgl functions and must not be called inside the gl lock, give them a
  * name that makes this clear
  */
-void (__stdcall  *wglFinish) ();
-void (__stdcall  *wglFlush) ();
+void (__stdcall *wglFinish)(void) DECLSPEC_HIDDEN;
+void (__stdcall *wglFlush)(void) DECLSPEC_HIDDEN;
 
 /* WGL functions */
-HGLRC   (WINAPI *pwglCreateContext)(HDC);
-BOOL    (WINAPI *pwglDeleteContext)(HGLRC);
-HGLRC   (WINAPI *pwglGetCurrentContext)(void);
-HDC     (WINAPI *pwglGetCurrentDC)(void);
-PROC    (WINAPI *pwglGetProcAddress)(LPCSTR);
-BOOL    (WINAPI *pwglMakeCurrent)(HDC,HGLRC);
-BOOL    (WINAPI *pwglShareLists)(HGLRC,HGLRC);
+HGLRC (WINAPI *pwglCreateContext)(HDC) DECLSPEC_HIDDEN;
+BOOL (WINAPI *pwglDeleteContext)(HGLRC) DECLSPEC_HIDDEN;
+HGLRC (WINAPI *pwglGetCurrentContext)(void) DECLSPEC_HIDDEN;
+HDC (WINAPI *pwglGetCurrentDC)(void) DECLSPEC_HIDDEN;
+PROC (WINAPI *pwglGetProcAddress)(LPCSTR) DECLSPEC_HIDDEN;
+BOOL (WINAPI *pwglMakeCurrent)(HDC, HGLRC) DECLSPEC_HIDDEN;
+BOOL (WINAPI *pwglShareLists)(HGLRC, HGLRC) DECLSPEC_HIDDEN;
 
 #define GL_FUNCS_GEN \
     USE_GL_FUNC(glAccum) \
@@ -1567,6 +1585,114 @@ typedef void (WINE_GLAPI *PGLFNCLAMPCOLORARBPROC) (GLenum target, GLenum clamp);
 #endif
 typedef void (WINE_GLAPI *PGLFNDRAWBUFFERSARBPROC) (GLsizei n, const GLenum *bufs);
 
+/* GL_ARB_framebuffer_object */
+#ifndef GL_ARB_framebuffer_object
+#define GL_ARB_framebuffer_object 1
+#define GL_FRAMEBUFFER                                      0x8d40
+#define GL_READ_FRAMEBUFFER                                 0x8ca8
+#define GL_DRAW_FRAMEBUFFER                                 0x8ca9
+#define GL_RENDERBUFFER                                     0x8d41
+#define GL_STENCIL_INDEX1                                   0x8d46
+#define GL_STENCIL_INDEX4                                   0x8d47
+#define GL_STENCIL_INDEX8                                   0x8d48
+#define GL_STENCIL_INDEX16                                  0x8d49
+#define GL_RENDERBUFFER_WIDTH                               0x8d42
+#define GL_RENDERBUFFER_HEIGHT                              0x8d43
+#define GL_RENDERBUFFER_INTERNAL_FORMAT                     0x8d44
+#define GL_RENDERBUFFER_RED_SIZE                            0x8d50
+#define GL_RENDERBUFFER_GREEN_SIZE                          0x8d51
+#define GL_RENDERBUFFER_BLUE_SIZE                           0x8d52
+#define GL_RENDERBUFFER_ALPHA_SIZE                          0x8d53
+#define GL_RENDERBUFFER_DEPTH_SIZE                          0x8d54
+#define GL_RENDERBUFFER_STENCIL_SIZE                        0x8d55
+#define GL_RENDERBUFFER_SAMPLES                             0x8cab
+#define GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE               0x8cd0
+#define GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME               0x8cd1
+#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL             0x8cd2
+#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE     0x8cd3
+#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER             0x8cd4
+#define GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING            0x8210
+#define GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE            0x8211
+#define GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE                  0x8212
+#define GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE                0x8213
+#define GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE                 0x8214
+#define GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE                0x8215
+#define GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE                0x8216
+#define GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE              0x8217
+#define GL_SRGB                                             0x8c40
+#define GL_UNSIGNED_NORMALIZED                              0x8c17
+#define GL_FRAMEBUFFER_DEFAULT                              0x8218
+#define GL_INDEX                                            0x8222
+#define GL_COLOR_ATTACHMENT0                                0x8ce0
+#define GL_COLOR_ATTACHMENT1                                0x8ce1
+#define GL_COLOR_ATTACHMENT2                                0x8ce2
+#define GL_COLOR_ATTACHMENT3                                0x8ce3
+#define GL_COLOR_ATTACHMENT4                                0x8ce4
+#define GL_COLOR_ATTACHMENT5                                0x8ce5
+#define GL_COLOR_ATTACHMENT6                                0x8ce6
+#define GL_COLOR_ATTACHMENT7                                0x8ce7
+#define GL_COLOR_ATTACHMENT8                                0x8ce8
+#define GL_COLOR_ATTACHMENT9                                0x8ce9
+#define GL_COLOR_ATTACHMENT10                               0x8cea
+#define GL_COLOR_ATTACHMENT11                               0x8ceb
+#define GL_COLOR_ATTACHMENT12                               0x8cec
+#define GL_COLOR_ATTACHMENT13                               0x8ced
+#define GL_COLOR_ATTACHMENT14                               0x8cee
+#define GL_COLOR_ATTACHMENT15                               0x8cef
+#define GL_DEPTH_ATTACHMENT                                 0x8d00
+#define GL_STENCIL_ATTACHMENT                               0x8d20
+#define GL_DEPTH_STENCIL_ATTACHMENT                         0x821a
+#define GL_MAX_SAMPLES                                      0x8d57
+#define GL_FRAMEBUFFER_COMPLETE                             0x8cd5
+#define GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT                0x8cd6
+#define GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT        0x8cd7
+#define GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER               0x8cdb
+#define GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER               0x8cdc
+#define GL_FRAMEBUFFER_UNSUPPORTED                          0x8cdd
+#define GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE               0x8d56
+#define GL_FRAMEBUFFER_UNDEFINED                            0x8219
+#define GL_FRAMEBUFFER_BINDING                              0x8ca6
+#define GL_DRAW_FRAMEBUFFER_BINDING                         0x8ca6
+#define GL_READ_FRAMEBUFFER_BINDING                         0x8caa
+#define GL_RENDERBUFFER_BINDING                             0x8ca7
+#define GL_MAX_COLOR_ATTACHMENTS                            0x8cdf
+#define GL_MAX_RENDERBUFFER_SIZE                            0x84e8
+#define GL_INVALID_FRAMEBUFFER_OPERATION                    0x0506
+#define GL_DEPTH_STENCIL                                    0x84f9
+#define GL_UNSIGNED_INT_24_8                                0x84fa
+#define GL_DEPTH24_STENCIL8                                 0x88f0
+#define GL_TEXTURE_STENCIL_SIZE                             0x88f1
+#endif
+typedef GLboolean (WINE_GLAPI * PGLFNGLISRENDERBUFFERPROC)(GLuint renderbuffer);
+typedef void (WINE_GLAPI * PGLFNGLBINDRENDERBUFFERPROC)(GLenum target, GLuint renderbuffer);
+typedef void (WINE_GLAPI * PGLFNGLDELETERENDERBUFFERSPROC)(GLsizei n, const GLuint *renderbuffers);
+typedef void (WINE_GLAPI * PGLFNGLGENRENDERBUFFERSPROC)(GLsizei n, GLuint *renderbuffers);
+typedef void (WINE_GLAPI * PGLFNGLRENDERBUFFERSTORAGEPROC)(GLenum target, GLenum internalformat,
+        GLsizei width, GLsizei height);
+typedef void (WINE_GLAPI * PGLFNRENDERBUFFERSTORAGEMULTISAMPLEPROC)(GLenum target, GLsizei samples,
+        GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (WINE_GLAPI * PGLFNGLGETRENDERBUFFERPARAMETERIVPROC)(GLenum target, GLenum pname, GLint *params);
+typedef GLboolean (WINE_GLAPI * PGLFNGLISFRAMEBUFFERPROC)(GLuint framebuffer);
+typedef void (WINE_GLAPI * PGLFNGLBINDFRAMEBUFFERPROC)(GLenum target, GLuint framebuffer);
+typedef void (WINE_GLAPI * PGLFNGLDELETEFRAMEBUFFERSPROC)(GLsizei n, const GLuint *framebuffers);
+typedef void (WINE_GLAPI * PGLFNGLGENFRAMEBUFFERSPROC)(GLsizei n, GLuint *framebuffers);
+typedef GLenum (WINE_GLAPI * PGLFNGLCHECKFRAMEBUFFERSTATUSPROC)(GLenum target);
+typedef void (WINE_GLAPI * PGLFNGLFRAMEBUFFERTEXTURE1DPROC)(GLenum target, GLenum attachment,
+        GLenum textarget, GLuint texture, GLint level);
+typedef void (WINE_GLAPI * PGLFNGLFRAMEBUFFERTEXTURE2DPROC)(GLenum target, GLenum attachment,
+        GLenum textarget, GLuint texture, GLint level);
+typedef void (WINE_GLAPI * PGLFNGLFRAMEBUFFERTEXTURE3DPROC)(GLenum target, GLenum attachment,
+        GLenum textarget, GLuint texture, GLint level, GLint layer);
+typedef void (WINE_GLAPI * PGLFNGLFRAMEBUFFERTEXTURELAYERPROC)(GLenum target, GLenum attachment,
+        GLuint texture, GLint level, GLint layer);
+typedef void (WINE_GLAPI * PGLFNGLFRAMEBUFFERRENDERBUFFERPROC)(GLenum target, GLenum attachment,
+        GLenum renderbuffertarget, GLuint renderbuffer);
+typedef void (WINE_GLAPI * PGLFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC)(GLenum target, GLenum attachment,
+        GLenum pname, GLint *params);
+typedef void (WINE_GLAPI * PGLFNGLBLITFRAMEBUFFERPROC)(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+typedef void (WINE_GLAPI * PGLFNGLGENERATEMIPMAPPROC)(GLenum target);
+
 /* GL_ARB_geometry_shader4 */
 #ifndef GL_ARB_geometry_shader4
 #define GL_GEOMETRY_SHADER_ARB                      0x8dd9
@@ -1758,6 +1884,17 @@ typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD4SVARBPROC) (GLenum target, 
 #endif
 typedef void (WINE_GLAPI * PGLFNGLPOINTPARAMETERFARBPROC) (GLenum pname, GLfloat param);
 typedef void (WINE_GLAPI * PGLFNGLPOINTPARAMETERFVARBPROC) (GLenum pname, const GLfloat *params);
+
+/* GL_ARB_provoking_vertex */
+#ifndef GL_ARB_provoking_vertex
+#define GL_ARB_provoking_vertex 1
+#define GL_FIRST_VERTEX_CONVENTION                      0x8e4d
+#define GL_LAST_VERTEX_CONVENTION                       0x8e4e
+#define GL_PROVOKING_VERTEX                             0x8e4f
+#define GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION     0x8e4c
+#endif
+typedef void (WINE_GLAPI * PGLFNGLPROVOKINGVERTEXPROC)(GLenum mode);
+
 /* GL_ARB_vertex_blend */
 #ifndef GL_ARB_vertex_blend
 #define GL_ARB_vertex_blend 1
@@ -1968,7 +2105,7 @@ typedef void (WINE_GLAPI * PGLFNGLPOINTPARAMETERFVEXTPROC) (GLenum pname, const 
 #define GL_FIRST_VERTEX_CONVENTION_EXT                      0x8e4d
 #define GL_LAST_VERTEX_CONVENTION_EXT                       0x8e4e
 #define GL_PROVOKING_VERTEX_EXT                             0x8e4f
-#define GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTIONS_EXT    0x8e4c
+#define GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION_EXT     0x8e4c
 #endif
 typedef void (WINE_GLAPI * PGLFNGLPROVOKINGVERTEXEXTPROC)(GLenum mode);
 
@@ -3031,8 +3168,8 @@ typedef void (WINE_GLAPI * PGLFNPROGRAMLOCALPARAMETERS4FVEXTPROC) (GLenum target
 typedef GLuint (WINE_GLAPI *PGLFNGENFRAGMENTSHADERSATI) (GLuint range);
 typedef void (WINE_GLAPI *PGLFNBINDFRAGMENTSHADERATI) (GLuint id);
 typedef void (WINE_GLAPI *PGLFNDELETEFRAGMENTSHADERATI) (GLuint id);
-typedef void (WINE_GLAPI *PGLFNBEGINFRAGMENTSHADERATI) ();
-typedef void (WINE_GLAPI *PGLFNENDFRAGMENTSHADERATI) ();
+typedef void (WINE_GLAPI *PGLFNBEGINFRAGMENTSHADERATI) (void);
+typedef void (WINE_GLAPI *PGLFNENDFRAGMENTSHADERATI) (void);
 typedef void (WINE_GLAPI *PGLFNPASSTEXCOORDATI) (GLuint dst, GLuint coord, GLenum swizzle);
 typedef void (WINE_GLAPI *PGLFNSAMPLEMAPATI) (GLuint dst, GLuint interp, GLenum swizzle);
 typedef void (WINE_GLAPI *PGLFNCOLORFRAGMENTOP1ATI) (GLenum op, GLuint dst, GLuint dstMask,
@@ -3416,12 +3553,14 @@ typedef enum _GL_SupportedExt {
   ARB_DRAW_BUFFERS,
   ARB_FRAGMENT_PROGRAM,
   ARB_FRAGMENT_SHADER,
+  ARB_FRAMEBUFFER_OBJECT,
   ARB_GEOMETRY_SHADER4,
   ARB_IMAGING,
   ARB_MULTISAMPLE,
   ARB_MULTITEXTURE,
   ARB_OCCLUSION_QUERY,
   ARB_POINT_PARAMETERS,
+  ARB_PROVOKING_VERTEX,
   ARB_PIXEL_BUFFER_OBJECT,
   ARB_POINT_SPRITE,
   ARB_TEXTURE_COMPRESSION,
@@ -3533,6 +3672,27 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(PGLFNCLAMPCOLORARBPROC,                             glClampColorARB,                            ARB_COLOR_BUFFER_FLOAT, NULL )\
     /* GL_ARB_draw_buffers */ \
     USE_GL_FUNC(PGLFNDRAWBUFFERSARBPROC,                            glDrawBuffersARB,                           ARB_DRAW_BUFFERS,       NULL )\
+    /* GL_ARB_framebuffer_object */ \
+    USE_GL_FUNC(PGLFNGLISRENDERBUFFERPROC,                          glIsRenderbuffer,                           ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLBINDRENDERBUFFERPROC,                        glBindRenderbuffer,                         ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLDELETERENDERBUFFERSPROC,                     glDeleteRenderbuffers,                      ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLGENRENDERBUFFERSPROC,                        glGenRenderbuffers,                         ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLRENDERBUFFERSTORAGEPROC,                     glRenderbufferStorage,                      ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNRENDERBUFFERSTORAGEMULTISAMPLEPROC,            glRenderbufferStorageMultisample,           ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLGETRENDERBUFFERPARAMETERIVPROC,              glGetRenderbufferParameteriv,               ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLISFRAMEBUFFERPROC,                           glIsFramebuffer,                            ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLBINDFRAMEBUFFERPROC,                         glBindFramebuffer,                          ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLDELETEFRAMEBUFFERSPROC,                      glDeleteFramebuffers,                       ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLGENFRAMEBUFFERSPROC,                         glGenFramebuffers,                          ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLCHECKFRAMEBUFFERSTATUSPROC,                  glCheckFramebufferStatus,                   ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE1DPROC,                    glFramebufferTexture1D,                     ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE2DPROC,                    glFramebufferTexture2D,                     ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE3DPROC,                    glFramebufferTexture3D,                     ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURELAYERPROC,                 glFramebufferTextureLayer,                  ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLFRAMEBUFFERRENDERBUFFERPROC,                 glFramebufferRenderbuffer,                  ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC,     glGetFramebufferAttachmentParameteriv,      ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLBLITFRAMEBUFFERPROC,                         glBlitFramebuffer,                          ARB_FRAMEBUFFER_OBJECT, NULL )\
+    USE_GL_FUNC(PGLFNGLGENERATEMIPMAPPROC,                          glGenerateMipmap,                           ARB_FRAMEBUFFER_OBJECT, NULL )\
     /* GL_ARB_geometry_shader4 */ \
     USE_GL_FUNC(PGLFNPROGRAMPARAMETERIARBPROC,                      glProgramParameteriARB,                     ARB_GEOMETRY_SHADER4,   NULL ) \
     USE_GL_FUNC(PGLFNFRAMEBUFFERTEXTUREARBPROC,                     glFramebufferTextureARB,                    ARB_GEOMETRY_SHADER4,   NULL ) \
@@ -3566,6 +3726,8 @@ typedef enum _GL_SupportedExt {
     /* GL_ARB_point_parameters */ \
     USE_GL_FUNC(PGLFNGLPOINTPARAMETERFARBPROC,                      glPointParameterfARB,                       ARB_POINT_PARAMETERS,   NULL )\
     USE_GL_FUNC(PGLFNGLPOINTPARAMETERFVARBPROC,                     glPointParameterfvARB,                      ARB_POINT_PARAMETERS,   NULL )\
+    /* GL_ARB_provoking_vertex */ \
+    USE_GL_FUNC(PGLFNGLPROVOKINGVERTEXPROC,                         glProvokingVertex,                          ARB_PROVOKING_VERTEX,   NULL)\
     /* GL_ARB_texture_compression */ \
     USE_GL_FUNC(PGLFNCOMPRESSEDTEXIMAGE2DPROC,                      glCompressedTexImage2DARB,                  ARB_TEXTURE_COMPRESSION,NULL )\
     USE_GL_FUNC(PGLFNCOMPRESSEDTEXIMAGE3DPROC,                      glCompressedTexImage3DARB,                  ARB_TEXTURE_COMPRESSION,NULL )\
@@ -3949,6 +4111,29 @@ typedef BOOL (WINAPI * WINED3D_PFNWGLSETPIXELFORMATWINE) (HDC hdc, int iPixelFor
  * Structures
  ****************************************************/
 
+struct wined3d_fbo_ops
+{
+    PGLFNGLISRENDERBUFFERPROC                       glIsRenderbuffer;
+    PGLFNGLBINDRENDERBUFFERPROC                     glBindRenderbuffer;
+    PGLFNGLDELETERENDERBUFFERSPROC                  glDeleteRenderbuffers;
+    PGLFNGLGENRENDERBUFFERSPROC                     glGenRenderbuffers;
+    PGLFNGLRENDERBUFFERSTORAGEPROC                  glRenderbufferStorage;
+    PGLFNRENDERBUFFERSTORAGEMULTISAMPLEPROC         glRenderbufferStorageMultisample;
+    PGLFNGLGETRENDERBUFFERPARAMETERIVPROC           glGetRenderbufferParameteriv;
+    PGLFNGLISFRAMEBUFFERPROC                        glIsFramebuffer;
+    PGLFNGLBINDFRAMEBUFFERPROC                      glBindFramebuffer;
+    PGLFNGLDELETEFRAMEBUFFERSPROC                   glDeleteFramebuffers;
+    PGLFNGLGENFRAMEBUFFERSPROC                      glGenFramebuffers;
+    PGLFNGLCHECKFRAMEBUFFERSTATUSPROC               glCheckFramebufferStatus;
+    PGLFNGLFRAMEBUFFERTEXTURE1DPROC                 glFramebufferTexture1D;
+    PGLFNGLFRAMEBUFFERTEXTURE2DPROC                 glFramebufferTexture2D;
+    PGLFNGLFRAMEBUFFERTEXTURE3DPROC                 glFramebufferTexture3D;
+    PGLFNGLFRAMEBUFFERRENDERBUFFERPROC              glFramebufferRenderbuffer;
+    PGLFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC  glGetFramebufferAttachmentParameteriv;
+    PGLFNGLBLITFRAMEBUFFERPROC                      glBlitFramebuffer;
+    PGLFNGLGENERATEMIPMAPPROC                       glGenerateMipmap;
+};
+
 #define USE_GL_FUNC(type, pfn, ext, replace) type pfn;
 
 struct wined3d_gl_info
@@ -3997,6 +4182,7 @@ struct wined3d_gl_info
 
     BOOL supported[WINED3D_GL_EXT_COUNT];
 
+    struct wined3d_fbo_ops fbo_ops;
     /* GL function pointers */
     GL_EXT_FUNCS_GEN
     /* WGL function pointers */

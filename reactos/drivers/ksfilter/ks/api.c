@@ -719,7 +719,7 @@ KsFreeObjectHeader(
 {
     PKSIOBJECT_HEADER ObjectHeader = (PKSIOBJECT_HEADER) Header;
 
-    DPRINT1("KsFreeObjectHeader Header %p Class %wZ\n", Header, &ObjectHeader->ObjectClass);
+    DPRINT("KsFreeObjectHeader Header %p Class %wZ\n", Header, &ObjectHeader->ObjectClass);
 
     if (ObjectHeader->ObjectClass.Buffer)
     {
@@ -804,7 +804,7 @@ KsAddObjectCreateItemToDeviceHeader(
 
     Header = (PKSIDEVICE_HEADER)DevHeader;
 
-    DPRINT1("KsAddObjectCreateItemToDeviceHeader entered\n");
+    DPRINT("KsAddObjectCreateItemToDeviceHeader entered\n");
 
      /* check if a device header has been provided */
     if (!DevHeader)
@@ -848,7 +848,7 @@ KsAddObjectCreateItemToObjectHeader(
 
     Header = (PKSIOBJECT_HEADER)ObjectHeader;
 
-    DPRINT1("KsAddObjectCreateItemToDeviceHeader entered\n");
+    DPRINT("KsAddObjectCreateItemToDeviceHeader entered\n");
 
      /* check if a device header has been provided */
     if (!Header)
@@ -1377,7 +1377,7 @@ KopDispatchCreate(
     DriverObjectExtension = (PKO_DRIVER_EXTENSION)IoGetDriverObjectExtension(DeviceObject->DriverObject, (PVOID)KoDriverInitialize);
     if (!DriverObjectExtension)
     {
-        DPRINT1("FileObject not attached!\n");
+        DPRINT1("No DriverObjectExtension!\n");
         Status = STATUS_UNSUCCESSFUL;
         goto cleanup;
     }

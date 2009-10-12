@@ -222,7 +222,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
     else if (BusDataType == EisaConfiguration)
     {
         /* FIXME: TODO */
-        KEBUGCHECK(0);
+        KeBugCheck(0);
     }
     else if ((BusDataType == PCIConfiguration) &&
              (HalpPCIConfigInitialized) &&

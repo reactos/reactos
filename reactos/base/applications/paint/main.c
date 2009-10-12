@@ -37,10 +37,11 @@ BITMAPINFO bitmapinfo;
 int imgXRes = 400;
 int imgYRes = 300;
 
-HBITMAP hBms[4];
+HBITMAP hBms[HISTORYSIZE];
 int currInd = 0;
 int undoSteps = 0;
 int redoSteps = 0;
+BOOL imageSaved = TRUE;
 
 // global status variables
 
@@ -116,6 +117,8 @@ HWND hSizeboxRightCenter;
 HWND hSizeboxLeftBottom;
 HWND hSizeboxCenterBottom;
 HWND hSizeboxRightBottom;
+
+HWND hTrackbarZoom;
 
 int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, int nFunsterStil)
 {
@@ -305,6 +308,9 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
 
     /* creating the tool settings child window */
     hToolSettings = CreateWindowEx(0, _T("ToolSettings"), _T(""), WS_CHILD | WS_VISIBLE, 7, 210, 42, 140, hwnd, NULL, hThisInstance, NULL);
+    hTrackbarZoom = CreateWindowEx(0, TRACKBAR_CLASS, _T(""), WS_CHILD | TBS_VERT | TBS_AUTOTICKS, 1, 1, 40, 64, hToolSettings, NULL, hThisInstance, NULL);
+    SendMessage(hTrackbarZoom, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 6));
+    SendMessage(hTrackbarZoom, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)3);
 
     /* creating the palette child window */
     hPalWin = CreateWindowEx(0, _T("Palette"), _T(""), WS_CHILD | WS_VISIBLE, 56, 9, 255, 32, hwnd, NULL, hThisInstance, NULL);

@@ -37,6 +37,9 @@ BEGIN
                     "FreeBSD - http://www.freebsd.org\n"\
                     "adns - http://adns.jgaa.com\n"\
                     "ICU - http://www.icu-project.org/\n"\
+                    "GraphApp - http://enchantia.com/software/graphapp/\n"\
+                    "Ext2 - http://winext2fsd.sourceforge.net/\n"\
+                    "X - http://www.x.org/\n"\
                     ""
 END
 

@@ -29,17 +29,28 @@
 #include <stdio.h>
 
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(powrprof);
 
 
 static const WCHAR szPowerCfgSubKey[] =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg";
+static const WCHAR szUserPowerConfigSubKey[] = 
+    L"Control Panel\\PowerCfg";
+static const WCHAR szCurrentPowerPolicies[] = 
+    L"CurrentPowerPolicy";
 static const WCHAR szPolicies[] = L"Policies";
+static const WCHAR szName[] = L"Name";
+static const WCHAR szDescription[] = L"Description";
 static const WCHAR szSemaphoreName[] = L"PowerProfileRegistrySemaphore";
 static const WCHAR szDiskMax[] = L"DiskSpindownMax";
 static const WCHAR szDiskMin[] = L"DiskSpindownMin";
 static const WCHAR szLastID[] = L"LastID";
+
+UINT g_LastID = -1;
+
+BOOLEAN WINAPI WritePwrPolicy(PUINT puiID, PPOWER_POLICY pPowerPolicy);
 
 HANDLE PPRegSemaphore = NULL;
 
@@ -50,6 +61,12 @@ CallNtPowerInformation(POWER_INFORMATION_LEVEL InformationLevel,
                        PVOID lpOutputBuffer,
                        ULONG nOutputBufferSize)
 {
+    BOOLEAN old;
+
+	//Lohnegrim: In order to get the right results, we have to ajust our Privilegs
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &old);
+    RtlAdjustPrivilege(SE_CREATE_PAGEFILE_PRIVILEGE, TRUE, FALSE, &old);
+
     return NtPowerInformation(InformationLevel,
                               lpInputBuffer,
                               nInputBufferSize,
@@ -325,7 +342,7 @@ GetCurrentPowerPolicies(PGLOBAL_POWER_POLICY pGlobalPowerPolicy,
     NtPowerInformation(SystemPowerPolicyDc, 0, 0, &DCPower, sizeof(SYSTEM_POWER_POLICY));
 
     return FALSE;
-	*/
+    */
 /*
    Lohnegrim: I dont know why this Function shoud call NtPowerInformation, becouse as far as i know,
       it simply returns the GlobalPowerPolicy and the AktivPowerScheme!
@@ -455,14 +472,24 @@ IsAdminOverrideActive(PADMINISTRATOR_POWER_POLICY p)
     return FALSE;
 }
 
-
 BOOLEAN WINAPI
 IsPwrHibernateAllowed(VOID)
 {
     SYSTEM_POWER_CAPABILITIES PowerCaps;
-    FIXME("() stub!\n");
-    NtPowerInformation(SystemPowerCapabilities, NULL, 0, &PowerCaps, sizeof(PowerCaps));
-    return FALSE;
+    NTSTATUS ret;
+    BOOLEAN old;
+
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &old);
+    ret = NtPowerInformation(SystemPowerCapabilities, NULL, 0, &PowerCaps, sizeof(PowerCaps));
+    if (ret == STATUS_SUCCESS)
+    {
+        return PowerCaps.SystemS4 && PowerCaps.HiberFilePresent; // IsHiberfilPresent();
+    }
+    else
+    {
+        SetLastError(RtlNtStatusToDosError(ret));
+        return FALSE;
+    }
 }
 
 
@@ -470,9 +497,20 @@ BOOLEAN WINAPI
 IsPwrShutdownAllowed(VOID)
 {
     SYSTEM_POWER_CAPABILITIES PowerCaps;
-    FIXME("() stub!\n");
-    NtPowerInformation(SystemPowerCapabilities, NULL, 0, &PowerCaps, sizeof(PowerCaps));
-    return FALSE;
+    NTSTATUS ret;
+    BOOLEAN old;
+
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &old);
+    ret = NtPowerInformation(SystemPowerCapabilities, NULL, 0, &PowerCaps, sizeof(PowerCaps));
+    if (ret == STATUS_SUCCESS)
+    {
+        return PowerCaps.SystemS5;
+    }
+    else
+    {
+        SetLastError(RtlNtStatusToDosError(ret));
+        return FALSE;
+    }
 }
 
 
@@ -480,9 +518,20 @@ BOOLEAN WINAPI
 IsPwrSuspendAllowed(VOID)
 {
     SYSTEM_POWER_CAPABILITIES PowerCaps;
-    FIXME("() stub!\n");
-    NtPowerInformation(SystemPowerCapabilities, NULL, 0, &PowerCaps, sizeof(PowerCaps));
-    return FALSE;
+    NTSTATUS ret;
+    BOOLEAN old;
+
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &old);
+    ret = NtPowerInformation(SystemPowerCapabilities, NULL, 0, &PowerCaps, sizeof(PowerCaps));
+    if (ret == STATUS_SUCCESS)
+    {
+        return PowerCaps.SystemS1 || PowerCaps.SystemS2 || PowerCaps.SystemS3;
+    }
+    else
+    {
+        SetLastError(RtlNtStatusToDosError(ret));
+        return FALSE;
+    }
 }
 
 
@@ -555,8 +604,40 @@ BOOLEAN WINAPI
 ReadProcessorPwrScheme(UINT uiID,
                        PMACHINE_PROCESSOR_POWER_POLICY pMachineProcessorPowerPolicy)
 {
-    FIXME("(%d, %p) stub!\n", uiID, pMachineProcessorPowerPolicy);
-    SetLastError(ERROR_FILE_NOT_FOUND);
+    HKEY hKey;
+    WCHAR szPath[MAX_PATH];
+    DWORD len=sizeof(MACHINE_PROCESSOR_POWER_POLICY);
+
+    swprintf(szPath, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg\\ProcessorPolicies\\%i", uiID);
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                     szPath,
+                     0,
+                     KEY_ALL_ACCESS,
+                     &hKey) == ERROR_SUCCESS)
+    {
+        if (RegQueryValueExW(hKey,szPolicies,NULL,0,(LPBYTE)pMachineProcessorPowerPolicy,&len) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return TRUE;
+        }
+        else
+        {
+            RegCloseKey(hKey);
+            if (uiID != 0)
+            {
+                return ReadProcessorPwrScheme(0,pMachineProcessorPowerPolicy);
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
+    }
+    else
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
     return FALSE;
 }
 
@@ -600,9 +681,54 @@ SetActivePwrScheme(UINT uiID,
                    PGLOBAL_POWER_POLICY lpGlobalPowerPolicy,
                    PPOWER_POLICY lpPowerPolicy)
 {
-    FIXME("(%d, %p, %p) stub!\n", uiID, lpGlobalPowerPolicy, lpPowerPolicy);
-    SetLastError(ERROR_FILE_NOT_FOUND);
-    return FALSE;
+    POWER_POLICY tmp;
+    HKEY hKey;
+    WCHAR Buf[MAX_PATH];
+    BOOLEAN ret;
+
+    if (ReadPwrScheme(uiID,&tmp))
+    {
+        if (RegOpenKeyEx(HKEY_CURRENT_USER,szUserPowerConfigSubKey,(DWORD)NULL,KEY_ALL_ACCESS,&hKey) != ERROR_SUCCESS)
+        {
+            return FALSE;
+        }
+        swprintf(Buf,L"%i",uiID);
+
+        if (RegSetValueExW(hKey,szCurrentPowerPolicies,(DWORD)NULL,REG_SZ,(CONST BYTE *)Buf,strlenW(Buf)*sizeof(WCHAR)) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            if ((lpGlobalPowerPolicy != NULL) || (lpPowerPolicy != NULL))
+            {
+                ret = ValidatePowerPolicies(lpGlobalPowerPolicy,lpPowerPolicy);
+                if (ret)
+                {
+                    ret = TRUE;
+                    if (lpGlobalPowerPolicy != NULL)
+                    {
+                        ret = WriteGlobalPwrPolicy(lpGlobalPowerPolicy);
+                    }
+                    if (ret && lpPowerPolicy != NULL)
+                    {
+                        ret = WritePwrPolicy(&uiID,lpPowerPolicy);
+                    }
+                }
+                return ret;
+            }
+            else
+            {
+                return TRUE;
+            }
+        }
+        else
+        {
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+    }
+    else
+    {
+        return FALSE;
+    }
 }
 
 
@@ -666,11 +792,38 @@ BOOLEAN WINAPI
 WriteProcessorPwrScheme(UINT ID,
                         PMACHINE_PROCESSOR_POWER_POLICY pMachineProcessorPowerPolicy)
 {
-    FIXME("(%d, %p) stub!\n", ID, pMachineProcessorPowerPolicy);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    WCHAR Buf[MAX_PATH];
+    HKEY hKey;
+    
+    swprintf(Buf,L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg\\ProcessorPolicies\\%i",ID);
+
+    if (RegCreateKey(HKEY_LOCAL_MACHINE,Buf, &hKey) == ERROR_SUCCESS)
+    {
+        RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)pMachineProcessorPowerPolicy,sizeof(MACHINE_PROCESSOR_POWER_POLICY));
+        RegCloseKey(hKey);
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
 }
 
+void SetLastID()
+{
+    WCHAR Buf[MAX_PATH];
+    HKEY hKey;
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                    szPowerCfgSubKey,
+                    0,
+                    KEY_WRITE,
+                    &hKey) != ERROR_SUCCESS)
+        return;
+    swprintf(Buf,L"%i",g_LastID);
+    RegSetValueExW(hKey,szLastID,(DWORD)NULL,REG_SZ,(CONST BYTE *)Buf,strlenW(Buf)*sizeof(WCHAR));
+    RegCloseKey(hKey);
+}
 
 BOOLEAN WINAPI
 WritePwrScheme(PUINT puiID,
@@ -678,40 +831,338 @@ WritePwrScheme(PUINT puiID,
                LPWSTR lpszDescription,
                PPOWER_POLICY pPowerPolicy)
 {
-    FIXME("(%p, %s, %s, %p) stub!\n", puiID, debugstr_w(lpszName), debugstr_w(lpszDescription), pPowerPolicy);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    WCHAR Buf[MAX_PATH];
+    HKEY hKey;
+
+    if (*puiID == -1)
+    {
+        g_LastID++;
+        *puiID = g_LastID;
+        SetLastID();
+    }
+
+    swprintf(Buf,L"Control Panel\\PowerCfg\\PowerPolicies\\%i",*puiID);
+
+    if (RegCreateKey(HKEY_CURRENT_USER,Buf,&hKey) == ERROR_SUCCESS)
+    {
+        RegSetValueExW(hKey,szName,(DWORD)NULL,REG_SZ,(const unsigned char *)lpszName,strlenW((const char *)lpszName)*sizeof(WCHAR));
+        RegSetValueExW(hKey,szDescription,(DWORD)NULL,REG_SZ,(const unsigned char *)lpszDescription,strlenW((const char *)lpszDescription)*sizeof(WCHAR));
+        RegCloseKey(hKey);
+        return WritePwrPolicy(puiID,pPowerPolicy);
+    }
+    else
+    {
+        return FALSE;
+    }
     return FALSE;
+}
+
+BOOLEAN CheckPowerActionPolicy(PPOWER_ACTION_POLICY pPAP, SYSTEM_POWER_CAPABILITIES PowerCaps)
+{
+/*
+   Lohnegrim: this is an Helperfunction, it checks if the POWERACTIONPOLICY is valid
+   Also, if the System dosn't support Hipernation, then change the PowerAction
+*/
+    switch (pPAP->Action)
+    {
+    case PowerActionNone:
+        return TRUE;
+    case PowerActionReserved:
+        if (PowerCaps.SystemS1 || PowerCaps.SystemS2 || PowerCaps.SystemS3)
+            pPAP->Action = PowerActionSleep;
+        else
+            pPAP->Action = PowerActionReserved;
+    case PowerActionSleep:
+        return TRUE;
+    case PowerActionHibernate:
+        if (!(PowerCaps.SystemS4 && PowerCaps.HiberFilePresent))
+        {
+            if (PowerCaps.SystemS1 || PowerCaps.SystemS2 || PowerCaps.SystemS3)
+                pPAP->Action = PowerActionSleep;
+            else
+                pPAP->Action = PowerActionReserved;
+        }
+    case PowerActionShutdown:
+    case PowerActionShutdownReset:
+    case PowerActionShutdownOff:
+    case PowerActionWarmEject:
+        return TRUE;
+    default:
+        SetLastError(ERROR_INVALID_DATA);
+        return FALSE;
+    };
+}
+
+VOID FixSystemPowerState(PSYSTEM_POWER_STATE Psps, SYSTEM_POWER_CAPABILITIES PowerCaps)
+{
+
+	//Lohnegrim: If the System dosn't support the Powerstates, then we have to change them
+    if (!PowerCaps.SystemS1 && *Psps == PowerSystemSleeping1)
+        *Psps = PowerSystemSleeping2;
+    if (!PowerCaps.SystemS2 && *Psps == PowerSystemSleeping2)
+        *Psps = PowerSystemSleeping3;
+    if (!PowerCaps.SystemS3 && *Psps == PowerSystemSleeping3)
+        *Psps = PowerSystemHibernate;
+    if (!(PowerCaps.SystemS4 && PowerCaps.HiberFilePresent) && *Psps == PowerSystemHibernate)
+        *Psps = PowerSystemSleeping2;
+    if (!PowerCaps.SystemS1 && *Psps == PowerSystemSleeping1)
+        *Psps = PowerSystemSleeping2;
+    if (!PowerCaps.SystemS2 && *Psps == PowerSystemSleeping2)
+        *Psps = PowerSystemSleeping3;
+    if (!PowerCaps.SystemS3 && *Psps == PowerSystemSleeping3)
+        *Psps = PowerSystemShutdown;
+
 }
 
 
 BOOLEAN WINAPI
 ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
 {
-    GLOBAL_POWER_POLICY pGlobalPowerPolicy;
-    POWER_POLICY pPowerPolicy;
+    SYSTEM_POWER_CAPABILITIES PowerCaps;
+    NTSTATUS ret;
+    BOOLEAN old;
 
-    FIXME("(%p, %p) not fully implemented\n", pGPP, pPP);
-
-    if (!GetCurrentPowerPolicies(&pGlobalPowerPolicy, &pPowerPolicy))
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &old);
+    ret = NtPowerInformation(SystemPowerCapabilities, NULL, 0, &PowerCaps, sizeof(PowerCaps));
+    if (ret != STATUS_SUCCESS)
     {
-        ERR("GetCurrentPowerPolicies(%p, %p) failed\n", pGPP, pPP);
+        SetLastError(RtlNtStatusToDosError(ret));
         return FALSE;
     }
 
     if (pGPP)
     {
-        //memcpy(&pGPP, &pGlobalPowerPolicy, sizeof(GLOBAL_POWER_POLICY));
+        if (pGPP->user.Revision != 1 || pGPP->mach.Revision != 1)
+        {
+            SetLastError(ERROR_REVISION_MISMATCH);
+            return FALSE;
+        }
+        if (pGPP->mach.LidOpenWakeAc == PowerSystemUnspecified)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+        if ((int)pGPP->mach.LidOpenWakeAc >= PowerSystemShutdown)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+        if (pGPP->mach.LidOpenWakeDc < PowerSystemWorking)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+        if ((int)pGPP->mach.LidOpenWakeDc >= PowerSystemShutdown)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+		//Lohnegrim: unneeded
+        /*if ((pGPP->mach.LidOpenWakeDc < PowerSystemWorking) || (pGPP->mach.LidOpenWakeDc >= PowerSystemMaximum))
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }*/
+        if (!CheckPowerActionPolicy(&pGPP->user.LidCloseAc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (!CheckPowerActionPolicy(&pGPP->user.LidCloseDc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (!CheckPowerActionPolicy(&pGPP->user.PowerButtonAc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (!CheckPowerActionPolicy(&pGPP->user.PowerButtonDc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (!CheckPowerActionPolicy(&pGPP->user.SleepButtonAc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (!CheckPowerActionPolicy(&pGPP->user.SleepButtonDc,PowerCaps))
+        {
+            return FALSE;
+        }
+        //Lohnegrim: The BroadcastCapacityResolution presents the Powerlevel in Percent, if invalid set th 100 == FULL
+        if ((pGPP->mach.BroadcastCapacityResolution < 0) || (pGPP->mach.BroadcastCapacityResolution > 100))
+            pGPP->mach.BroadcastCapacityResolution=100;
+
+		//Lohnegrim: I have no idear, if they are realy needed, or if they are spezific for my System, or what they mean, so i removed them
+        //pGPP->user.DischargePolicy[1].PowerPolicy.EventCode = pGPP->user.DischargePolicy[1].PowerPolicy.EventCode | 0x010000;
+        //pGPP->user.DischargePolicy[2].PowerPolicy.EventCode = pGPP->user.DischargePolicy[2].PowerPolicy.EventCode | 0x020000;
+        //pGPP->user.DischargePolicy[3].PowerPolicy.EventCode = pGPP->user.DischargePolicy[3].PowerPolicy.EventCode | 0x030000;
+
+        FixSystemPowerState(&pGPP->mach.LidOpenWakeAc,PowerCaps);
+        FixSystemPowerState(&pGPP->mach.LidOpenWakeDc,PowerCaps);
+
     }
 
     if (pPP)
     {
-        //memcpy(&pPP, &pPowerPolicy, sizeof(POWER_POLICY));
+        if (pPP->user.Revision != 1 || pPP->mach.Revision != 1)
+        {
+            SetLastError(ERROR_REVISION_MISMATCH);
+            return FALSE;
+        }
+        
+		//Lohnegrim: unneeded
+        //if (pPP->mach.MinSleepAc < PowerSystemWorking)
+        //{
+        //    SetLastError(ERROR_GEN_FAILURE);
+        //    return FALSE;
+        //}
+        if ((int)pPP->mach.MinSleepAc >= PowerSystemShutdown)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+		//Lohnegrim: unneeded
+        //if (pPP->mach.MinSleepDc < PowerSystemWorking)
+        //{
+        //    SetLastError(ERROR_GEN_FAILURE);
+        //    return FALSE;
+        //}
+        if ((int)pPP->mach.MinSleepDc >= PowerSystemShutdown)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+        if (pPP->mach.ReducedLatencySleepAc == PowerSystemUnspecified)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+        if ((int)pPP->mach.ReducedLatencySleepAc >= PowerSystemShutdown)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+        if (pPP->mach.ReducedLatencySleepDc < PowerSystemWorking)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+        if ((int)pPP->mach.ReducedLatencySleepDc >= PowerSystemShutdown)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+
+        if (!CheckPowerActionPolicy(&pPP->mach.OverThrottledAc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (!CheckPowerActionPolicy(&pPP->mach.OverThrottledDc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (!CheckPowerActionPolicy(&pPP->user.IdleAc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (!CheckPowerActionPolicy(&pPP->user.IdleDc,PowerCaps))
+        {
+            return FALSE;
+        }
+        if (pPP->user.MaxSleepAc < PowerSystemWorking)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+		//Lohnegrim: unneeded
+        /*if ((int)pPP->user.MaxSleepAc > PowerSystemShutdown)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }*/
+        if (pPP->user.MaxSleepDc < PowerSystemWorking)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+		//Lohnegrim: unneeded
+        /*if ((int)pPP->user.MaxSleepDc >= PowerSystemShutdown)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }*/
+        if (PowerCaps.SystemS1)
+        {
+            pPP->mach.MinSleepAc=PowerSystemSleeping1;
+            pPP->mach.MinSleepDc=PowerSystemSleeping1;
+        }
+        else if (PowerCaps.SystemS2)
+        {
+            pPP->mach.MinSleepAc=PowerSystemSleeping2;
+            pPP->mach.MinSleepDc=PowerSystemSleeping2;
+        }
+        else if (PowerCaps.SystemS3)
+        {
+            pPP->mach.MinSleepAc=PowerSystemSleeping3;
+            pPP->mach.MinSleepDc=PowerSystemSleeping3;
+        }
+
+        if (PowerCaps.SystemS4)
+        {
+            pPP->user.MaxSleepAc=PowerSystemSleeping3;
+            pPP->user.MaxSleepDc=PowerSystemSleeping3;
+        }
+        else if (PowerCaps.SystemS3)
+        {
+            pPP->user.MaxSleepAc=PowerSystemSleeping2;
+            pPP->user.MaxSleepDc=PowerSystemSleeping2;
+        }
+        else if (PowerCaps.SystemS1)
+        {
+            pPP->user.MaxSleepAc=PowerSystemSleeping1;
+            pPP->user.MaxSleepDc=PowerSystemSleeping1;
+        }
+		//Lohnegrim: I dont know where to get this info from, so i removed it
+        //pPP->user.OptimizeForPowerAc=TRUE;
+        //pPP->user.OptimizeForPowerDc=TRUE;
+
+        FixSystemPowerState(&pPP->mach.ReducedLatencySleepAc,PowerCaps);
+        FixSystemPowerState(&pPP->mach.ReducedLatencySleepDc,PowerCaps);
     }
 
     SetLastError(ERROR_SUCCESS);
     return TRUE;
 }
 
+BOOLEAN WINAPI WritePwrPolicy(PUINT puiID, PPOWER_POLICY pPowerPolicy)
+{
+
+    WCHAR Buf[MAX_PATH];
+    HKEY hKey;
+
+    swprintf(Buf,L"Control Panel\\PowerCfg\\PowerPolicies\\%i",*puiID);
+
+    if (RegCreateKey(HKEY_CURRENT_USER,Buf,&hKey) == ERROR_SUCCESS)
+    {
+        RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&pPowerPolicy->user,sizeof(USER_POWER_POLICY));
+        RegCloseKey(hKey);
+        swprintf(Buf,L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg\\PowerPolicies\\%i",*puiID);
+
+        if (RegCreateKey(HKEY_LOCAL_MACHINE,Buf,&hKey) == ERROR_SUCCESS)
+        {
+            RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&pPowerPolicy->mach,sizeof(MACHINE_POWER_POLICY));
+            RegCloseKey(hKey);
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+    else
+    {
+        return FALSE;
+    }
+}
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -735,10 +1186,14 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             }
             else
             {
-                BYTE lpValue[40];
+                WCHAR lpValue[MAX_PATH];
                 DWORD cbValue = sizeof(lpValue);
-                r = RegQueryValueExW(hKey, szLastID, 0, 0, lpValue, &cbValue);
-                if (r != ERROR_SUCCESS)
+                r = RegQueryValueExW(hKey, szLastID, 0, 0, (BYTE*)lpValue, &cbValue);
+                if (r == ERROR_SUCCESS)
+                {
+                    g_LastID = _wtoi(lpValue);
+                }
+                else
                 {
                     TRACE("Couldn't open registry entry HKLM\\%s\\LastID, using some sane(?) defaults\n", debugstr_w(szPowerCfgSubKey));
                 }

@@ -12,7 +12,6 @@
 		<include base="ReactOS">include/reactos/subsys</include>
 		<define name="__NTDLL__" />
 		<define name="_NTOSKRNL_" />
-		<define name="__NO_CTYPE_INLINES" />
 		<library>rtl</library>
 		<library>ntdllsys</library>
 		<library>libcntpr</library>
