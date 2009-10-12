@@ -8,6 +8,7 @@
 
 #include "priv.h"
 
+const GUID KSPROPTYPESETID_General = {0x97E99BA0L, 0xBDEA, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 NTSTATUS
 FindPropertyHandler(
@@ -22,7 +23,6 @@ FindPropertyHandler(
     OUT PKSPROPERTY_SET * Set)
 {
     ULONG Index, ItemIndex;
-    //PULONG Flags;
 
     for(Index = 0; Index < PropertySetCount; Index++)
     {
@@ -47,9 +47,11 @@ FindPropertyHandler(
                         IoStatus->Information = PropertySet[Index].PropertyItem[ItemIndex].MinData;
                         return STATUS_MORE_ENTRIES;
                     }
-#if 0
                     if (Property->Flags & KSPROPERTY_TYPE_BASICSUPPORT)
                     {
+                        PULONG Flags;
+                        PKSPROPERTY_DESCRIPTION Description;
+
                         if (sizeof(ULONG) > OutputBufferLength)
                         {
                             /* too small buffer */
@@ -60,7 +62,7 @@ FindPropertyHandler(
                         Flags = (PULONG)OutputBuffer;
 
                         /* clear flags */
-                        *Flags = KSPROPERTY_TYPE_BASICSUPPORT;
+                        *Flags = 0;
 
                         if (PropertySet[Index].PropertyItem[ItemIndex].GetSupported)
                             *Flags |= KSPROPERTY_TYPE_GET;
@@ -85,9 +87,8 @@ FindPropertyHandler(
 
                             IoStatus->Information = sizeof(KSPROPERTY_DESCRIPTION);
                         }
+                        return STATUS_SUCCESS;
                     }
-#endif
-
                     if (Property->Flags & KSPROPERTY_TYPE_SET)
                         *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].SetPropertyHandler;
 
@@ -177,7 +178,7 @@ KspPropertyHandler(
         if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GUID) * PropertySetsCount)
         {
             // buffer too small
-            return STATUS_BUFFER_OVERFLOW;
+            return STATUS_MORE_ENTRIES;
         }
 
         // get output buffer
