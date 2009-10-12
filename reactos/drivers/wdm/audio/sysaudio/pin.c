@@ -20,7 +20,7 @@ Pin_fnDeviceIoControl(
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -136,7 +136,7 @@ Pin_fnClose(
     PDISPATCH_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
