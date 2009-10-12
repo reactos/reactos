@@ -174,6 +174,84 @@ FatCreateCcb()
 
 VOID
 NTAPI
+FatGetFcbUnicodeName(IN PFAT_IRP_CONTEXT IrpContext,
+                     IN PFCB Fcb,
+                     OUT PUNICODE_STRING LongName)
+{
+    FF_DIRENT DirEnt;
+    FF_ERROR Err;
+    OEM_STRING ShortName;
+    CHAR ShortNameBuf[13];
+    UCHAR EntryBuffer[32];
+    UCHAR NumLFNs;
+    OEM_STRING LongNameOem;
+    NTSTATUS Status;
+
+    /* We support only files now, not directories */
+    if (Fcb->Header.NodeTypeCode != FAT_NTC_FCB)
+    {
+        UNIMPLEMENTED;
+        ASSERT(FALSE);
+    }
+
+    /* Get the dir entry */
+    Err = FF_GetEntry(Fcb->Vcb->Ioman,
+                      Fcb->FatHandle->DirEntry,
+                      Fcb->FatHandle->DirCluster,
+                      &DirEnt);
+
+    if (Err != FF_ERR_NONE)
+    {
+        DPRINT1("Error %d getting dirent of a file\n", Err);
+        return;
+    }
+
+    /* Read the dirent to fetch the raw short name */
+    FF_FetchEntry(Fcb->Vcb->Ioman,
+                  Fcb->FatHandle->DirCluster,
+                  Fcb->FatHandle->DirEntry,
+                  EntryBuffer);
+    NumLFNs = (UCHAR)(EntryBuffer[0] & ~0x40);
+
+    /* Check if we only have a short name.
+       Convert it to unicode and return if that's the case */
+    if (NumLFNs == 0)
+    {
+        /* Initialize short name string */
+        ShortName.Buffer = ShortNameBuf;
+        ShortName.Length = 0;
+        ShortName.MaximumLength = 12;
+
+        /* Convert raw short name to a proper string */
+        Fati8dot3ToString((PCHAR)EntryBuffer, FALSE, &ShortName);
+
+        /* Convert it to unicode */
+        Status = RtlOemStringToCountedUnicodeString(LongName,
+                                                    &ShortName,
+                                                    FALSE);
+
+        /* Ensure conversion was successful */
+        ASSERT(Status == STATUS_SUCCESS);
+
+        /* Exit */
+        return;
+    }
+
+    /* Convert LFN from OEM to unicode and return */
+    LongNameOem.Buffer = DirEnt.FileName;
+    LongNameOem.MaximumLength = FF_MAX_FILENAME;
+    LongNameOem.Length = strlen(DirEnt.FileName);
+
+    /* Convert it to unicode */
+    Status = RtlOemStringToUnicodeString(LongName, &LongNameOem, FALSE);
+
+    /* Ensure conversion was successful */
+    ASSERT(Status == STATUS_SUCCESS);
+}
+
+
+VOID
+NTAPI
 FatSetFullNameInFcb(PFCB Fcb,
                     PUNICODE_STRING Name)
 {
@@ -246,6 +324,99 @@ FatSetFullNameInFcb(PFCB Fcb,
 
 VOID
 NTAPI
+FatSetFullFileNameInFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                        IN PFCB Fcb)
+{
+    UNICODE_STRING LongName;
+    PFCB CurFcb = Fcb;
+    PFCB StopFcb;
+    PWCHAR TmpBuffer;
+    ULONG PathLength = 0;
+
+    /* Do nothing if it's already set */
+    if (Fcb->FullFileName.Buffer) return;
+
+    /* Allocate a temporary buffer */
+    LongName.Length = 0;
+    LongName.MaximumLength = FF_MAX_FILENAME * sizeof(WCHAR);
+    LongName.Buffer =
+        FsRtlAllocatePoolWithTag(PagedPool,
+                                 FF_MAX_FILENAME * sizeof(WCHAR),
+                                 TAG_FILENAME);
+
+    /* Go through all parents to calculate needed length */
+    while (CurFcb != Fcb->Vcb->RootDcb)
+    {
+        /* Does current FCB have FullFileName set? */
+        if (CurFcb != Fcb &&
+            CurFcb->FullFileName.Buffer)
+        {
+            /* Yes, just use it! */
+            PathLength += CurFcb->FullFileName.Length;
+
+            Fcb->FullFileName.Buffer =
+                FsRtlAllocatePoolWithTag(PagedPool,
+                                         PathLength,
+                                         TAG_FILENAME);
+
+            RtlCopyMemory(Fcb->FullFileName.Buffer,
+                          CurFcb->FullFileName.Buffer,
+                          CurFcb->FullFileName.Length);
+
+            break;
+        }
+
+        /* Sum up length of a current item */
+        PathLength += CurFcb->FileNameLength + sizeof(WCHAR);
+
+        /* Go to the parent */
+        CurFcb = CurFcb->ParentFcb;
+    }
+
+    /* Allocate FullFileName if it wasn't already allocated above */
+    if (!Fcb->FullFileName.Buffer)
+    {
+        Fcb->FullFileName.Buffer =
+            FsRtlAllocatePoolWithTag(PagedPool,
+                                     PathLength,
+                                     TAG_FILENAME);
+    }
+
+    StopFcb = CurFcb;
+
+    CurFcb = Fcb;
+    TmpBuffer =  Fcb->FullFileName.Buffer + PathLength / sizeof(WCHAR);
+
+    /* Set lengths */
+    Fcb->FullFileName.Length = PathLength;
+    Fcb->FullFileName.MaximumLength = PathLength;
+
+    while (CurFcb != StopFcb)
+    {
+        /* Get its unicode name */
+        FatGetFcbUnicodeName(IrpContext,
+                             CurFcb,
+                             &LongName);
+
+        /* Copy it */
+        TmpBuffer -= LongName.Length / sizeof(WCHAR);
+        RtlCopyMemory(TmpBuffer, LongName.Buffer, LongName.Length);
+
+        /* Append with a backslash */
+        TmpBuffer -= 1;
+        *TmpBuffer = L'\\';
+
+        /* Go to the parent */
+        CurFcb = CurFcb->ParentFcb;
+    }
+
+    /* Free the temp buffer */
+    ExFreePool(LongName.Buffer);
+}
+
+
+VOID
+NTAPI
 FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
                IN PFCB Fcb)
 {
@@ -313,6 +484,21 @@ FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
             ASSERT(FALSE);
         }
 
+        /* Set its length */
+        Fcb->FileNameLength = UnicodeName->Length;
+
+        /* Save case-preserved copy */
+        Fcb->ExactCaseLongName.Length = UnicodeName->Length;
+        Fcb->ExactCaseLongName.MaximumLength = UnicodeName->Length;
+        Fcb->ExactCaseLongName.Buffer =
+            FsRtlAllocatePoolWithTag(PagedPool, UnicodeName->Length, TAG_FILENAME);
+
+        RtlCopyMemory(Fcb->ExactCaseLongName.Buffer,
+                      UnicodeName->Buffer,
+                      UnicodeName->Length);
+
+        /* Perform a trick which is done by MS's FASTFAT driver to monocase
+           the filename */
         RtlDowncaseUnicodeString(UnicodeName, UnicodeName, FALSE);
         RtlUpcaseUnicodeString(UnicodeName, UnicodeName, FALSE);
 
@@ -324,6 +510,15 @@ FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
 
         /* Indicate that this FCB has a unicode long name */
         SetFlag(Fcb->State, FCB_STATE_HAS_UNICODE_NAME);
+    }
+    else
+    {
+        /* No LFN, set exact case name to 0 length */
+        Fcb->ExactCaseLongName.Length = 0;
+        Fcb->ExactCaseLongName.MaximumLength = 0;
+
+        /* Set the length based on the short name */
+        Fcb->FileNameLength = RtlOemStringToCountedUnicodeSize(ShortName);
     }
 
     /* Mark the fact that names were added to splay trees*/

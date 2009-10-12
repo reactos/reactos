@@ -281,6 +281,8 @@ typedef struct _FCB
     UNICODE_STRING FullFileName;
     /* Long name with exact case */
     UNICODE_STRING ExactCaseLongName;
+    /* Hint for the filename length */
+    ULONG FileNameLength;
     /* A copy of fat attribute byte */
     UCHAR DirentFatFlags;
     /* File basic info */

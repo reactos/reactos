@@ -376,7 +376,8 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         /* Ensure the name is set */
         if (!ParentDcb->FullFileName.Buffer)
         {
-            DPRINT1("ParentDcb->FullFileName.Buffer is NULL\n");
+            /* Set it if it's missing */
+            FatSetFullFileNameInFcb(IrpContext, ParentDcb);
         }
 
         /* Check max path length */

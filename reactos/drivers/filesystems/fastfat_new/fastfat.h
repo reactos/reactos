@@ -307,6 +307,10 @@ FatSetFullNameInFcb(PFCB Fcb,
                     PUNICODE_STRING Name);
 
 VOID NTAPI
+FatSetFullFileNameInFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                        IN PFCB Fcb);
+
+VOID NTAPI
 FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
                IN PFCB Fcb);
 

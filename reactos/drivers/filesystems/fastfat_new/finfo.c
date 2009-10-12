@@ -59,10 +59,10 @@ FatiQueryInternalInformation(IN PFAT_IRP_CONTEXT IrpContext,
 VOID
 NTAPI
 FatiQueryNameInformation(IN PFAT_IRP_CONTEXT IrpContext,
-                             IN PFCB Fcb,
-                             IN PFILE_OBJECT FileObject,
-                             IN OUT PFILE_NAME_INFORMATION Buffer,
-                             IN OUT PLONG Length)
+                         IN PFCB Fcb,
+                         IN PFILE_OBJECT FileObject,
+                         IN OUT PFILE_NAME_INFORMATION Buffer,
+                         IN OUT PLONG Length)
 {
     ULONG ByteSize;
     ULONG Trim = 0;
@@ -71,8 +71,11 @@ FatiQueryNameInformation(IN PFAT_IRP_CONTEXT IrpContext,
     /* Deduct the minimum written length */
     *Length -= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]);
 
-    // Build full name if needed
-    //if (!Fcb->FullFileName.Buffer)
+    /* Build full name if needed */
+    if (!Fcb->FullFileName.Buffer)
+    {
+        FatSetFullFileNameInFcb(IrpContext, Fcb);
+    }
 
     DPRINT1("FullFileName %wZ\n", &Fcb->FullFileName);
 
