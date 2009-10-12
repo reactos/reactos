@@ -5,11 +5,12 @@
 #define DIFFICULTY_TWO_COLORS    2
 #define DIFFICULTY_FOUR_COLORS   3
 #define CARDBACK_START           IDC_CARDBACK1
-#define CARDBACK_END             IDC_CARDBACK4
+#define CARDBACK_END             IDC_CARDBACK12
 #define NUM_CARDBACKS            (CARDBACK_END - CARDBACK_START + 1)
 #define CARDBACK_RES_START       53
-#define CARDBACK_OPTIONS_WIDTH   72
-#define CARDBACK_OPTIONS_HEIGHT  96
+/* Display option cards with half the size */
+#define CARDBACK_OPTIONS_WIDTH   36
+#define CARDBACK_OPTIONS_HEIGHT  48
 
 #define X_BORDER                  6
 #define Y_BORDER                 12
