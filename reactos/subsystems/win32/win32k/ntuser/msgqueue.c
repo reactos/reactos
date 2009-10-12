@@ -233,6 +233,49 @@ MsqInsertSystemMessage(MSG* Msg)
 }
 
 BOOL FASTCALL
+MsqIsClkLck(LPMSG Msg, BOOL Remove)
+{
+   PTHREADINFO pti;
+   PWINSTATION_OBJECT WinStaObject;
+   PSYSTEM_CURSORINFO CurInfo;
+   BOOL Res = FALSE;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->Desktop == NULL)
+   {
+      return FALSE;
+   }
+
+   WinStaObject = pti->Desktop->WindowStation;
+
+   CurInfo = IntGetSysCursorInfo(WinStaObject);
+
+   switch (Msg->message)
+   {
+     case WM_LBUTTONUP:
+       Res = ((Msg->time - CurInfo->ClickLockTime) >= gspv.dwMouseClickLockTime);
+       if (Res && (!CurInfo->ClickLockActive))
+       {
+         CurInfo->ClickLockActive = TRUE;
+       }
+       break;
+     case WM_LBUTTONDOWN:
+       if (CurInfo->ClickLockActive)
+       {
+         Res = TRUE;
+         CurInfo->ClickLockActive = FALSE;
+         CurInfo->ClickLockTime = 0;
+       }
+       else
+       {
+         CurInfo->ClickLockTime = Msg->time;
+       }
+       break;
+   }
+   return Res;
+}
+
+BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove)
 {
    PTHREADINFO pti;

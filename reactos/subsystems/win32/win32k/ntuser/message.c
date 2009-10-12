@@ -673,6 +673,15 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
       *HitTest = HTCLIENT;
    }
 
+   if (gspv.bMouseClickLock && ((Msg->message == WM_LBUTTONUP) || (Msg->message == WM_LBUTTONDOWN)))
+   {
+      if (MsqIsClkLck(Msg, Remove))
+      {
+        // FIXME: drop the message, hack: use WM_NULL
+        Msg->message = WM_NULL;
+      }
+   }
+
    if(IS_BTN_MESSAGE(Msg->message, DOWN))
    {
       /* generate double click messages, if necessary */
