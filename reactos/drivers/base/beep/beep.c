@@ -288,7 +288,7 @@ BeepUnload(IN PDRIVER_OBJECT DriverObject)
     IoDeleteDevice(DeviceObject);
 }
 
-
+DRIVER_STARTIO BeepStartIo;
 VOID
 NTAPI
 BeepStartIo(IN PDEVICE_OBJECT DeviceObject,
@@ -303,7 +303,7 @@ BeepStartIo(IN PDEVICE_OBJECT DeviceObject,
 
     /* Acquire the cancel lock and make sure the IRP is valid */
     IoAcquireCancelSpinLock(&CancelIrql);
-    if (Irp->Cancel)
+    if (!Irp)
     {
         /* It's not, release the lock and quit */
         IoReleaseCancelSpinLock(CancelIrql);
