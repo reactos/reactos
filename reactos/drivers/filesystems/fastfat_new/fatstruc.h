@@ -133,7 +133,9 @@ typedef struct _FAT_METHODS {
     PFAT_SETFAT_VALUE_RUN_ROUTINE SetValueRun;
 } FAT_METHODS, *PFAT_METHODS;
 
-#define VCB_STATE_FLAG_LOCKED 0x01
+#define VCB_STATE_FLAG_LOCKED   0x01
+#define VCB_STATE_FLAG_DIRTY    0x02
+#define VCB_STATE_MOUNTED_DIRTY 0x04
 
 typedef enum _VCB_CONDITION
 {
@@ -157,6 +159,10 @@ typedef struct _VCB
     VCB_CONDITION Condition;
     ERESOURCE Resource;
 
+    /* Direct volume access */
+    ULONG DirectOpenCount;
+    SHARE_ACCESS ShareAccess;
+
     /* Notifications support */
     PNOTIFY_SYNC NotifySync;
     LIST_ENTRY NotifyList;
@@ -179,7 +185,9 @@ typedef struct _VCB
     /*  Root Directory Control block */
     struct _FCB *RootDcb;
 
+    /* Counters */
     ULONG MediaChangeCount;
+    ULONG OpenFileCount;
 
     /* FullFAT integration */
     FF_IOMAN *Ioman;

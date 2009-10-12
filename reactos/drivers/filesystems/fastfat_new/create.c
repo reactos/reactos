@@ -113,6 +113,100 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
     return Iosb;
 }
 
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenVolume(IN PFAT_IRP_CONTEXT IrpContext,
+               IN PFILE_OBJECT FileObject,
+               IN PVCB Vcb,
+               IN PACCESS_MASK DesiredAccess,
+               IN USHORT ShareAccess,
+               IN ULONG CreateDisposition)
+{
+    PCCB Ccb;
+    IO_STATUS_BLOCK Iosb = {{0}};
+    BOOLEAN VolumeFlushed = FALSE;
+
+    /* Check parameters */
+    if (CreateDisposition != FILE_OPEN &&
+        CreateDisposition != FILE_OPEN_IF)
+    {
+        /* Deny access */
+        Iosb.Status = STATUS_ACCESS_DENIED;
+    }
+
+    /* Check if it's exclusive open */
+    if (!FlagOn(ShareAccess, FILE_SHARE_WRITE) &&
+        !FlagOn(ShareAccess, FILE_SHARE_DELETE))
+    {
+        // TODO: Check if exclusive read access requested
+        // and opened handles count is not 0
+        //if (!FlagOn(ShareAccess, FILE_SHARE_READ)
+
+        DPRINT1("Exclusive voume open\n");
+
+        // TODO: Flush the volume
+        VolumeFlushed = TRUE;
+    }
+    else if (FlagOn(*DesiredAccess, FILE_READ_DATA | FILE_WRITE_DATA | FILE_APPEND_DATA))
+    {
+        DPRINT1("Shared open\n");
+
+        // TODO: Flush the volume
+        VolumeFlushed = TRUE;
+    }
+
+    if (VolumeFlushed &&
+        !FlagOn(Vcb->State, VCB_STATE_MOUNTED_DIRTY) &&
+        FlagOn(Vcb->State, VCB_STATE_FLAG_DIRTY) &&
+        CcIsThereDirtyData(Vcb->Vpb))
+    {
+        UNIMPLEMENTED;
+    }
+
+    /* Set share access */
+    if (Vcb->DirectOpenCount > 0)
+    {
+        /* This volume has already been opened */
+        Iosb.Status = IoCheckShareAccess(*DesiredAccess,
+                                         ShareAccess,
+                                         FileObject,
+                                         &Vcb->ShareAccess,
+                                         TRUE);
+
+        if (!NT_SUCCESS(Iosb.Status))
+        {
+            ASSERT(FALSE);
+        }
+    }
+    else
+    {
+        /* This is the first time open */
+        IoSetShareAccess(*DesiredAccess,
+                         ShareAccess,
+                         FileObject,
+                         &Vcb->ShareAccess);
+    }
+
+    /* Set file object pointers */
+    Ccb = FatCreateCcb(IrpContext);
+    FatSetFileObject(FileObject, UserVolumeOpen, Vcb, Ccb);
+    FileObject->SectionObjectPointer = &Vcb->SectionObjectPointers;
+
+    /* Increase direct open count */
+    Vcb->DirectOpenCount++;
+    Vcb->OpenFileCount++;
+
+    /* Set no buffering flag */
+    FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+
+    // TODO: User's access check
+
+    Iosb.Status = STATUS_SUCCESS;
+    Iosb.Information = FILE_OPENED;
+
+    return Iosb;
+}
+
 NTSTATUS
 NTAPI
 FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
@@ -297,17 +391,36 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         if (!RelatedFO ||
             FatDecodeFileObject(RelatedFO, &DecodedVcb, &Fcb, &Ccb) == UserVolumeOpen)
         {
+            /* Check parameters */
+            if (DirectoryFile || OpenTargetDirectory)
+            {
+                Status = DirectoryFile ? STATUS_NOT_A_DIRECTORY : STATUS_INVALID_PARAMETER;
+
+                /* Unlock VCB */
+                FatReleaseVcb(IrpContext, Vcb);
+
+                /* Complete the request and return */
+                FatCompleteRequest(IrpContext, Irp, Status);
+                return Status;
+            }
+
             /* It is indeed a volume open request */
-            DPRINT1("Volume open request, not implemented now!\n");
-            UNIMPLEMENTED;
+            Iosb = FatiOpenVolume(IrpContext,
+                                  FileObject,
+                                  Vcb,
+                                  DesiredAccess,
+                                  ShareAccess,
+                                  CreateDisposition);
+
+            /* Set resulting information */
+            Irp->IoStatus.Information = Iosb.Information;
 
             /* Unlock VCB */
             FatReleaseVcb(IrpContext, Vcb);
 
-            /* Complete the request */
-            FatCompleteRequest(IrpContext, Irp, STATUS_NOT_IMPLEMENTED);
-
-            return STATUS_NOT_IMPLEMENTED;
+            /* Complete the request and return */
+            FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+            return Iosb.Status;
         }
     }
 
