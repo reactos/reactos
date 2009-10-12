@@ -381,6 +381,25 @@ typedef enum
     KSPROPERTY_CONNECTION_STARTAT
 } KSPROPERTY_CONNECTION;
 
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CONNECTION_STATE,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSSTATE),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CONNECTION_DATAFORMAT,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        0,\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+
 #define KSEVENTSETID_Connection \
     0x7f4bcbe0L, 0x9ea5, 0x11cf, 0xa5, 0xd6, 0x28, 0xdb, 0x04, 0xc1, 0x00, 0x00
 
@@ -619,7 +638,7 @@ typedef enum {
 */
 
 #define STATIC_KSPROPTYPESETID_General \
-    0x97E99BA0L, 0xBDEA, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+	0x97E99BA0L, 0xBDEA, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
 DEFINE_GUIDSTRUCT("97E99BA0-BDEA-11CF-A5D6-28DB04C10000", KSPROPTYPESETID_General);
 #define KSPROPTYPESETID_General DEFINE_GUIDNAMED(KSPROPTYPESETID_General)
 
