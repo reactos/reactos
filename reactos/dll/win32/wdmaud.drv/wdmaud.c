@@ -412,6 +412,12 @@ SetWdmWaveDeviceFormat(
             SND_TRACE(L"FrameSize %u BufferCount %u\n", Instance->FrameSize, Instance->BufferCount);
         }
     }
+    else
+    {
+        // use a default of 100 buffers
+        Instance->BufferCount = 100;
+    }
+
 
     /* Now start the stream */
     DeviceInfo.u.State = KSSTATE_RUN;
