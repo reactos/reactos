@@ -138,7 +138,7 @@ typedef struct
   /* X physical font */
 typedef UINT	 X_PHYSFONT;
 
-typedef struct tagXRENDERINFO *XRENDERINFO;
+struct xrender_info;
 
   /* X physical device */
 typedef struct
@@ -163,7 +163,7 @@ typedef struct
     Drawable      gl_drawable;
     Pixmap        pixmap;      /* Pixmap for a GLXPixmap gl_drawable */
     int           gl_copy;
-    XRENDERINFO   xrender;
+    struct xrender_info *xrender;
 } X11DRV_PDEVICE;
 
 
@@ -178,9 +178,6 @@ extern BOOL CDECL X11DRV_AlphaBlend( X11DRV_PDEVICE *physDevDst, INT xDst, INT y
                                      INT widthDst, INT heightDst,
                                      X11DRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc,
                                      INT widthSrc, INT heightSrc, BLENDFUNCTION blendfn );
-extern BOOL CDECL X11DRV_BitBlt( X11DRV_PDEVICE *physDevDst, INT xDst, INT yDst,
-                                 INT width, INT height, X11DRV_PDEVICE *physDevSrc,
-                                 INT xSrc, INT ySrc, DWORD rop );
 extern BOOL CDECL X11DRV_EnumDeviceFonts( X11DRV_PDEVICE *physDev, LPLOGFONTW plf,
                                           FONTENUMPROCW dfeproc, LPARAM lp );
 extern LONG CDECL X11DRV_GetBitmapBits( HBITMAP hbitmap, void *bits, LONG count );
@@ -190,8 +187,6 @@ extern BOOL CDECL X11DRV_GetDCOrgEx( X11DRV_PDEVICE *physDev, LPPOINT lpp );
 extern BOOL CDECL X11DRV_GetTextExtentExPoint( X11DRV_PDEVICE *physDev, LPCWSTR str, INT count,
                                                INT maxExt, LPINT lpnFit, LPINT alpDx, LPSIZE size );
 extern BOOL CDECL X11DRV_GetTextMetrics(X11DRV_PDEVICE *physDev, TEXTMETRICW *metrics);
-extern BOOL CDECL X11DRV_PatBlt( X11DRV_PDEVICE *physDev, INT left, INT top,
-                                 INT width, INT height, DWORD rop );
 extern BOOL CDECL X11DRV_StretchBlt( X11DRV_PDEVICE *physDevDst, INT xDst, INT yDst,
                                      INT widthDst, INT heightDst,
                                      X11DRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc,
@@ -291,6 +286,7 @@ extern void X11DRV_XRender_CopyBrush(X11DRV_PDEVICE *physDev, X_PHYSBITMAP *phys
 extern BOOL X11DRV_XRender_ExtTextOut(X11DRV_PDEVICE *physDev, INT x, INT y, UINT flags,
 				      const RECT *lprect, LPCWSTR wstr,
 				      UINT count, const INT *lpDx);
+extern BOOL X11DRV_XRender_SetPhysBitmapDepth(X_PHYSBITMAP *physBitmap, const DIBSECTION *dib);
 BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE *physDevDst,
                                       Pixmap pixmap, GC gc,
                                       INT widthSrc, INT heightSrc,
@@ -304,7 +300,7 @@ extern BOOL destroy_glxpixmap(Display *display, XID glxpixmap);
 /* IME support */
 extern void IME_UnregisterClasses(void);
 extern void IME_SetOpenStatus(BOOL fOpen);
-extern INT IME_GetCursorPos();
+extern INT IME_GetCursorPos(void);
 extern void IME_SetCursorPos(DWORD pos);
 extern void IME_UpdateAssociation(HWND focus);
 extern BOOL IME_SetCompositionString(DWORD dwIndex, LPCVOID lpComp,

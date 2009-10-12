@@ -2,7 +2,6 @@
 
 @ cdecl AlphaBlend(ptr long long long long ptr long long long long long) X11DRV_AlphaBlend
 @ cdecl Arc(ptr long long long long long long long long) X11DRV_Arc
-@ cdecl BitBlt(ptr long long long long ptr long long long) X11DRV_BitBlt
 @ cdecl ChoosePixelFormat(ptr ptr) X11DRV_ChoosePixelFormat
 @ cdecl Chord(ptr long long long long long long long long) X11DRV_Chord
 @ cdecl CreateBitmap(ptr long ptr) X11DRV_CreateBitmap
@@ -31,7 +30,6 @@
 @ cdecl GetTextMetrics(ptr ptr) X11DRV_GetTextMetrics
 @ cdecl LineTo(ptr long long) X11DRV_LineTo
 @ cdecl PaintRgn(ptr long) X11DRV_PaintRgn
-@ cdecl PatBlt(ptr long long long long long) X11DRV_PatBlt
 @ cdecl Pie(ptr long long long long long long long long) X11DRV_Pie
 @ cdecl PolyPolygon(ptr ptr ptr long) X11DRV_PolyPolygon
 @ cdecl PolyPolyline(ptr ptr ptr long) X11DRV_PolyPolyline

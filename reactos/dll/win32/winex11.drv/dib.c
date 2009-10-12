@@ -4744,19 +4744,23 @@ HBITMAP CDECL X11DRV_CreateDIBSection( X11DRV_PDEVICE *physDev, HBITMAP hbitmap,
                                                          &physBitmap->nColorMap );
     }
 
+    if (!X11DRV_XRender_SetPhysBitmapDepth( physBitmap, &dib ))
+    {
+        if (dib.dsBm.bmBitsPixel == 1)
+        {
+            physBitmap->pixmap_depth = 1;
+            physBitmap->trueColor = FALSE;
+        }
+        else
+        {
+            physBitmap->pixmap_depth = screen_depth;
+            physBitmap->pixmap_color_shifts = X11DRV_PALETTE_default_shifts;
+            physBitmap->trueColor = (visual->class == TrueColor || visual->class == DirectColor);
+        }
+    }
+
     /* create pixmap and X image */
     wine_tsx11_lock();
-    if(dib.dsBm.bmBitsPixel == 1)
-    {
-        physBitmap->pixmap_depth = 1;
-        physBitmap->trueColor = FALSE;
-    }
-    else
-    {
-        physBitmap->pixmap_depth = screen_depth;
-        physBitmap->pixmap_color_shifts = X11DRV_PALETTE_default_shifts;
-        physBitmap->trueColor = (visual->class == TrueColor || visual->class == DirectColor);
-    }
 #ifdef HAVE_LIBXXSHM
     physBitmap->shminfo.shmid = -1;
 
@@ -4802,6 +4806,19 @@ HBITMAP CDECL X11DRV_CreateDIBSection( X11DRV_PDEVICE *physDev, HBITMAP hbitmap,
 
     wine_tsx11_unlock();
     if (!physBitmap->pixmap || !physBitmap->image) return 0;
+
+    if (physBitmap->trueColor)
+    {
+        ColorShifts *shifts = &physBitmap->pixmap_color_shifts;
+
+        /* When XRender is around and used, we also support dibsections in other formats like 16-bit. In these
+         * cases we need to override the mask of XImages. The reason is that during XImage creation the masks are
+         * derived from a 24-bit visual (no 16-bit ones are around when X runs at 24-bit). SetImageBits and other
+         * functions rely on the color masks for proper color conversion, so we need to override the masks here. */
+        physBitmap->image->red_mask = shifts->physicalRed.max << shifts->physicalRed.shift;
+        physBitmap->image->green_mask = shifts->physicalGreen.max << shifts->physicalGreen.shift;
+        physBitmap->image->blue_mask = shifts->physicalBlue.max << shifts->physicalBlue.shift;
+    }
 
       /* install fault handler */
     InitializeCriticalSection( &physBitmap->lock );

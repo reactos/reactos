@@ -298,8 +298,7 @@ HBRUSH CDECL X11DRV_SelectBrush( X11DRV_PDEVICE *physDev, HBRUSH hbrush )
 
       case BS_DIBPATTERN:
 	TRACE("BS_DIBPATTERN\n");
-#ifndef __REACTOS__
-        if ((bmpInfo = GlobalLock16( logbrush.lbHatch )))
+        if ((bmpInfo = GlobalLock( (HGLOBAL)logbrush.lbHatch )))
 	{
 	    int size = bitmap_info_size( bmpInfo, logbrush.lbColor );
 	    hBitmap = CreateDIBitmap( physDev->hdc, &bmpInfo->bmiHeader,
@@ -308,9 +307,8 @@ HBRUSH CDECL X11DRV_SelectBrush( X11DRV_PDEVICE *physDev, HBRUSH hbrush )
                                         (WORD)logbrush.lbColor );
 	    BRUSH_SelectPatternBrush( physDev, hBitmap );
 	    DeleteObject( hBitmap );
-            GlobalUnlock16( logbrush.lbHatch );
+            GlobalUnlock( (HGLOBAL)logbrush.lbHatch );
 	}
-#endif
 	break;
     }
     return hbrush;

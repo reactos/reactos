@@ -34,7 +34,9 @@
 #endif
 #include <sys/types.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <math.h>
+#include <limits.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -1828,18 +1830,10 @@ static char* XFONT_UserMetricsCache( char* buffer, int* buf_size )
     const char *confdir = "";//wine_get_config_dir();
     const char *display_name = XDisplayName(NULL);
     int len = strlen(confdir) + strlen(INIFontMetrics) + strlen(display_name) + 8;
-    int display = 0;
-    int screen = 0;
+    unsigned int display = 0;
+    unsigned int screen = 0;
     char *p, *ext;
 
-    /*
-    **  Normalize the display name, since on Red Hat systems, DISPLAY
-    **      is commonly set to one of either 'unix:0.0' or ':0' or ':0.0'.
-    **      after this code, all of the above will resolve to ':0.0'.
-    */
-    if (!strncmp( display_name, "unix:", 5 )) display_name += 4;
-    p = strchr(display_name, ':');
-    if (p) sscanf(p + 1, "%d.%d", &display, &screen);
 
     if ((len > *buf_size) &&
         !(buffer = HeapReAlloc( GetProcessHeap(), 0, buffer, *buf_size = len )))
@@ -1852,8 +1846,46 @@ static char* XFONT_UserMetricsCache( char* buffer, int* buf_size )
     ext = buffer + strlen(buffer);
     strcpy( ext, display_name );
 
-    if (!(p = strchr( ext, ':' ))) p = ext + strlen(ext);
-    sprintf( p, ":%d.%d", display, screen );
+    /*
+    **  Normalize the display name. The format of DISPLAY is
+    **    [protocol/] [hostname] :[:] num [.num]
+    **
+    **  - on Red Hat systems, DISPLAY is commonly set to one of
+    **    either 'unix:0.0' or ':0' or ':0.0'.
+    **  - on MacOS X systems, DISPLAY is commonly set to
+    **    /tmp/foo/:0
+    **
+    **  after this code, all of the above will resolve to ':0.0'.
+    */
+    p = strrchr(ext, ':');
+    if (p)
+    {
+        sscanf(p + 1, "%u.%u", &display, &screen);
+        *p = 0;
+        if (display > 9999)
+        {
+            WARN("unlikely X11 display number\n");
+            *buffer = 0;
+            return buffer;
+        }
+    }
+    if (!strcmp( ext, "unix" ) ||
+        !strcmp( ext, "localhost" ))
+        *ext = 0;
+    if (!strncmp( ext, "/tmp/", 5 ))
+        *ext = 0; /* assume pathnames are local */
+
+    /* Deal with the possibility of slashes in the display name */
+    for( p = ext; *p; p++ )
+        if ( *p == '/' )
+            *p = '_';
+
+    /* X11 fonts are per-display, not per-screen, so don't
+    ** include the screen number in the font cache filename */
+    sprintf( ext + strlen(ext), ":%u", display );
+
+    TRACE("display '%s' -> cachefile '%s'\n", display_name, buffer);
+
     return buffer;
 }
 
@@ -2156,8 +2188,10 @@ static int XFONT_BuildMetrics(char** x_pattern, int res, unsigned x_checksum, in
  *
  * INIT ONLY
  */
-static BOOL XFONT_ReadCachedMetrics( int fd, int res, unsigned x_checksum, int x_count )
+static BOOL XFONT_ReadCachedMetrics( const char *path, int res, unsigned x_checksum, int x_count )
 {
+    int fd = open( path, O_RDONLY );
+
     if( fd >= 0 )
     {
 	unsigned u;
@@ -2270,6 +2304,8 @@ fail:
         HeapFree( GetProcessHeap(), 0, fontList );
 	fontList = NULL;
 	close( fd );
+    } else {
+        TRACE("fontcache '%s': %s\n", path, strerror(errno));
     }
     return FALSE;
 }
@@ -2855,7 +2891,7 @@ static void X11DRV_FONT_InitX11Metrics( void )
 {
   char**    x_pattern;
   unsigned  x_checksum;
-  int       i, x_count, fd, buf_size;
+  int       i, x_count, buf_size;
   char      *buffer;
   HKEY hkey;
 
@@ -2879,7 +2915,7 @@ static void X11DRV_FONT_InitX11Metrics( void )
      if( j ) x_checksum ^= __genericCheckSum( x_pattern[i], j );
   }
   x_checksum |= X_PFONT_MAGIC;
-  buf_size = 128;
+  buf_size = PATH_MAX;
   buffer = HeapAlloc( GetProcessHeap(), 0, buf_size );
 
   /* deal with systemwide font metrics cache */
@@ -2895,8 +2931,8 @@ static void X11DRV_FONT_InitX11Metrics( void )
 
   if( buffer[0] )
   {
-      fd = open( buffer, O_RDONLY );
-      XFONT_ReadCachedMetrics(fd, DefResolution, x_checksum, x_count);
+      TRACE("system fontcache is '%s'\n", buffer);
+      XFONT_ReadCachedMetrics(buffer, DefResolution, x_checksum, x_count);
   }
   if (fontList == NULL)
   {
@@ -2904,8 +2940,8 @@ static void X11DRV_FONT_InitX11Metrics( void )
       buffer = XFONT_UserMetricsCache( buffer, &buf_size );
       if( buffer[0] )
       {
-	  fd = open( buffer, O_RDONLY );
-	  XFONT_ReadCachedMetrics(fd, DefResolution, x_checksum, x_count);
+          TRACE("user fontcache is '%s'\n", buffer);
+	  XFONT_ReadCachedMetrics(buffer, DefResolution, x_checksum, x_count);
       }
   }
 
@@ -2914,11 +2950,15 @@ static void X11DRV_FONT_InitX11Metrics( void )
       int n_ff = XFONT_BuildMetrics(x_pattern, DefResolution, x_checksum, x_count);
       if( buffer[0] )	 /* update cached metrics */
       {
-	  fd = open( buffer, O_CREAT | O_TRUNC | O_RDWR, 0644 ); /* -rw-r--r-- */
-	  if( XFONT_WriteCachedMetrics( fd, x_checksum, x_count, n_ff ) == FALSE )
+	  int fd = open( buffer, O_CREAT | O_TRUNC | O_RDWR, 0666 );
+	  if ( fd < 0 )
+	  {
+	      WARN("Unable to create fontcache '%s': %s\n", buffer, strerror(errno));
+	  }
+	  else if( XFONT_WriteCachedMetrics( fd, x_checksum, x_count, n_ff ) == FALSE )
 	  {
 	      WARN("Unable to write to fontcache '%s'\n", buffer);
-	      if( fd >= 0) remove( buffer );	/* couldn't write entire file */
+	      remove( buffer );	/* couldn't write entire file */
 	  }
       }
   }
