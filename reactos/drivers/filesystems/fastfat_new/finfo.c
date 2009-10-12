@@ -37,7 +37,7 @@ FatiQueryStandardInformation(IN PFAT_IRP_CONTEXT IrpContext,
 
         Buffer->EndOfFile.LowPart = Fcb->FatHandle->Filesize;
         Buffer->AllocationSize = Buffer->EndOfFile;
-        DPRINT1("Filesize %d, chain length %d\n", Fcb->FatHandle->Filesize, Fcb->FatHandle->iChainLength);
+        DPRINT("Filesize %d, chain length %d\n", Fcb->FatHandle->Filesize, Fcb->FatHandle->iChainLength);
     }
     else
     {
@@ -77,7 +77,7 @@ FatiQueryNameInformation(IN PFAT_IRP_CONTEXT IrpContext,
         FatSetFullFileNameInFcb(IrpContext, Fcb);
     }
 
-    DPRINT1("FullFileName %wZ\n", &Fcb->FullFileName);
+    DPRINT("FullFileName %wZ\n", &Fcb->FullFileName);
 
     if (*Length < Fcb->FullFileName.Length - Trim)
     {
@@ -139,15 +139,15 @@ FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
     Length = IrpSp->Parameters.QueryFile.Length;
     Buffer = Irp->AssociatedIrp.SystemBuffer;
 
-    DPRINT1("FatiQueryInformation\n", 0);
-    DPRINT1("\tIrp                  = %08lx\n", Irp);
-    DPRINT1("\tLength               = %08lx\n", Length);
-    DPRINT1("\tFileInformationClass = %08lx\n", InfoClass);
-    DPRINT1("\tBuffer               = %08lx\n", Buffer);
+    DPRINT("FatiQueryInformation\n", 0);
+    DPRINT("\tIrp                  = %08lx\n", Irp);
+    DPRINT("\tLength               = %08lx\n", Length);
+    DPRINT("\tFileInformationClass = %08lx\n", InfoClass);
+    DPRINT("\tBuffer               = %08lx\n", Buffer);
 
     FileType = FatDecodeFileObject(FileObject, &Vcb, &Fcb, &Ccb);
 
-    DPRINT1("Vcb %p, Fcb %p, Ccb %p, open type %d\n", Vcb, Fcb, Ccb, FileType);
+    DPRINT("Vcb %p, Fcb %p, Ccb %p, open type %d\n", Vcb, Fcb, Ccb, FileType);
 
     /* Acquire VCB lock */
     if (InfoClass == FileNameInformation ||
