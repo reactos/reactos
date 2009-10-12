@@ -125,6 +125,7 @@ typedef struct _USBD_INTERFACE_LIST_ENTRY
 
 DECLSPEC_IMPORT
 VOID
+NTAPI
 USBD_GetUSBDIVersion(
     OUT PUSBD_VERSION_INFORMATION VersionInformation
 );
@@ -132,6 +133,7 @@ USBD_GetUSBDIVersion(
 
 DECLSPEC_IMPORT
 PUSB_INTERFACE_DESCRIPTOR
+NTAPI
 USBD_ParseConfigurationDescriptor(
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     IN UCHAR InterfaceNumber,
@@ -140,6 +142,7 @@ USBD_ParseConfigurationDescriptor(
 
 DECLSPEC_IMPORT
 PURB
+NTAPI
 USBD_CreateConfigurationRequest(
     IN  PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     OUT PUSHORT Siz
@@ -147,6 +150,7 @@ USBD_CreateConfigurationRequest(
 
 DECLSPEC_IMPORT
 PUSB_COMMON_DESCRIPTOR
+NTAPI
 USBD_ParseDescriptors(
     IN PVOID DescriptorBuffer,
     IN ULONG TotalLength,
@@ -156,6 +160,7 @@ USBD_ParseDescriptors(
 
 DECLSPEC_IMPORT
 PUSB_INTERFACE_DESCRIPTOR
+NTAPI
 USBD_ParseConfigurationDescriptorEx(
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     IN PVOID StartPosition,
@@ -168,6 +173,7 @@ USBD_ParseConfigurationDescriptorEx(
 
 DECLSPEC_IMPORT
 PURB
+NTAPI
 USBD_CreateConfigurationRequestEx(
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     IN PUSBD_INTERFACE_LIST_ENTRY InterfaceList
@@ -176,6 +182,7 @@ USBD_CreateConfigurationRequestEx(
 
 DECLSPEC_IMPORT
 ULONG
+NTAPI
 USBD_GetInterfaceLength(
     IN PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor,
     IN PUCHAR BufferEnd
@@ -183,6 +190,7 @@ USBD_GetInterfaceLength(
 
 DECLSPEC_IMPORT
 VOID
+NTAPI
 USBD_RegisterHcFilter(
     IN PDEVICE_OBJECT DeviceObject,
     IN PDEVICE_OBJECT FilterDeviceObject
@@ -192,6 +200,7 @@ USBD_RegisterHcFilter(
 
 DECLSPEC_IMPORT
 NTSTATUS
+NTAPI
 USBD_GetPdoRegistryParameter(
     IN PDEVICE_OBJECT PhysicalDeviceObject,
     IN PVOID Parameter,
@@ -202,6 +211,7 @@ USBD_GetPdoRegistryParameter(
 
 DECLSPEC_IMPORT
 NTSTATUS
+NTAPI
 USBD_QueryBusTime(
     IN PDEVICE_OBJECT RootHubPdo,
     OUT PULONG CurrentFrame
@@ -211,6 +221,7 @@ USBD_QueryBusTime(
 
 DECLSPEC_IMPORT
 ULONG
+NTAPI
 USBD_CalculateUsbBandwidth(
     IN ULONG MaxPacketSize,
     IN UCHAR EndpointType,
@@ -223,6 +234,7 @@ USBD_CalculateUsbBandwidth(
 
 DECLSPEC_IMPORT
 USBD_STATUS
+NTAPI
 USBD_ValidateConfigurationDescriptor(
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
     IN ULONG BufferLength,
