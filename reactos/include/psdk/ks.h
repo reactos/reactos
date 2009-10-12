@@ -390,6 +390,15 @@ typedef enum
         (SetHandler),\
         NULL, 0, NULL, NULL, 0)
 
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_PRIORITY(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CONNECTION_PRIORITY,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSPRIORITY),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
 #define DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(GetHandler, SetHandler)\
     DEFINE_KSPROPERTY_ITEM(\
         KSPROPERTY_CONNECTION_DATAFORMAT,\
@@ -397,6 +406,48 @@ typedef enum
         sizeof(KSPROPERTY),\
         0,\
         (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CONNECTION_ALLOCATORFRAMING,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSALLOCATOR_FRAMING),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING_EX(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CONNECTION_ALLOCATORFRAMING_EX,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_PROPOSEDATAFORMAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CONNECTION_PROPOSEDATAFORMAT,\
+        NULL,\
+        sizeof(KSPROPERTY),\
+        sizeof(KSDATAFORMAT),\
+        (Handler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_ACQUIREORDERING(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CONNECTION_ACQUIREORDERING,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(int),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_STARTAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CONNECTION_STARTAT,\
+        NULL,\
+        sizeof(KSPROPERTY),\
+        sizeof(KSRELATIVEEVENT),\
+        (Handler),\
         NULL, 0, NULL, NULL, 0)
 
 
