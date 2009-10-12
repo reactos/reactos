@@ -81,7 +81,7 @@ typedef struct _POOL_HEADER
 // Everything depends on this
 //
 C_ASSERT(sizeof(POOL_HEADER) == 8);
-C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
+//C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
 
 extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
 
