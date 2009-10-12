@@ -398,31 +398,6 @@ BOOL CDECL RosDrv_PaintRgn( NTDRV_PDEVICE *physDev, HRGN hrgn )
     return FALSE;
 }
 
-#if 0
-BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, INT height, DWORD rop )
-{
-    POINT pts[2], ptBrush;
-
-    /* Map coordinates */
-    pts[0].x = left;
-    pts[0].y = top;
-    pts[1].x = left + width;
-    pts[1].y = top + height;
-
-    LPtoDP(physDev->hUserDC, pts, 2);
-    width = pts[1].x - pts[0].x;
-    height = pts[1].y - pts[0].y;
-    left = pts[0].x;
-    top = pts[0].y;
-
-    /* Update brush origin */
-    GetBrushOrgEx(physDev->hUserDC, &ptBrush);
-    RosGdiSetBrushOrg(physDev->hKernelDC, ptBrush.x, ptBrush.y);
-
-    return RosGdiPatBlt(physDev->hKernelDC, left, top, width, height, rop);
-}
-#endif
-
 BOOL CDECL RosDrv_Pie( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
             INT xstart, INT ystart, INT xend, INT yend )
 {
@@ -777,8 +752,16 @@ BOOL CDECL RosDrv_StretchBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
     GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
     RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
 
-    return RosGdiStretchBlt(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst,
-        physDevSrc->hKernelDC, xSrc, ySrc, widthSrc, heightSrc, rop);
+    if (!physDevSrc)
+    {
+        /* This is PatBlt */
+        return RosGdiPatBlt(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst, rop);
+    }
+    else
+    {
+        return RosGdiStretchBlt(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst,
+            physDevSrc->hKernelDC, xSrc, ySrc, widthSrc, heightSrc, rop);
+    }
 }
 
 BOOL CDECL RosDrv_SwapBuffers(NTDRV_PDEVICE *physDev)
