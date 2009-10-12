@@ -314,6 +314,31 @@ PcHandlePropertyWithTable(
     IN PKSPROPERTY_SET PropertySet,
     IN PSUBDEVICE_DESCRIPTOR Descriptor);
 
+#define DEFINE_KSPROPERTY_CONNECTIONSET(PinSet,\
+    PropStateHandler, PropDataFormatHandler)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(PropStateHandler, PropStateHandler),\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(PropDataFormatHandler, PropDataFormatHandler)\
+}
+
+#define DEFINE_KSPROPERTY_ITEM_AUDIO_POSITION(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_AUDIO_POSITION,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSAUDIO_POSITION),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_AUDIOSET(PinSet,\
+    PropPositionHandler)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_AUDIO_POSITION(PropPositionHandler, PropPositionHandler)\
+}
+
+
+
+
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\

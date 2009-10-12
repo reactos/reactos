@@ -111,41 +111,32 @@ CIrpQueue::AddMapping(
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (!Buffer)
+    PC_ASSERT(!Buffer);
+
+    if (!Irp->MdlAddress)
     {
-        if (!Irp->MdlAddress)
+        // ioctl from KsStudio
+        // Wdmaud already probes buffers, therefore no need to probe it again
+        // probe the stream irp
+        Status = KsProbeStreamIrp(Irp, KSSTREAM_READ | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
+
+        // check for success
+        if (!NT_SUCCESS(Status))
         {
-            // ioctl from KsStudio
-            // Wdmaud already probes buffers, therefore no need to probe it again
-            // probe the stream irp
-            Status = KsProbeStreamIrp(Irp, KSSTREAM_WRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
-
-            // check for success
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("KsProbeStreamIrp failed with %x\n", Status);
-                return Status;
-            }
-        }
-        // get the stream header
-        Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
-        PC_ASSERT(Header);
-        PC_ASSERT(Irp->MdlAddress);
-
-        DPRINT("Size %u DataUsed %u FrameExtent %u SizeHeader %u\n", Header->Size, Header->DataUsed, Header->FrameExtent, sizeof(KSSTREAM_HEADER));
-
-        if (Irp->RequestorMode != KernelMode)
-        {
-           // use allocated mdl
-           Header->Data = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
-           PC_ASSERT(Header->Data);
+            DPRINT1("KsProbeStreamIrp failed with %x\n", Status);
+            return Status;
         }
     }
-    else
-    {
-        // HACK
-        Header = (PKSSTREAM_HEADER)Buffer;
-    }
+    // get the stream header
+    Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+    PC_ASSERT(Header);
+    PC_ASSERT(Irp->MdlAddress);
+
+    DPRINT1("Size %u DataUsed %u FrameExtent %u SizeHeader %u NumDataAvailable %u OutputLength %u\n", Header->Size, Header->DataUsed, Header->FrameExtent, sizeof(KSSTREAM_HEADER), m_NumDataAvailable, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+
+    Header->Data = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+    PC_ASSERT(Header->Data);
+    //PC_ASSERT(Header->Size == IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
     // HACK
     Irp->Tail.Overlay.DriverContext[2] = (PVOID)Header;
@@ -209,6 +200,8 @@ CIrpQueue::GetMapping(
 
     if (!Irp)
     {
+        DPRINT1("NoIrp\n");
+        return STATUS_UNSUCCESSFUL;
         // no irp available, use silence buffer
         *Buffer = (PUCHAR)m_SilenceBuffer;
         *BufferSize = m_MaxFrameSize;

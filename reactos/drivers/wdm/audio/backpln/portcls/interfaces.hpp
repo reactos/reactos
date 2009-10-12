@@ -215,6 +215,8 @@ typedef struct
     LIST_ENTRY PhysicalConnectionList;
     UNICODE_STRING RefString;
     PUNKNOWN UnknownMiniport;
+    PUNKNOWN UnknownStream;
+    PVOID PortPin;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE

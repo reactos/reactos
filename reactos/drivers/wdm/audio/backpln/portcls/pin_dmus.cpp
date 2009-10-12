@@ -698,7 +698,7 @@ CPortPinDMus::Init(
 
     DPRINT("CPortPinDMus::Init entered\n");
 
-    m_Format = (PKSDATAFORMAT)ExAllocatePoolWithTag(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+    m_Format = (PKSDATAFORMAT)AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
     if (!m_Format)
         return STATUS_INSUFFICIENT_RESOURCES;
 
