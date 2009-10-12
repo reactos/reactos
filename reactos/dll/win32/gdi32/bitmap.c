@@ -292,7 +292,6 @@ HBITMAP WINAPI CreateBitmapIndirect( const BITMAP *bmp )
     bmpobj->bitmap.bmBits = NULL;
     bmpobj->funcs = NULL;
     bmpobj->dib = NULL;
-    bmpobj->segptr_bits = 0;
     bmpobj->color_table = NULL;
     bmpobj->nb_colors = 0;
 
@@ -657,17 +656,6 @@ static BOOL BITMAP_DeleteObject( HGDIOBJ handle )
                 VirtualFree(dib->dsBm.bmBits, 0L, MEM_RELEASE );
         }
         HeapFree(GetProcessHeap(), 0, dib);
-        bmp->dib = NULL;
-#ifndef __REACTOS__
-        if (bmp->segptr_bits)
-        { /* free its selector array */
-            WORD sel = SELECTOROF(bmp->segptr_bits);
-            WORD count = (GetSelectorLimit16(sel) / 0x10000) + 1;
-            int i;
-
-            for (i = 0; i < count; i++) FreeSelector16(sel + (i << __AHSHIFT));
-        }
-#endif
         HeapFree(GetProcessHeap(), 0, bmp->color_table);
     }
     return HeapFree( GetProcessHeap(), 0, bmp );

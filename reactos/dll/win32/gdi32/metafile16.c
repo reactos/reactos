@@ -58,6 +58,61 @@ static BOOL16 MF_ReleaseMetaHeader16( HMETAFILE16 hmf )
 }
 
 /******************************************************************
+ *         MF_Create_HMETATFILE16
+ *
+ * Creates a HMETAFILE16 object from a METAHEADER
+ *
+ * HMETAFILE16s are Global memory handles.
+ */
+static HMETAFILE16 MF_Create_HMETAFILE16(METAHEADER *mh)
+{
+    HMETAFILE16 hmf;
+    DWORD size = mh->mtSize * sizeof(WORD);
+
+    hmf = GlobalAlloc16(GMEM_MOVEABLE, size);
+    if(hmf)
+    {
+	METAHEADER *mh_dest = GlobalLock16(hmf);
+	memcpy(mh_dest, mh, size);
+	GlobalUnlock16(hmf);
+    }
+    HeapFree(GetProcessHeap(), 0, mh);
+    return hmf;
+}
+
+/**********************************************************************
+ *	     CreateMetaFile     (GDI.125)
+ */
+HDC16 WINAPI CreateMetaFile16( LPCSTR filename )
+{
+    return HDC_16( CreateMetaFileA( filename ) );
+}
+
+/******************************************************************
+ *	     CloseMetaFile     (GDI.126)
+ */
+HMETAFILE16 WINAPI CloseMetaFile16(HDC16 hdc)
+{
+    HMETAFILE16 hmf16 = 0;
+    HMETAFILE hmf = CloseMetaFile( HDC_32(hdc) );
+
+    if (hmf)
+    {
+        UINT size = GetMetaFileBitsEx( hmf, 0, NULL );
+
+        hmf16 = GlobalAlloc16( GMEM_MOVEABLE, size );
+        if (hmf16)
+        {
+            void *buffer = GlobalLock16( hmf16 );
+            GetMetaFileBitsEx( hmf, size, buffer );
+            GlobalUnlock16( hmf16 );
+        }
+        DeleteMetaFile( hmf );
+    }
+    return hmf16;
+}
+
+/******************************************************************
  *	     DeleteMetaFile   (GDI.127)
  */
 BOOL16 WINAPI DeleteMetaFile16(  HMETAFILE16 hmf )

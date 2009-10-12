@@ -5507,12 +5507,18 @@ BOOL WineEngGetTextMetrics(GdiFont *font, LPTEXTMETRICW ptm)
                 LeaveCriticalSection( &freetype_cs );
                 return FALSE;
             }
+
+        /* Make sure that the font has sane width/height ratio */
+        if (font->aveWidth)
+        {
+            if ((font->aveWidth + font->potm->otmTextMetrics.tmHeight - 1) / font->potm->otmTextMetrics.tmHeight > 100)
+            {
+                WARN("Ignoring too large font->aveWidth %d\n", font->aveWidth);
+                font->aveWidth = 0;
+            }
+        }
     }
-    if(!font->potm)
-    {
-        LeaveCriticalSection( &freetype_cs );
-        return FALSE;
-    }
+
     *ptm = font->potm->otmTextMetrics;
     scale_font_metrics(font, ptm);
     LeaveCriticalSection( &freetype_cs );

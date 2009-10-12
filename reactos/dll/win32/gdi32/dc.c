@@ -87,7 +87,6 @@ DC *alloc_dc_ptr( const DC_FUNCTIONS *funcs, WORD magic )
     dc->saved_dc            = 0;
     dc->dwHookData          = 0;
     dc->hookProc            = NULL;
-    dc->hookThunk           = NULL;
     dc->wndOrgX             = 0;
     dc->wndOrgY             = 0;
     dc->wndExtX             = 1;
@@ -224,8 +223,8 @@ void release_dc_ptr( DC *dc )
  */
 void update_dc( DC *dc )
 {
-    if (InterlockedExchange( &dc->dirty, 0 ) && dc->hookThunk)
-        dc->hookThunk( dc->hSelf, DCHC_INVALIDVISRGN, dc->dwHookData, 0 );
+    if (InterlockedExchange( &dc->dirty, 0 ) && dc->hookProc)
+        dc->hookProc( dc->hSelf, DCHC_INVALIDVISRGN, dc->dwHookData, 0 );
 }
 
 
@@ -403,8 +402,7 @@ INT save_dc_state( HDC hdc )
     PATH_InitGdiPath( &newdc->path );
 
     newdc->pAbortProc = NULL;
-    newdc->hookThunk  = NULL;
-    newdc->hookProc   = 0;
+    newdc->hookProc   = NULL;
     newdc->saved_visrgn = NULL;
 
     if (!(newdc->hSelf = alloc_gdi_handle( &newdc->header, dc->header.type, &dc_funcs )))
@@ -820,7 +818,7 @@ BOOL WINAPI DeleteDC( HDC hdc )
     }
 
     /* Call hook procedure to check whether is it OK to delete this DC */
-    if (dc->hookThunk && !dc->hookThunk( hdc, DCHC_DELETEDC, dc->dwHookData, 0 ))
+    if (dc->hookProc && !dc->hookProc( hdc, DCHC_DELETEDC, dc->dwHookData, 0 ))
     {
         release_dc_ptr( dc );
         return FALSE;
@@ -1389,7 +1387,7 @@ BOOL WINAPI SetDCHook( HDC hdc, DCHOOKPROC hookProc, DWORD_PTR dwHookData )
     if (!(dc->flags & DC_SAVED))
     {
         dc->dwHookData = dwHookData;
-        dc->hookThunk = hookProc;
+        dc->hookProc = hookProc;
     }
     release_dc_ptr( dc );
     return TRUE;
@@ -1407,71 +1405,11 @@ DWORD_PTR WINAPI GetDCHook( HDC hdc, DCHOOKPROC *proc )
     DWORD_PTR ret;
 
     if (!dc) return 0;
-    if (proc) *proc = dc->hookThunk;
+    if (proc) *proc = dc->hookProc;
     ret = dc->dwHookData;
     release_dc_ptr( dc );
     return ret;
 }
-
-
-/* relay function to call the 16-bit DC hook proc */
-#ifndef __REACTOS__
-static BOOL WINAPI call_dc_hook16( HDC hdc, WORD code, DWORD_PTR data, LPARAM lParam )
-{
-    WORD args[6];
-    DWORD ret = 0;
-    DC *dc = get_dc_ptr( hdc );
-
-    if (!dc) return FALSE;
-    if (dc->hookProc)
-    {
-        args[5] = HDC_16(hdc);
-        args[4] = code;
-        args[3] = HIWORD(data);
-        args[2] = LOWORD(data);
-        args[1] = HIWORD(lParam);
-        args[0] = LOWORD(lParam);
-        WOWCallback16Ex( (DWORD)dc->hookProc, WCB16_PASCAL, sizeof(args), args, &ret );
-    }
-    release_dc_ptr( dc );
-    return LOWORD(ret);
-}
-
-/***********************************************************************
- *           SetDCHook   (GDI.190)
- */
-BOOL16 WINAPI SetDCHook16( HDC16 hdc16, FARPROC16 hookProc, DWORD dwHookData )
-{
-    DC *dc = get_dc_ptr( HDC_32(hdc16) );
-
-    if (!dc) return FALSE;
-    if (!(dc->flags & DC_SAVED))
-    {
-        dc->dwHookData = dwHookData;
-        dc->hookThunk = call_dc_hook16;
-        dc->hookProc = hookProc;
-    }
-    release_dc_ptr( dc );
-    return TRUE;
-}
-
-
-/***********************************************************************
- *           GetDCHook   (GDI.191)
- */
-DWORD WINAPI GetDCHook16( HDC16 hdc16, FARPROC16 *phookProc )
-{
-    HDC hdc = HDC_32( hdc16 );
-    DC *dc = get_dc_ptr( hdc );
-    DWORD ret;
-
-    if (!dc) return 0;
-    *phookProc = dc->hookProc;
-    ret = dc->dwHookData;
-    release_dc_ptr( dc );
-    return ret;
-}
-#endif
 
 
 /***********************************************************************

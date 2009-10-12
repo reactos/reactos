@@ -300,7 +300,7 @@ INT16 MFDRV_CreateBrushIndirect(PHYSDEV dev, HBRUSH hBrush )
 	      BITMAPINFO *info;
 	      DWORD bmSize, biSize;
 
-	      info = GlobalLock16((HGLOBAL16)logbrush.lbHatch);
+	      info = GlobalLock( (HGLOBAL)logbrush.lbHatch );
 	      if (info->bmiHeader.biCompression)
 		  bmSize = info->bmiHeader.biSizeImage;
 	      else
@@ -310,12 +310,17 @@ INT16 MFDRV_CreateBrushIndirect(PHYSDEV dev, HBRUSH hBrush )
 	      biSize = bitmap_info_size(info, LOWORD(logbrush.lbColor));
 	      size = sizeof(METARECORD) + biSize + bmSize + 2;
 	      mr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-	      if(!mr) goto done;
+              if (!mr)
+              {
+                  GlobalUnlock( (HGLOBAL)logbrush.lbHatch );
+                  goto done;
+              }
 	      mr->rdFunction = META_DIBCREATEPATTERNBRUSH;
 	      mr->rdSize = size / 2;
 	      *(mr->rdParm) = logbrush.lbStyle;
 	      *(mr->rdParm + 1) = LOWORD(logbrush.lbColor);
 	      memcpy(mr->rdParm + 2, info, biSize + bmSize);
+              GlobalUnlock( (HGLOBAL)logbrush.lbHatch );
 	      break;
 	}
 	default:

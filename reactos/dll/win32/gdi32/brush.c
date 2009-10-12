@@ -53,11 +53,10 @@ static const struct gdi_obj_funcs brush_funcs =
     BRUSH_DeleteObject   /* pDeleteObject */
 };
 
-#ifndef __REACTOS__
-static HGLOBAL16 dib_copy(const BITMAPINFO *info, UINT coloruse)
+static HGLOBAL dib_copy(const BITMAPINFO *info, UINT coloruse)
 {
     BITMAPINFO  *newInfo;
-    HGLOBAL16   hmem;
+    HGLOBAL     hmem;
     INT         size;
 
     if (info->bmiHeader.biCompression != BI_RGB && info->bmiHeader.biCompression != BI_BITFIELDS)
@@ -68,16 +67,15 @@ static HGLOBAL16 dib_copy(const BITMAPINFO *info, UINT coloruse)
                                     info->bmiHeader.biBitCount);
     size += bitmap_info_size( info, coloruse );
 
-    if (!(hmem = GlobalAlloc16( GMEM_MOVEABLE, size )))
+    if (!(hmem = GlobalAlloc( GMEM_MOVEABLE, size )))
     {
         return 0;
     }
-    newInfo = GlobalLock16( hmem );
+    newInfo = GlobalLock( hmem );
     memcpy( newInfo, info, size );
-    GlobalUnlock16( hmem );
+    GlobalUnlock( hmem );
     return hmem;
 }
-#endif
 
 
 /***********************************************************************
@@ -119,7 +117,6 @@ HBRUSH WINAPI CreateBrushIndirect( const LOGBRUSH * brush )
         ptr->logbrush.lbHatch = (ULONG_PTR)BITMAP_CopyBitmap( (HBITMAP) ptr->logbrush.lbHatch );
         if (!ptr->logbrush.lbHatch) goto error;
         break;
-#ifndef __REACTOS__
     case BS_DIBPATTERNPT:
         ptr->logbrush.lbStyle = BS_DIBPATTERN;
         ptr->logbrush.lbHatch = (ULONG_PTR)dib_copy( (BITMAPINFO *) ptr->logbrush.lbHatch,
@@ -135,12 +132,11 @@ HBRUSH WINAPI CreateBrushIndirect( const LOGBRUSH * brush )
 
             ptr->logbrush.lbStyle = BS_DIBPATTERN;
             if (!(bmi = GlobalLock( h ))) goto error;
-            ptr->logbrush.lbHatch = dib_copy( bmi, ptr->logbrush.lbColor);
+            ptr->logbrush.lbHatch = (ULONG_PTR)dib_copy( bmi, ptr->logbrush.lbColor);
             GlobalUnlock( h );
             if (!ptr->logbrush.lbHatch) goto error;
             break;
        }
-#endif
     default:
         if(ptr->logbrush.lbStyle > BS_MONOPATTERN) goto error;
         break;
@@ -159,7 +155,7 @@ HBRUSH WINAPI CreateBrushIndirect( const LOGBRUSH * brush )
             DeleteObject( (HGDIOBJ)ptr->logbrush.lbHatch );
 #ifndef __REACTOS__
         else if (ptr->logbrush.lbStyle == BS_DIBPATTERN)
-            GlobalFree16( (HGLOBAL16)ptr->logbrush.lbHatch );
+            GlobalFree( (HGLOBAL)ptr->logbrush.lbHatch );
 #endif
     }
     HeapFree( GetProcessHeap(), 0, ptr );
@@ -427,9 +423,7 @@ static BOOL BRUSH_DeleteObject( HGDIOBJ handle )
 	  DeleteObject( (HGDIOBJ)brush->logbrush.lbHatch );
 	  break;
       case BS_DIBPATTERN:
-#ifndef __REACTOS__
-	  GlobalFree16( (HGLOBAL16)brush->logbrush.lbHatch );
-#endif
+	  GlobalFree( (HGLOBAL)brush->logbrush.lbHatch );
 	  break;
     }
     return HeapFree( GetProcessHeap(), 0, brush );

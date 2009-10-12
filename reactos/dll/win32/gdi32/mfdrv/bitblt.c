@@ -36,18 +36,6 @@ BOOL  CDECL MFDRV_PatBlt( PHYSDEV dev, INT left, INT top, INT width, INT height,
 
 
 /***********************************************************************
- *           MFDRV_BitBlt
- */
-BOOL  CDECL MFDRV_BitBlt( PHYSDEV devDst, INT xDst, INT yDst, INT width, INT height,
-                          PHYSDEV devSrc, INT xSrc, INT ySrc, DWORD rop )
-{
-    return MFDRV_StretchBlt(devDst, xDst, yDst, width, height, devSrc,
-                            xSrc, ySrc, width, height, rop);
-}
-
-
-
-/***********************************************************************
  *           MFDRV_StretchBlt
  * this function contains TWO ways for processing StretchBlt in metafiles,
  * decide between rdFunction values  META_STRETCHBLT or META_DIBSTRETCHBLT

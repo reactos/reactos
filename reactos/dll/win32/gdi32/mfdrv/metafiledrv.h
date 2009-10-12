@@ -64,9 +64,6 @@ extern BOOL CDECL MFDRV_AbortPath( PHYSDEV dev ) DECLSPEC_HIDDEN;
 extern BOOL CDECL MFDRV_Arc( PHYSDEV dev, INT left, INT top, INT right, INT bottom,
                              INT xstart, INT ystart, INT xend, INT yend ) DECLSPEC_HIDDEN;
 extern BOOL CDECL MFDRV_BeginPath( PHYSDEV dev ) DECLSPEC_HIDDEN;
-extern BOOL CDECL MFDRV_BitBlt( PHYSDEV devDst, INT xDst, INT yDst,  INT width,
-                                INT height, PHYSDEV devSrc, INT xSrc, INT ySrc,
-                                DWORD rop ) DECLSPEC_HIDDEN;
 extern BOOL CDECL MFDRV_Chord( PHYSDEV dev, INT left, INT top, INT right,
                                INT bottom, INT xstart, INT ystart, INT xend,
                                INT yend ) DECLSPEC_HIDDEN;

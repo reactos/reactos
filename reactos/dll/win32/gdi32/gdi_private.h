@@ -252,8 +252,7 @@ typedef struct tagDC
     INT          saveLevel;
     HDC          saved_dc;
     DWORD_PTR    dwHookData;
-    FARPROC16    hookProc;         /* the original SEGPTR ... */
-    DCHOOKPROC   hookThunk;        /* ... and the thunk to call it */
+    DCHOOKPROC   hookProc;         /* DC hook */
 
     INT          wndOrgX;          /* Window origin */
     INT          wndOrgY;
@@ -346,7 +345,6 @@ typedef struct tagBITMAPOBJ
     const DC_FUNCTIONS *funcs; /* DC function table */
     /* For device-independent bitmaps: */
     DIBSECTION         *dib;
-    SEGPTR              segptr_bits;  /* segptr to DIB bits */
     RGBQUAD            *color_table;  /* DIB color table if <= 8bpp */
     UINT                nb_colors;    /* number of colors in table */
 } BITMAPOBJ;
@@ -462,7 +460,6 @@ extern BOOL GDI_hdc_not_using_object(HGDIOBJ obj, HDC hdc) DECLSPEC_HIDDEN;
 
 /* metafile.c */
 extern HMETAFILE MF_Create_HMETAFILE(METAHEADER *mh) DECLSPEC_HIDDEN;
-extern HMETAFILE16 MF_Create_HMETAFILE16(METAHEADER *mh) DECLSPEC_HIDDEN;
 extern METAHEADER *MF_CreateMetaHeaderDisk(METAHEADER *mr, LPCVOID filename, BOOL unicode ) DECLSPEC_HIDDEN;
 extern METAHEADER *MF_ReadMetaFile(HANDLE hfile) DECLSPEC_HIDDEN;
 extern METAHEADER *MF_LoadDiskBasedMetaFile(METAHEADER *mh) DECLSPEC_HIDDEN;

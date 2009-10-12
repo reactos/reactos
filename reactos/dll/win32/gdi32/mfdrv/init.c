@@ -23,8 +23,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wine/winbase16.h"
-#include "wownt32.h"
 #include "gdi_private.h"
 #include "mfdrv/metafiledrv.h"
 #include "wine/debug.h"
@@ -40,7 +38,7 @@ static const DC_FUNCTIONS MFDRV_Funcs =
     MFDRV_Arc,                       /* pArc */
     NULL,                            /* pArcTo */
     MFDRV_BeginPath,                 /* pBeginPath */
-    MFDRV_BitBlt,                    /* pBitBlt */
+    NULL,                            /* pBitBlt */
     NULL,                            /* pChoosePixelFormat */
     MFDRV_Chord,                     /* pChord */
     MFDRV_CloseFigure,               /* pCloseFigure */
@@ -351,52 +349,6 @@ static DC *MFDRV_CloseMetaFile( HDC hdc )
     }
 
     return dc;
-}
-
-/******************************************************************
- *         MF_Create_HMETATFILE16
- *
- * Creates a HMETAFILE16 object from a METAHEADER
- *
- * HMETAFILE16s are Global memory handles.
- */
-HMETAFILE16 MF_Create_HMETAFILE16(METAHEADER *mh)
-{
-    HMETAFILE16 hmf;
-    DWORD size = mh->mtSize * sizeof(WORD);
-
-    hmf = GlobalAlloc16(GMEM_MOVEABLE, size);
-    if(hmf)
-    {
-	METAHEADER *mh_dest = GlobalLock16(hmf);
-	memcpy(mh_dest, mh, size);
-	GlobalUnlock16(hmf);
-    }
-    HeapFree(GetProcessHeap(), 0, mh);
-    return hmf;
-}
-
-/******************************************************************
- *	     CloseMetaFile     (GDI.126)
- *
- * PARAMS
- *  hdc [I] Metafile DC to close 
- */
-HMETAFILE16 WINAPI CloseMetaFile16(HDC16 hdc)
-{
-    HMETAFILE16 hmf;
-    METAFILEDRV_PDEVICE *physDev;
-    DC *dc = MFDRV_CloseMetaFile(HDC_32(hdc));
-    if (!dc) return 0;
-    physDev = (METAFILEDRV_PDEVICE *)dc->physDev;
-
-    /* Now allocate a global handle for the metafile */
-
-    hmf = MF_Create_HMETAFILE16( physDev->mh );
-
-    physDev->mh = NULL;  /* So it won't be deleted */
-    MFDRV_DeleteDC( dc );
-    return hmf;
 }
 
 /******************************************************************
