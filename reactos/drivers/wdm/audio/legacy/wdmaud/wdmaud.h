@@ -5,7 +5,7 @@
 #include <ntddk.h>
 #include <portcls.h>
 #include <ks.h>
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 #include <ksmedia.h>
 #include <mmreg.h>
