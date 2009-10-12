@@ -15,6 +15,41 @@
 
 VOID
 NTAPI
+FatiQueryBasicInformation(IN PFAT_IRP_CONTEXT IrpContext,
+                          IN PFCB Fcb,
+                          IN PFILE_OBJECT FileObject,
+                          IN OUT PFILE_BASIC_INFORMATION Buffer,
+                          IN OUT PLONG Length)
+{
+    /* Zero the buffer */
+    RtlZeroMemory(Buffer, sizeof(FILE_BASIC_INFORMATION));
+
+    /* Deduct the written length */
+    *Length -= sizeof(FILE_BASIC_INFORMATION);
+
+    /* Check if it's a dir or a file */
+    if (FatNodeType(Fcb) == FAT_NTC_FCB)
+    {
+        // FIXME: Read dirent and get times from there
+        Buffer->LastAccessTime.QuadPart = 0;
+        Buffer->CreationTime.QuadPart = 0;
+        Buffer->LastWriteTime.QuadPart = 0;
+    }
+    else
+    {
+        // FIXME: May not be really correct
+        Buffer->FileAttributes = 0;
+        DPRINT1("Basic info of a directory '%wZ' is requested!\n", &Fcb->FullFileName);
+    }
+
+
+    /* If attribute is 0, set normal */
+    if (Buffer->FileAttributes == 0)
+        Buffer->FileAttributes = FILE_ATTRIBUTE_NORMAL;
+}
+
+VOID
+NTAPI
 FatiQueryStandardInformation(IN PFAT_IRP_CONTEXT IrpContext,
                              IN PFCB Fcb,
                              IN PFILE_OBJECT FileObject,
@@ -172,6 +207,9 @@ FatiQueryInformation(IN PFAT_IRP_CONTEXT IrpContext,
 
     switch (InfoClass)
     {
+    case FileBasicInformation:
+        FatiQueryBasicInformation(IrpContext, Fcb, FileObject, Buffer, &Length);
+        break;
     case FileStandardInformation:
         FatiQueryStandardInformation(IrpContext, Fcb, FileObject, Buffer, &Length);
         break;
