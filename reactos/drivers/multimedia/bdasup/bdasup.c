@@ -691,7 +691,7 @@ NTAPI
 BdaPropertyNodeDescriptors(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
-    OUT GUID *pguidProperty)
+    OUT BDANODE_DESCRIPTOR *pNodeDescriptorProperty)
 {
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
@@ -704,7 +704,7 @@ NTSTATUS
 NTAPI
 BdaPropertyNodeEvents(
     IN PIRP Irp,
-    IN KSPROPERTY *pKSProperty,
+    IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty)
 {
     UNIMPLEMENTED
@@ -718,7 +718,7 @@ NTSTATUS
 NTAPI
 BdaPropertyNodeMethods(
     IN PIRP Irp,
-    IN KSPROPERTY *pKSProperty,
+    IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty)
 {
     UNIMPLEMENTED
@@ -732,7 +732,7 @@ NTSTATUS
 NTAPI
 BdaPropertyNodeProperties(
     IN PIRP Irp,
-    IN KSPROPERTY *pKSProperty,
+    IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty)
 {
     UNIMPLEMENTED
