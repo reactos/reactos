@@ -179,7 +179,7 @@ KdpRestoreBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-DumpTraceData(IN PSTRING TraceData)
+DumpTraceData(OUT PSTRING TraceData)
 {
     /* Update the buffer */
     TraceDataBuffer[0] = TraceDataBufferPosition;
@@ -196,7 +196,7 @@ VOID
 NTAPI
 KdpSetCommonState(IN ULONG NewState,
                   IN PCONTEXT Context,
-                  IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
+                  OUT PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
 {
     USHORT InstructionCount;
     BOOLEAN HadBreakpoints;
@@ -267,6 +267,7 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     STRING Header;
     ULONG Length = State->u.ReadMemory.TransferCount;
     NTSTATUS Status = STATUS_SUCCESS;
+    ULONG64 TargetBaseAddress = State->u.ReadMemory.TargetBaseAddress;
 
     /* Validate length */
     if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
@@ -284,7 +285,15 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     }
 #endif
 
-    if (!State->u.ReadMemory.TargetBaseAddress)
+    // HACK for x64, until KD stops sending bogus addresses to WinDbg
+    if (TargetBaseAddress < (ULONG_PTR)MM_LOWEST_SYSTEM_ADDRESS)
+    {
+        FrLdrDbgPrint("Trying to read memory at 0x%p\n", TargetBaseAddress);
+//        DPRINT1("Trying to read memory at 0x%p\n", TargetBaseAddress);
+        TargetBaseAddress = 0;
+    }
+
+    if (!TargetBaseAddress)
     {
         Length = 0;
         Status = STATUS_UNSUCCESSFUL;
@@ -1245,7 +1254,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
         KdpSetContextState(&WaitStateChange, Context);
 
         /* Setup the actual header to send to KD */
-        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
+        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64) - sizeof(CONTEXT);
         Header.Buffer = (PCHAR)&WaitStateChange;
 
         /* Setup the trace data */
