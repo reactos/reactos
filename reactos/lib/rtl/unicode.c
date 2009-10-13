@@ -401,40 +401,52 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 
 /*
  * @implemented
- * 
- * NOTES
- *  Check the oem-string to match the uincoded-string.
  *
- *  Functions who convert unicode strings to oem strings will set a DefaultChar from 
- *  the OemCodepage when the character are unknown. So check it against the unicode string
- *  and return false when the unicode string not contain an TransDefaultChar.
+ * NOTES
+ *  Check the OEM string to match the Unicode string.
+ *
+ *  Functions which convert Unicode strings to OEM strings will set a
+ *  DefaultChar from the OEM codepage when the characters are unknown.
+ *  So check it against the Unicode string and return false when the
+ *  Unicode string does not contain a TransDefaultChar.
  */
 BOOLEAN
 NTAPI
 RtlpDidUnicodeToOemWork(IN PCUNICODE_STRING UnicodeString,
                         IN POEM_STRING OemString)
 {
-   ULONG i = 0;
+    ULONG i = 0;
 
-   /* Go through all characters of a string */
-   while (i < OemString->Length)
-   {
-       /* Check if it got translated into '?', but source char
-          wasn't '?' equivalent */
-       if ((OemString->Buffer[i] != 0) &&
-           (OemString->Buffer[i] == NlsOemDefaultChar) &&
-           (UnicodeString->Buffer[i] != NlsUnicodeDefaultChar))
-       {
-           /* Yes, it means unmappable characters were found */
-           return FALSE;
-       }
+    if (NlsMbOemCodePageTag == FALSE)
+    {
+        /* single-byte code page */
+        /* Go through all characters of a string */
+        while (i < OemString->Length)
+        {
+            /* Check if it got translated into a default char,
+             * but source char wasn't a default char equivalent
+             */
+            if ((OemString->Buffer[i] == NlsOemDefaultChar) &&
+                (UnicodeString->Buffer[i] != NlsUnicodeDefaultChar))
+            {
+                /* Yes, it means unmappable characters were found */
+                return FALSE;
+            }
 
-       /* Move to the next char */
-       i++;
-   }
+            /* Move to the next char */
+            i++;
+        }
 
-   /* All chars were translated successfuly */
-   return TRUE;
+        /* All chars were translated successfuly */
+        return TRUE;
+    }
+    else
+    {
+        /* multibyte code page */
+
+        /* FIXME */
+        return TRUE;
+    }
 }
 
 /*
