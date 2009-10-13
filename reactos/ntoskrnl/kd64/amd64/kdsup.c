@@ -19,11 +19,66 @@
 
 VOID
 NTAPI
+KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
+{
+    Version->MajorVersion = 0;
+    Version->MinorVersion = 0;
+    Version->ProtocolVersion = DBGKD_64BIT_PROTOCOL_VERSION2;
+    Version->KdSecondaryVersion = KD_SECONDARY_VERSION_AMD64_CONTEXT;
+    Version->Flags = DBGKD_VERS_FLAG_PTR64 | DBGKD_VERS_FLAG_DATA;
+    Version->MachineType = IMAGE_FILE_MACHINE_AMD64;
+    Version->MaxPacketType = PACKET_TYPE_MAX;
+    Version->MaxStateChange = 0;
+    Version->MaxManipulate = 0;
+    Version->Simulation = DBGKD_SIMULATION_NONE;
+    Version->Unused[0] = 0;
+    Version->KernBase = 0xfffff80000800000ULL;
+    Version->PsLoadedModuleList = (ULONG_PTR)&KeLoaderBlock->LoadOrderListHead;
+    Version->DebuggerDataList = 0;
+}
+
+VOID
+NTAPI
 KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
                   IN PCONTEXT Context)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    PKPRCB Prcb;
+    ULONG i;
+
+    /* Check for success */
+    if (NT_SUCCESS(State->u.Continue2.ContinueStatus))
+    {
+        /* Check if we're tracing */
+        if (State->u.Continue2.ControlSet.TraceFlag)
+        {
+            /* Enable TF */
+            Context->EFlags |= EFLAGS_TF;
+        }
+        else
+        {
+            /* Remove it */
+            Context->EFlags &= ~EFLAGS_TF;
+        }
+
+        /* Loop all processors */
+        for (i = 0; i < KeNumberProcessors; i++)
+        {
+            /* Get the PRCB and update DR7 and DR6 */
+            Prcb = KiProcessorBlock[i];
+            Prcb->ProcessorState.SpecialRegisters.KernelDr7 =
+                State->u.Continue2.ControlSet.Dr7;
+            Prcb->ProcessorState.SpecialRegisters.KernelDr6 = 0;
+        }
+
+        /* Check if we have new symbol information */
+        if (State->u.Continue2.ControlSet.CurrentSymbolStart != 1)
+        {
+            /* Update it */
+            KdpCurrentSymbolStart =
+                State->u.Continue2.ControlSet.CurrentSymbolStart;
+            KdpCurrentSymbolEnd= State->u.Continue2.ControlSet.CurrentSymbolEnd;
+        }
+    }
 }
 
 VOID
@@ -31,16 +86,29 @@ NTAPI
 KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
                    IN PCONTEXT Context)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-}
+    PKPRCB Prcb = KeGetCurrentPrcb();
 
-VOID
-NTAPI
-KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
+    /* Copy i386 specific debug registers */
+    WaitStateChange->ControlReport.Dr6 = Prcb->ProcessorState.SpecialRegisters.
+                                         KernelDr6;
+    WaitStateChange->ControlReport.Dr7 = Prcb->ProcessorState.SpecialRegisters.
+                                         KernelDr7;
+
+    /* Copy i386 specific segments */
+    WaitStateChange->ControlReport.SegCs = (USHORT)Context->SegCs;
+    WaitStateChange->ControlReport.SegDs = (USHORT)Context->SegDs;
+    WaitStateChange->ControlReport.SegEs = (USHORT)Context->SegEs;
+    WaitStateChange->ControlReport.SegFs = (USHORT)Context->SegFs;
+
+    /* Copy EFlags */
+    WaitStateChange->ControlReport.EFlags = Context->EFlags;
+
+    /* Set Report Flags */
+    WaitStateChange->ControlReport.ReportFlags = REPORT_INCLUDES_SEGS;
+    if (WaitStateChange->ControlReport.SegCs == KGDT_64_R0_CODE)
+    {
+        WaitStateChange->ControlReport.ReportFlags = REPORT_STANDARD_CS;
+    }
 }
 
 NTSTATUS
@@ -48,9 +116,8 @@ NTAPI
 KdpSysReadMsr(IN ULONG Msr,
               OUT PLARGE_INTEGER MsrValue)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    MsrValue->QuadPart = __readmsr(Msr);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -58,9 +125,8 @@ NTAPI
 KdpSysWriteMsr(IN ULONG Msr,
                IN PLARGE_INTEGER MsrValue)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    __writemsr(Msr, MsrValue->QuadPart);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -101,9 +167,55 @@ KdpSysReadControlSpace(IN ULONG Processor,
                        IN ULONG Length,
                        OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    PVOID ControlStart;
+    ULONG RealLength;
+
+    if ((ULONG)BaseAddress <= 2)
+    {
+        PKPRCB Prcb = KiProcessorBlock[Processor];
+        PKIPCR Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
+
+        switch ((ULONG_PTR)BaseAddress)
+        {
+            case 0:
+                /* Copy a pointer to the Pcr */
+                ControlStart = &Pcr;
+                RealLength = sizeof(PVOID);
+                break;
+
+            case 1:
+                /* Copy a pointer to the Prcb */
+                ControlStart = &Prcb;
+                RealLength = sizeof(PVOID);
+                break;
+
+            case 2:
+                /* Copy SpecialRegisters */
+                ControlStart = &Prcb->ProcessorState.SpecialRegisters;
+                RealLength = sizeof(KSPECIAL_REGISTERS);
+                break;
+
+            default:
+                RealLength = 0;
+                ControlStart = NULL;
+                ASSERT(FALSE);
+        }
+
+        if (RealLength < Length) Length = RealLength;
+
+        /* Copy the memory */
+        RtlCopyMemory(Buffer, ControlStart, Length);
+        *ActualLength = Length;
+
+        /* Finish up */
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid request */
+        *ActualLength = 0;
+        return STATUS_UNSUCCESSFUL;
+    }
 }
 
 NTSTATUS
