@@ -417,12 +417,12 @@ RtlpDidUnicodeToOemWork(IN PCUNICODE_STRING UnicodeString,
    ULONG i = 0;
 
    /* Go through all characters of a string */
-   while ((OemString->Buffer[i] != 0) &&
-          (i < OemString->Length))
+   while (i < OemString->Length)
    {
        /* Check if it got translated into '?', but source char
           wasn't '?' equivalent */
-       if ((OemString->Buffer[i] == NlsOemDefaultChar) &&
+       if ((OemString->Buffer[i] != 0) &&
+           (OemString->Buffer[i] == NlsOemDefaultChar) &&
            (UnicodeString->Buffer[i] != NlsUnicodeDefaultChar))
        {
            /* Yes, it means unmappable characters were found */
