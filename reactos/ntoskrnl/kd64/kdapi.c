@@ -14,6 +14,76 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+KdpCopyMemoryChunks(IN ULONG64 Address,
+                    IN PVOID Buffer,
+                    IN ULONG TotalSize,
+                    IN ULONG ChunkSize,
+                    IN ULONG Flags,
+                    OUT PULONG ActualSize OPTIONAL)
+{
+    ULONG Length;
+    NTSTATUS Status;
+
+    /* Check if this is physical or virtual copy */
+    if (Flags & MMDBG_COPY_PHYSICAL)
+    {
+        /* Fail physical memory read/write for now */
+        if (Flags & MMDBG_COPY_WRITE)
+        {
+            KdpDprintf("KdpCopyMemoryChunks: Failing write for Physical Address 0x%I64x Length: %x\n",
+                       Address,
+                       TotalSize);
+        }
+        else
+        {
+            KdpDprintf("KdpCopyMemoryChunks: Failing read for Physical Address 0x%I64x Length: %x\n",
+                       Address,
+                       TotalSize);
+        }
+
+        /* Return an error */
+        Length = 0;
+        Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Protect against NULL */
+        if (!Address)
+        {
+            if (ActualSize) *ActualSize = 0;
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        /* Check if this is read or write */
+        if (Flags & MMDBG_COPY_WRITE)
+        {
+            /* Do the write */
+            RtlCopyMemory((PVOID)(ULONG_PTR)Address,
+                          Buffer,
+                          TotalSize);
+        }
+        else
+        {
+            /* Do the read */
+            RtlCopyMemory(Buffer,
+                          (PVOID)(ULONG_PTR)Address,
+                          TotalSize);
+        }
+
+        /* Set size and status */
+        Length = TotalSize;
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Return the actual length if requested */
+    if (ActualSize) *ActualSize = Length;
+
+    /* Return status */
+    return Status;
+}
+
 VOID
 NTAPI
 KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
@@ -264,9 +334,14 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                      IN PSTRING Data,
                      IN PCONTEXT Context)
 {
+    PDBGKD_READ_MEMORY64 ReadMemory = &State->u.ReadMemory;
     STRING Header;
-    ULONG Length = State->u.ReadMemory.TransferCount;
-    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG Length = ReadMemory->TransferCount;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
 
     /* Validate length */
     if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
@@ -275,35 +350,16 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
         Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
     }
 
-#if 0
-    if (!MmIsAddressValid((PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress))
-    {
-        KdpDprintf("Tried to read invalid address %p\n",
-                   (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress);
-        while (TRUE);
-    }
-#endif
+    /* Do the read */
+    State->ReturnStatus = KdpCopyMemoryChunks(ReadMemory->TargetBaseAddress,
+                                              Data->Buffer,
+                                              Length,
+                                              0,
+                                              MMDBG_COPY_UNSAFE,
+                                              &Length);
 
-    if (!State->u.ReadMemory.TargetBaseAddress)
-    {
-        Length = 0;
-        Status = STATUS_UNSUCCESSFUL;
-    }
-    else
-    {
-        RtlCopyMemory(Data->Buffer,
-                      (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
-                      Length);
-    }
-
-    /* Fill out the header */
-    Data->Length = Length;
-    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
-    Header.Buffer = (PCHAR)State;
-
-    /* Fill out the state */
-    State->ReturnStatus = Status;
-    State->u.ReadMemory.ActualBytesRead = Length;
+    /* Return the actual length read */
+    Data->Length = ReadMemory->ActualBytesRead = Length;
 
     /* Send the packet */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -318,11 +374,27 @@ KdpWriteVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                       IN PSTRING Data,
                       IN PCONTEXT Context)
 {
-    /* FIXME: STUB */
-    KdpDprintf("KdpWriteVirtualMemory called for Address: %p Length %x\n",
-               (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
-               State->u.ReadMemory.TransferCount);
-    while (TRUE);
+    PDBGKD_WRITE_MEMORY64 WriteMemory = &State->u.WriteMemory;
+    STRING Header;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Do the write */
+    State->ReturnStatus = KdpCopyMemoryChunks(WriteMemory->TargetBaseAddress,
+                                              Data->Buffer,
+                                              Data->Length,
+                                              0,
+                                              MMDBG_COPY_UNSAFE |
+                                              MMDBG_COPY_WRITE,
+                                              &WriteMemory->ActualBytesWritten);
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -331,20 +403,56 @@ KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
                       IN PSTRING Data,
                       IN PCONTEXT Context)
 {
+    PDBGKD_READ_MEMORY64 ReadMemory = &State->u.ReadMemory;
     STRING Header;
+    ULONG Length = ReadMemory->TransferCount;
+    ULONG Flags, CacheFlags;
 
-    /* FIXME: STUB */
-    KdpDprintf("KdpWritePhysicalMemory called for Address %I64x Length: %x\n",
-               State->u.ReadMemory.TargetBaseAddress,
-               State->u.ReadMemory.TransferCount);
-
-    /* Setup an empty message, with failure */
+    /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    Data->Length = 0;
-    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    ASSERT(Data->Length == 0);
 
-    /* Send it */
+    /* Validate length */
+    if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
+    {
+        /* Overflow, set it to maximum possible */
+        Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
+    }
+
+    /* Start with the default flags */
+    Flags = MMDBG_COPY_UNSAFE | MMDBG_COPY_PHYSICAL;
+
+    /* Get the caching flags and check if a type is specified */
+    CacheFlags = ReadMemory->ActualBytesRead;
+    if (CacheFlags == DBGKD_CACHING_CACHED)
+    {
+        /* Cached */
+        Flags |= MMDBG_COPY_CACHED;
+    }
+    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    {
+        /* Uncached */
+        Flags |= MMDBG_COPY_UNCACHED;
+    }
+    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    {
+        /* Write Combined */
+        Flags |= DBGKD_CACHING_WRITE_COMBINED;
+    }
+
+    /* Do the read */
+    State->ReturnStatus = KdpCopyMemoryChunks(ReadMemory->TargetBaseAddress,
+                                              Data->Buffer,
+                                              Length,
+                                              0,
+                                              Flags,
+                                              &Length);
+
+    /* Return the actual length read */
+    Data->Length = ReadMemory->ActualBytesRead = Length;
+
+    /* Send the packet */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
                  Data,
@@ -357,23 +465,47 @@ KdpWritePhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
                        IN PSTRING Data,
                        IN PCONTEXT Context)
 {
+    PDBGKD_WRITE_MEMORY64 WriteMemory = &State->u.WriteMemory;
     STRING Header;
+    ULONG Flags, CacheFlags;
 
-    /* FIXME: STUB */
-    KdpDprintf("KdpWritePhysicalMemory called for Address %I64x Length: %x\n",
-               State->u.ReadMemory.TargetBaseAddress,
-               State->u.ReadMemory.TransferCount);
-
-    /* Setup an empty message, with failure */
+    /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    Data->Length = 0;
-    State->ReturnStatus = STATUS_UNSUCCESSFUL;
 
-    /* Send it */
+    /* Start with the default flags */
+    Flags = MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE | MMDBG_COPY_PHYSICAL;
+
+    /* Get the caching flags and check if a type is specified */
+    CacheFlags = WriteMemory->ActualBytesWritten;
+    if (CacheFlags == DBGKD_CACHING_CACHED)
+    {
+        /* Cached */
+        Flags |= MMDBG_COPY_CACHED;
+    }
+    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    {
+        /* Uncached */
+        Flags |= MMDBG_COPY_UNCACHED;
+    }
+    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    {
+        /* Write Combined */
+        Flags |= DBGKD_CACHING_WRITE_COMBINED;
+    }
+
+    /* Do the write */
+    State->ReturnStatus = KdpCopyMemoryChunks(WriteMemory->TargetBaseAddress,
+                                              Data->Buffer,
+                                              Data->Length,
+                                              0,
+                                              Flags,
+                                              &WriteMemory->ActualBytesWritten);
+
+    /* Send the packet */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data,
+                 NULL,
                  &KdpContext);
 }
 
@@ -425,7 +557,6 @@ KdpWriteControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
 {
     PDBGKD_WRITE_MEMORY64 WriteMemory = &State->u.WriteMemory;
     STRING Header;
-    ULONG Length;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -436,10 +567,7 @@ KdpWriteControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                                                   WriteMemory->TargetBaseAddress,
                                                   Data->Buffer,
                                                   Data->Length,
-                                                  &Length);
-
-    /* Return the length written */
-    WriteMemory->ActualBytesWritten = Length;
+                                                  &WriteMemory->ActualBytesWritten);
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -835,7 +963,7 @@ KdpCheckLowMemory(IN PDBGKD_MANIPULATE_STATE64 State)
     Header.Buffer = (PCHAR)State;
 
     /* Call the internal routine */
-    State->ReturnStatus = KdpSysCheckLowMemory(0x4);
+    State->ReturnStatus = KdpSysCheckLowMemory(MMDBG_COPY_UNSAFE);
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,

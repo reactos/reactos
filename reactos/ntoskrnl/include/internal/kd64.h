@@ -374,7 +374,7 @@ KdpSysReadIoSpace(
     IN ULONG BusNumber,
     IN ULONG AddressSpace,
     IN ULONG64 IoAddress,
-    IN PULONG DataValue,
+    IN PVOID DataValue,
     IN ULONG DataSize,
     OUT PULONG ActualDataSize
 );
@@ -386,7 +386,7 @@ KdpSysWriteIoSpace(
     IN ULONG BusNumber,
     IN ULONG AddressSpace,
     IN ULONG64 IoAddress,
-    IN PULONG DataValue,
+    IN PVOID DataValue,
     IN ULONG DataSize,
     OUT PULONG ActualDataSize
 );

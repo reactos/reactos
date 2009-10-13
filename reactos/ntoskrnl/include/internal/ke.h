@@ -192,6 +192,29 @@ extern ULONG KiDPCTimeout;
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
+VOID
+NTAPI
+CPUID(
+    IN ULONG InfoType,
+    OUT PULONG CpuInfoEax,
+    OUT PULONG CpuInfoEbx,
+    OUT PULONG CpuInfoEcx,
+    OUT PULONG CpuInfoEdx
+);
+
+LONGLONG
+FASTCALL
+RDMSR(
+    IN ULONG Register
+);
+
+VOID
+NTAPI
+WRMSR(
+    IN ULONG Register,
+    IN LONGLONG Value
+);
+
 /* Finds a new thread to run */
 NTSTATUS
 FASTCALL
@@ -271,16 +294,6 @@ PKTHREAD
 FASTCALL
 KiSelectNextThread(
     IN PKPRCB Prcb
-);
-
-VOID
-NTAPI
-CPUID(
-    IN ULONG InfoType,
-    OUT PULONG CpuInfoEax,
-    OUT PULONG CpuInfoEbx,
-    OUT PULONG CpuInfoEcx,
-    OUT PULONG CpuInfoEdx
 );
 
 BOOLEAN
@@ -1005,13 +1018,6 @@ KiInitMachineDependent(VOID);
 VOID
 NTAPI
 KiI386PentiumLockErrataFixup(VOID);
-
-VOID
-NTAPI
-WRMSR(
-    IN ULONG Register,
-    IN LONGLONG Value
-);
 
 BOOLEAN
 NTAPI

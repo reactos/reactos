@@ -95,7 +95,7 @@ KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
     WaitStateChange->ControlReport.ReportFlags = REPORT_INCLUDES_SEGS;
     if (WaitStateChange->ControlReport.SegCs == KGDT_R0_CODE)
     {
-        WaitStateChange->ControlReport.ReportFlags = REPORT_STANDARD_CS;
+        WaitStateChange->ControlReport.ReportFlags |= REPORT_STANDARD_CS;
     }
 }
 
@@ -104,9 +104,21 @@ NTAPI
 KdpSysReadMsr(IN ULONG Msr,
               OUT PLARGE_INTEGER MsrValue)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    /* Wrap this in SEH in case the MSR doesn't exist */
+    //_SEH2_TRY
+    {
+        /* Read from the MSR */
+        MsrValue->QuadPart = RDMSR(Msr);
+    }
+    //_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Invalid MSR */
+        //_SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
+    }
+    //_SEH2_END;
+
+    /* Success */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -114,9 +126,21 @@ NTAPI
 KdpSysWriteMsr(IN ULONG Msr,
                IN PLARGE_INTEGER MsrValue)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    /* Wrap this in SEH in case the MSR doesn't exist */
+    //_SEH2_TRY
+    {
+        /* Write to the MSR */
+        WRMSR(Msr, MsrValue->QuadPart);
+    }
+    //_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Invalid MSR */
+        //_SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
+    }
+    //_SEH2_END;
+
+    /* Success */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -228,7 +252,7 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
                   IN ULONG BusNumber,
                   IN ULONG AddressSpace,
                   IN ULONG64 IoAddress,
-                  IN PULONG DataValue,
+                  IN PVOID DataValue,
                   IN ULONG DataSize,
                   OUT PULONG ActualDataSize)
 {
@@ -243,7 +267,7 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
                    IN ULONG BusNumber,
                    IN ULONG AddressSpace,
                    IN ULONG64 IoAddress,
-                   IN PULONG DataValue,
+                   IN PVOID DataValue,
                    IN ULONG DataSize,
                    OUT PULONG ActualDataSize)
 {
