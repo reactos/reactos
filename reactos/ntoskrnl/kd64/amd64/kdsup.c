@@ -21,20 +21,8 @@ VOID
 NTAPI
 KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
 {
-    Version->MajorVersion = 0;
-    Version->MinorVersion = 0;
-    Version->ProtocolVersion = DBGKD_64BIT_PROTOCOL_VERSION2;
-    Version->KdSecondaryVersion = KD_SECONDARY_VERSION_AMD64_CONTEXT;
-    Version->Flags = DBGKD_VERS_FLAG_PTR64 | DBGKD_VERS_FLAG_DATA;
-    Version->MachineType = IMAGE_FILE_MACHINE_AMD64;
-    Version->MaxPacketType = PACKET_TYPE_MAX;
-    Version->MaxStateChange = 0;
-    Version->MaxManipulate = 0;
-    Version->Simulation = DBGKD_SIMULATION_NONE;
-    Version->Unused[0] = 0;
-    Version->KernBase = 0xfffff80000800000ULL;
-    Version->PsLoadedModuleList = (ULONG_PTR)&KeLoaderBlock->LoadOrderListHead;
-    Version->DebuggerDataList = 0;
+    /* Copy the version block */
+    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
 }
 
 VOID
@@ -107,7 +95,7 @@ KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
     WaitStateChange->ControlReport.ReportFlags = REPORT_INCLUDES_SEGS;
     if (WaitStateChange->ControlReport.SegCs == KGDT_64_R0_CODE)
     {
-        WaitStateChange->ControlReport.ReportFlags = REPORT_STANDARD_CS;
+        WaitStateChange->ControlReport.ReportFlags |= REPORT_STANDARD_CS;
     }
 }
 
