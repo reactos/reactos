@@ -117,6 +117,8 @@ CServiceGroup::RequestService()
 {
     KIRQL OldIrql;
 
+    DPRINT("CServiceGroup::RequestService() Dpc at Level %u\n", KeGetCurrentIrql());
+
     if (KeGetCurrentIrql() > DISPATCH_LEVEL)
     {
         KeInsertQueueDpc(&m_Dpc, NULL, NULL);

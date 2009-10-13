@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../../../tools/rbuild/project.dtd">
 <module name="portcls" type="kernelmodedriver" installbase="system32/drivers" installname="portcls.sys" entrypoint="0">
 	<importlibrary definition="portcls.spec" />
-	<define name="PC_NO_IMPORTS" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<include base="portcls">.</include>
 	<library>ntoskrnl</library>

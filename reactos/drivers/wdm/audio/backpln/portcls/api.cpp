@@ -238,8 +238,8 @@ NTAPI
 PcDmaSlaveDescription(
     IN PRESOURCELIST  ResourceList OPTIONAL,
     IN ULONG DmaIndex,
-    IN BOOL DemandMode,
-    IN ULONG AutoInitialize,
+    IN BOOLEAN DemandMode,
+    IN BOOLEAN AutoInitialize,
     IN DMA_SPEED DmaSpeed,
     IN ULONG MaximumLength,
     IN ULONG DmaPort,

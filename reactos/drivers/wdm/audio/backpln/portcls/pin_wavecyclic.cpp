@@ -958,7 +958,7 @@ CPortPinWaveCyclic::Init(
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
     PDEVICE_OBJECT DeviceObject;
-    BOOL Capture;
+    BOOLEAN Capture;
     PVOID SilenceBuffer;
     //IDrmAudioStream * DrmAudio = NULL;
 

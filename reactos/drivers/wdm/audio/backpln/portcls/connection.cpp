@@ -156,7 +156,7 @@ RegisterConnection(
     IN PUNICODE_STRING ToString,
     IN ULONG ToPin)
 {
-    PSUBDEVICE_DESCRIPTOR FromSubDeviceDescriptor, ToSubDeviceDescriptor;
+    PSUBDEVICE_DESCRIPTOR FromSubDeviceDescriptor = NULL, ToSubDeviceDescriptor = NULL;
     PSYMBOLICLINK_ENTRY SymEntry;
     ISubdevice * FromSubDevice = NULL, *ToSubDevice = NULL;
     NTSTATUS Status;
@@ -205,35 +205,49 @@ RegisterConnection(
 
     }
 
-    FromEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + ToString->MaximumLength, TAG_PORTCLASS);
-    if (!FromEntry)
+    if (FromSubDeviceDescriptor)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
+        FromEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + ToString->MaximumLength, TAG_PORTCLASS);
+        if (!FromEntry)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto cleanup;
+        }
     }
 
-    ToEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + FromString->MaximumLength, TAG_PORTCLASS);
-    if (!ToEntry)
+    if (ToSubDeviceDescriptor)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
+        ToEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + FromString->MaximumLength, TAG_PORTCLASS);
+        if (!ToEntry)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto cleanup;
+        }
     }
 
-    FromEntry->FromPin = FromPin;
-    FromEntry->Connection.Pin = ToPin;
-    FromEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + ToString->MaximumLength;
-    RtlMoveMemory(&FromEntry->Connection.SymbolicLinkName, ToString->Buffer, ToString->MaximumLength);
-    FromEntry->Connection.SymbolicLinkName[ToString->Length / sizeof(WCHAR)] = L'\0';
+    if (FromSubDeviceDescriptor)
+    {
+        FromEntry->FromPin = FromPin;
+        FromEntry->Connection.Pin = ToPin;
+        FromEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + ToString->MaximumLength;
+        RtlMoveMemory(&FromEntry->Connection.SymbolicLinkName, ToString->Buffer, ToString->MaximumLength);
+        FromEntry->Connection.SymbolicLinkName[ToString->Length / sizeof(WCHAR)] = L'\0';
 
-    ToEntry->FromPin = ToPin;
-    ToEntry->Connection.Pin = FromPin;
-    ToEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + FromString->MaximumLength;
-    RtlMoveMemory(&ToEntry->Connection.SymbolicLinkName, FromString->Buffer, FromString->MaximumLength);
-    ToEntry->Connection.SymbolicLinkName[FromString->Length /  sizeof(WCHAR)] = L'\0';
+        InsertTailList(&FromSubDeviceDescriptor->PhysicalConnectionList, &FromEntry->Entry);
+    }
 
 
-    InsertTailList(&FromSubDeviceDescriptor->PhysicalConnectionList, &FromEntry->Entry);
-    InsertTailList(&ToSubDeviceDescriptor->PhysicalConnectionList, &ToEntry->Entry);
+    if (ToSubDeviceDescriptor)
+    {
+        ToEntry->FromPin = ToPin;
+        ToEntry->Connection.Pin = FromPin;
+        ToEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + FromString->MaximumLength;
+        RtlMoveMemory(&ToEntry->Connection.SymbolicLinkName, FromString->Buffer, FromString->MaximumLength);
+        ToEntry->Connection.SymbolicLinkName[FromString->Length /  sizeof(WCHAR)] = L'\0';
+
+        InsertTailList(&ToSubDeviceDescriptor->PhysicalConnectionList, &ToEntry->Entry);
+
+    }
 
     return STATUS_SUCCESS;
 

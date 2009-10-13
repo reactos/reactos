@@ -358,7 +358,7 @@ CPortPinDMus::TransferMidiDataToDMus()
         //set up struct
         //Event->Event.usFlags = DMUS_KEF_EVENT_COMPLETE;
         Event->Event.cbStruct = sizeof(DMUS_KERNEL_EVENT);
-        Event->Event.cbEvent = BufferSize;
+        Event->Event.cbEvent = (USHORT)BufferSize;
         Event->Event.uData.pbData = (PBYTE)Buffer;
 
 

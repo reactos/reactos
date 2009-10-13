@@ -41,6 +41,11 @@ public:
     VOID NTAPI CloseStream();
 protected:
 
+    friend NTSTATUS NTAPI PinWavePciState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+    friend NTSTATUS NTAPI PinWavePciDataFormat(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+    friend NTSTATUS NTAPI PinWavePciAudioPosition(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+    friend NTSTATUS NTAPI PinWavePciAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+
     IPortWavePci * m_Port;
     IPortFilterWavePci * m_Filter;
     KSPIN_DESCRIPTOR * m_KsPinDescriptor;
@@ -57,20 +62,23 @@ protected:
     IIrpQueue * m_IrpQueue;
 
     ULONG m_TotalPackets;
-    ULONG m_PreCompleted;
-    ULONG m_PostCompleted;
+    KSAUDIO_POSITION m_Position;
     ULONG m_StopCount;
 
     ULONG m_Delay;
 
     BOOL m_bUsePrefetch;
     ULONG m_PrefetchOffset;
+    SUBDEVICE_DESCRIPTOR m_Descriptor;
 
     KSALLOCATOR_FRAMING m_AllocatorFraming;
 
     LONG m_Ref;
 
-    NTSTATUS NTAPI HandleKsProperty(IN PVOID InputBuffer, IN ULONG InputBufferLength, IN PVOID OutputBuffer, IN ULONG OutputBufferLength, IN PIO_STATUS_BLOCK IoStatusBlock);
+    NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
+    NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
+
+
     VOID NTAPI SetStreamState( IN KSSTATE State);
 };
 
@@ -80,6 +88,259 @@ typedef struct
     PIO_WORKITEM WorkItem;
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
+
+NTSTATUS NTAPI PinWavePciState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+NTSTATUS NTAPI PinWavePciDataFormat(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+NTSTATUS NTAPI PinWavePciAudioPosition(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+NTSTATUS NTAPI PinWavePciAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+
+DEFINE_KSPROPERTY_ALLOCATORFRAMING(PinWavePciConnectionSet, PinWavePciState, PinWavePciDataFormat, PinWavePciAllocatorFraming);
+DEFINE_KSPROPERTY_AUDIOSET(PinWavePciAudioSet, PinWavePciAudioPosition);
+
+KSPROPERTY_SET PinWavePciPropertySet[] =
+{
+    {
+        &KSPROPSETID_Connection,
+        sizeof(PinWavePciConnectionSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PinWavePciConnectionSet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_Audio,
+        sizeof(PinWavePciAudioSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PinWavePciAudioSet,
+        0,
+        NULL
+    }
+};
+
+
+NTSTATUS
+NTAPI
+PinWavePciAllocatorFraming(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER Request,
+    IN OUT PVOID Data)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+PinWavePciAudioPosition(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER Request,
+    IN OUT PVOID Data)
+{
+    CPortPinWavePci *Pin;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
+
+    // get sub device descriptor 
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    // sanity check 
+    PC_ASSERT(Descriptor);
+    PC_ASSERT(Descriptor->PortPin);
+    PC_ASSERT_IRQL(DISPATCH_LEVEL);
+
+    // cast to pin impl
+    Pin = (CPortPinWavePci*)Descriptor->PortPin;
+
+    //sanity check
+    PC_ASSERT(Pin->m_Stream);
+
+    if (Request->Flags & KSPROPERTY_TYPE_GET)
+    {
+        // FIXME non multithreading-safe
+        // copy audio position
+        RtlMoveMemory(Data, &Pin->m_Position, sizeof(KSAUDIO_POSITION));
+
+        DPRINT1("Play %lu Record %lu\n", Pin->m_Position.PlayOffset, Pin->m_Position.WriteOffset);
+        Irp->IoStatus.Information = sizeof(KSAUDIO_POSITION);
+        return STATUS_SUCCESS;
+    }
+
+    // not supported
+    return STATUS_NOT_SUPPORTED;
+}
+
+
+NTSTATUS
+NTAPI
+PinWavePciState(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER Request,
+    IN OUT PVOID Data)
+{
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    CPortPinWavePci *Pin;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
+    PKSSTATE State = (PKSSTATE)Data;
+
+    // get sub device descriptor 
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    // sanity check 
+    PC_ASSERT(Descriptor);
+    PC_ASSERT(Descriptor->PortPin);
+    PC_ASSERT_IRQL(DISPATCH_LEVEL);
+
+    // cast to pin impl
+    Pin = (CPortPinWavePci*)Descriptor->PortPin;
+
+    //sanity check
+    PC_ASSERT(Pin->m_Stream);
+
+    if (Request->Flags & KSPROPERTY_TYPE_SET)
+    {
+        // try set stream
+        Status = Pin->m_Stream->SetState(*State);
+
+        DPRINT("Setting state %u %x\n", *State, Status);
+        if (NT_SUCCESS(Status))
+        {
+            // store new state
+            Pin->m_State = *State;
+        }
+        // store result
+        Irp->IoStatus.Information = sizeof(KSSTATE);
+        return Status;
+    }
+    else if (Request->Flags & KSPROPERTY_TYPE_GET)
+    {
+        // get current stream state
+        *State = Pin->m_State;
+        // store result
+        Irp->IoStatus.Information = sizeof(KSSTATE);
+
+        return STATUS_SUCCESS;
+    }
+
+    // unsupported request
+    return STATUS_NOT_SUPPORTED;
+}
+
+NTSTATUS
+NTAPI
+PinWavePciDataFormat(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER Request,
+    IN OUT PVOID Data)
+{
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    CPortPinWavePci *Pin;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
+    PIO_STACK_LOCATION IoStack;
+
+    // get current irp stack location
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    // get sub device descriptor 
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    // sanity check 
+    PC_ASSERT(Descriptor);
+    PC_ASSERT(Descriptor->PortPin);
+
+    // cast to pin impl
+    Pin = (CPortPinWavePci*)Descriptor->PortPin;
+
+    //sanity check
+    PC_ASSERT(Pin->m_Stream);
+    PC_ASSERT(Pin->m_Format);
+
+    if (Request->Flags & KSPROPERTY_TYPE_SET)
+    {
+        // try to change data format
+        PKSDATAFORMAT NewDataFormat, DataFormat = (PKSDATAFORMAT)Irp->UserBuffer;
+        ULONG Size = min(Pin->m_Format->FormatSize, DataFormat->FormatSize);
+
+        if (RtlCompareMemory(DataFormat, Pin->m_Format, Size) == Size)
+        {
+            // format is identical
+            Irp->IoStatus.Information = DataFormat->FormatSize;
+            return STATUS_SUCCESS;
+        }
+
+        // new change request
+        PC_ASSERT(Pin->m_State == KSSTATE_STOP);
+        // FIXME queue a work item when Irql != PASSIVE_LEVEL
+        PC_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+        // allocate new data format
+        NewDataFormat = (PKSDATAFORMAT)AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+        if (!NewDataFormat)
+        {
+            // not enough memory
+            return STATUS_NO_MEMORY;
+        }
+
+        // copy new data format
+        RtlMoveMemory(NewDataFormat, DataFormat, DataFormat->FormatSize);
+
+        // set new format
+        Status = Pin->m_Stream->SetFormat(NewDataFormat);
+        if (NT_SUCCESS(Status))
+        {
+            // free old format
+            FreeItem(Pin->m_Format, TAG_PORTCLASS);
+
+            // update irp queue with new format
+            Pin->m_IrpQueue->UpdateFormat((PKSDATAFORMAT)NewDataFormat);
+
+            // store new format
+            Pin->m_Format = NewDataFormat;
+            Irp->IoStatus.Information = NewDataFormat->FormatSize;
+
+#if 0
+            PC_ASSERT(NewDataFormat->FormatSize == sizeof(KSDATAFORMAT_WAVEFORMATEX));
+            PC_ASSERT(IsEqualGUIDAligned(((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.MajorFormat, KSDATAFORMAT_TYPE_AUDIO));
+            PC_ASSERT(IsEqualGUIDAligned(((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.SubFormat, KSDATAFORMAT_SUBTYPE_PCM));
+            PC_ASSERT(IsEqualGUIDAligned(((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.Specifier, KSDATAFORMAT_SPECIFIER_WAVEFORMATEX));
+
+
+            DPRINT1("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
+                                                                       ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.wBitsPerSample,
+                                                                       ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nSamplesPerSec);
+#endif
+
+        }
+        else
+        {
+            // failed to set format
+            FreeItem(NewDataFormat, TAG_PORTCLASS);
+        }
+
+
+        // done
+        return Status;
+    }
+    else if (Request->Flags & KSPROPERTY_TYPE_GET)
+    {
+        // get current data format
+        PC_ASSERT(Pin->m_Format);
+
+        if (Pin->m_Format->FormatSize > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+        {
+            // buffer too small
+            Irp->IoStatus.Information = Pin->m_Format->FormatSize;
+            return STATUS_MORE_ENTRIES;
+        }
+        // copy data format
+        RtlMoveMemory(Data, Pin->m_Format, Pin->m_Format->FormatSize);
+        // store result size
+        Irp->IoStatus.Information = Pin->m_Format->FormatSize;
+
+        // done
+        return STATUS_SUCCESS;
+    }
+
+    // unsupported request
+    return STATUS_NOT_SUPPORTED;
+}
+
 
 //==================================================================================================================================
 NTSTATUS
@@ -185,7 +446,7 @@ CPortPinWavePci::SetState(KSSTATE State)
             // store minimum data threshold
             m_IrpQueue->SetMinimumDataThreshold(MinimumDataThreshold);
 
-            DPRINT1("Stopping PreCompleted %u PostCompleted %u StopCount %u MinimumDataThreshold %u\n", m_PreCompleted, m_PostCompleted, m_StopCount, MinimumDataThreshold);
+            DPRINT1("Stopping TotalCompleted %u StopCount %u MinimumDataThreshold %u\n", m_TotalPackets, m_StopCount, MinimumDataThreshold);
         }
         if (m_State == KSSTATE_RUN)
         {
@@ -308,144 +569,50 @@ CPortPinWavePci::NewIrpTarget(
 NTSTATUS
 NTAPI
 CPortPinWavePci::HandleKsProperty(
-    IN PVOID InputBuffer,
-    IN ULONG InputBufferLength,
-    IN PVOID OutputBuffer,
-    IN ULONG OutputBufferLength,
-    IN PIO_STATUS_BLOCK IoStatusBlock)
+    IN PIRP Irp)
 {
     PKSPROPERTY Property;
     NTSTATUS Status;
     UNICODE_STRING GuidString;
+    PIO_STACK_LOCATION IoStack;
 
-    DPRINT("IPortPinWavePci_HandleKsProperty entered\n");
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (InputBufferLength < sizeof(KSPROPERTY))
+    DPRINT("IPortPinWave_HandleKsProperty entered\n");
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
-        IoStatusBlock->Information = 0;
-        IoStatusBlock->Status = STATUS_INVALID_PARAMETER;
-        return STATUS_INVALID_PARAMETER;
+        DPRINT1("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
+        
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
     }
 
-    Property = (PKSPROPERTY)InputBuffer;
+    Status = PcHandlePropertyWithTable(Irp,  m_Descriptor.FilterPropertySetCount, m_Descriptor.FilterPropertySet, &m_Descriptor);
 
-    if (IsEqualGUIDAligned(Property->Set, KSPROPSETID_Connection))
+    if (Status == STATUS_NOT_FOUND)
     {
-        if (Property->Id == KSPROPERTY_CONNECTION_STATE)
-        {
-            PKSSTATE State = (PKSSTATE)OutputBuffer;
+        Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-            PC_ASSERT_IRQL(DISPATCH_LEVEL);
-            if (OutputBufferLength < sizeof(KSSTATE))
-            {
-                IoStatusBlock->Information = sizeof(KSSTATE);
-                IoStatusBlock->Status = STATUS_BUFFER_TOO_SMALL;
-                return STATUS_BUFFER_TOO_SMALL;
-            }
+        RtlStringFromGUID(Property->Set, &GuidString);
+        DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+        RtlFreeUnicodeString(&GuidString);
+    }
 
-            if (Property->Flags & KSPROPERTY_TYPE_SET)
-            {
-                Status = STATUS_UNSUCCESSFUL;
-                IoStatusBlock->Information = 0;
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
-                if (m_Stream)
-                {
-                    Status = m_Stream->SetState(*State);
+    return Status;
+}
 
-                    DPRINT1("Setting state %u %x\n", *State, Status);
-                    if (NT_SUCCESS(Status))
-                    {
-                        m_State = *State;
-                    }
-                }
-                IoStatusBlock->Status = Status;
-                return Status;
-            }
-            else if (Property->Flags & KSPROPERTY_TYPE_GET)
-            {
-                *State = m_State;
-                IoStatusBlock->Information = sizeof(KSSTATE);
-                IoStatusBlock->Status = STATUS_SUCCESS;
-                return STATUS_SUCCESS;
-            }
-        }
-        else if (Property->Id == KSPROPERTY_CONNECTION_DATAFORMAT)
-        {
-            PKSDATAFORMAT DataFormat = (PKSDATAFORMAT)OutputBuffer;
-            if (Property->Flags & KSPROPERTY_TYPE_SET)
-            {
-                PKSDATAFORMAT NewDataFormat;
-                if (!RtlCompareMemory(DataFormat, m_Format, DataFormat->FormatSize))
-                {
-                    IoStatusBlock->Information = DataFormat->FormatSize;
-                    IoStatusBlock->Status = STATUS_SUCCESS;
-                    return STATUS_SUCCESS;
-                }
-
-                NewDataFormat = (PKSDATAFORMAT)AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
-                if (!NewDataFormat)
-                {
-                    IoStatusBlock->Information = 0;
-                    IoStatusBlock->Status = STATUS_NO_MEMORY;
-                    return STATUS_NO_MEMORY;
-                }
-                RtlMoveMemory(NewDataFormat, DataFormat, DataFormat->FormatSize);
-
-                if (m_Stream)
-                {
 #if 0
-                    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
-                    ASSERT(NewDataFormat->FormatSize == sizeof(KSDATAFORMAT_WAVEFORMATEX));
-                    ASSERT(IsEqualGUIDAligned(&((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.MajorFormat, &KSDATAFORMAT_TYPE_AUDIO));
-                    ASSERT(IsEqualGUIDAligned(&((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.SubFormat, &KSDATAFORMAT_SUBTYPE_PCM));
-                    ASSERT(IsEqualGUIDAligned(&((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.Specifier, &KSDATAFORMAT_SPECIFIER_WAVEFORMATEX));
-
-                    ASSERT(This->State == KSSTATE_STOP);
-#endif
-                    DPRINT1("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
-                                                                                 ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.wBitsPerSample,
-                                                                                 ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nSamplesPerSec);
-
-                    Status = m_Stream->SetFormat(NewDataFormat);
-                    if (NT_SUCCESS(Status))
-                    {
-                        if (m_Format)
-                            ExFreePoolWithTag(m_Format, TAG_PORTCLASS);
-
-                        m_IrpQueue->UpdateFormat((PKSDATAFORMAT)NewDataFormat);
-                        m_Format = NewDataFormat;
-                        IoStatusBlock->Information = DataFormat->FormatSize;
-                        IoStatusBlock->Status = STATUS_SUCCESS;
-                        return STATUS_SUCCESS;
-                    }
-                }
-                DPRINT1("Failed to set format\n");
-                IoStatusBlock->Information = 0;
-                IoStatusBlock->Status = STATUS_UNSUCCESSFUL;
-                return STATUS_UNSUCCESSFUL;
-            }
-            else if (Property->Flags & KSPROPERTY_TYPE_GET)
-            {
-                if (!m_Format)
-                {
-                    DPRINT1("No format\n");
-                    IoStatusBlock->Information = 0;
-                    IoStatusBlock->Status = STATUS_UNSUCCESSFUL;
-                    return STATUS_UNSUCCESSFUL;
-                }
-                if (m_Format->FormatSize > OutputBufferLength)
-                {
-                    IoStatusBlock->Information = m_Format->FormatSize;
-                    IoStatusBlock->Status = STATUS_BUFFER_TOO_SMALL;
-                    return STATUS_BUFFER_TOO_SMALL;
-                }
-
-                RtlMoveMemory(DataFormat, m_Format, m_Format->FormatSize);
-                IoStatusBlock->Information = DataFormat->FormatSize;
-                IoStatusBlock->Status = STATUS_SUCCESS;
-                return STATUS_SUCCESS;
-            }
-        }
         else if (Property->Id == KSPROPERTY_CONNECTION_ALLOCATORFRAMING)
         {
             PKSALLOCATOR_FRAMING Framing = (PKSALLOCATOR_FRAMING)OutputBuffer;
@@ -466,15 +633,37 @@ CPortPinWavePci::HandleKsProperty(
             return STATUS_SUCCESS;
         }
     }
+#endif
 
-    RtlStringFromGUID(Property->Set, &GuidString);
-    DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-    RtlFreeUnicodeString(&GuidString);
+NTSTATUS
+NTAPI
+CPortPinWavePci::HandleKsStream(
+    IN PIRP Irp)
+{
+    NTSTATUS Status;
+    InterlockedIncrement((PLONG)&m_TotalPackets);
 
-    IoStatusBlock->Status = STATUS_NOT_IMPLEMENTED;
-    IoStatusBlock->Information = 0;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
+
+    Status = m_IrpQueue->AddMapping(NULL, 0, Irp);
+
+    if (NT_SUCCESS(Status))
+    {
+
+        PKSSTREAM_HEADER Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+        PC_ASSERT(Header);
+
+        if (m_Capture)
+            m_Position.WriteOffset += Header->FrameExtent;
+        else
+            m_Position.WriteOffset += Header->DataUsed;
+
+    }
+
+
+    return STATUS_PENDING;
 }
+
 
 NTSTATUS
 NTAPI
@@ -483,17 +672,17 @@ CPortPinWavePci::DeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    NTSTATUS Status;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
-       Status = HandleKsProperty(IoStack->Parameters.DeviceIoControl.Type3InputBuffer, IoStack->Parameters.DeviceIoControl.InputBufferLength, Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength, &Irp->IoStatus);
-       IoCompleteRequest(Irp, IO_NO_INCREMENT);
-       return Status;
+        return HandleKsProperty(Irp);
     }
-
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM || IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
+    {
+       return HandleKsStream(Irp);
+    }
 
     UNIMPLEMENTED
 
@@ -735,7 +924,7 @@ CPortPinWavePci::Init(
 {
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
-    BOOL Capture;
+    BOOLEAN Capture;
 
     Port->AddRef();
     Filter->AddRef();
@@ -809,6 +998,34 @@ CPortPinWavePci::Init(
 
     DPRINT("OptionFlags %x RequirementsFlag %x PoolType %x Frames %lu FrameSize %lu FileAlignment %lu\n",
            m_AllocatorFraming.OptionsFlags, m_AllocatorFraming.RequirementsFlags, m_AllocatorFraming.PoolType, m_AllocatorFraming.Frames, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment);
+
+    ISubdevice * Subdevice = NULL;
+    // get subdevice interface
+    Status = Port->QueryInterface(IID_ISubdevice, (PVOID*)&Subdevice);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
+
+    Status = Subdevice->GetDescriptor(&SubDeviceDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to get descriptor
+        Subdevice->Release();
+        return Status;
+    }
+
+    /* set up subdevice descriptor */
+    RtlZeroMemory(&m_Descriptor, sizeof(SUBDEVICE_DESCRIPTOR));
+    m_Descriptor.FilterPropertySet = PinWavePciPropertySet;
+    m_Descriptor.FilterPropertySetCount = sizeof(PinWavePciPropertySet) / sizeof(KSPROPERTY_SET);
+    m_Descriptor.UnknownStream = (PUNKNOWN)m_Stream;
+    m_Descriptor.DeviceDescriptor = SubDeviceDescriptor->DeviceDescriptor;
+    m_Descriptor.UnknownMiniport = SubDeviceDescriptor->UnknownMiniport;
+    m_Descriptor.PortPin = (PVOID)this;
+
+
 
     Status = NewIrpQueue(&m_IrpQueue);
     if (!NT_SUCCESS(Status))

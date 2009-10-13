@@ -355,8 +355,8 @@ CPortWaveCyclic::NewMasterDmaChannel(
     IN  PUNKNOWN OuterUnknown,
     IN  PRESOURCELIST ResourceList OPTIONAL,
     IN  ULONG MaximumLength,
-    IN  BOOL Dma32BitAddresses,
-    IN  BOOL Dma64BitAddresses,
+    IN  BOOLEAN Dma32BitAddresses,
+    IN  BOOLEAN Dma64BitAddresses,
     IN  DMA_WIDTH DmaWidth,
     IN  DMA_SPEED DmaSpeed)
 {
@@ -388,7 +388,7 @@ CPortWaveCyclic::NewSlaveDmaChannel(
     IN  PRESOURCELIST ResourceList OPTIONAL,
     IN  ULONG DmaIndex,
     IN  ULONG MaximumLength,
-    IN  BOOL DemandMode,
+    IN  BOOLEAN DemandMode,
     IN  DMA_SPEED DmaSpeed)
 {
     DEVICE_DESCRIPTION DeviceDescription;
