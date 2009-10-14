@@ -49,22 +49,22 @@ C_ASSERT(MM_ALLOCATION_GRANULARITY >= PAGE_SIZE);
 //
 typedef struct _HARDWARE_PTE
 {
-   ULONG64 Valid:1;
-   ULONG64 Write:1;
-   ULONG64 Owner:1;
-   ULONG64 WriteThrough:1;
-   ULONG64 CacheDisable:1;
-   ULONG64 Accessed:1;
-   ULONG64 Dirty:1;
-   ULONG64 LargePage:1;
-   ULONG64 Global:1;
-   ULONG64 CopyOnWrite:1;
-   ULONG64 Prototype:1;
-   ULONG64 reserved0:1;
-   ULONG64 PageFrameNumber:28;
-   ULONG64 reserved1:12;
-   ULONG64 SoftwareWsIndex:11;
-   ULONG64 NoExecute:1;
+    ULONG64 Valid:1;
+    ULONG64 Write:1;
+    ULONG64 Owner:1;
+    ULONG64 WriteThrough:1;
+    ULONG64 CacheDisable:1;
+    ULONG64 Accessed:1;
+    ULONG64 Dirty:1;
+    ULONG64 LargePage:1;
+    ULONG64 Global:1;
+    ULONG64 CopyOnWrite:1;
+    ULONG64 Prototype:1;
+    ULONG64 reserved0:1;
+    ULONG64 PageFrameNumber:28;
+    ULONG64 reserved1:12;
+    ULONG64 SoftwareWsIndex:11;
+    ULONG64 NoExecute:1;
 } HARDWARE_PTE, *PHARDWARE_PTE;
 
 typedef struct _MMPTE_SOFTWARE
@@ -131,37 +131,17 @@ typedef struct _MMPTE_LIST
     ULONG64 NextEntry:32;
 } MMPTE_LIST;
 
-#ifndef CONFIG_SMP
-
-typedef struct _MMPTE_HARDWARE
-{
-    ULONG64 Valid:1;
-    ULONG64 Write:1;
-    ULONG64 Owner:1;
-    ULONG64 WriteThrough:1;
-    ULONG64 CacheDisable:1;
-    ULONG64 Accessed:1;
-    ULONG64 Dirty:1;
-    ULONG64 LargePage:1;
-    ULONG64 Global:1;
-    ULONG64 CopyOnWrite:1;
-    ULONG64 Prototype:1;
-    ULONG64 reserved0:1;
-    ULONG64 PageFrameNumber:28;
-    ULONG64 reserved1:12;
-    ULONG64 SoftwareWsIndex:11;
-    ULONG64 NoExecute:1;
-} MMPTE_HARDWARE, *PMMPTE_HARDWARE;
-
-#else
-
 typedef struct _MMPTE_HARDWARE
 {
     ULONG64 Valid:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG64 Dirty1:1;
 #else
+#ifdef CONFIG_SMP
     ULONG64 Writable:1;
+#else
+    ULONG64 Write:1;
+#endif
 #endif
     ULONG64 Owner:1;
     ULONG64 WriteThrough:1;
@@ -172,19 +152,22 @@ typedef struct _MMPTE_HARDWARE
     ULONG64 Global:1;
     ULONG64 CopyOnWrite:1;
     ULONG64 Prototype:1;
-    ULONG64 Write:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG64 Write:1;
     ULONG64 PageFrameNumber:36;
     ULONG64 reserved1:4;
 #else
+#ifdef CONFIG_SMP
+    ULONG64 Write:1;
+#else
+    ULONG64 reserved0:1;
+#endif
     ULONG64 PageFrameNumber:28;
     ULONG64 reserved1:12;
 #endif
     ULONG64 SoftwareWsIndex:11;
     ULONG64 NoExecute:1;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
-
-#endif
 
 typedef struct _MMPTE_HARDWARE_LARGEPAGE
 {
