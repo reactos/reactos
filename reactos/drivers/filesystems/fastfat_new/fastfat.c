@@ -385,6 +385,23 @@ FatAcquireExclusiveVcb(IN PFAT_IRP_CONTEXT IrpContext,
     }
 }
 
+BOOLEAN
+NTAPI
+FatAcquireSharedVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PVCB Vcb)
+{
+    /* Acquire VCB's resource if possible */
+    if (ExAcquireResourceSharedLite(&Vcb->Resource,
+                                    BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
 VOID
 NTAPI
 FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,

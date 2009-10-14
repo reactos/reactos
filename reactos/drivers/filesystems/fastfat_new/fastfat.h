@@ -143,6 +143,10 @@ BOOLEAN NTAPI
 FatAcquireExclusiveVcb(IN PFAT_IRP_CONTEXT IrpContext,
                        IN PVCB Vcb);
 
+BOOLEAN NTAPI
+FatAcquireSharedVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PVCB Vcb);
+
 VOID NTAPI
 FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
               IN PVCB Vcb);
