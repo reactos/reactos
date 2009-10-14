@@ -104,7 +104,17 @@ NTAPI
 KdpSysReadMsr(IN ULONG Msr,
               OUT PLARGE_INTEGER MsrValue)
 {
-    MsrValue->QuadPart = __readmsr(Msr);
+    /* Use SEH to protect from invalid MSRs */
+    _SEH2_TRY
+    {
+        MsrValue->QuadPart = __readmsr(Msr);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
+    }
+    _SEH2_END
+
     return STATUS_SUCCESS;
 }
 
@@ -113,7 +123,17 @@ NTAPI
 KdpSysWriteMsr(IN ULONG Msr,
                IN PLARGE_INTEGER MsrValue)
 {
-    __writemsr(Msr, MsrValue->QuadPart);
+    /* Use SEH to protect from invalid MSRs */
+    _SEH2_TRY
+    {
+        __writemsr(Msr, MsrValue->QuadPart);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
+    }
+    _SEH2_END
+
     return STATUS_SUCCESS;
 }
 
@@ -165,28 +185,35 @@ KdpSysReadControlSpace(IN ULONG Processor,
 
         switch ((ULONG_PTR)BaseAddress)
         {
-            case 0:
+            case DEBUG_CONTROL_SPACE_KPCR:
                 /* Copy a pointer to the Pcr */
                 ControlStart = &Pcr;
                 RealLength = sizeof(PVOID);
                 break;
 
-            case 1:
+            case DEBUG_CONTROL_SPACE_KPRCB:
                 /* Copy a pointer to the Prcb */
                 ControlStart = &Prcb;
                 RealLength = sizeof(PVOID);
                 break;
 
-            case 2:
+            case DEBUG_CONTROL_SPACE_KSPECIAL:
                 /* Copy SpecialRegisters */
                 ControlStart = &Prcb->ProcessorState.SpecialRegisters;
                 RealLength = sizeof(KSPECIAL_REGISTERS);
+                break;
+
+            case DEBUG_CONTROL_SPACE_KTHREAD:
+                /* Copy a pointer to the current Thread */
+                ControlStart = &Prcb->CurrentThread;
+                RealLength = sizeof(PVOID);
                 break;
 
             default:
                 RealLength = 0;
                 ControlStart = NULL;
                 ASSERT(FALSE);
+                return STATUS_UNSUCCESSFUL;
         }
 
         if (RealLength < Length) Length = RealLength;
@@ -225,14 +252,48 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
                   IN ULONG BusNumber,
                   IN ULONG AddressSpace,
                   IN ULONG64 IoAddress,
-                  IN PULONG DataValue,
+                  OUT PVOID DataValue,
                   IN ULONG DataSize,
                   OUT PULONG ActualDataSize)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    /* Verify parameters */
+    if (InterfaceType != Isa || BusNumber != 0 || AddressSpace != 1)
+    {
+        /* No data was read */
+        *ActualDataSize = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    switch (DataSize)
+    {
+        case sizeof(UCHAR):
+            /* read one UCHAR */
+            *(PUCHAR)DataValue = READ_PORT_UCHAR((PUCHAR)IoAddress);
+            break;
+
+        case sizeof(USHORT):
+            /* Read one USHORT */
+            *(PUSHORT)DataValue = READ_PORT_USHORT((PUSHORT)IoAddress);
+            break;
+
+        case sizeof(ULONG):
+            /* Read one ULONG */
+            *(PULONG)DataValue = READ_PORT_ULONG((PULONG)IoAddress);
+            break;
+
+        default:
+            /* Invalid data size */
+             *ActualDataSize = 0;
+            return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Return the size of the data */
+    *ActualDataSize = DataSize;
+
+    /* Success! */
+    return STATUS_SUCCESS;
 }
+
 
 NTSTATUS
 NTAPI
@@ -240,13 +301,46 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
                    IN ULONG BusNumber,
                    IN ULONG AddressSpace,
                    IN ULONG64 IoAddress,
-                   IN PULONG DataValue,
+                   IN PVOID DataValue,
                    IN ULONG DataSize,
                    OUT PULONG ActualDataSize)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    /* Verify parameters */
+    if (InterfaceType != Isa || BusNumber != 0 || AddressSpace != 1)
+    {
+        /* No data was written */
+        *ActualDataSize = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    switch (DataSize)
+    {
+        case sizeof(UCHAR):
+            /* read one UCHAR */
+            WRITE_PORT_UCHAR((PUCHAR)IoAddress, *(PUCHAR)DataValue);
+            break;
+
+        case sizeof(USHORT):
+            /* Read one USHORT */
+            WRITE_PORT_USHORT((PUSHORT)IoAddress, *(PUSHORT)DataValue);
+            break;
+
+        case sizeof(ULONG):
+            /* Read one ULONG */
+            WRITE_PORT_ULONG((PULONG)IoAddress, *(PULONG)DataValue);
+            break;
+
+        default:
+            /* Invalid data size */
+             *ActualDataSize = 0;
+            return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Return the size of the data */
+    *ActualDataSize = DataSize;
+
+    /* Success! */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

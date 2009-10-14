@@ -195,6 +195,16 @@
 #define DBGKD_PARTITION_ALTERNATE           0x01
 
 //
+// Control Space types
+//
+#define DEBUG_CONTROL_SPACE_KPCR 0
+#define DEBUG_CONTROL_SPACE_KPRCB 1
+#define DEBUG_CONTROL_SPACE_KSPECIAL 2
+#define DEBUG_CONTROL_SPACE_KTHREAD 3
+#define X86_DEBUG_CONTROL_SPACE_KSPECIAL    716
+
+
+//
 // KD Packet Structure
 //
 typedef struct _KD_PACKET
