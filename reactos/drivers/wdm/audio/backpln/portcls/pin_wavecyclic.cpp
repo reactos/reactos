@@ -614,7 +614,7 @@ CPortPinWaveCyclic::RequestService()
     }
 
     Status = m_Stream->GetPosition(&Position);
-    DPRINT1("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u Capture %u\n", Position, Buffer, m_CommonBufferSize, BufferSize, m_Capture);
+    DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u Capture %u\n", Position, Buffer, m_CommonBufferSize, BufferSize, m_Capture);
 
     if (Position < m_CommonBufferOffset)
     {
