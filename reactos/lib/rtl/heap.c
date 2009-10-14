@@ -83,9 +83,14 @@ typedef struct tagARENA_FREE
 
 #define ARENA_FLAG_FREE        0x00000001  /* flags OR'ed with arena size */
 #define ARENA_FLAG_PREV_FREE   0x00000002
-#define ARENA_SIZE_MASK        (~3)
 #define ARENA_INUSE_MAGIC      0x455355        /* Value for arena 'magic' field */
 #define ARENA_FREE_MAGIC       0x45455246      /* Value for arena 'magic' field */
+
+#ifndef _WIN64
+#define ARENA_SIZE_MASK        (~3L)
+#else
+#define ARENA_SIZE_MASK        (~7L)
+#endif
 
 #define ARENA_INUSE_FILLER     0x55
 #define ARENA_FREE_FILLER      0xaa
@@ -113,7 +118,7 @@ static const DWORD HEAP_freeListSizes[HEAP_NB_FREE_LISTS] =
     0x10, 0x20, 0x80, 0x200, MAXULONG
 };
 
-typedef struct
+typedef union
 {
     ARENA_FREE  arena;
     void        *aligment[4];
@@ -146,7 +151,7 @@ typedef struct tagHEAP
     SUBHEAP          subheap;       /* First sub-heap */
     struct list      entry;         /* Entry in process heap list */
     RTL_CRITICAL_SECTION critSection; /* Critical section for serialization */
-    FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS];  /* Free lists */
+    FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS] DECLSPEC_ALIGN(8);  /* Free lists */
     DWORD            flags;         /* Heap flags */
     DWORD            magic;         /* Magic number */
     PRTL_HEAP_COMMIT_ROUTINE commitRoutine;
@@ -1249,7 +1254,7 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
 PVOID NTAPI
 RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
                 ULONG flags,   /* [in] Heap allocation control flags */
-                ULONG size)    /* [in] Number of bytes to allocate */
+                SIZE_T size)    /* [in] Number of bytes to allocate */
 {
    ARENA_FREE *pArena;
    ARENA_INUSE *pInUse;
@@ -1599,14 +1604,14 @@ RtlUnlockHeap(HANDLE Heap)
  *
  * @implemented
  */
-ULONG NTAPI
+SIZE_T NTAPI
 RtlSizeHeap(
    HANDLE heap,
    ULONG flags,
    PVOID ptr
 )
 {
-   SIZE_T ret;
+    SIZE_T ret;
     HEAP *heapPtr = HEAP_GetPtr( heap );
 
     if (!heapPtr)
@@ -1891,7 +1896,7 @@ NTAPI
 RtlExtendHeap(IN HANDLE Heap,
               IN ULONG Flags,
               IN PVOID P,
-              IN ULONG Size)
+              IN SIZE_T Size)
 {
     /* TODO */
     UNIMPLEMENTED;
