@@ -267,7 +267,7 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
     switch (DataSize)
     {
         case sizeof(UCHAR):
-            /* read one UCHAR */
+            /* Read one UCHAR */
             *(PUCHAR)DataValue = READ_PORT_UCHAR((PUCHAR)IoAddress);
             break;
 
@@ -316,17 +316,17 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
     switch (DataSize)
     {
         case sizeof(UCHAR):
-            /* read one UCHAR */
+            /* Write one UCHAR */
             WRITE_PORT_UCHAR((PUCHAR)IoAddress, *(PUCHAR)DataValue);
             break;
 
         case sizeof(USHORT):
-            /* Read one USHORT */
+            /* Write one USHORT */
             WRITE_PORT_USHORT((PUSHORT)IoAddress, *(PUSHORT)DataValue);
             break;
 
         case sizeof(ULONG):
-            /* Read one ULONG */
+            /* Write one ULONG */
             WRITE_PORT_ULONG((PULONG)IoAddress, *(PULONG)DataValue);
             break;
 
