@@ -9277,7 +9277,7 @@ MmSecureVirtualMemory(
   IN ULONG  ProbeMode);
 
 NTKERNELAPI
-ULONG
+SIZE_T
 NTAPI
 MmSizeOfMdl(
   IN PVOID  Base,
