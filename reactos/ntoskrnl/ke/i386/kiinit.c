@@ -621,7 +621,6 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
 
     /* Get TSS and FS Selectors */
     Tr = Ke386GetTr();
-    if (Tr != KGDT_TSS) Tr = KGDT_TSS; // FIXME: HACKHACK
     Fs = Ke386GetFs();
 
     /* Get PCR Selector, mask it and get its GDT Entry */
