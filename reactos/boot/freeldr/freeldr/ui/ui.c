@@ -412,8 +412,6 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 
 	if (!IniOpenSection(SectionName, &SectionId))
 	{
-		sprintf(SettingName, "Section %s not found in freeldr.ini.\n", SectionName);
-		UiMessageBox(SettingName);
 		return;
 	}
 
