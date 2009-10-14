@@ -77,7 +77,7 @@
 # define __unaligned
 #else
 # ifdef __GNUC__
-#  define __unaligned __attribute((packed))
+#  define __unaligned
 # elif defined(_MSC_VER) && !defined(_M_IA64) && !defined(_M_AMD64)
 #  define __unaligned
 # else

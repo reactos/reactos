@@ -56,8 +56,9 @@ extern "C" {
 #include <string.h>
 
 /* FIXME: add more architectures. Is there a way to specify this in GCC? */
-#ifdef _X86_
-#define UNALIGNED
+#if defined(_M_AMD64)
+#undef UNALIGNED
+#define UNALIGNED __unaligned
 #else
 #define UNALIGNED
 #endif
