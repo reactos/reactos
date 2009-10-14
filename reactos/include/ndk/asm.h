@@ -16,7 +16,9 @@ Author:
     Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
 
 --*/
-
+#ifdef _M_AMD64
+# include "amd64/asm.h"
+#else
 #ifndef _ASM_H
 #define _ASM_H
 
@@ -639,5 +641,6 @@ Author:
 
 
 
+#endif
 
 
