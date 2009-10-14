@@ -185,25 +185,25 @@ KdpSysReadControlSpace(IN ULONG Processor,
 
         switch ((ULONG_PTR)BaseAddress)
         {
-            case DEBUG_CONTROL_SPACE_KPCR:
+            case AMD64_DEBUG_CONTROL_SPACE_KPCR:
                 /* Copy a pointer to the Pcr */
                 ControlStart = &Pcr;
                 RealLength = sizeof(PVOID);
                 break;
 
-            case DEBUG_CONTROL_SPACE_KPRCB:
+            case AMD64_DEBUG_CONTROL_SPACE_KPRCB:
                 /* Copy a pointer to the Prcb */
                 ControlStart = &Prcb;
                 RealLength = sizeof(PVOID);
                 break;
 
-            case DEBUG_CONTROL_SPACE_KSPECIAL:
+            case AMD64_DEBUG_CONTROL_SPACE_KSPECIAL:
                 /* Copy SpecialRegisters */
                 ControlStart = &Prcb->ProcessorState.SpecialRegisters;
                 RealLength = sizeof(KSPECIAL_REGISTERS);
                 break;
 
-            case DEBUG_CONTROL_SPACE_KTHREAD:
+            case AMD64_DEBUG_CONTROL_SPACE_KTHREAD:
                 /* Copy a pointer to the current Thread */
                 ControlStart = &Prcb->CurrentThread;
                 RealLength = sizeof(PVOID);
