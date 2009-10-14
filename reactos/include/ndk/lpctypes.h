@@ -32,11 +32,6 @@ Author:
     (((ULONG)(x)+(s)-1) & ~((ULONG)(s)-1))
 
 //
-// Maximum message size that can be sent through an LPC Port without a section
-//
-#define PORT_MAXIMUM_MESSAGE_LENGTH     256
-
-//
 // Port Object Access Masks
 //
 #define PORT_CONNECT                    0x1
