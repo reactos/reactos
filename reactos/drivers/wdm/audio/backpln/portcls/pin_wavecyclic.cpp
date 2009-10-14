@@ -51,6 +51,7 @@ protected:
     friend NTSTATUS NTAPI PinWaveCyclicState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
     friend NTSTATUS NTAPI PinWaveCyclicDataFormat(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
     friend NTSTATUS NTAPI PinWaveCyclicAudioPosition(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+    friend NTSTATUS NTAPI PinWaveCyclicAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 
     IPortWaveCyclic * m_Port;
     IPortFilterWaveCyclic * m_Filter;
@@ -75,6 +76,7 @@ protected:
     ULONG m_TotalPackets;
     ULONG m_StopCount;
     KSAUDIO_POSITION m_Position;
+    KSALLOCATOR_FRAMING m_AllocatorFraming;
     SUBDEVICE_DESCRIPTOR m_Descriptor;
 
     ULONG m_Delay;
@@ -93,9 +95,9 @@ typedef struct
 NTSTATUS NTAPI PinWaveCyclicState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWaveCyclicDataFormat(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWaveCyclicAudioPosition(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+NTSTATUS NTAPI PinWaveCyclicAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 
-
-DEFINE_KSPROPERTY_CONNECTIONSET(PinWaveCyclicConnectionSet, PinWaveCyclicState, PinWaveCyclicDataFormat);
+DEFINE_KSPROPERTY_CONNECTIONSET(PinWaveCyclicConnectionSet, PinWaveCyclicState, PinWaveCyclicDataFormat, PinWaveCyclicAllocatorFraming);
 DEFINE_KSPROPERTY_AUDIOSET(PinWaveCyclicAudioSet, PinWaveCyclicAudioPosition);
 
 KSPROPERTY_SET PinWaveCyclicPropertySet[] =
@@ -144,7 +146,40 @@ CPortPinWaveCyclic::QueryInterface(
     return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+NTAPI
+PinWaveCyclicAllocatorFraming(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER Request,
+    IN OUT PVOID Data)
+{
+    CPortPinWaveCyclic *Pin;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
 
+    // get sub device descriptor 
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    // sanity check 
+    PC_ASSERT(Descriptor);
+    PC_ASSERT(Descriptor->PortPin);
+    PC_ASSERT_IRQL(DISPATCH_LEVEL);
+
+    // cast to pin impl
+    Pin = (CPortPinWaveCyclic*)Descriptor->PortPin;
+
+
+    if (Request->Flags & KSPROPERTY_TYPE_GET)
+    {
+        // copy pin framing
+        RtlMoveMemory(Data, &Pin->m_AllocatorFraming, sizeof(KSALLOCATOR_FRAMING));
+
+        Irp->IoStatus.Information = sizeof(KSALLOCATOR_FRAMING);
+        return STATUS_SUCCESS;
+    }
+
+    // not supported
+    return STATUS_NOT_SUPPORTED;
+}
 
 NTSTATUS
 NTAPI
@@ -960,6 +995,7 @@ CPortPinWaveCyclic::Init(
     PDEVICE_OBJECT DeviceObject;
     BOOLEAN Capture;
     PVOID SilenceBuffer;
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
     //IDrmAudioStream * DrmAudio = NULL;
 
     m_KsPinDescriptor = KsPinDescriptor;
@@ -1015,6 +1051,8 @@ CPortPinWaveCyclic::Init(
     }
 #endif
 
+    DPRINT("CPortPinWaveCyclic::Init Status %x\n", Status);
+
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -1024,8 +1062,6 @@ CPortPinWaveCyclic::Init(
 
     if (!NT_SUCCESS(Status))
         return Status;
-
-    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
 
     Status = Subdevice->GetDescriptor(&SubDeviceDescriptor);
     if (!NT_SUCCESS(Status))
@@ -1044,11 +1080,10 @@ CPortPinWaveCyclic::Init(
     m_Descriptor.UnknownMiniport = SubDeviceDescriptor->UnknownMiniport;
     m_Descriptor.PortPin = (PVOID)this;
 
-    DPRINT("CPortPinWaveCyclic::Init Status %x\n", Status);
-
     // release subdevice descriptor
     Subdevice->Release();
 
+    // add ourselves to service group
     Status = m_ServiceGroup->AddMember(PSERVICESINK(this));
     if (!NT_SUCCESS(Status))
     {
@@ -1071,6 +1106,15 @@ CPortPinWaveCyclic::Init(
     SilenceBuffer = AllocateItem(NonPagedPool, m_FrameSize, TAG_PORTCLASS);
     if (!SilenceBuffer)
         return STATUS_INSUFFICIENT_RESOURCES;
+
+
+    /* set up allocator framing */
+    m_AllocatorFraming.RequirementsFlags = KSALLOCATOR_REQUIREMENTF_SYSTEM_MEMORY | KSALLOCATOR_REQUIREMENTF_PREFERENCES_ONLY;
+    m_AllocatorFraming.PoolType = NonPagedPool;
+    m_AllocatorFraming.Frames = 8;
+    m_AllocatorFraming.FileAlignment = FILE_64_BYTE_ALIGNMENT;
+    m_AllocatorFraming.Reserved = 0;
+    m_AllocatorFraming.FrameSize = m_FrameSize;
 
     m_Stream->Silence(SilenceBuffer, m_FrameSize);
 

@@ -94,7 +94,7 @@ NTSTATUS NTAPI PinWavePciDataFormat(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OU
 NTSTATUS NTAPI PinWavePciAudioPosition(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWavePciAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 
-DEFINE_KSPROPERTY_ALLOCATORFRAMING(PinWavePciConnectionSet, PinWavePciState, PinWavePciDataFormat, PinWavePciAllocatorFraming);
+DEFINE_KSPROPERTY_CONNECTIONSET(PinWavePciConnectionSet, PinWavePciState, PinWavePciDataFormat, PinWavePciAllocatorFraming);
 DEFINE_KSPROPERTY_AUDIOSET(PinWavePciAudioSet, PinWavePciAudioPosition);
 
 KSPROPERTY_SET PinWavePciPropertySet[] =
@@ -123,8 +123,32 @@ PinWavePciAllocatorFraming(
     IN PKSIDENTIFIER Request,
     IN OUT PVOID Data)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    CPortPinWavePci *Pin;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
+
+    // get sub device descriptor 
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    // sanity check 
+    PC_ASSERT(Descriptor);
+    PC_ASSERT(Descriptor->PortPin);
+    PC_ASSERT_IRQL(DISPATCH_LEVEL);
+
+    // cast to pin impl
+    Pin = (CPortPinWavePci*)Descriptor->PortPin;
+
+
+    if (Request->Flags & KSPROPERTY_TYPE_GET)
+    {
+        // copy pin framing
+        RtlMoveMemory(Data, &Pin->m_AllocatorFraming, sizeof(KSALLOCATOR_FRAMING));
+
+        Irp->IoStatus.Information = sizeof(KSALLOCATOR_FRAMING);
+        return STATUS_SUCCESS;
+    }
+
+    // not supported
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS

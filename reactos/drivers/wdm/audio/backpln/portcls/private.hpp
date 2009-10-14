@@ -317,13 +317,6 @@ PcHandlePropertyWithTable(
     IN PSUBDEVICE_DESCRIPTOR Descriptor);
 
 #define DEFINE_KSPROPERTY_CONNECTIONSET(PinSet,\
-    PropStateHandler, PropDataFormatHandler)\
-DEFINE_KSPROPERTY_TABLE(PinSet) {\
-    DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(PropStateHandler, PropStateHandler),\
-    DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(PropDataFormatHandler, PropDataFormatHandler)\
-}
-
-#define DEFINE_KSPROPERTY_ALLOCATORFRAMING(PinSet,\
     PropStateHandler, PropDataFormatHandler, PropAllocatorFraming)\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(PropStateHandler, PropStateHandler),\
