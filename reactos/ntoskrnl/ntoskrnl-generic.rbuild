@@ -412,6 +412,7 @@
 		</if>
 		<if property="ARCH" value="amd64">
 			<directory name="amd64">
+				<file>init.c</file>
 				<file>page.c</file>
 			</directory>
 		</if>
