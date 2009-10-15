@@ -996,6 +996,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
         //
         ASSERT(MiStaticMemoryAreaCount < MI_STATIC_MEMORY_AREAS);
         MemoryArea = &MiStaticMemoryAreas[MiStaticMemoryAreaCount++];
+        Type &= ~MEMORY_AREA_STATIC;
     }
     else
     {

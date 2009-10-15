@@ -147,6 +147,15 @@ extern ULONG MxPfnAllocation;
 extern MM_PAGED_POOL_INFO MmPagedPoolInfo;
 extern RTL_BITMAP MiPfnBitMap;
 extern KGUARDED_MUTEX MmPagedPoolMutex;
+extern PVOID MmPagedPoolStart;
+extern PVOID MmPagedPoolEnd;
+extern PVOID MmNonPagedSystemStart;
+extern PVOID MiSystemViewStart;
+extern ULONG MmSystemViewSize;
+extern PVOID MmSessionBase;
+extern PVOID MiSessionSpaceEnd;
+extern ULONG MmSizeOfPagedPoolInBytes;
+extern PMMPTE MmSystemPagePtes;
 
 VOID
 NTAPI
