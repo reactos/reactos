@@ -171,6 +171,10 @@ typedef struct _DnsRecordFlags {
 	DWORD Unused	:3;
 	DWORD Reserved	:24;
 } DNS_RECORD_FLAGS;
+#define DNSREC_QUESTION 0
+#define DNSREC_ANSWER 1
+#define DNSREC_AUTHORITY 2
+#define DNSREC_ADDITIONAL 3
 typedef struct {
 	IP4_ADDRESS IpAddress;
 } DNS_A_DATA, *PDNS_A_DATA;
