@@ -54,7 +54,6 @@ MM_STATS MmStats;
 PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
 extern KMUTANT MmSystemLoadLock;
-extern ULONG MmBootImageSize;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
 TRUE;
@@ -313,55 +312,6 @@ MiDbgDumpMemoryDescriptors(VOID)
     DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
-NTSTATUS
-NTAPI
-MmArmInitSystem(IN ULONG Phase,
-                IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-VOID
-INIT_FUNCTION
-NTAPI
-MmInit1(VOID)
-{   
-    /* Initialize the kernel address space */
-    KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
-    MmKernelAddressSpace = MmGetCurrentAddressSpace();
-    MmInitGlobalKernelPageDirectory();
-    
-    /* Dump memory descriptors */
-    if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
-    
-    //
-    // Initialize ARM³ in phase 0
-    //
-    MmArmInitSystem(0, KeLoaderBlock);    
-    
-    /* Initialize the page list */
-    MmInitializePageList();
-       
-    //
-    // Initialize ARM³ in phase 1
-    //
-    MmArmInitSystem(1, KeLoaderBlock);
-
-    /* Put the paged pool after the loaded modules */
-    MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
-                                           MmBootImageSize);
-    MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-    
-    /* Intialize system memory areas */
-    MiInitSystemMemoryAreas();
-    
-    /* Dump the address space */
-    MiDbgDumpAddressSpace();
-
-    /* Initialize paged pool */
-    MmInitializePagedPool();
-    
-    /* Initialize working sets */
-    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
-}
-
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
@@ -374,8 +324,43 @@ MmInitSystem(IN ULONG Phase,
     
     if (Phase == 0)
     {
-        /* Initialize Mm bootstrap */
-        MmInit1();
+        /* Initialize the kernel address space */
+        KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
+        MmKernelAddressSpace = MmGetCurrentAddressSpace();
+        MmInitGlobalKernelPageDirectory();
+        
+        /* Dump memory descriptors */
+        if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
+        
+        //
+        // Initialize ARM³ in phase 0
+        //
+        MmArmInitSystem(0, KeLoaderBlock);    
+        
+        /* Initialize the page list */
+        MmInitializePageList();
+        
+        //
+        // Initialize ARM³ in phase 1
+        //
+        MmArmInitSystem(1, KeLoaderBlock);
+        
+        /* Put the paged pool after the loaded modules */
+        MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
+                                               MmBootImageSize);
+        MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+        
+        /* Intialize system memory areas */
+        MiInitSystemMemoryAreas();
+        
+        /* Dump the address space */
+        MiDbgDumpAddressSpace();
+        
+        /* Initialize paged pool */
+        MmInitializePagedPool();
+        
+        /* Initialize working sets */
+        MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
@@ -422,7 +407,7 @@ MmInitSystem(IN ULONG Phase,
         //
         // Now write a copy of it
         //
-        TempPte.u.Hard.Owner = 1;
+        MI_MAKE_OWNER_PAGE(&TempPte);
         TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
         *MmSharedUserDataPte = TempPte;
         

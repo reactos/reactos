@@ -157,6 +157,22 @@ extern PVOID MiSessionSpaceEnd;
 extern ULONG MmSizeOfPagedPoolInBytes;
 extern PMMPTE MmSystemPagePtes;
 
+NTSTATUS
+NTAPI
+MmArmInitSystem(
+    IN ULONG Phase,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+NTSTATUS
+NTAPI
+MmArmAccessFault(
+    IN BOOLEAN StoreInstruction,
+    IN PVOID Address,
+    IN KPROCESSOR_MODE Mode,
+    IN PVOID TrapInformation
+);
+
 VOID
 NTAPI
 MiInitializeArmPool(
