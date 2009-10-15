@@ -576,6 +576,25 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
 
 NTSTATUS
 NTAPI
+MiCopyFromUserPage(PFN_TYPE DestPage, PVOID SourceAddress)
+{
+    PEPROCESS Process;
+    KIRQL Irql;
+    PVOID TempAddress;
+    
+    Process = PsGetCurrentProcess();
+    TempAddress = MiMapPageInHyperSpace(Process, DestPage, &Irql);
+    if (TempAddress == NULL)
+    {
+        return(STATUS_NO_MEMORY);
+    }
+    memcpy(TempAddress, SourceAddress, PAGE_SIZE);
+    MiUnmapPageInHyperSpace(Process, TempAddress, Irql);
+    return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+NTAPI
 MiReadPage(PMEMORY_AREA MemoryArea,
            ULONG SegOffset,
            PPFN_TYPE Page)
@@ -4940,22 +4959,6 @@ MmUnmapViewInSessionSpace (
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-MmSetBankedSection (ULONG Unknown0,
-                    ULONG Unknown1,
-                    ULONG Unknown2,
-                    ULONG Unknown3,
-                    ULONG Unknown4,
-                    ULONG Unknown5)
-{
-   UNIMPLEMENTED;
-   return (STATUS_NOT_IMPLEMENTED);
-}
-
 
 /**********************************************************************
  * NAME       EXPORTED

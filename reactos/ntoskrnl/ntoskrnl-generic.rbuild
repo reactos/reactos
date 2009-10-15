@@ -390,6 +390,7 @@
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
 			<file>mdlsup.c</file>
+			<file>mmsup.c</file>
 			<file>ncache.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
@@ -402,7 +403,6 @@
 		<file>freelist.c</file>
 		<file>marea.c</file>
 		<file>mmfault.c</file>
-		<file>mmsup.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
 		<file>pagefile.c</file>
