@@ -540,14 +540,15 @@ MiBuildPagedPool(VOID)
     //
     Size = Size * 1024;
     ASSERT(Size == MmSizeOfPagedPoolInPages);
-    BitMapSize = sizeof(RTL_BITMAP) + (((Size + 31) / 32) * sizeof(ULONG));
+    BitMapSize = Size;
+    Size = sizeof(RTL_BITMAP) + (((Size + 31) / 32) * sizeof(ULONG));
 
     //
     // Allocate the allocation bitmap, which tells us which regions have not yet
     // been mapped into memory
     //
     MmPagedPoolInfo.PagedPoolAllocationMap = ExAllocatePoolWithTag(NonPagedPool,
-                                                                   BitMapSize,
+                                                                   Size,
                                                                    '  mM');
     ASSERT(MmPagedPoolInfo.PagedPoolAllocationMap);
 
@@ -568,7 +569,7 @@ MiBuildPagedPool(VOID)
     // entire allocation is.
     //
     MmPagedPoolInfo.EndOfPagedPoolBitmap = ExAllocatePoolWithTag(NonPagedPool,
-                                                                 BitMapSize,
+                                                                 Size,
                                                                  '  mM');
     ASSERT(MmPagedPoolInfo.EndOfPagedPoolBitmap);
     RtlInitializeBitMap(MmPagedPoolInfo.EndOfPagedPoolBitmap,
@@ -583,7 +584,12 @@ MiBuildPagedPool(VOID)
     //
     // Initialize paged pool.
     //
-    //InitializePool(PagedPool, 0);
+    InitializePool(PagedPool, 0);
+
+    //
+    // Initialize the paged pool mutex
+    //
+    KeInitializeGuardedMutex(&MmPagedPoolMutex);
 }
 
 NTSTATUS

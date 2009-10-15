@@ -22,7 +22,7 @@ LIST_ENTRY MmNonPagedPoolFreeListHead[MI_MAX_FREE_PAGE_LISTS];
 PFN_NUMBER MmNumberOfFreeNonPagedPool, MiExpansionPoolPagesInitialCharge;
 PVOID MmNonPagedPoolEnd0;
 PFN_NUMBER MiStartOfInitialPoolFrame, MiEndOfInitialPoolFrame;
-
+KGUARDED_MUTEX MmPagedPoolMutex;
 MM_PAGED_POOL_INFO MmPagedPoolInfo;
 
 /* PRIVATE FUNCTIONS **********************************************************/
