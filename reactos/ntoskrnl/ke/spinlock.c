@@ -140,7 +140,6 @@ KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-#ifdef _X86_
 /*
  * @implemented
  */
@@ -183,7 +182,6 @@ _KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
     /* Clear it */
     *SpinLock = 0;
 }
-#endif
 
 /*
  * @implemented
