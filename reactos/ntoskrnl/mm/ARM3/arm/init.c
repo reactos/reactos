@@ -24,9 +24,36 @@ ULONG MmMaximumNonPagedPoolInBytes;
 PVOID MmNonPagedSystemStart;
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
-PVOID MmNonPagedPoolEnd = (PVOID)0xFFBE0000;
+PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END;
+PVOID MmPagedPoolStart = MI_PAGED_POOL_START;
+PVOID MmPagedPoolEnd;
+ULONG MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
+PVOID MiSessionSpaceEnd;
+PVOID MiSessionImageEnd;
+PVOID MiSessionImageStart;
+PVOID MiSessionViewStart;
+PVOID MiSessionPoolEnd;
+PVOID MiSessionPoolStart;
+PVOID MmSessionBase;
+ULONG MmSessionSize;
+ULONG MmSessionViewSize;
+ULONG MmSessionPoolSize;
+ULONG MmSessionImageSize;
+PVOID MiSystemViewStart;
+ULONG MmSystemViewSize;
+PFN_NUMBER MmSystemPageDirectory;
+PMMPTE MmSystemPagePtes;
 ULONG MmNumberOfSystemPtes;
+ULONG MxPfnAllocation;
+RTL_BITMAP MiPfnBitMap;
 PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
+PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
+MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
+ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
+ULONG MmBootImageSize;
+ULONG MmUserProbeAddress;
+PVOID MmHighestUserAddress;
+PVOID MmSystemRangeStart;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
