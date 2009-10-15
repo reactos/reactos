@@ -392,6 +392,7 @@
 			<file>mdlsup.c</file>
 			<file>mmsup.c</file>
 			<file>ncache.c</file>
+			<file>pagfault.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
 			<file>syspte.c</file>

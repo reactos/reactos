@@ -403,12 +403,12 @@ MmInitSystem(IN ULONG Phase,
         // STEP 3: Allocate a page and touch it.
         // We should get an ARM3 page fault and it should handle the fault
         //
-        if (0) // NOT YET IMPLEMENTED
+        if (1)
         {
             PULONG Test;
             
             Test = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
-            DPRINT1("Value: %lx", *Test);
+            ASSERT(*Test == 0);
             MiFreePoolPages(Test);
         }
         

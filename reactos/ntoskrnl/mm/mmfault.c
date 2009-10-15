@@ -283,9 +283,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
         //
         // Hand it off to more competent hands...
         //
-        UNIMPLEMENTED;
-        KeBugCheckEx(MEMORY_AREA_OWNED_BY_ARM3, Mode, (ULONG_PTR)Address, 0, 0);
-        //return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
+        return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
     }   
 
     /* Keep same old ReactOS Behaviour */
