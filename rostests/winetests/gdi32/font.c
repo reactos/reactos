@@ -2175,7 +2175,7 @@ static void get_seg4(cmap_format_4 *cmap, USHORT seg_num, cmap_format_4_seg *seg
     seg->id_range_offset = GET_BE_WORD(cmap->end_count[3 * segs + 1 + seg_num]);
 }
 
-static BOOL get_first_last_from_cmap4(void *ptr, DWORD *first, DWORD *last)
+static BOOL get_first_last_from_cmap4(void *ptr, DWORD *first, DWORD *last, DWORD limit)
 {
     int i;
     cmap_format_4 *cmap = (cmap_format_4*)ptr;
@@ -2200,7 +2200,15 @@ static BOOL get_first_last_from_cmap4(void *ptr, DWORD *first, DWORD *last)
                     + code - seg.start_count
                     + i - seg_count;
 
-                index = GET_BE_WORD(glyph_ids[index]);
+                /* some fonts have broken last segment */
+                if ((char *)(glyph_ids + index + sizeof(*glyph_ids)) < (char *)ptr + limit)
+                    index = GET_BE_WORD(glyph_ids[index]);
+                else
+                {
+                    trace("segment %04x/%04x index %04x points to nowhere\n",
+                          seg.start_count, seg.end_count, index);
+                    index = 0;
+                }
                 if(index) index += seg.id_delta;
             }
             if(*first == 0x10000)
@@ -2273,7 +2281,7 @@ static BOOL get_first_last_from_cmap(HDC hdc, DWORD *first, DWORD *last, cmap_ty
         r = get_first_last_from_cmap0(cmap, first, last);
         break;
     case 4:
-        r = get_first_last_from_cmap4(cmap, first, last);
+        r = get_first_last_from_cmap4(cmap, first, last, size);
         break;
     default:
         trace("unhandled cmap format %d\n", format);
@@ -2914,10 +2922,67 @@ static void test_GetGlyphOutline(void)
     DeleteDC(hdc);
 }
 
+/* bug #9995: there is a limit to the character width that can be specified */
+static void test_GetTextMetrics2(const char *fontname, int font_height)
+{
+    HFONT of, hf;
+    HDC hdc;
+    TEXTMETRICA tm;
+    BOOL ret;
+    int ave_width, height, width, ratio, scale;
+
+    if (!is_truetype_font_installed( fontname)) {
+        skip("%s is not installed\n", fontname);
+        return;
+    }
+    hdc = CreateCompatibleDC(0);
+    ok( hdc != NULL, "CreateCompatibleDC failed\n");
+    /* select width = 0 */
+    hf = CreateFontA(font_height, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_LH_ANGLES,
+            DEFAULT_QUALITY, VARIABLE_PITCH,
+            fontname);
+    ok( hf != NULL, "CreateFontA failed\n");
+    of = SelectObject( hdc, hf);
+    ret = GetTextMetricsA( hdc, &tm);
+    ok(ret, "GetTextMetricsA error %u\n", GetLastError());
+    height = tm.tmHeight;
+    ave_width = tm.tmAveCharWidth;
+    SelectObject( hdc, of);
+    DeleteObject( hf);
+
+    trace("height %d, ave width %d\n", height, ave_width);
+
+    for (width = ave_width * 2; /* nothing*/; width += ave_width)
+    {
+        hf = CreateFont(height, width, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE,
+                        DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_LH_ANGLES,
+                        DEFAULT_QUALITY, VARIABLE_PITCH, fontname);
+        ok(hf != 0, "CreateFont failed\n");
+        of = SelectObject(hdc, hf);
+        ret = GetTextMetrics(hdc, &tm);
+        ok(ret, "GetTextMetrics error %u\n", GetLastError());
+        SelectObject(hdc, of);
+        DeleteObject(hf);
+
+        if (tm.tmAveCharWidth == ave_width || width / height > 200)
+            break;
+    }
+
+    DeleteDC(hdc);
+
+    ratio = width / height;
+    scale = width / ave_width;
+
+    trace("max width/height ratio (%d / %d) %d, max width scale (%d / %d) %d\n",
+          width, height, ratio, width, ave_width, scale);
+
+    ok(ratio >= 90 && ratio <= 110, "expected width/height ratio 90-110, got %d\n", ratio);
+}
+
 START_TEST(font)
 {
     init();
-
     test_logfont();
     test_bitmap_font();
     test_outline_font();
@@ -2952,4 +3017,10 @@ START_TEST(font)
     test_GdiRealizationInfo();
     test_GetTextFace();
     test_GetGlyphOutline();
+    test_GetTextMetrics2("Tahoma", -11);
+    test_GetTextMetrics2("Tahoma", -55);
+    test_GetTextMetrics2("Tahoma", -110);
+    test_GetTextMetrics2("Arial", -11);
+    test_GetTextMetrics2("Arial", -55);
+    test_GetTextMetrics2("Arial", -110);
 }

@@ -1277,6 +1277,26 @@ static BOOL match_emf_record(const ENHMETARECORD *emr1, const ENHMETARECORD *emr
         HeapFree(GetProcessHeap(), 0, eto1);
         HeapFree(GetProcessHeap(), 0, eto2);
     }
+    else if (emr1->iType == EMR_EXTSELECTCLIPRGN && !lstrcmpA(desc, "emf_clipping"))
+    {
+        /* We have to take care of NT4 differences here */
+        diff = memcmp(emr1, emr2, emr1->nSize);
+        if (diff)
+        {
+            ENHMETARECORD *emr_nt4;
+
+            emr_nt4 = HeapAlloc(GetProcessHeap(), 0, emr2->nSize);
+            memcpy(emr_nt4, emr2, emr2->nSize);
+            /* Correct the nRgnSize field */
+            emr_nt4->dParm[5] = sizeof(RECT);
+
+            diff = memcmp(emr1, emr_nt4, emr1->nSize);
+            if (!diff)
+                win_skip("Catered for NT4 differences\n");
+
+            HeapFree(GetProcessHeap(), 0, emr_nt4);
+        }
+    }
     else
         diff = memcmp(emr1, emr2, emr1->nSize);
 
@@ -1302,15 +1322,22 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
                             BOOL ignore_scaling)
 {
     unsigned char buf[MF_BUFSIZE];
-    UINT mfsize, offset;
+    UINT mfsize, offset1, offset2, diff_nt4, diff_9x;
     const ENHMETAHEADER *emh1, *emh2;
 
     mfsize = GetEnhMetaFileBits(mf, MF_BUFSIZE, buf);
     ok (mfsize > 0, "%s: GetEnhMetaFileBits error %d\n", desc, GetLastError());
 
+    /* ENHMETAHEADER size could differ, depending on platform */
+    diff_nt4 = sizeof(SIZEL);
+    diff_9x = sizeof(SIZEL) + 3 * sizeof(DWORD);
+
     if (mfsize < MF_BUFSIZE)
     {
-        ok(mfsize == bsize, "%s: mfsize=%d, bsize=%d\n", desc, mfsize, bsize);
+        ok(mfsize == bsize ||
+           broken(mfsize == bsize - diff_nt4) ||  /* NT4 */
+           broken(mfsize == bsize - diff_9x), /* Win9x/WinME */
+           "%s: mfsize=%d, bsize=%d\n", desc, mfsize, bsize);
     }
     else
         ok(bsize >= MF_BUFSIZE, "%s: mfsize > bufsize (%d bytes), bsize=%d\n",
@@ -1325,23 +1352,32 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
     ok(emh1->dSignature == ENHMETA_SIGNATURE, "expected ENHMETA_SIGNATURE, got %u\n", emh1->dSignature);
 
     ok(emh1->iType == emh2->iType, "expected EMR_HEADER, got %u\n", emh2->iType);
-    ok(emh1->nSize == emh2->nSize, "expected nSize %u, got %u\n", emh1->nSize, emh2->nSize);
+    ok(emh1->nSize == emh2->nSize ||
+       broken(emh1->nSize - diff_nt4 == emh2->nSize) ||
+       broken(emh1->nSize - diff_9x == emh2->nSize),
+       "expected nSize %u, got %u\n", emh1->nSize, emh2->nSize);
     ok(emh1->dSignature == emh2->dSignature, "expected dSignature %u, got %u\n", emh1->dSignature, emh2->dSignature);
-    ok(emh1->nBytes == emh2->nBytes, "expected nBytes %u, got %u\n", emh1->nBytes, emh2->nBytes);
-    ok(emh1->nRecords == emh2->nRecords, "expected nBytes %u, got %u\n", emh1->nRecords, emh2->nRecords);
+    ok(emh1->nBytes == emh2->nBytes ||
+       broken(emh1->nBytes - diff_nt4 == emh2->nBytes) ||
+       broken(emh1->nBytes - diff_9x == emh2->nBytes),
+       "expected nBytes %u, got %u\n", emh1->nBytes, emh2->nBytes);
+    ok(emh1->nRecords == emh2->nRecords, "expected nRecords %u, got %u\n", emh1->nRecords, emh2->nRecords);
 
-    offset = emh1->nSize;
-    while (offset < emh1->nBytes)
+    offset1 = emh1->nSize;
+    offset2 = emh2->nSize; /* Needed for Win9x/WinME/NT4 */
+    while (offset1 < emh1->nBytes)
     {
-	const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset);
-	const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset);
+	const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset1);
+	const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
 
-	trace("EMF record %u, size %u/record %u, size %u\n",
-              emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
+	trace("%s: EMF record %u, size %u/record %u, size %u\n",
+              desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
 
         if (!match_emf_record(emr1, emr2, desc, ignore_scaling)) return -1;
 
-	offset += emr1->nSize;
+        /* We have already bailed out if iType or nSize don't match */
+	offset1 += emr1->nSize;
+	offset2 += emr2->nSize;
     }
     return 0;
 }
@@ -1421,8 +1457,8 @@ static void test_CopyMetaFile(void)
 
     if (compare_mf_disk_bits(mf_name, MF_BLANK_BITS, sizeof(MF_BLANK_BITS), "mf_blank") != 0)
     {
-        dump_mf_bits(hMetafile, "mf_Blank");
-        EnumMetaFile(0, hMetafile, mf_enum_proc, 0);
+        dump_mf_bits(hmf_copy, "mf_Blank");
+        EnumMetaFile(0, hmf_copy, mf_enum_proc, 0);
     }
 
     ret = DeleteMetaFile(hmf_copy);
@@ -1440,6 +1476,7 @@ static void test_SetMetaFileBits(void)
     METAHEADER *mh;
 
     hmf = SetMetaFileBitsEx(sizeof(MF_GRAPHICS_BITS), MF_GRAPHICS_BITS);
+    trace("hmf %p\n", hmf);
     ok(hmf != 0, "SetMetaFileBitsEx error %d\n", GetLastError());
     type = GetObjectType(hmf);
     ok(type == OBJ_METAFILE, "SetMetaFileBitsEx created object with type %d\n", type);
@@ -1456,21 +1493,23 @@ static void test_SetMetaFileBits(void)
     /* NULL data crashes XP SP1 */
     /*hmf = SetMetaFileBitsEx(sizeof(MF_GRAPHICS_BITS), NULL);*/
 
-    /* Now with not zero size */
+    /* Now with zero size */
     SetLastError(0xdeadbeef);
     hmf = SetMetaFileBitsEx(0, MF_GRAPHICS_BITS);
+    trace("hmf %p\n", hmf);
     ok(!hmf, "SetMetaFileBitsEx should fail\n");
     ok(GetLastError() == ERROR_INVALID_DATA ||
        broken(GetLastError() == ERROR_INVALID_PARAMETER), /* Win9x */
        "wrong error %d\n", GetLastError());
 
-    /* Now with not even size */
+    /* Now with odd size */
     SetLastError(0xdeadbeef);
     hmf = SetMetaFileBitsEx(sizeof(MF_GRAPHICS_BITS) - 1, MF_GRAPHICS_BITS);
+    trace("hmf %p\n", hmf);
     ok(!hmf, "SetMetaFileBitsEx should fail\n");
     ok(GetLastError() == 0xdeadbeef /* XP SP1 */, "wrong error %d\n", GetLastError());
 
-    /* Now with zeroed out or faked some header fields */
+    /* Now with zeroed out header fields */
     assert(sizeof(buf) >= sizeof(MF_GRAPHICS_BITS));
     memcpy(buf, MF_GRAPHICS_BITS, sizeof(MF_GRAPHICS_BITS));
     mh = (METAHEADER *)buf;
@@ -1480,6 +1519,7 @@ static void test_SetMetaFileBits(void)
     mh->mtHeaderSize = 0;
     SetLastError(0xdeadbeef);
     hmf = SetMetaFileBitsEx(sizeof(MF_GRAPHICS_BITS), buf);
+    trace("hmf %p\n", hmf);
     ok(!hmf, "SetMetaFileBitsEx should fail\n");
     ok(GetLastError() == ERROR_INVALID_DATA ||
        broken(GetLastError() == ERROR_INVALID_PARAMETER), /* Win9x */
@@ -1491,6 +1531,7 @@ static void test_SetMetaFileBits(void)
     /* corruption of mtSize doesn't lead to a failure */
     mh->mtSize *= 2;
     hmf = SetMetaFileBitsEx(sizeof(MF_GRAPHICS_BITS), buf);
+    trace("hmf %p\n", hmf);
     ok(hmf != 0, "SetMetaFileBitsEx error %d\n", GetLastError());
 
     if (compare_mf_bits(hmf, MF_GRAPHICS_BITS, sizeof(MF_GRAPHICS_BITS), "mf_Graphics") != 0)
@@ -1508,6 +1549,7 @@ static void test_SetMetaFileBits(void)
     /* zeroing mtSize doesn't lead to a failure */
     mh->mtSize = 0;
     hmf = SetMetaFileBitsEx(sizeof(MF_GRAPHICS_BITS), buf);
+    trace("hmf %p\n", hmf);
     ok(hmf != 0, "SetMetaFileBitsEx error %d\n", GetLastError());
 
     if (compare_mf_bits(hmf, MF_GRAPHICS_BITS, sizeof(MF_GRAPHICS_BITS), "mf_Graphics") != 0)
@@ -1793,7 +1835,9 @@ static int CALLBACK clip_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
         ok(rgn1->data.rdh.dwSize == sizeof(rgn1->data.rdh), "expected sizeof(rdh), got %u\n", rgn1->data.rdh.dwSize);
         ok(rgn1->data.rdh.iType == RDH_RECTANGLES, "expected RDH_RECTANGLES, got %u\n", rgn1->data.rdh.iType);
         ok(rgn1->data.rdh.nCount == 1, "expected 1, got %u\n", rgn1->data.rdh.nCount);
-        ok(rgn1->data.rdh.nRgnSize == sizeof(RECT),  "expected sizeof(RECT), got %u\n", rgn1->data.rdh.nRgnSize);
+        ok(rgn1->data.rdh.nRgnSize == sizeof(RECT) ||
+           broken(rgn1->data.rdh.nRgnSize == 168), /* NT4 */
+           "expected sizeof(RECT), got %u\n", rgn1->data.rdh.nRgnSize);
 
         hrgn = CreateRectRgn(0, 0, 0, 0);
 
@@ -1812,7 +1856,7 @@ static int CALLBACK clip_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
         PlayEnhMetaFileRecord(hdc, handle_table, emr, n_objs);
 
         ret = GetClipRgn(hdc, hrgn);
-        ok(ret == 1, "GetClipRgn returned %d, expected 0\n", ret);
+        ok(ret == 1, "GetClipRgn returned %d, expected 1\n", ret);
 
         /* Win9x returns empty clipping region */
         if (is_win9x) return 1;
@@ -1846,7 +1890,9 @@ static int CALLBACK clip_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
         ok(rgn2.data.rdh.dwSize == sizeof(rgn1->data.rdh), "expected sizeof(rdh), got %u\n", rgn2.data.rdh.dwSize);
         ok(rgn2.data.rdh.iType == RDH_RECTANGLES, "expected RDH_RECTANGLES, got %u\n", rgn2.data.rdh.iType);
         ok(rgn2.data.rdh.nCount == 1, "expected 1, got %u\n", rgn2.data.rdh.nCount);
-        ok(rgn2.data.rdh.nRgnSize == sizeof(RECT),  "expected sizeof(RECT), got %u\n", rgn2.data.rdh.nRgnSize);
+        ok(rgn2.data.rdh.nRgnSize == sizeof(RECT) ||
+           broken(rgn2.data.rdh.nRgnSize == 168), /* NT4 */
+           "expected sizeof(RECT), got %u\n", rgn2.data.rdh.nRgnSize);
 
         DeleteObject(hrgn);
     }
@@ -1862,6 +1908,7 @@ static void test_emf_clipping(void)
     HENHMETAFILE hemf;
     HRGN hrgn;
     INT ret;
+    RECT rc_res, rc_sclip;
 
     SetLastError(0xdeadbeef);
     hdc = CreateEnhMetaFileA(0, NULL, NULL, NULL);
@@ -1900,6 +1947,22 @@ static void test_emf_clipping(void)
     DeleteEnhMetaFile(hemf);
     ReleaseDC(hwnd, hdc);
     DestroyWindow(hwnd);
+
+    hdc = CreateEnhMetaFileA(0, NULL, NULL, NULL);
+
+    SetRect(&rc_sclip, 100, 100, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    hrgn = CreateRectRgn(rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom);
+    SelectClipRgn(hdc, hrgn);
+    GetClipBox(hdc, &rc_res);
+    todo_wine ok(EqualRect(&rc_res, &rc_sclip),
+                 "expected rc_res (%d, %d) - (%d, %d), got (%d, %d) - (%d, %d)\n",
+                 rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom,
+                 rc_res.left, rc_res.top, rc_res.right, rc_res.bottom);
+
+    hemf = CloseEnhMetaFile(hdc);
+    DeleteEnhMetaFile(hemf);
+    DeleteObject(hrgn);
+    DeleteDC(hdc);
 }
 
 static INT CALLBACK EmfEnumProc(HDC hdc, HANDLETABLE *lpHTable, const ENHMETARECORD *lpEMFR, INT nObj, LPARAM lpData)
@@ -2262,6 +2325,198 @@ static void test_SetWinMetaFileBits(void)
   HeapFree(GetProcessHeap(), 0, buffer);
 }
 
+static BOOL near_match(int x, int y)
+{
+    int epsilon = min(abs(x), abs(y));
+
+    epsilon = max(epsilon/100, 2);
+
+    if(x < y - epsilon || x > y + epsilon) return FALSE;
+    return TRUE;
+}
+
+static void getwinmetafilebits(UINT mode, int scale, RECT *rc)
+{
+    HENHMETAFILE emf;
+    HDC display_dc, emf_dc;
+    ENHMETAHEADER *enh_header;
+    UINT size, emf_size, i;
+    WORD check = 0;
+    DWORD rec_num = 0;
+    METAHEADER *mh = NULL;
+    METARECORD *rec;
+    INT horz_res, vert_res, horz_size, vert_size;
+
+    display_dc = GetDC(NULL);
+    ok(display_dc != NULL, "display_dc is NULL\n");
+
+    horz_res = GetDeviceCaps(display_dc, HORZRES);
+    vert_res = GetDeviceCaps(display_dc, VERTRES);
+    horz_size = GetDeviceCaps(display_dc, HORZSIZE);
+    vert_size = GetDeviceCaps(display_dc, VERTSIZE);
+
+    emf_dc = CreateEnhMetaFileA(display_dc, NULL, rc, NULL);
+    ok(emf_dc != NULL, "emf_dc is NULL\n");
+    for(i = 0; i < 3000; i++) /* This is enough to take emf_size > 0xffff */
+        Rectangle(emf_dc, 0, 0, 1000, 20);
+    emf = CloseEnhMetaFile(emf_dc);
+    ok(emf != NULL, "emf is NULL\n");
+
+    emf_size = GetEnhMetaFileBits(emf, 0, NULL);
+    enh_header = HeapAlloc(GetProcessHeap(), 0, emf_size);
+    emf_size = GetEnhMetaFileBits(emf, emf_size, (BYTE*)enh_header);
+    DeleteEnhMetaFile(emf);
+    /* multiply szlDevice.cx by scale, when scale != 1 the recording and playback dcs
+       have different resolutions */
+    enh_header->szlDevice.cx *= scale;
+    emf = SetEnhMetaFileBits(emf_size, (BYTE*)enh_header);
+    ok(emf != NULL, "emf is NULL\n");
+    ok(EqualRect((RECT*)&enh_header->rclFrame, rc), "Frame rectangles differ\n");
+
+    size = GetWinMetaFileBits(emf, 0, NULL, mode, display_dc);
+    ok(size ||
+       broken(size == 0), /* some versions of winxp fail for some reason */
+       "GetWinMetaFileBits returns 0\n");
+    if(!size) goto end;
+    mh = HeapAlloc(GetProcessHeap(), 0, size);
+    GetWinMetaFileBits(emf, size, (BYTE*)mh, mode, display_dc);
+
+    for(i = 0; i < size / 2; i++) check += ((WORD*)mh)[i];
+    ok(check == 0, "check %04x\n", check);
+
+    rec = (METARECORD*)(mh + 1);
+
+    while(rec->rdSize && rec->rdFunction)
+    {
+        const DWORD chunk_size = 0x2000;
+        DWORD mfcomment_chunks = (emf_size + chunk_size - 1) / chunk_size;
+
+        if(rec_num < mfcomment_chunks)
+        {
+            DWORD this_chunk_size = chunk_size;
+
+            if(rec_num == mfcomment_chunks - 1)
+                this_chunk_size = emf_size - rec_num * chunk_size;
+
+            ok(rec->rdSize == (this_chunk_size + 44) / 2, "%04x: got %04x expected %04x\n", rec_num, rec->rdSize, (this_chunk_size + 44) / 2);
+            ok(rec->rdFunction == META_ESCAPE, "%04x: got %04x\n", rec_num, rec->rdFunction);
+            if(rec->rdSize < (this_chunk_size + 44) / 2) break;
+            ok(rec->rdParm[0] == MFCOMMENT, "got %04x\n", rec->rdParm[0]);
+            ok(rec->rdParm[1] == this_chunk_size + 34, "got %04x %x\n", rec->rdParm[1], emf_size + 34);
+            ok(rec->rdParm[2] == 0x4d57, "got %04x\n", rec->rdParm[2]); /* WMFC */
+            ok(rec->rdParm[3] == 0x4346, "got %04x\n", rec->rdParm[3]); /*  "   */
+            ok(rec->rdParm[4] == 1, "got %04x\n", rec->rdParm[4]);
+            ok(rec->rdParm[5] == 0, "got %04x\n", rec->rdParm[5]);
+            ok(rec->rdParm[6] == 0, "got %04x\n", rec->rdParm[6]);
+            ok(rec->rdParm[7] == 1, "got %04x\n", rec->rdParm[7]);
+            /* parm[8] is the checksum, tested above */
+            if(rec_num > 0) ok(rec->rdParm[8] == 0, "got %04x\n", rec->rdParm[8]);
+            ok(rec->rdParm[9] == 0, "got %04x\n", rec->rdParm[9]);
+            ok(rec->rdParm[10] == 0, "got %04x\n", rec->rdParm[10]);
+            ok(rec->rdParm[11] == mfcomment_chunks, "got %04x\n", rec->rdParm[11]); /* num chunks */
+            ok(rec->rdParm[12] == 0, "got %04x\n", rec->rdParm[12]);
+            ok(rec->rdParm[13] == this_chunk_size, "got %04x expected %04x\n", rec->rdParm[13], this_chunk_size);
+            ok(rec->rdParm[14] == 0, "got %04x\n", rec->rdParm[14]);
+            ok(*(DWORD*)(rec->rdParm + 15) == emf_size - this_chunk_size - rec_num * chunk_size, "got %08x\n", *(DWORD*)(rec->rdParm + 15));  /* DWORD size remaining after current chunk */
+            ok(*(DWORD*)(rec->rdParm + 17) == emf_size, "got %08x emf_size %08x\n", *(DWORD*)(rec->rdParm + 17), emf_size);
+            ok(!memcmp(rec->rdParm + 19, (char*)enh_header + rec_num * chunk_size, this_chunk_size), "bits mismatch\n");
+        }
+
+        else if(rec_num == mfcomment_chunks)
+        {
+            ok(rec->rdFunction == META_SETMAPMODE, "got %04x\n", rec->rdFunction);
+            ok(rec->rdParm[0] == mode, "got %04x\n", rec->rdParm[0]);
+        }
+        else if(rec_num == mfcomment_chunks + 1)
+        {
+            POINT pt;
+            ok(rec->rdFunction == META_SETWINDOWORG, "got %04x\n", rec->rdFunction);
+            switch(mode)
+            {
+            case MM_TEXT:
+            case MM_ISOTROPIC:
+            case MM_ANISOTROPIC:
+                pt.y = MulDiv(rc->top, vert_res, vert_size * 100) + 1;
+                pt.x = MulDiv(rc->left, horz_res, horz_size * 100);
+                break;
+            case MM_LOMETRIC:
+                pt.y = MulDiv(-rc->top, 1, 10) + 1;
+                pt.x = MulDiv( rc->left, 1, 10);
+                break;
+            case MM_HIMETRIC:
+                pt.y = -rc->top + 1;
+                pt.x = (rc->left >= 0) ? rc->left : rc->left + 1; /* strange but true */
+                break;
+            case MM_LOENGLISH:
+                pt.y = MulDiv(-rc->top, 10, 254) + 1;
+                pt.x = MulDiv( rc->left, 10, 254);
+                break;
+            case MM_HIENGLISH:
+                pt.y = MulDiv(-rc->top, 100, 254) + 1;
+                pt.x = MulDiv( rc->left, 100, 254);
+                break;
+            case MM_TWIPS:
+                pt.y = MulDiv(-rc->top, 72 * 20, 2540) + 1;
+                pt.x = MulDiv( rc->left, 72 * 20, 2540);
+                break;
+            default:
+                pt.x = pt.y = 0;
+            }
+            ok(near_match((short)rec->rdParm[0], pt.y), "got %d expect %d\n", (short)rec->rdParm[0], pt.y);
+            ok(near_match((short)rec->rdParm[1], pt.x), "got %d expect %d\n", (short)rec->rdParm[1], pt.x);
+        }
+        if(rec_num == mfcomment_chunks + 2)
+        {
+            ok(rec->rdFunction == META_SETWINDOWEXT, "got %04x\n", rec->rdFunction);
+            ok(near_match((short)rec->rdParm[0], MulDiv(rc->bottom - rc->top, vert_res, vert_size * 100)),
+               "got %d\n", (short)rec->rdParm[0]);
+            ok(near_match((short)rec->rdParm[1], MulDiv(rc->right - rc->left, horz_res, horz_size * 100)),
+               "got %d\n", (short)rec->rdParm[1]);
+        }
+
+        rec_num++;
+        rec = (METARECORD*)((WORD*)rec + rec->rdSize);
+    }
+
+end:
+    HeapFree(GetProcessHeap(), 0, mh);
+    HeapFree(GetProcessHeap(), 0, enh_header);
+    DeleteEnhMetaFile(emf);
+
+    ReleaseDC(NULL, display_dc);
+}
+
+static void test_GetWinMetaFileBits(void)
+{
+    UINT mode;
+    RECT frames[] =
+    {
+        { 1000,  2000, 3000, 6000},
+        {-1000,  2000, 3000, 6000},
+        { 1000, -2000, 3000, 6000},
+        { 1005,  2005, 3000, 6000},
+        {-1005, -2005, 3000, 6000},
+        {-1005, -2010, 3000, 6000},
+        {-1005,  2010, 3000, 6000},
+        {    0,     0,    1,    1},
+        {   -1,    -1,    1,    1},
+        {    0,     0,    0,    0}
+    };
+
+    for(mode = MM_MIN; mode <= MM_MAX; mode++)
+    {
+        RECT *rc;
+        trace("mode %d\n", mode);
+
+        for(rc = frames; rc->right - rc->left > 0; rc++)
+        {
+            trace("frame %d,%d - %d,%d\n", rc->left, rc->top, rc->right, rc->bottom);
+            getwinmetafilebits(mode, 1, rc);
+            getwinmetafilebits(mode, 2, rc);
+        }
+    }
+}
+
 static BOOL (WINAPI *pGdiIsMetaPrintDC)(HDC);
 static BOOL (WINAPI *pGdiIsMetaFileDC)(HDC);
 static BOOL (WINAPI *pGdiIsPlayMetafileDC)(HDC);
@@ -2385,6 +2640,7 @@ START_TEST(metafile)
     /* For metafile conversions */
     test_mf_conversions();
     test_SetWinMetaFileBits();
+    test_GetWinMetaFileBits();
 
     test_gdiis();
     test_SetEnhMetaFileBits();

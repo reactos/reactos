@@ -266,9 +266,49 @@ static void test_GetCurrentObject(void)
     DeleteDC(hdc);
 }
 
+static void test_region(void)
+{
+    HRGN hrgn = CreateRectRgn(10, 10, 20, 20);
+    RECT rc = { 5, 5, 15, 15 };
+    BOOL ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap left and right */
+    SetRect( &rc, 15, 5, 5, 15 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap top and bottom */
+    SetRect( &rc, 5, 15, 15, 5 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap both */
+    SetRect( &rc, 15, 15, 5, 5 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    DeleteObject(hrgn);
+    /* swap left and right in the region */
+    hrgn = CreateRectRgn(20, 10, 10, 20);
+    SetRect( &rc, 5, 5, 15, 15 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap left and right */
+    SetRect( &rc, 15, 5, 5, 15 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap top and bottom */
+    SetRect( &rc, 5, 15, 15, 5 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap both */
+    SetRect( &rc, 15, 15, 5, 5 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    DeleteObject(hrgn);
+}
+
 START_TEST(gdiobj)
 {
     test_gdi_objects();
     test_thread_objects();
     test_GetCurrentObject();
+    test_region();
 }

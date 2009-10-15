@@ -189,13 +189,13 @@ static void test_ExtCreateRegion(void)
     HRGN hrgn;
     XFORM xform;
 
-if (0) /* crashes under Win9x */
-{
-    SetLastError(0xdeadbeef);
-    hrgn = ExtCreateRegion(NULL, 0, NULL);
-    ok(!hrgn, "ExtCreateRegion should fail\n");
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
-}
+    if (0) /* crashes under Win9x */
+    {
+        SetLastError(0xdeadbeef);
+        hrgn = ExtCreateRegion(NULL, 0, NULL);
+        ok(!hrgn, "ExtCreateRegion should fail\n");
+        ok(GetLastError() == ERROR_INVALID_PARAMETER, "ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+    }
 
     rgn.data.rdh.dwSize = 0;
     rgn.data.rdh.iType = 0;
