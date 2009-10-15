@@ -241,7 +241,7 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
         if (!IsListEmpty(ListHead))
         {
             //
-            // Acquire the nonpaged pool lock now
+            // Acquire the pool lock now
             //
             OldIrql = ExLockPool(PoolDesc);
             
@@ -420,7 +420,7 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
     if (FragmentEntry->BlockSize != 1)
     {
         //
-        // Excellent -- acquire the nonpaged pool lock
+        // Excellent -- acquire the pool lock
         //
         OldIrql = ExLockPool(PoolDesc);
 
@@ -431,7 +431,7 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
                        (PLIST_ENTRY)FragmentEntry + 1);
         
         //
-        // Release the nonpaged pool lock
+        // Release the pool lock
         //
         ExUnlockPool(PoolDesc, OldIrql);
     }
@@ -487,7 +487,7 @@ ExFreeArmPoolWithTag(IN PVOID P,
     // for this pool type
     //
     BlockSize = Entry->BlockSize;
-    PoolType = (Entry->PoolType & BASE_POOL_TYPE_MASK) - 1;
+    PoolType = (Entry->PoolType & 3) - 1;
     PoolDesc = PoolVector[PoolType];
 
     //
@@ -496,7 +496,7 @@ ExFreeArmPoolWithTag(IN PVOID P,
     NextEntry = Entry + BlockSize;
 
     //
-    // Acquire the nonpaged pool lock
+    // Acquire the pool lock
     //
     OldIrql = ExLockPool(PoolDesc);
 
@@ -588,7 +588,7 @@ ExFreeArmPoolWithTag(IN PVOID P,
         (PAGE_ALIGN(Entry + Entry->BlockSize) == Entry + Entry->BlockSize))
     {
         //
-        // In this case, release the nonpaged pool lock, and free the page
+        // In this case, release the pool lock, and free the page
         //
         ExUnlockPool(PoolDesc, OldIrql);
         MiFreePoolPages(Entry);
@@ -621,7 +621,7 @@ ExFreeArmPoolWithTag(IN PVOID P,
     }
     
     //
-    // Insert this new free block, and release the nonpaged pool lock
+    // Insert this new free block, and release the pool lock
     //
     InsertHeadList(&PoolDesc->ListHeads[BlockSize - 1], (PLIST_ENTRY)Entry + 1);
     ExUnlockPool(PoolDesc, OldIrql);
