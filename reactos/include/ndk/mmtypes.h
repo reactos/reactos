@@ -321,14 +321,21 @@ typedef struct _MMPTE
 {
     union
     {
-        ULONG Long;
+        ULONG_PTR Long;
         HARDWARE_PTE Flush;
         MMPTE_HARDWARE Hard;
+#ifdef _M_AMD64
+        MMPTE_HARDWARE_LARGEPAGE HardLarge;
+#endif
         MMPTE_PROTOTYPE Proto;
         MMPTE_SOFTWARE Soft;
         MMPTE_TRANSITION Trans;
         MMPTE_SUBSECTION Subsect;
         MMPTE_LIST List;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+        volatile ULONG_PTR VolatileLong;
+        MMPTE_TIMESTAMP TimeStamp;
+#endif
     } u;
 } MMPTE, *PMMPTE;
 
