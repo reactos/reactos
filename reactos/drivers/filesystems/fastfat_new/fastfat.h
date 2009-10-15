@@ -50,6 +50,13 @@ FatQueryVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS NTAPI
 FatSetVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+VOID NTAPI
+FatReadStreamFile(PVCB Vcb,
+                  ULONGLONG ByteOffset,
+                  ULONG ByteSize,
+                  PBCB *Bcb,
+                  PVOID *Buffer);
+
 /*  ------------------------------------------------------  blockdev.c  */
 NTSTATUS
 NTAPI

@@ -502,7 +502,7 @@ FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
         RtlDowncaseUnicodeString(UnicodeName, UnicodeName, FALSE);
         RtlUpcaseUnicodeString(UnicodeName, UnicodeName, FALSE);
 
-        DPRINT1("Converted long name: %wZ\n", UnicodeName);
+        DPRINT("Converted long name: %wZ\n", UnicodeName);
 
         /* Add the long unicode name link */
         FatInsertName(IrpContext, &Fcb->ParentFcb->Dcb.SplayLinksUnicode, &Fcb->LongName);
@@ -603,7 +603,7 @@ Fati8dot3ToString(IN PCHAR FileName,
     /* Set the length */
     OutString->Length = BaseLen + ExtLen;
 
-    DPRINT1("'%s', len %d\n", OutString->Buffer, OutString->Length);
+    DPRINT("'%s', len %d\n", OutString->Buffer, OutString->Length);
 }
 
 VOID

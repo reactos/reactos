@@ -171,4 +171,27 @@ FatSetVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+VOID
+NTAPI
+FatReadStreamFile(PVCB Vcb,
+                  ULONGLONG ByteOffset,
+                  ULONG ByteSize,
+                  PBCB *Bcb,
+                  PVOID *Buffer)
+{
+    LARGE_INTEGER Offset;
+
+    Offset.QuadPart = ByteOffset;
+
+    if (!CcMapData(Vcb->StreamFileObject,
+                   &Offset,
+                   ByteSize,
+                   TRUE, // FIXME: CanWait
+                   Bcb,
+                   Buffer))
+    {
+        ASSERT(FALSE);
+    }
+}
+
 /* EOF */
