@@ -394,6 +394,7 @@
 			<file>pool.c</file>
 			<file>procsup.c</file>
 			<file>syspte.c</file>
+			<file>virtual.c</file>
 		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>

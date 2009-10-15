@@ -57,6 +57,12 @@ Author:
 #define MMPFNUSE_DRIVERLOCKPAGE                             10
 #define MMPFNUSE_KERNELSTACK                                11
 
+//
+// Lock/Unlock Virtuam Memory Flags
+//
+#define MAP_PROCESS                                         1
+#define MAP_SYSTEM                                          2
+
 #ifndef NTOS_MODE_USER
 
 //
