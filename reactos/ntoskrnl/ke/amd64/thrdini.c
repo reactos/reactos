@@ -46,13 +46,13 @@ typedef struct _KKINIT_FRAME
 
 VOID
 NTAPI
-Ke386InitThreadWithContext(IN PKTHREAD Thread,
+KiInitializeContextThread(IN PKTHREAD Thread,
                            IN PKSYSTEM_ROUTINE SystemRoutine,
                            IN PKSTART_ROUTINE StartRoutine,
                            IN PVOID StartContext,
                            IN PCONTEXT ContextPointer)
 {
-	FrLdrDbgPrint("Ke386InitThreadWithContext stub\n");
+	FrLdrDbgPrint("KiInitializeContextThread stub\n");
 #if 0
     PFX_SAVE_AREA FxSaveArea;
     PFXSAVE_FORMAT FxSaveFormat;
