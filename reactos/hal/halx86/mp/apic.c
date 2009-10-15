@@ -882,7 +882,6 @@ SetInterruptGate(ULONG index, ULONG_PTR address)
   idt->Access = Access.Value;
   idt->ExtendedOffset = (USHORT)(address >> 16);
 #endif
-#endif
 }
 
 VOID HaliInitBSP(VOID)
