@@ -181,7 +181,7 @@ IsBadStringPtrW(IN LPCWSTR lpsz,
         {
             Char = *Current;
             Current++;
-        } while (Char && (Current != Last));
+        } while (Char && (Current != Last + 1));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -224,7 +224,7 @@ IsBadStringPtrA(IN LPCSTR lpsz,
         {
             Char = *Current;
             Current++;
-        } while (Char && (Current != Last));
+        } while (Char && (Current != Last + 1));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
