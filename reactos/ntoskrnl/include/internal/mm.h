@@ -776,14 +776,19 @@ MmInitializeProcessAddressSpace(
 
 NTSTATUS
 NTAPI
-MmCreatePeb(struct _EPROCESS *Process);
+MmCreatePeb(
+    IN PEPROCESS Process,
+    IN PINITIAL_PEB InitialPeb,
+    OUT PPEB *BasePeb
+);
 
-PTEB
+NTSTATUS
 NTAPI
 MmCreateTeb(
-    struct _EPROCESS *Process,
-    PCLIENT_ID ClientId,
-    PINITIAL_TEB InitialTeb
+    IN PEPROCESS Process,
+    IN PCLIENT_ID ClientId,
+    IN PINITIAL_TEB InitialTeb,
+    OUT PTEB* BaseTeb
 );
 
 VOID

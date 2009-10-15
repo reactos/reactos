@@ -29,6 +29,10 @@
 #define MI_PAGED_POOL_START                    (PVOID)0xE1000000
 #define MI_NONPAGED_POOL_END                   (PVOID)0xFFBE0000
 
+#define MM_HIGHEST_VAD_ADDRESS \
+    (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
+
+
 //
 // FIXFIX: These should go in ex.h after the pool merge
 //

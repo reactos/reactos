@@ -587,23 +587,53 @@ typedef struct _PEB_FREE_BLOCK
 } PEB_FREE_BLOCK, *PPEB_FREE_BLOCK;
 
 //
+// Initial PEB
+//
+typedef struct _INITIAL_PEB
+{
+    BOOLEAN InheritedAddressSpace;
+    BOOLEAN ReadImageFileExecOptions;
+    BOOLEAN BeingDebugged;
+    union
+    {
+        BOOLEAN BitField;
+#if (NTDDI_VERSION >= NTDDI_WS03)
+        struct
+        {
+            BOOLEAN ImageUsesLargePages:1;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+            BOOLEAN IsProtectedProcess:1;
+            BOOLEAN IsLegacyProcess:1;
+            BOOLEAN SpareBits:5;
+#else
+            BOOLEAN SpareBits:7;
+#endif
+        };
+#else
+        BOOLEAN SpareBool;
+#endif
+    };
+    HANDLE Mutant;
+} INITIAL_PEB, *PINITIAL_PEB;
+
+//
 // Process Environment Block (PEB)
 //
 typedef struct _PEB
 {
-    UCHAR InheritedAddressSpace;
-    UCHAR ReadImageFileExecOptions;
-    UCHAR BeingDebugged;
+    BOOLEAN InheritedAddressSpace;
+    BOOLEAN ReadImageFileExecOptions;
+    BOOLEAN BeingDebugged;
 #if (NTDDI_VERSION >= NTDDI_WS03)
     struct
     {
-        UCHAR ImageUsesLargePages:1;
+        BOOLEAN ImageUsesLargePages:1;
     #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-        UCHAR IsProtectedProcess:1;
-        UCHAR IsLegacyProcess:1;
-        UCHAR SpareBits:5;
+        BOOLEAN IsProtectedProcess:1;
+        BOOLEAN IsLegacyProcess:1;
+        BOOLEAN SpareBits:5;
     #else
-        UCHAR SpareBits:7;
+        BOOLEAN SpareBits:7;
     #endif
     };
 #else

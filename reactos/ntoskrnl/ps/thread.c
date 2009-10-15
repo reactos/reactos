@@ -310,13 +310,13 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     if (ThreadContext)
     {
         /* User-mode Thread, create Teb */
-        TebBase = MmCreateTeb(Process, &Thread->Cid, InitialTeb);
-        if (!TebBase)
+        Status = MmCreateTeb(Process, &Thread->Cid, InitialTeb, &TebBase);
+        if (!NT_SUCCESS(Status))
         {
             /* Failed to create the TEB. Release rundown and dereference */
             ExReleaseRundownProtection(&Process->RundownProtect);
             ObDereferenceObject(Thread);
-            return STATUS_INSUFFICIENT_RESOURCES;
+            return Status;
         }
 
         /* Set the Start Addresses */
