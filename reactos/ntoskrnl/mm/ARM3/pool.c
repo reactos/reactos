@@ -149,6 +149,83 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     SizeInPages = BYTES_TO_PAGES(SizeInBytes);
     
     //
+    // Handle paged pool
+    //
+    if (PoolType == PagedPool)
+    {
+        //
+        // Lock the paged pool mutex
+        //
+        KeAcquireGuardedMutex(&MmPagedPoolMutex);
+        
+        //
+        // Find some empty allocation space
+        //
+        i = RtlFindClearBitsAndSet(MmPagedPoolInfo.PagedPoolAllocationMap,
+                                   SizeInPages,
+                                   MmPagedPoolInfo.PagedPoolHint);
+        if (i == 0xFFFFFFFF)
+        {
+            //
+            // Out of memory!
+            //
+            DPRINT1("OUT OF PAGED POOL!!!\n");
+            KeReleaseGuardedMutex(&MmPagedPoolMutex);
+            return NULL;
+        }
+        
+        //
+        // Update the pool hint if the request was just one page
+        //
+        if (SizeInPages == 1) MmPagedPoolInfo.PagedPoolHint = i + 1;
+        
+        //
+        // Update the end bitmap so we know the bounds of this allocation when
+        // the time comes to free it
+        //
+        RtlSetBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, i + SizeInPages - 1);
+        
+        //
+        // Now we can release the lock (it mainly protects the bitmap)
+        //
+        KeReleaseGuardedMutex(&MmPagedPoolMutex);
+        
+        //
+        // Now figure out where this allocation starts
+        //
+        BaseVa = (PVOID)((ULONG_PTR)MmPagedPoolStart + (i << PAGE_SHIFT));
+        
+        //
+        // Flush the TLB
+        //
+        KeFlushEntireTb(TRUE, TRUE);
+        
+        //
+        // Setup a demand-zero writable PTE
+        //
+        TempPte.u.Long = 0;
+        MI_MAKE_WRITE_PAGE(&TempPte);
+        
+        //
+        // Find the first and last PTE, then loop them all
+        //
+        PointerPte = MiAddressToPte(BaseVa);
+        StartPte = PointerPte + SizeInPages;
+        do
+        {
+            //
+            // Write the demand zero PTE and keep going
+            //
+            *PointerPte++ = TempPte;
+        } while (PointerPte < StartPte);
+        
+        //
+        // Return the allocation address to the caller
+        //
+        return BaseVa;
+    }    
+    
+    //
     // Allocations of less than 4 pages go into their individual buckets
     //
     i = SizeInPages - 1;
@@ -346,7 +423,57 @@ MiFreePoolPages(IN PVOID StartingVa)
     PFN_NUMBER FreePages, NumberOfPages;
     KIRQL OldIrql;
     PMMFREE_POOL_ENTRY FreeEntry, NextEntry, LastEntry;
-    ULONG i;
+    ULONG i, End;
+    
+    //
+    // Handle paged pool
+    //
+    if ((StartingVa >= MmPagedPoolStart) && (StartingVa <= MmPagedPoolEnd))
+    {
+        //
+        // Calculate the offset from the beginning of paged pool, and convert it
+        // into pages
+        //
+        i = ((ULONG_PTR)StartingVa - (ULONG_PTR)MmPagedPoolStart) >> PAGE_SHIFT;
+        End = i;
+        
+        //
+        // Now use the end bitmap to scan until we find a set bit, meaning that
+        // this allocation finishes here
+        //
+        while (!RtlTestBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, End)) End++;
+        
+        //
+        // Now calculate the total number of pages this allocation spans
+        //
+        NumberOfPages = End - i + 1;
+        
+        //
+        // Acquire the paged pool lock
+        //
+        KeAcquireGuardedMutex(&MmPagedPoolMutex);
+        
+        //
+        // Clear the allocation and free bits
+        //
+        RtlClearBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, i);
+        RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap, i, NumberOfPages);
+        
+        //
+        // Update the hint if we need to
+        //
+        if (i < MmPagedPoolInfo.PagedPoolHint) MmPagedPoolInfo.PagedPoolHint = i;
+        
+        //
+        // Release the lock protecting the bitmaps
+        //
+        KeReleaseGuardedMutex(&MmPagedPoolMutex);
+        
+        //
+        // And finally return the number of pages freed
+        //
+        return NumberOfPages;
+    }
     
     //
     // Get the first PTE and its corresponding PFN entry
