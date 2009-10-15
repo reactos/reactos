@@ -736,6 +736,11 @@ NTAPI
 PsGetThreadSessionId(IN PETHREAD Thread)
 {
     return (HANDLE)Thread->ThreadsProcess->Session;
+#if 0
+    // Should probably return a DWORD
+    PMM_SESSION_SPACE Session = Thread->ThreadsProcess->Session;
+    return Session->SessionId;
+#endif
 }
 
 /*
