@@ -5674,6 +5674,14 @@ KefReleaseSpinLockFromDpcLevel(
     
 #elif defined(_M_ARM) // !defined (_X86_)
     
+    FORCEINLINE
+    VOID
+    KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
+    {
+        /* Clear the lock */
+        *SpinLock = 0;
+    }
+    
     NTHALAPI
     KIRQL
     FASTCALL
