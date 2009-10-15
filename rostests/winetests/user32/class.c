@@ -598,8 +598,8 @@ static void test_builtinproc(void)
     HWND hwnd;
     int i;
 
-    pDefWindowProcA = GetProcAddress(GetModuleHandle("user32.dll"), "DefWindowProcA");
-    pDefWindowProcW = GetProcAddress(GetModuleHandle("user32.dll"), "DefWindowProcW");
+    pDefWindowProcA = (void *)GetProcAddress(GetModuleHandle("user32.dll"), "DefWindowProcA");
+    pDefWindowProcW = (void *)GetProcAddress(GetModuleHandle("user32.dll"), "DefWindowProcW");
 
     for (i = 0; i < 4; i++)
     {

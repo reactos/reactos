@@ -2390,23 +2390,33 @@ START_TEST(dde)
 
     test_end_to_end_server(proc.hProcess, proc.hThread, TRUE);
 
-    sprintf(buffer, "%s dde endw", argv[0]);
-    CreateProcessA(NULL, buffer, NULL, NULL, FALSE,
-                   CREATE_SUSPENDED, NULL, NULL, &startup, &proc);
+    /* Don't bother testing W interfaces on Win9x/WinMe */
+    SetLastError(0xdeadbeef);
+    lstrcmpW(NULL, NULL);
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("Skipping W-interface tests\n");
+    }
+    else
+    {
+        sprintf(buffer, "%s dde endw", argv[0]);
+        CreateProcessA(NULL, buffer, NULL, NULL, FALSE,
+                       CREATE_SUSPENDED, NULL, NULL, &startup, &proc);
 
-    test_end_to_end_server(proc.hProcess, proc.hThread, FALSE);
+        test_end_to_end_server(proc.hProcess, proc.hThread, FALSE);
 
-    sprintf(buffer, "%s dde enda", argv[0]);
-    CreateProcessA(NULL, buffer, NULL, NULL, FALSE,
-                   CREATE_SUSPENDED, NULL, NULL, &startup, &proc);
+        sprintf(buffer, "%s dde enda", argv[0]);
+        CreateProcessA(NULL, buffer, NULL, NULL, FALSE,
+                       CREATE_SUSPENDED, NULL, NULL, &startup, &proc);
 
-    test_end_to_end_server(proc.hProcess, proc.hThread, FALSE);
+        test_end_to_end_server(proc.hProcess, proc.hThread, FALSE);
 
-    sprintf(buffer, "%s dde endw", argv[0]);
-    CreateProcessA(NULL, buffer, NULL, NULL, FALSE,
-                   CREATE_SUSPENDED, NULL, NULL, &startup, &proc);
+        sprintf(buffer, "%s dde endw", argv[0]);
+        CreateProcessA(NULL, buffer, NULL, NULL, FALSE,
+                       CREATE_SUSPENDED, NULL, NULL, &startup, &proc);
 
-    test_end_to_end_server(proc.hProcess, proc.hThread, TRUE);
+        test_end_to_end_server(proc.hProcess, proc.hThread, TRUE);
+    }
 
     test_dde_aw_transaction();
 

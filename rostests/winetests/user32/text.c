@@ -80,7 +80,7 @@ static void test_DrawTextCalcRect(void)
     ok( textheight, "DrawTextA error %u\n", GetLastError());
 
     trace("MM_HIENGLISH rect.bottom %d\n", rect.bottom);
-    todo_wine ok(rect.bottom < 0, "In MM_HIENGLISH, DrawText with "
+    ok(rect.bottom < 0, "In MM_HIENGLISH, DrawText with "
        "DT_CALCRECT should return a negative rectangle bottom. "
        "(bot=%d)\n", rect.bottom);
 

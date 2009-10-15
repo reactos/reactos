@@ -3218,6 +3218,59 @@ static void test_window_styles(void)
     check_window_style(0, WS_EX_APPWINDOW, WS_CLIPSIBLINGS|WS_CAPTION, WS_EX_APPWINDOW|WS_EX_WINDOWEDGE);
 }
 
+static void test_scrollwindow( HWND hwnd)
+{
+    HDC hdc;
+    RECT rc, rc2, rc3;
+    COLORREF colr;
+
+    ShowWindow( hwnd, SW_SHOW);
+    UpdateWindow( hwnd);
+    flush_events( TRUE );
+    GetClientRect( hwnd, &rc);
+    hdc = GetDC( hwnd);
+    /* test ScrollWindow(Ex) with no clip rectangle */
+    /* paint the lower half of the window black */
+    rc2 = rc;
+    rc2.top = ( rc2.top + rc2.bottom) / 2;
+    FillRect( hdc, &rc2, GetStockObject(BLACK_BRUSH));
+    /* paint the upper half of the window white */
+    rc2.bottom = rc2.top;
+    rc2.top =0;
+    FillRect( hdc, &rc2, GetStockObject(WHITE_BRUSH));
+    /* scroll lower half up */
+    rc2 = rc;
+    rc2.top = ( rc2.top + rc2.bottom) / 2;
+    ScrollWindowEx( hwnd, 0, - rc2.top, &rc2, NULL, NULL, NULL, SW_ERASE);
+    flush_events(FALSE);
+    /* expected: black should have scrolled to the upper half */
+    colr = GetPixel( hdc, (rc2.left+rc2.right)/ 2,  rc2.bottom / 4 );
+    ok ( colr == 0, "pixel should be black, color is %08x\n", colr);
+    /* Repeat that test of ScrollWindow(Ex) now with clip rectangle */
+    /* paint the lower half of the window black */
+    rc2 = rc;
+    rc2.top = ( rc2.top + rc2.bottom) / 2;
+    FillRect( hdc, &rc2, GetStockObject(BLACK_BRUSH));
+    /* paint the upper half of the window white */
+    rc2.bottom = rc2.top;
+    rc2.top =0;
+    FillRect( hdc, &rc2, GetStockObject(WHITE_BRUSH));
+    /* scroll lower half up */
+    rc2 = rc;
+    rc2.top = ( rc2.top + rc2.bottom) / 2;
+    rc3 = rc;
+    rc3.left = rc3.right / 4;
+    rc3.right -= rc3.right / 4;
+    ScrollWindowEx( hwnd, 0, - rc2.top, &rc2, &rc3, NULL, NULL, SW_ERASE);
+    flush_events(FALSE);
+    /* expected: black should have scrolled to the upper half */
+    colr = GetPixel( hdc, (rc2.left+rc2.right)/ 2,  rc2.bottom / 4 );
+    ok ( colr == 0, "pixel should be black, color is %08x\n", colr);
+
+    /* clean up */
+    ReleaseDC( hwnd, hdc);
+}
+
 static void test_scrollvalidate( HWND parent)
 {
     HDC hdc;
@@ -5724,6 +5777,7 @@ START_TEST(win)
     test_mouse_input(hwndMain);
     test_validatergn(hwndMain);
     test_nccalcscroll( hwndMain);
+    test_scrollwindow( hwndMain);
     test_scrollvalidate( hwndMain);
     test_scrolldc( hwndMain);
     test_scroll();

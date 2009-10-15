@@ -1039,6 +1039,8 @@ static void check_DrawIcon(HDC hdc, BOOL maskvalue, UINT32 color, int bpp, COLOR
     HICON hicon = create_test_icon(hdc, 1, 1, bpp, maskvalue, &color, sizeof(color));
     if (!hicon) return;
     SetPixelV(hdc, 0, 0, background);
+    SetPixelV(hdc, GetSystemMetrics(SM_CXICON)-1, GetSystemMetrics(SM_CYICON)-1, background);
+    SetPixelV(hdc, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), background);
     DrawIcon(hdc, 0, 0, hicon);
     result = GetPixel(hdc, 0, 0);
 
@@ -1047,6 +1049,21 @@ static void check_DrawIcon(HDC hdc, BOOL maskvalue, UINT32 color, int bpp, COLOR
         "Overlaying Mask %d on Color %06X with DrawIcon. "
         "Expected a close match to %06X (modern), or %06X (legacy). Got %06X from line %d\n",
         maskvalue, color, modern_expected, legacy_expected, result, line);
+
+    result = GetPixel(hdc, GetSystemMetrics(SM_CXICON)-1, GetSystemMetrics(SM_CYICON)-1);
+
+    ok (color_match(result, modern_expected) ||         /* Windows 2000 and up */
+        broken(color_match(result, legacy_expected)),   /* Windows NT 4.0, 9X and below */
+        "Overlaying Mask %d on Color %06X with DrawIcon. "
+        "Expected a close match to %06X (modern), or %06X (legacy). Got %06X from line %d\n",
+        maskvalue, color, modern_expected, legacy_expected, result, line);
+
+    result = GetPixel(hdc, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
+
+    ok (color_match(result, background),
+        "Overlaying Mask %d on Color %06X with DrawIcon. "
+        "Expected unchanged background color %06X. Got %06X from line %d\n",
+        maskvalue, color, background, result, line);
 }
 
 static void test_DrawIcon(void)
@@ -1070,8 +1087,8 @@ static void test_DrawIcon(void)
 
     memset(&bitmapInfo, 0, sizeof(bitmapInfo));
     bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bitmapInfo.bmiHeader.biWidth = 1;
-    bitmapInfo.bmiHeader.biHeight = 1;
+    bitmapInfo.bmiHeader.biWidth = GetSystemMetrics(SM_CXICON)+1;
+    bitmapInfo.bmiHeader.biHeight = GetSystemMetrics(SM_CYICON)+1;
     bitmapInfo.bmiHeader.biBitCount = 32;
     bitmapInfo.bmiHeader.biPlanes = 1;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
@@ -1212,6 +1229,130 @@ cleanup:
         DeleteDC(hdcDst);
 }
 
+static void check_DrawState_Size(HDC hdc, BOOL maskvalue, UINT32 color, int bpp, HBRUSH hbr, UINT flags, int line)
+{
+    COLORREF result, background;
+    BOOL passed[2];
+    HICON hicon = create_test_icon(hdc, 1, 1, bpp, maskvalue, &color, sizeof(color));
+    background = 0x00FFFFFF;
+    /* Set color of the 2 pixels that will be checked afterwards */
+    SetPixelV(hdc, 0, 0, background);
+    SetPixelV(hdc, 2, 2, background);
+
+    /* Let DrawState calculate the size of the icon (it's 1x1) */
+    DrawState(hdc, hbr, NULL, (LPARAM) hicon, 0, 1, 1, 0, 0, (DST_ICON | flags ));
+
+    result = GetPixel(hdc, 0, 0);
+    passed[0] = color_match(result, background);
+    result = GetPixel(hdc, 2, 2);
+    passed[0] = passed[0] & color_match(result, background);
+
+    /* Check if manually specifying the icon size DOESN'T work */
+
+    /* IMPORTANT: For Icons, DrawState wants the size of the source image, not the
+     *            size in which it should be ultimately drawn. Therefore giving
+     *            width/height 2x2 if the icon is only 1x1 pixels in size should
+     *            result in drawing it with size 1x1. The size parameters must be
+     *            ignored if a Icon has to be drawn! */
+    DrawState(hdc, hbr, NULL, (LPARAM) hicon, 0, 1, 1, 2, 2, (DST_ICON | flags ));
+
+    result = GetPixel(hdc, 0, 0);
+    passed[1] = color_match(result, background);
+    result = GetPixel(hdc, 2, 2);
+    passed[1] = passed[0] & color_match(result, background);
+
+    if(!passed[0]&&!passed[1])
+        ok (passed[1],
+        "DrawState failed to draw a 1x1 Icon in the correct size, independent of the "
+        "width and height settings passed to it, for Icon with: Overlaying Mask %d on "
+        "Color %06X with flags %08X. Line %d\n",
+        maskvalue, color, (DST_ICON | flags), line);
+    else if(!passed[1])
+        ok (passed[1],
+        "DrawState failed to draw a 1x1 Icon in the correct size, if the width and height "
+        "parameters passed to it are bigger than the real Icon size, for Icon with: Overlaying "
+        "Mask %d on Color %06X with flags %08X. Line %d\n",
+        maskvalue, color, (DST_ICON | flags), line);
+    else
+        ok (passed[0],
+        "DrawState failed to draw a 1x1 Icon in the correct size, if the width and height "
+        "parameters passed to it are 0, for Icon with: Overlaying Mask %d on "
+        "Color %06X with flags %08X. Line %d\n",
+        maskvalue, color, (DST_ICON | flags), line);
+}
+
+static void check_DrawState_Color(HDC hdc, BOOL maskvalue, UINT32 color, int bpp, HBRUSH hbr, UINT flags,
+                             COLORREF background, COLORREF modern_expected, COLORREF legacy_expected, int line)
+{
+    COLORREF result;
+    HICON hicon = create_test_icon(hdc, 1, 1, bpp, maskvalue, &color, sizeof(color));
+    if (!hicon) return;
+    /* Set color of the pixel that will be checked afterwards */
+    SetPixelV(hdc, 1, 1, background);
+
+    DrawState(hdc, hbr, NULL, (LPARAM) hicon, 0, 1, 1, 0, 0, ( DST_ICON | flags ));
+
+    /* Check the color of the pixel is correct */
+    result = GetPixel(hdc, 1, 1);
+
+    ok (color_match(result, modern_expected) ||         /* Windows 2000 and up */
+        broken(color_match(result, legacy_expected)),   /* Windows NT 4.0, 9X and below */
+        "DrawState drawing Icon with Overlaying Mask %d on Color %06X with flags %08X. "
+        "Expected a close match to %06X (modern) or %06X (legacy). Got %06X from line %d\n",
+        maskvalue, color, (DST_ICON | flags), modern_expected, legacy_expected, result, line);
+}
+
+static void test_DrawState(void)
+{
+    BITMAPINFO bitmapInfo;
+    HDC hdcDst = NULL;
+    HBITMAP bmpDst = NULL;
+    HBITMAP bmpOld = NULL;
+    UINT32 bits = 0;
+
+    hdcDst = CreateCompatibleDC(0);
+    ok(hdcDst != 0, "CreateCompatibleDC(0) failed to return a valid DC\n");
+    if (!hdcDst)
+        return;
+
+    if(GetDeviceCaps(hdcDst, BITSPIXEL) <= 8)
+    {
+        skip("Windows will distort DrawIconEx colors at 8-bpp and less due to palletizing.\n");
+        goto cleanup;
+    }
+
+    memset(&bitmapInfo, 0, sizeof(bitmapInfo));
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = 3;
+    bitmapInfo.bmiHeader.biHeight = 3;
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+    bitmapInfo.bmiHeader.biSizeImage = sizeof(UINT32);
+    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    ok (bmpDst && bits, "CreateDIBSection failed to return a valid bitmap and buffer\n");
+    if (!bmpDst || !bits)
+        goto cleanup;
+    bmpOld = SelectObject(hdcDst, bmpDst);
+
+    /* potential flags to test with DrawState are: */
+    /* DSS_DISABLED embosses the icon */
+    /* DSS_MONO draw Icon using a brush as parameter 5 */
+    /* DSS_NORMAL draw Icon without any modifications */
+    /* DSS_UNION draw the Icon dithered */
+
+    check_DrawState_Size(hdcDst, FALSE, 0x00A0B0C0, 32, 0, DSS_NORMAL, __LINE__);
+    check_DrawState_Color(hdcDst, FALSE, 0x00A0B0C0, 32, 0, DSS_NORMAL, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
+
+cleanup:
+    if(bmpOld)
+        SelectObject(hdcDst, bmpOld);
+    if(bmpDst)
+        DeleteObject(bmpDst);
+    if(hdcDst)
+        DeleteDC(hdcDst);
+}
+
 static void test_DestroyCursor(void)
 {
     static const BYTE bmp_bits[4096];
@@ -1321,6 +1462,7 @@ START_TEST(cursoricon)
     test_CreateIconFromResource();
     test_DrawIcon();
     test_DrawIconEx();
+    test_DrawState();
     test_DestroyCursor();
     do_parent();
     test_child_process();
