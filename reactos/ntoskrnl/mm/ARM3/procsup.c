@@ -655,21 +655,21 @@ MmCreateTeb(IN PEPROCESS Process,
             (InitialTeb->PreviousStackLimit == NULL))
         {
             //
-            // Use grandparent TEB values
-            //
-            Teb->Tib.StackBase = InitialTeb->PreviousStackBase;
-            Teb->Tib.StackLimit = InitialTeb->PreviousStackLimit;
-        }
-        else
-        {
-            //
             // Use initial TEB values
             //
             Teb->Tib.StackBase = InitialTeb->StackBase;
             Teb->Tib.StackLimit = InitialTeb->StackLimit;
             Teb->DeallocationStack = InitialTeb->AllocatedStackBase;
         }
-        
+        else
+        {
+            //
+            // Use grandparent TEB values
+            //
+            Teb->Tib.StackBase = InitialTeb->PreviousStackBase;
+            Teb->Tib.StackLimit = InitialTeb->PreviousStackLimit;
+        }
+
         //
         // Initialize the static unicode string
         //
