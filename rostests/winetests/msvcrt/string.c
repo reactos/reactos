@@ -663,6 +663,46 @@ static void test_strtok(void)
     }
 }
 
+static void test_strtol(void)
+{
+    char* e;
+    LONG l;
+    ULONG ul;
+
+    /* errno is only set in case of error, so reset errno to EBADF to check for errno modification */
+    /* errno is modified on W2K8+ */
+    errno = EBADF;
+    l = strtol("-1234", &e, 0);
+    ok(l==-1234, "wrong value %d\n", l);
+    ok(errno == EBADF || broken(errno == 0), "wrong errno %d\n", errno);
+    errno = EBADF;
+    ul = strtoul("1234", &e, 0);
+    ok(ul==1234, "wrong value %u\n", ul);
+    ok(errno == EBADF || broken(errno == 0), "wrong errno %d\n", errno);
+
+    errno = EBADF;
+    l = strtol("2147483647L", &e, 0);
+    ok(l==2147483647, "wrong value %d\n", l);
+    ok(errno == EBADF || broken(errno == 0), "wrong errno %d\n", errno);
+    errno = EBADF;
+    l = strtol("-2147483648L", &e, 0);
+    ok(l==-2147483647L - 1, "wrong value %d\n", l);
+    ok(errno == EBADF || broken(errno == 0), "wrong errno %d\n", errno);
+    errno = EBADF;
+    ul = strtoul("4294967295UL", &e, 0);
+    ok(ul==4294967295ul, "wrong value %u\n", ul);
+    ok(errno == EBADF || broken(errno == 0), "wrong errno %d\n", errno);
+
+    errno = 0;
+    l = strtol("9223372036854775807L", &e, 0);
+    ok(l==2147483647, "wrong value %d\n", l);
+    ok(errno == ERANGE, "wrong errno %d\n", errno);
+    errno = 0;
+    ul = strtoul("9223372036854775807L", &e, 0);
+    ok(ul==4294967295ul, "wrong value %u\n", ul);
+    ok(errno == ERANGE, "wrong errno %d\n", errno);
+}
+
 START_TEST(string)
 {
     char mem[100];
@@ -706,4 +746,5 @@ START_TEST(string)
     test_mbcjisjms();
     test_strtok();
     test_wcscpy_s();
+    test_strtol();
 }

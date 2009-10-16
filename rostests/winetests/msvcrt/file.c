@@ -857,12 +857,89 @@ static void test_file_inherit_child_no(const char* fd_s)
     ok( ret == -1 && errno == EBADF, 
        "Wrong write result in child process on %d (%s)\n", fd, strerror(errno));
 }
- 
+
+static void create_io_inherit_block( STARTUPINFO *startup, unsigned int count, const HANDLE *handles )
+{
+    static BYTE block[1024];
+    BYTE *wxflag_ptr;
+    HANDLE *handle_ptr;
+    unsigned int i;
+
+    startup->lpReserved2 = block;
+    startup->cbReserved2 = sizeof(unsigned) + (sizeof(char) + sizeof(HANDLE)) * count;
+    wxflag_ptr = block + sizeof(unsigned);
+    handle_ptr = (HANDLE *)(wxflag_ptr + count);
+
+    *(unsigned*)block = count;
+    for (i = 0; i < count; i++)
+    {
+        wxflag_ptr[i] = 0x81;
+        handle_ptr[i] = handles[i];
+    }
+}
+
+static const char *read_file( HANDLE file )
+{
+    static char buffer[128];
+    DWORD ret;
+    SetFilePointer( file, 0, NULL, FILE_BEGIN );
+    if (!ReadFile( file, buffer, sizeof(buffer) - 1, &ret, NULL)) ret = 0;
+    buffer[ret] = 0;
+    return buffer;
+}
+
+static void test_stdout_handle( STARTUPINFO *startup, char *cmdline, HANDLE hstdout, BOOL expect_stdout,
+                                const char *descr )
+{
+    const char *data;
+    HANDLE hErrorFile;
+    SECURITY_ATTRIBUTES sa;
+    PROCESS_INFORMATION proc;
+
+    /* make file handle inheritable */
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+
+    hErrorFile = CreateFileA( "fdopen.err", GENERIC_READ|GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, CREATE_ALWAYS, 0, NULL );
+    startup->dwFlags    = STARTF_USESTDHANDLES;
+    startup->hStdInput  = GetStdHandle( STD_INPUT_HANDLE );
+    startup->hStdOutput = hErrorFile;
+    startup->hStdError  = GetStdHandle( STD_ERROR_HANDLE );
+
+    CreateProcessA( NULL, cmdline, NULL, NULL, TRUE,
+                    CREATE_DEFAULT_ERROR_MODE | NORMAL_PRIORITY_CLASS, NULL, NULL, startup, &proc );
+    winetest_wait_child_process( proc.hProcess );
+
+    data = read_file( hErrorFile );
+    if (expect_stdout)
+        ok( strcmp( data, "Success" ), "%s: Error file shouldn't contain data\n", descr );
+    else
+        ok( !strcmp( data, "Success" ), "%s: Wrong error data (%s)\n", descr, data );
+
+    if (hstdout)
+    {
+        data = read_file( hstdout );
+        if (expect_stdout)
+            ok( !strcmp( data, "Success" ), "%s: Wrong stdout data (%s)\n", descr, data );
+        else
+            ok( strcmp( data, "Success" ), "%s: Stdout file shouldn't contain data\n", descr );
+    }
+
+    CloseHandle( hErrorFile );
+    DeleteFile( "fdopen.err" );
+}
+
 static void test_file_inherit( const char* selfname )
 {
     int			fd;
     const char*		arg_v[5];
     char 		buffer[16];
+    char cmdline[MAX_PATH];
+    STARTUPINFO startup;
+    SECURITY_ATTRIBUTES sa;
+    HANDLE handles[3];
 
     fd = open ("fdopen.tst", O_CREAT | O_RDWR | O_BINARY, _S_IREAD |_S_IWRITE);
     ok(fd != -1, "Couldn't create test file\n");
@@ -890,6 +967,64 @@ static void test_file_inherit( const char* selfname )
     ok(read(fd, buffer, sizeof (buffer)) == 0, "Found unexpected data (%s)\n", buffer);
     close (fd);
     ok(unlink("fdopen.tst") == 0, "Couldn't unlink\n");
+
+    /* make file handle inheritable */
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+    sprintf(cmdline, "%s file inherit 1", selfname);
+
+    /* init an empty Reserved2, which should not be recognized as inherit-block */
+    ZeroMemory(&startup, sizeof(STARTUPINFO));
+    startup.cb = sizeof(startup);
+    create_io_inherit_block( &startup, 0, NULL );
+    test_stdout_handle( &startup, cmdline, 0, FALSE, "empty block" );
+
+    /* test with valid inheritblock */
+    handles[0] = GetStdHandle( STD_INPUT_HANDLE );
+    handles[1] = CreateFileA( "fdopen.tst", GENERIC_READ|GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, CREATE_ALWAYS, 0, NULL );
+    handles[2] = GetStdHandle( STD_ERROR_HANDLE );
+    create_io_inherit_block( &startup, 3, handles );
+    test_stdout_handle( &startup, cmdline, handles[1], TRUE, "valid block" );
+    CloseHandle( handles[1] );
+    DeleteFile("fdopen.tst");
+
+    /* test inherit block starting with unsigned zero */
+    handles[1] = CreateFileA( "fdopen.tst", GENERIC_READ|GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, CREATE_ALWAYS, 0, NULL );
+    create_io_inherit_block( &startup, 3, handles );
+    *(unsigned int *)startup.lpReserved2 = 0;
+    test_stdout_handle( &startup, cmdline, handles[1], FALSE, "zero count block" );
+    CloseHandle( handles[1] );
+    DeleteFile("fdopen.tst");
+
+    /* test inherit block with smaller size */
+    handles[1] = CreateFileA( "fdopen.tst", GENERIC_READ|GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, CREATE_ALWAYS, 0, NULL );
+    create_io_inherit_block( &startup, 3, handles );
+    startup.cbReserved2 -= 3;
+    test_stdout_handle( &startup, cmdline, handles[1], TRUE, "small size block" );
+    CloseHandle( handles[1] );
+    DeleteFile("fdopen.tst");
+
+    /* test inherit block with even smaller size */
+    handles[1] = CreateFileA( "fdopen.tst", GENERIC_READ|GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, CREATE_ALWAYS, 0, NULL );
+    create_io_inherit_block( &startup, 3, handles );
+    startup.cbReserved2 = sizeof(unsigned int) + sizeof(HANDLE) + sizeof(char);
+    test_stdout_handle( &startup, cmdline, handles[1], FALSE, "smaller size block" );
+    CloseHandle( handles[1] );
+    DeleteFile("fdopen.tst");
+
+    /* test inherit block with larger size */
+    handles[1] = CreateFileA( "fdopen.tst", GENERIC_READ|GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, CREATE_ALWAYS, 0, NULL );
+    create_io_inherit_block( &startup, 3, handles );
+    startup.cbReserved2 += 7;
+    test_stdout_handle( &startup, cmdline, handles[1], TRUE, "large size block" );
+    CloseHandle( handles[1] );
+    DeleteFile("fdopen.tst");
 }
 
 static void test_tmpnam( void )
