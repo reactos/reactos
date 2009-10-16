@@ -385,6 +385,7 @@ dll\win32\pstorec\pstorec.dll                       1
 dll\win32\qmgr\qmgr.dll                             1
 dll\win32\qmgrprxy\qmgrprxy.dll                     1
 dll\win32\query\query.dll                           1
+dll\win32\rasadhlp\rasadhlp.dll                     1
 dll\win32\rasapi32\rasapi32.dll                     1
 dll\win32\rasdlg\rasdlg.dll                         1
 dll\win32\resutils\resutils.dll                     1
