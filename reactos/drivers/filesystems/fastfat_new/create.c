@@ -643,7 +643,16 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             FatSetFullNameInFcb(ParentDcb, &FirstName);
         }
 
-        // TODO: Try to open directory
+        // TODO: Try to find a directory entry of this path
+
+        /* Check if we need to open target directory */
+        if (OpenTargetDirectory)
+        {
+            // TODO: Open target directory
+            UNIMPLEMENTED;
+        }
+
+        // TODO: Check, if path is a directory or a file
 
         /* If end backslash here, then it's definately not permitted,
            since we're opening files here */
