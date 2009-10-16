@@ -89,12 +89,60 @@ FatiOpenExistingDir(IN PFAT_IRP_CONTEXT IrpContext,
                      IN BOOLEAN DeleteOnClose)
 {
     IO_STATUS_BLOCK Iosb = {{0}};
+    OEM_STRING AnsiName;
+    CHAR AnsiNameBuf[512];
+    PFCB Fcb;
+    NTSTATUS Status;
+    FF_FILE *FileHandle;
 
-    DPRINT1("Opening directory\n");
+    /* Only open is permitted */
+    if (CreateDisposition != FILE_OPEN &&
+        CreateDisposition != FILE_OPEN_IF)
+    {
+        Iosb.Status = STATUS_OBJECT_NAME_COLLISION;
+        return Iosb;
+    }
 
-    UNIMPLEMENTED;
+    // TODO: Check dir access
 
-    Iosb.Status = STATUS_NOT_IMPLEMENTED;
+    /* Convert the name to ANSI */
+    AnsiName.Buffer = AnsiNameBuf;
+    AnsiName.Length = 0;
+    AnsiName.MaximumLength = sizeof(AnsiNameBuf);
+    RtlZeroMemory(AnsiNameBuf, sizeof(AnsiNameBuf));
+    Status = RtlUpcaseUnicodeStringToCountedOemString(&AnsiName, &FileObject->FileName, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+
+    /* Open the dir with FullFAT */
+    FileHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_DIR, NULL);
+
+    if (!FileHandle)
+    {
+        Iosb.Status = STATUS_OBJECT_NAME_NOT_FOUND; // FIXME: A shortcut for now
+        return Iosb;
+    }
+
+    /* Create a new DCB for this directory */
+    Fcb = FatCreateDcb(IrpContext, Vcb, ParentDcb);
+    Fcb->FatHandle = FileHandle;
+
+    /* Set share access */
+    IoSetShareAccess(*DesiredAccess, ShareAccess, FileObject, &Fcb->ShareAccess);
+
+    /* Set context and section object pointers */
+    FatSetFileObject(FileObject,
+                     UserDirectoryOpen,
+                     Fcb,
+                     FatCreateCcb());
+
+    Iosb.Status = STATUS_SUCCESS;
+    Iosb.Information = FILE_OPENED;
+
+    DPRINT1("Successfully opened dir %s\n", AnsiNameBuf);
+
     return Iosb;
 }
 

@@ -277,6 +277,8 @@ typedef struct _FCB
     ULONG State;
     /* Fcb condition */
     FCB_CONDITION Condition;
+    /* Share access */
+    SHARE_ACCESS ShareAccess;
     /* Mcb mapping Vbo->Lbo */
     LARGE_MCB Mcb;
     ULONG FirstCluster;
