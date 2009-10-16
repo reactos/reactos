@@ -84,7 +84,8 @@ FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
 PFCB NTAPI
 FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
              IN PVCB Vcb,
-             IN PFCB ParentDcb);
+             IN PFCB ParentDcb,
+             IN FF_FILE *FileHandle);
 
 /*  --------------------------------------------------------  create.c  */
 

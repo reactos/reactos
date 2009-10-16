@@ -127,7 +127,8 @@ PFCB
 NTAPI
 FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
              IN PVCB Vcb,
-             IN PFCB ParentDcb)
+             IN PFCB ParentDcb,
+             IN FF_FILE *FileHandle)
 {
     PFCB Fcb;
 
@@ -161,6 +162,13 @@ FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
 
     /* Initialize parent dcb list */
     InitializeListHead(&Fcb->Dcb.ParentDcbList);
+
+    /* Set FullFAT handle */
+    Fcb->FatHandle = FileHandle;
+
+    /* Set names */
+    if (FileHandle)
+        FatSetFcbNames(IrpContext, Fcb);
 
     return Fcb;
 }

@@ -126,8 +126,7 @@ FatiOpenExistingDir(IN PFAT_IRP_CONTEXT IrpContext,
     }
 
     /* Create a new DCB for this directory */
-    Fcb = FatCreateDcb(IrpContext, Vcb, ParentDcb);
-    Fcb->FatHandle = FileHandle;
+    Fcb = FatCreateDcb(IrpContext, Vcb, ParentDcb, FileHandle);
 
     /* Set share access */
     IoSetShareAccess(*DesiredAccess, ShareAccess, FileObject, &Fcb->ShareAccess);
@@ -332,9 +331,9 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     ULONG CreateDisposition;
 
     /* Control blocks */
-    PVCB Vcb, DecodedVcb;
-    PFCB Fcb, NextFcb;
-    PCCB Ccb;
+    PVCB Vcb, DecodedVcb, RelatedVcb;
+    PFCB Fcb, NextFcb, RelatedDcb;
+    PCCB Ccb, RelatedCcb;
     PFCB ParentDcb;
 
     /* IRP data */
@@ -357,6 +356,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     UNICODE_STRING RemainingPart, FirstName, NextName;
     OEM_STRING AnsiFirstName;
     FF_ERROR FfError;
+    TYPE_OF_OPEN TypeOfOpen;
 
     Iosb.Status = STATUS_SUCCESS;
 
@@ -533,8 +533,42 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     /* Check if this is a relative open */
     if (RelatedFO)
     {
-        // RelatedFO will be a parent directory
-        UNIMPLEMENTED;
+        /* Decode the file object */
+        TypeOfOpen = FatDecodeFileObject(RelatedFO,
+                                         &RelatedVcb,
+                                         &RelatedDcb,
+                                         &RelatedCcb);
+
+        /* Check open type */
+        if (TypeOfOpen != UserFileOpen &&
+            TypeOfOpen != UserDirectoryOpen)
+        {
+            DPRINT1("Invalid file object!\n");
+
+            /* Cleanup and return */
+            FatReleaseVcb(IrpContext, Vcb);
+            return STATUS_OBJECT_PATH_NOT_FOUND;
+        }
+
+        /* File path must be relative */
+        if (FileName.Length != 0 &&
+            FileName.Buffer[0] == L'\\')
+        {
+            /* The name is absolute, fail */
+            FatReleaseVcb(IrpContext, Vcb);
+            return STATUS_OBJECT_NAME_INVALID;
+        }
+
+        /* Make sure volume is the same */
+        ASSERT(RelatedVcb == Vcb);
+
+        /* Save VPB */
+        FileObject->Vpb = RelatedFO->Vpb;
+
+        /* Set parent DCB */
+        ParentDcb = RelatedDcb;
+
+        DPRINT1("Opening file '%wZ' relatively to '%wZ'\n", &FileName, &ParentDcb->FullFileName);
     }
     else
     {
@@ -743,7 +777,8 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             /* Create a DCB for this entry */
             ParentDcb = FatCreateDcb(IrpContext,
                                      Vcb,
-                                     ParentDcb);
+                                     ParentDcb,
+                                     NULL);
 
             /* Set its name */
             FatSetFullNameInFcb(ParentDcb, &FirstName);
