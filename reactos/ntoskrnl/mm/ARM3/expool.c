@@ -16,6 +16,9 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
+#undef ExAllocatePoolWithQuota
+#undef ExAllocatePoolWithQuotaTag
+
 /* GLOBALS ********************************************************************/
 
 POOL_DESCRIPTOR NonPagedPoolDescriptor;
@@ -635,6 +638,69 @@ ExFreeArmPool(PVOID P)
     // Just free without checking for the tag
     //
     ExFreeArmPoolWithTag(P, 0);
+}
+
+/*
+ * @unimplemented
+ */
+SIZE_T
+NTAPI
+ExQueryPoolBlockSize(IN PVOID PoolBlock,
+                     OUT PBOOLEAN QuotaCharged)
+{
+    //
+    // Not implemented
+    //
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+
+PVOID
+NTAPI
+ExAllocatePoolWithQuota(IN POOL_TYPE PoolType,
+                        IN ULONG NumberOfBytes)
+{
+    //
+    // Allocate the pool
+    //
+    return ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, 'enoN');
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+ExAllocatePoolWithTagPriority(IN POOL_TYPE PoolType,
+                              IN SIZE_T NumberOfBytes,
+                              IN ULONG Tag,
+                              IN EX_POOL_PRIORITY Priority)
+{
+    //
+    // Allocate the pool
+    //
+    UNIMPLEMENTED;
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
+                           IN ULONG NumberOfBytes,
+                           IN ULONG Tag)
+{
+    //
+    // Allocate the pool
+    //
+    UNIMPLEMENTED;
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 
 /* EOF */

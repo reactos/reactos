@@ -711,4 +711,44 @@ MiFreePoolPages(IN PVOID StartingVa)
     return NumberOfPages;
 }
 
+
+BOOLEAN
+NTAPI
+MiRaisePoolQuota(IN POOL_TYPE PoolType,
+                 IN ULONG CurrentMaxQuota,
+                 OUT PULONG NewMaxQuota)
+{
+    //
+    // Not implemented
+    //
+    UNIMPLEMENTED;
+    *NewMaxQuota = CurrentMaxQuota + 65536;
+    return TRUE;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+MmAllocateMappingAddress(IN SIZE_T NumberOfBytes,
+                         IN ULONG PoolTag)
+{
+	UNIMPLEMENTED;
+	return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+MmFreeMappingAddress(IN PVOID BaseAddress,
+                     IN ULONG PoolTag)
+{
+	UNIMPLEMENTED;
+}
+
 /* EOF */
