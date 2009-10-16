@@ -41,6 +41,63 @@ FatiOpenRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
     return Iosb;
 }
 
+FF_ERROR
+NTAPI
+FatiTryToOpen(IN PFILE_OBJECT FileObject,
+              IN PVCB Vcb)
+{
+    OEM_STRING AnsiName;
+    CHAR AnsiNameBuf[512];
+    FF_ERROR Error;
+    NTSTATUS Status;
+    FF_FILE *FileHandle;
+
+    /* Convert the name to ANSI */
+    AnsiName.Buffer = AnsiNameBuf;
+    AnsiName.Length = 0;
+    AnsiName.MaximumLength = sizeof(AnsiNameBuf);
+    RtlZeroMemory(AnsiNameBuf, sizeof(AnsiNameBuf));
+    Status = RtlUpcaseUnicodeStringToCountedOemString(&AnsiName, &FileObject->FileName, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+
+    /* Open the file with FullFAT */
+    FileHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_READ, &Error);
+
+    /* Close the handle */
+    if (FileHandle) FF_Close(FileHandle);
+
+    /* Return status */
+    return Error;
+}
+
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenExistingDir(IN PFAT_IRP_CONTEXT IrpContext,
+                     IN PFILE_OBJECT FileObject,
+                     IN PVCB Vcb,
+                     IN PFCB ParentDcb,
+                     IN PACCESS_MASK DesiredAccess,
+                     IN USHORT ShareAccess,
+                     IN ULONG AllocationSize,
+                     IN PFILE_FULL_EA_INFORMATION EaBuffer,
+                     IN ULONG EaLength,
+                     IN UCHAR FileAttributes,
+                     IN ULONG CreateDisposition,
+                     IN BOOLEAN DeleteOnClose)
+{
+    IO_STATUS_BLOCK Iosb = {{0}};
+
+    DPRINT1("Opening directory\n");
+
+    UNIMPLEMENTED;
+
+    Iosb.Status = STATUS_NOT_IMPLEMENTED;
+    return Iosb;
+}
+
 IO_STATUS_BLOCK
 NTAPI
 FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
@@ -251,6 +308,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     BOOLEAN EndBackslash = FALSE, OpenedAsDos;
     UNICODE_STRING RemainingPart, FirstName, NextName;
     OEM_STRING AnsiFirstName;
+    FF_ERROR FfError;
 
     Iosb.Status = STATUS_SUCCESS;
 
@@ -643,7 +701,8 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             FatSetFullNameInFcb(ParentDcb, &FirstName);
         }
 
-        // TODO: Try to find a directory entry of this path
+        /* Try to open it and get a result, saying if this is a dir or a file */
+        FfError = FatiTryToOpen(FileObject, Vcb);
 
         /* Check if we need to open target directory */
         if (OpenTargetDirectory)
@@ -652,7 +711,46 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             UNIMPLEMENTED;
         }
 
-        // TODO: Check, if path is a directory or a file
+        /* Check, if path is a directory or a file */
+        if (FfError == FF_ERR_FILE_OBJECT_IS_A_DIR)
+        {
+            if (NonDirectoryFile)
+            {
+                DPRINT1("Can't open dir as a file\n");
+
+                /* Unlock VCB */
+                FatReleaseVcb(IrpContext, Vcb);
+
+                /* Complete the request */
+                Iosb.Status = STATUS_FILE_IS_A_DIRECTORY;
+                FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+                return Iosb.Status;
+            }
+
+            /* Open this directory */
+            Iosb = FatiOpenExistingDir(IrpContext,
+                                       FileObject,
+                                       Vcb,
+                                       ParentDcb,
+                                       DesiredAccess,
+                                       ShareAccess,
+                                       AllocationSize,
+                                       EaBuffer,
+                                       EaLength,
+                                       FileAttributes,
+                                       CreateDisposition,
+                                       DeleteOnClose);
+
+            Irp->IoStatus.Information = Iosb.Information;
+
+            /* Unlock VCB */
+            FatReleaseVcb(IrpContext, Vcb);
+
+            /* Complete the request */
+            FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+
+            return Iosb.Status;
+        }
 
         /* If end backslash here, then it's definately not permitted,
            since we're opening files here */
