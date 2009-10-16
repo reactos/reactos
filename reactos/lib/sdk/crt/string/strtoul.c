@@ -63,6 +63,7 @@ strtoul(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = ULONG_MAX;
+    __set_errno(ERANGE);
   }
   else if (neg)
     acc = -acc;
