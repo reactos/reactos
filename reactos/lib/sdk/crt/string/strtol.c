@@ -79,7 +79,9 @@ strtol(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = neg ? LONG_MIN : LONG_MAX;
+#ifndef _LIBCNT_
     __set_errno(ERANGE);
+#endif
   }
   else if (neg)
     acc = -acc;
