@@ -49,6 +49,15 @@ Author:
 #define KTHREAD_INITIAL_STACK                   0x28
 #define KTHREAD_STACK_LIMIT                     0x30
 #define KTHREAD_WAIT_IRQL                       0x156
+#define KTHREAD_TEB                             0x0B0+0x10
+#define KTHREAD_KERNEL_STACK                    0x038
+#define KTHREAD_NPX_STATE                       0x85
+#define KTHREAD_SERVICE_TABLE                   0x1E8
+#define KTHREAD_PREVIOUS_MODE                   0x137
+#define KTHREAD_TRAP_FRAME                      0x1D8
+#define KTHREAD_CALLBACK_STACK                  0x1E0
+#define KTHREAD_APCSTATE_PROCESS                0x068
+#define KPROCESS_DIRECTORY_TABLE_BASE           0x028
 
 //
 // KPRCB Offsets
