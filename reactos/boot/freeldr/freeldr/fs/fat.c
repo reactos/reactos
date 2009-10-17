@@ -796,7 +796,7 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
 			//
 			// Check if current entry is a directory
 			//
-			if (!FatFileInfo.Attributes & ATTR_DIRECTORY)
+			if (!(FatFileInfo.Attributes & ATTR_DIRECTORY))
 			{
 				MmFreeMemory(FatFileInfo.FileFatChain);
 				return ENOTDIR;
