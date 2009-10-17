@@ -1,6 +1,7 @@
 /*
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2009       Hervé Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -598,6 +599,7 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
 			//
 			// We found the entry, now fill in the FAT_FILE_INFO struct
 			//
+			FatFileInfoPointer->Attributes = DirEntry->Attr;
 			FatFileInfoPointer->FileSize = DirEntry->Size;
 			FatFileInfoPointer->FilePointer = 0;
 
@@ -791,6 +793,14 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
 		//
 		if ((i+1) < NumberOfPathParts)
 		{
+			//
+			// Check if current entry is a directory
+			//
+			if (!FatFileInfo.Attributes & ATTR_DIRECTORY)
+			{
+				MmFreeMemory(FatFileInfo.FileFatChain);
+				return ENOTDIR;
+			}
 			DirectoryStartCluster = FatFileInfo.FileFatChain[0];
 		}
 		MmFreeMemory(FatFileInfo.FileFatChain);
@@ -1347,9 +1357,10 @@ LONG FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 	FAT_FILE_INFO TempFileInfo;
 	PFAT_FILE_INFO FileHandle;
 	ULONG DeviceId;
+	BOOLEAN IsDirectory;
 	LONG ret;
 
-	if (OpenMode != OpenReadOnly)
+	if (OpenMode != OpenReadOnly && OpenMode != OpenDirectory)
 		return EACCES;
 
 	DeviceId = FsGetDeviceId(*FileId);
@@ -1361,6 +1372,15 @@ LONG FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 	ret = FatLookupFile(FatVolume, Path, DeviceId, &TempFileInfo);
 	if (ret != ESUCCESS)
 		return ENOENT;
+
+	//
+	// Check if caller opened what he expected (dir vs file)
+	//
+	IsDirectory = (TempFileInfo.Attributes & ATTR_DIRECTORY) != 0;
+	if (IsDirectory && OpenMode != OpenDirectory)
+		return EISDIR;
+	else if (!IsDirectory && OpenMode != OpenReadOnly)
+		return ENOTDIR;
 
 	FileHandle = MmHeapAlloc(sizeof(FAT_FILE_INFO));
 	if (!FileHandle)
