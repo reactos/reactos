@@ -151,7 +151,7 @@ typedef struct tagHEAP
     SUBHEAP          subheap;       /* First sub-heap */
     struct list      entry;         /* Entry in process heap list */
     RTL_CRITICAL_SECTION critSection; /* Critical section for serialization */
-    FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS] DECLSPEC_ALIGN(8);  /* Free lists */
+    DECLSPEC_ALIGN(8) FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS];  /* Free lists */
     DWORD            flags;         /* Heap flags */
     DWORD            magic;         /* Magic number */
     PRTL_HEAP_COMMIT_ROUTINE commitRoutine;
