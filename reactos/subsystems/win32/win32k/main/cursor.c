@@ -114,6 +114,13 @@ RosUserSetCursor( ICONINFO* IconInfoUnsafe )
     ICONINFO IconInfo;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    /* Special case for removing a pointer */
+    if (!IconInfoUnsafe)
+    {
+        GreSetCursor(NULL, &CursorInfo);
+        return;
+    }
+
     _SEH2_TRY
     {
         ProbeForRead(IconInfoUnsafe, sizeof(ICONINFO), 1);
