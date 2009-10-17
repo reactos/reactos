@@ -271,13 +271,15 @@
 			<file>pnproot.c</file>
 		</directory>
 	</directory>
-	<directory name="kd">
-		<if property="ARCH" value="i386">
-			<directory name="i386">
-				<file>kdmemsup.c</file>
-			</directory>
-		</if>
-	</directory>
+	<if property="KDBG" value="1">
+		<directory name="kd">
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>kdmemsup.c</file>
+				</directory>
+			</if>
+		</directory>
+	</if>
 	<if property="_WINKD_" value="0">
 		<directory name="kdbg">
 			<if property="ARCH" value="i386">

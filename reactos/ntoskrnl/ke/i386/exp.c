@@ -928,11 +928,19 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* User mode exception, was it first-chance? */
         if (FirstChance)
         {
-            /* Make sure a debugger is present, and ignore user-mode if requested */
-            if ((KiDebugRoutine) &&
-                (!(PsGetCurrentProcess()->DebugPort)))
+            /* 
+             * Break into the kernel debugger unless a user mode debugger
+             * is present or user mode exceptions are ignored, unless this is
+             * a breakpoint or a debug service in which case we have to
+             * handle it.
+             */
+            if ((!(PsGetCurrentProcess()->DebugPort) &&
+                 !(KdIgnoreUmExceptions)) ||
+                 (KdIsThisAKdTrap(ExceptionRecord,
+                                  &Context,
+                                  PreviousMode)))
             {
-                /* Call the debugger */
+                /* Call the kernel debugger */
                 if (KiDebugRoutine(TrapFrame,
                                    ExceptionFrame,
                                    ExceptionRecord,
@@ -946,7 +954,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             }
 
             /* Forward exception to user mode debugger */
-            if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) goto Exit;
+            if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) return;
 
             /* Set up the user-stack */
 DispatchToUser:
@@ -1032,12 +1040,12 @@ DispatchToUser:
         if (DbgkForwardException(ExceptionRecord, TRUE, TRUE))
         {
             /* Handled, get out */
-            goto Exit;
+            return;
         }
         else if (DbgkForwardException(ExceptionRecord, FALSE, TRUE))
         {
             /* Handled, get out */
-            goto Exit;
+            return;
         }
 
         /* 3rd strike, kill the process */
@@ -1061,7 +1069,6 @@ Handled:
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);
-Exit:
     return;
 }
 

@@ -68,8 +68,8 @@ NTAPI
 KdpSysReadBusData(IN ULONG BusDataType,
                   IN ULONG BusNumber,
                   IN ULONG SlotNumber,
-                  IN PVOID Buffer,
                   IN ULONG Offset,
+                  IN PVOID Buffer,
                   IN ULONG Length,
                   OUT PULONG ActualLength)
 {
@@ -83,8 +83,8 @@ NTAPI
 KdpSysWriteBusData(IN ULONG BusDataType,
                    IN ULONG BusNumber,
                    IN ULONG SlotNumber,
-                   IN PVOID Buffer,
                    IN ULONG Offset,
+                   IN PVOID Buffer,
                    IN ULONG Length,
                    OUT PULONG ActualLength)
 {

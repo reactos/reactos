@@ -12,9 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#undef UNIMPLEMENTED
-#define UNIMPLEMENTED KdpDprintf("%s is unimplemented\n", __FUNCTION__)
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -148,14 +145,21 @@ NTAPI
 KdpSysReadBusData(IN ULONG BusDataType,
                   IN ULONG BusNumber,
                   IN ULONG SlotNumber,
-                  IN PVOID Buffer,
                   IN ULONG Offset,
+                  IN PVOID Buffer,
                   IN ULONG Length,
                   OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    /* Just forward to HAL */
+    *ActualLength = HalGetBusDataByOffset(BusDataType,
+                                          BusNumber,
+                                          SlotNumber,
+                                          Buffer,
+                                          Offset,
+                                          Length);
+
+    /* Return status */
+    return (*ActualLength != 0) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -163,14 +167,21 @@ NTAPI
 KdpSysWriteBusData(IN ULONG BusDataType,
                    IN ULONG BusNumber,
                    IN ULONG SlotNumber,
-                   IN PVOID Buffer,
                    IN ULONG Offset,
+                   IN PVOID Buffer,
                    IN ULONG Length,
                    OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    /* Just forward to HAL */
+    *ActualLength = HalSetBusDataByOffset(BusDataType,
+                                          BusNumber,
+                                          SlotNumber,
+                                          Buffer,
+                                          Offset,
+                                          Length);
+
+    /* Return status */
+    return (*ActualLength != 0) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -185,7 +196,7 @@ KdpSysReadControlSpace(IN ULONG Processor,
     ULONG RealLength;
 
     /* Make sure that this is a valid request */
-    if (((ULONG)BaseAddress < sizeof(KPROCESSOR_STATE)) &&
+    if ((BaseAddress < sizeof(KPROCESSOR_STATE)) &&
         (Processor < KeNumberProcessors))
     {
         /* Get the actual length */
@@ -223,7 +234,7 @@ KdpSysWriteControlSpace(IN ULONG Processor,
     PVOID ControlStart;
 
     /* Make sure that this is a valid request */
-    if ((((ULONG)BaseAddress + Length) <= sizeof(KPROCESSOR_STATE)) &&
+    if (((BaseAddress + Length) <= sizeof(KPROCESSOR_STATE)) &&
         (Processor < KeNumberProcessors))
     {
         /* Set the proper address */
@@ -256,9 +267,75 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
                   IN ULONG DataSize,
                   OUT PULONG ActualDataSize)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
+
+    /* Verify parameters */
+    if ((InterfaceType != Isa) ||
+        (BusNumber != 0) ||
+        (AddressSpace != 1))
+    {
+        /* Fail, we don't support this */
+        *ActualDataSize = 0;
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Check the size */
+    switch (DataSize)
+    {
+        case sizeof(UCHAR):
+
+            /* Read 1 byte */
+            *(PUCHAR)DataValue =
+                READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)IoAddress);
+            *ActualDataSize = sizeof(UCHAR);
+            Status = STATUS_SUCCESS;
+            break;
+
+        case sizeof(USHORT):
+
+            /* Make sure the address is aligned */
+            if ((IoAddress & (sizeof(USHORT) - 1)) != 0)
+            {
+                /* It isn't, bail out */
+                *ActualDataSize = 0;
+                Status = STATUS_DATATYPE_MISALIGNMENT;
+                break;
+            }
+
+            /* Read 2 bytes */
+            *(PUSHORT)DataValue =
+                READ_PORT_USHORT((PUSHORT)(ULONG_PTR)IoAddress);
+            *ActualDataSize = sizeof(USHORT);
+            Status = STATUS_SUCCESS;
+            break;
+
+        case sizeof(ULONG):
+
+            /* Make sure the address is aligned */
+            if ((IoAddress & (sizeof(ULONG) - 1)) != 0)
+            {
+                /* It isn't, bail out */
+                *ActualDataSize = 0;
+                Status = STATUS_DATATYPE_MISALIGNMENT;
+                break;
+            }
+
+            /* Read 4 bytes */
+            *(PULONG)DataValue =
+                READ_PORT_ULONG((PULONG)(ULONG_PTR)IoAddress);
+            *ActualDataSize = sizeof(ULONG);
+            Status = STATUS_SUCCESS;
+            break;
+
+        default:
+
+            /* Invalid size, fail */
+            *ActualDataSize = 0;
+            Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
@@ -271,16 +348,81 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
                    IN ULONG DataSize,
                    OUT PULONG ActualDataSize)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
+
+    /* Verify parameters */
+    if ((InterfaceType != Isa) ||
+        (BusNumber != 0) ||
+        (AddressSpace != 1))
+    {
+        /* Fail, we don't support this */
+        *ActualDataSize = 0;
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Check the size */
+    switch (DataSize)
+    {
+        case sizeof(UCHAR):
+
+            /* Write 1 byte */
+            WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)IoAddress,
+                             *(PUCHAR)DataValue);
+            *ActualDataSize = sizeof(UCHAR);
+            Status = STATUS_SUCCESS;
+            break;
+
+        case sizeof(USHORT):
+
+            /* Make sure the address is aligned */
+            if ((IoAddress & (sizeof(USHORT) - 1)) != 0)
+            {
+                /* It isn't, bail out */
+                *ActualDataSize = 0;
+                Status = STATUS_DATATYPE_MISALIGNMENT;
+                break;
+            }
+
+            /* Write 2 bytes */
+            WRITE_PORT_USHORT((PUSHORT)(ULONG_PTR)IoAddress,
+                             *(PUSHORT)DataValue);
+            *ActualDataSize = sizeof(USHORT);
+            Status = STATUS_SUCCESS;
+            break;
+
+        case sizeof(ULONG):
+
+            /* Make sure the address is aligned */
+            if ((IoAddress & (sizeof(ULONG) - 1)) != 0)
+            {
+                /* It isn't, bail out */
+                *ActualDataSize = 0;
+                Status = STATUS_DATATYPE_MISALIGNMENT;
+                break;
+            }
+
+            /* Write 4 bytes */
+            WRITE_PORT_ULONG((PULONG)(ULONG_PTR)IoAddress,
+                             *(PULONG)DataValue);
+            *ActualDataSize = sizeof(ULONG);
+            Status = STATUS_SUCCESS;
+            break;
+
+        default:
+
+            /* Invalid size, fail */
+            *ActualDataSize = 0;
+            Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
 NTAPI
 KdpSysCheckLowMemory(IN ULONG Flags)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    /* Stubbed as we don't support PAE */
     return STATUS_UNSUCCESSFUL;
 }

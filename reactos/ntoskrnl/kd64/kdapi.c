@@ -602,7 +602,7 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         else
         {
             /* SMP not yet handled */
-            KdpDprintf("SMP UNHANDLED\n");
+            KdpDprintf("KdpGetContext: SMP UNHANDLED\n");
             ControlStart = NULL;
             while (TRUE);
         }
@@ -653,7 +653,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         else
         {
             /* SMP not yet handled */
-            KdpDprintf("SMP UNHANDLED\n");
+            KdpDprintf("KdpSetContext: SMP UNHANDLED\n");
             ControlStart = NULL;
             while (TRUE);
         }
@@ -770,8 +770,8 @@ KdpGetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = KdpSysReadBusData(GetBusData->BusDataType,
                                             GetBusData->BusNumber,
                                             GetBusData->SlotNumber,
-                                            Data->Buffer,
                                             GetBusData->Offset,
+                                            Data->Buffer,
                                             Length,
                                             &Length);
 
@@ -803,8 +803,8 @@ KdpSetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = KdpSysWriteBusData(SetBusData->BusDataType,
                                              SetBusData->BusNumber,
                                              SetBusData->SlotNumber,
-                                             Data->Buffer,
                                              SetBusData->Offset,
+                                             Data->Buffer,
                                              SetBusData->Length,
                                              &Length);
 
@@ -1476,6 +1476,22 @@ KdpQueryPerformanceCounter(IN PKTRAP_FRAME TrapFrame)
     return KeQueryPerformanceCounter(NULL);
 }
 
+NTSTATUS
+NTAPI
+KdpAllowDisable(VOID)
+{
+    /* Check if we are on MP */
+    if (KeNumberProcessors > 1)
+    {
+        /* TODO */
+        KdpDprintf("KdpAllowDisable: SMP UNHANDLED\n");
+        while (TRUE);
+    }
+
+    /* Allow disable */
+    return STATUS_SUCCESS;
+}
+
 BOOLEAN
 NTAPI
 KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
@@ -1575,6 +1591,13 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
     OldIrql = PASSIVE_LEVEL;
 #endif
 
+    /* Check if enabling the debugger is blocked */
+    if (KdBlockEnable)
+    {
+        /* It is, fail the enable */
+        return STATUS_ACCESS_DENIED;
+    }
+
     /* Check if we need to acquire the lock */
     if (NeedLock)
     {
@@ -1592,10 +1615,21 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
             /* Do the unlock */
             KeLowerIrql(OldIrql);
             KdpPortUnlock();
-        }
 
-        /* Fail: We're already enabled */
-        return STATUS_INVALID_PARAMETER;
+            /* Fail: We're already enabled */
+            return STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            /*
+             * This can only happen if we are called from a bugcheck
+             * and were never initialized, so initialize the debugger now.
+             */
+            KdInitSystem(0, NULL);
+
+            /* Return success since we initialized */
+            return STATUS_SUCCESS;
+        }
     }
 
     /* Decrease the disable count */
@@ -1622,6 +1656,98 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
+{
+    KIRQL OldIrql;
+    NTSTATUS Status;
+
+#if defined(__GNUC__)
+    /* Make gcc happy */
+    OldIrql = PASSIVE_LEVEL;
+#endif
+
+    /*
+     * If enabling the debugger is blocked
+     * then there is nothing to disable (duh)
+     */
+    if (KdBlockEnable)
+    {
+        /* Fail */
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Check if we need to acquire the lock */
+    if (NeedLock)
+    {
+        /* Lock the port */
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+        KdpPortLock();
+    }
+
+    /* Check if we're not disabled */
+    if (!KdDisableCount)
+    {
+        /* Check if the debugger was never actually initialized */
+        if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
+        {
+            /* It wasn't, so don't re-enable it later */
+            KdPreviouslyEnabled = FALSE;
+        }
+        else
+        {
+            /* It was, so we will re-enable it later */
+            KdPreviouslyEnabled = TRUE;
+        }
+
+        /* Check if we were called from the exported API and are enabled */
+        if ((NeedLock) && (KdPreviouslyEnabled))
+        {
+            /* Check if it is safe to disable the debugger */
+            Status = KdpAllowDisable();
+            if (!NT_SUCCESS(Status))
+            {
+                /* Release the lock and fail */
+                KeLowerIrql(OldIrql);
+                KdpPortUnlock();
+                return Status;
+            }
+        }
+
+        /* Only disable the debugger if it is enabled */
+        if (KdDebuggerEnabled)
+        {
+            /*
+             * Disable the debugger; suspend breakpoints
+             * and reset the debug stub
+             */
+            KdpSuspendAllBreakPoints();
+            KiDebugRoutine = KdpStub;
+
+            /* We are disabled now */
+            KdDebuggerEnabled = FALSE;
+#undef KdDebuggerEnabled
+            SharedUserData->KdDebuggerEnabled = FALSE;
+#define KdDebuggerEnabled _KdDebuggerEnabled
+        }
+     }
+
+    /* Increment the disable count */
+    KdDisableCount++;
+
+    /* Check if we had locked the port before */
+    if (NeedLock)
+    {
+        /* Yes, now unlock it */
+        KeLowerIrql(OldIrql);
+        KdpPortUnlock();
+    }
+
+    /* We're done */
+    return STATUS_SUCCESS;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -1632,9 +1758,18 @@ NTAPI
 KdEnableDebugger(VOID)
 {
     /* Use the internal routine */
-    KdpDprintf("KdEnableDebugger called\n");
-    while (TRUE);
     return KdEnableDebuggerWithLock(TRUE);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KdDisableDebugger(VOID)
+{
+    /* Use the internal routine */
+    return KdDisableDebuggerWithLock(TRUE);
 }
 
 /*
@@ -1684,17 +1819,6 @@ KdPowerTransition(IN DEVICE_POWER_STATE NewState)
 /*
  * @unimplemented
  */
-NTSTATUS
-NTAPI
-KdDisableDebugger(VOID)
-{
-    /* HACK */
-    return STATUS_SUCCESS;
-}
-
-/*
- * @unimplemented
- */
 BOOLEAN
 NTAPI
 KdRefreshDebuggerNotPresent(VOID)
@@ -1721,4 +1845,3 @@ NtSetDebugFilterState(ULONG ComponentId,
     /* HACK */
     return STATUS_SUCCESS;
 }
-

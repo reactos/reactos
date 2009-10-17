@@ -22,6 +22,7 @@ extern BOOLEAN _KdDebuggerEnabled;
 extern BOOLEAN _KdDebuggerNotPresent;
 extern BOOLEAN KdBreakAfterSymbolLoad;
 extern BOOLEAN KdPitchDebugger;
+extern BOOLEAN KdIgnoreUmExceptions;
 
 BOOLEAN
 NTAPI
@@ -131,6 +132,14 @@ KD_CONTINUE_TYPE
     PEXCEPTION_RECORD ExceptionRecord,
     PCONTEXT Context,
     PKTRAP_FRAME TrapFrame
+);
+
+BOOLEAN
+NTAPI
+KdIsThisAKdTrap(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN KPROCESSOR_MODE PreviousMode
 );
 
 /* INIT ROUTINES *************************************************************/

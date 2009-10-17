@@ -18,8 +18,9 @@ BOOLEAN KdEnteredDebugger = FALSE;
 BOOLEAN KdDebuggerNotPresent = TRUE;
 BOOLEAN KiEnableTimerWatchdog = FALSE;
 BOOLEAN KdBreakAfterSymbolLoad = FALSE;
-BOOLEAN KdpBreakPending;
+BOOLEAN KdpBreakPending = FALSE;
 BOOLEAN KdPitchDebugger = TRUE;
+BOOLEAN KdIgnoreUmExceptions = FALSE;
 VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct
@@ -198,6 +199,16 @@ KdpCallGdb(IN PKTRAP_FRAME TrapFrame,
 
     /* Debugger handled it */
     return TRUE;
+}
+
+BOOLEAN
+NTAPI
+KdIsThisAKdTrap(IN PEXCEPTION_RECORD ExceptionRecord,
+                IN PCONTEXT Context,
+                IN KPROCESSOR_MODE PreviousMode)
+{
+    /* KDBG has its own mechanism for ignoring user mode exceptions */
+    return FALSE;
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/

@@ -289,3 +289,24 @@ KdpStub(IN PKTRAP_FRAME TrapFrame,
         return FALSE;
     }
 }
+
+BOOLEAN
+NTAPI
+KdIsThisAKdTrap(IN PEXCEPTION_RECORD ExceptionRecord,
+                IN PCONTEXT Context,
+                IN KPROCESSOR_MODE PreviousMode)
+{
+    /* Check if this is a breakpoint or a valid debug service */
+    if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
+        (ExceptionRecord->NumberParameters > 0) &&
+        (ExceptionRecord->ExceptionInformation[0] != BREAKPOINT_BREAK))
+    {
+        /* Then we have to handle it */
+        return TRUE;
+    }
+    else
+    {
+        /* We don't have to handle it */
+        return FALSE;
+    }
+}

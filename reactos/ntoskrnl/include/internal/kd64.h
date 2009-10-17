@@ -72,6 +72,17 @@ KdUpdateDataBlock(
 );
 
 //
+// Determines if the kernel debugger must handle a particular trap
+//
+BOOLEAN
+NTAPI
+KdIsThisAKdTrap(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN KPROCESSOR_MODE PreviousMode
+);
+
+//
 // Multi-Processor Switch Support
 //
 BOOLEAN
@@ -147,7 +158,7 @@ KdpPollBreakInWithPortLock(
 );
 
 //
-// Debugger Enable, Enter and Exit
+// Debugger Enter, Exit, Enable and Disable
 //
 BOOLEAN
 NTAPI
@@ -165,6 +176,12 @@ KdExitDebugger(
 NTSTATUS
 NTAPI
 KdEnableDebuggerWithLock(
+    IN BOOLEAN NeedLock
+);
+
+NTSTATUS
+NTAPI
+KdDisableDebuggerWithLock(
     IN BOOLEAN NeedLock
 );
 
@@ -242,10 +259,10 @@ KdpReportExceptionStateChange(
 //
 // Breakpoint Support
 //
-VOID
+ULONG
 NTAPI
-KdpRestoreAllBreakpoints(
-    VOID
+KdpAddBreakpoint(
+    IN PVOID Address
 );
 
 BOOLEAN
@@ -261,10 +278,22 @@ KdpDeleteBreakpointRange(
     IN PVOID Limit
 );
 
-ULONG
+VOID
 NTAPI
-KdpAddBreakpoint(
-    IN PVOID Address
+KdpSuspendBreakPoint(
+    IN ULONG BpEntry
+);
+
+VOID
+NTAPI
+KdpRestoreAllBreakpoints(
+    VOID
+);
+
+VOID
+NTAPI
+KdpSuspendAllBreakPoints(
+    VOID
 );
 
 //
@@ -323,8 +352,8 @@ KdpSysReadBusData(
     IN ULONG BusDataType,
     IN ULONG BusNumber,
     IN ULONG SlotNumber,
-    IN PVOID Buffer,
     IN ULONG Offset,
+    IN PVOID Buffer,
     IN ULONG Length,
     OUT PULONG ActualLength
 );
@@ -335,8 +364,8 @@ KdpSysWriteBusData(
     IN ULONG BusDataType,
     IN ULONG BusNumber,
     IN ULONG SlotNumber,
-    IN PVOID Buffer,
     IN ULONG Offset,
+    IN PVOID Buffer,
     IN ULONG Length,
     OUT PULONG ActualLength
 );
@@ -428,6 +457,8 @@ extern BOOLEAN KdPitchDebugger;
 extern BOOLEAN _KdDebuggerNotPresent;
 extern BOOLEAN _KdDebuggerEnabled;
 extern BOOLEAN KdAutoEnableOnEvent;
+extern BOOLEAN KdBlockEnable;
+extern BOOLEAN KdIgnoreUmExceptions;
 extern BOOLEAN KdPreviouslyEnabled;
 extern BOOLEAN KdpDebuggerStructuresInitialized;
 extern BOOLEAN KdEnteredDebugger;

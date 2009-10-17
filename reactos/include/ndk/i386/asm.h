@@ -527,6 +527,7 @@ Author:
 // NTSTATUS, Bugcheck Codes and Debug Codes
 //
 #ifdef __ASM__
+#define STATUS_SUCCESS                          0x00000000
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
 #define STATUS_IN_PAGE_ERROR                    0xC0000006
 #define STATUS_GUARD_PAGE_VIOLATION             0x80000001
