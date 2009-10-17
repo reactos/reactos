@@ -181,10 +181,11 @@ void DIALOG_EnableOwner( HWND hOwner )
     if (hOwner)
         hOwner = GetAncestor( hOwner, GA_ROOT );
     if (!hOwner) return;
-        EnableWindow( hOwner, TRUE );
+    EnableWindow( hOwner, TRUE );
 }
 
- /***********************************************************************
+
+/***********************************************************************
  *           DIALOG_DisableOwner
  *
  * Helper function for modal dialogs to disable the
@@ -205,7 +206,7 @@ BOOL DIALOG_DisableOwner( HWND hOwner )
         return FALSE;
 }
 
- /***********************************************************************
+/***********************************************************************
  *           DIALOG_GetControl32
  *
  * Return the class and text of the control pointed to by ptr,
@@ -303,10 +304,11 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
     p++;
 
     /* Next control is on dword boundary */
-    return (const WORD *)((((int)p) + 3) & ~3);
+    return (const WORD *)(((UINT_PTR)p + 3) & ~3);
 }
 
- /***********************************************************************
+
+/***********************************************************************
  *           DIALOG_CreateControls32
  *
  * Create the control windows for a dialog.
@@ -645,9 +647,9 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     /* Get the font name */
 
     result->pointSize = 0;
+    result->faceName = NULL;
     result->weight = FW_DONTCARE;
     result->italic = FALSE;
-    result->faceName = NULL;
 
     if (result->style & DS_SETFONT)
     {
@@ -660,18 +662,18 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
          */
         if (result->pointSize == 0x7fff)
         {
-           /* We could call SystemParametersInfo here, but then we'd have
-            * to convert from pixel size to point size (which can be
-            * imprecise).
-            */
+            /* We could call SystemParametersInfo here, but then we'd have
+             * to convert from pixel size to point size (which can be
+             * imprecise).
+             */
             TRACE(" FONT: Using message box font\n");
         }
         else
         {
             if (result->dialogEx)
             {
-               result->weight = GET_WORD(p); p++;
-               result->italic = LOBYTE(GET_WORD(p)); p++;
+                result->weight = GET_WORD(p); p++;
+                result->italic = LOBYTE(GET_WORD(p)); p++;
             }
             result->faceName = (LPCWSTR)p;
             p += wcslen( result->faceName ) + 1;
@@ -726,7 +728,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
         /* If no saved focus control exists, set focus to the first visible,
            non-disabled, WS_TABSTOP control in the dialog */
         infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
-       if (!IsWindow( infoPtr->hwndFocus )) return;
+        if (!IsWindow( infoPtr->hwndFocus )) return;
     }
     DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
 
@@ -783,20 +785,19 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             ncMetrics.cbSize = sizeof(NONCLIENTMETRICSW);
             if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
                                       sizeof(NONCLIENTMETRICSW), &ncMetrics, 0))
-           {
-               hUserFont = CreateFontIndirectW( &ncMetrics.lfMessageFont );
-           }
+            {
+                hUserFont = CreateFontIndirectW( &ncMetrics.lfMessageFont );
+            }
         }
-        else  
+        else
         {
-          /* We convert the size to pixels and then make it -ve.  This works
-           * for both +ve and -ve template.pointSize */
-          int pixels;
-          pixels = MulDiv(template.pointSize, GetDeviceCaps(dc , LOGPIXELSY), 72);
-          hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
-                                          template.italic, FALSE, FALSE, DEFAULT_CHARSET, 0, 0,
-                                          PROOF_QUALITY, FF_DONTCARE,
-                                          template.faceName );
+            /* We convert the size to pixels and then make it -ve.  This works
+             * for both +ve and -ve template.pointSize */
+            int pixels = MulDiv(template.pointSize, GetDeviceCaps(dc , LOGPIXELSY), 72);
+            hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
+                                              template.italic, FALSE, FALSE, DEFAULT_CHARSET, 0, 0,
+                                              PROOF_QUALITY, FF_DONTCARE,
+                                              template.faceName );
         }
 
         if (hUserFont)
@@ -840,7 +841,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     {
         HMONITOR monitor = 0;
         MONITORINFO mon_info;
-        
+
         mon_info.cbSize = sizeof(mon_info);
         if (template.style & DS_CENTER)
         {
@@ -947,7 +948,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     dlgInfo->hMenu       = hMenu;
     dlgInfo->xBaseUnit   = xBaseUnit;
     dlgInfo->yBaseUnit   = yBaseUnit;
-    dlgInfo->idResult    = 0;
+    dlgInfo->idResult    = IDOK;
     dlgInfo->flags       = flags;
     /* dlgInfo->hDialogHeap = 0; */
 
@@ -993,6 +994,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
     return 0;
 }
+
 
 /***********************************************************************
  *           DEFDLG_FindDefButton
