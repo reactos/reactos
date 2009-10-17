@@ -173,4 +173,24 @@ FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
     return Fcb;
 }
 
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenExistingDcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Dcb,
+                    IN PACCESS_MASK DesiredAccess,
+                    IN USHORT ShareAccess,
+                    IN ULONG CreateDisposition,
+                    IN BOOLEAN NoEaKnowledge,
+                    IN BOOLEAN DeleteOnClose)
+{
+    IO_STATUS_BLOCK Iosb = {{0}};
+
+    Iosb.Status = STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+
+    return Iosb;
+}
+
 /* EOF */

@@ -87,6 +87,17 @@ FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
              IN PFCB ParentDcb,
              IN FF_FILE *FileHandle);
 
+IO_STATUS_BLOCK NTAPI
+FatiOpenExistingDcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Dcb,
+                    IN PACCESS_MASK DesiredAccess,
+                    IN USHORT ShareAccess,
+                    IN ULONG CreateDisposition,
+                    IN BOOLEAN NoEaKnowledge,
+                    IN BOOLEAN DeleteOnClose);
+
 /*  --------------------------------------------------------  create.c  */
 
 NTSTATUS NTAPI
@@ -295,6 +306,23 @@ FatCreateFcb(
     IN PVCB Vcb,
     IN PFCB ParentDcb,
     IN FF_FILE *FileHandle);
+
+IO_STATUS_BLOCK NTAPI
+FatiOpenExistingFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Fcb,
+                    IN PACCESS_MASK DesiredAccess,
+                    IN USHORT ShareAccess,
+                    IN ULONG AllocationSize,
+                    IN PFILE_FULL_EA_INFORMATION EaBuffer,
+                    IN ULONG EaLength,
+                    IN UCHAR FileAttributes,
+                    IN ULONG CreateDisposition,
+                    IN BOOLEAN NoEaKnowledge,
+                    IN BOOLEAN DeleteOnClose,
+                    IN BOOLEAN OpenedAsDos,
+                    OUT PBOOLEAN OplockPostIrp);
 
 PFCB NTAPI
 FatFindFcb(PFAT_IRP_CONTEXT IrpContext,

@@ -353,10 +353,11 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     IO_STATUS_BLOCK Iosb;
     PIO_STACK_LOCATION IrpSp;
     BOOLEAN EndBackslash = FALSE, OpenedAsDos;
-    UNICODE_STRING RemainingPart, FirstName, NextName;
+    UNICODE_STRING RemainingPart, FirstName, NextName, FileNameUpcased;
     OEM_STRING AnsiFirstName;
     FF_ERROR FfError;
     TYPE_OF_OPEN TypeOfOpen;
+    BOOLEAN OplockPostIrp = FALSE;
 
     Iosb.Status = STATUS_SUCCESS;
 
@@ -684,10 +685,22 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
                                          &OpenedAsDos);
                 }
 
-                /* Check if we found anything */
+                /* If nothing found - try with unicode */
                 if (!NextFcb && Fcb->Dcb.SplayLinksUnicode)
                 {
-                    ASSERT(FALSE);
+                    FileNameUpcased.Buffer = FsRtlAllocatePool(PagedPool, FirstName.Length);
+                    FileNameUpcased.Length = 0;
+                    FileNameUpcased.MaximumLength = FirstName.Length;
+
+                    /* Downcase and then upcase to normalize it */
+                    Status = RtlDowncaseUnicodeString(&FileNameUpcased, &FirstName, FALSE);
+                    Status = RtlUpcaseUnicodeString(&FileNameUpcased, &FileNameUpcased, FALSE);
+
+                    /* Try to find FCB again using unicode name */
+                    NextFcb = FatFindFcb(IrpContext,
+                                         &Fcb->Dcb.SplayLinksUnicode,
+                                        (PSTRING)&FileNameUpcased,
+                                         &OpenedAsDos);
                 }
 
                 /* Move to the next FCB */
@@ -729,8 +742,116 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         /* We have a valid FCB now */
         if (!RemainingPart.Length)
         {
-            DPRINT1("It's possible to open an existing FCB\n");
-            ASSERT(FALSE);
+            /* Check for target dir open */
+            if (OpenTargetDirectory)
+            {
+                DPRINT1("Opening target dir is missing\n");
+                ASSERT(FALSE);
+            }
+
+            /* Check this FCB's type */
+            if (FatNodeType(Fcb) == FAT_NTC_ROOT_DCB ||
+                FatNodeType(Fcb) == FAT_NTC_DCB)
+            {
+                /* Open a directory */
+                if (NonDirectoryFile)
+                {
+                    /* Forbidden */
+                    Iosb.Status = STATUS_FILE_IS_A_DIRECTORY;
+                    ASSERT(FALSE);
+                    return Iosb.Status;
+                }
+
+                /* Open existing DCB */
+                Iosb = FatiOpenExistingDcb(IrpContext,
+                                           FileObject,
+                                           Vcb,
+                                           Fcb,
+                                           DesiredAccess,
+                                           ShareAccess,
+                                           CreateDisposition,
+                                           NoEaKnowledge,
+                                           DeleteOnClose);
+
+                /* Save information */
+                Irp->IoStatus.Information = Iosb.Information;
+
+                /* Unlock VCB */
+                FatReleaseVcb(IrpContext, Vcb);
+
+                /* Complete the request */
+                FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+
+                return Iosb.Status;
+            }
+            else if (FatNodeType(Fcb) == FAT_NTC_FCB)
+            {
+                /* Open a file */
+                if (OpenDirectory)
+                {
+                    /* Forbidden */
+                    Iosb.Status = STATUS_NOT_A_DIRECTORY;
+                    ASSERT(FALSE);
+                    return Iosb.Status;
+                }
+
+                /* Check for trailing backslash */
+                if (EndBackslash)
+                {
+                    /* Forbidden */
+                    Iosb.Status = STATUS_OBJECT_NAME_INVALID;
+                    ASSERT(FALSE);
+                    return Iosb.Status;
+                }
+
+                Iosb = FatiOpenExistingFcb(IrpContext,
+                                           FileObject,
+                                           Vcb,
+                                           Fcb,
+                                           DesiredAccess,
+                                           ShareAccess,
+                                           AllocationSize,
+                                           EaBuffer,
+                                           EaLength,
+                                           FileAttributes,
+                                           CreateDisposition,
+                                           NoEaKnowledge,
+                                           DeleteOnClose,
+                                           OpenedAsDos,
+                                           &OplockPostIrp);
+
+                /* Check if it's pending */
+                if (Iosb.Status != STATUS_PENDING)
+                {
+                    /* In case of success set cache supported flag */
+                    if (NT_SUCCESS(Iosb.Status) && !NoIntermediateBuffering)
+                    {
+                        SetFlag(FileObject->Flags, FO_CACHE_SUPPORTED);
+                    }
+
+                    /* Save information */
+                    Irp->IoStatus.Information = Iosb.Information;
+
+                    /* Unlock VCB */
+                    FatReleaseVcb(IrpContext, Vcb);
+
+                    /* Complete the request */
+                    FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+
+                    return Iosb.Status;
+                }
+                else
+                {
+                    /* Queue this IRP */
+                    UNIMPLEMENTED;
+                    ASSERT(FALSE);
+                }
+            }
+            else
+            {
+                /* Unexpected FCB type */
+                KeBugCheckEx(/*FAT_FILE_SYSTEM*/0x23, __LINE__, (ULONG_PTR)Fcb, 0, 0);
+            }
         }
 
         /* During parsing we encountered a part which has no attached FCB/DCB.

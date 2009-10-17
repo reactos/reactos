@@ -172,6 +172,32 @@ FatCreateCcb()
     return Ccb;
 }
 
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenExistingFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Fcb,
+                    IN PACCESS_MASK DesiredAccess,
+                    IN USHORT ShareAccess,
+                    IN ULONG AllocationSize,
+                    IN PFILE_FULL_EA_INFORMATION EaBuffer,
+                    IN ULONG EaLength,
+                    IN UCHAR FileAttributes,
+                    IN ULONG CreateDisposition,
+                    IN BOOLEAN NoEaKnowledge,
+                    IN BOOLEAN DeleteOnClose,
+                    IN BOOLEAN OpenedAsDos,
+                    OUT PBOOLEAN OplockPostIrp)
+{
+    IO_STATUS_BLOCK Iosb = {{0}};
+
+    Iosb.Status = STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+
+    return Iosb;
+}
+
 VOID
 NTAPI
 FatGetFcbUnicodeName(IN PFAT_IRP_CONTEXT IrpContext,
