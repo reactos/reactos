@@ -133,9 +133,10 @@ typedef struct _FAT_METHODS {
     PFAT_SETFAT_VALUE_RUN_ROUTINE SetValueRun;
 } FAT_METHODS, *PFAT_METHODS;
 
-#define VCB_STATE_FLAG_LOCKED   0x01
-#define VCB_STATE_FLAG_DIRTY    0x02
-#define VCB_STATE_MOUNTED_DIRTY 0x04
+#define VCB_STATE_FLAG_LOCKED        0x01
+#define VCB_STATE_FLAG_DIRTY         0x02
+#define VCB_STATE_MOUNTED_DIRTY      0x04
+#define VCB_STATE_CREATE_IN_PROGRESS 0x08
 
 typedef enum _VCB_CONDITION
 {
@@ -249,6 +250,8 @@ typedef enum _FCB_CONDITION
 
 #define FCB_STATE_HAS_NAMES        0x01
 #define FCB_STATE_HAS_UNICODE_NAME 0x02
+#define FCB_STATE_PAGEFILE         0x04
+#define FCB_STATE_DELAY_CLOSE      0x08
 
 typedef struct _FCB
 {
@@ -264,7 +267,6 @@ typedef struct _FCB
     ERESOURCE Resource; // nonpaged!
     ERESOURCE PagingIoResource; // nonpaged!
 
-    FILE_LOCK Lock;
     /* First cluster in the fat allocation chain */
     ULONG FirstClusterOfFile;
     /* A list of all FCBs of that DCB */
@@ -305,6 +307,13 @@ typedef struct _FCB
     PKEVENT OutstandingAsyncEvent;
     union
     {
+        struct
+        {
+            /* File and Op locks */
+            FILE_LOCK Lock;
+            OPLOCK Oplock;
+        } Fcb;
+
         struct
         {
             /* A list of all FCBs/DCBs opened under this DCB */

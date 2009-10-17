@@ -35,6 +35,15 @@
     ExReleaseResourceLite(&(FatGlobalData.Resource)); \
 }
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeStringToCountedOemString(
+    IN OUT POEM_STRING DestinationString,
+    IN PCUNICODE_STRING SourceString,
+    IN BOOLEAN AllocateDestinationString
+);
+
 
 /*  ------------------------------------------------------  shutdown.c  */
 
@@ -211,6 +220,14 @@ FatReadBlocks(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count,
 NTSTATUS NTAPI
 FatLockControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+VOID NTAPI
+FatOplockComplete(IN PVOID Context,
+                  IN PIRP Irp);
+
+VOID NTAPI
+FatPrePostIrp(IN PVOID Context,
+              IN PIRP Irp);
+
 /*  ---------------------------------------------------------  fsctl.c  */
 
 NTSTATUS NTAPI
@@ -220,6 +237,10 @@ FatFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS NTAPI FatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS NTAPI FatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+/*  ---------------------------------------------------------  fullfat.c  */
+
+FF_FILE *FF_OpenW(FF_IOMAN *pIoman, PUNICODE_STRING pathW, FF_T_UINT8 Mode, FF_ERROR *pError);
 
 /*  ---------------------------------------------------------  iface.c  */
 

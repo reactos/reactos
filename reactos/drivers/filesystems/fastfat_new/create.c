@@ -11,16 +11,6 @@
 #define NDEBUG
 #include "fastfat.h"
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeStringToCountedOemString(
-    IN OUT POEM_STRING DestinationString,
-    IN PCUNICODE_STRING SourceString,
-    IN BOOLEAN AllocateDestinationString
-);
-
-
 /* FUNCTIONS *****************************************************************/
 
 IO_STATUS_BLOCK
