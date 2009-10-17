@@ -106,7 +106,7 @@ extern "C" {
 #endif
 typedef char CHAR;
 typedef short SHORT;
-#ifndef __ROS_LONG64__
+#if !defined(__ROS_LONG64__) || defined(_M_AMD64)
 typedef long LONG;
 #else
 typedef int LONG;
@@ -3278,8 +3278,8 @@ typedef union _SLIST_HEADER {
     ULONGLONG Alignment;
     struct {
         SLIST_ENTRY Next;
-        WORD Depth;
-        WORD Sequence;
+        USHORT Depth;
+        USHORT Sequence;
     } DUMMYSTRUCTNAME;
 } SLIST_HEADER, *PSLIST_HEADER;
 #endif
