@@ -50,6 +50,8 @@
 
 PPHYSICAL_PAGE MmPfnDatabase;
 
+ULONG MmAvailablePages;
+
 /* List of pages allocated to the MC_USER Consumer */
 static LIST_ENTRY UserPageListHead;
 /* List of pages zeroed by the ZPW (MmZeroPageThreadMain) */
@@ -249,10 +251,9 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             if (Pfn1->Flags.Zero == 0) UnzeroedPageCount--;
                             
                             //
-                            // One less free page, one more system page
+                            // One less free page
                             //
-                            MmStats.NrFreePages--;
-                            MmStats.NrSystemPages++;
+                            MmAvailablePages--;
                             
                             //
                             // This PFN is now a used page, set it up
@@ -465,8 +466,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             //
             // Decrease available pages
             //
-            MmStats.NrSystemPages++;
-            MmStats.NrFreePages--;
+            MmAvailablePages--;
             
             //
             // Save it into the MDL
@@ -523,8 +523,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 //
                 // Decrease available pages
                 //
-                MmStats.NrSystemPages++;
-                MmStats.NrFreePages--;
+                MmAvailablePages--;
                 
                 //
                 // Save this page into the MDL
@@ -698,6 +697,7 @@ MmInitializePageList(VOID)
     PHYSICAL_PAGE UsedPage;
     PMEMORY_ALLOCATION_DESCRIPTOR Md;
     PLIST_ENTRY NextEntry;
+    ULONG NrSystemPages = 0;
 
     /* Initialize the page lists */
     InitializeListHead(&UserPageListHead);
@@ -746,7 +746,7 @@ MmInitializePageList(VOID)
                 InsertTailList(&FreeUnzeroedPageListHead,
                                &MmPfnDatabase[Md->BasePage + i].ListEntry);
                 UnzeroedPageCount++;
-                MmStats.NrFreePages++;
+                MmAvailablePages++;
             }
         }
         else
@@ -756,7 +756,7 @@ MmInitializePageList(VOID)
             {
                 /* Everything else is used memory */
                 MmPfnDatabase[Md->BasePage + i] = UsedPage;
-                MmStats.NrSystemPages++;
+                NrSystemPages++;
             }
         }
     }
@@ -769,13 +769,12 @@ MmInitializePageList(VOID)
 
         /* Mark it as used kernel memory */
         MmPfnDatabase[i] = UsedPage;
-        MmStats.NrSystemPages++;
+        NrSystemPages++;
     }
     
     KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
-    DPRINT("Pages: %x %x\n", MmStats.NrFreePages, MmStats.NrSystemPages);
-    MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
-    MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
+    DPRINT("Pages: %x %x\n", MmAvailablePages, NrSystemPages);
+    MmInitializeBalancer(MmAvailablePages, NrSystemPages);
 }
 
 VOID
@@ -912,8 +911,7 @@ MmDereferencePage(PFN_TYPE Pfn)
    Page->ReferenceCount--;
    if (Page->ReferenceCount == 0)
    {
-      MmStats.NrFreePages++;
-      MmStats.NrSystemPages--;
+      MmAvailablePages++;
       if (Page->Flags.Consumer == MC_USER) RemoveEntryList(&Page->ListEntry);
       if (Page->RmapListHead != (LONG)NULL)
       {
@@ -1028,7 +1026,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
       if (IsListEmpty(&FreeUnzeroedPageListHead))
       {
          /* Check if this allocation is for the PFN DB itself */
-         if (MmStats.NrTotalPages == 0) 
+         if (MmNumberOfPhysicalPages == 0) 
          {
              ASSERT(FALSE);
          }
@@ -1066,8 +1064,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
    PageDescriptor->LockCount = 0;
    PageDescriptor->SavedSwapEntry = SwapEntry;
 
-   MmStats.NrSystemPages++;
-   MmStats.NrFreePages--;
+   MmAvailablePages--;
 
    PfnOffset = PageDescriptor - MmPfnDatabase;
    if ((NeedClear) && (Consumer != MC_SYSTEM))

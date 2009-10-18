@@ -23,7 +23,6 @@ extern PVOID MiNonPagedPoolStart;
 extern ULONG MiNonPagedPoolLength;
 extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
-extern MM_STATS MmStats;
 
 /* FUNCTIONS ***************************************************************/
 

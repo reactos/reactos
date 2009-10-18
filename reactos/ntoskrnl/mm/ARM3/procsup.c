@@ -296,7 +296,7 @@ MmSetMemoryPriorityProcess(IN PEPROCESS Process,
     // Check if we have less then 16MB of Physical Memory
     //
     if ((MmSystemSize == MmSmallSystem) &&
-        (MmStats.NrTotalPages < ((15 * 1024 * 1024) / PAGE_SIZE)))
+        (MmNumberOfPhysicalPages < ((15 * 1024 * 1024) / PAGE_SIZE)))
     {
         //
         // Always use background priority

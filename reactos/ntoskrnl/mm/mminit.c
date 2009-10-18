@@ -50,7 +50,6 @@ MemType[] =
 
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
-MM_STATS MmStats;
 PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
 extern KMUTANT MmSystemLoadLock;
@@ -432,7 +431,7 @@ MmInitSystem(IN ULONG Phase,
 
         /* Setup shared user data settings that NT does as well */
         ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
-        SharedUserData->NumberOfPhysicalPages = MmStats.NrTotalPages;
+        SharedUserData->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
         SharedUserData->LargePageMinimum = 0;
         
         /* For now, we assume that we're always Server */

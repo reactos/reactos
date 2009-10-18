@@ -16,6 +16,7 @@ extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 extern ULONG MmNumberOfPhysicalPages;
 extern ULONG MmLowestPhysicalPage;
 extern ULONG MmHighestPhysicalPage;
+extern ULONG MmAvailablePages;
 
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
@@ -296,19 +297,6 @@ typedef struct _MEMORY_AREA
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
-typedef struct
-{
-    ULONG NrTotalPages;
-    ULONG NrSystemPages;
-    ULONG NrUserPages;
-    ULONG NrFreePages;
-    ULONG NrDirtyPages;
-    ULONG NrLockedPages;
-    ULONG PagingRequestsInLastMinute;
-    ULONG PagingRequestsInLastFiveMinutes;
-    ULONG PagingRequestsInLastFifteenMinutes;
-} MM_STATS;
-
 //
 // These two mappings are actually used by Windows itself, based on the ASSERTS
 //
@@ -379,7 +367,6 @@ typedef struct _MMPFN
 } MMPFN, *PMMPFN;
 
 extern PMMPFN MmPfnDatabase;
-extern MM_STATS MmStats;
 
 typedef struct _MM_PAGEOP
 {
