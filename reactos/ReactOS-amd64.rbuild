@@ -221,9 +221,11 @@
 			<directory name="bzip2">
 				<xi:include href="lib/3rdparty/bzip2/bzip2.rbuild" />
 			</directory>
+			<if property="USERMODE" value="1">
 			<directory name="cardlib">
 				<xi:include href="lib/3rdparty/cardlib/cardlib.rbuild" />
 			</directory>
+			</if>
 			<directory name="expat">
 				<xi:include href="lib/3rdparty/expat/expat.rbuild" />
 			</directory>
