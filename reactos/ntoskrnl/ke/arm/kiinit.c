@@ -187,6 +187,11 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KdInitSystem(0, LoaderBlock);
 
         //
+        // Check for break-in
+        //
+        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+
+        //
         // Cleanup the rest of the processor block array
         //
         for (i = 1; i < MAXIMUM_PROCESSORS; i++) KiProcessorBlock[i] = NULL;
@@ -372,12 +377,12 @@ KiInitializeSystem(IN ULONG Magic,
     //
     // Set global d-cache fill and alignment values
     //
-    if (Pcr->SecondLevelDcacheSize)
+    if (!Pcr->SecondLevelDcacheSize)
     {
         //
         // Use the first level
         //
-        Pcr->DcacheFillSize = Pcr->SecondLevelDcacheSize;
+        Pcr->DcacheFillSize = Pcr->FirstLevelDcacheSize;
     }
     else
     {
@@ -395,12 +400,12 @@ KiInitializeSystem(IN ULONG Magic,
     //
     // Set global i-cache fill and alignment values
     //
-    if (Pcr->SecondLevelIcacheSize)
+    if (!Pcr->SecondLevelIcacheSize)
     {
         //
         // Use the first level
         //
-        Pcr->IcacheFillSize = Pcr->SecondLevelIcacheSize;
+        Pcr->IcacheFillSize = Pcr->FirstLevelIcacheSize;
     }
     else
     {
