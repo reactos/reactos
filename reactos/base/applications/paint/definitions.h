@@ -165,3 +165,5 @@
 
 #define IDS_OPENFILTER  926
 #define IDS_SAVEFILTER  927
+#define IDS_FILESIZE    928
+#define IDS_PRINTRES    929

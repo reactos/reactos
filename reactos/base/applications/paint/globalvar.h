@@ -73,6 +73,10 @@ extern HINSTANCE hProgInstance;
 extern TCHAR filename[256];
 extern TCHAR filepathname[1000];
 extern BOOL isAFile;
+extern int fileSize;
+extern int fileHPPM;
+extern int fileVPPM;
+extern SYSTEMTIME fileTime;
 
 extern BOOL showGrid;
 extern BOOL showMiniature;

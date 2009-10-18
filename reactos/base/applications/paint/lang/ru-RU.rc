@@ -192,4 +192,6 @@ BEGIN
     IDS_TOOLTIP16, "Скругленный прямоугольник"
     IDS_OPENFILTER, "Точечные рисунки (*.bmp;*.dib)\1*.bmp;*.dib\1Все файлы (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24-разрядный рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d bytes"
+    IDS_PRINTRES, "%d x %d pixels per meter"
 END

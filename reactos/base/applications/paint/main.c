@@ -103,6 +103,10 @@ HINSTANCE hProgInstance;
 TCHAR filename[256];
 TCHAR filepathname[1000];
 BOOL isAFile = FALSE;
+int fileSize;
+int fileHPPM = 2834;
+int fileVPPM = 2834;
+SYSTEMTIME fileTime;
 
 BOOL showGrid = FALSE;
 BOOL showMiniature = FALSE;
@@ -338,6 +342,26 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     hBms[0] = CreateDIBWithProperties(imgXRes, imgYRes);
     SelectObject(hDrawingDC, hBms[0]);
     Rectangle(hDrawingDC, 0-1, 0-1, imgXRes+1, imgYRes+1);
+
+    if (lpszArgument[0] != 0)
+    {
+        HBITMAP bmNew = NULL;
+        LoadDIBFromFile(&bmNew, lpszArgument, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+        if (bmNew!=NULL)
+        {
+            TCHAR tempstr[1000];
+            TCHAR resstr[100];
+            insertReversible(bmNew);
+            TCHAR *temp;
+            GetFullPathName(lpszArgument, sizeof(filepathname), filepathname, &temp);
+            _tcscpy(filename, temp);
+            LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
+            _stprintf(tempstr, resstr, filename);
+            SetWindowText(hMainWnd, tempstr);
+            clearHistory();
+            isAFile = TRUE;
+        }
+    }
 
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
     choosecolor.lStructSize     = sizeof(CHOOSECOLOR);

@@ -197,4 +197,6 @@ BEGIN
     IDS_TOOLTIP16, "Rectangle arrondi"
     IDS_OPENFILTER, "Bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Tous les fichiers (*.*)\1*.*\1"
     IDS_SAVEFILTER, "Bitmap 24 bit (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d bytes"
+    IDS_PRINTRES, "%d x %d pixels per meter"
 END

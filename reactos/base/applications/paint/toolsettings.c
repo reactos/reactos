@@ -22,7 +22,7 @@ LRESULT CALLBACK SettingsWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     {
         case WM_VSCROLL:
             {
-                ZoomTo(125<<SendMessage(hTrackbarZoom, TBM_GETPOS, 0, 0));
+                zoomTo(125<<SendMessage(hTrackbarZoom, TBM_GETPOS, 0, 0), 0, 0);
             }
             break;
         case WM_PAINT:

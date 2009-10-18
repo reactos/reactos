@@ -200,6 +200,8 @@ BEGIN
     IDS_TOOLTIP16, "Dreptunghi rotunjit"
     IDS_OPENFILTER, "Fișiere bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
     IDS_SAVEFILTER, "Bitmap pe 24 biți (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d bytes"
+    IDS_PRINTRES, "%d x %d pixels per meter"
 END
 
 #pragma code_page(default)
