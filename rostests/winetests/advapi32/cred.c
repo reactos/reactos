@@ -101,8 +101,8 @@ static void test_CredWriteA(void)
     ret = pCredWriteA(&new_cred, 0);
     if (ret)
     {
-        /* Vista */
-        ok(GetLastError() == ERROR_IO_PENDING,
+        ok(GetLastError() == ERROR_SUCCESS ||
+           GetLastError() == ERROR_IO_PENDING, /* Vista */
            "Expected ERROR_IO_PENDING, got %d\n", GetLastError());
     }
     else
@@ -154,12 +154,13 @@ static void test_CredReadDomainCredentialsA(void)
 
     /* these two tests would crash on both native and Wine. Implementations
      * does not check for NULL output pointers and try to zero them out early */
-#if 0
+if(0)
+{
     ok(!pCredReadDomainCredentialsA(&info, 0, NULL, &creds) &&
             GetLastError() == ERROR_INVALID_PARAMETER, "!\n");
     ok(!pCredReadDomainCredentialsA(&info, 0, &count, NULL) &&
             GetLastError() == ERROR_INVALID_PARAMETER, "!\n");
-#endif
+}
 
     SetLastError(0xdeadbeef);
     ret = pCredReadDomainCredentialsA(NULL, 0, &count, &creds);

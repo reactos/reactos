@@ -28,6 +28,7 @@
 #include "winsvc.h"
 #include "winnls.h"
 #include "lmcons.h"
+#include "aclapi.h"
 
 #include "wine/test.h"
 
@@ -37,6 +38,8 @@ static BOOL (WINAPI *pChangeServiceConfig2A)(SC_HANDLE,DWORD,LPVOID);
 static BOOL (WINAPI *pEnumServicesStatusExA)(SC_HANDLE, SC_ENUM_TYPE, DWORD,
                                              DWORD, LPBYTE, DWORD, LPDWORD,
                                              LPDWORD, LPDWORD, LPCSTR);
+static DWORD (WINAPI *pGetSecurityInfo)(HANDLE, SE_OBJECT_TYPE, SECURITY_INFORMATION,
+                                        PSID*, PSID*, PACL*, PACL*, PSECURITY_DESCRIPTOR*);
 static BOOL (WINAPI *pQueryServiceConfig2A)(SC_HANDLE,DWORD,LPBYTE,DWORD,LPDWORD);
 static BOOL (WINAPI *pQueryServiceConfig2W)(SC_HANDLE,DWORD,LPBYTE,DWORD,LPDWORD);
 static BOOL (WINAPI *pQueryServiceStatusEx)(SC_HANDLE, SC_STATUS_TYPE, LPBYTE,
@@ -48,6 +51,7 @@ static void init_function_pointers(void)
 
     pChangeServiceConfig2A = (void*)GetProcAddress(hadvapi32, "ChangeServiceConfig2A");
     pEnumServicesStatusExA= (void*)GetProcAddress(hadvapi32, "EnumServicesStatusExA");
+    pGetSecurityInfo = (void *)GetProcAddress(hadvapi32, "GetSecurityInfo");
     pQueryServiceConfig2A= (void*)GetProcAddress(hadvapi32, "QueryServiceConfig2A");
     pQueryServiceConfig2W= (void*)GetProcAddress(hadvapi32, "QueryServiceConfig2W");
     pQueryServiceStatusEx= (void*)GetProcAddress(hadvapi32, "QueryServiceStatusEx");
@@ -1743,7 +1747,17 @@ static void test_sequence(void)
         return;
     }
     else
+    {
         ok(svc_handle != NULL, "Could not create the service : %d\n", GetLastError());
+        if ((svc_handle != NULL) && (pGetSecurityInfo != NULL))
+        {
+            PSID sidOwner, sidGroup;
+            PACL dacl, sacl;
+            PSECURITY_DESCRIPTOR pSD;
+            HRESULT retval = pGetSecurityInfo(svc_handle,SE_SERVICE,DACL_SECURITY_INFORMATION,&sidOwner,&sidGroup,&dacl,&sacl,&pSD);
+            todo_wine ok(ERROR_SUCCESS == retval, "Expected GetSecurityInfo to succeed: result %d\n",retval);
+        }
+    }
 
     if (!svc_handle) return;
 

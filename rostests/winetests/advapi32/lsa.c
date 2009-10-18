@@ -41,7 +41,8 @@ static NTSTATUS (WINAPI *pLsaEnumerateAccountRights)(LSA_HANDLE,PSID,PLSA_UNICOD
 static NTSTATUS (WINAPI *pLsaFreeMemory)(PVOID);
 static NTSTATUS (WINAPI *pLsaOpenPolicy)(PLSA_UNICODE_STRING,PLSA_OBJECT_ATTRIBUTES,ACCESS_MASK,PLSA_HANDLE);
 static NTSTATUS (WINAPI *pLsaQueryInformationPolicy)(LSA_HANDLE,POLICY_INFORMATION_CLASS,PVOID*);
-static BOOL     (WINAPI *pConvertSidToStringSidA)(PSID pSid, LPSTR *str);
+static BOOL     (WINAPI *pConvertSidToStringSidA)(PSID,LPSTR*);
+static NTSTATUS (WINAPI *pLsaLookupNames2)(LSA_HANDLE,ULONG,ULONG,PLSA_UNICODE_STRING,PLSA_REFERENCED_DOMAIN_LIST*,PLSA_TRANSLATED_SID2*);
 
 static BOOL init(void)
 {
@@ -53,6 +54,7 @@ static BOOL init(void)
     pLsaOpenPolicy = (void*)GetProcAddress(hadvapi32, "LsaOpenPolicy");
     pLsaQueryInformationPolicy = (void*)GetProcAddress(hadvapi32, "LsaQueryInformationPolicy");
     pConvertSidToStringSidA = (void*)GetProcAddress(hadvapi32, "ConvertSidToStringSidA");
+    pLsaLookupNames2 = (void*)GetProcAddress(hadvapi32, "LsaLookupNames2");
 
     if (pLsaClose && pLsaEnumerateAccountRights && pLsaFreeMemory && pLsaOpenPolicy && pLsaQueryInformationPolicy && pConvertSidToStringSidA)
         return TRUE;
@@ -216,6 +218,139 @@ static void test_lsa(void)
     }
 }
 
+static void get_sid_info(PSID psid, LPSTR *user, LPSTR *dom)
+{
+    static char account[257], domain[257];
+    DWORD user_size, dom_size;
+    SID_NAME_USE use;
+    BOOL ret;
+
+    *user = account;
+    *dom = domain;
+
+    user_size = dom_size = 257;
+    account[0] = domain[0] = 0;
+    ret = LookupAccountSidA(NULL, psid, account, &user_size, domain, &dom_size, &use);
+    ok(ret, "LookupAccountSidA failed %u\n", GetLastError());
+}
+
+static void test_LsaLookupNames2(void)
+{
+    static const WCHAR n1[] = {'L','O','C','A','L',' ','S','E','R','V','I','C','E'};
+    static const WCHAR n2[] = {'N','T',' ','A','U','T','H','O','R','I','T','Y','\\','L','o','c','a','l','S','e','r','v','i','c','e'};
+
+    NTSTATUS status;
+    LSA_HANDLE handle;
+    LSA_OBJECT_ATTRIBUTES attrs;
+    PLSA_REFERENCED_DOMAIN_LIST domains;
+    PLSA_TRANSLATED_SID2 sids;
+    LSA_UNICODE_STRING name[3];
+    LPSTR account, sid_dom;
+
+    if (!pLsaLookupNames2)
+    {
+        win_skip("LsaLookupNames2 not avaliable\n");
+        return;
+    }
+
+    if (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH)
+    {
+        skip("Non-english locale (skipping LsaLookupNames2 tests)\n");
+        return;
+    }
+
+    memset(&attrs, 0, sizeof(attrs));
+    attrs.Length = sizeof(attrs);
+
+    status = pLsaOpenPolicy(NULL, &attrs, POLICY_ALL_ACCESS, &handle);
+    ok(status == STATUS_SUCCESS || status == STATUS_ACCESS_DENIED,
+       "LsaOpenPolicy(POLICY_ALL_ACCESS) returned 0x%08x\n", status);
+
+    /* try a more restricted access mask if necessary */
+    if (status == STATUS_ACCESS_DENIED)
+    {
+        trace("LsaOpenPolicy(POLICY_ALL_ACCESS) failed, trying POLICY_VIEW_LOCAL_INFORMATION\n");
+        status = pLsaOpenPolicy(NULL, &attrs, POLICY_LOOKUP_NAMES, &handle);
+        ok(status == STATUS_SUCCESS, "LsaOpenPolicy(POLICY_VIEW_LOCAL_INFORMATION) returned 0x%08x\n", status);
+    }
+    if (status != STATUS_SUCCESS)
+    {
+        skip("Cannot acquire policy handle\n");
+        return;
+    }
+
+    name[0].Buffer = HeapAlloc(GetProcessHeap(), 0, sizeof(n1));
+    name[0].Length = name[0].MaximumLength = sizeof(n1);
+    memcpy(name[0].Buffer, n1, sizeof(n1));
+
+    name[1].Buffer = HeapAlloc(GetProcessHeap(), 0, sizeof(n1));
+    name[1].Length = name[1].MaximumLength = sizeof(n1) - sizeof(WCHAR);
+    memcpy(name[1].Buffer, n1, sizeof(n1) - sizeof(WCHAR));
+
+    name[2].Buffer = HeapAlloc(GetProcessHeap(), 0, sizeof(n2));
+    name[2].Length = name[2].MaximumLength = sizeof(n2);
+    memcpy(name[2].Buffer, n2, sizeof(n2));
+
+    /* account name only */
+    sids = NULL;
+    domains = NULL;
+    status = pLsaLookupNames2(handle, 0, 1, &name[0], &domains, &sids);
+    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %x)\n", status);
+    ok(sids[0].Use == SidTypeWellKnownGroup, "expected SidTypeWellKnownGroup, got %u\n", sids[0].Use);
+    ok(sids[0].Flags == 0, "expected 0, got 0x%08x\n", sids[0].Flags);
+    ok(domains->Entries == 1, "expected 1, got %u\n", domains->Entries);
+    get_sid_info(sids[0].Sid, &account, &sid_dom);
+    ok(!strcmp(account, "LOCAL SERVICE"), "expected \"LOCAL SERVICE\", got \"%s\"\n", account);
+    ok(!strcmp(sid_dom, "NT AUTHORITY"), "expected \"NT AUTHORITY\", got \"%s\"\n", sid_dom);
+    pLsaFreeMemory(sids);
+    pLsaFreeMemory(domains);
+
+    /* unknown account name */
+    sids = NULL;
+    domains = NULL;
+    status = pLsaLookupNames2(handle, 0, 1, &name[1], &domains, &sids);
+    ok(status == STATUS_NONE_MAPPED, "expected STATUS_NONE_MAPPED, got %x)\n", status);
+    ok(sids[0].Use == SidTypeUnknown, "expected SidTypeUnknown, got %u\n", sids[0].Use);
+    ok(sids[0].Flags == 0, "expected 0, got 0x%08x\n", sids[0].Flags);
+    ok(domains->Entries == 0, "expected 0, got %u\n", domains->Entries);
+    pLsaFreeMemory(sids);
+    pLsaFreeMemory(domains);
+
+    /* account + domain */
+    sids = NULL;
+    domains = NULL;
+    status = pLsaLookupNames2(handle, 0, 1, &name[2], &domains, &sids);
+    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %x)\n", status);
+    ok(sids[0].Use == SidTypeWellKnownGroup, "expected SidTypeWellKnownGroup, got %u\n", sids[0].Use);
+    ok(sids[0].Flags == 0, "expected 0, got 0x%08x\n", sids[0].Flags);
+    ok(domains->Entries == 1, "expected 1, got %u\n", domains->Entries);
+    get_sid_info(sids[0].Sid, &account, &sid_dom);
+    ok(!strcmp(account, "LOCAL SERVICE"), "expected \"LOCAL SERVICE\", got \"%s\"\n", account);
+    ok(!strcmp(sid_dom, "NT AUTHORITY"), "expected \"NT AUTHORITY\", got \"%s\"\n", sid_dom);
+    pLsaFreeMemory(sids);
+    pLsaFreeMemory(domains);
+
+    /* all three */
+    sids = NULL;
+    domains = NULL;
+    status = pLsaLookupNames2(handle, 0, 3, name, &domains, &sids);
+    ok(status == STATUS_SOME_NOT_MAPPED, "expected STATUS_SOME_NOT_MAPPED, got %x)\n", status);
+    ok(sids[0].Use == SidTypeWellKnownGroup, "expected SidTypeWellKnownGroup, got %u\n", sids[0].Use);
+    ok(sids[1].Use == SidTypeUnknown, "expected SidTypeUnknown, got %u\n", sids[0].Use);
+    ok(sids[2].Use == SidTypeWellKnownGroup, "expected SidTypeWellKnownGroup, got %u\n", sids[0].Use);
+    ok(sids[0].DomainIndex == 0, "expected 0, got %u\n", sids[0].DomainIndex);
+    ok(domains->Entries == 1, "expected 1, got %u\n", domains->Entries);
+    pLsaFreeMemory(sids);
+    pLsaFreeMemory(domains);
+
+    HeapFree(GetProcessHeap(), 0, name[0].Buffer);
+    HeapFree(GetProcessHeap(), 0, name[1].Buffer);
+    HeapFree(GetProcessHeap(), 0, name[2].Buffer);
+
+    status = pLsaClose(handle);
+    ok(status == STATUS_SUCCESS, "LsaClose() failed, returned 0x%08x\n", status);
+}
+
 START_TEST(lsa)
 {
     if (!init()) {
@@ -224,4 +359,5 @@ START_TEST(lsa)
     }
 
     test_lsa();
+    test_LsaLookupNames2();
 }

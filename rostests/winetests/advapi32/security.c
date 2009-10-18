@@ -92,6 +92,9 @@ typedef BOOL (WINAPI *fnSetFileSecurityA)(LPCSTR, SECURITY_INFORMATION,
 static DWORD (WINAPI *pGetNamedSecurityInfoA)(LPSTR, SE_OBJECT_TYPE, SECURITY_INFORMATION,
                                               PSID*, PSID*, PACL*, PACL*,
                                               PSECURITY_DESCRIPTOR*);
+static PDWORD (WINAPI *pGetSidSubAuthority)(PSID, DWORD);
+static PUCHAR (WINAPI *pGetSidSubAuthorityCount)(PSID);
+static BOOL (WINAPI *pIsValidSid)(PSID);
 typedef DWORD (WINAPI *fnRtlAdjustPrivilege)(ULONG,BOOLEAN,BOOLEAN,PBOOLEAN);
 typedef BOOL (WINAPI *fnCreateWellKnownSid)(WELL_KNOWN_SID_TYPE,PSID,PSID,DWORD*);
 typedef BOOL (WINAPI *fnDuplicateTokenEx)(HANDLE,DWORD,LPSECURITY_ATTRIBUTES,
@@ -160,6 +163,9 @@ static void init(void)
     pSetFileSecurityA = (fnSetFileSecurityA)GetProcAddress(hmod, "SetFileSecurityA" );
     pCreateWellKnownSid = (fnCreateWellKnownSid)GetProcAddress( hmod, "CreateWellKnownSid" );
     pGetNamedSecurityInfoA = (void *)GetProcAddress(hmod, "GetNamedSecurityInfoA");
+    pGetSidSubAuthority = (void *)GetProcAddress(hmod, "GetSidSubAuthority");
+    pGetSidSubAuthorityCount = (void *)GetProcAddress(hmod, "GetSidSubAuthorityCount");
+    pIsValidSid = (void *)GetProcAddress(hmod, "IsValidSid");
     pMakeSelfRelativeSD = (void *)GetProcAddress(hmod, "MakeSelfRelativeSD");
     pSetEntriesInAclW = (void *)GetProcAddress(hmod, "SetEntriesInAclW");
     pSetSecurityDescriptorControl = (void *)GetProcAddress(hmod, "SetSecurityDescriptorControl");
@@ -2390,7 +2396,8 @@ static void test_impersonation_level(void)
     /* can't perform access check when opening object against an anonymous impersonation token */
     todo_wine {
     error = RegOpenKeyEx(HKEY_CURRENT_USER, "Software", 0, KEY_READ, &hkey);
-    ok(error == ERROR_INVALID_HANDLE, "RegOpenKeyEx should have failed with ERROR_INVALID_HANDLE instead of %d\n", error);
+    ok(error == ERROR_INVALID_HANDLE || error == ERROR_CANT_OPEN_ANONYMOUS,
+       "RegOpenKeyEx should have failed with ERROR_INVALID_HANDLE or ERROR_CANT_OPEN_ANONYMOUS instead of %d\n", error);
     }
     RevertToSelf();
 
@@ -2443,7 +2450,8 @@ static void test_impersonation_level(void)
     /* can't perform access check when opening object against an identification impersonation token */
     error = RegOpenKeyEx(HKEY_CURRENT_USER, "Software", 0, KEY_READ, &hkey);
     todo_wine {
-    ok(error == ERROR_INVALID_HANDLE, "RegOpenKeyEx should have failed with ERROR_INVALID_HANDLE instead of %d\n", error);
+    ok(error == ERROR_INVALID_HANDLE || error == ERROR_BAD_IMPERSONATION_LEVEL,
+       "RegOpenKeyEx should have failed with ERROR_INVALID_HANDLE or ERROR_BAD_IMPERSONATION_LEVEL instead of %d\n", error);
     }
     ret = PrivilegeCheck(Token, PrivilegeSet, &AccessGranted);
     ok(ret, "PrivilegeCheck for SecurityIdentification failed with error %d\n", GetLastError());
@@ -2476,6 +2484,7 @@ static void test_SetEntriesInAcl(void)
     SID_IDENTIFIER_AUTHORITY SIDAuthNT = { SECURITY_NT_AUTHORITY };
     EXPLICIT_ACCESSW ExplicitAccess;
     static const WCHAR wszEveryone[] = {'E','v','e','r','y','o','n','e',0};
+    static const WCHAR wszCurrentUser[] = { 'C','U','R','R','E','N','T','_','U','S','E','R','\0'};
 
     if (!pSetEntriesInAclW)
     {
@@ -2568,6 +2577,13 @@ static void test_SetEntriesInAcl(void)
         ok(NewAcl != NULL, "returned acl was NULL\n");
         LocalFree(NewAcl);
     }
+
+    ExplicitAccess.Trustee.TrusteeForm = TRUSTEE_IS_USER;
+    ExplicitAccess.Trustee.ptstrName = (LPWSTR)wszCurrentUser;
+    res = pSetEntriesInAclW(1, &ExplicitAccess, OldAcl, &NewAcl);
+    ok(res == ERROR_SUCCESS, "SetEntriesInAclW failed: %u\n", res);
+    ok(NewAcl != NULL, "returned acl was NULL\n");
+    LocalFree(NewAcl);
 
     ExplicitAccess.grfAccessMode = REVOKE_ACCESS;
     ExplicitAccess.Trustee.TrusteeForm = TRUSTEE_IS_SID;
@@ -3036,20 +3052,25 @@ static void test_PrivateObjectSecurity(void)
         "GetPrivateObjectSecurity failed (err=%u)\n", GetLastError());
     ok(retSize <= dwDescSize, "Buffer too small (%d vs %d)\n", retSize, dwDescSize);
     ok(pConvertSecurityDescriptorToStringSecurityDescriptorA(buf, SDDL_REVISION_1, sec_info, &string, &len), "Conversion failed err=%u\n", GetLastError());
-    CHECK_RESULT_AND_FREE("G:S-1-5-21-93476-23408-4576D:(A;NP;GAGXGWGR;;;SU)(A;IOID;CCDC;;;SU)(D;OICI;0xffffffff;;;S-1-5-21-93476-23408-4576)");
+    CHECK_ONE_OF_AND_FREE("G:S-1-5-21-93476-23408-4576D:(A;NP;GAGXGWGR;;;SU)(A;IOID;CCDC;;;SU)(D;OICI;0xffffffff;;;S-1-5-21-93476-23408-4576)",
+        "G:S-1-5-21-93476-23408-4576D:P(A;NP;GAGXGWGR;;;SU)(A;IOID;CCDC;;;SU)(D;OICI;0xffffffff;;;S-1-5-21-93476-23408-4576)"); /* Win7 */
     GetSecurityDescriptorControl(buf, &ctrl, &dwRevision);
-    expect_eq(ctrl, 0x8004, int, "%x");
+    expect_eq(ctrl & (~ SE_DACL_PROTECTED), 0x8004, int, "%x");
 
     ok(GetPrivateObjectSecurity(sec, sec_info, buf, dwDescSize, &retSize),
         "GetPrivateObjectSecurity failed (err=%u)\n", GetLastError());
     ok(retSize == dwDescSize, "Buffer too small (%d vs %d)\n", retSize, dwDescSize);
     ok(pConvertSecurityDescriptorToStringSecurityDescriptorA(buf, SDDL_REVISION_1, sec_info, &string, &len), "Conversion failed\n");
-    CHECK_RESULT_AND_FREE("O:SY"
+    CHECK_ONE_OF_AND_FREE("O:SY"
         "G:S-1-5-21-93476-23408-4576"
         "D:(A;NP;GAGXGWGR;;;SU)(A;IOID;CCDC;;;SU)(D;OICI;0xffffffff;;;S-1-5-21-93476-23408-4576)"
-        "S:(AU;OICINPIOIDSAFA;CCDCLCSWRPRC;;;SU)(AU;NPSA;0x12019f;;;SU)");
+        "S:(AU;OICINPIOIDSAFA;CCDCLCSWRPRC;;;SU)(AU;NPSA;0x12019f;;;SU)",
+      "O:SY"
+        "G:S-1-5-21-93476-23408-4576"
+        "D:P(A;NP;GAGXGWGR;;;SU)(A;IOID;CCDC;;;SU)(D;OICI;0xffffffff;;;S-1-5-21-93476-23408-4576)"
+        "S:(AU;OICINPIOIDSAFA;CCDCLCSWRPRC;;;SU)(AU;NPSA;0x12019f;;;SU)"); /* Win7 */
     GetSecurityDescriptorControl(buf, &ctrl, &dwRevision);
-    expect_eq(ctrl, 0x8014, int, "%x");
+    expect_eq(ctrl & (~ SE_DACL_PROTECTED), 0x8014, int, "%x");
 
     SetLastError(0xdeadbeef);
     ok(GetPrivateObjectSecurity(sec, sec_info, buf, 5, &retSize) == FALSE, "GetPrivateObjectSecurity should have failed\n");
@@ -3176,6 +3197,34 @@ static void test_GetSecurityInfo(void)
     CloseHandle(obj);
 }
 
+static void test_GetSidSubAuthority(void)
+{
+    PSID psid = NULL;
+
+    if (!pGetSidSubAuthority || !pConvertStringSidToSidA || !pIsValidSid || !pGetSidSubAuthorityCount)
+    {
+        win_skip("Some functions not available\n");
+        return;
+    }
+    /* Note: on windows passing in an invalid index like -1, lets GetSidSubAuthority return 0x05000000 but
+             still GetLastError returns ERROR_SUCCESS then. We don't test these unlikely cornercases here for now */
+    ok(pConvertStringSidToSidA("S-1-5-21-93476-23408-4576",&psid),"ConvertStringSidToSidA failed\n");
+    ok(pIsValidSid(psid),"Sid is not valid\n");
+    SetLastError(0xbebecaca);
+    ok(*pGetSidSubAuthorityCount(psid) == 4,"GetSidSubAuthorityCount gave %d expected 4\n",*pGetSidSubAuthorityCount(psid));
+    ok(GetLastError() == 0,"GetLastError returned %d instead of 0\n",GetLastError());
+    SetLastError(0xbebecaca);
+    ok(*pGetSidSubAuthority(psid,0) == 21,"GetSidSubAuthority gave %d expected 21\n",*pGetSidSubAuthority(psid,0));
+    ok(GetLastError() == 0,"GetLastError returned %d instead of 0\n",GetLastError());
+    SetLastError(0xbebecaca);
+    ok(*pGetSidSubAuthority(psid,1) == 93476,"GetSidSubAuthority gave %d expected 93476\n",*pGetSidSubAuthority(psid,1));
+    ok(GetLastError() == 0,"GetLastError returned %d instead of 0\n",GetLastError());
+    SetLastError(0xbebecaca);
+    todo_wine ok(*pGetSidSubAuthority(psid,4) == 0,"GetSidSubAuthority gave %d,expected 0\n",*pGetSidSubAuthority(psid,4));
+    ok(GetLastError() == 0,"GetLastError returned %d instead of 0\n",GetLastError());
+    LocalFree(psid);
+}
+
 START_TEST(security)
 {
     init();
@@ -3205,4 +3254,5 @@ START_TEST(security)
     test_PrivateObjectSecurity();
     test_acls();
     test_GetSecurityInfo();
+    test_GetSidSubAuthority();
 }

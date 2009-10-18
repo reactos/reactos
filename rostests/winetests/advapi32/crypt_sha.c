@@ -35,21 +35,22 @@ typedef struct {
 
 static void test_sha_ctx(void)
 {
-   FARPROC pA_SHAInit, pA_SHAUpdate, pA_SHAFinal;
-   static const char test_buffer[] = "In our Life there's If"
-                       "In our beliefs there's Lie"
-                       "In our business there is Sin"
-                       "In our bodies, there is Die";
-   ULONG test_buffer_size = strlen(test_buffer);
+    void (WINAPI *pA_SHAInit)(PSHA_CTX);
+    void (WINAPI *pA_SHAUpdate)(PSHA_CTX, const unsigned char *, UINT);
+    void (WINAPI *pA_SHAFinal)(PSHA_CTX, PULONG);
+    static const unsigned char test_buffer[] = "In our Life there's If"
+                                               "In our beliefs there's Lie"
+                                               "In our business there is Sin"
+                                               "In our bodies, there is Die";
    HMODULE hmod;
    SHA_CTX ctx;
    ULONG result[5];
    ULONG result_correct[5] = {0xe014f93, 0xe09791ec, 0x6dcf96c8, 0x8e9385fc, 0x1611c1bb};
 
    hmod = GetModuleHandleA("advapi32.dll");
-   pA_SHAInit = GetProcAddress(hmod, "A_SHAInit");
-   pA_SHAUpdate = GetProcAddress(hmod, "A_SHAUpdate");
-   pA_SHAFinal = GetProcAddress(hmod, "A_SHAFinal");
+   pA_SHAInit = (void *)GetProcAddress(hmod, "A_SHAInit");
+   pA_SHAUpdate = (void *)GetProcAddress(hmod, "A_SHAUpdate");
+   pA_SHAFinal = (void *)GetProcAddress(hmod, "A_SHAFinal");
 
    if (!pA_SHAInit || !pA_SHAUpdate || !pA_SHAFinal)
    {
@@ -59,8 +60,8 @@ static void test_sha_ctx(void)
 
    RtlZeroMemory(&ctx, sizeof(ctx));
    pA_SHAInit(&ctx);
-   pA_SHAUpdate(&ctx, test_buffer, test_buffer_size);
-   pA_SHAUpdate(&ctx, test_buffer, test_buffer_size);
+   pA_SHAUpdate(&ctx, test_buffer, sizeof(test_buffer)-1);
+   pA_SHAUpdate(&ctx, test_buffer, sizeof(test_buffer)-1);
    pA_SHAFinal(&ctx, result);
    ok(!memcmp(result, result_correct, sizeof(result)), "incorrect result\n");
 }
