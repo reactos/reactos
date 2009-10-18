@@ -245,13 +245,8 @@ StopStreamingInSoundThread(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
-    /* complete all pending headers */
-    while(SoundDeviceInstance->HeadWaveHeader)
-        CompleteWaveHeader(SoundDeviceInstance, SoundDeviceInstance->HeadWaveHeader);
-
-    SND_ASSERT( NULL == SoundDeviceInstance->HeadWaveHeader );
-    SND_ASSERT( NULL == SoundDeviceInstance->TailWaveHeader );
-    return MMSYSERR_NOERROR;
+    /* TODO */
+    return MMSYSERR_NOTSUPPORTED;
 }
 
 MMRESULT
