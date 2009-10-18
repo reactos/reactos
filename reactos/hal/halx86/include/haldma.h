@@ -317,7 +317,7 @@ typedef struct _ROS_MAP_REGISTER_ENTRY
    ULONG Counter;
 } ROS_MAP_REGISTER_ENTRY, *PROS_MAP_REGISTER_ENTRY;
 
-struct _ADAPTER_OBJECT {
+typedef struct _ADAPTER_OBJECT {
    /*
     * New style DMA object definition. The fact that it is at the beginning
     * of the ADAPTER_OBJECT structure allows us to easily implement the
