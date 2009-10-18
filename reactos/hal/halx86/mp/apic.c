@@ -68,7 +68,7 @@ typedef struct _COMMON_AREA_INFO
 #include <poppack.h>
 #endif
 
-CHAR *APstart, *APend;
+extern CHAR *APstart, *APend;
 
 #define BIOS_AREA	0x0
 #define COMMON_AREA	0x2000

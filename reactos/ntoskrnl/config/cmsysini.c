@@ -23,14 +23,13 @@ LONG CmpLoadWorkerIncrement;
 PEPROCESS CmpSystemProcess;
 BOOLEAN HvShutdownComplete;
 PVOID CmpRegistryLockCallerCaller, CmpRegistryLockCaller;
-BOOLEAN CmpFlushStarveWriters;
 BOOLEAN CmpFlushOnLockRelease;
 BOOLEAN CmpSpecialBootCondition;
 BOOLEAN CmpNoWrite;
-BOOLEAN CmpForceForceFlush;
 BOOLEAN CmpWasSetupBoot;
 ULONG CmpTraceLevel = 0;
 
+extern LONG CmpFlushStarveWriters;
 extern BOOLEAN CmFirstTime;
 
 /* FUNCTIONS *****************************************************************/

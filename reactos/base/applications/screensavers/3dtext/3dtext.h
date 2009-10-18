@@ -20,7 +20,7 @@
 
 //////////////////////////////////////////////////////////////////
 
-TCHAR m_Text[MAX_PATH];
+extern TCHAR m_Text[MAX_PATH];
 
 VOID LoadSettings(VOID);
 VOID SaveSettings(VOID);

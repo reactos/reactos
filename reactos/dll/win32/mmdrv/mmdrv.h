@@ -330,8 +330,6 @@ VOID
 PerformWaveIO(SessionInfo* session_info);
 
 
-CRITICAL_SECTION critical_section;
-
-
+extern CRITICAL_SECTION critical_section;
 
 #endif
