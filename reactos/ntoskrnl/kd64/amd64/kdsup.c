@@ -264,6 +264,14 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Check for correct alignment */
+    if ((IoAddress & (DataSize - 1)))
+    {
+        /* Invalid alignment */
+        *ActualDataSize = 0;
+        return STATUS_DATATYPE_MISALIGNMENT;
+    }
+
     switch (DataSize)
     {
         case sizeof(UCHAR):
@@ -284,7 +292,7 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
         default:
             /* Invalid data size */
              *ActualDataSize = 0;
-            return STATUS_UNSUCCESSFUL;
+            return STATUS_INVALID_PARAMETER;
     }
 
     /* Return the size of the data */
@@ -313,6 +321,14 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Check for correct alignment */
+    if ((IoAddress & (DataSize - 1)))
+    {
+        /* Invalid alignment */
+        *ActualDataSize = 0;
+        return STATUS_DATATYPE_MISALIGNMENT;
+    }
+
     switch (DataSize)
     {
         case sizeof(UCHAR):
@@ -333,7 +349,7 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
         default:
             /* Invalid data size */
              *ActualDataSize = 0;
-            return STATUS_UNSUCCESSFUL;
+            return STATUS_INVALID_PARAMETER;
     }
 
     /* Return the size of the data */
