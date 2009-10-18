@@ -802,6 +802,35 @@ EnumPrinterDriversW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, 
   return FALSE;
 }
 
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+EnumPrinterKeyA(HANDLE Printer, LPSTR KeyName, LPTSTR Subkey, DWORD SubkeySize, PDWORD SubkeyReturned)
+{
+  OutputDebugStringW(L"winspool EnumPrinterKeyA stub called\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+  *SubkeyReturned = 0;
+
+  return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+EnumPrinterKeyW(HANDLE Printer, LPWSTR KeyName, LPTSTR Subkey, DWORD SubkeySize, PDWORD SubkeyReturned)
+{
+  OutputDebugStringW(L"winspool EnumPrinterKeyW stub called\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+  *SubkeyReturned = 0;
+
+  return 0;
+}
 
 /*
  * @unimplemented
