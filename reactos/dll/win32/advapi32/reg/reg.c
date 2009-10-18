@@ -3272,6 +3272,9 @@ RegOpenKeyA(HKEY hKey,
     TRACE("RegOpenKeyA hKey 0x%x lpSubKey %s phkResult %p\n",
           hKey, lpSubKey, phkResult);
 
+    if (!phkResult)
+        return ERROR_INVALID_PARAMETER;
+
     if (!hKey && lpSubKey && phkResult)
     {
         return ERROR_INVALID_HANDLE;
@@ -3307,6 +3310,9 @@ RegOpenKeyW(HKEY hKey,
 {
     TRACE("RegOpenKeyW hKey 0x%x lpSubKey %S phkResult %p\n",
           hKey, lpSubKey, phkResult);
+
+    if (!phkResult)
+        return ERROR_INVALID_PARAMETER;
 
     if (!hKey && lpSubKey && phkResult)
     {
