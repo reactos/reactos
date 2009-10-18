@@ -814,7 +814,7 @@ EnumPrinterKeyA(HANDLE Printer, LPSTR KeyName, LPTSTR Subkey, DWORD SubkeySize, 
 
   *SubkeyReturned = 0;
 
-  return 0;
+  return ERROR_FILE_NOT_FOUND;
 }
 
 /*
@@ -829,7 +829,7 @@ EnumPrinterKeyW(HANDLE Printer, LPWSTR KeyName, LPTSTR Subkey, DWORD SubkeySize,
 
   *SubkeyReturned = 0;
 
-  return 0;
+  return ERROR_FILE_NOT_FOUND;
 }
 
 /*
