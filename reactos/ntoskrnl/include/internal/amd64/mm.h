@@ -17,6 +17,8 @@ MmGetPageDirectory(VOID)
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 
+#define HYPER_SPACE 0xFFFFF70000000000ULL
+
 /* Base addresses of PTE and PDE */
 //#define PAGETABLE_MAP       PTE_BASE
 //#define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
@@ -56,5 +58,7 @@ MmGetPageDirectory(VOID)
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Write == 1)
 #define MI_IS_PAGE_COPY_ON_WRITE(x)((x)->u.Hard.CopyOnWrite == 1)
 #define MI_IS_PAGE_DIRTY(x)        ((x)->u.Hard.Dirty == 1)
+#define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
+#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Write = 1)
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_MM_H */

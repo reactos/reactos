@@ -22,6 +22,8 @@ ULONG MmMaximumNonPagedPoolPercent;
 ULONG MmSizeOfNonPagedPoolInBytes;
 ULONG MmMaximumNonPagedPoolInBytes;
 
+PVOID MiSessionSpaceEnd;    // 0xC0000000
+
 ULONG64 MmUserProbeAddress;
 PVOID MmHighestUserAddress;
 PVOID MmSystemRangeStart;
@@ -50,6 +52,10 @@ ULONG MmSessionSize;
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 
+PMMPTE MmSystemPagePtes;
+ULONG MxPfnAllocation;
+PVOID MiSystemViewStart;
+ULONG MmSystemViewSize;
 
 NTSTATUS
 NTAPI
