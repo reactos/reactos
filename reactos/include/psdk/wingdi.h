@@ -822,6 +822,8 @@ extern "C" {
 #define MM_TEXT 1
 #define MM_TWIPS 6
 #define MM_MAX_FIXEDSCALE	MM_TWIPS
+#define MM_MIN MM_TEXT
+#define MM_MAX MM_ANISOTROPIC
 #define ABSOLUTE	1
 #define RELATIVE	2
 #define PC_EXPLICIT 2

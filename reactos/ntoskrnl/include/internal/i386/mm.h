@@ -17,6 +17,7 @@ PULONG MmGetPageDirectory(VOID);
 
 #define PTE_BASE    0xC0000000
 #define PDE_BASE    0xC0300000
+#define PTE_TOP     0xC03FFFFF
 #define HYPER_SPACE 0xC0400000
 
 /* Converting address to a corresponding PDE or PTE entry */
@@ -47,5 +48,7 @@ PULONG MmGetPageDirectory(VOID);
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Write == 1)
 #define MI_IS_PAGE_COPY_ON_WRITE(x)((x)->u.Hard.CopyOnWrite == 1)
 #define MI_IS_PAGE_DIRTY(x)        ((x)->u.Hard.Dirty == 1)
+#define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
+#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Write = 1)
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

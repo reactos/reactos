@@ -183,7 +183,7 @@ KdpRestoreAllBreakpoints(VOID)
     BreakpointsSuspended = FALSE;
 
     /* Loop the breakpoints */
-    for (BpIndex = 0; BpIndex < KD_BREAKPOINT_MAX; BpIndex++ )
+    for (BpIndex = 0; BpIndex < KD_BREAKPOINT_MAX; BpIndex++)
     {
         /* Check if they are valid, suspended breakpoints */
         if ((KdpBreakpointTable[BpIndex].Flags & KdpBreakpointActive) &&
@@ -193,5 +193,38 @@ KdpRestoreAllBreakpoints(VOID)
             KdpBreakpointTable[BpIndex].Flags &= ~KdpBreakpointSuspended;
             KdpLowRestoreBreakpoint(BpIndex);
         }
+    }
+}
+
+VOID
+NTAPI
+KdpSuspendBreakPoint(IN ULONG BpEntry)
+{
+    ULONG BpIndex = BpEntry - 1;
+
+    /* Check if this is a valid, unsuspended breakpoint */
+    if ((KdpBreakpointTable[BpIndex].Flags & KdpBreakpointActive) &&
+        !(KdpBreakpointTable[BpIndex].Flags & KdpBreakpointSuspended))
+    {
+        /* Suspend it */
+        KdpBreakpointTable[BpIndex].Flags |= KdpBreakpointSuspended;
+        KdpLowWriteContent(BpIndex);
+    }
+}
+
+VOID
+NTAPI
+KdpSuspendAllBreakPoints(VOID)
+{
+    ULONG BpEntry;
+
+    /* Breakpoints are suspended */
+    BreakpointsSuspended = TRUE;
+
+    /* Loop every breakpoint */
+    for (BpEntry = 1; BpEntry <= KD_BREAKPOINT_MAX; BpEntry++)
+    {
+        /* Suspend it */
+        KdpSuspendBreakPoint(BpEntry);
     }
 }

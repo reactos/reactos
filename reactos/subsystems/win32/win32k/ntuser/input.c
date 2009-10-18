@@ -881,7 +881,7 @@ RawInputThreadMain(PVOID StartContext)
   }
 
   ptiRawInput = PsGetCurrentThreadWin32Thread();
-  DPRINT1("\nRaw Input Thread 0x%x \n", ptiRawInput);
+  DPRINT("\nRaw Input Thread 0x%x \n", ptiRawInput);
 
 
   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,

@@ -127,7 +127,8 @@ PFCB
 NTAPI
 FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
              IN PVCB Vcb,
-             IN PFCB ParentDcb)
+             IN PFCB ParentDcb,
+             IN FF_FILE *FileHandle)
 {
     PFCB Fcb;
 
@@ -162,7 +163,34 @@ FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
     /* Initialize parent dcb list */
     InitializeListHead(&Fcb->Dcb.ParentDcbList);
 
+    /* Set FullFAT handle */
+    Fcb->FatHandle = FileHandle;
+
+    /* Set names */
+    if (FileHandle)
+        FatSetFcbNames(IrpContext, Fcb);
+
     return Fcb;
+}
+
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenExistingDcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Dcb,
+                    IN PACCESS_MASK DesiredAccess,
+                    IN USHORT ShareAccess,
+                    IN ULONG CreateDisposition,
+                    IN BOOLEAN NoEaKnowledge,
+                    IN BOOLEAN DeleteOnClose)
+{
+    IO_STATUS_BLOCK Iosb = {{0}};
+
+    Iosb.Status = STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+
+    return Iosb;
 }
 
 /* EOF */

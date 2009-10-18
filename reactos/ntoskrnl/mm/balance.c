@@ -49,10 +49,10 @@ static LONG MiBalancerWork = 0;
 
 VOID MmPrintMemoryStatistic(VOID)
 {
-   DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MmStats.NrFreePages %d\n",
+   DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MmAvailablePages %d\n",
             MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed,
             MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed,
-            MmStats.NrFreePages);
+            MmAvailablePages);
 }
 
 VOID
@@ -117,7 +117,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
    if (MmGetReferenceCountPage(Page) == 1)
    {
       (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-      if (IsListEmpty(&AllocationListHead) || MmStats.NrFreePages < MiMinimumAvailablePages)
+      if (IsListEmpty(&AllocationListHead) || MmAvailablePages < MiMinimumAvailablePages)
       {
          KeReleaseSpinLock(&AllocationListLock, OldIrql);
          OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -208,7 +208,7 @@ MmRebalanceMemoryConsumers(VOID)
    ULONG NrFreedPages;
    NTSTATUS Status;
 
-   Target = (MiMinimumAvailablePages - MmStats.NrFreePages) + MiPagesRequired;
+   Target = (MiMinimumAvailablePages - MmAvailablePages) + MiPagesRequired;
    Target = max(Target, (LONG) MiMinimumPagesPerRun);
 
    for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
@@ -269,7 +269,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
          KeBugCheck(NO_PAGES_AVAILABLE);
       }
       *AllocatedPage = Page;
-      if (MmStats.NrFreePages <= MiMinimumAvailablePages &&
+      if (MmAvailablePages <= MiMinimumAvailablePages &&
             MiBalancerThreadHandle != NULL)
       {
          KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
@@ -280,7 +280,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    /*
     * Make sure we don't exceed global targets.
     */
-   if (MmStats.NrFreePages <= MiMinimumAvailablePages)
+   if (MmAvailablePages <= MiMinimumAvailablePages)
    {
       MM_ALLOCATION_REQUEST Request;
 
@@ -369,7 +369,7 @@ MiBalancerThread(PVOID Unused)
       if (Status == STATUS_SUCCESS)
       {
          /* MiBalancerEvent */
-         while (MmStats.NrFreePages < MiMinimumAvailablePages + 5)
+         while (MmAvailablePages < MiMinimumAvailablePages + 5)
          {
             for (i = 0; i < MC_MAXIMUM; i++)
             {
@@ -389,7 +389,7 @@ MiBalancerThread(PVOID Unused)
       else if (Status == STATUS_SUCCESS + 1)
       {
          /* MiBalancerTimer */
-         ShouldRun = MmStats.NrFreePages < MiMinimumAvailablePages + 5 ? TRUE : FALSE;
+         ShouldRun = MmAvailablePages < MiMinimumAvailablePages + 5 ? TRUE : FALSE;
          for (i = 0; i < MC_MAXIMUM; i++)
          {
             if (MiMemoryConsumers[i].Trim != NULL)

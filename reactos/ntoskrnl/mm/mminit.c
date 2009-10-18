@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define MODULE_INVOLVED_IN_ARM3
+#include "ARM3/miarm.h"
+
 /* GLOBALS *******************************************************************/
 
 PCHAR
@@ -47,11 +50,9 @@ MemType[] =
 
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
-MM_STATS MmStats;
 PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
 extern KMUTANT MmSystemLoadLock;
-extern ULONG MmBootImageSize;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
 TRUE;
@@ -69,19 +70,151 @@ MiInitSystemMemoryAreas()
     PVOID BaseAddress;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PMEMORY_AREA MArea;
+    NTSTATUS Status;
     BoundaryAddressMultiple.QuadPart = 0;
     
     //
-    // First initialize the page table and hyperspace memory areas
+    // Create the memory area to define the PTE base
     //
-    MiInitPageDirectoryMap();
+    BaseAddress = (PVOID)PTE_BASE;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                4 * 1024 * 1024,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    //
+    // Create the memory area to define Hyperspace
+    //
+    BaseAddress = (PVOID)HYPER_SPACE;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                4 * 1024 * 1024,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    //
+    // Protect the PFN database
+    //
+    BaseAddress = MmPfnDatabase;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                (MxPfnAllocation << PAGE_SHIFT),
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    //
+    // ReactOS requires a memory area to keep the initial NP area off-bounds
+    //
+    BaseAddress = MmNonPagedPoolStart;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                MmSizeOfNonPagedPoolInBytes,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    //
+    // And we need one more for the system NP
+    //
+    BaseAddress = MmNonPagedSystemStart;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                (ULONG_PTR)MmNonPagedPoolEnd -
+                                (ULONG_PTR)MmNonPagedSystemStart,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    //
+    // We also need one for system view space
+    //
+    BaseAddress = MiSystemViewStart;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                MmSystemViewSize,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    //
+    // And another for session space
+    //
+    BaseAddress = MmSessionBase;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                (ULONG_PTR)MiSessionSpaceEnd -
+                                (ULONG_PTR)MmSessionBase,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    //
+    // One more for ARM paged pool
+    //
+    BaseAddress = MmPagedPoolStart;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                MmSizeOfPagedPoolInBytes,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+    
+    //
+    // And now, ReactOS paged pool
+    //
+    BaseAddress = MmPagedPoolBase;
+    MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                       MEMORY_AREA_PAGED_POOL | MEMORY_AREA_STATIC,
+                       &BaseAddress,
+                       MmPagedPoolSize,
+                       PAGE_READWRITE,
+                       &MArea,
+                       TRUE,
+                       0,
+                       BoundaryAddressMultiple);
     
     //
     // Next, the KPCR
     //
     BaseAddress = (PVOID)PCR;
     MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                       MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
+                       MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                        &BaseAddress,
                        PAGE_SIZE * KeNumberProcessors,
                        PAGE_READWRITE,
@@ -89,13 +222,13 @@ MiInitSystemMemoryAreas()
                        TRUE,
                        0,
                        BoundaryAddressMultiple);
-
+    
     //
     // Now the KUSER_SHARED_DATA
     //
     BaseAddress = (PVOID)KI_USER_SHARED_DATA;
     MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                       MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
+                       MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                        &BaseAddress,
                        PAGE_SIZE,
                        PAGE_READWRITE,
@@ -103,6 +236,58 @@ MiInitSystemMemoryAreas()
                        TRUE,
                        0,
                        BoundaryAddressMultiple);
+}
+
+VOID
+NTAPI
+MiDbgDumpAddressSpace(VOID)
+{
+    //
+    // Print the memory layout
+    //
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmSystemRangeStart,
+            (ULONG_PTR)MmSystemRangeStart + MmBootImageSize,
+            "Boot Loaded Image");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmPagedPoolBase,
+            (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize,
+            "Paged Pool");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmPfnDatabase,
+            (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
+            "PFN Database");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmNonPagedPoolStart,
+            (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
+            "ARMÂ³ Non Paged Pool");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MiSystemViewStart,
+            (ULONG_PTR)MiSystemViewStart + MmSystemViewSize,
+            "System View Space");        
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmSessionBase,
+            MiSessionSpaceEnd,
+            "Session Space");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            PTE_BASE, PDE_BASE,
+            "Page Tables");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            PDE_BASE, HYPER_SPACE,
+            "Page Directories");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            HYPER_SPACE, HYPER_SPACE + (4 * 1024 * 1024),
+            "Hyperspace");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmPagedPoolStart,
+            (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
+            "ARMÂ³ Paged Pool");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
+            "System PTE Space");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
+            "Non Paged Pool Expansion PTE Space");
 }
 
 VOID
@@ -126,57 +311,6 @@ MiDbgDumpMemoryDescriptors(VOID)
     DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
-NTSTATUS
-NTAPI
-MmArmInitSystem(IN ULONG Phase,
-                IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-VOID
-INIT_FUNCTION
-NTAPI
-MmInit1(VOID)
-{   
-    /* Initialize the kernel address space */
-    KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
-    MmKernelAddressSpace = MmGetCurrentAddressSpace();
-    MmInitGlobalKernelPageDirectory();
-    
-    /* Dump memory descriptors */
-    if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
-    
-    //
-    // Initialize ARM³ in phase 0
-    //
-    MmArmInitSystem(0, KeLoaderBlock);    
-    
-    /* Intialize system memory areas */
-    MiInitSystemMemoryAreas();
-
-    /* Initialize the page list */
-    MmInitializePageList();
-       
-    //
-    // Initialize ARM³ in phase 1
-    //
-    MmArmInitSystem(1, KeLoaderBlock);
-
-    /* Put the paged pool after the loaded modules */
-    MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
-                                           MmBootImageSize);
-    MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-
-    //
-    // Initialize ARM³ in phase 2
-    //
-    MmArmInitSystem(2, KeLoaderBlock);
-    
-    /* Initialize paged pool */
-    MmInitializePagedPool();
-    
-    /* Initialize working sets */
-    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
-}
-
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
@@ -189,8 +323,102 @@ MmInitSystem(IN ULONG Phase,
     
     if (Phase == 0)
     {
-        /* Initialize Mm bootstrap */
-        MmInit1();
+        /* Initialize the kernel address space */
+        KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
+        MmKernelAddressSpace = MmGetCurrentAddressSpace();
+        MmInitGlobalKernelPageDirectory();
+        
+        /* Dump memory descriptors */
+        if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
+        
+        //
+        // Initialize ARMÂ³ in phase 0
+        //
+        MmArmInitSystem(0, KeLoaderBlock);    
+        
+        /* Initialize the page list */
+        MmInitializePageList();
+        
+        //
+        // Initialize ARMÂ³ in phase 1
+        //
+        MmArmInitSystem(1, KeLoaderBlock);
+        
+        /* Put the paged pool after the loaded modules */
+        MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
+                                               MmBootImageSize);
+        MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+        
+        /* Intialize system memory areas */
+        MiInitSystemMemoryAreas();
+        
+        //
+        // STEP 1: Allocate and free a single page, repeatedly
+        // We should always get the same address back
+        //
+        if (1)
+        {
+            PULONG Test, OldTest;
+            ULONG i;
+        
+            OldTest = Test = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
+            ASSERT(Test);
+            for (i = 0; i < 16; i++)
+            {
+                MiFreePoolPages(Test);
+                Test = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
+                ASSERT(OldTest == Test);
+            }
+            MiFreePoolPages(Test);
+        }
+        
+        //
+        // STEP 2: Allocate 2048 pages without freeing them
+        // We should run out of space at 1024 pages, since we don't support
+        // expansion yet.
+        //
+        if (1)
+        {
+            PULONG Test[2048];
+            ULONG i;
+            
+            for (i = 0; i < 2048; i++)
+            {
+                Test[i] = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
+                if (!Test[i]) 
+                {
+                    ASSERT(i == 1024);
+                    break;
+                }
+            }
+            
+            //
+            // Cleanup
+            //
+            while (--i) if (Test[i]) MiFreePoolPages(Test[i]);
+        }
+        
+        //
+        // STEP 3: Allocate a page and touch it.
+        // We should get an ARM3 page fault and it should handle the fault
+        //
+        if (1)
+        {
+            PULONG Test;
+            
+            Test = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
+            ASSERT(*Test == 0);
+            MiFreePoolPages(Test);
+        }
+        
+        /* Dump the address space */
+        MiDbgDumpAddressSpace();
+        
+        /* Initialize paged pool */
+        MmInitializePagedPool();
+        
+        /* Initialize working sets */
+        MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
@@ -203,7 +431,7 @@ MmInitSystem(IN ULONG Phase,
 
         /* Setup shared user data settings that NT does as well */
         ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
-        SharedUserData->NumberOfPhysicalPages = MmStats.NrTotalPages;
+        SharedUserData->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
         SharedUserData->LargePageMinimum = 0;
         
         /* For now, we assume that we're always Server */
@@ -237,7 +465,7 @@ MmInitSystem(IN ULONG Phase,
         //
         // Now write a copy of it
         //
-        TempPte.u.Hard.Owner = 1;
+        MI_MAKE_OWNER_PAGE(&TempPte);
         TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
         *MmSharedUserDataPte = TempPte;
         

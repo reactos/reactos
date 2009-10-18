@@ -34,6 +34,9 @@ public:
     }
 
     IMP_IResourceList;
+#ifdef BUILD_WDK
+    ULONG NTAPI NumberOfEntries();
+#endif
     CResourceList(IUnknown * OuterUnknown) : m_OuterUnknown(OuterUnknown), m_PoolType(NonPagedPool), m_TranslatedResourceList(0), m_UntranslatedResourceList(0), m_NumberOfEntries(0) {}
     virtual ~CResourceList() {}
 
@@ -72,15 +75,16 @@ CResourceList::QueryInterface(
 
     return STATUS_UNSUCCESSFUL;
 }
-
+#if 1
 ULONG
 NTAPI
 CResourceList::NumberOfEntries()
 {
-   // ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+   PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     return m_NumberOfEntries;
 }
+#endif
 
 ULONG
 NTAPI

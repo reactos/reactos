@@ -1295,6 +1295,9 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
     TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
     TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+
+    /* Set the TSS selector */
+    Ke386SetTr(KGDT_TSS);
 #endif
 
 #if defined(_M_PPC)
@@ -1360,5 +1363,3 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     /* Do general System Startup */
     KiSystemStartupReal(NtLoaderBlock);
 }
-
-/* EOF */

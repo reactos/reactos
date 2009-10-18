@@ -311,18 +311,19 @@ void msvcrt_init_io(void)
   InitializeCriticalSection(&FILE_cs);
   FILE_cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": FILE_cs");
   GetStartupInfoA(&si);
-  if (si.cbReserved2 != 0 && si.lpReserved2 != NULL)
+  if (si.cbReserved2 >= sizeof(unsigned int) && si.lpReserved2 != NULL)
   {
-    char*       wxflag_ptr;
+    BYTE*       wxflag_ptr;
     HANDLE*     handle_ptr;
+    unsigned int count;
 
-    fdend = *(unsigned*)si.lpReserved2;
+    count = *(unsigned*)si.lpReserved2;
+    wxflag_ptr = si.lpReserved2 + sizeof(unsigned);
+    handle_ptr = (HANDLE*)(wxflag_ptr + count);
 
-    wxflag_ptr = (char*)(si.lpReserved2 + sizeof(unsigned));
-    handle_ptr = (HANDLE*)(wxflag_ptr + fdend * sizeof(char));
-
-    fdend = min(fdend, sizeof(fdesc) / sizeof(fdesc[0]));
-    for (i = 0; i < fdend; i++)
+    count = min(count, (si.cbReserved2 - sizeof(unsigned)) / (sizeof(HANDLE) + 1));
+    count = min(count, sizeof(fdesc) / sizeof(fdesc[0]));
+    for (i = 0; i < count; i++)
     {
       if ((*wxflag_ptr & WX_OPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
       {
@@ -336,6 +337,7 @@ void msvcrt_init_io(void)
       }
       wxflag_ptr++; handle_ptr++;
     }
+    fdend = max( 3, count );
     for (fdstart = 3; fdstart < fdend; fdstart++)
         if (fdesc[fdstart].handle == INVALID_HANDLE_VALUE) break;
   }
@@ -905,10 +907,18 @@ int CDECL fseek(FILE* file, long offset, int whence)
 {
   /* Flush output if needed */
   if(file->_flag & _IOWRT)
-	flush_buffer(file);
+    flush_buffer(file);
 
   if(whence == SEEK_CUR && file->_flag & _IOREAD ) {
-	offset -= file->_cnt;
+    offset -= file->_cnt;
+    if (fdesc[file->_file].wxflag & WX_TEXT) {
+        /* Black magic correction for CR removal */
+        int i;
+        for (i=0; i<file->_cnt; i++) {
+            if (file->_ptr[i] == '\n')
+                offset--;
+        }
+    }
   }
   /* Discard buffered input */
   file->_cnt = 0;
@@ -1560,27 +1570,6 @@ int CDECL _rmtmp(void)
 }
 
 /*********************************************************************
- * (internal) remove_cr
- *
- * Translate all \r\n to \n inplace.
- * return the number of \r removed
- * Corner cases required by some apps:
- *   \r\r\n -> \r\n
- * BUG: should save state across calls somehow, so CR LF that
- * straddles buffer boundary gets recognized properly?
- */
-static unsigned int remove_cr(char *buf, unsigned int count)
-{
-    unsigned int i, j;
-
-    for (i=0, j=0; j < count; j++)
-        if ((buf[j] != '\r') || ((j+1) < count && buf[j+1] != '\n'))
-	    buf[i++] = buf[j];
-
-    return count - i;
-}
-
-/*********************************************************************
  * (internal) read_i
  */
 static int read_i(int fd, void *buf, unsigned int count)
@@ -1607,18 +1596,25 @@ static int read_i(int fd, void *buf, unsigned int count)
     {
         if (fdesc[fd].wxflag & WX_TEXT)
         {
-            int i;
-            /* in text mode, a ctrl-z signals EOF */
-            for (i=0; i<num_read; i++)
+              DWORD i, j;
+            for (i=0, j=0; i<num_read; i++)
             {
+                /* in text mode, a ctrl-z signals EOF */
                 if (bufstart[i] == 0x1a)
                 {
-                    num_read = i;
                     fdesc[fd].wxflag |= (WX_ATEOF|WX_READEOF);
                     TRACE(":^Z EOF %s\n",debugstr_an(buf,num_read));
                     break;
                 }
+                /* in text mode, strip \r if followed by \n.
+                 * BUG: should save state across calls somehow, so CR LF that
+                 * straddles buffer boundary gets recognized properly?
+                 */
+                if ((bufstart[i] != '\r')
+                        ||  ((i+1) < num_read && bufstart[i+1] != '\n'))
+                    bufstart[j++] = bufstart[i];
             }
+            num_read = j;
         }
         if (count != 0 && num_read == 0)
         {
@@ -1653,10 +1649,6 @@ int CDECL _read(int fd, void *buf, unsigned int count)
 {
   int num_read;
   num_read = read_i(fd, buf, count);
-  if (num_read>0 && fdesc[fd].wxflag & WX_TEXT)
-  {
-      num_read -= remove_cr(buf,num_read);
-  }
   return num_read;
 }
 
@@ -1958,17 +1950,13 @@ int CDECL fgetc(FILE* file)
 {
   unsigned char *i;
   unsigned int j;
-  do {
-    if (file->_cnt>0) {
-      file->_cnt--;
-      i = (unsigned char *)file->_ptr++;
-      j = *i;
-    } else
-      j = _filbuf(file);
-    if (!(fdesc[file->_file].wxflag & WX_TEXT)
-    || ((j != '\r') || (file->_cnt && file->_ptr[0] != '\n')))
-        return j;
-  } while(1);
+  if (file->_cnt>0) {
+    file->_cnt--;
+    i = (unsigned char *)file->_ptr++;
+    j = *i;
+  } else
+    j = _filbuf(file);
+  return j;
 }
 
 /*********************************************************************
@@ -2303,11 +2291,13 @@ int CDECL _flsbuf(int c, FILE* file)
   }
   if(file->_bufsiz) {
         int res=flush_buffer(file);
-	return res?res : fputc(c, file);
+    return res?res : fputc(c, file);
   } else {
-	unsigned char cc=c;
+    unsigned char cc=c;
         int len;
-	len = _write(file->_file, &cc, 1);
+        /* set _cnt to 0 for unbuffered FILEs */
+        file->_cnt = 0;
+        len = _write(file->_file, &cc, 1);
         if (len == 1) return c & 0xff;
         file->_flag |= _IOERR;
         return EOF;
@@ -2339,8 +2329,6 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
 	memcpy(ptr, file->_ptr, pcnt);
 	file->_cnt -= pcnt;
 	file->_ptr += pcnt;
-	if (fdesc[file->_file].wxflag & WX_TEXT)
-            pcnt -= remove_cr(ptr,pcnt);
 	read += pcnt ;
 	rcnt -= pcnt ;
         ptr = (char*)ptr + pcnt;
@@ -2496,17 +2484,26 @@ int CDECL fsetpos(FILE* file, const fpos_t *pos)
  */
 LONG CDECL ftell(FILE* file)
 {
+  /* TODO: just call fgetpos and return lower half of result */
   int off=0;
   long pos;
-  if(file->_bufsiz)  {
-	if( file->_flag & _IOWRT ) {
-		off = file->_ptr - file->_base;
-	} else {
-		off = -file->_cnt;
-	}
-  }
   pos = _tell(file->_file);
-  if(pos == -1) return pos;
+  if(pos == -1) return -1;
+  if(file->_bufsiz)  {
+    if( file->_flag & _IOWRT ) {
+        off = file->_ptr - file->_base;
+    } else {
+        off = -file->_cnt;
+        if (fdesc[file->_file].wxflag & WX_TEXT) {
+            /* Black magic correction for CR removal */
+            int i;
+            for (i=0; i<file->_cnt; i++) {
+                if (file->_ptr[i] == '\n')
+                    off--;
+            }
+        }
+    }
+  }
   return off + pos;
 }
 
@@ -2515,22 +2512,25 @@ LONG CDECL ftell(FILE* file)
  */
 int CDECL fgetpos(FILE* file, fpos_t *pos)
 {
-  /* This code has been lifted form the ftell function */
   int off=0;
-
   *pos = _lseeki64(file->_file,0,SEEK_CUR);
-
-  if (*pos == -1) return -1;
-  
+  if(*pos == -1) return -1;
   if(file->_bufsiz)  {
-	if( file->_flag & _IOWRT ) {
-		off = file->_ptr - file->_base;
-	} else {
-		off = -file->_cnt;
-	}
+    if( file->_flag & _IOWRT ) {
+        off = file->_ptr - file->_base;
+    } else {
+        off = -file->_cnt;
+        if (fdesc[file->_file].wxflag & WX_TEXT) {
+            /* Black magic correction for CR removal */
+            int i;
+            for (i=0; i<file->_cnt; i++) {
+                if (file->_ptr[i] == '\n')
+                    off--;
+            }
+        }
+    }
   }
   *pos += off;
-  
   return 0;
 }
 

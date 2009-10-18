@@ -916,6 +916,10 @@ GetGlyphIndicesA(
     INT countW;
 
     lpstrW = FONT_mbtowc(hdc, lpstr, count, &countW, NULL);
+
+    if (lpstrW == NULL)
+        return GDI_ERROR;
+
     Ret = NtGdiGetGlyphIndicesW(hdc, lpstrW, countW, pgi, flags);
     HeapFree(GetProcessHeap(), 0, lpstrW);
     return Ret;

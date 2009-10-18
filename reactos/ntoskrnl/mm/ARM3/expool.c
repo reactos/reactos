@@ -16,10 +16,14 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
+#undef ExAllocatePoolWithQuota
+#undef ExAllocatePoolWithQuotaTag
+
 /* GLOBALS ********************************************************************/
 
 POOL_DESCRIPTOR NonPagedPoolDescriptor;
 PPOOL_DESCRIPTOR PoolVector[2];
+PKGUARDED_MUTEX ExpPagedPoolMutex;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -69,18 +73,107 @@ NTAPI
 InitializePool(IN POOL_TYPE PoolType,
                IN ULONG Threshold)
 {
-    ASSERT(PoolType == NonPagedPool);
+    PPOOL_DESCRIPTOR Descriptor;
     
     //
-    // Initialize the nonpaged pool descirptor
+    // Check what kind of pool this is
     //
-    PoolVector[PoolType] = &NonPagedPoolDescriptor;
-    ExInitializePoolDescriptor(PoolVector[PoolType],
-                               PoolType,
-                               0,
-                               Threshold,
-                               NULL);
+    if (PoolType == NonPagedPool)
+    {
+        //
+        // Initialize the nonpaged pool descriptor
+        //
+        PoolVector[NonPagedPool] = &NonPagedPoolDescriptor;
+        ExInitializePoolDescriptor(PoolVector[NonPagedPool],
+                                   NonPagedPool,
+                                   0,
+                                   Threshold,
+                                   NULL);
+    }
+    else
+    {
+        //
+        // Allocate the pool descriptor
+        //
+        Descriptor = ExAllocatePoolWithTag(NonPagedPool,
+                                           sizeof(KGUARDED_MUTEX) +
+                                           sizeof(POOL_DESCRIPTOR),
+                                           'looP');
+        if (!Descriptor)
+        {
+            //
+            // This is really bad...
+            //
+            KeBugCheckEx(MUST_SUCCEED_POOL_EMPTY,
+                         0,
+                         -1,
+                         -1,
+                         -1);
+        }
+        
+        //
+        // Setup the vector and guarded mutex for paged pool
+        //
+        PoolVector[PagedPool] = Descriptor;
+        ExpPagedPoolMutex = (PKGUARDED_MUTEX)(Descriptor + 1);
+        KeInitializeGuardedMutex(ExpPagedPoolMutex);
+        ExInitializePoolDescriptor(Descriptor,
+                                   PagedPool,
+                                   0,
+                                   Threshold,
+                                   ExpPagedPoolMutex);
+    }
 }
+
+FORCEINLINE
+KIRQL
+ExLockPool(IN PPOOL_DESCRIPTOR Descriptor)
+{
+    //
+    // Check if this is nonpaged pool
+    //
+    if ((Descriptor->PoolType & BASE_POOL_TYPE_MASK) == NonPagedPool)
+    {
+        //
+        // Use the queued spin lock
+        //
+        return KeAcquireQueuedSpinLock(LockQueueNonPagedPoolLock);
+    }
+    else
+    {
+        //
+        // Use the guarded mutex
+        //
+        KeAcquireGuardedMutex(Descriptor->LockAddress);
+        return APC_LEVEL;
+    }
+}
+
+FORCEINLINE
+VOID
+ExUnlockPool(IN PPOOL_DESCRIPTOR Descriptor,
+             IN KIRQL OldIrql)
+{
+    //
+    // Check if this is nonpaged pool
+    //
+    if ((Descriptor->PoolType & BASE_POOL_TYPE_MASK) == NonPagedPool)
+    {
+        //
+        // Use the queued spin lock
+        //
+        KeReleaseQueuedSpinLock(LockQueueNonPagedPoolLock, OldIrql);
+    }
+    else
+    {
+        //
+        // Use the guarded mutex
+        //
+        KeReleaseGuardedMutex(Descriptor->LockAddress);
+    }
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 PVOID
 NTAPI
@@ -151,9 +244,9 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
         if (!IsListEmpty(ListHead))
         {
             //
-            // Acquire the nonpaged pool lock now
+            // Acquire the pool lock now
             //
-            OldIrql = KeAcquireQueuedSpinLock(LockQueueNonPagedPoolLock);
+            OldIrql = ExLockPool(PoolDesc);
             
             //
             // And make sure the list still has entries
@@ -166,7 +259,7 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
                 //
                 // Try again!
                 //
-                KeReleaseQueuedSpinLock(LockQueueNonPagedPoolLock, OldIrql);
+                ExUnlockPool(PoolDesc, OldIrql);
                 ListHead++;
                 continue;
             }
@@ -292,7 +385,7 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
             // and release the lock since we're done
             //
             Entry->PoolType = PoolType + 1;
-            KeReleaseQueuedSpinLock(LockQueueNonPagedPoolLock, OldIrql);
+            ExUnlockPool(PoolDesc, OldIrql);
 
             //
             // Return the pool allocation
@@ -330,9 +423,9 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
     if (FragmentEntry->BlockSize != 1)
     {
         //
-        // Excellent -- acquire the nonpaged pool lock
+        // Excellent -- acquire the pool lock
         //
-        OldIrql = KeAcquireQueuedSpinLock(LockQueueNonPagedPoolLock);
+        OldIrql = ExLockPool(PoolDesc);
 
         //
         // And insert the free entry into the free list for this block size
@@ -341,9 +434,9 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
                        (PLIST_ENTRY)FragmentEntry + 1);
         
         //
-        // Release the nonpaged pool lock
+        // Release the pool lock
         //
-        KeReleaseQueuedSpinLock(LockQueueNonPagedPoolLock, OldIrql);
+        ExUnlockPool(PoolDesc, OldIrql);
     }
 
     //
@@ -397,7 +490,7 @@ ExFreeArmPoolWithTag(IN PVOID P,
     // for this pool type
     //
     BlockSize = Entry->BlockSize;
-    PoolType = (Entry->PoolType & BASE_POOL_TYPE_MASK) - 1;
+    PoolType = (Entry->PoolType & 3) - 1;
     PoolDesc = PoolVector[PoolType];
 
     //
@@ -406,9 +499,9 @@ ExFreeArmPoolWithTag(IN PVOID P,
     NextEntry = Entry + BlockSize;
 
     //
-    // Acquire the nonpaged pool lock
+    // Acquire the pool lock
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueueNonPagedPoolLock);
+    OldIrql = ExLockPool(PoolDesc);
 
     //
     // Check if the next allocation is at the end of the page
@@ -498,9 +591,9 @@ ExFreeArmPoolWithTag(IN PVOID P,
         (PAGE_ALIGN(Entry + Entry->BlockSize) == Entry + Entry->BlockSize))
     {
         //
-        // In this case, release the nonpaged pool lock, and free the page
+        // In this case, release the pool lock, and free the page
         //
-        KeReleaseQueuedSpinLock(LockQueueNonPagedPoolLock, OldIrql);
+        ExUnlockPool(PoolDesc, OldIrql);
         MiFreePoolPages(Entry);
         return;
     }
@@ -531,10 +624,10 @@ ExFreeArmPoolWithTag(IN PVOID P,
     }
     
     //
-    // Insert this new free block, and release the nonpaged pool lock
+    // Insert this new free block, and release the pool lock
     //
     InsertHeadList(&PoolDesc->ListHeads[BlockSize - 1], (PLIST_ENTRY)Entry + 1);
-    KeReleaseQueuedSpinLock(LockQueueNonPagedPoolLock, OldIrql);
+    ExUnlockPool(PoolDesc, OldIrql);
 }
 
 VOID
@@ -545,6 +638,69 @@ ExFreeArmPool(PVOID P)
     // Just free without checking for the tag
     //
     ExFreeArmPoolWithTag(P, 0);
+}
+
+/*
+ * @unimplemented
+ */
+SIZE_T
+NTAPI
+ExQueryPoolBlockSize(IN PVOID PoolBlock,
+                     OUT PBOOLEAN QuotaCharged)
+{
+    //
+    // Not implemented
+    //
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+
+PVOID
+NTAPI
+ExAllocatePoolWithQuota(IN POOL_TYPE PoolType,
+                        IN SIZE_T NumberOfBytes)
+{
+    //
+    // Allocate the pool
+    //
+    return ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, 'enoN');
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+ExAllocatePoolWithTagPriority(IN POOL_TYPE PoolType,
+                              IN SIZE_T NumberOfBytes,
+                              IN ULONG Tag,
+                              IN EX_POOL_PRIORITY Priority)
+{
+    //
+    // Allocate the pool
+    //
+    UNIMPLEMENTED;
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
+                           IN SIZE_T NumberOfBytes,
+                           IN ULONG Tag)
+{
+    //
+    // Allocate the pool
+    //
+    UNIMPLEMENTED;
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 
 /* EOF */

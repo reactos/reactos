@@ -118,7 +118,10 @@ CIrpQueue::AddMapping(
         // ioctl from KsStudio
         // Wdmaud already probes buffers, therefore no need to probe it again
         // probe the stream irp
-        Status = KsProbeStreamIrp(Irp, KSSTREAM_READ | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
+        if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM)
+            Status = KsProbeStreamIrp(Irp, KSSTREAM_WRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
+        else
+            Status = KsProbeStreamIrp(Irp, KSSTREAM_READ| KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
 
         // check for success
         if (!NT_SUCCESS(Status))
@@ -200,8 +203,7 @@ CIrpQueue::GetMapping(
 
     if (!Irp)
     {
-        DPRINT1("NoIrp\n");
-        return STATUS_UNSUCCESSFUL;
+        DPRINT("NoIrp\n");
         // no irp available, use silence buffer
         *Buffer = (PUCHAR)m_SilenceBuffer;
         *BufferSize = m_MaxFrameSize;

@@ -68,6 +68,8 @@ BOOLEAN KdPitchDebugger;
 BOOLEAN _KdDebuggerNotPresent;
 BOOLEAN _KdDebuggerEnabled;
 BOOLEAN KdAutoEnableOnEvent;
+BOOLEAN KdBlockEnable;
+BOOLEAN KdIgnoreUmExceptions;
 BOOLEAN KdPreviouslyEnabled;
 BOOLEAN KdpDebuggerStructuresInitialized;
 BOOLEAN KdEnteredDebugger;
@@ -83,6 +85,9 @@ BOOLEAN KdpOweBreakpoint;
 BOOLEAN BreakpointsSuspended;
 ULONG KdpNumInternalBreakpoints;
 
+//
+// Symbol Data
+//
 ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
 
 //

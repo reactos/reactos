@@ -14,6 +14,76 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+KdpCopyMemoryChunks(IN ULONG64 Address,
+                    IN PVOID Buffer,
+                    IN ULONG TotalSize,
+                    IN ULONG ChunkSize,
+                    IN ULONG Flags,
+                    OUT PULONG ActualSize OPTIONAL)
+{
+    ULONG Length;
+    NTSTATUS Status;
+
+    /* Check if this is physical or virtual copy */
+    if (Flags & MMDBG_COPY_PHYSICAL)
+    {
+        /* Fail physical memory read/write for now */
+        if (Flags & MMDBG_COPY_WRITE)
+        {
+            KdpDprintf("KdpCopyMemoryChunks: Failing write for Physical Address 0x%I64x Length: %x\n",
+                       Address,
+                       TotalSize);
+        }
+        else
+        {
+            KdpDprintf("KdpCopyMemoryChunks: Failing read for Physical Address 0x%I64x Length: %x\n",
+                       Address,
+                       TotalSize);
+        }
+
+        /* Return an error */
+        Length = 0;
+        Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Protect against NULL */
+        if (!Address)
+        {
+            if (ActualSize) *ActualSize = 0;
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        /* Check if this is read or write */
+        if (Flags & MMDBG_COPY_WRITE)
+        {
+            /* Do the write */
+            RtlCopyMemory((PVOID)(ULONG_PTR)Address,
+                          Buffer,
+                          TotalSize);
+        }
+        else
+        {
+            /* Do the read */
+            RtlCopyMemory(Buffer,
+                          (PVOID)(ULONG_PTR)Address,
+                          TotalSize);
+        }
+
+        /* Set size and status */
+        Length = TotalSize;
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Return the actual length if requested */
+    if (ActualSize) *ActualSize = Length;
+
+    /* Return status */
+    return Status;
+}
+
 VOID
 NTAPI
 KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
@@ -264,10 +334,15 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                      IN PSTRING Data,
                      IN PCONTEXT Context)
 {
+    PDBGKD_READ_MEMORY64 ReadMemory = &State->u.ReadMemory;
     STRING Header;
-    ULONG Length = State->u.ReadMemory.TransferCount;
-    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG Length = ReadMemory->TransferCount;
     ULONG64 TargetBaseAddress = State->u.ReadMemory.TargetBaseAddress;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    ASSERT(Data->Length == 0);
 
     /* Validate length */
     if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
@@ -276,43 +351,16 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
         Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
     }
 
-#if 0
-    if (!MmIsAddressValid((PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress))
-    {
-        KdpDprintf("Tried to read invalid address %p\n",
-                   (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress);
-        while (TRUE);
-    }
-#endif
+    /* Do the read */
+    State->ReturnStatus = KdpCopyMemoryChunks(ReadMemory->TargetBaseAddress,
+                                              Data->Buffer,
+                                              Length,
+                                              0,
+                                              MMDBG_COPY_UNSAFE,
+                                              &Length);
 
-    // HACK for x64, until KD stops sending bogus addresses to WinDbg
-    if (TargetBaseAddress < (ULONG_PTR)MM_LOWEST_SYSTEM_ADDRESS)
-    {
-        FrLdrDbgPrint("Trying to read memory at 0x%p\n", TargetBaseAddress);
-//        DPRINT1("Trying to read memory at 0x%p\n", TargetBaseAddress);
-        TargetBaseAddress = 0;
-    }
-
-    if (!TargetBaseAddress)
-    {
-        Length = 0;
-        Status = STATUS_UNSUCCESSFUL;
-    }
-    else
-    {
-        RtlCopyMemory(Data->Buffer,
-                      (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
-                      Length);
-    }
-
-    /* Fill out the header */
-    Data->Length = Length;
-    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
-    Header.Buffer = (PCHAR)State;
-
-    /* Fill out the state */
-    State->ReturnStatus = Status;
-    State->u.ReadMemory.ActualBytesRead = Length;
+    /* Return the actual length read */
+    Data->Length = ReadMemory->ActualBytesRead = Length;
 
     /* Send the packet */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -327,11 +375,27 @@ KdpWriteVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                       IN PSTRING Data,
                       IN PCONTEXT Context)
 {
-    /* FIXME: STUB */
-    KdpDprintf("KdpWriteVirtualMemory called for Address: %p Length %x\n",
-               (PVOID)(ULONG_PTR)State->u.ReadMemory.TargetBaseAddress,
-               State->u.ReadMemory.TransferCount);
-    while (TRUE);
+    PDBGKD_WRITE_MEMORY64 WriteMemory = &State->u.WriteMemory;
+    STRING Header;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Do the write */
+    State->ReturnStatus = KdpCopyMemoryChunks(WriteMemory->TargetBaseAddress,
+                                              Data->Buffer,
+                                              Data->Length,
+                                              0,
+                                              MMDBG_COPY_UNSAFE |
+                                              MMDBG_COPY_WRITE,
+                                              &WriteMemory->ActualBytesWritten);
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -340,20 +404,56 @@ KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
                       IN PSTRING Data,
                       IN PCONTEXT Context)
 {
+    PDBGKD_READ_MEMORY64 ReadMemory = &State->u.ReadMemory;
     STRING Header;
+    ULONG Length = ReadMemory->TransferCount;
+    ULONG Flags, CacheFlags;
 
-    /* FIXME: STUB */
-    KdpDprintf("KdpWritePhysicalMemory called for Address %I64x Length: %x\n",
-               State->u.ReadMemory.TargetBaseAddress,
-               State->u.ReadMemory.TransferCount);
-
-    /* Setup an empty message, with failure */
+    /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    Data->Length = 0;
-    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    ASSERT(Data->Length == 0);
 
-    /* Send it */
+    /* Validate length */
+    if (Length > (PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64)))
+    {
+        /* Overflow, set it to maximum possible */
+        Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
+    }
+
+    /* Start with the default flags */
+    Flags = MMDBG_COPY_UNSAFE | MMDBG_COPY_PHYSICAL;
+
+    /* Get the caching flags and check if a type is specified */
+    CacheFlags = ReadMemory->ActualBytesRead;
+    if (CacheFlags == DBGKD_CACHING_CACHED)
+    {
+        /* Cached */
+        Flags |= MMDBG_COPY_CACHED;
+    }
+    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    {
+        /* Uncached */
+        Flags |= MMDBG_COPY_UNCACHED;
+    }
+    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    {
+        /* Write Combined */
+        Flags |= DBGKD_CACHING_WRITE_COMBINED;
+    }
+
+    /* Do the read */
+    State->ReturnStatus = KdpCopyMemoryChunks(ReadMemory->TargetBaseAddress,
+                                              Data->Buffer,
+                                              Length,
+                                              0,
+                                              Flags,
+                                              &Length);
+
+    /* Return the actual length read */
+    Data->Length = ReadMemory->ActualBytesRead = Length;
+
+    /* Send the packet */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
                  Data,
@@ -366,23 +466,47 @@ KdpWritePhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
                        IN PSTRING Data,
                        IN PCONTEXT Context)
 {
+    PDBGKD_WRITE_MEMORY64 WriteMemory = &State->u.WriteMemory;
     STRING Header;
+    ULONG Flags, CacheFlags;
 
-    /* FIXME: STUB */
-    KdpDprintf("KdpWritePhysicalMemory called for Address %I64x Length: %x\n",
-               State->u.ReadMemory.TargetBaseAddress,
-               State->u.ReadMemory.TransferCount);
-
-    /* Setup an empty message, with failure */
+    /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    Data->Length = 0;
-    State->ReturnStatus = STATUS_UNSUCCESSFUL;
 
-    /* Send it */
+    /* Start with the default flags */
+    Flags = MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE | MMDBG_COPY_PHYSICAL;
+
+    /* Get the caching flags and check if a type is specified */
+    CacheFlags = WriteMemory->ActualBytesWritten;
+    if (CacheFlags == DBGKD_CACHING_CACHED)
+    {
+        /* Cached */
+        Flags |= MMDBG_COPY_CACHED;
+    }
+    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    {
+        /* Uncached */
+        Flags |= MMDBG_COPY_UNCACHED;
+    }
+    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    {
+        /* Write Combined */
+        Flags |= DBGKD_CACHING_WRITE_COMBINED;
+    }
+
+    /* Do the write */
+    State->ReturnStatus = KdpCopyMemoryChunks(WriteMemory->TargetBaseAddress,
+                                              Data->Buffer,
+                                              Data->Length,
+                                              0,
+                                              Flags,
+                                              &WriteMemory->ActualBytesWritten);
+
+    /* Send the packet */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data,
+                 NULL,
                  &KdpContext);
 }
 
@@ -434,7 +558,6 @@ KdpWriteControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
 {
     PDBGKD_WRITE_MEMORY64 WriteMemory = &State->u.WriteMemory;
     STRING Header;
-    ULONG Length;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -445,10 +568,7 @@ KdpWriteControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                                                   WriteMemory->TargetBaseAddress,
                                                   Data->Buffer,
                                                   Data->Length,
-                                                  &Length);
-
-    /* Return the length written */
-    WriteMemory->ActualBytesWritten = Length;
+                                                  &WriteMemory->ActualBytesWritten);
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -483,7 +603,7 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         else
         {
             /* SMP not yet handled */
-            KdpDprintf("SMP UNHANDLED\n");
+            KdpDprintf("KdpGetContext: SMP UNHANDLED\n");
             ControlStart = NULL;
             while (TRUE);
         }
@@ -534,7 +654,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         else
         {
             /* SMP not yet handled */
-            KdpDprintf("SMP UNHANDLED\n");
+            KdpDprintf("KdpSetContext: SMP UNHANDLED\n");
             ControlStart = NULL;
             while (TRUE);
         }
@@ -651,8 +771,8 @@ KdpGetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = KdpSysReadBusData(GetBusData->BusDataType,
                                             GetBusData->BusNumber,
                                             GetBusData->SlotNumber,
-                                            Data->Buffer,
                                             GetBusData->Offset,
+                                            Data->Buffer,
                                             Length,
                                             &Length);
 
@@ -684,8 +804,8 @@ KdpSetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = KdpSysWriteBusData(SetBusData->BusDataType,
                                              SetBusData->BusNumber,
                                              SetBusData->SlotNumber,
-                                             Data->Buffer,
                                              SetBusData->Offset,
+                                             Data->Buffer,
                                              SetBusData->Length,
                                              &Length);
 
@@ -844,7 +964,7 @@ KdpCheckLowMemory(IN PDBGKD_MANIPULATE_STATE64 State)
     Header.Buffer = (PCHAR)State;
 
     /* Call the internal routine */
-    State->ReturnStatus = KdpSysCheckLowMemory(0x4);
+    State->ReturnStatus = KdpSysCheckLowMemory(MMDBG_COPY_UNSAFE);
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -1357,6 +1477,22 @@ KdpQueryPerformanceCounter(IN PKTRAP_FRAME TrapFrame)
     return KeQueryPerformanceCounter(NULL);
 }
 
+NTSTATUS
+NTAPI
+KdpAllowDisable(VOID)
+{
+    /* Check if we are on MP */
+    if (KeNumberProcessors > 1)
+    {
+        /* TODO */
+        KdpDprintf("KdpAllowDisable: SMP UNHANDLED\n");
+        while (TRUE);
+    }
+
+    /* Allow disable */
+    return STATUS_SUCCESS;
+}
+
 BOOLEAN
 NTAPI
 KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
@@ -1456,6 +1592,13 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
     OldIrql = PASSIVE_LEVEL;
 #endif
 
+    /* Check if enabling the debugger is blocked */
+    if (KdBlockEnable)
+    {
+        /* It is, fail the enable */
+        return STATUS_ACCESS_DENIED;
+    }
+
     /* Check if we need to acquire the lock */
     if (NeedLock)
     {
@@ -1473,10 +1616,21 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
             /* Do the unlock */
             KeLowerIrql(OldIrql);
             KdpPortUnlock();
-        }
 
-        /* Fail: We're already enabled */
-        return STATUS_INVALID_PARAMETER;
+            /* Fail: We're already enabled */
+            return STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            /*
+             * This can only happen if we are called from a bugcheck
+             * and were never initialized, so initialize the debugger now.
+             */
+            KdInitSystem(0, NULL);
+
+            /* Return success since we initialized */
+            return STATUS_SUCCESS;
+        }
     }
 
     /* Decrease the disable count */
@@ -1503,6 +1657,98 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
+{
+    KIRQL OldIrql;
+    NTSTATUS Status;
+
+#if defined(__GNUC__)
+    /* Make gcc happy */
+    OldIrql = PASSIVE_LEVEL;
+#endif
+
+    /*
+     * If enabling the debugger is blocked
+     * then there is nothing to disable (duh)
+     */
+    if (KdBlockEnable)
+    {
+        /* Fail */
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Check if we need to acquire the lock */
+    if (NeedLock)
+    {
+        /* Lock the port */
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+        KdpPortLock();
+    }
+
+    /* Check if we're not disabled */
+    if (!KdDisableCount)
+    {
+        /* Check if the debugger was never actually initialized */
+        if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
+        {
+            /* It wasn't, so don't re-enable it later */
+            KdPreviouslyEnabled = FALSE;
+        }
+        else
+        {
+            /* It was, so we will re-enable it later */
+            KdPreviouslyEnabled = TRUE;
+        }
+
+        /* Check if we were called from the exported API and are enabled */
+        if ((NeedLock) && (KdPreviouslyEnabled))
+        {
+            /* Check if it is safe to disable the debugger */
+            Status = KdpAllowDisable();
+            if (!NT_SUCCESS(Status))
+            {
+                /* Release the lock and fail */
+                KeLowerIrql(OldIrql);
+                KdpPortUnlock();
+                return Status;
+            }
+        }
+
+        /* Only disable the debugger if it is enabled */
+        if (KdDebuggerEnabled)
+        {
+            /*
+             * Disable the debugger; suspend breakpoints
+             * and reset the debug stub
+             */
+            KdpSuspendAllBreakPoints();
+            KiDebugRoutine = KdpStub;
+
+            /* We are disabled now */
+            KdDebuggerEnabled = FALSE;
+#undef KdDebuggerEnabled
+            SharedUserData->KdDebuggerEnabled = FALSE;
+#define KdDebuggerEnabled _KdDebuggerEnabled
+        }
+     }
+
+    /* Increment the disable count */
+    KdDisableCount++;
+
+    /* Check if we had locked the port before */
+    if (NeedLock)
+    {
+        /* Yes, now unlock it */
+        KeLowerIrql(OldIrql);
+        KdpPortUnlock();
+    }
+
+    /* We're done */
+    return STATUS_SUCCESS;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -1513,9 +1759,18 @@ NTAPI
 KdEnableDebugger(VOID)
 {
     /* Use the internal routine */
-    KdpDprintf("KdEnableDebugger called\n");
-    while (TRUE);
     return KdEnableDebuggerWithLock(TRUE);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KdDisableDebugger(VOID)
+{
+    /* Use the internal routine */
+    return KdDisableDebuggerWithLock(TRUE);
 }
 
 /*
@@ -1565,17 +1820,6 @@ KdPowerTransition(IN DEVICE_POWER_STATE NewState)
 /*
  * @unimplemented
  */
-NTSTATUS
-NTAPI
-KdDisableDebugger(VOID)
-{
-    /* HACK */
-    return STATUS_SUCCESS;
-}
-
-/*
- * @unimplemented
- */
 BOOLEAN
 NTAPI
 KdRefreshDebuggerNotPresent(VOID)
@@ -1602,4 +1846,3 @@ NtSetDebugFilterState(ULONG ComponentId,
     /* HACK */
     return STATUS_SUCCESS;
 }
-

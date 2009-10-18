@@ -919,7 +919,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	Ke386SetLocalDescriptorTable(Ldt);
 
 	// Load TSR
-	Ke386SetTr(0x28);
+	Ke386SetTr(KGDT_TSS);
 
 	// Clear GS
 	Ke386SetGs(0);

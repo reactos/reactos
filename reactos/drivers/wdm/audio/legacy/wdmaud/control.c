@@ -48,7 +48,7 @@ WdmAudControlDeviceType(
     IN  PWDMAUD_CLIENT ClientInfo)
 {
     ULONG Result = 0;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -179,7 +179,7 @@ WdmAudFrameSize(
     Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
+        DPRINT1("Invalid buffer handle %p\n", DeviceInfo->hDevice);
         return SetIrpIoStatus(Irp, Status, 0);
     }
 
@@ -343,7 +343,7 @@ WdmAudReadWrite(
     Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Invalid pin handle %x\n", DeviceInfo->hDevice);
+        DPRINT1("Invalid pin handle %p\n", DeviceInfo->hDevice);
         return SetIrpIoStatus(Irp, Status, 0);
     }
 

@@ -11,16 +11,6 @@
 #define NDEBUG
 #include "fastfat.h"
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeStringToCountedOemString(
-    IN OUT POEM_STRING DestinationString,
-    IN PCUNICODE_STRING SourceString,
-    IN BOOLEAN AllocateDestinationString
-);
-
-
 /* FUNCTIONS *****************************************************************/
 
 IO_STATUS_BLOCK
@@ -37,6 +27,110 @@ FatiOpenRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
     DPRINT1("Opening root directory\n");
 
     Iosb.Status = STATUS_NOT_IMPLEMENTED;
+
+    return Iosb;
+}
+
+FF_ERROR
+NTAPI
+FatiTryToOpen(IN PFILE_OBJECT FileObject,
+              IN PVCB Vcb)
+{
+    OEM_STRING AnsiName;
+    CHAR AnsiNameBuf[512];
+    FF_ERROR Error;
+    NTSTATUS Status;
+    FF_FILE *FileHandle;
+
+    /* Convert the name to ANSI */
+    AnsiName.Buffer = AnsiNameBuf;
+    AnsiName.Length = 0;
+    AnsiName.MaximumLength = sizeof(AnsiNameBuf);
+    RtlZeroMemory(AnsiNameBuf, sizeof(AnsiNameBuf));
+    Status = RtlUpcaseUnicodeStringToCountedOemString(&AnsiName, &FileObject->FileName, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+
+    /* Open the file with FullFAT */
+    FileHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_READ, &Error);
+
+    /* Close the handle */
+    if (FileHandle) FF_Close(FileHandle);
+
+    /* Return status */
+    return Error;
+}
+
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenExistingDir(IN PFAT_IRP_CONTEXT IrpContext,
+                     IN PFILE_OBJECT FileObject,
+                     IN PVCB Vcb,
+                     IN PFCB ParentDcb,
+                     IN PACCESS_MASK DesiredAccess,
+                     IN USHORT ShareAccess,
+                     IN ULONG AllocationSize,
+                     IN PFILE_FULL_EA_INFORMATION EaBuffer,
+                     IN ULONG EaLength,
+                     IN UCHAR FileAttributes,
+                     IN ULONG CreateDisposition,
+                     IN BOOLEAN DeleteOnClose)
+{
+    IO_STATUS_BLOCK Iosb = {{0}};
+    OEM_STRING AnsiName;
+    CHAR AnsiNameBuf[512];
+    PFCB Fcb;
+    NTSTATUS Status;
+    FF_FILE *FileHandle;
+
+    /* Only open is permitted */
+    if (CreateDisposition != FILE_OPEN &&
+        CreateDisposition != FILE_OPEN_IF)
+    {
+        Iosb.Status = STATUS_OBJECT_NAME_COLLISION;
+        return Iosb;
+    }
+
+    // TODO: Check dir access
+
+    /* Convert the name to ANSI */
+    AnsiName.Buffer = AnsiNameBuf;
+    AnsiName.Length = 0;
+    AnsiName.MaximumLength = sizeof(AnsiNameBuf);
+    RtlZeroMemory(AnsiNameBuf, sizeof(AnsiNameBuf));
+    Status = RtlUpcaseUnicodeStringToCountedOemString(&AnsiName, &FileObject->FileName, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+
+    /* Open the dir with FullFAT */
+    FileHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_DIR, NULL);
+
+    if (!FileHandle)
+    {
+        Iosb.Status = STATUS_OBJECT_NAME_NOT_FOUND; // FIXME: A shortcut for now
+        return Iosb;
+    }
+
+    /* Create a new DCB for this directory */
+    Fcb = FatCreateDcb(IrpContext, Vcb, ParentDcb, FileHandle);
+
+    /* Set share access */
+    IoSetShareAccess(*DesiredAccess, ShareAccess, FileObject, &Fcb->ShareAccess);
+
+    /* Set context and section object pointers */
+    FatSetFileObject(FileObject,
+                     UserDirectoryOpen,
+                     Fcb,
+                     FatCreateCcb());
+
+    Iosb.Status = STATUS_SUCCESS;
+    Iosb.Information = FILE_OPENED;
+
+    DPRINT1("Successfully opened dir %s\n", AnsiNameBuf);
 
     return Iosb;
 }
@@ -227,9 +321,9 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     ULONG CreateDisposition;
 
     /* Control blocks */
-    PVCB Vcb, DecodedVcb;
-    PFCB Fcb, NextFcb;
-    PCCB Ccb;
+    PVCB Vcb, DecodedVcb, RelatedVcb;
+    PFCB Fcb, NextFcb, RelatedDcb;
+    PCCB Ccb, RelatedCcb;
     PFCB ParentDcb;
 
     /* IRP data */
@@ -249,8 +343,11 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     IO_STATUS_BLOCK Iosb;
     PIO_STACK_LOCATION IrpSp;
     BOOLEAN EndBackslash = FALSE, OpenedAsDos;
-    UNICODE_STRING RemainingPart, FirstName, NextName;
+    UNICODE_STRING RemainingPart, FirstName, NextName, FileNameUpcased;
     OEM_STRING AnsiFirstName;
+    FF_ERROR FfError;
+    TYPE_OF_OPEN TypeOfOpen;
+    BOOLEAN OplockPostIrp = FALSE;
 
     Iosb.Status = STATUS_SUCCESS;
 
@@ -427,8 +524,42 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     /* Check if this is a relative open */
     if (RelatedFO)
     {
-        // RelatedFO will be a parent directory
-        UNIMPLEMENTED;
+        /* Decode the file object */
+        TypeOfOpen = FatDecodeFileObject(RelatedFO,
+                                         &RelatedVcb,
+                                         &RelatedDcb,
+                                         &RelatedCcb);
+
+        /* Check open type */
+        if (TypeOfOpen != UserFileOpen &&
+            TypeOfOpen != UserDirectoryOpen)
+        {
+            DPRINT1("Invalid file object!\n");
+
+            /* Cleanup and return */
+            FatReleaseVcb(IrpContext, Vcb);
+            return STATUS_OBJECT_PATH_NOT_FOUND;
+        }
+
+        /* File path must be relative */
+        if (FileName.Length != 0 &&
+            FileName.Buffer[0] == L'\\')
+        {
+            /* The name is absolute, fail */
+            FatReleaseVcb(IrpContext, Vcb);
+            return STATUS_OBJECT_NAME_INVALID;
+        }
+
+        /* Make sure volume is the same */
+        ASSERT(RelatedVcb == Vcb);
+
+        /* Save VPB */
+        FileObject->Vpb = RelatedFO->Vpb;
+
+        /* Set parent DCB */
+        ParentDcb = RelatedDcb;
+
+        DPRINT1("Opening file '%wZ' relatively to '%wZ'\n", &FileName, &ParentDcb->FullFileName);
     }
     else
     {
@@ -544,10 +675,22 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
                                          &OpenedAsDos);
                 }
 
-                /* Check if we found anything */
+                /* If nothing found - try with unicode */
                 if (!NextFcb && Fcb->Dcb.SplayLinksUnicode)
                 {
-                    ASSERT(FALSE);
+                    FileNameUpcased.Buffer = FsRtlAllocatePool(PagedPool, FirstName.Length);
+                    FileNameUpcased.Length = 0;
+                    FileNameUpcased.MaximumLength = FirstName.Length;
+
+                    /* Downcase and then upcase to normalize it */
+                    Status = RtlDowncaseUnicodeString(&FileNameUpcased, &FirstName, FALSE);
+                    Status = RtlUpcaseUnicodeString(&FileNameUpcased, &FileNameUpcased, FALSE);
+
+                    /* Try to find FCB again using unicode name */
+                    NextFcb = FatFindFcb(IrpContext,
+                                         &Fcb->Dcb.SplayLinksUnicode,
+                                        (PSTRING)&FileNameUpcased,
+                                         &OpenedAsDos);
                 }
 
                 /* Move to the next FCB */
@@ -589,8 +732,116 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         /* We have a valid FCB now */
         if (!RemainingPart.Length)
         {
-            DPRINT1("It's possible to open an existing FCB\n");
-            ASSERT(FALSE);
+            /* Check for target dir open */
+            if (OpenTargetDirectory)
+            {
+                DPRINT1("Opening target dir is missing\n");
+                ASSERT(FALSE);
+            }
+
+            /* Check this FCB's type */
+            if (FatNodeType(Fcb) == FAT_NTC_ROOT_DCB ||
+                FatNodeType(Fcb) == FAT_NTC_DCB)
+            {
+                /* Open a directory */
+                if (NonDirectoryFile)
+                {
+                    /* Forbidden */
+                    Iosb.Status = STATUS_FILE_IS_A_DIRECTORY;
+                    ASSERT(FALSE);
+                    return Iosb.Status;
+                }
+
+                /* Open existing DCB */
+                Iosb = FatiOpenExistingDcb(IrpContext,
+                                           FileObject,
+                                           Vcb,
+                                           Fcb,
+                                           DesiredAccess,
+                                           ShareAccess,
+                                           CreateDisposition,
+                                           NoEaKnowledge,
+                                           DeleteOnClose);
+
+                /* Save information */
+                Irp->IoStatus.Information = Iosb.Information;
+
+                /* Unlock VCB */
+                FatReleaseVcb(IrpContext, Vcb);
+
+                /* Complete the request */
+                FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+
+                return Iosb.Status;
+            }
+            else if (FatNodeType(Fcb) == FAT_NTC_FCB)
+            {
+                /* Open a file */
+                if (OpenDirectory)
+                {
+                    /* Forbidden */
+                    Iosb.Status = STATUS_NOT_A_DIRECTORY;
+                    ASSERT(FALSE);
+                    return Iosb.Status;
+                }
+
+                /* Check for trailing backslash */
+                if (EndBackslash)
+                {
+                    /* Forbidden */
+                    Iosb.Status = STATUS_OBJECT_NAME_INVALID;
+                    ASSERT(FALSE);
+                    return Iosb.Status;
+                }
+
+                Iosb = FatiOpenExistingFcb(IrpContext,
+                                           FileObject,
+                                           Vcb,
+                                           Fcb,
+                                           DesiredAccess,
+                                           ShareAccess,
+                                           AllocationSize,
+                                           EaBuffer,
+                                           EaLength,
+                                           FileAttributes,
+                                           CreateDisposition,
+                                           NoEaKnowledge,
+                                           DeleteOnClose,
+                                           OpenedAsDos,
+                                           &OplockPostIrp);
+
+                /* Check if it's pending */
+                if (Iosb.Status != STATUS_PENDING)
+                {
+                    /* In case of success set cache supported flag */
+                    if (NT_SUCCESS(Iosb.Status) && !NoIntermediateBuffering)
+                    {
+                        SetFlag(FileObject->Flags, FO_CACHE_SUPPORTED);
+                    }
+
+                    /* Save information */
+                    Irp->IoStatus.Information = Iosb.Information;
+
+                    /* Unlock VCB */
+                    FatReleaseVcb(IrpContext, Vcb);
+
+                    /* Complete the request */
+                    FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+
+                    return Iosb.Status;
+                }
+                else
+                {
+                    /* Queue this IRP */
+                    UNIMPLEMENTED;
+                    ASSERT(FALSE);
+                }
+            }
+            else
+            {
+                /* Unexpected FCB type */
+                KeBugCheckEx(/*FAT_FILE_SYSTEM*/0x23, __LINE__, (ULONG_PTR)Fcb, 0, 0);
+            }
         }
 
         /* During parsing we encountered a part which has no attached FCB/DCB.
@@ -637,13 +888,63 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             /* Create a DCB for this entry */
             ParentDcb = FatCreateDcb(IrpContext,
                                      Vcb,
-                                     ParentDcb);
+                                     ParentDcb,
+                                     NULL);
 
             /* Set its name */
             FatSetFullNameInFcb(ParentDcb, &FirstName);
         }
 
-        // TODO: Try to open directory
+        /* Try to open it and get a result, saying if this is a dir or a file */
+        FfError = FatiTryToOpen(FileObject, Vcb);
+
+        /* Check if we need to open target directory */
+        if (OpenTargetDirectory)
+        {
+            // TODO: Open target directory
+            UNIMPLEMENTED;
+        }
+
+        /* Check, if path is a directory or a file */
+        if (FfError == FF_ERR_FILE_OBJECT_IS_A_DIR)
+        {
+            if (NonDirectoryFile)
+            {
+                DPRINT1("Can't open dir as a file\n");
+
+                /* Unlock VCB */
+                FatReleaseVcb(IrpContext, Vcb);
+
+                /* Complete the request */
+                Iosb.Status = STATUS_FILE_IS_A_DIRECTORY;
+                FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+                return Iosb.Status;
+            }
+
+            /* Open this directory */
+            Iosb = FatiOpenExistingDir(IrpContext,
+                                       FileObject,
+                                       Vcb,
+                                       ParentDcb,
+                                       DesiredAccess,
+                                       ShareAccess,
+                                       AllocationSize,
+                                       EaBuffer,
+                                       EaLength,
+                                       FileAttributes,
+                                       CreateDisposition,
+                                       DeleteOnClose);
+
+            Irp->IoStatus.Information = Iosb.Information;
+
+            /* Unlock VCB */
+            FatReleaseVcb(IrpContext, Vcb);
+
+            /* Complete the request */
+            FatCompleteRequest(IrpContext, Irp, Iosb.Status);
+
+            return Iosb.Status;
+        }
 
         /* If end backslash here, then it's definately not permitted,
            since we're opening files here */

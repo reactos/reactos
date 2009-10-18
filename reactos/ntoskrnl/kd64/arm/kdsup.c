@@ -68,8 +68,8 @@ NTAPI
 KdpSysReadBusData(IN ULONG BusDataType,
                   IN ULONG BusNumber,
                   IN ULONG SlotNumber,
-                  IN PVOID Buffer,
                   IN ULONG Offset,
+                  IN PVOID Buffer,
                   IN ULONG Length,
                   OUT PULONG ActualLength)
 {
@@ -83,8 +83,8 @@ NTAPI
 KdpSysWriteBusData(IN ULONG BusDataType,
                    IN ULONG BusNumber,
                    IN ULONG SlotNumber,
-                   IN PVOID Buffer,
                    IN ULONG Offset,
+                   IN PVOID Buffer,
                    IN ULONG Length,
                    OUT PULONG ActualLength)
 {
@@ -125,7 +125,7 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
                   IN ULONG BusNumber,
                   IN ULONG AddressSpace,
                   IN ULONG64 IoAddress,
-                  IN PULONG DataValue,
+                  IN PVOID DataValue,
                   IN ULONG DataSize,
                   OUT PULONG ActualDataSize)
 {
@@ -140,7 +140,7 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
                    IN ULONG BusNumber,
                    IN ULONG AddressSpace,
                    IN ULONG64 IoAddress,
-                   IN PULONG DataValue,
+                   IN PVOID DataValue,
                    IN ULONG DataSize,
                    OUT PULONG ActualDataSize)
 {

@@ -35,6 +35,15 @@
     ExReleaseResourceLite(&(FatGlobalData.Resource)); \
 }
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeStringToCountedOemString(
+    IN OUT POEM_STRING DestinationString,
+    IN PCUNICODE_STRING SourceString,
+    IN BOOLEAN AllocateDestinationString
+);
+
 
 /*  ------------------------------------------------------  shutdown.c  */
 
@@ -49,6 +58,13 @@ FatQueryVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS NTAPI
 FatSetVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+VOID NTAPI
+FatReadStreamFile(PVCB Vcb,
+                  ULONGLONG ByteOffset,
+                  ULONG ByteSize,
+                  PBCB *Bcb,
+                  PVOID *Buffer);
 
 /*  ------------------------------------------------------  blockdev.c  */
 NTSTATUS
@@ -77,7 +93,19 @@ FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
 PFCB NTAPI
 FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
              IN PVCB Vcb,
-             IN PFCB ParentDcb);
+             IN PFCB ParentDcb,
+             IN FF_FILE *FileHandle);
+
+IO_STATUS_BLOCK NTAPI
+FatiOpenExistingDcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Dcb,
+                    IN PACCESS_MASK DesiredAccess,
+                    IN USHORT ShareAccess,
+                    IN ULONG CreateDisposition,
+                    IN BOOLEAN NoEaKnowledge,
+                    IN BOOLEAN DeleteOnClose);
 
 /*  --------------------------------------------------------  create.c  */
 
@@ -143,6 +171,10 @@ BOOLEAN NTAPI
 FatAcquireExclusiveVcb(IN PFAT_IRP_CONTEXT IrpContext,
                        IN PVCB Vcb);
 
+BOOLEAN NTAPI
+FatAcquireSharedVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PVCB Vcb);
+
 VOID NTAPI
 FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
               IN PVCB Vcb);
@@ -188,6 +220,14 @@ FatReadBlocks(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count,
 NTSTATUS NTAPI
 FatLockControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+VOID NTAPI
+FatOplockComplete(IN PVOID Context,
+                  IN PIRP Irp);
+
+VOID NTAPI
+FatPrePostIrp(IN PVOID Context,
+              IN PIRP Irp);
+
 /*  ---------------------------------------------------------  fsctl.c  */
 
 NTSTATUS NTAPI
@@ -197,6 +237,10 @@ FatFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS NTAPI FatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS NTAPI FatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+/*  ---------------------------------------------------------  fullfat.c  */
+
+FF_FILE *FF_OpenW(FF_IOMAN *pIoman, PUNICODE_STRING pathW, FF_T_UINT8 Mode, FF_ERROR *pError);
 
 /*  ---------------------------------------------------------  iface.c  */
 
@@ -283,6 +327,23 @@ FatCreateFcb(
     IN PVCB Vcb,
     IN PFCB ParentDcb,
     IN FF_FILE *FileHandle);
+
+IO_STATUS_BLOCK NTAPI
+FatiOpenExistingFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Fcb,
+                    IN PACCESS_MASK DesiredAccess,
+                    IN USHORT ShareAccess,
+                    IN ULONG AllocationSize,
+                    IN PFILE_FULL_EA_INFORMATION EaBuffer,
+                    IN ULONG EaLength,
+                    IN UCHAR FileAttributes,
+                    IN ULONG CreateDisposition,
+                    IN BOOLEAN NoEaKnowledge,
+                    IN BOOLEAN DeleteOnClose,
+                    IN BOOLEAN OpenedAsDos,
+                    OUT PBOOLEAN OplockPostIrp);
 
 PFCB NTAPI
 FatFindFcb(PFAT_IRP_CONTEXT IrpContext,

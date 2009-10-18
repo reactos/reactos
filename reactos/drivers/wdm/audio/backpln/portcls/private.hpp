@@ -9,6 +9,8 @@
 
 //#define _KS_NO_ANONYMOUS_STRUCTURES_
 #define PC_IMPLEMENTATION
+#define COM_STDMETHOD_CAN_THROW
+#define PC_NO_IMPORTS
 
 #include <ntddk.h>
 #include <portcls.h>
@@ -20,7 +22,7 @@
 #include "interfaces.hpp"
 #include <ks.h>
 #include <ksmedia.h>
-#include <intrin.h>
+//#include <intrin.h>
 
 #define TAG_PORTCLASS 'SLCP'
 
@@ -244,8 +246,8 @@ NTAPI
 PcDmaSlaveDescription(
     IN PRESOURCELIST  ResourceList OPTIONAL,
     IN ULONG DmaIndex,
-    IN BOOL DemandMode,
-    IN ULONG AutoInitialize,
+    IN BOOLEAN DemandMode,
+    IN BOOLEAN AutoInitialize,
     IN DMA_SPEED DmaSpeed,
     IN ULONG MaximumLength,
     IN ULONG DmaPort,
@@ -315,10 +317,11 @@ PcHandlePropertyWithTable(
     IN PSUBDEVICE_DESCRIPTOR Descriptor);
 
 #define DEFINE_KSPROPERTY_CONNECTIONSET(PinSet,\
-    PropStateHandler, PropDataFormatHandler)\
+    PropStateHandler, PropDataFormatHandler, PropAllocatorFraming)\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(PropStateHandler, PropStateHandler),\
-    DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(PropDataFormatHandler, PropDataFormatHandler)\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(PropDataFormatHandler, PropDataFormatHandler),\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING(PropAllocatorFraming)\
 }
 
 #define DEFINE_KSPROPERTY_ITEM_AUDIO_POSITION(GetHandler, SetHandler)\
@@ -335,9 +338,6 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_AUDIO_POSITION(PropPositionHandler, PropPositionHandler)\
 }
-
-
-
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\

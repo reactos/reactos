@@ -453,13 +453,14 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szTime[] = {'T','i','m','e',0};
     static const WCHAR szUserLangID[] = {'U','s','e','r','L','a','n','g','u','a','g','e','I','D',0};
     static const WCHAR szSystemLangID[] = {'S','y','s','t','e','m','L','a','n','g','u','a','g','e','I','D',0};
+    static const WCHAR szProductState[] = {'P','r','o','d','u','c','t','S','t','a','t','e',0};
 
     /*
      * Other things that probably should be set:
      *
      * ComputerName LogonUser VirtualMemory
      * ShellAdvSupport DefaultUIFont PackagecodeChanging
-     * ProductState CaptionHeight BorderTop BorderSide TextHeight
+     * CaptionHeight BorderTop BorderSide TextHeight
      * RedirectedDllSupport
      */
 
@@ -658,6 +659,9 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     sprintfW(bufstr, szIntFormat, langid);
 
     MSI_SetPropertyW( package, szSystemLangID, bufstr );
+
+    sprintfW(bufstr, szIntFormat, MsiQueryProductStateW(package->ProductCode));
+    MSI_SetPropertyW( package, szProductState, bufstr );
 }
 
 static UINT msi_load_summary_properties( MSIPACKAGE *package )
@@ -804,12 +808,14 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 
         create_temp_property_table( package );
         msi_clone_properties( package );
-        set_installer_properties(package);
-        sprintfW(uilevel,szpi,gUILevel);
-        MSI_SetPropertyW(package, szLevel, uilevel);
 
         package->ProductCode = msi_dup_property( package, szProductCode );
         set_installed_prop( package );
+        set_installer_properties( package );
+
+        sprintfW(uilevel,szpi,gUILevel);
+        MSI_SetPropertyW(package, szLevel, uilevel);
+
         r = msi_load_summary_properties( package );
         if (r != ERROR_SUCCESS)
         {

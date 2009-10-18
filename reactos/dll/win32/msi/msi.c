@@ -489,13 +489,86 @@ UINT WINAPI MsiDetermineApplicablePatchesA(LPCSTR szProductPackagePath,
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+static UINT MSI_ApplicablePatchW( MSIPACKAGE *package, LPCWSTR patch )
+{
+    MSISUMMARYINFO *si;
+    MSIDATABASE *patch_db;
+    UINT r = ERROR_SUCCESS;
+
+    r = MSI_OpenDatabaseW( patch, MSIDBOPEN_READONLY, &patch_db );
+    if (r != ERROR_SUCCESS)
+    {
+        WARN("failed to open patch file %s\n", debugstr_w(patch));
+        return r;
+    }
+
+    si = MSI_GetSummaryInformationW( patch_db->storage, 0 );
+    if (!si)
+    {
+        r = ERROR_FUNCTION_FAILED;
+        goto done;
+    }
+
+    r = msi_check_patch_applicable( package, si );
+    if (r != ERROR_SUCCESS)
+        TRACE("patch not applicable\n");
+
+done:
+    msiobj_release( &patch_db->hdr );
+    msiobj_release( &si->hdr );
+    return r;
+}
+
 UINT WINAPI MsiDetermineApplicablePatchesW(LPCWSTR szProductPackagePath,
         DWORD cPatchInfo, PMSIPATCHSEQUENCEINFOW pPatchInfo)
 {
-    FIXME("(%s, %d, %p): stub!\n", debugstr_w(szProductPackagePath),
-          cPatchInfo, pPatchInfo);
+    UINT i, r, ret = ERROR_FUNCTION_FAILED;
+    MSIPACKAGE *package;
 
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    TRACE("(%s, %d, %p)\n", debugstr_w(szProductPackagePath), cPatchInfo, pPatchInfo);
+
+    r = MSI_OpenPackageW( szProductPackagePath, &package );
+    if (r != ERROR_SUCCESS)
+    {
+        ERR("failed to open package %u\n", r);
+        return r;
+    }
+
+    for (i = 0; i < cPatchInfo; i++)
+    {
+        switch (pPatchInfo[i].ePatchDataType)
+        {
+        case MSIPATCH_DATATYPE_PATCHFILE:
+        {
+            FIXME("patch ordering not supported\n");
+            r = MSI_ApplicablePatchW( package, pPatchInfo[i].szPatchData );
+            if (r != ERROR_SUCCESS)
+            {
+                pPatchInfo[i].dwOrder = ~0u;
+                pPatchInfo[i].uStatus = ERROR_PATCH_TARGET_NOT_FOUND;
+            }
+            else
+            {
+                pPatchInfo[i].dwOrder = i;
+                pPatchInfo[i].uStatus = ret = ERROR_SUCCESS;
+            }
+            break;
+        }
+        default:
+        {
+            FIXME("patch data type %u not supported\n", pPatchInfo[i].ePatchDataType);
+            pPatchInfo[i].dwOrder = ~0u;
+            pPatchInfo[i].uStatus = ERROR_PATCH_TARGET_NOT_FOUND;
+            break;
+        }
+        }
+
+        TRACE("   szPatchData: %s\n", debugstr_w(pPatchInfo[i].szPatchData));
+        TRACE("ePatchDataType: %u\n", pPatchInfo[i].ePatchDataType);
+        TRACE("       dwOrder: %u\n", pPatchInfo[i].dwOrder);
+        TRACE("       uStatus: %u\n", pPatchInfo[i].uStatus);
+    }
+    return ret;
 }
 
 UINT WINAPI MsiDeterminePatchSequenceA(LPCSTR szProductCode, LPCSTR szUserSid,
@@ -619,9 +692,6 @@ UINT WINAPI MsiConfigureProductExW(LPCWSTR szProduct, int iInstallLevel,
     commandline[0] = 0;
     if (szCommandLine)
         lstrcpyW(commandline,szCommandLine);
-
-    if (MsiQueryProductStateW(szProduct) != INSTALLSTATE_UNKNOWN)
-        lstrcatW(commandline,szInstalled);
 
     if (eInstallState == INSTALLSTATE_ABSENT)
         lstrcatW(commandline, szRemoveAll);

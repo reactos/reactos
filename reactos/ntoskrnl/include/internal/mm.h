@@ -16,6 +16,7 @@ extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 extern ULONG MmNumberOfPhysicalPages;
 extern ULONG MmLowestPhysicalPage;
 extern ULONG MmHighestPhysicalPage;
+extern ULONG MmAvailablePages;
 
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
@@ -30,7 +31,23 @@ struct _MM_PAGEOP;
 typedef ULONG SWAPENTRY;
 typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
-#define MI_STATIC_MEMORY_AREAS              (8)
+//
+//MmDbgCopyMemory Flags
+//
+#define MMDBG_COPY_WRITE            0x00000001
+#define MMDBG_COPY_PHYSICAL         0x00000002
+#define MMDBG_COPY_UNSAFE           0x00000004
+#define MMDBG_COPY_CACHED           0x00000008
+#define MMDBG_COPY_UNCACHED         0x00000010
+#define MMDBG_COPY_WRITE_COMBINED   0x00000020
+
+//
+// Maximum chunk size per copy
+//
+#define MMDBG_COPY_MAX_SIZE         0x8
+
+
+#define MI_STATIC_MEMORY_AREAS              (12)
 
 #define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)
@@ -46,6 +63,7 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MEMORY_AREA_PAGED_POOL              (12)
 #define MEMORY_AREA_NO_ACCESS               (13)
 #define MEMORY_AREA_PEB_OR_TEB              (14)
+#define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING        (0x8)
@@ -279,19 +297,6 @@ typedef struct _MEMORY_AREA
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
-typedef struct
-{
-    ULONG NrTotalPages;
-    ULONG NrSystemPages;
-    ULONG NrUserPages;
-    ULONG NrFreePages;
-    ULONG NrDirtyPages;
-    ULONG NrLockedPages;
-    ULONG PagingRequestsInLastMinute;
-    ULONG PagingRequestsInLastFiveMinutes;
-    ULONG PagingRequestsInLastFifteenMinutes;
-} MM_STATS;
-
 //
 // These two mappings are actually used by Windows itself, based on the ASSERTS
 //
@@ -362,7 +367,6 @@ typedef struct _MMPFN
 } MMPFN, *PMMPFN;
 
 extern PMMPFN MmPfnDatabase;
-extern MM_STATS MmStats;
 
 typedef struct _MM_PAGEOP
 {
@@ -453,6 +457,18 @@ typedef VOID
     PFN_TYPE Page,
     SWAPENTRY SwapEntry,
     BOOLEAN Dirty
+);
+
+//
+// Mm copy support for Kd
+//
+NTSTATUS
+NTAPI
+MmDbgCopyMemory(
+    IN ULONG64 Address,
+    IN PVOID Buffer,
+    IN ULONG Size,
+    IN ULONG Flags
 );
 
 /* marea.c *******************************************************************/
@@ -748,14 +764,19 @@ MmInitializeProcessAddressSpace(
 
 NTSTATUS
 NTAPI
-MmCreatePeb(struct _EPROCESS *Process);
+MmCreatePeb(
+    IN PEPROCESS Process,
+    IN PINITIAL_PEB InitialPeb,
+    OUT PPEB *BasePeb
+);
 
-PTEB
+NTSTATUS
 NTAPI
 MmCreateTeb(
-    struct _EPROCESS *Process,
-    PCLIENT_ID ClientId,
-    PINITIAL_TEB InitialTeb
+    IN PEPROCESS Process,
+    IN PCLIENT_ID ClientId,
+    IN PINITIAL_TEB InitialTeb,
+    OUT PTEB* BaseTeb
 );
 
 VOID

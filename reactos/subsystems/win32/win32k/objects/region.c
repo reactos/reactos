@@ -2988,20 +2988,47 @@ BOOL
 FASTCALL
 REGION_RectInRegion(
     PROSRGNDATA Rgn,
-    const RECTL *rc
+    const RECTL *rect
 )
 {
     PRECTL pCurRect, pRectEnd;
+    RECT rc;
 
-    // this is (just) a useful optimization
-    if ((Rgn->rdh.nCount > 0) && EXTENTCHECK(&Rgn->rdh.rcBound, rc))
+    /* swap the coordinates to make right >= left and bottom >= top */
+    /* (region building rectangles are normalized the same way) */
+    if( rect->top > rect->bottom) {
+        rc.top = rect->bottom;
+        rc.bottom = rect->top;
+    } else {
+        rc.top = rect->top;
+        rc.bottom = rect->bottom;
+    }
+    if( rect->right < rect->left) {
+        rc.right = rect->left;
+        rc.left = rect->right;
+    } else {
+        rc.right = rect->right;
+        rc.left = rect->left;
+    }
+
+    /* this is (just) a useful optimization */
+    if ((Rgn->rdh.nCount > 0) && EXTENTCHECK(&Rgn->rdh.rcBound, &rc))
     {
-        for (pCurRect = Rgn->Buffer, pRectEnd = pCurRect + Rgn->rdh.nCount; pCurRect < pRectEnd; pCurRect++)
+        for (pCurRect = Rgn->Buffer, pRectEnd = pCurRect +
+         Rgn->rdh.nCount; pCurRect < pRectEnd; pCurRect++)
         {
-            if (pCurRect->bottom <= rc->top) continue; // not far enough down yet
-            if (pCurRect->top >= rc->bottom) break;    // too far down
-            if (pCurRect->right <= rc->left) continue; // not far enough over yet
-            if (pCurRect->left >= rc->right) continue;
+            if (pCurRect->bottom <= rc.top)
+            continue;             /* not far enough down yet */
+
+            if (pCurRect->top >= rc.bottom)
+                break;                /* too far down */
+
+            if (pCurRect->right <= rc.left)
+                continue;              /* not far enough over yet */
+
+            if (pCurRect->left >= rc.right) {
+                continue;
+            }
 
             return TRUE;
         }

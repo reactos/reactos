@@ -2308,7 +2308,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PCHAR BootDeviceName, CommandLine;
     PDEVICE_OBJECT PhysicalDeviceObject = NULL;
     NTSTATUS Status;
-    DPRINT1("RAM Disk Driver Initialized\n");
+    DPRINT("RAM Disk Driver Initialized\n");
     
     //
     // Query ramdisk parameters

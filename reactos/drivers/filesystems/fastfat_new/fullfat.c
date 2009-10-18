@@ -77,4 +77,27 @@ FatReadBlocks(FF_T_UINT8 *DestBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Cou
     return Count;
 }
 
+FF_FILE *FF_OpenW(FF_IOMAN *pIoman, PUNICODE_STRING pathW, FF_T_UINT8 Mode, FF_ERROR *pError)
+{
+    OEM_STRING AnsiName;
+    CHAR AnsiNameBuf[512];
+    NTSTATUS Status;
+
+    /* Convert the name to ANSI */
+    AnsiName.Buffer = AnsiNameBuf;
+    AnsiName.Length = 0;
+    AnsiName.MaximumLength = sizeof(AnsiNameBuf);
+    RtlZeroMemory(AnsiNameBuf, sizeof(AnsiNameBuf));
+    Status = RtlUpcaseUnicodeStringToCountedOemString(&AnsiName, pathW, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+
+    DPRINT1("Opening '%s'\n", AnsiName.Buffer);
+
+    /* Call FullFAT's handler */
+    return FF_Open(pIoman, AnsiName.Buffer, Mode, pError);
+}
+
 /* EOF */

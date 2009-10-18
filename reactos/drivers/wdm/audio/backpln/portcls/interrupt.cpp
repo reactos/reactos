@@ -97,8 +97,10 @@ CInterruptSynchronizedRoutine(
     IN PVOID  ServiceContext)
 {
     CInterruptSync * This = (CInterruptSync*)ServiceContext;
-    DPRINT("CInterruptSynchronizedRoutine this %p SyncRoutine %p Context %p\n", This, This->m_SyncRoutine, This->m_DynamicContext);
-    return This->m_SyncRoutine(This, This->m_DynamicContext);
+    NTSTATUS Status = This->m_SyncRoutine(This, This->m_DynamicContext);
+
+    DPRINT("CInterruptSynchronizedRoutine this %p SyncRoutine %p Context %p Status %x\n", This, This->m_SyncRoutine, This->m_DynamicContext, Status);
+    return NT_SUCCESS(Status);
 }
 
 NTSTATUS
@@ -155,9 +157,9 @@ IInterruptServiceRoutine(
     NTSTATUS Status;
     BOOL Success;
 
-    //DPRINT("IInterruptServiceRoutine Mode %u\n", m_Mode);
-
     CInterruptSync * This = (CInterruptSync*)ServiceContext;
+
+    DPRINT("IInterruptServiceRoutine Mode %u\n", This->m_Mode);
 
     if (This->m_Mode == InterruptSyncModeNormal)
     {
@@ -234,8 +236,8 @@ CInterruptSync::Connect()
                                 (PVOID)this,
                                 &m_Lock,
                                 Descriptor->u.Interrupt.Vector,
-                                Descriptor->u.Interrupt.Level,
-                                Descriptor->u.Interrupt.Level,
+                                (KIRQL)Descriptor->u.Interrupt.Level,
+                                (KIRQL)Descriptor->u.Interrupt.Level,
                                 (KINTERRUPT_MODE)(Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED),
                                 (Descriptor->Flags != CM_RESOURCE_INTERRUPT_LATCHED),
                                 Descriptor->u.Interrupt.Affinity,

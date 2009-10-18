@@ -98,13 +98,44 @@ void NewGame(void)
     fGameStarted = false;
 }
 
+bool stackLookingGood(const CardStack &mystack, int numChecks)
+{
+    int i;
+    for (i = 0; i < numChecks; i++)
+    {
+        if (mystack[i].LoVal() != mystack[i + 1].LoVal() - 1)
+        {
+            return false;
+        }
+        if (mystack[i].Suit() != mystack[i + 1].Suit())
+        {
+            return false;
+        }    
+    }
+    return true;
+}
+
+/* Card to be turned from a stack */
+void TurnStackCard(CardRegion &stackobj)
+{
+    int numfacedown;
+
+    stackobj.GetFaceDirection(&numfacedown);
+    if (stackobj.NumCards() <= numfacedown)
+    {
+        if (numfacedown > 0) numfacedown--;
+        stackobj.SetFaceDirection(CS_FACE_DOWNUP, numfacedown);
+        stackobj.Redraw();
+    }
+}
+
 /* Click on the deck */
 void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int NumDragCards)
 {
     CardStack temp, fakeDeck = pDeck->GetCardStack();
     fGameStarted = true;
-    int i;
-    
+    int i, j, facedown, faceup;
+
     if (fakeDeck.NumCards() != 0 && deck.NumCards() != 0)
     {
         /* Add one card to every stack */
@@ -112,6 +143,25 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int NumDragCards)
         {
             temp = pStack[i]->GetCardStack();
             temp.Push(deck.Pop());
+
+            /* Check if we accidentally finished a row */
+            pStack[i]->GetFaceDirection(&facedown);
+            faceup = temp.NumCards() - facedown;
+            if (faceup >= NUM_ONECOLOR_CARDS)
+            {
+                /* Check stack finished, remove cards if so */
+                if (stackLookingGood(temp, NUM_ONECOLOR_CARDS - 1))
+                {
+                    for (j = 0; j < NUM_ONECOLOR_CARDS; j++)
+                    {
+                        temp.RemoveCard(0);
+                    }
+                    cardsFinished += NUM_ONECOLOR_CARDS;
+                    pStack[i]->SetCardStack(temp);
+                    /* Turn now topmost card */
+                    TurnStackCard(*pStack[i]);
+                }
+            }
             pStack[i]->SetCardStack(temp);
         }
         /* Remove one card from the fake ones */
@@ -124,7 +174,7 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int NumDragCards)
 /* Cards dragged from a stack */
 bool CARDLIBPROC StackDragProc(CardRegion &stackobj, int numDragCards)
 {
-    int numfacedown, numcards, i;
+    int numfacedown, numcards;
 
     stackobj.GetFaceDirection(&numfacedown);
     numcards = stackobj.NumCards();
@@ -134,30 +184,9 @@ bool CARDLIBPROC StackDragProc(CardRegion &stackobj, int numDragCards)
     {
         const CardStack &mystack = stackobj.GetCardStack();
         /* Don't allow to drag unsuited cards */
-        for (i = 0; i < numDragCards - 1; i++)
-        {            
-            if (mystack[i].LoVal() != mystack[i + 1].LoVal() - 1)
-            {
-                return false;
-            }
-            switch (dwDifficulty)
-            {
-                case IDC_DIF_ONECOLOR:
-                    break;
-                case IDC_DIF_TWOCOLORS:
-                    if ((mystack[i].IsBlack() && mystack[i + 1].IsBlack()) ||
-                        (mystack[i].IsRed() && mystack[i + 1].IsRed()))
-                    {
-                       return false;
-                    }
-                    break;
-                case IDC_DIF_FOURCOLORS:
-                    if (mystack[i].Suit() != mystack[i + 1].Suit())
-                    {
-                       return false;
-                    }
-                    break;
-            }
+        if (!stackLookingGood(mystack, numDragCards - 1))
+        {
+            return false;
         }
         /* Remember where the cards come from */
         from = &stackobj;
@@ -193,20 +222,6 @@ void CARDLIBPROC StackAddProc(CardRegion &stackobj, const CardStack &added)
     }
 }
 
-/* Card to be turned from a stack */
-void TurnStackCard(CardRegion &stackobj)
-{
-    int numfacedown;
-
-    stackobj.GetFaceDirection(&numfacedown);
-    if (stackobj.NumCards() <= numfacedown)
-    {
-        if (numfacedown > 0) numfacedown--;
-        stackobj.SetFaceDirection(CS_FACE_DOWNUP, numfacedown);
-        stackobj.Redraw();
-    }
-}
-
 /* Cards dropped to a stack */
 bool CARDLIBPROC StackDropProc(CardRegion &stackobj, CardStack &dragcards)
 {
@@ -230,49 +245,20 @@ bool CARDLIBPROC StackDropProc(CardRegion &stackobj, CardStack &dragcards)
             return false;
         }
 
-        /* Can only drop if card matches colour rule */
-        switch (dwDifficulty)
-        {
-            case IDC_DIF_ONECOLOR:
-                break;
-            case IDC_DIF_TWOCOLORS:
-                if ((mystack[0].IsBlack() && dragcard.IsRed()) ||
-                    (mystack[0].IsRed() && dragcard.IsBlack()))
-                {
-                   return false;
-                }
-                break;
-            case IDC_DIF_FOURCOLORS:
-                if (mystack[0].Suit() != dragcard.Suit())
-                {
-                   return false;
-                }
-                break;
-        }
         /* Check if stack complete */
         stackobj.GetFaceDirection(&facedown);
         faceup = stackobj.NumCards() - facedown;
-        
+
         if (faceup + dragcards.NumCards() >= NUM_ONECOLOR_CARDS)
         {            
             int i, max = NUM_ONECOLOR_CARDS - dragcards.NumCards() - 1;
-            BOOL remove = true;
-            
-            /* Dragged cards have been checked to be in order, start with the first stack card */
-            for (i = 0; i < max; i++)
-            {
-                if (mystack[i].Suit() != mystack[i + 1].Suit() ||
-                    mystack[i].LoVal() != mystack[i + 1].LoVal() - 1)
-                {
-                    remove = false;
-                    break;
-                }
-            }            
-            if (remove)
+
+            /* Dragged cards have been checked to be in order, check stack cards */
+            if (stackLookingGood(mystack, max))
             {
                 CardStack s = stackobj.GetCardStack();
                 CardStack f;
-                
+
                 /* Remove from card stack */
                 for (i = 0; i < max + 1; i++)
                 {

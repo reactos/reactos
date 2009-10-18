@@ -172,6 +172,266 @@ FatCreateCcb()
     return Ccb;
 }
 
+IO_STATUS_BLOCK
+NTAPI
+FatiOpenExistingFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Fcb,
+                    IN PACCESS_MASK DesiredAccess,
+                    IN USHORT ShareAccess,
+                    IN ULONG AllocationSize,
+                    IN PFILE_FULL_EA_INFORMATION EaBuffer,
+                    IN ULONG EaLength,
+                    IN UCHAR FileAttributes,
+                    IN ULONG CreateDisposition,
+                    IN BOOLEAN NoEaKnowledge,
+                    IN BOOLEAN DeleteOnClose,
+                    IN BOOLEAN OpenedAsDos,
+                    OUT PBOOLEAN OplockPostIrp)
+{
+    IO_STATUS_BLOCK Iosb = {{0}};
+    ACCESS_MASK AddedAccess = 0;
+    BOOLEAN Hidden;
+    BOOLEAN System;
+    PCCB Ccb = NULL;
+    NTSTATUS Status;
+
+    /* Acquire exclusive FCB lock */
+    (VOID)FatAcquireExclusiveFcb(IrpContext, Fcb);
+
+    *OplockPostIrp = FALSE;
+
+    /* Check if there is a batch oplock */
+    if (FsRtlCurrentBatchOplock(&Fcb->Fcb.Oplock))
+    {
+        /* Return with a special information field */
+        Iosb.Information = FILE_OPBATCH_BREAK_UNDERWAY;
+
+        /* Check the oplock */
+        Iosb.Status = FsRtlCheckOplock(&Fcb->Fcb.Oplock,
+                                       IrpContext->Irp,
+                                       IrpContext,
+                                       FatOplockComplete,
+                                       FatPrePostIrp);
+
+        if (Iosb.Status != STATUS_SUCCESS &&
+            Iosb.Status != STATUS_OPLOCK_BREAK_IN_PROGRESS)
+        {
+            /* The Irp needs to be queued */
+            *OplockPostIrp = TRUE;
+
+            /* Release the FCB and return */
+            FatReleaseFcb(IrpContext, Fcb);
+            return Iosb;
+        }
+    }
+
+    /* Validate parameters and modify access */
+    if (CreateDisposition == FILE_CREATE)
+    {
+        Iosb.Status = STATUS_OBJECT_NAME_COLLISION;
+
+        /* Release the FCB and return */
+        FatReleaseFcb(IrpContext, Fcb);
+        return Iosb;
+    }
+    else if (CreateDisposition == FILE_SUPERSEDE)
+    {
+        SetFlag(AddedAccess, DELETE & ~(*DesiredAccess));
+        *DesiredAccess |= DELETE;
+    }
+    else if ((CreateDisposition == FILE_OVERWRITE) ||
+             (CreateDisposition == FILE_OVERWRITE_IF))
+    {
+        SetFlag(AddedAccess,
+                (FILE_WRITE_DATA | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES)
+                & ~(*DesiredAccess) );
+
+        *DesiredAccess |= FILE_WRITE_DATA | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES;
+    }
+
+    // TODO: Check desired access
+
+    // TODO: Check if this file is readonly and DeleteOnClose is set
+
+    /* Validate disposition information */
+    if ((CreateDisposition == FILE_SUPERSEDE) ||
+        (CreateDisposition == FILE_OVERWRITE) ||
+        (CreateDisposition == FILE_OVERWRITE_IF))
+    {
+        // TODO: Get this attributes from the dirent
+        Hidden = FALSE;
+        System = FALSE;
+
+        if ((Hidden && !FlagOn(FileAttributes, FILE_ATTRIBUTE_HIDDEN)) ||
+            (System && !FlagOn(FileAttributes, FILE_ATTRIBUTE_SYSTEM)))
+        {
+            DPRINT1("Hidden/system attributes don't match\n");
+
+            Iosb.Status = STATUS_ACCESS_DENIED;
+
+            /* Release the FCB and return */
+            FatReleaseFcb(IrpContext, Fcb);
+            return Iosb;
+        }
+
+        // TODO: Check for write protected volume
+    }
+
+    /* Check share access */
+    Iosb.Status = IoCheckShareAccess(*DesiredAccess,
+                                     ShareAccess,
+                                     FileObject,
+                                     &Fcb->ShareAccess,
+                                     FALSE);
+    if (!NT_SUCCESS(Iosb.Status))
+    {
+        /* Release the FCB and return */
+        FatReleaseFcb(IrpContext, Fcb);
+        return Iosb;
+    }
+
+    /* Check the oplock status after checking for share access */
+    Iosb.Status = FsRtlCheckOplock(&Fcb->Fcb.Oplock,
+                                   IrpContext->Irp,
+                                   IrpContext,
+                                   FatOplockComplete,
+                                   FatPrePostIrp );
+
+    if (Iosb.Status != STATUS_SUCCESS &&
+        Iosb.Status != STATUS_OPLOCK_BREAK_IN_PROGRESS)
+    {
+        /* The Irp needs to be queued */
+        *OplockPostIrp = TRUE;
+
+        /* Release the FCB and return */
+        FatReleaseFcb(IrpContext, Fcb);
+        return Iosb;
+    }
+
+    /* Set Fast I/O flag */
+    Fcb->Header.IsFastIoPossible = FALSE; //FatiIsFastIoPossible(Fcb);
+
+    /* Make sure image is not mapped */
+    if (DeleteOnClose || FlagOn(*DesiredAccess, FILE_WRITE_DATA))
+    {
+        /* Try to flush the image section */
+        if (!MmFlushImageSection(&Fcb->SectionObjectPointers, MmFlushForWrite))
+        {
+            /* Yes, image section exists, set correct status code */
+            if (DeleteOnClose)
+                Iosb.Status = STATUS_CANNOT_DELETE;
+            else
+                Iosb.Status = STATUS_SHARING_VIOLATION;
+
+            /* Release the FCB and return */
+            FatReleaseFcb(IrpContext, Fcb);
+            return Iosb;
+        }
+    }
+
+    /* Flush the cache if it's non-cached non-pagefile access */
+    if (FlagOn(FileObject->Flags, FO_NO_INTERMEDIATE_BUFFERING) &&
+        Fcb->SectionObjectPointers.DataSectionObject &&
+        !FlagOn(Fcb->State, FCB_STATE_PAGEFILE))
+    {
+        /* Set the flag that create is in progress */
+        SetFlag(Fcb->Vcb->State, VCB_STATE_CREATE_IN_PROGRESS);
+
+        /* Flush the cache */
+        CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
+
+        /* Acquire and release Paging I/O resource before purging the cache section
+           to let lazy writer finish */
+        ExAcquireResourceExclusiveLite( Fcb->Header.PagingIoResource, TRUE);
+        ExReleaseResourceLite( Fcb->Header.PagingIoResource );
+
+        /* Delete the cache section */
+        CcPurgeCacheSection(&Fcb->SectionObjectPointers, NULL, 0, FALSE);
+
+        /* Clear the flag */
+        ClearFlag(Fcb->Vcb->State, VCB_STATE_CREATE_IN_PROGRESS);
+    }
+
+    /* Check create disposition flags and branch accordingly */
+    if (CreateDisposition == FILE_OPEN ||
+        CreateDisposition == FILE_OPEN_IF)
+    {
+        DPRINT("Opening a file\n");
+
+        /* Check if we need to bother with EA */
+        if (NoEaKnowledge && FALSE /* FatIsFat32(Vcb)*/)
+        {
+            UNIMPLEMENTED;
+        }
+
+        /* Set up file object */
+        Ccb = FatCreateCcb(IrpContext);
+        FatSetFileObject(FileObject,
+                         UserFileOpen,
+                         Fcb,
+                         Ccb);
+
+        FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+
+        /* The file is opened */
+        Iosb.Information = FILE_OPENED;
+        goto SuccComplete;
+    }
+    else if ((CreateDisposition == FILE_SUPERSEDE) ||
+             (CreateDisposition == FILE_OVERWRITE) ||
+             (CreateDisposition == FILE_OVERWRITE_IF))
+    {
+        UNIMPLEMENTED;
+        ASSERT(FALSE);
+    }
+    else
+    {
+        /* We can't get here */
+        KeBugCheckEx(0x23, CreateDisposition, 0, 0, 0);
+    }
+
+
+SuccComplete:
+    /* If all is fine */
+    if (Iosb.Status != STATUS_PENDING &&
+        NT_SUCCESS(Iosb.Status))
+    {
+        /* Update access if needed */
+        if (AddedAccess)
+        {
+            /* Remove added access flags from desired access */
+            ClearFlag(*DesiredAccess, AddedAccess);
+
+            /* Check share access */
+            Status = IoCheckShareAccess(*DesiredAccess,
+                                        ShareAccess,
+                                        FileObject,
+                                        &Fcb->ShareAccess,
+                                        TRUE);
+
+            /* Make sure it's success */
+            ASSERT(Status == STATUS_SUCCESS);
+        }
+        else
+        {
+            /* Update the share access */
+            IoUpdateShareAccess(FileObject, &Fcb->ShareAccess);
+        }
+
+        /* Clear the delay close */
+        ClearFlag(Fcb->State, FCB_STATE_DELAY_CLOSE);
+
+        /* Increase global volume counter */
+        Vcb->OpenFileCount++;
+
+        // TODO: Handle DeleteOnClose and OpenedAsDos by storing those flags in CCB
+    }
+
+    return Iosb;
+}
+
 VOID
 NTAPI
 FatGetFcbUnicodeName(IN PFAT_IRP_CONTEXT IrpContext,
@@ -187,11 +447,16 @@ FatGetFcbUnicodeName(IN PFAT_IRP_CONTEXT IrpContext,
     OEM_STRING LongNameOem;
     NTSTATUS Status;
 
-    /* We support only files now, not directories */
-    if (Fcb->Header.NodeTypeCode != FAT_NTC_FCB)
+    /* Make sure this FCB has a FullFAT handle associated with it */
+    if (Fcb->FatHandle == NULL &&
+        FatNodeType(Fcb) == FAT_NTC_DCB)
     {
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
+        /* Open the dir with FullFAT */
+        Fcb->FatHandle = FF_OpenW(Fcb->Vcb->Ioman, &Fcb->FullFileName, FF_MODE_DIR, NULL);
+        if (!Fcb->FatHandle)
+        {
+            ASSERT(FALSE);
+        }
     }
 
     /* Get the dir entry */
@@ -502,7 +767,7 @@ FatSetFcbNames(IN PFAT_IRP_CONTEXT IrpContext,
         RtlDowncaseUnicodeString(UnicodeName, UnicodeName, FALSE);
         RtlUpcaseUnicodeString(UnicodeName, UnicodeName, FALSE);
 
-        DPRINT1("Converted long name: %wZ\n", UnicodeName);
+        DPRINT("Converted long name: %wZ\n", UnicodeName);
 
         /* Add the long unicode name link */
         FatInsertName(IrpContext, &Fcb->ParentFcb->Dcb.SplayLinksUnicode, &Fcb->LongName);
@@ -603,7 +868,7 @@ Fati8dot3ToString(IN PCHAR FileName,
     /* Set the length */
     OutString->Length = BaseLen + ExtLen;
 
-    DPRINT1("'%s', len %d\n", OutString->Buffer, OutString->Length);
+    DPRINT("'%s', len %d\n", OutString->Buffer, OutString->Length);
 }
 
 VOID

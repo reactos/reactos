@@ -863,7 +863,7 @@ GetControlsFromPinByConnectionIndex(
         if (bUpDirection)
         {
             /* add the sum / mux node to destination line */
-            //Nodes[NodeIndex] = TRUE;
+            Nodes[NodeIndex] = TRUE;
         }
 
         return STATUS_SUCCESS;
@@ -1005,7 +1005,27 @@ AddMixerControl(
     }
 
     MixerInfo->ControlId++;
+#if 0
+    if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUX)
+    {
+        KSNODEPROPERTY Property;
+        ULONG PinId = 2;
 
+        /* setup the request */
+        RtlZeroMemory(&Property, sizeof(KSNODEPROPERTY));
+
+        Property.NodeId = NodeIndex;
+        Property.Property.Id = KSPROPERTY_AUDIO_MUX_SOURCE;
+        Property.Property.Flags = KSPROPERTY_TYPE_SET;
+        Property.Property.Set = KSPROPSETID_Audio;
+
+        /* get node volume level info */
+        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSNODEPROPERTY), (PVOID)&PinId, sizeof(ULONG), &BytesReturned);
+
+        DPRINT1("Status %x NodeIndex %u PinId %u\n", Status, NodeIndex, PinId);
+        //DbgBreakPoint();
+    }else
+#endif
     if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
     {
         KSNODEPROPERTY_AUDIO_CHANNEL Property;
@@ -1041,37 +1061,42 @@ AddMixerControl(
 
             DPRINT("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
 
-            VolumeData = ExAllocatePool(NonPagedPool, sizeof(MIXERVOLUME_DATA));
-            if (!VolumeData)
-                return STATUS_INSUFFICIENT_RESOURCES;
+            MaxRange = Range->Bounds.UnsignedMaximum  - Range->Bounds.UnsignedMinimum;
 
-            MaxRange = (abs(Range->Bounds.SignedMinimum) + abs(Range->Bounds.SignedMaximum));
-            Steps = MaxRange / Range->SteppingDelta + 1;
-
-            /* store mixer control info there */
-            VolumeData->Header.dwControlID = MixerControl->dwControlID;
-            VolumeData->SignedMaximum = Range->Bounds.SignedMaximum;
-            VolumeData->SignedMinimum = Range->Bounds.SignedMinimum;
-            VolumeData->SteppingDelta = Range->SteppingDelta;
-            VolumeData->ValuesCount = Steps;
-            VolumeData->InputSteppingDelta = 0x10000 / Steps;
-
-            VolumeData->Values = ExAllocatePool(NonPagedPool, sizeof(LONG) * Steps);
-            if (!VolumeData->Values)
+            if (MaxRange)
             {
-                ExFreePool(Desc);
-                ExFreePool(VolumeData);
+                ASSERT(MaxRange);
+                VolumeData = ExAllocatePool(NonPagedPool, sizeof(MIXERVOLUME_DATA));
+                if (!VolumeData)
+                    return STATUS_INSUFFICIENT_RESOURCES;
 
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
+                Steps = MaxRange / Range->SteppingDelta + 1;
 
-            Value = Range->Bounds.SignedMinimum;
-            for(Index = 0; Index < Steps; Index++)
-            {
-                VolumeData->Values[Index] = Value;
-                Value += Range->SteppingDelta;
-            }
-            InsertTailList(&MixerLine->LineControlsExtraData, &VolumeData->Header.Entry);
+                /* store mixer control info there */
+                VolumeData->Header.dwControlID = MixerControl->dwControlID;
+                VolumeData->SignedMaximum = Range->Bounds.SignedMaximum;
+                VolumeData->SignedMinimum = Range->Bounds.SignedMinimum;
+                VolumeData->SteppingDelta = Range->SteppingDelta;
+                VolumeData->ValuesCount = Steps;
+                VolumeData->InputSteppingDelta = 0x10000 / Steps;
+
+                VolumeData->Values = ExAllocatePool(NonPagedPool, sizeof(LONG) * Steps);
+                if (!VolumeData->Values)
+                {
+                    ExFreePool(Desc);
+                    ExFreePool(VolumeData);
+
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+
+                Value = Range->Bounds.SignedMinimum;
+                for(Index = 0; Index < Steps; Index++)
+                {
+                    VolumeData->Values[Index] = Value;
+                    Value += Range->SteppingDelta;
+                }
+                InsertTailList(&MixerLine->LineControlsExtraData, &VolumeData->Header.Entry);
+           }
        }
        ExFreePool(Desc);
     }
@@ -1445,6 +1470,7 @@ HandlePhysicalConnection(
                 PinsSrcRef[Index] = TRUE;
                 PinsSrcRef[OutConnection->Pin] = TRUE;
             }
+            PinsSrcRef[OutConnection->Pin] = TRUE;
 
             Status = AddMixerSourceLines(MixerInfo, FileObject, NodeConnections, NodeTypes, DeviceIndex, PinsRefCount, OutConnection->Pin, Index, PinsSrcRef);
 
@@ -2208,6 +2234,7 @@ WdmAudGetControlDetails(
     }
 
     Status = STATUS_NOT_IMPLEMENTED;
+    DPRINT("dwLineId %x dwControlID %x dwControlType %x\n", MixerLine->Line.dwLineID, MixerControl->dwControlID, MixerControl->dwControlType);
     if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
     {
         /* send the request */

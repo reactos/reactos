@@ -329,8 +329,6 @@ typedef enum _SECURITY_LOGON_TYPE
 
 #define MAILSLOT_SIZE_AUTO              0
 
-#define MAP_PROCESS                     1L
-#define MAP_SYSTEM                      2L
 #define MEM_DOS_LIM                     0x40000000
 
 #define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1

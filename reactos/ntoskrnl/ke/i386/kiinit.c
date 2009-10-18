@@ -40,7 +40,7 @@ KiInitMachineDependent(VOID)
     if (KeFeatureBits & KF_LARGE_PAGE)
     {
         /* FIXME: Support this */
-        DPRINT1("Large Page support detected but not yet taken advantage of!\n");
+        DPRINT("Large Page support detected but not yet taken advantage of!\n");
     }
 
     /* Check for global page support */
@@ -621,7 +621,6 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
 
     /* Get TSS and FS Selectors */
     Tr = Ke386GetTr();
-    if (Tr != KGDT_TSS) Tr = KGDT_TSS; // FIXME: HACKHACK
     Fs = Ke386GetFs();
 
     /* Get PCR Selector, mask it and get its GDT Entry */
@@ -753,7 +752,7 @@ AppCpuInit:
         KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
-        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
+        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
 
     /* Raise to HIGH_LEVEL */

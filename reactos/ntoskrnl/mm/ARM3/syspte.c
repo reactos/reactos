@@ -109,7 +109,6 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
                 // Decrement the free count and move to the next starting PTE
                 //
                 MmTotalFreeSystemPtes[SystemPtePoolType] -= NumberOfPtes;
-                KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
                 PointerPte += (ClusterSize - NumberOfPtes);
                 break;
             }
@@ -158,8 +157,9 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
     }   
     
     //
-    // Flush the TLB and return the first PTE
+    // Release the lock, flush the TLB and return the first PTE
     //
+    KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
     KeFlushProcessTb();
     return PointerPte;
 }

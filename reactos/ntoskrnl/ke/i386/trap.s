@@ -781,7 +781,7 @@ _KiTrap3:
     TRAP_PROLOG kit3_a, kit3_t
 
     /* Set status code */
-    mov eax, 0 //STATUS_SUCCESS
+    mov eax, STATUS_SUCCESS
 
     /* Check for V86 */
 PrepareInt3:

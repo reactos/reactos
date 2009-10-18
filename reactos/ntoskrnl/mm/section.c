@@ -576,6 +576,25 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
 
 NTSTATUS
 NTAPI
+MiCopyFromUserPage(PFN_TYPE DestPage, PVOID SourceAddress)
+{
+    PEPROCESS Process;
+    KIRQL Irql;
+    PVOID TempAddress;
+    
+    Process = PsGetCurrentProcess();
+    TempAddress = MiMapPageInHyperSpace(Process, DestPage, &Irql);
+    if (TempAddress == NULL)
+    {
+        return(STATUS_NO_MEMORY);
+    }
+    memcpy(TempAddress, SourceAddress, PAGE_SIZE);
+    MiUnmapPageInHyperSpace(Process, TempAddress, Irql);
+    return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+NTAPI
 MiReadPage(PMEMORY_AREA MemoryArea,
            ULONG SegOffset,
            PPFN_TYPE Page)
@@ -4794,7 +4813,7 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
          /* Something must gone wrong
           * how can we have a Section but no 
           * reference? */
-         DPRINT1("ERROR: DataSectionObject without reference!\n");
+         DPRINT("ERROR: DataSectionObject without reference!\n");
       }
    }
 
@@ -4944,22 +4963,6 @@ MmUnmapViewInSessionSpace (
 	return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-MmSetBankedSection (ULONG Unknown0,
-                    ULONG Unknown1,
-                    ULONG Unknown2,
-                    ULONG Unknown3,
-                    ULONG Unknown4,
-                    ULONG Unknown5)
-{
-   UNIMPLEMENTED;
-   return (STATUS_NOT_IMPLEMENTED);
-}
-
-
 /**********************************************************************
  * NAME       EXPORTED
  *  MmCreateSection@
@@ -5071,46 +5074,6 @@ MmCreateSection (OUT PVOID  * Section,
                                   MaximumSize,
                                   SectionPageProtection,
                                   AllocationAttributes));
-}
-
-NTSTATUS
-NTAPI
-NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
-                            IN OUT PULONG_PTR NumberOfPages,
-                            IN OUT PULONG_PTR UserPfnArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtMapUserPhysicalPages(IN PVOID VirtualAddresses,
-                       IN ULONG_PTR NumberOfPages,
-                       IN OUT PULONG_PTR UserPfnArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtMapUserPhysicalPagesScatter(IN PVOID *VirtualAddresses,
-                              IN ULONG_PTR NumberOfPages,
-                              IN OUT PULONG_PTR UserPfnArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtFreeUserPhysicalPages(IN HANDLE ProcessHandle,
-                        IN OUT PULONG_PTR NumberOfPages,
-                        IN OUT PULONG_PTR UserPfnArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS

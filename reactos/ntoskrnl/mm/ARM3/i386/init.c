@@ -540,14 +540,15 @@ MiBuildPagedPool(VOID)
     //
     Size = Size * 1024;
     ASSERT(Size == MmSizeOfPagedPoolInPages);
-    BitMapSize = sizeof(RTL_BITMAP) + (((Size + 31) / 32) * sizeof(ULONG));
+    BitMapSize = Size;
+    Size = sizeof(RTL_BITMAP) + (((Size + 31) / 32) * sizeof(ULONG));
 
     //
     // Allocate the allocation bitmap, which tells us which regions have not yet
     // been mapped into memory
     //
     MmPagedPoolInfo.PagedPoolAllocationMap = ExAllocatePoolWithTag(NonPagedPool,
-                                                                   BitMapSize,
+                                                                   Size,
                                                                    '  mM');
     ASSERT(MmPagedPoolInfo.PagedPoolAllocationMap);
 
@@ -568,7 +569,7 @@ MiBuildPagedPool(VOID)
     // entire allocation is.
     //
     MmPagedPoolInfo.EndOfPagedPoolBitmap = ExAllocatePoolWithTag(NonPagedPool,
-                                                                 BitMapSize,
+                                                                 Size,
                                                                  '  mM');
     ASSERT(MmPagedPoolInfo.EndOfPagedPoolBitmap);
     RtlInitializeBitMap(MmPagedPoolInfo.EndOfPagedPoolBitmap,
@@ -583,7 +584,12 @@ MiBuildPagedPool(VOID)
     //
     // Initialize paged pool.
     //
-    //InitializePool(PagedPool, 0);
+    InitializePool(PagedPool, 0);
+
+    //
+    // Initialize the paged pool mutex
+    //
+    KeInitializeGuardedMutex(&MmPagedPoolMutex);
 }
 
 NTSTATUS
@@ -594,20 +600,16 @@ MmArmInitSystem(IN ULONG Phase,
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG FreePages = 0;
-    PMEMORY_AREA MArea;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PFN_NUMBER PageFrameIndex;
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde = HyperTemplatePte, TempPte = HyperTemplatePte;
-    PVOID NonPagedPoolExpansionVa, BaseAddress;
-    NTSTATUS Status;
+    PVOID NonPagedPoolExpansionVa;
     ULONG OldCount;
     BOOLEAN IncludeType[LoaderMaximum];
     ULONG i;
     PVOID Bitmap;
     PPHYSICAL_MEMORY_RUN Run;
     PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
-    BoundaryAddressMultiple.QuadPart = 0;
     
     if (Phase == 0)
     {
@@ -1079,37 +1081,6 @@ MmArmInitSystem(IN ULONG Phase,
         }
         
         //
-        // ReactOS requires a memory area to keep the initial NP area off-bounds
-        //
-        BaseAddress = MmNonPagedPoolStart;
-        Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                    MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
-                                    &BaseAddress,
-                                    MmSizeOfNonPagedPoolInBytes,
-                                    PAGE_READWRITE,
-                                    &MArea,
-                                    TRUE,
-                                    0,
-                                    BoundaryAddressMultiple);
-        ASSERT(Status == STATUS_SUCCESS);
-        
-        //
-        // And we need one more for the system NP
-        //
-        BaseAddress = MmNonPagedSystemStart;
-        Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                    MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
-                                    &BaseAddress,
-                                    (ULONG_PTR)MmNonPagedPoolEnd -
-                                    (ULONG_PTR)MmNonPagedSystemStart,
-                                    PAGE_READWRITE,
-                                    &MArea,
-                                    TRUE,
-                                    0,
-                                    BoundaryAddressMultiple);
-        ASSERT(Status == STATUS_SUCCESS);
-        
-        //
         // Sanity check: make sure we have properly defined the system PTE space
         //
         ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
@@ -1318,9 +1289,7 @@ MmArmInitSystem(IN ULONG Phase,
         MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
         MiSyncARM3WithROS(MmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
         MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
-    }
-    else // NOW WE HAVE NONPAGED POOL
-    {
+
         //
         // Instantiate memory that we don't consider RAM/usable
         // We use the same exclusions that Windows does, in order to try to be
@@ -1394,53 +1363,6 @@ MmArmInitSystem(IN ULONG Phase,
         // Size up paged pool and build the shadow system page directory
         //
         MiBuildPagedPool();
-        
-        //
-        // Print the memory layout
-        //
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmSystemRangeStart,
-                (ULONG_PTR)MmSystemRangeStart + MmBootImageSize,
-                "Boot Loaded Image");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmPagedPoolBase,
-                (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize,
-                "Paged Pool");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmPfnDatabase,
-                (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
-                "PFN Database");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmNonPagedPoolStart,
-                (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
-                "ARM³ Non Paged Pool");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MiSystemViewStart,
-                (ULONG_PTR)MiSystemViewStart + MmSystemViewSize,
-                "System View Space");        
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmSessionBase,
-                MiSessionSpaceEnd,
-                "Session Space");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                PTE_BASE, PDE_BASE,
-                "Page Tables");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                PDE_BASE, HYPER_SPACE,
-                "Page Directories");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                HYPER_SPACE, HYPER_SPACE + (4 * 1024 * 1024),
-                "Hyperspace");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmPagedPoolStart,
-                (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
-                "ARM³ Paged Pool");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
-                "System PTE Space");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
-                "Non Paged Pool Expansion PTE Space");
     }
     
     //

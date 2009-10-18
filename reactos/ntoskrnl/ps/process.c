@@ -379,6 +379,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
+    BOOLEAN NeedsPeb = FALSE;
+    INITIAL_PEB InitialPeb;
     PAGED_CODE();
     PSTRACE(PS_PROCESS_DEBUG,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
@@ -635,17 +637,27 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                                  SeAuditProcessCreationInfo.
                                                  ImageFileName);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        
+        //
+        // We need a PEB
+        //
+        NeedsPeb = TRUE;
     }
     else if (Parent)
     {
         /* Check if this is a child of the system process */
         if (Parent != PsInitialSystemProcess)
         {
+            //
+            // We need a PEB
+            //
+            NeedsPeb = TRUE;
+
             /* This is a clone! */
             ASSERTMSG("No support for cloning yet\n", FALSE);
         }
         else
-        {
+        {           
             /* This is the initial system process */
             Flags &= ~PS_LARGE_PAGES;
             Status = MmInitializeProcessAddressSpace(Process,
@@ -702,11 +714,34 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     }
 
     /* Create PEB only for User-Mode Processes */
-    if (Parent)
+    if ((Parent) && (NeedsPeb))
     {
-        /* Create it */
-        Status = MmCreatePeb(Process);
-        if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        //
+        // Set up the initial PEB
+        //
+        RtlZeroMemory(&InitialPeb, sizeof(INITIAL_PEB));
+        InitialPeb.Mutant = (HANDLE)-1;
+        InitialPeb.ImageUsesLargePages = 0; // FIXME: Not yet supported
+        
+        //
+        // Create it only if we have an image section
+        //
+        if (SectionHandle)
+        {
+            //
+            // Create it
+            //
+            Status = MmCreatePeb(Process, &InitialPeb, &Process->Peb);
+            if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        }
+        else
+        {
+            //
+            // We have to clone it
+            //
+            ASSERTMSG("No support for cloning yet\n", FALSE);
+        }
+
     }
 
     /* The process can now be activated */

@@ -297,13 +297,15 @@
 			<file>pnproot.c</file>
 		</directory>
 	</directory>
-	<directory name="kd">
-		<if property="ARCH" value="i386">
-			<directory name="i386">
-				<file>kdmemsup.c</file>
-			</directory>
-		</if>
-	</directory>
+	<if property="KDBG" value="1">
+		<directory name="kd">
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>kdmemsup.c</file>
+				</directory>
+			</if>
+		</directory>
+	</if>
 	<if property="_WINKD_" value="0">
 		<directory name="kdbg">
 			<if property="ARCH" value="i386">
@@ -434,10 +436,13 @@
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
 			<file>mdlsup.c</file>
+			<file>mmsup.c</file>
 			<file>ncache.c</file>
+			<file>pagfault.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
 			<file>syspte.c</file>
+			<file>virtual.c</file>
 		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
@@ -445,7 +450,6 @@
 		<file>freelist.c</file>
 		<file>marea.c</file>
 		<file>mmfault.c</file>
-		<file>mmsup.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
 		<file>pagefile.c</file>

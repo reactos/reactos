@@ -103,7 +103,7 @@ WSAAPI
 getxyDataEnt(IN OUT PCHAR *Results,
              IN DWORD Length,
              IN LPSTR Name,
-             IN LPGUID Type,
+             IN LPCGUID Type,
              IN LPSTR *NewName)
 {
     PWSAQUERYSETA WsaQuery = (PWSAQUERYSETA)*Results;
@@ -119,7 +119,7 @@ getxyDataEnt(IN OUT PCHAR *Results,
     RtlZeroMemory(WsaQuery, sizeof(*WsaQuery));
     WsaQuery->dwSize = sizeof(*WsaQuery);
     WsaQuery->lpszServiceInstanceName = Name;
-    WsaQuery->lpServiceClassId = Type;
+    WsaQuery->lpServiceClassId = (LPGUID)Type;
     WsaQuery->dwNameSpace = NS_ALL;
     WsaQuery->dwNumberOfProtocols = 2;
     WsaQuery->lpafpProtocols = &afp[0];

@@ -679,6 +679,10 @@ typedef IPortPinWavePci *PPORTPINWAVEPCI;
 #undef INTERFACE
 #define INTERFACE IPortFilterWaveRT
 
+#ifndef PPORTWAVERT
+typedef IPortWaveRT *PPORTWAVERT;
+#endif
+
 DECLARE_INTERFACE_(IPortFilterWaveRT, IIrpTarget)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -1102,5 +1106,16 @@ DECLARE_INTERFACE_(IPortWaveRTStreamInit, IUnknown)
         IN      PMDL              MemoryDescriptorList,                   \
         IN      ULONG             Index                                   \
     )
+
+#ifndef IMP_IPortClsVersion
+
+#define IMP_IPortClsVersion \
+    STDMETHODIMP_(DWORD) GetVersion(void);
+
+#endif
+
+#ifdef IMP_IPortWaveRT
+#define IMP_IPortWaveRT IMP_IPort
+#endif
 
 #endif

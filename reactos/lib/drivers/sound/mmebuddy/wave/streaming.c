@@ -65,6 +65,10 @@ DoWaveStreaming(
         HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
         SND_ASSERT( HeaderExtension );
 
+        /* Saniy checks */
+        SND_ASSERT(Header->dwFlags & WHDR_PREPARED);
+        SND_ASSERT(Header->dwFlags & WHDR_INQUEUE);
+
         /* Can never be *above* the length */
         SND_ASSERT( HeaderExtension->BytesCommitted <= Header->dwBufferLength );
 
@@ -170,6 +174,8 @@ CompleteIO(
     WaveHdr = (PWAVEHDR) SoundOverlapped->Header;
     SND_ASSERT( WaveHdr );
 
+    SND_ASSERT( ERROR_SUCCESS == dwErrorCode );
+
     HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
     SND_ASSERT( HdrExtension );
 
@@ -262,8 +268,7 @@ StopStreaming(
     if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
-    /* FIXME: What about wave input? */
-    if ( DeviceType != WAVE_OUT_DEVICE_TYPE )
+    if ( DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceType != WAVE_IN_DEVICE_TYPE )
         return MMSYSERR_NOTSUPPORTED;
 
     return CallSoundThread(SoundDeviceInstance,

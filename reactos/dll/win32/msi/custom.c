@@ -679,7 +679,7 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
     hModule = LoadLibraryW( dll );
     if (!hModule)
     {
-        ERR("failed to load dll %s\n", debugstr_w( dll ) );
+        ERR("failed to load dll %s (%u)\n", debugstr_w( dll ), GetLastError() );
         return r;
     }
 
@@ -1046,15 +1046,16 @@ static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
     if( row )
     {
         LPCWSTR error = MSI_RecordGetString( row, 1 );
-        MessageBoxW( NULL, error, NULL, MB_OK );
+        if ((gUILevel & INSTALLUILEVEL_MASK) != INSTALLUILEVEL_NONE)
+            MessageBoxW( NULL, error, NULL, MB_OK );
         msiobj_release( &row->hdr );
     }
-    else
+    else if ((gUILevel & INSTALLUILEVEL_MASK) != INSTALLUILEVEL_NONE)
         MessageBoxW( NULL, deformated, NULL, MB_OK );
 
     msi_free( deformated );
 
-    return ERROR_FUNCTION_FAILED;
+    return ERROR_INSTALL_FAILURE;
 }
 
 static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,

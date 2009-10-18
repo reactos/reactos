@@ -148,6 +148,7 @@ typedef struct _FAT_VOLUME_INFO *PFAT_VOLUME_INFO;
 
 typedef struct
 {
+	UCHAR	Attributes;		/* File attributes */
 	ULONG	FileSize;		/* File size */
 	ULONG	FilePointer;		/* File pointer */
 	ULONG*	FileFatChain;		/* File fat chain array */

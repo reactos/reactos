@@ -488,9 +488,9 @@ QSI_DEF(SystemBasicInformation)
     Sbi->Reserved = 0;
     Sbi->TimerResolution = KeMaximumIncrement;
     Sbi->PageSize = PAGE_SIZE;
-    Sbi->NumberOfPhysicalPages = MmStats.NrTotalPages;
-    Sbi->LowestPhysicalPageNumber = 0; /* FIXME */
-    Sbi->HighestPhysicalPageNumber = MmStats.NrTotalPages; /* FIXME */
+    Sbi->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
+    Sbi->LowestPhysicalPageNumber = MmLowestPhysicalPage;
+    Sbi->HighestPhysicalPageNumber = MmHighestPhysicalPage;
     Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
     Sbi->MinimumUserModeAddress = 0x10000; /* Top of 64k */
     Sbi->MaximumUserModeAddress = (ULONG_PTR)MmHighestUserAddress;
@@ -555,7 +555,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->IoWriteOperationCount = IoWriteOperationCount;
     Spi->IoOtherOperationCount = IoOtherOperationCount;
 
-    Spi->AvailablePages = MmStats.NrFreePages;
+    Spi->AvailablePages = MmAvailablePages;
     /*
      *   Add up all the used "Committed" memory + pagefile.
      *   Not sure this is right. 8^\
@@ -570,7 +570,7 @@ QSI_DEF(SystemPerformanceInformation)
      *  All this make Taskmgr happy but not sure it is the right numbers.
      *  This too, fixes some of GlobalMemoryStatusEx numbers.
      */
-    Spi->CommitLimit = MmStats.NrTotalPages + MiFreeSwapPages + MiUsedSwapPages;
+    Spi->CommitLimit = MmNumberOfPhysicalPages + MiFreeSwapPages + MiUsedSwapPages;
 
     Spi->PeakCommitment = 0; /* FIXME */
     Spi->PageFaultCount = 0; /* FIXME */
@@ -596,7 +596,7 @@ QSI_DEF(SystemPerformanceInformation)
 
     Spi->FreeSystemPtes = 0; /* FIXME */
 
-    Spi->ResidentSystemCodePage = MmStats.NrSystemPages; /* FIXME */
+    Spi->ResidentSystemCodePage = 0; /* FIXME */
 
     Spi->TotalSystemDriverPages = 0; /* FIXME */
     Spi->TotalSystemCodePages = 0; /* FIXME */
