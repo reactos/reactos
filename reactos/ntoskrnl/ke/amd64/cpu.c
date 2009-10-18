@@ -387,18 +387,16 @@ KiGetCacheInformation(VOID)
     }
 }
 
-
 VOID
 FASTCALL
 Ki386InitializeTss(IN PKTSS64 Tss,
-                   IN PKIDTENTRY Idt,
-                   IN PKGDTENTRY Gdt,
+                   IN PVOID GdtBase,
                    IN UINT64 Stack)
 {
     PKGDTENTRY64 TssEntry;
 
     /* Initialize the TSS descriptor entry */
-    TssEntry = (PVOID)((ULONG64)Gdt + KGDT_TSS);
+    TssEntry = (PVOID)((ULONG64)GdtBase + KGDT_TSS);
     TssEntry->Bits.Type = 9;//AMD64_TSS;
     TssEntry->Bits.Dpl = 0;
     TssEntry->Bits.Present = 1;
