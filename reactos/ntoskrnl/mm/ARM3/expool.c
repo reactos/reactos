@@ -662,7 +662,7 @@ ExQueryPoolBlockSize(IN PVOID PoolBlock,
 PVOID
 NTAPI
 ExAllocatePoolWithQuota(IN POOL_TYPE PoolType,
-                        IN ULONG NumberOfBytes)
+                        IN SIZE_T NumberOfBytes)
 {
     //
     // Allocate the pool
@@ -693,7 +693,7 @@ ExAllocatePoolWithTagPriority(IN POOL_TYPE PoolType,
 PVOID
 NTAPI
 ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
-                           IN ULONG NumberOfBytes,
+                           IN SIZE_T NumberOfBytes,
                            IN ULONG Tag)
 {
     //
