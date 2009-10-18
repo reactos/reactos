@@ -467,7 +467,7 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
     UCHAR* Ptr = (UCHAR*)Buffer;
-    ULONG i, Length, Sectors;
+    ULONG i, Length;
     BOOLEAN ret;
 
     *Count = 0;
@@ -475,13 +475,12 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     while (N > 0)
     {
         Length = N;
-        if (Length > DISKREADBUFFER_SIZE)
-            Length = DISKREADBUFFER_SIZE;
-        Sectors = (Length + Context->SectorSize - 1) / Context->SectorSize;
+        if (Length > Context->SectorSize)
+            Length = Context->SectorSize;
         ret = MachDiskReadLogicalSectors(
             Context->DriveNumber,
             Context->SectorNumber + Context->SectorOffset + i,
-            Sectors,
+            1,
             (PVOID)DISKREADBUFFER);
         if (!ret)
             return EIO;
@@ -489,7 +488,7 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         Ptr += Length;
         *Count += Length;
         N -= Length;
-        i += Sectors;
+        i++;
     }
 
     return ESUCCESS;
