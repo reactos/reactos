@@ -1,9 +1,9 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            freeldr/winldr/wlmemory.c
+ * FILE:            freeldr/amd64/wlmemory.c
  * PURPOSE:         Memory related routines
- * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ***************************************************************/
@@ -13,60 +13,13 @@
 #include <ndk/asm.h>
 #include <debug.h>
 
-extern ULONG TotalNLSSize;
-extern ULONG LoaderPagesSpanned;
+//extern ULONG LoaderPagesSpanned;
 
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
 
 #define HYPER_SPACE_ENTRY       0x300
-
-PCHAR  MemTypeDesc[]  = {
-    "ExceptionBlock    ", // ?
-    "SystemBlock       ", // ?
-    "Free              ",
-    "Bad               ", // used
-    "LoadedProgram     ", // == Free
-    "FirmwareTemporary ", // == Free
-    "FirmwarePermanent ", // == Bad
-    "OsloaderHeap      ", // used
-    "OsloaderStack     ", // == Free
-    "SystemCode        ",
-    "HalCode           ",
-    "BootDriver        ", // not used
-    "ConsoleInDriver   ", // ?
-    "ConsoleOutDriver  ", // ?
-    "StartupDpcStack   ", // ?
-    "StartupKernelStack", // ?
-    "StartupPanicStack ", // ?
-    "StartupPcrPage    ", // ?
-    "StartupPdrPage    ", // ?
-    "RegistryData      ", // used
-    "MemoryData        ", // not used
-    "NlsData           ", // used
-    "SpecialMemory     ", // == Bad
-    "BBTMemory         " // == Bad
-    };
-
-VOID
-WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-
-VOID
-MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG BasePage,
-                   ULONG PageCount,
-                   ULONG Type);
-VOID
-WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor);
-
-VOID
-WinLdrRemoveDescriptor(IN PMEMORY_ALLOCATION_DESCRIPTOR Descriptor);
-
-VOID
-WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss);
 
 // This is needed only for SetProcessorContext routine
 #pragma pack(2)
@@ -79,91 +32,284 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss);
 
 /* GLOBALS ***************************************************************/
 
-PHARDWARE_PTE PDE;
-PHARDWARE_PTE HalPageTable;
+//PHARDWARE_PTE PDE;
+//PHARDWARE_PTE HalPageTable;
 
-PUCHAR PhysicalPageTablesBuffer;
-PUCHAR KernelPageTablesBuffer;
-ULONG PhysicalPageTables;
-ULONG KernelPageTables;
-
-MEMORY_ALLOCATION_DESCRIPTOR *Mad;
-ULONG MadCount = 0;
-
+PPAGE_DIRECTORY_AMD64 pPML4;
 
 /* FUNCTIONS **************************************************************/
 
 BOOLEAN
 MempAllocatePageTables()
 {
+	ULONG KernelPages;
+	PVOID UserSharedData;
+
+    DPRINTM(DPRINT_WINDOWS,">>> MempAllocatePageTables\n");
+
+	/* Allocate a page for the PML4 */
+	pPML4 = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
+    if (!pPML4)
+    {
+        DPRINTM(DPRINT_WINDOWS,"failed to allocate PML4\n");
+        return FALSE;
+    }
+
+	// FIXME: Physical PTEs = FirmwareTemporary ?
+
+	/* Zero the PML4 */
+	RtlZeroMemory(pPML4, PAGE_SIZE);
+
+	/* The page tables are located at 0xfffff68000000000 
+	 * We create a recursive self mapping through all 4 levels at 
+	 * virtual address 0xfffff6fb7dbedf68 */
+	pPML4->Pde[VAtoPXI(PXE_BASE)].Valid = 1;
+	pPML4->Pde[VAtoPXI(PXE_BASE)].Write = 1;
+	pPML4->Pde[VAtoPXI(PXE_BASE)].PageFrameNumber = PtrToPfn(pPML4);
+
+    // FIXME: map PDE's for hals memory mapping
+
+    DPRINTM(DPRINT_WINDOWS,">>> leave MempAllocatePageTables\n");
 
 	return TRUE;
 }
 
-VOID
-MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
+PPAGE_DIRECTORY_AMD64
+MempGetOrCreatePageDir(PPAGE_DIRECTORY_AMD64 pDir, ULONG Index)
 {
+	PPAGE_DIRECTORY_AMD64 pSubDir;
 
+	if (!pDir)
+		return NULL;
+
+	if (!pDir->Pde[Index].Valid)
+	{
+		pSubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderSpecialMemory);
+		if (!pSubDir)
+			return NULL;
+		RtlZeroMemory(pSubDir, PAGE_SIZE);
+		pDir->Pde[Index].PageFrameNumber = PtrToPfn(pSubDir);
+		pDir->Pde[Index].Valid = 1;
+		pDir->Pde[Index].Write = 1;
+	}
+	else
+	{
+		pSubDir = (PPAGE_DIRECTORY_AMD64)((ULONGLONG)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+	}
+	return pSubDir;
+}
+
+BOOLEAN
+MempMapSinglePage(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress)
+{
+	PPAGE_DIRECTORY_AMD64 pDir3, pDir2, pDir1;
+	ULONG Index;
+
+	pDir3 = MempGetOrCreatePageDir(pPML4, VAtoPXI(VirtualAddress));
+	pDir2 = MempGetOrCreatePageDir(pDir3, VAtoPPI(VirtualAddress));
+	pDir1 = MempGetOrCreatePageDir(pDir2, VAtoPDI(VirtualAddress));
+
+	if (!pDir1)
+		return FALSE;
+
+	Index = VAtoPTI(VirtualAddress);
+	if (pDir1->Pde[Index].Valid)
+	{
+		return FALSE;
+	}
+
+	pDir1->Pde[Index].Valid = 1;
+	pDir1->Pde[Index].Write = 1;
+	pDir1->Pde[Index].PageFrameNumber = PhysicalAddress / PAGE_SIZE;
+
+	return TRUE;
+}
+
+ULONG
+MempMapRangeOfPages(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress, ULONG cPages)
+{
+	ULONG i;
+
+	for (i = 0; i < cPages; i++)
+	{
+		if (!FrLdrMapSinglePage(VirtualAddress, PhysicalAddress))
+		{
+			return i;
+		}
+		VirtualAddress += PAGE_SIZE;
+		PhysicalAddress += PAGE_SIZE;
+	}
+	return i;
 }
 
 BOOLEAN
 MempSetupPaging(IN ULONG StartPage,
 				IN ULONG NumberOfPages)
 {
+    DPRINTM(DPRINT_WINDOWS,">>> MempSetupPaging(0x%lx, %ld)\n", StartPage, NumberOfPages);
+
+    if (MempMapRangeOfPages(StartPage * PAGE_SIZE,
+                            StartPage * PAGE_SIZE,
+                            NumberOfPages) != NumberOfPages)
+    {
+        DPRINTM(DPRINT_WINDOWS,"Failed to map pages\n");
+        return FALSE;
+    }
 
 	return TRUE;
 }
 
 VOID
-MempDisablePages()
+MempUnmapPage(ULONG Page)
 {
-
+   // DPRINTM(DPRINT_WINDOWS,">>> MempUnmapPage\n");
 }
 
-VOID
-MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG BasePage,
-                   ULONG PageCount,
-                   ULONG Type)
-{
-
-}
-
-#ifdef _M_IX86
 VOID
 WinLdrpMapApic()
 {
+	BOOLEAN LocalAPIC;
+	LARGE_INTEGER MsrValue;
+	ULONG CpuInfo[4];
+	ULONG64 APICAddress;
 
+    DPRINTM(DPRINT_WINDOWS,">>> WinLdrpMapApic\n");
+
+	/* Check if we have a local APIC */
+	__cpuid((int*)CpuInfo, 1);
+	LocalAPIC = (((CpuInfo[3] >> 9) & 1) != 0);
+
+	/* If there is no APIC, just return */
+	if (!LocalAPIC)
+	{
+        DPRINTM(DPRINT_WINDOWS,"No APIC found.\n");
+		return;
+	}
+
+	/* Read the APIC Address */
+	MsrValue.QuadPart = __readmsr(0x1B);
+	APICAddress = (MsrValue.LowPart & 0xFFFFF000);
+
+	DPRINTM(DPRINT_WINDOWS, "Local APIC detected at address 0x%x\n",
+		APICAddress);
+
+	/* Map it */
+	MempMapSinglePage(APIC_BASE, APICAddress);
 }
-#else
-VOID
-WinLdrpMapApic()
-{
-	/* Implement it for another arch */
-}
-#endif
 
 BOOLEAN
-WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG PcrBasePage,
-                   ULONG TssBasePage,
-                   PVOID GdtIdt)
+WinLdrMapSpecialPages(ULONG PcrBasePage)
 {
-return 1;
+    /* Map the PCR page */
+    if (!MempMapSinglePage(PcrBasePage * PAGE_SIZE, KIP0PCRADDRESS))
+    {
+        DPRINTM(DPRINT_WINDOWS, "Could not map PCR @ %lx\n", PcrBasePage);
+        return FALSE;
+    }
+
+    /* Map KI_USER_SHARED_DATA */
+    if (!MempMapSinglePage((PcrBasePage+1) * PAGE_SIZE, KI_USER_SHARED_DATA))
+    {
+        DPRINTM(DPRINT_WINDOWS, "Could not map KI_USER_SHARED_DATA\n");
+        return FALSE;
+    }
+
+	/* Map the APIC page */
+	WinLdrpMapApic();
+
+    return TRUE;
 }
 
-// Two special things this func does: it sorts descriptors,
-// and it merges free ones
 VOID
-WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor)
+WinLdrSetupGdt(PVOID GdtBase, ULONG64 TssBase)
 {
+	PKGDTENTRY64 Entry;
+	KDESCRIPTOR GdtDesc;
+
+	/* Setup KGDT_64_R0_CODE */
+	Entry = KiGetGdtEntry(GdtBase, KGDT_64_R0_CODE);
+	*(PULONG64)Entry = 0x00209b0000000000ULL;
+
+	/* Setup KGDT_64_R0_SS */
+	Entry = KiGetGdtEntry(GdtBase, KGDT_64_R0_SS);
+	*(PULONG64)Entry = 0x00cf93000000ffffULL;
+
+	/* Setup KGDT_64_DATA */
+	Entry = KiGetGdtEntry(GdtBase, KGDT_64_DATA);
+	*(PULONG64)Entry = 0x00cff3000000ffffULL;
+
+	/* Setup KGDT_64_R3_CODE */
+	Entry = KiGetGdtEntry(GdtBase, KGDT_64_R3_CODE);
+	*(PULONG64)Entry = 0x0020fb0000000000ULL;
+
+	/* Setup KGDT_32_R3_TEB */
+	Entry = KiGetGdtEntry(GdtBase, KGDT_32_R3_TEB);
+	*(PULONG64)Entry = 0xff40f3fd50003c00ULL;
+
+	/* Setup TSS entry */
+	Entry = KiGetGdtEntry(GdtBase, KGDT_TSS);
+	KiInitGdtEntry(Entry, TssBase, sizeof(KTSS), I386_TSS, 0);
+
+    /* Setup GDT descriptor */
+	GdtDesc.Base  = GdtBase;
+	GdtDesc.Limit = NUM_GDT * sizeof(KGDTENTRY) - 1;
+
+	/* Set the new Gdt */
+	__lgdt(&GdtDesc.Limit);
+	DbgPrint("Gdtr.Base = %p, num = %ld\n", GdtDesc.Base, NUM_GDT);
 
 }
 
 VOID
-WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
+WinLdrSetupIdt(PVOID IdtBase)
 {
+	KDESCRIPTOR IdtDesc, OldIdt;
 
+    /* Get old IDT */
+	__sidt(&OldIdt);
+
+	/* Copy the old IDT */
+	RtlCopyMemory(IdtBase, (PVOID)OldIdt.Base, OldIdt.Limit + 1);
+
+	/* Setup the new IDT descriptor */
+	IdtDesc.Base = IdtBase;
+	IdtDesc.Limit = NUM_IDT * sizeof(KIDTENTRY) - 1;
+
+	/* Set the new IDT */
+	__lidt(&IdtDesc.Limit);
+	DbgPrint("Idtr.Base = %p\n", IdtDesc.Base);
+
+}
+
+VOID
+WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
+{
+	/* Disable Interrupts */
+	_disable();
+
+	/* Re-initalize EFLAGS */
+	__writeeflags(0);
+
+	/* Set the new PML4 */
+	__writecr3((ULONGLONG)pPML4);
+
+	// Enable paging by modifying CR0
+	__writecr0(__readcr0() | CR0_PG);
+
+	// Kernel expects the PCR to be zero-filled on startup
+	// FIXME: Why zero it here when we can zero it right after allocation?
+	RtlZeroMemory((PVOID)Pcr, MM_PAGE_SIZE); //FIXME: Why zero only 1 page when we allocate 2?
+
+	RtlZeroMemory(GdtIdt, PAGE_SIZE);
+
+    WinLdrSetupGdt(GdtIdt, Tss);
+
+    WinLdrSetupIdt(GdtIdt);
+
+}
+
+VOID
+MempDump()
+{
 }
 

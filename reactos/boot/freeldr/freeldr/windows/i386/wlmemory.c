@@ -1,7 +1,7 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            freeldr/winldr/wlmemory.c
+ * FILE:            freeldr/winldr/i386/wlmemory.c
  * PURPOSE:         Memory related routines
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */
@@ -22,52 +22,6 @@ extern ULONG LoaderPagesSpanned;
 
 #define HYPER_SPACE_ENTRY       0x300
 
-PCHAR  MemTypeDesc[]  = {
-    "ExceptionBlock    ", // ?
-    "SystemBlock       ", // ?
-    "Free              ",
-    "Bad               ", // used
-    "LoadedProgram     ", // == Free
-    "FirmwareTemporary ", // == Free
-    "FirmwarePermanent ", // == Bad
-    "OsloaderHeap      ", // used
-    "OsloaderStack     ", // == Free
-    "SystemCode        ",
-    "HalCode           ",
-    "BootDriver        ", // not used
-    "ConsoleInDriver   ", // ?
-    "ConsoleOutDriver  ", // ?
-    "StartupDpcStack   ", // ?
-    "StartupKernelStack", // ?
-    "StartupPanicStack ", // ?
-    "StartupPcrPage    ", // ?
-    "StartupPdrPage    ", // ?
-    "RegistryData      ", // used
-    "MemoryData        ", // not used
-    "NlsData           ", // used
-    "SpecialMemory     ", // == Bad
-    "BBTMemory         " // == Bad
-    };
-
-VOID
-WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-
-VOID
-MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG BasePage,
-                   ULONG PageCount,
-                   ULONG Type);
-VOID
-WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor);
-
-VOID
-WinLdrRemoveDescriptor(IN PMEMORY_ALLOCATION_DESCRIPTOR Descriptor);
-
-VOID
-WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss);
-
 // This is needed only for SetProcessorContext routine
 #pragma pack(2)
 	typedef struct
@@ -86,10 +40,6 @@ PUCHAR PhysicalPageTablesBuffer;
 PUCHAR KernelPageTablesBuffer;
 ULONG PhysicalPageTables;
 ULONG KernelPageTables;
-
-MEMORY_ALLOCATION_DESCRIPTOR *Mad;
-ULONG MadCount = 0;
-
 
 /* FUNCTIONS **************************************************************/
 
@@ -253,133 +203,24 @@ MempSetupPaging(IN ULONG StartPage,
 }
 
 VOID
-MempDisablePages()
+MempUnmapPage(ULONG Page)
 {
-	ULONG i;
+    PHARDWARE_PTE KernelPT;
+    ULONG Entry = (Page >> 10) + (KSEG0_BASE >> 22);
 
-	//
-	// We need to delete kernel mapping from memory areas which are
-	// marked as Special or Permanent memory (thus non-accessible)
-	//
+    if (PDE[Entry].Valid)
+    {
+        KernelPT = (PHARDWARE_PTE)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
 
-	for (i=0; i<MadCount; i++)
-	{
-		ULONG StartPage, EndPage, Page;
-
-		StartPage = Mad[i].BasePage;
-		EndPage = Mad[i].BasePage + Mad[i].PageCount;
-
-		if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
-			Mad[i].MemoryType == LoaderSpecialMemory ||
-			Mad[i].MemoryType == LoaderFree ||
-			(Mad[i].MemoryType == LoaderFirmwareTemporary && EndPage <= LoaderPagesSpanned) ||
-			Mad[i].MemoryType == LoaderOsloaderStack ||
-			Mad[i].MemoryType == LoaderLoadedProgram)
-		{
-			//
-			// But, the first megabyte of memory always stays!
-			// And, to tell the truth, we don't care about what's higher
-			// than LoaderPagesSpanned
-			if (Mad[i].MemoryType == LoaderFirmwarePermanent ||
-				Mad[i].MemoryType == LoaderSpecialMemory)
-			{
-				if (StartPage < 0x100)
-					StartPage = 0x100;
-
-				if (EndPage > LoaderPagesSpanned)
-					EndPage = LoaderPagesSpanned;
-			}
-
-			for (Page = StartPage; Page < EndPage; Page++)
-			{
-				PHARDWARE_PTE KernelPT;
-				ULONG Entry = (Page >> 10) + (KSEG0_BASE >> 22);
-
-				if (PDE[Entry].Valid)
-				{
-					KernelPT = (PHARDWARE_PTE)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
-
-					if (KernelPT)
-					{
-						KernelPT[Page & 0x3ff].PageFrameNumber = 0;
-						KernelPT[Page & 0x3ff].Valid = 0;
-						KernelPT[Page & 0x3ff].Write = 0;
-					}
-				}
-			}
-		}
-	}
+        if (KernelPT)
+        {
+            KernelPT[Page & 0x3ff].PageFrameNumber = 0;
+            KernelPT[Page & 0x3ff].Valid = 0;
+            KernelPT[Page & 0x3ff].Write = 0;
+        }
+    }
 }
 
-VOID
-MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG BasePage,
-                   ULONG PageCount,
-                   ULONG Type)
-{
-	BOOLEAN Status;
-
-	//
-	// Check for some weird stuff at the top
-	//
-	if (BasePage + PageCount > 0xF0000)
-	{
-		//
-		// Just skip this, without even adding to MAD list
-		//
-		return;
-	}
-
-	//
-	// Set Base page, page count and type
-	//
-	Mad[MadCount].BasePage = BasePage;
-	Mad[MadCount].PageCount = PageCount;
-	Mad[MadCount].MemoryType = Type;
-
-	//
-	// Check if it's more than the allowed for OS loader
-	// if yes - don't map the pages, just add as FirmwareTemporary
-	//
-	if (BasePage + PageCount > LoaderPagesSpanned)
-	{
-		if (Mad[MadCount].MemoryType != LoaderSpecialMemory &&
-			Mad[MadCount].MemoryType != LoaderFirmwarePermanent &&
-			Mad[MadCount].MemoryType != LoaderFree)
-		{
-			DPRINTM(DPRINT_WINDOWS, "Setting page %x %x to Temporary from %d\n",
-				BasePage, PageCount, Mad[MadCount].MemoryType);
-			Mad[MadCount].MemoryType = LoaderFirmwareTemporary;
-		}
-
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		return;
-	}
-	
-	//
-	// Add descriptor
-	//
-	WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-	MadCount++;
-
-	//
-	// Map it (don't map low 1Mb because it was already contigiously
-	// mapped in WinLdrTurnOnPaging)
-	//
-	if (BasePage >= 0x100)
-	{
-		Status = MempSetupPaging(BasePage, PageCount);
-		if (!Status)
-		{
-			DPRINTM(DPRINT_WINDOWS, "Error during MempSetupPaging\n");
-			return;
-		}
-	}
-}
-
-#ifdef _M_IX86
 VOID
 WinLdrpMapApic()
 {
@@ -410,149 +251,10 @@ WinLdrpMapApic()
 	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].WriteThrough = 1;
 	HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].CacheDisable = 1;
 }
-#else
-VOID
-WinLdrpMapApic()
-{
-	/* Implement it for another arch */
-}
-#endif
 
 BOOLEAN
-WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG PcrBasePage,
-                   ULONG TssBasePage,
-                   PVOID GdtIdt)
+WinLdrMapSpecialPages(ULONG PcrBasePage)
 {
-	ULONG i, PagesCount, MemoryMapSizeInPages;
-	ULONG LastPageIndex, LastPageType, MemoryMapStartPage;
-	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
-	ULONG NoEntries;
-	PKTSS Tss;
-	BOOLEAN Status;
-
-	//
-	// Creating a suitable memory map for the Windows can be tricky, so let's
-	// give a few advices:
-	// 1) One must not map the whole available memory pages to PDE!
-	//    Map only what's needed - 16Mb, 24Mb, 32Mb max I think,
-	//    thus occupying 4, 6 or 8 PDE entries for identical mapping,
-	//    the same quantity for KSEG0_BASE mapping, one more entry for
-	//    hyperspace and one more entry for HAL physical pages mapping.
-	// 2) Memory descriptors must map *the whole* physical memory
-	//    showing any memory above 16/24/32 as FirmwareTemporary
-	//
-	// 3) Overall memory blocks count must not exceed 30 (?? why?)
-	//
-
-	//
-	// During MmInitMachineDependent, the kernel zeroes PDE at the following address
-	// 0xC0300000 - 0xC03007FC
-	//
-	// Then it finds the best place for non-paged pool:
-	// StartPde C0300F70, EndPde C0300FF8, NumberOfPages C13, NextPhysPage 3AD
-	//
-
-	// Before we start mapping pages, create a block of memory, which will contain
-	// PDE and PTEs
-	if (MempAllocatePageTables() == FALSE)
-		return FALSE;
-
-	// Allocate memory for memory allocation descriptors
-	Mad = MmHeapAlloc(sizeof(MEMORY_ALLOCATION_DESCRIPTOR) * 1024);
-
-	// Setup an entry for each descriptor
-	MemoryMap = MmGetMemoryMap(&NoEntries);
-	if (MemoryMap == NULL)
-	{
-		UiMessageBox("Can not retrieve the current memory map");
-		return FALSE;
-	}
-
-	// Calculate parameters of the memory map
-	MemoryMapStartPage = (ULONG_PTR)MemoryMap >> MM_PAGE_SHIFT;
-	MemoryMapSizeInPages = NoEntries * sizeof(PAGE_LOOKUP_TABLE_ITEM);
-
-	DPRINTM(DPRINT_WINDOWS, "Got memory map with %d entries\n", NoEntries);
-
-	// Always contigiously map low 1Mb of memory
-	Status = MempSetupPaging(0, 0x100);
-	if (!Status)
-	{
-		DPRINTM(DPRINT_WINDOWS, "Error during MempSetupPaging of low 1Mb\n");
-		return FALSE;
-	}
-
-	// Construct a good memory map from what we've got,
-	// but mark entries which the memory allocation bitmap takes
-	// as free entries (this is done in order to have the ability
-	// to place mem alloc bitmap outside lower 16Mb zone)
-	PagesCount = 1;
-	LastPageIndex = 0;
-	LastPageType = MemoryMap[0].PageAllocated;
-	for(i=1;i<NoEntries;i++)
-	{
-		// Check if its memory map itself
-		if (i >= MemoryMapStartPage &&
-			i < (MemoryMapStartPage+MemoryMapSizeInPages))
-		{
-			// Exclude it if current page belongs to the memory map
-			MemoryMap[i].PageAllocated = LoaderFree;
-		}
-
-		// Process entry
-		if (MemoryMap[i].PageAllocated == LastPageType &&
-			(i != NoEntries-1) )
-		{
-			PagesCount++;
-		}
-		else
-		{
-			// Add the resulting region
-			MempAddMemoryBlock(LoaderBlock, LastPageIndex, PagesCount, LastPageType);
-
-			// Reset our counter vars
-			LastPageIndex = i;
-			LastPageType = MemoryMap[i].PageAllocated;
-			PagesCount = 1;
-		}
-	}
-
-	// TEMP, DEBUG!
-	// adding special reserved memory zones for vmware workstation
-#if 0
-	{
-		Mad[MadCount].BasePage = 0xfec00;
-		Mad[MadCount].PageCount = 0x10;
-		Mad[MadCount].MemoryType = LoaderSpecialMemory;
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		Mad[MadCount].BasePage = 0xfee00;
-		Mad[MadCount].PageCount = 0x1;
-		Mad[MadCount].MemoryType = LoaderSpecialMemory;
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-
-		Mad[MadCount].BasePage = 0xfffe0;
-		Mad[MadCount].PageCount = 0x20;
-		Mad[MadCount].MemoryType = LoaderSpecialMemory;
-		WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
-		MadCount++;
-	}
-#endif
-
-	DPRINTM(DPRINT_WINDOWS, "MadCount: %d\n", MadCount);
-
-	WinLdrpDumpMemoryDescriptors(LoaderBlock); //FIXME: Delete!
-
-	// Map our loader image, so we can continue running
-	/*Status = MempSetupPaging(OsLoaderBase >> MM_PAGE_SHIFT, OsLoaderSize >> MM_PAGE_SHIFT);
-	if (!Status)
-	{
-		UiMessageBox("Error during MempSetupPaging");
-		return;
-	}*/
 
 	//VideoDisplayString(L"Hello from VGA, going into the kernel\n");
 	DPRINTM(DPRINT_WINDOWS, "HalPageTable: 0x%X\n", HalPageTable);
@@ -574,37 +276,21 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//VideoMemoryBase = MmMapIoSpace(0xb8000, 4000, MmNonCached);
 	//DPRINTM(DPRINT_WINDOWS, "VideoMemoryBase: 0x%X\n", VideoMemoryBase);
 
-	Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
+    return TRUE;
+}
 
-	// Unmap what is not needed from kernel page table
-	MempDisablePages();
 
-	// Fill the memory descriptor list and 
-	//PrepareMemoryDescriptorList();
-	DPRINTM(DPRINT_WINDOWS, "Memory Descriptor List prepared, printing PDE\n");
-	List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);
+VOID
+WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
+{
+	GDTIDT GdtDesc, IdtDesc, OldIdt;
+	PKGDTENTRY	pGdt;
+	PKIDTENTRY	pIdt;
+	ULONG Ldt = 0;
+	//ULONG i;
 
-#if DBG
-	{
-		ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
-		int j;
-
-		DPRINTM(DPRINT_WINDOWS, "\nPDE\n");
-
-		for (i=0; i<128; i++)
-		{
-			DPRINTM(DPRINT_WINDOWS, "0x%04X | ", i*8);
-
-			for (j=0; j<8; j++)
-			{
-				DPRINTM(DPRINT_WINDOWS, "0x%08X ", PDE_Addr[i*8+j]);
-			}
-
-			DPRINTM(DPRINT_WINDOWS, "\n");
-		}
-	}
-#endif
-
+	DPRINTM(DPRINT_WINDOWS, "GDtIdt %p, Pcr %p, Tss 0x%08X\n",
+		GdtIdt, Pcr, Tss);
 
 	// Enable paging
 	//BS->ExitBootServices(ImageHandle,MapKey);
@@ -620,93 +306,6 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	// Enable paging by modifying CR0
 	__writecr0(__readcr0() | CR0_PG);
-
-	// Set processor context
-	WinLdrSetProcessorContext(GdtIdt, KIP0PCRADDRESS, KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
-
-	// Zero KI_USER_SHARED_DATA page
-	memset((PVOID)KI_USER_SHARED_DATA, 0, MM_PAGE_SIZE);
-
-	return TRUE;
-}
-
-// Two special things this func does: it sorts descriptors,
-// and it merges free ones
-VOID
-WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor)
-{
-	PLIST_ENTRY ListHead = &LoaderBlock->MemoryDescriptorListHead;
-	PLIST_ENTRY PreviousEntry, NextEntry;
-	PMEMORY_ALLOCATION_DESCRIPTOR PreviousDescriptor = NULL, NextDescriptor = NULL;
-
-	DPRINTM(DPRINT_WINDOWS, "BP=0x%X PC=0x%X %s\n", NewDescriptor->BasePage,
-		NewDescriptor->PageCount, MemTypeDesc[NewDescriptor->MemoryType]);
-
-	/* Find a place where to insert the new descriptor to */
-	PreviousEntry = ListHead;
-	NextEntry = ListHead->Flink;
-	while (NextEntry != ListHead)
-	{
-		NextDescriptor = CONTAINING_RECORD(NextEntry,
-			MEMORY_ALLOCATION_DESCRIPTOR,
-			ListEntry);
-		if (NewDescriptor->BasePage < NextDescriptor->BasePage)
-			break;
-
-		PreviousEntry = NextEntry;
-		PreviousDescriptor = NextDescriptor;
-		NextEntry = NextEntry->Flink;
-	}
-
-	/* Don't forget about merging free areas */
-	if (NewDescriptor->MemoryType != LoaderFree)
-	{
-		/* Just insert, nothing to merge */
-		InsertHeadList(PreviousEntry, &NewDescriptor->ListEntry);
-	}
-	else
-	{
-		/* Previous block also free? */
-		if ((PreviousEntry != ListHead) && (PreviousDescriptor->MemoryType == LoaderFree) &&
-			((PreviousDescriptor->BasePage + PreviousDescriptor->PageCount) ==
-			NewDescriptor->BasePage))
-		{
-			/* Just enlarge previous descriptor's PageCount */
-			PreviousDescriptor->PageCount += NewDescriptor->PageCount;
-			NewDescriptor = PreviousDescriptor;
-		}
-		else
-		{
-			/* Nope, just insert */
-			InsertHeadList(PreviousEntry, &NewDescriptor->ListEntry);
-		}
-
-		/* Next block is free ?*/
-		if ((NextEntry != ListHead) &&
-			(NextDescriptor->MemoryType == LoaderFree) &&
-			((NewDescriptor->BasePage + NewDescriptor->PageCount) == NextDescriptor->BasePage))
-		{
-			/* Enlarge next descriptor's PageCount */
-			NewDescriptor->PageCount += NextDescriptor->PageCount;
-			RemoveEntryList(&NextDescriptor->ListEntry);
-		}
-	}
-
-	return;
-}
-
-VOID
-WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
-{
-	GDTIDT GdtDesc, IdtDesc, OldIdt;
-	PKGDTENTRY	pGdt;
-	PKIDTENTRY	pIdt;
-	ULONG Ldt = 0;
-	//ULONG i;
-
-	DPRINTM(DPRINT_WINDOWS, "GDtIdt %p, Pcr %p, Tss 0x%08X\n",
-		GdtIdt, Pcr, Tss);
 
 	// Kernel expects the PCR to be zero-filled on startup
 	// FIXME: Why zero it here when we can zero it right after allocation?
@@ -937,3 +536,25 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 		ret
 		*/
 }
+
+VOID
+MempDump()
+{
+    ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
+    int j;
+
+    DPRINTM(DPRINT_WINDOWS, "\nPDE\n");
+
+    for (i=0; i<128; i++)
+    {
+        DPRINTM(DPRINT_WINDOWS, "0x%04X | ", i*8);
+
+        for (j=0; j<8; j++)
+        {
+            DPRINTM(DPRINT_WINDOWS, "0x%08X ", PDE_Addr[i*8+j]);
+        }
+
+        DPRINTM(DPRINT_WINDOWS, "\n");
+    }
+}
+

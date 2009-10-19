@@ -73,6 +73,7 @@
 			<file>conversion.c</file>
 			<file>peloader.c</file>
 			<file>winldr.c</file>
+			<file>wlmemory.c</file>
 			<file>wlregistry.c</file>
 		</directory>
 	</if>
@@ -81,6 +82,7 @@
 			<file>conversion.c</file>
 			<file>peloader.c</file>
 			<file>winldr.c</file>
+			<file>wlmemory.c</file>
 			<file>wlregistry.c</file>
 		</directory>
 	</if>
