@@ -52,7 +52,6 @@
 static const char usage[] =
 "Usage: widl [options...] infile.idl\n"
 "   or: widl [options...] --dlldata-only name1 [name2...]\n"
-"   -a n               Set structure alignment to 'n'\n"
 "   -b arch            Set the target architecture\n"
 "   -c                 Generate client stub\n"
 "   -C file            Name of client stub file (default is infile_c.c)\n"
@@ -82,6 +81,8 @@ static const char usage[] =
 "   -W                 Enable pedantic warnings\n"
 "   --win32            Only generate 32-bit code\n"
 "   --win64            Only generate 64-bit code\n"
+"   --win32-align n    Set win32 structure alignment to 'n'\n"
+"   --win64-align n    Set win64 structure alignment to 'n'\n"
 "Debug level 'n' is a bitmask with following meaning:\n"
 "    * 0x01 Tell which resource is parsed (verbose mode)\n"
 "    * 0x02 Dump internal structures\n"
@@ -111,7 +112,8 @@ int no_preprocess = 0;
 int old_names = 0;
 int do_win32 = 1;
 int do_win64 = 1;
-int packing = 8;
+int win32_packing = 8;
+int win64_packing = 8;
 
 char *input_name;
 char *header_name;
@@ -150,11 +152,13 @@ enum {
     PREFIX_CLIENT_OPTION,
     PREFIX_SERVER_OPTION,
     WIN32_OPTION,
-    WIN64_OPTION
+    WIN64_OPTION,
+    WIN32_ALIGN_OPTION,
+    WIN64_ALIGN_OPTION
 };
 
 static const char short_options[] =
-    "a:b:cC:d:D:EhH:I:m:NpP:sS:tT:uU:VW";
+    "b:cC:d:D:EhH:I:m:NpP:sS:tT:uU:VW";
 static const struct option long_options[] = {
     { "dlldata", 1, 0, DLLDATA_OPTION },
     { "dlldata-only", 0, 0, DLLDATA_ONLY_OPTION },
@@ -165,6 +169,8 @@ static const struct option long_options[] = {
     { "prefix-server", 1, 0, PREFIX_SERVER_OPTION },
     { "win32", 0, 0, WIN32_OPTION },
     { "win64", 0, 0, WIN64_OPTION },
+    { "win32-align", 1, 0, WIN32_ALIGN_OPTION },
+    { "win64-align", 1, 0, WIN64_ALIGN_OPTION },
     { 0, 0, 0, 0 }
 };
 
@@ -246,7 +252,8 @@ static void set_target( const char *target )
         { "x86_64",  SYS_WIN64 },
         { "sparc",   SYS_WIN32 },
         { "alpha",   SYS_WIN32 },
-        { "powerpc", SYS_WIN32 }
+        { "powerpc", SYS_WIN32 },
+        { "arm",     SYS_WIN32 }
     };
 
     unsigned int i;
@@ -522,9 +529,14 @@ int main(int argc,char *argv[])
       do_win32 = 0;
       do_win64 = 1;
       break;
-    case 'a':
-      packing = strtol(optarg, NULL, 0);
-      if(packing != 2 && packing != 4 && packing != 8)
+    case WIN32_ALIGN_OPTION:
+      win32_packing = strtol(optarg, NULL, 0);
+      if(win32_packing != 2 && win32_packing != 4 && win32_packing != 8)
+          error("Packing must be one of 2, 4 or 8\n");
+      break;
+    case WIN64_ALIGN_OPTION:
+      win64_packing = strtol(optarg, NULL, 0);
+      if(win64_packing != 2 && win64_packing != 4 && win64_packing != 8)
           error("Packing must be one of 2, 4 or 8\n");
       break;
     case 'b':

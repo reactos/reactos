@@ -346,9 +346,14 @@ static void write_type_v(FILE *h, type_t *t, int is_field, int declonly, const c
   if (name) fprintf(h, "%s%s", needs_space_after(t) ? " " : "", name );
 
   if (type_get_type_detect_alias(pt) == TYPE_FUNCTION) {
+    const var_list_t *args = type_function_get_args(pt);
+
     if (ptr_level) fputc(')', h);
     fputc('(', h);
-    write_args(h, type_function_get_args(pt), NULL, 0, FALSE);
+    if (args)
+        write_args(h, args, NULL, 0, FALSE);
+    else
+        fprintf(h, "void");
     fputc(')', h);
   } else
     write_type_right(h, t, is_field);

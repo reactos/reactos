@@ -144,6 +144,13 @@ unsigned char get_basic_fc(const type_t *type)
     }
 }
 
+static inline unsigned int clamp_align(unsigned int align)
+{
+    unsigned int packing = (pointer_size == 4) ? win32_packing : win64_packing;
+    if(align > packing) align = packing;
+    return align;
+}
+
 unsigned char get_pointer_fc(const type_t *type, const attr_list_t *attrs, int toplevel_param)
 {
     const type_t *t;
@@ -1164,13 +1171,12 @@ static unsigned int fields_memsize(const var_list_t *fields, unsigned int *align
         unsigned int falign = 0;
         unsigned int fsize = type_memsize(v->type, &falign);
         if (*align < falign) *align = falign;
-        if (falign > packing) falign = packing;
+        falign = clamp_align(falign);
         size = ROUND_SIZE(size, falign);
         size += fsize;
     }
 
-    max_align = *align;
-    if(max_align > packing) max_align = packing;
+    max_align = clamp_align(*align);
     size = ROUND_SIZE(size, max_align);
 
     return size;
@@ -1210,7 +1216,7 @@ int get_padding(const var_list_t *fields)
         type_t *ft = f->type;
         unsigned int align = 0;
         unsigned int size = type_memsize(ft, &align);
-        if (align > packing) align = packing;
+        align = clamp_align(align);
         if (align > salign) salign = align;
         offset = ROUND_SIZE(offset, align);
         offset += size;
@@ -2279,7 +2285,7 @@ static void write_struct_members(FILE *file, const type_t *type,
         type_t *ft = field->type;
         unsigned int align = 0;
         unsigned int size = type_memsize(ft, &align);
-        if(align > packing) align = packing;
+        align = clamp_align(align);
         if (salign < align) salign = align;
 
         if (!is_conformant_array(ft) || type_array_is_decl_as_ptr(ft))
