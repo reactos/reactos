@@ -8510,7 +8510,7 @@ static void test_MsiEnumPatchesEx_userunmanaged(LPCSTR usersid, LPCSTR expecteds
     RegCloseKey(prodkey);
 }
 
-static void test_MsiEnumPatchesEx_machine()
+static void test_MsiEnumPatchesEx_machine(void)
 {
     CHAR keypath[MAX_PATH], patch[MAX_PATH];
     CHAR patch_squashed[MAX_PATH], patchcode[MAX_PATH];

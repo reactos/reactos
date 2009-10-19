@@ -239,6 +239,32 @@ static void test_suminfo(void)
     r = MsiCloseHandle(hdb);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
+    /* filename, non-zero update count */
+    MsiGetSummaryInformation(0, msifile, 1, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed\n");
+
+    r = MsiSummaryInfoSetProperty(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
+
+    r = MsiSummaryInfoPersist(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoPersist failed %u\n", r);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed %u\n", r);
+
+    /* filename, zero update count */
+    MsiGetSummaryInformation(0, msifile, 0, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed %u\n", r);
+
+    r = MsiSummaryInfoSetProperty(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
+    todo_wine ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty wrong error, %u\n", r);
+
+    r = MsiSummaryInfoPersist(hsuminfo);
+    ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoPersist wrong error %u\n", r);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
     r = DeleteFile(msifile);
     ok(r, "DeleteFile failed\n");
 }
@@ -408,6 +434,12 @@ static void test_summary_binary(void)
     r = MsiSummaryInfoGetPropertyCount( hsuminfo, &count );
     ok(r == ERROR_SUCCESS, "getpropcount failed\n");
     todo_wine ok(count == 10, "prop count incorrect\n");
+
+    r = MsiSummaryInfoSetProperty( hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "Mike" );
+    ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty failed %u\n", r);
+
+    r = MsiSummaryInfoPersist( hsuminfo );
+    ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoPersist failed %u\n", r);
 
     MsiCloseHandle( hsuminfo );
     MsiCloseHandle( hdb );

@@ -369,8 +369,8 @@ static int strcmp_ww(const WCHAR* str1, const WCHAR* str2)
 {
     CHAR str1A[MAX_PATH], str2A[MAX_PATH];
 
-    WideCharToMultiByte(CP_ACP, 0, str1, -1, str1A, MAX_PATH, NULL, NULL); \
-    WideCharToMultiByte(CP_ACP, 0, str2, -1, str2A, MAX_PATH, NULL, NULL); \
+    WideCharToMultiByte(CP_ACP, 0, str1, -1, str1A, MAX_PATH, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, str2, -1, str2A, MAX_PATH, NULL, NULL);
 
     return lstrcmpA(str1A, str2A);
 }

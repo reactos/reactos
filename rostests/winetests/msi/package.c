@@ -26,6 +26,7 @@
 #include <msidefs.h>
 #include <msi.h>
 #include <msiquery.h>
+#include <srrestoreptapi.h>
 
 #include "wine/test.h"
 
@@ -36,10 +37,14 @@ static UINT (WINAPI *pMsiApplyMultiplePatchesA)(LPCSTR, LPCSTR, LPCSTR);
 
 static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
 
+static BOOL (WINAPI *pSRRemoveRestorePoint)(DWORD);
+static BOOL (WINAPI *pSRSetRestorePointA)(RESTOREPOINTINFOA*, STATEMGRSTATUS*);
+
 static void init_functionpointers(void)
 {
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
+    HMODULE hsrclient;
 
 #define GET_PROC(mod, func) \
     p ## func = (void*)GetProcAddress(mod, #func);
@@ -48,6 +53,9 @@ static void init_functionpointers(void)
 
     GET_PROC(hadvapi32, ConvertSidToStringSidA);
 
+    hsrclient = LoadLibraryA("srclient.dll");
+    GET_PROC(hsrclient, SRRemoveRestorePoint);
+    GET_PROC(hsrclient, SRSetRestorePointA);
 #undef GET_PROC
 }
 
@@ -738,7 +746,8 @@ static BOOL create_file_with_version(const CHAR *name, LONG ms, LONG ls)
     BOOL ret = FALSE;
 
     GetSystemDirectory(path, MAX_PATH);
-    lstrcatA(path, "\\kernel32.dll");
+    /* Some dlls can't be updated on Vista/W2K8 */
+    lstrcatA(path, "\\version.dll");
 
     CopyFileA(path, name, FALSE);
 
@@ -772,6 +781,27 @@ static BOOL create_file_with_version(const CHAR *name, LONG ms, LONG ls)
 done:
     HeapFree(GetProcessHeap(), 0, buffer);
     return ret;
+}
+
+static BOOL notify_system_change(DWORD event_type, STATEMGRSTATUS *status)
+{
+    RESTOREPOINTINFOA spec;
+
+    spec.dwEventType = event_type;
+    spec.dwRestorePtType = APPLICATION_INSTALL;
+    spec.llSequenceNumber = status->llSequenceNumber;
+    lstrcpyA(spec.szDescription, "msitest restore point");
+
+    return pSRSetRestorePointA(&spec, status);
+}
+
+static void remove_restore_point(DWORD seq_number)
+{
+    DWORD res;
+
+    res = pSRRemoveRestorePoint(seq_number);
+    if (res != ERROR_SUCCESS)
+        trace("Failed to remove the restore point : %08x\n", res);
 }
 
 static void test_createpackage(void)
@@ -11870,9 +11900,21 @@ static void test_MsiApplyPatch(void)
 
 START_TEST(package)
 {
+    STATEMGRSTATUS status;
+    BOOL ret = FALSE;
+
     init_functionpointers();
 
     GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
+
+    /* Create a restore point ourselves so we circumvent the multitude of restore points
+     * that would have been created by all the installation and removal tests.
+     */
+    if (pSRSetRestorePointA)
+    {
+        memset(&status, 0, sizeof(status));
+        ret = notify_system_change(BEGIN_NESTED_SYSTEM_CHANGE, &status);
+    }
 
     test_createpackage();
     test_doaction();
@@ -11905,4 +11947,11 @@ START_TEST(package)
     test_MsiSetProperty();
     test_MsiApplyMultiplePatches();
     test_MsiApplyPatch();
+
+    if (pSRSetRestorePointA && ret)
+    {
+        ret = notify_system_change(END_NESTED_SYSTEM_CHANGE, &status);
+        if (ret)
+            remove_restore_point(status.llSequenceNumber);
+    }
 }
