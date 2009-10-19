@@ -351,8 +351,8 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
         {
             TCHAR tempstr[1000];
             TCHAR resstr[100];
-            insertReversible(bmNew);
             TCHAR *temp;
+            insertReversible(bmNew);
             GetFullPathName(lpszArgument, sizeof(filepathname), filepathname, &temp);
             _tcscpy(filename, temp);
             LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));

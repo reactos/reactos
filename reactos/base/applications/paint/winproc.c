@@ -50,11 +50,14 @@ void updateCanvasAndScrollbars()
 
 void zoomTo(int newZoom, int mouseX, int mouseY)
 {
+    int tbPos = 0;
+    int tempZoom = newZoom;
+
     long clientRectScrollbox[4];
     long clientRectImageArea[4];
+    int x, y, w, h;
     GetClientRect(hScrollbox, (LPRECT)&clientRectScrollbox);
     GetClientRect(hImageArea, (LPRECT)&clientRectImageArea);
-    int x, y, w, h;
     w = clientRectImageArea[2] * clientRectScrollbox[2] / (clientRectImageArea[2] * newZoom / zoom);
     h = clientRectImageArea[3] * clientRectScrollbox[3] / (clientRectImageArea[3] * newZoom / zoom);
     x = max(0, min(clientRectImageArea[2] - w, mouseX - w / 2)) * newZoom / zoom;
@@ -70,8 +73,6 @@ void zoomTo(int newZoom, int mouseX, int mouseY)
     SendMessage(hScrollbox, WM_HSCROLL, SB_THUMBPOSITION | (x << 16), 0);
     SendMessage(hScrollbox, WM_VSCROLL, SB_THUMBPOSITION | (y << 16), 0);
     
-    int tbPos = 0;
-    int tempZoom = newZoom;
     while (tempZoom>125)
     {
         tbPos++;
@@ -82,24 +83,26 @@ void zoomTo(int newZoom, int mouseX, int mouseY)
 
 void drawZoomFrame(int mouseX, int mouseY)
 {
+    HDC hdc;
+    HPEN oldPen;
+    HBRUSH oldBrush;
+    LOGBRUSH logbrush;
+    int rop;
+
     long clientRectScrollbox[4];
     long clientRectImageArea[4];
+    int x, y, w, h;
     GetClientRect(hScrollbox, (LPRECT)&clientRectScrollbox);
     GetClientRect(hImageArea, (LPRECT)&clientRectImageArea);
-    int x, y, w, h;
     w = clientRectImageArea[2] * clientRectScrollbox[2] / (clientRectImageArea[2] * 2);
     h = clientRectImageArea[3] * clientRectScrollbox[3] / (clientRectImageArea[3] * 2);
     x = max(0, min(clientRectImageArea[2] - w, mouseX - w / 2));
     y = max(0, min(clientRectImageArea[3] - h, mouseY - h / 2));
-    HDC hdc;
+    
     hdc = GetDC(hImageArea);
-    HPEN oldPen;
     oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 0, 0));
-    HBRUSH oldBrush;
-    LOGBRUSH logbrush;
     logbrush.lbStyle = BS_HOLLOW;
     oldBrush = SelectObject(hdc, CreateBrushIndirect(&logbrush));
-    int rop;
     rop = SetROP2(hdc, R2_NOT);
     Rectangle(hdc, x, y, x + w, y + h);
     SetROP2(hdc, rop);
@@ -525,6 +528,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 if ((!drawing)||(activeTool<=9))
                 {
+                    TRACKMOUSEEVENT tme;
+
                     TCHAR coordStr[100];
                     _stprintf(coordStr, _T("%d, %d"), (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom);
                     SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM)coordStr);
@@ -535,7 +540,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         drawZoomFrame((short)LOWORD(lParam), (short)HIWORD(lParam));
                     }
                     
-                    TRACKMOUSEEVENT tme;
                     tme.cbSize = sizeof(TRACKMOUSEEVENT);
                     tme.dwFlags = TME_LEAVE;
                     tme.hwndTrack = hImageArea;
