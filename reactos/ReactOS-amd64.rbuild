@@ -42,6 +42,7 @@
 
 	<compilerflag>-U_X86_</compilerflag>
 	<compilerflag>-mpreferred-stack-boundary=4</compilerflag>
+	<compilerflag compiler="midl">-m64 --win64</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
