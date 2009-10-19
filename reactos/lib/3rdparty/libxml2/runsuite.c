@@ -307,7 +307,7 @@ getString(xmlNodePtr cur, const char *xpath) {
  *									*
  ************************************************************************/
 
-static int 
+static int
 xsdIncorectTestCase(xmlNodePtr cur) {
     xmlNodePtr test;
     xmlBufferPtr buf;
@@ -319,7 +319,7 @@ xsdIncorectTestCase(xmlNodePtr cur) {
     if (cur == NULL) {
         return(0);
     }
-    
+
     test = getNext(cur, "./*");
     if (test == NULL) {
         test_log("Failed to find test in correct line %ld\n",

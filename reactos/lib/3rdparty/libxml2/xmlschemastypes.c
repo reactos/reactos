@@ -2899,12 +2899,23 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
         case XML_SCHEMAS_ANYURI:{		
                 if (*value != 0) {
 		    xmlURIPtr uri;
+		    xmlChar *tmpval, *cur;
 		    if (normOnTheFly) {		    
 			norm = xmlSchemaCollapseString(value);
 			if (norm != NULL)
 			    value = norm;
 		    }
-                    uri = xmlParseURI((const char *) value);
+		    tmpval = xmlStrdup(value);
+		    for (cur = tmpval; *cur; ++cur) {
+			if (*cur < 32 || *cur >= 127 || *cur == ' ' ||
+			    *cur == '<' || *cur == '>' || *cur == '"' ||
+			    *cur == '{' || *cur == '}' || *cur == '|' ||
+			    *cur == '\\' || *cur == '^' || *cur == '`' ||
+			    *cur == '\'')
+			    *cur = '_';
+		    }
+                    uri = xmlParseURI((const char *) tmpval);
+		    xmlFree(tmpval);
                     if (uri == NULL)
                         goto return1;
                     xmlFreeURI(uri);
