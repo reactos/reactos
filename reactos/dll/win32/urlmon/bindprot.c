@@ -38,6 +38,7 @@ struct BindProtocol {
     const IInternetPriorityVtbl      *lpInternetPriorityVtbl;
     const IServiceProviderVtbl       *lpServiceProviderVtbl;
     const IInternetProtocolSinkVtbl  *lpIInternetProtocolSinkVtbl;
+    const IWinInetHttpInfoVtbl       *lpIWinInetHttpInfoVtbl;
 
     const IInternetProtocolVtbl *lpIInternetProtocolHandlerVtbl;
 
@@ -73,6 +74,7 @@ struct BindProtocol {
 
 #define BINDINFO(x)  ((IInternetBindInfo*) &(x)->lpInternetBindInfoVtbl)
 #define PRIORITY(x)  ((IInternetPriority*) &(x)->lpInternetPriorityVtbl)
+#define HTTPINFO(x)  ((IWinInetHttpInfo*)  &(x)->lpIWinInetHttpInfoVtbl)
 #define SERVPROV(x)  ((IServiceProvider*)  &(x)->lpServiceProviderVtbl)
 
 #define PROTOCOLHANDLER(x)  ((IInternetProtocol*)  &(x)->lpIInternetProtocolHandlerVtbl)
@@ -316,15 +318,41 @@ static HRESULT WINAPI BindProtocol_QueryInterface(IInternetProtocol *iface, REFI
     }else if(IsEqualGUID(&IID_IInternetProtocolSink, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolSink %p)\n", This, ppv);
         *ppv = PROTSINK(This);
+    }else if(IsEqualGUID(&IID_IWinInetInfo, riid)) {
+        TRACE("(%p)->(IID_IWinInetInfo %p)\n", This, ppv);
+
+        if(This->protocol) {
+            IWinInetInfo *inet_info;
+            HRESULT hres;
+
+            hres = IInternetProtocol_QueryInterface(This->protocol, &IID_IWinInetInfo, (void**)&inet_info);
+            if(SUCCEEDED(hres)) {
+                *ppv = HTTPINFO(This);
+                IWinInetInfo_Release(inet_info);
+            }
+        }
+    }else if(IsEqualGUID(&IID_IWinInetHttpInfo, riid)) {
+        TRACE("(%p)->(IID_IWinInetHttpInfo %p)\n", This, ppv);
+
+        if(This->protocol) {
+            IWinInetHttpInfo *http_info;
+            HRESULT hres;
+
+            hres = IInternetProtocol_QueryInterface(This->protocol, &IID_IWinInetHttpInfo, (void**)&http_info);
+            if(SUCCEEDED(hres)) {
+                *ppv = HTTPINFO(This);
+                IWinInetHttpInfo_Release(http_info);
+            }
+        }
+    }else {
+        WARN("not supported interface %s\n", debugstr_guid(riid));
     }
 
-    if(*ppv) {
-        IInternetProtocol_AddRef(iface);
-        return S_OK;
-    }
+    if(!*ppv)
+        return E_NOINTERFACE;
 
-    WARN("not supported interface %s\n", debugstr_guid(riid));
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI BindProtocol_AddRef(IInternetProtocol *iface)
@@ -675,7 +703,7 @@ static HRESULT WINAPI ProtocolHandler_Read(IInternetProtocol *iface, void *pv,
 
     TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
 
-    if(This->buf) {
+    if(This->buf_size) {
         read = min(cb, This->buf_size);
         memcpy(pv, This->buf, read);
 
@@ -1000,36 +1028,55 @@ static HRESULT report_data(BindProtocol *This, DWORD bscf, ULONG progress, ULONG
         return S_OK;
 
     if((This->pi & PI_MIMEVERIFICATION) && !This->reported_mime) {
+        BYTE buf[BUFFER_SIZE];
         DWORD read = 0;
         LPWSTR mime;
         HRESULT hres;
 
-        if(!This->buf) {
-            This->buf = heap_alloc(BUFFER_SIZE);
-            if(!This->buf)
-                return E_OUTOFMEMORY;
-        }
-
         do {
             read = 0;
-            hres = IInternetProtocol_Read(This->protocol, This->buf+This->buf_size,
-                    BUFFER_SIZE-This->buf_size, &read);
+            hres = IInternetProtocol_Read(This->protocol, buf,
+                    sizeof(buf)-This->buf_size, &read);
             if(FAILED(hres) && hres != E_PENDING)
                 return hres;
+
+            if(!This->buf) {
+                This->buf = heap_alloc(BUFFER_SIZE);
+                if(!This->buf)
+                    return E_OUTOFMEMORY;
+            }else if(read + This->buf_size > BUFFER_SIZE) {
+                BYTE *tmp;
+
+                tmp = heap_realloc(This->buf, read+This->buf_size);
+                if(!tmp)
+                    return E_OUTOFMEMORY;
+                This->buf = tmp;
+            }
+
+            memcpy(This->buf+This->buf_size, buf, read);
             This->buf_size += read;
         }while(This->buf_size < MIME_TEST_SIZE && hres == S_OK);
 
         if(This->buf_size < MIME_TEST_SIZE && hres != S_FALSE)
             return S_OK;
 
-        hres = FindMimeFromData(NULL, This->url, This->buf, min(This->buf_size, MIME_TEST_SIZE),
-                This->mime, 0, &mime, 0);
-        if(FAILED(hres))
-            return hres;
+        bscf = BSCF_FIRSTDATANOTIFICATION;
+        if(hres == S_FALSE)
+            bscf |= BSCF_LASTDATANOTIFICATION|BSCF_DATAFULLYAVAILABLE;
 
-        mime_available(This, mime, TRUE);
-        CoTaskMemFree(mime);
+        if(!This->reported_mime) {
+            hres = FindMimeFromData(NULL, This->url, This->buf, min(This->buf_size, MIME_TEST_SIZE),
+                    This->mime, 0, &mime, 0);
+            if(FAILED(hres))
+                return hres;
+
+            mime_available(This, mime, TRUE);
+            CoTaskMemFree(mime);
+        }
     }
+
+    if(!This->protocol_sink)
+        return S_OK;
 
     return IInternetProtocolSink_ReportData(This->protocol_sink, bscf, progress, progress_max);
 }
@@ -1138,6 +1185,52 @@ static const IInternetProtocolSinkVtbl InternetProtocolSinkVtbl = {
     BPInternetProtocolSink_ReportResult
 };
 
+#define INETINFO_THIS(iface) DEFINE_THIS(BindProtocol, IWinInetHttpInfo, iface)
+
+static HRESULT WINAPI WinInetHttpInfo_QueryInterface(IWinInetHttpInfo *iface, REFIID riid, void **ppv)
+{
+    BindProtocol *This = INETINFO_THIS(iface);
+    return IInternetProtocol_QueryInterface(PROTOCOL(This), riid, ppv);
+}
+
+static ULONG WINAPI WinInetHttpInfo_AddRef(IWinInetHttpInfo *iface)
+{
+    BindProtocol *This = INETINFO_THIS(iface);
+    return IInternetProtocol_AddRef(PROTOCOL(This));
+}
+
+static ULONG WINAPI WinInetHttpInfo_Release(IWinInetHttpInfo *iface)
+{
+    BindProtocol *This = INETINFO_THIS(iface);
+    return IInternetProtocol_Release(PROTOCOL(This));
+}
+
+static HRESULT WINAPI WinInetHttpInfo_QueryOption(IWinInetHttpInfo *iface, DWORD dwOption,
+        void *pBuffer, DWORD *pcbBuffer)
+{
+    BindProtocol *This = INETINFO_THIS(iface);
+    FIXME("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI WinInetHttpInfo_QueryInfo(IWinInetHttpInfo *iface, DWORD dwOption,
+        void *pBuffer, DWORD *pcbBuffer, DWORD *pdwFlags, DWORD *pdwReserved)
+{
+    BindProtocol *This = INETINFO_THIS(iface);
+    FIXME("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
+    return E_NOTIMPL;
+}
+
+#undef INETINFO_THIS
+
+static const IWinInetHttpInfoVtbl WinInetHttpInfoVtbl = {
+    WinInetHttpInfo_QueryInterface,
+    WinInetHttpInfo_AddRef,
+    WinInetHttpInfo_Release,
+    WinInetHttpInfo_QueryOption,
+    WinInetHttpInfo_QueryInfo
+};
+
 #define SERVPROV_THIS(iface) DEFINE_THIS(BindProtocol, ServiceProvider, iface)
 
 static HRESULT WINAPI BPServiceProvider_QueryInterface(IServiceProvider *iface,
@@ -1191,6 +1284,7 @@ HRESULT create_binding_protocol(LPCWSTR url, BOOL from_urlmon, IInternetProtocol
     ret->lpServiceProviderVtbl          = &ServiceProviderVtbl;
     ret->lpIInternetProtocolSinkVtbl    = &InternetProtocolSinkVtbl;
     ret->lpIInternetProtocolHandlerVtbl = &InternetProtocolHandlerVtbl;
+    ret->lpIWinInetHttpInfoVtbl         = &WinInetHttpInfoVtbl;
 
     ret->ref = 1;
     ret->from_urlmon = from_urlmon;

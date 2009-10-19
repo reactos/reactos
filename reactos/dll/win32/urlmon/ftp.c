@@ -37,11 +37,11 @@ typedef struct {
 #define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(FtpProtocol, base, iface)
 
 static HRESULT FtpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD request_flags,
-                                        IInternetBindInfo *bind_info)
+        HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
     FtpProtocol *This = ASYNCPROTOCOL_THIS(prot);
 
-    This->base.request = InternetOpenUrlW(This->base.internet, url, NULL, 0,
+    This->base.request = InternetOpenUrlW(internet_session, url, NULL, 0,
             request_flags|INTERNET_FLAG_EXISTING_CONNECT|INTERNET_FLAG_PASSIVE,
             (DWORD_PTR)&This->base);
     if (!This->base.request && GetLastError() != ERROR_IO_PENDING) {

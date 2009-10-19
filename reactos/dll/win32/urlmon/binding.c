@@ -1082,8 +1082,8 @@ static HRESULT WINAPI InternetProtocolSink_ReportResult(IInternetProtocolSink *i
 
     TRACE("(%p)->(%08x %d %s)\n", This, hrResult, dwError, debugstr_w(szResult));
 
-    IInternetProtocol_Terminate(This->protocol, 0);
     stop_binding(This, hrResult, szResult);
+    IInternetProtocol_Terminate(This->protocol, 0);
     return S_OK;
 }
 
