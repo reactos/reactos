@@ -41,8 +41,7 @@ typedef struct _entityref
 {
     const struct IXMLDOMEntityReferenceVtbl *lpVtbl;
     LONG ref;
-    IUnknown *node_unk;
-    IXMLDOMNode *node;
+    xmlnode *node;
 } entityref;
 
 static inline entityref *impl_from_IXMLDOMEntityReference( IXMLDOMEntityReference *iface )
@@ -66,7 +65,7 @@ static HRESULT WINAPI entityref_QueryInterface(
     }
     else if ( IsEqualGUID( riid, &IID_IXMLDOMNode ) )
     {
-        return IUnknown_QueryInterface(This->node_unk, riid, ppvObject);
+        *ppvObject = IXMLDOMNode_from_impl(This->node);
     }
     else
     {
@@ -74,8 +73,7 @@ static HRESULT WINAPI entityref_QueryInterface(
         return E_NOINTERFACE;
     }
 
-    IXMLDOMEntityReference_AddRef( iface );
-
+    IUnknown_AddRef((IUnknown*)*ppvObject);
     return S_OK;
 }
 
@@ -95,7 +93,7 @@ static ULONG WINAPI entityref_Release(
     ref = InterlockedDecrement( &This->ref );
     if ( ref == 0 )
     {
-        IUnknown_Release( This->node_unk );
+        destroy_xmlnode(This->node);
         HeapFree( GetProcessHeap(), 0, This );
     }
 
@@ -183,7 +181,7 @@ static HRESULT WINAPI entityref_get_nodeName(
     BSTR* p )
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_nodeName( This->node, p );
+    return IXMLDOMNode_get_nodeName( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_get_nodeValue(
@@ -191,7 +189,7 @@ static HRESULT WINAPI entityref_get_nodeValue(
     VARIANT* var1 )
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_nodeValue( This->node, var1 );
+    return IXMLDOMNode_get_nodeValue( IXMLDOMNode_from_impl(This->node), var1 );
 }
 
 static HRESULT WINAPI entityref_put_nodeValue(
@@ -199,7 +197,7 @@ static HRESULT WINAPI entityref_put_nodeValue(
     VARIANT var1 )
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_put_nodeValue( This->node, var1 );
+    return IXMLDOMNode_put_nodeValue( IXMLDOMNode_from_impl(This->node), var1 );
 }
 
 static HRESULT WINAPI entityref_get_nodeType(
@@ -207,7 +205,7 @@ static HRESULT WINAPI entityref_get_nodeType(
     DOMNodeType* domNodeType )
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_nodeType( This->node, domNodeType );
+    return IXMLDOMNode_get_nodeType( IXMLDOMNode_from_impl(This->node), domNodeType );
 }
 
 static HRESULT WINAPI entityref_get_parentNode(
@@ -215,7 +213,7 @@ static HRESULT WINAPI entityref_get_parentNode(
     IXMLDOMNode** parent )
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_parentNode( This->node, parent );
+    return IXMLDOMNode_get_parentNode( IXMLDOMNode_from_impl(This->node), parent );
 }
 
 static HRESULT WINAPI entityref_get_childNodes(
@@ -223,7 +221,7 @@ static HRESULT WINAPI entityref_get_childNodes(
     IXMLDOMNodeList** outList)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_childNodes( This->node, outList );
+    return IXMLDOMNode_get_childNodes( IXMLDOMNode_from_impl(This->node), outList );
 }
 
 static HRESULT WINAPI entityref_get_firstChild(
@@ -231,7 +229,7 @@ static HRESULT WINAPI entityref_get_firstChild(
     IXMLDOMNode** domNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_firstChild( This->node, domNode );
+    return IXMLDOMNode_get_firstChild( IXMLDOMNode_from_impl(This->node), domNode );
 }
 
 static HRESULT WINAPI entityref_get_lastChild(
@@ -239,7 +237,7 @@ static HRESULT WINAPI entityref_get_lastChild(
     IXMLDOMNode** domNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_lastChild( This->node, domNode );
+    return IXMLDOMNode_get_lastChild( IXMLDOMNode_from_impl(This->node), domNode );
 }
 
 static HRESULT WINAPI entityref_get_previousSibling(
@@ -247,7 +245,7 @@ static HRESULT WINAPI entityref_get_previousSibling(
     IXMLDOMNode** domNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_previousSibling( This->node, domNode );
+    return IXMLDOMNode_get_previousSibling( IXMLDOMNode_from_impl(This->node), domNode );
 }
 
 static HRESULT WINAPI entityref_get_nextSibling(
@@ -255,7 +253,7 @@ static HRESULT WINAPI entityref_get_nextSibling(
     IXMLDOMNode** domNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_nextSibling( This->node, domNode );
+    return IXMLDOMNode_get_nextSibling( IXMLDOMNode_from_impl(This->node), domNode );
 }
 
 static HRESULT WINAPI entityref_get_attributes(
@@ -263,7 +261,7 @@ static HRESULT WINAPI entityref_get_attributes(
     IXMLDOMNamedNodeMap** attributeMap)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_attributes( This->node, attributeMap );
+    return IXMLDOMNode_get_attributes( IXMLDOMNode_from_impl(This->node), attributeMap );
 }
 
 static HRESULT WINAPI entityref_insertBefore(
@@ -272,7 +270,7 @@ static HRESULT WINAPI entityref_insertBefore(
     IXMLDOMNode** outOldNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_insertBefore( This->node, newNode, var1, outOldNode );
+    return IXMLDOMNode_insertBefore( IXMLDOMNode_from_impl(This->node), newNode, var1, outOldNode );
 }
 
 static HRESULT WINAPI entityref_replaceChild(
@@ -282,7 +280,7 @@ static HRESULT WINAPI entityref_replaceChild(
     IXMLDOMNode** outOldNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_replaceChild( This->node, newNode, oldNode, outOldNode );
+    return IXMLDOMNode_replaceChild( IXMLDOMNode_from_impl(This->node), newNode, oldNode, outOldNode );
 }
 
 static HRESULT WINAPI entityref_removeChild(
@@ -290,7 +288,7 @@ static HRESULT WINAPI entityref_removeChild(
     IXMLDOMNode* domNode, IXMLDOMNode** oldNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_removeChild( This->node, domNode, oldNode );
+    return IXMLDOMNode_removeChild( IXMLDOMNode_from_impl(This->node), domNode, oldNode );
 }
 
 static HRESULT WINAPI entityref_appendChild(
@@ -298,7 +296,7 @@ static HRESULT WINAPI entityref_appendChild(
     IXMLDOMNode* newNode, IXMLDOMNode** outNewNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_appendChild( This->node, newNode, outNewNode );
+    return IXMLDOMNode_appendChild( IXMLDOMNode_from_impl(This->node), newNode, outNewNode );
 }
 
 static HRESULT WINAPI entityref_hasChildNodes(
@@ -306,7 +304,7 @@ static HRESULT WINAPI entityref_hasChildNodes(
     VARIANT_BOOL* pbool)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_hasChildNodes( This->node, pbool );
+    return IXMLDOMNode_hasChildNodes( IXMLDOMNode_from_impl(This->node), pbool );
 }
 
 static HRESULT WINAPI entityref_get_ownerDocument(
@@ -314,7 +312,7 @@ static HRESULT WINAPI entityref_get_ownerDocument(
     IXMLDOMDocument** domDocument)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_ownerDocument( This->node, domDocument );
+    return IXMLDOMNode_get_ownerDocument( IXMLDOMNode_from_impl(This->node), domDocument );
 }
 
 static HRESULT WINAPI entityref_cloneNode(
@@ -322,7 +320,7 @@ static HRESULT WINAPI entityref_cloneNode(
     VARIANT_BOOL pbool, IXMLDOMNode** outNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_cloneNode( This->node, pbool, outNode );
+    return IXMLDOMNode_cloneNode( IXMLDOMNode_from_impl(This->node), pbool, outNode );
 }
 
 static HRESULT WINAPI entityref_get_nodeTypeString(
@@ -330,7 +328,7 @@ static HRESULT WINAPI entityref_get_nodeTypeString(
     BSTR* p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_nodeTypeString( This->node, p );
+    return IXMLDOMNode_get_nodeTypeString( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_get_text(
@@ -338,7 +336,7 @@ static HRESULT WINAPI entityref_get_text(
     BSTR* p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_text( This->node, p );
+    return IXMLDOMNode_get_text( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_put_text(
@@ -346,7 +344,7 @@ static HRESULT WINAPI entityref_put_text(
     BSTR p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_put_text( This->node, p );
+    return IXMLDOMNode_put_text( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_get_specified(
@@ -354,7 +352,7 @@ static HRESULT WINAPI entityref_get_specified(
     VARIANT_BOOL* pbool)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_specified( This->node, pbool );
+    return IXMLDOMNode_get_specified( IXMLDOMNode_from_impl(This->node), pbool );
 }
 
 static HRESULT WINAPI entityref_get_definition(
@@ -362,7 +360,7 @@ static HRESULT WINAPI entityref_get_definition(
     IXMLDOMNode** domNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_definition( This->node, domNode );
+    return IXMLDOMNode_get_definition( IXMLDOMNode_from_impl(This->node), domNode );
 }
 
 static HRESULT WINAPI entityref_get_nodeTypedValue(
@@ -370,7 +368,7 @@ static HRESULT WINAPI entityref_get_nodeTypedValue(
     VARIANT* var1)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_nodeTypedValue( This->node, var1 );
+    return IXMLDOMNode_get_nodeTypedValue( IXMLDOMNode_from_impl(This->node), var1 );
 }
 
 static HRESULT WINAPI entityref_put_nodeTypedValue(
@@ -378,7 +376,7 @@ static HRESULT WINAPI entityref_put_nodeTypedValue(
     VARIANT var1)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_put_nodeTypedValue( This->node, var1 );
+    return IXMLDOMNode_put_nodeTypedValue( IXMLDOMNode_from_impl(This->node), var1 );
 }
 
 static HRESULT WINAPI entityref_get_dataType(
@@ -386,7 +384,7 @@ static HRESULT WINAPI entityref_get_dataType(
     VARIANT* var1)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_dataType( This->node, var1 );
+    return IXMLDOMNode_get_dataType( IXMLDOMNode_from_impl(This->node), var1 );
 }
 
 static HRESULT WINAPI entityref_put_dataType(
@@ -394,7 +392,7 @@ static HRESULT WINAPI entityref_put_dataType(
     BSTR p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_put_dataType( This->node, p );
+    return IXMLDOMNode_put_dataType( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_get_xml(
@@ -402,7 +400,7 @@ static HRESULT WINAPI entityref_get_xml(
     BSTR* p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_xml( This->node, p );
+    return IXMLDOMNode_get_xml( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_transformNode(
@@ -410,7 +408,7 @@ static HRESULT WINAPI entityref_transformNode(
     IXMLDOMNode* domNode, BSTR* p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_transformNode( This->node, domNode, p );
+    return IXMLDOMNode_transformNode( IXMLDOMNode_from_impl(This->node), domNode, p );
 }
 
 static HRESULT WINAPI entityref_selectNodes(
@@ -418,7 +416,7 @@ static HRESULT WINAPI entityref_selectNodes(
     BSTR p, IXMLDOMNodeList** outList)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_selectNodes( This->node, p, outList );
+    return IXMLDOMNode_selectNodes( IXMLDOMNode_from_impl(This->node), p, outList );
 }
 
 static HRESULT WINAPI entityref_selectSingleNode(
@@ -426,7 +424,7 @@ static HRESULT WINAPI entityref_selectSingleNode(
     BSTR p, IXMLDOMNode** outNode)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_selectSingleNode( This->node, p, outNode );
+    return IXMLDOMNode_selectSingleNode( IXMLDOMNode_from_impl(This->node), p, outNode );
 }
 
 static HRESULT WINAPI entityref_get_parsed(
@@ -434,7 +432,7 @@ static HRESULT WINAPI entityref_get_parsed(
     VARIANT_BOOL* pbool)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_parsed( This->node, pbool );
+    return IXMLDOMNode_get_parsed( IXMLDOMNode_from_impl(This->node), pbool );
 }
 
 static HRESULT WINAPI entityref_get_namespaceURI(
@@ -442,7 +440,7 @@ static HRESULT WINAPI entityref_get_namespaceURI(
     BSTR* p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_namespaceURI( This->node, p );
+    return IXMLDOMNode_get_namespaceURI( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_get_prefix(
@@ -450,7 +448,7 @@ static HRESULT WINAPI entityref_get_prefix(
     BSTR* p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_prefix( This->node, p );
+    return IXMLDOMNode_get_prefix( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_get_baseName(
@@ -458,7 +456,7 @@ static HRESULT WINAPI entityref_get_baseName(
     BSTR* p)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_get_baseName( This->node, p );
+    return IXMLDOMNode_get_baseName( IXMLDOMNode_from_impl(This->node), p );
 }
 
 static HRESULT WINAPI entityref_transformNodeToObject(
@@ -466,7 +464,7 @@ static HRESULT WINAPI entityref_transformNodeToObject(
     IXMLDOMNode* domNode, VARIANT var1)
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    return IXMLDOMNode_transformNodeToObject( This->node, domNode, var1 );
+    return IXMLDOMNode_transformNodeToObject( IXMLDOMNode_from_impl(This->node), domNode, var1 );
 }
 
 static const struct IXMLDOMEntityReferenceVtbl entityref_vtbl =
@@ -519,7 +517,6 @@ static const struct IXMLDOMEntityReferenceVtbl entityref_vtbl =
 IUnknown* create_doc_entity_ref( xmlNodePtr entity )
 {
     entityref *This;
-    xmlnode *node;
 
     This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
     if ( !This )
@@ -528,15 +525,12 @@ IUnknown* create_doc_entity_ref( xmlNodePtr entity )
     This->lpVtbl = &entityref_vtbl;
     This->ref = 1;
 
-    node = create_basic_node( entity, (IUnknown*)&This->lpVtbl, NULL );
-    if(!node)
+    This->node = create_basic_node( entity, (IUnknown*)&This->lpVtbl, NULL );
+    if(!This->node)
     {
         HeapFree(GetProcessHeap(), 0, This);
         return NULL;
     }
-
-    This->node_unk = (IUnknown*)&node->lpInternalUnkVtbl;
-    This->node = IXMLDOMNode_from_impl(node);
 
     return (IUnknown*) &This->lpVtbl;
 }

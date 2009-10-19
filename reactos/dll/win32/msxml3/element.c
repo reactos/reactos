@@ -108,7 +108,7 @@ static ULONG WINAPI domelem_Release(
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
-        IXMLDOMNode_Release(IXMLDOMNode_from_impl(This->node));
+        destroy_xmlnode(This->node);
         heap_free(This);
     }
 

@@ -66,11 +66,6 @@ static const WCHAR szFloat[]      = {'f','l','o','a','t',0};
 static const WCHAR szUUID[]       = {'u','u','i','d',0};
 static const WCHAR szBinHex[]     = {'b','i','n','.','h','e','x',0};
 
-static inline xmlnode *impl_from_InternalUnknown( IUnknown *iface )
-{
-    return (xmlnode *)((char*)iface - FIELD_OFFSET(xmlnode, lpInternalUnkVtbl));
-}
-
 xmlNodePtr xmlNodePtr_from_domnode( IXMLDOMNode *iface, xmlElementType type )
 {
     xmlnode *This;
@@ -91,23 +86,52 @@ static HRESULT WINAPI xmlnode_QueryInterface(
     void** ppvObject )
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
+
     TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
 
-    return IUnknown_QueryInterface(This->pUnkOuter, riid, ppvObject);
+    if(This->pUnkOuter)
+        return IUnknown_QueryInterface(This->pUnkOuter, riid, ppvObject);
+
+    if (IsEqualGUID(riid, &IID_IUnknown)) {
+        *ppvObject = iface;
+    }else if (IsEqualGUID( riid, &IID_IDispatch) ||
+              IsEqualGUID( riid, &IID_IXMLDOMNode)) {
+        *ppvObject = &This->lpVtbl;
+    }else  {
+        FIXME("interface %s not implemented\n", debugstr_guid(riid));
+        *ppvObject = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef( (IUnknown*)*ppvObject );
+    return S_OK;
 }
 
 static ULONG WINAPI xmlnode_AddRef(
     IXMLDOMNode *iface )
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
-    return IUnknown_AddRef(This->pUnkOuter);
+
+    if(This->pUnkOuter)
+        return IUnknown_AddRef(This->pUnkOuter);
+
+    return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI xmlnode_Release(
     IXMLDOMNode *iface )
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
-    return IUnknown_Release(This->pUnkOuter);
+    LONG ref;
+
+    if(This->pUnkOuter)
+        return IUnknown_Release(This->pUnkOuter);
+
+    ref = InterlockedDecrement( &This->ref );
+    if(!ref)
+        destroy_xmlnode(This);
+
+    return ref;
 }
 
 static HRESULT WINAPI xmlnode_GetTypeInfoCount(
@@ -1484,63 +1508,12 @@ static const struct IXMLDOMNodeVtbl xmlnode_vtbl =
     xmlnode_transformNodeToObject,
 };
 
-static HRESULT WINAPI Internal_QueryInterface(
-    IUnknown *iface,
-    REFIID riid,
-    void** ppvObject )
+void destroy_xmlnode(xmlnode *This)
 {
-    xmlnode *This = impl_from_InternalUnknown( iface );
-
-    TRACE("%p %s %p\n", iface, debugstr_guid(riid), ppvObject);
-
-
-    if ( IsEqualGUID( riid, &IID_IUnknown ))
-        *ppvObject = iface;
-    else if ( IsEqualGUID( riid, &IID_IDispatch ) ||
-              IsEqualGUID( riid, &IID_IXMLDOMNode ) )
-        *ppvObject = &This->lpVtbl;
-    else
-    {
-        FIXME("interface %s not implemented\n", debugstr_guid(riid));
-        *ppvObject = NULL;
-        return E_NOINTERFACE;
-    }
-
-    IUnknown_AddRef( (IUnknown*)*ppvObject );
-
-    return S_OK;
+    if(This->node)
+        xmldoc_release(This->node->doc);
+    HeapFree( GetProcessHeap(), 0, This );
 }
-
-static ULONG WINAPI Internal_AddRef(
-                 IUnknown *iface )
-{
-    xmlnode *This = impl_from_InternalUnknown( iface );
-    return InterlockedIncrement( &This->ref );
-}
-
-static ULONG WINAPI Internal_Release(
-    IUnknown *iface )
-{
-    xmlnode *This = impl_from_InternalUnknown( iface );
-    ULONG ref;
-
-    ref = InterlockedDecrement( &This->ref );
-    if ( ref == 0 )
-    {
-        if( This->node )
-	    xmldoc_release( This->node->doc );
-        HeapFree( GetProcessHeap(), 0, This );
-    }
-
-    return ref;
-}
-
-static const struct IUnknownVtbl internal_unk_vtbl =
-{
-    Internal_QueryInterface,
-    Internal_AddRef,
-    Internal_Release
-};
 
 xmlnode *create_basic_node( xmlNodePtr node, IUnknown *pUnkOuter, dispex_static_data_t *dispex_data )
 {
@@ -1554,12 +1527,11 @@ xmlnode *create_basic_node( xmlNodePtr node, IUnknown *pUnkOuter, dispex_static_
         xmldoc_add_ref( node->doc );
 
     This->lpVtbl = &xmlnode_vtbl;
-    This->lpInternalUnkVtbl = &internal_unk_vtbl;
 
     if(pUnkOuter)
         This->pUnkOuter = pUnkOuter; /* Don't take a ref on outer Unknown */
     else
-        This->pUnkOuter = (IUnknown *)&This->lpInternalUnkVtbl;
+        This->pUnkOuter = NULL;
 
     if(dispex_data)
         init_dispex(&This->dispex, This->pUnkOuter, dispex_data);
@@ -1602,7 +1574,7 @@ IXMLDOMNode *create_node( xmlNodePtr node )
         break;
     default:
         FIXME("only creating basic node for type %d\n", node->type);
-        pUnk = (IUnknown*)&create_basic_node( node, NULL, NULL )->lpInternalUnkVtbl;
+        pUnk = (IUnknown*)&create_basic_node( node, NULL, NULL )->lpVtbl;
     }
 
     hr = IUnknown_QueryInterface(pUnk, &IID_IXMLDOMNode, (LPVOID*)&ret);
