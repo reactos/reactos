@@ -125,6 +125,35 @@ MempMapSinglePage(ULONG64 VirtualAddress, ULONG64 PhysicalAddress)
 	return TRUE;
 }
 
+BOOLEAN
+MempIsPageMapped(PVOID VirtualAddress)
+{
+    PPAGE_DIRECTORY_AMD64 pDir;
+    ULONG Index;
+    
+    pDir = pPML4;
+    Index = VAtoPXI(VirtualAddress);
+    if (!pDir->Pde[Index].Valid)
+        return FALSE;
+
+    pDir = (PPAGE_DIRECTORY_AMD64)((ULONG64)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+    Index = VAtoPPI(VirtualAddress);
+    if (!pDir->Pde[Index].Valid)
+        return FALSE;
+
+    pDir = (PPAGE_DIRECTORY_AMD64)((ULONG64)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+    Index = VAtoPDI(VirtualAddress);
+    if (!pDir->Pde[Index].Valid)
+        return FALSE;
+
+    pDir = (PPAGE_DIRECTORY_AMD64)((ULONG64)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+    Index = VAtoPTI(VirtualAddress);
+    if (!pDir->Pde[Index].Valid)
+        return FALSE;
+
+    return TRUE;
+}
+
 ULONG
 MempMapRangeOfPages(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress, ULONG cPages)
 {
@@ -146,13 +175,24 @@ BOOLEAN
 MempSetupPaging(IN ULONG StartPage,
 				IN ULONG NumberOfPages)
 {
-    DPRINTM(DPRINT_WINDOWS,">>> MempSetupPaging(0x%lx, %ld)\n", StartPage, NumberOfPages);
+    DPRINTM(DPRINT_WINDOWS,">>> MempSetupPaging(0x%lx, %ld, %p)\n", 
+            StartPage, NumberOfPages, StartPage * PAGE_SIZE + KSEG0_BASE);
 
+    /* Identity mapping */
     if (MempMapRangeOfPages(StartPage * PAGE_SIZE,
                             StartPage * PAGE_SIZE,
                             NumberOfPages) != NumberOfPages)
     {
-        DPRINTM(DPRINT_WINDOWS,"Failed to map pages\n");
+        DPRINTM(DPRINT_WINDOWS,"Failed to map pages 1\n");
+        return FALSE;
+    }
+
+    /* Kernel mapping */
+    if (MempMapRangeOfPages(StartPage * PAGE_SIZE + KSEG0_BASE,
+                            StartPage * PAGE_SIZE,
+                            NumberOfPages) != NumberOfPages)
+    {
+        DPRINTM(DPRINT_WINDOWS,"Failed to map pages 2\n");
         return FALSE;
     }
 
