@@ -132,8 +132,10 @@ static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULO
 #define Ke386GetSs()                _Ke386GetSeg(ss)
 #define Ke386GetFs()                _Ke386GetSeg(fs)
 #define Ke386SetFs(X)               _Ke386SetSeg(fs, X)
+#define Ke386SetGs(X)               _Ke386SetSeg(gs, X)
 #define Ke386SetDs(X)               _Ke386SetSeg(ds, X)
 #define Ke386SetEs(X)               _Ke386SetSeg(es, X)
+#define Ke386SetSs(X)               _Ke386SetSeg(ss, X)
 
 #elif defined(_MSC_VER)
 

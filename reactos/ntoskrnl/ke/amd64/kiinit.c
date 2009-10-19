@@ -621,7 +621,12 @@ NTAPI
 KiSystemStartup(IN ULONG_PTR Dummy,
                 IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    KiRosPrepareForSystemStartup(Dummy, LoaderBlock);
+    FrLdrDbgPrint = ((PLOADER_PARAMETER_BLOCK)Dummy)->u.Amd64.DbgPrint;
+    FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
+
+    KiSystemStartupReal((PLOADER_PARAMETER_BLOCK)Dummy);
+
+//    KiRosPrepareForSystemStartup(Dummy, LoaderBlock);
 }
 
 
@@ -669,7 +674,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
 
     /* LDT is unused */
-    __sldt(0);
+//    __lldt(0);
 
     /* Align stack to 16 bytes */
     LoaderBlock->KernelStack &= ~(16 - 1);
@@ -719,6 +724,8 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
 //    DPRINT1("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
+
+    DbgBreakPointWithStatus(0);
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
