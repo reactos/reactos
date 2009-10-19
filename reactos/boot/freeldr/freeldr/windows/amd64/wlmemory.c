@@ -15,10 +15,6 @@
 
 //extern ULONG LoaderPagesSpanned;
 
-// This is needed because headers define wrong one for ReactOS
-#undef KIP0PCRADDRESS
-#define KIP0PCRADDRESS                      0xffdff000
-
 #define HYPER_SPACE_ENTRY       0x300
 
 // This is needed only for SetProcessorContext routine
@@ -100,7 +96,7 @@ MempGetOrCreatePageDir(PPAGE_DIRECTORY_AMD64 pDir, ULONG Index)
 }
 
 BOOLEAN
-MempMapSinglePage(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress)
+MempMapSinglePage(ULONG64 VirtualAddress, ULONG64 PhysicalAddress)
 {
 	PPAGE_DIRECTORY_AMD64 pDir3, pDir2, pDir1;
 	ULONG Index;
@@ -110,11 +106,15 @@ MempMapSinglePage(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress)
 	pDir1 = MempGetOrCreatePageDir(pDir2, VAtoPDI(VirtualAddress));
 
 	if (!pDir1)
+	{
+        DPRINTM(DPRINT_WINDOWS,"!!!No Dir %p, %p, %p, %p\n", pPML4, pDir3, pDir2, pDir1);
 		return FALSE;
+	}
 
 	Index = VAtoPTI(VirtualAddress);
 	if (pDir1->Pde[Index].Valid)
 	{
+        DPRINTM(DPRINT_WINDOWS,"!!!Already mapped %ld\n", Index);
 		return FALSE;
 	}
 
@@ -201,14 +201,14 @@ BOOLEAN
 WinLdrMapSpecialPages(ULONG PcrBasePage)
 {
     /* Map the PCR page */
-    if (!MempMapSinglePage(PcrBasePage * PAGE_SIZE, KIP0PCRADDRESS))
+    if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
     {
         DPRINTM(DPRINT_WINDOWS, "Could not map PCR @ %lx\n", PcrBasePage);
         return FALSE;
     }
 
     /* Map KI_USER_SHARED_DATA */
-    if (!MempMapSinglePage((PcrBasePage+1) * PAGE_SIZE, KI_USER_SHARED_DATA))
+    if (!MempMapSinglePage(KI_USER_SHARED_DATA, (PcrBasePage+1) * PAGE_SIZE))
     {
         DPRINTM(DPRINT_WINDOWS, "Could not map KI_USER_SHARED_DATA\n");
         return FALSE;
@@ -284,6 +284,8 @@ WinLdrSetupIdt(PVOID IdtBase)
 VOID
 WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
 {
+    DPRINTM(DPRINT_WINDOWS, "WinLdrSetProcessorContext %p\n", Pcr);
+
 	/* Disable Interrupts */
 	_disable();
 
@@ -293,18 +295,13 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
 	/* Set the new PML4 */
 	__writecr3((ULONGLONG)pPML4);
 
-	// Enable paging by modifying CR0
-	__writecr0(__readcr0() | CR0_PG);
-
-	// Kernel expects the PCR to be zero-filled on startup
-	// FIXME: Why zero it here when we can zero it right after allocation?
-	RtlZeroMemory((PVOID)Pcr, MM_PAGE_SIZE); //FIXME: Why zero only 1 page when we allocate 2?
-
 	RtlZeroMemory(GdtIdt, PAGE_SIZE);
 
     WinLdrSetupGdt(GdtIdt, Tss);
 
-    WinLdrSetupIdt(GdtIdt);
+    WinLdrSetupIdt((PVOID)((ULONG64)GdtIdt + 2048)); // HACK!
+
+    DPRINTM(DPRINT_WINDOWS, "leave WinLdrSetProcessorContext\n");
 
 }
 

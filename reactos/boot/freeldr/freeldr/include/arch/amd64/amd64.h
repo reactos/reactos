@@ -21,6 +21,10 @@
 #ifndef __AMD64_AMD64_H_
 #define __AMD64_AMD64_H_
 
+// This is needed because headers define wrong one for ReactOS
+#undef KIP0PCRADDRESS
+#define KIP0PCRADDRESS                      0xFFFFF78000001000ULL /* FIXME!!! */
+
 #define STACK64ADDR	0x74000	/* The 64-bit stack top will be at 0x74000 */
 
 /* Long mode selectors */

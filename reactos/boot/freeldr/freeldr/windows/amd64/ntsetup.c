@@ -40,5 +40,45 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
                       ULONG *PcrBasePage,
                       ULONG *TssBasePage)
 {
+	ULONG TssSize;
+	ULONG TssPages;
+	ULONG_PTR Pcr = 0;
+	ULONG_PTR Tss = 0;
+	ULONG BlockSize, NumPages;
 
+	LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
+	LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
+
+	/* Allocate 2 pages for PCR */
+	Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
+	*PcrBasePage = Pcr >> MM_PAGE_SHIFT;
+	RtlZeroMemory((PVOID)Pcr, 2 * MM_PAGE_SIZE);
+
+	if (Pcr == 0)
+	{
+		UiMessageBox("Can't allocate PCR\n");
+		return;
+	}
+
+	/* Allocate TSS */
+	TssSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);
+	TssPages = TssSize / MM_PAGE_SIZE;
+
+	Tss = (ULONG_PTR)MmAllocateMemoryWithType(TssSize, LoaderMemoryData);
+
+	*TssBasePage = Tss >> MM_PAGE_SHIFT;
+
+	/* Allocate space for new GDT + IDT */
+	BlockSize = NUM_GDT*sizeof(KGDTENTRY) + NUM_IDT*sizeof(KIDTENTRY);//FIXME: Use GDT/IDT limits here?
+	NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
+	*GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
+
+	if (*GdtIdt == NULL)
+	{
+		UiMessageBox("Can't allocate pages for GDT+IDT!\n");
+		return;
+	}
+
+	/* Zero newly prepared GDT+IDT */
+	RtlZeroMemory(*GdtIdt, NumPages << MM_PAGE_SHIFT);
 }

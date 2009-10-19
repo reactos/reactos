@@ -15,10 +15,6 @@
 
 extern ULONG LoaderPagesSpanned;
 
-// This is needed because headers define wrong one for ReactOS
-#undef KIP0PCRADDRESS
-#define KIP0PCRADDRESS                      0xffdff000
-
 PCHAR  MemTypeDesc[]  = {
     "ExceptionBlock    ", // ?
     "SystemBlock       ", // ?
@@ -63,7 +59,7 @@ VOID
 WinLdrRemoveDescriptor(IN PMEMORY_ALLOCATION_DESCRIPTOR Descriptor);
 
 VOID
-WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss);
+WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG_PTR Pcr, IN ULONG_PTR Tss);
 
 BOOLEAN
 MempAllocatePageTables();
