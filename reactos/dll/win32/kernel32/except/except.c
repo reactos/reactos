@@ -395,7 +395,18 @@ RaiseException(IN DWORD dwExceptionCode,
     {
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
         DPRINT1("Exception-Object: %p\n", ExceptionRecord.ExceptionInformation[1]);
-        DPRINT1("Exception text: %s\n", ExceptionRecord.ExceptionInformation[2]);        
+        DPRINT1("Exception text: %s\n", ExceptionRecord.ExceptionInformation[2]);
+    }
+
+    /* Trace the wine special error and show the modulename and functionname */
+    if (dwExceptionCode == 0x80000100 /*EXCEPTION_WINE_STUB*/)
+    {
+       /* Numbers of parameter must be equal to two */
+       if (ExceptionRecord.NumberParameters == 2)
+       {
+          DPRINT1("Missing function in   : %s\n", ExceptionRecord.ExceptionInformation[0]);
+          DPRINT1("with the functionname : %s\n", ExceptionRecord.ExceptionInformation[1]);
+       }
     }
 
     /* Raise the exception */
