@@ -24,6 +24,7 @@ STRINGTABLE DISCARDABLE
 {
     IDS_TO_PRIMITIVE        "Error converting object to primitive type"
     IDS_INVALID_CALL_ARG    "Invalid procedure call or argument"
+    IDS_CREATE_OBJ_ERROR    "Automation server can't create object"
     IDS_NO_PROPERTY         "Object doesn't support this property or method"
     IDS_ARG_NOT_OPT         "Argument not optional"
     IDS_SYNTAX_ERROR        "Syntax error"
@@ -34,8 +35,12 @@ STRINGTABLE DISCARDABLE
     IDS_NOT_FUNC            "Function expected"
     IDS_NOT_DATE            "'[object]' is not a date object"
     IDS_NOT_NUM             "Number expected"
+    IDS_OBJECT_EXPECTED     "Object expected"
     IDS_ILLEGAL_ASSIGN      "Illegal assignment"
     IDS_UNDEFINED           "'|' is undefined"
     IDS_NOT_BOOL            "Boolean object expected"
+    IDS_JSCRIPT_EXPECTED    "JScript object expected"
+    IDS_REGEXP_SYNTAX_ERROR "Syntax error in regular expression"
     IDS_INVALID_LENGTH      "Array length must be a finite positive integer"
+    IDS_ARRAY_EXPECTED      "Array object expected"
 }

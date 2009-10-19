@@ -39,10 +39,15 @@ static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};
 static const WCHAR numberW[] = {'n','u','m','b','e','r',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 
-static HRESULT Error_number(DispatchEx *dispex, LCID lcid, WORD flags,
+static inline ErrorInstance *error_from_vdisp(vdisp_t *vdisp)
+{
+    return (ErrorInstance*)vdisp->u.jsdisp;
+}
+
+static HRESULT Error_number(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    ErrorInstance *This = (ErrorInstance*)dispex;
+    ErrorInstance *This = error_from_vdisp(jsthis);
 
     TRACE("\n");
 
@@ -57,10 +62,10 @@ static HRESULT Error_number(DispatchEx *dispex, LCID lcid, WORD flags,
     }
 }
 
-static HRESULT Error_description(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT Error_description(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    ErrorInstance *This = (ErrorInstance*)dispex;
+    ErrorInstance *This = error_from_vdisp(jsthis);
 
     TRACE("\n");
 
@@ -76,10 +81,10 @@ static HRESULT Error_description(DispatchEx *dispex, LCID lcid, WORD flags,
 }
 
 /* ECMA-262 3rd Edition    15.11.4.3 */
-static HRESULT Error_message(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT Error_message(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    ErrorInstance *This = (ErrorInstance*)dispex;
+    ErrorInstance *This = error_from_vdisp(jsthis);
 
     TRACE("\n");
 
@@ -95,7 +100,7 @@ static HRESULT Error_message(DispatchEx *dispex, LCID lcid, WORD flags,
 }
 
 /* ECMA-262 3rd Edition    15.11.4.4 */
-static HRESULT Error_toString(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT Error_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     static const WCHAR str[] = {'[','o','b','j','e','c','t',' ','E','r','r','o','r',']',0};
@@ -112,14 +117,14 @@ static HRESULT Error_toString(DispatchEx *dispex, LCID lcid, WORD flags,
     return S_OK;
 }
 
-static HRESULT Error_value(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT Error_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
 
     switch(flags) {
     case INVOKE_FUNC:
-        return throw_type_error(dispex->ctx, ei, IDS_NOT_FUNC, NULL);
+        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
     default:
         FIXME("unimplemented flags %x\n", flags);
         return E_NOTIMPL;
@@ -223,7 +228,7 @@ static HRESULT create_error(script_ctx_t *ctx, DispatchEx *constr,
     return S_OK;
 }
 
-static HRESULT error_constr(DispatchEx *dispex, WORD flags, DISPPARAMS *dp,
+static HRESULT error_constr(script_ctx_t *ctx, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, DispatchEx *constr) {
     DispatchEx *err;
     VARIANT numv;
@@ -234,9 +239,9 @@ static HRESULT error_constr(DispatchEx *dispex, WORD flags, DISPPARAMS *dp,
     V_VT(&numv) = VT_NULL;
 
     if(arg_cnt(dp)) {
-        hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &numv);
+        hres = to_number(ctx, get_arg(dp, 0), ei, &numv);
         if(FAILED(hres) || (V_VT(&numv)==VT_R8 && isnan(V_R8(&numv))))
-            hres = to_string(dispex->ctx, get_arg(dp, 0), ei, &msg);
+            hres = to_string(ctx, get_arg(dp, 0), ei, &msg);
         else if(V_VT(&numv) == VT_I4)
             num = V_I4(&numv);
         else
@@ -247,7 +252,7 @@ static HRESULT error_constr(DispatchEx *dispex, WORD flags, DISPPARAMS *dp,
     }
 
     if(arg_cnt(dp)>1 && !msg) {
-        hres = to_string(dispex->ctx, get_arg(dp, 1), ei, &msg);
+        hres = to_string(ctx, get_arg(dp, 1), ei, &msg);
         if(FAILED(hres))
             return hres;
     }
@@ -256,9 +261,9 @@ static HRESULT error_constr(DispatchEx *dispex, WORD flags, DISPPARAMS *dp,
     case INVOKE_FUNC:
     case DISPATCH_CONSTRUCT:
         if(V_VT(&numv) == VT_NULL)
-            hres = create_error(dispex->ctx, constr, NULL, msg, &err);
+            hres = create_error(ctx, constr, NULL, msg, &err);
         else
-            hres = create_error(dispex->ctx, constr, &num, msg, &err);
+            hres = create_error(ctx, constr, &num, msg, &err);
 
         if(FAILED(hres))
             return hres;
@@ -268,7 +273,7 @@ static HRESULT error_constr(DispatchEx *dispex, WORD flags, DISPPARAMS *dp,
             V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(err);
         }
         else
-            IDispatchEx_Release(_IDispatchEx_(err));
+            jsdisp_release(err);
 
         return S_OK;
 
@@ -278,60 +283,60 @@ static HRESULT error_constr(DispatchEx *dispex, WORD flags, DISPPARAMS *dp,
     }
 }
 
-static HRESULT ErrorConstr_value(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT ErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
-    return error_constr(dispex, flags, dp, retv, ei,
-            dispex->ctx->error_constr);
+    return error_constr(ctx, flags, dp, retv, ei, ctx->error_constr);
 }
 
-static HRESULT EvalErrorConstr_value(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT EvalErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
-    return error_constr(dispex, flags, dp, retv, ei,
-            dispex->ctx->eval_error_constr);
+    return error_constr(ctx, flags, dp, retv, ei, ctx->eval_error_constr);
 }
 
-static HRESULT RangeErrorConstr_value(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT RangeErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
-    return error_constr(dispex, flags, dp, retv, ei,
-            dispex->ctx->range_error_constr);
+    return error_constr(ctx, flags, dp, retv, ei, ctx->range_error_constr);
 }
 
-static HRESULT ReferenceErrorConstr_value(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT ReferenceErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
-    return error_constr(dispex, flags, dp, retv, ei,
-            dispex->ctx->reference_error_constr);
+    return error_constr(ctx, flags, dp, retv, ei, ctx->reference_error_constr);
 }
 
-static HRESULT SyntaxErrorConstr_value(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT RegExpErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
-    return error_constr(dispex, flags, dp, retv, ei,
-            dispex->ctx->syntax_error_constr);
+    return error_constr(ctx, flags, dp, retv, ei, ctx->regexp_error_constr);
 }
 
-static HRESULT TypeErrorConstr_value(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT SyntaxErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
-    return error_constr(dispex, flags, dp, retv, ei,
-            dispex->ctx->type_error_constr);
+    return error_constr(ctx, flags, dp, retv, ei, ctx->syntax_error_constr);
 }
 
-static HRESULT URIErrorConstr_value(DispatchEx *dispex, LCID lcid, WORD flags,
+static HRESULT TypeErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
-    return error_constr(dispex, flags, dp, retv, ei,
-            dispex->ctx->uri_error_constr);
+    return error_constr(ctx, flags, dp, retv, ei, ctx->type_error_constr);
+}
+
+static HRESULT URIErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+        DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+    return error_constr(ctx, flags, dp, retv, ei, ctx->uri_error_constr);
 }
 
 HRESULT init_error_constr(script_ctx_t *ctx, DispatchEx *object_prototype)
@@ -341,25 +346,26 @@ HRESULT init_error_constr(script_ctx_t *ctx, DispatchEx *object_prototype)
     static const WCHAR EvalErrorW[] = {'E','v','a','l','E','r','r','o','r',0};
     static const WCHAR RangeErrorW[] = {'R','a','n','g','e','E','r','r','o','r',0};
     static const WCHAR ReferenceErrorW[] = {'R','e','f','e','r','e','n','c','e','E','r','r','o','r',0};
+    static const WCHAR RegExpErrorW[] = {'R','e','g','E','x','p','E','r','r','o','r',0};
     static const WCHAR SyntaxErrorW[] = {'S','y','n','t','a','x','E','r','r','o','r',0};
     static const WCHAR TypeErrorW[] = {'T','y','p','e','E','r','r','o','r',0};
     static const WCHAR URIErrorW[] = {'U','R','I','E','r','r','o','r',0};
     static const WCHAR *names[] = {ErrorW, EvalErrorW, RangeErrorW,
-        ReferenceErrorW, SyntaxErrorW, TypeErrorW, URIErrorW};
+        ReferenceErrorW, RegExpErrorW, SyntaxErrorW, TypeErrorW, URIErrorW};
     DispatchEx **constr_addr[] = {&ctx->error_constr, &ctx->eval_error_constr,
-        &ctx->range_error_constr, &ctx->reference_error_constr,
+        &ctx->range_error_constr, &ctx->reference_error_constr, &ctx->regexp_error_constr,
         &ctx->syntax_error_constr, &ctx->type_error_constr,
         &ctx->uri_error_constr};
     static builtin_invoke_t constr_val[] = {ErrorConstr_value, EvalErrorConstr_value,
-        RangeErrorConstr_value, ReferenceErrorConstr_value, SyntaxErrorConstr_value,
-        TypeErrorConstr_value, URIErrorConstr_value};
+        RangeErrorConstr_value, ReferenceErrorConstr_value, RegExpErrorConstr_value,
+        SyntaxErrorConstr_value, TypeErrorConstr_value, URIErrorConstr_value};
 
     ErrorInstance *err;
     INT i;
     VARIANT v;
     HRESULT hres;
 
-    for(i=0; i<7; i++) {
+    for(i=0; i < sizeof(names)/sizeof(names[0]); i++) {
         hres = alloc_error(ctx, i==0 ? object_prototype : NULL, NULL, &err);
         if(FAILED(hres))
             return hres;
@@ -367,17 +373,17 @@ HRESULT init_error_constr(script_ctx_t *ctx, DispatchEx *object_prototype)
         V_VT(&v) = VT_BSTR;
         V_BSTR(&v) = SysAllocString(names[i]);
         if(!V_BSTR(&v)) {
-            IDispatchEx_Release(_IDispatchEx_(&err->dispex));
+            jsdisp_release(&err->dispex);
             return E_OUTOFMEMORY;
         }
 
-        hres = jsdisp_propput_name(&err->dispex, nameW, ctx->lcid, &v, NULL/*FIXME*/, NULL/*FIXME*/);
+        hres = jsdisp_propput_name(&err->dispex, nameW, &v, NULL/*FIXME*/, NULL/*FIXME*/);
 
         if(SUCCEEDED(hres))
-            hres = create_builtin_function(ctx, constr_val[i], NULL,
+            hres = create_builtin_function(ctx, constr_val[i], names[i], NULL,
                     PROPF_CONSTR, &err->dispex, constr_addr[i]);
 
-        IDispatchEx_Release(_IDispatchEx_(&err->dispex));
+        jsdisp_release(&err->dispex);
         VariantClear(&v);
         if(FAILED(hres))
             return hres;
@@ -423,6 +429,11 @@ HRESULT throw_eval_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHAR
     return throw_error(ctx, ei, id, str, ctx->eval_error_constr);
 }
 
+HRESULT throw_generic_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHAR *str)
+{
+    return throw_error(ctx, ei, id, str, ctx->error_constr);
+}
+
 HRESULT throw_range_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHAR *str)
 {
     return throw_error(ctx, ei, id, str, ctx->range_error_constr);
@@ -431,6 +442,11 @@ HRESULT throw_range_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHA
 HRESULT throw_reference_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHAR *str)
 {
     return throw_error(ctx, ei, id, str, ctx->reference_error_constr);
+}
+
+HRESULT throw_regexp_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHAR *str)
+{
+    return throw_error(ctx, ei, id, str, ctx->regexp_error_constr);
 }
 
 HRESULT throw_syntax_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHAR *str)

@@ -72,15 +72,16 @@
      tINC = 288,
      tDEC = 289,
      tHTMLCOMMENT = 290,
-     kFUNCTION = 291,
-     tIdentifier = 292,
-     tAssignOper = 293,
-     tEqOper = 294,
-     tShiftOper = 295,
-     tRelOper = 296,
-     tNumericLiteral = 297,
-     tStringLiteral = 298,
-     LOWER_THAN_ELSE = 299
+     kDIVEQ = 291,
+     kFUNCTION = 292,
+     tIdentifier = 293,
+     tAssignOper = 294,
+     tEqOper = 295,
+     tShiftOper = 296,
+     tRelOper = 297,
+     tNumericLiteral = 298,
+     tStringLiteral = 299,
+     LOWER_THAN_ELSE = 300
    };
 #endif
 
@@ -115,7 +116,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 119 "parser.tab.h"
+#line 120 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
