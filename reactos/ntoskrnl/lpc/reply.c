@@ -136,7 +136,7 @@ LpcpMoveMessage(IN PPORT_MESSAGE Destination,
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI

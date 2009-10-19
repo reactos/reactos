@@ -437,7 +437,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
