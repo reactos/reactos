@@ -725,6 +725,7 @@ static void test_decodeCatNameValue(void)
     DWORD size;
     CAT_NAMEVALUE *value;
 
+    buf = NULL;
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
      emptyCatNameValue, sizeof(emptyCatNameValue),
      CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
@@ -739,6 +740,7 @@ static void test_decodeCatNameValue(void)
          value->Value.cbData);
         LocalFree(buf);
     }
+    buf = NULL;
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
      catNameValueWithTag, sizeof(catNameValueWithTag),
      CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
@@ -754,6 +756,7 @@ static void test_decodeCatNameValue(void)
          value->Value.cbData);
         LocalFree(buf);
     }
+    buf = NULL;
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
      catNameValueWithFlags, sizeof(catNameValueWithFlags),
      CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
@@ -768,6 +771,7 @@ static void test_decodeCatNameValue(void)
          value->Value.cbData);
         LocalFree(buf);
     }
+    buf = NULL;
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
      catNameValueWithValue, sizeof(catNameValueWithValue),
      CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
@@ -838,7 +842,7 @@ static void test_encodeSpOpusInfo(void)
     ok(!ret && GetLastError() == E_INVALIDARG,
      "expected E_INVALIDARG, got %08x\n", GetLastError());
     moreInfo.dwLinkChoice = SPC_URL_LINK_CHOICE;
-    moreInfo.pwszUrl = winehq;
+    U(moreInfo).pwszUrl = winehq;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
      &info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
@@ -874,7 +878,6 @@ static void test_decodeSpOpusInfo(void)
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
      emptySequence, sizeof(emptySequence), CRYPT_DECODE_ALLOC_FLAG, NULL,
      &info, &size);
-    todo_wine
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -886,7 +889,6 @@ static void test_decodeSpOpusInfo(void)
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
      spOpusInfoWithProgramName, sizeof(spOpusInfoWithProgramName),
      CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &size);
-    todo_wine
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -899,7 +901,6 @@ static void test_decodeSpOpusInfo(void)
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
      spOpusInfoWithMoreInfo, sizeof(spOpusInfoWithMoreInfo),
      CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &size);
-    todo_wine
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -909,7 +910,7 @@ static void test_decodeSpOpusInfo(void)
         {
             ok(info->pMoreInfo->dwLinkChoice == SPC_URL_LINK_CHOICE,
              "unexpected link choice %d\n", info->pMoreInfo->dwLinkChoice);
-            ok(!lstrcmpW(info->pMoreInfo->pwszUrl, winehq),
+            ok(!lstrcmpW(U(*info->pMoreInfo).pwszUrl, winehq),
              "unexpected link value\n");
         }
         ok(!info->pPublisherInfo, "expected NULL\n");
@@ -918,7 +919,6 @@ static void test_decodeSpOpusInfo(void)
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
      spOpusInfoWithPublisherInfo, sizeof(spOpusInfoWithPublisherInfo),
      CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &size);
-    todo_wine
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -931,7 +931,7 @@ static void test_decodeSpOpusInfo(void)
             ok(info->pPublisherInfo->dwLinkChoice == SPC_URL_LINK_CHOICE,
              "unexpected link choice %d\n",
              info->pPublisherInfo->dwLinkChoice);
-            ok(!lstrcmpW(info->pPublisherInfo->pwszUrl, winehq),
+            ok(!lstrcmpW(U(*info->pPublisherInfo).pwszUrl, winehq),
              "unexpected link value\n");
         }
         LocalFree(info);
