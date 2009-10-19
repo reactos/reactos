@@ -20,28 +20,28 @@ extern "C" {
  *
  * the version string like "1.2.3"
  */
-#define LIBXSLT_DOTTED_VERSION "1.1.24"
+#define LIBXSLT_DOTTED_VERSION "1.1.26"
 
 /**
  * LIBXSLT_VERSION:
  *
  * the version number: 1.2.3 value is 10203
  */
-#define LIBXSLT_VERSION 10124
+#define LIBXSLT_VERSION 10126
 
 /**
  * LIBXSLT_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "10203"
  */
-#define LIBXSLT_VERSION_STRING "10124"
+#define LIBXSLT_VERSION_STRING "10126"
 
 /**
  * LIBXSLT_VERSION_EXTRA:
  *
  * extra version information, used to show a CVS compilation
  */
-#define	LIBXSLT_VERSION_EXTRA "-CVS1070"
+#define	LIBXSLT_VERSION_EXTRA "-GITv1.1.26"
 
 /**
  * WITH_XSLT_DEBUG:
@@ -116,11 +116,24 @@ extern "C" {
  * Whether module support is configured into libxslt
  * Note: no default module path for win32 platforms
  */
-#if 0
+#if 1
 #ifndef WITH_MODULES
 #define WITH_MODULES
 #endif
 #define LIBXSLT_DEFAULT_PLUGINS_PATH() "/usr/lib/libxslt-plugins"
+#endif
+
+/**
+ * Locale support
+ */
+#if 1
+#ifndef XSLT_LOCALE_XLOCALE
+#define XSLT_LOCALE_XLOCALE
+#endif
+#elif 0
+#ifndef XSLT_LOCALE_WINAPI
+#define XSLT_LOCALE_WINAPI
+#endif
 #endif
 
 /**

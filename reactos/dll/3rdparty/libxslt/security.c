@@ -58,6 +58,7 @@
 #include "xslt.h"
 #include "xsltInternals.h"
 #include "xsltutils.h"
+#include "extensions.h"
 #include "security.h"
 
 
@@ -87,6 +88,8 @@ static xsltSecurityPrefsPtr xsltDefaultSecurityPrefs = NULL;
 xsltSecurityPrefsPtr
 xsltNewSecurityPrefs(void) {
     xsltSecurityPrefsPtr ret;
+
+    xsltInitGlobals();
 
     ret = (xsltSecurityPrefsPtr) xmlMalloc(sizeof(xsltSecurityPrefs));
     if (ret == NULL) {
@@ -124,6 +127,7 @@ xsltFreeSecurityPrefs(xsltSecurityPrefsPtr sec) {
 int
 xsltSetSecurityPrefs(xsltSecurityPrefsPtr sec, xsltSecurityOption option,
                      xsltSecurityCheck func) {
+    xsltInitGlobals();
     if (sec == NULL)
 	return(-1);
     switch (option) {
@@ -177,6 +181,7 @@ xsltGetSecurityPrefs(xsltSecurityPrefsPtr sec, xsltSecurityOption option) {
  */
 void
 xsltSetDefaultSecurityPrefs(xsltSecurityPrefsPtr sec) {
+    
     xsltDefaultSecurityPrefs = sec;
 }
 
