@@ -50,6 +50,10 @@ MemType[] =
 
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
+//
+// 0 | 1 is on/off paging, 2 is undocumented
+//
+UCHAR MmDisablePagingExecutive = 1; // Forced to off
 PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
 extern KMUTANT MmSystemLoadLock;

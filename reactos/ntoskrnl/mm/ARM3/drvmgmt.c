@@ -119,8 +119,32 @@ MmPageEntireDriver(IN PVOID AddressWithinSection)
     //
     // We should find the driver loader entry and return its base address
     //
+    //PMMPTE Pte;
     PLDR_DATA_TABLE_ENTRY pLdrDataTabEntry = MiLookupDataTableEntry(AddressWithinSection);
-    if (pLdrDataTabEntry) return pLdrDataTabEntry->DllBase;
+    if (pLdrDataTabEntry)
+    {
+        //
+        //  Is Paging Disabled or Check if we had already mapped it in for this section
+        //
+        if ( (MmDisablePagingExecutive & 1) || pLdrDataTabEntry->SectionPointer )
+        {
+           return pLdrDataTabEntry->DllBase;
+        }
+        //
+        // Flush all queued DPCs.
+        //
+        KeFlushQueuedDpcs();
+        //
+        // Get the PTE for this section
+        //
+        //Pte = MiGetPteAddress(pLdrDataTabEntry->DllBase);
+        //
+        //MiSetPagingOfDriver( (Pte & (4,194,304 - 4) ) - 0x40000000 , 
+        //                     (Pte & (4,194,304 - 4) ) - 0x40000000 + 4 *
+        //                               pLdrDataTabEntry->SizeOfImage >> PAGE_SHIFT - 4 );
+        //
+        return pLdrDataTabEntry->DllBase;
+    }
     return NULL;
 }
 

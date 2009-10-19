@@ -14,6 +14,7 @@ extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 extern ULONG MmNumberOfPhysicalPages;
+extern UCHAR MmDisablePagingExecutive;
 extern ULONG MmLowestPhysicalPage;
 extern ULONG MmHighestPhysicalPage;
 extern ULONG MmAvailablePages;
