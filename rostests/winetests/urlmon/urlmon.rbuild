@@ -7,6 +7,7 @@
 	<file>generated.c</file>
 	<file>misc.c</file>
 	<file>protocol.c</file>
+	<file>sec_mgr.c</file>
 	<file>stream.c</file>
 	<file>url.c</file>
 	<file>testlist.c</file>

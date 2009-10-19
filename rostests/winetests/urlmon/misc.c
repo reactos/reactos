@@ -63,13 +63,6 @@ DEFINE_EXPECT(QI_IInternetProtocolInfo);
 DEFINE_EXPECT(CreateInstance);
 DEFINE_EXPECT(unk_Release);
 
-static const char *debugstr_w(LPCWSTR str)
-{
-    static char buf[1024];
-    WideCharToMultiByte(CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL);
-    return buf;
-}
-
 static void test_CreateFormatEnum(void)
 {
     IEnumFORMATETC *fenum = NULL, *fenum2 = NULL;
@@ -527,7 +520,7 @@ static BYTE data85[] = {'.','S','N','D',0};
 static const struct {
     BYTE *data;
     DWORD size;
-    LPCWSTR mime;
+    LPCWSTR mime, mime_alt;
 } mime_tests2[] = {
     {data1, sizeof(data1), mimeTextPlain},
     {data2, sizeof(data2), mimeAppOctetStream},
@@ -535,12 +528,12 @@ static const struct {
     {data4, sizeof(data4), mimeAppOctetStream},
     {data5, sizeof(data5), mimeTextPlain},
     {data6, sizeof(data6), mimeTextPlain},
-    {data7, sizeof(data7), mimeTextHtml},
-    {data8, sizeof(data8), mimeTextHtml},
-    {data9, sizeof(data9), mimeTextHtml},
-    {data10, sizeof(data10), mimeTextHtml},
-    {data11, sizeof(data11), mimeTextHtml},
-    {data12, sizeof(data12), mimeTextHtml},
+    {data7, sizeof(data7), mimeTextHtml, mimeTextPlain /* IE8 */},
+    {data8, sizeof(data8), mimeTextHtml, mimeTextPlain /* IE8 */},
+    {data9, sizeof(data9), mimeTextHtml, mimeImagePjpeg /* IE8 */},
+    {data10, sizeof(data10), mimeTextHtml, mimeTextPlain /* IE8 */},
+    {data11, sizeof(data11), mimeTextHtml, mimeTextPlain /* IE8 */},
+    {data12, sizeof(data12), mimeTextHtml, mimeTextPlain /* IE8 */},
     {data13, sizeof(data13), mimeTextPlain},
     {data14, sizeof(data14), mimeTextPlain},
     {data15, sizeof(data15), mimeTextPlain},
@@ -554,21 +547,21 @@ static const struct {
     {data23, sizeof(data23), mimeTextPlain},
     {data24, sizeof(data24), mimeImageGif},
     {data25, sizeof(data25), mimeImageGif},
-    {data26, sizeof(data26), mimeTextHtml},
+    {data26, sizeof(data26), mimeTextHtml, mimeImageGif /* IE8 */},
     {data27, sizeof(data27), mimeTextPlain},
     {data28, sizeof(data28), mimeImageBmp},
     {data29, sizeof(data29), mimeImageBmp},
     {data30, sizeof(data30), mimeAppOctetStream},
-    {data31, sizeof(data31), mimeTextHtml},
+    {data31, sizeof(data31), mimeTextHtml, mimeImageBmp /* IE8 */},
     {data32, sizeof(data32), mimeAppOctetStream},
     {data33, sizeof(data33), mimeAppOctetStream},
     {data34, sizeof(data34), mimeImageXPng},
     {data35, sizeof(data35), mimeImageXPng},
     {data36, sizeof(data36), mimeAppOctetStream},
-    {data37, sizeof(data37), mimeTextHtml},
+    {data37, sizeof(data37), mimeTextHtml, mimeImageXPng /* IE8 */},
     {data38, sizeof(data38), mimeAppOctetStream},
     {data39, sizeof(data39), mimeImageTiff},
-    {data40, sizeof(data40), mimeTextHtml},
+    {data40, sizeof(data40), mimeTextHtml, mimeImageTiff /* IE8 */},
     {data41, sizeof(data41), mimeImageTiff},
     {data42, sizeof(data42), mimeTextPlain},
     {data43, sizeof(data43), mimeAppOctetStream},
@@ -576,43 +569,43 @@ static const struct {
     {data45, sizeof(data45), mimeTextPlain},
     {data46, sizeof(data46), mimeTextPlain},
     {data47, sizeof(data47), mimeTextPlain},
-    {data48, sizeof(data48), mimeTextHtml},
+    {data48, sizeof(data48), mimeTextHtml, mimeVideoAvi /* IE8 */},
     {data49, sizeof(data49), mimeVideoAvi},
     {data50, sizeof(data50), mimeVideoMpeg},
     {data51, sizeof(data51), mimeVideoMpeg},
     {data52, sizeof(data52), mimeAppOctetStream},
     {data53, sizeof(data53), mimeAppOctetStream},
-    {data54, sizeof(data54), mimeTextHtml},
+    {data54, sizeof(data54), mimeTextHtml, mimeVideoMpeg /* IE8 */},
     {data55, sizeof(data55), mimeAppXGzip},
     {data56, sizeof(data56), mimeTextPlain},
-    {data57, sizeof(data57), mimeTextHtml},
+    {data57, sizeof(data57), mimeTextHtml, mimeAppXGzip /* IE8 */},
     {data58, sizeof(data58), mimeAppOctetStream},
     {data59, sizeof(data59), mimeAppXZip},
     {data60, sizeof(data60), mimeTextPlain},
-    {data61, sizeof(data61), mimeTextHtml},
+    {data61, sizeof(data61), mimeTextHtml, mimeAppXZip /* IE8 */},
     {data62, sizeof(data62), mimeAppJava},
     {data63, sizeof(data63), mimeTextPlain},
-    {data64, sizeof(data64), mimeTextHtml},
+    {data64, sizeof(data64), mimeTextHtml, mimeAppJava /* IE8 */},
     {data65, sizeof(data65), mimeAppPdf},
     {data66, sizeof(data66), mimeTextPlain},
-    {data67, sizeof(data67), mimeTextHtml},
+    {data67, sizeof(data67), mimeTextHtml, mimeAppPdf /* IE8 */},
     {data68, sizeof(data68), mimeAppXMSDownload},
     {data69, sizeof(data69), mimeTextPlain},
-    {data70, sizeof(data70), mimeTextHtml},
+    {data70, sizeof(data70), mimeTextHtml, mimeAppXMSDownload /* IE8 */},
     {data71, sizeof(data71), mimeTextRichtext},
     {data72, sizeof(data72), mimeTextPlain},
     {data73, sizeof(data73), mimeTextPlain},
-    {data74, sizeof(data74), mimeTextHtml},
+    {data74, sizeof(data74), mimeTextHtml, mimeTextRichtext /* IE8 */},
     {data75, sizeof(data75), mimeAudioWav},
     {data76, sizeof(data76), mimeTextPlain},
     {data77, sizeof(data77), mimeTextPlain},
-    {data78, sizeof(data78), mimeTextHtml},
+    {data78, sizeof(data78), mimeTextHtml, mimeTextPlain /* IE8 */},
     {data79, sizeof(data79), mimeAppPostscript},
     {data80, sizeof(data80), mimeTextPlain},
-    {data81, sizeof(data81), mimeTextHtml},
+    {data81, sizeof(data81), mimeTextHtml, mimeAppPostscript /* IE8 */},
     {data82, sizeof(data82), mimeAudioBasic},
     {data83, sizeof(data83), mimeTextPlain},
-    {data84, sizeof(data84), mimeTextHtml},
+    {data84, sizeof(data84), mimeTextHtml, mimeAudioBasic /* IE8 */},
     {data85, sizeof(data85), mimeTextPlain}
 };
 
@@ -653,7 +646,7 @@ static void test_FindMimeFromData(void)
         hres = FindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
                 NULL, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime: %s\n", i, debugstr_w(mime));
+        ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
         hres = FindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
@@ -672,7 +665,9 @@ static void test_FindMimeFromData(void)
         if(!lstrcmpW(mimeAppOctetStream, mime_tests2[i].mime) || i == 17)
             ok(!lstrcmpW(mime, mimeImagePjpeg), "[%d] wrong mime\n", i);
         else
-            ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime\n", i);
+            ok(!lstrcmpW(mime, mime_tests2[i].mime) ||
+                    (mime_tests2[i].mime_alt && !lstrcmpW(mime, mime_tests2[i].mime_alt)),
+                    "[%d] wrong mime, got %s\n", i, wine_dbgstr_w(mime));
 
         CoTaskMemFree(mime);
     }
@@ -711,274 +706,6 @@ static void test_FindMimeFromData(void)
 
     hres = FindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, NULL, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
-}
-
-static const BYTE secid1[] = {'f','i','l','e',':',0,0,0,0};
-static const BYTE secid5[] = {'h','t','t','p',':','w','w','w','.','w','i','n','e','h','q',
-    '.','o','r','g',3,0,0,0};
-static const BYTE secid6[] = {'a','b','o','u','t',':','b','l','a','n','k',3,0,0,0};
-static const BYTE secid7[] = {'f','t','p',':','w','i','n','e','h','q','.','o','r','g',
-                              3,0,0,0};
-static const BYTE secid10[] =
-    {'f','i','l','e',':','s','o','m','e','%','2','0','f','i','l','e','.','j','p','g',3,0,0,0};
-static const BYTE secid10_2[] =
-    {'f','i','l','e',':','s','o','m','e',' ','f','i','l','e','.','j','p','g',3,0,0,0};
-
-static struct secmgr_test {
-    LPCWSTR url;
-    DWORD zone;
-    HRESULT zone_hres;
-    DWORD secid_size;
-    const BYTE *secid;
-    HRESULT secid_hres;
-} secmgr_tests[] = {
-    {url1, 0,   S_OK, sizeof(secid1), secid1, S_OK},
-    {url2, 100, 0x80041001, 0, NULL, E_INVALIDARG},
-    {url3, 0,   S_OK, sizeof(secid1), secid1, S_OK},
-    {url5, 3,   S_OK, sizeof(secid5), secid5, S_OK},
-    {url6, 3,   S_OK, sizeof(secid6), secid6, S_OK},
-    {url7, 3,   S_OK, sizeof(secid7), secid7, S_OK}
-};
-
-static void test_SecurityManager(void)
-{
-    int i;
-    IInternetSecurityManager *secmgr = NULL;
-    BYTE buf[512];
-    DWORD zone, size, policy;
-    HRESULT hres;
-
-    hres = CoInternetCreateSecurityManager(NULL, &secmgr, 0);
-    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08x\n", hres);
-    if(FAILED(hres))
-        return;
-
-    for(i=0; i < sizeof(secmgr_tests)/sizeof(secmgr_tests[0]); i++) {
-        zone = 100;
-        hres = IInternetSecurityManager_MapUrlToZone(secmgr, secmgr_tests[i].url,
-                                                     &zone, 0);
-        ok(hres == secmgr_tests[i].zone_hres /* IE <=6 */
-           || (FAILED(secmgr_tests[i].zone_hres) && hres == E_INVALIDARG), /* IE7 */
-           "[%d] MapUrlToZone failed: %08x, expected %08x\n",
-                i, hres, secmgr_tests[i].zone_hres);
-        if(SUCCEEDED(hres))
-            ok(zone == secmgr_tests[i].zone, "[%d] zone=%d, expected %d\n", i, zone,
-               secmgr_tests[i].zone);
-        else
-            ok(zone == secmgr_tests[i].zone || zone == -1, "[%d] zone=%d\n", i, zone);
-
-        size = sizeof(buf);
-        memset(buf, 0xf0, sizeof(buf));
-        hres = IInternetSecurityManager_GetSecurityId(secmgr, secmgr_tests[i].url,
-                buf, &size, 0);
-        ok(hres == secmgr_tests[i].secid_hres,
-           "[%d] GetSecurityId failed: %08x, expected %08x\n",
-           i, hres, secmgr_tests[i].secid_hres);
-        if(secmgr_tests[i].secid) {
-            ok(size == secmgr_tests[i].secid_size, "[%d] size=%d, expected %d\n",
-                    i, size, secmgr_tests[i].secid_size);
-            ok(!memcmp(buf, secmgr_tests[i].secid, size), "[%d] wrong secid\n", i);
-        }
-    }
-
-    zone = 100;
-    hres = IInternetSecurityManager_MapUrlToZone(secmgr, url10, &zone, 0);
-    ok(hres == S_OK, "MapUrlToZone failed: %08x, expected S_OK\n", hres);
-    ok(zone == 3, "zone=%d, expected 3\n", zone);
-
-    /* win2k3 translates %20 into a space */
-    size = sizeof(buf);
-    memset(buf, 0xf0, sizeof(buf));
-    hres = IInternetSecurityManager_GetSecurityId(secmgr, url10, buf, &size, 0);
-    ok(hres == S_OK, "GetSecurityId failed: %08x, expected S_OK\n", hres);
-    ok(size == sizeof(secid10) ||
-       size == sizeof(secid10_2), /* win2k3 */
-       "size=%d\n", size);
-    ok(!memcmp(buf, secid10, size) ||
-       !memcmp(buf, secid10_2, size), /* win2k3 */
-       "wrong secid\n");
-
-    zone = 100;
-    hres = IInternetSecurityManager_MapUrlToZone(secmgr, NULL, &zone, 0);
-    ok(hres == E_INVALIDARG, "MapUrlToZone failed: %08x, expected E_INVALIDARG\n", hres);
-    ok(zone == 100 || zone == -1, "zone=%d\n", zone);
-
-    size = sizeof(buf);
-    hres = IInternetSecurityManager_GetSecurityId(secmgr, NULL, buf, &size, 0);
-    ok(hres == E_INVALIDARG,
-       "GetSecurityId failed: %08x, expected E_INVALIDARG\n", hres);
-    hres = IInternetSecurityManager_GetSecurityId(secmgr, secmgr_tests[1].url,
-                                                  NULL, &size, 0);
-    ok(hres == E_INVALIDARG,
-       "GetSecurityId failed: %08x, expected E_INVALIDARG\n", hres);
-    hres = IInternetSecurityManager_GetSecurityId(secmgr, secmgr_tests[1].url,
-                                                  buf, NULL, 0);
-    ok(hres == E_INVALIDARG,
-       "GetSecurityId failed: %08x, expected E_INVALIDARG\n", hres);
-
-    hres = IInternetSecurityManager_ProcessUrlAction(secmgr, NULL, URLACTION_SCRIPT_RUN, (BYTE*)&policy,
-            sizeof(WCHAR), NULL, 0, 0, 0);
-    ok(hres == E_INVALIDARG, "ProcessUrlAction failed: %08x, expected E_INVALIDARG\n", hres);
-
-    IInternetSecurityManager_Release(secmgr);
-}
-
-/* Check if Internet Explorer is configured to run in "Enhanced Security Configuration" (aka hardened mode) */
-/* Note: this code is duplicated in dlls/mshtml/tests/dom.c, dlls/mshtml/tests/script.c and dlls/urlmon/tests/misc.c */
-static BOOL is_ie_hardened(void)
-{
-    HKEY zone_map;
-    DWORD ie_harden, type, size;
-
-    ie_harden = 0;
-    if(RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap",
-                    0, KEY_QUERY_VALUE, &zone_map) == ERROR_SUCCESS) {
-        size = sizeof(DWORD);
-        if (RegQueryValueEx(zone_map, "IEHarden", NULL, &type, (LPBYTE) &ie_harden, &size) != ERROR_SUCCESS ||
-            type != REG_DWORD) {
-            ie_harden = 0;
-        }
-    RegCloseKey(zone_map);
-    }
-
-    return ie_harden != 0;
-}
-
-static void test_url_action(IInternetSecurityManager *secmgr, IInternetZoneManager *zonemgr, DWORD action)
-{
-    DWORD res, size, policy, reg_policy;
-    char buf[10];
-    HKEY hkey;
-    HRESULT hres;
-
-    /* FIXME: HKEY_CURRENT_USER is most of the time the default but this can be changed on a system.
-     * The test should be changed to cope with that, if need be.
-     */
-    res = RegOpenKeyA(HKEY_CURRENT_USER,
-            "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\3", &hkey);
-    if(res != ERROR_SUCCESS) {
-        ok(0, "Could not open zone key\n");
-        return;
-    }
-
-    wsprintf(buf, "%X", action);
-    size = sizeof(DWORD);
-    res = RegQueryValueExA(hkey, buf, NULL, NULL, (BYTE*)&reg_policy, &size);
-    RegCloseKey(hkey);
-    if(res != ERROR_SUCCESS || size != sizeof(DWORD)) {
-        policy = 0xdeadbeef;
-        hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
-                sizeof(WCHAR), NULL, 0, 0, 0);
-        ok(hres == E_FAIL, "ProcessUrlAction(%x) failed: %08x, expected E_FAIL\n", action, hres);
-        ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
-
-        policy = 0xdeadbeef;
-        hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, (BYTE*)&policy,
-                sizeof(DWORD), URLZONEREG_DEFAULT);
-        ok(hres == E_FAIL, "GetZoneActionPolicy failed: %08x, expected E_FAIL\n", hres);
-        ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
-        return;
-    }
-
-    policy = 0xdeadbeef;
-    hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, (BYTE*)&policy,
-            sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == S_OK, "GetZoneActionPolicy failed: %08x\n", hres);
-    ok(policy == reg_policy, "(%x) policy=%x, expected %x\n", action, policy, reg_policy);
-
-    if(policy != URLPOLICY_QUERY) {
-        if(winetest_interactive || ! is_ie_hardened()) {
-            policy = 0xdeadbeef;
-            hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
-                    sizeof(WCHAR), NULL, 0, 0, 0);
-            if(reg_policy == URLPOLICY_DISALLOW)
-                ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
-            else
-                ok(hres == S_OK, "ProcessUrlAction(%x) failed: %08x\n", action, hres);
-            ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
-        }else {
-            skip("IE running in Enhanced Security Configuration\n");
-        }
-	}
-}
-
-static void test_special_url_action(IInternetSecurityManager *secmgr, IInternetZoneManager *zonemgr, DWORD action)
-{
-    DWORD policy;
-    HRESULT hres;
-
-    policy = 0xdeadbeef;
-    hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, (BYTE*)&policy,
-            sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == S_OK, "GetZoneActionPolicy failed: %08x\n", hres);
-    ok(policy == URLPOLICY_DISALLOW, "(%x) policy=%x, expected URLPOLIVY_DISALLOW\n", action, policy);
-
-    policy = 0xdeadbeef;
-    hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url1, action, (BYTE*)&policy,
-            sizeof(WCHAR), NULL, 0, 0, 0);
-    ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
-}
-
-static void test_polices(void)
-{
-    IInternetZoneManager *zonemgr = NULL;
-    IInternetSecurityManager *secmgr = NULL;
-    HRESULT hres;
-
-    hres = CoInternetCreateSecurityManager(NULL, &secmgr, 0);
-    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08x\n", hres);
-    hres = CoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hres == S_OK, "CoInternetCreateZoneManager failed: %08x\n", hres);
-
-    test_url_action(secmgr, zonemgr, URLACTION_SCRIPT_RUN);
-    test_url_action(secmgr, zonemgr, URLACTION_ACTIVEX_OVERRIDE_OBJECT_SAFETY);
-    test_url_action(secmgr, zonemgr, URLACTION_CHANNEL_SOFTDIST_PERMISSIONS);
-    test_url_action(secmgr, zonemgr, 0xdeadbeef);
-
-    test_special_url_action(secmgr, zonemgr, URLACTION_SCRIPT_OVERRIDE_SAFETY);
-
-    IInternetSecurityManager_Release(secmgr);
-    IInternetZoneManager_Release(zonemgr);
-}
-
-static void test_ZoneManager(void)
-{
-    IInternetZoneManager *zonemgr = NULL;
-    BYTE buf[32];
-    HRESULT hres;
-    DWORD action = URLACTION_CREDENTIALS_USE; /* Implemented on all IE versions */
-
-    hres = CoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hres == S_OK, "CoInternetCreateZoneManager failed: %08x\n", hres);
-    if(FAILED(hres))
-        return;
-
-    hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, buf,
-            sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == S_OK, "GetZoneActionPolicy failed: %08x\n", hres);
-    ok(*(DWORD*)buf == URLPOLICY_CREDENTIALS_SILENT_LOGON_OK ||
-            *(DWORD*)buf == URLPOLICY_CREDENTIALS_MUST_PROMPT_USER ||
-            *(DWORD*)buf == URLPOLICY_CREDENTIALS_CONDITIONAL_PROMPT ||
-            *(DWORD*)buf == URLPOLICY_CREDENTIALS_ANONYMOUS_ONLY,
-            "unexpected policy=%d\n", *(DWORD*)buf);
-
-    hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, NULL,
-            sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08x, expected E_INVALIDARG\n", hres);
-
-    hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, buf,
-            2, URLZONEREG_DEFAULT);
-    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08x, expected E_INVALIDARG\n", hres);
-
-    hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, 0x1fff, buf,
-            sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == E_FAIL, "GetZoneActionPolicy failed: %08x, expected E_FAIL\n", hres);
-
-    hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 13, action, buf,
-            sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08x, expected E_INVALIDARG\n", hres);
-
-    IInternetZoneManager_Release(zonemgr);
 }
 
 static void register_protocols(void)
@@ -1421,9 +1148,11 @@ static void test_UrlMkGetSessionOption(void)
     ok(encoding == 0xdeadbeef, "encoding = %08x, exepcted 0xdeadbeef\n", encoding);
 }
 
-static void test_ObtainUserAgentString(void)
+static void test_user_agent(void)
 {
     static const CHAR expected[] = "Mozilla/4.0 (compatible; MSIE ";
+    static char test_str[] = "test";
+    static char test2_str[] = "test\0test";
     static CHAR str[3];
     LPSTR str2 = NULL;
     HRESULT hres;
@@ -1455,26 +1184,97 @@ static void test_ObtainUserAgentString(void)
     ok(size > 0, "size=%d, expected non-zero\n", size);
 
     str2 = HeapAlloc(GetProcessHeap(), 0, (size+20)*sizeof(CHAR));
-    if (!str2)
-    {
-        skip("skipping rest of ObtainUserAgent tests, out of memory\n");
-    }
-    else
-    {
-        saved = size;
-        hres = ObtainUserAgentString(0, str2, &size);
-        ok(hres == S_OK, "ObtainUserAgentString failed: %08x\n", hres);
-        ok(size == saved, "size=%d, expected %d\n", size, saved);
-        ok(strlen(expected) <= strlen(str2) &&
-           !memcmp(expected, str2, strlen(expected)*sizeof(CHAR)),
-           "user agent was \"%s\", expected to start with \"%s\"\n",
-           str2, expected);
+    saved = size;
+    hres = ObtainUserAgentString(0, str2, &size);
+    ok(hres == S_OK, "ObtainUserAgentString failed: %08x\n", hres);
+    ok(size == saved, "size=%d, expected %d\n", size, saved);
+    ok(strlen(expected) <= strlen(str2) &&
+       !memcmp(expected, str2, strlen(expected)*sizeof(CHAR)),
+       "user agent was \"%s\", expected to start with \"%s\"\n",
+       str2, expected);
 
-        size = saved+10;
-        hres = ObtainUserAgentString(0, str2, &size);
-        ok(hres == S_OK, "ObtainUserAgentString failed: %08x\n", hres);
-        ok(size == saved, "size=%d, expected %d\n", size, saved);
-    }
+    size = saved+10;
+    hres = ObtainUserAgentString(0, str2, &size);
+    ok(hres == S_OK, "ObtainUserAgentString failed: %08x\n", hres);
+    ok(size == saved, "size=%d, expected %d\n", size, saved);
+
+    size = 0;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, NULL, 0, &size, 0);
+    ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(size, "size == 0\n");
+
+    size = 0xdeadbeef;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, NULL, 1000, &size, 0);
+    ok(hres == E_INVALIDARG, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(size, "size == 0\n");
+
+    saved = size;
+    size = 0;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved+10, &size, 0);
+    ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(size == saved, "size = %d, expected %d\n", size, saved);
+    ok(sizeof(expected) <= strlen(str2) && !memcmp(expected, str2, sizeof(expected)-1),
+       "user agent was \"%s\", expected to start with \"%s\"\n",
+       str2, expected);
+
+    size = 0;
+    str2[0] = 0;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
+    ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(size == saved, "size = %d, expected %d\n", size, saved);
+    ok(sizeof(expected) <= strlen(str2) && !memcmp(expected, str2, sizeof(expected)-1),
+       "user agent was \"%s\", expected to start with \"%s\"\n",
+       str2, expected);
+
+    size = saved;
+    str2[0] = 0;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved-1, &size, 0);
+    ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(size == saved, "size = %d, expected %d\n", size, saved);
+    ok(!str2[0], "buf changed\n");
+
+    size = saved;
+    str2[0] = 0;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, NULL, 0);
+    ok(hres == E_INVALIDARG, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(!str2[0], "buf changed\n");
+
+    hres = UrlMkSetSessionOption(URLMON_OPTION_USERAGENT, test_str, sizeof(test_str), 0);
+    ok(hres == S_OK, "UrlMkSetSessionOption failed: %08x\n", hres);
+
+    size = 0;
+    str2[0] = 0;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
+    ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(size == sizeof(test_str) && !memcmp(str2, test_str, sizeof(test_str)), "wrong user agent\n");
+
+    hres = UrlMkSetSessionOption(URLMON_OPTION_USERAGENT, test2_str, sizeof(test2_str), 0);
+    ok(hres == S_OK, "UrlMkSetSessionOption failed: %08x\n", hres);
+
+    size = 0;
+    str2[0] = 0;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
+    ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(size == sizeof(test_str) && !memcmp(str2, test_str, sizeof(test_str)), "wrong user agent\n");
+
+    hres = UrlMkSetSessionOption(URLMON_OPTION_USERAGENT, test_str, 2, 0);
+    ok(hres == S_OK, "UrlMkSetSessionOption failed: %08x\n", hres);
+
+    size = 0;
+    str2[0] = 0;
+    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
+    ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
+    ok(size == 3 && !strcmp(str2, "te"), "wrong user agent\n");
+
+    hres = UrlMkSetSessionOption(URLMON_OPTION_USERAGENT, test_str, 0, 0);
+    ok(hres == E_INVALIDARG, "UrlMkSetSessionOption failed: %08x\n", hres);
+
+    hres = UrlMkSetSessionOption(URLMON_OPTION_USERAGENT, NULL, sizeof(test_str), 0);
+    ok(hres == E_INVALIDARG, "UrlMkSetSessionOption failed: %08x\n", hres);
+
+    hres = UrlMkSetSessionOption(URLMON_OPTION_USERAGENT, NULL, 0, 0);
+    ok(hres == E_INVALIDARG, "UrlMkSetSessionOption failed: %08x\n", hres);
+
     HeapFree(GetProcessHeap(), 0, str2);
 }
 
@@ -1500,7 +1300,7 @@ static void test_MkParseDisplayNameEx(void)
 
     hres = IMoniker_GetDisplayName(mon, NULL, 0, &name);
     ok(hres == S_OK, "GetDiasplayName failed: %08x\n", hres);
-    ok(!lstrcmpW(name, url9), "wrong display name %s\n", debugstr_w(name));
+    ok(!lstrcmpW(name, url9), "wrong display name %s\n", wine_dbgstr_w(name));
     CoTaskMemFree(name);
 
     hres = IMoniker_IsSystemMoniker(mon, &issys);
@@ -1526,6 +1326,14 @@ static void test_MkParseDisplayNameEx(void)
     IBindCtx_Release(bctx);
 }
 
+static void test_IsValidURL(void)
+{
+    HRESULT hr;
+
+    hr = IsValidURL(NULL, 0, 0);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+}
+
 START_TEST(misc)
 {
     OleInitialize(NULL);
@@ -1538,16 +1346,14 @@ START_TEST(misc)
     test_CoInternetCompareUrl();
     test_CoInternetQueryInfo();
     test_FindMimeFromData();
-    test_SecurityManager();
-    test_polices();
-    test_ZoneManager();
     test_NameSpace();
     test_MimeFilter();
     test_ReleaseBindInfo();
     test_CopyStgMedium();
     test_UrlMkGetSessionOption();
-    test_ObtainUserAgentString();
+    test_user_agent();
     test_MkParseDisplayNameEx();
+    test_IsValidURL();
 
     OleUninitialize();
 }
