@@ -323,6 +323,55 @@ static void get_str_for_type(DOMNodeType type, char *buf)
     }
 }
 
+#define test_disp(u) _test_disp(__LINE__,u)
+static void _test_disp(unsigned line, IUnknown *unk)
+{
+    DISPID dispid = DISPID_XMLDOM_NODELIST_RESET;
+    IDispatchEx *dispex;
+    DWORD dwProps = 0;
+    BSTR sName;
+    UINT ticnt;
+    IUnknown *pUnk;
+    HRESULT hres;
+
+    hres = IUnknown_QueryInterface(unk, &IID_IDispatchEx, (void**)&dispex);
+    ok_(__FILE__,line) (hres == S_OK, "Could not get IDispatch: %08x\n", hres);
+    if(FAILED(hres))
+        return;
+
+    ticnt = 0xdeadbeef;
+    hres = IDispatchEx_GetTypeInfoCount(dispex, &ticnt);
+    ok_(__FILE__,line) (hres == S_OK, "GetTypeInfoCount failed: %08x\n", hres);
+    ok_(__FILE__,line) (ticnt == 1, "ticnt=%u\n", ticnt);
+
+    sName = SysAllocString( szstar );
+    hres = IDispatchEx_DeleteMemberByName(dispex, sName, fdexNameCaseSensitive);
+    ok(hres == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", hres);
+    SysFreeString( sName );
+
+    hres = IDispatchEx_DeleteMemberByDispID(dispex, dispid);
+    ok(hres == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", hres);
+
+    hres = IDispatchEx_GetMemberProperties(dispex, dispid, grfdexPropCanAll, &dwProps);
+    ok(hres == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", hres);
+    ok(dwProps == 0, "expected 0 got %d\n", dwProps);
+
+    hres = IDispatchEx_GetMemberName(dispex, dispid, &sName);
+    ok(hres == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", hres);
+    if(SUCCEEDED(hres))
+        SysFreeString(sName);
+
+    hres = IDispatchEx_GetNextDispID(dispex, fdexEnumDefault, DISPID_XMLDOM_NODELIST_RESET, &dispid);
+    ok(hres == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", hres);
+
+    hres = IDispatchEx_GetNameSpaceParent(dispex, &pUnk);
+    ok(hres == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", hres);
+    if(hres == S_OK && pUnk)
+        IUnknown_Release(pUnk);
+
+    IDispatchEx_Release(dispex);
+}
+
 static int get_node_position(IXMLDOMNode *node)
 {
     HRESULT r;
@@ -457,6 +506,8 @@ static void test_domdoc( void )
     if( r != S_OK )
         return;
 
+    test_disp((IUnknown*)doc);
+
     /* try some stupid things */
     r = IXMLDOMDocument_loadXML( doc, NULL, NULL );
     ok( r == S_FALSE, "loadXML failed\n");
@@ -547,6 +598,8 @@ static void test_domdoc( void )
     {
         IObjectIdentity *ident;
         BSTR tag = NULL;
+
+        test_disp((IUnknown*)element);
 
         r = IXMLDOMElement_QueryInterface( element, &IID_IObjectIdentity, (LPVOID*)&ident );
         ok( r == E_NOINTERFACE, "ret %08x\n", r);
@@ -1660,7 +1713,6 @@ static void test_getElementsByTagName(void)
     VARIANT_BOOL b;
     IXMLDOMDocument *doc;
     IXMLDOMNodeList *node_list;
-    IDispatchEx *dispex;
     LONG len;
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
@@ -1681,43 +1733,7 @@ static void test_getElementsByTagName(void)
     ok( r == S_OK, "ret %08x\n", r );
     ok( len == 6, "len %d\n", len );
 
-    r = IXMLDOMNodeList_QueryInterface( node_list, &IID_IDispatchEx, (void**)&dispex );
-    ok( r == S_OK, "rets %08x\n", r);
-    if( r == S_OK )
-    {
-        DISPID dispid = DISPID_XMLDOM_NODELIST_RESET;
-        DWORD dwProps = 0;
-        BSTR sName;
-        IUnknown *pUnk;
-
-        sName = SysAllocString( szstar );
-        r = IDispatchEx_DeleteMemberByName(dispex, sName, fdexNameCaseSensitive);
-        ok(r == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", r);
-        SysFreeString( sName );
-
-        r = IDispatchEx_DeleteMemberByDispID(dispex, dispid);
-        ok(r == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", r);
-
-        r = IDispatchEx_GetMemberProperties(dispex, dispid, grfdexPropCanAll, &dwProps);
-        ok(r == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", r);
-        ok(dwProps == 0, "expected 0 got %d\n", dwProps);
-
-        r = IDispatchEx_GetMemberName(dispex, dispid, &sName);
-        ok(r == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", r);
-        if( SUCCEEDED(r) )
-            SysFreeString(sName);
-
-        r = IDispatchEx_GetNextDispID(dispex, fdexEnumDefault, DISPID_XMLDOM_NODELIST_RESET, &dispid);
-        ok(r == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", r);
-
-        r = IDispatchEx_GetNameSpaceParent(dispex, &pUnk);
-        ok(r == E_NOTIMPL, "expected E_NOTIMPL got %08x\n", r);
-        if(r == S_OK)
-            IUnknown_Release(pUnk);
-
-        IDispatchEx_Release( dispex );
-    }
-
+    test_disp((IUnknown*)node_list);
 
     IXMLDOMNodeList_Release( node_list );
     SysFreeString( str );
