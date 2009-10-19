@@ -375,6 +375,11 @@ typedef struct _I386_LOADER_BLOCK
     ULONG VirtualBias;
 } I386_LOADER_BLOCK, *PI386_LOADER_BLOCK;
 
+typedef struct _AMD64_LOADER_BLOCK
+{
+    PVOID DbgPrint;
+} AMD64_LOADER_BLOCK, *PAMD64_LOADER_BLOCK;
+
 typedef struct _PPC_LOADER_BLOCK
 {
     PVOID BootInfo;
@@ -477,6 +482,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
     union
     {
         I386_LOADER_BLOCK I386;
+        AMD64_LOADER_BLOCK Amd64;
         ALPHA_LOADER_BLOCK Alpha;
         IA64_LOADER_BLOCK IA64;
         PPC_LOADER_BLOCK PowerPC;
