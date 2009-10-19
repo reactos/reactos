@@ -58,6 +58,32 @@ ok(tmp === "undefined", "encodeURI() = " + tmp);
 tmp = encodeURI("abc", "test");
 ok(tmp === "abc", "encodeURI('abc') = " + tmp);
 
+tmp = escape("abc");
+ok(tmp === "abc", "escape('abc') = " + tmp);
+tmp = escape("");
+ok(tmp === "", "escape('') = " + tmp);
+tmp = escape("a1b c!d+e@*-_+./,");
+ok(tmp === "a1b%20c%21d+e@*-_+./%2C", "escape('a1b c!d+e@*-_+./,') = " + tmp);
+tmp = escape();
+ok(tmp === "undefined", "escape() = " + tmp);
+tmp = escape('\u1234\123\xf3');
+ok(tmp == "%u1234S%F3", "escape('\u1234\123\xf3') = " + tmp);
+
+tmp = unescape("abc");
+ok(tmp === "abc", "unescape('abc') = " + tmp);
+tmp = unescape("");
+ok(tmp === "", "unescape('') = " + tmp);
+tmp = unescape("%%%");
+ok(tmp === "%%%", "unescape('%%%') = " + tmp);
+tmp = unescape();
+ok(tmp === "undefined", "unescape() = " + tmp);
+tmp = unescape("%54%65s%u0074");
+ok(tmp === "Test", "unescape('%54%65s%u0074') = " + tmp);
+
+tmp = "aA1~`!@#$%^&*()_+=-][{}';:/.,<>?\|";
+ok(escape(tmp) === "aA1%7E%60%21@%23%24%25%5E%26*%28%29_+%3D-%5D%5B%7B%7D%27%3B%3A/.%2C%3C%3E%3F%7C", "escape('" + tmp + "') = " + escape(tmp));
+ok(unescape(escape(tmp)) === tmp, "unescape(escape('" + tmp + "')) = " + unescape(escape(tmp)));
+
 tmp = "" + new Object();
 ok(tmp === "[object Object]", "'' + new Object() = " + tmp);
 (tmp = new Array).f = Object.prototype.toString;
@@ -76,6 +102,23 @@ ok(tmp.f() === "[object Number]", "tmp.f() = " + tmp.f());
 ok(tmp.f() === "[object RegExp]", "tmp.f() = " + tmp.f());
 (tmp = new String).f = Object.prototype.toString;
 ok(tmp.f() === "[object String]", "tmp.f() = " + tmp.f());
+tmp = Object.prototype.toString.call(testObj);
+ok(tmp === "[object Object]", "toString.call(testObj) = " + tmp);
+tmp = Object.prototype.toString.call(this);
+ok(tmp === "[object Object]", "toString.call(this) = " + tmp);
+(function () { tmp = Object.prototype.toString.call(arguments); })();
+ok(tmp === "[object Object]", "toString.call(arguments) = " + tmp);
+
+ok(Object(1) instanceof Number, "Object(1) is not instance of Number");
+ok(Object("") instanceof String, "Object('') is not instance of String");
+ok(Object(false) instanceof Boolean, "Object(false) is not instance of Boolean");
+
+obj = new Object();
+ok(Object(obj) === obj, "Object(obj) !== obj");
+
+ok(typeof(Object()) === "object", "typeof(Object()) !== 'object'");
+ok(typeof(Object(undefined)) === "object", "typeof(Object(undefined)) !== 'object'");
+ok(typeof(Object(null)) === "object", "typeof(Object(null)) !== 'object'");
 
 var obj = new Object();
 obj.toString = function (x) {
@@ -84,6 +127,7 @@ obj.toString = function (x) {
 };
 ok((tmp = obj.toLocaleString()) === "test", "obj.toLocaleString() = " + tmp);
 ok((tmp = obj.toLocaleString(1)) === "test", "obj.toLocaleString(1) = " + tmp);
+ok(obj === obj.valueOf(), "obj !== obj.valueOf");
 
 ok("".length === 0, "\"\".length = " + "".length);
 ok(getVT("".length) == "VT_I4", "\"\".length = " + "".length);
@@ -110,6 +154,11 @@ var str = new String();
 ok(str.toString() === "", "str.toString() = " + str.toString());
 var str = new String("test", "abc");
 ok(str.toString() === "test", "str.toString() = " + str.toString());
+
+var strObj = new Object();
+strObj.toString = function() { return "abcd" };
+strObj.substr = String.prototype.substr;
+strObj.lastIndexOf = String.prototype.lastIndexOf;
 
 tmp = "value " + str;
 ok(tmp === "value test", "'value ' + str = " + tmp);
@@ -154,6 +203,12 @@ tmp = "abc".charCodeAt(true);
 ok(tmp === 0x62, "'abc'.charCodeAt(true) = " + tmp);
 tmp = "abc".charCodeAt(0,2);
 ok(tmp === 0x61, "'abc'.charCodeAt(0,2) = " + tmp);
+tmp = "\u49F4".charCodeAt(0);
+ok(tmp === 0x49F4, "'\u49F4'.charCodeAt(0) = " + tmp);
+tmp = "\052".charCodeAt(0);
+ok(tmp === 0x2A, "'\052'.charCodeAt(0) = " + tmp);
+tmp = "\xa2".charCodeAt(0);
+ok(tmp === 0xA2, "'\xa2'.charCodeAt(0) = " + tmp);
 
 tmp = "abcd".substring(1,3);
 ok(tmp === "bc", "'abcd'.substring(1,3) = " + tmp);
@@ -171,6 +226,25 @@ tmp = "abcd".substring(1,3,2);
 ok(tmp === "bc", "'abcd'.substring(1,3,2) = " + tmp);
 tmp = "abcd".substring();
 ok(tmp === "abcd", "'abcd'.substring() = " + tmp);
+
+tmp = "abcd".substr(1,3);
+ok(tmp === "bcd", "'abcd'.substr(1,3) = " + tmp);
+tmp = "abcd".substr(-1,3);
+ok(tmp === "abc", "'abcd'.substr(-1,3) = " + tmp);
+tmp = "abcd".substr(1,6);
+ok(tmp === "bcd", "'abcd'.substr(1,6) = " + tmp);
+tmp = "abcd".substr(2,-1);
+ok(tmp === "", "'abcd'.substr(3,1) = " + tmp);
+tmp = "abcd".substr(2,0);
+ok(tmp === "", "'abcd'.substr(2,2) = " + tmp);
+tmp = "abcd".substr(true,"3");
+ok(tmp === "bcd", "'abcd'.substr(true,'3') = " + tmp);
+tmp = "abcd".substr(1,3,2);
+ok(tmp === "bcd", "'abcd'.substr(1,3,2) = " + tmp);
+tmp = "abcd".substr();
+ok(tmp === "abcd", "'abcd'.substr() = " + tmp);
+tmp = strObj.substr(1,1);
+ok(tmp === "b", "'abcd'.substr(1,3) = " + tmp);
 
 tmp = "abcd".slice(1,3);
 ok(tmp === "bc", "'abcd'.slice(1,3) = " + tmp);
@@ -270,6 +344,25 @@ tmp = "abcd".indexOf("bc",0,"test");
 ok(tmp === 1, "indexOf = " + tmp);
 tmp = "abcd".indexOf();
 ok(tmp == -1, "indexOf = " + tmp);
+
+tmp = "abcd".lastIndexOf("bc",1);
+ok(tmp === 1, "lastIndexOf = " + tmp);
+tmp = "abcd".lastIndexOf("bc",2);
+ok(tmp === 1, "lastIndexOf = " + tmp);
+tmp = "abcd".lastIndexOf("bc");
+ok(tmp === 1, "lastIndexOf = " + tmp);
+tmp = "abcd".lastIndexOf("ac");
+ok(tmp === -1, "lastIndexOf = " + tmp);
+tmp = "abcd".lastIndexOf("d",10);
+ok(tmp === 3, "lastIndexOf = " + tmp);
+tmp = "abcd".lastIndexOf("bc",0,"test");
+ok(tmp === -1, "lastIndexOf = " + tmp);
+tmp = "abcd".lastIndexOf();
+ok(tmp === -1, "lastIndexOf = " + tmp);
+tmp = "aaaa".lastIndexOf("a",2);
+ok(tmp == 2, "lastIndexOf = " + tmp);
+tmp = strObj.lastIndexOf("b");
+ok(tmp === 1, "lastIndexOf = " + tmp);
 
 tmp = "".toLowerCase();
 ok(tmp === "", "''.toLowerCase() = " + tmp);
@@ -469,6 +562,19 @@ ok(arr.push(true, 'b', false) === 10, "arr.push(true, 'b', false) !== 10");
 ok(arr[8] === "b", "arr[8] != 'b'");
 ok(arr.length === 10, "arr.length != 10");
 
+var arr = new Object();
+arr.push = Array.prototype.push;
+
+arr.length = 6;
+
+ok(arr.push() === 6, "arr.push() !== 6");
+ok(arr.push(1) === 7, "arr.push(1) !== 7");
+ok(arr[6] === 1, "arr[6] != 1");
+ok(arr.length === 7, "arr.length != 10");
+ok(arr.push(true, 'b', false) === 10, "arr.push(true, 'b', false) !== 10");
+ok(arr[8] === "b", "arr[8] != 'b'");
+ok(arr.length === 10, "arr.length != 10");
+
 arr = [3,4,5];
 tmp = arr.pop();
 ok(arr.length === 2, "arr.length = " + arr.length);
@@ -538,6 +644,64 @@ ok(arr.toString() === "a,b,c", "arr.toString() = " + arr.toString());
 ok(arr.valueOf === Object.prototype.valueOf, "arr.valueOf !== Object.prototype.valueOf");
 ok(arr === arr.valueOf(), "arr !== arr.valueOf");
 
+arr = [1,2,3];
+tmp = arr.unshift(0);
+ok(tmp === undefined, "[1,2,3].unshift(0) returned " +tmp);
+ok(arr.length === 4, "arr.length = " + arr.length);
+ok(arr.toString() === "0,1,2,3", "arr.toString() = " + arr.toString());
+
+arr = new Array(3);
+arr[0] = 1;
+arr[2] = 3;
+tmp = arr.unshift(-1,0);
+ok(tmp === undefined, "unshift returned " +tmp);
+ok(arr.length === 5, "arr.length = " + arr.length);
+ok(arr.toString() === "-1,0,1,,3", "arr.toString() = " + arr.toString());
+
+arr = [1,2,3];
+tmp = arr.unshift();
+ok(tmp === undefined, "unshift returned " +tmp);
+ok(arr.length === 3, "arr.length = " + arr.length);
+ok(arr.toString() === "1,2,3", "arr.toString() = " + arr.toString());
+
+arr = new Object();
+arr.length = 2;
+arr[0] = 1;
+arr[1] = 2;
+tmp = Array.prototype.unshift.call(arr, 0);
+ok(tmp === undefined, "unshift returned " +tmp);
+ok(arr.length === 3, "arr.length = " + arr.length);
+ok(arr[0] === 0 && arr[1] === 1 && arr[2] === 2, "unexpected array");
+
+arr = [1,2,,4];
+tmp = arr.shift();
+ok(tmp === 1, "[1,2,,4].shift() = " + tmp);
+ok(arr.toString() === "2,,4", "arr = " + arr.toString());
+
+arr = [];
+tmp = arr.shift();
+ok(tmp === undefined, "[].shift() = " + tmp);
+ok(arr.toString() === "", "arr = " + arr.toString());
+
+arr = [1,2,,4];
+tmp = arr.shift(2);
+ok(tmp === 1, "[1,2,,4].shift(2) = " + tmp);
+ok(arr.toString() === "2,,4", "arr = " + arr.toString());
+
+arr = [1,];
+tmp = arr.shift();
+ok(tmp === 1, "[1,].shift() = " + tmp);
+ok(arr.toString() === "", "arr = " + arr.toString());
+
+obj = new Object();
+obj[0] = "test";
+obj[2] = 3;
+obj.length = 3;
+tmp = Array.prototype.shift.call(obj);
+ok(tmp === "test", "obj.shift() = " + tmp);
+ok(obj.length == 2, "obj.length = " + obj.length);
+ok(obj[1] === 3, "obj[1] = " + obj[1]);
+
 var num = new Number(6);
 arr = [0,1,2];
 tmp = arr.concat(3, [4,5], num);
@@ -571,6 +735,87 @@ for(var i=0; i < arr.length; i++)
 arr[12] = 2;
 ok(arr.slice(5).toString() === "a,,,,,,,2", "arr.slice(5).toString() = " + arr.slice(5).toString());
 ok(arr.slice(5).length === 8, "arr.slice(5).length = " + arr.slice(5).length);
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(2,2);
+ok(tmp.toString() == "3,4", "arr.splice(2,2) returned " + tmp.toString());
+ok(arr.toString() == "1,2,5", "arr.splice(2,2) is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(2,2,"a");
+ok(tmp.toString() == "3,4", "arr.splice(2,2,'a') returned " + tmp.toString());
+ok(arr.toString() == "1,2,a,5", "arr.splice(2,2,'a') is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(2,2,'a','b','c');
+ok(tmp.toString() == "3,4", "arr.splice(2,2,'a','b','c') returned " + tmp.toString());
+ok(arr.toString() == "1,2,a,b,c,5", "arr.splice(2,2,'a','b','c') is " + arr.toString());
+
+arr = [1,2,3,4,];
+tmp = arr.splice(2,2,'a','b','c');
+ok(tmp.toString() == "3,4", "arr.splice(2,2,'a','b','c') returned " + tmp.toString());
+ok(arr.toString() == "1,2,a,b,c,", "arr.splice(2,2,'a','b','c') is " + arr.toString());
+
+arr = [1,2,3,4,];
+arr.splice(2,2,'a','b','c');
+ok(arr.toString() == "1,2,a,b,c,", "arr.splice(2,2,'a','b','c') is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(2,2,'a','b');
+ok(tmp.toString() == "3,4", "arr.splice(2,2,'a','b') returned " + tmp.toString());
+ok(arr.toString() == "1,2,a,b,5", "arr.splice(2,2,'a','b') is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(-1,2);
+ok(tmp.toString() == "5", "arr.splice(-1,2) returned " + tmp.toString());
+ok(arr.toString() == "1,2,3,4", "arr.splice(-1,2) is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(-10,3);
+ok(tmp.toString() == "1,2,3", "arr.splice(-10,3) returned " + tmp.toString());
+ok(arr.toString() == "4,5", "arr.splice(-10,3) is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(-10,100);
+ok(tmp.toString() == "1,2,3,4,5", "arr.splice(-10,100) returned " + tmp.toString());
+ok(arr.toString() == "", "arr.splice(-10,100) is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(2,-1);
+ok(tmp.toString() == "", "arr.splice(2,-1) returned " + tmp.toString());
+ok(arr.toString() == "1,2,3,4,5", "arr.splice(2,-1) is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice(2);
+ok(tmp.toString() == "", "arr.splice(2,-1) returned " + tmp.toString());
+ok(arr.toString() == "1,2,3,4,5", "arr.splice(2,-1) is " + arr.toString());
+
+arr = [1,2,3,4,5];
+tmp = arr.splice();
+ok(tmp.toString() == "", "arr.splice(2,-1) returned " + tmp.toString());
+ok(arr.toString() == "1,2,3,4,5", "arr.splice(2,-1) is " + arr.toString());
+
+obj = new Object();
+obj.length = 3;
+obj[0] = 1;
+obj[1] = 2;
+obj[2] = 3;
+tmp = Array.prototype.splice.call(obj, 1, 1, 'a', 'b');
+ok(tmp.toString() === "2", "obj.splice returned " + tmp);
+ok(obj.length === 4, "obj.length = " + obj.length);
+ok(obj[0] === 1, "obj[0] = " + obj[0]);
+ok(obj[1] === 'a', "obj[1] = " + obj[1]);
+ok(obj[2] === 'b', "obj[2] = " + obj[2]);
+ok(obj[3] === 3, "obj[3] = " + obj[3]);
+
+obj = new Object();
+obj.length = 3;
+obj[0] = 1;
+obj[1] = 2;
+obj[2] = 3;
+tmp = Array.prototype.slice.call(obj, 1, 2);
+ok(tmp.length === 1, "tmp.length = " + tmp.length);
+ok(tmp[0] === 2, "tmp[0] = " + tmp[0]);
 
 var num = new Number(2);
 ok(num.toString() === "2", "num(2).toString !== 2");
@@ -1102,6 +1347,41 @@ ok(testFuncToString.toString() === "function testFuncToString(x,y) {\n    return
 ok("" + testFuncToString === "function testFuncToString(x,y) {\n    return x+y;\n}",
    "'' + testFuncToString = " + testFuncToString);
 
+tmp = new Object();
+
+function callTest(argc) {
+    ok(this === tmp, "this !== tmp\n");
+    ok(arguments.length === argc+1, "arguments.length = " + arguments.length + " expected " + (argc+1));
+    for(var i=1; i <= argc; i++)
+        ok(arguments[i] === i, "arguments[i] = " + arguments[i]);
+}
+
+callTest.call(tmp, 1, 1);
+callTest.call(tmp, 2, 1, 2);
+
+callTest.apply(tmp, [1, 1]);
+callTest.apply(tmp, [2, 1, 2]);
+(function () { callTest.apply(tmp, arguments); })(2,1,2);
+
+function callTest2() {
+    ok(this === tmp, "this !== tmp\n");
+    ok(arguments.length === 0, "callTest2: arguments.length = " + arguments.length + " expected 0");
+}
+
+callTest2.call(tmp);
+callTest2.apply(tmp, []);
+callTest2.apply(tmp);
+(function () { callTest2.apply(tmp, arguments); })();
+
+function callTest3() {
+    ok(arguments.length === 0, "arguments.length = " + arguments.length + " expected 0");
+}
+
+callTest3.call();
+
+tmp = Number.prototype.toString.call(3);
+ok(tmp === "3", "Number.prototype.toString.call(3) = " + tmp);
+
 var date = new Date();
 
 date = new Date(100);
@@ -1255,12 +1535,26 @@ ok(Math.floor(Math.SQRT1_2*100) === 70, "Math.SQRT1_2 = " + Math.SQRT1_2);
 Math.SQRT1_2 = "test";
 ok(Math.floor(Math.SQRT1_2*100) === 70, "modified Math.SQRT1_2 = " + Math.SQRT1_2);
 
+ok(isNaN.toString() === "\nfunction isNaN() {\n    [native code]\n}\n",
+   "isNaN.toString = '" + isNaN.toString() + "'");
+ok(Array.toString() === "\nfunction Array() {\n    [native code]\n}\n",
+   "isNaN.toString = '" + Array.toString() + "'");
+ok(Function.toString() === "\nfunction Function() {\n    [native code]\n}\n",
+   "isNaN.toString = '" + Function.toString() + "'");
+ok(Function.prototype.toString() === "\nfunction prototype() {\n    [native code]\n}\n",
+   "isNaN.toString = '" + Function.prototype.toString() + "'");
+ok("".substr.toString() === "\nfunction substr() {\n    [native code]\n}\n",
+   "''.substr.toString = '" + "".substr.toString() + "'");
+
 var bool = new Boolean();
 ok(bool.toString() === "false", "bool.toString() = " + bool.toString());
 var bool = new Boolean("false");
 ok(bool.toString() === "true", "bool.toString() = " + bool.toString());
 ok(bool.valueOf() === Boolean(1), "bool.valueOf() = " + bool.valueOf());
 ok(bool.toLocaleString() === bool.toString(), "bool.toLocaleString() = " + bool.toLocaleString());
+
+ok(ActiveXObject instanceof Function, "ActiveXObject is not instance of Function");
+ok(ActiveXObject.prototype instanceof Object, "ActiveXObject.prototype is not instance of Object");
 
 ok(Error.prototype !== TypeError.prototype, "Error.prototype === TypeError.prototype");
 ok(RangeError.prototype !== TypeError.prototype, "RangeError.prototype === TypeError.prototype");
@@ -1352,8 +1646,94 @@ exception_test(function() {eval("for(i=0;i<10")}, "SyntaxError", -2146827284);
 exception_test(function() {eval("while(")}, "SyntaxError", -2146827286);
 exception_test(function() {eval("if(")}, "SyntaxError", -2146827286);
 exception_test(function() {eval("'unterminated")}, "SyntaxError", -2146827273);
+exception_test(function() {eval("nonexistingfunc()")}, "TypeError", -2146823281);
+exception_test(function() {RegExp(/a/, "g");}, "RegExpError", -2146823271);
 
-function testObjectInherit(obj, ts, tls, vo) {
+function testThisExcept(func, number) {
+    exception_test(function() {func.call(new Object())}, "TypeError", number);
+}
+
+function testBoolThis(func) {
+    testThisExcept(Boolean.prototype[func], -2146823278);
+}
+
+testBoolThis("toString");
+testBoolThis("valueOf");
+
+function testDateThis(func) {
+    testThisExcept(Date.prototype[func], -2146823282);
+}
+
+testDateThis("getDate");
+testDateThis("getDay");
+testDateThis("getFullYear");
+testDateThis("getHours");
+testDateThis("getMilliseconds");
+testDateThis("getMinutes");
+testDateThis("getMonth");
+testDateThis("getSeconds");
+testDateThis("getTime");
+testDateThis("getTimezoneOffset");
+testDateThis("getUTCDate");
+testDateThis("getUTCDay");
+testDateThis("getUTCFullYear");
+testDateThis("getUTCHours");
+testDateThis("getUTCMilliseconds");
+testDateThis("getUTCMinutes");
+testDateThis("getUTCMonth");
+testDateThis("getUTCSeconds");
+testDateThis("setDate");
+testDateThis("setFullYear");
+testDateThis("setHours");
+testDateThis("setMilliseconds");
+testDateThis("setMinutes");
+testDateThis("setMonth");
+testDateThis("setSeconds");
+testDateThis("setTime");
+testDateThis("setUTCDate");
+testDateThis("setUTCFullYear");
+testDateThis("setUTCHours");
+testDateThis("setUTCMilliseconds");
+testDateThis("setUTCMinutes");
+testDateThis("setUTCMonth");
+testDateThis("setUTCSeconds");
+testDateThis("toDateString");
+testDateThis("toLocaleDateString");
+testDateThis("toLocaleString");
+testDateThis("toLocaleTimeString");
+testDateThis("toString");
+testDateThis("toTimeString");
+testDateThis("toUTCString");
+testDateThis("valueOf");
+
+function testArrayThis(func) {
+    testThisExcept(Array.prototype[func], -2146823257);
+}
+
+testArrayThis("toString");
+
+function testFunctionThis(func) {
+    testThisExcept(Function.prototype[func], -2146823286);
+}
+
+testFunctionThis("toString");
+testFunctionThis("call");
+testFunctionThis("apply");
+
+function testArrayHostThis(func) {
+    exception_test(function() { Array.prototype[func].call(testObj); }, "TypeError", -2146823274);
+}
+
+testArrayHostThis("push");
+testArrayHostThis("shift");
+testArrayHostThis("slice");
+testArrayHostThis("splice");
+testArrayHostThis("unshift");
+
+function testObjectInherit(obj, constr, ts, tls, vo) {
+    ok(obj instanceof Object, "obj is not instance of Object");
+    ok(obj instanceof constr, "obj is not instance of its constructor");
+
     ok(obj.hasOwnProperty === Object.prototype.hasOwnProperty,
        "obj.hasOwnProperty !== Object.prototype.hasOwnProprty");
     ok(obj.isPrototypeOf === Object.prototype.isPrototypeOf,
@@ -1386,15 +1766,17 @@ function testObjectInherit(obj, ts, tls, vo) {
 }
 
 Object.prototype._test = "test";
-testObjectInherit(new String("test"), false, true, false);
-testObjectInherit(/test/g, false, true, true);
-testObjectInherit(new Number(1), false, false, false);
-testObjectInherit(new Date(), false, false, false);
-testObjectInherit(new Boolean(true), false, true, false);
-testObjectInherit(new Array(), false, false, true);
-testObjectInherit(new Error(), false, true, true);
-testObjectInherit(testObjectInherit, false, true, true);
-testObjectInherit(Math, true, true, true);
+testObjectInherit(new String("test"), String, false, true, false);
+testObjectInherit(/test/g, RegExp, false, true, true);
+testObjectInherit(new Number(1), Number, false, false, false);
+testObjectInherit(new Date(), Date, false, false, false);
+testObjectInherit(new Boolean(true), Boolean, false, true, false);
+testObjectInherit(new Array(), Array, false, false, true);
+testObjectInherit(new Error(), Error, false, true, true);
+testObjectInherit(testObjectInherit, Function, false, true, true);
+testObjectInherit(Math, Object, true, true, true);
+
+(function() { testObjectInherit(arguments, Object, true, true, true); })();
 
 function testFunctions(obj, arr) {
     var l;
@@ -1500,6 +1882,7 @@ testFunctions(Date.prototype, [
         ["toString", 0],
         ["toTimeString", 0],
         ["toUTCString", 0],
+        ["toGMTString", 0],
         ["valueOf", 0]
     ]);
 
@@ -1550,6 +1933,12 @@ testFunctions(Object.prototype, [
         ["toLocaleString", 0],
         ["toString", 0],
         ["valueOf", 0]
+    ]);
+
+testFunctions(Function.prototype, [
+        ["apply", 2],
+        ["call", 1],
+        ["toString", 0]
     ]);
 
 reportSuccess();

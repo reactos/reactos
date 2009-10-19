@@ -68,6 +68,18 @@ DEFINE_EXPECT(OnStateChange_INITIALIZED);
 DEFINE_EXPECT(OnEnterScript);
 DEFINE_EXPECT(OnLeaveScript);
 
+static BSTR a2bstr(const char *str)
+{
+    BSTR ret;
+    int len;
+
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    ret = SysAllocStringLen(NULL, len-1);
+    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+
+    return ret;
+}
+
 #define test_state(s,ss) _test_state(__LINE__,s,ss)
 static void _test_state(unsigned line, IActiveScript *script, SCRIPTSTATE exstate)
 {
@@ -195,6 +207,8 @@ static void test_script_dispatch(IActiveScript *script, BOOL initialized)
 {
     IDispatchEx *dispex;
     IDispatch *disp;
+    BSTR str;
+    DISPID id;
     HRESULT hres;
 
     disp = (void*)0xdeadbeef;
@@ -213,6 +227,11 @@ static void test_script_dispatch(IActiveScript *script, BOOL initialized)
     hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
     IDispatch_Release(disp);
     ok(hres == S_OK, "Could not get IDispatchEx interface: %08x\n", hres);
+
+    str = a2bstr("ActiveXObject");
+    hres = IDispatchEx_GetDispID(dispex, str, fdexNameCaseSensitive, &id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08x\n", hres);
 
     IDispatchEx_Release(dispex);
 }
