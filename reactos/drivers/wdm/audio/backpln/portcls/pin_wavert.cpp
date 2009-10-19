@@ -130,7 +130,7 @@ SetStreamWorkerRoutine(
         {
             // reset start stream
             This->m_IrpQueue->CancelBuffers(); //FIX function name
-            DPRINT1("Stopping PreCompleted %u PostCompleted %u\n", This->m_PreCompleted, This->m_PostCompleted);
+            DPRINT("Stopping PreCompleted %u PostCompleted %u\n", This->m_PreCompleted, This->m_PostCompleted);
         }
 
         if (This->m_State == KSSTATE_RUN)
@@ -249,7 +249,7 @@ CPortPinWaveRT::HandleKsProperty(
                 {
                     Status = m_Stream->SetState(*State);
 
-                    DPRINT1("Setting state %u %x\n", *State, Status);
+                    DPRINT("Setting state %u %x\n", *State, Status);
                     if (NT_SUCCESS(Status))
                     {
                         m_State = *State;
@@ -303,7 +303,7 @@ CPortPinWaveRT::HandleKsProperty(
 
                     ASSERT(m_State == KSSTATE_STOP);
 #endif
-                    DPRINT1("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
+                    DPRINT("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
                                                                                  ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.wBitsPerSample,
                                                                                  ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nSamplesPerSec);
 
@@ -321,7 +321,7 @@ CPortPinWaveRT::HandleKsProperty(
                         return STATUS_SUCCESS;
                     }
                 }
-                DPRINT1("Failed to set format\n");
+                DPRINT("Failed to set format\n");
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -331,7 +331,7 @@ CPortPinWaveRT::HandleKsProperty(
             {
                 if (!m_Format)
                 {
-                    DPRINT1("No format\n");
+                    DPRINT("No format\n");
                     Irp->IoStatus.Information = 0;
                     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
                     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -355,7 +355,7 @@ CPortPinWaveRT::HandleKsProperty(
 
     }
     RtlStringFromGUID(Property->Set, &GuidString);
-    DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
     RtlFreeUnicodeString(&GuidString);
 
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
@@ -414,7 +414,6 @@ CPortPinWaveRT::DeviceIoControl(
     }
 
     UNIMPLEMENTED
-    DbgBreakPoint();
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -511,7 +510,7 @@ CloseStreamRoutine(
     {
         Stream = This->m_Stream;
         This->m_Stream = NULL;
-        DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
+        DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->Release();
     }
 }
@@ -529,14 +528,14 @@ CPortPinWaveRT::Close(
         Ctx = (PCLOSESTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
         if (!Ctx)
         {
-            DPRINT1("Failed to allocate stream context\n");
+            DPRINT("Failed to allocate stream context\n");
             goto cleanup;
         }
 
         Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
         if (!Ctx->WorkItem)
         {
-            DPRINT1("Failed to allocate work item\n");
+            DPRINT("Failed to allocate work item\n");
             goto cleanup;
         }
 
@@ -696,7 +695,7 @@ CPortPinWaveRT::Init(
     }
     else
     {
-        DPRINT1("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
+        DPRINT("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
         KeBugCheck(0);
     }
 
@@ -713,21 +712,21 @@ CPortPinWaveRT::Init(
 	Status = m_Stream->AllocateAudioBuffer(16384 * 11, &m_Mdl, &m_CommonBufferSize, &m_CommonBufferOffset, &m_CacheType);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("AllocateAudioBuffer failed with %x\n", Status);
+        DPRINT("AllocateAudioBuffer failed with %x\n", Status);
         goto cleanup;
     }
 
     m_CommonBuffer = MmGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get system address %x\n", Status);
+        DPRINT("Failed to get system address %x\n", Status);
         IoFreeMdl(m_Mdl);
         m_Mdl = NULL;
         goto cleanup;
     }
 
-    DPRINT1("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
-    DPRINT1("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
+    DPRINT("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
+    DPRINT("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
     m_State = KSSTATE_PAUSE;
     return STATUS_SUCCESS;
 

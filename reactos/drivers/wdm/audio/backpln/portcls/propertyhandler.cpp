@@ -124,13 +124,13 @@ HandlePhysicalConnection(
     if (RequestLength < sizeof(KSP_PIN))
     {
         // input buffer must be at least sizeof KSP_PIN
-        DPRINT1("input length too small\n");
+        DPRINT("input length too small\n");
         return STATUS_INVALID_PARAMETER;
     }
 
     if (IsListEmpty(&Descriptor->PhysicalConnectionList))
     {
-        DPRINT1("no connection\n");
+        DPRINT("no connection\n");
         return STATUS_NOT_FOUND;
     }
 
@@ -201,7 +201,7 @@ PinPropertyHandler(
     Status = IrpTarget->QueryInterface(IID_IPort, (PVOID*)&Port);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to obtain IPort interface from filter\n");
+        DPRINT("Failed to obtain IPort interface from filter\n");
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
         return STATUS_UNSUCCESSFUL;
@@ -211,7 +211,7 @@ PinPropertyHandler(
     Status = Port->QueryInterface(IID_ISubdevice, (PVOID*)&SubDevice);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to obtain ISubdevice interface from port driver\n");
+        DPRINT("Failed to obtain ISubdevice interface from port driver\n");
         KeBugCheck(0);
     }
 

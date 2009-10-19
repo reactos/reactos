@@ -69,7 +69,7 @@ CResourceList::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IResourceList_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IResourceList_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 
@@ -107,7 +107,7 @@ CResourceList::NumberOfEntriesOfType(
     {
         PartialDescriptor = &m_TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
         UnPartialDescriptor = &m_UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
-        DPRINT1("Descriptor Type %u\n", PartialDescriptor->Type);
+        DPRINT("Descriptor Type %u\n", PartialDescriptor->Type);
         if (PartialDescriptor->Type == Type)
         {
             // Yay! Finally found one that matches!
@@ -116,15 +116,15 @@ CResourceList::NumberOfEntriesOfType(
 
         if (PartialDescriptor->Type == CmResourceTypeInterrupt)
         {
-            DPRINT1("Index %u TRANS   Interrupt Number Affinity %x Level %u Vector %u\n", Index, PartialDescriptor->u.Interrupt.Affinity, PartialDescriptor->u.Interrupt.Level, PartialDescriptor->u.Interrupt.Vector, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags);
-            DPRINT1("Index %u UNTRANS Interrupt Number Affinity %x Level %u Vector %u\n", Index, UnPartialDescriptor->u.Interrupt.Affinity, UnPartialDescriptor->u.Interrupt.Level, UnPartialDescriptor->u.Interrupt.Vector, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags);
+            DPRINT("Index %u TRANS   Interrupt Number Affinity %x Level %u Vector %u Flags %x Share %x\n", Index, PartialDescriptor->u.Interrupt.Affinity, PartialDescriptor->u.Interrupt.Level, PartialDescriptor->u.Interrupt.Vector, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
+            DPRINT("Index %u UNTRANS Interrupt Number Affinity %x Level %u Vector %u Flags %x Share %x\\n", Index, UnPartialDescriptor->u.Interrupt.Affinity, UnPartialDescriptor->u.Interrupt.Level, UnPartialDescriptor->u.Interrupt.Vector, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
 
         }
-		else if (PartialDescriptor->Type == CmResourceTypePort)
-		{
-            DPRINT1("Index %u TRANS    Port Length %u Start %u %u Flags %x\n", Index, PartialDescriptor->u.Port.Length, PartialDescriptor->u.Port.Start.HighPart, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags);
-            DPRINT1("Index %u UNTRANS  Port Length %u Start %u %u Flags %x\n", Index, UnPartialDescriptor->u.Port.Length, UnPartialDescriptor->u.Port.Start.HighPart, UnPartialDescriptor->u.Port.Start.LowPart, UnPartialDescriptor->Flags);
-		}
+        else if (PartialDescriptor->Type == CmResourceTypePort)
+        {
+            DPRINT("Index %u TRANS    Port Length %u Start %u %u Flags %x Share %x\n", Index, PartialDescriptor->u.Port.Length, PartialDescriptor->u.Port.Start.HighPart, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
+            DPRINT("Index %u UNTRANS  Port Length %u Start %u %u Flags %x Share %x\n", Index, UnPartialDescriptor->u.Port.Length, UnPartialDescriptor->u.Port.Start.HighPart, UnPartialDescriptor->u.Port.Start.LowPart, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
+        }
     }
 
     DPRINT("Found %d type %d\n", Count, Type);

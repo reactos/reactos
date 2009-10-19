@@ -28,11 +28,11 @@ PcInitializeAdapterDriver(
     IN  PUNICODE_STRING RegistryPathName,
     IN  PDRIVER_ADD_DEVICE AddDevice)
 {
-    DPRINT1("PcInitializeAdapterDriver\n");
+    DPRINT("PcInitializeAdapterDriver\n");
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     // Our IRP handlers
-    DPRINT1("Setting IRP handlers\n");
+    DPRINT("Setting IRP handlers\n");
     DriverObject->MajorFunction[IRP_MJ_CREATE] = PcDispatchIrp;
     DriverObject->MajorFunction[IRP_MJ_PNP] = PcDispatchIrp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = PcDispatchIrp;
@@ -79,7 +79,7 @@ PcAddAdapterDevice(
     PDEVICE_OBJECT PrevDeviceObject;
     PPCLASS_DEVICE_EXTENSION portcls_ext = NULL;
 
-    DPRINT1("PcAddAdapterDevice called\n");
+    DPRINT("PcAddAdapterDevice called\n");
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!DriverObject || !PhysicalDeviceObject || !StartDevice)
@@ -215,7 +215,7 @@ PcRegisterSubdevice(
     UNICODE_STRING RefName;
     PSYMBOLICLINK_ENTRY SymEntry;
 
-    DPRINT1("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
+    DPRINT("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
 
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
@@ -240,7 +240,7 @@ PcRegisterSubdevice(
     Status = Unknown->QueryInterface(IID_ISubdevice, (LPVOID*)&SubDevice);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("No ISubdevice interface\n");
+        DPRINT("No ISubdevice interface\n");
         // the provided port driver doesnt support ISubdevice
         return STATUS_INVALID_PARAMETER;
     }
@@ -249,7 +249,7 @@ PcRegisterSubdevice(
     Status = SubDevice->GetDescriptor(&SubDeviceDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get subdevice descriptor %x\n", Status);
+        DPRINT("Failed to get subdevice descriptor %x\n", Status);
         SubDevice->Release();
         return STATUS_UNSUCCESSFUL;
     }
@@ -260,7 +260,7 @@ PcRegisterSubdevice(
     {
         // failed to attach
         SubDevice->Release();
-        DPRINT1("KsAddObjectCreateItemToDeviceHeader failed with %x\n", Status);
+        DPRINT("KsAddObjectCreateItemToDeviceHeader failed with %x\n", Status);
         return Status;
     }
 

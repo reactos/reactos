@@ -139,7 +139,7 @@ CPortDMus::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IPortMidi_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IPortMidi_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
     return STATUS_UNSUCCESSFUL;
@@ -225,7 +225,7 @@ CPortDMus::Init(
         Status = Miniport->GetDescription(&m_pDescriptor);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("failed to get description\n");
+            DPRINT("failed to get description\n");
             Miniport->Release();
             m_bInitialized = FALSE;
             return Status;
@@ -250,7 +250,7 @@ CPortDMus::Init(
         Status = MidiMiniport->GetDescription(&m_pDescriptor);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("failed to get description\n");
+            DPRINT("failed to get description\n");
             MidiMiniport->Release();
             m_bInitialized = FALSE;
             return Status;
@@ -278,7 +278,7 @@ CPortDMus::Init(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create descriptior\n");
+        DPRINT("Failed to create descriptior\n");
 
         if (Miniport)
             Miniport->Release();

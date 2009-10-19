@@ -108,6 +108,8 @@ CIrpQueue::AddMapping(
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStack;
 
+    PC_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -126,7 +128,7 @@ CIrpQueue::AddMapping(
         // check for success
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("KsProbeStreamIrp failed with %x\n", Status);
+            DPRINT("KsProbeStreamIrp failed with %x\n", Status);
             return Status;
         }
     }
@@ -135,7 +137,7 @@ CIrpQueue::AddMapping(
     PC_ASSERT(Header);
     PC_ASSERT(Irp->MdlAddress);
 
-    DPRINT1("Size %u DataUsed %u FrameExtent %u SizeHeader %u NumDataAvailable %u OutputLength %u\n", Header->Size, Header->DataUsed, Header->FrameExtent, sizeof(KSSTREAM_HEADER), m_NumDataAvailable, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+    DPRINT("Size %u DataUsed %u FrameExtent %u SizeHeader %u NumDataAvailable %u OutputLength %u\n", Header->Size, Header->DataUsed, Header->FrameExtent, sizeof(KSSTREAM_HEADER), m_NumDataAvailable, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
     Header->Data = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
     PC_ASSERT(Header->Data);

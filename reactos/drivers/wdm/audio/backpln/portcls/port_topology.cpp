@@ -171,7 +171,7 @@ CPortTopology::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IPortTopology_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IPortTopology_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
     return STATUS_UNSUCCESSFUL;
@@ -219,14 +219,14 @@ CPortTopology::Init(
 
     if (m_bInitialized)
     {
-        DPRINT1("IPortTopology_Init called again\n");
+        DPRINT("IPortTopology_Init called again\n");
         return STATUS_SUCCESS;
     }
 
     Status = UnknownMiniport->QueryInterface(IID_IMiniportTopology, (PVOID*)&Miniport);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IPortTopology_Init called with invalid IMiniport adapter\n");
+        DPRINT("IPortTopology_Init called with invalid IMiniport adapter\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -239,7 +239,7 @@ CPortTopology::Init(
     Status = Miniport->Init(UnknownAdapter, ResourceList, this);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IPortTopology_Init failed with %x\n", Status);
+        DPRINT("IPortTopology_Init failed with %x\n", Status);
         m_bInitialized = FALSE;
         Miniport->Release();
         return Status;
@@ -249,7 +249,7 @@ CPortTopology::Init(
     Status = Miniport->GetDescription(&m_pDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("failed to get description\n");
+        DPRINT("failed to get description\n");
         Miniport->Release();
         m_bInitialized = FALSE;
         return Status;
@@ -371,7 +371,7 @@ NTSTATUS
 NTAPI
 CPortTopology::ReleaseChildren()
 {
-    DPRINT1("ISubDevice_fnReleaseChildren\n");
+    DPRINT("ISubDevice_fnReleaseChildren\n");
 
     // release the filter
     m_Filter->Release();
@@ -468,7 +468,7 @@ CreatePinWorkerRoutine(
                                                  WorkerContext->Irp,
                                                  NULL);
 
-    DPRINT1("CreatePinWorkerRoutine Status %x\n", Status);
+    DPRINT("CreatePinWorkerRoutine Status %x\n", Status);
 
     if (NT_SUCCESS(Status))
     {
@@ -505,7 +505,7 @@ PcCreatePinDispatch(
     // sanity check
     PC_ASSERT(CreateItem);
 
-    DPRINT1("PcCreatePinDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
+    DPRINT("PcCreatePinDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
 
     Filter = (IIrpTarget*)CreateItem->Context;
 
@@ -517,7 +517,7 @@ PcCreatePinDispatch(
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
     {
-        DPRINT1("PcCreatePinDispatch failed to reference device header\n");
+        DPRINT("PcCreatePinDispatch failed to reference device header\n");
 
         FreeItem(Entry, TAG_PORTCLASS);
         goto cleanup;
@@ -577,7 +577,7 @@ PcCreateItemDispatch(
     // access the create item
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
 
-    DPRINT1("PcCreateItemDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
+    DPRINT("PcCreateItemDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
 
     // get the subdevice
     SubDevice = (ISubdevice*)CreateItem->Context;
@@ -589,7 +589,7 @@ PcCreateItemDispatch(
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
     {
-        DPRINT1("PcCreateItemDispatch failed to reference device header\n");
+        DPRINT("PcCreateItemDispatch failed to reference device header\n");
 
         FreeItem(Entry, TAG_PORTCLASS);
         goto cleanup;
@@ -606,7 +606,7 @@ PcCreateItemDispatch(
                                      NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get filter object\n");
+        DPRINT("Failed to get filter object\n");
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;

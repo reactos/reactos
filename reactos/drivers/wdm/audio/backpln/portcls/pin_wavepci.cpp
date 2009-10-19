@@ -181,7 +181,7 @@ PinWavePciAudioPosition(
         // copy audio position
         RtlMoveMemory(Data, &Pin->m_Position, sizeof(KSAUDIO_POSITION));
 
-        DPRINT1("Play %lu Record %lu\n", Pin->m_Position.PlayOffset, Pin->m_Position.WriteOffset);
+        DPRINT("Play %lu Record %lu\n", Pin->m_Position.PlayOffset, Pin->m_Position.WriteOffset);
         Irp->IoStatus.Information = sizeof(KSAUDIO_POSITION);
         return STATUS_SUCCESS;
     }
@@ -325,7 +325,7 @@ PinWavePciDataFormat(
             PC_ASSERT(IsEqualGUIDAligned(((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->DataFormat.Specifier, KSDATAFORMAT_SPECIFIER_WAVEFORMATEX));
 
 
-            DPRINT1("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
+            DPRINT("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
                                                                        ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.wBitsPerSample,
                                                                        ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nSamplesPerSec);
 #endif
@@ -470,7 +470,7 @@ CPortPinWavePci::SetState(KSSTATE State)
             // store minimum data threshold
             m_IrpQueue->SetMinimumDataThreshold(MinimumDataThreshold);
 
-            DPRINT1("Stopping TotalCompleted %u StopCount %u MinimumDataThreshold %u\n", m_TotalPackets, m_StopCount, MinimumDataThreshold);
+            DPRINT("Stopping TotalCompleted %u StopCount %u MinimumDataThreshold %u\n", m_TotalPackets, m_StopCount, MinimumDataThreshold);
         }
         if (m_State == KSSTATE_RUN)
         {
@@ -608,7 +608,7 @@ CPortPinWavePci::HandleKsProperty(
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
-        DPRINT1("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
+        DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
         
         Irp->IoStatus.Status = STATUS_SUCCESS;
 
@@ -623,7 +623,7 @@ CPortPinWavePci::HandleKsProperty(
         Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
         RtlStringFromGUID(Property->Set, &GuidString);
-        DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+        DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
         RtlFreeUnicodeString(&GuidString);
     }
 
@@ -787,7 +787,7 @@ CPortPinWavePci::CloseStream()
     {
         Stream = m_Stream;
         m_Stream = 0;
-        DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
+        DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->Release();
     }
 }
@@ -830,14 +830,14 @@ CPortPinWavePci::Close(
         Ctx = (PCLOSESTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
         if (!Ctx)
         {
-            DPRINT1("Failed to allocate stream context\n");
+            DPRINT("Failed to allocate stream context\n");
             goto cleanup;
         }
 
         Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
         if (!Ctx->WorkItem)
         {
-            DPRINT1("Failed to allocate work item\n");
+            DPRINT("Failed to allocate work item\n");
             goto cleanup;
         }
 
@@ -980,7 +980,7 @@ CPortPinWavePci::Init(
     }
     else
     {
-        DPRINT1("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
+        DPRINT("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
         KeBugCheck(0);
     }
 
@@ -1004,7 +1004,7 @@ CPortPinWavePci::Init(
         Status = m_ServiceGroup->AddMember(PSERVICESINK(this));
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to add pin to service group\n");
+            DPRINT("Failed to add pin to service group\n");
             return Status;
         }
         m_ServiceGroup->SupportDelayedService();
@@ -1016,7 +1016,7 @@ CPortPinWavePci::Init(
     Status = m_Stream->GetAllocatorFraming(&m_AllocatorFraming);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("GetAllocatorFraming failed with %x\n", Status);
+        DPRINT("GetAllocatorFraming failed with %x\n", Status);
         return Status;
     }
 
@@ -1058,7 +1058,7 @@ CPortPinWavePci::Init(
     Status = m_IrpQueue->Init(ConnectDetails, m_Format, DeviceObject, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IrpQueue_Init failed with %x\n", Status);
+        DPRINT("IrpQueue_Init failed with %x\n", Status);
         return Status;
     }
 

@@ -81,7 +81,7 @@ CPortWaveRTStreamInit::AllocateContiguousPagesForMdl(
     Buffer = MmAllocateContiguousMemorySpecifyCache(TotalBytes, LowAddress, HighAddress, RtlConvertUlongToLargeInteger(0), MmNonCached);
     if (!Buffer)
     {
-        DPRINT1("MmAllocateContiguousMemorySpecifyCache failed\n");
+        DPRINT("MmAllocateContiguousMemorySpecifyCache failed\n");
         return NULL;
     }
 
@@ -92,13 +92,13 @@ CPortWaveRTStreamInit::AllocateContiguousPagesForMdl(
     Mdl = MmAllocatePagesForMdl(Address, HighAddress, RtlConvertUlongToLargeInteger(0), TotalBytes);
     if (!Mdl)
     {
-        DPRINT1("MmAllocatePagesForMdl failed\n");
+        DPRINT("MmAllocatePagesForMdl failed\n");
         return NULL;
     }
 
     if (MmGetMdlByteCount(Mdl) < TotalBytes)
     {
-        DPRINT1("ByteCount %u Required %u\n", MmGetMdlByteCount(Mdl), TotalBytes);
+        DPRINT("ByteCount %u Required %u\n", MmGetMdlByteCount(Mdl), TotalBytes);
         MmFreePagesFromMdl(Mdl);
         ExFreePool(Mdl);
         return NULL;
@@ -157,7 +157,7 @@ CPortWaveRTStreamInit::GetPhysicalPageAddress(
     Pages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(0, MmGetMdlByteCount(MemoryDescriptorList));
     if (Pages <= Index)
     {
-        DPRINT1("OutOfBounds: Pages %u Index %u\n", Pages, Index);
+        DPRINT("OutOfBounds: Pages %u Index %u\n", Pages, Index);
         return RtlConvertUlongToLargeInteger(0);
     }
 

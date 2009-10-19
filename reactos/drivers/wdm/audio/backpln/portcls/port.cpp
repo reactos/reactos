@@ -47,7 +47,7 @@ PcNewPort(
 
         if (RtlStringFromGUID(ClassId, &GuidString) == STATUS_SUCCESS)
         {
-            DPRINT1("unknown interface %S\n", GuidString.Buffer);
+            DPRINT("unknown interface %S\n", GuidString.Buffer);
             RtlFreeUnicodeString(&GuidString);
         }
 

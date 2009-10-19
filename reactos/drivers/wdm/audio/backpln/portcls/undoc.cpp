@@ -229,14 +229,14 @@ PcHandlePropertyWithTable(
 
                     if (Status != STATUS_PENDING)
                     {
-                        //DPRINT1("Status %x ValueSize %u 
+                        //DPRINT("Status %x ValueSize %u 
 
                         Irp->IoStatus.Information = PropertyRequest->ValueSize;
                         ExFreePool(PropertyRequest);
                     }
 #if 0
                     RtlStringFromGUID(Property->Property.Set, &GuidString);
-                    DPRINT1("Id %u Flags %x Set %S FlagsItem %x Status %x\n", Property->Property.Id, Property->Property.Flags, GuidString.Buffer, PropertyItem->Flags, Status);
+                    DPRINT("Id %u Flags %x Set %S FlagsItem %x Status %x\n", Property->Property.Id, Property->Property.Flags, GuidString.Buffer, PropertyItem->Flags, Status);
                     RtlFreeUnicodeString(&GuidString);
 #endif
                     return Status;
@@ -245,7 +245,7 @@ PcHandlePropertyWithTable(
             }
 #if 0
             RtlStringFromGUID(Property->Property.Set, &GuidString);
-            DPRINT1("Id %u Flags %x Set %S Status %x\n", Property->Property.Id, Property->Property.Flags, GuidString.Buffer, Status);
+            DPRINT("Id %u Flags %x Set %S Status %x\n", Property->Property.Id, Property->Property.Flags, GuidString.Buffer, Status);
             RtlFreeUnicodeString(&GuidString);
 #endif
         }
@@ -310,12 +310,12 @@ DumpFilterDescriptor(
     PPCPROPERTY_ITEM PropertyItem;
     UNICODE_STRING GuidString;
 
-    DPRINT1("======================\n");
-    DPRINT1("Descriptor Automation Table%p\n",FilterDescription->AutomationTable);
+    DPRINT("======================\n");
+    DPRINT("Descriptor Automation Table%p\n",FilterDescription->AutomationTable);
 
     if (FilterDescription->AutomationTable)
     {
-        DPRINT1("FilterPropertiesCount %u FilterPropertySize %u Expected %u\n", FilterDescription->AutomationTable->PropertyCount, FilterDescription->AutomationTable->PropertyItemSize, sizeof(PCPROPERTY_ITEM));
+        DPRINT("FilterPropertiesCount %u FilterPropertySize %u Expected %u\n", FilterDescription->AutomationTable->PropertyCount, FilterDescription->AutomationTable->PropertyItemSize, sizeof(PCPROPERTY_ITEM));
         if (FilterDescription->AutomationTable->PropertyCount)
         {
             PropertyItem = (PPCPROPERTY_ITEM)FilterDescription->AutomationTable->Properties;
@@ -323,7 +323,7 @@ DumpFilterDescriptor(
             for(Index = 0; Index < FilterDescription->AutomationTable->PropertyCount; Index++)
             {
                 RtlStringFromGUID(*PropertyItem->Set, &GuidString);
-                DPRINT1("Index %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
+                DPRINT("Index %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
 
                 PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + FilterDescription->AutomationTable->PropertyItemSize);
             }
@@ -331,8 +331,7 @@ DumpFilterDescriptor(
     }
 
 
-    DPRINT1("======================\n");
-    DbgBreakPoint();
+    DPRINT("======================\n");
 }
 
 NTSTATUS
@@ -451,13 +450,16 @@ PcCreateSubdeviceDescriptor(
         {
             RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &SrcDescriptor->KsPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
 
+            DPRINT("Index %u DataRangeCount %u\n", Index, SrcDescriptor->KsPinDescriptor.DataRangesCount);
+
             Descriptor->Factory.Instances[Index].CurrentPinInstanceCount = 0;
-            Descriptor->Factory.Instances[Index].MaxFilterInstanceCount = FilterDescription->Pins[Index].MaxFilterInstanceCount;
-            Descriptor->Factory.Instances[Index].MaxGlobalInstanceCount = FilterDescription->Pins[Index].MaxGlobalInstanceCount;
-            Descriptor->Factory.Instances[Index].MinFilterInstanceCount = FilterDescription->Pins[Index].MinFilterInstanceCount;
+            Descriptor->Factory.Instances[Index].MaxFilterInstanceCount = SrcDescriptor->MaxFilterInstanceCount;
+            Descriptor->Factory.Instances[Index].MaxGlobalInstanceCount = SrcDescriptor->MaxGlobalInstanceCount;
+            Descriptor->Factory.Instances[Index].MinFilterInstanceCount = SrcDescriptor->MinFilterInstanceCount;
             SrcDescriptor = (PPCPIN_DESCRIPTOR)((ULONG_PTR)SrcDescriptor + FilterDescription->PinSize);
         }
     }
+
     Descriptor->DeviceDescriptor = FilterDescription;
     *OutSubdeviceDescriptor = Descriptor;
     return STATUS_SUCCESS;

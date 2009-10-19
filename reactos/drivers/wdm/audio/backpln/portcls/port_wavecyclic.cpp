@@ -181,7 +181,7 @@ CPortWaveCyclic::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 
@@ -268,7 +268,7 @@ CPortWaveCyclic::Init(
     Status = Miniport->GetDescription(&m_pDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("failed to get description\n");
+        DPRINT("failed to get description\n");
         Miniport->Release();
         m_bInitialized = FALSE;
         return Status;
@@ -292,7 +292,7 @@ CPortWaveCyclic::Init(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("PcCreateSubdeviceDescriptor failed with %x\n", Status);
+        DPRINT("PcCreateSubdeviceDescriptor failed with %x\n", Status);
         Miniport->Release();
         m_bInitialized = FALSE;
         return Status;
