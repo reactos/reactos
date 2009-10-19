@@ -31,7 +31,7 @@ const struct test winetest_testlist[] =
     { "generated", func_generated },
     { "icm", func_icm },
     { "mapping", func_mapping },
-    //{ "metafile", func_metafile },
+    { "metafile", func_metafile },
     { "palette", func_palette },
     { "path", func_path },
     { "pen", func_pen },
