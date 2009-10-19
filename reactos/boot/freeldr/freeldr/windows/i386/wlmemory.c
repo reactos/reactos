@@ -541,7 +541,7 @@ VOID
 MempDump()
 {
     ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
-    int j;
+    int i, j;
 
     DPRINTM(DPRINT_WINDOWS, "\nPDE\n");
 
