@@ -25,6 +25,7 @@
 			<compilerflag>-momit-leaf-frame-pointer</compilerflag>
 		</if>
 		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
+		<compilerflag compiler="midl">-m32 --win32</compilerflag>
 	</group>
 
 	<group linkerset="ld">
