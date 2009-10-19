@@ -341,8 +341,20 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
 
     WinLdrSetupIdt((PVOID)((ULONG64)GdtIdt + 2048)); // HACK!
 
-    DPRINTM(DPRINT_WINDOWS, "leave WinLdrSetProcessorContext\n");
+    /* LDT is unused */
+    __lldt(0);
 
+    /* Load selectors for DS/ES/FS/GS/SS */
+    Ke386SetDs(KGDT_64_DATA | RPL_MASK);   // 0x2b
+    Ke386SetEs(KGDT_64_DATA | RPL_MASK);   // 0x2b
+    Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK); // 0x53
+	Ke386SetGs(KGDT_64_DATA | RPL_MASK);   // 0x2b
+	Ke386SetSs(KGDT_64_R0_SS);             // 0x18
+
+	// Load TSR
+	Ke386SetTr(KGDT_TSS);
+
+    DPRINTM(DPRINT_WINDOWS, "leave WinLdrSetProcessorContext\n");
 }
 
 VOID

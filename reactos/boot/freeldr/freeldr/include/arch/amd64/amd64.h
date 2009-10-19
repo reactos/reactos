@@ -58,13 +58,6 @@ typedef struct _PAGE_DIRECTORY_AMD64
     HARDWARE_PTE Pde[512];
 } PAGE_DIRECTORY_AMD64, *PPAGE_DIRECTORY_AMD64;
 
-VOID
-FORCEINLINE
-__lgdt(void *gdt)
-{
-    asm volatile ("lgdt %0\n" : : "m"(*(short*)gdt));
-}
-
 PKGDTENTRY64
 FORCEINLINE
 KiGetGdtEntry(PVOID pGdt, USHORT Index)
