@@ -240,11 +240,11 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
     if(IsEqualGUID(&IID_IOleUndoManager, riid)) {
         TRACE("(%p)->(IID_IOleUndoManager %p)\n", This, ppv);
 
-        if(!This->undomgr)
-            This->undomgr = create_undomgr();
+        if(!This->doc_obj->undomgr)
+            This->doc_obj->undomgr = create_undomgr();
 
-        IOleUndoManager_AddRef(This->undomgr);
-        *ppv = This->undomgr;
+        IOleUndoManager_AddRef(This->doc_obj->undomgr);
+        *ppv = This->doc_obj->undomgr;
         return S_OK;
     }
 
@@ -263,6 +263,4 @@ static const IServiceProviderVtbl ServiceProviderVtbl = {
 void HTMLDocument_Service_Init(HTMLDocument *This)
 {
     This->lpServiceProviderVtbl = &ServiceProviderVtbl;
-
-    This->undomgr = NULL;
 }

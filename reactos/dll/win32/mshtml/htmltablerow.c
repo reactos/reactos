@@ -325,8 +325,7 @@ HTMLElement *HTMLTableRow_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLTableRowVtbl = &HTMLTableRowVtbl;
     ret->element.node.vtbl = &HTMLTableRowImplVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLTABLEROW(ret), &HTMLTableRow_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, &HTMLTableRow_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTableRowElement, (void**)&ret->nsrow);
     if(NS_FAILED(nsres))

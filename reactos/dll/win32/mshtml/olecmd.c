@@ -39,20 +39,23 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define NSCMD_COPY "cmd_copy"
 
-void do_ns_command(NSContainer *This, const char *cmd, nsICommandParams *nsparam)
+void do_ns_command(HTMLDocument *This, const char *cmd, nsICommandParams *nsparam)
 {
     nsICommandManager *cmdmgr;
     nsresult nsres;
 
     TRACE("(%p)\n", This);
 
-    nsres = get_nsinterface((nsISupports*)This->webbrowser, &IID_nsICommandManager, (void**)&cmdmgr);
+    if(!This->doc_obj || !This->doc_obj->nscontainer)
+        return;
+
+    nsres = get_nsinterface((nsISupports*)This->doc_obj->nscontainer->webbrowser, &IID_nsICommandManager, (void**)&cmdmgr);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsICommandManager: %08x\n", nsres);
         return;
     }
 
-    nsres = nsICommandManager_DoCommand(cmdmgr, cmd, nsparam, This->doc->window->nswindow);
+    nsres = nsICommandManager_DoCommand(cmdmgr, cmd, nsparam, This->window->nswindow);
     if(NS_FAILED(nsres))
         ERR("DoCommand(%s) failed: %08x\n", debugstr_a(cmd), nsres);
 
@@ -221,10 +224,10 @@ static HRESULT exec_print(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn,
     if(pvaOut)
         FIXME("unsupported pvaOut\n");
 
-    if(!This->nscontainer)
+    if(!This->doc_obj->nscontainer)
         return S_OK;
 
-    nsres = get_nsinterface((nsISupports*)This->nscontainer->webbrowser, &IID_nsIWebBrowserPrint,
+    nsres = get_nsinterface((nsISupports*)This->doc_obj->nscontainer->webbrowser, &IID_nsIWebBrowserPrint,
             (void**)&nsprint);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIWebBrowserPrint: %08x\n", nsres);
@@ -470,10 +473,10 @@ static HRESULT exec_mshtml_copy(HTMLDocument *This, DWORD cmdexecopt, VARIANT *i
 {
     TRACE("(%p)->(%08x %p %p)\n", This, cmdexecopt, in, out);
 
-    if(This->usermode == EDITMODE)
+    if(This->doc_obj->usermode == EDITMODE)
         return editor_exec_copy(This, cmdexecopt, in, out);
 
-    do_ns_command(This->nscontainer, NSCMD_COPY, NULL);
+    do_ns_command(This, NSCMD_COPY, NULL);
     return S_OK;
 }
 
@@ -488,7 +491,7 @@ static HRESULT exec_mshtml_cut(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in
 {
     TRACE("(%p)->(%08x %p %p)\n", This, cmdexecopt, in, out);
 
-    if(This->usermode == EDITMODE)
+    if(This->doc_obj->usermode == EDITMODE)
         return editor_exec_cut(This, cmdexecopt, in, out);
 
     FIXME("Unimplemented in browse mode\n");
@@ -506,7 +509,7 @@ static HRESULT exec_mshtml_paste(HTMLDocument *This, DWORD cmdexecopt, VARIANT *
 {
     TRACE("(%p)->(%08x %p %p)\n", This, cmdexecopt, in, out);
 
-    if(This->usermode == EDITMODE)
+    if(This->doc_obj->usermode == EDITMODE)
         return editor_exec_paste(This, cmdexecopt, in, out);
 
     FIXME("Unimplemented in browse mode\n");
@@ -520,7 +523,7 @@ static HRESULT exec_browsemode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in
     if(in || out)
         FIXME("unsupported args\n");
 
-    This->usermode = BROWSEMODE;
+    This->doc_obj->usermode = BROWSEMODE;
 
     return S_OK;
 }
@@ -535,29 +538,29 @@ static HRESULT exec_editmode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->usermode == EDITMODE)
+    if(This->doc_obj->usermode == EDITMODE)
         return S_OK;
 
-    This->usermode = EDITMODE;
+    This->doc_obj->usermode = EDITMODE;
 
-    if(This->mon) {
+    if(This->doc_obj->mon) {
         CLSID clsid = IID_NULL;
-        hres = IMoniker_GetClassID(This->mon, &clsid);
+        hres = IMoniker_GetClassID(This->doc_obj->mon, &clsid);
         if(SUCCEEDED(hres)) {
             /* We should use IMoniker::Save here */
             FIXME("Use CLSID %s\n", debugstr_guid(&clsid));
         }
     }
 
-    if(This->frame)
-        IOleInPlaceFrame_SetStatusText(This->frame, NULL);
+    if(This->doc_obj->frame)
+        IOleInPlaceFrame_SetStatusText(This->doc_obj->frame, NULL);
 
-    This->readystate = READYSTATE_UNINITIALIZED;
+    This->doc_obj->readystate = READYSTATE_UNINITIALIZED;
 
-    if(This->client) {
+    if(This->doc_obj->client) {
         IOleCommandTarget *cmdtrg;
 
-        hres = IOleClientSite_QueryInterface(This->client, &IID_IOleCommandTarget,
+        hres = IOleClientSite_QueryInterface(This->doc_obj->client, &IID_IOleCommandTarget,
                 (void**)&cmdtrg);
         if(SUCCEEDED(hres)) {
             VARIANT var;
@@ -570,12 +573,12 @@ static HRESULT exec_editmode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
         }
     }
 
-    if(This->hostui) {
+    if(This->doc_obj->hostui) {
         DOCHOSTUIINFO hostinfo;
 
         memset(&hostinfo, 0, sizeof(DOCHOSTUIINFO));
         hostinfo.cbSize = sizeof(DOCHOSTUIINFO);
-        hres = IDocHostUIHandler_GetHostInfo(This->hostui, &hostinfo);
+        hres = IDocHostUIHandler_GetHostInfo(This->doc_obj->hostui, &hostinfo);
         if(SUCCEEDED(hres))
             /* FIXME: use hostinfo */
             TRACE("hostinfo = {%u %08x %08x %s %s}\n",
@@ -585,11 +588,11 @@ static HRESULT exec_editmode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
 
     update_doc(This, UPDATE_UI);
 
-    if(This->mon) {
+    if(This->doc_obj->mon) {
         /* FIXME: We should find nicer way to do this */
         remove_doc_tasks(This);
 
-        mon = This->mon;
+        mon = This->doc_obj->mon;
         IMoniker_AddRef(mon);
     }else {
         static const WCHAR about_blankW[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
@@ -606,29 +609,29 @@ static HRESULT exec_editmode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
     if(FAILED(hres))
         return hres;
 
-    if(This->ui_active) {
-        if(This->ip_window)
-            call_set_active_object(This->ip_window, NULL);
-        if(This->hostui)
-            IDocHostUIHandler_HideUI(This->hostui);
+    if(This->doc_obj->ui_active) {
+        if(This->doc_obj->ip_window)
+            call_set_active_object(This->doc_obj->ip_window, NULL);
+        if(This->doc_obj->hostui)
+            IDocHostUIHandler_HideUI(This->doc_obj->hostui);
     }
 
-    if(This->nscontainer)
-        set_ns_editmode(This->nscontainer);
+    if(This->doc_obj->nscontainer)
+        set_ns_editmode(This->doc_obj->nscontainer);
 
-    if(This->ui_active) {
+    if(This->doc_obj->ui_active) {
         RECT rcBorderWidths;
 
-        if(This->hostui)
-            IDocHostUIHandler_ShowUI(This->hostui, DOCHOSTUITYPE_AUTHOR, ACTOBJ(This), CMDTARGET(This),
-                This->frame, This->ip_window);
+        if(This->doc_obj->hostui)
+            IDocHostUIHandler_ShowUI(This->doc_obj->hostui, DOCHOSTUITYPE_AUTHOR, ACTOBJ(This), CMDTARGET(This),
+                This->doc_obj->frame, This->doc_obj->ip_window);
 
-        if(This->ip_window)
-            call_set_active_object(This->ip_window, ACTOBJ(This));
+        if(This->doc_obj->ip_window)
+            call_set_active_object(This->doc_obj->ip_window, ACTOBJ(This));
 
         memset(&rcBorderWidths, 0, sizeof(rcBorderWidths));
-        if (This->frame)
-            IOleInPlaceFrame_SetBorderSpace(This->frame, &rcBorderWidths);
+        if(This->doc_obj->frame)
+            IOleInPlaceFrame_SetBorderSpace(This->doc_obj->frame, &rcBorderWidths);
     }
 
     return S_OK;
@@ -789,8 +792,8 @@ static HRESULT WINAPI OleCommandTarget_QueryStatus(IOleCommandTarget *iface, con
                     OLECMD olecmd;
 
                     prgCmds[i].cmdf = OLECMDF_SUPPORTED;
-                    if(This->client) {
-                        hr = IOleClientSite_QueryInterface(This->client, &IID_IOleCommandTarget,
+                    if(This->doc_obj->client) {
+                        hr = IOleClientSite_QueryInterface(This->doc_obj->client, &IID_IOleCommandTarget,
                                 (void**)&cmdtrg);
                         if(SUCCEEDED(hr)) {
                             olecmd.cmdID = prgCmds[i].cmdID;
@@ -894,14 +897,14 @@ static const IOleCommandTargetVtbl OleCommandTargetVtbl = {
     OleCommandTarget_Exec
 };
 
-void show_context_menu(HTMLDocument *This, DWORD dwID, POINT *ppt, IDispatch *elem)
+void show_context_menu(HTMLDocumentObj *This, DWORD dwID, POINT *ppt, IDispatch *elem)
 {
     HMENU menu_res, menu;
     DWORD cmdid;
     HRESULT hres;
 
     hres = IDocHostUIHandler_ShowContextMenu(This->hostui, dwID, ppt,
-            (IUnknown*)CMDTARGET(This), elem);
+            (IUnknown*)CMDTARGET(&This->basedoc), elem);
     if(hres == S_OK)
         return;
 
@@ -913,7 +916,7 @@ void show_context_menu(HTMLDocument *This, DWORD dwID, POINT *ppt, IDispatch *el
     DestroyMenu(menu_res);
 
     if(cmdid)
-        IOleCommandTarget_Exec(CMDTARGET(This), &CGID_MSHTML, cmdid, 0, NULL, NULL);
+        IOleCommandTarget_Exec(CMDTARGET(&This->basedoc), &CGID_MSHTML, cmdid, 0, NULL, NULL);
 }
 
 void HTMLDocument_OleCmd_Init(HTMLDocument *This)

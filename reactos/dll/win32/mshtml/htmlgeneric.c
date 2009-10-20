@@ -178,8 +178,7 @@ HTMLElement *HTMLGenericElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLGenericElementVtbl = &HTMLGenericElementVtbl;
     ret->element.node.vtbl = &HTMLGenericElementImplVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLGENERIC(ret), &HTMLGenericElement_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, &HTMLGenericElement_dispex);
 
     return &ret->element;
 }

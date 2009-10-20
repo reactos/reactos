@@ -602,15 +602,16 @@ static HRESULT WINAPI HTMLBodyElement_createTextRange(IHTMLBodyElement *iface, I
     nsIDOMDocumentRange *nsdocrange;
     nsIDOMRange *nsrange = NULL;
     nsresult nsres;
+    HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, range);
 
-    if(!This->textcont.element.node.doc->nsdoc) {
+    if(!This->textcont.element.node.doc->basedoc.nsdoc) {
         WARN("No nsdoc\n");
         return E_UNEXPECTED;
     }
 
-    nsres = nsIDOMDocument_QueryInterface(This->textcont.element.node.doc->nsdoc, &IID_nsIDOMDocumentRange,
+    nsres = nsIDOMDocument_QueryInterface(This->textcont.element.node.doc->basedoc.nsdoc, &IID_nsIDOMDocumentRange,
             (void**)&nsdocrange);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMDocumentRabge iface: %08x\n", nsres);
@@ -628,8 +629,10 @@ static HRESULT WINAPI HTMLBodyElement_createTextRange(IHTMLBodyElement *iface, I
 
     nsIDOMDocumentRange_Release(nsdocrange);
 
-    *range = HTMLTxtRange_Create(This->textcont.element.node.doc, nsrange);
-    return S_OK;
+    hres = HTMLTxtRange_Create(This->textcont.element.node.doc->basedoc.doc_node, nsrange, range);
+
+    nsIDOMRange_Release(nsrange);
+    return hres;
 }
 
 #undef HTMLBODY_THIS
@@ -718,11 +721,21 @@ static void HTMLBodyElement_destructor(HTMLDOMNode *iface)
     HTMLElement_destructor(&This->textcont.element.node);
 }
 
+static event_target_t **HTMLBodyElement_get_event_target(HTMLDOMNode *iface)
+{
+    HTMLBodyElement *This = HTMLBODY_NODE_THIS(iface);
+
+    return This->textcont.element.node.doc && This->textcont.element.node.doc->basedoc.window
+        ? &This->textcont.element.node.doc->basedoc.window->event_target
+        : &This->textcont.element.node.event_target;
+}
+
 #undef HTMLBODY_NODE_THIS
 
 static const NodeImplVtbl HTMLBodyElementImplVtbl = {
     HTMLBodyElement_QI,
-    HTMLBodyElement_destructor
+    HTMLBodyElement_destructor,
+    HTMLBodyElement_get_event_target
 };
 
 static const tid_t HTMLBodyElement_iface_tids[] = {
@@ -753,12 +766,10 @@ HTMLElement *HTMLBodyElement_Create(nsIDOMHTMLElement *nselem)
 
     TRACE("(%p)->(%p)\n", ret, nselem);
 
-    HTMLTextContainer_Init(&ret->textcont);
-
     ret->lpHTMLBodyElementVtbl = &HTMLBodyElementVtbl;
-
-    init_dispex(&ret->textcont.element.node.dispex, (IUnknown*)HTMLBODY(ret), &HTMLBodyElement_dispex);
     ret->textcont.element.node.vtbl = &HTMLBodyElementImplVtbl;
+
+    HTMLTextContainer_Init(&ret->textcont, &HTMLBodyElement_dispex);
 
     ConnectionPoint_Init(&ret->cp_propnotif, &ret->textcont.element.cp_container, &IID_IPropertyNotifySink);
 

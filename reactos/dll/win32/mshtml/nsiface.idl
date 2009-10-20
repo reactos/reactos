@@ -1353,6 +1353,42 @@ interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
 
 [
     object,
+    uuid(a6cf90aa-15b3-11d2-932e-00805f8add32),
+    local
+    /* FROZEN */
+]
+interface nsIDOMHTMLAnchorElement : nsIDOMHTMLElement
+{
+    nsresult GetAccessKey(nsAString *aAccessKey);
+    nsresult SetAccessKey(const nsAString *aAccessKey);
+    nsresult GetCharset(nsAString *aCharset);
+    nsresult SetCharset(const nsAString *aCharset);
+    nsresult GetCoords(nsAString *aCoords);
+    nsresult SetCoords(const nsAString *aCoords);
+    nsresult GetHref(nsAString *aHref);
+    nsresult SetHref(const nsAString *aHref);
+    nsresult GetHreflang(nsAString *aHreflang);
+    nsresult SetHreflang(const nsAString *aHreflang);
+    nsresult GetName(nsAString *aName);
+    nsresult SetName(const nsAString *aName);
+    nsresult GetRel(nsAString *aRel);
+    nsresult SetRel(const nsAString *aRel);
+    nsresult GetRev(nsAString *aRev);
+    nsresult SetRev(const nsAString *aRev);
+    nsresult GetShape(nsAString *aShape);
+    nsresult SetShape(const nsAString *aShape);
+    nsresult GetTabIndex(PRInt32 *aTabIndex);
+    nsresult SetTabIndex(PRInt32 aTabIndex);
+    nsresult GetTarget(nsAString *aTarget);
+    nsresult SetTarget(const nsAString *aTarget);
+    nsresult GetType(nsAString *aType);
+    nsresult SetType(const nsAString *aType);
+    nsresult Blur();
+    nsresult Focus();
+}
+
+[
+    object,
     uuid(a6cf90b2-15b3-11d2-932e-00805f8add32),
     local
     /* FROZEN */

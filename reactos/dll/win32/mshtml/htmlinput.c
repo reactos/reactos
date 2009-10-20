@@ -506,15 +506,42 @@ static HRESULT WINAPI HTMLInputElement_get_alt(IHTMLInputElement *iface, BSTR *p
 static HRESULT WINAPI HTMLInputElement_put_src(IHTMLInputElement *iface, BSTR v)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_Init(&nsstr, v);
+    nsres = nsIDOMHTMLInputElement_SetSrc(This->nsinput, &nsstr);
+    nsAString_Finish(&nsstr);
+    if(NS_FAILED(nsres))
+        ERR("SetSrc failed: %08x\n", nsres);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLInputElement_get_src(IHTMLInputElement *iface, BSTR *p)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    const PRUnichar *src;
+    nsAString src_str;
+    nsresult nsres;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&src_str, NULL);
+    nsres = nsIDOMHTMLInputElement_GetSrc(This->nsinput, &src_str);
+    if(NS_FAILED(nsres)) {
+        ERR("GetSrc failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsAString_GetData(&src_str, &src);
+    hres = nsuri_to_url(src, FALSE, p);
+    nsAString_Finish(&src_str);
+
+    return hres;
 }
 
 static HRESULT WINAPI HTMLInputElement_put_lowsrc(IHTMLInputElement *iface, BSTR v)
@@ -1119,6 +1146,7 @@ static HRESULT HTMLInputElementImpl_get_disabled(HTMLDOMNode *iface, VARIANT_BOO
 static const NodeImplVtbl HTMLInputElementImplVtbl = {
     HTMLInputElement_QI,
     HTMLInputElement_destructor,
+    NULL,
     HTMLInputElementImpl_put_disabled,
     HTMLInputElementImpl_get_disabled,
 };
@@ -1148,8 +1176,7 @@ HTMLElement *HTMLInputElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLInputTextElementVtbl = &HTMLInputTextElementVtbl;
     ret->element.node.vtbl = &HTMLInputElementImplVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLINPUT(ret), &HTMLInputElement_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, &HTMLInputElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLInputElement,
                                              (void**)&ret->nsinput);
