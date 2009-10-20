@@ -55,3 +55,53 @@ ULONG ChecksumCompute(
 
   return Sum;
 }
+
+ULONG
+UDPv4ChecksumCalculate(
+  PIPv4_HEADER IPHeader,
+  PUCHAR PacketBuffer,
+  ULONG DataLength)
+{
+  ULONG Sum = 0;
+  USHORT TmpSum;
+  ULONG i;
+  BOOLEAN Pad;
+
+  /* Pad the data if needed */
+  Pad = (DataLength & 1);
+  if (Pad) {
+      DbgPrint("Odd\n");
+      DataLength++;
+  } else DbgPrint("Even\n");
+
+  /* Add from the UDP header and data */
+  for (i = 0; i < DataLength; i += 2)
+  {
+       TmpSum = ((PacketBuffer[i] << 8) & 0xFF00) +
+                ((Pad && i == DataLength - 1) ? 0 : (PacketBuffer[i+1] & 0x00FF));
+       Sum += TmpSum;
+  }
+
+  /* Add the source address */
+  for (i = 0; i < sizeof(IPv4_RAW_ADDRESS); i += 2)
+  {
+       TmpSum = ((((PUCHAR)&IPHeader->SrcAddr)[i] << 8) & 0xFF00) +
+                (((PUCHAR)&IPHeader->SrcAddr)[i+1] & 0x00FF);
+       Sum += TmpSum;
+  }
+
+  /* Add the destination address */
+  for (i = 0; i < sizeof(IPv4_RAW_ADDRESS); i += 2)
+  {
+       TmpSum = ((((PUCHAR)&IPHeader->DstAddr)[i] << 8) & 0xFF00) +
+                (((PUCHAR)&IPHeader->DstAddr)[i+1] & 0x00FF);
+       Sum += TmpSum;
+  }
+
+  /* Add the proto number and length */
+  Sum += IPPROTO_UDP + (DataLength - (Pad ? 1 : 0));
+
+  /* Fold the checksum and return the one's complement */
+  return ~ChecksumFold(Sum);
+}
+

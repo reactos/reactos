@@ -19,6 +19,7 @@ NTSTATUS AddUDPHeaderIPv4(
     PIP_ADDRESS LocalAddress,
     USHORT LocalPort,
     PIP_PACKET IPPacket,
+    PVOID Data,
     UINT DataLength)
 /*
  * FUNCTION: Adds an IPv4 and UDP header to an IP packet
@@ -49,10 +50,20 @@ NTSTATUS AddUDPHeaderIPv4(
     /* Port values are already big-endian values */
     UDPHeader->SourcePort = LocalPort;
     UDPHeader->DestPort   = RemotePort;
-    /* FIXME: Calculate UDP checksum and put it in UDP header */
     UDPHeader->Checksum   = 0;
     /* Length of UDP header and data */
     UDPHeader->Length     = WH2N(DataLength + sizeof(UDP_HEADER));
+
+    TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n",
+			    IPPacket->Header, IPPacket->Data,
+			    (PCHAR)IPPacket->Data - (PCHAR)IPPacket->Header));
+
+    RtlCopyMemory(IPPacket->Data, Data, DataLength);
+
+    UDPHeader->Checksum = UDPv4ChecksumCalculate((PIPv4_HEADER)IPPacket->Header,
+                                                 (PUCHAR)UDPHeader,
+                                                 DataLength + sizeof(UDP_HEADER));
+    UDPHeader->Checksum = WH2N(UDPHeader->Checksum);
 
     TI_DbgPrint(MID_TRACE, ("Packet: %d ip %d udp %d payload\n",
 			    (PCHAR)UDPHeader - (PCHAR)IPPacket->Header,
@@ -105,7 +116,7 @@ NTSTATUS BuildUDPPacket(
     switch (RemoteAddress->Type) {
     case IP_ADDRESS_V4:
 	Status = AddUDPHeaderIPv4(RemoteAddress, RemotePort,
-				  LocalAddress, LocalPort, Packet, DataLen);
+				  LocalAddress, LocalPort, Packet, DataBuffer, DataLen);
 	break;
     case IP_ADDRESS_V6:
 	/* FIXME: Support IPv6 */
@@ -120,12 +131,6 @@ NTSTATUS BuildUDPPacket(
 	FreeNdisPacket(Packet->NdisPacket);
 	return Status;
     }
-
-    TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n",
-			    Packet->Header, Packet->Data,
-			    (PCHAR)Packet->Data - (PCHAR)Packet->Header));
-
-    RtlCopyMemory( Packet->Data, DataBuffer, DataLen );
 
     TI_DbgPrint(MID_TRACE, ("Displaying packet\n"));
 
@@ -258,7 +263,15 @@ VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 
   UDPHeader = (PUDP_HEADER)IPPacket->Data;
 
-  /* FIXME: Calculate and validate UDP checksum */
+  /* Calculate and validate UDP checksum */
+  i = UDPv4ChecksumCalculate(IPv4Header,
+                             (PUCHAR)UDPHeader,
+                             WH2N(UDPHeader->Length));
+  if (i != DH2N(0x0000FFFF))
+  {
+      TI_DbgPrint(MIN_TRACE, ("Bad checksum on packet received.\n"));
+      return;
+  }
 
   /* Sanity checks */
   i = WH2N(UDPHeader->Length);
