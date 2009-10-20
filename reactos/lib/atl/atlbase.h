@@ -244,6 +244,15 @@ inline BOOL WINAPI InlineIsEqualUnknown(REFGUID rguid1)
 	  ((unsigned long *)&rguid1)[3] == 0x46000000);
 }
 
+inline BOOL WINAPI InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
+{
+   return (
+	  ((unsigned long *)&rguid1)[0] == ((unsigned long *)&rguid2)[0] &&
+	  ((unsigned long *)&rguid1)[1] == ((unsigned long *)&rguid1)[1] &&
+	  ((unsigned long *)&rguid1)[2] == ((unsigned long *)&rguid1)[2] &&
+	  ((unsigned long *)&rguid1)[3] == ((unsigned long *)&rguid1)[3]);
+}
+
 class CComMultiThreadModelNoCS
 {
 public:
