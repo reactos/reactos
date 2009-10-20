@@ -5,6 +5,7 @@
 	<include base="mshtml_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>dom.c</file>
+	<file>events.c</file>
 	<file>htmldoc.c</file>
 	<file>misc.c</file>
 	<file>protocol.c</file>

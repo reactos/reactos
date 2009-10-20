@@ -20,6 +20,7 @@
 
 #include <wine/test.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -56,6 +57,7 @@
 
 DEFINE_GUID(CLSID_ResProtocol, 0x3050F3BC, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_AboutProtocol, 0x3050F406, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
+DEFINE_GUID(CLSID_JSProtocol, 0x3050F3B2, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 
 DEFINE_EXPECT(GetBindInfo);
 DEFINE_EXPECT(ReportProgress);
@@ -69,11 +71,17 @@ static DWORD bindf;
 static const WCHAR about_blank_url[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
 static const WCHAR about_test_url[] = {'a','b','o','u','t',':','t','e','s','t',0};
 static const WCHAR about_res_url[] = {'r','e','s',':','b','l','a','n','k',0};
+static const WCHAR javascript_test_url[] = {'j','a','v','a','s','c','r','i','p','t',':','t','e','s','t','(',')',0};
 
-static const char *debugstr_w(LPCWSTR str)
+static const char *debugstr_guid(REFIID riid)
 {
-    static char buf[1024];
-    WideCharToMultiByte(CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL);
+    static char buf[50];
+
+    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
+            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
+            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
+
     return buf;
 }
 
@@ -83,6 +91,9 @@ static HRESULT WINAPI ProtocolSink_QueryInterface(IInternetProtocolSink *iface, 
         *ppv = iface;
         return S_OK;
     }
+
+    *ppv = NULL;
+    ok(0, "unexpected riid %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -167,6 +178,9 @@ static HRESULT WINAPI BindInfo_QueryInterface(IInternetBindInfo *iface, REFIID r
         *ppv = iface;
         return S_OK;
     }
+
+    *ppv = NULL;
+    ok(0, "unexpected riid %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -278,7 +292,7 @@ static void res_sec_url_cmp(LPCWSTR url, DWORD size, LPCWSTR file)
 
     len += sizeof(fileW)/sizeof(WCHAR)+1;
     ok(len == size, "wrong size %u, expected %u\n", size, len);
-    ok(!lstrcmpW(url + sizeof(fileW)/sizeof(WCHAR), buf), "wrong file part %s\n", debugstr_w(url));
+    ok(!lstrcmpW(url + sizeof(fileW)/sizeof(WCHAR), buf), "wrong file part %s\n", wine_dbgstr_w(url));
 }
 
 static void test_res_protocol(void)
@@ -350,14 +364,18 @@ static void test_res_protocol(void)
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
         ok(hres == S_OK || hres == E_FAIL, "ParseUrl failed: %08x\n", hres);
         ok(buf[0] == '?', "buf changed\n");
-        ok(size == sizeof(blank_url)/sizeof(WCHAR), "size=%d\n", size);
+        ok(size == sizeof(blank_url)/sizeof(WCHAR) ||
+           size == sizeof(buf)/sizeof(buf[0]), /* IE8 */
+           "size=%d\n", size);
 
         size = 0xdeadbeef;
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, wrong_url1, PARSE_DOMAIN, 0, buf,
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
         ok(hres == S_OK || hres == E_FAIL, "ParseUrl failed: %08x\n", hres);
         ok(buf[0] == '?', "buf changed\n");
-        ok(size == sizeof(wrong_url1)/sizeof(WCHAR), "size=%d\n", size);
+        ok(size == sizeof(wrong_url1)/sizeof(WCHAR) ||
+           size == sizeof(buf)/sizeof(buf[0]), /* IE8 */
+           "size=%d\n", size);
 
         if (0)
         {
@@ -653,7 +671,9 @@ static void test_about_protocol(void)
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
         ok(hres == S_OK || hres == E_FAIL, "ParseUrl failed: %08x\n", hres);
         ok(buf[0] == '?', "buf changed\n");
-        ok(size == sizeof(about_blank_url)/sizeof(WCHAR), "size=%d\n", size);
+        ok(size == sizeof(about_blank_url)/sizeof(WCHAR) ||
+           size == sizeof(buf)/sizeof(buf[0]), /* IE8 */
+           "size=%d\n", size);
 
         if (0)
         {
@@ -774,12 +794,108 @@ static void test_about_protocol(void)
     IUnknown_Release(unk);
 }
 
+static void test_javascript_protocol(void)
+{
+    IInternetProtocolInfo *protocol_info;
+    IUnknown *unk;
+    IClassFactory *factory;
+    HRESULT hres;
+
+    hres = CoGetClassObject(&CLSID_JSProtocol, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void**)&unk);
+    ok(hres == S_OK, "CoGetClassObject failed: %08x\n", hres);
+    if(FAILED(hres))
+        return;
+
+    hres = IUnknown_QueryInterface(unk, &IID_IInternetProtocolInfo, (void**)&protocol_info);
+    ok(hres == S_OK, "Could not get IInternetProtocolInfo interface: %08x\n", hres);
+    if(SUCCEEDED(hres)) {
+        WCHAR buf[128];
+        DWORD size;
+        int i;
+
+        for(i = PARSE_CANONICALIZE; i <= PARSE_UNESCAPE; i++) {
+            if(i != PARSE_SECURITY_URL && i != PARSE_DOMAIN) {
+                hres = IInternetProtocolInfo_ParseUrl(protocol_info, javascript_test_url, i, 0, buf,
+                        sizeof(buf)/sizeof(buf[0]), &size, 0);
+                ok(hres == INET_E_DEFAULT_ACTION,
+                        "[%d] failed: %08x, expected INET_E_DEFAULT_ACTION\n", i, hres);
+            }
+        }
+
+        hres = IInternetProtocolInfo_ParseUrl(protocol_info, javascript_test_url, PARSE_UNESCAPE+1, 0, buf,
+                sizeof(buf)/sizeof(buf[0]), &size, 0);
+        ok(hres == INET_E_DEFAULT_ACTION,
+                "ParseUrl failed: %08x, expected INET_E_DEFAULT_ACTION\n", hres);
+
+        size = 0xdeadbeef;
+        hres = IInternetProtocolInfo_CombineUrl(protocol_info, javascript_test_url, javascript_test_url,
+                0, buf, sizeof(buf)/sizeof(buf[0]), &size, 0);
+        ok(hres == INET_E_USE_DEFAULT_PROTOCOLHANDLER, "CombineUrl failed: %08x\n", hres);
+        ok(size == 0xdeadbeef, "size=%d\n", size);
+
+        hres = IInternetProtocolInfo_CompareUrl(protocol_info, javascript_test_url, javascript_test_url, 0);
+        ok(hres == E_NOTIMPL, "CompareUrl failed: %08x\n", hres);
+
+        for(i=0; i<30; i++) {
+            switch(i) {
+            case QUERY_USES_NETWORK:
+            case QUERY_IS_SECURE:
+                break;
+            default:
+                hres = IInternetProtocolInfo_QueryInfo(protocol_info, javascript_test_url, i, 0,
+                                                       buf, sizeof(buf), &size, 0);
+                ok(hres == INET_E_USE_DEFAULT_PROTOCOLHANDLER,
+                   "QueryInfo(%d) returned: %08x, expected INET_E_USE_DEFAULT_PROTOCOLHANDLER\n", i, hres);
+            }
+        }
+
+
+        memset(buf, '?', sizeof(buf));
+        hres = IInternetProtocolInfo_QueryInfo(protocol_info, javascript_test_url, QUERY_USES_NETWORK, 0,
+                                               buf, sizeof(buf), &size, 0);
+        ok(hres == S_OK, "QueryInfo(QUERY_USES_NETWORK) failed: %08x\n", hres);
+        ok(size == sizeof(DWORD), "size=%d\n", size);
+        ok(!*(DWORD*)buf, "buf=%d\n", *(DWORD*)buf);
+
+        memset(buf, '?', sizeof(buf));
+        hres = IInternetProtocolInfo_QueryInfo(protocol_info, javascript_test_url, QUERY_USES_NETWORK, 0,
+                                               buf, sizeof(buf), NULL, 0);
+        ok(hres == S_OK, "QueryInfo(QUERY_USES_NETWORK) failed: %08x\n", hres);
+        ok(!*(DWORD*)buf, "buf=%d\n", *(DWORD*)buf);
+
+        hres = IInternetProtocolInfo_QueryInfo(protocol_info, javascript_test_url, QUERY_USES_NETWORK, 0,
+                                               buf, 3, &size, 0);
+        ok(hres == E_FAIL, "QueryInfo(QUERY_USES_NETWORK) failed: %08x, expected E_FAIL\n", hres);
+
+        hres = IInternetProtocolInfo_QueryInfo(protocol_info, javascript_test_url, QUERY_USES_NETWORK, 0,
+                                               NULL, sizeof(buf), &size, 0);
+        ok(hres == E_FAIL, "QueryInfo(QUERY_USES_NETWORK) failed: %08x, expected E_FAIL\n", hres);
+
+        hres = IInternetProtocolInfo_QueryInfo(protocol_info, javascript_test_url, 60, 0,
+                                               NULL, sizeof(buf), &size, 0);
+        ok(hres == INET_E_USE_DEFAULT_PROTOCOLHANDLER,
+           "QueryInfo failed: %08x, expected INET_E_USE_DEFAULT_PROTOCOLHANDLER\n", hres);
+
+        /* FIXME: test QUERY_IS_SECURE */
+
+        IInternetProtocolInfo_Release(protocol_info);
+    }
+
+    hres = IUnknown_QueryInterface(unk, &IID_IClassFactory, (void**)&factory);
+    ok(hres == S_OK, "Could not get IClassFactory interface\n");
+    if(SUCCEEDED(hres))
+        IClassFactory_Release(factory);
+
+    IUnknown_Release(unk);
+}
+
 START_TEST(protocol)
 {
     OleInitialize(NULL);
 
     test_res_protocol();
     test_about_protocol();
+    test_javascript_protocol();
 
     OleUninitialize();
 }

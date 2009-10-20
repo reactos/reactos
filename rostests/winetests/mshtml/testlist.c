@@ -7,6 +7,7 @@
 #include "wine/test.h"
 
 extern void func_dom(void);
+extern void func_events(void);
 extern void func_htmldoc(void);
 extern void func_misc(void);
 extern void func_protocol(void);
@@ -15,7 +16,8 @@ extern void func_script(void);
 const struct test winetest_testlist[] =
 {
     { "dom", func_dom },
-    { "htmldoc", func_htmldoc },
+    { "events", func_events },
+	{ "htmldoc", func_htmldoc },
     { "misc", func_misc },
     { "protocol", func_protocol },
     { "script", func_script },
