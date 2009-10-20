@@ -168,7 +168,12 @@ FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
 
     /* Set names */
     if (FileHandle)
+    {
         FatSetFcbNames(IrpContext, Fcb);
+
+        /* Ensure the full name is set */
+        FatSetFullFileNameInFcb(IrpContext, Fcb);
+    }
 
     return Fcb;
 }

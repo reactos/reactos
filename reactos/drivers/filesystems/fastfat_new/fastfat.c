@@ -317,7 +317,7 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
 
             TypeOfOpen = (*Ccb == NULL ? DirectoryFile : UserDirectoryOpen);
 
-            DPRINT1("Referencing a directory: %Z\n", &(*FcbOrDcb)->FullFileName);
+            DPRINT1("Referencing a directory: %wZ\n", &(*FcbOrDcb)->FullFileName);
             break;
 
         /* File */
@@ -327,7 +327,7 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
 
             TypeOfOpen = (*Ccb == NULL ? EaFile : UserFileOpen);
 
-            DPRINT("Referencing a file: %Z\n", &(*FcbOrDcb)->FullFileName);
+            DPRINT("Referencing a file: %wZ\n", &(*FcbOrDcb)->FullFileName);
 
             break;
 
