@@ -26,6 +26,7 @@
 #include "winerror.h"
 #include "winnt.h"
 #include "mapiutil.h"
+#include "mapi32_test.h"
 
 static HMODULE hMapi32 = 0;
 
@@ -88,6 +89,12 @@ START_TEST(imalloc)
 {
     SCODE ret;
 
+    if (!HaveDefaultMailClient())
+    {
+        win_skip("No default mail client installed\n");
+        return;
+    }
+
     hMapi32 = LoadLibraryA("mapi32.dll");
 
     pScInitMapiUtil = (void*)GetProcAddress(hMapi32, "ScInitMapiUtil@4");
@@ -103,6 +110,12 @@ START_TEST(imalloc)
     if ((ret != S_OK) && (GetLastError() == ERROR_PROC_NOT_FOUND))
     {
         win_skip("ScInitMapiUtil is not implemented\n");
+        FreeLibrary(hMapi32);
+        return;
+    }
+    else if ((ret == E_FAIL) && (GetLastError() == ERROR_INVALID_HANDLE))
+    {
+        win_skip("ScInitMapiUtil doesn't work on some Win98 and WinME systems\n");
         FreeLibrary(hMapi32);
         return;
     }

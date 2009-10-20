@@ -27,6 +27,7 @@
 #include "initguid.h"
 #include "mapiutil.h"
 #include "mapitags.h"
+#include "mapi32_test.h"
 
 static HMODULE hMapi32 = 0;
 
@@ -239,7 +240,7 @@ static void test_UlPropSize(void)
         }
 
         res = pUlPropSize(&pv);
-        ok(res == exp || broken(!res) /* Win9x */,
+        ok(res == exp,
            "pt= %d: Expected %d, got %d\n", pt, exp, res);
     }
 }
@@ -281,30 +282,30 @@ static void test_FPropContainsProp(void)
     pvRight.Value.lpszA = szFull;
 
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_FULLSTRING);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "(full,full)[] match failed\n");
+    ok(bRet == TRUE, "(full,full)[] match failed\n");
     pvRight.Value.lpszA = szPrefix;
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_FULLSTRING);
     ok(bRet == FALSE, "(full,prefix)[] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX);
     ok(bRet == TRUE, "(full,prefix)[PREFIX] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_SUBSTRING);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "(full,prefix)[SUBSTRING] match failed\n");
+    ok(bRet == TRUE, "(full,prefix)[SUBSTRING] match failed\n");
     pvRight.Value.lpszA = szPrefixLower;
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX);
     ok(bRet == FALSE, "(full,prefixlow)[PREFIX] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_SUBSTRING);
     ok(bRet == FALSE, "(full,prefixlow)[SUBSTRING] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX|FL_IGNORECASE);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "(full,prefixlow)[PREFIX|IGNORECASE] match failed\n");
+    ok(bRet == TRUE, "(full,prefixlow)[PREFIX|IGNORECASE] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_SUBSTRING|FL_IGNORECASE);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "(full,prefixlow)[SUBSTRING|IGNORECASE] match failed\n");
+    ok(bRet == TRUE, "(full,prefixlow)[SUBSTRING|IGNORECASE] match failed\n");
     pvRight.Value.lpszA = szSubstring;
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_FULLSTRING);
     ok(bRet == FALSE, "(full,substr)[] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX);
     ok(bRet == FALSE, "(full,substr)[PREFIX] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_SUBSTRING);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "(full,substr)[SUBSTRING] match failed\n");
+    ok(bRet == TRUE, "(full,substr)[SUBSTRING] match failed\n");
     pvRight.Value.lpszA = szSubstringLower;
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX);
     ok(bRet == FALSE, "(full,substrlow)[PREFIX] match failed\n");
@@ -313,10 +314,10 @@ static void test_FPropContainsProp(void)
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX|FL_IGNORECASE);
     ok(bRet == FALSE, "(full,substrlow)[PREFIX|IGNORECASE] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_SUBSTRING|FL_IGNORECASE);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "(full,substrlow)[SUBSTRING|IGNORECASE] match failed\n");
+    ok(bRet == TRUE, "(full,substrlow)[SUBSTRING|IGNORECASE] match failed\n");
     pvRight.Value.lpszA = szFullLower;
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_FULLSTRING|FL_IGNORECASE);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "(full,fulllow)[IGNORECASE] match failed\n");
+    ok(bRet == TRUE, "(full,fulllow)[IGNORECASE] match failed\n");
 
     pvLeft.ulPropTag = pvRight.ulPropTag = PT_BINARY;
     pvLeft.Value.bin.lpb = (LPBYTE)szFull;
@@ -324,15 +325,15 @@ static void test_FPropContainsProp(void)
     pvLeft.Value.bin.cb = pvRight.Value.bin.cb = strlen(szFull);
 
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_FULLSTRING);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "bin(full,full)[] match failed\n");
+    ok(bRet == TRUE, "bin(full,full)[] match failed\n");
     pvRight.Value.bin.lpb = (LPBYTE)szPrefix;
     pvRight.Value.bin.cb = strlen(szPrefix);
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_FULLSTRING);
     ok(bRet == FALSE, "bin(full,prefix)[] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "bin(full,prefix)[PREFIX] match failed\n");
+    ok(bRet == TRUE, "bin(full,prefix)[PREFIX] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_SUBSTRING);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "bin(full,prefix)[SUBSTRING] match failed\n");
+    ok(bRet == TRUE, "bin(full,prefix)[SUBSTRING] match failed\n");
     pvRight.Value.bin.lpb = (LPBYTE)szPrefixLower;
     pvRight.Value.bin.cb = strlen(szPrefixLower);
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX);
@@ -350,7 +351,7 @@ static void test_FPropContainsProp(void)
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX);
     ok(bRet == FALSE, "bin(full,substr)[PREFIX] match failed\n");
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_SUBSTRING);
-    ok(bRet == TRUE || broken(!bRet) /* Win9x */, "bin(full,substr)[SUBSTRING] match failed\n");
+    ok(bRet == TRUE, "bin(full,substr)[SUBSTRING] match failed\n");
     pvRight.Value.bin.lpb = (LPBYTE)szSubstringLower;
     pvRight.Value.bin.cb = strlen(szSubstringLower);
     bRet = pFPropContainsProp(&pvLeft, &pvRight, FL_PREFIX);
@@ -503,7 +504,7 @@ static void test_FPropCompareProp(void)
             }
 
             bRet = pFPropCompareProp(&pvLeft, FPCProp_Results[j].relOp, &pvRight);
-            ok(bRet == bExp || broken(!bRet) /* Win9x */,
+            ok(bRet == bExp,
                "pt %d (%d,%d,%s): expected %d, got %d\n", ptTypes[i],
                FPCProp_Results[j].lVal, FPCProp_Results[j].rVal,
                relops[FPCProp_Results[j].relOp], bExp, bRet);
@@ -627,7 +628,7 @@ static void test_LPropCompareProp(void)
             }
 
             iRet = pLPropCompareProp(&pvLeft, &pvRight);
-            ok(iRet == iExp || broken(iRet == 0) /* Win9x */,
+            ok(iRet == iExp,
                "pt %d (%d,%d): expected %d, got %d\n", ptTypes[i],
                LPCProp_Results[j].lVal, LPCProp_Results[j].rVal, iExp, iRet);
         }
@@ -649,7 +650,7 @@ static void test_PpropFindProp(void)
         pvProp.ulPropTag = ptTypes[i];
 
         pRet = pPpropFindProp(&pvProp, 1u, ptTypes[i]);
-        ok(pRet == &pvProp || broken(pRet != &pvProp) /* Win9x */,
+        ok(pRet == &pvProp,
            "PpropFindProp[%d]: Didn't find existing propery\n",
            ptTypes[i]);
 
@@ -886,7 +887,7 @@ static void test_LpValFindProp(void)
         pvProp.ulPropTag = PROP_TAG(ptTypes[i], 1u);
 
         pRet = pLpValFindProp(PROP_TAG(ptTypes[i], 1u), 1u, &pvProp);
-        ok(pRet == &pvProp || broken(pRet != &pvProp) /* Win9x */,
+        ok(pRet == &pvProp,
            "LpValFindProp[%d]: Didn't find existing propery id/type\n",
            ptTypes[i]);
 
@@ -899,7 +900,7 @@ static void test_LpValFindProp(void)
            ptTypes[i]);
 
         pRet = pLpValFindProp(PROP_TAG(PT_NULL, 1u), 1u, &pvProp);
-        ok(pRet == &pvProp || broken(pRet != &pvProp) /* Win9x */,
+        ok(pRet == &pvProp,
            "LpValFindProp[%d]: Didn't find existing propery id\n",
            ptTypes[i]);
     }
@@ -996,7 +997,7 @@ static void test_FBadPropTag(void)
         if (bBad)
             ok(res != 0, "pt= %d: Expected non-zero, got 0\n", pt);
         else
-            ok(res == 0 || broken(res) /* Win9x */,
+            ok(res == 0,
                "pt= %d: Expected zero, got %d\n", pt, res);
     }
 }
@@ -1086,7 +1087,7 @@ static void test_FBadProp(void)
         if (bBad)
             ok(res != 0, "pt= %d: Expected non-zero, got 0\n", pt);
         else
-            ok(res == 0 || broken(res) /* Win9x */,
+            ok(res == 0,
                "pt= %d: Expected zero, got %d\n", pt, res);
     }
 }
@@ -1138,7 +1139,7 @@ static void test_FBadColumnSet(void)
         if (bBad)
             ok(res != 0, "pt= %d: Expected non-zero, got 0\n", pt);
         else
-            ok(res == 0 || broken(res) /* Win9x */,
+            ok(res == 0,
                "pt= %d: Expected zero, got %d\n", pt, res);
     }
 }
@@ -1360,6 +1361,12 @@ START_TEST(prop)
 {
     SCODE ret;
 
+    if (!HaveDefaultMailClient())
+    {
+        win_skip("No default mail client installed\n");
+        return;
+    }
+
     if(!InitFuncPtrs())
     {
         win_skip("Needed functions are not available\n");
@@ -1371,6 +1378,12 @@ START_TEST(prop)
     if ((ret != S_OK) && (GetLastError() == ERROR_PROC_NOT_FOUND))
     {
         win_skip("ScInitMapiUtil is not implemented\n");
+        FreeLibrary(hMapi32);
+        return;
+    }
+    else if ((ret == E_FAIL) && (GetLastError() == ERROR_INVALID_HANDLE))
+    {
+        win_skip("ScInitMapiUtil doesn't work on some Win98 and WinME systems\n");
         FreeLibrary(hMapi32);
         return;
     }
