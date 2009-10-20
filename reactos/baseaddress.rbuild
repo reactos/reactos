@@ -239,7 +239,7 @@
   <property name="BASEADDRESS_OLEPRO32" value="0x77b10000" />
   <property name="BASEADDRESS_ACTIVEDS" value="0x77cb0000" />
   <property name="BASEADDRESS_ADVAPI32" value="0x77dc0000" />
-  <property name="BASEADDRESS_USER32" value="0x77e30000" />
+  <property name="BASEADDRESS_USER32" value="0x77e50000" />
   <property name="BASEADDRESS_GDI32" value="0x77f70000" />
   <property name="BASEADDRESS_DNSAPI" value="0x77fb0000" />
   <property name="BASEADDRESS_MSVCRT" value="0x78000000" />
