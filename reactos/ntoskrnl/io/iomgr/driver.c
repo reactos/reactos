@@ -1403,9 +1403,19 @@ try_again:
     /* Loop all Major Functions */
     for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
-        /* Set each function that was set to NULL to internal routine */
+        /*
+         * Make sure the driver didn't set any dispatch entry point to NULL!
+         * Doing so is illegal; drivers shouldn't touch entry points they
+         * do not implement.
+         */
+        ASSERT(DriverObject->MajorFunction[i] != NULL);
+
+        /* Check if it did so anyway */
 		if (!DriverObject->MajorFunction[i])
+        {
+            /* Fix it up */
             DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
+        }
     }
 
     /* Return the Status */

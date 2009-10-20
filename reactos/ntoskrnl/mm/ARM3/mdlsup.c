@@ -507,8 +507,13 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
         // Get the PTE
         //
         PointerPte = MiAddressToPte(BaseAddress);
+
+        //
+        // This should be a resident system PTE
+        //
         ASSERT(PointerPte >= MmSystemPtesStart[SystemPteSpace]);
         ASSERT(PointerPte <= MmSystemPtesEnd[SystemPteSpace]);
+        ASSERT(PointerPte->u.Hard.Valid == 1);
         
         //
         // Check if the caller wants us to free advanced pages
@@ -715,7 +720,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
     //
     // Sanity check
     //
-    ASSERT(MdlPages = (PPFN_NUMBER)(Mdl + 1));
+    ASSERT(MdlPages == (PPFN_NUMBER)(Mdl + 1));
     
     //
     // Check what kind of operation this is
