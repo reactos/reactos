@@ -7,6 +7,9 @@
 	<directory name="sdk">
 		<xi:include href="sdk/sdk.rbuild" />
 	</directory>
+	<directory name="atl">
+		<xi:include href="atl/atl.rbuild" />
+	</directory>
 	<directory name="cmlib">
 		<xi:include href="cmlib/cmlib.rbuild" />
 	</directory>
