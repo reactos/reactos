@@ -3365,6 +3365,12 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
          Menu, Flags, x, y, Wnd, Rect ? Rect->left : 0, Rect ? Rect->top : 0,
          Rect ? Rect->right : 0, Rect ? Rect->bottom : 0);
 
+  if (!IsMenu(Menu))
+  {
+    SetLastError( ERROR_INVALID_MENU_HANDLE );
+    return FALSE;
+  }
+
   fEndMenu = FALSE;
   if (! MenuGetRosMenuInfo(&MenuInfo, Menu))
     {
@@ -3516,17 +3522,12 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                         {
                           MenuSelectItem(Mt.OwnerWnd, &MenuInfo, NO_SELECTED_ITEM,
                                          FALSE, 0 );
-                        }
-                      /* fall through */
-
-                    case VK_UP:
-                      if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
-                        {
                           MenuMoveSelection(Mt.OwnerWnd, &MenuInfo,
                                             VK_HOME == Msg.wParam ? ITEM_NEXT : ITEM_PREV);
                         }
                       break;
 
+                    case VK_UP:
                     case VK_DOWN: /* If on menu bar, pull-down the menu */
                       if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
                         {
@@ -3682,6 +3683,11 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                 {
                   DestroyWindow(MenuInfo.Wnd);
                   MenuInfo.Wnd = NULL;
+
+                  if (!(MenuInfo.Flags & TPM_NONOTIFY))
+                    SendMessageW( Mt.OwnerWnd, WM_UNINITMENUPOPUP, (WPARAM)Mt.TopMenu,
+                                 MAKELPARAM(0, IS_SYSTEM_MENU(&MenuInfo)) );
+
                 }
               MenuSelectItem(Mt.OwnerWnd, &MenuInfo, NO_SELECTED_ITEM, FALSE, NULL);
             }
@@ -5182,6 +5188,12 @@ TrackPopupMenu(
   CONST RECT *Rect)
 {
   BOOL ret = FALSE;
+
+  if (!IsMenu(Menu))
+  {
+    SetLastError( ERROR_INVALID_MENU_HANDLE );
+    return FALSE;
+  }
 
   MenuInitTracking(Wnd, Menu, TRUE, Flags);
 
