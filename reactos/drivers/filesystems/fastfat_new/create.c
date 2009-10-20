@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS FAT file system driver
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GNU GPLv3 as published by the Free Software Foundation
  * FILE:            drivers/filesystems/fastfat/create.c
  * PURPOSE:         Create routines
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
