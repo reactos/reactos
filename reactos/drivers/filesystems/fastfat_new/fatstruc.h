@@ -305,6 +305,8 @@ typedef struct _FCB
     ULONG OutstandingAsyncWrites;
     /* The outstanding async writes sync event */
     PKEVENT OutstandingAsyncEvent;
+    /* Counters */
+    ULONG OpenCount;
     union
     {
         struct

@@ -23,10 +23,64 @@ FatiOpenRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
                 IN ULONG CreateDisposition)
 {
     IO_STATUS_BLOCK Iosb;
+    PFCB Dcb;
+    NTSTATUS Status;
+    PCCB Ccb;
 
-    DPRINT1("Opening root directory\n");
+    /* Reference our DCB */
+    Dcb = Vcb->RootDcb;
 
-    Iosb.Status = STATUS_NOT_IMPLEMENTED;
+    DPRINT("Opening root directory\n");
+
+    /* Exclusively lock this DCB */
+    (VOID)FatAcquireExclusiveFcb(IrpContext, Dcb);
+
+    do
+    {
+        /* Validate parameters */
+        if (CreateDisposition != FILE_OPEN &&
+            CreateDisposition != FILE_OPEN_IF)
+        {
+            Iosb.Status = STATUS_ACCESS_DENIED;
+            break;
+        }
+
+        // TODO: Check file access
+
+        /* Is it a first time open? */
+        if (Dcb->OpenCount == 0)
+        {
+            /* Set share access */
+            IoSetShareAccess(*DesiredAccess,
+                             ShareAccess,
+                             FileObject,
+                             &Dcb->ShareAccess);
+        }
+        else
+        {
+            /* Check share access */
+            Status = IoCheckShareAccess(*DesiredAccess,
+                                        ShareAccess,
+                                        FileObject,
+                                        &Dcb->ShareAccess,
+                                        TRUE);
+        }
+
+        /* Set file object pointers */
+        Ccb = FatCreateCcb(IrpContext);
+        FatSetFileObject(FileObject, UserDirectoryOpen, Dcb, Ccb);
+
+        /* Increment counters */
+        Dcb->OpenCount++;
+        Vcb->OpenFileCount++;
+
+        /* Set success statuses */
+        Iosb.Status = STATUS_SUCCESS;
+        Iosb.Information = FILE_OPENED;
+    } while (FALSE);
+
+    /* Release the DCB lock */
+    FatReleaseFcb(IrpContext, Dcb);
 
     return Iosb;
 }
