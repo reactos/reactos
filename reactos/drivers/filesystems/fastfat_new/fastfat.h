@@ -66,21 +66,6 @@ FatReadStreamFile(PVCB Vcb,
                   PBCB *Bcb,
                   PVOID *Buffer);
 
-/*  ------------------------------------------------------  blockdev.c  */
-NTSTATUS
-NTAPI
-FatPerformLboIo(
-    IN PFAT_IRP_CONTEXT IrpContext,
-    IN PLARGE_INTEGER Offset,
-    IN SIZE_T Length);
-
-NTSTATUS
-FatPerformVirtualNonCachedIo(
-    IN PFAT_IRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PLARGE_INTEGER Offset,
-    IN SIZE_T Length);
-
 /*  -----------------------------------------------------------  dir.c  */
 
 NTSTATUS NTAPI
@@ -215,6 +200,10 @@ FatWriteBlocks(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count
 FF_T_SINT32
 FatReadBlocks(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAddress, FF_T_UINT32 Count, void *pParam);
 
+VOID NTAPI
+FatQueryFileTimes(OUT PLARGE_INTEGER FileTimes,
+                  IN PDIR_ENTRY Dirent);
+
 /* ---------------------------------------------------------  lock.c */
 
 NTSTATUS NTAPI
@@ -249,33 +238,16 @@ NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
 /*  -----------------------------------------------------------  fat.c  */
-PVOID
-FatPinPage(
-    PFAT_PAGE_CONTEXT Context,
-    LONGLONG ByteOffset);
-
-PVOID
-FatPinNextPage(
-    PFAT_PAGE_CONTEXT Context);
-
-NTSTATUS
+NTSTATUS NTAPI
 FatInitializeVcb(
     IN PFAT_IRP_CONTEXT IrpContext,
     IN PVCB Vcb,
     IN PDEVICE_OBJECT TargetDeviceObject,
     IN PVPB Vpb);
 
-VOID
+VOID NTAPI
 FatUninitializeVcb(
     IN PVCB Vcb);
-
-ULONG
-FatScanFat(
-    IN PFCB Fcb,
-    IN LONGLONG Vbo, OUT PLONGLONG Lbo,
-    IN OUT PLONGLONG Length,
-    OUT PULONG Index,
-    IN BOOLEAN CanWait);
 
 /*  ------------------------------------------------------  device.c  */
 
@@ -291,36 +263,7 @@ FatPerformDevIoCtrl(PDEVICE_OBJECT DeviceObject,
                     ULONG OutputBufferSize,
                     BOOLEAN Override);
 
-/*  ------------------------------------------------------  direntry.c  */
-VOID
-FatFindDirent(IN OUT PFAT_FIND_DIRENT_CONTEXT Context,
-              OUT PDIR_ENTRY* Dirent,
-              OUT PUNICODE_STRING LongFileName OPTIONAL);
-
-VOID
-FatEnumerateDirents(IN OUT PFAT_ENUM_DIRENT_CONTEXT Context,
-                    IN SIZE_T Offset);
-
-VOID
-FatQueryFileTimes(OUT PLARGE_INTEGER FileTimes,
-                  IN PDIR_ENTRY Dirent);
-
 /*  -----------------------------------------------------------  fcb.c  */
-PFCB
-FatLookupFcbByName(
-	IN PFCB ParentFcb,
-	IN PUNICODE_STRING Name);
-
-BOOLEAN
-FatLinkFcbNames(
-	IN PFCB ParentFcb,
-	IN PFCB Fcb);
-
-VOID
-FatUnlinkFcbNames(
-	IN PFCB ParentFcb,
-	IN PFCB Fcb);
-
 PFCB NTAPI
 FatCreateFcb(
     IN PFAT_IRP_CONTEXT IrpContext,

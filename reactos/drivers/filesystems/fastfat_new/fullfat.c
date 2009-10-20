@@ -100,4 +100,114 @@ FF_FILE *FF_OpenW(FF_IOMAN *pIoman, PUNICODE_STRING pathW, FF_T_UINT8 Mode, FF_E
     return FF_Open(pIoman, AnsiName.Buffer, Mode, pError);
 }
 
+FORCEINLINE
+VOID
+FatDateTimeToSystemTime(OUT PLARGE_INTEGER SystemTime,
+                        IN PFAT_DATETIME FatDateTime,
+                        IN UCHAR TenMs OPTIONAL)
+{
+    TIME_FIELDS TimeFields;
+
+    /* Setup time fields */
+    TimeFields.Year = FatDateTime->Date.Year + 1980;
+    TimeFields.Month = FatDateTime->Date.Month;
+    TimeFields.Day = FatDateTime->Date.Day;
+    TimeFields.Hour = FatDateTime->Time.Hour;
+    TimeFields.Minute = FatDateTime->Time.Minute;
+    TimeFields.Second = (FatDateTime->Time.DoubleSeconds << 1);
+
+    /* Adjust up to 10 milliseconds
+     * if the parameter was supplied
+     */
+    if (ARGUMENT_PRESENT(TenMs))
+    {
+        TimeFields.Second += TenMs / 100;
+        TimeFields.Milliseconds = (TenMs % 100) * 10;
+    }
+    else
+    {
+        TimeFields.Milliseconds = 0;
+    }
+
+    /* Fix seconds value that might get beyoud the bound */
+    if (TimeFields.Second > 59) TimeFields.Second = 0;
+
+    /* Perform ceonversion to system time if possible */
+    if (RtlTimeFieldsToTime(&TimeFields, SystemTime))
+    {
+        /* Convert to system time */
+        ExLocalTimeToSystemTime(SystemTime, SystemTime);
+    }
+    else
+    {
+        /* Set to default time if conversion failed */
+        *SystemTime = FatGlobalData.DefaultFileTime;
+    }
+}
+
+// TODO: Make it a helper around FullFAT library
+VOID
+NTAPI
+FatQueryFileTimes(OUT PLARGE_INTEGER FileTimes,
+                  IN PDIR_ENTRY Dirent)
+{
+    /* Convert LastWriteTime */
+    FatDateTimeToSystemTime(&FileTimes[FileLastWriteTime],
+                            &Dirent->LastWriteDateTime,
+                            0);
+    /* All other time fileds are valid (according to MS)
+     * only if Win31 compatability mode is set.
+     */
+    if (FatGlobalData.Win31FileSystem)
+    {
+       /* We can avoid calling conversion routine
+        * if time in dirent is 0 or equals to already
+        * known time (LastWriteTime).
+        */
+        if (Dirent->CreationDateTime.Value == 0)
+        {
+            /* Set it to default time */
+            FileTimes[FileCreationTime] = FatGlobalData.DefaultFileTime;
+        }
+        else if (Dirent->CreationDateTime.Value
+            == Dirent->LastWriteDateTime.Value)
+        {
+            /* Assign the already known time */
+            FileTimes[FileCreationTime] = FileTimes[FileLastWriteTime];
+            /* Adjust milliseconds from extra dirent field */
+            FileTimes[FileCreationTime].QuadPart
+                += (ULONG) Dirent->CreationTimeTenMs * 100000;
+        }
+        else
+        {
+            /* Perform conversion */
+            FatDateTimeToSystemTime(&FileTimes[FileCreationTime],
+                                    &Dirent->CreationDateTime,
+                                    Dirent->CreationTimeTenMs);
+        }
+        if (Dirent->LastAccessDate.Value == 0)
+        {
+            /* Set it to default time */
+            FileTimes[FileLastAccessTime] = FatGlobalData.DefaultFileTime;
+        }
+        else if (Dirent->LastAccessDate.Value
+                == Dirent->LastWriteDateTime.Date.Value)
+        {
+            /* Assign the already known time */
+            FileTimes[FileLastAccessTime] = FileTimes[FileLastWriteTime];
+        }
+        else
+        {
+            /* Perform conversion */
+            FAT_DATETIME LastAccessDateTime;
+
+            LastAccessDateTime.Date.Value = Dirent->LastAccessDate.Value;
+            LastAccessDateTime.Time.Value = 0;
+            FatDateTimeToSystemTime(&FileTimes[FileLastAccessTime],
+                                    &LastAccessDateTime,
+                                    0);
+        }
+    }
+}
+
 /* EOF */

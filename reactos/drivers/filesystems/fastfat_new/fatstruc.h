@@ -388,6 +388,14 @@ typedef enum _TYPE_OF_OPEN
     EaFile
 } TYPE_OF_OPEN;
 
+typedef enum _FILE_TIME_INDEX
+{
+    FileCreationTime = 0,
+    FileLastAccessTime,
+    FileLastWriteTime,
+    FileChangeTime
+} FILE_TIME_INDEX;
+
 #define CCB_SEARCH_RETURN_SINGLE_ENTRY      0x01
 #define CCB_SEARCH_PATTERN_LEGAL_8DOT3      0x02
 #define CCB_SEARCH_PATTERN_HAS_WILD_CARD    0x04

@@ -4,7 +4,6 @@
  * FILE:            drivers/filesystems/fastfat/rw.c
  * PURPOSE:         Read/write support
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
- *                  Alexey Vlasov
  */
 
 /* INCLUDES *****************************************************************/
