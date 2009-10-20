@@ -384,6 +384,15 @@ NtUserCreateAcceleratorTable(
           {
               Accel->Table[Index].key = Entries[Index].key;
           }
+          else
+          {
+             RtlMultiByteToUnicodeN(&Accel->Table[Index].key, 
+                                    sizeof(WCHAR), 
+                                    NULL, 
+                                    (PCSTR)&Entries[Index].key, 
+                                    sizeof(CHAR));
+          }
+
           Accel->Table[Index].cmd = Entries[Index].cmd;
       }
 
