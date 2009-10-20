@@ -606,10 +606,10 @@ private:
 	{
 		LPCOLESTR							iter;
 		strbuf								buf;
-		unsigned int						i;
+		unsigned int							i;
 		HRESULT								hResult;
 		static const struct {
-			wchar_t							*name;
+			const wchar_t						*name;
 			HKEY							key;
 		} root_keys[] = {
 			{_T("HKEY_CLASSES_ROOT"), HKEY_CLASSES_ROOT},
