@@ -513,8 +513,7 @@ DWORD getNumArpEntries(void)
 
     for( i = 0; i < numEntities; i++ ) {
         if( isInterface( &entitySet[i] ) &&
-	    hasArp( tcpFile, &entitySet[i] ) &&
-	    !isLoopback( tcpFile, &entitySet[i] ) ) {
+	    hasArp( tcpFile, &entitySet[i] ) ) {
 
 	    status = tdiGetSetOfThings( tcpFile,
 					INFO_CLASS_PROTOCOL,
@@ -574,8 +573,7 @@ PMIB_IPNETTABLE getArpTable(void)
 
     for( i = 0; i < numEntities; i++ ) {
         if( isInterface( &entitySet[i] ) &&
-	    hasArp( tcpFile, &entitySet[i] ) &&
-	    !isLoopback( tcpFile, &entitySet[i] ) ) {
+	    hasArp( tcpFile, &entitySet[i] ) ) {
 
 	    status = tdiGetSetOfThings( tcpFile,
 					INFO_CLASS_PROTOCOL,

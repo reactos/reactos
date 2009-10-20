@@ -197,7 +197,7 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     EntityList[EntityCount].tei_entity   = AT_ENTITY;
     EntityList[EntityCount].tei_instance = ATCount;
     EntityList[EntityCount].context      = Interface;
-    EntityList[EntityCount].flags        = AT_ARP;
+    EntityList[EntityCount].flags        = (Interface != Loopback) ? AT_ARP : AT_NULL;
     EntityCount++;
 
     TcpipReleaseSpinLock( &EntityListLock, OldIrql );
