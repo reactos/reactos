@@ -69,16 +69,14 @@ UDPv4ChecksumCalculate(
 
   /* Pad the data if needed */
   Pad = (DataLength & 1);
-  if (Pad) {
-      DbgPrint("Odd\n");
+  if (Pad)
       DataLength++;
-  } else DbgPrint("Even\n");
 
   /* Add from the UDP header and data */
   for (i = 0; i < DataLength; i += 2)
   {
        TmpSum = ((PacketBuffer[i] << 8) & 0xFF00) +
-                ((Pad && i == DataLength - 1) ? 0 : (PacketBuffer[i+1] & 0x00FF));
+                ((Pad && i == DataLength - 2) ? 0 : (PacketBuffer[i+1] & 0x00FF));
        Sum += TmpSum;
   }
 

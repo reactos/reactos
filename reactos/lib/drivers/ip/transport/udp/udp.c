@@ -267,7 +267,7 @@ VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
   i = UDPv4ChecksumCalculate(IPv4Header,
                              (PUCHAR)UDPHeader,
                              WH2N(UDPHeader->Length));
-  if (i != DH2N(0x0000FFFF))
+  if (i != DH2N(0x0000FFFF) && UDPHeader->Checksum != 0)
   {
       TI_DbgPrint(MIN_TRACE, ("Bad checksum on packet received.\n"));
       return;
