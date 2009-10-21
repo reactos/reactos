@@ -113,16 +113,23 @@ TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID ID,
     NTSTATUS Status;
     ULONG NumNeighbors = NBCopyNeighbors( Interface, NULL );
     ULONG MemSize = NumNeighbors * sizeof(IPARP_ENTRY);
-    PIPARP_ENTRY ArpEntries =
-	exAllocatePoolWithTag
-	( NonPagedPool, MemSize, FOURCC('A','R','P','t') );
+    PIPARP_ENTRY ArpEntries;
 
-    if( !ArpEntries ) return STATUS_NO_MEMORY;
-    NBCopyNeighbors( Interface, ArpEntries );
+    if (MemSize != 0)
+    {
+        ArpEntries = exAllocatePoolWithTag( NonPagedPool, MemSize, FOURCC('A','R','P','t') );
+        if( !ArpEntries ) return STATUS_NO_MEMORY;
 
-    Status = InfoCopyOut( (PVOID)ArpEntries, MemSize, Buffer, BufferSize );
+        NBCopyNeighbors( Interface, ArpEntries );
 
-    exFreePool( ArpEntries );
+        Status = InfoCopyOut( (PVOID)ArpEntries, MemSize, Buffer, BufferSize );
+
+        exFreePool( ArpEntries );
+    }
+    else
+    {
+        Status = InfoCopyOut(NULL, 0, NULL, BufferSize);
+    }
 
     return Status;
 }
