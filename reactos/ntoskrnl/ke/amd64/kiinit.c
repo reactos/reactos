@@ -701,14 +701,14 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Setup the IDT */
         KeInitExceptions();
 
+        /* HACK: misuse this function to pass a function pointer to kdcom */
+        KdDebuggerInitialize1((PVOID)FrLdrDbgPrint);
+
         /* Initialize debugging system */
         KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
 //        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
-
-        /* HACK: misuse this function to pass a function pointer to kdcom */
-        KdDebuggerInitialize1((PVOID)FrLdrDbgPrint);
 
         /* Hack! Wait for the debugger! */
         while (!KdPollBreakIn());

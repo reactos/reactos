@@ -468,8 +468,8 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
 
     /* Restore GDT, IDT, LDT and TSS */
     __lgdt(&ProcessorState->SpecialRegisters.Gdtr.Limit);
-    __lldt(&ProcessorState->SpecialRegisters.Ldtr);
-    __ltr(&ProcessorState->SpecialRegisters.Tr);
+//    __lldt(&ProcessorState->SpecialRegisters.Ldtr);
+//    __ltr(&ProcessorState->SpecialRegisters.Tr);
     __lidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
 
     __ldmxcsr(&ProcessorState->SpecialRegisters.MxCsr);

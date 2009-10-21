@@ -30,6 +30,9 @@ _MsgBreakpointTrap:
 _MsgUnexpectedInterrupt:
 .ascii "UnexpectedInterrupt\n\0"
 
+_MsgInvalidOpcodeFault:
+.ascii "General protection fault at %p!\n\0"
+
 /* Helper Macros *************************************************************/
 
 #define TRAPFLAG_SYSTEMSERVICE 1
@@ -267,9 +270,6 @@ _MsgUnexpectedInterrupt:
     mov rdx, rbp
     call _FrLdrDbgPrint[rip]
 
-    /* Increase Rip to skip the int3 */
-    inc qword ptr [rbp + KTRAP_FRAME_Rip]
-
     DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
 
     /* Return */
@@ -310,9 +310,18 @@ _MsgUnexpectedInterrupt:
     push 0
     .allocstack 0x8
 
-    UNIMPLEMENTED KiInvalidOpcodeFault
+    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
 
+//    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
+
+    mov rdx, [rbp + KTRAP_FRAME_Rip]
+    lea rcx, _MsgInvalidOpcodeFault[rip]
+    call _FrLdrDbgPrint[rip]
     jmp $
+
+    /* Return */
+    LEAVE_TRAP_FRAME
+    iretq
 .endproc
 
 .proc KiNpxNotAvailableFault
