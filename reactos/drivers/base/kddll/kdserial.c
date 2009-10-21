@@ -80,8 +80,6 @@ KdpReceivePacketLeader(
     /* Set first character to 0 */
     Buffer[0] = 0;
 
-KdpDbgPrint("KdpReceivePacketLeader\n" );
-
     do
     {
         /* Receive a single Byte */
@@ -108,7 +106,6 @@ KdpDbgPrint("KdpReceivePacketLeader\n" );
             if (Byte == PACKET_LEADER_BYTE ||
                 Byte == CONTROL_PACKET_LEADER_BYTE)
             {
-                KdpDbgPrint("received byte 0x%x, Index = %d\n", Byte, Index);
                 /* Check if we match the first byte */
                 if (Byte != Buffer[0])
                 {
@@ -137,8 +134,6 @@ KdpDbgPrint("KdpReceivePacketLeader\n" );
 
     /* Return the received packet leader */
     *PacketLeader = *(PULONG)Buffer;
-
-KdpDbgPrint("KDP_PACKET_RECEIVED\n");
 
     return KDP_PACKET_RECEIVED;
 }

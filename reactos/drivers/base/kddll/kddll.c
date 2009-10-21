@@ -10,7 +10,7 @@
 
 /* GLOBALS ********************************************************************/
 
-ULONG CurrentPacketId = INITIAL_PACKET_ID;
+ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
 
 // HACK!!!
 DBGRNT KdpDbgPrint = 0;
@@ -194,7 +194,9 @@ KdReceivePacket(
             switch (Packet.PacketType)
             {
                 case PACKET_TYPE_KD_ACKNOWLEDGE:
-                    if (PacketType == PACKET_TYPE_KD_ACKNOWLEDGE)
+                    /* Are we waiting for an ACK packet? */                    
+                    if (PacketType == PACKET_TYPE_KD_ACKNOWLEDGE &&
+                        Packet.PacketId == (CurrentPacketId & ~SYNC_PACKET_ID))
                     {
                         /* Remote acknowledges the last packet */
                         CurrentPacketId ^= 1;
@@ -210,6 +212,7 @@ KdReceivePacket(
                     /* Fall through */
 
                 case PACKET_TYPE_KD_RESEND:
+                    KdpDbgPrint("KdReceivePacket - got PACKET_TYPE_KD_RESEND\n");
                     /* Remote wants us to resend the last packet */
                     return KDP_PACKET_RESEND;
 
@@ -223,13 +226,18 @@ KdReceivePacket(
         if (PacketType == PACKET_TYPE_KD_ACKNOWLEDGE)
         {
             /* We received something different, start over */
-            continue;
+//            continue;
+            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
+            CurrentPacketId ^= 1;
+            return KDP_PACKET_RECEIVED;
         }
 
         /* Did we get the right packet type? */
         if (PacketType != Packet.PacketType)
         {
             /* We received something different, start over */
+            KdpDbgPrint("KdReceivePacket - wrong PacketType\n");
+            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
         }
 
@@ -270,8 +278,9 @@ KdReceivePacket(
                                    MessageHeader->Length);
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
-            /* Didn't receive data. Start over. */
-            KdpDbgPrint("KdReceivePacket - Didn't receive message header data. Start over\n");
+            /* Didn't receive data. Packet needs to be resent. */
+            KdpDbgPrint("KdReceivePacket - Didn't receive message header data.\n");
+            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
         }
 
@@ -281,11 +290,14 @@ KdReceivePacket(
         Checksum = KdpCalculateChecksum(MessageHeader->Buffer,
                                         MessageHeader->Length);
 
+        /* Calculate the length of the message data */
+        *DataLength = Packet.ByteCount - MessageHeader->Length;
+
         /* Shall we receive messsage data? */
         if (MessageData)
         {
-            /* Calculate the length of the message data */
-            MessageData->Length = Packet.ByteCount - MessageHeader->Length;
+            /* Set the length of the message data */
+            MessageData->Length = *DataLength;
 
             /* Do we have data? */
             if (MessageData->Length)
@@ -298,7 +310,8 @@ KdReceivePacket(
                 if (KdStatus != KDP_PACKET_RECEIVED)
                 {
                     /* Didn't receive data. Start over. */
-                    KdpDbgPrint("KdReceivePacket - Didn't receive message data. Start over\n");
+                    KdpDbgPrint("KdReceivePacket - Didn't receive message data.\n");
+                    KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
                     continue;
                 }
 
@@ -311,14 +324,20 @@ KdReceivePacket(
         /* Compare checksum */
         if (Packet.Checksum != Checksum)
         {
-            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, CurrentPacketId);
             KdpDbgPrint("KdReceivePacket - wrong cheksum, got %x, calculated %x\n",
                           Packet.Checksum, Checksum);
+            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
         }
 
         /* We must receive a PACKET_TRAILING_BYTE now */
         KdStatus = KdpReceiveBuffer(&Byte, sizeof(UCHAR));
+        if (KdStatus != KDP_PACKET_RECEIVED || Byte != PACKET_TRAILING_BYTE)
+        {
+            KdpDbgPrint("KdReceivePacket - wrong trailing byte (0x%x), status 0x%x\n", Byte, KdStatus);
+            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
+            continue;
+        }
 
         /* Acknowledge the received packet */
         KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, Packet.PacketId);
@@ -343,23 +362,23 @@ KdSendPacket(
     KD_PACKET Packet;
     KDP_STATUS KdStatus;
 
+    /* Initialize a KD_PACKET */
+    Packet.PacketLeader = PACKET_LEADER;
+    Packet.PacketType = PacketType;
+    Packet.ByteCount = MessageHeader->Length;
+    Packet.Checksum = KdpCalculateChecksum(MessageHeader->Buffer,
+                                           MessageHeader->Length);
+
+    /* If we have message data, add it to the packet */
+    if (MessageData)
+    {
+        Packet.ByteCount += MessageData->Length;
+        Packet.Checksum += KdpCalculateChecksum(MessageData->Buffer,
+                                                MessageData->Length);
+    }
+
     for (;;)
     {
-        /* Initialize a KD_PACKET */
-        Packet.PacketLeader = PACKET_LEADER;
-        Packet.PacketType = PacketType;
-        Packet.ByteCount = MessageHeader->Length;
-        Packet.Checksum = KdpCalculateChecksum(MessageHeader->Buffer,
-                                               MessageHeader->Length);
-
-        /* If we have message data, add it to the packet */
-        if (MessageData)
-        {
-            Packet.ByteCount += MessageData->Length;
-            Packet.Checksum += KdpCalculateChecksum(MessageData->Buffer,
-                                                    MessageData->Length);
-        }
-
         /* Set the packet id */
         Packet.PacketId = CurrentPacketId;
 
@@ -396,7 +415,7 @@ KdSendPacket(
         if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
         {
             /* No response, silently fail. */
-//            return;
+            return;
         }
 
         /* Packet timed out, send it again */
