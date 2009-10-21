@@ -1035,6 +1035,7 @@ PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
       break;
 
     case MM_GETMENUHANDLE:
+    case MN_GETHMENU: 
       return GetWindowLongPtrA(Wnd, 0);
 
     default:
@@ -1106,6 +1107,7 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
       break;
 
     case MM_GETMENUHANDLE:
+    case MN_GETHMENU:
       return GetWindowLongPtrW(Wnd, 0);
 
     default:
