@@ -8,7 +8,7 @@ Description = SMPlayer.
 Size = 13.38MB
 Category = 1
 URLSite = http://smplayer.sourceforge.net/
-URLDownload = http://downloads.sourceforge.net/project/smplayer/SMPlayer/0.6.8/smplayer-0.6.8-win32.exe?use_mirror=ovh
+URLDownload = http://downloads.sourceforge.net/project/smplayer/SMPlayer/0.6.8/smplayer-0.6.8-win32.exe
 CDPath = none
 
 
