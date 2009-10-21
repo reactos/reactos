@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        history.c
+ * FILE:        base/applications/paint/history.c
  * PURPOSE:     Undo and redo functionality
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -17,9 +17,10 @@
 
 extern void updateCanvasAndScrollbars(void);
 
-void setImgXYRes(int x, int y)
+void
+setImgXYRes(int x, int y)
 {
-    if ((imgXRes!=x)||(imgYRes!=y))
+    if ((imgXRes != x) || (imgYRes != y))
     {
         imgXRes = x;
         imgYRes = y;
@@ -27,12 +28,14 @@ void setImgXYRes(int x, int y)
     }
 }
 
-void newReversible()
+void
+newReversible()
 {
-    DeleteObject(hBms[(currInd+1)%HISTORYSIZE]);
-    hBms[(currInd+1)%HISTORYSIZE] = CopyImage( hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
-    currInd = (currInd+1)%HISTORYSIZE;
-    if (undoSteps<HISTORYSIZE-1) undoSteps++;
+    DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
+    hBms[(currInd + 1) % HISTORYSIZE] = CopyImage(hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    currInd = (currInd + 1) % HISTORYSIZE;
+    if (undoSteps < HISTORYSIZE - 1)
+        undoSteps++;
     redoSteps = 0;
     SelectObject(hDrawingDC, hBms[currInd]);
     imgXRes = GetDIBWidth(hBms[currInd]);
@@ -40,74 +43,85 @@ void newReversible()
     imageSaved = FALSE;
 }
 
-void undo()
+void
+undo()
 {
-    if (undoSteps>0)
+    if (undoSteps > 0)
     {
         ShowWindow(hSelection, SW_HIDE);
-        currInd = (currInd+HISTORYSIZE-1)%HISTORYSIZE;
+        currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         undoSteps--;
-        if (redoSteps<HISTORYSIZE-1) redoSteps++;
+        if (redoSteps < HISTORYSIZE - 1)
+            redoSteps++;
         setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
     }
 }
 
-void redo()
+void
+redo()
 {
-    if (redoSteps>0)
+    if (redoSteps > 0)
     {
         ShowWindow(hSelection, SW_HIDE);
-        currInd = (currInd+1)%HISTORYSIZE;
+        currInd = (currInd + 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         redoSteps--;
-        if (undoSteps<HISTORYSIZE-1) undoSteps++;
+        if (undoSteps < HISTORYSIZE - 1)
+            undoSteps++;
         setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
     }
 }
 
-void resetToU1()
+void
+resetToU1()
 {
     DeleteObject(hBms[currInd]);
-    hBms[currInd] = CopyImage( hBms[(currInd+HISTORYSIZE-1)%HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    hBms[currInd] =
+        CopyImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
     SelectObject(hDrawingDC, hBms[currInd]);
     imgXRes = GetDIBWidth(hBms[currInd]);
     imgYRes = GetDIBHeight(hBms[currInd]);
 }
 
-void clearHistory()
+void
+clearHistory()
 {
     undoSteps = 0;
     redoSteps = 0;
 }
 
-void insertReversible(HBITMAP hbm)
+void
+insertReversible(HBITMAP hbm)
 {
-    DeleteObject(hBms[(currInd+1)%HISTORYSIZE]);
-    hBms[(currInd+1)%HISTORYSIZE] = hbm;
-    currInd = (currInd+1)%HISTORYSIZE;
-    if (undoSteps<HISTORYSIZE-1) undoSteps++;
+    DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
+    hBms[(currInd + 1) % HISTORYSIZE] = hbm;
+    currInd = (currInd + 1) % HISTORYSIZE;
+    if (undoSteps < HISTORYSIZE - 1)
+        undoSteps++;
     redoSteps = 0;
     SelectObject(hDrawingDC, hBms[currInd]);
     setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
 }
 
-void cropReversible(int width, int height, int xOffset, int yOffset)
+void
+cropReversible(int width, int height, int xOffset, int yOffset)
 {
     HDC hdc;
     HPEN oldPen;
     HBRUSH oldBrush;
 
     SelectObject(hDrawingDC, hBms[currInd]);
-    DeleteObject(hBms[(currInd+1)%HISTORYSIZE]);
-    hBms[(currInd+1)%HISTORYSIZE] = CreateDIBWithProperties(width, height);
-    currInd = (currInd+1)%HISTORYSIZE;
-    if (undoSteps<HISTORYSIZE-1) undoSteps++;
+    DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
+    hBms[(currInd + 1) % HISTORYSIZE] = CreateDIBWithProperties(width, height);
+    currInd = (currInd + 1) % HISTORYSIZE;
+    if (undoSteps < HISTORYSIZE - 1)
+        undoSteps++;
     redoSteps = 0;
-    
+
     hdc = CreateCompatibleDC(hDrawingDC);
     SelectObject(hdc, hBms[currInd]);
-    
+
     oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, bgColor));
     oldBrush = SelectObject(hdc, CreateSolidBrush(bgColor));
     Rectangle(hdc, 0, 0, width, height);
@@ -116,6 +130,6 @@ void cropReversible(int width, int height, int xOffset, int yOffset)
     DeleteObject(SelectObject(hdc, oldPen));
     DeleteDC(hdc);
     SelectObject(hDrawingDC, hBms[currInd]);
-    
+
     setImgXYRes(width, height);
 }

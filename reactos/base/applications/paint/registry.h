@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        registry.h
+ * FILE:        base/applications/paint/registry.h
  * PURPOSE:     Offering functions dealing with registry values
  * PROGRAMMERS: Benedikt Freisen
  */

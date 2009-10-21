@@ -1,4 +1,10 @@
-/* Basque language resource file */
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     unknown (LGPL assumed)
+ * FILE:        base/applications/paint/lang/eu-ES.rc
+ * PURPOSE:     Basque Language resource file
+ * TRANSLATORS: unknown
+ */
 
 LANGUAGE LANG_BASQUE, SUBLANG_DEFAULT
 
@@ -135,9 +141,9 @@ BEGIN
     LTEXT "Azken gordetze-data:", IDD_ATTRIBUTESTEXT3, 10, 5, 80, 10
     LTEXT "Diskoko tamaina:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Bereizmena:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT6, 80, 5, 60, 10
-    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT7, 80, 15, 60, 10
-    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT8, 80, 25, 60, 10
+    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT6, 80, 5, 70, 10
+    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT7, 80, 15, 70, 10
+    LTEXT "Ez dago erabilgarri", IDD_ATTRIBUTESTEXT8, 80, 25, 70, 10
     GROUPBOX "Unitateak ", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "Hazbetea", IDD_ATTRIBUTESRB1, 12, 69, 42, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 60, 69, 30, 10

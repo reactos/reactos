@@ -1,6 +1,9 @@
 /*
- * German Language resource file / Deutsche Sprachresourcendatei
- * Program's initial language / anfängliche Programmsprache, Benedikt Freisen
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL
+ * FILE:        base/applications/paint/lang/de-DE.rc
+ * PURPOSE:     German Language resource file (reference language file)
+ * TRANSLATORS: Benedikt Freisen
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN

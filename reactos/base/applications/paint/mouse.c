@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        mouse.c
+ * FILE:        base/applications/paint/mouse.c
  * PURPOSE:     Things which should not be in the mouse event handler itself
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -15,9 +15,11 @@
 
 /* FUNCTIONS ********************************************************/
 
-void placeSelWin()
+void
+placeSelWin()
 {
-    MoveWindow(hSelection, rectSel_dest[0]*zoom/1000, rectSel_dest[1]*zoom/1000, rectSel_dest[2]*zoom/1000+6, rectSel_dest[3]*zoom/1000+6, TRUE);
+    MoveWindow(hSelection, rectSel_dest[0] * zoom / 1000, rectSel_dest[1] * zoom / 1000,
+               rectSel_dest[2] * zoom / 1000 + 6, rectSel_dest[3] * zoom / 1000 + 6, TRUE);
     BringWindowToTop(hSelection);
     SendMessage(hImageArea, WM_PAINT, 0, 0);
     //SendMessage(hSelection, WM_PAINT, 0, 0);
@@ -26,7 +28,8 @@ void placeSelWin()
 POINT pointStack[256];
 short pointSP;
 
-void startPaintingL(HDC hdc, short x, short y, int fg, int bg)
+void
+startPaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     startX = x;
     startY = y;
@@ -37,6 +40,7 @@ void startPaintingL(HDC hdc, short x, short y, int fg, int bg)
         case 1:
         case 10:
         case 11:
+        case 13:
         case 15:
         case 16:
             newReversible();
@@ -67,7 +71,7 @@ void startPaintingL(HDC hdc, short x, short y, int fg, int bg)
         case 12:
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if (pointSP==0)
+            if (pointSP == 0)
             {
                 newReversible();
                 pointSP++;
@@ -76,8 +80,9 @@ void startPaintingL(HDC hdc, short x, short y, int fg, int bg)
         case 14:
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if (pointSP+1>=2) Poly(hdc, pointStack, pointSP+1, fg, bg, lineWidth, shapeStyle, FALSE);
-            if (pointSP==0)
+            if (pointSP + 1 >= 2)
+                Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE);
+            if (pointSP == 0)
             {
                 newReversible();
                 pointSP++;
@@ -86,24 +91,25 @@ void startPaintingL(HDC hdc, short x, short y, int fg, int bg)
     }
 }
 
-void whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
+void
+whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
         case 2:
-            {
-                short tempX;
-                short tempY;
-                resetToU1();
-                tempX = max(0, min(x, imgXRes));
-                tempY = max(0, min(y, imgYRes));
-                rectSel_dest[0] = rectSel_src[0] = min(startX, tempX);
-                rectSel_dest[1] = rectSel_src[1] = min(startY, tempY);
-                rectSel_dest[2] = rectSel_src[2] = max(startX, tempX)-min(startX, tempX);
-                rectSel_dest[3] = rectSel_src[3] = max(startY, tempY)-min(startY, tempY);
-                RectSel(hdc, startX, startY, tempX, tempY);
-            }
+        {
+            short tempX;
+            short tempY;
+            resetToU1();
+            tempX = max(0, min(x, imgXRes));
+            tempY = max(0, min(y, imgYRes));
+            rectSel_dest[0] = rectSel_src[0] = min(startX, tempX);
+            rectSel_dest[1] = rectSel_src[1] = min(startY, tempY);
+            rectSel_dest[2] = rectSel_src[2] = max(startX, tempX) - min(startX, tempX);
+            rectSel_dest[3] = rectSel_src[3] = max(startY, tempY) - min(startY, tempY);
+            RectSel(hdc, startX, startY, tempX, tempY);
             break;
+        }
         case 3:
             Erase(hdc, lastX, lastY, x, y, bg, rubberRadius);
             break;
@@ -126,9 +132,16 @@ void whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             pointStack[pointSP].y = y;
             switch (pointSP)
             {
-                case 1: Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, fg, lineWidth); break;
-                case 2: Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], fg, lineWidth); break;
-                case 3: Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], fg, lineWidth); break;
+                case 1:
+                    Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, fg,
+                         lineWidth);
+                    break;
+                case 2:
+                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], fg, lineWidth);
+                    break;
+                case 3:
+                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], fg, lineWidth);
+                    break;
             }
             break;
         case 13:
@@ -139,7 +152,8 @@ void whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if (pointSP+1>=2) Poly(hdc, pointStack, pointSP+1, fg, bg, lineWidth, shapeStyle, FALSE);
+            if (pointSP + 1 >= 2)
+                Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE);
             break;
         case 15:
             resetToU1();
@@ -150,21 +164,25 @@ void whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
     }
-    
+
     lastX = x;
     lastY = y;
 }
 
-void endPaintingL(HDC hdc, short x, short y, int fg, int bg)
+void
+endPaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
         case 2:
             resetToU1();
-            if ((rectSel_src[2]!=0)&&(rectSel_src[3]!=0))
+            if ((rectSel_src[2] != 0) && (rectSel_src[3] != 0))
             {
-                DeleteObject(SelectObject(hSelDC, hSelBm = (HBITMAP)CreateDIBWithProperties(rectSel_src[2], rectSel_src[3])));
-                BitBlt(hSelDC, 0, 0, rectSel_src[2], rectSel_src[3], hDrawingDC, rectSel_src[0], rectSel_src[1], SRCCOPY);
+                DeleteObject(SelectObject
+                             (hSelDC, hSelBm =
+                              (HBITMAP) CreateDIBWithProperties(rectSel_src[2], rectSel_src[3])));
+                BitBlt(hSelDC, 0, 0, rectSel_src[2], rectSel_src[3], hDrawingDC, rectSel_src[0],
+                       rectSel_src[1], SRCCOPY);
                 placeSelWin();
                 ShowWindow(hSelection, SW_SHOW);
             }
@@ -182,7 +200,8 @@ void endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 12:
             pointSP++;
-            if (pointSP==4) pointSP = 0;
+            if (pointSP == 4)
+                pointSP = 0;
             break;
         case 13:
             resetToU1();
@@ -193,9 +212,10 @@ void endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             pointSP++;
-            if (pointSP>=2)
+            if (pointSP >= 2)
             {
-                if ( (pointStack[0].x-x)*(pointStack[0].x-x) + (pointStack[0].y-y)*(pointStack[0].y-y) <= lineWidth*lineWidth+1)
+                if ((pointStack[0].x - x) * (pointStack[0].x - x) +
+                    (pointStack[0].y - y) * (pointStack[0].y - y) <= lineWidth * lineWidth + 1)
                 {
                     Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, TRUE);
                     pointSP = 0;
@@ -205,7 +225,8 @@ void endPaintingL(HDC hdc, short x, short y, int fg, int bg)
                     Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, FALSE);
                 }
             }
-            if (pointSP==255) pointSP--;
+            if (pointSP == 255)
+                pointSP--;
             break;
         case 15:
             resetToU1();
@@ -218,7 +239,8 @@ void endPaintingL(HDC hdc, short x, short y, int fg, int bg)
     }
 }
 
-void startPaintingR(HDC hdc, short x, short y, int fg, int bg)
+void
+startPaintingR(HDC hdc, short x, short y, int fg, int bg)
 {
     startX = x;
     startY = y;
@@ -229,6 +251,7 @@ void startPaintingR(HDC hdc, short x, short y, int fg, int bg)
         case 1:
         case 10:
         case 11:
+        case 13:
         case 15:
         case 16:
             newReversible();
@@ -255,7 +278,7 @@ void startPaintingR(HDC hdc, short x, short y, int fg, int bg)
         case 12:
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if (pointSP==0)
+            if (pointSP == 0)
             {
                 newReversible();
                 pointSP++;
@@ -264,8 +287,9 @@ void startPaintingR(HDC hdc, short x, short y, int fg, int bg)
         case 14:
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if (pointSP+1>=2) Poly(hdc, pointStack, pointSP+1, bg, fg, lineWidth, shapeStyle, FALSE);
-            if (pointSP==0)
+            if (pointSP + 1 >= 2)
+                Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE);
+            if (pointSP == 0)
             {
                 newReversible();
                 pointSP++;
@@ -274,7 +298,8 @@ void startPaintingR(HDC hdc, short x, short y, int fg, int bg)
     }
 }
 
-void whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
+void
+whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
@@ -300,9 +325,16 @@ void whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
             pointStack[pointSP].y = y;
             switch (pointSP)
             {
-                case 1: Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, bg, lineWidth); break;
-                case 2: Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], bg, lineWidth); break;
-                case 3: Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], bg, lineWidth); break;
+                case 1:
+                    Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, bg,
+                         lineWidth);
+                    break;
+                case 2:
+                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], bg, lineWidth);
+                    break;
+                case 3:
+                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], bg, lineWidth);
+                    break;
             }
             break;
         case 13:
@@ -313,7 +345,8 @@ void whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if (pointSP+1>=2) Poly(hdc, pointStack, pointSP+1, bg, fg, lineWidth, shapeStyle, FALSE);
+            if (pointSP + 1 >= 2)
+                Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE);
             break;
         case 15:
             resetToU1();
@@ -324,12 +357,13 @@ void whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
             RRect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
     }
-    
+
     lastX = x;
     lastY = y;
 }
 
-void endPaintingR(HDC hdc, short x, short y, int fg, int bg)
+void
+endPaintingR(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
@@ -346,7 +380,8 @@ void endPaintingR(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 12:
             pointSP++;
-            if (pointSP==4) pointSP = 0;
+            if (pointSP == 4)
+                pointSP = 0;
             break;
         case 13:
             resetToU1();
@@ -357,9 +392,10 @@ void endPaintingR(HDC hdc, short x, short y, int fg, int bg)
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             pointSP++;
-            if (pointSP>=2)
+            if (pointSP >= 2)
             {
-                if ( (pointStack[0].x-x)*(pointStack[0].x-x) + (pointStack[0].y-y)*(pointStack[0].y-y) <= lineWidth*lineWidth+1)
+                if ((pointStack[0].x - x) * (pointStack[0].x - x) +
+                    (pointStack[0].y - y) * (pointStack[0].y - y) <= lineWidth * lineWidth + 1)
                 {
                     Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, TRUE);
                     pointSP = 0;
@@ -369,7 +405,8 @@ void endPaintingR(HDC hdc, short x, short y, int fg, int bg)
                     Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, FALSE);
                 }
             }
-            if (pointSP==255) pointSP--;
+            if (pointSP == 255)
+                pointSP--;
             break;
         case 15:
             resetToU1();

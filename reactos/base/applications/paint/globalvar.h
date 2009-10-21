@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        globalvar.h
+ * FILE:        base/applications/paint/globalvar.h
  * PURPOSE:     Declaring global variables for later initialization
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -45,13 +45,16 @@ extern HWND hImageArea;
 extern HBITMAP hSelBm;
 
 extern int palColors[28];
+
 extern int fgColor;
 extern int bgColor;
+
 extern HWND hStatusBar;
 extern HWND hScrollbox;
 extern HWND hMainWnd;
 extern HWND hPalWin;
 extern HWND hToolSettings;
+extern HWND hTrackbarZoom;
 extern CHOOSECOLOR choosecolor;
 extern OPENFILENAME ofn;
 extern OPENFILENAME sfn;
@@ -92,9 +95,7 @@ extern HWND hSizeboxLeftBottom;
 extern HWND hSizeboxCenterBottom;
 extern HWND hSizeboxRightBottom;
 
-extern HWND hTrackbarZoom;
-
-/* VARIABLES declared in mouse.c *************************************/
+/* VARIABLES declared in mouse.c ************************************/
 
 extern POINT pointStack[256];
 extern short pointSP;

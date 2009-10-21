@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        rsrc.rc
+ * FILE:        base/applications/paint/rsrc.rc
  * PURPOSE:     Managing the resources
  * PROGRAMMERS: Benedikt Freisen
  */

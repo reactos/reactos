@@ -1,6 +1,9 @@
-/* FILE:        ??rospaint??/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2009-04-28
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     unknown (LGPL assumed)
+ * FILE:        base/applications/paint/lang/cs-CZ.rc
+ * PURPOSE:     Czech Language resource file
+ * TRANSLATORS: Radek Liska aka Black_Fox (radekliska at gmail dot com)
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -137,9 +140,9 @@ BEGIN
     LTEXT "Datum zmìny:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Velikost souboru:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Rozlišení:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Jednotka", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "Palce", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "Centimetry", IDD_ATTRIBUTESRB2, 52, 69, 35, 10

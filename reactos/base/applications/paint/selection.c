@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        selection.c
+ * FILE:        base/applications/paint/selection.c
  * PURPOSE:     Window procedure of the selection window
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -20,21 +20,23 @@ BOOL moving = FALSE;
 short xPos;
 short yPos;
 
-LRESULT CALLBACK SelectionWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
         case WM_PAINT:
+        {
+            if (!moving)
             {
-                if (!moving)
-                {
-                    HDC hDC = GetDC(hwnd);
-                    DefWindowProc (hwnd, message, wParam, lParam);
-                    SelectionFrame(hDC, 1, 1, rectSel_dest[2]*zoom/1000+5, rectSel_dest[3]*zoom/1000+5);
-                    ReleaseDC(hwnd, hDC);
-                }
+                HDC hDC = GetDC(hwnd);
+                DefWindowProc(hwnd, message, wParam, lParam);
+                SelectionFrame(hDC, 1, 1, rectSel_dest[2] * zoom / 1000 + 5,
+                               rectSel_dest[3] * zoom / 1000 + 5);
+                ReleaseDC(hwnd, hDC);
             }
             break;
+        }
         case WM_LBUTTONDOWN:
             xPos = LOWORD(lParam);
             yPos = HIWORD(lParam);
@@ -45,15 +47,19 @@ LRESULT CALLBACK SelectionWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARA
             if (moving)
             {
                 resetToU1();
-                rectSel_dest[0]+=(short)LOWORD(lParam)-xPos;
-                rectSel_dest[1]+=(short)HIWORD(lParam)-yPos;
-                
-                Rect(hDrawingDC, rectSel_src[0], rectSel_src[1], rectSel_src[0]+rectSel_src[2], rectSel_src[1]+rectSel_src[3], bgColor, bgColor, 0, TRUE);
-                if (transpBg==0)
-                    BitBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3], hSelDC, 0, 0, SRCCOPY);
+                rectSel_dest[0] += (short)LOWORD(lParam) - xPos;
+                rectSel_dest[1] += (short)HIWORD(lParam) - yPos;
+
+                Rect(hDrawingDC, rectSel_src[0], rectSel_src[1], rectSel_src[0] + rectSel_src[2],
+                     rectSel_src[1] + rectSel_src[3], bgColor, bgColor, 0, TRUE);
+                if (transpBg == 0)
+                    BitBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3],
+                           hSelDC, 0, 0, SRCCOPY);
                 else
-                    BitBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3], hSelDC, 0, 0, SRCAND);
-                    //TransparentBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3], hSelDC, 0, 0, rectSel_dest[2], rectSel_dest[3], bgColor);
+                    BitBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3],
+                           hSelDC, 0, 0, SRCAND);
+                    //TransparentBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3], 
+                    //               hSelDC, 0, 0, rectSel_dest[2], rectSel_dest[3], bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 xPos = LOWORD(lParam);
                 yPos = HIWORD(lParam);
@@ -71,7 +77,7 @@ LRESULT CALLBACK SelectionWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARA
             }
             break;
         default:
-            return DefWindowProc (hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, message, wParam, lParam);
     }
 
     return 0;
