@@ -601,10 +601,11 @@ CPortPinWaveCyclic::HandleKsStream(
         else
             m_Position.WriteOffset += Header->DataUsed;
 
+        return STATUS_PENDING;
+
     }
 
-
-    return STATUS_PENDING;
+    return Status;
 }
 
 NTSTATUS
@@ -976,6 +977,11 @@ CPortPinWaveCyclic::Init(
 
     RtlMoveMemory(m_Format, DataFormat, DataFormat->FormatSize);
 
+    PKSDATAFORMAT_WAVEFORMATEX Wave = (PKSDATAFORMAT_WAVEFORMATEX)m_Format;
+
+	DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u\n", Wave->WaveFormatEx.wBitsPerSample, Wave->WaveFormatEx.nSamplesPerSec, Wave->WaveFormatEx.nChannels, Wave->WaveFormatEx.wFormatTag, m_FrameSize);
+
+
 
     Port->AddRef();
     Filter->AddRef();
@@ -985,9 +991,6 @@ CPortPinWaveCyclic::Init(
 
     DPRINT("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
     DPRINT("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
-    DPRINT("Setting state to run %x\n", m_Stream->SetState(KSSTATE_RUN));
-    m_State = KSSTATE_RUN;
-
 
     return STATUS_SUCCESS;
 }

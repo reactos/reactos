@@ -682,10 +682,10 @@ CPortPinWavePci::HandleKsStream(
         else
             m_Position.WriteOffset += Header->DataUsed;
 
+        return STATUS_PENDING;
     }
 
-
-    return STATUS_PENDING;
+    return Status;
 }
 
 
