@@ -1567,12 +1567,7 @@ BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
         SetLastError(ERROR_INVALID_DATA);
         return FALSE;
     }
-    if (pChainPara->cbSize != sizeof(CERT_CHAIN_PARA_NO_EXTRA_FIELDS) &&
-     pChainPara->cbSize != sizeof(CERT_CHAIN_PARA))
-    {
-        SetLastError(E_INVALIDARG);
-        return FALSE;
-    }
+
     if (!hChainEngine)
         hChainEngine = CRYPT_GetDefaultChainEngine();
     /* FIXME: what about HCCE_LOCAL_MACHINE? */

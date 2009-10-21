@@ -1,23 +1,46 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
 
-#define FRAME_EDITED        0xFFF8
-
 #ifndef __ASM__
 
 #include "intrin_i.h"
 #include "v86m.h"
 
-#define KeArchFnInit() Ke386FnInit()
-#define KeArchHaltProcessor() Ke386HaltProcessor()
-
 extern ULONG Ke386CacheAlignment;
 
-struct _KPCR;
-VOID
-KiInitializeGdt(struct _KPCR* Pcr);
-VOID
-Ki386ApplicationProcessorInitializeTSS(VOID);
+#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_I386
+
+//
+// INT3 is 1 byte long
+//
+#define KD_BREAKPOINT_TYPE        UCHAR
+#define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
+#define KD_BREAKPOINT_VALUE       0xCC
+
+//
+// Macros for getting and setting special purpose registers in portable code
+//
+#define KeGetContextPc(Context) \
+    ((Context)->Eip)
+
+#define KeSetContextPc(Context, ProgramCounter) \
+    ((Context)->Eip = (ProgramCounter))
+
+#define KeGetTrapFramePc(TrapFrame) \
+    ((TrapFrame)->Eip)
+
+#define KeGetContextReturnRegister(Context) \
+    ((Context)->Eax)
+
+#define KeSetContextReturnRegister(Context, ReturnValue) \
+    ((Context)->Eax = (ReturnValue))
+
+//
+// Returns the Interrupt State from a Trap Frame.
+// ON = TRUE, OFF = FALSE
+//
+#define KeGetTrapFrameInterruptState(TrapFrame) \
+        BooleanFlagOn((TrapFrame)->EFlags, EFLAGS_INTERRUPT_MASK)
 
 VOID
 FASTCALL
@@ -26,13 +49,6 @@ Ki386InitializeTss(
     IN PKIDTENTRY Idt,
     IN PKGDTENTRY Gdt
 );
-
-VOID
-KiGdtPrepareForApplicationProcessorInit(ULONG Id);
-VOID
-Ki386InitializeLdt(VOID);
-VOID
-Ki386SetProcessorFeatures(VOID);
 
 VOID
 NTAPI
@@ -61,23 +77,6 @@ KiSetProcessorType(VOID);
 ULONG
 NTAPI
 KiGetFeatureBits(VOID);
-
-ULONG KeAllocateGdtSelector(ULONG Desc[2]);
-VOID KeFreeGdtSelector(ULONG Entry);
-VOID
-KeApplicationProcessorInitDispatcher(VOID);
-VOID
-KeCreateApplicationProcessorIdleThread(ULONG Id);
-
-VOID
-NTAPI
-Ke386InitThreadWithContext(PKTHREAD Thread,
-                           PKSYSTEM_ROUTINE SystemRoutine,
-                           PKSTART_ROUTINE StartRoutine,
-                           PVOID StartContext,
-                           PCONTEXT Context);
-#define KeArchInitThreadWithContext(Thread,SystemRoutine,StartRoutine,StartContext,Context) \
-  Ke386InitThreadWithContext(Thread,SystemRoutine,StartRoutine,StartContext,Context)
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID

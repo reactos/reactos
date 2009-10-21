@@ -92,7 +92,7 @@ PcRegisterIoTimeout(
     TimerContext = (PTIMER_CONTEXT)AllocateItem(NonPagedPool, sizeof(TIMER_CONTEXT), TAG_PORTCLASS);
     if (!TimerContext)
     {
-        DPRINT1("Failed to allocate memory\n");
+        DPRINT("Failed to allocate memory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -238,8 +238,8 @@ NTAPI
 PcDmaSlaveDescription(
     IN PRESOURCELIST  ResourceList OPTIONAL,
     IN ULONG DmaIndex,
-    IN BOOL DemandMode,
-    IN ULONG AutoInitialize,
+    IN BOOLEAN DemandMode,
+    IN BOOLEAN AutoInitialize,
     IN DMA_SPEED DmaSpeed,
     IN ULONG MaximumLength,
     IN ULONG DmaPort,

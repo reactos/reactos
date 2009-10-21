@@ -5,6 +5,7 @@
  * Copyright 2004 Jason Edmeades
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -74,6 +75,7 @@ static ULONG WINAPI IWineD3DVertexDeclarationImpl_Release(IWineD3DVertexDeclarat
         }
 
         HeapFree(GetProcessHeap(), 0, This->elements);
+        This->parent_ops->wined3d_object_destroyed(This->parent);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -129,7 +131,7 @@ static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
                 case WINED3DFMT_R32G32_FLOAT:
                 case WINED3DFMT_R32G32B32_FLOAT:
                 case WINED3DFMT_R32G32B32A32_FLOAT:
-                case WINED3DFMT_A8R8G8B8:
+                case WINED3DFMT_B8G8R8A8_UNORM:
                 case WINED3DFMT_R8G8B8A8_UINT:
                 case WINED3DFMT_R16G16_SINT:
                 case WINED3DFMT_R16G16B16A16_SINT:
@@ -173,7 +175,7 @@ static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
             {
                 case WINED3DFMT_R32G32B32_FLOAT:
                 case WINED3DFMT_R32G32B32A32_FLOAT:
-                case WINED3DFMT_A8R8G8B8:
+                case WINED3DFMT_B8G8R8A8_UNORM:
                 case WINED3DFMT_R8G8B8A8_UINT:
                 case WINED3DFMT_R16G16B16A16_SINT:
                 case WINED3DFMT_R8G8B8A8_UNORM:
@@ -190,86 +192,7 @@ static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
     }
 }
 
-HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *This,
-        const WINED3DVERTEXELEMENT *elements, UINT element_count)
-{
-    HRESULT hr = WINED3D_OK;
-    unsigned int i;
-    char isPreLoaded[MAX_STREAMS];
-
-    TRACE("(%p) : d3d version %d\n", This, ((IWineD3DImpl *)This->wineD3DDevice->wineD3D)->dxVersion);
-    memset(isPreLoaded, 0, sizeof(isPreLoaded));
-
-    if (TRACE_ON(d3d_decl)) {
-        for (i = 0; i < element_count; ++i) {
-            dump_wined3dvertexelement(elements+i);
-        }
-    }
-
-    This->element_count = element_count;
-    This->elements = HeapAlloc(GetProcessHeap(), 0, sizeof(*This->elements) * element_count);
-    if (!This->elements)
-    {
-        ERR("Memory allocation failed\n");
-        return WINED3DERR_OUTOFVIDEOMEMORY;
-    }
-
-    /* Do some static analysis on the elements to make reading the declaration more comfortable
-     * for the drawing code
-     */
-    This->num_streams = 0;
-    This->position_transformed = FALSE;
-    for (i = 0; i < element_count; ++i) {
-        struct wined3d_vertex_declaration_element *e = &This->elements[i];
-
-        e->format_desc = getFormatDescEntry(elements[i].format, &This->wineD3DDevice->adapter->gl_info);
-        e->ffp_valid = declaration_element_valid_ffp(&elements[i]);
-        e->input_slot = elements[i].input_slot;
-        e->offset = elements[i].offset;
-        e->output_slot = elements[i].output_slot;
-        e->method = elements[i].method;
-        e->usage = elements[i].usage;
-        e->usage_idx = elements[i].usage_idx;
-
-        if (e->usage == WINED3DDECLUSAGE_POSITIONT) This->position_transformed = TRUE;
-
-        /* Find the Streams used in the declaration. The vertex buffers have to be loaded
-         * when drawing, but filter tesselation pseudo streams
-         */
-        if (e->input_slot >= MAX_STREAMS) continue;
-
-        if (!e->format_desc->gl_vtx_format)
-        {
-            FIXME("The application tries to use an unsupported format (%s), returning E_FAIL\n",
-                    debug_d3dformat(elements[i].format));
-            /* The caller will release the vdecl, which will free This->elements */
-            return E_FAIL;
-        }
-
-        if (e->offset & 0x3)
-        {
-            WARN("Declaration element %u is not 4 byte aligned(%u), returning E_FAIL\n", i, e->offset);
-            return E_FAIL;
-        }
-
-        if (!isPreLoaded[e->input_slot])
-        {
-            This->streams[This->num_streams] = e->input_slot;
-            This->num_streams++;
-            isPreLoaded[e->input_slot] = 1;
-        }
-
-        if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)
-        {
-            if (!GL_SUPPORT(ARB_HALF_FLOAT_VERTEX)) This->half_float_conv_needed = TRUE;
-        }
-    }
-
-    TRACE("Returning\n");
-    return hr;
-}
-
-const IWineD3DVertexDeclarationVtbl IWineD3DVertexDeclaration_Vtbl =
+static const IWineD3DVertexDeclarationVtbl IWineD3DVertexDeclaration_Vtbl =
 {
     /* IUnknown */
     IWineD3DVertexDeclarationImpl_QueryInterface,
@@ -279,3 +202,84 @@ const IWineD3DVertexDeclarationVtbl IWineD3DVertexDeclaration_Vtbl =
     IWineD3DVertexDeclarationImpl_GetParent,
     IWineD3DVertexDeclarationImpl_GetDevice,
 };
+
+HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *declaration, IWineD3DDeviceImpl *device,
+        const WINED3DVERTEXELEMENT *elements, UINT element_count,
+        IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    WORD preloaded = 0; /* MAX_STREAMS, 16 */
+    unsigned int i;
+
+    if (TRACE_ON(d3d_decl))
+    {
+        for (i = 0; i < element_count; ++i)
+        {
+            dump_wined3dvertexelement(elements + i);
+        }
+    }
+
+    declaration->lpVtbl = &IWineD3DVertexDeclaration_Vtbl;
+    declaration->ref = 1;
+    declaration->parent = parent;
+    declaration->parent_ops = parent_ops;
+    declaration->wineD3DDevice = device;
+    declaration->elements = HeapAlloc(GetProcessHeap(), 0, sizeof(*declaration->elements) * element_count);
+    if (!declaration->elements)
+    {
+        ERR("Failed to allocate elements memory.\n");
+        return E_OUTOFMEMORY;
+    }
+    declaration->element_count = element_count;
+
+    /* Do some static analysis on the elements to make reading the
+     * declaration more comfortable for the drawing code. */
+    for (i = 0; i < element_count; ++i)
+    {
+        struct wined3d_vertex_declaration_element *e = &declaration->elements[i];
+
+        e->format_desc = getFormatDescEntry(elements[i].format, gl_info);
+        e->ffp_valid = declaration_element_valid_ffp(&elements[i]);
+        e->input_slot = elements[i].input_slot;
+        e->offset = elements[i].offset;
+        e->output_slot = elements[i].output_slot;
+        e->method = elements[i].method;
+        e->usage = elements[i].usage;
+        e->usage_idx = elements[i].usage_idx;
+
+        if (e->usage == WINED3DDECLUSAGE_POSITIONT) declaration->position_transformed = TRUE;
+
+        /* Find the streams used in the declaration. The vertex buffers have
+         * to be loaded when drawing, but filter tesselation pseudo streams. */
+        if (e->input_slot >= MAX_STREAMS) continue;
+
+        if (!e->format_desc->gl_vtx_format)
+        {
+            FIXME("The application tries to use an unsupported format (%s), returning E_FAIL.\n",
+                    debug_d3dformat(elements[i].format));
+            HeapFree(GetProcessHeap(), 0, declaration->elements);
+            return E_FAIL;
+        }
+
+        if (e->offset & 0x3)
+        {
+            WARN("Declaration element %u is not 4 byte aligned(%u), returning E_FAIL.\n", i, e->offset);
+            HeapFree(GetProcessHeap(), 0, declaration->elements);
+            return E_FAIL;
+        }
+
+        if (!(preloaded & (1 << e->input_slot)))
+        {
+            declaration->streams[declaration->num_streams] = e->input_slot;
+            ++declaration->num_streams;
+            preloaded |= 1 << e->input_slot;
+        }
+
+        if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)
+        {
+            if (!gl_info->supported[ARB_HALF_FLOAT_VERTEX]) declaration->half_float_conv_needed = TRUE;
+        }
+    }
+
+    return WINED3D_OK;
+}

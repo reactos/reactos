@@ -20,7 +20,7 @@
 #if 1
 const WCHAR DiskMountString[] = L"\\DosDevices\\%C:";
 
-#define AUTO_DRIVE         ((ULONG)-1)
+#define AUTO_DRIVE         MAXULONG
 
 #define PARTITION_MAGIC    0xaa55
 
@@ -135,7 +135,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
     if (RtlCompareUnicodeString(PartitionName, BootDevice, FALSE) == 0)
     {
         /* Set NtSystemPath to that partition's disk letter */
-        *NtSystemPath = 'A' + DriveNumber;
+        *NtSystemPath = (UCHAR)('A' + DriveNumber);
     }
 
     return TRUE;

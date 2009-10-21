@@ -20,8 +20,8 @@
 
 MM_DRIVER_VERIFIER_DATA MmVerifierData;
 LIST_ENTRY MiVerifierDriverAddedThunkListHead;
-KMUTANT MmSystemLoadLock;
 ULONG MiActiveVerifierThunks;
+extern KMUTANT MmSystemLoadLock;
 extern LIST_ENTRY PsLoadedModuleList;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -116,11 +116,43 @@ PVOID
 NTAPI
 MmPageEntireDriver(IN PVOID AddressWithinSection)
 {
+    PAGED_CODE();
     //
     // We should find the driver loader entry and return its base address
     //
-    PLDR_DATA_TABLE_ENTRY pLdrDataTabEntry = MiLookupDataTableEntry(AddressWithinSection);
-    if (pLdrDataTabEntry) return pLdrDataTabEntry->DllBase;
+    //PMMPTE StartPte, EndPte;
+    PLDR_DATA_TABLE_ENTRY pLdrDataTabEntry =
+        MiLookupDataTableEntry(AddressWithinSection);
+    if (pLdrDataTabEntry)
+    {
+        //
+        //  Is Paging disabled or it's mapped as an image
+        //
+        if ((MmDisablePagingExecutive & 1) || pLdrDataTabEntry->SectionPointer)
+           return pLdrDataTabEntry->DllBase;
+
+        //
+        // Flush all queued DPCs.
+        //
+        KeFlushQueuedDpcs();
+
+        //
+        // Get PTE range for this section
+        //
+        //StartPte = MiGetPteAddress(pLdrDataTabEntry->DllBase);
+        //EndPte = MiGetPteAddress(pLdrDataTabEntry->DllBase +
+        //                         pLdrDataTabEntry->SizeOfImage);
+
+        //
+        // Set paging for specified PTE range
+        //
+        //MiSetPagingOfDriver(StartPte, EndPte);
+
+        //
+        // Return base address
+        //
+        return pLdrDataTabEntry->DllBase;
+    }
     return NULL;
 }
 

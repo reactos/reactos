@@ -60,6 +60,15 @@ ULONG					Ext2GroupCount = 0;				// Number of groups in this file system
 ULONG					Ext2InodesPerBlock = 0;			// Number of inodes in one block
 ULONG					Ext2GroupDescPerBlock = 0;		// Number of group descriptors in one block
 
+BOOLEAN DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
+{
+	*DriveNumber = 0;
+	*StartSector = 0;
+	*SectorCount = 0;
+	*FsType = 0;
+	return FALSE;
+}
+
 BOOLEAN Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
 {
 

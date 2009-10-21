@@ -193,8 +193,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                         Process->Vm.MinimumWorkingSetSize << PAGE_SHIFT;
 
                 /* Set default time limits */
-                QuotaLimits->TimeLimit.LowPart = (ULONG)-1;
-                QuotaLimits->TimeLimit.HighPart = (ULONG)-1;
+                QuotaLimits->TimeLimit.LowPart = MAXULONG;
+                QuotaLimits->TimeLimit.HighPart = MAXULONG;
 
                 /* Is quota block a default one? */
                 if (Process->QuotaBlock == &PspDefaultQuotaBlock)

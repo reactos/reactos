@@ -35,44 +35,44 @@ D3DFORMAT d3dformat_from_wined3dformat(WINED3DFORMAT format)
     switch(format)
     {
         case WINED3DFMT_UNKNOWN: return D3DFMT_UNKNOWN;
-        case WINED3DFMT_R8G8B8: return D3DFMT_R8G8B8;
-        case WINED3DFMT_A8R8G8B8: return D3DFMT_A8R8G8B8;
-        case WINED3DFMT_X8R8G8B8: return D3DFMT_X8R8G8B8;
-        case WINED3DFMT_R5G6B5: return D3DFMT_R5G6B5;
-        case WINED3DFMT_X1R5G5B5: return D3DFMT_X1R5G5B5;
-        case WINED3DFMT_A1R5G5B5: return D3DFMT_A1R5G5B5;
-        case WINED3DFMT_A4R4G4B4: return D3DFMT_A4R4G4B4;
-        case WINED3DFMT_R3G3B2: return D3DFMT_R3G3B2;
+        case WINED3DFMT_B8G8R8_UNORM: return D3DFMT_R8G8B8;
+        case WINED3DFMT_B8G8R8A8_UNORM: return D3DFMT_A8R8G8B8;
+        case WINED3DFMT_B8G8R8X8_UNORM: return D3DFMT_X8R8G8B8;
+        case WINED3DFMT_B5G6R5_UNORM: return D3DFMT_R5G6B5;
+        case WINED3DFMT_B5G5R5X1_UNORM: return D3DFMT_X1R5G5B5;
+        case WINED3DFMT_B5G5R5A1_UNORM: return D3DFMT_A1R5G5B5;
+        case WINED3DFMT_B4G4R4A4_UNORM: return D3DFMT_A4R4G4B4;
+        case WINED3DFMT_B2G3R3_UNORM: return D3DFMT_R3G3B2;
         case WINED3DFMT_A8_UNORM: return D3DFMT_A8;
-        case WINED3DFMT_A8R3G3B2: return D3DFMT_A8R3G3B2;
-        case WINED3DFMT_X4R4G4B4: return D3DFMT_X4R4G4B4;
+        case WINED3DFMT_B2G3R3A8_UNORM: return D3DFMT_A8R3G3B2;
+        case WINED3DFMT_B4G4R4X4_UNORM: return D3DFMT_X4R4G4B4;
         case WINED3DFMT_R10G10B10A2_UNORM: return D3DFMT_A2B10G10R10;
         case WINED3DFMT_R8G8B8A8_UNORM: return D3DFMT_A8B8G8R8;
-        case WINED3DFMT_X8B8G8R8: return D3DFMT_X8B8G8R8;
+        case WINED3DFMT_R8G8B8X8_UNORM: return D3DFMT_X8B8G8R8;
         case WINED3DFMT_R16G16_UNORM: return D3DFMT_G16R16;
-        case WINED3DFMT_A2R10G10B10: return D3DFMT_A2R10G10B10;
+        case WINED3DFMT_B10G10R10A2_UNORM: return D3DFMT_A2R10G10B10;
         case WINED3DFMT_R16G16B16A16_UNORM: return D3DFMT_A16B16G16R16;
-        case WINED3DFMT_A8P8: return D3DFMT_A8P8;
-        case WINED3DFMT_P8: return D3DFMT_P8;
-        case WINED3DFMT_L8: return D3DFMT_L8;
-        case WINED3DFMT_A8L8: return D3DFMT_A8L8;
-        case WINED3DFMT_A4L4: return D3DFMT_A4L4;
+        case WINED3DFMT_P8_UINT_A8_UNORM: return D3DFMT_A8P8;
+        case WINED3DFMT_P8_UINT: return D3DFMT_P8;
+        case WINED3DFMT_L8_UNORM: return D3DFMT_L8;
+        case WINED3DFMT_L8A8_UNORM: return D3DFMT_A8L8;
+        case WINED3DFMT_L4A4_UNORM: return D3DFMT_A4L4;
         case WINED3DFMT_R8G8_SNORM: return D3DFMT_V8U8;
-        case WINED3DFMT_L6V5U5: return D3DFMT_L6V5U5;
-        case WINED3DFMT_X8L8V8U8: return D3DFMT_X8L8V8U8;
+        case WINED3DFMT_R5G5_SNORM_L6_UNORM: return D3DFMT_L6V5U5;
+        case WINED3DFMT_R8G8_SNORM_L8X8_UNORM: return D3DFMT_X8L8V8U8;
         case WINED3DFMT_R8G8B8A8_SNORM: return D3DFMT_Q8W8V8U8;
         case WINED3DFMT_R16G16_SNORM: return D3DFMT_V16U16;
-        case WINED3DFMT_A2W10V10U10: return D3DFMT_A2W10V10U10;
+        case WINED3DFMT_R10G10B10_SNORM_A2_UNORM: return D3DFMT_A2W10V10U10;
         case WINED3DFMT_D16_LOCKABLE: return D3DFMT_D16_LOCKABLE;
-        case WINED3DFMT_D32: return D3DFMT_D32;
-        case WINED3DFMT_D15S1: return D3DFMT_D15S1;
-        case WINED3DFMT_D24S8: return D3DFMT_D24S8;
-        case WINED3DFMT_D24X8: return D3DFMT_D24X8;
-        case WINED3DFMT_D24X4S4: return D3DFMT_D24X4S4;
+        case WINED3DFMT_D32_UNORM: return D3DFMT_D32;
+        case WINED3DFMT_S1_UINT_D15_UNORM: return D3DFMT_D15S1;
+        case WINED3DFMT_S8_UINT_D24_UNORM: return D3DFMT_D24S8;
+        case WINED3DFMT_X8D24_UNORM: return D3DFMT_D24X8;
+        case WINED3DFMT_S4X4_UINT_D24_UNORM: return D3DFMT_D24X4S4;
         case WINED3DFMT_D16_UNORM: return D3DFMT_D16;
-        case WINED3DFMT_L16: return D3DFMT_L16;
-        case WINED3DFMT_D32F_LOCKABLE: return D3DFMT_D32F_LOCKABLE;
-        case WINED3DFMT_D24FS8: return D3DFMT_D24FS8;
+        case WINED3DFMT_L16_UNORM: return D3DFMT_L16;
+        case WINED3DFMT_D32_FLOAT: return D3DFMT_D32F_LOCKABLE;
+        case WINED3DFMT_S8_UINT_D24_FLOAT: return D3DFMT_D24FS8;
         case WINED3DFMT_VERTEXDATA: return D3DFMT_VERTEXDATA;
         case WINED3DFMT_R16_UINT: return D3DFMT_INDEX16;
         case WINED3DFMT_R32_UINT: return D3DFMT_INDEX32;
@@ -83,7 +83,7 @@ D3DFORMAT d3dformat_from_wined3dformat(WINED3DFORMAT format)
         case WINED3DFMT_R32_FLOAT: return D3DFMT_R32F;
         case WINED3DFMT_R32G32_FLOAT: return D3DFMT_G32R32F;
         case WINED3DFMT_R32G32B32A32_FLOAT: return D3DFMT_A32B32G32R32F;
-        case WINED3DFMT_CxV8U8: return D3DFMT_CxV8U8;
+        case WINED3DFMT_R8G8_SNORM_Cx: return D3DFMT_CxV8U8;
         default:
             FIXME("Unhandled WINED3DFORMAT %#x\n", format);
             return D3DFMT_UNKNOWN;
@@ -100,44 +100,44 @@ WINED3DFORMAT wined3dformat_from_d3dformat(D3DFORMAT format)
     switch(format)
     {
         case D3DFMT_UNKNOWN: return WINED3DFMT_UNKNOWN;
-        case D3DFMT_R8G8B8: return WINED3DFMT_R8G8B8;
-        case D3DFMT_A8R8G8B8: return WINED3DFMT_A8R8G8B8;
-        case D3DFMT_X8R8G8B8: return WINED3DFMT_X8R8G8B8;
-        case D3DFMT_R5G6B5: return WINED3DFMT_R5G6B5;
-        case D3DFMT_X1R5G5B5: return WINED3DFMT_X1R5G5B5;
-        case D3DFMT_A1R5G5B5: return WINED3DFMT_A1R5G5B5;
-        case D3DFMT_A4R4G4B4: return WINED3DFMT_A4R4G4B4;
-        case D3DFMT_R3G3B2: return WINED3DFMT_R3G3B2;
+        case D3DFMT_R8G8B8: return WINED3DFMT_B8G8R8_UNORM;
+        case D3DFMT_A8R8G8B8: return WINED3DFMT_B8G8R8A8_UNORM;
+        case D3DFMT_X8R8G8B8: return WINED3DFMT_B8G8R8X8_UNORM;
+        case D3DFMT_R5G6B5: return WINED3DFMT_B5G6R5_UNORM;
+        case D3DFMT_X1R5G5B5: return WINED3DFMT_B5G5R5X1_UNORM;
+        case D3DFMT_A1R5G5B5: return WINED3DFMT_B5G5R5A1_UNORM;
+        case D3DFMT_A4R4G4B4: return WINED3DFMT_B4G4R4A4_UNORM;
+        case D3DFMT_R3G3B2: return WINED3DFMT_B2G3R3_UNORM;
         case D3DFMT_A8: return WINED3DFMT_A8_UNORM;
-        case D3DFMT_A8R3G3B2: return WINED3DFMT_A8R3G3B2;
-        case D3DFMT_X4R4G4B4: return WINED3DFMT_X4R4G4B4;
+        case D3DFMT_A8R3G3B2: return WINED3DFMT_B2G3R3A8_UNORM;
+        case D3DFMT_X4R4G4B4: return WINED3DFMT_B4G4R4X4_UNORM;
         case D3DFMT_A2B10G10R10: return WINED3DFMT_R10G10B10A2_UNORM;
         case D3DFMT_A8B8G8R8: return WINED3DFMT_R8G8B8A8_UNORM;
-        case D3DFMT_X8B8G8R8: return WINED3DFMT_X8B8G8R8;
+        case D3DFMT_X8B8G8R8: return WINED3DFMT_R8G8B8X8_UNORM;
         case D3DFMT_G16R16: return WINED3DFMT_R16G16_UNORM;
-        case D3DFMT_A2R10G10B10: return WINED3DFMT_A2R10G10B10;
+        case D3DFMT_A2R10G10B10: return WINED3DFMT_B10G10R10A2_UNORM;
         case D3DFMT_A16B16G16R16: return WINED3DFMT_R16G16B16A16_UNORM;
-        case D3DFMT_A8P8: return WINED3DFMT_A8P8;
-        case D3DFMT_P8: return WINED3DFMT_P8;
-        case D3DFMT_L8: return WINED3DFMT_L8;
-        case D3DFMT_A8L8: return WINED3DFMT_A8L8;
-        case D3DFMT_A4L4: return WINED3DFMT_A4L4;
+        case D3DFMT_A8P8: return WINED3DFMT_P8_UINT_A8_UNORM;
+        case D3DFMT_P8: return WINED3DFMT_P8_UINT;
+        case D3DFMT_L8: return WINED3DFMT_L8_UNORM;
+        case D3DFMT_A8L8: return WINED3DFMT_L8A8_UNORM;
+        case D3DFMT_A4L4: return WINED3DFMT_L4A4_UNORM;
         case D3DFMT_V8U8: return WINED3DFMT_R8G8_SNORM;
-        case D3DFMT_L6V5U5: return WINED3DFMT_L6V5U5;
-        case D3DFMT_X8L8V8U8: return WINED3DFMT_X8L8V8U8;
+        case D3DFMT_L6V5U5: return WINED3DFMT_R5G5_SNORM_L6_UNORM;
+        case D3DFMT_X8L8V8U8: return WINED3DFMT_R8G8_SNORM_L8X8_UNORM;
         case D3DFMT_Q8W8V8U8: return WINED3DFMT_R8G8B8A8_SNORM;
         case D3DFMT_V16U16: return WINED3DFMT_R16G16_SNORM;
-        case D3DFMT_A2W10V10U10: return WINED3DFMT_A2W10V10U10;
+        case D3DFMT_A2W10V10U10: return WINED3DFMT_R10G10B10_SNORM_A2_UNORM;
         case D3DFMT_D16_LOCKABLE: return WINED3DFMT_D16_LOCKABLE;
-        case D3DFMT_D32: return WINED3DFMT_D32;
-        case D3DFMT_D15S1: return WINED3DFMT_D15S1;
-        case D3DFMT_D24S8: return WINED3DFMT_D24S8;
-        case D3DFMT_D24X8: return WINED3DFMT_D24X8;
-        case D3DFMT_D24X4S4: return WINED3DFMT_D24X4S4;
+        case D3DFMT_D32: return WINED3DFMT_D32_UNORM;
+        case D3DFMT_D15S1: return WINED3DFMT_S1_UINT_D15_UNORM;
+        case D3DFMT_D24S8: return WINED3DFMT_S8_UINT_D24_UNORM;
+        case D3DFMT_D24X8: return WINED3DFMT_X8D24_UNORM;
+        case D3DFMT_D24X4S4: return WINED3DFMT_S4X4_UINT_D24_UNORM;
         case D3DFMT_D16: return WINED3DFMT_D16_UNORM;
-        case D3DFMT_L16: return WINED3DFMT_L16;
-        case D3DFMT_D32F_LOCKABLE: return WINED3DFMT_D32F_LOCKABLE;
-        case D3DFMT_D24FS8: return WINED3DFMT_D24FS8;
+        case D3DFMT_L16: return WINED3DFMT_L16_UNORM;
+        case D3DFMT_D32F_LOCKABLE: return WINED3DFMT_D32_FLOAT;
+        case D3DFMT_D24FS8: return WINED3DFMT_S8_UINT_D24_FLOAT;
         case D3DFMT_VERTEXDATA: return WINED3DFMT_VERTEXDATA;
         case D3DFMT_INDEX16: return WINED3DFMT_R16_UINT;
         case D3DFMT_INDEX32: return WINED3DFMT_R32_UINT;
@@ -148,7 +148,7 @@ WINED3DFORMAT wined3dformat_from_d3dformat(D3DFORMAT format)
         case D3DFMT_R32F: return WINED3DFMT_R32_FLOAT;
         case D3DFMT_G32R32F: return WINED3DFMT_R32G32_FLOAT;
         case D3DFMT_A32B32G32R32F: return WINED3DFMT_R32G32B32A32_FLOAT;
-        case D3DFMT_CxV8U8: return WINED3DFMT_CxV8U8;
+        case D3DFMT_CxV8U8: return WINED3DFMT_R8G8_SNORM_Cx;
         default:
             FIXME("Unhandled D3DFORMAT %#x\n", format);
             return WINED3DFMT_UNKNOWN;
@@ -257,7 +257,7 @@ static ULONG WINAPI IDirect3DDevice9Impl_Release(LPDIRECT3DDEVICE9EX iface) {
       }
       HeapFree(GetProcessHeap(), 0, This->convertedDecls);
 
-      IWineD3DDevice_Uninit3D(This->WineD3DDevice, D3D9CB_DestroyDepthStencilSurface, D3D9CB_DestroySwapChain);
+      IWineD3DDevice_Uninit3D(This->WineD3DDevice, D3D9CB_DestroySwapChain);
       IWineD3DDevice_Release(This->WineD3DDevice);
       wined3d_mutex_unlock();
 
@@ -508,7 +508,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_Reset(LPDIRECT3DDEVICE9EX iface, D3
      * below fails, the device is considered "lost", and _Reset and _Release are the only allowed calls
      */
     wined3d_mutex_lock();
-    IWineD3DDevice_SetIndices(This->WineD3DDevice, NULL, WINED3DFMT_UNKNOWN);
+    IWineD3DDevice_SetIndexBuffer(This->WineD3DDevice, NULL, WINED3DFMT_UNKNOWN);
     for(i = 0; i < 16; i++) {
         IWineD3DDevice_SetStreamSource(This->WineD3DDevice, i, NULL, 0, 0);
     }
@@ -644,53 +644,196 @@ static void WINAPI IDirect3DDevice9Impl_GetGammaRamp(LPDIRECT3DDEVICE9EX iface, 
     wined3d_mutex_unlock();
 }
 
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateTexture(IDirect3DDevice9Ex *iface,
+        UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, IDirect3DTexture9 **texture, HANDLE *shared_handle)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DTexture9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, width %u, height %u, levels %u, usage %#x, format %#x, pool %#x, texture %p, shared_handle %p.\n",
+            iface, width, height, levels, usage, format, pool, texture, shared_handle);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate texture memory.\n");
+        return D3DERR_OUTOFVIDEOMEMORY;
+    }
+
+    hr = texture_init(object, This, width, height, levels, usage, format, pool);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize texture, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created texture %p.\n", object);
+    *texture = (IDirect3DTexture9 *)object;
+
+    return D3D_OK;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateVolumeTexture(IDirect3DDevice9Ex *iface,
+        UINT width, UINT height, UINT depth, UINT levels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, IDirect3DVolumeTexture9 **texture, HANDLE *shared_handle)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DVolumeTexture9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, width %u, height %u, depth %u, levels %u\n",
+            iface, width, height, depth, levels);
+    TRACE("usage %#x, format %#x, pool %#x, texture %p, shared_handle %p.\n",
+            usage, format, pool, texture, shared_handle);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate volume texture memory.\n");
+        return D3DERR_OUTOFVIDEOMEMORY;
+    }
+
+    hr = volumetexture_init(object, This, width, height, depth, levels, usage, format, pool);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize volume texture, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created volume texture %p.\n", object);
+    *texture = (IDirect3DVolumeTexture9 *)object;
+
+    return D3D_OK;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateCubeTexture(IDirect3DDevice9Ex *iface,
+        UINT edge_length, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool,
+        IDirect3DCubeTexture9 **texture, HANDLE *shared_handle)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DCubeTexture9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, edge_length %u, levels %u, usage %#x, format %#x, pool %#x, texture %p, shared_handle %p.\n",
+            iface, edge_length, levels, usage, format, pool, texture, shared_handle);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate cube texture memory.\n");
+        return D3DERR_OUTOFVIDEOMEMORY;
+    }
+
+    hr = cubetexture_init(object, This, edge_length, levels, usage, format, pool);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize cube texture, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created cube texture %p.\n", object);
+    *texture = (IDirect3DCubeTexture9 *)object;
+
+    return D3D_OK;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateVertexBuffer(IDirect3DDevice9Ex *iface, UINT size, DWORD usage,
+        DWORD fvf, D3DPOOL pool, IDirect3DVertexBuffer9 **buffer, HANDLE *shared_handle)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DVertexBuffer9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, size %u, usage %#x, fvf %#x, pool %#x, buffer %p, shared_handle %p.\n",
+            iface, size, usage, fvf, pool, buffer, shared_handle);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate buffer memory.\n");
+        return D3DERR_OUTOFVIDEOMEMORY;
+    }
+
+    hr = vertexbuffer_init(object, This, size, usage, fvf, pool);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize vertex buffer, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created vertex buffer %p.\n", object);
+    *buffer = (IDirect3DVertexBuffer9 *)object;
+
+    return D3D_OK;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateIndexBuffer(IDirect3DDevice9Ex *iface, UINT size, DWORD usage,
+        D3DFORMAT format, D3DPOOL pool, IDirect3DIndexBuffer9 **buffer, HANDLE *shared_handle)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DIndexBuffer9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, size %u, usage %#x, format %#x, pool %#x, buffer %p, shared_handle %p.\n",
+            iface, size, usage, format, pool, buffer, shared_handle);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate buffer memory.\n");
+        return D3DERR_OUTOFVIDEOMEMORY;
+    }
+
+    hr = indexbuffer_init(object, This, size, usage, format, pool);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize index buffer, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created index buffer %p.\n", object);
+    *buffer = (IDirect3DIndexBuffer9 *)object;
+
+    return D3D_OK;
+}
 
 static HRESULT IDirect3DDevice9Impl_CreateSurface(LPDIRECT3DDEVICE9EX iface, UINT Width, UINT Height,
         D3DFORMAT Format, BOOL Lockable, BOOL Discard, UINT Level, IDirect3DSurface9 **ppSurface,
         UINT Usage, D3DPOOL Pool, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality)
 {
-    HRESULT hrc;
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     IDirect3DSurface9Impl *object;
-    IDirect3DDevice9Impl  *This = (IDirect3DDevice9Impl *)iface;
-    TRACE("(%p) Relay\n", This);
-
-    if (MultisampleQuality > 0)
-    {
-        FIXME("MultisampleQuality set to %d, bstituting 0\n", MultisampleQuality);
-        MultisampleQuality = 0;
-    }
-    /*FIXME: Check MAX bounds of MultisampleQuality*/
-
-    /* Allocate the storage for the device */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DSurface9Impl));
-    if (NULL == object) {
-        FIXME("Allocation of memory failed\n");
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
-
-    object->lpVtbl = &Direct3DSurface9_Vtbl;
-    object->ref = 1;
+    HRESULT hr;
 
     TRACE("(%p) : w(%d) h(%d) fmt(%d) surf@%p\n", This, Width, Height, Format, *ppSurface);
 
-    wined3d_mutex_lock();
-    hrc = IWineD3DDevice_CreateSurface(This->WineD3DDevice, Width, Height, wined3dformat_from_d3dformat(Format),
-            Lockable, Discard, Level, &object->wineD3DSurface, Usage & WINED3DUSAGE_MASK, (WINED3DPOOL)Pool,
-            MultiSample, MultisampleQuality, SURFACE_OPENGL, (IUnknown *)object);
-    wined3d_mutex_unlock();
-
-    if (hrc != D3D_OK || NULL == object->wineD3DSurface) {
-
-       /* free up object */
-        FIXME("(%p) call to IWineD3DDevice_CreateSurface failed\n", This);
-        HeapFree(GetProcessHeap(), 0, object);
-    } else {
-        IDirect3DDevice9Ex_AddRef(iface);
-        object->parentDevice = iface;
-        TRACE("(%p) : Created surface %p\n", This, object);
-        *ppSurface = (LPDIRECT3DSURFACE9) object;
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DSurface9Impl));
+    if (!object)
+    {
+        FIXME("Failed to allocate surface memory.\n");
+        return D3DERR_OUTOFVIDEOMEMORY;
     }
-    return hrc;
+
+    hr = surface_init(object, This, Width, Height, Format, Lockable, Discard,
+            Level, Usage, Pool, MultiSample, MultisampleQuality);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize surface, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created surface %p.\n", object);
+    *ppSurface = (IDirect3DSurface9 *)object;
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI IDirect3DDevice9Impl_CreateRenderTarget(IDirect3DDevice9Ex *iface, UINT Width, UINT Height,
@@ -849,6 +992,12 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_SetRenderTarget(LPDIRECT3DDEVICE9EX
     HRESULT hr;
     TRACE("(%p) Relay\n" , This);
 
+    if (RenderTargetIndex >= D3D9_MAX_SIMULTANEOUS_RENDERTARGETS)
+    {
+        WARN("Invalid index %u specified.\n", RenderTargetIndex);
+        return D3DERR_INVALIDCALL;
+    }
+
     wined3d_mutex_lock();
     hr = IWineD3DDevice_SetRenderTarget(This->WineD3DDevice, RenderTargetIndex, pSurface ? pSurface->wineD3DSurface : NULL);
     wined3d_mutex_unlock();
@@ -864,6 +1013,12 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_GetRenderTarget(LPDIRECT3DDEVICE9EX
     TRACE("(%p) Relay\n" , This);
 
     if (ppRenderTarget == NULL) {
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (RenderTargetIndex >= D3D9_MAX_SIMULTANEOUS_RENDERTARGETS)
+    {
+        WARN("Invalid index %u specified.\n", RenderTargetIndex);
         return D3DERR_INVALIDCALL;
     }
 
@@ -1468,8 +1623,8 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_DrawIndexedPrimitive(LPDIRECT3DDEVI
     wined3d_mutex_lock();
     IWineD3DDevice_SetBaseVertexIndex(This->WineD3DDevice, BaseVertexIndex);
     IWineD3DDevice_SetPrimitiveType(This->WineD3DDevice, PrimitiveType);
-    hr = IWineD3DDevice_DrawIndexedPrimitive(This->WineD3DDevice, MinVertexIndex, NumVertices,
-            startIndex, vertex_count_from_primitive_count(PrimitiveType, primCount));
+    hr = IWineD3DDevice_DrawIndexedPrimitive(This->WineD3DDevice, startIndex,
+            vertex_count_from_primitive_count(PrimitiveType, primCount));
     wined3d_mutex_unlock();
 
     return hr;
@@ -1501,7 +1656,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_DrawIndexedPrimitiveUP(LPDIRECT3DDE
 
     wined3d_mutex_lock();
     IWineD3DDevice_SetPrimitiveType(This->WineD3DDevice, PrimitiveType);
-    hr = IWineD3DDevice_DrawIndexedPrimitiveUP(This->WineD3DDevice, MinVertexIndex, NumVertexIndices,
+    hr = IWineD3DDevice_DrawIndexedPrimitiveUP(This->WineD3DDevice,
             vertex_count_from_primitive_count(PrimitiveType, PrimitiveCount), pIndexData,
             wined3dformat_from_d3dformat(IndexDataFormat), pVertexStreamZeroData, VertexStreamZeroStride);
     wined3d_mutex_unlock();
@@ -1521,6 +1676,42 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_ProcessVertices(LPDIRECT3DDEVICE9EX
     wined3d_mutex_unlock();
 
     return hr;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateVertexDeclaration(IDirect3DDevice9Ex *iface,
+        const D3DVERTEXELEMENT9 *elements, IDirect3DVertexDeclaration9 **declaration)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DVertexDeclaration9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, elements %p, declaration %p.\n", iface, elements, declaration);
+
+    if (!declaration)
+    {
+        WARN("Caller passed a NULL declaration, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate vertex declaration memory.\n");
+        return E_OUTOFMEMORY;
+    }
+
+    hr = vertexdeclaration_init(object, This, elements);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize vertex declaration, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created vertex declaration %p.\n", object);
+    *declaration = (IDirect3DVertexDeclaration9 *)object;
+
+    return D3D_OK;
 }
 
 static IDirect3DVertexDeclaration9 *getConvertedDecl(IDirect3DDevice9Impl *This, DWORD fvf) {
@@ -1639,6 +1830,36 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetFVF(LPDIRECT3DDEVICE9EX iface, DWO
     return hr;
 }
 
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateVertexShader(IDirect3DDevice9Ex *iface,
+        const DWORD *byte_code, IDirect3DVertexShader9 **shader)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DVertexShader9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, byte_code %p, shader %p.\n", iface, byte_code, shader);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate vertex shader memory.\n");
+        return E_OUTOFMEMORY;
+    }
+
+    hr = vertexshader_init(object, This, byte_code);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize vertex shader, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created vertex shader %p.\n", object);
+    *shader = (IDirect3DVertexShader9 *)object;
+
+    return D3D_OK;
+}
+
 static HRESULT WINAPI IDirect3DDevice9Impl_SetStreamSource(LPDIRECT3DDEVICE9EX iface, UINT StreamNumber, IDirect3DVertexBuffer9* pStreamData, UINT OffsetInBytes, UINT Stride) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hr;
@@ -1713,7 +1934,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_SetIndices(LPDIRECT3DDEVICE9EX ifac
     TRACE("(%p) Relay\n", This);
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_SetIndices(This->WineD3DDevice,
+    hr = IWineD3DDevice_SetIndexBuffer(This->WineD3DDevice,
             ib ? ib->wineD3DIndexBuffer : NULL,
             ib ? ib->format : WINED3DFMT_UNKNOWN);
     wined3d_mutex_unlock();
@@ -1733,7 +1954,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_GetIndices(LPDIRECT3DDEVICE9EX ifac
     }
 
     wined3d_mutex_lock();
-    rc = IWineD3DDevice_GetIndices(This->WineD3DDevice, &retIndexData);
+    rc = IWineD3DDevice_GetIndexBuffer(This->WineD3DDevice, &retIndexData);
     if (SUCCEEDED(rc) && retIndexData) {
         IWineD3DBuffer_GetParent(retIndexData, (IUnknown **)ppIndexData);
         IWineD3DBuffer_Release(retIndexData);
@@ -1744,6 +1965,36 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_GetIndices(LPDIRECT3DDEVICE9EX ifac
     wined3d_mutex_unlock();
 
     return rc;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_CreatePixelShader(IDirect3DDevice9Ex *iface,
+        const DWORD *byte_code, IDirect3DPixelShader9 **shader)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DPixelShader9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, byte_code %p, shader %p.\n", iface, byte_code, shader);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        FIXME("Failed to allocate pixel shader memory.\n");
+        return E_OUTOFMEMORY;
+    }
+
+    hr = pixelshader_init(object, This, byte_code);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize pixel shader, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created pixel shader %p.\n", object);
+    *shader = (IDirect3DPixelShader9 *)object;
+
+    return D3D_OK;
 }
 
 static HRESULT  WINAPI  IDirect3DDevice9Impl_DrawRectPatch(LPDIRECT3DDEVICE9EX iface, UINT Handle, CONST float* pNumSegs, CONST D3DRECTPATCH_INFO* pRectPatchInfo) {
@@ -2014,17 +2265,6 @@ const IDirect3DDevice9ExVtbl Direct3DDevice9_Vtbl =
     IDirect3DDevice9ExImpl_GetDisplayModeEx
 };
 
-ULONG WINAPI D3D9CB_DestroySurface(IWineD3DSurface *pSurface) {
-    IDirect3DSurface9Impl* surfaceParent;
-    TRACE("(%p) call back\n", pSurface);
-
-    IWineD3DSurface_GetParent(pSurface, (IUnknown **) &surfaceParent);
-    /* GetParent's AddRef was forwarded to an object in destruction.
-     * Releasing it here again would cause an endless recursion. */
-    surfaceParent->forwardReference = NULL;
-    return IDirect3DSurface9_Release((IDirect3DSurface9*) surfaceParent);
-}
-
 /* IWineD3DDeviceParent IUnknown methods */
 
 static inline struct IDirect3DDevice9Impl *device_from_device_parent(IWineD3DDeviceParent *iface)
@@ -2084,9 +2324,13 @@ static HRESULT STDMETHODCALLTYPE device_parent_CreateSurface(IWineD3DDeviceParen
     }
 
     *surface = d3d_surface->wineD3DSurface;
+    IWineD3DSurface_AddRef(*surface);
+
     d3d_surface->container = superior;
     IDirect3DDevice9Ex_Release(d3d_surface->parentDevice);
     d3d_surface->parentDevice = NULL;
+
+    IDirect3DSurface9_Release((IDirect3DSurface9 *)d3d_surface);
     d3d_surface->forwardReference = superior;
 
     return hr;
@@ -2114,8 +2358,9 @@ static HRESULT STDMETHODCALLTYPE device_parent_CreateRenderTarget(IWineD3DDevice
     }
 
     *surface = d3d_surface->wineD3DSurface;
+    IWineD3DSurface_AddRef(*surface);
+
     d3d_surface->container = superior;
-    d3d_surface->isImplicit = TRUE;
     /* Implicit surfaces are created with an refcount of 0 */
     IDirect3DSurface9_Release((IDirect3DSurface9 *)d3d_surface);
 
@@ -2144,8 +2389,8 @@ static HRESULT STDMETHODCALLTYPE device_parent_CreateDepthStencilSurface(IWineD3
     }
 
     *surface = d3d_surface->wineD3DSurface;
+    IWineD3DSurface_AddRef(*surface);
     d3d_surface->container = (IUnknown *)This;
-    d3d_surface->isImplicit = TRUE;
     /* Implicit surfaces are created with an refcount of 0 */
     IDirect3DSurface9_Release((IDirect3DSurface9 *)d3d_surface);
 
@@ -2172,23 +2417,22 @@ static HRESULT STDMETHODCALLTYPE device_parent_CreateVolume(IWineD3DDeviceParent
         return D3DERR_OUTOFVIDEOMEMORY;
     }
 
-    object->lpVtbl = &Direct3DVolume9_Vtbl;
-    object->ref = 1;
-    hr = IWineD3DDevice_CreateVolume(This->WineD3DDevice, width, height, depth, usage & WINED3DUSAGE_MASK,
-            format, pool, &object->wineD3DVolume, (IUnknown *)object);
+    hr = volume_init(object, This, width, height, depth, usage, format, pool);
     if (FAILED(hr))
     {
-        ERR("(%p) CreateVolume failed, returning %#x\n", iface, hr);
+        WARN("Failed to initialize volume, hr %#x.\n", hr);
         HeapFree(GetProcessHeap(), 0, object);
-        *volume = NULL;
         return hr;
     }
 
     *volume = object->wineD3DVolume;
+    IWineD3DVolume_AddRef(*volume);
+    IDirect3DVolume9_Release((IDirect3DVolume9 *)object);
+
     object->container = superior;
     object->forwardReference = superior;
 
-    TRACE("(%p) Created volume %p\n", iface, *volume);
+    TRACE("(%p) Created volume %p\n", iface, object);
 
     return hr;
 }

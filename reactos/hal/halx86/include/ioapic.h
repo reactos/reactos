@@ -15,7 +15,7 @@
 #define IOAPIC_REDTBL   0x0010  /* Redirection Table (0-23 64-bit registers) (R/W) */
 
 #define IOAPIC_ID_MASK        (0xF << 24)
-#define GET_IOAPIC_ID(x)	    (((x) & IOAPIC_ID_MASK) >> 24)
+#define GET_IOAPIC_ID(x)	    ((UCHAR)(((x) & IOAPIC_ID_MASK) >> 24))
 #define SET_IOAPIC_ID(x)	    ((x) << 24)
 
 #define IOAPIC_VER_MASK       (0xFF)
@@ -68,8 +68,8 @@ typedef struct _IOAPIC_ROUTE_ENTRY {
 
 typedef struct _IOAPIC_INFO
 {
-   ULONG  ApicId;         /* APIC ID */
-   ULONG  ApicVersion;    /* APIC version */
+   UCHAR  ApicId;         /* APIC ID */
+   UCHAR  ApicVersion;    /* APIC version */
    ULONG  ApicAddress;    /* APIC address */
    ULONG  EntryCount;     /* Number of redirection entries */
 } IOAPIC_INFO, *PIOAPIC_INFO;

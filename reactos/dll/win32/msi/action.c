@@ -501,7 +501,7 @@ static UINT msi_apply_substorage_transform( MSIPACKAGE *package,
     return ERROR_SUCCESS;
 }
 
-static UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si )
+UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si )
 {
     static const WCHAR szProdCode[] = { 'P','r','o','d','u','c','t','C','o','d','e',0 };
     LPWSTR guid_list, *guids, product_code;
@@ -789,6 +789,9 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     static const WCHAR szUILevel[] = {'U','I','L','e','v','e','l',0};
     static const WCHAR szAction[] = {'A','C','T','I','O','N',0};
     static const WCHAR szInstall[] = {'I','N','S','T','A','L','L',0};
+    static const WCHAR szReinstall[] = {'R','E','I','N','S','T','A','L','L',0};
+    static const WCHAR szInstalled[] = {'I','n','s','t','a','l','l','e','d',0};
+    static const WCHAR szAll[] = {'A','L','L',0};
 
     MSI_SetPropertyW(package, szAction, szInstall);
 
@@ -837,6 +840,12 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     msi_apply_transforms( package );
     msi_apply_patches( package );
 
+    if (!szCommandLine && msi_get_property_int( package, szInstalled, 0 ))
+    {
+        TRACE("setting reinstall property\n");
+        MSI_SetPropertyW( package, szReinstall, szAll );
+    }
+
     /* properties may have been added by a transform */
     msi_clone_properties( package );
     msi_set_context( package );
@@ -871,6 +880,9 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     /* finish up running custom actions */
     ACTION_FinishCustomActions(package);
     
+    if (rc == ERROR_SUCCESS && package->need_reboot)
+        return ERROR_SUCCESS_REBOOT_REQUIRED;
+
     return rc;
 }
 
@@ -3378,16 +3390,12 @@ static UINT ACTION_CreateShortcuts(MSIPACKAGE *package)
         return ERROR_SUCCESS;
 
     res = CoInitialize( NULL );
-    if (FAILED (res))
-    {
-        ERR("CoInitialize failed\n");
-        return ERROR_FUNCTION_FAILED;
-    }
 
     rc = MSI_IterateRecords(view, NULL, ITERATE_CreateShortcuts, package);
     msiobj_release(&view->hdr);
 
-    CoUninitialize();
+    if (SUCCEEDED(res))
+        CoUninitialize();
 
     return rc;
 }
@@ -5308,8 +5316,7 @@ static LONG env_set_flags( LPCWSTR *name, LPCWSTR *value, DWORD *flags )
         }
     }
 
-    if (!*flags ||
-        check_flag_combo(*flags, ENV_ACT_SETALWAYS | ENV_ACT_SETABSENT) ||
+    if (check_flag_combo(*flags, ENV_ACT_SETALWAYS | ENV_ACT_SETABSENT) ||
         check_flag_combo(*flags, ENV_ACT_REMOVEMATCH | ENV_ACT_SETABSENT) ||
         check_flag_combo(*flags, ENV_ACT_REMOVEMATCH | ENV_ACT_SETALWAYS) ||
         check_flag_combo(*flags, ENV_ACT_SETABSENT | ENV_MOD_MASK))
@@ -5317,6 +5324,9 @@ static LONG env_set_flags( LPCWSTR *name, LPCWSTR *value, DWORD *flags )
         ERR("Invalid flags: %08x\n", *flags);
         return ERROR_FUNCTION_FAILED;
     }
+
+    if (!*flags)
+        *flags = ENV_ACT_SETALWAYS | ENV_ACT_REMOVE;
 
     return ERROR_SUCCESS;
 }
@@ -5344,6 +5354,8 @@ static UINT ITERATE_WriteEnvironmentString( MSIRECORD *rec, LPVOID param )
 
     name = MSI_RecordGetString(rec, 2);
     value = MSI_RecordGetString(rec, 3);
+
+    TRACE("name %s value %s\n", debugstr_w(name), debugstr_w(value));
 
     res = env_set_flags(&name, &value, &flags);
     if (res != ERROR_SUCCESS)

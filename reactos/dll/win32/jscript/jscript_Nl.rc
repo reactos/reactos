@@ -34,8 +34,12 @@ STRINGTABLE DISCARDABLE
     IDS_NOT_FUNC            "Functie verwacht"
     IDS_NOT_DATE            "'[object]' is geen datum object"
     IDS_NOT_NUM             "Getal verwacht"
+    IDS_OBJECT_EXPECTED     "Object verwacht"
     IDS_ILLEGAL_ASSIGN      "Ongeldige toekenning"
     IDS_UNDEFINED           "'|' is ongedefinieerd"
     IDS_NOT_BOOL            "Boolean object verwacht"
+    IDS_JSCRIPT_EXPECTED    "JScript object verwacht"
+    IDS_REGEXP_SYNTAX_ERROR "Syntax fout in reguliere expressie"
     IDS_INVALID_LENGTH      "Array lengte moet een eindig, positief geheel getal zijn"
+    IDS_ARRAY_EXPECTED      "Array object verwacht"
 }

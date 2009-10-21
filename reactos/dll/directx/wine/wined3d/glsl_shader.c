@@ -187,14 +187,14 @@ static void print_glsl_info_log(const struct wined3d_gl_info *gl_info, GLhandleA
     static const char * const spam[] =
     {
         "Vertex shader was successfully compiled to run on hardware.\n",    /* fglrx          */
-        "Fragment shader was successfully compiled to run on hardware.\n",  /* fglrx          */
+        "Fragment shader was successfully compiled to run on hardware.\n",  /* fglrx, with \n */
+        "Fragment shader was successfully compiled to run on hardware.",    /* fglrx, no \n   */
         "Fragment shader(s) linked, vertex shader(s) linked. \n ",          /* fglrx, with \n */
         "Fragment shader(s) linked, vertex shader(s) linked.",              /* fglrx, no \n   */
         "Vertex shader(s) linked, no fragment shader(s) defined. \n ",      /* fglrx, with \n */
         "Vertex shader(s) linked, no fragment shader(s) defined.",          /* fglrx, no \n   */
-        "Fragment shader was successfully compiled to run on hardware.\n"
-        "Fragment shader(s) linked, no vertex shader(s) defined.",          /* fglrx, no \n   */
         "Fragment shader(s) linked, no vertex shader(s) defined. \n ",      /* fglrx, with \n */
+        "Fragment shader(s) linked, no vertex shader(s) defined.",          /* fglrx, no \n   */
     };
 
     if (!TRACE_ON(d3d_shader) && !FIXME_ON(d3d_shader)) return;
@@ -3880,10 +3880,16 @@ static GLhandleARB find_glsl_pshader(const struct wined3d_context *context,
     struct ps_np2fixup_info        *np2fixup = NULL;
     GLhandleARB ret;
 
-    if(!shader->backend_priv) {
-        shader->backend_priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*shader_data));
+    if (!shader->baseShader.backend_data)
+    {
+        shader->baseShader.backend_data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*shader_data));
+        if (!shader->baseShader.backend_data)
+        {
+            ERR("Failed to allocate backend data.\n");
+            return 0;
+        }
     }
-    shader_data = shader->backend_priv;
+    shader_data = shader->baseShader.backend_data;
 
     /* Usually we have very few GL shaders for each d3d shader(just 1 or maybe 2),
      * so a linear search is more performant than a hashmap or a binary search
@@ -3949,10 +3955,16 @@ static GLhandleARB find_glsl_vshader(const struct wined3d_context *context,
     struct glsl_vshader_private *shader_data;
     GLhandleARB ret;
 
-    if(!shader->backend_priv) {
-        shader->backend_priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*shader_data));
+    if (!shader->baseShader.backend_data)
+    {
+        shader->baseShader.backend_data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*shader_data));
+        if (!shader->baseShader.backend_data)
+        {
+            ERR("Failed to allocate backend data.\n");
+            return 0;
+        }
     }
-    shader_data = shader->backend_priv;
+    shader_data = shader->baseShader.backend_data;
 
     /* Usually we have very few GL shaders for each d3d shader(just 1 or maybe 2),
      * so a linear search is more performant than a hashmap or a binary search
@@ -4351,11 +4363,11 @@ static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
     if(pshader) {
         struct glsl_pshader_private *shader_data;
         ps = (IWineD3DPixelShaderImpl *) This;
-        shader_data = ps->backend_priv;
+        shader_data = ps->baseShader.backend_data;
         if(!shader_data || shader_data->num_gl_shaders == 0)
         {
             HeapFree(GetProcessHeap(), 0, shader_data);
-            ps->backend_priv = NULL;
+            ps->baseShader.backend_data = NULL;
             return;
         }
 
@@ -4371,11 +4383,11 @@ static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
     } else {
         struct glsl_vshader_private *shader_data;
         vs = (IWineD3DVertexShaderImpl *) This;
-        shader_data = vs->backend_priv;
+        shader_data = vs->baseShader.backend_data;
         if(!shader_data || shader_data->num_gl_shaders == 0)
         {
             HeapFree(GetProcessHeap(), 0, shader_data);
-            vs->backend_priv = NULL;
+            vs->baseShader.backend_data = NULL;
             return;
         }
 
@@ -4411,7 +4423,7 @@ static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
 
     if(pshader) {
         UINT i;
-        struct glsl_pshader_private *shader_data = ps->backend_priv;
+        struct glsl_pshader_private *shader_data = ps->baseShader.backend_data;
 
         ENTER_GL();
         for(i = 0; i < shader_data->num_gl_shaders; i++) {
@@ -4422,10 +4434,10 @@ static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
         LEAVE_GL();
         HeapFree(GetProcessHeap(), 0, shader_data->gl_shaders);
         HeapFree(GetProcessHeap(), 0, shader_data);
-        ps->backend_priv = NULL;
+        ps->baseShader.backend_data = NULL;
     } else {
         UINT i;
-        struct glsl_vshader_private *shader_data = vs->backend_priv;
+        struct glsl_vshader_private *shader_data = vs->baseShader.backend_data;
 
         ENTER_GL();
         for(i = 0; i < shader_data->num_gl_shaders; i++) {
@@ -4436,7 +4448,7 @@ static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
         LEAVE_GL();
         HeapFree(GetProcessHeap(), 0, shader_data->gl_shaders);
         HeapFree(GetProcessHeap(), 0, shader_data);
-        vs->backend_priv = NULL;
+        vs->baseShader.backend_data = NULL;
     }
 }
 

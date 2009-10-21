@@ -1327,6 +1327,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                         strcpy(GspOutBuffer, "E03");
                         DPRINT1("Fault during memory read\n");
                     }
+                    ptr = NULL;
                 }
 
                 if (NULL != ptr)

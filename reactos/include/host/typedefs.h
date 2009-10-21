@@ -217,6 +217,8 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 #define MAKEWORD(a,b)           ((WORD)(((BYTE)(a))|(((WORD)((BYTE)(b)))<<8)))
 #define MAKELONG(a,b)           ((LONG)(((WORD)(a))|(((DWORD)((WORD)(b)))<<16)))
 
+#define MAXULONG 0xFFFFFFFF
+
 #define NT_SUCCESS(x)           ((x)>=0)
 #if !defined(__GNUC__)
 #define FIELD_OFFSET(t,f)       ((LONG)(LONG_PTR)&(((t*) 0)->f))

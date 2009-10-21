@@ -49,11 +49,11 @@ KdpPollBreakInWithPortLock(VOID)
         else
         {
             /* Now get a packet */
-            if (!KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
+            if (KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
                                  NULL,
                                  NULL,
                                  NULL,
-                                 NULL))
+                                 NULL) == KdPacketReceived)
             {
                 /* Successful breakin */
                 DoBreak = TRUE;
@@ -96,11 +96,11 @@ KdPollBreakIn(VOID)
             if (KeTryToAcquireSpinLockAtDpcLevel(&KdpDebuggerLock))
             {
                 /* Now get a packet */
-                if (!KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
+                if (KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
                                      NULL,
                                      NULL,
                                      NULL,
-                                     NULL))
+                                     NULL) == KdPacketReceived)
                 {
                     /* Successful breakin */
                     DoBreak = TRUE;

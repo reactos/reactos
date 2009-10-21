@@ -15,6 +15,7 @@ HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 SETTINGS_INFO SettingsInfo;
 
+
 VOID
 FillDafaultSettings(PSETTINGS_INFO pSettingsInfo)
 {
@@ -37,7 +38,7 @@ LoadSettings(VOID)
     HKEY hKey;
     DWORD dwSize;
 
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         dwSize = sizeof(SETTINGS_INFO);
         if (RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
@@ -70,7 +71,7 @@ SaveSettings(HWND hwnd)
         SettingsInfo.Maximized = (IsZoomed(hwnd) || (wp.flags & WPF_RESTORETOMAXIMIZED));
     }
 
-    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, NULL,
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\rapps", 0, NULL,
         REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
         RegSetValueEx(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SETTINGS_INFO));
@@ -82,31 +83,40 @@ VOID
 FreeInstalledAppList(VOID)
 {
     INT Count = ListView_GetItemCount(hListView) - 1;
-    HKEY hKey;
+    PINSTALLED_INFO Info;
 
     while (Count >= 0)
     {
-        hKey = ListViewGetlParam(Count);
-        if (hKey)
-            RegCloseKey(hKey);
+        Info = ListViewGetlParam(Count);
+        if (Info)
+        {
+            RegCloseKey(Info->hSubKey);
+            HeapFree(GetProcessHeap(), 0, Info);
+        }
         Count--;
     }
 }
 
 BOOL
 CALLBACK
-EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, LPWSTR lpKeyName, LPARAM lParam)
+EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, INSTALLED_INFO Info)
 {
+    PINSTALLED_INFO ItemInfo;
     WCHAR szText[MAX_PATH];
     INT Index;
 
-    Index = ListViewAddItem(ItemIndex, 0, lpName, lParam);
+    ItemInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(INSTALLED_INFO));
+    if (!ItemInfo) return FALSE;
+
+    *ItemInfo = Info;
+
+    Index = ListViewAddItem(ItemIndex, 0, lpName, (LPARAM)ItemInfo);
 
     /* Get version info */
-    GetApplicationString((HKEY)lParam, L"DisplayVersion", szText);
+    GetApplicationString((HKEY)ItemInfo->hSubKey, L"DisplayVersion", szText);
     ListView_SetItemText(hListView, Index, 1, szText);
     /* Get comments */
-    GetApplicationString((HKEY)lParam, L"Comments", szText);
+    GetApplicationString((HKEY)ItemInfo->hSubKey, L"Comments", szText);
     ListView_SetItemText(hListView, Index, 2, szText);
 
     return TRUE;
@@ -397,6 +407,10 @@ MainWndOnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
         case ID_MODIFY:
             if (UninstallApplication(-1, TRUE))
                 UpdateApplicationsList(-1);
+            break;
+
+        case ID_REGREMOVE:
+            RemoveAppFromRegistry(-1);
             break;
 
         case ID_REFRESH:

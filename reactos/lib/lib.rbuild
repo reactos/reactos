@@ -7,11 +7,17 @@
 	<directory name="sdk">
 		<xi:include href="sdk/sdk.rbuild" />
 	</directory>
+	<directory name="atl">
+		<xi:include href="atl/atl.rbuild" />
+	</directory>
 	<directory name="cmlib">
 		<xi:include href="cmlib/cmlib.rbuild" />
 	</directory>
 	<directory name="debugsup">
 		<xi:include href="debugsup/debugsup.rbuild" />
+	</directory>
+	<directory name="dnslib">
+		<xi:include href="dnslib/dnslib.rbuild" />
 	</directory>
 	<directory name="drivers">
 		<xi:include href="drivers/directory.rbuild" />

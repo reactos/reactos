@@ -172,7 +172,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 /* keywords */
 %token kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kIF kFINALLY kFOR kIN
 %token kINSTANCEOF kNEW kNULL kUNDEFINED kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
-%token tANDAND tOROR tINC tDEC tHTMLCOMMENT
+%token tANDAND tOROR tINC tDEC tHTMLCOMMENT kDIVEQ
 
 %token <srcptr> kFUNCTION '}'
 
@@ -245,6 +245,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 %type <literal> PropertyName
 %type <literal> BooleanLiteral
 %type <srcptr> KFunction
+%type <ival> AssignOper
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc kELSE
@@ -294,6 +295,7 @@ Statement
         : Block                 { $$ = $1; }
         | VariableStatement     { $$ = $1; }
         | EmptyStatement        { $$ = $1; }
+        | FunctionExpression    { $$ = new_empty_statement(ctx); } /* FIXME: return NULL */
         | ExpressionStatement   { $$ = $1; }
         | IfStatement           { $$ = $1; }
         | IterationStatement    { $$ = $1; }
@@ -515,12 +517,16 @@ ExpressionNoIn
         | ExpressionNoIn ',' AssignmentExpressionNoIn
                                 { $$ = new_binary_expression(ctx, EXPR_COMMA, $1, $3); }
 
+AssignOper
+        : tAssignOper           { $$ = $1; }
+        | kDIVEQ                { $$ = EXPR_ASSIGNDIV; }
+
 /* ECMA-262 3rd Edition    11.13 */
 AssignmentExpression
         : ConditionalExpression { $$ = $1; }
         | LeftHandSideExpression '=' AssignmentExpression
                                 { $$ = new_binary_expression(ctx, EXPR_ASSIGN, $1, $3); }
-        | LeftHandSideExpression tAssignOper AssignmentExpression
+        | LeftHandSideExpression AssignOper AssignmentExpression
                                 { $$ = new_binary_expression(ctx, $2, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.13 */
@@ -529,7 +535,7 @@ AssignmentExpressionNoIn
                                 { $$ = $1; }
         | LeftHandSideExpression '=' AssignmentExpressionNoIn
                                 { $$ = new_binary_expression(ctx, EXPR_ASSIGN, $1, $3); }
-        | LeftHandSideExpression tAssignOper AssignmentExpressionNoIn
+        | LeftHandSideExpression AssignOper AssignmentExpressionNoIn
                                 { $$ = new_binary_expression(ctx, $2, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.12 */
@@ -800,11 +806,13 @@ Literal
         | tStringLiteral        { $$ = new_string_literal(ctx, $1); }
         | '/'                   { $$ = parse_regexp(ctx);
                                   if(!$$) YYABORT; }
+        | kDIVEQ                { $$ = parse_regexp(ctx);
+                                  if(!$$) YYABORT; }
 
 /* ECMA-262 3rd Edition    7.8.2 */
 BooleanLiteral
-        : kTRUE                 { $$ = new_boolean_literal(ctx, TRUE); }
-        | kFALSE                { $$ = new_boolean_literal(ctx, FALSE); }
+        : kTRUE                 { $$ = new_boolean_literal(ctx, VARIANT_TRUE); }
+        | kFALSE                { $$ = new_boolean_literal(ctx, VARIANT_FALSE); }
 
 semicolon_opt
         : ';'

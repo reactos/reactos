@@ -9,6 +9,7 @@
 	<installfile installbase="inf">hdc.inf</installfile>
 	<installfile installbase="inf">intl.inf</installfile>
 	<installfile installbase="inf">keyboard.inf</installfile>
+	<installfile installbase="inf">ks.inf</installfile>
 	<installfile installbase="inf">layout.inf</installfile>
 	<installfile installbase="inf">machine.inf</installfile>
 	<installfile installbase="inf">msmouse.inf</installfile>

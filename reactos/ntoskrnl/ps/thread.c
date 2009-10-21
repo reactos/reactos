@@ -310,34 +310,18 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     if (ThreadContext)
     {
         /* User-mode Thread, create Teb */
-        TebBase = MmCreateTeb(Process, &Thread->Cid, InitialTeb);
-        if (!TebBase)
+        Status = MmCreateTeb(Process, &Thread->Cid, InitialTeb, &TebBase);
+        if (!NT_SUCCESS(Status))
         {
             /* Failed to create the TEB. Release rundown and dereference */
             ExReleaseRundownProtection(&Process->RundownProtect);
             ObDereferenceObject(Thread);
-            return STATUS_INSUFFICIENT_RESOURCES;
+            return Status;
         }
 
         /* Set the Start Addresses */
-#if defined(_M_IX86)
-        Thread->StartAddress = (PVOID)ThreadContext->Eip;
-        Thread->Win32StartAddress = (PVOID)ThreadContext->Eax;
-#elif defined(_M_PPC)
-        Thread->StartAddress = (PVOID)ThreadContext->Dr0;
-        Thread->Win32StartAddress = (PVOID)ThreadContext->Gpr3;
-#elif defined(_M_MIPS)
-        Thread->StartAddress = (PVOID)ThreadContext->Psr;
-        Thread->Win32StartAddress = (PVOID)ThreadContext->IntA0;
-#elif defined(_M_ARM)
-        Thread->StartAddress = (PVOID)ThreadContext->Pc;
-        Thread->Win32StartAddress = (PVOID)ThreadContext->R0;
-#elif defined(_M_AMD64)
-        Thread->StartAddress = (PVOID)ThreadContext->Rip;
-        Thread->Win32StartAddress = (PVOID)ThreadContext->Rax;
-#else
-#error Unknown architecture
-#endif
+        Thread->StartAddress = (PVOID)KeGetContextPc(ThreadContext);
+        Thread->Win32StartAddress = (PVOID)KeGetContextReturnRegister(ThreadContext);
 
         /* Let the kernel intialize the Thread */
         Status = KeInitThread(&Thread->Tcb,

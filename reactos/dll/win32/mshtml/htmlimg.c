@@ -295,7 +295,7 @@ static HRESULT WINAPI HTMLImgElement_get_src(IHTMLImgElement *iface, BSTR *p)
     }
 
     nsAString_GetData(&src_str, &src);
-    hres = nsuri_to_url(src, p);
+    hres = nsuri_to_url(src, TRUE, p);
     nsAString_Finish(&src_str);
 
     return hres;
@@ -607,8 +607,7 @@ HTMLElement *HTMLImgElement_Create(nsIDOMHTMLElement *nselem)
     if(NS_FAILED(nsres))
         ERR("Could not get nsIDOMHTMLImageElement: %08x\n", nsres);
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLIMG(ret), &HTMLImgElement_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, &HTMLImgElement_dispex);
 
     return &ret->element;
 }

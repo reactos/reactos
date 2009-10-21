@@ -25,16 +25,15 @@
 #include <bugcodes.h>
 #include <ntdddisk.h>
 #include <arc/arc.h>
-#include <iotypes.h>
-#include <kefuncs.h>
-#include <halfuncs.h>
-#include <iofuncs.h>
-#include <ldrtypes.h>
-#include <obfuncs.h>
+#include <ntndk.h>
 
 /* Internal kernel headers */
 #include "internal/pci.h"
+#ifdef _M_AMD64
+#include "internal/amd64/intrin_i.h"
+#else
 #include "internal/i386/intrin_i.h"
+#endif
 
 /* Internal HAL Headers */
 #include "apic.h"

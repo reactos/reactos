@@ -176,7 +176,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(listview);
 typedef struct tagCOLUMN_INFO
 {
   RECT rcHeader;	/* tracks the header's rectangle */
-  int fmt;		/* same as LVCOLUMN.fmt */
+  INT fmt;		/* same as LVCOLUMN.fmt */
+  INT cxMin;
 } COLUMN_INFO;
 
 typedef struct tagITEMHDR
@@ -5733,6 +5734,9 @@ static BOOL LISTVIEW_GetColumnT(const LISTVIEW_INFO *infoPtr, INT nColumn, LPLVC
     if (lpColumn->mask & LVCF_SUBITEM)
 	lpColumn->iSubItem = hdi.lParam;
 
+    if (lpColumn->mask & LVCF_MINWIDTH)
+	lpColumn->cxMin = lpColumnInfo->cxMin;
+
     return TRUE;
 }
 
@@ -7299,7 +7303,10 @@ static BOOL LISTVIEW_SetBkColor(LISTVIEW_INFO *infoPtr, COLORREF clrBk)
 	if (clrBk == CLR_NONE)
 	    infoPtr->hBkBrush = (HBRUSH)GetClassLongPtrW(infoPtr->hwndSelf, GCLP_HBRBACKGROUND);
 	else
+	{
 	    infoPtr->hBkBrush = CreateSolidBrush(clrBk);
+	    infoPtr->dwLvExStyle &= ~LVS_EX_TRANSPARENTBKGND;
+	}
 	LISTVIEW_InvalidateList(infoPtr);
     }
 
@@ -7333,6 +7340,9 @@ static void column_fill_hditem(const LISTVIEW_INFO *infoPtr, HDITEMW *lphdi, INT
             lphdi->fmt |= HDF_IMAGE;
             lphdi->iImage = I_IMAGECALLBACK;
         }
+
+        if (lpColumn->fmt & LVCFMT_FIXED_WIDTH)
+            lphdi->fmt |= HDF_FIXEDWIDTH;
     }
 
     if (lpColumn->mask & LVCF_WIDTH)
@@ -7450,6 +7460,7 @@ static INT LISTVIEW_InsertColumnT(LISTVIEW_INFO *infoPtr, INT nColumn,
     if (DPA_InsertPtr(infoPtr->hdpaColumns, nNewColumn, lpColumnInfo) == -1) goto fail;
 
     if (lpColumn->mask & LVCF_FMT) lpColumnInfo->fmt = lpColumn->fmt;
+    if (lpColumn->mask & LVCF_MINWIDTH) lpColumnInfo->cxMin = lpColumn->cxMin;
     if (!SendMessageW(infoPtr->hwndHeader, HDM_GETITEMRECT, nNewColumn, (LPARAM)&lpColumnInfo->rcHeader))
         goto fail;
 
@@ -7529,7 +7540,7 @@ static BOOL LISTVIEW_SetColumnT(const LISTVIEW_INFO *infoPtr, INT nColumn,
     if (lpColumn->mask & LVCF_FMT)
     {
 	COLUMN_INFO *lpColumnInfo = LISTVIEW_GetColumnInfo(infoPtr, nColumn);
-	int oldFmt = lpColumnInfo->fmt;
+	INT oldFmt = lpColumnInfo->fmt;
 	
 	lpColumnInfo->fmt = lpColumn->fmt;
 	if ((oldFmt ^ lpColumn->fmt) & (LVCFMT_JUSTIFYMASK | LVCFMT_IMAGE))
@@ -7537,6 +7548,9 @@ static BOOL LISTVIEW_SetColumnT(const LISTVIEW_INFO *infoPtr, INT nColumn,
 	    if (infoPtr->uView == LV_VIEW_DETAILS) LISTVIEW_InvalidateColumn(infoPtr, nColumn);
 	}
     }
+
+    if (lpColumn->mask & LVCF_MINWIDTH)
+	LISTVIEW_GetColumnInfo(infoPtr, nColumn)->cxMin = lpColumn->cxMin;
 
     return TRUE;
 }
@@ -7673,7 +7687,7 @@ static BOOL LISTVIEW_SetColumnWidth(LISTVIEW_INFO *infoPtr, INT nColumn, INT cx)
 
     /* call header to update the column change */
     hdi.mask = HDI_WIDTH;
-    hdi.cxy = cx;
+    hdi.cxy = max(cx, LISTVIEW_GetColumnInfo(infoPtr, nColumn)->cxMin);
     TRACE("hdi.cxy=%d\n", hdi.cxy);
     return SendMessageW(infoPtr->hwndHeader, HDM_SETITEMW, nColumn, (LPARAM)&hdi);
 }
@@ -7785,6 +7799,11 @@ static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD dwM
         LISTVIEW_UpdateSize(infoPtr);
     }
 
+    if((infoPtr->dwLvExStyle ^ dwOldExStyle) & LVS_EX_TRANSPARENTBKGND)
+    {
+        if (infoPtr->dwLvExStyle & LVS_EX_TRANSPARENTBKGND)
+            LISTVIEW_SetBkColor(infoPtr, CLR_NONE);
+    }
 
     LISTVIEW_InvalidateList(infoPtr);
     return dwOldExStyle;
@@ -8800,7 +8819,13 @@ static inline BOOL LISTVIEW_EraseBkgnd(const LISTVIEW_INFO *infoPtr, HDC hdc)
     if (!GetClipBox(hdc, &rc)) return FALSE;
 
     if (infoPtr->clrBk == CLR_NONE)
-        return SendMessageW(infoPtr->hwndNotify, WM_ERASEBKGND, (WPARAM)hdc, 0);
+    {
+        if (infoPtr->dwLvExStyle & LVS_EX_TRANSPARENTBKGND)
+            return SendMessageW(infoPtr->hwndNotify, WM_PRINTCLIENT,
+                                (WPARAM)hdc, PRF_ERASEBKGND);
+        else
+            return SendMessageW(infoPtr->hwndNotify, WM_ERASEBKGND, (WPARAM)hdc, 0);
+    }
 
     /* for double buffered controls we need to do this during refresh */
     if (infoPtr->dwLvExStyle & LVS_EX_DOUBLEBUFFER) return FALSE;

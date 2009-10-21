@@ -290,21 +290,12 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
 NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
   UINT Information ) {
-
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = Information;
-
-    if( Status == STATUS_PENDING ) {
-	/* We should firstly mark this IRP as pending, because
-	   otherwise it may be completed by StreamSocketConnectComplete()
-	   before we return from SocketStateUnlock(). */
-	IoMarkIrpPending( Irp );
-	SocketStateUnlock( FCB );
-    } else {
-	if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
-	SocketStateUnlock( FCB );
-	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-    }
+    if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
+    (void)IoSetCancelRoutine(Irp, NULL);
+    SocketStateUnlock( FCB );
+    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     return Status;
 }
 
@@ -322,7 +313,8 @@ NTSTATUS LostSocket( PIRP Irp ) {
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
     InsertTailList( &FCB->PendingIrpList[Function],
 		    &Irp->Tail.Overlay.ListEntry );
-	IoMarkIrpPending(Irp);
-	Irp->IoStatus.Status = STATUS_PENDING;
-    return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0 );
+    IoMarkIrpPending(Irp);
+    (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
+    SocketStateUnlock( FCB );
+    return STATUS_PENDING;
 }

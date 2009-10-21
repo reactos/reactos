@@ -99,37 +99,41 @@ VOID DestroyFIBEs(
 }
 
 
-UINT CountFIBs() {
+UINT CountFIBs(PIP_INTERFACE IF) {
     UINT FibCount = 0;
     PLIST_ENTRY CurrentEntry;
     PLIST_ENTRY NextEntry;
+    PFIB_ENTRY Current;
 
-    /* Search the list and remove every FIB entry we find */
     CurrentEntry = FIBListHead.Flink;
     while (CurrentEntry != &FIBListHead) {
         NextEntry = CurrentEntry->Flink;
+        Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+        if (Current->Router->Interface == IF)
+	    FibCount++;
         CurrentEntry = NextEntry;
-	FibCount++;
     }
 
     return FibCount;
 }
 
 
-UINT CopyFIBs( PFIB_ENTRY Target ) {
+UINT CopyFIBs( PIP_INTERFACE IF, PFIB_ENTRY Target ) {
     UINT FibCount = 0;
     PLIST_ENTRY CurrentEntry;
     PLIST_ENTRY NextEntry;
     PFIB_ENTRY Current;
 
-    /* Search the list and remove every FIB entry we find */
     CurrentEntry = FIBListHead.Flink;
     while (CurrentEntry != &FIBListHead) {
         NextEntry = CurrentEntry->Flink;
 	Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
-	Target[FibCount] = *Current;
+        if (Current->Router->Interface == IF)
+        {
+	    Target[FibCount] = *Current;
+	    FibCount++;
+        }
         CurrentEntry = NextEntry;
-	FibCount++;
     }
 
     return FibCount;

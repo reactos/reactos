@@ -49,6 +49,8 @@ static const WCHAR attrBackgroundRepeat[] =
     {'b','a','c','k','g','r','o','u','n','d','-','r','e','p','e','a','t',0};
 static const WCHAR attrBorder[] =
     {'b','o','r','d','e','r',0};
+static const WCHAR attrBorderBottomColor[] =
+    {'b','o','r','d','e','r','-','b','o','t','t','o','m','-','c','o','l','o','r',0};
 static const WCHAR attrBorderBottomStyle[] =
     {'b','o','r','d','e','r','-','b','o','t','t','o','m','-','s','t','y','l','e',0};
 static const WCHAR attrBorderBottomWidth[] =
@@ -57,14 +59,20 @@ static const WCHAR attrBorderColor[] =
     {'b','o','r','d','e','r','-','c','o','l','o','r',0};
 static const WCHAR attrBorderLeft[] =
     {'b','o','r','d','e','r','-','l','e','f','t',0};
+static const WCHAR attrBorderLeftColor[] =
+    {'b','o','r','d','e','r','-','l','e','f','t','-','c','o','l','o','r',0};
 static const WCHAR attrBorderLeftStyle[] =
     {'b','o','r','d','e','r','-','l','e','f','t','-','s','t','y','l','e',0};
 static const WCHAR attrBorderLeftWidth[] =
     {'b','o','r','d','e','r','-','l','e','f','t','-','w','i','d','t','h',0};
+static const WCHAR attrBorderRightColor[] =
+    {'b','o','r','d','e','r','-','r','i','g','h','t','-','c','o','l','o','r',0};
 static const WCHAR attrBorderRightStyle[] =
     {'b','o','r','d','e','r','-','r','i','g','h','t','-','s','t','y','l','e',0};
 static const WCHAR attrBorderRightWidth[] =
     {'b','o','r','d','e','r','-','r','i','g','h','t','-','w','i','d','t','h',0};
+static const WCHAR attrBorderTopColor[] =
+    {'b','o','r','d','e','r','-','t','o','p','-','c','o','l','o','r',0};
 static const WCHAR attrBorderStyle[] =
     {'b','o','r','d','e','r','-','s','t','y','l','e',0};
 static const WCHAR attrBorderTopStyle[] =
@@ -73,6 +81,8 @@ static const WCHAR attrBorderTopWidth[] =
     {'b','o','r','d','e','r','-','t','o','p','-','w','i','d','t','h',0};
 static const WCHAR attrBorderWidth[] =
     {'b','o','r','d','e','r','-','w','i','d','t','h',0};
+static const WCHAR attrBottom[] =
+    {'b','o','t','t','o','m',0};
 static const WCHAR attrColor[] =
     {'c','o','l','o','r',0};
 static const WCHAR attrCursor[] =
@@ -97,24 +107,40 @@ static const WCHAR attrLeft[] =
     {'l','e','f','t',0};
 static const WCHAR attrLetterSpacing[] =
     {'l','e','t','t','e','r','-','s','p','a','c','i','n','g',0};
+static const WCHAR attrLineHeight[] =
+    {'l','i','n','e','-','h','e','i','g','h','t',0};
 static const WCHAR attrMargin[] =
     {'m','a','r','g','i','n',0};
+static const WCHAR attrMarginBottom[] =
+    {'m','a','r','g','i','n','-','b','o','t','t','o','m',0};
 static const WCHAR attrMarginLeft[] =
     {'m','a','r','g','i','n','-','l','e','f','t',0};
 static const WCHAR attrMarginRight[] =
     {'m','a','r','g','i','n','-','r','i','g','h','t',0};
+static const WCHAR attrMarginTop[] =
+    {'m','a','r','g','i','n','-','t','o','p',0};
 static const WCHAR attrMinHeight[] =
     {'m','i','n','-','h','e','i','g','h','t',0};
 static const WCHAR attrOverflow[] =
     {'o','v','e','r','f','l','o','w',0};
+static const WCHAR attrPaddingBottom[] =
+    {'p','a','d','d','i','n','g','-','b','o','t','t','o','m',0};
 static const WCHAR attrPaddingLeft[] =
     {'p','a','d','d','i','n','g','-','l','e','f','t',0};
+static const WCHAR attrPaddingRight[] =
+    {'p','a','d','d','i','n','g','-','r','i','g','h','t',0};
+static const WCHAR attrPaddingTop[] =
+    {'p','a','d','d','i','n','g','-','t','o','p',0};
 static const WCHAR attrPosition[] =
     {'p','o','s','i','t','i','o','n',0};
+static const WCHAR attrRight[] =
+    {'r','i','g','h','t',0};
 static const WCHAR attrTextAlign[] =
     {'t','e','x','t','-','a','l','i','g','n',0};
 static const WCHAR attrTextDecoration[] =
     {'t','e','x','t','-','d','e','c','o','r','a','t','i','o','n',0};
+static const WCHAR attrTextIndent[] =
+    {'t','e','x','t','-','i','n','d','e','n','t',0};
 static const WCHAR attrTop[] =
     {'t','o','p',0};
 static const WCHAR attrVerticalAlign[] =
@@ -141,18 +167,23 @@ static const struct{
     {attrBackgroundPositionY,  DISPID_IHTMLSTYLE_BACKGROUNDPOSITIONY},
     {attrBackgroundRepeat,     DISPID_IHTMLSTYLE_BACKGROUNDREPEAT},
     {attrBorder,               DISPID_IHTMLSTYLE_BORDER},
+    {attrBorderBottomColor,    DISPID_IHTMLSTYLE_BORDERBOTTOMCOLOR},
     {attrBorderBottomStyle,    DISPID_IHTMLSTYLE_BORDERBOTTOMSTYLE},
     {attrBorderBottomWidth,    DISPID_IHTMLSTYLE_BORDERBOTTOMWIDTH},
     {attrBorderColor,          DISPID_IHTMLSTYLE_BORDERCOLOR},
     {attrBorderLeft,           DISPID_IHTMLSTYLE_BORDERLEFT},
+    {attrBorderLeftColor,      DISPID_IHTMLSTYLE_BORDERLEFTCOLOR},
     {attrBorderLeftStyle,      DISPID_IHTMLSTYLE_BORDERLEFTSTYLE},
     {attrBorderLeftWidth,      DISPID_IHTMLSTYLE_BORDERLEFTWIDTH},
+    {attrBorderRightColor,     DISPID_IHTMLSTYLE_BORDERRIGHTCOLOR},
     {attrBorderRightStyle,     DISPID_IHTMLSTYLE_BORDERRIGHTSTYLE},
     {attrBorderRightWidth,     DISPID_IHTMLSTYLE_BORDERRIGHTWIDTH},
     {attrBorderStyle,          DISPID_IHTMLSTYLE_BORDERSTYLE},
+    {attrBorderTopColor,       DISPID_IHTMLSTYLE_BORDERTOPCOLOR},
     {attrBorderTopStyle,       DISPID_IHTMLSTYLE_BORDERTOPSTYLE},
     {attrBorderTopWidth,       DISPID_IHTMLSTYLE_BORDERTOPWIDTH},
     {attrBorderWidth,          DISPID_IHTMLSTYLE_BORDERWIDTH},
+    {attrBottom,               DISPID_IHTMLSTYLE2_BOTTOM},
     {attrColor,                DISPID_IHTMLSTYLE_COLOR},
     {attrCursor,               DISPID_IHTMLSTYLE_CURSOR},
     {attrDisplay,              DISPID_IHTMLSTYLE_DISPLAY},
@@ -165,15 +196,23 @@ static const struct{
     {attrHeight,               DISPID_IHTMLSTYLE_HEIGHT},
     {attrLeft,                 DISPID_IHTMLSTYLE_LEFT},
     {attrLetterSpacing,        DISPID_IHTMLSTYLE_LETTERSPACING},
+    {attrLineHeight,           DISPID_IHTMLSTYLE_LINEHEIGHT},
     {attrMargin,               DISPID_IHTMLSTYLE_MARGIN},
+    {attrMarginBottom,         DISPID_IHTMLSTYLE_MARGINBOTTOM},
     {attrMarginLeft,           DISPID_IHTMLSTYLE_MARGINLEFT},
     {attrMarginRight,          DISPID_IHTMLSTYLE_MARGINRIGHT},
+    {attrMarginTop,            DISPID_IHTMLSTYLE_MARGINTOP},
     {attrMinHeight,            DISPID_IHTMLSTYLE4_MINHEIGHT},
     {attrOverflow,             DISPID_IHTMLSTYLE_OVERFLOW},
+    {attrPaddingBottom,        DISPID_IHTMLSTYLE_PADDINGBOTTOM},
     {attrPaddingLeft,          DISPID_IHTMLSTYLE_PADDINGLEFT},
+    {attrPaddingRight,         DISPID_IHTMLSTYLE_PADDINGRIGHT},
+    {attrPaddingTop,           DISPID_IHTMLSTYLE_PADDINGTOP},
     {attrPosition,             DISPID_IHTMLSTYLE2_POSITION},
+    {attrRight,                DISPID_IHTMLSTYLE2_RIGHT},
     {attrTextAlign,            DISPID_IHTMLSTYLE_TEXTALIGN},
     {attrTextDecoration,       DISPID_IHTMLSTYLE_TEXTDECORATION},
+    {attrTextIndent,           DISPID_IHTMLSTYLE_TEXTINDENT},
     {attrTop,                  DISPID_IHTMLSTYLE_TOP},
     {attrVerticalAlign,        DISPID_IHTMLSTYLE_VERTICALALIGN},
     {attrVisibility,           DISPID_IHTMLSTYLE_VISIBILITY},
@@ -291,6 +330,9 @@ HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, 
 
     case VT_BSTR:
         return set_nsstyle_attr(nsstyle, sid, V_BSTR(value), flags);
+
+    case VT_BSTR|VT_BYREF:
+        return set_nsstyle_attr(nsstyle, sid, *V_BSTRREF(value), flags);
 
     case VT_I4: {
         WCHAR str[14];
@@ -2016,7 +2058,7 @@ static HRESULT WINAPI HTMLStyle_put_overflow(IHTMLStyle *iface, BSTR v)
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
     /* overflow can only be one of the follow values. */
-    if(!v || strcmpiW(szVisible, v) == 0 || strcmpiW(szScroll, v) == 0 ||
+    if(!v || !*v || strcmpiW(szVisible, v) == 0 || strcmpiW(szScroll, v) == 0 ||
              strcmpiW(szHidden, v) == 0  || strcmpiW(szAuto, v) == 0)
     {
         return set_nsstyle_attr(This->nsstyle, STYLEID_OVERFLOW, v, 0);

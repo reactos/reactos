@@ -573,7 +573,7 @@ InterlockedAdd64(
 #define PSLIST_ENTRY PSINGLE_LIST_ENTRY
 
 #if defined(_WIN64)
-typedef union _SLIST_HEADER {
+typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
     struct {
         ULONGLONG Alignment;
         ULONGLONG Region;

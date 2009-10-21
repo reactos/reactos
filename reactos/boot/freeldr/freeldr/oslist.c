@@ -27,7 +27,6 @@ BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayName
 	CHAR	SettingValue[260];
 	ULONG		OperatingSystemCount;
 	ULONG_PTR	SectionId;
-	ULONG_PTR	OperatingSystemSectionId;
 	ULONG		SectionSettingCount;
 	PCHAR	*OperatingSystemSectionNames;
 	PCHAR	*OperatingSystemDisplayNames;
@@ -60,17 +59,14 @@ BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayName
 	{
 		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
-		if (IniOpenSection(SettingName, &OperatingSystemSectionId))
-		{
-			// Copy the section name
-			strcpy(OperatingSystemSectionNames[CurrentOperatingSystemIndex], SettingName);
+		// Copy the section name
+		strcpy(OperatingSystemSectionNames[CurrentOperatingSystemIndex], SettingName);
 
-			// Copy the display name
-			RemoveQuotes(SettingValue);
-			strcpy(OperatingSystemDisplayNames[CurrentOperatingSystemIndex], SettingValue);
+		// Copy the display name
+		RemoveQuotes(SettingValue);
+		strcpy(OperatingSystemDisplayNames[CurrentOperatingSystemIndex], SettingValue);
 
-			CurrentOperatingSystemIndex++;
-		}
+		CurrentOperatingSystemIndex++;
 	}
 
 	*OperatingSystemCountPointer = OperatingSystemCount;
@@ -82,32 +78,7 @@ BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayName
 
 ULONG CountOperatingSystems(ULONG SectionId)
 {
-	ULONG		Idx;
-	CHAR	SettingName[260];
-	CHAR	SettingValue[260];
-	ULONG		OperatingSystemCount = 0;
-	ULONG		SectionSettingCount;
-
-	//
-	// Loop through and count the operating systems
-	//
-	SectionSettingCount = IniGetNumSectionItems(SectionId);
-	for (Idx=0; Idx<SectionSettingCount; Idx++)
-	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
-
-		if (IniOpenSection(SettingName, NULL))
-		{
-			OperatingSystemCount++;
-		}
-		else
-		{
-			sprintf(SettingName, "Operating System '%s' is listed in\nfreeldr.ini but doesn't have a [section].", SettingValue);
-			UiMessageBox(SettingName);
-		}
-	}
-
-	return OperatingSystemCount;
+	return IniGetNumSectionItems(SectionId);
 }
 
 BOOLEAN AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount)

@@ -41,8 +41,19 @@ static const WCHAR toPrecisionW[] = {'t','o','P','r','e','c','i','s','i','o','n'
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 
 #define NUMBER_TOSTRING_BUF_SIZE 64
+
+static inline NumberInstance *number_from_vdisp(vdisp_t *vdisp)
+{
+    return (NumberInstance*)vdisp->u.jsdisp;
+}
+
+static inline NumberInstance *number_this(vdisp_t *jsthis)
+{
+    return is_vclass(jsthis, JSCLASS_NUMBER) ? number_from_vdisp(jsthis) : NULL;
+}
+
 /* ECMA-262 3rd Edition    15.7.4.2 */
-static HRESULT Number_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Number_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     NumberInstance *number;
@@ -53,18 +64,16 @@ static HRESULT Number_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_NUMBER))
-        return throw_type_error(dispex->ctx, ei, IDS_NOT_NUM, NULL);
-
-    number = (NumberInstance*)dispex;
+    if(!(number = number_this(jsthis)))
+        return throw_type_error(ctx, ei, IDS_NOT_NUM, NULL);
 
     if(arg_cnt(dp)) {
-        hres = to_int32(dispex->ctx, get_arg(dp, 0), ei, &radix);
+        hres = to_int32(ctx, get_arg(dp, 0), ei, &radix);
         if(FAILED(hres))
             return hres;
 
         if(radix<2 || radix>36)
-            return throw_type_error(dispex->ctx, ei, IDS_INVALID_CALL_ARG, NULL);
+            return throw_type_error(ctx, ei, IDS_INVALID_CALL_ARG, NULL);
     }
 
     if(V_VT(&number->num) == VT_I4)
@@ -73,7 +82,7 @@ static HRESULT Number_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
         val = V_R8(&number->num);
 
     if(radix==10 || isnan(val) || isinf(val)) {
-        hres = to_string(dispex->ctx, &number->num, ei, &str);
+        hres = to_string(ctx, &number->num, ei, &str);
         if(FAILED(hres))
             return hres;
     }
@@ -170,57 +179,57 @@ static HRESULT Number_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
     return S_OK;
 }
 
-static HRESULT Number_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Number_toLocaleString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT Number_toFixed(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Number_toFixed(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT Number_toExponential(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Number_toExponential(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT Number_toPrecision(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Number_toPrecision(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT Number_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Number_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
+    NumberInstance *number;
+
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_NUMBER))
-        return throw_type_error(dispex->ctx, ei, IDS_NOT_NUM, NULL);
+    if(!(number = number_this(jsthis)))
+        return throw_type_error(ctx, ei, IDS_NOT_NUM, NULL);
 
-    if(retv) {
-        NumberInstance *number = (NumberInstance*)dispex;
+    if(retv)
         *retv = number->num;
-    }
     return S_OK;
 }
 
-static HRESULT Number_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Number_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    NumberInstance *number = (NumberInstance*)dispex;
+    NumberInstance *number = number_from_vdisp(jsthis);
 
     switch(flags) {
     case INVOKE_FUNC:
-        return throw_type_error(dispex->ctx, ei, IDS_NOT_FUNC, NULL);
+        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
     case DISPATCH_PROPERTYGET:
         *retv = number->num;
         break;
@@ -251,7 +260,7 @@ static const builtin_info_t Number_info = {
     NULL
 };
 
-static HRESULT NumberConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT NumberConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT num;
@@ -269,7 +278,7 @@ static HRESULT NumberConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DIS
             return S_OK;
         }
 
-        hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &num);
+        hres = to_number(ctx, get_arg(dp, 0), ei, &num);
         if(FAILED(hres))
             return hres;
 
@@ -281,7 +290,7 @@ static HRESULT NumberConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DIS
         DispatchEx *obj;
 
         if(arg_cnt(dp)) {
-            hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &num);
+            hres = to_number(ctx, get_arg(dp, 0), ei, &num);
             if(FAILED(hres))
                 return hres;
         }else {
@@ -289,7 +298,7 @@ static HRESULT NumberConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DIS
             V_I4(&num) = 0;
         }
 
-        hres = create_number(dispex->ctx, &num, &obj);
+        hres = create_number(ctx, &num, &obj);
         if(FAILED(hres))
             return hres;
 
@@ -330,12 +339,14 @@ HRESULT create_number_constr(script_ctx_t *ctx, DispatchEx *object_prototype, Di
     NumberInstance *number;
     HRESULT hres;
 
+    static const WCHAR NumberW[] = {'N','u','m','b','e','r',0};
+
     hres = alloc_number(ctx, object_prototype, &number);
     if(FAILED(hres))
         return hres;
 
     V_VT(&number->num) = VT_I4;
-    hres = create_builtin_function(ctx, NumberConstr_value, NULL, PROPF_CONSTR, &number->dispex, ret);
+    hres = create_builtin_function(ctx, NumberConstr_value, NumberW, NULL, PROPF_CONSTR, &number->dispex, ret);
 
     jsdisp_release(&number->dispex);
     return hres;

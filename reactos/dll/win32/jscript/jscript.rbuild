@@ -11,8 +11,10 @@
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>user32</library>
+	<library>ole32</library>
 	<library>oleaut32</library>
 	<library>advapi32</library>
+	<file>activex.c</file>
 	<file>date.c</file>
 	<file>dispex.c</file>
 	<file>engine.c</file>

@@ -81,7 +81,7 @@ InstallDriver(
     RtlCopyMemory(FullImagePath, PathPrefix.Buffer, PathPrefix.MaximumLength);
     wcscat(FullImagePath, ImagePath);
 
-    DPRINT1("Using driver '%S' for device '%S'\n", ImagePath, DeviceId);
+    DPRINT("Using driver '%S' for device '%S'\n", ImagePath, DeviceId);
 
     /* Create service key */
     RtlInitUnicodeString(&StringU, Driver);
@@ -368,7 +368,7 @@ EventThread(IN LPVOID lpParameter)
         DPRINT("Received PnP Event\n");
         if (IsEqualIID(&PnpEvent->EventGuid, (REFGUID)&GUID_DEVICE_ENUMERATED))
         {
-            DPRINT1("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
             InstallDevice(hInf, hEnum, hServices, PnpEvent->TargetDevice.DeviceIds);
         }
         else

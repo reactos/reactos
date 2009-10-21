@@ -26,4 +26,12 @@
 			<xi:include href="halarm/directory.rbuild" />
 		</directory>
 	</if>
+	<if property="ARCH" value="amd64">
+		<directory name="halx86">
+			<xi:include href="halx86/hal_generic_amd64.rbuild" />
+		</directory>
+		<directory name="halamd64">
+			<xi:include href="halamd64/directory.rbuild" />
+		</directory>
+	</if>
 </group>

@@ -3,7 +3,7 @@
 
 #include "usb100.h"
 
-#include <PSHPACK1.H>
+#include <pshpack1.h>
 
 
 typedef enum _USB_DEVICE_TYPE
@@ -107,6 +107,6 @@ typedef struct _USB_INTERFACE_ASSOCIATION_DESCRIPTOR
 #define USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE        0x06
 #define USB_INTERFACE_ASSOCIATION_DESCRIPTOR_TYPE   0x0B
 
-#include <POPPACK.H>
+#include <poppack.h>
 
 #endif __USB200_H__

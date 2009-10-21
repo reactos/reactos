@@ -5,6 +5,7 @@
  * Copyright 2002-2003 Raphael Junqueira
  * Copyright 2004      Jason Edmeades
  * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,7 +33,7 @@ int num_lock = 0;
 void (*CDECL wine_tsx11_lock_ptr)(void) = NULL;
 void (*CDECL wine_tsx11_unlock_ptr)(void) = NULL;
 
-CRITICAL_SECTION wined3d_cs;
+static CRITICAL_SECTION wined3d_cs;
 static CRITICAL_SECTION_DEBUG wined3d_cs_debug =
 {
     0, 0, &wined3d_cs,
@@ -40,7 +41,7 @@ static CRITICAL_SECTION_DEBUG wined3d_cs_debug =
     &wined3d_cs_debug.ProcessLocksList},
     0, 0, {(DWORD_PTR)(__FILE__ ": wined3d_cs")}
 };
-CRITICAL_SECTION wined3d_cs = {&wined3d_cs_debug, -1, 0, 0, 0, 0};
+static CRITICAL_SECTION wined3d_cs = {&wined3d_cs_debug, -1, 0, 0, 0, 0};
 
 /* When updating default value here, make sure to update winecfg as well,
  * where appropriate. */
@@ -293,8 +294,11 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
         }
         if ( !get_config_key( hkey, appkey, "WineLogo", buffer, size) )
         {
-            wined3d_settings.logo = HeapAlloc(GetProcessHeap(), 0, strlen(buffer) + 1);
-            if(wined3d_settings.logo) strcpy(wined3d_settings.logo, buffer);
+            size_t len = strlen(buffer) + 1;
+
+            wined3d_settings.logo = HeapAlloc(GetProcessHeap(), 0, len);
+            if (!wined3d_settings.logo) ERR("Failed to allocate logo path memory.\n");
+            else memcpy(wined3d_settings.logo, buffer, len);
         }
         if ( !get_config_key( hkey, appkey, "Multisampling", buffer, size) )
         {

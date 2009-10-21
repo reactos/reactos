@@ -60,8 +60,6 @@
 #define TCP_REQUEST_QUERY_INFORMATION_INIT { { { 0 } } }
 #define TCP_REQUEST_SET_INFORMATION_INIT { { 0 } }
 
-#define IP_MIB_ROUTETABLE_ENTRY_ID   0x101
-
 // As in the mib from RFC 1213
 
 typedef struct _IPRouteEntry {

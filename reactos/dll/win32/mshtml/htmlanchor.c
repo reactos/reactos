@@ -36,6 +36,8 @@ typedef struct {
     HTMLElement element;
 
     const IHTMLAnchorElementVtbl *lpHTMLAnchorElementVtbl;
+
+    nsIDOMHTMLAnchorElement *nsanchor;
 } HTMLAnchorElement;
 
 #define HTMLANCHOR(x)  (&(x)->lpHTMLAnchorElementVtbl)
@@ -104,8 +106,26 @@ static HRESULT WINAPI HTMLAnchorElement_put_href(IHTMLAnchorElement *iface, BSTR
 static HRESULT WINAPI HTMLAnchorElement_get_href(IHTMLAnchorElement *iface, BSTR *p)
 {
     HTMLAnchorElement *This = HTMLANCHOR_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString href_str;
+    nsresult nsres;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&href_str, NULL);
+    nsres = nsIDOMHTMLAnchorElement_GetHref(This->nsanchor, &href_str);
+    if(NS_SUCCEEDED(nsres)) {
+        const PRUnichar *href;
+
+        nsAString_GetData(&href_str, &href);
+        hres = nsuri_to_url(href, TRUE, p);
+    }else {
+        ERR("GetHref failed: %08x\n", nsres);
+        hres = E_FAIL;
+    }
+
+    nsAString_Finish(&href_str);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLAnchorElement_put_target(IHTMLAnchorElement *iface, BSTR v)
@@ -464,6 +484,10 @@ static HRESULT HTMLAnchorElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
 static void HTMLAnchorElement_destructor(HTMLDOMNode *iface)
 {
     HTMLAnchorElement *This = HTMLANCHOR_NODE_THIS(iface);
+
+    if(This->nsanchor)
+        nsIDOMHTMLAnchorElement_Release(This->nsanchor);
+
     HTMLElement_destructor(&This->element.node);
 }
 
@@ -474,14 +498,39 @@ static const NodeImplVtbl HTMLAnchorElementImplVtbl = {
     HTMLAnchorElement_destructor
 };
 
+static const tid_t HTMLAnchorElement_iface_tids[] = {
+    IHTMLAnchorElement_tid,
+    IHTMLDOMNode_tid,
+    IHTMLDOMNode2_tid,
+    IHTMLElement_tid,
+    IHTMLElement2_tid,
+    IHTMLElement3_tid,
+    IHTMLElement4_tid,
+    IHTMLTextContainer_tid,
+    IHTMLUniqueName_tid,
+    0
+};
+
+static dispex_static_data_t HTMLAnchorElement_dispex = {
+    NULL,
+    DispHTMLAnchorElement_tid,
+    NULL,
+    HTMLAnchorElement_iface_tids
+};
+
 HTMLElement *HTMLAnchorElement_Create(nsIDOMHTMLElement *nselem)
 {
     HTMLAnchorElement *ret = heap_alloc_zero(sizeof(HTMLAnchorElement));
-
-    HTMLElement_Init(&ret->element);
+    nsresult nsres;
 
     ret->lpHTMLAnchorElementVtbl = &HTMLAnchorElementVtbl;
     ret->element.node.vtbl = &HTMLAnchorElementImplVtbl;
+
+    HTMLElement_Init(&ret->element, &HTMLAnchorElement_dispex);
+
+    nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLAnchorElement, (void**)&ret->nsanchor);
+    if(NS_FAILED(nsres))
+        ERR("Could not get nsIDOMHTMLAnchorElement iface: %08x\n", nsres);
 
     return &ret->element;
 }

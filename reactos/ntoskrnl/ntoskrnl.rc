@@ -14,8 +14,13 @@
 #define VER_FILETYPE                VFT_DRV
 #define VER_FILESUBTYPE             VFT2_DRV_SYSTEM
 #define VER_FILEDESCRIPTION_STR     "NT Kernel & System"
+#ifndef CONFIG_SMP
 #define VER_INTERNALNAME_STR        "ntoskrnl.exe"
 #define VER_ORIGINALFILENAME_STR    "ntoskrnl.exe"
+#else
+#define VER_INTERNALNAME_STR        "ntkrnlmp.exe"
+#define VER_ORIGINALFILENAME_STR    "ntkrnlmp.exe"
+#endif
 #define VER_LANGNEUTRAL
 #include "common.ver"
 

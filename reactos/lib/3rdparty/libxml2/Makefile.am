@@ -18,7 +18,16 @@ bin_SCRIPTS=xml2-config
 lib_LTLIBRARIES = libxml2.la
 libxml2_la_LIBADD = @THREAD_LIBS@ @Z_LIBS@ $(ICONV_LIBS) @M_LIBS@ @WIN32_EXTRA_LIBADD@
 
-libxml2_la_LDFLAGS = @CYGWIN_EXTRA_LDFLAGS@ @WIN32_EXTRA_LDFLAGS@ -version-info @LIBXML_VERSION_INFO@ @MODULE_PLATFORM_LIBS@
+if USE_VERSION_SCRIPT
+LIBXML2_VERSION_SCRIPT = $(VERSION_SCRIPT_FLAGS)$(srcdir)/libxml2.syms
+else
+LIBXML2_VERSION_SCRIPT =
+endif
+
+libxml2_la_LDFLAGS = @CYGWIN_EXTRA_LDFLAGS@ @WIN32_EXTRA_LDFLAGS@ \
+                     $(LIBXML2_VERSION_SCRIPT) \
+		     -version-info @LIBXML_VERSION_INFO@ \
+		     @MODULE_PLATFORM_LIBS@
 
 if WITH_TRIO_SOURCES
 libxml2_la_SOURCES = SAX.c entities.c encoding.c error.c parserInternals.c  \
@@ -923,7 +932,7 @@ VTimingtests: xmllint$(EXEEXT)
 
 C14Ntests : testC14N$(EXEEXT)
 	@echo "## C14N and XPath regression tests"
-	-@(for m in with-comments without-comments exc-without-comments ; do \
+	-@(for m in with-comments without-comments 1-1-without-comments exc-without-comments ; do \
 	    for i in $(srcdir)/test/c14n/$$m/*.xml ; do  \
 		if [ ! -d $$i ] ; then \
 		    name=`basename $$i .xml`; \
@@ -1044,7 +1053,7 @@ Relaxtests: xmllint$(EXEEXT)
 		    > res.$$name 2> err.$$name;\
 	          grep "MORY ALLO" .memdump  | grep -v "MEMORY ALLOCATED : 0";\
 	          diff $(srcdir)/result/relaxng/"$$name"_"$$xno" res.$$name;\
-		  if [ "$$name" != "tutor10_1" -a "$$name" != "tutor10_2" -a "$$name" != "tutor3_2" -a "$$name" != "307377" ] ; then \
+		  if [ "$$name" != "tutor10_1" -a "$$name" != "tutor10_2" -a "$$name" != "tutor3_2" -a "$$name" != "307377" -a "$$name" != "tutor8_2" ] ; then \
 		      diff $(srcdir)/result/relaxng/"$$name"_"$$xno".err \
 			   err.$$name | grep -v "error detected at";\
 		  fi ; grep Unimplemented err.$$name`; \
@@ -1141,7 +1150,7 @@ cleanup:
 
 dist-hook: cleanup libxml2.spec
 	-cp libxml2.spec $(distdir)
-	(cd $(srcdir) ; tar -cf - --exclude CVS --exclude .svn win32 macos vms bakefile test result) | (cd $(distdir); tar xf -)
+	(cd $(srcdir) ; tar -cf - --exclude CVS --exclude .svn win32 macos vms VxWorks bakefile test result) | (cd $(distdir); tar xf -)
 
 dist-source: distdir
 	$(AMTAR) -chof - --exclude Tests --exclude test --exclude result $(distdir) | GZIP=$(GZIP_ENV) gzip -c >`echo "$(distdir)" | sed "s+libxml2+libxml2-sources+"`.tar.gz
@@ -1187,7 +1196,7 @@ EXTRA_DIST = xml2-config.in xml2Conf.sh.in libxml.spec.in libxml2.spec \
 	     triop.h triodef.h libxml.h elfgcchack.h \
 	     testThreadsWin32.c genUnicode.py TODO_SCHEMAS \
 	     dbgen.pl dbgenattr.pl regressions.py regressions.xml \
-	     README.tests Makefile.tests \
+	     README.tests Makefile.tests libxml2.syms \
 	     $(CVS_EXTRA_DIST)
 
 
@@ -1211,12 +1220,12 @@ install-data-local:
 	-@INSTALL@ -m 0644 $(srcdir)/testXPath.c $(DESTDIR)$(EXAMPLES_DIR)
 
 uninstall-local:
-	rm $(DESTDIR)$(EXAMPLES_DIR)/testXPath.c
-	rm $(DESTDIR)$(EXAMPLES_DIR)/testHTML.c
-	rm $(DESTDIR)$(EXAMPLES_DIR)/testSAX.c
-	rm $(DESTDIR)$(EXAMPLES_DIR)/xmllint.c
+	rm -f $(DESTDIR)$(EXAMPLES_DIR)/testXPath.c
+	rm -f $(DESTDIR)$(EXAMPLES_DIR)/testHTML.c
+	rm -f $(DESTDIR)$(EXAMPLES_DIR)/testSAX.c
+	rm -f $(DESTDIR)$(EXAMPLES_DIR)/xmllint.c
 	rm -rf $(DESTDIR)$(EXAMPLES_DIR)
-	rm $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)/Copyright
+	rm -f $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)/Copyright
 	rm -rf $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
 
 tst: tst.c

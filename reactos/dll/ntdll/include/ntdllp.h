@@ -28,10 +28,6 @@ typedef BOOL
                          ULONG ul_reason_for_call,
                          LPVOID lpReserved);
 
-#if defined(KDBG) || DBG
-VOID
-LdrpLoadUserModuleSymbols(PLDR_DATA_TABLE_ENTRY LdrModule);
-#endif
 extern HANDLE WindowsApiPort;
 
 /* EOF */

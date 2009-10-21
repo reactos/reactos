@@ -59,6 +59,7 @@
 	<file>persist.c</file>
 	<file>protocol.c</file>
 	<file>script.c</file>
+	<file>secmgr.c</file>
 	<file>selection.c</file>
 	<file>service.c</file>
 	<file>task.c</file>

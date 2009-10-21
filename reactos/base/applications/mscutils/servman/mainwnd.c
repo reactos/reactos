@@ -643,11 +643,14 @@ MainWndProc(HWND hwnd,
             if (!InitMainWnd(Info))
                 return -1;
 
+            /* Fill the list-view before showing the main window */
+            RefreshServiceList(Info);
+
             /* Show the window */
             ShowWindow(hwnd,
                        Info->nCmdShow);
 
-            RefreshServiceList(Info);
+            SetFocus(Info->hListView);
         }
         break;
 
@@ -683,6 +686,16 @@ MainWndProc(HWND hwnd,
                     }
 
                     //OpenPropSheet(Info);
+                }
+                break;
+
+                case NM_RETURN:
+                {
+                    SendMessage(hwnd,
+                                WM_COMMAND,
+                                //ID_PROP,
+                                MAKEWPARAM((WORD)ID_PROP, (WORD)0),
+                                0);
                 }
                 break;
 

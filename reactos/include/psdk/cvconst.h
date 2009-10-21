@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* information in this file is highly derivated from MSDN DIA information pages */
+/* information in this file is highly derived from MSDN DIA information pages */
 
 /* symbols & types enumeration */
 enum SymTagEnum
@@ -186,7 +186,7 @@ enum CV_HREG_e
     CV_REG_LDTR         = 114,
     CV_REG_TR           = 115,
 
-    CV_REG_PSEUDO1      = 116, /* this includes Pseudo02 to Pseuso09 */
+    CV_REG_PSEUDO1      = 116, /* this includes Pseudo02 to Pseudo09 */
     CV_REG_ST0          = 128, /* this includes ST1 to ST7 */
     CV_REG_CTRL         = 136,
     CV_REG_STAT         = 137,
@@ -473,7 +473,7 @@ enum CV_HREG_e
     CV_AMD64_LDTR       = CV_REG_LDTR,
     CV_AMD64_TR         = CV_REG_TR,
 
-    CV_AMD64_PSEUDO1    = CV_REG_PSEUDO1, /* this includes Pseudo02 to Pseuso09 */
+    CV_AMD64_PSEUDO1    = CV_REG_PSEUDO1, /* this includes Pseudo02 to Pseudo09 */
     CV_AMD64_ST0        = CV_REG_ST0,     /* this includes ST1 to ST7 */
     CV_AMD64_CTRL       = CV_REG_CTRL,
     CV_AMD64_STAT       = CV_REG_STAT,
@@ -528,7 +528,7 @@ enum CV_HREG_e
     CV_AMD64_R13        = 341,
     CV_AMD64_R14        = 342,
     CV_AMD64_R15        = 343,
-} CV_HREG_e;
+};
 
 typedef enum
 {

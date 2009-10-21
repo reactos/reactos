@@ -198,4 +198,6 @@ BEGIN
     IDS_TOOLTIP16, "Rectángulo redondeado"
     IDS_OPENFILTER, "Archivos de mapa de bits (*.bmp;*.dib)\1*.bmp;*.dib\1Todos los archivos (*.*)\1*.*\1"
     IDS_SAVEFILTER, "Mapa de bits de 24 bits (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d bytes"
+    IDS_PRINTRES, "%d x %d pixels per meter"
 END

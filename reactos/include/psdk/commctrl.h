@@ -2964,6 +2964,7 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVCF_SUBITEM            0x0008
 #define LVCF_IMAGE              0x0010
 #define LVCF_ORDER              0x0020
+#define LVCF_MINWIDTH           0x0040
 
 #define LVCFMT_LEFT             0x0000
 #define LVCFMT_RIGHT            0x0001
@@ -4953,8 +4954,22 @@ INT    WINAPI DSA_InsertItem(HDSA, INT, LPVOID);
 struct _DPA;
 typedef struct _DPA *HDPA;
 
+#define DPA_GetPtrCount(hdpa)  (*(INT*)(hdpa))
+
 typedef INT (CALLBACK *PFNDPAENUMCALLBACK)(LPVOID, LPVOID);
 typedef INT (CALLBACK *PFNDPACOMPARE)(LPVOID, LPVOID, LPARAM);
+typedef PVOID (CALLBACK *PFNDPAMERGE)(UINT,PVOID,PVOID,LPARAM);
+
+/* merge callback codes */
+#define DPAMM_MERGE     1
+#define DPAMM_DELETE    2
+#define DPAMM_INSERT    3
+
+/* merge options */
+#define DPAM_SORTED     0x00000001
+#define DPAM_NORMAL     0x00000002
+#define DPAM_UNION      0x00000004
+#define DPAM_INTERSECT  0x00000008
 
 HDPA   WINAPI DPA_Create(INT);
 BOOL   WINAPI DPA_Destroy(HDPA);
@@ -4962,11 +4977,25 @@ LPVOID WINAPI DPA_DeletePtr(HDPA, INT);
 BOOL   WINAPI DPA_DeleteAllPtrs(HDPA);
 BOOL   WINAPI DPA_SetPtr(HDPA, INT, LPVOID);
 LPVOID WINAPI DPA_GetPtr(HDPA, INT);
+INT    WINAPI DPA_GetPtrIndex(HDPA, LPCVOID);
+ULONGLONG WINAPI DPA_GetSize(HDPA);
+BOOL   WINAPI DPA_Grow(HDPA, INT);
 INT    WINAPI DPA_InsertPtr(HDPA, INT, LPVOID);
 BOOL   WINAPI DPA_Sort(HDPA, PFNDPACOMPARE, LPARAM);
 void   WINAPI DPA_EnumCallback(HDPA, PFNDPAENUMCALLBACK, LPVOID);
 void   WINAPI DPA_DestroyCallback(HDPA, PFNDPAENUMCALLBACK, LPVOID);
 INT    WINAPI DPA_Search(HDPA, LPVOID, INT, PFNDPACOMPARE, LPARAM, UINT);
+BOOL   WINAPI DPA_Merge(HDPA, HDPA, DWORD, PFNDPACOMPARE, PFNDPAMERGE, LPARAM);
+
+/* save/load from stream */
+typedef struct _DPASTREAMINFO
+{
+    INT    iPos;   /* item index */
+    LPVOID pvItem;
+} DPASTREAMINFO;
+
+struct IStream;
+typedef HRESULT (CALLBACK *PFNDPASTREAM)(DPASTREAMINFO*, struct IStream*, LPVOID);
 
 BOOL WINAPI Str_SetPtrW (LPWSTR *, LPCWSTR);
 

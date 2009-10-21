@@ -226,6 +226,7 @@ BEGIN
     IDS_GAMES		"Игри"
     IDS_CMT_SOLITAIRE	"Пасианс"
     IDS_CMT_WINEMINE	"Минички"
+	IDS_CMT_SPIDER      "Spider Solitaire"
 END
 
 STRINGTABLE
@@ -286,6 +287,7 @@ BEGIN
     IDS_SHORT_SNDVOL32   "Сила на звука.lnk"
     IDS_SHORT_DXDIAG     "Преглеждане на РеактХ.lnk"
     IDS_SHORT_PAINT      "Рисунък.lnk"
+	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 

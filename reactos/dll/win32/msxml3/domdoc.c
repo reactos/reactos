@@ -509,7 +509,7 @@ static ULONG WINAPI domdoc_Release(
 
         if (This->site)
             IUnknown_Release( This->site );
-        IXMLDOMNode_Release(IXMLDOMNode_from_impl(This->node));
+        destroy_xmlnode(This->node);
         if(This->schema) IXMLDOMSchemaCollection_Release( This->schema );
         if (This->stream) IStream_Release(This->stream);
         HeapFree( GetProcessHeap(), 0, This );

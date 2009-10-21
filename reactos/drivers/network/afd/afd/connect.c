@@ -99,6 +99,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
 	       NextIrp->IoStatus.Information = 0;
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );
@@ -120,6 +121,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	NextIrp->IoStatus.Status = Status;
 	NextIrp->IoStatus.Information = 0;
 	if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+        (void)IoSetCancelRoutine(NextIrp, NULL);
 	IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
     }
 

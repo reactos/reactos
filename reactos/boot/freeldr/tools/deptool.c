@@ -50,6 +50,10 @@ int main(int argc, char *argv[])
 	if (!DependFileData || !NewDependFileData)
 	{
 		printf("deptool: Out of memory!\n");
+		if (DependFileData != NULL)
+			free(DependFileData);
+		if (NewDependFileData != NULL)
+			free(NewDependFileData);
 		fclose(DependFile);
 		return ERROR_OUTOFMEMORY;
 	}
@@ -61,6 +65,8 @@ int main(int argc, char *argv[])
 	if (ferror(DependFile))
 	{
 		printf("deptool: Dependency file read error.\n");
+		free(DependFileData);
+		free(NewDependFileData);
 		fclose(DependFile);
 		return ERROR_READERROR;
 	}
@@ -121,9 +127,13 @@ int main(int argc, char *argv[])
 	{
 		printf("deptool: Dependency file write error.\n");
 		fclose(DependFile);
+		free(DependFileData);
+		free(NewDependFileData);
 		return ERROR_WRITEERROR;
 	}
 
 	fclose(DependFile);
+	free(DependFileData);
+	free(NewDependFileData);
 	return ERROR_SUCCESS;
 }

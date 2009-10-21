@@ -231,12 +231,7 @@ VOID NTAPI ProtocolSendComplete(
  *     Status         = Status of the operation
  */
 {
-    TI_DbgPrint(DEBUG_DATALINK, ("Calling completion routine\n"));
-    ASSERT_KM_POINTER(Packet);
-    ASSERT_KM_POINTER(PC(Packet));
-    ASSERT_KM_POINTER(PC(Packet)->DLComplete);
-    (*PC(Packet)->DLComplete)( PC(Packet)->Context, Packet, Status);
-    TI_DbgPrint(DEBUG_DATALINK, ("Finished\n"));
+    FreeNdisPacket(Packet);
 }
 
 VOID LanReceiveWorker( PVOID Context ) {
@@ -418,7 +413,7 @@ NDIS_STATUS NTAPI ProtocolReceive(
 				 Adapter, Adapter->MTU));
 
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL,
-                                           PacketSize + HeaderBufferSize );
+                                           PacketSize );
     if( NdisStatus != NDIS_STATUS_SUCCESS ) {
 	return NDIS_STATUS_NOT_ACCEPTED;
     }
@@ -599,18 +594,18 @@ VOID LANTransmit(
 {
     NDIS_STATUS NdisStatus;
     PETH_HEADER EHeader;
-    PCHAR Data;
-    UINT Size;
+    PCHAR Data, OldData;
+    UINT Size, OldSize;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
     KIRQL OldIrql;
-    UINT PacketLength;
+    PNDIS_PACKET XmitPacket;
 
     TI_DbgPrint(DEBUG_DATALINK,
 		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
 		 NdisPacket, Offset, Adapter));
 
     if (Adapter->State != LAN_STATE_STARTED) {
-        ProtocolSendComplete(Context, NdisPacket, NDIS_STATUS_NOT_ACCEPTED);
+        (*PC(NdisPacket)->DLComplete)(PC(NdisPacket)->Context, NdisPacket, NDIS_STATUS_NOT_ACCEPTED);
         return;
     }
 
@@ -623,9 +618,19 @@ VOID LANTransmit(
 		 Adapter->HWAddress[4] & 0xff,
 		 Adapter->HWAddress[5] & 0xff));
 
-    /* XXX arty -- Handled adjustment in a saner way than before ...
-     * not needed immediately */
-    GetDataPtr( NdisPacket, 0, &Data, &Size );
+    GetDataPtr( NdisPacket, 0, &OldData, &OldSize );
+
+    NdisStatus = AllocatePacketWithBuffer(&XmitPacket, NULL, OldSize + Adapter->HeaderSize);
+    if (NdisStatus != NDIS_STATUS_SUCCESS) {
+        (*PC(NdisPacket)->DLComplete)(PC(NdisPacket)->Context, NdisPacket, NDIS_STATUS_RESOURCES);
+        return;
+    }
+
+    GetDataPtr(XmitPacket, 0, &Data, &Size);
+
+    RtlCopyMemory(Data + Adapter->HeaderSize, OldData, OldSize);
+
+    (*PC(NdisPacket)->DLComplete)(PC(NdisPacket)->Context, NdisPacket, NDIS_STATUS_SUCCESS);
 
         switch (Adapter->Media) {
         case NdisMedium802_3:
@@ -652,14 +657,7 @@ VOID LANTransmit(
                 EHeader->EType = ETYPE_IPv6;
                 break;
             default:
-#if DBG
-                /* Should not happen */
-                TI_DbgPrint(MIN_TRACE, ("Unknown LAN protocol.\n"));
-
-                ProtocolSendComplete((NDIS_HANDLE)Context,
-                                     NdisPacket,
-                                     NDIS_STATUS_FAILURE);
-#endif
+                ASSERT(FALSE);
                 return;
             }
             break;
@@ -682,9 +680,7 @@ VOID LANTransmit(
 		   ((PCHAR)LinkAddress)[5] & 0xff));
 	}
 
-        NdisQueryPacketLength(NdisPacket, &PacketLength);
-
-        if (Adapter->MTU < PacketLength) {
+        if (Adapter->MTU < Size) {
             /* This is NOT a pointer. MSDN explicitly says so. */
             NDIS_PER_PACKET_INFO_FROM_PACKET(NdisPacket,
                                              TcpLargeSendPacketInfo) = (PVOID)((ULONG)Adapter->MTU);
@@ -692,7 +688,7 @@ VOID LANTransmit(
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
-	NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
+	NdisSend(&NdisStatus, Adapter->NdisHandle, XmitPacket);
 	TI_DbgPrint(MID_TRACE, ("NdisSend %s\n",
 				NdisStatus == NDIS_STATUS_PENDING ?
 				"Pending" : "Complete"));
@@ -703,7 +699,7 @@ VOID LANTransmit(
 	 * status_pending is returned.  Note that this is different from
 	 * the situation with IRPs. */
         if (NdisStatus != NDIS_STATUS_PENDING)
-            ProtocolSendComplete((NDIS_HANDLE)Context, NdisPacket, NdisStatus);
+            ProtocolSendComplete((NDIS_HANDLE)Context, XmitPacket, NdisStatus);
 }
 
 static NTSTATUS

@@ -174,6 +174,97 @@ KsValidateConnectRequest(
     return STATUS_SUCCESS;
 }
 
+
+NTSTATUS
+KspReadMediaCategory(
+    IN LPGUID Category,
+    PKEY_VALUE_PARTIAL_INFORMATION *OutInformation)
+{
+    UNICODE_STRING MediaPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control\\MediaCategories\\");
+    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"Name");
+    UNICODE_STRING GuidString, Path;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hKey;
+    ULONG Size;
+    PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+
+    /* convert the guid to string */
+    Status = RtlStringFromGUID(Category, &GuidString);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* allocate buffer for the registry key */
+    Path.Length = 0;
+    Path.MaximumLength = MediaPath.MaximumLength + GuidString.MaximumLength;
+    Path.Buffer = ExAllocatePool(NonPagedPool, Path.MaximumLength);
+    if (!Path.Buffer)
+    {
+        /* not enough memory */
+        RtlFreeUnicodeString(&GuidString);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&Path, &MediaPath);
+    RtlAppendUnicodeStringToString(&Path, &GuidString);
+
+    /* free guid string */
+    RtlFreeUnicodeString(&GuidString);
+
+    /* initialize object attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &Path, OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+    /* open the key */
+    Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
+
+        DPRINT1("ZwOpenKey() status 0x%08lx %S\n", Status, Path.Buffer);
+
+    /* free path buffer */
+    ExFreePool(Path.Buffer);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwOpenKey() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* query the name size */
+    Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, NULL, 0, &Size);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        /* failed to query for name key */
+        ZwClose(hKey);
+        return Status;
+    }
+
+    /* allocate buffer to read key info */
+    KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePool(NonPagedPool, Size);
+    if (!KeyInfo)
+    {
+        /* not enough memory */
+        ZwClose(hKey);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* now read the info */
+    Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, (PVOID)KeyInfo, Size, &Size);
+
+    /* close the key */
+    ZwClose(hKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed to read key */
+        ExFreePool(KeyInfo);
+        return Status;
+    }
+
+    /* store key information */
+    *OutInformation = KeyInfo;
+    return Status;
+}
+
 /*
     @implemented
 */
@@ -194,26 +285,26 @@ KsPinPropertyHandler(
     PVOID Buffer;
     PKSDATARANGE_AUDIO *WaveFormatOut;
     PKSDATAFORMAT_WAVEFORMATEX WaveFormatIn;
-    PULONG GuidBuffer;
-    static WCHAR Speaker[] = {L"PC-Speaker"};
+    PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+    NTSTATUS Status = STATUS_NOT_SUPPORTED;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Buffer = Irp->UserBuffer;
 
-    DPRINT("KsPinPropertyHandler Irp %p Property %p Data %p DescriptorsCount %u Descriptor %p OutputLength %u Id %x\n", Irp, Property, Data, DescriptorsCount, Descriptor, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
+    DPRINT("KsPinPropertyHandler Irp %p Property %p Data %p DescriptorsCount %u Descriptor %p OutputLength %u Id %u\n", Irp, Property, Data, DescriptorsCount, Descriptor, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
 
     switch(Property->Id)
     {
         case KSPROPERTY_PIN_CTYPES:
             (*(PULONG)Buffer) = DescriptorsCount;
             Irp->IoStatus.Information = sizeof(ULONG);
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             break;
         case KSPROPERTY_PIN_DATAFLOW:
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
                 Irp->IoStatus.Information = 0;
                 break;
             }
@@ -221,20 +312,20 @@ KsPinPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
 
             *((KSPIN_DATAFLOW*)Buffer) = Descriptor[Pin->PinId].DataFlow;
             Irp->IoStatus.Information = sizeof(KSPIN_DATAFLOW);
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             break;
 
         case KSPROPERTY_PIN_DATARANGES:
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
                 Irp->IoStatus.Information = 0;
                 break;
             }
@@ -247,7 +338,7 @@ KsPinPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
+                Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
@@ -262,14 +353,14 @@ KsPinPropertyHandler(
                 Data = ((PUCHAR)Data + Descriptor[Pin->PinId].DataRanges[Index]->FormatSize);
             }
 
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;
         case KSPROPERTY_PIN_INTERFACES:
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
                 Irp->IoStatus.Information = 0;
                 break;
             }
@@ -281,7 +372,7 @@ KsPinPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
+                Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
@@ -299,14 +390,14 @@ KsPinPropertyHandler(
                 RtlMoveMemory((PVOID)(Item + 1), &StandardPinInterface, sizeof(KSPIN_INTERFACE));
             }
 
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;
         case KSPROPERTY_PIN_MEDIUMS:
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
                 Irp->IoStatus.Information = 0;
                 break;
             }
@@ -318,7 +409,7 @@ KsPinPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
+                Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
@@ -336,7 +427,7 @@ KsPinPropertyHandler(
                 RtlMoveMemory((PVOID)(Item + 1), &StandardPinMedium, sizeof(KSPIN_MEDIUM));
             }
 
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;
 
@@ -344,7 +435,7 @@ KsPinPropertyHandler(
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
                 Irp->IoStatus.Information = 0;
                 break;
             }
@@ -353,12 +444,12 @@ KsPinPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
 
             *((KSPIN_COMMUNICATION*)Buffer) = Descriptor[Pin->PinId].Communication;
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;
 
@@ -366,7 +457,7 @@ KsPinPropertyHandler(
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
                 Irp->IoStatus.Information = 0;
                 break;
             }
@@ -375,12 +466,15 @@ KsPinPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
+            if (Descriptor[Pin->PinId].Category)
+            {
+                RtlMoveMemory(Buffer, Descriptor[Pin->PinId].Category, sizeof(GUID));
+            }
 
-            RtlMoveMemory(Buffer, &Descriptor[Pin->PinId].Category, sizeof(GUID));
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;
 
@@ -388,32 +482,45 @@ KsPinPropertyHandler(
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
                 Irp->IoStatus.Information = 0;
                 break;
             }
 
-            GuidBuffer = Buffer;
-            Size = sizeof(Speaker);
-
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
+            if (!Descriptor[Pin->PinId].Name)
             {
-                Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
+                Irp->IoStatus.Information = 0;
+                Status = STATUS_SUCCESS;
                 break;
             }
 
-            RtlMoveMemory(GuidBuffer, Speaker, sizeof(Speaker));
+            Status = KspReadMediaCategory((LPGUID)Descriptor[Pin->PinId].Name, &KeyInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                Irp->IoStatus.Information = 0;
+                break;
+            }
 
-            //RtlMoveMemory(Buffer, &Descriptor[Pin->PinId].Name, sizeof(GUID));
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = Size;
+            Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
+
+
+            if (KeyInfo->DataLength + sizeof(WCHAR) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+            {
+                Status = STATUS_MORE_ENTRIES;
+                ExFreePool(KeyInfo);
+                break;
+            }
+
+            RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
+            ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
+            Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
+            ExFreePool(KeyInfo);
             break;
         case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
                 Irp->IoStatus.Information = 0;
                 break;
             }
@@ -421,23 +528,23 @@ KsPinPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(KSDATAFORMAT_WAVEFORMATEX))
             {
                 UNIMPLEMENTED
-                Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+                Status = STATUS_NOT_IMPLEMENTED;
                 Irp->IoStatus.Information = 0;
-                return STATUS_NOT_IMPLEMENTED;
+                break;
             }
 
             WaveFormatIn = (PKSDATAFORMAT_WAVEFORMATEX)Buffer;
             if (!Descriptor[Pin->PinId].DataRanges || !Descriptor[Pin->PinId].DataRangesCount)
             {
-                Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                Status = STATUS_UNSUCCESSFUL;
                 Irp->IoStatus.Information = 0;
-                return STATUS_UNSUCCESSFUL;
+                break;
             }
             WaveFormatOut = (PKSDATARANGE_AUDIO*)Descriptor[Pin->PinId].DataRanges;
             for(Index = 0; Index < Descriptor[Pin->PinId].DataRangesCount; Index++)
@@ -465,16 +572,34 @@ KsPinPropertyHandler(
                     return STATUS_SUCCESS;
                 }
             }
-            Irp->IoStatus.Status = STATUS_NO_MATCH;
+            Status = STATUS_NO_MATCH;
             Irp->IoStatus.Information = 0;
-            return STATUS_NO_MATCH;
+            break;
         default:
             DPRINT1("Unhandled property request %x\n", Property->Id);
-            Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_NOT_IMPLEMENTED;
             Irp->IoStatus.Information = 0;
     }
 
-    return Irp->IoStatus.Status;
+    return Status;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI NTSTATUS NTAPI
+KsPinDataIntersectionEx(
+    IN  PIRP Irp,
+    IN  PKSP_PIN Pin,
+    OUT PVOID Data,
+    IN  ULONG DescriptorsCount,
+    IN  const KSPIN_DESCRIPTOR* Descriptor,
+    IN  ULONG DescriptorSize,
+    IN  PFNKSINTERSECTHANDLEREX IntersectHandler OPTIONAL,
+    IN  PVOID HandlerContext OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -520,7 +645,7 @@ KsPinDataIntersection(
     }
 
     /* get start item */
-    Item = (KSMULTIPLE_ITEM*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+    Item = (KSMULTIPLE_ITEM*)(Pin + 1);
     /* get first data range */
     DataRange = (KSDATARANGE*)(Item + 1);
     /* iterate through all data ranges */

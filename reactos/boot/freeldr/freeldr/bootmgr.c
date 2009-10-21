@@ -21,12 +21,12 @@
 
 VOID RunLoader(VOID)
 {
-	CHAR	SettingName[80];
 	CHAR	SettingValue[80];
 	ULONG_PTR	SectionId;
 	ULONG		OperatingSystemCount;
 	PCSTR	*OperatingSystemSectionNames;
 	PCSTR	*OperatingSystemDisplayNames;
+	PCSTR SectionName;
 	ULONG		DefaultOperatingSystem;
 	LONG		TimeOut;
 	ULONG		SelectedOperatingSystem;
@@ -93,28 +93,48 @@ VOID RunLoader(VOID)
 		TimeOut = -1;
 
 		// Try to open the operating system section in the .ini file
-		if (!IniOpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))
+		SettingValue[0] = ANSI_NULL;
+		SectionName = OperatingSystemSectionNames[SelectedOperatingSystem];
+		if (IniOpenSection(SectionName, &SectionId))
 		{
-			sprintf(SettingName, "Section [%s] not found in freeldr.ini.", OperatingSystemSectionNames[SelectedOperatingSystem]);
-			UiMessageBox(SettingName);
-			continue;
+			// Try to read the boot type
+			IniReadSettingByName(SectionId, "BootType", SettingValue, sizeof(SettingValue));
 		}
 
-		// Try to read the boot type
-		if (!IniReadSettingByName(SectionId, "BootType", SettingValue, sizeof(SettingValue)))
+		if (SettingValue[0] == ANSI_NULL && SectionName[0] != ANSI_NULL)
 		{
-			sprintf(SettingName, "BootType= line not found in section [%s] in freeldr.ini.", OperatingSystemSectionNames[SelectedOperatingSystem]);
-			UiMessageBox(SettingName);
-			continue;
+			// Try to infere boot type value
+#ifdef __i386__
+			CHAR LastChar;
+			LastChar = SectionName[strlen(SectionName) - 1];
+			if (LastChar == '\\' ||
+			    (strstr(SectionName, ")partition(") != NULL &&
+			     strstr(SectionName, ")partition(0)") == NULL))
+			{
+				strcpy(SettingValue, "Partition");
+			}
+			else if (LastChar == ')' || LastChar == ':')
+			{
+				strcpy(SettingValue, "Drive");
+			}
+			else if (TRUE)
+			{
+				strcpy(SettingValue, "BootSector");
+			}
+			else
+#endif
+			{
+				strcpy(SettingValue, "Windows2003");
+			}
 		}
 
 		// Install the drive mapper according to this sections drive mappings
 #ifdef __i386__
-		DriveMapMapDrivesInSection(OperatingSystemSectionNames[SelectedOperatingSystem]);
+		DriveMapMapDrivesInSection(SectionName);
 #endif
 		if (_stricmp(SettingValue, "ReactOS") == 0)
 		{
-			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
+			LoadAndBootReactOS(SectionName);
 		}
 #ifdef FREELDR_REACTOS_SETUP
 		else if (_stricmp(SettingValue, "ReactOSSetup") == 0)
@@ -134,27 +154,27 @@ VOID RunLoader(VOID)
 #ifdef __i386__
 		else if (_stricmp(SettingValue, "WindowsNT40") == 0)
 		{
-			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_NT4);
+			LoadAndBootWindows(SectionName, _WIN32_WINNT_NT4);
 		}
 		else if (_stricmp(SettingValue, "Windows2003") == 0)
 		{
-			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WS03);
+			LoadAndBootWindows(SectionName, _WIN32_WINNT_WS03);
 		}
 		else if (_stricmp(SettingValue, "Linux") == 0)
 		{
-			LoadAndBootLinux(OperatingSystemSectionNames[SelectedOperatingSystem], OperatingSystemDisplayNames[SelectedOperatingSystem]);
+			LoadAndBootLinux(SectionName, OperatingSystemDisplayNames[SelectedOperatingSystem]);
 		}
 		else if (_stricmp(SettingValue, "BootSector") == 0)
 		{
-			LoadAndBootBootSector(OperatingSystemSectionNames[SelectedOperatingSystem]);
+			LoadAndBootBootSector(SectionName);
 		}
 		else if (_stricmp(SettingValue, "Partition") == 0)
 		{
-			LoadAndBootPartition(OperatingSystemSectionNames[SelectedOperatingSystem]);
+			LoadAndBootPartition(SectionName);
 		}
 		else if (_stricmp(SettingValue, "Drive") == 0)
 		{
-			LoadAndBootDrive(OperatingSystemSectionNames[SelectedOperatingSystem]);
+			LoadAndBootDrive(SectionName);
 		}
 #endif
 	}

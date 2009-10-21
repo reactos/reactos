@@ -126,7 +126,7 @@ PortClsPnp(
             return PcCompleteIrp(DeviceObject, Irp, Status);
     }
 
-    DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
+    DPRINT("unhandled function %u\n", IoStack->MinorFunction);
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -174,37 +174,15 @@ PortClsShutdown(
     IN  PIRP Irp)
 {
     PPCLASS_DEVICE_EXTENSION DeviceExtension;
-    PLIST_ENTRY Entry;
-    PPHYSICAL_CONNECTION Connection;
     DPRINT("PortClsShutdown called\n");
 
     // get device extension
     DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    while(!IsListEmpty(&DeviceExtension->PhysicalConnectionList))
-    {
-        // get connection entry
-        Entry = RemoveHeadList(&DeviceExtension->PhysicalConnectionList);
-        Connection = (PPHYSICAL_CONNECTION)CONTAINING_RECORD(Entry, PHYSICAL_CONNECTION, Entry);
-
-        if (Connection->FromSubDevice)
-        {
-            // release subdevice
-            Connection->FromSubDevice->Release();
-        }
-
-        if (Connection->ToSubDevice)
-        {
-            // release subdevice
-            Connection->ToSubDevice->Release();
-        }
-        FreeItem(Connection, TAG_PORTCLASS);
-    }
-
     if (DeviceExtension->AdapterPowerManagement)
     {
         // release adapter power management
-        DPRINT1("Power %u\n", DeviceExtension->AdapterPowerManagement->Release());
+        DPRINT("Power %u\n", DeviceExtension->AdapterPowerManagement->Release());
     }
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -251,7 +229,7 @@ PcDispatchIrp(
             return PortClsShutdown(DeviceObject, Irp);
 
         default:
-            DPRINT1("Unhandled function %x\n", IoStack->MajorFunction);
+            DPRINT("Unhandled function %x\n", IoStack->MajorFunction);
             break;
     };
 

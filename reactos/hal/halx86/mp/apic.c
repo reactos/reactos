@@ -68,7 +68,7 @@ typedef struct _COMMON_AREA_INFO
 #include <poppack.h>
 #endif
 
-CHAR *APstart, *APend;
+extern CHAR *APstart, *APend;
 
 #define BIOS_AREA	0x0
 #define COMMON_AREA	0x2000
@@ -709,6 +709,9 @@ VOID
 MpsIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
 			   PKTRAP_FRAME TrapFrame)
 {
+#ifdef _M_AMD64
+    UNIMPLEMENTED;
+#else
    TrapFrame->SegGs     = (USHORT)IrqTrapFrame->Gs;
    TrapFrame->SegFs     = (USHORT)IrqTrapFrame->Fs;
    TrapFrame->SegEs     = (USHORT)IrqTrapFrame->Es;
@@ -724,6 +727,7 @@ MpsIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
    TrapFrame->Eip    = IrqTrapFrame->Eip;
    TrapFrame->SegCs     = IrqTrapFrame->Cs;
    TrapFrame->EFlags = IrqTrapFrame->Eflags;
+#endif
 }
 
 VOID
@@ -798,7 +802,7 @@ APICCalibrateTimer(ULONG CPU)
 
    APICSetupLVTT(1000000000);
 
-   TSCPresent = ((PKIPCR)KeGetPcr())->PrcbData.FeatureBits & KF_RDTSC ? TRUE : FALSE;
+   TSCPresent = KeGetCurrentPrcb()->FeatureBits & KF_RDTSC ? TRUE : FALSE;
 
    /*
     * The timer chip counts down to zero. Let's wait
@@ -823,11 +827,11 @@ APICCalibrateTimer(ULONG CPU)
    if (TSCPresent)
    {
       t2.QuadPart = (LONGLONG)__rdtsc();
-      CPUMap[CPU].CoreSpeed = (HZ * (t2.QuadPart - t1.QuadPart));
+      CPUMap[CPU].CoreSpeed = (HZ * (ULONG)(t2.QuadPart - t1.QuadPart));
       DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	     CPUMap[CPU].CoreSpeed/1000000,
 	     CPUMap[CPU].CoreSpeed%1000000);
-      ((PKIPCR)KeGetPcr())->PrcbData.MHz = CPUMap[CPU].CoreSpeed/1000000;
+      KeGetCurrentPrcb()->MHz = CPUMap[CPU].CoreSpeed/1000000;
    }
 
    CPUMap[CPU].BusSpeed = (HZ * (long)(tt1 - tt2) * APIC_DIVISOR);
@@ -843,8 +847,25 @@ APICCalibrateTimer(ULONG CPU)
 }
 
 VOID 
-SetInterruptGate(ULONG index, ULONG address)
+SetInterruptGate(ULONG index, ULONG_PTR address)
 {
+#ifdef _M_AMD64
+  KIDTENTRY64 *idt;
+
+  idt = &KeGetPcr()->IdtBase[index];
+
+  idt->OffsetLow = address & 0xffff;
+  idt->Selector = KGDT_64_R0_CODE;
+  idt->IstIndex = 0;
+  idt->Reserved0 = 0;
+  idt->Type = 0x0e;
+  idt->Dpl = 0;
+  idt->Present = 1;
+  idt->OffsetMiddle = (address >> 16) & 0xffff;
+  idt->OffsetHigh = address >> 32;
+  idt->Reserved1 = 0;
+  idt->Alignment = 0;
+#else
   KIDTENTRY *idt;
   KIDT_ACCESS Access;
 
@@ -856,10 +877,11 @@ SetInterruptGate(ULONG index, ULONG address)
   Access.SegmentType = I386_INTERRUPT_GATE;
   
   idt = (KIDTENTRY*)((ULONG)KeGetPcr()->IDT + index * sizeof(KIDTENTRY));
-  idt->Offset = address & 0xffff;
+  idt->Offset = (USHORT)(address & 0xffff);
   idt->Selector = KGDT_R0_CODE;
   idt->Access = Access.Value;
-  idt->ExtendedOffset = address >> 16;
+  idt->ExtendedOffset = (USHORT)(address >> 16);
+#endif
 }
 
 VOID HaliInitBSP(VOID)
@@ -880,11 +902,11 @@ VOID HaliInitBSP(VOID)
    BSPInitialized = TRUE;
 
    /* Setup interrupt handlers */
-   SetInterruptGate(LOCAL_TIMER_VECTOR, (ULONG)MpsTimerInterrupt);
-   SetInterruptGate(ERROR_VECTOR, (ULONG)MpsErrorInterrupt);
-   SetInterruptGate(SPURIOUS_VECTOR, (ULONG)MpsSpuriousInterrupt);
+   SetInterruptGate(LOCAL_TIMER_VECTOR, (ULONG_PTR)MpsTimerInterrupt);
+   SetInterruptGate(ERROR_VECTOR, (ULONG_PTR)MpsErrorInterrupt);
+   SetInterruptGate(SPURIOUS_VECTOR, (ULONG_PTR)MpsSpuriousInterrupt);
 #ifdef CONFIG_SMP
-   SetInterruptGate(IPI_VECTOR, (ULONG)MpsIpiInterrupt);
+   SetInterruptGate(IPI_VECTOR, (ULONG_PTR)MpsIpiInterrupt);
 #endif
    DPRINT("APIC is mapped at 0x%X\n", APICBase);
 
@@ -913,18 +935,18 @@ VOID HaliInitBSP(VOID)
    CommonBase = (PULONG)COMMON_AREA;
  
    /* Copy bootstrap code to common area */
-   memcpy((PVOID)((ULONG)CommonBase + PAGE_SIZE),
+   memcpy((PVOID)((ULONG_PTR)CommonBase + PAGE_SIZE),
 	  &APstart,
-	  (ULONG)&APend - (ULONG)&APstart + 1);
+	  (ULONG_PTR)&APend - (ULONG_PTR)&APstart + 1);
 
    /* Set shutdown code */
    CMOS_WRITE(0xF, 0xA);
 
    /* Set warm reset vector */
-   ps = (PUSHORT)((ULONG)BIOSBase + 0x467);
+   ps = (PUSHORT)((ULONG_PTR)BIOSBase + 0x467);
    *ps = (COMMON_AREA + PAGE_SIZE) & 0xF;
  
-   ps = (PUSHORT)((ULONG)BIOSBase + 0x469);
+   ps = (PUSHORT)((ULONG_PTR)BIOSBase + 0x469);
    *ps = (COMMON_AREA + PAGE_SIZE) >> 4;
 #endif
 

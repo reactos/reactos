@@ -584,6 +584,10 @@ declare_new_prefix:
 	xmlChar pref[30];
 	int counter = 1;
 
+	if (nsPrefix == NULL) {
+	    nsPrefix = "ns";
+	}
+
 	do {
 	    snprintf((char *) pref, 30, "%s_%d", nsPrefix, counter++);
 	    ns = xmlSearchNs(target->doc, target, BAD_CAST pref);

@@ -83,7 +83,7 @@ HaliMPFamily(ULONG Family,
 static VOID 
 HaliMPProcessorInfo(PMP_CONFIGURATION_PROCESSOR m)
 {
-  ULONG ver;
+  UCHAR ver;
 
   if (!(m->CpuFlags & CPU_FLAG_ENABLED))
     return;
@@ -176,7 +176,7 @@ HaliMPProcessorInfo(PMP_CONFIGURATION_PROCESSOR m)
 static VOID 
 HaliMPBusInfo(PMP_CONFIGURATION_BUS m)
 {
-  static ULONG CurrentPCIBusId = 0;
+  static UCHAR CurrentPCIBusId = 0;
 
   DPRINT("Bus #%d is %.*s\n", m->BusId, 6, m->BusType);
 
@@ -357,7 +357,7 @@ static VOID
 HaliConstructDefaultIOIrqMPTable(ULONG Type)
 {
 	MP_CONFIGURATION_INTSRC intsrc;
-	ULONG i;
+	UCHAR i;
 
 	intsrc.Type = MPCTE_INTSRC;
 	intsrc.IrqFlag = 0;			/* conforming */
@@ -394,8 +394,8 @@ HaliConstructDefaultISAMPTable(ULONG Type)
   MP_CONFIGURATION_BUS bus;
   MP_CONFIGURATION_IOAPIC ioapic;
   MP_CONFIGURATION_INTLOCAL lintsrc;
-  ULONG linttypes[2] = { INT_EXTINT, INT_NMI };
-  ULONG i;
+  UCHAR linttypes[2] = { INT_EXTINT, INT_NMI };
+  UCHAR i;
 
   /*
    * 2 CPUs, numbered 0 & 1.

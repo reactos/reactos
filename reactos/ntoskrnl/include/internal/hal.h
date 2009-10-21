@@ -47,6 +47,13 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
                           IN ULONG NumberOfHeads,
                           IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer);
 
+VOID
+NTAPI
+xHalHaltSystem(
+    VOID
+);
+
+
 //
 // Various offsets in the boot record
 //

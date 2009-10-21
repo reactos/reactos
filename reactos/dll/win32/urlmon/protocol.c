@@ -186,12 +186,53 @@ static void WINAPI internet_status_callback(HINTERNET internet, DWORD_PTR contex
     }
 }
 
+static HINTERNET create_internet_session(IInternetBindInfo *bind_info)
+{
+    LPWSTR global_user_agent = NULL;
+    LPOLESTR user_agent = NULL;
+    ULONG size = 0;
+    HINTERNET ret;
+    HRESULT hres;
+
+    hres = IInternetBindInfo_GetBindString(bind_info, BINDSTRING_USER_AGENT, &user_agent, 1, &size);
+    if(hres != S_OK || !size)
+        global_user_agent = get_useragent();
+
+    ret = InternetOpenW(user_agent ? user_agent : global_user_agent, 0, NULL, NULL, INTERNET_FLAG_ASYNC);
+    heap_free(global_user_agent);
+    CoTaskMemFree(user_agent);
+    if(!ret) {
+        WARN("InternetOpen failed: %d\n", GetLastError());
+        return NULL;
+    }
+
+    InternetSetStatusCallbackW(ret, internet_status_callback);
+    return ret;
+}
+
+static HINTERNET internet_session;
+
+HINTERNET get_internet_session(IInternetBindInfo *bind_info)
+{
+    HINTERNET new_session;
+
+    if(internet_session)
+        return internet_session;
+
+    if(!bind_info)
+        return NULL;
+
+    new_session = create_internet_session(bind_info);
+    if(new_session && InterlockedCompareExchangePointer((void**)&internet_session, new_session, NULL))
+        InternetCloseHandle(new_session);
+
+    return internet_session;
+}
+
 HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, LPCWSTR url,
         IInternetProtocolSink *protocol_sink, IInternetBindInfo *bind_info)
 {
-    LPOLESTR user_agent = NULL;
     DWORD request_flags;
-    ULONG size = 0;
     HRESULT hres;
 
     protocol->protocol = prot;
@@ -210,37 +251,8 @@ HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, LPCWSTR url,
     if(!(protocol->bindf & BINDF_FROMURLMON))
         report_progress(protocol, BINDSTATUS_DIRECTBIND, NULL);
 
-    hres = IInternetBindInfo_GetBindString(bind_info, BINDSTRING_USER_AGENT, &user_agent, 1, &size);
-    if (hres != S_OK || !size) {
-        DWORD len;
-        CHAR null_char = 0;
-        LPSTR user_agenta = NULL;
-
-        len = 0;
-        if ((hres = ObtainUserAgentString(0, &null_char, &len)) != E_OUTOFMEMORY) {
-            WARN("ObtainUserAgentString failed: %08x\n", hres);
-        }else if (!(user_agenta = heap_alloc(len*sizeof(CHAR)))) {
-            WARN("Out of memory\n");
-        }else if ((hres = ObtainUserAgentString(0, user_agenta, &len)) != S_OK) {
-            WARN("ObtainUserAgentString failed: %08x\n", hres);
-        }else {
-            if(!(user_agent = CoTaskMemAlloc((len)*sizeof(WCHAR))))
-                WARN("Out of memory\n");
-            else
-                MultiByteToWideChar(CP_ACP, 0, user_agenta, -1, user_agent, len);
-        }
-        heap_free(user_agenta);
-    }
-
-    protocol->internet = InternetOpenW(user_agent, 0, NULL, NULL, INTERNET_FLAG_ASYNC);
-    CoTaskMemFree(user_agent);
-    if(!protocol->internet) {
-        WARN("InternetOpen failed: %d\n", GetLastError());
+    if(!get_internet_session(bind_info))
         return report_result(protocol, INET_E_NO_SESSION);
-    }
-
-    /* Native does not check for success of next call, so we won't either */
-    InternetSetStatusCallbackW(protocol->internet, internet_status_callback);
 
     request_flags = INTERNET_FLAG_KEEP_CONNECTION;
     if(protocol->bindf & BINDF_NOWRITECACHE)
@@ -248,7 +260,7 @@ HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, LPCWSTR url,
     if(protocol->bindf & BINDF_NEEDFILE)
         request_flags |= INTERNET_FLAG_NEED_FILE;
 
-    hres = protocol->vtbl->open_request(protocol, url, request_flags, bind_info);
+    hres = protocol->vtbl->open_request(protocol, url, request_flags, internet_session, bind_info);
     if(FAILED(hres)) {
         protocol_close_connection(protocol);
         return report_result(protocol, hres);
@@ -326,14 +338,14 @@ HRESULT protocol_read(Protocol *protocol, void *buf, ULONG size, ULONG *read_ret
     BOOL res;
     HRESULT hres = S_FALSE;
 
-    if(!(protocol->flags & FLAG_REQUEST_COMPLETE)) {
-        *read_ret = 0;
-        return E_PENDING;
-    }
-
     if(protocol->flags & FLAG_ALL_DATA_READ) {
         *read_ret = 0;
         return S_FALSE;
+    }
+
+    if(!(protocol->flags & FLAG_REQUEST_COMPLETE)) {
+        *read_ret = 0;
+        return E_PENDING;
     }
 
     while(read < size) {
@@ -420,11 +432,6 @@ void protocol_close_connection(Protocol *protocol)
 
     if(protocol->connection)
         InternetCloseHandle(protocol->connection);
-
-    if(protocol->internet) {
-        InternetCloseHandle(protocol->internet);
-        protocol->internet = 0;
-    }
 
     protocol->flags = 0;
 }

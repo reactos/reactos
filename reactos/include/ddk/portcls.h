@@ -1187,7 +1187,7 @@ DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
         IN  PRESOURCELIST ResourceList OPTIONAL,
         IN  ULONG DmaIndex,
         IN  ULONG MaximumLength,
-        IN  BOOL DemandMode,
+        IN  BOOLEAN DemandMode,
         IN  DMA_SPEED DmaSpeed) PURE;
 
     STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
@@ -1195,8 +1195,8 @@ DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
         IN  PUNKNOWN OuterUnknown,
         IN  PRESOURCELIST ResourceList OPTIONAL,
         IN  ULONG MaximumLength,
-        IN  BOOL Dma32BitAddresses,
-        IN  BOOL Dma64BitAddresses,
+        IN  BOOLEAN Dma32BitAddresses,
+        IN  BOOLEAN Dma64BitAddresses,
         IN  DMA_WIDTH DmaWidth,
         IN  DMA_SPEED DmaSpeed) PURE;
 
@@ -1216,7 +1216,7 @@ typedef IPortWaveCyclic *PPORTWAVECYCLIC;
         IN  PRESOURCELIST ResourceList OPTIONAL,      \
         IN  ULONG DmaIndex,                           \
         IN  ULONG MaximumLength,                      \
-        IN  BOOL DemandMode,                          \
+        IN  BOOLEAN DemandMode,                       \
         IN  DMA_SPEED DmaSpeed);                      \
                                                       \
     STDMETHODIMP_(NTSTATUS) NewMasterDmaChannel(      \
@@ -1224,8 +1224,8 @@ typedef IPortWaveCyclic *PPORTWAVECYCLIC;
         IN  PUNKNOWN OuterUnknown,                    \
         IN  PRESOURCELIST ResourceList OPTIONAL,      \
         IN  ULONG MaximumLength,                      \
-        IN  BOOL Dma32BitAddresses,                   \
-        IN  BOOL Dma64BitAddresses,                   \
+        IN  BOOLEAN Dma32BitAddresses,                \
+        IN  BOOLEAN Dma64BitAddresses,                \
         IN  DMA_WIDTH DmaWidth,                       \
         IN  DMA_SPEED DmaSpeed)
 #endif

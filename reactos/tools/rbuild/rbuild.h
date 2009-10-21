@@ -455,6 +455,7 @@ protected:
 	void ParseToolsets ( const Project& project, const XMLElement& node );
 
 public:
+	virtual ~ToolsetDirective() { }
 	bool IsEnabled () const;
 };
 
@@ -469,6 +470,7 @@ protected:
 
 public:
 	CompilerDirective (): enabled ( true ) { }
+	virtual ~CompilerDirective() { }
 	void SetCompiler ( CompilerType compiler );
 	void UnsetCompiler ( CompilerType compiler );
 	void SetAllCompilers ();

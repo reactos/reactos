@@ -2777,7 +2777,7 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
 
                 r = TABLE_insert_row( &tv->view, rec, -1, FALSE );
                 if (r != ERROR_SUCCESS)
-                    ERR("insert row failed\n");
+                    WARN("insert row failed\n");
 
                 if ( number != MSI_NULL_INTEGER && !lstrcmpW(name, szColumns) )
                     msi_update_table_columns( db, table );
@@ -2788,7 +2788,7 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
 
                 r = msi_table_find_row( tv, rec, &row );
                 if (r != ERROR_SUCCESS)
-                    ERR("no matching row to transform\n");
+                    WARN("no matching row to transform\n");
                 else if ( mask )
                 {
                     TRACE("modifying row [%d]:\n", row);

@@ -8,6 +8,9 @@
  
 /* DEFINES **********************************************************/
 
+#define HISTORYSIZE 11
+/* HISTORYSIZE = number of possible undo-steps + 1 */
+
 #define SIZEOF(a)  (sizeof(a) / sizeof((a)[0]))
 
 #define IDI_APPICON 500
@@ -162,3 +165,5 @@
 
 #define IDS_OPENFILTER  926
 #define IDS_SAVEFILTER  927
+#define IDS_FILESIZE    928
+#define IDS_PRINTRES    929

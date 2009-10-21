@@ -46,6 +46,13 @@ static ULONG WINAPI IDirect3DPixelShader8Impl_AddRef(IDirect3DPixelShader8 *ifac
 
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
+    if (ref == 1)
+    {
+        wined3d_mutex_lock();
+        IWineD3DPixelShader_AddRef(This->wineD3DPixelShader);
+        wined3d_mutex_unlock();
+    }
+
     return ref;
 }
 
@@ -59,16 +66,47 @@ static ULONG WINAPI IDirect3DPixelShader8Impl_Release(IDirect3DPixelShader8 * if
         wined3d_mutex_lock();
         IWineD3DPixelShader_Release(This->wineD3DPixelShader);
         wined3d_mutex_unlock();
-
-        HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
 }
 
-const IDirect3DPixelShader8Vtbl Direct3DPixelShader8_Vtbl =
+static const IDirect3DPixelShader8Vtbl Direct3DPixelShader8_Vtbl =
 {
     /* IUnknown */
     IDirect3DPixelShader8Impl_QueryInterface,
     IDirect3DPixelShader8Impl_AddRef,
     IDirect3DPixelShader8Impl_Release,
 };
+
+static void STDMETHODCALLTYPE d3d8_pixelshader_wined3d_object_destroyed(void *parent)
+{
+    HeapFree(GetProcessHeap(), 0, parent);
+}
+
+static const struct wined3d_parent_ops d3d8_pixelshader_wined3d_parent_ops =
+{
+    d3d8_pixelshader_wined3d_object_destroyed,
+};
+
+HRESULT pixelshader_init(IDirect3DPixelShader8Impl *shader, IDirect3DDevice8Impl *device,
+        const DWORD *byte_code, DWORD shader_handle)
+{
+    HRESULT hr;
+
+    shader->ref = 1;
+    shader->lpVtbl = &Direct3DPixelShader8_Vtbl;
+    shader->handle = shader_handle;
+
+    wined3d_mutex_lock();
+    hr = IWineD3DDevice_CreatePixelShader(device->WineD3DDevice, byte_code,
+            NULL, &shader->wineD3DPixelShader, (IUnknown *)shader,
+            &d3d8_pixelshader_wined3d_parent_ops);
+    wined3d_mutex_unlock();
+    if (FAILED(hr))
+    {
+        WARN("Failed to create wined3d pixel shader, hr %#x.\n", hr);
+        return hr;
+    }
+
+    return D3D_OK;
+}

@@ -744,7 +744,7 @@ void get_editor_controller(NSContainer *This)
     }
 
     nsres = nsIEditingSession_GetEditorForWindow(editing_session,
-            This->doc->window->nswindow, &This->editor);
+            This->doc->basedoc.window->nswindow, &This->editor);
     nsIEditingSession_Release(editing_session);
     if(NS_FAILED(nsres)) {
         ERR("Could not get editor: %08x\n", nsres);
@@ -807,11 +807,13 @@ void set_ns_editmode(NSContainer *This)
     nsIWebBrowser_SetParentURIContentListener(This->webbrowser, NSURICL(This));
 }
 
-void update_nsdocument(HTMLDocument *doc)
+void update_nsdocument(HTMLDocumentObj *doc)
 {
+    HTMLDocumentNode *doc_node;
     nsIDOMHTMLDocument *nsdoc;
     nsIDOMDocument *nsdomdoc;
     nsresult nsres;
+    HRESULT hres;
 
     if(!doc->nscontainer || !doc->nscontainer->navigation)
         return;
@@ -829,20 +831,37 @@ void update_nsdocument(HTMLDocument *doc)
         return;
     }
 
-    if(nsdoc == doc->nsdoc) {
+    if(nsdoc == doc->basedoc.nsdoc) {
         nsIDOMHTMLDocument_Release(nsdoc);
         return;
     }
 
-    if(doc->nsdoc) {
-        remove_mutation_observer(doc->nscontainer, doc->nsdoc);
-        nsIDOMHTMLDocument_Release(doc->nsdoc);
+    if(doc->basedoc.nsdoc) {
+        remove_mutation_observer(doc->nscontainer, doc->basedoc.nsdoc);
+        nsIDOMHTMLDocument_Release(doc->basedoc.nsdoc);
+
+        doc_node = doc->basedoc.doc_node;
+        doc_node->basedoc.doc_obj = NULL;
+        IHTMLDocument2_Release(HTMLDOC(&doc_node->basedoc));
+        doc->basedoc.doc_node = NULL;
     }
 
-    doc->nsdoc = nsdoc;
+    doc->basedoc.nsdoc = nsdoc;
+    if(!nsdoc) {
+        window_set_docnode(doc->basedoc.window, NULL);
+        return;
+    }
 
-    if(nsdoc)
-        set_mutation_observer(doc->nscontainer, nsdoc);
+    set_mutation_observer(doc->nscontainer, nsdoc);
+
+    hres = create_doc_from_nsdoc(nsdoc, doc, doc->basedoc.window, &doc_node);
+    if(FAILED(hres)) {
+        ERR("Could not create document: %08x\n", hres);
+        return;
+    }
+
+    doc->basedoc.doc_node = doc_node;
+    window_set_docnode(doc->basedoc.window, doc_node);
 }
 
 void close_gecko(void)
@@ -932,7 +951,6 @@ static nsrefcnt NSAPI nsWebBrowserChrome_Release(nsIWebBrowserChrome *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
-        heap_free(This->event_vector);
         if(This->parent)
             nsIWebBrowserChrome_Release(NSWBCHROME(This->parent));
         heap_free(This);
@@ -1121,7 +1139,7 @@ static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuList
         FIXME("aContextFlags=%08x\n", aContextFlags);
     };
 
-    show_context_menu(This->doc, dwID, &pt, (IDispatch*)HTMLDOMNODE(get_node(This->doc, aNode, TRUE)));
+    show_context_menu(This->doc, dwID, &pt, (IDispatch*)HTMLDOMNODE(get_node(This->doc->basedoc.doc_node, aNode, TRUE)));
 
     return NS_OK;
 }
@@ -1160,7 +1178,7 @@ static nsrefcnt NSAPI nsURIContentListener_Release(nsIURIContentListener *iface)
     return nsIWebBrowserChrome_Release(NSWBCHROME(This));
 }
 
-static BOOL translate_url(HTMLDocument *doc, nsIWineURI *nsuri)
+static BOOL translate_url(HTMLDocumentObj *doc, nsIWineURI *nsuri)
 {
     OLECHAR *new_url = NULL, *url;
     BOOL ret = FALSE;
@@ -1233,7 +1251,7 @@ static nsresult NSAPI nsURIContentListener_OnStartURIOpen(nsIURIContentListener 
 
         *_retval = FALSE;
     }else if(This->doc) {
-        *_retval = translate_url(This->doc, wine_uri);
+        *_retval = translate_url(This->doc->basedoc.doc_obj, wine_uri);
     }
 
     nsIWineURI_Release(wine_uri);
@@ -1653,7 +1671,7 @@ static const nsISupportsWeakReferenceVtbl nsSupportsWeakReferenceVtbl = {
 };
 
 
-NSContainer *NSContainer_Create(HTMLDocument *doc, NSContainer *parent)
+NSContainer *NSContainer_Create(HTMLDocumentObj *doc, NSContainer *parent)
 {
     nsIWebBrowserSetup *wbsetup;
     nsIScrollable *scrollable;

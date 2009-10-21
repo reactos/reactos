@@ -329,8 +329,6 @@ typedef enum _SECURITY_LOGON_TYPE
 
 #define MAILSLOT_SIZE_AUTO              0
 
-#define MAP_PROCESS                     1L
-#define MAP_SYSTEM                      2L
 #define MEM_DOS_LIM                     0x40000000
 
 #define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
@@ -945,10 +943,10 @@ typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
     UCHAR Revision;
     UCHAR Sbz1;
     SECURITY_DESCRIPTOR_CONTROL Control;
-    DWORD_PTR Owner;
-    DWORD_PTR Group;
-    DWORD_PTR Sacl;
-    DWORD_PTR Dacl;
+    ULONG Owner;
+    ULONG Group;
+    ULONG Sacl;
+    ULONG Dacl;
 } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,

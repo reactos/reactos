@@ -236,14 +236,22 @@ write_h (int build, char *buildstr, long revno)
 			char* orig;
 	
 			orig = (char *) malloc(length);
+			if (orig == NULL)
+			{
+				fclose(h);
+				free(s1);
+				return;
+			}
 			fseek(h, 0, SEEK_SET);
 			fread(orig, 1, length, h);
 			if (memcmp(s1, orig, length) == 0)
 			{
 				fclose(h);
 				free(s1);
+				free(orig);
 				return;
 			}
+			free(orig);
 		}
 		fclose(h);
 	}
@@ -259,7 +267,7 @@ write_h (int build, char *buildstr, long revno)
 		return;
 	}
 	fwrite(s1, 1, strlen(s1), h);
-	fclose (h);
+	fclose(h);
 }
 
 void

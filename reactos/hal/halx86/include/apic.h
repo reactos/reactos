@@ -5,7 +5,11 @@
 #ifndef __INTERNAL_HAL_APIC_H
 #define __INTERNAL_HAL_APIC_H
 
+#ifdef _M_AMD64
+#define APIC_DEFAULT_BASE     0xfffffffffee00000ULL;
+#else
 #define APIC_DEFAULT_BASE     0xFEE00000    /* Default Local APIC Base Register Address */
+#endif
 
 /* APIC Register Address Map */
 #define APIC_ID      0x0020 /* Local APIC ID Register (R/W) */
@@ -115,30 +119,6 @@
 #define APIC_TDCR_128      0x0A
 #define APIC_TDCR_1        0x0B
 
-#define APIC_LVT_VECTOR   		  (0xFF << 0)   /* Vector */
-#define APIC_LVT_DS       		  (0x1 << 12)   /* Delivery Status */
-#define APIC_LVT_REMOTE_IRR		  (0x1 << 14)	/* Remote IRR */
-#define APIC_LVT_LEVEL_TRIGGER		  (0x1 << 15)	/* Lvel Triggered */
-#define APIC_LVT_MASKED			  (0x1 << 16)   /* Mask */
-#define APIC_LVT_PERIODIC	 	  (0x1 << 17)   /* Timer Mode */
-
-#define APIC_LVT3_DM        (0x7 << 8)
-#define APIC_LVT3_IIPP      (0x1 << 13)
-#define APIC_LVT3_TM        (0x1 << 15)
-#define APIC_LVT3_MASKED    (0x1 << 16)
-#define APIC_LVT3_OS        (0x1 << 17)
-
-#define APIC_TDCR_TMBASE   (0x1 << 2)
-#define APIC_TDCR_MASK     0x0F
-#define APIC_TDCR_2        0x00
-#define APIC_TDCR_4        0x01
-#define APIC_TDCR_8        0x02
-#define APIC_TDCR_16       0x03
-#define APIC_TDCR_32       0x08
-#define APIC_TDCR_64       0x09
-#define APIC_TDCR_128      0x0A
-#define APIC_TDCR_1        0x0B
-
 #define APIC_TARGET_SELF         0x100
 #define APIC_TARGET_ALL          0x200
 #define APIC_TARGET_ALL_BUT_SELF 0x300
@@ -206,7 +186,7 @@ static __inline ULONG _APICRead(ULONG Offset)
 {
     PULONG p;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
     return *p;
 }
 
@@ -216,7 +196,7 @@ static __inline VOID APICWrite(ULONG Offset,
 {
     PULONG p;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
     *p = Value;
 }
@@ -230,7 +210,7 @@ static __inline VOID APICWrite(ULONG Offset,
     lastregw[CPU] = Offset;
     lastvalw[CPU] = Value;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
     *p = Value;
 }
@@ -241,7 +221,7 @@ static __inline ULONG APICRead(ULONG Offset)
 {
     PULONG p;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
     return *p;
 }
 #else
@@ -253,7 +233,7 @@ static __inline ULONG APICRead(ULONG Offset)
     lastregr[CPU] = Offset;
     lastvalr[CPU] = 0;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
     lastvalr[CPU] = *p;
     return lastvalr[CPU];

@@ -1,12 +1,10 @@
 #ifndef _KDDLL_
 #define _KDDLL_
 
-typedef enum _KDSTATUS
-{
-    KdPacketReceived = 0,
-    KdPacketTimedOut,
-    KdPacketNeedsResend
-} KDSTATUS;
+typedef ULONG KDSTATUS;
+#define KdPacketReceived     0
+#define KdPacketTimedOut     1
+#define KdPacketNeedsResend  2
 
 NTSTATUS
 NTAPI

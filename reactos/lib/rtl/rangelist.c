@@ -608,11 +608,11 @@ RtlInvertRangeList (OUT PRTL_RANGE_LIST InvertedRangeList,
     }
 
   /* Add trailing range */
-  if (Previous->Range.End + 1 != (ULONGLONG)-1)
+  if (Previous->Range.End + 1 != MAXULONGLONG)
     {
       Status = RtlAddRange (InvertedRangeList,
 			    Previous->Range.End + 1,
-			    (ULONGLONG)-1,
+			    MAXULONGLONG,
 			    0,
 			    0,
 			    NULL,

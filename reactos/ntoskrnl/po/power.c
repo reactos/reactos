@@ -526,7 +526,7 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
 
             /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
             RtlZeroMemory(BatteryState, sizeof(SYSTEM_BATTERY_STATE));
-            BatteryState->EstimatedTime = (ULONG)-1;
+            BatteryState->EstimatedTime = MAXULONG;
 
             Status = STATUS_SUCCESS;
             break;

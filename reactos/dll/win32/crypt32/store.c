@@ -978,7 +978,8 @@ BOOL WINAPI CertDeleteCertificateFromStore(PCCERT_CONTEXT pCertContext)
             ret = FALSE;
         else
             ret = hcs->certs.deleteContext(hcs, (void *)pCertContext);
-        CertFreeCertificateContext(pCertContext);
+        if (ret)
+            CertFreeCertificateContext(pCertContext);
     }
     return ret;
 }

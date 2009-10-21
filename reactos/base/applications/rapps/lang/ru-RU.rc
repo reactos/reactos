@@ -10,9 +10,11 @@ BEGIN
 	END
 	POPUP "&Программы"
 	BEGIN
-		MENUITEM "&Установить",  ID_INSTALL
+		MENUITEM "У&становить",  ID_INSTALL
 		MENUITEM "&Удалить",     ID_UNINSTALL
 		MENUITEM "&Изменить",    ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "У&далить из реестра", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Обновить",    ID_REFRESH
 	END
@@ -39,6 +41,8 @@ BEGIN
 		MENUITEM "&Установить",   ID_INSTALL
 		MENUITEM "&Удалить",      ID_UNINSTALL
 		MENUITEM "&Изменить",     ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "У&далить из реестра", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Обновить",     ID_REFRESH
 	END
@@ -183,4 +187,7 @@ BEGIN
 	IDS_CHOOSE_FOLDER_TEXT "Выберите папку, которая будет использоваться для загрузки программ:"
 	IDS_CHOOSE_FOLDER_ERROR "Вы указали несуществующую папку!"
 	IDS_USER_NOT_ADMIN "Вы должны быть администратором для запуска ""Менеджера приложений ReactOS""!"
+	IDS_APP_REG_REMOVE "Вы действительно хотите удалить данные об установленной программе из реестра?"
+	IDS_INFORMATION "Информация"
+	IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
 END

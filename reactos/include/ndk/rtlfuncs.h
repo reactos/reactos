@@ -2666,7 +2666,7 @@ DbgBreakPoint(
     VOID
 );
 
-NTSTATUS
+VOID
 NTAPI
 DbgLoadImageSymbols(
     IN PANSI_STRING Name,

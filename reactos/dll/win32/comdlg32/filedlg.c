@@ -910,7 +910,7 @@ static INT_PTR FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM
                     WideCharToMultiByte(CP_ACP, 0, lpstrPath, -1, 
                                         (LPSTR)lParam, (int)wParam, NULL, NULL);
             }        
-            retval = lstrlenW(lpstrPath);
+            retval = lstrlenW(lpstrPath) + 1;
             break;
 
         case CDM_GETFOLDERIDLIST:

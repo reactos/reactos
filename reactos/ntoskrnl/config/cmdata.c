@@ -16,7 +16,6 @@
 
 ULONG DummyData;
 ULONG CmNtGlobalFlag;
-ULONG CmNtCSDVersion;
 
 WCHAR CmDefaultLanguageId[12];
 ULONG CmDefaultLanguageIdLength = sizeof(CmDefaultLanguageId);
@@ -388,7 +387,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"DisablePagingExecutive",
-        &DummyData,
+        &MmDisablePagingExecutive,
         NULL,
         NULL
     },

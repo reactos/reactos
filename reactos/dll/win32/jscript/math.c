@@ -73,7 +73,7 @@ static HRESULT math_constant(DOUBLE val, WORD flags, VARIANT *retv)
 }
 
 /* ECMA-262 3rd Edition    15.8.1.1 */
-static HRESULT Math_E(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_E(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
@@ -81,7 +81,7 @@ static HRESULT Math_E(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
 }
 
 /* ECMA-262 3rd Edition    15.8.1.4 */
-static HRESULT Math_LOG2E(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_LOG2E(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
@@ -89,21 +89,21 @@ static HRESULT Math_LOG2E(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
 }
 
 /* ECMA-262 3rd Edition    15.8.1.4 */
-static HRESULT Math_LOG10E(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_LOG10E(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
     return math_constant(M_LOG10E, flags, retv);
 }
 
-static HRESULT Math_LN2(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_LN2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
     return math_constant(M_LN2, flags, retv);
 }
 
-static HRESULT Math_LN10(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_LN10(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
@@ -111,21 +111,21 @@ static HRESULT Math_LN10(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
 }
 
 /* ECMA-262 3rd Edition    15.8.1.6 */
-static HRESULT Math_PI(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_PI(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
     return math_constant(M_PI, flags, retv);
 }
 
-static HRESULT Math_SQRT2(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_SQRT2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
     return math_constant(M_SQRT2, flags, retv);
 }
 
-static HRESULT Math_SQRT1_2(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_SQRT1_2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
@@ -133,7 +133,7 @@ static HRESULT Math_SQRT1_2(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
 }
 
 /* ECMA-262 3rd Edition    15.8.2.12 */
-static HRESULT Math_abs(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_abs(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -148,7 +148,7 @@ static HRESULT Math_abs(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -158,7 +158,7 @@ static HRESULT Math_abs(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
     return S_OK;
 }
 
-static HRESULT Math_acos(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_acos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -171,7 +171,7 @@ static HRESULT Math_acos(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -179,7 +179,7 @@ static HRESULT Math_acos(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
     return S_OK;
 }
 
-static HRESULT Math_asin(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_asin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -192,7 +192,7 @@ static HRESULT Math_asin(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -200,7 +200,7 @@ static HRESULT Math_asin(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
     return S_OK;
 }
 
-static HRESULT Math_atan(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_atan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -213,7 +213,7 @@ static HRESULT Math_atan(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -221,7 +221,7 @@ static HRESULT Math_atan(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
     return S_OK;
 }
 
-static HRESULT Math_atan2(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_atan2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v1, v2;
@@ -234,11 +234,11 @@ static HRESULT Math_atan2(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v1);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v1);
     if(FAILED(hres))
         return hres;
 
-    hres = to_number(dispex->ctx, get_arg(dp, 1), ei, &v2);
+    hres = to_number(ctx, get_arg(dp, 1), ei, &v2);
     if(FAILED(hres))
         return hres;
 
@@ -247,7 +247,7 @@ static HRESULT Math_atan2(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
 }
 
 /* ECMA-262 3rd Edition    15.8.2.6 */
-static HRESULT Math_ceil(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_ceil(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -261,7 +261,7 @@ static HRESULT Math_ceil(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -270,7 +270,7 @@ static HRESULT Math_ceil(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
     return S_OK;
 }
 
-static HRESULT Math_cos(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_cos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -283,7 +283,7 @@ static HRESULT Math_cos(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -291,7 +291,7 @@ static HRESULT Math_cos(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
     return S_OK;
 }
 
-static HRESULT Math_exp(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_exp(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -304,7 +304,7 @@ static HRESULT Math_exp(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -312,7 +312,7 @@ static HRESULT Math_exp(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
     return S_OK;
 }
 
-static HRESULT Math_floor(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_floor(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -326,7 +326,7 @@ static HRESULT Math_floor(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -335,7 +335,7 @@ static HRESULT Math_floor(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
     return S_OK;
 }
 
-static HRESULT Math_log(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_log(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -349,7 +349,7 @@ static HRESULT Math_log(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -359,7 +359,7 @@ static HRESULT Math_log(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
 }
 
 /* ECMA-262 3rd Edition    15.8.2.11 */
-static HRESULT Math_max(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_max(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     DOUBLE max, d;
@@ -375,13 +375,13 @@ static HRESULT Math_max(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
     max = num_val(&v);
     for(i=1; i < arg_cnt(dp); i++) {
-        hres = to_number(dispex->ctx, get_arg(dp, i), ei, &v);
+        hres = to_number(ctx, get_arg(dp, i), ei, &v);
         if(FAILED(hres))
             return hres;
 
@@ -396,7 +396,7 @@ static HRESULT Math_max(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
 }
 
 /* ECMA-262 3rd Edition    15.8.2.12 */
-static HRESULT Math_min(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_min(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     DOUBLE min, d;
@@ -412,13 +412,13 @@ static HRESULT Math_min(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
     min = num_val(&v);
     for(i=1; i < arg_cnt(dp); i++) {
-        hres = to_number(dispex->ctx, get_arg(dp, i), ei, &v);
+        hres = to_number(ctx, get_arg(dp, i), ei, &v);
         if(FAILED(hres))
             return hres;
 
@@ -433,7 +433,7 @@ static HRESULT Math_min(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
 }
 
 /* ECMA-262 3rd Edition    15.8.2.13 */
-static HRESULT Math_pow(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_pow(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT x, y;
@@ -446,11 +446,11 @@ static HRESULT Math_pow(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &x);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &x);
     if(FAILED(hres))
         return hres;
 
-    hres = to_number(dispex->ctx, get_arg(dp, 1), ei, &y);
+    hres = to_number(ctx, get_arg(dp, 1), ei, &y);
     if(FAILED(hres))
         return hres;
 
@@ -460,7 +460,7 @@ static HRESULT Math_pow(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
 }
 
 /* ECMA-262 3rd Edition    15.8.2.14 */
-static HRESULT Math_random(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_random(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     UINT r;
@@ -477,7 +477,7 @@ static HRESULT Math_random(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS
 }
 
 /* ECMA-262 3rd Edition    15.8.2.15 */
-static HRESULT Math_round(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_round(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -490,7 +490,7 @@ static HRESULT Math_round(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -499,7 +499,7 @@ static HRESULT Math_round(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
     return S_OK;
 }
 
-static HRESULT Math_sin(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_sin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -512,7 +512,7 @@ static HRESULT Math_sin(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -520,7 +520,7 @@ static HRESULT Math_sin(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
     return S_OK;
 }
 
-static HRESULT Math_sqrt(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_sqrt(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -533,7 +533,7 @@ static HRESULT Math_sqrt(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 
@@ -541,7 +541,7 @@ static HRESULT Math_sqrt(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
     return S_OK;
 }
 
-static HRESULT Math_tan(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Math_tan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     VARIANT v;
@@ -554,7 +554,7 @@ static HRESULT Math_tan(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *d
         return S_OK;
     }
 
-    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
         return hres;
 

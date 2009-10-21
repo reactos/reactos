@@ -195,4 +195,6 @@ BEGIN
     IDS_TOOLTIP16, "Laukizuzen biribildua"
     IDS_OPENFILTER, "Bit-mapa fitxategiak(*.bmp;*.dib)\1*.bmp;*.dib\1Fitxategi gustiak (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24 Biteko bit-mapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d bytes"
+    IDS_PRINTRES, "%d x %d pixels per meter"
 END

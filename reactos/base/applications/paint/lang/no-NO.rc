@@ -197,4 +197,6 @@ BEGIN
     IDS_TOOLTIP16, "Avrundet rektangel"
     IDS_OPENFILTER, "Bitmap filer (*.bmp;*.dib)\1*.bmp;*.dib\1Alle filer (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d bytes"
+    IDS_PRINTRES, "%d x %d pixels per meter"
 END

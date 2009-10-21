@@ -141,7 +141,7 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     SectorSize = (DrivePartition == 0xff ? 2048 : 512);
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
-        if (!MachDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
+        if (!XboxDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
         SectorCount = PartitionTableEntry.PartitionSectorCount;
@@ -168,7 +168,7 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
     UCHAR* Ptr = (UCHAR*)Buffer;
-    ULONG i, Length;
+    ULONG i, Length, Sectors;
     BOOLEAN ret;
 
     *Count = 0;
@@ -176,12 +176,13 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     while (N > 0)
     {
         Length = N;
-        if (Length > Context->SectorSize)
-            Length = Context->SectorSize;
+        if (Length > DISKREADBUFFER_SIZE)
+            Length = DISKREADBUFFER_SIZE;
+        Sectors = (Length + Context->SectorSize - 1) / Context->SectorSize;
         ret = MachDiskReadLogicalSectors(
             Context->DriveNumber,
             Context->SectorNumber + Context->SectorOffset + i,
-            1,
+            Sectors,
             (PVOID)DISKREADBUFFER);
         if (!ret)
             return EIO;
@@ -189,7 +190,7 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         Ptr += Length;
         *Count += Length;
         N -= Length;
-        i++;
+        i += Sectors;
     }
 
     return ESUCCESS;
@@ -266,7 +267,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   /* Add partitions */
   i = 1;
   DiskReportError(FALSE);
-  while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
+  while (XboxDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
   {
     if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
     {

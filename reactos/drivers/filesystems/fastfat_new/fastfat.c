@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS FAT file system driver
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GNU GPLv3 as published by the Free Software Foundation
  * FILE:            drivers/filesystems/fastfat/fastfat.c
  * PURPOSE:         Initialization routines
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
@@ -108,6 +108,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     /* Initialize synchronization resource for the global data */
     ExInitializeResourceLite(&FatGlobalData.Resource);
 
+    /* Initialize global VCB list */
+    InitializeListHead(&FatGlobalData.VcbListHead);
+
     /* Register and reference our filesystem */
     IoRegisterFileSystem(DeviceObject);
     ObReferenceObject(DeviceObject);
@@ -134,6 +137,7 @@ FatBuildIrpContext(PIRP Irp,
 
     /* Save IRP, MJ and MN */
     IrpContext->Irp = Irp;
+    IrpContext->Stack = IrpSp;
     IrpContext->MajorFunction = IrpSp->MajorFunction;
     IrpContext->MinorFunction = IrpSp->MinorFunction;
 
@@ -268,4 +272,242 @@ FatQueueRequest(IN PFAT_IRP_CONTEXT IrpContext,
     ExQueueWorkItem(&IrpContext->WorkQueueItem,
         DelayedWorkQueue);
 }
+
+TYPE_OF_OPEN
+NTAPI
+FatDecodeFileObject(IN PFILE_OBJECT FileObject,
+                    OUT PVCB *Vcb,
+                    OUT PFCB *FcbOrDcb,
+                    OUT PCCB *Ccb)
+{
+    TYPE_OF_OPEN TypeOfOpen = UnopenedFileObject;
+    PVOID FsContext = FileObject->FsContext;
+    PVOID FsContext2 = FileObject->FsContext2;
+
+    /* If FsContext is NULL, then everything is NULL */
+    if (!FsContext)
+    {
+        *Ccb = NULL;
+        *FcbOrDcb = NULL;
+        *Vcb = NULL;
+
+        return TypeOfOpen;
+    }
+
+    /* CCB is always stored in FsContext2 */
+    *Ccb = FsContext2;
+
+    /* Switch according to the NodeType */
+    switch (FatNodeType(FsContext))
+    {
+        /* Volume */
+        case FAT_NTC_VCB:
+            *FcbOrDcb = NULL;
+            *Vcb = FsContext;
+
+            TypeOfOpen = ( *Ccb == NULL ? VirtualVolumeFile : UserVolumeOpen );
+
+            break;
+
+        /* Root or normal directory*/
+        case FAT_NTC_ROOT_DCB:
+        case FAT_NTC_DCB:
+            *FcbOrDcb = FsContext;
+            *Vcb = (*FcbOrDcb)->Vcb;
+
+            TypeOfOpen = (*Ccb == NULL ? DirectoryFile : UserDirectoryOpen);
+
+            DPRINT1("Referencing a directory: %wZ\n", &(*FcbOrDcb)->FullFileName);
+            break;
+
+        /* File */
+        case FAT_NTC_FCB:
+            *FcbOrDcb = FsContext;
+            *Vcb = (*FcbOrDcb)->Vcb;
+
+            TypeOfOpen = (*Ccb == NULL ? EaFile : UserFileOpen);
+
+            DPRINT("Referencing a file: %wZ\n", &(*FcbOrDcb)->FullFileName);
+
+            break;
+
+        default:
+            DPRINT1("Unknown node type %x\n", FatNodeType(FsContext));
+            ASSERT(FALSE);
+    }
+
+    return TypeOfOpen;
+}
+
+VOID
+NTAPI
+FatSetFileObject(PFILE_OBJECT FileObject,
+                 TYPE_OF_OPEN TypeOfOpen,
+                 PVOID Fcb,
+                 PCCB Ccb)
+{
+    if (Fcb)
+    {
+        /* Check Fcb's type  */
+        if (FatNodeType(Fcb) == FAT_NTC_VCB)
+        {
+            FileObject->Vpb = ((PVCB)Fcb)->Vpb;
+        }
+        else
+        {
+            FileObject->Vpb = ((PFCB)Fcb)->Vcb->Vpb;
+        }
+    }
+
+    /* Set FsContext */
+    if (FileObject)
+    {
+        FileObject->FsContext  = Fcb;
+        FileObject->FsContext2 = Ccb;
+    }
+}
+
+
+BOOLEAN
+NTAPI
+FatAcquireExclusiveVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PVCB Vcb)
+{
+    /* Acquire VCB's resource if possible */
+    if (ExAcquireResourceExclusiveLite(&Vcb->Resource,
+                                       BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+BOOLEAN
+NTAPI
+FatAcquireSharedVcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PVCB Vcb)
+{
+    /* Acquire VCB's resource if possible */
+    if (ExAcquireResourceSharedLite(&Vcb->Resource,
+                                    BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+VOID
+NTAPI
+FatReleaseVcb(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PVCB Vcb)
+{
+    /* Release VCB's resource */
+    ExReleaseResourceLite(&Vcb->Resource);
+}
+
+BOOLEAN
+NTAPI
+FatAcquireExclusiveFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                       IN PFCB Fcb)
+{
+RetryLockingE:
+    /* Try to acquire the exclusive lock*/
+    if (ExAcquireResourceExclusiveLite(Fcb->Header.Resource,
+        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        /* Wait same way MS's FASTFAT wait, i.e.
+           checking that there are outstanding async writes,
+           or someone is waiting on it*/
+        if (Fcb->OutstandingAsyncWrites &&
+            ((IrpContext->MajorFunction != IRP_MJ_WRITE) ||
+             !FlagOn(IrpContext->Irp->Flags, IRP_NOCACHE) ||
+             ExGetSharedWaiterCount(Fcb->Header.Resource) ||
+             ExGetExclusiveWaiterCount(Fcb->Header.Resource)))
+        {
+            KeWaitForSingleObject(Fcb->OutstandingAsyncEvent,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+
+            /* Release the lock */
+            FatReleaseFcb(IrpContext, Fcb);
+
+            /* Retry */
+            goto RetryLockingE;
+        }
+
+        /* Return success */
+        return TRUE;
+    }
+
+    /* Return failure */
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+FatAcquireSharedFcb(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PFCB Fcb)
+{
+RetryLockingS:
+    /* Try to acquire the shared lock*/
+    if (ExAcquireResourceSharedLite(Fcb->Header.Resource,
+        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        /* Wait same way MS's FASTFAT wait, i.e.
+           checking that there are outstanding async writes,
+           or someone is waiting on it*/
+        if (Fcb->OutstandingAsyncWrites &&
+            ((IrpContext->MajorFunction != IRP_MJ_WRITE) ||
+             !FlagOn(IrpContext->Irp->Flags, IRP_NOCACHE) ||
+             ExGetSharedWaiterCount(Fcb->Header.Resource) ||
+             ExGetExclusiveWaiterCount(Fcb->Header.Resource)))
+        {
+            KeWaitForSingleObject(Fcb->OutstandingAsyncEvent,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+
+            /* Release the lock */
+            FatReleaseFcb(IrpContext, Fcb);
+
+            /* Retry */
+            goto RetryLockingS;
+        }
+
+        /* Return success */
+        return TRUE;
+    }
+
+    /* Return failure */
+    return FALSE;
+}
+
+VOID
+NTAPI
+FatReleaseFcb(IN PFAT_IRP_CONTEXT IrpContext,
+              IN PFCB Fcb)
+{
+    /* Release FCB's resource */
+    ExReleaseResourceLite(Fcb->Header.Resource);
+}
+
+PVOID
+FASTCALL
+FatMapUserBuffer(PIRP Irp)
+{
+    if (!Irp->MdlAddress)
+        return Irp->UserBuffer;
+    else
+        return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+}
+
 /* EOF */

@@ -5,7 +5,9 @@
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>advapi32</library>
+	<library>glu32</library>
 	<pch>opengl32.h</pch>
+	<file>font.c</file>
 	<file>gl.c</file>
 	<file>opengl32.c</file>
 	<file>wgl.c</file>

@@ -41,6 +41,16 @@ VOID NTAPI HalpInitPICs(VOID);
 /* udelay.c */
 VOID NTAPI HalpInitializeClock(VOID);
 
+VOID
+NTAPI
+HalpCalibrateStallExecution(VOID);
+
+ULONG
+NTAPI
+HalpQuery8254Counter(
+    VOID
+);
+
 /* pci.c */
 VOID HalpInitPciBus (VOID);
 
@@ -153,6 +163,26 @@ NTAPI
 HalpTrap06(
     VOID
 );
+
+//
+// Processor Halt Routine
+//
+VOID
+NTAPI
+HaliHaltSystem(
+    VOID
+);
+
+#ifdef _M_AMD64
+#define KfLowerIrql KeLowerIrql
+#ifndef CONFIG_SMP
+/* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
+#define KiAcquireSpinLock(SpinLock)
+#define KiReleaseSpinLock(SpinLock)
+#define KfAcquireSpinLock(SpinLock) KfRaiseIrql(DISPATCH_LEVEL);
+#define KfReleaseSpinLock(SpinLock, OldIrql) KeLowerIrql(OldIrql);
+#endif // !CONFIG_SMP
+#endif // _M_AMD64
 
 extern PVOID HalpRealModeStart;
 extern PVOID HalpRealModeEnd;

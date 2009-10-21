@@ -20,7 +20,7 @@ Pin_fnDeviceIoControl(
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -115,9 +115,16 @@ Pin_fnWrite(
     IoStack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
     IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_WRITE_STREAM; //FIXME
     IoStack->Parameters.DeviceIoControl.OutputBufferLength = Length;
+    ASSERT(Irp->AssociatedIrp.SystemBuffer);
 
     /* now call the driver */
-    return IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);
+    Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);
+
+    /* dereference file object */
+    ObDereferenceObject(FileObject);
+
+    return Status;
+
 }
 
 NTSTATUS
@@ -129,7 +136,7 @@ Pin_fnClose(
     PDISPATCH_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
+    DPRINT("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -151,57 +158,6 @@ Pin_fnClose(
     return STATUS_SUCCESS;
 }
 
-BOOLEAN
-NTAPI
-Pin_fnFastWrite(
-    PFILE_OBJECT FileObject,
-    PLARGE_INTEGER FileOffset,
-    ULONG Length,
-    BOOLEAN Wait,
-    ULONG LockKey,
-    PVOID Buffer,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    PDISPATCH_CONTEXT Context;
-    PFILE_OBJECT RealFileObject;
-    NTSTATUS Status;
-
-    DPRINT("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
-
-    Context = (PDISPATCH_CONTEXT)FileObject->FsContext;
-
-    if (Context->hMixerPin)
-    {
-        Status = ObReferenceObjectByHandle(Context->hMixerPin, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&RealFileObject, NULL);
-        if (NT_SUCCESS(Status))
-        {
-            Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, UserMode);
-            ObDereferenceObject(RealFileObject);
-        }
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Mixing stream failed with %lx\n", Status);
-            DbgBreakPoint();
-            return FALSE;
-        }
-    }
-
-    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&RealFileObject, NULL);
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, UserMode);
-
-    ObDereferenceObject(RealFileObject);
-
-    if (NT_SUCCESS(Status))
-        return TRUE;
-    else
-        return FALSE;
-}
-
 static KSDISPATCH_TABLE PinTable =
 {
     Pin_fnDeviceIoControl,
@@ -213,7 +169,7 @@ static KSDISPATCH_TABLE PinTable =
     KsDispatchInvalidDeviceRequest,
     KsDispatchFastIoDeviceControlFailure,
     KsDispatchFastReadFailure,
-    Pin_fnFastWrite,
+    KsDispatchFastWriteFailure,
 };
 
 NTSTATUS

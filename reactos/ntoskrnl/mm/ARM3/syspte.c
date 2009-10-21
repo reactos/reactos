@@ -109,7 +109,6 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
                 // Decrement the free count and move to the next starting PTE
                 //
                 MmTotalFreeSystemPtes[SystemPtePoolType] -= NumberOfPtes;
-                KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
                 PointerPte += (ClusterSize - NumberOfPtes);
                 break;
             }
@@ -158,8 +157,9 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
     }   
     
     //
-    // Flush the TLB and return the first PTE
+    // Release the lock, flush the TLB and return the first PTE
     //
+    KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
     KeFlushProcessTb();
     return PointerPte;
 }
@@ -170,12 +170,26 @@ MiReserveSystemPtes(IN ULONG NumberOfPtes,
                     IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType)
 {
     PMMPTE PointerPte;
-    
+
     //
     // Use the extended function
     //
     PointerPte = MiReserveAlignedSystemPtes(NumberOfPtes, SystemPtePoolType, 0);
-    ASSERT(PointerPte != NULL);
+
+    //
+    // Check if allocation failed
+    //
+    if (!PointerPte)
+    {
+        //
+        // Warn that we are out of memory
+        //
+        DPRINT1("MiReserveSystemPtes: Failed to reserve %lu PTE(s)!\n", NumberOfPtes);
+    }
+
+    //
+    // Return the PTE Pointer
+    //
     return PointerPte;
 }
 

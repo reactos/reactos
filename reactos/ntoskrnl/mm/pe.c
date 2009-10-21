@@ -16,10 +16,6 @@
 
 #include <reactos/exeformat.h>
 
-#ifndef MAXULONG
-#define MAXULONG ((ULONG)(~1))
-#endif
-
 static ULONG SectionCharacteristicsToProtect[16] =
 {
     PAGE_NOACCESS,          /* 0 = NONE */
@@ -49,10 +45,6 @@ static __inline BOOLEAN Intsafe_CanAddULongPtr(IN ULONG_PTR Addend1, IN ULONG_PT
 {
     return Addend1 <= (MAXULONG_PTR - Addend2);
 }
-
-#ifndef MAXLONGLONG
-#define MAXLONGLONG ((LONGLONG)((~((ULONGLONG)0)) >> 1))
-#endif
 
 static __inline BOOLEAN Intsafe_CanAddLong64(IN LONG64 Addend1, IN LONG64 Addend2)
 {
@@ -165,11 +157,17 @@ static __inline BOOLEAN AlignUp(OUT PULONG AlignedAddress, IN ULONG Address, IN 
 
 
 
+
+
+
 //
 // FIXME: All this whitespace is "padding" so the C_ASSERTs aren't on the same lines as asserts in other headers.
 // This is necessary because of the way we define C_ASSERT in a gcc compatible way.
 // This can be removed once we upgrade to gcc 4.3.x or later (which implements __COUNTER__).
 //
+
+
+
 
 
 
@@ -453,7 +451,7 @@ l_ReadHeaderFromFile:
 		if(pioh64OptHeader->ImageBase > MAXULONG_PTR)
 		    DIE(("ImageBase exceeds the address space\n"));
 
-		ImageSectionObject->ImageBase = pioh64OptHeader->ImageBase;
+		ImageSectionObject->ImageBase = (ULONG_PTR)pioh64OptHeader->ImageBase;
 	    }
 
 	    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfImage))

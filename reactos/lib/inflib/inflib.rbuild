@@ -3,7 +3,6 @@
 <group>
 <module name="inflib" type="staticlibrary">
 	<include base="inflib">.</include>
-	<define name="__NO_CTYPE_INLINES" />
 	<file>infcore.c</file>
 	<file>infget.c</file>
 	<file>infput.c</file>

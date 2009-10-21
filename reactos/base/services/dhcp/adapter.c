@@ -182,6 +182,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
             Adapter->RouterMib.dwForwardDest = 0;
             Adapter->RouterMib.dwForwardMask = 0;
             Adapter->RouterMib.dwForwardMetric1 = 1;
+            Adapter->RouterMib.dwForwardIfIndex = Adapter->IfMib.dwIndex;
             Adapter->RouterMib.dwForwardNextHop = inet_addr(DefaultGateway);
             Error = CreateIpForwardEntry( &Adapter->RouterMib );
             if( Error )

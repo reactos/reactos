@@ -594,7 +594,7 @@ static const WORD table_c0000202[109] =
       ERROR_MR_MID_NOT_FOUND,                 /* c0000222 */
       ERROR_MR_MID_NOT_FOUND,                 /* c0000223 */
       ERROR_PASSWORD_MUST_CHANGE,             /* c0000224 (STATUS_PASSWORD_MUST_CHANGE) */
-      ERROR_MR_MID_NOT_FOUND,                 /* c0000225 */
+      ERROR_NOT_FOUND,                        /* c0000225 (STATUS_NOT_FOUND)*/
       ERROR_MR_MID_NOT_FOUND,                 /* c0000226 */
       ERROR_MR_MID_NOT_FOUND,                 /* c0000227 */
       ERROR_MR_MID_NOT_FOUND,                 /* c0000228 */

@@ -88,7 +88,13 @@ int main( int argc, char **argv ) {
 		if( new_f ) continue;
 
 		new_f = (stub *)malloc( sizeof(stub) );
-		if( !new_f ) {fprintf( stderr, "Out of memory\n" ); return 1;}
+		if( !new_f ) 
+		{
+			fprintf( stderr, "Out of memory\n" ); 
+			fclose( out );
+			pclose( make_f );
+			return 1;
+		}
 
 		new_f->name = strdup( line );
 		new_f->next = functions;
@@ -129,7 +135,14 @@ int main( int argc, char **argv ) {
 			if( new_f ) continue;
 
 			new_f = (stub *)malloc( sizeof(stub) );
-			if( !new_f ) {fprintf( stderr, "Out of memory\n" ); return 1;}
+			if( !new_f ) 
+			{
+				fprintf( stderr, "Out of memory\n" ); 
+				fclose( out );
+				pclose( make_f );
+				pclose( nm_f );
+				return 1;
+			}
 
 			new_f->name   = strdup( import_sign + 1 );
 			new_f->origin = origin;
@@ -137,7 +150,7 @@ int main( int argc, char **argv ) {
 			imports = new_f;
 		}
 
-		fclose( nm_f );
+		pclose( nm_f );
 	}
 
 	/* Now we have a list of unique functions and a list of imports,
@@ -152,6 +165,6 @@ int main( int argc, char **argv ) {
 	}
 
 	fclose( out );
-
+	pclose( make_f );
 	return 0;
 }

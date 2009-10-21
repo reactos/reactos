@@ -170,14 +170,15 @@ NTAPI
 VirtualLock(IN LPVOID lpAddress,
             IN SIZE_T dwSize)
 {
-    ULONG BytesLocked;
     NTSTATUS Status;
+    ULONG RegionSize = dwSize;
+    PVOID BaseAddress = lpAddress;
 
     /* Lock the memory */
     Status = NtLockVirtualMemory(NtCurrentProcess(),
-                                 lpAddress,
-                                 dwSize,
-                                 &BytesLocked);
+                                 &BaseAddress,
+                                 &RegionSize,
+                                 MAP_PROCESS);
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
@@ -244,14 +245,15 @@ NTAPI
 VirtualUnlock(IN LPVOID lpAddress,
               IN SIZE_T dwSize)
 {
-    ULONG BytesLocked;
     NTSTATUS Status;
-
-    /* Unlock the memory */
+    ULONG RegionSize = dwSize;
+    PVOID BaseAddress = lpAddress;
+    
+    /* Lock the memory */
     Status = NtUnlockVirtualMemory(NtCurrentProcess(),
-                                   lpAddress,
-                                   dwSize,
-                                   &BytesLocked);
+                                   &BaseAddress,
+                                   &RegionSize,
+                                   MAP_PROCESS);
     if (!NT_SUCCESS(Status))
     {
         /* We failed */

@@ -100,15 +100,15 @@ void set_dirty(HTMLDocument *This, VARIANT_BOOL dirty)
 {
     nsresult nsres;
 
-    if(This->usermode != EDITMODE || !This->nscontainer || !This->nscontainer->editor)
+    if(This->doc_obj->usermode != EDITMODE || !This->doc_obj->nscontainer || !This->doc_obj->nscontainer->editor)
         return;
 
     if(dirty) {
-        nsres = nsIEditor_IncrementModificationCount(This->nscontainer->editor, 1);
+        nsres = nsIEditor_IncrementModificationCount(This->doc_obj->nscontainer->editor, 1);
         if(NS_FAILED(nsres))
             ERR("IncrementModificationCount failed: %08x\n", nsres);
     }else {
-        nsres = nsIEditor_ResetModificationCount(This->nscontainer->editor);
+        nsres = nsIEditor_ResetModificationCount(This->doc_obj->nscontainer->editor);
         if(NS_FAILED(nsres))
             ERR("ResetModificationCount failed: %08x\n", nsres);
     }
@@ -137,7 +137,7 @@ static nsresult get_ns_command_state(NSContainer *This, const char *cmd, nsIComm
         return nsres;
     }
 
-    nsres = nsICommandManager_GetCommandState(cmdmgr, cmd, This->doc->window->nswindow, nsparam);
+    nsres = nsICommandManager_GetCommandState(cmdmgr, cmd, This->doc->basedoc.window->nswindow, nsparam);
     if(NS_FAILED(nsres))
         ERR("GetCommandState(%s) failed: %08x\n", debugstr_a(cmd), nsres);
 
@@ -150,12 +150,12 @@ static DWORD query_ns_edit_status(HTMLDocument *This, const char *nscmd)
     nsICommandParams *nsparam;
     PRBool b = FALSE;
 
-    if(This->usermode != EDITMODE || This->readystate < READYSTATE_INTERACTIVE)
+    if(This->doc_obj->usermode != EDITMODE || This->doc_obj->readystate < READYSTATE_INTERACTIVE)
         return OLECMDF_SUPPORTED;
 
-    if(This->nscontainer && nscmd) {
+    if(This->doc_obj->nscontainer && nscmd) {
         nsparam = create_nscommand_params();
-        get_ns_command_state(This->nscontainer, nscmd, nsparam);
+        get_ns_command_state(This->doc_obj->nscontainer, nscmd, nsparam);
 
         nsICommandParams_GetBooleanValue(nsparam, NSSTATE_ALL, &b);
 
@@ -169,13 +169,13 @@ static void set_ns_align(HTMLDocument *This, const char *align_str)
 {
     nsICommandParams *nsparam;
 
-    if(!This->nscontainer)
+    if(!This->doc_obj->nscontainer)
         return;
 
     nsparam = create_nscommand_params();
     nsICommandParams_SetCStringValue(nsparam, NSSTATE_ATTRIBUTE, align_str);
 
-    do_ns_command(This->nscontainer, NSCMD_ALIGN, nsparam);
+    do_ns_command(This, NSCMD_ALIGN, nsparam);
 
     nsICommandParams_Release(nsparam);
 }
@@ -185,12 +185,12 @@ static DWORD query_align_status(HTMLDocument *This, const char *align_str)
     nsICommandParams *nsparam;
     char *align = NULL;
 
-    if(This->usermode != EDITMODE || This->readystate < READYSTATE_INTERACTIVE)
+    if(This->doc_obj->usermode != EDITMODE || This->doc_obj->readystate < READYSTATE_INTERACTIVE)
         return OLECMDF_SUPPORTED;
 
-    if(This->nscontainer) {
+    if(This->doc_obj->nscontainer) {
         nsparam = create_nscommand_params();
-        get_ns_command_state(This->nscontainer, NSCMD_ALIGN, nsparam);
+        get_ns_command_state(This->doc_obj->nscontainer, NSCMD_ALIGN, nsparam);
 
         nsICommandParams_GetCStringValue(nsparam, NSSTATE_ATTRIBUTE, &align);
 
@@ -204,19 +204,12 @@ static DWORD query_align_status(HTMLDocument *This, const char *align_str)
 
 static nsISelection *get_ns_selection(HTMLDocument *This)
 {
-    nsIDOMWindow *dom_window;
     nsISelection *nsselection = NULL;
     nsresult nsres;
 
-    if(!This->nscontainer)
-        return NULL;
-
-    nsres = nsIWebBrowser_GetContentDOMWindow(This->nscontainer->webbrowser, &dom_window);
+    nsres = nsIDOMWindow_GetSelection(This->window->nswindow, &nsselection);
     if(NS_FAILED(nsres))
-        return NULL;
-
-    nsIDOMWindow_GetSelection(dom_window, &nsselection);
-    nsIDOMWindow_Release(dom_window);
+        ERR("GetSelection failed %08x\n", nsres);
 
     return nsselection;
 
@@ -412,7 +405,7 @@ static void handle_arrow_key(HTMLDocument *This, nsIDOMKeyEvent *event, const ch
         i |= 2;
 
     if(cmds[i])
-        do_ns_editor_command(This->nscontainer, cmds[i]);
+        do_ns_editor_command(This->doc_obj->nscontainer, cmds[i]);
 
     nsIDOMKeyEvent_PreventDefault(event);
 }
@@ -517,11 +510,11 @@ void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
 
 void handle_edit_load(HTMLDocument *This)
 {
-    This->nscontainer->reset_focus = GetFocus();
-    get_editor_controller(This->nscontainer);
+    This->doc_obj->nscontainer->reset_focus = GetFocus();
+    get_editor_controller(This->doc_obj->nscontainer);
 }
 
-static void set_ns_fontname(NSContainer *This, const char *fontname)
+static void set_ns_fontname(HTMLDocument *This, const char *fontname)
 {
     nsICommandParams *nsparam = create_nscommand_params();
 
@@ -534,8 +527,8 @@ static HRESULT exec_delete(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VA
 {
     TRACE("(%p)->(%p %p)\n", This, in, out);
 
-    if(This->nscontainer)
-        do_ns_editor_command(This->nscontainer, NSCMD_DELETECHARFORWARD);
+    if(This->doc_obj->nscontainer)
+        do_ns_editor_command(This->doc_obj->nscontainer, NSCMD_DELETECHARFORWARD);
 
     update_doc(This, UPDATE_UI);
     return S_OK;
@@ -545,7 +538,7 @@ static HRESULT exec_fontname(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
 {
     TRACE("(%p)->(%p %p)\n", This, in, out);
 
-    if(!This->nscontainer) {
+    if(!This->doc_obj->nscontainer) {
         update_doc(This, UPDATE_UI);
         return E_FAIL;
     }
@@ -561,7 +554,7 @@ static HRESULT exec_fontname(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
         TRACE("%s\n", debugstr_w(V_BSTR(in)));
 
         stra = heap_strdupWtoA(V_BSTR(in));
-        set_ns_fontname(This->nscontainer, stra);
+        set_ns_fontname(This, stra);
         heap_free(stra);
 
         update_doc(This, UPDATE_UI);
@@ -579,7 +572,7 @@ static HRESULT exec_fontname(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
 
         nsparam = create_nscommand_params();
 
-        nsres = get_ns_command_state(This->nscontainer, NSCMD_FONTFACE, nsparam);
+        nsres = get_ns_command_state(This->doc_obj->nscontainer, NSCMD_FONTFACE, nsparam);
         if(NS_FAILED(nsres))
             return S_OK;
 
@@ -611,7 +604,7 @@ static HRESULT exec_forecolor(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
                     V_I4(in)&0xff, (V_I4(in)>>8)&0xff, (V_I4(in)>>16)&0xff);
 
             nsICommandParams_SetCStringValue(nsparam, NSSTATE_ATTRIBUTE, color_str);
-            do_ns_command(This->nscontainer, NSCMD_FONTCOLOR, nsparam);
+            do_ns_command(This, NSCMD_FONTCOLOR, nsparam);
 
             nsICommandParams_Release(nsparam);
         }else {
@@ -677,8 +670,8 @@ static HRESULT exec_selectall(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_SELECTALL, NULL);
+    if(This->doc_obj->nscontainer)
+        do_ns_command(This, NSCMD_SELECTALL, NULL);
 
     update_doc(This, UPDATE_UI);
     return S_OK;
@@ -691,8 +684,8 @@ static HRESULT exec_bold(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARI
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_BOLD, NULL);
+    if(This->doc_obj->nscontainer)
+        do_ns_command(This, NSCMD_BOLD, NULL);
 
     update_doc(This, UPDATE_UI);
     return S_OK;
@@ -705,8 +698,8 @@ static HRESULT exec_italic(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VA
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_ITALIC, NULL);
+    if(This->doc_obj->nscontainer)
+        do_ns_command(This, NSCMD_ITALIC, NULL);
 
     update_doc(This, UPDATE_UI);
     return S_OK;
@@ -722,7 +715,7 @@ static HRESULT query_justify(HTMLDocument *This, OLECMD *cmd)
     case IDM_JUSTIFYLEFT:
         TRACE("(%p) IDM_JUSTIFYLEFT\n", This);
         /* FIXME: We should set OLECMDF_LATCHED only if it's set explicitly. */
-        if(This->usermode != EDITMODE || This->readystate < READYSTATE_INTERACTIVE)
+        if(This->doc_obj->usermode != EDITMODE || This->doc_obj->readystate < READYSTATE_INTERACTIVE)
             cmd->cmdf = OLECMDF_SUPPORTED;
         else
             cmd->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
@@ -779,9 +772,7 @@ static HRESULT exec_underline(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_UNDERLINE, NULL);
-
+    do_ns_command(This, NSCMD_UNDERLINE, NULL);
     update_doc(This, UPDATE_UI);
     return S_OK;
 }
@@ -793,9 +784,7 @@ static HRESULT exec_horizontalline(HTMLDocument *This, DWORD cmdexecopt, VARIANT
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_INSERTHR, NULL);
-
+    do_ns_command(This, NSCMD_INSERTHR, NULL);
     update_doc(This, UPDATE_UI);
     return S_OK;
 }
@@ -807,9 +796,7 @@ static HRESULT exec_orderlist(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_OL, NULL);
-
+    do_ns_command(This, NSCMD_OL, NULL);
     update_doc(This, UPDATE_UI);
     return S_OK;
 }
@@ -821,9 +808,7 @@ static HRESULT exec_unorderlist(HTMLDocument *This, DWORD cmdexecopt, VARIANT *i
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_UL, NULL);
-
+    do_ns_command(This, NSCMD_UL, NULL);
     update_doc(This, UPDATE_UI);
     return S_OK;
 }
@@ -835,9 +820,7 @@ static HRESULT exec_indent(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VA
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_INDENT, NULL);
-
+    do_ns_command(This, NSCMD_INDENT, NULL);
     update_doc(This, UPDATE_UI);
     return S_OK;
 }
@@ -849,9 +832,7 @@ static HRESULT exec_outdent(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, V
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->nscontainer)
-        do_ns_command(This->nscontainer, NSCMD_OUTDENT, NULL);
-
+    do_ns_command(This, NSCMD_OUTDENT, NULL);
     update_doc(This, UPDATE_UI);
     return S_OK;
 }
@@ -931,10 +912,10 @@ HRESULT editor_exec_copy(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARI
 {
     update_doc(This, UPDATE_UI);
 
-    if(!This->nscontainer)
+    if(!This->doc_obj->nscontainer)
         return E_FAIL;
 
-    do_ns_editor_command(This->nscontainer, NSCMD_COPY);
+    do_ns_editor_command(This->doc_obj->nscontainer, NSCMD_COPY);
     return S_OK;
 }
 
@@ -942,10 +923,10 @@ HRESULT editor_exec_cut(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARIA
 {
     update_doc(This, UPDATE_UI);
 
-    if(!This->nscontainer)
+    if(!This->doc_obj->nscontainer)
         return E_FAIL;
 
-    do_ns_editor_command(This->nscontainer, NSCMD_CUT);
+    do_ns_editor_command(This->doc_obj->nscontainer, NSCMD_CUT);
     return S_OK;
 }
 
@@ -953,10 +934,10 @@ HRESULT editor_exec_paste(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VAR
 {
     update_doc(This, UPDATE_UI);
 
-    if(!This->nscontainer)
+    if(!This->doc_obj->nscontainer)
         return E_FAIL;
 
-    do_ns_editor_command(This->nscontainer, NSCMD_PASTE);
+    do_ns_editor_command(This->doc_obj->nscontainer, NSCMD_PASTE);
     return S_OK;
 }
 
@@ -1212,7 +1193,7 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
 
     nsAString_Finish(&ns_url);
 
-    nsIEditor_QueryInterface(This->nscontainer->editor, &IID_nsIHTMLEditor, (void **)&html_editor);
+    nsIEditor_QueryInterface(This->doc_obj->nscontainer->editor, &IID_nsIHTMLEditor, (void **)&html_editor);
     if (html_editor) {
         nsresult nsres;
 
@@ -1273,20 +1254,17 @@ void init_editor(HTMLDocument *This)
 {
     update_doc(This, UPDATE_UI);
 
-    if(!This->nscontainer)
-        return;
-
-    set_ns_fontname(This->nscontainer, "Times New Roman");
+    set_ns_fontname(This, "Times New Roman");
 }
 
 HRESULT editor_is_dirty(HTMLDocument *This)
 {
     PRBool modified;
 
-    if(!This->nscontainer || !This->nscontainer->editor)
+    if(!This->doc_obj->nscontainer || !This->doc_obj->nscontainer->editor)
         return S_FALSE;
 
-    nsIEditor_GetDocumentModified(This->nscontainer->editor, &modified);
+    nsIEditor_GetDocumentModified(This->doc_obj->nscontainer->editor, &modified);
 
     return modified ? S_OK : S_FALSE;
 }

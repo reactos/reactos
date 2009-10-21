@@ -572,7 +572,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
         {
             ResourceCount++;
 
-            Offset = FIELD_OFFSET(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
+            Offset = (UCHAR)FIELD_OFFSET(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
 
             /* Write 0xFFFFFFFF there */
             WriteBuffer = 0xffffffff;

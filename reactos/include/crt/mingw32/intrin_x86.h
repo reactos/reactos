@@ -1107,6 +1107,10 @@ __INTRIN_INLINE void _enable(void)
 	__asm__("sti");
 }
 
+__INTRIN_INLINE void __halt(void)
+{
+	__asm__("hlt\n\t");
+}
 
 /*** Protected memory management ***/
 

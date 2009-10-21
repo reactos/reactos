@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define MODULE_INVOLVED_IN_ARM3
+#include "ARM3/miarm.h"
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -256,6 +259,8 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
               IN KPROCESSOR_MODE Mode,
               IN PVOID TrapInformation)
 {
+    PMEMORY_AREA MemoryArea;
+
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
     {
@@ -268,6 +273,18 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
         }
 #endif
     }
+    
+    //
+    // Check if this is an ARM3 memory area
+    //
+    MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
+    if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3))
+    {
+        //
+        // Hand it off to more competent hands...
+        //
+        return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
+    }   
 
     /* Keep same old ReactOS Behaviour */
     if (StoreInstruction)
@@ -288,6 +305,8 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 {
    NTSTATUS Status;
    PFN_TYPE AllocatedPage;
+   KIRQL OldIrql;
+
    Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
    if (!NT_SUCCESS(Status))
    {
@@ -303,7 +322,9 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
                              1);
    if (Locked)
    {
+      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       MmLockPage(AllocatedPage);
+      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
    return(Status);
 }

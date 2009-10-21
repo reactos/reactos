@@ -3682,6 +3682,8 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
                                    pdev_ext->res_interrupt.level,
                                    pdev_ext->res_interrupt.vector, &irql, &affinity);
 
+    KeInitializeDpc(&pdev_ext->ehci_dpc, ehci_dpc_callback, (PVOID) pdev_ext->ehci);
+
     //connect the interrupt
     DbgPrint("ehci_alloc(): the int=0x%x\n", vector);
     if (IoConnectInterrupt(&pdev_ext->ehci_int, ehci_isr, pdev_ext->ehci, NULL, //&pdev_ext->ehci->frame_list_lock,
@@ -3692,8 +3694,6 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         ehci_release(pdev);
         return NULL;
     }
-
-    KeInitializeDpc(&pdev_ext->ehci_dpc, ehci_dpc_callback, (PVOID) pdev_ext->ehci);
 
     return pdev;
 }

@@ -23,6 +23,13 @@
 
 HINSTANCE hLibModule;
 
+typedef struct _PROTECTED_FILE_DATA
+{
+    WCHAR FileName[MAX_PATH];
+    DWORD FileNumber;
+} PROTECTED_FILE_DATA, *PPROTECTED_FILE_DATA;
+
+
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     switch (fdwReason)
@@ -116,6 +123,22 @@ BOOL WINAPI SfcIsKeyProtected(HKEY hKey, LPCWSTR lpSubKey, REGSAM samDesired)
     }
 
     SetLastError(ERROR_FILE_NOT_FOUND);
+    return FALSE;
+}
+
+/******************************************************************
+ *              SfcGetNextProtectedFile     [sfc_os.@]
+ */
+BOOL WINAPI SfcGetNextProtectedFile(HANDLE RpcHandle, PPROTECTED_FILE_DATA ProtFileData)
+{
+    if (!ProtFileData)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    UNIMPLEMENTED;
+    SetLastError(ERROR_NO_MORE_FILES);
     return FALSE;
 }
 

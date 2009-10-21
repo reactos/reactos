@@ -173,8 +173,13 @@ MiAllocateContiguousMemory(IN SIZE_T NumberOfBytes,
 {
     PVOID BaseAddress;
     PFN_NUMBER SizeInPages;
-    MI_PFN_CACHE_ATTRIBUTE CacheAttribute;   
+    MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
+
+    //
+    // Verify count and cache type
+    //
     ASSERT(NumberOfBytes != 0);
+    ASSERT(CacheType <= MmWriteCombined);
     
     //
     // Compute size requested
@@ -352,7 +357,12 @@ MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
                                        IN MEMORY_CACHING_TYPE CacheType OPTIONAL)
 {
     PFN_NUMBER LowestPfn, HighestPfn, BoundaryPfn;
-    ASSERT (NumberOfBytes != 0);
+
+    //
+    // Verify count and cache type
+    //
+    ASSERT(NumberOfBytes != 0);
+    ASSERT(CacheType <= MmWriteCombined);
     
     //
     // Convert the lowest address into a PFN
@@ -396,7 +406,12 @@ MmAllocateContiguousMemory(IN ULONG NumberOfBytes,
                            IN PHYSICAL_ADDRESS HighestAcceptableAddress)
 {
     PFN_NUMBER HighestPfn;
-    
+
+    //
+    // Verify byte count
+    //
+    ASSERT(NumberOfBytes != 0);
+
     //
     // Convert and normalize the highest address into a PFN
     //

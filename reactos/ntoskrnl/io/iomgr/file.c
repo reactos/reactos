@@ -411,7 +411,13 @@ IopParseDevice(IN PVOID ParseObject,
         ((wcsstr(CompleteName->Buffer, L"Harddisk"))) &&
         !(UseDummyFile))
     {
-        DPRINT1("Using IopParseDevice() hack\n");
+        DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
+        DesiredAccess & ~(SYNCHRONIZE |
+                          FILE_READ_ATTRIBUTES |
+                          READ_CONTROL |
+                          ACCESS_SYSTEM_SECURITY |
+                          WRITE_OWNER |
+                          WRITE_DAC));
         DirectOpen = TRUE;
     }
 

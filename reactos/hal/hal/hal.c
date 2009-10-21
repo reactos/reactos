@@ -75,6 +75,7 @@ HalSetProfileInterval(IN ULONG_PTR Interval)
     return Interval;
 }
 
+#ifndef _M_AMD64
 VOID
 FASTCALL
 ExAcquireFastMutex(
@@ -101,7 +102,7 @@ ExTryToAcquireFastMutex(
 
   return TRUE;
 }
-
+#endif
 
 VOID
 NTAPI
@@ -466,7 +467,7 @@ HalReportResourceUsage(VOID)
 VOID
 NTAPI
 HalRequestIpi(
-  ULONG Unknown)
+    KAFFINITY TargetSet)
 {
   UNIMPLEMENTED;
 }
@@ -747,7 +748,7 @@ KeAcquireSpinLockRaiseToSynch(
   return 0;
 }
 
-
+#ifndef _M_AMD64
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLock(
@@ -776,6 +777,7 @@ KeReleaseInStackQueuedSpinLock(
 {
   UNIMPLEMENTED;
 }
+#endif
 
 VOID
 NTAPI
@@ -784,6 +786,7 @@ KeFlushWriteBuffer(VOID)
   UNIMPLEMENTED;
 }
 
+#ifndef _M_AMD64
 #undef KeGetCurrentIrql
 KIRQL
 NTAPI
@@ -802,6 +805,7 @@ KeLowerIrql(
 {
   UNIMPLEMENTED;
 }
+#endif
 
 
 LARGE_INTEGER
@@ -818,6 +822,7 @@ KeQueryPerformanceCounter(
   return Value;
 }
 
+#ifndef _M_AMD64
 #undef KeRaiseIrql
 VOID
 NTAPI
@@ -847,7 +852,9 @@ KeRaiseIrqlToSynchLevel(VOID)
 
   return (KIRQL)0;
 }
+#endif
 
+#ifndef _M_AMD64
 #undef KeReleaseSpinLock
 VOID
 NTAPI
@@ -857,7 +864,7 @@ KeReleaseSpinLock(
 {
   UNIMPLEMENTED;
 }
-
+#endif
 
 VOID
 NTAPI
@@ -891,7 +898,7 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(
   return FALSE;
 }
 
-
+#if !defined(_M_AMD64)
 KIRQL
 FASTCALL
 KfAcquireSpinLock(
@@ -931,8 +938,9 @@ KfReleaseSpinLock(
 {
   UNIMPLEMENTED;
 }
+#endif
 
-
+#if !defined(_M_AMD64)
 VOID
 NTAPI
 READ_PORT_BUFFER_UCHAR(
@@ -1058,6 +1066,7 @@ WRITE_PORT_USHORT(
 {
   UNIMPLEMENTED;
 }
+#endif
 
 KIRQL
 FASTCALL

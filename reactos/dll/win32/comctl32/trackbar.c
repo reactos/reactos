@@ -155,7 +155,7 @@ static void TRACKBAR_RecalculateTics (TRACKBAR_INFO *infoPtr)
     if (infoPtr->uTicFreq && infoPtr->lRangeMax >= infoPtr->lRangeMin) {
         nrTics=(infoPtr->lRangeMax - infoPtr->lRangeMin)/infoPtr->uTicFreq;
         /* don't add extra tic if there's no remainder */
-        if ((infoPtr->lRangeMax - infoPtr->lRangeMin) % infoPtr->uTicFreq == 0)
+        if (nrTics && ((infoPtr->lRangeMax - infoPtr->lRangeMin) % infoPtr->uTicFreq == 0))
           nrTics--;
     }
     else {
@@ -1294,9 +1294,6 @@ TRACKBAR_SetThumbLength (TRACKBAR_INFO *infoPtr, UINT iLength)
 static inline LRESULT
 TRACKBAR_SetTic (TRACKBAR_INFO *infoPtr, LONG lPos)
 {
-    if (infoPtr->dwStyle & TBS_AUTOTICKS)
-	return FALSE;
-
     if ((lPos < infoPtr->lRangeMin) || (lPos> infoPtr->lRangeMax))
         return FALSE;
 
@@ -1408,7 +1405,7 @@ TRACKBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     infoPtr->lSelMin   = 0;
     infoPtr->lSelMax   = 0;
     infoPtr->lPos      = 0;
-    infoPtr->fLocation = -1;
+    infoPtr->fLocation = TBTS_TOP;
     infoPtr->uNumTics  = 0;    /* start and end tic are not included in count*/
     infoPtr->uTicFreq  = 1;
     infoPtr->tics      = NULL;

@@ -445,7 +445,7 @@ static dispex_static_data_t HTMLElementCollection_dispex = {
     HTMLElementCollection_iface_tids
 };
 
-static void create_all_list(HTMLDocument *doc, HTMLDOMNode *elem, elem_vector_t *buf)
+static void create_all_list(HTMLDocumentNode *doc, HTMLDOMNode *elem, elem_vector_t *buf)
 {
     nsIDOMNodeList *nsnode_list;
     nsIDOMNode *iter;
@@ -492,7 +492,7 @@ IHTMLElementCollection *create_all_collection(HTMLDOMNode *node, BOOL include_ro
     return HTMLElementCollection_Create((IUnknown*)HTMLDOMNODE(node), buf.buf, buf.len);
 }
 
-IHTMLElementCollection *create_collection_from_nodelist(HTMLDocument *doc, IUnknown *unk, nsIDOMNodeList *nslist)
+IHTMLElementCollection *create_collection_from_nodelist(HTMLDocumentNode *doc, IUnknown *unk, nsIDOMNodeList *nslist)
 {
     PRUint32 length = 0, i;
     elem_vector_t buf;
@@ -521,7 +521,7 @@ IHTMLElementCollection *create_collection_from_nodelist(HTMLDocument *doc, IUnkn
     return HTMLElementCollection_Create(unk, buf.buf, buf.len);
 }
 
-IHTMLElementCollection *create_collection_from_htmlcol(HTMLDocument *doc, IUnknown *unk, nsIDOMHTMLCollection *nscol)
+IHTMLElementCollection *create_collection_from_htmlcol(HTMLDocumentNode *doc, IUnknown *unk, nsIDOMHTMLCollection *nscol)
 {
     PRUint32 length = 0, i;
     elem_vector_t buf;

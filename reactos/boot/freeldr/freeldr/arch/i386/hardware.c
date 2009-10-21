@@ -440,7 +440,7 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     SectorSize = (DrivePartition == 0xff ? 2048 : 512);
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
-        if (!MachDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
+        if (!DiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
         SectorCount = PartitionTableEntry.PartitionSectorCount;
@@ -565,7 +565,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   /* Add partitions */
   i = 1;
   DiskReportError(FALSE);
-  while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
+  while (DiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
   {
     if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
     {
@@ -921,7 +921,7 @@ GetDiskCount(PCONFIGURATION_COMPONENT_DATA BusKey)
     //
     // Return number of disks
     //
-    DPRINTM(DPRINT_HWDETECT, "Retrieving %lu INT13 disks\\0\n");
+    DPRINTM(DPRINT_HWDETECT, "Retrieving %lu INT13 disks\\0\n", DiskCount);
     return DiskCount;
 };
 
@@ -981,6 +981,29 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
         DiskIsDriveRemovable(BootDrive))
     {
         /* TODO: Check if it's really a cdrom drive */
+        ULONG* Buffer;
+        ULONG Checksum = 0;
+
+        /* Read the MBR */
+        if (!MachDiskReadLogicalSectors(BootDrive, 16ULL, 1, (PVOID)DISKREADBUFFER))
+        {
+          DPRINTM(DPRINT_HWDETECT, "Reading MBR failed\n");
+          return;
+        }
+
+        Buffer = (ULONG*)DISKREADBUFFER;
+
+        /* Calculate the MBR checksum */
+        for (i = 0; i < 2048 / sizeof(ULONG); i++) Checksum += Buffer[i];
+        DPRINTM(DPRINT_HWDETECT, "Checksum: %x\n", Checksum);
+
+        /* Fill out the ARC disk block */
+        reactos_arc_disk_info[reactos_disk_count].CheckSum = Checksum;
+        strcpy(reactos_arc_strings[reactos_disk_count], BootPath);
+        reactos_arc_disk_info[reactos_disk_count].ArcName =
+            reactos_arc_strings[reactos_disk_count];
+        reactos_disk_count++;
+
         FsRegisterDevice(BootPath, &DiskVtbl);
     }
 }

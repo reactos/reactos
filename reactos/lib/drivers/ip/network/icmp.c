@@ -75,7 +75,7 @@ BOOLEAN PrepareICMPPacket(
     /* No special flags */
     IPPacket->Flags = 0;
 
-    Size = MaxLLHeaderSize + sizeof(IPv4_HEADER) + DataSize;
+    Size = sizeof(IPv4_HEADER) + DataSize;
 
     /* Allocate NDIS packet */
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Size );
@@ -84,14 +84,14 @@ BOOLEAN PrepareICMPPacket(
 
     IPPacket->NdisPacket = NdisPacket;
 
-    GetDataPtr( IPPacket->NdisPacket, MaxLLHeaderSize,
+    GetDataPtr( IPPacket->NdisPacket, 0,
 		(PCHAR *)&IPPacket->Header, &IPPacket->ContigSize );
 
     TI_DbgPrint(DEBUG_ICMP, ("Size (%d). Data at (0x%X).\n", Size, Data));
     TI_DbgPrint(DEBUG_ICMP, ("NdisPacket at (0x%X).\n", NdisPacket));
 
     IPPacket->HeaderSize = sizeof(IPv4_HEADER);
-    IPPacket->TotalSize  = Size - MaxLLHeaderSize;
+    IPPacket->TotalSize  = Size;
     IPPacket->Data = ((PCHAR)IPPacket->Header) + IPPacket->HeaderSize;
 
     TI_DbgPrint(DEBUG_ICMP, ("Copying Address: %x -> %x\n",

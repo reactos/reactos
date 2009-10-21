@@ -134,12 +134,12 @@ BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
     LTEXT "Breite:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
     LTEXT "Höhe:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
-    LTEXT "Dateidatum:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Dateigröße:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Auflösung:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
-    LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
-    LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    LTEXT "Dateidatum:", IDD_ATTRIBUTESTEXT3, 10, 5, 50, 10
+    LTEXT "Dateigröße:", IDD_ATTRIBUTESTEXT4, 10, 15, 50, 10
+    LTEXT "Auflösung:", IDD_ATTRIBUTESTEXT5, 10, 25, 50, 10
+    LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Nicht verfügbar", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Maßeinheit", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "Zoll", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
@@ -197,4 +197,6 @@ BEGIN
     IDS_TOOLTIP16, "Abgerundetes Rechteck"
     IDS_OPENFILTER, "Bitmapdateien (*.bmp;*.dib)\1*.bmp;*.dib\1Alle Dateien (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24-Bit-Bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d Bytes"
+    IDS_PRINTRES, "%d x %d Pixel pro Meter"
 END

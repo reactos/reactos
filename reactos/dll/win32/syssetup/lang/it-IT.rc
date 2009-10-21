@@ -213,6 +213,7 @@ BEGIN
     IDS_GAMES           "Giochi"
     IDS_CMT_SOLITAIRE   "Solitario"
     IDS_CMT_WINEMINE    "Campo minato"
+	IDS_CMT_SPIDER      "Spider Solitaire"
 END
 
 STRINGTABLE
@@ -273,6 +274,7 @@ BEGIN
     IDS_SHORT_SNDVOL32   "Controllo Volume.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostica.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
+	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

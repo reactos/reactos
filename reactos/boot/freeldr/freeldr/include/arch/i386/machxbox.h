@@ -24,7 +24,7 @@
 #include "mm.h"
 #endif
 
-UCHAR XboxFont8x16[256 * 16];
+extern UCHAR XboxFont8x16[256 * 16];
 
 VOID XboxMachInit(const char *CmdLine);
 

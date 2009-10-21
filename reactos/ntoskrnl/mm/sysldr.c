@@ -29,7 +29,7 @@ sprintf_nt(IN PCHAR Buffer,
 
 LIST_ENTRY PsLoadedModuleList;
 KSPIN_LOCK PsLoadedModuleSpinLock;
-ULONG PsNtosImageBase;
+ULONG_PTR PsNtosImageBase;
 KMUTANT MmSystemLoadLock;
 extern ULONG NtGlobalFlag;
 
@@ -1334,7 +1334,7 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     LdrEntry = CONTAINING_RECORD(NextEntry,
                                  LDR_DATA_TABLE_ENTRY,
                                  InLoadOrderLinks);
-    PsNtosImageBase = (ULONG)LdrEntry->DllBase;
+    PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
 
     /* Loop the loader block */
     while (NextEntry != ListHead)

@@ -519,6 +519,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         Adapter->RouterMib.dwForwardDest = 0; /* Default route */
         Adapter->RouterMib.dwForwardMask = 0;
         Adapter->RouterMib.dwForwardMetric1 = 1;
+        Adapter->RouterMib.dwForwardIfIndex = Adapter->IfMib.dwIndex;
 
         if( Adapter->RouterMib.dwForwardNextHop ) {
             /* If we set a default route before, delete it before continuing */
@@ -581,8 +582,10 @@ bind_lease(struct interface_info *ip)
     Adapter = AdapterFindInfo( ip );
 
     if( Adapter )  setup_adapter( Adapter, new_lease );
-    else warning("Could not find adapter for info %p\n", ip);
-
+    else {
+        warning("Could not find adapter for info %p\n", ip);
+        return;
+    }
     set_name_servers( Adapter, new_lease );
 }
 

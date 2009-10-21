@@ -5674,6 +5674,14 @@ KefReleaseSpinLockFromDpcLevel(
     
 #elif defined(_M_ARM) // !defined (_X86_)
     
+    FORCEINLINE
+    VOID
+    KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
+    {
+        /* Clear the lock */
+        *SpinLock = 0;
+    }
+    
     NTHALAPI
     KIRQL
     FASTCALL
@@ -10317,8 +10325,16 @@ DbgPrintReturnControlC(
   IN PCH  Format,
   IN ...);
 
+ULONG
+NTAPI
+DbgPrompt(
+    IN PCCH Prompt,
+    OUT PCH Response,
+    IN ULONG MaximumResponseLength
+);
+
 NTKERNELAPI
-BOOLEAN
+NTSTATUS
 NTAPI
 DbgQueryDebugFilterState(
   IN ULONG  ComponentId,

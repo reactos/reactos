@@ -746,23 +746,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 
     UiDrawStatusText("Loading...");
 
-    //
-    // If we have a ramdisk, this will switch to the ramdisk disk routines
-    // which read from memory instead of using the firmware. This has to be done
-    // after hardware detection, since hardware detection will require using the
-    // real routines in order to perform disk-detection (just because we're on a
-    // ram-boot doesn't mean the user doesn't have actual disks installed too!)
-    //
-    RamDiskSwitchFromBios();
-
-    /*
-     * Try to get system volume
-     */
-    if (!DiskGetSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
-    {
-        UiMessageBox("Failed to get system volume.");
-        return;
-    }
+    /* Get boot path */
+    if (strchr(SystemPath, '\\') != NULL)
+        strcpy(szBootPath, strchr(SystemPath, '\\'));
+    else
+        szBootPath[0] = '\0';
 
     /* append a backslash */
     if ((strlen(szBootPath)==0) ||

@@ -412,6 +412,9 @@
 <directory name="query">
 	<xi:include href="query/query.rbuild" />
 </directory>
+<directory name="rasadhlp">
+	<xi:include href="rasadhlp/rasadhlp.rbuild" />
+</directory>
 <directory name="rasapi32">
 	<xi:include href="rasapi32/rasapi32.rbuild" />
 </directory>

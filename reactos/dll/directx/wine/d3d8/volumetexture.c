@@ -47,6 +47,14 @@ static ULONG WINAPI IDirect3DVolumeTexture8Impl_AddRef(LPDIRECT3DVOLUMETEXTURE8 
 
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
+    if (ref == 1)
+    {
+        IDirect3DDevice8_AddRef(This->parentDevice);
+        wined3d_mutex_lock();
+        IWineD3DVolumeTexture_AddRef(This->wineD3DVolumeTexture);
+        wined3d_mutex_unlock();
+    }
+
     return ref;
 }
 
@@ -57,12 +65,10 @@ static ULONG WINAPI IDirect3DVolumeTexture8Impl_Release(LPDIRECT3DVOLUMETEXTURE8
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
-        wined3d_mutex_lock();
-        IWineD3DVolumeTexture_Destroy(This->wineD3DVolumeTexture, D3D8CB_DestroyVolume);
-        wined3d_mutex_unlock();
-
         IUnknown_Release(This->parentDevice);
-        HeapFree(GetProcessHeap(), 0, This);
+        wined3d_mutex_lock();
+        IWineD3DVolumeTexture_Release(This->wineD3DVolumeTexture);
+        wined3d_mutex_unlock();
     }
     return ref;
 }
@@ -285,8 +291,7 @@ static HRESULT WINAPI IDirect3DVolumeTexture8Impl_AddDirtyBox(LPDIRECT3DVOLUMETE
     return hr;
 }
 
-
-const IDirect3DVolumeTexture8Vtbl Direct3DVolumeTexture8_Vtbl =
+static const IDirect3DVolumeTexture8Vtbl Direct3DVolumeTexture8_Vtbl =
 {
     /* IUnknown */
     IDirect3DVolumeTexture8Impl_QueryInterface,
@@ -312,3 +317,38 @@ const IDirect3DVolumeTexture8Vtbl Direct3DVolumeTexture8_Vtbl =
     IDirect3DVolumeTexture8Impl_UnlockBox,
     IDirect3DVolumeTexture8Impl_AddDirtyBox
 };
+
+static void STDMETHODCALLTYPE volumetexture_wined3d_object_destroyed(void *parent)
+{
+    HeapFree(GetProcessHeap(), 0, parent);
+}
+
+static const struct wined3d_parent_ops d3d8_volumetexture_wined3d_parent_ops =
+{
+    volumetexture_wined3d_object_destroyed,
+};
+
+HRESULT volumetexture_init(IDirect3DVolumeTexture8Impl *texture, IDirect3DDevice8Impl *device,
+        UINT width, UINT height, UINT depth, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
+{
+    HRESULT hr;
+
+    texture->lpVtbl = &Direct3DVolumeTexture8_Vtbl;
+    texture->ref = 1;
+
+    wined3d_mutex_lock();
+    hr = IWineD3DDevice_CreateVolumeTexture(device->WineD3DDevice, width, height, depth, levels,
+            usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(format), pool,
+            &texture->wineD3DVolumeTexture, (IUnknown *)texture, &d3d8_volumetexture_wined3d_parent_ops);
+    wined3d_mutex_unlock();
+    if (FAILED(hr))
+    {
+        WARN("Failed to create wined3d volume texture, hr %#x.\n", hr);
+        return hr;
+    }
+
+    texture->parentDevice = (IDirect3DDevice8 *)device;
+    IDirect3DDevice8_AddRef(texture->parentDevice);
+
+    return D3D_OK;
+}

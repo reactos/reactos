@@ -43,7 +43,7 @@ static VOID CopyBackStatus( PAFD_HANDLE HandleArray,
     }
 }
 
-static VOID ZeroEvents( PAFD_HANDLE HandleArray,
+VOID ZeroEvents( PAFD_HANDLE HandleArray,
 		 UINT HandleCount ) {
     UINT i;
 
@@ -55,7 +55,7 @@ static VOID ZeroEvents( PAFD_HANDLE HandleArray,
 
 
 /* you must pass either Poll OR Irp */
-static VOID SignalSocket(
+VOID SignalSocket(
    PAFD_ACTIVE_POLL Poll OPTIONAL,
    PIRP _Irp OPTIONAL,
    PAFD_POLL_INFO PollReq,
@@ -89,6 +89,7 @@ static VOID SignalSocket(
     UnlockHandles( AFD_HANDLES(PollReq), PollReq->HandleCount );
     if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
     AFD_DbgPrint(MID_TRACE,("Completing\n"));
+    (void)IoSetCancelRoutine(Irp, NULL);
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     AFD_DbgPrint(MID_TRACE,("Done\n"));
 }
@@ -244,6 +245,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
           Status = STATUS_PENDING;
           IoMarkIrpPending( Irp );
+          (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
        } else {
           AFD_DbgPrint(MAX_TRACE, ("FIXME: do something with the IRP!\n"));
           Status = STATUS_NO_MEMORY;

@@ -149,29 +149,12 @@ struct sockaddr
     char sa_data[14];
 };
 
-typedef TDI_STATUS (*InfoRequest_f)( UINT InfoClass,
-				     UINT InfoType,
-				     UINT InfoId,
-				     PVOID Context,
-				     TDIEntityID *id,
-				     PNDIS_BUFFER Buffer,
-				     PUINT BufferSize );
-
-typedef TDI_STATUS (*InfoSet_f)( UINT InfoClass,
-				 UINT InfoType,
-				 UINT InfoId,
-				 PVOID Context,
-				 TDIEntityID *id,
-				 PCHAR Buffer,
-				 UINT BufferSize );
-
 /* Sufficient information to manage the entity list */
 typedef struct {
     UINT tei_entity;
     UINT tei_instance;
     PVOID context;
-    InfoRequest_f info_req;
-    InfoSet_f info_set;
+    UINT flags;
 } TDIEntityInfo;
 
 #ifndef htons

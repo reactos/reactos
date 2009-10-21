@@ -340,6 +340,7 @@ typedef struct tagMSIPACKAGE
     unsigned char scheduled_action_running : 1;
     unsigned char commit_action_running : 1;
     unsigned char rollback_action_running : 1;
+    unsigned char need_reboot : 1;
 } MSIPACKAGE;
 
 typedef struct tagMSIPREVIEW
@@ -682,6 +683,8 @@ extern UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg );
 extern UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
                  LPCWSTR szTransformFile, int iErrorCond );
 extern void append_storage_to_db( MSIDATABASE *db, IStorage *stg );
+
+extern UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si );
 
 /* action internals */
 extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );

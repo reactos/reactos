@@ -52,6 +52,13 @@ static CRITICAL_SECTION_DEBUG session_cs_dbg =
 };
 static CRITICAL_SECTION session_cs = { &session_cs_dbg, -1, 0, 0, 0, 0 };
 
+static const WCHAR internet_settings_keyW[] =
+    {'S','O','F','T','W','A','R','E',
+     '\\','M','i','c','r','o','s','o','f','t',
+     '\\','W','i','n','d','o','w','s',
+     '\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
+     '\\','I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0};
+
 static name_space *find_name_space(LPCWSTR protocol)
 {
     name_space *iter;
@@ -482,15 +489,9 @@ static BOOL get_url_encoding(HKEY root, DWORD *encoding)
     DWORD size = sizeof(DWORD), res, type;
     HKEY hkey;
 
-    static const WCHAR wszKeyName[] = 
-        {'S','O','F','T','W','A','R','E',
-         '\\','M','i','c','r','o','s','o','f','t',
-         '\\','W','i','n','d','o','w','s',
-         '\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
-         '\\','I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0};
     static const WCHAR wszUrlEncoding[] = {'U','r','l','E','n','c','o','d','i','n','g',0};
 
-    res = RegOpenKeyW(root, wszKeyName, &hkey);
+    res = RegOpenKeyW(root, internet_settings_keyW, &hkey);
     if(res != ERROR_SUCCESS)
         return FALSE;
 
@@ -498,6 +499,50 @@ static BOOL get_url_encoding(HKEY root, DWORD *encoding)
     RegCloseKey(hkey);
 
     return res == ERROR_SUCCESS;
+}
+
+static LPWSTR user_agent;
+
+static void ensure_useragent(void)
+{
+    DWORD size = sizeof(DWORD), res, type;
+    HKEY hkey;
+
+    static const WCHAR user_agentW[] = {'U','s','e','r',' ','A','g','e','n','t',0};
+
+    if(user_agent)
+        return;
+
+    res = RegOpenKeyW(HKEY_CURRENT_USER, internet_settings_keyW, &hkey);
+    if(res != ERROR_SUCCESS)
+        return;
+
+    res = RegQueryValueExW(hkey, user_agentW, NULL, &type, NULL, &size);
+    if(res == ERROR_SUCCESS && type == REG_SZ) {
+        user_agent = heap_alloc(size);
+        res = RegQueryValueExW(hkey, user_agentW, NULL, &type, (LPBYTE)user_agent, &size);
+        if(res != ERROR_SUCCESS) {
+            heap_free(user_agent);
+            user_agent = NULL;
+        }
+    }else {
+        WARN("Could not find User Agent value: %u\n", res);
+    }
+
+    RegCloseKey(hkey);
+}
+
+LPWSTR get_useragent(void)
+{
+    LPWSTR ret;
+
+    ensure_useragent();
+
+    EnterCriticalSection(&session_cs);
+    ret = heap_strdupW(user_agent);
+    LeaveCriticalSection(&session_cs);
+
+    return ret;
 }
 
 HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength,
@@ -509,6 +554,32 @@ HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
         WARN("dwReserved = %d\n", dwReserved);
 
     switch(dwOption) {
+    case URLMON_OPTION_USERAGENT: {
+        HRESULT hres = E_OUTOFMEMORY;
+        DWORD size;
+
+        if(!pdwBufferLength)
+            return E_INVALIDARG;
+
+        EnterCriticalSection(&session_cs);
+
+        ensure_useragent();
+        if(user_agent) {
+            size = WideCharToMultiByte(CP_ACP, 0, user_agent, -1, NULL, 0, NULL, NULL);
+            *pdwBufferLength = size;
+            if(size <= dwBufferLength) {
+                if(pBuffer)
+                    WideCharToMultiByte(CP_ACP, 0, user_agent, -1, pBuffer, size, NULL, NULL);
+                else
+                    hres = E_INVALIDARG;
+            }
+        }
+
+        LeaveCriticalSection(&session_cs);
+
+        /* Tests prove that we have to return E_OUTOFMEMORY on success. */
+        return hres;
+    }
     case URLMON_OPTION_URL_ENCODING: {
         DWORD encoding = 0;
 
@@ -527,4 +598,86 @@ HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
     }
 
     return E_INVALIDARG;
+}
+
+/**************************************************************************
+ *                 UrlMkSetSessionOption (URLMON.@)
+ */
+HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength,
+        DWORD Reserved)
+{
+    TRACE("(%x %p %x)\n", dwOption, pBuffer, dwBufferLength);
+
+    switch(dwOption) {
+    case URLMON_OPTION_USERAGENT: {
+        LPWSTR new_user_agent;
+        char *buf = pBuffer;
+        DWORD len, size;
+
+        if(!pBuffer || !dwBufferLength)
+            return E_INVALIDARG;
+
+        for(len=0; len<dwBufferLength && buf[len]; len++);
+
+        TRACE("Setting user agent %s\n", debugstr_an(buf, len));
+
+        size = MultiByteToWideChar(CP_ACP, 0, buf, len, NULL, 0);
+        new_user_agent = heap_alloc((size+1)*sizeof(WCHAR));
+        if(!new_user_agent)
+            return E_OUTOFMEMORY;
+        MultiByteToWideChar(CP_ACP, 0, buf, len, new_user_agent, size);
+        new_user_agent[size] = 0;
+
+        EnterCriticalSection(&session_cs);
+
+        heap_free(user_agent);
+        user_agent = new_user_agent;
+
+        LeaveCriticalSection(&session_cs);
+        break;
+    }
+    default:
+        FIXME("Unknown option %x\n", dwOption);
+        return E_INVALIDARG;
+    }
+
+    return S_OK;
+}
+
+/**************************************************************************
+ *                 ObtainUserAgentString (URLMON.@)
+ */
+HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPSTR pcszUAOut, DWORD *cbSize)
+{
+    DWORD size;
+    HRESULT hres = E_FAIL;
+
+    TRACE("(%d %p %p)\n", dwOption, pcszUAOut, cbSize);
+
+    if(!pcszUAOut || !cbSize)
+        return E_INVALIDARG;
+
+    EnterCriticalSection(&session_cs);
+
+    ensure_useragent();
+    if(user_agent) {
+        size = WideCharToMultiByte(CP_ACP, 0, user_agent, -1, NULL, 0, NULL, NULL);
+
+        if(size <= *cbSize) {
+            WideCharToMultiByte(CP_ACP, 0, user_agent, -1, pcszUAOut, *cbSize, NULL, NULL);
+            hres = S_OK;
+        }else {
+            hres = E_OUTOFMEMORY;
+        }
+
+        *cbSize = size;
+    }
+
+    LeaveCriticalSection(&session_cs);
+    return hres;
+}
+
+void free_session(void)
+{
+    heap_free(user_agent);
 }

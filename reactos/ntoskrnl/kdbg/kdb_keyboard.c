@@ -112,9 +112,7 @@ KdbpTryGetCharKeyboard(PULONG ScanCode, ULONG Retry)
 
     while (KeepRetrying || Retry-- > 0)
     {
-        unsigned char status = kbd_read_status();
-
-        while (status & KBD_STAT_OBF)
+        while (kbd_read_status() & KBD_STAT_OBF)
         {
             byte_t scancode;
 

@@ -116,7 +116,7 @@ typedef struct _BCB
     PVOID LazyWriteContext;
     KSPIN_LOCK BcbLock;
     ULONG RefCount;
-#if DBG || defined(KDBG)
+#if DBG
 	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
 #endif
 } BCB, *PBCB;
