@@ -81,7 +81,7 @@ vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
 	{
 		/* FIXME: what to do if no more memory? */
 		DPRINT1("Unable to initialize FCB for filename '%wZ'\n", NameU);
-		KeBugCheckEx(0, (ULONG_PTR)Fcb, (ULONG_PTR)NameU, 0, 0);
+		KeBugCheckEx(FAT_FILE_SYSTEM, (ULONG_PTR)Fcb, (ULONG_PTR)NameU, 0, 0);
 	}
 
 	Fcb->PathNameU.Length = 0;

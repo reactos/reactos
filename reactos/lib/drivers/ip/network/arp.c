@@ -140,7 +140,7 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PVOID LinkAddress,
             break;
         default:
 	    TI_DbgPrint(DEBUG_ARP,("Bad Address Type %x\n", Address->Type));
-	    KeBugCheck(0);
+	    DbgBreakPoint();
             /* Should not happen */
             return FALSE;
     }

@@ -1,4 +1,5 @@
 #include <ntifs.h>
+#include <bugcodes.h>
 #include <ntdddisk.h>
 #include <debug.h>
 #include <pseh/pseh2.h>

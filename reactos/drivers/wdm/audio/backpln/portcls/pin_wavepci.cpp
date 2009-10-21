@@ -981,7 +981,8 @@ CPortPinWavePci::Init(
     else
     {
         DPRINT("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
-        KeBugCheck(0);
+        DbgBreakPoint();
+        while(TRUE);
     }
 
     Status = m_Miniport->NewStream(&m_Stream,

@@ -389,7 +389,7 @@ FatiOpenExistingFcb(IN PFAT_IRP_CONTEXT IrpContext,
     else
     {
         /* We can't get here */
-        KeBugCheckEx(0x23, CreateDisposition, 0, 0, 0);
+        KeBugCheckEx(FAT_FILE_SYSTEM, CreateDisposition, 0, 0, 0);
     }
 
 

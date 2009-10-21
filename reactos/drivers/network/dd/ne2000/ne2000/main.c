@@ -1001,7 +1001,7 @@ DriverEntry(
             if(Status != NDIS_STATUS_SUCCESS)
             {
                 DbgPrint("ne2000!MiniportInitialize: failed to set DwordTest: 0x%x\n", Status);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             DbgPrint("ne2000!MiniportInitialize: DwordTest successfully set\n");
@@ -1015,7 +1015,7 @@ DriverEntry(
             if(Status != NDIS_STATUS_SUCCESS)
             {
                 DbgPrint("ne2000!MiniportInitialize: failed to set StringTest: 0x%x\n", Status);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             DbgPrint("ne2000!MiniportInitialize: StringTest successfully set\n");
@@ -1031,14 +1031,14 @@ DriverEntry(
             if(Status != NDIS_STATUS_SUCCESS)
             {
                 DbgPrint("ne2000!MiniportInitialize: failed to read DwordTest: 0x%x\n", Status);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             if(ParameterValue->ParameterData.IntegerData != 0x12345678)
             {
                 DbgPrint("ne2000!MiniportInitialize: DwordTest value is wrong: 0x%x\n",
                     ParameterValue->ParameterData.IntegerData);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             DbgPrint("ne2000!MiniportInitialize: DwordTest value was correctly read\n");
@@ -1049,7 +1049,7 @@ DriverEntry(
             if(Status != NDIS_STATUS_SUCCESS)
             {
                 DbgPrint("ne2000!MiniportInitialize: failed to read StringTest: 0x%x\n", Status);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             if(wcsncmp(ParameterValue->ParameterData.StringData.Buffer, L"Testing123",
@@ -1057,7 +1057,7 @@ DriverEntry(
             {
                 DbgPrint("ne2000!MiniportInitialize: StringTest value is wrong: %wZ\n",
                     &ParameterValue->ParameterData.StringData);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             DbgPrint("ne2000!MiniportInitialize: StringTest value was correctly read\n");

@@ -895,7 +895,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         else
         {
             /* Unexpected FCB type */
-            KeBugCheckEx(/*FAT_FILE_SYSTEM*/0x23, __LINE__, (ULONG_PTR)Fcb, 0, 0);
+            KeBugCheckEx(FAT_FILE_SYSTEM, __LINE__, (ULONG_PTR)Fcb, 0, 0);
         }
     }
 
