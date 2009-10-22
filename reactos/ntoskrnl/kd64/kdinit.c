@@ -284,7 +284,7 @@ KdInitSystem(IN ULONG BootPhase,
         if (!KdpDebuggerStructuresInitialized)
         {
             /* Set the Debug Switch Routine and Retries*/
-            KdpContext.KdpDefaultRetries = 20;
+            KdpContext.RetryCount = 20;
             KiDebugSwitchRoutine = KdpSwitchProcessor;
 
             /* Initialize the Time Slip DPC */

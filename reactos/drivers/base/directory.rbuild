@@ -7,9 +7,16 @@
 <directory name="bootvid">
 	<xi:include href="bootvid/bootvid.rbuild" />
 </directory>
-<directory name="kdcom">
-    <xi:include href="kdcom/kdcom.rbuild" />
-</directory>
+<ifnot property="_WINKD_" value="1">
+	<directory name="kdcom">
+		<xi:include href="kdcom/kdcom.rbuild" />
+	</directory>
+</if>
+<if property="_WINKD_" value="1">
+	<directory name="kddll">
+		<xi:include href="kddll/kddll.rbuild" />
+	</directory>
+</if>
 <directory name="null">
 	<xi:include href="null/null.rbuild" />
 </directory>
