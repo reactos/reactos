@@ -212,11 +212,13 @@ VOID ARPReceive(
     SenderProtoAddress = (PVOID)((ULONG_PTR)SenderHWAddress + Header->HWAddrLen);
     TargetProtoAddress = (PVOID)((ULONG_PTR)SenderProtoAddress + Header->ProtoAddrLen + Header->HWAddrLen);
 
-    /* Check if we know the sender */
+    AddrInitIPv4(&DstAddress, *((PULONG)TargetProtoAddress));
+    if (!AddrIsEqual(&DstAddress, &Interface->Unicast))
+        return;
 
     AddrInitIPv4(&SrcAddress, *((PULONG)SenderProtoAddress));
-    AddrInitIPv4(&DstAddress, *((PULONG)TargetProtoAddress));
 
+    /* Check if we know the sender */
     NCE = NBLocateNeighbor(&SrcAddress);
     if (NCE) {
         /* We know the sender. Update the hardware address
@@ -230,8 +232,7 @@ VOID ARPReceive(
             Header->HWAddrLen, 0, ARP_TIMEOUT);
     }
 
-    if (Header->Opcode != ARP_OPCODE_REQUEST ||
-        !AddrIsEqual(&DstAddress, &Interface->Unicast))
+    if (Header->Opcode != ARP_OPCODE_REQUEST)
         return;
 
     /* This is a request for our address. Swap the addresses and
