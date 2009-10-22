@@ -220,8 +220,8 @@ typedef struct _KD_PACKET
 //
 typedef struct _KD_CONTEXT
 {
-    ULONG KdpDefaultRetries;
-    BOOLEAN KdpControlCPending;
+    ULONG RetryCount;
+    BOOLEAN BreakInRequested;
 } KD_CONTEXT, *PKD_CONTEXT;
 
 //
