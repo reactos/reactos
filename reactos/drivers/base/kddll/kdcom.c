@@ -47,7 +47,7 @@ KdpPortInitialize()
 {
     ULONG Mode;
 
-KdpDbgPrint("KdpPortInitialize\n");
+    KDDBGPRINT("KdpPortInitialize\n");
 
     /* Enable loop mode (set Bit 4 of the MCR) */
     WRITE_PORT_UCHAR(ComPortBase + COM_MCR, MCR_LOOP);
@@ -201,9 +201,6 @@ KdDebuggerInitialize0(
             }
         }
     }
-
-    // HACK use com1 for FrLdrDbg, com2 for WinDbg
-    ComPortNumber = 2;
 
     /* Get base address */
     ComPortBase = UlongToPtr(BaseArray[ComPortNumber]);

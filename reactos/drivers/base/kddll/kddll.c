@@ -6,15 +6,16 @@
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@ewactos.org)
  */
 
+//#define KDDEBUG /* uncomment to enable debugging this dll */
 #include "kddll.h"
 
 /* GLOBALS ********************************************************************/
 
+PFNDBGPRNT KdpDbgPrint = NULL;
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
 
-// HACK!!!
-DBGRNT KdpDbgPrint = 0;
 
+/* PRIVATE FUNCTIONS **********************************************************/
 
 /******************************************************************************
  * \name KdpCalculateChecksum
@@ -97,7 +98,7 @@ KdDebuggerInitialize1(
 {
     // HACK: misuse this function to get a pointer to FrLdrDbgPrint
     KdpDbgPrint = (PVOID)LoaderBlock;
-    KdpDbgPrint("KdDebuggerInitialize1\n");
+    KDDBGPRINT("KdDebuggerInitialize1\n");
 
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -210,18 +211,18 @@ KdReceivePacket(
                     continue;
 
                 case PACKET_TYPE_KD_RESET:
-                    KdpDbgPrint("KdReceivePacket - got a reset packet\n");
+                    KDDBGPRINT("KdReceivePacket - got a reset packet\n");
                     KdpSendControlPacket(PACKET_TYPE_KD_RESET, 0);
                     CurrentPacketId = INITIAL_PACKET_ID;
                     /* Fall through */
 
                 case PACKET_TYPE_KD_RESEND:
-                    KdpDbgPrint("KdReceivePacket - got PACKET_TYPE_KD_RESEND\n");
+                    KDDBGPRINT("KdReceivePacket - got PACKET_TYPE_KD_RESEND\n");
                     /* Remote wants us to resend the last packet */
                     return KDP_PACKET_RESEND;
 
                 default:
-                    KdpDbgPrint("KdReceivePacket - got unknown control packet\n");
+                    KDDBGPRINT("KdReceivePacket - got unknown control packet\n");
                     return KDP_PACKET_RESEND;
             }
         }
@@ -229,8 +230,7 @@ KdReceivePacket(
         /* Did we wait for an ack packet? */
         if (PacketType == PACKET_TYPE_KD_ACKNOWLEDGE)
         {
-            /* We received something different, start over */
-//            continue;
+            /* We received something different */
             KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             CurrentPacketId ^= 1;
             return KDP_PACKET_RECEIVED;
@@ -240,7 +240,7 @@ KdReceivePacket(
         if (PacketType != Packet.PacketType)
         {
             /* We received something different, start over */
-            KdpDbgPrint("KdReceivePacket - wrong PacketType\n");
+            KDDBGPRINT("KdReceivePacket - wrong PacketType\n");
             KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
         }
@@ -261,21 +261,21 @@ KdReceivePacket(
                 break;
 
             default:
-                KdpDbgPrint("KdReceivePacket - unknown PacketType\n");
+                KDDBGPRINT("KdReceivePacket - unknown PacketType\n");
                 return KDP_PACKET_RESEND;
         }
 
-//KdpDbgPrint("KdReceivePacket - got normal PacketType\n");
+        //KDDBGPRINT("KdReceivePacket - got normal PacketType\n");
 
         /* Packet smaller than expected? */
         if (MessageHeader->Length > Packet.ByteCount)
         {
-            KdpDbgPrint("KdReceivePacket - too few data (%d) for type %d\n",
+            KDDBGPRINT("KdReceivePacket - too few data (%d) for type %d\n",
                           Packet.ByteCount, MessageHeader->Length);
             MessageHeader->Length = Packet.ByteCount;
         }
 
-//KdpDbgPrint("KdReceivePacket - got normal PacketType, Buffer = %p\n", MessageHeader->Buffer);
+        //KDDBGPRINT("KdReceivePacket - got normal PacketType, Buffer = %p\n", MessageHeader->Buffer);
 
         /* Receive the message header data */
         KdStatus = KdpReceiveBuffer(MessageHeader->Buffer,
@@ -283,12 +283,12 @@ KdReceivePacket(
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
             /* Didn't receive data. Packet needs to be resent. */
-            KdpDbgPrint("KdReceivePacket - Didn't receive message header data.\n");
+            KDDBGPRINT("KdReceivePacket - Didn't receive message header data.\n");
             KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
         }
 
-//KdpDbgPrint("KdReceivePacket - got normal PacketType 3\n");
+        //KDDBGPRINT("KdReceivePacket - got normal PacketType 3\n");
 
         /* Calculate checksum for the header data */
         Checksum = KdpCalculateChecksum(MessageHeader->Buffer,
@@ -306,7 +306,7 @@ KdReceivePacket(
             /* Do we have data? */
             if (MessageData->Length)
             {
-                KdpDbgPrint("KdReceivePacket - got data\n");
+                KDDBGPRINT("KdReceivePacket - got data\n");
 
                 /* Receive the message data */
                 KdStatus = KdpReceiveBuffer(MessageData->Buffer,
@@ -314,7 +314,7 @@ KdReceivePacket(
                 if (KdStatus != KDP_PACKET_RECEIVED)
                 {
                     /* Didn't receive data. Start over. */
-                    KdpDbgPrint("KdReceivePacket - Didn't receive message data.\n");
+                    KDDBGPRINT("KdReceivePacket - Didn't receive message data.\n");
                     KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
                     continue;
                 }
@@ -328,7 +328,7 @@ KdReceivePacket(
         /* Compare checksum */
         if (Packet.Checksum != Checksum)
         {
-            KdpDbgPrint("KdReceivePacket - wrong cheksum, got %x, calculated %x\n",
+            KDDBGPRINT("KdReceivePacket - wrong cheksum, got %x, calculated %x\n",
                           Packet.Checksum, Checksum);
             KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
@@ -338,7 +338,7 @@ KdReceivePacket(
         KdStatus = KdpReceiveBuffer(&Byte, sizeof(UCHAR));
         if (KdStatus != KDP_PACKET_RECEIVED || Byte != PACKET_TRAILING_BYTE)
         {
-            KdpDbgPrint("KdReceivePacket - wrong trailing byte (0x%x), status 0x%x\n", Byte, KdStatus);
+            KDDBGPRINT("KdReceivePacket - wrong trailing byte (0x%x), status 0x%x\n", Byte, KdStatus);
             KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
         }
@@ -346,7 +346,7 @@ KdReceivePacket(
         /* Acknowledge the received packet */
         KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, Packet.PacketId);
 
-//KdpDbgPrint("KdReceivePacket - all ok\n");
+        //KDDBGPRINT("KdReceivePacket - all ok\n");
 
         return KDP_PACKET_RECEIVED;
     }

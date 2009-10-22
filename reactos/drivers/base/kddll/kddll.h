@@ -6,6 +6,9 @@
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@ewactos.org)
  */
 
+#ifndef _KDDLL_H_
+#define _KDDLL_H_
+
 #define NOEXTAPI
 #include <ntddk.h>
 #define NDEBUG
@@ -21,8 +24,8 @@
 
 typedef UCHAR BYTE, *PBYTE;
 
-typedef ULONG (*DBGRNT)(const char *Format, ...);
-extern DBGRNT KdpDbgPrint;
+typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
+extern PFNDBGPRNT KdpDbgPrint;
 
 typedef enum
 {
@@ -31,3 +34,10 @@ typedef enum
     KDP_PACKET_RESEND = 2
 } KDP_STATUS;
 
+#ifndef KDDEBUG
+#define KDDBGPRINT(...)
+#else
+#define KDDBGPRINT KdpDbgPrint
+#endif
+
+#endif /* !_KDDLL_H_ */
