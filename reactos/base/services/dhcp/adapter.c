@@ -199,9 +199,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
                         Adapter->DhclientInfo.name,
                         Adapter->BindStatus));
 
-        add_protocol(Adapter->DhclientInfo.name, Adapter->DhclientInfo.rfdesc, got_one, &Adapter->DhclientInfo);
 	Adapter->DhclientInfo.client->state = S_INIT;
-	state_reboot(&Adapter->DhclientInfo);
     }
 
     if( IPAddress ) free( IPAddress );
@@ -330,6 +328,15 @@ BOOLEAN AdapterDiscover() {
                 ifi = &Adapter->DhclientInfo;
 
                 read_client_conf(&Adapter->DhclientInfo);
+
+                if (Adapter->DhclientInfo.client->state == S_INIT)
+                {
+                    add_protocol(Adapter->DhclientInfo.name,
+                                 Adapter->DhclientInfo.rfdesc,
+                                 got_one, &Adapter->DhclientInfo);
+
+	            state_init(&Adapter->DhclientInfo);
+                }
 
                 InsertTailList( &AdapterList, &Adapter->ListEntry );
             } else { free( Adapter ); Adapter = 0; }
