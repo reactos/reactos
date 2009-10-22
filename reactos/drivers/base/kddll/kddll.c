@@ -125,7 +125,7 @@ KdReceivePacket(
     OUT PSTRING MessageHeader,
     OUT PSTRING MessageData,
     OUT PULONG DataLength,
-    IN OUT PKD_CONTEXT Context)
+    IN OUT PKD_CONTEXT KdContext)
 {
     UCHAR Byte = 0;
     KDP_STATUS KdStatus;
@@ -144,7 +144,11 @@ KdReceivePacket(
         KdStatus = KdpReceivePacketLeader(&Packet.PacketLeader);
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
-            /* Couldn't read a correct packet leader.  */
+            /* Check if we got a breakin  */
+            if (KdStatus == KDP_PACKET_RESEND)
+            {
+                KdContext->BreakInRequested = TRUE;
+            }
             return KdStatus;
         }
 

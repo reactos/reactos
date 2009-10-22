@@ -67,7 +67,8 @@ KdpReceiveBuffer(
  * \brief Recieves a packet leadr from the KD port.
  * \param PacketLeader Pointer to an ULONG that receives the packet leader.
  * \return KDP_PACKET_RECEIVED if successful. 
- *         KDP_PACKET_TIMEOUT if the receice timed out.
+ *         KDP_PACKET_TIMEOUT if the receive timed out.
+ *         KDP_PACKET_RESEND if a breakin byte was detected.
  */
 KDP_STATUS
 NTAPI
@@ -82,26 +83,25 @@ KdpReceivePacketLeader(
 
     do
     {
-        /* Receive a single Byte */
+        /* Receive a single byte */
         KdStatus = KdpReceiveByte(&Byte);
 
         /* Check for timeout */
         if (KdStatus == KDP_PACKET_TIMEOUT)
         {
+            /* Check if we already got a breakin byte */
+            if (Buffer[0] == BREAKIN_PACKET_BYTE)
+            {
+                return KDP_PACKET_RESEND;
+            }
+
             /* Report timeout */
-            KdpDbgPrint("KDP_PACKET_TIMEOUT\n");
             return KDP_PACKET_TIMEOUT;
         }
 
         /* Check if we received a byte */
         if (KdStatus == KDP_PACKET_RECEIVED)
         {
-            /* Check for breakin byte */
-            if (Byte == BREAKIN_PACKET_BYTE)
-            {
-                KdpDbgPrint("BREAKIN_PACKET_BYTE\n");
-            }
-
             /* Check if this is a valid packet leader byte */
             if (Byte == PACKET_LEADER_BYTE ||
                 Byte == CONTROL_PACKET_LEADER_BYTE)
@@ -118,6 +118,15 @@ KdpReceivePacketLeader(
 
                 /* Continue with next byte */
                 Index++;
+                continue;
+            }
+
+            /* Check for breakin byte */
+            if (Byte == BREAKIN_PACKET_BYTE)
+            {
+                KdpDbgPrint("BREAKIN_PACKET_BYTE\n");
+                Index = 0;
+                Buffer[0] = Byte;
                 continue;
             }
         }
