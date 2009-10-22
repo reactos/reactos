@@ -971,7 +971,7 @@ OnDrawItem(UINT idCtl,
                    GetSysColor(COLOR_WINDOWTEXT));
     }
 
-    if (lpdis->itemID != MAXUINT)
+    if (lpdis->itemID != (UINT)-1)
     {
         CopyRect(&rc, &lpdis->rcItem);
         rc.left += 5;
