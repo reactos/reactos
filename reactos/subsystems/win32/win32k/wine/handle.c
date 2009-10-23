@@ -121,14 +121,14 @@ static void handle_table_dump( struct object *obj, int verbose )
 
     assert( obj->ops == &handle_table_ops );
 
-    DPRINT1( "Handle table last=%d count=%d process=%p\n",
+    DbgPrint( "Handle table last=%d count=%d process=%p\n",
              table->last, table->count, table->process );
     if (!verbose) return;
     entry = table->entries;
     for (i = 0; i <= table->last; i++, entry++)
     {
         if (!entry->ptr) continue;
-        DPRINT1( "    %04x: %p %08x ",
+        DbgPrint( "    %04x: %p %08x ",
                  index_to_handle(i), entry->ptr, entry->access );
         entry->ptr->ops->dump( entry->ptr, 0 );
     }

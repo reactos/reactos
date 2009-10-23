@@ -122,7 +122,7 @@ static void winstation_dump( struct object *obj, int verbose )
 {
     struct winstation *winstation = (struct winstation *)obj;
 
-    DPRINT1( "Winstation flags=%x clipboard=%p atoms=%p ",
+    DbgPrint( "Winstation flags=%x clipboard=%p atoms=%p ",
              winstation->flags, winstation->clipboard, winstation->atom_table );
     dump_object_name( &winstation->obj );
     DbgPrint( "\n" );
@@ -232,7 +232,7 @@ static void desktop_dump( struct object *obj, int verbose )
 {
     struct desktop *desktop = (struct desktop *)obj;
 
-    DPRINT1( "Desktop flags=%x winstation=%p top_win=%p hooks=%p ",
+    DbgPrint( "Desktop flags=%x winstation=%p top_win=%p hooks=%p ",
              desktop->flags, desktop->winstation, desktop->top_window, desktop->global_hooks );
     dump_object_name( &desktop->obj );
     DbgPrint( "\n" );

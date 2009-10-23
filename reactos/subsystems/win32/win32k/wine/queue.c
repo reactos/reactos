@@ -848,7 +848,7 @@ static void msg_queue_remove_queue(struct object *obj, struct wait_queue_entry *
 static void msg_queue_dump( struct object *obj, int verbose )
 {
     struct msg_queue *queue = (struct msg_queue *)obj;
-    DPRINT1( "Msg queue bits=%x mask=%x\n",
+    DbgPrint( "Msg queue bits=%x mask=%x\n",
              queue->wake_bits, queue->wake_mask );
 }
 
@@ -920,7 +920,7 @@ static void msg_queue_poll_event( struct fd *fd, int event )
 static void thread_input_dump( struct object *obj, int verbose )
 {
     struct thread_input *input = (struct thread_input *)obj;
-    DPRINT1( "Thread input focus=%08x capture=%08x active=%08x\n",
+    DbgPrint( "Thread input focus=%08x capture=%08x active=%08x\n",
              input->focus, input->capture, input->active );
 }
 

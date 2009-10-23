@@ -53,13 +53,13 @@ void dump_objects(void)
     LIST_FOR_EACH( p, &static_object_list )
     {
         struct object *ptr = LIST_ENTRY( p, struct object, obj_list );
-        DPRINT1( "%p:%d: ", ptr, ptr->refcount );
+        DbgPrint( "%p:%d: ", ptr, ptr->refcount );
         ptr->ops->dump( ptr, 1 );
     }
     LIST_FOR_EACH( p, &object_list )
     {
         struct object *ptr = LIST_ENTRY( p, struct object, obj_list );
-        DPRINT1( "%p:%d: ", ptr, ptr->refcount );
+        DbgPrint( "%p:%d: ", ptr, ptr->refcount );
         ptr->ops->dump( ptr, 1 );
     }
 }
@@ -222,12 +222,13 @@ void *create_named_object( struct namespace *namespace, const struct object_ops 
 /* dump the name of an object to stderr */
 void dump_object_name( struct object *obj )
 {
+    UNICODE_STRING str;
     if (!obj->name) DbgPrint( "name=\"\"" );
     else
     {
         DbgPrint( "name=L\"" );
-        //dump_strW( obj->name->name, obj->name->len/sizeof(WCHAR), stderr, "\"\"" );
-        DbgPrint("[dump_strW is missing]");
+        str.Buffer = obj->name->name; str.Length = str.MaximumLength = obj->name->len;
+        DbgPrint("%wZ", &str);
         DbgPrint( "\"" );
     }
 }

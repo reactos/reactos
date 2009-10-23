@@ -118,7 +118,7 @@ static void directory_dump( struct object *obj, int verbose )
 {
     assert( obj->ops == &directory_ops );
 
-    DPRINT1( "Directory ");
+    DbgPrint( "Directory ");
     dump_object_name( obj );
     DbgPrint( "\n" );
 }
