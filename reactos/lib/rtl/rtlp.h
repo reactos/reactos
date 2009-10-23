@@ -100,7 +100,7 @@ RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(BOOLEAN Type);
+RtlpCheckForActiveDebugger(VOID);
 
 BOOLEAN
 NTAPI
@@ -140,10 +140,6 @@ RtlpCheckLogException(IN PEXCEPTION_RECORD ExceptionRecord,
                       IN PCONTEXT ContextRecord,
                       IN PVOID ContextData,
                       IN ULONG Size);
-
-PVOID
-NTAPI
-RtlpGetExceptionAddress(VOID);
 
 VOID
 NTAPI

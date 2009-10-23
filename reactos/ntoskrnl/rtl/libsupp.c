@@ -44,10 +44,10 @@ RtlInitializeRangeListPackage(VOID)
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(BOOLEAN Type)
+RtlpCheckForActiveDebugger(VOID)
 {
     /* This check is meaningless in kernel-mode */
-    return Type;
+    return FALSE;
 }
 
 BOOLEAN

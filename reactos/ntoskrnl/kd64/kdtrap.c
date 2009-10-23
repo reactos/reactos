@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/kd64/kdtrap.c
  * PURPOSE:         KD64 Trap Handlers
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -55,24 +56,41 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     PKPRCB Prcb;
     NTSTATUS ExceptionCode = ExceptionRecord->ExceptionCode;
 
-    /* Check if this is single step or a breakpoint, or if we're forced to handle it */
+    /*
+     * Determine whether to pass the exception to the debugger.
+     * First, check if this is a "debug exception", meaning breakpoint
+     * (including debug service), single step and assertion failure exceptions.
+     */
     if ((ExceptionCode == STATUS_BREAKPOINT) ||
         (ExceptionCode == STATUS_SINGLE_STEP) ||
-        (ExceptionCode == STATUS_ASSERTION_FAILURE) ||
-        (NtGlobalFlag & FLG_STOP_ON_EXCEPTION))
+        (ExceptionCode == STATUS_ASSERTION_FAILURE))
     {
-        /* Check if we can't really handle this */
-        if ((SecondChanceException) ||
-            (ExceptionCode == STATUS_PORT_DISCONNECTED) ||
-            (NT_SUCCESS(ExceptionCode)))
+        /* This is a debug exception; we always pass them to the debugger */
+    }
+    else if (NtGlobalFlag & FLG_STOP_ON_EXCEPTION)
+    {
+        /*
+         * Not a debug exception, but the stop-on-exception flag is set,
+         * meaning the debugger requests that we pass it first chance
+         * exceptions. However, some exceptions are always passed to the
+         * exception handler first, namely exceptions with a code that isn't
+         * an error or warning code, and also exceptions with the special
+         * STATUS_PORT_DISCONNECTED code (an error code).
+         */
+        if ((SecondChanceException == FALSE) &&
+            ((ExceptionCode == STATUS_PORT_DISCONNECTED) ||
+             (NT_SUCCESS(ExceptionCode))))
         {
-            /* Return false to have someone else take care of the exception */
+            /* Let the exception handler, if any, try to handle it */
             return FALSE;
         }
     }
-    else if (SecondChanceException)
+    else if (SecondChanceException == FALSE)
     {
-        /* We won't bother unless this is first chance */
+        /* 
+         * This isn't a debug exception and the stop-on-exception flag isn't
+         * set, so don't bother
+         */
         return FALSE;
     }
 
@@ -122,7 +140,8 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
 
     /*
      * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
-     * Load/Unload symbols.
+     * Load/Unload symbols. Make sure it isn't a software breakpoints as those
+     * are handled by KdpReport.
      */
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
         (ExceptionRecord->ExceptionInformation[0] != BREAKPOINT_BREAK))
@@ -296,7 +315,10 @@ KdIsThisAKdTrap(IN PEXCEPTION_RECORD ExceptionRecord,
                 IN PCONTEXT Context,
                 IN KPROCESSOR_MODE PreviousMode)
 {
-    /* Check if this is a breakpoint or a valid debug service */
+    /*
+     * Determine if this is a valid debug service call and make sure that
+     * it isn't a software breakpoint
+     */
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
         (ExceptionRecord->NumberParameters > 0) &&
         (ExceptionRecord->ExceptionInformation[0] != BREAKPOINT_BREAK))

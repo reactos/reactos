@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/kd64/kdapi.c
  * PURPOSE:         KD64 Public Routines and Internal Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/

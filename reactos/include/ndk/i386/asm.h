@@ -376,6 +376,19 @@ Author:
 #define CONTEXT_FLOAT_SAVE_STATUS_WORD          CONTEXT_FLOAT_SAVE + FP_STATUS_WORD
 #define CONTEXT_FLOAT_SAVE_TAG_WORD             CONTEXT_FLOAT_SAVE + FP_TAG_WORD
 #define CONTEXT_ALIGNED_SIZE                    0x2CC
+#define CONTEXT_FRAME_LENGTH                    0x2D0
+
+//
+// CONTEXT Flags
+//
+#ifdef __ASM__
+#define CONTEXT_CONTROL                         0x10001
+#define CONTEXT_INTEGER                         0x10002
+#define CONTEXT_SEGMENTS                        0x10004
+#define CONTEXT_FLOATING_POINT                  0x10008
+#define CONTEXT_DEBUG_REGISTERS                 0x10010
+#define CONTEXT_FULL                            0x10007
+#endif
 
 //
 // EXCEPTION_RECORD Offsets
@@ -527,7 +540,6 @@ Author:
 // NTSTATUS, Bugcheck Codes and Debug Codes
 //
 #ifdef __ASM__
-#define STATUS_SUCCESS                          0x00000000
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
 #define STATUS_IN_PAGE_ERROR                    0xC0000006
 #define STATUS_GUARD_PAGE_VIOLATION             0x80000001
@@ -553,6 +565,7 @@ Author:
 #define STATUS_FLOAT_UNDERFLOW                  0xC0000093
 #define STATUS_FLOAT_MULTIPLE_FAULTS            0xC00002B4
 #define STATUS_FLOAT_MULTIPLE_TRAPS             0xC00002B5
+#define STATUS_ASSERTION_FAILURE                0xC0000420
 #define APC_INDEX_MISMATCH                      0x01
 #define IRQL_NOT_GREATER_OR_EQUAL               0x09
 #define IRQL_NOT_LESS_OR_EQUAL                  0x0A
@@ -563,6 +576,11 @@ Author:
 #define ATTEMPTED_SWITCH_FROM_DPC               0xB8
 #define HARDWARE_INTERRUPT_STORM                0xF2
 #define DBG_STATUS_CONTROL_C                    0x01
+
+//
+// DebugService Control Types
+//
+#define BREAKPOINT_BREAK                        0x0
 
 //
 // IRQL Levels

@@ -5796,6 +5796,25 @@ KeAcquireSpinLockRaiseToDpc(
 #define ROUND_TO_PAGES(Size) \
   ((ULONG_PTR) (((ULONG_PTR) Size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1)))
 
+
+
+#if defined(_X86_) || defined(_AMD64_)
+
+//
+// x86 and x64 performs a 0x2C interrupt
+//
+#define DbgRaiseAssertionFailure __int2c
+
+#elif defined(_ARM_)
+
+//
+// TODO
+//
+
+#else
+#error Unsupported Architecture
+#endif
+
 #if DBG
 
 #define ASSERT(exp) \
@@ -5807,7 +5826,7 @@ KeAcquireSpinLockRaiseToDpc(
     RtlAssert( #exp, __FILE__, __LINE__, msg ), FALSE : TRUE)
 
 #define RTL_SOFT_ASSERT(exp) \
-  (VOID)((!(_exp)) ? \
+  (VOID)((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
 
 #define RTL_SOFT_ASSERTMSG(msg, exp) \
@@ -5819,6 +5838,36 @@ KeAcquireSpinLockRaiseToDpc(
 
 #define RTL_SOFT_VERIFY(exp) RTL_SOFT_ASSERT(exp)
 #define RTL_SOFT_VERIFYMSG(msg, exp) RTL_SOFT_ASSERTMSG(msg, exp)
+
+#if defined(_MSC_VER)
+
+#define NT_ASSERT(exp) \
+   ((!(exp)) ? \
+      (__annotation(L"Debug", L"AssertFail", L#exp), \
+       DbgRaiseAssertionFailure(), FALSE) : TRUE)
+
+#define NT_ASSERTMSG(msg, exp) \
+   ((!(exp)) ? \
+      (__annotation(L"Debug", L"AssertFail", L##msg), \
+      DbgRaiseAssertionFailure(), FALSE) : TRUE)
+
+#define NT_ASSERTMSGW(msg, exp) \
+    ((!(exp)) ? \
+        (__annotation(L"Debug", L"AssertFail", msg), \
+         DbgRaiseAssertionFailure(), FALSE) : TRUE)
+
+#else
+
+//
+// GCC doesn't support __annotation (nor PDB)
+//
+#define NT_ASSERT(exp) \
+   (VOID)((!(exp)) ? (DbgRaiseAssertionFailure(), FALSE) : TRUE)
+
+#define NT_ASSERTMSG NT_ASSERT
+#define NT_ASSERTMSGW NT_ASSERT
+
+#endif
 
 #else /* !DBG */
 
@@ -5833,6 +5882,10 @@ KeAcquireSpinLockRaiseToDpc(
 
 #define RTL_SOFT_VERIFY(exp) ((exp) ? TRUE : FALSE)
 #define RTL_SOFT_VERIFYMSG(msg, exp) ((exp) ? TRUE : FALSE)
+
+#define NT_ASSERT(exp)     ((VOID)0)
+#define NT_ASSERTMSG(exp)  ((VOID)0)
+#define NT_ASSERTMSGW(exp) ((VOID)0)
 
 #endif /* DBG */
 

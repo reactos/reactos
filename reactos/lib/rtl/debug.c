@@ -22,7 +22,7 @@ DebugPrint(IN PANSI_STRING DebugString,
            IN ULONG ComponentId,
            IN ULONG Level)
 {
-    /* Call the INT2D Service */
+    /* Call the Debug Service */
     return DebugService(BREAKPOINT_PRINT,
                         DebugString->Buffer,
                         DebugString->Length,
@@ -35,7 +35,7 @@ NTAPI
 DebugPrompt(IN PCSTRING Output,
             IN PSTRING Input)
 {
-    /* Call the INT2D Service */
+    /* Call the Debug Service */
     return DebugService(BREAKPOINT_PROMPT,
                         Output->Buffer,
                         Output->Length,
@@ -115,7 +115,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     DebugString.Buffer = Buffer;
 
     /* First, let the debugger know as well */
-    if (RtlpCheckForActiveDebugger(FALSE))
+    if (RtlpCheckForActiveDebugger())
     {
         /* Fill out an exception record */
         ExceptionRecord.ExceptionCode = DBG_PRINTEXCEPTION_C;

@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/kd64/kdprint.c
  * PURPOSE:         KD64 Trap Handler Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -49,6 +50,75 @@ KdpPrintString(IN PSTRING Output)
 
     /* Check if the user pressed CTRL+C */
     return KdpPollBreakInWithPortLock();
+}
+
+BOOLEAN
+NTAPI
+KdpPromptString(IN PSTRING PromptString,
+                IN PSTRING ResponseString)
+{
+    STRING Data, Header;
+    DBGKD_DEBUG_IO DebugIo;
+    ULONG Length = PromptString->Length;
+    KDSTATUS Status;
+
+    /* Copy the string to the message buffer */
+    RtlCopyMemory(KdpMessageBuffer,
+                  PromptString->Buffer,
+                  PromptString->Length);
+
+    /* Make sure we don't exceed the KD Packet size */
+    if ((sizeof(DBGKD_DEBUG_IO) + Length) > PACKET_MAX_SIZE)
+    {
+        /* Normalize length */
+        Length = PACKET_MAX_SIZE - sizeof(DBGKD_DEBUG_IO);
+    }
+
+    /* Build the packet header */
+    DebugIo.ApiNumber = DbgKdGetStringApi;
+    DebugIo.ProcessorLevel = KeProcessorLevel;
+    DebugIo.Processor = KeGetCurrentPrcb()->Number;
+    DebugIo.u.GetString.LengthOfPromptString = Length;
+    DebugIo.u.GetString.LengthOfStringRead = ResponseString->MaximumLength;
+    Header.Length = sizeof(DBGKD_DEBUG_IO);
+    Header.Buffer = (PCHAR)&DebugIo;
+
+    /* Build the data */
+    Data.Length = PromptString->Length;
+    Data.Buffer = KdpMessageBuffer;
+
+    /* Send the packet */
+    KdSendPacket(PACKET_TYPE_KD_DEBUG_IO, &Header, &Data, &KdpContext);
+
+    /* Set the maximum lengths for the receive */
+    Header.MaximumLength = sizeof(DBGKD_DEBUG_IO);
+    Data.MaximumLength = sizeof(KdpMessageBuffer);
+
+    /* Enter receive loop */
+    do
+    {
+        /* Get our reply */
+        Status = KdReceivePacket(PACKET_TYPE_KD_DEBUG_IO,
+                                 &Header,
+                                 &Data,
+                                 &Length,
+                                 &KdpContext);
+
+        /* Return TRUE if we need to resend */
+        if (Status == KdPacketNeedsResend) return TRUE;
+
+    /* Loop until we succeed */
+    } while (Status != KdPacketReceived);
+
+    /* Don't copy back a larger respone than there is room foor */
+    Length = min(Length, ResponseString->MaximumLength);
+
+    /* Copy back the string and return the length */
+    RtlCopyMemory(ResponseString->Buffer, KdpMessageBuffer, Length);
+    ResponseString->Length = Length;
+
+    /* Success; we don't need to resend */
+    return FALSE;
 }
 
 VOID
@@ -108,20 +178,56 @@ KdpSymbol(IN PSTRING DllPath,
     KdExitDebugger(Entered);
 }
 
-BOOLEAN
+USHORT
 NTAPI
-KdpPrompt(IN LPSTR InString,
-          IN USHORT InStringLength,
-          OUT LPSTR OutString,
-          IN USHORT OutStringLength,
+KdpPrompt(IN LPSTR PromptString,
+          IN USHORT PromptLength,
+          OUT LPSTR ResponseString,
+          IN USHORT MaximumResponseLength,
           IN KPROCESSOR_MODE PreviousMode,
           IN PKTRAP_FRAME TrapFrame,
           IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    /* FIXME */
-    KdpDprintf("KdpPrompt called\n");
-    while (TRUE);
-    return FALSE;
+    STRING PromptBuffer, ResponseBuffer;
+    BOOLEAN Entered, Resend;
+
+    /* Normalize the lengths */
+    PromptLength = min(PromptLength, 512);
+    MaximumResponseLength = min(MaximumResponseLength, 512);
+
+    /* Check if we need to verify the string */
+    if (PreviousMode != KernelMode)
+    {
+        /* FIXME: Handle user-mode */
+    }
+
+    /* Setup the prompt and response  buffers */
+    PromptBuffer.Buffer = PromptString;
+    PromptBuffer.Length = PromptLength;
+    ResponseBuffer.Buffer = ResponseString;
+    ResponseBuffer.Length = 0;
+    ResponseBuffer.MaximumLength = MaximumResponseLength;
+
+    /* Log the print */
+    //KdLogDbgPrint(&PromptBuffer);
+
+    /* Enter the debugger */
+    Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
+
+    /* Enter prompt loop */
+    do
+    {
+        /* Send the prompt and receive the response */
+        Resend = KdpPromptString(&PromptBuffer, &ResponseBuffer);
+
+    /* Loop while we need to resend */
+    } while (Resend);
+
+    /* Exit the debugger */
+    KdExitDebugger(Entered);
+
+    /* Return the number of characters received */
+    return ResponseBuffer.Length;
 }
 
 NTSTATUS

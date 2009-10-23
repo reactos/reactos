@@ -201,13 +201,13 @@ KdpPrint(
     OUT PBOOLEAN Status
 );
 
-BOOLEAN
+USHORT
 NTAPI
 KdpPrompt(
-    IN LPSTR InString,
-    IN USHORT InStringLength,
-    OUT LPSTR OutString,
-    IN USHORT OutStringLength,
+    IN LPSTR PromptString,
+    IN USHORT PromptLength,
+    OUT LPSTR ResponseString,
+    IN USHORT MaximumResponseLength,
     IN KPROCESSOR_MODE PreviousMode,
     IN PKTRAP_FRAME TrapFrame,
     IN PKEXCEPTION_FRAME ExceptionFrame

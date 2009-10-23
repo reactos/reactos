@@ -113,7 +113,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
         ((ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS) ||
          (ExceptionCommand == BREAKPOINT_UNLOAD_SYMBOLS) ||
          (ExceptionCommand == BREAKPOINT_COMMAND_STRING) ||
-         (ExceptionCommand == BREAKPOINT_PRINT)))
+         (ExceptionCommand == BREAKPOINT_PRINT) ||
+         (ExceptionCommand == BREAKPOINT_PROMPT)))
     {
         /* Check if this is a debug print */
         if (ExceptionCommand == BREAKPOINT_PRINT)
@@ -126,21 +127,56 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             /* Return success */
             KeSetContextReturnRegister(Context, STATUS_SUCCESS);
         }
+#ifdef KDBG
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
-#ifdef KDBG
             PLDR_DATA_TABLE_ENTRY LdrEntry;
 
             /* Load symbols. Currently implemented only for KDBG! */
             if(KdbpSymFindModule(((PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2])->BaseOfDll, NULL, -1, &LdrEntry))
                 KdbSymProcessSymbols(LdrEntry);
-#endif
         }
+        else if (ExceptionCommand == BREAKPOINT_PROMPT)
+        {
+            ULONG ReturnValue;
+            LPSTR OutString;
+            USHORT OutStringLength;
+
+            /* Get the response string  and length */
+            OutString = (LPSTR)Context->Ebx;
+            OutStringLength = (USHORT)Context->Edi;
+
+            /* Call KDBG */
+            ReturnValue = KdpPrompt((LPSTR)ExceptionRecord->
+                                    ExceptionInformation[1],
+                                    (USHORT)ExceptionRecord->
+                                    ExceptionInformation[2],
+                                    OutString,
+                                    OutStringLength);
+
+            /* Return the number of characters that we received */
+            Context->Eax = ReturnValue;
+        }
+#endif
 
         /* This we can handle: simply bump the Program Counter */
         KeSetContextPc(Context, KeGetContextPc(Context) + KD_BREAKPOINT_SIZE);
         return TRUE;
     }
+
+#ifdef KDBG
+    /* Check if this is an assertion failure */
+    if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
+    {
+        /* Warn about it */
+        DbgPrint("\n!!! Assertion Failure at Address 0x%p !!!\n\n",
+                 (PVOID)Context->Eip);
+
+        /* Bump EIP to the instruction following the int 2C and return */
+        Context->Eip += 2;
+        return TRUE;
+    }
+#endif
 
     /* Get out of here if the Debugger isn't connected */
     if (KdDebuggerNotPresent) return FALSE;

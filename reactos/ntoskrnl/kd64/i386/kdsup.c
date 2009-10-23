@@ -3,7 +3,8 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/kd64/i386/kdsup.c
  * PURPOSE:         KD support routines for x86
- * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
