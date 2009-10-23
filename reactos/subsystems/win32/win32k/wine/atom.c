@@ -169,24 +169,23 @@ static unsigned short atom_hash( struct atom_table *table, const struct unicode_
 /* dump an atom table */
 static void atom_table_dump( struct object *obj, int verbose )
 {
-#if 0
     int i;
     struct atom_table *table = (struct atom_table *)obj;
     assert( obj->ops == &atom_table_ops );
 
-    fprintf( stderr, "Atom table size=%d entries=%d\n",
+    DPRINT1( "Atom table size=%d entries=%d\n",
              table->last + 1, table->entries_count );
     if (!verbose) return;
     for (i = 0; i <= table->last; i++)
     {
         struct atom_entry *entry = table->handles[i];
         if (!entry) continue;
-        fprintf( stderr, "  %04x: ref=%d pinned=%c hash=%d \"",
+        DPRINT1( "  %04x: ref=%d pinned=%c hash=%d \"",
                  entry->atom, entry->count, entry->pinned ? 'Y' : 'N', entry->hash );
-        dump_strW( entry->str, entry->len / sizeof(WCHAR), stderr, "\"\"");
-        fprintf( stderr, "\"\n" );
+        //dump_strW( entry->str, entry->len / sizeof(WCHAR), stderr, "\"\"");
+        DbgPrint("skipping dump_strW...");
+        DPRINT1( "\"\n" );
     }
-#endif
 }
 
 /* destroy the atom table */

@@ -48,22 +48,20 @@ static struct list static_object_list = LIST_INIT(static_object_list);
 
 void dump_objects(void)
 {
-#ifndef __REACTOS__
     struct list *p;
 
     LIST_FOR_EACH( p, &static_object_list )
     {
         struct object *ptr = LIST_ENTRY( p, struct object, obj_list );
-        fprintf( stderr, "%p:%d: ", ptr, ptr->refcount );
+        DPRINT1( "%p:%d: ", ptr, ptr->refcount );
         ptr->ops->dump( ptr, 1 );
     }
     LIST_FOR_EACH( p, &object_list )
     {
         struct object *ptr = LIST_ENTRY( p, struct object, obj_list );
-        fprintf( stderr, "%p:%d: ", ptr, ptr->refcount );
+        DPRINT1( "%p:%d: ", ptr, ptr->refcount );
         ptr->ops->dump( ptr, 1 );
     }
-#endif
 }
 
 void close_objects(void)
@@ -224,15 +222,14 @@ void *create_named_object( struct namespace *namespace, const struct object_ops 
 /* dump the name of an object to stderr */
 void dump_object_name( struct object *obj )
 {
-#ifndef __REACTOS__
-    if (!obj->name) fprintf( stderr, "name=\"\"" );
+    if (!obj->name) DbgPrint( "name=\"\"" );
     else
     {
-        fprintf( stderr, "name=L\"" );
-        dump_strW( obj->name->name, obj->name->len/sizeof(WCHAR), stderr, "\"\"" );
-        fputc( '\"', stderr );
+        DbgPrint( "name=L\"" );
+        //dump_strW( obj->name->name, obj->name->len/sizeof(WCHAR), stderr, "\"\"" );
+        DbgPrint("[dump_strW is missing]");
+        DbgPrint( "\"" );
     }
-#endif
 }
 
 /* unlink a named object from its namespace, without freeing the object itself */
