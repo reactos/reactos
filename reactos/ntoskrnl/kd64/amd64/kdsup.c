@@ -176,61 +176,46 @@ KdpSysReadControlSpace(IN ULONG Processor,
                        OUT PULONG ActualLength)
 {
     PVOID ControlStart;
-    ULONG RealLength;
+    PKPRCB Prcb = KiProcessorBlock[Processor];
+    PKIPCR Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
 
-    if ((ULONG)BaseAddress <= 2)
+    switch (BaseAddress)
     {
-        PKPRCB Prcb = KiProcessorBlock[Processor];
-        PKIPCR Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
+        case AMD64_DEBUG_CONTROL_SPACE_KPCR:
+            /* Copy a pointer to the Pcr */
+            ControlStart = &Pcr;
+            *ActualLength = sizeof(PVOID);
+            break;
 
-        switch ((ULONG_PTR)BaseAddress)
-        {
-            case AMD64_DEBUG_CONTROL_SPACE_KPCR:
-                /* Copy a pointer to the Pcr */
-                ControlStart = &Pcr;
-                RealLength = sizeof(PVOID);
-                break;
+        case AMD64_DEBUG_CONTROL_SPACE_KPRCB:
+            /* Copy a pointer to the Prcb */
+            ControlStart = &Prcb;
+            *ActualLength = sizeof(PVOID);
+            break;
 
-            case AMD64_DEBUG_CONTROL_SPACE_KPRCB:
-                /* Copy a pointer to the Prcb */
-                ControlStart = &Prcb;
-                RealLength = sizeof(PVOID);
-                break;
+        case AMD64_DEBUG_CONTROL_SPACE_KSPECIAL:
+            /* Copy SpecialRegisters */
+            ControlStart = &Prcb->ProcessorState.SpecialRegisters;
+            *ActualLength = sizeof(KSPECIAL_REGISTERS);
+            break;
 
-            case AMD64_DEBUG_CONTROL_SPACE_KSPECIAL:
-                /* Copy SpecialRegisters */
-                ControlStart = &Prcb->ProcessorState.SpecialRegisters;
-                RealLength = sizeof(KSPECIAL_REGISTERS);
-                break;
+        case AMD64_DEBUG_CONTROL_SPACE_KTHREAD:
+            /* Copy a pointer to the current Thread */
+            ControlStart = &Prcb->CurrentThread;
+            *ActualLength = sizeof(PVOID);
+            break;
 
-            case AMD64_DEBUG_CONTROL_SPACE_KTHREAD:
-                /* Copy a pointer to the current Thread */
-                ControlStart = &Prcb->CurrentThread;
-                RealLength = sizeof(PVOID);
-                break;
-
-            default:
-                RealLength = 0;
-                ControlStart = NULL;
-                ASSERT(FALSE);
-                return STATUS_UNSUCCESSFUL;
-        }
-
-        if (RealLength < Length) Length = RealLength;
-
-        /* Copy the memory */
-        RtlCopyMemory(Buffer, ControlStart, Length);
-        *ActualLength = Length;
-
-        /* Finish up */
-        return STATUS_SUCCESS;
+        default:
+            *ActualLength = 0;
+            ASSERT(FALSE);
+            return STATUS_UNSUCCESSFUL;
     }
-    else
-    {
-        /* Invalid request */
-        *ActualLength = 0;
-        return STATUS_UNSUCCESSFUL;
-    }
+
+    /* Copy the memory */
+    RtlCopyMemory(Buffer, ControlStart, min(Length, *ActualLength));
+
+    /* Finish up */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
