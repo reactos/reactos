@@ -134,7 +134,7 @@ GetWdmDeviceCapabilities(
             MixerCaps->vDriverVersion = DeviceInfo.u.MixCaps.vDriverVersion;
             MixerCaps->wMid = DeviceInfo.u.MixCaps.wMid;
             MixerCaps->wPid = DeviceInfo.u.MixCaps.wPid;
-            break;y
+            break;
         }
         case WAVE_OUT_DEVICE_TYPE :
         {
