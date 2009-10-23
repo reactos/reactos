@@ -256,24 +256,6 @@ DWORD WINAPI SetWindowStationUser(DWORD x1,DWORD x2)
     return 1;
 }
 
-/***********************************************************************
- *		RegisterLogonProcess (USER32.@)
- */
-BOOL WINAPI RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
-{
-    FIXME("(%d,%d),stub!\n",dwProcessId,bRegister);
-    return 1;
-}
-
-/***********************************************************************
- *		SetLogonNotifyWindow (USER32.@)
- */
-DWORD WINAPI SetLogonNotifyWindow(HWINSTA hwinsta,HWND hwnd)
-{
-    FIXME("(%p,%p),stub!\n",hwinsta,hwnd);
-    return 1;
-}
-
 static const WCHAR primary_device_name[] = {'\\','\\','.','\\','D','I','S','P','L','A','Y','1',0};
 static const WCHAR primary_device_string[] = {'X','1','1',' ','W','i','n','d','o','w','i','n','g',' ',
                                               'S','y','s','t','e','m',0};

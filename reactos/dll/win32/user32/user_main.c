@@ -356,45 +356,6 @@ BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
     return ret;
 }
 
-
-/***********************************************************************
- *		ExitWindowsEx (USER32.@)
- */
-BOOL WINAPI ExitWindowsEx( UINT flags, DWORD reason )
-{
-    static const WCHAR winebootW[]    = { '\\','w','i','n','e','b','o','o','t','.','e','x','e',0 };
-    static const WCHAR killW[]        = { ' ','-','-','k','i','l','l',0 };
-    static const WCHAR end_sessionW[] = { ' ','-','-','e','n','d','-','s','e','s','s','i','o','n',0 };
-    static const WCHAR forceW[]       = { ' ','-','-','f','o','r','c','e',0 };
-    static const WCHAR shutdownW[]    = { ' ','-','-','s','h','u','t','d','o','w','n',0 };
-
-    WCHAR cmdline[MAX_PATH + 64];
-    PROCESS_INFORMATION pi;
-    STARTUPINFOW si;
-
-    GetSystemDirectoryW( cmdline, MAX_PATH );
-    lstrcatW( cmdline, winebootW );
-
-    if (flags & EWX_FORCE) lstrcatW( cmdline, killW );
-    else
-    {
-        lstrcatW( cmdline, end_sessionW );
-        if (flags & EWX_FORCEIFHUNG) lstrcatW( cmdline, forceW );
-    }
-    if (!(flags & EWX_REBOOT)) lstrcatW( cmdline, shutdownW );
-
-    memset( &si, 0, sizeof si );
-    si.cb = sizeof si;
-    if (!CreateProcessW( NULL, cmdline, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi ))
-    {
-        ERR( "Failed to run %s\n", debugstr_w(cmdline) );
-        return FALSE;
-    }
-    CloseHandle( pi.hProcess );
-    CloseHandle( pi.hThread );
-    return TRUE;
-}
-
 /***********************************************************************
  *		LockWorkStation (USER32.@)
  */
@@ -403,15 +364,6 @@ BOOL WINAPI LockWorkStation(void)
     TRACE(": stub\n");
     SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
     return FALSE;
-}
-
-/***********************************************************************
- *		RegisterServicesProcess (USER32.@)
- */
-int WINAPI RegisterServicesProcess(DWORD ServicesProcessId)
-{
-    FIXME("(0x%x): stub\n", ServicesProcessId);
-    return TRUE;
 }
 
 

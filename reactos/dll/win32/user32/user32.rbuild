@@ -23,6 +23,7 @@
 	<file>class.c</file>
 	<file>clipboard.c</file>
 	<file>combo.c</file>
+	<file>csr.c</file>
 	<file>cursoricon.c</file>
 	<file>dde_client.c</file>
 	<file>dde_misc.c</file>
