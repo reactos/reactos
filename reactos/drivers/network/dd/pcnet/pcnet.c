@@ -66,6 +66,7 @@ MiniportHandleInterrupt(
 {
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
   USHORT Data;
+  UINT i = 0;
 
   DPRINT("Called\n");
 
@@ -78,7 +79,7 @@ MiniportHandleInterrupt(
 
   DPRINT("CSR0 is 0x%x\n", Data);
 
-  while(Data & CSR0_INTR)
+  while((Data & CSR0_INTR) && i++ < INTERRUPT_LIMIT)
     {
       /* Clear interrupt flags early to avoid race conditions. */
       NdisRawWritePortUshort(Adapter->PortOffset + RDP, Data);
