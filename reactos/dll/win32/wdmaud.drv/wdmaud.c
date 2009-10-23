@@ -94,14 +94,13 @@ GetWdmDeviceCapabilities(
     SND_ASSERT( SoundDevice );
     SND_ASSERT( Capabilities );
 
-    SND_TRACE(L"WDMAUD - GetWdmDeviceCapabilities\n");
-
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
     if ( ! MMSUCCESS(Result) )
         return Result;
 
+    SND_TRACE(L"WDMAUD - GetWdmDeviceCapabilities DeviceType %u DeviceId %u\n", DeviceType, DeviceId);
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.DeviceType = DeviceType;
@@ -120,8 +119,6 @@ GetWdmDeviceCapabilities(
         return TranslateInternalMmResult(Result);
     }
 
-    SND_TRACE(L"WDMAUD Name %S\n", DeviceInfo.u.WaveOutCaps.szPname);
-
     /* This is pretty much a big hack right now */
     switch ( DeviceType )
     {
@@ -129,18 +126,21 @@ GetWdmDeviceCapabilities(
         {
             LPMIXERCAPS MixerCaps = (LPMIXERCAPS) Capabilities;
 
-            CopyWideString(MixerCaps->szPname, DeviceInfo.u.WaveOutCaps.szPname);
+            DeviceInfo.u.MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+            CopyWideString(MixerCaps->szPname, DeviceInfo.u.MixCaps.szPname);
 
             MixerCaps->cDestinations = DeviceInfo.u.MixCaps.cDestinations;
             MixerCaps->fdwSupport = DeviceInfo.u.MixCaps.fdwSupport;
             MixerCaps->vDriverVersion = DeviceInfo.u.MixCaps.vDriverVersion;
             MixerCaps->wMid = DeviceInfo.u.MixCaps.wMid;
             MixerCaps->wPid = DeviceInfo.u.MixCaps.wPid;
-            break;
+            break;y
         }
         case WAVE_OUT_DEVICE_TYPE :
         {
             LPWAVEOUTCAPS WaveOutCaps = (LPWAVEOUTCAPS) Capabilities;
+
+            DeviceInfo.u.WaveOutCaps.szPname[MAXPNAMELEN-1] = L'\0';
             WaveOutCaps->wMid = DeviceInfo.u.WaveOutCaps.wMid;
             WaveOutCaps->wPid = DeviceInfo.u.WaveOutCaps.wPid;
 
@@ -154,9 +154,19 @@ GetWdmDeviceCapabilities(
         }
         case WAVE_IN_DEVICE_TYPE :
         {
-            LPWAVEINCAPS WaveInCaps = (LPWAVEINCAPS) Capabilities;
-            CopyWideString(WaveInCaps->szPname, DeviceInfo.u.WaveOutCaps.szPname);
-            /* TODO... other fields */
+            LPWAVEINCAPSW WaveInCaps = (LPWAVEINCAPSW) Capabilities;
+
+            DeviceInfo.u.WaveInCaps.szPname[MAXPNAMELEN-1] = L'\0';
+
+            WaveInCaps->wMid = DeviceInfo.u.WaveInCaps.wMid;
+            WaveInCaps->wPid = DeviceInfo.u.WaveInCaps.wPid;
+
+            WaveInCaps->vDriverVersion = 0x0001;
+            CopyWideString(WaveInCaps->szPname, DeviceInfo.u.WaveInCaps.szPname);
+
+            WaveInCaps->dwFormats = DeviceInfo.u.WaveInCaps.dwFormats;
+            WaveInCaps->wChannels = DeviceInfo.u.WaveInCaps.wChannels;
+            WaveInCaps->wReserved1 = 0;
             break;
         }
     }
@@ -407,7 +417,7 @@ SetWdmWaveDeviceFormat(
     {
         if (DeviceInfo.u.FrameSize)
         {
-            //Instance->FrameSize = DeviceInfo.u.FrameSize;
+            Instance->FrameSize = DeviceInfo.u.FrameSize * 2;
             Instance->BufferCount = WaveFormat->nAvgBytesPerSec / Instance->FrameSize;
             SND_TRACE(L"FrameSize %u BufferCount %u\n", Instance->FrameSize, Instance->BufferCount);
         }
