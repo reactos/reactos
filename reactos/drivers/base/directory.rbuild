@@ -11,7 +11,7 @@
 	<directory name="kdcom">
 		<xi:include href="kdcom/kdcom.rbuild" />
 	</directory>
-</if>
+</ifnot>
 <if property="_WINKD_" value="1">
 	<directory name="kddll">
 		<xi:include href="kddll/kddll.rbuild" />
