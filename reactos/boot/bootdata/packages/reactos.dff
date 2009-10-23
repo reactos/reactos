@@ -64,6 +64,7 @@ base\applications\network\finger\finger.exe             1
 base\applications\network\ftp\ftp.exe                   1
 base\applications\network\ipconfig\ipconfig.exe         1
 base\applications\network\netstat\netstat.exe           1
+base\applications\network\nslookup\nslookup.exe         1
 base\applications\network\ping\ping.exe                 1
 base\applications\network\telnet\telnet.exe             1
 base\applications\network\tracert\tracert.exe           1

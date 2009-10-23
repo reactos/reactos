@@ -22,6 +22,9 @@
 	<directory name="netstat">
 		<xi:include href="netstat/netstat.rbuild" />
 	</directory>
+	<directory name="nslookup">
+		<xi:include href="nslookup/nslookup.rbuild" />
+	</directory>
 	<directory name="ping">
 		<xi:include href="ping/ping.rbuild" />
 	</directory>
