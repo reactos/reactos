@@ -1828,7 +1828,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(80);
 
     /* Initialize VDM support */
-#ifdef i386
+#if defined(_M_IX86)
     KeI386VdmInitialize();
 #endif
 
