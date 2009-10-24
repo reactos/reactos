@@ -40,6 +40,7 @@ base\applications\cmdutils\find\find.exe                1
 base\applications\cmdutils\hostname\hostname.exe        1
 base\applications\cmdutils\lodctr\lodctr.exe            1
 base\applications\cmdutils\more\more.exe                1
+base\applications\cmdutils\reg\reg.exe                  1
 base\applications\cmdutils\xcopy\xcopy.exe              1
 base\applications\control\control.exe                   1
 base\applications\dxdiag\dxdiag.exe                     1
