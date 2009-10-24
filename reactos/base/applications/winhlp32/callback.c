@@ -158,23 +158,23 @@ static LONG CALLBACK WHD_API(LPSTR x, WORD xx, DWORD xxx)
     return 0;
 }
 
-FARPROC Callbacks[] =
+const struct winhelp_callbacks Callbacks =
 {
-    (FARPROC)WHD_GetFSError, 
-    (FARPROC)WHD_Open, 
-    (FARPROC)WHD_Close, 
-    (FARPROC)WHD_OpenBag, 
-    (FARPROC)WHD_CloseBag,
-    (FARPROC)WHD_ReadBag,
-    (FARPROC)WHD_TellBag,
-    (FARPROC)WHD_SeekBag,
-    (FARPROC)WHD_IsEofBag, 
-    (FARPROC)WHD_SizeBag,
-    (FARPROC)WHD_Access,
-    (FARPROC)WHD_LLInfoFromBag, 
-    (FARPROC)WHD_LLInfoFromFile, 
-    (FARPROC)WHD_Error,
-    (FARPROC)WHD_ErrorString,
-    (FARPROC)WHD_GetInfo,
-    (FARPROC)WHD_API
+    WHD_GetFSError,
+    WHD_Open,
+    WHD_Close,
+    WHD_OpenBag,
+    WHD_CloseBag,
+    WHD_ReadBag,
+    WHD_TellBag,
+    WHD_SeekBag,
+    WHD_IsEofBag,
+    WHD_SizeBag,
+    WHD_Access,
+    WHD_LLInfoFromBag,
+    WHD_LLInfoFromFile,
+    WHD_Error,
+    WHD_ErrorString,
+    WHD_GetInfo,
+    WHD_API
 };

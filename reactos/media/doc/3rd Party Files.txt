@@ -43,7 +43,7 @@ Actual Version: 2.0.1
 Website: http://expat.sourceforge.net
 
 Title: LibXML
-Version: 2.7.1
+Version: 2.7.6
 Actual Version: 2.7.6
 Website: http://xmlsoft.org
 
