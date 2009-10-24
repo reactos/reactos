@@ -29,18 +29,8 @@
 #include "winreg.h"
 #include "winternl.h"
 #include "wine/windef16.h"
-#include "wine/winbase16.h"
 
 extern WORD USER_HeapSel DECLSPEC_HIDDEN;
-
-#define USER_HEAP_ALLOC(size) \
-            ((HANDLE)HeapAlloc( GetProcessHeap(), 0, (size) ))
-#define USER_HEAP_REALLOC(handle,size) \
-            ((HANDLE)HeapReAlloc( GetProcessHeap(), 0, (handle), (size) ))
-#define USER_HEAP_FREE(handle) \
-            HeapFree( GetProcessHeap(), 0, handle )
-#define USER_HEAP_LIN_ADDR(handle)  \
-            (handle)
 
 #define GET_WORD(ptr)  (*(const WORD *)(ptr))
 #define GET_DWORD(ptr) (*(const DWORD *)(ptr))
@@ -135,6 +125,27 @@ extern void USER_unload_driver(void) DECLSPEC_HIDDEN;
 
 struct received_message_info;
 struct hook16_queue_info;
+
+enum user_obj_type
+{
+    USER_WINDOW = 1,  /* window */
+    USER_MENU,        /* menu */
+    USER_ACCEL,       /* accelerator */
+    USER_DWP          /* DeferWindowPos structure */
+};
+
+struct user_object
+{
+    HANDLE             handle;
+    enum user_obj_type type;
+};
+
+#define OBJ_OTHER_PROCESS ((void *)1)  /* returned by get_user_handle_ptr on unknown handles */
+
+HANDLE alloc_user_handle( struct user_object *ptr, enum user_obj_type type ) DECLSPEC_HIDDEN;
+void *get_user_handle_ptr( HANDLE handle, enum user_obj_type type ) DECLSPEC_HIDDEN;
+void release_user_handle_ptr( void *ptr ) DECLSPEC_HIDDEN;
+void *free_user_handle( HANDLE handle, enum user_obj_type type ) DECLSPEC_HIDDEN;
 
 /* type of message-sending functions that need special WM_CHAR handling */
 enum wm_char_mapping
@@ -319,6 +330,7 @@ typedef struct
 #include "poppack.h"
 
 extern void CURSORICON_FreeModuleIcons( HMODULE16 hModule ) DECLSPEC_HIDDEN;
+extern BOOL get_icon_size( HICON handle, SIZE *size ) DECLSPEC_HIDDEN;
 
 NTSYSAPI
 VOID

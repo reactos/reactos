@@ -310,6 +310,8 @@ DECL_HANDLER(set_completion_info);
 DECL_HANDLER(add_fd_completion);
 DECL_HANDLER(get_window_layered_info);
 DECL_HANDLER(set_window_layered_info);
+DECL_HANDLER(alloc_user_handle);
+DECL_HANDLER(free_user_handle);
 
 #ifdef WANT_REQUEST_HANDLERS
 
@@ -554,6 +556,8 @@ static const req_handler req_handlers[REQ_NB_REQUESTS] =
     (req_handler)req_add_fd_completion,
     (req_handler)req_get_window_layered_info,
     (req_handler)req_set_window_layered_info,
+    (req_handler)req_alloc_user_handle,
+    (req_handler)req_free_user_handle,
 };
 
 #if 0
@@ -1854,6 +1858,10 @@ C_ASSERT( FIELD_OFFSET(struct set_window_layered_info_request, color_key) == 16 
 C_ASSERT( FIELD_OFFSET(struct set_window_layered_info_request, alpha) == 20 );
 C_ASSERT( FIELD_OFFSET(struct set_window_layered_info_request, flags) == 24 );
 C_ASSERT( sizeof(struct set_window_layered_info_request) == 32 );
+C_ASSERT( FIELD_OFFSET(struct alloc_user_handle_reply, handle) == 8 );
+C_ASSERT( sizeof(struct alloc_user_handle_reply) == 16 );
+C_ASSERT( FIELD_OFFSET(struct free_user_handle_request, handle) == 12 );
+C_ASSERT( sizeof(struct free_user_handle_request) == 16 );
 #endif
 #endif  /* WANT_REQUEST_HANDLERS */
 

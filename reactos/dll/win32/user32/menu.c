@@ -93,8 +93,8 @@ typedef struct {
 
 /* Popup menu structure */
 typedef struct {
+    struct user_object obj;
     WORD        wFlags;       /* Menu flags (MF_POPUP, MF_SYSMENU) */
-    WORD        wMagic;       /* Magic number */
     WORD	Width;        /* Width of the whole menu */
     WORD	Height;       /* Height of the whole menu */
     UINT        nItems;       /* Number of items in the menu */
@@ -300,12 +300,15 @@ static void do_debug_print_menuitem(const char *prefix, const MENUITEM *mp,
  */
 static POPUPMENU *MENU_GetMenu(HMENU hMenu)
 {
-    POPUPMENU *menu = USER_HEAP_LIN_ADDR(hMenu);
-    if (!menu || menu->wMagic != MENU_MAGIC)
+    POPUPMENU *menu = get_user_handle_ptr( hMenu, USER_MENU );
+
+    if (menu == OBJ_OTHER_PROCESS)
     {
-        WARN("invalid menu handle=%p, ptr=%p, magic=%x\n", hMenu, menu, menu? menu->wMagic:0);
-        menu = NULL;
+        WARN( "other process menu %p?\n", hMenu);
+        return NULL;
     }
+    if (menu) release_user_handle_ptr( menu );  /* FIXME! */
+    else WARN("invalid menu handle=%p\n", hMenu);
     return menu;
 }
 
@@ -3507,6 +3510,7 @@ static LRESULT WINAPI PopupMenuWndProc( HWND hwnd, UINT message, WPARAM wParam, 
         break;
 
     case MM_GETMENUHANDLE:
+    case MN_GETHMENU:
         return GetWindowLongPtrW( hwnd, 0 );
 
     default:
@@ -4029,13 +4033,12 @@ HMENU WINAPI CreateMenu(void)
 {
     HMENU hMenu;
     LPPOPUPMENU menu;
-    if (!(hMenu = USER_HEAP_ALLOC( sizeof(POPUPMENU) ))) return 0;
-    menu = USER_HEAP_LIN_ADDR(hMenu);
 
-    ZeroMemory(menu, sizeof(POPUPMENU));
-    menu->wMagic = MENU_MAGIC;
+    if (!(menu = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*menu) ))) return 0;
     menu->FocusedItem = NO_SELECTED_ITEM;
     menu->bTimeToHide = FALSE;
+
+    if (!(hMenu = alloc_user_handle( &menu->obj, USER_MENU ))) HeapFree( GetProcessHeap(), 0, menu );
 
     TRACE("return %p\n", hMenu );
 
@@ -4048,14 +4051,12 @@ HMENU WINAPI CreateMenu(void)
  */
 BOOL WINAPI DestroyMenu( HMENU hMenu )
 {
-    LPPOPUPMENU lppop = MENU_GetMenu(hMenu);
+    LPPOPUPMENU lppop;
 
     TRACE("(%p)\n", hMenu);
 
-
-    if (!lppop) return FALSE;
-
-    lppop->wMagic = 0;  /* Mark it as destroyed */
+    if (!(lppop = free_user_handle( hMenu, USER_MENU ))) return FALSE;
+    if (lppop == OBJ_OTHER_PROCESS) return FALSE;
 
     /* DestroyMenu should not destroy system menu popup owner */
     if ((lppop->wFlags & (MF_POPUP | MF_SYSMENU)) == MF_POPUP && lppop->hWnd)
@@ -4075,7 +4076,7 @@ BOOL WINAPI DestroyMenu( HMENU hMenu )
         }
         HeapFree( GetProcessHeap(), 0, lppop->items );
     }
-    USER_HEAP_FREE( hMenu );
+    HeapFree( GetProcessHeap(), 0, lppop );
     return TRUE;
 }
 
@@ -5349,52 +5350,26 @@ static BOOL translate_accelerator( HWND hWnd, UINT message, WPARAM wParam, LPARA
  */
 INT WINAPI TranslateAcceleratorA( HWND hWnd, HACCEL hAccel, LPMSG msg )
 {
-    /* YES, Accel16! */
-    LPACCEL lpAccelTbl;
-    int i;
-    WPARAM wParam;
-
-    if (!hWnd || !msg) return 0;
-
-    if (!hAccel || !(lpAccelTbl = (LPACCEL) LockResource(hAccel)))
-    {
-        WARN_(accel)("invalid accel handle=%p\n", hAccel);
-        return 0;
-    }
-
-    wParam = msg->wParam;
-
     switch (msg->message)
     {
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
-        break;
+        return TranslateAcceleratorW( hWnd, hAccel, msg );
 
     case WM_CHAR:
     case WM_SYSCHAR:
         {
-            char ch = LOWORD(wParam);
+            MSG msgW = *msg;
+            char ch = LOWORD(msg->wParam);
             WCHAR wch;
             MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wch, 1);
-            wParam = MAKEWPARAM(wch, HIWORD(wParam));
+            msgW.wParam = MAKEWPARAM(wch, HIWORD(msg->wParam));
+            return TranslateAcceleratorW( hWnd, hAccel, &msgW );
         }
-        break;
 
     default:
         return 0;
     }
-
-    TRACE_(accel)("hAccel %p, hWnd %p, msg->hwnd %p, msg->message %04x, wParam %08lx, lParam %08lx\n",
-                  hAccel,hWnd,msg->hwnd,msg->message,msg->wParam,msg->lParam);
-    i = 0;
-    do
-    {
-        if (translate_accelerator( hWnd, msg->message, wParam, msg->lParam,
-                                   lpAccelTbl[i].fVirt, lpAccelTbl[i].key, lpAccelTbl[i].cmd))
-            return 1;
-    } while ((lpAccelTbl[i++].fVirt & 0x80) == 0);
-
-    return 0;
 }
 
 /**********************************************************************
@@ -5402,39 +5377,32 @@ INT WINAPI TranslateAcceleratorA( HWND hWnd, HACCEL hAccel, LPMSG msg )
  */
 INT WINAPI TranslateAcceleratorW( HWND hWnd, HACCEL hAccel, LPMSG msg )
 {
-    /* YES, Accel16! */
-    LPACCEL lpAccelTbl;
-    int i;
+    ACCEL data[32], *ptr = data;
+    int i, count;
 
-    if (!hWnd || !msg) return 0;
+    if (!hWnd) return 0;
 
-    if (!hAccel || !(lpAccelTbl = LockResource(hAccel)))
-    {
-        WARN_(accel)("invalid accel handle=%p\n", hAccel);
+    if (msg->message != WM_KEYDOWN &&
+        msg->message != WM_SYSKEYDOWN &&
+        msg->message != WM_CHAR &&
+        msg->message != WM_SYSCHAR)
         return 0;
-    }
-
-    switch (msg->message)
-    {
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-    case WM_CHAR:
-    case WM_SYSCHAR:
-        break;
-
-    default:
-        return 0;
-    }
 
     TRACE_(accel)("hAccel %p, hWnd %p, msg->hwnd %p, msg->message %04x, wParam %08lx, lParam %08lx\n",
                   hAccel,hWnd,msg->hwnd,msg->message,msg->wParam,msg->lParam);
-    i = 0;
-    do
+
+    if (!(count = CopyAcceleratorTableW( hAccel, NULL, 0 ))) return 0;
+    if (count > sizeof(data)/sizeof(data[0]))
+    {
+        if (!(ptr = HeapAlloc( GetProcessHeap(), 0, count * sizeof(*ptr) ))) return 0;
+    }
+    count = CopyAcceleratorTableW( hAccel, ptr, count );
+    for (i = 0; i < count; i++)
     {
         if (translate_accelerator( hWnd, msg->message, msg->wParam, msg->lParam,
-                                   lpAccelTbl[i].fVirt, lpAccelTbl[i].key, lpAccelTbl[i].cmd))
-            return 1;
-    } while ((lpAccelTbl[i++].fVirt & 0x80) == 0);
-
-    return 0;
+                                   ptr[i].fVirt, ptr[i].key, ptr[i].cmd))
+            break;
+    }
+    if (ptr != data) HeapFree( GetProcessHeap(), 0, ptr );
+    return (i < count);
 }

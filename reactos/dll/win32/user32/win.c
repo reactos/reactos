@@ -92,6 +92,89 @@ static inline void set_win_data( void *ptr, LONG_PTR val, UINT size )
 static void *user_handles[NB_USER_HANDLES];
 
 /***********************************************************************
+ *           alloc_user_handle
+ */
+HANDLE alloc_user_handle( struct user_object *ptr, enum user_obj_type type )
+{
+    HANDLE handle = 0;
+
+    SERVER_START_REQ( alloc_user_handle )
+    {
+        if (!wine_server_call_err( req )) handle = wine_server_ptr_handle( reply->handle );
+    }
+    SERVER_END_REQ;
+
+    if (handle)
+    {
+        UINT index = USER_HANDLE_TO_INDEX( handle );
+
+        assert( index < NB_USER_HANDLES );
+        ptr->handle = handle;
+        ptr->type = type;
+        user_handles[index] = ptr;
+    }
+    return handle;
+}
+
+
+/***********************************************************************
+ *           get_user_handle_ptr
+ */
+void *get_user_handle_ptr( HANDLE handle, enum user_obj_type type )
+{
+    struct user_object *ptr;
+    WORD index = USER_HANDLE_TO_INDEX( handle );
+
+    if (index >= NB_USER_HANDLES) return NULL;
+
+    USER_Lock();
+    if ((ptr = user_handles[index]))
+    {
+        if (ptr->type == type &&
+            ((UINT)(UINT_PTR)ptr->handle == (UINT)(UINT_PTR)handle ||
+             !HIWORD(handle) || HIWORD(handle) == 0xffff))
+            return ptr;
+        ptr = NULL;
+    }
+    else ptr = OBJ_OTHER_PROCESS;
+    USER_Unlock();
+    return ptr;
+}
+
+
+/***********************************************************************
+ *           release_user_handle_ptr
+ */
+void release_user_handle_ptr( void *ptr )
+{
+    USER_Unlock();
+}
+
+
+/***********************************************************************
+ *           free_user_handle
+ */
+void *free_user_handle( HANDLE handle, enum user_obj_type type )
+{
+    struct user_object *ptr;
+    WORD index = USER_HANDLE_TO_INDEX( handle );
+
+    if ((ptr = get_user_handle_ptr( handle, type )) && ptr != OBJ_OTHER_PROCESS)
+    {
+        SERVER_START_REQ( free_user_handle )
+        {
+            req->handle = wine_server_user_handle( handle );
+            if (!wine_server_call( req )) user_handles[index] = NULL;
+            else ptr = NULL;
+        }
+        SERVER_END_REQ;
+        release_user_handle_ptr( ptr );
+    }
+    return ptr;
+}
+
+
+/***********************************************************************
  *           create_window_handle
  *
  * Create a window handle with the server.
@@ -164,12 +247,12 @@ static WND *create_window_handle( HWND parent, HWND owner, LPCWSTR name,
     index = USER_HANDLE_TO_INDEX(handle);
     assert( index < NB_USER_HANDLES );
     user_handles[index] = win;
-    win->hwndSelf   = handle;
+    win->obj.handle = handle;
+    win->obj.type   = USER_WINDOW;
     win->parent     = full_parent;
     win->owner      = full_owner;
     win->class      = class;
     win->winproc    = get_class_winproc( class );
-    win->dwMagic    = WND_MAGIC;
     win->cbWndExtra = extra_bytes;
     if (WINPROC_IsUnicode( win->winproc, unicode )) win->flags |= WIN_ISUNICODE;
     return win;
@@ -181,31 +264,23 @@ static WND *create_window_handle( HWND parent, HWND owner, LPCWSTR name,
  *
  * Free a window handle.
  */
-static WND *free_window_handle( HWND hwnd )
+static void free_window_handle( HWND hwnd )
 {
-    WND *ptr;
+    struct user_object *ptr;
     WORD index = USER_HANDLE_TO_INDEX(hwnd);
 
-    if (index >= NB_USER_HANDLES) return NULL;
-    USER_Lock();
-    if ((ptr = user_handles[index]))
+    if ((ptr = get_user_handle_ptr( hwnd, USER_WINDOW )) && ptr != OBJ_OTHER_PROCESS)
     {
         SERVER_START_REQ( destroy_window )
         {
             req->handle = wine_server_user_handle( hwnd );
-            if (!wine_server_call_err( req ))
-            {
-                user_handles[index] = NULL;
-                ptr->dwMagic = 0;
-            }
-            else
-                ptr = NULL;
+            if (!wine_server_call_err( req )) user_handles[index] = NULL;
+            else ptr = NULL;
         }
         SERVER_END_REQ;
+        release_user_handle_ptr( ptr );
+        HeapFree( GetProcessHeap(), 0, ptr );
     }
-    USER_Unlock();
-    HeapFree( GetProcessHeap(), 0, ptr );
-    return ptr;
 }
 
 
@@ -408,22 +483,12 @@ BOOL is_desktop_window( HWND hwnd )
  */
 WND *WIN_GetPtr( HWND hwnd )
 {
-    WND * ptr;
-    WORD index = USER_HANDLE_TO_INDEX(hwnd);
+    WND *ptr;
 
-    if (index >= NB_USER_HANDLES) return NULL;
-
-    USER_Lock();
-    if ((ptr = user_handles[index]))
+    if ((ptr = get_user_handle_ptr( hwnd, USER_WINDOW )) == WND_OTHER_PROCESS)
     {
-        if (ptr->dwMagic == WND_MAGIC &&
-            (hwnd == ptr->hwndSelf || !HIWORD(hwnd) || HIWORD(hwnd) == 0xffff))
-            return ptr;
-        ptr = NULL;
+        if (is_desktop_window( hwnd )) ptr = WND_DESKTOP;
     }
-    else if (is_desktop_window( hwnd )) ptr = WND_DESKTOP;
-    else ptr = WND_OTHER_PROCESS;
-    USER_Unlock();
     return ptr;
 }
 
@@ -439,7 +504,7 @@ HWND WIN_IsCurrentProcess( HWND hwnd )
     HWND ret;
 
     if (!(ptr = WIN_GetPtr( hwnd )) || ptr == WND_OTHER_PROCESS || ptr == WND_DESKTOP) return 0;
-    ret = ptr->hwndSelf;
+    ret = ptr->obj.handle;
     WIN_ReleasePtr( ptr );
     return ret;
 }
@@ -456,7 +521,7 @@ HWND WIN_IsCurrentThread( HWND hwnd )
     HWND ret = 0;
 
     if (!(ptr = WIN_GetPtr( hwnd )) || ptr == WND_OTHER_PROCESS || ptr == WND_DESKTOP) return 0;
-    if (ptr->tid == GetCurrentThreadId()) ret = ptr->hwndSelf;
+    if (ptr->tid == GetCurrentThreadId()) ret = ptr->obj.handle;
     WIN_ReleasePtr( ptr );
     return ret;
 }
@@ -486,7 +551,7 @@ HWND WIN_Handle32( HWND16 hwnd16 )
 
     if (ptr != WND_OTHER_PROCESS)
     {
-        hwnd = ptr->hwndSelf;
+        hwnd = ptr->obj.handle;
         WIN_ReleasePtr( ptr );
     }
     else  /* may belong to another process */
@@ -593,7 +658,11 @@ BOOL WIN_GetRectangles( HWND hwnd, RECT *rectWindow, RECT *rectClient )
     WND *win = WIN_GetPtr( hwnd );
     BOOL ret = TRUE;
 
-    if (!win) return FALSE;
+    if (!win)
+    {
+        SetLastError( ERROR_INVALID_WINDOW_HANDLE );
+        return FALSE;
+    }
     if (win == WND_DESKTOP)
     {
         RECT rect;
@@ -616,7 +685,7 @@ BOOL WIN_GetRectangles( HWND hwnd, RECT *rectWindow, RECT *rectClient )
         SERVER_START_REQ( get_window_rectangles )
         {
             req->handle = wine_server_user_handle( hwnd );
-            if ((ret = !wine_server_call( req )))
+            if ((ret = !wine_server_call_err( req )))
             {
                 if (rectWindow)
                 {
@@ -697,6 +766,8 @@ LRESULT WIN_DestroyWindow( HWND hwnd )
     free_dce( wndPtr->dce, hwnd );
     wndPtr->dce = NULL;
     icon_title = wndPtr->icon_title;
+    HeapFree(GetProcessHeap(), 0, wndPtr->pScroll);
+    wndPtr->pScroll = NULL;
     WIN_ReleasePtr( wndPtr );
 
     if (icon_title) DestroyWindow( icon_title );
@@ -746,7 +817,6 @@ static void destroy_thread_window( HWND hwnd )
         sys_menu = wndPtr->hSysMenu;
         free_dce( wndPtr->dce, hwnd );
         user_handles[index] = NULL;
-        wndPtr->dwMagic = 0;
     }
     USER_Unlock();
 
@@ -1133,7 +1203,7 @@ static HWND WIN_CreateWindowEx( CREATESTRUCTA *cs, LPCWSTR className, UINT flags
 
     if (!(wndPtr = create_window_handle( parent, owner, className, cs->hInstance, unicode )))
         return 0;
-    hwnd = wndPtr->hwndSelf;
+    hwnd = wndPtr->obj.handle;
 
     /* Fill the window structure */
 
@@ -3080,6 +3150,7 @@ BOOL WINAPI EnumThreadWindows( DWORD id, WNDENUMPROC func, LPARAM lParam )
 {
     HWND *list;
     int i;
+    BOOL ret = TRUE;
 
     USER_CheckNotLock();
 
@@ -3088,9 +3159,9 @@ BOOL WINAPI EnumThreadWindows( DWORD id, WNDENUMPROC func, LPARAM lParam )
     /* Now call the callback function for every window */
 
     for (i = 0; list[i]; i++)
-        if (!func( list[i], lParam )) break;
+        if (!(ret = func( list[i], lParam ))) break;
     HeapFree( GetProcessHeap(), 0, list );
-    return TRUE;
+    return ret;
 }
 
 
@@ -3221,7 +3292,7 @@ BOOL WINAPI FlashWindow( HWND hWnd, BOOL bInvert )
 
         wndPtr = WIN_GetPtr(hWnd);
         if (!wndPtr || wndPtr == WND_OTHER_PROCESS || wndPtr == WND_DESKTOP) return FALSE;
-        hWnd = wndPtr->hwndSelf;  /* make it a full handle */
+        hWnd = wndPtr->obj.handle;  /* make it a full handle */
 
         if (bInvert) wparam = !(wndPtr->flags & WIN_NCACTIVATED);
         else wparam = (hWnd == GetForegroundWindow());

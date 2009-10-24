@@ -22,8 +22,8 @@
 #include <stdarg.h>
 
 #include "windef.h"
+#include "winbase.h"
 #include "wingdi.h"
-#include "wine/winuser16.h"
 #include "winuser.h"
 #include "user_private.h"
 #include "wine/unicode.h"
@@ -1597,7 +1597,6 @@ static BOOL UITOOLS_DrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp
     if(!cx || !cy)
     {
         SIZE s;
-        CURSORICONINFO *ici;
         BITMAP bm;
 
         switch(opcode)
@@ -1612,11 +1611,7 @@ static BOOL UITOOLS_DrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp
             break;
 
         case DST_ICON:
-            ici = GlobalLock((HGLOBAL)lp);
-            if(!ici) return FALSE;
-            s.cx = ici->nWidth;
-            s.cy = ici->nHeight;
-            GlobalUnlock((HGLOBAL)lp);
+            if (!get_icon_size( (HICON)lp, &s )) return FALSE;
             break;
 
         case DST_BITMAP:

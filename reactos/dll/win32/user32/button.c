@@ -836,14 +836,17 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     hOldBrush = SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
     oldBkMode = SetBkMode(hDC, TRANSPARENT);
 
-    /* completely skip the drawing if only focus has changed */
-    if (action == ODA_FOCUS) goto draw_focus;
-
     if (get_button_type(style) == BS_DEFPUSHBUTTON)
     {
-        Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
+        if (action != ODA_FOCUS)
+            Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
 	InflateRect( &rc, -1, -1 );
     }
+
+    focus_rect = rc;
+
+    /* completely skip the drawing if only focus has changed */
+    if (action == ODA_FOCUS) goto draw_focus;
 
     uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
 
@@ -861,8 +864,6 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
         uState |= DFCS_CHECKED;
 
     DrawFrameControl( hDC, &rc, DFC_BUTTON, uState );
-
-    focus_rect = rc;
 
     /* draw button label */
     r = rc;

@@ -1198,9 +1198,10 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
     if (event_flags & KEYEVENTF_KEYUP)
     {
         message = WM_KEYUP;
-        if ((key_state_table[VK_MENU] & 0x80) &&
-            ((wVkStripped == VK_MENU) || (wVkStripped == VK_CONTROL)
-             || !(key_state_table[VK_CONTROL] & 0x80)))
+        if (((key_state_table[VK_MENU] & 0x80) &&
+             ((wVkStripped == VK_MENU) || (wVkStripped == VK_CONTROL)
+              || !(key_state_table[VK_CONTROL] & 0x80)))
+            || (wVkStripped == VK_F10))
         {
             if( TrackSysKey == VK_MENU || /* <ALT>-down/<ALT>-up sequence */
                 (wVkStripped != VK_MENU)) /* <ALT>-down...<something else>-up */
@@ -1212,8 +1213,9 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
     else
     {
         message = WM_KEYDOWN;
-        if ((key_state_table[VK_MENU] & 0x80 || wVkStripped == VK_MENU) &&
-            !(key_state_table[VK_CONTROL] & 0x80 || wVkStripped == VK_CONTROL))
+        if (((key_state_table[VK_MENU] & 0x80 || wVkStripped == VK_MENU) &&
+             !(key_state_table[VK_CONTROL] & 0x80 || wVkStripped == VK_CONTROL)) ||
+            (wVkStripped == VK_F10))
         {
             message = WM_SYSKEYDOWN;
             TrackSysKey = wVkStripped;

@@ -124,7 +124,7 @@ typedef enum { AA_None = 0, AA_Grey, AA_RGB, AA_BGR, AA_VRGB, AA_VBGR, AA_MAXVAL
 typedef struct
 {
     GlyphSet glyphset;
-    WineXRenderFormat *font_format;
+    const WineXRenderFormat *font_format;
     int nrealized;
     BOOL *realized;
     void **bitmaps;
@@ -144,8 +144,9 @@ struct xrender_info
 {
     int                cache_index;
     Picture            pict;
+    Picture            pict_src;
+    const WineXRenderFormat *format;
 };
-
 
 static gsCacheEntry *glyphsetCache = NULL;
 static DWORD glyphsetCacheSize = 0;
@@ -206,23 +207,6 @@ static CRITICAL_SECTION xrender_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 #define get_be_word(x) RtlUshortByteSwap(x)
 #define NATIVE_BYTE_ORDER LSBFirst
 #endif
-
-static struct xrender_info *get_xrender_info(X11DRV_PDEVICE *physDev)
-{
-    if(!physDev->xrender)
-    {
-        physDev->xrender = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*physDev->xrender));
-
-        if(!physDev->xrender)
-        {
-            ERR("Unable to allocate XRENDERINFO!\n");
-            return NULL;
-        }
-        physDev->xrender->cache_index = -1;
-    }
-
-    return physDev->xrender;
-}
 
 static BOOL get_xrender_template(const WineXRenderFormatTemplate *fmt, XRenderPictFormat *templ, unsigned long *mask)
 {
@@ -409,7 +393,7 @@ sym_not_found:
 }
 
 /* Helper function to convert from a color packed in a 32-bit integer to a XRenderColor */
-static void get_xrender_color(WineXRenderFormat *wxr_format, int src_color, XRenderColor *dst_color)
+static void get_xrender_color(const WineXRenderFormat *wxr_format, int src_color, XRenderColor *dst_color)
 {
     XRenderPictFormat *pf = wxr_format->pict_format;
 
@@ -431,7 +415,7 @@ static void get_xrender_color(WineXRenderFormat *wxr_format, int src_color, XRen
     dst_color->alpha = 0xffff;
 }
 
-static WineXRenderFormat *get_xrender_format(WXRFormat format)
+static const WineXRenderFormat *get_xrender_format(WXRFormat format)
 {
     int i;
     for(i=0; i<WineXRenderFormatsListSize; i++)
@@ -445,7 +429,7 @@ static WineXRenderFormat *get_xrender_format(WXRFormat format)
     return NULL;
 }
 
-static WineXRenderFormat *get_xrender_format_from_color_shifts(int depth, ColorShifts *shifts)
+static const WineXRenderFormat *get_xrender_format_from_color_shifts(int depth, ColorShifts *shifts)
 {
     int redMask, greenMask, blueMask;
     unsigned int i;
@@ -480,6 +464,86 @@ static WineXRenderFormat *get_xrender_format_from_color_shifts(int depth, ColorS
     /* This should not happen because when we reach 'shifts' must have been set and we only allows shifts which are backed by X */
     ERR("No XRender format found!\n");
     return NULL;
+}
+
+/* Set the x/y scaling and x/y offsets in the transformation matrix of the source picture */
+static void set_xrender_transformation(Picture src_pict, float xscale, float yscale, int xoffset, int yoffset)
+{
+#ifdef HAVE_XRENDERSETPICTURETRANSFORM
+    XTransform xform = {{
+        { XDoubleToFixed(xscale), XDoubleToFixed(0), XDoubleToFixed(xoffset) },
+        { XDoubleToFixed(0), XDoubleToFixed(yscale), XDoubleToFixed(yoffset) },
+        { XDoubleToFixed(0), XDoubleToFixed(0), XDoubleToFixed(1) }
+    }};
+
+    pXRenderSetPictureTransform(gdi_display, src_pict, &xform);
+#endif
+}
+
+static struct xrender_info *get_xrender_info(X11DRV_PDEVICE *physDev)
+{
+    if(!physDev->xrender)
+    {
+        physDev->xrender = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*physDev->xrender));
+
+        if(!physDev->xrender)
+        {
+            ERR("Unable to allocate XRENDERINFO!\n");
+            return NULL;
+        }
+        physDev->xrender->cache_index = -1;
+    }
+    if (!physDev->xrender->format)
+        physDev->xrender->format = get_xrender_format_from_color_shifts(physDev->depth, physDev->color_shifts);
+
+    return physDev->xrender;
+}
+
+static Picture get_xrender_picture(X11DRV_PDEVICE *physDev)
+{
+    struct xrender_info *info = get_xrender_info(physDev);
+    if (!info) return 0;
+
+    if (!info->pict && info->format)
+    {
+        XRenderPictureAttributes pa;
+        RGNDATA *clip = X11DRV_GetRegionData( physDev->region, 0 );
+
+        wine_tsx11_lock();
+        pa.subwindow_mode = IncludeInferiors;
+        info->pict = pXRenderCreatePicture(gdi_display, physDev->drawable, info->format->pict_format,
+                                           CPSubwindowMode, &pa);
+        if (info->pict && clip)
+            pXRenderSetPictureClipRectangles( gdi_display, info->pict,
+                                              physDev->dc_rect.left, physDev->dc_rect.top,
+                                              (XRectangle *)clip->Buffer, clip->rdh.nCount );
+        wine_tsx11_unlock();
+        TRACE("Allocing pict=%lx dc=%p drawable=%08lx\n", info->pict, physDev->hdc, physDev->drawable);
+        HeapFree( GetProcessHeap(), 0, clip );
+    }
+
+    return info->pict;
+}
+
+static Picture get_xrender_picture_source(X11DRV_PDEVICE *physDev)
+{
+    struct xrender_info *info = get_xrender_info(physDev);
+    if (!info) return 0;
+
+    if (!info->pict_src && info->format)
+    {
+        XRenderPictureAttributes pa;
+
+        wine_tsx11_lock();
+        pa.subwindow_mode = IncludeInferiors;
+        info->pict_src = pXRenderCreatePicture(gdi_display, physDev->drawable, info->format->pict_format,
+                                               CPSubwindowMode, &pa);
+        wine_tsx11_unlock();
+
+        TRACE("Allocing pict_src=%lx dc=%p drawable=%08lx\n", info->pict_src, physDev->hdc, physDev->drawable);
+    }
+
+    return info->pict_src;
 }
 
 static BOOL fontcmp(LFANDSIZE *p1, LFANDSIZE *p2)
@@ -836,6 +900,21 @@ BOOL X11DRV_XRender_SelectFont(X11DRV_PDEVICE *physDev, HFONT hfont)
 }
 
 /***********************************************************************
+*   X11DRV_XRender_SetDeviceClipping
+*/
+void X11DRV_XRender_SetDeviceClipping(X11DRV_PDEVICE *physDev, const RGNDATA *data)
+{
+    if (physDev->xrender->pict)
+    {
+        wine_tsx11_lock();
+        pXRenderSetPictureClipRectangles( gdi_display, physDev->xrender->pict,
+                                          physDev->dc_rect.left, physDev->dc_rect.top,
+                                          (XRectangle *)data->Buffer, data->rdh.nCount );
+        wine_tsx11_unlock();
+    }
+}
+
+/***********************************************************************
  *   X11DRV_XRender_DeleteDC
  */
 void X11DRV_XRender_DeleteDC(X11DRV_PDEVICE *physDev)
@@ -854,7 +933,7 @@ void X11DRV_XRender_DeleteDC(X11DRV_PDEVICE *physDev)
 
 BOOL X11DRV_XRender_SetPhysBitmapDepth(X_PHYSBITMAP *physBitmap, const DIBSECTION *dib)
 {
-    WineXRenderFormat *fmt;
+    const WineXRenderFormat *fmt;
     ColorShifts shifts;
 
     /* When XRender is not around we can only use the screen_depth and when needed we perform depth conversion
@@ -886,18 +965,28 @@ BOOL X11DRV_XRender_SetPhysBitmapDepth(X_PHYSBITMAP *physBitmap, const DIBSECTIO
  */
 void X11DRV_XRender_UpdateDrawable(X11DRV_PDEVICE *physDev)
 {
-    wine_tsx11_lock();
+    struct xrender_info *info = physDev->xrender;
 
-    if(physDev->xrender->pict)
+    if (info->pict || info->pict_src)
     {
-        TRACE("freeing pict = %lx dc = %p\n", physDev->xrender->pict, physDev->hdc);
-        XFlush(gdi_display);
-        pXRenderFreePicture(gdi_display, physDev->xrender->pict);
-        physDev->xrender->pict = 0;
+        wine_tsx11_lock();
+        XFlush( gdi_display );
+        if (info->pict)
+        {
+            TRACE("freeing pict = %lx dc = %p\n", info->pict, physDev->hdc);
+            pXRenderFreePicture(gdi_display, info->pict);
+            info->pict = 0;
+        }
+        if(info->pict_src)
+        {
+            TRACE("freeing pict = %lx dc = %p\n", info->pict_src, physDev->hdc);
+            pXRenderFreePicture(gdi_display, info->pict_src);
+            info->pict_src = 0;
+        }
+        wine_tsx11_unlock();
     }
-    wine_tsx11_unlock();
 
-    return;
+    info->format = NULL;
 }
 
 /************************************************************************
@@ -1369,7 +1458,7 @@ static void SmoothGlyphGray(XImage *image, int x, int y, void *bitmap, XGlyphInf
  * Returns an appropriate Picture for tiling the text colour.
  * Call and use result within the xrender_cs
  */
-static Picture get_tile_pict(WineXRenderFormat *wxr_format, int text_pixel)
+static Picture get_tile_pict(const WineXRenderFormat *wxr_format, int text_pixel)
 {
     static struct
     {
@@ -1429,12 +1518,10 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
 				const RECT *lprect, LPCWSTR wstr, UINT count,
 				const INT *lpDx )
 {
-    RGNDATA *data;
     XGCValues xgcval;
     gsCacheEntry *entry;
     gsCacheEntryFormat *formatEntry;
     BOOL retv = FALSE;
-    HDC hdc = physDev->hdc;
     int textPixel, backgroundPixel;
     HRGN saved_region = 0;
     BOOL disable_antialias = FALSE;
@@ -1443,7 +1530,7 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
     unsigned int idx;
     double cosEsc, sinEsc;
     LOGFONTW lf;
-    WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDev->depth, physDev->color_shifts);
+    const WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDev->depth, physDev->color_shifts);
     Picture tile_pict = 0;
 
     /* Do we need to disable antialiasing because of palette mode? */
@@ -1515,35 +1602,6 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
         DeleteObject( clip_region );
     }
 
-    if(X11DRV_XRender_Installed) {
-        if(!physDev->xrender->pict) {
-	    XRenderPictureAttributes pa;
-	    pa.subwindow_mode = IncludeInferiors;
-
-	    wine_tsx11_lock();
-	    physDev->xrender->pict = pXRenderCreatePicture(gdi_display,
-							   physDev->drawable, dst_format->pict_format,
-							   CPSubwindowMode, &pa);
-	    wine_tsx11_unlock();
-
-	    TRACE("allocing pict = %lx dc = %p drawable = %08lx\n",
-                  physDev->xrender->pict, hdc, physDev->drawable);
-	} else {
-	    TRACE("using existing pict = %lx dc = %p drawable = %08lx\n",
-                  physDev->xrender->pict, hdc, physDev->drawable);
-	}
-
-	if ((data = X11DRV_GetRegionData( physDev->region, 0 )))
-	{
-	    wine_tsx11_lock();
-	    pXRenderSetPictureClipRectangles( gdi_display, physDev->xrender->pict,
-					      physDev->dc_rect.left, physDev->dc_rect.top,
-					      (XRectangle *)data->Buffer, data->rdh.nCount );
-	    wine_tsx11_unlock();
-	    HeapFree( GetProcessHeap(), 0, data );
-	}
-    }
-
     EnterCriticalSection(&xrender_cs);
 
     entry = glyphsetCache + physDev->xrender->cache_index;
@@ -1578,6 +1636,7 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
         INT offset = 0;
         POINT desired, current;
         int render_op = PictOpOver;
+        Picture pict = get_xrender_picture(physDev);
 
         /* There's a bug in XRenderCompositeText that ignores the xDst and yDst parameters.
            So we pass zeros to the function and move to our starting position using the first
@@ -1618,9 +1677,11 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
             }
         }
         wine_tsx11_lock();
+        /* Make sure we don't have any transforms set from a previous call */
+        set_xrender_transformation(pict, 1, 1, 0, 0);
         pXRenderCompositeText16(gdi_display, render_op,
                                 tile_pict,
-                                physDev->xrender->pict,
+                                pict,
                                 formatEntry->font_format->pict_format,
                                 0, 0, 0, 0, elts, count);
         wine_tsx11_unlock();
@@ -1781,20 +1842,6 @@ done_unlock:
     return retv;
 }
 
-/* Set the x/y scaling and x/y offsets in the transformation matrix of the source picture */
-static void set_xrender_transformation(Picture src_pict, float xscale, float yscale, int xoffset, int yoffset)
-{
-#ifdef HAVE_XRENDERSETPICTURETRANSFORM
-    XTransform xform = {{
-        { XDoubleToFixed(xscale), XDoubleToFixed(0), XDoubleToFixed(xoffset) },
-        { XDoubleToFixed(0), XDoubleToFixed(yscale), XDoubleToFixed(yoffset) },
-        { XDoubleToFixed(0), XDoubleToFixed(0), XDoubleToFixed(1) }
-    }};
-
-    pXRenderSetPictureTransform(gdi_display, src_pict, &xform);
-#endif
-}
-
 /* Helper function for (stretched) blitting using xrender */
 static void xrender_blit(Picture src_pict, Picture mask_pict, Picture dst_pict, int x_src, int y_src, float xscale, float yscale, int width, int height)
 {
@@ -1848,9 +1895,7 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
     int y, y2;
     POINT pts[2];
     BOOL top_down = FALSE;
-    RGNDATA *rgndata;
-    WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(devDst->depth, devDst->color_shifts);
-    WineXRenderFormat *src_format;
+    const WineXRenderFormat *src_format;
     int repeat_src;
 
     if(!X11DRV_XRender_Installed) {
@@ -1961,7 +2006,7 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
 
     }
 
-    rgndata = X11DRV_GetRegionData( devDst->region, 0 );
+    dst_pict = get_xrender_picture(devDst);
 
     wine_tsx11_lock();
     image = XCreateImage(gdi_display, visual, 32, ZPixmap, 0,
@@ -1975,15 +2020,6 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
         return FALSE;
     }
 
-    pa.subwindow_mode = IncludeInferiors;
-    pa.repeat = repeat_src ? RepeatNormal : RepeatNone;
-
-    /* FIXME use devDst->xrender->pict ? */
-    dst_pict = pXRenderCreatePicture(gdi_display,
-                                     devDst->drawable,
-                                     dst_format->pict_format,
-                                     CPSubwindowMode, &pa);
-    TRACE("dst_pict %08lx\n", dst_pict);
     TRACE("src_drawable = %08lx\n", devSrc->drawable);
     xpm = XCreatePixmap(gdi_display,
                         root_window,
@@ -1993,19 +2029,12 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
     TRACE("xpm = %08lx\n", xpm);
     XPutImage(gdi_display, xpm, gc, image, 0, 0, 0, 0, widthSrc, heightSrc);
 
+    pa.subwindow_mode = IncludeInferiors;
+    pa.repeat = repeat_src ? RepeatNormal : RepeatNone;
     src_pict = pXRenderCreatePicture(gdi_display,
                                      xpm, src_format->pict_format,
                                      CPSubwindowMode|CPRepeat, &pa);
     TRACE("src_pict %08lx\n", src_pict);
-
-    if (rgndata)
-    {
-        pXRenderSetPictureClipRectangles( gdi_display, dst_pict,
-                                          devDst->dc_rect.left, devDst->dc_rect.top,
-                                          (XRectangle *)rgndata->Buffer, 
-                                          rgndata->rdh.nCount );
-        HeapFree( GetProcessHeap(), 0, rgndata );
-    }
 
     /* Make sure we ALWAYS set the transformation matrix even if we don't need to scale. The reason is
      * that later on we want to reuse pictures (it can bring a lot of extra performance) and each time
@@ -2022,7 +2051,6 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
     pXRenderFreePicture(gdi_display, src_pict);
     XFreePixmap(gdi_display, xpm);
     XFreeGC(gdi_display, gc);
-    pXRenderFreePicture(gdi_display, dst_pict);
     image->data = NULL;
     XDestroyImage(image);
 
@@ -2047,8 +2075,8 @@ void X11DRV_XRender_CopyBrush(X11DRV_PDEVICE *physDev, X_PHYSBITMAP *physBitmap,
     }
     else /* We meed depth conversion */
     {
-        WineXRenderFormat *src_format = get_xrender_format_from_color_shifts(physBitmap->pixmap_depth, &physBitmap->pixmap_color_shifts);
-        WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDev->depth, physDev->color_shifts);
+        const WineXRenderFormat *src_format = get_xrender_format_from_color_shifts(physBitmap->pixmap_depth, &physBitmap->pixmap_color_shifts);
+        const WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDev->depth, physDev->color_shifts);
 
         Picture src_pict, dst_pict;
         XRenderPictureAttributes pa;
@@ -2076,8 +2104,7 @@ BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE
     int height = visRectDst->bottom - visRectDst->top;
     int x_src = physDevSrc->dc_rect.left + visRectSrc->left;
     int y_src = physDevSrc->dc_rect.top + visRectSrc->top;
-    WineXRenderFormat *src_format = get_xrender_format_from_color_shifts(physDevSrc->depth, physDevSrc->color_shifts);
-    WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDevDst->depth, physDevDst->color_shifts);
+    const WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDevDst->depth, physDevDst->color_shifts);
     Picture src_pict=0, dst_pict=0, mask_pict=0;
 
     double xscale = widthSrc/(double)widthDst;
@@ -2121,36 +2148,34 @@ BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE
         get_xrender_color(dst_format, physDevDst->textPixel, &col);
 
         /* We use the source drawable as a mask */
-        wine_tsx11_lock();
-        mask_pict = pXRenderCreatePicture(gdi_display, physDevSrc->drawable, src_format->pict_format, CPSubwindowMode|CPRepeat, &pa);
+        mask_pict = get_xrender_picture_source(physDevSrc);
 
         /* Use backgroundPixel as the foreground color */
+        EnterCriticalSection( &xrender_cs );
         src_pict = get_tile_pict(dst_format, physDevDst->backgroundPixel);
 
         /* Create a destination picture and fill it with textPixel color as the background color */
+        wine_tsx11_lock();
         dst_pict = pXRenderCreatePicture(gdi_display, pixmap, dst_format->pict_format, CPSubwindowMode|CPRepeat, &pa);
         pXRenderFillRectangle(gdi_display, PictOpSrc, dst_pict, &col, 0, 0, width, height);
 
         xrender_blit(src_pict, mask_pict, dst_pict, x_src, y_src, xscale, yscale, width, height);
 
         if(dst_pict) pXRenderFreePicture(gdi_display, dst_pict);
-        if(mask_pict) pXRenderFreePicture(gdi_display, mask_pict);
         wine_tsx11_unlock();
+        LeaveCriticalSection( &xrender_cs );
     }
     else /* color -> color but with different depths */
     {
-        wine_tsx11_lock();
-        src_pict = pXRenderCreatePicture(gdi_display,
-                                          physDevSrc->drawable, src_format->pict_format,
-                                          CPSubwindowMode|CPRepeat, &pa);
+        src_pict = get_xrender_picture_source(physDevSrc);
 
+        wine_tsx11_lock();
         dst_pict = pXRenderCreatePicture(gdi_display,
                                           pixmap, dst_format->pict_format,
                                           CPSubwindowMode|CPRepeat, &pa);
 
         xrender_blit(src_pict, 0, dst_pict, x_src, y_src, xscale, yscale, width, height);
 
-        if(src_pict) pXRenderFreePicture(gdi_display, src_pict);
         if(dst_pict) pXRenderFreePicture(gdi_display, dst_pict);
         wine_tsx11_unlock();
     }
@@ -2179,6 +2204,12 @@ void X11DRV_XRender_DeleteDC(X11DRV_PDEVICE *physDev)
 {
   assert(0);
   return;
+}
+
+void X11DRV_XRender_SetDeviceClipping(X11DRV_PDEVICE *physDev, const RGNDATA *data)
+{
+    assert(0);
+    return;
 }
 
 BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flags,

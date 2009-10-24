@@ -166,6 +166,9 @@ void CDECL X11DRV_SetDeviceClipping( X11DRV_PDEVICE *physDev, HRGN vis_rgn, HRGN
     XSetClipRectangles( gdi_display, physDev->gc, physDev->dc_rect.left, physDev->dc_rect.top,
                         (XRectangle *)data->Buffer, data->rdh.nCount, YXBanded );
     wine_tsx11_unlock();
+
+    if (physDev->xrender) X11DRV_XRender_SetDeviceClipping(physDev, data);
+
     HeapFree( GetProcessHeap(), 0, data );
 }
 

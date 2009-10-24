@@ -148,12 +148,12 @@ static void restore_clipping(HDC hdc, HRGN hrgn)
 static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
 {
     HICON prevIcon;
-    CURSORICONINFO * info;
+    SIZE size;
 
     if ((style & SS_TYPEMASK) != SS_ICON) return 0;
-    info = hicon ? GlobalLock(hicon) : NULL;
-    if (hicon && !info) {
-        WARN("hicon != 0, but info == 0\n");
+    if (hicon && !get_icon_size( hicon, &size ))
+    {
+        WARN("hicon != 0, but invalid\n");
         return 0;
     }
     prevIcon = (HICON)SetWindowLongPtrW( hwnd, HICON_GWL_OFFSET, (LONG_PTR)hicon );
@@ -170,11 +170,9 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
         }
         else */
         {
-            SetWindowPos( hwnd, 0, 0, 0, info->nWidth, info->nHeight,
-                          SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+            SetWindowPos( hwnd, 0, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
     }
-    if (info) GlobalUnlock(hicon);
     return prevIcon;
 }
 
@@ -573,7 +571,9 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
 
     case STM_GETIMAGE:
         return (LRESULT)STATIC_GetImage( hwnd, wParam, full_style );
-    
+
+        return HICON_16(STATIC_GetImage( hwnd, IMAGE_ICON, full_style ));
+
     case STM_GETICON:
         return (LRESULT)STATIC_GetImage( hwnd, IMAGE_ICON, full_style );
 
@@ -596,6 +596,8 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         STATIC_TryPaintFcn( hwnd, full_style );
 	break;
 
+        wParam = (WPARAM)HICON_32( (HICON16)wParam );
+        /* fall through */
     case STM_SETICON:
         lResult = (LRESULT)STATIC_SetIcon( hwnd, (HICON)wParam, full_style );
         STATIC_TryPaintFcn( hwnd, full_style );
@@ -798,13 +800,12 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
     RECT rc, iconRect;
     HBRUSH hbrush;
     HICON hIcon;
-    CURSORICONINFO * info;
+    SIZE size;
 
     GetClientRect( hwnd, &rc );
     hbrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
     hIcon = (HICON)GetWindowLongPtrW( hwnd, HICON_GWL_OFFSET );
-    info = hIcon ? GlobalLock(hIcon) : NULL;
-    if (!hIcon || !info)
+    if (!hIcon || !get_icon_size( hIcon, &size ))
     {
         FillRect(hdc, &rc, hbrush);
     }
@@ -812,10 +813,10 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
     {
         if (style & SS_CENTERIMAGE)
         {
-            iconRect.left = (rc.right - rc.left) / 2 - info->nWidth / 2;
-            iconRect.top = (rc.bottom - rc.top) / 2 - info->nHeight / 2;
-            iconRect.right = iconRect.left + info->nWidth;
-            iconRect.bottom = iconRect.top + info->nHeight;
+            iconRect.left = (rc.right - rc.left) / 2 - size.cx / 2;
+            iconRect.top = (rc.bottom - rc.top) / 2 - size.cy / 2;
+            iconRect.right = iconRect.left + size.cx;
+            iconRect.bottom = iconRect.top + size.cy;
         }
         else
             iconRect = rc;
@@ -823,7 +824,6 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
         DrawIconEx( hdc, iconRect.left, iconRect.top, hIcon, iconRect.right - iconRect.left,
                     iconRect.bottom - iconRect.top, 0, NULL, DI_NORMAL );
     }
-    if (info) GlobalUnlock(hIcon);
 }
 
 static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )

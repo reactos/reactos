@@ -4537,16 +4537,16 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 
 	alloc_size = ROUND_TO_GROW((es->buffer_size + 1) * sizeof(WCHAR));
 	if(!(es->hloc32W = LocalAlloc(LMEM_MOVEABLE | LMEM_ZEROINIT, alloc_size)))
-	    return FALSE;
+	    goto cleanup;
 	es->buffer_size = LocalSize(es->hloc32W)/sizeof(WCHAR) - 1;
 
 	if (!(es->undo_text = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (es->buffer_size + 1) * sizeof(WCHAR))))
-		return FALSE;
+		goto cleanup;
 	es->undo_buffer_size = es->buffer_size;
 
 	if (es->style & ES_MULTILINE)
 		if (!(es->first_line_def = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINEDEF))))
-			return FALSE;
+			goto cleanup;
 	es->line_count = 1;
 
 	/*
@@ -4566,6 +4566,14 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 		SetWindowLongW(hwnd, GWL_STYLE, es->style & ~WS_BORDER);
 
 	return TRUE;
+
+cleanup:
+	SetWindowLongPtrW(es->hwndSelf, 0, 0);
+	HeapFree(GetProcessHeap(), 0, es->first_line_def);
+	HeapFree(GetProcessHeap(), 0, es->undo_text);
+	if (es->hloc32W) LocalFree(es->hloc32W);
+	HeapFree(GetProcessHeap(), 0, es);
+	return FALSE;
 }
 
 
@@ -4653,7 +4661,8 @@ static LRESULT EDIT_WM_Destroy(EDITSTATE *es)
 		pc = pp;
 	}
 
-        SetWindowLongPtrW( es->hwndSelf, 0, 0 );
+	SetWindowLongPtrW( es->hwndSelf, 0, 0 );
+	HeapFree(GetProcessHeap(), 0, es->undo_text);
 	HeapFree(GetProcessHeap(), 0, es);
 
 	return 0;
@@ -5255,7 +5264,11 @@ const struct builtin_class_descr EDIT_builtin_class =
     CS_DBLCLKS | CS_PARENTDC,   /* style */
     EditWndProcA,         /* procA */
     EditWndProcW,         /* procW */
+#ifdef _WIN64
     sizeof(EDITSTATE *),  /* extra */
+#else
+    sizeof(EDITSTATE *) + sizeof(HANDLE16), /* extra */
+#endif
     IDC_IBEAM,            /* cursor */
     0                     /* brush */
 };

@@ -533,17 +533,17 @@ static LRESULT NC_DoNCHitTest (WND *wndPtr, POINT pt )
     RECT rect, rcClient;
     POINT ptClient;
 
-    TRACE("hwnd=%p pt=%d,%d\n", wndPtr->hwndSelf, pt.x, pt.y );
+    TRACE("hwnd=%p pt=%d,%d\n", wndPtr->obj.handle, pt.x, pt.y );
 
-    GetWindowRect(wndPtr->hwndSelf, &rect );
+    GetWindowRect(wndPtr->obj.handle, &rect );
     if (!PtInRect( &rect, pt )) return HTNOWHERE;
 
     if (wndPtr->dwStyle & WS_MINIMIZE) return HTCAPTION;
 
     /* Check client area */
     ptClient = pt;
-    ScreenToClient( wndPtr->hwndSelf, &ptClient );
-    GetClientRect( wndPtr->hwndSelf, &rcClient );
+    ScreenToClient( wndPtr->obj.handle, &ptClient );
+    GetClientRect( wndPtr->obj.handle, &rcClient );
     if (PtInRect( &rcClient, ptClient )) return HTCLIENT;
 
     /* Check borders */
@@ -606,7 +606,7 @@ static LRESULT NC_DoNCHitTest (WND *wndPtr, POINT pt )
             /* Check system menu */
             if ((wndPtr->dwStyle & WS_SYSMENU) && !(wndPtr->dwExStyle & WS_EX_TOOLWINDOW))
             {
-                if (NC_IconForWindow(wndPtr->hwndSelf))
+                if (NC_IconForWindow(wndPtr->obj.handle))
                     rect.left += GetSystemMetrics(SM_CYCAPTION) - 1;
             }
             if (pt.x < rect.left) return HTSYSMENU;

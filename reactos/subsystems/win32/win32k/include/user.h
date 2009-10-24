@@ -36,7 +36,7 @@ enum user_object
 {
     USER_WINDOW = 1,
     USER_HOOK,
-    USER_MONITOR
+    USER_CLIENT  /* arbitrary client handle */
 };
 
 #define DESKTOP_ATOM  ((atom_t)32769)
@@ -72,6 +72,7 @@ extern void *get_user_object_handle( user_handle_t *handle, enum user_object typ
 extern user_handle_t get_user_full_handle( user_handle_t handle );
 extern void *free_user_handle( user_handle_t handle );
 extern void *next_user_handle( user_handle_t *handle, enum user_object type );
+extern void free_process_user_handles( PPROCESSINFO process );
 
 /* clipboard functions */
 

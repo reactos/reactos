@@ -28,20 +28,19 @@
 #include <winuser.h>
 #include <wine/windef16.h>
 
-#define WND_MAGIC     0x444e4957  /* 'WIND' */
+#include "user_private.h"
 
 struct tagCLASS;
 struct tagDIALOGINFO;
 
 typedef struct tagWND
 {
-    HWND           hwndSelf;      /* Handle of this window */
+    struct user_object obj;       /* object header */
     HWND           parent;        /* Window parent */
     HWND           owner;         /* Window owner */
     struct tagCLASS *class;       /* Window class */
     struct dce    *dce;           /* DCE pointer */
     WNDPROC        winproc;       /* Window procedure */
-    DWORD          dwMagic;       /* Magic number (must be WND_MAGIC) */
     DWORD          tid;           /* Owner thread id */
     HINSTANCE      hInstance;     /* Window hInstance (from CreateWindow) */
     RECT           rectClient;    /* Client area rel. to parent client area */

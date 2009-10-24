@@ -192,7 +192,7 @@ void WINAPI mouse_event( DWORD dwFlags, DWORD dx, DWORD dy,
 /***********************************************************************
  *		GetCursorPos (USER32.@)
  */
-BOOL WINAPI GetCursorPos( POINT *pt )
+BOOL WINAPI DECLSPEC_HOTPATCH GetCursorPos( POINT *pt )
 {
     if (!pt) return FALSE;
     return USER_Driver->pGetCursorPos( pt );
@@ -215,7 +215,7 @@ BOOL WINAPI GetCursorInfo( PCURSORINFO pci )
 /***********************************************************************
  *		SetCursorPos (USER32.@)
  */
-BOOL WINAPI SetCursorPos( INT x, INT y )
+BOOL WINAPI DECLSPEC_HOTPATCH SetCursorPos( INT x, INT y )
 {
     return USER_Driver->pSetCursorPos( x, y );
 }
@@ -224,7 +224,7 @@ BOOL WINAPI SetCursorPos( INT x, INT y )
 /**********************************************************************
  *		SetCapture (USER32.@)
  */
-HWND WINAPI SetCapture( HWND hwnd )
+HWND WINAPI DECLSPEC_HOTPATCH SetCapture( HWND hwnd )
 {
     HWND previous;
 
@@ -236,7 +236,7 @@ HWND WINAPI SetCapture( HWND hwnd )
 /**********************************************************************
  *		ReleaseCapture (USER32.@)
  */
-BOOL WINAPI ReleaseCapture(void)
+BOOL WINAPI DECLSPEC_HOTPATCH ReleaseCapture(void)
 {
     BOOL ret = set_capture_window( 0, 0, NULL );
 
@@ -271,7 +271,7 @@ HWND WINAPI GetCapture(void)
  * bit set to 1 if currently pressed, low-order bit set to 1 if key has
  * been pressed.
  */
-SHORT WINAPI GetAsyncKeyState(INT nKey)
+SHORT WINAPI DECLSPEC_HOTPATCH GetAsyncKeyState(INT nKey)
 {
     if (nKey < 0 || nKey > 256)
         return 0;
@@ -370,7 +370,7 @@ UINT WINAPI GetRawInputDeviceList(PRAWINPUTDEVICELIST pRawInputDeviceList, PUINT
 /******************************************************************
 *		RegisterRawInputDevices (USER32.@)
 */
-BOOL WINAPI RegisterRawInputDevices(PRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
+BOOL WINAPI DECLSPEC_HOTPATCH RegisterRawInputDevices(PRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
     FIXME("(pRawInputDevices=%p, uiNumDevices=%d, cbSize=%d) stub!\n", pRawInputDevices, uiNumDevices, cbSize);
 
@@ -393,7 +393,7 @@ UINT WINAPI GetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, P
 /******************************************************************
 *		GetRawInputBuffer (USER32.@)
 */
-UINT WINAPI GetRawInputBuffer(PRAWINPUT pData, PUINT pcbSize, UINT cbSizeHeader)
+UINT WINAPI DECLSPEC_HOTPATCH GetRawInputBuffer(PRAWINPUT pData, PUINT pcbSize, UINT cbSizeHeader)
 {
     FIXME("(pData=%p, pcbSize=%p, cbSizeHeader=%d) stub!\n", pData, pcbSize, cbSizeHeader);
 
@@ -474,7 +474,7 @@ BOOL WINAPI AttachThreadInput( DWORD from, DWORD to, BOOL attach )
  * keyboard-input message.  This function retrieves the state of the key
  * at the time the input message was generated.
  */
-SHORT WINAPI GetKeyState(INT vkey)
+SHORT WINAPI DECLSPEC_HOTPATCH GetKeyState(INT vkey)
 {
     SHORT retval = 0;
 
@@ -493,7 +493,7 @@ SHORT WINAPI GetKeyState(INT vkey)
 /**********************************************************************
  *		GetKeyboardState (USER32.@)
  */
-BOOL WINAPI GetKeyboardState( LPBYTE state )
+BOOL WINAPI DECLSPEC_HOTPATCH GetKeyboardState( LPBYTE state )
 {
     BOOL ret;
 

@@ -61,7 +61,7 @@ IntCreateMonitorObject()
    }
 
    RtlZeroMemory(Monitor, sizeof (MONITOR));
-   Monitor->Handle = (HANDLE)alloc_user_handle(Monitor, USER_MONITOR);
+   Monitor->Handle = (HANDLE)alloc_user_handle(Monitor, USER_CLIENT);
 
    ExInitializeFastMutex(&Monitor->Lock);
 
@@ -99,7 +99,7 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
       return NULL;
    }
 
-   Monitor = (PMONITOR)get_user_object((user_handle_t)hMonitor, USER_MONITOR);
+   Monitor = (PMONITOR)get_user_object((user_handle_t)hMonitor, USER_CLIENT);
    if (!Monitor)
    {
       SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);

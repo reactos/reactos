@@ -2,7 +2,7 @@
  * USER resource functions
  *
  * Copyright 1993 Robert J. Amstadt
- * Copyright 1995 Alexandre Julliard
+ * Copyright 1995, 2009 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,10 +26,8 @@
 #include "winerror.h"
 #include "winternl.h"
 #include "winnls.h"
-#include "wine/winbase16.h"
-#include "wine/winuser16.h"
-#include "wownt32.h"
 #include "wine/debug.h"
+#include "user_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(resource);
 WINE_DECLARE_DEBUG_CHANNEL(accel);
@@ -41,73 +39,39 @@ typedef struct
     WORD   key;
     WORD   cmd;
     WORD   pad;
-} PE_ACCEL, *LPPE_ACCEL;
+} PE_ACCEL;
 
-/**********************************************************************
- *			LoadAccelerators	[USER.177]
- */
-#ifndef __REACTOS__
-HACCEL16 WINAPI LoadAccelerators16(HINSTANCE16 instance, LPCSTR lpTableName)
+/* the accelerator user object */
+struct accelerator
 {
-    HRSRC16	hRsrc;
+    struct user_object obj;
+    unsigned int       count;
+    PE_ACCEL           table[1];
+};
 
-    TRACE_(accel)("%04x %s\n", instance, debugstr_a(lpTableName) );
-
-    if (!(hRsrc = FindResource16( instance, lpTableName, (LPSTR)RT_ACCELERATOR ))) {
-      WARN_(accel)("couldn't find accelerator table resource\n");
-      return 0;
-    }
-
-    TRACE_(accel)("returning HACCEL 0x%x\n", hRsrc);
-    return LoadResource16(instance,hRsrc);
-}
-#endif
 /**********************************************************************
  *			LoadAcceleratorsW	(USER32.@)
- * The image layout seems to look like this (not 100% sure):
- * 00:	WORD	type		type of accelerator
- * 02:	WORD	event
- * 04:	WORD	IDval
- * 06:	WORD	pad		(to DWORD boundary)
  */
-HACCEL WINAPI LoadAcceleratorsW(HINSTANCE instance,LPCWSTR lpTableName)
+HACCEL WINAPI LoadAcceleratorsW(HINSTANCE instance, LPCWSTR name)
 {
-    HRSRC hRsrc;
-    HACCEL hMem;
-    HACCEL hRetval=0;
-    DWORD size;
+    struct accelerator *accel;
+    const PE_ACCEL *table;
+    HRSRC rsrc;
+    HACCEL handle;
+    DWORD count;
 
-    if (HIWORD(lpTableName))
-        TRACE_(accel)("%p '%s'\n", instance, (const char *)( lpTableName ) );
-    else
-        TRACE_(accel)("%p 0x%04x\n", instance, LOWORD(lpTableName) );
-
-    if (!(hRsrc = FindResourceW( instance, lpTableName, (LPWSTR)RT_ACCELERATOR )))
-    {
-      WARN_(accel)("couldn't find accelerator table resource\n");
-    } else {
-      hMem = LoadResource( instance, hRsrc );
-      size = SizeofResource( instance, hRsrc );
-      if(size>=sizeof(PE_ACCEL))
-      {
-	LPPE_ACCEL accel_table = (LPPE_ACCEL) hMem;
-	LPACCEL accel16;
-	int i,nrofaccells = size/sizeof(PE_ACCEL);
-
-	hRetval = GlobalAlloc(0,sizeof(ACCEL)*nrofaccells);
-	accel16 = (LPACCEL)GlobalLock(hRetval);
-	for (i=0;i<nrofaccells;i++) {
-          accel16[i].fVirt = accel_table[i].fVirt & 0x7f;
-          accel16[i].key = accel_table[i].key;
-          if( !(accel16[i].fVirt & FVIRTKEY) )
-            accel16[i].key &= 0x00ff;
-          accel16[i].cmd = accel_table[i].cmd;
-	}
-	accel16[i-1].fVirt |= 0x80;
-      }
-    }
-    TRACE_(accel)("returning HACCEL %p\n", hRsrc);
-    return hRetval;
+    if (!(rsrc = FindResourceW( instance, name, (LPWSTR)RT_ACCELERATOR ))) return 0;
+    table = LoadResource( instance, rsrc );
+    count = SizeofResource( instance, rsrc ) / sizeof(*table);
+    if (!count) return 0;
+    accel = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( struct accelerator, table[count] ));
+    if (!accel) return 0;
+    accel->count = count;
+    memcpy( accel->table, table, count * sizeof(*table) );
+    if (!(handle = alloc_user_handle( &accel->obj, USER_ACCEL )))
+        HeapFree( GetProcessHeap(), 0, accel );
+    TRACE_(accel)("%p %s returning %p\n", instance, debugstr_w(name), handle );
+    return handle;
 }
 
 /***********************************************************************
@@ -134,164 +98,118 @@ HACCEL WINAPI LoadAcceleratorsA(HINSTANCE instance,LPCSTR lpTableName)
 /**********************************************************************
  *             CopyAcceleratorTableA   (USER32.@)
  */
-INT WINAPI CopyAcceleratorTableA(HACCEL src, LPACCEL dst, INT entries)
+INT WINAPI CopyAcceleratorTableA(HACCEL src, LPACCEL dst, INT count)
 {
-  return CopyAcceleratorTableW(src, dst, entries);
+    char ch;
+    int i, ret = CopyAcceleratorTableW( src, dst, count );
+
+    if (ret && dst)
+    {
+        for (i = 0; i < ret; i++)
+        {
+            if (dst[i].fVirt & FVIRTKEY) continue;
+            WideCharToMultiByte( CP_ACP, 0, &dst[i].key, 1, &ch, 1, NULL, NULL );
+            dst[i].key = ch;
+        }
+    }
+    return ret;
 }
 
 /**********************************************************************
  *             CopyAcceleratorTableW   (USER32.@)
- *
- * By mortene@pvv.org 980321
  */
-INT WINAPI CopyAcceleratorTableW(HACCEL src, LPACCEL dst,
-				     INT entries)
+INT WINAPI CopyAcceleratorTableW(HACCEL src, LPACCEL dst, INT count)
 {
-  int i,xsize;
-  LPACCEL accel = (LPACCEL)GlobalLock(src);
-  BOOL done = FALSE;
+    struct accelerator *accel;
+    int i;
 
-  /* Do parameter checking to avoid the explosions and the screaming
-     as far as possible. */
-  if((dst && (entries < 1)) || (src == NULL) || !accel) {
-    WARN_(accel)("Application sent invalid parameters (%p %p %d).\n",
-         src, dst, entries);
-    return 0;
-  }
-  xsize = GlobalSize(src)/sizeof(ACCEL);
-  if (xsize<entries) entries=xsize;
-
-  i=0;
-  while(!done) {
-    /* Spit out some debugging information. */
-    TRACE_(accel)("accel %d: type 0x%02x, event '%c', IDval 0x%04x.\n",
-	  i, accel[i].fVirt, accel[i].key, accel[i].cmd);
-
-    /* Copy data to the destination structure array (if dst == NULL,
-       we're just supposed to count the number of entries). */
-    if(dst) {
-      dst[i].fVirt = accel[i].fVirt&0x7f;
-      dst[i].key = accel[i].key;
-      dst[i].cmd = accel[i].cmd;
-
-      /* Check if we've reached the end of the application supplied
-         accelerator table. */
-      if(i+1 == entries)
-	done = TRUE;
+    if (!(accel = get_user_handle_ptr( src, USER_ACCEL ))) return 0;
+    if (accel == OBJ_OTHER_PROCESS)
+    {
+        FIXME( "other process handle %p?\n", src );
+        return 0;
     }
-
-    /* The highest order bit seems to mark the end of the accelerator
-       resource table, but not always. Use GlobalSize() check too. */
-    if((accel[i].fVirt & 0x80) != 0) done = TRUE;
-
-    i++;
-  }
-
-  return i;
+    if (dst)
+    {
+        if (count > accel->count) count = accel->count;
+        for (i = 0; i < count; i++)
+        {
+            dst[i].fVirt = accel->table[i].fVirt & 0x7f;
+            dst[i].key   = accel->table[i].key;
+            dst[i].cmd   = accel->table[i].cmd;
+        }
+    }
+    else count = accel->count;
+    release_user_handle_ptr( accel );
+    return count;
 }
 
 /*********************************************************************
  *                    CreateAcceleratorTableA   (USER32.@)
- *
- * By mortene@pvv.org 980321
  */
-HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccel, INT cEntries)
+HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccel, INT count)
 {
-  HACCEL	hAccel;
-  LPACCEL	accel;
-  int		i;
+    struct accelerator *accel;
+    HACCEL handle;
+    int i;
 
-  /* Do parameter checking just in case someone's trying to be
-     funny. */
-  if(cEntries < 1) {
-    WARN_(accel)("Application sent invalid parameters (%p %d).\n",
-	 lpaccel, cEntries);
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return NULL;
-  }
-
-  /* Allocate memory and copy the table. */
-  hAccel = GlobalAlloc(0,cEntries*sizeof(ACCEL));
-
-  TRACE_(accel)("handle %p\n", hAccel);
-  if(!hAccel) {
-    ERR_(accel)("Out of memory.\n");
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return NULL;
-  }
-  accel = GlobalLock(hAccel);
-  for (i=0;i<cEntries;i++) {
-    accel[i].fVirt = lpaccel[i].fVirt&0x7f;
-    accel[i].key = lpaccel[i].key;
-    if( !(accel[i].fVirt & FVIRTKEY) )
-      accel[i].key &= 0x00ff;
-    accel[i].cmd = lpaccel[i].cmd;
-  }
-  /* Set the end-of-table terminator. */
-  accel[cEntries-1].fVirt |= 0x80;
-
-  TRACE_(accel)("Allocated accelerator handle %p with %d entries\n", hAccel,cEntries);
-  return hAccel;
+    if (count < 1)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+    accel = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( struct accelerator, table[count] ));
+    if (!accel) return 0;
+    accel->count = count;
+    for (i = 0; i < count; i++)
+    {
+        accel->table[i].fVirt = lpaccel[i].fVirt;
+        accel->table[i].cmd   = lpaccel[i].cmd;
+        if (!(lpaccel[i].fVirt & FVIRTKEY))
+        {
+            char ch = lpaccel[i].key;
+            MultiByteToWideChar( CP_ACP, 0, &ch, 1, &accel->table[i].key, 1 );
+        }
+        else accel->table[i].key = lpaccel[i].key;
+    }
+    if (!(handle = alloc_user_handle( &accel->obj, USER_ACCEL )))
+        HeapFree( GetProcessHeap(), 0, accel );
+    TRACE_(accel)("returning %p\n", handle );
+    return handle;
 }
 
 /*********************************************************************
  *                    CreateAcceleratorTableW   (USER32.@)
- *
- *
  */
-HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccel, INT cEntries)
+HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccel, INT count)
 {
-  HACCEL	hAccel;
-  LPACCEL	accel;
-  int		i;
-  char		ckey;
+    struct accelerator *accel;
+    HACCEL handle;
+    int i;
 
-  /* Do parameter checking just in case someone's trying to be
-     funny. */
-  if(cEntries < 1) {
-    WARN_(accel)("Application sent invalid parameters (%p %d).\n",
-	 lpaccel, cEntries);
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return NULL;
-  }
-
-  /* Allocate memory and copy the table. */
-  hAccel = GlobalAlloc(0,cEntries*sizeof(ACCEL));
-
-  TRACE_(accel)("handle %p\n", hAccel);
-  if(!hAccel) {
-    ERR_(accel)("Out of memory.\n");
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return NULL;
-  }
-  accel = GlobalLock(hAccel);
-
-
-  for (i=0;i<cEntries;i++) {
-       accel[i].fVirt = lpaccel[i].fVirt&0x7f;
-       if( !(accel[i].fVirt & FVIRTKEY) ) {
-	  ckey = (char) lpaccel[i].key;
-         if(!MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &ckey, 1, &accel[i].key, 1))
-            WARN_(accel)("Error converting ASCII accelerator table to Unicode\n");
-       }
-       else
-         accel[i].key = lpaccel[i].key;
-       accel[i].cmd = lpaccel[i].cmd;
-  }
-
-  /* Set the end-of-table terminator. */
-  accel[cEntries-1].fVirt |= 0x80;
-
-  TRACE_(accel)("Allocated accelerator handle %p\n", hAccel);
-  return hAccel;
+    if (count < 1)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+    accel = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( struct accelerator, table[count] ));
+    if (!accel) return 0;
+    accel->count = count;
+    for (i = 0; i < count; i++)
+    {
+        accel->table[i].fVirt = lpaccel[i].fVirt;
+        accel->table[i].key   = lpaccel[i].key;
+        accel->table[i].cmd   = lpaccel[i].cmd;
+    }
+    if (!(handle = alloc_user_handle( &accel->obj, USER_ACCEL )))
+        HeapFree( GetProcessHeap(), 0, accel );
+    TRACE_(accel)("returning %p\n", handle );
+    return handle;
 }
 
 /******************************************************************************
  * DestroyAcceleratorTable [USER32.@]
  * Destroys an accelerator table
- *
- * NOTES
- *    By mortene@pvv.org 980321
  *
  * PARAMS
  *    handle [I] Handle to accelerator table
@@ -302,57 +220,16 @@ HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccel, INT cEntries)
  */
 BOOL WINAPI DestroyAcceleratorTable( HACCEL handle )
 {
-    if( !handle )
+    struct accelerator *accel;
+
+    if (!(accel = free_user_handle( handle, USER_ACCEL ))) return FALSE;
+    if (accel == OBJ_OTHER_PROCESS)
+    {
+        FIXME( "other process handle %p?\n", accel );
         return FALSE;
-    return !GlobalFree(handle);
-}
-
-/**********************************************************************
- *     LoadString   (USER.176)
- */
-#ifndef __REACTOS__
-INT16 WINAPI LoadString16( HINSTANCE16 instance, UINT16 resource_id,
-                           LPSTR buffer, INT16 buflen )
-{
-    HGLOBAL16 hmem;
-    HRSRC16 hrsrc;
-    unsigned char *p;
-    int string_num;
-    int i;
-
-    TRACE("inst=%04x id=%04x buff=%p len=%d\n",
-          instance, resource_id, buffer, buflen);
-
-    hrsrc = FindResource16( instance, MAKEINTRESOURCEA((resource_id>>4)+1), (LPSTR)RT_STRING );
-    if (!hrsrc) return 0;
-    hmem = LoadResource16( instance, hrsrc );
-    if (!hmem) return 0;
-
-    p = LockResource16(hmem);
-    string_num = resource_id & 0x000f;
-    for (i = 0; i < string_num; i++)
-	p += *p + 1;
-
-    TRACE("strlen = %d\n", (int)*p );
-
-    if (buffer == NULL) return *p;
-    i = min(buflen - 1, *p);
-    if (i > 0) {
-	memcpy(buffer, p + 1, i);
-	buffer[i] = '\0';
-    } else {
-	if (buflen > 1) {
-	    buffer[0] = '\0';
-	    return 0;
-	}
-	WARN("Don't know why caller gave buflen=%d *p=%d trying to obtain string '%s'\n", buflen, *p, p + 1);
     }
-    FreeResource16( hmem );
-
-    TRACE("'%s' loaded !\n", buffer);
-    return i;
+    return HeapFree( GetProcessHeap(), 0, accel );
 }
-#endif
 
 /**********************************************************************
  *	LoadStringW		(USER32.@)

@@ -69,17 +69,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(win);
 #define PLACE_MAX		0x0002
 #define PLACE_RECT		0x0004
 
-
-#define DWP_MAGIC  ((INT)('W' | ('P' << 8) | ('O' << 16) | ('S' << 24)))
-
 typedef struct
 {
+    struct user_object obj;
     INT       actualCount;
     INT       suggestedCount;
-    BOOL      valid;
-    INT       wMagic;
     HWND      hwndParent;
-    WINDOWPOS winPos[1];
+    WINDOWPOS *winPos;
 } DWP;
 
 
@@ -1795,7 +1791,7 @@ static BOOL fixup_flags( WINDOWPOS *winpos )
         SetLastError( ERROR_INVALID_WINDOW_HANDLE );
         return FALSE;
     }
-    winpos->hwnd = wndPtr->hwndSelf;  /* make it a full handle */
+    winpos->hwnd = wndPtr->obj.handle;  /* make it a full handle */
 
     /* Finally make sure that all coordinates are valid */
     if (winpos->x < -32768) winpos->x = -32768;
@@ -2074,7 +2070,7 @@ BOOL WINAPI SetWindowPos( HWND hwnd, HWND hwndInsertAfter,
  */
 HDWP WINAPI BeginDeferWindowPos( INT count )
 {
-    HDWP handle;
+    HDWP handle = 0;
     DWP *pDWP;
 
     TRACE("%d\n", count);
@@ -2087,14 +2083,18 @@ HDWP WINAPI BeginDeferWindowPos( INT count )
     /* Windows allows zero count, in which case it allocates context for 8 moves */
     if (count == 0) count = 8;
 
-    handle = USER_HEAP_ALLOC( sizeof(DWP) + (count-1)*sizeof(WINDOWPOS) );
-    if (!handle) return 0;
-    pDWP = USER_HEAP_LIN_ADDR( handle );
+    if (!(pDWP = HeapAlloc( GetProcessHeap(), 0, sizeof(DWP)))) return 0;
+
     pDWP->actualCount    = 0;
     pDWP->suggestedCount = count;
-    pDWP->valid          = TRUE;
-    pDWP->wMagic         = DWP_MAGIC;
     pDWP->hwndParent     = 0;
+
+    if (!(pDWP->winPos = HeapAlloc( GetProcessHeap(), 0, count * sizeof(WINDOWPOS) )) ||
+        !(handle = alloc_user_handle( &pDWP->obj, USER_DWP )))
+    {
+        HeapFree( GetProcessHeap(), 0, pDWP->winPos );
+        HeapFree( GetProcessHeap(), 0, pDWP );
+    }
 
     TRACE("returning hdwp %p\n", handle);
     return handle;
@@ -2110,7 +2110,7 @@ HDWP WINAPI DeferWindowPos( HDWP hdwp, HWND hwnd, HWND hwndAfter,
 {
     DWP *pDWP;
     int i;
-    HDWP newhdwp = hdwp,retvalue;
+    HDWP retvalue = hdwp;
 
     TRACE("hdwp %p, hwnd %p, after %p, %d,%d (%dx%d), flags %08x\n",
           hdwp, hwnd, hwndAfter, x, y, cx, cy, flags);
@@ -2118,9 +2118,12 @@ HDWP WINAPI DeferWindowPos( HDWP hdwp, HWND hwnd, HWND hwndAfter,
     hwnd = WIN_GetFullHandle( hwnd );
     if (is_desktop_window( hwnd )) return 0;
 
-    if (!(pDWP = USER_HEAP_LIN_ADDR( hdwp ))) return 0;
-
-    USER_Lock();
+    if (!(pDWP = get_user_handle_ptr( hdwp, USER_DWP ))) return 0;
+    if (pDWP == OBJ_OTHER_PROCESS)
+    {
+        FIXME( "other process handle %p?\n", hdwp );
+        return 0;
+    }
 
     for (i = 0; i < pDWP->actualCount; i++)
     {
@@ -2147,21 +2150,20 @@ HDWP WINAPI DeferWindowPos( HDWP hdwp, HWND hwnd, HWND hwndAfter,
                                                SWP_NOOWNERZORDER);
             pDWP->winPos[i].flags |= flags & (SWP_SHOWWINDOW | SWP_HIDEWINDOW |
                                               SWP_FRAMECHANGED);
-            retvalue = hdwp;
             goto END;
         }
     }
     if (pDWP->actualCount >= pDWP->suggestedCount)
     {
-        newhdwp = USER_HEAP_REALLOC( hdwp,
-                      sizeof(DWP) + pDWP->suggestedCount*sizeof(WINDOWPOS) );
-        if (!newhdwp)
+        WINDOWPOS *newpos = HeapReAlloc( GetProcessHeap(), 0, pDWP->winPos,
+                                         pDWP->suggestedCount * 2 * sizeof(WINDOWPOS) );
+        if (!newpos)
         {
             retvalue = 0;
             goto END;
         }
-        pDWP = USER_HEAP_LIN_ADDR( newhdwp );
-        pDWP->suggestedCount++;
+        pDWP->suggestedCount *= 2;
+        pDWP->winPos = newpos;
     }
     pDWP->winPos[pDWP->actualCount].hwnd = hwnd;
     pDWP->winPos[pDWP->actualCount].hwndInsertAfter = hwndAfter;
@@ -2171,9 +2173,8 @@ HDWP WINAPI DeferWindowPos( HDWP hdwp, HWND hwnd, HWND hwndAfter,
     pDWP->winPos[pDWP->actualCount].cy = cy;
     pDWP->winPos[pDWP->actualCount].flags = flags;
     pDWP->actualCount++;
-    retvalue = newhdwp;
 END:
-    USER_Unlock();
+    release_user_handle_ptr( pDWP );
     return retvalue;
 }
 
@@ -2190,8 +2191,13 @@ BOOL WINAPI EndDeferWindowPos( HDWP hdwp )
 
     TRACE("%p\n", hdwp);
 
-    pDWP = USER_HEAP_LIN_ADDR( hdwp );
-    if (!pDWP) return FALSE;
+    if (!(pDWP = free_user_handle( hdwp, USER_DWP ))) return FALSE;
+    if (pDWP == OBJ_OTHER_PROCESS)
+    {
+        FIXME( "other process handle %p?\n", hdwp );
+        return FALSE;
+    }
+
     for (i = 0, winpos = pDWP->winPos; res && i < pDWP->actualCount; i++, winpos++)
     {
         TRACE("hwnd %p, after %p, %d,%d (%dx%d), flags %08x\n",
@@ -2203,7 +2209,8 @@ BOOL WINAPI EndDeferWindowPos( HDWP hdwp )
         else
             res = SendMessageW( winpos->hwnd, WM_WINE_SETWINDOWPOS, 0, (LPARAM)winpos );
     }
-    USER_HEAP_FREE( hdwp );
+    HeapFree( GetProcessHeap(), 0, pDWP->winPos );
+    HeapFree( GetProcessHeap(), 0, pDWP );
     return res;
 }
 

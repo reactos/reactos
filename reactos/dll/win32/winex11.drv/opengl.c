@@ -906,7 +906,10 @@ static WineGLPixelFormat *get_formats(Display *display, int *size_ret, int *onsc
                  * with a depth of 32 in addition to the default 24 bit. In order to prevent BadMatch errors we only
                  * list formats with the same depth. */
                 if(visinfo->depth != screen_depth)
+                {
+                    XFree(visinfo);
                     continue;
+                }
 
                 TRACE("Found onscreen format FBCONFIG_ID 0x%x corresponding to iPixelFormat %d at GLX index %d\n", fmt_id, size+1, i);
                 list[size].iPixelFormat = size+1; /* The index starts at 1 */
@@ -931,8 +934,6 @@ static WineGLPixelFormat *get_formats(Display *display, int *size_ret, int *onsc
                     size++;
                     onscreen_size++;
                 }
-
-                XFree(visinfo);
             } else if(run && !visinfo) {
                 TRACE("Found offscreen format FBCONFIG_ID 0x%x corresponding to iPixelFormat %d at GLX index %d\n", fmt_id, size+1, i);
                 list[size].iPixelFormat = size+1; /* The index starts at 1 */
@@ -943,6 +944,8 @@ static WineGLPixelFormat *get_formats(Display *display, int *size_ret, int *onsc
                 list[size].dwFlags = 0;
                 size++;
             }
+
+            if (visinfo) XFree(visinfo);
         }
     }
 
