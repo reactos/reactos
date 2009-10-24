@@ -439,17 +439,16 @@ void connect_process_winstation( PPROCESSINFO process )
                                    process, 0, 0, DUP_HANDLE_SAME_ACCESS );
     }
 
-    if (handle) set_process_default_desktop( process, desktop, handle );
-
-#if 0
+#if 1
+    else
     {
-        // set default desktop differently. Just always assign a "default" desktop
+        // Always assign a "default" desktop if there is no parent desktop
         WCHAR deskbuf[8];
         struct unicode_str full_str, desktop_name;
         WCHAR *full_name;
 
         desktop_name.str = deskbuf;
-        desktop_name.len = sizeof(deskbuf);
+        desktop_name.len = sizeof(deskbuf) - sizeof(WCHAR);
         wcscpy(deskbuf, L"Default");
 
         if ((full_name = build_desktop_name( &desktop_name, winstation, &full_str )))
@@ -457,10 +456,12 @@ void connect_process_winstation( PPROCESSINFO process )
             handle = open_object( winstation_namespace, &full_str, &desktop_ops, GENERIC_ALL,
                                          OBJ_CASE_INSENSITIVE );
             ExFreePool( full_name );
-            DPRINT1("handle %x\n", handle);
+            DPRINT("handle %x\n", handle);
         }
     }
 #endif
+
+    if (handle) set_process_default_desktop( process, desktop, handle );
 
 done:
     if (desktop) release_object( desktop );

@@ -125,7 +125,8 @@ Win32kThreadCallout(PETHREAD Thread,
     }
     if (Type == PsW32ThreadCalloutInitialize)
     {
-        DPRINT("Creating W32 thread TID:%d at IRQ level: %lu. Win32Process %p\n", Thread->Tcb.Teb->ClientId.UniqueThread, KeGetCurrentIrql(), Win32Process);
+        DPRINT("Creating W32 thread TID:%d PID:%d at IRQ level: %lu. Win32Process %p, desktop %x\n",
+            Thread->Tcb.Teb->ClientId.UniqueThread, Thread->Tcb.Teb->ClientId.UniqueProcess, KeGetCurrentIrql(), Win32Process, Win32Process->desktop);
 
         Win32Thread->process = Win32Process;
         Win32Thread->peThread = Thread;
