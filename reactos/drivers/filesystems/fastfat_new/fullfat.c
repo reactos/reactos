@@ -26,7 +26,7 @@ FF_Malloc(FF_T_UINT32 allocSize)
 VOID
 FF_Free(VOID *pBuffer)
 {
-    return ExFreePoolWithTag(pBuffer, TAG_FULLFAT);
+    ExFreePoolWithTag(pBuffer, TAG_FULLFAT);
 }
 
 FF_T_SINT32
