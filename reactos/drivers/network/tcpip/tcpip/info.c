@@ -268,12 +268,18 @@ TDI_STATUS InfoTdiSetInformationEx
                  if (ID->toi_type != INFO_TYPE_PROVIDER)
                      return TDI_INVALID_PARAMETER;
 
-                 if (ID->toi_entity.tei_entity != CL_NL_ENTITY &&
-                     ID->toi_entity.tei_entity != CO_NL_ENTITY)
-                     return TDI_INVALID_PARAMETER;
-
-                 if ((EntityListContext = GetContext(ID->toi_entity)))
-	             return InfoTdiSetRoute(EntityListContext, (PIPROUTE_ENTRY)Buffer);
+                 if (ID->toi_entity.tei_entity == AT_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiSetArptableMIB(EntityListContext,
+                                                      Buffer, BufferSize);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                 else if (ID->toi_entity.tei_entity == CL_NL_ENTITY ||
+                          ID->toi_entity.tei_entity == CO_NL_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+	                return InfoTdiSetRoute(EntityListContext, Buffer, BufferSize);
+                     else
+                        return TDI_INVALID_PARAMETER;
                  else
                      return TDI_INVALID_PARAMETER;
 

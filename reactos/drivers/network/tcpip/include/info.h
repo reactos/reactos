@@ -160,7 +160,13 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF,
                                       PNDIS_BUFFER Buffer,
                                       PUINT BufferSize );
 
-TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PIPROUTE_ENTRY Route);
+TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF,
+                           PVOID Buffer,
+                           UINT BufferSize);
+
+TDI_STATUS InfoTdiSetArptableMIB(PIP_INTERFACE IF,
+                                 PVOID Buffer,
+                                 UINT BufferSize);
 
 TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID ID,
 				      PIP_INTERFACE Interface,

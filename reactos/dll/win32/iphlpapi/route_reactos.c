@@ -55,7 +55,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     HANDLE tcpFile;
     NTSTATUS status = openTcpFile( &tcpFile );
-    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req =
+    TCP_REQUEST_SET_INFORMATION_EX_ROUTE_ENTRY req =
         TCP_REQUEST_SET_INFORMATION_INIT;
     IPRouteEntry *rte;
     TDIEntityID   id;
@@ -120,7 +120,7 @@ DWORD setIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
 DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     HANDLE tcpFile;
     NTSTATUS status = openTcpFile( &tcpFile );
-    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req =
+    TCP_REQUEST_SET_INFORMATION_EX_ROUTE_ENTRY req =
         TCP_REQUEST_SET_INFORMATION_INIT;
     IPRouteEntry *rte;
     TDIEntityID   id;
