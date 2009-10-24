@@ -568,6 +568,9 @@ UINT WINAPI mixerGetLineInfoW(HMIXEROBJ hmix, LPMIXERLINEW lpmliW, DWORD fdwInfo
 
     TRACE("(%p, %p, %08lx)\n", hmix, lpmliW, fdwInfo);
 
+    if (lpmliW == NULL || lpmliW->cbStruct != sizeof(*lpmliW))
+	return MMSYSERR_INVALPARAM;
+	
     if ((uRet = MIXER_GetDev(hmix, fdwInfo, &lpwm)) != MMSYSERR_NOERROR)
 	return uRet;
 
