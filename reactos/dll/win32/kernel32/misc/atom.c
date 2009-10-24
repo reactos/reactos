@@ -302,6 +302,11 @@ InternalGetAtomName(BOOLEAN Local,
         SetLastErrorByStatus(STATUS_BUFFER_OVERFLOW);
         return 0;
     }
+    if (!Atom)
+    {
+        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+        return 0;
+    }
 
     /* Check if this is a global query */
     if (Local)
