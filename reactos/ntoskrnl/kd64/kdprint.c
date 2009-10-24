@@ -110,7 +110,7 @@ KdpPromptString(IN PSTRING PromptString,
     /* Loop until we succeed */
     } while (Status != KdPacketReceived);
 
-    /* Don't copy back a larger respone than there is room for */
+    /* Don't copy back a larger response than there is room for */
     Length = min(Length, ResponseString->MaximumLength);
 
     /* Copy back the string and return the length */
