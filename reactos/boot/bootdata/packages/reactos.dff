@@ -115,6 +115,7 @@ base\system\lsass\lsass.exe                         1
 base\system\msiexec\msiexec.exe                     1
 base\system\regsvr32\regsvr32.exe                   1
 base\system\rundll32\rundll32.exe                   1
+base\system\runonce\runonce.exe                     1
 base\system\services\services.exe                   1
 base\system\userinit\userinit.exe                   1
 base\system\winlogon\winlogon.exe                   1
