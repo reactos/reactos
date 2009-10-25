@@ -40,10 +40,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-extern const WCHAR szFindRelatedProducts[];
-extern const WCHAR szMigrateFeatureStates[];
-extern const WCHAR szRemoveExistingProducts[];
-
 static BOOL check_language(DWORD lang1, LPCWSTR lang2, DWORD attributes)
 {
     DWORD langdword;
@@ -65,7 +61,6 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
     LPWSTR prop;
     LPWSTR newprop;
     DWORD len;
-    static const WCHAR separator[] = {';',0};
 
     prop = msi_dup_property(package, action_property );
     if (prop)
@@ -86,7 +81,7 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
     if (prop)
     {
         strcpyW(newprop,prop);
-        strcatW(newprop,separator);
+        strcatW(newprop,szSemiColon);
     }
     else
         newprop[0] = 0;

@@ -162,8 +162,6 @@ static LPWSTR app_search_file(LPWSTR path, MSISIGNATURE *sig)
     LPWSTR val = NULL;
     LPBYTE buffer;
 
-    static const WCHAR root[] = {'\\',0};
-
     if (!sig->File)
     {
         PathRemoveFileSpecW(path);
@@ -193,7 +191,7 @@ static LPWSTR app_search_file(LPWSTR path, MSISIGNATURE *sig)
     if (!GetFileVersionInfoW(path, 0, size, buffer))
         goto done;
 
-    if (!VerQueryValueW(buffer, root, (LPVOID)&info, &size) || !info)
+    if (!VerQueryValueW(buffer, szBackSlash, (LPVOID)&info, &size) || !info)
         goto done;
 
     if (sig->MinVersionLS || sig->MinVersionMS)
@@ -633,12 +631,11 @@ static UINT ACTION_FileVersionMatches(const MSISIGNATURE *sig, LPCWSTR filePath,
 
             if (buf)
             {
-                static const WCHAR rootW[] = { '\\',0 };
                 UINT versionLen;
                 LPVOID subBlock = NULL;
 
                 if (GetFileVersionInfoW(filePath, 0, size, buf))
-                    VerQueryValueW(buf, rootW, &subBlock, &versionLen);
+                    VerQueryValueW(buf, szBackSlash, &subBlock, &versionLen);
                 if (subBlock)
                 {
                     VS_FIXEDFILEINFO *info = subBlock;
@@ -742,8 +739,6 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
     WCHAR subpath[MAX_PATH];
     WCHAR *buf;
 
-    static const WCHAR dot[] = {'.',0};
-    static const WCHAR dotdot[] = {'.','.',0};
     static const WCHAR starDotStarW[] = { '*','.','*',0 };
 
     TRACE("Searching directory %s for file %s, depth %d\n", debugstr_w(dir),
@@ -792,8 +787,8 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
         if (hFind != INVALID_HANDLE_VALUE)
         {
             if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY &&
-                lstrcmpW(findData.cFileName, dot) &&
-                lstrcmpW(findData.cFileName, dotdot))
+                lstrcmpW(findData.cFileName, szDot) &&
+                lstrcmpW(findData.cFileName, szDotDot))
             {
                 lstrcpyW(subpath, dir);
                 PathAppendW(subpath, findData.cFileName);
@@ -804,8 +799,8 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
             while (rc == ERROR_SUCCESS && !*appValue &&
                    FindNextFileW(hFind, &findData) != 0)
             {
-                if (!lstrcmpW(findData.cFileName, dot) ||
-                    !lstrcmpW(findData.cFileName, dotdot))
+                if (!lstrcmpW(findData.cFileName, szDot) ||
+                    !lstrcmpW(findData.cFileName, szDotDot))
                     continue;
 
                 lstrcpyW(subpath, dir);
@@ -1079,7 +1074,6 @@ static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
     UINT r = ERROR_SUCCESS;
 
     static const WCHAR success[] = {'C','C','P','_','S','u','c','c','e','s','s',0};
-    static const WCHAR one[] = {'1',0};
 
     signature = MSI_RecordGetString(row, 1);
 
@@ -1089,7 +1083,7 @@ static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
     if (value)
     {
         TRACE("Found signature %s\n", debugstr_w(signature));
-        MSI_SetPropertyW(package, success, one);
+        MSI_SetPropertyW(package, success, szOne);
         msi_free(value);
         r = ERROR_NO_MORE_ITEMS;
     }

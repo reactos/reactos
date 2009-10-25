@@ -47,13 +47,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-extern const WCHAR szInstallFiles[];
-extern const WCHAR szDuplicateFiles[];
-extern const WCHAR szMoveFiles[];
-extern const WCHAR szPatchFiles[];
-extern const WCHAR szRemoveDuplicateFiles[];
-extern const WCHAR szRemoveFiles[];
-
 static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f, const WCHAR *action )
 {
     MSIRECORD *uirow;
@@ -164,14 +157,12 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
     }
     if (gle == ERROR_SHARING_VIOLATION)
     {
-        static const WCHAR msiW[] = {'m','s','i',0};
-        static const WCHAR slashW[] = {'\\',0};
         WCHAR tmpfileW[MAX_PATH], *pathW, *p;
         DWORD len;
 
         TRACE("file in use, scheduling rename operation\n");
 
-        GetTempFileNameW(slashW, msiW, 0, tmpfileW);
+        GetTempFileNameW(szBackSlash, szMsi, 0, tmpfileW);
         len = strlenW(file->TargetPath) + strlenW(tmpfileW) + 1;
         if (!(pathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
             return ERROR_OUTOFMEMORY;
