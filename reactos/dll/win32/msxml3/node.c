@@ -128,8 +128,10 @@ static ULONG WINAPI xmlnode_Release(
         return IUnknown_Release(This->pUnkOuter);
 
     ref = InterlockedDecrement( &This->ref );
-    if(!ref)
+    if(!ref) {
         destroy_xmlnode(This);
+        HeapFree( GetProcessHeap(), 0, This );
+    }
 
     return ref;
 }
@@ -1512,34 +1514,20 @@ void destroy_xmlnode(xmlnode *This)
 {
     if(This->node)
         xmldoc_release(This->node->doc);
-    HeapFree( GetProcessHeap(), 0, This );
 }
 
-xmlnode *create_basic_node( xmlNodePtr node, IUnknown *pUnkOuter, dispex_static_data_t *dispex_data )
+void init_xmlnode(xmlnode *This, xmlNodePtr node, IUnknown *outer, dispex_static_data_t *dispex_data )
 {
-    xmlnode *This;
-
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
-    if ( !This )
-        return NULL;
-
     if(node)
         xmldoc_add_ref( node->doc );
 
     This->lpVtbl = &xmlnode_vtbl;
-
-    if(pUnkOuter)
-        This->pUnkOuter = pUnkOuter; /* Don't take a ref on outer Unknown */
-    else
-        This->pUnkOuter = NULL;
+    This->ref = 1;
+    This->node = node;
+    This->pUnkOuter = outer;
 
     if(dispex_data)
         init_dispex(&This->dispex, This->pUnkOuter, dispex_data);
-
-    This->ref = 1;
-    This->node = node;
-
-    return This;
 }
 
 IXMLDOMNode *create_node( xmlNodePtr node )
@@ -1572,9 +1560,18 @@ IXMLDOMNode *create_node( xmlNodePtr node )
     case XML_DOCUMENT_NODE:
         pUnk = create_domdoc( node );
         break;
-    default:
+    default: {
+        xmlnode *new_node;
+
         FIXME("only creating basic node for type %d\n", node->type);
-        pUnk = (IUnknown*)&create_basic_node( node, NULL, NULL )->lpVtbl;
+
+        new_node = heap_alloc(sizeof(xmlnode));
+        if(!new_node)
+            return NULL;
+
+        init_xmlnode(new_node, node, NULL, NULL);
+        pUnk = (IUnknown*)IXMLDOMNode_from_impl(new_node);
+    }
     }
 
     hr = IUnknown_QueryInterface(pUnk, &IID_IXMLDOMNode, (LPVOID*)&ret);

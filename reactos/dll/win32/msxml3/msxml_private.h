@@ -159,7 +159,7 @@ static inline IXMLDOMNode *IXMLDOMNode_from_impl(xmlnode *This)
     return (IXMLDOMNode*)&This->lpVtbl;
 }
 
-extern xmlnode *create_basic_node(xmlNodePtr,IUnknown*,dispex_static_data_t*);
+extern void init_xmlnode(xmlnode*,xmlNodePtr,IUnknown*,dispex_static_data_t*);
 extern void destroy_xmlnode(xmlnode*);
 
 extern HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **document);
