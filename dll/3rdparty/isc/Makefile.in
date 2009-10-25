@@ -1,0 +1,116 @@
+# Copyright (C) 2004-2009  Internet Systems Consortium, Inc. ("ISC")
+# Copyright (C) 1998-2003  Internet Software Consortium.
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+# OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+# $Id: Makefile.in,v 1.96.50.3 2009/02/16 01:02:58 marka Exp $
+
+srcdir =	@srcdir@
+VPATH =		@srcdir@
+top_srcdir =	@top_srcdir@
+
+@BIND9_VERSION@
+
+@LIBISC_API@
+
+CINCLUDES =	-I${srcdir}/unix/include \
+		-I${srcdir}/@ISC_THREAD_DIR@/include \
+		-I${srcdir}/@ISC_ARCH_DIR@/include \
+		-I./include \
+		-I${srcdir}/include
+CDEFINES =
+CWARNINGS =
+
+# Alphabetically
+UNIXOBJS =	@ISC_ISCIPV6_O@ \
+		unix/app.@O@ unix/dir.@O@ unix/entropy.@O@ \
+		unix/errno2result.@O@ unix/file.@O@ unix/fsaccess.@O@ \
+		unix/interfaceiter.@O@ unix/keyboard.@O@ unix/net.@O@ \
+		unix/os.@O@ unix/resource.@O@ unix/socket.@O@ unix/stdio.@O@ \
+		unix/stdtime.@O@ unix/strerror.@O@ unix/syslog.@O@ unix/time.@O@
+
+
+NLSOBJS =	nls/msgcat.@O@
+
+THREADOBJS =	@ISC_THREAD_DIR@/condition.@O@ @ISC_THREAD_DIR@/mutex.@O@ \
+		@ISC_THREAD_DIR@/thread.@O@
+
+WIN32OBJS = 	win32/condition.@O@ win32/dir.@O@ win32/file.@O@ \
+		win32/fsaccess.@O@ win32/once.@O@ win32/stdtime.@O@ \
+		win32/thread.@O@ win32/time.@O@
+
+# Alphabetically
+OBJS =		@ISC_EXTRA_OBJS@ \
+		assertions.@O@ base32.@O@ base64.@O@ bitstring.@O@ buffer.@O@ \
+		bufferlist.@O@ commandline.@O@ error.@O@ event.@O@ \
+		hash.@O@ heap.@O@ hex.@O@ hmacmd5.@O@ hmacsha.@O@ \
+		httpd.@O@ inet_aton.@O@ iterated_hash.@O@ \
+		lex.@O@ lfsr.@O@ lib.@O@ log.@O@ \
+		md5.@O@ mem.@O@ mutexblock.@O@ \
+		netaddr.@O@ netscope.@O@ ondestroy.@O@ \
+		parseint.@O@ portset.@O@ quota.@O@ radix.@O@ random.@O@ \
+		ratelimiter.@O@ refcount.@O@ region.@O@ result.@O@ rwlock.@O@ \
+		serial.@O@ sha1.@O@ sha2.@O@ sockaddr.@O@ stats.@O@ \
+		string.@O@ strtoul.@O@ symtab.@O@ task.@O@ taskpool.@O@ \
+		timer.@O@ version.@O@ ${UNIXOBJS} ${NLSOBJS} ${THREADOBJS}
+
+# Alphabetically
+SRCS =		@ISC_EXTRA_SRCS@ \
+		assertions.c base32.c base64.c bitstring.c buffer.c \
+		bufferlist.c commandline.c error.c event.c \
+		heap.c hex.c hmacmd5.c hmacsha.c \
+		httpd.c inet_aton.c iterated_hash.c \
+		lex.c lfsr.c lib.c log.c \
+		md5.c mem.c mutexblock.c \
+		netaddr.c netscope.c ondestroy.c \
+		parseint.c portset.c quota.c radix.c random.c \
+		ratelimiter.c refcount.c region.c result.c rwlock.c \
+		serial.c sha1.c sha2.c sockaddr.c stats.c string.c strtoul.c \
+		symtab.c task.c taskpool.c timer.c version.c
+
+LIBS =		@LIBS@
+
+SUBDIRS =	include unix nls @ISC_THREAD_DIR@ @ISC_ARCH_DIR@
+TARGETS =	timestamp
+
+@BIND9_MAKE_RULES@
+
+version.@O@: version.c
+	${LIBTOOL_MODE_COMPILE} ${CC} ${ALL_CFLAGS} \
+		-DVERSION=\"${VERSION}\" \
+		-DLIBINTERFACE=${LIBINTERFACE} \
+		-DLIBREVISION=${LIBREVISION} \
+		-DLIBAGE=${LIBAGE} \
+		-c ${srcdir}/version.c
+
+libisc.@SA@: ${OBJS}
+	${AR} ${ARFLAGS} $@ ${OBJS}
+	${RANLIB} $@
+
+libisc.la: ${OBJS}
+	${LIBTOOL_MODE_LINK} \
+		${CC} ${ALL_CFLAGS} ${LDFLAGS} -o libisc.la -rpath ${libdir} \
+		-version-info ${LIBINTERFACE}:${LIBREVISION}:${LIBAGE} \
+		${OBJS} ${LIBS}
+
+timestamp: libisc.@A@
+	touch timestamp
+
+installdirs:
+	$(SHELL) ${top_srcdir}/mkinstalldirs ${DESTDIR}${libdir}
+
+install:: timestamp installdirs
+	${LIBTOOL_MODE_INSTALL} ${INSTALL_DATA} libisc.@A@ ${DESTDIR}${libdir}
+
+clean distclean::
+	rm -f libisc.@A@ libisc.la timestamp
