@@ -2669,7 +2669,7 @@ DbgBreakPoint(
 VOID
 NTAPI
 DbgLoadImageSymbols(
-    IN PANSI_STRING Name,
+    IN PSTRING Name,
     IN PVOID Base,
     IN ULONG_PTR ProcessId
 );
@@ -2677,7 +2677,7 @@ DbgLoadImageSymbols(
 VOID
 NTAPI
 DbgUnLoadImageSymbols(
-    IN PANSI_STRING Name,
+    IN PSTRING Name,
     IN PVOID Base,
     IN ULONG_PTR ProcessId
 );

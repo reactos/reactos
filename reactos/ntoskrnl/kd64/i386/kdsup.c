@@ -69,7 +69,7 @@ KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
+KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
                    IN PCONTEXT Context)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();

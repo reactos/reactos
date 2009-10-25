@@ -368,13 +368,13 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
             if (ComponentId == KdComponentTable[i].ComponentId)
             {
                 /* Check if mask are matching */
-                return (Level & KdComponentTable[i].Level) != 0;
+                return (Level & KdComponentTable[i].Level) ? TRUE : FALSE;
             }
         }
     }
 
     /* Entry not found in the table, use default mask */
-    return (Level & Kd_DEFAULT_MASK) != 0;
+    return (Level & Kd_DEFAULT_MASK) ? TRUE : FALSE;
 }
 
 NTSTATUS

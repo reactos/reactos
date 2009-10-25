@@ -446,8 +446,6 @@ typedef struct _DBGKD_WAIT_STATE_CHANGE32
         DBGKM_EXCEPTION32 Exception;
         DBGKD_LOAD_SYMBOLS32 LoadSymbols;
     } u;
-    DBGKD_CONTROL_REPORT ControlReport;
-    CONTEXT Context;
 } DBGKD_WAIT_STATE_CHANGE32, *PDBGKD_WAIT_STATE_CHANGE32;
 
 typedef struct _DBGKD_WAIT_STATE_CHANGE64
@@ -463,8 +461,6 @@ typedef struct _DBGKD_WAIT_STATE_CHANGE64
         DBGKM_EXCEPTION64 Exception;
         DBGKD_LOAD_SYMBOLS64 LoadSymbols;
     } u;
-    DBGKD_CONTROL_REPORT ControlReport;
-    CONTEXT Context;
 } DBGKD_WAIT_STATE_CHANGE64, *PDBGKD_WAIT_STATE_CHANGE64;
 
 typedef struct _DBGKD_ANY_WAIT_STATE_CHANGE
@@ -864,15 +860,10 @@ typedef struct _DBGKD_TRACE_IO
    } u;
 } DBGKD_TRACE_IO, *PDBGKD_TRACE_IO;
 
-#if defined(_M_AMD64)
-
-#define CopyExceptionRecord(Ex64From, Ex64To) \
-        RtlCopyMemory(Ex64To, Ex64From, sizeof(EXCEPTION_RECORD64))
-
-#else
-
-FORCEINLINE
+static
+__inline
 VOID
+NTAPI
 ExceptionRecord32To64(IN PEXCEPTION_RECORD32 Ex32,
                       OUT PEXCEPTION_RECORD64 Ex64)
 {
@@ -889,10 +880,5 @@ ExceptionRecord32To64(IN PEXCEPTION_RECORD32 Ex32,
         COPYSE(Ex64,Ex32,ExceptionInformation[i]);
     }
 }
-
-#define CopyExceptionRecord(Ex32From, Ex64To) \
-        ExceptionRecord32To64((PEXCEPTION_RECORD32)Ex32From, Ex64To)
-
-#endif
 
 #endif

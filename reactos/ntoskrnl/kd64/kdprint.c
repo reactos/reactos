@@ -138,7 +138,7 @@ KdpCommandString(IN ULONG Length,
 VOID
 NTAPI
 KdpSymbol(IN PSTRING DllPath,
-          IN PKD_SYMBOLS_INFO DllBase,
+          IN PKD_SYMBOLS_INFO SymbolInfo,
           IN BOOLEAN Unload,
           IN KPROCESSOR_MODE PreviousMode,
           IN PCONTEXT ContextRecord,
@@ -163,7 +163,7 @@ KdpSymbol(IN PSTRING DllPath,
 
     /* Report the new state */
     Status = KdpReportLoadSymbolsStateChange(DllPath,
-                                             DllBase,
+                                             SymbolInfo,
                                              Unload,
                                              &Prcb->ProcessorState.
                                              ContextFrame);
@@ -243,7 +243,7 @@ KdpPrint(IN ULONG ComponentId,
 {
     NTSTATUS ReturnStatus;
     BOOLEAN Entered;
-    ANSI_STRING AnsiString;
+    STRING OutputString;
 
     /* Assume failure */
     *Status = FALSE;
@@ -268,12 +268,12 @@ KdpPrint(IN ULONG ComponentId,
         /* FIXME: Support user-mode */
     }
 
-    /* Setup the ANSI string */
-    AnsiString.Buffer = String;
-    AnsiString.Length = Length;
+    /* Setup the output string */
+    OutputString.Buffer = String;
+    OutputString.Length = Length;
 
     /* Log the print */
-    //KdLogDbgPrint(&AnsiString);
+    //KdLogDbgPrint(&OutputString);
 
     /* Check for a debugger */
     if (KdDebuggerNotPresent)
@@ -287,7 +287,7 @@ KdpPrint(IN ULONG ComponentId,
     Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
 
     /* Print the string */
-    if (KdpPrintString(&AnsiString))
+    if (KdpPrintString(&OutputString))
     {
         /* User pressed CTRL-C, breakpoint on return */
         ReturnStatus = STATUS_BREAKPOINT;

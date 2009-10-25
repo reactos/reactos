@@ -10359,23 +10359,23 @@ NTAPI
 vDbgPrintEx(
   IN ULONG ComponentId,
   IN ULONG Level,
-  IN LPCSTR Format,
+  IN PCCH Format,
   IN va_list ap);
 
 ULONG
 NTAPI
 vDbgPrintExWithPrefix(
-  IN LPCSTR Prefix,
+  IN PCCH Prefix,
   IN ULONG ComponentId,
   IN ULONG Level,
-  IN LPCSTR Format,
+  IN PCCH Format,
   IN va_list ap);
 
 NTKERNELAPI
 ULONG
 DDKCDECLAPI
 DbgPrintReturnControlC(
-  IN PCH  Format,
+  IN PCCH  Format,
   IN ...);
 
 ULONG

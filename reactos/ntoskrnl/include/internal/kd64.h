@@ -217,7 +217,7 @@ VOID
 NTAPI
 KdpSymbol(
     IN PSTRING DllPath,
-    IN PKD_SYMBOLS_INFO DllBase,
+    IN PKD_SYMBOLS_INFO SymbolInfo,
     IN BOOLEAN Unload,
     IN KPROCESSOR_MODE PreviousMode,
     IN PCONTEXT ContextRecord,
@@ -322,7 +322,7 @@ KdpGetStateChange(
 VOID
 NTAPI
 KdpSetContextState(
-    IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
+    IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
     IN PCONTEXT Context
 );
 

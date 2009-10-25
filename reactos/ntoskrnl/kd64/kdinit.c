@@ -75,7 +75,7 @@ KdInitSystem(IN ULONG BootPhase,
 {
     BOOLEAN EnableKd, DisableKdAfterInit = FALSE, BlockEnable;
     LPSTR CommandLine, DebugLine, DebugOptionStart, DebugOptionEnd;
-    ANSI_STRING ImageName;
+    STRING ImageName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
     ULONG i, j, Length, DebugOptionLength;
@@ -350,8 +350,10 @@ KdInitSystem(IN ULONG BootPhase,
                 NameBuffer[j] = ANSI_NULL;
 
                 /* Load symbols for image */
-                RtlInitAnsiString(&ImageName, NameBuffer);
-                DbgLoadImageSymbols(&ImageName, LdrEntry->DllBase, -1);
+                RtlInitString(&ImageName, NameBuffer);
+                DbgLoadImageSymbols(&ImageName,
+                                    LdrEntry->DllBase,
+                                    (ULONG_PTR)ZwCurrentProcess());
 
                 /* Go to the next entry */
                 NextEntry = NextEntry->Flink;

@@ -1197,7 +1197,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     if (Reboot)
     {
         /* Unload symbols */
-        DbgUnLoadImageSymbols(NULL, NtCurrentProcess(), 0);
+        DbgUnLoadImageSymbols(NULL, (PVOID)MAXULONG_PTR, 0);
         HalReturnToFirmware(HalRebootRoutine);
     }
 

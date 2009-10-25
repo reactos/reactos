@@ -267,7 +267,7 @@ VOID
 NTAPI
 KdpSetCommonState(IN ULONG NewState,
                   IN PCONTEXT Context,
-                  IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
+                  IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange)
 {
     USHORT InstructionCount;
     BOOLEAN HadBreakpoints;
@@ -280,9 +280,9 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->Thread = (ULONG64)(LONG_PTR)KeGetCurrentThread();
     WaitStateChange->ProgramCounter = (ULONG64)(LONG_PTR)KeGetContextPc(Context);
 
-    /* Zero out the Control Report */
-    RtlZeroMemory(&WaitStateChange->ControlReport,
-                  sizeof(DBGKD_CONTROL_REPORT));
+    /* Zero out the entire Control Report */
+    RtlZeroMemory(&WaitStateChange->AnyControlReport,
+                  sizeof(DBGKD_ANY_CONTROL_REPORT));
 
     /* Now copy the instruction stream and set the count */
     RtlCopyMemory(&WaitStateChange->ControlReport.InstructionStream[0],
@@ -1296,7 +1296,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
 {
     PSTRING ExtraData;
     STRING Data, Header;
-    DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
+    DBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange;
     KCONTINUE_STATUS Status;
 
     /* Start wait loop */
@@ -1335,7 +1335,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
         }
 
         /* Setup the header */
-        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
+        Header.Length = sizeof(DBGKD_ANY_WAIT_STATE_CHANGE);
         Header.Buffer = (PCHAR)&WaitStateChange;
 
         /* Send the packet */
@@ -1356,7 +1356,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
                               IN BOOLEAN SecondChanceException)
 {
     STRING Header, Data;
-    DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
+    DBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange;
     KCONTINUE_STATUS Status;
 
     /* Start report loop */
@@ -1366,15 +1366,21 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
         KdpSetCommonState(DbgKdExceptionStateChange, Context, &WaitStateChange);
 
         /* Copy the Exception Record and set First Chance flag */
-        CopyExceptionRecord(ExceptionRecord,
-                            &WaitStateChange.u.Exception.ExceptionRecord);
+#if !defined(_WIN64)
+        ExceptionRecord32To64((PEXCEPTION_RECORD32)ExceptionRecord,
+                              &WaitStateChange.u.Exception.ExceptionRecord);
+#else
+        RtlCopyMemory(&WaitStateChange.u.Exception.ExceptionRecord,
+                      ExceptionRecord,
+                      sizeof(EXCEPTION_RECORD));
+#endif
         WaitStateChange.u.Exception.FirstChance = !SecondChanceException;
 
         /* Now finish creating the structure */
         KdpSetContextState(&WaitStateChange, Context);
 
         /* Setup the actual header to send to KD */
-        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
+        Header.Length = sizeof(DBGKD_ANY_WAIT_STATE_CHANGE);
         Header.Buffer = (PCHAR)&WaitStateChange;
 
         /* Setup the trace data */
@@ -1828,20 +1834,26 @@ KdRefreshDebuggerNotPresent(VOID)
     return KdDebuggerNotPresent;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
-NtQueryDebugFilterState(ULONG ComponentId,
-                        ULONG Level)
+NtQueryDebugFilterState(IN ULONG ComponentId,
+                        IN ULONG Level)
 {
     /* HACK */
     return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
-NtSetDebugFilterState(ULONG ComponentId,
-                      ULONG Level,
-                      BOOLEAN State)
+NtSetDebugFilterState(IN ULONG ComponentId,
+                      IN ULONG Level,
+                      IN BOOLEAN State)
 {
     /* HACK */
     return STATUS_SUCCESS;

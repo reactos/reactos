@@ -135,8 +135,10 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
         IN BOOLEAN SecondChanceException)
 {
     BOOLEAN Unload = FALSE;
-    ULONG_PTR ProgramCounter, ReturnValue;
+    ULONG_PTR ProgramCounter;
     BOOLEAN Status = FALSE;
+    NTSTATUS ReturnStatus;
+    USHORT ReturnLength;
 
     /*
      * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
@@ -156,38 +158,38 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_PRINT:
 
                 /* Call the worker routine */
-                ReturnValue = KdpPrint((ULONG)KdpGetFirstParameter(ContextRecord),
-                                       (ULONG)KdpGetSecondParameter(ContextRecord),
-                                       (LPSTR)ExceptionRecord->
-                                       ExceptionInformation[1],
-                                       (USHORT)ExceptionRecord->
-                                       ExceptionInformation[2],
-                                       PreviousMode,
-                                       TrapFrame,
-                                       ExceptionFrame,
-                                       &Status);
+                ReturnStatus = KdpPrint((ULONG)KdpGetFirstParameter(ContextRecord),
+                                        (ULONG)KdpGetSecondParameter(ContextRecord),
+                                        (LPSTR)ExceptionRecord->
+                                        ExceptionInformation[1],
+                                        (USHORT)ExceptionRecord->
+                                        ExceptionInformation[2],
+                                        PreviousMode,
+                                        TrapFrame,
+                                        ExceptionFrame,
+                                        &Status);
 
                 /* Update the return value for the caller */
-                KeSetContextReturnRegister(ContextRecord, ReturnValue);
+                KeSetContextReturnRegister(ContextRecord, ReturnStatus);
                 break;
 
             /* DbgPrompt */
             case BREAKPOINT_PROMPT:
 
                 /* Call the worker routine */
-                ReturnValue = KdpPrompt((LPSTR)ExceptionRecord->
-                                        ExceptionInformation[1],
-                                        (USHORT)ExceptionRecord->
-                                        ExceptionInformation[2],
-                                        (LPSTR)KdpGetFirstParameter(ContextRecord),
-                                        (USHORT)KdpGetSecondParameter(ContextRecord),
-                                        PreviousMode,
-                                        TrapFrame,
-                                        ExceptionFrame);
+                ReturnLength = KdpPrompt((LPSTR)ExceptionRecord->
+                                         ExceptionInformation[1],
+                                         (USHORT)ExceptionRecord->
+                                         ExceptionInformation[2],
+                                         (LPSTR)KdpGetFirstParameter(ContextRecord),
+                                         (USHORT)KdpGetSecondParameter(ContextRecord),
+                                         PreviousMode,
+                                         TrapFrame,
+                                         ExceptionFrame);
                 Status = TRUE;
 
                 /* Update the return value for the caller */
-                KeSetContextReturnRegister(ContextRecord, ReturnValue);
+                KeSetContextReturnRegister(ContextRecord, ReturnLength);
                 break;
 
             /* DbgUnLoadImageSymbols */
