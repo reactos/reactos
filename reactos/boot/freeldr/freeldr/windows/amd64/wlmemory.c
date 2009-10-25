@@ -342,7 +342,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
     WinLdrSetupIdt((PVOID)((ULONG64)GdtIdt + 2048)); // HACK!
 
     /* LDT is unused */
-    __lldt(0);
+//    __lldt(0);
 
     /* Load selectors for DS/ES/FS/GS/SS */
     Ke386SetDs(KGDT_64_DATA | RPL_MASK);   // 0x2b

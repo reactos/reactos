@@ -46,7 +46,7 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	ULONG_PTR Tss = 0;
 	ULONG BlockSize, NumPages;
 
-	LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
+	LoaderBlock->u.I386.CommonDataArea = (PVOID)DbgPrint; // HACK
 	LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
 
 	/* Allocate 2 pages for PCR */
