@@ -307,15 +307,6 @@ KdReceivePacket(
             }
         }
 
-        /* Compare checksum */
-        if (Packet.Checksum != Checksum)
-        {
-            KDDBGPRINT("KdReceivePacket - wrong cheksum, got %x, calculated %x\n",
-                          Packet.Checksum, Checksum);
-            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
-            continue;
-        }
-
         /* We must receive a PACKET_TRAILING_BYTE now */
         KdStatus = KdpReceiveBuffer(&Byte, sizeof(UCHAR));
         if (KdStatus != KDP_PACKET_RECEIVED || Byte != PACKET_TRAILING_BYTE)
@@ -325,21 +316,28 @@ KdReceivePacket(
             continue;
         }
 
-        /* Did we get the right packet type? */
-        if (PacketType != Packet.PacketType)
+        /* Compare checksum */
+        if (Packet.Checksum != Checksum)
         {
-            /* We received something different, ignore it. */
-            KDDBGPRINT("KdReceivePacket - wrong PacketType\n");
-            KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, Packet.PacketId);
+            KDDBGPRINT("KdReceivePacket - wrong cheksum, got %x, calculated %x\n",
+                          Packet.Checksum, Checksum);
+            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
         }
 
         /* Acknowledge the received packet */
         KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, Packet.PacketId);
 
-        //KDDBGPRINT("KdReceivePacket - all ok\n");
+        /* Did we get the right packet type? */
+        if (PacketType == Packet.PacketType)
+        {
+            /* Yes, return success */
+            //KDDBGPRINT("KdReceivePacket - all ok\n");
+            return KDP_PACKET_RECEIVED;
+        }
 
-        return KDP_PACKET_RECEIVED;
+        /* We received something different, ignore it. */
+        KDDBGPRINT("KdReceivePacket - wrong PacketType\n");
     }
 
     return KDP_PACKET_RECEIVED;
