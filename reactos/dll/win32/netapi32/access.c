@@ -112,7 +112,7 @@ static BOOL NETAPI_IsCurrentUser(LPCWSTR username)
     BOOL ret = FALSE;
 
     dwSize = LM20_UNLEN+1;
-    curr_user = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    curr_user = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
     if(!curr_user)
     {
         ERR("Failed to allocate memory for user name.\n");
@@ -431,7 +431,7 @@ NetUserGetLocalGroups(LPCWSTR servername, LPCWSTR username, DWORD level,
         return status;
 
     size = UNLEN + 1;
-    NetApiBufferAllocate(size, (LPVOID*)&currentuser);
+    NetApiBufferAllocate(size * sizeof(WCHAR), (LPVOID*)&currentuser);
     GetUserNameW(currentuser, &size);
 
     if (lstrcmpiW(username, currentuser) && NETAPI_FindUser(username))
@@ -640,7 +640,7 @@ NetQueryDisplayInformation(
 
         /* get data */
         dwSize = UNLEN + 1;
-        NetApiBufferAllocate(dwSize, (LPVOID *) &name);
+        NetApiBufferAllocate(dwSize * sizeof(WCHAR), (LPVOID *) &name);
         if (!GetUserNameW(name, &dwSize))
         {
             NetApiBufferFree(name);
@@ -728,6 +728,16 @@ NetGroupEnum(LPCWSTR servername, DWORD level, LPBYTE *bufptr, DWORD prefmaxlen,
 {
     FIXME("(%s, %d, %p, %d, %p, %p, %p) stub!\n", debugstr_w(servername),
           level, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
+    return ERROR_ACCESS_DENIED;
+}
+
+/************************************************************
+ *                NetGroupGetInfo  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS WINAPI NetGroupGetInfo(LPCWSTR servername, LPCWSTR groupname, DWORD level, LPBYTE *bufptr)
+{
+    FIXME("(%s, %s, %d, %p) stub!\n", debugstr_w(servername), debugstr_w(groupname), level, bufptr);
     return ERROR_ACCESS_DENIED;
 }
 
