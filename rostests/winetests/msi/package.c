@@ -843,7 +843,10 @@ static void test_doaction( void )
 
 static void test_gettargetpath_bad(void)
 {
+    static const WCHAR boo[] = {'b','o','o',0};
+    static const WCHAR empty[] = {0};
     char buffer[0x80];
+    WCHAR bufferW[0x80];
     MSIHANDLE hpkg;
     DWORD sz;
     UINT r;
@@ -867,6 +870,32 @@ static void test_gettargetpath_bad(void)
     ok( r == ERROR_DIRECTORY, "wrong return val\n");
 
     r = MsiGetTargetPath( hpkg, "boo", buffer, NULL );
+    ok( r == ERROR_DIRECTORY, "wrong return val\n");
+
+    sz = 0;
+    r = MsiGetTargetPath( hpkg, "", buffer, &sz );
+    ok( r == ERROR_DIRECTORY, "wrong return val\n");
+
+    r = MsiGetTargetPathW( 0, NULL, NULL, NULL );
+    ok( r == ERROR_INVALID_PARAMETER, "wrong return val\n");
+
+    r = MsiGetTargetPathW( 0, NULL, NULL, &sz );
+    ok( r == ERROR_INVALID_PARAMETER, "wrong return val\n");
+
+    r = MsiGetTargetPathW( 0, boo, NULL, NULL );
+    ok( r == ERROR_INVALID_HANDLE, "wrong return val\n");
+
+    r = MsiGetTargetPathW( 0, boo, NULL, NULL );
+    ok( r == ERROR_INVALID_HANDLE, "wrong return val\n");
+
+    r = MsiGetTargetPathW( hpkg, boo, NULL, NULL );
+    ok( r == ERROR_DIRECTORY, "wrong return val\n");
+
+    r = MsiGetTargetPathW( hpkg, boo, bufferW, NULL );
+    ok( r == ERROR_DIRECTORY, "wrong return val\n");
+
+    sz = 0;
+    r = MsiGetTargetPathW( hpkg, empty, bufferW, &sz );
     ok( r == ERROR_DIRECTORY, "wrong return val\n");
 
     MsiCloseHandle( hpkg );
@@ -7662,6 +7691,7 @@ static void test_appsearch_complocator(void)
     DeleteFileA("FileName10.dll");
     MsiCloseHandle(hpkg);
     DeleteFileA(msifile);
+    LocalFree(usersid);
 }
 
 static void test_appsearch_reglocator(void)
@@ -11362,6 +11392,7 @@ static void test_emptypackage(void)
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     }
 
+    buffer[0] = 0;
     size = MAX_PATH;
     r = MsiRecordGetString(hrec, 1, buffer, &size);
     todo_wine
