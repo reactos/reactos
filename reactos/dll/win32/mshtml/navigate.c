@@ -313,7 +313,7 @@ static HRESULT WINAPI BindStatusCallback_OnStartBinding(IBindStatusCallback *ifa
     This->binding = pbind;
 
     if(This->doc)
-        list_add_head(&This->doc->bindings, &This->entry);
+        list_add_head(&This->doc->doc_obj->bindings, &This->entry);
 
     return This->vtbl->start_binding(This);
 }
@@ -615,7 +615,7 @@ static void init_bscallback(BSCallback *This, const BSCallbackVtbl *vtbl, IMonik
 }
 
 /* Calls undocumented 84 cmd of CGID_ShellDocView */
-static void call_docview_84(HTMLDocument *doc)
+static void call_docview_84(HTMLDocumentObj *doc)
 {
     IOleCommandTarget *olecmd;
     VARIANT var;
@@ -714,7 +714,7 @@ HRESULT start_binding(HTMLDocument *doc, BSCallback *bscallback, IBindCtx *bctx)
 
     /* NOTE: IE7 calls IsSystemMoniker here*/
 
-    call_docview_84(doc);
+    call_docview_84(doc->doc_obj);
 
     if(bctx) {
         RegisterBindStatusCallback(bctx, STATUSCLB(bscallback), NULL, 0);
@@ -893,20 +893,20 @@ static void on_start_nsrequest(nsChannelBSC *This)
         FIXME("OnStartRequest failed: %08x\n", nsres);
 }
 
-static void on_stop_nsrequest(nsChannelBSC *This)
+static void on_stop_nsrequest(nsChannelBSC *This, HRESULT result)
 {
     nsresult nsres;
 
     if(!This->nslistener)
         return;
 
-    if(!This->bsc.readed) {
+    if(!This->bsc.readed && SUCCEEDED(result)) {
         TRACE("No data read! Calling OnStartRequest\n");
         on_start_nsrequest(This);
     }
 
     nsres = nsIStreamListener_OnStopRequest(This->nslistener, (nsIRequest*)NSCHANNEL(This->nschannel),
-            This->nscontext, NS_OK);
+             This->nscontext, SUCCEEDED(result) ? NS_OK : NS_ERROR_FAILURE);
     if(NS_FAILED(nsres))
         WARN("OnStopRequest failed: %08x\n", nsres);
 }
@@ -949,9 +949,9 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
             on_start_nsrequest(This);
 
             /* events are reset when a new document URI is loaded, so re-initialise them here */
-            if(This->bsc.doc && This->bsc.doc->bscallback == This && This->bsc.doc->nscontainer) {
-                update_nsdocument(This->bsc.doc);
-                init_nsevents(This->bsc.doc->nscontainer);
+            if(This->bsc.doc && This->bsc.doc->doc_obj->bscallback == This && This->bsc.doc->doc_obj->nscontainer) {
+                update_nsdocument(This->bsc.doc->doc_obj);
+                init_nsevents(This->bsc.doc->doc_obj->nscontainer);
             }
         }
 
@@ -1030,7 +1030,7 @@ static HRESULT nsChannelBSC_stop_binding(BSCallback *bsc, HRESULT result)
 {
     nsChannelBSC *This = NSCHANNELBSC_THIS(bsc);
 
-    on_stop_nsrequest(This);
+    on_stop_nsrequest(This, result);
 
     if(This->nslistener) {
         if(This->nschannel->load_group) {
@@ -1109,19 +1109,19 @@ void set_document_bscallback(HTMLDocument *doc, nsChannelBSC *callback)
 {
     BSCallback *iter;
 
-    if(doc->bscallback) {
-        if(doc->bscallback->bsc.binding)
-            IBinding_Abort(doc->bscallback->bsc.binding);
-        doc->bscallback->bsc.doc = NULL;
-        IBindStatusCallback_Release(STATUSCLB(&doc->bscallback->bsc));
+    if(doc->doc_obj->bscallback) {
+        if(doc->doc_obj->bscallback->bsc.binding)
+            IBinding_Abort(doc->doc_obj->bscallback->bsc.binding);
+        doc->doc_obj->bscallback->bsc.doc = NULL;
+        IBindStatusCallback_Release(STATUSCLB(&doc->doc_obj->bscallback->bsc));
     }
 
-    LIST_FOR_EACH_ENTRY(iter, &doc->bindings, BSCallback, entry) {
+    LIST_FOR_EACH_ENTRY(iter, &doc->doc_obj->bindings, BSCallback, entry) {
         iter->doc = NULL;
         list_remove(&iter->entry);
     }
 
-    doc->bscallback = callback;
+    doc->doc_obj->bscallback = callback;
 
     if(callback) {
         IBindStatusCallback_AddRef(STATUSCLB(&callback->bsc));

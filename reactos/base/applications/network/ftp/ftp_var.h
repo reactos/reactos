@@ -101,7 +101,7 @@ extern int	mapflag;		/* use mapin mapout templates on file names */
 extern int	code;			/* return/reply code for ftp command */
 extern int	crflag;			/* if 1, strip car. rets. on ascii gets */
 extern char	pasv[64];		/* passive port for proxy data connection */
-extern int  passivemode;    /* passive mode enabled */
+extern int	passivemode;		/* passive mode enabled */
 extern char	*altarg;		/* argv[1] with no shell-like preprocessing  */
 extern char	ntin[17];		/* input translation table */
 extern char	ntout[17];		/* output translation table */
@@ -126,8 +126,8 @@ extern char	*stringbase;		/* current scan point in line buffer */
 extern char	argbuf[200];		/* argument storage buffer */
 extern char	*argbase;		/* current storage point in arg buffer */
 extern int	margc;			/* count of arguments on input line */
-extern const char	*margv[20];		/* args parsed from input line */
-extern int     cpend;                  /* flag: if != 0, then pending server reply */
+extern const char	*margv[20];	/* args parsed from input line */
+extern int	cpend;			/* flag: if != 0, then pending server reply */
 extern int	mflag;			/* flag: if != 0, then active multi command */
 
 extern int	options;		/* used during socket creation */
@@ -138,21 +138,21 @@ extern int	options;		/* used during socket creation */
 struct cmd {
 	const char	*c_name;	/* name of command */
 	const char	*c_help;	/* help string */
-	char	c_bell;		/* give bell when command completes */
-	char	c_conn;		/* must be connected to use command */
-	char	c_proxy;	/* proxy server may execute */
-	void	(*c_handler)();	/* function to call */
+	char	c_bell;			/* give bell when command completes */
+	char	c_conn;			/* must be connected to use command */
+	char	c_proxy;		/* proxy server may execute */
+	void	(*c_handler)();		/* function to call */
 };
 
 struct macel {
-	char mac_name[9];	/* macro name */
-	char *mac_start;	/* start of macro in macbuf */
-	char *mac_end;		/* end of macro in macbuf */
+	char mac_name[9];		/* macro name */
+	char *mac_start;		/* start of macro in macbuf */
+	char *mac_end;			/* end of macro in macbuf */
 };
 
-int macnum;			/* number of defined macros */
-struct macel macros[16];
-char macbuf[4096];
+extern int macnum;			/* number of defined macros */
+extern struct macel macros[16];
+extern char macbuf[4096];
 
 #if	defined(__ANSI__) || defined(sparc)
 typedef void sig_t;

@@ -405,6 +405,7 @@ static HRESULT HTMLTextAreaElementImpl_get_disabled(HTMLDOMNode *iface, VARIANT_
 static const NodeImplVtbl HTMLTextAreaElementImplVtbl = {
     HTMLTextAreaElement_QI,
     HTMLTextAreaElement_destructor,
+    NULL,
     HTMLTextAreaElementImpl_put_disabled,
     HTMLTextAreaElementImpl_get_disabled
 };
@@ -414,10 +415,10 @@ HTMLElement *HTMLTextAreaElement_Create(nsIDOMHTMLElement *nselem)
     HTMLTextAreaElement *ret = heap_alloc_zero(sizeof(HTMLTextAreaElement));
     nsresult nsres;
 
-    HTMLElement_Init(&ret->element);
-
     ret->lpHTMLTextAreaElementVtbl = &HTMLTextAreaElementVtbl;
     ret->element.node.vtbl = &HTMLTextAreaElementImplVtbl;
+
+    HTMLElement_Init(&ret->element, NULL);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTextAreaElement,
                                              (void**)&ret->nstextarea);

@@ -452,15 +452,15 @@ BOOL			WINAPI	mciFreeCommandResource(UINT uTable);
 #define DCB_TYPEMASK		0x0007
 #define DCB_NOSWITCH		0x0008			/* don't switch stacks for callback */
 
-BOOL		 	WINAPI	DriverCallback(DWORD_PTR dwCallBack, UINT uFlags, HDRVR hDev,
-					       UINT wMsg, DWORD_PTR dwUser, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
+BOOL		 	APIENTRY	DriverCallback(DWORD_PTR dwCallBack, DWORD uFlags, HDRVR hDev,
+					       DWORD wMsg, DWORD_PTR dwUser, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 typedef void (*LPTASKCALLBACK)(DWORD dwInst);
 
 #define TASKERR_NOTASKSUPPORT 1
 #define TASKERR_OUTOFMEMORY   2
 MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK, HANDLE*, DWORD);
-void     WINAPI mmTaskBlock(HANDLE);
+void     WINAPI mmTaskBlock(DWORD);
 BOOL     WINAPI mmTaskSignal(DWORD);
 void     WINAPI mmTaskYield(void);
 DWORD   WINAPI mmGetCurrentTask(void);

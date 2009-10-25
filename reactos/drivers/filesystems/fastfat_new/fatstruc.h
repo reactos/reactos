@@ -305,6 +305,8 @@ typedef struct _FCB
     ULONG OutstandingAsyncWrites;
     /* The outstanding async writes sync event */
     PKEVENT OutstandingAsyncEvent;
+    /* Counters */
+    ULONG OpenCount;
     union
     {
         struct
@@ -387,6 +389,14 @@ typedef enum _TYPE_OF_OPEN
     DirectoryFile,
     EaFile
 } TYPE_OF_OPEN;
+
+typedef enum _FILE_TIME_INDEX
+{
+    FileCreationTime = 0,
+    FileLastAccessTime,
+    FileLastWriteTime,
+    FileChangeTime
+} FILE_TIME_INDEX;
 
 #define CCB_SEARCH_RETURN_SINGLE_ENTRY      0x01
 #define CCB_SEARCH_PATTERN_LEGAL_8DOT3      0x02

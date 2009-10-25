@@ -797,6 +797,8 @@ DECLARE_INTERFACE_(IPortPinWaveCyclic, IIrpTarget)
     STDMETHOD_(PMINIPORT, GetMiniport)(THIS) PURE;
 };
 
+typedef IPortPinWaveCyclic *PPORTPINWAVECYCLIC;
+
 #define IMP_IPortPinWaveCyclic                           \
     IMP_IIrpTarget;                                      \
     STDMETHODIMP_(NTSTATUS) Init(THIS_                   \

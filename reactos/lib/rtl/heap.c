@@ -1952,8 +1952,30 @@ RtlQueryHeapInformation(HANDLE HeapHandle,
                         SIZE_T HeapInformationLength OPTIONAL,
                         PSIZE_T ReturnLength OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return 0;
+    HEAP *heapPtr;
+
+    heapPtr = HEAP_GetPtr(HeapHandle);
+    if (!heapPtr)
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_HANDLE );
+        return FALSE;
+    }
+
+    UNIMPLEMENTED
+
+    switch (HeapInformationClass)
+    {
+        case HeapCompatibilityInformation:
+            if (ReturnLength) *ReturnLength = sizeof(ULONG);
+
+            if (HeapInformationLength < sizeof(ULONG))
+                return STATUS_BUFFER_TOO_SMALL;
+
+            *(ULONG *)HeapInformation = 0; /* standard heap */
+            return STATUS_SUCCESS;
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
 }
 
 DWORD

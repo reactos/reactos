@@ -331,7 +331,7 @@ WdmAudReadWrite(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("KsProbeStreamIrp failed with Status %x\n", Status);
+        DPRINT1("KsProbeStreamIrp failed with Status %x Cancel %u\n", Status, Irp->Cancel);
         return SetIrpIoStatus(Irp, Status, 0);
     }
 
@@ -355,7 +355,7 @@ WdmAudReadWrite(
 
     /* attach file object */
     IoStack->FileObject = FileObject;
-    IoStack->Parameters.Write.Length = sizeof(KSSTREAM_HEADER);
+    IoStack->Parameters.Write.Length = Length;
     IoStack->MajorFunction = IRP_MJ_WRITE;
 
     /* mark irp as pending */

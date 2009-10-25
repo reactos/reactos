@@ -32,6 +32,7 @@
 #error Unsupported compiler
 #endif
 
+#define _ReturnAddress() (__builtin_return_address(0))
 #define _ReadWriteBarrier() __sync_synchronize()
 
 __INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)

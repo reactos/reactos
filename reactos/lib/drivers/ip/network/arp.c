@@ -140,7 +140,7 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PVOID LinkAddress,
             break;
         default:
 	    TI_DbgPrint(DEBUG_ARP,("Bad Address Type %x\n", Address->Type));
-	    KeBugCheck(0);
+	    DbgBreakPoint();
             /* Should not happen */
             return FALSE;
     }
@@ -183,9 +183,11 @@ VOID ARPReceive(
  */
 {
     PARP_HEADER Header;
-    IP_ADDRESS Address;
+    IP_ADDRESS SrcAddress;
+    IP_ADDRESS DstAddress;
     PVOID SenderHWAddress;
     PVOID SenderProtoAddress;
+    PVOID TargetProtoAddress;
     PNEIGHBOR_CACHE_ENTRY NCE;
     PNDIS_PACKET NdisPacket;
     PIP_INTERFACE Interface = (PIP_INTERFACE)Context;
@@ -208,12 +210,16 @@ VOID ARPReceive(
 
     SenderHWAddress    = (PVOID)((ULONG_PTR)Header + sizeof(ARP_HEADER));
     SenderProtoAddress = (PVOID)((ULONG_PTR)SenderHWAddress + Header->HWAddrLen);
+    TargetProtoAddress = (PVOID)((ULONG_PTR)SenderProtoAddress + Header->ProtoAddrLen + Header->HWAddrLen);
+
+    AddrInitIPv4(&DstAddress, *((PULONG)TargetProtoAddress));
+    if (!AddrIsEqual(&DstAddress, &Interface->Unicast))
+        return;
+
+    AddrInitIPv4(&SrcAddress, *((PULONG)SenderProtoAddress));
 
     /* Check if we know the sender */
-
-    AddrInitIPv4(&Address, *((PULONG)SenderProtoAddress));
-
-    NCE = NBLocateNeighbor(&Address);
+    NCE = NBLocateNeighbor(&SrcAddress);
     if (NCE) {
         /* We know the sender. Update the hardware address
            and state in our neighbor address cache */
@@ -222,12 +228,11 @@ VOID ARPReceive(
         /* The packet had our protocol address as target. The sender
            may want to communicate with us soon, so add his address
            to our address cache */
-        NCE = NBAddNeighbor(Interface, &Address, SenderHWAddress,
+        NCE = NBAddNeighbor(Interface, &SrcAddress, SenderHWAddress,
             Header->HWAddrLen, 0, ARP_TIMEOUT);
     }
 
-    if (Header->Opcode != ARP_OPCODE_REQUEST ||
-        !AddrIsEqual(&Address, &Interface->Unicast))
+    if (Header->Opcode != ARP_OPCODE_REQUEST)
         return;
 
     /* This is a request for our address. Swap the addresses and

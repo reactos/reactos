@@ -81,7 +81,7 @@ CUnregisterSubdevice::UnregisterSubdevice(
     Status = Unknown->QueryInterface(IID_ISubdevice, (LPVOID*)&SubDevice);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("No ISubdevice interface\n");
+        DPRINT("No ISubdevice interface\n");
         // the provided port driver doesnt support ISubdevice
         return STATUS_INVALID_PARAMETER;
     }
@@ -89,7 +89,7 @@ CUnregisterSubdevice::UnregisterSubdevice(
     Status = SubDevice->GetDescriptor(&SubDeviceDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to retrieve subdevice descriptor %x\n", Status);
+        DPRINT("Failed to retrieve subdevice descriptor %x\n", Status);
         // the provided port driver doesnt support ISubdevice
         return STATUS_INVALID_PARAMETER;
     }

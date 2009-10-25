@@ -92,7 +92,7 @@ PcRegisterIoTimeout(
     TimerContext = (PTIMER_CONTEXT)AllocateItem(NonPagedPool, sizeof(TIMER_CONTEXT), TAG_PORTCLASS);
     if (!TimerContext)
     {
-        DPRINT1("Failed to allocate memory\n");
+        DPRINT("Failed to allocate memory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 

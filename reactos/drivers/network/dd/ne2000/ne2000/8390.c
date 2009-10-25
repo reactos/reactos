@@ -1315,6 +1315,7 @@ VOID NTAPI MiniportHandleInterrupt(
     UCHAR ISRMask;
     UCHAR Mask;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+    UINT i = 0;
 
     ISRMask = Adapter->InterruptMask;
     NdisRawReadPortUchar(Adapter->IOBase + PG0_ISR, &ISRValue);
@@ -1323,12 +1324,14 @@ VOID NTAPI MiniportHandleInterrupt(
 
     Adapter->InterruptStatus |= (ISRValue & ISRMask);
 
-    if (ISRValue != 0x00)
-        /* Acknowledge interrupts */
-        NdisRawWritePortUchar(Adapter->IOBase + PG0_ISR, ISRValue);
-
     Mask = 0x01;
-    while (Adapter->InterruptStatus != 0x00) {
+    while (Adapter->InterruptStatus != 0x00 && i++ < INTERRUPT_LIMIT) {
+
+        if (ISRValue != 0x00) {
+            /* Acknowledge interrupts */
+            NdisRawWritePortUchar(Adapter->IOBase + PG0_ISR, ISRValue);
+            Mask = 0x01;
+        }
 
         NDIS_DbgPrint(MID_TRACE, ("Adapter->InterruptStatus (0x%X)  Mask (0x%X).\n",
             Adapter->InterruptStatus, Mask));
@@ -1409,12 +1412,6 @@ VOID NTAPI MiniportHandleInterrupt(
         NDIS_DbgPrint(MID_TRACE, ("ISRValue (0x%X).\n", ISRValue));
 
         Adapter->InterruptStatus |= (ISRValue & ISRMask);
-
-        if (ISRValue != 0x00) {
-            /* Acknowledge interrupts */
-            NdisRawWritePortUchar(Adapter->IOBase + PG0_ISR, ISRValue);
-            Mask = 0x01;
-        }
     }
 
     NICEnableInterrupts((PNIC_ADAPTER)MiniportAdapterContext);

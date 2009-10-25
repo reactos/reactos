@@ -25,15 +25,11 @@
 extern ULONG PageDirectoryStart;
 extern ULONG PageDirectoryEnd;
 
-ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
-char					reactos_kernel_cmdline[255];	// Command line passed to kernel
-LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
-char					reactos_module_strings[64][256];	// Array to hold module names
-reactos_mem_data_t reactos_mem_data;
+extern CHAR szBootPath[255];
+extern CHAR SystemRoot[255];
+extern CHAR szHalName[255];
+
 extern char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE];
-char szBootPath[256];
-char szHalName[256];
-CHAR SystemRoot[255];
 extern ULONG_PTR KernelBase;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 

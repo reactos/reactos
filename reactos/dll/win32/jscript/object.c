@@ -32,9 +32,12 @@ static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','
 
 static const WCHAR default_valueW[] = {'[','o','b','j','e','c','t',' ','O','b','j','e','c','t',']',0};
 
-static HRESULT Object_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Object_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
+    DispatchEx *jsdisp;
+    const WCHAR *str;
+
     static const WCHAR formatW[] = {'[','o','b','j','e','c','t',' ','%','s',']',0};
 
     static const WCHAR arrayW[] = {'A','r','r','a','y',0};
@@ -48,83 +51,92 @@ static HRESULT Object_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
     static const WCHAR regexpW[] = {'R','e','g','E','x','p',0};
     static const WCHAR stringW[] = {'S','t','r','i','n','g',0};
     /* Keep in sync with jsclass_t enum */
-    static const WCHAR *names[] = {NULL, arrayW, booleanW, dateW, errorW,
-        functionW, NULL, mathW, numberW, objectW, regexpW, stringW};
+    static const WCHAR *names[] = {objectW, arrayW, booleanW, dateW, errorW,
+        functionW, NULL, mathW, numberW, objectW, regexpW, stringW, objectW};
 
     TRACE("\n");
 
-    if(names[dispex->builtin_info->class] == NULL) {
-        ERR("dispex->builtin_info->class = %d\n",
-                dispex->builtin_info->class);
+    jsdisp = get_jsdisp(jsthis);
+    if(!jsdisp) {
+        str = objectW;
+    }else if(names[jsdisp->builtin_info->class]) {
+        str = names[jsdisp->builtin_info->class];
+    }else {
+        FIXME("jdisp->builtin_info->class = %d\n", jsdisp->builtin_info->class);
         return E_FAIL;
     }
 
     if(retv) {
         V_VT(retv) = VT_BSTR;
-        V_BSTR(retv) = SysAllocStringLen(NULL, 9+strlenW(names[dispex->builtin_info->class]));
+        V_BSTR(retv) = SysAllocStringLen(NULL, 9+strlenW(str));
         if(!V_BSTR(retv))
             return E_OUTOFMEMORY;
 
-        sprintfW(V_BSTR(retv), formatW, names[dispex->builtin_info->class]);
+        sprintfW(V_BSTR(retv), formatW, str);
     }
 
     return S_OK;
 }
 
-static HRESULT Object_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Object_toLocaleString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     DISPPARAMS params = {NULL, NULL, 0, 0};
 
     TRACE("\n");
 
-    return jsdisp_call_name(dispex, toStringW, lcid, DISPATCH_METHOD, &params, retv, ei, sp);
+    if(!is_jsdisp(jsthis)) {
+        FIXME("Host object this\n");
+        return E_FAIL;
+    }
+
+    return jsdisp_call_name(jsthis->u.jsdisp, toStringW, DISPATCH_METHOD, &params, retv, ei, sp);
 }
 
-static HRESULT Object_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Object_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
 
     if(retv) {
-        IDispatchEx_AddRef(_IDispatchEx_(dispex));
+        IDispatch_AddRef(jsthis->u.disp);
 
         V_VT(retv) = VT_DISPATCH;
-        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(dispex);
+        V_DISPATCH(retv) = jsthis->u.disp;
     }
 
     return S_OK;
 }
 
-static HRESULT Object_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT Object_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Object_propertyIsEnumerable(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT Object_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Object_isPrototypeOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT Object_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Object_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
 
     switch(flags) {
     case INVOKE_FUNC:
-        return throw_type_error(dispex->ctx, ei, IDS_NOT_FUNC, NULL);
+        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
     case DISPATCH_PROPERTYGET:
         V_VT(retv) = VT_BSTR;
         V_BSTR(retv) = SysAllocString(default_valueW);
@@ -162,18 +174,39 @@ static const builtin_info_t Object_info = {
     NULL
 };
 
-static HRESULT ObjectConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT ObjectConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
     HRESULT hres;
 
     TRACE("\n");
 
     switch(flags) {
+    case DISPATCH_METHOD:
+        if(arg_cnt(dp)) {
+            VARIANT *arg = get_arg(dp,0);
+
+            if(V_VT(arg) != VT_EMPTY && V_VT(arg) != VT_NULL) {
+                IDispatch *disp;
+
+                hres = to_object(ctx, arg, &disp);
+                if(FAILED(hres))
+                    return hres;
+
+                if(retv) {
+                    V_VT(retv) = VT_DISPATCH;
+                    V_DISPATCH(retv) = disp;
+                }else {
+                    IDispatch_Release(disp);
+                }
+                return S_OK;
+            }
+        }
+        /* fall through */
     case DISPATCH_CONSTRUCT: {
         DispatchEx *obj;
 
-        hres = create_object(dispex->ctx, NULL, &obj);
+        hres = create_object(ctx, NULL, &obj);
         if(FAILED(hres))
             return hres;
 
@@ -192,7 +225,9 @@ static HRESULT ObjectConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DIS
 
 HRESULT create_object_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
 {
-    return create_builtin_function(ctx, ObjectConstr_value, NULL, PROPF_CONSTR,
+    static const WCHAR ObjectW[] = {'O','b','j','e','c','t',0};
+
+    return create_builtin_function(ctx, ObjectConstr_value, ObjectW, NULL, PROPF_CONSTR,
             object_prototype, ret);
 }
 

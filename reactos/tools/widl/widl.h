@@ -46,7 +46,8 @@ extern int do_dlldata;
 extern int old_names;
 extern int do_win32;
 extern int do_win64;
-extern int packing;
+extern int win32_packing;
+extern int win64_packing;
 
 extern char *input_name;
 extern char *header_name;

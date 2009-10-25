@@ -28,7 +28,8 @@
 
 #define LOCALE_RETURN_NUMBER 0x20000000
 #define LOCALE_USE_CP_ACP 0x40000000
-#define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|LOCALE_RETURN_NUMBER)
+#define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|\
+                                    LOCALE_RETURN_NUMBER|LOCALE_RETURN_GENITIVE_NAMES)
 #define CALINFO_MAX_YEAR 2029
 
 //static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
@@ -52,6 +53,62 @@ typedef struct
 
 static const WCHAR szLocaleKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\NLS\\Locale";
 static const WCHAR szLangGroupsKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\NLS\\Language Groups";
+
+/***********************************************************************
+ *           is_genitive_name_supported
+ *
+ * Determine could LCTYPE basically support genitive name form or not.
+ */
+static BOOL is_genitive_name_supported( LCTYPE lctype )
+{
+    switch(lctype & 0xffff)
+    {
+    case LOCALE_SMONTHNAME1:
+    case LOCALE_SMONTHNAME2:
+    case LOCALE_SMONTHNAME3:
+    case LOCALE_SMONTHNAME4:
+    case LOCALE_SMONTHNAME5:
+    case LOCALE_SMONTHNAME6:
+    case LOCALE_SMONTHNAME7:
+    case LOCALE_SMONTHNAME8:
+    case LOCALE_SMONTHNAME9:
+    case LOCALE_SMONTHNAME10:
+    case LOCALE_SMONTHNAME11:
+    case LOCALE_SMONTHNAME12:
+    case LOCALE_SMONTHNAME13:
+         return TRUE;
+    default:
+         return FALSE;
+    }
+}
+
+/***********************************************************************
+ *		create_registry_key
+ *
+ * Create the Control Panel\\International registry key.
+ */
+static inline HANDLE create_registry_key(void)
+{
+    static const WCHAR intlW[] = {'C','o','n','t','r','o','l',' ','P','a','n','e','l','\\',
+                                  'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING nameW;
+    HANDLE hkey;
+
+    if (RtlOpenCurrentUser( KEY_ALL_ACCESS, &hkey ) != STATUS_SUCCESS) return 0;
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = hkey;
+    attr.ObjectName = &nameW;
+    attr.Attributes = 0;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+    RtlInitUnicodeString( &nameW, intlW );
+
+    if (NtCreateKey( &hkey, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS) hkey = 0;
+    NtClose( attr.RootDirectory );
+    return hkey;
+}
 
 /******************************************************************************
  * @implemented
@@ -1751,6 +1808,13 @@ GetLocaleInfoW (
         SetLastError( ERROR_INVALID_PARAMETER );
         return 0;
     }
+    if (LCType & LOCALE_RETURN_GENITIVE_NAMES &&
+       !is_genitive_name_supported( LCType ))
+    {
+        SetLastError( ERROR_INVALID_FLAGS );
+        return 0;
+    }
+
     if (!cchData) lpLCData = NULL;
 
     if (Locale == LOCALE_NEUTRAL || Locale == LOCALE_SYSTEM_DEFAULT) Locale = GetSystemDefaultLCID();
@@ -1781,10 +1845,23 @@ GetLocaleInfoW (
         return 0;
 
     ch = LockResource( hMem );
-    for (i = 0; i < (int)(LCType & 0x0f); i++) ch += *ch + 1;
+    for (i = 0; i < (LCType & 0x0f); i++) ch += *ch + 1;
 
     if (uiFlags & LOCALE_RETURN_NUMBER) nRet = sizeof(UINT) / sizeof(WCHAR);
-    else nRet = (LCType == LOCALE_FONTSIGNATURE) ? *ch : *ch + 1;
+    else if (is_genitive_name_supported( LCType ) && *ch)
+    {
+        /* genitive form's stored after a null separator from a nominative */
+        for (i = 1; i <= *ch; i++) if (!ch[i]) break;
+
+        if (i <= *ch && (uiFlags & LOCALE_RETURN_GENITIVE_NAMES))
+        {
+            nRet = *ch - i + 1;
+            ch += i;
+        }
+        else nRet = i;
+    }
+    else
+        nRet = (LCType == LOCALE_FONTSIGNATURE) ? *ch : *ch + 1;
 
     if (!lpLCData) return nRet;
 
@@ -2092,6 +2169,12 @@ INT WINAPI GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
         SetLastError( ERROR_INVALID_PARAMETER );
         return 0;
     }
+    if (lctype & LOCALE_RETURN_GENITIVE_NAMES )
+    {
+        SetLastError( ERROR_INVALID_FLAGS );
+        return 0;
+    }
+
     if (!len) buffer = NULL;
 
     if (!(lenW = GetLocaleInfoW( lcid, lctype, NULL, 0 ))) return 0;
@@ -2231,35 +2314,6 @@ GetUserDefaultUILanguage(VOID)
     }
 
     return LangId;
-}
-
-
-/***********************************************************************
- *		create_registry_key
- *
- * Create the Control Panel\\International registry key.
- */
-static inline HANDLE create_registry_key(void)
-{
-    static const WCHAR intlW[] = {'C','o','n','t','r','o','l',' ','P','a','n','e','l','\\',
-                                  'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
-    OBJECT_ATTRIBUTES attr;
-    UNICODE_STRING nameW;
-    HANDLE hkey;
-
-    if (RtlOpenCurrentUser( KEY_ALL_ACCESS, &hkey ) != STATUS_SUCCESS) return 0;
-
-    attr.Length = sizeof(attr);
-    attr.RootDirectory = hkey;
-    attr.ObjectName = &nameW;
-    attr.Attributes = 0;
-    attr.SecurityDescriptor = NULL;
-    attr.SecurityQualityOfService = NULL;
-    RtlInitUnicodeString( &nameW, intlW );
-
-    if (NtCreateKey( &hkey, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS) hkey = 0;
-    NtClose( attr.RootDirectory );
-    return hkey;
 }
 
 

@@ -113,3 +113,16 @@ NET_API_STATUS WINAPI NetShareAdd(LMSTR servername,
     FIXME("Stub (%s %d %p %p)\n", debugstr_w(servername), level, buf, parm_err);
     return ERROR_NOT_SUPPORTED;
 }
+
+/************************************************************
+ *                NetFileEnum  (NETAPI32.@)
+ */
+NET_API_STATUS WINAPI NetFileEnum(
+    LPWSTR ServerName, LPWSTR BasePath, LPWSTR UserName,
+    DWORD Level, LPBYTE* BufPtr, DWORD PrefMaxLen,
+    LPDWORD EntriesRead, LPDWORD TotalEntries, PDWORD_PTR ResumeHandle)
+{
+    FIXME("(%s, %s, %s, %u): stub\n", debugstr_w(ServerName), debugstr_w(BasePath),
+        debugstr_w(UserName), Level);
+    return ERROR_NOT_SUPPORTED;
+}

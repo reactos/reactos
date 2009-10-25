@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS FAT file system driver
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GNU GPLv3 as published by the Free Software Foundation
  * FILE:            drivers/filesystems/fastfat/fcb.c
  * PURPOSE:         FCB manipulation routines.
  * PROGRAMMERS:     Aleksey Bragin <aleksey@reactos.org>
@@ -389,7 +389,7 @@ FatiOpenExistingFcb(IN PFAT_IRP_CONTEXT IrpContext,
     else
     {
         /* We can't get here */
-        KeBugCheckEx(0x23, CreateDisposition, 0, 0, 0);
+        KeBugCheckEx(FAT_FILE_SYSTEM, CreateDisposition, 0, 0, 0);
     }
 
 
@@ -423,7 +423,8 @@ SuccComplete:
         /* Clear the delay close */
         ClearFlag(Fcb->State, FCB_STATE_DELAY_CLOSE);
 
-        /* Increase global volume counter */
+        /* Increase counters */
+        Fcb->OpenCount++;
         Vcb->OpenFileCount++;
 
         // TODO: Handle DeleteOnClose and OpenedAsDos by storing those flags in CCB
@@ -895,8 +896,19 @@ FatInsertName(IN PFAT_IRP_CONTEXT IrpContext,
     NameLink = CONTAINING_RECORD(*RootNode, FCB_NAME_LINK, Links);
     while (TRUE)
     {
-        /* Compare prefixes */
-        Comparison = FatiCompareNames(&NameLink->Name.Ansi, &Name->Name.Ansi);
+        /* Compare the prefix */
+        if (*(PUCHAR)NameLink->Name.Ansi.Buffer != *(PUCHAR)&Name->Name.Ansi.Buffer)
+        {
+            if (*(PUCHAR)NameLink->Name.Ansi.Buffer < *(PUCHAR)&Name->Name.Ansi.Buffer)
+                Comparison = LessThan;
+            else
+                Comparison = GreaterThan;
+        }
+        else
+        {
+            /* Perform real comparison */
+            Comparison = FatiCompareNames(&NameLink->Name.Ansi, &Name->Name.Ansi);
+        }
 
         /* Check the bad case first */
         if (Comparison == EqualTo)
@@ -912,7 +924,7 @@ FatInsertName(IN PFAT_IRP_CONTEXT IrpContext,
             if (!RtlLeftChild(&NameLink->Links))
             {
                 /* It's absent, insert here and break */
-                RtlInsertAsLeftChild(&NameLink->Links, &NameLink->Links);
+                RtlInsertAsLeftChild(&NameLink->Links, &Name->Links);
                 break;
             }
             else

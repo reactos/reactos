@@ -57,7 +57,7 @@ CDrmPort2::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IDrmPort2_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IDrmPort2_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
     return STATUS_UNSUCCESSFUL;

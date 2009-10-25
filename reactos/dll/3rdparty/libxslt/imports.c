@@ -348,6 +348,11 @@ xsltFindElemSpaceHandling(xsltTransformContextPtr ctxt, xmlNodePtr node) {
 	if (node->ns != NULL) {
 	    val = (const xmlChar *)
 	      xmlHashLookup2(style->stripSpaces, node->name, node->ns->href);
+            if (val == NULL) {
+                val = (const xmlChar *)
+                    xmlHashLookup2(style->stripSpaces, BAD_CAST "*",
+                                   node->ns->href);
+            }
 	} else {
 	    val = (const xmlChar *)
 		  xmlHashLookup2(style->stripSpaces, node->name, NULL);
@@ -357,7 +362,7 @@ xsltFindElemSpaceHandling(xsltTransformContextPtr ctxt, xmlNodePtr node) {
 		return(1);
 	    if (xmlStrEqual(val, (xmlChar *) "preserve"))
 		return(0);
-	} 
+	}
 	if (style->stripAll == 1)
 	    return(1);
 	if (style->stripAll == -1)

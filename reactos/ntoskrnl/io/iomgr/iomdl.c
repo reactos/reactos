@@ -29,6 +29,9 @@ IoAllocateMdl(IN PVOID VirtualAddress,
     ULONG Flags = 0;
     ULONG Size;
 
+    /* Make sure we got a valid length */
+    ASSERT(Length != 0);
+
     /* Fail if allocation is over 2GB */
     if (Length & 0x80000000) return NULL;
 

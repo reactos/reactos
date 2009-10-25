@@ -144,7 +144,7 @@ static HRESULT WINAPI HTMLDocument5_createComment(IHTMLDocument5 *iface, BSTR bs
         return E_FAIL;
     }
 
-    node = &HTMLCommentElement_Create(This, (nsIDOMNode*)nscomment)->node;
+    node = &HTMLCommentElement_Create(This->doc_node, (nsIDOMNode*)nscomment)->node;
     nsIDOMElement_Release(nscomment);
 
     *ppRetNode = HTMLDOMNODE(node);

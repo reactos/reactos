@@ -188,6 +188,7 @@ reactos/base/applications/cmdutils/xcopy  # Autosync
 reactos/base/applications/games/winemine  # Out of sync
 reactos/base/applications/iexplore        # Autosync
 reactos/base/applications/notepad         # Forked at Wine-20041201
+reactos/base/applications/reg             # Synced to Wine-1_1_31
 reactos/base/applications/regedit         # Out of sync
 reactos/base/applications/winhlp32        # Autosync
 reactos/base/applications/wordpad         # Autosync

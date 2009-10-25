@@ -14,6 +14,7 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
+	<library>pseh</library>
 	<file>driver.c</file>
 	<file>joystick.c</file>
 	<file>lolvldrv.c</file>

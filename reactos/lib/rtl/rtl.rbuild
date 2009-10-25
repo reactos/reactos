@@ -54,6 +54,7 @@
 	<file>access.c</file>
 	<file>acl.c</file>
 	<file>actctx.c</file>
+	<file>assert.c</file>
 	<file>atom.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>

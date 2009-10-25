@@ -65,6 +65,11 @@ static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
         DeleteFileW( db->deletefile );
         msi_free( db->deletefile );
     }
+    if (db->localfile)
+    {
+        DeleteFileW( db->localfile );
+        msi_free( db->localfile );
+    }
 }
 
 UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
@@ -78,7 +83,6 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     BOOL created = FALSE;
     WCHAR path[MAX_PATH];
 
-    static const WCHAR backslash[] = {'\\',0};
     static const WCHAR szTables[]  = { '_','T','a','b','l','e','s',0 };
 
     TRACE("%s %s\n",debugstr_w(szDBPath),debugstr_w(szPersist) );
@@ -177,7 +181,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     if (!strchrW( save_path, '\\' ))
     {
         GetCurrentDirectoryW( MAX_PATH, path );
-        lstrcatW( path, backslash );
+        lstrcatW( path, szBackSlash );
         lstrcatW( path, save_path );
     }
     else
@@ -192,8 +196,6 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     db->mode = szMode;
     if (created)
         db->deletefile = strdupW( szDBPath );
-    else
-        db->deletefile = NULL;
     list_init( &db->tables );
     list_init( &db->transforms );
 
@@ -656,7 +658,6 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     LPWSTR **records = NULL;
     LPWSTR **temp_records;
 
-    static const WCHAR backslash[] = {'\\',0};
     static const WCHAR suminfo[] =
         {'_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0};
 
@@ -665,13 +666,13 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     if( folder == NULL || file == NULL )
         return ERROR_INVALID_PARAMETER;
 
-    len = lstrlenW(folder) + lstrlenW(backslash) + lstrlenW(file) + 1;
+    len = lstrlenW(folder) + lstrlenW(szBackSlash) + lstrlenW(file) + 1;
     path = msi_alloc( len * sizeof(WCHAR) );
     if (!path)
         return ERROR_OUTOFMEMORY;
 
     lstrcpyW( path, folder );
-    lstrcatW( path, backslash );
+    lstrcatW( path, szBackSlash );
     lstrcatW( path, file );
 
     data = msi_read_text_archive( path );
@@ -878,7 +879,6 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
 {
     static const WCHAR query[] = {
         's','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','%','s',0 };
-    static const WCHAR szbs[] = { '\\', 0 };
     static const WCHAR forcecodepage[] = {
         '_','F','o','r','c','e','C','o','d','e','p','a','g','e',0 };
     MSIRECORD *rec = NULL;
@@ -899,7 +899,7 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         return ERROR_OUTOFMEMORY;
 
     lstrcpyW( filename, folder );
-    lstrcatW( filename, szbs );
+    lstrcatW( filename, szBackSlash );
     lstrcatW( filename, file );
 
     handle = CreateFileW( filename, GENERIC_READ | GENERIC_WRITE, 0,
@@ -1081,6 +1081,19 @@ typedef struct _tagMERGEDATA
     struct list *tabledata;
 } MERGEDATA;
 
+static BOOL merge_type_match(LPCWSTR type1, LPCWSTR type2)
+{
+    if (((type1[0] == 'l') || (type1[0] == 's')) &&
+        ((type2[0] == 'l') || (type2[0] == 's')))
+        return TRUE;
+
+    if (((type1[0] == 'L') || (type1[0] == 'S')) &&
+        ((type2[0] == 'L') || (type2[0] == 'S')))
+        return TRUE;
+
+    return !lstrcmpW(type1, type2);
+}
+
 static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
 {
     MSIRECORD *dbrec, *mergerec;
@@ -1126,7 +1139,7 @@ static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
         if (!MSI_RecordGetString(mergerec, i))
             break;
 
-        if (lstrcmpW(MSI_RecordGetString(dbrec, i),
+        if (!merge_type_match(MSI_RecordGetString(dbrec, i),
                      MSI_RecordGetString(mergerec, i)))
         {
             r = ERROR_DATATYPE_MISMATCH;
@@ -1335,6 +1348,8 @@ static UINT merge_diff_row(MSIRECORD *rec, LPVOID param)
         }
         else if (r != ERROR_NO_MORE_ITEMS)
             goto done;
+
+        r = ERROR_SUCCESS;
     }
 
     mergerow = msi_alloc(sizeof(MERGEROW));

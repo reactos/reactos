@@ -219,8 +219,8 @@ BEGIN
     STRING_PREVIEW_PRINT,            "Печать"
     STRING_PREVIEW_NEXTPAGE,         "Следующая страница"
     STRING_PREVIEW_PREVPAGE,         "Предыдущая страница"
-    STRING_PREVIEW_TWOPAGES,         "Two pages"
-    STRING_PREVIEW_ONEPAGE,          "One page"
+    STRING_PREVIEW_TWOPAGES,         "Две страницы"
+    STRING_PREVIEW_ONEPAGE,          "Одна страница"
     STRING_PREVIEW_CLOSE,            "Закрыть"
 END
 
@@ -231,7 +231,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_DEFAULT_FILENAME,     "Document"
+    STRING_DEFAULT_FILENAME,     "Документ"
     STRING_PROMPT_SAVE_CHANGES,  "Сохранить изменения в '%s'?"
     STRING_SEARCH_FINISHED,      "Поиск в документе завершен."
     STRING_LOAD_RICHED_FAILED,   "Ошибка загрузки библиотеки RichEdit."
@@ -240,6 +240,11 @@ BEGIN
                                  "этой операции?"
     STRING_INVALID_NUMBER,       "Неправильный числовой формат"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage документы не поддерживаются"
+    STRING_WRITE_FAILED,              "Невозможно сохранить файл."
+    STRING_WRITE_ACCESS_DENIED,       "Недостаточно прав для сохранения файла."
+    STRING_OPEN_FAILED,               "Невозможно открыть файл."
+    STRING_OPEN_ACCESS_DENIED,        "Недостаточно прав для открытия файла."
     STRING_PRINTING_NOT_IMPLEMENTED, "Печать не поддерживается"
+    STRING_MAX_TAB_STOPS,             "Нельзя добавить более 32 позиций табуляции."
 END
 #pragma code_page(default)

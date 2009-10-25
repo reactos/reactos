@@ -180,16 +180,6 @@ extern ULONG KiDPCTimeout;
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
 
-/* IOPM Definitions */
-#define IO_ACCESS_MAP_NONE 0
-#define IOPM_OFFSET FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
-#define KiComputeIopmOffset(MapNumber)              \
-    (MapNumber == IO_ACCESS_MAP_NONE) ?             \
-        (USHORT)(sizeof(KTSS)) :                    \
-        (USHORT)(FIELD_OFFSET(KTSS, IoMaps[MapNumber-1].IoMap))
-
-#define SIZE_OF_FX_REGISTERS 32
-
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 VOID

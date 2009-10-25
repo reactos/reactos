@@ -216,7 +216,7 @@ KfLowerIrql (KIRQL	NewIrql)
     {
       DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
 		__FILE__, __LINE__, NewIrql, KeGetPcr()->Irql);
-      KeBugCheck(0);
+      KeBugCheck(IRQL_NOT_LESS_OR_EQUAL);
       for(;;);
     }
 
@@ -251,7 +251,7 @@ KfRaiseIrql (KIRQL	NewIrql)
     {
       DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
 		__FILE__,__LINE__,KeGetPcr()->Irql,NewIrql);
-      KeBugCheck (0);
+      KeBugCheck (IRQL_NOT_GREATER_OR_EQUAL);
       for(;;);
     }
 
@@ -424,7 +424,7 @@ HalRequestSoftwareInterrupt(
       break;
 
     default:
-      KeBugCheck(0);
+      DbgBreakPoint();
   }
 }
 
@@ -443,7 +443,7 @@ HalClearSoftwareInterrupt(
       break;
 
     default:
-      KeBugCheck(0);
+      DbgBreakPoint();
   }
 }
 

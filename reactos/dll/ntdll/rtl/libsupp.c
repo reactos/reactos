@@ -38,9 +38,10 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(BOOLEAN Type)
+RtlpCheckForActiveDebugger(VOID)
 {
-    return (NtCurrentPeb()->BeingDebugged);
+    /* Return the flag in the PEB */
+    return NtCurrentPeb()->BeingDebugged;
 }
 
 BOOLEAN

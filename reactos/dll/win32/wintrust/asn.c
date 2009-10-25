@@ -1465,6 +1465,10 @@ struct AsnDecodeSequenceItem
     DWORD                 size;
 };
 
+/* Align up to a DWORD_PTR boundary
+ */
+#define ALIGN_DWORD_PTR(x) (((x) + sizeof(DWORD_PTR) - 1) & ~(sizeof(DWORD_PTR) - 1))
+
 /* Decodes the items in a sequence, where the items are described in items,
  * the encoded data are in pbEncoded with length cbEncoded.  Decodes into
  * pvStructInfo.  nextData is a pointer to the memory location at which the
@@ -1517,9 +1521,7 @@ static BOOL CRYPT_AsnDecodeSequenceItems(DWORD dwCertEncodingType,
                         if (ret)
                         {
                             /* Account for alignment padding */
-                            if (items[i].size % sizeof(DWORD))
-                                items[i].size += sizeof(DWORD) -
-                                 items[i].size % sizeof(DWORD);
+                            items[i].size = ALIGN_DWORD_PTR(items[i].size);
                             TRACE("item %d size: %d\n", i, items[i].size);
                             if (nextData && items[i].hasPointer &&
                              items[i].size > items[i].minSize)

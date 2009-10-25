@@ -214,7 +214,7 @@ static void add_script_runner(NSContainer *This)
     nsIDOMNSDocument *nsdoc;
     nsresult nsres;
 
-    nsres = nsIDOMHTMLDocument_QueryInterface(This->doc->nsdoc, &IID_nsIDOMNSDocument, (void**)&nsdoc);
+    nsres = nsIDOMHTMLDocument_QueryInterface(This->doc->basedoc.nsdoc, &IID_nsIDOMNSDocument, (void**)&nsdoc);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMNSDocument: %08x\n", nsres);
         return;
@@ -300,7 +300,7 @@ static nsresult NSAPI nsRunnable_Run(nsIRunnable *iface)
                 const PRUnichar *comment;
 
                 nsAString_GetData(&comment_str, &comment);
-                remove_comment = handle_insert_comment(This->doc, comment);
+                remove_comment = handle_insert_comment(&This->doc->basedoc, comment);
             }
 
             nsAString_Finish(&comment_str);
@@ -340,7 +340,7 @@ static nsresult NSAPI nsRunnable_Run(nsIRunnable *iface)
                 break;
             }
 
-            doc_insert_script(This->doc, nsscript);
+            doc_insert_script(This->doc->basedoc.window, nsscript);
             nsIDOMHTMLScriptElement_Release(nsscript);
             break;
         }
@@ -468,7 +468,7 @@ static void NSAPI nsDocumentObserver_EndLoad(nsIDocumentObserver *iface, nsIDocu
 
     task = heap_alloc(sizeof(task_t));
 
-    task->doc = This->doc;
+    task->doc = &This->doc->basedoc;
     task->task_id = TASK_PARSECOMPLETE;
     task->next = NULL;
 
@@ -545,7 +545,7 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
 
     nsres = nsISupports_QueryInterface(aContent, &IID_nsIDOMElement, (void**)&nselem);
     if(NS_SUCCEEDED(nsres)) {
-        check_event_attr(This->doc, nselem);
+        check_event_attr(This->doc->basedoc.doc_node, nselem);
         nsIDOMElement_Release(nselem);
     }
 

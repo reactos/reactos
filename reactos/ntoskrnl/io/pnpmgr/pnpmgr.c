@@ -1420,7 +1420,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                              sizeof(ULONG));
 
       /* Set 'UINumber' value */
-      if (DeviceCapabilities.UINumber != (ULONG)-1)
+      if (DeviceCapabilities.UINumber != MAXULONG)
       {
          RtlInitUnicodeString(&ValueName, L"UINumber");
          Status = ZwSetValueKey(InstanceKey,
@@ -3078,7 +3078,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     case DevicePropertyAddress:
         /* Query the device caps */
         Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
-        if (NT_SUCCESS(Status) && (DeviceCaps.Address != (ULONG)-1))
+        if (NT_SUCCESS(Status) && (DeviceCaps.Address != MAXULONG))
         {
             /* Return length */
             *ResultLength = sizeof(ULONG);

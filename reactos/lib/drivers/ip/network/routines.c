@@ -94,8 +94,8 @@ VOID DisplayTCPPacket(
     UINT Length;
     PCHAR Buffer;
 
-    if (!(DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK)) ||
-        !(DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_TCP | DPFLTR_MASK))) {
+    if ((DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK) != TRUE) ||
+        (DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_TCP | DPFLTR_MASK) != TRUE)) {
         return;
     }
 
@@ -139,8 +139,8 @@ VOID DisplayIPPacket(
     PNDIS_BUFFER NextBuffer;
     PCHAR CharBuffer;
 
-    if (!(DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK)) ||
-        !(DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_IP | DPFLTR_MASK))) {
+    if ((DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_PBUFFER | DPFLTR_MASK) != TRUE) ||
+        (DbgQueryDebugFilterState(DPFLTR_TCPIP_ID, DEBUG_IP | DPFLTR_MASK) != TRUE)) {
         return;
     }
 

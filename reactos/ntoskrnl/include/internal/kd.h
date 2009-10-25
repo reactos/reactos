@@ -208,6 +208,15 @@ KdpPrintString(
     LPSTR String,
     ULONG Length);
 
+ULONG
+NTAPI
+KdpPrompt(
+    IN LPSTR InString,
+    IN USHORT InStringLength,
+    OUT LPSTR OutString,
+    IN USHORT OutStringLength
+);
+
 BOOLEAN
 NTAPI
 KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);

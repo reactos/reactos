@@ -124,6 +124,19 @@ extern "C" {
 #endif
 
 /**
+ * Locale support
+ */
+#if @XSLT_LOCALE_XLOCALE@
+#ifndef XSLT_LOCALE_XLOCALE
+#define XSLT_LOCALE_XLOCALE
+#endif
+#elif @XSLT_LOCALE_WINAPI@
+#ifndef XSLT_LOCALE_WINAPI
+#define XSLT_LOCALE_WINAPI
+#endif
+#endif
+
+/**
  * ATTRIBUTE_UNUSED:
  *
  * This macro is used to flag unused function parameters to GCC

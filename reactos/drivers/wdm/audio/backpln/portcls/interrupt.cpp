@@ -82,7 +82,7 @@ CInterruptSync::QueryInterface(
         return STATUS_SUCCESS;
     }
 
-    DPRINT1("CInterruptSync::QueryInterface: this %p UNKNOWN interface requested\n", this);
+    DPRINT("CInterruptSync::QueryInterface: this %p UNKNOWN interface requested\n", this);
     return STATUS_UNSUCCESSFUL;
 }
 

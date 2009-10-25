@@ -10,7 +10,6 @@ GENERATE_ARM_STUB _global_unwind2
 GENERATE_ARM_STUB _local_unwind2  
 GENERATE_ARM_STUB RtlGetCallersAddress 
 GENERATE_ARM_STUB RtlUnwind 
-GENERATE_ARM_STUB RtlpGetExceptionAddress
 GENERATE_ARM_STUB RtlDispatchException
 GENERATE_ARM_STUB RtlpGetStackLimits
 GENERATE_ARM_STUB DbgBreakPointWithStatus 

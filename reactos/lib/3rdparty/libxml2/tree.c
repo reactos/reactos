@@ -49,7 +49,8 @@ int __xmlRegisterCallbacks = 0;
  *									*
  ************************************************************************/
 
-xmlNsPtr xmlNewReconciliedNs(xmlDocPtr doc, xmlNodePtr tree, xmlNsPtr ns);
+static xmlNsPtr
+xmlNewReconciliedNs(xmlDocPtr doc, xmlNodePtr tree, xmlNsPtr ns);
 
 static xmlChar* xmlGetPropNodeValueInternal(xmlAttrPtr prop);
 
@@ -1420,9 +1421,9 @@ xmlStringLenGetNodeList(xmlDocPtr doc, const xmlChar *value, int len) {
 	    node = xmlNewDocTextLen(doc, q, cur - q);
 	    if (node == NULL) return(ret);
 	    if (last == NULL) {
-		last = ret = node;
+		ret = node;
 	    } else {
-		last = xmlAddNextSibling(last, node);
+		xmlAddNextSibling(last, node);
 	    }
 	}
     }
@@ -1589,8 +1590,6 @@ xmlStringGetNodeList(xmlDocPtr doc, const xmlChar *value) {
 			last = xmlAddNextSibling(last, node);
 		    }
 		}
-
-		charval = 0;
 	    }
 	} else
 	    cur++;
@@ -1800,7 +1799,7 @@ xmlNewPropInternal(xmlNodePtr node, xmlNsPtr ns,
     cur = (xmlAttrPtr) xmlMalloc(sizeof(xmlAttr));
     if (cur == NULL) {
         if ((eatname == 1) &&
-	    ((node->doc == NULL) ||
+	    ((node == NULL) || (node->doc == NULL) ||
 	     (!(xmlDictOwns(node->doc->dict, name)))))
             xmlFree((xmlChar *) name);
         xmlTreeErrMemory("building attribute");
@@ -1860,7 +1859,8 @@ xmlNewPropInternal(xmlNodePtr node, xmlNsPtr ns,
         }
     }
 
-    if (xmlIsID((node == NULL) ? NULL : node->doc, node, cur) == 1)
+    if ((value != NULL) && (node != NULL) &&
+        (xmlIsID(node->doc, node, cur) == 1))
         xmlAddID(NULL, node->doc, value, cur);
 
     if ((__xmlRegisterCallbacks) && (xmlRegisterNodeDefaultValue))
@@ -3103,6 +3103,14 @@ xmlAddSibling(xmlNodePtr cur, xmlNodePtr elem) {
 	return(NULL);
     }
 
+    if (cur == elem) {
+#ifdef DEBUG_TREE
+        xmlGenericError(xmlGenericErrorContext,
+		"xmlAddSibling : cur == elem\n");
+#endif
+	return(NULL);
+    }
+
     /*
      * Constant time is we can rely on the ->parent->last to find
      * the last sibling.
@@ -4160,7 +4168,8 @@ xmlStaticCopyNode(const xmlNodePtr node, xmlDocPtr doc, xmlNodePtr parent,
 
     if (!extended)
 	goto out;
-    if ((node->type == XML_ELEMENT_NODE) && (node->nsDef != NULL))
+    if (((node->type == XML_ELEMENT_NODE) ||
+         (node->type == XML_XINCLUDE_START)) && (node->nsDef != NULL))
         ret->nsDef = xmlCopyNamespaceList(node->nsDef);
 
     if (node->ns != NULL) {
@@ -4187,7 +4196,8 @@ xmlStaticCopyNode(const xmlNodePtr node, xmlDocPtr doc, xmlNodePtr parent,
 	    ret->ns = ns;
 	}
     }
-    if ((node->type == XML_ELEMENT_NODE) && (node->properties != NULL))
+    if (((node->type == XML_ELEMENT_NODE) ||
+         (node->type == XML_XINCLUDE_START)) && (node->properties != NULL))
         ret->properties = xmlCopyPropList(ret, node->properties);
     if (node->type == XML_ENTITY_REF_NODE) {
 	if ((doc == NULL) || (node->doc != doc)) {
@@ -6045,7 +6055,7 @@ xmlSearchNsByHref(xmlDocPtr doc, xmlNodePtr node, const xmlChar * href)
  * @tree or on one of its ancestors then a new prefix is generated.
  * Returns the (new) namespace definition or NULL in case of error
  */
-xmlNsPtr
+static xmlNsPtr
 xmlNewReconciliedNs(xmlDocPtr doc, xmlNodePtr tree, xmlNsPtr ns) {
     xmlNsPtr def;
     xmlChar prefix[50];
@@ -7061,11 +7071,13 @@ xmlBufferGrow(xmlBufferPtr buf, unsigned int len) {
     if (buf->alloc == XML_BUFFER_ALLOC_IMMUTABLE) return(0);
     if (len + buf->use < buf->size) return(0);
 
-/*
- * Windows has a BIG problem on realloc timing, so we try to double
- * the buffer size (if that's enough) (bug 146697)
- */
-#ifdef WIN32
+    /*
+     * Windows has a BIG problem on realloc timing, so we try to double
+     * the buffer size (if that's enough) (bug 146697)
+     * Apparently BSD too, and it's probably best for linux too
+     * On an embedded system this may be something to change
+     */
+#if 1
     if (buf->size > len)
         size = buf->size * 2;
     else
@@ -7765,8 +7777,11 @@ xmlDOMWrapStoreNs(xmlDocPtr doc,
 	}
     }
     /* Create. */
-    ns->next = xmlNewNs(NULL, nsName, prefix);
-    return (ns->next);
+    if (ns != NULL) {
+        ns->next = xmlNewNs(NULL, nsName, prefix);
+        return (ns->next);
+    }
+    return(NULL);
 }
 
 /*

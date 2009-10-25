@@ -116,7 +116,7 @@ static inline void exec_addref(exec_ctx_t *ctx)
 }
 
 void exec_release(exec_ctx_t*);
-HRESULT create_exec_ctx(IDispatch*,DispatchEx*,scope_chain_t*,exec_ctx_t**);
+HRESULT create_exec_ctx(script_ctx_t*,IDispatch*,DispatchEx*,scope_chain_t*,exec_ctx_t**);
 HRESULT exec_source(exec_ctx_t*,parser_ctx_t*,source_elements_t*,jsexcept_t*,VARIANT*);
 
 typedef struct _statement_t statement_t;
@@ -272,7 +272,8 @@ typedef struct {
     enum {
         EXPRVAL_VARIANT,
         EXPRVAL_IDREF,
-        EXPRVAL_NAMEREF
+        EXPRVAL_NAMEREF,
+        EXPRVAL_INVALID
     } type;
     union {
         VARIANT var;
@@ -284,6 +285,7 @@ typedef struct {
             IDispatch *disp;
             BSTR name;
         } nameref;
+        BSTR identifier;
     } u;
 } exprval_t;
 

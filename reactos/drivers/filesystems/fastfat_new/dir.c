@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS FAT file system driver
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GNU GPLv3 as published by the Free Software Foundation
  * FILE:            drivers/filesystems/fastfat/dir.c
  * PURPOSE:         Directory Control
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
@@ -168,7 +168,12 @@ FatCreateDcb(IN PFAT_IRP_CONTEXT IrpContext,
 
     /* Set names */
     if (FileHandle)
+    {
         FatSetFcbNames(IrpContext, Fcb);
+
+        /* Ensure the full name is set */
+        FatSetFullFileNameInFcb(IrpContext, Fcb);
+    }
 
     return Fcb;
 }

@@ -30,7 +30,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msgina);
 
-extern HINSTANCE hDllInstance;
+HINSTANCE hDllInstance;
 
 extern GINA_UI GinaGraphicalUI;
 extern GINA_UI GinaTextUI;

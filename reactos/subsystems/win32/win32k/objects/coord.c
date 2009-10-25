@@ -198,7 +198,21 @@ NtGdiGetTransform(
                 MatrixS2XForm(XForm, &dc->dclevel.mxWorldToPage);
                 break;
 
+            case GdiWorldSpaceToDeviceSpace:
+                MatrixS2XForm(XForm, &dc->dclevel.mxWorldToDevice);
+                break;
+
+            case GdiPageSpaceToDeviceSpace:
+                DPRINT1("Page space -> device space is unsupported!\n");
+                break;
+
+            case GdiDeviceSpaceToWorldSpace:
+                MatrixS2XForm(XForm, &dc->dclevel.mxDeviceToWorld);
+                break;
+
             default:
+                DPRINT1("Unknown transform %lu\n", iXform);
+                Status = STATUS_INVALID_PARAMETER;
                 break;
         }
     }

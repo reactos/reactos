@@ -201,9 +201,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_GAMES			"Игры"
-    IDS_CMT_SOLITAIRE	"Пасьянс ""Косынка"""
+    IDS_CMT_SOLITAIRE	"Пасьянс Косынка"
     IDS_CMT_WINEMINE	"Сапер"
-	IDS_CMT_SPIDER      "Пасьянс ""Паук"""
+	IDS_CMT_SPIDER      "Пасьянс Паук"
 END
 
 STRINGTABLE
@@ -254,7 +254,7 @@ BEGIN
     IDS_SHORT_NOTEPAD    "Блокнот.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Пасьянс ""Косынка"".lnk"
+    IDS_SHORT_SOLITAIRE  "Пасьянс Косынка.lnk"
     IDS_SHORT_WINEMINE   "Сапер.lnk"
     IDS_SHORT_CHARMAP    "Таблица символов.lnk"
     IDS_SHORT_MAGNIFY    "Экранная лупа.lnk"
@@ -265,7 +265,7 @@ BEGIN
     IDS_SHORT_SNDVOL32   "Громкость.lnk"
     IDS_SHORT_DXDIAG     "Средство диагностики ReactX.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Пасьянс ""Паук"".lnk"
+	IDS_SHORT_SPIDER     "Пасьянс Паук.lnk"
 END
 
 STRINGTABLE

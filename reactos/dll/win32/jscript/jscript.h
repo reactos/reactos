@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Jacek Caban for CodeWeavers
+ * Copyright 2008-2009 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -69,6 +69,7 @@ extern HINSTANCE jscript_hinstance;
 #define PROPF_ENUM    0x0200
 #define PROPF_CONSTR  0x0400
 
+/* NOTE: Keep in sync with names in Object.toString implementation */
 typedef enum {
     JSCLASS_NONE,
     JSCLASS_ARRAY,
@@ -81,10 +82,77 @@ typedef enum {
     JSCLASS_NUMBER,
     JSCLASS_OBJECT,
     JSCLASS_REGEXP,
-    JSCLASS_STRING
+    JSCLASS_STRING,
+    JSCLASS_ARGUMENTS
 } jsclass_t;
 
-typedef HRESULT (*builtin_invoke_t)(DispatchEx*,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
+DispatchEx *iface_to_jsdisp(IUnknown*);
+
+typedef struct {
+    union {
+        IDispatch *disp;
+        IDispatchEx *dispex;
+        DispatchEx *jsdisp;
+    } u;
+    DWORD flags;
+} vdisp_t;
+
+#define VDISP_DISPEX  0x0001
+#define VDISP_JSDISP  0x0002
+
+static inline void vdisp_release(vdisp_t *vdisp)
+{
+    IDispatch_Release(vdisp->u.disp);
+}
+
+static inline BOOL is_jsdisp(vdisp_t *vdisp)
+{
+    return (vdisp->flags & VDISP_JSDISP) != 0;
+}
+
+static inline BOOL is_dispex(vdisp_t *vdisp)
+{
+    return (vdisp->flags & VDISP_DISPEX) != 0;
+}
+
+static inline void set_jsdisp(vdisp_t *vdisp, DispatchEx *jsdisp)
+{
+    vdisp->u.jsdisp = jsdisp;
+    vdisp->flags = VDISP_JSDISP | VDISP_DISPEX;
+    IDispatch_AddRef(vdisp->u.disp);
+}
+
+static inline void set_disp(vdisp_t *vdisp, IDispatch *disp)
+{
+    IDispatchEx *dispex;
+    DispatchEx *jsdisp;
+    HRESULT hres;
+
+    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    if(jsdisp) {
+        vdisp->u.jsdisp = jsdisp;
+        vdisp->flags = VDISP_JSDISP | VDISP_DISPEX;
+        return;
+    }
+
+    hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
+    if(SUCCEEDED(hres)) {
+        vdisp->u.dispex = dispex;
+        vdisp->flags = VDISP_DISPEX;
+        return;
+    }
+
+    IDispatch_AddRef(disp);
+    vdisp->u.disp = disp;
+    vdisp->flags = 0;
+}
+
+static inline DispatchEx *get_jsdisp(vdisp_t *vdisp)
+{
+    return is_jsdisp(vdisp) ? vdisp->u.jsdisp : NULL;
+}
+
+typedef HRESULT (*builtin_invoke_t)(script_ctx_t*,vdisp_t*,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
 
 typedef struct {
     const WCHAR *name;
@@ -126,33 +194,33 @@ static inline void jsdisp_release(DispatchEx *jsdisp)
 HRESULT create_dispex(script_ctx_t*,const builtin_info_t*,DispatchEx*,DispatchEx**);
 HRESULT init_dispex(DispatchEx*,script_ctx_t*,const builtin_info_t*,DispatchEx*);
 HRESULT init_dispex_from_constr(DispatchEx*,script_ctx_t*,const builtin_info_t*,DispatchEx*);
-DispatchEx *iface_to_jsdisp(IUnknown*);
 
-HRESULT disp_call(IDispatch*,DISPID,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_call_value(DispatchEx*,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_call(DispatchEx*,DISPID,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_call_name(DispatchEx*,const WCHAR*,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT disp_propget(IDispatch*,DISPID,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT disp_propput(IDispatch*,DISPID,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_propget(DispatchEx*,DISPID,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_propput_name(DispatchEx*,const WCHAR*,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_propput_idx(DispatchEx*,DWORD,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_propget_name(DispatchEx*,LPCWSTR,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_propget_idx(DispatchEx*,DWORD,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT disp_call(script_ctx_t*,IDispatch*,DISPID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_call_value(DispatchEx*,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_call(DispatchEx*,DISPID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_call_name(DispatchEx*,const WCHAR*,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT disp_propget(script_ctx_t*,IDispatch*,DISPID,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT disp_propput(script_ctx_t*,IDispatch*,DISPID,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_propget(DispatchEx*,DISPID,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_propput_name(DispatchEx*,const WCHAR*,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_propput_idx(DispatchEx*,DWORD,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_propget_name(DispatchEx*,LPCWSTR,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_propget_idx(DispatchEx*,DWORD,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT jsdisp_get_id(DispatchEx*,const WCHAR*,DWORD,DISPID*);
 HRESULT jsdisp_delete_idx(DispatchEx*,DWORD);
 
-HRESULT create_builtin_function(script_ctx_t*,builtin_invoke_t,const builtin_info_t*,DWORD,
+HRESULT create_builtin_function(script_ctx_t*,builtin_invoke_t,const WCHAR*,const builtin_info_t*,DWORD,
         DispatchEx*,DispatchEx**);
-HRESULT Function_value(DispatchEx*,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT Function_value(script_ctx_t*,vdisp_t*,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
 
 HRESULT throw_eval_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
+HRESULT throw_generic_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
 HRESULT throw_range_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
 HRESULT throw_reference_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
+HRESULT throw_regexp_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
 HRESULT throw_syntax_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
 HRESULT throw_type_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
 HRESULT throw_uri_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
-
 
 HRESULT create_object(script_ctx_t*,DispatchEx*,DispatchEx**);
 HRESULT create_math(script_ctx_t*,DispatchEx**);
@@ -175,7 +243,7 @@ HRESULT to_integer(script_ctx_t*,VARIANT*,jsexcept_t*,VARIANT*);
 HRESULT to_int32(script_ctx_t*,VARIANT*,jsexcept_t*,INT*);
 HRESULT to_uint32(script_ctx_t*,VARIANT*,jsexcept_t*,DWORD*);
 HRESULT to_string(script_ctx_t*,VARIANT*,jsexcept_t*,BSTR*);
-HRESULT to_object(exec_ctx_t*,VARIANT*,IDispatch**);
+HRESULT to_object(script_ctx_t*,VARIANT*,IDispatch**);
 
 typedef struct named_item_t {
     IDispatch *disp;
@@ -192,13 +260,17 @@ struct _script_ctx_t {
     exec_ctx_t *exec_ctx;
     named_item_t *named_items;
     IActiveScriptSite *site;
+    IInternetHostSecurityManager *secmgr;
+    DWORD safeopt;
     LCID lcid;
 
     jsheap_t tmp_heap;
 
-    DispatchEx *script_disp;
+    IDispatch *host_global;
+
     DispatchEx *global;
     DispatchEx *function_constr;
+    DispatchEx *activex_constr;
     DispatchEx *array_constr;
     DispatchEx *bool_constr;
     DispatchEx *date_constr;
@@ -206,6 +278,7 @@ struct _script_ctx_t {
     DispatchEx *eval_error_constr;
     DispatchEx *range_error_constr;
     DispatchEx *reference_error_constr;
+    DispatchEx *regexp_error_constr;
     DispatchEx *syntax_error_constr;
     DispatchEx *type_error_constr;
     DispatchEx *uri_error_constr;
@@ -226,6 +299,7 @@ HRESULT init_global(script_ctx_t*);
 HRESULT init_function_constr(script_ctx_t*,DispatchEx*);
 HRESULT create_object_prototype(script_ctx_t*,DispatchEx**);
 
+HRESULT create_activex_constr(script_ctx_t*,DispatchEx**);
 HRESULT create_array_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
 HRESULT create_bool_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
 HRESULT create_date_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
@@ -235,14 +309,16 @@ HRESULT create_object_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
 HRESULT create_regexp_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
 HRESULT create_string_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
 
+IUnknown *create_ax_site(script_ctx_t*);
+
 typedef struct {
     const WCHAR *str;
     DWORD len;
 } match_result_t;
 
-HRESULT regexp_match_next(DispatchEx*,BOOL,const WCHAR*,DWORD,const WCHAR**,match_result_t**,
+HRESULT regexp_match_next(script_ctx_t*,DispatchEx*,BOOL,const WCHAR*,DWORD,const WCHAR**,match_result_t**,
         DWORD*,DWORD*,match_result_t*);
-HRESULT regexp_match(DispatchEx*,const WCHAR*,DWORD,BOOL,match_result_t**,DWORD*);
+HRESULT regexp_match(script_ctx_t*,DispatchEx*,const WCHAR*,DWORD,BOOL,match_result_t**,DWORD*);
 
 static inline VARIANT *get_arg(DISPPARAMS *dp, DWORD i)
 {
@@ -257,6 +333,11 @@ static inline DWORD arg_cnt(const DISPPARAMS *dp)
 static inline BOOL is_class(DispatchEx *jsdisp, jsclass_t class)
 {
     return jsdisp->builtin_info->class == class;
+}
+
+static inline BOOL is_vclass(vdisp_t *vdisp, jsclass_t class)
+{
+    return is_jsdisp(vdisp) && is_class(vdisp->u.jsdisp, class);
 }
 
 static inline BOOL is_num_vt(enum VARENUM vt)
@@ -290,7 +371,7 @@ static inline void num_set_nan(VARIANT *v)
 #endif
 }
 
-static inline DOUBLE ret_nan()
+static inline DOUBLE ret_nan(void)
 {
     VARIANT v;
     num_set_nan(&v);

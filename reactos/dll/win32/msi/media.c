@@ -75,7 +75,6 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     LPWSTR source_dir;
     UINT r = ERROR_SUCCESS;
 
-    static const WCHAR szUILevel[] = {'U','I','L','e','v','e','l',0};
     static const WCHAR error_prop[] = {'E','r','r','o','r','D','i','a','l','o','g',0};
 
     if ((msi_get_property_int(package, szUILevel, 0) & INSTALLUILEVEL_MASK) ==
@@ -356,14 +355,12 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
         }
         if (err == ERROR_SHARING_VIOLATION)
         {
-            static const WCHAR msiW[] = {'m','s','i',0};
-            static const WCHAR slashW[] = {'\\',0};
             WCHAR tmpfileW[MAX_PATH], *tmppathW, *p;
             DWORD len;
 
             TRACE("file in use, scheduling rename operation\n");
 
-            GetTempFileNameW(slashW, msiW, 0, tmpfileW);
+            GetTempFileNameW(szBackSlash, szMsi, 0, tmpfileW);
             len = strlenW(path) + strlenW(tmpfileW) + 1;
             if (!(tmppathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
                 return ERROR_OUTOFMEMORY;

@@ -1134,6 +1134,9 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
     PDRIVER_OBJECT DriverObject;
     PIO_STACK_LOCATION StackPtr;
 
+    /* Make sure this is a valid IRP */
+    ASSERT(Irp->Type == IO_TYPE_IRP);
+
     /* Get the Driver Object */
     DriverObject = DeviceObject->DriverObject;
 

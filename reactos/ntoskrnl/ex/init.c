@@ -734,7 +734,7 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN OverFlow = FALSE;
     CHAR NameBuffer[256];
-    ANSI_STRING SymbolString;
+    STRING SymbolString;
 
     /* Loop the driver list */
     NextEntry = LoaderBlock->LoadOrderListHead.Flink;
@@ -799,13 +799,13 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             /* Check if the buffer was ok */
             if (!OverFlow)
             {
-                /* Initialize the ANSI_STRING for the debugger */
+                /* Initialize the STRING for the debugger */
                 RtlInitString(&SymbolString, NameBuffer);
 
                 /* Load the symbols */
                 DbgLoadImageSymbols(&SymbolString,
                                     LdrEntry->DllBase,
-                                    0xFFFFFFFF);
+                                    (ULONG_PTR)ZwCurrentProcess());
             }
         }
 
@@ -1829,7 +1829,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(80);
 
     /* Initialize VDM support */
-#ifdef i386
+#if defined(_M_IX86)
     KeI386VdmInitialize();
 #endif
 

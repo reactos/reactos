@@ -3,9 +3,64 @@ Signature="$ReactOS$
 
 [AddReg]
 
+HKCU,"Console","CursorSize",0x00010003,25
+HKCU,"Console","FaceName",0x00000002,""
+HKCU,"Console","FontFamily",0x00010003,0
+HKCU,"Console","FontSize",0x00010003,0
+HKCU,"Console","FontWeight",0x00010003,0
+HKCU,"Console","FullScreen",0x00010003,0
+HKCU,"Console","HistoryBufferSize",0x00010003,50
+HKCU,"Console","InsertMode",0x00010003,1
+HKCU,"Console","LoadConIme",0x00010003,1
+HKCU,"Console","NumberOfHistoryBuffers",0x00010003,4
+HKCU,"Console","PopupColors",0x00010003,245
+HKCU,"Console","QuickEdit",0x00010003,0
+HKCU,"Console","ScreenBufferSize",0x00010003,19660880
+HKCU,"Console","ScreenColors",0x00010003,7
+HKCU,"Console","WindowSize",0x00010003,1638480
+HKCU,"Console","ColorTable00",0x00010003,0
+HKCU,"Console","ColorTable01",0x00010003,8388608
+HKCU,"Console","ColorTable02",0x00010003,32768
+HKCU,"Console","ColorTable03",0x00010003,8421376
+HKCU,"Console","ColorTable04",0x00010003,128
+HKCU,"Console","ColorTable05",0x00010003,8388736
+HKCU,"Console","ColorTable06",0x00010003,32896
+HKCU,"Console","ColorTable07",0x00010003,12632256
+HKCU,"Console","ColorTable08",0x00010003,8421504
+HKCU,"Console","ColorTable09",0x00010003,16711680
+HKCU,"Console","ColorTable10",0x00010003,65280
+HKCU,"Console","ColorTable11",0x00010003,16776960
+HKCU,"Console","ColorTable12",0x00010003,255
+HKCU,"Console","ColorTable13",0x00010003,16711935
+HKCU,"Console","ColorTable14",0x00010003,65535
+HKCU,"Console","ColorTable15",0x00010003,16777215
+
 HKCU,"Control Panel",,0x00000012
+
+; Accessibility
 HKCU,"Control Panel\Accessibility",,0x00000012
-HKCU,"Control Panel\Appearance",,0x00000012
+HKCU,"Control Panel\Accessibility\Keyboard Preference",,0x00000012
+HKCU,"Control Panel\Accessibility\Keyboard Preference","On",2,"0"
+HKCU,"Control Panel\Accessibility\HighContrast","Flags",2,"126"
+HKCU,"Control Panel\Accessibility\HighContrast","High Contrast Scheme",2,"High Contrast Black (large)"
+HKCU,"Control Panel\Accessibility\Keyboard Response","AutoRepeatDelay",2,"1000"
+HKCU,"Control Panel\Accessibility\Keyboard Response","AutoRepeatRate",2,"500"
+HKCU,"Control Panel\Accessibility\Keyboard Response","BounceTime",2,"0"
+HKCU,"Control Panel\Accessibility\Keyboard Response","DelayBeforeAcceptance",2,"1000"
+HKCU,"Control Panel\Accessibility\Keyboard Response","Flags",2,"126"
+HKCU,"Control Panel\Accessibility\MouseKeys","Flags",2,"62"
+HKCU,"Control Panel\Accessibility\MouseKeys","MaximumSpeed",2,"80"
+HKCU,"Control Panel\Accessibility\MouseKeys","TimeToMaximumSpeed",2,"3000"
+HKCU,"Control Panel\Accessibility\ShowSounds","On",2,"0"
+HKCU,"Control Panel\Accessibility\SoundSentry","Flags",2,"2"
+HKCU,"Control Panel\Accessibility\SoundSentry","FSTextEffect",2,"0"
+HKCU,"Control Panel\Accessibility\SoundSentry","WindowsEffect",2,"1"
+HKCU,"Control Panel\Accessibility\StickyKeys","Flags",2,"510"
+HKCU,"Control Panel\Accessibility\TimeOut","Flags",2,"2"
+HKCU,"Control Panel\Accessibility\TimeOut","TimeToWait",2,"300000"
+HKCU,"Control Panel\Accessibility\ToggleKeys","Flags",2,"62"
+HKCU,"Control Panel\Accessibility\Blind Access","On",2,"0"
+
 HKCU,"Control Panel\Mouse","MouseTrails",0x00000002,"0"
 HKCU,"Control Panel\Mouse","SnapToDefaultButton",0x00000002,"0"
 HKCU,"Control Panel\Mouse","MouseSpeed",0x00000002,"1"
@@ -20,21 +75,45 @@ HKCU,"Control Panel\Mouse","MouseHoverHeight",0x00000002,"4"
 HKCU,"Control Panel\Mouse","DoubleClickWidth",0x00000002,"4"
 HKCU,"Control Panel\Mouse","DoubleClickHeight",0x00000002,"4"
 
-HKCU,"Control Panel\Desktop","AutoEndTasks",0x00000002,"0"
-HKCU,"Control Panel\Desktop","CursorBlinkRate",0x00000002,"530"
-HKCU,"Control Panel\Desktop","DragFullWindows",0x00000002,"0"
+HKCU,"Control Panel\Keyboard","InitialKeyboardIndicators",2,"0x80000000"
+HKCU,"Control Panel\Keyboard","KeyboardDelay",2,"1"
+HKCU,"Control Panel\Keyboard","KeyboardSpeed",2,"31"
+
+HKCU,"Control Panel\Desktop","ActiveWndTrkTimeout",0x00010003,0x00000000
+HKCU,"Control Panel\Desktop","AutoEndTasks",2,"0"
+HKCU,"Control Panel\Desktop","CaretWidth",0x00010003,0x00000001
+HKCU,"Control Panel\Desktop","CoolSwitch",2,"1"
+HKCU,"Control Panel\Desktop","CoolSwitchColumns",2,"7"
+HKCU,"Control Panel\Desktop","CoolSwitchRows",2,"3"
+HKCU,"Control Panel\Desktop","CursorBlinkRate",2,"530"
+HKCU,"Control Panel\Desktop","DragFullWindows",2,"0"
+HKCU,"Control Panel\Desktop","DragHeight",0x00000000,"4"
+HKCU,"Control Panel\Desktop","DragWidth",0x00000000,"4"
 HKCU,"Control Panel\Desktop","PaintDesktopVersion",0x00010001,"0"
-HKCU,"Control Panel\Desktop","HungAppTimeout",0x00000002,"5000"
-HKCU,"Control Panel\Desktop","SCRNSAVE.EXE",0x00000000,""
-HKCU,"Control Panel\Desktop","WaitToKillAppTimeout",0x00000002,"20000"
+HKCU,"Control Panel\Desktop","HungAppTimeout",2,"5000"
+HKCU,"Control Panel\Desktop","SCRNSAVE.EXE",0,""
+HKCU,"Control Panel\Desktop","ScreenSaveActive",2,"1"
+HKCU,"Control Panel\Desktop","ScreenSaverIsSecure",2,"1"
+HKCU,"Control Panel\Desktop","ScreenSaveTimeOut",0,"600"
+HKCU,"Control Panel\Desktop","WaitToKillAppTimeout",2,"20000"
 HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,""
 HKCU,"Control Panel\Desktop","FontSmoothing",2,"0"
+HKCU,"Control Panel\Desktop","FontSmoothingOrientation",0x00010003,0x00000001
+HKCU,"Control Panel\Desktop","FontSmoothingType",0x00010003,0x00000001
+HKCU,"Control Panel\Desktop","ForegroundFlashCount",0x00010003,0x00000003
+HKCU,"Control Panel\Desktop","ForegroundLockTimeout",0x00010003,0x00030d40
+HKCU,"Control Panel\Desktop","GridGranularity",2,"0"
 HKCU,"Control Panel\Desktop","SmoothScroll",3,00,00,00,00
 HKCU,"Control Panel\Desktop","UserPreferencesMask",3,10,00,00,80
-HKCU,"Control Panel\Desktop","LowPowerActive",,"0"
+HKCU,"Control Panel\Desktop","LowPowerActive",2,"0"
+HKCU,"Control Panel\Desktop","LowPowerTimeOut",2,"0"
+HKCU,"Control Panel\Desktop","PowerOffActive",2,"0"
+HKCU,"Control Panel\Desktop","PowerOffTimeOut",2,"0"
 HKCU,"Control Panel\Desktop","MenuShowDelay",2,"400"
 HKCU,"Control Panel\Desktop","WheelScrollLines",2,"3"
 HKCU,"Control Panel\Desktop","WheelScrollChars",2,"3"
+HKCU,"Control Panel\Desktop","TileWallpaper",2,"0"
+HKCU,"Control Panel\Desktop","Pattern",2,"(None)"
 
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollWidth",2,"16"
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollHeight",2,"16"
@@ -46,9 +125,86 @@ HKCU,"Control Panel\Desktop\WindowMetrics","MenuWidth",2,"18"
 HKCU,"Control Panel\Desktop\WindowMetrics","MenuHeight",2,"18"
 HKCU,"Control Panel\Desktop\WindowMetrics","BorderWidth",2,"1"
 HKCU,"Control Panel\Desktop\WindowMetrics","Shell Icon Size",2,"32"
+HKCU, "Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
+00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU, "Control Panel\Desktop\WindowMetrics","IconFont",0x00000001,f5,ff,ff,ff,00,00,00,00,\
+00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,\
+61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU, "Control Panel\Desktop\WindowMetrics","MenuFont",0x00000001,f5,ff,ff,ff,00,00,00,00,\
+00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,\
+61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU, "Control Panel\Desktop\WindowMetrics","MessageFont",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
+00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU, "Control Panel\Desktop\WindowMetrics","SmCaptionFont",0x00000001,f5,ff,ff,ff,00,00,\
+00,00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,\
+6d,00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU, "Control Panel\Desktop\WindowMetrics","StatusFont",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
+00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
+; Input Methods
+HKCU,"Control Panel\Input Method\Hot Keys",,0x00000012
+HKCU,"Control Panel\Input Method\Hot Keys\00000010","Key Modifiers",0x00030003,02,c0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000010","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000010","Virtual Key",0x00030003,20,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000011","Key Modifiers",0x00030003,04,c0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000011","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000011","Virtual Key",0x00030003,20,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000012","Key Modifiers",0x00030003,02,c0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000012","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000012","Virtual Key",0x00030003,be,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000070","Key Modifiers",0x00030003,02,c0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000070","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000070","Virtual Key",0x00030003,20,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000071","Key Modifiers",0x00030003,04,c0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000071","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000071","Virtual Key",0x00030003,20,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000072","Key Modifiers",0x00030003,03,c0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000072","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000072","Virtual Key",0x00030003,bc,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000200","Key Modifiers",0x00030003,03,C0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000200","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000200","Virtual Key",0x00030003,47,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000201","Key Modifiers",0x00030003,03,c0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000201","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000201","Virtual Key",0x00030003,4b,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000202","Key Modifiers",0x00030003,03,c0,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000202","Target IME",0x00030003,00,00,00,00
+HKCU,"Control Panel\Input Method\Hot Keys\00000202","Virtual Key",0x00030003,4c,00,00,00
+
+; International keys
 HKCU,"Control Panel\International",,0x00000012
 HKCU,"Control Panel\International","Locale",0x00000000,"0409"
+HKCU,"Control Panel\International","iCountry",2,"1"
+HKCU,"Control Panel\International","iCurrDigits",2,"2"
+HKCU,"Control Panel\International","iCurrency",2,"0"
+HKCU,"Control Panel\International","iDate",2,"0"
+HKCU,"Control Panel\International","iDigits",2,"2"
+HKCU,"Control Panel\International","iLZero",2,"1"
+HKCU,"Control Panel\International","iMeasure",2,"1"
+HKCU,"Control Panel\International","iNegCurr",2,"0"
+HKCU,"Control Panel\International","iTime",2,"0"
+HKCU,"Control Panel\International","iTLZero",2,"0"
+HKCU,"Control Panel\International","s1159",2,"AM"
+HKCU,"Control Panel\International","s2359",2,"PM"
+HKCU,"Control Panel\International","sCountry",2,"United States"
+HKCU,"Control Panel\International","sCurrency",2,"$"
+HKCU,"Control Panel\International","sDate",2,"/"
+HKCU,"Control Panel\International","sDecimal",2,"."
+;HKCU,"Control Panel\International","sLanguage",2,"ENU"
+HKCU,"Control Panel\International","sList",2,","
+HKCU,"Control Panel\International","sLongDate",2,"dddd, MMMM dd, yyyy"
+HKCU,"Control Panel\International","sShortDate",2,"M/d/yyyy"
+HKCU,"Control Panel\International","sThousand",2,","
+HKCU,"Control Panel\International","sTime",2,":"
 HKCU,"Control Panel\International\Geo","Nation",0x00000000,"1"
 
 ; Cursors Schemes
@@ -56,21 +212,57 @@ HKCU,"Control Panel\Cursors",,,"ReactOS Default"
 HKCU,"Control Panel\Cursors","Scheme Source",0x00010001,0x00000002
 
 ; PowerCfg
-HKCU,"Control Panel\PowerCfg","CurrentPowerPolicy",0x00000002,"0"
-HKCU,"Control Panel\PowerCfg\GlobalPowerPolicy","Policies",0x00000001,01,00,00,00,03,\
-00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,03,00,00,00,00,00,00,00,02,00,00,00,03,\
-00,00,00,00,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00,00,00,00,00,01,00,00,00,00,\
-00,00,80,00,00,00,00,01,00,00,00,00,00,00,80,01,00,00,00,03,00,00,00,02,00,00,00,04,\
-00,00,c0,01,00,00,00,04,00,00,00,01,00,00,00,0a,00,00,00,00,00,00,00,03,00,00,00,01,\
-00,01,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,02,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,03,00,00,00,00,00,16,\
+HKCU,"Control Panel\PowerCfg","CurrentPowerPolicy",2,"0"
+HKCU,"Control Panel\PowerCfg\GlobalPowerPolicy","Policies",0x00030003,01,00,00,00,00,\
+00,00,00,03,00,00,00,10,00,00,00,00,00,00,00,03,00,00,00,10,00,00,00,02,00,00,00,03,\
+00,00,00,00,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00,02,00,00,00,01,00,00,00,00,\
+00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,01,00,00,00,03,00,00,00,03,00,00,00,00,\
+00,00,C0,01,00,00,00,05,00,00,00,01,00,00,00,0A,00,00,00,00,00,00,00,03,00,00,00,01,\
+00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,16,\
 00,00,00
-HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Name",0x00020000,"Home/Office Desk"
-HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Description",0x00020000,"This scheme is suited to most home or desktop computers that are left plugged in all the time."
-HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Policies",0x00000001,01,00,00,00,02,\
-00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,2c,\
-01,00,00,32,32,00,03,04,00,00,00,04,00,00,00,00,00,00,00,00,00,00,00,b0,04,00,00,2c,\
-01,00,00,00,00,00,00,58,02,00,00,01,01,64,50,64,64,00,00
+
+HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Name",2,"Home/Office Desk"
+HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Description",2,"This scheme is suited to most home or desktop computers that are left plugged in all the time."
+HKCU,"Control Panel\PowerCfg\PowerPolicies\0","Policies",0x00030003,01,00,00,00,02,00,\
+00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,2C,01,\
+00,00,32,32,00,03,04,00,00,00,04,00,00,00,00,00,00,00,00,00,00,00,B0,04,00,00,2C,01,\
+00,00,00,00,00,00,58,02,00,00,01,01,64,50,64,64,00,00
+
+HKCU,"Control Panel\PowerCfg\PowerPolicies\1","Name",2,"Portable/Laptop"
+HKCU,"Control Panel\PowerCfg\PowerPolicies\1","Description",2,"This scheme is designed for extended battery life for portable computers on the road."
+HKCU,"Control Panel\PowerCfg\PowerPolicies\1","Policies",0x00030003,01,00,00,00,02,00,\
+00,00,01,00,00,00,00,00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,B0,04,00,00,2C,01,\
+00,00,32,32,03,03,04,00,00,00,04,00,00,00,00,00,00,00,00,00,00,00,84,03,00,00,2C,01,\
+00,00,08,07,00,00,2C,01,00,00,01,01,64,50,64,64,00,00
+
+HKCU,"Control Panel\PowerCfg\PowerPolicies\2","Name",2,"Presentation"
+HKCU,"Control Panel\PowerCfg\PowerPolicies\2","Description",2,"This scheme keeps the monitor on for doing presentations."
+HKCU,"Control Panel\PowerCfg\PowerPolicies\2","Policies",0x00030003,01,00,00,00,02,00,\
+00,00,01,00,00,00,00,00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,84,03,\
+00,00,32,32,03,02,04,00,00,00,04,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,2C,01,00,00,01,01,50,50,64,64,00,00
+
+HKCU,"Control Panel\PowerCfg\PowerPolicies\3","Name",2,"Always On"
+HKCU,"Control Panel\PowerCfg\PowerPolicies\3","Description",2,"This scheme keeps the computer running so that it can be accessed from the network. Use this scheme if you do not have network wakeup hardware."
+HKCU,"Control Panel\PowerCfg\PowerPolicies\3","Policies",0x00030003,01,00,00,00,02,00,\
+00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,32,32,00,00,04,00,00,00,04,00,00,00,00,00,00,00,00,00,00,00,B0,04,00,00,84,03,\
+00,00,00,00,00,00,08,07,00,00,00,01,64,64,64,64,00,00
+
+HKCU,"Control Panel\PowerCfg\PowerPolicies\4","Name",2,"Minimal Power Management"
+HKCU,"Control Panel\PowerCfg\PowerPolicies\4","Description",2,"This scheme keeps the computer on and optimizes it for high performance."
+HKCU,"Control Panel\PowerCfg\PowerPolicies\4","Policies",0x00030003,01,00,00,00,02,00,\
+00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,2C,01,\
+00,00,32,32,03,03,04,00,00,00,04,00,00,00,00,00,00,00,00,00,00,00,84,03,00,00,2C,01,\
+00,00,00,00,00,00,84,03,00,00,00,01,64,64,64,64,00,00
+
+HKCU,"Control Panel\PowerCfg\PowerPolicies\5","Name",2,"Max Battery"
+HKCU,"Control Panel\PowerCfg\PowerPolicies\5","Description",2,"This scheme is extremely aggressive for saving power."
+HKCU,"Control Panel\PowerCfg\PowerPolicies\5","Policies",0x00030003,01,00,00,00,02,00,\
+00,00,01,00,00,00,00,00,00,00,02,00,00,00,05,00,00,00,00,00,00,00,B0,04,00,00,78,00,\
+00,00,32,32,03,02,04,00,00,00,04,00,00,00,00,00,00,00,00,00,00,00,84,03,00,00,3C,00,\
+00,00,00,00,00,00,B4,00,00,00,01,01,64,32,64,64,00,00
 
 ; Color schemes
 HKCU,"Control Panel\Current","Color Schemes",0x00020000,"ReactOS Standard"
@@ -1421,11 +1613,15 @@ HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","Color #30",0x00010001,0x
 HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","Contrast",0x00010001,0x00000000
 HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","LegacyName",0x00020000,"Wheat"
 
+HKCU,"Control Panel\Sound","Beep",2,"yes"
+HKCU,"Control Panel\Sound","ExtendedSounds",2,"yes"
+
 HKCU,"Environment",,0x00000012
 HKCU,"Environment","TEMP",0x00020000,"%USERPROFILE%\Local Settings\Temp"
 HKCU,"Environment","TMP",0x00020000,"%USERPROFILE%\Local Settings\Temp"
 
 HKCU,"SOFTWARE",,0x00000012
+HKCU,"SOFTWARE\Policies",,0x00000012
 HKCU,"SOFTWARE\Microsoft",,0x00000012
 
 ; DirectX version report as DirectX 9.0
@@ -1449,11 +1645,28 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu","{208D2C60-3AEA-1069-A2D7-08002B30309D}",0x00010001,0x00000000
-HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",,0x00000012
 
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",,0x00000012
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Telephony",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
 
 HKCU,"SOFTWARE\Microsoft\Windows NT",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Devices",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Network",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\PrinterPorts",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Program Manager",,0x00000012
+
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DebugOptions",2,"2048"
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","device",2,""
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","Documents",2,""
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DosPrint",2,"no"
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","load",2,""
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","NetMessage",2,"no"
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","NullPort",2,"None"
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","Programs",2,"com exe bat pif cmd"
 
 ; Application compatibility settings for Windows 95
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN95","MajorVersion",0x00010001,0x00000004
@@ -1491,38 +1704,6 @@ HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP",
 HKCU,"SOFTWARE\ReactOS\Debug","SpyInclude",0x00020000,"INCLUDEALL"
 ;HKCU,"SOFTWARE\ReactOS\Debug","SpyExclude",0x00020000,""
 ;HKCU,"SOFTWARE\ReactOS\Debug","SpyExcludeDWP",0x00020000,""
-
-; GUI Setup
-
-HKCU, "Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000001,f5,ff,ff,ff,00,00,00,\
-00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
-00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","IconFont",0x00000001,f5,ff,ff,ff,00,00,00,00,\
-00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,\
-61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","MenuFont",0x00000001,f5,ff,ff,ff,00,00,00,00,\
-00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,\
-61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","MessageFont",0x00000001,f5,ff,ff,ff,00,00,00,\
-00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
-00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","SmCaptionFont",0x00000001,f5,ff,ff,ff,00,00,\
-00,00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,\
-6d,00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","StatusFont",0x00000001,f5,ff,ff,ff,00,00,00,\
-00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
-00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-
-; Accessibility
-HKCU,"Control Panel\Accessibility",,0x00000012
-HKCU,"Control Panel\Accessibility\Keyboard Preference",,0x00000012
-HKCU,"Control Panel\Accessibility\Keyboard Preference","On",2,"0"
 
 ; Internet Explorer
 

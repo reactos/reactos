@@ -5,7 +5,7 @@ AC_CANONICAL_HOST
 
 LIBXML_MAJOR_VERSION=2
 LIBXML_MINOR_VERSION=7
-LIBXML_MICRO_VERSION=3
+LIBXML_MICRO_VERSION=6
 LIBXML_MICRO_VERSION_SUFFIX=
 LIBXML_VERSION=$LIBXML_MAJOR_VERSION.$LIBXML_MINOR_VERSION.$LIBXML_MICRO_VERSION$LIBXML_MICRO_VERSION_SUFFIX
 LIBXML_VERSION_INFO=`expr $LIBXML_MAJOR_VERSION + $LIBXML_MINOR_VERSION`:$LIBXML_MICRO_VERSION:$LIBXML_MINOR_VERSION
@@ -26,6 +26,14 @@ else if test -d .svn ; then
   then
       LIBXML_VERSION_EXTRA="-SVN$extra"
   fi
+else if test -d .git ; then
+  extra=`git describe | sed 's+LIBXML[[0-9.]]*-++'`
+  echo extra=$extra
+  if test "$extra" != ""
+  then
+      LIBXML_VERSION_EXTRA="-GIT$extra"
+  fi
+fi
 fi
 fi
 AC_SUBST(LIBXML_MAJOR_VERSION)
@@ -58,6 +66,18 @@ test "x$U" != "x" && AC_MSG_ERROR(Compiler not ANSI compliant)
 
 AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
+
+dnl
+dnl if the system support linker version scripts for symbol versioning
+dnl then add it
+dnl
+VERSION_SCRIPT_FLAGS=
+$(/usr/bin/ld --help 2>&1 | grep -- --version-script >/dev/null) && \
+    VERSION_SCRIPT_FLAGS=-Wl,--version-script=
+test "`uname`" == "SunOS" && \
+    VERSION_SCRIPT_FLAGS="-Wl,-M -Wl,"
+AC_SUBST(VERSION_SCRIPT_FLAGS)
+AM_CONDITIONAL([USE_VERSION_SCRIPT], [test -n "$VERSION_SCRIPT_FLAGS"])
 
 dnl
 dnl We process the AC_ARG_WITH first so that later we can modify
@@ -414,6 +434,7 @@ AC_CHECK_HEADERS([arpa/inet.h], [], [],
 AC_CHECK_HEADERS([netdb.h])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([sys/select.h])
+AC_CHECK_HEADERS([poll.h])
 AC_CHECK_HEADERS([sys/mman.h])
 AC_CHECK_HEADERS([sys/timeb.h])
 AC_CHECK_HEADERS([signal.h])
@@ -473,7 +494,7 @@ fi
 
 dnl Checks for inet libraries:
 AC_SEARCH_LIBS(gethostent, [nsl])
-AC_SEARCH_LIBS(setsockopt, [socket net])
+AC_SEARCH_LIBS(setsockopt, [socket net network])
 AC_SEARCH_LIBS(connect, [inet])
 
 dnl Determine what socket length (socklen_t) data type is
@@ -721,6 +742,7 @@ if test "$with_python" != "no" ; then
 		    PYTHON_SITE_PACKAGES=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_lib()"`
 	    fi
 	fi
+	PYTHON_LIBS=`python$PYTHON_VERSION-config --libs`
     fi
     if test "$with_python" != ""
     then
@@ -740,6 +762,7 @@ else
 fi
 AC_SUBST(pythondir)
 AC_SUBST(PYTHON_SUBDIR)
+AC_SUBST(PYTHON_LIBS)
 
 dnl check for dso support
 WITH_MODULES=0
@@ -862,17 +885,21 @@ if test "$with_threads" = "no" ; then
     echo Disabling multithreaded support
 else
     echo Enabling multithreaded support
-
-    AC_CHECK_HEADER(pthread.h,
-	AC_CHECK_LIB(pthread, pthread_join,[
-	   THREAD_LIBS="-lpthread"
-	   AC_DEFINE([HAVE_LIBPTHREAD], [], [Define if pthread library is there (-lpthread)])
-	   AC_DEFINE([HAVE_PTHREAD_H], [], [Define if <pthread.h> is there])
-	   WITH_THREADS="1"]))
+    dnl Use pthread by default
+    if test "$with_threads" = "pthread" || test "$with_threads" = "" || test "$with_threads" = "yes" ; then
+        AC_CHECK_HEADER(pthread.h,
+	    AC_CHECK_LIB(pthread, pthread_join,[
+	       THREAD_LIBS="-lpthread"
+	       AC_DEFINE([HAVE_LIBPTHREAD], [], [Define if pthread library is there (-lpthread)])
+	       AC_DEFINE([HAVE_PTHREAD_H], [], [Define if <pthread.h> is there])
+	       WITH_THREADS="1"]))
+    fi
     case $host_os in
-       *mingw32*) WITH_THREADS="1"
-           THREADS_W32="Win32"
-	   THREAD_CFLAGS="$THREAD_CFLAGS -DHAVE_WIN32_THREADS"
+       *mingw32*) if test "$THREAD_LIBS" != "-lpthread"; then
+               WITH_THREADS="1"
+               THREADS_W32="Win32"
+	       THREAD_CFLAGS="$THREAD_CFLAGS -DHAVE_WIN32_THREADS"
+           fi
        ;;
        *cygwin*) THREAD_LIBS=""
        ;;
@@ -890,7 +917,7 @@ else
 		       THREAD_LIBS=""
 		       BASE_THREAD_LIBS="-lpthread"
 		   else
-		   if expr ${GCC_MAJOR} \> 3 > /dev/null 
+		   if expr ${GCC_MAJOR} \> 3 > /dev/null
 		   then
 		       THREAD_LIBS=""
 		       BASE_THREAD_LIBS="-lpthread"
@@ -1261,6 +1288,8 @@ case "$host" in
 	;;
 	*beos*) M_LIBS=""
 	;;
+        *haiku*) M_LIBS=""
+        ;;
 	*) M_LIBS="-lm"
 	;;
 esac

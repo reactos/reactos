@@ -121,6 +121,22 @@ static void detach_thread(void)
     heap_free(data);
 }
 
+static void process_detach(void)
+{
+    HINTERNET internet_session;
+
+    internet_session = get_internet_session(NULL);
+    if(internet_session)
+        InternetCloseHandle(internet_session);
+
+    if (hCabinet)
+        FreeLibrary(hCabinet);
+
+    init_session(FALSE);
+    free_session();
+    free_tls_list();
+}
+
 /***********************************************************************
  *		DllMain (URLMON.init)
  */
@@ -132,16 +148,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
     case DLL_PROCESS_ATTACH:
         URLMON_hInstance = hinstDLL;
         init_session(TRUE);
-	break;
+        break;
 
     case DLL_PROCESS_DETACH:
-        if (hCabinet)
-            FreeLibrary(hCabinet);
-        hCabinet = NULL;
-        init_session(FALSE);
-        free_tls_list();
-        URLMON_hInstance = 0;
-	break;
+        process_detach();
+        break;
 
     case DLL_THREAD_DETACH:
         detach_thread();
@@ -362,42 +373,6 @@ HRESULT WINAPI DllRegisterServerEx(void)
 }
 
 /**************************************************************************
- *                 UrlMkSetSessionOption (URLMON.@)
- */
-HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength,
- 					DWORD Reserved)
-{
-    FIXME("(%#x, %p, %#x): stub\n", dwOption, pBuffer, dwBufferLength);
-
-    return S_OK;
-}
-
-static const CHAR Agent[] = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)";
-
-/**************************************************************************
- *                 ObtainUserAgentString (URLMON.@)
- */
-HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPSTR pcszUAOut, DWORD *cbSize)
-{
-    FIXME("(%d, %p, %p): stub\n", dwOption, pcszUAOut, cbSize);
-
-    if (pcszUAOut == NULL || cbSize == NULL)
-        return E_INVALIDARG;
-
-    if (*cbSize < sizeof(Agent))
-    {
-        *cbSize = sizeof(Agent);
-        return E_OUTOFMEMORY;
-    }
-
-    if (sizeof(Agent) < *cbSize)
-        *cbSize = sizeof(Agent);
-    lstrcpynA(pcszUAOut, Agent, *cbSize);
-
-    return S_OK;
-}
-
-/**************************************************************************
  *                 IsValidURL (URLMON.@)
  * 
  * Determines if a specified string is a valid URL.
@@ -418,10 +393,10 @@ HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPSTR pcszUAOut, DWORD *cbS
 HRESULT WINAPI IsValidURL(LPBC pBC, LPCWSTR szURL, DWORD dwReserved)
 {
     FIXME("(%p, %s, %d): stub\n", pBC, debugstr_w(szURL), dwReserved);
-    
-    if (pBC != NULL || dwReserved != 0)
+
+    if (pBC || dwReserved || !szURL)
         return E_INVALIDARG;
-    
+
     return S_OK;
 }
 

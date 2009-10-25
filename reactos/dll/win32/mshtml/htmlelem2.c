@@ -590,23 +590,59 @@ static HRESULT WINAPI HTMLElement2_get_clientWidth(IHTMLElement2 *iface, LONG *p
 static HRESULT WINAPI HTMLElement2_get_clientTop(IHTMLElement2 *iface, LONG *p)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMNSElement *nselem;
+    PRInt32 client_top = 0;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMElement_QueryInterface(This->nselem, &IID_nsIDOMNSElement, (void**)&nselem);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIDOMNSElement_GetClientTop(nselem, &client_top);
+        nsIDOMNSElement_Release(nselem);
+        if(NS_FAILED(nsres))
+            ERR("GetScrollHeight failed: %08x\n", nsres);
+    }else {
+        ERR("Could not get nsIDOMNSElement interface: %08x\n", nsres);
+    }
+
+    *p = client_top;
+    TRACE("*p = %d\n", *p);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement2_get_clientLeft(IHTMLElement2 *iface, LONG *p)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMNSElement *nselem;
+    PRInt32 client_left = 0;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMElement_QueryInterface(This->nselem, &IID_nsIDOMNSElement, (void**)&nselem);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIDOMNSElement_GetClientLeft(nselem, &client_left);
+        nsIDOMNSElement_Release(nselem);
+        if(NS_FAILED(nsres))
+            ERR("GetScrollHeight failed: %08x\n", nsres);
+    }else {
+        ERR("Could not get nsIDOMNSElement interface: %08x\n", nsres);
+    }
+
+    *p = client_left;
+    TRACE("*p = %d\n", *p);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement2_attachEvent(IHTMLElement2 *iface, BSTR event,
                                                IDispatch *pDisp, VARIANT_BOOL *pfResult)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%s %p %p)\n", This, debugstr_w(event), pDisp, pfResult);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s %p %p)\n", This, debugstr_w(event), pDisp, pfResult);
+
+    return attach_event(get_node_event_target(&This->node), &This->node.doc->basedoc, event, pDisp, pfResult);
 }
 
 static HRESULT WINAPI HTMLElement2_detachEvent(IHTMLElement2 *iface, BSTR event, IDispatch *pDisp)
@@ -626,15 +662,19 @@ static HRESULT WINAPI HTMLElement2_get_readyState(IHTMLElement2 *iface, VARIANT 
 static HRESULT WINAPI HTMLElement2_put_onreadystatechange(IHTMLElement2 *iface, VARIANT v)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    FIXME("(%p)->(%s): semi-stub\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->node, EVENTID_READYSTATECHANGE, &v);
 }
 
 static HRESULT WINAPI HTMLElement2_get_onreadystatechange(IHTMLElement2 *iface, VARIANT *p)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->node, EVENTID_READYSTATECHANGE, p);
 }
 
 static HRESULT WINAPI HTMLElement2_put_onrowsdelete(IHTMLElement2 *iface, VARIANT v)
@@ -733,7 +773,7 @@ static HRESULT WINAPI HTMLElement2_get_scrollHeight(IHTMLElement2 *iface, LONG *
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    nsres = nsIDOMElement_QueryInterface(This->nselem, &IID_nsIDOMNSHTMLElement, (void**)&nselem);
+    nsres = nsIDOMElement_QueryInterface(This->nselem, &IID_nsIDOMNSElement, (void**)&nselem);
     if(NS_SUCCEEDED(nsres)) {
         nsres = nsIDOMNSElement_GetScrollHeight(nselem, &height);
         nsIDOMNSElement_Release(nselem);
@@ -743,7 +783,7 @@ static HRESULT WINAPI HTMLElement2_get_scrollHeight(IHTMLElement2 *iface, LONG *
         ERR("Could not get nsIDOMNSElement interface: %08x\n", nsres);
     }
 
-    *p = height == -1 ? 0 : height;
+    *p = height;
     TRACE("*p = %d\n", *p);
 
     return S_OK;

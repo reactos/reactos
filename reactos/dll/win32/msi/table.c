@@ -121,7 +121,6 @@ static void table_calc_column_offsets( MSIDATABASE *db, MSICOLUMNINFO *colinfo,
 static UINT get_tablecolumns( MSIDATABASE *db,
        LPCWSTR szTableName, MSICOLUMNINFO *colinfo, UINT *sz);
 static void msi_free_colinfo( MSICOLUMNINFO *colinfo, UINT count );
-static UINT table_find_insert_idx (MSIVIEW *view, LPCWSTR name, INT *pidx);
 
 static inline UINT bytes_per_column( MSIDATABASE *db, const MSICOLUMNINFO *col )
 {
@@ -627,7 +626,6 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
     column_info *col;
     MSITABLE *table;
     UINT i;
-    INT idx;
 
     /* only add tables that don't exist already */
     if( TABLE_Exists(db, name ) )
@@ -693,11 +691,7 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
     if( r )
         goto err;
 
-    r = table_find_insert_idx (tv, name, &idx);
-    if (r != ERROR_SUCCESS)
-       idx = -1;
-
-    r = tv->ops->insert_row( tv, rec, idx, persistent == MSICONDITION_FALSE );
+    r = tv->ops->insert_row( tv, rec, -1, persistent == MSICONDITION_FALSE );
     TRACE("insert_row returned %x\n", r);
     if( r )
         goto err;
@@ -747,11 +741,7 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
             if( r )
                 goto err;
 
-            r = table_find_insert_idx (tv, name, &idx);
-            if (r != ERROR_SUCCESS)
-                idx = -1;
-
-            r = tv->ops->insert_row( tv, rec, idx, FALSE );
+            r = tv->ops->insert_row( tv, rec, -1, FALSE );
             if( r )
                 goto err;
 
@@ -1189,8 +1179,6 @@ static UINT msi_stream_name( const MSITABLEVIEW *tv, UINT row, LPWSTR *pstname )
         type = tv->columns[i].type;
         if ( type & MSITYPE_KEY )
         {
-            static const WCHAR szDot[] = { '.', 0 };
-
             r = TABLE_fetch_int( view, row, i+1, &ival );
             if ( r != ERROR_SUCCESS )
                 goto err;
@@ -1370,6 +1358,48 @@ err:
     return r;
 }
 
+static UINT get_table_value_from_record( MSITABLEVIEW *tv, MSIRECORD *rec, UINT iField, UINT *pvalue )
+{
+    MSICOLUMNINFO columninfo;
+    UINT r;
+
+    if ( (iField <= 0) ||
+         (iField > tv->num_cols) ||
+          MSI_RecordIsNull( rec, iField ) )
+        return ERROR_FUNCTION_FAILED;
+
+    columninfo = tv->columns[ iField - 1 ];
+
+    if ( MSITYPE_IS_BINARY(columninfo.type) )
+    {
+        *pvalue = 1; /* refers to the first key column */
+    }
+    else if ( columninfo.type & MSITYPE_STRING )
+    {
+        LPCWSTR sval = MSI_RecordGetString( rec, iField );
+
+        r = msi_string2idW(tv->db->strings, sval, pvalue);
+        if (r != ERROR_SUCCESS)
+           return ERROR_NOT_FOUND;
+    }
+    else if ( 2 == bytes_per_column( tv->db, &columninfo ) )
+    {
+        *pvalue = 0x8000 + MSI_RecordGetInteger( rec, iField );
+        if ( *pvalue & 0xffff0000 )
+        {
+            ERR("field %u value %d out of range\n", iField, *pvalue - 0x8000);
+            return ERROR_FUNCTION_FAILED;
+        }
+    }
+    else
+    {
+        INT ival = MSI_RecordGetInteger( rec, iField );
+        *pvalue = ival ^ 0x80000000;
+    }
+
+    return ERROR_SUCCESS;
+}
+
 static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
@@ -1397,10 +1427,14 @@ static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UI
         val = 0;
         if ( !MSI_RecordIsNull( rec, i + 1 ) )
         {
+            r = get_table_value_from_record (tv, rec, i + 1, &val);
             if ( MSITYPE_IS_BINARY(tv->columns[ i ].type) )
             {
                 IStream *stm;
                 LPWSTR stname;
+
+                if ( r != ERROR_SUCCESS )
+                    return ERROR_FUNCTION_FAILED;
 
                 r = MSI_RecordGetIStream( rec, i + 1, &stm );
                 if ( r != ERROR_SUCCESS )
@@ -1419,38 +1453,29 @@ static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UI
 
                 if ( r != ERROR_SUCCESS )
                     return r;
-
-                val = 1; /* refers to the first key column */
             }
             else if ( tv->columns[i].type & MSITYPE_STRING )
             {
-                LPCWSTR sval = MSI_RecordGetString( rec, i + 1 );
-                UINT ival, x;
+                UINT x;
 
-                r = msi_string2idW(tv->db->strings, sval, &ival);
-                if (r == ERROR_SUCCESS)
+                if ( r != ERROR_SUCCESS )
+                {
+                    LPCWSTR sval = MSI_RecordGetString( rec, i + 1 );
+                    val = msi_addstringW( tv->db->strings, 0, sval, -1, 1,
+                      persistent ? StringPersistent : StringNonPersistent );
+
+                }
+                else
                 {
                     TABLE_fetch_int(&tv->view, row, i + 1, &x);
-                    if (ival == x)
+                    if (val == x)
                         continue;
-                }
-
-                val = msi_addstringW( tv->db->strings, 0, sval, -1, 1,
-                                      persistent ? StringPersistent : StringNonPersistent );
-            }
-            else if ( 2 == bytes_per_column( tv->db, &tv->columns[ i ] ) )
-            {
-                val = 0x8000 + MSI_RecordGetInteger( rec, i + 1 );
-                if ( val & 0xffff0000 )
-                {
-                    ERR("field %u value %d out of range\n", i+1, val - 0x8000 );
-                    return ERROR_FUNCTION_FAILED;
                 }
             }
             else
             {
-                INT ival = MSI_RecordGetInteger( rec, i + 1 );
-                val = ival ^ 0x80000000;
+                if ( r != ERROR_SUCCESS )
+                    return ERROR_FUNCTION_FAILED;
             }
         }
 
@@ -1622,6 +1647,41 @@ static UINT table_validate_new( MSITABLEVIEW *tv, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
+static UINT find_insert_index( MSITABLEVIEW *tv, MSIRECORD *rec, UINT *pidx )
+{
+    UINT r, idx, j, ivalue, x;
+
+    TRACE("%p %p %p\n", tv, rec, pidx);
+
+    for (idx = 0; idx < tv->table->row_count; idx++)
+    {
+        for (j = 0; j < tv->num_cols; j++ )
+        {
+            r = get_table_value_from_record (tv, rec, j+1, &ivalue);
+            if (r != ERROR_SUCCESS)
+                break;
+
+            r = TABLE_fetch_int(&tv->view, idx, j + 1, &x);
+            if (r != ERROR_SUCCESS)
+                return r;
+
+            if (ivalue > x)
+                break;
+            else if (ivalue == x)
+                continue;
+            else {
+                TRACE("Found %d.\n", idx);
+                *pidx = idx;
+                return ERROR_SUCCESS;
+            }
+        }
+    }
+
+    TRACE("Found %d.\n", idx);
+    *pidx = idx;
+    return ERROR_SUCCESS;
+}
+
 static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
@@ -1633,6 +1693,13 @@ static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec, UINT row,
     r = table_validate_new( tv, rec );
     if( r != ERROR_SUCCESS )
         return ERROR_FUNCTION_FAILED;
+
+    if (row == -1)
+    {
+        r = find_insert_index(tv, rec, &row);
+        if( r != ERROR_SUCCESS )
+            return ERROR_FUNCTION_FAILED;
+    }
 
     r = table_create_new_row( view, &row, temporary );
     TRACE("insert_row returned %08x\n", r);
@@ -2377,7 +2444,6 @@ static UINT read_raw_int(const BYTE *data, UINT col, UINT bytes)
 
 static UINT msi_record_encoded_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWSTR *pstname )
 {
-    static const WCHAR szDot[] = { '.', 0 };
     LPWSTR stname = NULL, sval, p;
     DWORD len;
     UINT i, r;
@@ -2956,30 +3022,4 @@ void msi_free_transforms( MSIDATABASE *db )
         IStorage_Release( t->stg );
         msi_free( t );
     }
-}
-
-static UINT table_find_insert_idx (MSIVIEW *view, LPCWSTR name, INT *pidx)
-{
-    UINT r, name_id, row_id;
-    INT idx;
-    MSITABLEVIEW *tv = (MSITABLEVIEW *)view;
-
-    TRACE ("%p %s\n", view, debugstr_w(name));
-
-    r = msi_string2idW(tv->db->strings, name, &name_id);
-    if (r != ERROR_SUCCESS)
-    {
-        *pidx = -1;
-        return r;
-    }
-
-    for( idx = 0; idx < tv->table->row_count; idx++ )
-    {
-        r = TABLE_fetch_int( &tv->view, idx, 1, &row_id );
-        if (row_id > name_id)
-            break;
-    }
-
-    *pidx = idx;
-    return ERROR_SUCCESS;
 }

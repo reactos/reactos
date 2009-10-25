@@ -126,9 +126,7 @@ UINT MSI_DatabaseOpenViewW(MSIDATABASE *db,
         return ERROR_FUNCTION_FAILED;
 
     msiobj_addref( &db->hdr );
-    query->row = 0;
     query->db = db;
-    query->view = NULL;
     list_init( &query->mem );
 
     r = MSI_ParseSQL( db, szQuery, &query->view, &query->mem );

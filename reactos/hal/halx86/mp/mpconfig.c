@@ -271,7 +271,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
        
        DPRINT1("Bad MP configuration block signature: %c%c%c%c\n",
 		pc[0], pc[1], pc[2], pc[3]);
-       KeBugCheckEx(0, pc[0], pc[1], pc[2], pc[3]);
+       KeBugCheckEx(HAL_INITIALIZATION_FAILED, pc[0], pc[1], pc[2], pc[3]);
        return FALSE;
      }
 

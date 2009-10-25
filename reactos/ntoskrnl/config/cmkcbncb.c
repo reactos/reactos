@@ -18,8 +18,6 @@ ULONG CmpHashTableSize = 2048;
 PCM_KEY_HASH_TABLE_ENTRY CmpCacheTable;
 PCM_NAME_HASH_TABLE_ENTRY CmpNameCacheTable;
 
-BOOLEAN CmpHoldLazyFlush;
-
 /* FUNCTIONS *****************************************************************/
 
 VOID

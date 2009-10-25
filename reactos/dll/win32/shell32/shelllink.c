@@ -2169,6 +2169,8 @@ static HRESULT WINAPI IShellLinkW_fnSetPath(IShellLinkW * iface, LPCWSTR pszFile
 
     TRACE("(%p)->(path=%s)\n",This, debugstr_w(pszFile));
 
+    if (!pszFile) return E_INVALIDARG;
+
     /* quotes at the ends of the string are stripped */
     len = wcslen(pszFile);
     if (pszFile[0] == '"' && pszFile[len-1] == '"')

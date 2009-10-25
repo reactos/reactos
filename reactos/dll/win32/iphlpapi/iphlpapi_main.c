@@ -2087,15 +2087,54 @@ DWORD WINAPI SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
  * RETURNS
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
- *
- * FIXME
- *  Stub, returns NO_ERROR.
  */
 DWORD WINAPI SetIpNetEntry(PMIB_IPNETROW pArpEntry)
 {
-  FIXME("(pArpEntry %p): stub\n", pArpEntry);
-  /* same as CreateIpNetEntry here, could use SIOCSARP, not sure I want to */
-  return 0;
+  HANDLE tcpFile;
+  NTSTATUS status;
+  TCP_REQUEST_SET_INFORMATION_EX_ARP_ENTRY req =
+      TCP_REQUEST_SET_INFORMATION_INIT;
+  TDIEntityID id;
+  DWORD returnSize;
+  PMIB_IPNETROW arpBuff;
+
+  if (!pArpEntry)
+      return ERROR_INVALID_PARAMETER;
+
+  if (!NT_SUCCESS(openTcpFile( &tcpFile )))
+      return ERROR_NOT_SUPPORTED;
+
+  if (!NT_SUCCESS(getNthIpEntity( tcpFile, pArpEntry->dwIndex, &id )))
+  {
+      closeTcpFile(tcpFile);
+      return ERROR_INVALID_PARAMETER;
+  }
+
+  req.Req.ID.toi_class = INFO_CLASS_PROTOCOL;
+  req.Req.ID.toi_type = INFO_TYPE_PROVIDER;
+  req.Req.ID.toi_id = IP_MIB_ARPTABLE_ENTRY_ID;
+  req.Req.ID.toi_entity.tei_instance = id.tei_instance;
+  req.Req.ID.toi_entity.tei_entity = AT_ENTITY;
+  req.Req.BufferSize = sizeof(MIB_IPNETROW);
+  arpBuff = (PMIB_IPNETROW)&req.Req.Buffer[0];
+
+  RtlCopyMemory(arpBuff, pArpEntry, sizeof(MIB_IPNETROW));
+
+  status = DeviceIoControl( tcpFile,
+                            IOCTL_TCP_SET_INFORMATION_EX,
+                            &req,
+                            sizeof(req),
+                            NULL,
+                            0,
+                            &returnSize,
+                            NULL );
+
+  closeTcpFile(tcpFile);
+
+  if (status)
+     return NO_ERROR;
+  else
+     return ERROR_INVALID_PARAMETER;
 }
 
 

@@ -34,14 +34,6 @@ RtlDispatchException
     return TRUE;
 }
 
-NTSYSAPI
-PVOID
-RtlpGetExceptionAddress()
-{
-    // XXX arty fixme
-    return NULL;
-}
-
 VOID
 NTAPI
 RtlUnwind(IN PVOID TargetFrame OPTIONAL,

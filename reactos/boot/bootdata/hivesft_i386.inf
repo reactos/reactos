@@ -4,26 +4,54 @@ Signature="$ReactOS$
 [AddReg]
 
 ; Internet Explorer
-HKLM,"Software\Microsoft\Internet Explorer","Version",,"6.0.2900.2180"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer","Build",,"62800"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer","Version",,"6.0.2800.3959"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer","W2kVersion",,"6.0.2800.3959"
 
 ; DirectX
 HKLM,"SOFTWARE\Microsoft\DirectX","Version",0x00000000,"4.09.00.0904"
 
 ; RPC
-HKLM,Software\Microsoft\Rpc\SecurityService,1,2,"secur32.dll"
-HKLM,Software\Microsoft\Rpc\SecurityService,10,2,"secur32.dll"
-HKLM,Software\Microsoft\Rpc\SecurityService,14,2,"schannel.dll"
-HKLM,Software\Microsoft\Rpc\SecurityService,16,2,"secur32.dll"
-HKLM,Software\Microsoft\Rpc\SecurityService,18,2,"secur32.dll"
-HKLM,Software\Microsoft\Rpc\SecurityService,68,2,"netlogon.dll"
-HKLM,Software\Microsoft\Rpc\SecurityService,9,2,"secur32.dll"
+HKLM,"SOFTWARE\Microsoft\Rpc",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Rpc\NetBios",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Rpc","DCOM Protocols",0x00010002,"ncacn_ip_tcp"
+HKLM,"SOFTWARE\Microsoft\Rpc\ClientProtocols","ncacn_np",0x00000000,"rpcrt4.dll"
+HKLM,"SOFTWARE\Microsoft\Rpc\NameService","DefaultSyntax",2,"3"
+HKLM,"SOFTWARE\Microsoft\Rpc\NameService","Endpoint",2,"\pipe\locator"
+HKLM,"SOFTWARE\Microsoft\Rpc\NameService","NetworkAddress",2,"\\."
+HKLM,"SOFTWARE\Microsoft\Rpc\NameService","Protocol",2,"ncacn_np"
+HKLM,"SOFTWARE\Microsoft\Rpc\NameService","ServerNetworkAddress",2,"\\."
+HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","1",2,"secur32.dll"
+HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","10",2,"secur32.dll"
+HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","14",2,"schannel.dll"
+HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","16",2,"secur32.dll"
+HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","18",2,"secur32.dll"
+HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","68",2,"netlogon.dll"
+HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","9",2,"secur32.dll"
+
+HKLM,"SOFTWARE\Microsoft\Secure",,0x00000012
+
+; WBem
+HKLM,"SOFTWARE\Microsoft\wbem\ess",,0x00000012
+HKLM,"SOFTWARE\Microsoft\wbem\Transports",,0x00000012
+HKLM,"SOFTWARE\Microsoft\wbem\Scripting",,0x00000012
+HKLM,"SOFTWARE\Microsoft\wbem","Installation Directory",0x00020000,"%SystemRoot%\system32\wbem"
+HKLM,"SOFTWARE\Microsoft\wbem","MOF Self-Install Directory",0x00020000,"%SystemRoot%\system32\wbem\mof"
 
 ; HTML Help
-HKLM,SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9},,2,"HTML Help"
-HKLM,SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9},"ComponentID",2,"HTMLHelp"
-HKLM,SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9},"IsInstalled",2,1
-HKLM,SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9},"Locale",2,"*"
-HKLM,SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9},"Version",2,"4,74,9273,0"
+HKLM,"SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9}",,2,"HTML Help"
+HKLM,"SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9}","ComponentID",2,"HTMLHelp"
+HKLM,"SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9}","IsInstalled",2,1
+HKLM,"SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9}","Locale",2,"*"
+HKLM,"SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9}","Version",2,"4,74,9273,0"
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","DevicePath",0x00020002,"%SystemRoot%\inf"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","MediaPathUnexpanded",0x00020000,"%SystemRoot%\Media"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Applets",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls",,0x00000012
+; Cursors Schemes
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,""",,,,,,,,,,,,,"""
 
 ; Common shell folders
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
@@ -33,7 +61,14 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\DefragPath",
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\BackupPath",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\BackupPath","",0x00020000,"%SystemRoot%\system32\ntbackup.exe"
 
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnceEx",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Setup",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Setup","DriverCachePath",0x00020002,"%SystemRoot%\Driver Cache"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\SharedDlls",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions",,0x00000012
+
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu","{208D2C60-3AEA-1069-A2D7-08002B30309D}",0x00010001,0x00000000
@@ -44,15 +79,49 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Bitbucket\Volume",,0x00
 HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
 
 ; Uninstall Application list
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000010
-
-HKLM,"SOFTWARE\Microsoft\Rpc",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
 
 ; Version Information
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00020000,"5.2"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00020000,"Service Pack 2"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00020000,"3790"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","InstallDate",0x00010003,0
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","ProductName",2,"ReactOS"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegDone",0x00000002,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegisteredOrganization",2,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegisteredOwner",2,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","SoftwareType",2,"System"
 
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Accessibility",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Compatibility",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Compatibility32",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Network",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Network\Shared Parameters",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Network\SMAddOns",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Network\UMAddOns",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Network\World Full Access Shared Parameters",,0x00000012
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\Nls","00000409",2,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont","0",2,"Lucida Console"
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers.desc",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontMapper",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\HotFix",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IME Compatibility",,0x00000012
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,0
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadCTFIME",0x00010003,0
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","COM1:",2,"9600,n,8,1"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","COM2:",2,"9600,n,8,1"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","COM3:",2,"9600,n,8,1"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","COM4:",2,"9600,n,8,1"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","FILE:",2,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","LPT1:",2,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","LPT2:",2,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","LPT3:",2,""
 
 ; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe) 
 HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\loadlib.exe","GlobalFlag",0x00000000,"0x00000002"
@@ -120,7 +189,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\Mesa","Flags",0
 
 ; User Profile List
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList",,0x00000012
-;HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirectory",0x00020000,"%SystemDrive%\Documents and Settings"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirectory",0x00020000,"%SystemDrive%\Documents and Settings"
 
 ; Font substitutes
 ; SysFontSubstitutes are also returned by EnumFontFamilies, FontSubstitutes aren't
@@ -942,6 +1011,15 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","6",0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","7",0x00000000,"time.windows.com"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","8",0x00000000,"time.nist.gov"
 
+; Telephony
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Locations","DisableCallWaiting",0x00010003,3
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Locations","DisableCallWaiting0",2,"*70,"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Locations","DisableCallWaiting1",2,"70#,"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Locations","DisableCallWaiting2",2,"1170,"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\tapi3",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Terminal Manager",,0x00000012
+
 ; Country Codes
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List","CountryListVersion",0x00010001,0x00000019
@@ -1108,20 +1186,69 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\996","Nam
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","CountryCode",0x00010001,0x000003e6
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","Name",0x00000000,"Uzbekistan"
 
-;Cursors Schemes
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,""",,,,,,,,,,,,,"""
-
-;PowerCfg
+; PowerCfg
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg","LastID",0x00000002,"0"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg","DiskSpinDownMax",0x00000002,"3600"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg","DiskSpinDownMin",0x00000002,"3"
 
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\GlobalPowerPolicy","Policies",0x00000001,\
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\GlobalPowerPolicy","Policies",0x00030003,\
 01,00,00,00,01,00,00,00,01,00,00,00,03,00,00,00
 
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\PowerPolicies\0","Policies",0x00000001,\
-01,00,00,00,02,00,00,00,04,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,84,03,00,00,00,00,00,00,84,03,\
-00,00,32,32,00,00,02,00,00,00,04,00,00,c0,00,00,00,00,02,00,00,00,04,00,00,c0,00,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\PowerPolicies\0","Policies",0x00030003,\
+01,00,00,00,02,00,00,00,04,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,84,03,00,00,00,00,00,00,84,03,00,00,32,\
+32,00,00,02,00,00,00,04,00,00,C0,00,00,00,00,02,00,00,00,04,00,00,C0,00,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\PowerPolicies\1","Policies",0x00030003,\
+01,00,00,00,02,00,00,00,03,00,00,00,03,00,00,00,03,00,00,00,60,09,00,00,2C,01,00,00,80,25,00,00,F4,1A,00,00,32,\
+32,00,00,02,00,00,00,04,00,00,C0,00,00,00,00,02,00,00,00,04,00,00,C0,00,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\PowerPolicies\2","Policies",0x00030003,\
+01,00,00,00,02,00,00,00,03,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,84,03,00,00,00,00,00,00,9C,18,00,00,32,\
+32,00,00,02,00,00,00,04,00,00,C0,00,00,00,00,02,00,00,00,04,00,00,C0,00,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\PowerPolicies\3","Policies",0x00030003,\
+01,00,00,00,02,00,00,00,04,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,5A,\
+5A,00,00,02,00,00,00,04,00,00,C0,00,00,00,00,02,00,00,00,04,00,00,C0,00,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\PowerPolicies\4","Policies",0x00030003,\
+01,00,00,00,02,00,00,00,04,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,08,07,00,00,00,00,00,00,04,29,00,00,5A,\
+5A,00,00,02,00,00,00,04,00,00,C0,00,00,00,00,02,00,00,00,04,00,00,C0,00,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\PowerPolicies\5","Policies",0x00030003,\
+01,00,00,00,02,00,00,00,04,00,00,00,03,00,00,00,03,00,00,00,DC,05,00,00,B4,00,00,00,DC,05,00,00,98,0D,00,00,32,\
+0A,00,00,02,00,00,00,04,00,00,C0,00,00,00,00,02,00,00,00,04,00,00,C0,00,00,00,00
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\ProcessorPolicies\0","Policies",0x00030001,\
+01,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,32,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,3C,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,50,00,00,\
+01,00,00,00,01,00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,0A,14,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,28,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,46,00,00,\
+01,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\ProcessorPolicies\1","Policies",0x00030001,\
+01,00,00,00,01,00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,32,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,3C,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,50,00,00,\
+01,00,00,00,01,00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,0A,14,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,28,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,46,00,00,\
+01,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\ProcessorPolicies\2","Policies",0x00030001,\
+01,00,00,00,01,00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,32,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,3C,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,50,00,00,\
+01,00,00,00,01,00,00,00,02,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,0A,14,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,28,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,46,00,00,\
+01,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\ProcessorPolicies\3","Policies",0x00030001,\
+01,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,32,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,3C,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,50,00,00,\
+01,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,0A,14,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,28,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,50,00,00,\
+01,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\ProcessorPolicies\4","Policies",0x00030001,\
+01,00,00,00,01,00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,32,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,3C,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,50,00,00,\
+01,00,00,00,01,00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,0A,14,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,28,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,46,00,00,\
+01,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg\ProcessorPolicies\5","Policies",0x00030001,\
+01,00,00,00,01,00,00,00,03,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,32,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,3C,00,00,02,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,28,50,00,00,\
+01,00,00,00,01,00,00,00,02,00,00,00,00,00,00,00,03,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,0A,14,00,00,02,00,\
+00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,28,00,00,02,00,00,00,A0,86,01,00,A0,86,01,00,A0,86,01,00,14,41,00,00,\
+01,00,00,00
 
 ; deskadp.dll shell extension
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\PropertySheetHandlers\Display Adapter CPL Extension","",0x00000000,"{42071712-76d4-11d1-8b24-00a0c9068ff3}"

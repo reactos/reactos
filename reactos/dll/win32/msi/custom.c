@@ -44,15 +44,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 static const WCHAR c_collen[] = {'C',':','\\',0};
 static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
 
-
-static const WCHAR szActionData[] = {
-    'C','u','s','t','o','m','A','c','t','i','o','n','D','a','t','a',0
-};
-static const WCHAR ProdCode[] = {
-    'P','r','o','d','u','c','t','C','o','d','e',0
-};
-static const WCHAR UserSID[] = {'U','s','e','r','S','I','D',0};
-
 typedef struct tagMSIRUNNINGACTION
 {
     struct list entry;
@@ -172,17 +163,17 @@ static void set_deferred_action_props(MSIPACKAGE *package, LPWSTR deferred_data)
 
     end = strstrW(beg, sep);
     *end = '\0';
-    MSI_SetPropertyW(package, szActionData, beg);
+    MSI_SetPropertyW(package, szCustomActionData, beg);
     beg = end + 3;
 
     end = strstrW(beg, sep);
     *end = '\0';
-    MSI_SetPropertyW(package, UserSID, beg);
+    MSI_SetPropertyW(package, szUserSID, beg);
     beg = end + 3;
 
     end = strchrW(beg, ']');
     *end = '\0';
-    MSI_SetPropertyW(package, ProdCode, beg);
+    MSI_SetPropertyW(package, szProductCode, beg);
 }
 
 UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL execute)
@@ -241,8 +232,8 @@ UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL 
         if (!execute)
         {
             LPWSTR actiondata = msi_dup_property(package, action);
-            LPWSTR usersid = msi_dup_property(package, UserSID);
-            LPWSTR prodcode = msi_dup_property(package, ProdCode);
+            LPWSTR usersid = msi_dup_property(package, szUserSID);
+            LPWSTR prodcode = msi_dup_property(package, szProductCode);
             LPWSTR deferred = msi_get_deferred_action(action, actiondata, usersid, prodcode);
 
             if (type & msidbCustomActionTypeCommit)
@@ -265,8 +256,6 @@ UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL 
         }
         else
         {
-            static const WCHAR szBlank[] = {0};
-
             LPWSTR actiondata = msi_dup_property( package, action );
 
             switch (script)
@@ -287,9 +276,9 @@ UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL 
             if (deferred_data)
                 set_deferred_action_props(package, deferred_data);
             else if (actiondata)
-                MSI_SetPropertyW(package,szActionData,actiondata);
+                MSI_SetPropertyW(package, szCustomActionData, actiondata);
             else
-                MSI_SetPropertyW(package,szActionData,szBlank);
+                MSI_SetPropertyW(package, szCustomActionData, szEmpty);
 
             msi_free(actiondata);
         }
@@ -383,7 +372,6 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
     MSIRECORD *row = 0;
     HANDLE file;
     CHAR buffer[1024];
-    static const WCHAR f1[] = {'m','s','i',0};
     WCHAR fmt[MAX_PATH];
     DWORD sz = MAX_PATH;
     UINT r;
@@ -391,7 +379,7 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
     if (MSI_GetPropertyW(package, cszTempFolder, fmt, &sz) != ERROR_SUCCESS)
         GetTempPathW(MAX_PATH, fmt);
 
-    if (GetTempFileNameW(fmt, f1, 0, tmp_file) == 0)
+    if (GetTempFileNameW(fmt, szMsi, 0, tmp_file) == 0)
     {
         TRACE("Unable to create file\n");
         return ERROR_FUNCTION_FAILED;
@@ -853,11 +841,9 @@ static UINT HANDLE_CustomType23(MSIPACKAGE *package, LPCWSTR source,
     DWORD size;
     UINT r;
 
-    static const WCHAR backslash[] = {'\\',0};
-
     size = MAX_PATH;
     MSI_GetPropertyW(package, cszSourceDir, package_path, &size);
-    lstrcatW(package_path, backslash);
+    lstrcatW(package_path, szBackSlash);
     lstrcatW(package_path, source);
 
     TRACE("Installing package %s concurrently\n", debugstr_w(package_path));
@@ -884,10 +870,7 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
           debugstr_w(tmp_file));
 
     if (!strchrW(tmp_file,'.'))
-    {
-        static const WCHAR dot[]={'.',0};
-        strcatW(tmp_file,dot);
-    }
+        strcatW(tmp_file, szDot);
 
     info = do_msidbCustomActionTypeDll( package, type, tmp_file, target, action );
 

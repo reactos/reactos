@@ -113,18 +113,50 @@ TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID ID,
     NTSTATUS Status;
     ULONG NumNeighbors = NBCopyNeighbors( Interface, NULL );
     ULONG MemSize = NumNeighbors * sizeof(IPARP_ENTRY);
-    PIPARP_ENTRY ArpEntries =
-	exAllocatePoolWithTag
-	( NonPagedPool, MemSize, FOURCC('A','R','P','t') );
+    PIPARP_ENTRY ArpEntries;
 
-    if( !ArpEntries ) return STATUS_NO_MEMORY;
-    NBCopyNeighbors( Interface, ArpEntries );
+    if (MemSize != 0)
+    {
+        ArpEntries = exAllocatePoolWithTag( NonPagedPool, MemSize, FOURCC('A','R','P','t') );
+        if( !ArpEntries ) return STATUS_NO_MEMORY;
 
-    Status = InfoCopyOut( (PVOID)ArpEntries, MemSize, Buffer, BufferSize );
+        NBCopyNeighbors( Interface, ArpEntries );
 
-    exFreePool( ArpEntries );
+        Status = InfoCopyOut( (PVOID)ArpEntries, MemSize, Buffer, BufferSize );
+
+        exFreePool( ArpEntries );
+    }
+    else
+    {
+        Status = InfoCopyOut(NULL, 0, NULL, BufferSize);
+    }
 
     return Status;
+}
+
+TDI_STATUS InfoTdiSetArptableMIB(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize)
+{
+    PIPARP_ENTRY ArpEntry = Buffer;
+    IP_ADDRESS Address;
+    PNEIGHBOR_CACHE_ENTRY NCE;
+
+    if (!Buffer || BufferSize < sizeof(IPARP_ENTRY))
+        return TDI_INVALID_PARAMETER;
+
+    AddrInitIPv4(&Address, ArpEntry->LogAddr);
+
+    if ((NCE = NBLocateNeighbor(&Address)))
+        NBRemoveNeighbor(NCE);
+     
+    if (NBAddNeighbor(IF,
+                      &Address,
+                      ArpEntry->PhysAddr,
+                      ArpEntry->AddrSize,
+                      NUD_PERMANENT,
+                      0))
+        return TDI_SUCCESS;
+    else
+        return TDI_INVALID_PARAMETER;
 }
 
 VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
@@ -197,7 +229,7 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     EntityList[EntityCount].tei_entity   = AT_ENTITY;
     EntityList[EntityCount].tei_instance = ATCount;
     EntityList[EntityCount].context      = Interface;
-    EntityList[EntityCount].flags        = AT_ARP;
+    EntityList[EntityCount].flags        = (Interface != Loopback) ? AT_ARP : AT_NULL;
     EntityCount++;
 
     TcpipReleaseSpinLock( &EntityListLock, OldIrql );

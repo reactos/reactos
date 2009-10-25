@@ -201,7 +201,7 @@ CPortWavePci::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IPortWavePci_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IPortWavePci_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 
@@ -269,7 +269,7 @@ CPortWavePci::Init(
     Status = Miniport->GetDescription(&m_pDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("failed to get description\n");
+        DPRINT("failed to get description\n");
         Miniport->Release();
         m_bInitialized = FALSE;
         return Status;
@@ -294,7 +294,7 @@ CPortWavePci::Init(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("PcCreateSubdeviceDescriptor failed with %x\n", Status);
+        DPRINT("PcCreateSubdeviceDescriptor failed with %x\n", Status);
         Miniport->Release();
         m_bInitialized = FALSE;
         return Status;
@@ -489,7 +489,7 @@ NTAPI
 CPortWavePci::GetDescriptor(
     IN SUBDEVICE_DESCRIPTOR ** Descriptor)
 {
-    DPRINT1("ISubDevice_GetDescriptor this %p\n", this);
+    DPRINT("ISubDevice_GetDescriptor this %p\n", this);
     *Descriptor = m_SubDeviceDescriptor;
     return STATUS_SUCCESS;
 }

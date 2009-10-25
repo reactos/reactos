@@ -708,9 +708,9 @@ HINTERNET WINAPI FtpFindFirstFileA(HINTERNET hConnect,
     ret = FtpFindFirstFileW(hConnect, lpwzSearchFile, lpFindFileDataW, dwFlags, dwContext);
     HeapFree(GetProcessHeap(), 0, lpwzSearchFile);
     
-    if(lpFindFileData) {
+    if (ret && lpFindFileData)
         WININET_find_data_WtoA(lpFindFileDataW, lpFindFileData);
-    }
+    
     return ret;
 }
 

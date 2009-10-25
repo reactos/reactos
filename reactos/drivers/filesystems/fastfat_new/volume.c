@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS FAT file system driver
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GNU GPLv3 as published by the Free Software Foundation
  * FILE:            drivers/filesystems/fastfat/volume.c
  * PURPOSE:         Volume information
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
@@ -49,6 +49,36 @@ FatiQueryFsVolumeInfo(PVCB Vcb,
     Buffer->VolumeLabelLength = Vcb->Vpb->VolumeLabelLength;
     RtlCopyMemory(Buffer->VolumeLabel, Vcb->Vpb->VolumeLabel, ByteSize);
     *Length -= ByteSize;
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+FatiQueryFsSizeInfo(PVCB Vcb,
+                    PFILE_FS_SIZE_INFORMATION Buffer,
+                    PLONG Length)
+{
+    FF_PARTITION *Partition;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Deduct the minimum written length */
+    *Length -= sizeof(FILE_FS_SIZE_INFORMATION);
+
+    /* Zero it */
+    RtlZeroMemory(Buffer, sizeof(FILE_FS_SIZE_INFORMATION));
+
+    /* Reference FullFAT's partition */
+    Partition = Vcb->Ioman->pPartition;
+
+    /* Set values */
+    Buffer->AvailableAllocationUnits.LowPart = Partition->FreeClusterCount;
+    Buffer->TotalAllocationUnits.LowPart = Partition->NumClusters;
+    Buffer->SectorsPerAllocationUnit = Vcb->Bpb.SectorsPerCluster;
+    Buffer->BytesPerSector = Vcb->Bpb.BytesPerSector;
+
+    DPRINT1("Total %d, free %d, SPC %d, BPS %d\n", Partition->FreeClusterCount,
+        Partition->NumClusters, Vcb->Bpb.SectorsPerCluster, Vcb->Bpb.BytesPerSector);
 
     return Status;
 }
@@ -104,6 +134,10 @@ FatiQueryVolumeInfo(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
 
         /* Call FsVolumeInfo handler */
         Status = FatiQueryFsVolumeInfo(Vcb, Buffer, &Length);
+        break;
+    case FileFsSizeInformation:
+        /* Call FsVolumeInfo handler */
+        Status = FatiQueryFsSizeInfo(Vcb, Buffer, &Length);
         break;
     default:
         DPRINT1("Volume information class %d is not supported!\n", InfoClass);

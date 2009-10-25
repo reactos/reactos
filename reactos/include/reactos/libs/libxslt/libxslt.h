@@ -16,7 +16,7 @@
 #include "config.h"
 #endif
 
-#include "xsltconfig.h"
+#include <libxslt/xsltconfig.h>
 #include <libxml/xmlversion.h>
 
 #if !defined LIBXSLT_PUBLIC

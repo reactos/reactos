@@ -132,7 +132,6 @@ _KiTrapIoTable:
 
 _KiGetTickCount:
 _KiCallbackReturn:
-_KiRaiseAssertion:
     /* FIXME: TODO */
     UNHANDLED_PATH
 
@@ -461,6 +460,29 @@ AbiosExit:
     /* FIXME: TODO */
     UNHANDLED_PATH
 
+.func KiRaiseAssertion
+TRAP_FIXUPS kira_a, kira_t, DoFixupV86, DoFixupAbios
+_KiRaiseAssertion:
+
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG kira_a, kira_t
+
+    /*
+     * Modify EIP so it points to the faulting instruction and set it as the
+     * exception address. Note that the 'int 2C' instruction used for this call
+     * is 2 bytes long as opposed to 1 byte 'int 3'.
+     */
+    sub dword ptr [ebp+KTRAP_FRAME_EIP], 2
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+
+    /* Raise an assertion failure */
+    mov eax, STATUS_ASSERTION_FAILURE
+    jmp _DispatchNoParam
+.endfunc
+
 .func KiDebugService
 TRAP_FIXUPS kids_a, kids_t, DoFixupV86, DoFixupAbios
 _KiDebugService:
@@ -780,8 +802,11 @@ _KiTrap3:
     /* Enter trap */
     TRAP_PROLOG kit3_a, kit3_t
 
-    /* Set status code */
-    mov eax, STATUS_SUCCESS
+    /*
+     * Set the special code to indicate that this is a software breakpoint
+     * and not a debug service call
+     */
+    mov eax, BREAKPOINT_BREAK
 
     /* Check for V86 */
 PrepareInt3:

@@ -3,7 +3,8 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/kd64/i386/kdsup.c
  * PURPOSE:         KD support routines for x86
- * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -68,7 +69,7 @@ KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
+KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
                    IN PCONTEXT Context)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();

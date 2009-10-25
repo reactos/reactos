@@ -184,6 +184,7 @@ static int nocatalogs = 0;
 #endif
 #ifdef LIBXML_C14N_ENABLED
 static int canonical = 0;
+static int canonical_11 = 0;
 static int exc_canonical = 0;
 #endif
 #ifdef LIBXML_READER_ENABLED
@@ -247,7 +248,7 @@ void parsePath(const xmlChar *path) {
 
 static xmlExternalEntityLoader defaultEntityLoader = NULL;
 
-static xmlParserInputPtr 
+static xmlParserInputPtr
 xmllintExternalEntityLoader(const char *URL, const char *ID,
 			     xmlParserCtxtPtr ctxt) {
     xmlParserInputPtr ret;
@@ -305,10 +306,10 @@ xmllintExternalEntityLoader(const char *URL, const char *ID,
 		    ctxt->sax->error = err;
 		if (load_trace) {
 		    fprintf \
-		    	(stderr,
-		    	 "Loaded URL=\"%s\" ID=\"%s\"\n",
+			(stderr,
+			 "Loaded URL=\"%s\" ID=\"%s\"\n",
 			 newURL,
-		    	 ID ? ID : "(null)");
+			 ID ? ID : "(null)");
 		}
 		xmlFree(newURL);
 		return(ret);
@@ -328,9 +329,9 @@ xmllintExternalEntityLoader(const char *URL, const char *ID,
     return(NULL);
 }
 /************************************************************************
- * 									*
+ *									*
  * Memory allocation consumption debugging				*
- * 									*
+ *									*
  ************************************************************************/
 
 static void
@@ -391,13 +392,13 @@ myStrdupFunc(const char *str)
     return (ret);
 }
 /************************************************************************
- * 									*
+ *									*
  * Internal timing routines to remove the necessity to have		*
  * unix-specific function calls.					*
- * 									*
+ *									*
  ************************************************************************/
 
-#ifndef HAVE_GETTIMEOFDAY 
+#ifndef HAVE_GETTIMEOFDAY
 #ifdef HAVE_SYS_TIMEB_H
 #ifdef HAVE_SYS_TIME_H
 #ifdef HAVE_FTIME
@@ -523,9 +524,9 @@ endTimer(char *format, ...)
 }
 #endif
 /************************************************************************
- * 									*
- * 			HTML ouput					*
- * 									*
+ *									*
+ *			HTML ouput					*
+ *									*
  ************************************************************************/
 static char buffer[50000];
 
@@ -544,7 +545,7 @@ xmlHTMLEncodeSend(void) {
 /**
  * xmlHTMLPrintFileInfo:
  * @input:  an xmlParserInputPtr input
- * 
+ *
  * Displays the associated file and line informations for the current input
  */
 
@@ -568,7 +569,7 @@ xmlHTMLPrintFileInfo(xmlParserInputPtr input) {
 /**
  * xmlHTMLPrintFileContext:
  * @input:  an xmlParserInputPtr input
- * 
+ *
  * Displays current context within the input content for error tracking
  */
 
@@ -593,7 +594,7 @@ xmlHTMLPrintFileContext(xmlParserInputPtr input) {
     n = 0;
     while ((*cur != 0) && (*cur != '\n') && (*cur != '\r') && (n < 79)) {
 	len = strlen(buffer);
-        snprintf(&buffer[len], sizeof(buffer) - len, "%c", 
+        snprintf(&buffer[len], sizeof(buffer) - len, "%c",
 		    (unsigned char) *cur++);
 	n++;
     }
@@ -619,7 +620,7 @@ xmlHTMLPrintFileContext(xmlParserInputPtr input) {
  * @ctx:  an XML parser context
  * @msg:  the message to display/transmit
  * @...:  extra parameters for the message display
- * 
+ *
  * Display and format an error messages, gives file, line, position and
  * extra parameters.
  */
@@ -636,7 +637,7 @@ xmlHTMLError(void *ctx, const char *msg, ...)
     if ((input != NULL) && (input->filename == NULL) && (ctxt->inputNr > 1)) {
         input = ctxt->inputTab[ctxt->inputNr - 2];
     }
-        
+
     xmlHTMLPrintFileInfo(input);
 
     xmlGenericError(xmlGenericErrorContext, "<b>error</b>: ");
@@ -656,7 +657,7 @@ xmlHTMLError(void *ctx, const char *msg, ...)
  * @ctx:  an XML parser context
  * @msg:  the message to display/transmit
  * @...:  extra parameters for the message display
- * 
+ *
  * Display and format a warning messages, gives file, line, position and
  * extra parameters.
  */
@@ -673,13 +674,13 @@ xmlHTMLWarning(void *ctx, const char *msg, ...)
     if ((input != NULL) && (input->filename == NULL) && (ctxt->inputNr > 1)) {
         input = ctxt->inputTab[ctxt->inputNr - 2];
     }
-        
+
 
     xmlHTMLPrintFileInfo(input);
-        
+
     xmlGenericError(xmlGenericErrorContext, "<b>warning</b>: ");
     va_start(args, msg);
-    len = strlen(buffer);    
+    len = strlen(buffer);
     vsnprintf(&buffer[len],  sizeof(buffer) - len, msg, args);
     va_end(args);
     xmlHTMLEncodeSend();
@@ -694,7 +695,7 @@ xmlHTMLWarning(void *ctx, const char *msg, ...)
  * @ctx:  an XML parser context
  * @msg:  the message to display/transmit
  * @...:  extra parameters for the message display
- * 
+ *
  * Display and format an validity error messages, gives file,
  * line, position and extra parameters.
  */
@@ -710,7 +711,7 @@ xmlHTMLValidityError(void *ctx, const char *msg, ...)
     input = ctxt->input;
     if ((input->filename == NULL) && (ctxt->inputNr > 1))
         input = ctxt->inputTab[ctxt->inputNr - 2];
-        
+
     xmlHTMLPrintFileInfo(input);
 
     xmlGenericError(xmlGenericErrorContext, "<b>validity error</b>: ");
@@ -731,7 +732,7 @@ xmlHTMLValidityError(void *ctx, const char *msg, ...)
  * @ctx:  an XML parser context
  * @msg:  the message to display/transmit
  * @...:  extra parameters for the message display
- * 
+ *
  * Display and format a validity warning messages, gives file, line,
  * position and extra parameters.
  */
@@ -749,10 +750,10 @@ xmlHTMLValidityWarning(void *ctx, const char *msg, ...)
         input = ctxt->inputTab[ctxt->inputNr - 2];
 
     xmlHTMLPrintFileInfo(input);
-        
+
     xmlGenericError(xmlGenericErrorContext, "<b>validity warning</b>: ");
     va_start(args, msg);
-    len = strlen(buffer); 
+    len = strlen(buffer);
     vsnprintf(&buffer[len],  sizeof(buffer) - len, msg, args);
     va_end(args);
     xmlHTMLEncodeSend();
@@ -763,9 +764,9 @@ xmlHTMLValidityWarning(void *ctx, const char *msg, ...)
 }
 
 /************************************************************************
- * 									*
- * 			Shell Interface					*
- * 									*
+ *									*
+ *			Shell Interface					*
+ *									*
  ************************************************************************/
 #ifdef LIBXML_DEBUG_ENABLED
 #ifdef LIBXML_XPATH_ENABLED
@@ -774,7 +775,7 @@ xmlHTMLValidityWarning(void *ctx, const char *msg, ...)
  * @prompt:  the prompt value
  *
  * Read a string
- * 
+ *
  * Returns a pointer to it or NULL on EOF the caller is expected to
  *     free the returned string.
  */
@@ -813,9 +814,9 @@ xmlShellReadline(char *prompt) {
 #endif /* LIBXML_DEBUG_ENABLED */
 
 /************************************************************************
- * 									*
- * 			I/O Interfaces					*
- * 									*
+ *									*
+ *			I/O Interfaces					*
+ *									*
  ************************************************************************/
 
 static int myRead(FILE *f, char * buf, int len) {
@@ -829,7 +830,7 @@ static void myClose(FILE *f) {
 
 /************************************************************************
  *									*
- *		 	SAX based tests					*
+ *			SAX based tests					*
  *									*
  ************************************************************************/
 
@@ -999,7 +1000,7 @@ resolveEntityDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar *publicId, const xm
 	return(NULL);
     /* xmlParserCtxtPtr ctxt = (xmlParserCtxtPtr) ctx; */
 
-    
+
     fprintf(stdout, "SAX.resolveEntity(");
     if (publicId != NULL)
 	fprintf(stdout, "%s", (char *)publicId);
@@ -1054,8 +1055,8 @@ getParameterEntityDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar *name)
 /**
  * entityDeclDebug:
  * @ctxt:  An XML parser context
- * @name:  the entity name 
- * @type:  the entity type 
+ * @name:  the entity name
+ * @type:  the entity type
  * @publicId: The public ID of the entity
  * @systemId: The system ID of the entity
  * @content: the entity value (without processing).
@@ -1084,8 +1085,8 @@ const xmlChar *nullstr = BAD_CAST "(null)";
 /**
  * attributeDeclDebug:
  * @ctxt:  An XML parser context
- * @name:  the attribute name 
- * @type:  the attribute type 
+ * @name:  the attribute name
+ * @type:  the attribute type
  *
  * An attribute definition has been parsed
  */
@@ -1109,8 +1110,8 @@ attributeDeclDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar * elem,
 /**
  * elementDeclDebug:
  * @ctxt:  An XML parser context
- * @name:  the element name 
- * @type:  the element type 
+ * @name:  the element name
+ * @type:  the element type
  * @content: the element value (without processing).
  *
  * An element definition has been parsed
@@ -1296,7 +1297,7 @@ charactersDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar *ch, int len)
  * @ctxt:  An XML parser context
  * @name:  The entity name
  *
- * called when an entity reference is detected. 
+ * called when an entity reference is detected.
  */
 static void
 referenceDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar *name)
@@ -1532,7 +1533,7 @@ startElementNsDebug(void *ctx ATTRIBUTE_UNUSED,
     else
 	fprintf(stdout, ", '%s'", (char *) URI);
     fprintf(stdout, ", %d", nb_namespaces);
-    
+
     if (namespaces != NULL) {
         for (i = 0;i < nb_namespaces * 2;i++) {
 	    fprintf(stdout, ", xmlns");
@@ -1695,7 +1696,7 @@ testSAX(const char *filename) {
 	    goto error;
 	}
 	inputPush(ctxt, inputStream);
-	
+
 	/* do the parsing */
 	xmlParseDocument(ctxt);
 
@@ -1714,9 +1715,9 @@ error:
 }
 
 /************************************************************************
- * 									*
- * 			Stream Test processing				*
- * 									*
+ *									*
+ *			Stream Test processing				*
+ *									*
  ************************************************************************/
 #ifdef LIBXML_READER_ENABLED
 static void processNode(xmlTextReaderPtr reader) {
@@ -1733,8 +1734,8 @@ static void processNode(xmlTextReaderPtr reader) {
 
 	value = xmlTextReaderConstValue(reader);
 
-	
-	printf("%d %d %s %d %d", 
+
+	printf("%d %d %s %d %d",
 		xmlTextReaderDepth(reader),
 		type,
 		name,
@@ -1750,14 +1751,19 @@ static void processNode(xmlTextReaderPtr reader) {
     if (patternc) {
         xmlChar *path = NULL;
         int match = -1;
-	
+
 	if (type == XML_READER_TYPE_ELEMENT) {
 	    /* do the check only on element start */
 	    match = xmlPatternMatch(patternc, xmlTextReaderCurrentNode(reader));
 
 	    if (match) {
+#if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_DEBUG_ENABLED)
 		path = xmlGetNodePath(xmlTextReaderCurrentNode(reader));
 		printf("Node %s matches pattern %s\n", path, pattern);
+#else
+                printf("Node %s matches pattern %s\n",
+                       xmlTextReaderConstName(reader), pattern);
+#endif
 	    }
 	}
 	if (patstream != NULL) {
@@ -1772,19 +1778,23 @@ static void processNode(xmlTextReaderPtr reader) {
                     xmlFreeStreamCtxt(patstream);
 		    patstream = NULL;
 		} else if (ret != match) {
+#if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_DEBUG_ENABLED)
 		    if (path == NULL) {
 		        path = xmlGetNodePath(
 		                       xmlTextReaderCurrentNode(reader));
 		    }
+#endif
 		    fprintf(stderr,
 		            "xmlPatternMatch and xmlStreamPush disagree\n");
-		    fprintf(stderr,
-		            "  pattern %s node %s\n",
-			    pattern, path);
+                    if (path != NULL)
+                        fprintf(stderr, "  pattern %s node %s\n",
+                                pattern, path);
+                    else
+		        fprintf(stderr, "  pattern %s node %s\n",
+			    pattern, xmlTextReaderConstName(reader));
 		}
-		
 
-	    } 
+	    }
 	    if ((type == XML_READER_TYPE_END_ELEMENT) ||
 	        ((type == XML_READER_TYPE_ELEMENT) && (empty))) {
 	        ret = xmlStreamPop(patstream);
@@ -1811,7 +1821,7 @@ static void streamFile(char *filename) {
     xmlParserInputBufferPtr input = NULL;
 
     if (memory) {
-	if (stat(filename, &info) < 0) 
+	if (stat(filename, &info) < 0)
 	    return;
 	if ((fd = open(filename, O_RDONLY)) < 0)
 	    return;
@@ -1980,7 +1990,7 @@ static void walkDoc(xmlDocPtr doc) {
         namespaces[i++] = ns->prefix;
     }
     namespaces[i++] = NULL;
-    namespaces[i++] = NULL;
+    namespaces[i] = NULL;
 
     if (pattern != NULL) {
         patternc = xmlPatterncompile((const xmlChar *) pattern, doc->dict,
@@ -2041,9 +2051,9 @@ static void walkDoc(xmlDocPtr doc) {
 #endif /* LIBXML_READER_ENABLED */
 
 /************************************************************************
- * 									*
- * 			Tree Test processing				*
- * 									*
+ *									*
+ *			Tree Test processing				*
+ *									*
  ************************************************************************/
 static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
     xmlDocPtr doc = NULL;
@@ -2053,7 +2063,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 
     if ((timing) && (!repeat))
 	startTimer();
-    
+
 
 #ifdef LIBXML_TREE_ENABLED
     if (filename == NULL) {
@@ -2104,7 +2114,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	int fd;
 	struct stat info;
 	const char *base;
-	if (stat(filename, &info) < 0) 
+	if (stat(filename, &info) < 0)
 	    return;
 	if ((fd = open(filename, O_RDONLY)) < 0)
 	    return;
@@ -2114,7 +2124,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 
 	doc = htmlReadMemory((char *) base, info.st_size, filename,
 	                     NULL, options);
-	    
+
 	munmap((char *) base, info.st_size);
 	close(fd);
     }
@@ -2165,6 +2175,8 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 			doc = NULL;
 		    }
 	        }
+                if (f != stdin)
+                    fclose(f);
 	    }
 	} else
 #endif /* LIBXML_PUSH_ENABLED */
@@ -2199,7 +2211,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 		ctxt = xmlNewParserCtxt();
 	    else
 	        ctxt = rectxt;
-	    if (ctxt == NULL) {	      
+	    if (ctxt == NULL) {
 	        doc = NULL;
 	    } else {
 	        ctxt->sax->error = xmlHTMLError;
@@ -2217,7 +2229,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	    int fd;
 	    struct stat info;
 	    const char *base;
-	    if (stat(filename, &info) < 0) 
+	    if (stat(filename, &info) < 0)
 		return;
 	    if ((fd = open(filename, O_RDONLY)) < 0)
 		return;
@@ -2231,7 +2243,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	    else
 		doc = xmlCtxtReadMemory(rectxt, (char *) base, info.st_size,
 			                filename, NULL, options);
-	        
+
 	    munmap((char *) base, info.st_size);
 	    close(fd);
 #endif
@@ -2243,7 +2255,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 		ctxt = xmlNewParserCtxt();
 	    else
 	        ctxt = rectxt;
-	    if (ctxt == NULL) {	      
+	    if (ctxt == NULL) {
 	        doc = NULL;
 	    } else {
 		doc = xmlCtxtReadFile(ctxt, filename, NULL, options);
@@ -2364,7 +2376,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 		    }
 		}
 	    }
-	}    
+	}
     }else
 #endif /* LIBXML_VALID_ENABLED */
 #ifdef LIBXML_READER_ENABLED
@@ -2429,7 +2441,19 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	        xmlChar *result = NULL;
 		int size;
 
-		size = xmlC14NDocDumpMemory(doc, NULL, 0, NULL, 1, &result);
+		size = xmlC14NDocDumpMemory(doc, NULL, XML_C14N_1_0, NULL, 1, &result);
+		if (size >= 0) {
+		    write(1, result, size);
+		    xmlFree(result);
+		} else {
+		    fprintf(stderr, "Failed to canonicalize\n");
+		    progresult = XMLLINT_ERR_OUT;
+		}
+	    } else if (canonical) {
+	        xmlChar *result = NULL;
+		int size;
+
+		size = xmlC14NDocDumpMemory(doc, NULL, XML_C14N_1_1, NULL, 1, &result);
 		if (size >= 0) {
 		    write(1, result, size);
 		    xmlFree(result);
@@ -2442,7 +2466,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	        xmlChar *result = NULL;
 		int size;
 
-		size = xmlC14NDocDumpMemory(doc, NULL, 1, NULL, 1, &result);
+		size = xmlC14NDocDumpMemory(doc, NULL, XML_C14N_EXCLUSIVE_1_0, NULL, 1, &result);
 		if (size >= 0) {
 		    write(1, result, size);
 		    xmlFree(result);
@@ -2460,7 +2484,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 		if (encoding != NULL) {
 		    if ( format ) {
 		        xmlDocDumpFormatMemoryEnc(doc, &result, &len, encoding, 1);
-		    } else { 
+		    } else {
 			xmlDocDumpMemoryEnc(doc, &result, &len, encoding);
 		    }
 		} else {
@@ -2527,6 +2551,8 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 
                 if (format)
 		    saveOpts |= XML_SAVE_FORMAT;
+                if (xmlout)
+                    saveOpts |= XML_SAVE_AS_XML;
 
 		if (output == NULL)
 		    ctxt = xmlSaveToFd(1, encoding, saveOpts);
@@ -2580,9 +2606,9 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	    startTimer();
 	}
 	if (dtdvalid != NULL)
-	    dtd = xmlParseDTD(NULL, (const xmlChar *)dtdvalid); 
+	    dtd = xmlParseDTD(NULL, (const xmlChar *)dtdvalid);
 	else
-	    dtd = xmlParseDTD((const xmlChar *)dtdvalidfpi, NULL); 
+	    dtd = xmlParseDTD((const xmlChar *)dtdvalidfpi, NULL);
 	if ((timing) && (!repeat)) {
 	    endTimer("Parsing DTD");
 	}
@@ -2772,9 +2798,9 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 }
 
 /************************************************************************
- * 									*
- * 			Usage and Main					*
- * 									*
+ *									*
+ *			Usage and Main					*
+ *									*
  ************************************************************************/
 
 static void showVersion(const char *name) {
@@ -2788,28 +2814,28 @@ static void showVersion(const char *name) {
     if (xmlHasFeature(XML_WITH_PATTERN)) fprintf(stderr, "Patterns ");
     if (xmlHasFeature(XML_WITH_WRITER)) fprintf(stderr, "Writer ");
     if (xmlHasFeature(XML_WITH_SAX1)) fprintf(stderr, "SAXv1 ");
-    if (xmlHasFeature(XML_WITH_FTP)) fprintf(stderr, "FTP "); 
-    if (xmlHasFeature(XML_WITH_HTTP)) fprintf(stderr, "HTTP "); 
+    if (xmlHasFeature(XML_WITH_FTP)) fprintf(stderr, "FTP ");
+    if (xmlHasFeature(XML_WITH_HTTP)) fprintf(stderr, "HTTP ");
     if (xmlHasFeature(XML_WITH_VALID)) fprintf(stderr, "DTDValid ");
-    if (xmlHasFeature(XML_WITH_HTML)) fprintf(stderr, "HTML "); 
-    if (xmlHasFeature(XML_WITH_LEGACY)) fprintf(stderr, "Legacy "); 
-    if (xmlHasFeature(XML_WITH_C14N)) fprintf(stderr, "C14N "); 
-    if (xmlHasFeature(XML_WITH_CATALOG)) fprintf(stderr, "Catalog "); 
-    if (xmlHasFeature(XML_WITH_XPATH)) fprintf(stderr, "XPath "); 
-    if (xmlHasFeature(XML_WITH_XPTR)) fprintf(stderr, "XPointer "); 
-    if (xmlHasFeature(XML_WITH_XINCLUDE)) fprintf(stderr, "XInclude "); 
-    if (xmlHasFeature(XML_WITH_ICONV)) fprintf(stderr, "Iconv "); 
-    if (xmlHasFeature(XML_WITH_ISO8859X)) fprintf(stderr, "ISO8859X "); 
-    if (xmlHasFeature(XML_WITH_UNICODE)) fprintf(stderr, "Unicode "); 
-    if (xmlHasFeature(XML_WITH_REGEXP)) fprintf(stderr, "Regexps "); 
-    if (xmlHasFeature(XML_WITH_AUTOMATA)) fprintf(stderr, "Automata "); 
-    if (xmlHasFeature(XML_WITH_EXPR)) fprintf(stderr, "Expr "); 
-    if (xmlHasFeature(XML_WITH_SCHEMAS)) fprintf(stderr, "Schemas "); 
-    if (xmlHasFeature(XML_WITH_SCHEMATRON)) fprintf(stderr, "Schematron "); 
-    if (xmlHasFeature(XML_WITH_MODULES)) fprintf(stderr, "Modules "); 
-    if (xmlHasFeature(XML_WITH_DEBUG)) fprintf(stderr, "Debug "); 
-    if (xmlHasFeature(XML_WITH_DEBUG_MEM)) fprintf(stderr, "MemDebug "); 
-    if (xmlHasFeature(XML_WITH_DEBUG_RUN)) fprintf(stderr, "RunDebug "); 
+    if (xmlHasFeature(XML_WITH_HTML)) fprintf(stderr, "HTML ");
+    if (xmlHasFeature(XML_WITH_LEGACY)) fprintf(stderr, "Legacy ");
+    if (xmlHasFeature(XML_WITH_C14N)) fprintf(stderr, "C14N ");
+    if (xmlHasFeature(XML_WITH_CATALOG)) fprintf(stderr, "Catalog ");
+    if (xmlHasFeature(XML_WITH_XPATH)) fprintf(stderr, "XPath ");
+    if (xmlHasFeature(XML_WITH_XPTR)) fprintf(stderr, "XPointer ");
+    if (xmlHasFeature(XML_WITH_XINCLUDE)) fprintf(stderr, "XInclude ");
+    if (xmlHasFeature(XML_WITH_ICONV)) fprintf(stderr, "Iconv ");
+    if (xmlHasFeature(XML_WITH_ISO8859X)) fprintf(stderr, "ISO8859X ");
+    if (xmlHasFeature(XML_WITH_UNICODE)) fprintf(stderr, "Unicode ");
+    if (xmlHasFeature(XML_WITH_REGEXP)) fprintf(stderr, "Regexps ");
+    if (xmlHasFeature(XML_WITH_AUTOMATA)) fprintf(stderr, "Automata ");
+    if (xmlHasFeature(XML_WITH_EXPR)) fprintf(stderr, "Expr ");
+    if (xmlHasFeature(XML_WITH_SCHEMAS)) fprintf(stderr, "Schemas ");
+    if (xmlHasFeature(XML_WITH_SCHEMATRON)) fprintf(stderr, "Schematron ");
+    if (xmlHasFeature(XML_WITH_MODULES)) fprintf(stderr, "Modules ");
+    if (xmlHasFeature(XML_WITH_DEBUG)) fprintf(stderr, "Debug ");
+    if (xmlHasFeature(XML_WITH_DEBUG_MEM)) fprintf(stderr, "MemDebug ");
+    if (xmlHasFeature(XML_WITH_DEBUG_RUN)) fprintf(stderr, "RunDebug ");
     if (xmlHasFeature(XML_WITH_ZLIB)) fprintf(stderr, "Zlib ");
     fprintf(stderr, "\n");
 }
@@ -2878,7 +2904,8 @@ static void usage(const char *name) {
     printf("\t--encode encoding : output in the given encoding\n");
     printf("\t--dropdtd : remove the DOCTYPE of the input docs\n");
 #endif /* LIBXML_OUTPUT_ENABLED */
-    printf("\t--c14n : save in W3C canonical format (with comments)\n");
+    printf("\t--c14n : save in W3C canonical format v1.0 (with comments)\n");
+    printf("\t--c14n11 : save in W3C canonical format v1.1 (with comments)\n");
     printf("\t--exc-c14n : save in W3C exclusive canonical format (with comments)\n");
 #ifdef LIBXML_C14N_ENABLED
 #endif /* LIBXML_C14N_ENABLED */
@@ -2944,7 +2971,7 @@ main(int argc, char **argv) {
     int files = 0;
     int version = 0;
     const char* indent;
-    
+
     if (argc <= 1) {
 	usage(argv[0]);
 	return(1);
@@ -2964,7 +2991,7 @@ main(int argc, char **argv) {
 	         (!strcmp(argv[i], "--shell"))) {
 	    shell++;
             noout = 1;
-        } else 
+        } else
 #endif
 #ifdef LIBXML_TREE_ENABLED
 	if ((!strcmp(argv[i], "-copy")) || (!strcmp(argv[i], "--copy")))
@@ -3133,19 +3160,24 @@ main(int argc, char **argv) {
 		 (!strcmp(argv[i], "--debugent"))) {
 	    debugent++;
 	    xmlParserDebugEntities = 1;
-	} 
+	}
 #endif
 #ifdef LIBXML_C14N_ENABLED
 	else if ((!strcmp(argv[i], "-c14n")) ||
 		 (!strcmp(argv[i], "--c14n"))) {
 	    canonical++;
 	    options |= XML_PARSE_NOENT | XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD;
-	} 
+	}
+	else if ((!strcmp(argv[i], "-c14n11")) ||
+		 (!strcmp(argv[i], "--c14n11"))) {
+	    canonical_11++;
+	    options |= XML_PARSE_NOENT | XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD;
+	}
 	else if ((!strcmp(argv[i], "-exc-c14n")) ||
 		 (!strcmp(argv[i], "--exc-c14n"))) {
 	    exc_canonical++;
 	    options |= XML_PARSE_NOENT | XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD;
-	} 
+	}
 #endif
 #ifdef LIBXML_CATALOG_ENABLED
 	else if ((!strcmp(argv[i], "-catalogs")) ||
@@ -3154,7 +3186,7 @@ main(int argc, char **argv) {
 	} else if ((!strcmp(argv[i], "-nocatalogs")) ||
 		 (!strcmp(argv[i], "--nocatalogs"))) {
 	    nocatalogs++;
-	} 
+	}
 #endif
 	else if ((!strcmp(argv[i], "-encode")) ||
 	         (!strcmp(argv[i], "--encode"))) {
@@ -3202,16 +3234,17 @@ main(int argc, char **argv) {
 #ifdef LIBXML_SAX1_ENABLED
 	else if ((!strcmp(argv[i], "-sax1")) ||
 	         (!strcmp(argv[i], "--sax1"))) {
-	     sax1++;
+	    sax1++;
+	    options |= XML_PARSE_SAX1;
 	}
 #endif /* LIBXML_SAX1_ENABLED */
 	else if ((!strcmp(argv[i], "-sax")) ||
 	         (!strcmp(argv[i], "--sax"))) {
-	     sax++;
+	    sax++;
 	}
 	else if ((!strcmp(argv[i], "-chkregister")) ||
 	         (!strcmp(argv[i], "--chkregister"))) {
-	     chkregister++;
+	    chkregister++;
 #ifdef LIBXML_SCHEMAS_ENABLED
 	} else if ((!strcmp(argv[i], "-relaxng")) ||
 	         (!strcmp(argv[i], "--relaxng"))) {
@@ -3289,12 +3322,12 @@ main(int argc, char **argv) {
 	xmlRegisterNodeDefault(registerNode);
 	xmlDeregisterNodeDefault(deregisterNode);
     }
-    
+
     indent = getenv("XMLLINT_INDENT");
     if(indent != NULL) {
 	xmlTreeIndentString = indent;
     }
-    
+
 
     defaultEntityLoader = xmlGetExternalEntityLoader();
     xmlSetExternalEntityLoader(xmllintExternalEntityLoader);
@@ -3316,7 +3349,7 @@ main(int argc, char **argv) {
 	xmlGenericError(xmlGenericErrorContext,
 	 "<html><head><title>%s output</title></head>\n",
 		argv[0]);
-	xmlGenericError(xmlGenericErrorContext, 
+	xmlGenericError(xmlGenericErrorContext,
 	 "<body bgcolor=\"#ffffff\"><h1 align=\"center\">%s output</h1>\n",
 		argv[0]);
     }
@@ -3330,7 +3363,7 @@ main(int argc, char **argv) {
 	xmlSchematronParserCtxtPtr ctxt;
 
         /* forces loading the DTDs */
-        xmlLoadExtDtdDefaultValue |= 1; 
+        xmlLoadExtDtdDefaultValue |= 1;
 	options |= XML_PARSE_DTDLOAD;
 	if (timing) {
 	    startTimer();
@@ -3364,7 +3397,7 @@ main(int argc, char **argv) {
 	xmlRelaxNGParserCtxtPtr ctxt;
 
         /* forces loading the DTDs */
-        xmlLoadExtDtdDefaultValue |= 1; 
+        xmlLoadExtDtdDefaultValue |= 1;
 	options |= XML_PARSE_DTDLOAD;
 	if (timing) {
 	    startTimer();
@@ -3444,7 +3477,7 @@ main(int argc, char **argv) {
 	         (!strcmp(argv[i], "--dtdvalid"))) {
 	    i++;
 	    continue;
-        } 
+        }
 	if ((!strcmp(argv[i], "-path")) ||
                    (!strcmp(argv[i], "--path"))) {
             i++;
@@ -3534,7 +3567,7 @@ main(int argc, char **argv) {
 	    }
 	}
     }
-    if (generate) 
+    if (generate)
 	parseAndPrintFile(NULL, NULL);
     if ((htmlout) && (!nowrap)) {
 	xmlGenericError(xmlGenericErrorContext, "</body></html>\n");

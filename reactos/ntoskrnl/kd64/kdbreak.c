@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/kd64/kdbreak.c
  * PURPOSE:         KD64 Breakpoint Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/

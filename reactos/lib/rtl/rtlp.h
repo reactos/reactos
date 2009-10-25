@@ -102,7 +102,7 @@ RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(BOOLEAN Type);
+RtlpCheckForActiveDebugger(VOID);
 
 BOOLEAN
 NTAPI
@@ -143,28 +143,30 @@ RtlpCheckLogException(IN PEXCEPTION_RECORD ExceptionRecord,
                       IN PVOID ContextData,
                       IN ULONG Size);
 
-PVOID
-NTAPI
-RtlpGetExceptionAddress(VOID);
-
 VOID
 NTAPI
 RtlpCaptureContext(OUT PCONTEXT ContextRecord);
 
-/* i386/debug.S */
-NTSTATUS
+//
+// Debug Service calls
+//
+ULONG
 NTAPI
-DebugService(IN ULONG Service,
-             IN const void* Buffer,
-             IN ULONG Length,
-             IN PVOID Argument1,
-             IN PVOID Argument2);
+DebugService(
+    IN ULONG Service,
+    IN PVOID Argument1,
+    IN PVOID Argument2,
+    IN PVOID Argument3,
+    IN PVOID Argument4
+);
 
-NTSTATUS
+VOID
 NTAPI
-DebugService2(IN PVOID Argument1,
-              IN PVOID Argument2,
-              IN ULONG Service);
+DebugService2(
+    IN PVOID Argument1,
+    IN PVOID Argument2,
+    IN ULONG Service
+);
 
 /* Tags for the String Allocators */
 #define TAG_USTR        'RTSU'

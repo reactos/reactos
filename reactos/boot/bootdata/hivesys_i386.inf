@@ -3,6 +3,15 @@ Signature = "$ReactOS$"
 
 [AddReg]
 
+HKLM,"SYSTEM\CurrentControlSet\Control","CurrentUser",2,"USERNAME"
+HKLM,"SYSTEM\CurrentControlSet\Control","WaitToKillServiceTimeout",2,"20000"
+HKLM,"SYSTEM\CurrentControlSet\Control\Biosinfo","InfName",2,"biosinfo.inf"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP",,0x00000012
+
+HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","NtfsDisable8dot3NameCreation",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","Win31FileSystem",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","Win95TruncatedExtensions",0x00010001,1
+
 ; Device classes (this list is incomplete... and should be generated from .inf files during installation)
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Client"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetClient"
@@ -369,6 +378,80 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Text",0x00000000,"Korean"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5063"
 
+; Keyboard layouts
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000402",2,"bg"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000404",2,"ch"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000405",2,"cz"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000406",2,"dk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000407",2,"gr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000408",2,"gk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000409",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040A",2,"sp"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040B",2,"su"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040C",2,"fr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040E",2,"hu"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040F",2,"is"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000410",2,"it"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000411",2,"jp"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000412",2,"ko"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000413",2,"nl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000414",2,"no"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000415",2,"pl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000416",2,"br"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000418",2,"ro"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000419",2,"ru"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041A",2,"yu"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041B",2,"sl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041C",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041D",2,"sv"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041F",2,"tr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000422",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000423",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000424",2,"yu"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000425",2,"et"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000426",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000427",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000804",2,"ch"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000807",2,"sg"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000809",2,"uk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000080A",2,"la"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000080C",2,"be"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000813",2,"be"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000816",2,"po"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000C0C",2,"cf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000C1A",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00001009",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000100C",2,"sf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00001809",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010402",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010405",2,"cz"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010407",2,"gr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010408",2,"gk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010409",2,"dv"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0001040A",2,"sp"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0001040E",2,"hu"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010410",2,"it"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010415",2,"pl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010419",2,"ru"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0001041B",2,"sl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0001041F",2,"tr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010426",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010C0C",2,"cf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010C1A",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00020408",2,"gk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00020409",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00030409",2,"usl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00040409",2,"usr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00050408",2,"gk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00000410",2,"141"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","0000041F",2,"179"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00010408",2,"220"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00010410",2,"142"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00010415",2,"214"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","0001041F",2,"440"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00020408",2,"319"
+
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Net"
@@ -443,6 +526,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28606",0x00000000,"c_28606
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","ACP",0x00000000,"1252"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","OEMCP",0x00000000,"437"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","MACCP",0x00000000,"10000"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","932",2,"F040-F9FC"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","936",2,"AAA1-AFFE,F8A1-FEFE,A140-A7A0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","949",2,"C9A1-C9FE,FEA1-FEFE"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","950",2,"FA40-FEFE,8E40-A0FE,8140-8DFE,C6A1-C8FE"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","Unicode",2,"E000-F8FF"
 
 ; NLS Language settings
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0402",0x00000000,"l_intl.nls"
@@ -693,6 +782,20 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00021004",0x
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00021404",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00030404",0x00000000,""
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","MajorVersion",0x00010001,2
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","MinorVersion",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","PriorityClass",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors\Local Port","Driver",2,"localspl.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers",,0x00000012
+
+HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductType",2,"WinNT"
+HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002,""
+
+HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x00000012
+
 ; Some installers check for SP6
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
 
@@ -726,6 +829,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
 HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI","Timeout",0x00010001,0x00000007
+HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\UseNewKey",,0x00000012
 
 ; Group order, the first DWORD is the count of entries, 
 ; the following dwords are the tag entries for the load order.

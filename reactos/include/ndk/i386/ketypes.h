@@ -132,6 +132,11 @@ Author:
         (USHORT)(FIELD_OFFSET(KTSS, IoMaps[MapNumber-1].IoMap))
 
 //
+// Size of the XMM register save area in the FXSAVE format
+//
+#define SIZE_OF_FX_REGISTERS    128
+
+//
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
 //
 #define KSEG0_BASE              0x80000000
@@ -333,7 +338,7 @@ typedef struct _FXSAVE_FORMAT
     ULONG DataSelector;
     ULONG MXCsr;
     ULONG MXCsrMask;
-    UCHAR RegisterArea[128];
+    UCHAR RegisterArea[SIZE_OF_FX_REGISTERS];
     UCHAR Reserved3[128];
     UCHAR Reserved4[224];
     UCHAR Align16Byte[8];

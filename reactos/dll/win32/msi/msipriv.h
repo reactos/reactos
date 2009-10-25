@@ -76,6 +76,7 @@ typedef struct tagMSIDATABASE
     UINT bytes_per_strref;
     LPWSTR path;
     LPWSTR deletefile;
+    LPWSTR localfile;
     LPCWSTR mode;
     struct list tables;
     struct list transforms;
@@ -1029,12 +1030,44 @@ extern DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR f
 extern void ui_progress(MSIPACKAGE *, int, int, int, int);
 extern void ui_actiondata(MSIPACKAGE *, LPCWSTR, MSIRECORD *);
 
-/* string consts use a number of places  and defined in helpers.c*/
-extern const WCHAR cszSourceDir[];
-extern const WCHAR cszSOURCEDIR[];
-extern const WCHAR cszRootDrive[];
-extern const WCHAR cszbs[];
-extern const WCHAR szLocalSid[];
+/* common strings */
+static const WCHAR cszSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
+static const WCHAR cszSOURCEDIR[] = {'S','O','U','R','C','E','D','I','R',0};
+static const WCHAR cszRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
+static const WCHAR szLocalSid[] = {'S','-','1','-','5','-','1','8',0};
+static const WCHAR szEmpty[] = {0};
+static const WCHAR szAll[] = {'A','L','L',0};
+static const WCHAR szOne[] = {'1',0};
+static const WCHAR szZero[] = {'0',0};
+static const WCHAR szSpace[] = {' ',0};
+static const WCHAR szBackSlash[] = {'\\',0};
+static const WCHAR szForwardSlash[] = {'/',0};
+static const WCHAR szDot[] = {'.',0};
+static const WCHAR szDotDot[] = {'.','.',0};
+static const WCHAR szSemiColon[] = {';',0};
+static const WCHAR szPreselected[] = {'P','r','e','s','e','l','e','c','t','e','d',0};
+static const WCHAR szPatches[] = {'P','a','t','c','h','e','s',0};
+static const WCHAR szState[] = {'S','t','a','t','e',0};
+static const WCHAR szMsi[] = {'m','s','i',0};
+static const WCHAR szPatch[] = {'P','A','T','C','H',0};
+static const WCHAR szSourceList[] = {'S','o','u','r','c','e','L','i','s','t',0};
+static const WCHAR szInstalled[] = {'I','n','s','t','a','l','l','e','d',0};
+static const WCHAR szReinstall[] = {'R','E','I','N','S','T','A','L','L',0};
+static const WCHAR szReinstallMode[] = {'R','E','I','N','S','T','A','L','L','M','O','D','E',0};
+static const WCHAR szRemove[] = {'R','E','M','O','V','E',0};
+static const WCHAR szUserSID[] = {'U','s','e','r','S','I','D',0};
+static const WCHAR szProductCode[] = {'P','r','o','d','u','c','t','C','o','d','e',0};
+static const WCHAR szRegisterClassInfo[] = {'R','e','g','i','s','t','e','r','C','l','a','s','s','I','n','f','o',0};
+static const WCHAR szRegisterProgIdInfo[] = {'R','e','g','i','s','t','e','r','P','r','o','g','I','d','I','n','f','o',0};
+static const WCHAR szRegisterExtensionInfo[] = {'R','e','g','i','s','t','e','r','E','x','t','e','n','s','i','o','n','I','n','f','o',0};
+static const WCHAR szRegisterMIMEInfo[] = {'R','e','g','i','s','t','e','r','M','I','M','E','I','n','f','o',0};
+static const WCHAR szDuplicateFiles[] = {'D','u','p','l','i','c','a','t','e','F','i','l','e','s',0};
+static const WCHAR szInstallFiles[] = {'I','n','s','t','a','l','l','F','i','l','e','s',0};
+static const WCHAR szRemoveFiles[] = {'R','e','m','o','v','e','F','i','l','e','s',0};
+static const WCHAR szFindRelatedProducts[] = {'F','i','n','d','R','e','l','a','t','e','d','P','r','o','d','u','c','t','s',0};
+static const WCHAR szAllUsers[] = {'A','L','L','U','S','E','R','S',0};
+static const WCHAR szCustomActionData[] = {'C','u','s','t','o','m','A','c','t','i','o','n','D','a','t','a',0};
+static const WCHAR szUILevel[] = {'U','I','L','e','v','e','l',0};
 
 /* memory allocation macro functions */
 static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);

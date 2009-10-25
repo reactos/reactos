@@ -235,7 +235,7 @@ RtlUnwind(IN PVOID TargetFrame OPTIONAL,
         ExceptionRecord3.ExceptionFlags = 0;
         ExceptionRecord3.ExceptionCode = STATUS_UNWIND;
         ExceptionRecord3.ExceptionRecord = NULL;
-        ExceptionRecord3.ExceptionAddress = RtlpGetExceptionAddress();
+        ExceptionRecord3.ExceptionAddress = _ReturnAddress();
         ExceptionRecord3.NumberParameters = 0;
     }
 

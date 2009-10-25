@@ -192,8 +192,8 @@ RtlTimeFieldsToTime(
        TimeFields->Hour < 0 || TimeFields->Hour > 23 ||
        TimeFields->Month < 1 || TimeFields->Month > 12 ||
        TimeFields->Day < 1 ||
-       TimeFields->Day > MonthLengths[TimeFields->Month == 2 ||
-       IsLeapYear(TimeFields->Year)][TimeFields->Month - 1] ||
+       TimeFields->Day >
+           MonthLengths[IsLeapYear(TimeFields->Year)][TimeFields->Month - 1] ||
        TimeFields->Year < 1601)
    {
        return FALSE;

@@ -150,9 +150,6 @@ UINT msi_clone_properties(MSIPACKAGE *package)
  */
 static UINT set_installed_prop( MSIPACKAGE *package )
 {
-    static const WCHAR szInstalled[] = {
-        'I','n','s','t','a','l','l','e','d',0 };
-    WCHAR val[2] = { '1', 0 };
     HKEY hkey = 0;
     UINT r;
 
@@ -160,7 +157,7 @@ static UINT set_installed_prop( MSIPACKAGE *package )
     if (r == ERROR_SUCCESS)
     {
         RegCloseKey( hkey );
-        MSI_SetPropertyW( package, szInstalled, val );
+        MSI_SetPropertyW( package, szInstalled, szOne );
     }
 
     return r;
@@ -174,8 +171,6 @@ static UINT set_user_sid_prop( MSIPACKAGE *package )
     DWORD size, dom_size;
     PSID psid = NULL;
     UINT r = ERROR_FUNCTION_FAILED;
-
-    static const WCHAR user_sid[] = {'U','s','e','r','S','I','D',0};
 
     size = 0;
     GetUserNameW( NULL, &size );
@@ -205,7 +200,7 @@ static UINT set_user_sid_prop( MSIPACKAGE *package )
     if (!ConvertSidToStringSidW( psid, &sid_str ))
         goto done;
 
-    r = MSI_SetPropertyW( package, user_sid, sid_str );
+    r = MSI_SetPropertyW( package, szUserSID, sid_str );
 
 done:
     LocalFree( sid_str );
@@ -226,7 +221,6 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
     WCHAR name[MAX_PATH];
     WCHAR windir[MAX_PATH];
 
-    static const WCHAR backslash[] = {'\\',0};
     static const WCHAR fusion[] = {'f','u','s','i','o','n','.','d','l','l',0};
     static const WCHAR sub[] = {
         'S','o','f','t','w','a','r','e','\\',
@@ -265,10 +259,10 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
             }
 
             lstrcpyW(check, windir);
-            lstrcatW(check, backslash);
+            lstrcatW(check, szBackSlash);
             lstrcatW(check, subdir);
             lstrcatW(check, name);
-            lstrcatW(check, backslash);
+            lstrcatW(check, szBackSlash);
             lstrcatW(check, fusion);
 
             if(GetFileAttributesW(check) != INVALID_FILE_ATTRIBUTES)
@@ -360,7 +354,6 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     SYSTEMTIME systemtime;
     LANGID langid;
 
-    static const WCHAR cszbs[]={'\\',0};
     static const WCHAR CFF[] = 
 {'C','o','m','m','o','n','F','i','l','e','s','F','o','l','d','e','r',0};
     static const WCHAR PFF[] = 
@@ -407,8 +400,6 @@ static VOID set_installer_properties(MSIPACKAGE *package)
 {'A','d','m','i','n','U','s','e','r',0};
     static const WCHAR szPriv[] =
 {'P','r','i','v','i','l','e','g','e','d',0};
-    static const WCHAR szOne[] =
-{'1',0};
     static const WCHAR v9x[] = { 'V','e','r','s','i','o','n','9','X',0 };
     static const WCHAR vNT[] = { 'V','e','r','s','i','o','n','N','T',0 };
     static const WCHAR szMsiNTProductType[] = { 'M','s','i','N','T','P','r','o','d','u','c','t','T','y','p','e',0 };
@@ -465,76 +456,76 @@ static VOID set_installer_properties(MSIPACKAGE *package)
      */
 
     SHGetFolderPathW(NULL,CSIDL_PROGRAM_FILES_COMMON,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, CFF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_PROGRAM_FILES,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, PFF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_COMMON_APPDATA,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, CADF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_FAVORITES,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, FaF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_FONTS,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, FoF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_SENDTO,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, SendTF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_STARTMENU,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, SMF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_STARTUP,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, StF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_TEMPLATES,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, TemplF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_DESKTOP,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, DF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_PROGRAMS,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, PMF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_ADMINTOOLS,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, ATF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_APPDATA,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, ADF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_SYSTEM,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, SF, pth);
     MSI_SetPropertyW(package, SF16, pth);
 
     SHGetFolderPathW(NULL,CSIDL_LOCAL_APPDATA,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, LADF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_MYPICTURES,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, MPF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_PERSONAL,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, PF, pth);
 
     SHGetFolderPathW(NULL,CSIDL_WINDOWS,NULL,0,pth);
-    strcatW(pth,cszbs);
+    strcatW(pth, szBackSlash);
     MSI_SetPropertyW(package, WF, pth);
     
     /* Physical Memory is specified in MB. Using total amount. */
@@ -753,15 +744,6 @@ static MSIPACKAGE *msi_alloc_package( void )
         list_init( &package->RunningActions );
         list_init( &package->sourcelist_info );
         list_init( &package->sourcelist_media );
-
-        package->patch = NULL;
-        package->ActionFormat = NULL;
-        package->LastAction = NULL;
-        package->dialog = NULL;
-        package->next_dialog = NULL;
-        package->scheduled_action_running = FALSE;
-        package->commit_action_running = FALSE;
-        package->rollback_action_running = FALSE;
     }
 
     return package;
@@ -788,8 +770,6 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 {
     static const WCHAR szLevel[] = { 'U','I','L','e','v','e','l',0 };
     static const WCHAR szpi[] = {'%','i',0};
-    static const WCHAR szProductCode[] = {
-        'P','r','o','d','u','c','t','C','o','d','e',0};
     MSIPACKAGE *package;
     WCHAR uilevel[10];
     UINT r;
@@ -843,10 +823,9 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 static LPCWSTR copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
 {
     WCHAR path[MAX_PATH];
-    static const WCHAR szMSI[] = {'m','s','i',0};
 
     GetTempPathW( MAX_PATH, path );
-    GetTempFileNameW( path, szMSI, 0, filename );
+    GetTempFileNameW( path, szMsi, 0, filename );
 
     if( !CopyFileW( szPackage, filename, FALSE ) )
     {
@@ -891,6 +870,38 @@ LPCWSTR msi_download_file( LPCWSTR szUrl, LPWSTR filename )
     return filename;
 }
 
+static UINT msi_get_local_package_name( LPWSTR path )
+{
+    static const WCHAR szInstaller[] = {
+        '\\','I','n','s','t','a','l','l','e','r','\\',0};
+    static const WCHAR fmt[] = { '%','x','.','m','s','i',0};
+    DWORD time, len, i;
+    HANDLE handle;
+
+    time = GetTickCount();
+    GetWindowsDirectoryW( path, MAX_PATH );
+    strcatW( path, szInstaller );
+    CreateDirectoryW( path, NULL );
+
+    len = strlenW(path);
+    for (i = 0; i < 0x10000; i++)
+    {
+        snprintfW( &path[len], MAX_PATH - len, fmt, (time + i)&0xffff );
+        handle = CreateFileW( path, GENERIC_WRITE, 0, NULL,
+                              CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
+        if (handle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(handle);
+            break;
+        }
+        if (GetLastError() != ERROR_FILE_EXISTS &&
+            GetLastError() != ERROR_SHARING_VIOLATION)
+            return ERROR_FUNCTION_FAILED;
+    }
+
+    return ERROR_SUCCESS;
+}
+
 UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
 {
     static const WCHAR OriginalDatabase[] =
@@ -901,7 +912,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     MSIHANDLE handle;
     LPWSTR ptr, base_url = NULL;
     UINT r;
-    WCHAR temppath[MAX_PATH];
+    WCHAR temppath[MAX_PATH], localfile[MAX_PATH];
     LPCWSTR file = szPackage;
 
     TRACE("%s %p\n", debugstr_w(szPackage), pPackage);
@@ -929,6 +940,8 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         if ( UrlIsW( szPackage, URLIS_URL ) )
         {
             file = msi_download_file( szPackage, temppath );
+            if ( file != szPackage )
+                file = copy_package_to_temp( file, temppath );
 
             base_url = strdupW( szPackage );
             if ( !base_url )
@@ -940,7 +953,24 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         else
             file = copy_package_to_temp( szPackage, temppath );
 
-        r = MSI_OpenDatabaseW( file, MSIDBOPEN_READONLY, &db );
+        r = msi_get_local_package_name( localfile );
+        if (r != ERROR_SUCCESS)
+            return r;
+
+        TRACE("Copying to local package %s\n", debugstr_w(localfile));
+
+        if (!CopyFileW( file, localfile, FALSE ))
+        {
+            ERR("Unable to copy package (%s -> %s) (error %u)\n",
+                debugstr_w(file), debugstr_w(localfile), GetLastError());
+            return GetLastError();
+        }
+
+        /* transforms that add binary streams require that we open the database
+         * read/write, which is safe because we always create a copy that is thrown
+         * away when we're done.
+         */
+        r = MSI_OpenDatabaseW( file, MSIDBOPEN_DIRECT, &db );
         if( r != ERROR_SUCCESS )
         {
             if (file != szPackage)
@@ -951,6 +981,8 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
 
             return r;
         }
+
+        db->localfile = strdupW( localfile );
     }
 
     package = MSI_CreatePackage( db, base_url );
@@ -981,6 +1013,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         MSI_SetPropertyW( package, OriginalDatabase, fullpath );
     }
 
+    package->script = msi_alloc_zero( sizeof(MSISCRIPT) );
     *pPackage = package;
 
     return ERROR_SUCCESS;
@@ -1148,7 +1181,6 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
             LPWSTR tmp;
             WCHAR number[3];
             static const WCHAR format[] = { '%','i',':',' ',0};
-            static const WCHAR space[] = { ' ',0};
             sz = 0;
             MSI_RecordGetStringW(record,i,NULL,&sz);
             sz+=4;
@@ -1165,7 +1197,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
             }
             strcatW(message,tmp);
             if (msg_field > 1)
-                strcatW(message,space);
+                strcatW(message, szSpace);
 
             msi_free(tmp);
         }
@@ -1526,7 +1558,6 @@ int msi_get_property_int(MSIPACKAGE *package, LPCWSTR prop, int def)
 static UINT MSI_GetProperty( MSIHANDLE handle, LPCWSTR name,
                              awstring *szValueBuf, LPDWORD pchValueBuf )
 {
-    static const WCHAR empty[] = {0};
     MSIPACKAGE *package;
     MSIRECORD *row = NULL;
     UINT r = ERROR_FUNCTION_FAILED;
@@ -1602,7 +1633,7 @@ done:
         val = MSI_RecordGetString( row, 1 );
 
     if (!val)
-        val = empty;
+        val = szEmpty;
 
     r = msi_strcpy_to_awstring( val, szValueBuf, pchValueBuf );
 

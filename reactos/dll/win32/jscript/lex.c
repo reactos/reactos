@@ -105,6 +105,12 @@ static int lex_error(parser_ctx_t *ctx, HRESULT hres)
     return -1;
 }
 
+/* ECMA-262 3rd Edition    7.6 */
+static BOOL is_identifier_char(WCHAR c)
+{
+    return isalnumW(c) || c == '$' || c == '_' || c == '\\';
+}
+
 static int check_keyword(parser_ctx_t *ctx, const WCHAR *word, const WCHAR **lval)
 {
     const WCHAR *p1 = ctx->ptr;
@@ -117,7 +123,7 @@ static int check_keyword(parser_ctx_t *ctx, const WCHAR *word, const WCHAR **lva
         p2++;
     }
 
-    if(*p2 || (p1 < ctx->end && isalnumW(*p1)))
+    if(*p2 || (p1 < ctx->end && is_identifier_char(*p1)))
         return 1;
 
     *lval = ctx->ptr;
@@ -129,11 +135,6 @@ static int check_keyword(parser_ctx_t *ctx, const WCHAR *word, const WCHAR **lva
 static BOOL is_endline(WCHAR c)
 {
     return c == '\n' || c == '\r' || c == 0x2028 || c == 0x2029;
-}
-
-static BOOL is_identifier_char(WCHAR c)
-{
-    return isalnumW(c) || c == '$' || c == '_' || c == '\\';
 }
 
 static int hex_to_int(WCHAR c)
@@ -286,7 +287,7 @@ static BOOL unescape(WCHAR *str)
             i = hex_to_int(*++p);
             if(i == -1)
                 return FALSE;
-            c += 1 << 4;
+            c += i << 4;
 
             i = hex_to_int(*++p);
             if(i == -1)
@@ -296,13 +297,15 @@ static BOOL unescape(WCHAR *str)
         default:
             if(isdigitW(*p)) {
                 c = *p++ - '0';
-                while(isdigitW(*p))
-                    c = c*10 + (*p++ - '0');
-                *pd++ = c;
-                continue;
+                if(isdigitW(*p)) {
+                    c = c*8 + (*p++ - '0');
+                    if(isdigitW(*p))
+                        c = c*8 + (*p++ - '0');
+                }
+                p--;
             }
-
-            c = *p;
+            else
+                c = *p;
         }
 
         *pd++ = c;
@@ -734,7 +737,7 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
             if(*ctx->ptr == '=') {  /* /= */
                 ctx->ptr++;
                 *(int*)lval = EXPR_ASSIGNDIV;
-                return tAssignOper;
+                return kDIVEQ;
             }
         }
         return '/';
@@ -771,7 +774,10 @@ literal_t *parse_regexp(parser_ctx_t *ctx)
 
     TRACE("\n");
 
-    re = ctx->ptr;
+    while(*ctx->ptr != '/')
+        ctx->ptr--;
+
+    re = ++ctx->ptr;
     while(ctx->ptr < ctx->end && *ctx->ptr != '/') {
         if(*ctx->ptr++ == '\\' && ctx->ptr < ctx->end)
             ctx->ptr++;

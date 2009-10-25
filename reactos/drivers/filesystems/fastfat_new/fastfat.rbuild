@@ -8,13 +8,11 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>pseh</library>
-	<file>blockdev.c</file>
 	<file>cleanup.c</file>
 	<file>close.c</file>
 	<file>create.c</file>
 	<file>device.c</file>
 	<file>dir.c</file>
-	<file>direntry.c</file>
 	<file>ea.c</file>
 	<file>fastfat.c</file>
 	<file>fat.c</file>

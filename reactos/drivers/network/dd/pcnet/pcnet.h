@@ -149,6 +149,9 @@ MiGetMediaDuplex(PADAPTER Adapter);
 /* flags */
 #define RESET_IN_PROGRESS 0x1
 
+/* Maximum number of interrupts handled per call to MiniportHandleInterrupt */
+#define INTERRUPT_LIMIT 10
+
 #if DBG
 #define BREAKPOINT DbgBreakPoint();
 #else
