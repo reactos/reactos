@@ -198,7 +198,17 @@ NtGdiGetTransform(
                 MatrixS2XForm(XForm, &dc->dclevel.mxWorldToPage);
                 break;
 
+            case GdiWorldSpaceToDeviceSpace:
+                MatrixS2XForm(XForm, &dc->dclevel.mxWorldToDevice);
+                break;
+
+            case GdiDeviceSpaceToWorldSpace:
+                MatrixS2XForm(XForm, &dc->dclevel.mxDeviceToWorld);
+                break;
+
             default:
+                DPRINT1("Unknown or unsupported transform %lu\n", iXform);
+                Status = STATUS_INVALID_PARAMETER;
                 break;
         }
     }

@@ -163,6 +163,9 @@ typedef enum GDILoObjType
 } GDILOOBJTYPE, *PGDILOOBJTYPE;
 
 #define GdiWorldSpaceToPageSpace    0x203
+#define GdiWorldSpaceToDeviceSpace  0x204
+#define GdiPageSpaceToDeviceSpace   0x304
+#define GdiDeviceSpaceToWorldSpace  0x402
 
 /* FIXME: Unknown */
 typedef DWORD FULLSCREENCONTROL;
