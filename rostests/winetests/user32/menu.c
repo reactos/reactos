@@ -150,10 +150,12 @@ static int  gflag_initmenupopup,
 static LRESULT WINAPI menu_ownerdraw_wnd_proc(HWND hwnd, UINT msg,
         WPARAM wparam, LPARAM lparam)
 {
+    static HMENU hmenupopup;
     switch (msg)
     {
         case WM_INITMENUPOPUP:
             gflag_initmenupopup++;
+            hmenupopup = (HMENU) wparam;
             break;
         case WM_ENTERMENULOOP:
             gflag_entermenuloop++;
@@ -229,6 +231,11 @@ static LRESULT WINAPI menu_ownerdraw_wnd_proc(HWND hwnd, UINT msg,
             {
                 ok( lparam || broken(!lparam), /* win9x, nt4 */
                     "Menu window handle is NULL!\n");
+                if( lparam) {
+                    HMENU hmenu = (HMENU)SendMessageA( (HWND)lparam, MN_GETHMENU, 0, 0);
+                    ok( hmenupopup == hmenu, "MN_GETHMENU returns %p expected %p\n",
+                        hmenu, hmenupopup);
+                }
                 PostMessage(hwnd, WM_CANCELMODE, 0, 0);
                 return TRUE;
             }

@@ -831,9 +831,41 @@ static void CreateDialogParamTest(HINSTANCE hInstance)
     }
 }
 
+static const struct
+{
+    const char name[9];
+    int value;
+    int badvalue;
+} extra_values[] =
+{
+    {"#32770",30,30}, /* Dialog */
+#ifdef _WIN64
+    {"Edit",8,8},
+#else
+    {"Edit",6,8},     /* Windows XP 64-bit returns 8 also to 32-bit applications */
+#endif
+};
+
+static void test_extra_values(void)
+{
+    int i;
+    for(i=0; i< sizeof(extra_values)/sizeof(extra_values[0]); i++)
+    {
+        WNDCLASSEX wcx;
+        BOOL ret = GetClassInfoEx(NULL,extra_values[i].name,&wcx);
+
+        ok( ret, "GetClassInfo (0) failed for global class %s\n", extra_values[i].name);
+        if (!ret) continue;
+        ok(extra_values[i].value == wcx.cbWndExtra || broken(extra_values[i].badvalue == wcx.cbWndExtra),
+           "expected %d, got %d\n", extra_values[i].value, wcx.cbWndExtra);
+    }
+}
+
 START_TEST(class)
 {
     HANDLE hInstance = GetModuleHandleA( NULL );
+
+    test_extra_values();
 
     if (!GetModuleHandleW(0))
     {

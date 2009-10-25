@@ -303,6 +303,7 @@ static void test_ownerdraw(void)
     hLB = create_listbox(LBS_OWNERDRAWFIXED | WS_CHILD | WS_VISIBLE, parent);
     assert(hLB);
 
+    SetForegroundWindow(hLB);
     UpdateWindow(hLB);
 
     /* make height short enough */

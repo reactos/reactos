@@ -211,7 +211,7 @@ static LRESULT WINAPI dde_server_wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPA
 
         executed = TRUE;
 
-        lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, DDE_FACK, HIWORD(lparam));
+        lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, DDE_FACK, lparam);
         PostMessageA(client, WM_DDE_ACK, (WPARAM)hwnd, lparam);
 
         break;

@@ -904,7 +904,12 @@ static void test_Input_blackbox(void)
     SetWindowPos( window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE );
     SetForegroundWindow( window );
 
-    hook = SetWindowsHookExA(WH_KEYBOARD_LL, hook_proc, GetModuleHandleA( NULL ), 0);
+    if (!(hook = SetWindowsHookExA(WH_KEYBOARD_LL, hook_proc, GetModuleHandleA( NULL ), 0)))
+    {
+        DestroyWindow(window);
+        win_skip("WH_KEYBOARD_LL is not supported\n");
+        return;
+    }
 
     /* must process all initial messages, otherwise X11DRV_KeymapNotify unsets
      * key state set by SendInput(). */

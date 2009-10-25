@@ -569,6 +569,60 @@ static void test_parent_owner(void)
     DestroyWindow( owner );
 }
 
+static BOOL CALLBACK enum_proc( HWND hwnd, LPARAM lParam)
+{
+    (*(LPINT)lParam)++;
+    if (*(LPINT)lParam > 2) return FALSE;
+    return TRUE;
+}
+static DWORD CALLBACK enum_thread( void *arg )
+{
+    INT count;
+    HWND hwnd[3];
+    BOOL ret;
+    MSG msg;
+
+    PeekMessage( &msg, 0, 0, 0, PM_NOREMOVE );  /* make sure we have a message queue */
+
+    count = 0;
+    ret = EnumThreadWindows( GetCurrentThreadId(), enum_proc, (LPARAM)&count );
+    ok( ret, "EnumThreadWindows should have returned TRUE\n" );
+    ok( count == 0, "count should be 0 got %d\n", count );
+
+    hwnd[0] = CreateWindowExA(0, "ToolWindowClass", "Tool window 1", WS_POPUP,
+                              0, 0, 100, 100, 0, 0, 0, NULL );
+    count = 0;
+    ret = EnumThreadWindows( GetCurrentThreadId(), enum_proc, (LPARAM)&count );
+    ok( ret, "EnumThreadWindows should have returned TRUE\n" );
+    if (count != 2)  /* Vista gives us two windows for the price of one */
+    {
+        ok( count == 1, "count should be 1 got %d\n", count );
+        hwnd[2] = CreateWindowExA(0, "ToolWindowClass", "Tool window 2", WS_POPUP,
+                                  0, 0, 100, 100, 0, 0, 0, NULL );
+    }
+    else hwnd[2] = 0;
+
+    hwnd[1] = CreateWindowExA(0, "ToolWindowClass", "Tool window 3", WS_POPUP,
+                              0, 0, 100, 100, 0, 0, 0, NULL );
+    count = 0;
+    ret = EnumThreadWindows( GetCurrentThreadId(), enum_proc, (LPARAM)&count );
+    ok( !ret, "EnumThreadWindows should have returned FALSE\n" );
+    ok( count == 3, "count should be 3 got %d\n", count );
+
+    if (hwnd[2]) DestroyWindow(hwnd[2]);
+    DestroyWindow(hwnd[1]);
+    DestroyWindow(hwnd[0]);
+    return 0;
+}
+
+/* test EnumThreadWindows in a separate thread */
+static void test_enum_thread_windows(void)
+{
+    DWORD id;
+    HANDLE handle = CreateThread( NULL, 0, enum_thread, 0, 0, &id );
+    ok( !WaitForSingleObject( handle, 10000 ), "wait failed\n" );
+    CloseHandle( handle );
+}
 
 static LRESULT WINAPI main_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -5762,6 +5816,7 @@ START_TEST(win)
     test_CreateWindow();
     test_parent_owner();
     test_SetParent();
+    test_enum_thread_windows();
 
     test_mdi();
     test_icons();
