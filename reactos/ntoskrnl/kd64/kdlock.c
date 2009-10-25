@@ -40,11 +40,11 @@ KdpPollBreakInWithPortLock(VOID)
     if (KdDebuggerEnabled)
     {
         /* Check if a CTRL-C is in the queue */
-        if (KdpContext.BreakInRequested)
+        if (KdpContext.KdpControlCPending)
         {
             /* Set it and prepare for break */
             DoBreak = TRUE;
-            KdpContext.BreakInRequested = FALSE;
+            KdpContext.KdpControlCPending = FALSE;
         }
         else
         {
@@ -83,12 +83,12 @@ KdPollBreakIn(VOID)
         Enable = KeDisableInterrupts();
 
         /* Check if a CTRL-C is in the queue */
-        if (KdpContext.BreakInRequested)
+        if (KdpContext.KdpControlCPending)
         {
             /* Set it and prepare for break */
             KdpControlCPressed = TRUE;
             DoBreak = TRUE;
-            KdpContext.BreakInRequested = FALSE;
+            KdpContext.KdpControlCPending = FALSE;
         }
         else
         {

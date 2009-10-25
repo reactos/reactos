@@ -40,4 +40,46 @@ typedef enum
 #define KDDBGPRINT KdpDbgPrint
 #endif
 
+VOID
+NTAPI
+KdpSendBuffer(
+    IN PVOID Buffer,
+    IN ULONG Size);
+
+KDP_STATUS
+NTAPI
+KdpReceiveBuffer(
+    OUT PVOID Buffer,
+    IN  ULONG Size);
+
+KDP_STATUS
+NTAPI
+KdpReceivePacketLeader(
+    OUT PULONG PacketLeader);
+
+VOID
+NTAPI
+KdpSendByte(IN BYTE Byte);
+
+KDP_STATUS
+NTAPI
+KdpPollByte(OUT PBYTE OutByte);
+
+KDP_STATUS
+NTAPI
+KdpReceiveByte(OUT PBYTE OutByte);
+
+KDP_STATUS
+NTAPI
+KdpPollBreakIn();
+
+
+#if 0
+NTSTATUS
+NTAPI
+KdDebuggerInitialize0(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL);
+#endif
+
+
 #endif /* !_KDDLL_H_ */
