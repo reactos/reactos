@@ -125,16 +125,21 @@ static void update_empty_exe( void )
     CloseHandle( file );
 
     res = BeginUpdateResource( filename, TRUE );
-    ok( res != NULL, "BeginUpdateResource failed\n");
+    if ( res != NULL || GetLastError() != ERROR_FILE_INVALID )
+    {
+        ok( res != NULL, "BeginUpdateResource failed\n");
 
-    /* check if it's possible to open the file now */
-    test = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
-    ok (test != INVALID_HANDLE_VALUE, "failed to create file\n");
+        /* check if it's possible to open the file now */
+        test = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
+        ok (test != INVALID_HANDLE_VALUE, "failed to create file\n");
 
-    CloseHandle( test );
+        CloseHandle( test );
 
-    r = EndUpdateResource( res, FALSE );
-    ok( r == FALSE, "EndUpdateResource failed\n");
+        r = EndUpdateResource( res, FALSE );
+        ok( r == FALSE, "EndUpdateResource failed\n");
+    }
+    else
+        skip( "Can't update resource in empty file\n" );
 
     res = BeginUpdateResource( filename, FALSE );
     ok( res == NULL, "BeginUpdateResource failed\n");

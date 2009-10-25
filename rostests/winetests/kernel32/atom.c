@@ -619,6 +619,10 @@ static void test_local_error_handling(void)
 
 START_TEST(atom)
 {
+    /* Global atom table seems to be available to GUI apps only in
+       Win7, so let's turn this app into a GUI app */
+    GetDesktopWindow();
+
     test_add_atom();
     test_get_atom_name();
     test_error_handling();

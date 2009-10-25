@@ -684,7 +684,7 @@ static HANDLE test_OpenComm(BOOL doOverlap)
 	if (hcom == INVALID_HANDLE_VALUE)
 	    trace("Could not find a valid COM port.  Skipping test_ReadTimeOut\n");
 	else
-	    trace("Found Com port %s. Connected devices may disturbe results\n", port_name);
+	    trace("Found Com port %s. Connected devices may disturb results\n", port_name);
 	/*shown = TRUE; */
     }
     if (hcom != INVALID_HANDLE_VALUE)
@@ -692,9 +692,12 @@ static HANDLE test_OpenComm(BOOL doOverlap)
         BOOL ret;
 
         ret = ClearCommError(hcom, &errors, &comstat);
-        if (!ret && GetLastError() == ERROR_NOT_READY)
+        if (!ret && (GetLastError() == ERROR_NOT_READY || GetLastError() == ERROR_INVALID_HANDLE))
         {
-            trace("%s doesn't respond, skipping the test\n", port_name);
+            if (GetLastError() == ERROR_NOT_READY)
+                trace("%s doesn't respond, skipping the test\n", port_name);
+            else
+                trace("%s is not a real serial port, skipping the test\n", port_name);
             CloseHandle(hcom);
             return INVALID_HANDLE_VALUE;
         }
@@ -1643,6 +1646,16 @@ static void  test_WaitBreak(HANDLE hcom)
     ok(ClearCommBreak(hcom), "ClearCommBreak failed\n");
 }
 
+static void test_stdio(void)
+{
+    DCB dcb;
+
+    /* cygwin tries this to determine the stdin handle type */
+    ok( !GetCommState( GetStdHandle(STD_INPUT_HANDLE), &dcb ), "GetCommState succeeded on stdin\n" );
+    ok( GetLastError() == ERROR_INVALID_HANDLE || GetLastError() == ERROR_INVALID_FUNCTION,
+        "got error %u\n", GetLastError() );
+}
+
 START_TEST(comm)
 {
     HANDLE hcom;
@@ -1735,4 +1748,5 @@ START_TEST(comm)
 	test_WaitBreak(hcom);
 	CloseHandle(hcom);
     }
+    test_stdio();
 }

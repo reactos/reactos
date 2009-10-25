@@ -160,17 +160,7 @@ static void testCursorInfo(HANDLE hCon)
     ok(GetLastError() == 0xdeadbeef, "GetLastError: expecting %u got %u\n",
        0xdeadbeef, GetLastError());
 
-    if (info.dwSize == 12)
-    {
-        win_skip("NULL CONSOLE_CURSOR_INFO will crash on win9x\n");
-        return;
-    }
-
-    SetLastError(0xdeadbeef);
-    ret = GetConsoleCursorInfo(hCon, NULL);
-    ok(!ret, "Expected failure\n");
-    ok(GetLastError() == ERROR_INVALID_ACCESS, "GetLastError: expecting %u got %u\n",
-       ERROR_INVALID_ACCESS, GetLastError());
+    /* Don't test NULL CONSOLE_CURSOR_INFO, it crashes on win9x and win7 */
 }
 
 static void testEmptyWrite(HANDLE hCon)
@@ -280,6 +270,7 @@ static void testWriteNotWrappedProcessed(HANDLE hCon, COORD sbSize)
     const int	mylen = strlen(mytest);
     const int	mylen2 = strchr(mytest, '\n') - mytest;
     int			p;
+    WORD                attr;
 
     ok(GetConsoleMode(hCon, &mode) && SetConsoleMode(hCon, (mode | ENABLE_PROCESSED_OUTPUT) & ~ENABLE_WRAP_AT_EOL_OUTPUT),
        "clearing wrap at EOL & setting processed output\n");
@@ -294,6 +285,15 @@ static void testWriteNotWrappedProcessed(HANDLE hCon, COORD sbSize)
     {
         okCHAR(hCon, c, mytest[c.X - sbSize.X + 5], TEST_ATTRIB);
     }
+
+    ReadConsoleOutputAttribute(hCon, &attr, 1, c, &len);
+    /* Win9x and WinMe change the attribs for '\n' up to 'f' */
+    if (attr == TEST_ATTRIB)
+    {
+        win_skip("Win9x/WinMe don't respect ~ENABLE_WRAP_AT_EOL_OUTPUT\n");
+        return;
+    }
+
     okCHAR(hCon, c, ' ', DEFAULT_ATTRIB);
 
     c.X = 0; c.Y++;
@@ -391,6 +391,7 @@ static void testWriteWrappedProcessed(HANDLE hCon, COORD sbSize)
     const char*		mytest = "abcd\nf\tg";
     const int	mylen = strlen(mytest);
     int			p;
+    WORD                attr;
 
     ok(GetConsoleMode(hCon, &mode) && SetConsoleMode(hCon, mode | (ENABLE_WRAP_AT_EOL_OUTPUT|ENABLE_PROCESSED_OUTPUT)),
        "setting wrap at EOL & processed output\n");
@@ -406,7 +407,11 @@ static void testWriteWrappedProcessed(HANDLE hCon, COORD sbSize)
         okCHAR(hCon, c, mytest[p], TEST_ATTRIB);
     }
     c.X = sbSize.X - 9 + p;
-    okCHAR(hCon, c, ' ', DEFAULT_ATTRIB);
+    ReadConsoleOutputAttribute(hCon, &attr, 1, c, &len);
+    if (attr == TEST_ATTRIB)
+        win_skip("Win9x/WinMe changes attribs for '\\n' up to 'f'\n");
+    else
+        okCHAR(hCon, c, ' ', DEFAULT_ATTRIB);
     c.X = 0; c.Y++;
     okCHAR(hCon, c, mytest[5], TEST_ATTRIB);
     for (c.X = 1; c.X < 8; c.X++)
@@ -429,7 +434,11 @@ static void testWriteWrappedProcessed(HANDLE hCon, COORD sbSize)
     c.X = 0; c.Y++;
     okCHAR(hCon, c, mytest[3], TEST_ATTRIB);
     c.X++;
-    okCHAR(hCon, c, ' ', DEFAULT_ATTRIB);
+    ReadConsoleOutputAttribute(hCon, &attr, 1, c, &len);
+    if (attr == TEST_ATTRIB)
+        win_skip("Win9x/WinMe changes attribs for '\\n' up to 'f'\n");
+    else
+        okCHAR(hCon, c, ' ', DEFAULT_ATTRIB);
 
     c.X = 0; c.Y++;
     okCHAR(hCon, c, mytest[5], TEST_ATTRIB);

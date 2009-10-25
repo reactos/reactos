@@ -131,8 +131,10 @@ static void test_negative_source_length(void)
     SetLastError( 0xdeadbeef );
     memset(buf,'x',sizeof(buf));
     len = WideCharToMultiByte(CP_ACP, 0, foobarW, -2002, buf, 10, NULL, NULL);
-    ok(len == 7 && !lstrcmpA(buf, "foobar") && GetLastError() == 0xdeadbeef,
+    ok(len == 7 && GetLastError() == 0xdeadbeef,
        "WideCharToMultiByte(-2002): len=%d error=%u\n", len, GetLastError());
+    ok(!lstrcmpA(buf, "foobar"),
+       "WideCharToMultiByte(-2002): expected \"foobar\" got \"%s\"\n", buf);
 
     SetLastError( 0xdeadbeef );
     memset(bufW,'x',sizeof(bufW));

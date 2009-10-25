@@ -236,6 +236,14 @@ static void test_profile_sections(void)
         broken(GetLastError() == 0xdeadbeef), /* Win9x, WinME */
         "expected ERROR_SUCCESS, got %d\n", GetLastError());
 
+    /* Overflow*/
+    ret=GetPrivateProfileSectionA("section1", buf, 24, testfile4);
+    for( p = buf + strlen(buf) + 1; *p;p += strlen(p)+1)
+        p[-1] = ',';
+    ok( ret == 22 && !strcmp( buf, "name1=val1,name2=,name"), "wrong section returned(%d): %s\n",
+        ret, buf);
+    ok( buf[ret] == 0 && buf[ret+1] == 0, "returned buffer not terminated with double-null\n" );
+
     DeleteFileA( testfile4 );
 }
 
@@ -844,8 +852,9 @@ static void test_GetPrivateProfileString(const char *content, const char *descri
     ok( ret == 0, "expected return size 0, got %d\n", ret );
     ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
     todo_wine
-    ok( GetLastError() == 0xdeadbeef , "expected 0xdeadbeef, got %d\n",
-        GetLastError());
+   ok( GetLastError() == 0xdeadbeef ||
+       GetLastError() == ERROR_FILE_NOT_FOUND /* Win 7 */,
+       "expected 0xdeadbeef or ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
 
 
     DeleteFileA(path);

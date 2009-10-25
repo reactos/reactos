@@ -125,7 +125,9 @@ static void test_GetLocaleInfoA(void)
 
   ok(lcid == 0x409, "wrong LCID calculated - %d\n", lcid);
 
-  /* en, ar and zh use SUBLANG_NEUTRAL, but GetLocaleInfo assume SUBLANG_DEFAULT */
+  /* en and ar use SUBLANG_NEUTRAL, but GetLocaleInfo assume SUBLANG_DEFAULT
+     Same is true for zh on pre-Vista, but on Vista and higher GetLocaleInfo
+     assumes SUBLANG_NEUTRAL for zh */
   memset(expected, 0, COUNTOF(expected));
   len = GetLocaleInfoA(MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), LOCALE_SLANGUAGE, expected, COUNTOF(expected));
   SetLastError(0xdeadbeef);
@@ -147,19 +149,6 @@ static void test_GetLocaleInfoA(void)
   }
   else
       win_skip("LANG_ARABIC not installed\n");
-
-  memset(expected, 0, COUNTOF(expected));
-  len = GetLocaleInfoA(MAKELANGID(LANG_CHINESE, SUBLANG_DEFAULT), LOCALE_SLANGUAGE, expected, COUNTOF(expected));
-  if (len) {
-      SetLastError(0xdeadbeef);
-      memset(buffer, 0, COUNTOF(buffer));
-      ret = GetLocaleInfoA(LANG_CHINESE, LOCALE_SLANGUAGE, buffer, COUNTOF(buffer));
-      ok((ret == len) && !lstrcmpA(buffer, expected),
-          "got %d with '%s' (expected %d with '%s')\n",
-          ret, buffer, len, expected);
-  }
-  else
-      win_skip("LANG_CHINESE not installed\n");
 
   /* SUBLANG_DEFAULT is required for mlang.dll, but optional for GetLocaleInfo */
   memset(expected, 0, COUNTOF(expected));
@@ -192,6 +181,89 @@ static void test_GetLocaleInfoA(void)
   ret = GetLocaleInfoA(lcid, NUO|LOCALE_SDAYNAME1, buffer, 10);
   ok(ret == 7, "Expected ret == 7, got %d, error %d\n", ret, GetLastError());
   ok(!strcmp(buffer, "Monday"), "Expected 'Monday', got '%s'\n", buffer);
+}
+
+static void test_GetLocaleInfoW(void)
+{
+  LCID lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
+  LCID lcid_ru = MAKELCID(MAKELANGID(LANG_RUSSIAN, SUBLANG_NEUTRAL), SORT_DEFAULT);
+  WCHAR bufferW[80], buffer2W[80];
+  CHAR bufferA[80];
+  DWORD ret;
+  INT i;
+
+  ret = GetLocaleInfoW(lcid_en, LOCALE_SMONTHNAME1, bufferW, COUNTOF(bufferW));
+  if (!ret) {
+      win_skip("GetLocaleInfoW() isn't implemented\n");
+      return;
+  }
+  ret = GetLocaleInfoW(lcid_ru, LOCALE_SMONTHNAME1, bufferW, COUNTOF(bufferW));
+  if (!ret) {
+      win_skip("LANG_RUSSIAN locale data unavailable\n");
+      return;
+  }
+  ret = GetLocaleInfoW(lcid_ru, LOCALE_SMONTHNAME1|LOCALE_RETURN_GENITIVE_NAMES,
+                       bufferW, COUNTOF(bufferW));
+  if (!ret) {
+      win_skip("LOCALE_RETURN_GENITIVE_NAMES isn't supported\n");
+      return;
+  }
+
+  /* LOCALE_RETURN_GENITIVE_NAMES isn't supported for GetLocaleInfoA */
+  bufferA[0] = 'a';
+  SetLastError(0xdeadbeef);
+  ret = GetLocaleInfoA(lcid_ru, LOCALE_SMONTHNAME1|LOCALE_RETURN_GENITIVE_NAMES,
+                       bufferA, COUNTOF(bufferA));
+  ok(ret == 0, "LOCALE_RETURN_GENITIVE_NAMES should fail with GetLocaleInfoA\n");
+  ok(bufferA[0] == 'a', "Expected buffer to be untouched\n");
+  ok(GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %x\n", GetLastError());
+
+  bufferW[0] = 'a';
+  SetLastError(0xdeadbeef);
+  ret = GetLocaleInfoW(lcid_ru, LOCALE_RETURN_GENITIVE_NAMES,
+                       bufferW, COUNTOF(bufferW));
+  ok(ret == 0,
+     "LOCALE_RETURN_GENITIVE_NAMES itself doesn't return anything, got %d\n", ret);
+  ok(bufferW[0] == 'a', "Expected buffer to be untouched\n");
+  ok(GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %x\n", GetLastError());
+
+  /* yes, test empty 13 month entry too */
+  for (i = 0; i < 12; i++) {
+      bufferW[0] = 0;
+      ret = GetLocaleInfoW(lcid_ru, (LOCALE_SMONTHNAME1+i)|LOCALE_RETURN_GENITIVE_NAMES,
+                           bufferW, COUNTOF(bufferW));
+      ok(ret, "Expected non zero result\n");
+      ok(ret == lstrlenW(bufferW)+1, "Expected actual length, got %d, length %d\n",
+                                    ret, lstrlenW(bufferW));
+      buffer2W[0] = 0;
+      ret = GetLocaleInfoW(lcid_ru, LOCALE_SMONTHNAME1+i,
+                           buffer2W, COUNTOF(buffer2W));
+      ok(ret, "Expected non zero result\n");
+      ok(ret == lstrlenW(buffer2W)+1, "Expected actual length, got %d, length %d\n",
+                                    ret, lstrlenW(buffer2W));
+
+      ok(lstrcmpW(bufferW, buffer2W) != 0,
+           "Expected genitive name to differ, got the same for month %d\n", i+1);
+
+      /* for locale without genitive names nominative returned in both cases */
+      bufferW[0] = 0;
+      ret = GetLocaleInfoW(lcid_en, (LOCALE_SMONTHNAME1+i)|LOCALE_RETURN_GENITIVE_NAMES,
+                           bufferW, COUNTOF(bufferW));
+      ok(ret, "Expected non zero result\n");
+      ok(ret == lstrlenW(bufferW)+1, "Expected actual length, got %d, length %d\n",
+                                    ret, lstrlenW(bufferW));
+      buffer2W[0] = 0;
+      ret = GetLocaleInfoW(lcid_en, LOCALE_SMONTHNAME1+i,
+                           buffer2W, COUNTOF(buffer2W));
+      ok(ret, "Expected non zero result\n");
+      ok(ret == lstrlenW(buffer2W)+1, "Expected actual length, got %d, length %d\n",
+                                    ret, lstrlenW(buffer2W));
+
+      ok(lstrcmpW(bufferW, buffer2W) == 0,
+         "Expected same names, got different for month %d\n", i+1);
+  }
 }
 
 static void test_GetTimeFormatA(void)
@@ -1300,15 +1372,8 @@ static void test_LCMapStringA(void)
     ok(ret == ret2, "lengths of sort keys must be equal\n");
     ok(!lstrcmpA(buf, buf2), "sort keys must be equal\n");
 
-    /* test LCMAP_SORTKEY | NORM_IGNORENONSPACE */
-    ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORENONSPACE,
-                       lower_case, -1, buf, sizeof(buf));
-    ok(ret, "LCMapStringA must succeed\n");
-    ret2 = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
-                       lower_case, -1, buf2, sizeof(buf2));
-    ok(ret2, "LCMapStringA must succeed\n");
-    ok(ret == ret2, "lengths of sort keys must be equal\n");
-    ok(!lstrcmpA(buf, buf2), "sort keys must be equal\n");
+    /* Don't test LCMAP_SORTKEY | NORM_IGNORENONSPACE, produces different
+       results from plain LCMAP_SORTKEY on Vista */
 
     /* test LCMAP_SORTKEY | NORM_IGNORESYMBOLS */
     ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORESYMBOLS,
@@ -1361,9 +1426,14 @@ static void test_LCMapStringW(void)
         win_skip("LCMapStringW is not implemented\n");
         return;
     }
-    ok(!ret, "LCMAP_LOWERCASE and LCMAP_UPPERCASE are mutually exclusive\n");
-    ok(GetLastError() == ERROR_INVALID_FLAGS,
-       "unexpected error code %d\n", GetLastError());
+    if (broken(ret))
+        ok(lstrcmpW(buf, upper_case) == 0, "Expected upper case string\n");
+    else
+    {
+        ok(!ret, "LCMAP_LOWERCASE and LCMAP_UPPERCASE are mutually exclusive\n");
+        ok(GetLastError() == ERROR_INVALID_FLAGS,
+           "unexpected error code %d\n", GetLastError());
+    }
 
     ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_HIRAGANA | LCMAP_KATAKANA,
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
@@ -1459,15 +1529,8 @@ static void test_LCMapStringW(void)
     ok(ret == ret2, "lengths of sort keys must be equal\n");
     ok(!lstrcmpA(p_buf, p_buf2), "sort keys must be equal\n");
 
-    /* test LCMAP_SORTKEY | NORM_IGNORENONSPACE */
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORENONSPACE,
-                       lower_case, -1, buf, sizeof(buf));
-    ok(ret, "LCMapStringW must succeed\n");
-    ret2 = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
-                       lower_case, -1, buf2, sizeof(buf2));
-    ok(ret2, "LCMapStringW must succeed\n");
-    ok(ret == ret2, "lengths of sort keys must be equal\n");
-    ok(!lstrcmpA(p_buf, p_buf2), "sort keys must be equal\n");
+    /* Don't test LCMAP_SORTKEY | NORM_IGNORENONSPACE, produces different
+       results from plain LCMAP_SORTKEY on Vista */
 
     /* test LCMAP_SORTKEY | NORM_IGNORESYMBOLS */
     ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORESYMBOLS,
@@ -1631,7 +1694,8 @@ static void test_sorting(void)
 
 static void test_FoldStringA(void)
 {
-  int ret, i;
+  int ret, i, j;
+  BOOL is_special;
   char src[256], dst[256];
   static const char digits_src[] = { 0xB9,0xB2,0xB3,'\0'  };
   static const char digits_dst[] = { '1','2','3','\0'  };
@@ -1664,6 +1728,24 @@ static void test_FoldStringA(void)
     0x6f,0xa8,0x6f,0x3f,0x75,0x60,0x75,0xb4,
     0x75,0x5e,0x75,0xa8,0x79,0xb4,0x79,0xa8,'\0'
   };
+  static const char composite_dst_alt[] =
+  {
+    0x53,0x3f,0x5a,0x3f,0x73,0x3f,0x7a,0x3f,
+    0x59,0xa8,0x41,0x60,0x41,0xb4,0x41,0x5e,
+    0x41,0x7e,0x41,0xa8,0x41,0xb0,0x43,0xb8,
+    0x45,0x60,0x45,0xb4,0x45,0x5e,0x45,0xa8,
+    0x49,0x60,0x49,0xb4,0x49,0x5e,0x49,0xa8,
+    0x4e,0x7e,0x4f,0x60,0x4f,0xb4,0x4f,0x5e,
+    0x4f,0x7e,0x4f,0xa8,0xd8,0x55,0x60,0x55,
+    0xb4,0x55,0x5e,0x55,0xa8,0x59,0xb4,0x61,
+    0x60,0x61,0xb4,0x61,0x5e,0x61,0x7e,0x61,
+    0xa8,0x61,0xb0,0x63,0xb8,0x65,0x60,0x65,
+    0xb4,0x65,0x5e,0x65,0xa8,0x69,0x60,0x69,
+    0xb4,0x69,0x5e,0x69,0xa8,0x6e,0x7e,0x6f,
+    0x60,0x6f,0xb4,0x6f,0x5e,0x6f,0x7e,0x6f,
+    0xa8,0xf8,0x75,0x60,0x75,0xb4,0x75,0x5e,
+    0x75,0xa8,0x79,0xb4,0x79,0xa8,'\0'
+  };
   static const char ligatures_src[] =
   {
     0x8C,0x9C,0xC6,0xDE,0xDF,0xE6,0xFE,'\0'
@@ -1671,6 +1753,31 @@ static void test_FoldStringA(void)
   static const char ligatures_dst[] =
   {
     'O','E','o','e','A','E','T','H','s','s','a','e','t','h','\0'
+  };
+  static const struct special
+  {
+    char src;
+    char dst[4];
+  }  foldczone_special[] =
+  {
+    /* src   dst                   */
+    { 0x85, { 0x2e, 0x2e, 0x2e, 0x00 } },
+    { 0x98, { 0x20, 0x7e, 0x00 } },
+    { 0x99, { 0x54, 0x4d, 0x00 } },
+    { 0xa0, { 0x20, 0x00 } },
+    { 0xa8, { 0x20, 0xa8, 0x00 } },
+    { 0xaa, { 0x61, 0x00 } },
+    { 0xaf, { 0x20, 0xaf, 0x00 } },
+    { 0xb2, { 0x32, 0x00 } },
+    { 0xb3, { 0x33, 0x00 } },
+    { 0xb4, { 0x20, 0xb4, 0x00 } },
+    { 0xb8, { 0x20, 0xb8, 0x00 } },
+    { 0xb9, { 0x31, 0x00 } },
+    { 0xba, { 0x6f, 0x00 } },
+    { 0xbc, { 0x31, 0x2f, 0x34, 0x00 } },
+    { 0xbd, { 0x31, 0x2f, 0x32, 0x00 } },
+    { 0xbe, { 0x33, 0x2f, 0x34, 0x00 } },
+    { 0x00 }
   };
 
   if (!pFoldStringA)
@@ -1724,9 +1831,19 @@ static void test_FoldStringA(void)
         src[1] = '\0';
         SetLastError(0);
         ret = pFoldStringA(MAP_EXPAND_LIGATURES, src, -1, dst, 256);
-        ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
-        ok(dst[0] == src[0],
-           "MAP_EXPAND_LIGATURES: Expected '%s', got '%s'\n", src, dst);
+        if (ret == 3)
+        {
+          /* Vista */
+          ok((i == 0xDC && lstrcmpA(dst, "UE") == 0) ||
+             (i == 0xFC && lstrcmpA(dst, "ue") == 0),
+             "Got %s for %d\n", dst, i);
+        }
+        else
+        {
+          ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
+          ok(dst[0] == src[0],
+             "MAP_EXPAND_LIGATURES: Expected '%s', got '%s'\n", src, dst);
+        }
       }
     }
   }
@@ -1735,13 +1852,9 @@ static void test_FoldStringA(void)
   SetLastError(0);
   ret = pFoldStringA(MAP_COMPOSITE, composite_src, -1, dst, 256);
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
-  todo_wine
-  {
-    /* Wine gets close, but doesn't produce quite the same result as native */
-    ok(ret == 121, "Expected 121, got %d\n", ret);
-    ok(strcmp(dst, composite_dst) == 0,
-       "MAP_COMPOSITE: Expected '%s', got '%s'\n", composite_dst, dst);
-  }
+  ok(ret == 121 || ret == 119, "Expected 121 or 119, got %d\n", ret);
+  ok(strcmp(dst, composite_dst) == 0 || strcmp(dst, composite_dst_alt) == 0,
+     "MAP_COMPOSITE: Mismatch, got '%s'\n", dst);
 
   for (i = 1; i < 256; i++)
   {
@@ -1765,10 +1878,27 @@ static void test_FoldStringA(void)
     src[1] = '\0';
     SetLastError(0);
     ret = pFoldStringA(MAP_FOLDCZONE, src, -1, dst, 256);
-    ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
-    ok(src[0] == dst[0],
-       "MAP_FOLDCZONE: Expected 0x%02x, got 0x%02x\n",
-       (unsigned char)src[0], (unsigned char)dst[0]);
+    is_special = FALSE;
+    for (j = 0; foldczone_special[j].src != 0 && ! is_special; j++)
+    {
+      if (foldczone_special[j].src == src[0])
+      {
+        ok(ret == 2 || ret == lstrlenA(foldczone_special[j].dst) + 1,
+           "Expected ret == 2 or %d, got %d, error %d\n",
+           lstrlenA(foldczone_special[j].dst) + 1, ret, GetLastError());
+        ok(src[0] == dst[0] || lstrcmpA(foldczone_special[j].dst, dst) == 0,
+           "MAP_FOLDCZONE: string mismatch for 0x%02x\n",
+           (unsigned char)src[0]);
+        is_special = TRUE;
+      }
+    }
+    if (! is_special)
+    {
+      ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
+      ok(src[0] == dst[0],
+         "MAP_FOLDCZONE: Expected 0x%02x, got 0x%02x\n",
+         (unsigned char)src[0], (unsigned char)dst[0]);
+    }
   }
 
   /* MAP_PRECOMPOSED */
@@ -1788,7 +1918,7 @@ static void test_FoldStringA(void)
 static void test_FoldStringW(void)
 {
   int ret;
-  unsigned int i, j, failures;
+  unsigned int i, j;
   WCHAR src[256], dst[256], ch, prev_ch = 1;
   static const DWORD badFlags[] =
   {
@@ -1814,6 +1944,7 @@ static void test_FoldStringW(void)
     0x0D66, /* Maylayalam */
     0x0E50, /* Thai */
     0x0ED0, /* Laos */
+    0x0F29, /* Tibet - 0 is out of sequence */
     0x2070, /* Superscript - 1, 2, 3 are out of sequence */
     0x2080, /* Subscript */
     0x245F, /* Circled - 0 is out of sequence */
@@ -1822,6 +1953,7 @@ static void test_FoldStringW(void)
     0x2775, /* Inverted circled - No 0 */
     0x277F, /* Patterned circled - No 0 */
     0x2789, /* Inverted Patterned circled - No 0 */
+    0x3020, /* Hangzhou */
     0xff10, /* Pliene chasse (?) */
     0xffff  /* Terminator */
   };
@@ -1831,125 +1963,36 @@ static void test_FoldStringW(void)
       0xB9,   /* Superscript 1 */
       0xB2,   /* Superscript 2 */
       0xB3,   /* Superscript 3 */
+      0x0F33, /* Tibetan half zero */
       0x24EA, /* Circled 0 */
+      0x3007, /* Ideographic number zero */
       '\0'    /* Terminator */
   };
   /* Digits in digitRanges for which no representation is available */
   static const WCHAR noDigitAvailable[] =
   {
       0x0BE6, /* No Tamil 0 */
+      0x0F29, /* No Tibetan half zero (out of sequence) */
       0x2473, /* No Bracketed 0 */
       0x2487, /* No 0 Full stop */
       0x2775, /* No inverted circled 0 */
       0x277F, /* No patterned circled */
       0x2789, /* No inverted Patterned circled */
+      0x3020, /* No Hangzhou 0 */
       '\0'    /* Terminator */
   };
-  /* Compatibility conversion results */
-  static const WCHAR compat_F900_FA2F[256+48] =
+  static const WCHAR foldczone_src[] =
   {
-      0x8c48, 0x66f4, 0x8eca, 0x8cc8, 0x6ed1, 0x4e32, 0x53e5, 0x9f9c,
-      0x9f9c, 0x5951, 0x91d1, 0x5587, 0x5948, 0x61f6, 0x7669, 0x7f85,
-      0x863f, 0x87ba, 0x88f8, 0x908f, 0x6a02, 0x6d1b, 0x70d9, 0x73de,
-      0x843d, 0x916a, 0x99f1, 0x4e82, 0x5375, 0x6b04, 0x721b, 0x862d,
-      0x9e1e, 0x5d50, 0x6feb, 0x85cd, 0x8964, 0x62c9, 0x81d8, 0x881f,
-      0x5eca, 0x6717, 0x6d6a, 0x72fc, 0x0000, 0x4f86, 0x51b7, 0x52de,
-      0x64c4, 0x6ad3, 0x7210, 0x76e7, 0x8001, 0x8606, 0x865c, 0x8def,
-      0x9732, 0x9b6f, 0x9dfa, 0x788c, 0x797f, 0x7da0, 0x83c9, 0x9304,
-      0x9e7f, 0x8ad6, 0x58df, 0x5f04, 0x7c60, 0x807e, 0x7262, 0x78ca,
-      0x8cc2, 0x96f7, 0x58d8, 0x5c62, 0x6a13, 0x6dda, 0x6f0f, 0x7d2f,
-      0x7e37, 0x964b, 0x52d2, 0x808b, 0x51dc, 0x51cc, 0x7a1c, 0x7dbe,
-      0x83f1, 0x9675, 0x8b80, 0x62cf, 0x6a02, 0x8afe, 0x4e39, 0x5be7,
-      0x6012, 0x7387, 0x7570, 0x5317, 0x78fb, 0x4fbf, 0x5fa9, 0x4e0d,
-      0x6ccc, 0x6578, 0x7d22, 0x53c3, 0x585e, 0x7701, 0x8449, 0x8aaa,
-      0x6bba, 0x8fb0, 0x6c88, 0x62fe, 0x82e5, 0x63a0, 0x7565, 0x4eae,
-      0x5169, 0x0000, 0x6881, 0x7ce7, 0x826f, 0x8ad2, 0x91cf, 0x52f5,
-      0x5442, 0x5973, 0x5eec, 0x65c5, 0x6ffe, 0x792a, 0x95ad, 0x9a6a,
-      0x9e97, 0x9ece, 0x529b, 0x66c6, 0x6b77, 0x8f62, 0x5e74, 0x6190,
-      0x6200, 0x649a, 0x6f23, 0x7149, 0x7489, 0x0000, 0x7df4, 0x806f,
-      0x8f26, 0x84ee, 0x9023, 0x934a, 0x5217, 0x52a3, 0x54bd, 0x70c8,
-      0x88c2, 0x8aaa, 0x5ec9, 0x5ff5, 0x637b, 0x6bae, 0x7c3e, 0x7375,
-      0x4ee4, 0x56f9, 0x5be7, 0x5dba, 0x601c, 0x73b2, 0x7469, 0x7f9a,
-      0x8046, 0x9234, 0x96f6, 0x9748, 0x9818, 0x4f8b, 0x79ae, 0x91b4,
-      0x96b8, 0x60e1, 0x4e86, 0x50da, 0x5bee, 0x5c3f, 0x6599, 0x6a02,
-      0x71ce, 0x7642, 0x84fc, 0x907c, 0x9f8d, 0x6688, 0x962e, 0x5289,
-      0x677b, 0x67f3, 0x6d41, 0x6e9c, 0x7409, 0x7559, 0x786b, 0x7d10,
-      0x985e, 0x516d, 0x622e, 0x9678, 0x502b, 0x5d19, 0x6dea, 0x8f2a,
-      0x5f8b, 0x6144, 0x6817, 0x7387, 0x9686, 0x5229, 0x540f, 0x5c65,
-      0x6613, 0x674e, 0x68a8, 0x6ce5, 0x7406, 0x75e2, 0x7f79, 0x0000,
-      0x88e1, 0x91cc, 0x96e2, 0x533f, 0x6eba, 0x541d, 0x71d0, 0x7498,
-      0x85fa, 0x0000, 0x9c57, 0x9e9f, 0x6797, 0x6dcb, 0x81e8, 0x7acb,
-      0x7b20, 0x7c92, 0x72c0, 0x7099, 0x8b58, 0x4ec0, 0x8336, 0x523a,
-      0x5207, 0x5ea6, 0x62d3, 0x7cd6, 0x5b85, 0x6d1e, 0x66b4, 0x8f3b,
-      0x884c, 0x964d, 0x898b, 0x5ed3, 0x0000, 0x0000, 0x0000, 0x0000,
-      0x585a, 0x0000, 0x6674, 0x0000, 0x0000, 0x51de, 0x8c6c, 0x76ca,
-      0x0000, 0x795e, 0x7965, 0x798f, 0x9756, 0x7cbe, 0x7fbd, 0x0000,
-      0x0000, 0x0000, 0x8af8, 0x0000, 0x0000, 0x9038, 0x90fd, 0x0000,
-      0x0000, 0x0000, 0x98ef, 0x98fc, 0x9928, 0x9db4, 0x0000, 0x0000
+    'W',    'i',    'n',    'e',    0x0348, 0x0551, 0x1323, 0x280d,
+    0xff37, 0xff49, 0xff4e, 0xff45, '\0'
   };
-  static const WCHAR compat_FE30_FEF7[200] =
+  static const WCHAR foldczone_dst[] =
   {
-      0x2025, 0x2014, 0x2013, 0x005f, 0x005f, 0x0028, 0x0029, 0x007b,
-      0x007d, 0x3014, 0x3015, 0x3010, 0x3011, 0x300a, 0x300b, 0x3008,
-      0x3009, 0x300c, 0x300d, 0x300e, 0x300f, 0x0000, 0x0000, 0x0000,
-      0x0000, 0x203e, 0x203e, 0x203e, 0x203e, 0x005f, 0x005f, 0x005f,
-      0x002c, 0x3001, 0x002e, 0x0000, 0x003b, 0x003a, 0x003f, 0x0021,
-      0x2014, 0x0028, 0x0029, 0x007b, 0x007d, 0x3014, 0x3015, 0x0023,
-      0x0026, 0x002a, 0x002b, 0x002d, 0x003c, 0x003e, 0x003d, 0x0000,
-      0x0000, 0x0024, 0x0025, 0x0040, 0x0000, 0x0000, 0x0000, 0x0000,
-      0x064b, 0x064b, 0x064c, 0x0000, 0x064d, 0x0000, 0x064e, 0x064e,
-      0x064f, 0x064f, 0x0650, 0x0650, 0x0651, 0x0651, 0x0652, 0x0652,
-      0x0621, 0x0622, 0x0622, 0x0623, 0x0623, 0x0624, 0x0624, 0x0625,
-      0x0625, 0x0626, 0x0626, 0x0626, 0x0626, 0x0627, 0x0627, 0x0628,
-      0x0628, 0x0628, 0x0628, 0x0629, 0x0629, 0x062a, 0x062a, 0x062a,
-      0x062a, 0x062b, 0x062b, 0x062b, 0x062b, 0x062c, 0x062c, 0x062c,
-      0x062c, 0x062d, 0x062d, 0x062d, 0x062d, 0x062e, 0x062e, 0x062e,
-      0x062e, 0x062f, 0x062f, 0x0630, 0x0630, 0x0631, 0x0631, 0x0632,
-      0x0632, 0x0633, 0x0633, 0x0633, 0x0633, 0x0634, 0x0634, 0x0634,
-      0x0634, 0x0635, 0x0635, 0x0635, 0x0635, 0x0636, 0x0636, 0x0636,
-      0x0636, 0x0637, 0x0637, 0x0637, 0x0637, 0x0638, 0x0638, 0x0638,
-      0x0638, 0x0639, 0x0639, 0x0639, 0x0639, 0x063a, 0x063a, 0x063a,
-      0x063a, 0x0641, 0x0641, 0x0641, 0x0641, 0x0642, 0x0642, 0x0642,
-      0x0642, 0x0643, 0x0643, 0x0643, 0x0643, 0x0644, 0x0644, 0x0644,
-      0x0644, 0x0645, 0x0645, 0x0645, 0x0645, 0x0646, 0x0646, 0x0646,
-      0x0646, 0x0647, 0x0647, 0x0647, 0x0647, 0x0648, 0x0648, 0x0649,
-      0x0649, 0x064a, 0x064a, 0x064a, 0x064a, 0x0000, 0x0000, 0x0000
-  };
-  static const WCHAR compat_FF00_FFEF[240] =
-  {
-      0x0000, 0x0021, 0x0022, 0x0023, 0x0024, 0x0025, 0x0026, 0x0027,
-      0x0028, 0x0029, 0x002a, 0x002b, 0x002c, 0x002d, 0x002e, 0x002f,
-      0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037,
-      0x0038, 0x0039, 0x003a, 0x003b, 0x003c, 0x003d, 0x003e, 0x003f,
-      0x0040, 0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047,
-      0x0048, 0x0049, 0x004a, 0x004b, 0x004c, 0x004d, 0x004e, 0x004f,
-      0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057,
-      0x0058, 0x0059, 0x005a, 0x005b, 0x0000, 0x005d, 0x005e, 0x005f,
-      0x0060, 0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067,
-      0x0068, 0x0069, 0x006a, 0x006b, 0x006c, 0x006d, 0x006e, 0x006f,
-      0x0070, 0x0071, 0x0072, 0x0073, 0x0074, 0x0075, 0x0076, 0x0077,
-      0x0078, 0x0079, 0x007a, 0x007b, 0x007c, 0x007d, 0x007e, 0x0000,
-      0x0000, 0x3002, 0x300c, 0x300d, 0x3001, 0x30fb, 0x30f2, 0x30a1,
-      0x30a3, 0x30a5, 0x30a7, 0x30a9, 0x30e3, 0x30e5, 0x30e7, 0x30c3,
-      0x30fc, 0x30a2, 0x30a4, 0x30a6, 0x30a8, 0x30aa, 0x30ab, 0x30ad,
-      0x30af, 0x30b1, 0x30b3, 0x30b5, 0x30b7, 0x30b9, 0x30bb, 0x30bd,
-      0x30bf, 0x30c1, 0x30c4, 0x30c6, 0x30c8, 0x30ca, 0x30cb, 0x30cc,
-      0x30cd, 0x30ce, 0x30cf, 0x30d2, 0x30d5, 0x30d8, 0x30db, 0x30de,
-      0x30df, 0x30e0, 0x30e1, 0x30e2, 0x30e4, 0x30e6, 0x30e8, 0x30e9,
-      0x30ea, 0x30eb, 0x30ec, 0x30ed, 0x30ef, 0x30f3, 0x309b, 0x309c,
-      0x3164, 0x3131, 0x3132, 0x3133, 0x3134, 0x3135, 0x3136, 0x3137,
-      0x3138, 0x3139, 0x313a, 0x313b, 0x313c, 0x313d, 0x313e, 0x313f,
-      0x3140, 0x3141, 0x3142, 0x3143, 0x3144, 0x3145, 0x3146, 0x3147,
-      0x3148, 0x3149, 0x314a, 0x314b, 0x314c, 0x314d, 0x314e, 0x0000,
-      0x0000, 0x0000, 0x314f, 0x3150, 0x3151, 0x3152, 0x3153, 0x3154,
-      0x0000, 0x0000, 0x3155, 0x3156, 0x3157, 0x3158, 0x3159, 0x315a,
-      0x0000, 0x0000, 0x315b, 0x315c, 0x315d, 0x315e, 0x315f, 0x3160,
-      0x0000, 0x0000, 0x3161, 0x3162, 0x3163, 0x0000, 0x0000, 0x0000,
-      0x00a2, 0x00a3, 0x00ac, 0x00af, 0x00a6, 0x00a5, 0x20a9, 0x0000,
-      0x2502, 0x2190, 0x2191, 0x2192, 0x2193, 0x25a0, 0x25cb, 0x0000
+    'W','i','n','e',0x0348,0x0551,0x1323,0x280d,'W','i','n','e','\0'
   };
   static const WCHAR ligatures_src[] =
   {
+    'W',    'i',    'n',    'e',    0x03a6, 0x03b9, 0x03bd, 0x03b5,
     0x00c6, 0x00de, 0x00df, 0x00e6, 0x00fe, 0x0132, 0x0133, 0x0152,
     0x0153, 0x01c4, 0x01c5, 0x01c6, 0x01c7, 0x01c8, 0x01c9, 0x01ca,
     0x01cb, 0x01cc, 0x01e2, 0x01e3, 0x01f1, 0x01f2, 0x01f3, 0x01fc,
@@ -1958,6 +2001,7 @@ static void test_FoldStringW(void)
   };
   static const WCHAR ligatures_dst[] =
   {
+    'W','i','n','e',0x03a6,0x03b9,0x03bd,0x03b5,
     'A','E','T','H','s','s','a','e','t','h','I','J','i','j','O','E','o','e',
     'D',0x017d,'D',0x017e,'d',0x017e,'L','J','L','j','l','j','N','J','N','j',
     'n','j',0x0100,0x0112,0x0101,0x0113,'D','Z','D','z','d','z',0x00c1,0x00c9,
@@ -2073,6 +2117,8 @@ static void test_FoldStringW(void)
 
       ok((dst[0] == '0' + ch - digitRanges[j] && dst[1] == '\0') ||
          broken( dst[0] == ch ) ||  /* old Windows versions don't have all mappings */
+         (digitRanges[j] == 0x3020 && dst[0] == ch) || /* Hangzhou not present in all Windows versions */
+         (digitRanges[j] == 0x0F29 && dst[0] == ch) || /* Tibetan not present in all Windows versions */
          strchrW(noDigitAvailable, c),
          "MAP_FOLDDIGITS: ch %d Expected %d got %d\n",
          ch, '0' + digitRanges[j] - ch, dst[0]);
@@ -2081,45 +2127,12 @@ static void test_FoldStringW(void)
   }
 
   /* MAP_FOLDCZONE */
-  for (ch = 1, failures = 0; ch <0xffff; ch++)
-  {
-    WCHAR expected = 0;
-
-    if (ch >= 0xF900 && ch <= 0xFA2F)
-      expected = compat_F900_FA2F[ch - 0xF900];
-    else if (ch >= 0xFE30 && ch <= 0xFEF7)
-      expected = compat_FE30_FEF7[ch - 0xFE30];
-    else if (ch >= 0xFF00 && ch <= 0xFFEF)
-      expected = compat_FF00_FFEF[ch - 0xFF00];
-
-    if (!expected)
-      expected = ch;
-
-    SetLastError(0);
-    src[0] = ch;
-    src[1] = dst[0] = '\0';
-    ret = pFoldStringW(MAP_FOLDCZONE, src, -1, dst, 256);
-    ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
-    ok(dst[0] == expected ||
-       broken( dst[0] == ch ) ||  /* old Windows versions don't have all mappings */
-       /* Wine (correctly) uses updated mappings for some Unicode 4.0 chars */
-       /* FIXME: But they should be re-checked */
-       ch == 0xf92c || ch == 0xf979 || ch == 0xf995 || ch == 0xf9e7 ||
-       ch == 0xf9f1 ||
-       (0xfa0c <= ch && ch <= 0xfa6a) ||
-       (0xfa70 <= ch && ch <= 0xfad9) ||
-       ch == 0xfe47 || ch == 0xfe48 || ch == 0xfe68 ||
-       (0xfe70 <= ch && ch <= 0xfe7f) ||
-       ch == 0xff3c || ch == 0xff5f || ch == 0xff60 ||
-       ch == 0xff9e || ch == 0xff9f,
-       "MAP_FOLDCZONE: ch %d 0x%04x Expected 0x%04x got 0x%04x\n",
-       ch, ch, expected, dst[0]);
-    if (dst[0] != expected && ch < 0xf000 && ++failures > 50)
-    {
-        trace( "MAP_FOLDCZONE: Too many failures, giving up\n" );
-        break;
-    }
-  }
+  SetLastError(0);
+  ret = pFoldStringW(MAP_FOLDCZONE, foldczone_src, -1, dst, 256);
+  ok(ret == sizeof(foldczone_dst)/sizeof(foldczone_dst[0]),
+     "Got %d, error %d\n", ret, GetLastError());
+  ok(!memcmp(dst, foldczone_dst, sizeof(foldczone_dst)),
+     "MAP_FOLDCZONE: Expanded incorrectly\n");
 
   /* MAP_EXPAND_LIGATURES */
   SetLastError(0);
@@ -2130,29 +2143,6 @@ static void test_FoldStringW(void)
        "Got %d, error %d\n", ret, GetLastError());
     ok(!memcmp(dst, ligatures_dst, sizeof(ligatures_dst)),
        "MAP_EXPAND_LIGATURES: Expanded incorrectly\n");
-    for (i = 1, failures = 0; i <= 0xffff; i++)
-    {
-      if (!strchrW(ligatures_src, i))
-      {
-        src[0] = i;
-        src[1] = '\0';
-        SetLastError(0);
-        ret = pFoldStringW(MAP_EXPAND_LIGATURES, src, -1, dst, 256);
-        ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
-        if (ret == 3)
-            ok(0, "MAP_EXPAND_LIGATURES: %04x : Expected %04x, got %04x %04x\n",
-               i, src[0], dst[0], dst[1]);
-        else
-            ok(dst[0] == src[0],
-               "MAP_EXPAND_LIGATURES: %04x : Expected %04x, got %04x\n",
-               i, src[0], dst[0]);
-        if (dst[0] != src[0] && ++failures > 50)
-        {
-            trace( "MAP_EXPAND_LIGATURES: Too many failures, giving up\n" );
-            break;
-        }
-      }
-    }
   }
 
   /* FIXME: MAP_PRECOMPOSED : MAP_COMPOSITE */
@@ -2182,13 +2172,9 @@ static void test_ConvertDefaultLocale(void)
            MKLCID(LANG_ENGLISH,  SUBLANG_DEFAULT, SORT_DEFAULT));
   LCID_RES(MKLCID(LANG_JAPANESE, SUBLANG_NEUTRAL, SORT_DEFAULT),
            MKLCID(LANG_JAPANESE, SUBLANG_DEFAULT, SORT_DEFAULT));
-  LCID_RES(MKLCID(LANG_JAPANESE, SUBLANG_NEUTRAL, SORT_JAPANESE_UNICODE),
-           MKLCID(LANG_JAPANESE, SUBLANG_DEFAULT, SORT_JAPANESE_UNICODE));
 
   /* Invariant language is not treated specially */
   TEST_LCID(LANG_INVARIANT, SUBLANG_DEFAULT, SORT_DEFAULT);
-  LCID_RES(MKLCID(LANG_INVARIANT, SUBLANG_NEUTRAL, SORT_DEFAULT),
-           MKLCID(LANG_INVARIANT, SUBLANG_DEFAULT, SORT_DEFAULT));
 
   /* User/system default languages alone are not mapped */
   TEST_LCIDLANG(LANG_SYSTEM_DEFAULT, SORT_JAPANESE_UNICODE);
@@ -2568,6 +2554,7 @@ START_TEST(locale)
   test_EnumTimeFormatsA();
   test_EnumDateFormatsA();
   test_GetLocaleInfoA();
+  test_GetLocaleInfoW();
   test_GetTimeFormatA();
   test_GetDateFormatA();
   test_GetDateFormatW();

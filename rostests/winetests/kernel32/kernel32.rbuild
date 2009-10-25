@@ -6,6 +6,7 @@
     <define name="__ROS_LONG64__" />
     <library>ntdll</library>
     <library>kernel32</library>
+    <library>user32</library>
     <library>advapi32</library>
     <file>actctx.c</file>
     <file>alloc.c</file>

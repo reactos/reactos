@@ -228,13 +228,18 @@ static void testLoadLibraryEx(void)
     ok(hfile != INVALID_HANDLE_VALUE, "Expected a valid file handle\n");
 
     /* NULL lpFileName */
-    SetLastError(0xdeadbeef);
-    hmodule = LoadLibraryExA(NULL, NULL, 0);
-    ok(hmodule == 0, "Expected 0, got %p\n", hmodule);
-    ok(GetLastError() == ERROR_MOD_NOT_FOUND ||
-       GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
-       "Expected ERROR_MOD_NOT_FOUND or ERROR_INVALID_PARAMETER, got %d\n",
-       GetLastError());
+    if (is_unicode_enabled)
+    {
+        SetLastError(0xdeadbeef);
+        hmodule = LoadLibraryExA(NULL, NULL, 0);
+        ok(hmodule == 0, "Expected 0, got %p\n", hmodule);
+        ok(GetLastError() == ERROR_MOD_NOT_FOUND ||
+           GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
+           "Expected ERROR_MOD_NOT_FOUND or ERROR_INVALID_PARAMETER, got %d\n",
+           GetLastError());
+    }
+    else
+        win_skip("NULL filename crashes on WinMe\n");
 
     /* empty lpFileName */
     SetLastError(0xdeadbeef);
@@ -281,13 +286,16 @@ static void testLoadLibraryEx(void)
     }
 
     /* lpFileName does not matter */
-    SetLastError(0xdeadbeef);
-    hmodule = LoadLibraryExA(NULL, hfile, 0);
-    ok(hmodule == 0, "Expected 0, got %p\n", hmodule);
-    ok(GetLastError() == ERROR_MOD_NOT_FOUND ||
-       GetLastError() == ERROR_INVALID_PARAMETER, /* win2k3 */
-       "Expected ERROR_MOD_NOT_FOUND or ERROR_INVALID_PARAMETER, got %d\n",
-       GetLastError());
+    if (is_unicode_enabled)
+    {
+        SetLastError(0xdeadbeef);
+        hmodule = LoadLibraryExA(NULL, hfile, 0);
+        ok(hmodule == 0, "Expected 0, got %p\n", hmodule);
+        ok(GetLastError() == ERROR_MOD_NOT_FOUND ||
+           GetLastError() == ERROR_INVALID_PARAMETER, /* win2k3 */
+           "Expected ERROR_MOD_NOT_FOUND or ERROR_INVALID_PARAMETER, got %d\n",
+           GetLastError());
+    }
 
     CloseHandle(hfile);
 

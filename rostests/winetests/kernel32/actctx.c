@@ -246,7 +246,8 @@ static BOOL create_wide_manifest(const char *filename, const char *manifest, BOO
 
 typedef struct {
     ULONG format_version;
-    ULONG assembly_cnt;
+    ULONG assembly_cnt_min;
+    ULONG assembly_cnt_max;
     ULONG root_manifest_type;
     LPWSTR root_manifest_path;
     ULONG root_config_type;
@@ -255,23 +256,24 @@ typedef struct {
 } detailed_info_t;
 
 static const detailed_info_t detailed_info0 = {
-    0, 0, 0, NULL, 0, 0, NULL
+    0, 0, 0, 0, NULL, 0, 0, NULL
 };
 
 static const detailed_info_t detailed_info1 = {
-    1, 1, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, manifest_path,
+    1, 1, 1, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, manifest_path,
     ACTIVATION_CONTEXT_PATH_TYPE_NONE, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE,
     work_dir,
 };
 
 static const detailed_info_t detailed_info1_child = {
-    1, 1, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, app_manifest_path,
+    1, 1, 1, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, app_manifest_path,
     ACTIVATION_CONTEXT_PATH_TYPE_NONE, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE,
     app_dir,
 };
 
+/* On Vista+, there's an extra assembly for Microsoft.Windows.Common-Controls.Resources */
 static const detailed_info_t detailed_info2 = {
-    1, 2, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, manifest_path,
+    1, 2, 3, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, manifest_path,
     ACTIVATION_CONTEXT_PATH_TYPE_NONE, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE,
     work_dir,
 };
@@ -310,9 +312,10 @@ static void test_detailed_info(HANDLE handle, const detailed_info_t *exinfo)
     ok(detailed_info->ulFormatVersion == exinfo->format_version,
        "detailed_info->ulFormatVersion=%u, expected %u\n", detailed_info->ulFormatVersion,
        exinfo->format_version);
-    ok(detailed_info->ulAssemblyCount == exinfo->assembly_cnt,
-       "detailed_info->ulAssemblyCount=%u, expected %u\n", detailed_info->ulAssemblyCount,
-       exinfo->assembly_cnt);
+    ok(exinfo->assembly_cnt_min <= detailed_info->ulAssemblyCount &&
+       detailed_info->ulAssemblyCount <= exinfo->assembly_cnt_max,
+       "detailed_info->ulAssemblyCount=%u, expected between %u and %u\n", detailed_info->ulAssemblyCount,
+       exinfo->assembly_cnt_min, exinfo->assembly_cnt_max);
     ok(detailed_info->ulRootManifestPathType == exinfo->root_manifest_type,
        "detailed_info->ulRootManifestPathType=%u, expected %u\n",
        detailed_info->ulRootManifestPathType, exinfo->root_manifest_type);
@@ -1139,6 +1142,8 @@ static void run_child_process(void)
     char **argv;
     PROCESS_INFORMATION pi;
     STARTUPINFO si = { 0 };
+    HANDLE file;
+    FILETIME now;
 
     GetModuleFileNameA(NULL, path, MAX_PATH);
     strcat(path, ".manifest");
@@ -1149,6 +1154,15 @@ static void run_child_process(void)
 
     si.cb = sizeof(si);
     winetest_get_mainargs( &argv );
+    /* Vista+ seems to cache presence of .manifest files. Change last modified
+       date to defeat the cache */
+    file = CreateFileA(argv[0], FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                       NULL, OPEN_EXISTING, 0, NULL);
+    if (file != INVALID_HANDLE_VALUE) {
+        GetSystemTimeAsFileTime(&now);
+        SetFileTime(file, NULL, NULL, &now);
+        CloseHandle(file);
+    }
     sprintf(cmdline, "\"%s\" %s manifest1", argv[0], argv[1]);
     ok(CreateProcess(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL,
                      &si, &pi) != 0, "Could not create process: %u\n", GetLastError());

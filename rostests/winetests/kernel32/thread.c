@@ -698,8 +698,7 @@ static VOID test_thread_priority(void)
       return;
    }
 
-   todo_wine
-     ok(rc!=0,"error=%d\n",GetLastError());
+   ok(rc!=0,"error=%d\n",GetLastError());
 
    if (pOpenThread) {
 /* check that access control is obeyed */
@@ -709,7 +708,7 @@ static VOID test_thread_priority(void)
      ok(access_thread!=NULL,"OpenThread returned an invalid handle\n");
      if (access_thread!=NULL) {
        obey_ar(pSetThreadPriorityBoost(access_thread,1)==0);
-       obey_ar(pGetThreadPriorityBoost(access_thread,&disabled)==0);
+       todo_wine obey_ar(pGetThreadPriorityBoost(access_thread,&disabled)==0);
        ok(CloseHandle(access_thread),"Error Closing thread handle\n");
      }
    }
@@ -723,10 +722,10 @@ static VOID test_thread_priority(void)
 
      rc = pSetThreadPriorityBoost(curthread,0);
      ok( rc != 0, "error=%d\n",GetLastError());
-     rc=pGetThreadPriorityBoost(curthread,&disabled);
-     ok(rc!=0 && disabled==0,
-        "rc=%d error=%d disabled=%d\n",rc,GetLastError(),disabled);
    }
+   rc=pGetThreadPriorityBoost(curthread,&disabled);
+   ok(rc!=0 && disabled==0,
+      "rc=%d error=%d disabled=%d\n",rc,GetLastError(),disabled);
 }
 
 /* check the GetThreadTimes function */
