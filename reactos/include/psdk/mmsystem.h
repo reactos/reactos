@@ -159,7 +159,7 @@ extern "C" {
 #define SND_PURGE             0x40
 #define SND_APPLICATION       0x80
 #define SND_ALIAS_START	      0
-#define	sndAlias(c0,c1)	      (SND_ALIAS_START+(DWORD)(BYTE)(c0)|((DWORD)(BYTE)(c1)<<8))
+#define	sndAlias(c0,c1)	      (SND_ALIAS_START+((DWORD)(BYTE)(c0)|((DWORD)(BYTE)(c1)<<8)))
 #define SND_ALIAS_SYSTEMASTERISK    sndAlias('S','*')
 #define SND_ALIAS_SYSTEMQUESTION    sndAlias('S','?')
 #define SND_ALIAS_SYSTEMHAND        sndAlias('S','H')

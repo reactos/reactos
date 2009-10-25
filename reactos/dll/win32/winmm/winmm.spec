@@ -26,7 +26,7 @@
 @ stdcall auxGetVolume(long ptr)
 @ stdcall auxOutMessage(long long long long)
 @ stdcall auxSetVolume(long long)
-@ stub joyConfigChanged
+@ stdcall joyConfigChanged(long)
 @ stdcall joyGetDevCapsA(long ptr long)
 @ stdcall joyGetDevCapsW(long ptr long)
 @ stdcall joyGetNumDevs()
@@ -56,8 +56,8 @@
 @ stdcall mciSendStringW(wstr ptr long long)
 @ stdcall mciSetDriverData(long long)
 @ stdcall mciSetYieldProc(long ptr long)
-@ stub midiConnect
-@ stub midiDisconnect
+@ stdcall midiConnect(long long ptr)
+@ stdcall midiDisconnect(long long ptr)
 @ stdcall midiInAddBuffer(long ptr long)
 @ stdcall midiInClose(long)
 @ stdcall midiInGetDevCapsA(long ptr long)
