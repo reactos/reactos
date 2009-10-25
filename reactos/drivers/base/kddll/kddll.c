@@ -227,15 +227,6 @@ KdReceivePacket(
             return KDP_PACKET_RECEIVED;
         }
 
-        /* Did we get the right packet type? */
-        if (PacketType != Packet.PacketType)
-        {
-            /* We received something different, start over */
-            KDDBGPRINT("KdReceivePacket - wrong PacketType\n");
-            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
-            continue;
-        }
-
         /* Get size of the message header */
         switch (Packet.PacketType)
         {
@@ -331,6 +322,15 @@ KdReceivePacket(
         {
             KDDBGPRINT("KdReceivePacket - wrong trailing byte (0x%x), status 0x%x\n", Byte, KdStatus);
             KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
+            continue;
+        }
+
+        /* Did we get the right packet type? */
+        if (PacketType != Packet.PacketType)
+        {
+            /* We received something different, ignore it. */
+            KDDBGPRINT("KdReceivePacket - wrong PacketType\n");
+            KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, Packet.PacketId);
             continue;
         }
 
