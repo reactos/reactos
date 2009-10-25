@@ -1,0 +1,52 @@
+-- Copyright (C) The Internet Society 2005.  This version of
+-- this module is part of RFC 4178; see the RFC itself for
+-- full legal notices.
+
+-- (The above copyright notice is per RFC 3978 5.6 (a), q.v.)
+
+-- $Id: spnego.asn1,v 1.2 2006/12/04 01:52:46 marka Exp $
+
+-- This is the SPNEGO ASN.1 module from RFC 4178, tweaked
+-- to get the Heimdal ASN.1 compiler to accept it.
+
+SPNEGOASNOneSpec DEFINITIONS ::= BEGIN
+
+MechType ::= OBJECT IDENTIFIER
+
+MechTypeList ::= SEQUENCE OF MechType
+
+ContextFlags ::= BIT STRING {
+    delegFlag       (0),
+    mutualFlag      (1),
+    replayFlag      (2),
+    sequenceFlag    (3),
+    anonFlag        (4),
+    confFlag        (5),
+    integFlag       (6)
+}
+
+NegTokenInit ::= SEQUENCE {
+    mechTypes       [0] MechTypeList,
+    reqFlags        [1] ContextFlags  OPTIONAL,
+    mechToken       [2] OCTET STRING  OPTIONAL,
+    mechListMIC     [3] OCTET STRING  OPTIONAL
+}
+
+NegTokenResp ::= SEQUENCE {
+    negState       [0] ENUMERATED {
+	accept-completed    (0),
+	accept-incomplete   (1),
+	reject              (2),
+	request-mic         (3)
+    }                                 OPTIONAL,
+    supportedMech   [1] MechType      OPTIONAL,
+    responseToken   [2] OCTET STRING  OPTIONAL,
+    mechListMIC     [3] OCTET STRING  OPTIONAL
+}
+
+NegotiationToken ::= CHOICE {
+    negTokenInit    [0] NegTokenInit,
+    negTokenResp    [1] NegTokenResp
+}
+
+END

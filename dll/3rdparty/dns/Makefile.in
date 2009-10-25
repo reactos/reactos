@@ -1,0 +1,179 @@
+# Copyright (C) 2004-2008  Internet Systems Consortium, Inc. ("ISC")
+# Copyright (C) 1998-2003  Internet Software Consortium.
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+# OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+# $Id: Makefile.in,v 1.163 2008/09/24 02:46:22 marka Exp $
+
+srcdir =	@srcdir@
+VPATH =		@srcdir@
+top_srcdir =	@top_srcdir@
+
+# Attempt to disable parallel processing.
+.NOTPARALLEL:
+.NO_PARALLEL:
+
+@BIND9_VERSION@
+
+@LIBDNS_API@
+
+@BIND9_MAKE_INCLUDES@
+
+USE_ISC_SPNEGO = @USE_ISC_SPNEGO@
+
+CINCLUDES =	-I. -Iinclude ${DNS_INCLUDES} \
+		${ISC_INCLUDES} @DST_OPENSSL_INC@ @DST_GSSAPI_INC@
+
+CDEFINES =	-DUSE_MD5 @USE_OPENSSL@ @USE_PKCS11@ @USE_GSSAPI@ \
+		${USE_ISC_SPNEGO}
+
+CWARNINGS =
+
+ISCLIBS =	../../lib/isc/libisc.@A@
+
+ISCDEPLIBS =	../../lib/isc/libisc.@A@
+
+LIBS =		@LIBS@
+
+# Alphabetically
+
+DSTOBJS =	@DST_EXTRA_OBJS@ \
+		dst_api.@O@ dst_lib.@O@ dst_parse.@O@ dst_result.@O@ \
+		gssapi_link.@O@ gssapictx.@O@ hmac_link.@O@ key.@O@ \
+		openssl_link.@O@ openssldh_link.@O@ openssldsa_link.@O@ \
+		opensslrsa_link.@O@
+
+# Alphabetically
+DNSOBJS =	acache.@O@ acl.@O@ adb.@O@ byaddr.@O@ \
+		cache.@O@ callbacks.@O@ compress.@O@ \
+		db.@O@ dbiterator.@O@ dbtable.@O@ diff.@O@ dispatch.@O@ \
+		dlz.@O@ dnssec.@O@ ds.@O@ forward.@O@ iptable.@O@ journal.@O@ \
+		keytable.@O@ lib.@O@ log.@O@ lookup.@O@ \
+		master.@O@ masterdump.@O@ message.@O@ \
+		name.@O@ ncache.@O@ nsec.@O@ nsec3.@O@ order.@O@ peer.@O@ portlist.@O@ \
+		rbt.@O@ rbtdb.@O@ rbtdb64.@O@ rcode.@O@ rdata.@O@ \
+		rdatalist.@O@ \
+		rdataset.@O@ rdatasetiter.@O@ rdataslab.@O@ request.@O@ \
+		resolver.@O@ result.@O@ rootns.@O@ sdb.@O@ sdlz.@O@ \
+		soa.@O@ ssu.@O@ \
+		stats.@O@ tcpmsg.@O@ time.@O@ timer.@O@ tkey.@O@ \
+		tsig.@O@ ttl.@O@ validator.@O@ \
+		version.@O@ view.@O@ xfrin.@O@ zone.@O@ zonekey.@O@ zt.@O@
+
+OBJS=		${DNSOBJS} ${OTHEROBJS} ${DSTOBJS}
+
+# Alphabetically
+DSTSRCS =	@DST_EXTRA_SRCS@ \
+		dst_api.c dst_lib.c dst_parse.c \
+		dst_result.c gssapi_link.c gssapictx.c \
+		hmac_link.c key.c \
+		openssl_link.c openssldh_link.c \
+		openssldsa_link.c opensslrsa_link.c
+
+DNSSRCS =	acache.c acl.c adb.c byaddr.c \
+		cache.c callbacks.c compress.c \
+		db.c dbiterator.c dbtable.c diff.c dispatch.c \
+		dlz.c dnssec.c ds.c forward.c iptable.c journal.c \
+		keytable.c lib.c log.c lookup.c \
+		master.c masterdump.c message.c \
+		name.c ncache.c nsec.c nsec3.c order.c peer.c portlist.c \
+		rbt.c rbtdb.c rbtdb64.c rcode.c rdata.c \
+		rdatalist.c \
+		rdataset.c rdatasetiter.c rdataslab.c request.c \
+		resolver.c result.c rootns.c sdb.c sdlz.c \
+		soa.c ssu.c \
+		stats.c tcpmsg.c time.c timer.c tkey.c \
+		tsig.c ttl.c validator.c \
+		version.c view.c xfrin.c zone.c zonekey.c zt.c ${OTHERSRCS}
+SRCS = ${DSTSRCS} ${DNSSRCS}
+
+SUBDIRS =	include 
+TARGETS =	include/dns/enumtype.h include/dns/enumclass.h \
+		include/dns/rdatastruct.h timestamp
+
+DEPENDEXTRA =	./gen -F include/dns/rdatastruct.h \
+		-s ${srcdir} -d >> Makefile ;
+
+@BIND9_MAKE_RULES@
+
+version.@O@: version.c
+	${LIBTOOL_MODE_COMPILE} ${CC} ${ALL_CFLAGS} \
+		-DVERSION=\"${VERSION}\" \
+		-DLIBINTERFACE=${LIBINTERFACE} \
+		-DLIBREVISION=${LIBREVISION} \
+		-DLIBAGE=${LIBAGE} \
+		-c ${srcdir}/version.c
+
+libdns.@SA@: ${OBJS}
+	${AR} ${ARFLAGS} $@ ${OBJS}
+	${RANLIB} $@
+
+libdns.la: ${OBJS}
+	${LIBTOOL_MODE_LINK} \
+		${CC} ${ALL_CFLAGS} ${LDFLAGS} -o libdns.la -rpath ${libdir} \
+		-version-info ${LIBINTERFACE}:${LIBREVISION}:${LIBAGE} \
+		${OBJS} ${ISCLIBS} @DNS_CRYPTO_LIBS@ ${LIBS}
+
+timestamp: libdns.@A@
+	touch timestamp
+
+installdirs:
+	$(SHELL) ${top_srcdir}/mkinstalldirs ${DESTDIR}${libdir}
+
+install:: timestamp installdirs
+	${LIBTOOL_MODE_INSTALL} ${INSTALL_DATA} libdns.@A@ ${DESTDIR}${libdir}
+
+clean distclean::
+	rm -f libdns.@A@ timestamp
+	rm -f gen code.h include/dns/enumtype.h include/dns/enumclass.h
+	rm -f include/dns/rdatastruct.h
+
+newrr::
+	rm -f code.h include/dns/enumtype.h include/dns/enumclass.h
+	rm -f include/dns/rdatastruct.h
+
+include: include/dns/enumtype.h include/dns/enumclass.h \
+	include/dns/rdatastruct.h
+
+rdata.@O@: code.h
+
+include/dns/enumtype.h: gen
+	./gen -s ${srcdir} -t > $@
+
+include/dns/enumclass.h: gen
+	./gen -s ${srcdir} -c > $@
+
+include/dns/rdatastruct.h: gen \
+		${srcdir}/rdata/rdatastructpre.h \
+		${srcdir}/rdata/rdatastructsuf.h
+	./gen -s ${srcdir} -i \
+		-P ${srcdir}/rdata/rdatastructpre.h \
+		-S ${srcdir}/rdata/rdatastructsuf.h > $@
+
+code.h:	gen
+	./gen -s ${srcdir} > code.h
+
+gen: gen.c
+	${BUILD_CC} ${BUILD_CFLAGS} -I${top_srcdir}/lib/isc/include \
+	${BUILD_CPPFLAGS} ${BUILD_LDFLAGS} -o $@ ${srcdir}/gen.c ${BUILD_LIBS}
+
+rbtdb64.@O@: rbtdb.c
+
+depend: include/dns/enumtype.h include/dns/enumclass.h \
+	include/dns/rdatastruct.h code.h
+subdirs: include/dns/enumtype.h include/dns/enumclass.h \
+	include/dns/rdatastruct.h code.h
+${OBJS}: include/dns/enumtype.h include/dns/enumclass.h \
+	include/dns/rdatastruct.h
+
+spnego.@O@: spnego_asn1.c spnego.h

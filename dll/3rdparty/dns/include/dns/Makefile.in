@@ -1,0 +1,54 @@
+# Copyright (C) 2004, 2007, 2008  Internet Systems Consortium, Inc. ("ISC")
+# Copyright (C) 1998-2003  Internet Software Consortium.
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+# OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+# $Id: Makefile.in,v 1.55 2008/11/14 23:47:33 tbox Exp $
+
+srcdir =	@srcdir@
+VPATH =		@srcdir@
+top_srcdir =	@top_srcdir@
+
+@BIND9_VERSION@
+
+HEADERS =	acl.h adb.h byaddr.h cache.h callbacks.h \
+		cert.h compress.h \
+		db.h dbiterator.h dbtable.h diff.h dispatch.h dlz.h \
+		dnssec.h ds.h events.h fixedname.h iptable.h journal.h keyflags.h \
+		keytable.h keyvalues.h lib.h log.h master.h masterdump.h \
+		message.h name.h ncache.h \
+		nsec.h peer.h portlist.h rbt.h rcode.h \
+		rdata.h rdataclass.h rdatalist.h rdataset.h rdatasetiter.h \
+		rdataslab.h rdatatype.h request.h resolver.h result.h \
+		rootns.h sdb.h sdlz.h secalg.h secproto.h soa.h ssu.h \
+		tcpmsg.h time.h tkey.h \
+		tsig.h ttl.h types.h validator.h version.h view.h xfrin.h \
+		zone.h zonekey.h zt.h
+
+GENHEADERS =	enumclass.h enumtype.h rdatastruct.h
+
+SUBDIRS =
+TARGETS =
+
+@BIND9_MAKE_RULES@
+
+installdirs:
+	$(SHELL) ${top_srcdir}/mkinstalldirs ${DESTDIR}${includedir}/dns
+
+install:: installdirs
+	for i in ${HEADERS}; do \
+		${INSTALL_DATA} ${srcdir}/$$i ${DESTDIR}${includedir}/dns ; \
+	done
+	for i in ${GENHEADERS}; do \
+		${INSTALL_DATA} $$i ${DESTDIR}${includedir}/dns ; \
+	done
