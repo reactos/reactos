@@ -2086,6 +2086,37 @@ static void test_null_provider(void)
     CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 
+    /* Test for being able to get a key generated with CALG_RSA_SIGN. */
+    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+     CRYPT_NEWKEYSET);
+    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    result = CryptGenKey(prov, CALG_RSA_SIGN, 0, &key);
+    ok(result, "CryptGenKey with CALG_RSA_SIGN failed with error %08x\n", GetLastError());
+    result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &key);
+    ok(!result, "expected CryptGetUserKey to fail\n");
+    result = CryptGetUserKey(prov, AT_SIGNATURE, &key);
+    ok(result, "CryptGetUserKey with AT_SIGNATURE failed: %08x\n", GetLastError());
+    CryptDestroyKey(key);
+    CryptReleaseContext(prov, 0);
+
+    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+     CRYPT_DELETEKEYSET);
+
+    /* Test for being able to get a key generated with CALG_RSA_KEYX. */
+    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+     CRYPT_NEWKEYSET);
+    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    result = CryptGenKey(prov, CALG_RSA_KEYX, 0, &key);
+    ok(result, "CryptGenKey with CALG_RSA_KEYX failed with error %08x\n", GetLastError());
+    result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &key);
+    ok(result, "CryptGetUserKey with AT_KEYEXCHANGE failed: %08x\n", GetLastError());
+    result = CryptGetUserKey(prov, AT_SIGNATURE, &key);
+    ok(!result, "expected CryptGetUserKey to fail\n");
+    CryptDestroyKey(key);
+    CryptReleaseContext(prov, 0);
+
+    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+     CRYPT_DELETEKEYSET);
 
     /* test for the bug in accessing the user key in a container
      */
