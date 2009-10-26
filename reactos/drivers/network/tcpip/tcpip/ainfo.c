@@ -15,13 +15,14 @@ TDI_STATUS SetAddressFileInfo(TDIObjectID *ID,
 {
     switch (ID->toi_id)
     {
+#if 0
       case AO_OPTION_TTL:
          if (BufferSize < sizeof(UCHAR))
              return TDI_INVALID_PARAMETER;
 
          AddrFile->TTL = *((PUCHAR)Buffer);
          return TDI_SUCCESS;
-
+#endif
       default:
          DbgPrint("Unimplemented option %x\n", ID->toi_id);
 
