@@ -149,8 +149,8 @@ KdReceivePacket(
         KdStatus = KdpReceiveBuffer(&Packet.PacketType, sizeof(USHORT));
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
-            /* Didn't receive a PacketType or PacketType is bad. Start over. */
-            continue;
+            /* Didn't receive a PacketType. */
+            return KdStatus;
         }
 
         /* Check if we got a resend packet */
@@ -164,16 +164,16 @@ KdReceivePacket(
         KdStatus = KdpReceiveBuffer(&Packet.ByteCount, sizeof(USHORT));
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
-            /* Didn't receive ByteCount or it's too big. Start over. */
-            continue;
+            /* Didn't receive ByteCount. */
+            return KdStatus;
         }
 
         /* Step 4 - Read PacketId */
         KdStatus = KdpReceiveBuffer(&Packet.PacketId, sizeof(ULONG));
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
-            /* Didn't receive PacketId. Start over. */
-            continue;
+            /* Didn't receive PacketId. */
+            return KdStatus;
         }
 
 /*
@@ -188,8 +188,8 @@ KdReceivePacket(
         KdStatus = KdpReceiveBuffer(&Packet.Checksum, sizeof(ULONG));
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
-            /* Didn't receive Checksum. Start over. */
-            continue;
+            /* Didn't receive Checksum. */
+            return KdStatus;
         }
 
         /* Step 6 - Handle control packets */
@@ -421,6 +421,7 @@ KdSendPacket(
         }
 
         /* Packet timed out, send it again */
+        KDDBGPRINT("KdSendPacket got KdStatus 0x%x\n", KdStatus);
     }
     while (Retries > 0);
 }
