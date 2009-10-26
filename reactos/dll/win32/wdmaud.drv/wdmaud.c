@@ -428,16 +428,18 @@ SetWdmWaveDeviceFormat(
         Instance->BufferCount = 100;
     }
 
-
-    /* Now start the stream */
-    DeviceInfo.u.State = KSSTATE_RUN;
-    SyncOverlappedDeviceIoControl(KernelHandle,
-                                  IOCTL_SETDEVICE_STATE,
-                                  (LPVOID) &DeviceInfo,
-                                  sizeof(WDMAUD_DEVICE_INFO),
-                                  (LPVOID) &DeviceInfo,
-                                  sizeof(WDMAUD_DEVICE_INFO),
-                                  NULL);
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        /* Now start the stream */
+        DeviceInfo.u.State = KSSTATE_RUN;
+        SyncOverlappedDeviceIoControl(KernelHandle,
+                                      IOCTL_SETDEVICE_STATE,
+                                      (LPVOID) &DeviceInfo,
+                                      sizeof(WDMAUD_DEVICE_INFO),
+                                      (LPVOID) &DeviceInfo,
+                                      sizeof(WDMAUD_DEVICE_INFO),
+                                      NULL);
+    }
 
     return MMSYSERR_NOERROR;
 }
@@ -502,11 +504,54 @@ WriteFileEx_Committer2(
     else if (DeviceType == WAVE_IN_DEVICE_TYPE)
     {
         Ret = ReadFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
-        if (Ret)
-            WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
+        //if (Ret)
+        //    WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
     }
 
     return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+SetWdmWaveState(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN BOOL bStart)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    MMDEVICE_TYPE DeviceType;
+    HANDLE Handle;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.hDevice = Handle;
+    DeviceInfo.DeviceType = DeviceType;
+
+    if (bStart)
+        DeviceInfo.u.State = KSSTATE_RUN;
+    else
+        DeviceInfo.u.State = KSSTATE_PAUSE;
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_SETDEVICE_STATE,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+    return Result;
 }
 
 MMRESULT
@@ -680,6 +725,11 @@ PopulateWdmDeviceList(
         else
         {
             FuncTable.SetWaveFormat = SetWdmWaveDeviceFormat;
+        }
+
+        if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+        {
+            FuncTable.SetState = SetWdmWaveState;
         }
 
         FuncTable.Open = OpenWdmSoundDevice;

@@ -291,6 +291,7 @@ WdmAudReadWrite(
     PIO_STACK_LOCATION IoStack;
     ULONG Length;
     PMDL Mdl;
+    BOOLEAN Read = TRUE;
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -318,6 +319,7 @@ WdmAudReadWrite(
     if (IoStack->MajorFunction == IRP_MJ_WRITE)
     {
         /* probe the write stream irp */
+        Read = FALSE;
         Status = KsProbeStreamIrp(Irp, KSPROBE_STREAMWRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK, Length);
     }
     else
@@ -353,13 +355,22 @@ WdmAudReadWrite(
     /* get next stack location */
     IoStack = IoGetNextIrpStackLocation(Irp);
 
+    if (Read)
+    {
+        IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_READ_STREAM;
+    }
+    else
+    {
+        IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_WRITE_STREAM;
+    }
+
     /* attach file object */
     IoStack->FileObject = FileObject;
     IoStack->Parameters.Write.Length = Length;
     IoStack->MajorFunction = IRP_MJ_WRITE;
 
     /* mark irp as pending */
-    IoMarkIrpPending(Irp);
+//    IoMarkIrpPending(Irp);
     /* call the driver */
     Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);
 

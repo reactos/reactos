@@ -182,6 +182,7 @@ mxdMessage(
 
         case MXDM_INIT :
         {
+            Result = MMSYSERR_NOERROR;
             break;
         }
 

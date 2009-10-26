@@ -236,6 +236,12 @@ typedef MMRESULT(*MMGETPOS_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  MMTIME* Time);
 
+
+typedef MMRESULT(*MMSETSTATE_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  BOOL bStart);
+
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -258,6 +264,7 @@ typedef struct _MMFUNCTION_TABLE
     WAVE_COMMIT_FUNC                CommitWaveBuffer;
 
     MMGETPOS_FUNC                   GetPos;
+    MMSETSTATE_FUNC                 SetState;
 
     // Redundant
     //MMWAVEHEADER_FUNC               PrepareWaveHeader;
@@ -406,6 +413,11 @@ MmeGetPosition(
     IN  DWORD PrivateHandle,
     IN  MMTIME* Time,
     IN  DWORD Size);
+
+MMRESULT
+MmeSetState(
+    IN  DWORD PrivateHandle,
+    IN  BOOL bStart);
 
 
 #define MmePrepareWaveHeader(private_handle, header) \

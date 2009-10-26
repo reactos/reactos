@@ -45,6 +45,18 @@ widMessage(
             break;
         }
 
+        case WIDM_START :
+        {
+            Result = MmeSetState(PrivateHandle, TRUE);
+            break;
+        }
+
+        case WIDM_STOP :
+        {
+            Result = MmeSetState(PrivateHandle, FALSE);
+            break;
+        }
+
         case WIDM_GETDEVCAPS :
         {
 

@@ -2150,6 +2150,12 @@ UINT WINAPI waveOutGetDevCapsW(UINT_PTR uDeviceID, LPWAVEOUTCAPSW lpCaps,
 
     if (lpCaps == NULL)	return MMSYSERR_INVALPARAM;
 
+    if (uDeviceID == WAVE_MAPPER)
+    {
+        FIXME("Support WAVE_MAPPER\n");
+        uDeviceID = 0;
+    }
+
     if ((wmld = MMDRV_Get((HANDLE)uDeviceID, MMDRV_WAVEOUT, TRUE)) == NULL)
         return MMSYSERR_BADDEVICEID;
 
@@ -2542,6 +2548,13 @@ UINT WINAPI waveInGetDevCapsW(UINT_PTR uDeviceID, LPWAVEINCAPSW lpCaps, UINT uSi
     TRACE("(%lu %p %u)!\n", uDeviceID, lpCaps, uSize);
 
     if (lpCaps == NULL)	return MMSYSERR_INVALPARAM;
+
+    if (uDeviceID == WAVE_MAPPER)
+    {
+        FIXME("Support WAVE_MAPPER\n");
+        uDeviceID = 0;
+    }
+
 
     if ((wmld = MMDRV_Get((HANDLE)uDeviceID, MMDRV_WAVEIN, TRUE)) == NULL)
 	return MMSYSERR_BADDEVICEID;

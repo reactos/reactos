@@ -15,6 +15,47 @@
 #include <sndtypes.h>
 #include <mmebuddy.h>
 
+
+/*
+    Sets the device into running or stopped state
+*/
+
+MMRESULT
+MmeSetState(
+    IN  DWORD PrivateHandle,
+    IN  BOOL bStart)
+{
+    MMRESULT Result;
+    PMMFUNCTION_TABLE FunctionTable;
+    PSOUND_DEVICE SoundDevice;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+
+    VALIDATE_MMSYS_PARAMETER( PrivateHandle );
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    /* Get the function table, and validate it */
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    SND_ASSERT( FunctionTable->SetState );
+    if ( FunctionTable->SetState == NULL )
+    {
+        /* FIXME */
+        return MMSYSERR_NOTSUPPORTED;
+    }
+    /* Try change state */
+    Result = FunctionTable->SetState(SoundDeviceInstance, bStart);
+
+    return Result;
+}
+
 /*
     Call the client application when something interesting happens (MME API
     defines "interesting things" as device open, close, and buffer

@@ -73,12 +73,9 @@ Pin_fnWrite(
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
-    ULONG Length;
 
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    Length = IoStack->Parameters.Write.Length;
 
     /* The dispatch context is stored in the FsContext member */
     Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
@@ -113,9 +110,7 @@ Pin_fnWrite(
     /* store file object of next device object */
     IoStack->FileObject = FileObject;
     IoStack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
-    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_WRITE_STREAM; //FIXME
-    IoStack->Parameters.DeviceIoControl.OutputBufferLength = Length;
-    ASSERT(Irp->AssociatedIrp.SystemBuffer);
+    //ASSERT(Irp->AssociatedIrp.SystemBuffer);
 
     /* now call the driver */
     Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);

@@ -133,9 +133,11 @@ CIrpQueue::AddMapping(
         // Wdmaud already probes buffers, therefore no need to probe it again
         // probe the stream irp
         if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM)
-            Status = KsProbeStreamIrp(Irp, KSSTREAM_WRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
-        else
-            Status = KsProbeStreamIrp(Irp, KSSTREAM_READ| KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
+            Status = KsProbeStreamIrp(Irp, KSSTREAM_WRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_SYSTEMADDRESS, 0);
+        else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
+            Status = KsProbeStreamIrp(Irp, KSSTREAM_READ  | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_SYSTEMADDRESS, 0);
+        else 
+            PC_ASSERT(0);
 
         // check for success
         if (!NT_SUCCESS(Status))
