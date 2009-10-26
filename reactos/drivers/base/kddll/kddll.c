@@ -13,6 +13,7 @@
 
 PFNDBGPRNT KdpDbgPrint = NULL;
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
+ULONG RemotePacketId = 0;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -152,6 +153,13 @@ KdReceivePacket(
             continue;
         }
 
+        /* Check if we got a resend packet */
+        if (Packet.PacketLeader == CONTROL_PACKET_LEADER &&
+            Packet.PacketType == PACKET_TYPE_KD_RESEND)
+        {
+            return KDP_PACKET_RESEND;
+        }
+
         /* Step 3 - Read ByteCount */
         KdStatus = KdpReceiveBuffer(&Packet.ByteCount, sizeof(USHORT));
         if (KdStatus != KDP_PACKET_RECEIVED || Packet.ByteCount > PACKET_MAX_SIZE)
@@ -205,6 +213,7 @@ KdReceivePacket(
                     KDDBGPRINT("KdReceivePacket - got a reset packet\n");
                     KdpSendControlPacket(PACKET_TYPE_KD_RESET, 0);
                     CurrentPacketId = INITIAL_PACKET_ID;
+                    RemotePacketId = INITIAL_PACKET_ID;
                     /* Fall through */
 
                 case PACKET_TYPE_KD_RESEND:
@@ -255,6 +264,8 @@ KdReceivePacket(
             KDDBGPRINT("KdReceivePacket - too few data (%d) for type %d\n",
                           Packet.ByteCount, MessageHeader->Length);
             MessageHeader->Length = Packet.ByteCount;
+            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
+            continue;
         }
 
         //KDDBGPRINT("KdReceivePacket - got normal PacketType, Buffer = %p\n", MessageHeader->Buffer);
@@ -328,11 +339,19 @@ KdReceivePacket(
         /* Acknowledge the received packet */
         KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, Packet.PacketId);
 
+        /* Check if the received PacketId is ok */
+        if (Packet.PacketId != RemotePacketId)
+        {
+            /* Continue with next packet */
+            continue;
+        }
+
         /* Did we get the right packet type? */
         if (PacketType == Packet.PacketType)
         {
             /* Yes, return success */
             //KDDBGPRINT("KdReceivePacket - all ok\n");
+            RemotePacketId ^= 1;
             return KDP_PACKET_RECEIVED;
         }
 
@@ -354,6 +373,7 @@ KdSendPacket(
 {
     KD_PACKET Packet;
     KDP_STATUS KdStatus;
+    ULONG Retries;
 
     /* Initialize a KD_PACKET */
     Packet.PacketLeader = PACKET_LEADER;
@@ -370,7 +390,9 @@ KdSendPacket(
                                                 MessageData->Length);
     }
 
-    for (;;)
+    Retries = Context->KdpDefaultRetries;
+
+    do
     {
         /* Set the packet id */
         Packet.PacketId = CurrentPacketId;
@@ -392,10 +414,10 @@ KdSendPacket(
 
         /* Wait for acknowledge */
         KdStatus = KdReceivePacket(PACKET_TYPE_KD_ACKNOWLEDGE,
-                                  NULL,
-                                  NULL,
-                                  0,
-                                  NULL);
+                                   NULL,
+                                   NULL,
+                                   0,
+                                   Context);
 
         /* Did we succeed? */
         if (KdStatus == KDP_PACKET_RECEIVED)
@@ -411,8 +433,14 @@ KdSendPacket(
             return;
         }
 
+        if (KdStatus == KDP_PACKET_TIMEOUT)
+        {
+            Retries--;
+        }
+
         /* Packet timed out, send it again */
     }
+    while (Retries > 0);
 
     return;
 }
