@@ -10417,7 +10417,14 @@ DbgSetDebugFilterState(
 
 #endif /* !DBG */
 
-#if defined(_NTDDK_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
+#if defined(__GNUC__)
+
+extern NTKERNELAPI BOOLEAN KdDebuggerNotPresent;
+extern NTKERNELAPI BOOLEAN KdDebuggerEnabled;
+#define KD_DEBUGGER_ENABLED     KdDebuggerEnabled
+#define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
+
+#elif defined(_NTDDK_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
 
 extern NTKERNELAPI PBOOLEAN KdDebuggerNotPresent;
 extern NTKERNELAPI PBOOLEAN KdDebuggerEnabled;
