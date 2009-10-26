@@ -242,6 +242,14 @@ typedef MMRESULT(*MMSETSTATE_FUNC)(
     IN  BOOL bStart);
 
 
+typedef MMRESULT(*MMQUERYDEVICEINTERFACESTRING_FUNC)(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize);
+
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -265,6 +273,7 @@ typedef struct _MMFUNCTION_TABLE
 
     MMGETPOS_FUNC                   GetPos;
     MMSETSTATE_FUNC                 SetState;
+    MMQUERYDEVICEINTERFACESTRING_FUNC     GetDeviceInterfaceString;
 
     // Redundant
     //MMWAVEHEADER_FUNC               PrepareWaveHeader;
@@ -413,6 +422,15 @@ MmeGetPosition(
     IN  DWORD PrivateHandle,
     IN  MMTIME* Time,
     IN  DWORD Size);
+
+MMRESULT
+MmeGetDeviceInterfaceString(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize);
+
 
 MMRESULT
 MmeSetState(

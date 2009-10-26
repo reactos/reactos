@@ -248,6 +248,39 @@ MmeResetWavePlayback(
 }
 
 MMRESULT
+MmeGetDeviceInterfaceString(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE FunctionTable;
+
+    Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    if ( FunctionTable->GetDeviceInterfaceString == NULL )
+    {
+        /* querying device interface string / size not supported */
+        return MMSYSERR_NOTSUPPORTED;
+    }
+
+    /* Call the driver */
+    Result = FunctionTable->GetDeviceInterfaceString(DeviceType, DeviceId, Interface, InterfaceLength, InterfaceSize);
+
+    return Result;
+}
+
+
+MMRESULT
 MmeGetPosition(
     IN  MMDEVICE_TYPE DeviceType,
     IN  DWORD DeviceId,

@@ -555,6 +555,64 @@ SetWdmWaveState(
 }
 
 MMRESULT
+GetDeviceInterfaceString(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize)
+{
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    MMRESULT Result;
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.DeviceType = DeviceType;
+    DeviceInfo.DeviceIndex = DeviceId;
+
+
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_QUERYDEVICEINTERFACESTRING,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+
+    if (!Interface)
+    {
+        SND_ASSERT(InterfaceSize);
+
+        *InterfaceSize = DeviceInfo.u.Interface.DeviceInterfaceStringSize;
+        return MMSYSERR_NOERROR;
+    }
+
+    if (InterfaceLength < DeviceInfo.u.Interface.DeviceInterfaceStringSize)
+    {
+        /* buffer is too small */
+        return MMSYSERR_MOREDATA;
+    }
+
+    DeviceInfo.u.Interface.DeviceInterfaceStringSize = InterfaceLength;
+    DeviceInfo.u.Interface.DeviceInterfaceString = Interface;
+
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_QUERYDEVICEINTERFACESTRING,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+    return Result;
+}
+
+MMRESULT
 GetWdmPosition(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  MMTIME* Time)
@@ -734,6 +792,7 @@ PopulateWdmDeviceList(
 
         FuncTable.Open = OpenWdmSoundDevice;
         FuncTable.Close = CloseWdmSoundDevice;
+        FuncTable.GetDeviceInterfaceString = GetDeviceInterfaceString;
 #ifndef USERMODE_MIXER
         FuncTable.CommitWaveBuffer = WriteFileEx_Committer2;
 #else

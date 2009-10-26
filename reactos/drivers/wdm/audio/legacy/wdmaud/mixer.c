@@ -1536,6 +1536,7 @@ InitializeMixer(
     MixerInfo->MixCaps.vDriverVersion = 1; //FIXME
     MixerInfo->MixCaps.fdwSupport = 0;
     MixerInfo->MixCaps.cDestinations = 1;
+    MixerInfo->DeviceIndex = DeviceIndex;
 
     /* get target pnp name */
     Status = GetSysAudioDevicePnpName(DeviceObject, DeviceIndex, &Device);
