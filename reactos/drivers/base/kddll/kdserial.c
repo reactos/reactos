@@ -124,7 +124,7 @@ KdpReceivePacketLeader(
             /* Check for breakin byte */
             if (Byte == BREAKIN_PACKET_BYTE)
             {
-                KdpDbgPrint("BREAKIN_PACKET_BYTE\n");
+                KDDBGPRINT("BREAKIN_PACKET_BYTE\n");
                 Index = 0;
                 Buffer[0] = Byte;
                 continue;
@@ -138,7 +138,7 @@ KdpReceivePacketLeader(
     while (Index < 4);
 
     /* Enable the debugger */
-//    KdDebuggerNotPresent = FALSE;
+    KdDebuggerNotPresent = FALSE;
     SharedUserData->KdDebuggerEnabled |= 0x00000002;
 
     /* Return the received packet leader */
