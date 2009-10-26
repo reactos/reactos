@@ -5533,7 +5533,11 @@ const struct builtin_class_descr EDIT_builtin_class =
     CS_DBLCLKS | CS_PARENTDC,   /* style */
     EditWndProcA,         /* procA */
     EditWndProcW,         /* procW */
+#ifdef _WIN64
     sizeof(EDITSTATE *),  /* extra */
+#else
+    sizeof(EDITSTATE *) + sizeof(WORD), /* extra */
+#endif
     IDC_IBEAM,            /* cursor */
     0                     /* brush */
 };
