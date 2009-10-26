@@ -162,7 +162,7 @@ KdReceivePacket(
 
         /* Step 3 - Read ByteCount */
         KdStatus = KdpReceiveBuffer(&Packet.ByteCount, sizeof(USHORT));
-        if (KdStatus != KDP_PACKET_RECEIVED || Packet.ByteCount > PACKET_MAX_SIZE)
+        if (KdStatus != KDP_PACKET_RECEIVED)
         {
             /* Didn't receive ByteCount or it's too big. Start over. */
             continue;
@@ -237,29 +237,11 @@ KdReceivePacket(
         }
 
         /* Get size of the message header */
-        switch (Packet.PacketType)
-        {
-            case PACKET_TYPE_KD_STATE_CHANGE64:
-                MessageHeader->Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
-                break;
+        MessageHeader->Length = MessageHeader->MaximumLength;
 
-            case PACKET_TYPE_KD_STATE_MANIPULATE:
-                MessageHeader->Length = sizeof(DBGKD_MANIPULATE_STATE64);
-                break;
-
-            case PACKET_TYPE_KD_DEBUG_IO:
-                MessageHeader->Length = sizeof(DBGKD_DEBUG_IO);
-                break;
-
-            default:
-                KDDBGPRINT("KdReceivePacket - unknown PacketType\n");
-                return KDP_PACKET_RESEND;
-        }
-
-        //KDDBGPRINT("KdReceivePacket - got normal PacketType\n");
-
-        /* Packet smaller than expected? */
-        if (MessageHeader->Length > Packet.ByteCount)
+        /* Packet smaller than expected or too big? */
+        if (Packet.ByteCount < MessageHeader->Length ||
+            Packet.ByteCount > PACKET_MAX_SIZE)
         {
             KDDBGPRINT("KdReceivePacket - too few data (%d) for type %d\n",
                           Packet.ByteCount, MessageHeader->Length);
@@ -369,7 +351,7 @@ KdSendPacket(
     IN ULONG PacketType,
     IN PSTRING MessageHeader,
     IN PSTRING MessageData,
-    IN OUT PKD_CONTEXT Context)
+    IN OUT PKD_CONTEXT KdContext)
 {
     KD_PACKET Packet;
     KDP_STATUS KdStatus;
@@ -390,7 +372,7 @@ KdSendPacket(
                                                 MessageData->Length);
     }
 
-    Retries = Context->KdpDefaultRetries;
+    Retries = KdContext->KdpDefaultRetries;
 
     do
     {
@@ -417,7 +399,7 @@ KdSendPacket(
                                    NULL,
                                    NULL,
                                    0,
-                                   Context);
+                                   KdContext);
 
         /* Did we succeed? */
         if (KdStatus == KDP_PACKET_RECEIVED)
@@ -441,7 +423,5 @@ KdSendPacket(
         /* Packet timed out, send it again */
     }
     while (Retries > 0);
-
-    return;
 }
 
