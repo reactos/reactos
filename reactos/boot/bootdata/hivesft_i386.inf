@@ -130,7 +130,7 @@ HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\tlstest.exe","GlobalFlag",0x00000000,"0x00000002"
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midimapper",0x00000000,"midimap.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","wavemapper",0x00000000,"msacm32.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","wavemapper",0x00000000,"msacm32.drv"
 ;HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","wave",0x00000000,"sndblst.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midi",0x00000000,"beepmidi.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msadpcm",0x00000000,"msadp32.acm"
