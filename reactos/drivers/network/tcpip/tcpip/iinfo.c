@@ -160,105 +160,17 @@ TDI_STATUS InfoTdiSetArptableMIB(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize
 }
 
 VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
-    KIRQL OldIrql;
-    UINT IFCount = 0, CLNLCount = 0, CLTLCount = 0, COTLCount = 0, ATCount = 0, ERCount = 0, i;
+    AddEntity(IF_ENTITY, Interface, IF_MIB);
 
-    TI_DbgPrint(DEBUG_INFO,
-		("Inserting interface %08x (%d entities already)\n",
-		 Interface, EntityCount));
+    AddEntity(AT_ENTITY, Interface,
+              (Interface != Loopback) ? AT_ARP : AT_NULL);
 
-    TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
-
-    /* Count IP Entities */
-    for( i = 0; i < EntityCount; i++ )
-	switch( EntityList[i].tei_entity )
-        {
-           case IF_ENTITY:
-              IFCount++;
-              break;
-
-           case CL_NL_ENTITY:
-              CLNLCount++;
-              break;
-
-           case CL_TL_ENTITY:
-              CLTLCount++;
-              break;
-
-           case CO_TL_ENTITY:
-              COTLCount++;
-              break;
-
-           case AT_ENTITY:
-              ATCount++;
-              break;
-
-           case ER_ENTITY:
-              ERCount++;
-              break;
-
-           default:
-              break;
-       }
-
-    EntityList[EntityCount].tei_entity   = IF_ENTITY;
-    EntityList[EntityCount].tei_instance = IFCount;
-    EntityList[EntityCount].context      = Interface;
-    EntityList[EntityCount].flags        = IF_MIB;
-    EntityCount++;
-    EntityList[EntityCount].tei_entity   = CL_NL_ENTITY;
-    EntityList[EntityCount].tei_instance = CLNLCount;
-    EntityList[EntityCount].context      = Interface;
-    EntityList[EntityCount].flags        = CL_NL_IP;
-    EntityCount++;
-    EntityList[EntityCount].tei_entity   = CL_TL_ENTITY;
-    EntityList[EntityCount].tei_instance = CLTLCount;
-    EntityList[EntityCount].context      = Interface;
-    EntityList[EntityCount].flags        = CL_TL_UDP;
-    EntityCount++;
-    EntityList[EntityCount].tei_entity   = CO_TL_ENTITY;
-    EntityList[EntityCount].tei_instance = COTLCount;
-    EntityList[EntityCount].context      = Interface;
-    EntityList[EntityCount].flags        = CO_TL_TCP;
-    EntityCount++;
-    EntityList[EntityCount].tei_entity   = ER_ENTITY;
-    EntityList[EntityCount].tei_instance = ERCount;
-    EntityList[EntityCount].context      = Interface;
-    EntityList[EntityCount].flags        = ER_ICMP;
-    EntityCount++;
-    EntityList[EntityCount].tei_entity   = AT_ENTITY;
-    EntityList[EntityCount].tei_instance = ATCount;
-    EntityList[EntityCount].context      = Interface;
-    EntityList[EntityCount].flags        = (Interface != Loopback) ? AT_ARP : AT_NULL;
-    EntityCount++;
-
-    TcpipReleaseSpinLock( &EntityListLock, OldIrql );
+    /* FIXME: This is probably wrong */
+    AddEntity(CL_NL_ENTITY, Interface, CL_NL_IP);
 }
 
 VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
-    KIRQL OldIrql;
-    UINT i;
-
-    TI_DbgPrint(DEBUG_INFO,("Removing TDI entry 0x%x\n", Interface));
-
-    TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
-
-    /* Remove entities that have this interface as context
-     * In the future, this might include AT_ENTITY types, too
-     */
-    for( i = 0; i < EntityCount; i++ ) {
-	TI_DbgPrint(DEBUG_INFO,("--> examining TDI entry 0x%x\n", EntityList[i].context));
-	if( EntityList[i].context == Interface ) {
-	    if( i != EntityCount-1 ) {
-		memcpy( &EntityList[i],
-			&EntityList[--EntityCount],
-			sizeof(EntityList[i]) );
-	    } else {
-		EntityCount--;
-	    }
-	}
-    }
-
-    TcpipReleaseSpinLock( &EntityListLock, OldIrql );
+    /* This removes all of them */
+    RemoveEntityByContext(Interface);
 }
 

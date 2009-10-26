@@ -416,13 +416,13 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint
 		(MID_TRACE,("RemoteAddress #%d Type %d\n",
-					((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
+					((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
 					TAAddressCount,
-					((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
+					((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
 					Address[0].AddressType));
 
     TdiBuildConnectionInfo( &TargetAddress,
-							((PTRANSPORT_ADDRESS)SendReq->RemoteAddress) );
+							((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress) );
 
     /* Check the size of the Address given ... */
 

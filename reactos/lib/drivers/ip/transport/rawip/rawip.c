@@ -11,6 +11,7 @@
 #include "precomp.h"
 
 NTSTATUS AddGenericHeaderIPv4(
+    PADDRESS_FILE AddrFile,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
     PIP_ADDRESS LocalAddress,
@@ -62,9 +63,9 @@ NTSTATUS AddGenericHeaderIPv4(
     IPHeader->Id = (USHORT)Random();
     /* One fragment at offset 0 */
     IPHeader->FlagsFragOfs = 0;
-    /* Time-to-Live is 128 */
-    IPHeader->Ttl = 128;
-    /* User Datagram Protocol */
+    /* Time-to-Live */
+    IPHeader->Ttl = AddrFile->TTL;
+    /* Protocol */
     IPHeader->Protocol = Protocol;
     /* Checksum is 0 (for later calculation of this) */
     IPHeader->Checksum = 0;
@@ -82,6 +83,7 @@ NTSTATUS AddGenericHeaderIPv4(
 
 
 NTSTATUS BuildRawIpPacket(
+    PADDRESS_FILE AddrFile,
     PIP_PACKET Packet,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
@@ -124,9 +126,9 @@ NTSTATUS BuildRawIpPacket(
     switch (RemoteAddress->Type) {
     case IP_ADDRESS_V4:
 	Status = AddGenericHeaderIPv4
-            (RemoteAddress, RemotePort,
+            (AddrFile, RemoteAddress, RemotePort,
              LocalAddress, LocalPort, Packet, DataLen,
-             IPPROTO_RAW,
+             AddrFile->Protocol,
              0, (PVOID *)&Payload );
 	break;
     case IP_ADDRESS_V6:
@@ -225,7 +227,8 @@ NTSTATUS RawIPSendDatagram(
         LocalAddress = NCE->Interface->Unicast;
     }
 
-    Status = BuildRawIpPacket( &Packet,
+    Status = BuildRawIpPacket( AddrFile,
+                               &Packet,
                                &RemoteAddress,
                                RemotePort,
                                &LocalAddress,

@@ -354,7 +354,7 @@ static NTSTATUS NTAPI
 AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
 #if DBG
     PFILE_OBJECT FileObject = IrpSp->FileObject;
 #endif
@@ -431,6 +431,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	case IOCTL_AFD_SET_INFO:
 	    return AfdSetInfo( DeviceObject, Irp, IrpSp );
 
+	case IOCTL_AFD_GET_CONTEXT_SIZE:
+	    return AfdGetContextSize( DeviceObject, Irp, IrpSp );
+
 	case IOCTL_AFD_GET_CONTEXT:
 	    return AfdGetContext( DeviceObject, Irp, IrpSp );
 
@@ -453,70 +456,73 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             return AfdGetPeerName( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_TDI_HANDLES:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_TDI_HANDLES\n"));
+	    DbgPrint("IOCTL_AFD_GET_TDI_HANDLES is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_SET_CONNECT_DATA:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_CONNECT_DATA\n"));
+	    DbgPrint("IOCTL_AFD_SET_CONNECT_DATA is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_SET_CONNECT_OPTIONS:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_CONNECT_OPTIONS\n"));
+	    DbgPrint("IOCTL_AFD_SET_CONNECT_OPTIONS is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_SET_DISCONNECT_DATA:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_DATA\n"));
+	    DbgPrint("IOCTL_AFD_SET_DISCONNECT_DATA is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_SET_DISCONNECT_OPTIONS:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_OPTIONS\n"));
+	    DbgPrint("IOCTL_AFD_SET_DISCONNECT_OPTIONS is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_GET_CONNECT_DATA:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_CONNECT_DATA\n"));
+	    DbgPrint("IOCTL_AFD_GET_CONNECT_DATA is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_GET_CONNECT_OPTIONS:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_CONNECT_OPTIONS\n"));
+	    DbgPrint("IOCTL_AFD_GET_CONNECT_OPTIONS is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_GET_DISCONNECT_DATA:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_DISCONNECT_DATA\n"));
+	    DbgPrint("IOCTL_AFD_GET_DISCONNECT_DATA is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_GET_DISCONNECT_OPTIONS:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_DISCONNECT_OPTIONS\n"));
+	    DbgPrint("IOCTL_AFD_GET_DISCONNECT_OPTIONS is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_SET_CONNECT_DATA_SIZE:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_CONNECT_DATA_SIZE\n"));
+	    DbgPrint("IOCTL_AFD_SET_CONNECT_DATA_SIZE is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE\n"));
+	    DbgPrint("IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_SET_DISCONNECT_DATA_SIZE:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_DATA_SIZE\n"));
+	    DbgPrint("IOCTL_AFD_SET_DISCONNECT_DATA_SIZE is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE\n"));
+	    DbgPrint("IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_DEFER_ACCEPT:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_DEFER_ACCEPT\n"));
+	    DbgPrint("IOCTL_AFD_DEFER_ACCEPT is UNIMPLEMENTED!\n");
 	    break;
 
 	case IOCTL_AFD_GET_PENDING_CONNECT_DATA:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_PENDING_CONNECT_DATA\n"));
+	    DbgPrint("IOCTL_AFD_GET_PENDING_CONNECT_DATA is UNIMPLEMENTED!\n");
+	    break;
+
+	case IOCTL_AFD_VALIDATE_GROUP:
+	    DbgPrint("IOCTL_AFD_VALIDATE_GROUP is UNIMPLEMENTED!\n");
 	    break;
 
 	default:
-	    Status = STATUS_NOT_IMPLEMENTED;
-	    AFD_DbgPrint(MIN_TRACE, ("Unknown IOCTL (0x%x)\n",
-				     IrpSp->Parameters.DeviceIoControl.
-				     IoControlCode));
+	    Status = STATUS_NOT_SUPPORTED;
+	    DbgPrint("Unknown IOCTL (0x%x)\n",
+		     IrpSp->Parameters.DeviceIoControl.IoControlCode);
 	    break;
 	}
 	break;

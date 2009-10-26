@@ -201,6 +201,9 @@ NTSTATUS FileOpenAddress(
 
   AddrFile->Free = AddrFileFree;
 
+  /* Set our default TTL */
+  AddrFile->TTL = 128;
+
   /* Make sure address is a local unicast address or 0 */
   /* FIXME: IPv4 only */
   AddrFile->Family = Address->Address[0].AddressType;
@@ -231,6 +234,8 @@ NTSTATUS FileOpenAddress(
           return STATUS_INVALID_PARAMETER;
       }
 
+      AddEntity(CO_TL_ENTITY, AddrFile, CO_TL_TCP);
+
       AddrFile->Send = NULL; /* TCPSendData */
       break;
 
@@ -250,18 +255,27 @@ NTSTATUS FileOpenAddress(
       TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",
                              AddrFile->Port,
                              Address->Address[0].Address[0].sin_port));
+
+      AddEntity(CL_TL_ENTITY, AddrFile, CL_TL_UDP);
+
       AddrFile->Send = UDPSendDatagram;
       break;
 
   case IPPROTO_ICMP:
     AddrFile->Port = 0;
     AddrFile->Send = ICMPSendDatagram;
+
+    /* FIXME: Verify this */
+    AddEntity(ER_ENTITY, AddrFile, ER_ICMP);
     break;
 
   default:
     /* Use raw IP for all other protocols */
     AddrFile->Port = 0;
     AddrFile->Send = RawIPSendDatagram;
+
+    /* FIXME: Verify this */
+    AddEntity(CL_TL_ENTITY, AddrFile, 0);
     break;
   }
 
@@ -379,6 +393,8 @@ NTSTATUS FileCloseAddress(
     UDPFreePort( AddrFile->Port );
     break;
   }
+
+  RemoveEntityByContext(AddrFile);
 
   (*AddrFile->Free)(AddrFile);
 

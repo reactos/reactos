@@ -158,6 +158,7 @@ typedef struct _ADDRESS_FILE {
     USHORT Family;                        /* Address family */
     USHORT Protocol;                      /* Protocol number */
     USHORT Port;                          /* Network port (network byte order) */
+    UCHAR TTL;                            /* Time to live stored in packets sent from this address file */
     WORK_QUEUE_ITEM WorkItem;             /* Work queue item handle */
     DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine for delete request */
     PVOID Context;                        /* Delete request context */
