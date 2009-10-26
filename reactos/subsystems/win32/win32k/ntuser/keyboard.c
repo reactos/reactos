@@ -69,11 +69,11 @@ NTSTATUS FASTCALL InitKeyboardImpl(VOID)
 static UINT DontDistinguishShifts( UINT ret )
 {
    if( ret == VK_LSHIFT || ret == VK_RSHIFT )
-      ret = VK_LSHIFT;
+      ret = VK_SHIFT;
    if( ret == VK_LCONTROL || ret == VK_RCONTROL )
-      ret = VK_LCONTROL;
+      ret = VK_CONTROL;
    if( ret == VK_LMENU || ret == VK_RMENU )
-      ret = VK_LMENU;
+      ret = VK_MENU;
    return ret;
 }
 
@@ -435,14 +435,27 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    if( !keyLayout )
       return FALSE;
 
+   if (lpMsg->message < WM_KEYFIRST || lpMsg->message > WM_KEYLAST)
+      return FALSE;
    if (lpMsg->message != WM_KEYDOWN && lpMsg->message != WM_SYSKEYDOWN)
       return FALSE;
-
-   ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
    /* All messages have to contain the cursor point. */
    IntGetCursorLocation(pti->Desktop->WindowStation,
                         &NewMsg.pt);
+
+    switch (lpMsg->wParam)
+    {
+    case VK_PACKET:
+        NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
+        NewMsg.hwnd = lpMsg->hwnd;
+        NewMsg.wParam = HIWORD(lpMsg->lParam);
+        NewMsg.lParam = LOWORD(lpMsg->lParam);
+        MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
+        return TRUE;
+    }
+
+   ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
    UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
                            gQueueKeyStateTable, wp, 2, 0,
@@ -628,11 +641,11 @@ static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout )
    switch( Type )
    {
       case 0:
-         if( Code == VK_RSHIFT )
+         if( Code == VK_SHIFT )
             Code = VK_LSHIFT;
-         if( Code == VK_RMENU )
+         if( Code == VK_MENU )
             Code = VK_LMENU;
-         if( Code == VK_RCONTROL )
+         if( Code == VK_CONTROL )
             Code = VK_LCONTROL;
          ret = VkToScan( Code, FALSE, keyLayout );
          break;
@@ -706,7 +719,7 @@ NtUserToUnicodeEx(
    DECLARE_RETURN(int);
 
    DPRINT("Enter NtUserSetKeyboardState\n");
-   UserEnterShared();//faxme: this syscall doesnt seem to need any locking...
+   UserEnterShared();//fixme: this syscall doesnt seem to need any locking...
 
 
    if( !NT_SUCCESS(MmCopyFromCaller(KeyStateBuf,
@@ -785,12 +798,22 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    if( lParam & (1<<25) )
    {
       CareVk = VkCode = ScanToVk( ScanCode, ExtKey, keyLayout );
-      if( VkCode == VK_LSHIFT || VkCode == VK_RSHIFT )
-         VkCode = VK_LSHIFT;
-      if( VkCode == VK_LCONTROL || VkCode == VK_RCONTROL )
-         VkCode = VK_LCONTROL;
-      if( VkCode == VK_LMENU || VkCode == VK_RMENU )
-         VkCode = VK_LMENU;
+      switch (VkCode)
+      {
+          case VK_RSHIFT:
+              ScanCode |= 0x100;
+          case VK_LSHIFT:
+             VkCode = VK_SHIFT;
+             break;
+          case VK_LCONTROL:
+          case VK_RCONTROL:
+             VkCode = VK_CONTROL;
+             break;
+          case VK_LMENU:
+          case VK_RMENU:
+             VkCode = VK_MENU;
+             break;
+      }
    }
    else
    {
