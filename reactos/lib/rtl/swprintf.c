@@ -33,7 +33,7 @@ typedef struct {
     unsigned int exponent:11;
     unsigned int sign:1;
 } double_t;
-
+#if 0
 static
 __inline
 int
@@ -62,7 +62,7 @@ _isnan(double __x)
     	x.__x = &__x;
 	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
 }
-
+#endif
 
 static
 __inline
@@ -178,6 +178,7 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 	return buf;
 }
 
+#if 0
 static wchar_t *
 numberf(wchar_t * buf, wchar_t * end, double num, int base, int size, int precision, int type)
 {
@@ -283,6 +284,7 @@ numberf(wchar_t * buf, wchar_t * end, double num, int base, int size, int precis
 	}
 	return buf;
 }
+#endif
 
 static wchar_t*
 string(wchar_t* buf, wchar_t* end, const char* s, int len, int field_width, int precision, int flags)
@@ -394,7 +396,7 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
 	const char *s;
 	const wchar_t *sw;
 	const wchar_t *ss;
-	double _double;
+//	double _double;
 
 	int flags;		/* flags to number() */
 
@@ -591,6 +593,7 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
 				*ip = (str - buf);
 			}
 			continue;
+#if 0
 		/* float number formats - set up the flags and "break" */
         case 'e':
 		case 'E':
@@ -633,7 +636,7 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
          }
 
           continue;
-
+#endif
 
 
 		/* integer number formats - set up the flags and "break" */
