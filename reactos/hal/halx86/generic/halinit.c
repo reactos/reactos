@@ -97,11 +97,11 @@ HalInitSystem(IN ULONG BootPhase,
         /* Force initial PIC state */
         KfRaiseIrql(KeGetCurrentIrql());
 
-        /* Initialize the clock */
-        HalpInitializeClock();
-
         /* Setup busy waiting */
         HalpCalibrateStallExecution();
+
+        /* Initialize the clock */
+        HalpInitializeClock();
 
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
