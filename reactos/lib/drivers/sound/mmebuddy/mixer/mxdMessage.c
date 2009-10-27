@@ -243,6 +243,19 @@ mxdMessage(
 
             break;
         }
+
+        case DRV_QUERYDEVICEINTERFACESIZE :
+        {
+            Result = MmeGetDeviceInterfaceString(MIXER_DEVICE_TYPE, DeviceId, NULL, 0, (DWORD*)Parameter1); //FIXME DWORD_PTR
+            break;
+        }
+
+        case DRV_QUERYDEVICEINTERFACE :
+        {
+            Result = MmeGetDeviceInterfaceString(MIXER_DEVICE_TYPE, DeviceId, (LPWSTR)Parameter1, Parameter2, NULL); //FIXME DWORD_PTR
+            break;
+        }
+
     }
 
     SND_TRACE(L"mxdMessage returning MMRESULT %d\n", Result);

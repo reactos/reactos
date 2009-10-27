@@ -609,6 +609,13 @@ GetDeviceInterfaceString(
                                            (LPVOID) &DeviceInfo,
                                            sizeof(WDMAUD_DEVICE_INFO),
                                            NULL);
+
+    if (  MMSUCCESS(Result) && InterfaceLength > 2)
+    {
+        Interface[1] = L'\\';
+        Interface[InterfaceLength-1] = L'\0';
+    }
+
     return Result;
 }
 
