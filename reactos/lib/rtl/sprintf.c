@@ -34,6 +34,7 @@ typedef struct {
     unsigned int sign:1;
 } double_t;
 
+#if 0
 static
 __inline
 int
@@ -62,7 +63,7 @@ _isnan(double __x)
     	x.__x = &__x;
 	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
 }
-
+#endif
 
 static
 __inline
@@ -179,6 +180,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 	return buf;
 }
 
+#if 0
 static char *
 numberf(char * buf, char * end, double num, int base, int size, int precision, int type)
 {
@@ -283,6 +285,7 @@ numberf(char * buf, char * end, double num, int base, int size, int precision, i
 	}
 	return buf;
 }
+#endif
 
 static char*
 string(char* buf, char* end, const char* s, int len, int field_width, int precision, int flags)
@@ -389,7 +392,7 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
 	int len;
 	unsigned long long num;
-	double _double;
+//	double _double;
 
 	int base;
 	char *str, *end;
@@ -594,6 +597,7 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			}
 			continue;
 
+#if 0
 		/* float number formats - set up the flags and "break" */
         case 'e':
 		case 'E':
@@ -635,7 +639,7 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
          }
 
           continue;
-
+#endif
 
 		/* integer number formats - set up the flags and "break" */
 		case 'o':
