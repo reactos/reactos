@@ -172,7 +172,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 
-	IDS_LICENSE				"Ten program nale¿y do wolnego oprogramowania; mo¿esz go rozpowszechniaæ i/lub modyfikowaæ w zgodzie z zasadami licencji GNU GPL w formie w jakiej zosta³y opublikowane przez fundacjê Free Software Foundation; albo w wersji 2 Licencji albo (tu masz wybór) w jakiejkolwiek póŸniejszej wersji.\r\n\r\nRozpowszechniaj¹c ten program mamy nadziejê, ¿e bêdzie u¿yteczny, ale BEZ ¯ADNEJ GWARANCJI; nawet bez zak³adanej gwarancji HANDLOWOŒCI, a w szczególnym przypadku zdatnoœci. Aby poznaæ wiêcej szczegó³ów, zajrzyj do licencji GNU.\r\n\r\nKopia licencji GNU GPL powinna byæ dostarczona razem z tym programem; jeœli tak nie jest, napisz list do fundacji na adres: Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+	IDS_LICENSE				"Ten program nale¿y do wolnego oprogramowania; mo¿esz go rozpowszechniaæ i/lub modyfikowaæ w zgodzie z zasadami licencji GNU GPL w formie w jakiej zosta³y opublikowane przez fundacjê Free Software Foundation; albo w wersji 2 Licencji albo (tu masz wybór) w jakiejkolwiek póŸniejszej wersji.\r\n\r\nRozpowszechniaj¹c ten program mamy nadziejê, ¿e bêdzie u¿yteczny, ale BEZ ¯ADNEJ GWARANCJI; nawet bez zak³adanej gwarancji HANDLOWOŒCI, a w szczególnym przypadku zdatnoœci. Aby poznaæ wiêcej szczegó³ów, zajrzyj do licencji GNU.\r\n\r\nKopia licencji GNU GPL powinna byæ dostarczona razem z tym programem; jeœli tak nie jest, napisz list do fundacji na adres: Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 
 	END
 

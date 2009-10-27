@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <stdlib.h>
@@ -817,7 +817,7 @@ void TestBoard( HWND hWnd, BOARD *pBoard, LONG x, LONG y, int msg )
 
         pBoard->uNumFlags = pBoard->uMines;
         RedrawWindow( pBoard->hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW );
-        
+
         if( pBoard->Difficulty != CUSTOM && pBoard->uTime < pBoard->uBestTime[pBoard->Difficulty] )
         {
             pBoard->uBestTime[pBoard->Difficulty] = pBoard->uTime;
