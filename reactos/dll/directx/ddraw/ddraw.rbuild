@@ -61,6 +61,7 @@
 		<file>DirectDraw4_Vtable.c</file>
 		<file>DirectDraw2_Vtable.c</file>
 		<file>DirectDraw_Vtable.c</file>
+		<file>DirectDrawPalette_Vtable.c</file>
 		<file>DirectDrawSurface7_Vtable.c</file>
 		<file>DirectDrawSurface4_Vtable.c</file>
 		<file>DirectDrawSurface3_Vtable.c</file>
