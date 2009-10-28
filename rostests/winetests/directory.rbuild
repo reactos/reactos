@@ -241,9 +241,10 @@
 	<directory name="ws2_32">
 		<xi:include href="ws2_32/ws2_32.rbuild" />
 	</directory>
-	<!--
-	<directory name="winetest">
+	<!--directory name="winetest">
 		<xi:include href="winetest/winetest.rbuild" />
+	</directory-->
+	<directory name="winmm">
+		<xi:include href="winmm/winmm.rbuild" />
 	</directory>
-	-->
 </group>
