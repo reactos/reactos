@@ -24,7 +24,10 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+
+#ifndef __REACTOS__
 #include <syslog.h> /* XXXDCL NT */
+#endif
 
 #include <isc/formatcheck.h>
 #include <isc/lang.h>

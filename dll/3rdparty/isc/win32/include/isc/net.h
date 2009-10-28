@@ -97,7 +97,10 @@
 #include <isc/lang.h>
 #include <isc/types.h>
 
+#ifndef __REACTOS__
 #include <ws2tcpip.h>
+#endif
+
 #include <isc/ipv6.h>
 
 /*
@@ -117,9 +120,15 @@ struct in6_pktinfo {
 };
 #endif
 
+#ifndef __REACTOS__
 #if _MSC_VER < 1300
+#endif
+
 #define in6addr_any isc_in6addr_any
 #define in6addr_loopback isc_in6addr_loopback
+
+#ifndef __REACTOS__
+#endif
 #endif
 
 /*

@@ -29,8 +29,12 @@
 
 #define S_IREAD	_S_IREAD	/* read permission, owner */
 #define S_IWRITE _S_IWRITE	/* write permission, owner */
+
+#ifndef __REACTOS__
 #define S_IRUSR _S_IREAD	/* Owner read permission */
 #define S_IWUSR _S_IWRITE	/* Owner write permission */
+#endif
+
 #define S_IRGRP _S_IREAD	/* Group read permission */
 #define S_IWGRP _S_IWRITE	/* Group write permission */
 #define S_IROTH _S_IREAD	/* Other read permission */

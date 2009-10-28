@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
+	<directory name="isc">
+		<xi:include href="isc/isc.rbuild" />
+	</directory>
+	<directory name="dns">
+		<xi:include href="dns/dns.rbuild" />
+	</directory>
 	<directory name="mesa32">
 		<xi:include href="mesa32/mesa32.rbuild" />
 	</directory>
