@@ -242,9 +242,22 @@ _MsgInvalidOpcodeFault:
     push 0
     .allocstack 0x8
 
-    UNIMPLEMENTED KiDebugTrapOrFault
+    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
 
-    jmp $
+    /* Check if the frame was from kernelmode */
+    test word ptr [rbp + KTRAP_FRAME_SegCs], 3
+    jz KiDebugTrapOrFaultKMode
+
+    /* Enable interrupts for user-mode */
+    sti
+
+KiDebugTrapOrFaultKMode:
+
+    DISPATCH_EXCEPTION STATUS_SINGLE_STEP, 0, 0, 0, 0
+
+    /* Return */
+    LEAVE_TRAP_FRAME
+    iretq
 .endproc
 
 .proc KiNmiInterrupt
