@@ -67,7 +67,7 @@ FatiOpenRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
         }
 
         /* Set file object pointers */
-        Ccb = FatCreateCcb(IrpContext);
+        Ccb = FatCreateCcb();
         FatSetFileObject(FileObject, UserDirectoryOpen, Dcb, Ccb);
 
         /* Increment counters */
@@ -336,7 +336,7 @@ FatiOpenVolume(IN PFAT_IRP_CONTEXT IrpContext,
     }
 
     /* Set file object pointers */
-    Ccb = FatCreateCcb(IrpContext);
+    Ccb = FatCreateCcb();
     FatSetFileObject(FileObject, UserVolumeOpen, Vcb, Ccb);
     FileObject->SectionObjectPointer = &Vcb->SectionObjectPointers;
 
