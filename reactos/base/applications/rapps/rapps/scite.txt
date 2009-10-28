@@ -1,0 +1,15 @@
+; UTF-8
+
+[Section]
+Name = SciTE
+Version = 2.01
+Licence = Freeware
+Description = SciTE is a SCIntilla based Text Editor. Originally built to demonstrate Scintilla, it has grown to be a generally useful editor with facilities for building and running programs.
+Size = 0.6M
+Category = 7
+URLSite = http://www.scintilla.org/
+URLDownload = http://fastbull.dl.sourceforge.net/sourceforge/scintilla/Sc201.exe
+CDPath = none
+
+[Section.0407]
+Description = SciTE ist ein SCIntilla basierter Text Editor. Ursprünglich wurde er erstellt, um Scintilla vorzuführen, wuchs aber zu einem nützlichen Editor mit der Fähigkeit Programme zu erstellen und auszuführen.
