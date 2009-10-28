@@ -670,6 +670,8 @@ subsystems\win32\win32k\win32k.sys                  1
 modules\optional\netkvm2k.inf                       6  optional
 modules\optional\netkvm2k.cat                       6  optional
 modules\optional\netkvm.sys                         2  optional
+modules\optional\alcxwdm.inf                        6  optional
+modules\optional\alcxwdm.sys                        2  optional
 modules\optional\mfc42.dll                          1  optional
 modules\optional\mfc42u.dll                         1  optional
 modules\optional\mfc71.dll                          1  optional
