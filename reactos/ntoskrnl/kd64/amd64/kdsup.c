@@ -226,9 +226,28 @@ KdpSysWriteControlSpace(IN ULONG Processor,
                         IN ULONG Length,
                         OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    PVOID ControlStart;
+    PKPRCB Prcb = KiProcessorBlock[Processor];
+    PKIPCR Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
+
+    switch (BaseAddress)
+    {
+        case AMD64_DEBUG_CONTROL_SPACE_KSPECIAL:
+            /* Copy SpecialRegisters */
+            ControlStart = &Prcb->ProcessorState.SpecialRegisters;
+            *ActualLength = sizeof(KSPECIAL_REGISTERS);
+            break;
+
+        default:
+            *ActualLength = 0;
+            ASSERT(FALSE);
+            return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Copy the memory */
+    RtlCopyMemory(ControlStart, Buffer, min(Length, *ActualLength));
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
