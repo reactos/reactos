@@ -264,12 +264,27 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDDRAWI_DDRAWSURFACE_INT This)
 {
+    ULONG ref = 0;
 
-    /* FIXME
-       This is not right exiame how it should be done
-     */
-    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
-    return This->dwIntRefCnt;
+    AcquireDDThreadLock();
+
+    _SEH2_TRY
+    {
+        This->dwIntRefCnt--;
+        ref = This->dwIntRefCnt;
+        if(!ref)
+        {
+            DxHeapMemFree(This);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+    _SEH2_END
+
+    ReleaseDDThreadLock();
+
+    return ref;
 }
 
 

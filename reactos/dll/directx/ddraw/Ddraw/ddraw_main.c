@@ -117,7 +117,7 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
         else
         {
             *obj = NULL;
-            DX_STUB_str("E_NOINTERFACE");
+            DX_STUB_str("E_NOINTERFACE\n");
             retVal = E_NOINTERFACE;
         }
     }
@@ -533,18 +533,13 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
     }
     _SEH2_END;
 
+    if(*ppSurf != NULL)
+        Main_DirectDraw_AddRef(This);
+
     LeaveCriticalSection(&ddcs);
     return ret;
 }
 
 /* 5 of 31 DirectDraw7_Vtable api are working simluare to windows */
 /* 8 of 31 DirectDraw7_Vtable api are under devloping / testing */
-
-
-
-
-
-
-
-
 
