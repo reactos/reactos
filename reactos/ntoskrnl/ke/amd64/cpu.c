@@ -472,7 +472,7 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
 //    __ltr(&ProcessorState->SpecialRegisters.Tr);
     __lidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
 
-    __ldmxcsr(&ProcessorState->SpecialRegisters.MxCsr);
+//    __ldmxcsr(&ProcessorState->SpecialRegisters.MxCsr); // FIXME
 //    ProcessorState->SpecialRegisters.DebugControl
 //    ProcessorState->SpecialRegisters.LastBranchToRip
 //    ProcessorState->SpecialRegisters.LastBranchFromRip
