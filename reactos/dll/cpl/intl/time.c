@@ -76,7 +76,7 @@ GetSelectedComboEntry(HWND hwndDlg, DWORD dwIdc, TCHAR *Buffer, UINT uSize)
          * it shouldn't be required because the previous CB_LIMITTEXT,
          * but it would be better to check it anyways */
         uReqSize = SendMessage(hChildWnd, CB_GETLBTEXTLEN, (WPARAM)nIndex, 0) + 1;
-        /* allocate enought space, to be more safe */
+        /* allocate enough space to be more safe */
         tmp = (LPTSTR)_alloca(uReqSize*sizeof(TCHAR));
         /* get selected time format text */
         SendMessage(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
@@ -109,9 +109,9 @@ TimePageProc(HWND hwndDlg,
             /* Update the time format sample */
             UpdateTimeSample(GetDlgItem(hwndDlg, IDC_TIMESAMPLE), pGlobalData->lcid);
 
-            /* Get the time format (max. 80 characters) */
+            /* Get the time format */
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
-                        CB_LIMITTEXT, 80, 0);
+                        CB_LIMITTEXT, MAX_TIMEFORMAT, 0);
 
             /* Add available time formats to the list */
             hwndEnum = GetDlgItem(hwndDlg, IDC_TIMEFORMAT);
@@ -123,9 +123,9 @@ TimePageProc(HWND hwndDlg,
                         -1,
                         (LPARAM)Buffer);
 
-            /* Get the time separator (max. 4 characters) */
+            /* Get the time separator */
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
-                        CB_LIMITTEXT, 4, 0);
+                        CB_LIMITTEXT, MAX_TIMESEPARATOR, 0);
             GetLocaleInfo(pGlobalData->lcid, LOCALE_STIME, Buffer, sizeof(Buffer)/sizeof(TCHAR));
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
                         CB_ADDSTRING,
@@ -136,10 +136,10 @@ TimePageProc(HWND hwndDlg,
                         0, /* index */
                         0);
 
-            /* Get the AM symbol (max. 9 characters) */
+            /* Get the AM symbol */
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
-                        CB_LIMITTEXT, 9, 0);
-            nLen = GetLocaleInfo(pGlobalData->lcid, LOCALE_S1159, Buffer, 80);
+                        CB_LIMITTEXT, MAX_TIMEAMSYMBOL, 0);
+            nLen = GetLocaleInfo(pGlobalData->lcid, LOCALE_S1159, Buffer, sizeof(Buffer)/sizeof(TCHAR));
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
                         CB_ADDSTRING,
                         0,
@@ -156,10 +156,10 @@ TimePageProc(HWND hwndDlg,
                         0, /* index */
                         0);
 
-            /* Get the PM symbol (max. 9 characters) */
+            /* Get the PM symbol */
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
-                        CB_LIMITTEXT, 9, 0);
-            nLen = GetLocaleInfo(pGlobalData->lcid, LOCALE_S2359, Buffer, 80);
+                        CB_LIMITTEXT, MAX_TIMEPMSYMBOL, 0);
+            nLen = GetLocaleInfo(pGlobalData->lcid, LOCALE_S2359, Buffer, sizeof(Buffer)/sizeof(TCHAR));
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
                         CB_ADDSTRING,
                         0,

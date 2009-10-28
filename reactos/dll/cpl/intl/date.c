@@ -269,7 +269,7 @@ InitShortDateSepSamples(HWND hwndDlg, LCID lcid)
                 (WPARAM)0,
                 (LPARAM)0);
 
-    /* Create standart list of separators */
+    /* Create standard list of separators */
     for (nCBIndex = 0; nCBIndex < MAX_SHRT_DATE_SEPARATORS; nCBIndex++)
     {
         SendMessageW(GetDlgItem(hwndDlg, IDC_SHRTDATESEP_COMBO),
@@ -316,6 +316,16 @@ InitShortDateCB(HWND hwndDlg, LCID lcid)
     TCHAR szShortDateFmt[MAX_SAMPLES_STR_SIZE];
     INT nRetCode;
 
+    /* Limit text lengths */
+    SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATEFMT_COMBO),
+                CB_LIMITTEXT,
+                MAX_SHRTDATEFMT,
+                0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATESEP_COMBO),
+                CB_LIMITTEXT,
+                MAX_SHRTDATESEP,
+                0);
+
     /* Get current short date format */
     GetLocaleInfo(lcid,
                   LOCALE_SSHORTDATE,
@@ -358,6 +368,12 @@ InitLongDateCB(HWND hwndDlg, LCID lcid)
 {
     TCHAR szLongDateFmt[MAX_SAMPLES_STR_SIZE];
     INT nRetCode;
+
+    /* Limit text length */
+    SendMessage(GetDlgItem(hwndDlg, IDC_LONGDATEFMT_COMBO),
+                CB_LIMITTEXT,
+                MAX_LONGDATEFMT,
+                0);
 
     /* Get current long date format */
     GetLocaleInfo(lcid,
@@ -468,6 +484,16 @@ InitMinMaxDateSpin(HWND hwndDlg, LCID lcid)
     TCHAR OutBuffer[YEAR_STR_MAX_SIZE];
     HWND hWndYearSpin;
 
+    /* Limit text lengths */
+    SendMessage(GetDlgItem(hwndDlg, IDC_FIRSTYEAR_EDIT),
+                EM_LIMITTEXT,
+                MAX_YEAR_EDIT,
+                0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_SECONDYEAR_EDIT),
+                EM_LIMITTEXT,
+                MAX_YEAR_EDIT,
+                0);
+
     hWndYearSpin = GetDlgItem(hwndDlg, IDC_SCR_MAX_YEAR);
 
     /* Init max date value */
@@ -503,17 +529,17 @@ static VOID
 UpdateDateLocaleSamples(HWND hwndDlg,
                         LCID lcidLocale)
 {
-    TCHAR OutBuffer[MAX_FMT_SIZE];
+    TCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
 
     /* Get short date format sample */
     GetDateFormat(lcidLocale, DATE_SHORTDATE, NULL, NULL, OutBuffer,
-        MAX_FMT_SIZE);
+                  MAX_SAMPLES_STR_SIZE);
     SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATESAMPLE_EDIT), WM_SETTEXT,
         0, (LPARAM)OutBuffer);
 
     /* Get long date sample */
     GetDateFormat(lcidLocale, DATE_LONGDATE, NULL, NULL, OutBuffer,
-        MAX_FMT_SIZE);
+                  MAX_SAMPLES_STR_SIZE);
     SendMessage(GetDlgItem(hwndDlg, IDC_LONGDATESAMPLE_EDIT),
         WM_SETTEXT, 0, (LPARAM)OutBuffer);
 }

@@ -63,6 +63,12 @@ InitCurrencySymbols(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
     TCHAR szBuffer[MAX_FMT_SIZE];
 
+    /* Limit text length */
+    SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYSYMBOL),
+                CB_LIMITTEXT,
+                MAX_CURRENCYSYMBOL,
+                0);
+
     /* Set currency symbols */
     GetLocaleInfo(pGlobalData->lcid,
                   LOCALE_SCURRENCY,
@@ -240,6 +246,12 @@ InitCurrencyDecimalSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
     TCHAR szBuffer[MAX_FMT_SIZE];
 
+    /* Limit text length */
+    SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYDECSEP),
+                CB_LIMITTEXT,
+                MAX_CURRENCYDECSEP,
+                0);
+
     /* Get decimal separator */
     GetLocaleInfo(pGlobalData->lcid,
                   LOCALE_SMONDECIMALSEP,
@@ -266,7 +278,7 @@ InitCurrencyNumFracDigits(HWND hwndDlg, PGLOBALDATA pGlobalData)
     int ret;
     int i;
 
-    /* */
+    /* Create standard list of fractional symbols */
     for (i = 0; i < 10; i++)
     {
         szBuffer[0] = _T('0') + i;
@@ -303,6 +315,12 @@ static VOID
 InitCurrencyGroupSeparators(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
     TCHAR szBuffer[MAX_FMT_SIZE];
+
+    /* Limit text length */
+    SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYGRPSEP),
+                CB_LIMITTEXT,
+                MAX_CURRENCYGRPSEP,
+                0);
 
     /* Get group separator */
     GetLocaleInfo(pGlobalData->lcid,
@@ -347,6 +365,7 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
     cyFmt.LeadingZero = 0;
     cyFmt.lpDecimalSep = _T("");
     cyFmt.lpThousandSep = szThousandSep;
+    cyFmt.PositiveOrder = 0;
     cyFmt.NegativeOrder = 0;
     cyFmt.lpCurrencySymbol = _T("");
     cyFmt.Grouping = 0;
@@ -393,7 +412,7 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 }
 
 
-/* Set number of digidts in field  */
+/* Set number of digits in field  */
 static BOOL
 SetCurrencyDigNum(HWND hwndDlg, LCID lcid)
 {
@@ -406,13 +425,13 @@ SetCurrencyDigNum(HWND hwndDlg, LCID lcid)
 
     int nCurrSel;
 
-    /* Get setted number of digidts in field */
+    /* Get setted number of digits in field */
     nCurrSel = SendMessage(GetDlgItem(hwndDlg, IDC_CURRENCYGRPNUM),
                            CB_GETCURSEL,
                            (WPARAM)0,
                            (LPARAM)0);
 
-    /* Save number of digidts in field */
+    /* Save number of digits in field */
     if (nCurrSel != CB_ERR)
         SetLocaleInfo(lcid, LOCALE_SMONGROUPING, szFieldDigNumSamples[nCurrSel]);
 

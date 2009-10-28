@@ -51,6 +51,12 @@ LocalesEnumProc(LPTSTR lpLocale)
 
     lcid = _tcstoul(lpLocale, NULL, 16);
 
+    /* Display only languages with installed support */
+/*  See bug #4898.
+    if (!IsValidLocale(lcid, LCID_INSTALLED))
+        return TRUE;
+*/
+
     if (lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) ||
         lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT))
     {
@@ -89,22 +95,22 @@ LocalesEnumProc(LPTSTR lpLocale)
 static VOID
 UpdateLocaleSample(HWND hwndDlg, LCID lcidLocale)
 {
-    TCHAR OutBuffer[MAX_FMT_SIZE];
+    TCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
 
     /* Get number format sample */
     GetNumberFormat(lcidLocale, NO_FLAG, SAMPLE_NUMBER, NULL, OutBuffer,
-        MAX_FMT_SIZE);
+                    MAX_SAMPLES_STR_SIZE);
     SendMessage(GetDlgItem(hwndDlg, IDC_NUMSAMPLE_EDIT),
                  WM_SETTEXT, 0, (LPARAM)OutBuffer);
 
     /* Get monetary format sample */
     GetCurrencyFormat(lcidLocale, LOCALE_USE_CP_ACP, SAMPLE_NUMBER, NULL,
-        OutBuffer, MAX_FMT_SIZE);
+                      OutBuffer, MAX_SAMPLES_STR_SIZE);
     SendMessage(GetDlgItem(hwndDlg, IDC_MONEYSAMPLE_EDIT),
                  WM_SETTEXT, 0, (LPARAM)OutBuffer);
 
     /* Get time format sample */
-    GetTimeFormat(lcidLocale, NO_FLAG, NULL, NULL, OutBuffer, MAX_FMT_SIZE);
+    GetTimeFormat(lcidLocale, NO_FLAG, NULL, NULL, OutBuffer, MAX_SAMPLES_STR_SIZE);
     SendMessage(GetDlgItem(hwndDlg, IDC_TIMESAMPLE_EDIT),
         WM_SETTEXT,
         0,
@@ -112,13 +118,13 @@ UpdateLocaleSample(HWND hwndDlg, LCID lcidLocale)
 
     /* Get short date format sample */
     GetDateFormat(lcidLocale, DATE_SHORTDATE, NULL, NULL, OutBuffer,
-        MAX_FMT_SIZE);
+        MAX_SAMPLES_STR_SIZE);
     SendMessage(GetDlgItem(hwndDlg, IDC_SHORTTIMESAMPLE_EDIT), WM_SETTEXT,
         0, (LPARAM)OutBuffer);
 
     /* Get long date sample */
     GetDateFormat(lcidLocale, DATE_LONGDATE, NULL, NULL, OutBuffer,
-        MAX_FMT_SIZE);
+        MAX_SAMPLES_STR_SIZE);
     SendMessage(GetDlgItem(hwndDlg, IDC_FULLTIMESAMPLE_EDIT),
         WM_SETTEXT, 0, (LPARAM)OutBuffer);
 }
@@ -241,7 +247,7 @@ LocationsEnumProc(GEOID gId)
     TCHAR loc[MAX_STR_SIZE];
     INT index;
 
-    GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_FMT_SIZE, LANG_SYSTEM_DEFAULT);
+    GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT);
     index = (INT)SendMessage(hGeoList,
                              CB_ADDSTRING,
                              0,
@@ -272,7 +278,7 @@ CreateLocationsList(HWND hWnd)
     GetGeoInfo(userGeoID,
                GEO_FRIENDLYNAME,
                loc,
-               MAX_FMT_SIZE,
+               MAX_STR_SIZE,
                LANG_SYSTEM_DEFAULT);
 
     SendMessage(hGeoList,
