@@ -133,7 +133,7 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
 * @name DDraw->AddRef
 * @implemented
 *
-* The function DDraw->AddRef count of all ref counter in the COM object DDraw->
+* The function DDraw->AddRef manages all ref counters in the COM object DDraw->
 
 * @return
 * Returns the local Ref counter value for the COM object
@@ -149,20 +149,20 @@ Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This)
 
     DX_WINDBG_trace();
 
-    /* Lock the thread so nothing can change the COM while we updating it */
+    /* Lock the thread */
     AcquireDDThreadLock();
 
     _SEH2_TRY
     {
-        /* Count up the internal ref counter */
+        /* Increment the internal ref counter */
         This->dwIntRefCnt++;
 
-        /* Count up the internal local ref counter */
+        /* Increment the local internal ref counter */
         This->lpLcl->dwLocalRefCnt++;
 
         if (This->lpLcl->lpGbl != NULL)
         {
-            /* Count up the internal gobal ref counter */
+            /* Increment the gobal internal ref counter */
             This->lpLcl->lpGbl->dwRefCnt++;
         }
     }
@@ -198,7 +198,7 @@ Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This)
 
     DX_WINDBG_trace();
 
-    /* Lock the thread so nothing can change the COM while we updating it */
+    /* Lock the thread */
     AcquireDDThreadLock();
 
     _SEH2_TRY
@@ -255,14 +255,13 @@ Main_DirectDraw_Initialize (LPDDRAWI_DIRECTDRAW_INT This, LPGUID lpGUID)
 * @name DDraw->Compact
 * @implemented
 *
-* The function DDraw->Compact only return two diffent return value, they are DD_OK and DERR_NOEXCLUSIVEMODE
-* if we are in Exclusive mode we return DERR_NOEXCLUSIVEMODE, other wise we return DD_OK
-
+* In exlusive mode the function DDraw->Compact returns DERR_NOEXCLUSIVEMODE, otherwise it returns DD_OK
+*
 * @return
-* Returns only Error code DD_OK or DERR_NOEXCLUSIVEMODE
+* Returns only error code DD_OK or DERR_NOEXCLUSIVEMODE
 *
 * @remarks.
-*  Microsoft say Compact is not implement in ddraw.dll, but Compact return  DDERR_NOEXCLUSIVEMODE or DD_OK
+*  Microsoft says Compact is not implemented in ddraw.dll, but it returns  DDERR_NOEXCLUSIVEMODE or DD_OK
 *
 *--*/
 HRESULT WINAPI
@@ -272,12 +271,12 @@ Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This)
 
     DX_WINDBG_trace();
 
-    /* Lock the thread so nothing can change the COM while we updating it */
+    /* Lock the thread */
     AcquireDDThreadLock();
 
     _SEH2_TRY
     {
-        /* Check see if Exclusive mode have been activate */
+        /* Check if Exclusive mode has been activated */
         if (This->lpLcl->lpGbl->lpExclusiveOwner != This->lpLcl)
         {
             retVal = DDERR_NOEXCLUSIVEMODE;

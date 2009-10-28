@@ -1,14 +1,8 @@
 #ifndef __DDRAW_PRIVATE
 #define __DDRAW_PRIVATE
 
-#define WIN32_NO_STATUS
-#define NTOS_MODE_USER
-
 /********* Includes  *********/
 #include <windows.h>
-#include <ndk/ntndk.h>
-
-
 #include <stdio.h>
 #include <ddraw.h>
 #include <ddrawi.h>

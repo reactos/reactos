@@ -1,12 +1,13 @@
 /* $Id$
-*
-* COPYRIGHT: See COPYING in the top level directory
-* PROJECT: ReactOS DirectX
-* FILE: ddraw/surface/callbacks_surf_hel.c
-* PURPOSE: HEL Callbacks For Surface APIs
-* PROGRAMMER: Magnus Olsen
-*
-*/
+ *
+ * COPYRIGHT:            See COPYING in the top level directory
+ * PROJECT:              ReactOS DirectX
+ * FILE:                 ddraw/surface/callbacks_surf_hel.c
+ * PURPOSE:              HEL Callbacks For Surface APIs
+ * PROGRAMMER:           Magnus Olsen
+ *
+ */
+
 #include "rosdraw.h"
 
 DWORD CALLBACK HelDdSurfAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA lpDestroySurface)
@@ -78,12 +79,12 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
     DX_WINDBG_trace();
 
-    /* ToDo tell ddraw internal this surface are locked */
+    /* ToDo tell ddraw internal this surface is locked */
     /* ToDo add support for dwFlags */
 
 
-    /* Get our hdc for the active windows */
-    hDC = GetDC(lpLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
+    /* Get our hdc for the active window */
+    hDC = GetDC((HWND)lpLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
 
     if (hDC != NULL)
     {
@@ -91,7 +92,6 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
         if (!lpLockData->bHasRect)
         {
-            
             hImage = CreateCompatibleBitmap (hDC, lpLockData->lpDDSurface->lpGbl->wWidth, lpLockData->lpDDSurface->lpGbl->wHeight);
         }
         else
@@ -121,7 +121,7 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
             SelectObject (hMemDC, hDCBmp);
 
-            /* Alloc memory buffer at usermode for the bitmap pixel data  */
+            /* Allocate memory buffer for the bitmap pixel data  */
             cbBuffer = bm.bmWidthBytes * bm.bmHeight ;
             pixels = (PDWORD) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbBuffer );
 
@@ -130,7 +130,7 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
                 /* Get the bitmap bits */
                 GetBitmapBits(hImage,cbBuffer,pixels);
 
-                /* Fixme HACK check which member that store the hel bitmap buffer */
+                /* Fixme HACK - check which member stores the HEL bitmap buffer */
                 lpLockData->lpDDSurface->lpSurfMore->lpDDRAWReserved2 = pixels;
 
                 /* Setup return value */
@@ -164,10 +164,7 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
 DWORD CALLBACK HelDdSurfreserved4(DWORD *lpPtr)
 {
-    /*
-    This api is not doucment by MS So I leave it
-    as stub.
-    */
+    /* This api is not doucmented by MS, keep it stubbed */
     DX_STUB;
 }
 
@@ -202,8 +199,8 @@ DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData)
 
     DX_WINDBG_trace();
 
-    /* Get our hdc for the active windows */
-    hDC = GetDC(lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
+    /* Get our hdc for the active window */
+    hDC = GetDC((HWND)lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
 
     if (hDC != NULL)
     {

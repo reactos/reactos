@@ -11,7 +11,6 @@
 #include "rosdraw.h"
 
 
-
 /* FIXME adding hal and hel stub
     DestroySurface;
     SetClipList;
@@ -305,11 +304,11 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT 
 
     if (mDdBlt.Blt == NULL)
     {
-        /* This api are unsupported */
+        /* This API is unsupported */
         return DDERR_UNSUPPORTED;
     }
 
-    /* Prepare for draw, if we do not rest the DdResetVisrgn some graphice card will not draw on the screen */
+    /* Prepare for draw, if we do not reset the DdResetVisrgn some graphics card will not draw on the screen */
     if (!DdResetVisrgn( ThisDest->lpLcl->lpSurfMore->slist[0], NULL))
     {
         DX_STUB_str("DdResetVisrgn failed");
@@ -340,7 +339,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT 
         }
 
     /* FIXME
-    *  compare so we do not write to far
+    *  compare so we do not write too far
     *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
     *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
     *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
@@ -363,7 +362,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT 
     }
 
     /* FIXME
-    *  compare so we do not write to far
+    *  compare so we do not write too far
     *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
     *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
     *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
