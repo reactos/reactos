@@ -715,6 +715,7 @@ QueryMixerInfo(
             break;
        default:
            SND_ASSERT(0);
+           return MMSYSERR_NOTSUPPORTED;
     }
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
