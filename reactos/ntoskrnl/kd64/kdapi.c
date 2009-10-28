@@ -674,7 +674,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data,
+                 NULL,
                  &KdpContext);
 }
 
@@ -815,7 +815,7 @@ KdpSetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data,
+                 NULL,
                  &KdpContext);
 }
 
