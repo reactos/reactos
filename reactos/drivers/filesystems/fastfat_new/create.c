@@ -119,6 +119,113 @@ FatiTryToOpen(IN PFILE_OBJECT FileObject,
 
 IO_STATUS_BLOCK
 NTAPI
+FatiOverwriteFile(PFAT_IRP_CONTEXT IrpContext,
+                  PFILE_OBJECT FileObject,
+                  PFCB Fcb,
+                  ULONG AllocationSize,
+                  PFILE_FULL_EA_INFORMATION EaBuffer,
+                  ULONG EaLength,
+                  UCHAR FileAttributes,
+                  ULONG CreateDisposition,
+                  BOOLEAN NoEaKnowledge)
+{
+    IO_STATUS_BLOCK Iosb = {{0}};
+    PCCB Ccb;
+    LARGE_INTEGER Zero;
+    ULONG NotifyFilter;
+
+    Zero.QuadPart = 0;
+
+    /* Check Ea mismatch first */
+    if (NoEaKnowledge && EaLength > 0)
+    {
+        Iosb.Status = STATUS_ACCESS_DENIED;
+        return Iosb;
+    }
+
+    do
+    {
+        /* Check if it's not still mapped */
+        if (!MmCanFileBeTruncated(&Fcb->SectionObjectPointers,
+                                  &Zero))
+        {
+            /* Fail */
+            Iosb.Status = STATUS_USER_MAPPED_FILE;
+            break;
+        }
+
+        /* Set file object pointers */
+        Ccb = FatCreateCcb();
+        FatSetFileObject(FileObject,
+                         UserFileOpen,
+                         Fcb,
+                         Ccb);
+
+        FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+
+        /* Indicate that create is in progress */
+        Fcb->Vcb->State |= VCB_STATE_CREATE_IN_PROGRESS;
+
+        /* Purge the cache section */
+        CcPurgeCacheSection(&Fcb->SectionObjectPointers, NULL, 0, FALSE);
+
+        /* Add Eas */
+        if (EaLength > 0)
+        {
+            ASSERT(FALSE);
+        }
+
+        /* Acquire the paging resource */
+        (VOID)ExAcquireResourceExclusiveLite(Fcb->Header.PagingIoResource, TRUE);
+
+        /* Initialize FCB header */
+        Fcb->Header.FileSize.QuadPart = 0;
+        Fcb->Header.ValidDataLength.QuadPart = 0;
+
+        /* Let CC know about changed file size */
+        CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
+
+        // TODO: Actually truncate the file
+        DPRINT1("TODO: Actually truncate the file with a fullfat handle %x\n", Fcb->FatHandle);
+
+        /* Release the paging resource */
+        ExReleaseResourceLite(Fcb->Header.PagingIoResource);
+
+        /* Specify truncate on close */
+        Fcb->State |= FCB_STATE_TRUNCATE_ON_CLOSE;
+
+        // TODO: Delete previous EA if needed
+
+        /* Send notification about changes */
+        NotifyFilter = FILE_NOTIFY_CHANGE_LAST_WRITE |
+                       FILE_NOTIFY_CHANGE_ATTRIBUTES |
+                       FILE_NOTIFY_CHANGE_SIZE;
+
+        FsRtlNotifyFullReportChange(Fcb->Vcb->NotifySync,
+                                    &Fcb->Vcb->NotifyList,
+                                    (PSTRING)&Fcb->FullFileName,
+                                    Fcb->FullFileName.Length - Fcb->FileNameLength,
+                                    NULL,
+                                    NULL,
+                                    NotifyFilter,
+                                    FILE_ACTION_MODIFIED,
+                                    NULL);
+
+        /* Set success status */
+        Iosb.Status = STATUS_SUCCESS;
+
+        /* Set correct information code */
+        Iosb.Information = (CreateDisposition == FILE_SUPERSEDE) ? FILE_SUPERSEDED : FILE_OVERWRITTEN;
+    } while (0);
+
+    /* Remove the create in progress flag */
+    ClearFlag(Fcb->Vcb->State, VCB_STATE_CREATE_IN_PROGRESS);
+
+    return Iosb;
+}
+
+IO_STATUS_BLOCK
+NTAPI
 FatiOpenExistingDir(IN PFAT_IRP_CONTEXT IrpContext,
                      IN PFILE_OBJECT FileObject,
                      IN PVCB Vcb,

@@ -248,10 +248,11 @@ typedef enum _FCB_CONDITION
     FcbNeedsToBeVerified
 } FCB_CONDITION;
 
-#define FCB_STATE_HAS_NAMES        0x01
-#define FCB_STATE_HAS_UNICODE_NAME 0x02
-#define FCB_STATE_PAGEFILE         0x04
-#define FCB_STATE_DELAY_CLOSE      0x08
+#define FCB_STATE_HAS_NAMES         0x01
+#define FCB_STATE_HAS_UNICODE_NAME  0x02
+#define FCB_STATE_PAGEFILE          0x04
+#define FCB_STATE_DELAY_CLOSE       0x08
+#define FCB_STATE_TRUNCATE_ON_CLOSE 0x10
 
 typedef struct _FCB
 {
