@@ -161,7 +161,7 @@ mxdMessage(
 
     AcquireEntrypointMutex(MIXER_DEVICE_TYPE);
 
-    SND_TRACE(L"mxdMessage - Message type %d\n", Message);
+    //SND_TRACE(L"mxdMessage - Message type %d\n", Message);
 
     switch ( Message )
     {
@@ -258,7 +258,7 @@ mxdMessage(
 
     }
 
-    SND_TRACE(L"mxdMessage returning MMRESULT %d\n", Result);
+    //SND_TRACE(L"mxdMessage returning MMRESULT %d\n", Result);
 
     ReleaseEntrypointMutex(MIXER_DEVICE_TYPE);
 
