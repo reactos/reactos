@@ -67,6 +67,11 @@ Author:
 #define KGDT_NMI_TSS            0x58
 
 //
+// Define the number of GDTs that can be queried by user mode
+//
+#define KGDT_NUMBER             10
+
+//
 // CR4
 //
 #define CR4_VME                 0x1

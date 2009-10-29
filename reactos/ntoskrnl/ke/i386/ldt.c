@@ -5,6 +5,7 @@
  * PURPOSE:         LDT managment
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -19,6 +20,55 @@ static KSPIN_LOCK LdtLock;
 static KSPIN_LOCK GdtLock;
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+NTAPI
+Ke386GetGdtEntryThread(IN PKTHREAD Thread,
+                       IN ULONG Offset,
+                       IN PKGDTENTRY Descriptor)
+{
+    /* Make sure the offset is inside the allowed range */
+    if (!((Offset) < (KGDT_NUMBER * sizeof(KGDTENTRY))))
+    {
+        /* It isn't, fail */
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    /* Check if this is the LDT selector */
+    if (Offset == KGDT_LDT)
+    {
+        /* Get it from the thread's process */
+        RtlCopyMemory(Descriptor,
+                      &Thread->Process->LdtDescriptor,
+                      sizeof(KGDTENTRY));
+    }
+    else
+    {
+        /* Get the descriptor entry from the GDT */
+        RtlCopyMemory(Descriptor,
+                      (PCHAR)((PKIPCR)KeGetPcr()->GDT) + Offset,
+                      sizeof(KGDTENTRY));
+
+        /* Check if this is the TEB selector */
+        if (Offset == KGDT_R3_TEB)
+        {
+            /*
+             * Make sure we set the correct base for this thread. This is per
+             * process and is set in the GDT on context switch, so it might not
+             * be correct for the thread specified.
+             */
+            Descriptor->BaseLow =
+                (USHORT)((ULONG_PTR)(Thread->Teb) & 0xFFFF);
+            Descriptor->HighWord.Bytes.BaseMid =
+                (UCHAR)((ULONG_PTR)(Thread->Teb) >> 16);
+            Descriptor->HighWord.Bytes.BaseHi =
+                (UCHAR)((ULONG_PTR)(Thread->Teb) >> 24);
+        }
+    }
+
+    /* Success */
+    return STATUS_SUCCESS;
+}
 
 VOID
 KeSetBaseGdtSelector(ULONG Entry,

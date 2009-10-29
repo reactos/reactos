@@ -444,6 +444,7 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>psctx.c</file>
+				<file>psldt.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="arm">
