@@ -21,7 +21,7 @@ NTAPI
 KiInitializeMTRR(IN BOOLEAN FinalCpu)
 {
     /* FIXME: Support this */
-    DPRINT("Your machine supports MTRR but ReactOS doesn't yet.\n");
+    DPRINT1("MTRR support detected but not yet taken advantage of\n");
 }
 
 VOID
@@ -29,5 +29,5 @@ NTAPI
 KiAmdK6InitializeMTRR(VOID)
 {
     /* FIXME: Support this */
-    DPRINT("Your machine supports AMD MTRR but ReactOS doesn't yet.\n");
+    DPRINT1("AMD MTRR support detected but not yet taken advantage of\n");
 }
