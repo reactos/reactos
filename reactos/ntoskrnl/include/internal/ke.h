@@ -403,7 +403,7 @@ KeInitializeProfile(
     KAFFINITY Affinity
 );
 
-VOID
+BOOLEAN
 NTAPI
 KeStartProfile(
     struct _KPROFILE* Profile,

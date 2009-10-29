@@ -46,10 +46,21 @@ KiGetVectorDispatch(IN ULONG Vector,
 {
     PKINTERRUPT_ROUTINE Handler;
     ULONG Current;
+    UCHAR Type;
+    UCHAR Entry;
+
+    /* Check if this is a primary or 2nd-level dispatch */
+    Type = HalSystemVectorDispatchEntry(Vector,
+                                        &Dispatch->FlatDispatch,
+                                        &Dispatch->NoDispatch);
+    ASSERT(Type == 0);
+
+    /* Get the IDT entry for this vector */
+    Entry = HalVectorToIDTEntry(Vector);
 
     /* Setup the unhandled dispatch */
     Dispatch->NoDispatch = (PVOID)(((ULONG_PTR)&KiStartUnexpectedRange) +
-                                   (Vector - PRIMARY_VECTOR_BASE) *
+                                   (Entry - PRIMARY_VECTOR_BASE) *
                                    KiUnexpectedEntrySize);
 
     /* Setup the handlers */
@@ -59,9 +70,9 @@ KiGetVectorDispatch(IN ULONG Vector,
     Dispatch->FlatDispatch = NULL;
 
     /* Get the current handler */
-    Current = ((((PKIPCR)KeGetPcr())->IDT[Vector].ExtendedOffset << 16)
+    Current = ((((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset << 16)
                & 0xFFFF0000) |
-              (((PKIPCR)KeGetPcr())->IDT[Vector].Offset & 0xFFFF);
+              (((PKIPCR)KeGetPcr())->IDT[Entry].Offset & 0xFFFF);
 
     /* Set the interrupt */
     Dispatch->Interrupt = CONTAINING_RECORD(Current,
@@ -105,6 +116,7 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
     DISPATCH_INFO Dispatch;
     PKINTERRUPT_ROUTINE Handler;
     PULONG Patch = &Interrupt->DispatchCode[0];
+    UCHAR Entry;
 
     /* Get vector data */
     KiGetVectorDispatch(Interrupt->Vector, &Dispatch);
@@ -139,10 +151,13 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
         Handler = (PVOID)&Interrupt->DispatchCode;
     }
 
+    /* Get the IDT entry for this vector */
+    Entry = HalVectorToIDTEntry(Interrupt->Vector);
+
     /* Set the pointer in the IDT */
-    ((PKIPCR)KeGetPcr())->IDT[Interrupt->Vector].ExtendedOffset =
+    ((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset =
         (USHORT)(((ULONG_PTR)Handler >> 16) & 0xFFFF);
-    ((PKIPCR)KeGetPcr())->IDT[Interrupt->Vector].Offset =
+    ((PKIPCR)KeGetPcr())->IDT[Entry].Offset =
         (USHORT)PtrToUlong(Handler);
 }
 

@@ -2433,6 +2433,34 @@ typedef struct _ARBITER_INTERFACE {
   ULONG  Flags;
 } ARBITER_INTERFACE, *PARBITER_INTERFACE;
 
+typedef enum _KPROFILE_SOURCE {
+  ProfileTime,
+  ProfileAlignmentFixup,
+  ProfileTotalIssues,
+  ProfilePipelineDry,
+  ProfileLoadInstructions,
+  ProfilePipelineFrozen,
+  ProfileBranchInstructions,
+  ProfileTotalNonissues,
+  ProfileDcacheMisses,
+  ProfileIcacheMisses,
+  ProfileCacheMisses,
+  ProfileBranchMispredictions,
+  ProfileStoreInstructions,
+  ProfileFpInstructions,
+  ProfileIntegerInstructions,
+  Profile2Issue,
+  Profile3Issue,
+  Profile4Issue,
+  ProfileSpecialInstructions,
+  ProfileTotalCycles,
+  ProfileIcacheIssues,
+  ProfileDcacheAccesses,
+  ProfileMemoryBarrierCycles,
+  ProfileLoadLinkedIssues,
+  ProfileMaximum
+} KPROFILE_SOURCE;
+
 typedef enum _HAL_QUERY_INFORMATION_CLASS {
   HalInstalledBusInformation,
   HalProfileSourceInformation,
@@ -2469,6 +2497,19 @@ typedef enum _HAL_SET_INFORMATION_CLASS {
   HalCpeLog,
   HalGenerateCmcInterrupt
 } HAL_SET_INFORMATION_CLASS, *PHAL_SET_INFORMATION_CLASS;
+
+typedef struct _HAL_PROFILE_SOURCE_INTERVAL
+{
+    KPROFILE_SOURCE Source;
+    ULONG_PTR Interval;
+} HAL_PROFILE_SOURCE_INTERVAL, *PHAL_PROFILE_SOURCE_INTERVAL;
+
+typedef struct _HAL_PROFILE_SOURCE_INFORMATION
+{
+    KPROFILE_SOURCE Source;
+    BOOLEAN Supported;
+    ULONG Interval;
+} HAL_PROFILE_SOURCE_INFORMATION, *PHAL_PROFILE_SOURCE_INFORMATION;
 
 typedef struct _MAP_REGISTER_ENTRY
 {
@@ -4268,34 +4309,6 @@ typedef enum _KINTERRUPT_MODE {
 typedef VOID
 (DDKAPI *PKINTERRUPT_ROUTINE)(
   VOID);
-
-typedef enum _KPROFILE_SOURCE {
-  ProfileTime,
-  ProfileAlignmentFixup,
-  ProfileTotalIssues,
-  ProfilePipelineDry,
-  ProfileLoadInstructions,
-  ProfilePipelineFrozen,
-  ProfileBranchInstructions,
-  ProfileTotalNonissues,
-  ProfileDcacheMisses,
-  ProfileIcacheMisses,
-  ProfileCacheMisses,
-  ProfileBranchMispredictions,
-  ProfileStoreInstructions,
-  ProfileFpInstructions,
-  ProfileIntegerInstructions,
-  Profile2Issue,
-  Profile3Issue,
-  Profile4Issue,
-  ProfileSpecialInstructions,
-  ProfileTotalCycles,
-  ProfileIcacheIssues,
-  ProfileDcacheAccesses,
-  ProfileMemoryBarrierCycles,
-  ProfileLoadLinkedIssues,
-  ProfileMaximum
-} KPROFILE_SOURCE;
 
 typedef enum _CREATE_FILE_TYPE {
   CreateFileTypeNone,

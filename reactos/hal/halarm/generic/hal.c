@@ -857,12 +857,11 @@ HalStartNextProcessor(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 }
 
 
-ULONG
+UCHAR
 FASTCALL
-HalSystemVectorDispatchEntry(
-  ULONG Unknown1,
-  ULONG Unknown2,
-  ULONG Unknown3)
+HalSystemVectorDispatchEntry(IN ULONG Vector,
+                             OUT PKINTERRUPT_ROUTINE **FlatDispatch,
+                             OUT PKINTERRUPT_ROUTINE *NoConnection)
 {
   UNIMPLEMENTED;
 

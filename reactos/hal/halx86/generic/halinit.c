@@ -97,11 +97,11 @@ HalInitSystem(IN ULONG BootPhase,
         /* Force initial PIC state */
         KfRaiseIrql(KeGetCurrentIrql());
 
-        /* Setup busy waiting */
-        HalpCalibrateStallExecution();
+        /* Initialize CMOS lock */
+        KeInitializeSpinLock(&HalpSystemHardwareLock);
 
-        /* Initialize the clock */
-        HalpInitializeClock();
+        /* Initialize CMOS */
+        HalpInitializeCmos();
 
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
@@ -112,8 +112,27 @@ HalInitSystem(IN ULONG BootPhase,
         HalResetDisplay = HalpBiosDisplayReset;
         HalHaltSystem = HaliHaltSystem;
 
-        /* Initialize the hardware lock (CMOS) */
-        KeInitializeSpinLock(&HalpSystemHardwareLock);
+        /* Register IRQ 2 */
+        HalpRegisterVector(IDT_INTERNAL,
+                           PRIMARY_VECTOR_BASE + 2,
+                           PRIMARY_VECTOR_BASE + 2,
+                           HIGH_LEVEL);
+
+        /* Setup I/O space */
+        HalpDefaultIoSpace.Next = HalpAddressUsageList;
+        HalpAddressUsageList = &HalpDefaultIoSpace;
+
+        /* Setup busy waiting */
+        HalpCalibrateStallExecution();
+
+        /* Initialize the clock */
+        HalpInitializeClock();
+
+        /*
+         * We could be rebooting with a pending profile interrupt,
+         * so clear it here before interrupts are enabled
+         */
+        HalStopProfileInterrupt(ProfileTime);
 
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
@@ -123,12 +142,21 @@ HalInitSystem(IN ULONG BootPhase,
         /* Initialize the default HAL stubs for bus handling functions */
         HalpInitNonBusHandler();
 
-        /* Enable the clock interrupt */
-        ((PKIPCR)KeGetPcr())->IDT[0x30].ExtendedOffset =
-            (USHORT)(((ULONG_PTR)HalpClockInterrupt >> 16) & 0xFFFF);
-        ((PKIPCR)KeGetPcr())->IDT[0x30].Offset =
-            (USHORT)((ULONG_PTR)HalpClockInterrupt);
-        HalEnableSystemInterrupt(0x30, CLOCK2_LEVEL, Latched);
+        /* Enable IRQ 0 */
+        HalpEnableInterruptHandler(IDT_DEVICE,
+                                   0,
+                                   PRIMARY_VECTOR_BASE,
+                                   CLOCK2_LEVEL,
+                                   HalpClockInterrupt,
+                                   Latched);
+
+        /* Enable IRQ 8 */
+        HalpEnableInterruptHandler(IDT_DEVICE,
+                                   0,
+                                   PRIMARY_VECTOR_BASE + 8,
+                                   PROFILE_LEVEL,
+                                   HalpProfileInterrupt,
+                                   Latched);
 
         /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();

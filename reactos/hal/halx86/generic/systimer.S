@@ -17,7 +17,6 @@ _HalpLastPerfCounterLow:    .long 0
 _HalpLastPerfCounterHigh:   .long 0
 _HalpPerfCounterLow:        .long 0
 _HalpPerfCounterHigh:       .long 0
-_HalpSystemHardwareLock:    .long 0
 _HalpSystemHardwareFlags:   .long 0
 
 _UnhandledMsg:
@@ -52,6 +51,7 @@ _HalpReleaseCmosSpinLock@0:
     popf
     ret
 #endif
+
 .endfunc
 
 .global _HalpAcquireSystemHardwareSpinLock@0
@@ -84,7 +84,6 @@ CmosSpin:
 
     /* Spin */
     SPIN_ON_LOCK(eax, HardwareLock)
-
 #else
     /* Save EFLAGS, disable interrupts and return */
     pushf
@@ -92,6 +91,7 @@ CmosSpin:
     pop _HalpSystemHardwareFlags
     ret
 #endif
+
 .endfunc
 
 .global _HalpCalibrateStallExecution@0
@@ -632,3 +632,28 @@ Spurious:
     jmp _Kei386EoiHelper@0
 .endfunc
 
+.globl _HalpProfileInterrupt@0
+.func HalpProfileInterrupt@0
+TRAP_FIXUPS hpi_a, hpi_t, DoFixupV86, DoFixupAbios
+_HalpProfileInterrupt@0:
+
+    /* Enter trap */
+    INT_PROLOG hpi_a, hpi_t, DoPushFakeErrorCode
+
+    /* Push vector and make stack for IRQL */
+    push 0x38
+    sub esp, 4
+
+    /* Begin the interrupt */
+    push esp
+    push 0x38
+    push PROFILE_LEVEL
+    call _HalBeginSystemInterrupt@12
+
+    /* Check if it's spurious */
+    or al, al
+    jz Spurious
+
+    /* FIXME: We should not be getting profile interrupts yet! */
+    int 3
+.endfunc
