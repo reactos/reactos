@@ -2402,13 +2402,12 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     TTTOOL_INFO *toolPtr = infoPtr->tools;
     INT nResult;
 
-    TRACE("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
+    TRACE("hwnd=%p wParam=%lx lParam=%lx\n", infoPtr->hwndSelf, wParam, lParam);
 
     if (lParam == NF_QUERY) {
         if (toolPtr->bNotifyUnicode) {
@@ -2418,8 +2417,8 @@ TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
         }
     }
     else if (lParam == NF_REQUERY) {
-        nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
-                    (WPARAM)hwnd, (LPARAM)NF_QUERY);
+        nResult = SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
+                    (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
         if (nResult == NFR_ANSI) {
             toolPtr->bNotifyUnicode = FALSE;
             TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
