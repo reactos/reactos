@@ -86,7 +86,7 @@ capCreateCaptureWindowW(LPCWSTR lpszWindowName,
                            nWidth,
                            nHeight,
                            hWnd,
-                           (HMENU)nID,
+                           ULongToHandle(nID),
                            hInstance,
                            NULL);
 }
