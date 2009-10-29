@@ -627,23 +627,19 @@ typedef struct _PEB
 #if (NTDDI_VERSION >= NTDDI_WS03)
     union
     {
-        BOOLEAN ImageUsesLargePages:1;
         BOOLEAN BitField;
         struct
         {
             UCHAR ImageUsesLargePages:1;
-    #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-        BOOLEAN IsProtectedProcess:1;
-        BOOLEAN IsLegacyProcess:1;
-        BOOLEAN SpareBits:5;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
             BOOLEAN IsProtectedProcess:1;
             BOOLEAN IsLegacyProcess:1;
             BOOLEAN IsImageDynamicallyRelocated:1;
             BOOLEAN SkipPatchingUser32Forwarders:1;
             BOOLEAN SpareBits:3;
-    #else
+#else
             BOOLEAN SpareBits:7;
-    #endif
+#endif
         };
     };
 #else
