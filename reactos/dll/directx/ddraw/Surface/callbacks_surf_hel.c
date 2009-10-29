@@ -84,7 +84,7 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
 
     /* Get our hdc for the active window */
-    hDC = GetDC(lpLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
+    hDC = GetDC((HWND)lpLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
 
     if (hDC != NULL)
     {
@@ -200,7 +200,7 @@ DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData)
     DX_WINDBG_trace();
 
     /* Get our hdc for the active window */
-    hDC = GetDC(lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
+    hDC = GetDC((HWND)lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
 
     if (hDC != NULL)
     {
