@@ -1,0 +1,316 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_gnba.html,v 1.24 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_gnba</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_gnbarequest_render, lwres_gnbaresponse_render, lwres_gnbarequest_parse, lwres_gnbaresponse_parse, lwres_gnbaresponse_free, lwres_gnbarequest_free &#8212; lightweight resolver getnamebyaddress message handling</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">
+#include &lt;lwres/lwres.h&gt;
+</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_gnbarequest_render</b>
+(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_gnbarequest_t * </td>
+<td>
+<var class="pdparam">req</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_gnbaresponse_render</b>
+(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_gnbaresponse_t * </td>
+<td>
+<var class="pdparam">req</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_gnbarequest_parse</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_gnbarequest_t ** </td>
+<td>
+<var class="pdparam">structp</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_gnbaresponse_parse</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_gnbaresponse_t ** </td>
+<td>
+<var class="pdparam">structp</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_gnbaresponse_free</b>
+(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_gnbaresponse_t ** </td>
+<td>
+<var class="pdparam">structp</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_gnbarequest_free</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_gnbarequest_t ** </td>
+<td>
+<var class="pdparam">structp</var><code>)</code>;</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543525"></a><h2>DESCRIPTION</h2>
+<p>
+      These are low-level routines for creating and parsing
+      lightweight resolver address-to-name lookup request and
+      response messages.
+    </p>
+<p>
+      There are four main functions for the getnamebyaddr opcode.
+      One render function converts a getnamebyaddr request structure &#8212;
+      <span class="type">lwres_gnbarequest_t</span> &#8212;
+      to the lightweight resolver's canonical format.
+      It is complemented by a parse function that converts a packet in this
+      canonical format to a getnamebyaddr request structure.
+      Another render function converts the getnamebyaddr response structure
+      &#8212;
+      <span class="type">lwres_gnbaresponse_t</span>
+      to the canonical format.
+      This is complemented by a parse function which converts a packet in
+      canonical format to a getnamebyaddr response structure.
+    </p>
+<p>
+      These structures are defined in
+      <code class="filename">lwres/lwres.h</code>.
+      They are shown below.
+    </p>
+<pre class="programlisting">
+#define LWRES_OPCODE_GETNAMEBYADDR      0x00010002U
+</pre>
+<p>
+    </p>
+<pre class="programlisting">
+typedef struct {
+        lwres_uint32_t  flags;
+        lwres_addr_t    addr;
+} lwres_gnbarequest_t;
+</pre>
+<p>
+    </p>
+<pre class="programlisting">
+typedef struct {
+        lwres_uint32_t  flags;
+        lwres_uint16_t  naliases;
+        char           *realname;
+        char          **aliases;
+        lwres_uint16_t  realnamelen;
+        lwres_uint16_t *aliaslen;
+        void           *base;
+        size_t          baselen;
+} lwres_gnbaresponse_t;
+</pre>
+<p>
+    </p>
+<p><code class="function">lwres_gnbarequest_render()</code>
+      uses resolver context <code class="varname">ctx</code> to convert
+      getnamebyaddr request structure <code class="varname">req</code> to
+      canonical format.  The packet header structure
+      <code class="varname">pkt</code> is initialised and transferred to buffer
+      <code class="varname">b</code>.  The contents of <code class="varname">*req</code>
+      are then appended to the buffer in canonical format.
+      <code class="function">lwres_gnbaresponse_render()</code> performs the
+      same task, except it converts a getnamebyaddr response structure
+      <span class="type">lwres_gnbaresponse_t</span> to the lightweight resolver's
+      canonical format.
+    </p>
+<p><code class="function">lwres_gnbarequest_parse()</code>
+      uses context <code class="varname">ctx</code> to convert the contents of
+      packet <code class="varname">pkt</code> to a
+      <span class="type">lwres_gnbarequest_t</span> structure.  Buffer
+      <code class="varname">b</code> provides space to be used for storing this
+      structure.  When the function succeeds, the resulting
+      <span class="type">lwres_gnbarequest_t</span> is made available through
+      <code class="varname">*structp</code>.
+      <code class="function">lwres_gnbaresponse_parse()</code> offers the same
+      semantics as <code class="function">lwres_gnbarequest_parse()</code>
+      except it yields a <span class="type">lwres_gnbaresponse_t</span> structure.
+    </p>
+<p><code class="function">lwres_gnbaresponse_free()</code>
+      and <code class="function">lwres_gnbarequest_free()</code> release the
+      memory in resolver context <code class="varname">ctx</code> that was
+      allocated to the <span class="type">lwres_gnbaresponse_t</span> or
+      <span class="type">lwres_gnbarequest_t</span> structures referenced via
+      <code class="varname">structp</code>.  Any memory associated with
+      ancillary buffers and strings for those structures is also
+      discarded.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543665"></a><h2>RETURN VALUES</h2>
+<p>
+      The getnamebyaddr opcode functions
+      <code class="function">lwres_gnbarequest_render()</code>,
+      <code class="function">lwres_gnbaresponse_render()</code>
+      <code class="function">lwres_gnbarequest_parse()</code>
+      and
+      <code class="function">lwres_gnbaresponse_parse()</code>
+      all return
+      <span class="errorcode">LWRES_R_SUCCESS</span>
+      on success.
+      They return
+      <span class="errorcode">LWRES_R_NOMEMORY</span>
+      if memory allocation fails.
+      <span class="errorcode">LWRES_R_UNEXPECTEDEND</span>
+      is returned if the available space in the buffer
+      <code class="varname">b</code>
+      is too small to accommodate the packet header or the
+      <span class="type">lwres_gnbarequest_t</span>
+      and
+      <span class="type">lwres_gnbaresponse_t</span>
+      structures.
+      <code class="function">lwres_gnbarequest_parse()</code>
+      and
+      <code class="function">lwres_gnbaresponse_parse()</code>
+      will return
+      <span class="errorcode">LWRES_R_UNEXPECTEDEND</span>
+      if the buffer is not empty after decoding the received packet.
+      These functions will return
+      <span class="errorcode">LWRES_R_FAILURE</span>
+      if
+      <em class="structfield"><code>pktflags</code></em>
+      in the packet header structure
+      <span class="type">lwres_lwpacket_t</span>
+      indicate that the packet is not a response to an earlier query.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543731"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">lwres_packet</span>(3)</span>.
+    </p>
+</div>
+</div></body>
+</html>

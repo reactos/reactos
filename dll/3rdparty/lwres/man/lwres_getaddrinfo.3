@@ -1,0 +1,246 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001, 2003 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_getaddrinfo.3,v 1.31 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_getaddrinfo
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_GETADDRINFO" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_getaddrinfo, lwres_freeaddrinfo \- socket address structure to host and service name
+.SH "SYNOPSIS"
+.nf
+#include <lwres/netdb.h>
+.fi
+.HP 22
+.BI "int lwres_getaddrinfo(const\ char\ *" "hostname" ", const\ char\ *" "servname" ", const\ struct\ addrinfo\ *" "hints" ", struct\ addrinfo\ **" "res" ");"
+.HP 24
+.BI "void lwres_freeaddrinfo(struct\ addrinfo\ *" "ai" ");"
+.PP
+If the operating system does not provide a
+\fBstruct addrinfo\fR, the following structure is used:
+.PP
+.RS 4
+.nf
+struct  addrinfo {
+        int             ai_flags;       /* AI_PASSIVE, AI_CANONNAME */
+        int             ai_family;      /* PF_xxx */
+        int             ai_socktype;    /* SOCK_xxx */
+        int             ai_protocol;    /* 0 or IPPROTO_xxx for IPv4 and IPv6 */
+        size_t          ai_addrlen;     /* length of ai_addr */
+        char            *ai_canonname;  /* canonical name for hostname */
+        struct sockaddr *ai_addr;       /* binary address */
+        struct addrinfo *ai_next;       /* next structure in linked list */
+};
+.fi
+.RE
+.sp
+.SH "DESCRIPTION"
+.PP
+\fBlwres_getaddrinfo()\fR
+is used to get a list of IP addresses and port numbers for host
+\fIhostname\fR
+and service
+\fIservname\fR. The function is the lightweight resolver's implementation of
+\fBgetaddrinfo()\fR
+as defined in RFC2133.
+\fIhostname\fR
+and
+\fIservname\fR
+are pointers to null\-terminated strings or
+\fBNULL\fR.
+\fIhostname\fR
+is either a host name or a numeric host address string: a dotted decimal IPv4 address or an IPv6 address.
+\fIservname\fR
+is either a decimal port number or a service name as listed in
+\fI/etc/services\fR.
+.PP
+\fIhints\fR
+is an optional pointer to a
+\fBstruct addrinfo\fR. This structure can be used to provide hints concerning the type of socket that the caller supports or wishes to use. The caller can supply the following structure elements in
+\fI*hints\fR:
+.PP
+\fBai_family\fR
+.RS 4
+The protocol family that should be used. When
+\fBai_family\fR
+is set to
+\fBPF_UNSPEC\fR, it means the caller will accept any protocol family supported by the operating system.
+.RE
+.PP
+\fBai_socktype\fR
+.RS 4
+denotes the type of socket \(em
+\fBSOCK_STREAM\fR,
+\fBSOCK_DGRAM\fR
+or
+\fBSOCK_RAW\fR
+\(em that is wanted. When
+\fBai_socktype\fR
+is zero the caller will accept any socket type.
+.RE
+.PP
+\fBai_protocol\fR
+.RS 4
+indicates which transport protocol is wanted: IPPROTO_UDP or IPPROTO_TCP. If
+\fBai_protocol\fR
+is zero the caller will accept any protocol.
+.RE
+.PP
+\fBai_flags\fR
+.RS 4
+Flag bits. If the
+\fBAI_CANONNAME\fR
+bit is set, a successful call to
+\fBlwres_getaddrinfo()\fR
+will return a null\-terminated string containing the canonical name of the specified hostname in
+\fBai_canonname\fR
+of the first
+\fBaddrinfo\fR
+structure returned. Setting the
+\fBAI_PASSIVE\fR
+bit indicates that the returned socket address structure is intended for used in a call to
+\fBbind\fR(2). In this case, if the hostname argument is a
+\fBNULL\fR
+pointer, then the IP address portion of the socket address structure will be set to
+\fBINADDR_ANY\fR
+for an IPv4 address or
+\fBIN6ADDR_ANY_INIT\fR
+for an IPv6 address.
+.sp
+When
+\fBai_flags\fR
+does not set the
+\fBAI_PASSIVE\fR
+bit, the returned socket address structure will be ready for use in a call to
+\fBconnect\fR(2)
+for a connection\-oriented protocol or
+\fBconnect\fR(2),
+\fBsendto\fR(2), or
+\fBsendmsg\fR(2)
+if a connectionless protocol was chosen. The IP address portion of the socket address structure will be set to the loopback address if
+\fIhostname\fR
+is a
+\fBNULL\fR
+pointer and
+\fBAI_PASSIVE\fR
+is not set in
+\fBai_flags\fR.
+.sp
+If
+\fBai_flags\fR
+is set to
+\fBAI_NUMERICHOST\fR
+it indicates that
+\fIhostname\fR
+should be treated as a numeric string defining an IPv4 or IPv6 address and no name resolution should be attempted.
+.RE
+.PP
+All other elements of the
+\fBstruct addrinfo\fR
+passed via
+\fIhints\fR
+must be zero.
+.PP
+A
+\fIhints\fR
+of
+\fBNULL\fR
+is treated as if the caller provided a
+\fBstruct addrinfo\fR
+initialized to zero with
+\fBai_family\fRset to
+\fBPF_UNSPEC\fR.
+.PP
+After a successful call to
+\fBlwres_getaddrinfo()\fR,
+\fI*res\fR
+is a pointer to a linked list of one or more
+\fBaddrinfo\fR
+structures. Each
+\fBstruct addrinfo\fR
+in this list cn be processed by following the
+\fBai_next\fR
+pointer, until a
+\fBNULL\fR
+pointer is encountered. The three members
+\fBai_family\fR,
+\fBai_socktype\fR, and
+\fBai_protocol\fR
+in each returned
+\fBaddrinfo\fR
+structure contain the corresponding arguments for a call to
+\fBsocket\fR(2). For each
+\fBaddrinfo\fR
+structure in the list, the
+\fBai_addr\fR
+member points to a filled\-in socket address structure of length
+\fBai_addrlen\fR.
+.PP
+All of the information returned by
+\fBlwres_getaddrinfo()\fR
+is dynamically allocated: the addrinfo structures, and the socket address structures and canonical host name strings pointed to by the
+\fBaddrinfo\fRstructures. Memory allocated for the dynamically allocated structures created by a successful call to
+\fBlwres_getaddrinfo()\fR
+is released by
+\fBlwres_freeaddrinfo()\fR.
+\fIai\fR
+is a pointer to a
+\fBstruct addrinfo\fR
+created by a call to
+\fBlwres_getaddrinfo()\fR.
+.SH "RETURN VALUES"
+.PP
+\fBlwres_getaddrinfo()\fR
+returns zero on success or one of the error codes listed in
+\fBgai_strerror\fR(3)
+if an error occurs. If both
+\fIhostname\fR
+and
+\fIservname\fR
+are
+\fBNULL\fR
+\fBlwres_getaddrinfo()\fR
+returns
+\fBEAI_NONAME\fR.
+.SH "SEE ALSO"
+.PP
+\fBlwres\fR(3),
+\fBlwres_getaddrinfo\fR(3),
+\fBlwres_freeaddrinfo\fR(3),
+\fBlwres_gai_strerror\fR(3),
+\fBRFC2133\fR(),
+\fBgetservbyname\fR(3),
+\fBbind\fR(2),
+\fBconnect\fR(2),
+\fBsendto\fR(2),
+\fBsendmsg\fR(2),
+\fBsocket\fR(2).
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001, 2003 Internet Software Consortium.
+.br

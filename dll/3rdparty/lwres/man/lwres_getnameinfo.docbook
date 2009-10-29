@@ -1,0 +1,205 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_getnameinfo.docbook,v 1.10 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_getnameinfo</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_getnameinfo</refname>
+    <refpurpose>lightweight resolver socket address structure to hostname and
+      service name
+    </refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/netdb.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+int
+<function>lwres_getnameinfo</function></funcdef>
+        <paramdef>const struct sockaddr *<parameter>sa</parameter></paramdef>
+        <paramdef>size_t <parameter>salen</parameter></paramdef>
+        <paramdef>char *<parameter>host</parameter></paramdef>
+        <paramdef>size_t <parameter>hostlen</parameter></paramdef>
+        <paramdef>char *<parameter>serv</parameter></paramdef>
+        <paramdef>size_t <parameter>servlen</parameter></paramdef>
+        <paramdef>int <parameter>flags</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>
+       This function is equivalent to the
+      <citerefentry>
+        <refentrytitle>getnameinfo</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry> function defined in RFC2133.
+      <function>lwres_getnameinfo()</function> returns the
+      hostname for the
+      <type>struct sockaddr</type> <parameter>sa</parameter> which
+      is
+      <parameter>salen</parameter> bytes long.  The hostname is of
+      length
+      <parameter>hostlen</parameter> and is returned via
+      <parameter>*host.</parameter> The maximum length of the
+      hostname is
+      1025 bytes: <constant>NI_MAXHOST</constant>.
+    </para>
+
+    <para> The name of the service associated with the port number in
+      <parameter>sa</parameter> is returned in <parameter>*serv.</parameter>
+      It is <parameter>servlen</parameter> bytes long.  The
+      maximum length
+      of the service name is <constant>NI_MAXSERV</constant> - 32
+      bytes.
+    </para>
+
+    <para>
+       The <parameter>flags</parameter> argument sets the
+      following
+      bits:
+      <variablelist>
+        <varlistentry>
+          <term><constant>NI_NOFQDN</constant></term>
+          <listitem>
+            <para>
+              A fully qualified domain name is not required for local hosts.
+              The local part of the fully qualified domain name is returned
+              instead.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>NI_NUMERICHOST</constant></term>
+          <listitem>
+            <para>
+              Return the address in numeric form, as if calling inet_ntop(),
+              instead of a host name.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>NI_NAMEREQD</constant></term>
+          <listitem>
+            <para>
+              A name is required. If the hostname cannot be found in the DNS
+              and
+              this flag is set, a non-zero error code is returned.
+              If the hostname is not found and the flag is not set, the
+              address is returned in numeric form.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>NI_NUMERICSERV</constant></term>
+          <listitem>
+            <para>
+              The service name is returned as a digit string representing the
+              port number.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>NI_DGRAM</constant></term>
+          <listitem>
+            <para>
+              Specifies that the service being looked up is a datagram
+              service,  and causes getservbyport() to be called with a second
+              argument of "udp" instead of its default of "tcp".  This is
+              required
+              for the few ports (512-514) that have different services for UDP
+              and
+              TCP.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>RETURN VALUES</title>
+    <para><function>lwres_getnameinfo()</function>
+      returns 0 on success or a non-zero error code if an error occurs.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>RFC2133</refentrytitle>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>getservbyport</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>lwres</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>lwres_getnameinfo</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>lwres_getnamebyaddr</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>.
+      <citerefentry>
+        <refentrytitle>lwres_net_ntop</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      RFC2133 fails to define what the nonzero return values of
+      <citerefentry>
+        <refentrytitle>getnameinfo</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>
+      are.
+    </para>
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

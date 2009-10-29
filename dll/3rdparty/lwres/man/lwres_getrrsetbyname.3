@@ -1,0 +1,164 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_getrrsetbyname.3,v 1.25 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_getrrsetbyname
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Oct 18, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_GETRRSETBYNAME" "3" "Oct 18, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_getrrsetbyname, lwres_freerrset \- retrieve DNS records
+.SH "SYNOPSIS"
+.nf
+#include <lwres/netdb.h>
+.fi
+.HP 25
+.BI "int lwres_getrrsetbyname(const\ char\ *" "hostname" ", unsigned\ int\ " "rdclass" ", unsigned\ int\ " "rdtype" ", unsigned\ int\ " "flags" ", struct\ rrsetinfo\ **" "res" ");"
+.HP 21
+.BI "void lwres_freerrset(struct\ rrsetinfo\ *" "rrset" ");"
+.PP
+The following structures are used:
+.PP
+.RS 4
+.nf
+struct  rdatainfo {
+        unsigned int            rdi_length;     /* length of data */
+        unsigned char           *rdi_data;      /* record data */
+};
+.fi
+.RE
+.sp
+.PP
+.RS 4
+.nf
+struct  rrsetinfo {
+        unsigned int            rri_flags;      /* RRSET_VALIDATED... */
+        unsigned int            rri_rdclass;    /* class number */
+        unsigned int            rri_rdtype;     /* RR type number */
+        unsigned int            rri_ttl;        /* time to live */
+        unsigned int            rri_nrdatas;    /* size of rdatas array */
+        unsigned int            rri_nsigs;      /* size of sigs array */
+        char                    *rri_name;      /* canonical name */
+        struct rdatainfo        *rri_rdatas;    /* individual records */
+        struct rdatainfo        *rri_sigs;      /* individual signatures */
+};
+.fi
+.RE
+.sp
+.SH "DESCRIPTION"
+.PP
+\fBlwres_getrrsetbyname()\fR
+gets a set of resource records associated with a
+\fIhostname\fR,
+\fIclass\fR, and
+\fItype\fR.
+\fIhostname\fR
+is a pointer a to null\-terminated string. The
+\fIflags\fR
+field is currently unused and must be zero.
+.PP
+After a successful call to
+\fBlwres_getrrsetbyname()\fR,
+\fI*res\fR
+is a pointer to an
+\fBrrsetinfo\fR
+structure, containing a list of one or more
+\fBrdatainfo\fR
+structures containing resource records and potentially another list of
+\fBrdatainfo\fR
+structures containing SIG resource records associated with those records. The members
+\fBrri_rdclass\fR
+and
+\fBrri_rdtype\fR
+are copied from the parameters.
+\fBrri_ttl\fR
+and
+\fBrri_name\fR
+are properties of the obtained rrset. The resource records contained in
+\fBrri_rdatas\fR
+and
+\fBrri_sigs\fR
+are in uncompressed DNS wire format. Properties of the rdataset are represented in the
+\fBrri_flags\fR
+bitfield. If the RRSET_VALIDATED bit is set, the data has been DNSSEC validated and the signatures verified.
+.PP
+All of the information returned by
+\fBlwres_getrrsetbyname()\fR
+is dynamically allocated: the
+\fBrrsetinfo\fR
+and
+\fBrdatainfo\fR
+structures, and the canonical host name strings pointed to by the
+\fBrrsetinfo\fRstructure. Memory allocated for the dynamically allocated structures created by a successful call to
+\fBlwres_getrrsetbyname()\fR
+is released by
+\fBlwres_freerrset()\fR.
+\fIrrset\fR
+is a pointer to a
+\fBstruct rrset\fR
+created by a call to
+\fBlwres_getrrsetbyname()\fR.
+.PP
+.SH "RETURN VALUES"
+.PP
+\fBlwres_getrrsetbyname()\fR
+returns zero on success, and one of the following error codes if an error occurred:
+.PP
+\fBERRSET_NONAME\fR
+.RS 4
+the name does not exist
+.RE
+.PP
+\fBERRSET_NODATA\fR
+.RS 4
+the name exists, but does not have data of the desired type
+.RE
+.PP
+\fBERRSET_NOMEMORY\fR
+.RS 4
+memory could not be allocated
+.RE
+.PP
+\fBERRSET_INVAL\fR
+.RS 4
+a parameter is invalid
+.RE
+.PP
+\fBERRSET_FAIL\fR
+.RS 4
+other failure
+.RE
+.PP
+.RS 4
+.RE
+.SH "SEE ALSO"
+.PP
+\fBlwres\fR(3).
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br

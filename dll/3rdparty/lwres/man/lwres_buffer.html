@@ -1,0 +1,455 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_buffer.html,v 1.21 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_buffer</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_buffer_init, lwres_buffer_invalidate, lwres_buffer_add, lwres_buffer_subtract, lwres_buffer_clear, lwres_buffer_first, lwres_buffer_forward, lwres_buffer_back, lwres_buffer_getuint8, lwres_buffer_putuint8, lwres_buffer_getuint16, lwres_buffer_putuint16, lwres_buffer_getuint32, lwres_buffer_putuint32, lwres_buffer_putmem, lwres_buffer_getmem &#8212; lightweight resolver buffer management</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">
+#include &lt;lwres/lwbuffer.h&gt;
+</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_init</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>void * </td>
+<td>
+<var class="pdparam">base</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>unsigned int  </td>
+<td>
+<var class="pdparam">length</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_invalidate</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_add</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>unsigned int  </td>
+<td>
+<var class="pdparam">n</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_subtract</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>unsigned int  </td>
+<td>
+<var class="pdparam">n</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_clear</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_first</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_forward</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>unsigned int  </td>
+<td>
+<var class="pdparam">n</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_back</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>unsigned int  </td>
+<td>
+<var class="pdparam">n</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+lwres_uint8_t
+<b class="fsfunc">lwres_buffer_getuint8</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_putuint8</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_uint8_t  </td>
+<td>
+<var class="pdparam">val</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+lwres_uint16_t
+<b class="fsfunc">lwres_buffer_getuint16</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_putuint16</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_uint16_t  </td>
+<td>
+<var class="pdparam">val</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+lwres_uint32_t
+<b class="fsfunc">lwres_buffer_getuint32</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_putuint32</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_uint32_t  </td>
+<td>
+<var class="pdparam">val</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_putmem</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>const unsigned char * </td>
+<td>
+<var class="pdparam">base</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>unsigned int  </td>
+<td>
+<var class="pdparam">length</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_buffer_getmem</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>unsigned char * </td>
+<td>
+<var class="pdparam">base</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>unsigned int  </td>
+<td>
+<var class="pdparam">length</var><code>)</code>;</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543892"></a><h2>DESCRIPTION</h2>
+<p>
+      These functions provide bounds checked access to a region of memory
+      where data is being read or written.
+      They are based on, and similar to, the
+      <code class="literal">isc_buffer_</code>
+      functions in the ISC library.
+    </p>
+<p>
+      A buffer is a region of memory, together with a set of related
+      subregions.
+      The <span class="emphasis"><em>used region</em></span> and the
+      <span class="emphasis"><em>available</em></span> region are disjoint, and
+      their union is the buffer's region.
+      The used region extends from the beginning of the buffer region to the
+      last used byte.
+      The available region extends from one byte greater than the last used
+      byte to the end of the  buffer's region.
+      The size of the used region can be changed using various
+      buffer commands.
+      Initially, the used region is empty.
+    </p>
+<p>
+      The used region is further subdivided into two disjoint regions: the
+      <span class="emphasis"><em>consumed region</em></span> and the <span class="emphasis"><em>remaining region</em></span>.
+      The union of these two regions is the used region.
+      The consumed region extends from the beginning of the used region to
+      the byte before the <span class="emphasis"><em>current</em></span> offset (if any).
+      The <span class="emphasis"><em>remaining</em></span> region the current pointer to the end
+      of the used
+      region.
+      The size of the consumed region can be changed using various
+      buffer commands.
+      Initially, the consumed region is empty.
+    </p>
+<p>
+      The <span class="emphasis"><em>active region</em></span> is an (optional) subregion of the
+      remaining
+      region.
+      It extends from the current offset to an offset in the
+      remaining region.
+      Initially, the active region is empty.
+      If the current offset advances beyond the chosen offset,
+      the active region will also be empty.
+    </p>
+<pre class="programlisting">
+   /------------entire length---------------\\
+   /----- used region -----\\/-- available --\\
+   +----------------------------------------+
+   | consumed  | remaining |                |
+   +----------------------------------------+
+   a           b     c     d                e
+      </pre>
+<p>
+    </p>
+<pre class="programlisting">
+  a == base of buffer.
+  b == current pointer.  Can be anywhere between a and d.
+  c == active pointer.  Meaningful between b and d.
+  d == used pointer.
+  e == length of buffer.
+      </pre>
+<p>
+    </p>
+<pre class="programlisting">
+  a-e == entire length of buffer.
+  a-d == used region.
+  a-b == consumed region.
+  b-d == remaining region.
+  b-c == optional active region.
+</pre>
+<p>
+    </p>
+<p><code class="function">lwres_buffer_init()</code>
+      initializes the
+      <span class="type">lwres_buffer_t</span>
+      <em class="parameter"><code>*b</code></em>
+      and assocates it with the memory region of size
+      <em class="parameter"><code>length</code></em>
+      bytes starting at location
+      <em class="parameter"><code>base.</code></em>
+    </p>
+<p><code class="function">lwres_buffer_invalidate()</code>
+      marks the buffer <em class="parameter"><code>*b</code></em>
+      as invalid.  Invalidating a buffer after use is not required,
+      but makes it possible to catch its possible accidental use.
+    </p>
+<p>
+      The functions
+      <code class="function">lwres_buffer_add()</code>
+      and
+      <code class="function">lwres_buffer_subtract()</code>
+      respectively increase and decrease the used space in
+      buffer
+      <em class="parameter"><code>*b</code></em>
+      by
+      <em class="parameter"><code>n</code></em>
+      bytes.
+      <code class="function">lwres_buffer_add()</code>
+      checks for buffer overflow and
+      <code class="function">lwres_buffer_subtract()</code>
+      checks for underflow.
+      These functions do not allocate or deallocate memory.
+      They just change the value of
+      <em class="structfield"><code>used</code></em>.
+    </p>
+<p>
+      A buffer is re-initialised by
+      <code class="function">lwres_buffer_clear()</code>.
+      The function sets
+      <em class="structfield"><code>used</code></em>,
+      <em class="structfield"><code>current</code></em>
+      and
+      <em class="structfield"><code>active</code></em>
+      to zero.
+    </p>
+<p><code class="function">lwres_buffer_first</code>
+      makes the consumed region of buffer
+      <em class="parameter"><code>*p</code></em>
+      empty by setting
+      <em class="structfield"><code>current</code></em>
+      to zero (the start of the buffer).
+    </p>
+<p><code class="function">lwres_buffer_forward()</code>
+      increases the consumed region of buffer
+      <em class="parameter"><code>*b</code></em>
+      by
+      <em class="parameter"><code>n</code></em>
+      bytes, checking for overflow.
+      Similarly,
+      <code class="function">lwres_buffer_back()</code>
+      decreases buffer
+      <em class="parameter"><code>b</code></em>'s
+      consumed region by
+      <em class="parameter"><code>n</code></em>
+      bytes and checks for underflow.
+    </p>
+<p><code class="function">lwres_buffer_getuint8()</code>
+      reads an unsigned 8-bit integer from
+      <em class="parameter"><code>*b</code></em>
+      and returns it.
+      <code class="function">lwres_buffer_putuint8()</code>
+      writes the unsigned 8-bit integer
+      <em class="parameter"><code>val</code></em>
+      to buffer
+      <em class="parameter"><code>*b</code></em>.
+    </p>
+<p><code class="function">lwres_buffer_getuint16()</code>
+      and
+      <code class="function">lwres_buffer_getuint32()</code>
+      are identical to
+      <code class="function">lwres_buffer_putuint8()</code>
+      except that they respectively read an unsigned 16-bit or 32-bit integer
+      in network byte order from
+      <em class="parameter"><code>b</code></em>.
+      Similarly,
+      <code class="function">lwres_buffer_putuint16()</code>
+      and
+      <code class="function">lwres_buffer_putuint32()</code>
+      writes the unsigned 16-bit or 32-bit integer
+      <em class="parameter"><code>val</code></em>
+      to buffer
+      <em class="parameter"><code>b</code></em>,
+      in network byte order.
+    </p>
+<p>
+      Arbitrary amounts of data are read or written from a lightweight
+      resolver buffer with
+      <code class="function">lwres_buffer_getmem()</code>
+      and
+      <code class="function">lwres_buffer_putmem()</code>
+      respectively.
+      <code class="function">lwres_buffer_putmem()</code>
+      copies
+      <em class="parameter"><code>length</code></em>
+      bytes of memory at
+      <em class="parameter"><code>base</code></em>
+      to
+      <em class="parameter"><code>b</code></em>.
+      Conversely,
+      <code class="function">lwres_buffer_getmem()</code>
+      copies
+      <em class="parameter"><code>length</code></em>
+      bytes of memory from
+      <em class="parameter"><code>b</code></em>
+      to
+      <em class="parameter"><code>base</code></em>.
+    </p>
+</div>
+</div></body>
+</html>

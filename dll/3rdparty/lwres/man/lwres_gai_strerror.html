@@ -1,0 +1,124 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_gai_strerror.html,v 1.24 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_gai_strerror</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_gai_strerror &#8212; print suitable error string</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">#include &lt;lwres/netdb.h&gt;</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0"><tr>
+<td><code class="funcdef">
+char *
+<b class="fsfunc">gai_strerror</b>(</code></td>
+<td>int  </td>
+<td>
+<var class="pdparam">ecode</var><code>)</code>;</td>
+</tr></table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543361"></a><h2>DESCRIPTION</h2>
+<p><code class="function">lwres_gai_strerror()</code>
+      returns an error message corresponding to an error code returned by
+      <code class="function">getaddrinfo()</code>.
+      The following error codes and their meaning are defined in
+      <code class="filename">include/lwres/netdb.h</code>.
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><span class="errorcode">EAI_ADDRFAMILY</span></span></dt>
+<dd><p>
+              address family for hostname not supported
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_AGAIN</span></span></dt>
+<dd><p>
+              temporary failure in name resolution
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_BADFLAGS</span></span></dt>
+<dd><p>
+              invalid value for
+              <code class="constant">ai_flags</code>
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_FAIL</span></span></dt>
+<dd><p>
+              non-recoverable failure in name resolution
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_FAMILY</span></span></dt>
+<dd><p><code class="constant">ai_family</code> not supported
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_MEMORY</span></span></dt>
+<dd><p>
+              memory allocation failure
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_NODATA</span></span></dt>
+<dd><p>
+              no address associated with hostname
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_NONAME</span></span></dt>
+<dd><p>
+              hostname or servname not provided, or not known
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_SERVICE</span></span></dt>
+<dd><p>
+              servname not supported for <code class="constant">ai_socktype</code>
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_SOCKTYPE</span></span></dt>
+<dd><p><code class="constant">ai_socktype</code> not supported
+            </p></dd>
+<dt><span class="term"><span class="errorcode">EAI_SYSTEM</span></span></dt>
+<dd><p>
+              system error returned in errno
+            </p></dd>
+</dl></div>
+<p>
+      The message <span class="errorname">invalid error code</span> is returned if
+      <em class="parameter"><code>ecode</code></em>
+      is out of range.
+    </p>
+<p><code class="constant">ai_flags</code>,
+      <code class="constant">ai_family</code>
+      and
+      <code class="constant">ai_socktype</code>
+      are elements of the
+      <span class="type">struct  addrinfo</span>
+      used by
+      <code class="function">lwres_getaddrinfo()</code>.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543576"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">strerror</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">lwres_getaddrinfo</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">getaddrinfo</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">RFC2133</span></span>.
+    </p>
+</div>
+</div></body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001, 2003  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_context.docbook,v 1.11 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_context</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <year>2003</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_context_create</refname>
+    <refname>lwres_context_destroy</refname>
+    <refname>lwres_context_nextserial</refname>
+    <refname>lwres_context_initserial</refname>
+    <refname>lwres_context_freemem</refname>
+    <refname>lwres_context_allocmem</refname>
+    <refname>lwres_context_sendrecv</refname>
+    <refpurpose>lightweight resolver context management</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/lwres.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_context_create</function></funcdef>
+        <paramdef>lwres_context_t **<parameter>contextp</parameter></paramdef>
+        <paramdef>void *<parameter>arg</parameter></paramdef>
+        <paramdef>lwres_malloc_t <parameter>malloc_function</parameter></paramdef>
+        <paramdef>lwres_free_t <parameter>free_function</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_context_destroy</function></funcdef>
+        <paramdef>lwres_context_t **<parameter>contextp</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_context_initserial</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_uint32_t <parameter>serial</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_uint32_t
+<function>lwres_context_nextserial</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_context_freemem</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>void *<parameter>mem</parameter></paramdef>
+        <paramdef>size_t <parameter>len</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_context_allocmem</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>size_t <parameter>len</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void *
+<function>lwres_context_sendrecv</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>void *<parameter>sendbase</parameter></paramdef>
+        <paramdef>int <parameter>sendlen</parameter></paramdef>
+        <paramdef>void *<parameter>recvbase</parameter></paramdef>
+        <paramdef>int <parameter>recvlen</parameter></paramdef>
+        <paramdef>int *<parameter>recvd_len</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><function>lwres_context_create()</function>
+      creates a <type>lwres_context_t</type> structure for use in
+      lightweight resolver operations.  It holds a socket and other
+      data needed for communicating with a resolver daemon.  The new
+      <type>lwres_context_t</type> is returned through
+      <parameter>contextp</parameter>, a pointer to a
+      <type>lwres_context_t</type> pointer.  This
+      <type>lwres_context_t</type> pointer must initially be NULL, and
+      is modified to point to the newly created
+      <type>lwres_context_t</type>.
+    </para>
+    <para>
+      When the lightweight resolver needs to perform dynamic memory
+      allocation, it will call
+      <parameter>malloc_function</parameter>
+      to allocate memory and
+      <parameter>free_function</parameter>
+      to free it.  If
+      <parameter>malloc_function</parameter>
+      and
+      <parameter>free_function</parameter>
+      are NULL, memory is allocated using
+      <citerefentry>
+        <refentrytitle>malloc</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>.
+      and
+      <citerefentry>
+        <refentrytitle>free</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>.
+
+      It is not permitted to have a NULL
+      <parameter>malloc_function</parameter> and a non-NULL
+      <parameter>free_function</parameter> or vice versa.
+      <parameter>arg</parameter> is passed as the first parameter to
+      the memory allocation functions.  If
+      <parameter>malloc_function</parameter> and
+      <parameter>free_function</parameter> are NULL,
+      <parameter>arg</parameter> is unused and should be passed as
+      NULL.
+    </para>
+
+    <para>
+      Once memory for the structure has been allocated,
+      it is initialized using
+      <citerefentry>
+        <refentrytitle>lwres_conf_init</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>
+      and returned via <parameter>*contextp</parameter>.
+    </para>
+
+    <para><function>lwres_context_destroy()</function>
+      destroys a <type>lwres_context_t</type>, closing its socket.
+      <parameter>contextp</parameter> is a pointer to a pointer to the
+      context that is to be destroyed.  The pointer will be set to
+      NULL when the context has been destroyed.
+    </para>
+
+    <para>
+      The context holds a serial number that is used to identify
+      resolver request packets and associate responses with the
+      corresponding requests.  This serial number is controlled using
+      <function>lwres_context_initserial()</function> and
+      <function>lwres_context_nextserial()</function>.
+      <function>lwres_context_initserial()</function> sets the serial
+      number for context <parameter>*ctx</parameter> to
+      <parameter>serial</parameter>.
+      <function>lwres_context_nextserial()</function> increments the
+      serial number and returns the previous value.
+    </para>
+
+    <para>
+      Memory for a lightweight resolver context is allocated and freed
+      using <function>lwres_context_allocmem()</function> and
+      <function>lwres_context_freemem()</function>.  These use
+      whatever allocations were defined when the context was created
+      with <function>lwres_context_create()</function>.
+      <function>lwres_context_allocmem()</function> allocates
+      <parameter>len</parameter> bytes of memory and if successful
+      returns a pointer to the allocated storage.
+      <function>lwres_context_freemem()</function> frees
+      <parameter>len</parameter> bytes of space starting at location
+      <parameter>mem</parameter>.
+    </para>
+
+    <para><function>lwres_context_sendrecv()</function>
+      performs I/O for the context <parameter>ctx</parameter>.  Data
+      are read and written from the context's socket.  It writes data
+      from <parameter>sendbase</parameter> &mdash; typically a
+      lightweight resolver query packet &mdash; and waits for a reply
+      which is copied to the receive buffer at
+      <parameter>recvbase</parameter>.  The number of bytes that were
+      written to this receive buffer is returned in
+      <parameter>*recvd_len</parameter>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>RETURN VALUES</title>
+
+    <para><function>lwres_context_create()</function>
+      returns <errorcode>LWRES_R_NOMEMORY</errorcode> if memory for
+      the <type>struct lwres_context</type> could not be allocated,
+      <errorcode>LWRES_R_SUCCESS</errorcode> otherwise.
+    </para>
+    <para>
+      Successful calls to the memory allocator
+      <function>lwres_context_allocmem()</function>
+      return a pointer to the start of the allocated space.
+      It returns NULL if memory could not be allocated.
+    </para>
+    <para><errorcode>LWRES_R_SUCCESS</errorcode>
+      is returned when
+      <function>lwres_context_sendrecv()</function>
+      completes successfully.
+      <errorcode>LWRES_R_IOERROR</errorcode>
+      is returned if an I/O error occurs and
+      <errorcode>LWRES_R_TIMEOUT</errorcode>
+      is returned if
+      <function>lwres_context_sendrecv()</function>
+      times out waiting for a response.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>lwres_conf_init</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>malloc</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>free</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>.
+    </para>
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

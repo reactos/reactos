@@ -1,0 +1,117 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_getnameinfo.3,v 1.29 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_getnameinfo
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_GETNAMEINFO" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_getnameinfo \- lightweight resolver socket address structure to hostname and service name
+.SH "SYNOPSIS"
+.nf
+#include <lwres/netdb.h>
+.fi
+.HP 22
+.BI "int lwres_getnameinfo(const\ struct\ sockaddr\ *" "sa" ", size_t\ " "salen" ", char\ *" "host" ", size_t\ " "hostlen" ", char\ *" "serv" ", size_t\ " "servlen" ", int\ " "flags" ");"
+.SH "DESCRIPTION"
+.PP
+This function is equivalent to the
+\fBgetnameinfo\fR(3)
+function defined in RFC2133.
+\fBlwres_getnameinfo()\fR
+returns the hostname for the
+\fBstruct sockaddr\fR
+\fIsa\fR
+which is
+\fIsalen\fR
+bytes long. The hostname is of length
+\fIhostlen\fR
+and is returned via
+\fI*host.\fR
+The maximum length of the hostname is 1025 bytes:
+\fBNI_MAXHOST\fR.
+.PP
+The name of the service associated with the port number in
+\fIsa\fR
+is returned in
+\fI*serv.\fR
+It is
+\fIservlen\fR
+bytes long. The maximum length of the service name is
+\fBNI_MAXSERV\fR
+\- 32 bytes.
+.PP
+The
+\fIflags\fR
+argument sets the following bits:
+.PP
+\fBNI_NOFQDN\fR
+.RS 4
+A fully qualified domain name is not required for local hosts. The local part of the fully qualified domain name is returned instead.
+.RE
+.PP
+\fBNI_NUMERICHOST\fR
+.RS 4
+Return the address in numeric form, as if calling inet_ntop(), instead of a host name.
+.RE
+.PP
+\fBNI_NAMEREQD\fR
+.RS 4
+A name is required. If the hostname cannot be found in the DNS and this flag is set, a non\-zero error code is returned. If the hostname is not found and the flag is not set, the address is returned in numeric form.
+.RE
+.PP
+\fBNI_NUMERICSERV\fR
+.RS 4
+The service name is returned as a digit string representing the port number.
+.RE
+.PP
+\fBNI_DGRAM\fR
+.RS 4
+Specifies that the service being looked up is a datagram service, and causes getservbyport() to be called with a second argument of "udp" instead of its default of "tcp". This is required for the few ports (512\-514) that have different services for UDP and TCP.
+.RE
+.SH "RETURN VALUES"
+.PP
+\fBlwres_getnameinfo()\fR
+returns 0 on success or a non\-zero error code if an error occurs.
+.SH "SEE ALSO"
+.PP
+\fBRFC2133\fR(),
+\fBgetservbyport\fR(3),
+\fBlwres\fR(3),
+\fBlwres_getnameinfo\fR(3),
+\fBlwres_getnamebyaddr\fR(3).
+\fBlwres_net_ntop\fR(3).
+.SH "BUGS"
+.PP
+RFC2133 fails to define what the nonzero return values of
+\fBgetnameinfo\fR(3)
+are.
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br

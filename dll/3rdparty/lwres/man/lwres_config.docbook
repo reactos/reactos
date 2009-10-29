@@ -1,0 +1,173 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_config.docbook,v 1.9 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+  <refentryinfo>
+
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_config</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_conf_init</refname>
+    <refname>lwres_conf_clear</refname>
+    <refname>lwres_conf_parse</refname>
+    <refname>lwres_conf_print</refname>
+    <refname>lwres_conf_get</refname>
+    <refpurpose>lightweight resolver configuration</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/lwres.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_conf_init</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_conf_clear</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_conf_parse</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>const char *<parameter>filename</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_conf_print</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>FILE *<parameter>fp</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_conf_t *
+<function>lwres_conf_get</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><function>lwres_conf_init()</function>
+      creates an empty
+      <type>lwres_conf_t</type>
+      structure for lightweight resolver context
+      <parameter>ctx</parameter>.
+    </para>
+
+    <para><function>lwres_conf_clear()</function>
+      frees up all the internal memory used by
+      that
+      <type>lwres_conf_t</type>
+      structure in resolver context
+      <parameter>ctx</parameter>.
+    </para>
+
+    <para><function>lwres_conf_parse()</function>
+      opens the file
+      <parameter>filename</parameter>
+      and parses it to initialise the resolver context
+      <parameter>ctx</parameter>'s
+      <type>lwres_conf_t</type>
+      structure.
+    </para>
+
+    <para><function>lwres_conf_print()</function>
+      prints the
+      <type>lwres_conf_t</type>
+      structure for resolver context
+      <parameter>ctx</parameter>
+      to the
+      <type>FILE</type>
+      <parameter>fp</parameter>.
+    </para>
+  </refsect1>
+  <refsect1>
+
+    <title>RETURN VALUES</title>
+
+    <para><function>lwres_conf_parse()</function>
+      returns <errorcode>LWRES_R_SUCCESS</errorcode>
+      if it successfully read and parsed
+      <parameter>filename</parameter>.
+      It returns <errorcode>LWRES_R_FAILURE</errorcode>
+      if <parameter>filename</parameter>
+      could not be opened or contained incorrect
+      resolver statements.
+    </para>
+
+    <para><function>lwres_conf_print()</function>
+      returns <errorcode>LWRES_R_SUCCESS</errorcode>
+      unless an error occurred when converting the network addresses to a
+      numeric host address string.
+      If this happens, the function returns
+      <errorcode>LWRES_R_FAILURE</errorcode>.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>stdio</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>resolver</refentrytitle><manvolnum>5</manvolnum>
+      </citerefentry>.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>FILES</title>
+    <para><filename>/etc/resolv.conf</filename>
+    </para>
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

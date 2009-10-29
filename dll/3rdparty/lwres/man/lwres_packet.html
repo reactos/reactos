@@ -1,0 +1,235 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_packet.html,v 1.26 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_packet</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_lwpacket_renderheader, lwres_lwpacket_parseheader &#8212; lightweight resolver packet handling functions</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">#include &lt;lwres/lwpacket.h&gt;</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_lwpacket_renderheader</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_lwpacket_parseheader</b>(</code></td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var><code>)</code>;</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543389"></a><h2>DESCRIPTION</h2>
+<p>
+      These functions rely on a
+      <span class="type">struct lwres_lwpacket</span>
+      which is defined in
+      <code class="filename">lwres/lwpacket.h</code>.
+    </p>
+<pre class="programlisting">
+typedef struct lwres_lwpacket lwres_lwpacket_t;
+      </pre>
+<p>
+    </p>
+<pre class="programlisting">
+struct lwres_lwpacket {
+        lwres_uint32_t          length;
+        lwres_uint16_t          version;
+        lwres_uint16_t          pktflags;
+        lwres_uint32_t          serial;
+        lwres_uint32_t          opcode;
+        lwres_uint32_t          result;
+        lwres_uint32_t          recvlength;
+        lwres_uint16_t          authtype;
+        lwres_uint16_t          authlength;
+};
+</pre>
+<p>
+    </p>
+<p>
+      The elements of this structure are:
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><code class="constant">length</code></span></dt>
+<dd><p>
+              the overall packet length, including the entire packet header.
+              This field is filled in by the lwres_gabn_*() and lwres_gnba_*()
+              calls.
+            </p></dd>
+<dt><span class="term"><code class="constant">version</code></span></dt>
+<dd><p>
+              the header format. There is currently only one format,
+              <span class="type">LWRES_LWPACKETVERSION_0</span>.
+
+              This field is filled in by the lwres_gabn_*() and lwres_gnba_*()
+              calls.
+            </p></dd>
+<dt><span class="term"><code class="constant">pktflags</code></span></dt>
+<dd><p>
+              library-defined flags for this packet: for instance whether the
+              packet
+              is a request or a reply. Flag values can be set, but not defined
+              by
+              the caller.
+              This field is filled in by the application wit the exception of
+              the
+              LWRES_LWPACKETFLAG_RESPONSE bit, which is set by the library in
+              the
+              lwres_gabn_*() and lwres_gnba_*() calls.
+            </p></dd>
+<dt><span class="term"><code class="constant">serial</code></span></dt>
+<dd><p>
+              is set by the requestor and is returned in all replies. If two
+              or more
+              packets from the same source have the same serial number and are
+              from
+              the same source, they are assumed to be duplicates and the
+              latter ones
+              may be dropped.
+              This field must be set by the application.
+            </p></dd>
+<dt><span class="term"><code class="constant">opcode</code></span></dt>
+<dd><p>
+              indicates the operation.
+              Opcodes between 0x00000000 and 0x03ffffff are
+              reserved for use by the lightweight resolver library. Opcodes
+              between
+              0x04000000 and 0xffffffff are application defined.
+              This field is filled in by the lwres_gabn_*() and lwres_gnba_*()
+              calls.
+            </p></dd>
+<dt><span class="term"><code class="constant">result</code></span></dt>
+<dd><p>
+              is only valid for replies.
+              Results between 0x04000000 and 0xffffffff are application
+              defined.
+              Results between 0x00000000 and 0x03ffffff are reserved for
+              library use.
+              This field is filled in by the lwres_gabn_*() and lwres_gnba_*()
+              calls.
+            </p></dd>
+<dt><span class="term"><code class="constant">recvlength</code></span></dt>
+<dd><p>
+              is the maximum buffer size that the receiver can handle on
+              requests
+              and the size of the buffer needed to satisfy a request when the
+              buffer
+              is too large for replies.
+              This field is supplied by the application.
+            </p></dd>
+<dt><span class="term"><code class="constant">authtype</code></span></dt>
+<dd><p>
+              defines the packet level authentication that is used.
+              Authorisation types between 0x1000 and 0xffff are application
+              defined
+              and types between 0x0000 and 0x0fff are reserved for library
+              use.
+              Currently these are not used and must be zero.
+            </p></dd>
+<dt><span class="term"><code class="constant">authlen</code></span></dt>
+<dd><p>
+              gives the length of the authentication data.
+              Since packet authentication is currently not used, this must be
+              zero.
+            </p></dd>
+</dl></div>
+<p>
+    </p>
+<p>
+      The following opcodes are currently defined:
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><code class="constant">NOOP</code></span></dt>
+<dd><p>
+              Success is always returned and the packet contents are echoed.
+              The lwres_noop_*() functions should be used for this type.
+            </p></dd>
+<dt><span class="term"><code class="constant">GETADDRSBYNAME</code></span></dt>
+<dd><p>
+              returns all known addresses for a given name.
+              The lwres_gabn_*() functions should be used for this type.
+            </p></dd>
+<dt><span class="term"><code class="constant">GETNAMEBYADDR</code></span></dt>
+<dd><p>
+              return the hostname for the given address.
+              The lwres_gnba_*() functions should be used for this type.
+            </p></dd>
+</dl></div>
+<p>
+    </p>
+<p><code class="function">lwres_lwpacket_renderheader()</code>
+      transfers the contents of lightweight resolver packet structure
+      <span class="type">lwres_lwpacket_t</span> <em class="parameter"><code>*pkt</code></em> in
+      network byte order to the lightweight resolver buffer,
+      <em class="parameter"><code>*b</code></em>.
+    </p>
+<p><code class="function">lwres_lwpacket_parseheader()</code>
+      performs the converse operation.  It transfers data in network
+      byte order from buffer <em class="parameter"><code>*b</code></em> to resolver
+      packet <em class="parameter"><code>*pkt</code></em>.  The contents of the buffer
+      <em class="parameter"><code>b</code></em> should correspond to a
+      <span class="type">lwres_lwpacket_t</span>.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543706"></a><h2>RETURN VALUES</h2>
+<p>
+      Successful calls to
+      <code class="function">lwres_lwpacket_renderheader()</code> and
+      <code class="function">lwres_lwpacket_parseheader()</code> return
+      <span class="errorcode">LWRES_R_SUCCESS</span>.  If there is insufficient
+      space to copy data between the buffer <em class="parameter"><code>*b</code></em> and
+      lightweight resolver packet <em class="parameter"><code>*pkt</code></em> both
+      functions
+      return <span class="errorcode">LWRES_R_UNEXPECTEDEND</span>.
+    </p>
+</div>
+</div></body>
+</html>

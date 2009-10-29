@@ -1,0 +1,261 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_gnba.docbook,v 1.11 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_gnba</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_gnbarequest_render</refname>
+    <refname>lwres_gnbaresponse_render</refname>
+    <refname>lwres_gnbarequest_parse</refname>
+    <refname>lwres_gnbaresponse_parse</refname>
+    <refname>lwres_gnbaresponse_free</refname>
+    <refname>lwres_gnbarequest_free</refname>
+    <refpurpose>lightweight resolver getnamebyaddress message handling</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+
+    <funcsynopsis>
+<funcsynopsisinfo>
+#include &lt;lwres/lwres.h&gt;
+</funcsynopsisinfo>
+
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_gnbarequest_render</function>
+</funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_gnbarequest_t *<parameter>req</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        </funcprototype>
+
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_gnbaresponse_render</function>
+</funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_gnbaresponse_t *<parameter>req</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_gnbarequest_parse</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        <paramdef>lwres_gnbarequest_t **<parameter>structp</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_gnbaresponse_parse</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        <paramdef>lwres_gnbaresponse_t **<parameter>structp</parameter></paramdef>
+        </funcprototype>
+
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_gnbaresponse_free</function>
+</funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_gnbaresponse_t **<parameter>structp</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_gnbarequest_free</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_gnbarequest_t **<parameter>structp</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      These are low-level routines for creating and parsing
+      lightweight resolver address-to-name lookup request and
+      response messages.
+    </para>
+    <para>
+      There are four main functions for the getnamebyaddr opcode.
+      One render function converts a getnamebyaddr request structure &mdash;
+      <type>lwres_gnbarequest_t</type> &mdash;
+      to the lightweight resolver's canonical format.
+      It is complemented by a parse function that converts a packet in this
+      canonical format to a getnamebyaddr request structure.
+      Another render function converts the getnamebyaddr response structure
+      &mdash;
+      <type>lwres_gnbaresponse_t</type>
+      to the canonical format.
+      This is complemented by a parse function which converts a packet in
+      canonical format to a getnamebyaddr response structure.
+    </para>
+    <para>
+      These structures are defined in
+      <filename>lwres/lwres.h</filename>.
+      They are shown below.
+    </para>
+    <para><programlisting>
+#define LWRES_OPCODE_GETNAMEBYADDR      0x00010002U
+</programlisting>
+    </para>
+    <para><programlisting>
+typedef struct {
+        lwres_uint32_t  flags;
+        lwres_addr_t    addr;
+} lwres_gnbarequest_t;
+</programlisting>
+    </para>
+    <para><programlisting>
+typedef struct {
+        lwres_uint32_t  flags;
+        lwres_uint16_t  naliases;
+        char           *realname;
+        char          **aliases;
+        lwres_uint16_t  realnamelen;
+        lwres_uint16_t *aliaslen;
+        void           *base;
+        size_t          baselen;
+} lwres_gnbaresponse_t;
+</programlisting>
+    </para>
+
+    <para><function>lwres_gnbarequest_render()</function>
+      uses resolver context <varname>ctx</varname> to convert
+      getnamebyaddr request structure <varname>req</varname> to
+      canonical format.  The packet header structure
+      <varname>pkt</varname> is initialised and transferred to buffer
+      <varname>b</varname>.  The contents of <varname>*req</varname>
+      are then appended to the buffer in canonical format.
+      <function>lwres_gnbaresponse_render()</function> performs the
+      same task, except it converts a getnamebyaddr response structure
+      <type>lwres_gnbaresponse_t</type> to the lightweight resolver's
+      canonical format.
+    </para>
+
+    <para><function>lwres_gnbarequest_parse()</function>
+      uses context <varname>ctx</varname> to convert the contents of
+      packet <varname>pkt</varname> to a
+      <type>lwres_gnbarequest_t</type> structure.  Buffer
+      <varname>b</varname> provides space to be used for storing this
+      structure.  When the function succeeds, the resulting
+      <type>lwres_gnbarequest_t</type> is made available through
+      <varname>*structp</varname>.
+      <function>lwres_gnbaresponse_parse()</function> offers the same
+      semantics as <function>lwres_gnbarequest_parse()</function>
+      except it yields a <type>lwres_gnbaresponse_t</type> structure.
+    </para>
+
+    <para><function>lwres_gnbaresponse_free()</function>
+      and <function>lwres_gnbarequest_free()</function> release the
+      memory in resolver context <varname>ctx</varname> that was
+      allocated to the <type>lwres_gnbaresponse_t</type> or
+      <type>lwres_gnbarequest_t</type> structures referenced via
+      <varname>structp</varname>.  Any memory associated with
+      ancillary buffers and strings for those structures is also
+      discarded.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>RETURN VALUES</title>
+    <para>
+      The getnamebyaddr opcode functions
+      <function>lwres_gnbarequest_render()</function>,
+      <function>lwres_gnbaresponse_render()</function>
+      <function>lwres_gnbarequest_parse()</function>
+      and
+      <function>lwres_gnbaresponse_parse()</function>
+      all return
+      <errorcode>LWRES_R_SUCCESS</errorcode>
+      on success.
+      They return
+      <errorcode>LWRES_R_NOMEMORY</errorcode>
+      if memory allocation fails.
+      <errorcode>LWRES_R_UNEXPECTEDEND</errorcode>
+      is returned if the available space in the buffer
+      <varname>b</varname>
+      is too small to accommodate the packet header or the
+      <type>lwres_gnbarequest_t</type>
+      and
+      <type>lwres_gnbaresponse_t</type>
+      structures.
+      <function>lwres_gnbarequest_parse()</function>
+      and
+      <function>lwres_gnbaresponse_parse()</function>
+      will return
+      <errorcode>LWRES_R_UNEXPECTEDEND</errorcode>
+      if the buffer is not empty after decoding the received packet.
+      These functions will return
+      <errorcode>LWRES_R_FAILURE</errorcode>
+      if
+      <structfield>pktflags</structfield>
+      in the packet header structure
+      <type>lwres_lwpacket_t</type>
+      indicate that the packet is not a response to an earlier query.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>lwres_packet</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>.
+    </para>
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

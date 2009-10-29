@@ -1,0 +1,170 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_resutil.3,v 1.28 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_resutil
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_RESUTIL" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_string_parse, lwres_addr_parse, lwres_getaddrsbyname, lwres_getnamebyaddr \- lightweight resolver utility functions
+.SH "SYNOPSIS"
+.nf
+#include <lwres/lwres.h>
+.fi
+.HP 34
+.BI "lwres_result_t lwres_string_parse(lwres_buffer_t\ *" "b" ", char\ **" "c" ", lwres_uint16_t\ *" "len" ");"
+.HP 32
+.BI "lwres_result_t lwres_addr_parse(lwres_buffer_t\ *" "b" ", lwres_addr_t\ *" "addr" ");"
+.HP 36
+.BI "lwres_result_t lwres_getaddrsbyname(lwres_context_t\ *" "ctx" ", const\ char\ *" "name" ", lwres_uint32_t\ " "addrtypes" ", lwres_gabnresponse_t\ **" "structp" ");"
+.HP 35
+.BI "lwres_result_t lwres_getnamebyaddr(lwres_context_t\ *" "ctx" ", lwres_uint32_t\ " "addrtype" ", lwres_uint16_t\ " "addrlen" ", const\ unsigned\ char\ *" "addr" ", lwres_gnbaresponse_t\ **" "structp" ");"
+.SH "DESCRIPTION"
+.PP
+\fBlwres_string_parse()\fR
+retrieves a DNS\-encoded string starting the current pointer of lightweight resolver buffer
+\fIb\fR: i.e.
+\fBb\->current\fR. When the function returns, the address of the first byte of the encoded string is returned via
+\fI*c\fR
+and the length of that string is given by
+\fI*len\fR. The buffer's current pointer is advanced to point at the character following the string length, the encoded string, and the trailing
+\fBNULL\fR
+character.
+.PP
+\fBlwres_addr_parse()\fR
+extracts an address from the buffer
+\fIb\fR. The buffer's current pointer
+\fBb\->current\fR
+is presumed to point at an encoded address: the address preceded by a 32\-bit protocol family identifier and a 16\-bit length field. The encoded address is copied to
+\fBaddr\->address\fR
+and
+\fBaddr\->length\fR
+indicates the size in bytes of the address that was copied.
+\fBb\->current\fR
+is advanced to point at the next byte of available data in the buffer following the encoded address.
+.PP
+\fBlwres_getaddrsbyname()\fR
+and
+\fBlwres_getnamebyaddr()\fR
+use the
+\fBlwres_gnbaresponse_t\fR
+structure defined below:
+.PP
+.RS 4
+.nf
+typedef struct {
+        lwres_uint32_t          flags;
+        lwres_uint16_t          naliases;
+        lwres_uint16_t          naddrs;
+        char                   *realname;
+        char                  **aliases;
+        lwres_uint16_t          realnamelen;
+        lwres_uint16_t         *aliaslen;
+        lwres_addrlist_t        addrs;
+        void                   *base;
+        size_t                  baselen;
+} lwres_gabnresponse_t;
+.fi
+.RE
+.PP
+The contents of this structure are not manipulated directly but they are controlled through the
+\fBlwres_gabn\fR(3)
+functions.
+.PP
+The lightweight resolver uses
+\fBlwres_getaddrsbyname()\fR
+to perform foward lookups. Hostname
+\fIname\fR
+is looked up using the resolver context
+\fIctx\fR
+for memory allocation.
+\fIaddrtypes\fR
+is a bitmask indicating which type of addresses are to be looked up. Current values for this bitmask are
+\fBLWRES_ADDRTYPE_V4\fR
+for IPv4 addresses and
+\fBLWRES_ADDRTYPE_V6\fR
+for IPv6 addresses. Results of the lookup are returned in
+\fI*structp\fR.
+.PP
+\fBlwres_getnamebyaddr()\fR
+performs reverse lookups. Resolver context
+\fIctx\fR
+is used for memory allocation. The address type is indicated by
+\fIaddrtype\fR:
+\fBLWRES_ADDRTYPE_V4\fR
+or
+\fBLWRES_ADDRTYPE_V6\fR. The address to be looked up is given by
+\fIaddr\fR
+and its length is
+\fIaddrlen\fR
+bytes. The result of the function call is made available through
+\fI*structp\fR.
+.SH "RETURN VALUES"
+.PP
+Successful calls to
+\fBlwres_string_parse()\fR
+and
+\fBlwres_addr_parse()\fR
+return
+\fBLWRES_R_SUCCESS.\fR
+Both functions return
+\fBLWRES_R_FAILURE\fR
+if the buffer is corrupt or
+\fBLWRES_R_UNEXPECTEDEND\fR
+if the buffer has less space than expected for the components of the encoded string or address.
+.PP
+\fBlwres_getaddrsbyname()\fR
+returns
+\fBLWRES_R_SUCCESS\fR
+on success and it returns
+\fBLWRES_R_NOTFOUND\fR
+if the hostname
+\fIname\fR
+could not be found.
+.PP
+\fBLWRES_R_SUCCESS\fR
+is returned by a successful call to
+\fBlwres_getnamebyaddr()\fR.
+.PP
+Both
+\fBlwres_getaddrsbyname()\fR
+and
+\fBlwres_getnamebyaddr()\fR
+return
+\fBLWRES_R_NOMEMORY\fR
+when memory allocation requests fail and
+\fBLWRES_R_UNEXPECTEDEND\fR
+if the buffers used for sending queries and receiving replies are too small.
+.SH "SEE ALSO"
+.PP
+\fBlwres_buffer\fR(3),
+\fBlwres_gabn\fR(3).
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br

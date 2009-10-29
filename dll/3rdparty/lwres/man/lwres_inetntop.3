@@ -1,0 +1,77 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_inetntop.3,v 1.26 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_inetntop
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_INETNTOP" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_net_ntop \- lightweight resolver IP address presentation
+.SH "SYNOPSIS"
+.nf
+#include <lwres/net.h>
+.fi
+.HP 28
+.BI "const char * lwres_net_ntop(int\ " "af" ", const\ void\ *" "src" ", char\ *" "dst" ", size_t\ " "size" ");"
+.SH "DESCRIPTION"
+.PP
+\fBlwres_net_ntop()\fR
+converts an IP address of protocol family
+\fIaf\fR
+\(em IPv4 or IPv6 \(em at location
+\fIsrc\fR
+from network format to its conventional representation as a string. For IPv4 addresses, that string would be a dotted\-decimal. An IPv6 address would be represented in colon notation as described in RFC1884.
+.PP
+The generated string is copied to
+\fIdst\fR
+provided
+\fIsize\fR
+indicates it is long enough to store the ASCII representation of the address.
+.SH "RETURN VALUES"
+.PP
+If successful, the function returns
+\fIdst\fR: a pointer to a string containing the presentation format of the address.
+\fBlwres_net_ntop()\fR
+returns
+\fBNULL\fR
+and sets the global variable
+\fBerrno\fR
+to
+\fBEAFNOSUPPORT\fR
+if the protocol family given in
+\fIaf\fR
+is not supported.
+.SH "SEE ALSO"
+.PP
+\fBRFC1884\fR(),
+\fBinet_ntop\fR(3),
+\fBerrno\fR(3).
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br

@@ -1,0 +1,206 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001, 2003 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_getipnode.3,v 1.28 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_getipnode
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_GETIPNODE" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_getipnodebyname, lwres_getipnodebyaddr, lwres_freehostent \- lightweight resolver nodename / address translation API
+.SH "SYNOPSIS"
+.nf
+#include <lwres/netdb.h>
+.fi
+.HP 39
+.BI "struct hostent * lwres_getipnodebyname(const\ char\ *" "name" ", int\ " "af" ", int\ " "flags" ", int\ *" "error_num" ");"
+.HP 39
+.BI "struct hostent * lwres_getipnodebyaddr(const\ void\ *" "src" ", size_t\ " "len" ", int\ " "af" ", int\ *" "error_num" ");"
+.HP 23
+.BI "void lwres_freehostent(struct\ hostent\ *" "he" ");"
+.SH "DESCRIPTION"
+.PP
+These functions perform thread safe, protocol independent nodename\-to\-address and address\-to\-nodename translation as defined in RFC2553.
+.PP
+They use a
+\fBstruct hostent\fR
+which is defined in
+\fInamedb.h\fR:
+.PP
+.RS 4
+.nf
+struct  hostent {
+        char    *h_name;        /* official name of host */
+        char    **h_aliases;    /* alias list */
+        int     h_addrtype;     /* host address type */
+        int     h_length;       /* length of address */
+        char    **h_addr_list;  /* list of addresses from name server */
+};
+#define h_addr  h_addr_list[0]  /* address, for backward compatibility */
+.fi
+.RE
+.sp
+.PP
+The members of this structure are:
+.PP
+\fBh_name\fR
+.RS 4
+The official (canonical) name of the host.
+.RE
+.PP
+\fBh_aliases\fR
+.RS 4
+A NULL\-terminated array of alternate names (nicknames) for the host.
+.RE
+.PP
+\fBh_addrtype\fR
+.RS 4
+The type of address being returned \- usually
+\fBPF_INET\fR
+or
+\fBPF_INET6\fR.
+.RE
+.PP
+\fBh_length\fR
+.RS 4
+The length of the address in bytes.
+.RE
+.PP
+\fBh_addr_list\fR
+.RS 4
+A
+\fBNULL\fR
+terminated array of network addresses for the host. Host addresses are returned in network byte order.
+.RE
+.PP
+\fBlwres_getipnodebyname()\fR
+looks up addresses of protocol family
+\fIaf\fR
+for the hostname
+\fIname\fR. The
+\fIflags\fR
+parameter contains ORed flag bits to specify the types of addresses that are searched for, and the types of addresses that are returned. The flag bits are:
+.PP
+\fBAI_V4MAPPED\fR
+.RS 4
+This is used with an
+\fIaf\fR
+of AF_INET6, and causes IPv4 addresses to be returned as IPv4\-mapped IPv6 addresses.
+.RE
+.PP
+\fBAI_ALL\fR
+.RS 4
+This is used with an
+\fIaf\fR
+of AF_INET6, and causes all known addresses (IPv6 and IPv4) to be returned. If AI_V4MAPPED is also set, the IPv4 addresses are return as mapped IPv6 addresses.
+.RE
+.PP
+\fBAI_ADDRCONFIG\fR
+.RS 4
+Only return an IPv6 or IPv4 address if here is an active network interface of that type. This is not currently implemented in the BIND 9 lightweight resolver, and the flag is ignored.
+.RE
+.PP
+\fBAI_DEFAULT\fR
+.RS 4
+This default sets the
+\fBAI_V4MAPPED\fR
+and
+\fBAI_ADDRCONFIG\fR
+flag bits.
+.RE
+.PP
+\fBlwres_getipnodebyaddr()\fR
+performs a reverse lookup of address
+\fIsrc\fR
+which is
+\fIlen\fR
+bytes long.
+\fIaf\fR
+denotes the protocol family, typically
+\fBPF_INET\fR
+or
+\fBPF_INET6\fR.
+.PP
+\fBlwres_freehostent()\fR
+releases all the memory associated with the
+\fBstruct hostent\fR
+pointer
+\fIhe\fR. Any memory allocated for the
+\fBh_name\fR,
+\fBh_addr_list\fR
+and
+\fBh_aliases\fR
+is freed, as is the memory for the
+\fBhostent\fR
+structure itself.
+.SH "RETURN VALUES"
+.PP
+If an error occurs,
+\fBlwres_getipnodebyname()\fR
+and
+\fBlwres_getipnodebyaddr()\fR
+set
+\fI*error_num\fR
+to an appropriate error code and the function returns a
+\fBNULL\fR
+pointer. The error codes and their meanings are defined in
+\fI<lwres/netdb.h>\fR:
+.PP
+\fBHOST_NOT_FOUND\fR
+.RS 4
+No such host is known.
+.RE
+.PP
+\fBNO_ADDRESS\fR
+.RS 4
+The server recognised the request and the name but no address is available. Another type of request to the name server for the domain might return an answer.
+.RE
+.PP
+\fBTRY_AGAIN\fR
+.RS 4
+A temporary and possibly transient error occurred, such as a failure of a server to respond. The request may succeed if retried.
+.RE
+.PP
+\fBNO_RECOVERY\fR
+.RS 4
+An unexpected failure occurred, and retrying the request is pointless.
+.RE
+.PP
+\fBlwres_hstrerror\fR(3)
+translates these error codes to suitable error messages.
+.SH "SEE ALSO"
+.PP
+\fBRFC2553\fR(),
+\fBlwres\fR(3),
+\fBlwres_gethostent\fR(3),
+\fBlwres_getaddrinfo\fR(3),
+\fBlwres_getnameinfo\fR(3),
+\fBlwres_hstrerror\fR(3).
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001, 2003 Internet Software Consortium.
+.br

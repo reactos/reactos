@@ -1,0 +1,291 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_packet.docbook,v 1.13 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_packet</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_lwpacket_renderheader</refname>
+    <refname>lwres_lwpacket_parseheader</refname>
+    <refpurpose>lightweight resolver packet handling functions</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/lwpacket.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_lwpacket_renderheader</function></funcdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_lwpacket_parseheader</function></funcdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      These functions rely on a
+      <type>struct lwres_lwpacket</type>
+      which is defined in
+      <filename>lwres/lwpacket.h</filename>.
+    </para>
+
+    <para><programlisting>
+typedef struct lwres_lwpacket lwres_lwpacket_t;
+      </programlisting>
+    </para>
+    <para><programlisting>
+struct lwres_lwpacket {
+        lwres_uint32_t          length;
+        lwres_uint16_t          version;
+        lwres_uint16_t          pktflags;
+        lwres_uint32_t          serial;
+        lwres_uint32_t          opcode;
+        lwres_uint32_t          result;
+        lwres_uint32_t          recvlength;
+        lwres_uint16_t          authtype;
+        lwres_uint16_t          authlength;
+};
+</programlisting>
+    </para>
+
+    <para>
+      The elements of this structure are:
+      <variablelist>
+        <varlistentry>
+          <term><constant>length</constant></term>
+          <listitem>
+            <para>
+              the overall packet length, including the entire packet header.
+              This field is filled in by the lwres_gabn_*() and lwres_gnba_*()
+              calls.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>version</constant></term>
+          <listitem>
+            <para>
+              the header format. There is currently only one format,
+              <type>LWRES_LWPACKETVERSION_0</type>.
+
+              This field is filled in by the lwres_gabn_*() and lwres_gnba_*()
+              calls.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>pktflags</constant></term>
+          <listitem>
+            <para>
+              library-defined flags for this packet: for instance whether the
+              packet
+              is a request or a reply. Flag values can be set, but not defined
+              by
+              the caller.
+              This field is filled in by the application wit the exception of
+              the
+              LWRES_LWPACKETFLAG_RESPONSE bit, which is set by the library in
+              the
+              lwres_gabn_*() and lwres_gnba_*() calls.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>serial</constant></term>
+          <listitem>
+            <para>
+              is set by the requestor and is returned in all replies. If two
+              or more
+              packets from the same source have the same serial number and are
+              from
+              the same source, they are assumed to be duplicates and the
+              latter ones
+              may be dropped.
+              This field must be set by the application.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>opcode</constant></term>
+          <listitem>
+            <para>
+              indicates the operation.
+              Opcodes between 0x00000000 and 0x03ffffff are
+              reserved for use by the lightweight resolver library. Opcodes
+              between
+              0x04000000 and 0xffffffff are application defined.
+              This field is filled in by the lwres_gabn_*() and lwres_gnba_*()
+              calls.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>result</constant></term>
+          <listitem>
+            <para>
+              is only valid for replies.
+              Results between 0x04000000 and 0xffffffff are application
+              defined.
+              Results between 0x00000000 and 0x03ffffff are reserved for
+              library use.
+              This field is filled in by the lwres_gabn_*() and lwres_gnba_*()
+              calls.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>recvlength</constant></term>
+          <listitem>
+            <para>
+              is the maximum buffer size that the receiver can handle on
+              requests
+              and the size of the buffer needed to satisfy a request when the
+              buffer
+              is too large for replies.
+              This field is supplied by the application.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>authtype</constant></term>
+          <listitem>
+            <para>
+              defines the packet level authentication that is used.
+              Authorisation types between 0x1000 and 0xffff are application
+              defined
+              and types between 0x0000 and 0x0fff are reserved for library
+              use.
+              Currently these are not used and must be zero.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>authlen</constant></term>
+          <listitem>
+            <para>
+              gives the length of the authentication data.
+              Since packet authentication is currently not used, this must be
+              zero.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </para>
+    <para>
+      The following opcodes are currently defined:
+      <variablelist>
+        <varlistentry>
+          <term><constant>NOOP</constant></term>
+          <listitem>
+            <para>
+              Success is always returned and the packet contents are echoed.
+              The lwres_noop_*() functions should be used for this type.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>GETADDRSBYNAME</constant></term>
+          <listitem>
+            <para>
+              returns all known addresses for a given name.
+              The lwres_gabn_*() functions should be used for this type.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>GETNAMEBYADDR</constant></term>
+          <listitem>
+            <para>
+              return the hostname for the given address.
+              The lwres_gnba_*() functions should be used for this type.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </para>
+
+    <para><function>lwres_lwpacket_renderheader()</function>
+      transfers the contents of lightweight resolver packet structure
+      <type>lwres_lwpacket_t</type> <parameter>*pkt</parameter> in
+      network byte order to the lightweight resolver buffer,
+      <parameter>*b</parameter>.
+    </para>
+
+    <para><function>lwres_lwpacket_parseheader()</function>
+      performs the converse operation.  It transfers data in network
+      byte order from buffer <parameter>*b</parameter> to resolver
+      packet <parameter>*pkt</parameter>.  The contents of the buffer
+      <parameter>b</parameter> should correspond to a
+      <type>lwres_lwpacket_t</type>.
+    </para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>RETURN VALUES</title>
+    <para>
+      Successful calls to
+      <function>lwres_lwpacket_renderheader()</function> and
+      <function>lwres_lwpacket_parseheader()</function> return
+      <errorcode>LWRES_R_SUCCESS</errorcode>.  If there is insufficient
+      space to copy data between the buffer <parameter>*b</parameter> and
+      lightweight resolver packet <parameter>*pkt</parameter> both
+      functions
+      return <errorcode>LWRES_R_UNEXPECTEDEND</errorcode>.
+    </para>
+
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

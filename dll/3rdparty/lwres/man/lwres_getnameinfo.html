@@ -1,0 +1,176 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_getnameinfo.html,v 1.23 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_getnameinfo</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_getnameinfo &#8212; lightweight resolver socket address structure to hostname and
+      service name
+    </p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">#include &lt;lwres/netdb.h&gt;</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0">
+<tr>
+<td><code class="funcdef">
+int
+<b class="fsfunc">lwres_getnameinfo</b>(</code></td>
+<td>const struct sockaddr * </td>
+<td>
+<var class="pdparam">sa</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>size_t  </td>
+<td>
+<var class="pdparam">salen</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>char * </td>
+<td>
+<var class="pdparam">host</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>size_t  </td>
+<td>
+<var class="pdparam">hostlen</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>char * </td>
+<td>
+<var class="pdparam">serv</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>size_t  </td>
+<td>
+<var class="pdparam">servlen</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">flags</var><code>)</code>;</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543393"></a><h2>DESCRIPTION</h2>
+<p>
+       This function is equivalent to the
+      <span class="citerefentry"><span class="refentrytitle">getnameinfo</span>(3)</span> function defined in RFC2133.
+      <code class="function">lwres_getnameinfo()</code> returns the
+      hostname for the
+      <span class="type">struct sockaddr</span> <em class="parameter"><code>sa</code></em> which
+      is
+      <em class="parameter"><code>salen</code></em> bytes long.  The hostname is of
+      length
+      <em class="parameter"><code>hostlen</code></em> and is returned via
+      <em class="parameter"><code>*host.</code></em> The maximum length of the
+      hostname is
+      1025 bytes: <code class="constant">NI_MAXHOST</code>.
+    </p>
+<p> The name of the service associated with the port number in
+      <em class="parameter"><code>sa</code></em> is returned in <em class="parameter"><code>*serv.</code></em>
+      It is <em class="parameter"><code>servlen</code></em> bytes long.  The
+      maximum length
+      of the service name is <code class="constant">NI_MAXSERV</code> - 32
+      bytes.
+    </p>
+<p>
+       The <em class="parameter"><code>flags</code></em> argument sets the
+      following
+      bits:
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><code class="constant">NI_NOFQDN</code></span></dt>
+<dd><p>
+              A fully qualified domain name is not required for local hosts.
+              The local part of the fully qualified domain name is returned
+              instead.
+            </p></dd>
+<dt><span class="term"><code class="constant">NI_NUMERICHOST</code></span></dt>
+<dd><p>
+              Return the address in numeric form, as if calling inet_ntop(),
+              instead of a host name.
+            </p></dd>
+<dt><span class="term"><code class="constant">NI_NAMEREQD</code></span></dt>
+<dd><p>
+              A name is required. If the hostname cannot be found in the DNS
+              and
+              this flag is set, a non-zero error code is returned.
+              If the hostname is not found and the flag is not set, the
+              address is returned in numeric form.
+            </p></dd>
+<dt><span class="term"><code class="constant">NI_NUMERICSERV</code></span></dt>
+<dd><p>
+              The service name is returned as a digit string representing the
+              port number.
+            </p></dd>
+<dt><span class="term"><code class="constant">NI_DGRAM</code></span></dt>
+<dd><p>
+              Specifies that the service being looked up is a datagram
+              service,  and causes getservbyport() to be called with a second
+              argument of "udp" instead of its default of "tcp".  This is
+              required
+              for the few ports (512-514) that have different services for UDP
+              and
+              TCP.
+            </p></dd>
+</dl></div>
+<p>
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543534"></a><h2>RETURN VALUES</h2>
+<p><code class="function">lwres_getnameinfo()</code>
+      returns 0 on success or a non-zero error code if an error occurs.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543546"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">RFC2133</span></span>,
+      <span class="citerefentry"><span class="refentrytitle">getservbyport</span>(3)</span>,
+      <span class="citerefentry"><span class="refentrytitle">lwres</span>(3)</span>,
+      <span class="citerefentry"><span class="refentrytitle">lwres_getnameinfo</span>(3)</span>,
+      <span class="citerefentry"><span class="refentrytitle">lwres_getnamebyaddr</span>(3)</span>.
+      <span class="citerefentry"><span class="refentrytitle">lwres_net_ntop</span>(3)</span>.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543604"></a><h2>BUGS</h2>
+<p>
+      RFC2133 fails to define what the nonzero return values of
+      <span class="citerefentry"><span class="refentrytitle">getnameinfo</span>(3)</span>
+      are.
+    </p>
+</div>
+</div></body>
+</html>

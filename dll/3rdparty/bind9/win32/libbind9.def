@@ -1,0 +1,8 @@
+LIBRARY libbind9
+
+; Exported Functions
+EXPORTS
+bind9_check_namedconf
+bind9_check_key
+bind9_getaddresses
+

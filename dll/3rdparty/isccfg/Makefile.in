@@ -1,0 +1,83 @@
+# Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+# Copyright (C) 2001-2003  Internet Software Consortium.
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+# OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+# $Id: Makefile.in,v 1.18 2007/06/19 23:47:22 tbox Exp $
+
+srcdir =	@srcdir@
+VPATH =		@srcdir@
+top_srcdir =	@top_srcdir@
+
+@BIND9_VERSION@
+
+@LIBISCCFG_API@
+
+@BIND9_MAKE_INCLUDES@
+
+CINCLUDES =	-I. ${DNS_INCLUDES} ${ISC_INCLUDES} ${ISCCFG_INCLUDES}
+
+CDEFINES =      @USE_DLZ@
+CWARNINGS =
+
+ISCLIBS =	../../lib/isc/libisc.@A@
+ISCCCLIBS =	../../lib/isccc/libisccc.@A@
+DNSLIBS =	../../lib/dns/libdns.@A@
+ISCCFGLIBS =	../../lib/cfg/libisccfg.@A@
+
+ISCDEPLIBS =	../../lib/isc/libisc.@A@
+ISCCFGDEPLIBS =	libisccfg.@A@
+
+LIBS =		@LIBS@
+
+SUBDIRS =	include
+
+# Alphabetically
+OBJS =		aclconf.@O@ log.@O@ namedconf.@O@ parser.@O@ version.@O@
+
+# Alphabetically
+SRCS =		aclconf.c log.c namedconf.c parser.c version.c
+
+TARGETS = 	timestamp
+
+@BIND9_MAKE_RULES@
+
+version.@O@: version.c
+	${LIBTOOL_MODE_COMPILE} ${CC} ${ALL_CFLAGS} \
+		-DVERSION=\"${VERSION}\" \
+		-DLIBINTERFACE=${LIBINTERFACE} \
+		-DLIBREVISION=${LIBREVISION} \
+		-DLIBAGE=${LIBAGE} \
+		-c ${srcdir}/version.c
+
+libisccfg.@SA@: ${OBJS}
+	${AR} ${ARFLAGS} $@ ${OBJS}
+	${RANLIB} $@
+
+libisccfg.la: ${OBJS}
+	 ${LIBTOOL_MODE_LINK} \
+		${CC} ${ALL_CFLAGS} ${LDFLAGS} -o libisccfg.la -rpath ${libdir} \
+		-version-info ${LIBINTERFACE}:${LIBREVISION}:${LIBAGE} \
+		${OBJS} ${LIBS} ${DNSLIBS} ${ISCCCLIBS} ${ISCLIBS}
+
+timestamp: libisccfg.@A@
+	touch timestamp
+
+installdirs:
+	$(SHELL) ${top_srcdir}/mkinstalldirs ${DESTDIR}${libdir}
+
+install:: timestamp installdirs
+	${LIBTOOL_MODE_INSTALL} ${INSTALL_DATA} libisccfg.@A@ ${DESTDIR}${libdir}
+
+clean distclean::
+	rm -f libisccfg.@A@ timestamp

@@ -1,0 +1,45 @@
+LIBRARY libisccfg
+
+; Exported Functions
+EXPORTS
+
+cfg_acl_fromconfig
+cfg_aclconfctx_destroy
+cfg_aclconfctx_init
+cfg_list_first
+cfg_list_next
+cfg_listelt_value
+cfg_log_init
+cfg_map_get
+cfg_map_getname
+cfg_obj_asboolean
+cfg_obj_asnetprefix
+cfg_obj_assockaddr
+cfg_obj_asstring
+cfg_obj_asuint32
+cfg_obj_asuint64
+cfg_obj_destroy
+cfg_obj_file
+cfg_obj_isboolean
+cfg_obj_islist
+cfg_obj_ismap
+cfg_obj_isnetprefix
+cfg_obj_issockaddr
+cfg_obj_isstring
+cfg_obj_istuple
+cfg_obj_istype
+cfg_obj_isuint32
+cfg_obj_isuint64
+cfg_obj_isvoid
+cfg_obj_line
+cfg_obj_log
+cfg_parse_buffer
+cfg_parse_file
+cfg_parser_create
+cfg_parser_destroy
+cfg_parser_setcallback
+cfg_tuple_get
+
+; Exported Data
+
+;cfg_type_rndcconf

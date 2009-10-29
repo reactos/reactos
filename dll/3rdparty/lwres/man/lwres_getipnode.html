@@ -1,0 +1,279 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001, 2003 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_getipnode.html,v 1.25 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_getipnode</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_getipnodebyname, lwres_getipnodebyaddr, lwres_freehostent &#8212; lightweight resolver nodename / address translation API</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">#include &lt;lwres/netdb.h&gt;</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+struct hostent *
+<b class="fsfunc">lwres_getipnodebyname</b>(</code></td>
+<td>const char * </td>
+<td>
+<var class="pdparam">name</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">af</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">flags</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int * </td>
+<td>
+<var class="pdparam">error_num</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+struct hostent *
+<b class="fsfunc">lwres_getipnodebyaddr</b>(</code></td>
+<td>const void * </td>
+<td>
+<var class="pdparam">src</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>size_t  </td>
+<td>
+<var class="pdparam">len</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">af</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int * </td>
+<td>
+<var class="pdparam">error_num</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0"><tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_freehostent</b>(</code></td>
+<td>struct hostent * </td>
+<td>
+<var class="pdparam">he</var><code>)</code>;</td>
+</tr></table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543431"></a><h2>DESCRIPTION</h2>
+<p>
+      These functions perform thread safe, protocol independent
+      nodename-to-address and address-to-nodename
+      translation as defined in RFC2553.
+    </p>
+<p>
+      They use a
+      <span class="type">struct hostent</span>
+      which is defined in
+      <code class="filename">namedb.h</code>:
+    </p>
+<pre class="programlisting">
+struct  hostent {
+        char    *h_name;        /* official name of host */
+        char    **h_aliases;    /* alias list */
+        int     h_addrtype;     /* host address type */
+        int     h_length;       /* length of address */
+        char    **h_addr_list;  /* list of addresses from name server */
+};
+#define h_addr  h_addr_list[0]  /* address, for backward compatibility */
+</pre>
+<p>
+    </p>
+<p>
+      The members of this structure are:
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><code class="constant">h_name</code></span></dt>
+<dd><p>
+              The official (canonical) name of the host.
+            </p></dd>
+<dt><span class="term"><code class="constant">h_aliases</code></span></dt>
+<dd><p>
+              A NULL-terminated array of alternate names (nicknames) for the
+              host.
+            </p></dd>
+<dt><span class="term"><code class="constant">h_addrtype</code></span></dt>
+<dd><p>
+              The type of address being returned - usually
+              <span class="type">PF_INET</span>
+              or
+              <span class="type">PF_INET6</span>.
+
+            </p></dd>
+<dt><span class="term"><code class="constant">h_length</code></span></dt>
+<dd><p>
+              The length of the address in bytes.
+            </p></dd>
+<dt><span class="term"><code class="constant">h_addr_list</code></span></dt>
+<dd><p>
+              A
+              <span class="type">NULL</span>
+              terminated array of network addresses for the host.
+              Host addresses are returned in network byte order.
+            </p></dd>
+</dl></div>
+<p>
+    </p>
+<p><code class="function">lwres_getipnodebyname()</code>
+      looks up addresses of protocol family <em class="parameter"><code>af</code></em>
+      for the hostname <em class="parameter"><code>name</code></em>.  The
+      <em class="parameter"><code>flags</code></em> parameter contains ORed flag bits
+      to specify the types of addresses that are searched for, and the
+      types of addresses that are returned.  The flag bits are:
+
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><code class="constant">AI_V4MAPPED</code></span></dt>
+<dd><p>
+              This is used with an
+              <em class="parameter"><code>af</code></em>
+              of AF_INET6, and causes IPv4 addresses to be returned as
+              IPv4-mapped
+              IPv6 addresses.
+            </p></dd>
+<dt><span class="term"><code class="constant">AI_ALL</code></span></dt>
+<dd><p>
+              This is used with an
+              <em class="parameter"><code>af</code></em>
+              of AF_INET6, and causes all known addresses (IPv6 and IPv4) to
+              be returned.
+              If AI_V4MAPPED is also set, the IPv4 addresses are return as
+              mapped
+              IPv6 addresses.
+            </p></dd>
+<dt><span class="term"><code class="constant">AI_ADDRCONFIG</code></span></dt>
+<dd><p>
+              Only return an IPv6 or IPv4 address if here is an active network
+              interface of that type.  This is not currently implemented
+              in the BIND 9 lightweight resolver, and the flag is ignored.
+            </p></dd>
+<dt><span class="term"><code class="constant">AI_DEFAULT</code></span></dt>
+<dd><p>
+              This default sets the
+              <code class="constant">AI_V4MAPPED</code>
+              and
+              <code class="constant">AI_ADDRCONFIG</code>
+              flag bits.
+            </p></dd>
+</dl></div>
+<p>
+    </p>
+<p><code class="function">lwres_getipnodebyaddr()</code>
+      performs a reverse lookup of address <em class="parameter"><code>src</code></em>
+      which is <em class="parameter"><code>len</code></em> bytes long.
+      <em class="parameter"><code>af</code></em> denotes the protocol family, typically
+      <span class="type">PF_INET</span> or <span class="type">PF_INET6</span>.
+    </p>
+<p><code class="function">lwres_freehostent()</code>
+      releases all the memory associated with the <span class="type">struct
+      hostent</span> pointer <em class="parameter"><code>he</code></em>.  Any memory
+      allocated for the <code class="constant">h_name</code>,
+      <code class="constant">h_addr_list</code> and
+      <code class="constant">h_aliases</code> is freed, as is the memory for
+      the <span class="type">hostent</span> structure itself.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543689"></a><h2>RETURN VALUES</h2>
+<p>
+      If an error occurs,
+      <code class="function">lwres_getipnodebyname()</code>
+      and
+      <code class="function">lwres_getipnodebyaddr()</code>
+      set
+      <em class="parameter"><code>*error_num</code></em>
+      to an appropriate error code and the function returns a
+      <span class="type">NULL</span>
+      pointer.
+      The error codes and their meanings are defined in
+      <code class="filename">&lt;lwres/netdb.h&gt;</code>:
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><code class="constant">HOST_NOT_FOUND</code></span></dt>
+<dd><p>
+              No such host is known.
+            </p></dd>
+<dt><span class="term"><code class="constant">NO_ADDRESS</code></span></dt>
+<dd><p>
+              The server recognised the request and the name but no address is
+              available.  Another type of request to the name server for the
+              domain might return an answer.
+            </p></dd>
+<dt><span class="term"><code class="constant">TRY_AGAIN</code></span></dt>
+<dd><p>
+              A temporary and possibly transient error occurred, such as a
+              failure of a server to respond.  The request may succeed if
+              retried.
+            </p></dd>
+<dt><span class="term"><code class="constant">NO_RECOVERY</code></span></dt>
+<dd><p>
+              An unexpected failure occurred, and retrying the request
+              is pointless.
+            </p></dd>
+</dl></div>
+<p>
+    </p>
+<p><span class="citerefentry"><span class="refentrytitle">lwres_hstrerror</span>(3)</span>
+      translates these error codes to suitable error messages.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543786"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">RFC2553</span></span>,
+
+      <span class="citerefentry"><span class="refentrytitle">lwres</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">lwres_gethostent</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">lwres_getaddrinfo</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">lwres_getnameinfo</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">lwres_hstrerror</span>(3)</span>.
+    </p>
+</div>
+</div></body>
+</html>

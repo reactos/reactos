@@ -1,0 +1,200 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_gai_strerror.docbook,v 1.10 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_gai_strerror</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_gai_strerror</refname>
+    <refpurpose>print suitable error string</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/netdb.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+char *
+<function>gai_strerror</function></funcdef>
+        <paramdef>int <parameter>ecode</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><function>lwres_gai_strerror()</function>
+      returns an error message corresponding to an error code returned by
+      <function>getaddrinfo()</function>.
+      The following error codes and their meaning are defined in
+      <filename>include/lwres/netdb.h</filename>.
+      <variablelist>
+        <varlistentry>
+          <term><errorcode>EAI_ADDRFAMILY</errorcode></term>
+          <listitem>
+            <para>
+              address family for hostname not supported
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_AGAIN</errorcode></term>
+          <listitem>
+            <para>
+              temporary failure in name resolution
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_BADFLAGS</errorcode></term>
+          <listitem>
+            <para>
+              invalid value for
+              <constant>ai_flags</constant>
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_FAIL</errorcode></term>
+          <listitem>
+            <para>
+              non-recoverable failure in name resolution
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_FAMILY</errorcode></term>
+          <listitem>
+            <para><constant>ai_family</constant> not supported
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_MEMORY</errorcode></term>
+          <listitem>
+            <para>
+              memory allocation failure
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_NODATA</errorcode></term>
+          <listitem>
+            <para>
+              no address associated with hostname
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_NONAME</errorcode></term>
+          <listitem>
+            <para>
+              hostname or servname not provided, or not known
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_SERVICE</errorcode></term>
+          <listitem>
+            <para>
+              servname not supported for <constant>ai_socktype</constant>
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_SOCKTYPE</errorcode></term>
+          <listitem>
+            <para><constant>ai_socktype</constant> not supported
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><errorcode>EAI_SYSTEM</errorcode></term>
+          <listitem>
+            <para>
+              system error returned in errno
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      The message <errorname>invalid error code</errorname> is returned if
+      <parameter>ecode</parameter>
+      is out of range.
+    </para>
+    <para><constant>ai_flags</constant>,
+      <constant>ai_family</constant>
+      and
+      <constant>ai_socktype</constant>
+      are elements of the
+      <type>struct  addrinfo</type>
+      used by
+      <function>lwres_getaddrinfo()</function>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>strerror</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_getaddrinfo</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>getaddrinfo</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>RFC2133</refentrytitle>
+      </citerefentry>.
+    </para>
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

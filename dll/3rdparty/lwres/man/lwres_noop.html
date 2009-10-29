@@ -1,0 +1,317 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_noop.html,v 1.25 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_noop</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_nooprequest_render, lwres_noopresponse_render, lwres_nooprequest_parse, lwres_noopresponse_parse, lwres_noopresponse_free, lwres_nooprequest_free &#8212; lightweight resolver no-op message handling</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">
+#include &lt;lwres/lwres.h&gt;</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_nooprequest_render</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_nooprequest_t * </td>
+<td>
+<var class="pdparam">req</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_noopresponse_render</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_noopresponse_t * </td>
+<td>
+<var class="pdparam">req</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_nooprequest_parse</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_nooprequest_t ** </td>
+<td>
+<var class="pdparam">structp</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_noopresponse_parse</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_buffer_t * </td>
+<td>
+<var class="pdparam">b</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_lwpacket_t * </td>
+<td>
+<var class="pdparam">pkt</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_noopresponse_t ** </td>
+<td>
+<var class="pdparam">structp</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_noopresponse_free</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_noopresponse_t ** </td>
+<td>
+<var class="pdparam">structp</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_nooprequest_free</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_nooprequest_t ** </td>
+<td>
+<var class="pdparam">structp</var><code>)</code>;</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543522"></a><h2>DESCRIPTION</h2>
+<p>
+      These are low-level routines for creating and parsing
+      lightweight resolver no-op request and response messages.
+    </p>
+<p>
+      The no-op message is analogous to a <span><strong class="command">ping</strong></span>
+      packet:
+      a packet is sent to the resolver daemon and is simply echoed back.
+      The opcode is intended to allow a client to determine if the server is
+      operational or not.
+    </p>
+<p>
+      There are four main functions for the no-op opcode.
+      One render function converts a no-op request structure &#8212;
+      <span class="type">lwres_nooprequest_t</span> &#8212;
+      to the lighweight resolver's canonical format.
+      It is complemented by a parse function that converts a packet in this
+      canonical format to a no-op request structure.
+      Another render function converts the no-op response structure &#8212;
+      <span class="type">lwres_noopresponse_t</span>
+      to the canonical format.
+      This is complemented by a parse function which converts a packet in
+      canonical format to a no-op response structure.
+    </p>
+<p>
+      These structures are defined in
+      <code class="filename">lwres/lwres.h</code>.
+
+      They are shown below.
+    </p>
+<pre class="programlisting">
+#define LWRES_OPCODE_NOOP       0x00000000U
+</pre>
+<p>
+    </p>
+<pre class="programlisting">
+typedef struct {
+        lwres_uint16_t  datalength;
+        unsigned char   *data;
+} lwres_nooprequest_t;
+</pre>
+<p>
+    </p>
+<pre class="programlisting">
+typedef struct {
+        lwres_uint16_t  datalength;
+        unsigned char   *data;
+} lwres_noopresponse_t;
+</pre>
+<p>
+    </p>
+<p>
+      Although the structures have different types, they are identical.
+      This is because the no-op opcode simply echos whatever data was sent:
+      the response is therefore identical to the request.
+    </p>
+<p><code class="function">lwres_nooprequest_render()</code>
+      uses resolver context <em class="parameter"><code>ctx</code></em> to convert
+      no-op request structure <em class="parameter"><code>req</code></em> to canonical
+      format.  The packet header structure <em class="parameter"><code>pkt</code></em>
+      is initialised and transferred to buffer
+      <em class="parameter"><code>b</code></em>.  The contents of
+      <em class="parameter"><code>*req</code></em> are then appended to the buffer in
+      canonical format.
+      <code class="function">lwres_noopresponse_render()</code> performs the
+      same task, except it converts a no-op response structure
+      <span class="type">lwres_noopresponse_t</span> to the lightweight resolver's
+      canonical format.
+    </p>
+<p><code class="function">lwres_nooprequest_parse()</code>
+      uses context <em class="parameter"><code>ctx</code></em> to convert the contents
+      of packet <em class="parameter"><code>pkt</code></em> to a
+      <span class="type">lwres_nooprequest_t</span> structure.  Buffer
+      <em class="parameter"><code>b</code></em> provides space to be used for storing
+      this structure.  When the function succeeds, the resulting
+      <span class="type">lwres_nooprequest_t</span> is made available through
+      <em class="parameter"><code>*structp</code></em>.
+      <code class="function">lwres_noopresponse_parse()</code> offers the same
+      semantics as <code class="function">lwres_nooprequest_parse()</code>
+      except it yields a <span class="type">lwres_noopresponse_t</span> structure.
+    </p>
+<p><code class="function">lwres_noopresponse_free()</code>
+      and <code class="function">lwres_nooprequest_free()</code> release the
+      memory in resolver context <em class="parameter"><code>ctx</code></em> that was
+      allocated to the <span class="type">lwres_noopresponse_t</span> or
+      <span class="type">lwres_nooprequest_t</span> structures referenced via
+      <em class="parameter"><code>structp</code></em>.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543672"></a><h2>RETURN VALUES</h2>
+<p>
+      The no-op opcode functions
+      <code class="function">lwres_nooprequest_render()</code>,
+
+      <code class="function">lwres_noopresponse_render()</code>
+      <code class="function">lwres_nooprequest_parse()</code>
+      and
+      <code class="function">lwres_noopresponse_parse()</code>
+      all return
+      <span class="errorcode">LWRES_R_SUCCESS</span>
+      on success.
+      They return
+      <span class="errorcode">LWRES_R_NOMEMORY</span>
+      if memory allocation fails.
+      <span class="errorcode">LWRES_R_UNEXPECTEDEND</span>
+      is returned if the available space in the buffer
+      <em class="parameter"><code>b</code></em>
+      is too small to accommodate the packet header or the
+      <span class="type">lwres_nooprequest_t</span>
+      and
+      <span class="type">lwres_noopresponse_t</span>
+      structures.
+      <code class="function">lwres_nooprequest_parse()</code>
+      and
+      <code class="function">lwres_noopresponse_parse()</code>
+      will return
+      <span class="errorcode">LWRES_R_UNEXPECTEDEND</span>
+      if the buffer is not empty after decoding the received packet.
+      These functions will return
+      <span class="errorcode">LWRES_R_FAILURE</span>
+      if
+      <code class="constant">pktflags</code>
+      in the packet header structure
+      <span class="type">lwres_lwpacket_t</span>
+      indicate that the packet is not a response to an earlier query.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543738"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">lwres_packet</span>(3)</span>
+    </p>
+</div>
+</div></body>
+</html>

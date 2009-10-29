@@ -1,0 +1,106 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_config.3,v 1.26 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_config
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_CONFIG" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_conf_init, lwres_conf_clear, lwres_conf_parse, lwres_conf_print, lwres_conf_get \- lightweight resolver configuration
+.SH "SYNOPSIS"
+.nf
+#include <lwres/lwres.h>
+.fi
+.HP 21
+.BI "void lwres_conf_init(lwres_context_t\ *" "ctx" ");"
+.HP 22
+.BI "void lwres_conf_clear(lwres_context_t\ *" "ctx" ");"
+.HP 32
+.BI "lwres_result_t lwres_conf_parse(lwres_context_t\ *" "ctx" ", const\ char\ *" "filename" ");"
+.HP 32
+.BI "lwres_result_t lwres_conf_print(lwres_context_t\ *" "ctx" ", FILE\ *" "fp" ");"
+.HP 30
+.BI "lwres_conf_t * lwres_conf_get(lwres_context_t\ *" "ctx" ");"
+.SH "DESCRIPTION"
+.PP
+\fBlwres_conf_init()\fR
+creates an empty
+\fBlwres_conf_t\fR
+structure for lightweight resolver context
+\fIctx\fR.
+.PP
+\fBlwres_conf_clear()\fR
+frees up all the internal memory used by that
+\fBlwres_conf_t\fR
+structure in resolver context
+\fIctx\fR.
+.PP
+\fBlwres_conf_parse()\fR
+opens the file
+\fIfilename\fR
+and parses it to initialise the resolver context
+\fIctx\fR's
+\fBlwres_conf_t\fR
+structure.
+.PP
+\fBlwres_conf_print()\fR
+prints the
+\fBlwres_conf_t\fR
+structure for resolver context
+\fIctx\fR
+to the
+\fBFILE\fR
+\fIfp\fR.
+.SH "RETURN VALUES"
+.PP
+\fBlwres_conf_parse()\fR
+returns
+\fBLWRES_R_SUCCESS\fR
+if it successfully read and parsed
+\fIfilename\fR. It returns
+\fBLWRES_R_FAILURE\fR
+if
+\fIfilename\fR
+could not be opened or contained incorrect resolver statements.
+.PP
+\fBlwres_conf_print()\fR
+returns
+\fBLWRES_R_SUCCESS\fR
+unless an error occurred when converting the network addresses to a numeric host address string. If this happens, the function returns
+\fBLWRES_R_FAILURE\fR.
+.SH "SEE ALSO"
+.PP
+\fBstdio\fR(3),
+\fBresolver\fR(5).
+.SH "FILES"
+.PP
+\fI/etc/resolv.conf\fR
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br

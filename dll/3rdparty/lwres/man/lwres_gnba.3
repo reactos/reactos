@@ -1,0 +1,183 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_gnba.3,v 1.27 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_gnba
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_GNBA" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_gnbarequest_render, lwres_gnbaresponse_render, lwres_gnbarequest_parse, lwres_gnbaresponse_parse, lwres_gnbaresponse_free, lwres_gnbarequest_free \- lightweight resolver getnamebyaddress message handling
+.SH "SYNOPSIS"
+.nf
+#include <lwres/lwres.h>
+.fi
+.HP 40
+.BI "lwres_result_t lwres_gnbarequest_render(lwres_context_t\ *" "ctx" ", lwres_gnbarequest_t\ *" "req" ", lwres_lwpacket_t\ *" "pkt" ", lwres_buffer_t\ *" "b" ");"
+.HP 41
+.BI "lwres_result_t lwres_gnbaresponse_render(lwres_context_t\ *" "ctx" ", lwres_gnbaresponse_t\ *" "req" ", lwres_lwpacket_t\ *" "pkt" ", lwres_buffer_t\ *" "b" ");"
+.HP 39
+.BI "lwres_result_t lwres_gnbarequest_parse(lwres_context_t\ *" "ctx" ", lwres_buffer_t\ *" "b" ", lwres_lwpacket_t\ *" "pkt" ", lwres_gnbarequest_t\ **" "structp" ");"
+.HP 40
+.BI "lwres_result_t lwres_gnbaresponse_parse(lwres_context_t\ *" "ctx" ", lwres_buffer_t\ *" "b" ", lwres_lwpacket_t\ *" "pkt" ", lwres_gnbaresponse_t\ **" "structp" ");"
+.HP 29
+.BI "void lwres_gnbaresponse_free(lwres_context_t\ *" "ctx" ", lwres_gnbaresponse_t\ **" "structp" ");"
+.HP 28
+.BI "void lwres_gnbarequest_free(lwres_context_t\ *" "ctx" ", lwres_gnbarequest_t\ **" "structp" ");"
+.SH "DESCRIPTION"
+.PP
+These are low\-level routines for creating and parsing lightweight resolver address\-to\-name lookup request and response messages.
+.PP
+There are four main functions for the getnamebyaddr opcode. One render function converts a getnamebyaddr request structure \(em
+\fBlwres_gnbarequest_t\fR
+\(em to the lightweight resolver's canonical format. It is complemented by a parse function that converts a packet in this canonical format to a getnamebyaddr request structure. Another render function converts the getnamebyaddr response structure \(em
+\fBlwres_gnbaresponse_t\fR
+to the canonical format. This is complemented by a parse function which converts a packet in canonical format to a getnamebyaddr response structure.
+.PP
+These structures are defined in
+\fIlwres/lwres.h\fR. They are shown below.
+.PP
+.RS 4
+.nf
+#define LWRES_OPCODE_GETNAMEBYADDR      0x00010002U
+.fi
+.RE
+.sp
+.PP
+.RS 4
+.nf
+typedef struct {
+        lwres_uint32_t  flags;
+        lwres_addr_t    addr;
+} lwres_gnbarequest_t;
+.fi
+.RE
+.sp
+.PP
+.RS 4
+.nf
+typedef struct {
+        lwres_uint32_t  flags;
+        lwres_uint16_t  naliases;
+        char           *realname;
+        char          **aliases;
+        lwres_uint16_t  realnamelen;
+        lwres_uint16_t *aliaslen;
+        void           *base;
+        size_t          baselen;
+} lwres_gnbaresponse_t;
+.fi
+.RE
+.sp
+.PP
+\fBlwres_gnbarequest_render()\fR
+uses resolver context
+\fIctx\fR
+to convert getnamebyaddr request structure
+\fIreq\fR
+to canonical format. The packet header structure
+\fIpkt\fR
+is initialised and transferred to buffer
+\fIb\fR. The contents of
+\fI*req\fR
+are then appended to the buffer in canonical format.
+\fBlwres_gnbaresponse_render()\fR
+performs the same task, except it converts a getnamebyaddr response structure
+\fBlwres_gnbaresponse_t\fR
+to the lightweight resolver's canonical format.
+.PP
+\fBlwres_gnbarequest_parse()\fR
+uses context
+\fIctx\fR
+to convert the contents of packet
+\fIpkt\fR
+to a
+\fBlwres_gnbarequest_t\fR
+structure. Buffer
+\fIb\fR
+provides space to be used for storing this structure. When the function succeeds, the resulting
+\fBlwres_gnbarequest_t\fR
+is made available through
+\fI*structp\fR.
+\fBlwres_gnbaresponse_parse()\fR
+offers the same semantics as
+\fBlwres_gnbarequest_parse()\fR
+except it yields a
+\fBlwres_gnbaresponse_t\fR
+structure.
+.PP
+\fBlwres_gnbaresponse_free()\fR
+and
+\fBlwres_gnbarequest_free()\fR
+release the memory in resolver context
+\fIctx\fR
+that was allocated to the
+\fBlwres_gnbaresponse_t\fR
+or
+\fBlwres_gnbarequest_t\fR
+structures referenced via
+\fIstructp\fR. Any memory associated with ancillary buffers and strings for those structures is also discarded.
+.SH "RETURN VALUES"
+.PP
+The getnamebyaddr opcode functions
+\fBlwres_gnbarequest_render()\fR,
+\fBlwres_gnbaresponse_render()\fR
+\fBlwres_gnbarequest_parse()\fR
+and
+\fBlwres_gnbaresponse_parse()\fR
+all return
+\fBLWRES_R_SUCCESS\fR
+on success. They return
+\fBLWRES_R_NOMEMORY\fR
+if memory allocation fails.
+\fBLWRES_R_UNEXPECTEDEND\fR
+is returned if the available space in the buffer
+\fIb\fR
+is too small to accommodate the packet header or the
+\fBlwres_gnbarequest_t\fR
+and
+\fBlwres_gnbaresponse_t\fR
+structures.
+\fBlwres_gnbarequest_parse()\fR
+and
+\fBlwres_gnbaresponse_parse()\fR
+will return
+\fBLWRES_R_UNEXPECTEDEND\fR
+if the buffer is not empty after decoding the received packet. These functions will return
+\fBLWRES_R_FAILURE\fR
+if
+pktflags
+in the packet header structure
+\fBlwres_lwpacket_t\fR
+indicate that the packet is not a response to an earlier query.
+.SH "SEE ALSO"
+.PP
+\fBlwres_packet\fR(3).
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br

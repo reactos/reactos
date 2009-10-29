@@ -1,0 +1,295 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001, 2003 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_context.html,v 1.23 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_context</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_context_create, lwres_context_destroy, lwres_context_nextserial, lwres_context_initserial, lwres_context_freemem, lwres_context_allocmem, lwres_context_sendrecv &#8212; lightweight resolver context management</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">#include &lt;lwres/lwres.h&gt;</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_context_create</b>(</code></td>
+<td>lwres_context_t ** </td>
+<td>
+<var class="pdparam">contextp</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>void * </td>
+<td>
+<var class="pdparam">arg</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_malloc_t  </td>
+<td>
+<var class="pdparam">malloc_function</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_free_t  </td>
+<td>
+<var class="pdparam">free_function</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+lwres_result_t
+<b class="fsfunc">lwres_context_destroy</b>(</code></td>
+<td>lwres_context_t ** </td>
+<td>
+<var class="pdparam">contextp</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_context_initserial</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>lwres_uint32_t  </td>
+<td>
+<var class="pdparam">serial</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+lwres_uint32_t
+<b class="fsfunc">lwres_context_nextserial</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_context_freemem</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>void * </td>
+<td>
+<var class="pdparam">mem</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>size_t  </td>
+<td>
+<var class="pdparam">len</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_context_allocmem</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>size_t  </td>
+<td>
+<var class="pdparam">len</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0">
+<tr>
+<td><code class="funcdef">
+void *
+<b class="fsfunc">lwres_context_sendrecv</b>(</code></td>
+<td>lwres_context_t * </td>
+<td>
+<var class="pdparam">ctx</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>void * </td>
+<td>
+<var class="pdparam">sendbase</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">sendlen</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>void * </td>
+<td>
+<var class="pdparam">recvbase</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">recvlen</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int * </td>
+<td>
+<var class="pdparam">recvd_len</var><code>)</code>;</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543531"></a><h2>DESCRIPTION</h2>
+<p><code class="function">lwres_context_create()</code>
+      creates a <span class="type">lwres_context_t</span> structure for use in
+      lightweight resolver operations.  It holds a socket and other
+      data needed for communicating with a resolver daemon.  The new
+      <span class="type">lwres_context_t</span> is returned through
+      <em class="parameter"><code>contextp</code></em>, a pointer to a
+      <span class="type">lwres_context_t</span> pointer.  This
+      <span class="type">lwres_context_t</span> pointer must initially be NULL, and
+      is modified to point to the newly created
+      <span class="type">lwres_context_t</span>.
+    </p>
+<p>
+      When the lightweight resolver needs to perform dynamic memory
+      allocation, it will call
+      <em class="parameter"><code>malloc_function</code></em>
+      to allocate memory and
+      <em class="parameter"><code>free_function</code></em>
+      to free it.  If
+      <em class="parameter"><code>malloc_function</code></em>
+      and
+      <em class="parameter"><code>free_function</code></em>
+      are NULL, memory is allocated using
+      <span class="citerefentry"><span class="refentrytitle">malloc</span>(3)</span>.
+      and
+      <span class="citerefentry"><span class="refentrytitle">free</span>(3)</span>.
+
+      It is not permitted to have a NULL
+      <em class="parameter"><code>malloc_function</code></em> and a non-NULL
+      <em class="parameter"><code>free_function</code></em> or vice versa.
+      <em class="parameter"><code>arg</code></em> is passed as the first parameter to
+      the memory allocation functions.  If
+      <em class="parameter"><code>malloc_function</code></em> and
+      <em class="parameter"><code>free_function</code></em> are NULL,
+      <em class="parameter"><code>arg</code></em> is unused and should be passed as
+      NULL.
+    </p>
+<p>
+      Once memory for the structure has been allocated,
+      it is initialized using
+      <span class="citerefentry"><span class="refentrytitle">lwres_conf_init</span>(3)</span>
+      and returned via <em class="parameter"><code>*contextp</code></em>.
+    </p>
+<p><code class="function">lwres_context_destroy()</code>
+      destroys a <span class="type">lwres_context_t</span>, closing its socket.
+      <em class="parameter"><code>contextp</code></em> is a pointer to a pointer to the
+      context that is to be destroyed.  The pointer will be set to
+      NULL when the context has been destroyed.
+    </p>
+<p>
+      The context holds a serial number that is used to identify
+      resolver request packets and associate responses with the
+      corresponding requests.  This serial number is controlled using
+      <code class="function">lwres_context_initserial()</code> and
+      <code class="function">lwres_context_nextserial()</code>.
+      <code class="function">lwres_context_initserial()</code> sets the serial
+      number for context <em class="parameter"><code>*ctx</code></em> to
+      <em class="parameter"><code>serial</code></em>.
+      <code class="function">lwres_context_nextserial()</code> increments the
+      serial number and returns the previous value.
+    </p>
+<p>
+      Memory for a lightweight resolver context is allocated and freed
+      using <code class="function">lwres_context_allocmem()</code> and
+      <code class="function">lwres_context_freemem()</code>.  These use
+      whatever allocations were defined when the context was created
+      with <code class="function">lwres_context_create()</code>.
+      <code class="function">lwres_context_allocmem()</code> allocates
+      <em class="parameter"><code>len</code></em> bytes of memory and if successful
+      returns a pointer to the allocated storage.
+      <code class="function">lwres_context_freemem()</code> frees
+      <em class="parameter"><code>len</code></em> bytes of space starting at location
+      <em class="parameter"><code>mem</code></em>.
+    </p>
+<p><code class="function">lwres_context_sendrecv()</code>
+      performs I/O for the context <em class="parameter"><code>ctx</code></em>.  Data
+      are read and written from the context's socket.  It writes data
+      from <em class="parameter"><code>sendbase</code></em> &#8212; typically a
+      lightweight resolver query packet &#8212; and waits for a reply
+      which is copied to the receive buffer at
+      <em class="parameter"><code>recvbase</code></em>.  The number of bytes that were
+      written to this receive buffer is returned in
+      <em class="parameter"><code>*recvd_len</code></em>.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543719"></a><h2>RETURN VALUES</h2>
+<p><code class="function">lwres_context_create()</code>
+      returns <span class="errorcode">LWRES_R_NOMEMORY</span> if memory for
+      the <span class="type">struct lwres_context</span> could not be allocated,
+      <span class="errorcode">LWRES_R_SUCCESS</span> otherwise.
+    </p>
+<p>
+      Successful calls to the memory allocator
+      <code class="function">lwres_context_allocmem()</code>
+      return a pointer to the start of the allocated space.
+      It returns NULL if memory could not be allocated.
+    </p>
+<p><span class="errorcode">LWRES_R_SUCCESS</span>
+      is returned when
+      <code class="function">lwres_context_sendrecv()</code>
+      completes successfully.
+      <span class="errorcode">LWRES_R_IOERROR</span>
+      is returned if an I/O error occurs and
+      <span class="errorcode">LWRES_R_TIMEOUT</span>
+      is returned if
+      <code class="function">lwres_context_sendrecv()</code>
+      times out waiting for a response.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543769"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">lwres_conf_init</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">malloc</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">free</span>(3)</span>.
+    </p>
+</div>
+</div></body>
+</html>

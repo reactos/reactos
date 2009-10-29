@@ -1,0 +1,223 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_getrrsetbyname.docbook,v 1.10 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Oct 18, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_getrrsetbyname</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_getrrsetbyname</refname>
+    <refname>lwres_freerrset</refname>
+    <refpurpose>retrieve DNS records</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/netdb.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+int
+<function>lwres_getrrsetbyname</function></funcdef>
+        <paramdef>const char *<parameter>hostname</parameter></paramdef>
+        <paramdef>unsigned int <parameter>rdclass</parameter></paramdef>
+        <paramdef>unsigned int <parameter>rdtype</parameter></paramdef>
+        <paramdef>unsigned int <parameter>flags</parameter></paramdef>
+        <paramdef>struct rrsetinfo **<parameter>res</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_freerrset</function></funcdef>
+        <paramdef>struct rrsetinfo *<parameter>rrset</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+
+    <para>
+      The following structures are used:
+    </para>
+    <para><programlisting>
+struct  rdatainfo {
+        unsigned int            rdi_length;     /* length of data */
+        unsigned char           *rdi_data;      /* record data */
+};
+</programlisting>
+    </para>
+    <para><programlisting>
+struct  rrsetinfo {
+        unsigned int            rri_flags;      /* RRSET_VALIDATED... */
+        unsigned int            rri_rdclass;    /* class number */
+        unsigned int            rri_rdtype;     /* RR type number */
+        unsigned int            rri_ttl;        /* time to live */
+        unsigned int            rri_nrdatas;    /* size of rdatas array */
+        unsigned int            rri_nsigs;      /* size of sigs array */
+        char                    *rri_name;      /* canonical name */
+        struct rdatainfo        *rri_rdatas;    /* individual records */
+        struct rdatainfo        *rri_sigs;      /* individual signatures */
+};
+</programlisting>
+    </para>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para><function>lwres_getrrsetbyname()</function>
+      gets a set of resource records associated with a
+      <parameter>hostname</parameter>, <parameter>class</parameter>,
+      and <parameter>type</parameter>.
+      <parameter>hostname</parameter> is a pointer a to
+      null-terminated string.  The <parameter>flags</parameter> field
+      is currently unused and must be zero.
+    </para>
+    <para>
+      After a successful call to
+      <function>lwres_getrrsetbyname()</function>,
+      <parameter>*res</parameter> is a pointer to an
+      <type>rrsetinfo</type> structure, containing a list of one or
+      more <type>rdatainfo</type> structures containing resource
+      records and potentially another list of <type>rdatainfo</type>
+      structures containing SIG resource records associated with those
+      records.  The members <constant>rri_rdclass</constant> and
+      <constant>rri_rdtype</constant> are copied from the parameters.
+      <constant>rri_ttl</constant> and <constant>rri_name</constant>
+      are properties of the obtained rrset.  The resource records
+      contained in <constant>rri_rdatas</constant> and
+      <constant>rri_sigs</constant> are in uncompressed DNS wire
+      format.  Properties of the rdataset are represented in the
+      <constant>rri_flags</constant> bitfield.  If the RRSET_VALIDATED
+      bit is set, the data has been DNSSEC validated and the
+      signatures verified.
+    </para>
+    <para>
+      All of the information returned by
+      <function>lwres_getrrsetbyname()</function> is dynamically
+      allocated: the <constant>rrsetinfo</constant> and
+      <constant>rdatainfo</constant> structures, and the canonical
+      host name strings pointed to by the
+      <constant>rrsetinfo</constant>structure.
+
+      Memory allocated for the dynamically allocated structures
+      created by a successful call to
+      <function>lwres_getrrsetbyname()</function> is released by
+      <function>lwres_freerrset()</function>.
+
+      <parameter>rrset</parameter> is a pointer to a <type>struct
+      rrset</type> created by a call to
+      <function>lwres_getrrsetbyname()</function>.
+    </para>
+    <para></para>
+  </refsect1>
+  <refsect1>
+    <title>RETURN VALUES</title>
+    <para><function>lwres_getrrsetbyname()</function>
+      returns zero on success, and one of the following error codes if
+      an error occurred:
+      <variablelist>
+
+        <varlistentry>
+          <term><constant>ERRSET_NONAME</constant></term>
+          <listitem>
+            <para>
+              the name does not exist
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><constant>ERRSET_NODATA</constant></term>
+          <listitem>
+            <para>
+              the name exists, but does not have data of the desired type
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><constant>ERRSET_NOMEMORY</constant></term>
+          <listitem>
+            <para>
+              memory could not be allocated
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><constant>ERRSET_INVAL</constant></term>
+          <listitem>
+            <para>
+              a parameter is invalid
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><constant>ERRSET_FAIL</constant></term>
+          <listitem>
+            <para>
+              other failure
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><constant/></term>
+          <listitem>
+            <para></para>
+          </listitem>
+        </varlistentry>
+
+      </variablelist>
+
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>lwres</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>.
+    </para>
+
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

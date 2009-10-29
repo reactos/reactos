@@ -1,0 +1,129 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_gai_strerror.3,v 1.27 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_gai_strerror
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_GAI_STRERROR" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_gai_strerror \- print suitable error string
+.SH "SYNOPSIS"
+.nf
+#include <lwres/netdb.h>
+.fi
+.HP 20
+.BI "char * gai_strerror(int\ " "ecode" ");"
+.SH "DESCRIPTION"
+.PP
+\fBlwres_gai_strerror()\fR
+returns an error message corresponding to an error code returned by
+\fBgetaddrinfo()\fR. The following error codes and their meaning are defined in
+\fIinclude/lwres/netdb.h\fR.
+.PP
+\fBEAI_ADDRFAMILY\fR
+.RS 4
+address family for hostname not supported
+.RE
+.PP
+\fBEAI_AGAIN\fR
+.RS 4
+temporary failure in name resolution
+.RE
+.PP
+\fBEAI_BADFLAGS\fR
+.RS 4
+invalid value for
+\fBai_flags\fR
+.RE
+.PP
+\fBEAI_FAIL\fR
+.RS 4
+non\-recoverable failure in name resolution
+.RE
+.PP
+\fBEAI_FAMILY\fR
+.RS 4
+\fBai_family\fR
+not supported
+.RE
+.PP
+\fBEAI_MEMORY\fR
+.RS 4
+memory allocation failure
+.RE
+.PP
+\fBEAI_NODATA\fR
+.RS 4
+no address associated with hostname
+.RE
+.PP
+\fBEAI_NONAME\fR
+.RS 4
+hostname or servname not provided, or not known
+.RE
+.PP
+\fBEAI_SERVICE\fR
+.RS 4
+servname not supported for
+\fBai_socktype\fR
+.RE
+.PP
+\fBEAI_SOCKTYPE\fR
+.RS 4
+\fBai_socktype\fR
+not supported
+.RE
+.PP
+\fBEAI_SYSTEM\fR
+.RS 4
+system error returned in errno
+.RE
+The message
+invalid error code
+is returned if
+\fIecode\fR
+is out of range.
+.PP
+\fBai_flags\fR,
+\fBai_family\fR
+and
+\fBai_socktype\fR
+are elements of the
+\fBstruct addrinfo\fR
+used by
+\fBlwres_getaddrinfo()\fR.
+.SH "SEE ALSO"
+.PP
+\fBstrerror\fR(3),
+\fBlwres_getaddrinfo\fR(3),
+\fBgetaddrinfo\fR(3),
+\fBRFC2133\fR().
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br

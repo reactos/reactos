@@ -1,0 +1,233 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_buffer.3,v 1.26 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_buffer
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_BUFFER" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_buffer_init, lwres_buffer_invalidate, lwres_buffer_add, lwres_buffer_subtract, lwres_buffer_clear, lwres_buffer_first, lwres_buffer_forward, lwres_buffer_back, lwres_buffer_getuint8, lwres_buffer_putuint8, lwres_buffer_getuint16, lwres_buffer_putuint16, lwres_buffer_getuint32, lwres_buffer_putuint32, lwres_buffer_putmem, lwres_buffer_getmem \- lightweight resolver buffer management
+.SH "SYNOPSIS"
+.nf
+#include <lwres/lwbuffer.h>
+.fi
+.HP 23
+.BI "void lwres_buffer_init(lwres_buffer_t\ *" "b" ", void\ *" "base" ", unsigned\ int\ " "length" ");"
+.HP 29
+.BI "void lwres_buffer_invalidate(lwres_buffer_t\ *" "b" ");"
+.HP 22
+.BI "void lwres_buffer_add(lwres_buffer_t\ *" "b" ", unsigned\ int\ " "n" ");"
+.HP 27
+.BI "void lwres_buffer_subtract(lwres_buffer_t\ *" "b" ", unsigned\ int\ " "n" ");"
+.HP 24
+.BI "void lwres_buffer_clear(lwres_buffer_t\ *" "b" ");"
+.HP 24
+.BI "void lwres_buffer_first(lwres_buffer_t\ *" "b" ");"
+.HP 26
+.BI "void lwres_buffer_forward(lwres_buffer_t\ *" "b" ", unsigned\ int\ " "n" ");"
+.HP 23
+.BI "void lwres_buffer_back(lwres_buffer_t\ *" "b" ", unsigned\ int\ " "n" ");"
+.HP 36
+.BI "lwres_uint8_t lwres_buffer_getuint8(lwres_buffer_t\ *" "b" ");"
+.HP 27
+.BI "void lwres_buffer_putuint8(lwres_buffer_t\ *" "b" ", lwres_uint8_t\ " "val" ");"
+.HP 38
+.BI "lwres_uint16_t lwres_buffer_getuint16(lwres_buffer_t\ *" "b" ");"
+.HP 28
+.BI "void lwres_buffer_putuint16(lwres_buffer_t\ *" "b" ", lwres_uint16_t\ " "val" ");"
+.HP 38
+.BI "lwres_uint32_t lwres_buffer_getuint32(lwres_buffer_t\ *" "b" ");"
+.HP 28
+.BI "void lwres_buffer_putuint32(lwres_buffer_t\ *" "b" ", lwres_uint32_t\ " "val" ");"
+.HP 25
+.BI "void lwres_buffer_putmem(lwres_buffer_t\ *" "b" ", const\ unsigned\ char\ *" "base" ", unsigned\ int\ " "length" ");"
+.HP 25
+.BI "void lwres_buffer_getmem(lwres_buffer_t\ *" "b" ", unsigned\ char\ *" "base" ", unsigned\ int\ " "length" ");"
+.SH "DESCRIPTION"
+.PP
+These functions provide bounds checked access to a region of memory where data is being read or written. They are based on, and similar to, the
+isc_buffer_
+functions in the ISC library.
+.PP
+A buffer is a region of memory, together with a set of related subregions. The
+\fIused region\fR
+and the
+\fIavailable\fR
+region are disjoint, and their union is the buffer's region. The used region extends from the beginning of the buffer region to the last used byte. The available region extends from one byte greater than the last used byte to the end of the buffer's region. The size of the used region can be changed using various buffer commands. Initially, the used region is empty.
+.PP
+The used region is further subdivided into two disjoint regions: the
+\fIconsumed region\fR
+and the
+\fIremaining region\fR. The union of these two regions is the used region. The consumed region extends from the beginning of the used region to the byte before the
+\fIcurrent\fR
+offset (if any). The
+\fIremaining\fR
+region the current pointer to the end of the used region. The size of the consumed region can be changed using various buffer commands. Initially, the consumed region is empty.
+.PP
+The
+\fIactive region\fR
+is an (optional) subregion of the remaining region. It extends from the current offset to an offset in the remaining region. Initially, the active region is empty. If the current offset advances beyond the chosen offset, the active region will also be empty.
+.PP
+.RS 4
+.nf
+   /\-\-\-\-\-\-\-\-\-\-\-\-entire length\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\\\\
+   /\-\-\-\-\- used region \-\-\-\-\-\\\\/\-\- available \-\-\\\\
+   +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+   | consumed  | remaining |                |
+   +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+   a           b     c     d                e
+.fi
+.RE
+.sp
+.PP
+.RS 4
+.nf
+  a == base of buffer.
+  b == current pointer.  Can be anywhere between a and d.
+  c == active pointer.  Meaningful between b and d.
+  d == used pointer.
+  e == length of buffer.
+.fi
+.RE
+.sp
+.PP
+.RS 4
+.nf
+  a\-e == entire length of buffer.
+  a\-d == used region.
+  a\-b == consumed region.
+  b\-d == remaining region.
+  b\-c == optional active region.
+.fi
+.RE
+.sp
+.PP
+\fBlwres_buffer_init()\fR
+initializes the
+\fBlwres_buffer_t\fR
+\fI*b\fR
+and assocates it with the memory region of size
+\fIlength\fR
+bytes starting at location
+\fIbase.\fR
+.PP
+\fBlwres_buffer_invalidate()\fR
+marks the buffer
+\fI*b\fR
+as invalid. Invalidating a buffer after use is not required, but makes it possible to catch its possible accidental use.
+.PP
+The functions
+\fBlwres_buffer_add()\fR
+and
+\fBlwres_buffer_subtract()\fR
+respectively increase and decrease the used space in buffer
+\fI*b\fR
+by
+\fIn\fR
+bytes.
+\fBlwres_buffer_add()\fR
+checks for buffer overflow and
+\fBlwres_buffer_subtract()\fR
+checks for underflow. These functions do not allocate or deallocate memory. They just change the value of
+used.
+.PP
+A buffer is re\-initialised by
+\fBlwres_buffer_clear()\fR. The function sets
+used,
+current
+and
+active
+to zero.
+.PP
+\fBlwres_buffer_first\fR
+makes the consumed region of buffer
+\fI*p\fR
+empty by setting
+current
+to zero (the start of the buffer).
+.PP
+\fBlwres_buffer_forward()\fR
+increases the consumed region of buffer
+\fI*b\fR
+by
+\fIn\fR
+bytes, checking for overflow. Similarly,
+\fBlwres_buffer_back()\fR
+decreases buffer
+\fIb\fR's consumed region by
+\fIn\fR
+bytes and checks for underflow.
+.PP
+\fBlwres_buffer_getuint8()\fR
+reads an unsigned 8\-bit integer from
+\fI*b\fR
+and returns it.
+\fBlwres_buffer_putuint8()\fR
+writes the unsigned 8\-bit integer
+\fIval\fR
+to buffer
+\fI*b\fR.
+.PP
+\fBlwres_buffer_getuint16()\fR
+and
+\fBlwres_buffer_getuint32()\fR
+are identical to
+\fBlwres_buffer_putuint8()\fR
+except that they respectively read an unsigned 16\-bit or 32\-bit integer in network byte order from
+\fIb\fR. Similarly,
+\fBlwres_buffer_putuint16()\fR
+and
+\fBlwres_buffer_putuint32()\fR
+writes the unsigned 16\-bit or 32\-bit integer
+\fIval\fR
+to buffer
+\fIb\fR, in network byte order.
+.PP
+Arbitrary amounts of data are read or written from a lightweight resolver buffer with
+\fBlwres_buffer_getmem()\fR
+and
+\fBlwres_buffer_putmem()\fR
+respectively.
+\fBlwres_buffer_putmem()\fR
+copies
+\fIlength\fR
+bytes of memory at
+\fIbase\fR
+to
+\fIb\fR. Conversely,
+\fBlwres_buffer_getmem()\fR
+copies
+\fIlength\fR
+bytes of memory from
+\fIb\fR
+to
+\fIbase\fR.
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br

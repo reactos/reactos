@@ -1,0 +1,387 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001, 2003  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_getaddrinfo.docbook,v 1.13 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_getaddrinfo</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <year>2003</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_getaddrinfo</refname>
+    <refname>lwres_freeaddrinfo</refname>
+    <refpurpose>socket address structure to host and service name</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/netdb.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+int
+<function>lwres_getaddrinfo</function></funcdef>
+        <paramdef>const char *<parameter>hostname</parameter></paramdef>
+        <paramdef>const char *<parameter>servname</parameter></paramdef>
+        <paramdef>const struct addrinfo *<parameter>hints</parameter></paramdef>
+        <paramdef>struct addrinfo **<parameter>res</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_freeaddrinfo</function></funcdef>
+        <paramdef>struct addrinfo *<parameter>ai</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+
+    <para>
+      If the operating system does not provide a
+      <type>struct addrinfo</type>,
+      the following structure is used:
+    </para>
+    <para><programlisting>
+struct  addrinfo {
+        int             ai_flags;       /* AI_PASSIVE, AI_CANONNAME */
+        int             ai_family;      /* PF_xxx */
+        int             ai_socktype;    /* SOCK_xxx */
+        int             ai_protocol;    /* 0 or IPPROTO_xxx for IPv4 and IPv6 */
+        size_t          ai_addrlen;     /* length of ai_addr */
+        char            *ai_canonname;  /* canonical name for hostname */
+        struct sockaddr *ai_addr;       /* binary address */
+        struct addrinfo *ai_next;       /* next structure in linked list */
+};
+</programlisting>
+    </para>
+
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><function>lwres_getaddrinfo()</function>
+      is used to get a list of IP addresses and port numbers for host
+      <parameter>hostname</parameter> and service
+      <parameter>servname</parameter>.
+
+      The function is the lightweight resolver's implementation of
+      <function>getaddrinfo()</function> as defined in RFC2133.
+      <parameter>hostname</parameter> and
+      <parameter>servname</parameter> are pointers to null-terminated
+      strings or <type>NULL</type>.
+
+      <parameter>hostname</parameter> is either a host name or a
+      numeric host address string: a dotted decimal IPv4 address or an
+      IPv6 address.  <parameter>servname</parameter> is either a
+      decimal port number or a service name as listed in
+      <filename>/etc/services</filename>.
+    </para>
+
+    <para><parameter>hints</parameter>
+      is an optional pointer to a
+      <type>struct addrinfo</type>.
+      This structure can be used to provide hints concerning the type of
+      socket
+      that the caller supports or wishes to use.
+      The caller can supply the following structure elements in
+      <parameter>*hints</parameter>:
+
+      <variablelist>
+        <varlistentry>
+          <term><constant>ai_family</constant></term>
+          <listitem>
+            <para>
+              The protocol family that should be used.
+              When
+              <constant>ai_family</constant>
+              is set to
+              <type>PF_UNSPEC</type>,
+              it means the caller will accept any protocol family supported by
+              the
+              operating system.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>ai_socktype</constant></term>
+          <listitem>
+            <para>
+              denotes the type of socket &mdash;
+              <type>SOCK_STREAM</type>,
+              <type>SOCK_DGRAM</type>
+              or
+              <type>SOCK_RAW</type>
+              &mdash; that is wanted.
+              When
+              <constant>ai_socktype</constant>
+              is zero the caller will accept any socket type.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>ai_protocol</constant></term>
+          <listitem>
+            <para>
+              indicates which transport protocol is wanted: IPPROTO_UDP or
+              IPPROTO_TCP.
+              If
+              <constant>ai_protocol</constant>
+              is zero the caller will accept any protocol.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><constant>ai_flags</constant></term>
+          <listitem>
+            <para>
+              Flag bits.
+              If the
+              <type>AI_CANONNAME</type>
+              bit is set, a successful call to
+              <function>lwres_getaddrinfo()</function>
+              will return a null-terminated string containing the canonical
+              name
+              of the specified hostname in
+              <constant>ai_canonname</constant>
+              of the first
+              <type>addrinfo</type>
+              structure returned.
+              Setting the
+              <type>AI_PASSIVE</type>
+              bit indicates that the returned socket address structure is
+              intended
+              for used in a call to
+              <citerefentry>
+                <refentrytitle>bind</refentrytitle><manvolnum>2</manvolnum>
+              </citerefentry>.
+
+              In this case, if the hostname argument is a
+              <type>NULL</type>
+              pointer, then the IP address portion of the socket
+              address structure will be set to
+              <type>INADDR_ANY</type>
+              for an IPv4 address or
+              <type>IN6ADDR_ANY_INIT</type>
+              for an IPv6 address.
+            </para>
+            <para>
+              When
+              <constant>ai_flags</constant>
+              does not set the
+              <type>AI_PASSIVE</type>
+              bit, the returned socket address structure will be ready
+              for use in a call to
+              <citerefentry>
+                <refentrytitle>connect</refentrytitle><manvolnum>2</manvolnum>
+              </citerefentry>
+              for a connection-oriented protocol or
+              <citerefentry>
+                <refentrytitle>connect</refentrytitle><manvolnum>2</manvolnum>
+              </citerefentry>,
+
+              <citerefentry>
+                <refentrytitle>sendto</refentrytitle><manvolnum>2</manvolnum>
+              </citerefentry>,
+
+              or
+              <citerefentry>
+                <refentrytitle>sendmsg</refentrytitle><manvolnum>2</manvolnum>
+              </citerefentry>
+              if a connectionless protocol was chosen.
+              The IP address portion of the socket address structure will be
+              set to the loopback address if
+              <parameter>hostname</parameter>
+              is a
+              <type>NULL</type>
+              pointer and
+              <type>AI_PASSIVE</type>
+              is not set in
+              <constant>ai_flags</constant>.
+            </para>
+            <para>
+              If
+              <constant>ai_flags</constant>
+              is set to
+              <type>AI_NUMERICHOST</type>
+              it indicates that
+              <parameter>hostname</parameter>
+              should be treated as a numeric string defining an IPv4 or IPv6
+              address
+              and no name resolution should be attempted.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </para>
+
+    <para>
+      All other elements of the <type>struct addrinfo</type> passed
+      via <parameter>hints</parameter> must be zero.
+    </para>
+
+    <para>
+      A <parameter>hints</parameter> of <type>NULL</type> is
+      treated as if
+      the caller provided a <type>struct addrinfo</type> initialized to zero
+      with <constant>ai_family</constant>set to
+      <constant>PF_UNSPEC</constant>.
+    </para>
+
+    <para>
+      After a successful call to
+      <function>lwres_getaddrinfo()</function>,
+      <parameter>*res</parameter>
+      is a pointer to a linked list of one or more
+      <type>addrinfo</type>
+      structures.
+      Each
+      <type>struct addrinfo</type>
+      in this list cn be processed by following
+      the
+      <constant>ai_next</constant>
+      pointer, until a
+      <type>NULL</type>
+      pointer is encountered.
+      The three members
+      <constant>ai_family</constant>,
+      <constant>ai_socktype</constant>,
+      and
+      <constant>ai_protocol</constant>
+      in each
+      returned
+      <type>addrinfo</type>
+      structure contain the corresponding arguments for a call to
+      <citerefentry>
+        <refentrytitle>socket</refentrytitle><manvolnum>2</manvolnum>
+      </citerefentry>.
+      For each
+      <type>addrinfo</type>
+      structure in the list, the
+      <constant>ai_addr</constant>
+      member points to a filled-in socket address structure of length
+      <constant>ai_addrlen</constant>.
+    </para>
+
+    <para>
+      All of the information returned by
+      <function>lwres_getaddrinfo()</function>
+      is dynamically allocated: the addrinfo structures, and the socket
+      address structures and canonical host name strings pointed to by the
+      <constant>addrinfo</constant>structures.
+      Memory allocated for the dynamically allocated structures created by
+      a successful call to
+      <function>lwres_getaddrinfo()</function>
+      is released by
+      <function>lwres_freeaddrinfo()</function>.
+      <parameter>ai</parameter>
+      is a pointer to a
+      <type>struct addrinfo</type>
+      created by a call to
+      <function>lwres_getaddrinfo()</function>.
+    </para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>RETURN VALUES</title>
+
+    <para><function>lwres_getaddrinfo()</function>
+      returns zero on success or one of the error codes listed in
+      <citerefentry>
+        <refentrytitle>gai_strerror</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>
+      if an error occurs.  If both <parameter>hostname</parameter> and
+      <parameter>servname</parameter> are <type>NULL</type>
+      <function>lwres_getaddrinfo()</function> returns
+      <errorcode>EAI_NONAME</errorcode>.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>lwres</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_getaddrinfo</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_freeaddrinfo</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_gai_strerror</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>RFC2133</refentrytitle>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>getservbyname</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>bind</refentrytitle><manvolnum>2</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>connect</refentrytitle><manvolnum>2</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>sendto</refentrytitle><manvolnum>2</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>sendmsg</refentrytitle><manvolnum>2</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>socket</refentrytitle><manvolnum>2</manvolnum>
+      </citerefentry>.
+    </para>
+
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

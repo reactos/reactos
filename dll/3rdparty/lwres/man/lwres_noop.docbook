@@ -1,0 +1,255 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_noop.docbook,v 1.11 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_noop</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_nooprequest_render</refname>
+    <refname>lwres_noopresponse_render</refname>
+    <refname>lwres_nooprequest_parse</refname>
+    <refname>lwres_noopresponse_parse</refname>
+    <refname>lwres_noopresponse_free</refname>
+    <refname>lwres_nooprequest_free</refname>
+    <refpurpose>lightweight resolver no-op message handling</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>
+#include &lt;lwres/lwres.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_nooprequest_render</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_nooprequest_t *<parameter>req</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_noopresponse_render</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_noopresponse_t *<parameter>req</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_nooprequest_parse</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        <paramdef>lwres_nooprequest_t **<parameter>structp</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+lwres_result_t
+<function>lwres_noopresponse_parse</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_buffer_t *<parameter>b</parameter></paramdef>
+        <paramdef>lwres_lwpacket_t *<parameter>pkt</parameter></paramdef>
+        <paramdef>lwres_noopresponse_t **<parameter>structp</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_noopresponse_free</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_noopresponse_t **<parameter>structp</parameter></paramdef>
+        </funcprototype>
+<funcprototype>
+        <funcdef>
+void
+<function>lwres_nooprequest_free</function></funcdef>
+        <paramdef>lwres_context_t *<parameter>ctx</parameter></paramdef>
+        <paramdef>lwres_nooprequest_t **<parameter>structp</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      These are low-level routines for creating and parsing
+      lightweight resolver no-op request and response messages.
+    </para>
+    <para>
+      The no-op message is analogous to a <command>ping</command>
+      packet:
+      a packet is sent to the resolver daemon and is simply echoed back.
+      The opcode is intended to allow a client to determine if the server is
+      operational or not.
+    </para>
+    <para>
+      There are four main functions for the no-op opcode.
+      One render function converts a no-op request structure &mdash;
+      <type>lwres_nooprequest_t</type> &mdash;
+      to the lighweight resolver's canonical format.
+      It is complemented by a parse function that converts a packet in this
+      canonical format to a no-op request structure.
+      Another render function converts the no-op response structure &mdash;
+      <type>lwres_noopresponse_t</type>
+      to the canonical format.
+      This is complemented by a parse function which converts a packet in
+      canonical format to a no-op response structure.
+    </para>
+    <para>
+      These structures are defined in
+      <filename>lwres/lwres.h</filename>.
+
+      They are shown below.
+    </para>
+    <para><programlisting>
+#define LWRES_OPCODE_NOOP       0x00000000U
+</programlisting>
+    </para>
+    <para><programlisting>
+typedef struct {
+        lwres_uint16_t  datalength;
+        unsigned char   *data;
+} lwres_nooprequest_t;
+</programlisting>
+    </para>
+    <para><programlisting>
+typedef struct {
+        lwres_uint16_t  datalength;
+        unsigned char   *data;
+} lwres_noopresponse_t;
+</programlisting>
+    </para>
+    <para>
+      Although the structures have different types, they are identical.
+      This is because the no-op opcode simply echos whatever data was sent:
+      the response is therefore identical to the request.
+    </para>
+
+    <para><function>lwres_nooprequest_render()</function>
+      uses resolver context <parameter>ctx</parameter> to convert
+      no-op request structure <parameter>req</parameter> to canonical
+      format.  The packet header structure <parameter>pkt</parameter>
+      is initialised and transferred to buffer
+      <parameter>b</parameter>.  The contents of
+      <parameter>*req</parameter> are then appended to the buffer in
+      canonical format.
+      <function>lwres_noopresponse_render()</function> performs the
+      same task, except it converts a no-op response structure
+      <type>lwres_noopresponse_t</type> to the lightweight resolver's
+      canonical format.
+    </para>
+
+    <para><function>lwres_nooprequest_parse()</function>
+      uses context <parameter>ctx</parameter> to convert the contents
+      of packet <parameter>pkt</parameter> to a
+      <type>lwres_nooprequest_t</type> structure.  Buffer
+      <parameter>b</parameter> provides space to be used for storing
+      this structure.  When the function succeeds, the resulting
+      <type>lwres_nooprequest_t</type> is made available through
+      <parameter>*structp</parameter>.
+      <function>lwres_noopresponse_parse()</function> offers the same
+      semantics as <function>lwres_nooprequest_parse()</function>
+      except it yields a <type>lwres_noopresponse_t</type> structure.
+    </para>
+
+    <para><function>lwres_noopresponse_free()</function>
+      and <function>lwres_nooprequest_free()</function> release the
+      memory in resolver context <parameter>ctx</parameter> that was
+      allocated to the <type>lwres_noopresponse_t</type> or
+      <type>lwres_nooprequest_t</type> structures referenced via
+      <parameter>structp</parameter>.
+    </para>
+
+  </refsect1>
+  <refsect1>
+    <title>RETURN VALUES</title>
+    <para>
+      The no-op opcode functions
+      <function>lwres_nooprequest_render()</function>,
+
+      <function>lwres_noopresponse_render()</function>
+      <function>lwres_nooprequest_parse()</function>
+      and
+      <function>lwres_noopresponse_parse()</function>
+      all return
+      <errorcode>LWRES_R_SUCCESS</errorcode>
+      on success.
+      They return
+      <errorcode>LWRES_R_NOMEMORY</errorcode>
+      if memory allocation fails.
+      <errorcode>LWRES_R_UNEXPECTEDEND</errorcode>
+      is returned if the available space in the buffer
+      <parameter>b</parameter>
+      is too small to accommodate the packet header or the
+      <type>lwres_nooprequest_t</type>
+      and
+      <type>lwres_noopresponse_t</type>
+      structures.
+      <function>lwres_nooprequest_parse()</function>
+      and
+      <function>lwres_noopresponse_parse()</function>
+      will return
+      <errorcode>LWRES_R_UNEXPECTEDEND</errorcode>
+      if the buffer is not empty after decoding the received packet.
+      These functions will return
+      <errorcode>LWRES_R_FAILURE</errorcode>
+      if
+      <constant>pktflags</constant>
+      in the packet header structure
+      <type>lwres_lwpacket_t</type>
+      indicate that the packet is not a response to an earlier query.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>lwres_packet</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>
+    </para>
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

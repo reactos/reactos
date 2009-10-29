@@ -1,0 +1,266 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres.docbook,v 1.10 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+  <refnamediv>
+    <refname>lwres</refname>
+    <refpurpose>introduction to the lightweight resolver library</refpurpose>
+  </refnamediv>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/lwres.h&gt;</funcsynopsisinfo>
+</funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      The BIND 9 lightweight resolver library is a simple, name service
+      independent stub resolver library.  It provides hostname-to-address
+      and address-to-hostname lookup services to applications by
+      transmitting lookup requests to a resolver daemon
+      <command>lwresd</command>
+      running on the local host. The resover daemon performs the
+      lookup using the DNS or possibly other name service protocols,
+      and returns the results to the application through the library.
+      The library and resolver daemon communicate using a simple
+      UDP-based protocol.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>OVERVIEW</title>
+    <para>
+      The lwresd library implements multiple name service APIs.
+      The standard
+      <function>gethostbyname()</function>,
+      <function>gethostbyaddr()</function>,
+      <function>gethostbyname_r()</function>,
+      <function>gethostbyaddr_r()</function>,
+      <function>getaddrinfo()</function>,
+      <function>getipnodebyname()</function>,
+      and
+      <function>getipnodebyaddr()</function>
+      functions are all supported.  To allow the lwres library to coexist
+      with system libraries that define functions of the same name,
+      the library defines these functions with names prefixed by
+      <literal>lwres_</literal>.
+      To define the standard names, applications must include the
+      header file
+      <filename>&lt;lwres/netdb.h&gt;</filename>
+      which contains macro definitions mapping the standard function names
+      into
+      <literal>lwres_</literal>
+      prefixed ones.  Operating system vendors who integrate the lwres
+      library into their base distributions should rename the functions
+      in the library proper so that the renaming macros are not needed.
+    </para>
+    <para>
+      The library also provides a native API consisting of the functions
+      <function>lwres_getaddrsbyname()</function>
+      and
+      <function>lwres_getnamebyaddr()</function>.
+      These may be called by applications that require more detailed
+      control over the lookup process than the standard functions
+      provide.
+    </para>
+    <para>
+      In addition to these name service independent address lookup
+      functions, the library implements a new, experimental API
+      for looking up arbitrary DNS resource records, using the
+      <function>lwres_getaddrsbyname()</function>
+      function.
+    </para>
+    <para>
+      Finally, there is a low-level API for converting lookup
+      requests and responses to and from raw lwres protocol packets.
+      This API can be used by clients requiring nonblocking operation,
+      and is also used when implementing the server side of the lwres
+      protocol, for example in the
+      <command>lwresd</command>
+      resolver daemon.  The use of this low-level API in clients
+      and servers is outlined in the following sections.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>CLIENT-SIDE LOW-LEVEL API CALL FLOW</title>
+    <para>
+      When a client program wishes to make an lwres request using the
+      native low-level API, it typically performs the following
+      sequence of actions.
+    </para>
+    <para>
+      (1) Allocate or use an existing <type>lwres_packet_t</type>,
+      called <varname>pkt</varname> below.
+    </para>
+    <para>
+      (2) Set <structfield>pkt.recvlength</structfield> to the maximum length
+      we will accept.
+      This is done so the receiver of our packets knows how large our receive
+      buffer is.  The "default" is a constant in
+      <filename>lwres.h</filename>: <constant>LWRES_RECVLENGTH = 4096</constant>.
+    </para>
+    <para>
+      (3) Set <structfield>pkt.serial</structfield>
+      to a unique serial number.  This value is echoed
+      back to the application by the remote server.
+    </para>
+    <para>
+      (4) Set <structfield>pkt.pktflags</structfield>.  Usually this is set to
+      0.
+    </para>
+    <para>
+      (5) Set <structfield>pkt.result</structfield> to 0.
+    </para>
+    <para>
+      (6) Call <function>lwres_*request_render()</function>,
+      or marshall in the data using the primitives
+      such as <function>lwres_packet_render()</function>
+      and storing the packet data.
+    </para>
+    <para>
+      (7) Transmit the resulting buffer.
+    </para>
+    <para>
+      (8) Call <function>lwres_*response_parse()</function>
+      to parse any packets received.
+    </para>
+    <para>
+      (9) Verify that the opcode and serial match a request, and process the
+      packet specific information contained in the body.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>SERVER-SIDE LOW-LEVEL API CALL FLOW</title>
+    <para>
+      When implementing the server side of the lightweight resolver
+      protocol using the lwres library, a sequence of actions like the
+      following is typically involved in processing each request packet.
+    </para>
+    <para>
+      Note that the same <type>lwres_packet_t</type> is used
+      in both the <function>_parse()</function> and <function>_render()</function> calls,
+      with only a few modifications made
+      to the packet header's contents between uses.  This method is
+      recommended
+      as it keeps the serial, opcode, and other fields correct.
+    </para>
+    <para>
+      (1) When a packet is received, call <function>lwres_*request_parse()</function> to
+      unmarshall it.  This returns a <type>lwres_packet_t</type> (also called <varname>pkt</varname>, below)
+      as well as a data specific type, such as <type>lwres_gabnrequest_t</type>.
+    </para>
+    <para>
+      (2) Process the request in the data specific type.
+    </para>
+    <para>
+      (3) Set the <structfield>pkt.result</structfield>,
+      <structfield>pkt.recvlength</structfield> as above.  All other fields
+      can
+      be left untouched since they were filled in by the <function>*_parse()</function> call
+      above.  If using <function>lwres_*response_render()</function>,
+      <structfield>pkt.pktflags</structfield> will be set up
+      properly.  Otherwise, the <constant>LWRES_LWPACKETFLAG_RESPONSE</constant> bit should be
+      set.
+    </para>
+    <para>
+      (4) Call the data specific rendering function, such as
+      <function>lwres_gabnresponse_render()</function>.
+    </para>
+    <para>
+      (5) Send the resulting packet to the client.
+    </para>
+    <para></para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>lwres_gethostent</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_getipnode</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_getnameinfo</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_noop</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_gabn</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_gnba</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_context</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwres_config</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>resolver</refentrytitle><manvolnum>5</manvolnum>
+      </citerefentry>,
+
+      <citerefentry>
+        <refentrytitle>lwresd</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>.
+
+    </para>
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

@@ -1,0 +1,466 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2001 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_gethostent.html,v 1.24 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_gethostent</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_gethostbyname, lwres_gethostbyname2, lwres_gethostbyaddr, lwres_gethostent, lwres_sethostent, lwres_endhostent, lwres_gethostbyname_r, lwres_gethostbyaddr_r, lwres_gethostent_r, lwres_sethostent_r, lwres_endhostent_r &#8212; lightweight resolver get network host entry</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">#include &lt;lwres/netdb.h&gt;</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+struct hostent *
+<b class="fsfunc">lwres_gethostbyname</b>(</code></td>
+<td>const char * </td>
+<td>
+<var class="pdparam">name</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+struct hostent *
+<b class="fsfunc">lwres_gethostbyname2</b>(</code></td>
+<td>const char * </td>
+<td>
+<var class="pdparam">name</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">af</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+struct hostent *
+<b class="fsfunc">lwres_gethostbyaddr</b>(</code></td>
+<td>const char * </td>
+<td>
+<var class="pdparam">addr</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">len</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">type</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+struct hostent *
+<b class="fsfunc">lwres_gethostent</b>(</code></td>
+<td> </td>
+<td>
+<code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_sethostent</b>(</code></td>
+<td>int  </td>
+<td>
+<var class="pdparam">stayopen</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_endhostent</b>(</code></td>
+<td> </td>
+<td>
+<code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+struct hostent *
+<b class="fsfunc">lwres_gethostbyname_r</b>(</code></td>
+<td>const char * </td>
+<td>
+<var class="pdparam">name</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>struct hostent * </td>
+<td>
+<var class="pdparam">resbuf</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>char * </td>
+<td>
+<var class="pdparam">buf</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">buflen</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int * </td>
+<td>
+<var class="pdparam">error</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+struct hostent  *
+<b class="fsfunc">lwres_gethostbyaddr_r</b>(</code></td>
+<td>const char * </td>
+<td>
+<var class="pdparam">addr</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">len</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">type</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>struct hostent * </td>
+<td>
+<var class="pdparam">resbuf</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>char * </td>
+<td>
+<var class="pdparam">buf</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">buflen</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int * </td>
+<td>
+<var class="pdparam">error</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em">
+<tr>
+<td><code class="funcdef">
+struct hostent  *
+<b class="fsfunc">lwres_gethostent_r</b>(</code></td>
+<td>struct hostent * </td>
+<td>
+<var class="pdparam">resbuf</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>char * </td>
+<td>
+<var class="pdparam">buf</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int  </td>
+<td>
+<var class="pdparam">buflen</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>int * </td>
+<td>
+<var class="pdparam">error</var><code>)</code>;</td>
+</tr>
+</table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0" style="padding-bottom: 1em"><tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_sethostent_r</b>(</code></td>
+<td>int  </td>
+<td>
+<var class="pdparam">stayopen</var><code>)</code>;</td>
+</tr></table>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0"><tr>
+<td><code class="funcdef">
+void
+<b class="fsfunc">lwres_endhostent_r</b>(</code></td>
+<td> </td>
+<td>
+<code>)</code>;</td>
+</tr></table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543608"></a><h2>DESCRIPTION</h2>
+<p>
+      These functions provide hostname-to-address and
+      address-to-hostname lookups by means of the lightweight resolver.
+      They are similar to the standard
+      <span class="citerefentry"><span class="refentrytitle">gethostent</span>(3)</span>
+      functions provided by most operating systems.
+      They use a
+      <span class="type">struct hostent</span>
+      which is usually defined in
+      <code class="filename">&lt;namedb.h&gt;</code>.
+    </p>
+<pre class="programlisting">
+struct  hostent {
+        char    *h_name;        /* official name of host */
+        char    **h_aliases;    /* alias list */
+        int     h_addrtype;     /* host address type */
+        int     h_length;       /* length of address */
+        char    **h_addr_list;  /* list of addresses from name server */
+};
+#define h_addr  h_addr_list[0]  /* address, for backward compatibility */
+</pre>
+<p>
+    </p>
+<p>
+      The members of this structure are:
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><code class="constant">h_name</code></span></dt>
+<dd><p>
+              The official (canonical) name of the host.
+            </p></dd>
+<dt><span class="term"><code class="constant">h_aliases</code></span></dt>
+<dd><p>
+              A NULL-terminated array of alternate names (nicknames) for the
+              host.
+            </p></dd>
+<dt><span class="term"><code class="constant">h_addrtype</code></span></dt>
+<dd><p>
+              The type of address being returned &#8212;
+              <span class="type">PF_INET</span>
+              or
+              <span class="type">PF_INET6</span>.
+            </p></dd>
+<dt><span class="term"><code class="constant">h_length</code></span></dt>
+<dd><p>
+              The length of the address in bytes.
+            </p></dd>
+<dt><span class="term"><code class="constant">h_addr_list</code></span></dt>
+<dd><p>
+              A <span class="type">NULL</span>
+              terminated array of network addresses for the host.
+              Host addresses are returned in network byte order.
+            </p></dd>
+</dl></div>
+<p>
+    </p>
+<p>
+      For backward compatibility with very old software,
+      <code class="constant">h_addr</code>
+      is the first address in
+      <code class="constant">h_addr_list.</code>
+    </p>
+<p><code class="function">lwres_gethostent()</code>,
+      <code class="function">lwres_sethostent()</code>,
+      <code class="function">lwres_endhostent()</code>,
+      <code class="function">lwres_gethostent_r()</code>,
+      <code class="function">lwres_sethostent_r()</code>
+      and
+      <code class="function">lwres_endhostent_r()</code>
+      provide iteration over the known host entries on systems that
+      provide such functionality through facilities like
+      <code class="filename">/etc/hosts</code>
+      or NIS.  The lightweight resolver does not currently implement
+      these functions; it only provides them as stub functions that always
+      return failure.
+    </p>
+<p><code class="function">lwres_gethostbyname()</code>
+      and <code class="function">lwres_gethostbyname2()</code> look up the
+      hostname <em class="parameter"><code>name</code></em>.
+      <code class="function">lwres_gethostbyname()</code> always looks for an
+      IPv4 address while <code class="function">lwres_gethostbyname2()</code>
+      looks for an address of protocol family
+      <em class="parameter"><code>af</code></em>: either <span class="type">PF_INET</span> or
+      <span class="type">PF_INET6</span> &#8212; IPv4 or IPV6 addresses
+      respectively.  Successful calls of the functions return a
+      <span class="type">struct hostent</span>for the name that was looked up.
+      <span class="type">NULL</span> is returned if the lookups by
+      <code class="function">lwres_gethostbyname()</code> or
+      <code class="function">lwres_gethostbyname2()</code> fail.
+    </p>
+<p>
+      Reverse lookups of addresses are performed by
+      <code class="function">lwres_gethostbyaddr()</code>.
+      <em class="parameter"><code>addr</code></em> is an address of length
+      <em class="parameter"><code>len</code></em> bytes and protocol family
+      <em class="parameter"><code>type</code></em> &#8212; <span class="type">PF_INET</span> or
+      <span class="type">PF_INET6</span>.
+      <code class="function">lwres_gethostbyname_r()</code> is a
+      thread-safe function
+      for forward lookups.  If an error occurs, an error code is returned in
+      <em class="parameter"><code>*error</code></em>.
+      <em class="parameter"><code>resbuf</code></em> is a pointer to a
+      <span class="type">struct hostent</span> which is initialised by a successful call to
+      <code class="function">lwres_gethostbyname_r()</code>.
+      <em class="parameter"><code>buf</code></em> is a buffer of length
+      <em class="parameter"><code>len</code></em> bytes which is used to store the
+      <code class="constant">h_name</code>, <code class="constant">h_aliases</code>, and
+      <code class="constant">h_addr_list</code> elements of the
+      <span class="type">struct hostent</span> returned in <em class="parameter"><code>resbuf</code></em>.
+      Successful calls to <code class="function">lwres_gethostbyname_r()</code>
+      return <em class="parameter"><code>resbuf</code></em>,
+      which is a pointer to the <span class="type">struct hostent</span> it created.
+    </p>
+<p><code class="function">lwres_gethostbyaddr_r()</code>
+      is a thread-safe function
+      that performs a reverse lookup of address <em class="parameter"><code>addr</code></em>
+      which is <em class="parameter"><code>len</code></em> bytes long and is of
+      protocol
+      family <em class="parameter"><code>type</code></em> &#8212; <span class="type">PF_INET</span> or
+      <span class="type">PF_INET6</span>.  If an error occurs, the error code is returned
+      in <em class="parameter"><code>*error</code></em>.  The other function
+      parameters are
+      identical to those in <code class="function">lwres_gethostbyname_r()</code>.
+      <em class="parameter"><code>resbuf</code></em> is a pointer to a
+      <span class="type">struct hostent</span> which is initialised by a successful call to
+      <code class="function">lwres_gethostbyaddr_r()</code>.
+      <em class="parameter"><code>buf</code></em> is a buffer of length
+      <em class="parameter"><code>len</code></em> bytes which is used to store the
+      <code class="constant">h_name</code>, <code class="constant">h_aliases</code>, and
+      <code class="constant">h_addr_list</code> elements of the
+      <span class="type">struct hostent</span> returned in <em class="parameter"><code>resbuf</code></em>.
+      Successful calls to <code class="function">lwres_gethostbyaddr_r()</code> return
+      <em class="parameter"><code>resbuf</code></em>, which is a pointer to the
+      <code class="function">struct hostent()</code> it created.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543959"></a><h2>RETURN VALUES</h2>
+<p>
+      The functions
+      <code class="function">lwres_gethostbyname()</code>,
+      <code class="function">lwres_gethostbyname2()</code>,
+      <code class="function">lwres_gethostbyaddr()</code>,
+      and
+      <code class="function">lwres_gethostent()</code>
+      return NULL to indicate an error.  In this case the global variable
+      <span class="type">lwres_h_errno</span>
+      will contain one of the following error codes defined in
+      <code class="filename">&lt;lwres/netdb.h&gt;</code>:
+
+      </p>
+<div class="variablelist"><dl>
+<dt><span class="term"><code class="constant">HOST_NOT_FOUND</code></span></dt>
+<dd><p>
+              The host or address was not found.
+            </p></dd>
+<dt><span class="term"><code class="constant">TRY_AGAIN</code></span></dt>
+<dd><p>
+              A recoverable error occurred, e.g., a timeout.
+              Retrying the lookup may succeed.
+            </p></dd>
+<dt><span class="term"><code class="constant">NO_RECOVERY</code></span></dt>
+<dd><p>
+              A non-recoverable error occurred.
+            </p></dd>
+<dt><span class="term"><code class="constant">NO_DATA</code></span></dt>
+<dd><p>
+              The name exists, but has no address information
+              associated with it (or vice versa in the case
+              of a reverse lookup).  The code NO_ADDRESS
+              is accepted as a synonym for NO_DATA for backwards
+              compatibility.
+            </p></dd>
+</dl></div>
+<p>
+    </p>
+<p><span class="citerefentry"><span class="refentrytitle">lwres_hstrerror</span>(3)</span>
+      translates these error codes to suitable error messages.
+    </p>
+<p><code class="function">lwres_gethostent()</code>
+      and <code class="function">lwres_gethostent_r()</code>
+      always return <span class="type">NULL</span>.
+    </p>
+<p>
+      Successful calls to <code class="function">lwres_gethostbyname_r()</code> and
+      <code class="function">lwres_gethostbyaddr_r()</code> return
+      <em class="parameter"><code>resbuf</code></em>, a pointer to the
+      <span class="type">struct hostent</span> that was initialised by these functions.  They return
+      <span class="type">NULL</span> if the lookups fail or if <em class="parameter"><code>buf</code></em>
+      was too small to hold the list of addresses and names referenced by
+      the <code class="constant">h_name</code>, <code class="constant">h_aliases</code>, and
+      <code class="constant">h_addr_list</code> elements of the
+      <span class="type">struct hostent</span>.
+      If <em class="parameter"><code>buf</code></em> was too small, both
+      <code class="function">lwres_gethostbyname_r()</code> and
+      <code class="function">lwres_gethostbyaddr_r()</code> set the global
+      variable
+      <span class="type">errno</span> to <span class="errorcode">ERANGE</span>.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2544193"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">gethostent</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">lwres_getipnode</span>(3)</span>,
+
+      <span class="citerefentry"><span class="refentrytitle">lwres_hstrerror</span>(3)</span>
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2544227"></a><h2>BUGS</h2>
+<p><code class="function">lwres_gethostbyname()</code>,
+      <code class="function">lwres_gethostbyname2()</code>,
+      <code class="function">lwres_gethostbyaddr()</code>
+      and
+      <code class="function">lwres_endhostent()</code>
+      are not thread safe; they return pointers to static data and
+      provide error codes through a global variable.
+      Thread-safe versions for name and address lookup are provided by
+      <code class="function">lwres_gethostbyname_r()</code>,
+      and
+      <code class="function">lwres_gethostbyaddr_r()</code>
+      respectively.
+    </p>
+<p>
+      The resolver daemon does not currently support any non-DNS
+      name services such as
+      <code class="filename">/etc/hosts</code>
+      or
+      <span class="type">NIS</span>,
+      consequently the above functions don't, either.
+    </p>
+</div>
+</div></body>
+</html>

@@ -1,0 +1,232 @@
+# Copyright (C) 2004, 2007  Internet Systems Consortium, Inc. ("ISC")
+# Copyright (C) 2001  Internet Software Consortium.
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+# OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+# $Id: Makefile.in,v 1.9 2007/06/19 23:47:23 tbox Exp $
+
+srcdir =	@srcdir@
+VPATH =		@srcdir@
+top_srcdir =	@top_srcdir@
+
+@BIND9_VERSION@
+
+@BIND9_MAKE_RULES@
+
+# Alphabetically
+#MANPAGES =	lwres.3 lwres_addr_parse.3 lwres_buffer.3 \
+#		lwres_buffer_add.3 lwres_buffer_back.3 lwres_buffer_clear.3 \
+#		lwres_buffer_first.3 lwres_buffer_forward.3 \
+#		lwres_buffer_getmem.3 lwres_buffer_getuint16.3 \
+#		lwres_buffer_getuint32.3 lwres_buffer_getuint8.3 \
+#		lwres_buffer_init.3 lwres_buffer_invalidate.3 \
+#		lwres_buffer_putmem.3 lwres_buffer_putuint16.3 \
+#		lwres_buffer_putuint32.3 lwres_buffer_putuint8.3 \
+#		lwres_buffer_subtract.3 lwres_conf_clear.3 \
+#		lwres_conf_get.3 lwres_conf_init.3 \
+#		lwres_conf_parse.3 lwres_conf_print.3 \
+#		lwres_config.3 lwres_context.3 \
+#		lwres_context_allocmem.3 lwres_context_create.3 \
+#		lwres_context_destroy.3 lwres_context_freemem.3 \
+#		lwres_context_initserial.3 lwres_context_nextserial.3 \
+#		lwres_context_sendrecv.3 lwres_endhostent.3 \
+#		lwres_endhostent_r.3 lwres_freeaddrinfo.3 \
+#		lwres_freehostent.3 lwres_gabn.3 \
+#		lwres_gabnrequest_free.3 lwres_gabnrequest_parse.3 \
+#		lwres_gabnrequest_render.3 lwres_gabnresponse_free.3 \
+#		lwres_gabnresponse_parse.3 lwres_gabnresponse_render.3 \
+#		lwres_gai_strerror.3 lwres_getaddrinfo.3 \
+#		lwres_getaddrsbyname.3 lwres_gethostbyaddr.3 \
+#		lwres_gethostbyaddr_r.3 lwres_gethostbyname.3 \
+#		lwres_gethostbyname2.3 lwres_gethostbyname_r.3 \
+#		lwres_gethostent.3 lwres_gethostent_r.3 \
+#		lwres_getipnode.3 lwres_getipnodebyaddr.3 \
+#		lwres_getipnodebyname.3 lwres_getnamebyaddr.3 \
+#		lwres_getnameinfo.3 lwres_getrrsetbyname.3 \
+#		lwres_gnba.3 lwres_gnbarequest_free.3 \
+#		lwres_gnbarequest_parse.3 lwres_gnbarequest_render.3 \
+#		lwres_gnbaresponse_free.3 lwres_gnbaresponse_parse.3 \
+#		lwres_gnbaresponse_render.3 lwres_herror.3 \
+#		lwres_hstrerror.3 lwres_inetntop.3 \
+#		lwres_lwpacket_parseheader.3 lwres_lwpacket_renderheader.3 \
+#		lwres_net_ntop.3 lwres_noop.3 \
+#		lwres_nooprequest_free.3 lwres_nooprequest_parse.3 \
+#		lwres_nooprequest_render.3 lwres_noopresponse_free.3 \
+#		lwres_noopresponse_parse.3 lwres_noopresponse_render.3 \
+#		lwres_packet.3 lwres_resutil.3 \
+#		lwres_sethostent.3 lwres_sethostent_r.3 \
+#		lwres_string_parse.3
+
+
+MANPAGES = 	lwres.3 lwres_buffer.3 lwres_config.3 lwres_context.3	\
+		lwres_gabn.3 lwres_gai_strerror.3 lwres_getaddrinfo.3			\
+		lwres_gethostent.3 lwres_getipnode.3 lwres_getnameinfo.3		\
+		lwres_getrrsetbyname.3 lwres_gnba.3 lwres_hstrerror.3 lwres_inetntop.3	\
+		lwres_noop.3 lwres_packet.3 lwres_resutil.3
+
+HTMLPAGES = 	lwres.html lwres_buffer.html lwres_config.html lwres_context.html	\
+		lwres_gabn.html lwres_gai_strerror.html lwres_getaddrinfo.html			\
+		lwres_gethostent.html lwres_getipnode.html lwres_getnameinfo.html		\
+		lwres_getrrsetbyname.html lwres_gnba.html lwres_hstrerror.html lwres_inetntop.html	\
+		lwres_noop.html lwres_packet.html lwres_resutil.html
+
+MANOBJS =	${MANPAGES} ${HTMLPAGES}
+
+doc man:: ${MANOBJS}
+
+docclean manclean maintainer-clean::
+	rm -f ${MANOBJS}
+
+installdirs:
+	$(SHELL) ${top_srcdir}/mkinstalldirs ${DESTDIR}${mandir}/man3
+
+man3 = ${DESTDIR}${mandir}/man3
+
+install:: installdirs
+	for m in ${MANPAGES}; do ${INSTALL_DATA} ${srcdir}/$$m ${DESTDIR}${mandir}/man3; done
+	rm -f ${man3}/lwres_addr_parse.3
+	@LN@ ${man3}/lwres_resutil.3 ${man3}/lwres_addr_parse.3
+	rm -f ${man3}/lwres_buffer_add.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_add.3
+	rm -f ${man3}/lwres_buffer_back.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_back.3
+	rm -f ${man3}/lwres_buffer_clear.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_clear.3
+	rm -f ${man3}/lwres_buffer_first.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_first.3
+	rm -f ${man3}/lwres_buffer_forward.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_forward.3
+	rm -f ${man3}/lwres_buffer_getmem.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_getmem.3
+	rm -f ${man3}/lwres_buffer_getuint16.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_getuint16.3
+	rm -f ${man3}/lwres_buffer_getuint32.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_getuint32.3
+	rm -f ${man3}/lwres_buffer_getuint8.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_getuint8.3
+	rm -f ${man3}/lwres_buffer_init.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_init.3
+	rm -f ${man3}/lwres_buffer_invalidate.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_invalidate.3
+	rm -f ${man3}/lwres_buffer_putmem.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_putmem.3
+	rm -f ${man3}/lwres_buffer_putuint16.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_putuint16.3
+	rm -f ${man3}/lwres_buffer_putuint32.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_putuint32.3
+	rm -f ${man3}/lwres_buffer_putuint8.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_putuint8.3
+	rm -f ${man3}/lwres_buffer_subtract.3
+	@LN@ ${man3}/lwres_buffer.3 ${man3}/lwres_buffer_subtract.3
+	rm -f ${man3}/lwres_conf_clear.3
+	@LN@ ${man3}/lwres_config.3 ${man3}/lwres_conf_clear.3
+	rm -f ${man3}/lwres_conf_get.3
+	@LN@ ${man3}/lwres_config.3 ${man3}/lwres_conf_get.3
+	rm -f ${man3}/lwres_conf_init.3
+	@LN@ ${man3}/lwres_config.3 ${man3}/lwres_conf_init.3
+	rm -f ${man3}/lwres_conf_parse.3
+	@LN@ ${man3}/lwres_config.3 ${man3}/lwres_conf_parse.3
+	rm -f ${man3}/lwres_conf_print.3
+	@LN@ ${man3}/lwres_config.3 ${man3}/lwres_conf_print.3
+	rm -f ${man3}/lwres_context_allocmem.3
+	@LN@ ${man3}/lwres_context.3 ${man3}/lwres_context_allocmem.3
+	rm -f ${man3}/lwres_context_create.3
+	@LN@ ${man3}/lwres_context.3 ${man3}/lwres_context_create.3
+	rm -f ${man3}/lwres_context_destroy.3
+	@LN@ ${man3}/lwres_context.3 ${man3}/lwres_context_destroy.3
+	rm -f ${man3}/lwres_context_freemem.3
+	@LN@ ${man3}/lwres_context.3 ${man3}/lwres_context_freemem.3
+	rm -f ${man3}/lwres_context_initserial.3
+	@LN@ ${man3}/lwres_context.3 ${man3}/lwres_context_initserial.3
+	rm -f ${man3}/lwres_context_nextserial.3
+	@LN@ ${man3}/lwres_context.3 ${man3}/lwres_context_nextserial.3
+	rm -f ${man3}/lwres_context_sendrecv.3
+	@LN@ ${man3}/lwres_context.3 ${man3}/lwres_context_sendrecv.3
+	rm -f ${man3}/lwres_endhostent.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_endhostent.3
+	rm -f ${man3}/lwres_endhostent_r.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_endhostent_r.3
+	rm -f ${man3}/lwres_freeaddrinfo.3
+	@LN@ ${man3}/lwres_getaddrinfo.3 ${man3}/lwres_freeaddrinfo.3
+	rm -f ${man3}/lwres_freehostent.3
+	@LN@ ${man3}/lwres_getipnode.3 ${man3}/lwres_freehostent.3
+	rm -f ${man3}/lwres_gabnrequest_free.3
+	@LN@ ${man3}/lwres_gabn.3 ${man3}/lwres_gabnrequest_free.3
+	rm -f ${man3}/lwres_gabnrequest_parse.3
+	@LN@ ${man3}/lwres_gabn.3 ${man3}/lwres_gabnrequest_parse.3
+	rm -f ${man3}/lwres_gabnrequest_render.3
+	@LN@ ${man3}/lwres_gabn.3 ${man3}/lwres_gabnrequest_render.3
+	rm -f ${man3}/lwres_gabnresponse_free.3
+	@LN@ ${man3}/lwres_gabn.3 ${man3}/lwres_gabnresponse_free.3
+	rm -f ${man3}/lwres_gabnresponse_parse.3
+	@LN@ ${man3}/lwres_gabn.3 ${man3}/lwres_gabnresponse_parse.3
+	rm -f ${man3}/lwres_gabnresponse_render.3
+	@LN@ ${man3}/lwres_gabn.3 ${man3}/lwres_gabnresponse_render.3
+	rm -f ${man3}/lwres_getaddrsbyname.3
+	@LN@ ${man3}/lwres_resutil.3 ${man3}/lwres_getaddrsbyname.3
+	rm -f ${man3}/lwres_gethostbyaddr.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_gethostbyaddr.3
+	rm -f ${man3}/lwres_gethostbyaddr_r.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_gethostbyaddr_r.3
+	rm -f ${man3}/lwres_gethostbyname.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_gethostbyname.3
+	rm -f ${man3}/lwres_gethostbyname2.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_gethostbyname2.3
+	rm -f ${man3}/lwres_gethostbyname_r.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_gethostbyname_r.3
+	rm -f ${man3}/lwres_gethostent_r.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_gethostent_r.3
+	rm -f ${man3}/lwres_getipnodebyaddr.3
+	@LN@ ${man3}/lwres_getipnode.3 ${man3}/lwres_getipnodebyaddr.3
+	rm -f ${man3}/lwres_getipnodebyname.3
+	@LN@ ${man3}/lwres_getipnode.3 ${man3}/lwres_getipnodebyname.3
+	rm -f ${man3}/lwres_getnamebyaddr.3
+	@LN@ ${man3}/lwres_resutil.3 ${man3}/lwres_getnamebyaddr.3
+	rm -f ${man3}/lwres_gnbarequest_free.3
+	@LN@ ${man3}/lwres_gnba.3 ${man3}/lwres_gnbarequest_free.3
+	rm -f ${man3}/lwres_gnbarequest_parse.3
+	@LN@ ${man3}/lwres_gnba.3 ${man3}/lwres_gnbarequest_parse.3
+	rm -f ${man3}/lwres_gnbarequest_render.3
+	@LN@ ${man3}/lwres_gnba.3 ${man3}/lwres_gnbarequest_render.3
+	rm -f ${man3}/lwres_gnbaresponse_free.3
+	@LN@ ${man3}/lwres_gnba.3 ${man3}/lwres_gnbaresponse_free.3
+	rm -f ${man3}/lwres_gnbaresponse_parse.3
+	@LN@ ${man3}/lwres_gnba.3 ${man3}/lwres_gnbaresponse_parse.3
+	rm -f ${man3}/lwres_gnbaresponse_render.3
+	@LN@ ${man3}/lwres_gnba.3 ${man3}/lwres_gnbaresponse_render.3
+	rm -f ${man3}/lwres_herror.3
+	@LN@ ${man3}/lwres_hstrerror.3 ${man3}/lwres_herror.3
+	rm -f ${man3}/lwres_lwpacket_parseheader.3
+	@LN@ ${man3}/lwres_packet.3 ${man3}/lwres_lwpacket_parseheader.3
+	rm -f ${man3}/lwres_lwpacket_renderheader.3
+	@LN@ ${man3}/lwres_packet.3 ${man3}/lwres_lwpacket_renderheader.3
+	rm -f ${man3}/lwres_net_ntop.3
+	@LN@ ${man3}/lwres_inetntop.3 ${man3}/lwres_net_ntop.3
+	rm -f ${man3}/lwres_nooprequest_free.3
+	@LN@ ${man3}/lwres_noop.3 ${man3}/lwres_nooprequest_free.3
+	rm -f ${man3}/lwres_nooprequest_parse.3
+	@LN@ ${man3}/lwres_noop.3 ${man3}/lwres_nooprequest_parse.3
+	rm -f ${man3}/lwres_nooprequest_render.3
+	@LN@ ${man3}/lwres_noop.3 ${man3}/lwres_nooprequest_render.3
+	rm -f ${man3}/lwres_noopresponse_free.3
+	@LN@ ${man3}/lwres_noop.3 ${man3}/lwres_noopresponse_free.3
+	rm -f ${man3}/lwres_noopresponse_parse.3
+	@LN@ ${man3}/lwres_noop.3 ${man3}/lwres_noopresponse_parse.3
+	rm -f ${man3}/lwres_noopresponse_render.3
+	@LN@ ${man3}/lwres_noop.3 ${man3}/lwres_noopresponse_render.3
+	rm -f ${man3}/lwres_sethostent.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_sethostent.3
+	rm -f ${man3}/lwres_sethostent_r.3
+	@LN@ ${man3}/lwres_gethostent.3 ${man3}/lwres_sethostent_r.3
+	rm -f ${man3}/lwres_string_parse.3
+	@LN@ ${man3}/lwres_resutil.3 ${man3}/lwres_string_parse.3

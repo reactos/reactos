@@ -1,0 +1,103 @@
+<!--
+ - Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001 Internet Software Consortium.
+ - 
+ - Permission to use, copy, modify, and distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ - 
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+<!-- $Id: lwres_inetntop.html,v 1.23 2007/01/30 00:24:59 marka Exp $ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>lwres_inetntop</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id2476275"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>lwres_net_ntop &#8212; lightweight resolver IP address presentation</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="funcsynopsis">
+<pre class="funcsynopsisinfo">#include &lt;lwres/net.h&gt;</pre>
+<table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0">
+<tr>
+<td><code class="funcdef">
+const char *
+<b class="fsfunc">lwres_net_ntop</b>(</code></td>
+<td>int  </td>
+<td>
+<var class="pdparam">af</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>const void * </td>
+<td>
+<var class="pdparam">src</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>char * </td>
+<td>
+<var class="pdparam">dst</var>, </td>
+</tr>
+<tr>
+<td> </td>
+<td>size_t  </td>
+<td>
+<var class="pdparam">size</var><code>)</code>;</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543379"></a><h2>DESCRIPTION</h2>
+<p><code class="function">lwres_net_ntop()</code>
+      converts an IP address of protocol family
+      <em class="parameter"><code>af</code></em> &#8212; IPv4 or IPv6 &#8212; at
+      location <em class="parameter"><code>src</code></em> from network format to its
+      conventional representation as a string.  For IPv4 addresses,
+      that string would be a dotted-decimal.  An IPv6 address would be
+      represented in colon notation as described in RFC1884.
+    </p>
+<p>
+      The generated string is copied to <em class="parameter"><code>dst</code></em>
+      provided
+      <em class="parameter"><code>size</code></em> indicates it is long enough to
+      store the
+      ASCII representation of the address.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543411"></a><h2>RETURN VALUES</h2>
+<p>
+      If successful, the function returns <em class="parameter"><code>dst</code></em>:
+      a pointer to a string containing the presentation format of the
+      address.  <code class="function">lwres_net_ntop()</code> returns
+      <span class="type">NULL</span> and sets the global variable
+      <code class="constant">errno</code> to <span class="errorcode">EAFNOSUPPORT</span> if
+      the protocol family given in <em class="parameter"><code>af</code></em> is
+      not
+      supported.
+    </p>
+</div>
+<div class="refsect1" lang="en">
+<a name="id2543444"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">RFC1884</span></span>,
+      <span class="citerefentry"><span class="refentrytitle">inet_ntop</span>(3)</span>,
+      <span class="citerefentry"><span class="refentrytitle">errno</span>(3)</span>.
+    </p>
+</div>
+</div></body>
+</html>

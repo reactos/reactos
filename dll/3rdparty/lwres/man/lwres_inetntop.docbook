@@ -1,0 +1,120 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"
+	       [<!ENTITY mdash "&#8212;">]>
+<!--
+ - Copyright (C) 2004, 2005, 2007  Internet Systems Consortium, Inc. ("ISC")
+ - Copyright (C) 2000, 2001  Internet Software Consortium.
+ -
+ - Permission to use, copy, modify, and/or distribute this software for any
+ - purpose with or without fee is hereby granted, provided that the above
+ - copyright notice and this permission notice appear in all copies.
+ -
+ - THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ - REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ - AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ - INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ - LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ - OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ - PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<!-- $Id: lwres_inetntop.docbook,v 1.10 2007/06/18 23:47:51 tbox Exp $ -->
+<refentry>
+
+  <refentryinfo>
+    <date>Jun 30, 2000</date>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>lwres_inetntop</refentrytitle>
+    <manvolnum>3</manvolnum>
+    <refmiscinfo>BIND9</refmiscinfo>
+  </refmeta>
+
+  <docinfo>
+    <copyright>
+      <year>2004</year>
+      <year>2005</year>
+      <year>2007</year>
+      <holder>Internet Systems Consortium, Inc. ("ISC")</holder>
+    </copyright>
+    <copyright>
+      <year>2000</year>
+      <year>2001</year>
+      <holder>Internet Software Consortium.</holder>
+    </copyright>
+  </docinfo>
+
+  <refnamediv>
+    <refname>lwres_net_ntop</refname>
+    <refpurpose>lightweight resolver IP address presentation</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <funcsynopsis>
+<funcsynopsisinfo>#include &lt;lwres/net.h&gt;</funcsynopsisinfo>
+<funcprototype>
+        <funcdef>
+const char *
+<function>lwres_net_ntop</function></funcdef>
+        <paramdef>int <parameter>af</parameter></paramdef>
+        <paramdef>const void *<parameter>src</parameter></paramdef>
+        <paramdef>char *<parameter>dst</parameter></paramdef>
+        <paramdef>size_t <parameter>size</parameter></paramdef>
+      </funcprototype>
+</funcsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><function>lwres_net_ntop()</function>
+      converts an IP address of protocol family
+      <parameter>af</parameter> &mdash; IPv4 or IPv6 &mdash; at
+      location <parameter>src</parameter> from network format to its
+      conventional representation as a string.  For IPv4 addresses,
+      that string would be a dotted-decimal.  An IPv6 address would be
+      represented in colon notation as described in RFC1884.
+    </para>
+
+    <para>
+      The generated string is copied to <parameter>dst</parameter>
+      provided
+      <parameter>size</parameter> indicates it is long enough to
+      store the
+      ASCII representation of the address.
+    </para>
+
+  </refsect1>
+  <refsect1>
+    <title>RETURN VALUES</title>
+
+    <para>
+      If successful, the function returns <parameter>dst</parameter>:
+      a pointer to a string containing the presentation format of the
+      address.  <function>lwres_net_ntop()</function> returns
+      <type>NULL</type> and sets the global variable
+      <constant>errno</constant> to <errorcode>EAFNOSUPPORT</errorcode> if
+      the protocol family given in <parameter>af</parameter> is
+      not
+      supported.
+    </para>
+
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para><citerefentry>
+        <refentrytitle>RFC1884</refentrytitle>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>inet_ntop</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>errno</refentrytitle><manvolnum>3</manvolnum>
+      </citerefentry>.
+    </para>
+  </refsect1>
+</refentry><!--
+ - Local variables:
+ - mode: sgml
+ - End:
+-->

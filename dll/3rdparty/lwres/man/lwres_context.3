@@ -1,0 +1,170 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001, 2003 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres_context.3,v 1.28 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres_context
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES_CONTEXT" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres_context_create, lwres_context_destroy, lwres_context_nextserial, lwres_context_initserial, lwres_context_freemem, lwres_context_allocmem, lwres_context_sendrecv \- lightweight resolver context management
+.SH "SYNOPSIS"
+.nf
+#include <lwres/lwres.h>
+.fi
+.HP 36
+.BI "lwres_result_t lwres_context_create(lwres_context_t\ **" "contextp" ", void\ *" "arg" ", lwres_malloc_t\ " "malloc_function" ", lwres_free_t\ " "free_function" ");"
+.HP 37
+.BI "lwres_result_t lwres_context_destroy(lwres_context_t\ **" "contextp" ");"
+.HP 30
+.BI "void lwres_context_initserial(lwres_context_t\ *" "ctx" ", lwres_uint32_t\ " "serial" ");"
+.HP 40
+.BI "lwres_uint32_t lwres_context_nextserial(lwres_context_t\ *" "ctx" ");"
+.HP 27
+.BI "void lwres_context_freemem(lwres_context_t\ *" "ctx" ", void\ *" "mem" ", size_t\ " "len" ");"
+.HP 28
+.BI "void lwres_context_allocmem(lwres_context_t\ *" "ctx" ", size_t\ " "len" ");"
+.HP 30
+.BI "void * lwres_context_sendrecv(lwres_context_t\ *" "ctx" ", void\ *" "sendbase" ", int\ " "sendlen" ", void\ *" "recvbase" ", int\ " "recvlen" ", int\ *" "recvd_len" ");"
+.SH "DESCRIPTION"
+.PP
+\fBlwres_context_create()\fR
+creates a
+\fBlwres_context_t\fR
+structure for use in lightweight resolver operations. It holds a socket and other data needed for communicating with a resolver daemon. The new
+\fBlwres_context_t\fR
+is returned through
+\fIcontextp\fR, a pointer to a
+\fBlwres_context_t\fR
+pointer. This
+\fBlwres_context_t\fR
+pointer must initially be NULL, and is modified to point to the newly created
+\fBlwres_context_t\fR.
+.PP
+When the lightweight resolver needs to perform dynamic memory allocation, it will call
+\fImalloc_function\fR
+to allocate memory and
+\fIfree_function\fR
+to free it. If
+\fImalloc_function\fR
+and
+\fIfree_function\fR
+are NULL, memory is allocated using
+\fBmalloc\fR(3). and
+\fBfree\fR(3). It is not permitted to have a NULL
+\fImalloc_function\fR
+and a non\-NULL
+\fIfree_function\fR
+or vice versa.
+\fIarg\fR
+is passed as the first parameter to the memory allocation functions. If
+\fImalloc_function\fR
+and
+\fIfree_function\fR
+are NULL,
+\fIarg\fR
+is unused and should be passed as NULL.
+.PP
+Once memory for the structure has been allocated, it is initialized using
+\fBlwres_conf_init\fR(3)
+and returned via
+\fI*contextp\fR.
+.PP
+\fBlwres_context_destroy()\fR
+destroys a
+\fBlwres_context_t\fR, closing its socket.
+\fIcontextp\fR
+is a pointer to a pointer to the context that is to be destroyed. The pointer will be set to NULL when the context has been destroyed.
+.PP
+The context holds a serial number that is used to identify resolver request packets and associate responses with the corresponding requests. This serial number is controlled using
+\fBlwres_context_initserial()\fR
+and
+\fBlwres_context_nextserial()\fR.
+\fBlwres_context_initserial()\fR
+sets the serial number for context
+\fI*ctx\fR
+to
+\fIserial\fR.
+\fBlwres_context_nextserial()\fR
+increments the serial number and returns the previous value.
+.PP
+Memory for a lightweight resolver context is allocated and freed using
+\fBlwres_context_allocmem()\fR
+and
+\fBlwres_context_freemem()\fR. These use whatever allocations were defined when the context was created with
+\fBlwres_context_create()\fR.
+\fBlwres_context_allocmem()\fR
+allocates
+\fIlen\fR
+bytes of memory and if successful returns a pointer to the allocated storage.
+\fBlwres_context_freemem()\fR
+frees
+\fIlen\fR
+bytes of space starting at location
+\fImem\fR.
+.PP
+\fBlwres_context_sendrecv()\fR
+performs I/O for the context
+\fIctx\fR. Data are read and written from the context's socket. It writes data from
+\fIsendbase\fR
+\(em typically a lightweight resolver query packet \(em and waits for a reply which is copied to the receive buffer at
+\fIrecvbase\fR. The number of bytes that were written to this receive buffer is returned in
+\fI*recvd_len\fR.
+.SH "RETURN VALUES"
+.PP
+\fBlwres_context_create()\fR
+returns
+\fBLWRES_R_NOMEMORY\fR
+if memory for the
+\fBstruct lwres_context\fR
+could not be allocated,
+\fBLWRES_R_SUCCESS\fR
+otherwise.
+.PP
+Successful calls to the memory allocator
+\fBlwres_context_allocmem()\fR
+return a pointer to the start of the allocated space. It returns NULL if memory could not be allocated.
+.PP
+\fBLWRES_R_SUCCESS\fR
+is returned when
+\fBlwres_context_sendrecv()\fR
+completes successfully.
+\fBLWRES_R_IOERROR\fR
+is returned if an I/O error occurs and
+\fBLWRES_R_TIMEOUT\fR
+is returned if
+\fBlwres_context_sendrecv()\fR
+times out waiting for a response.
+.SH "SEE ALSO"
+.PP
+\fBlwres_conf_init\fR(3),
+\fBmalloc\fR(3),
+\fBfree\fR(3).
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001, 2003 Internet Software Consortium.
+.br

@@ -1,0 +1,165 @@
+.\" Copyright (C) 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.\" Copyright (C) 2000, 2001 Internet Software Consortium.
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+.\" OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" $Id: lwres.3,v 1.28 2007/01/30 00:24:59 marka Exp $
+.\"
+.hy 0
+.ad l
+.\"     Title: lwres
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.71.1 <http://docbook.sf.net/>
+.\"      Date: Jun 30, 2000
+.\"    Manual: BIND9
+.\"    Source: BIND9
+.\"
+.TH "LWRES" "3" "Jun 30, 2000" "BIND9" "BIND9"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+lwres \- introduction to the lightweight resolver library
+.SH "SYNOPSIS"
+.nf
+#include <lwres/lwres.h>
+.fi
+.SH "DESCRIPTION"
+.PP
+The BIND 9 lightweight resolver library is a simple, name service independent stub resolver library. It provides hostname\-to\-address and address\-to\-hostname lookup services to applications by transmitting lookup requests to a resolver daemon
+\fBlwresd\fR
+running on the local host. The resover daemon performs the lookup using the DNS or possibly other name service protocols, and returns the results to the application through the library. The library and resolver daemon communicate using a simple UDP\-based protocol.
+.SH "OVERVIEW"
+.PP
+The lwresd library implements multiple name service APIs. The standard
+\fBgethostbyname()\fR,
+\fBgethostbyaddr()\fR,
+\fBgethostbyname_r()\fR,
+\fBgethostbyaddr_r()\fR,
+\fBgetaddrinfo()\fR,
+\fBgetipnodebyname()\fR, and
+\fBgetipnodebyaddr()\fR
+functions are all supported. To allow the lwres library to coexist with system libraries that define functions of the same name, the library defines these functions with names prefixed by
+lwres_. To define the standard names, applications must include the header file
+\fI<lwres/netdb.h>\fR
+which contains macro definitions mapping the standard function names into
+lwres_
+prefixed ones. Operating system vendors who integrate the lwres library into their base distributions should rename the functions in the library proper so that the renaming macros are not needed.
+.PP
+The library also provides a native API consisting of the functions
+\fBlwres_getaddrsbyname()\fR
+and
+\fBlwres_getnamebyaddr()\fR. These may be called by applications that require more detailed control over the lookup process than the standard functions provide.
+.PP
+In addition to these name service independent address lookup functions, the library implements a new, experimental API for looking up arbitrary DNS resource records, using the
+\fBlwres_getaddrsbyname()\fR
+function.
+.PP
+Finally, there is a low\-level API for converting lookup requests and responses to and from raw lwres protocol packets. This API can be used by clients requiring nonblocking operation, and is also used when implementing the server side of the lwres protocol, for example in the
+\fBlwresd\fR
+resolver daemon. The use of this low\-level API in clients and servers is outlined in the following sections.
+.SH "CLIENT\-SIDE LOW\-LEVEL API CALL FLOW"
+.PP
+When a client program wishes to make an lwres request using the native low\-level API, it typically performs the following sequence of actions.
+.PP
+(1) Allocate or use an existing
+\fBlwres_packet_t\fR, called
+\fIpkt\fR
+below.
+.PP
+(2) Set
+pkt.recvlength
+to the maximum length we will accept. This is done so the receiver of our packets knows how large our receive buffer is. The "default" is a constant in
+\fIlwres.h\fR:
+\fBLWRES_RECVLENGTH = 4096\fR.
+.PP
+(3) Set
+pkt.serial
+to a unique serial number. This value is echoed back to the application by the remote server.
+.PP
+(4) Set
+pkt.pktflags. Usually this is set to 0.
+.PP
+(5) Set
+pkt.result
+to 0.
+.PP
+(6) Call
+\fBlwres_*request_render()\fR, or marshall in the data using the primitives such as
+\fBlwres_packet_render()\fR
+and storing the packet data.
+.PP
+(7) Transmit the resulting buffer.
+.PP
+(8) Call
+\fBlwres_*response_parse()\fR
+to parse any packets received.
+.PP
+(9) Verify that the opcode and serial match a request, and process the packet specific information contained in the body.
+.SH "SERVER\-SIDE LOW\-LEVEL API CALL FLOW"
+.PP
+When implementing the server side of the lightweight resolver protocol using the lwres library, a sequence of actions like the following is typically involved in processing each request packet.
+.PP
+Note that the same
+\fBlwres_packet_t\fR
+is used in both the
+\fB_parse()\fR
+and
+\fB_render()\fR
+calls, with only a few modifications made to the packet header's contents between uses. This method is recommended as it keeps the serial, opcode, and other fields correct.
+.PP
+(1) When a packet is received, call
+\fBlwres_*request_parse()\fR
+to unmarshall it. This returns a
+\fBlwres_packet_t\fR
+(also called
+\fIpkt\fR, below) as well as a data specific type, such as
+\fBlwres_gabnrequest_t\fR.
+.PP
+(2) Process the request in the data specific type.
+.PP
+(3) Set the
+pkt.result,
+pkt.recvlength
+as above. All other fields can be left untouched since they were filled in by the
+\fB*_parse()\fR
+call above. If using
+\fBlwres_*response_render()\fR,
+pkt.pktflags
+will be set up properly. Otherwise, the
+\fBLWRES_LWPACKETFLAG_RESPONSE\fR
+bit should be set.
+.PP
+(4) Call the data specific rendering function, such as
+\fBlwres_gabnresponse_render()\fR.
+.PP
+(5) Send the resulting packet to the client.
+.PP
+.SH "SEE ALSO"
+.PP
+\fBlwres_gethostent\fR(3),
+\fBlwres_getipnode\fR(3),
+\fBlwres_getnameinfo\fR(3),
+\fBlwres_noop\fR(3),
+\fBlwres_gabn\fR(3),
+\fBlwres_gnba\fR(3),
+\fBlwres_context\fR(3),
+\fBlwres_config\fR(3),
+\fBresolver\fR(5),
+\fBlwresd\fR(8).
+.SH "COPYRIGHT"
+Copyright \(co 2004, 2005, 2007 Internet Systems Consortium, Inc. ("ISC")
+.br
+Copyright \(co 2000, 2001 Internet Software Consortium.
+.br
