@@ -21,6 +21,8 @@
 #define UNICODE
 #define _UNICODE
 
+#define NOMINMAX
+
 #include "../../pch.h"
 
 #include "mingw.h"
@@ -57,6 +59,8 @@ typedef __gnu_cxx::stdio_sync_filebuf<char> stdio_filebuf;
 #else
 #error Unknown or unsupported C++ standard library
 #endif
+
+
 
 namespace
 {
