@@ -188,7 +188,7 @@ CsrInsertObject(
     ProcessData->HandleTable[i].Object = Object;
     ProcessData->HandleTable[i].Access = Access;
     ProcessData->HandleTable[i].Inheritable = Inheritable;
-    *Handle = (HANDLE)((i << 2) | 0x3);
+    *Handle = ULongToHandle(((i << 2) | 0x3));
     _InterlockedIncrement( &Object->ReferenceCount );
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return(STATUS_SUCCESS);
