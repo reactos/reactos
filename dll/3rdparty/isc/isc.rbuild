@@ -2,13 +2,12 @@
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="isc" type="win32dll" installbase="system32" installname="libisc.dll" allowwarnings="true">
 	<include base="ReactOS">dll/3rdparty/isc/include</include>
+	<include base="ReactOS">dll/3rdparty/isc/win32</include>
 	<include base="ReactOS">dll/3rdparty/isc/win32/include</include>
-	<include base="ReactOS">dll/3rdparty/isc/x86_32/include</include>
+	<include base="ReactOS">dll/3rdparty/isc/noatomic/include</include>
+	<include base="ReactOS">dll/3rdparty/isccfg/include</include>
 	<define name="WIN32" />
-	<define name="USE_MD5" />
 	<define name="LIBISC_EXPORTS" />
-	<define name="ISC_PLATFORM_HAVEIN6PKTINFO" />
-	<define name="ISC_PLATFORM_USEGCCASM" />
 	<file>assertions.c</file>
 	<file>base32.c</file>
 	<file>base64.c</file>
@@ -32,6 +31,7 @@
 	<file>lex.c</file>
 	<file>lfsr.c</file>
 	<file>lib.c</file>
+	<file>log.c</file>
 	<file>md5.c</file>
 	<file>mem.c</file>
 	<file>mutexblock.c</file>
@@ -75,7 +75,6 @@
 		<file>ipv6.c</file>
 		<file>keyboard.c</file>
 		<file>net.c</file>
-		<file>ntgroups.c</file>
 		<file>ntpaths.c</file>
 		<file>once.c</file>
 		<file>os.c</file>

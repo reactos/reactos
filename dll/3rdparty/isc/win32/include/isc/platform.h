@@ -30,7 +30,10 @@
  *** Network.
  ***/
 
+#ifndef __REACTOS__
 #define ISC_PLATFORM_HAVEIPV6
+#endif
+
 #if _MSC_VER > 1200
 #define ISC_PLATFORM_HAVEIN6PKTINFO
 #endif

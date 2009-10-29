@@ -2,9 +2,11 @@
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dns" type="win32dll" installbase="system32" installname="libdns.dll" allowwarnings="true">
 	<include base="ReactOS">dll/3rdparty/dns/include</include>
+	<include base="ReactOS">dll/3rdparty/dns/win32/include</include>
 	<include base="ReactOS">dll/3rdparty/isc/include</include>
+	<include base="ReactOS">dll/3rdparty/isc/win32</include>
 	<include base="ReactOS">dll/3rdparty/isc/win32/include</include>
-	<include base="ReactOS">dll/3rdparty/isc/x86_32/include</include>
+	<include base="ReactOS">dll/3rdparty/isc/noatomic/include</include>
 	<define name="WIN32" />
 	<define name="USE_MD5" />
 	<define name="LIBDNS_EXPORTS" />

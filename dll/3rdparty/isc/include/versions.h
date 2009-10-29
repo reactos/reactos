@@ -36,4 +36,22 @@
 #define LIBAGE			2
 #endif /* LIBDNS_EXPORTS */
 
+#ifdef LIBLWRES_EXPORTS
+#define LIBINTERFACE	50
+#define LIBREVISION		2
+#define LIBAGE			0
+#endif /* LIBLWRES_EXPORTS */
+
+#ifdef LIBBIND9_EXPORTS
+#define LIBINTERFACE	50
+#define LIBREVISION		3
+#define LIBAGE			0
+#endif /* LIBBIND9_EXPORTS */
+
+#ifdef LIBISCCFG_EXPORTS
+#define LIBINTERFACE	50
+#define LIBREVISION		0
+#define LIBAGE			0
+#endif /* LIBISCCFG_EXPORTS */
+
 #endif /* VERSIONS_H */
