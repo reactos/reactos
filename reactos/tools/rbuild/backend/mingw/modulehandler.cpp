@@ -1513,8 +1513,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          linkerScriptArgument.c_str (),
 		          objectsMacro.c_str (),
 		          link_defaultlibs ? "$(PROJECT_LPPFLAGS) " : "",
-		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str (),
+		          libsMacro.c_str (),
 		          target_macro.c_str () );
 	}
 	else
@@ -1555,8 +1555,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          backend->GetFullName ( temp_exp ).c_str (),
 		          objectsMacro.c_str (),
 		          link_defaultlibs ? "$(PROJECT_LPPFLAGS) " : "",
-		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str (),
+  		          libsMacro.c_str (),
 		          target_macro.c_str () );
 
 		fprintf ( fMakefile,
