@@ -42,7 +42,7 @@ EngCopyBits(SURFOBJ *psoDest,
             RECTL *DestRect,
             POINTL *SourcePoint)
 {
-    BOOLEAN   ret;
+    BOOL      ret;
     BYTE      clippingType;
     RECT_ENUM RectEnum;
     BOOL      EnumMore;
@@ -78,13 +78,7 @@ EngCopyBits(SURFOBJ *psoDest,
                 ret = GDIDEVFUNCS(psoDest).CopyBits(
                           psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
 
-                if (psoDest != psoSource)
-                {
-                    SURFACE_UnlockBitmapBits(psurfDest);
-                }
-                SURFACE_UnlockBitmapBits(psurfSource);
-
-                return ret;
+                goto cleanup;
             }
         }
 
@@ -97,13 +91,7 @@ EngCopyBits(SURFOBJ *psoDest,
                 ret = GDIDEVFUNCS(psoSource).CopyBits(
                           psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
 
-                if (psoDest != psoSource)
-                {
-                    SURFACE_UnlockBitmapBits(psurfDest);
-                }
-                SURFACE_UnlockBitmapBits(psurfSource);
-
-                return ret;
+                goto cleanup;
             }
         }
 
@@ -112,17 +100,11 @@ EngCopyBits(SURFOBJ *psoDest,
                            NULL, Clip, ColorTranslation, DestRect, SourcePoint,
                            NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
 
-        if (psoDest != psoSource)
-        {
-            SURFACE_UnlockBitmapBits(psurfDest);
-        }
-        SURFACE_UnlockBitmapBits(psurfSource);
-
-        return ret;
+        goto cleanup;
     }
 
     // Determine clipping type
-    if (Clip == (CLIPOBJ *) NULL)
+    if (!Clip)
     {
         clippingType = DC_TRIVIAL;
     }
@@ -143,16 +125,8 @@ EngCopyBits(SURFOBJ *psoDest,
             BltInfo.DestRect = *DestRect;
             BltInfo.SourcePoint = *SourcePoint;
 
-            DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
-
-            MouseSafetyOnDrawEnd(psoDest);
-            if (psoDest != psoSource)
-            {
-                SURFACE_UnlockBitmapBits(psurfDest);
-            }
-            SURFACE_UnlockBitmapBits(psurfSource);
-
-            return TRUE;
+            ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
+            break;
 
         case DC_RECT:
             // Clip the blt to the clip rectangle
@@ -161,15 +135,8 @@ EngCopyBits(SURFOBJ *psoDest,
             BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
             BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
 
-            DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
-
-            if (psoDest != psoSource)
-            {
-                SURFACE_UnlockBitmapBits(psurfDest);
-            }
-            SURFACE_UnlockBitmapBits(psurfSource);
-
-            return TRUE;
+            ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
+            break;
 
         case DC_COMPLEX:
 
@@ -192,7 +159,10 @@ EngCopyBits(SURFOBJ *psoDest,
                         BltInfo.SourcePoint.y = SourcePoint->y + prcl->top - DestRect->top;
 
                         if (!DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
-                            return FALSE;
+                        {
+                            ret = FALSE;
+                            goto cleanup;
+                        }
 
                         prcl++;
 
@@ -200,23 +170,23 @@ EngCopyBits(SURFOBJ *psoDest,
                 }
 
             } while (EnumMore);
+            ret = TRUE;
+            break;
 
-            if (psoDest != psoSource)
-            {
-                SURFACE_UnlockBitmapBits(psurfDest);
-            }
-            SURFACE_UnlockBitmapBits(psurfSource);
-
-            return TRUE;
+        default:
+            ASSERT(FALSE);
+            ret = FALSE;
+            break;
     }
 
+cleanup:
     if (psoDest != psoSource)
     {
         SURFACE_UnlockBitmapBits(psurfDest);
     }
     SURFACE_UnlockBitmapBits(psurfSource);
 
-    return FALSE;
+    return ret;
 }
 
 BOOL APIENTRY
