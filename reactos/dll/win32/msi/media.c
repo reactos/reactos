@@ -353,7 +353,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
             if (handle != INVALID_HANDLE_VALUE) goto done;
             err = GetLastError();
         }
-        if (err == ERROR_SHARING_VIOLATION)
+        if ((err == ERROR_SHARING_VIOLATION) || (err == ERROR_USER_MAPPED_FILE))
         {
             WCHAR tmpfileW[MAX_PATH], *tmppathW, *p;
             DWORD len;
