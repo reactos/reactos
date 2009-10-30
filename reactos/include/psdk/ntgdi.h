@@ -2794,7 +2794,7 @@ NtGdiEnumFontChunk(
     IN HDC hdc,
     IN ULONG_PTR idEnum,
     IN ULONG cjEfdw,
-    OUT ULONG *pcjEfdw,
+    OUT ULONG_PTR *pcjEfdw,
     OUT PENUMFONTDATAW pefdw
 );
 #endif
@@ -2809,7 +2809,7 @@ NtGdiEnumFontOpen(
     IN ULONG cwchMax,
     IN OPTIONAL LPWSTR pwszFaceName,
     IN ULONG lfCharSet,
-    OUT ULONG *pulCount
+    OUT ULONG_PTR *pulCount
 );
 
 W32KAPI
