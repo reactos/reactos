@@ -249,7 +249,7 @@ HalpGetPCIData(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootBusHandler,
     IN PCI_SLOT_NUMBER SlotNumber,
-    IN PUCHAR Buffer,
+    IN PVOID Buffer,
     IN ULONG Offset,
     IN ULONG Length
 );
@@ -260,7 +260,7 @@ HalpSetPCIData(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootBusHandler,
     IN PCI_SLOT_NUMBER SlotNumber,
-    IN PUCHAR Buffer,
+    IN PVOID Buffer,
     IN ULONG Offset,
     IN ULONG Length
 );
