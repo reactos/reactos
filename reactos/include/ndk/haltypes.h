@@ -44,7 +44,7 @@ typedef enum _FIRMWARE_REENTRY
 //
 typedef
 PBUS_HANDLER
-(NTAPI *pHalHandlerForConfigSpace)(
+(FASTCALL *pHalHandlerForConfigSpace)(
     IN BUS_DATA_TYPE ConfigSpace,
     IN ULONG BusNumber
 );
@@ -101,15 +101,15 @@ BOOLEAN
 //
 typedef
 NTSTATUS
-(NTAPI *pAdjustResourceList)(
+(NTAPI *PADJUSTRESOURCELIST)(
     IN PBUS_HANDLER BusHandler,
-    IN ULONG BusNumber,
-    IN OUT PCM_RESOURCE_LIST Resources
+    IN PBUS_HANDLER RootHandler,
+    IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *Resources
 );
 
 typedef
 NTSTATUS
-(NTAPI *pAssignSlotResources)(
+(NTAPI *PASSIGNSLOTRESOURCES)(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootHandler,
     IN PUNICODE_STRING RegistryPath,
@@ -122,20 +122,20 @@ NTSTATUS
 
 typedef
 ULONG
-(NTAPI *pGetSetBusData)(
+(NTAPI *PGETSETBUSDATA)(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootHandler,
-    IN PCI_SLOT_NUMBER SlotNumber,
-    OUT PUCHAR Buffer,
+    IN ULONG SlotNumber,
+    OUT PVOID Buffer,
     IN ULONG Offset,
     IN ULONG Length
 );
 
 typedef
 ULONG
-(NTAPI *pGetInterruptVector)(
+(NTAPI *PGETINTERRUPTVECTOR)(
     IN PBUS_HANDLER BusHandler,
-    IN ULONG BusNumber,
+    IN PBUS_HANDLER RootHandler,
     IN ULONG BusInterruptLevel,
     IN ULONG BusInterruptVector,
     OUT PKIRQL Irql,
@@ -143,10 +143,10 @@ ULONG
 );
 
 typedef
-ULONG
-(NTAPI *pTranslateBusAddress)(
+BOOLEAN
+(NTAPI *PTRANSLATEBUSADDRESS)(
     IN PBUS_HANDLER BusHandler,
-    IN ULONG BusNumber,
+    IN PBUS_HANDLER RootHandler,
     IN PHYSICAL_ADDRESS BusAddress,
     IN OUT PULONG AddressSpace,
     OUT PPHYSICAL_ADDRESS TranslatedAddress
@@ -187,8 +187,37 @@ typedef struct _HAL_PRIVATE_DISPATCH
 } HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
 
 //
+// HAL Supported Range
+//
+#define HAL_SUPPORTED_RANGE_VERSION 1
+typedef struct _SUPPORTED_RANGE
+{
+    struct _SUPPORTED_RANGE *Next;
+    ULONG SystemAddressSpace;
+    LONGLONG SystemBase;
+    LONGLONG Base;
+    LONGLONG Limit;
+} SUPPORTED_RANGE, *PSUPPORTED_RANGE;
+
+typedef struct _SUPPORTED_RANGES 
+{
+    USHORT Version;
+    BOOLEAN Sorted;
+    UCHAR Reserved;
+    ULONG NoIO;
+    SUPPORTED_RANGE IO;
+    ULONG NoMemory;
+    SUPPORTED_RANGE Memory;
+    ULONG NoPrefetchMemory;
+    SUPPORTED_RANGE PrefetchMemory;
+    ULONG NoDma;
+    SUPPORTED_RANGE Dma;
+} SUPPORTED_RANGES, *PSUPPORTED_RANGES;
+
+//
 // HAL Bus Handler
 //
+#define HAL_BUS_HANDLER_VERSION 1
 typedef struct _BUS_HANDLER
 {
     ULONG Version;
@@ -199,15 +228,29 @@ typedef struct _BUS_HANDLER
     struct _BUS_HANDLER *ParentHandler;
     PVOID BusData;
     ULONG DeviceControlExtensionSize;
-    //PSUPPORTED_RANGES BusAddresses;
+    PSUPPORTED_RANGES BusAddresses;
     ULONG Reserved[4];
-    pGetSetBusData GetBusData;
-    pGetSetBusData SetBusData;
-    pAdjustResourceList AdjustResourceList;
-    pAssignSlotResources AssignSlotResources;
-    pGetInterruptVector GetInterruptVector;
-    pTranslateBusAddress TranslateBusAddress;
+    PGETSETBUSDATA GetBusData;
+    PGETSETBUSDATA SetBusData;
+    PADJUSTRESOURCELIST AdjustResourceList;
+    PASSIGNSLOTRESOURCES AssignSlotResources;
+    PGETINTERRUPTVECTOR GetInterruptVector;
+    PTRANSLATEBUSADDRESS TranslateBusAddress;
+    PVOID Spare1;
+    PVOID Spare2;
+    PVOID Spare3;
+    PVOID Spare4;
+    PVOID Spare5;
+    PVOID Spare6;
+    PVOID Spare7;
+    PVOID Spare8;
 } BUS_HANDLER;
+
+//
+// HAL Chip Hacks
+//
+#define HAL_PCI_CHIP_HACK_DISABLE_HIBERNATE 0x02
+#define HAL_PCI_CHIP_HACK_USB_SMI_DISABLE   0x08
 
 //
 // Kernel Exports

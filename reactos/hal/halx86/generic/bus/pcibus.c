@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/pci.c
+ * FILE:            hal/halx86/generic/bus/pcibus.c
  * PURPOSE:         PCI Bus Support (Configuration Space, Resource Allocation)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -98,9 +98,10 @@ BUS_HANDLER HalpFakePciBusHandler =
     NULL,
     &HalpFakePciBusData,
     0,
+    NULL,
     {0, 0, 0, 0},
-    HalpGetPCIData,
-    HalpSetPCIData,
+    (PGETSETBUSDATA)HalpGetPCIData,
+    (PGETSETBUSDATA)HalpSetPCIData,
     NULL,
     HalpAssignPCISlotResources,
     NULL,
@@ -338,7 +339,7 @@ NTAPI
 HalpGetPCIData(IN PBUS_HANDLER BusHandler,
                IN PBUS_HANDLER RootHandler,
                IN PCI_SLOT_NUMBER Slot,
-               IN PUCHAR Buffer,
+               IN PVOID Buffer,
                IN ULONG Offset,
                IN ULONG Length)
 {
@@ -404,7 +405,7 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
 
         /* Update buffer and offset, decrement total length */
         Offset += Len;
-        Buffer += Len;
+        Buffer = (PVOID)((ULONG_PTR)Buffer + Len);
         Length -= Len;
     }
 
@@ -429,7 +430,7 @@ NTAPI
 HalpSetPCIData(IN PBUS_HANDLER BusHandler,
                IN PBUS_HANDLER RootHandler,
                IN PCI_SLOT_NUMBER Slot,
-               IN PUCHAR Buffer,
+               IN PVOID Buffer,
                IN ULONG Offset,
                IN ULONG Length)
 {
@@ -483,7 +484,7 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
 
         /* Update buffer and offset, decrement total length */
         Offset += Len;
-        Buffer += Len;
+        Buffer = (PVOID)((ULONG_PTR)Buffer + Len);
         Length -= Len;
     }
 

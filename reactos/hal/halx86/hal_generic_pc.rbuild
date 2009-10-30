@@ -6,7 +6,9 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHAL_" />
 		<directory name="generic">
-			<file>pci.c</file>
+			<directory name="bus">
+				<file>pcibus.c</file>
+			</directory>
 		</directory>
 	</module>
 </group>
