@@ -647,7 +647,7 @@ INT DrawGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation, FLOAT ex
         v[2] = 0.0;
         z_value = 0.0f;
 
-        gluTessBeginPolygon(tess, (VOID *)*(INT *)&z_value);
+        gluTessBeginPolygon(tess, &z_value);
 
         for (loop = (DWORD) *p++; loop; --loop)
         {
@@ -718,7 +718,7 @@ INT DrawGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation, FLOAT ex
             glNormal3f(0.0f, 0.0f, -1.0f);
             gluTessNormal(tess, 0.0F, 0.0F, -1.0F);
 
-            gluTessBeginPolygon(tess, (VOID *)*(INT *)&thickness);
+            gluTessBeginPolygon(tess, &thickness);
 
             for (loop = (DWORD) *p++; loop; --loop)
             {
