@@ -499,9 +499,9 @@
 <directory name="smdll">
 	<xi:include href="smdll/smdll.rbuild" />
 </directory>
-<directory name="sndblst">
+<!--directory name="sndblst">
 	<xi:include href="sndblst/sndblst.rbuild" />
-</directory>
+</directory-->
 <directory name="snmpapi">
 	<xi:include href="snmpapi/snmpapi.rbuild" />
 </directory>
@@ -583,9 +583,9 @@
 <directory name="version">
 	<xi:include href="version/version.rbuild" />
 </directory>
-<directory name="wdmaud.drv">
+<!--directory name="wdmaud.drv">
 	<xi:include href="wdmaud.drv/wdmaud.rbuild" />
-</directory>
+</directory-->
 <directory name="windowscodecs">
 	<xi:include href="windowscodecs/windowscodecs.rbuild" />
 </directory>
