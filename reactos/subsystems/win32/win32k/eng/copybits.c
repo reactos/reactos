@@ -36,183 +36,187 @@
  */
 BOOL APIENTRY
 EngCopyBits(SURFOBJ *psoDest,
-	    SURFOBJ *psoSource,
-	    CLIPOBJ *Clip,
-	    XLATEOBJ *ColorTranslation,
-	    RECTL *DestRect,
-	    POINTL *SourcePoint)
+            SURFOBJ *psoSource,
+            CLIPOBJ *Clip,
+            XLATEOBJ *ColorTranslation,
+            RECTL *DestRect,
+            POINTL *SourcePoint)
 {
-  BOOLEAN   ret;
-  BYTE      clippingType;
-  RECT_ENUM RectEnum;
-  BOOL      EnumMore;
-  BLTINFO   BltInfo;
-  SURFACE *psurfDest;
-  SURFACE *psurfSource;
+    BOOLEAN   ret;
+    BYTE      clippingType;
+    RECT_ENUM RectEnum;
+    BOOL      EnumMore;
+    BLTINFO   BltInfo;
+    SURFACE *psurfDest;
+    SURFACE *psurfSource;
 
-  ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
+    ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
-  psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
-  SURFACE_LockBitmapBits(psurfSource);
+    psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
+    SURFACE_LockBitmapBits(psurfSource);
 
-  psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
-  if (psoDest != psoSource)
-  {
-    SURFACE_LockBitmapBits(psurfDest);
-  }
-
-  // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
-  //        mark the copy block function to be DrvCopyBits instead of the
-  //        GDI's copy bit function so as to remove clipping from the
-  //        driver's responsibility
-
-  // If one of the surfaces isn't managed by the GDI
-  if((psoDest->iType!=STYPE_BITMAP) || (psoSource->iType!=STYPE_BITMAP))
-  {
-    // Destination surface is device managed
-    if(psoDest->iType!=STYPE_BITMAP)
+    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+    if (psoDest != psoSource)
     {
-      /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-      if (psurfDest->flHooks & HOOK_COPYBITS)
-      {
-        ret = GDIDEVFUNCS(psoDest).CopyBits(
-          psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
+        SURFACE_LockBitmapBits(psurfDest);
+    }
+
+    // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
+    //        mark the copy block function to be DrvCopyBits instead of the
+    //        GDI's copy bit function so as to remove clipping from the
+    //        driver's responsibility
+
+    // If one of the surfaces isn't managed by the GDI
+    if ((psoDest->iType!=STYPE_BITMAP) || (psoSource->iType!=STYPE_BITMAP))
+    {
+        // Destination surface is device managed
+        if (psoDest->iType!=STYPE_BITMAP)
+        {
+            /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
+            if (psurfDest->flHooks & HOOK_COPYBITS)
+            {
+                ret = GDIDEVFUNCS(psoDest).CopyBits(
+                          psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
+
+                if (psoDest != psoSource)
+                {
+                    SURFACE_UnlockBitmapBits(psurfDest);
+                }
+                SURFACE_UnlockBitmapBits(psurfSource);
+
+                return ret;
+            }
+        }
+
+        // Source surface is device managed
+        if (psoSource->iType!=STYPE_BITMAP)
+        {
+            /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
+            if (psurfSource->flHooks & HOOK_COPYBITS)
+            {
+                ret = GDIDEVFUNCS(psoSource).CopyBits(
+                          psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
+
+                if (psoDest != psoSource)
+                {
+                    SURFACE_UnlockBitmapBits(psurfDest);
+                }
+                SURFACE_UnlockBitmapBits(psurfSource);
+
+                return ret;
+            }
+        }
+
+        // If CopyBits wasn't hooked, BitBlt must be
+        ret = IntEngBitBlt(psoDest, psoSource,
+                           NULL, Clip, ColorTranslation, DestRect, SourcePoint,
+                           NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
 
         if (psoDest != psoSource)
         {
-          SURFACE_UnlockBitmapBits(psurfDest);
+            SURFACE_UnlockBitmapBits(psurfDest);
         }
         SURFACE_UnlockBitmapBits(psurfSource);
 
         return ret;
-      }
     }
 
-    // Source surface is device managed
-    if(psoSource->iType!=STYPE_BITMAP)
+    // Determine clipping type
+    if (Clip == (CLIPOBJ *) NULL)
     {
-      /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-      if (psurfSource->flHooks & HOOK_COPYBITS)
-      {
-        ret = GDIDEVFUNCS(psoSource).CopyBits(
-          psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
-
-        if (psoDest != psoSource)
-        {
-          SURFACE_UnlockBitmapBits(psurfDest);
-        }
-        SURFACE_UnlockBitmapBits(psurfSource);
-
-        return ret;
-      }
+        clippingType = DC_TRIVIAL;
+    }
+    else
+    {
+        clippingType = Clip->iDComplexity;
     }
 
-    // If CopyBits wasn't hooked, BitBlt must be
-    ret = IntEngBitBlt(psoDest, psoSource,
-                       NULL, Clip, ColorTranslation, DestRect, SourcePoint,
-                       NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
+    BltInfo.DestSurface = psoDest;
+    BltInfo.SourceSurface = psoSource;
+    BltInfo.PatternSurface = NULL;
+    BltInfo.XlateSourceToDest = ColorTranslation;
+    BltInfo.Rop4 = SRCCOPY;
+
+    switch (clippingType)
+    {
+        case DC_TRIVIAL:
+            BltInfo.DestRect = *DestRect;
+            BltInfo.SourcePoint = *SourcePoint;
+
+            DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
+
+            MouseSafetyOnDrawEnd(psoDest);
+            if (psoDest != psoSource)
+            {
+                SURFACE_UnlockBitmapBits(psurfDest);
+            }
+            SURFACE_UnlockBitmapBits(psurfSource);
+
+            return TRUE;
+
+        case DC_RECT:
+            // Clip the blt to the clip rectangle
+            RECTL_bIntersectRect(&BltInfo.DestRect, DestRect, &Clip->rclBounds);
+
+            BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
+            BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
+
+            DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
+
+            if (psoDest != psoSource)
+            {
+                SURFACE_UnlockBitmapBits(psurfDest);
+            }
+            SURFACE_UnlockBitmapBits(psurfSource);
+
+            return TRUE;
+
+        case DC_COMPLEX:
+
+            CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_ANY, 0);
+
+            do
+            {
+                EnumMore = CLIPOBJ_bEnum(Clip,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+
+                if (RectEnum.c > 0)
+                {
+                    RECTL* prclEnd = &RectEnum.arcl[RectEnum.c];
+                    RECTL* prcl    = &RectEnum.arcl[0];
+
+                    do
+                    {
+                        RECTL_bIntersectRect(&BltInfo.DestRect, prcl, DestRect);
+
+                        BltInfo.SourcePoint.x = SourcePoint->x + prcl->left - DestRect->left;
+                        BltInfo.SourcePoint.y = SourcePoint->y + prcl->top - DestRect->top;
+
+                        if (!DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
+                            return FALSE;
+
+                        prcl++;
+
+                    } while (prcl < prclEnd);
+                }
+
+            } while (EnumMore);
+
+            if (psoDest != psoSource)
+            {
+                SURFACE_UnlockBitmapBits(psurfDest);
+            }
+            SURFACE_UnlockBitmapBits(psurfSource);
+
+            return TRUE;
+    }
 
     if (psoDest != psoSource)
     {
-      SURFACE_UnlockBitmapBits(psurfDest);
+        SURFACE_UnlockBitmapBits(psurfDest);
     }
     SURFACE_UnlockBitmapBits(psurfSource);
 
-    return ret;
-  }
-
-  // Determine clipping type
-  if (Clip == (CLIPOBJ *) NULL)
-  {
-    clippingType = DC_TRIVIAL;
-  } else {
-    clippingType = Clip->iDComplexity;
-  }
-
-  BltInfo.DestSurface = psoDest;
-  BltInfo.SourceSurface = psoSource;
-  BltInfo.PatternSurface = NULL;
-  BltInfo.XlateSourceToDest = ColorTranslation;
-  BltInfo.Rop4 = SRCCOPY;
-
-  switch(clippingType)
-    {
-      case DC_TRIVIAL:
-        BltInfo.DestRect = *DestRect;
-        BltInfo.SourcePoint = *SourcePoint;
-
-        DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
-
-        MouseSafetyOnDrawEnd(psoDest);
-        if (psoDest != psoSource)
-        {
-          SURFACE_UnlockBitmapBits(psurfDest);
-        }
-        SURFACE_UnlockBitmapBits(psurfSource);
-
-        return(TRUE);
-
-      case DC_RECT:
-        // Clip the blt to the clip rectangle
-        RECTL_bIntersectRect(&BltInfo.DestRect, DestRect, &Clip->rclBounds);
-
-        BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
-        BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
-
-        DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
-
-        if (psoDest != psoSource)
-        {
-          SURFACE_UnlockBitmapBits(psurfDest);
-        }
-        SURFACE_UnlockBitmapBits(psurfSource);
-
-        return(TRUE);
-
-      case DC_COMPLEX:
-
-        CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_ANY, 0);
-
-        do {
-          EnumMore = CLIPOBJ_bEnum(Clip,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
-
-          if (RectEnum.c > 0)
-          {
-            RECTL* prclEnd = &RectEnum.arcl[RectEnum.c];
-            RECTL* prcl    = &RectEnum.arcl[0];
-
-            do {
-              RECTL_bIntersectRect(&BltInfo.DestRect, prcl, DestRect);
-
-              BltInfo.SourcePoint.x = SourcePoint->x + prcl->left - DestRect->left;
-              BltInfo.SourcePoint.y = SourcePoint->y + prcl->top - DestRect->top;
-
-              if(!DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
-                return FALSE;
-
-              prcl++;
-
-              } while (prcl < prclEnd);
-            }
-
-          } while(EnumMore);
-
-          if (psoDest != psoSource)
-          {
-            SURFACE_UnlockBitmapBits(psurfDest);
-          }
-          SURFACE_UnlockBitmapBits(psurfSource);
-
-          return(TRUE);
-    }
-
-  if (psoDest != psoSource)
-  {
-    SURFACE_UnlockBitmapBits(psurfDest);
-  }
-  SURFACE_UnlockBitmapBits(psurfSource);
-
-  return FALSE;
+    return FALSE;
 }
 
 BOOL APIENTRY
@@ -227,8 +231,8 @@ IntEngCopyBits(
     BOOL bResult;
 
     MouseSafetyOnDrawStart(psoSource, ptlSource->x, ptlSource->y,
-                         (ptlSource->x + abs(prclDest->right - prclDest->left)),
-                         (ptlSource->y + abs(prclDest->bottom - prclDest->top)));
+                           (ptlSource->x + abs(prclDest->right - prclDest->left)),
+                           (ptlSource->y + abs(prclDest->bottom - prclDest->top)));
 
     MouseSafetyOnDrawStart(psoDest, prclDest->left, prclDest->top, prclDest->right, prclDest->bottom);
 
