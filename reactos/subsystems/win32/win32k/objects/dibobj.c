@@ -444,7 +444,7 @@ NtGdiSetDIBitsToDeviceInternal(
     SIZEL SourceSize;
     EXLATEOBJ exlo;
     PPALETTE ppalDDB = NULL, ppalDIB = NULL;
-    HPALETTE DDBPalette, DIBPalette = NULL;
+    HPALETTE hpalDDB, hpalDIB = NULL;
     ULONG DIBPaletteType;
 
     if (!Bits) return 0;
@@ -478,13 +478,13 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Use destination palette obtained from the DC by default */
-    DDBPalette = pDC->ppdev->devinfo.hpalDefault;
+    hpalDDB = pDC->ppdev->devinfo.hpalDefault;
 
     /* Try to use hDIBPalette if it exists */
     pSurf = pDC->dclevel.pSurface;
     if (pSurf && pSurf->hDIBPalette)
     {
-        DDBPalette = pSurf->hDIBPalette;
+        hpalDDB = pSurf->hDIBPalette;
     }
 
     pDestSurf = pSurf ? &pSurf->SurfObj : NULL;
@@ -526,7 +526,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Obtain destination palette */
-    ppalDDB = PALETTE_LockPalette(DDBPalette);
+    ppalDDB = PALETTE_LockPalette(hpalDDB);
     if (!ppalDDB)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -534,11 +534,21 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit;
     }
 
-    DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
-    if (!DIBPalette)
+    /* Create a palette for the DIB */
+    hpalDIB = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
+    if (!hpalDIB)
     {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         Status = STATUS_NO_MEMORY;
+        goto Exit;
+    }
+
+    /* Lock the DIB palette */
+    ppalDIB = PALETTE_LockPalette(hpalDIB);
+    if (!ppalDDB)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        Status = STATUS_UNSUCCESSFUL;
         goto Exit;
     }
 
@@ -573,7 +583,7 @@ Exit:
 
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
-    if (DIBPalette) PALETTE_FreePaletteByHandle(DIBPalette);
+    if (hpalDIB) PALETTE_FreePaletteByHandle(hpalDIB);
     DC_UnlockDc(pDC);
 
     return ret;
