@@ -251,7 +251,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
                 SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
-                SendMessage(hStatusBar, SB_SETPARTS, 3, (int)&test);
+                SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
                 MoveWindow(hScrollbox, 56, 49, LOWORD(lParam) - 56, HIWORD(lParam) - 72, TRUE);
                 //InvalidateRect(hwnd, NULL, TRUE);
             }
