@@ -71,10 +71,13 @@
 #include <ui/tui.h>
 /* arch files */
 #if defined(_M_IX86)
+#include <arch/i386/custom.h>
+#include <arch/i386/drivemap.h>
 #include <arch/i386/hardware.h>
 #include <arch/i386/i386.h>
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
+#include <arch/i386/miscboot.h>
 #include <internal/i386/intrin_i.h>
 #include <internal/i386/ke.h>
 #elif defined(_M_PPC)
@@ -96,8 +99,6 @@
 /* Needed by boot manager */
 #include <bootmgr.h>
 #include <oslist.h>
-#include <drivemap.h>
-#include <miscboot.h>
 #include <options.h>
 #include <linux.h>
 /* Externals */

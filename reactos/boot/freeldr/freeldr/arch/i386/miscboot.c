@@ -19,7 +19,6 @@
 
 #include <freeldr.h>
 
-#ifdef __i386__
 VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 {
 	PFILE	FilePointer;
@@ -211,4 +210,3 @@ VOID LoadAndBootDrive(PCSTR OperatingSystemName)
 	//DisableA20();
 	ChainLoadBiosBootSectorCode();
 }
-#endif /* __i386__ */

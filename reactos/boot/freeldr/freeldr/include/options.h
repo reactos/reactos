@@ -22,15 +22,4 @@
 
 VOID	DoOptionsMenu(VOID);
 
-VOID	OptionMenuReboot(VOID);
-
-VOID	OptionMenuCustomBoot(VOID);
-#ifdef __i386__
-VOID	OptionMenuCustomBootDisk(VOID);
-VOID	OptionMenuCustomBootPartition(VOID);
-VOID	OptionMenuCustomBootBootSectorFile(VOID);
-VOID	OptionMenuCustomBootReactOS(VOID);
-VOID	OptionMenuCustomBootLinux(VOID);
-#endif /* __i386__ */
-
 #endif // #defined __OPTIONS_H

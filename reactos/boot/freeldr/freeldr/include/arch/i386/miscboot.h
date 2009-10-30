@@ -17,13 +17,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __BOOT_H
-#define __BOOT_H
+#ifndef __I386_BOOT_H
+#define __I386_BOOT_H
 
-#ifdef __i386__
 VOID	LoadAndBootBootSector(PCSTR OperatingSystemName);
 VOID	LoadAndBootPartition(PCSTR OperatingSystemName);
 VOID	LoadAndBootDrive(PCSTR OperatingSystemName);
-#endif /* __i386__ */
 
-#endif // defined __BOOT_H
+#endif // defined __I386_BOOT_H

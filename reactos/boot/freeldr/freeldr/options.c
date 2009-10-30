@@ -35,8 +35,12 @@ PCSTR	OptionsMenuList[] =
 
 	"SEPARATOR",
 
+#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 	"Custom Boot",
+#endif
+#ifdef HAS_OPTION_MENU_REBOOT
 	"Reboot",
+#endif
 };
 
 enum OptionMenuItems
@@ -55,8 +59,12 @@ enum OptionMenuItems
 
 	SEPARATOR2 = 9,
 
+#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 	CUSTOM_BOOT = 10,
+#endif
+#ifdef HAS_OPTION_MENU_REBOOT
 	REBOOT = 11,
+#endif
 };
 
 ULONG		OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
@@ -96,22 +104,15 @@ VOID DoOptionsMenu(VOID)
 		break;
 	//case SEPARATOR2:
 	//	break;
+#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 	case CUSTOM_BOOT:
 		OptionMenuCustomBoot();
 		break;
+#endif
+#ifdef HAS_OPTION_MENU_REBOOT
 	case REBOOT:
 		OptionMenuReboot();
 		break;
 	}
-}
-
-VOID OptionMenuReboot(VOID)
-{
-	UiMessageBox("The system will now reboot.");
-
-#ifdef __i386__
-	DiskStopFloppyMotor();
-	SoftReboot();
-#else
 #endif
 }

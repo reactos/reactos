@@ -20,7 +20,6 @@
 #include <freeldr.h>
 #include <debug.h>
 
-#ifdef __i386__
 BOOLEAN	DriveMapInstalled = FALSE;	// Tells us if we have already installed our drive map int 13h handler code
 ULONG		OldInt13HandlerAddress = 0;	// Address of BIOS int 13h handler
 ULONG		DriveMapHandlerAddress = 0;	// Linear address of our drive map handler
@@ -221,4 +220,3 @@ VOID DriveMapRemoveInt13Handler(VOID)
 		DriveMapInstalled = FALSE;
 	}
 }
-#endif /* __i386__ */
