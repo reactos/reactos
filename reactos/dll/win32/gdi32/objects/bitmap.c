@@ -418,7 +418,7 @@ GetDIBits(
         }
      }
 
-     if ((ULONG)lpvBits & (sizeof(DWORD) - 1))
+     if ((PtrToUlong(lpvBits)) & (sizeof(DWORD) - 1))
      {
          pvSafeBits = RtlAllocateHeap(RtlGetProcessHeap(), 0, cjBmpScanSize);
          if (!pvSafeBits)

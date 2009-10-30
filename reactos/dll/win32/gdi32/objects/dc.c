@@ -322,7 +322,7 @@ DeleteObject(HGDIOBJ hObject)
   /* From Wine: DeleteObject does not SetLastError() on a null object */
   if(!hObject) return FALSE;
 
-  if (0 != ((DWORD) hObject & GDI_HANDLE_STOCK_MASK))
+  if (0 != (HandleToUlong(hObject) & GDI_HANDLE_STOCK_MASK))
   { // Relax! This is a normal return!
      DPRINT("Trying to delete system object 0x%x\n", hObject);
      return TRUE;
@@ -1559,7 +1559,7 @@ SelectObject(HDC hDC,
     switch (uType)
     {
         case GDI_OBJECT_TYPE_REGION:
-            return (HGDIOBJ)ExtSelectClipRgn(hDC, hGdiObj, RGN_COPY);
+            return ULongToHandle(ExtSelectClipRgn(hDC, hGdiObj, RGN_COPY));
 
         case GDI_OBJECT_TYPE_BITMAP:
             return NtGdiSelectBitmap(hDC, hGdiObj);

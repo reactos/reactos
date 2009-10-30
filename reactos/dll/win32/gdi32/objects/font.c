@@ -1021,19 +1021,19 @@ GetOutlineTextMetricsA(
     needed = sizeof(OUTLINETEXTMETRICA);
     if(lpOTMW->otmpFamilyName)
         needed += WideCharToMultiByte(CP_ACP, 0,
-	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFamilyName), -1,
+	   (WCHAR*)((char*)lpOTMW + (ptrdiff_t)lpOTMW->otmpFamilyName), -1,
 				      NULL, 0, NULL, NULL);
     if(lpOTMW->otmpFaceName)
         needed += WideCharToMultiByte(CP_ACP, 0,
-	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFaceName), -1,
+	   (WCHAR*)((char*)lpOTMW + (ptrdiff_t)lpOTMW->otmpFaceName), -1,
 				      NULL, 0, NULL, NULL);
     if(lpOTMW->otmpStyleName)
         needed += WideCharToMultiByte(CP_ACP, 0,
-	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpStyleName), -1,
+	   (WCHAR*)((char*)lpOTMW + (ptrdiff_t)lpOTMW->otmpStyleName), -1,
 				      NULL, 0, NULL, NULL);
     if(lpOTMW->otmpFullName)
         needed += WideCharToMultiByte(CP_ACP, 0,
-	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFullName), -1,
+	   (WCHAR*)((char*)lpOTMW + (ptrdiff_t)lpOTMW->otmpFullName), -1,
 				      NULL, 0, NULL, NULL);
 
     if(!lpOTM) {
@@ -1090,7 +1090,7 @@ GetOutlineTextMetricsA(
     if(lpOTMW->otmpFamilyName) {
         output->otmpFamilyName = (LPSTR)(ptr - (char*)output);
 	len = WideCharToMultiByte(CP_ACP, 0,
-	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFamilyName), -1,
+	     (WCHAR*)((char*)lpOTMW + (ptrdiff_t)lpOTMW->otmpFamilyName), -1,
 				  ptr, left, NULL, NULL);
 	left -= len;
 	ptr += len;
@@ -1100,7 +1100,7 @@ GetOutlineTextMetricsA(
     if(lpOTMW->otmpFaceName) {
         output->otmpFaceName = (LPSTR)(ptr - (char*)output);
 	len = WideCharToMultiByte(CP_ACP, 0,
-	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFaceName), -1,
+	     (WCHAR*)((char*)lpOTMW + (ptrdiff_t)lpOTMW->otmpFaceName), -1,
 				  ptr, left, NULL, NULL);
 	left -= len;
 	ptr += len;
@@ -1110,7 +1110,7 @@ GetOutlineTextMetricsA(
     if(lpOTMW->otmpStyleName) {
         output->otmpStyleName = (LPSTR)(ptr - (char*)output);
 	len = WideCharToMultiByte(CP_ACP, 0,
-	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpStyleName), -1,
+	     (WCHAR*)((char*)lpOTMW + (ptrdiff_t)lpOTMW->otmpStyleName), -1,
 				  ptr, left, NULL, NULL);
 	left -= len;
 	ptr += len;
@@ -1120,7 +1120,7 @@ GetOutlineTextMetricsA(
     if(lpOTMW->otmpFullName) {
         output->otmpFullName = (LPSTR)(ptr - (char*)output);
 	len = WideCharToMultiByte(CP_ACP, 0,
-	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFullName), -1,
+	     (WCHAR*)((char*)lpOTMW + (ptrdiff_t)lpOTMW->otmpFullName), -1,
 				  ptr, left, NULL, NULL);
 	left -= len;
     } else

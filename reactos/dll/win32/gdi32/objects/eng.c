@@ -163,7 +163,7 @@ EngGetDriverName(HDEV hdev)
   
   if (pPDev->Sig != PDEV_UMPD_ID)
   {
-     pPDev = (PUMPDEV)pPDev->Sig;
+     pPDev = (PUMPDEV)ULongToPtr(pPDev->Sig);//wtf?
   }
   return pPDev->pdi5Info->pDriverPath;
 }
@@ -180,7 +180,7 @@ EngGetPrinterDataFileName(HDEV hdev)
 
   if (pPDev->Sig != PDEV_UMPD_ID)
   {
-     pPDev = (PUMPDEV)pPDev->Sig;
+     pPDev = (PUMPDEV)ULongToPtr(pPDev->Sig);//wtf
   }
   return pPDev->pdi5Info->pDataFile;
 }
