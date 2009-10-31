@@ -2701,6 +2701,7 @@ interface IBrowserService4 : IBrowserService3
 	HRESULT _ResizeAllBorders();
 }
 
+cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE60)")
 
 /*****************************************************************************
  * ITrackShellMenu interface
@@ -2724,3 +2725,5 @@ interface ITrackShellMenu : IShellMenu
 		[in] RECTL *prcExclude,
 		MP_POPUPFLAGS dwFlags);
 };
+
+cpp_quote("#endif /* _WIN32_IE_IE60 */")
