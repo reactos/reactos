@@ -322,9 +322,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PVOID SilenceBuffer) PURE;
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
-        IN PUCHAR Buffer,
-        IN ULONG BufferSize,
-        IN PIRP Irp) PURE;
+        IN PIRP Irp,
+        OUT PULONG Data) PURE;
 
     STDMETHOD_(NTSTATUS, GetMapping)(THIS_
         OUT PUCHAR * Buffer,
@@ -372,9 +371,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PVOID SilenceBuffer);                       \
                                                        \
     STDMETHODIMP_(NTSTATUS) AddMapping(THIS_           \
-        IN PUCHAR Buffer,                              \
-        IN ULONG BufferSize,                           \
-        IN PIRP Irp);                                  \
+        IN PIRP Irp,                                   \
+        OUT PULONG Data);                              \
                                                        \
     STDMETHODIMP_(NTSTATUS) GetMapping(THIS_           \
         OUT PUCHAR * Buffer,                           \

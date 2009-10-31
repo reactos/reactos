@@ -39,7 +39,7 @@ protected:
     LONG m_NumMappings;
     ULONG m_NumDataAvailable;
     BOOL m_StartStream;
-    KSPIN_CONNECT * m_ConnectDetails;
+    PKSPIN_CONNECT m_ConnectDetails;
     PKSDATAFORMAT_WAVEFORMATEX m_DataFormat;
 
     KSPIN_LOCK m_IrpListLock;
@@ -110,9 +110,8 @@ CIrpQueue::Init(
 NTSTATUS
 NTAPI
 CIrpQueue::AddMapping(
-    IN PUCHAR Buffer,
-    IN ULONG BufferSize,
-    IN PIRP Irp)
+    IN PIRP Irp,
+    OUT PULONG Data)
 {
     PKSSTREAM_HEADER Header;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -124,8 +123,6 @@ CIrpQueue::AddMapping(
 
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    PC_ASSERT(!Buffer);
 
     if (!Irp->MdlAddress)
     {
@@ -172,8 +169,8 @@ CIrpQueue::AddMapping(
 
     NumData = 0;
     // prepare all headers
-	for(Index = 0; Index < NumHeaders; Index++)
-	{
+    for(Index = 0; Index < NumHeaders; Index++)
+    {
         // sanity checks
         PC_ASSERT(Header);
         PC_ASSERT(Mdl);
@@ -181,17 +178,17 @@ CIrpQueue::AddMapping(
         Header->Data = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
 
         if (!Header->Data)
-		{
+        {
             // insufficient resources
             ExFreePool(Irp->AssociatedIrp.SystemBuffer);
             Irp->AssociatedIrp.SystemBuffer = NULL;
-			// complete and forget request
+            // complete and forget request
             Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
             Irp->IoStatus.Information = 0;
 
             IoCompleteRequest(Irp, IO_NO_INCREMENT); 
             return STATUS_INSUFFICIENT_RESOURCES;
-		}
+        }
 
         // increment num mappings
         InterlockedIncrement(&m_NumMappings);
@@ -207,10 +204,10 @@ CIrpQueue::AddMapping(
         
         // move to next mdl
         Mdl = Mdl->Next;
-	}
+    }
 
     DPRINT("StreamHeaders %u NumData %u FrameSize %u NumDataAvailable %u\n", NumHeaders, NumData, m_MaxFrameSize, m_NumDataAvailable);
-
+    *Data = NumData;
 
     // mark irp as pending
     IoMarkIrpPending(Irp);
@@ -330,7 +327,7 @@ CIrpQueue::UpdateMapping(
     if (m_CurrentOffset >= Size)
     {
         if (STREAMHEADER_INDEX(m_Irp) + 1 < STREAMHEADER_COUNT(m_Irp))
-		{
+        {
             // the irp has at least one more stream header
             m_Irp->Tail.Overlay.DriverContext[OFFSET_HEADERINDEX] = UlongToPtr(STREAMHEADER_INDEX(m_Irp) + 1);
 
@@ -345,7 +342,7 @@ CIrpQueue::UpdateMapping(
 
             // done
             return;
-		}
+        }
 
         // irp has been processed completly
 
@@ -354,7 +351,7 @@ CIrpQueue::UpdateMapping(
 
         // loop all stream headers
         for(Index = 0; Index < STREAMHEADER_COUNT(m_Irp); Index++)
-		{
+        {
             PC_ASSERT(StreamHeader);
 
             // add size of buffer
@@ -369,19 +366,29 @@ CIrpQueue::UpdateMapping(
 
             // get next stream header
             StreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamHeader + StreamHeader->Size);
-		}
+        }
+
+        if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
+        {
+            // looped streaming repeat the buffers untill
+            // the caller decides to stop the streams
+
+            // reset stream header index
+            m_Irp->Tail.Overlay.DriverContext[OFFSET_HEADERINDEX] = UlongToPtr(0);
+            // re-insert irp
+            KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, m_Irp, KsListEntryTail, NULL);
+            // clear current irp
+            m_Irp = NULL;
+            // reset offset
+            m_CurrentOffset = 0;
+            // increment available data
+            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, NumData);
+            // done
+            return;
+        }
 
         m_Irp->IoStatus.Status = STATUS_SUCCESS;
         m_Irp->IoStatus.Information = NumData;
-
-#if 0
-        PC_ASSERT_IRQL(DISPATCH_LEVEL);
-        MmUnlockPages(m_Irp->MdlAddress);
-        IoFreeMdl(m_Irp->MdlAddress);
-        m_Irp->MdlAddress = NULL;
-        ExFreePool(m_Irp->AssociatedIrp.SystemBuffer);
-        m_Irp->AssociatedIrp.SystemBuffer = NULL;
-#endif
 
         // complete the request
         IoCompleteRequest(m_Irp, IO_SOUND_INCREMENT);

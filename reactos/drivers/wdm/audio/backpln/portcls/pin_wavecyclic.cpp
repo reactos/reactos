@@ -59,7 +59,7 @@ protected:
     PMINIPORTWAVECYCLICSTREAM m_Stream;
     KSSTATE m_State;
     PKSDATAFORMAT m_Format;
-    KSPIN_CONNECT * m_ConnectDetails;
+    PKSPIN_CONNECT m_ConnectDetails;
 
     PVOID m_CommonBuffer;
     ULONG m_CommonBufferSize;
@@ -187,6 +187,7 @@ PinWaveCyclicAudioPosition(
 {
     CPortPinWaveCyclic *Pin;
     PSUBDEVICE_DESCRIPTOR Descriptor;
+    PKSAUDIO_POSITION Position;
 
     // get sub device descriptor 
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
@@ -206,9 +207,21 @@ PinWaveCyclicAudioPosition(
     {
         // FIXME non multithreading-safe
         // copy audio position
-        RtlMoveMemory(Data, &Pin->m_Position, sizeof(KSAUDIO_POSITION));
 
-        DPRINT("Play %lu Record %lu\n", Pin->m_Position.PlayOffset, Pin->m_Position.WriteOffset);
+        Position = (PKSAUDIO_POSITION)Data;
+
+        if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_STREAMING)
+        {
+            RtlMoveMemory(Data, &Pin->m_Position, sizeof(KSAUDIO_POSITION));
+            DPRINT("Play %lu Record %lu\n", Pin->m_Position.PlayOffset, Pin->m_Position.WriteOffset);
+        }
+        else if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
+        {
+            Position->PlayOffset = Pin->m_Position.PlayOffset % Pin->m_Position.WriteOffset;
+            Position->WriteOffset = Pin->m_IrpQueue->NumData();
+        }
+
+
         Irp->IoStatus.Information = sizeof(KSAUDIO_POSITION);
         return STATUS_SUCCESS;
     }
@@ -584,25 +597,21 @@ CPortPinWaveCyclic::HandleKsStream(
     IN PIRP Irp)
 {
     NTSTATUS Status;
+    ULONG Data = 0;
     InterlockedIncrement((PLONG)&m_TotalPackets);
 
     DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
 
-    Status = m_IrpQueue->AddMapping(NULL, 0, Irp);
+    Status = m_IrpQueue->AddMapping(Irp, &Data);
 
     if (NT_SUCCESS(Status))
     {
-
-        PKSSTREAM_HEADER Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
-        PC_ASSERT(Header);
-
         if (m_Capture)
-            m_Position.WriteOffset += Header->FrameExtent;
+            m_Position.WriteOffset += Data;
         else
-            m_Position.WriteOffset += Header->DataUsed;
+            m_Position.WriteOffset += Data;
 
         return STATUS_PENDING;
-
     }
 
     return Status;
