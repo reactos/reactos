@@ -236,6 +236,14 @@ done:
     return (error);
 }
 
+int OskitTCPDisconnect(void *socket)
+{
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
+    return sodisconnect(socket);
+}
+
 int OskitTCPShutdown( void *socket, int disconn_type ) {
     if (!socket)
         return OSK_ESHUTDOWN;

@@ -162,6 +162,8 @@ int OskitTCPSetSockOpt(void *socket,
                        char *buffer,
                        int size);
 
+int OskitTCPDisconnect(void *socket);
+
 #undef errno
 
 void *fbsd_malloc( unsigned int bytes, char *file, unsigned line, ... );
@@ -181,5 +183,8 @@ void fbsd_free( void *data, char *file, unsigned line, ... );
 #define OSK_MSG_OOB      0x01
 #define OSK_MSG_PEEK     0x02
 #define OSK_MSG_DONTWAIT 0x80
+
+#define	FREAD		0x0001
+#define	FWRITE		0x0002
 
 #endif/*OSKITTCP_H*/
