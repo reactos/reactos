@@ -169,29 +169,28 @@ AllocateListMemoryFailed:
 BOOLEAN RemoveQuotes(PCHAR QuotedString)
 {
 	CHAR	TempString[200];
+	PCHAR p;
+	PSTR Start;
 
 	//
-	// If this string is not quoted then return FALSE
+	// Skip spaces up to "
 	//
-	if ((QuotedString[0] != '\"') && (QuotedString[strlen(QuotedString)-1] != '\"'))
-	{
-		return FALSE;
-	}
+	p = QuotedString;
+	while (*p == ' ' || *p == '"')
+		p++;
+	Start = p;
 
-	if (QuotedString[0] == '\"')
-	{
-		strcpy(TempString, (QuotedString + 1));
-	}
-	else
-	{
-		strcpy(TempString, QuotedString);
-	}
+	//
+	// Go up to next "
+	//
+	while (*p != '"' && *p != ANSI_NULL)
+		p++;
+	*p = ANSI_NULL;
 
-	if (TempString[strlen(TempString)-1] == '\"')
-	{
-		TempString[strlen(TempString)-1] = '\0';
-	}
-
+	//
+	// Copy result
+	//
+	strcpy(TempString, Start);
 	strcpy(QuotedString, TempString);
 
 	return TRUE;

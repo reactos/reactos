@@ -27,7 +27,9 @@
 // ReactOS Loading Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion);
+VOID LoadAndBootWindows(PCSTR OperatingSystemName,
+                        PSTR SettingsValue,
+                        USHORT OperatingSystemVersion);
 
 /* Entry-point to kernel */
 typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
@@ -77,8 +79,11 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    PVOID GdtIdt);
 
 // wlregistry.c
-BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                                    IN LPCSTR DirectoryPath);
+BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                             IN LPCSTR DirectoryPath);
+
+BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                             IN LPCSTR DirectoryPath);
 
 
 /* FIXME: Should be moved to NDK, and respective ACPI header files */
