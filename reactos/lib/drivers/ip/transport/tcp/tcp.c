@@ -44,15 +44,6 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
 
-           /* We have to notify oskittcp of the abortion */
-           TCPDisconnect
-	     ( Connection,
-	       TDI_DISCONNECT_RELEASE | TDI_DISCONNECT_ABORT,
-	       NULL,
-	       NULL,
-	       Bucket->Request.RequestNotifyObject,
-	       (PIRP)Bucket->Request.RequestContext );
-
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
 
            exFreePool(Bucket);
@@ -63,15 +54,6 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
         {
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
-
-           /* We have to notify oskittcp of the abortion */
-           TCPDisconnect
-	     ( Connection,
-	       TDI_DISCONNECT_RELEASE,
-	       NULL,
-	       NULL,
-	       Bucket->Request.RequestNotifyObject,
-	       (PIRP)Bucket->Request.RequestContext );
 
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
 
@@ -89,6 +71,8 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                Connection);
 
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+
+           exFreePool(Bucket);
         }
 
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ConnectRequest,
@@ -98,6 +82,8 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
            Complete = Bucket->Request.RequestNotifyObject;
 
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+
+           exFreePool(Bucket);
         }
 
         Connection->SignalState = 0;
@@ -671,29 +657,17 @@ NTSTATUS TCPDisconnect
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context ) {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
 
     ASSERT_LOCKED(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("started\n"));
 
-    switch( Flags & (TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE) ) {
-    case 0:
-    case TDI_DISCONNECT_ABORT:
-        Flags = 0;
-        break;
+    if (Flags & TDI_DISCONNECT_RELEASE)
+        Status = TCPTranslateError(OskitTCPDisconnect(Connection->SocketContext));
 
-    case TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE:
-        Flags = 2;
-        break;
-
-    case TDI_DISCONNECT_RELEASE:
-        Flags = 1;
-        break;
-    }
-
-    Status = TCPTranslateError
-        ( OskitTCPShutdown( Connection->SocketContext, Flags ) );
+    if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
+        Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE | FREAD));
 
     TI_DbgPrint(DEBUG_TCP,("finished %x\n", Status));
 
