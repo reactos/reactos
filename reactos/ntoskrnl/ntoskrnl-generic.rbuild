@@ -405,7 +405,9 @@
 		<file>dbgpool.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
-		<file>mmdbg.c</file>
+		<if property="_WINKD_" value ="1">
+			<file>mmdbg.c</file>
+		</if>
 		<file>mmfault.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
