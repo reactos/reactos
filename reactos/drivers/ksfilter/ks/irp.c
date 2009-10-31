@@ -888,6 +888,10 @@ ProbeMdl:
             goto ProbeMdl;
     }
 
+#if 0
+    // HACK for MS PORTCLS
+	HeaderSize = Length;
+#endif
     /* probe user mode buffers */
     if (Length && ( (!HeaderSize) || (Length % HeaderSize == 0) || ((ProbeFlags & KSPROBE_ALLOWFORMATCHANGE) && (Length == sizeof(KSSTREAM_HEADER))) ) )
     {
@@ -1940,7 +1944,7 @@ KsSetMajorFunctionHandler(
     IN  ULONG MajorFunction)
 {
     DPRINT("KsSetMajorFunctionHandler Function %x\n", MajorFunction);
-#if 0
+#if 1
     // HACK
     // for MS PORTCLS
     //
