@@ -181,6 +181,13 @@ class CAtlBaseModule : public _ATL_BASE_MODULE
 public :
 	static bool								m_bInitFailed;
 public:
+	CAtlBaseModule()
+	{
+		cbSize = sizeof(_ATL_BASE_MODULE);
+		GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)this, &m_hInst);
+		m_hInstResource = m_hInst;
+	}
+
 	HINSTANCE GetModuleInstance()
 	{
 		return m_hInst;

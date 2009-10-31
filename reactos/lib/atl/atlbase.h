@@ -53,8 +53,6 @@
 
 #define offsetofclass(base, derived) (reinterpret_cast<DWORD_PTR>(static_cast<base *>(reinterpret_cast<derived *>(_ATL_PACKING))) - _ATL_PACKING)
 
-extern "C" IMAGE_DOS_HEADER __ImageBase;
-
 namespace ATL
 {
 
@@ -451,7 +449,7 @@ class CAtlComModule : public _ATL_COM_MODULE
 public:
 	CAtlComModule()
 	{
-		m_hInstTypeLib = reinterpret_cast<HINSTANCE>(&__ImageBase);
+		GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)this, &m_hInstTypeLib);
 		m_ppAutoObjMapFirst = NULL;
 		m_ppAutoObjMapLast = NULL;
 		if (FAILED(m_csObjMap.Init()))

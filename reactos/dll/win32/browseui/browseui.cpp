@@ -61,12 +61,23 @@ END_OBJECT_MAP()
 CBrowseUIModule								gModule;
 CAtlWinModule								gWinModule;
 
+void *operator new (size_t, void *buf)
+{
+	return buf;
+}
+
 /*************************************************************************
  * BROWSEUI DllMain
  */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
+STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
 {
     TRACE("%p 0x%x %p\n", hInstance, dwReason, fImpLoad);
+	
+	/* HACK - the global constructors don't run, so I placement new them here */
+	new (&gModule) CBrowseUIModule;
+	new (&gWinModule) CAtlWinModule;
+	new (&_AtlBaseModule) CAtlBaseModule;
+
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
 		gModule.Init(ObjectMap, hInstance, NULL);
