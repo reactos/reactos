@@ -27,10 +27,10 @@ Ke386GetGdtEntryThread(IN PKTHREAD Thread,
                        IN ULONG Offset,
                        IN PKGDTENTRY Descriptor)
 {
-    /* Make sure the offset is inside the allowed range */
-    if (!((Offset) < (KGDT_NUMBER * sizeof(KGDTENTRY))))
+    /* Make sure the offset isn't outside the allowed range */
+    if (Offset >= (KGDT_NUMBER * sizeof(KGDTENTRY)))
     {
-        /* It isn't, fail */
+        /* It is, fail */
         return STATUS_ACCESS_VIOLATION;
     }
 
@@ -46,7 +46,7 @@ Ke386GetGdtEntryThread(IN PKTHREAD Thread,
     {
         /* Get the descriptor entry from the GDT */
         RtlCopyMemory(Descriptor,
-                      (PCHAR)((PKIPCR)KeGetPcr()->GDT) + Offset,
+                      (PVOID)(((ULONG_PTR)KeGetPcr()->GDT) + Offset),
                       sizeof(KGDTENTRY));
 
         /* Check if this is the TEB selector */
