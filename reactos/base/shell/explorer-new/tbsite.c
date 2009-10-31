@@ -38,7 +38,7 @@ typedef struct
     IUnknown *punkInner;
     IBandSite *BandSite;
     ITaskBand *TaskBand;
-    IWindowEventHandler *WindowEventHandler;
+    IWinEventHandler *WindowEventHandler;
     IContextMenu *ContextMenu;
 
     HWND hWndRebar;
@@ -84,7 +84,7 @@ ITrayBandSiteImpl_Free(IN OUT ITrayBandSiteImpl *This)
 
     if (This->WindowEventHandler != NULL)
     {
-        IWindowEventHandler_Release(This->WindowEventHandler);
+        IWinEventHandler_Release(This->WindowEventHandler);
         This->WindowEventHandler = NULL;
     }
 
@@ -146,9 +146,9 @@ ITrayBandSiteImpl_QueryInterface(IN OUT ITrayBandSite *iface,
         *ppvObj = IBandSite_from_ITrayBandSiteImpl(This);
     }
     else if (IsEqualIID(riid,
-                        &IID_IWindowEventHandler))
+                        &IID_IWinEventHandler))
     {
-        DbgPrint("ITaskBandSite: IWindowEventHandler queried!\n");
+        DbgPrint("ITaskBandSite: IWinEventHandler queried!\n");
         *ppvObj = NULL;
         return E_NOINTERFACE;
     }
@@ -354,12 +354,12 @@ ITrayBandSiteImpl_ProcessMessage(IN OUT ITrayBandSite *iface,
         }
     };
 
-    /* Forward to the shell's IWindowEventHandler interface to get the default
+    /* Forward to the shell's IWinEventHandler interface to get the default
        shell behavior! */
     if (This->WindowEventHandler != NULL)
     {
-        /*DbgPrint("Calling IWindowEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p) This->hWndRebar=0x%p\n", hWnd, uMsg, wParam, lParam, plResult, This->hWndRebar);*/
-        hRet = IWindowEventHandler_ProcessMessage(This->WindowEventHandler,
+        /*DbgPrint("Calling IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p) This->hWndRebar=0x%p\n", hWnd, uMsg, wParam, lParam, plResult, This->hWndRebar);*/
+        hRet = IWinEventHandler_OnWinEvent(This->WindowEventHandler,
                                                   hWnd,
                                                   uMsg,
                                                   wParam,
@@ -370,11 +370,11 @@ ITrayBandSiteImpl_ProcessMessage(IN OUT ITrayBandSite *iface,
             if (uMsg == WM_NOTIFY)
             {
                 const NMHDR *nmh = (const NMHDR *)lParam;
-                DbgPrint("ITrayBandSite->IWindowEventHandler::ProcessMessage: WM_NOTIFY for 0x%p, From: 0x%p, Code: NM_FIRST-%u returned 0x%x\n", hWnd, nmh->hwndFrom, NM_FIRST - nmh->code, hRet);
+                DbgPrint("ITrayBandSite->IWinEventHandler::ProcessMessage: WM_NOTIFY for 0x%p, From: 0x%p, Code: NM_FIRST-%u returned 0x%x\n", hWnd, nmh->hwndFrom, NM_FIRST - nmh->code, hRet);
             }
             else
             {
-                DbgPrint("ITrayBandSite->IWindowEventHandler::ProcessMessage(0x%p,0x%x,0x%p,0x%p,0x%p->0x%p) returned: 0x%x\n", hWnd, uMsg, wParam, lParam, plResult, *plResult, hRet);
+                DbgPrint("ITrayBandSite->IWinEventHandler::ProcessMessage(0x%p,0x%x,0x%p,0x%p,0x%p->0x%p) returned: 0x%x\n", hWnd, uMsg, wParam, lParam, plResult, *plResult, hRet);
             }
         }
     }
@@ -944,7 +944,7 @@ ITrayBandSiteImpl_Construct(IN OUT ITrayWindow *Tray,
     }
 
     hRet = IUnknown_QueryInterface(This->punkInner,
-                                   &IID_IWindowEventHandler,
+                                   &IID_IWinEventHandler,
                                    (PVOID*)&This->WindowEventHandler);
     if (!SUCCEEDED(hRet))
     {

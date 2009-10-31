@@ -244,15 +244,6 @@ inline BOOL WINAPI InlineIsEqualUnknown(REFGUID rguid1)
 	  ((unsigned long *)&rguid1)[3] == 0x46000000);
 }
 
-inline BOOL WINAPI InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
-{
-   return (
-	  ((unsigned long *)&rguid1)[0] == ((unsigned long *)&rguid2)[0] &&
-	  ((unsigned long *)&rguid1)[1] == ((unsigned long *)&rguid2)[1] &&
-	  ((unsigned long *)&rguid1)[2] == ((unsigned long *)&rguid2)[2] &&
-	  ((unsigned long *)&rguid1)[3] == ((unsigned long *)&rguid2)[3]);
-}
-
 class CComMultiThreadModelNoCS
 {
 public:
@@ -331,6 +322,8 @@ public:
 
 class CAtlModule : public _ATL_MODULE
 {
+protected:
+	static GUID								m_libid;
 public:
 	CAtlModule()
 	{
@@ -434,6 +427,8 @@ private:
 		return S_OK;
 	}
 };
+
+__declspec(selectany) GUID					CAtlModule::m_libid = {0x0, 0x0, 0x0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0} };
 
 template <class T>
 class CAtlModuleT : public CAtlModule
@@ -551,6 +546,47 @@ public:
 	~CComModule()
 	{
 		_pModule = NULL;
+	}
+
+	HRESULT Init(_ATL_OBJMAP_ENTRY *p, HINSTANCE /* h */, const GUID *plibid)
+	{
+		_ATL_OBJMAP_ENTRY					*objectMapEntry;
+
+		if (plibid != NULL)
+			m_libid = *plibid;
+
+		if (p != reinterpret_cast<_ATL_OBJMAP_ENTRY *>(-1))
+		{
+			m_pObjMap = p;
+			if (p != NULL)
+			{
+				objectMapEntry = p;
+				while (objectMapEntry->pclsid != NULL)
+				{
+					objectMapEntry->pfnObjectMain(true);
+					objectMapEntry++;
+				}
+			}
+		}
+		return S_OK;
+	}
+
+	void Term()
+	{
+		_ATL_OBJMAP_ENTRY					*objectMapEntry;
+
+		if (m_pObjMap != NULL)
+		{
+			objectMapEntry = m_pObjMap;
+			while (objectMapEntry->pclsid != NULL)
+			{
+				if (objectMapEntry->pCF != NULL)
+					objectMapEntry->pCF->Release();
+				objectMapEntry->pCF = NULL;
+				objectMapEntry->pfnObjectMain(false);
+				objectMapEntry++;
+			}
+		}
 	}
 
 	HRESULT GetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)

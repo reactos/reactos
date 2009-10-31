@@ -110,6 +110,16 @@ typedef GUID FMTID,*LPFMTID;
 #endif /* !defined(__cplusplus) && !defined(CINTERFACE) */
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
+
+__inline int InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
+{
+    return (
+        ((unsigned long *) &rguid1)[0] == ((unsigned long *) &rguid2)[0] &&
+        ((unsigned long *) &rguid1)[1] == ((unsigned long *) &rguid2)[1] &&
+        ((unsigned long *) &rguid1)[2] == ((unsigned long *) &rguid2)[2] &&
+        ((unsigned long *) &rguid1)[3] == ((unsigned long *) &rguid2)[3]);
+}
+
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(&(rguid1), &(rguid2), sizeof(GUID)))
 #else /* defined(__cplusplus) && !defined(CINTERFACE) */
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(rguid1, rguid2, sizeof(GUID)))

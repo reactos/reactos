@@ -17,6 +17,41 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /*
  * Unimplemented
  */
+HLOCAL
+WINAPI
+SHLocalAlloc(UINT uFlags, SIZE_T uBytes)
+{
+    FIXME("SHLocalAlloc() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+HLOCAL
+WINAPI
+SHLocalFree(HLOCAL hMem)
+{
+    FIXME("SHLocalFree() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+HLOCAL
+WINAPI
+SHLocalReAlloc(HLOCAL hMem,
+               SIZE_T uBytes,
+               UINT uFlags)
+{
+    FIXME("SHLocalReAlloc() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
 LPWSTR
 WINAPI
 AddCommasW(DWORD dwUnknown, LPWSTR lpNumber)
@@ -901,7 +936,7 @@ PifMgr_CloseProperties(HANDLE hHandle, UINT uUnknown)
 BOOL
 WINAPI
 DAD_DragEnterEx2(HWND hwndTarget,
-                 const POINT ptStart,
+                 POINT ptStart,
                  IDataObject *pdtObject)
 {
     FIXME("DAD_DragEnterEx2() stub\n");

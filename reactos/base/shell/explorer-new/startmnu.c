@@ -288,14 +288,14 @@ CreateStartContextMenu(IN HWND hWndOwner,
 
 static const IStartMenuSiteVtbl IStartMenuSiteImpl_Vtbl;
 static const IServiceProviderVtbl IServiceProviderImpl_Vtbl;
-static const IStartMenuCallbackVtbl IStartMenuCallbackImpl_Vtbl;
+static const ITrayPrivVtbl ITrayPrivImpl_Vtbl;
 static const IOleCommandTargetVtbl IOleCommandTargetImpl_Vtbl;
 
 typedef struct
 {
     const IStartMenuSiteVtbl *lpVtbl;
     const IServiceProviderVtbl *lpServiceProviderVtbl;
-    const IStartMenuCallbackVtbl *lpStartMenuCallbackVtbl;
+    const ITrayPrivVtbl *lpStartMenuCallbackVtbl;
     const IOleCommandTargetVtbl *lpOleCommandTargetVtbl;
     LONG Ref;
 
@@ -310,7 +310,7 @@ IUnknown_from_IStartMenuSiteImpl(IStartMenuSiteImpl *This)
 
 IMPL_CASTS(IStartMenuSite, IStartMenuSite, lpVtbl)
 IMPL_CASTS(IServiceProvider, IStartMenuSite, lpServiceProviderVtbl)
-IMPL_CASTS(IStartMenuCallback, IStartMenuSite, lpStartMenuCallbackVtbl)
+IMPL_CASTS(ITrayPriv, IStartMenuSite, lpStartMenuCallbackVtbl)
 IMPL_CASTS(IOleCommandTarget, IStartMenuSite, lpOleCommandTargetVtbl)
 
 /*******************************************************************/
@@ -368,11 +368,11 @@ IStartMenuSiteImpl_QueryInterface(IN OUT IStartMenuSite *iface,
         *ppvObj = IServiceProvider_from_IStartMenuSiteImpl(This);
     }
     else if (IsEqualIID(riid,
-                        &IID_IStartMenuCallback) ||
+                        &IID_ITrayPriv) ||
              IsEqualIID(riid,
                         &IID_IOleWindow))
     {
-        *ppvObj = IStartMenuCallback_from_IStartMenuSiteImpl(This);
+        *ppvObj = ITrayPriv_from_IStartMenuSiteImpl(This);
     }
     else if (IsEqualIID(riid,
                         &IID_IOleCommandTarget))
@@ -440,16 +440,16 @@ static const IServiceProviderVtbl IServiceProviderImpl_Vtbl =
 
 /*******************************************************************/
 
-METHOD_IUNKNOWN_INHERITED_ADDREF(IStartMenuCallback, IStartMenuSite)
-METHOD_IUNKNOWN_INHERITED_RELEASE(IStartMenuCallback, IStartMenuSite)
-METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE(IStartMenuCallback, IStartMenuSite)
+METHOD_IUNKNOWN_INHERITED_ADDREF(ITrayPriv, IStartMenuSite)
+METHOD_IUNKNOWN_INHERITED_RELEASE(ITrayPriv, IStartMenuSite)
+METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE(ITrayPriv, IStartMenuSite)
 
 static HRESULT STDMETHODCALLTYPE
-IStartMenuSiteImpl_GetWindow(IN OUT IStartMenuCallback *iface,
+IStartMenuSiteImpl_GetWindow(IN OUT ITrayPriv *iface,
                              OUT HWND *phwnd)
 {
-    IStartMenuSiteImpl *This = IStartMenuSiteImpl_from_IStartMenuCallback(iface);
-    DbgPrint("IStartMenuCallback::GetWindow\n");
+    IStartMenuSiteImpl *This = IStartMenuSiteImpl_from_ITrayPriv(iface);
+    DbgPrint("ITrayPriv::GetWindow\n");
 
     *phwnd = ITrayWindow_GetHWND(This->Tray);
     if (*phwnd != NULL)
@@ -459,24 +459,24 @@ IStartMenuSiteImpl_GetWindow(IN OUT IStartMenuCallback *iface,
 }
 
 static HRESULT STDMETHODCALLTYPE
-IStartMenuSiteImpl_ContextSensitiveHelp(IN OUT IStartMenuCallback *iface,
+IStartMenuSiteImpl_ContextSensitiveHelp(IN OUT ITrayPriv *iface,
                                         IN BOOL fEnterMode)
 {
-    DbgPrint("IStartMenuCallback::ContextSensitiveHelp\n");
+    DbgPrint("ITrayPriv::ContextSensitiveHelp\n");
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE
-IStartMenuSiteImpl_Execute(IN OUT IStartMenuCallback *iface,
+IStartMenuSiteImpl_Execute(IN OUT ITrayPriv *iface,
                            IN IShellFolder *pShellFolder,
                            IN LPCITEMIDLIST pidl)
 {
     HMODULE hShlwapi;
     HRESULT ret = S_FALSE;
 
-    IStartMenuSiteImpl *This = IStartMenuSiteImpl_from_IStartMenuCallback(iface);
+    IStartMenuSiteImpl *This = IStartMenuSiteImpl_from_ITrayPriv(iface);
 
-    DbgPrint("IStartMenuCallback::Execute\n");
+    DbgPrint("ITrayPriv::Execute\n");
 
     hShlwapi = GetModuleHandle(TEXT("SHLWAPI.DLL"));
     if (hShlwapi != NULL)
@@ -498,13 +498,13 @@ IStartMenuSiteImpl_Execute(IN OUT IStartMenuCallback *iface,
 }
 
 static HRESULT STDMETHODCALLTYPE
-IStartMenuSiteImpl_Unknown(IN OUT IStartMenuCallback *iface,
+IStartMenuSiteImpl_Unknown(IN OUT ITrayPriv *iface,
                            IN PVOID Unknown1,
                            IN PVOID Unknown2,
                            IN PVOID Unknown3,
                            IN PVOID Unknown4)
 {
-    DbgPrint("IStartMenuCallback::Unknown(0x%p,0x%p,0x%p,0x%p)\n", Unknown1, Unknown2, Unknown3, Unknown4);
+    DbgPrint("ITrayPriv::Unknown(0x%p,0x%p,0x%p,0x%p)\n", Unknown1, Unknown2, Unknown3, Unknown4);
     return E_NOTIMPL;
 }
 
@@ -525,7 +525,7 @@ ShowSynchronizeMenuItem(VOID)
 }
 
 static HRESULT STDMETHODCALLTYPE
-IStartMenuSiteImpl_AppendMenu(IN OUT IStartMenuCallback *iface,
+IStartMenuSiteImpl_AppendMenu(IN OUT ITrayPriv *iface,
                               OUT HMENU* phMenu)
 {
     HMENU hMenu, hSettingsMenu;
@@ -534,7 +534,7 @@ IStartMenuSiteImpl_AppendMenu(IN OUT IStartMenuCallback *iface,
     UINT uLastItemsCount = 5; /* 5 menu items below the last separator */
     TCHAR szUser[128];
 
-    DbgPrint("IStartMenuCallback::AppendMenu\n");
+    DbgPrint("ITrayPriv::AppendMenu\n");
 
     hMenu = LoadPopupMenu(hExplorerInstance,
                           MAKEINTRESOURCE(IDM_STARTMENU));
@@ -711,16 +711,16 @@ IStartMenuSiteImpl_AppendMenu(IN OUT IStartMenuCallback *iface,
     return S_OK;
 }
 
-static const IStartMenuCallbackVtbl IStartMenuCallbackImpl_Vtbl =
+static const ITrayPrivVtbl ITrayPrivImpl_Vtbl =
 {
     /*** IUnknown methods ***/
-    METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE_NAME(IStartMenuCallback, IStartMenuSite),
-    METHOD_IUNKNOWN_INHERITED_ADDREF_NAME(IStartMenuCallback, IStartMenuSite),
-    METHOD_IUNKNOWN_INHERITED_RELEASE_NAME(IStartMenuCallback, IStartMenuSite),
+    METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE_NAME(ITrayPriv, IStartMenuSite),
+    METHOD_IUNKNOWN_INHERITED_ADDREF_NAME(ITrayPriv, IStartMenuSite),
+    METHOD_IUNKNOWN_INHERITED_RELEASE_NAME(ITrayPriv, IStartMenuSite),
     /*** IOleWindow methods ***/
     IStartMenuSiteImpl_GetWindow,
     IStartMenuSiteImpl_ContextSensitiveHelp,
-    /*** IStartMenuCallback methods ***/
+    /*** ITrayPriv methods ***/
     IStartMenuSiteImpl_Execute,
     IStartMenuSiteImpl_Unknown,
     IStartMenuSiteImpl_AppendMenu
@@ -782,7 +782,7 @@ IStartMenuSiteImpl_Construct(IN ITrayWindow *Tray)
 
     This->lpVtbl = &IStartMenuSiteImpl_Vtbl;
     This->lpServiceProviderVtbl = &IServiceProviderImpl_Vtbl;
-    This->lpStartMenuCallbackVtbl = &IStartMenuCallbackImpl_Vtbl;
+    This->lpStartMenuCallbackVtbl = &ITrayPrivImpl_Vtbl;
     This->lpOleCommandTargetVtbl = &IOleCommandTargetImpl_Vtbl;
     This->Ref = 1;
 

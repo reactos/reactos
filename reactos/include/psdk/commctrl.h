@@ -1935,6 +1935,8 @@ static const WCHAR REBARCLASSNAMEW[] = { 'R','e','B','a','r',
 #define RBN_MINMAX              (RBN_FIRST-21)
 #define RBN_AUTOBREAK           (RBN_FIRST-22)
 
+#define RBSTR_CHANGERECT            0x0001
+
 typedef struct tagREBARINFO
 {
     UINT     cbSize;

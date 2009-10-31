@@ -31,7 +31,7 @@ static const IDeskBandVtbl IDeskBandImpl_Vtbl;
 static const IObjectWithSiteVtbl IObjectWithSiteImpl_Vtbl;
 static const IDeskBarVtbl IDeskBarImpl_Vtbl;
 static const IPersistStreamVtbl IPersistStreamImpl_Vtbl;
-static const IWindowEventHandlerVtbl IWindowEventHandlerImpl_Vtbl;
+static const IWinEventHandlerVtbl IWinEventHandlerImpl_Vtbl;
 
 typedef struct
 {
@@ -40,7 +40,7 @@ typedef struct
     const IObjectWithSiteVtbl *lpObjectWithSiteVtbl;
     const IDeskBarVtbl *lpDeskBarVtbl;
     const IPersistStreamVtbl *lpPersistStreamVtbl;
-    const IWindowEventHandlerVtbl *lpWindowEventHandlerVtbl;
+    const IWinEventHandlerVtbl *lpWindowEventHandlerVtbl;
     /* FIXME: Implement IOleCommandTarget */
     LONG Ref;
 
@@ -62,7 +62,7 @@ IMPL_CASTS(IDeskBand, ITaskBand, lpDeskBandVtbl)
 IMPL_CASTS(IObjectWithSite, ITaskBand, lpObjectWithSiteVtbl)
 IMPL_CASTS(IDeskBar, ITaskBand, lpDeskBarVtbl)
 IMPL_CASTS(IPersistStream, ITaskBand, lpPersistStreamVtbl)
-IMPL_CASTS(IWindowEventHandler, ITaskBand, lpWindowEventHandlerVtbl)
+IMPL_CASTS(IWinEventHandler, ITaskBand, lpWindowEventHandlerVtbl)
 
 static ULONG STDMETHODCALLTYPE
 ITaskBandImpl_AddRef(IN OUT ITaskBand *iface)
@@ -137,7 +137,7 @@ ITaskBandImpl_QueryInterface(IN OUT ITaskBand *iface,
         *ppvObj = IDeskBar_from_ITaskBandImpl(This);
     }
     else if (IsEqualIID(riid,
-                        &IID_IWindowEventHandler))
+                        &IID_IWinEventHandler))
     {
         /* When run on Windows the system queries this interface, which is completely
            undocumented :( It's queried during initialization of the tray band site.
@@ -149,7 +149,7 @@ ITaskBandImpl_QueryInterface(IN OUT ITaskBand *iface,
            interface in the ITaskBand implementation is only actually used if we use
            the same interface to forward messages to the IBandSite implementation of
            the shell! */
-        *ppvObj = IWindowEventHandler_from_ITaskBandImpl(This);
+        *ppvObj = IWinEventHandler_from_ITaskBandImpl(This);
     }
 #if 0
     else if (IsEqualIID(riid,
@@ -575,27 +575,27 @@ static const IObjectWithSiteVtbl IObjectWithSiteImpl_Vtbl =
 
 /*****************************************************************************/
 
-METHOD_IUNKNOWN_INHERITED_ADDREF(IWindowEventHandler, ITaskBand)
-METHOD_IUNKNOWN_INHERITED_RELEASE(IWindowEventHandler, ITaskBand)
-METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE(IWindowEventHandler, ITaskBand)
+METHOD_IUNKNOWN_INHERITED_ADDREF(IWinEventHandler, ITaskBand)
+METHOD_IUNKNOWN_INHERITED_RELEASE(IWinEventHandler, ITaskBand)
+METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE(IWinEventHandler, ITaskBand)
 
 static HRESULT STDMETHODCALLTYPE
-IWindowEventHandlerImpl_ProcessMessage(IN OUT IWindowEventHandler *iface,
+IWinEventHandlerImpl_ProcessMessage(IN OUT IWinEventHandler *iface,
                                        IN HWND hWnd,
                                        IN UINT uMsg,
                                        IN WPARAM wParam,
                                        IN LPARAM lParam,
                                        OUT LRESULT *plrResult)
 {
-    DbgPrint("ITaskBand: IWindowEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
+    DbgPrint("ITaskBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE
-IWindowEventHandlerImpl_ContainsWindow(IN OUT IWindowEventHandler *iface,
+IWinEventHandlerImpl_ContainsWindow(IN OUT IWinEventHandler *iface,
                                        IN HWND hWnd)
 {
-    ITaskBandImpl *This = ITaskBandImpl_from_IWindowEventHandler(iface);
+    ITaskBandImpl *This = ITaskBandImpl_from_IWinEventHandler(iface);
     HRESULT hRet = S_OK;
 
     if (This->hWnd != hWnd ||
@@ -610,15 +610,15 @@ IWindowEventHandlerImpl_ContainsWindow(IN OUT IWindowEventHandler *iface,
     return hRet;
 }
 
-static const IWindowEventHandlerVtbl IWindowEventHandlerImpl_Vtbl =
+static const IWinEventHandlerVtbl IWinEventHandlerImpl_Vtbl =
 {
     /*** IUnknown methods ***/
-    METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE_NAME(IWindowEventHandler, ITaskBand),
-    METHOD_IUNKNOWN_INHERITED_ADDREF_NAME(IWindowEventHandler, ITaskBand),
-    METHOD_IUNKNOWN_INHERITED_RELEASE_NAME(IWindowEventHandler, ITaskBand),
-    /*** IWindowEventHandler methods ***/
-    IWindowEventHandlerImpl_ProcessMessage,
-    IWindowEventHandlerImpl_ContainsWindow
+    METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE_NAME(IWinEventHandler, ITaskBand),
+    METHOD_IUNKNOWN_INHERITED_ADDREF_NAME(IWinEventHandler, ITaskBand),
+    METHOD_IUNKNOWN_INHERITED_RELEASE_NAME(IWinEventHandler, ITaskBand),
+    /*** IWinEventHandler methods ***/
+    IWinEventHandlerImpl_ProcessMessage,
+    IWinEventHandlerImpl_ContainsWindow
 };
 
 /*****************************************************************************/
@@ -641,7 +641,7 @@ ITaskBandImpl_Construct(IN OUT ITrayWindow *Tray)
     This->lpObjectWithSiteVtbl = &IObjectWithSiteImpl_Vtbl;
     This->lpDeskBarVtbl = &IDeskBarImpl_Vtbl;
     This->lpPersistStreamVtbl = &IPersistStreamImpl_Vtbl;
-    This->lpWindowEventHandlerVtbl = &IWindowEventHandlerImpl_Vtbl;
+    This->lpWindowEventHandlerVtbl = &IWinEventHandlerImpl_Vtbl;
     This->Ref = 1;
 
     This->Tray = Tray;

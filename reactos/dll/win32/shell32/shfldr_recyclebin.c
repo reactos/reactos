@@ -152,16 +152,16 @@ static HRESULT WINAPI RecycleBin_QueryInterface(IShellFolder2 *iface, REFIID rii
 
     if (IsEqualGUID(riid, &IID_IPersist) || IsEqualGUID(riid, &IID_IPersistFolder)
             || IsEqualGUID(riid, &IID_IPersistFolder2))
-        *ppvObject = &This->lpPersistFolderVtbl;
+        *ppvObject = (void *)&This->lpPersistFolderVtbl;
 
 	else if (IsEqualIID(riid, &IID_IContextMenu) || IsEqualGUID(riid, &IID_IContextMenu2))
     {
         This->lpContextMenu2 = &recycleBincmVtblFolder;
-        *ppvObject = &This->lpContextMenu2;
+        *ppvObject = (void *)&This->lpContextMenu2;
     }
 	else if(IsEqualIID(riid, &IID_IShellExtInit))
     {
-        *ppvObject = &(This->lpSEI);
+        *ppvObject = (void *)&(This->lpSEI);
     }
 
     if (*ppvObject != NULL)
@@ -429,7 +429,7 @@ static HRESULT WINAPI RecycleBin_CreateViewObject(IShellFolder2 *iface, HWND hwn
     else if (IsEqualIID (riid, &IID_IContextMenu) || IsEqualIID (riid, &IID_IContextMenu2))
     {
         This->lpContextMenu2 = &recycleBincmVtblFolder;
-        *ppv = &This->lpContextMenu2;
+        *ppv = (void *)&This->lpContextMenu2;
         This->refCount++;
         hr = S_OK;
     }

@@ -45,7 +45,7 @@ typedef struct _SHDESK
     HWND hWnd;
     HWND hWndShellView;
     HWND hWndDesktopListView;
-    IShellDesktop *ShellDesk;
+    IShellDesktopTray *ShellDesk;
     IShellView *DesktopView;
     IShellBrowser *DefaultShellBrowser;
     LPITEMIDLIST pidlDesktopDirectory;
@@ -104,7 +104,7 @@ static void
 SHDESK_Free(SHDESK *This)
 {
     if (This->ShellDesk != NULL)
-        IShellDesktop_Release(This->ShellDesk);
+        IShellDesktopTray_Release(This->ShellDesk);
 
     if (This->DesktopView != NULL)
     {
@@ -202,12 +202,12 @@ static PSHDESK
 SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 {
     IShellFolder *psfDesktopFolder;
-    IShellDesktop *ShellDesk;
+    IShellDesktopTray *ShellDesk;
     CSFV csfv;
     SHDESK *This;
     HRESULT hRet;
 
-    ShellDesk = (IShellDesktop *)lpCreateStruct->lpCreateParams;
+    ShellDesk = (IShellDesktopTray *)lpCreateStruct->lpCreateParams;
     if (ShellDesk == NULL)
     {
         WARN("No IShellDesk interface provided!");
@@ -226,7 +226,7 @@ SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     This->Ref = 1;
     This->hWnd = hWnd;
     This->ShellDesk = ShellDesk;
-    IShellDesktop_AddRef(ShellDesk);
+    IShellDesktopTray_AddRef(ShellDesk);
 
     This->pidlDesktopDirectory = SHCloneSpecialIDList(This->hWnd, CSIDL_DESKTOPDIRECTORY, FALSE);
     hRet = SHGetSpecialFolderLocation(This->hWnd, CSIDL_DESKTOP, &This->pidlDesktop);
@@ -632,7 +632,7 @@ ProgmanWindowProc(IN HWND hwnd,
 
             case WM_CREATE:
             {
-                IShellDesktop_RegisterDesktopWindow(This->ShellDesk,
+                IShellDesktopTray_RegisterDesktopWindow(This->ShellDesk,
                                                     This->hWnd);
 
                 if (!SHDESK_CreateDeskWnd(This))
@@ -698,7 +698,7 @@ RegisterProgmanWindowClass(VOID)
  * SHCreateDesktop			[SHELL32.200]
  *
  */
-HANDLE WINAPI SHCreateDesktop(IShellDesktop *ShellDesk)
+HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
 {
     HWND hWndDesk;
     RECT rcDesk;
