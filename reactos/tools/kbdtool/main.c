@@ -26,8 +26,8 @@ FILE* gfpInput;
 
 /* FUNCTIONS ******************************************************************/
 
-void 
-usage()
+VOID 
+PrintUsage(VOID)
 {
     /* This is who we are */
     printf("\nKbdTool v%d.%02d - convert keyboard text file to C file or a keyboard layout DLL\n\n",
@@ -57,9 +57,9 @@ usage()
     printf("should not be here");
 }
 
-int
-main(int argc,
-     char** argv)
+INT
+main(INT argc,
+     PCHAR* argv)
 {
     CHAR Option;
     PCHAR OpenFlags;
@@ -145,13 +145,13 @@ main(int argc,
             }
 
             /* If you got here, the options are invalid or missing */
-            usage();
+            PrintUsage();
         }
         break;
     }
     
     /* Do we have no options? */
-    if (optind == argc) usage();
+    if (optind == argc) PrintUsage();
 
     /* Should we announce ourselves? */
     if (!NoLogo)
@@ -213,6 +213,12 @@ main(int argc,
         /* Now inform the user */
         printf("Compiling layout information from '%s' for %s.\n", gpszFileName, BuildOptions);
     }
+       
+    /* Now parse the keywords */
+    DoParsing();
+    
+    /* We are done */
+    fclose(gfpInput);
     
     /* Now do something... */
     printf("Like a rock...\n");
