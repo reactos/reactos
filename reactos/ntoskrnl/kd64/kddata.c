@@ -36,9 +36,9 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 
 #elif defined(_M_ARM)
 
-//#define KPCR_SELF_OFFSET
+#define KPCR_SELF_OFFSET               0
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
-//#define KPCR_CONTAINED_PRCB_OFFSET
+#define KPCR_CONTAINED_PRCB_OFFSET     0
 
 #else
 #error Unsupported Architecture
@@ -485,7 +485,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {(ULONG_PTR)KdPrintDefaultCircularBuffer},
     {(ULONG_PTR)&KdPrintBufferSize},
     {(ULONG_PTR)&KeLoaderBlock},
-    sizeof(KPCR) + sizeof(KPRCB),
+    sizeof(KPCR),
     KPCR_SELF_OFFSET,
     KPCR_CURRENT_PRCB_OFFSET,
     KPCR_CONTAINED_PRCB_OFFSET,
@@ -494,7 +494,6 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     0,
     0,
     0,
-    KPCR_CONTAINED_PRCB_OFFSET +
     FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
 #if defined(_M_IX86)
     //
