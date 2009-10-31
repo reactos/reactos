@@ -297,6 +297,20 @@ KdpSuspendAllBreakPoints(
 );
 
 //
+// Safe memory read & write Support
+//
+NTSTATUS
+NTAPI
+KdpCopyMemoryChunks(
+    IN ULONG64 Address,
+    IN PVOID Buffer,
+    IN ULONG TotalSize,
+    IN ULONG ChunkSize,
+    IN ULONG Flags,
+    OUT PULONG ActualSize OPTIONAL
+);
+
+//
 // Architecture dependent support routines
 //
 

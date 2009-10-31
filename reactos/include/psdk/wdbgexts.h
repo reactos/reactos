@@ -285,7 +285,11 @@ typedef struct _KDDEBUGGER_DATA64
     USHORT Gdt64R3CmTeb;
     GCC_ULONG64 IopNumTriageDumpDataBlocks;
     GCC_ULONG64 IopTriageDumpDataBlocks;
+#if 0 // Longhorn/Vista and later
     GCC_ULONG64 VfCrashDataBlock;
+    GCC_ULONG64 MmBadPagesDetected;
+    GCC_ULONG64 MmZeroedPageSingleBitErrorsDetected;
+#endif
 } KDDEBUGGER_DATA64, *PKDDEBUGGER_DATA64;
 
 #endif

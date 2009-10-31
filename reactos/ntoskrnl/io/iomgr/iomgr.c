@@ -39,6 +39,8 @@ LARGE_INTEGER IoWriteTransferCount = {{0, 0}};
 ULONG IoOtherOperationCount = 0;
 LARGE_INTEGER IoOtherTransferCount = {{0, 0}};
 KSPIN_LOCK IoStatisticsLock = 0;
+ULONG IopNumTriageDumpDataBlocks;
+PVOID IopTriageDumpDataBlocks[64];
 
 GENERIC_MAPPING IopFileMapping = {
     FILE_GENERIC_READ,

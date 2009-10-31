@@ -78,6 +78,7 @@ static KSPIN_LOCK PagingFileListLock;
 
 /* Number of paging files */
 static ULONG MiPagingFileCount;
+ULONG MmNumberOfPagingFiles;
 
 /* Number of pages that are available for swapping */
 ULONG MiFreeSwapPages;

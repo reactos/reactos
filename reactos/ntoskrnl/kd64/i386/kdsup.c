@@ -160,7 +160,7 @@ KdpSysReadBusData(IN ULONG BusDataType,
                                           Length);
 
     /* Return status */
-    return (*ActualLength != 0) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return *ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -182,7 +182,7 @@ KdpSysWriteBusData(IN ULONG BusDataType,
                                           Length);
 
     /* Return status */
-    return (*ActualLength != 0) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return *ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -209,12 +209,13 @@ KdpSysReadControlSpace(IN ULONG Processor,
                                (ULONG_PTR)&KiProcessorBlock[Processor]->
                                            ProcessorState);
 
-        /* Copy the memory */
-        RtlCopyMemory(Buffer, ControlStart, Length);
-
-        /* Finish up */
-        *ActualLength = Length;
-        return STATUS_SUCCESS;
+        /* Read the control state safely */
+        return KdpCopyMemoryChunks((ULONG_PTR)Buffer,
+                                   ControlStart,
+                                   Length,
+                                   0,
+                                   MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE,
+                                   ActualLength);
     }
     else
     {
@@ -243,12 +244,13 @@ KdpSysWriteControlSpace(IN ULONG Processor,
                                (ULONG_PTR)&KiProcessorBlock[Processor]->
                                            ProcessorState);
 
-        /* Copy the memory */
-        RtlCopyMemory(ControlStart, Buffer, Length);
-
-        /* Finish up */
-        *ActualLength = Length;
-        return STATUS_SUCCESS;
+        /* Write the control state safely */
+        return KdpCopyMemoryChunks((ULONG_PTR)Buffer,
+                                   ControlStart,
+                                   Length,
+                                   0,
+                                   MMDBG_COPY_UNSAFE,
+                                   ActualLength);
     }
     else
     {

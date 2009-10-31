@@ -24,65 +24,72 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
                     IN ULONG Flags,
                     OUT PULONG ActualSize OPTIONAL)
 {
-    ULONG Length;
     NTSTATUS Status;
+    ULONG RemainingLength, CopyChunk;
 
-    /* Check if this is physical or virtual copy */
-    if (Flags & MMDBG_COPY_PHYSICAL)
+    /* Check if we didn't get a chunk size or if it is too big */
+    if (ChunkSize == 0)
     {
-        /* Fail physical memory read/write for now */
-        if (Flags & MMDBG_COPY_WRITE)
-        {
-            KdpDprintf("KdpCopyMemoryChunks: Failing write for Physical Address 0x%I64x Length: %x\n",
-                       Address,
-                       TotalSize);
-        }
-        else
-        {
-            KdpDprintf("KdpCopyMemoryChunks: Failing read for Physical Address 0x%I64x Length: %x\n",
-                       Address,
-                       TotalSize);
-        }
-
-        /* Return an error */
-        Length = 0;
-        Status = STATUS_UNSUCCESSFUL;
+        /* Default to 4 byte chunks */
+        ChunkSize = 4;
     }
-    else
+    else if (ChunkSize > MMDBG_COPY_MAX_SIZE)
     {
-        /* Protect against NULL */
-        if (!Address)
-        {
-            if (ActualSize) *ActualSize = 0;
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        /* Check if this is read or write */
-        if (Flags & MMDBG_COPY_WRITE)
-        {
-            /* Do the write */
-            RtlCopyMemory((PVOID)(ULONG_PTR)Address,
-                          Buffer,
-                          TotalSize);
-        }
-        else
-        {
-            /* Do the read */
-            RtlCopyMemory(Buffer,
-                          (PVOID)(ULONG_PTR)Address,
-                          TotalSize);
-        }
-
-        /* Set size and status */
-        Length = TotalSize;
-        Status = STATUS_SUCCESS;
+        /* Normalize to maximum size */
+        ChunkSize = MMDBG_COPY_MAX_SIZE;
     }
 
-    /* Return the actual length if requested */
-    if (ActualSize) *ActualSize = Length;
+    /* Copy the whole range in page aligned chunks */
+    RemainingLength = TotalSize;
+    CopyChunk = 1;
+    while (RemainingLength > 0)
+    {
+        /*
+         * Determine the best chunk size for this round.
+         * The ideal size is page aligned, isn't larger than the
+         * the remaining length and respects the chunk limit.
+         */
+        while (((CopyChunk * 2) <= RemainingLength) &&
+               (CopyChunk < ChunkSize) &&
+               ((Address & ((CopyChunk * 2) - 1)) == 0))
+        {
+            /* Increase it */
+            CopyChunk = CopyChunk * 2;
+        }
 
-    /* Return status */
-    return Status;
+        /*
+         * The chunk size can be larger than the remaining size if this isn't
+         * the first round, so check if we need to shrink it back
+         */
+        while (CopyChunk > RemainingLength)
+        {
+            /* Shrink it */
+            CopyChunk /= 2;
+        }
+
+        /* Do the copy */
+        Status = MmDbgCopyMemory(Address,
+                                 Buffer,
+                                 CopyChunk,
+                                 Flags);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Copy failed, break out */
+            break;
+        }
+
+        /* Update pointers and length for the next run */
+        Address = Address + CopyChunk;
+        Buffer = (PVOID)((ULONG_PTR)Buffer + CopyChunk);
+        RemainingLength = RemainingLength - CopyChunk;
+    }
+
+    /*
+     * Return the size we managed to copy
+     * and return success if we could copy the whole range
+     */
+    if (ActualSize) *ActualSize = TotalSize - RemainingLength;
+    return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 VOID
@@ -269,7 +276,7 @@ KdpSetCommonState(IN ULONG NewState,
                   IN PCONTEXT Context,
                   IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange)
 {
-    USHORT InstructionCount;
+    ULONG InstructionCount;
     BOOLEAN HadBreakpoints;
 
     /* Setup common stuff available for all CPU architectures */
@@ -285,10 +292,12 @@ KdpSetCommonState(IN ULONG NewState,
                   sizeof(DBGKD_ANY_CONTROL_REPORT));
 
     /* Now copy the instruction stream and set the count */
-    RtlCopyMemory(&WaitStateChange->ControlReport.InstructionStream[0],
-                  (PVOID)(ULONG_PTR)WaitStateChange->ProgramCounter,
-                  DBGKD_MAXSTREAM);
-    InstructionCount = DBGKD_MAXSTREAM;
+    KdpCopyMemoryChunks((ULONG_PTR)WaitStateChange->ProgramCounter,
+                        &WaitStateChange->ControlReport.InstructionStream[0],
+                        DBGKD_MAXSTREAM,
+                        0,
+                        MMDBG_COPY_UNSAFE,
+                        &InstructionCount);
     WaitStateChange->ControlReport.InstructionCount = InstructionCount;
 
     /* Clear all the breakpoints in this region */
@@ -299,9 +308,12 @@ KdpSetCommonState(IN ULONG NewState,
     if (HadBreakpoints)
     {
         /* Copy the instruction stream again, this time without breakpoints */
-        RtlCopyMemory(&WaitStateChange->ControlReport.InstructionStream[0],
-                      (PVOID)(ULONG_PTR)WaitStateChange->ProgramCounter,
-                      WaitStateChange->ControlReport.InstructionCount);
+        KdpCopyMemoryChunks((ULONG_PTR)WaitStateChange->ProgramCounter,
+                            &WaitStateChange->ControlReport.InstructionStream[0],
+                            InstructionCount,
+                            0,
+                            MMDBG_COPY_UNSAFE,
+                            NULL);
     }
 }
 
@@ -1297,6 +1309,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
     PSTRING ExtraData;
     STRING Data, Header;
     DBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange;
+    ULONG PathNameLength;
     KCONTINUE_STATUS Status;
 
     /* Start wait loop */
@@ -1317,14 +1330,27 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
         WaitStateChange.u.LoadSymbols.CheckSum = SymbolInfo->CheckSum;
         WaitStateChange.u.LoadSymbols.SizeOfImage = SymbolInfo->SizeOfImage;
 
-        /* Check if we have a symbol name */
+        /* Check if we have a path name */
         if (PathName)
         {
-            /* Setup the information */
-            WaitStateChange.u.LoadSymbols.PathNameLength = PathName->Length;
-            RtlCopyMemory(KdpPathBuffer, PathName->Buffer, PathName->Length);
+            /* Copy it to the path buffer */
+            KdpCopyMemoryChunks((ULONG_PTR)PathName->Buffer,
+                                KdpPathBuffer,
+                                PathName->Length,
+                                0,
+                                MMDBG_COPY_UNSAFE,
+                                &PathNameLength);
+
+            /* Null terminate */
+            KdpPathBuffer[PathNameLength] = ANSI_NULL;
+            PathNameLength++;
+
+            /* Set the path length */
+            WaitStateChange.u.LoadSymbols.PathNameLength = PathNameLength;
+
+            /* Set up the data */
             Data.Buffer = KdpPathBuffer;
-            Data.Length = WaitStateChange.u.LoadSymbols.PathNameLength;
+            Data.Length = PathNameLength;
             ExtraData = &Data;
         }
         else

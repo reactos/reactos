@@ -405,6 +405,7 @@
 		<file>dbgpool.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
+		<file>mmdbg.c</file>
 		<file>mmfault.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>

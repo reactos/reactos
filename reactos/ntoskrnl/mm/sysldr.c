@@ -28,10 +28,17 @@ sprintf_nt(IN PCHAR Buffer,
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY PsLoadedModuleList;
+LIST_ENTRY MmLoadedUserImageList;
 KSPIN_LOCK PsLoadedModuleSpinLock;
 ULONG_PTR PsNtosImageBase;
 KMUTANT MmSystemLoadLock;
 extern ULONG NtGlobalFlag;
+
+PVOID MmUnloadedDrivers;
+PVOID MmLastUnloadedDrivers;
+PVOID MmTriageActionTaken;
+PVOID KernelVerifier;
+MM_DRIVER_VERIFIER_DATA MmVerifierData;
 
 /* FUNCTIONS *****************************************************************/
 
