@@ -23,8 +23,12 @@ extern PCHAR gpszFileName;
 extern FILE* gfpInput;
 CHAR gBuf[256];
 CHAR gKBDName[10];
+CHAR gCopyright[256];
 CHAR gDescription[256];
+CHAR gCompany[256];
+CHAR gLocaleName[256];
 ULONG gID = 0;
+ULONG gKbdLayoutVersion;
 CHAR g_Layout[4096];
 ULONG gLineCount;
 PCHAR KeyWordList[KEYWORD_COUNT] =
@@ -132,8 +136,6 @@ SkipLines(VOID)
 ULONG
 DoKBD(VOID)
 {    
-    PCHAR p;
-    
     /* On Unicode files, we need to find the Unicode marker (FEEF) */
     ASSERT(UnicodeFile == FALSE);
     
@@ -156,25 +158,70 @@ DoKBD(VOID)
 
 ULONG
 DoVERSION(VOID)
-{    
+{           
+    /* Scan for the value */
+    if (sscanf(gBuf, "VERSION %d", &gKbdLayoutVersion) < 1)
+    {
+        /* Couldn't find them */
+        printf("Unable to read keyboard version information.\n");
+    }
+    
+    /* Debug only */
+    DPRINT1("VERSION [%d]\n", gKbdLayoutVersion);
     return SkipLines();
 }
 
 ULONG
 DoCOPYRIGHT(VOID)
 {    
+    /* Initial values */
+    *gCopyright = '\0';
+    
+    /* Scan for the value */
+    if (sscanf(gBuf, "COPYRIGHT \"%40[^\"]\"", gCopyright) < 1)
+    {
+        /* Couldn't find them */
+        printf("Unable to read the specified COPYRIGHT string.\n");
+    }
+    
+    /* Debug only */
+    DPRINT1("COPYRIGHT [%40s]\n", gCopyright);
     return SkipLines();
 }
 
 ULONG
 DoCOMPANY(VOID)
 {    
+    /* Initial values */
+    *gCompany = '\0';
+    
+    /* Scan for the value */
+    if (sscanf(gBuf, "COMPANY \"%85[^\"]\"", gCompany) < 1)
+    {
+        /* Couldn't find them */
+        printf("Unable to read the specified COMPANY name.\n");
+    }
+    
+    /* Debug only */
+    DPRINT1("COMPANY [%85s]\n", gCompany);
     return SkipLines();
 }
 
 ULONG
 DoLOCALENAME(VOID)
 {    
+    /* Initial values */
+    *gLocaleName = '\0';
+    
+    /* Scan for the value */
+    if (sscanf(gBuf, "LOCALENAME \"%40[^\"]\"", gLocaleName) < 1)
+    {
+        /* Couldn't find them */
+        printf("Unable to read the specified COPYRIGHT string.\n");
+    }
+    
+    /* Debug only */
+    DPRINT1("LOCALENAME [%40s]\n", gLocaleName);
     return SkipLines();
 }
 
