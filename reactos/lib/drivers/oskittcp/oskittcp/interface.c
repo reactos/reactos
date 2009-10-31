@@ -76,9 +76,6 @@ void TimerOskitTCP( int FastTimer, int SlowTimer ) {
 
 void RegisterOskitTCPEventHandlers( POSKITTCP_EVENT_HANDLERS EventHandlers ) {
     memcpy( &OtcpEvent, EventHandlers, sizeof(OtcpEvent) );
-    if( OtcpEvent.PacketSend )
-	OS_DbgPrint(OSK_MID_TRACE,("SendPacket handler registered: %x\n",
-				   OtcpEvent.PacketSend));
 }
 
 void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
@@ -169,7 +166,7 @@ int OskitTCPRecv( void *connection,
     return error;
 }
 
-int OskitTCPBind( void *socket, void *connection,
+int OskitTCPBind( void *socket,
 		  void *nam, OSK_UINT namelen ) {
     int error = EFAULT;
     struct socket *so = socket;
@@ -177,6 +174,9 @@ int OskitTCPBind( void *socket, void *connection,
     struct sockaddr addr;
 
     OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
+
+    if (!socket)
+        return OSK_ESHUTDOWN;
 
     if( nam )
 	addr = *((struct sockaddr *)nam);
@@ -243,11 +243,18 @@ done:
 }
 
 int OskitTCPShutdown( void *socket, int disconn_type ) {
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
     return soshutdown( socket, disconn_type );
 }
 
 int OskitTCPClose( void *socket ) {
     struct socket *so = socket;
+
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
     so->so_connection = 0;
     soclose( so );
     return 0;
@@ -258,6 +265,9 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     int error;
     struct uio uio;
     struct iovec iov;
+
+    if (!socket)
+        return OSK_ESHUTDOWN;
 
     iov.iov_len = Len;
     iov.iov_base = (char *)Data;
@@ -292,6 +302,12 @@ int OskitTCPAccept( void *socket,
     struct mbuf mnam;
     struct inpcb *inp;
     int namelen = 0, error = 0, s;
+
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
+    if (!new_socket || !AddrOut)
+        return OSK_EINVAL;
 
     OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: Doing accept (Finish %d)\n",
 			       FinishAccepting));
@@ -436,6 +452,9 @@ int OskitTCPSetSockOpt(void *socket,
 {
     struct mbuf *m;
 
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
     if (size >= MLEN)
         return OSK_EINVAL;
 
@@ -460,6 +479,9 @@ int OskitTCPGetSockOpt(void *socket,
     int error, oldsize = *size;
     struct mbuf *m;
 
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
     error = sogetopt(socket, level, optname, &m);
     if (!error)
     {
@@ -482,6 +504,9 @@ int OskitTCPGetSockOpt(void *socket,
 int OskitTCPListen( void *socket, int backlog ) {
     int error;
 
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
     OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
     error = solisten( socket, backlog );
     OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
@@ -489,32 +514,44 @@ int OskitTCPListen( void *socket, int backlog ) {
     return error;
 }
 
-void OskitTCPSetAddress( void *socket,
+int OskitTCPSetAddress( void *socket,
 			 OSK_UINT LocalAddress,
 			 OSK_UI16 LocalPort,
 			 OSK_UINT RemoteAddress,
 			 OSK_UI16 RemotePort ) {
     struct socket *so = socket;
-    struct inpcb *inp = (struct inpcb *)so->so_pcb;
+    struct inpcb *inp;
+
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
+    inp = (struct inpcb *)so->so_pcb;
     inp->inp_laddr.s_addr = LocalAddress;
     inp->inp_lport = LocalPort;
     inp->inp_faddr.s_addr = RemoteAddress;
     inp->inp_fport = RemotePort;
+
+    return 0;
 }
 
-void OskitTCPGetAddress( void *socket,
+int OskitTCPGetAddress( void *socket,
 			 OSK_UINT *LocalAddress,
 			 OSK_UI16 *LocalPort,
 			 OSK_UINT *RemoteAddress,
 			 OSK_UI16 *RemotePort ) {
     struct socket *so = socket;
-    struct inpcb *inp = so ? (struct inpcb *)so->so_pcb : NULL;
-    if( inp ) {
-	*LocalAddress = inp->inp_laddr.s_addr;
-	*LocalPort = inp->inp_lport;
-	*RemoteAddress = inp->inp_faddr.s_addr;
-	*RemotePort = inp->inp_fport;
-    }
+    struct inpcb *inp;
+
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
+    inp = (struct inpcb *)so->so_pcb;
+    *LocalAddress = inp->inp_laddr.s_addr;
+    *LocalPort = inp->inp_lport;
+    *RemoteAddress = inp->inp_faddr.s_addr;
+    *RemotePort = inp->inp_fport;
+
+    return 0;
 }
 
 struct ifaddr *ifa_iffind(struct sockaddr *addr, int type)

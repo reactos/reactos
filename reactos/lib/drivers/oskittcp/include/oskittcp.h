@@ -127,7 +127,7 @@ extern int OskitTCPConnect( void *socket, void *connection,
 			    void *nam, OSK_UINT namelen );
 extern int OskitTCPClose( void *socket );
 
-extern int OskitTCPBind( void *socket, void *connection,
+extern int OskitTCPBind( void *socket,
 			 void *nam, OSK_UINT namelen );
 
 extern int OskitTCPAccept( void *socket, void **new_socket,
@@ -144,7 +144,7 @@ extern int OskitTCPRecv( void *connection,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
 
-void OskitTCPGetAddress( void *socket,
+int OskitTCPGetAddress( void *socket,
 			 OSK_UINT *LocalAddress,
 			 OSK_UI16 *LocalPort,
 			 OSK_UINT *RemoteAddress,
