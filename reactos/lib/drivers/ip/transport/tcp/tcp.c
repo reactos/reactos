@@ -563,8 +563,16 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
     case OSK_ECONNREFUSED:
     case OSK_ECONNRESET: Status = STATUS_REMOTE_NOT_LISTENING; break;
-    case OSK_EINPROGRESS:
-    case OSK_EAGAIN: Status = STATUS_PENDING; break;
+    case OSK_EINPROGRESS: Status = STATUS_PENDING; break;
+    case OSK_EWOULDBLOCK: Status = STATUS_CANT_WAIT; break;
+    case OSK_EINVAL: Status = STATUS_INVALID_PARAMETER; break;
+    case OSK_ENOMEM:
+    case OSK_ENOBUFS: Status = STATUS_INSUFFICIENT_RESOURCES; break;
+    case OSK_ESHUTDOWN: Status = STATUS_FILE_CLOSED; break;
+    case OSK_EMSGSIZE: Status = STATUS_BUFFER_TOO_SMALL; break;
+    case OSK_ETIMEDOUT: Status = STATUS_TIMEOUT; break;
+    case OSK_ENETUNREACH: Status = STATUS_NETWORK_UNREACHABLE; break;
+    case OSK_EFAULT: Status = STATUS_ACCESS_VIOLATION; break;
     default:
        DbgPrint("OskitTCP returned unhandled error code: %d\n", OskitError);
        Status = STATUS_INVALID_CONNECTION;
