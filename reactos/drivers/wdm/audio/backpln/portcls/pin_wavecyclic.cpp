@@ -218,7 +218,8 @@ PinWaveCyclicAudioPosition(
         else if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
             Position->PlayOffset = Pin->m_Position.PlayOffset % Pin->m_Position.WriteOffset;
-            Position->WriteOffset = Pin->m_IrpQueue->NumData();
+            Position->WriteOffset = (ULONGLONG)Pin->m_IrpQueue->GetCurrentIrpOffset();
+            DPRINT("Play %lu Write %lu\n", Position->PlayOffset, Position->WriteOffset);
         }
 
 
@@ -606,10 +607,7 @@ CPortPinWaveCyclic::HandleKsStream(
 
     if (NT_SUCCESS(Status))
     {
-        if (m_Capture)
-            m_Position.WriteOffset += Data;
-        else
-            m_Position.WriteOffset += Data;
+        m_Position.WriteOffset += Data;
 
         return STATUS_PENDING;
     }

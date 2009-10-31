@@ -35,7 +35,7 @@ public:
     virtual ~CIrpQueue(){}
 
 protected:
-    ULONG m_CurrentOffset;
+    volatile ULONG m_CurrentOffset;
     LONG m_NumMappings;
     ULONG m_NumDataAvailable;
     BOOL m_StartStream;
@@ -312,7 +312,7 @@ CIrpQueue::UpdateMapping(
    // ASSERT(StreamHeader);
 
     // add to current offset
-    m_CurrentOffset += BytesWritten;
+    InterlockedExchangeAdd((volatile PLONG)&m_CurrentOffset, (LONG)BytesWritten);
 
     // decrement available data counter
     m_NumDataAvailable -= BytesWritten;
@@ -559,11 +559,12 @@ CIrpQueue::HasLastMappingFailed()
     return m_OutOfMapping;
 }
 
-VOID
+ULONG
 NTAPI
-CIrpQueue::PrintQueueStatus()
+CIrpQueue::GetCurrentIrpOffset()
 {
 
+    return m_CurrentOffset;
 }
 
 VOID

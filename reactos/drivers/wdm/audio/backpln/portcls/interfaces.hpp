@@ -354,7 +354,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PVOID Tag) PURE;
 
     STDMETHOD_(BOOL, HasLastMappingFailed)(THIS) PURE;
-    STDMETHOD_(VOID, PrintQueueStatus)(THIS) PURE;
+    STDMETHOD_(ULONG, GetCurrentIrpOffset)(THIS) PURE;
     STDMETHOD_(VOID, SetMinimumDataThreshold)(THIS_
         IN ULONG MinimumDataThreshold) PURE;
     STDMETHOD_(ULONG, GetMinimumDataThreshold)(THIS) PURE;
@@ -403,7 +403,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PVOID Tag);                                 \
                                                        \
     STDMETHODIMP_(BOOL) HasLastMappingFailed(THIS);    \
-    STDMETHODIMP_(VOID) PrintQueueStatus(THIS);        \
+    STDMETHODIMP_(ULONG) GetCurrentIrpOffset(THIS);    \
     STDMETHODIMP_(VOID) SetMinimumDataThreshold(       \
         IN ULONG MinimumDataThreshold);                \
     STDMETHODIMP_(ULONG) GetMinimumDataThreshold(VOID)
