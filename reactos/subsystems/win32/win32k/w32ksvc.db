@@ -82,3 +82,9 @@ RosUserGetKeyNameText              3
 RosUserToUnicodeEx                 7
 RosUserMapVirtualKeyEx             4
 RosUserGetAsyncKeyState            1
+SwmAddWindow                       2
+SwmRemoveWindow                    1
+SwmSetForeground                   1
+SwmPosChanging                     2
+SwmPosChanged                      3
+SwmGetWindowFromPoint              2

@@ -58,9 +58,9 @@ void move_window_bits( struct ntdrv_win_data *data, const RECT *old_rect, const 
         hdc_src = hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE );
     }
 
-    //ERR( "copying bits for win %p (parent %p)/ %s -> %s\n",
-    //       data->hwnd, parent,
-    //       wine_dbgstr_rect(&src_rect), wine_dbgstr_rect(&dst_rect) );
+    FIXME( "copying bits for win %p (parent %p)/ %s -> %s\n",
+           data->hwnd, parent,
+           wine_dbgstr_rect(&src_rect), wine_dbgstr_rect(&dst_rect) );
     BitBlt( hdc_dst, dst_rect.left, dst_rect.top,
             dst_rect.right - dst_rect.left, dst_rect.bottom - dst_rect.top,
             hdc_src, src_rect.left, src_rect.top, SRCCOPY );
@@ -723,10 +723,9 @@ void CDECL RosDrv_SetCapture( HWND hwnd, UINT flags )
 
 void CDECL RosDrv_SetFocus( HWND hwnd )
 {
-    RECT rc;
-    //UNIMPLEMENTED;
-    GetWindowRect(hwnd, &rc);
-    RosDrv_UpdateZOrder(hwnd, &rc);
+    TRACE("SetFocus %x, desk %x\n", hwnd, GetDesktopWindow());
+    if (GetDesktopWindow() != hwnd)
+        SwmSetForeground(hwnd);
 }
 
 void CDECL RosDrv_SetLayeredWindowAttributes( HWND hwnd, COLORREF key, BYTE alpha, DWORD flags )
@@ -765,7 +764,7 @@ void CDECL RosDrv_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
             !(data = NTDRV_create_win_data( hwnd ))) return;
 
         /* Do some magic... */
-        TRACE("Window %x is being made visible\n", hwnd);
+        FIXME("Window %x is being made visible1\n", hwnd);
     }
 
     if (offset == GWL_STYLE && (changed & WS_DISABLED))
@@ -787,7 +786,7 @@ void CDECL RosDrv_SetWindowText( HWND hwnd, LPCWSTR text )
 
 UINT CDECL RosDrv_ShowWindow( HWND hwnd, INT cmd, RECT *rect, UINT swp )
 {
-    TRACE( "win %p cmd %d at %s flags %08x\n",
+    FIXME( "win %p cmd %d at %s flags %08x\n",
            hwnd, cmd, wine_dbgstr_rect(rect), swp );
 
     return swp;
@@ -819,6 +818,11 @@ void CDECL RosDrv_WindowPosChanging( HWND hwnd, HWND insert_after, UINT swp_flag
         if (!(data = NTDRV_create_win_data( hwnd ))) return;
     }
 
+    SwmPosChanging(hwnd, window_rect);
+
+    TRACE( "win %x pos is changing. vis rect %s, win rect %s\n",
+           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(window_rect) );
+
     *visible_rect = *window_rect;
 }
 
@@ -833,6 +837,9 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
     struct ntdrv_win_data *data = NTDRV_get_win_data(hwnd);
 
     if (!data) return;
+
+    TRACE( "win %x pos changed. new vis rect %s, old whole rect %s\n",
+           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect) );
 
     old_whole_rect  = data->whole_rect;
     old_client_rect = data->client_rect;
@@ -855,11 +862,12 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
             old_client_rect.bottom - data->client_rect.bottom == y_offset &&
             !memcmp( &valid_rects[0], &data->client_rect, sizeof(RECT) ))
         {
-             move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
+             //move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
+            SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
         }
         else
         {
-            move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
+            //move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
         }
     }
 

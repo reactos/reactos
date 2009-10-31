@@ -116,6 +116,9 @@
 		<file>kbdlayout.c</file>
 		<file>keyboard.c</file>
 	</directory>
+	<directory name="swm">
+		<file>winman.c</file>
+	</directory>
 	<directory name="wine">
 		<file>atom.c</file>
 		<file>class.c</file>

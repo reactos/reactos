@@ -72,6 +72,9 @@ BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
     GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
     RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
 
+    //FIXME("xDst %d, yDst %d, widthDst %d, heightDst %d, src x %d y %d\n",
+    //    xDst, yDst, width, height, xSrc, ySrc);
+
     return RosGdiBitBlt(physDevDst->hKernelDC, xDst, yDst, width, height,
         physDevSrc->hKernelDC, xSrc, ySrc, rop);
 }
@@ -668,6 +671,8 @@ void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN 
     RGNDATA *data;
     HRGN dc_rgn;
     DWORD size;
+
+    //FIXME("SetDeviceClipping hdc %x\n", physDev->hUserDC);
 
     /* Create a dummy region (FIXME: create it once!) */
     dc_rgn = CreateRectRgn(0,0,0,0);

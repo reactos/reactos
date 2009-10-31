@@ -18,6 +18,7 @@
 #define NTOS_USER_MODE
 #include <ndk/ntndk.h>
 #include "ntrosgdi.h"
+#include "win32k/rosuser.h"
 #include "winent.h"
 #include "wine/server.h"
 #include "wine/debug.h"
@@ -94,7 +95,15 @@ struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd )
         TRACE( "win %p window %s whole %s client %s\n",
                hwnd, wine_dbgstr_rect( &data->window_rect ),
                wine_dbgstr_rect( &data->whole_rect ), wine_dbgstr_rect( &data->client_rect ));
+
+        /* Inform window manager about window rect in screen coords */
+        SwmAddWindow(hwnd, &data->window_rect);
     }
+
+    /* Add desktop window too */
+    if (hwnd == GetDesktopWindow())
+        SwmAddWindow(hwnd, &data->window_rect);
+
     return data;
 }
 
@@ -110,6 +119,9 @@ void NTDRV_destroy_win_data( HWND hwnd )
 
     /* Remove property */
     RemovePropA( hwnd, window_data_prop );
+
+    /* Inform window manager */
+    SwmRemoveWindow( hwnd );
 
     /* Free window data */
     HeapFree( GetProcessHeap(), 0, data );

@@ -110,7 +110,7 @@ static struct window *taskman_window;
 #define WINPTR_NOTOPMOST ((struct window *)4L)
 
 /* retrieve a pointer to a window from its handle */
-static inline struct window *get_window( user_handle_t handle )
+/*static*/ inline struct window *get_window( user_handle_t handle )
 {
     struct window *ret = get_user_object( handle, USER_WINDOW );
     if (!ret) set_win32_error( ERROR_INVALID_WINDOW_HANDLE );
@@ -1231,7 +1231,7 @@ static void validate_parents( struct window *child )
 
 
 /* add/subtract a region (in client coordinates) to the update region of the window */
-static void redraw_window( struct window *win, struct region *region, int frame, unsigned int flags )
+/*static*/ void redraw_window( struct window *win, struct region *region, int frame, unsigned int flags )
 {
     struct region *tmp;
     struct window *child;

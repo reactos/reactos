@@ -136,4 +136,23 @@ RosUserGetAsyncKeyboardState(BYTE key_state_table[]);
 VOID NTAPI
 RosUserConnectCsrss(VOID);
 
+VOID NTAPI
+SwmAddWindow(HWND hWnd, RECT *WindowRect);
+
+VOID NTAPI
+SwmRemoveWindow(HWND hWnd);
+
+VOID NTAPI
+SwmSetForeground(HWND hWnd);
+
+VOID NTAPI
+SwmPosChanging(HWND hWnd, const RECT *WindowRect);
+
+VOID NTAPI
+SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect);
+
+HWND NTAPI
+SwmGetWindowFromPoint(LONG x, LONG y);
+
+
 #endif /* __WIN32K_NTUSER_H */
