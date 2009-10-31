@@ -428,6 +428,57 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
     /* The buffer Ip is freed by tcp_input */
 }
 
+int OskitTCPSetSockOpt(void *socket,
+                       int level,
+                       int optname,
+                       char *buffer,
+                       int size)
+{
+    struct mbuf *m;
+
+    if (size >= MLEN)
+        return OSK_EINVAL;
+
+    m = m_get(M_WAIT, MT_SOOPTS);
+    if (!m)
+        return OSK_ENOMEM;
+
+    m->m_len = size;
+
+    memcpy(m->m_data, buffer, size);
+
+    /* m is freed by sosetopt */
+    return sosetopt(socket, level, optname, m);
+}   
+
+int OskitTCPGetSockOpt(void *socket,
+                       int level,
+                       int optname,
+                       char *buffer,
+                       int *size)
+{
+    int error, oldsize = *size;
+    struct mbuf *m;
+
+    error = sogetopt(socket, level, optname, &m);
+    if (!error)
+    {
+        *size = m->m_len;
+
+        if (!buffer || oldsize < m->m_len)
+        {
+            m_freem(m);
+            return OSK_EINVAL;
+        }
+
+        memcpy(buffer, m->m_data, m->m_len);
+
+        m_freem(m);
+    }
+
+    return error;
+}
+
 int OskitTCPListen( void *socket, int backlog ) {
     int error;
 

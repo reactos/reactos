@@ -150,6 +150,18 @@ void OskitTCPGetAddress( void *socket,
 			 OSK_UINT *RemoteAddress,
 			 OSK_UI16 *RemotePort );
 
+int OskitTCPGetSockOpt(void *socket,
+                       int level,
+                       int optname,
+                       char *buffer,
+                       int *size);
+
+int OskitTCPSetSockOpt(void *socket,
+                       int level,
+                       int optname,
+                       char *buffer,
+                       int size);
+
 #undef errno
 
 void *fbsd_malloc( unsigned int bytes, char *file, unsigned line, ... );
