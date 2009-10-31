@@ -22,6 +22,7 @@ extern BOOLEAN Verbose;
 extern PCHAR gpszFileName;
 extern FILE* gfpInput;
 CHAR gBuf[256];
+CHAR g_Layout[4096];
 ULONG gLineCount;
 PCHAR KeyWordList[KEYWORD_COUNT] =
 {
@@ -125,11 +126,104 @@ SkipLines(VOID)
     return KEYWORD_COUNT;
 }
 
+ULONG
+DoKBD(VOID)
+{    
+    return SkipLines();
+}
+
+ULONG
+DoVERSION(VOID)
+{    
+    return SkipLines();
+}
+
+ULONG
+DoCOPYRIGHT(VOID)
+{    
+    return SkipLines();
+}
+
+ULONG
+DoCOMPANY(VOID)
+{    
+    return SkipLines();
+}
+
+ULONG
+DoLOCALENAME(VOID)
+{    
+    return SkipLines();
+}
+
+ULONG
+DoMODIFIERS(VOID)
+{    
+    return SkipLines();
+}
+
+ULONG
+DoDESCRIPTIONS(PVOID DescriptionData)
+{
+    return SkipLines();
+}
+
+ULONG
+DoKEYNAME(PVOID KeyNameData)
+{
+    return SkipLines();   
+}
+
+ULONG
+DoLIGATURE(PVOID LigatureData)
+{
+    return SkipLines();
+}
+
+ULONG
+DoATTRIBUTES(PVOID AttributeData)
+{
+    return SkipLines();
+}
+
+ULONG
+DoLANGUAGENAMES(PVOID LanguageData)
+{
+    return SkipLines();
+}
+
+ULONG
+DoDEADKEY(PVOID DeadKeyData)
+{
+    return SkipLines();
+}
+
+ULONG
+DoSHIFTSTATE(IN PULONG StateCount,
+             IN OUT PULONG ShiftStates)
+{
+    *StateCount = 10;
+    return SkipLines();
+}
+
+ULONG
+DoLAYOUT(IN PVOID LayoutData,
+         IN PVOID LigatureData,
+         IN PULONG ShiftStates,
+         IN ULONG StateCount)
+{
+    return SkipLines();
+}
+
 VOID
 DoParsing(VOID)
 {
     ULONG KeyWords[KEYWORD_COUNT];
     ULONG KeyWord;
+    ULONG StateCount;
+    ULONG ShiftStates[8];
+    PVOID AttributeData, LigatureData, DeadKeyData, DescriptionData;
+    PVOID KeyNameData, KeyNameExtData, KeyNameDeadData, LanguageData;
     
     /* Parse keywords */
     gLineCount = 0;
@@ -155,6 +249,7 @@ DoParsing(VOID)
             printf("The '%s' keyword appeared multiple times.\n",
                    KeyWordList[KeyWord]);
         }
+               
         
         /* Now parse this keyword */
         switch (KeyWord)
@@ -163,112 +258,122 @@ DoParsing(VOID)
             case 0:
                 
                 printf("Found KBD section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoKBD();
                 break;
                 
             /* VERSION */
             case 1:
                 
                 printf("Found VERSION section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoVERSION();
                 break;
                 
             /* COPYRIGHT */
             case 2:
                 
                 printf("Found COPYRIGHT section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoCOPYRIGHT();
                 break;
                 
             /* COMPANY */
             case 3:
                 
                 printf("Found COMPANY section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoCOMPANY();
                 break;
                 
             /* LOCALENAME */
             case 4:
                 
                 printf("Found LOCALENAME section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoLOCALENAME();
                 break;
             
             /* MODIFIERS */
             case 5:
                 
                 printf("Found MODIFIERS section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoMODIFIERS();
                 break;
                 
             /* SHIFTSTATE */
             case 6:
                 
                 printf("Found SHIFTSTATE section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoSHIFTSTATE(&StateCount, ShiftStates);
+                if (StateCount < 2)
+                {
+                    /* Fail */
+                    fclose(gfpInput);
+                    printf("ERROR");
+                    exit(1);
+                }
                 break;
                 
             /* ATTRIBUTES */
             case 7:
                 
                 printf("Found ATTRIBUTES section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoATTRIBUTES(&AttributeData);
                 break;
                 
             /* LAYOUT */
             case 8:
                 
                 printf("Found LAYOUT section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoLAYOUT(&g_Layout,
+                                   &LigatureData,
+                                   ShiftStates,
+                                   StateCount);
                 break;
                 
             /* DEADKEY */
             case 9:
                 
                 printf("Found DEADKEY section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoDEADKEY(&DeadKeyData);
                 break;
                 
             /* LIGATURE */
             case 10:
                 
                 printf("Found LIGATURE section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoLIGATURE(&LigatureData);
                 break;
                 
             /* KEYNAME */
             case 11:
                 
                 printf("Found KEYNAME section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoKEYNAME(&KeyNameData);
                 break;
                 
             /* KEYNAME_EXT */
             case 12:
                 
                 printf("Found KEYNAME_EXT section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoKEYNAME(&KeyNameExtData);
                 break;
                 
             /* KEYNAME_DEAD */
             case 13:
                 
                 printf("Found KEYNAME_DEAD section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoKEYNAME(&KeyNameDeadData);
                 break;
                 
             /* DESCRIPTIONS */
             case 14:
                 
                 printf("Found DESCRIPTIONS section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoDESCRIPTIONS(&DescriptionData);
                 break;
                 
             /* LANGUAGENAMES */
             case 15:
                 
                 printf("Found LANGUAGENAMES section\n");
-                KeyWord = SkipLines();
+                KeyWord = DoLANGUAGENAMES(&LanguageData);
                 break;
                 
             /* ENDKBD */
