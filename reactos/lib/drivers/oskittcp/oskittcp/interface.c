@@ -118,11 +118,7 @@ int OskitTCPSocket( void *context,
     int error = socreate(domain, &so, type, proto);
     if( !error ) {
 	so->so_connection = context;
-	so->so_state = SS_NBIO;
-	so->so_error = 0;
-        so->so_q = so->so_q0 = NULL;
-        so->so_qlen = 0;
-        so->so_head = NULL;
+	so->so_state |= SS_NBIO;
 	*aso = so;
     }
     return error;
@@ -138,8 +134,6 @@ int OskitTCPRecv( void *connection,
     int error = 0;
     int tcp_flags = 0;
 
-    *OutLen = 0;
-
     OS_DbgPrint(OSK_MID_TRACE,
                 ("so->so_state %x\n", ((struct socket *)connection)->so_state));
 
@@ -147,21 +141,21 @@ int OskitTCPRecv( void *connection,
     if( Flags & OSK_MSG_DONTWAIT ) tcp_flags |= MSG_DONTWAIT;
     if( Flags & OSK_MSG_PEEK )     tcp_flags |= MSG_PEEK;
 
-    uio.uio_resid = Len;
-    uio.uio_iov = &iov;
-    uio.uio_rw = UIO_READ;
-    uio.uio_iovcnt = 1;
     iov.iov_len = Len;
     iov.iov_base = (char *)Data;
+    uio.uio_iov = &iov;
+    uio.uio_iovcnt = 1;
+    uio.uio_offset = 0;
+    uio.uio_resid = Len;
+    uio.uio_segflg = UIO_SYSSPACE;
+    uio.uio_rw = UIO_READ;
+    uio.uio_procp = NULL;
 
     OS_DbgPrint(OSK_MID_TRACE,("Reading %d bytes from TCP:\n", Len));
 
     error = soreceive( connection, NULL, &uio, NULL, NULL /* SCM_RIGHTS */,
 		       &tcp_flags );
-
-    if( error == 0 ) {
-	*OutLen = Len - uio.uio_resid;
-    }
+    *OutLen = Len - uio.uio_resid;
 
     return error;
 }
@@ -280,10 +274,7 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     uio.uio_procp = NULL;
 
     error = sosend( socket, NULL, &uio, NULL, NULL, 0 );
-    if (OSK_EWOULDBLOCK == error) {
-	((struct socket *) socket)->so_snd.sb_flags |= SB_WAIT;
-    }
-    *OutLen = uio.uio_offset;
+    *OutLen = Len - uio.uio_resid;
 
     return error;
 }
