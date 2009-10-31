@@ -18,10 +18,13 @@
 
 #define KEYWORD_COUNT 17
 
-extern BOOLEAN Verbose;
+extern BOOLEAN Verbose, UnicodeFile;
 extern PCHAR gpszFileName;
 extern FILE* gfpInput;
 CHAR gBuf[256];
+CHAR gKBDName[10];
+CHAR gDescription[256];
+ULONG gID = 0;
 CHAR g_Layout[4096];
 ULONG gLineCount;
 PCHAR KeyWordList[KEYWORD_COUNT] =
@@ -129,6 +132,25 @@ SkipLines(VOID)
 ULONG
 DoKBD(VOID)
 {    
+    PCHAR p;
+    
+    /* On Unicode files, we need to find the Unicode marker (FEEF) */
+    ASSERT(UnicodeFile == FALSE);
+    
+    /* Initial values */
+    *gKBDName = '\0';
+    *gDescription = '\0';
+    
+    /* Scan for the values */
+    if (sscanf(gBuf, "KBD %8s \"%40[^\"]\" %d", gKBDName, gDescription, &gID) < 2)
+    {
+        /* Couldn't find them */
+        printf("Unable to read keyboard name or description.\n");
+        exit(1);
+    }
+    
+    /* Debug only */
+    DPRINT1("KBD Name: [%8s] Description: [%40s] ID: [%d]\n", gKBDName, gDescription, gID);
     return SkipLines();
 }
 
