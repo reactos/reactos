@@ -21,6 +21,8 @@ ULONG gVersion = 3;
 ULONG gSubVersion = 40;
 BOOLEAN UnicodeFile, Verbose, NoLogo, FallbackDriver, SanityCheck, SourceOnly;
 ULONG BuildType;
+PCHAR gpszFileName;
+FILE* gfpInput;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -60,6 +62,8 @@ main(int argc,
      char** argv)
 {
     CHAR Option;
+    PCHAR OpenFlags;
+    CHAR BuildOptions[16] = {0};
     
     /* Loop for parameter */
     while (TRUE)
@@ -157,8 +161,62 @@ main(int argc,
                gVersion, gSubVersion);
     }
      
-    /* Otherwise... do something */
-    printf("Zoom zoom...\n");
+    /* Save the file name */
+    gpszFileName = argv[optind];
+    
+    /* Open either as binary or text */
+    OpenFlags = "rb";
+    if (!UnicodeFile) OpenFlags = "rt";
+    
+    /* Open a handle to the file */
+    gfpInput = fopen(gpszFileName, OpenFlags);
+    if (!gfpInput)
+    {
+        /* Couldn't open it */
+        printf("Unable to open '%s' for read.\n", gpszFileName);
+        exit(1);
+    }
+    
+    /* Should we print out what we're doing? */
+    if (!NoLogo)
+    {
+        /* Are we only building the source files? */
+        if (SourceOnly)
+        {
+            /* Then there's no target architecture */
+            strcpy(BuildOptions, "source files");
+        }
+        else
+        {
+            /* Take a look at the target architecture*/
+            switch (BuildType)
+            {
+                /* Print the appropriate message depending on what was chosen */
+                case 0:
+                    strcpy(BuildOptions, "i386/x86");
+                    break;                      
+                case 1:
+                    strcpy(BuildOptions, "ia64");
+                    break;
+                case 2:
+                    strcpy(BuildOptions, "amd64/x64");
+                    break;
+                case 3:
+                    strcpy(BuildOptions, "wow64");
+                    break;
+                default:
+                    strcpy(BuildOptions, "unknown purpose");
+                    break;
+            }
+        }
+        
+        /* Now inform the user */
+        printf("Compiling layout information from '%s' for %s.\n", gpszFileName, BuildOptions);
+    }
+    
+    /* Now do something... */
+    printf("Like a rock...\n");
+    exit(0);
 }
 
 /* EOF */
