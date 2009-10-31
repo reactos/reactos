@@ -986,7 +986,7 @@ static MUI_ENTRY enUSBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR).",
+        "Install bootloader on the harddisk (bootsector).",
         TEXT_STYLE_NORMAL
     },
     {
