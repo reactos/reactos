@@ -77,6 +77,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
 	new (&gModule) CBrowseUIModule;
 	new (&gWinModule) CAtlWinModule;
 	new (&_AtlBaseModule) CAtlBaseModule;
+	new (&_AtlComModule) CAtlComModule;
 
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
