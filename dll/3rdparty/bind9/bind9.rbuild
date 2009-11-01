@@ -14,8 +14,13 @@
 	<define name="LIBBIND9_EXPORTS" />
 	<define name="ISC_PLATFORM_HAVEIN6PKTINFO" />
 	<define name="ISC_PLATFORM_USEGCCASM" />
+	<library>isc</library>
+	<library>dns</library>
+	<library>isccfg</library>
+	<library>ws2_32</library>
 	<file>check.c</file>
 	<file>getaddresses.c</file>
+	<importlibrary definition="win32/libbind9.def" />
 	<directory name="win32">
 		<file>DLLMain.c</file>
 		<file>version.c</file>

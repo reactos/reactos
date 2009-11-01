@@ -129,6 +129,11 @@ dll\3rdparty\mesa32\mesa32.dll                      1
 dll\3rdparty\libjpeg\libjpeg.dll                    1
 dll\3rdparty\libxslt\libxslt.dll                    1
 dll\3rdparty\dxtn\dxtn.dll                          1   optional
+dll\3rdparty\isc\libisc.dll                         1
+dll\3rdparty\dns\libdns.dll                         1
+dll\3rdparty\isccfg\libisccfg.dll                   1
+dll\3rdparty\lwres\liblwres.dll                     1
+dll\3rdparty\bind9\libbind9.dll                     1
 
 dll\cpl\access\access.cpl                           1
 dll\cpl\appwiz\appwiz.cpl                           1

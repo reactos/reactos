@@ -14,11 +14,13 @@
 	<define name="USE_MD5" />
 	<define name="LIBISCCFG_EXPORTS" />
 	<define name="ISC_PLATFORM_HAVEIN6PKTINFO" />
-	<define name="ISC_PLATFORM_USEGCCASM" />
+	<library>isc</library>
+	<library>dns</library>
 	<file>aclconf.c</file>
 	<file>log.c</file>
 	<file>namedconf.c</file>
 	<file>parser.c</file>
+	<importlibrary definition="win32/libisccfg.def" />
 	<directory name="win32">
 		<file>DLLMain.c</file>
 		<file>version.c</file>

@@ -12,6 +12,15 @@
 	<define name="LIBDNS_EXPORTS" />
 	<define name="ISC_PLATFORM_HAVEIN6PKTINFO" />
 	<define name="ISC_PLATFORM_USEGCCASM" />
+	<library>ntdll</library>
+	<library>kernel32</library>
+	<library>user32</library>
+	<library>advapi32</library>
+	<library>uuid</library>
+	<library>ws2_32</library>
+	<library>msvcrt40</library>
+	<library>isc</library>
+	<importlibrary definition="win32/libdns.def" />
 	<directory name="win32">
 		<file>DLLMain.c</file>
 		<file>version.c</file>

@@ -4,6 +4,18 @@
 	<directory name="isc">
 		<xi:include href="isc/isc.rbuild" />
 	</directory>
+	<directory name="dns">
+		<xi:include href="dns/dns.rbuild" />
+	</directory>
+	<directory name="isccfg">
+		<xi:include href="isccfg/isccfg.rbuild" />
+	</directory>
+	<directory name="lwres">
+		<xi:include href="lwres/lwres.rbuild" />
+	</directory>
+	<directory name="bind9">
+		<xi:include href="bind9/bind9.rbuild" />
+	</directory>
 	<directory name="mesa32">
 		<xi:include href="mesa32/mesa32.rbuild" />
 	</directory>

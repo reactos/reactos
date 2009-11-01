@@ -14,6 +14,11 @@
 	<define name="LIBLWRES_EXPORTS" />
 	<define name="ISC_PLATFORM_HAVEIN6PKTINFO" />
 	<define name="ISC_PLATFORM_USEGCCASM" />
+	<library>isc</library>
+	<library>ws2_32</library>
+	<library>msvcrt40</library>
+	<library>advapi32</library>
+	<library>iphlpapi</library>
 	<file>context.c</file>
 	<file>gai_strerror.c</file>
 	<file>getaddrinfo.c</file>
@@ -32,6 +37,7 @@
 	<file>lwres_grbn.c</file>
 	<file>lwres_noop.c</file>
 	<file>lwresutil.c</file>
+	<importlibrary definition="win32/liblwres.def" />
 	<directory name="win32">
 		<file>lwconfig.c</file>
 		<file>DLLMain.c</file>

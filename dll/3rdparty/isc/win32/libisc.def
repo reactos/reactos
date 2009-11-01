@@ -541,6 +541,7 @@ syslog
 EXPORTS
 
 isc_assertion_failed		DATA
+isc_categories				DATA
 isc_commandline_argument	DATA
 isc_commandline_errprint	DATA
 isc_commandline_index		DATA

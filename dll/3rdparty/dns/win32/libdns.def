@@ -553,6 +553,7 @@ dns_resolver_whenshutdown
 dns_result_register
 dns_result_torcode
 dns_result_totext
+dns_rootname
 dns_rootns_create
 dns_sdb_putnamedrr
 dns_sdb_putrdata
@@ -600,6 +601,12 @@ dns_tkey_processgssresponse
 dns_tkey_processquery
 dns_tkeyctx_create
 dns_tkeyctx_destroy
+dns_tsig_hmacmd5_name
+dns_tsig_hmacsha1_name
+dns_tsig_hmacsha224_name
+dns_tsig_hmacsha256_name
+dns_tsig_hmacsha384_name
+dns_tsig_hmacsha512_name
 dns_tsig_sign
 dns_tsig_verify
 dns_tsigkey_attach
