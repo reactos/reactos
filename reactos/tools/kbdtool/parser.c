@@ -17,7 +17,7 @@
 typedef struct tagKEYNAME
 {
     ULONG LanguageCode;
-    PCHAR Description;
+    PCHAR Name;
     struct tagKEYNAME* Next;
 } KEYNAME, *PKEYNAME;
 
@@ -298,11 +298,11 @@ DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
         
         /* Fill out the structure */
         Description->LanguageCode = LanguageCode;
-        Description->Description = strdup(p);
+        Description->Name = strdup(p);
         Description->Next = NULL;
         
         /* Debug only */
-        DPRINT1("LANGID: [%4x] Description: [%s]\n", Description->LanguageCode, Description->Description);
+        DPRINT1("LANGID: [%4x] Description: [%s]\n", Description->LanguageCode, Description->Name);
         
         /* Point to it and advance the pointer */
         *DescriptionData = Description;
@@ -332,9 +332,78 @@ DoATTRIBUTES(PVOID AttributeData)
 }
 
 ULONG
-DoLANGUAGENAMES(PVOID LanguageData)
+DoLANGUAGENAMES(IN PKEYNAME* LanguageData)
 {
-    return SkipLines();
+    ULONG KeyWord = 0;
+    CHAR Token[32];
+    ULONG LanguageCode;
+    PCHAR p, pp;
+    PKEYNAME Language;
+    
+    /* Assume nothing */
+    *LanguageData = 0;
+    
+    /* Start scanning */
+    while (NextLine(gBuf, 256, gfpInput))
+    {        
+        /* Search for token */
+        if (sscanf(gBuf, "%s", Token) != 1) continue;
+        
+        /* Make sure it's not just a comment */
+        if (*Token == ';') continue;
+        
+        /* Make sure it's not a keyword */
+        KeyWord = isKeyWord(Token);
+        if (KeyWord < KEYWORD_COUNT) break;
+        
+        /* Now scan for the language code */
+        if (sscanf(Token, " %4x", &LanguageCode) != 1)
+        {
+            /* Skip */
+            printf("An invalid LANGID was specified.\n");
+            continue;
+        }
+        
+        /* Now get the actual language */
+        if (sscanf(gBuf, " %*4x %s[^\n]", Token) != 1)
+        {
+            /* Skip */
+            printf("A language name is missing\n");
+            continue;
+        }
+        
+        /* Get the language string and find the ending */
+        p = strstr(gBuf, Token);
+        pp = strchr(p, '\n');
+        if (!pp) pp = strchr(p, '\r');
+        
+        /* Terminate the language string here */
+        if (pp) *pp = 0;
+        
+        /* Now allocate the language */
+        Language = malloc(sizeof(KEYNAME));
+        if (!Language)
+        {
+            /* Fail */
+            printf("Unable to allocate the KEYNAME struct (out of memory?).\n");
+            exit(1);
+        }
+        
+        /* Fill out the structure */
+        Language->LanguageCode = LanguageCode;
+        Language->Name = strdup(p);
+        Language->Next = NULL;
+        
+        /* Debug only */
+        DPRINT1("LANGID: [%4x] Name: [%s]\n", Language->LanguageCode, Language->Name);
+        
+        /* Point to it and advance the pointer */
+        *LanguageData = Language;
+        LanguageData = &Language->Next;
+    }
+    
+    /* We are done */
+    return KeyWord;
 }
 
 ULONG
@@ -429,9 +498,9 @@ DoParsing(VOID)
     ULONG KeyWord;
     ULONG StateCount;
     ULONG ShiftStates[8];
-    PKEYNAME DescriptionData;
+    PKEYNAME DescriptionData, LanguageData;
     PVOID AttributeData, LigatureData, DeadKeyData;
-    PVOID KeyNameData, KeyNameExtData, KeyNameDeadData, LanguageData;
+    PVOID KeyNameData, KeyNameExtData, KeyNameDeadData;
     
     /* Parse keywords */
     gLineCount = 0;
