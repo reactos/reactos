@@ -16,7 +16,7 @@
 
 typedef struct tagKEYNAME
 {
-    ULONG LanguageCode;
+    ULONG Code;
     PCHAR Name;
     struct tagKEYNAME* Next;
 } KEYNAME, *PKEYNAME;
@@ -233,12 +233,6 @@ DoLOCALENAME(VOID)
 }
 
 ULONG
-DoMODIFIERS(VOID)
-{    
-    return SkipLines();
-}
-
-ULONG
 DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
 {
     ULONG KeyWord = 0;
@@ -297,12 +291,12 @@ DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
         }
         
         /* Fill out the structure */
-        Description->LanguageCode = LanguageCode;
+        Description->Code = LanguageCode;
         Description->Name = strdup(p);
         Description->Next = NULL;
         
         /* Debug only */
-        DPRINT1("LANGID: [%4x] Description: [%s]\n", Description->LanguageCode, Description->Name);
+        DPRINT1("LANGID: [%4x] Description: [%s]\n", Description->Code, Description->Name);
         
         /* Point to it and advance the pointer */
         *DescriptionData = Description;
@@ -311,24 +305,6 @@ DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
 
     /* We are done */
     return KeyWord;
-}
-
-ULONG
-DoKEYNAME(PVOID KeyNameData)
-{
-    return SkipLines();   
-}
-
-ULONG
-DoLIGATURE(PVOID LigatureData)
-{
-    return SkipLines();
-}
-
-ULONG
-DoATTRIBUTES(PVOID AttributeData)
-{
-    return SkipLines();
 }
 
 ULONG
@@ -390,12 +366,12 @@ DoLANGUAGENAMES(IN PKEYNAME* LanguageData)
         }
         
         /* Fill out the structure */
-        Language->LanguageCode = LanguageCode;
+        Language->Code = LanguageCode;
         Language->Name = strdup(p);
         Language->Next = NULL;
         
         /* Debug only */
-        DPRINT1("LANGID: [%4x] Name: [%s]\n", Language->LanguageCode, Language->Name);
+        DPRINT1("LANGID: [%4x] Name: [%s]\n", Language->Code, Language->Name);
         
         /* Point to it and advance the pointer */
         *LanguageData = Language;
@@ -407,9 +383,78 @@ DoLANGUAGENAMES(IN PKEYNAME* LanguageData)
 }
 
 ULONG
-DoDEADKEY(PVOID DeadKeyData)
+DoKEYNAME(IN PKEYNAME* KeyNameData)
 {
-    return SkipLines();
+    ULONG KeyWord = 0;
+    CHAR Token[32];
+    ULONG CharacterCode;
+    PCHAR p, pp;
+    PKEYNAME KeyName;
+    
+    /* Assume nothing */
+    *KeyNameData = 0;
+    
+    /* Start scanning */
+    while (NextLine(gBuf, 256, gfpInput))
+    {        
+        /* Search for token */
+        if (sscanf(gBuf, "%s", Token) != 1) continue;
+        
+        /* Make sure it's not just a comment */
+        if (*Token == ';') continue;
+        
+        /* Make sure it's not a keyword */
+        KeyWord = isKeyWord(Token);
+        if (KeyWord < KEYWORD_COUNT) break;
+        
+        /* Now scan for the character code */
+        if (sscanf(Token, " %4x", &CharacterCode) != 1)
+        {
+            /* Skip */
+            printf("An invalid character code was specified.\n");
+            continue;
+        }
+        
+        /* Now get the actual key name */
+        if (sscanf(gBuf, " %*4x %s[^\n]", Token) != 1)
+        {
+            /* Skip */
+            printf("A key name is missing\n");
+            continue;
+        }
+        
+        /* Get the key name string and find the ending */
+        p = strstr(gBuf, Token);
+        pp = strchr(p, '\n');
+        if (!pp) pp = strchr(p, '\r');
+        
+        /* Terminate the key name string here */
+        if (pp) *pp = 0;
+        
+        /* Now allocate the language */
+        KeyName = malloc(sizeof(KEYNAME));
+        if (!KeyName)
+        {
+            /* Fail */
+            printf("Unable to allocate the KEYNAME struct (out of memory?).\n");
+            exit(1);
+        }
+        
+        /* Fill out the structure */
+        KeyName->Code = CharacterCode;
+        KeyName->Name = strdup(p);
+        KeyName->Next = NULL;
+        
+        /* Debug only */
+        DPRINT1("CHARCODE: [%4x] Name: [%s]\n", KeyName->Code, KeyName->Name);
+        
+        /* Point to it and advance the pointer */
+        *KeyNameData = KeyName;
+        KeyNameData = &KeyName->Next;
+    }
+    
+    /* We are done */
+    return KeyWord; 
 }
 
 ULONG
@@ -447,7 +492,7 @@ DoSHIFTSTATE(IN PULONG StateCount,
         
         /* Now read the state */
         ShiftState = atoi(Token);
-
+        
         /* Scan existing states */
         for (i = 0; i < *StateCount; i++)
         {
@@ -472,7 +517,7 @@ DoSHIFTSTATE(IN PULONG StateCount,
             if (Verbose) printf("There were too many states (you defined %d).\n", *StateCount);
         }
     }
-
+    
     /* Debug only */
     DPRINT1("Found %d Shift States: [", *StateCount);
     for (i = 0; i < *StateCount; i++) DPRINT1("%d ", ShiftStates[i]);
@@ -480,6 +525,30 @@ DoSHIFTSTATE(IN PULONG StateCount,
     
     /* We are done */
     return KeyWord;
+}
+
+ULONG
+DoLIGATURE(PVOID LigatureData)
+{
+    return SkipLines();
+}
+
+ULONG
+DoATTRIBUTES(PVOID AttributeData)
+{
+    return SkipLines();
+}
+
+ULONG
+DoMODIFIERS(VOID)
+{    
+    return SkipLines();
+}
+
+ULONG
+DoDEADKEY(PVOID DeadKeyData)
+{
+    return SkipLines();
 }
 
 ULONG
@@ -499,8 +568,8 @@ DoParsing(VOID)
     ULONG StateCount;
     ULONG ShiftStates[8];
     PKEYNAME DescriptionData, LanguageData;
+    PKEYNAME KeyNameData, KeyNameExtData, KeyNameDeadData;
     PVOID AttributeData, LigatureData, DeadKeyData;
-    PVOID KeyNameData, KeyNameExtData, KeyNameDeadData;
     
     /* Parse keywords */
     gLineCount = 0;
