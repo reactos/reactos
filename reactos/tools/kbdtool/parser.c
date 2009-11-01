@@ -14,6 +14,13 @@
 #include <stdlib.h>
 #include <host/typedefs.h>
 
+typedef struct tagKEYNAME
+{
+    ULONG LanguageCode;
+    PCHAR Description;
+    struct tagKEYNAME* Next;
+} KEYNAME, *PKEYNAME;
+
 /* GLOBALS ********************************************************************/
 
 #define KEYWORD_COUNT 17
@@ -232,9 +239,78 @@ DoMODIFIERS(VOID)
 }
 
 ULONG
-DoDESCRIPTIONS(PVOID DescriptionData)
+DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
 {
-    return SkipLines();
+    ULONG KeyWord = 0;
+    CHAR Token[32];
+    ULONG LanguageCode;
+    PCHAR p, pp;
+    PKEYNAME Description;
+    
+    /* Assume nothing */
+    *DescriptionData = 0;
+    
+    /* Start scanning */
+    while (NextLine(gBuf, 256, gfpInput))
+    {        
+        /* Search for token */
+        if (sscanf(gBuf, "%s", Token) != 1) continue;
+        
+        /* Make sure it's not just a comment */
+        if (*Token == ';') continue;
+        
+        /* Make sure it's not a keyword */
+        KeyWord = isKeyWord(Token);
+        if (KeyWord < KEYWORD_COUNT) break;
+        
+        /* Now scan for the language code */
+        if (sscanf(Token, " %4x", &LanguageCode) != 1)
+        {
+            /* Skip */
+            printf("An invalid LANGID was specified.\n");
+            continue;
+        }
+        
+        /* Now get the actual description */
+        if (sscanf(gBuf, " %*4x %s[^\n]", Token) != 1)
+        {
+            /* Skip */
+            printf("A language description is missing.\n");
+            continue;
+        }
+        
+        /* Get the description string and find the ending */
+        p = strstr(gBuf, Token);
+        pp = strchr(p, '\n');
+        if (!pp) pp = strchr(p, '\r');
+        
+        /* Terminate the description string here */
+        if (pp) *pp = 0;
+        
+        /* Now allocate the description */
+        Description = malloc(sizeof(KEYNAME));
+        if (!Description)
+        {
+            /* Fail */
+            printf("Unable to allocate the KEYNAME struct (out of memory?).\n");
+            exit(1);
+        }
+        
+        /* Fill out the structure */
+        Description->LanguageCode = LanguageCode;
+        Description->Description = strdup(p);
+        Description->Next = NULL;
+        
+        /* Debug only */
+        DPRINT1("LANGID: [%4x] Description: [%s]\n", Description->LanguageCode, Description->Description);
+        
+        /* Point to it and advance the pointer */
+        *DescriptionData = Description;
+        DescriptionData = &Description->Next;
+    }
+
+    /* We are done */
+    return KeyWord;
 }
 
 ULONG
@@ -293,15 +369,16 @@ DoSHIFTSTATE(IN PULONG StateCount,
         if (KeyWord < KEYWORD_COUNT) break;
         
         /* Now scan for the shift state */
-        if (sscanf(gBuf, " %1s[01234567]", Token) != 1)
+        if (sscanf(gBuf, " %1s[012367]", Token) != 1)
         {
             /* We failed -- should we warn? */
-            if (Verbose) printf("Invalid shift state\n");
+            if (Verbose) printf("An invalid shift state '%s' was found (use 0, 1, 2, 3, 6, or 7.)\n", Token);
             continue;
         }
         
         /* Now read the state */
         ShiftState = atoi(Token);
+
         /* Scan existing states */
         for (i = 0; i < *StateCount; i++)
         {
@@ -309,7 +386,7 @@ DoSHIFTSTATE(IN PULONG StateCount,
             if ((ShiftStates[i] == ShiftState) && (Verbose))
             {
                 /* Warn user */
-                printf("Duplicate shift state\n");
+                printf("The state '%d' was duplicated for this Virtual Key.\n", ShiftStates[i]);
                 break;
             }
         }
@@ -323,14 +400,14 @@ DoSHIFTSTATE(IN PULONG StateCount,
         else
         {
             /* Too many states -- should we warn? */
-            if (Verbose) printf("Too many shift states: %d\n", *StateCount);
+            if (Verbose) printf("There were too many states (you defined %d).\n", *StateCount);
         }
     }
 
     /* Debug only */
-    printf("Found %d Shift States: [", *StateCount);
-    for (i = 0; i < *StateCount; i++) printf("%d ", ShiftStates[i]);
-    printf("]\n");
+    DPRINT1("Found %d Shift States: [", *StateCount);
+    for (i = 0; i < *StateCount; i++) DPRINT1("%d ", ShiftStates[i]);
+    DPRINT1("]\n");
     
     /* We are done */
     return KeyWord;
@@ -352,7 +429,8 @@ DoParsing(VOID)
     ULONG KeyWord;
     ULONG StateCount;
     ULONG ShiftStates[8];
-    PVOID AttributeData, LigatureData, DeadKeyData, DescriptionData;
+    PKEYNAME DescriptionData;
+    PVOID AttributeData, LigatureData, DeadKeyData;
     PVOID KeyNameData, KeyNameExtData, KeyNameDeadData, LanguageData;
     
     /* Parse keywords */
