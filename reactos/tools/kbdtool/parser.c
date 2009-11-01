@@ -530,24 +530,28 @@ DoSHIFTSTATE(IN PULONG StateCount,
 ULONG
 DoLIGATURE(PVOID LigatureData)
 {
+    printf("LIGATURE support is not yet implemented. Please bug Arch to fix it\n");
     return SkipLines();
 }
 
 ULONG
 DoATTRIBUTES(PVOID AttributeData)
 {
+    printf("ATTRIBUTES support is not yet implemented. Please bug Arch to fix it\n");
     return SkipLines();
 }
 
 ULONG
 DoMODIFIERS(VOID)
-{    
+{
+    printf("MODIFIERS support is not yet implemented. Please bug Arch to fix it\n");
     return SkipLines();
 }
 
 ULONG
 DoDEADKEY(PVOID DeadKeyData)
 {
+    printf("DEADKEY support is not yet implemented. Please bug Arch to fix it\n");
     return SkipLines();
 }
 
@@ -603,49 +607,49 @@ DoParsing(VOID)
             /* KBD */
             case 0:
                 
-                printf("Found KBD section\n");
+                DPRINT1("Found KBD section\n");
                 KeyWord = DoKBD();
                 break;
                 
             /* VERSION */
             case 1:
                 
-                printf("Found VERSION section\n");
+                DPRINT1("Found VERSION section\n");
                 KeyWord = DoVERSION();
                 break;
                 
             /* COPYRIGHT */
             case 2:
                 
-                printf("Found COPYRIGHT section\n");
+                DPRINT1("Found COPYRIGHT section\n");
                 KeyWord = DoCOPYRIGHT();
                 break;
                 
             /* COMPANY */
             case 3:
                 
-                printf("Found COMPANY section\n");
+                DPRINT1("Found COMPANY section\n");
                 KeyWord = DoCOMPANY();
                 break;
                 
             /* LOCALENAME */
             case 4:
                 
-                printf("Found LOCALENAME section\n");
+                DPRINT1("Found LOCALENAME section\n");
                 KeyWord = DoLOCALENAME();
                 break;
             
             /* MODIFIERS */
             case 5:
                 
-                printf("Found MODIFIERS section\n");
+                DPRINT1("Found MODIFIERS section\n");
                 KeyWord = DoMODIFIERS();
                 break;
                 
             /* SHIFTSTATE */
             case 6:
                 
-                printf("Found SHIFTSTATE section\n");
+                DPRINT1("Found SHIFTSTATE section\n");
                 KeyWord = DoSHIFTSTATE(&StateCount, ShiftStates);
                 if (StateCount < 2)
                 {
@@ -659,14 +663,14 @@ DoParsing(VOID)
             /* ATTRIBUTES */
             case 7:
                 
-                printf("Found ATTRIBUTES section\n");
+                DPRINT1("Found ATTRIBUTES section\n");
                 KeyWord = DoATTRIBUTES(&AttributeData);
                 break;
                 
             /* LAYOUT */
             case 8:
                 
-                printf("Found LAYOUT section\n");
+                DPRINT1("Found LAYOUT section\n");
                 KeyWord = DoLAYOUT(&g_Layout,
                                    &LigatureData,
                                    ShiftStates,
@@ -676,56 +680,56 @@ DoParsing(VOID)
             /* DEADKEY */
             case 9:
                 
-                printf("Found DEADKEY section\n");
+                DPRINT1("Found DEADKEY section\n");
                 KeyWord = DoDEADKEY(&DeadKeyData);
                 break;
                 
             /* LIGATURE */
             case 10:
                 
-                printf("Found LIGATURE section\n");
+                DPRINT1("Found LIGATURE section\n");
                 KeyWord = DoLIGATURE(&LigatureData);
                 break;
                 
             /* KEYNAME */
             case 11:
                 
-                printf("Found KEYNAME section\n");
+                DPRINT1("Found KEYNAME section\n");
                 KeyWord = DoKEYNAME(&KeyNameData);
                 break;
                 
             /* KEYNAME_EXT */
             case 12:
                 
-                printf("Found KEYNAME_EXT section\n");
+                DPRINT1("Found KEYNAME_EXT section\n");
                 KeyWord = DoKEYNAME(&KeyNameExtData);
                 break;
                 
             /* KEYNAME_DEAD */
             case 13:
                 
-                printf("Found KEYNAME_DEAD section\n");
+                DPRINT1("Found KEYNAME_DEAD section\n");
                 KeyWord = DoKEYNAME(&KeyNameDeadData);
                 break;
                 
             /* DESCRIPTIONS */
             case 14:
                 
-                printf("Found DESCRIPTIONS section\n");
+                DPRINT1("Found DESCRIPTIONS section\n");
                 KeyWord = DoDESCRIPTIONS(&DescriptionData);
                 break;
                 
             /* LANGUAGENAMES */
             case 15:
                 
-                printf("Found LANGUAGENAMES section\n");
+                DPRINT1("Found LANGUAGENAMES section\n");
                 KeyWord = DoLANGUAGENAMES(&LanguageData);
                 break;
                 
             /* ENDKBD */
             case 16:
                 
-                printf("Found ENDKBD section\n");
+                DPRINT1("Found ENDKBD section\n");
                 KeyWord = SkipLines();
                 break;
                 
