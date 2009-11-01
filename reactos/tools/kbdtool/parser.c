@@ -271,8 +271,69 @@ ULONG
 DoSHIFTSTATE(IN PULONG StateCount,
              IN OUT PULONG ShiftStates)
 {
-    *StateCount = 10;
-    return SkipLines();
+    ULONG KeyWord;
+    ULONG i;
+    ULONG ShiftState;
+    CHAR Token[32];
+    
+    /* Reset the shift states */
+    for (i = 0; i < 8; i++) ShiftStates[i] = -1;
+    
+    /* Start with no states */
+    *StateCount = 0;
+    
+    /* Scan for shift states */
+    while (NextLine(gBuf, 256, gfpInput))
+    {
+        /* Search for token */
+        if (sscanf(gBuf, "%s", Token) != 1) continue;
+        
+        /* Make sure it's not a keyword */
+        KeyWord = isKeyWord(Token);
+        if (KeyWord < KEYWORD_COUNT) break;
+        
+        /* Now scan for the shift state */
+        if (sscanf(gBuf, " %1s[01234567]", Token) != 1)
+        {
+            /* We failed -- should we warn? */
+            if (Verbose) printf("Invalid shift state\n");
+            continue;
+        }
+        
+        /* Now read the state */
+        ShiftState = atoi(Token);
+        /* Scan existing states */
+        for (i = 0; i < *StateCount; i++)
+        {
+            /* Check for duplicate */
+            if ((ShiftStates[i] == ShiftState) && (Verbose))
+            {
+                /* Warn user */
+                printf("Duplicate shift state\n");
+                break;
+            }
+        }
+        
+        /* Make sure we won't overflow */
+        if (*StateCount < 8)
+        {
+            /* Save this state */
+            ShiftStates[(*StateCount)++] = ShiftState;
+        }
+        else
+        {
+            /* Too many states -- should we warn? */
+            if (Verbose) printf("Too many shift states: %d\n", *StateCount);
+        }
+    }
+
+    /* Debug only */
+    printf("Found %d Shift States: [", *StateCount);
+    for (i = 0; i < *StateCount; i++) printf("%d ", ShiftStates[i]);
+    printf("]\n");
+    
+    /* We are done */
+    return KeyWord;
 }
 
 ULONG
