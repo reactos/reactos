@@ -153,19 +153,19 @@ VOID RunLoader(VOID)
 		{
 			LoadAndBootWindows(SectionName, SettingValue, 0);
 		}
-		else if (_stricmp(SettingValue, "WindowsNT40") == 0)
+		else if (_stricmp(BootType, "WindowsNT40") == 0)
 		{
-			LoadAndBootWindows(BootType, SettingValue, _WIN32_WINNT_NT4);
+			LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_NT4);
 		}
-		else if (_stricmp(SettingValue, "Windows2003") == 0)
+		else if (_stricmp(BootType, "Windows2003") == 0)
 		{
-			LoadAndBootWindows(BootType, SettingValue, _WIN32_WINNT_WS03);
+			LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
 		}
-		else if (_stricmp(SettingValue, "Linux") == 0)
+		else if (_stricmp(BootType, "Linux") == 0)
 		{
-			LoadAndBootLinux(BootType, OperatingSystemDisplayNames[SelectedOperatingSystem]);
+			LoadAndBootLinux(SectionName, OperatingSystemDisplayNames[SelectedOperatingSystem]);
 		}
-		else if (_stricmp(SettingValue, "BootSector") == 0)
+		else if (_stricmp(BootType, "BootSector") == 0)
 		{
 			LoadAndBootBootSector(SectionName);
 		}
