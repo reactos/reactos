@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
-<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="isc" type="win32dll" installbase="system32" installname="libisc.dll" allowwarnings="true">
+	<include base="ReactOS">dll/3rdparty/isc</include>
 	<include base="ReactOS">dll/3rdparty/isc/include</include>
 	<include base="ReactOS">dll/3rdparty/isc/win32</include>
 	<include base="ReactOS">dll/3rdparty/isc/win32/include</include>
@@ -8,6 +9,14 @@
 	<include base="ReactOS">dll/3rdparty/isccfg/include</include>
 	<define name="WIN32" />
 	<define name="LIBISC_EXPORTS" />
+	<define name="ISC_PLATFORM_HAVEIN6PKTINFO" />
+	<library>ntdll</library>
+	<library>kernel32</library>
+	<library>user32</library>
+	<library>advapi32</library>
+	<library>uuid</library>
+	<library>ws2_32</library>
+	<library>msvcrt40</library>
 	<file>assertions.c</file>
 	<file>base32.c</file>
 	<file>base64.c</file>
@@ -17,7 +26,6 @@
 	<file>commandline.c</file>
 	<file>error.c</file>
 	<file>event.c</file>
-	<file>fsaccess.c</file>
 	<file>hash.c</file>
 	<file>heap.c</file>
 	<file>hex.c</file>
@@ -59,6 +67,7 @@
 	<file>task.c</file>
 	<file>taskpool.c</file>
 	<file>timer.c</file>
+	<importlibrary definition="win32/libisc.def" />
 	<directory name="nls">
 		<file>msgcat.c</file>
 	</directory>

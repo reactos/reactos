@@ -97,11 +97,8 @@
 #include <isc/lang.h>
 #include <isc/types.h>
 
-#ifndef __REACTOS__
 #include <ws2tcpip.h>
-#endif
-
-#include <isc/ipv6.h>
+#include "ipv6.h"
 
 /*
  * This is here because named client, interfacemgr.c, etc. use the name as
@@ -120,16 +117,16 @@ struct in6_pktinfo {
 };
 #endif
 
-#ifndef __REACTOS__
+/*#ifndef __REACTOS__
 #if _MSC_VER < 1300
-#endif
+#endif*/
 
 #define in6addr_any isc_in6addr_any
 #define in6addr_loopback isc_in6addr_loopback
 
-#ifndef __REACTOS__
+/*#ifndef __REACTOS__
 #endif
-#endif
+#endif*/
 
 /*
  * Ensure type in_port_t is defined.

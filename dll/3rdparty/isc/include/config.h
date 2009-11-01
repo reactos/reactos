@@ -195,8 +195,10 @@
 #define getcwd _getcwd
 #endif
 
+#ifndef __REACTOS__
 #define utime _utime
 #define utimbuf _utimbuf
+#endif
 
 /* #define EAFNOSUPPORT EINVAL */
 #ifndef __REACTOS__

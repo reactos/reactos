@@ -424,7 +424,7 @@ static void
 socket_log(int lineno, isc_socket_t *sock, isc_sockaddr_t *address,
 	   isc_logcategory_t *category, isc_logmodule_t *module, int level,
 	   isc_msgcat_t *msgcat, int msgset, int message,
-	   const char *fmt, ...) ISC_FORMAT_PRINTF(9, 10);
+	   const char *fmt, ...) ISC_FORMAT_PRINTF(10, 11);
 
 /*  This function will add an entry to the I/O completion port
  *  that will signal the I/O thread to exit (gracefully)

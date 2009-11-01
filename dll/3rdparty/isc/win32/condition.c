@@ -249,10 +249,18 @@ isc_condition_waituntil(isc_condition_t *cond, isc_mutex_t *mutex,
 	}
 
 	microseconds = isc_time_microdiff(t, &now);
+
+#ifdef __GNUC__
+	if (microseconds > 0xFFFFFFFFull * 1000)
+		milliseconds = 0xFFFFFFFF;
+	else
+		milliseconds = (DWORD)(microseconds / 1000);
+#else
 	if (microseconds > 0xFFFFFFFFi64 * 1000)
 		milliseconds = 0xFFFFFFFF;
 	else
 		milliseconds = (DWORD)(microseconds / 1000);
+#endif
 
 	return (wait(cond, mutex, milliseconds));
 }
