@@ -3987,7 +3987,7 @@ User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength)
   Common = (PLOADMENU_CALLBACK_ARGUMENTS) Arguments;
   
   Result = (LRESULT)LoadMenuW( Common->hModule,
-                               IS_INTRESOURCE(Common->MenuName) ?
+                               IS_INTRESOURCE(Common->MenuName[0]) ?
                                   MAKEINTRESOURCE(Common->MenuName[0]) :
                                         (LPCWSTR)&Common->MenuName);
 
