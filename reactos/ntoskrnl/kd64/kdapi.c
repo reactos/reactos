@@ -671,7 +671,7 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
                             ProcessorState.ContextFrame;
         }
 
-        /* Copy it over */
+        /* Copy it over to the debugger */
         RtlCopyMemory(Data->Buffer, TargetContext, sizeof(CONTEXT));
         Data->Length = sizeof(CONTEXT);
 
@@ -724,7 +724,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
                             ProcessorState.ContextFrame;
         }
 
-        /* Get the context from the PRCB array */
+        /* Copy the new context to it */
         RtlCopyMemory(TargetContext, Data->Buffer, sizeof(CONTEXT));
 
         /* Finish up */

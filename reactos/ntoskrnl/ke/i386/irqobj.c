@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/i386/irq.c
  * PURPOSE:         Manages the Kernel's IRQ support for external drivers,
- *                  for the purpouses of connecting, disconnecting and setting
+ *                  for the purposes of connecting, disconnecting and setting
  *                  up ISRs for drivers. The backend behind the Io* Interrupt
  *                  routines.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
