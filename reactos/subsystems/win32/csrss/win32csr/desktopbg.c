@@ -120,8 +120,10 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 static BOOL FASTCALL
 DtbgInit()
 {
-  //WNDCLASSEXW Class;
-  //ATOM ClassAtom;
+    //WNDCLASSEXW Class;
+    //ATOM ClassAtom;
+    static const WCHAR WinSta0[] = {'W','i','n','S','t','a','0',0};
+    HANDLE handle;
 
   /*
    * Create the desktop window class
@@ -146,9 +148,17 @@ DtbgInit()
       return FALSE;
     }
 #endif
-  VisibleDesktopWindow = NULL;
 
-  return TRUE;
+    /* set winstation if we don't have one yet */
+    if (!GetProcessWindowStation())
+    {
+        handle = OpenWindowStationW( WinSta0, FALSE, WINSTA_ALL_ACCESS );
+        if (handle) SetProcessWindowStation( handle );
+    }
+
+    VisibleDesktopWindow = NULL;
+
+    return TRUE;
 }
 
 HWND BackgroundWnd;
