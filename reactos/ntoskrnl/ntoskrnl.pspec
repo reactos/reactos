@@ -47,7 +47,7 @@
 @ stdcall CmUnRegisterCallback(long long)
 @ stdcall DbgBreakPoint()
 @ stdcall DbgBreakPointWithStatus(long)
-;DbgCommandString
+@ stdcall DbgCommandString(ptr ptr)
 @ stdcall DbgLoadImageSymbols(ptr ptr long)
 @ cdecl DbgPrint(str)
 @ cdecl DbgPrintEx(long long str)

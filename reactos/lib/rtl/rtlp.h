@@ -114,7 +114,15 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
 
 BOOLEAN
 NTAPI
-RtlpSetInDbgPrint(IN BOOLEAN NewValue);
+RtlpSetInDbgPrint(
+    VOID
+);
+
+VOID
+NTAPI
+RtlpClearInDbgPrint(
+    VOID
+);
 
 /* i386/except.S */
 

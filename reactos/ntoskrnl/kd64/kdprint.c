@@ -123,16 +123,41 @@ KdpPromptString(IN PSTRING PromptString,
 
 VOID
 NTAPI
-KdpCommandString(IN ULONG Length,
-                 IN LPSTR String,
+KdpCommandString(IN PSTRING NameString,
+                 IN PSTRING CommandString,
                  IN KPROCESSOR_MODE PreviousMode,
                  IN PCONTEXT ContextRecord,
                  IN PKTRAP_FRAME TrapFrame,
                  IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    /* FIXME */
-    KdpDprintf("KdpCommandString called\n");
-    while (TRUE);
+    BOOLEAN Entered;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Check if we need to do anything */
+    if ((PreviousMode != KernelMode) || (KdDebuggerNotPresent)) return;
+
+    /* Enter the debugger */
+    Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
+
+    /* Save the CPU Control State and save the context */
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
+    RtlCopyMemory(&Prcb->ProcessorState.ContextFrame,
+                  ContextRecord,
+                  sizeof(CONTEXT));
+
+    /* Send the command string to the debugger */
+    KdpReportCommandStringStateChange(NameString,
+                                      CommandString,
+                                      &Prcb->ProcessorState.ContextFrame);
+
+    /* Restore the processor state */
+    RtlCopyMemory(ContextRecord,
+                  &Prcb->ProcessorState.ContextFrame,
+                  sizeof(CONTEXT));
+    KiRestoreProcessorControlState(&Prcb->ProcessorState);
+
+    /* Exit the debugger and return */
+    KdExitDebugger(Entered);
 }
 
 VOID
@@ -147,7 +172,6 @@ KdpSymbol(IN PSTRING DllPath,
 {
     BOOLEAN Entered;
     PKPRCB Prcb = KeGetCurrentPrcb();
-    ULONG Status;
 
     /* Check if we need to do anything */
     if ((PreviousMode != KernelMode) || (KdDebuggerNotPresent)) return;
@@ -162,19 +186,18 @@ KdpSymbol(IN PSTRING DllPath,
                   sizeof(CONTEXT));
 
     /* Report the new state */
-    Status = KdpReportLoadSymbolsStateChange(DllPath,
-                                             SymbolInfo,
-                                             Unload,
-                                             &Prcb->ProcessorState.
-                                             ContextFrame);
+    KdpReportLoadSymbolsStateChange(DllPath,
+                                    SymbolInfo,
+                                    Unload,
+                                    &Prcb->ProcessorState.ContextFrame);
 
-    /* Now restore the processor state, manually again. */
+    /* Restore the processor state */
     RtlCopyMemory(ContextRecord,
                   &Prcb->ProcessorState.ContextFrame,
                   sizeof(CONTEXT));
     KiRestoreProcessorControlState(&Prcb->ProcessorState);
 
-    /* Exit the debugger and clear the CTRL-C state */
+    /* Exit the debugger and return */
     KdExitDebugger(Entered);
 }
 
@@ -233,7 +256,7 @@ KdpPrompt(IN LPSTR PromptString,
 NTSTATUS
 NTAPI
 KdpPrint(IN ULONG ComponentId,
-         IN ULONG ComponentMask,
+         IN ULONG Level,
          IN LPSTR String,
          IN USHORT Length,
          IN KPROCESSOR_MODE PreviousMode,
@@ -249,14 +272,14 @@ KdpPrint(IN ULONG ComponentId,
     *Status = FALSE;
 
     /* Validate the mask */
-    if (ComponentMask < 0x20) ComponentMask = 1 << ComponentMask;
-    if (!(Kd_WIN2000_Mask & ComponentMask) ||
+    if (Level < 32) Level = 1 << Level;
+    if (!(Kd_WIN2000_Mask & Level) ||
         ((ComponentId < KdComponentTableSize) &&
-        !(*KdComponentTable[ComponentId] & ComponentMask)))
+        !(*KdComponentTable[ComponentId] & Level)))
     {
         /* Mask validation failed */
         *Status = TRUE;
-        return FALSE;
+        return STATUS_SUCCESS;
     }
 
     /* Normalize the length */

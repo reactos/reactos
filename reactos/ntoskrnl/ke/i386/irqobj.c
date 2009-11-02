@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/i386/irq.c
  * PURPOSE:         Manages the Kernel's IRQ support for external drivers,
- *                  for the purpopses of connecting, disconnecting and setting
+ *                  for the purpouses of connecting, disconnecting and setting
  *                  up ISRs for drivers. The backend behind the Io* Interrupt
  *                  routines.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
@@ -22,22 +22,6 @@ USHORT KiISROverflow = 30000;
 extern ULONG NTAPI KiChainedDispatch2ndLvl(VOID);
 
 /* PRIVATE FUNCTIONS *********************************************************/
-
-BOOLEAN
-NTAPI
-KeDisableInterrupts(VOID)
-{
-    ULONG Flags;
-    BOOLEAN Return;
-
-    /* Get EFLAGS and check if the interrupt bit is set */
-    Flags = __readeflags();
-    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
-
-    /* Disable interrupts */
-    _disable();
-    return Return;
-}
 
 VOID
 NTAPI

@@ -41,21 +41,22 @@ RtlpCheckForActiveDebugger(VOID)
 
 BOOLEAN
 NTAPI
-RtlpSetInDbgPrint(IN BOOLEAN NewValue)
+RtlpSetInDbgPrint(VOID)
 {
-    /* If we're setting it to false, do it and return */
-    if (NewValue == FALSE)
-    {
-        NtCurrentTeb()->InDbgPrint = FALSE;
-        return FALSE;
-    }
-
-    /* Setting to true; check if it's not already */
+    /* Check if it's already set and return TRUE if so */
     if (NtCurrentTeb()->InDbgPrint) return TRUE;
 
     /* Set it and return */
     NtCurrentTeb()->InDbgPrint = TRUE;
     return FALSE;
+}
+
+VOID
+NTAPI
+RtlpClearInDbgPrint(VOID)
+{
+    /* Clear the flag */
+    NtCurrentTeb()->InDbgPrint = FALSE;
 }
 
 KPROCESSOR_MODE

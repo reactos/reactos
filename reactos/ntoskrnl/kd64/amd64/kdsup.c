@@ -35,14 +35,6 @@ KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
     while (TRUE);
 }
 
-VOID
-NTAPI
-KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-}
-
 NTSTATUS
 NTAPI
 KdpSysReadMsr(IN ULONG Msr,

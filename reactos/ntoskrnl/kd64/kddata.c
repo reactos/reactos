@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include "../mm/arm3/miarm.h"
+#include "../mm/ARM3/miarm.h"
 #define NDEBUG
 #include <debug.h>
 
@@ -18,27 +18,36 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 //
 // Apply the KIPCR WDK workaround for x86 and AMD64
 //
-#if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(_X86_) || defined(_AMD64_)
 #define KPCR KIPCR
 #endif
 
-#if defined(_M_IX86)
+#if defined(_X86_)
 
-#define KPCR_SELF_OFFSET               FIELD_OFFSET(KPCR, Self)
+#define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, Self)
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
 #define KPCR_CONTAINED_PRCB_OFFSET     FIELD_OFFSET(KPCR, PrcbData)
+#define KPCR_INITIAL_STACK_OFFSET      0
+#define KPCR_STACK_LIMIT_OFFSET        0
+#define KPRCB_PCR_PAGE_OFFSET          0
 
-#elif defined(_M_AMD64)
+#elif defined(_AMD64_)
 
-#define KPCR_SELF_OFFSET               FIELD_OFFSET(KPCR, Self)
+#define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, Self)
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, CurrentPrcb)
 #define KPCR_CONTAINED_PRCB_OFFSET     FIELD_OFFSET(KPCR, Prcb)
+#define KPCR_INITIAL_STACK_OFFSET      0
+#define KPCR_STACK_LIMIT_OFFSET        0
+#define KPRCB_PCR_PAGE_OFFSET          0
 
-#elif defined(_M_ARM)
+#elif defined(_ARM_)
 
-#define KPCR_SELF_OFFSET               0
+#define KPCR_SELF_PCR_OFFSET           0
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
 #define KPCR_CONTAINED_PRCB_OFFSET     0
+#define KPCR_INITIAL_STACK_OFFSET      FIELD_OFFSET(KPCR, InitialStack)
+#define KPCR_STACK_LIMIT_OFFSET        FIELD_OFFSET(KPCR, StackLimit)
+#define KPRCB_PCR_PAGE_OFFSET          FIELD_OFFSET(KPRCB, PcrPage)
 
 #else
 #error Unsupported Architecture
@@ -53,6 +62,7 @@ KD_CONTEXT KdpContext;
 BOOLEAN KdpPortLocked;
 KSPIN_LOCK KdpDebuggerLock;
 BOOLEAN KdpControlCPressed;
+BOOLEAN KdpContextSent;
 
 //
 // Debug Trap Handlers
@@ -110,13 +120,13 @@ LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 //
 // Buffers
 //
-CHAR KdpMessageBuffer[4096];
-CHAR KdpPathBuffer[4096];
+CHAR KdpMessageBuffer[0x1000];
+CHAR KdpPathBuffer[0x1000];
 
 //
 // KdPrint Buffers
 //
-CHAR KdPrintDefaultCircularBuffer[0x8000];
+CHAR KdPrintDefaultCircularBuffer[KD_DEFAULT_LOG_BUFFER_SIZE];
 PCHAR KdPrintWritePointer = KdPrintDefaultCircularBuffer;
 ULONG KdPrintRolloverCount;
 PCHAR KdPrintCircularBuffer = KdPrintDefaultCircularBuffer;
@@ -486,14 +496,14 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {(ULONG_PTR)&KdPrintBufferSize},
     {(ULONG_PTR)&KeLoaderBlock},
     sizeof(KPCR),
-    KPCR_SELF_OFFSET,
+    KPCR_SELF_PCR_OFFSET,
     KPCR_CURRENT_PRCB_OFFSET,
     KPCR_CONTAINED_PRCB_OFFSET,
     0,
     0,
-    0,
-    0,
-    0,
+    KPCR_INITIAL_STACK_OFFSET,
+    KPCR_STACK_LIMIT_OFFSET,
+    KPRCB_PCR_PAGE_OFFSET,
     FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
 #if defined(_M_IX86)
     //

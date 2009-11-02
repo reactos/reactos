@@ -17,7 +17,7 @@
 // Retrieves the ComponentId and Level for BREAKPOINT_PRINT
 // and OutputString and OutputStringLength for BREAKPOINT_PROMPT.
 //
-#if defined(_M_IX86)
+#if defined(_X86_)
 
 //
 // EBX/EDI on x86
@@ -25,7 +25,7 @@
 #define KdpGetFirstParameter(Context)  ((Context)->Ebx)
 #define KdpGetSecondParameter(Context) ((Context)->Edi)
 
-#elif defined(_M_AMD64)
+#elif defined(_AMD64_)
 
 //
 // R8/R9 on AMD64
@@ -33,7 +33,7 @@
 #define KdpGetFirstParameter(Context)  ((Context)->R8)
 #define KdpGetSecondParameter(Context) ((Context)->R9)
 
-#elif defined(_M_ARM)
+#elif defined(_ARM_)
 
 #error Yo Ninjas!
 
@@ -218,9 +218,9 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_COMMAND_STRING:
 
                 /* Call the worker routine */
-                KdpCommandString((ULONG)ExceptionRecord->
+                KdpCommandString((PSTRING)ExceptionRecord->
                                  ExceptionInformation[1],
-                                 (LPSTR)ExceptionRecord->
+                                 (PSTRING)ExceptionRecord->
                                  ExceptionInformation[2],
                                  PreviousMode,
                                  ContextRecord,

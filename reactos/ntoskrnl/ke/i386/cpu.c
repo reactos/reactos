@@ -915,15 +915,29 @@ KiI386PentiumLockErrataFixup(VOID)
 
 BOOLEAN
 NTAPI
+KeDisableInterrupts(VOID)
+{
+    ULONG Flags;
+    BOOLEAN Return;
+
+    /* Get EFLAGS and check if the interrupt bit is set */
+    Flags = __readeflags();
+    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+
+    /* Disable interrupts */
+    _disable();
+    return Return;
+}
+
+BOOLEAN
+NTAPI
 KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
                   IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    ULONG Flags;
+    BOOLEAN Enable;
 
     /* Disable interrupts and get previous state */
-    Flags = __readeflags();
-    //Flags = __getcallerseflags();
-    _disable();
+    Enable = KeDisableInterrupts();
 
     /* Save freeze flag */
     KiFreezeFlag = 4;
@@ -932,7 +946,7 @@ KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
     KiOldIrql = KeGetCurrentIrql();
 
     /* Return whether interrupts were enabled */
-    return (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+    return Enable;
 }
 
 VOID

@@ -27,6 +27,26 @@ enum
 
 #define KDBG_TAG                                        'GBDK'
 
+typedef enum _DBGKD_MAJOR_TYPES
+{
+    DBGKD_MAJOR_NT,
+    DBGKD_MAJOR_XBOX,
+    DBGKD_MAJOR_BIG,
+    DBGKD_MAJOR_EXDI,
+    DBGKD_MAJOR_NTBD,
+    DBGKD_MAJOR_EFI,
+    DBGKD_MAJOR_TNT,
+    DBGKD_MAJOR_SINGULARITY,
+    DBGKD_MAJOR_HYPERVISOR,
+    DBGKD_MAJOR_COUNT
+} DBGKD_MAJOR_TYPES;
+
+//
+// The major type is in the high byte
+//
+#define DBGKD_MAJOR_TYPE(MajorVersion) \
+    ((DBGKD_MAJOR_TYPES)((MajorVersion) >> 8))
+
 typedef struct _DBGKD_GET_VERSION32
 {
     USHORT MajorVersion;
