@@ -493,10 +493,10 @@ WaitOnBusy(
 {
     ULONG i;
     UCHAR Status;
-    for (i=0; i<20000; i++) {
+    for (i=0; i<200; i++) {
         GetStatus(chan, Status);
         if (Status & IDE_STATUS_BUSY) {
-            AtapiStallExecution(150);
+            AtapiStallExecution(10);
             continue;
         } else {
             break;
@@ -537,10 +537,10 @@ WaitOnBaseBusy(
 {
     ULONG i;
     UCHAR Status;
-    for (i=0; i<20000; i++) {
+    for (i=0; i<200; i++) {
         GetBaseStatus(chan, Status);
         if (Status & IDE_STATUS_BUSY) {
-            AtapiStallExecution(150);
+            AtapiStallExecution(10);
             continue;
         } else {
             break;
@@ -640,11 +640,11 @@ WaitForDrq(
     for (i=0; i<1000; i++) {
         GetStatus(chan, Status);
         if (Status & IDE_STATUS_BUSY) {
-            AtapiStallExecution(100);
+            AtapiStallExecution(10);
         } else if (Status & IDE_STATUS_DRQ) {
             break;
         } else {
-            AtapiStallExecution(200);
+            AtapiStallExecution(10);
         }
     }
     return Status;
@@ -661,11 +661,11 @@ WaitShortForDrq(
     for (i=0; i<2; i++) {
         GetStatus(chan, Status);
         if (Status & IDE_STATUS_BUSY) {
-            AtapiStallExecution(100);
+            AtapiStallExecution(10);
         } else if (Status & IDE_STATUS_DRQ) {
             break;
         } else {
-            AtapiStallExecution(100);
+            AtapiStallExecution(10);
         }
     }
     return Status;
