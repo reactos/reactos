@@ -461,12 +461,12 @@ INT MakeLinesFromTTPolygon(UCHAR** pp, FLOAT chordalDeviation)
 * Used by tessellator to handle output vertexes.
 *****************************************************************************/
 
-VOID CALLBACK TessVertexOutData(FLOAT p[3], GLfloat z)
+VOID CALLBACK TessVertexOutData(FLOAT p[3], GLfloat *pz)
 {
     GLfloat v[3];
     v[0] = (GLfloat) p[0];
     v[1] = (GLfloat) p[1];
-    v[2] = z;
+    v[2] = *pz;
     glVertex3fv(v);
 }
 
