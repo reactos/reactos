@@ -132,7 +132,7 @@ FindPciBios(PPCI_REGISTRY_INFO BusData)
       BusData->NoBuses = RegsOut.b.cl + 1;
       BusData->MajorRevision = RegsOut.b.bh;
       BusData->MinorRevision = RegsOut.b.bl;
-      BusData->HardwareMechanism = RegsOut.b.cl;
+      BusData->HardwareMechanism = RegsOut.b.al;
 
       return TRUE;
     }

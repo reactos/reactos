@@ -938,11 +938,7 @@ HalpInitializePciStubs(VOID)
     ULONG VendorId = 0;
 
     /* Query registry information */
-#ifdef WORKED_FOR_ME
     PciRegistryInfo = HalpQueryPciRegistryInfo();
-#else
-    PciRegistryInfo = NULL;
-#endif
     if (!PciRegistryInfo)
     {
         /* Assume type 1 */
