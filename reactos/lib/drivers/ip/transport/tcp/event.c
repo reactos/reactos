@@ -15,6 +15,8 @@ int TCPSocketState(void *ClientData,
            void *WhichConnection,
            OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = WhichConnection;
+    ULONG OldState;
+    KIRQL OldIrql;
 
     ASSERT_LOCKED(&TCPLock);
 
@@ -38,14 +40,23 @@ int TCPSocketState(void *ClientData,
         TI_DbgPrint(DEBUG_TCP,("Found socket %x\n", Connection));
     }
 
-    TI_DbgPrint(MID_TRACE,("Connection signalled: %d\n",
-               Connection->Signalled));
+    OldState = Connection->SignalState;
 
     Connection->SignalState |= NewState;
-    if( !Connection->Signalled ) {
-    Connection->Signalled = TRUE;
-    ExInterlockedInsertTailList( &SignalledConnectionsList, &Connection->SignalList, &SignalledConnectionsLock );
+
+    NewState = HandleSignalledConnection(Connection);
+
+    KeAcquireSpinLock(&SignalledConnectionsLock, &OldIrql);
+    if ((NewState == 0 || NewState == SEL_FIN) &&
+        (OldState != 0 && OldState != SEL_FIN))
+    {
+        RemoveEntryList(&Connection->SignalList);
     }
+    else if (NewState != 0 && NewState != SEL_FIN)
+    {
+        InsertTailList(&SignalledConnectionsList, &Connection->SignalList);
+    }
+    KeReleaseSpinLock(&SignalledConnectionsLock, OldIrql);
 
     return 0;
 }

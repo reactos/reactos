@@ -22,7 +22,7 @@ FAST_MUTEX SleepingThreadsLock;
 RECURSIVE_MUTEX TCPLock;
 PORT_SET TCPPorts;
 
-static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
+ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
@@ -38,6 +38,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
     if( Connection->SignalState & SEL_FIN ) {
         TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
 
+        Connection->SignalState &= ~SEL_READ;
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ReceiveRequest,
                                                      &Connection->Lock )) != NULL)
         {
@@ -49,6 +50,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
            exFreePool(Bucket);
         }
 
+        Connection->SignalState &= ~SEL_WRITE;
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->SendRequest,
                                                      &Connection->Lock )) != NULL)
         {
@@ -60,6 +62,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
            exFreePool(Bucket);
         }
 
+        Connection->SignalState &= ~SEL_ACCEPT;
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ListenRequest,
                                                      &Connection->Lock )) != NULL)
         {
@@ -75,6 +78,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
            exFreePool(Bucket);
         }
 
+        Connection->SignalState &= ~SEL_CONNECT;
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ConnectRequest,
                                                      &Connection->Lock )) != NULL)
         {
@@ -85,12 +89,11 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
 
            exFreePool(Bucket);
         }
-
-        Connection->SignalState = 0;
     }
 
     /* Things that can happen when we try the initial connection */
     if( Connection->SignalState & SEL_CONNECT ) {
+        Connection->SignalState &= ~SEL_CONNECT;
         while( (Entry = ExInterlockedRemoveHeadList( &Connection->ConnectRequest,
                                                      &Connection->Lock )) != NULL ) {
             
@@ -118,6 +121,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                IsListEmpty(&Connection->ListenRequest) ?
                                "empty" : "nonempty"));
 
+        Connection->SignalState &= ~SEL_ACCEPT;
         while( (Entry = ExInterlockedRemoveHeadList( &Connection->ListenRequest,
                                                      &Connection->Lock )) != NULL ) {
             PIO_STACK_LOCATION IrpSp;
@@ -137,6 +141,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
             TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n"));
 
             if( Status == STATUS_PENDING ) {
+                Connection->SignalState |= SEL_ACCEPT;
                 ExInterlockedInsertHeadList( &Connection->ListenRequest, &Bucket->Entry, &Connection->Lock );
                 break;
             } else {
@@ -152,6 +157,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                IsListEmpty(&Connection->ReceiveRequest) ?
                                "empty" : "nonempty"));
 
+        Connection->SignalState &= ~SEL_READ;
         while( (Entry = ExInterlockedRemoveHeadList( &Connection->ReceiveRequest,
                                                      &Connection->Lock )) != NULL ) {
             OSK_UINT RecvLen = 0, Received = 0;
@@ -197,6 +203,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
             } else if( Status == STATUS_PENDING ) {
                 ExInterlockedInsertHeadList
                     ( &Connection->ReceiveRequest, &Bucket->Entry, &Connection->Lock );
+                Connection->SignalState |= SEL_READ;
                 break;
             } else {
                 TI_DbgPrint(DEBUG_TCP,
@@ -212,6 +219,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                IsListEmpty(&Connection->SendRequest) ?
                                "empty" : "nonempty"));
 
+        Connection->SignalState &= ~SEL_WRITE;
         while( (Entry = ExInterlockedRemoveHeadList( &Connection->SendRequest,
                                                      &Connection->Lock )) != NULL ) {
             OSK_UINT SendLen = 0, Sent = 0;
@@ -256,6 +264,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
             } else if( Status == STATUS_PENDING ) {
                 ExInterlockedInsertHeadList
                     ( &Connection->SendRequest, &Bucket->Entry, &Connection->Lock );
+                Connection->SignalState |= SEL_WRITE;
                 break;
             } else {
                 TI_DbgPrint(DEBUG_TCP,
@@ -267,20 +276,35 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
         }
     }
 
-    Connection->SignalState = 0;
-    Connection->Signalled = FALSE;
+    return Connection->SignalState;
 }
 
-VOID DrainSignals() {
+static VOID DrainSignals() {
     PCONNECTION_ENDPOINT Connection;
-    PLIST_ENTRY ListEntry;
+    PLIST_ENTRY CurrentEntry, NextEntry;
+    ULONG NewState;
+    KIRQL OldIrql;
 
-    while( (ListEntry = ExInterlockedRemoveHeadList(&SignalledConnectionsList,
-                                                    &SignalledConnectionsLock)) != NULL) {
-        Connection = CONTAINING_RECORD( ListEntry, CONNECTION_ENDPOINT,
+    KeAcquireSpinLock(&SignalledConnectionsLock, &OldIrql);
+    CurrentEntry = SignalledConnectionsList.Flink;
+    while (CurrentEntry != &SignalledConnectionsList)
+    {
+        NextEntry = CurrentEntry->Flink;
+        Connection = CONTAINING_RECORD( CurrentEntry, CONNECTION_ENDPOINT,
                                         SignalList );
-        HandleSignalledConnection( Connection );
+
+        KeReleaseSpinLock(&SignalledConnectionsLock, OldIrql);
+        NewState = HandleSignalledConnection(Connection);
+        KeAcquireSpinLock(&SignalledConnectionsLock, &OldIrql);
+
+        if (NewState == SEL_FIN || NewState == 0)
+        {
+            RemoveEntryList(CurrentEntry);
+        }
+
+        CurrentEntry = NextEntry;
     }
+    KeReleaseSpinLock(&SignalledConnectionsLock, OldIrql);
 }
 
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
@@ -353,8 +377,6 @@ VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
     OskitTCPReceiveDatagram( IPPacket->Header,
                              IPPacket->TotalSize,
                              IPPacket->HeaderSize );
-
-    DrainSignals();
 
     TcpipRecursiveMutexLeave( &TCPLock );
 }
