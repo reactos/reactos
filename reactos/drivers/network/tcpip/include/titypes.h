@@ -299,8 +299,6 @@ typedef struct _CONNECTION_ENDPOINT {
     PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
     PVOID SocketContext;        /* Context for lower layer */
 
-    UINT State;                 /* Socket state W.R.T. oskit */
-
     /* Requests */
     LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
     LIST_ENTRY ListenRequest;  /* Queued listen requests */

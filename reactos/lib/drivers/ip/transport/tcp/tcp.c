@@ -601,11 +601,6 @@ NTSTATUS TCPConnect
         return STATUS_NETWORK_UNREACHABLE;
     }
 
-    if (Connection->State & SEL_FIN)
-    {
-        return STATUS_REMOTE_DISCONNECT;
-    }
-
     /* Freed in TCPSocketState */
     TI_DbgPrint(DEBUG_TCP,
                 ("Connecting to address %x:%x\n",
@@ -683,8 +678,8 @@ NTSTATUS TCPClose
     ASSERT_LOCKED(&TCPLock);
 
     /* Make our code remove all pending IRPs */
-    Connection->State |= SEL_FIN;
-    DrainSignals();
+    Connection->SignalState |= SEL_FIN;
+    HandleSignalledConnection(Connection);
 
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
     if (Status == STATUS_SUCCESS)
@@ -714,13 +709,6 @@ NTSTATUS TCPReceiveData
     ASSERT_LOCKED(&TCPLock);
 
     ASSERT_KM_POINTER(Connection->SocketContext);
-
-    /* Closing */
-    if (Connection->State & SEL_FIN)
-    {
-        *BytesReceived = 0;
-        return STATUS_REMOTE_DISCONNECT;
-    }
 
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
@@ -786,12 +774,6 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
                            Connection->SocketContext));
 
-    /* Closing */
-    if (Connection->State & SEL_FIN)
-    {
-        *BytesSent = 0;
-        return STATUS_REMOTE_DISCONNECT;
-    }
 
     Status = TCPTranslateError
         ( OskitTCPSend( Connection->SocketContext,
