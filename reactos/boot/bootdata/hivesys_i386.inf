@@ -782,6 +782,29 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00021004",0x
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00021404",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00030404",0x00000000,""
 
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82441FX",0x00030003,\
+01,00,00,00,86,80,37,12,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82439HX",0x00030003,\
+01,00,00,00,86,80,50,12,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82439TX",0x00030003,\
+01,00,00,00,86,80,00,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82443LX/EX",0x00030003,\
+01,00,00,00,86,80,80,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82443BX1",0x00030003,\
+01,00,00,00,86,80,90,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82443BX2",0x00030003,\
+01,00,00,00,86,80,92,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82443GX",0x00030003,\
+01,00,00,00,86,80,a0,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","VIA Tech1",0x00030003,\
+01,00,00,00,06,11,01,05,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","VIA Tech2",0x00030003,\
+01,00,00,00,06,11,91,06,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Toshiba",0x00030003,\
+01,00,00,00,79,11,01,06,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Ali",0x00030003,\
+01,00,00,00,b9,10,21,15,00,00,00,00,00,00,00,00
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","MajorVersion",0x00010001,2
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","MinorVersion",0x00010003,0
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","PriorityClass",0x00010003,0

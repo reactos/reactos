@@ -703,19 +703,24 @@ NTAPI
 HalpQueryPciRegistryInfo(VOID)
 {
     WCHAR NameBuffer[8];
-    OBJECT_ATTRIBUTES   ObjectAttributes;
+    OBJECT_ATTRIBUTES  ObjectAttributes;
     UNICODE_STRING KeyName, ConfigName, IdentName;
-    HANDLE KeyHandle, BusKeyHandle;
+    HANDLE KeyHandle, BusKeyHandle, CardListHandle;
     NTSTATUS Status;
-    UCHAR KeyBuffer[sizeof(PPCI_REGISTRY_INFO) + 100];
+    UCHAR KeyBuffer[sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + 100];
     PKEY_VALUE_FULL_INFORMATION ValueInfo = (PVOID)KeyBuffer;
+    UCHAR PartialKeyBuffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) +
+                           sizeof(PCI_CARD_DESCRIPTOR)];
+    PKEY_VALUE_PARTIAL_INFORMATION PartialValueInfo = (PVOID)PartialKeyBuffer;
+    KEY_FULL_INFORMATION KeyInformation;
     ULONG ResultLength;
     PWSTR Tag;
-    ULONG i;
+    ULONG i, ElementCount;
     PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PPCI_REGISTRY_INFO PciRegInfo;
     PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo;
+    PPCI_CARD_DESCRIPTOR CardDescriptor;
 
     /* Setup the object attributes for the key */
     RtlInitUnicodeString(&KeyName,
@@ -736,7 +741,7 @@ HalpQueryPciRegistryInfo(VOID)
     KeyName.MaximumLength = sizeof(NameBuffer);
 
     /* Setup the configuration and identifier key names */
-    RtlInitUnicodeString(&ConfigName, L"ConfigurationData");
+    RtlInitUnicodeString(&ConfigName, L"Configuration Data");
     RtlInitUnicodeString(&IdentName, L"Identifier");
 
     /* Keep looping for each ID */
@@ -805,28 +810,120 @@ HalpQueryPciRegistryInfo(VOID)
         /* Check if this is our PCI Registry Information */
         if (PartialDescriptor->Type == CmResourceTypeDeviceSpecific)
         {
-            /* Close the key */
-            ZwClose(KeyHandle);
-
-            /* FIXME: Check PnP\PCI\CardList */
-
-            /* Get the PCI information */
-            PciRegInfo = (PPCI_REGISTRY_INFO)(PartialDescriptor + 1);
-
-            /* Allocate the return structure */
-            PciRegistryInfo = ExAllocatePoolWithTag(NonPagedPool,
-                                                    sizeof(PCI_REGISTRY_INFO_INTERNAL),
-                                                    ' laH');
-            if (!PciRegistryInfo) return NULL;
-
-            /* Fill it out */
-            PciRegistryInfo->HardwareMechanism = PciRegInfo->HardwareMechanism;
-            PciRegistryInfo->NoBuses = PciRegInfo->NoBuses;
-            PciRegistryInfo->MajorRevision = PciRegInfo->MajorRevision;
-            PciRegistryInfo->MinorRevision = PciRegInfo->MinorRevision;
-            PciRegistryInfo->ElementCount = 0;
+            /* It is, stop searching */
+            break;
         }
     }
+
+    /* Close the key */
+    ZwClose(KeyHandle);
+
+    /* Save the PCI information for later */
+    PciRegInfo = (PPCI_REGISTRY_INFO)(PartialDescriptor + 1);
+
+    /* Assume no Card List entries */
+    ElementCount = 0;
+
+    /* Set up for checking the PCI Card List key */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\"
+                         L"Control\\PnP\\PCI\\CardList");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Attempt to open it */
+    Status = ZwOpenKey(&CardListHandle, KEY_READ, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* It exists, so let's query it */
+        Status = ZwQueryKey(CardListHandle,
+                            KeyFullInformation,
+                            &KeyInformation,
+                            sizeof(KEY_FULL_INFORMATION),
+                            &ResultLength);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Failed to query, so no info */
+            PciRegistryInfo = NULL;
+        }
+        else
+        {
+            /* Allocate the full structure */
+            PciRegistryInfo =
+                ExAllocatePoolWithTag(NonPagedPool,
+                                      sizeof(PCI_REGISTRY_INFO_INTERNAL) +
+                                      (KeyInformation.Values *
+                                       sizeof(PCI_CARD_DESCRIPTOR)),
+                                       ' laH');
+            if (PciRegistryInfo)
+            {
+                /* Get the first card descriptor entry */
+                CardDescriptor = (PPCI_CARD_DESCRIPTOR)(PciRegistryInfo + 1);
+
+                /* Loop all the values */
+                for (i = 0; i < KeyInformation.Values; i++)
+                {
+                    /* Attempt to get the value */
+                    Status = ZwEnumerateValueKey(CardListHandle,
+                                                 i,
+                                                 KeyValuePartialInformation,
+                                                 PartialValueInfo,
+                                                 sizeof(PartialKeyBuffer),
+                                                 &ResultLength);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        /* Something went wrong, stop the search */
+                        break;
+                    }
+
+                    /* Make sure it is correctly sized */
+                    if (PartialValueInfo->DataLength == sizeof(PCI_CARD_DESCRIPTOR))
+                    {
+                        /* Sure is, copy it over */
+                        *CardDescriptor = *(PPCI_CARD_DESCRIPTOR)
+                                           PartialValueInfo->Data;
+
+                        /* One more Card List entry */
+                        ElementCount++;
+
+                        /* Move to the next descriptor */
+                        CardDescriptor = (CardDescriptor + 1);
+                    }
+                }
+            }
+        }
+
+        /* Close the Card List key */
+        ZwClose(CardListHandle);
+    }
+    else
+    {
+       /* No key, no Card List */
+       PciRegistryInfo = NULL;
+    }
+
+    /* Check if we failed to get the full structure */
+    if (!PciRegistryInfo)
+    {
+        /* Just allocate the basic structure then */
+        PciRegistryInfo = ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(PCI_REGISTRY_INFO_INTERNAL),
+                                                ' laH');
+        if (!PciRegistryInfo) return NULL;
+    }
+
+    /* Save the info we got */
+    PciRegistryInfo->MajorRevision = PciRegInfo->MajorRevision;
+    PciRegistryInfo->MinorRevision = PciRegInfo->MinorRevision;
+    PciRegistryInfo->NoBuses = PciRegInfo->NoBuses;
+    PciRegistryInfo->HardwareMechanism = PciRegInfo->HardwareMechanism;
+    PciRegistryInfo->ElementCount = ElementCount;
+
+    /* Return it */
+    return PciRegistryInfo;
 }
 
 VOID
@@ -893,7 +990,7 @@ HalpInitializePciStubs(VOID)
         default:
 
             /* Invalid type */
-            DbgPrint("HAL: Unnkown PCI type\n");
+            DbgPrint("HAL: Unknown PCI type\n");
     }
 
     /* Loop all possible buses */
