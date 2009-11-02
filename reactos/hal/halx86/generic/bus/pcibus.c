@@ -125,7 +125,7 @@ HalpPCISynchronizeType1(IN PBUS_HANDLER BusHandler,
     PciCfg1->u.bits.Enable = TRUE;
 
     /* Acquire the lock */
-    *Irql = KfRaiseIrql(HIGH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL, Irql);
     KiAcquireSpinLock(&HalpPCIConfigLock);
 }
 
@@ -143,7 +143,7 @@ HalpPCIReleaseSynchronzationType1(IN PBUS_HANDLER BusHandler,
 
     /* Release the lock */
     KiReleaseSpinLock(&HalpPCIConfigLock);
-    KfLowerIrql(Irql);
+    KeLowerIrql(Irql);
 }
 
 TYPE1_READ(HalpPCIReadUcharType1, UCHAR)
@@ -171,7 +171,7 @@ HalpPCISynchronizeType2(IN PBUS_HANDLER BusHandler,
     PciCfg->u.bits.AddressBase = (USHORT)BusData->Config.Type2.Base;
 
     /* Acquire the lock */
-    *Irql = KfRaiseIrql(HIGH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL, Irql);
     KiAcquireSpinLock(&HalpPCIConfigLock);
 
     /* Setup the CSE Register */
@@ -201,7 +201,7 @@ HalpPCIReleaseSynchronizationType2(IN PBUS_HANDLER BusHandler,
 
     /* Release the lock */
     KiReleaseSpinLock(&HalpPCIConfigLock);
-    KfLowerIrql(Irql);
+    KeLowerIrql(Irql);
 }
 
 TYPE2_READ(HalpPCIReadUcharType2, UCHAR)
