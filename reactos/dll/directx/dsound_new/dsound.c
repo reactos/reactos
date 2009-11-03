@@ -23,7 +23,15 @@ static INTERFACE_TABLE InterfaceTable[] =
         NewDirectSoundCapture
     },
     {
+        &CLSID_DirectSoundCapture8,
+        NewDirectSoundCapture
+    },
+    {
         &CLSID_DirectSound,
+        NewDirectSound
+    },
+    {
+        &CLSID_DirectSound8,
         NewDirectSound
     },
     {

@@ -353,6 +353,14 @@ IDirectSound8_fnVerifyCertification(
     LPDIRECTSOUND8 iface,
     LPDWORD pdwCertified)
 {
+    LPCDirectSoundImpl This = (LPCDirectSoundImpl)CONTAINING_RECORD(iface, CDirectSoundImpl, lpVtbl);
+
+    if (!This->bInitialized)
+    {
+        /* object not yet initialized */
+        return DSERR_UNINITIALIZED;
+    }
+
     UNIMPLEMENTED;
     return DS_CERTIFIED;
 }
