@@ -255,7 +255,7 @@ SecondaryDirectSoundBuffer8Impl_fnLock(
 
         return DS_OK;
     }
-    else if (dwFlags & DSBLOCK_FROMWRITECURSOR)
+    else if (dwFlags == DSBLOCK_FROMWRITECURSOR)
     {
         UNIMPLEMENTED
         return DSERR_UNSUPPORTED;

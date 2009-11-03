@@ -298,11 +298,6 @@ IDirectSoundCaptureBufferImpl_Lock(
 
         return DS_OK;
     }
-    else if (dwFlags & DSBLOCK_FROMWRITECURSOR)
-    {
-        UNIMPLEMENTED
-        return DSERR_UNSUPPORTED;
-    }
     else
     {
         ASSERT(dwOffset < This->BufferSize);
