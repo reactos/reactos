@@ -26,8 +26,35 @@ typedef struct tagSCVK
     USHORT ScanCode;
     USHORT VirtualKey;
     PCHAR Name;
-    PVOID Reserved;
+    BOOLEAN Processed;
 } SCVK, *PSCVK;
+
+typedef struct tagVKNAME
+{
+    ULONG VirtualKey;
+    PCHAR Name;
+} VKNAME, *PVKNAME;
+
+typedef struct tagLAYOUTENTRY
+{
+    USHORT ScanCode;
+    UCHAR VirtualKey;
+    UCHAR OriginalVirtualKey;
+    UCHAR Cap;
+    ULONG StateCount;
+    ULONG CharData[8];
+    ULONG DeadCharData[8];
+    ULONG OtherCharData[8];
+    struct LAYOUTENTRY* CapData;
+    PCHAR Name;
+    ULONG Processed;
+    ULONG LineCount;
+} LAYOUTENTRY, *PLAYOUTENTRY;
+
+typedef struct tagLAYOUT
+{
+    LAYOUTENTRY Entry[110];
+} LAYOUT, *PLAYOUT;
 
 /* GLOBALS ********************************************************************/
 
@@ -44,7 +71,7 @@ CHAR gCompany[256];
 CHAR gLocaleName[256];
 ULONG gID = 0;
 ULONG gKbdLayoutVersion;
-CHAR g_Layout[4096];
+LAYOUT g_Layout;
 ULONG gLineCount;
 PCHAR KeyWordList[KEYWORD_COUNT] =
 {
@@ -70,118 +97,159 @@ PCHAR KeyWordList[KEYWORD_COUNT] =
 /* ISO 110-key Keyboard Scancode to Virtual Key Conversion Table */
 SCVK ScVk[] =
 {
-    {0x02, '1', NULL, NULL},
-    {0x03, '2', NULL, NULL},
-    {0x04, '3', NULL, NULL},
-    {0x05, '4', NULL, NULL},
-    {0x06, '5', NULL, NULL},
-    {0x07, '6', NULL, NULL},
-    {0x08, '7', NULL, NULL},
-    {0x09, '8', NULL, NULL},
-    {0x0a, '9', NULL, NULL},
-    {0x0b, '0', NULL, NULL},
-    {0x0c, 0xbd, NULL, NULL},
-    {0x0d, 0xbb, NULL, NULL},
-    {0x10, 'Q', NULL, NULL},
-    {0x11, 'W', NULL, NULL},
-    {0x12, 'E', NULL, NULL},
-    {0x13, 'R', NULL, NULL},
-    {0x14, 'T', NULL, NULL},
-    {0x15, 'Y', NULL, NULL},
-    {0x16, 'U', NULL, NULL},
-    {0x17, 'I', NULL, NULL},
-    {0x18, 'O', NULL, NULL},
-    {0x19, 'P', NULL, NULL},
-    {0x1a, 0xdb, NULL, NULL},
-    {0x1b, 0xdd, NULL, NULL},
-    {0x1e, 'A', NULL, NULL},
-    {0x1f, 'S', NULL, NULL},
-    {0x20, 'D', NULL, NULL},
-    {0x21, 'F', NULL, NULL},
-    {0x22, 'G', NULL, NULL},
-    {0x23, 'H', NULL, NULL},
-    {0x24, 'J', NULL, NULL},
-    {0x25, 'K', NULL, NULL},
-    {0x26, 'L', NULL, NULL},
-    {0x27, 0xba, NULL, NULL},
-    {0x28, 0xde, NULL, NULL},
-    {0x29, 0xc0, NULL, NULL},
-    {0x2b, 0xdc, NULL, NULL},
-    {0x2c, 'Z', NULL, NULL},
-    {0x2d, 'X', NULL, NULL},
-    {0x2e, 'C', NULL, NULL},
-    {0x2f, 'V', NULL, NULL},
-    {0x30, 'B', NULL, NULL},
-    {0x31, 'N', NULL, NULL},
-    {0x32, 'M', NULL, NULL},
-    {0x33, 0xbc, NULL, NULL},
-    {0x34, 0xbe, NULL, NULL},
-    {0x35, 0xbf, NULL, NULL},
-    {0x53, 0x6e, NULL, NULL},
-    {0x56, 0xe2, NULL, NULL},
-    {0x73, 0xc1, NULL, NULL},
-    {0x7e, 0xc2, NULL, NULL},
-    {0xe010, 0xb1, "Speedracer: Previous Track", NULL},
-    {0xe019, 0xb0, "Speedracer: Next Track", NULL},
-    {0xe01d, 0xa3, "RControl", NULL},
-    {0xe020, 0xad, "Speedracer: Volume Mute", NULL},
-    {0xe021, 0xb7, "Speedracer: Launch App 2", NULL},
-    {0xe022, 0xb3, "Speedracer: Media Play/Pause", NULL},
-    {0xe024, 0xb2, "Speedracer: Media Stop", NULL},
-    {0xe02e, 0xae, "Speedracer: Volume Up", NULL},
-    {0xe030, 0xaf, "Speedracer: Volume Down", NULL},
-    {0xe032, 0xac, "Speedracer: Browser Home", NULL},
-    {0xe035, 0x6f, "Numpad Divide", NULL},
-    {0xe037, 0x2c, "Snapshot", NULL},
-    {0xe038, 0xa5, "RMenu", NULL},
-    {0xe047, 0x24, "Home", NULL},
-    {0xe048, 0x26, "Up", NULL},
-    {0xe049, 0x21, "Prior", NULL},
-    {0xe04b, 0x25, "Left", NULL},
-    {0xe04d, 0x27, "Right", NULL},
-    {0xe04f, 0x23, "End", NULL},
-    {0xe050, 0x28, "Down", NULL},
-    {0xe051, 0x22, "Next", NULL},
-    {0xe052, 0x2d, "Insert", NULL},
-    {0xe053, 0x2e, "Delete", NULL},
-    {0xe05b, 0x5b, "Left Win", NULL},
-    {0xe05c, 0x5c, "Right Win", NULL},
-    {0xe05d, 0x5d, "Application", NULL},
-    {0xe05e, 0xff, "Power", NULL},
-    {0xe05f, 0x5f, "Speedracer: Sleep", NULL},
-    {0xe060, 0xff, "BAD SCANCODE", NULL},
-    {0xe061, 0xff, "BAD SCANCODE", NULL},
-    {0xe065, 0xaa, "Speedracer: Browser Search", NULL},
-    {0xe066, 0xab, "Speedracer: Browser Favorites", NULL},
-    {0xe067, 0xa8, "Speedracer: Browser Refresh", NULL},
-    {0xe068, 0xa9, "Speedracer: Browser Stop", NULL},
-    {0xe069, 0xa7, "Speedracer: Browser Foward", NULL},
-    {0xe06a, 0xa6, "Speedracer: Browser Back", NULL},
-    {0xe06b, 0xb6, "Speedracer: Launch App 1", NULL},
-    {0xe06c, 0xb4, "Speedracer: Launch Mail", NULL},
-    {0xe06d, 0xb5, "Speedracer: Launch Media Selector", NULL},
-    {0x53, 0x6e, NULL, NULL},
-    {0x0e, 0x08, NULL, NULL},
-    {0x01, 0x1b, NULL, NULL},
-    {0xe01c, 0x0d, "Numpad Enter", NULL},
-    {0x1c, 0x0d, NULL, NULL},
-    {0x39, 0x20, NULL, NULL},
-    {0xe046, 0x03, "Break (Ctrl + Pause)", NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL},
-    {0xFFFF, 0x00, NULL, NULL}
+    {0x02, '1', NULL, FALSE},
+    {0x03, '2', NULL, FALSE},
+    {0x04, '3', NULL, FALSE},
+    {0x05, '4', NULL, FALSE},
+    {0x06, '5', NULL, FALSE},
+    {0x07, '6', NULL, FALSE},
+    {0x08, '7', NULL, FALSE},
+    {0x09, '8', NULL, FALSE},
+    {0x0a, '9', NULL, FALSE},
+    {0x0b, '0', NULL, FALSE},
+    {0x0c, 0xbd, NULL, FALSE},
+    {0x0d, 0xbb, NULL, FALSE},
+    {0x10, 'Q', NULL, FALSE},
+    {0x11, 'W', NULL, FALSE},
+    {0x12, 'E', NULL, FALSE},
+    {0x13, 'R', NULL, FALSE},
+    {0x14, 'T', NULL, FALSE},
+    {0x15, 'Y', NULL, FALSE},
+    {0x16, 'U', NULL, FALSE},
+    {0x17, 'I', NULL, FALSE},
+    {0x18, 'O', NULL, FALSE},
+    {0x19, 'P', NULL, FALSE},
+    {0x1a, 0xdb, NULL, FALSE},
+    {0x1b, 0xdd, NULL, FALSE},
+    {0x1e, 'A', NULL, FALSE},
+    {0x1f, 'S', NULL, FALSE},
+    {0x20, 'D', NULL, FALSE},
+    {0x21, 'F', NULL, FALSE},
+    {0x22, 'G', NULL, FALSE},
+    {0x23, 'H', NULL, FALSE},
+    {0x24, 'J', NULL, FALSE},
+    {0x25, 'K', NULL, FALSE},
+    {0x26, 'L', NULL, FALSE},
+    {0x27, 0xba, NULL, FALSE},
+    {0x28, 0xde, NULL, FALSE},
+    {0x29, 0xc0, NULL, FALSE},
+    {0x2b, 0xdc, NULL, FALSE},
+    {0x2c, 'Z', NULL, FALSE},
+    {0x2d, 'X', NULL, FALSE},
+    {0x2e, 'C', NULL, FALSE},
+    {0x2f, 'V', NULL, FALSE},
+    {0x30, 'B', NULL, FALSE},
+    {0x31, 'N', NULL, FALSE},
+    {0x32, 'M', NULL, FALSE},
+    {0x33, 0xbc, NULL, FALSE},
+    {0x34, 0xbe, NULL, FALSE},
+    {0x35, 0xbf, NULL, FALSE},
+    {0x53, 0x6e, NULL, FALSE},
+    {0x56, 0xe2, NULL, FALSE},
+    {0x73, 0xc1, NULL, FALSE},
+    {0x7e, 0xc2, NULL, FALSE},
+    {0xe010, 0xb1, "Speedracer: Previous Track", FALSE},
+    {0xe019, 0xb0, "Speedracer: Next Track", FALSE},
+    {0xe01d, 0xa3, "RControl", FALSE},
+    {0xe020, 0xad, "Speedracer: Volume Mute", FALSE},
+    {0xe021, 0xb7, "Speedracer: Launch App 2", FALSE},
+    {0xe022, 0xb3, "Speedracer: Media Play/Pause", FALSE},
+    {0xe024, 0xb2, "Speedracer: Media Stop", FALSE},
+    {0xe02e, 0xae, "Speedracer: Volume Up", FALSE},
+    {0xe030, 0xaf, "Speedracer: Volume Down", FALSE},
+    {0xe032, 0xac, "Speedracer: Browser Home", FALSE},
+    {0xe035, 0x6f, "Numpad Divide", FALSE},
+    {0xe037, 0x2c, "Snapshot", FALSE},
+    {0xe038, 0xa5, "RMenu", FALSE},
+    {0xe047, 0x24, "Home", FALSE},
+    {0xe048, 0x26, "Up", FALSE},
+    {0xe049, 0x21, "Prior", FALSE},
+    {0xe04b, 0x25, "Left", FALSE},
+    {0xe04d, 0x27, "Right", FALSE},
+    {0xe04f, 0x23, "End", FALSE},
+    {0xe050, 0x28, "Down", FALSE},
+    {0xe051, 0x22, "Next", FALSE},
+    {0xe052, 0x2d, "Insert", FALSE},
+    {0xe053, 0x2e, "Delete", FALSE},
+    {0xe05b, 0x5b, "Left Win", FALSE},
+    {0xe05c, 0x5c, "Right Win", FALSE},
+    {0xe05d, 0x5d, "Application", FALSE},
+    {0xe05e, 0xff, "Power", FALSE},
+    {0xe05f, 0x5f, "Speedracer: Sleep", FALSE},
+    {0xe060, 0xff, "BAD SCANCODE", FALSE},
+    {0xe061, 0xff, "BAD SCANCODE", FALSE},
+    {0xe065, 0xaa, "Speedracer: Browser Search", FALSE},
+    {0xe066, 0xab, "Speedracer: Browser Favorites", FALSE},
+    {0xe067, 0xa8, "Speedracer: Browser Refresh", FALSE},
+    {0xe068, 0xa9, "Speedracer: Browser Stop", FALSE},
+    {0xe069, 0xa7, "Speedracer: Browser Foward", FALSE},
+    {0xe06a, 0xa6, "Speedracer: Browser Back", FALSE},
+    {0xe06b, 0xb6, "Speedracer: Launch App 1", FALSE},
+    {0xe06c, 0xb4, "Speedracer: Launch Mail", FALSE},
+    {0xe06d, 0xb5, "Speedracer: Launch Media Selector", FALSE},
+    {0x53, 0x6e, NULL, FALSE},
+    {0x0e, 0x08, NULL, FALSE},
+    {0x01, 0x1b, NULL, FALSE},
+    {0xe01c, 0x0d, "Numpad Enter", FALSE},
+    {0x1c, 0x0d, NULL, FALSE},
+    {0x39, 0x20, NULL, FALSE},
+    {0xe046, 0x03, "Break (Ctrl + Pause)", FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE},
+    {0xFFFF, 0x00, NULL, FALSE}
 };
+
+VKNAME VKName[] =
+{
+    {0x08, "BACK"},
+    {0x03, "CANCEL"},
+    {0x1b, "ESCAPE"},
+    {0x0d, "RETURN"},
+    {0x20, "SPACE"},
+    {0x6e, "DECIMAL"},
+    {0xba, "OEM_1"},
+    {0xbb, "OEM_PLUS"},
+    {0xbc, "OEM_COMMA"},
+    {0xbd, "OEM_MINUS"},
+    {0xbe, "OEM_PERIOD"},
+    {0xbf, "OEM_2"},
+    {0xc0, "OEM_3"},
+    {0xdb, "OEM_4"},
+    {0xdc, "OEM_5"},
+    {0xdd, "OEM_6"},
+    {0xde, "OEM_7"},
+    {0xdf, "OEM_8"},
+    {0xe2, "OEM_102"},
+    {0xc1, "ABNT_C1"},
+    {0xc2, "ABNT_C2"},
+    {0x10, "SHIFT"},
+    {0xa0, "LSHIFT"},
+    {0xa1, "RSHIFT"},
+    {0x12, "MENU"},
+    {0xa4, "LMENU"},
+    {0xa5, "RMENU"},
+    {0x11, "CONTROL"},
+    {0xa2, "LCONTROL"},
+    {0xa3, "RCONTROL"},
+    {0x6c, "SEPARATOR"},
+    {0xe4, "ICO_00"},
+    {0x2e, "DELETE"},
+    {0x2d, "INSERT"},
+    {0xe5, "GROUPSHIFT"},
+    {0xe6, "RGROUPSHIFT"}
+};
+
 
 /* FUNCTIONS ******************************************************************/
 
@@ -195,6 +263,52 @@ isKeyWord(PCHAR p)
     
     /* If we didn't find anything, i will be KEYWORD_COUNT, which is invalid */
     return i;
+}
+
+ULONG
+getVKNum(IN PCHAR p)
+{
+    ULONG Length;
+    ULONG i;
+    ULONG KeyNumber;
+    
+    /* Compute the length of the string */
+    Length = strlen(p);
+    if (!Length) return -1;
+    
+    /* Check if this is is a simple key */
+    if (Length == 1)
+    {
+        /* If it's a number, return it now */
+        if ((*p >= '0') && (*p <= '9')) return *p;
+
+        /* Otherwise, convert the letter to upper case */
+        *p = toupper(*p);
+        
+        /* And make sure it's a valid letter */
+        if ((*p >= 'A') && (*p <='Z')) return *p;
+        
+        /* Otherwise, fail */
+        return -1;
+    }
+
+    /* Otherwise, scan our virtual key names */
+    for (i = 0; i < 36; i++)
+    {
+        /* Check if we have a match */
+        if (!strcmp(VKName[i].Name, p)) return VKName[i].VirtualKey;
+    }
+    
+    /*  Check if this is a hex string */
+    if ((*p == '0') && ((*(p + 1) == 'x') || (*(p + 1) == 'X')))
+    {
+        /* Get the key number from the hex string */
+        *(p + 1) = 'x';
+        if (sscanf(p, "0x%x", &KeyNumber) == 1) return KeyNumber;
+    }
+
+    /* No hope: fail */
+    return -1;
 }
 
 BOOLEAN
@@ -680,11 +794,131 @@ DoDEADKEY(PVOID DeadKeyData)
 }
 
 ULONG
-DoLAYOUT(IN PVOID LayoutData,
+DoLAYOUT(IN PLAYOUT LayoutData,
          IN PVOID LigatureData,
          IN PULONG ShiftStates,
          IN ULONG StateCount)
 {
+    CHAR Token[32];
+    CHAR Cap[8];
+    ULONG KeyWord;
+    ULONG ScanCode, CurrentCode;
+    ULONG TokenCount;
+    ULONG VirtualKey;
+    ULONG i;
+    BOOLEAN FullEntry;
+    ULONG ScanCodeCount = -1;
+    PLAYOUTENTRY Entry;
+    
+    /* Only attempt this is Verbose is enabled (FOR DEBUGGING ONLY) */
+    if (!Verbose) return SkipLines();
+    
+    /* Zero out the layout */
+    memset(LayoutData, 0, sizeof(LAYOUT));
+    
+    /* Read each line */
+    Entry = &LayoutData->Entry[0];
+    while (NextLine(gBuf, 256, gfpInput))
+    {
+        /* Search for token */
+        if (sscanf(gBuf, "%s", Token) != 1) continue;
+        
+        /* Make sure it's not just a comment */
+        if (*Token == ';') continue;
+        
+        /* Make sure it's not a keyword */
+        KeyWord = isKeyWord(Token);
+        if (KeyWord < KEYWORD_COUNT) break;
+        
+        /* Now read the entry */
+        TokenCount = sscanf(gBuf, " %x %s %s", &ScanCode, Token, Cap);
+        if (TokenCount == 3)
+        {
+            /* Full entry with cap */
+            FullEntry = TRUE;
+        }
+        else if (TokenCount != 2)
+        {
+            /* Fail, invalid LAYOUT entry */
+            printf("There are not enough columns in the layout list.\n");
+            exit(1);
+        }
+        else
+        {
+            /* Simplified layout with no cap */
+            FullEntry = FALSE;
+        }
+        
+        /* One more */
+        Entry++;
+        if (++ScanCodeCount >= 110)
+        {
+            /* Too many! */
+            printf("ScanCode %02x - too many scancodes here to parse.\n", ScanCode);
+            exit(1);
+        }
+        
+        /* Fill out this entry */
+        Entry->ScanCode = ScanCode;
+        Entry->LineCount = gLineCount;
+        
+        /* Loop scancode table */
+        for (i = 0; i < 110; i++)
+        {
+            /* Get the current code */
+            CurrentCode = ScVk[i].ScanCode;
+            if (CurrentCode == 0xFFFF)
+            {
+                /* New code */
+                if (Verbose) printf("A new scancode is being defined: 0x%2X, %s\n", Entry->ScanCode, Token);
+                
+                /* Fill out the entry */
+                Entry->VirtualKey = getVKNum(Token);
+                goto FillEntry;
+            }
+            
+            /* If we found it, process it */
+            if (ScanCode == CurrentCode) break;
+        }
+        
+        /* Make sure we didn't already process it */
+        if (ScVk[i].Processed)
+        {
+            /* Fail */
+            printf("Scancode %X was previously defined.\n", ScanCode);
+            exit(1);
+        }
+        
+        /* Check if there is a valid virtual key */
+        if (ScVk[i].VirtualKey == 0xFFFF)
+        {
+            /* Fail */
+            printf("The Scancode you tried to use (%X) is reserved.\n", ScanCode);
+            exit(1);
+        }
+        
+        /* Fill out the entry */
+        Entry->OriginalVirtualKey = ScVk[i].VirtualKey;
+        Entry->Name = ScVk[i].Name;
+        
+FillEntry:
+        Entry->Processed = TRUE;
+        ScVk[i].Processed = TRUE;
+        
+        /* Get the virtual key from the entry */
+        VirtualKey = getVKNum(Token);
+        Entry->VirtualKey = VirtualKey;
+        
+        /* Make sure it's valid */
+        if (VirtualKey == 0xFFFF)
+        {
+            /* Warn the user */
+            if (Verbose) printf("An invalid Virtual Key '%s' was defined.\n", Token);
+            continue;
+        }
+    }
+    
+    /* Skip what's left */
     return SkipLines();
 }
 
