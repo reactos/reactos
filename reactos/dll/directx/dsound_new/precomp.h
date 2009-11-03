@@ -101,6 +101,16 @@ GetPinIdFromFilter(
 
 /* misc.c */
 
+BOOL
+CreateCompatiblePin(
+    IN HANDLE hFilter,
+    IN DWORD PinId,
+    IN BOOL bLoop,
+    IN LPWAVEFORMATEX WaveFormatEx,
+    OUT LPWAVEFORMATEX WaveFormatOut,
+    OUT PHANDLE hPin);
+
+
 DWORD
 SyncOverlappedDeviceIoControl(
     IN  HANDLE Handle,
@@ -198,6 +208,16 @@ NewKsPropertySet(
     IUnknown* pUnkOuter,
     REFIID riid,
     LPVOID* ppvObject);
+
+/* capture.c */
+
+HRESULT
+CALLBACK
+NewDirectSoundCapture(
+    IUnknown* pUnkOuter,
+    REFIID riid,
+    LPVOID* ppvObject);
+
 
 /* capturebuffer.c */
 HRESULT

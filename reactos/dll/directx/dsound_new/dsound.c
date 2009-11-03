@@ -19,6 +19,10 @@ static INTERFACE_TABLE InterfaceTable[] =
         NewKsPropertySet
     },
     {
+        &CLSID_DirectSoundCapture,
+        NewDirectSoundCapture
+    },
+    {
         NULL,
         NULL
     }
@@ -160,7 +164,7 @@ DllMain(
     {
         case DLL_PROCESS_ATTACH:
             dsound_hInstance = hInstDLL;
-#if 0
+#if 1
             DPRINT("NumDevs %u\n", waveOutGetNumDevs());
             if (EnumAudioDeviceInterfaces(&RootInfo) != S_OK)
             {

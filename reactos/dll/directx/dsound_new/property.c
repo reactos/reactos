@@ -129,7 +129,7 @@ KSPropertySetImpl_Get(
             }
             else
             {
-                DPRINT("Using default capture guid\n");
+                DPRINT("Using default playback guid\n");
                 CopyMemory(&DeviceGuid, &DSDEVID_DefaultPlayback, sizeof(GUID));
             }
         }

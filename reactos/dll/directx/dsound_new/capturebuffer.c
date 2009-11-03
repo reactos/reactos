@@ -26,8 +26,10 @@ typedef struct
     PUCHAR Buffer;
     DWORD BufferSize;
     LPWAVEFORMATEX Format;
+    WAVEFORMATEX MixFormat;
+    BOOL bMix;
+    BOOL bLoop;
     KSSTATE State;
-
 
 }CDirectSoundCaptureBufferImpl, *LPCDirectSoundCaptureBufferImpl;
 
@@ -88,9 +90,17 @@ IDirectSoundCaptureBufferImpl_Release(
 
     if (!ref)
     {
+        if (This->hPin)
+        {
+            /* close pin handle */
+            CloseHandle(This->hPin);
+        }
+
         /* free capture buffer */
         HeapFree(GetProcessHeap(), 0, This->Buffer);
+        /* free wave format */
         HeapFree(GetProcessHeap(), 0, This->Format);
+        /* free capture buffer */
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -104,8 +114,25 @@ IDirectSoundCaptureBufferImpl_GetCaps(
     LPDIRECTSOUNDCAPTUREBUFFER8 iface,
     LPDSCBCAPS lpDSCBCaps )
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
+
+    if (!lpDSCBCaps)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    if (lpDSCBCaps->dwSize != sizeof(DSCBCAPS))
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    lpDSCBCaps->dwBufferBytes = This->BufferSize;
+    lpDSCBCaps->dwReserved = 0;
+    //lpDSCBCaps->dwFlags =  DSCBCAPS_WAVEMAPPED;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -115,8 +142,47 @@ IDirectSoundCaptureBufferImpl_GetCurrentPosition(
     LPDWORD lpdwCapturePosition,
     LPDWORD lpdwReadPosition)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    KSAUDIO_POSITION Position;
+    KSPROPERTY Request;
+    DWORD Result;
+
+    LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
+
+    if (!This->hPin)
+    {
+        if (lpdwCapturePosition)
+            *lpdwCapturePosition = 0;
+
+        if (lpdwReadPosition)
+            *lpdwReadPosition = 0;
+
+        DPRINT("No Audio Pin\n");
+        return DS_OK;
+    }
+
+    /* setup audio position property request */
+    Request.Id = KSPROPERTY_AUDIO_POSITION;
+    Request.Set = KSPROPSETID_Audio;
+    Request.Flags = KSPROPERTY_TYPE_GET;
+
+
+    Result = SyncOverlappedDeviceIoControl(This->hPin, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSPROPERTY), (PVOID)&Position, sizeof(KSAUDIO_POSITION), NULL);
+
+    if (Result != ERROR_SUCCESS)
+    {
+        DPRINT("GetPosition failed with %x\n", Result);
+        return DSERR_UNSUPPORTED;
+    }
+
+    //DPRINT("Play %I64u Write %I64u \n", Position.PlayOffset, Position.WriteOffset);
+
+    if (lpdwCapturePosition)
+        *lpdwCapturePosition = (DWORD)Position.PlayOffset;
+
+    if (lpdwReadPosition)
+        *lpdwReadPosition = (DWORD)Position.WriteOffset;
+
+    return DS_OK;
 }
 
 
@@ -128,8 +194,40 @@ IDirectSoundCaptureBufferImpl_GetFormat(
     DWORD dwSizeAllocated,
     LPDWORD lpdwSizeWritten)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    DWORD FormatSize;
+    LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
+
+    FormatSize = sizeof(WAVEFORMATEX) + This->Format->cbSize;
+
+    if (!lpwfxFormat && !lpdwSizeWritten)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    if (!lpwfxFormat)
+    {
+        /* return required format size */
+        *lpdwSizeWritten = FormatSize;
+        return DS_OK;
+    }
+    else
+    {
+        if (dwSizeAllocated >= FormatSize)
+        {
+            /* copy format */
+            CopyMemory(lpwfxFormat, This->Format, FormatSize);
+
+            if (lpdwSizeWritten)
+                *lpdwSizeWritten = FormatSize;
+
+            return DS_OK;
+        }
+        /* buffer too small */
+        if (lpdwSizeWritten)
+            *lpdwSizeWritten = 0;
+        return DSERR_INVALIDPARAM;
+    }
 }
 
 HRESULT
@@ -138,8 +236,27 @@ IDirectSoundCaptureBufferImpl_GetStatus(
     LPDIRECTSOUNDCAPTUREBUFFER8 iface,
     LPDWORD lpdwStatus )
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
+
+    if (!lpdwStatus)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    /* reset flags */
+    *lpdwStatus = 0;
+
+    /* check if pin is running */
+    if (This->State == KSSTATE_RUN)
+        *lpdwStatus |= DSCBSTATUS_CAPTURING;
+
+    /* check if a looped buffer is used */
+    if (This->bLoop)
+        *lpdwStatus |= DSCBSTATUS_LOOPING;
+
+    /* done */
+    return DS_OK;
 }
 
 HRESULT
@@ -175,8 +292,64 @@ IDirectSoundCaptureBufferImpl_Start(
     LPDIRECTSOUNDCAPTUREBUFFER8 iface,
     DWORD dwFlags )
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    KSPROPERTY Property;
+    KSSTREAM_HEADER Header;
+    DWORD Result, BytesTransferred;
+    OVERLAPPED Overlapped;
+    KSSTATE State;
+    LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
+
+    DPRINT("IDirectSoundCaptureBufferImpl_Start Flags %x\n", dwFlags);
+    ASSERT(dwFlags == DSCBSTART_LOOPING);
+
+    /* check if pin is already running */
+    if (This->State == KSSTATE_RUN)
+        return DS_OK;
+
+    /* sanity check */
+    ASSERT(This->hPin);
+
+    /* setup request */
+    Property.Set = KSPROPSETID_Connection;
+    Property.Id = KSPROPERTY_CONNECTION_STATE;
+    Property.Flags = KSPROPERTY_TYPE_SET;
+    State = KSSTATE_RUN;
+
+    /* set pin to run */
+    Result = SyncOverlappedDeviceIoControl(This->hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&State, sizeof(KSSTATE), &BytesTransferred);
+
+    ASSERT(Result == ERROR_SUCCESS);
+
+    if (Result == ERROR_SUCCESS)
+    {
+        /* store result */
+        This->State = State;
+    }
+
+    /* initialize overlapped struct */
+    ZeroMemory(&Overlapped, sizeof(OVERLAPPED));
+    Overlapped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    /* clear stream header */
+    ZeroMemory(&Header, sizeof(KSSTREAM_HEADER));
+
+    /* initialize stream header */
+    Header.FrameExtent = This->BufferSize;
+    Header.DataUsed = 0;
+    Header.Data = This->Buffer;
+    Header.Size = sizeof(KSSTREAM_HEADER);
+    Header.PresentationTime.Numerator = 1;
+    Header.PresentationTime.Denominator = 1;
+
+    Result = DeviceIoControl(This->hPin, IOCTL_KS_WRITE_STREAM, NULL, 0, &Header, sizeof(KSSTREAM_HEADER), &BytesTransferred, &Overlapped);
+
+    if (Result != ERROR_SUCCESS)
+    {
+        DPRINT("Failed submit buffer with %lx\n", Result);
+        return DSERR_GENERIC;
+    }
+
+    return DS_OK;
 }
 
 HRESULT
@@ -258,6 +431,7 @@ NewDirectSoundCaptureBuffer(
     DWORD FormatSize;
     ULONG DeviceId = 0, PinId;
     DWORD Result = ERROR_SUCCESS;
+    WAVEFORMATEX MixFormat;
 
     LPCDirectSoundCaptureBufferImpl This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CDirectSoundCaptureBufferImpl));
 
@@ -299,7 +473,6 @@ NewDirectSoundCaptureBuffer(
     {
         /* try all available recording pins on that filter */
         PinId = GetPinIdFromFilter(Filter, TRUE, DeviceId);
-        DPRINT("PinId %u DeviceId %u\n", PinId, DeviceId);
 
         if (PinId == ULONG_MAX)
             break;
@@ -313,11 +486,41 @@ NewDirectSoundCaptureBuffer(
 
     if (Result != ERROR_SUCCESS)
     {
-        /* failed to instantiate the capture pin */
-        HeapFree(GetProcessHeap(), 0, This->Buffer);
-        HeapFree(GetProcessHeap(), 0, This->Format);
-        HeapFree(GetProcessHeap(), 0, This);
-        return DSERR_OUTOFMEMORY;
+        /* failed to instantiate the capture pin with the native format
+         * try to compute a compatible format and use that
+         * we could use the mixer api for this purpose but... the kmixer isnt working very good atm
+         */
+
+       DeviceId = 0;
+       do
+       {
+           /* try all available recording pins on that filter */
+            PinId = GetPinIdFromFilter(Filter, TRUE, DeviceId);
+            DPRINT("PinId %u DeviceId %u\n", PinId, DeviceId);
+
+            if (PinId == ULONG_MAX)
+                break;
+
+            if (CreateCompatiblePin(Filter->hFilter, PinId, TRUE, lpcDSBufferDesc->lpwfxFormat, &MixFormat, &This->hPin))
+            {
+                This->bMix = TRUE;
+                CopyMemory(&This->MixFormat, &MixFormat, sizeof(WAVEFORMATEX));
+                break;
+            }
+
+            DeviceId++;
+        }while(TRUE);
+
+
+        if (!This->bMix)
+        {
+            /* FIXME should not happen */
+            DPRINT("failed to compute a compatible format\n");
+            HeapFree(GetProcessHeap(), 0, This->Buffer);
+            HeapFree(GetProcessHeap(), 0, This->Format);
+            HeapFree(GetProcessHeap(), 0, This);
+            return DSERR_GENERIC;
+        }
     }
 
     /* initialize capture buffer */
@@ -325,6 +528,9 @@ NewDirectSoundCaptureBuffer(
     This->lpVtbl = &vt_DirectSoundCaptureBuffer8;
     This->Filter = Filter;
     This->State = KSSTATE_STOP;
+    This->bLoop = TRUE;
+
+    RtlMoveMemory(This->Format, lpcDSBufferDesc->lpwfxFormat, FormatSize);
 
     *OutBuffer = (LPDIRECTSOUNDCAPTUREBUFFER8)&This->lpVtbl;
     return DS_OK;

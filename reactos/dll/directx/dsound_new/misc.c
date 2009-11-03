@@ -13,6 +13,102 @@ const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {
 const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Audio = {0x45FFAAA0L, 0x6E1B, 0x11D0, {0xBC, 0xF2, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00}};
 
+BOOL
+DoDataIntersection(
+    HANDLE hFilter,
+    DWORD PinId,
+    DWORD SampleFrequency,
+    LPWAVEFORMATEX WaveFormatEx,
+    DWORD MinimumBitsPerSample,
+    DWORD MaximumBitsPerSample,
+    DWORD MaximumChannels,
+    LPWAVEFORMATEX WaveFormatOut)
+{
+    DWORD nChannels, nBitsPerSample;
+    KSDATAFORMAT_WAVEFORMATEX WaveFormat;
+    PKSP_PIN Pin;
+    PKSMULTIPLE_ITEM Item;
+    PKSDATAFORMAT_WAVEFORMATEX DataFormat;
+    DWORD dwResult;
+
+    /* allocate request */
+    Pin = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSP_PIN) + sizeof(KSMULTIPLE_ITEM) + sizeof(KSDATAFORMAT_WAVEFORMATEX));
+    if (!Pin)
+    {
+        /* no memory */
+        return FALSE;
+    }
+
+    Item = (PKSMULTIPLE_ITEM)(Pin + 1);
+    DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)(Item + 1);
+
+    /* setup request */
+    Pin->PinId = PinId;
+    Pin->Property.Flags = KSPROPERTY_TYPE_GET;
+    Pin->Property.Set = KSPROPSETID_Pin;
+    Pin->Property.Id = KSPROPERTY_PIN_DATAINTERSECTION;
+    Item->Count = 1;
+    Item->Size = sizeof(KSDATAFORMAT_WAVEFORMATEX);
+
+
+    DataFormat->WaveFormatEx.wFormatTag = WaveFormatEx->wFormatTag;
+    DataFormat->WaveFormatEx.nSamplesPerSec = SampleFrequency;
+    DataFormat->WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
+    DataFormat->WaveFormatEx.cbSize = 0;
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+    DataFormat->DataFormat.Flags = 0;
+    DataFormat->DataFormat.Reserved = 0;
+    DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
+    DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+    DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
+    DataFormat->DataFormat.SampleSize = 4;
+
+    for(nChannels = 1; nChannels <= 2; nChannels++)
+    {
+        for(nBitsPerSample = MinimumBitsPerSample; nBitsPerSample <= MaximumBitsPerSample; nBitsPerSample += 8)
+        {
+            DataFormat->WaveFormatEx.nChannels = nChannels;
+            DataFormat->WaveFormatEx.nAvgBytesPerSec = (nBitsPerSample / 8) * nChannels * SampleFrequency;
+            DataFormat->WaveFormatEx.wBitsPerSample = nBitsPerSample;
+
+            DPRINT("CurrentFormat: InFormat nChannels %u wBitsPerSample %u nSamplesPerSec %u\n",
+                   nChannels, nBitsPerSample, SampleFrequency);
+
+            dwResult = SyncOverlappedDeviceIoControl(hFilter, IOCTL_KS_PROPERTY, (LPVOID)Pin, sizeof(KSP_PIN) + sizeof(KSMULTIPLE_ITEM) + sizeof(KSDATAFORMAT_WAVEFORMATEX),
+                                                     (LPVOID)&WaveFormat, sizeof(KSDATAFORMAT_WAVEFORMATEX), NULL);
+
+            DPRINT("dwResult %x\n", dwResult);
+
+
+            if (dwResult == ERROR_SUCCESS)
+            {
+                /* found a compatible audio range */
+                WaveFormatOut->cbSize = 0;
+                WaveFormatOut->nBlockAlign = WaveFormatEx->nBlockAlign;
+                WaveFormatOut->wFormatTag = WaveFormatEx->wFormatTag;
+                WaveFormatOut->nAvgBytesPerSec = (nBitsPerSample / 8) * nChannels * SampleFrequency;
+                WaveFormatOut->wBitsPerSample = nBitsPerSample;
+                WaveFormatOut->nSamplesPerSec = SampleFrequency;
+                WaveFormatOut->nChannels = nChannels;
+
+                /* free buffer */
+                HeapFree(GetProcessHeap(), 0, Pin);
+
+                DPRINT("InFormat  nChannels %u wBitsPerSample %u nSamplesPerSec %u\nOutFormat nChannels %u nBitsPerSample %u nSamplesPerSec %u\n",
+                       WaveFormatEx->nChannels, WaveFormatEx->wBitsPerSample, WaveFormatEx->nSamplesPerSec,
+                       WaveFormatOut->nChannels, WaveFormatOut->wBitsPerSample, WaveFormatOut->nSamplesPerSec);
+
+                return TRUE;
+            }
+        }
+    }
+
+    /* free buffer */
+    HeapFree(GetProcessHeap(), 0, Pin);
+    ASSERT(0);
+    return FALSE;
+}
+
 DWORD
 OpenPin(
     HANDLE hFilter,
@@ -111,7 +207,7 @@ SyncOverlappedDeviceIoControl(
 {
     OVERLAPPED Overlapped;
     BOOLEAN IoResult;
-    DWORD Transferred;
+    DWORD Transferred = 0;
 
     /* Overlapped I/O is done here - this is used for waiting for completion */
     ZeroMemory(&Overlapped, sizeof(OVERLAPPED));
@@ -283,12 +379,15 @@ GetFilterPinDataRanges(
     /* retrieve size of data ranges buffer */
     Status = SyncOverlappedDeviceIoControl(hFilter, IOCTL_KS_PROPERTY, (LPVOID)&Property, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
 
+#if 0
     if (Status != ERROR_MORE_DATA)
     {
         DPRINT("SyncOverlappedDeviceIoControl failed with %lx\n", Status);
         return Status;
     }
+#endif
 
+    ASSERT(BytesReturned);
     MultipleItem = HeapAlloc(GetProcessHeap(), 0, BytesReturned);
     if (!MultipleItem)
     {
@@ -314,3 +413,76 @@ GetFilterPinDataRanges(
     *OutMultipleItem = MultipleItem;
     return Status;
 }
+
+BOOL
+CreateCompatiblePin(
+    IN HANDLE hFilter,
+    IN DWORD PinId,
+    IN BOOL bLoop,
+    IN LPWAVEFORMATEX WaveFormatEx,
+    OUT LPWAVEFORMATEX WaveFormatOut,
+    OUT PHANDLE hPin)
+{
+    PKSMULTIPLE_ITEM Item = NULL;
+    PKSDATARANGE_AUDIO AudioRange;
+    DWORD dwResult;
+    DWORD dwIndex, nChannels;
+
+    dwResult = GetFilterPinDataRanges(hFilter, PinId, &Item);
+
+    if (dwResult != ERROR_SUCCESS)
+    {
+        /* failed to get data ranges */
+         return FALSE;
+    }
+
+    CopyMemory(WaveFormatOut, WaveFormatEx, sizeof(WAVEFORMATEX));
+
+    /* iterate through all dataranges */
+    AudioRange = (PKSDATARANGE_AUDIO)(Item + 1);
+    for(dwIndex = 0; dwIndex < Item->Count; dwIndex++)
+    {
+        if (AudioRange->DataRange.FormatSize != sizeof(KSDATARANGE_AUDIO))
+        {
+            UNIMPLEMENTED
+            AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
+            continue;
+        }
+
+        if (WaveFormatOut->nSamplesPerSec < AudioRange->MinimumSampleFrequency)
+            WaveFormatOut->nSamplesPerSec = AudioRange->MinimumSampleFrequency;
+        else if (WaveFormatOut->nSamplesPerSec > AudioRange->MaximumSampleFrequency)
+            WaveFormatOut->nSamplesPerSec = AudioRange->MaximumSampleFrequency;
+
+        if (WaveFormatOut->wBitsPerSample < AudioRange->MinimumBitsPerSample)
+            WaveFormatOut->wBitsPerSample = AudioRange->MinimumBitsPerSample;
+        else if (WaveFormatOut->wBitsPerSample > AudioRange->MaximumBitsPerSample)
+            WaveFormatOut->wBitsPerSample = AudioRange->MaximumBitsPerSample;
+
+        DPRINT1("MinimumBitsPerSample %u MaximumBitsPerSample %u MinimumSampleFrequency %u MaximumSampleFrequency %u\n",
+            AudioRange->MinimumBitsPerSample, AudioRange->MaximumBitsPerSample, AudioRange->MinimumSampleFrequency, AudioRange->MaximumSampleFrequency);
+
+        for(nChannels = 1; nChannels <= AudioRange->MaximumChannels; nChannels++)
+        {
+                DPRINT("InFormat  nChannels %u wBitsPerSample %u nSamplesPerSec %u\nOutFormat nChannels %u nBitsPerSample %u nSamplesPerSec %u\n",
+                       WaveFormatEx->nChannels, WaveFormatEx->wBitsPerSample, WaveFormatEx->nSamplesPerSec,
+                       WaveFormatOut->nChannels, WaveFormatOut->wBitsPerSample, WaveFormatOut->nSamplesPerSec);
+
+            WaveFormatOut->nChannels = nChannels;
+
+            dwResult = OpenPin(hFilter, PinId, WaveFormatOut, hPin, TRUE);
+            if (dwResult == ERROR_SUCCESS)
+            {
+                /* free buffer */
+                HeapFree(GetProcessHeap(), 0, Item);
+                return TRUE;
+            }
+        }
+        AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
+    }
+
+    /* free buffer */
+    HeapFree(GetProcessHeap(), 0, Item);
+    return FALSE;
+}
+

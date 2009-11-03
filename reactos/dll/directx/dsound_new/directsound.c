@@ -253,6 +253,11 @@ IDirectSound8_fnInitialize(
     HRESULT hr;
     LPCDirectSoundImpl This = (LPCDirectSoundImpl)CONTAINING_RECORD(iface, CDirectSoundImpl, lpVtbl);
 
+    if (!RootInfo)
+    {
+        EnumAudioDeviceInterfaces(&RootInfo);
+    }
+
     /* sanity check */
     ASSERT(RootInfo);
 
