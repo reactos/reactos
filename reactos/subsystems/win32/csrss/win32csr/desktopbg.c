@@ -179,7 +179,7 @@ DtbgDesktopThread(PVOID Data)
     }
   BackgroundWnd = CreateWindowW((LPCWSTR) DESKTOP_WINDOW_ATOM,
                                 L"",
-                                WS_POPUP | WS_CLIPCHILDREN,
+                                WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                 0,
                                 0,
                                 0,
