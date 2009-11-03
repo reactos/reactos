@@ -189,9 +189,9 @@ void NTDRV_SendMouseInput( HWND hwnd, DWORD flags, DWORD x, DWORD y,
 		GetCursorPos(&pt);
     }
 
-    hwnd = SwmGetWindowFromPoint(pt.x, pt.y);
+    //hwnd = SwmGetWindowFromPoint(pt.x, pt.y);
 
-    FIXME("hwnd %x\n", hwnd);
+    //FIXME("hwnd %x\n", hwnd);
 
     if (flags & MOUSEEVENTF_MOVE)
     {
