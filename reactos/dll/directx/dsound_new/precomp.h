@@ -98,6 +98,15 @@ GetPinIdFromFilter(
     BOOL bCapture,
     ULONG Offset);
 
+/* directsound.c */
+
+HRESULT
+CALLBACK
+NewDirectSound(
+    IUnknown* pUnkOuter,
+    REFIID riid,
+    LPVOID* ppvObject);
+
 
 /* misc.c */
 

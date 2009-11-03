@@ -464,11 +464,11 @@ CreateCompatiblePin(
 
         for(nChannels = 1; nChannels <= AudioRange->MaximumChannels; nChannels++)
         {
+            WaveFormatOut->nChannels = nChannels;
+
                 DPRINT("InFormat  nChannels %u wBitsPerSample %u nSamplesPerSec %u\nOutFormat nChannels %u nBitsPerSample %u nSamplesPerSec %u\n",
                        WaveFormatEx->nChannels, WaveFormatEx->wBitsPerSample, WaveFormatEx->nSamplesPerSec,
                        WaveFormatOut->nChannels, WaveFormatOut->wBitsPerSample, WaveFormatOut->nSamplesPerSec);
-
-            WaveFormatOut->nChannels = nChannels;
 
             dwResult = OpenPin(hFilter, PinId, WaveFormatOut, hPin, TRUE);
             if (dwResult == ERROR_SUCCESS)

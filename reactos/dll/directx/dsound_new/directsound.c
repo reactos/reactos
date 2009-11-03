@@ -15,6 +15,7 @@ typedef struct
     LONG ref;
     GUID DeviceGUID;
     BOOL bInitialized;
+    BOOL bDirectSound8;
     DWORD dwLevel;
     LPFILTERINFO Filter;
     LPDIRECTSOUNDBUFFER8 PrimaryBuffer;
@@ -32,10 +33,9 @@ IDirectSound8_fnQueryInterface(
     LPOLESTR pStr;
     LPCDirectSoundImpl This = (LPCDirectSoundImpl)CONTAINING_RECORD(iface, CDirectSoundImpl, lpVtbl);
 
-
-    if (IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IDirectSound) ||
-        IsEqualIID(riid, &IID_IDirectSound8))
+    if ((IsEqualIID(riid, &IID_IDirectSound) && This->bDirectSound8 == FALSE) || 
+        (IsEqualIID(riid, &IID_IDirectSound8) && This->bDirectSound8 == TRUE) ||
+        (IsEqualIID(riid, &IID_IUnknown)))
     {
         *ppobj = (LPVOID)&This->lpVtbl;
         InterlockedIncrement(&This->ref);
@@ -177,6 +177,26 @@ IDirectSound8_fnGetCaps(
     LPDIRECTSOUND8 iface,
     LPDSCAPS lpDSCaps)
 {
+    LPCDirectSoundImpl This = (LPCDirectSoundImpl)CONTAINING_RECORD(iface, CDirectSoundImpl, lpVtbl);
+
+    if (!This->bInitialized)
+    {
+        /* object not yet initialized */
+        return DSERR_UNINITIALIZED;
+    }
+
+    if (!lpDSCaps)
+    {
+        /* object not yet initialized */
+        return DSERR_INVALIDPARAM;
+    }
+
+    if (lpDSCaps->dwSize != sizeof(DSCAPS))
+    {
+        /* object not yet initialized */
+        return DSERR_INVALIDPARAM;
+    }
+
     UNIMPLEMENTED;
     return DSERR_GENERIC;
 }
@@ -217,8 +237,22 @@ WINAPI
 IDirectSound8_fnCompact(
     LPDIRECTSOUND8 iface)
 {
-    UNIMPLEMENTED;
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundImpl This = (LPCDirectSoundImpl)CONTAINING_RECORD(iface, CDirectSoundImpl, lpVtbl);
+
+    if (!This->bInitialized)
+    {
+        /* object not yet initialized */
+        return DSERR_UNINITIALIZED;
+    }
+
+    if (This->dwLevel != DSSCL_PRIORITY)
+    {
+        /* needs priority level */
+        return DSERR_PRIOLEVELNEEDED;
+    }
+
+    /* done */
+    return DS_OK;
 }
 
 HRESULT
@@ -227,6 +261,15 @@ IDirectSound8_fnGetSpeakerConfig(
     LPDIRECTSOUND8 iface,
     LPDWORD pdwSpeakerConfig)
 {
+    LPCDirectSoundImpl This = (LPCDirectSoundImpl)CONTAINING_RECORD(iface, CDirectSoundImpl, lpVtbl);
+
+    if (!This->bInitialized)
+    {
+        /* object not yet initialized */
+        return DSERR_UNINITIALIZED;
+    }
+
+
     UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
@@ -275,6 +318,12 @@ IDirectSound8_fnInitialize(
         pcGuidDevice = &DSDEVID_DefaultPlayback;
     }
 
+    if (IsEqualIID(pcGuidDevice, &DSDEVID_DefaultCapture) || IsEqualIID(pcGuidDevice, &DSDEVID_DefaultVoiceCapture))
+    {
+        /* this has to be a winetest */
+        return DSERR_NODRIVER;
+    }
+
     /* now verify the guid */
     if (GetDeviceID(pcGuidDevice, &DeviceGuid) != DS_OK)
     {
@@ -291,7 +340,7 @@ IDirectSound8_fnInitialize(
     if (SUCCEEDED(hr))
     {
         This->bInitialized = TRUE;
-        return DS_OK;
+        return DS_OK;	
     }
 
     DPRINT("Failed to find device\n");
@@ -331,7 +380,8 @@ HRESULT
 InternalDirectSoundCreate(
     LPCGUID lpcGUID,
     LPDIRECTSOUND8 *ppDS,
-    IUnknown *pUnkOuter)
+    IUnknown *pUnkOuter,
+    BOOL bDirectSound8)
 {
     LPCDirectSoundImpl This;
     HRESULT hr;
@@ -352,6 +402,7 @@ InternalDirectSoundCreate(
 
     /* initialize IDirectSound object */
     This->ref = 1;
+    This->bDirectSound8 = bDirectSound8;
     This->lpVtbl = &vt_DirectSound8;
 
 
@@ -374,13 +425,51 @@ InternalDirectSoundCreate(
 }
 
 HRESULT
+CALLBACK
+NewDirectSound(
+    IUnknown* pUnkOuter,
+    REFIID riid,
+    LPVOID* ppvObject)
+{
+    LPOLESTR pStr;
+    LPCDirectSoundImpl This;
+
+    /* check requested interface */
+    if (!IsEqualIID(riid, &IID_IUnknown) && !IsEqualIID(riid, &IID_IDirectSound) && !IsEqualIID(riid, &IID_IDirectSound8))
+    {
+        *ppvObject = 0;
+        StringFromIID(riid, &pStr);
+        DPRINT("KsPropertySet does not support Interface %ws\n", pStr);
+        CoTaskMemFree(pStr);
+        return E_NOINTERFACE;
+    }
+
+    /* allocate CDirectSoundCaptureImpl struct */
+    This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CDirectSoundImpl));
+    if (!This)
+    {
+        /* not enough memory */
+        return DSERR_OUTOFMEMORY;
+    }
+
+    /* initialize object */
+    This->ref = 1;
+    This->lpVtbl = &vt_DirectSound8;
+    This->bInitialized = FALSE;
+    *ppvObject = (LPVOID)&This->lpVtbl;
+
+    return S_OK;
+}
+
+
+HRESULT
 WINAPI
 DirectSoundCreate(
     LPCGUID lpcGUID,
     LPDIRECTSOUND *ppDS,
     IUnknown *pUnkOuter)
 {
-    return InternalDirectSoundCreate(lpcGUID, (LPDIRECTSOUND8*)ppDS, pUnkOuter);
+    return InternalDirectSoundCreate(lpcGUID, (LPDIRECTSOUND8*)ppDS, pUnkOuter, FALSE);
 }
 
 HRESULT
@@ -390,5 +479,5 @@ DirectSoundCreate8(
     LPDIRECTSOUND8 *ppDS,
     IUnknown *pUnkOuter)
 {
-    return InternalDirectSoundCreate(lpcGUID, ppDS, pUnkOuter);
+    return InternalDirectSoundCreate(lpcGUID, ppDS, pUnkOuter, TRUE);
 }
