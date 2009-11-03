@@ -110,6 +110,9 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             return 0;
         }
       }
+
+      default:
+        return DefWindowProcW(Wnd, Msg, wParam, lParam);
     }
 
   return 0;
