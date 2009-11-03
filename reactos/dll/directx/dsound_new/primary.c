@@ -76,6 +76,12 @@ PrimaryDirectSoundBuffer8Impl_fnRelease(
 
     if (!ref)
     {
+        if (This->hPin)
+        {
+            /* close pin handle */
+            CloseHandle(This->hPin);
+        }
+        /* free primary buffer */
         HeapFree(GetProcessHeap(), 0, This);
     }
 

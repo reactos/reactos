@@ -274,16 +274,50 @@ HRESULT
 WINAPI
 IDirectSoundCaptureBufferImpl_Lock(
     LPDIRECTSOUNDCAPTUREBUFFER8 iface,
-    DWORD dwReadCusor,
-    DWORD dwReadBytes,
-    LPVOID* lplpvAudioPtr1,
-    LPDWORD lpdwAudioBytes1,
-    LPVOID* lplpvAudioPtr2,
-    LPDWORD lpdwAudioBytes2,
+    DWORD dwOffset,
+    DWORD dwBytes,
+    LPVOID* ppvAudioPtr1,
+    LPDWORD pdwAudioBytes1,
+    LPVOID* ppvAudioPtr2,
+    LPDWORD pdwAudioBytes2,
     DWORD dwFlags )
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
+
+    DPRINT("This %p dwOffset %u dwBytes %u ppvAudioPtr1 %p pdwAudioBytes1 %p ppvAudioPtr2 %p pdwAudioBytes2 %p dwFlags %x This->BufferSize %u\n",
+           This, dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags, This->BufferSize);
+
+    if (dwFlags == DSBLOCK_ENTIREBUFFER)
+    {
+        *ppvAudioPtr1 = (LPVOID)This->Buffer;
+        *pdwAudioBytes1 = This->BufferSize;
+        if (ppvAudioPtr2)
+            *ppvAudioPtr2 = NULL;
+        if (pdwAudioBytes2)
+            *pdwAudioBytes2 = 0;
+
+        return DS_OK;
+    }
+    else if (dwFlags & DSBLOCK_FROMWRITECURSOR)
+    {
+        UNIMPLEMENTED
+        return DSERR_UNSUPPORTED;
+    }
+    else
+    {
+        ASSERT(dwOffset < This->BufferSize);
+        ASSERT(dwBytes < This->BufferSize);
+        ASSERT(dwBytes + dwOffset <= This->BufferSize);
+
+        *ppvAudioPtr1 = This->Buffer + dwOffset;
+        *pdwAudioBytes1 = dwBytes;
+        if (ppvAudioPtr2)
+            *ppvAudioPtr2 = NULL;
+        if (pdwAudioBytes2)
+            *pdwAudioBytes2 = 0;
+
+        return DS_OK;
+    }
 }
 
 HRESULT
@@ -369,8 +403,7 @@ IDirectSoundCaptureBufferImpl_Unlock(
     LPVOID lpvAudioPtr2,
     DWORD dwAudioBytes2 )
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    return DS_OK;
 }
 
 HRESULT
