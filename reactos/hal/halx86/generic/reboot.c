@@ -49,7 +49,7 @@ HalpReboot(VOID)
     /* Enable warm reboot */
     ((PUSHORT)ZeroPageMapping)[0x239] = 0x1234;
 
-    /* Lock CMOS Access */
+    /* Lock CMOS Access (and disable interrupts) */
     HalpAcquireSystemHardwareSpinLock();
 
     /* Setup control register B */
