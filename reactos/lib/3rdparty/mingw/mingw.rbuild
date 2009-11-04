@@ -42,7 +42,6 @@
 	<file>crt0_c.c</file>
 	<file>crtexe.c</file>
 	<file>dllargv.c</file>
-	<file>ucrtexe.c</file>
 </module>
 <module name="mingw_wmain" type="staticlibrary" isstartuplib="true" unicode="yes" crt="dll">
 	<define name="_CRTBLD" />
@@ -52,13 +51,11 @@
 	<file>crt0_w.c</file>
 	<file>crtexe.c</file>
 	<file>dllargv.c</file>
-	<file>ucrtexe.c</file>
 </module>
 <module name="mingw_dllmain" type="staticlibrary" isstartuplib="true" crt="dll">
 	<define name="_CRTBLD" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
 	<file>crtdll.c</file>
 	<file>dllargv.c</file>
-	<file>udllargc.c</file>
 </module>
 </group>
