@@ -383,11 +383,13 @@ MmInitSystem(IN ULONG Phase,
         //
         MmArmInitSystem(1, KeLoaderBlock);
 
+#if defined(_WINKD_)
         //
         // Everything required for the debugger to read and write
         // physical memory is now set up
         //
         MiDbgReadyForPhysical = TRUE;
+#endif
         
         /* Put the paged pool after the loaded modules */
         MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
