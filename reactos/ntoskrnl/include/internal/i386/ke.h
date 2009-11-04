@@ -42,6 +42,17 @@ extern ULONG Ke386CacheAlignment;
 #define KeGetTrapFrameInterruptState(TrapFrame) \
         BooleanFlagOn((TrapFrame)->EFlags, EFLAGS_INTERRUPT_MASK)
 
+//
+// Invalidates the TLB entry for a specified address
+//
+FORCEINLINE
+VOID
+KeInvalidateTlbEntry(IN PVOID Address)
+{
+    /* Invalidate the TLB entry for this address */
+    __invlpg(Address);
+}
+
 VOID
 FASTCALL
 Ki386InitializeTss(

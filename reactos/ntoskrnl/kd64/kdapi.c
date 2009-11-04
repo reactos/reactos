@@ -500,10 +500,10 @@ KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
         /* Uncached */
         Flags |= MMDBG_COPY_UNCACHED;
     }
-    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    else if (CacheFlags == DBGKD_CACHING_WRITE_COMBINED)
     {
         /* Write Combined */
-        Flags |= DBGKD_CACHING_WRITE_COMBINED;
+        Flags |= MMDBG_COPY_WRITE_COMBINED;
     }
 
     /* Do the read */
@@ -553,10 +553,10 @@ KdpWritePhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
         /* Uncached */
         Flags |= MMDBG_COPY_UNCACHED;
     }
-    else if (CacheFlags == DBGKD_CACHING_UNCACHED)
+    else if (CacheFlags == DBGKD_CACHING_WRITE_COMBINED)
     {
         /* Write Combined */
-        Flags |= DBGKD_CACHING_WRITE_COMBINED;
+        Flags |= MMDBG_COPY_WRITE_COMBINED;
     }
 
     /* Do the write */

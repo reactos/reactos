@@ -6,13 +6,124 @@
  * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include "ARM3/miarm.h"
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* GLOBALS ********************************************************************/
+
+PMMPTE MmDebugPte = MiAddressToPte(MI_DEBUG_MAPPING);
+BOOLEAN MiDbgReadyForPhysical = FALSE;
+
+/* FUNCTIONS ******************************************************************/
+
+PVOID
+NTAPI
+MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
+                              IN ULONG Flags)
+{
+    PFN_NUMBER Pfn;
+    MMPTE TempPte;
+    PVOID MappingBaseAddress;
+
+    //
+    // Check if we are called too early 
+    //
+    if (MiDbgReadyForPhysical == FALSE)
+    {
+        //
+        // The structures we require aren't initialized yet, fail
+        //
+        KdpDprintf("MiDbgTranslatePhysicalAddress called too early! "
+                   "Address: 0x%I64x\n", PhysicalAddress);
+        return NULL;
+    }
+
+    //
+    // FIXME: No support for cache flags yet
+    //
+    if ((Flags & (MMDBG_COPY_CACHED |
+                  MMDBG_COPY_UNCACHED |
+                  MMDBG_COPY_WRITE_COMBINED)) != 0)
+    {
+        //
+        // Fail
+        //
+        KdpDprintf("MiDbgTranslatePhysicalAddress: Cache Flags not yet supported. "
+                   "Flags: 0x%lx\n", Flags & (MMDBG_COPY_CACHED |
+                                              MMDBG_COPY_UNCACHED |
+                                              MMDBG_COPY_WRITE_COMBINED));
+        return NULL;
+    }
+
+    //
+    // Save the base address of our mapping page
+    //
+    MappingBaseAddress = MiPteToAddress(MmDebugPte);
+
+    //
+    //
+    //
+    TempPte = HyperTemplatePte;
+
+    //
+    // Convert physical address to PFN
+    //
+    Pfn = (PFN_NUMBER)(PhysicalAddress >> PAGE_SHIFT);
+
+    //
+    // Check if this could be an I/O mapping
+    //
+    if (Pfn > MmHighestPhysicalPage)
+    {
+        //
+        // FIXME: We don't support this yet
+        //
+        KdpDprintf("MiDbgTranslatePhysicalAddress: I/O Space not yet supported. "
+                   "PFN: 0x%I64x\n", (ULONG64)Pfn);
+        return NULL;
+    }
+    else
+    {
+        //
+        // Set the PFN in the PTE
+        //
+        TempPte.u.Hard.PageFrameNumber = Pfn;
+    }
+
+    //
+    // Map the PTE and invalidate its TLB entry
+    //
+    *MmDebugPte = TempPte;
+    KeInvalidateTlbEntry(MappingBaseAddress);
+
+    //
+    // Calculate and return the virtual offset into our mapping page
+    //
+    return (PVOID)((ULONG_PTR)MappingBaseAddress +
+                    BYTE_OFFSET(PhysicalAddress));
+}
+
+VOID
+NTAPI
+MiDbgUnTranslatePhysicalAddress(VOID)
+{
+    PVOID MappingBaseAddress = MiPteToAddress(MmDebugPte);
+
+    //
+    // The address must still be valid at this point
+    //
+    ASSERT(MmIsAddressValid(MappingBaseAddress));
+
+    // 
+    // Clear the mapping PTE and invalidate its TLB entry
+    //
+    MmDebugPte->u.Long = 0;
+    KeInvalidateTlbEntry(MappingBaseAddress);
+}
 
 NTSTATUS
 NTAPI
@@ -22,87 +133,174 @@ MmDbgCopyMemory(IN ULONG64 Address,
                 IN ULONG Flags)
 {
     NTSTATUS Status;
+    PVOID TargetAddress;
 
-    /* For now, this must be a "unsafe" copy */
+    //
+    // No local kernel debugging support yet, so don't worry about locking
+    //
     ASSERT(Flags & MMDBG_COPY_UNSAFE);
 
-    /* We only handle 1, 2, 4 and 8 byte requests */
+    //
+    // We only handle 1, 2, 4 and 8 byte requests
+    //
     if ((Size != 1) &&
         (Size != 2) &&
         (Size != 4) &&
         (Size != MMDBG_COPY_MAX_SIZE))
     {
-        /* Invalid size, fail */
+        //
+        // Invalid size, fail
+        //
+        KdpDprintf("MmDbgCopyMemory: Received Illegal Size 0x%lx\n", Size);
         return STATUS_INVALID_PARAMETER_3;
     }
 
-    /* The copy must be aligned too */
+    //
+    // The copy must be aligned
+    //
     if ((Address & (Size - 1)) != 0)
     {
-        /* Fail */
+        //
+        // Fail
+        //
+        KdpDprintf("MmDbgCopyMemory: Received Unaligned Address 0x%I64x Size %lx\n",
+                  Address, Size);
         return STATUS_INVALID_PARAMETER_3;
     }
 
-    /* No physical memory support yet */
+    //
+    // Check if this is physical or virtual copy
+    //
     if (Flags & MMDBG_COPY_PHYSICAL)
     {
-        /* Fail */
-        KdpDprintf("MmDbgCopyMemory: Failing %s for Physical Address 0x%I64x\n",
-                   Flags & MMDBG_COPY_WRITE ? "write" : "read",
-                   Address);
-        return STATUS_UNSUCCESSFUL;
-    }
+        //
+        // Physical: translate and map it to our mapping space
+        //
+        TargetAddress = MiDbgTranslatePhysicalAddress(Address, Flags);
 
-    /* Simple check for invalid address */
-    if ((MiAddressToPde((ULONG_PTR)Address)->u.Hard.Valid == 0) ||
-        (MiAddressToPte((ULONG_PTR)Address)->u.Hard.Valid == 0))
+        //
+        // Check if translation failed
+        //
+        if (!TargetAddress)
+        {
+            //
+            // Fail
+            //
+            KdpDprintf("MmDbgCopyMemory: Failed to Translate Physical Address "
+                       "%I64x\n", Address);
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        //
+        // The address we received must be valid!
+        //
+        ASSERT(MmIsAddressValid(TargetAddress));
+    }
+    else
     {
-        /* Fail */
-        KdpDprintf("MmDbgCopyMemory: Failing %s for invalid Address 0x%p\n",
-                   Flags & MMDBG_COPY_WRITE ? "write" : "read",
-                   (PVOID)(ULONG_PTR)Address);
-        return STATUS_UNSUCCESSFUL;
+        //
+        // Virtual; truncate it to avoid casts later down
+        //
+        TargetAddress = (PVOID)(ULONG_PTR)Address;
+
+        //
+        // Check if the address is invalid
+        //
+        if (!MmIsAddressValid(TargetAddress))
+        {
+            //
+            // Fail
+            //
+            KdpDprintf("MmDbgCopyMemory: Failing %s for invalid "
+                       "Virtual Address 0x%p\n",
+                       Flags & MMDBG_COPY_WRITE ? "write" : "read",
+                       TargetAddress);
+            return STATUS_UNSUCCESSFUL;
+        }
     }
 
-    /* If we are going to write to it then make sure it is writeable too */
+    //
+    // If we are going to write to the address then make sure it is writeable too
+    //
     if ((Flags & MMDBG_COPY_WRITE) &&
-        (!MI_IS_PAGE_WRITEABLE(MiAddressToPte((ULONG_PTR)Address))))
+        (!MI_IS_PAGE_WRITEABLE(MiAddressToPte(TargetAddress))))
     {
-        /* Fail */
-        KdpDprintf("MmDbgCopyMemory: Failing write for Address 0x%p\n",
-                   (PVOID)(ULONG_PTR)Address);
+        //
+        // Check if we mapped anything
+        //
+        if (Flags & MMDBG_COPY_PHYSICAL)
+        {
+            //
+            // Get rid of the mapping
+            //
+            MiDbgUnTranslatePhysicalAddress();
+        }
+
+        //
+        // Fail
+        //
+        // FIXME: We should attempt to override the write protection instead of
+        // failing here
+        //
+        KdpDprintf("MmDbgCopyMemory: Failing Write for Protected Address 0x%p\n",
+                   TargetAddress);
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Use SEH to try to catch anything else somewhat cleanly */
+    //
+    // Use SEH to try to catch anything else somewhat cleanly
+    //
     _SEH2_TRY
     {
-        /* Check if this is read or write */
+        //
+        // Check if this is read or write
+        //
         if (Flags & MMDBG_COPY_WRITE)
         {
-            /* Do the write */
-            RtlCopyMemory((PVOID)(ULONG_PTR)Address,
+            //
+            // Do the write
+            //
+            RtlCopyMemory(TargetAddress,
                           Buffer,
                           Size);
         }
         else
         {
-            /* Do the read */
+            //
+            // Do the read
+            //
             RtlCopyMemory(Buffer,
-                          (PVOID)(ULONG_PTR)Address,
+                          TargetAddress,
                           Size);
         }
 
-        /* Copy succeeded */
+        //
+        // Copy succeeded
+        //
         Status = STATUS_SUCCESS;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Get the exception code */
+        //
+        // Get the exception code
+        //
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
 
-    /* Return status */
+    //
+    // Get rid of the mapping if this was a physical copy
+    //
+    if (Flags & MMDBG_COPY_PHYSICAL)
+    {
+        //
+        // Unmap and flush it
+        //
+        MiDbgUnTranslatePhysicalAddress();
+    }
+
+    //
+    // Return status to caller
+    //
     return Status;
 }

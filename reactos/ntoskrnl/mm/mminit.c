@@ -203,43 +203,78 @@ MiInitSystemMemoryAreas()
     // And now, ReactOS paged pool
     //
     BaseAddress = MmPagedPoolBase;
-    MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                       MEMORY_AREA_PAGED_POOL | MEMORY_AREA_STATIC,
-                       &BaseAddress,
-                       MmPagedPoolSize,
-                       PAGE_READWRITE,
-                       &MArea,
-                       TRUE,
-                       0,
-                       BoundaryAddressMultiple);
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_PAGED_POOL | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                MmPagedPoolSize,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
     
     //
     // Next, the KPCR
     //
     BaseAddress = (PVOID)PCR;
-    MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                       MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                       &BaseAddress,
-                       PAGE_SIZE * KeNumberProcessors,
-                       PAGE_READWRITE,
-                       &MArea,
-                       TRUE,
-                       0,
-                       BoundaryAddressMultiple);
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                PAGE_SIZE * KeNumberProcessors,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
     
     //
     // Now the KUSER_SHARED_DATA
     //
     BaseAddress = (PVOID)KI_USER_SHARED_DATA;
-    MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                       MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                       &BaseAddress,
-                       PAGE_SIZE,
-                       PAGE_READWRITE,
-                       &MArea,
-                       TRUE,
-                       0,
-                       BoundaryAddressMultiple);
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                PAGE_SIZE,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    //
+    // And the debugger mapping
+    //
+    BaseAddress = MI_DEBUG_MAPPING;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                PAGE_SIZE,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+
+#if defined(_X86_)
+    //
+    // Finally, reserve the 2  pages we currently make use of for HAL mappings
+    //
+    BaseAddress = (PVOID)0xFFC00000;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                PAGE_SIZE * 2,
+                                PAGE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+#endif
 }
 
 VOID
@@ -347,6 +382,12 @@ MmInitSystem(IN ULONG Phase,
         // Initialize ARM³ in phase 1
         //
         MmArmInitSystem(1, KeLoaderBlock);
+
+        //
+        // Everything required for the debugger to read and write
+        // physical memory is now set up
+        //
+        MiDbgReadyForPhysical = TRUE;
         
         /* Put the paged pool after the loaded modules */
         MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +

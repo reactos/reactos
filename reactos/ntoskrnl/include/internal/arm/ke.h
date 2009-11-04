@@ -40,6 +40,17 @@
 //
 //#define KeGetTrapFrameInterruptState(TrapFrame) \
 
+//
+// Invalidates the TLB entry for a specified address
+//
+FORCEINLINE
+VOID
+KeInvalidateTlbEntry(IN PVOID Address)
+{
+    /* Invalidate the TLB entry for this address */
+    KeArmInvalidateTlbEntry(Address);
+}
+
 VOID
 KiPassiveRelease(
     VOID
