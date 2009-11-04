@@ -890,9 +890,6 @@ DoLAYOUT(IN PLAYOUT LayoutData,
     PLAYOUTENTRY Entry;
     UCHAR CharacterType, LigatureChar;
     
-    /* Only attempt this is Verbose is enabled (FOR DEBUGGING ONLY) */
-    if (!Verbose) return SkipLines();
-    
     /* Zero out the layout */
     memset(LayoutData, 0, sizeof(LAYOUT));
     
@@ -930,6 +927,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
         }
         
         /* One more */
+        DPRINT1("RAW ENTRY: [%x %s %s]\n", ScanCode, Token, Cap);
         Entry++;
         if (++ScanCodeCount >= 110)
         {
@@ -988,6 +986,8 @@ DoLAYOUT(IN PLAYOUT LayoutData,
         /* Get the virtual key from the entry */
         VirtualKey = getVKNum(Token);
         Entry->VirtualKey = VirtualKey;
+        DPRINT1("ENTRY: [%x %x %x %s] with ",
+                Entry->VirtualKey, Entry->OriginalVirtualKey, Entry->ScanCode, Entry->Name);
         
         /* Make sure it's valid */
         if (VirtualKey == 0xFFFF)
@@ -1024,6 +1024,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                        State[6],
                        State[7]);
         Entry->StateCount = Count;
+        DPRINT1("%d STATES: [", Count);
         
         /* Check if there are less than 2 states */
         if ((Count < 2) && (FullEntry))
@@ -1037,6 +1038,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
         for (i = 0; i < Count; i++)
         {
             /* Check if this is an undefined state */
+            DPRINT1("%s ", State[i]);
             if (!strcmp(State[i], "-1"))
             {
                 /* No data for this state */
@@ -1061,6 +1063,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
         }
         
         /* Check for sanity checks */
+        DPRINT1("]\n");
         if (SanityCheck)
         {
             /* Not yet handled... */
