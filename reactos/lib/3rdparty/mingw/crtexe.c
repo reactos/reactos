@@ -20,16 +20,15 @@
 #include <tchar.h>
 #include <sect_attribs.h>
 #include <locale.h>
-#include <intrin.h>
 
 #ifndef __winitenv
-extern wchar_t ***_imp____winitenv;
-#define __winitenv (*_imp____winitenv)
+extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
+#define __winitenv (* __MINGW_IMP_SYMBOL(__winitenv))
 #endif
 
 #ifndef __initenv
-extern char ***_imp____initenv;
-#define __initenv (*_imp____initenv)
+extern char *** __MINGW_IMP_SYMBOL(__initenv);
+#define __initenv (* __MINGW_IMP_SYMBOL(__initenv))
 #endif
 
 /* Hack, for bug in ld.  Will be removed soon.  */
@@ -43,20 +42,16 @@ extern void _fpreset (void);
 
 __declspec(dllimport) void __setusermatherr(int (__cdecl *)(struct _exception *));
 
-extern int *_imp___fmode;
-extern int *_imp___commode;
+extern int * __MINGW_IMP_SYMBOL(_fmode);
+extern int * __MINGW_IMP_SYMBOL(_commode);
 
 #undef _fmode
 extern int _fmode;
-extern int *_imp___commode;
-#define _commode (*_imp___commode)
+extern int * __MINGW_IMP_SYMBOL(_commode);
+#define _commode (* __MINGW_IMP_SYMBOL(_commode))
 extern int _dowildcard;
 
-#if defined(__GNUC__)
 int _MINGW_INSTALL_DEBUG_MATHERR __attribute__((weak)) = 0;
-#else
-int _MINGW_INSTALL_DEBUG_MATHERR = 0;
-#endif
 extern int __defaultmatherr;
 extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
 
@@ -74,6 +69,10 @@ extern _PVFV *__onexitend;
 
 extern int mingw_app_type;
 
+HINSTANCE __mingw_winmain_hInstance;
+_TCHAR *__mingw_winmain_lpCmdLine;
+DWORD __mingw_winmain_nShowCmd;
+
 static int argc;
 #ifdef WPRFLAG
 extern void __main(void);
@@ -89,10 +88,10 @@ static int mainret=0;
 static int managedapp;
 static int has_cctor = 0;
 static _startupinfo startinfo;
+static LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler = NULL;
 
 extern void _pei386_runtime_relocator (void);
 static long CALLBACK _gnu_exception_handler (EXCEPTION_POINTERS * exception_data);
-//static LONG __mingw_vex(EXCEPTION_POINTERS * exception_data);
 #ifdef WPRFLAG
 static void duplicate_ppstrings (int ac, wchar_t ***av);
 #else
@@ -101,7 +100,7 @@ static void duplicate_ppstrings (int ac, char ***av);
 
 static int __cdecl pre_c_init (void);
 static void __cdecl pre_cpp_init (void);
-
+static void __cdecl __mingw_prepare_except_for_msvcr80_and_higher (void);
 _CRTALLOC(".CRT$XIAA") _PIFV mingw_pcinit = pre_c_init;
 _CRTALLOC(".CRT$XCAA") _PVFV mingw_pcppinit = pre_cpp_init;
 
@@ -115,8 +114,8 @@ pre_c_init (void)
     __set_app_type (_CONSOLE_APP);
   __onexitbegin = __onexitend = (_PVFV *) _encode_pointer ((_PVFV *)(-1));
 
-  *_imp___fmode = _fmode;
-  *_imp___commode = _commode;
+  * __MINGW_IMP_SYMBOL(_fmode) = _fmode;
+  * __MINGW_IMP_SYMBOL(_commode) = _commode;
 
 #ifdef WPRFLAG
   _wsetargv();
@@ -152,12 +151,20 @@ pre_cpp_init (void)
 
 static int __tmainCRTStartup (void);
 
+int WinMainCRTStartup (void);
+
 int WinMainCRTStartup (void)
 {
   mingw_app_type = 1;
   __security_init_cookie ();
   return __tmainCRTStartup ();
 }
+
+int mainCRTStartup (void);
+
+#ifdef _WIN64
+int __mingw_init_ehandler (void);
+#endif
 
 int mainCRTStartup (void)
 {
@@ -166,7 +173,7 @@ int mainCRTStartup (void)
   return __tmainCRTStartup ();
 }
 
-
+static
 __declspec(noinline) int
 __tmainCRTStartup (void)
 {
@@ -174,7 +181,7 @@ __tmainCRTStartup (void)
   STARTUPINFO StartupInfo;
   BOOL inDoubleQuote = FALSE;
   memset (&StartupInfo, 0, sizeof (STARTUPINFO));
-
+  
   if (mingw_app_type)
     GetStartupInfo (&StartupInfo);
   {
@@ -211,18 +218,17 @@ __tmainCRTStartup (void)
     _ASSERTE(__native_startup_state == __initialized);
     if (! nested)
       (VOID)InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
-
-    if (__dyn_tls_init_callback != NULL && _IsNonwritableInCurrentImage ((PBYTE) &__dyn_tls_init_callback))
+    
+    if (__dyn_tls_init_callback != NULL)
       __dyn_tls_init_callback (NULL, DLL_THREAD_ATTACH, NULL);
-
+    
     _pei386_runtime_relocator ();
-
-#if defined(__i386__) || defined(_M_IX86)
-	__writefsdword(0, 0xffffffff);
+    __mingw_oldexcpt_handler = SetUnhandledExceptionFilter (_gnu_exception_handler);
+#ifdef _WIN64
+    __mingw_init_ehandler ();
 #endif
-    //AddVectoredExceptionHandler (0, (PVECTORED_EXCEPTION_HANDLER)__mingw_vex);
-    SetUnhandledExceptionFilter (_gnu_exception_handler);
-
+    __mingw_prepare_except_for_msvcr80_and_higher ();
+    
     _fpreset ();
 
     if (mingw_app_type)
@@ -239,7 +245,7 @@ __tmainCRTStartup (void)
 #ifdef _MBCS
 	if (_ismbblead (*lpszCommandLine))
 	  {
-	    if (lpszCommandLine)
+	    if (*lpszCommandLine)
 	      lpszCommandLine++;
 	  }
 #endif
@@ -248,21 +254,11 @@ __tmainCRTStartup (void)
     while (*lpszCommandLine && (*lpszCommandLine <= SPACECHAR))
       lpszCommandLine++;
 
-#ifdef WPRFLAG
-    /* C++ initialization.
-       gcc inserts this call automatically for a function called main, but not for wmain.  */
-    __main ();
-    mainret = wmain (
-    	(int) (StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT),
-    	(wchar_t **) lpszCommandLine, (wchar_t **) (HINSTANCE) &__ImageBase);
-#else
-    mainret = main (
-    	(int) (StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT),
-    	(char **) lpszCommandLine, (char **) (HINSTANCE) &__ImageBase);
-#endif
+    __mingw_winmain_hInstance = (HINSTANCE) &__ImageBase;
+    __mingw_winmain_lpCmdLine = lpszCommandLine;
+    __mingw_winmain_nShowCmd = StartupInfo.dwFlags & STARTF_USESHOWWINDOW ?
+				StartupInfo.wShowWindow : SW_SHOWDEFAULT;
     }
-  else
-    {
     duplicate_ppstrings (argc, &argv);
 #ifdef WPRFLAG
     __winitenv = envp;
@@ -274,7 +270,6 @@ __tmainCRTStartup (void)
     __initenv = envp;
     mainret = main (argc, argv, envp);
 #endif
-    }
     if (!managedapp)
       exit (mainret);
 
@@ -328,7 +323,7 @@ check_managed_app (void)
 }
 
 static long CALLBACK
-_gnu_exception_handler (EXCEPTION_POINTERS * exception_data)
+_gnu_exception_handler (EXCEPTION_POINTERS *exception_data)
 {
   void (*old_handler) (int);
   long action = EXCEPTION_CONTINUE_SEARCH;
@@ -399,42 +394,26 @@ _gnu_exception_handler (EXCEPTION_POINTERS * exception_data)
 	  action = EXCEPTION_CONTINUE_EXECUTION;
 	}
       break;
-
+#ifdef _WIN64
+    case EXCEPTION_DATATYPE_MISALIGNMENT:
+    case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+    case EXCEPTION_FLT_STACK_CHECK:
+    case EXCEPTION_INT_OVERFLOW:
+    case EXCEPTION_INVALID_HANDLE:
+    /*case EXCEPTION_POSSIBLE_DEADLOCK: */
+      action = EXCEPTION_CONTINUE_EXECUTION;
+      break;
+#endif
     default:
       break;
     }
+
+  if (action == EXCEPTION_CONTINUE_SEARCH && __mingw_oldexcpt_handler)
+    action = (*__mingw_oldexcpt_handler)(exception_data);
   return action;
 }
 
-#if 0
-static LONG __mingw_vex(EXCEPTION_POINTERS * exception_data)
-{
-  /* TODO this is not chainablem, therefore need rewrite. Disabled the ill code. */
-  #if 0
-  #ifdef _WIN64
-  __asm__ __volatile__ (
-      "movq %gs:0,%rax" "\n\t"
-      "orq %rax,%rax\n\t"
-      "jz l1\n\t"
-      "jmp *8(%rax)\n\r"
-      "l1:\n\t"
-      "nop\n");
-#else
-  __asm__ __volatile__ (
-      "movl %fs:0,%eax" "\n\t"
-      "orl %eax,%eax\n\t"
-      "jz l1\n\t"
-      "jmp *4(%eax)\n\r"
-      "l1:\n\t"
-      "nop\n");
-#endif
-#endif
-  return _gnu_exception_handler(exception_data);
-}
-#endif
-
 #ifdef WPRFLAG
-
 static size_t wbytelen(const wchar_t *p)
 {
 	size_t ret = 1;
@@ -465,7 +444,7 @@ static void duplicate_ppstrings (int ac, char ***av)
 	char **avl;
 	int i;
 	char **n = (char **) malloc (sizeof (char *) * (ac + 1));
-
+	
 	avl=*av;
 	for (i=0; i < ac; i++)
 	  {
@@ -477,3 +456,35 @@ static void duplicate_ppstrings (int ac, char ***av)
 	*av = n;
 }
 #endif
+
+static void
+__mingw_invalidParameterHandler (const wchar_t *expression __attribute__ ((__unused__)),
+				 const wchar_t *function __attribute__ ((__unused__)),
+				 const wchar_t *file __attribute__ ((__unused__)),
+				 unsigned int line __attribute__ ((__unused__)),
+				 uintptr_t pReserved __attribute__ ((__unused__)))
+{
+#ifdef __MINGW_SHOW_INVALID_PARAMETER_EXCEPTION
+   wprintf(L"Invalid parameter detected in function %s. File: %s Line: %d\n", function, file, line);
+   wprintf(L"Expression: %s\n", expression);
+#endif
+}
+
+static void __cdecl 
+__mingw_prepare_except_for_msvcr80_and_higher (void)
+{
+  _invalid_parameter_handler (*fIPH)(_invalid_parameter_handler) = NULL;
+  HMODULE hmsv = GetModuleHandleA ("msvcr80.dll");
+  if(!hmsv)
+    hmsv = GetModuleHandleA ("msvcr70.dll");
+  if (!hmsv)
+    hmsv = GetModuleHandleA ("msvcrt.dll");
+  if (!hmsv)
+    hmsv = LoadLibraryA ("msvcrt.dll");
+  if (!hmsv)
+    return;
+  fIPH = (_invalid_parameter_handler (*)(_invalid_parameter_handler))
+    GetProcAddress (hmsv, "_set_invalid_parameter_handler");
+  if (fIPH)
+    (*fIPH)(__mingw_invalidParameterHandler);
+}

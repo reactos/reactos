@@ -110,10 +110,9 @@ BOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	}
       if (! nested)
 	{
-	  InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
+	  (void) InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
 	}
-      if (__dyn_tls_init_callback != NULL &&
-	  _IsNonwritableInCurrentImage ((PBYTE) &__dyn_tls_init_callback))
+      if (__dyn_tls_init_callback != NULL)
 	{
 	  __dyn_tls_init_callback (hDllHandle, DLL_THREAD_ATTACH, lpreserved);
 	}
@@ -143,7 +142,7 @@ BOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	      __onexitbegin = __onexitend = (_PVFV *) NULL;
 	    }
 	  __native_startup_state = __uninitialized;
-	  InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
+	  (void) InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
 	}
     }
   return TRUE;
@@ -151,13 +150,19 @@ BOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 
 static BOOL __DllMainCRTStartup (HANDLE, DWORD, LPVOID);
 
+BOOL WINAPI DllMainCRTStartup (HANDLE, DWORD, LPVOID);
+int __mingw_init_ehandler (void);
+
 BOOL WINAPI
-DllMainCRTStartup(HANDLE hDllHandle,DWORD dwReason,LPVOID lpreserved)
+DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
   mingw_app_type = 0;
   if (dwReason == DLL_PROCESS_ATTACH)
     {
       __security_init_cookie ();
+#ifdef _WIN64
+      __mingw_init_ehandler ();
+#endif
     }
   return __DllMainCRTStartup (hDllHandle, dwReason, lpreserved);
 }

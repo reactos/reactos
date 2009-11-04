@@ -2,12 +2,17 @@
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
+ *
+ * Contributed by Egor Duda  <deo@logos-m.ru>
+ * Modified by addition of runtime_pseudo_reloc version 2
+ * by Kai Tietz  <kai.tietz@onevision.com>
  */
 
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <assert.h>
 
 extern char __RUNTIME_PSEUDO_RELOC_LIST__;
 extern char __RUNTIME_PSEUDO_RELOC_LIST_END__;
@@ -31,15 +36,14 @@ typedef struct {
 } runtime_pseudo_reloc_v2;
 
 static void
-__write_memory (void *addr,const void *src,size_t len)
+__write_memory (void *addr, const void *src, size_t len)
 {
   MEMORY_BASIC_INFORMATION b;
   DWORD oldprot;
   if (!len)
     return;
-  if (!VirtualQuery (addr, &b, sizeof(b)))
-    abort ();
-  // Protect
+  assert (VirtualQuery (addr, &b, sizeof(b)));
+  /* Temporarily allow write access to read-only protected memory.  */
   if (b.Protect != PAGE_EXECUTE_READWRITE && b.Protect != PAGE_READWRITE)
     VirtualProtect (b.BaseAddress, b.RegionSize, PAGE_EXECUTE_READWRITE,
 		  &oldprot);
@@ -52,7 +56,7 @@ __write_memory (void *addr,const void *src,size_t len)
 #define RP_VERSION_V2 1
 
 static void
-do_pseudo_reloc (void* start,void *end,void *base)
+do_pseudo_reloc (void *start, void *end, void *base)
 {
   ptrdiff_t addr_imp, reldata;
   ptrdiff_t reloc_target = (ptrdiff_t) ((char *)end - (char*)start);
@@ -81,8 +85,10 @@ do_pseudo_reloc (void* start,void *end,void *base)
   /* Check if this is a known version.  */
   if (v2_hdr->version != RP_VERSION_V2)
     {
+#ifdef DEBUG
       fprintf (stderr, "pseudo_relocation protocol version %d is unknown to this runtime.\n",
 	       (int) v2_hdr->version);
+#endif
       return;
     }
   /* Walk over header.  */
@@ -120,7 +126,9 @@ do_pseudo_reloc (void* start,void *end,void *base)
 #endif
 	  default:
 	    reldata=0;
+#ifdef DEBUG
 	    fprintf(stderr, "Unknown pseudo relocation bit size %d\n",(int) (r->flags & 0xff));
+#endif
 	    break;
         }
       reldata -= ((ptrdiff_t) base + r->sym);
@@ -145,8 +153,10 @@ do_pseudo_reloc (void* start,void *end,void *base)
     }
 }
 
+void _pei386_runtime_relocator (void);
+
 void
-_pei386_runtime_relocator ()
+_pei386_runtime_relocator (void)
 {
   static int was_init = 0;
   if (was_init)

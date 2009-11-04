@@ -22,7 +22,7 @@ extern "C" {
   typedef int (__cdecl *_PIFV)(void);
   typedef void (__cdecl *_PVFI)(int);
 
-#if defined (SPECIAL_CRTEXE) && defined (_DLL)
+#if defined (SPECIAL_CRTEXE) && (defined (_DLL) || defined (__GNUC__))
   extern int _commode;
 #else
   _CRTIMP extern int _commode;
@@ -31,12 +31,6 @@ extern "C" {
 #define __IOINFO_TM_ANSI 0
 #define __IOINFO_TM_UTF8 1
 #define __IOINFO_TM_UTF16LE 2
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4214)
-#pragma warning(disable:4820)
-#endif
 
   typedef struct {
     intptr_t osfhnd;
@@ -48,10 +42,6 @@ extern "C" {
     char unicode : 1;
     char pipech2[2];
   } ioinfo;
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 #define IOINFO_ARRAY_ELTS (1 << 5)
 
@@ -69,13 +59,13 @@ extern "C" {
 #define _tm_unicode_safe(i) (_pioinfo_safe(i)->unicode)
 
 #ifndef __badioinfo
-  extern ioinfo ** _imp____badioinfo[];
-#define __badioinfo (*_imp____badioinfo)
+  extern ioinfo ** __MINGW_IMP_SYMBOL(__badioinfo)[];
+#define __badioinfo (* __MINGW_IMP_SYMBOL(__badioinfo))
 #endif
 
 #ifndef __pioinfo
-  extern ioinfo ** _imp____pioinfo[];
-#define __pioinfo (*_imp____pioinfo)
+  extern ioinfo ** __MINGW_IMP_SYMBOL(__pioinfo)[];
+#define __pioinfo (* __MINGW_IMP_SYMBOL(__pioinfo))
 #endif
 
 #define _NO_CONSOLE_FILENO (intptr_t)-2
@@ -107,24 +97,24 @@ extern "C" {
   extern int _newmode;
 
 #ifndef __winitenv
-extern wchar_t ***_imp____winitenv;
-#define __winitenv (*_imp____winitenv)
+extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
+#define __winitenv (* __MINGW_IMP_SYMBOL(__winitenv))
 #endif
 
 #ifndef __initenv
-extern char ***_imp____initenv;
-#define __initenv (*_imp____initenv)
+extern char *** __MINGW_IMP_SYMBOL(__initenv);
+#define __initenv (* __MINGW_IMP_SYMBOL(__initenv))
 #endif
 
 #ifndef _acmdln
-extern char **_imp___acmdln;
-#define _acmdln (*_imp___acmdln)
+extern char ** __MINGW_IMP_SYMBOL(_acmdln);
+#define _acmdln (* __MINGW_IMP_SYMBOL(_acmdln))
 /*  _CRTIMP extern char *_acmdln; */
 #endif
 
 #ifndef _wcmdln
-extern char **_imp___wcmdln;
-#define _wcmdln (*_imp___wcmdln)
+extern char ** __MINGW_IMP_SYMBOL(_wcmdln);
+#define _wcmdln (* __MINGW_IMP_SYMBOL(_wcmdln))
 /*  __CRTIMP extern wchar_t *_wcmdln; */
 #endif
 
@@ -169,7 +159,7 @@ extern char **_imp___wcmdln;
 #include <errno.h>
 
   void * __cdecl _encode_pointer(void *);
-  void * __cdecl _encoded_null(void);
+  void * __cdecl _encoded_null();
   void * __cdecl _decode_pointer(void *);
 
   BOOL __cdecl _ValidateImageBase (PBYTE pImageBase);

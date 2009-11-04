@@ -4,14 +4,10 @@
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
 
-#include <_mingw.h>
+#include <fcntl.h>
 
-extern void (* __MINGW_IMP_SYMBOL(_fpreset))(void);
-void _fpreset (void);
+/* Set default file mode to text */
 
-void _fpreset (void)
-{
-  (* __MINGW_IMP_SYMBOL(_fpreset))();
-}
+/* Is this correct?  Default value of  _fmode in msvcrt.dll is 0. */
 
-void __attribute__ ((alias ("_fpreset"))) fpreset(void);
+int _fmode = _O_TEXT; 

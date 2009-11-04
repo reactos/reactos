@@ -4,9 +4,7 @@
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
 
-void _fpreset (void);
+#define SPECIAL_CRTEXE
 
-void _fpreset (void)
-  { __asm__ ("fninit" ) ;}
-
-void __attribute__ ((alias ("_fpreset"))) fpreset(void);
+#include <fcntl.h>
+#include <stdlib.h>

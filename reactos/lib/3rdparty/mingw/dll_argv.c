@@ -4,14 +4,22 @@
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
 
-#include <_mingw.h>
+#ifdef CRTDLL
+#undef CRTDLL
+#endif
 
-extern void (* __MINGW_IMP_SYMBOL(_fpreset))(void);
-void _fpreset (void);
+#include <internal.h>
 
-void _fpreset (void)
+extern int _dowildcard;
+
+#ifdef WPRFLAG
+int __CRTDECL
+__wsetargv (void)
+#else
+int __CRTDECL
+__setargv (void)
+#endif
 {
-  (* __MINGW_IMP_SYMBOL(_fpreset))();
+  _dowildcard = 1;
+  return 0;
 }
-
-void __attribute__ ((alias ("_fpreset"))) fpreset(void);

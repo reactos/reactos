@@ -189,5 +189,15 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define _CRT_UNUSED(x) (void)x
 #endif
 
+#define __MINGW_USE_UNDERSCORE_PREFIX 1
+
+#if __MINGW_USE_UNDERSCORE_PREFIX == 0
+#define __MINGW_IMP_SYMBOL(sym)	_imp_##sym
+#define __MINGW_USYMBOL(sym) sym
+#else
+#define __MINGW_IMP_SYMBOL(sym)	_imp__##sym
+#define __MINGW_USYMBOL(sym) _##sym
+#endif
+
 #endif /* !_INC_MINGW */
 
