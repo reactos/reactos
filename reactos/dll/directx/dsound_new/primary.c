@@ -519,8 +519,14 @@ PrimaryDirectSoundBuffer_SetFormat(
 
     if (This->hPin)
     {
-        /* fixme change format */
-        ASSERT(0);
+        // FIXME
+        // check if multiple buffers are active
+        // in that case need mixing
+
+        if (SetPinFormat(This->hPin, pcfxFormat))
+            return DS_OK;
+        else
+            return DSERR_GENERIC;
     }
 
     do

@@ -14,6 +14,45 @@ const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, 
 const GUID KSPROPSETID_Audio = {0x45FFAAA0L, 0x6E1B, 0x11D0, {0xBC, 0xF2, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00}};
 
 BOOL
+SetPinFormat(
+    IN HANDLE hPin,
+    IN LPWAVEFORMATEX WaveFormatEx)
+{
+    DWORD dwResult;
+    KSPROPERTY Property;
+    KSDATAFORMAT_WAVEFORMATEX DataFormat;
+
+    /* setup connection request */
+    Property.Id = KSPROPERTY_CONNECTION_DATAFORMAT;
+    Property.Set = KSPROPSETID_Connection;
+    Property.Flags = KSPROPERTY_TYPE_SET;
+
+    /* setup data format */
+    DataFormat.WaveFormatEx.wFormatTag = WaveFormatEx->wFormatTag;
+    DataFormat.WaveFormatEx.nSamplesPerSec = WaveFormatEx->nSamplesPerSec;
+    DataFormat.WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
+    DataFormat.WaveFormatEx.cbSize = 0;
+    DataFormat.DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+    DataFormat.DataFormat.Flags = 0;
+    DataFormat.DataFormat.Reserved = 0;
+    DataFormat.DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
+    DataFormat.DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+    DataFormat.DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
+    DataFormat.DataFormat.SampleSize = 4;
+    DataFormat.WaveFormatEx.nChannels = WaveFormatEx->nChannels;
+    DataFormat.WaveFormatEx.nAvgBytesPerSec = WaveFormatEx->nAvgBytesPerSec;
+    DataFormat.WaveFormatEx.wBitsPerSample = WaveFormatEx->wBitsPerSample;
+
+    dwResult = SyncOverlappedDeviceIoControl(hPin, IOCTL_KS_PROPERTY, (LPVOID)&Property, sizeof(KSPROPERTY),(LPVOID)&DataFormat, sizeof(KSDATAFORMAT_WAVEFORMATEX), NULL);
+
+    if (dwResult == ERROR_SUCCESS)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+
+BOOL
 DoDataIntersection(
     HANDLE hFilter,
     DWORD PinId,

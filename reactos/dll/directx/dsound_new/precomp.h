@@ -15,7 +15,7 @@
 #include <dsconf.h>
 #include <vfwmsgs.h>
 #include <setupapi.h>
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 #include <ks.h>
 #include <ksmedia.h>
@@ -109,6 +109,11 @@ NewDirectSound(
 
 
 /* misc.c */
+
+BOOL
+SetPinFormat(
+    IN HANDLE hPin,
+    IN LPWAVEFORMATEX WaveFormatEx);
 
 BOOL
 CreateCompatiblePin(

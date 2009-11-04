@@ -294,25 +294,29 @@ SecondaryDirectSoundBuffer8Impl_fnPlay(
         return DSERR_INVALIDPARAM;
     }
 
-    DPRINT("SecondaryDirectSoundBuffer8Impl_fnPlay dwPriority %x dwFlags %x\n", dwPriority, dwFlags);
-    hResult = PrimaryDirectSoundBuffer_SetFormat(This->PrimaryBuffer, This->Format, (dwFlags & DSBPLAY_LOOPING));
+    /* sanity check */
+    ASSERT(dwFlags & DSBPLAY_LOOPING);
 
-    DPRINT("Result %x\n", hResult);
+    /* set dataformat */
+    hResult = PrimaryDirectSoundBuffer_SetFormat(This->PrimaryBuffer, This->Format, TRUE);
+
     if (!SUCCEEDED(hResult))
     {
         /* failed */
+        DPRINT1("Failed to set format Tag %u Samples %u Bytes %u nChannels %u\n", This->Format->wFormatTag, This->Format->nSamplesPerSec, This->Format->wBitsPerSample, This->Format->nChannels);
         return hResult;
     }
 
+    /* start primary buffer */
     PrimaryDirectSoundBuffer_SetState(This->PrimaryBuffer, KSSTATE_RUN);
-
-
+    /* acquire primary buffer */
     PrimaryDirectSoundBuffer_AcquireLock(This->PrimaryBuffer);
-
+    /* HACK write buffer */
     PrimaryDirectSoundBuffer_Write(This->PrimaryBuffer, This->Buffer, This->BufferSize);
-
+    /* release primary buffer */
     PrimaryDirectSoundBuffer_ReleaseLock(This->PrimaryBuffer);
 
+    DPRINT1("SetFormatSuccess PrimaryBuffer %p\n", This->PrimaryBuffer);
     return DS_OK;
 }
 

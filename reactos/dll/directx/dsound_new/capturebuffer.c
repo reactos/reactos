@@ -335,8 +335,10 @@ IDirectSoundCaptureBufferImpl_Start(
     if (This->State == KSSTATE_RUN)
         return DS_OK;
 
-    /* sanity check */
-    ASSERT(This->hPin);
+
+    /* check if there is a pin instance */
+    if (!This->hPin)
+        return DSERR_GENERIC;
 
     /* setup request */
     Property.Set = KSPROPSETID_Connection;
@@ -385,8 +387,42 @@ HRESULT
 WINAPI
 IDirectSoundCaptureBufferImpl_Stop( LPDIRECTSOUNDCAPTUREBUFFER8 iface )
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    KSPROPERTY Property;
+    DWORD Result;
+    KSSTATE State;
+
+    LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
+
+    if (This->State == KSSTATE_STOP)
+    {
+        /* stream has already been stopped */
+        return DS_OK;
+    }
+
+    if (!This->hPin)
+        return DSERR_GENERIC;
+
+    /* setup request */
+    Property.Set = KSPROPSETID_Connection;
+    Property.Id = KSPROPERTY_CONNECTION_STATE;
+    Property.Flags = KSPROPERTY_TYPE_SET;
+    State = KSSTATE_STOP;
+
+
+    /* set pin to stop */
+    Result = SyncOverlappedDeviceIoControl(This->hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&State, sizeof(KSSTATE), NULL);
+
+    ASSERT(Result == ERROR_SUCCESS);
+
+    if (Result == ERROR_SUCCESS)
+    {
+        /* store result */
+        This->State = State;
+        return DS_OK;
+    }
+
+    DPRINT("Failed to stop pin\n");
+    return DSERR_GENERIC;
 }
 
 HRESULT
