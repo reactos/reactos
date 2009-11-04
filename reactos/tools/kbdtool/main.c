@@ -8,21 +8,21 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "getopt.h"
-#include <host/typedefs.h>
+#include "kbdtool.h"
 
 /* GLOBALS ********************************************************************/
 
+/* Internal tool data */
 ULONG gVersion = 3;
 ULONG gSubVersion = 40;
-BOOLEAN UnicodeFile, Verbose, NoLogo, FallbackDriver, SanityCheck, SourceOnly;
-ULONG BuildType;
+
+/* Input file */
 PCHAR gpszFileName;
 FILE* gfpInput;
+
+/* Command-line parameters */
+BOOLEAN UnicodeFile, Verbose, NoLogo, FallbackDriver, SanityCheck, SourceOnly;
+ULONG BuildType;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -53,7 +53,7 @@ PrintUsage(VOID)
     printf("\t-i/-x/-m/-o-s will exhibit the same behavior when than one of them is specified.\n\n");
     
     /* Quit */
-    _exit(1);
+    exit(1);
     printf("should not be here");
 }
 
@@ -61,6 +61,7 @@ INT
 main(INT argc,
      PCHAR* argv)
 {
+    ULONG ErrorCode, FailureCode;
     CHAR Option;
     PCHAR OpenFlags;
     CHAR BuildOptions[16] = {0};
@@ -213,16 +214,27 @@ main(INT argc,
         /* Now inform the user */
         printf("Compiling layout information from '%s' for %s.\n", gpszFileName, BuildOptions);
     }
-       
+          
     /* Now parse the keywords */
-    DoParsing();
+    FailureCode = DoParsing();
     
-    /* We are done */
-    fclose(gfpInput);
+    /* Should we build? */
+    if (!(SourceOnly) && !(FallbackDriver)) ErrorCode = 0;//DoBuild();
     
-    /* Now do something... */
-    printf("Like a rock...\n");
-    exit(0);
+    /* Did everything work? */
+    if (FailureCode == 0)
+    {
+        /* Tell the user, if he cares */
+        if (!NoLogo) printf("All tasks completed successfully.\n");
+    }
+    else
+    {
+        /* Print the failure code */
+        printf("\n     %13d\n", FailureCode);
+    }
+    
+    /* Return the error code */
+    return ErrorCode;
 }
 
 /* EOF */

@@ -1,0 +1,75 @@
+/*
+ * PROJECT:         ReactOS Build Tools [Keyboard Layout Compiler]
+ * LICENSE:         BSD - See COPYING.BSD in the top level directory
+ * FILE:            tools/kbdtool/kbdtool.h
+ * PURPOSE:         Main Header File
+ * PROGRAMMERS:     ReactOS Foundation
+ */
+
+/* INCLUDES *******************************************************************/
+
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <host/typedefs.h>
+
+#define KEYWORD_COUNT 17
+
+#define CHAR_NORMAL_KEY   0
+#define CHAR_DEAD_KEY     1
+#define CHAR_OTHER_KEY    2
+#define CHAR_INVALID_KEY  3
+#define CHAR_LIGATURE_KEY 4
+
+typedef struct tagKEYNAME
+{
+    ULONG Code;
+    PCHAR Name;
+    struct tagKEYNAME* Next;
+} KEYNAME, *PKEYNAME;
+
+typedef struct tagSCVK
+{
+    USHORT ScanCode;
+    USHORT VirtualKey;
+    PCHAR Name;
+    BOOLEAN Processed;
+} SCVK, *PSCVK;
+
+typedef struct tagVKNAME
+{
+    ULONG VirtualKey;
+    PCHAR Name;
+} VKNAME, *PVKNAME;
+
+typedef struct tagLAYOUTENTRY
+{
+    USHORT ScanCode;
+    UCHAR VirtualKey;
+    UCHAR OriginalVirtualKey;
+    ULONG Cap;
+    ULONG StateCount;
+    ULONG CharData[8];
+    ULONG DeadCharData[8];
+    ULONG OtherCharData[8];
+    struct LAYOUTENTRY* CapData;
+    PCHAR Name;
+    ULONG Processed;
+    ULONG LineCount;
+} LAYOUTENTRY, *PLAYOUTENTRY;
+
+typedef struct tagLAYOUT
+{
+    LAYOUTENTRY Entry[110];
+} LAYOUT, *PLAYOUT;
+
+extern BOOLEAN Verbose, UnicodeFile, SanityCheck, FallbackDriver;
+extern PCHAR gpszFileName;
+extern FILE* gfpInput;
+extern VKNAME VKName[];
+extern SCVK ScVk[];
+extern LAYOUT g_Layout;
+
+/* EOF */
