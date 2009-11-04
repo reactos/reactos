@@ -160,6 +160,41 @@ RtlLookupFunctionEntry(
     return NULL;
 }
 
+BOOLEAN
+NTAPI
+RtlAddFunctionTable(
+    IN PRUNTIME_FUNCTION FunctionTable,
+    IN DWORD EntryCount,
+    IN DWORD64 BaseAddress,
+    IN ULONGLONG TargetGp)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+RtlDeleteFunctionTable(
+    IN PRUNTIME_FUNCTION FunctionTable)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+RtlInstallFunctionTableCallback(
+    IN DWORD64 TableIdentifier,
+    IN DWORD64 BaseAddress,
+    IN DWORD Length,
+    IN PGET_RUNTIME_FUNCTION_CALLBACK Callback,
+    IN PVOID Context,
+    IN PCWSTR OutOfProcessCallbackDll)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 void
 FORCEINLINE
 SetReg(PCONTEXT Context, BYTE Reg, DWORD64 Value)
