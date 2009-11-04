@@ -40,9 +40,9 @@ typedef struct tagLAYOUTENTRY
     USHORT ScanCode;
     UCHAR VirtualKey;
     UCHAR OriginalVirtualKey;
-    UCHAR Cap;
+    ULONG Cap;
     ULONG StateCount;
-    ULONG CharData[8];
+    ULONGLONG CharData[8];
     ULONG DeadCharData[8];
     ULONG OtherCharData[8];
     struct LAYOUTENTRY* CapData;
@@ -250,6 +250,11 @@ VKNAME VKName[] =
     {0xe6, "RGROUPSHIFT"}
 };
 
+#define CHAR_NORMAL_KEY   0
+#define CHAR_DEAD_KEY     1
+#define CHAR_OTHER_KEY    2
+#define CHAR_INVALID_KEY  3
+#define CHAR_LIGATURE_KEY 4
 
 /* FUNCTIONS ******************************************************************/
 
@@ -311,6 +316,16 @@ getVKNum(IN PCHAR p)
     return -1;
 }
 
+UCHAR
+getCharacterInfo(IN PCHAR State,
+                 IN PLAYOUTENTRY Entry,
+                 OUT PCHAR LigatureChar)
+{
+    /* FIXME: NOT YET IMPLEMENTED */
+    ASSERT(FALSE);
+    return 0;
+}
+                 
 BOOLEAN
 NextLine(PCHAR LineBuffer,
          ULONG BufferSize,
@@ -806,9 +821,12 @@ DoLAYOUT(IN PLAYOUT LayoutData,
     ULONG TokenCount;
     ULONG VirtualKey;
     ULONG i;
+    ULONG Count;
     BOOLEAN FullEntry;
+    CHAR State[8][8];
     ULONG ScanCodeCount = -1;
     PLAYOUTENTRY Entry;
+    UCHAR CharacterType, LigatureChar;
     
     /* Only attempt this is Verbose is enabled (FOR DEBUGGING ONLY) */
     if (!Verbose) return SkipLines();
@@ -915,6 +933,67 @@ FillEntry:
             /* Warn the user */
             if (Verbose) printf("An invalid Virtual Key '%s' was defined.\n", Token);
             continue;
+        }
+        
+        /* Is this a full entry */
+        if (FullEntry)
+        {
+            /* Do we have SGCAP data? Set cap mode to 2 */
+            if (!strcmp(Cap, "SGCAP")) *Cap = '2';
+            
+            /* Read the cap mode */
+            if (sscanf(Cap, "%1d[012]", &Entry->Cap) != 1)
+            {
+                /* Invalid cap mode */
+                printf("invalid Cap specified (%s). Must be 0, 1, or 2.\n", Cap);
+                exit(1);
+            }
+        }
+        
+        /* Read the states */
+        Count = sscanf(gBuf,
+                       " %*s %*s %*s %s %s %s %s %s %s %s %s",
+                       State[0],
+                       State[1],
+                       State[2],
+                       State[3],
+                       State[4],
+                       State[5],
+                       State[6],
+                       State[7]);
+        Entry->StateCount = Count;
+        
+        /* Check if there are less than 2 states */
+        if ((Count < 2) && (FullEntry))
+        {
+            /* Fail */
+            printf("You must have at least 2 characters.\n");
+            exit(1);
+        }
+        
+        /* Loop all states */
+        for (i = 0; i < Count; i++)
+        {
+            /* Check if this is an undefined state */
+            if (!strcmp(State[i], "-1"))
+            {
+                /* No data for this state */
+                Entry->CharData[i] = -1;
+                continue;
+            }
+            
+            /* Otherwise, check what kind of character this is */
+            CharacterType = getCharacterInfo(State[i], Entry, &LigatureChar);
+            if (CharacterType == CHAR_DEAD_KEY)
+            {
+                /* Save it as such */
+                Entry->DeadCharData[i] = 1;
+            }
+            else if (CharacterType == CHAR_OTHER_KEY)
+            {
+                /* Save it as such */
+                Entry->OtherCharData[i] = 1;
+            }
         }
     }
     
