@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <time.h>
 #include <host/typedefs.h>
 
 #define KEYWORD_COUNT 17
@@ -65,11 +66,22 @@ typedef struct tagLAYOUT
     LAYOUTENTRY Entry[110];
 } LAYOUT, *PLAYOUT;
 
+PCHAR
+getVKName(
+    IN ULONG VirtualKey,
+    IN BOOLEAN Prefix
+);
+
 extern BOOLEAN Verbose, UnicodeFile, SanityCheck, FallbackDriver;
 extern PCHAR gpszFileName;
 extern FILE* gfpInput;
 extern VKNAME VKName[];
 extern SCVK ScVk[];
 extern LAYOUT g_Layout;
+extern CHAR gVKeyName[32];
+extern CHAR gKBDName[10];
+extern CHAR gCopyright[256];
+extern CHAR gDescription[256];
+extern ULONG gVersion, gSubVersion;
 
 /* EOF */

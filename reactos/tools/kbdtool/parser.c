@@ -19,6 +19,7 @@ CHAR gCopyright[256];
 CHAR gDescription[256];
 CHAR gCompany[256];
 CHAR gLocaleName[256];
+CHAR gVKeyName[32];
 ULONG gID = 0;
 ULONG gKbdLayoutVersion;
 LAYOUT g_Layout;
@@ -58,6 +59,53 @@ isKeyWord(PCHAR p)
     
     /* If we didn't find anything, i will be KEYWORD_COUNT, which is invalid */
     return i;
+}
+
+PCHAR
+getVKName(IN ULONG VirtualKey,
+          IN BOOLEAN Prefix)
+{
+    ULONG i;
+    
+    /* Loop for standard virtual key */
+    if (((VirtualKey >= 'A') && (VirtualKey <= 'Z')) ||
+        ((VirtualKey >= '0') && (VirtualKey <= '9')))
+    {
+        /* Fill out the name */
+        gVKeyName[0] = '\'';
+        gVKeyName[1] = VirtualKey;
+        gVKeyName[2] = '\'';
+        gVKeyName[3] = '\0';
+        return gVKeyName;
+    }
+    
+    /* Check if a prefix is required */
+    if (Prefix)
+    {
+        /* Add it */
+        strcpy(gVKeyName, "VK_");
+    }
+    else
+    {
+        /* Otherwise, don't add anything */
+        strcpy(gVKeyName, "");
+    }
+    
+    /* Loop all virtual keys */
+    for (i = 0; i < 36; i++)
+    {
+        /* Check if this key matches */
+        if (VKName[i].VirtualKey == VirtualKey)
+        {
+            /* Copy the key's name into the buffer */
+            strcat(gVKeyName, VKName[i].Name);
+            return gVKeyName;
+        }
+    }
+    
+    /* If we got here, then we failed, so print out an error name */
+    strcpy(gVKeyName, "#ERROR#");
+    return gVKeyName;
 }
 
 ULONG
