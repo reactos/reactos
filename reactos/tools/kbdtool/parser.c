@@ -42,7 +42,7 @@ typedef struct tagLAYOUTENTRY
     UCHAR OriginalVirtualKey;
     ULONG Cap;
     ULONG StateCount;
-    ULONGLONG CharData[8];
+    ULONG CharData[8];
     ULONG DeadCharData[8];
     ULONG OtherCharData[8];
     struct LAYOUTENTRY* CapData;
@@ -60,7 +60,7 @@ typedef struct tagLAYOUT
 
 #define KEYWORD_COUNT 17
 
-extern BOOLEAN Verbose, UnicodeFile;
+extern BOOLEAN Verbose, UnicodeFile, SanityCheck;
 extern PCHAR gpszFileName;
 extern FILE* gfpInput;
 CHAR gBuf[256];
@@ -318,12 +318,74 @@ getVKNum(IN PCHAR p)
 
 UCHAR
 getCharacterInfo(IN PCHAR State,
-                 IN PLAYOUTENTRY Entry,
+                 OUT PULONG EntryChar,
                  OUT PCHAR LigatureChar)
 {
-    /* FIXME: NOT YET IMPLEMENTED */
-    ASSERT(FALSE);
-    return 0;
+    ULONG Length;
+    ULONG CharInfo = CHAR_NORMAL_KEY;
+    UCHAR StateChar;
+    ULONG CharCode;
+    
+    /* Calculate the length of the state */
+    Length = strlen(State);
+    
+    /* Check if this is at least a simple key state */
+    if (Length > 1)
+    {
+        /* Read the first character and check if it's a dead key */
+        StateChar = State[Length - 1];
+        if (StateChar == '@')
+        {
+            /* This is a dead key */
+            CharInfo = CHAR_DEAD_KEY;
+        }
+        else if (StateChar == '%')
+        {
+            /* This is another key */
+            CharInfo = CHAR_OTHER_KEY;
+        }
+    }
+    
+    /* Check if this is a numerical key state */
+    if ((Length - 1) >= 2)
+    {
+        /* Scan for extended character code entry */
+        if ((sscanf(State, "%6x", &CharCode) == 1) &&
+            ((Length == 5) && (State[0] == '0') ||
+             (Length == 6) && ((State[0] == '0') && (State[1] == '0'))))
+        {
+            /* Handle a ligature key */
+            CharInfo = CHAR_LIGATURE_KEY;
+            
+            /* Not yet handled */
+            printf("Ligatured character entries not yet supported!\n");
+            exit(1);
+        }
+        else
+        {
+            /* Get the normal character entry */
+            if (sscanf(State, "%4x", &CharCode) == 1)
+            {
+                /* Does the caller want the key? */
+                if (EntryChar) *EntryChar = CharCode;
+            }
+            else
+            {
+                /* The entry is totally invalid */
+                if (Verbose) printf("An unparseable character entry '%s' was found.\n", State);
+                if (EntryChar) *EntryChar = 0;
+                CharInfo = CHAR_INVALID_KEY;
+            }
+        }
+    }
+    else
+    {
+        /* Save the key if the caller requested it */
+        if (EntryChar) *EntryChar = *State;
+    }
+
+    /* Return the type of character this is */
+    return CharInfo;
 }
                  
 BOOLEAN
@@ -892,34 +954,34 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                 
                 /* Fill out the entry */
                 Entry->VirtualKey = getVKNum(Token);
-                goto FillEntry;
+                break;
             }
-            
-            /* If we found it, process it */
-            if (ScanCode == CurrentCode) break;
+            else if (ScanCode == CurrentCode)
+            {
+                /* Make sure we didn't already process it */
+                if (ScVk[i].Processed)
+                {
+                    /* Fail */
+                    printf("Scancode %X was previously defined.\n", ScanCode);
+                    exit(1);
+                }
+                
+                /* Check if there is a valid virtual key */
+                if (ScVk[i].VirtualKey == 0xFFFF)
+                {
+                    /* Fail */
+                    printf("The Scancode you tried to use (%X) is reserved.\n", ScanCode);
+                    exit(1);
+                }
+                
+                /* Fill out the entry */
+                Entry->OriginalVirtualKey = ScVk[i].VirtualKey;
+                Entry->Name = ScVk[i].Name;
+                break;
+            }
         }
         
-        /* Make sure we didn't already process it */
-        if (ScVk[i].Processed)
-        {
-            /* Fail */
-            printf("Scancode %X was previously defined.\n", ScanCode);
-            exit(1);
-        }
-        
-        /* Check if there is a valid virtual key */
-        if (ScVk[i].VirtualKey == 0xFFFF)
-        {
-            /* Fail */
-            printf("The Scancode you tried to use (%X) is reserved.\n", ScanCode);
-            exit(1);
-        }
-        
-        /* Fill out the entry */
-        Entry->OriginalVirtualKey = ScVk[i].VirtualKey;
-        Entry->Name = ScVk[i].Name;
-        
-FillEntry:
+        /* The entry is now processed */
         Entry->Processed = TRUE;
         ScVk[i].Processed = TRUE;
         
@@ -983,7 +1045,9 @@ FillEntry:
             }
             
             /* Otherwise, check what kind of character this is */
-            CharacterType = getCharacterInfo(State[i], Entry, &LigatureChar);
+            CharacterType = getCharacterInfo(State[i],
+                                             &Entry->CharData[i],
+                                             &LigatureChar);
             if (CharacterType == CHAR_DEAD_KEY)
             {
                 /* Save it as such */
@@ -994,6 +1058,22 @@ FillEntry:
                 /* Save it as such */
                 Entry->OtherCharData[i] = 1;
             }
+        }
+        
+        /* Check for sanity checks */
+        if (SanityCheck)
+        {
+            /* Not yet handled... */
+            printf("Sanity checks not yet handled!\n");
+            exit(1);   
+        }
+        
+        /* Check if we had SGCAP data */
+        if (Entry->Cap & 2)
+        {
+            /* Not yet handled... */
+            printf("SGCAP state not yet handled!\n");
+            exit(1);
         }
     }
     
