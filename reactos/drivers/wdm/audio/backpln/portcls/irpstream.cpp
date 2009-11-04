@@ -441,8 +441,20 @@ BOOL
 NTAPI
 CIrpQueue::CancelBuffers()
 {
+    // is there an active irp
+    if (m_Irp)
+    {
+        // re-insert it to cancelable queue
+        KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, m_Irp, KsListEntryTail, NULL);
+        //set it to zero
+        m_Irp = NULL;
+    }
 
+    // cancel all irps
+    KsCancelIo(&m_IrpList, &m_IrpListLock);
+    // reset stream start flag
     m_StartStream = FALSE;
+    // done
     return TRUE;
 }
 

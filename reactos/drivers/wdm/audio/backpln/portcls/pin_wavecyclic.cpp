@@ -268,7 +268,14 @@ PinWaveCyclicState(
         {
             // store new state
             Pin->m_State = *State;
+
+            if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING && Pin->m_State == KSSTATE_STOP)
+            {
+                /* FIXME complete pending irps with successfull state */
+                Pin->m_IrpQueue->CancelBuffers();
+            }
         }
+
         // store result
         Irp->IoStatus.Information = sizeof(KSSTATE);
         return Status;
@@ -905,7 +912,8 @@ CPortPinWaveCyclic::Init(
     }
 #endif
 
-    DPRINT("CPortPinWaveCyclic::Init Status %x\n", Status);
+    DPRINT("CPortPinWaveCyclic::Init Status %x PinId %u Capture %u\n", Status, ConnectDetails->PinId, Capture);
+    DPRINT("Bits %u Samples %u Channels %u Tag %u FrameSize %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize);
 
     if (!NT_SUCCESS(Status))
         return Status;
