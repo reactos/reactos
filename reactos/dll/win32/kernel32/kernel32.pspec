@@ -759,9 +759,14 @@
 @ stdcall ResetWriteWatch(ptr long)
 @ stdcall RestoreLastError(long) ntdll.RtlRestoreLastWin32Error
 @ stdcall ResumeThread(long)
+@ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long double double)
 @ stdcall RtlCaptureContext(ptr) ntdll.RtlCaptureContext
 @ stdcall RtlCaptureStackBackTrace(long long ptr ptr)  ntdll.RtlCaptureStackBackTrace
+@ stdcall -arch=x86_64 RtlCompareMemory(ptr ptr ptr)
+@ stdcall -arch=x86_64 RtlCopyMemory(ptr ptr ptr)
+@ stdcall -arch=x86_64 RtlDeleteFunctionTable(ptr)
 @ stdcall RtlFillMemory(ptr long long) ntdll.RtlFillMemory
+@ stdcall -arch=x86_64 RtlInstallFunctionTableCallback(double double long ptr ptr ptr)
 @ stdcall RtlMoveMemory(ptr ptr long) ntdll.RtlMoveMemory
 @ stdcall RtlUnwind(ptr ptr ptr long) ntdll.RtlUnwind
 @ stdcall RtlVirtualUnwind(ptr ptr ptr long) ntdll.RtlVirtualUnwind
