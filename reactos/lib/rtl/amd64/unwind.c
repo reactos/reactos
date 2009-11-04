@@ -165,8 +165,7 @@ NTAPI
 RtlAddFunctionTable(
     IN PRUNTIME_FUNCTION FunctionTable,
     IN DWORD EntryCount,
-    IN DWORD64 BaseAddress,
-    IN ULONGLONG TargetGp)
+    IN DWORD64 BaseAddress)
 {
     UNIMPLEMENTED;
     return FALSE;
