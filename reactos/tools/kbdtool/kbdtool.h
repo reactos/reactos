@@ -82,6 +82,8 @@ extern CHAR gVKeyName[32];
 extern CHAR gKBDName[10];
 extern CHAR gCopyright[256];
 extern CHAR gDescription[256];
+extern CHAR gCompany[256];
+extern CHAR gLocaleName[256];
 extern ULONG gVersion, gSubVersion;
 
 /* EOF */

@@ -12,6 +12,9 @@
 
 /* GLOBALS ********************************************************************/
 
+ULONG gStringIdForDescriptions = 1000;
+ULONG gStringIdForLanguageNames = 1100;
+ULONG gStringIdForLocaleName = 1200;
 time_t Clock;
 struct tm *Now;
 
@@ -145,8 +148,201 @@ BOOLEAN
 kbd_rc(IN PKEYNAME DescriptionData,
        IN PKEYNAME LanguageData)
 {
-    /* FIXME: Stub */
-    return FALSE;
+    CHAR OutputFile[13];
+    CHAR InternalName[13];
+    CHAR TimeBuffer[5];
+    FILE *FileHandle;
+    ULONG Length;
+    PCHAR p;
+    PKEYNAME NextDescription, NextLanguage;
+    
+    /* Build the keyboard name and internal name */
+    strcpy(OutputFile, gKBDName);
+    strcat(OutputFile, ".RC");
+    strcpy(InternalName, gKBDName);
+    for (p = InternalName; *p; p++) *p = tolower(*p);
+    
+    /* Open it */
+    FileHandle = fopen(OutputFile, "wb");
+    if (!FileHandle)
+    {
+        /* Fail */
+        printf(" %12s : can't open for write.\n", OutputFile);
+        return FALSE;
+    }
+    
+    /* Check if we have copyright */
+    Length = strlen(gCopyright);
+    if (!Length)
+    {
+        /* Set time string */
+        strftime(TimeBuffer, 5, "%Y", Now);
+        
+        /* Add copyright character */
+        strcpy(gCopyright, "(C)");
+        
+        /* Add the year */
+        strcat(gCopyright, TimeBuffer);
+        
+        /* Add blank company */
+        strcat(gCopyright, " ");
+    }
+    
+    /* Write the resource file header */
+    fprintf(FileHandle,
+            "#include \"winver.h\"\r\n"
+            "1 VERSIONINFO\r\n"
+            " FILEVERSION       1,0,%d,%d\r\n"
+            " PRODUCTVERSION    1,0,%d,%d\r\n"
+            " FILEFLAGSMASK 0x3fL\r\n"
+            " FILEFLAGS 0x0L\r\n"
+            "FILEOS 0x40004L\r\n"
+            " FILETYPE VFT_DLL\r\n"
+            " FILESUBTYPE VFT2_DRV_KEYBOARD\r\n"
+            "BEGIN\r\n"
+            "    BLOCK \"StringFileInfo\"\r\n"
+            "    BEGIN\r\n"
+            "        BLOCK \"000004B0\"\r\n"
+            "        BEGIN\r\n"
+            "            VALUE \"CompanyName\",     \"%s\\0\"\r\n"
+            "            VALUE \"FileDescription\", \"%s Keyboard Layout\\0\"\r\n"
+            "            VALUE \"FileVersion\",     \"1, 0, %d, %d\\0\"\r\n",
+            gVersion,
+            gSubVersion,
+            gVersion,
+            gSubVersion,
+            gCompany,
+            gDescription,
+            gVersion,
+            gSubVersion);
+    
+    /* Continue writing it */
+    fprintf(FileHandle,
+            "            VALUE \"InternalName\",    \"%s (%d.%d)\\0\"\r\n"
+            "            VALUE \"ProductName\",\"%s\\0\"\r\n"
+            "            VALUE \"Release Information\",\"%s\\0\"\r\n"
+            "            VALUE \"LegalCopyright\",  \"%s\\0\"\r\n"
+            "            VALUE \"OriginalFilename\",\"%s\\0\"\r\n"
+            "            VALUE \"ProductVersion\",  \"1, 0, %d, %d\\0\"\r\n"
+            "        END\r\n"
+            "    END\r\n"
+            "    BLOCK \"VarFileInfo\"\r\n"
+            "    BEGIN\r\n"
+            "        VALUE \"Translation\", 0x0000, 0x04B0\r\n"
+            "    END\r\n"
+            "END\r\n",
+            InternalName,
+            gVersion,
+            gSubVersion,
+            "Created by ReactOS KbdTool",
+            "Created by ReactOS KbdTool",
+            gCopyright,
+            InternalName,
+            gVersion,
+            gSubVersion);
+    
+    /* Now check if we have a locale name */
+    Length = strlen(gLocaleName);
+    if (Length)
+    {
+        /* Write the stringtable header */
+        fprintf(FileHandle,
+                "\r\nSTRINGTABLE DISCARDABLE\r\nLANGUAGE %d, %d\r\n",
+                9,
+                1);
+        fprintf(FileHandle, "BEGIN\r\n");
+        
+        /* Language or locale? */
+        if (strchr(gLocaleName, '\"'))
+        {
+            /* Write the language name */
+            fprintf(FileHandle, "    %d    %s\r\n", gStringIdForLanguageNames, gLocaleName);
+        }
+        else
+        {
+            /* Write the locale name */
+            fprintf(FileHandle, "    %d    \"%s\"\r\n", gStringIdForLocaleName, gLocaleName);
+        }
+        
+        /* Terminate the entry */
+        fprintf(FileHandle, "END\r\n\r\n");
+    }
+    
+    /* Check for description information */
+    while (DescriptionData)
+    {
+        /* Remember the next pointer */
+        NextDescription = DescriptionData->Next;
+        
+        /* Write the header */
+        fprintf(FileHandle,
+                "\r\nSTRINGTABLE DISCARDABLE\r\nLANGUAGE %d, %d\r\n",
+                DescriptionData->Code & 0x3FF,
+                DescriptionData->Code >> 10);
+        fprintf(FileHandle, "BEGIN\r\n");
+        
+        /* Quoted string or not? */
+        if (strchr(DescriptionData->Name, '\"'))
+        {
+            /* Write the description name */
+            fprintf(FileHandle, "    %d    %s\r\n", gStringIdForDescriptions, DescriptionData->Name);
+        }
+        else
+        {
+            /* Write the description name */
+            fprintf(FileHandle, "    %d    \"%s\"\r\n", gStringIdForDescriptions, DescriptionData->Name);
+        }
+        
+        /* Terminate the entry */
+        fprintf(FileHandle, "END\r\n\r\n");
+        
+        /* Free the allocation */
+        free(DescriptionData->Name);
+        free(DescriptionData);
+        
+        /* Move to the next entry */
+        DescriptionData = NextDescription;
+    }
+    
+    /* Check for language information */
+    while (LanguageData)
+    {
+        /* Remember the next pointer */
+        NextLanguage = LanguageData->Next;
+        
+        /* Write the header */
+        fprintf(FileHandle,
+                "\r\nSTRINGTABLE DISCARDABLE\r\nLANGUAGE %d, %d\r\n",
+                LanguageData->Code & 0x3FF,
+                LanguageData->Code >> 10);
+        fprintf(FileHandle, "BEGIN\r\n");
+        
+        /* Quoted string or not? */
+        if (strchr(LanguageData->Name, '\"'))
+        {
+            /* Write the language name */
+            fprintf(FileHandle, "    %d    %s\r\n", gStringIdForLanguageNames, LanguageData->Name);
+        }
+        else
+        {
+            /* Write the language name */
+            fprintf(FileHandle, "    %d    \"%s\"\r\n", gStringIdForLanguageNames, LanguageData->Name);
+        }
+        
+        /* Terminate the entry */
+        fprintf(FileHandle, "END\r\n\r\n");
+        
+        /* Free the allocation */
+        free(LanguageData->Name);
+        free(LanguageData);
+        
+        /* Move to the next entry */
+        LanguageData = NextLanguage;
+    }
+    
+    /* We're done! */
+    fclose(FileHandle);
+    return TRUE;
 }
 
 BOOLEAN
