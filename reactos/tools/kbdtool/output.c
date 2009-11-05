@@ -387,11 +387,14 @@ kbd_c(IN ULONG StateCount,
       IN PKEYNAME KeyNameDeadData)
 {
     CHAR OutputFile[13];
+    CHAR KeyNameBuffer[50];
+    BOOLEAN NeedPlus;
     FILE *FileHandle;
     ULONG States[8];
-    ULONG i;
+    ULONG i, j, k;
     ULONG HighestState;
     PVKNAME Entry;
+    PCHAR p;
     
     /* Build the keyboard name and internal name */
     strcpy(OutputFile, gKBDName);
@@ -636,8 +639,9 @@ kbd_c(IN ULONG StateCount,
     for (i = 0; i < 8; i++) States[i] = -1;
     
     /* Find the highest set state */
-    for (HighestState = 1, i = 0; i < 8 && ShiftStates[i] > -1; i++)
+    for (HighestState = 1, i = 0; (i < 8) && (ShiftStates[i] != -1); i++)
     {
+        /* Save all state values */
         States[ShiftStates[i]] = i;
         if (ShiftStates[i] > HighestState) HighestState = ShiftStates[i];
     }
@@ -650,7 +654,68 @@ kbd_c(IN ULONG StateCount,
             "    {\n"
             "    //  Modification# //  Keys Pressed\n"
             "    //  ============= // =============\n",
-            2); /* FIXME: STATE STUFF */
+            HighestState);
+    
+    /* Loop states */
+    for (i = 0; i <= HighestState; i++)
+    {
+        /* Check for invalid state */
+        if (States[i] == -1)
+        {
+            /* Invalid state header */
+            fprintf(FileHandle, "        SHFT_INVALID, // ");
+        }
+        else
+        {
+            /* Is this the last one? */
+            if (i == HighestState)
+            {
+                /* Last state header */
+                fprintf(FileHandle, "        %d             // ", States[i]);   
+            }
+            else
+            {
+                /* Normal state header */
+                fprintf(FileHandle, "        %d,            // ", States[i]);   
+            }
+            
+            /* State 1 or higher? */
+            if (i >= 1)
+            {
+                /* J is the loop variable, K is the double */
+                for (NeedPlus = 0, j = 0, k = 1; (1 << j) <= i; j++, k = (1 << j))
+                {
+                    /* Do we need to add a plus? */
+                    if (NeedPlus)
+                    {
+                        /* Add it */
+                        fprintf(FileHandle, "+");
+                        NeedPlus = FALSE;
+                    }
+                    
+                    /* Check if it's time to add a modifier */
+                    if (i & k)
+                    {
+                        /* Get the key state name and copy it into our buffer */
+                        strcpy(KeyNameBuffer, getVKName(Modifiers[j].VirtualKey, 1));
+                        
+                        /* Go go the 4th char (past the "KBD") and lower name */
+                        for (p = &KeyNameBuffer[4]; *p; p++) *p = tolower(*p);
+                        
+                        /* Print it */
+                        fprintf(FileHandle, "%s", &KeyNameBuffer[3]);
+                        
+                        /* We'll need a plus sign next */
+                        NeedPlus = TRUE;
+                    }
+                }
+            }
+            
+            /* Terminate the entry */
+            fprintf(FileHandle, "\n");
+        }
+    }
+    
     
     /* Modifier conversion table end */
     fprintf(FileHandle,"     }\n" "};\n\n");
