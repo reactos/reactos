@@ -58,11 +58,6 @@ typedef struct _UNWIND_INFO
 */
 } UNWIND_INFO, *PUNWIND_INFO;
 
-PVOID
-NTAPI
-RtlpLookupModuleBase(
-    PVOID Address);
-
 /* FUNCTIONS *****************************************************************/
 
 PRUNTIME_FUNCTION
@@ -77,8 +72,7 @@ RtlLookupFunctionTable(
     PIMAGE_DATA_DIRECTORY Directory;
 
     /* Find ModuleBase */
-    DosHeader = RtlpLookupModuleBase((PVOID)ControlPc);
-    if (!DosHeader)
+    if (!RtlPcToFileHeader((PVOID)ControlPc, (PVOID*)&DosHeader))
     {
         return NULL;
     }

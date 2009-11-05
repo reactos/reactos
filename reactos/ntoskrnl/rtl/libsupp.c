@@ -30,26 +30,26 @@ SIZE_T RtlpAllocDeallocQueryBufferSize = 128;
 
 PVOID
 NTAPI
-RtlpLookupModuleBase(
-    PVOID Address)
+RtlPcToFileHeader(
+    IN  PVOID PcValue,
+    OUT PVOID *BaseOfImage)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InSystem;
-    PVOID p;
 
     /* Get the base for this file */
-    if ((ULONG_PTR)Address > (ULONG_PTR)MmHighestUserAddress)
+    if ((ULONG_PTR)PcValue > (ULONG_PTR)MmHighestUserAddress)
     {
         /* We are in kernel */
-        p = KiPcToFileHeader(Address, &LdrEntry, FALSE, &InSystem);
+        *BaseOfImage = KiPcToFileHeader(PcValue, &LdrEntry, FALSE, &InSystem);
     }
     else
     {
         /* We are in user land */
-        p = KiRosPcToUserFileHeader(Address, &LdrEntry);
+        *BaseOfImage = KiRosPcToUserFileHeader(PcValue, &LdrEntry);
     }
 
-    return p;
+    return *BaseOfImage;
 }
 
 VOID
