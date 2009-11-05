@@ -388,6 +388,10 @@ kbd_c(IN ULONG StateCount,
 {
     CHAR OutputFile[13];
     FILE *FileHandle;
+    ULONG States[8];
+    ULONG i;
+    ULONG HighestState;
+    PVKNAME Entry;
     
     /* Build the keyboard name and internal name */
     strcpy(OutputFile, gKBDName);
@@ -528,7 +532,28 @@ kbd_c(IN ULONG StateCount,
     /* Key name table header */
     fprintf(FileHandle, "static ALLOC_SECTION_LDATA VSC_VK aE0VscToVk[] = {\n");
     
-    /* FIXME: Key names */
+    /* Loop 110-key table */
+    for (i = 0; i < 110; i++)
+    {
+        /* Check for non-extended keys */
+        if ((Layout->Entry[i].ScanCode & 0xFF00) == 0xE000)
+        {
+            /* Which are valid */
+            if (Layout->Entry[i].ScanCode != 0xFF)
+            {
+                /* And mapped */
+                if (Layout->Entry[i].VirtualKey != 0xFF)
+                {
+                    /* Output them */
+                    fprintf(FileHandle,
+                            "        { 0x%02X, X%02X | KBDEXT              },  // %s\n",
+                            Layout->Entry[i].ScanCode,
+                            Layout->Entry[i].ScanCode,
+                            Layout->Entry[i].Name);
+                }
+            }
+        }
+    }
     
     /* Key name table finish */
     fprintf(FileHandle, "        { 0,      0                       }\n};\n\n");
@@ -536,7 +561,28 @@ kbd_c(IN ULONG StateCount,
     /* Extended key name table header */
     fprintf(FileHandle, "static ALLOC_SECTION_LDATA VSC_VK aE1VscToVk[] = {\n");
     
-    /* FIXME: Extended scancodes */
+    /* Loop 110-key table */
+    for (i = 0; i < 110; i++)
+    {
+        /* Check for extended keys */
+        if ((Layout->Entry[i].ScanCode & 0xFF00) == 0xE100)
+        {
+            /* Which are valid */
+            if (Layout->Entry[i].ScanCode != 0xFF)
+            {
+                /* And mapped */
+                if (Layout->Entry[i].VirtualKey != 0xFF)
+                {
+                    /* Output them */
+                    fprintf(FileHandle,
+                            "        { 0x%02X, Y%02X | KBDEXT            },  // %s\n",
+                            Layout->Entry[i].ScanCode,
+                            Layout->Entry[i].ScanCode,
+                            Layout->Entry[i].Name);
+                }
+            }
+        }
+    }
     
     /* Extended key name table finish */
     fprintf(FileHandle,
@@ -559,7 +605,20 @@ kbd_c(IN ULONG StateCount,
     /* Modifier table header */
     fprintf(FileHandle, "static ALLOC_SECTION_LDATA VK_TO_BIT aVkToBits[] = {\n");
     
-    /* FIXME: Key modifiers */
+    /* Loop modifier table */
+    i = 0;
+    Entry = &Modifiers[0];
+    while (Entry->VirtualKey)
+    {
+        /* Print out entry */
+        fprintf(FileHandle,
+                "    { %-12s,   %-12s },\n",
+                getVKName(Entry->VirtualKey, 1),
+                Entry->Name);
+        
+        /* Move to the next one */
+        Entry = &Modifiers[++i];
+    }
     
     /* Modifier table finish */
     fprintf(FileHandle, "    { 0,          0        }\n};\n\n");
@@ -572,6 +631,16 @@ kbd_c(IN ULONG StateCount,
             "* See kbd.h for a full description.\n"
             "*\n"
             "\\***************************************************************************/\n\n");
+    
+    /* Zero out local state data */
+    for (i = 0; i < 8; i++) States[i] = -1;
+    
+    /* Find the highest set state */
+    for (HighestState = 1, i = 0; i < 8 && ShiftStates[i] > -1; i++)
+    {
+        States[ShiftStates[i]] = i;
+        if (ShiftStates[i] > HighestState) HighestState = ShiftStates[i];
+    }
     
     /* Modifier conversion table header */
     fprintf(FileHandle,
