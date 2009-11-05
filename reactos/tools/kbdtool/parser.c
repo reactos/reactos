@@ -929,9 +929,9 @@ DoParsing(VOID)
     ULONG KeyWord;
     ULONG StateCount;
     ULONG ShiftStates[8];
-    PKEYNAME DescriptionData, LanguageData;
-    PKEYNAME KeyNameData, KeyNameExtData, KeyNameDeadData;
-    PVOID AttributeData, LigatureData, DeadKeyData;
+    PKEYNAME DescriptionData = NULL, LanguageData = NULL;
+    PKEYNAME KeyNameData = NULL, KeyNameExtData = NULL, KeyNameDeadData = NULL;
+    PVOID AttributeData = NULL, LigatureData = NULL, DeadKeyData = NULL;
     
     /* Parse keywords */
     gLineCount = 0;
