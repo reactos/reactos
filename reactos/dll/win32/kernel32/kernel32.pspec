@@ -72,7 +72,7 @@
 @ stdcall CancelIo(long)
 @ stdcall CancelIoEx(long ptr)
 @ stdcall CancelSynchronousIo(long)
-;@ stdcall CancelThreadpoolIo ; Win 7
+;@ stdcall CancelThreadpoolIo(ptr) ntdll.TpCancelAsyncIoOperation; Win 7
 @ stdcall CancelTimerQueueTimer(long long)
 @ stdcall CancelWaitableTimer(long)
 @ stdcall ChangeTimerQueueTimer(long long long long)
@@ -89,13 +89,13 @@
 ;@ stdcall ClosePrivateNamespace ; Win 7
 @ stdcall CloseProfileUserMapping()
 @ stub CloseSystemHandle ; missing in XP SP3 and Win 7
-;@ stdcall CloseThreadpool ; Win 7
-;@ stdcall CloseThreadpoolCleanupGroup ; Win 7
-;@ stdcall CloseThreadpoolCleanupGroupMembers ; Win 7
-;@ stdcall CloseThreadpoolIo ; Win 7
-;@ stdcall CloseThreadpoolTimer ; Win 7
-;@ stdcall CloseThreadpoolWait ; Win 7
-;@ stdcall CloseThreadpoolWork ; Win 7
+;@ stdcall CloseThreadpool(ptr) ntdll.TpReleasePool ; Win 7
+;@ stdcall CloseThreadpoolCleanupGroup(ptr) ntdll.TpReleaseCleanupGroup ; Win 7
+;@ stdcall CloseThreadpoolCleanupGroupMembers(ptr long ptr) ntdll.TpReleaseCleanupGroupMembers ; Win 7
+;@ stdcall CloseThreadpoolIo ntdll.TpReleaseIoCompletion ; Win 7
+;@ stdcall CloseThreadpoolTimer ntdll.TpReleaseTimer ; Win 7
+;@ stdcall CloseThreadpoolWait ntdll.TpReleaseWait ; Win 7
+;@ stdcall CloseThreadpoolWork ntdll.TpReleaseWork ; Win 7
 @ stdcall CmdBatNotification(long)
 @ stdcall CommConfigDialogA(str long ptr)
 @ stdcall CommConfigDialogW(wstr long ptr)
@@ -178,7 +178,7 @@
 @ stdcall CreateProcessInternalWSecure() ; missing in Win 7
 @ stdcall CreateProcessW(wstr wstr ptr ptr long long ptr wstr ptr ptr)
 @ stdcall CreateRemoteThread(long ptr long ptr long long ptr)
-;@ stdcall CreateRemoteThreadEx ; Win 7
+;@ stdcall CreateRemoteThreadEx api-ms-win-core-processthreads-l1-1-0.CreateRemoteThreadEx ; Win 7
 @ stdcall CreateSemaphoreA(ptr long long str)
 @ stdcall CreateSemaphoreExA(ptr long long str long long)
 @ stdcall CreateSemaphoreExW(ptr long long wstr long long)
@@ -219,14 +219,14 @@
 @ stdcall DefineDosDeviceW(long wstr wstr)
 @ stdcall DelayLoadFailureHook(str str)
 @ stdcall DeleteAtom(long)
-;@ stdcall DeleteBoundaryDescriptor ; Win 7
+;@ stdcall DeleteBoundaryDescriptor ntdll.RtlDeleteBoundaryDescriptor ; Win 7
 @ stdcall DeleteCriticalSection(ptr) ntdll.RtlDeleteCriticalSection
 @ stdcall DeleteFiber(ptr)
 @ stdcall DeleteFileA(str)
 ;@ stdcall DeleteFileTransactedA ; Win 7
 ;@ stdcall DeleteFileTransactedW ; Win 7
 @ stdcall DeleteFileW(wstr)
-;@ stdcall DeleteProcThreadAttributeList ; Win 7
+;@ stdcall DeleteProcThreadAttributeList api-ms-win-core-processthreads-l1-1-0.DeleteProcThreadAttributeList ; Win 7
 @ stdcall DeleteTimerQueue(long)
 @ stdcall DeleteTimerQueueEx (long long)
 @ stdcall DeleteTimerQueueTimer(long long long)
@@ -238,7 +238,7 @@
 @ stdcall DeviceIoControl(long long ptr long ptr long ptr ptr)
 @ stdcall DisableThreadLibraryCalls(long)
 ;@ stdcall DisableThreadProfiling ; Win 7
-;@ stdcall DisassociateCurrentThreadFromCallback ; Win 7
+;@ stdcall DisassociateCurrentThreadFromCallback ntdll.TpDisassociateCallback ; Win 7
 @ stdcall DisconnectNamedPipe(long)
 @ stdcall DnsHostnameToComputerNameA (str ptr ptr)
 @ stdcall DnsHostnameToComputerNameW (wstr ptr ptr)
@@ -296,8 +296,8 @@
 @ stdcall EnumerateLocalComputerNamesW(ptr long wstr ptr)
 @ stdcall EraseTape(ptr long long)
 @ stdcall EscapeCommFunction(long long)
-@ stdcall ExitProcess(long)
-@ stdcall ExitThread(long)
+@ stdcall ExitProcess(long) ; FIXME: ntdll.RtlExitUserProcess
+@ stdcall ExitThread(long) ; FIXME: ntdll.RtlExitUserThread
 @ stdcall ExitVDM(long long)
 @ stdcall ExpandEnvironmentStringsA(str ptr long)
 @ stdcall ExpandEnvironmentStringsW(wstr ptr long)
@@ -361,7 +361,7 @@
 @ stdcall FlushConsoleInputBuffer(long)
 @ stdcall FlushFileBuffers(long)
 @ stdcall FlushInstructionCache(long long long)
-;@ stdcall FlushProcessWriteBuffers ; Win 7
+;@ stdcall FlushProcessWriteBuffers ntdll.NtFlushProcessWriteBuffers ; Win 7
 @ stdcall FlushViewOfFile(ptr long)
 @ stdcall FoldStringA(long str long ptr long)
 @ stdcall FoldStringW(long wstr long ptr long)
@@ -372,7 +372,7 @@
 @ stdcall FreeEnvironmentStringsW(ptr)
 @ stdcall FreeLibrary(long)
 @ stdcall FreeLibraryAndExitThread(long long)
-;@ stdcall FreeLibraryWhenCallbackReturns ; Win 7
+;@ stdcall FreeLibraryWhenCallbackReturns ntdll.TpCallbackUnloadDllOnCompletion ; Win 7
 @ stdcall FreeResource(long)
 @ stdcall FreeUserPhysicalPages(long long long)
 @ stdcall FreeVirtualBuffer(ptr) ; missing in Win 7
@@ -469,7 +469,7 @@
 @ stdcall GetCurrentProcess()
 @ stdcall GetCurrentProcessId()
 @ stdcall GetCurrentProcessorNumber() ntdll.RtlGetCurrentProcessorNumber
-;@ stdcall GetCurrentProcessorNumberEx ; Win 7
+;@ stdcall GetCurrentProcessorNumberEx ntdll.RtlGetCurrentProcessorNumberEx ; Win 7
 @ stdcall GetCurrentThread()
 @ stdcall GetCurrentThreadId()
 ;@ stdcall GetCurrentUmsThread
@@ -491,8 +491,8 @@
 @ stdcall GetDriveTypeW(wstr)
 ;@ stdcall GetDurationFormat ; Win 7
 ;@ stdcall GetDurationFormatEx ; Win 7
-;@ stdcall GetDynamicTimeZoneInformation
-;@ stdcall GetEnabledExtendedFeatures
+;@ stdcall GetDynamicTimeZoneInformation ; Win 7
+;@ stdcall GetEnabledExtendedFeatures api-ms-win-core-xstate-l1-1-0.RtlGetEnabledExtendedFeatures ; Win 7
 @ stdcall GetEnvironmentStrings()
 @ stdcall GetEnvironmentStringsA() GetEnvironmentStrings
 @ stdcall GetEnvironmentStringsW()
@@ -505,7 +505,7 @@
 @ stdcall GetExpandedNameA(str ptr)
 @ stdcall GetExpandedNameW(wstr ptr)
 ;@ stdcall GetExtendedContextLength ; Win 7
-;@ stdcall GetExtendedFeaturesMask ; Win 7
+;@ stdcall GetExtendedFeaturesMask api-ms-win-core-xstate-l1-1-0.RtlGetExtendedFeaturesMask ; Win 7
 @ stdcall GetFileAttributesA(str)
 @ stdcall GetFileAttributesByHandle(long ptr long) ; missing in Win 7
 @ stdcall GetFileAttributesExA(str long ptr)
@@ -548,7 +548,7 @@
 @ stdcall GetLogicalDriveStringsW(long ptr)
 @ stdcall GetLogicalDrives()
 @ stdcall GetLogicalProcessorInformation(ptr ptr)
-;@ stdcall GetLogicalProcessorInformationEx ; Win 7
+;@ stdcall GetLogicalProcessorInformationEx api-ms-win-core-sysinfo-l1-1-0.GetLogicalProcessorInformationEx ; Win 7
 @ stdcall GetLongPathNameA (str long long)
 ;@ stdcall GetLongPathNameTransactedA ; Win 7
 ;@ stdcall GetLongPathNameTransactedW ; Win 7
@@ -775,13 +775,13 @@
 ;@ stdcall InitOnceBeginInitialize ; Win 7
 ;@ stdcall InitOnceComplete ; Win 7
 ;@ stdcall InitOnceExecuteOnce ; Win 7
-;@ stdcall InitOnceInitialize ; Win 7
-;@ stdcall InitializeConditionVariable ; Win 7
-@ stdcall InitializeCriticalSection(ptr)
+;@ stdcall InitOnceInitialize ntdll.RtlRunOnceInitialize ; Win 7
+;@ stdcall InitializeConditionVariable ntdll.RtlInitializeConditionVariable ; Win 7
+@ stdcall InitializeCriticalSection(ptr) ; FIXME: ntdll.RtlInitializeCriticalSection
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)
 ;@ stdcall InitializeCriticalSectionEx(ptr long long) ; missing in XP SP3
 ;@ stdcall InitializeExtendedContext ; Win 7
-;@ stdcall InitializeProcThreadAttributeList ; Win 7
+;@ stdcall InitializeProcThreadAttributeList api-ms-win-core-processthreads-l1-1-0.InitializeProcThreadAttributeList ; Win 7
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
 @ stdcall InitializeSRWLock(ptr) ntdll.RtlInitializeSRWLock
 @ stdcall InterlockedCompareExchange(ptr long long) ; missing in Win 7 x64
@@ -793,7 +793,7 @@
 @ stdcall InterlockedIncrement(ptr) ; missing in Win 7 x64
 @ stdcall InterlockedPopEntrySList(ptr) ntdll.RtlInterlockedPopEntrySList
 @ stdcall InterlockedPushEntrySList(ptr ptr) ntdll.RtlInterlockedPushEntrySList
-;@ stdcall InterlockedPushListSList ; Win 7
+;@ stdcall InterlockedPushListSList ntdll.RtlInterlockedPushListSList ; Win 7
 @ stdcall InvalidateConsoleDIBits(long long)
 @ stub InvalidateNSCache ; missing in XP SP3 and Win 7
 @ stdcall IsBadCodePtr(ptr)
@@ -815,7 +815,7 @@
 @ stdcall IsProcessorFeaturePresent(long)
 @ stdcall IsSystemResumeAutomatic()
 ;@ stdcall IsThreadAFiber ; Win 7
-;@ stdcall IsThreadpoolTimerSet ; Win 7
+;@ stdcall IsThreadpoolTimerSet ntdll.TpIsTimerSet ; Win 7
 ;@ stdcall IsTimeZoneRedirectionEnabled ; Win 7
 ;@ stdcall IsValidCalDateTime ; Win 7
 @ stdcall IsValidCodePage(long)
@@ -867,7 +867,7 @@
 @ stdcall LZSeek(long long long) ;check
 @ stdcall LZStart()
 @ stdcall LeaveCriticalSection(ptr) ntdll.RtlLeaveCriticalSection
-;@ stdcall LeaveCriticalSectionWhenCallbackReturns ; Win 7
+;@ stdcall LeaveCriticalSectionWhenCallbackReturns ntdll.TpCallbackLeaveCriticalSectionOnCompletion ; Win 7
 ;@ stdcall LoadAppInitDlls ; Win 7
 @ stdcall LoadLibraryA(str)
 @ stdcall LoadLibraryExA( str long long)
@@ -889,8 +889,8 @@
 @ stdcall LocalSize(long)
 @ stdcall LocalUnlock(long)
 @ stub LocaleNameToLCID ; missing in XP SP3
-;@ stdcall LocateExtendedFeature ; Win 7
-;@ stdcall LocateLegacyContext ; Win 7
+;@ stdcall LocateExtendedFeature api-ms-win-core-xstate-l1-1-0.RtlLocateExtendedFeature ; Win 7
+;@ stdcall LocateLegacyContext api-ms-win-core-xstate-l1-1-0.RtlLocateLegacyContext ; Win 7
 @ stdcall LockFile(long long long long long)
 @ stdcall LockFileEx(long long long long long ptr)
 @ stdcall LockResource(long)
@@ -943,12 +943,12 @@
 ;@ stdcall OpenPrivateNamespaceA ; Win 7
 ;@ stdcall OpenPrivateNamespaceW ; Win 7
 @ stdcall OpenProcess(long long long)
-;@ stdcall OpenProcessToken ; Win 7
+;@ stdcall OpenProcessToken api-ms-win-core-processthreads-l1-1-0.OpenProcessToken ; Win 7
 @ stdcall OpenProfileUserMapping()
 @ stdcall OpenSemaphoreA(long long str)
 @ stdcall OpenSemaphoreW(long long wstr)
 @ stdcall OpenThread(long long long)
-;@ stdcall OpenThreadToken
+;@ stdcall OpenThreadToken api-ms-win-core-processthreads-l1-1-0.OpenThreadToken ; win 7
 @ stdcall OpenWaitableTimerA(long long str)
 @ stdcall OpenWaitableTimerW(long long wstr)
 @ stdcall OutputDebugStringA(str)
@@ -1071,11 +1071,11 @@
 @ stdcall RegisterWowExec(long)
 ;@ stdcall ReleaseActCtx(ptr)
 @ stdcall ReleaseMutex(long)
-;@ stdcall ReleaseMutexWhenCallbackReturns ; Win 7
+;@ stdcall ReleaseMutexWhenCallbackReturns ntdll.TpCallbackReleaseMutexOnCompletion ; Win 7
 @ stdcall ReleaseSRWLockExclusive(ptr) ntdll.RtlReleaseSRWLockExclusive
 @ stdcall ReleaseSRWLockShared(ptr) ntdll.RtlReleaseSRWLockShared
 @ stdcall ReleaseSemaphore(long long ptr)
-;@ stdcall ReleaseSemaphoreWhenCallbackReturns ; Win 7
+;@ stdcall ReleaseSemaphoreWhenCallbackReturns ntdll.TpCallbackReleaseSemaphoreOnCompletion ; Win 7
 @ stdcall RemoveDirectoryA(str)
 ;@ stdcall RemoveDirectoryTransactedA ; Win 7
 ;@ stdcall RemoveDirectoryTransactedW ; Win 7
@@ -1180,8 +1180,8 @@
 @ stdcall SetEnvironmentVariableW(wstr wstr)
 @ stdcall SetErrorMode(long)
 @ stdcall SetEvent(long)
-;@ stdcall SetEventWhenCallbackReturns ; Win 7
-;@ stdcall SetExtendedFeaturesMask ; Win 7
+;@ stdcall SetEventWhenCallbackReturns ntdll.TpCallbackSetEventOnCompletion ; Win 7
+;@ stdcall SetExtendedFeaturesMask api-ms-win-core-xstate-l1-1-0.RtlSetExtendedFeaturesMask ; Win 7
 @ stdcall SetFileApisToANSI()
 @ stdcall SetFileApisToOEM()
 @ stdcall SetFileAttributesA(str long)
@@ -1246,13 +1246,13 @@
 @ stdcall SetThreadPriority(long long)
 @ stdcall SetThreadPriorityBoost(long long)
 ;@ stdcall SetThreadStackGuarantee ; Win 7
-;@ stdcall SetThreadToken ; Win 7
+;@ stdcall SetThreadToken api-ms-win-core-processthreads-l1-1-0.SetThreadToken ; Win 7
 @ stdcall SetThreadUILanguage(long)
 ;@ stdcall SetThreadpoolStackInformation ; Win 7
-;@ stdcall SetThreadpoolThreadMaximum ; Win 7
+;@ stdcall SetThreadpoolThreadMaximum ntdll.TpSetPoolMaxThreads ; Win 7
 ;@ stdcall SetThreadpoolThreadMinimum ; Win 7
-;@ stdcall SetThreadpoolTimer ; Win 7
-;@ stdcall SetThreadpoolWait ; Win 7
+;@ stdcall SetThreadpoolTimer ntdll.TpSetTimer ; Win 7
+;@ stdcall SetThreadpoolWait ntdll.TpSetWait ; Win 7
 @ stdcall SetTimeZoneInformation(ptr)
 @ stdcall SetTimerQueueTimer(long ptr ptr long long long)
 ;@ stdcall -arch?x86_64 SetUmsThreadInformation
@@ -1264,7 +1264,7 @@
 @ stdcall SetVolumeMountPointA(str str)
 @ stdcall SetVolumeMountPointW(wstr wstr)
 @ stdcall SetWaitableTimer(long ptr long ptr ptr long)
-;@ stdcall SetWaitableTimerEx ; Win 7
+;@ stdcall SetWaitableTimerEx api-ms-win-core-threadpool-l1-1-0.SetWaitableTimerEx ; Win 7
 @ stdcall SetupComm(long long long)
 @ stdcall ShowConsoleCursor(long long)
 @ stdcall SignalObjectAndWait(long long long long)
@@ -1275,8 +1275,8 @@
 @ stdcall SleepEx(long long)
 ;@ stdcall SortCloseHandle ; Win 7
 ;@ stdcall SortGetHandle ; Win 7
-;@ stdcall StartThreadpoolIo ; Win 7
-;@ stdcall SubmitThreadpoolWork ; Win 7
+;@ stdcall StartThreadpoolIo ntdll.TpStartAsyncIoOperation ; Win 7
+;@ stdcall SubmitThreadpoolWork ntdll.TpPostWork ; Win 7
 @ stdcall SuspendThread(long)
 @ stdcall SwitchToFiber(ptr)
 @ stdcall SwitchToThread()
@@ -1298,8 +1298,8 @@
 @ stdcall TransactNamedPipe(long ptr long ptr long ptr ptr)
 @ stdcall TransmitCommChar(long long)
 @ stdcall TrimVirtualBuffer(ptr) ; missing in Win 7
-;@ stdcall TryAcquireSRWLockExclusive ; Win 7
-;@ stdcall TryAcquireSRWLockShared ; Win 7
+;@ stdcall TryAcquireSRWLockExclusive ntdll.RtlTryAcquireSRWLockExclusive ; Win 7
+;@ stdcall TryAcquireSRWLockShared ntdll.RtlTryAcquireSRWLockShared ; Win 7
 @ stdcall TryEnterCriticalSection(ptr) ntdll.RtlTryEnterCriticalSection
 ;@ stdcall TrySubmitThreadpoolCallback ; Win 7
 @ stdcall TzSpecificLocalTimeToSystemTime(ptr ptr ptr)
@@ -1316,7 +1316,7 @@
 @ stdcall UnregisterWait(long)
 @ stdcall UnregisterWaitEx(long long)
 ;@ stdcall UpdateCalendarDayOfWeek ; Win 7
-;@ stdcall UpdateProcThreadAttribute ; Win 7
+;@ stdcall UpdateProcThreadAttribute api-ms-win-core-processthreads-l1-1-0.UpdateProcThreadAttribute ; Win 7
 @ stdcall UpdateResourceA(long str str long ptr long)
 @ stdcall UpdateResourceW(long wstr wstr long ptr long)
 @ stdcall VDMConsoleOperation(long long)
@@ -1349,10 +1349,10 @@
 @ stdcall WaitForMultipleObjectsEx(long ptr long long long)
 @ stdcall WaitForSingleObject(long long)
 @ stdcall WaitForSingleObjectEx(long long long)
-;@ stdcall WaitForThreadpoolIoCallbacks ; Win 7
-;@ stdcall WaitForThreadpoolTimerCallbacks ; Win 7
-;@ stdcall WaitForThreadpoolWaitCallbacks ; Win 7
-;@ stdcall WaitForThreadpoolWorkCallbacks ; Win 7
+;@ stdcall WaitForThreadpoolIoCallbacks ntdll.TpWaitForIoCompletion ; Win 7
+;@ stdcall WaitForThreadpoolTimerCallbacks ntdll.TpWaitForTimer ; Win 7
+;@ stdcall WaitForThreadpoolWaitCallbacks ntdll.TpWaitForWait ; Win 7
+;@ stdcall WaitForThreadpoolWorkCallbacks ntdll.TpWaitForWork ; Win 7
 @ stdcall WaitNamedPipeA (str long)
 @ stdcall WaitNamedPipeW (wstr long)
 @ stdcall WakeAllConditionVariable(ptr) ntdll.RtlWakeAllConditionVariable
@@ -1408,9 +1408,9 @@
 @ stdcall WriteTapemark(ptr long long long)
 @ stdcall WTSGetActiveConsoleSessionId() ; missing in win 7
 ;@ stdcall ZombifyActCtx(ptr)
-;@ stdcall -arch=x86_64 __C_specific_handler
-;@ stdcall -arch=x86_64 __chkstk
-;@ stdcall -arch=x86_64 __misaligned_access
+;@ stdcall -arch=x86_64 __C_specific_handler ntdll.__C_specific_handler
+;@ stdcall -arch=x86_64 __chkstk ntdll.__chkstk
+;@ stdcall -arch=x86_64 __misaligned_access ntdll.__misaligned_access
 @ stub _DebugOut ; missing in XP SP3 and Win 7
 @ stub _DebugPrintf ; missing in XP SP3 and Win 7
 @ stdcall _hread(long ptr long)
@@ -1418,7 +1418,7 @@
 @ stdcall _lclose(long)
 @ stdcall _lcreat(str long)
 @ stdcall _llseek(long long long)
-;@ stdcall -arch=x86_64 _local_unwind ; Win 7
+;@ stdcall -arch=x86_64 _local_unwind ntdll._local_unwind; Win 7
 @ stdcall _lopen(str long)
 @ stdcall _lread(long ptr long) _hread
 @ stdcall _lwrite(long ptr long) _hwrite
