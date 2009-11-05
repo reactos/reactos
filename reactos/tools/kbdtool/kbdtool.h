@@ -76,6 +76,7 @@ extern BOOLEAN Verbose, UnicodeFile, SanityCheck, FallbackDriver;
 extern PCHAR gpszFileName;
 extern FILE* gfpInput;
 extern VKNAME VKName[];
+extern VKNAME Modifiers[];
 extern SCVK ScVk[];
 extern LAYOUT g_Layout;
 extern CHAR gVKeyName[32];

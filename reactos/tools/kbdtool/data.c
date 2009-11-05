@@ -52,6 +52,13 @@ VKNAME VKName[] =
     {0xe5, "GROUPSHIFT"},
     {0xe6, "RGROUPSHIFT"}
 };
+/* Table of modifiers */
+VKNAME Modifiers[] =
+{
+    {0x10, "KBDSHIFT"},
+    {0x11, "KBDCTRL"},
+    {0x12, "KBDALT"}
+};
 
 /* ISO 110-key Keyboard Scancode to Virtual Key Conversion Table */
 SCVK ScVk[] =
