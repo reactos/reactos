@@ -466,6 +466,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     Stack = IoGetCurrentIrpStackLocation (Irp);
     DeviceToVerify = Stack->Parameters.VerifyVolume.DeviceObject;
 
+    FsRtlEnterFileSystem();
     ExAcquireResourceExclusiveLite (&DeviceExt->VcbResource,
         TRUE);
 
@@ -473,6 +474,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     {
         DPRINT1 ("Volume has been verified!\n");
         ExReleaseResourceLite (&DeviceExt->VcbResource);
+        FsRtlExitFileSystem();
         return STATUS_SUCCESS;
     }
 
@@ -511,6 +513,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
 
     ExReleaseResourceLite (&DeviceExt->VcbResource);
+    FsRtlExitFileSystem();
 
     return Status;
 }
