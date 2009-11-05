@@ -150,6 +150,7 @@ KdReceivePacket(
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
             /* Didn't receive a PacketType. */
+            KDDBGPRINT("KdReceivePacket - Didn't receive a PacketType.\n");
             return KdStatus;
         }
 
@@ -157,6 +158,7 @@ KdReceivePacket(
         if (Packet.PacketLeader == CONTROL_PACKET_LEADER &&
             Packet.PacketType == PACKET_TYPE_KD_RESEND)
         {
+            KDDBGPRINT("KdReceivePacket - PACKET_TYPE_KD_RESEND.\n");
             return KDP_PACKET_RESEND;
         }
 
@@ -165,6 +167,7 @@ KdReceivePacket(
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
             /* Didn't receive ByteCount. */
+            KDDBGPRINT("KdReceivePacket - Didn't receive ByteCount.\n");
             return KdStatus;
         }
 
@@ -173,6 +176,7 @@ KdReceivePacket(
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
             /* Didn't receive PacketId. */
+            KDDBGPRINT("KdReceivePacket - Didn't receive PacketId.\n");
             return KdStatus;
         }
 
@@ -189,6 +193,7 @@ KdReceivePacket(
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
             /* Didn't receive Checksum. */
+            KDDBGPRINT("KdReceivePacket - Didn't receive Checksum.\n");
             return KdStatus;
         }
 
@@ -281,7 +286,7 @@ KdReceivePacket(
             /* Do we have data? */
             if (MessageData->Length)
             {
-                KDDBGPRINT("KdReceivePacket - got data\n");
+                KDDBGPRINT("KdReceivePacket - 0x%lx bytes data\n", *DataLength);
 
                 /* Receive the message data */
                 KdStatus = KdpReceiveBuffer(MessageData->Buffer,
@@ -325,6 +330,7 @@ KdReceivePacket(
         if (Packet.PacketId != RemotePacketId)
         {
             /* Continue with next packet */
+            KDDBGPRINT("KdReceivePacket - Wrong PacketId.\n");
             continue;
         }
 
