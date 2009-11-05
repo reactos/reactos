@@ -20,6 +20,110 @@ struct tm *Now;
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+PrintNameTable(FILE* FileHandle,
+               PKEYNAME KeyName,
+               BOOL DeadKey)
+{
+    CHAR CharBuffer[255];
+    PKEYNAME NextName; 
+    PCHAR Name, Buffer;
+    ULONG i;
+    
+    /* Loop all key names */
+    while (KeyName)
+    {
+        /* Go to the next key name */
+        NextName = KeyName->Next;
+        
+        /* Remember the name and our buffer address */
+        Name = KeyName->Name;
+        Buffer = CharBuffer;
+        
+        /* Check if it's an IDS name */
+        if (strncmp(Name, "IDS_", 4))
+        {
+            /* No, so start parsing it. First, handle initial quote */
+            if (*Name != '\"') *Buffer++ = '\"';
+            
+            /* Next, parse the name */
+            while (*Name)
+            {
+                /* Check if this is a C-style hex string */
+                if ((*Name != '\\') || ((*(Name + 1) != 'x') && (*(Name + 1) != 'X')))
+                {
+                    /* It's not, so just copy straight into our buffer */
+                    *Buffer++ = *Name++;
+                }
+                else
+                {
+                    /* Continue scanning as long as this is a C-style hex string */
+                    while ((*Name == '\\') && ((*(Name + 1) == 'x') || (*(Name + 1) == 'X')))
+                    {
+                        /* Copy 6 characters */
+                        for (i = 0; (*Name) && (i < 6); i++) *Buffer++ = *Name++;
+                    }
+                    
+                    /* Check if we still have something at the end */
+                    if (*Name)
+                    {
+                        /* Terminate our buffer */
+                        *Buffer++ = '\"';
+                        *Buffer++ = ' ';
+                        *Buffer++ = 'L';
+                        *Buffer++ = '\"';
+                    }
+                }
+            }
+            
+            /*  Check for terminating quote */
+            if (*(Buffer - 1) != '\"') *Buffer++ = '\"';
+            
+            /* Terminate the buffer */
+            *Buffer++ = '\0';
+        }
+        else
+        {
+            /* Not yet supported */
+            printf("IDS Entries not yet handled!\n");
+            exit(1);
+        }
+
+        /* Is this a dead key? */
+        if (DeadKey)
+        {
+            /* Not yet handled */
+            printf("Dead keys not yet handled\n");
+            exit(1);
+        }
+        else
+        {
+            /* Print the entry */
+            fprintf(FileHandle, "    0x%02x,    L%s,\n", KeyName->Code, CharBuffer);
+        }
+        
+        /* Cleanup allocation */
+        free(KeyName->Name);
+        free(KeyName);
+        
+        /* Move on */
+        KeyName = NextName;
+    }
+    
+    /* Is this a dead key? */
+    if (DeadKey)
+    {
+        /* Not yet handled */
+        printf("Dead keys not yet handled\n");
+        exit(1);
+    }
+    else
+    {
+        /* Terminate the table */
+        fprintf(FileHandle, "    0   ,    NULL\n");
+    }
+}
+
 BOOLEAN
 kbd_h(IN PLAYOUT Layout)
 {
@@ -728,7 +832,15 @@ kbd_c(IN ULONG StateCount,
             "* aVkToWch3[]  - Virtual Key to WCHAR translation for 3 shift states\n"
             "* aVkToWch4[]  - Virtual Key to WCHAR translation for 4 shift states\n");
     
-    /* FIXME: STATE STUFF */
+    /* Check if there's exta shift states */
+    for (i = 5; i < HighestState; i++)
+    {
+        /* Print out extra information */
+        fprintf(FileHandle,
+                "* aVkToWch%d[]  - Virtual Key to WCHAR translation for %d shift states\n",
+                i,
+                i);
+    }
     
     /* Shift state translation table description continue */
     fprintf(FileHandle,
@@ -752,7 +864,7 @@ kbd_c(IN ULONG StateCount,
             "*\n"
             "\\***************************************************************************/\n\n");
     
-    /* FIXME: STATE STUFF */
+    /* FIXME: LOTS OF STATE STUFF */
     
     /* Numpad translation table */
     fprintf(FileHandle,
@@ -776,7 +888,16 @@ kbd_c(IN ULONG StateCount,
     /* Translation tables header */
     fprintf(FileHandle,"static ALLOC_SECTION_LDATA VK_TO_WCHAR_TABLE aVkToWcharTable[] = {\n");
     
-    /* FIXME: STATE STUFF */
+    /* Loop states higher than 3 */
+    for (i = 3; i <= StateCount; i++)
+    {
+        /* Print out the extra tables */
+        fprintf(FileHandle,
+                "    {  (PVK_TO_WCHARS1)aVkToWch%d, %d, sizeof(aVkToWch%d[0]) },\n",
+                i,
+                i,
+                i);
+    }
     
     /* Array of translation tables */
     fprintf(FileHandle,
@@ -802,7 +923,8 @@ kbd_c(IN ULONG StateCount,
         /* Table header */
         fprintf(FileHandle, "static ALLOC_SECTION_LDATA VSC_LPWSTR aKeyNames[] = {\n");
         
-        /* FIXME: TODO: Print table */
+        /* Print table */
+        PrintNameTable(FileHandle, KeyNameData, FALSE);
      
         /* Table end */
         fprintf(FileHandle, "};\n\n");
@@ -814,7 +936,8 @@ kbd_c(IN ULONG StateCount,
         /* Table header */
         fprintf(FileHandle, "static ALLOC_SECTION_LDATA VSC_LPWSTR aKeyNamesExt[] = {\n");
         
-        /* FIXME: TODO: Print table */
+        /* Print table */
+        PrintNameTable(FileHandle, KeyNameExtData, FALSE);
         
         /* Table end */
         fprintf(FileHandle, "};\n\n");
@@ -833,7 +956,7 @@ kbd_c(IN ULONG StateCount,
     {
         /* Not yet supported */
         printf("Dead key data not supported!\n");
-        //exit(1);
+        exit(1);
     }
     
     /* Check for ligature data */
@@ -868,11 +991,11 @@ kbd_c(IN ULONG StateCount,
     /* Descriptor dead key data section */
     if (DeadKeyData)
     {
-        fprintf(FileHandle,"    aDeadKey,\n\n");
+        fprintf(FileHandle, "    aDeadKey,\n\n");
     }
     else
     {
-        fprintf(FileHandle,"    NULL,\n\n");
+        fprintf(FileHandle, "    NULL,\n\n");
     }
     
     /* Descriptor key name comment */
@@ -884,31 +1007,31 @@ kbd_c(IN ULONG StateCount,
     /* Descriptor key name section */
     if (KeyNameData)
     {
-        fprintf(FileHandle,"    aKeyNames,\n");
+        fprintf(FileHandle, "    aKeyNames,\n");
     }
     else
     {
-        fprintf(FileHandle,"    NULL,\n");
+        fprintf(FileHandle, "    NULL,\n");
     }
     
     /* Descriptor extended key name section */
     if (KeyNameExtData)
     {
-        fprintf(FileHandle,"    aKeyNamesExt,\n");
+        fprintf(FileHandle, "    aKeyNamesExt,\n");
     }
     else
     {
-        fprintf(FileHandle,"    NULL,\n");
+        fprintf(FileHandle, "    NULL,\n");
     }
     
     /* Descriptor dead key name section */
     if ((DeadKeyData) && (KeyNameDeadData))
     {
-        fprintf(FileHandle,"    aKeyNamesDead,\n\n");
+        fprintf(FileHandle, "    aKeyNamesDead,\n\n");
     }
     else
     {
-        fprintf(FileHandle,"    NULL,\n\n");
+        fprintf(FileHandle, "    NULL,\n\n");
     }
     
     /* Descriptor conversion table section  */
@@ -927,7 +1050,7 @@ kbd_c(IN ULONG StateCount,
     /* FIXME: AttributeData and KLLF_ALTGR stuff */
     
     /* Descriptor locale-specific section */
-    fprintf(FileHandle, "    MAKELONG(%s, KBD_VERSION),\n\n", (PCHAR)AttributeData);
+    fprintf(FileHandle, "    MAKELONG(%s, KBD_VERSION),\n\n", "0");  /* FIXME */
     
     /* Descriptor ligature data comment */
     fprintf(FileHandle, "    /*\n     * Ligatures\n     */\n    %d,\n", 0); /* FIXME */
@@ -945,7 +1068,7 @@ kbd_c(IN ULONG StateCount,
     }
 
     /* Descriptor finish */
-    fprintf(FileHandle,"};\n\n");
+    fprintf(FileHandle, "};\n\n");
     
     /* Keyboard layout callback function */
     if (!FallbackDriver) fprintf(FileHandle,
