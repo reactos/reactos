@@ -131,6 +131,32 @@ SHCreateFileExtractIconW(LPCWSTR pszPath,
     return E_FAIL;
 }
 
+HRESULT
+WINAPI
+SHGetUnreadMailCountW(HKEY hKeyUser,
+                      LPCWSTR pszMailAddress,
+                      DWORD *pdwCount,
+                      FILETIME *pFileTime,
+                      LPCWSTR pszShellExecuteCommand,
+                      int cchShellExecuteCommand)
+{
+    FIXME("SHGetUnreadMailCountW() stub\n");
+    return E_FAIL;
+};
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHSetUnreadMailCountW(LPCWSTR pszMailAddress,
+                      DWORD dwCount,
+                      LPCWSTR pszShellExecuteCommand)
+{
+    FIXME("SHSetUnreadMailCountW() stub\n");
+    return E_FAIL;
+}
+
 /*
  * Unimplemented
  */
