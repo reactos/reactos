@@ -658,6 +658,65 @@ GetClassWord(
 }
 
 
+LONG_PTR Internal_GetWindowLong( HWND hwnd, INT offset, UINT size, BOOL unicode )
+{
+    LONG_PTR retvalue = 0;
+    WND *wndPtr;
+
+    if (offset == GWLP_HWNDPARENT)
+    {
+        HWND parent = GetAncestor( hwnd, GA_PARENT );
+        if (parent == GetDesktopWindow()) parent = GetWindow( hwnd, GW_OWNER );
+        return (ULONG_PTR)parent;
+    }
+
+    if (!(wndPtr = ValidateHwnd( hwnd )))
+    {
+        SetLastError( ERROR_INVALID_WINDOW_HANDLE );
+        return 0;
+    }
+
+    if (offset >= 0)
+    {
+        if (offset > (int)(wndPtr->cbwndExtra - size))
+        {
+            WARN("Invalid offset %d\n", offset );
+            SetLastError( ERROR_INVALID_INDEX );
+            return 0;
+        }
+        retvalue = *((LONG_PTR *)((PCHAR)(wndPtr + 1) + offset));
+
+        /* WINE: special case for dialog window procedure */
+        //if ((offset == DWLP_DLGPROC) && (size == sizeof(LONG_PTR)) && (wndPtr->flags & WIN_ISDIALOG))
+        //    retvalue = (LONG_PTR)IntGetWndProc( (WNDPROC)retvalue, unicode );
+        return retvalue;
+    }
+
+    switch(offset)
+    {
+    case GWLP_USERDATA:  retvalue = wndPtr->dwUserData; break;
+    case GWL_STYLE:      retvalue = wndPtr->style; break;
+    case GWL_EXSTYLE:    retvalue = wndPtr->ExStyle; break;
+    case GWLP_ID:        retvalue = wndPtr->IDMenu; break;
+    case GWLP_HINSTANCE: retvalue = (ULONG_PTR)wndPtr->hModule; break;
+    case GWLP_WNDPROC:
+	{
+		if (!TestWindowProcess(wndPtr))
+		{
+			SetLastError(ERROR_ACCESS_DENIED);
+			retvalue = 0;
+		}
+		retvalue = (ULONG_PTR)IntGetWndProc(wndPtr, unicode);
+        break;
+	}
+    default:
+        WARN("Unknown offset %d\n", offset );
+        SetLastError( ERROR_INVALID_INDEX );
+        break;
+    }
+    return retvalue;
+
+}
 /*
  * @implemented
  */
@@ -665,57 +724,8 @@ LONG
 WINAPI
 GetWindowLongA ( HWND hWnd, int nIndex )
 {
-    PWND Wnd;
-
-    Wnd = ValidateHwnd(hWnd);
-    if (Wnd == NULL)
-        return 0;
-
-    if (nIndex >= 0)
-    {
-        if ((DWORD)nIndex + sizeof(LONG) > Wnd->cbwndExtra)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
-        }
-        return *((LONG *)((PCHAR)(Wnd + 1) + nIndex));
-    }
-    else
-    {
-        switch (nIndex)
-        {
-            case GWL_EXSTYLE:
-                return Wnd->ExStyle;
-            case GWL_STYLE:
-                return Wnd->style;
-            case GWL_HINSTANCE:
-                return (LONG)Wnd->hModule;
-            case GWL_ID:
-                return Wnd->IDMenu;
-            case GWL_USERDATA:
-                return Wnd->dwUserData;
-
-            case GWL_HWNDPARENT:
-            {
-                HWND parent = GetAncestor( hWnd, GA_PARENT );
-                if (parent == GetDesktopWindow()) parent = GetWindow( hWnd, GW_OWNER );
-                return (LONG)parent;
-            }
-            case GWL_WNDPROC:
-                if (!TestWindowProcess(Wnd))
-                {
-                   SetLastError(ERROR_ACCESS_DENIED);
-                   return 0;
-                }
-                return IntGetWndProc(Wnd, TRUE);
-
-            default:
-                SetLastError(ERROR_INVALID_PARAMETER);
-                return 0;
-        }
-    }
+    return Internal_GetWindowLong( hWnd, nIndex, sizeof(LONG), FALSE );
 }
-
 
 /*
  * @implemented
@@ -724,55 +734,7 @@ LONG
 WINAPI
 GetWindowLongW(HWND hWnd, int nIndex)
 {
-    PWND Wnd;
-
-    Wnd = ValidateHwnd(hWnd);
-    if (Wnd == NULL)
-        return 0;
-
-    if (nIndex >= 0)
-    {
-        if ((DWORD)nIndex + sizeof(LONG) > Wnd->cbwndExtra)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
-        }
-        return *((LONG *)((PCHAR)(Wnd + 1) + nIndex));
-    }
-    else
-    {
-        switch (nIndex)
-        {
-            case GWL_EXSTYLE:
-                return Wnd->ExStyle;
-            case GWL_STYLE:
-                return Wnd->style;
-            case GWL_HINSTANCE:
-                return (LONG)Wnd->hModule;
-            case GWL_ID:
-                return Wnd->IDMenu;
-            case GWL_USERDATA:
-                return Wnd->dwUserData;
-
-            case GWL_HWNDPARENT:
-            {
-                HWND parent = GetAncestor( hWnd, GA_PARENT );
-                if (parent == GetDesktopWindow()) parent = GetWindow( hWnd, GW_OWNER );
-                return (LONG)parent;
-            }
-            case GWL_WNDPROC:
-                if (!TestWindowProcess(Wnd))
-                {
-                   SetLastError(ERROR_ACCESS_DENIED);
-                   return 0;
-                }
-                return IntGetWndProc(Wnd, FALSE);
-
-            default:
-                SetLastError(ERROR_INVALID_PARAMETER);
-                return 0;
-        }
-    }
+    return Internal_GetWindowLong( hWnd, nIndex, sizeof(LONG), TRUE );
 }
 
 #ifdef _WIN64
@@ -784,8 +746,7 @@ WINAPI
 GetWindowLongPtrA(HWND hWnd,
                   INT nIndex)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return Internal_GetWindowLong( hWnd, nIndex, sizeof(LONG_PTR), FALSE );
 }
 
 /*
@@ -796,8 +757,8 @@ WINAPI
 GetWindowLongPtrW(HWND hWnd,
                   INT nIndex)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return Internal_GetWindowLong( hWnd, nIndex, sizeof(LONG_PTR), TRUE );
+
 }
 #endif // _WIN64
 
@@ -808,7 +769,22 @@ WORD
 WINAPI
 GetWindowWord(HWND hWnd, int nIndex)
 {
-  return (WORD)GetWindowLongW(hWnd, nIndex);
+    switch(nIndex)
+    {
+    case GWLP_ID:
+    case GWLP_HINSTANCE:
+    case GWLP_HWNDPARENT:
+        break;
+    default:
+        if (nIndex < 0)
+        {
+            WARN("Invalid offset %d\n", nIndex );
+            SetLastError( ERROR_INVALID_INDEX );
+            return 0;
+        }
+        break;
+    }
+    return Internal_GetWindowLong( hWnd, nIndex, sizeof(WORD), FALSE );
 }
 
 /*

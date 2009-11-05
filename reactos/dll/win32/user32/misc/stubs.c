@@ -193,11 +193,11 @@ SetSysColorsTemp(const COLORREF *pPens,
             SysColorBrushes[i] = pBrushes[i];
         }
 
-        return (DWORD) pOldCol; /* FIXME: pointer truncation */
+        return PtrToLong(pOldCol); /* FIXME: pointer truncation */
     }
     if (!pPens && !pBrushes) /* "restore" call */
     {
-        LPVOID pOldCol = (LPVOID)n; /* FIXME: not 64-bit safe */
+        LPVOID pOldCol = LongToPtr(n); /* FIXME: not 64-bit safe */
         LPVOID p = pOldCol;
         DWORD nCount = *(DWORD *)p;
         p = (char*)p + sizeof(DWORD);

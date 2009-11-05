@@ -101,7 +101,7 @@ RegisterServicesProcess(DWORD ServicesProcessId)
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(REGISTER_SERVICES_PROCESS, CSR_GUI);
-  Request.Data.RegisterServicesProcessRequest.ProcessId = (HANDLE)ServicesProcessId;
+  Request.Data.RegisterServicesProcessRequest.ProcessId = LongToHandle(ServicesProcessId);
 
   Status = CsrClientCallServer(&Request,
                    NULL,
