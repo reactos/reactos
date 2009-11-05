@@ -918,6 +918,43 @@ DoLAYOUT(IN PLAYOUT LayoutData,
         }
     }
     
+    /* Process the scan code table */
+    Entry = &LayoutData->Entry[ScanCodeCount];
+    for (i = 0; i < 110; i++)
+    {
+        /* Get the scan code */
+        CurrentCode = ScVk[i].ScanCode;
+        if (CurrentCode == 0xFFFF) break;
+        
+        /* Check if this entry had been processed */
+        if (ScVk[i].Processed)
+        {
+            /* Skip it */
+            ScVk[i].Processed = FALSE;
+        }
+        else
+        {
+            /* Do we have too many? */
+            if (++ScanCodeCount >= 110)
+            {
+                /* Fail */
+                printf("ScanCode %02x - too many scancodes here to parse.\n", CurrentCode);
+                exit(1);   
+            }
+            
+            /* Build an entry for it */
+            Entry++;
+            Entry->ScanCode = CurrentCode;
+            Entry->VirtualKey = ScVk[i].VirtualKey;
+            Entry->OriginalVirtualKey = ScVk[i].VirtualKey;
+            Entry->Name = ScVk[i].Name;
+            Entry->Processed = TRUE;
+            Entry->LineCount = 0;
+            DPRINT1("AUTOMATIC ENTRY: [%x %x %s]\n",
+                    Entry->VirtualKey, Entry->ScanCode, Entry->Name);
+        }
+    }
+    
     /* Skip what's left */
     return KeyWord;
 }
