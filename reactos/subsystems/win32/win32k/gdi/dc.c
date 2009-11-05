@@ -452,7 +452,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     PDC pDC;
     RECTL pStackBuf[8];
     RECTL *pSafeRects = pStackBuf;
-    RECTL rcSafeBounds;
+    RECTL rcSafeBounds, rcSurface;
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -467,7 +467,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
             ProbeForRead(pRects, count * sizeof(RECTL), 1);
 
             /* Use pool allocated buffer if data doesn't fit */
-            if (count > sizeof(*pStackBuf) / sizeof(RECTL))
+            if (count > sizeof(pStackBuf) / sizeof(RECTL))
                 pSafeRects = ExAllocatePool(PagedPool, sizeof(RECTL) * count);
 
             /* Copy points data */
@@ -515,18 +515,23 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
 
     if (count == 0)
     {
-        /* Special case, set it to full screen then */
-        /*RECTL_vSetRect(&rcSafeBounds,
-                       pDC->rcVport.left,
-                       pDC->rcVport.top,
-                       pDC->rcVport.right,
-                       pDC->rcVport.bottom);*/
-
+        /* Set unclipped mode (clip by dc rect) */
         RECTL_vSetRect(&rcSafeBounds,
+                       pDC->rcDcRect.left,
+                       pDC->rcDcRect.top,
+                       pDC->rcDcRect.right,
+                       pDC->rcDcRect.bottom);
+
+        RECTL_vOffsetRect(&rcSafeBounds, pDC->rcVport.left, pDC->rcVport.top);
+
+        /* Intersect it with an underlying surface rectangle */
+        RECTL_vSetRect(&rcSurface,
                        0,
                        0,
                        pDC->pBitmap->SurfObj.sizlBitmap.cx,
                        pDC->pBitmap->SurfObj.sizlBitmap.cy);
+
+        RECTL_bIntersectRect(&rcSafeBounds, &rcSafeBounds, &rcSurface);
 
         /* Set the clipping object */
         pDC->CombinedClip = IntEngCreateClipRegion(1, &rcSafeBounds, &rcSafeBounds);
