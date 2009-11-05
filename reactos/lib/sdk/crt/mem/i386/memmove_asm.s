@@ -4,8 +4,10 @@
  * NOTE: This code is duplicated in memcpy_asm.s
  */
 
+.globl	_memcpy
 .globl	_memmove
 
+_memcpy:
 _memmove:
 	push	%ebp
 	mov	%esp,%ebp
