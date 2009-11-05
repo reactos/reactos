@@ -348,8 +348,32 @@ kbd_rc(IN PKEYNAME DescriptionData,
 BOOLEAN
 kbd_def(VOID)
 {
-    /* FIXME: Stub */
-    return FALSE;   
+    CHAR OutputFile[13];
+    FILE *FileHandle;
+    
+    /* Build the keyboard name and internal name */
+    strcpy(OutputFile, gKBDName);
+    strcat(OutputFile, ".DEF");
+    
+    /* Open it */
+    FileHandle = fopen(OutputFile, "wt");
+    if (!FileHandle)
+    {
+        /* Fail */
+        printf(" %12s : can't open for write.\n", OutputFile);
+        return FALSE;
+    }
+    
+    /* Write the file exports */
+    fprintf(FileHandle,
+            "LIBRARY %s\n\n"
+            "EXPORTS\n"
+            "    KbdLayerDescriptor @1\n",
+            gKBDName);
+    
+    /* Clean up */
+    fclose(FileHandle);
+    return TRUE;
 }
 
 BOOLEAN
