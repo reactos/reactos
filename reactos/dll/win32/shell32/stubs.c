@@ -142,7 +142,7 @@ SHGetUnreadMailCountW(HKEY hKeyUser,
 {
     FIXME("SHGetUnreadMailCountW() stub\n");
     return E_FAIL;
-};
+}
 
 /*
  * Unimplemented
