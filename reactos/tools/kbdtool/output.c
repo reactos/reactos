@@ -17,8 +17,75 @@ ULONG gStringIdForLanguageNames = 1100;
 ULONG gStringIdForLocaleName = 1200;
 time_t Clock;
 struct tm *Now;
+CHAR gCharName[32];
 
 /* FUNCTIONS ******************************************************************/
+
+PCHAR
+WChName(IN ULONG Char,
+        IN BOOLEAN AddZero)
+{
+    PCHAR p;
+    
+    /* Check for invalid character */
+    if (Char == -1)
+    {
+        /* No name */
+        strcpy(gCharName, "WCH_NONE");
+    }
+    else if ((Char > 31) && (Char < 128))
+    {
+        /* Use our global buffer */
+        p = gCharName;
+        
+        /* Add the first quote unless this was a zero-string */
+        if (!AddZero) *p++ = '\'';
+        
+        /* Now replace any other quote or comment character with a slash */
+        if ((Char == '\"') || (Char == '\'') || (Char == '\\')) *p++ = '\\';
+        
+        /* Now plug in the character */
+        *p++ = Char;
+        
+        /* And add the terminating quote, unless this was a zero-string */
+        if (!AddZero) *p++ = '\'';
+        
+        /* Terminate the buffer */
+        *p = '\0';
+    }
+    else
+    {
+        /* Handle special cases */
+        if (Char == '\b')
+        {
+            /* Bell */
+            strcpy(gCharName, "'\\b'");
+        }
+        else if (Char == '\n')
+        {
+            /* New line */
+            strcpy(gCharName, "'\\n'");
+        }
+        else if (Char == '\r')
+        {
+            /* Return */
+            strcpy(gCharName, "'\\r'");
+        }
+        else if (!AddZero)
+        {
+            /* Char value, in hex */
+            sprintf(gCharName, "0x%04x", Char);
+        }
+        else
+        {
+            /* Char value, C-style */
+            sprintf(gCharName, "\\x%04x", Char);
+        }
+    }
+    
+    /* Return the name */
+    return gCharName;
+}
 
 VOID
 PrintNameTable(FILE* FileHandle,
@@ -871,9 +938,12 @@ kbd_c(IN ULONG StateCount,
         /* Check if this something else than state 2 */
         if (i != 2)
         {
-            /* Not yet supported */
-            printf("Extra states not yet supported!\n");
-            break;//exit(1);
+            /* Loop all the scan codes */
+            for (j = 0; j < 110; j++)
+            {
+                /* Check if this is the state for the entry */
+                if (i == Layout->Entry[j].StateCount) break;
+            }
         }
         
         /* Print the table header */
@@ -911,7 +981,33 @@ kbd_c(IN ULONG StateCount,
             /* Initialize the buffer for this line */
             *LineBuffer = '\0';
             
-            /* FIXME: Loop for states */
+            /* Loop states */
+            for (k = 0; k < i; k++)
+            {
+                /* Check for dead key data */
+                if (DeadKeyData)
+                {
+                    /* Not yet supported */
+                    printf("Dead key data not supported!\n");
+                    exit(1);
+                }
+                
+                /* Check if it's a ligature key */
+                if (Layout->Entry[j].LigatureCharData[k])
+                {
+                    /* Not yet supported */
+                    printf("Ligature key data not supported!\n");
+                    exit(1);
+                }
+                
+                /* Print out the WCH_ name */
+                fprintf(FileHandle,
+                        ",%-9s",
+                        WChName(Layout->Entry[j].CharData[k]));
+                
+                /* If we have something on the line buffer by now, add WCH_NONE */
+                if (*LineBuffer != '\0') strcpy(LineBuffer, "WCH_NONE ");
+            }
             
             /* Finish the line */
             fprintf(FileHandle, "},\n");

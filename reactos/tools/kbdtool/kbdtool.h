@@ -54,6 +54,7 @@ typedef struct tagLAYOUTENTRY
     ULONG StateCount;
     ULONG CharData[8];
     ULONG DeadCharData[8];
+    UCHAR LigatureCharData[8];
     ULONG OtherCharData[8];
     struct LAYOUTENTRY* CapData;
     PCHAR Name;
