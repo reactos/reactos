@@ -24,8 +24,9 @@
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>sysinfo.c</file>
-			<file>timer.c</file>
 			<file>systimer.S</file>
+			<file>timer.c</file>
+			<file>usage.c</file>
 			<file>v86.s</file>
 		</directory>
 		<directory name="include">

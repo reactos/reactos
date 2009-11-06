@@ -1026,10 +1026,5 @@ VOID
 NTAPI
 HalpInitializePciBus(VOID)
 {
-    /* Initialize the stubs */
-    HalpInitializePciStubs();
-
     /* FIXME: Initialize NMI Crash Flag */
 }
-
-/* EOF */

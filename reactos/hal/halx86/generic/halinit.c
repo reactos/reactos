@@ -168,21 +168,3 @@ HalInitSystem(IN ULONG BootPhase,
     /* All done, return */
     return TRUE;
 }
-
-/*
- * @unimplemented
- */
-VOID
-NTAPI
-HalReportResourceUsage(VOID)
-{
-    /* Initialize PCI bus. */
-    HalpInitializePciBus();
-
-    /* FIXME: This is done in ReactOS MP HAL only*/
-    //HaliReconfigurePciInterrupts();
-
-    /* FIXME: Report HAL Usage to kernel */
-}
-
-/* EOF */

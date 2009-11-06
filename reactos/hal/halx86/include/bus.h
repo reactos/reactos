@@ -81,6 +81,14 @@
                 *((POINTER_TO_(y))Buffer));                             \
     TYPE2_END(y)
 
+typedef NTSTATUS
+(NTAPI *PciIrqRange)(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler,
+    IN PCI_SLOT_NUMBER PciSlot,
+    OUT PSUPPORTED_RANGE *Interrupt
+);
+
 typedef struct _PCIPBUSDATA
 {
     PCIBUSDATA CommonData;
@@ -99,6 +107,14 @@ typedef struct _PCIPBUSDATA
         } Type2;
     } Config;
     ULONG MaxDevice;
+    PciIrqRange GetIrqRange;
+    BOOLEAN BridgeConfigRead;
+    UCHAR ParentBus;
+    UCHAR Subtractive;
+    UCHAR reserved[1];
+    UCHAR SwizzleIn[4];
+    RTL_BITMAP DeviceConfigured;
+    ULONG ConfiguredBits[PCI_MAX_DEVICES * PCI_MAX_FUNCTION / 32];
 } PCIPBUSDATA, *PPCIPBUSDATA;
 
 typedef ULONG
@@ -281,6 +297,12 @@ HalpAssignPCISlotResources(
 VOID
 NTAPI
 HalpInitializePciBus(
+    VOID
+);
+
+VOID
+NTAPI
+HalpInitializePciStubs(
     VOID
 );
 
