@@ -12,6 +12,7 @@
 	<file>userdrv.c</file>
 	<file>mouse.c</file>
 	<file>wnd.c</file>
+	<file>ogldrv.c</file>
 
 	<file>winent.rc</file>
 

@@ -79,13 +79,6 @@ BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
         physDevSrc->hKernelDC, xSrc, ySrc, rop);
 }
 
-int CDECL RosDrv_ChoosePixelFormat(NTDRV_PDEVICE *physDev,
-                                   const PIXELFORMATDESCRIPTOR *ppfd)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 BOOL CDECL RosDrv_Chord( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
               INT xstart, INT ystart, INT xend, INT yend )
 {
@@ -205,15 +198,6 @@ BOOL CDECL RosDrv_DeleteDC( NTDRV_PDEVICE *physDev )
 
     /* Return result */
     return res;
-}
-
-int CDECL RosDrv_DescribePixelFormat(NTDRV_PDEVICE *physDev,
-			       int iPixelFormat,
-			       UINT nBytes,
-			       PIXELFORMATDESCRIPTOR *ppfd)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
 BOOL CDECL RosDrv_Ellipse( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom )
@@ -350,12 +334,6 @@ COLORREF CDECL RosDrv_GetPixel( NTDRV_PDEVICE *physDev, INT x, INT y )
     LPtoDP(physDev->hUserDC, &ptPixel, 1);
 
     return RosGdiGetPixel(physDev->hKernelDC, ptPixel.x, ptPixel.y);
-}
-
-int CDECL RosDrv_GetPixelFormat(NTDRV_PDEVICE *physDev)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
 UINT CDECL RosDrv_GetSystemPaletteEntries( NTDRV_PDEVICE *physDev, UINT start, UINT count,
@@ -728,14 +706,6 @@ COLORREF CDECL RosDrv_SetPixel( NTDRV_PDEVICE *physDev, INT x, INT y, COLORREF c
     return RosGdiSetPixel(physDev->hKernelDC, ptPixel.x, ptPixel.y, color);
 }
 
-BOOL CDECL RosDrv_SetPixelFormat(NTDRV_PDEVICE *physDev,
-                                   int iPixelFormat,
-                                   const PIXELFORMATDESCRIPTOR *ppfd)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 COLORREF CDECL RosDrv_SetTextColor( NTDRV_PDEVICE *physDev, COLORREF color )
 {
     return RosGdiSetTextColor(physDev->hKernelDC, color);
@@ -780,12 +750,6 @@ BOOL CDECL RosDrv_StretchBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
 
     return RosGdiStretchBlt(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst,
         physDevSrc->hKernelDC, xSrc, ySrc, widthSrc, heightSrc, rop);
-}
-
-BOOL CDECL RosDrv_SwapBuffers(NTDRV_PDEVICE *physDev)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 BOOL CDECL RosDrv_UnrealizePalette( HPALETTE hpal )
