@@ -105,7 +105,7 @@ CDirectSoundCapture_fnCreateCaptureBuffer(
     }
 
     /* check buffer description */
-    if ((lpcDSBufferDesc->dwSize != sizeof(DSBUFFERDESC) && lpcDSBufferDesc->dwSize != sizeof(DSBUFFERDESC1)) || lpcDSBufferDesc->dwReserved != 0)
+    if ((lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC) && lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC1)) || lpcDSBufferDesc->dwReserved != 0)
     {
         DPRINT("Invalid buffer description size %u expected %u or %u dwReserved %u\n", lpcDSBufferDesc->dwSize, sizeof(DSBUFFERDESC1), sizeof(DSBUFFERDESC), lpcDSBufferDesc->dwReserved);
         return DSERR_INVALIDPARAM;
