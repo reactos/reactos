@@ -492,6 +492,7 @@ kbd_c(IN ULONG StateCount,
 {
     CHAR OutputFile[13];
     CHAR KeyNameBuffer[50];
+    CHAR LineBuffer[256];
     BOOLEAN NeedPlus;
     FILE *FileHandle;
     ULONG States[8];
@@ -864,7 +865,92 @@ kbd_c(IN ULONG StateCount,
             "*\n"
             "\\***************************************************************************/\n\n");
     
-    /* FIXME: LOTS OF STATE STUFF */
+    /* Loop all the states */
+    for (i = 2; i <= StateCount; i++)
+    {
+        /* Check if this something else than state 2 */
+        if (i != 2)
+        {
+            /* Not yet supported */
+            printf("Extra states not yet supported!\n");
+            break;//exit(1);
+        }
+        
+        /* Print the table header */
+        fprintf(FileHandle,
+                "static ALLOC_SECTION_LDATA VK_TO_WCHARS%d aVkToWch%d[] = {\n"
+                "//                      |         |  Shift  |",
+                i,
+                i);
+        
+        /* Print the correct state label */
+        for (k = 2; k < i; k++) fprintf(FileHandle, "%-9.9s|",
+                                        StateLabel[ShiftStates[k]]);
+        
+        /* Print the next separator */
+        fprintf(FileHandle, "\n//                      |=========|=========|");
+        
+        /* Check for extra states and print their separators too */
+        for (k = 2; k < i; k++) fprintf(FileHandle, "=========|");
+        
+        /* Finalize the separator header */
+        fprintf(FileHandle, "\n");
+        
+        /* Loop all the scan codes */
+        for (j = 0; j < 110; j++)
+        {
+            /* Check if this is the state for the entry */
+            if (i != Layout->Entry[j].StateCount) continue;
+            
+            /* Print out the entry for this key */
+            fprintf(FileHandle,
+                    "  {%-13s,%-7s",
+                    getVKName(Layout->Entry[j].VirtualKey, 1),
+                    CapState[Layout->Entry[j].Cap]);
+            
+            /* Initialize the buffer for this line */
+            *LineBuffer = '\0';
+            
+            /* FIXME: Loop for states */
+            
+            /* Finish the line */
+            fprintf(FileHandle, "},\n");
+            
+            /* Do we have any data at all? */
+            if (*LineBuffer != '\0')
+            {
+                /* Print it, we're done */
+                fprintf(FileHandle, "%s},\n", LineBuffer);
+                continue;
+            }
+            
+            /* Otherwise, we're done, unless this requires SGCAP data */
+            if (Layout->Entry[j].Cap != 2) continue;
+            
+            /* Not yet supported */
+            printf("SGCAP not yet supported!\n");
+            exit(1);
+        }
+        
+        /* Did we only have two states? */
+        if (i == 2)
+        {
+            /* Print out the built-in table */
+            fprintf(FileHandle,
+                    "  {VK_TAB       ,0      ,'\\t'     ,'\\t'     },\n"
+                    "  {VK_ADD       ,0      ,'+'      ,'+'      },\n"
+                    "  {VK_DIVIDE    ,0      ,'/'      ,'/'      },\n"
+                    "  {VK_MULTIPLY  ,0      ,'*'      ,'*'      },\n"
+                    "  {VK_SUBTRACT  ,0      ,'-'      ,'-'      },\n");
+        }
+        
+        /* Terminate the table */
+        fprintf(FileHandle, "  {0            ,0      ");
+        for (k = 0; k < i; k++) fprintf(FileHandle, ",0        ");
+
+        /* Terminate the structure */
+        fprintf(FileHandle, "}\n" "};\n\n");
+    }
     
     /* Numpad translation table */
     fprintf(FileHandle,
