@@ -60,6 +60,88 @@ VKNAME Modifiers[] =
     {0x12, "KBDALT"}
 };
 
+/* Table of states */
+PCHAR StateLabel[] =
+{
+    "",
+    "Shift",
+    "  Ctrl",
+    "S+Ctrl",
+    "      Alt",
+    "Shift+Alt",
+    "  Ctl+Alt",
+    "S+Ctl+Alt",
+    "      X1      ",
+    "S+    X1      ",
+    "  C+  X1      ",
+    "S+C+  X1      ",
+    "    A+X1      ",
+    "S+  A+X1      ",
+    "  C+A+X1      ",
+    "S+C+A+X1      ",
+    "         X2   ",
+    "S+       X2   ",
+    "  C+     X2   ",
+    "S+C+     X2   ",
+    "    A+   X2   ",
+    "S+  A+   X2   ",
+    "  C+A+   X2   ",
+    "S+C+A+   X2   ",
+    "      X1+X2   ",
+    "S+    X1+X2   ",
+    "  C+  X1+X2   ",
+    "S+C+  X1+X2   ",
+    "    A+X1+X2   ",
+    "S+  A+X1+X2   ",
+    "  C+A+X1+X2   ",
+    "S+C+A+X1+X2   ",
+    "            X3",
+    "S+          X3",
+    "  C+        X3",
+    "S+C+        X3",
+    "    A+      X3",
+    "S+  A+      X3",
+    "  C+A+      X3",
+    "S+C+A+      X3",
+    "      X1+   X3",
+    "S+    X1+   X3",
+    "  C+  X1+   X3",
+    "S+C+  X1+   X3",
+    "    A+X1+   X3",
+    "S+  A+X1+   X3",
+    "  C+A+X1+   X3",
+    "S+C+A+X1+   X3",
+    "         X2+X3",
+    "S+       X2+X3",
+    "  C+     X2+X3",
+    "S+C+     X2+X3",
+    "    A+   X2+X3",
+    "S+  A+   X2+X3",
+    "  C+A+   X2+X3",
+    "S+C+A+   X2+X3",
+    "      X1+X2+X3",
+    "S+    X1+X2+X3",
+    "  C+  X1+X2+X3",
+    "S+C+  X1+X2+X3",
+    "    A+X1+X2+X3",
+    "S+  A+X1+X2+X3",
+    "  C+A+X1+X2+X3",
+    "S+C+A+X1+X2+X3",
+    "unexpected",
+    "unexpected"
+};
+
+/* Table of Cap States */
+PCHAR CapState[] =
+{
+    "0",
+    "CAPLOK",
+    "SGCAPS",
+    "CAPLOCK | SGCAPS",
+    "CAPLOKALTGR",
+    "CAPLOK | CAPLOKALTGR"
+};
+
 /* ISO 110-key Keyboard Scancode to Virtual Key Conversion Table */
 SCVK ScVk[] =
 {

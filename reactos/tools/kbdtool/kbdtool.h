@@ -78,6 +78,8 @@ extern FILE* gfpInput;
 extern VKNAME VKName[];
 extern VKNAME Modifiers[];
 extern SCVK ScVk[];
+extern PCHAR StateLabel[];
+extern PCHAR CapState[];
 extern LAYOUT g_Layout;
 extern CHAR gVKeyName[32];
 extern CHAR gKBDName[10];
