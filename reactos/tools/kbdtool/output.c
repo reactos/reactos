@@ -1003,7 +1003,7 @@ kbd_c(IN ULONG StateCount,
                 /* Print out the WCH_ name */
                 fprintf(FileHandle,
                         ",%-9s",
-                        WChName(Layout->Entry[j].CharData[k]));
+                        WChName(Layout->Entry[j].CharData[k], 0));
                 
                 /* If we have something on the line buffer by now, add WCH_NONE */
                 if (*LineBuffer != '\0') strcpy(LineBuffer, "WCH_NONE ");
