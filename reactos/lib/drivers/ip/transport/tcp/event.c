@@ -44,7 +44,15 @@ int TCPSocketState(void *ClientData,
 
     Connection->SignalState |= NewState;
 
+    TcpipRecursiveMutexLeave(&TCPLock);
+
+    /* We must not be locked when handling signalled connections 
+     * because a completion could trigger another IOCTL which
+     * would cause a deadlock
+     */
     NewState = HandleSignalledConnection(Connection);
+
+    TcpipRecursiveMutexEnter(&TCPLock);
 
     KeAcquireSpinLock(&SignalledConnectionsLock, &OldIrql);
     if ((NewState == 0 || NewState == SEL_FIN) &&

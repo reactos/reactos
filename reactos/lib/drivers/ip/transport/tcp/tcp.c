@@ -28,8 +28,6 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
     PIRP Irp;
     PMDL Mdl;
 
-    ASSERT_LOCKED(&TCPLock);
-
     TI_DbgPrint(MID_TRACE,("Handling signalled state on %x (%x)\n",
                            Connection, Connection->SocketContext));
 
@@ -337,7 +335,7 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
                     UINT Family, UINT Type, UINT Proto ) {
     NTSTATUS Status;
 
-    ASSERT_LOCKED(&TCPLock);
+    TcpipRecursiveMutexEnter(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("Called: Connection %x, Family %d, Type %d, "
                            "Proto %d\n",
@@ -353,6 +351,8 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
                            Connection->SocketContext));
+
+    TcpipRecursiveMutexLeave(&TCPLock);
 
     return Status;
 }
@@ -370,7 +370,7 @@ VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
                            IPPacket->TotalSize,
                            IPPacket->HeaderSize));
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+    TcpipRecursiveMutexEnter( &TCPLock );
 
     OskitTCPReceiveDatagram( IPPacket->Header,
                              IPPacket->TotalSize,
@@ -447,12 +447,13 @@ TimerThread(PVOID Context)
             PsTerminateSystemThread(Status);
         }
 
-        TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+        TcpipRecursiveMutexEnter( &TCPLock );
         TimerOskitTCP( Next == NextFast, Next == NextSlow );
+        TcpipRecursiveMutexLeave( &TCPLock );
+
         if (Next == NextSlow) {
             DrainSignals();
         }
-        TcpipRecursiveMutexLeave( &TCPLock );
 
         Current = Next;
         if (10 <= Current) {
@@ -496,7 +497,7 @@ NTSTATUS TCPStartup(VOID)
         return Status;
     }
 
-    TcpipRecursiveMutexEnter(&TCPLock, TRUE);
+    TcpipRecursiveMutexEnter(&TCPLock);
     RegisterOskitTCPEventHandlers( &EventHandlers );
     InitOskitTCP();
     TcpipRecursiveMutexLeave(&TCPLock);
@@ -544,7 +545,9 @@ NTSTATUS TCPShutdown(VOID)
 
     TCPInitialized = FALSE;
 
+    TcpipRecursiveMutexEnter(&TCPLock);
     DeinitOskitTCP();
+    TcpipRecursiveMutexLeave(&TCPLock);
 
     PortsShutdown( &TCPPorts );
 
@@ -597,8 +600,6 @@ NTSTATUS TCPConnect
 
     TI_DbgPrint(DEBUG_TCP,("TCPConnect: Called\n"));
 
-    ASSERT_LOCKED(&TCPLock);
-
     Status = AddrBuildAddress
         ((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress,
          &RemoteAddress,
@@ -623,6 +624,8 @@ NTSTATUS TCPConnect
     AddressToConnect.sin_family = AF_INET;
     AddressToBind = AddressToConnect;
     AddressToBind.sin_addr.s_addr = NCE->Interface->Unicast.Address.IPv4Address;
+
+    TcpipRecursiveMutexEnter(&TCPLock);
 
     Status = TCPTranslateError
         ( OskitTCPBind( Connection->SocketContext,
@@ -655,6 +658,8 @@ NTSTATUS TCPConnect
         }
     }
 
+    TcpipRecursiveMutexLeave(&TCPLock);
+
     return Status;
 }
 
@@ -671,11 +676,15 @@ NTSTATUS TCPDisconnect
 
     TI_DbgPrint(DEBUG_TCP,("started\n"));
 
+    TcpipRecursiveMutexEnter(&TCPLock);
+
     if (Flags & TDI_DISCONNECT_RELEASE)
         Status = TCPTranslateError(OskitTCPDisconnect(Connection->SocketContext));
 
     if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
         Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE | FREAD));
+
+    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("finished %x\n", Status));
 
@@ -688,15 +697,17 @@ NTSTATUS TCPClose
 
     TI_DbgPrint(DEBUG_TCP,("TCPClose started\n"));
 
-    ASSERT_LOCKED(&TCPLock);
-
     /* Make our code remove all pending IRPs */
     Connection->SignalState |= SEL_FIN;
     HandleSignalledConnection(Connection);
 
+    TcpipRecursiveMutexEnter(&TCPLock);
+
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
     if (Status == STATUS_SUCCESS)
         Connection->SocketContext = NULL;
+
+    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("TCPClose finished %x\n", Status));
 
@@ -719,13 +730,13 @@ NTSTATUS TCPReceiveData
     TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n",
                            ReceiveLength, Connection->SocketContext));
 
-    ASSERT_LOCKED(&TCPLock);
-
     ASSERT_KM_POINTER(Connection->SocketContext);
 
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
     TI_DbgPrint(DEBUG_TCP,("TCP>|< Got an MDL %x (%x:%d)\n", Buffer, DataBuffer, DataLen));
+
+    TcpipRecursiveMutexEnter(&TCPLock);
 
     Status = TCPTranslateError
         ( OskitTCPRecv
@@ -734,6 +745,8 @@ NTSTATUS TCPReceiveData
             DataLen,
             &Received,
             ReceiveFlags ) );
+
+    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("OskitTCPReceive: %x, %d\n", Status, Received));
 
@@ -787,11 +800,14 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
                            Connection->SocketContext));
 
+    TcpipRecursiveMutexEnter(&TCPLock);
 
     Status = TCPTranslateError
         ( OskitTCPSend( Connection->SocketContext,
                         (OSK_PCHAR)BufferData, SendLength,
                         &Sent, 0 ) );
+
+    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("OskitTCPSend: %x, %d\n", Status, Sent));
 
@@ -850,11 +866,14 @@ NTSTATUS TCPGetSockAddress
     PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
     NTSTATUS Status;
 
-    ASSERT_LOCKED(&TCPLock);
+    TcpipRecursiveMutexEnter(&TCPLock);
 
     Status = TCPTranslateError(OskitTCPGetAddress(Connection->SocketContext,
                                                   &LocalAddress, &LocalPort,
                                                   &RemoteAddress, &RemotePort));
+
+    TcpipRecursiveMutexLeave(&TCPLock);
+
     if (!NT_SUCCESS(Status))
         return Status;
 

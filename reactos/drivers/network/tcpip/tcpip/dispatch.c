@@ -352,8 +352,6 @@ NTSTATUS DispTdiConnect(
 
   /* Get associated connection endpoint file object. Quit if none exists */
 
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
   TranContext = IrpSp->FileObject->FsContext;
   if (!TranContext) {
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
@@ -384,8 +382,6 @@ NTSTATUS DispTdiConnect(
   }
 
 done:
-  TcpipRecursiveMutexLeave( &TCPLock );
-
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, 0);
   } else
@@ -465,8 +461,6 @@ NTSTATUS DispTdiDisconnect(
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   DisReq = (PTDI_REQUEST_KERNEL_DISCONNECT)&IrpSp->Parameters;
 
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
   /* Get associated connection endpoint file object. Quit if none exists */
 
   TranContext = IrpSp->FileObject->FsContext;
@@ -492,8 +486,6 @@ NTSTATUS DispTdiDisconnect(
       Irp );
 
 done:
-   TcpipRecursiveMutexLeave( &TCPLock );
-
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, 0);
    } else
@@ -526,8 +518,6 @@ NTSTATUS DispTdiListen(
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
   /* Get associated connection endpoint file object. Quit if none exists */
-
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
   TranContext = IrpSp->FileObject->FsContext;
   if (TranContext == NULL)
@@ -593,8 +583,6 @@ NTSTATUS DispTdiListen(
   }
 
 done:
-  TcpipRecursiveMutexLeave( &TCPLock );
-
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, 0);
   } else
@@ -621,19 +609,15 @@ NTSTATUS DispTdiQueryInformation(
   PTDI_REQUEST_KERNEL_QUERY_INFORMATION Parameters;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   Parameters = (PTDI_REQUEST_KERNEL_QUERY_INFORMATION)&IrpSp->Parameters;
 
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
   TranContext = IrpSp->FileObject->FsContext;
   if (!TranContext) {
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    TcpipRecursiveMutexLeave(&TCPLock);
     return STATUS_INVALID_PARAMETER;
   }
 
@@ -651,7 +635,6 @@ NTSTATUS DispTdiQueryInformation(
             (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
              sizeof(TDI_ADDRESS_IP))) {
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
-          TcpipRecursiveMutexLeave(&TCPLock);
           return STATUS_BUFFER_TOO_SMALL;
         }
 
@@ -670,7 +653,6 @@ NTSTATUS DispTdiQueryInformation(
 			RtlZeroMemory(
 				&Address->Address[0].Address[0].sin_zero,
 				sizeof(Address->Address[0].Address[0].sin_zero));
-			TcpipRecursiveMutexLeave(&TCPLock);
 			return STATUS_SUCCESS;
 
           case TDI_CONNECTION_FILE:
@@ -681,12 +663,10 @@ NTSTATUS DispTdiQueryInformation(
 			RtlZeroMemory(
 				&Address->Address[0].Address[0].sin_zero,
 				sizeof(Address->Address[0].Address[0].sin_zero));
-			TcpipRecursiveMutexLeave(&TCPLock);
 			return STATUS_SUCCESS;
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
-            TcpipRecursiveMutexLeave(&TCPLock);
             return STATUS_INVALID_PARAMETER;
         }
       }
@@ -701,7 +681,6 @@ NTSTATUS DispTdiQueryInformation(
             (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
              sizeof(PVOID))) {
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
-          TcpipRecursiveMutexLeave(&TCPLock);
           return STATUS_BUFFER_TOO_SMALL;
         }
 
@@ -721,24 +700,18 @@ NTSTATUS DispTdiQueryInformation(
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
-            TcpipRecursiveMutexLeave(&TCPLock);
             return STATUS_INVALID_PARAMETER;
         }
 
         if (!Endpoint) {
           TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
-          TcpipRecursiveMutexLeave(&TCPLock);
           return STATUS_INVALID_PARAMETER;
         }
 
-        Status = TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
-
-        TcpipRecursiveMutexLeave(&TCPLock);
-        return Status;
+        return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
       }
   }
 
-  TcpipRecursiveMutexLeave(&TCPLock);
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -763,8 +736,6 @@ NTSTATUS DispTdiReceive(
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   ReceiveInfo = (PTDI_REQUEST_KERNEL_RECEIVE)&(IrpSp->Parameters);
-
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
   TranContext = IrpSp->FileObject->FsContext;
   if (TranContext == NULL)
@@ -801,8 +772,6 @@ NTSTATUS DispTdiReceive(
     }
 
 done:
-  TcpipRecursiveMutexLeave( &TCPLock );
-
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, BytesReceived);
   } else
@@ -835,8 +804,6 @@ NTSTATUS DispTdiReceiveDatagram(
 
   IrpSp     = IoGetCurrentIrpStackLocation(Irp);
   DgramInfo = (PTDI_REQUEST_KERNEL_RECEIVEDG)&(IrpSp->Parameters);
-
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
   TranContext = IrpSp->FileObject->FsContext;
   if (TranContext == NULL)
@@ -879,8 +846,6 @@ NTSTATUS DispTdiReceiveDatagram(
     }
 
 done:
-   TcpipRecursiveMutexLeave( &TCPLock );
-
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, BytesReceived);
    } else
@@ -912,8 +877,6 @@ NTSTATUS DispTdiSend(
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   SendInfo = (PTDI_REQUEST_KERNEL_SEND)&(IrpSp->Parameters);
-
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
   TranContext = IrpSp->FileObject->FsContext;
   if (TranContext == NULL)
@@ -955,8 +918,6 @@ NTSTATUS DispTdiSend(
     }
 
 done:
-   TcpipRecursiveMutexLeave( &TCPLock );
-
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, BytesSent);
    } else
@@ -988,8 +949,6 @@ NTSTATUS DispTdiSendDatagram(
 
     IrpSp       = IoGetCurrentIrpStackLocation(Irp);
     DgramInfo   = (PTDI_REQUEST_KERNEL_SENDDG)&(IrpSp->Parameters);
-
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     TranContext = IrpSp->FileObject->FsContext;
     if (TranContext == NULL)
@@ -1037,8 +996,6 @@ NTSTATUS DispTdiSendDatagram(
     }
 
 done:
-    TcpipRecursiveMutexLeave( &TCPLock );
-
     if (Status != STATUS_PENDING) {
         DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);
     } else
