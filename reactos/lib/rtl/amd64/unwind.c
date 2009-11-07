@@ -60,6 +60,17 @@ typedef struct _UNWIND_INFO
 
 /* FUNCTIONS *****************************************************************/
 
+/*! RtlLookupFunctionTable
+ * \brief Locates the table of RUNTIME_FUNCTION entries for a code address.
+ * \param ControlPc
+ *            Address of the code, for which the table should be searched.
+ * \param ImageBase 
+ *            Pointer to a DWORD64 that receives the base address of the
+ *            corresponding executable image.
+ * \param Length
+ *            Pointer to an ULONG that receives the number of table entries
+ *            present in the table.
+ */
 PRUNTIME_FUNCTION
 NTAPI
 RtlLookupFunctionTable(
@@ -67,34 +78,27 @@ RtlLookupFunctionTable(
     OUT PDWORD64 ImageBase,
     OUT PULONG Length)
 {
-    PIMAGE_DOS_HEADER DosHeader;
-    PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_DATA_DIRECTORY Directory;
+    PVOID Table;
+    ULONG Size;
 
-    /* Find ModuleBase */
-    if (!RtlPcToFileHeader((PVOID)ControlPc, (PVOID*)&DosHeader))
+    /* Find corresponding file header from code address */
+    if (!RtlPcToFileHeader((PVOID)ControlPc, (PVOID*)ImageBase))
     {
-        return NULL;
-    }
-
-    /* Locate NT header and check number of directories */
-    NtHeader = (PVOID)((ULONG64)DosHeader + DosHeader->e_lfanew);
-    if (NtHeader->OptionalHeader.NumberOfRvaAndSizes 
-         < IMAGE_DIRECTORY_ENTRY_EXCEPTION)
-    {
+        /* Nothing found */
         return NULL;
     }
 
     /* Locate the exception directory */
-    Directory = &NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION];
-    *Length = Directory->Size / sizeof(RUNTIME_FUNCTION);
-    *ImageBase = (ULONG64)DosHeader;
-    if (!Directory->VirtualAddress)
-    {
-        return NULL;
-    }
+    Table = RtlImageDirectoryEntryToData((PVOID)*ImageBase,
+                                         TRUE,
+                                         IMAGE_DIRECTORY_ENTRY_EXCEPTION,
+                                         &Size);
 
-    return (PVOID)((ULONG64)DosHeader + Directory->VirtualAddress);
+    /* Return the number of entries */
+    *Length = Size / sizeof(RUNTIME_FUNCTION);
+
+    /* Return the address of the table */
+    return Table;
 }
 
 /*! RtlLookupFunctionEntry
@@ -119,7 +123,7 @@ RtlLookupFunctionEntry(
     /* Fail, if no table is found */
     if (!FunctionTable)
     {
-        return (PVOID)1;
+        return NULL;
     }
 
     /* Use relative virtual address */
