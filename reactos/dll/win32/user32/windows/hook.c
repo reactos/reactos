@@ -441,12 +441,12 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           if (NULL != CbtCreatewndExtra->Cs.lpszName)
           {
               Csw.lpszName = (LPCWSTR)((PCHAR) CbtCreatewndExtra
-                                       + (ULONG) CbtCreatewndExtra->Cs.lpszName);
+                                       + (ULONG_PTR) CbtCreatewndExtra->Cs.lpszName);
           }
           if (0 != HIWORD(CbtCreatewndExtra->Cs.lpszClass))
           {
               Csw.lpszClass = (LPCWSTR)((PCHAR) CbtCreatewndExtra
-                                         + LOWORD((ULONG) CbtCreatewndExtra->Cs.lpszClass));
+                                         + LOWORD((ULONG_PTR) CbtCreatewndExtra->Cs.lpszClass));
           }
           wParam = Common->wParam;
           if (Common->Ansi)

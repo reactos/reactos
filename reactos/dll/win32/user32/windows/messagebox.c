@@ -423,7 +423,7 @@ MessageBoxTimeoutIndirectW(
     }
 
     /* create static for text */
-    dest = (BYTE*)(((DWORD)dest + 3) & ~3);
+    dest = (BYTE*)(((UINT_PTR)dest + 3) & ~3);
     itxt = (DLGITEMTEMPLATE *)dest;
     itxt->style = WS_CHILD | WS_VISIBLE | SS_NOPREFIX;
     if(lpMsgBoxParams->dwStyle & MB_RIGHT)
@@ -450,7 +450,7 @@ MessageBoxTimeoutIndirectW(
     btnrect.left = btnrect.top = 0;
     for(i = 0; i < nButtons; i++)
     {
-      dest = (BYTE*)(((DWORD)dest + 3) & ~3);
+      dest = (BYTE*)(((UINT_PTR)dest + 3) & ~3);
       ibtn[i] = (DLGITEMTEMPLATE *)dest;
       ibtn[i]->style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
       if(!defbtn && (i == ((lpMsgBoxParams->dwStyle & MB_DEFMASK) >> 8)))
@@ -699,7 +699,7 @@ MessageBoxIndirectA(
     UNICODE_STRING textW, captionW, iconW;
     int ret;
 
-    if (HIWORD((UINT)lpMsgBoxParams->lpszText))
+    if (HIWORD((UINT_PTR)lpMsgBoxParams->lpszText))
     {
         RtlCreateUnicodeStringFromAsciiz(&textW, (PCSZ)lpMsgBoxParams->lpszText);
         /*
@@ -711,7 +711,7 @@ MessageBoxIndirectA(
     else
         textW.Buffer = (LPWSTR)lpMsgBoxParams->lpszText;
 
-    if (HIWORD((UINT)lpMsgBoxParams->lpszCaption))
+    if (HIWORD((UINT_PTR)lpMsgBoxParams->lpszCaption))
     {
         RtlCreateUnicodeStringFromAsciiz(&captionW, (PCSZ)lpMsgBoxParams->lpszCaption);
         /*
@@ -725,7 +725,7 @@ MessageBoxIndirectA(
 
     if(lpMsgBoxParams->dwStyle & MB_USERICON)
     {
-        if (HIWORD((UINT)lpMsgBoxParams->lpszIcon))
+        if (HIWORD((UINT_PTR)lpMsgBoxParams->lpszIcon))
         {
             RtlCreateUnicodeStringFromAsciiz(&iconW, (PCSZ)lpMsgBoxParams->lpszIcon);
             /*
@@ -753,13 +753,13 @@ MessageBoxIndirectA(
 
     ret = MessageBoxTimeoutIndirectW(&msgboxW, (UINT)-1);
 
-    if (HIWORD((UINT)lpMsgBoxParams->lpszText))
+    if (HIWORD((UINT_PTR)lpMsgBoxParams->lpszText))
         RtlFreeUnicodeString(&textW);
 
-    if (HIWORD((UINT)lpMsgBoxParams->lpszCaption))
+    if (HIWORD((UINT_PTR)lpMsgBoxParams->lpszCaption))
         RtlFreeUnicodeString(&captionW);
 
-    if ((lpMsgBoxParams->dwStyle & MB_USERICON) && HIWORD((UINT)iconW.Buffer))
+    if ((lpMsgBoxParams->dwStyle & MB_USERICON) && HIWORD((UINT_PTR)iconW.Buffer))
         RtlFreeUnicodeString(&iconW);
 
     return ret;
@@ -809,12 +809,12 @@ MessageBoxTimeoutA(
     UNICODE_STRING textW, captionW;
     int ret;
 
-    if (HIWORD((UINT)lpText))
+    if (HIWORD((UINT_PTR)lpText))
         RtlCreateUnicodeStringFromAsciiz(&textW, (PCSZ)lpText);
     else
         textW.Buffer = (LPWSTR)lpText;
 
-    if (HIWORD((UINT)lpCaption))
+    if (HIWORD((UINT_PTR)lpCaption))
         RtlCreateUnicodeStringFromAsciiz(&captionW, (PCSZ)lpCaption);
     else
         captionW.Buffer = (LPWSTR)lpCaption;

@@ -145,7 +145,7 @@ CloseWindow(HWND hWnd)
 {
     SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
 
-    return (BOOL)(hWnd);
+    return HandleToUlong(hWnd);
 }
 
 
@@ -346,7 +346,7 @@ CreateWindowExA(DWORD dwExStyle,
 
         MDI_CalcDefaultChildPos(hWndParent, -1, mPos, 0, &id);
 
-        if (!(dwStyle & WS_POPUP)) hMenu = (HMENU)id;
+        if (!(dwStyle & WS_POPUP)) hMenu = UlongToHandle(id);
 
         if (dwStyle & (WS_CHILD | WS_POPUP))
         {
@@ -458,7 +458,7 @@ CreateWindowExW(DWORD dwExStyle,
 
         MDI_CalcDefaultChildPos(hWndParent, -1, mPos, 0, &id);
 
-        if (!(dwStyle & WS_POPUP)) hMenu = (HMENU)id;
+        if (!(dwStyle & WS_POPUP)) hMenu = UlongToHandle(id);
 
         if (dwStyle & (WS_CHILD | WS_POPUP))
         {
@@ -618,7 +618,7 @@ User32EnumWindows(HDESK hDesktop,
          * Once that's fixed, we shouldn't have to check for a NULL HWND
          * here
          */
-        if (!(ULONG)pHwnd[i]) /* don't enumerate a NULL HWND */
+        if (!pHwnd[i]) /* don't enumerate a NULL HWND */
             continue;
         if (!(*lpfn)(pHwnd[i], lParam))
         {
@@ -1343,8 +1343,8 @@ GetWindowThreadProcessId(HWND hWnd,
         { // We are current.
           //FIXME("Current!\n");
             if (lpdwProcessId)
-                *lpdwProcessId = (DWORD)NtCurrentTeb()->ClientId.UniqueProcess;
-            Ret = (DWORD)NtCurrentTeb()->ClientId.UniqueThread;
+                *lpdwProcessId = (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
+            Ret = (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueThread;
         }
         else
         { // Ask kernel for info.

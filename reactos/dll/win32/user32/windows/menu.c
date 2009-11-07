@@ -330,7 +330,7 @@ MenuGetBitmapItemSize(PROSMENUITEMINFO lpitem, SIZE *Size, HWND WndOwner)
           case (INT_PTR) HBMMENU_SYSTEM:
             if (0 != lpitem->dwItemData)
               {
-                Bmp = (HBITMAP) lpitem->dwItemData;
+                Bmp = (HBITMAP)(ULONG_PTR) lpitem->dwItemData;
                 break;
               }
             /* fall through */
@@ -982,7 +982,7 @@ PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
       {
         CREATESTRUCTA *cs = (CREATESTRUCTA *) lParam;
-        SetWindowLongPtrA(Wnd, 0, (LONG) cs->lpCreateParams);
+        SetWindowLongPtrA(Wnd, 0, (LONG_PTR)cs->lpCreateParams);
         return 0;
       }
 
@@ -1054,7 +1054,7 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
       {
         CREATESTRUCTW *cs = (CREATESTRUCTW *) lParam;
-        SetWindowLongPtrW(Wnd, 0, (LONG) cs->lpCreateParams);
+        SetWindowLongPtrW(Wnd, 0, (LONG_PTR)cs->lpCreateParams);
         return 0;
       }
 
@@ -1144,11 +1144,11 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
       resinfo = GET_WORD(res);
       res += sizeof(WORD);
       /* Align the text on a word boundary.  */
-      res += (~((int)res - 1)) & 1;
+      res += (~((UINT_PTR)res - 1)) & 1;
       mii.dwTypeData = (LPWSTR) res;
       res += (1 + strlenW(mii.dwTypeData)) * sizeof(WCHAR);
       /* Align the following fields on a dword boundary.  */
-      res += (~((int)res - 1)) & 3;
+      res += (~((UINT_PTR)res - 1)) & 3;
 
       if (resinfo & 1) /* Pop-up? */
 	{
@@ -1164,7 +1164,7 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
 	  }
 	  mii.fMask |= MIIM_SUBMENU;
 	  mii.fType |= MF_POPUP;
-	  mii.wID = (UINT) mii.hSubMenu;
+	  mii.wID = (UINT_PTR) mii.hSubMenu;
 	}
       else if(!*mii.dwTypeData && !(mii.fType & MF_SEPARATOR))
 	{
@@ -1218,9 +1218,9 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
       if(!(res = MENU_ParseResource(res, hSubMenu, unicode)))
         return NULL;
       if(!unicode)
-        AppendMenuA(hMenu, flags, (UINT)hSubMenu, str);
+        AppendMenuA(hMenu, flags, (UINT_PTR)hSubMenu, str);
       else
-        AppendMenuW(hMenu, flags, (UINT)hSubMenu, (LPCWSTR)str);
+        AppendMenuW(hMenu, flags, (UINT_PTR)hSubMenu, (LPCWSTR)str);
     }
     else  /* Not a popup */
     {
@@ -3868,7 +3868,7 @@ MenuSetItemData(
   {
     mii->fType |= MFT_OWNERDRAW;
     mii->fMask |= MIIM_DATA;
-    mii->dwItemData = (DWORD) NewItem;
+    mii->dwItemData = (DWORD_PTR) NewItem;
   }
   else if (Flags & MF_SEPARATOR)
   {
@@ -4245,12 +4245,9 @@ EndMenu(VOID)
 HMENU WINAPI
 GetMenu(HWND hWnd)
 {
-       PWND Wnd = ValidateHwnd(hWnd);
-
-       if (!Wnd)
-               return NULL;
-
-       return (HMENU)Wnd->IDMenu;
+    HMENU retvalue = (HMENU)GetWindowLongPtrW( hWnd, GWLP_ID );
+    TRACE("for %p returning %p\n", hWnd, retvalue);
+    return retvalue;
 }
 
 
