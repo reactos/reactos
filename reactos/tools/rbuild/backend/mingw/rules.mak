@@ -24,18 +24,18 @@ RBUILD_source_name=$(basename $(notdir $(1)))
 #(source)
 RBUILD_dir=${call RBUILD_fullpath,$(dir ${call RBUILD_compress_prefixes,$(1)})}
 
-# FIXME: when RosBE stops hijacking HOST_CFLAGS etc., add CFLAGS etc.
-
 #(module, flags, includes, compiler, prefix)
 RBUILD_compiler_flags=\
 $$(BUILTIN_$(5)$(4)FLAGS) \
 $$(PROJECT_$(5)$(4)FLAGS) \
 $$(MODULETYPE$($(1)_TYPE)_$(4)FLAGS) \
 $$($(1)_$(4)FLAGS) \
-$(2)
+$(2) \
+$$($(5)$(4)FLAGS)
 
 #(module, flags, includes, compiler, prefix)
 RBUILD_compiler_flags_with_cpp=\
+$$($(5)$(4)INCLUDES) $$(CPPINCLUDES) \
 $(3) \
 $$($(1)_$(4)INCLUDES) $$($(1)_CPPINCLUDES) \
 $$(MODULETYPE$($(1)_TYPE)_$(4)INCLUDES) $$(MODULETYPE$($(1)_TYPE)_CPPINCLUDES) \
@@ -45,10 +45,12 @@ $$(BUILTIN_$(5)CPPDEFINES) $$(BUILTIN_$(5)CPPFLAGS) $$(BUILTIN_$(5)$(4)DEFINES) 
 $$(PROJECT_$(5)CPPDEFINES) $$(PROJECT_$(5)CPPFLAGS) $$(PROJECT_$(5)$(4)DEFINES) $$(PROJECT_$(5)$(4)FLAGS) \
 $$(MODULETYPE$($(1)_TYPE)_CPPDEFINES) $$(MODULETYPE$($(1)_TYPE)_CPPFLAGS) $$(MODULETYPE$($(1)_TYPE)_$(4)DEFINES) $$(MODULETYPE$($(1)_TYPE)_$(4)FLAGS) \
 $$($(1)_CPPDEFINES) $$($(1)_CPPFLAGS) $$($(1)_$(4)DEFINES) $$($(1)_$(4)FLAGS) \
-$(2)
+$(2) \
+$$(CPPDEFINES) $$(CPPFLAGS) $$($(5)$(4)DEFINES) $$($(5)$(4)FLAGS)
 
 #(module, flags, includes, compiler, prefix)
 RBUILD_compiler_flags_builtin_cpp=\
+$$($(5)$(4)INCLUDES) $$(CPPINCLUDES) \
 $(3) \
 $$($(1)_$(4)INCLUDES) $$($(1)_CPPINCLUDES) \
 $$(MODULETYPE$($(1)_TYPE)_$(4)INCLUDES) $$(MODULETYPE$($(1)_TYPE)_CPPINCLUDES) \
@@ -58,10 +60,12 @@ $$(BUILTIN_$(5)CPPDEFINES) $$(BUILTIN_$(5)$(4)DEFINES) $$(BUILTIN_$(5)$(4)FLAGS)
 $$(PROJECT_$(5)CPPDEFINES) $$(PROJECT_$(5)$(4)DEFINES) $$(PROJECT_$(5)$(4)FLAGS) \
 $$(MODULETYPE$($(1)_TYPE)_CPPDEFINES) $$(MODULETYPE$($(1)_TYPE)_$(4)DEFINES) $$(MODULETYPE$($(1)_TYPE)_$(4)FLAGS) \
 $$($(1)_CPPDEFINES) $$($(1)_$(4)DEFINES) $$($(1)_$(4)FLAGS) \
-$(2)
+$(2) \
+$$(CPPDEFINES) $$($(5)$(4)DEFINES) $$($(5)$(4)FLAGS)
 
 #(module, flags, includes, compiler, prefix)
 RBUILD_compiler_flags_with_includes=\
+$$($(5)$(4)INCLUDES)
 $(3) \
 $$($(1)_$(4)INCLUDES) $$($(1)_CPPINCLUDES) \
 $$(MODULETYPE$($(1)_TYPE)_$(4)INCLUDES) \
@@ -71,10 +75,12 @@ $$(BUILTIN_$(5)$(4)FLAGS) \
 $$(PROJECT_$(5)$(4)FLAGS) \
 $$(MODULETYPE$($(1)_TYPE)_$(4)FLAGS) \
 $$($(1)_$(4)FLAGS) \
-$(2)
+$(2) \
+$$($(5)$(4)FLAGS)
 
 #(module, flags, includes, compiler, prefix)
 RBUILD_compiler_flags_cpp=\
+$$($(5)$(4)INCLUDES) $$(CPPINCLUDES)
 $(3) \
 $$($(1)_$(4)INCLUDES) $$($(1)_CPPINCLUDES) \
 $$(MODULETYPE$($(1)_TYPE)_$(4)INCLUDES) $$(MODULETYPE$($(1)_TYPE)_CPPINCLUDES) \
@@ -84,7 +90,8 @@ $$(BUILTIN_$(5)CPPFLAGS) $$(BUILTIN_$(5)CPPDEFINES) $$(BUILTIN_$(5)$(4)DEFINES) 
 $$(PROJECT_$(5)CPPFLAGS) $$(PROJECT_$(5)CPPDEFINES) $$(PROJECT_$(5)$(4)DEFINES) \
 $$(MODULETYPE$($(1)_TYPE)_CPPFLAGS) $$(MODULETYPE$($(1)_TYPE)_CPPDEFINES) $$(MODULETYPE$($(1)_TYPE)_$(4)DEFINES) \
 $$($(1)_CPPFLAGS) $$($(1)_CPPDEFINES) $$($(1)_$(4)DEFINES) \
-$(2)
+$(2) \
+$$(CPPFLAGS) $$(CPPDEFINES) $$($(5)$(4)DEFINES)
 
 #(module, flags, includes)
 RBUILD_cflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),C}
