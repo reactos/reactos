@@ -510,6 +510,17 @@ static UINT COMBOEX_GetListboxText(const COMBOEX_INFO *infoPtr, INT_PTR n, LPWST
         return 0;
 
     str = COMBOEX_GetText(infoPtr, item);
+    if (!str)
+    {
+        if (buf)
+        {
+            if (infoPtr->unicode)
+                buf[0] = 0;
+            else
+                *((LPSTR)buf) = 0;
+        }
+        return 0;
+    }
 
     if (infoPtr->unicode)
     {
@@ -968,8 +979,6 @@ static INT COMBOEX_SetItemHeight (COMBOEX_INFO const *infoPtr, INT index, UINT h
 
 static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
 {
-    static const WCHAR COMBOBOX[] = { 'C', 'o', 'm', 'b', 'o', 'B', 'o', 'x', 0 };
-    static const WCHAR EDIT[] = { 'E', 'D', 'I', 'T', 0 };
     static const WCHAR NIL[] = { 0 };
     COMBOEX_INFO *infoPtr;
     LOGFONTW mylogfont;
@@ -1011,7 +1020,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
     /* We also need to place the edit control at the proper location    */
     /* (allow space for the icons).                                     */
 
-    infoPtr->hwndCombo = CreateWindowW (COMBOBOX, NIL,
+    infoPtr->hwndCombo = CreateWindowW (WC_COMBOBOXW, NIL,
 			 /* following line added to match native */
                          WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VSCROLL |
                          CBS_NOINTEGRALHEIGHT | CBS_DROPDOWNLIST |
@@ -1045,7 +1054,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
      * It is created only for CBS_DROPDOWN style
      */
     if ((cs->style & CBS_DROPDOWNLIST) == CBS_DROPDOWN) {
-	infoPtr->hwndEdit = CreateWindowExW (0, EDIT, NIL,
+	infoPtr->hwndEdit = CreateWindowExW (0, WC_EDITW, NIL,
 		    WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_AUTOHSCROLL,
 		    0, 0, 0, 0,  /* will set later */
 		    infoPtr->hwndCombo,

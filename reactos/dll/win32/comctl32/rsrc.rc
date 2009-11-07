@@ -19,10 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
 #include "comctl32.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -80,39 +76,3 @@ IDI_TT_WARN_SM ICON LOADONCALL DISCARDABLE idi_tt_warn_sm.ico
 
 /* @makedep: idi_tt_error_sm.ico */
 IDI_TT_ERROR_SM ICON LOADONCALL DISCARDABLE idi_tt_error_sm.ico
-
-
-/*
- * Everything specific to any language goes
- * in one of the specific files.
- * Note that you can and may override resources
- * which also have a neutral version. This is to
- * get localized bitmaps for example.
- */
-
-#include "comctl_Bg.rc"
-#include "comctl_Cs.rc"
-#include "comctl_De.rc"
-#include "comctl_El.rc"
-#include "comctl_En.rc"
-#include "comctl_Eo.rc"
-#include "comctl_Es.rc"
-#include "comctl_Fr.rc"
-#include "comctl_Hu.rc"
-#include "comctl_It.rc"
-#include "comctl_Ja.rc"
-#include "comctl_Ko.rc"
-#include "comctl_Lt.rc"
-#include "comctl_Nl.rc"
-#include "comctl_No.rc"
-#include "comctl_Pl.rc"
-#include "comctl_Pt.rc"
-#include "comctl_Ro.rc"
-#include "comctl_Ru.rc"
-#include "comctl_Si.rc"
-#include "comctl_Sk.rc"
-#include "comctl_Sv.rc"
-#include "comctl_Th.rc"
-#include "comctl_Tr.rc"
-#include "comctl_Uk.rc"
-#include "comctl_Zh.rc"

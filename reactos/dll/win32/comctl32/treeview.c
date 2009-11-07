@@ -2788,19 +2788,27 @@ TREEVIEW_UpdateScrollBars(TREEVIEW_INFO *infoPtr)
 	infoPtr->uInternalStatus &= ~TV_HSCROLL;
 }
 
-/* CtrlSpy doesn't mention this, but CorelDRAW's object manager needs it. */
-static LRESULT
-TREEVIEW_EraseBackground(const TREEVIEW_INFO *infoPtr, HDC hDC)
+static void
+TREEVIEW_FillBkgnd(const TREEVIEW_INFO *infoPtr, HDC hdc, const RECT *rc)
 {
     HBRUSH hBrush;
     COLORREF clrBk = infoPtr->clrBk == -1 ? comctl32_color.clrWindow:
                                             infoPtr->clrBk;
+    hBrush =  CreateSolidBrush(clrBk);
+    FillRect(hdc, rc, hBrush);
+    DeleteObject(hBrush);
+}
+
+/* CtrlSpy doesn't mention this, but CorelDRAW's object manager needs it. */
+static LRESULT
+TREEVIEW_EraseBackground(const TREEVIEW_INFO *infoPtr, HDC hdc)
+{
     RECT rect;
 
-    hBrush =  CreateSolidBrush(clrBk);
+    TRACE("%p\n", infoPtr);
+
     GetClientRect(infoPtr->hwnd, &rect);
-    FillRect(hDC, &rect, hBrush);
-    DeleteObject(hBrush);
+    TREEVIEW_FillBkgnd(infoPtr, hdc, &rect);
 
     return 1;
 }
@@ -2843,12 +2851,7 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, const RECT *rc)
 	}
     }
 
-    //
-    // This is correct, but is causes and infinite loop of WM_PAINT messages, resulting
-    // in continuous painting of the scroll bar in reactos. Comment out until the real
-    // bug is found
-    // 
-    //TREEVIEW_UpdateScrollBars(infoPtr);
+    TREEVIEW_UpdateScrollBars(infoPtr);
 
     if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
 	infoPtr->cdmode =
@@ -2865,7 +2868,7 @@ TREEVIEW_Invalidate(const TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *item)
 }
 
 static LRESULT
-TREEVIEW_Paint(TREEVIEW_INFO *infoPtr, WPARAM wParam)
+TREEVIEW_Paint(TREEVIEW_INFO *infoPtr, HDC hdc_ref)
 {
     HDC hdc;
     PAINTSTRUCT ps;
@@ -2873,27 +2876,48 @@ TREEVIEW_Paint(TREEVIEW_INFO *infoPtr, WPARAM wParam)
 
     TRACE("\n");
 
-    if (wParam)
+    if (hdc_ref)
     {
-        hdc = (HDC)wParam;
-        GetClientRect(infoPtr->hwnd, &rc);        
-        TREEVIEW_EraseBackground(infoPtr, hdc);
+        hdc = hdc_ref;
+        GetClientRect(infoPtr->hwnd, &rc);
     }
     else
     {
         hdc = BeginPaint(infoPtr->hwnd, &ps);
-        rc = ps.rcPaint;
+        rc  = ps.rcPaint;
+        if(ps.fErase)
+            TREEVIEW_FillBkgnd(infoPtr, hdc, &rc);
     }
 
     if(infoPtr->bRedraw) /* WM_SETREDRAW sets bRedraw */
         TREEVIEW_Refresh(infoPtr, hdc, &rc);
 
-    if (!wParam)
+    if (!hdc_ref)
 	EndPaint(infoPtr->hwnd, &ps);
 
     return 0;
 }
 
+static LRESULT
+TREEVIEW_PrintClient(TREEVIEW_INFO *infoPtr, HDC hdc, DWORD options)
+{
+    FIXME("Partial Stub: (hdc=%p options=0x%08x)\n", hdc, options);
+
+    if ((options & PRF_CHECKVISIBLE) && !IsWindowVisible(infoPtr->hwnd))
+        return 0;
+
+    if (options & PRF_ERASEBKGND)
+        TREEVIEW_EraseBackground(infoPtr, hdc);
+
+    if (options & PRF_CLIENT)
+    {
+        RECT rc;
+        GetClientRect(infoPtr->hwnd, &rc);
+        TREEVIEW_Refresh(infoPtr, hdc, &rc);
+    }
+
+    return 0;
+}
 
 /* Sorting **************************************************************/
 
@@ -3679,7 +3703,6 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
     HDC hdc;
     HFONT hOldFont=0;
     TEXTMETRICW textMetric;
-    static const WCHAR EditW[] = {'E','d','i','t',0};
 
     TRACE("%p %p\n", hwnd, hItem);
     if (!TREEVIEW_ValidItem(infoPtr, hItem))
@@ -3726,7 +3749,7 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
     infoPtr->editItem = hItem;
 
     hwndEdit = CreateWindowExW(WS_EX_LEFT,
-			       EditW,
+			       WC_EDITW,
 			       0,
 			       WS_CHILD | WS_BORDER | ES_AUTOHSCROLL |
 			       WS_CLIPSIBLINGS | ES_WANTRETURN |
@@ -5713,8 +5736,10 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return TREEVIEW_NotifyFormat(infoPtr, (HWND)wParam, (UINT)lParam);
 
     case WM_PRINTCLIENT:
+        return TREEVIEW_PrintClient(infoPtr, (HDC)wParam, lParam);
+
     case WM_PAINT:
-	return TREEVIEW_Paint(infoPtr, wParam);
+	return TREEVIEW_Paint(infoPtr, (HDC)wParam);
 
     case WM_RBUTTONDOWN:
 	return TREEVIEW_RButtonDown(infoPtr, lParam);

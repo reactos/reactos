@@ -3,7 +3,7 @@
  * French language support
  *
  * Copyright 1999 Eric Kohl
- * Copyright 2003 Vincent Béron
+ * Copyright 2003 Vincent BÃ©ron
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,11 +20,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "comctl32.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_PROPSHEET DIALOG DISCARDABLE 0, 0, 220, 140
 STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
-CAPTION "Propriétés pour %s"
+CAPTION "PropriÃ©tÃ©s pour %s"
 FONT 8, "MS Shell Dlg"
 BEGIN
   DEFPUSHBUTTON "OK",     IDOK,4,122,50,14, WS_TABSTOP | WS_GROUP
@@ -40,9 +45,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
 CAPTION "Assistant"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  PUSHBUTTON    "< &Précédent", IDC_BACK_BUTTON,71,138,50,14
-  DEFPUSHBUTTON "&Suivant >", IDC_NEXT_BUTTON,121,138,50,14
-  DEFPUSHBUTTON "Terminer", IDC_FINISH_BUTTON,121,138,50,14
+  PUSHBUTTON    "< &PrÃ©cÃ©dent", IDC_BACK_BUTTON,71,138,50,14
+  DEFPUSHBUTTON "&Suivant >", IDC_NEXT_BUTTON,123,138,50,14
+  DEFPUSHBUTTON "Terminer", IDC_FINISH_BUTTON,123,138,50,14
   PUSHBUTTON    "Annuler", IDCANCEL,178,138,50,14
   PUSHBUTTON    "Aide",    IDHELP,235,138,50,14,WS_GROUP
   LTEXT         "",        IDC_SUNKEN_LINE,7,129,278,1,SS_SUNKEN
@@ -57,15 +62,15 @@ CAPTION "Personnaliser la barre d'outils"
 FONT 8, "MS Shell Dlg"
 BEGIN
   DEFPUSHBUTTON "&Fermer",  IDCANCEL,308,6,44,14
-  PUSHBUTTON    "&Réinitialiser", IDC_RESET_BTN,308,23,44,14
+  PUSHBUTTON    "&RÃ©initialiser", IDC_RESET_BTN,308,23,44,14
   PUSHBUTTON    "Aid&e",    IDC_HELP_BTN,308,40,44,14
   PUSHBUTTON    "&Monter",  IDC_MOVEUP_BTN,308,74,44,14
   PUSHBUTTON    "&Descendre", IDC_MOVEDN_BTN,308,91,44,14
-  LTEXT         "Boutons disponibles :", -1,4,5,84,10
+  LTEXT         "Boutons &disponibles :", -1,4,5,84,10
   LISTBOX       IDC_AVAILBTN_LBOX,4,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
   PUSHBUTTON    "A&jouter ->",    IDOK, 131, 42, 44, 14
   PUSHBUTTON    "<- E&nlever", IDC_REMOVE_BTN,131,62,44,14
-  LTEXT         "&Boutons de la barre d'outils :", -1,182,5,78,10
+  LTEXT         "&Boutons de la barre d'outils :", -1,182,5,93,10
   LISTBOX       IDC_TOOLBARBTN_LBOX, 182,17,120,100,LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
 END
 
@@ -77,12 +82,12 @@ STRINGTABLE DISCARDABLE
 STRINGTABLE DISCARDABLE
 {
     IDM_TODAY    "Aujourd'hui:"
-    IDM_GOTODAY  "Aller à aujourd'hui"
+    IDM_GOTODAY  "Aller Ã  aujourd'hui"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_SEPARATOR "Séparateur"
+    IDS_SEPARATOR "SÃ©parateur"
 }
 
 STRINGTABLE DISCARDABLE

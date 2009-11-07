@@ -7,6 +7,7 @@
  * Copyright 2001 CodeWeavers Inc.
  * Copyright 2002 Dimitrie O. Paun
  * Copyright 2009 Nikolay Sivov
+ * Copyright 2009 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -98,7 +99,6 @@
  *   -- LVN_BEGINSCROLL, LVN_ENDSCROLL
  *   -- LVN_GETINFOTIP
  *   -- LVN_HOTTRACK
- *   -- LVN_MARQUEEBEGIN
  *   -- LVN_SETDISPINFO
  *   -- NM_HOVER
  *   -- LVN_BEGINRDRAG
@@ -248,6 +248,8 @@ typedef struct tagLISTVIEW_INFO
   BOOL bLButtonDown;
   BOOL bRButtonDown;
   BOOL bDragging;
+  BOOL bMarqueeSelect;       /* marquee selection/highlight underway */
+  RECT marqueeRect;
   POINT ptClickPos;         /* point where the user clicked */ 
   BOOL bNoItemMetrics;		/* flags if item metrics are not yet computed */
   INT nItemHeight;
@@ -3605,6 +3607,96 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
         WORD wDragWidth = GetSystemMetrics(SM_CXDRAG);
         WORD wDragHeight= GetSystemMetrics(SM_CYDRAG);
 
+        /* Ensure coordinates are within client bounds */
+        if (x < 0)
+            x = 0;
+
+        if (y < 0)
+            y = 0;
+
+        if (x > infoPtr->rcList.right)
+            x = infoPtr->rcList.right;
+
+        if (y > infoPtr->rcList.bottom)
+            y = infoPtr->rcList.bottom;
+
+        if (infoPtr->bMarqueeSelect)
+        {
+            LVITEMW item;
+            ITERATOR i;
+
+            if (x > infoPtr->ptClickPos.x)
+            {
+                rect.left = infoPtr->ptClickPos.x;
+                rect.right = x;
+            }
+            else
+            {
+                rect.left = x;
+                rect.right = infoPtr->ptClickPos.x;
+            }
+
+            if (y > infoPtr->ptClickPos.y)
+            {
+                rect.top = infoPtr->ptClickPos.y;
+                rect.bottom = y;
+            }
+            else
+            {
+                rect.top = y;
+                rect.bottom = infoPtr->ptClickPos.y;
+            }
+
+            /* Cancel out the old marquee rectangle and draw the new one */
+            LISTVIEW_InvalidateRect(infoPtr, &infoPtr->marqueeRect);
+
+            /* Invert the items in the old marquee rectangle */
+            iterator_frameditems(&i, infoPtr, &infoPtr->marqueeRect);
+
+            while (iterator_next(&i))
+            {
+                if (i.nItem > -1)
+                {
+                    if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED) == LVIS_SELECTED)
+                        item.state = 0;
+                    else
+                        item.state = LVIS_SELECTED;
+
+                    item.stateMask = LVIS_SELECTED;
+
+                    LISTVIEW_SetItemState(infoPtr, i.nItem, &item);
+                }
+            }
+
+            iterator_destroy(&i);
+
+            CopyRect(&infoPtr->marqueeRect, &rect);
+
+            /* Iterate over the items within our marquee rectangle */
+            iterator_frameditems(&i, infoPtr, &rect);
+
+            while (iterator_next(&i))
+            {
+                if (i.nItem > -1)
+                {
+                    /* If CTRL is pressed, invert. If not, always select the item. */
+                    if ((fwKeys & MK_CONTROL) && (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED)))
+                        item.state = 0;
+                    else
+                        item.state = LVIS_SELECTED;
+
+                    item.stateMask = LVIS_SELECTED;
+
+                    LISTVIEW_SetItemState(infoPtr, i.nItem, &item);
+                }
+            }
+
+            iterator_destroy(&i);
+
+            LISTVIEW_InvalidateRect(infoPtr, &rect);
+            return 0;
+        }
+
         rect.left = infoPtr->ptClickPos.x - wDragWidth;
         rect.right = infoPtr->ptClickPos.x + wDragWidth;
         rect.top = infoPtr->ptClickPos.y - wDragHeight;
@@ -3640,17 +3732,34 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
 
             if (!infoPtr->bDragging)
             {
-                NMLISTVIEW nmlv;
-
                 lvHitTestInfo.pt = infoPtr->ptClickPos;
                 LISTVIEW_HitTest(infoPtr, &lvHitTestInfo, TRUE, TRUE);
 
-                ZeroMemory(&nmlv, sizeof(nmlv));
-                nmlv.iItem = lvHitTestInfo.iItem;
-                nmlv.ptAction = infoPtr->ptClickPos;
+                /* If the click is outside the range of an item, begin a
+                   highlight. If not, begin an item drag. */
+                if (lvHitTestInfo.iItem == -1)
+                {
+                    NMHDR hdr;
 
-                notify_listview(infoPtr, LVN_BEGINDRAG, &nmlv);
-                infoPtr->bDragging = TRUE;
+                    /* If we're allowing multiple selections, send notification.
+                       If return value is non-zero, cancel. */
+                    if (!(infoPtr->dwStyle & LVS_SINGLESEL) && (notify_hdr(infoPtr, LVN_MARQUEEBEGIN, &hdr) == 0))
+                    {
+                        infoPtr->bMarqueeSelect = TRUE;
+                        SetCapture(infoPtr->hwndSelf);
+                    }
+                }
+                else
+                {
+                    NMLISTVIEW nmlv;
+
+                    ZeroMemory(&nmlv, sizeof(nmlv));
+                    nmlv.iItem = lvHitTestInfo.iItem;
+                    nmlv.ptAction = infoPtr->ptClickPos;
+
+                    notify_listview(infoPtr, LVN_BEGINDRAG, &nmlv);
+                    infoPtr->bDragging = TRUE;
+                }
             }
 
             return 0;
@@ -4643,6 +4752,10 @@ enddraw:
     if ((infoPtr->uView == LV_VIEW_DETAILS) && infoPtr->dwLvExStyle & LVS_EX_GRIDLINES)
         LISTVIEW_RefreshReportGrid(infoPtr, hdc);
 
+    /* Draw marquee rectangle if appropriate */
+    if (infoPtr->bMarqueeSelect)
+        DrawFocusRect(hdc, &infoPtr->marqueeRect);
+
     if (cdmode & CDRF_NOTIFYPOSTPAINT)
 	notify_postpaint(infoPtr, &nmlvcd);
 
@@ -4744,10 +4857,46 @@ static DWORD LISTVIEW_ApproximateViewRect(const LISTVIEW_INFO *infoPtr, INT nIte
 
     dwViewRect = MAKELONG(wWidth, wHeight);
   }
+  else if (infoPtr->uView == LV_VIEW_ICON)
+  {
+    UINT rows,cols;
+    UINT nItemWidth;
+    UINT nItemHeight;
+
+    nItemWidth = infoPtr->iconSpacing.cx;
+    nItemHeight = infoPtr->iconSpacing.cy;
+
+    if (nItemCount == -1)
+      nItemCount = infoPtr->nItemCount;
+
+    if (wWidth == 0xffff)
+      wWidth = infoPtr->rcList.right - infoPtr->rcList.left;
+
+    if (wWidth < nItemWidth)
+      wWidth = nItemWidth;
+
+    cols = wWidth / nItemWidth;
+    if (cols > nItemCount)
+      cols = nItemCount;
+    if (cols < 1)
+        cols = 1;
+
+    if (nItemCount)
+    {
+      rows = nItemCount / cols;
+      if (nItemCount % cols)
+        rows++;
+    }
+    else
+      rows = 0;
+
+    wHeight = (nItemHeight * rows)+2;
+    wWidth = (nItemWidth * cols)+2;
+
+    dwViewRect = MAKELONG(wWidth, wHeight);
+  }
   else if (infoPtr->uView == LV_VIEW_SMALLICON)
     FIXME("uView == LV_VIEW_SMALLICON: not implemented\n");
-  else if (infoPtr->uView == LV_VIEW_ICON)
-    FIXME("uView == LV_VIEW_ICON: not implemented\n");
 
   return dwViewRect;
 }
@@ -4855,6 +5004,8 @@ static BOOL LISTVIEW_DeleteAllItems(LISTVIEW_INFO *infoPtr, BOOL destroy)
     HDPA hdpaSubItems = NULL;
     BOOL bSuppress;
     ITEMHDR *hdrItem;
+    ITEM_INFO *lpItem;
+    ITEM_ID *lpID;
     INT i, j;
 
     TRACE("()\n");
@@ -4876,13 +5027,20 @@ static BOOL LISTVIEW_DeleteAllItems(LISTVIEW_INFO *infoPtr, BOOL destroy)
     {
 	if (!(infoPtr->dwStyle & LVS_OWNERDATA))
 	{
-            /* send LVN_DELETEITEM notification, if not suppressed
-               and if it is not a virtual listview */
-            if (!bSuppress) notify_deleteitem(infoPtr, i);
-            hdpaSubItems = DPA_GetPtr(infoPtr->hdpaItems, i);
+	    /* send LVN_DELETEITEM notification, if not suppressed
+	       and if it is not a virtual listview */
+	    if (!bSuppress) notify_deleteitem(infoPtr, i);
+	    hdpaSubItems = DPA_GetPtr(infoPtr->hdpaItems, i);
+	    lpItem = DPA_GetPtr(hdpaSubItems, 0);
+	    /* free id struct */
+	    j = DPA_GetPtrIndex(infoPtr->hdpaItemIds, lpItem->id);
+	    lpID = DPA_GetPtr(infoPtr->hdpaItemIds, j);
+	    DPA_DeletePtr(infoPtr->hdpaItemIds, j);
+	    Free(lpID);
+	    /* both item and subitem start with ITEMHDR header */
 	    for (j = 0; j < DPA_GetPtrCount(hdpaSubItems); j++)
 	    {
-                hdrItem = DPA_GetPtr(hdpaSubItems, j);
+	        hdrItem = DPA_GetPtr(hdpaSubItems, j);
 		if (is_textW(hdrItem->pszText)) Free(hdrItem->pszText);
 		Free(hdrItem);
 	    }
@@ -7774,10 +7932,18 @@ static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD dwM
             LISTVIEW_SetItemState(infoPtr, -1, &item);
 
             himl = LISTVIEW_CreateCheckBoxIL(infoPtr);
+            if(!(infoPtr->dwStyle & LVS_SHAREIMAGELISTS))
+                ImageList_Destroy(infoPtr->himlState);
         }
-        LISTVIEW_SetImageList(infoPtr, LVSIL_STATE, himl);
+        himl = LISTVIEW_SetImageList(infoPtr, LVSIL_STATE, himl);
+        /*   checkbox list replaces prevous custom list or... */
+        if(((infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES) &&
+           !(infoPtr->dwStyle & LVS_SHAREIMAGELISTS)) ||
+            /* ...previous was checkbox list */
+            (dwOldExStyle & LVS_EX_CHECKBOXES))
+            ImageList_Destroy(himl);
     }
-    
+
     if((infoPtr->dwLvExStyle ^ dwOldExStyle) & LVS_EX_HEADERDRAGDROP)
     {
         DWORD dwStyle;
@@ -9312,6 +9478,7 @@ static LRESULT LISTVIEW_LButtonDown(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, IN
   infoPtr->bLButtonDown = TRUE;
   infoPtr->ptClickPos = pt;
   infoPtr->bDragging = FALSE;
+  infoPtr->bMarqueeSelect = FALSE;
 
   lvHitTestInfo.pt.x = x;
   lvHitTestInfo.pt.y = y;
@@ -9389,6 +9556,9 @@ static LRESULT LISTVIEW_LButtonDown(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, IN
   }
   else
   {
+    if (!infoPtr->bFocus)
+        SetFocus(infoPtr->hwndSelf);
+
     /* remove all selections */
     if (!(wKey & MK_CONTROL) && !(wKey & MK_SHIFT))
         LISTVIEW_DeselectAll(infoPtr);
@@ -9433,9 +9603,19 @@ static LRESULT LISTVIEW_LButtonUp(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, INT 
         LISTVIEW_SetSelection(infoPtr, infoPtr->nLButtonDownItem);
     infoPtr->nLButtonDownItem = -1;
 
-    if (infoPtr->bDragging)
+    if (infoPtr->bDragging || infoPtr->bMarqueeSelect)
     {
+        /* Remove the marquee rectangle and release our mouse capture */
+        if (infoPtr->bMarqueeSelect)
+        {
+            LISTVIEW_InvalidateRect(infoPtr, &infoPtr->marqueeRect);
+            ReleaseCapture();
+        }
+
+        SetRect(&infoPtr->marqueeRect, 0, 0, 0, 0);
+
         infoPtr->bDragging = FALSE;
+        infoPtr->bMarqueeSelect = FALSE;
         return 0;
     }
 
@@ -9471,6 +9651,8 @@ static LRESULT LISTVIEW_LButtonUp(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, INT 
  */
 static LRESULT LISTVIEW_NCDestroy(LISTVIEW_INFO *infoPtr)
 {
+  INT i;
+
   TRACE("()\n");
 
   /* delete all items */
@@ -9481,18 +9663,18 @@ static LRESULT LISTVIEW_NCDestroy(LISTVIEW_INFO *infoPtr)
   DPA_Destroy(infoPtr->hdpaItemIds);
   DPA_Destroy(infoPtr->hdpaPosX);
   DPA_Destroy(infoPtr->hdpaPosY);
+  /* columns */
+  for (i = 0; i < DPA_GetPtrCount(infoPtr->hdpaColumns); i++)
+      Free(DPA_GetPtr(infoPtr->hdpaColumns, i));
   DPA_Destroy(infoPtr->hdpaColumns);
   ranges_destroy(infoPtr->selectionRanges);
 
   /* destroy image lists */
   if (!(infoPtr->dwStyle & LVS_SHAREIMAGELISTS))
   {
-      if (infoPtr->himlNormal)
-	  ImageList_Destroy(infoPtr->himlNormal);
-      if (infoPtr->himlSmall)
-	  ImageList_Destroy(infoPtr->himlSmall);
-      if (infoPtr->himlState)
-	  ImageList_Destroy(infoPtr->himlState);
+      ImageList_Destroy(infoPtr->himlNormal);
+      ImageList_Destroy(infoPtr->himlSmall);
+      ImageList_Destroy(infoPtr->himlState);
   }
 
   /* destroy font, bkgnd brush */
@@ -10163,19 +10345,23 @@ static void LISTVIEW_UpdateSize(LISTVIEW_INFO *infoPtr)
     }
     else if (infoPtr->uView == LV_VIEW_DETAILS)
     {
-	HDLAYOUT hl;
-	WINDOWPOS wp;
+	/* if control created invisible header isn't created */
+	if (infoPtr->hwndHeader)
+	{
+	    HDLAYOUT hl;
+	    WINDOWPOS wp;
 
-	hl.prc = &infoPtr->rcList;
-	hl.pwpos = &wp;
-	SendMessageW( infoPtr->hwndHeader, HDM_LAYOUT, 0, (LPARAM)&hl );
-        TRACE("  wp.flags=0x%08x, wp=%d,%d (%dx%d)\n", wp.flags, wp.x, wp.y, wp.cx, wp.cy);
-	SetWindowPos(wp.hwnd, wp.hwndInsertAfter, wp.x, wp.y, wp.cx, wp.cy,
-                    wp.flags | ((infoPtr->dwStyle & LVS_NOCOLUMNHEADER)
-                        ? SWP_HIDEWINDOW : SWP_SHOWWINDOW));
-        TRACE("  after SWP wp=%d,%d (%dx%d)\n", wp.x, wp.y, wp.cx, wp.cy);
+	    hl.prc = &infoPtr->rcList;
+	    hl.pwpos = &wp;
+	    SendMessageW( infoPtr->hwndHeader, HDM_LAYOUT, 0, (LPARAM)&hl );
+            TRACE("  wp.flags=0x%08x, wp=%d,%d (%dx%d)\n", wp.flags, wp.x, wp.y, wp.cx, wp.cy);
+	    SetWindowPos(wp.hwnd, wp.hwndInsertAfter, wp.x, wp.y, wp.cx, wp.cy,
+                         wp.flags | ((infoPtr->dwStyle & LVS_NOCOLUMNHEADER)
+                         ? SWP_HIDEWINDOW : SWP_SHOWWINDOW));
+	    TRACE("  after SWP wp=%d,%d (%dx%d)\n", wp.x, wp.y, wp.cx, wp.cy);
 
-	infoPtr->rcList.top = max(wp.cy, 0);
+	    infoPtr->rcList.top = max(wp.cy, 0);
+	}
         infoPtr->rcList.top += (infoPtr->dwLvExStyle & LVS_EX_GRIDLINES) ? 2 : 0;
     }
 
@@ -11149,7 +11335,6 @@ static LRESULT CALLBACK EditLblWndProcA(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
  */
 static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style, BOOL isW)
 {
-    WCHAR editName[5] = { 'E', 'd', 'i', 't', '\0' };
     HWND hedit;
     HINSTANCE hinst = (HINSTANCE)GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_HINSTANCE);
 
@@ -11159,9 +11344,9 @@ static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style, 
 
     /* Window will be resized and positioned after LVN_BEGINLABELEDIT */
     if (isW)
-	hedit = CreateWindowW(editName, text, style, 0, 0, 0, 0, infoPtr->hwndSelf, 0, hinst, 0);
+	hedit = CreateWindowW(WC_EDITW, text, style, 0, 0, 0, 0, infoPtr->hwndSelf, 0, hinst, 0);
     else
-	hedit = CreateWindowA("Edit", (LPCSTR)text, style, 0, 0, 0, 0, infoPtr->hwndSelf, 0, hinst, 0);
+	hedit = CreateWindowA(WC_EDITA, (LPCSTR)text, style, 0, 0, 0, 0, infoPtr->hwndSelf, 0, hinst, 0);
 
     if (!hedit) return 0;
 
