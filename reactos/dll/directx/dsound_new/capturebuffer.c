@@ -30,8 +30,101 @@ typedef struct
     BOOL bMix;
     BOOL bLoop;
     KSSTATE State;
+    PUCHAR MixBuffer;
+    ULONG MixBufferSize;
+    HANDLE hStopEvent;
+    volatile LONG StopMixerThread;
+    volatile LONG CurrentMixPosition;
 
 }CDirectSoundCaptureBufferImpl, *LPCDirectSoundCaptureBufferImpl;
+
+DWORD
+WINAPI
+MixerThreadRoutine(
+    LPVOID lpParameter)
+{
+    KSPROPERTY Request;
+    KSAUDIO_POSITION Position;
+    DWORD Result, MixPosition, BufferPosition, BytesWritten, BytesRead, MixLength, BufferLength;
+    LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)lpParameter;
+
+    /* setup audio position property request */
+    Request.Id = KSPROPERTY_AUDIO_POSITION;
+    Request.Set = KSPROPSETID_Audio;
+    Request.Flags = KSPROPERTY_TYPE_GET;
+
+    MixPosition = 0;
+    BufferPosition = 0;
+    do
+    {
+        /* query current position */
+        Result = SyncOverlappedDeviceIoControl(This->hPin, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSPROPERTY), (PVOID)&Position, sizeof(KSAUDIO_POSITION), NULL);
+
+        /* sanity check */
+        ASSERT(Result == ERROR_SUCCESS);
+
+        /* FIXME implement samplerate conversion */
+        ASSERT(This->MixFormat.nSamplesPerSec == This->Format->nSamplesPerSec);
+
+        /* FIXME implement bitrate conversion */
+        ASSERT(This->MixFormat.wBitsPerSample == This->Format->wBitsPerSample);
+
+        /* sanity check */
+        ASSERT(BufferPosition <= This->BufferSize);
+        ASSERT(MixPosition  <= This->MixBufferSize);
+
+        if (BufferPosition == This->BufferSize)
+        {
+            /* restart from front */
+            BufferPosition = 0;
+        }
+
+        if (MixPosition == This->MixBufferSize)
+        {
+            /* restart from front */
+            MixPosition = 0;
+        }
+
+        if (This->MixFormat.nChannels != This->Format->nChannels)
+        {
+            if ((DWORD)Position.PlayOffset >= MixPosition)
+            {
+                /* calculate buffer position difference */
+                MixLength = Position.PlayOffset - MixPosition;
+            }
+            else
+            {
+                /* buffer overlap */
+                MixLength = This->MixBufferSize - MixPosition;
+            }
+
+            BufferLength = This->BufferSize - BufferPosition;
+
+            /* convert the format */
+            PerformChannelConversion(&This->MixBuffer[MixPosition], MixLength, &BytesRead, This->MixFormat.nChannels, This->Format->nChannels, This->Format->wBitsPerSample, &This->Buffer[BufferPosition], BufferLength, &BytesWritten);
+
+            /* update buffer offsets */
+            MixPosition += BytesRead;
+            BufferPosition += BytesWritten;
+            DPRINT("MixPosition %u BufferPosition %u BytesRead %u BytesWritten %u MixLength %u BufferLength %u\n", MixPosition, BufferPosition, BytesRead, BytesWritten, MixLength, BufferLength);
+        }
+        /* update offset */
+        InterlockedExchange(&This->CurrentMixPosition, (LONG)BufferPosition);
+
+        /* FIXME use timer */
+        Sleep(10);
+
+    }while(InterlockedCompareExchange(&This->StopMixerThread, 0, 0) == 0);
+
+
+    /* signal stop event */
+    SetEvent(This->hStopEvent);
+
+    /* done */
+    return 0;
+}
+
+
 
 HRESULT
 WINAPI
@@ -96,6 +189,18 @@ IDirectSoundCaptureBufferImpl_Release(
             CloseHandle(This->hPin);
         }
 
+        if (This->hStopEvent)
+        {
+            /* close stop event handle */
+            CloseHandle(This->hStopEvent);
+        }
+
+        if (This->MixBuffer)
+        {
+            /* free mix buffer */
+            HeapFree(GetProcessHeap(), 0, This->MixBuffer);
+        }
+
         /* free capture buffer */
         HeapFree(GetProcessHeap(), 0, This->Buffer);
         /* free wave format */
@@ -145,6 +250,7 @@ IDirectSoundCaptureBufferImpl_GetCurrentPosition(
     KSAUDIO_POSITION Position;
     KSPROPERTY Request;
     DWORD Result;
+    DWORD Value;
 
     LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
 
@@ -157,6 +263,20 @@ IDirectSoundCaptureBufferImpl_GetCurrentPosition(
             *lpdwReadPosition = 0;
 
         DPRINT("No Audio Pin\n");
+        return DS_OK;
+    }
+
+    if (This->bMix)
+    {
+        /* read current position */
+        Value = InterlockedCompareExchange(&This->CurrentMixPosition, 0, 0);
+
+        if (lpdwCapturePosition)
+            *lpdwCapturePosition = (DWORD)Value;
+
+        if (lpdwReadPosition)
+            *lpdwReadPosition = (DWORD)Value;
+
         return DS_OK;
     }
 
@@ -326,6 +446,8 @@ IDirectSoundCaptureBufferImpl_Start(
     DWORD Result, BytesTransferred;
     OVERLAPPED Overlapped;
     KSSTATE State;
+    HANDLE hThread;
+
     LPCDirectSoundCaptureBufferImpl This = (LPCDirectSoundCaptureBufferImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureBufferImpl, lpVtbl);
 
     DPRINT("IDirectSoundCaptureBufferImpl_Start Flags %x\n", dwFlags);
@@ -367,7 +489,7 @@ IDirectSoundCaptureBufferImpl_Start(
     /* initialize stream header */
     Header.FrameExtent = This->BufferSize;
     Header.DataUsed = 0;
-    Header.Data = This->Buffer;
+    Header.Data = (This->bMix ? This->MixBuffer : This->Buffer);
     Header.Size = sizeof(KSSTREAM_HEADER);
     Header.PresentationTime.Numerator = 1;
     Header.PresentationTime.Denominator = 1;
@@ -379,6 +501,34 @@ IDirectSoundCaptureBufferImpl_Start(
         DPRINT("Failed submit buffer with %lx\n", Result);
         return DSERR_GENERIC;
     }
+
+    if (This->bMix)
+    {
+        if (!This->hStopEvent)
+        {
+            /* create stop event */
+            This->hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+            if (!This->hStopEvent)
+            {
+                DPRINT1("Failed to create event object with %x\n", GetLastError());
+                return DSERR_GENERIC;
+            }
+        }
+
+        /* set state to stop false */
+        This->StopMixerThread = FALSE;
+
+        hThread = CreateThread(NULL, 0, MixerThreadRoutine, (PVOID)This, 0, NULL);
+        if (!hThread)
+        {
+            DPRINT1("Failed to create thread with %x\n", GetLastError());
+            return DSERR_GENERIC;
+        }
+
+        /* close thread handle */
+        CloseHandle(hThread);
+    }
+
 
     return DS_OK;
 }
@@ -413,6 +563,20 @@ IDirectSoundCaptureBufferImpl_Stop( LPDIRECTSOUNDCAPTUREBUFFER8 iface )
     Result = SyncOverlappedDeviceIoControl(This->hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&State, sizeof(KSSTATE), NULL);
 
     ASSERT(Result == ERROR_SUCCESS);
+
+
+    if (This->bMix)
+    {
+        /* sanity check */
+        ASSERT(This->hStopEvent);
+        /* reset event */
+        ResetEvent(This->hStopEvent);
+        /* signal event to stop */
+        This->StopMixerThread = TRUE;
+        /* Wait for the event to stop */
+        WaitForSingleObject(This->hStopEvent, INFINITE);
+    }
+
 
     if (Result == ERROR_SUCCESS)
     {
@@ -492,7 +656,7 @@ NewDirectSoundCaptureBuffer(
     LPFILTERINFO Filter,
     LPCDSCBUFFERDESC lpcDSBufferDesc)
 {
-    DWORD FormatSize;
+    DWORD FormatSize, MixBufferSize;
     ULONG DeviceId = 0, PinId;
     DWORD Result = ERROR_SUCCESS;
     WAVEFORMATEX MixFormat;
@@ -580,11 +744,33 @@ NewDirectSoundCaptureBuffer(
         {
             /* FIXME should not happen */
             DPRINT("failed to compute a compatible format\n");
+            HeapFree(GetProcessHeap(), 0, This->MixBuffer);
             HeapFree(GetProcessHeap(), 0, This->Buffer);
             HeapFree(GetProcessHeap(), 0, This->Format);
             HeapFree(GetProcessHeap(), 0, This);
             return DSERR_GENERIC;
         }
+
+        MixBufferSize = lpcDSBufferDesc->dwBufferBytes;
+        MixBufferSize /= lpcDSBufferDesc->lpwfxFormat->nChannels;
+        MixBufferSize /= (lpcDSBufferDesc->lpwfxFormat->wBitsPerSample/8);
+
+        MixBufferSize *= This->MixFormat.nChannels;
+        MixBufferSize *= (This->MixFormat.wBitsPerSample/8);
+
+        /* allocate buffer for mixing */
+        This->MixBuffer = HeapAlloc(GetProcessHeap(), 0, MixBufferSize);
+        if (!This->Buffer)
+        {
+            /* not enough memory */
+            CloseHandle(This->hPin);
+            HeapFree(GetProcessHeap(), 0, This->Buffer);
+            HeapFree(GetProcessHeap(), 0, This->Format);
+            HeapFree(GetProcessHeap(), 0, This);
+            return DSERR_OUTOFMEMORY;
+        }
+        This->MixBufferSize = MixBufferSize;
+        DPRINT1("MixBufferSize %u BufferSize %u\n", MixBufferSize, This->BufferSize);
     }
 
     /* initialize capture buffer */

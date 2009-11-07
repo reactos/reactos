@@ -110,6 +110,18 @@ NewDirectSound(
 
 /* misc.c */
 
+VOID
+PerformChannelConversion(
+    PUCHAR Buffer,
+    ULONG BufferLength,
+    PULONG BytesRead,
+    ULONG OldChannels,
+    ULONG NewChannels,
+    ULONG BitsPerSample,
+    PUCHAR Result,
+    ULONG ResultLength,
+    PULONG BytesWritten);
+
 BOOL
 SetPinFormat(
     IN HANDLE hPin,

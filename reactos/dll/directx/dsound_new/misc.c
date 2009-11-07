@@ -13,6 +13,69 @@ const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {
 const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Audio = {0x45FFAAA0L, 0x6E1B, 0x11D0, {0xBC, 0xF2, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00}};
 
+
+VOID
+PerformChannelConversion(
+    PUCHAR Buffer,
+    ULONG BufferLength,
+    PULONG BytesRead,
+    ULONG OldChannels,
+    ULONG NewChannels,
+    ULONG BitsPerSample,
+    PUCHAR Result,
+    ULONG ResultLength,
+    PULONG BytesWritten)
+{
+    DWORD Samples;
+    DWORD NewIndex, OldIndex;
+    DWORD NewLength, Skip;
+
+    Samples = BufferLength / (BitsPerSample / 8) / OldChannels;
+
+    if (NewChannels > OldChannels)
+    {
+        UNIMPLEMENTED
+        ASSERT(0);
+    }
+
+    /* setup index */
+    NewIndex = 0;
+    OldIndex = 0;
+
+    /* calculate offsets */
+    NewLength = NewChannels * (BitsPerSample/8);
+    Skip = OldChannels * (BitsPerSample/8);
+
+    do
+    {
+        if (NewIndex + NewLength>= ResultLength)
+        {
+            NewIndex = ResultLength;
+            break;
+        }
+
+        if (OldIndex + Skip >= BufferLength)
+        {
+            OldIndex = BufferLength;
+            break;
+        }
+
+        /* copy first channel */
+        RtlMoveMemory(&Result[NewIndex], &Buffer[OldIndex], NewLength);
+
+        /* skip other channels */
+        OldIndex += Skip;
+
+        /* increment offset */
+        NewIndex += NewLength;
+
+    }while(TRUE);
+
+    *BytesRead = OldIndex;
+    *BytesWritten = NewIndex;
+}
+
+
 BOOL
 SetPinFormat(
     IN HANDLE hPin,
@@ -498,20 +561,21 @@ CreateCompatiblePin(
         else if (WaveFormatOut->wBitsPerSample > AudioRange->MaximumBitsPerSample)
             WaveFormatOut->wBitsPerSample = AudioRange->MaximumBitsPerSample;
 
-        DPRINT1("MinimumBitsPerSample %u MaximumBitsPerSample %u MinimumSampleFrequency %u MaximumSampleFrequency %u\n",
+        DPRINT("MinimumBitsPerSample %u MaximumBitsPerSample %u MinimumSampleFrequency %u MaximumSampleFrequency %u\n",
             AudioRange->MinimumBitsPerSample, AudioRange->MaximumBitsPerSample, AudioRange->MinimumSampleFrequency, AudioRange->MaximumSampleFrequency);
 
         for(nChannels = 1; nChannels <= AudioRange->MaximumChannels; nChannels++)
         {
             WaveFormatOut->nChannels = nChannels;
 
+            dwResult = OpenPin(hFilter, PinId, WaveFormatOut, hPin, TRUE);
+            if (dwResult == ERROR_SUCCESS)
+            {
                 DPRINT("InFormat  nChannels %u wBitsPerSample %u nSamplesPerSec %u\nOutFormat nChannels %u nBitsPerSample %u nSamplesPerSec %u\n",
                        WaveFormatEx->nChannels, WaveFormatEx->wBitsPerSample, WaveFormatEx->nSamplesPerSec,
                        WaveFormatOut->nChannels, WaveFormatOut->wBitsPerSample, WaveFormatOut->nSamplesPerSec);
 
-            dwResult = OpenPin(hFilter, PinId, WaveFormatOut, hPin, TRUE);
-            if (dwResult == ERROR_SUCCESS)
-            {
+
                 /* free buffer */
                 HeapFree(GetProcessHeap(), 0, Item);
                 return TRUE;
