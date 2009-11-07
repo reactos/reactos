@@ -354,7 +354,15 @@ KiDebugTrapOrFaultKMode:
     push 0
     .allocstack 0x8
 
-    UNIMPLEMENTED KiDoubleFaultAbort
+    /* Bugcheck code UNEXPECTED_KERNEL_MODE_TRAP */
+    mov rcx, 0x0000007F
+    
+    /* Specify double fault */
+    mov rdx, 0x00000008
+    mov r8, 0
+    mov r9, 0
+
+    call _KeBugCheckEx
 
     jmp $
 .endproc

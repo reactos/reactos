@@ -601,9 +601,6 @@ BOOLEAN
 NTAPI
 KeInvalidateAllCaches(VOID)
 {
-    /* Only supported on Pentium Pro and higher */
-    if (KeI386CpuType < 6) return FALSE;
-
     /* Invalidate all caches */
     __wbinvd();
     return TRUE;
