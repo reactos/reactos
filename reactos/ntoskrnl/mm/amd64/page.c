@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/mm/amd64/page.c
  * PURPOSE:         Low level memory managment manipulation
  *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ***************************************************************/
@@ -24,32 +24,11 @@
 ULONG64 MmGlobalKernelPageDirectory[512];
 
 
+/* PRIVATE FUNCTIONS *******************************************************/
+
+
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN MmUnmapPageTable(PULONG Pt);
-
-ULONG_PTR
-NTAPI
-MiFlushTlbIpiRoutine(ULONG_PTR Address)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-VOID
-MiFlushTlb(PULONG Pt, PVOID Address)
-{
-    UNIMPLEMENTED;
-}
-
-
-/*
-static ULONG
-ProtectToPTE(ULONG flProtect)
-{
-    return 0;
-}
-*/
 NTSTATUS
 NTAPI
 Mmi386ReleaseMmInfo(PEPROCESS Process)
@@ -75,26 +54,6 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
 {
     UNIMPLEMENTED;
     return 0;
-}
-
-VOID
-NTAPI
-MmDeletePageTable(PEPROCESS Process, PVOID Address)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-MmFreePageTable(PEPROCESS Process, PVOID Address)
-{
-    UNIMPLEMENTED;
-}
-
-BOOLEAN MmUnmapPageTable(PULONG Pt)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 PFN_TYPE
@@ -137,26 +96,11 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 }
 
 BOOLEAN
-Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOLEAN
 NTAPI
 MmIsDirtyPage(PEPROCESS Process, PVOID Address)
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
-BOOLEAN
-NTAPI
-MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
 VOID
@@ -194,17 +138,6 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     UNIMPLEMENTED;
     return 0;
-}
-
-NTSTATUS
-NTAPI
-MmCreateVirtualMappingForKernel(PVOID Address,
-                                ULONG flProtect,
-                                PPFN_TYPE Pages,
-				ULONG PageCount)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -257,9 +190,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     UNIMPLEMENTED;
 }
 
-/*
- * @implemented
- */
 PHYSICAL_ADDRESS
 NTAPI
 MmGetPhysicalAddress(PVOID vaddr)
@@ -267,14 +197,6 @@ MmGetPhysicalAddress(PVOID vaddr)
 	PHYSICAL_ADDRESS ret = {{0}};
     UNIMPLEMENTED;
     return ret;
-}
-
-PFN_TYPE
-NTAPI
-MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
 VOID
@@ -322,12 +244,5 @@ MmInitGlobalKernelPageDirectory(VOID)
     UNIMPLEMENTED;
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-MiInitPageDirectoryMap(VOID)
-{
-    UNIMPLEMENTED;
-}
 
 /* EOF */
