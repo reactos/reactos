@@ -394,7 +394,15 @@ INT  WINAPI LBItemFromPt (HWND, POINT, BOOL);
 /* UpDown */
 
 #define UPDOWN_CLASSA           "msctls_updown32"
+#if defined(__GNUC__)
+# define UPDOWN_CLASSW (const WCHAR []){ 'm','s','c','t','l','s','_', \
+  'u','p','d','o','w','n','3','2',0 }
+#elif defined(_MSC_VER)
 # define UPDOWN_CLASSW          L"msctls_updown32"
+#else
+static const WCHAR UPDOWN_CLASSW[] = { 'm','s','c','t','l','s','_',
+  'u','p','d','o','w','n','3','2',0 };
+#endif
 #define UPDOWN_CLASS            WINELIB_NAME_AW(UPDOWN_CLASS)
 
 typedef struct _UDACCEL
@@ -455,7 +463,15 @@ HWND WINAPI CreateUpDownControl (DWORD, INT, INT, INT, INT,
 /* Progress Bar */
 
 #define PROGRESS_CLASSA   "msctls_progress32"
+#if defined(__GNUC__)
+# define PROGRESS_CLASSW (const WCHAR []){ 'm','s','c','t','l','s','_', \
+  'p','r','o','g','r','e','s','s','3','2',0 }
+#elif defined(_MSC_VER)
 # define PROGRESS_CLASSW  L"msctls_progress32"
+#else
+static const WCHAR PROGRESS_CLASSW[] = { 'm','s','c','t','l','s','_',
+  'p','r','o','g','r','e','s','s','3','2',0 };
+#endif
 #define PROGRESS_CLASS      WINELIB_NAME_AW(PROGRESS_CLASS)
 
 #define PBM_SETRANGE        (WM_USER+1)
@@ -568,6 +584,7 @@ typedef struct _IMAGELISTDRAWPARAMS
 } IMAGELISTDRAWPARAMS, *LPIMAGELISTDRAWPARAMS;
 
 
+HRESULT  WINAPI HIMAGELIST_QueryInterface(HIMAGELIST,REFIID,void **);
 INT      WINAPI ImageList_Add(HIMAGELIST,HBITMAP,HBITMAP);
 INT      WINAPI ImageList_AddMasked(HIMAGELIST,HBITMAP,COLORREF);
 BOOL     WINAPI ImageList_BeginDrag(HIMAGELIST,INT,INT,INT);
@@ -704,7 +721,13 @@ int WINAPI DrawShadowText(HDC, LPCWSTR, UINT, RECT*, DWORD, COLORREF, COLORREF, 
 /* Header control */
 
 #define WC_HEADERA		"SysHeader32"
+#if defined(__GNUC__)
+# define WC_HEADERW (const WCHAR []){ 'S','y','s','H','e','a','d','e','r','3','2',0 }
+#elif defined(_MSC_VER)
 # define WC_HEADERW             L"SysHeader32"
+#else
+static const WCHAR WC_HEADERW[] = { 'S','y','s','H','e','a','d','e','r','3','2',0 };
+#endif
 #define WC_HEADER		WINELIB_NAME_AW(WC_HEADER)
 
 #define HDS_HORZ                0x0000
@@ -1013,7 +1036,13 @@ typedef struct tagNMHDFILTERBTNCLICK
 
 /* Win32 5.1 Button Theme */
 #define WC_BUTTONA       "Button"
+#if defined(__GNUC__)
+# define WC_BUTTONW (const WCHAR []){ 'B','u','t','t','o','n',0 }
+#elif defined(_MSC_VER)
 # define WC_BUTTONW      L"Button"
+#else
+static const WCHAR WC_BUTTONW[] = { 'B','u','t','t','o','n',0 };
+#endif
 #define WC_BUTTON WINELIB_NAME_AW(WC_BUTTON)
 
 #define BCN_FIRST               (0U-1250U)
@@ -1032,8 +1061,15 @@ typedef struct tagNMBCHOTITEM
 /* Toolbar */
 
 #define TOOLBARCLASSNAMEA       "ToolbarWindow32"
+#if defined(__GNUC__)
+# define TOOLBARCLASSNAMEW (const WCHAR []){ 'T','o','o','l','b','a','r', \
+  'W','i','n','d','o','w','3','2',0 }
+#elif defined(_MSC_VER)
 # define TOOLBARCLASSNAMEW      L"ToolbarWindow32"
-
+#else
+static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
+  'W','i','n','d','o','w','3','2',0 };
+#endif
 #define TOOLBARCLASSNAME WINELIB_NAME_AW(TOOLBARCLASSNAME)
 
 #define CMB_MASKED              0x02
@@ -1592,27 +1628,16 @@ CreateMappedBitmap (HINSTANCE, INT_PTR, UINT, LPCOLORMAP, INT);
 /* Tool tips */
 
 #define TOOLTIPS_CLASSA         "tooltips_class32"
+#if defined(__GNUC__)
+# define TOOLTIPS_CLASSW (const WCHAR []){ 't','o','o','l','t','i','p','s','_', \
+  'c','l','a','s','s','3','2',0 }
+#elif defined(_MSC_VER)
 # define TOOLTIPS_CLASSW        L"tooltips_class32"
+#else
+static const WCHAR TOOLTIPS_CLASSW[] = { 't','o','o','l','t','i','p','s','_',
+  'c','l','a','s','s','3','2',0 };
+#endif
 #define TOOLTIPS_CLASS          WINELIB_NAME_AW(TOOLTIPS_CLASS)
-
-#if (_WIN32_WINNT >= 0x501)
-#define BUTTON_IMAGELIST_ALIGN_LEFT 0
-#define BUTTON_IMAGELIST_ALIGN_RIGHT 1
-#define BUTTON_IMAGELIST_ALIGN_TOP 2
-#define BUTTON_IMAGELIST_ALIGN_BOTTOM 3
-#define BUTTON_IMAGELIST_ALIGN_CENTER 4
-
-typedef struct
-{
-    HIMAGELIST himl;
-    RECT margin;
-    UINT uAlign;
-} BUTTON_IMAGELIST, *PBUTTON_IMAGELIST;
-
-#define BCM_FIRST   0x1600
-#define BCM_GETIDEALSIZE    (BCM_FIRST + 1)
-#define BCM_SETIMAGELIST    (BCM_FIRST + 2)
-#endif /* _WIN32_WINNT */
 
 #define INFOTIPSIZE             1024
 
@@ -1749,6 +1774,10 @@ typedef struct tagTOOLINFOW {
 #define TTTOOLINFOA_V1_SIZE CCSIZEOF_STRUCT(TTTOOLINFOA, lpszText)
 #define TTTOOLINFOW_V1_SIZE CCSIZEOF_STRUCT(TTTOOLINFOW, lpszText)
 #define TTTOOLINFO_V1_SIZE  CCSIZEOF_STRUCT(WINELIB_NAME_AW(TTTOOLINFO), lpszText)
+#define TTTOOLINFOA_V2_SIZE CCSIZEOF_STRUCT(TTTOOLINFOA, lParam)
+#define TTTOOLINFOW_V2_SIZE CCSIZEOF_STRUCT(TTTOOLINFOW, lParam)
+#define TTTOOLINFOA_V3_SIZE CCSIZEOF_STRUCT(TTTOOLINFOA, lpReserved)
+#define TTTOOLINFOW_V3_SIZE CCSIZEOF_STRUCT(TTTOOLINFOW, lpReserved)
 
 typedef struct _TT_HITTESTINFOA
 {
@@ -4239,9 +4268,10 @@ typedef struct tagTCITEMW
 #define TCN_FIRST               (0U-550U)
 #define TCN_LAST                (0U-580U)
 #define TCN_KEYDOWN             (TCN_FIRST - 0)
-#define TCN_SELCHANGE		(TCN_FIRST - 1)
+#define TCN_SELCHANGE           (TCN_FIRST - 1)
 #define TCN_SELCHANGING         (TCN_FIRST - 2)
 #define TCN_GETOBJECT           (TCN_FIRST - 3)
+#define TCN_FOCUSCHANGE         (TCN_FIRST - 4)
 
 #include <pshpack1.h>
 typedef struct tagTCKEYDOWN
@@ -4644,6 +4674,7 @@ static const WCHAR MONTHCAL_CLASSW[] = { 'S','y','s',
 #define MCS_WEEKNUMBERS        0x0004
 #define MCS_NOTODAY            0x0010
 #define MCS_NOTODAYCIRCLE      0x0008
+#define MCS_NOTRAILINGDATES    0x0040
 
 #define MCHT_TITLE             0x00010000
 #define MCHT_CALENDAR          0x00020000
@@ -4679,7 +4710,14 @@ typedef struct {
         POINT pt;
         UINT uHit;
         SYSTEMTIME st;
+        /* Vista */
+        RECT rc;
+        INT iOffset;
+        INT iRow;
+        INT iCol;
 } MCHITTESTINFO, *PMCHITTESTINFO;
+
+#define MCHITTESTINFO_V1_SIZE CCSIZEOF_STRUCT(MCHITTESTINFO, st)
 
 typedef struct tagNMSELCHANGE
 {
@@ -4703,51 +4741,51 @@ typedef struct tagNMDAYSTATE
 /* macros */
 
 #define MonthCal_GetCurSel(hmc, pst) \
-		(BOOL)SNDMSGA(hmc, MCM_GETCURSEL, 0, (LPARAM)(pst))
+		(BOOL)SNDMSG(hmc, MCM_GETCURSEL, 0, (LPARAM)(pst))
 #define MonthCal_SetCurSel(hmc, pst)  \
-		(BOOL)SNDMSGA(hmc, MCM_SETCURSEL, 0, (LPARAM)(pst))
+		(BOOL)SNDMSG(hmc, MCM_SETCURSEL, 0, (LPARAM)(pst))
 #define MonthCal_GetMaxSelCount(hmc) \
-		(DWORD)SNDMSGA(hmc, MCM_GETMAXSELCOUNT, 0, 0L)
+		(DWORD)SNDMSG(hmc, MCM_GETMAXSELCOUNT, 0, 0L)
 #define MonthCal_SetMaxSelCount(hmc, n) \
-		(BOOL)SNDMSGA(hmc, MCM_SETMAXSELCOUNT, (WPARAM)(n), 0L)
+		(BOOL)SNDMSG(hmc, MCM_SETMAXSELCOUNT, (WPARAM)(n), 0L)
 #define MonthCal_GetSelRange(hmc, rgst) \
-		SNDMSGA(hmc, MCM_GETSELRANGE, 0, (LPARAM) (rgst))
+		SNDMSG(hmc, MCM_GETSELRANGE, 0, (LPARAM) (rgst))
 #define MonthCal_SetSelRange(hmc, rgst) \
-		SNDMSGA(hmc, MCM_SETSELRANGE, 0, (LPARAM) (rgst))
+		SNDMSG(hmc, MCM_SETSELRANGE, 0, (LPARAM) (rgst))
 #define MonthCal_GetMonthRange(hmc, gmr, rgst) \
-		(DWORD)SNDMSGA(hmc, MCM_GETMONTHRANGE, (WPARAM)(gmr), (LPARAM)(rgst))
+		(DWORD)SNDMSG(hmc, MCM_GETMONTHRANGE, (WPARAM)(gmr), (LPARAM)(rgst))
 #define MonthCal_SetDayState(hmc, cbds, rgds) \
-		SNDMSGA(hmc, MCM_SETDAYSTATE, (WPARAM)(cbds), (LPARAM)(rgds))
+		SNDMSG(hmc, MCM_SETDAYSTATE, (WPARAM)(cbds), (LPARAM)(rgds))
 #define MonthCal_GetMinReqRect(hmc, prc) \
-		SNDMSGA(hmc, MCM_GETMINREQRECT, 0, (LPARAM)(prc))
+		SNDMSG(hmc, MCM_GETMINREQRECT, 0, (LPARAM)(prc))
 #define MonthCal_SetColor(hmc, iColor, clr)\
-        SNDMSGA(hmc, MCM_SETCOLOR, iColor, clr)
+        SNDMSG(hmc, MCM_SETCOLOR, iColor, clr)
 #define MonthCal_GetColor(hmc, iColor) \
-		SNDMSGA(hmc, MCM_SETCOLOR, iColor, 0)
+		SNDMSG(hmc, MCM_SETCOLOR, iColor, 0)
 #define MonthCal_GetToday(hmc, pst)\
-		(BOOL)SNDMSGA(hmc, MCM_GETTODAY, 0, (LPARAM)pst)
+		(BOOL)SNDMSG(hmc, MCM_GETTODAY, 0, (LPARAM)pst)
 #define MonthCal_SetToday(hmc, pst)\
-		SNDMSGA(hmc, MCM_SETTODAY, 0, (LPARAM)pst)
+		SNDMSG(hmc, MCM_SETTODAY, 0, (LPARAM)pst)
 #define MonthCal_HitTest(hmc, pinfo) \
-        SNDMSGA(hmc, MCM_HITTEST, 0, (LPARAM)(PMCHITTESTINFO)pinfo)
+        SNDMSG(hmc, MCM_HITTEST, 0, (LPARAM)(PMCHITTESTINFO)pinfo)
 #define MonthCal_SetFirstDayOfWeek(hmc, iDay) \
-        SNDMSGA(hmc, MCM_SETFIRSTDAYOFWEEK, 0, iDay)
+        SNDMSG(hmc, MCM_SETFIRSTDAYOFWEEK, 0, iDay)
 #define MonthCal_GetFirstDayOfWeek(hmc) \
-        (DWORD)SNDMSGA(hmc, MCM_GETFIRSTDAYOFWEEK, 0, 0)
+        (DWORD)SNDMSG(hmc, MCM_GETFIRSTDAYOFWEEK, 0, 0)
 #define MonthCal_GetRange(hmc, rgst) \
-        (DWORD)SNDMSGA(hmc, MCM_GETRANGE, 0, (LPARAM)(rgst))
+        (DWORD)SNDMSG(hmc, MCM_GETRANGE, 0, (LPARAM)(rgst))
 #define MonthCal_SetRange(hmc, gd, rgst) \
-        (BOOL)SNDMSGA(hmc, MCM_SETRANGE, (WPARAM)(gd), (LPARAM)(rgst))
+        (BOOL)SNDMSG(hmc, MCM_SETRANGE, (WPARAM)(gd), (LPARAM)(rgst))
 #define MonthCal_GetMonthDelta(hmc) \
-        (int)SNDMSGA(hmc, MCM_GETMONTHDELTA, 0, 0)
+        (int)SNDMSG(hmc, MCM_GETMONTHDELTA, 0, 0)
 #define MonthCal_SetMonthDelta(hmc, n) \
-        (int)SNDMSGA(hmc, MCM_SETMONTHDELTA, n, 0)
+        (int)SNDMSG(hmc, MCM_SETMONTHDELTA, n, 0)
 #define MonthCal_GetMaxTodayWidth(hmc) \
-        (DWORD)SNDMSGA(hmc, MCM_GETMAXTODAYWIDTH, 0, 0)
+        (DWORD)SNDMSG(hmc, MCM_GETMAXTODAYWIDTH, 0, 0)
 #define MonthCal_SetUnicodeFormat(hwnd, fUnicode)  \
-        (BOOL)SNDMSGA((hwnd), MCM_SETUNICODEFORMAT, (WPARAM)(fUnicode), 0)
+        (BOOL)SNDMSG((hwnd), MCM_SETUNICODEFORMAT, (WPARAM)(fUnicode), 0)
 #define MonthCal_GetUnicodeFormat(hwnd)  \
-        (BOOL)SNDMSGA((hwnd), MCM_GETUNICODEFORMAT, 0, 0)
+        (BOOL)SNDMSG((hwnd), MCM_GETUNICODEFORMAT, 0, 0)
 
 
 /**************************************************************************
@@ -4907,28 +4945,28 @@ DECL_WINELIB_TYPE_AW(LPNMDATETIMEFORMATQUERY)
 
 
 #define DateTime_GetSystemtime(hdp, pst)   \
-  (DWORD)SNDMSGA (hdp, DTM_GETSYSTEMTIME , 0, (LPARAM)(pst))
+  (DWORD)SNDMSG (hdp, DTM_GETSYSTEMTIME , 0, (LPARAM)(pst))
 #define DateTime_SetSystemtime(hdp, gd, pst)   \
-  (BOOL)SNDMSGA (hdp, DTM_SETSYSTEMTIME, (LPARAM)(gd), (LPARAM)(pst))
+  (BOOL)SNDMSG (hdp, DTM_SETSYSTEMTIME, (LPARAM)(gd), (LPARAM)(pst))
 #define DateTime_GetRange(hdp, rgst)  \
-  (DWORD)SNDMSGA (hdp, DTM_GETRANGE, 0, (LPARAM)(rgst))
+  (DWORD)SNDMSG (hdp, DTM_GETRANGE, 0, (LPARAM)(rgst))
 #define DateTime_SetRange(hdp, gd, rgst) \
-   (BOOL)SNDMSGA (hdp, DTM_SETRANGE, (WPARAM)(gd), (LPARAM)(rgst))
+   (BOOL)SNDMSG (hdp, DTM_SETRANGE, (WPARAM)(gd), (LPARAM)(rgst))
 #define DateTime_SetFormatA(hdp, sz)  \
   (BOOL)SNDMSGA (hdp, DTM_SETFORMATA, 0, (LPARAM)(sz))
 #define DateTime_SetFormatW(hdp, sz)  \
   (BOOL)SNDMSGW (hdp, DTM_SETFORMATW, 0, (LPARAM)(sz))
 #define DateTime_SetFormat WINELIB_NAME_AW(DateTime_SetFormat)
 #define DateTime_GetMonthCalColor(hdp, iColor) \
-  SNDMSGA (hdp, DTM_GETMCCOLOR, iColor, 0)
+  SNDMSG (hdp, DTM_GETMCCOLOR, iColor, 0)
 #define DateTime_SetMonthCalColor(hdp, iColor, clr) \
-  SNDMSGA (hdp, DTM_SETMCCOLOR, iColor, clr)
+  SNDMSG (hdp, DTM_SETMCCOLOR, iColor, clr)
 #define DateTime_GetMonthCal(hdp)  \
-  (HWND) SNDMSGA (hdp, DTM_GETMONTHCAL, 0, 0)
+  (HWND) SNDMSG (hdp, DTM_GETMONTHCAL, 0, 0)
 #define DateTime_SetMonthCalFont(hdp, hfont, fRedraw) \
-  SNDMSGA (hdp, DTM_SETMCFONT, (WPARAM)hfont, (LPARAM)fRedraw)
+  SNDMSG (hdp, DTM_SETMCFONT, (WPARAM)hfont, (LPARAM)fRedraw)
 #define DateTime_GetMonthCalFont(hdp) \
-  SNDMSGA (hdp, DTM_GETMCFONT, 0, 0)
+  SNDMSG (hdp, DTM_GETMCFONT, 0, 0)
 
 #define DA_LAST         (0x7fffffff)
 #define DPA_APPEND      (0x7fffffff)
@@ -4999,6 +5037,9 @@ typedef struct _DPASTREAMINFO
 struct IStream;
 typedef HRESULT (CALLBACK *PFNDPASTREAM)(DPASTREAMINFO*, struct IStream*, LPVOID);
 
+HRESULT WINAPI DPA_LoadStream(HDPA*, PFNDPASTREAM, struct IStream*, LPVOID);
+HRESULT WINAPI DPA_SaveStream(HDPA, PFNDPASTREAM, struct IStream*, LPVOID);
+
 BOOL WINAPI Str_SetPtrW (LPWSTR *, LPCWSTR);
 
 /**************************************************************************
@@ -5012,6 +5053,10 @@ BOOL WINAPI Str_SetPtrW (LPWSTR *, LPCWSTR);
 #else
 static const WCHAR WC_LINK[] = { 'S','y','s','L','i','n','k',0 };
 #endif
+
+/* SysLink styles */
+#define LWS_TRANSPARENT      0x0001
+#define LWS_IGNORERETURN     0x0002
 
 /* SysLink messages */
 #define LM_HITTEST           (WM_USER + 768)
