@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * PURPOSE:         Exception related functions
+ * PURPOSE:         Unwinding related functions
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -27,6 +27,11 @@
 #define UWOP_SAVE_XMM128 8
 #define UWOP_SAVE_XMM128_FAR 9
 #define UWOP_PUSH_MACHFRAME 10
+
+#define UNW_FLAG_NHANDLER 0
+#define UNW_FLAG_EHANDLER 1
+#define UNW_FLAG_UHANDLER 2
+#define UNW_FLAG_CHAININFO 4
 
 typedef unsigned char UBYTE;
 
@@ -611,3 +616,69 @@ RtlGetCallersAddress(
 
     return;
 }
+
+// FIXME: move to different file
+VOID
+NTAPI
+RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
+{
+    CONTEXT Context;
+    NTSTATUS Status;
+    ULONG64 ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+    PVOID HandlerData;
+    ULONG64 EstablisherFrame;
+
+    /* Capture the context */
+    RtlCaptureContext(&Context);
+
+    /* Get the function entry for this function */
+    FunctionEntry = RtlLookupFunctionEntry(Context.Rip,
+                                           &ImageBase,
+                                           NULL);
+
+    /* Check if we found it */
+    if (FunctionEntry)
+    {
+        /* Unwind to the caller of this function */
+        RtlVirtualUnwind(UNW_FLAG_NHANDLER,
+                         ImageBase,
+                         Context.Rip,
+                         FunctionEntry,
+                         &Context,
+                         &HandlerData,
+                         &EstablisherFrame,
+                         NULL);
+
+        /* Save the exception address */
+        ExceptionRecord->ExceptionAddress = (PVOID)Context.Rip;
+
+        /* Write the context flag */
+        Context.ContextFlags = CONTEXT_FULL;
+
+        /* Check if user mode debugger is active */
+        if (RtlpCheckForActiveDebugger())
+        {
+            /* Raise an exception immediately */
+            Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
+        }
+        else
+        {
+            /* Dispatch the exception and check if we should continue */
+            if (!RtlDispatchException(ExceptionRecord, &Context))
+            {
+                /* Raise the exception */
+                Status = ZwRaiseException(ExceptionRecord, &Context, FALSE);
+            }
+            else
+            {
+                /* Continue, go back to previous context */
+                Status = ZwContinue(&Context, FALSE);
+            }
+        }
+    }
+
+    /* If we returned, raise a status */
+    RtlRaiseStatus(Status);
+}
+
