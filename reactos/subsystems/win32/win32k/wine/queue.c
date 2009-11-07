@@ -253,7 +253,7 @@ static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_inp
     if ((queue = alloc_object( &msg_queue_ops )))
     {
         queue->fd              = NULL;
-        ZwCreateEvent(&queue->wake_event, EVENT_ALL_ACCESS, NULL, NotificationEvent, FALSE);
+        ZwCreateEvent(&queue->wake_event, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, FALSE);
         /* Get a pointer to the object itself */
         ObReferenceObjectByHandle(queue->wake_event,
                                   EVENT_ALL_ACCESS,
@@ -338,7 +338,7 @@ static inline void set_queue_bits( struct msg_queue *queue, unsigned int bits )
     queue->changed_bits |= bits;
     if (is_signaled( queue ))
     {
-        KePulseEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
+        KeSetEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
     }
 }
 
@@ -914,7 +914,7 @@ static void msg_queue_poll_event( struct fd *fd, int event )
 
     if (event & (POLLERR | POLLHUP)) set_fd_events( fd, -1 );
     else set_fd_events( queue->fd, 0 );
-    KePulseEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
+    KeSetEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
 }
 
 static void thread_input_dump( struct object *obj, int verbose )
@@ -1686,7 +1686,7 @@ DECL_HANDLER(set_queue_mask)
             }
             else
             {
-                KePulseEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
+                KeSetEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
             }
         }
     }
