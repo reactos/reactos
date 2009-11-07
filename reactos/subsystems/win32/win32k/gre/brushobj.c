@@ -256,7 +256,7 @@ GreCreateHatchedBrush(INT iHatchStyle, COLORREF crColor)
     pBrush->hbmPattern = GreCreateBitmap(szPatSize, 0, BMF_1BPP, BMF_NOZEROINIT, NULL);
     GDIOBJ_SetOwnership(pBrush->hbmPattern, NULL);
     pPattern = SURFACE_Lock(pBrush->hbmPattern);
-    GreSetBitmapBits(pPattern, 8, (PVOID)HatchBrushes[iHatchStyle]);
+    GreSetBitmapBits(pPattern, 8 * sizeof(USHORT), (PVOID)HatchBrushes[iHatchStyle]);
     SURFACE_Unlock(pPattern);
 
     /* Set color to the reserved value */
