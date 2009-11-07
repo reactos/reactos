@@ -354,13 +354,18 @@ KiDebugTrapOrFaultKMode:
     push 0
     .allocstack 0x8
 
+    /* Reserve stack space for parameters */
+    sub rsp, 0x28
+    .allocstack 0x28
+
     /* Bugcheck code UNEXPECTED_KERNEL_MODE_TRAP */
     mov rcx, 0x0000007F
     
-    /* Specify double fault */
+    /* Set double fault parameters */
     mov rdx, 0x00000008
     mov r8, 0
     mov r9, 0
+    mov qword ptr [rsp + 0x20], 0
 
     call _KeBugCheckEx
 
