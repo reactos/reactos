@@ -3553,7 +3553,8 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                             }
                           else      /* otherwise try to move selection */
                             {
-                              MenuMoveSelection(Mt.OwnerWnd, &MenuInfo, ITEM_NEXT);
+                              MenuMoveSelection(Mt.OwnerWnd, &MenuInfo,
+                                            VK_DOWN == Msg.wParam ? ITEM_NEXT : ITEM_PREV);
                             }
                         }
                       break;
