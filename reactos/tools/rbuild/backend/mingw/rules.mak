@@ -65,7 +65,7 @@ $$(CPPDEFINES) $$($(5)$(4)DEFINES) $$($(5)$(4)FLAGS)
 
 #(module, flags, includes, compiler, prefix)
 RBUILD_compiler_flags_with_includes=\
-$$($(5)$(4)INCLUDES)
+$$($(5)$(4)INCLUDES) \
 $(3) \
 $$($(1)_$(4)INCLUDES) $$($(1)_CPPINCLUDES) \
 $$(MODULETYPE$($(1)_TYPE)_$(4)INCLUDES) \
@@ -80,7 +80,7 @@ $$($(5)$(4)FLAGS)
 
 #(module, flags, includes, compiler, prefix)
 RBUILD_compiler_flags_cpp=\
-$$($(5)$(4)INCLUDES) $$(CPPINCLUDES)
+$$($(5)$(4)INCLUDES) $$(CPPINCLUDES) \
 $(3) \
 $$($(1)_$(4)INCLUDES) $$($(1)_CPPINCLUDES) \
 $$(MODULETYPE$($(1)_TYPE)_$(4)INCLUDES) $$(MODULETYPE$($(1)_TYPE)_CPPINCLUDES) \
@@ -106,6 +106,7 @@ RBUILD_spec_flags=${call RBUILD_compiler_flags,$(1),$(2),,SPEC}
 RBUILD_midlflags=${call RBUILD_compiler_flags_builtin_cpp,$(1),$(2),$(3),MIDL}
 RBUILD_host_cflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),C,HOST_}
 RBUILD_host_cxxflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),CXX,HOST_}
+RBUILD_ldflags=${call RBUILD_compiler_flags,$(1),$(2),,LD}
 
 RCFLAG_UNICODE:=-DUNICODE -D_UNICODE
 
