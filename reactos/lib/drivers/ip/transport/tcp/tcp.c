@@ -17,8 +17,6 @@ static BOOLEAN TCPInitialized = FALSE;
 static NPAGED_LOOKASIDE_LIST TCPSegmentList;
 LIST_ENTRY SignalledConnectionsList;
 KSPIN_LOCK SignalledConnectionsLock;
-LIST_ENTRY SleepingThreadsList;
-FAST_MUTEX SleepingThreadsLock;
 RECURSIVE_MUTEX TCPLock;
 PORT_SET TCPPorts;
 
@@ -403,11 +401,6 @@ void TCPFree( void *ClientData,
               void *data, OSK_PCHAR file, OSK_UINT line );
 void TCPMemShutdown( void );
 
-int TCPSleep( void *ClientData, void *token, int priority, char *msg,
-              int tmio );
-
-void TCPWakeup( void *ClientData, void *token );
-
 OSKITTCP_EVENT_HANDLERS EventHandlers = {
     NULL,             /* Client Data */
     TCPSocketState,   /* SocketState */
@@ -415,8 +408,8 @@ OSKITTCP_EVENT_HANDLERS EventHandlers = {
     TCPFindInterface, /* FindInterface */
     TCPMalloc,        /* Malloc */
     TCPFree,          /* Free */
-    TCPSleep,         /* Sleep */
-    TCPWakeup         /* Wakeup */
+    NULL,             /* Sleep */
+    NULL,             /* Wakeup */
 };
 
 static KEVENT TimerLoopEvent;
@@ -490,9 +483,7 @@ NTSTATUS TCPStartup(VOID)
     NTSTATUS Status;
 
     TcpipRecursiveMutexInit( &TCPLock );
-    ExInitializeFastMutex( &SleepingThreadsLock );
     KeInitializeSpinLock( &SignalledConnectionsLock );
-    InitializeListHead( &SleepingThreadsList );
     InitializeListHead( &SignalledConnectionsList );
     Status = TCPMemStartup();
     if ( ! NT_SUCCESS(Status) ) {
