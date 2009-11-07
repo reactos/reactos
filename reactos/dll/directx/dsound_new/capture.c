@@ -18,7 +18,6 @@ typedef struct
     LPFILTERINFO Filter;
 }CDirectSoundCaptureImpl, *LPCDirectSoundCaptureImpl;
 
-
 HRESULT
 WINAPI
 CDirectSoundCapture_fnQueryInterface(
@@ -100,25 +99,20 @@ CDirectSoundCapture_fnCreateCaptureBuffer(
 
     if (!lpcDSBufferDesc  || !ppDSCBuffer || pUnkOuter != NULL)
     {
-        DPRINT("Invalid parameter %p %p %p\n", lpcDSBufferDesc, ppDSCBuffer, pUnkOuter);
+        /* invalid param */
         return DSERR_INVALIDPARAM;
     }
 
     /* check buffer description */
-    if ((lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC) && lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC1)) || lpcDSBufferDesc->dwReserved != 0)
+    if ((lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC) && lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC1)) || 
+        lpcDSBufferDesc->dwReserved != 0 || lpcDSBufferDesc->dwBufferBytes == 0 || lpcDSBufferDesc->lpwfxFormat == NULL)
     {
-        DPRINT("Invalid buffer description size %u expected %u or %u dwReserved %u\n", lpcDSBufferDesc->dwSize, sizeof(DSBUFFERDESC1), sizeof(DSBUFFERDESC), lpcDSBufferDesc->dwReserved);
+        /* invalid buffer description */
         return DSERR_INVALIDPARAM;
     }
 
-    /* sanity check */
-    ASSERT(lpcDSBufferDesc->lpwfxFormat);
-
-    if (lpcDSBufferDesc->lpwfxFormat)
-    {
-        DPRINT("This %p wFormatTag %x nChannels %u nSamplesPerSec %u nAvgBytesPerSec %u NBlockAlign %u wBitsPerSample %u cbSize %u\n",
-               This, lpcDSBufferDesc->lpwfxFormat->wFormatTag, lpcDSBufferDesc->lpwfxFormat->nChannels, lpcDSBufferDesc->lpwfxFormat->nSamplesPerSec, lpcDSBufferDesc->lpwfxFormat->nAvgBytesPerSec, lpcDSBufferDesc->lpwfxFormat->nBlockAlign, lpcDSBufferDesc->lpwfxFormat->wBitsPerSample, lpcDSBufferDesc->lpwfxFormat->cbSize);
-    }
+    DPRINT("This %p wFormatTag %x nChannels %u nSamplesPerSec %u nAvgBytesPerSec %u NBlockAlign %u wBitsPerSample %u cbSize %u\n",
+           This, lpcDSBufferDesc->lpwfxFormat->wFormatTag, lpcDSBufferDesc->lpwfxFormat->nChannels, lpcDSBufferDesc->lpwfxFormat->nSamplesPerSec, lpcDSBufferDesc->lpwfxFormat->nAvgBytesPerSec, lpcDSBufferDesc->lpwfxFormat->nBlockAlign, lpcDSBufferDesc->lpwfxFormat->wBitsPerSample, lpcDSBufferDesc->lpwfxFormat->cbSize);
 
     hResult = NewDirectSoundCaptureBuffer((LPDIRECTSOUNDCAPTUREBUFFER8*)ppDSCBuffer, This->Filter, lpcDSBufferDesc);
     return hResult;

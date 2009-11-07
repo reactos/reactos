@@ -252,4 +252,19 @@ NewDirectSoundCaptureBuffer(
     LPFILTERINFO Filter,
     LPCDSCBUFFERDESC lpcDSBufferDesc);
 
+/* notify.c */
+VOID
+DoNotifyPositionEvents(
+    LPDIRECTSOUNDNOTIFY iface,
+    DWORD OldPosition,
+    DWORD NewPosition);
+
+HRESULT
+NewDirectSoundNotify(
+    LPDIRECTSOUNDNOTIFY * Notify,
+    BOOL bLoop,
+    BOOL bMix,
+    HANDLE hPin,
+    DWORD BufferSize);
+
 #endif

@@ -22,6 +22,7 @@
 	<file>dsound.c</file>
 	<file>enum.c</file>
 	<file>misc.c</file>
+	<file>notify.c</file>
 	<file>primary.c</file>
 	<file>property.c</file>
 	<file>regsvr.c</file>

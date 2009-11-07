@@ -15,11 +15,14 @@ const GUID KSMEDIUMSETID_Standard               = {0x4747B320L, 0x62CE, 0x11CF, 
 const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
 const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+const GUID KSEVENTSETID_LoopedStreaming        = {0x4682B940L, 0xC6EF, 0x11D0, {0x96, 0xD8, 0x00, 0xAA, 0x00, 0x51, 0xE5, 0x1D}};
+
 
 
 typedef struct
 {
     IDirectSoundCaptureBuffer8Vtbl *lpVtbl;
+
     LONG ref;
     LPFILTERINFO Filter;
     HANDLE hPin;
@@ -35,6 +38,8 @@ typedef struct
     HANDLE hStopEvent;
     volatile LONG StopMixerThread;
     volatile LONG CurrentMixPosition;
+
+    LPDIRECTSOUNDNOTIFY Notify;
 
 }CDirectSoundCaptureBufferImpl, *LPCDirectSoundCaptureBufferImpl;
 
@@ -108,6 +113,13 @@ MixerThreadRoutine(
             BufferPosition += BytesWritten;
             DPRINT("MixPosition %u BufferPosition %u BytesRead %u BytesWritten %u MixLength %u BufferLength %u\n", MixPosition, BufferPosition, BytesRead, BytesWritten, MixLength, BufferLength);
         }
+
+        /* Notify Events */
+        if (This->Notify)
+        {
+            DoNotifyPositionEvents(This->Notify, This->CurrentMixPosition, BufferPosition);
+        }
+
         /* update offset */
         InterlockedExchange(&This->CurrentMixPosition, (LONG)BufferPosition);
 
@@ -143,6 +155,25 @@ IDirectSoundCaptureBufferImpl_QueryInterface(
     {
         *ppobj = (LPVOID)&This->lpVtbl;
         InterlockedIncrement(&This->ref);
+        return S_OK;
+    }
+
+    /* check if the interface is supported */
+    if (IsEqualIID(riid, &IID_IDirectSoundNotify))
+    {
+        if (!This->Notify)
+        {
+            HRESULT hr = NewDirectSoundNotify(&This->Notify, This->bLoop, This->bMix, This->hPin, This->BufferSize);
+            if (FAILED(hr))
+                return hr;
+
+            *ppobj = (LPVOID)This->Notify;
+            return S_OK;
+        }
+
+        /* increment reference count on existing notify object */
+        IDirectSoundNotify_AddRef(This->Notify);
+        *ppobj = (LPVOID)This->Notify;
         return S_OK;
     }
 
@@ -648,6 +679,8 @@ static IDirectSoundCaptureBuffer8Vtbl vt_DirectSoundCaptureBuffer8 =
     IDirectSoundCaptureBufferImpl_GetObjectInPath,
     IDirectSoundCaptureBufferImpl_GetFXStatus
 };
+
+
 
 
 HRESULT
