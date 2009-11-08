@@ -325,17 +325,17 @@
 		<directory name="kd64">
 			<if property="ARCH" value="i386">
 				<directory name="i386">
-					<file>kdsup.c</file>
+					<file>kdx86.c</file>
 				</directory>
 			</if>
 			<if property="ARCH" value="amd64">
 				<directory name="amd64">
-					<file>kdsup.c</file>
+					<file>kdx64.c</file>
 				</directory>
 			</if>
 			<if property="ARCH" value="arm">
 				<directory name="arm">
-					<file>kdsup.c</file>
+					<file>kdarm.c</file>
 				</directory>
 			</if>
 			<file>kdapi.c</file>
