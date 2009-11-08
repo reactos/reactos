@@ -1,6 +1,8 @@
 #ifndef __WIN32K_BRUSHOBJ_H
 #define __WIN32K_BRUSHOBJ_H
 
+struct _DC;
+
 /* GDI Brush Attributes */
 #define GDIBRUSH_NEED_FG_CLR        0x0001
 #define GDIBRUSH_NEED_BK_CLR        0x0002 /* Background color is needed */
@@ -37,6 +39,8 @@ typedef struct _BRUSHGDI
     ULONG dwStyleCount;
     HBITMAP hbmPattern;
     XLATEOBJ *XlateObject;
+    COLORREF crForegroundClr;
+    COLORREF crBackgroundClr;
 } BRUSHGDI, *PBRUSHGDI;
 
 PBRUSHGDI NTAPI
@@ -66,5 +70,11 @@ GreCreateNullBrush();
 
 VOID NTAPI
 GreFreeBrush(PBRUSHGDI pBrush);
+
+SURFOBJ * NTAPI
+GreRealizeBrush(PBRUSHGDI GdiBrush, PSURFACE psurfPattern, SURFOBJ *OutputObj);
+
+VOID NTAPI
+GreUpdateBrush(PBRUSHGDI pBrush, struct _DC *pDc);
 
 #endif

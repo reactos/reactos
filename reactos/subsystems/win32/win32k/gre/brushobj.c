@@ -262,6 +262,9 @@ GreCreateHatchedBrush(INT iHatchStyle, COLORREF crColor)
     /* Set color to the reserved value */
     pBrush->BrushObj.iSolidColor = 0xFFFFFFFF;
 
+    /* Set real brush color */
+    pBrush->crForegroundClr = crColor;
+
     /* Return newly created brush */
     return pBrush;
 }
@@ -279,6 +282,54 @@ GreFreeBrush(PBRUSHGDI pBrush)
 
     /* Free the memory */
     EngFreeMem(pBrush);
+}
+
+SURFOBJ *
+NTAPI
+GreRealizeBrush(PBRUSHGDI GdiBrush, PSURFACE psurfPattern, SURFOBJ *OutputObj)
+{
+    SURFOBJ *psoRealize;
+    HBITMAP hbmpRealize;
+    POINTL ptlSrc = {0, 0};
+    RECTL rclDest;
+    HPALETTE hPalette;
+    LONG lWidth;
+
+    rclDest = (RECTL){0, 0, psurfPattern->SurfObj.sizlBitmap.cx, psurfPattern->SurfObj.sizlBitmap.cy};
+
+    hPalette = NULL;//pDC->pBitmap->hDIBPalette; // FIXME: use dest surface palette!
+    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
+
+    lWidth = DIB_GetDIBWidthBytes(psurfPattern->SurfObj.sizlBitmap.cx, BitsPerFormat(OutputObj->iBitmapFormat));
+    hbmpRealize = EngCreateBitmap(psurfPattern->SurfObj.sizlBitmap,
+                                  lWidth,
+                                  OutputObj->iBitmapFormat,
+                                  BMF_NOZEROINIT,
+                                  NULL);
+
+
+    psoRealize = EngLockSurface(hbmpRealize);
+    if (!psoRealize)
+    {
+        EngDeleteSurface(hbmpRealize);
+        return FALSE;
+    }
+
+    GdiBrush->XlateObject = IntEngCreateSrcMonoXlate(hPalette, GdiBrush->crBackgroundClr, GdiBrush->crForegroundClr);
+
+    EngCopyBits(psoRealize, &psurfPattern->SurfObj, NULL, GdiBrush->XlateObject, &rclDest, &ptlSrc);
+
+    EngUnlockSurface(psoRealize);
+
+    return psoRealize;
+}
+
+VOID
+NTAPI
+GreUpdateBrush(PBRUSHGDI pBrush, PDC pDc)
+{
+    /* Update background color, important for hatch brushes */
+    pBrush->crBackgroundClr = pDc->crBackgroundClr;
 }
 
 /* EOF */

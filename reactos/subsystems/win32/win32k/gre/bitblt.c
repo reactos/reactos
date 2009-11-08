@@ -307,6 +307,8 @@ GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
         BrushOrigin.x = pDC->ptBrushOrg.x + pDC->rcDcRect.left;
         BrushOrigin.y = pDC->ptBrushOrg.y + pDC->rcDcRect.top;
 
+        GreUpdateBrush(pDC->pFillBrush, pDC);
+
         bRet = GrepBitBltEx(
             &pDC->pBitmap->SurfObj,
             NULL,

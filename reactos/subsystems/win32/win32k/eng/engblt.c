@@ -210,7 +210,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
         GdiBrush = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
         if ((psurfPattern = SURFACE_Lock(GdiBrush->hbmPattern)))
         {
-            BltInfo.PatternSurface = &psurfPattern->SurfObj;
+            BltInfo.PatternSurface = GreRealizeBrush(GdiBrush, psurfPattern, OutputObj);
         }
         else
         {
