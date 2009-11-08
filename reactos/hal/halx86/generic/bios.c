@@ -26,14 +26,6 @@ ULONG HalpSavedEsp0;
 #define GetPdeAddress(x) (PHARDWARE_PTE)(((((ULONG_PTR)(x)) >> 22) << 2) + 0xC0300000)
 #define GetPteAddress(x) (PHARDWARE_PTE)(((((ULONG_PTR)(x)) >> 12) << 2) + 0xC0000000)
 
-#if !defined(CONFIG_SMP)
-#define GetPteWriteBit(PTE) ((PTE)->Write)
-#define SetPteWriteBit(PTE, x) ((PTE)->Write = (x))
-#else
-#define GetPteWriteBit(PTE) ((PTE)->Writable)
-#define SetPteWriteBit(PTE, x) ((PTE)->Writable = (x))
-#endif
-
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -231,10 +223,10 @@ HalpBiosDisplayReset(VOID)
     {
         /* Get the PTE and check if it is has been write protected yet  */
         IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
-        if (GetPteWriteBit(IdtPte) == 0)
+        if (IdtPte->Write == 0)
         {
             /* Remove the protection and flush the TLB */
-            SetPteWriteBit(IdtPte, 1);
+            IdtPte->Write = 1;
             __writecr3(__readcr3());
             RestoreWriteProtection = TRUE;
         }
@@ -257,7 +249,7 @@ HalpBiosDisplayReset(VOID)
     {
         /* Get the PTE, restore the write protection and flush the TLB */
         IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
-        SetPteWriteBit(IdtPte, 0);
+        IdtPte->Write = 0;
         __writecr3(__readcr3());
     }
     
