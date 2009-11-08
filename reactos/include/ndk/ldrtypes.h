@@ -52,7 +52,7 @@ Author:
 #define LDRP_SYSTEM_MAPPED                      0x01000000
 #define LDRP_IMAGE_VERIFYING                    0x02000000
 #define LDRP_DRIVER_DEPENDENT_DLL               0x04000000
-#define LDRP_ENTRY_NATIVE                       0x08800000
+#define LDRP_ENTRY_NATIVE                       0x08000000
 #define LDRP_REDIRECTED                         0x10000000
 #define LDRP_NON_PAGED_DEBUG_INFO               0x20000000
 #define LDRP_MM_LOADED                          0x40000000
@@ -112,9 +112,12 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     union
     {
         LIST_ENTRY HashLinks;
-        PVOID SectionPointer;
+        struct
+        {
+            PVOID SectionPointer;
+            ULONG CheckSum;
+        };
     };
-    ULONG CheckSum;
     union
     {
         ULONG TimeDateStamp;

@@ -112,8 +112,17 @@ KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
         }
         else
         {
-            /* FIXME: Check if it's session space */
-            Memory->AddressSpace = DBGKD_QUERY_MEMORY_KERNEL;
+            /* Check if it's session space */
+            if (MmIsSessionAddress((PVOID)(ULONG_PTR)Memory->Address))
+            {
+                /* It is */
+                Memory->AddressSpace = DBGKD_QUERY_MEMORY_SESSION;
+            }
+            else
+            {
+                /* Not session space but some other kernel memory */
+                Memory->AddressSpace = DBGKD_QUERY_MEMORY_KERNEL;
+            }
         }
 
         /* Set flags */
@@ -1642,28 +1651,12 @@ KdpQueryPerformanceCounter(IN PKTRAP_FRAME TrapFrame)
     return KeQueryPerformanceCounter(NULL);
 }
 
-NTSTATUS
-NTAPI
-KdpAllowDisable(VOID)
-{
-    /* Check if we are on MP */
-    if (KeNumberProcessors > 1)
-    {
-        /* TODO */
-        KdpDprintf("KdpAllowDisable: SMP UNHANDLED\n");
-        while (TRUE);
-    }
-
-    /* Allow disable */
-    return STATUS_SUCCESS;
-}
-
 BOOLEAN
 NTAPI
 KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
                 IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    BOOLEAN Entered;
+    BOOLEAN Enable;
 
     /* Check if we have a trap frame */
     if (TrapFrame)
@@ -1683,7 +1676,7 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     KeGetCurrentPrcb()->DebuggerSavedIRQL = KeGetCurrentIrql();
 
     /* Freeze all CPUs */
-    Entered = KeFreezeExecution(TrapFrame, ExceptionFrame);
+    Enable = KeFreezeExecution(TrapFrame, ExceptionFrame);
 
     /* Lock the port, save the state and set debugger entered */
     KdpPortLocked = KeTryToAcquireSpinLockAtDpcLevel(&KdpDebuggerLock);
@@ -1707,13 +1700,13 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     /* Make sure we acquired the port */
     if (!KdpPortLocked) KdpDprintf("Port lock was not acquired!\n");
 
-    /* Return enter state */
-    return Entered;
+    /* Return if interrupts needs to be re-enabled */
+    return Enable;
 }
 
 VOID
 NTAPI
-KdExitDebugger(IN BOOLEAN Entered)
+KdExitDebugger(IN BOOLEAN Enable)
 {
     ULONG TimeSlip;
 
@@ -1722,7 +1715,7 @@ KdExitDebugger(IN BOOLEAN Entered)
     if (KdpPortLocked) KdpPortUnlock();
 
     /* Unfreeze the CPUs */
-    KeThawExecution(Entered);
+    KeThawExecution(Enable);
 
     /* Compare time with the one from KdEnterDebugger */
     if (!KdTimerStop.QuadPart)
@@ -2048,7 +2041,7 @@ BOOLEAN
 NTAPI
 KdRefreshDebuggerNotPresent(VOID)
 {
-    BOOLEAN Entered, DebuggerNotPresent;
+    BOOLEAN Enable, DebuggerNotPresent;
 
     /* Check if the debugger is completely disabled */
     if (KdPitchDebugger)
@@ -2058,7 +2051,7 @@ KdRefreshDebuggerNotPresent(VOID)
     }
 
     /* Enter the debugger */
-    Entered = KdEnterDebugger(NULL, NULL);
+    Enable = KdEnterDebugger(NULL, NULL);
 
     /*
      * Attempt to send a string to the debugger to refresh the
@@ -2070,7 +2063,7 @@ KdRefreshDebuggerNotPresent(VOID)
     DebuggerNotPresent = KdDebuggerNotPresent;
 
     /* Exit the debugger and return the state */
-    KdExitDebugger(Entered);
+    KdExitDebugger(Enable);
     return DebuggerNotPresent;
 }
 

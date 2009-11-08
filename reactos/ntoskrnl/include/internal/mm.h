@@ -511,6 +511,15 @@ MmDbgCopyMemory(
     IN ULONG Flags
 );
 
+//
+// Determines if a given address is a session address
+//
+BOOLEAN
+NTAPI
+MmIsSessionAddress(
+    IN PVOID Address
+);
+
 /* marea.c *******************************************************************/
 
 NTSTATUS

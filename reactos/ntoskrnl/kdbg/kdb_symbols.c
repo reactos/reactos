@@ -529,10 +529,9 @@ KdbInitialize(
         LdrEntry = CONTAINING_RECORD(PsLoadedModuleList.Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
         KdbSymProcessSymbols(LdrEntry);
 
-        /* Also load them for HAL.DLL.
-           This module has no fixed position, so search for it. */
-        if(KdbpSymFindModule(NULL, L"HAL.DLL", -1, &LdrEntry))
-            KdbSymProcessSymbols(LdrEntry);
+        /* Also load them for HAL.DLL. */
+        LdrEntry = CONTAINING_RECORD(PsLoadedModuleList.Flink->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        KdbSymProcessSymbols(LdrEntry);
 
         KdbpSymbolsInitialized = TRUE;
     }

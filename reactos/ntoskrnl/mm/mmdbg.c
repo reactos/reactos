@@ -20,6 +20,16 @@ BOOLEAN MiDbgReadyForPhysical = FALSE;
 
 /* FUNCTIONS ******************************************************************/
 
+BOOLEAN
+NTAPI
+MmIsSessionAddress(IN PVOID Address)
+{
+    //
+    // No session space support yet
+    //
+    return FALSE;
+}
+
 PVOID
 NTAPI
 MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
@@ -217,6 +227,11 @@ MmDbgCopyMemory(IN ULONG64 Address,
                        TargetAddress);
             return STATUS_UNSUCCESSFUL;
         }
+
+        //
+        // No session space support yet
+        //
+        ASSERT(MmIsSessionAddress(TargetAddress) == FALSE);
     }
 
     //

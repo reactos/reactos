@@ -22,20 +22,24 @@
 //
 // EBX/EDI on x86
 //
-#define KdpGetFirstParameter(Context)  ((Context)->Ebx)
-#define KdpGetSecondParameter(Context) ((Context)->Edi)
+#define KdpGetParameterThree(Context)  ((Context)->Ebx)
+#define KdpGetParameterFour(Context)   ((Context)->Edi)
 
 #elif defined(_AMD64_)
 
 //
 // R8/R9 on AMD64
 //
-#define KdpGetFirstParameter(Context)  ((Context)->R8)
-#define KdpGetSecondParameter(Context) ((Context)->R9)
+#define KdpGetParameterThree(Context)  ((Context)->R8)
+#define KdpGetParameterFour(Context)   ((Context)->R9)
 
 #elif defined(_ARM_)
 
-#error Yo Ninjas!
+//
+// R3/R4 on ARM
+//
+#define KdpGetParameterThree(Context)  ((Context)->R3)
+#define KdpGetParameterFour(Context)   ((Context)->R4)
 
 #else
 #error Unsupported Architecture
@@ -52,7 +56,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
           IN KPROCESSOR_MODE PreviousMode,
           IN BOOLEAN SecondChanceException)
 {
-    BOOLEAN Entered, Status;
+    BOOLEAN Enable, Handled;
     PKPRCB Prcb;
     NTSTATUS ExceptionCode = ExceptionRecord->ExceptionCode;
 
@@ -95,7 +99,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Enter the debugger */
-    Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
+    Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
 
     /*
      * Get the KPRCB and save the CPU Control State manually instead of
@@ -108,10 +112,10 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
                   sizeof(CONTEXT));
 
     /* Report the new state */
-    Status = KdpReportExceptionStateChange(ExceptionRecord,
-                                           &Prcb->ProcessorState.
-                                           ContextFrame,
-                                           SecondChanceException);
+    Handled = KdpReportExceptionStateChange(ExceptionRecord,
+                                            &Prcb->ProcessorState.
+                                            ContextFrame,
+                                            SecondChanceException);
 
     /* Now restore the processor state, manually again. */
     RtlCopyMemory(ContextRecord,
@@ -120,9 +124,9 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     KiRestoreProcessorControlState(&Prcb->ProcessorState);
 
     /* Exit the debugger and clear the CTRL-C state */
-    KdExitDebugger(Entered);
+    KdExitDebugger(Enable);
     KdpControlCPressed = FALSE;
-    return Status;
+    return Handled;
 }
 
 BOOLEAN
@@ -136,7 +140,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
 {
     BOOLEAN Unload = FALSE;
     ULONG_PTR ProgramCounter;
-    BOOLEAN Status = FALSE;
+    BOOLEAN Handled;
     NTSTATUS ReturnStatus;
     USHORT ReturnLength;
 
@@ -158,8 +162,8 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_PRINT:
 
                 /* Call the worker routine */
-                ReturnStatus = KdpPrint((ULONG)KdpGetFirstParameter(ContextRecord),
-                                        (ULONG)KdpGetSecondParameter(ContextRecord),
+                ReturnStatus = KdpPrint((ULONG)KdpGetParameterThree(ContextRecord),
+                                        (ULONG)KdpGetParameterFour(ContextRecord),
                                         (LPSTR)ExceptionRecord->
                                         ExceptionInformation[1],
                                         (USHORT)ExceptionRecord->
@@ -167,7 +171,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                                         PreviousMode,
                                         TrapFrame,
                                         ExceptionFrame,
-                                        &Status);
+                                        &Handled);
 
                 /* Update the return value for the caller */
                 KeSetContextReturnRegister(ContextRecord, ReturnStatus);
@@ -181,12 +185,12 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                                          ExceptionInformation[1],
                                          (USHORT)ExceptionRecord->
                                          ExceptionInformation[2],
-                                         (LPSTR)KdpGetFirstParameter(ContextRecord),
-                                         (USHORT)KdpGetSecondParameter(ContextRecord),
+                                         (LPSTR)KdpGetParameterThree(ContextRecord),
+                                         (USHORT)KdpGetParameterFour(ContextRecord),
                                          PreviousMode,
                                          TrapFrame,
                                          ExceptionFrame);
-                Status = TRUE;
+                Handled = TRUE;
 
                 /* Update the return value for the caller */
                 KeSetContextReturnRegister(ContextRecord, ReturnLength);
@@ -211,7 +215,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                           ContextRecord,
                           TrapFrame,
                           ExceptionFrame);
-                Status = TRUE;
+                Handled = TRUE;
                 break;
 
             /* DbgCommandString */
@@ -226,12 +230,13 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                                  ContextRecord,
                                  TrapFrame,
                                  ExceptionFrame);
-                Status = TRUE;
+                Handled = TRUE;
 
             /* Anything else, do nothing */
             default:
 
-                /* Get out */
+                /* Invalid debug service! Don't handle this! */
+                Handled = FALSE;
                 break;
         }
 
@@ -249,16 +254,16 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     else
     {
         /* Call the worker routine */
-        Status = KdpReport(TrapFrame,
-                           ExceptionFrame,
-                           ExceptionRecord,
-                           ContextRecord,
-                           PreviousMode,
-                           SecondChanceException);
+        Handled = KdpReport(TrapFrame,
+                            ExceptionFrame,
+                            ExceptionRecord,
+                            ContextRecord,
+                            PreviousMode,
+                            SecondChanceException);
     }
 
     /* Return TRUE or FALSE to caller */
-    return Status;
+    return Handled;
 }
 
 BOOLEAN

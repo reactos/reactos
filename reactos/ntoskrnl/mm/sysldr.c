@@ -32,7 +32,6 @@ LIST_ENTRY MmLoadedUserImageList;
 KSPIN_LOCK PsLoadedModuleSpinLock;
 ULONG_PTR PsNtosImageBase;
 KMUTANT MmSystemLoadLock;
-extern ULONG NtGlobalFlag;
 
 PVOID MmUnloadedDrivers;
 PVOID MmLastUnloadedDrivers;
@@ -997,7 +996,7 @@ CheckDllState:
                 /* Now add the import name and null-terminate it */
                 RtlAppendStringToString((PSTRING)&DllName,
                                         (PSTRING)&NameString);
-                DllName.Buffer[(DllName.MaximumLength - 1) / 2] = UNICODE_NULL;
+                DllName.Buffer[(DllName.MaximumLength - 1) /  sizeof(WCHAR)] = UNICODE_NULL;
 
                 /* Load the image */
                 Status = MmLoadSystemImage(&DllName,
@@ -1220,7 +1219,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Debug info */
         DPRINT("[Mm0]: Driver at: %p ending at: %p for module: %wZ\n",
                 LdrEntry->DllBase,
-                (ULONG_PTR)LdrEntry->DllBase+ LdrEntry->SizeOfImage,
+                (ULONG_PTR)LdrEntry->DllBase + LdrEntry->SizeOfImage,
                 &LdrEntry->FullDllName);
 
         /* Skip kernel and HAL */
@@ -1315,7 +1314,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                        LdrEntry->SizeOfImage);
 
         /* Update the loader entry */
-        LdrEntry->Flags |= 0x01000000;
+        LdrEntry->Flags |= LDRP_SYSTEM_MAPPED;
         LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)NewImageAddress +
                                 NtHeader->OptionalHeader.AddressOfEntryPoint);
         LdrEntry->SizeOfImage = LdrEntry->SizeOfImage;
@@ -1551,9 +1550,6 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
         if (!PsGetCurrentProcess()->ProcessInSession) return STATUS_NO_MEMORY;
     }
 
-    if (ModuleObject) *ModuleObject = NULL;
-    if (ImageBaseAddress) *ImageBaseAddress = NULL;
-
     /* Allocate a buffer we'll use for names */
     Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
@@ -1644,8 +1640,8 @@ LoaderScan:
         if (!Flags)
         {
             /* It wasn't, so just return the data */
-            if (ModuleObject) *ModuleObject = LdrEntry;
-            if (ImageBaseAddress) *ImageBaseAddress = LdrEntry->DllBase;
+            *ModuleObject = LdrEntry;
+            *ImageBaseAddress = LdrEntry->DllBase;
             Status = STATUS_IMAGE_ALREADY_LOADED;
         }
         else
@@ -1818,7 +1814,7 @@ LoaderScan:
         (NtHeader->OptionalHeader.MajorImageVersion >= 5))
     {
         /* Mark this image as a native image */
-        LdrEntry->Flags |= 0x80000000;
+        LdrEntry->Flags |= LDRP_ENTRY_NATIVE;
     }
 
     /* Setup the rest of the entry */
@@ -1838,7 +1834,7 @@ LoaderScan:
     RtlCopyMemory(LdrEntry->BaseDllName.Buffer,
                   BaseName.Buffer,
                   BaseName.Length);
-    LdrEntry->BaseDllName.Buffer[BaseName.Length / 2] = UNICODE_NULL;
+    LdrEntry->BaseDllName.Buffer[BaseName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Now allocate the full name */
     LdrEntry->FullDllName.Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -1861,7 +1857,7 @@ LoaderScan:
         RtlCopyMemory(LdrEntry->FullDllName.Buffer,
                       PrefixName.Buffer,
                       PrefixName.Length);
-        LdrEntry->FullDllName.Buffer[PrefixName.Length / 2] = UNICODE_NULL;
+        LdrEntry->FullDllName.Buffer[PrefixName.Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
 
     /* Add the entry */
@@ -1919,11 +1915,11 @@ LoaderScan:
         PspRunLoadImageNotifyRoutines(FileName, NULL, &ImageInfo);
     }
 
-    /* Check if there's symbols */
-#ifdef KDBG
-    /* If KDBG is defined, then we always have symbols */
+#if defined(KDBG) || defined(_WINKD_)
+    /* MiCacheImageSymbols doesn't detect rossym */
     if (TRUE)
 #else
+    /* Check if there's symbols */
     if (MiCacheImageSymbols(LdrEntry->DllBase))
 #endif
     {
@@ -1960,8 +1956,8 @@ LoaderScan:
     ASSERT(Section == NULL);
 
     /* Return pointers */
-    if (ModuleObject) *ModuleObject = LdrEntry;
-    if (ImageBaseAddress) *ImageBaseAddress = LdrEntry->DllBase;
+    *ModuleObject = LdrEntry;
+    *ImageBaseAddress = LdrEntry->DllBase;
 
 Quickie:
     /* If we have a file handle, close it */
@@ -1995,7 +1991,6 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
     ANSI_STRING AnsiRoutineName;
     NTSTATUS Status;
     PLIST_ENTRY NextEntry;
-    extern LIST_ENTRY PsLoadedModuleList;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN Found = FALSE;
     UNICODE_STRING KernelName = RTL_CONSTANT_STRING(L"ntoskrnl.exe");

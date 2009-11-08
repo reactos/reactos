@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/kd64/i386/kdsup.c
+ * FILE:            ntoskrnl/kd64/i386/kdx86.c
  * PURPOSE:         KD support routines for x86
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
@@ -420,4 +420,29 @@ KdpSysCheckLowMemory(IN ULONG Flags)
 {
     /* Stubbed as we don't support PAE */
     return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+KdpAllowDisable(VOID)
+{
+    LONG i;
+    ULONG Dr7;
+
+    /* Loop every processor */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        /* Get its DR7 */
+        Dr7 =  KiProcessorBlock[i]->ProcessorState.SpecialRegisters.KernelDr7;
+
+        /* Check if any processor breakpoints are active */
+        if (Dr7 != 0)
+        {
+            /* We can't allow running without a debugger then */
+            return STATUS_ACCESS_DENIED;
+        }
+    }
+
+    /* No processor breakpoints; allow disabling the debugger */
+    return STATUS_SUCCESS;
 }

@@ -71,10 +71,6 @@ typedef PCHAR
     IN ULONG Length
 );
 
-extern ULONG_PTR MmFreeLdrFirstKrnlPhysAddr;
-extern ULONG_PTR MmFreeLdrLastKrnlPhysAddr;
-extern ULONG_PTR MmFreeLdrLastKernelAddress;
-
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
@@ -82,18 +78,10 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER KeBootTime;
 extern ULONGLONG KeBootTimeBias;
 extern BOOLEAN ExCmosClockIsSane;
-extern ULONG KeI386NpxPresent;
-extern ULONG KeI386XMMIPresent;
-extern ULONG KeI386FxsrPresent;
-extern ULONG KiMXCsrMask;
-extern ULONG KeI386CpuType;
-extern ULONG KeI386CpuStep;
 extern ULONG KeProcessorArchitecture;
 extern ULONG KeProcessorLevel;
 extern ULONG KeProcessorRevision;
 extern ULONG KeFeatureBits;
-extern ULONG Ke386GlobalPagesEnabled;
-extern BOOLEAN KiI386PentiumLockErrataPresent;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
@@ -105,17 +93,6 @@ extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;
 extern ULONG KiUnexpectedEntrySize;
-#ifdef _M_IX86
-extern PVOID Ki386IopmSaveArea;
-extern ULONG KeI386EFlagsAndMaskV86;
-extern ULONG KeI386EFlagsOrMaskV86;
-extern BOOLEAN KeI386VirtualIntExtensions;
-extern KIDTENTRY KiIdt[];
-extern KGDTENTRY KiBootGdt[];
-extern KDESCRIPTOR KiGdtDescriptor;
-extern KDESCRIPTOR KiIdtDescriptor;
-extern KTSS KiBootTss;
-#endif
 extern UCHAR P0BootStack[];
 extern UCHAR KiDoubleFaultStack[];
 extern EX_PUSH_LOCK KernelAddressSpaceLock;
@@ -142,16 +119,10 @@ extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG KiIdleSummary;
-extern VOID __cdecl KiTrap19(VOID);
-extern VOID __cdecl KiTrap8(VOID);
-extern VOID __cdecl KiTrap2(VOID);
-extern VOID __cdecl KiFastCallEntry(VOID);
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
-extern UCHAR KiDebugRegisterTrapOffsets[9];
-extern UCHAR KiDebugRegisterContextOffsets[9];
 extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
 extern ULONG_PTR KiBugCheckData[5];
@@ -885,38 +856,9 @@ KiChainedDispatch(
 
 VOID
 NTAPI
-Ki386AdjustEsp0(
-    IN PKTRAP_FRAME TrapFrame
-);
-
-VOID
-NTAPI
-Ki386SetupAndExitToV86Mode(
-    OUT PTEB VdmTeb
-);
-
-VOID
-NTAPI
-KeI386VdmInitialize(
-    VOID
-);
-
-VOID
-NTAPI
 KiInitializeMachineType(
     VOID
 );
-
-//
-// We need to do major portability work
-//
-#ifdef _M_IX86
-VOID
-NTAPI
-KiFlushNPXState(
-    IN FLOATING_SAVE_AREA *SaveArea
-);
-#endif
 
 VOID
 NTAPI
@@ -969,45 +911,9 @@ KiGetUserModeStackAddress(
     VOID
 );
 
-ULONG_PTR
-NTAPI
-Ki386EnableGlobalPage(IN volatile ULONG_PTR Context);
-
-VOID
-NTAPI
-KiInitializePAT(VOID);
-
-VOID
-NTAPI
-KiInitializeMTRR(IN BOOLEAN FinalCpu);
-
-VOID
-NTAPI
-KiAmdK6InitializeMTRR(VOID);
-
-VOID
-NTAPI
-KiRestoreFastSyscallReturnState(VOID);
-
-ULONG_PTR
-NTAPI
-Ki386EnableDE(IN ULONG_PTR Context);
-
-ULONG_PTR
-NTAPI
-Ki386EnableFxsr(IN ULONG_PTR Context);
-
-ULONG_PTR
-NTAPI
-Ki386EnableXMMIExceptions(IN ULONG_PTR Context);
-
 VOID
 NTAPI
 KiInitMachineDependent(VOID);
-
-VOID
-NTAPI
-KiI386PentiumLockErrataFixup(VOID);
 
 BOOLEAN
 NTAPI
