@@ -247,7 +247,8 @@ SURFACE_Cleanup(PVOID ObjectBody)
         GDIOBJ_FreeObjByHandle(pSurf->hDIBPalette, GDI_OBJECT_TYPE_PALETTE);
 
     /* Free bitslock storage */
-    ExFreePoolWithTag(pSurf->pBitsLock, TAG_SURFOBJ);
+    if (pSurf->pBitsLock)
+        ExFreePoolWithTag(pSurf->pBitsLock, TAG_SURFOBJ);
 
     return TRUE;
 }
