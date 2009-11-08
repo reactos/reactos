@@ -96,6 +96,7 @@
 		<file>eventobj.c</file>
 		<file>except.c</file>
 		<file>freeldr.c</file>
+		<file>freeze.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>
 		<file>ipi.c</file>
