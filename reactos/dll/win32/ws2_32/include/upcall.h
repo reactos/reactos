@@ -34,7 +34,7 @@ SOCKET
 WSPAPI
 WPUCreateSocketHandle(
     IN  DWORD dwCatalogEntryId,
-    IN  DWORD dwContext,
+    IN  DWORD_PTR dwContext,
     OUT LPINT lpErrno);
 
 int
@@ -69,14 +69,14 @@ WSPAPI
 WPUQueryBlockingCallback(
     IN  DWORD dwCatalogEntryId,
     OUT LPBLOCKINGCALLBACK FAR* lplpfnCallback,
-    OUT LPDWORD lpdwContext,
+    OUT PDWORD_PTR lpdwContext,
     OUT LPINT lpErrno);
 
 INT
 WSPAPI
 WPUQuerySocketHandleContext(
     IN  SOCKET s,
-    OUT LPDWORD lpContext,
+    OUT PDWORD_PTR lpContext,
     OUT LPINT lpErrno);
 
 INT
@@ -84,7 +84,7 @@ WSPAPI
 WPUQueueApc(
     IN  LPWSATHREADID lpThreadId,
     IN  LPWSAUSERAPC lpfnUserApc,
-    IN  DWORD dwContext,
+    IN  DWORD_PTR dwContext,
     OUT LPINT lpErrno);
 
 BOOL

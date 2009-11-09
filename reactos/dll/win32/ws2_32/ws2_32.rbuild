@@ -1,4 +1,4 @@
-<module name="ws2_32" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32.dll" unicode="yes">
+<module name="ws2_32" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32.dll" unicode="yes" allowwarnings="true">
 	<importlibrary definition="ws2_32.spec" />
 	<include base="ws2_32">include</include>
 	<include base="ReactOS">include/reactos/wine</include>
