@@ -834,7 +834,7 @@ static	DWORD	MCI_LoadMciDriver(LPCWSTR _strDevTyp, LPWINE_MCIDRIVER* lpwmd)
 
     wmd->lpfnYieldProc = MCI_DefYieldProc;
     wmd->dwYieldData = VK_CANCEL;
-    wmd->CreatorThread = GetCurrentThreadId();
+    wmd->CreatorThread = GetCurrentThread();
 
     EnterCriticalSection(&WINMM_cs);
     /* wmd must be inserted in list before sending opening the driver, because it
@@ -1155,8 +1155,8 @@ static	DWORD	MCI_HandleReturnValues(DWORD dwRet, LPWINE_MCIDRIVER wmd, DWORD ret
 {
     static const WCHAR wszLd  [] = {'%','l','d',0};
     static const WCHAR wszLd4 [] = {'%','l','d',' ','%','l','d',' ','%','l','d',' ','%','l','d',0};
-    static const WCHAR wszCol3[] = {'%','d',':','%','d',':','%','d',0};
-    static const WCHAR wszCol4[] = {'%','d',':','%','d',':','%','d',':','%','d',0};
+    static const WCHAR wszCol3[] = {'%','0','2','d',':','%','0','2','d',':','%','0','2','d',0};
+    static const WCHAR wszCol4[] = {'%','0','2','d',':','%','0','2','d',':','%','0','2','d',':','%','0','2','d',0};
 
     if (lpstrRet) {
 	switch (retType) {
@@ -1391,20 +1391,20 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpstrCommand, LPWSTR lpstrRet,
 
     /* set up call back */
     if (dwFlags & MCI_NOTIFY) {
-	data[0] = (DWORD)hwndCallback;
+	data[0] = (DWORD_PTR)hwndCallback;
     }
 
     /* FIXME: the command should get it's own notification window set up and
      * ask for device closing while processing the notification mechanism
      */
     if (lpstrRet && uRetLen) *lpstrRet = '\0';
-
+/*
     TRACE("[%d, %s, %08x, %08x/%s %08x/%s %08x/%s %08x/%s %08x/%s %08x/%s]\n",
 	  wmd->wDeviceID, MCI_MessageToString(MCI_GetMessage(lpCmd)), dwFlags,
 	  data[0], debugstr_w((WCHAR *)data[0]), data[1], debugstr_w((WCHAR *)data[1]),
 	  data[2], debugstr_w((WCHAR *)data[2]), data[3], debugstr_w((WCHAR *)data[3]),
 	  data[4], debugstr_w((WCHAR *)data[4]), data[5], debugstr_w((WCHAR *)data[5]));
-
+*/
     if (strcmpW(verb, wszOpen) == 0) {
 	if ((dwRet = MCI_FinishOpen(wmd, (LPMCI_OPEN_PARMSW)data, dwFlags)))
 	    MCI_UnLoadMciDriver(wmd);
@@ -1466,7 +1466,7 @@ BOOL WINAPI mciExecute(LPCSTR lpstrCommand)
     ret = mciSendStringA(lpstrCommand, strRet, sizeof(strRet), 0);
     if (ret != 0) {
 	if (!mciGetErrorStringA(ret, strRet, sizeof(strRet))) {
-	    sprintf(strRet, "Unknown MCI error (%lu)", ret);
+	    sprintf(strRet, "Unknown MCI error (%d)", ret);
 	}
 	MessageBoxA(0, strRet, "Error in mciExecute()", MB_OK);
     }
@@ -1676,7 +1676,7 @@ static	DWORD MCI_Close(UINT16 wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParms
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwParam, lpParms);
 
-    if (wDevID == (UINT16)MCI_ALL_DEVICE_ID) {
+    if (wDevID == MCI_ALL_DEVICE_ID) {
 	/* FIXME: shall I notify once after all is done, or for
 	 * each of the open drivers ? if the latest, which notif
 	 * to return when only one fails ?
@@ -1746,8 +1746,8 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSW lpParm
     LPWINE_MCIDRIVER	wmd;
     HKEY		hKey;
 
-    if (lpParms == NULL || lpParms->lpstrReturn == NULL)
-        return MCIERR_NULL_PARAMETER_BLOCK;
+    if (lpParms == NULL)			return MCIERR_NULL_PARAMETER_BLOCK;
+    if (lpParms->lpstrReturn == NULL)		return MCIERR_PARAM_OVERFLOW;
 
     TRACE("(%08x, %08X, %p[num=%d, wDevTyp=%u])\n",
 	  uDevID, dwFlags, lpParms, lpParms->dwNumber, lpParms->wDeviceType);
@@ -2079,7 +2079,7 @@ BOOL WINAPI mciSetDriverData(MCIDEVICEID uDeviceID, DWORD_PTR data)
  * 				mciSendCommandW			[WINMM.@]
  *
  */
-DWORD WINAPI mciSendCommandW(MCIDEVICEID wDevID, UINT wMsg, DWORD dwParam1, DWORD_PTR dwParam2)
+DWORD WINAPI mciSendCommandW(MCIDEVICEID wDevID, UINT wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
     DWORD	dwRet;
 
@@ -2095,7 +2095,7 @@ DWORD WINAPI mciSendCommandW(MCIDEVICEID wDevID, UINT wMsg, DWORD dwParam1, DWOR
 /**************************************************************************
  * 				mciSendCommandA			[WINMM.@]
  */
-DWORD WINAPI mciSendCommandA(MCIDEVICEID wDevID, UINT wMsg, DWORD dwParam1, DWORD_PTR dwParam2)
+DWORD WINAPI mciSendCommandA(MCIDEVICEID wDevID, UINT wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
     DWORD ret;
     int mapped;

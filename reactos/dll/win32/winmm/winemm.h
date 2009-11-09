@@ -99,14 +99,14 @@ typedef struct {
 typedef struct tagWINE_MCIDRIVER {
         UINT			wDeviceID;
         UINT			wType;
-	LPWSTR			lpstrElementName;
+        LPWSTR			lpstrElementName;
         LPWSTR			lpstrDeviceType;
         LPWSTR			lpstrAlias;
         HDRVR			hDriver;
-        DWORD_PTR               dwPrivate;
+        DWORD_PTR		dwPrivate;
         YIELDPROC		lpfnYieldProc;
-        DWORD	                dwYieldData;
-        DWORD                   CreatorThread;
+        DWORD			dwYieldData;
+        HANDLE			CreatorThread;
         UINT			uTypeCmdTable;
         UINT			uSpecificCmdTable;
         struct tagWINE_MCIDRIVER*lpNext;

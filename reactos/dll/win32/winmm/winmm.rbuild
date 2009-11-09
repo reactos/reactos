@@ -21,9 +21,9 @@
 	<file>mci.c</file>
 	<file>mmio.c</file>
 	<file>playsound.c</file>
+	<file>registry.c</file>
 	<file>time.c</file>
 	<file>winmm.c</file>
-	<file>registry.c</file>
 	<file>winmm_res.rc</file>
 </module>
 </group>

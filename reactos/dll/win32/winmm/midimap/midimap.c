@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * TODO:
  *	notification has to be implemented
@@ -270,7 +270,7 @@ static	DWORD	modOpen(LPDWORD lpdwUser, LPMIDIOPENDESC lpDesc, DWORD dwFlags)
 
     if (MIDIMAP_LoadSettings(mom))
     {
-	*lpdwUser = (DWORD_PTR)mom;
+	*lpdwUser = (DWORD)mom;
 	mom->self = mom;
 
 	return MMSYSERR_NOERROR;
@@ -306,7 +306,7 @@ static	DWORD	modClose(MIDIMAPDATA* mom)
     return ret;
 }
 
-static	DWORD	modLongData(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwParam2)
+static	DWORD	modLongData(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
 {
     WORD	chn;
     DWORD	ret = MMSYSERR_NOERROR;
@@ -330,7 +330,7 @@ static	DWORD	modLongData(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwPara
     return ret;
 }
 
-static	DWORD	modData(MIDIMAPDATA* mom, DWORD_PTR dwParam)
+static	DWORD	modData(MIDIMAPDATA* mom, DWORD dwParam)
 {
     BYTE	lb = LOBYTE(LOWORD(dwParam));
     WORD	chn = lb & 0x0F;
@@ -393,7 +393,7 @@ static	DWORD	modData(MIDIMAPDATA* mom, DWORD_PTR dwParam)
     return ret;
 }
 
-static	DWORD	modPrepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwParam2)
+static	DWORD	modPrepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
 {
     if (MIDIMAP_IsBadData(mom)) return MMSYSERR_ERROR;
     if (lpMidiHdr->dwFlags & (MHDR_ISSTRM|MHDR_PREPARED))
@@ -403,7 +403,7 @@ static	DWORD	modPrepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwParam
     return MMSYSERR_NOERROR;
 }
 
-static	DWORD	modUnprepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwParam2)
+static	DWORD	modUnprepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
 {
     if (MIDIMAP_IsBadData(mom)) return MMSYSERR_ERROR;
     if ((lpMidiHdr->dwFlags & MHDR_ISSTRM) || !(lpMidiHdr->dwFlags & MHDR_PREPARED))
@@ -413,7 +413,7 @@ static	DWORD	modUnprepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwPar
     return MMSYSERR_NOERROR;
 }
 
-static	DWORD	modGetDevCaps(UINT wDevID, MIDIMAPDATA* mom, LPMIDIOUTCAPSW lpMidiCaps, DWORD_PTR size)
+static	DWORD	modGetDevCaps(UINT wDevID, MIDIMAPDATA* mom, LPMIDIOUTCAPSW lpMidiCaps, DWORD size)
 {
     static const WCHAR name[] = {'W','i','n','e',' ','m','i','d','i',' ','m','a','p','p','e','r',0};
     lpMidiCaps->wMid = 0x00FF;
@@ -451,8 +451,8 @@ static	DWORD	modReset(MIDIMAPDATA* mom)
 /**************************************************************************
  * 				modMessage (MIDIMAP.@)
  */
-DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD_PTR dwUser,
-				DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD dwUser,
+				DWORD dwParam1, DWORD dwParam2)
 {
     TRACE("(%u, %04X, %08lX, %08lX, %08lX);\n",
 	  wDevID, wMsg, dwUser, dwParam1, dwParam2);
@@ -492,7 +492,7 @@ DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD_PTR dwUser,
 /**************************************************************************
  * 				MIDIMAP_drvOpen			[internal]
  */
-static	LRESULT	MIDIMAP_drvOpen(LPSTR str)
+static	DWORD	MIDIMAP_drvOpen(LPSTR str)
 {
     MIDIOUTCAPSW	moc;
     unsigned		dev, i;
@@ -527,7 +527,7 @@ static	LRESULT	MIDIMAP_drvOpen(LPSTR str)
 /**************************************************************************
  * 				MIDIMAP_drvClose		[internal]
  */
-static	LRESULT	MIDIMAP_drvClose(DWORD_PTR dwDevID)
+static	DWORD	MIDIMAP_drvClose(DWORD dwDevID)
 {
     if (midiOutPorts)
     {
@@ -541,8 +541,8 @@ static	LRESULT	MIDIMAP_drvClose(DWORD_PTR dwDevID)
 /**************************************************************************
  * 				DriverProc (MIDIMAP.@)
  */
-LRESULT CALLBACK	MIDIMAP_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
-				   LPARAM dwParam1, LPARAM dwParam2)
+LONG CALLBACK	MIDIMAP_DriverProc(DWORD dwDevID, HDRVR hDriv, DWORD wMsg,
+				   DWORD dwParam1, DWORD dwParam2)
 {
 /* EPP     TRACE("(%08lX, %04X, %08lX, %08lX, %08lX)\n",  */
 /* EPP 	  dwDevID, hDriv, wMsg, dwParam1, dwParam2); */
