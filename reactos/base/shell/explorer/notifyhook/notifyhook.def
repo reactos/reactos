@@ -1,3 +1,4 @@
+LIBRARY notifyhook.dll
 EXPORTS
 DeinstallNotifyHook
 GetWindowModulePath
