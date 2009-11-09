@@ -59,10 +59,15 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         TrapFrame->Xmm4 = Context->Xmm4;
         TrapFrame->Xmm5 = Context->Xmm5;
         ExceptionFrame->Xmm6 = Context->Xmm6;
-        ExceptionFrame->Xmm6 = Context->Xmm6;
-        ExceptionFrame->Xmm6 = Context->Xmm6;
-        ExceptionFrame->Xmm6 = Context->Xmm6;
-        ExceptionFrame->Xmm6 = Context->Xmm6;
+        ExceptionFrame->Xmm7 = Context->Xmm7;
+        ExceptionFrame->Xmm8 = Context->Xmm8;
+        ExceptionFrame->Xmm9 = Context->Xmm9;
+        ExceptionFrame->Xmm10 = Context->Xmm10;
+        ExceptionFrame->Xmm11 = Context->Xmm11;
+        ExceptionFrame->Xmm12 = Context->Xmm12;
+        ExceptionFrame->Xmm13 = Context->Xmm13;
+        ExceptionFrame->Xmm14 = Context->Xmm14;
+        ExceptionFrame->Xmm15 = Context->Xmm15;
     }
 
     /* Handle control registers */
@@ -170,10 +175,15 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         Context->Xmm4 = TrapFrame->Xmm4;
         Context->Xmm5 = TrapFrame->Xmm5;
         Context->Xmm6 = ExceptionFrame->Xmm6;
-        Context->Xmm6 = ExceptionFrame->Xmm6;
-        Context->Xmm6 = ExceptionFrame->Xmm6;
-        Context->Xmm6 = ExceptionFrame->Xmm6;
-        Context->Xmm6 = ExceptionFrame->Xmm6;
+        Context->Xmm7 = ExceptionFrame->Xmm7;
+        Context->Xmm8 = ExceptionFrame->Xmm8;
+        Context->Xmm9 = ExceptionFrame->Xmm9;
+        Context->Xmm10 = ExceptionFrame->Xmm10;
+        Context->Xmm11 = ExceptionFrame->Xmm11;
+        Context->Xmm12 = ExceptionFrame->Xmm12;
+        Context->Xmm13 = ExceptionFrame->Xmm13;
+        Context->Xmm14 = ExceptionFrame->Xmm14;
+        Context->Xmm15 = ExceptionFrame->Xmm15;
     }
 
     /* Handle control registers */
