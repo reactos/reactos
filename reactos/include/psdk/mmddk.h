@@ -435,7 +435,7 @@ typedef struct {
 	UINT			wType;			/* driver type (filled in by the driver) */
 } MCI_OPEN_DRIVER_PARMSW, *LPMCI_OPEN_DRIVER_PARMSW;
 
-DWORD 			WINAPI	mciGetDriverData(UINT uDeviceID);
+DWORD_PTR		WINAPI	mciGetDriverData(UINT uDeviceID);
 BOOL			WINAPI	mciSetDriverData(UINT uDeviceID, DWORD_PTR dwData);
 UINT			WINAPI	mciDriverYield(UINT uDeviceID);
 BOOL			WINAPI	mciDriverNotify(HWND hwndCallback, UINT uDeviceID,
@@ -459,7 +459,7 @@ typedef void (*LPTASKCALLBACK)(DWORD dwInst);
 
 #define TASKERR_NOTASKSUPPORT 1
 #define TASKERR_OUTOFMEMORY   2
-MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK, HANDLE*, DWORD);
+UINT WINAPI mmTaskCreate(LPTASKCALLBACK, HANDLE*, DWORD_PTR);
 void     WINAPI mmTaskBlock(DWORD);
 BOOL     WINAPI mmTaskSignal(DWORD);
 void     WINAPI mmTaskYield(void);
