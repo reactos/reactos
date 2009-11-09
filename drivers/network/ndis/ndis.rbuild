@@ -4,9 +4,7 @@
 	<importlibrary definition="ndis.def"></importlibrary>
 	<include base="ndis">include</include>
 	<define name="NDIS_WRAPPER" />
-	<define name="NDIS50" />
 	<define name="NDIS51" />
-	<define name="NDIS50_MINIPORT" />
 	<define name="NDIS51_MINIPORT" />
 	<define name="NDIS_LEGACY_DRIVER" />
 	<define name="NDIS_LEGACY_MINIPORT" />
@@ -18,8 +16,9 @@
 		<pch>ndissys.h</pch>
 	</directory>
 	<directory name="ndis">
-		<file>40gone.c</file>
-		<file>50gone.c</file>
+		<file>30stubs.c</file>
+		<file>40stubs.c</file>
+		<file>50stubs.c</file>
 		<file>buffer.c</file>
 		<file>cl.c</file>
 		<file>cm.c</file>
@@ -32,9 +31,9 @@
 		<file>main.c</file>
 		<file>memory.c</file>
 		<file>miniport.c</file>
+		<file>misc.c</file>
 		<file>protocol.c</file>
 		<file>string.c</file>
-		<file>stubs.c</file>
 		<file>time.c</file>
 	</directory>
 	<file>ndis.rc</file>

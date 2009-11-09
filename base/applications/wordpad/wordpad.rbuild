@@ -10,10 +10,8 @@
 	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>comctl32</library>
-	<compilationunit name="unit.c">
-		<file>print.c</file>
-		<file>registry.c</file>
-		<file>wordpad.c</file>
-	</compilationunit>
+	<file>print.c</file>
+	<file>registry.c</file>
+	<file>wordpad.c</file>
 	<file>rsrc.rc</file>
 </module>

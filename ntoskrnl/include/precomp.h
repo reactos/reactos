@@ -14,26 +14,22 @@
 
 /* DDK/IFS/NDK Headers */
 #define _REALLY_GET_CALLERS_CALLER
-#ifdef _MSC_VER
 #include <excpt.h>
 #include <ntdef.h>
 #undef DECLSPEC_IMPORT
 #define DECLSPEC_IMPORT
-#endif
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <arc/arc.h>
+#undef NTHALAPI
+#define NTHALAPI __declspec(dllimport)
 #include <ntndk.h>
 #undef TEXT
 #define TEXT(s) L##s
 #include <regstr.h>
 
-/* FIXME: Temporary until CC Ros is gone */
-#include <ccros.h>
+/* FIXME: Temporary until Winldr is used */
 #include <rosldr.h>
-
-/* Disk Dump Driver Header */
-#include <diskdump/diskdump.h>
 
 /* C Headers */
 #include <stdlib.h>

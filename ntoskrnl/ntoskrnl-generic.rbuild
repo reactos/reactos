@@ -3,12 +3,10 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<importlibrary definition="ntoskrnl.pspec" />
-	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="__NO_CTYPE_INLINES" />
-	<define name="WIN9X_COMPAT_SPINLOCK" />
 	<define name="_IN_KERNEL_" />
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
@@ -117,12 +115,11 @@
 	<directory name="cache">
 		<file>cachesub.c</file>
 		<file>copysup.c</file>
-		<file>io.c</file>
+		<file>fssup.c</file>
 		<file>lazyrite.c</file>
+		<file>logsup.c</file>
 		<file>mdlsup.c</file>
 		<file>pinsup.c</file>
-		<file>fssup.c</file>
-		<file>logsup.c</file>
 		<file>vacbsup.c</file>
 	</directory>
 	<directory name="config">
@@ -301,6 +298,7 @@
 			<if property="KDBG" value="1">
 				<file>kdb.c</file>
 				<file>kdb_cli.c</file>
+				<file>kdb_lock.c</file>
 				<file>kdb_expr.c</file>
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
@@ -363,38 +361,59 @@
 				<file>page.c</file>
 			</directory>
 		</if>
+		<directory name="ARM3">
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>init.c</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="arm">
+				<directory name="arm">
+					<file>init.c</file>
+				</directory>
+			</if>
+			<file>contmem.c</file>
+			<file>drvmgmt.c</file>
+			<file>dynamic.c</file>
+			<file>expool.c</file>
+			<file>hypermap.c</file>
+			<file>iosup.c</file>
+			<file>mdlsup.c</file>
+			<file>ncache.c</file>
+			<file>pool.c</file>
+			<file>procsup.c</file>
+			<file>syspte.c</file>
+		</directory>
+		<directory name="section">
+			<file>data.c</file>
+			<if property="_ELF_" value="1">
+				<file>elf32.c</file>
+				<file>elf64.c</file>
+			</if>
+			<file>image.c</file>
+			<file>io.c</file>
+			<file>pagefile.c</file>
+			<file>pe.c</file>
+			<file>physical.c</file>
+		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
-		<file>cont.c</file>
-		<file>drvlck.c</file>
+		<file>dbgpool.c</file>
 		<file>freelist.c</file>
-		<file>iospace.c</file>
-		<file>kmap.c</file>
 		<file>marea.c</file>
-		<file>mdlsup.c</file>
-		<file>mm.c</file>
+		<file>mmfault.c</file>
+		<file>mmsup.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
-		<file>ncache.c</file>
-		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
-		<file>pe.c</file>
-		<file>physical.c</file>
 		<file>pool.c</file>
 		<file>ppool.c</file>
 		<file>procsup.c</file>
 		<file>region.c</file>
 		<file>rmap.c</file>
-		<file>section.c</file>
 		<file>sysldr.c</file>
-		<file>verifier.c</file>
 		<file>virtual.c</file>
-		<file>wset.c</file>
-		<if property="_ELF_" value="1">
-			<file>elf32.c</file>
-			<file>elf64.c</file>
-		</if>
 	</directory>
 	<directory name="ob">
 		<file>obdir.c</file>
@@ -474,5 +493,5 @@
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </group>

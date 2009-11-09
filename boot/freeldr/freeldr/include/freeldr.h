@@ -109,19 +109,11 @@
 /* Swap */
 #include <bytesex.h>
 
-/* arch defines */
-#ifdef _X86_
-#define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
-#endif
-
-#ifdef _M_AMD64
-#define KeAmd64EraseFlags(x)     __asm__ __volatile__("pushq $0 ; popfq\n")
-#endif
-
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);
 
 /* Special hack for ReactOS setup OS type */
 VOID LoadReactOSSetup(VOID);
+VOID LoadReactOSSetup2(VOID);
 
 #endif  // defined __FREELDR_H

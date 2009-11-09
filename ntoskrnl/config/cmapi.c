@@ -1493,3 +1493,12 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
     if (KeyHandle) ZwClose(KeyHandle);
     return Status;
 }
+
+NTSTATUS
+NTAPI
+CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
+            IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}

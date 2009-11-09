@@ -630,7 +630,7 @@ ehci_process_pending_endp(PEHCI_DEV ehci)
         if (can_submit == STATUS_NO_MORE_ENTRIES)
         {
             //no enough bandwidth or tds
-            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertHeadList(&pendp->urb_list, &purb->urb_link);
             InsertTailList(&temp_list, pthis);
         }
         else
@@ -788,7 +788,7 @@ ehci_submit_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     }
 
     pending_endp->pendp = purb->pendp;
-    InsertTailList(&ehci->pending_endp_list, (PLIST_ENTRY) pending_endp);
+    InsertTailList(&ehci->pending_endp_list, &pending_endp->endp_link);
 
     unlock_dev(pdev, TRUE);
     unlock_pending_endp_list(&ehci->pending_endp_list_lock);
@@ -798,7 +798,7 @@ ehci_submit_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 
   LBL_OUT2:
     pdev->ref_count--;
-    RemoveEntryList((PLIST_ENTRY) purb);
+    RemoveEntryList(&purb->urb_link);
 
   LBL_OUT:
     unlock_dev(pdev, TRUE);
@@ -1198,10 +1198,16 @@ ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
             purb->flags &= ~URB_FLAG_STATE_MASK;
             purb->flags |= URB_FLAG_STATE_PENDING;
 
-            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertHeadList(&pendp->urb_list, &purb->urb_link);
         }
 
         pending_endp = alloc_pending_endp(&ehci->pending_endp_pool, 1);
+        if (!pending_endp)
+        {
+            unlock_dev(pdev, TRUE);
+            KeReleaseSpinLockFromDpcLevel(&ehci->pending_endp_list_lock);
+            return;
+        }
         pending_endp->pendp = pendp;
         InsertTailList(&ehci->pending_endp_list, &pending_endp->endp_link);
 
@@ -1382,7 +1388,7 @@ ehci_insert_urb_schedule(PEHCI_DEV ehci, PURB purb)
 
     purb->flags &= ~URB_FLAG_STATE_MASK;
     purb->flags |= URB_FLAG_STATE_IN_PROCESS | URB_FLAG_IN_SCHEDULE;
-    InsertTailList(&ehci->urb_list, (PLIST_ENTRY) purb);
+    InsertTailList(&ehci->urb_list, &purb->urb_link);
 
     return TRUE;
 }
@@ -1567,6 +1573,7 @@ ehci_internal_submit_bulk(PEHCI_DEV ehci, PURB purb)
     PEHCI_QTD_CONTENT ptdc;
     PEHCI_QH_CONTENT pqhc;
     PEHCI_ELEM_LINKS pelnk;
+    PEHCI_ELEM_LINKS plnk;
 
     if (ehci == NULL || purb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1679,7 +1686,17 @@ ehci_internal_submit_bulk(PEHCI_DEV ehci, PURB purb)
     RemoveEntryList(&td_list);
 
     elem_pool_lock(qh_pool, TRUE);
-    pqh = (PEHCI_QH) ((ULONG) elem_pool_alloc_elem(qh_pool)->phys_part & PHYS_PART_ADDR_MASK);
+
+    plnk = elem_pool_alloc_elem(qh_pool);
+    if (plnk == NULL)
+    {
+        // free the qtds
+        elem_safe_free(pthis, TRUE);
+        if (qh_pool) elem_pool_unlock(qh_pool, TRUE);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    pqh = (PEHCI_QH) ((ULONG) plnk->phys_part & PHYS_PART_ADDR_MASK);
     elem_pool_unlock(qh_pool, TRUE);
 
     if (pqh == NULL)
@@ -3113,6 +3130,12 @@ ehci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 i = EHCI_PORTSC + 4 * (psetup->wIndex - 1);     // USBPORTSC1;
 
                 ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+                if (!ptimer)
+                {
+                    purb->status = STATUS_NO_MEMORY;
+                    break;
+                }
+
                 ptimer->threshold = 0;  // within [ 50ms, 60ms ], one tick is 10 ms
                 ptimer->context = (ULONG) purb;
                 ptimer->pdev = pdev;
@@ -3136,6 +3159,11 @@ ehci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
         case USB_ENDPOINT_XFER_INT:
         {
             ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+            if (!ptimer)
+            {
+                purb->status = STATUS_NO_MEMORY;
+                break;
+            }
             ptimer->threshold = RH_INTERVAL;
             ptimer->context = (ULONG) purb;
             ptimer->pdev = pdev;
@@ -3482,7 +3510,7 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
             KeSynchronizeExecution(pdev_ext->ehci_int, ehci_cal_cpu_freq, NULL);
         }
     }
-    return NULL;
+    return pdev;
 }
 
 PDEVICE_OBJECT
@@ -6060,7 +6088,7 @@ ehci_isr(PKINTERRUPT interrupt, PVOID context)
 
     PEHCI_DEV ehci;
     ULONG status;
-#ifdef DBG
+#if DBG
     ULONG urb_count;
 #endif
     PLIST_ENTRY pthis, pnext;
@@ -6116,7 +6144,7 @@ ehci_isr(PKINTERRUPT interrupt, PVOID context)
     door_bell_rings = ((status & STS_IAA) != 0);
 
     // scan to remove those due
-#ifdef DBG
+#if DBG
     urb_count = dbg_count_list(&ehci->urb_list);
     ehci_dbg_print(DBGLVL_MAXIMUM, ("ehci_isr(): urb# in process is %d\n", urb_count));
 #endif

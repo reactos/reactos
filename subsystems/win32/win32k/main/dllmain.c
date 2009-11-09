@@ -27,6 +27,8 @@
 #define NDEBUG
 #include <debug.h>
 
+HANDLE hModuleWin;
+
 PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
 BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 /* FIXME */
@@ -53,7 +55,7 @@ APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
     DECLARE_RETURN(NTSTATUS);
 
     DPRINT("Enter Win32kProcessCallback\n");
@@ -67,12 +69,12 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     {
         /* FIXME - lock the process */
         Win32Process = ExAllocatePoolWithTag(NonPagedPool,
-                                             sizeof(W32PROCESS),
-                                             TAG('W', '3', '2', 'p'));
+                                             sizeof(PROCESSINFO),
+                                             'p23W');
 
         if (Win32Process == NULL) RETURN( STATUS_NO_MEMORY);
 
-        RtlZeroMemory(Win32Process, sizeof(W32PROCESS));
+        RtlZeroMemory(Win32Process, sizeof(PROCESSINFO));
 
         PsSetProcessWin32Process(Process, Win32Process);
         /* FIXME - unlock the process */
@@ -129,14 +131,13 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       }
 
       /* setup process flags */
-      Win32Process->Flags = 0;
+      Win32Process->W32PF_flags = 0;
     }
   else
     {
       DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
       IntCleanupMenus(Process, Win32Process);
       IntCleanupCurIcons(Process, Win32Process);
-      IntEngCleanupDriverObjs(Process, Win32Process);
       CleanupMonitorImpl();
 
       /* no process windows should exist at this point, or the function will assert! */
@@ -152,12 +153,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       if(LogonProcess == Win32Process)
       {
         LogonProcess = NULL;
-      }
-
-      if (Win32Process->ProcessInfo != NULL)
-      {
-          UserHeapFree(Win32Process->ProcessInfo);
-          Win32Process->ProcessInfo = NULL;
       }
     }
 
@@ -193,7 +188,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         /* FIXME - lock the process */
         Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(THREADINFO),
-                                            TAG('W', '3', '2', 't'));
+                                            't23W');
 
         if (Win32Thread == NULL) RETURN( STATUS_NO_MEMORY);
 
@@ -281,11 +276,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       }
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
-      if (Win32Thread->ThreadInfo)
-      {
-          Win32Thread->ThreadInfo->ClientThreadInfo.dwcPumpHook = 0;
-          Win32Thread->pClientInfo->pClientThreadInfo = &Win32Thread->ThreadInfo->ClientThreadInfo;
-      }
+      Win32Thread->pEThread = Thread;
     }
   else
     {
@@ -316,12 +307,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       IntSetThreadDesktop(NULL,
                           TRUE);
 
-      if (Win32Thread->ThreadInfo != NULL)
-      {
-          UserHeapFree(Win32Thread->ThreadInfo);
-          Win32Thread->ThreadInfo = NULL;
-      }
-
       PsSetThreadWin32Thread(Thread, NULL);
     }
 
@@ -345,12 +330,12 @@ Win32kInitWin32Thread(PETHREAD Thread)
   if (Process->Win32Process == NULL)
     {
       /* FIXME - lock the process */
-      Process->Win32Process = ExAllocatePool(NonPagedPool, sizeof(W32PROCESS));
+      Process->Win32Process = ExAllocatePool(NonPagedPool, sizeof(PROCESSINFO));
 
       if (Process->Win32Process == NULL)
 	return STATUS_NO_MEMORY;
 
-      RtlZeroMemory(Process->Win32Process, sizeof(W32PROCESS));
+      RtlZeroMemory(Process->Win32Process, sizeof(PROCESSINFO));
       /* FIXME - unlock the process */
 
       Win32kProcessCallback(Process, TRUE);
@@ -399,6 +384,8 @@ DriverEntry (
       return STATUS_UNSUCCESSFUL;
     }
 
+  hModuleWin = MmPageEntireDriver(DriverEntry);
+  DPRINT("Win32k hInstance 0x%x!\n",hModuleWin);
     /*
      * Register Object Manager Callbacks
      */
@@ -539,6 +526,8 @@ DriverEntry (
       DPRINT1("Unable to initialize font support\n");
       return STATUS_UNSUCCESSFUL;
     }
+
+  InitXlateImpl();
 
   /* Create stock objects, ie. precreated objects commonly
      used by win32 applications */

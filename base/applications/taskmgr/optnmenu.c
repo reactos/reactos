@@ -40,7 +40,7 @@ void TaskManager_OnOptionsAlwaysOnTop(void)
      * Check or uncheck the always on top menu item
      * and update main window.
      */
-    if ((GetWindowLongW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0)
+    if ((GetWindowLongPtrW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0)
     {
         CheckMenuItem(hOptionsMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND|MF_UNCHECKED);
         TaskManagerSettings.AlwaysOnTop = FALSE;

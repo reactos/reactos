@@ -11,15 +11,13 @@
 #include <debug.h>
 
 NTSTATUS
-#ifndef _MSC_VER
 NTAPI
-#endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath);
 
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 ULONG DebugTraceLevel = 0;
@@ -235,6 +233,9 @@ static NDIS_STATUS NTAPI MiniportInitialize(
     UINT i;
     NDIS_STATUS Status;
     PNIC_ADAPTER Adapter;
+    NDIS_HANDLE ConfigurationHandle;
+    UINT *RegNetworkAddress = 0;
+    UINT RegNetworkAddressLength = 0;
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
@@ -281,10 +282,7 @@ static NDIS_STATUS NTAPI MiniportInitialize(
     if (Status != NDIS_STATUS_SUCCESS)
     {
         PNDIS_CONFIGURATION_PARAMETER ConfigurationParameter;
-        NDIS_HANDLE ConfigurationHandle;
         UNICODE_STRING Keyword;
-        UINT *RegNetworkAddress = 0;
-        UINT RegNetworkAddressLength = 0;
 
         NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
         if (Status == NDIS_STATUS_SUCCESS)
@@ -306,18 +304,6 @@ static NDIS_STATUS NTAPI MiniportInitialize(
                 NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Port returned successfully, port 0x%x\n",
                         ConfigurationParameter->ParameterData.IntegerData));
                 Adapter->IoBaseAddress = ConfigurationParameter->ParameterData.IntegerData;
-            }
-
-            /* the returned copy of the data is owned by NDIS and will be released on NdisCloseConfiguration */
-            NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
-            if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
-            {
-                int i;
-                NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
-                        RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
-                        RegNetworkAddress[4], RegNetworkAddress[5]));
-                for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
-                    Adapter->StationAddress[i] = RegNetworkAddress[i];
             }
 
             NdisCloseConfiguration(ConfigurationHandle);
@@ -366,6 +352,30 @@ static NDIS_STATUS NTAPI MiniportInitialize(
         NDIS_DbgPrint(MID_TRACE, ("Status (0x%X).\n", Status));
         MiniportHalt((NDIS_HANDLE)Adapter);
         return Status;
+    }
+
+    NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
+    if (Status == NDIS_STATUS_SUCCESS)
+    {
+         NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
+         if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
+         {
+             int i;
+             NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
+                     RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
+                     RegNetworkAddress[4], RegNetworkAddress[5]));
+             for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+                 Adapter->StationAddress[i] = RegNetworkAddress[i];
+         }
+
+         NdisCloseConfiguration(ConfigurationHandle);
+    }
+
+    if (Status != NDIS_STATUS_SUCCESS || RegNetworkAddressLength != DRIVER_LENGTH_OF_ADDRESS)
+    {
+        int i;
+        for (i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+             Adapter->StationAddress[i] = Adapter->PermanentAddress[i];
     }
 
     NDIS_DbgPrint(MID_TRACE, ("BOARDDATA:\n"));
@@ -659,11 +669,19 @@ static NDIS_STATUS NTAPI MiniportReset(
  *     Status of operation
  */
 {
+    NDIS_STATUS NdisStatus = NDIS_STATUS_SUCCESS;
+
     ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    return NDIS_STATUS_FAILURE;
+#ifndef NOCARD
+    NdisStatus = NICReset((PNIC_ADAPTER)MiniportAdapterContext);
+#endif
+
+    *AddressingReset = TRUE;
+
+    return NdisStatus;
 }
 
 
@@ -907,9 +925,7 @@ static NDIS_STATUS NTAPI MiniportTransferData(
 
 
 NTSTATUS
-#ifndef _MSC_VER
 NTAPI
-#endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath)

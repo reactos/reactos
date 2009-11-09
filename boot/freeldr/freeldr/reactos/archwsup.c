@@ -20,6 +20,12 @@ PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
 BOOLEAN UseRealHeap = FALSE;
 
+VOID
+NTAPI
+FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
+                         IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+                         IN ULONG Size);
+
 /* FUNCTIONS ******************************************************************/
 
 PVOID
@@ -49,23 +55,6 @@ FldrpHwHeapAlloc(IN ULONG Size)
 
     /* Return the buffer */
     return Buffer;
-}
-
-VOID
-NTAPI
-FldrSetComponentInformation(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-                            IN IDENTIFIER_FLAG Flags,
-                            IN ULONG Key,
-                            IN ULONG Affinity)
-{
-    PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
-
-    /* Set component information */
-    Component->Flags = Flags;
-    Component->Version = 0;
-    Component->Revision = 0;
-    Component->Key = Key;
-    Component->AffinityMask = Affinity;
 }
 
 VOID
@@ -107,6 +96,11 @@ FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
     Component->ConfigurationDataLength = 0;
     Component->Identifier = 0;
     Component->IdentifierLength = 0;
+    Component->Flags = 0;
+    Component->Version = 0;
+    Component->Revision = 0;
+    Component->Key = 0;
+    Component->AffinityMask = 0xFFFFFFFF;
     
     /* Return the node */
     *SystemNode = FldrArcHwTreeRoot;
@@ -145,10 +139,14 @@ FldrLinkToParent(IN PCONFIGURATION_COMPONENT_DATA Parent,
 VOID
 NTAPI
 FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
-                       IN PWCHAR BusName,
-                       IN ULONG BusNumber,
                        IN CONFIGURATION_CLASS Class,
                        IN CONFIGURATION_TYPE Type,
+                       IN IDENTIFIER_FLAG Flags,
+                       IN ULONG Key,
+                       IN ULONG Affinity,
+                       IN PCHAR IdentifierString,
+                       IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+                       IN ULONG Size,
                        OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey)
 {
     PCONFIGURATION_COMPONENT_DATA ComponentData;
@@ -162,12 +160,24 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     ComponentData->Parent = SystemNode;
     
     /* Link us to the parent */
-    FldrLinkToParent(SystemNode, ComponentData);
+    if (SystemNode)
+        FldrLinkToParent(SystemNode, ComponentData);
     
     /* Set us up */
     Component = &ComponentData->ComponentEntry;
     Component->Class = Class;
     Component->Type = Type;
+    Component->Flags = Flags;
+    Component->Key = Key;
+    Component->AffinityMask = Affinity;
+    
+    /* Set identifier */
+    if (IdentifierString)
+        FldrSetIdentifier(ComponentData, IdentifierString);
+    
+    /* Set configuration data */
+    if (ResourceList)
+        FldrSetConfigurationData(ComponentData, ResourceList, Size);
     
     /* Return the child */
     *ComponentKey = ComponentData; 

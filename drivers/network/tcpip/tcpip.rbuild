@@ -26,7 +26,6 @@
 	</directory>
 	<directory name="tcpip">
 		<file>buffer.c</file>
-		<file>bug.c</file>
 		<file>dispatch.c</file>
 		<file>fileobjs.c</file>
 		<file>iinfo.c</file>
@@ -41,5 +40,5 @@
 	</directory>
 	<file>tcpip.rc</file>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

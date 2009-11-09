@@ -199,51 +199,50 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
         {
                 do
                 {
-                        bExclusion = FALSE;
+					bExclusion = FALSE;
 
-		        /*if it is going to be excluded by - no need to check attrs*/
-		        if(*dwFlags & DEL_ATTRIBUTES && !bExclusion)
-		        {
+					/*if it is going to be excluded by - no need to check attrs*/
+					if(*dwFlags & DEL_ATTRIBUTES && !bExclusion)
+					{
 
-			        /*save if file attr check if user doesnt care about that attr anyways*/
-			        if(dwAttrFlags & ATTR_ARCHIVE && !(f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
+						/*save if file attr check if user doesnt care about that attr anyways*/
+					 if(dwAttrFlags & ATTR_ARCHIVE && !(f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
 				        bExclusion = TRUE;
-			        if(dwAttrFlags & ATTR_HIDDEN && !(f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+					 if(dwAttrFlags & ATTR_HIDDEN && !(f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
 				        bExclusion = TRUE;
-			        if(dwAttrFlags & ATTR_SYSTEM && !(f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
+					 if(dwAttrFlags & ATTR_SYSTEM && !(f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
 				        bExclusion = TRUE;
-			        if(dwAttrFlags & ATTR_READ_ONLY && !(f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-			                bExclusion = TRUE;
-		                if(dwAttrFlags & ATTR_N_ARCHIVE && (f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
-			                bExclusion = TRUE;
-		                if(dwAttrFlags & ATTR_N_HIDDEN && (f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
-			                bExclusion = TRUE;
-		                if(dwAttrFlags & ATTR_N_SYSTEM && (f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
-			                bExclusion = TRUE;
-		                if(dwAttrFlags & ATTR_N_READ_ONLY && (f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-			                bExclusion = TRUE;
-	                }
+					 if(dwAttrFlags & ATTR_READ_ONLY && !(f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+			            bExclusion = TRUE;
+		             if(dwAttrFlags & ATTR_N_ARCHIVE && (f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
+			            bExclusion = TRUE;
+		             if(dwAttrFlags & ATTR_N_HIDDEN && (f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+			            bExclusion = TRUE;
+		             if(dwAttrFlags & ATTR_N_SYSTEM && (f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
+			            bExclusion = TRUE;
+		             if(dwAttrFlags & ATTR_N_READ_ONLY && (f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+			            bExclusion = TRUE;
+					}
+					if(bExclusion)
+						continue;
 
-	                if(bExclusion)
+					/* ignore directories */
+					if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		                continue;
 
-		        /* ignore directories */
-		        if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		                continue;
+
+					_tcscpy (pFilePart, f.cFileName);
+
+					/* We cant delete ourselves */
+					if(!_tcscmp (CMDPath,szFullPath))
+						continue;
 
 
-		        _tcscpy (pFilePart, f.cFileName);
+					TRACE("Full filename: %s\n", debugstr_aw(szFullPath));
 
-		        /* We cant delete ourselves */
-		        if(!_tcscmp (CMDPath,szFullPath))
-			        continue;
-
-
-		        TRACE("Full filename: %s\n", debugstr_aw(szFullPath));
-
-		        /* ask for deleting */
-		        if (*dwFlags & DEL_PROMPT)
-		        {
+					/* ask for deleting */
+					if (*dwFlags & DEL_PROMPT)
+					{
 		                ConErrResPrintf(STRING_DEL_ERROR5, szFullPath);
 
 		                res = FilePromptYN (STRING_DEL_ERROR6);
@@ -267,19 +266,19 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 
 	                if(RemoveFile (szFullPath, *dwFlags, &f))
 		                dwFiles++;
-		        else
+					else
                         {
-		                ErrorMessage (GetLastError(), _T(""));
+							ErrorMessage (GetLastError(), _T(""));
 //                                FindClose(hFile);
 //                                return -1;
-	                }
+						}
                 }
                 while (FindNextFile (hFile, &f));
-	        FindClose (hFile);
-        }
+				FindClose (hFile);
+        } 
+		else error_sfile_not_found(szFullPath);
         return dwFiles;
 }
-
 
 static DWORD
 ProcessDirectory(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)

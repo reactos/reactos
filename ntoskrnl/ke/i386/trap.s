@@ -200,7 +200,7 @@ NotWin32K:
     /* Increase total syscall count */
     inc dword ptr PCR[KPCR_SYSTEM_CALLS]
 
-#ifdef DBG
+#if DBG
     /* Increase per-syscall count */
     mov ecx, [edi+SERVICE_DESCRIPTOR_COUNT]
     jecxz NoCountTable
@@ -239,7 +239,7 @@ CopyParams:
     call ebx
 
 AfterSysCall:
-#ifdef DBG
+#if DBG
     /* Make sure the user-mode call didn't return at elevated IRQL */
     test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
     jz SkipCheck
@@ -377,7 +377,7 @@ BadStack:
     push 0
     jmp _KiTrap6
 
-#ifdef DBG
+#if DBG
 InvalidIrql:
     /* Save current IRQL */
     push PCR[KPCR_IRQL]
@@ -1338,7 +1338,6 @@ BogusTrap:
 .globl _KiTrap8
 .func KiTrap8
 _KiTrap8:
-
     /* Can't really do too much */
     mov eax, 8
     jmp _KiSystemFatalException
@@ -1511,6 +1510,7 @@ NotV86:
     cmp eax, offset CheckPrivilegedInstruction
     jbe KmodeGpf
     cmp eax, offset CheckPrivilegedInstruction2
+    jae KmodeGpf
 
     /* FIXME: TODO */
     UNHANDLED_PATH
@@ -1924,10 +1924,14 @@ _KiTrap14:
 NoFixUp:
     mov edi, cr2
 
+    /* REACTOS Mm Hack of Doom */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+    je HandlePf
+
     /* Enable interrupts and check if we got here with interrupts disabled */
     sti
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
-    jz IllegalState
+    /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+    jz IllegalState */
 
 HandlePf:
     /* Send trap frame and check if this is kernel-mode or usermode */

@@ -26,6 +26,12 @@
 #define MACH_TYPE_VERSATILE_PB 387
 
 //
+// TI Beagle Board, OMAP3530 SoC
+// qemu-system-arm -M beagle, Beagle Board
+//
+#define MACH_TYPE_OMAP3_BEAGLE 1546
+
+//
 // Compatible boot-loaders should return us this information
 //
 #define ARM_BOARD_CONFIGURATION_MAJOR_VERSION 1
@@ -54,22 +60,6 @@ typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
 //
 VOID
 NTAPI
-FldrSetComponentInformation(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN IDENTIFIER_FLAG Flags,
-    IN ULONG Key,
-    IN ULONG Affinity
-);
-
-VOID
-NTAPI
-FldrSetIdentifier(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN PCHAR Identifier
-);
-
-VOID
-NTAPI
 FldrCreateSystemKey(
     OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
 );
@@ -77,20 +67,16 @@ FldrCreateSystemKey(
 VOID
 NTAPI
 FldrCreateComponentKey(
-    IN PCONFIGURATION_COMPONENT_DATA SystemKey,
-    IN PWCHAR BusName,
-    IN ULONG BusNumber,
+    IN PCONFIGURATION_COMPONENT_DATA SystemKey,,
     IN CONFIGURATION_CLASS Class,
     IN CONFIGURATION_TYPE Type,
-    OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
-);
-
-VOID
-NTAPI
-FldrSetConfigurationData(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
+    IN IDENTIFIER_FLAG Flags,
+    IN ULONG Key,
+    IN ULONG Affinity,
+    IN PCHAR IdentifierString,
     IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-    IN ULONG Size
+    IN ULONG Size,
+    OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
 );
 
 VOID
@@ -104,6 +90,18 @@ ArmFeroGetCh(VOID);
 
 BOOLEAN
 ArmFeroKbHit(VOID);
+
+VOID
+ArmOmap3SerialInit(IN ULONG Baudrate);
+
+VOID
+ArmOmap3PutChar(IN INT Char);
+
+INT
+ArmOmap3GetCh(VOID);
+
+BOOLEAN
+ArmOmap3KbHit(VOID);
 
 VOID
 ArmVersaSerialInit(IN ULONG Baudrate);

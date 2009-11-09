@@ -48,6 +48,10 @@ INT cmd_for (LPTSTR param)
 	return 1;
 }
 
+/* The stack of current FOR contexts.
+ * NULL when no FOR command is active */
+LPFOR_CONTEXT fc = NULL;
+
 /* Get the next element of the FOR's list */
 static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
 {
@@ -65,24 +69,25 @@ static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
 }
 
 /* Execute a single instance of a FOR command */
-static void RunInstance(PARSED_COMMAND *Cmd)
+static INT RunInstance(PARSED_COMMAND *Cmd)
 {
-	if (bEcho && Cmd->Subcommands->Type != C_QUIET)
+	if (bEcho && !bDisableBatchEcho && Cmd->Subcommands->Type != C_QUIET)
 	{
-		ConOutChar(_T('\n'));
+		if (!bIgnoreEcho)
+			ConOutChar(_T('\n'));
 		PrintPrompt();
 		EchoCommand(Cmd->Subcommands);
 		ConOutChar(_T('\n'));
 	}
 	/* Just run the command (variable expansion is done in DoDelayedExpansion) */
-	ExecuteCommand(Cmd->Subcommands);
+	return ExecuteCommand(Cmd->Subcommands);
 }
 
 /* Check if this FOR should be terminated early */
 static BOOL Exiting(PARSED_COMMAND *Cmd)
 {
-	/* Someone might have removed our context by calling ExitBatch */
-	return bCtrlBreak || bc != Cmd->For.Context;
+	/* Someone might have removed our context */
+	return bCtrlBreak || fc != Cmd->For.Context;
 }
 
 /* Read the contents of a text file into memory,
@@ -112,7 +117,7 @@ static LPTSTR ReadFileContents(FILE *InputFile, TCHAR *Buffer)
 	return Contents;
 }
 
-static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
+static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 {
 	LPTSTR Delims = _T(" \t");
 	TCHAR Eol = _T(';');
@@ -124,6 +129,7 @@ static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 	LPTSTR Variables[32];
 	TCHAR *Start, *End;
 	INT i;
+	INT Ret = 0;
 
 	if (Cmd->For.Params)
 	{
@@ -223,17 +229,17 @@ static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 			{
 			error:
 				error_syntax(Param);
-				return FALSE;
+				return 1;
 			}
 		}
 	}
 
 	/* Count how many variables will be set: one for each token,
 	 * plus maybe one for the remainder */
-	bc->forvarcount = RemainderVar;
+	fc->varcount = RemainderVar;
 	for (i = 1; i < 32; i++)
-		bc->forvarcount += (Tokens >> i & 1);
-	bc->forvalues = Variables;
+		fc->varcount += (Tokens >> i & 1);
+	fc->values = Variables;
 
 	if (*List == StringQuote || *List == CommandQuote)
 	{
@@ -264,8 +270,8 @@ static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 			InputFile = _tpopen(Start + 1, _T("r"));
 			if (!InputFile)
 			{
-				error_bad_command();
-				return FALSE;
+				error_bad_command(Start + 1);
+				return 1;
 			}
 			FullInput = ReadFileContents(InputFile, Buffer);
 			_pclose(InputFile);
@@ -281,7 +287,7 @@ static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 			if (!InputFile)
 			{
 				error_sfile_not_found(Start);
-				return FALSE;
+				return 1;
 			}
 			FullInput = ReadFileContents(InputFile, Buffer);
 			fclose(InputFile);
@@ -290,7 +296,7 @@ static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 		if (!FullInput)
 		{
 			error_out_of_memory();
-			return FALSE;
+			return 1;
 		}
 
 		/* Loop over the input line by line */
@@ -332,20 +338,21 @@ static BOOL ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 
 			/* Don't run unless the line had enough tokens to fill at least one variable */
 			if (*Variables[0])
-				RunInstance(Cmd);
+				Ret = RunInstance(Cmd);
 		} while (!Exiting(Cmd) && (In = NextLine) != NULL);
 		cmd_free(FullInput);
 	}
 
-	return TRUE;
+	return Ret;
 }
 
 /* FOR /L: Do a numeric loop */
-static void ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
+static INT ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 {
 	enum { START, STEP, END };
 	INT params[3] = { 0, 0, 0 };
 	INT i;
+	INT Ret = 0;
 
 	TCHAR *Start, *End = List;
 	for (i = 0; i < 3 && GetNextElement(&Start, &End); i++)
@@ -356,17 +363,19 @@ static void ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 	       (params[STEP] >= 0 ? (i <= params[END]) : (i >= params[END])))
 	{
 		_itot(i, Buffer, 10);
-		RunInstance(Cmd);
+		Ret = RunInstance(Cmd);
 		i += params[STEP];
 	}
+	return Ret;
 }
 
 /* Process a FOR in one directory. Stored in Buffer (up to BufPos) is a
  * string which is prefixed to each element of the list. In a normal FOR
  * it will be empty, but in FOR /R it will be the directory name. */
-static void ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos)
+static INT ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos)
 {
 	TCHAR *Start, *End = List;
+	INT Ret = 0;
 	while (!Exiting(Cmd) && GetNextElement(&Start, &End))
 	{
 		if (BufPos + (End - Start) > &Buffer[CMDLINE_LENGTH])
@@ -397,22 +406,24 @@ static void ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPo
 				    _tcscmp(w32fd.cFileName, _T("..")) == 0)
 					continue;
 				_tcscpy(FilePart, w32fd.cFileName);
-				RunInstance(Cmd);
+				Ret = RunInstance(Cmd);
 			} while (!Exiting(Cmd) && FindNextFile(hFind, &w32fd));
 			FindClose(hFind);
 		}
 		else
 		{
-			RunInstance(Cmd);
+			Ret = RunInstance(Cmd);
 		}
 	}
+	return Ret;
 }
 
 /* FOR /R: Process a FOR in each directory of a tree, recursively. */
-static void ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos)
+static INT ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos)
 {
 	HANDLE hFind;
 	WIN32_FIND_DATA w32fd;
+	INT Ret = 0;
 
 	if (BufPos[-1] != _T('\\'))
 	{
@@ -420,12 +431,12 @@ static void ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR 
 		*BufPos = _T('\0');
 	}
 
-	ForDir(Cmd, List, Buffer, BufPos);
+	Ret = ForDir(Cmd, List, Buffer, BufPos);
 
 	_tcscpy(BufPos, _T("*"));
 	hFind = FindFirstFile(Buffer, &w32fd);
 	if (hFind == INVALID_HANDLE_VALUE)
-		return;
+		return Ret;
 	do
 	{
 		if (!(w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -433,9 +444,10 @@ static void ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR 
 		if (_tcscmp(w32fd.cFileName, _T(".")) == 0 ||
 		    _tcscmp(w32fd.cFileName, _T("..")) == 0)
 			continue;
-		ForRecursive(Cmd, List, Buffer, _stpcpy(BufPos, w32fd.cFileName));
+		Ret = ForRecursive(Cmd, List, Buffer, _stpcpy(BufPos, w32fd.cFileName));
 	} while (!Exiting(Cmd) && FindNextFile(hFind, &w32fd));
 	FindClose(hFind);
+	return Ret;
 }
 
 BOOL
@@ -443,60 +455,54 @@ ExecuteFor(PARSED_COMMAND *Cmd)
 {
 	TCHAR Buffer[CMDLINE_LENGTH]; /* Buffer to hold the variable value */
 	LPTSTR BufferPtr = Buffer;
-	LPBATCH_CONTEXT lpNew;
-	BOOL Success = TRUE;
+	LPFOR_CONTEXT lpNew;
+	INT Ret;
 	LPTSTR List = DoDelayedExpansion(Cmd->For.List);
 
 	if (!List)
-		return FALSE;
+		return 1;
 
-	/* Create our pseudo-batch-context */
-	lpNew = cmd_alloc(sizeof(BATCH_CONTEXT));
+	/* Create our FOR context */
+	lpNew = cmd_alloc(sizeof(FOR_CONTEXT));
 	if (!lpNew)
-		return FALSE;
+	{
+		cmd_free(List);
+		return 1;
+	}
+	lpNew->prev = fc;
+	lpNew->firstvar = Cmd->For.Variable;
+	lpNew->varcount = 1;
+	lpNew->values = &BufferPtr;
+
 	Cmd->For.Context = lpNew;
-
-	lpNew->prev = bc;
-	bc = lpNew;
-
-	bc->hBatchFile = INVALID_HANDLE_VALUE;
-	bc->raw_params = NULL;
-	bc->params = NULL;
-	bc->shiftlevel = 0;
-	bc->forvar = Cmd->For.Variable;
-	bc->forvarcount = 1;
-	bc->forvalues = &BufferPtr;
-	if (bc->prev)
-		bc->bEcho = bc->prev->bEcho;
-	else
-		bc->bEcho = bEcho;
-	bc->RedirList = NULL;
+	fc = lpNew;
 
 	if (Cmd->For.Switches & FOR_F)
 	{
-		Success = ForF(Cmd, List, Buffer);
+		Ret = ForF(Cmd, List, Buffer);
 	}
 	else if (Cmd->For.Switches & FOR_LOOP)
 	{
-		ForLoop(Cmd, List, Buffer);
+		Ret = ForLoop(Cmd, List, Buffer);
 	}
 	else if (Cmd->For.Switches & FOR_RECURSIVE)
 	{
 		DWORD Len = GetFullPathName(Cmd->For.Params ? Cmd->For.Params : _T("."),
 		                            MAX_PATH, Buffer, NULL);
-		ForRecursive(Cmd, List, Buffer, &Buffer[Len]);
+		Ret = ForRecursive(Cmd, List, Buffer, &Buffer[Len]);
 	}
 	else
 	{
-		ForDir(Cmd, List, Buffer, Buffer);
+		Ret = ForDir(Cmd, List, Buffer, Buffer);
 	}
 
 	/* Remove our context, unless someone already did that */
-	if (bc == lpNew)
-		ExitBatch(NULL);
+	if (fc == lpNew)
+		fc = lpNew->prev;
 
+	cmd_free(lpNew);
 	cmd_free(List);
-	return Success;
+	return Ret;
 }
 
 /* EOF */

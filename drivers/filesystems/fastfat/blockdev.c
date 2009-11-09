@@ -23,6 +23,8 @@ VfatReadWritePartialCompletion (IN PDEVICE_OBJECT DeviceObject,
   PVFAT_IRP_CONTEXT IrpContext;
   PMDL Mdl;
 
+  UNREFERENCED_PARAMETER(DeviceObject);
+
   DPRINT("VfatReadWritePartialCompletion() called\n");
 
   IrpContext = (PVFAT_IRP_CONTEXT)Context;
@@ -80,7 +82,7 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 				      &IoStatus);
   if (Irp == NULL)
     {
-      DPRINT("IoBuildSynchronousFsdRequest failed\n");
+      DPRINT1("IoBuildSynchronousFsdRequest failed\n");
       return(STATUS_UNSUCCESSFUL);
     }
 
@@ -135,7 +137,7 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
   Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);
   if (Irp == NULL)
     {
-      DPRINT("IoAllocateIrp failed\n");
+      DPRINT1("IoAllocateIrp failed\n");
       return(STATUS_UNSUCCESSFUL);
     }
 
@@ -155,7 +157,7 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 
   if (!IoAllocateMdl(Buffer, ReadLength, FALSE, FALSE, Irp))
     {
-      DPRINT("IoAllocateMdl failed\n");
+      DPRINT1("IoAllocateMdl failed\n");
       IoFreeIrp(Irp);
       return STATUS_UNSUCCESSFUL;
     }
@@ -214,7 +216,7 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
   Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);
   if (Irp == NULL)
     {
-      DPRINT("IoAllocateIrp failed\n");
+      DPRINT1("IoAllocateIrp failed\n");
       return(STATUS_UNSUCCESSFUL);
     }
 
@@ -234,7 +236,7 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 
   if (!IoAllocateMdl(Buffer, WriteLength, FALSE, FALSE, Irp))
     {
-      DPRINT("IoAllocateMdl failed\n");
+      DPRINT1("IoAllocateMdl failed\n");
       IoFreeIrp(Irp);
       return STATUS_UNSUCCESSFUL;
     }

@@ -1,8 +1,8 @@
 
 
 
-#define TAG_THDD    TAG('t', 'h', 'd', 'd')
-#define TAG_GINI    TAG('G', 'i', 'n', 'i')
+#define TAG_THDD    'ddht'
+#define TAG_GINI    'iniG'
 
 
 

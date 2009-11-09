@@ -715,7 +715,7 @@ ScsiPortIoMapTransfer(
     );
 
 SCSIPORT_API
-VOID DDKAPI
+VOID DDKCDECLAPI
 ScsiPortNotification(
     IN SCSI_NOTIFICATION_TYPE NotificationType,
     IN PVOID HwDeviceExtension,
@@ -960,7 +960,7 @@ ScsiPortValidateRange(
 // begin_ntminitape
 
 SCSIPORT_API
-VOID DDKAPI
+VOID DDKCDECLAPI
 ScsiDebugPrint(
     ULONG DebugPrintLevel,
     PCCHAR DebugMessage,

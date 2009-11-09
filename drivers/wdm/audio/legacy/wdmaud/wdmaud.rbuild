@@ -10,5 +10,6 @@
 	<file>control.c</file>
 	<file>deviface.c</file>
 	<file>entry.c</file>
+	<file>mixer.c</file>
 	<file>wdmaud.rc</file>
 </module>

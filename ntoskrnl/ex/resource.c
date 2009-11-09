@@ -18,7 +18,7 @@
 #define IsOwnedExclusive(r)     (r->Flag & ResourceOwnedExclusive)
 #define IsBoostAllowed(r)       (!(r->Flag & ResourceHasDisabledPriorityBoost))
 
-#if (!(defined(CONFIG_SMP)) && !(defined(DBG)))
+#if (!(defined(CONFIG_SMP)) && !(DBG))
 
 FORCEINLINE
 VOID
@@ -773,6 +773,8 @@ ExAcquireResourceExclusiveLite(IN PERESOURCE Resource,
     KLOCK_QUEUE_HANDLE LockHandle;
     ERESOURCE_THREAD Thread;
     BOOLEAN Success;
+
+	DPRINT("Acquire %x from %x\n", Resource,__builtin_return_address(1));
 
     /* Sanity check */
     ASSERT((Resource->Flag & ResourceNeverExclusive) == 0);
@@ -1817,6 +1819,7 @@ FASTCALL
 ExReleaseResourceLite(IN PERESOURCE Resource)
 {
     /* Just call the For-Thread function */
+	DPRINT("Release %x from %x\n",Resource,__builtin_return_address(1));
     ExReleaseResourceForThreadLite(Resource, (ERESOURCE_THREAD)PsGetCurrentThread());
 }
 

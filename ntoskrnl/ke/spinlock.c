@@ -89,9 +89,41 @@ KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
 /*
  * @implemented
  */
+KIRQL
+NTAPI
+KeAcquireInterruptSpinLock(IN PKINTERRUPT Interrupt)
+{
+    KIRQL OldIrql;
+
+    /* Raise IRQL */
+    KeRaiseIrql(Interrupt->SynchronizeIrql, &OldIrql);
+
+    /* Acquire spinlock on MP */
+    KeAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
+    return OldIrql;
+}
+
+/*
+ * @implemented
+ */
 VOID
 NTAPI
-KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
+KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
+                           IN KIRQL OldIrql)
+{
+    /* Release lock on MP */
+    KeReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
+
+    /* Lower IRQL */
+    KeLowerIrql(OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+_KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
 {
     /* Clear it */
     *SpinLock = 0;
@@ -189,7 +221,7 @@ KeTryToAcquireSpinLockAtDpcLevel(IN OUT PKSPIN_LOCK SpinLock)
         return FALSE;
     }
 
-#ifdef DBG
+#if DBG
     /* On debug builds, we OR in the KTHREAD */
     *SpinLock = (ULONG_PTR)KeGetCurrentThread() | 1;
 #endif
@@ -226,38 +258,6 @@ KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
     /* Call the internal function */
     KeReleaseQueuedSpinLockFromDpcLevel(LockHandle->LockQueue.Next);
 #endif
-}
-
-/*
- * @implemented
- */
-KIRQL
-NTAPI
-KeAcquireInterruptSpinLock(IN PKINTERRUPT Interrupt)
-{
-    KIRQL OldIrql;
-
-    /* Raise IRQL */
-    KeRaiseIrql(Interrupt->SynchronizeIrql, &OldIrql);
-
-    /* Acquire spinlock on MP */
-    KefAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
-    return OldIrql;
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
-                           IN KIRQL OldIrql)
-{
-    /* Release lock on MP */
-    KefReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
-
-    /* Lower IRQL */
-    KeLowerIrql(OldIrql);
 }
 
 /*
@@ -305,14 +305,24 @@ KeReleaseInStackQueuedSpinLockForDpc(IN PKLOCK_QUEUE_HANDLE LockHandle)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 FASTCALL
 KeTestSpinLock(IN PKSPIN_LOCK SpinLock)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    /* Test this spinlock */
+    if (*SpinLock)
+    {
+        /* Spinlock is busy, yield execution */
+        YieldProcessor();
+
+        /* Return busy flag */
+        return FALSE;
+    }
+
+    /* Spinlock appears to be free */
+    return TRUE;
 }
 
 /* EOF */

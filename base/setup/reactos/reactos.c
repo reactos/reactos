@@ -194,8 +194,8 @@ StartDlgProc(HWND hwndDlg,
             /* Center the wizard window */
             CenterWindow (hwndControl);
 
-            dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-            SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
             /* Hide and disable the 'Cancel' button at the moment,
              * we use this button to cancel the setup process
@@ -259,8 +259,8 @@ LangSelDlgProc(HWND hwndDlg,
 
             hwndControl = GetParent(hwndDlg);
 
-            dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-            SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
             
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
             ShowWindow (hwndControl, SW_SHOW);
@@ -349,9 +349,9 @@ LangSelDlgProc(HWND hwndDlg,
                     break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLong(hwndDlg,
-                                  DWL_MSGRESULT,
-                                  MessageBox(GetParent(hwndDlg),
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_MSGRESULT,
+                                     MessageBox(GetParent(hwndDlg),
                                              abort_msg,
                                              abort_title,
                                              MB_YESNO | MB_ICONQUESTION) != IDYES);
@@ -364,8 +364,9 @@ LangSelDlgProc(HWND hwndDlg,
 
                     if (tindex != CB_ERR)
                     {
+                        WORD LangID;
                         SetupData.SelectedLangId = SendMessage(hList, CB_GETITEMDATA, (WPARAM) tindex, (LPARAM) 0);
-                        WORD LangID = _tcstol(SetupData.pLanguages[SetupData.SelectedLangId].LangId, NULL, 16);
+                        LangID = _tcstol(SetupData.pLanguages[SetupData.SelectedLangId].LangId, NULL, 16);
                         SetThreadLocale(MAKELCID(LangID, SORT_DEFAULT));
                         // FIXME: need to reload all resource to force
                         // the new language setting
@@ -408,8 +409,8 @@ TypeDlgProc(HWND hwndDlg,
 
             hwndControl = GetParent(hwndDlg);
 
-            dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-            SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
             CheckDlgButton(hwndDlg, IDC_INSTALL, BST_CHECKED);
             
@@ -433,9 +434,9 @@ TypeDlgProc(HWND hwndDlg,
                 break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLong(hwndDlg,
-                                  DWL_MSGRESULT,
-                                  MessageBox(GetParent(hwndDlg),
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_MSGRESULT,
+                                     MessageBox(GetParent(hwndDlg),
                                              abort_msg,
                                              abort_title,
                                              MB_YESNO | MB_ICONQUESTION) != IDYES);
@@ -480,8 +481,8 @@ DeviceDlgProc(HWND hwndDlg,
 
             hwndControl = GetParent(hwndDlg);
 
-            dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-            SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
@@ -530,9 +531,9 @@ DeviceDlgProc(HWND hwndDlg,
                     break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLong(hwndDlg,
-                                  DWL_MSGRESULT,
-                                  MessageBox(GetParent(hwndDlg),
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_MSGRESULT,
+                                     MessageBox(GetParent(hwndDlg),
                                              abort_msg,
                                              abort_title,
                                              MB_YESNO | MB_ICONQUESTION) != IDYES);
@@ -680,8 +681,8 @@ DriveDlgProc(HWND hwndDlg,
 
             hwndControl = GetParent(hwndDlg);
 
-            dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-            SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
@@ -762,9 +763,9 @@ DriveDlgProc(HWND hwndDlg,
                     break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLong(hwndDlg,
-                                  DWL_MSGRESULT,
-                                  MessageBox(GetParent(hwndDlg),
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_MSGRESULT,
+                                     MessageBox(GetParent(hwndDlg),
                                              abort_msg,
                                              abort_title,
                                              MB_YESNO | MB_ICONQUESTION) != IDYES);
@@ -799,8 +800,8 @@ SummaryDlgProc(HWND hwndDlg,
 
             hwndControl = GetParent(hwndDlg);
 
-            dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-            SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
             ShowWindow(hwndControl, SW_HIDE);
@@ -853,8 +854,8 @@ ProcessDlgProc(HWND hwndDlg,
 
             hwndControl = GetParent(hwndDlg);
 
-            dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-            SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
             ShowWindow(hwndControl, SW_HIDE);
@@ -910,8 +911,8 @@ RestartDlgProc(HWND hwndDlg,
 
             hwndControl = GetParent(hwndDlg);
 
-            dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-            SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,

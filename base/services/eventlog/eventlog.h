@@ -91,10 +91,12 @@ typedef struct
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
-typedef struct
+typedef struct _EVENTSOURCE
 {
+    LIST_ENTRY EventSourceListEntry;
     PLOGFILE LogFile;
-    WCHAR *Name;
+    ULONG CurrentRecord;
+    WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
 
 /* file.c */
@@ -114,9 +116,9 @@ VOID LogfListAddItem(PLOGFILE Item);
 
 VOID LogfListRemoveItem(PLOGFILE Item);
 
-BOOL LogfReadEvent(PLOGFILE LogFile,
+DWORD LogfReadEvent(PLOGFILE LogFile,
                    DWORD Flags,
-                   DWORD RecordNumber,
+                   DWORD * RecordNumber,
                    DWORD BufSize,
                    PBYTE Buffer,
                    DWORD * BytesRead,
@@ -139,12 +141,17 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile);
 
 DWORD LogfGetOldestRecord(PLOGFILE LogFile);
 
+DWORD LogfGetCurrentRecord(PLOGFILE LogFile);
+
 ULONG LogfOffsetByNumber(PLOGFILE LogFile,
                          DWORD RecordNumber);
 
 BOOL LogfAddOffsetInformation(PLOGFILE LogFile,
                               ULONG ulNumber,
                               ULONG ulOffset);
+
+BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile,
+                              ULONG ulNumber);
 
 PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwRecordNumber,

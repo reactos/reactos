@@ -37,6 +37,10 @@ COMMAND cmds[] =
 	{_T("alias"), 0, CommandAlias},
 #endif
 
+#ifdef INCLUDE_CMD_ASSOC
+	{_T("assoc"), 0, CommandAssoc},
+#endif
+
 #ifdef INCLUDE_CMD_ATTRIB
 	{_T("attrib"), 0, CommandAttrib},
 #endif
@@ -133,6 +137,10 @@ COMMAND cmds[] =
 #ifdef INCLUDE_CMD_MKDIR
 	{_T("md"), CMD_SPECIAL, cmd_mkdir},
 	{_T("mkdir"), CMD_SPECIAL, cmd_mkdir},
+#endif
+
+#ifdef INCLUDE_CMD_MKLINK
+	{_T("mklink"), 0, cmd_mklink},
 #endif
 
 #ifdef INCLUDE_CMD_MOVE

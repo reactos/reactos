@@ -375,11 +375,11 @@ GuiConsoleOpenUserSettings(PGUI_CONSOLE_DATA GuiData, DWORD ProcessId, PHKEY hSu
           while((ptr = wcschr(szProcessName, L'\\')))
             ptr[0] = L'_';
 
-          swprintf(szBuffer, L"Console\\\%SystemRoot\%%S", &szProcessName[wLength]);
+          swprintf(szBuffer, L"Console\\%%SystemRoot%%%S", &szProcessName[wLength]);
           DPRINT("#3 Path : %S\n", szBuffer);
           if (RegOpenKeyExW(hKey, szBuffer, 0, samDesired, hSubKey) == ERROR_SUCCESS)
             {
-              swprintf(GuiData->szProcessName, L"\%SystemRoot\%%S", &szProcessName[wLength]);
+              swprintf(GuiData->szProcessName, L"%%SystemRoot%%%S", &szProcessName[wLength]);
               RegCloseKey(hKey);
               return TRUE;
             }
@@ -1998,7 +1998,7 @@ GuiInit(VOID)
   wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
   wc.hIcon = LoadIconW(GetModuleHandleW(L"win32csr"), MAKEINTRESOURCEW(1));
   wc.hCursor = LoadCursorW(NULL, (LPCWSTR) IDC_ARROW);
-  wc.hbrBackground = NULL;
+  wc.hbrBackground = CreateSolidBrush(RGB(0,0,0));
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;

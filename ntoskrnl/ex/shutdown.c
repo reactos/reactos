@@ -28,7 +28,7 @@ KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
    while (TRUE)
      {
        KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
-#if defined(_M_X86)
+#if defined(_M_IX86)
        Ke386HaltProcessor();
 #else
        HalProcessorIdle();
@@ -133,6 +133,10 @@ ShutdownThreadMain(PVOID Context)
        "<Place your Ad here>\n"
     };
    LARGE_INTEGER Now;
+#ifdef CONFIG_SMP
+	LONG i;
+	KIRQL OldIrql;
+#endif
 
    /* Run the thread on the boot processor */
    KeSetSystemAffinityThread(1);
@@ -160,7 +164,7 @@ ShutdownThreadMain(PVOID Context)
    PspShutdownProcessManager();
 
    CmShutdownSystem();
-   MiShutdownMemoryManager();
+   CcShutdownSystem();
    IoShutdownRegisteredFileSystems();
    IoShutdownRegisteredDevices();
 
@@ -173,9 +177,6 @@ ShutdownThreadMain(PVOID Context)
         HalReturnToFirmware (FIRMWARE_OFF);
 #else
 #ifdef CONFIG_SMP
-        LONG i;
-	KIRQL OldIrql;
-
 	OldIrql = KeRaiseIrqlToDpcLevel();
         /* Halt all other processors */
 	for (i = 0; i < KeNumberProcessors; i++)

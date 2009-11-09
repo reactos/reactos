@@ -175,9 +175,11 @@ parse_option_buffer(struct packet *packet,
 			 * for clients, but what the heck...
 			 */
 			t = calloc(1, len + packet->options[code].len + 1);
-			if (!t)
+			if (!t) {
 				error("Can't expand storage for option %s.",
 				    dhcp_options[code].name);
+                                return;
+                        }
 			memcpy(t, packet->options[code].data,
 				packet->options[code].len);
 			memcpy(t + packet->options[code].len,

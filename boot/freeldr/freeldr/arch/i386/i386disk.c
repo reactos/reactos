@@ -163,7 +163,7 @@ BOOLEAN DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT B
 
 	memcpy(Buffer, Ptr, BufferSize);
 
-#ifdef DBG
+#if DBG
     DPRINTM(DPRINT_DISK, "size of buffer:                          %x\n", Ptr[0]);
     DPRINTM(DPRINT_DISK, "information flags:                       %x\n", Ptr[1]);
     DPRINTM(DPRINT_DISK, "number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]);

@@ -207,7 +207,10 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   StringO.MaximumLength = 42;
   Status = RtlUnicodeStringToOemString(&StringO, &StringW, FALSE);
   if (!NT_SUCCESS(Status))
+  {
+	  DPRINT1("Status %x\n", Status);
     return Status;
+  }
   if (DeviceExt->Flags & VCB_IS_FATX)
   {
     RtlCopyMemory(VolumeLabelDirEntry.FatX.Filename, cString, LabelLen);
@@ -281,6 +284,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   vfatReleaseFCB(DeviceExt, pRootFcb);
   if (!NT_SUCCESS(Status))
   {
+	  DPRINT1("Status %x\n", Status);
     return Status;
   }
 
@@ -288,6 +292,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   DeviceObject->Vpb->VolumeLabelLength = (USHORT)FsLabelInfo->VolumeLabelLength;
   RtlCopyMemory(DeviceObject->Vpb->VolumeLabel, FsLabelInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabelLength);
 
+  if (!NT_SUCCESS(Status)) DPRINT1("Status %x\n", Status);
   return Status;
 }
 

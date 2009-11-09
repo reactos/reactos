@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define ENABLE_ACPI
+//#define ENABLE_ACPI
 
 /* GLOBALS *******************************************************************/
 
@@ -29,6 +29,7 @@ extern BOOLEAN PnpSystemInit;
 /* DATA **********************************************************************/
 
 PDRIVER_OBJECT IopRootDriverObject;
+FAST_MUTEX IopBusTypeGuidListLock;
 PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList = NULL;
 
 #if defined (ALLOC_PRAGMA)
@@ -279,7 +280,7 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
    PVOID NewList;
 
    /* Acquire the lock */
-   ExAcquireFastMutex(&IopBusTypeGuidList->Lock);
+   ExAcquireFastMutex(&IopBusTypeGuidListLock);
 
    /* Loop all entries */
    while (i < IopBusTypeGuidList->GuidCount)
@@ -333,7 +334,7 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
    IopBusTypeGuidList->GuidCount++;
 
 Quickie:
-   ExReleaseFastMutex(&IopBusTypeGuidList->Lock);
+   ExReleaseFastMutex(&IopBusTypeGuidListLock);
    return FoundIndex;
 }
 
@@ -513,6 +514,11 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
    /* PNP IRPs are initialized with a status code of STATUS_NOT_SUPPORTED */
    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
    Irp->IoStatus.Information = 0;
+
+   if (MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS)
+   {
+      Irp->IoStatus.Information = (ULONG_PTR)Stack->Parameters.FilterResourceRequirements.IoResourceRequirementList;
+   }
 
    IrpSp = IoGetNextIrpStackLocation(Irp);
    IrpSp->MinorFunction = (UCHAR)MinorFunction;
@@ -746,7 +752,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                                    &KeyName,
                                    0,
                                    REG_RESOURCE_LIST,
-                                   &DeviceNode->BootResources,
+                                   DeviceNode->BootResources,
                                    ListSize);
          }
       }
@@ -1046,7 +1052,7 @@ IopTranslateDeviceResources(
          {
             case CmResourceTypePort:
             {
-               ULONG AddressSpace = 0; /* IO space */
+               ULONG AddressSpace = 1; /* IO space */
                if (!HalTranslateBusAddress(
                   DeviceNode->ResourceList->List[i].InterfaceType,
                   DeviceNode->ResourceList->List[i].BusNumber,
@@ -1072,7 +1078,7 @@ IopTranslateDeviceResources(
             }
             case CmResourceTypeMemory:
             {
-               ULONG AddressSpace = 1; /* Memory space */
+               ULONG AddressSpace = 0; /* Memory space */
                if (!HalTranslateBusAddress(
                   DeviceNode->ResourceList->List[i].InterfaceType,
                   DeviceNode->ResourceList->List[i].BusNumber,
@@ -2843,9 +2849,9 @@ PnpInit(VOID)
     DPRINT("PnpInit()\n");
 
     KeInitializeSpinLock(&IopDeviceTreeLock);
-
+	ExInitializeFastMutex(&IopBusTypeGuidListLock);
     /* Initialize the Bus Type GUID List */
-    IopBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
+    IopBusTypeGuidList = ExAllocatePool(NonPagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
     if (!IopBusTypeGuidList) {
 	DPRINT1("ExAllocatePool() failed\n");
 	KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
@@ -3211,7 +3217,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         {
             Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
         }
-        Data = &DeviceNode->BootResources;
+        Data = DeviceNode->BootResources;
         break;
 
         /* FIXME: use a translated boot configuration instead */
@@ -3221,7 +3227,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         {
             Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
         }
-        Data = &DeviceNode->BootResources;
+        Data = DeviceNode->BootResources;
         break;
 
     case DevicePropertyEnumeratorName:

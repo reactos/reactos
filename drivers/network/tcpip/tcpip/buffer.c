@@ -238,7 +238,7 @@ UINT CopyPacketToBufferChain(
         return 0;
 
     /* Skip SrcOffset bytes in the source packet */
-    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, &SrcData, &SrcSize, &Total);
+    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
         return 0;
 
@@ -365,7 +365,6 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
     NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewData, Len );
     if( Status != NDIS_STATUS_SUCCESS ) {
 	exFreePool( NewData );
-	UntrackFL( File, Line, Packet, NDIS_PACKET_TAG );
 	FreeNdisPacket( Packet );
 	return Status;
     }

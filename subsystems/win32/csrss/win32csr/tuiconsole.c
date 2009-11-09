@@ -32,11 +32,43 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 static BOOL FASTCALL
-TuiInit(VOID)
+TuiStartService(LPCWSTR lpServiceName)
+{
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hService = NULL;
+    BOOL ret = FALSE;
+
+    hSCManager = OpenSCManagerW(NULL, NULL, 0);
+    if (hSCManager == NULL)
+        goto cleanup;
+
+    hService = OpenServiceW(hSCManager, lpServiceName, SERVICE_START);
+    if (hService == NULL)
+        goto cleanup;
+
+    ret = StartServiceW(hService, 0, NULL);
+    if (!ret)
+        goto cleanup;
+
+    ret = TRUE;
+
+cleanup:
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
+    if (hService != NULL)
+        CloseServiceHandle(hService);
+    return ret;
+}
+
+static BOOL FASTCALL
+TuiInit(DWORD OemCP)
 {
   CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
   DWORD BytesReturned;
   WNDCLASSEXW wc;
+  USHORT TextAttribute = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+
+  TuiStartService(L"Blue");
 
   ConsoleDeviceHandle = CreateFileW(L"\\\\.\\BlueScreen", FILE_ALL_ACCESS, 0, NULL,
                                     OPEN_EXISTING, 0, NULL);
@@ -44,6 +76,21 @@ TuiInit(VOID)
     {
       DPRINT1("Failed to open BlueScreen.\n");
       return FALSE;
+    }
+
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_LOADFONT,
+                         &OemCP, sizeof(OemCP), NULL, 0,
+                         &BytesReturned, NULL))
+    {
+        DPRINT1("Failed to load the font for codepage %d\n", OemCP);
+        /* Let's suppose the font is good enough to continue */
+    }
+
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
+                         &TextAttribute, sizeof(TextAttribute), NULL, 0,
+                         &BytesReturned, NULL))
+    {
+        DPRINT1("Failed to set text attribute\n");
     }
 
   ActiveConsole = NULL;
@@ -73,7 +120,7 @@ TuiInit(VOID)
 static VOID WINAPI
 TuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
 {
-  Buffer->DefaultAttrib = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_BLUE;
+  Buffer->DefaultAttrib = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 }
 
 static void FASTCALL
@@ -304,7 +351,7 @@ TuiInitConsole(PCSRSS_CONSOLE Console)
   if (! ConsInitialized)
     {
       ConsInitialized = TRUE;
-      if (! TuiInit())
+      if (! TuiInit(Console->CodePage))
         {
           ConsInitialized = FALSE;
           return STATUS_UNSUCCESSFUL;

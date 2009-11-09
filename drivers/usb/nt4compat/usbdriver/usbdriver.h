@@ -41,4 +41,5 @@
 #include "hub.h"
 #include "umss.h"
 #include "mouse.h"
+#include "keyboard.h"
 #include "uhciver.h"

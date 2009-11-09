@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  18-09-2008
- * LAST CHANGE:  05-11-2008
+ * LAST CHANGE:  02-05-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -152,6 +152,19 @@ BEGIN
   DEFPUSHBUTTON "Nie", IDCANCEL, 102, 129, 54, 13
 END
 
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "Stop Other Services"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "Naozaj chcete zastaviù tieto sluûby?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "¡no", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "Nie", IDCANCEL, 120, 129, 54, 14
+END
+
 IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
 CAPTION "Moûnosti"
 FONT 8, "MS Shell Dlg",0,0
@@ -196,6 +209,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "PoËet sluûieb: %d"
+  IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
   IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
@@ -257,11 +271,11 @@ BEGIN
   IDS_HINT_HELP         " Display help window."
   IDS_HINT_ABOUT        " »o je ManaûÈr sluûieb systÈmu ReactOS."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_RESTORE  " ObnovÌ veækosù tohto okna na norm·lnu."
   IDS_HINT_SYS_MOVE     " Presunie toto okno."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_SIZE     " ZmenÌ veækosù tohto okna."
+  IDS_HINT_SYS_MINIMIZE " ZbalÌ toto okno do ikony."
+  IDS_HINT_SYS_MAXIMIZE " Zv‰ËöÌ veækosù tohto okna tak, aby vyplnilo obrazovku."
   IDS_HINT_SYS_CLOSE    " Zavrie toto okno."
 END
 

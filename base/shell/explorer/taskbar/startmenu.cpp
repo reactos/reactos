@@ -1943,7 +1943,8 @@ int StartMenuHandler::Command(int id, int code)
 
 #ifndef __REACTOS__
 	  case IDC_TERMINATE:
-		DestroyWindow(GetParent(_hwnd));
+		DestroyWindow(g_Globals._hwndDesktopBar);
+		DestroyWindow(g_Globals._hwndDesktop);
 		break;
 #endif
 

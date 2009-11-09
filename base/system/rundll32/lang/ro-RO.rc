@@ -1,0 +1,14 @@
+/*
+ * ReactOS rundll32
+ * Copyright (C) 2009 Petru Dimitriu (Romanian translation)
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DllNotLoaded,   "LoadLibrary nu a putut încãrca '%s'"
+    IDS_MissingEntry,   "Lipsã punct de intrare: %s\nîn %s"
+END

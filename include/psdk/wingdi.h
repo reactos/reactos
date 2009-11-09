@@ -6,6 +6,12 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4820)
+#endif
+
 /* Get/SetSystemPaletteUse() values */
 #define SYSPAL_ERROR        0
 #define SYSPAL_STATIC       1
@@ -166,6 +172,25 @@ extern "C" {
 #define EMR_GLSRECORD 102
 #define EMR_GLSBOUNDEDRECORD 103
 #define EMR_PIXELFORMAT 104
+#if (_WIN32_WINNT >= 0x0500)
+#define EMR_DRAWESCAPE 105
+#define EMR_EXTESCAPE 106
+#define EMR_STARTDOC 107
+#define EMR_SMALLTEXTOUT 108
+#define EMR_FORCEUFIMAPPING 109
+#define EMR_NAMEDESCAPE 110
+#define EMR_COLORCORRECTPALETTE 111
+#define EMR_SETICMPROFILEA 112
+#define EMR_SETICMPROFILEW 113
+#define EMR_ALPHABLEND 114
+#define EMR_ALPHADIBBLEND 115
+#define EMR_TRANSPARENTBLT 116
+#define EMR_TRANSPARENTDIB 117
+#define EMR_GRADIENTFILL 118
+#define EMR_SETLINKEDUFIS 119
+#define EMR_SETTEXTJUSTIFICATION 120
+#define EMR_COLORMATCHTOTARGETW 121
+#endif
 #define ENHMETA_SIGNATURE 1179469088
 #define EPS_SIGNATURE 0x46535045
 #if (_WIN32_WINNT >= 0x0500)
@@ -1119,31 +1144,40 @@ extern "C" {
 #define DM_IN_PROMPT	DM_PROMPT
 #define DM_OUT_BUFFER	DM_COPY
 #define DM_OUT_DEFAULT	DM_UPDATE
-#define DM_ORIENTATION 1
-#define DM_PAPERSIZE 2
-#define DM_PAPERLENGTH 4
-#define DM_PAPERWIDTH 8
-#define DM_POSITION 32
-#define DM_SCALE 16
-#define DM_COPIES 256
-#define DM_DEFAULTSOURCE 512
-#define DM_PRINTQUALITY 1024
-#define DM_COLOR 2048
-#define DM_DUPLEX 4096
-#define DM_YRESOLUTION 8192
-#define DM_TTOPTION 16384
-#define DM_COLLATE 32768
-#define DM_FORMNAME 65536
-#define DM_LOGPIXELS 0x20000
-#define DM_BITSPERPEL 0x40000
-#define DM_PELSWIDTH 0x80000
-#define DM_PELSHEIGHT 0x100000
-#define DM_DISPLAYFLAGS 0x200000
-#define DM_DISPLAYFREQUENCY 0x400000
-#define DM_ICMMETHOD 0x800000
-#define DM_ICMINTENT 0x1000000
-#define DM_MEDIATYPE 0x2000000
-#define DM_DITHERTYPE 0x4000000
+
+#define DM_ORIENTATION        0x00000001
+#define DM_PAPERSIZE          0x00000002
+#define DM_PAPERLENGTH        0x00000004
+#define DM_PAPERWIDTH         0x00000008
+#define DM_SCALE              0x00000010
+#define DM_POSITION           0x00000020
+#define DM_NUP                0x00000040
+#define DM_DISPLAYORIENTATION 0x00000080
+#define DM_COPIES             0x00000100
+#define DM_DEFAULTSOURCE      0x00000200
+#define DM_PRINTQUALITY       0x00000400
+#define DM_COLOR              0x00000800
+#define DM_DUPLEX             0x00001000
+#define DM_YRESOLUTION        0x00002000
+#define DM_TTOPTION           0x00004000
+#define DM_COLLATE            0x00008000
+#define DM_FORMNAME           0x00010000
+#define DM_LOGPIXELS          0x00020000
+#define DM_BITSPERPEL         0x00040000
+#define DM_PELSWIDTH          0x00080000
+#define DM_PELSHEIGHT         0x00100000
+#define DM_DISPLAYFLAGS       0x00200000
+#define DM_DISPLAYFREQUENCY   0x00400000
+#define DM_ICMMETHOD          0x00800000
+#define DM_ICMINTENT          0x01000000
+#define DM_MEDIATYPE          0x02000000
+#define DM_DITHERTYPE         0x04000000
+#define DM_PANNINGWIDTH       0x08000000
+#define DM_PANNINGHEIGHT      0x10000000
+#if (WINVER >= 0x0501)
+#define DM_DISPLAYFIXEDOUTPUT 0x20000000
+#endif
+
 #define DMICMMETHOD_NONE	1
 #define DMICMMETHOD_SYSTEM	2
 #define DMICMMETHOD_DRIVER	3
@@ -1438,9 +1472,11 @@ typedef struct _devicemodeA {
 #else
     } DUMMYSTRUCTNAME;
 #endif
-    POINTL dmPosition;
-    DWORD  dmDisplayOrientation;
-    DWORD  dmDisplayFixedOutput;
+    struct {
+      POINTL dmPosition;
+      DWORD  dmDisplayOrientation;
+      DWORD  dmDisplayFixedOutput;
+    } DUMMYSTRUCTNAME2;
 #ifdef __WINESRC__
   } DUMMYUNIONNAME1;
 #else
@@ -1497,9 +1533,11 @@ typedef struct _devicemodeW {
 #else
     } DUMMYSTRUCTNAME;
 #endif
-    POINTL dmPosition;
-    DWORD  dmDisplayOrientation;
-    DWORD  dmDisplayFixedOutput;
+    struct {
+      POINTL dmPosition;
+      DWORD  dmDisplayOrientation;
+      DWORD  dmDisplayFixedOutput;
+    } DUMMYSTRUCTNAME2;
 #ifdef __WINESRC__
   } DUMMYUNIONNAME1;
 #else
@@ -1533,7 +1571,7 @@ typedef struct _devicemodeW {
   DWORD  dmPanningHeight;
 #endif
 #endif /* WINVER >= 0x0400 */
-} DEVMODEW,*LPDEVMODEW,*PDEVMODEW;
+} DEVMODEW,*LPDEVMODEW,*PDEVMODEW,*NPDEVMODEW;
 typedef struct tagDIBSECTION {
 	BITMAP dsBm;
 	BITMAPINFOHEADER dsBmih;
@@ -2875,6 +2913,7 @@ int WINAPI FillRgn(HDC,HRGN,HBRUSH);
 BOOL WINAPI FixBrushOrgEx(HDC,int,int,LPPOINT);
 BOOL WINAPI FlattenPath(HDC);
 BOOL WINAPI FloodFill(HDC,int,int,COLORREF);
+BOOL WINAPI GdiAlphaBlend(HDC,int,int,int,int,HDC,int,int,int,int,BLENDFUNCTION);
 BOOL WINAPI GdiComment(HDC,UINT,const BYTE*);
 BOOL WINAPI GdiFlush(void);
 DWORD WINAPI GdiGetBatchLimit(void);
@@ -2934,6 +2973,7 @@ UINT WINAPI GetEnhMetaFilePaletteEntries(HENHMETAFILE,UINT,LPPALETTEENTRY);
 UINT WINAPI GetEnhMetaFilePixelFormat(HENHMETAFILE,UINT,PIXELFORMATDESCRIPTOR*);
 DWORD WINAPI GetFontData(HDC,DWORD,DWORD,PVOID,DWORD);
 DWORD WINAPI GetFontLanguageInfo(HDC);
+DWORD WINAPI GetFontUnicodeRanges(HDC,LPGLYPHSET);
 DWORD WINAPI GetGlyphIndicesA(HDC,LPCSTR,INT,LPWORD,DWORD);
 DWORD WINAPI GetGlyphIndicesW(HDC,LPCWSTR,INT,LPWORD,DWORD);
 DWORD WINAPI GetGlyphOutlineA(HDC,UINT,UINT,LPGLYPHMETRICS,DWORD,PVOID,const MAT2*);
@@ -3305,6 +3345,11 @@ typedef DISPLAY_DEVICEA DISPLAY_DEVICE, *PDISPLAY_DEVICE, *LPDISPLAY_DEVICE;
 #define wglUseFontOutlines wglUseFontOutlinesA
 #endif
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

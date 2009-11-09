@@ -36,12 +36,7 @@ BOOLEAN FsRecognizeVolume(ULONG DriveNumber, ULONG VolumeStartSector, UCHAR* Vol
 
 	DPRINTM(DPRINT_FILESYSTEM, "FsRecognizeVolume() DriveNumber: 0x%x VolumeStartSector: %d\n", DriveNumber, VolumeStartSector);
 
-	if (FsRecIsExt2(DriveNumber, VolumeStartSector))
-	{
-		*VolumeType = PARTITION_EXT2;
-		return TRUE;
-	}
-	else if (FsRecIsFat(DriveNumber, VolumeStartSector))
+	if (FsRecIsFat(DriveNumber, VolumeStartSector))
 	{
 		*VolumeType = PARTITION_FAT32;
 		return TRUE;
@@ -49,6 +44,11 @@ BOOLEAN FsRecognizeVolume(ULONG DriveNumber, ULONG VolumeStartSector, UCHAR* Vol
 	else if (FsRecIsNtfs(DriveNumber, VolumeStartSector))
 	{
 		*VolumeType = PARTITION_NTFS;
+		return TRUE;
+	}
+	else if (FsRecIsExt2(DriveNumber, VolumeStartSector))
+	{
+		*VolumeType = PARTITION_EXT2;
 		return TRUE;
 	}
 
@@ -83,7 +83,7 @@ BOOLEAN FsRecIsExt2(ULONG DriveNumber, ULONG VolumeStartSector)
 		return FALSE;
 	}
 
-	if (SuperBlock->s_magic == EXT3_SUPER_MAGIC)
+	if (SuperBlock->magic == EXT2_MAGIC)
 	{
 		return TRUE;
 	}

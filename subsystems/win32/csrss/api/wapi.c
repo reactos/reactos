@@ -123,7 +123,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
                              IN HANDLE hApiListenPort)
 {
     NTSTATUS Status;
-    HANDLE ServerPort = (HANDLE) 0;
+    HANDLE ServerPort = NULL, ServerThread = NULL;
     PCSRSS_PROCESS_DATA ProcessData = NULL;
     REMOTE_PORT_VIEW LpcRead;
     LpcRead.Length = sizeof(LpcRead);
@@ -167,7 +167,6 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
         return Status;
     }
 
-    HANDLE ServerThread = (HANDLE) 0;
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
                                  FALSE,
@@ -299,51 +298,6 @@ ClientConnectionThread(HANDLE ServerPort)
     DPRINT("CSR: %s done\n", __FUNCTION__);
     RtlExitUserThread(STATUS_SUCCESS);
 }
-
-/**********************************************************************
- * NAME
- *	ServerApiPortThread/1
- *
- * DESCRIPTION
- * 	Handle connection requests from clients to the port
- * 	"\Windows\ApiPort".
- */
-#if 0
-DWORD WINAPI
-ServerApiPortThread (HANDLE hApiListenPort)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    BYTE RawRequest[sizeof(PORT_MESSAGE) + sizeof(CSR_CONNECTION_INFO)];
-    PPORT_MESSAGE Request = (PPORT_MESSAGE)RawRequest;
-
-    DPRINT("CSR: %s called", __FUNCTION__);
-
-    for (;;)
-    {
-         REMOTE_PORT_VIEW LpcRead;
-         LpcRead.Length = sizeof(LpcRead);
-
-         Status = NtListenPort (hApiListenPort, Request);
-         if (!NT_SUCCESS(Status))
-         {
-             DPRINT1("CSR: NtListenPort() failed, status=%x\n", Status);
-             break;
-         }
-
-         Status = CsrpHandleConnectionRequest(Request, hApiListenPort);
-         if(!NT_SUCCESS(Status))
-         {
-             DPRINT1("CSR: %s: SmpHandleConnectionRequest failed (Status=0x%08lx)\n",
-                     __FUNCTION__, Status);
-             break;
-         }
-    }
-
-    NtClose(hApiListenPort);
-    NtTerminateThread(NtCurrentThread(), Status);
-    return 0;
-}
-#endif
 
 /**********************************************************************
  * NAME

@@ -122,7 +122,7 @@ extern "C" {
   _CRTIMP int __cdecl __iswcsym(wint_t);
   int __cdecl is_wctype(wint_t,wctype_t);
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
-int __cdecl isblank(int _C);
+int __cdecl iswblank(wint_t _C);
 #endif
 #endif
 

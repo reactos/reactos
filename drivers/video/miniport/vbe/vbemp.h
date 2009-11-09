@@ -24,7 +24,10 @@
 /* INCLUDES *******************************************************************/
 
 #ifdef _MSC_VER
-#include "dderror.h"
+#pragma message ("INVESTIGATE ME")
+#endif
+
+#if 0 //#ifdef _MSC_VER
 #include "devioctl.h"
 #else
 #include <ntddk.h>
@@ -35,8 +38,7 @@
 #include "ntddvdeo.h"
 #include "video.h"
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define TAG_VBE TAG('V', 'B', 'E', ' ')
+#define TAG_VBE ' EBV'
 
 /*
  * Compile-time define to get VBE 1.2 support. The implementation

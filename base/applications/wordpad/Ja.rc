@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -153,7 +155,7 @@ CAPTION "タブの設定"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "タブの停止位置(&T)", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "追加(&A)", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "削除(&R)", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
@@ -242,6 +244,7 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,       "ファイルに保存する権限がありません。"
     STRING_OPEN_FAILED,               "ファイルを開けません。"
     STRING_OPEN_ACCESS_DENIED,        "ファイルを開く権限がありません。"
+    STRING_PRINTING_NOT_IMPLEMENTED,  "プリントが実装されていません。"
+    STRING_MAX_TAB_STOPS,             "32以上なタブを追加できません。"
 END
-
 #pragma code_page(default)

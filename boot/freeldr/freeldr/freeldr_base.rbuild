@@ -7,8 +7,10 @@
 	<include base="ntoskrnl">include</include>
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
-	<compilerflag>-fno-inline</compilerflag>
-	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+	<group compilerset="gcc">
+		<compilerflag>-fno-inline</compilerflag>
+		<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+	</group>
 	<directory name="cache">
 		<file>blocklist.c</file>
 		<file>cache.c</file>

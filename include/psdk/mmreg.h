@@ -21,6 +21,11 @@
 #ifndef __WINE_MMREG_H
 #define __WINE_MMREG_H
 
+#ifndef RC_INVOKED
+#include "pshpack1.h"
+#endif
+
+
 /***********************************************************************
  * Defines/Enums
  */
@@ -117,6 +122,7 @@ typedef const struct _WAVEFORMATEX *LPCWAVEFORMATEX;
 #define  WAVE_FORMAT_G721_ADPCM			0x0040	/*  Antex Electronics Corporation  */
 #define  WAVE_FORMAT_MPEG			0x0050	/*  Microsoft Corporation  */
 #define  WAVE_FORMAT_MPEGLAYER3			0x0055
+#define  WAVE_FORMAT_DOLBY_AC3_SPDIF	0x0092 /* Sonic Foundry */
 #define  WAVE_FORMAT_CREATIVE_ADPCM		0x0200	/*  Creative Labs, Inc  */
 #define  WAVE_FORMAT_CREATIVE_FASTSPEECH8	0x0202	/*  Creative Labs, Inc  */
 #define  WAVE_FORMAT_CREATIVE_FASTSPEECH10	0x0203	/*  Creative Labs, Inc  */
@@ -506,6 +512,10 @@ typedef struct tagEXBMINFOHEADER {
 #define ICTYPE_AUDIO		mmioFOURCC('a', 'u', 'd', 'c')
 #endif
 
+#endif
+
+#ifndef RC_INVOKED
+#include "poppack.h"
 #endif
 
 #endif /* __WINE_MMREG_H */

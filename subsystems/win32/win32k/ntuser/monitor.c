@@ -151,14 +151,14 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
  *
  * Arguments
  *
- *   pGdiDevice     Pointer to the GDIDEVICE onto which the monitor was attached
+ *   pGdiDevice     Pointer to the PDEVOBJ onto which the monitor was attached
  *   DisplayNumber  Display Number (starting with 0)
  *
  * Return value
  *   Returns a NTSTATUS
  */
 NTSTATUS
-IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
+IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
                  IN ULONG DisplayNumber)
 {
    PMONITOR_OBJECT Monitor;
@@ -195,7 +195,6 @@ IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
       PMONITOR_OBJECT p;
       DPRINT("Additional monitor is beeing attached\n");
       for (p = gMonitorList; p->Next != NULL; p = p->Next)
-         ;
       {
          p->Next = Monitor;
       }
@@ -211,13 +210,13 @@ IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
  *
  * Arguments
  *
- *   pGdiDevice  Pointer to the GDIDEVICE from which the monitor was detached
+ *   pGdiDevice  Pointer to the PDEVOBJ from which the monitor was detached
  *
  * Return value
  *   Returns a NTSTATUS
  */
 NTSTATUS
-IntDetachMonitor(IN GDIDEVICE *pGdiDevice)
+IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
 {
    PMONITOR_OBJECT Monitor;
 
@@ -316,9 +315,9 @@ IntGetPrimaryMonitor()
  */
 static
 UINT
-IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
+IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
                        OPTIONAL OUT HMONITOR *hMonitorList,
-                       OPTIONAL OUT LPRECT monitorRectList,
+                       OPTIONAL OUT PRECTL monitorRectList,
                        OPTIONAL IN DWORD listSize,
                        OPTIONAL IN DWORD flags)
 {
@@ -329,13 +328,13 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
    /* find monitors which intersect the rectangle */
    for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
    {
-      RECT MonitorRect, IntersectionRect;
+      RECTL MonitorRect, IntersectionRect;
 
       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Monitor->Lock);
       MonitorRect.left = 0; /* FIXME: get origin */
       MonitorRect.top = 0; /* FIXME: get origin */
-      MonitorRect.right = MonitorRect.left + Monitor->GdiDevice->GDIInfo.ulHorzRes;
-      MonitorRect.bottom = MonitorRect.top + Monitor->GdiDevice->GDIInfo.ulVertRes;
+      MonitorRect.right = MonitorRect.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+      MonitorRect.bottom = MonitorRect.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
       ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Monitor->Lock);
 
       DPRINT("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
@@ -456,16 +455,16 @@ INT
 APIENTRY
 NtUserEnumDisplayMonitors(
    OPTIONAL IN HDC hDC,
-   OPTIONAL IN LPCRECT pRect,
+   OPTIONAL IN LPCRECTL pRect,
    OPTIONAL OUT HMONITOR *hMonitorList,
-   OPTIONAL OUT LPRECT monitorRectList,
+   OPTIONAL OUT PRECTL monitorRectList,
    OPTIONAL IN DWORD listSize)
 {
    INT numMonitors, i;
    HMONITOR *safeHMonitorList = NULL;
-   LPRECT safeRectList = NULL;
-   RECT rect, *myRect;
-   RECT dcRect;
+   PRECTL safeRectList = NULL;
+   RECTL rect, *myRect;
+   RECTL dcRect;
    NTSTATUS status;
 
    /* get rect */
@@ -494,7 +493,7 @@ NtUserEnumDisplayMonitors(
          /* FIXME: setlasterror? */
          return -1;
       }
-      dcVisRgn = dc->w.hVisRgn;
+      dcVisRgn = dc->rosdc.hVisRgn;
       DC_UnlockDc(dc);
 
       regionType = NtGdiGetRgnBox(dcVisRgn, &dcRect);
@@ -667,8 +666,8 @@ NtUserGetMonitorInfo(
    /* fill monitor info */
    MonitorInfo.rcMonitor.left = 0; /* FIXME: get origin */
    MonitorInfo.rcMonitor.top = 0; /* FIXME: get origin */
-   MonitorInfo.rcMonitor.right = MonitorInfo.rcMonitor.left + Monitor->GdiDevice->GDIInfo.ulHorzRes;
-   MonitorInfo.rcMonitor.bottom = MonitorInfo.rcMonitor.top + Monitor->GdiDevice->GDIInfo.ulVertRes;
+   MonitorInfo.rcMonitor.right = MonitorInfo.rcMonitor.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+   MonitorInfo.rcMonitor.bottom = MonitorInfo.rcMonitor.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
    MonitorInfo.rcWork = MonitorInfo.rcMonitor; /* FIXME: use DEVMODE panning to calculate work area? */
    MonitorInfo.dwFlags = 0;
 
@@ -729,7 +728,7 @@ NtUserMonitorFromPoint(
    IN DWORD dwFlags)
 {
    INT NumMonitors;
-   RECT InRect;
+   RECTL InRect;
    HMONITOR hMonitor = NULL;
 
    /* fill inRect */
@@ -783,14 +782,14 @@ NtUserMonitorFromPoint(
 HMONITOR
 APIENTRY
 NtUserMonitorFromRect(
-   IN LPCRECT pRect,
+   IN LPCRECTL pRect,
    IN DWORD dwFlags)
 {
    INT numMonitors, iLargestArea = -1, i;
-   LPRECT rectList;
+   PRECTL rectList;
    HMONITOR *hMonitorList;
    HMONITOR hMonitor = NULL;
-   RECT rect;
+   RECTL rect;
    NTSTATUS status;
 
    /* get rect */
@@ -883,7 +882,7 @@ NtUserMonitorFromWindow(
 {
    PWINDOW_OBJECT Window;
    HMONITOR hMonitor = NULL;
-   RECT Rect;
+   RECTL Rect;
    DECLARE_RETURN(HMONITOR);
 
    DPRINT("Enter NtUserMonitorFromWindow\n");
@@ -902,8 +901,8 @@ NtUserMonitorFromWindow(
    if (!Window->Wnd)
       RETURN(hMonitor);
 
-   Rect.left = Rect.right = Window->Wnd->WindowRect.left;
-   Rect.top = Rect.bottom = Window->Wnd->WindowRect.bottom;
+   Rect.left = Rect.right = Window->Wnd->rcWindow.left;
+   Rect.top = Rect.bottom = Window->Wnd->rcWindow.bottom;
 
    IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
 

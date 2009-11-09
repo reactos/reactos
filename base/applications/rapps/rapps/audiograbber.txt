@@ -1,0 +1,19 @@
+; UTF-8
+
+[Section]
+Name = Audio Grabber
+Version = 1.83 SE
+Licence = Freeware
+Description = A very good CD Ripper/Audio File Converter.
+Size = 1.6MB
+Category = 1
+URLSite = http://www.audiograbber.com-us.net/
+URLDownload = http://www.audiograbber.de/files/4898276276/agsetup183se.exe
+CDPath = none
+
+
+[Section.0407]
+Description = Ein sehr guter CD-Ripper/Audio-Datei-Konverter.
+
+[Section.0415]
+Description = Bardzo dobry CD Ripper/konwerter plików audio.

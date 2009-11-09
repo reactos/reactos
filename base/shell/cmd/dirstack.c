@@ -22,7 +22,7 @@ typedef struct tagDIRENTRY
 {
 	struct tagDIRENTRY *prev;
 	struct tagDIRENTRY *next;
-	LPTSTR pszPath;
+	TCHAR szPath[1];
 } DIRENTRY, *LPDIRENTRY;
 
 
@@ -34,11 +34,7 @@ static LPDIRENTRY lpStackBottom;
 static INT
 PushDirectory (LPTSTR pszPath)
 {
-	LPDIRENTRY lpDir;
-
-	nErrorLevel = 0;
-
-	lpDir = (LPDIRENTRY)cmd_alloc (sizeof (DIRENTRY));
+	LPDIRENTRY lpDir = cmd_alloc(FIELD_OFFSET(DIRENTRY, szPath[_tcslen(pszPath) + 1]));
 	if (!lpDir)
 	{
 		error_out_of_memory ();
@@ -46,67 +42,34 @@ PushDirectory (LPTSTR pszPath)
 	}
 
 	lpDir->prev = NULL;
+	lpDir->next = lpStackTop;
 	if (lpStackTop == NULL)
-	{
-		lpDir->next = NULL;
 		lpStackBottom = lpDir;
-	}
 	else
-	{
-		lpDir->next = lpStackTop;
 		lpStackTop->prev = lpDir;
-	}
 	lpStackTop = lpDir;
 
-	lpDir->pszPath = (LPTSTR)cmd_alloc ((_tcslen(pszPath)+1)*sizeof(TCHAR));
-	if (!lpDir->pszPath)
-	{
-		cmd_free (lpDir);
-		error_out_of_memory ();
-		return -1;
-	}
-
-	_tcscpy (lpDir->pszPath, pszPath);
+	_tcscpy(lpDir->szPath, pszPath);
 
 	nStackDepth++;
 
-	return 0;
+	return nErrorLevel = 0;
 }
 
 
 static VOID
 PopDirectory (VOID)
 {
-	LPDIRENTRY lpDir;
-
-    nErrorLevel = 0;
-
-	if (nStackDepth == 0)
-		return;
-
-	lpDir = lpStackTop;
+	LPDIRENTRY lpDir = lpStackTop;
 	lpStackTop = lpDir->next;
 	if (lpStackTop != NULL)
 		lpStackTop->prev = NULL;
 	else
 		lpStackBottom = NULL;
 
-	cmd_free (lpDir->pszPath);
 	cmd_free (lpDir);
 
 	nStackDepth--;
-}
-
-
-static VOID
-GetDirectoryStackTop (LPTSTR pszPath)
-{
-	nErrorLevel = 0;
-
-	if (lpStackTop)
-		_tcsncpy (pszPath, lpStackTop->pszPath, MAX_PATH);
-	else
-		*pszPath = _T('\0');
 }
 
 
@@ -143,8 +106,6 @@ INT GetDirectoryStackDepth (VOID)
 INT CommandPushd (LPTSTR rest)
 {
 	TCHAR curPath[MAX_PATH];
-	TCHAR newPath[MAX_PATH];
-	BOOL  bChangePath = FALSE;
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
@@ -152,22 +113,15 @@ INT CommandPushd (LPTSTR rest)
 		return 0;
 	}
 
-	nErrorLevel = 0;
+	GetCurrentDirectory (MAX_PATH, curPath);
 
 	if (rest[0] != _T('\0'))
 	{
-		GetFullPathName (rest, MAX_PATH, newPath, NULL);
-		bChangePath = IsValidPathName (newPath);
+		if (!SetRootPath(NULL, rest))
+			return 1;
 	}
 
-	GetCurrentDirectory (MAX_PATH, curPath);
-	if (PushDirectory (curPath))
-		return 0;
-
-	if (bChangePath)
-		SetCurrentDirectory (newPath);
-
-	return 0;
+	return PushDirectory(curPath);
 }
 
 
@@ -176,25 +130,20 @@ INT CommandPushd (LPTSTR rest)
  */
 INT CommandPopd (LPTSTR rest)
 {
-	TCHAR szPath[MAX_PATH];
-
+	INT ret = 0;
 	if (!_tcsncmp(rest, _T("/?"), 2))
 	{
 		ConOutResPuts(STRING_DIRSTACK_HELP2);
 		return 0;
 	}
 
-	nErrorLevel = 0;
+	if (nStackDepth == 0)
+		return 1;
 
-	if (GetDirectoryStackDepth () == 0)
-		return 0;
-
-	GetDirectoryStackTop (szPath);
+	ret = _tchdir(lpStackTop->szPath) != 0;
 	PopDirectory ();
 
-	SetCurrentDirectory (szPath);
-
-	return 0;
+	return ret;
 }
 
 
@@ -223,8 +172,7 @@ INT CommandDirs (LPTSTR rest)
 
 	while (lpDir != NULL)
 	{
-		ConOutPuts (lpDir->pszPath);
-
+		ConOutPuts(lpDir->szPath);
 		lpDir = lpDir->prev;
 	}
 

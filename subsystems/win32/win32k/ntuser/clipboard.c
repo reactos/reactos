@@ -54,7 +54,7 @@ IntIsWindowInChain(PWINDOW_OBJECT window)
     return wce;
 }
 
-VOID FASTCALL printChain()
+VOID FASTCALL printChain(VOID)
 {
     /*test*/
     PCLIPBOARDCHAINELEMENT wce2 = WindowsChain;
@@ -148,7 +148,7 @@ intIsFormatAvailable(UINT format)
 
 /* counts how many distinct format were are in the clipboard */
 DWORD FASTCALL
-IntCountClipboardFormats()
+IntCountClipboardFormats(VOID)
 {
     DWORD ret = 0;
     PCLIPBOARDELEMENT ce = ClipboardData;
@@ -221,7 +221,7 @@ intRemoveFormatedData(UINT format)
 }
 
 VOID FASTCALL
-IntEmptyClipboardData()
+IntEmptyClipboardData(VOID)
 {
     PCLIPBOARDELEMENT ce = ClipboardData;
     PCLIPBOARDELEMENT tmp;
@@ -229,7 +229,10 @@ IntEmptyClipboardData()
     while(ce)
     {
         tmp = ce->next;
-        ExFreePool(ce->hData);
+		if (ce->hData)
+		{
+            ExFreePool(ce->hData);
+        }
 	    ExFreePool(ce);
 	    ce = tmp;
     }
@@ -319,7 +322,7 @@ synthesizeData(UINT format)
 }
 
 VOID FASTCALL
-freeSynthesizedData()
+freeSynthesizedData(VOID)
 {
     ExFreePool(synthesizedData);
 }
@@ -327,7 +330,7 @@ freeSynthesizedData()
 /*==============================================================*/
 
 BOOL FASTCALL
-intIsClipboardOpenByMe()
+intIsClipboardOpenByMe(VOID)
 {
     /* check if we open the clipboard */
     if (ClipboardThread && ClipboardThread == PsGetCurrentThreadWin32Thread())
@@ -1149,7 +1152,7 @@ NtUserGetClipboardSequenceNumber(VOID)
 
     WinSta = UserGetProcessWindowStation();
 
-    Status = IntValidateWindowStationHandle(WinSta, UserMode, WINSTA_ACCESSCLIPBOARD, &WinStaObj);
+    Status = IntValidateWindowStationHandle(WinSta, KernelMode, WINSTA_ACCESSCLIPBOARD, &WinStaObj);
 
     if (!NT_SUCCESS(Status))
     {

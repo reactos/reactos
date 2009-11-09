@@ -489,7 +489,7 @@ BOOL preview_isactive(void)
     return preview.page != 0;
 }
 
-static void add_ruler_units(HDC hdcRuler, RECT* drawRect, BOOL NewMetrics, long EditLeftmost)
+static void add_ruler_units(HDC hdcRuler, RECT* drawRect, BOOL NewMetrics, LONG EditLeftmost)
 {
     static HDC hdc;
 
@@ -564,7 +564,7 @@ static void add_ruler_units(HDC hdcRuler, RECT* drawRect, BOOL NewMetrics, long 
     BitBlt(hdcRuler, 0, 0, drawRect->right, drawRect->bottom, hdc, 0, 0, SRCAND);
 }
 
-static void paint_ruler(HWND hWnd, long EditLeftmost, BOOL NewMetrics)
+static void paint_ruler(HWND hWnd, LONG EditLeftmost, BOOL NewMetrics)
 {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
@@ -603,7 +603,7 @@ static void paint_ruler(HWND hWnd, long EditLeftmost, BOOL NewMetrics)
 LRESULT CALLBACK ruler_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static WNDPROC pPrevRulerProc;
-    static long EditLeftmost;
+    static LONG EditLeftmost;
     static BOOL NewMetrics;
 
     switch(msg)

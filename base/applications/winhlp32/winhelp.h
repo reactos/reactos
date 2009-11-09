@@ -71,14 +71,15 @@ typedef struct tagPageSet
 
 typedef struct tagWinHelp
 {
-    LPCSTR              lpszName;
-
+    unsigned            ref_count;
     WINHELP_BUTTON*     first_button;
     HLPFILE_PAGE*       page;
 
     HWND                hMainWnd;
     HWND                hShadowWnd;
     HWND                hHistoryWnd;
+
+    WNDPROC             origRicheditWndProc;
 
     HFONT*              fonts;
     UINT                fonts_len;
@@ -88,7 +89,6 @@ typedef struct tagWinHelp
     HBRUSH              hBrush;
 
     HLPFILE_WINDOWINFO* info;
-    HLPFILE_LINK*       current_link;
 
     WINHELP_PAGESET     back;
     unsigned            font_scale; /* 0 = small, 1 = normal, 2 = large */
@@ -152,6 +152,8 @@ void WINHELP_DeleteBackSet(WINHELP_WINDOW*);
 HLPFILE* WINHELP_LookupHelpFile(LPCSTR lpszFile);
 HLPFILE_WINDOWINFO* WINHELP_GetWindowInfo(HLPFILE* hlpfile, LPCSTR name);
 void WINHELP_LayoutMainWindow(WINHELP_WINDOW* win);
+WINHELP_WINDOW* WINHELP_GrabWindow(WINHELP_WINDOW*);
+BOOL WINHELP_ReleaseWindow(WINHELP_WINDOW*);
 
 extern const char MAIN_WIN_CLASS_NAME[];
 extern const char BUTTON_BOX_WIN_CLASS_NAME[];

@@ -38,17 +38,17 @@ SetWindowStyle(IN HWND hWnd,
 
     ASSERT((~dwStyleMask & dwStyle) == 0);
 
-    PrevStyle = GetWindowLong(hWnd,
-                              GWL_STYLE);
+    PrevStyle = GetWindowLongPtr(hWnd,
+                                 GWL_STYLE);
     if (PrevStyle != 0 &&
         (PrevStyle & dwStyleMask) != dwStyle)
     {
         Style = PrevStyle & ~dwStyleMask;
         Style |= dwStyle;
 
-        PrevStyle = SetWindowLong(hWnd,
-                                  GWL_STYLE,
-                                  Style);
+        PrevStyle = SetWindowLongPtr(hWnd,
+                                     GWL_STYLE,
+                                     Style);
     }
 
     return PrevStyle;
@@ -63,17 +63,17 @@ SetWindowExStyle(IN HWND hWnd,
 
     ASSERT((~dwStyleMask & dwStyle) == 0);
 
-    PrevStyle = GetWindowLong(hWnd,
-                              GWL_EXSTYLE);
+    PrevStyle = GetWindowLongPtr(hWnd,
+                                 GWL_EXSTYLE);
     if (PrevStyle != 0 &&
         (PrevStyle & dwStyleMask) != dwStyle)
     {
         Style = PrevStyle & ~dwStyleMask;
         Style |= dwStyle;
 
-        PrevStyle = SetWindowLong(hWnd,
-                                  GWL_EXSTYLE,
-                                  Style);
+        PrevStyle = SetWindowLongPtr(hWnd,
+                                     GWL_EXSTYLE,
+                                     Style);
     }
 
     return PrevStyle;

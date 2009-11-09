@@ -358,6 +358,9 @@ IntVideoPortPnPStartDevice(
            FullList < AllocatedResources->List + AllocatedResources->Count;
            FullList++)
       {
+         INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
+                FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
+
          /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
          ASSERT(FullList->InterfaceType == PCIBus &&
                 FullList->BusNumber == DeviceExtension->SystemIoBusNumber &&

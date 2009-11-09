@@ -132,7 +132,7 @@ SURFACE_Cleanup(PVOID ObjectBody)
 
         if (psurf->hDIBPalette != NULL)
         {
-            NtGdiDeleteObject(psurf->hDIBPalette);
+            GreDeleteObject(psurf->hDIBPalette);
         }
     }
 
@@ -191,6 +191,13 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
     }
 
     pso = EngLockSurface((HSURF)NewBitmap);
+    if (!pso)
+    {
+        DPRINT1("EngLockSurface failed on newly created bitmap!\n");
+        GreDeleteObject(NewBitmap);
+        return NULL;
+    }
+
     pso->dhsurf = dhsurf;
     EngUnlockSurface(pso);
 
@@ -503,44 +510,36 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
     return hsurf;
 }
 
-PFN FASTCALL DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
-{
-    ULONG i;
-
-    for (i=0; i<DED->c; i++)
-    {
-        if (DED->pdrvfn[i].iFunc == DriverFunc)
-        {
-            return DED->pdrvfn[i].pfn;
-        }
-    }
-    return NULL;
-}
-
 /*
  * @implemented
  */
-BOOL APIENTRY
-EngAssociateSurface(IN HSURF hsurf,
-                    IN HDEV Dev,
-                    IN ULONG Hooks)
+BOOL
+APIENTRY
+EngAssociateSurface(
+    IN HSURF hsurf,
+    IN HDEV hdev,
+    IN FLONG flHooks)
 {
     SURFOBJ *pso;
     PSURFACE psurf;
-    GDIDEVICE* Device;
+    PDEVOBJ* ppdev;
 
-    Device = (GDIDEVICE*)Dev;
+    ppdev = (PDEVOBJ*)hdev;
 
+    /* Lock the surface */
     psurf = SURFACE_LockSurface(hsurf);
-    ASSERT(psurf);
+    if (!psurf)
+    {
+        return FALSE;
+    }
     pso = &psurf->SurfObj;
 
     /* Associate the hdev */
-    pso->hdev = Dev;
-    pso->dhpdev = Device->hPDev;
+    pso->hdev = hdev;
+    pso->dhpdev = ppdev->dhpdev;
 
     /* Hook up specified functions */
-    psurf->flHooks = Hooks;
+    psurf->flHooks = flHooks;
 
     SURFACE_UnlockSurface(psurf);
 
@@ -562,25 +561,29 @@ EngModifySurface(
     IN VOID *pvReserved)
 {
     SURFOBJ *pso;
+    PSURFACE psurf;
+    PDEVOBJ* ppdev;
 
-    pso = EngLockSurface(hsurf);
-    if (pso == NULL)
+    psurf = SURFACE_LockSurface(hsurf);
+    if (psurf == NULL)
     {
         return FALSE;
     }
 
-    if (!EngAssociateSurface(hsurf, hdev, flHooks))
-    {
-        EngUnlockSurface(pso);
-
-        return FALSE;
-    }
-
+    ppdev = (PDEVOBJ*)hdev;
+    pso = &psurf->SurfObj;
     pso->dhsurf = dhsurf;
     pso->lDelta = lDelta;
     pso->pvScan0 = pvScan0;
 
-    EngUnlockSurface(pso);
+    /* Associate the hdev */
+    pso->hdev = hdev;
+    pso->dhpdev = ppdev->dhpdev;
+
+    /* Hook up specified functions */
+    psurf->flHooks = flHooks;
+
+    SURFACE_UnlockSurface(psurf);
 
     return TRUE;
 }
@@ -608,10 +611,6 @@ EngEraseSurface(SURFOBJ *pso,
     ASSERT(Rect);
     return FillSolid(pso, Rect, iColor);
 }
-
-#define GDIBdyToHdr(body)                                                      \
-  ((PGDIOBJHDR)(body) - 1)
-
 
 /*
  * @implemented

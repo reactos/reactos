@@ -74,16 +74,13 @@ BOOLEAN
 NTAPI
 KdPollBreakIn(VOID)
 {
-    BOOLEAN DoBreak = FALSE;
-    ULONG Flags = 0;
+    BOOLEAN DoBreak = FALSE, Enable;
 
     /* First make sure that KD is enabled */
     if (KdDebuggerEnabled)
     {
         /* Disable interrupts */
-        Ke386SaveFlags(Flags);
-        //Flags = __getcallerseflags();
-        _disable();
+        Enable = KeDisableInterrupts();
 
         /* Check if a CTRL-C is in the queue */
         if (KdpContext.KdpControlCPending)
@@ -115,11 +112,10 @@ KdPollBreakIn(VOID)
             }
         }
 
-        /* Re-enable interrupts if they were disabled */
-        if (Flags & EFLAGS_INTERRUPT_MASK) _enable();
+        /* Re-enable interrupts if they were enabled previously */
+        if (Enable) _enable();
     }
 
     /* Tell the caller to do a break */
     return DoBreak;
 }
-

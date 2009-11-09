@@ -34,8 +34,8 @@
 
 static __inline int
 CompareRightDown(
-    const PRECT r1,
-    const PRECT r2)
+    const RECTL *r1,
+    const RECTL *r2)
 {
     int Cmp;
 
@@ -70,8 +70,8 @@ CompareRightDown(
 
 static __inline int
 CompareRightUp(
-    const PRECT r1,
-    const PRECT r2)
+    const RECTL *r1,
+    const RECTL *r2)
 {
     int Cmp;
 
@@ -106,8 +106,8 @@ CompareRightUp(
 
 static __inline int
 CompareLeftDown(
-    const PRECT r1,
-    const PRECT r2)
+    const RECTL *r1,
+    const RECTL *r2)
 {
     int Cmp;
 
@@ -142,8 +142,8 @@ CompareLeftDown(
 
 static __inline int
 CompareLeftUp(
-    const PRECT r1,
-    const PRECT r2)
+    const RECTL *r1,
+    const RECTL *r2)
 {
     int Cmp;
 
@@ -177,8 +177,8 @@ CompareLeftUp(
 
 static __inline int
 CompareSpans(
-    const PSPAN Span1,
-    const PSPAN Span2)
+    const SPAN *Span1,
+    const SPAN *Span2)
 {
     int Cmp;
 
@@ -406,18 +406,21 @@ ClipobjToSpans(
 
     ASSERT(Boundary->top <= Boundary->bottom && Boundary->left <= Boundary->right);
 
-    *Spans = NULL;
+    *Count = Boundary->bottom - Boundary->top;
+    if (*Count > 0)
+    {
+        *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), TAG_CLIP);
+        if (NULL == *Spans)
+        {
+            *Count = 0;
+            return FALSE;
+        }
+    }
+
     if (NULL == ClipRegion || DC_TRIVIAL == ClipRegion->iDComplexity)
     {
-        *Count = Boundary->bottom - Boundary->top;
         if (0 != *Count)
         {
-            *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), TAG_CLIP);
-            if (NULL == *Spans)
-            {
-                *Count = 0;
-                return FALSE;
-            }
             for (i = 0; i < Boundary->bottom - Boundary->top; i++)
             {
                 (*Spans)[i].X = Boundary->left;

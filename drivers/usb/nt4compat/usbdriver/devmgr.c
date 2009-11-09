@@ -26,6 +26,10 @@
 	PBYTE data_buf;\
 	int i;\
 	data_buf = usb_alloc_mem( NonPagedPool, ( pdEV )->desc_buf_size += 1024 );\
+	if (!data_buf)\
+	{\
+		goto LBL_OUT;\
+	}\
 	RtlZeroMemory( data_buf, ( pdEV )->desc_buf_size );\
 	for( i = 0; i < ( LONG )( puRB )->context; i++ )\
 	{\
@@ -162,8 +166,8 @@ dev_mgr_driver_entry_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr)
     pdrvr[MOUSE_DRIVER_IDX].driver_init = mouse_driver_init;
     pdrvr[MOUSE_DRIVER_IDX].driver_destroy = mouse_driver_destroy;
 
-    //pdrvr[KEYBOARD_DRIVER_IDX].driver_init = gendrv_if_driver_init;
-    //pdrvr[KEYBOARD_DRIVER_IDX].driver_destroy = gendrv_if_driver_destroy;
+    pdrvr[KEYBOARD_DRIVER_IDX].driver_init = kbd_driver_init;
+    pdrvr[KEYBOARD_DRIVER_IDX].driver_destroy = kbd_driver_destroy;
 }
 
 BOOLEAN
@@ -202,6 +206,7 @@ dev_mgr_strobe(PUSB_DEV_MANAGER dev_mgr)
     pevent->context = (ULONG) dev_mgr;
 
     KeInitializeEvent(&dev_mgr->wake_up_event, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&dev_mgr->drivers_inited, NotificationEvent, FALSE);
 
     InsertTailList(&dev_mgr->event_list, &pevent->event_link);
 
@@ -273,6 +278,9 @@ dev_mgr_event_init(PUSB_DEV pdev,       //always null. we do not use this param
         KeSetTimerEx(&dev_mgr->dev_mgr_timer,
                      due_time, DEV_MGR_TIMER_INTERVAL_MS, &dev_mgr->dev_mgr_timer_dpc);
 
+        /* Signal we're done initing */
+        KeSetEvent(&dev_mgr->drivers_inited, 0, FALSE);
+
         return TRUE;
     }
 
@@ -286,6 +294,7 @@ dev_mgr_event_init(PUSB_DEV pdev,       //always null. we do not use this param
 
     KeCancelTimer(&dev_mgr->dev_mgr_timer);
     KeRemoveQueueDpc(&dev_mgr->dev_mgr_timer_dpc);
+    KeSetEvent(&dev_mgr->drivers_inited, 0, FALSE);
     return FALSE;
 
 }
@@ -793,7 +802,7 @@ dev_mgr_start_config_dev(PUSB_DEV pdev)
     //first, get device descriptor
     purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
     data_buf = usb_alloc_mem(NonPagedPool, 512);
-    if (purb == NULL)
+    if (purb == NULL || data_buf == NULL)
     {
         unlock_dev(pdev, TRUE);
         return FALSE;
@@ -1006,8 +1015,11 @@ dev_mgr_get_desc_completion(PURB purb, PVOID context)
     }
 
 LBL_OUT:
-    usb_free_mem(purb);
-    purb = NULL;
+    if (purb)
+    {
+        usb_free_mem(purb);
+        purb = NULL;
+    }
 
     lock_dev(pdev, TRUE);
     if (dev_state(pdev) != USB_DEV_STATE_ZOMB)
@@ -1195,6 +1207,7 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
 {
     LONG i;
     PUSB_ENDPOINT_DESC pendp_desc;
+    PBYTE pbuf;
 
     if (pcfg == NULL || pif == NULL || pif_desc == NULL)
         return FALSE;
@@ -1213,11 +1226,23 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
         InitializeListHead(&pif->altif_list);
         pif->altif_count = 0;
 
-        pendp_desc = (PUSB_ENDPOINT_DESC) (&((PBYTE) pif_desc)[sizeof(USB_INTERFACE_DESC)]);
+        pbuf = &((PBYTE) pif_desc)[sizeof(USB_INTERFACE_DESC)];
 
-        for(i = 0; i < pif->endp_count; i++, pendp_desc++)
+        i = 0;
+        while (i < pif->endp_count)
         {
-            dev_mgr_build_usb_endp(pif, &pif->endp[i], pendp_desc);
+            pendp_desc = (PUSB_ENDPOINT_DESC)pbuf;
+
+            // check if it's an endpoint descriptor
+            if (pendp_desc->bDescriptorType == USB_DT_ENDPOINT)
+            {
+                // add it
+                dev_mgr_build_usb_endp(pif, &pif->endp[i], pendp_desc);
+                i++;
+            }
+
+            // skip to the next one
+            pbuf += pendp_desc->bLength;
         }
     }
     else
@@ -1227,6 +1252,8 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
 
         pif->altif_count++;
         paltif = usb_alloc_mem(NonPagedPool, sizeof(USB_INTERFACE));
+        if (!paltif) return FALSE;
+
         RtlZeroMemory(paltif, sizeof(USB_INTERFACE));
         InsertTailList(&pif->altif_list, &paltif->altif_list);
         paltif->pif_drv = NULL;
@@ -1294,8 +1321,7 @@ dev_mgr_build_usb_config(PUSB_DEV pdev, PBYTE pbuf, ULONG config_val, LONG confi
         }
         else
         {
-            i--;
-            pif = &pcfg->interf[i];
+            pif = &pcfg->interf[i-1];
             dev_mgr_build_usb_if(pcfg, pif, pif_desc, TRUE);
         }
     }

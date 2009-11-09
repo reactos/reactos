@@ -30,8 +30,7 @@
 
 #include <debug.h>
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define TAG_STRING	TAG('S', 'T', 'R', ' ') /* string */
+#define TAG_STRING	' RTS' /* string */
 
 /* Define _NTTEST_ to make test version. Device names are prefixed with
    'NT' to allow the driver to run side by side with MS TCP/IP driver */

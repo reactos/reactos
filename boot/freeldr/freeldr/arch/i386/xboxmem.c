@@ -45,14 +45,14 @@ XboxMemInit(VOID)
   InstalledMemoryMb = 64;
   memset(ControlRegion, TEST_PATTERN1, TEST_SIZE);
   memset(MembaseTop, TEST_PATTERN1, TEST_SIZE);
-  __asm__ ("wbinvd\n");
+  __wbinvd();
 
   if (0 == memcmp(MembaseTop, ControlRegion, TEST_SIZE))
     {
       /* Looks like there is memory .. maybe a 128MB box */
       memset(ControlRegion, TEST_PATTERN2, TEST_SIZE);
       memset(MembaseTop, TEST_PATTERN2, TEST_SIZE);
-      __asm__ ("wbinvd\n");
+      __wbinvd();
       if (0 == memcmp(MembaseTop, ControlRegion, TEST_SIZE))
         {
           /* Definitely looks like there is memory */

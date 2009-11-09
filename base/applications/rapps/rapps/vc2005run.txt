@@ -1,0 +1,20 @@
+; UTF-8
+
+[Section]
+Name = Visual Studio 2005 Runtime
+Version = 7.0
+Licence = Unknown
+Description = Visual Studio 2005 Runtime.
+Size = 2.6MB
+Category = 14
+URLSite = http://www.microsoft.com/Downloads/details.aspx?displaylang=en&FamilyID=32bc1bee-a3f9-4c13-9c99-220b62a191ee
+URLDownload = http://download.microsoft.com/download/d/3/4/d342efa6-3266-4157-a2ec-5174867be706/vcredist_x86.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Studio 2005 Laufzeitsystem
+
+[Section.0415]
+Licence = Nieznana
+Description = Biblioteki uruchomieniowe Visual Studio 2005

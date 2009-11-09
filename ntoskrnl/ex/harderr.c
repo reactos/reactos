@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ERR TAG('E', 'r', 'r', ' ')
+#define TAG_ERR ' rrE'
 
 /* GLOBALS ****************************************************************/
 
@@ -113,6 +113,12 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PAGED_CODE();
 
+	DPRINT1("ExpRaiseHardError %x %x %x %x %x\n",
+			ErrorStatus,
+			NumberOfParameters,
+			UnicodeStringParameterMask,
+			Parameters,
+			ValidResponseOptions);
     /* Check if this error will shutdown the system */
     if (ValidResponseOptions == OptionShutdownSystem)
     {
@@ -380,6 +386,8 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
     NTSTATUS Status;
     PAGED_CODE();
 
+	ASSERT(FALSE);
+
     /* Check if we have parameters */
     if (Parameters)
     {
@@ -434,20 +442,34 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                     ParameterBase[i] = (ULONG_PTR)&StringBase[i];
 
                     /* Copy the string buffer */
-                    RtlMoveMemory(BufferBase,
-                                  CapturedParams[i].Buffer,
-                                  CapturedParams[i].MaximumLength);
+					_SEH2_TRY
+					{
+						DPRINT("Buffer Base %x, CapturedParams[%d].Buffer %x, Length %x\n",
+							   BufferBase, i, 
+							   CapturedParams[i].Buffer, 
+							   CapturedParams[i].MaximumLength);
 
-                    /* Set buffer */
-                    CapturedParams[i].Buffer = BufferBase;
+						RtlMoveMemory(BufferBase,
+									  CapturedParams[i].Buffer,
+									  CapturedParams[i].MaximumLength);
 
-                    /* Copy the string structure */
-                    RtlMoveMemory(&StringBase[i],
-                                  &CapturedParams[i],
-                                  sizeof(UNICODE_STRING));
-
-                    /* Update the pointer */
-                    BufferBase += CapturedParams[i].MaximumLength;
+						/* Set buffer */
+						CapturedParams[i].Buffer = BufferBase;
+						
+						/* Copy the string structure */
+						RtlMoveMemory(&StringBase[i],
+									  &CapturedParams[i],
+									  sizeof(UNICODE_STRING));
+						
+						/* Update the pointer */
+						BufferBase += CapturedParams[i].MaximumLength;
+					}
+					_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+					{
+						DPRINT1("Couldn't capture parameter string %d!\n", i);
+						CapturedParams[i].Buffer = BufferBase;
+					}
+					_SEH2_END;
                 }
                 else
                 {
@@ -620,16 +642,15 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                 }
             }
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free captured buffer */
             if (SafeParams) ExFreePool(SafeParams);
-            Status = _SEH2_GetExceptionCode();
+
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* If we failed to capture/probe, bail out */
-        if (!NT_SUCCESS(Status)) return Status;
 
         /* Call the system function directly, because we probed */
         ExpRaiseHardError(ErrorStatus,
@@ -668,8 +689,9 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
             /* Return the response */
             *Response = SafeResponse;
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;

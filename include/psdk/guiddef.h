@@ -35,16 +35,24 @@ typedef struct _GUID
 #define DECLSPEC_SELECTANY __declspec(selectany)
 #endif
 
+#ifndef EXTERN_C
+#ifdef __cplusplus
+#define EXTERN_C    extern "C"
+#else
+#define EXTERN_C    extern
+#endif
+#endif
+
 #undef DEFINE_GUID
 
 #ifdef INITGUID
 #ifdef __cplusplus
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-        EXTERN_C const GUID name = \
+        EXTERN_C const GUID DECLSPEC_SELECTANY name = \
 	{ l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 #else
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-        const GUID name = \
+        const GUID DECLSPEC_SELECTANY name = \
 	{ l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 #endif
 #else
@@ -109,6 +117,8 @@ typedef GUID FMTID,*LPFMTID;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 #include <string.h>
+#if !defined _SYS_GUID_OPERATOR_EQ_ && !defined _NO_SYS_GUID_OPERATOR_EQ_
+#define _SYS_GUID_OPERATOR_EQ_
 inline bool operator==(const GUID& guidOne, const GUID& guidOther)
 {
     return !memcmp(&guidOne,&guidOther,sizeof(GUID));
@@ -117,6 +127,7 @@ inline bool operator!=(const GUID& guidOne, const GUID& guidOther)
 {
     return !(guidOne == guidOther);
 }
+#endif
 #endif
 
 #endif /* _GUIDDEF_H_ */

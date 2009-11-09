@@ -1,0 +1,20 @@
+; UTF-8
+
+[Section]
+Name = Visual Studio 2008 Runtime
+Version = 8.0
+Licence = Unknown
+Description = Visual Studio 2008 Runtime.
+Size = 1.7MB
+Category = 14
+URLSite = http://www.microsoft.com/DOWNLOADS/details.aspx?FamilyID=9b2da534-3e03-4391-8a4d-074b9f2bc1bf&displaylang=en
+URLDownload = http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Studio 2008 Laufzeitsystem
+
+[Section.0415]
+Licence = Nieznana
+Description = Biblioteki uruchomieniowe Visual Studio 2008

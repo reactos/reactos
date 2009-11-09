@@ -1,7 +1,6 @@
 #ifndef _WIN32K_MOUSE_H
 #define _WIN32K_MOUSE_H
 
-#include "../eng/misc.h"
 #include <include/winsta.h>
 
 INT  INTERNAL_CALL MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2);

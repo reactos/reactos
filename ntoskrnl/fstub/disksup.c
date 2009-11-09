@@ -11,7 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 #include <internal/hal.h>
 
@@ -452,6 +452,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePool(PagedPool,
         sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO));
 
+    if (!Buffer1 || !Buffer2 || !PartialInformation) return;
+
     DiskMountInfo = (PREG_DISK_MOUNT_INFO) PartialInformation->Data;
 
     /* Open or Create the 'MountedDevices' key */
@@ -522,8 +524,18 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
 
     /* Initialize layout array */
+    if (ConfigInfo->DiskCount == 0)
+        goto end_assign_disks;
     LayoutArray = ExAllocatePool(NonPagedPool,
         ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
+    if (!LayoutArray)
+    {
+        ExFreePool(PartialInformation);
+        ExFreePool(Buffer2);
+        ExFreePool(Buffer1);
+        if (hKey) ZwClose(hKey);
+    }
+
     RtlZeroMemory(LayoutArray,
         ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
     for (i = 0; i < ConfigInfo->DiskCount; i++)
@@ -885,6 +897,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             ExFreePool(LayoutArray[i]);
     }
     ExFreePool(LayoutArray);
+end_assign_disks:
 
     /* Assign floppy drives */
     DPRINT("Floppy drives: %d\n", ConfigInfo->FloppyCount);

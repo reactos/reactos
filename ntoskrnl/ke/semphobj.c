@@ -62,6 +62,10 @@ KeReleaseSemaphore(IN PKSEMAPHORE Semaphore,
     ASSERT_SEMAPHORE(Semaphore);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
+#ifdef DBG
+	KdbgDeclareWait(Semaphore);
+#endif
+
     /* Lock the Dispatcher Database */
     OldIrql = KiAcquireDispatcherLock();
 
@@ -102,6 +106,9 @@ KeReleaseSemaphore(IN PKSEMAPHORE Semaphore,
     }
 
     /* Return the previous state */
+#ifdef DBG
+	KdbgSatisfyWait(Semaphore);
+#endif
     return InitialState;
 }
 

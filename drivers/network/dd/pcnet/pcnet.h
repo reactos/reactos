@@ -60,6 +60,8 @@ typedef struct _ADAPTER
   ULONG_PTR PortOffset;
   NDIS_MINIPORT_INTERRUPT InterruptObject;
   NDIS_MEDIA_STATE MediaState;
+  UINT MediaSpeed;
+  BOOLEAN FullDuplex;
   NDIS_MINIPORT_TIMER MediaDetectionTimer;
   ULONG CurrentReceiveDescriptorIndex;
   ULONG CurrentPacketFilter;
@@ -129,6 +131,14 @@ NDIS_MEDIA_STATE
 NTAPI
 MiGetMediaState(PADAPTER Adapter);
 
+UINT
+NTAPI
+MiGetMediaSpeed(PADAPTER Adapter);
+
+BOOLEAN
+NTAPI
+MiGetMediaDuplex(PADAPTER Adapter);
+
 /* operational constants */
 #define NUMBER_OF_BUFFERS     0x20
 #define LOG_NUMBER_OF_BUFFERS 5         /* log2(NUMBER_OF_BUFFERS) */
@@ -145,12 +155,8 @@ MiGetMediaState(PADAPTER Adapter);
 #define BREAKPOINT
 #endif
 
-#ifndef TAG
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
-
 /* memory pool tag */
-#define PCNET_TAG TAG('P', 'c', 'N', 't')
+#define PCNET_TAG 'tNcP'
 
 #endif // _PCNET_H_
 

@@ -56,7 +56,7 @@
         { \
             if ( ! ( condition ) ) \
             { \
-                SND_ERR(L"ASSERT FAILED: %hS\n", #condition); \
+                SND_ERR(L"ASSERT FAILED: %hS File %hS Line %u\n", #condition, __FILE__, __LINE__); \
                 POPUP(L"ASSERT FAILED: %hS\n", #condition); \
                 ExitProcess(1); \
             } \
@@ -80,6 +80,7 @@
     #define SND_WARN(...) do {} while ( 0 )
     #define SND_TRACE(...) do {} while ( 0 )
     #define SND_ASSERT(condition) do {} while ( 0 )
+    #define DUMP_WAVEHDR_QUEUE(condition) do {} while ( 0 )
 #endif
 
 /*
@@ -155,6 +156,7 @@ struct _SOUND_DEVICE_INSTANCE;
 #define DEFINE_GETCAPS_FUNCTYPE(func_typename, caps_type) \
     typedef MMRESULT (*func_typename)( \
         IN  struct _SOUND_DEVICE* SoundDevice, \
+        IN  DWORD DeviceId, \
         OUT caps_type Capabilities, \
         IN  DWORD CapabilitiesSize);
 
@@ -182,6 +184,10 @@ typedef struct _SOUND_OVERLAPPED
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
     PWAVEHDR Header;
     BOOL PerformCompletion;
+
+    DWORD OriginalBufferSize;
+    LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
+
 } SOUND_OVERLAPPED, *PSOUND_OVERLAPPED;
 
 typedef MMRESULT (*WAVE_COMMIT_FUNC)(
@@ -200,6 +206,7 @@ typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
 
 typedef MMRESULT (*MMWAVESETFORMAT_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  DWORD DeviceId,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
@@ -220,6 +227,10 @@ typedef MMRESULT (*MMBUFFER_FUNC)(
     IN  PVOID Buffer,
     IN  DWORD Length);
 
+typedef MMRESULT(*MMGETPOS_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  MMTIME* Time);
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -238,6 +249,8 @@ typedef struct _MMFUNCTION_TABLE
     MMWAVESETFORMAT_FUNC            SetWaveFormat;
 
     WAVE_COMMIT_FUNC                CommitWaveBuffer;
+
+    MMGETPOS_FUNC                   GetPos;
 
     // Redundant
     //MMWAVEHEADER_FUNC               PrepareWaveHeader;
@@ -318,6 +331,9 @@ typedef struct _SOUND_DEVICE_INSTANCE
     //PWAVEHDR CurrentWaveHeader;
     DWORD OutstandingBuffers;
     DWORD LoopsRemaining;
+    DWORD FrameSize;
+    DWORD BufferCount;
+    WAVEFORMATEX WaveFormatEx;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -376,6 +392,15 @@ MMRESULT
 MmeCloseDevice(
     IN  DWORD PrivateHandle);
 
+MMRESULT
+MmeGetPosition(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  DWORD PrivateHandle,
+    IN  MMTIME* Time,
+    IN  DWORD Size);
+
+
 #define MmePrepareWaveHeader(private_handle, header) \
     PrepareWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
 
@@ -397,6 +422,7 @@ MmeResetWavePlayback(
 MMRESULT
 GetSoundDeviceCapabilities(
     IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD DeviceId,
     OUT PVOID Capabilities,
     IN  DWORD CapabilitiesSize);
 
@@ -563,6 +589,7 @@ QueryWaveDeviceFormatSupport(
 MMRESULT
 SetWaveDeviceFormat(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD DeviceId,
     IN  LPWAVEFORMATEX Format,
     IN  DWORD FormatSize);
 

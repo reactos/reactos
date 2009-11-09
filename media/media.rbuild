@@ -13,6 +13,9 @@
 	<directory name="nls">
 		<xi:include href="nls/nls.rbuild" />
 	</directory>
+	<directory name="sounds">
+		<xi:include href="sounds/sounds.rbuild" />
+	</directory>
 	<directory name="vgafonts">
 		<xi:include href="vgafonts/vgafonts.rbuild" />
 	</directory>

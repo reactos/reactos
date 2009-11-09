@@ -74,7 +74,7 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
   
   TRACE_(NTFS, "NtfsAllocateIrpContext()\n");
   
-  IrpContext = (PNTFS_IRP_CONTEXT)ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_IRP_CONTEXT), TAG('N', 'I', 'R', 'P'));
+  IrpContext = (PNTFS_IRP_CONTEXT)ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_IRP_CONTEXT), 'PRIN');
   if (IrpContext == NULL)
     return NULL;
   RtlZeroMemory(IrpContext, sizeof(NTFS_IRP_CONTEXT));

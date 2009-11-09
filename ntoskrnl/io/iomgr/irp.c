@@ -393,6 +393,29 @@ IopCompleteRequest(IN PKAPC Apc,
             }
         }
 
+        /* Update transfer count for everything but create operation */
+        if (!(Irp->Flags & IRP_CREATE_OPERATION))
+        {
+            if (Irp->Flags & IRP_WRITE_OPERATION)
+            {
+                /* Update write transfer count */
+                IopUpdateTransferCount(IopWriteTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+            else if (Irp->Flags & IRP_READ_OPERATION)
+            {
+                /* Update read transfer count */
+                IopUpdateTransferCount(IopReadTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+            else
+            {
+                /* Update other transfer count */
+                IopUpdateTransferCount(IopOtherTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+        }
+
         /* Now that we've signaled the events, de-associate the IRP */
         IopUnQueueIrpFromThread(Irp);
 
@@ -404,7 +427,7 @@ IopCompleteRequest(IN PKAPC Apc,
                             KeGetCurrentThread(),
                             CurrentApcEnvironment,
                             IopFreeIrpKernelApc,
-                            IopAbortIrpKernelApc,
+                            (PKRUNDOWN_ROUTINE)IopAbortIrpKernelApc,
                             (PKNORMAL_ROUTINE)Irp->
                             Overlay.AsynchronousParameters.UserApcRoutine,
                             Irp->RequestorMode,
@@ -689,12 +712,11 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
 				/* Free the IRP and its MDL */
 				IoFreeMdl(Irp->MdlAddress);
 				IoFreeIrp(Irp);
-				Irp = NULL;
+
+                /* Fail */
+				_SEH2_YIELD(return NULL);
 			}
 			_SEH2_END;
-		
-            /* This is how we know if we failed during the probe */
-            if (!Irp) return NULL;
         }
         else
         {
@@ -885,12 +907,11 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                     /* Free the input buffer and IRP */
                     if (InputBuffer) ExFreePool(Irp->AssociatedIrp.SystemBuffer);
                     IoFreeIrp(Irp);
-                    Irp = NULL;
+
+                    /* Fail */
+                    _SEH2_YIELD(return NULL);
                 }
                 _SEH2_END;
-
-                /* This is how we know if probing failed */
-                if (!Irp) return NULL;
             }
             break;
 
@@ -1110,8 +1131,11 @@ FASTCALL
 IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
+	NTSTATUS Status;
     PDRIVER_OBJECT DriverObject;
     PIO_STACK_LOCATION StackPtr;
+
+	DPRINT("IofCallDriver(%x,%x)\n", DeviceObject, Irp);
 
     /* Get the Driver Object */
     DriverObject = DeviceObject->DriverObject;
@@ -1132,8 +1156,10 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
     StackPtr->DeviceObject = DeviceObject;
 
     /* Call it */
-    return DriverObject->MajorFunction[StackPtr->MajorFunction](DeviceObject,
-                                                                Irp);
+	DPRINT("Calling %x\n", DriverObject->MajorFunction[StackPtr->MajorFunction]);
+    Status = DriverObject->MajorFunction[StackPtr->MajorFunction](DeviceObject, Irp);
+	DPRINT("Status: %x\n", Status);
+	return Status;
 }
 
 FORCEINLINE
@@ -1317,12 +1343,11 @@ IofCompleteRequest(IN PIRP Irp,
         }
         else
         {
-#if 0
             /* Page 166 */
-            KeInitializeApc(&Irp->Tail.Apc
+            KeInitializeApc(&Irp->Tail.Apc,
                             &Irp->Tail.Overlay.Thread->Tcb,
                             Irp->ApcEnvironment,
-                            IopCompletePageWrite,
+                            IopCompleteRequest,
                             NULL,
                             NULL,
                             KernelMode,
@@ -1331,11 +1356,6 @@ IofCompleteRequest(IN PIRP Irp,
                              NULL,
                              NULL,
                              PriorityBoost);
-#else
-            /* Not implemented yet. */
-            DPRINT1("Not supported!\n");
-            while (TRUE);
-#endif
         }
 
         /* Get out of here */

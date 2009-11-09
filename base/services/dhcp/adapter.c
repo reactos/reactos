@@ -3,7 +3,6 @@
 static SOCKET DhcpSocket = INVALID_SOCKET;
 static LIST_ENTRY AdapterList;
 static WSADATA wsd;
-extern struct interface_info *ifi;
 
 PCHAR *GetSubkeyNames( PCHAR MainKeyName, PCHAR Append ) {
     int i = 0;
@@ -150,7 +149,6 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     PCHAR IPAddress = NULL, Netmask = NULL, DefaultGateway = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     DWORD Error = ERROR_SUCCESS;
-    MIB_IPFORWARDROW DefGatewayRow;
 
     Adapter->DhclientState.config = &Adapter->DhclientConfig;
     strncpy(Adapter->DhclientInfo.name, (char*)Adapter->IfMib.bDescr,
@@ -171,10 +169,9 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
         Adapter->DhclientState.state = S_STATIC;
 
         Netmask = RegReadString( AdapterKey, NULL, "Subnetmask" );
-        if( !Netmask ) Netmask = "255.255.255.0";
 
         Status = AddIPAddress( inet_addr( IPAddress ),
-                               inet_addr( Netmask ),
+                               inet_addr( Netmask ? Netmask : "255.255.255.0" ),
                                Adapter->IfMib.dwIndex,
                                &Adapter->NteContext,
                                &Adapter->NteInstance );
@@ -182,11 +179,11 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
         DefaultGateway = RegReadString( AdapterKey, NULL, "DefaultGateway" );
 
         if( DefaultGateway ) {
-            DefGatewayRow.dwForwardDest = 0;
-            DefGatewayRow.dwForwardMask = 0;
-            DefGatewayRow.dwForwardMetric1 = 1;
-            DefGatewayRow.dwForwardNextHop = inet_addr(DefaultGateway);
-            Error = CreateIpForwardEntry( &DefGatewayRow );
+            Adapter->RouterMib.dwForwardDest = 0;
+            Adapter->RouterMib.dwForwardMask = 0;
+            Adapter->RouterMib.dwForwardMetric1 = 1;
+            Adapter->RouterMib.dwForwardNextHop = inet_addr(DefaultGateway);
+            Error = CreateIpForwardEntry( &Adapter->RouterMib );
             if( Error )
                 warning("Failed to set default gateway %s: %ld\n",
                         DefaultGateway, Error);
@@ -200,6 +197,10 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
             (MID_TRACE,("Adapter Name: [%s] (Bind Status %x) (dynamic)\n",
                         Adapter->DhclientInfo.name,
                         Adapter->BindStatus));
+
+        add_protocol(Adapter->DhclientInfo.name, Adapter->DhclientInfo.rfdesc, got_one, &Adapter->DhclientInfo);
+	Adapter->DhclientInfo.client->state = S_INIT;
+	state_reboot(&Adapter->DhclientInfo);
     }
 
     if( IPAddress ) free( IPAddress );
@@ -207,18 +208,33 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     return TRUE;
 }
 
-/*
- * XXX Figure out the way to bind a specific adapter to a socket.
- */
-
 void AdapterInit() {
-    PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
-    DWORD Error, Size, i;
-    PDHCP_ADAPTER Adapter = NULL;
-
     WSAStartup(0x0101,&wsd);
 
     InitializeListHead( &AdapterList );
+}
+
+int
+InterfaceConnected(MIB_IFROW IfEntry)
+{
+    if (IfEntry.dwOperStatus == IF_OPER_STATUS_CONNECTED ||
+        IfEntry.dwOperStatus == IF_OPER_STATUS_OPERATIONAL)
+        return 1;
+
+    DH_DbgPrint(MID_TRACE,("Interface %d is down\n", IfEntry.dwIndex));
+    return 0;
+}
+
+/*
+ * XXX Figure out the way to bind a specific adapter to a socket.
+ */
+BOOLEAN AdapterDiscover() {
+    PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
+    DWORD Error, Size = sizeof(MIB_IFTABLE);
+    PDHCP_ADAPTER Adapter = NULL;
+    struct interface_info *ifi = NULL;
+    int i;
+    BOOLEAN ret = TRUE;
 
     DH_DbgPrint(MID_TRACE,("Getting Adapter List...\n"));
 
@@ -229,16 +245,35 @@ void AdapterInit() {
         Table = (PMIB_IFTABLE) malloc( Size );
     }
 
-    if( Error != NO_ERROR ) goto term;
+    if( Error != NO_ERROR ) {
+        ret = FALSE;
+        goto term;
+    }
 
     DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
 
-    for( i = 0; i < Table->dwNumEntries; i++ ) {
+    for( i = Table->dwNumEntries - 1; i >= 0; i-- ) {
         DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n",
                                Table->table[i].dwIndex));
+
+        if ((Adapter = AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen)))
+        {
+            /* This is an existing adapter */
+            if (InterfaceConnected(Table->table[i])) {
+                /* We're still active so we stay in the list */
+                ifi = &Adapter->DhclientInfo;
+            } else {
+                /* We've lost our link so out we go */
+                RemoveEntryList(&Adapter->ListEntry);
+                free(Adapter);
+            }
+
+            continue;
+        }
+
         Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
 
-        if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET ) {
+        if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET && InterfaceConnected(Table->table[i])) {
             memcpy( &Adapter->IfMib, &Table->table[i],
                     sizeof(Adapter->IfMib) );
             Adapter->DhclientInfo.client = &Adapter->DhclientState;
@@ -263,13 +298,18 @@ void AdapterInit() {
                     Adapter->DhclientInfo.rfdesc =
                     Adapter->DhclientInfo.wfdesc =
                     socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
-                Adapter->ListenAddr.sin_family = AF_INET;
-                Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
-                Adapter->BindStatus =
-                    (bind( Adapter->DhclientInfo.rfdesc,
-                           (struct sockaddr *)&Adapter->ListenAddr,
-                           sizeof(Adapter->ListenAddr) ) == 0) ?
-                    0 : WSAGetLastError();
+
+                if (DhcpSocket != INVALID_SOCKET) {
+                    Adapter->ListenAddr.sin_family = AF_INET;
+                    Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
+                    Adapter->BindStatus =
+                        (bind( Adapter->DhclientInfo.rfdesc,
+                               (struct sockaddr *)&Adapter->ListenAddr,
+                               sizeof(Adapter->ListenAddr) ) == 0) ?
+                        0 : WSAGetLastError();
+                } else {
+                    error("socket() failed: %d\n", WSAGetLastError());
+                }
             } else {
                 Adapter->DhclientInfo.rfdesc =
                     Adapter->DhclientInfo.wfdesc = DhcpSocket;
@@ -287,6 +327,9 @@ void AdapterInit() {
             if( PrepareAdapterForService( Adapter ) ) {
                 Adapter->DhclientInfo.next = ifi;
                 ifi = &Adapter->DhclientInfo;
+
+                read_client_conf(&Adapter->DhclientInfo);
+
                 InsertTailList( &AdapterList, &Adapter->ListEntry );
             } else { free( Adapter ); Adapter = 0; }
         } else { free( Adapter ); Adapter = 0; }
@@ -300,6 +343,7 @@ void AdapterInit() {
 
 term:
     if( Table ) free( Table );
+    return ret;
 }
 
 void AdapterStop() {
@@ -350,6 +394,23 @@ PDHCP_ADAPTER AdapterFindInfo( struct interface_info *ip ) {
          ListEntry = ListEntry->Flink ) {
         Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
         if( ip == &Adapter->DhclientInfo ) return Adapter;
+    }
+
+    return NULL;
+}
+
+PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen ) {
+    PDHCP_ADAPTER Adapter;
+    PLIST_ENTRY ListEntry;
+
+    for(ListEntry = AdapterList.Flink;
+        ListEntry != &AdapterList;
+        ListEntry = ListEntry->Flink) {
+       Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
+       if (Adapter->DhclientInfo.hw_address.hlen == hlen &&
+           !memcmp(Adapter->DhclientInfo.hw_address.haddr,
+                  haddr,
+                  hlen)) return Adapter;
     }
 
     return NULL;

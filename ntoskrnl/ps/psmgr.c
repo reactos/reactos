@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 extern ULONG ExpInitializationPhase;
@@ -261,7 +261,6 @@ PsLocateSystemDll(VOID)
     ULONG HardErrorResponse;
 
     /* Locate and open NTDLL to determine ImageBase and LdrStartup */
-	DPRINT1("PsLocateSystemDll\n");
     InitializeObjectAttributes(&ObjectAttributes,
                                &PsNtDllPathName,
                                0,
@@ -273,9 +272,11 @@ PsLocateSystemDll(VOID)
                         &IoStatusBlock,
                         FILE_SHARE_READ,
                         0);
+
     if (!NT_SUCCESS(Status))
     {
         /* Failed, bugcheck */
+		DPRINT1("Could not find %wZ\n", &PsNtDllPathName);
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 2, 0, 0);
     }
 
@@ -306,7 +307,6 @@ PsLocateSystemDll(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Failed, bugcheck */
-		DPRINT1("Status %x\n", Status);
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 3, 0, 0);
     }
 
@@ -333,7 +333,6 @@ PsLocateSystemDll(VOID)
     }
 
     /* Return status */
-	DPRINT1("PsLocateSystemDll %x\n", Status);
     return Status;
 }
 
@@ -349,6 +348,7 @@ PspInitializeSystemDll(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Failed, bugcheck */
+		DPRINT1("Failed to get LdrInitializeThunk\n");
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 7, 0, 0);
     }
 
@@ -357,6 +357,7 @@ PspInitializeSystemDll(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Failed, bugcheck */
+		DPRINT1("Failed to get user entry points\n");
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 8, 0, 0);
     }
 

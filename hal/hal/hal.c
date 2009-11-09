@@ -610,7 +610,7 @@ HalTranslateBusAddress(
   return TRUE;
 }
 
-
+#ifndef _M_ARM
 VOID
 NTAPI
 HalpAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
@@ -668,7 +668,7 @@ HalpSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
                                      PartitionNumber,
                                      PartitionType);
 }
-
+#endif
 
 BOOLEAN
 NTAPI

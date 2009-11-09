@@ -4,6 +4,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
 #define WINSHELLAPI DECLSPEC_IMPORT
 #define ABE_LEFT	0
 #define ABE_TOP	1
@@ -319,6 +323,18 @@ typedef struct _SHNAMEMAPPINGW {
 #define SHERB_NOPROGRESSUI   0x2
 #define SHERB_NOSOUND        0x4
 
+/******************************************
+ * Links
+ */
+
+#define SHGNLI_PIDL        0x01
+#define SHGNLI_PREFIXNAME  0x02
+#define SHGNLI_NOUNIQUE    0x04
+#define SHGNLI_NOLNK       0x08
+
+BOOL WINAPI SHGetNewLinkInfoA(LPCSTR,LPCSTR,LPSTR,BOOL*,UINT);
+BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR,LPCWSTR,LPWSTR,BOOL*,UINT);
+
 LPWSTR * WINAPI CommandLineToArgvW(LPCWSTR,int*);
 void WINAPI DragAcceptFiles(HWND,BOOL);
 void WINAPI DragFinish(HDROP);
@@ -379,6 +395,7 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define SHGetNewLinkInfo SHGetNewLinkInfoW
 #define SHQueryRecycleBin SHQueryRecycleBinW
 #define SHEmptyRecycleBin SHEmptyRecycleBinW
+#define SHGetNewLinkInfo SHGetNewLinkInfoW
 
 #else
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAA_V1_SIZE
@@ -404,6 +421,10 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
 #define SHQueryRecycleBin SHQueryRecycleBinA
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
+#define SHGetNewLinkInfo SHGetNewLinkInfoA
+#endif
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 #ifdef __cplusplus
 }

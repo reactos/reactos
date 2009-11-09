@@ -79,7 +79,7 @@ VOID OptionMenuCustomBootDisk(VOID)
 	CHAR	SectionName[100];
 	CHAR	BootDriveString[20];
 	ULONG	SectionId;
-	ULONG	Year, Month, Day, Hour, Minute, Second;
+	TIMEINFO*	TimeInfo;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -90,8 +90,8 @@ VOID OptionMenuCustomBootDisk(VOID)
 	}
 
 	// Generate a unique section name
-	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomBootDisk%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
+	TimeInfo = ArcGetTime();
+	sprintf(SectionName, "CustomBootDisk%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -122,7 +122,7 @@ VOID OptionMenuCustomBootPartition(VOID)
 	CHAR	BootDriveString[20];
 	CHAR	BootPartitionString[20];
 	ULONG	SectionId;
-	ULONG	Year, Month, Day, Hour, Minute, Second;
+	TIMEINFO*	TimeInfo;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -139,8 +139,8 @@ VOID OptionMenuCustomBootPartition(VOID)
 	}
 
 	// Generate a unique section name
-	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomBootPartition%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
+	TimeInfo = ArcGetTime();
+	sprintf(SectionName, "CustomBootPartition%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -178,7 +178,7 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 	CHAR	BootPartitionString[20];
 	CHAR	BootSectorFileString[200];
 	ULONG	SectionId;
-	ULONG	Year, Month, Day, Hour, Minute, Second;
+	TIMEINFO*	TimeInfo;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -201,8 +201,8 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 	}
 
 	// Generate a unique section name
-	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomBootSectorFile%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
+	TimeInfo = ArcGetTime();
+	sprintf(SectionName, "CustomBootSectorFile%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -248,7 +248,7 @@ VOID OptionMenuCustomBootReactOS(VOID)
 	CHAR	ReactOSARCPath[200];
 	CHAR	ReactOSOptions[200];
 	ULONG	SectionId;
-	ULONG	Year, Month, Day, Hour, Minute, Second;
+	TIMEINFO*	TimeInfo;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -277,8 +277,8 @@ VOID OptionMenuCustomBootReactOS(VOID)
 	}
 
 	// Generate a unique section name
-	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomReactOS%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
+	TimeInfo = ArcGetTime();
+	sprintf(SectionName, "CustomReactOS%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -321,7 +321,7 @@ VOID OptionMenuCustomBootLinux(VOID)
 	CHAR	LinuxInitrdString[200];
 	CHAR	LinuxCommandLineString[200];
 	ULONG	SectionId;
-	ULONG	Year, Month, Day, Hour, Minute, Second;
+	TIMEINFO*	TimeInfo;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -356,8 +356,8 @@ VOID OptionMenuCustomBootLinux(VOID)
 	}
 
 	// Generate a unique section name
-	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	sprintf(SectionName, "CustomLinux%ld%ld%ld%ld%ld%ld", Year, Day, Month, Hour, Minute, Second);
+	TimeInfo = ArcGetTime();
+	sprintf(SectionName, "CustomLinux%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))

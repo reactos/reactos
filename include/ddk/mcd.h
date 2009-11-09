@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 #if defined(_MCD_)
-  #define CHANGERAPI DECLSPEC_EXPORT
+  #define CHANGERAPI
 #else
   #define CHANGERAPI DECLSPEC_IMPORT
 #endif
@@ -41,7 +41,7 @@ extern "C" {
 #undef DebugPrint
 #endif
 
-#ifdef DBG
+#if DBG
 #define DebugPrint(x) ChangerClassDebugPrint x
 #else
 #define DebugPrint(x)

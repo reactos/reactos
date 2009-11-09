@@ -1,0 +1,23 @@
+; UTF-8
+
+[Section]
+Name = OLE Viewer and Microsoft Foundation Classes version 4
+Version = 4.0
+Licence = Unknown
+Description = MFC 4 is needed by some applications.
+Size = 865kB
+Category = 14
+URLSite = http://support.microsoft.com/kb/122244
+URLDownload = http://download.microsoft.com/download/ole/ole2v/3.5/w351/en-us/ole2v.exe
+CDPath = none
+
+
+[Section.0407]
+Name = OLE Anzeige und Microsoft Foundation Classes Version 4
+Licence = Unbekannt
+Description = MFC 4 wird von einigen Anwendungen benötigt.
+
+[Section.0415]
+Name = Przeglądarka OLE oraz MFC (Microsoft Foundation Classes) wersja 4
+Licence = Nieznana
+Description = Biblioteka MFC 4 jest używana przez część aplikacji.

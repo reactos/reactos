@@ -68,10 +68,8 @@ typedef struct _PDEV
    DDPIXELFORMAT ddpfDisplay;
 } PDEV, *PPDEV;
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
 #define DEVICE_NAME	L"framebuf"
-#define ALLOC_TAG	TAG('F','B','U','F')
+#define ALLOC_TAG	'FUBF'
 
 
 DHPDEV APIENTRY

@@ -13,6 +13,7 @@
 #include <debug.h>
 
 /* GCC's incompetence strikes again */
+__inline
 VOID
 sprintf_nt(IN PCHAR Buffer,
            IN PCHAR Format,
@@ -281,7 +282,7 @@ MiFindExportedRoutineByName(IN PVOID DllBase,
     Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
 
     /* We found it! */
-    ASSERT((Function > (PVOID)ExportDirectory) &&
+    ASSERT(!(Function > (PVOID)ExportDirectory) &&
            (Function < (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
     return Function;
 }

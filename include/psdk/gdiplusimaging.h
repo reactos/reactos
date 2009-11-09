@@ -38,6 +38,33 @@ enum ImageLockMode
     ImageLockModeUserInputBuf   = 4
 };
 
+enum RotateFlipType
+{
+    RotateNoneFlipNone = 0,
+    Rotate180FlipXY    = RotateNoneFlipNone,
+
+    Rotate90FlipNone   = 1,
+    Rotate270FlipXY    = Rotate90FlipNone,
+
+    Rotate180FlipNone  = 2,
+    RotateNoneFlipXY   = Rotate180FlipNone,
+
+    Rotate270FlipNone  = 3,
+    Rotate90FlipXY     = Rotate270FlipNone,
+
+    RotateNoneFlipX    = 4,
+    Rotate180FlipY     = RotateNoneFlipX,
+
+    Rotate90FlipX      = 5,
+    Rotate270FlipY     = Rotate90FlipX,
+
+    Rotate180FlipX     = 6,
+    RotateNoneFlipY    = Rotate180FlipX,
+
+    Rotate270FlipX     = 7,
+    Rotate90FlipY      = Rotate270FlipX
+};
+
 #ifdef __cplusplus
 class EncoderParameter
 {
@@ -108,6 +135,7 @@ public:
 #else /* end of c++ typedefs */
 
 typedef enum ImageLockMode ImageLockMode;
+typedef enum RotateFlipType RotateFlipType;
 
 typedef struct EncoderParameter
 {

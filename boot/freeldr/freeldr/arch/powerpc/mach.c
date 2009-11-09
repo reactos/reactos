@@ -247,40 +247,6 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     return slots;
 }
 
-/* Strategy:
- *
- * For now, it'll be easy enough to use the boot command line as our boot path.
- * Treat it as the path of a disk partition.  We might even be able to get
- * away with grabbing a partition image by tftp in this scenario.
- */
-
-BOOLEAN PpcDiskGetBootVolume( PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType ) {
-    *DriveNumber = 0;
-    *StartSector = 0;
-    *SectorCount = 0;
-    *FsType = FS_FAT;
-    return TRUE;
-}
-
-BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
-                             char *RemainingPath,
-                             PULONG Device,
-                             PULONG DriveNumber,
-                             PULONGLONG StartSector,
-                             PULONGLONG SectorCount,
-                             int *FsType ) {
-    char *remain = strchr(SystemPath, '\\');
-    if( remain ) {
-	strcpy( RemainingPath, remain+1 );
-    } else {
-	RemainingPath[0] = 0;
-    }
-    *Device = 0;
-    // Hack to be a bit easier on ram
-    CacheSizeLimit = 64 * 1024;
-    return MachDiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
-}
-
 BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
     strncpy( OutBootPath, BootPath, Size );
     return TRUE;
@@ -342,9 +308,12 @@ ULONG PpcDiskGetCacheableBlockCount( ULONG DriveNumber ) {
     return 1;
 }
 
-VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day,
-                               PULONG Hour, PULONG Minute, PULONG Second ) {
-    //printf("RTCGeturrentDateTime\n");
+TIMEINFO*
+PpcGetTime(VOID)
+{
+    static TIMEINFO TimeInfo;
+    //printf("PpcGetTime\n");
+    return &TimeInfo;
 }
 
 VOID NarrowToWide(WCHAR *wide_name, char *name)
@@ -389,13 +358,15 @@ VOID OfwCopyDeviceTree
     /* Create a key for this device */
     FldrCreateComponentKey
         (ParentKey,
-         wide_name,
-         0,
          AdapterClass,
          MultiFunctionAdapter,
+         0,
+         0,
+         (ULONG)-1,
+         NULL,
+         NULL,
+         0,
          &NewKey);
-
-    FldrSetComponentInformation(NewKey, 0, 0, (ULONG)-1);
 
     /* Add properties */
     for (prev_name = ""; ofw_nextprop(node, prev_name, cur_name) == 1; )
@@ -452,8 +423,6 @@ PCONFIGURATION_COMPONENT_DATA PpcHwDetect() {
     int node = ofw_finddevice("/");
 
     FldrCreateSystemKey(&RootKey);
-
-    FldrSetComponentInformation(RootKey, 0, 0, (ULONG)-1);
 
     OfwCopyDeviceTree(RootKey,"/",node,&BusNumber,&DiskController,&DiskNumber);
     return RootKey;
@@ -524,8 +493,6 @@ void PpcDefaultMachVtbl()
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
     MachVtbl.DiskNormalizeSystemPath = PpcDiskNormalizeSystemPath;
-    MachVtbl.DiskGetBootVolume = PpcDiskGetBootVolume;
-    MachVtbl.DiskGetSystemVolume = PpcDiskGetSystemVolume;
     MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
     MachVtbl.DiskGetBootDevice = PpcDiskGetBootDevice;
     MachVtbl.DiskBootingFromFloppy = PpcDiskBootingFromFloppy;
@@ -534,7 +501,7 @@ void PpcDefaultMachVtbl()
     MachVtbl.DiskGetDriveGeometry = PpcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PpcDiskGetCacheableBlockCount;
 
-    MachVtbl.RTCGetCurrentDateTime = PpcRTCGetCurrentDateTime;
+    MachVtbl.GetTime = PpcGetTime;
 
     MachVtbl.HwDetect = PpcHwDetect;
 }
@@ -567,6 +534,8 @@ void PpcOfwInit()
 }
 
 void PpcInit( of_proxy the_ofproxy ) {
+    // Hack to be a bit easier on ram
+    CacheSizeLimit = 64 * 1024;
     ofproxy = the_ofproxy;
     PpcDefaultMachVtbl();
     if(ofproxy) PpcOfwInit();

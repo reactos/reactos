@@ -51,14 +51,8 @@ VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 		return;
 	}
 
-	if (!FsOpenSystemVolume(FileName, FileName, NULL))
-	{
-		UiMessageBox("Failed to open boot drive.");
-		return;
-	}
-
 	FilePointer = FsOpenFile(FileName);
-	if (FilePointer == NULL)
+	if (!FilePointer)
 	{
 		strcat(FileName, " not found.");
 		UiMessageBox(FileName);

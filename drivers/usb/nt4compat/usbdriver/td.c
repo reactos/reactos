@@ -400,6 +400,7 @@ alloc_tds(PUHCI_TD_POOL_LIST pool_list, LONG count)
         return NULL;
 
     ptd = alloc_td(pool_list);
+    if (!ptd) return NULL;
 
     for(i = 1; i < count; i++)
     {

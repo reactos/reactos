@@ -24,7 +24,7 @@ typedef struct _MM_RMAP_ENTRY
    struct _MM_RMAP_ENTRY* Next;
    PEPROCESS Process;
    PVOID Address;
-#ifdef DBG
+#if DBG
    PVOID Caller;
 #endif
 }
@@ -58,7 +58,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
@@ -91,7 +91,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->VadRoot;
+      AddressSpace = &Process->Vm;
    }
    else
    {
@@ -149,6 +149,13 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       Status = MmWritePageSectionView(AddressSpace, MemoryArea,
                                       Address, PageOp);
    }
+   else if ((Type == MEMORY_AREA_PHYSICAL_MEMORY_SECTION) ||
+			(Type == MEMORY_AREA_PAGE_FILE_SECTION) ||
+			(Type == MEMORY_AREA_IMAGE_SECTION))
+   {
+	   MmUnlockAddressSpace(AddressSpace);
+	   Status = STATUS_SUCCESS;
+   }
    else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
    {
       PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
@@ -192,7 +199,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
@@ -222,7 +229,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->VadRoot;
+      AddressSpace = &Process->Vm;
    }
    else
    {
@@ -273,6 +280,70 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
        */
       Status = MmPageOutSectionView(AddressSpace, MemoryArea,
                                     Address, PageOp);
+   }
+   else if (Type == MEMORY_AREA_PAGE_FILE_SECTION)
+   {
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
+             + MemoryArea->Data.SectionData.ViewOffset;
+
+      /*
+       * Get or create a pageop
+       */
+      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
+                           MemoryArea->Data.SectionData.Segment,
+                           Offset, MM_PAGEOP_PAGEOUT, TRUE);
+      if (PageOp == NULL)
+      {
+         MmUnlockAddressSpace(AddressSpace);
+         if (Address < MmSystemRangeStart)
+         {
+            ObDereferenceObject(Process);
+         }
+         return(STATUS_UNSUCCESSFUL);
+      }
+
+      /*
+       * Release locks now we have a page op.
+       */
+      MmUnlockAddressSpace(AddressSpace);
+
+      /*
+       * Do the actual page out work.
+       */
+      Status = MmPageOutPageFileView
+		  (AddressSpace, MemoryArea, Address, PageOp);
+   }
+   else if (Type == MEMORY_AREA_IMAGE_SECTION)
+   {
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
+             + MemoryArea->Data.SectionData.ViewOffset;
+
+      /*
+       * Get or create a pageop
+       */
+      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
+                           MemoryArea->Data.SectionData.Segment,
+                           Offset, MM_PAGEOP_PAGEOUT, TRUE);
+      if (PageOp == NULL)
+      {
+         MmUnlockAddressSpace(AddressSpace);
+         if (Address < MmSystemRangeStart)
+         {
+            ObDereferenceObject(Process);
+         }
+         return(STATUS_UNSUCCESSFUL);
+      }
+
+      /*
+       * Release locks now we have a page op.
+       */
+      MmUnlockAddressSpace(AddressSpace);
+
+      /*
+       * Do the actual page out work.
+       */
+      Status = MmPageOutImageFile
+		  (AddressSpace, MemoryArea, Address, PageOp);
    }
    else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
    {
@@ -396,7 +467,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    }
    new_entry->Address = Address;
    new_entry->Process = (PEPROCESS)Process;
-#ifdef DBG
+#if DBG
 #ifdef __GNUC__
    new_entry->Caller = __builtin_return_address(0);
 #else
@@ -416,7 +487,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
    new_entry->Next = current_entry;
-#ifdef DBG
+#if DBG
    while (current_entry)
    {
       if (current_entry->Address == new_entry->Address && current_entry->Process == new_entry->Process)

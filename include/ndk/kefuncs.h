@@ -195,12 +195,6 @@ KeIsExecutingDpc(
     VOID
 );
 
-VOID
-NTAPI
-KeFlushQueuedDpcs(
-    VOID
-);
-
 BOOLEAN
 NTAPI
 KiIpiServiceRoutine(

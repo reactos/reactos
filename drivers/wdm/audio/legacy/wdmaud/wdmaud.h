@@ -5,20 +5,30 @@
 #include <ntddk.h>
 #include <portcls.h>
 #include <ks.h>
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 #include <ksmedia.h>
 #include <mmsystem.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <wchar.h>
 
 #include "interface.h"
 
 typedef struct
 {
+    HANDLE Handle;
+    SOUND_DEVICE_TYPE Type;
+    ULONG FilterId;
+    ULONG PinId;
+}WDMAUD_HANDLE, *PWDMAUD_HANDLE;
+
+
+typedef struct
+{
     HANDLE hProcess;
-    HANDLE hSysAudio;
-    PFILE_OBJECT FileObject;
     ULONG NumPins;
-    HANDLE * hPins;
+    WDMAUD_HANDLE * hPins;
 
 }WDMAUD_CLIENT, *PWDMAUD_CLIENT;
 
@@ -38,16 +48,16 @@ typedef struct
     KSPIN_LOCK Lock;
     ULONG NumSysAudioDevices;
     LIST_ENTRY SysAudioDeviceList;
+    HANDLE hSysAudio;
+    PFILE_OBJECT FileObject;
 
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
 typedef struct
 {
+    KSSTREAM_HEADER Header;
     PIRP Irp;
-    IO_STATUS_BLOCK StatusBlock;
-    ULONG Length;
-}WRITE_CONTEXT, *PWRITE_CONTEXT;
-
+}CONTEXT_WRITE, *PCONTEXT_WRITE;
 
 NTSTATUS
 WdmAudRegisterDeviceInterface(
@@ -69,5 +79,28 @@ NTAPI
 WdmAudDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
+
+NTSTATUS
+NTAPI
+WdmAudWrite(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp);
+
+NTSTATUS
+WdmAudControlOpenMixer(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo);
+
+ULONG
+GetNumOfMixerDevices(
+    IN  PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+SetIrpIoStatus(
+    IN PIRP Irp,
+    IN NTSTATUS Status,
+    IN ULONG Length);
 
 #endif

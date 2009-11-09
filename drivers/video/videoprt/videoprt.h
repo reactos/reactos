@@ -36,8 +36,8 @@
 
 #include <debug.h>
 
-#define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
-#define TAG_VIDEO_PORT_BUFFER  TAG('V', 'p', 'm', '\0' )
+#define TAG_VIDEO_PORT  'PDIV'
+#define TAG_VIDEO_PORT_BUFFER  '\0mpV'
 
 typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {
@@ -103,6 +103,15 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
       HwDeviceExtension, \
       VIDEO_PORT_DEVICE_EXTENSION, \
       MiniPortDeviceExtension)
+
+typedef struct _VIDEO_PORT_EVENT
+{
+    /* Public part */
+    ENG_EVENT;
+
+    /* Private part */
+    KEVENT Event;
+} VIDEO_PORT_EVENT, *PVIDEO_PORT_EVENT;
 
 /* agp.c */
 

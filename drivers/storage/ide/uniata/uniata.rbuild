@@ -4,6 +4,10 @@
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="uniata">.</include>
 	<include base="uniata">inc</include>
+	<group compilerset="gcc">
+		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	</group>
 	<!-- define name="_DEBUG" /-->
 	<library>ntoskrnl</library>
 	<library>hal</library>

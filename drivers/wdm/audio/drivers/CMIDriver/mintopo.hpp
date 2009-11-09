@@ -80,14 +80,14 @@ public:
     );
 
 	//friends
-    friend NTSTATUS PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest);
-    friend NTSTATUS PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest);
-    friend NTSTATUS PropertyHandler_CpuResources(PPCPROPERTY_REQUEST PropertyRequest);
-    friend NTSTATUS PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest);
-    friend NTSTATUS PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest);
-    friend NTSTATUS PropertyHandler_Mux(PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_CpuResources(PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_Mux(PPCPROPERTY_REQUEST PropertyRequest);
 
-    static NTSTATUS EventHandler(PPCEVENT_REQUEST EventRequest);
+    static NTSTATUS NTAPI EventHandler(PPCEVENT_REQUEST EventRequest);
 };
 
 #endif //_MINTOPO_HPP_

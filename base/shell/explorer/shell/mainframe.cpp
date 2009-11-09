@@ -96,7 +96,7 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 					XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 
 					bool mdi = XMLBool(explorer_options, "mdi", true);
-					bool separateFolders = XMLBool(explorer_options, "separate-folders", true);
+					bool separateFolders = XMLBool(explorer_options, "separate-folders", false);
 
 					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
 					LOG(FmtString(TEXT("MainFrameBase::OpenShellFolders(): pidl_abs=%s"), (LPCTSTR)FileSysShellPath(pidl_abs)));
@@ -152,7 +152,35 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 MainFrameBase::MainFrameBase(HWND hwnd)
  :	super(hwnd)
 {
-	_himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0);
+    HDC hDC = GetDC(NULL);
+#ifndef _NO_REBAR
+    //static WCHAR Title1[] = TEXT("Toolbar");
+    static WCHAR Title2[] = TEXT("Address :");
+#endif
+
+    if (hDC)
+    {
+        DWORD ilMask;
+        INT bpp = GetDeviceCaps(hDC, BITSPIXEL);
+        ReleaseDC(NULL, hDC);
+
+        if (bpp <= 4)
+            ilMask = ILC_COLOR4;
+        else if (bpp <= 8)
+            ilMask = ILC_COLOR8;
+        else if (bpp <= 16)
+            ilMask = ILC_COLOR16;
+        else if (bpp <= 24)
+            ilMask = ILC_COLOR24;
+        else if (bpp <= 32)
+            ilMask = ILC_COLOR32;
+        else
+            ilMask = ILC_COLOR;
+
+        ilMask |= ILC_MASK;
+
+        _himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ilMask, 2, 0);
+    }
 
 	_hMenuFrame = GetMenu(hwnd);
 	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-3);
@@ -181,7 +209,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 #endif
 		WS_CHILD|TBSTYLE_FLAT|WS_VISIBLE, IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR,
 		toolbarBtns, sizeof(toolbarBtns)/sizeof(TBBUTTON),
-		16, 15, 16, 15, sizeof(TBBUTTON));
+		16, 16, 16, 16, sizeof(TBBUTTON));
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
 
@@ -241,7 +269,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	rbBand.cyMaxChild = 0;
 	rbBand.cyIntegral = btn_hgt;
 
-	rbBand.lpText = NULL;//TEXT("Toolbar");
+	rbBand.lpText = NULL;//Title1
 	rbBand.hwndChild = _htoolbar;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt;
@@ -250,7 +278,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 
 	rbBand.fStyle &= ~RBBS_HIDETITLE;
 	rbBand.fStyle |= RBBS_BREAK;
-    rbBand.lpText = TEXT("Address :");
+    rbBand.lpText = Title2;
 	rbBand.hwndChild = _haddrcombo;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt;
@@ -694,7 +722,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 				CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|
 				WS_CHILD|TBSTYLE_FLAT|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_EXTRABAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, NULL, 0,
-				16, 15, 16, 15, sizeof(TBBUTTON));
+				16, 16, 16, 16, sizeof(TBBUTTON));
 #else
 	_hextrabar = CreateToolbarEx(hwnd,
 				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,CCS_NODIVIDER|
@@ -764,7 +792,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 				CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|
 				WS_CHILD|WS_VISIBLE|TBSTYLE_FLAT|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, NULL, 0,
-				16, 15, 16, 15, sizeof(TBBUTTON));
+				16, 16, 16, 16, sizeof(TBBUTTON));
 #else
 	_hdrivebar = CreateToolbarEx(hwnd,
 				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST|CCS_NODIVIDER,

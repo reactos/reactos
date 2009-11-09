@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 #include "smss.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 static NTSTATUS NTAPI
@@ -64,6 +64,7 @@ SmpKnownDllsQueryRoutine(PWSTR ValueName,
   if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
     {
       /* Raise a hard error (crash the system/BSOD) */
+	  DPRINT1("STATUS_IMAGE_CHECKSUM_MISMATCH for %wZ\n", &ImageName);
       NtRaiseHardError (Status,
 			0,
 			0,

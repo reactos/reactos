@@ -322,7 +322,7 @@ co_IntInitializeDesktopGraphics(VOID)
    gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
    gpsi->dmLogPixels   = NtGdiGetDeviceCaps(ScreenDeviceContext, LOGPIXELSY);
    // Font is realized and this dc was previously set to internal DC_ATTR.
-   gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, &gpsi->cySysFontChar);
+   gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
    gpsi->tmSysFont     = tmw;
 
    return TRUE;
@@ -483,6 +483,9 @@ NtUserCreateWindowStation(
       return 0;
    }
 
+   /* Zero out the buffer */
+   RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
+
    KeInitializeSpinLock(&WindowStationObject->Lock);
 
    InitializeListHead(&WindowStationObject->DesktopListHead);
@@ -537,24 +540,24 @@ NtUserCreateWindowStation(
 
    /* FIXME: Obtain the following information from the registry */
 
-   CurInfo->WheelScroLines = 3;
-   CurInfo->WheelScroChars = 3;
+//   CurInfo->WheelScroLines = 3;
+//   CurInfo->WheelScroChars = 3;
    CurInfo->SwapButtons = FALSE;
    CurInfo->DblClickSpeed = 500;
    CurInfo->DblClickWidth = 4;
    CurInfo->DblClickHeight = 4;
 
-   CurInfo->MouseSpeed = 10;
-   CurInfo->CursorAccelerationInfo.FirstThreshold  = 6;
-   CurInfo->CursorAccelerationInfo.SecondThreshold = 10;
-   CurInfo->CursorAccelerationInfo.Acceleration    = 1;
+//   CurInfo->MouseSpeed = 10;
+//   CurInfo->CursorAccelerationInfo.FirstThreshold  = 6;
+//   CurInfo->CursorAccelerationInfo.SecondThreshold = 10;
+//   CurInfo->CursorAccelerationInfo.Acceleration    = 1;
 
-   CurInfo->MouseHoverTime = 80;
-   CurInfo->MouseHoverWidth = 4;
-   CurInfo->MouseHoverHeight = 4;
+//   CurInfo->MouseHoverTime = 80;
+//   CurInfo->MouseHoverWidth = 4;
+//   CurInfo->MouseHoverHeight = 4;
 
-   WindowStationObject->ScreenSaverActive = FALSE;
-   WindowStationObject->ScreenSaverTimeOut = 10;
+//   WindowStationObject->ScreenSaverActive = FALSE;
+//   WindowStationObject->ScreenSaverTimeOut = 10;
    WindowStationObject->SystemCursor = CurInfo;
 
    /* END FIXME loading from register */
@@ -627,14 +630,14 @@ NtUserOpenWindowStation(
    InitializeObjectAttributes(
       &ObjectAttributes,
       &WindowStationName,
-      0,
+      OBJ_CASE_INSENSITIVE,
       NULL,
       NULL);
 
    Status = ObOpenObjectByName(
                &ObjectAttributes,
                ExWindowStationObjectType,
-               UserMode,
+               KernelMode,
                NULL,
                dwDesiredAccess,
                NULL,
@@ -683,6 +686,11 @@ NtUserCloseWindowStation(
    NTSTATUS Status;
 
    DPRINT("About to close window station handle (0x%X)\n", hWinSta);
+
+	if (hWinSta == UserGetProcessWindowStation())
+	{
+		return FALSE;
+	}
 
    Status = IntValidateWindowStationHandle(
                hWinSta,

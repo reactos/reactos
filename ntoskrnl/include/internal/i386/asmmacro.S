@@ -997,7 +997,7 @@ PendingUserApc:
 // @remark
 //
 .macro TRAP_EPILOG SystemCall, RestorePreviousMode, RestoreSegments, RestoreVolatiles, RestoreAllRegs
-#ifdef DBG
+#if DBG
     /* Assert the flags */
     pushfd
     pop edx
@@ -1011,7 +1011,7 @@ PendingUserApc:
     /* Assert the trap frame */
 #endif
 5:
-#ifdef DBG
+#if DBG
     sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
     jnz 0f
 
@@ -1033,7 +1033,7 @@ PendingUserApc:
     /* Get exception list */
     mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
 
-#ifdef DBG
+#if DBG
     /* Assert the saved exception list */
     or edx, edx
     jnz 1f
@@ -1048,7 +1048,7 @@ PendingUserApc:
     /* Get previous mode */
     mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
 
-#ifdef DBG
+#if DBG
     /* Assert the saved previous mode */
     cmp ecx, -1
     jnz 1f
@@ -1061,7 +1061,7 @@ PendingUserApc:
     mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
 .else
 
-#ifdef DBG
+#if DBG
     /* Assert the saved previous mode */
     mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
     cmp ecx, -1
@@ -1304,7 +1304,7 @@ FastExit:
 .endif
 .endm
 
-#ifdef DBG
+#if DBG
 
 .macro VERIFY_INT Label
     /* Get the current time and mask it to 192 ticks */

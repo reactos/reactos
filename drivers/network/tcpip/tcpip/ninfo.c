@@ -91,20 +91,17 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     RtCount = CopyFIBs( RCache );
 
     while( RtCurrent < RouteEntries + RtCount ) {
-	/* Copy Desitnation */
+	ASSERT(RCacheCur->Router);
+
 	RtlCopyMemory( &RtCurrent->Dest,
 		       &RCacheCur->NetworkAddress.Address,
 		       sizeof(RtCurrent->Dest) );
 	RtlCopyMemory( &RtCurrent->Mask,
 		       &RCacheCur->Netmask.Address,
 		       sizeof(RtCurrent->Mask) );
-
-	if( RCacheCur->Router )
-	    RtlCopyMemory( &RtCurrent->Gw,
-			   &RCacheCur->Router->Address.Address,
-			   sizeof(RtCurrent->Gw) );
-	else
-	    RtlZeroMemory( &RtCurrent->Gw, sizeof(RtCurrent->Gw) );
+	RtlCopyMemory( &RtCurrent->Gw,
+		       &RCacheCur->Router->Address.Address,
+		       sizeof(RtCurrent->Gw) );
 
 	RtCurrent->Metric1 = RCacheCur->Metric;
 	RtCurrent->Type = TDI_ADDRESS_TYPE_IP;

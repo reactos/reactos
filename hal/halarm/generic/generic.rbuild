@@ -3,7 +3,6 @@
 <module name="halarm_generic" type="objectlibrary">
 	<include base="halarm_generic">../include</include>
 	<include base="ntoskrnl">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="_NTHAL_" />
 	<file>hal.c</file>
 	<pch>../include/hal.h</pch>

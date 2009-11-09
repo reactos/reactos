@@ -134,6 +134,19 @@ typedef struct _LLIP_BIND_INFO {
     LL_TRANSMIT_ROUTINE Transmit; /* Transmit function for this interface */
 } LLIP_BIND_INFO, *PLLIP_BIND_INFO;
 
+typedef struct _SEND_RECV_STATS {
+    UINT InBytes;
+    UINT InUnicast;
+    UINT InNUnicast;
+    UINT InDiscarded;
+    UINT InErrors;
+    UINT InDiscardedUnknownProto;
+    UINT OutBytes;
+    UINT OutUnicast;
+    UINT OutNUnicast;
+    UINT OutDiscarded;
+    UINT OutErrors;
+} SEND_RECV_STATS, *PSEND_RECV_STATS;
 
 /* Information about an IP interface */
 typedef struct _IP_INTERFACE {
@@ -157,6 +170,7 @@ typedef struct _IP_INTERFACE {
     UINT  Index;                  /* Index of adapter (used to add ip addr) */
     LL_TRANSMIT_ROUTINE Transmit; /* Pointer to transmit function */
     PVOID TCPContext;             /* TCP Content for this interface */
+    SEND_RECV_STATS Stats;        /* Send/Receive statistics */
 } IP_INTERFACE, *PIP_INTERFACE;
 
 typedef struct _IP_SET_ADDRESS {
@@ -173,8 +187,8 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
 
 /* Loopback adapter address information (network byte order) */
 #define LOOPBACK_ADDRESS_IPv4   ((IPv4_RAW_ADDRESS)DH2N(0x7F000001))
-#define LOOPBACK_BCASTADDR_IPv4 ((IPv4_RAW_ADDRESS)DH2N(0x7F0000FF))
-#define LOOPBACK_ADDRMASK_IPv4  ((IPv4_RAW_ADDRESS)DH2N(0xFFFFFF00))
+#define LOOPBACK_BCASTADDR_IPv4 ((IPv4_RAW_ADDRESS)DH2N(0x7FFFFFFF))
+#define LOOPBACK_ADDRMASK_IPv4  ((IPv4_RAW_ADDRESS)DH2N(0xFF000000))
 
 /* Protocol definitions */
 #ifndef IPPROTO_RAW

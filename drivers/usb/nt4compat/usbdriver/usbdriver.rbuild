@@ -22,6 +22,7 @@
 	<file>etd.c</file>
 	<file>gendrv.c</file>
 	<file>mouse.c</file>
+	<file>keyboard.c</file>
 	<file>usbdriver.rc</file>
 	<pch>usbdriver.h</pch>
 </module>

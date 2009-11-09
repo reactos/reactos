@@ -1,0 +1,27 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Manages command-line editing settings, history, and macros.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
+\n\
+  /INSERT             Enables insert mode.\n\
+  /OVERSTRIKE         Disables insert mode.\n\
+  /EXENAME=exename    Sets the name of the program to view/change history\n\
+                      and macros for. The default is cmd.exe.\n\
+  /HISTORY            Displays the command history.\n\
+  /LISTSIZE=size      Sets the number of commands per history buffer.\n\
+  /REINSTALL          Clears the command history.\n\
+  /MACROS             Displays macro definitions.\n\
+  /MACROS:exename     Displays macro definitions for a specific program.\n\
+  /MACROS:ALL         Displays macro definitions for all programs.\n\
+  /MACROFILE=filename Loads macro definitions from a file.\n\
+  macroname           Specifies the name of a macro to create.\n\
+  text                Specifies the replacement text for the macro.\n"
+
+IDS_INVALID_MACRO_DEF, "Invalid macro definition: %s\n"
+
+END

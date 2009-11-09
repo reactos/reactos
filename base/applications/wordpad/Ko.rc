@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
@@ -152,7 +153,7 @@ Caption "탭"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "탭 정지", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "더하기(&A)", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "지우기(&R)", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "확인(&O)", IDOK, 137, 15, 50, 15
@@ -179,29 +180,22 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_RICHTEXT_FILES_RTF,     "리치 텍스트 파일형식 (*.rtf)"
-    STRING_TEXT_FILES_TXT,         "텍스트 파일 (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "유니코드 텍스트 문서(*.txt)"
-    STRING_ALL_FILES,              "모든 문서 (*.*)"
+	STRING_ALL_FILES,              "모든 문서 (*.*)"
+	STRING_TEXT_FILES_TXT,         "텍스트 파일 (*.txt)"
+	STRING_TEXT_FILES_UNICODE_TXT, "유니코드 텍스트 문서 (*.txt)"
+	STRING_RICHTEXT_FILES_RTF,     "리치 텍스트 파일형식 (*.rtf)"
+	STRING_NEWFILE_RICHTEXT,       "리치 텍스트 문서"
+	STRING_NEWFILE_TXT,            "텍스트 문서"
+	STRING_NEWFILE_TXT_UNICODE,    "유니코드 텍스트 문서"
+	STRING_PRINTER_FILES_PRN,      "프린터 파일 (*.PRN)"
 END
+
 
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_ALIGN_LEFT,            "왼쪽"
     STRING_ALIGN_RIGHT,           "오른쪽"
     STRING_ALIGN_CENTER,          "가운데"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_NEWFILE_RICHTEXT,     "리치 텍스트 문서"
-    STRING_NEWFILE_TXT,          "텍스트 문서"
-    STRING_NEWFILE_TXT_UNICODE,  "유니코드 텍스트 문서"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_PRINTER_FILES_PRN,        "프린터 파일 (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -219,10 +213,6 @@ BEGIN
     STRING_PREVIEW_TWOPAGES,         "두 페이지"
     STRING_PREVIEW_ONEPAGE,          "한 페이지"
     STRING_PREVIEW_CLOSE,            "닫기"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
     STRING_UNITS_CM,             "cm"
 END
 
@@ -242,4 +232,5 @@ BEGIN
     STRING_OPEN_FAILED,               "파일을 열 수 없습니다."
     STRING_OPEN_ACCESS_DENIED,        "파일을 열 권한이 없습니다."
     STRING_PRINTING_NOT_IMPLEMENTED, "인쇄는 지원되지 않습니다"
+    STRING_MAX_TAB_STOPS,             " 탭중지는 32개 이상 추가 할 수 없습니다."
 END

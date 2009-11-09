@@ -61,35 +61,27 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     if (FindApmBios())
     {
-        /* Create new bus key */
-        FldrCreateComponentKey(SystemKey,
-                               L"MultifunctionAdapter",
-                               *BusNumber,
-                               AdapterClass,
-                               MultiFunctionAdapter,
-                               &BiosKey);
-
-        /* Set 'Component Information' */
-        FldrSetComponentInformation(BiosKey,
-                                    0x0,
-                                    0x0,
-                                    0xFFFFFFFF);
-
-        /* Set 'Configuration Data' value */
+        /* Create 'Configuration Data' value */
         memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
         PartialResourceList.Version = 0;
         PartialResourceList.Revision = 0;
         PartialResourceList.Count = 0;
-        FldrSetConfigurationData(BiosKey,
-                                 &PartialResourceList,
-                                 sizeof(CM_PARTIAL_RESOURCE_LIST) -
-                                 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+
+        /* Create new bus key */
+        FldrCreateComponentKey(SystemKey,
+                               AdapterClass,
+                               MultiFunctionAdapter,
+                               0x0,
+                               0x0,
+                               0xFFFFFFFF,
+                               "APM",
+                               &PartialResourceList,
+                               sizeof(CM_PARTIAL_RESOURCE_LIST) -
+                                   sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
+                               &BiosKey);
 
         /* Increment bus number */
         (*BusNumber)++;
-
-        /* Set 'Identifier' value */
-        FldrSetIdentifier(BiosKey, "APM");
     }
 
     /* FIXME: Add configuration data */

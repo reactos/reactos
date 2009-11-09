@@ -55,8 +55,6 @@ static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 
 /* FUNCTIONS *****************************************************************/
-ULONG FASTCALL
-IntSystemParametersInfo(UINT uiAction, UINT uiParam,PVOID pvParam, UINT fWinIni);
 DWORD IntLastInputTick(BOOL LastInputTickSetGet);
 
 #define ClearMouseInput(mi) \
@@ -134,6 +132,15 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       mid = (Data + i);
       mi.dx += mid->LastX;
       mi.dy += mid->LastY;
+
+      /* Check if the mouse move is absolute */
+      if (mid->Flags == MOUSE_MOVE_ABSOLUTE)
+      {
+         /* Set flag and convert to screen location */
+         mi.dwFlags |= MOUSEEVENTF_ABSOLUTE;
+         mi.dx = mi.dx / (65535 / (UserGetSystemMetrics(SM_CXVIRTUALSCREEN) - 1));
+         mi.dy = mi.dy / (65535 / (UserGetSystemMetrics(SM_CYVIRTUALSCREEN) - 1));
+      }
 
       if(mid->ButtonFlags)
       {
@@ -213,6 +220,7 @@ MouseThreadMain(PVOID StartContext)
    OBJECT_ATTRIBUTES MouseObjectAttributes;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
+   MOUSE_ATTRIBUTES MouseAttr;
 
    InitializeObjectAttributes(&MouseObjectAttributes,
                               &MouseDeviceName,
@@ -249,6 +257,20 @@ MouseThreadMain(PVOID StartContext)
                                      TRUE,
                                      NULL);
       DPRINT("Mouse Input Thread Starting...\n");
+
+      /*FIXME: Does mouse attributes need to be used for anything */
+      Status = NtDeviceIoControlFile(MouseDeviceHandle,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &Iosb,
+                                     IOCTL_MOUSE_QUERY_ATTRIBUTES,
+                                     &MouseAttr, sizeof(MOUSE_ATTRIBUTES),
+                                     NULL, 0);
+      if(!NT_SUCCESS(Status))
+      {
+         DPRINT("Failed to get mouse attributes\n");
+      }
 
       /*
        * Receive and process mouse input.
@@ -861,7 +883,7 @@ RawInputThreadMain(PVOID StartContext)
 
   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
   if (!MasterTimer)
-  {   
+  {
      DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
      return;
   }
@@ -1042,18 +1064,6 @@ CLEANUP:
 }
 
 BOOL FASTCALL
-IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
-{
-   PSYSTEM_CURSORINFO CurInfo;
-   BOOL res;
-
-   CurInfo = IntGetSysCursorInfo(WinStaObject);
-   res = CurInfo->SwapButtons;
-   CurInfo->SwapButtons = Swap;
-   return res;
-}
-
-BOOL FASTCALL
 IntMouseInput(MOUSEINPUT *mi)
 {
    const UINT SwapBtnMsg[2][2] =
@@ -1072,7 +1082,6 @@ IntMouseInput(MOUSEINPUT *mi)
    PWINSTATION_OBJECT WinSta;
    BOOL DoMove, SwapButtons;
    MSG Msg;
-   HBITMAP hBitmap;
    SURFACE *psurf;
    SURFOBJ *pso;
    PDC dc;
@@ -1135,10 +1144,10 @@ IntMouseInput(MOUSEINPUT *mi)
 
       if (DesktopWindow)
       {
-         if(MousePos.x >= DesktopWindow->Wnd->ClientRect.right)
-            MousePos.x = DesktopWindow->Wnd->ClientRect.right - 1;
-         if(MousePos.y >= DesktopWindow->Wnd->ClientRect.bottom)
-            MousePos.y = DesktopWindow->Wnd->ClientRect.bottom - 1;
+         if(MousePos.x >= DesktopWindow->Wnd->rcClient.right)
+            MousePos.x = DesktopWindow->Wnd->rcClient.right - 1;
+         if(MousePos.y >= DesktopWindow->Wnd->rcClient.bottom)
+            MousePos.y = DesktopWindow->Wnd->rcClient.bottom - 1;
          UserDereferenceObject(DesktopWindow);
       }
 
@@ -1169,10 +1178,7 @@ IntMouseInput(MOUSEINPUT *mi)
       dc = DC_LockDc(hDC);
       if (dc)
       {
-         hBitmap = dc->w.hBitmap;
-         DC_UnlockDc(dc);
-
-         psurf = SURFACE_LockSurface(hBitmap);
+         psurf = dc->dclevel.pSurface;
          if (psurf)
          {
             pso = &psurf->SurfObj;
@@ -1181,13 +1187,13 @@ IntMouseInput(MOUSEINPUT *mi)
             {
                IntEngMovePointer(pso, MousePos.x, MousePos.y, &(GDIDEV(pso)->Pointer.Exclude));
             }
-            /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
+            /* Only now, update the info in the PDEVOBJ, so EngMovePointer can
             * use the old values to move the pointer image */
             gpsi->ptCursor.x = MousePos.x;
             gpsi->ptCursor.y = MousePos.y;
-
-            SURFACE_UnlockSurface(psurf);
          }
+
+         DC_UnlockDc(dc);
       }
    }
 

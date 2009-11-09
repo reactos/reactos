@@ -1533,8 +1533,13 @@ Return Value:
             // Note fastfat depends on this parameter to determine when to
             // remount do to a sector size change.
             //
-
+			
+			DPRINT1("Trying to read outside a partition:\n");
+			DPRINT1("startingOffset  %08x%08x\n", startingOffset.u.HighPart, startingOffset.u.LowPart);
+			DPRINT1("partitionLength %08x%08x\n", deviceExtension->PartitionLength.u.HighPart, deviceExtension->PartitionLength.u.LowPart);
+			DPRINT1("transferByteCnt %08x\n", transferByteCount);
             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+			ASSERT(FALSE);
         }
 
         return STATUS_INVALID_PARAMETER;

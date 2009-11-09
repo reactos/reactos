@@ -38,7 +38,7 @@ APIENTRY
 EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_14br.htm
-  PW32THREAD W32Thread;
+  PTHREADINFO W32Thread;
   ASSERT(hsem);
   IntGdiAcquireSemaphore ( hsem );
   W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
@@ -62,7 +62,7 @@ APIENTRY
 EngReleaseSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_5u3r.htm
-  PW32THREAD W32Thread;
+  PTHREADINFO W32Thread;
   ASSERT(hsem);
   W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
   if (W32Thread) --W32Thread->dwEngAcquireCount;

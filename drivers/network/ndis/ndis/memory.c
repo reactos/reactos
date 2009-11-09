@@ -41,8 +41,10 @@ NdisAllocateMemoryWithTag(
   Block = ExAllocatePoolWithTag(NonPagedPool, Length, Tag);
   *VirtualAddress = Block;
 
-  if (!Block)
+  if (!Block) {
+    NDIS_DbgPrint(MIN_TRACE, ("Failed to allocate memory (%lx)\n", Length));
     return NDIS_STATUS_FAILURE;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -74,28 +76,30 @@ NdisAllocateMemory(
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  if (MemoryFlags & NDIS_MEMORY_NONCACHED)
-    {
-      *VirtualAddress = MmAllocateNonCachedMemory(Length);
-      if(!*VirtualAddress)
-        return NDIS_STATUS_FAILURE;
-
-      return NDIS_STATUS_SUCCESS;
-    }
-
   if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS)
-    {
-      *VirtualAddress = MmAllocateContiguousMemory(Length, HighestAcceptableAddress);
-      if(!*VirtualAddress)
-        return NDIS_STATUS_FAILURE;
+  {
+      /* Allocate contiguous memory (possibly noncached) */
+      *VirtualAddress = MmAllocateContiguousMemorySpecifyCache(Length,
+                                                               RtlConvertUlongToLargeInteger(0),
+                                                               HighestAcceptableAddress,
+                                                               RtlConvertUlongToLargeInteger(0),
+                                                               (MemoryFlags & NDIS_MEMORY_NONCACHED) ? MmNonCached : MmCached);
+  }
+  else if (MemoryFlags & NDIS_MEMORY_NONCACHED)
+  {
+      /* Allocate noncached noncontiguous memory */
+      *VirtualAddress = MmAllocateNonCachedMemory(Length);
+  }
+  else
+  {
+      /* Allocate plain nonpaged memory */
+      *VirtualAddress = ExAllocatePool(NonPagedPool, Length);
+  }
 
-      return NDIS_STATUS_SUCCESS;
-    }
-
-  /* Plain nonpaged memory */
-  *VirtualAddress = ExAllocatePool(NonPagedPool, Length);
-  if (!*VirtualAddress)
+  if (!*VirtualAddress) {
+    NDIS_DbgPrint(MIN_TRACE, ("Allocation failed (%lx, %lx)\n", MemoryFlags, Length));
     return NDIS_STATUS_FAILURE;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -120,49 +124,23 @@ NdisFreeMemory(
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  if (MemoryFlags & NDIS_MEMORY_NONCACHED)
-    {
-      MmFreeNonCachedMemory(VirtualAddress, Length);
-      return;
-    }
-
   if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS)
-    {
-      MmFreeContiguousMemory(VirtualAddress);
-      return;
-    }
-
-  ExFreePool(VirtualAddress);
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisImmediateReadSharedMemory(
-    IN  NDIS_HANDLE WrapperConfigurationContext,
-    IN  ULONG       SharedMemoryAddress,
-    OUT PUCHAR      Buffer,
-    IN  ULONG       Length)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisImmediateWriteSharedMemory(
-    IN  NDIS_HANDLE WrapperConfigurationContext,
-    IN  ULONG       SharedMemoryAddress,
-    IN  PUCHAR      Buffer,
-    IN  ULONG       Length)
-{
-    UNIMPLEMENTED
+  {
+      /* Free contiguous memory (possibly noncached) */
+      MmFreeContiguousMemorySpecifyCache(VirtualAddress,
+                                         Length,
+                                         (MemoryFlags & NDIS_MEMORY_NONCACHED) ? MmNonCached : MmCached);
+  }
+  else if (MemoryFlags & NDIS_MEMORY_NONCACHED)
+  {
+      /* Free noncached noncontiguous memory */
+      MmFreeNonCachedMemory(VirtualAddress, Length);
+  }
+  else
+  {
+      /* Free nonpaged pool */
+      ExFreePool(VirtualAddress);
+  }
 }
 
 
@@ -198,24 +176,6 @@ NdisMAllocateSharedMemory(
 }
 
 
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
-NdisMAllocateSharedMemoryAsync(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  ULONG       Length,
-    IN  BOOLEAN     Cached,
-    IN  PVOID       Context)
-{
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    UNIMPLEMENTED
-
-  return NDIS_STATUS_FAILURE;
-}
-
-
 VOID
 NTAPI
 NdisMFreeSharedMemoryPassive(
@@ -229,6 +189,7 @@ NdisMFreeSharedMemoryPassive(
  */
 {
   PMINIPORT_SHARED_MEMORY Memory = (PMINIPORT_SHARED_MEMORY)Context;
+  PRKEVENT Event = Memory->Event;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -239,6 +200,10 @@ NdisMFreeSharedMemoryPassive(
       Memory->VirtualAddress, Memory->Cached);
 
   ExFreePool(Memory);
+
+  KeSetEvent(Event,
+             IO_NO_INCREMENT,
+             FALSE);
 }
 
 
@@ -269,6 +234,7 @@ NdisMFreeSharedMemory(
   HANDLE ThreadHandle;
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   PMINIPORT_SHARED_MEMORY Memory;
+  KEVENT Event;
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
 
@@ -279,19 +245,145 @@ NdisMFreeSharedMemory(
 
   if(!Memory)
     {
-      NDIS_DbgPrint(MID_TRACE, ("Insufficient resources\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return;
     }
+
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
   Memory->AdapterObject = Adapter->NdisMiniportBlock.SystemAdapterObject;
   Memory->Length = Length;
   Memory->PhysicalAddress = PhysicalAddress;
   Memory->VirtualAddress = VirtualAddress;
   Memory->Cached = Cached;
+  Memory->Adapter = &Adapter->NdisMiniportBlock;
+  Memory->Event = &Event;
 
   PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, NdisMFreeSharedMemoryPassive, Memory);
   ZwClose(ThreadHandle);
+
+  KeWaitForSingleObject(&Event,
+                        Executive,
+                        KernelMode,
+                        FALSE,
+                        NULL);
 }
+
+VOID
+NTAPI
+NdisMAllocateSharedMemoryPassive(
+    PVOID Context)
+/*
+ * FUNCTION:  Allocate a common buffer
+ * ARGUMENTS:
+ *     Context:  Pointer to a miniport shared memory context
+ * NOTES:
+ *     - Called by NdisMAllocateSharedMemoryAsync to do the actual work
+ */
+{
+  PMINIPORT_SHARED_MEMORY Memory = (PMINIPORT_SHARED_MEMORY)Context;
+
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+  Memory->VirtualAddress = Memory->AdapterObject->DmaOperations->AllocateCommonBuffer(
+      Memory->AdapterObject, Memory->Length, &Memory->PhysicalAddress, Memory->Cached);
+
+  if (Memory->Adapter->DriverHandle->MiniportCharacteristics.AllocateCompleteHandler)
+      Memory->Adapter->DriverHandle->MiniportCharacteristics.AllocateCompleteHandler(
+             Memory->Adapter->MiniportAdapterContext, Memory->VirtualAddress, 
+             &Memory->PhysicalAddress, Memory->Length, Memory->Context);
+
+  ExFreePool(Memory);
+}
+
+
+/*
+ * @implemented
+ */
+NDIS_STATUS
+EXPORT
+NdisMAllocateSharedMemoryAsync(
+    IN  NDIS_HANDLE MiniportAdapterHandle,
+    IN  ULONG       Length,
+    IN  BOOLEAN     Cached,
+    IN  PVOID       Context)
+{
+  HANDLE ThreadHandle;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
+  PMINIPORT_SHARED_MEMORY Memory;
+
+  NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
+
+  ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+  /* Must be NonpagedPool because by definition we're at DISPATCH_LEVEL */
+  Memory = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_SHARED_MEMORY));
+
+  if(!Memory)
+    {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
+      return NDIS_STATUS_FAILURE;
+    }
+
+  Memory->AdapterObject = Adapter->NdisMiniportBlock.SystemAdapterObject;
+  Memory->Length = Length;
+  Memory->Cached = Cached;
+  Memory->Adapter = &Adapter->NdisMiniportBlock;
+  Memory->Context = Context;
+
+  PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, NdisMAllocateSharedMemoryPassive, Memory);
+  ZwClose(ThreadHandle);
+
+  return NDIS_STATUS_PENDING;
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisAllocateSharedMemory(
+    IN  NDIS_HANDLE             NdisAdapterHandle,
+    IN  ULONG                   Length,
+    IN  BOOLEAN                 Cached,
+    OUT PVOID                   *VirtualAddress,
+    OUT PNDIS_PHYSICAL_ADDRESS  PhysicalAddress)
+{
+    NdisMAllocateSharedMemory(NdisAdapterHandle,
+                              Length,
+                              Cached,
+                              VirtualAddress,
+                              PhysicalAddress);
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisFreeSharedMemory(
+    IN NDIS_HANDLE              NdisAdapterHandle,
+    IN ULONG                    Length,
+    IN BOOLEAN                  Cached,
+    IN PVOID                    VirtualAddress,
+    IN NDIS_PHYSICAL_ADDRESS    PhysicalAddress)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 4.0
+ */
+{
+    NdisMFreeSharedMemory(NdisAdapterHandle,
+                          Length,
+                          Cached,
+                          VirtualAddress,
+                          PhysicalAddress);
+}
+
 
 /* EOF */
 

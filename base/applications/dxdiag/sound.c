@@ -8,8 +8,8 @@
  */
 
 #include "precomp.h"
-//#include <initguid.h>
 #include <devguid.h>
+#include <dsound.h>
 
 #if 0
 BOOL

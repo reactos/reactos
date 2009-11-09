@@ -1,0 +1,26 @@
+LIBRARY freetype
+EXPORTS
+  FT_Done_Face
+  FT_Done_Glyph
+  FT_Get_Char_Index
+  FT_Get_First_Char
+  FT_Get_Glyph
+  FT_Get_Kerning
+  FT_Get_Next_Char
+  FT_Get_PS_Font_Info
+  FT_Get_Sfnt_Table
+  FT_Get_WinFNT_Header
+  FT_Glyph_To_Bitmap
+  FT_Init_FreeType
+  FT_Load_Glyph
+  FT_Load_Sfnt_Table
+  FT_Matrix_Multiply
+  FT_MulFix
+  FT_New_Memory_Face
+  FT_Outline_Get_Bitmap
+  FT_Outline_Transform
+  FT_Outline_Translate
+  FT_Set_Charmap
+  FT_Set_Pixel_Sizes
+  FT_Vector_Transform
+  FT_Vector_Unit

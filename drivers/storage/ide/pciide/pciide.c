@@ -104,7 +104,7 @@ PciIdeGetControllerProperties(
 	ControllerProperties->SupportedTransferMode[0][0] =
 	ControllerProperties->SupportedTransferMode[0][1] =
 	ControllerProperties->SupportedTransferMode[1][0] =
-	ControllerProperties->SupportedTransferMode[1][0] =
+	ControllerProperties->SupportedTransferMode[1][1] =
 		PIO_MODE0 | PIO_MODE1 | PIO_MODE2 | PIO_MODE3 | PIO_MODE4 |
 		SWDMA_MODE0 | SWDMA_MODE1 | SWDMA_MODE2 |
 		MWDMA_MODE0 | MWDMA_MODE1 | MWDMA_MODE2 |

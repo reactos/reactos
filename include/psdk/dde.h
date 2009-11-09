@@ -28,6 +28,12 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4214)
+#pragma warning(disable:4820)
+#endif
+
 #define WM_DDE_INITIATE   0x3E0
 #define WM_DDE_TERMINATE  0x3E1
 #define WM_DDE_ADVISE	  0x3E2
@@ -82,6 +88,9 @@ BOOL        WINAPI UnpackDDElParam(UINT,LPARAM,PUINT_PTR,PUINT_PTR);
 BOOL        WINAPI FreeDDElParam(UINT,LPARAM);
 LPARAM      WINAPI ReuseDDElParam(LPARAM,UINT,UINT,UINT_PTR,UINT_PTR);
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

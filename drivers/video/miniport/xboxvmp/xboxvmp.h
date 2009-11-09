@@ -26,7 +26,10 @@
 /* INCLUDES *******************************************************************/
 
 #ifdef _MSC_VER
-#include "dderror.h"
+#pragma message ("INVESTIGATE ME")
+#endif
+
+#if 0 //#ifdef _MSC_VER
 #include "devioctl.h"
 #define PAGE_SIZE 4096
 #else

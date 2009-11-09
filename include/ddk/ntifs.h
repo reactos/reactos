@@ -24,12 +24,7 @@
 #define _NTIFS_
 #define _GNU_NTIFS_
 
-#ifdef _NTOSKRNL_
-/* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
-#define NTKERNELAPI
-#else
 #define NTKERNELAPI DECLSPEC_IMPORT
-#endif
 
 #include <ntddk.h>
 
@@ -42,10 +37,6 @@ extern "C" {
 
 #ifndef VER_PRODUCTBUILD
 #define VER_PRODUCTBUILD 10000
-#endif
-
-#ifndef NTSYSAPI
-#define NTSYSAPI
 #endif
 
 #define EX_PUSH_LOCK ULONG_PTR
@@ -1093,7 +1084,7 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
     ULONG           FileAttributes;
     ULONG           FileNameLength;
     ULONG           EaSize;
-    WCHAR           FileName[0];
+    WCHAR           FileName[ANYSIZE_ARRAY];
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION;
     
 typedef struct _FILE_ID_FULL_DIR_INFORMATION {
@@ -2387,7 +2378,7 @@ CcFlushCache (
     OUT PIO_STATUS_BLOCK        IoStatus OPTIONAL
 );
 
-typedef VOID (*PDIRTY_PAGE_ROUTINE) (
+typedef VOID (NTAPI *PDIRTY_PAGE_ROUTINE) (
     IN PFILE_OBJECT     FileObject,
     IN PLARGE_INTEGER   FileOffset,
     IN ULONG            Length,
@@ -3610,7 +3601,7 @@ FsRtlNotifyCleanup (
     IN PVOID        FsContext
 );
 
-typedef BOOLEAN (*PCHECK_FOR_TRAVERSE_ACCESS) (
+typedef BOOLEAN (NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
     IN PVOID                        NotifyContext,
     IN PVOID                        TargetContext,
     IN PSECURITY_SUBJECT_CONTEXT    SubjectContext
@@ -3965,13 +3956,6 @@ FsRtlUninitializeOplock (
     IN OUT POPLOCK Oplock
 );
 
-NTHALAPI
-VOID
-NTAPI
-HalDisplayString (
-    IN PCHAR String
-);
-
 NTKERNELAPI
 UCHAR
 NTAPI
@@ -4082,6 +4066,32 @@ NTAPI
 IoGetBaseFileSystemDeviceObject (
     IN PFILE_OBJECT FileObject
 );
+
+#if (VER_PRODUCTBUILD >= 2600)
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetDeviceAttachmentBaseRef (
+    IN PDEVICE_OBJECT DeviceObject
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetDiskDeviceObject (
+    IN PDEVICE_OBJECT   FileSystemDeviceObject,
+    OUT PDEVICE_OBJECT  *DiskDeviceObject
+);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetLowerDeviceObject (
+    IN PDEVICE_OBJECT DeviceObject
+);
+
+#endif /* (VER_PRODUCTBUILD >= 2600) */
 
 NTKERNELAPI
 PEPROCESS
@@ -5512,7 +5522,7 @@ SeQuerySessionIdToken (
     ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken :     \
     ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->PrimaryToken )
 
-typedef NTSTATUS (*PSE_LOGON_SESSION_TERMINATED_ROUTINE) (
+typedef NTSTATUS (NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE) (
     IN PLUID LogonId
 );
 

@@ -239,9 +239,10 @@ ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
         PrevLuid = LuidValue;
         NewLuid = RtlLargeIntegerAdd(PrevLuid,
                                      LuidIncrement);
-    } while(ExfInterlockedCompareExchange64(&LuidValue.QuadPart,
-                                            &NewLuid.QuadPart,
-                                            &PrevLuid.QuadPart) != PrevLuid.QuadPart);
+    } while(ExInterlockedCompareExchange64(&LuidValue.QuadPart,
+                                           &NewLuid.QuadPart,
+                                           &PrevLuid.QuadPart,
+                                           NULL) != PrevLuid.QuadPart);
 
     LocallyUniqueId->LowPart = NewLuid.u.LowPart;
     LocallyUniqueId->HighPart = NewLuid.u.HighPart;
@@ -258,7 +259,7 @@ NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
     LUID NewLuid;
     KPROCESSOR_MODE PreviousMode;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     PAGED_CODE();
 
@@ -274,14 +275,9 @@ NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        if(!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
     }
 
     Status = ExpAllocateLocallyUniqueId(&NewLuid);

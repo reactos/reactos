@@ -2,166 +2,166 @@
 #define _NTOSKRNL_TAG_H
 
 /* formerly located in cc/view.c */
-#define TAG_CSEG  TAG('C', 'S', 'E', 'G')
-#define TAG_BCB   TAG('B', 'C', 'B', ' ')
-#define TAG_IBCB  TAG('i', 'B', 'C', 'B')
+#define TAG_CSEG  'GESC'
+#define TAG_BCB   ' BCB'
+#define TAG_IBCB  'BCBi'
 
 /* formely located in include/callback.h */
-#define CALLBACK_TAG        TAG('C','L','B','K')
+#define CALLBACK_TAG        'KBLC'
 
 /* formerly located in ex/resource.c */
-#define TAG_RESOURCE_TABLE      TAG('R', 'e', 'T', 'a')
-#define TAG_RESOURCE_EVENT      TAG('R', 'e', 'T', 'a')
-#define TAG_RESOURCE_SEMAPHORE  TAG('R', 'e', 'T', 'a')
+#define TAG_RESOURCE_TABLE      'aTeR'
+#define TAG_RESOURCE_EVENT      'aTeR'
+#define TAG_RESOURCE_SEMAPHORE  'aTeR'
 
 /* formerly located in fs/notify.c */
-#define FSRTL_NOTIFY_TAG TAG('N','O','T','I')
+#define FSRTL_NOTIFY_TAG 'ITON'
 
 /* formerly located in io/device.c */
-#define TAG_DEVICE_EXTENSION   TAG('D', 'E', 'X', 'T')
-#define TAG_SHUTDOWN_ENTRY    TAG('S', 'H', 'U', 'T')
-#define TAG_IO_TIMER      TAG('I', 'O', 'T', 'M')
+#define TAG_DEVICE_EXTENSION   'TXED'
+#define TAG_SHUTDOWN_ENTRY    'TUHS'
+#define TAG_IO_TIMER      'MTOI'
 
 /* formerly located in io/driver.c */
-#define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
-#define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')
+#define TAG_DRIVER             'RVRD'
+#define TAG_DRIVER_EXTENSION   'EVRD'
 
 /* formerly located in io/file.c */
-#define TAG_SYSB        TAG('S', 'Y', 'S', 'B')
-#define TAG_LOCK        TAG('F','l','c','k')
-#define TAG_FILE_NAME   TAG('F', 'N', 'A', 'M')
+#define TAG_SYSB        'BSYS'
+#define TAG_LOCK        'kclF'
+#define TAG_FILE_NAME   'MANF'
 
 /* formerly located in io/fs.c */
-#define TAG_FILE_SYSTEM       TAG('F', 'S', 'Y', 'S')
-#define TAG_FS_CHANGE_NOTIFY  TAG('F', 'S', 'C', 'N')
-#define IFS_POOL_TAG          TAG('F', 'S', 'r', 't')
+#define TAG_FILE_SYSTEM       'SYSF'
+#define TAG_FS_CHANGE_NOTIFY  'NCSF'
+#define IFS_POOL_TAG          'trSF'
 
 /* formerly located in io/iocomp.c */
-#define IOC_TAG   TAG('I', 'O', 'C', 'T')
+#define IOC_TAG   'TCOI'
 
 /* formerly located in io/iomgr.c */
-#define TAG_DEVICE_TYPE     TAG('D', 'E', 'V', 'T')
-#define TAG_FILE_TYPE       TAG('F', 'I', 'L', 'E')
-#define TAG_ADAPTER_TYPE    TAG('A', 'D', 'P', 'T')
-#define IO_LARGEIRP         TAG('I', 'r', 'p', 'l')
-#define IO_SMALLIRP         TAG('I', 'r', 'p', 's')
-#define IO_LARGEIRP_CPU     TAG('I', 'r', 'p', 'L')
-#define IO_SMALLIRP_CPU     TAG('I', 'r', 'p', 'S')
-#define IOC_TAG1             TAG('I', 'p', 'c', ' ')
-#define IOC_CPU             TAG('I', 'p', 'c', 'P')
-#define TAG_APC             TAG('K', 'A', 'P', 'C')
-#define TAG_IO              TAG('I', 'o', ' ', ' ')
-#define TAG_ERROR_LOG       TAG('I', 'o', 'E', 'r')
-#define TAG_EA              TAG('I', 'o', 'E', 'a')
-#define TAG_IO_NAME         TAG('I', 'o', 'N', 'm')
-#define TAG_REINIT          TAG('I', 'o', 'R', 'i')
+#define TAG_DEVICE_TYPE     'TVED'
+#define TAG_FILE_TYPE       'ELIF'
+#define TAG_ADAPTER_TYPE    'TPDA'
+#define IO_LARGEIRP         'lprI'
+#define IO_SMALLIRP         'sprI'
+#define IO_LARGEIRP_CPU     'LprI'
+#define IO_SMALLIRP_CPU     'SprI'
+#define IOC_TAG1            ' cpI'
+#define IOC_CPU             'PcpI'
+#define TAG_APC             'CPAK'
+#define TAG_IO              '  oI'
+#define TAG_ERROR_LOG       'rEoI'
+#define TAG_EA              'aEoI'
+#define TAG_IO_NAME         'mNoI'
+#define TAG_REINIT          'iRoI'
 
 /* formerly located in io/work.c */
-#define TAG_IOWI TAG('I', 'O', 'W', 'I')
+#define TAG_IOWI 'IWOI'
 
 /* formerly located in io/irp.c */
-#define TAG_IRP      TAG('I', 'R', 'P', ' ')
-#define TAG_SYS_BUF  TAG('S', 'Y', 'S' , 'B')
+#define TAG_IRP      ' PRI'
+#define TAG_SYS_BUF  'BSYS'
 
 /* formerly located in io/irq.c */
-#define TAG_KINTERRUPT   TAG('K', 'I', 'S', 'R')
+#define TAG_KINTERRUPT   'RSIK'
 
 /* formerly located in io/mdl.c */
-#define TAG_MDL    TAG('M', 'D', 'L', ' ')
+#define TAG_MDL    ' LDM'
 
 /* formerly located in io/pnpnotify.c */
-#define TAG_PNP_NOTIFY  TAG('P', 'n', 'P', 'N')
+#define TAG_PNP_NOTIFY  'NPnP'
 
 /* for io/pnproot.c */
-#define TAG_PNP_ROOT    TAG('P', 'n', 'P', 'R')
+#define TAG_PNP_ROOT    'RPnP'
 
 /* formerly located in io/resource.c */
-#define TAG_IO_RESOURCE    TAG('R', 'S', 'R', 'C')
+#define TAG_IO_RESOURCE    'CRSR'
 
 /* formerly located in io/timer.c */
-#define TAG_IO_TIMER      TAG('I', 'O', 'T', 'M')
+#define TAG_IO_TIMER      'MTOI'
 
 /* formerly located in io/vpb.c */
-#define TAG_VPB    TAG('V', 'P', 'B', ' ')
-#define TAG_SYSB   TAG('S', 'Y', 'S', 'B')
+#define TAG_VPB    ' BPV'
+#define TAG_SYSB   'BSYS'
 
 /* formerly located in kdbg/kdb_symbols.c */
-#define TAG_KDBS TAG('K', 'D', 'B', 'S')
-#define TAG_KDBG TAG('K', 'D', 'B', 'G')
+#define TAG_KDBS 'SBDK'
+#define TAG_KDBG 'GBDK'
 
 /* formerly located in ldr/loader.c */
-#define TAG_DRIVER_MEM  TAG('D', 'R', 'V', 'M') /* drvm */
-#define TAG_MODULE_OBJECT TAG('k', 'l', 'm', 'o') /* klmo - kernel ldr module object */
-#define TAG_LDR_WSTR TAG('k', 'l', 'w', 's') /* klws - kernel ldr wide string */
+#define TAG_DRIVER_MEM  'MVRD' /* drvm */
+#define TAG_MODULE_OBJECT 'omlk' /* klmo - kernel ldr module object */
+#define TAG_LDR_WSTR 'swlk' /* klws - kernel ldr wide string */
 
 /* formerly located in lpc/connect */
-#define TAG_LPC_CONNECT_MESSAGE   TAG('L', 'P', 'C', 'C')
+#define TAG_LPC_CONNECT_MESSAGE   'CCPL'
 
 /* formerly located in mm/aspace.c */
-#define TAG_PTRC      TAG('P', 'T', 'R', 'C')
+#define TAG_PTRC      'CRTP'
 
 /* formerly located in mm/marea.c */
-#define TAG_MAREA   TAG('M', 'A', 'R', 'E')
+#define TAG_MAREA   'ERAM'
 
 /* formerly located in mm/pageop.c */
-#define TAG_MM_PAGEOP   TAG('M', 'P', 'O', 'P')
+#define TAG_MM_PAGEOP   'POPM'
 
 /* formerly located in mm/pool.c */
-#define TAG_NONE TAG('N', 'o', 'n', 'e')
+#define TAG_NONE 'enoN'
 
 /* formerly located in mm/region.c */
-#define TAG_MM_REGION    TAG('M', 'R', 'G', 'N')
+#define TAG_MM_REGION    'NGRM'
 
 /* formerly located in mm/rmap.c */
-#define TAG_RMAP    TAG('R', 'M', 'A', 'P')
+#define TAG_RMAP    'PAMR'
 
 /* formerly located in mm/section.c */
-#define TAG_MM_SECTION_SEGMENT   TAG('M', 'M', 'S', 'S')
-#define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
+#define TAG_MM_SECTION_SEGMENT   'SSMM'
+#define TAG_SECTION_PAGE_TABLE   'TPSM'
 
 /* formerly located in ob/symlink.c */
-#define TAG_OBJECT_TYPE         TAG('O', 'b', 'j', 'T')
-#define TAG_SYMLINK_TTARGET     TAG('S', 'Y', 'T', 'T')
-#define TAG_SYMLINK_TARGET      TAG('S', 'Y', 'M', 'T')
+#define TAG_OBJECT_TYPE         'TjbO'
+#define TAG_SYMLINK_TTARGET     'TTYS'
+#define TAG_SYMLINK_TARGET      'TMYS'
 
 /* Object Manager Tags */
-#define OB_NAME_TAG             TAG('O', 'b', 'N', 'm')
-#define OB_DIR_TAG              TAG('O', 'b', 'D', 'i')
+#define OB_NAME_TAG             'mNbO'
+#define OB_DIR_TAG              'iDbO'
 
 /* formerly located in ps/cid.c */
-#define TAG_CIDOBJECT TAG('C', 'I', 'D', 'O')
-#define TAG_PS_IMPERSONATION    TAG('P', 's', 'I', 'm')
+#define TAG_CIDOBJECT 'ODIC'
+#define TAG_PS_IMPERSONATION    'mIsP'
 
 /* formerly located in ps/job.c */
-#define TAG_EJOB TAG('E', 'J', 'O', 'B') /* EJOB */
+#define TAG_EJOB 'BOJE' /* EJOB */
 
 /* formerly located in ps/kill.c */
-#define TAG_TERMINATE_APC   TAG('T', 'A', 'P', 'C')
+#define TAG_TERMINATE_APC   'CPAT'
 
 /* formerly located in ps/notify.c */
-#define TAG_KAPC TAG('k','p','a','p') /* kpap - kernel ps apc */
-#define TAG_PS_APC TAG('P', 's', 'a', 'p') /* Psap - Ps APC */
+#define TAG_KAPC 'papk' /* kpap - kernel ps apc */
+#define TAG_PS_APC 'pasP' /* Psap - Ps APC */
 
 /* formerly located in rtl/handle.c */
-#define TAG_HDTB  TAG('H', 'D', 'T', 'B')
+#define TAG_HDTB  'BTDH'
 
 /* formerly located in se/acl.c */
-#define TAG_ACL    TAG('S', 'e', 'A', 'c')
+#define TAG_ACL    'cAeS'
 
 /* formerly located in se/sid.c */
-#define TAG_SID    TAG('S', 'e', 'S', 'i')
+#define TAG_SID    'iSeS'
 
 /* formerly located in se/sd.c */
-#define TAG_SD     TAG('S', 'e', 'S', 'd')
+#define TAG_SD     'dSeS'
 
 /* LPC Tags */
-#define TAG_LPC_MESSAGE   TAG('L', 'p', 'c', 'M')
-#define TAG_LPC_ZONE      TAG('L', 'p', 'c', 'Z')
+#define TAG_LPC_MESSAGE   'McpL'
+#define TAG_LPC_ZONE      'ZcpL'
 
 /* Se Process Audit */
-#define TAG_SEPA          TAG('S', 'e', 'P', 'a')
+#define TAG_SEPA          'aPeS'
 
-#define TAG_WAIT            TAG('W', 'a', 'i', 't')
-#define TAG_SEC_QUERY       TAG('O', 'b', 'S', 'q')
+#define TAG_WAIT            'tiaW'
+#define TAG_SEC_QUERY       'qSbO'
 
 #endif /* _NTOSKRNL_TAG_H */

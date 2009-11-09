@@ -13,7 +13,7 @@ Signature = "$ReactOS$"
 
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
-atapi.sys=,,,,,,x,,,,,,4
+uniata.sys=,,,,,,x,,,,,,4
 buslogic.sys=,,,,,,x,,,,,,4
 blue.sys=,,,,,,x,,,,,,4
 bootvid.dll=,,,,,,,,,,,,4
@@ -31,7 +31,6 @@ l_intl.nls=,,,,,,,,,,,,2
 ntfs.sys=,,,,,,,,,,,,4
 pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
-uniata.sys=,,,,,,,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
 ramdisk.sys=,,,,,,x,,,,,,4
 ext2.sys=,,,,,,x,,,,,,4

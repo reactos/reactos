@@ -4,6 +4,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
 #define WNNC_NET_MSNET      0x00010000
 #define WNNC_NET_LANMAN     0x00020000
 #define WNNC_NET_NETWARE    0x00030000
@@ -283,6 +287,24 @@ DWORD WINAPI WNetRestoreConnectionA(HWND,LPCSTR);
 DWORD WINAPI WNetRestoreConnectionW(HWND,LPCWSTR);
 DWORD APIENTRY MultinetGetConnectionPerformanceA(LPNETRESOURCEA,LPNETCONNECTINFOSTRUCT);
 DWORD APIENTRY MultinetGetConnectionPerformanceW(LPNETRESOURCEW,LPNETCONNECTINFOSTRUCT);
+
+#ifdef _WINE
+typedef struct tagPASSWORD_CACHE_ENTRY
+{
+	WORD cbEntry;
+	WORD cbResource;
+	WORD cbPassword;
+	BYTE iEntry;
+	BYTE nType;
+	BYTE abResource[1];
+} PASSWORD_CACHE_ENTRY;
+
+typedef BOOL (CALLBACK *ENUMPASSWORDPROC)(PASSWORD_CACHE_ENTRY *, DWORD);
+DWORD WINAPI WNetCachePassword( LPSTR, WORD, LPSTR, WORD, BYTE, WORD );
+UINT WINAPI WNetEnumCachedPasswords( LPSTR, WORD, BYTE, ENUMPASSWORDPROC, DWORD);
+DWORD WINAPI WNetGetCachedPassword( LPSTR, WORD, LPSTR, LPWORD, BYTE );
+#endif
+
 #ifdef UNICODE
 #define PFNPROCESSPOLICIES PFNPROCESSPOLICIESW
 #define PFNRECONCILEPROFILE PFNRECONCILEPROFILEW
@@ -340,6 +362,9 @@ typedef REMOTE_NAME_INFOA REMOTE_NAME_INFO,*LPREMOTE_NAME_INFO;
 #define WNetGetLastError WNetGetLastErrorA
 #define MultinetGetConnectionPerformance MultinetGetConnectionPerformanceA
 #endif
+#endif
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 #ifdef __cplusplus
 }

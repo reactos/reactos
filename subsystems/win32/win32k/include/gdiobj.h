@@ -44,7 +44,7 @@ typedef struct _BASEOBJECT
   ULONG       ulShareCount;
   USHORT      cExclusiveLock;
   USHORT      BaseFlags;
-  PW32THREAD  Tid;
+  PTHREADINFO Tid;
 } BASEOBJECT, *POBJ;
 
 typedef struct _CLIENTOBJ
@@ -54,15 +54,17 @@ typedef struct _CLIENTOBJ
 
 enum BASEFLAGS
 {
-    BASEFLAG_LOOKASIDE = 0x80
+    BASEFLAG_LOOKASIDE = 0x80,
+
+    /* ReactOS specific: */
+    BASEFLAG_READY_TO_DIE = 0x1000
 };
 
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
 BOOL    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
 BOOL    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
 BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
-VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(POBJ Object);
-VOID    INTERNAL_CALL GDIOBJ_ShareUnlockObjByPtr(POBJ Object);
+//VOID    INTERNAL_CALL GDIOBJ_ShareUnlockObjByPtr(POBJ Object);
 BOOL    INTERNAL_CALL GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType);
 POBJ    INTERNAL_CALL GDIOBJ_AllocObj(UCHAR ObjectType);
 POBJ    INTERNAL_CALL GDIOBJ_AllocObjWithHandle(ULONG ObjectType);
@@ -80,8 +82,54 @@ PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCES
 #define GDIOBJFLAG_IGNOREPID 	(0x1)
 #define GDIOBJFLAG_IGNORELOCK 	(0x2)
 
-BOOL FASTCALL  NtGdiDeleteObject(HGDIOBJ hObject);
+BOOL FASTCALL  GreDeleteObject(HGDIOBJ hObject);
 BOOL FASTCALL  IsObjectDead(HGDIOBJ);
 BOOL FASTCALL  IntGdiSetDCOwnerEx( HDC, DWORD, BOOL);
+
+/*!
+ * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked. 
+ * You should unlock the object
+ * as soon as you don't need to have access to it's data.
+
+ * \param Object 	Object pointer (as returned by GDIOBJ_LockObj).
+ */
+ULONG
+FORCEINLINE
+GDIOBJ_UnlockObjByPtr(POBJ Object)
+{
+    INT cLocks = InterlockedDecrement((PLONG)&Object->cExclusiveLock);
+    ASSERT(cLocks >= 0);
+    return cLocks;
+}
+
+ULONG
+FORCEINLINE
+GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
+{
+    HGDIOBJ hobj = Object->hHmgr;
+    USHORT flags = Object->BaseFlags;
+    INT cLocks = InterlockedDecrement((PLONG)&Object->ulShareCount);
+    ASSERT(cLocks >= 0);
+    if ((flags & BASEFLAG_READY_TO_DIE) && (cLocks == 0))
+    {
+        GDIOBJ_FreeObjByHandle(hobj, GDI_OBJECT_TYPE_DONTCARE);
+    }
+    return cLocks;
+}
+
+#ifdef GDI_DEBUG
+ULONG FASTCALL GDIOBJ_IncrementShareCount(POBJ Object);
+#else
+ULONG
+FORCEINLINE
+GDIOBJ_IncrementShareCount(POBJ Object)
+{
+    INT cLocks = InterlockedIncrement((PLONG)&Object->ulShareCount);
+    ASSERT(cLocks >= 1);
+    return cLocks;
+}
+#endif
+
+INT FASTCALL GreGetObjectOwner(HGDIOBJ, GDIOBJTYPE);
 
 #endif

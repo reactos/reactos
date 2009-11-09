@@ -41,7 +41,7 @@ STRING_NO_VOLUME         "Неуспешно определяне на тома"
 
 STRING_NO_VOLUME_SIZE    "Неуспешно определяне на размера на тома"
 
-STRING_FILESYSTEM        "ВИд на файловата система: %s.\n"
+STRING_FILESYSTEM        "Вид на файловата система: %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Въведете сегашния етикет на устройство %C: "
 
@@ -64,7 +64,7 @@ STRING_VOL_COMPRESS    "Томът не поддържа сбиване.\n"
 
 STRING_ENTER_LABEL     "Етикет (11 знака или Enter за нищо)? "
 
-STRING_NO_LABEL        "Неуспежно поставяне на етикет"
+STRING_NO_LABEL        "Неуспешно поставяне на етикет"
 
 STRING_FREE_SPACE     "\n%I64d байта общо дисково пространство.\n%I64d байта достъпни.\n"
 

@@ -113,8 +113,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     }
 }
 
-static
-int
+LONG
 PspUnhandledExceptionInSystemThread(PEXCEPTION_POINTERS ExceptionPointers)
 {
     /* Print debugging information */
@@ -476,9 +475,6 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
-
             /* Thread insertion failed, thread is dead */
             PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
 
@@ -493,9 +489,11 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
             /* Close its handle, killing it */
             ObCloseHandle(ThreadHandle, PreviousMode);
+
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -880,7 +878,6 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
                IN BOOLEAN CreateSuspended)
 {
     INITIAL_TEB SafeInitialTeb;
-    NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
     PSTRACE(PS_THREAD_DEBUG,
             "ProcessHandle: %p Context: %p\n", ProcessHandle, ThreadContext);
@@ -898,7 +895,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
             ProbeForWriteHandle(ThreadHandle);
 
             /* Check if the caller wants a client id */
-            if(ClientId)
+            if (ClientId)
             {
                 /* Make sure we can write to it */
                 ProbeForWrite(ClientId, sizeof(CLIENT_ID), sizeof(ULONG));
@@ -913,10 +910,10 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -952,7 +949,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     CLIENT_ID SafeClientId;
     ULONG Attributes = 0;
     HANDLE hThread = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PETHREAD Thread;
     BOOLEAN HasObjectName = FALSE;
     ACCESS_STATE AccessState;
@@ -991,11 +988,10 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {

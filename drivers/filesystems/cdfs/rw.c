@@ -208,6 +208,18 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
         ReadOffset.u.LowPart,
         Irp->Flags,
         &ReturnedReadLength);
+
+	DPRINT("Status %x Returned read length %x\n", Status, ReturnedReadLength);
+
+	int *buffer;
+	int carry, crc = 0;
+	for (buffer = (int *)Buffer; buffer < ((int *)Buffer) + ReadLength / sizeof(int); buffer++)
+	{
+		carry = !!(*buffer < 0 && crc < 0);
+		crc += carry + *buffer;
+	}
+	DPRINT("Sector: %08x crc %08x length %x\n", ReadOffset.u.LowPart, crc, ReadLength);
+
     if (NT_SUCCESS(Status))
     {
         if (FileObject->Flags & FO_SYNCHRONOUS_IO)
@@ -237,6 +249,7 @@ CdfsWrite(PDEVICE_OBJECT DeviceObject,
 
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp,IO_NO_INCREMENT);
     return(STATUS_NOT_SUPPORTED);
 }
 

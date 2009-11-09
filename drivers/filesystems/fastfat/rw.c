@@ -311,6 +311,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
     {
       if (Length > 0)
         {
+			DPRINT1("STATUS_UNSUCCESSFUL\n");
 	  Status = STATUS_UNSUCCESSFUL;
 	}
       else
@@ -521,6 +522,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
      {
        if (Length > 0)
          {
+			DPRINT1("STATUS_UNSUCCESSFUL\n");
 	   Status = STATUS_UNSUCCESSFUL;
 	 }
        else
@@ -809,6 +811,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
   /* fail if file is a directory and no paged read */
    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
    {
+	  DPRINT("STATUS_INVALID_PARAMETER\n");
       Status = STATUS_INVALID_PARAMETER;
       goto ByeBye;
    }
@@ -824,6 +827,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
    {
+	  DPRINT("STATUS_INVALID_PARAMETER\n");
       Status = STATUS_INVALID_PARAMETER;
       goto ByeBye;
    }
@@ -844,6 +848,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       if (ByteOffset.u.LowPart % BytesPerSector != 0 || Length % BytesPerSector != 0)
       {
          // non cached write must be sector aligned
+		 DPRINT("STATUS_INVALID_PARAMETER\n");
          Status = STATUS_INVALID_PARAMETER;
          goto ByeBye;
       }
@@ -863,6 +868,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    {
       if (ByteOffset.u.LowPart + Length > Fcb->RFCB.AllocationSize.u.LowPart)
       {
+		  DPRINT("STATUS_INVALID_PARAMETER - File is %08x bytes, writing %x bytes at %08x%08x\n", Fcb->RFCB.AllocationSize.u.LowPart, Length, ByteOffset.u.HighPart, ByteOffset.u.LowPart);
          Status = STATUS_INVALID_PARAMETER;
          goto ByeBye;
       }
@@ -941,9 +947,10 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
        ByteOffset.u.LowPart + Length > Fcb->RFCB.FileSize.u.LowPart)
    {
       LARGE_INTEGER AllocationSize;
+	  DPRINT(">>> Setting new file size to %x\n", ByteOffset.u.LowPart + Length);
       AllocationSize.QuadPart = ByteOffset.u.LowPart + Length;
       Status = VfatSetAllocationSizeInformation(IrpContext->FileObject, Fcb,
-	                                        IrpContext->DeviceExt, &AllocationSize);
+												IrpContext->DeviceExt, &AllocationSize);
       if (!NT_SUCCESS (Status))
       {
          goto ByeBye;
@@ -975,6 +982,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       }
       else
       {
+			DPRINT1("STATUS_UNSUCCESSFUL\n");
          Status = STATUS_UNSUCCESSFUL;
       }
    }

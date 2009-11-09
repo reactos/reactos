@@ -61,6 +61,9 @@
 
 #define IDI_SM_ICON         50
 #define IDB_BUTTONS         51
+#define IDI_NODEPENDS       52
+#define IDI_SERVICE         53
+#define IDI_DRIVER          54
 
 #define IDB_PROP            10000
 #define IDB_REFRESH         10001
@@ -139,6 +142,7 @@
 #define IDC_DEPEND_TREE1    20002
 #define IDC_DEPEND_TREE2    20003
 #define IDC_DEPEND_SERVICE  20004
+#define IDS_NO_DEPENDS      20005
 
 
 /* create service dialog */
@@ -174,3 +178,9 @@
 #define IDS_PROGRESS_INFO_STOP   7005
 #define IDS_PROGRESS_INFO_PAUSE  7006
 #define IDS_PROGRESS_INFO_RESUME 7007
+
+/* stop dependencies */
+#define IDD_DLG_DEPEND_STOP 12000
+#define IDC_STOP_DEPENDS    12001
+#define IDS_STOP_DEPENDS    12002
+#define IDC_STOP_DEPENDS_LB 12003

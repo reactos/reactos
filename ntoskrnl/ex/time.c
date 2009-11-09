@@ -190,7 +190,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     PAGED_CODE();
 
     /* Check if we were called from user-mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -198,14 +198,12 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
             NewSystemTime = ProbeForReadLargeInteger(SystemTime);
             if(PreviousTime) ProbeForWriteLargeInteger(PreviousTime);
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* If the pointers were invalid, bail out */
-        if(!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -214,7 +212,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     }
 
     /* Make sure we have permission to change the time */
-    if(!SeSinglePrivilegeCheck(SeSystemtimePrivilege, PreviousMode))
+    if (!SeSinglePrivilegeCheck(SeSystemtimePrivilege, PreviousMode))
     {
         DPRINT1("NtSetSystemTime: Caller requires the "
                 "SeSystemtimePrivilege privilege!\n");
@@ -230,7 +228,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     KeSetSystemTime(&NewSystemTime, &OldSystemTime, FALSE, NULL);
 
     /* Check if caller wanted previous time */
-    if(PreviousTime)
+    if (PreviousTime)
     {
         /* Enter SEH Block for return */
         _SEH2_TRY
@@ -240,6 +238,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         }
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
+            /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
@@ -264,7 +263,7 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
     PAGED_CODE();
 
     /* Check if we were called from user-mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -278,9 +277,10 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
              */
             KeQuerySystemTime(SystemTime);
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-        Status = _SEH2_GetExceptionCode();
+            /* Get the exception code */
+            Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
     }

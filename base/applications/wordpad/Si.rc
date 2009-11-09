@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
@@ -152,7 +154,7 @@ Caption "Tabulatorji"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Položaji tabulatorja", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "&Dodaj", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Odstrani", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&V redu", IDOK, 137, 15, 50, 15
@@ -242,7 +244,7 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,       "Nimate pravic za shranjevanje te datoteke."
     STRING_OPEN_FAILED,               "Napaka pri odpiranju datoteke."
     STRING_OPEN_ACCESS_DENIED,        "Nimate pravic za odpiranje te datoteke."
-    STRING_PRINTING_NOT_IMPLEMENTED, "Tiskanje (še) ni na voljo"
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Tiskanje (še) ni na voljo"
+    STRING_MAX_TAB_STOPS,             "Ne morem vstaviti več kot 32 položajev tabulatorja."
 END
-
 #pragma code_page(default)

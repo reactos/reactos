@@ -544,6 +544,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         /* No callback, just copy the message */
         _SEH2_TRY
         {
+            /* Copy it */
             LpcpMoveMessage(&Message->Request,
                             LpcRequest,
                             LpcRequest + 1,
@@ -552,16 +553,12 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
+            /* Fail */
             LpcpFreeToPortZone(Message, 0);
             ObDereferenceObject(Port);
-            return Status;
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
 
         /* Acquire the LPC lock */
         KeAcquireGuardedMutex(&LpcpLock);

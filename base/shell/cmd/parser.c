@@ -84,10 +84,7 @@ restart:
 
 static void ParseError()
 {
-	if (CurrentTokenType == TOK_END)
-		ConOutResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
-	else
-		ConOutPrintf(_T("%s was unexpected at this time.\n"), CurrentToken);
+	error_syntax(CurrentTokenType != TOK_END ? CurrentToken : NULL);
 	bParseError = TRUE;
 }
 
@@ -329,10 +326,11 @@ static PARSED_COMMAND *ParseBlock(REDIRECTION *RedirList)
 static PARSED_COMMAND *ParseIf(void)
 {
 	PARSED_COMMAND *Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
+	int Type;
 	memset(Cmd, 0, sizeof(PARSED_COMMAND));
 	Cmd->Type = C_IF;
 
-	int Type = CurrentTokenType;
+	Type = CurrentTokenType;
 	if (_tcsicmp(CurrentToken, _T("/I")) == 0)
 	{
 		Cmd->If.Flags |= IFFLAG_IGNORECASE;
@@ -522,12 +520,82 @@ error:
 	return NULL;
 }
 
-static PARSED_COMMAND *ParseCommandPart(void)
+/* Parse a REM command */
+static PARSED_COMMAND *ParseRem(void)
+{
+	/* Just ignore the rest of the line */
+	while (CurChar && CurChar != _T('\n'))
+		ParseChar();
+	return NULL;
+}
+
+static DECLSPEC_NOINLINE PARSED_COMMAND *ParseCommandPart(REDIRECTION *RedirList)
 {
 	TCHAR ParsedLine[CMDLINE_LENGTH];
-	TCHAR *Pos;
-	DWORD TailOffset;
 	PARSED_COMMAND *Cmd;
+	PARSED_COMMAND *(*Func)(void);
+
+	TCHAR *Pos = _stpcpy(ParsedLine, CurrentToken) + 1;
+	DWORD TailOffset = Pos - ParsedLine;
+
+	/* Check for special forms */
+	if ((Func = ParseFor, _tcsicmp(ParsedLine, _T("for")) == 0) ||
+	    (Func = ParseIf,  _tcsicmp(ParsedLine, _T("if")) == 0)  ||
+	    (Func = ParseRem, _tcsicmp(ParsedLine, _T("rem")) == 0))
+	{
+		ParseToken(0, STANDARD_SEPS);
+		/* Do special parsing only if it's not followed by /? */
+		if (_tcscmp(CurrentToken, _T("/?")) != 0)
+		{
+			if (RedirList)
+			{
+				ParseError();
+				FreeRedirection(RedirList);
+				return NULL;
+			}
+			return Func();
+		}
+		Pos = _stpcpy(Pos, _T(" /?"));
+	}
+
+	/* Now get the tail */
+	while (1)
+	{
+		int Type = ParseToken(0, NULL);
+		if (Type == TOK_NORMAL)
+		{
+			if (Pos + _tcslen(CurrentToken) >= &ParsedLine[CMDLINE_LENGTH])
+			{
+				ParseError();
+				FreeRedirection(RedirList);
+				return NULL;
+			}
+			Pos = _stpcpy(Pos, CurrentToken);
+		}
+		else if (Type == TOK_REDIRECTION)
+		{
+			if (!ParseRedirection(&RedirList))
+				return NULL;
+		}
+		else
+		{
+			break;
+		}
+	}
+	*Pos++ = _T('\0');
+
+	Cmd = cmd_alloc(FIELD_OFFSET(PARSED_COMMAND, Command.First[Pos - ParsedLine]));
+	Cmd->Type = C_COMMAND;
+	Cmd->Next = NULL;
+	Cmd->Subcommands = NULL;
+	Cmd->Redirections = RedirList;
+	memcpy(Cmd->Command.First, ParsedLine, (Pos - ParsedLine) * sizeof(TCHAR));
+	Cmd->Command.Rest = Cmd->Command.First + TailOffset;
+	return Cmd;
+}
+
+static PARSED_COMMAND *ParsePrimary(void)
+{
 	REDIRECTION *RedirList = NULL;
 	int Type;
 
@@ -552,6 +620,7 @@ static PARSED_COMMAND *ParseCommandPart(void)
 
 	if (CurChar == _T('@'))
 	{
+		PARSED_COMMAND *Cmd;
 		ParseChar();
 		Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
 		Cmd->Type = C_QUIET;
@@ -563,89 +632,23 @@ static PARSED_COMMAND *ParseCommandPart(void)
 		return Cmd;
 	}
 
-	/* Get the head of the command */
-	while (1)
+	/* Process leading redirections and get the head of the command */
+	while ((Type = ParseToken(_T('('), STANDARD_SEPS)) == TOK_REDIRECTION)
 	{
-		Type = ParseToken(_T('('), STANDARD_SEPS);
-		if (Type == TOK_NORMAL)
-		{
-			Pos = _stpcpy(ParsedLine, CurrentToken);
-			break;
-		}
-		else if (Type == TOK_REDIRECTION)
-		{
-			if (!ParseRedirection(&RedirList))
-				return NULL;
-		}
-		else if (Type == TOK_BEGIN_BLOCK)
-		{
-			return ParseBlock(RedirList);
-		}
-		else if (Type == TOK_END_BLOCK && !RedirList)
-		{
+		if (!ParseRedirection(&RedirList))
 			return NULL;
-		}
-		else
-		{
-			ParseError();
-			FreeRedirection(RedirList);
-			return NULL;
-		}
-	}
-	TailOffset = Pos - ParsedLine;
-
-	/* Check for special forms */
-	if (_tcsicmp(ParsedLine, _T("for")) == 0 ||
-	    _tcsicmp(ParsedLine, _T("if")) == 0)
-	{
-		ParseToken(0, STANDARD_SEPS);
-		/* Do special parsing only if it's not followed by /? */
-		if (_tcscmp(CurrentToken, _T("/?")) != 0)
-		{
-			if (RedirList)
-			{
-				ParseError();
-				FreeRedirection(RedirList);
-				return NULL;
-			}
-			return _totlower(*ParsedLine) == _T('f') ? ParseFor() : ParseIf();
-		}
-		Pos = _stpcpy(Pos, _T(" /?"));
 	}
 
-	/* Now get the tail */
-	while (1)
-	{
-		Type = ParseToken(0, NULL);
-		if (Type == TOK_NORMAL)
-		{
-			if (Pos + _tcslen(CurrentToken) >= &ParsedLine[CMDLINE_LENGTH])
-			{
-				ParseError();
-				FreeRedirection(RedirList);
-				return NULL;
-			}
-			Pos = _stpcpy(Pos, CurrentToken);
-		}
-		else if (Type == TOK_REDIRECTION)
-		{
-			if (!ParseRedirection(&RedirList))
-				return NULL;
-		}
-		else
-		{
-			break;
-		}
-	}
+	if (Type == TOK_NORMAL)
+		return ParseCommandPart(RedirList);
+	else if (Type == TOK_BEGIN_BLOCK)
+		return ParseBlock(RedirList);
+	else if (Type == TOK_END_BLOCK && !RedirList)
+		return NULL;
 
-	Cmd = cmd_alloc(FIELD_OFFSET(PARSED_COMMAND, Command.CommandLine[Pos + 1 - ParsedLine]));
-	Cmd->Type = C_COMMAND;
-	Cmd->Next = NULL;
-	Cmd->Subcommands = NULL;
-	Cmd->Redirections = RedirList;
-	_tcscpy(Cmd->Command.CommandLine, ParsedLine);
-	Cmd->Command.Tail = Cmd->Command.CommandLine + TailOffset;
-	return Cmd;
+	ParseError();
+	FreeRedirection(RedirList);
+	return NULL;
 }
 
 static PARSED_COMMAND *ParseCommandOp(int OpType)
@@ -653,7 +656,7 @@ static PARSED_COMMAND *ParseCommandOp(int OpType)
 	PARSED_COMMAND *Cmd, *Left, *Right;
 
 	if (OpType == C_OP_HIGHEST)
-		Cmd = ParseCommandPart();
+		Cmd = ParsePrimary();
 	else
 		Cmd = ParseCommandOp(OpType + 1);
 
@@ -693,7 +696,8 @@ ParseCommand(LPTSTR Line)
 
 	if (Line)
 	{
-		_tcscpy(ParseLine, Line);
+		if (!SubstituteVars(Line, ParseLine, _T('%')))
+			return NULL;
 		bLineContinuations = FALSE;
 	}
 	else
@@ -716,6 +720,11 @@ ParseCommand(LPTSTR Line)
 			FreeCommand(Cmd);
 			Cmd = NULL;
 		}
+		bIgnoreEcho = FALSE;
+	}
+	else
+	{
+		bIgnoreEcho = TRUE;
 	}
 	return Cmd;
 }
@@ -733,17 +742,31 @@ EchoCommand(PARSED_COMMAND *Cmd)
 	switch (Cmd->Type)
 	{
 	case C_COMMAND:
-		if (SubstituteForVars(Cmd->Command.CommandLine, Buf))
+		if (SubstituteForVars(Cmd->Command.First, Buf))
+			ConOutPrintf(_T("%s"), Buf);
+		if (SubstituteForVars(Cmd->Command.Rest, Buf))
 			ConOutPrintf(_T("%s"), Buf);
 		break;
 	case C_QUIET:
 		return;
 	case C_BLOCK:
 		ConOutChar(_T('('));
-		for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+		Sub = Cmd->Subcommands;
+		if (Sub && !Sub->Next)
 		{
+			/* Single-command block: display all on one line */
 			EchoCommand(Sub);
+		}
+		else if (Sub)
+		{
+			/* Multi-command block: display parenthesis on separate lines */
 			ConOutChar(_T('\n'));
+			do
+			{
+				EchoCommand(Sub);
+				ConOutChar(_T('\n'));
+				Sub = Sub->Next;
+			} while (Sub);
 		}
 		ConOutChar(_T(')'));
 		break;
@@ -794,6 +817,108 @@ EchoCommand(PARSED_COMMAND *Cmd)
 			ConOutPrintf(_T(" %c%s%s"), _T('0') + Redir->Number,
 				RedirString[Redir->Type], Buf);
 	}
+}
+
+/* "Unparse" a command into a text form suitable for passing to CMD /C.
+ * Used for pipes. This is basically the same thing as EchoCommand, but
+ * writing into a string instead of to standard output. */
+TCHAR *
+Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd)
+{
+	TCHAR Buf[CMDLINE_LENGTH];
+	PARSED_COMMAND *Sub;
+	REDIRECTION *Redir;
+
+/* Since this function has the annoying requirement that it must avoid
+ * overflowing the supplied buffer, define some helper macros to make
+ * this less painful */
+#define CHAR(Char) { \
+	if (Out == OutEnd) return NULL; \
+	*Out++ = Char; }
+#define STRING(String) { \
+	if (Out + _tcslen(String) > OutEnd) return NULL; \
+	Out = _stpcpy(Out, String); }
+#define PRINTF(Format, ...) { \
+	UINT Len = _sntprintf(Out, OutEnd - Out, Format, __VA_ARGS__); \
+	if (Len > (UINT)(OutEnd - Out)) return NULL; \
+	Out += Len; }
+#define RECURSE(Subcommand) { \
+	Out = Unparse(Subcommand, Out, OutEnd); \
+	if (!Out) return NULL; }
+
+	switch (Cmd->Type)
+	{
+	case C_COMMAND:
+		/* This is fragile since there could be special characters, but
+		 * Windows doesn't bother escaping them, so for compatibility
+		 * we probably shouldn't do it either */
+		if (!SubstituteForVars(Cmd->Command.First, Buf)) return NULL;
+		STRING(Buf)
+		if (!SubstituteForVars(Cmd->Command.Rest, Buf)) return NULL;
+		STRING(Buf)
+		break;
+	case C_QUIET:
+		CHAR(_T('@'))
+		RECURSE(Cmd->Subcommands)
+		break;
+	case C_BLOCK:
+		CHAR(_T('('))
+		for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+		{
+			RECURSE(Sub)
+			if (Sub->Next)
+				CHAR(_T('&'))
+		}
+		CHAR(_T(')'))
+		break;
+	case C_MULTI:
+	case C_IFFAILURE:
+	case C_IFSUCCESS:
+	case C_PIPE:
+		Sub = Cmd->Subcommands;
+		RECURSE(Sub)
+		PRINTF(_T(" %s "), OpString[Cmd->Type - C_OP_LOWEST])
+		RECURSE(Sub->Next)
+		break;
+	case C_IF:
+		STRING(_T("if"))
+		if (Cmd->If.Flags & IFFLAG_IGNORECASE)
+			STRING(_T(" /I"))
+		if (Cmd->If.Flags & IFFLAG_NEGATE)
+			STRING(_T(" not"))
+		if (Cmd->If.LeftArg && SubstituteForVars(Cmd->If.LeftArg, Buf))
+			PRINTF(_T(" %s"), Buf)
+		PRINTF(_T(" %s"), IfOperatorString[Cmd->If.Operator]);
+		if (!SubstituteForVars(Cmd->If.RightArg, Buf)) return NULL;
+		PRINTF(_T(" %s "), Buf)
+		Sub = Cmd->Subcommands;
+		RECURSE(Sub)
+		if (Sub->Next)
+		{
+			STRING(_T(" else "))
+			RECURSE(Sub->Next)
+		}
+		break;
+	case C_FOR:
+		STRING(_T("for"))
+		if (Cmd->For.Switches & FOR_DIRS)      STRING(_T(" /D"))
+		if (Cmd->For.Switches & FOR_F)         STRING(_T(" /F"))
+		if (Cmd->For.Switches & FOR_LOOP)      STRING(_T(" /L"))
+		if (Cmd->For.Switches & FOR_RECURSIVE) STRING(_T(" /R"))
+		if (Cmd->For.Params)
+			PRINTF(_T(" %s"), Cmd->For.Params)
+		PRINTF(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List)
+		RECURSE(Cmd->Subcommands)
+		break;
+	}
+
+	for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
+	{
+		if (!SubstituteForVars(Redir->Filename, Buf)) return NULL;
+		PRINTF(_T(" %c%s%s"), _T('0') + Redir->Number,
+			RedirString[Redir->Type], Buf)
+	}
+	return Out;
 }
 
 VOID

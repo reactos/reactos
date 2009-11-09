@@ -196,6 +196,13 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
     if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
     {
         DPRINT("Pipe is already disconnected\n");
+        Status = STATUS_PIPE_DISCONNECTED;
+    }
+    else if ((!Ccb->OtherSide) && (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE))
+    {
+        ExAcquireFastMutex(&Ccb->DataListLock);
+        Ccb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+        ExReleaseFastMutex(&Ccb->DataListLock);
         Status = STATUS_SUCCESS;
     }
     else if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)

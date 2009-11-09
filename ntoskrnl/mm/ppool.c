@@ -52,6 +52,22 @@ INIT_FUNCTION
 NTAPI
 MmInitializePagedPool(VOID)
 {
+    PVOID BaseAddress;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+    PMEMORY_AREA MArea;
+    BoundaryAddressMultiple.QuadPart = 0;
+    
+    BaseAddress = MmPagedPoolBase;
+    MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                       MEMORY_AREA_PAGED_POOL,
+                       &BaseAddress,
+                       MmPagedPoolSize,
+                       PAGE_READWRITE,
+                       &MArea,
+                       TRUE,
+                       0,
+                       BoundaryAddressMultiple);
+    
 	/*
 	 * We are still at a high IRQL level at this point so explicitly commit
 	 * the first page of the paged pool before writing the first block header.

@@ -23,6 +23,8 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
+#if !defined (__arm__)
+
 #if defined(__GNUC__)
 struct _EXCEPTION_RECORD;
 struct _EXCEPTION_POINTERS;
@@ -83,43 +85,6 @@ extern void __cdecl _SEH2Return(void);
 
 #ifdef __cplusplus
 }
-#endif
-
-#if defined(__i386__)
-typedef struct __SEHTrampoline
-{
-	unsigned char STR_MovEcx;
-	unsigned char STR_Closure[4];
-	unsigned char STR_Jmp;
-	unsigned char STR_Function[4];
-}
-_SEHTrampoline_t;
-
-static
-__inline__
-__attribute__((always_inline))
-int _SEHIsTrampoline(_SEHTrampoline_t * trampoline_)
-{
-	return trampoline_->STR_MovEcx == 0xb9 && trampoline_->STR_Jmp == 0xe9;
-}
-
-static
-__inline__
-__attribute__((always_inline))
-void * _SEHFunctionFromTrampoline(_SEHTrampoline_t * trampoline_)
-{
-	return (void *)(*(int *)(&trampoline_->STR_Function[0]) + (int)(trampoline_ + 1));
-}
-
-static
-__inline__
-__attribute__((always_inline))
-void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
-{
-	return (void *)*(int *)(&trampoline_->STR_Closure[0]);
-}
-#else
-#error TODO
 #endif
 
 /* A no-op side effect that scares GCC */
@@ -194,16 +159,18 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 #define __SEH_ENTER_SCOPE(TRYLEVEL_) (_SEHTopTryLevel ? __SEH_ENTER_FRAME_AND_TRYLEVEL(TRYLEVEL_) : __SEH_ENTER_TRYLEVEL(TRYLEVEL_))
 #define __SEH_ENTER_HANDLE_SCOPE(TRYLEVEL_, HANDLE_) (({ __SEH_BARRIER; __asm__ __volatile__("mov %%esp, %0" : "=m" ((TRYLEVEL_)->SHT_Esp)); __SEH_BARRIER; }), (_SEHTopTryLevel ? __SEH_ENTER_FRAME_AND_HANDLE_TRYLEVEL((TRYLEVEL_), (HANDLE_)) : __SEH_ENTER_HANDLE_TRYLEVEL((TRYLEVEL_), (HANDLE_))))
 
-#define __SEH_LEAVE_SCOPE() \
+#define __SEH_LEAVE_TRYLEVEL() \
+	if(!_SEHTopTryLevel) \
+	{ \
+		__SEH_SET_TRYLEVEL(_SEHPrevTryLevelP); \
+	} \
+
+#define __SEH_LEAVE_FRAME() \
 	if(_SEHTopTryLevel) \
 	{ \
 		_SEH2LeaveFrame(); \
 		__asm__ __volatile__("mov %0, %%esp" : : "g" (_SEHStackPointer)); \
-	} \
-	else \
-	{ \
-		__SEH_SET_TRYLEVEL(_SEHPrevTryLevelP); \
-	} \
+	}
 
 #define __SEH_END_SCOPE_CHAIN \
 	static __attribute__((unused)) const int _SEH2ScopeKind = 1; \
@@ -289,7 +256,7 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
  \
 		_SEHAbnormalTermination = 0; \
  \
-		__SEH_LEAVE_SCOPE(); \
+		__SEH_LEAVE_TRYLEVEL(); \
  \
 		_SEHFinally(); \
 		goto _SEHEndExcept; \
@@ -362,7 +329,7 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 		__attribute__((unused)) __SEH_DEFINE_FINALLY(_SEHFinally) { __SEH_RETURN_FINALLY(); } \
  \
 		_SEHAfterTry:; \
-		__SEH_LEAVE_SCOPE(); \
+		__SEH_LEAVE_TRYLEVEL(); \
  \
 		goto _SEHEndExcept; \
  \
@@ -377,6 +344,8 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 		} \
  \
 		_SEHEndExcept:; \
+ \
+		__SEH_LEAVE_FRAME(); \
 	} \
 	__SEH_END_SCOPE;
 
@@ -412,6 +381,22 @@ __SEH_END_SCOPE_CHAIN;
 
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE __leave
+
+#endif
+
+#else
+
+#define _SEH2_TRY  {
+#define _SEH2_FINALLY }  {
+#define _SEH2_EXCEPT(...) } if (0) {
+#define _SEH2_END }
+
+#define _SEH2_GetExceptionInformation() 
+#define _SEH2_GetExceptionCode() STATUS_SUCCESS
+#define _SEH2_AbnormalTermination() 
+
+#define _SEH2_YIELD(STMT_) STMT_
+#define _SEH2_LEAVE
 
 #endif
 

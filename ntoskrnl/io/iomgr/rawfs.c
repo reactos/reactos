@@ -1082,7 +1082,6 @@ RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
     DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
     DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP] =
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)RawDispatch;
 

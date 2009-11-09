@@ -33,7 +33,7 @@ static __inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
     FLOAT x, y;
     XFORM xformWorld2Vport;
     
-    MatrixS2XForm(&xformWorld2Vport, &dc->DcLevel.mxWorldToDevice);
+    MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
 
     /* Perform the transformation */
     x = point->x;
@@ -89,25 +89,25 @@ static __inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
 
 #define MulDiv( x, y, z ) EngMulDiv( x, y, z )
 
-#define XDPTOLP(Dc_Attr,tx) \
-    (MulDiv(((tx)-(Dc_Attr)->ptlViewportOrg.x), (Dc_Attr)->szlWindowExt.cx, (Dc_Attr)->szlViewportExt.cx) + (Dc_Attr)->ptlWindowOrg.x)
-#define YDPTOLP(Dc_Attr,ty) \
-    (MulDiv(((ty)-(Dc_Attr)->ptlViewportOrg.y), (Dc_Attr)->szlWindowExt.cy, (Dc_Attr)->szlViewportExt.cy) + (Dc_Attr)->ptlWindowOrg.y)
-#define XLPTODP(Dc_Attr,tx) \
-    (MulDiv(((tx)-(Dc_Attr)->ptlWindowOrg.x), (Dc_Attr)->szlViewportExt.cx, (Dc_Attr)->szlWindowExt.cx) + (Dc_Attr)->ptlViewportOrg.x)
-#define YLPTODP(Dc_Attr,ty) \
-    (MulDiv(((ty)-(Dc_Attr)->ptlWindowOrg.y), (Dc_Attr)->szlViewportExt.cy, (Dc_Attr)->szlWindowExt.cy) + (Dc_Attr)->ptlViewportOrg.y)
+#define XDPTOLP(pdcattr,tx) \
+    (MulDiv(((tx)-(pdcattr)->ptlViewportOrg.x), (pdcattr)->szlWindowExt.cx, (pdcattr)->szlViewportExt.cx) + (pdcattr)->ptlWindowOrg.x)
+#define YDPTOLP(pdcattr,ty) \
+    (MulDiv(((ty)-(pdcattr)->ptlViewportOrg.y), (pdcattr)->szlWindowExt.cy, (pdcattr)->szlViewportExt.cy) + (pdcattr)->ptlWindowOrg.y)
+#define XLPTODP(pdcattr,tx) \
+    (MulDiv(((tx)-(pdcattr)->ptlWindowOrg.x), (pdcattr)->szlViewportExt.cx, (pdcattr)->szlWindowExt.cx) + (pdcattr)->ptlViewportOrg.x)
+#define YLPTODP(pdcattr,ty) \
+    (MulDiv(((ty)-(pdcattr)->ptlWindowOrg.y), (pdcattr)->szlViewportExt.cy, (pdcattr)->szlWindowExt.cy) + (pdcattr)->ptlViewportOrg.y)
 
   /* Device <-> logical size conversion */
 
-#define XDSTOLS(Dc_Attr,tx) \
-    MulDiv((tx), (Dc_Attr)->szlWindowExt.cx, (Dc_Attr)->szlViewportExt.cx)
+#define XDSTOLS(pdcattr,tx) \
+    MulDiv((tx), (pdcattr)->szlWindowExt.cx, (pdcattr)->szlViewportExt.cx)
 #define YDSTOLS(DC_Attr,ty) \
-    MulDiv((ty), (Dc_Attr)->szlWindowExt.cy, (Dc_Attr)->szlViewportExt.cy)
-#define XLSTODS(Dc_Attr,tx) \
-    MulDiv((tx), (Dc_Attr)->szlViewportExt.cx, (Dc_Attr)->szlWindowExt.cx)
-#define YLSTODS(Dc_Attr,ty) \
-    MulDiv((ty), (Dc_Attr)->szlViewportExt.cy, (Dc_Attr)->szlWindowExt.cy)
+    MulDiv((ty), (pdcattr)->szlWindowExt.cy, (pdcattr)->szlViewportExt.cy)
+#define XLSTODS(pdcattr,tx) \
+    MulDiv((tx), (pdcattr)->szlViewportExt.cx, (pdcattr)->szlWindowExt.cx)
+#define YLSTODS(pdcattr,ty) \
+    MulDiv((ty), (pdcattr)->szlViewportExt.cy, (pdcattr)->szlWindowExt.cy)
 
 #endif
 

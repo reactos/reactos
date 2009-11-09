@@ -11,7 +11,7 @@
 //
 // VIC Registers
 //
-#define VIC_BASE                (PVOID)0xE0040000 /* HACK: freeldr mapped it here */
+#define VIC_BASE                (ULONG_PTR)0xE0040000 /* HACK: freeldr mapped it here */
 
 #define VIC_INT_STATUS          (VIC_BASE + 0x00)
 #define VIC_INT_ENABLE          (VIC_BASE + 0x10)

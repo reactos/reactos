@@ -44,6 +44,12 @@ Author:
 #define DEBUG_EVENT_SUSPEND               (0x20)
 
 //
+// NtCreateDebugObject Flags
+//
+#define DBGK_KILL_PROCESS_ON_EXIT         (0x1)
+#define DBGK_ALL_FLAGS                    (DBGK_KILL_PROCESS_ON_EXIT)
+
+//
 // Debug Object Information Classes for NtQueryDebugObject
 //
 typedef enum _DEBUGOBJECTINFOCLASS

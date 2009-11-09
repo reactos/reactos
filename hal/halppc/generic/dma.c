@@ -114,7 +114,7 @@ static DMA_OPERATIONS HalpDmaOperations = {
 
 #define MAX_MAP_REGISTERS 64
 
-#define TAG_DMA TAG('D','M','A',' ')
+#define TAG_DMA ' AMD'
 
 /* FUNCTIONS *****************************************************************/
 
@@ -770,7 +770,7 @@ HalGetAdapter(
    {
       if (!HalpDmaInitializeEisaAdapter(AdapterObject, DeviceDescription))
       {
-         ObfDereferenceObject(AdapterObject);
+         ObDereferenceObject(AdapterObject);
          return NULL;
       }
    }
@@ -817,7 +817,7 @@ HalPutDmaAdapter(
       KeSetEvent(&HalpDmaLock, 0, 0);
    }
 
-   ObfDereferenceObject(AdapterObject);
+   ObDereferenceObject(AdapterObject);
 }
 
 /**

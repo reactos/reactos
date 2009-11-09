@@ -178,7 +178,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 /*         PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(192, 192, 255)) ; */
 /*         PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ; */
         GraphCtrl_SetBackgroundColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 0, 0)) ;
-        GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(152, 205, 152)) ;
+        GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 128, 64));
 
         GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 0, RGB(0, 255, 0)) ;
         GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 1, RGB(255, 0, 0)) ;
@@ -188,7 +188,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         GraphCtrl_Create(&PerformancePageMemUsageHistoryGraph, hPerformancePageMemUsageHistoryGraph, hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
         GraphCtrl_SetRange(&PerformancePageMemUsageHistoryGraph, 0.0, 100.0, 10) ;
         GraphCtrl_SetBackgroundColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 0, 0)) ;
-        GraphCtrl_SetGridColor(&PerformancePageMemUsageHistoryGraph, RGB(152, 215, 152)) ;
+        GraphCtrl_SetGridColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 128, 64)) ;
         GraphCtrl_SetPlotColor(&PerformancePageMemUsageHistoryGraph, 0, RGB(255, 255, 0)) ;
         /*  Start our refresh thread */
 #ifdef RUN_PERF_PAGE

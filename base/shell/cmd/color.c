@@ -30,6 +30,7 @@
 
 VOID SetScreenColor (WORD wColor, BOOL bNoFill)
 {
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
@@ -65,6 +66,8 @@ VOID SetScreenColor (WORD wColor, BOOL bNoFill)
  */
 INT CommandColor (LPTSTR rest)
 {
+	WORD wColor;
+
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
 		ConOutResPaging(TRUE,STRING_COLOR_HELP1);
@@ -84,6 +87,7 @@ INT CommandColor (LPTSTR rest)
 
 	if ( _tcslen(&rest[0])==1)
 	{
+	  HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	  if ( (_tcscmp(&rest[0], _T("0")) >=0 ) && (_tcscmp(&rest[0], _T("9")) <=0 ) )
 	  {
         SetConsoleTextAttribute (hConsole, (WORD)_ttoi(rest));

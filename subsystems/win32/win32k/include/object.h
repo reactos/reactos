@@ -22,8 +22,8 @@ typedef struct _USER_HANDLE_ENTRY
     union
     {
         PVOID pi;
-        PW32THREADINFO pti;          // pointer to Win32ThreadInfo
-        PW32PROCESSINFO ppi;         // pointer to W32ProcessInfo
+        PTHREADINFO pti;          // pointer to Win32ThreadInfo
+        PPROCESSINFO ppi;         // pointer to W32ProcessInfo
     };
     unsigned short type;         /* object type (0 if free) */
     unsigned short generation;   /* generation counter */
@@ -115,7 +115,7 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
 BOOL UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
 PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type );
 PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
-BOOL FASTCALL UserCreateHandleTable();
+BOOL FASTCALL UserCreateHandleTable(VOID);
 VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
 
 

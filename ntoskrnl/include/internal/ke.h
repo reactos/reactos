@@ -790,6 +790,7 @@ KeTrapFrameToContext(
     IN OUT PCONTEXT Context
 );
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckWithTf(
@@ -993,6 +994,7 @@ NTAPI
 KiI386PentiumLockErrataFixup(VOID);
 
 VOID
+NTAPI
 WRMSR(
     IN ULONG Register,
     IN LONGLONG Value
@@ -1061,6 +1063,7 @@ KiIdleLoop(
     VOID
 );
 
+#include "kdb_lock.h"
 #include "ke_x.h"
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

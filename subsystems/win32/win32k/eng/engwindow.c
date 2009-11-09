@@ -27,7 +27,10 @@
  *                 16/11/2004: Created
  */
 
-/* TODO: Check how the WNDOBJ implementation should behave with a driver on windows. */
+/* TODO: Check how the WNDOBJ implementation should behave with a driver on windows.
+
+   Simple! Use Prop's!
+ */
 
 #include <w32k.h>
 
@@ -85,14 +88,14 @@ IntEngWndUpdateClipObj(
   hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
   if (hVisRgn != NULL)
   {
-    NtGdiOffsetRgn(hVisRgn, Window->Wnd->ClientRect.left, Window->Wnd->ClientRect.top);
+    NtGdiOffsetRgn(hVisRgn, Window->Wnd->rcClient.left, Window->Wnd->rcClient.top);
     visRgn = REGION_LockRgn(hVisRgn);
     if (visRgn != NULL)
     {
       if (visRgn->rdh.nCount > 0)
       {
-        ClipObj = IntEngCreateClipRegion(visRgn->rdh.nCount, (PRECTL)visRgn->Buffer,
-                                         (PRECTL)&visRgn->rdh.rcBound);
+        ClipObj = IntEngCreateClipRegion(visRgn->rdh.nCount, visRgn->Buffer,
+                                         &visRgn->rdh.rcBound);
         DPRINT("Created visible region with %d rects\n", visRgn->rdh.nCount);
         DPRINT("  BoundingRect: %d, %d  %d, %d\n",
                visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
@@ -122,8 +125,8 @@ IntEngWndUpdateClipObj(
   if (ClipObj == NULL)
   {
     /* Fall back to client rect */
-    ClipObj = IntEngCreateClipRegion(1, (PRECTL)&Window->Wnd->ClientRect,
-                                     (PRECTL)&Window->Wnd->ClientRect);
+    ClipObj = IntEngCreateClipRegion(1, &Window->Wnd->rcClient,
+                                     &Window->Wnd->rcClient);
   }
 
   if (ClipObj == NULL)
@@ -133,7 +136,7 @@ IntEngWndUpdateClipObj(
   }
 
   RtlCopyMemory(&WndObjInt->WndObj.coClient, ClipObj, sizeof (CLIPOBJ));
-  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->Wnd->ClientRect, sizeof (RECT));
+  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->Wnd->rcClient, sizeof (RECT));
   OldClipObj = InterlockedExchangePointer(&WndObjInt->ClientClipObj, ClipObj);
   if (OldClipObj != NULL)
     IntEngDeleteClipRegion(OldClipObj);

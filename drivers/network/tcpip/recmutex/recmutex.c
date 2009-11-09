@@ -3,80 +3,59 @@
 
 VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
     RtlZeroMemory( RecMutex, sizeof(*RecMutex) );
-    KeInitializeSpinLock( &RecMutex->SpinLock );
     ExInitializeFastMutex( &RecMutex->Mutex );
     KeInitializeEvent( &RecMutex->StateLockedEvent,
-		       NotificationEvent, FALSE );
+        NotificationEvent, FALSE );
 }
 
 /* NOTE: When we leave, the FAST_MUTEX must have been released.  The result
- * is that we always exit in the same irql as entering */
-SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
+* is that we always exit in the same irql as entering */
+VOID RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID CurrentThread = KeGetCurrentThread();
 
+    ASSERT(RecMutex);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+
     /* Wait for the previous user to unlock the RecMutex state.  There might be
-     * multiple waiters waiting to change the state.  We need to check each
-     * time we get the event whether somebody still has the state locked */
+    * multiple waiters waiting to change the state.  We need to check each
+    * time we get the event whether somebody still has the state locked */
 
-    if( !RecMutex ) return FALSE;
+    ExAcquireFastMutex( &RecMutex->Mutex );
 
-    if( CurrentThread == RecMutex->CurrentThread ||
-	(!ToWrite && !RecMutex->Writer) ) {
-	RecMutex->LockCount++;
-	return TRUE;
+    if( CurrentThread == RecMutex->CurrentThread ) {
+            RecMutex->LockCount++;
+            ExReleaseFastMutex( &RecMutex->Mutex );
+            return;
     }
 
-    if( KeGetCurrentIrql() == PASSIVE_LEVEL ) {
-	ExAcquireFastMutex( &RecMutex->Mutex );
-	RecMutex->OldIrql = PASSIVE_LEVEL;
-	while( RecMutex->Locked ) {
-	    ExReleaseFastMutex( &RecMutex->Mutex );
-	    Status = KeWaitForSingleObject( &RecMutex->StateLockedEvent,
-					    UserRequest,
-					    KernelMode,
-					    FALSE,
-					    NULL );
-	    ExAcquireFastMutex( &RecMutex->Mutex );
-	}
-	RecMutex->Locked = TRUE;
-	RecMutex->Writer = ToWrite;
-	RecMutex->CurrentThread = CurrentThread;
-	RecMutex->LockCount++;
-	ExReleaseFastMutex( &RecMutex->Mutex );
-    } else {
-	KeAcquireSpinLock( &RecMutex->SpinLock, &RecMutex->OldIrql );
-	RecMutex->Locked = TRUE;
-	RecMutex->Writer = ToWrite;
-	RecMutex->CurrentThread = CurrentThread;
-	RecMutex->LockCount++;
+    while( RecMutex->LockCount != 0 ) {
+         ExReleaseFastMutex( &RecMutex->Mutex );
+         Status = KeWaitForSingleObject( &RecMutex->StateLockedEvent,
+             UserRequest,
+             KernelMode,
+             FALSE,
+             NULL );
+         ExAcquireFastMutex( &RecMutex->Mutex );
     }
-
-    return TRUE;
+    RecMutex->CurrentThread = CurrentThread;
+    RecMutex->LockCount++;
+    ExReleaseFastMutex( &RecMutex->Mutex );
 }
 
 VOID RecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex ) {
-    if( RecMutex->LockCount == 0 ) {
-	return;
-    } else
-	RecMutex->LockCount--;
+    ASSERT(RecMutex);
+
+    ExAcquireFastMutex( &RecMutex->Mutex );
+
+    ASSERT(RecMutex->LockCount > 0);
+    RecMutex->LockCount--;
 
     if( !RecMutex->LockCount ) {
-	RecMutex->CurrentThread = NULL;
-	if( RecMutex->OldIrql == PASSIVE_LEVEL ) {
-	    ExAcquireFastMutex( &RecMutex->Mutex );
-	    RecMutex->Locked = FALSE;
-	    RecMutex->Writer = FALSE;
-	    ExReleaseFastMutex( &RecMutex->Mutex );
-	} else {
-	    RecMutex->Locked = FALSE;
-	    RecMutex->Writer = FALSE;
-	    KeReleaseSpinLock( &RecMutex->SpinLock, RecMutex->OldIrql );
-	}
-
-	RecMutex->OldIrql = PASSIVE_LEVEL;
-	KePulseEvent( &RecMutex->StateLockedEvent, IO_NETWORK_INCREMENT,
-		      FALSE );
+        KePulseEvent( &RecMutex->StateLockedEvent, IO_NETWORK_INCREMENT,
+            FALSE );
     }
+
+    ExReleaseFastMutex( &RecMutex->Mutex );
 }
 

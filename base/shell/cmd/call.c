@@ -33,16 +33,13 @@
 
 /*
  * Perform CALL command.
- *
- * Allocate a new batch context and add it to the current chain.
- * Call parsecommandline passing in our param string
- * If No batch file was opened then remove our newly allocted
- * context block.
  */
 
 INT cmd_call (LPTSTR param)
 {
-	LPBATCH_CONTEXT n = NULL;
+	TCHAR line[CMDLINE_LENGTH + 1];
+	TCHAR *first;
+	BOOL bInQuote = FALSE;
 
 	TRACE ("cmd_call: (\'%s\')\n", debugstr_aw(param));
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -51,52 +48,37 @@ INT cmd_call (LPTSTR param)
 		return 0;
 	}
 
-	if (*param == _T(':') && (bc))
+	/* Do a second round of %-variable substitutions */
+	if (!SubstituteVars(param, line, _T('%')))
+		return nErrorLevel = 1;
+
+	/* Find start and end of first word */
+	first = line;
+	while (_istspace(*first))
+		first++;
+
+	for (param = first; *param; param++)
 	{
-		TCHAR *first = param;
-		while (*param && !_istspace(*param))
+		if (!bInQuote && (_istspace(*param) || _tcschr(_T(",;="), *param)))
+			break;
+		bInQuote ^= (*param == _T('"'));
+	}
+
+	/* Separate first word from rest of line */
+	memmove(param + 1, param, (_tcslen(param) + 1) * sizeof(TCHAR));
+	*param++ = _T('\0');
+
+	if (*first == _T(':') && (bc))
+	{
+		/* CALL :label - call a subroutine of the current batch file */
+		while (*param == _T(' '))
 			param++;
-		if (*param)
-		{
-			*param++ = _T('\0');
-			while (_istspace(*param))
-				param++;
-		}
-		if (!Batch(bc->BatchFilePath, first, param, TRUE))
-			return 1;
-		return cmd_goto(first);
+		nErrorLevel = Batch(bc->BatchFilePath, first, param, NULL);
+		return nErrorLevel;
 	}
 
-    nErrorLevel = 0;
-
-	n = (LPBATCH_CONTEXT)cmd_alloc (sizeof (BATCH_CONTEXT));
-
-	if (n == NULL)
-	{
-		error_out_of_memory ();
-		return 1;
-	}
-
-	n->prev = bc;
-	bc = n;
-
-	bc->hBatchFile = INVALID_HANDLE_VALUE;
-	bc->params = NULL;
-	bc->shiftlevel = 0;
-	bc->forvar = 0;        /* HBP004 */
-	bc->forvarcount = 0;
-	bc->RedirList = NULL;
-	ParseCommandLine (param);
-
-
-	/* Wasn't a batch file so remove conext */
-	if (bc->hBatchFile == INVALID_HANDLE_VALUE)
-	{
-		bc = bc->prev;
-		cmd_free (n);
-	}
-
-	return 0;
+	nErrorLevel = DoCommand(first, param, NULL);
+	return nErrorLevel;
 }
 
 /* EOF */

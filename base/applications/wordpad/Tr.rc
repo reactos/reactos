@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
@@ -152,7 +154,7 @@ Caption "Tabs"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tab stops", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "&Add", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Remove", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
@@ -224,17 +226,4 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_UNITS_CM,             "cm"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_DEFAULT_FILENAME,     "Document"
-    STRING_PROMPT_SAVE_CHANGES,  "Save changes to '%s'?"
-    STRING_SEARCH_FINISHED,      "Finished searching the document."
-    STRING_LOAD_RICHED_FAILED,   "Failed to load the RichEdit library."
-    STRING_SAVE_LOSEFORMATTING,  "You have chosen to save in plain text format, " \
-                                 "which will cause all formatting to be lost. " \
-                                 "Are you sure that you wish to do this?"
-    STRING_INVALID_NUMBER,       "Invalid number format"
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
 END

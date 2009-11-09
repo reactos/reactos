@@ -1,9 +1,14 @@
-#include "windows.h"
-#include "resource.h"
-
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
+
+STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
+\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
 
 STRING_ATTRIB_HELP,    "Viser eller endrer filattributtene.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
@@ -235,7 +240,10 @@ Skriv ECHO uten parameter for å vise gjeldende ECHO innstillinger."
 
 STRING_ECHO_HELP5, "ECHO er %s\n"
 
-STRING_EXIT_HELP, "Avslutt kommandotolk.\n\nEXIT\n"
+STRING_EXIT_HELP, "Avslutt kommando linje interpreter.\n\nAVSLUTT [/b] [ExitCode]\n\n\
+  /B            Avslutt bare en batch fil.  \n\
+                Hvis det kjøres en batch fil på utsiden vil den avslutte cmd.exe\n\
+  ExitCode      Denne verdien vil bli utpekt til ERRORLEVEL ved avslutting\n"
 
 STRING_FOR_HELP1, "Kjør en spesifisert kommando for hver fil i en gruppe med filer\n\n\
 FOR %variabel IN (gruppe) DO kommando [parametere]\n\n\
@@ -285,6 +293,13 @@ STRING_LOCALE_HELP1, "gjeldende tid er"
 
 STRING_MKDIR_HELP,   "Oppretter en mappe.\n\n\
 MKDIR [stasjon:]mappe\nMD [stasjon:]mappe"
+
+STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
 
 STRING_MEMMORY_HELP1, "Vis mengde av system minne.\n\nMEMORY"
 
@@ -381,6 +396,46 @@ MOVE kommando for det formålet.\n"
 STRING_REN_HELP2, "    %lu fil endret navn\n"
 
 STRING_REN_HELP3, "    %lu filer endret navn\n"
+
+STRING_REPLACE_HELP1, "Replaces files.\n\n\
+REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
+REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [drive1:][path1]filename Specifies the source file or files.\n\
+  [drive2:][path2]         Specifies the directory where files are to be\n\
+                           replaced.\n\
+  /A                       Adds new files to destination directory. Cannot\n\
+                           use with /S or /U switches.\n\
+  /P                       Prompts for confirmation before replacing a file or\n\
+                           adding a source file.\n\
+  /R                       Replaces read-only files as well as unprotected\n\
+                           files.\n\
+  /S                       Replaces files in all subdirectories of the\n\
+                           destination directory. Cannot use with the /A\n\
+                           switch.\n\
+  /W                       Waits for you to insert a disk before beginning.\n\
+  /U                       Replaces (updates) only files that are older than\n\
+                           source files. Cannot use with the /A switch.\n"
+
+STRING_REPLACE_HELP2, "Source path required\n"
+
+STRING_REPLACE_HELP3, "No files replaced\n"
+
+STRING_REPLACE_HELP4, "%lu file(s) replaced\n"
+
+STRING_REPLACE_HELP5, "Replacing %s\n"
+
+STRING_REPLACE_HELP6, "Replace %s\n"
+
+STRING_REPLACE_HELP7, "No files added\n"
+
+STRING_REPLACE_HELP8, "%lu file(s) added\n"
+
+STRING_REPLACE_HELP9, "Add %s (Y/N) "
+
+STRING_REPLACE_HELP10, "Replace %s (Y/N) "
+
+STRING_REPLACE_HELP11, "Adding %s\n"
+
 
 STRING_SHIFT_HELP, "Endre posisjon for erstattelig parameter i et satsvis fil.\n\n\
 SHIFT [NED]"
@@ -496,6 +551,7 @@ MAX           maksimer vinduet\n\
 RESTORE       gjenopprett vinduet\n\
 tittel        ny tittel\n"
 
+
 STRING_HELP1, "Liste av alle tilgjengelige kommandoer (+ beskrivelse)\n\n\
 kommando /?     For mer informasjon om en bestemt kommando\n\n\
 ?        Lister alle tilgjengelige kommando uten beskrivelse).\n\
@@ -526,6 +582,7 @@ IF       Utføre betinget behandling i satsvise programmer.\n\
 LABEL    Oppretter, endrer, eller sletter volumnavnet på en disk.\n\
 MD       Oppretter en mappe.\n\
 MKDIR    Oppretter en mappe.\n\
+MKLINK   Creates a filesystem link object.\n\
 MOVE     Flytter en eller flere filer fra en mappe til en annen.\n\
 PATH     Vis eller sett en søkesti for kjørbare filer.\n\
 PAUSE    Avbryter behandling av en satsvis fil, og viser en melding.\n\
@@ -541,7 +598,6 @@ RMDIR    Fjerner en mappe.\n\
 SCREEN   Flytter markør.\n\
 SET      Vis, sett, eller fjern ReactOS miljøvariabel.\n\
 SHIFT    Shift plass for erstattelige parameter i satsvise filer.\n"
-
 STRING_HELP2, "START    Start et separat vindu til å kjøre et spesifisert program eller kommando.\n\
          Utfører kommando.\n\
 TIME     Vis eller sett system tid.\n\
@@ -557,7 +613,7 @@ VOL      Vis et volums navn og serienummer.\n"
 STRING_CHOICE_OPTION,         "YN"
 STRING_COPY_OPTION,           "YNA"
 
-
+STRING_ASSOC_ERROR,          "Fil association ble ikke funnet for utvidelsen %s\n"
 STRING_ALIAS_ERROR,          "Kommando linje for lang etter alias utvidelse!\n"
 STRING_BATCH_ERROR,          "Feil ved åpning av satsvis fil\n"
 STRING_CHCP_ERROR1,          "Aktiv tegntabell: %u\n"
@@ -618,7 +674,7 @@ STRING_ERROR_FILE_NOT_FOUND,       "Filen ble ikke funnet\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "Obligatorisk parameter mangler\n"
 STRING_ERROR_INVALID_DRIVE,        "Ugyldig stasjon angitt\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Ugyldig parameter format - %s\n"
-STRING_ERROR_BADCOMMAND,           "Feil kommando eller filnavn\n"
+STRING_ERROR_BADCOMMAND,           "Feil kommando eller filnavn - %s\n"
 STRING_ERROR_OUT_OF_MEMORY,        "Feil: Minne fullt.\n"
 STRING_ERROR_CANNOTPIPE,           "Feil! Kan ikke bruke datakanal! Kan ikke åpne midlertidig fil!\n"
 STRING_ERROR_D_PAUSEMSG,           "Trykk en tast for å fortsette . . ."
@@ -626,7 +682,16 @@ STRING_ERROR_DRIVER_NOT_READY,     "Stasjonen er ikke klar"
 
 STRING_PATH_ERROR,                 "CMD: Ikke i miljøet '%s'\n"
 
-STRING_CMD_SHELLINFO,              "\nReactOS Kommandotolk"
+STRING_REPLACE_ERROR1, "Invalid switch - %s\n"
+STRING_REPLACE_ERROR2, "Mappen ble ikke funnet - %s\n"
+STRING_REPLACE_ERROR3, "The filename, directory name, or volume label syntax is incorrect.\n"
+STRING_REPLACE_ERROR4, "Invalid parameter combination\n"
+STRING_REPLACE_ERROR5, "Tilgang nektet - %s\n"
+STRING_REPLACE_ERROR6, "Ingen filer ble funnet - %s\n"
+STRING_REPLACE_ERROR7, "Extended Error 32\n"
+
+STRING_REACTOS_VERSION,            "ReactOS Operativsystem [Versjon %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nReactOS Kommandotolk\nVersjon %s %s"
 STRING_VERSION_RUNVER,             " kjører på %s"
 STRING_COPY_FILE ,                 "        %d file(r) kopiert\n"
 STRING_DELETE_WIPE,                "slettet"
@@ -634,6 +699,11 @@ STRING_FOR_ERROR,                  "ugyldig variabel spesifikasjon."
 STRING_SCREEN_COL,                 "ugyldig verdi for kolonne"
 STRING_SCREEN_ROW,                 "ugyldig verdi for rad"
 STRING_TIMER_TIME                  "Stoppeklokke %d er %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
+STRING_MORE,                       "More? "
+STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break trykket.  Avbryt batch filen? (Ja/Nei/Alt) "
 
 STRING_INVALID_OPERAND,            "Ugyldig operand."
 STRING_EXPECTED_CLOSE_PAREN,       "Forventet ')'."

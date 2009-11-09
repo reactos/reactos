@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
@@ -152,7 +154,7 @@ Caption "Tabstopps"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tabstoppposition", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "&Festlegen", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Löschen", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
@@ -242,6 +244,6 @@ BEGIN
     STRING_OPEN_FAILED,          "Die Datei konnte nicht geöffnet werden."
     STRING_OPEN_ACCESS_DENIED,   "Sie haben keine ausreichende Zugriffsberechtigung um die Datei zu öffnen."
     STRING_PRINTING_NOT_IMPLEMENTED, "Drucken ist nicht implementiert"
+    STRING_MAX_TAB_STOPS,            "Es können nur maximal 32 Tabstopps definiert werden."
 END
-
 #pragma code_page(default)

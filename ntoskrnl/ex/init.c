@@ -235,7 +235,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Allocate the a new buffer since loader memory will be freed */
         ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
                                                 ExpNlsTableSize,
-                                                TAG('R', 't', 'l', 'i'));
+                                                'iltR');
         if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
         /* Copy the codepage data in its new location. */
@@ -324,7 +324,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
-    ExFreePoolWithTag(ExpNlsTableBase, TAG('R', 't', 'l', 'i'));
+    ExFreePoolWithTag(ExpNlsTableBase, 'iltR');
     ExpNlsTableBase = SectionBase;
 
     /* Initialize the NLS Tables */
@@ -1188,7 +1188,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     KeServiceDescriptorTable[0].Count =
         ExAllocatePoolWithTag(NonPagedPool,
                               KiServiceLimit * sizeof(ULONG),
-                              TAG('C', 'a', 'l', 'l'));
+                              'llaC');
 
     /* Use it for the shadow table too */
     KeServiceDescriptorTableShadow[0].Count = KeServiceDescriptorTable[0].Count;
@@ -1269,7 +1269,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
-                                       TAG('I', 'n', 'i', 't'));
+                                       'tinI');
     if (!InitBuffer)
     {
         /* Bugcheck */

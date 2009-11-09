@@ -629,12 +629,14 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
 
 NTHALAPI
 VOID
+NTAPI
 HalDisplayString (
     PUCHAR String
     );
 
 NTHALAPI
 VOID
+NTAPI
 HalQueryDisplayParameters (
     OUT PULONG WidthInCharacters,
     OUT PULONG HeightInLines,
@@ -644,6 +646,7 @@ HalQueryDisplayParameters (
 
 NTHALAPI
 VOID
+NTAPI
 HalSetDisplayParameters (
     IN ULONG CursorColumn,
     IN ULONG CursorRow

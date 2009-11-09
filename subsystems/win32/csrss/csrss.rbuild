@@ -6,6 +6,7 @@
 		<include base="csrss">include</include>
 		<include base="ReactOS">include/reactos/subsys</include>
 		<include base="ReactOS">include/reactos/drivers</include>
+		<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 		<library>nt</library>
 		<library>ntdll</library>
 		<library>smdll</library>

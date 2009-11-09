@@ -47,7 +47,7 @@ typedef struct _EPATHOBJ
 #define  PATH_UnlockPath(pPath) GDIOBJ_ShareUnlockObjByPtr((POBJ)pPath)
 
 
-#define PATH_IsPathOpen(DcLevel) ( ((DcLevel).hPath) && ((DcLevel).flPath & DCPATH_ACTIVE) )
+#define PATH_IsPathOpen(dclevel) ( ((dclevel).hPath) && ((dclevel).flPath & DCPATH_ACTIVE) )
 
 BOOL FASTCALL PATH_Arc (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xStart, INT yStart, INT xEnd, INT yEnd, INT lines);
 BOOL FASTCALL PATH_AssignGdiPath (PPATH pPathDest, const PPATH pPathSrc);
@@ -67,7 +67,7 @@ BOOL FASTCALL PATH_PolyPolyline( PDC dc, const POINT* pts, const DWORD* counts, 
 BOOL FASTCALL PATH_Rectangle (PDC dc, INT x1, INT y1, INT x2, INT y2);
 BOOL FASTCALL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height);
 BOOL FASTCALL PATH_PathToRegion (PPATH pPath, INT nPolyFillMode, HRGN *pHrgn);
-BOOL FASTCALL PATH_ExtTextOut(PDC dc,INT x,INT y,UINT flags,const RECT *lprc,LPCWSTR str,UINT count,const INT *dx);
+BOOL FASTCALL PATH_ExtTextOut(PDC dc,INT x,INT y,UINT flags,const RECTL *lprc,LPCWSTR str,UINT count,const INT *dx);
 
 VOID FASTCALL IntGdiCloseFigure(PPATH pPath);
 BOOL FASTCALL PATH_Delete(HPATH hPath);

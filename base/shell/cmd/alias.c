@@ -86,21 +86,23 @@ PrintAlias (VOID)
 VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 {
 	LPTSTR buffer;
-	TCHAR* position;
+	TCHAR *position, *in, *out;
 	LPTSTR Token;
 	LPTSTR tmp;
 
-	tmp = cmd_alloc(maxlen);
+	tmp = cmd_dup(cmd);
 	if (!tmp)
 		return;
-	_tcscpy(tmp, cmd);
 
-	Token = _tcstok(tmp, _T(" ")); /* first part is the macro name */
-	if (!Token)
+	/* first part is the macro name */
+	position = tmp + _tcscspn(tmp, _T(" \n"));
+	if (position == tmp)
 	{
 		cmd_free(tmp);
 		return;
 	}
+	*position++ = _T('\0');
+	position += _tcsspn(position, _T(" "));
 
 	buffer = cmd_alloc(maxlen);
 	if (!buffer)
@@ -109,34 +111,60 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 		return;
 	}
 	
-	if (GetConsoleAlias(Token, buffer, maxlen, _T("cmd.exe")) == 0)
+	if (GetConsoleAlias(tmp, buffer, maxlen, _T("cmd.exe")) == 0)
 	{
 		cmd_free(tmp);
 		cmd_free(buffer);
 		return;
 	}
 
-	Token = _tcstok (NULL, _T(" "));
-
-	ZeroMemory(cmd, maxlen);
-	position = _tcsstr(buffer, _T("$*"));
-	if (position)
+	in = buffer;
+	out = cmd;
+	while (*in)
 	{
-		_tcsncpy(cmd, buffer, (INT) (position - buffer) - 1);
-		if (Token)
+		if (*in == _T('$'))
 		{
-			_tcscat(cmd, _T(" "));
-			_tcscat(cmd, Token);
+			Token = position;
+			if (in[1] >= _T('1') && in[1] <= _T('9'))
+			{
+				/* Copy a single space-delimited token from the input line */
+				INT num;
+				for (num = in[1] - _T('1'); num > 0; num--)
+				{
+					Token += _tcscspn(Token, _T(" \n"));
+					Token += _tcsspn(Token, _T(" "));
+				}
+				while (!_tcschr(_T(" \n"), *Token))
+				{
+					if (out >= &cmd[maxlen - 1])
+						break;
+					*out++ = *Token++;
+				}
+				in += 2;
+				continue;
+			}
+			else if (in[1] == _T('*'))
+			{
+				/* Copy the entire remainder of the line */
+				while (*Token && *Token != _T('\n'))
+				{
+					if (out >= &cmd[maxlen - 1])
+						break;
+					*out++ = *Token++;
+				}
+				in += 2;
+				continue;
+			}
 		}
+		if (out >= &cmd[maxlen - 1])
+			break;
+		*out++ = *in++;
 	}
-	else
-	{
-		_tcscpy(cmd, buffer);
-	}
+	*out++ = _T('\n');
+	*out = _T('\0');
 
 	cmd_free(buffer);
 	cmd_free(tmp);
-
 }
 
 INT CommandAlias (LPTSTR param)

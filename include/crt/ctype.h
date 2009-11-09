@@ -48,6 +48,20 @@ extern "C" {
 # endif /* !_CTYPE_DISABLE_MACROS */
 #endif /* !_CRT_WCTYPEDATA_DEFINED */
 
+  /* CRT stuff */
+#if 1
+  extern const unsigned char __newclmap[];
+  extern const unsigned char __newcumap[];
+  extern pthreadlocinfo __ptlocinfo;
+  extern pthreadmbcinfo __ptmbcinfo;
+  extern int __globallocalestatus;
+  extern int __locale_changed;
+  extern struct threadlocaleinfostruct __initiallocinfo;
+  extern _locale_tstruct __initiallocalestructinfo;
+  pthreadlocinfo __cdecl __updatetlocinfo(void);
+  pthreadmbcinfo __cdecl __updatetmbcinfo(void);
+#endif
+
 #define _UPPER 0x1
 #define _LOWER 0x2
 #define _DIGIT 0x4

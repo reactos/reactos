@@ -1,0 +1,24 @@
+#include <windows.h>
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Multimedia Player\0"
+#define REACTOS_STR_INTERNAL_NAME	"mplay32\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"mplay32.exe\0"
+#include <reactos/version.rc>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+/* Icons */
+IDI_MAIN ICON DISCARDABLE "resources/mplay32.ico"
+
+/* Bitmaps */
+IDB_PLAYICON     BITMAP "resources/play.bmp"
+IDB_STOPICON     BITMAP "resources/stop.bmp"
+IDB_EJECTICON    BITMAP "resources/eject.bmp"
+IDB_BACKWARDICON BITMAP "resources/backward.bmp"
+IDB_SEEKBACKICON BITMAP "resources/seekback.bmp"
+IDB_SEEKFORWICON BITMAP "resources/seekforw.bmp"
+IDB_FORWARDICON  BITMAP "resources/forward.bmp"
+IDB_PAUSEICON    BITMAP "resources/pause.bmp"
+
+#include "rsrc.rc"

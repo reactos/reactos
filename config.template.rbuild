@@ -42,7 +42,7 @@
 
 <!--
 	What level of optimisation to use.
-		0 = off (will not work)
+		0 = off
 		1 = Default option, optimize for size (-Os) with some additional options
 		2 = -Os
 		3 = -O1
@@ -59,8 +59,7 @@
 
 
 <!--
-	Whether to compile for debugging. No compiler optimizations will be
-	performed.
+	Whether to compile for debugging.
 -->
 <property name="DBG" value="1" />
 
@@ -88,6 +87,11 @@
 	failure to enter GUI mode. Do not enable unless you know what you're doing.
 -->
 <property name="_WINKD_" value="0" />
+
+<!--
+	Compile with experimental section and cache separation and reimplementation.
+-->
+<property name="_NEWSECT_" value="0" />
 
 <!--
 	Whether to compile support for ELF files. Do not enable unless you know what

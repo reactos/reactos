@@ -17,6 +17,7 @@ const GUID KSMEDIUMSETID_Standard               = {0x4747B320L, 0x62CE, 0x11CF, 
 const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
+const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 NTSTATUS
 SetIrpIoStatus(
@@ -32,50 +33,167 @@ SetIrpIoStatus(
 }
 
 NTSTATUS
+GetFilterIdAndPinId(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo,
+    IN PULONG FilterId,
+    IN PULONG PinId)
+{
+    KSP_PIN Pin;
+    ULONG Count, BytesReturned, Index, SubIndex, Result, NumPins;
+    NTSTATUS Status;
+    KSPIN_COMMUNICATION Communication;
+    KSPIN_DATAFLOW DataFlow;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+
+    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
+    {
+        DPRINT1("FIXME: Unsupported device type %x\n", DeviceInfo->DeviceType);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Pin.Property.Set = KSPROPSETID_Sysaudio;
+    Pin.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_COUNT;
+    Pin.Property.Flags = KSPROPERTY_TYPE_GET;
+
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
+    if (!NT_SUCCESS(Status))
+        return STATUS_UNSUCCESSFUL;
+
+    Result = 0;
+    for(Index = 0; Index < Count; Index++)
+    {
+        /* query number of pins */
+        Pin.Reserved = Index; // see sysaudio
+        Pin.Property.Flags = KSPROPERTY_TYPE_GET;
+        Pin.Property.Set = KSPROPSETID_Pin;
+        Pin.Property.Id = KSPROPERTY_PIN_CTYPES;
+        Pin.PinId = 0;
+
+        Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&NumPins, sizeof(ULONG), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            /* enumerate now all pins */
+            for(SubIndex = 0; SubIndex < NumPins; SubIndex++)
+            {
+                Pin.PinId = SubIndex;
+                Pin.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
+                Communication = KSPIN_COMMUNICATION_NONE;
+
+                /* get pin communication type */
+                KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
+
+                Pin.Property.Id = KSPROPERTY_PIN_DATAFLOW;
+                DataFlow = 0;
+
+                /* get pin dataflow type */
+                KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
+
+                if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
+                {
+                    if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
+                    {
+                        if(DeviceInfo->DeviceIndex == Result)
+                        {
+                            /* found the index */
+                            *FilterId = Index;
+                            *PinId = SubIndex;
+                            return STATUS_SUCCESS;
+                        }
+
+                        Result++;
+                    }
+                }
+                else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
+                {
+                    if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
+                    {
+                        if(DeviceInfo->DeviceIndex == Result)
+                        {
+                            /* found the index */
+                            *FilterId = Index;
+                            *PinId = SubIndex;
+                            return STATUS_SUCCESS;
+                        }
+                        Result++;
+                    }
+                }
+            }
+        }
+    }
+
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
 WdmAudControlOpen(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    PSYSAUDIO_INSTANCE_INFO InstanceInfo;
+    SYSAUDIO_INSTANCE_INFO InstanceInfo;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     ULONG BytesReturned;
     NTSTATUS Status;
     ACCESS_MASK DesiredAccess = 0;
     HANDLE PinHandle;
     KSPIN_CONNECT * PinConnect;
-    ULONG Length;
+    ULONG Length, Index;
     KSDATAFORMAT_WAVEFORMATEX * DataFormat;
+    ULONG FilterId;
+    ULONG PinId;
+    ULONG FreeIndex;
 
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE)
+    if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
-        DPRINT1("FIXME: only waveout devices are supported\n");
+        return WdmAudControlOpenMixer(DeviceObject, Irp, DeviceInfo, ClientInfo);
+    }
+
+    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
+    {
+        DPRINT1("FIXME: only waveout / wavein devices are supported\n");
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
-    Length = sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
-    InstanceInfo = ExAllocatePool(NonPagedPool, Length);
-    if (!InstanceInfo)
+    if (DeviceInfo->u.WaveFormatEx.wFormatTag != WAVE_FORMAT_PCM)
+    {
+        DPRINT("FIXME: Only WAVE_FORMAT_PCM is supported RequestFormat %x\n", DeviceInfo->u.WaveFormatEx.wFormatTag);
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
+    Status = GetFilterIdAndPinId(DeviceObject, DeviceInfo, ClientInfo, &FilterId, &PinId);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid device index %u\n", DeviceInfo->DeviceIndex);
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
+    /* close pin handle which uses same virtual audio device id and pin id */
+    FreeIndex = (ULONG)-1;
+    for(Index = 0; Index < ClientInfo->NumPins; Index++)
+    {
+        if (ClientInfo->hPins[Index].FilterId == FilterId && ClientInfo->hPins[Index].PinId == PinId && ClientInfo->hPins[Index].Handle && ClientInfo->hPins[Index].Type == DeviceInfo->DeviceType)
+        {
+            ZwClose(ClientInfo->hPins[Index].Handle);
+            ClientInfo->hPins[Index].Handle = NULL;
+            FreeIndex = Index;
+        }
+    }
+
+
+    Length = sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT);
+    PinConnect = ExAllocatePool(NonPagedPool, Length);
+    if (!PinConnect)
     {
         /* no memory */
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
-    InstanceInfo->Property.Set = KSPROPSETID_Sysaudio;
-    InstanceInfo->Property.Id = KSPROPERTY_SYSAUDIO_INSTANCE_INFO;
-    InstanceInfo->Property.Flags = KSPROPERTY_TYPE_SET;
-    InstanceInfo->Flags = 0;
-    InstanceInfo->DeviceNumber = DeviceInfo->DeviceIndex;
-
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)InstanceInfo, sizeof(SYSAUDIO_INSTANCE_INFO), NULL, 0, &BytesReturned);
-
-    if (!NT_SUCCESS(Status))
-    {
-        /* failed to acquire audio device */
-        DPRINT1("KsSynchronousIoControlDevice failed with %x\n", Status);
-        ExFreePool(InstanceInfo);
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE ||
         DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE ||
@@ -92,17 +210,14 @@ WdmAudControlOpen(
         DesiredAccess |= GENERIC_WRITE;
     }
 
-    PinConnect = (KSPIN_CONNECT*)(InstanceInfo + 1);
-
-
     PinConnect->Interface.Set = KSINTERFACESETID_Standard;
     PinConnect->Interface.Id = KSINTERFACE_STANDARD_STREAMING;
     PinConnect->Interface.Flags = 0;
     PinConnect->Medium.Set = KSMEDIUMSETID_Standard;
     PinConnect->Medium.Id = KSMEDIUM_TYPE_ANYINSTANCE;
     PinConnect->Medium.Flags = 0;
-    PinConnect->PinId = 0; //FIXME
-    PinConnect->PinToHandle = ClientInfo->hSysAudio;
+    PinConnect->PinToHandle = NULL;
+    PinConnect->PinId = PinId;
     PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
     PinConnect->Priority.PrioritySubClass = 1;
 
@@ -120,30 +235,64 @@ WdmAudControlOpen(
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
 
-    if (DeviceInfo->u.WaveFormatEx.wFormatTag != WAVE_FORMAT_PCM)
-        DPRINT1("FIXME\n");
-
     DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->DataFormat.SampleSize = 4;
 
-    /* ros specific pin creation request */
-    InstanceInfo->Property.Id = (ULONG)-1;
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)InstanceInfo, Length, &PinHandle, sizeof(HANDLE), &BytesReturned);
+    /* setup property request */
+    InstanceInfo.Property.Set = KSPROPSETID_Sysaudio;
+    InstanceInfo.Property.Id = KSPROPERTY_SYSAUDIO_INSTANCE_INFO;
+    InstanceInfo.Property.Flags = KSPROPERTY_TYPE_SET;
+    InstanceInfo.Flags = 0;
+    InstanceInfo.DeviceNumber = FilterId;
+
+    /* first open the virtual device */
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&InstanceInfo, sizeof(SYSAUDIO_INSTANCE_INFO), NULL, 0, &BytesReturned);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        ExFreePool(PinConnect);
+        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
+    /* now create the pin */
+    Status = KsCreatePin(DeviceExtension->hSysAudio, PinConnect, DesiredAccess, &PinHandle);
+
+    /* free create info */
+    ExFreePool(PinConnect);
+
     if (NT_SUCCESS(Status))
     {
-        PHANDLE Handels = ExAllocatePool(NonPagedPool, sizeof(HANDLE) * (ClientInfo->NumPins+1));
+        PWDMAUD_HANDLE Handels;
+
+        if (FreeIndex != (ULONG)-1)
+        {
+            /* re-use a free index */
+            ClientInfo->hPins[Index].Handle = PinHandle;
+            ClientInfo->hPins[Index].FilterId = FilterId;
+            ClientInfo->hPins[Index].PinId = PinId;
+            ClientInfo->hPins[Index].Type = DeviceInfo->DeviceType;
+
+            DeviceInfo->hDevice = PinHandle;
+            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+        }
+
+        Handels = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
 
         if (Handels)
         {
             if (ClientInfo->NumPins)
             {
-                RtlMoveMemory(Handels, ClientInfo->hPins, sizeof(HANDLE) * ClientInfo->NumPins);
+                RtlMoveMemory(Handels, ClientInfo->hPins, sizeof(WDMAUD_HANDLE) * ClientInfo->NumPins);
                 ExFreePool(ClientInfo->hPins);
             }
 
             ClientInfo->hPins = Handels;
-            ClientInfo->hPins[ClientInfo->NumPins] = PinHandle;
+            ClientInfo->hPins[ClientInfo->NumPins].Handle = PinHandle;
+            ClientInfo->hPins[ClientInfo->NumPins].Type = DeviceInfo->DeviceType;
+            ClientInfo->hPins[ClientInfo->NumPins].FilterId = FilterId;
+            ClientInfo->hPins[ClientInfo->NumPins].PinId = PinId;
             ClientInfo->NumPins++;
         }
         DeviceInfo->hDevice = PinHandle;
@@ -163,29 +312,89 @@ WdmAudControlDeviceType(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    KSPROPERTY Property;
-    ULONG Result, BytesReturned;
+    KSP_PIN Pin;
+    ULONG Count, BytesReturned, Index, SubIndex, Result, NumPins;
     NTSTATUS Status;
+    KSPIN_COMMUNICATION Communication;
+    KSPIN_DATAFLOW DataFlow;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE)
+    if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
-        DPRINT1("FIXME: only waveout devices are supported\n");
+        DeviceInfo->DeviceCount = GetNumOfMixerDevices(DeviceObject);
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
+    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
+    {
+        DPRINT1("FIXME: Unsupported device type %x\n", DeviceInfo->DeviceType);
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
-    Property.Set = KSPROPSETID_Sysaudio;
-    Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_COUNT;
-    Property.Flags = KSPROPERTY_TYPE_GET;
+    Pin.Property.Set = KSPROPSETID_Sysaudio;
+    Pin.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_COUNT;
+    Pin.Property.Flags = KSPROPERTY_TYPE_GET;
 
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&Result, sizeof(ULONG), &BytesReturned);
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("KSPROPERTY_SYSAUDIO_DEVICE_COUNT failed with %x\n", Status);
+        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    }
+    Result = 0;
+    /* now enumerate all available filters */
+    for(Index = 0; Index < Count; Index++)
+    {
+        /* query number of pins */
+        Pin.Reserved = Index; // see sysaudio
+        Pin.Property.Flags = KSPROPERTY_TYPE_GET;
+        Pin.Property.Set = KSPROPSETID_Pin;
+        Pin.Property.Id = KSPROPERTY_PIN_CTYPES;
+        Pin.PinId = 0;
 
-    if (NT_SUCCESS(Status))
-        DeviceInfo->DeviceCount = Result;
-    else
-        DeviceInfo->DeviceCount = 0;
+        Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&NumPins, sizeof(ULONG), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            /* enumerate now all pins */
+            for(SubIndex = 0; SubIndex < NumPins; SubIndex++)
+            {
+                Pin.PinId = SubIndex;
+                Pin.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
+                Communication = KSPIN_COMMUNICATION_NONE;
+
+                /* get pin communication type */
+                Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
+                if (!NT_SUCCESS(Status))
+                    continue;
+
+                Pin.Property.Id = KSPROPERTY_PIN_DATAFLOW;
+                DataFlow = 0;
+
+                /* get pin dataflow type */
+                Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
+                if (!NT_SUCCESS(Status))
+                    continue;
+
+                if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
+                {
+                    if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
+                        Result++;
+                }
+                else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
+                {
+                    if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
+                        Result++;
+                }
+            }
+        }
+    }
+
+    /* store result count */
+    DeviceInfo->DeviceCount = Result;
 
     DPRINT1("WdmAudControlDeviceType Status %x Devices %u\n", Status, DeviceInfo->DeviceCount);
-    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
 }
 
 NTSTATUS
@@ -201,11 +410,7 @@ WdmAudControlDeviceState(
     ULONG BytesReturned;
     PFILE_OBJECT FileObject;
 
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE)
-    {
-        DPRINT1("FIXME: only waveout devices are supported\n");
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
+    //DPRINT1("WdmAudControlDeviceState\n");
 
     Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
@@ -218,114 +423,13 @@ WdmAudControlDeviceState(
     Property.Id = KSPROPERTY_CONNECTION_STATE;
     Property.Flags = KSPROPERTY_TYPE_SET;
 
-    State = DeviceInfo->State;
+    State = DeviceInfo->u.State;
 
     Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&State, sizeof(KSSTATE), &BytesReturned);
 
     ObDereferenceObject(FileObject);
 
-    DPRINT1("WdmAudControlDeviceState Status %x\n", Status);
-    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
-}
-
-NTSTATUS
-NTAPI
-WdmAudWriteCompleted(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PIRP  Irp,
-    IN PVOID  Ctx)
-{
-    PWRITE_CONTEXT Context = (PWRITE_CONTEXT)Ctx;
-
-    Context->Irp->IoStatus.Information = Context->Length;
-    Context->Irp->IoStatus.Status = Irp->IoStatus.Status;
-    IoCompleteRequest(Context->Irp, IO_SOUND_INCREMENT);
-
-    ExFreePool(Context);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-WdmAudControlWriteData(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp,
-    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
-    IN  PWDMAUD_CLIENT ClientInfo)
-{
-    PKSSTREAM_HEADER Packet;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PFILE_OBJECT FileObject;
-    PWRITE_CONTEXT Context;
-    ULONG BytesReturned;
-    PUCHAR Buffer;
-
-    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE)
-    {
-        DPRINT1("FIXME: only waveout devices are supported\n");
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForRead(DeviceInfo->Buffer, DeviceInfo->BufferSize, TYPE_ALIGNMENT(char));
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Exception, get the error code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Invalid buffer supplied\n");
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
-    Buffer = ExAllocatePool(NonPagedPool, DeviceInfo->BufferSize);
-    if (!Buffer)
-    {
-        /* no memory */
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    RtlMoveMemory(Buffer, DeviceInfo->Buffer, DeviceInfo->BufferSize);
-
-
-    Context = ExAllocatePool(NonPagedPool, sizeof(WRITE_CONTEXT));
-    if (!Context)
-    {
-        /* no memory */
-        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
-    }
-
-    /* setup completion context */
-    Context->Irp = Irp;
-    Context->Length = DeviceInfo->BufferSize;
-
-    /* setup stream context */
-    Packet = (PKSSTREAM_HEADER)ExAllocatePool(NonPagedPool, sizeof(KSSTREAM_HEADER));
-    Packet->Data = Buffer;
-    Packet->FrameExtent = DeviceInfo->BufferSize;
-    Packet->DataUsed = DeviceInfo->BufferSize;
-    Packet->Size = sizeof(KSSTREAM_HEADER);
-    Packet->PresentationTime.Numerator = 1;
-    Packet->PresentationTime.Denominator = 1;
-    ASSERT(FileObject->FsContext != NULL);
-
-
-    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_WRITE_STREAM, (PVOID)Packet, sizeof(KSSTREAM_HEADER), NULL, 0, &BytesReturned);
-
-    DPRINT1("KsSynchronousIoControlDevice result %x\n", Status);
-    ExFreePool(Buffer);
-
+    //DPRINT1("WdmAudControlDeviceState Status %x\n", Status);
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 
@@ -364,6 +468,218 @@ CheckFormatSupport(
 
 }
 
+PKEY_VALUE_PARTIAL_INFORMATION
+ReadKeyValue(
+    IN HANDLE hSubKey,
+    IN PUNICODE_STRING KeyName)
+{
+    NTSTATUS Status;
+    ULONG Length;
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
+
+    /* now query MatchingDeviceId key */
+    Status = ZwQueryValueKey(hSubKey, KeyName, KeyValuePartialInformation, NULL, 0, &Length);
+
+    /* check for success */
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+        return NULL;
+
+    /* allocate a buffer for key data */
+    PartialInformation = ExAllocatePool(NonPagedPool, Length);
+
+    if (!PartialInformation)
+        return NULL;
+
+
+    /* now query MatchingDeviceId key */
+    Status = ZwQueryValueKey(hSubKey, KeyName, KeyValuePartialInformation, PartialInformation, Length, &Length);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(PartialInformation);
+        return NULL;
+    }
+
+    if (PartialInformation->Type != REG_SZ)
+    {
+        /* invalid key type */
+        ExFreePool(PartialInformation);
+        return NULL;
+    }
+
+    return PartialInformation;
+}
+
+
+NTSTATUS
+CompareProductName(
+    IN HANDLE hSubKey,
+    IN LPWSTR PnpName,
+    IN ULONG ProductNameSize,
+    OUT LPWSTR ProductName)
+{
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
+    UNICODE_STRING DriverDescName = RTL_CONSTANT_STRING(L"DriverDesc");
+    UNICODE_STRING MatchingDeviceIdName = RTL_CONSTANT_STRING(L"MatchingDeviceId");
+    ULONG Length;
+    LPWSTR DeviceName;
+
+    /* read MatchingDeviceId value */
+    PartialInformation = ReadKeyValue(hSubKey, &MatchingDeviceIdName);
+
+    if (!PartialInformation)
+        return STATUS_UNSUCCESSFUL;
+
+
+    /* extract last '&' */
+    DeviceName = wcsrchr((LPWSTR)PartialInformation->Data, L'&');
+    ASSERT(DeviceName);
+    /* terminate it */
+    DeviceName[0] = L'\0';
+
+    Length = wcslen((LPWSTR)PartialInformation->Data);
+
+    DPRINT("DeviceName %S PnpName %S Length %u\n", (LPWSTR)PartialInformation->Data, PnpName, Length);
+
+    if (_wcsnicmp((LPWSTR)PartialInformation->Data, &PnpName[4], Length))
+    {
+        ExFreePool(PartialInformation);
+        return STATUS_NO_MATCH;
+    }
+
+    /* free buffer */
+    ExFreePool(PartialInformation);
+
+    /* read DriverDescName value */
+    PartialInformation = ReadKeyValue(hSubKey, &DriverDescName);
+
+    if (!PartialInformation)
+    {
+        /* failed to read driver desc key */
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* copy key name */
+    Length = min(ProductNameSize * sizeof(WCHAR), PartialInformation->DataLength);
+    RtlMoveMemory(ProductName, (PVOID)PartialInformation->Data, Length);
+
+    /* zero terminate it */
+    ProductName[ProductNameSize-1] = L'\0';
+
+    /* free buffer */
+    ExFreePool(PartialInformation);
+
+    return STATUS_SUCCESS;
+}
+
+
+
+NTSTATUS
+FindProductName(
+    IN LPWSTR PnpName,
+    IN ULONG ProductNameSize,
+    OUT LPWSTR ProductName)
+{
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class\\{4D36E96C-E325-11CE-BFC1-08002BE10318}");
+
+    UNICODE_STRING SubKeyName;
+    WCHAR SubKey[20];
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hKey, hSubKey;
+    NTSTATUS Status;
+    ULONG Length, Index;
+    PKEY_FULL_INFORMATION KeyInformation;
+
+    for(Index = 0; Index < wcslen(PnpName); Index++)
+    {
+        if (PnpName[Index] == '#')
+            PnpName[Index] = L'\\';
+    }
+
+
+    /* initialize key attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+
+    /* open the key */
+    Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* query num of subkeys */
+    Status = ZwQueryKey(hKey, KeyFullInformation, NULL, 0, &Length);
+
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        DPRINT1("ZwQueryKey failed with %x\n", Status);
+        /* failed */
+        ZwClose(hKey);
+        return Status;
+    }
+
+    /* allocate key information struct */
+    KeyInformation = ExAllocatePool(NonPagedPool, Length);
+    if (!KeyInformation)
+    {
+        /* no memory */
+        ZwClose(hKey);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* query num of subkeys */
+    Status = ZwQueryKey(hKey, KeyFullInformation, (PVOID)KeyInformation, Length, &Length);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwQueryKey failed with %x\n", Status);
+        ExFreePool(KeyInformation);
+        ZwClose(hKey);
+        return Status;
+    }
+
+    /* now iterate through all subkeys */
+    for(Index = 0; Index < KeyInformation->SubKeys; Index++)
+    {
+        /* subkeys are always in the format 0000-XXXX */
+        swprintf(SubKey, L"%04u", Index);
+
+        /* initialize subkey name */
+        RtlInitUnicodeString(&SubKeyName, SubKey);
+
+        /* initialize key attributes */
+        InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, hKey, NULL);
+
+        /* open the sub key */
+        Status = ZwOpenKey(&hSubKey, GENERIC_READ, &ObjectAttributes);
+
+        /* check for success */
+        if (NT_SUCCESS(Status))
+        {
+            /* compare product name */
+            Status = CompareProductName(hSubKey, PnpName, ProductNameSize, ProductName);
+
+            /* close subkey */
+            ZwClose(hSubKey);
+
+            if (NT_SUCCESS(Status))
+                break;
+        }
+    }
+
+    /* free buffer */
+    ExFreePool(KeyInformation);
+
+    /* close key */
+    ZwClose(hKey);
+
+    /* no matching key found */
+    return Status;
+}
+
+
+
 NTSTATUS
 WdmAudCapabilities(
     IN  PDEVICE_OBJECT DeviceObject,
@@ -371,6 +687,7 @@ WdmAudCapabilities(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     KSP_PIN PinProperty;
     KSCOMPONENTID ComponentId;
@@ -378,34 +695,56 @@ WdmAudCapabilities(
     ULONG BytesReturned;
     PKSDATARANGE_AUDIO DataRangeAudio;
     PKSDATARANGE DataRange;
-
     ULONG Index;
     ULONG wChannels = 0;
     ULONG dwFormats = 0;
     ULONG dwSupport = 0;
+    ULONG FilterId;
     ULONG PinId;
+    WCHAR DeviceName[MAX_PATH];
 
     DPRINT("WdmAudCapabilities entered\n");
 
-    PinProperty.PinId = DeviceInfo->DeviceIndex; // used as index of the virtual audio device
+    Status = GetFilterIdAndPinId(DeviceObject, DeviceInfo, ClientInfo, &FilterId, &PinId);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid device index provided %u\n", DeviceInfo->DeviceIndex);
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    PinProperty.PinId = FilterId;
     PinProperty.Property.Set = KSPROPSETID_Sysaudio;
     PinProperty.Property.Id = KSPROPERTY_SYSAUDIO_COMPONENT_ID;
     PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
 
     RtlZeroMemory(&ComponentId, sizeof(KSCOMPONENTID));
 
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)&ComponentId, sizeof(KSCOMPONENTID), &BytesReturned);
     if (NT_SUCCESS(Status))
     {
         DeviceInfo->u.WaveOutCaps.wMid = ComponentId.Manufacturer.Data1 - 0xd5a47fa7;
         DeviceInfo->u.WaveOutCaps.vDriverVersion = MAKELONG(ComponentId.Version, ComponentId.Revision);
     }
 
-    //FIXME
-    // Reserved index defines the audio device index
-    // pin offset should be first determined
-    // by determing the pin type of the target filter
-    PinId = 0;
+    /* retrieve pnp base name */
+    PinProperty.PinId = FilterId;
+    PinProperty.Property.Set = KSPROPSETID_Sysaudio;
+    PinProperty.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_INTERFACE_NAME;
+    PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
+
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)DeviceName, sizeof(DeviceName), &BytesReturned);
+    if (NT_SUCCESS(Status))
+    {
+        /* find product name */
+        Status = FindProductName(DeviceName, MAXPNAMELEN, DeviceInfo->u.WaveOutCaps.szPname);
+
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            DeviceInfo->u.WaveOutCaps.szPname[0] = L'\0';
+        }
+    }
 
     PinProperty.Reserved = DeviceInfo->DeviceIndex;
     PinProperty.PinId = PinId;
@@ -413,9 +752,8 @@ WdmAudCapabilities(
     PinProperty.Property.Id = KSPROPERTY_PIN_DATARANGES;
     PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
 
-
     BytesReturned = 0;
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)NULL, 0, &BytesReturned);
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)NULL, 0, &BytesReturned);
     if (Status != STATUS_BUFFER_TOO_SMALL)
     {
         return SetIrpIoStatus(Irp, Status, 0);
@@ -428,7 +766,7 @@ WdmAudCapabilities(
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
-    Status = KsSynchronousIoControlDevice(ClientInfo->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
     if (!NT_SUCCESS(Status))
     {
         ExFreePool(MultipleItem);
@@ -469,16 +807,15 @@ WdmAudCapabilities(
     DeviceInfo->u.WaveOutCaps.dwFormats = dwFormats;
     DeviceInfo->u.WaveOutCaps.dwSupport = dwSupport;
     DeviceInfo->u.WaveOutCaps.wChannels = wChannels;
-    DeviceInfo->u.WaveOutCaps.szPname[0] = L'\0';
-
 
     ExFreePool(MultipleItem);
+
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 
 NTSTATUS
 NTAPI
-WdmAudClose(
+WdmAudIoctlClose(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
@@ -488,11 +825,11 @@ WdmAudClose(
 
     for(Index = 0; Index < ClientInfo->NumPins; Index++)
     {
-        if (ClientInfo->hPins[Index] == DeviceInfo->hDevice)
+        if (ClientInfo->hPins[Index].Handle == DeviceInfo->hDevice && ClientInfo->hPins[Index].Type != MIXER_DEVICE_TYPE)
         {
             DPRINT1("Closing device %p\n", DeviceInfo->hDevice);
             ZwClose(DeviceInfo->hDevice);
-            ClientInfo->hPins[Index] = NULL;
+            ClientInfo->hPins[Index].Handle = NULL;
             SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
             return STATUS_SUCCESS;
         }
@@ -500,6 +837,49 @@ WdmAudClose(
     SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, sizeof(WDMAUD_DEVICE_INFO));
     return STATUS_INVALID_PARAMETER;
 }
+
+NTSTATUS
+NTAPI
+WdmAudFrameSize(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    PFILE_OBJECT FileObject;
+    KSPROPERTY Property;
+    ULONG BytesReturned;
+    KSALLOCATOR_FRAMING Framing;
+    NTSTATUS Status;
+
+    /* Get sysaudio pin file object */
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    /* Setup get framing request */
+    Property.Id = KSPROPERTY_CONNECTION_ALLOCATORFRAMING;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+    Property.Set = KSPROPSETID_Connection;
+
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&Framing, sizeof(KSALLOCATOR_FRAMING), &BytesReturned);
+    /* Did we succeed */
+    if (NT_SUCCESS(Status))
+    {
+        /* Store framesize */
+        DeviceInfo->u.FrameSize = Framing.FrameSize;
+    }
+
+    /* Release file object */
+    ObDereferenceObject(FileObject);
+
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+
+}
+
 
 NTSTATUS
 NTAPI
@@ -513,7 +893,7 @@ WdmAudDeviceControl(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("WdmAudDeviceControl entered\n");
+    DPRINT("WdmAudDeviceControl entered\n");
 
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(WDMAUD_DEVICE_INFO))
     {
@@ -539,7 +919,7 @@ WdmAudDeviceControl(
     }
     ClientInfo = (PWDMAUD_CLIENT)IoStack->FileObject->FsContext;
 
-    DPRINT1("WdmAudDeviceControl entered\n");
+    DPRINT("WdmAudDeviceControl entered\n");
 
     switch(IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
@@ -549,12 +929,13 @@ WdmAudDeviceControl(
             return WdmAudControlDeviceType(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_SETDEVICE_STATE:
             return WdmAudControlDeviceState(DeviceObject, Irp, DeviceInfo, ClientInfo);
-        case IOCTL_WRITEDATA:
-            return WdmAudControlWriteData(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETCAPABILITIES:
             return WdmAudCapabilities(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_CLOSE_WDMAUD:
-            return WdmAudClose(DeviceObject, Irp, DeviceInfo, ClientInfo);
+            return WdmAudIoctlClose(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_GETFRAMESIZE:
+            return WdmAudFrameSize(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_GETPOS:
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:
@@ -564,4 +945,208 @@ WdmAudDeviceControl(
     }
 
     return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
+}
+
+NTSTATUS
+NTAPI
+WdmAudWriteCompletion(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP LowerIrp,
+    IN PVOID  Context)
+{
+    //PIRP Irp;
+    ASSERT(LowerIrp->PendingReturned == FALSE);
+    /* get original irp */
+    //Irp = (PIRP)Context;
+
+    /* save status */
+    //Irp->IoStatus.Status = LowerIrp->IoStatus.Status;
+    //Irp->IoStatus.Information = LowerIrp->IoStatus.Information;
+    /* complete request */
+    //IoCompleteRequest(Irp, IO_SOUND_INCREMENT);
+    /* return success to free irp */
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
+WdmAudWrite(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PWDMAUD_DEVICE_INFO DeviceInfo;
+    PWDMAUD_CLIENT ClientInfo;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PUCHAR Buffer;
+    PFILE_OBJECT FileObject;
+    PMDL Mdl;
+    //PIRP LowerIrp;
+    PCONTEXT_WRITE Packet;
+    PVOID SystemBuffer;
+    //LARGE_INTEGER Offset;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //DPRINT("WdmAudWrite entered\n");
+
+    if (IoStack->Parameters.Write.Length < sizeof(WDMAUD_DEVICE_INFO))
+    {
+        /* invalid parameter */
+        DPRINT1("Input buffer too small size %u expected %u\n", IoStack->Parameters.Write.Length, sizeof(WDMAUD_DEVICE_INFO));
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    DeviceInfo = (PWDMAUD_DEVICE_INFO)MmGetMdlVirtualAddress(Irp->MdlAddress);
+
+
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+
+    //DPRINT("DeviceInfo %p %p %p\n", DeviceInfo, Irp->MdlAddress->StartVa, Irp->MdlAddress->MappedSystemVa);
+    if (DeviceInfo->DeviceType < MIN_SOUND_DEVICE_TYPE || DeviceInfo->DeviceType > MAX_SOUND_DEVICE_TYPE)
+    {
+        /* invalid parameter */
+        DPRINT1("Error: device type not set\n");
+        ObDereferenceObject(FileObject);
+        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+    }
+
+    if (!IoStack->FileObject)
+    {
+        /* file object parameter */
+        DPRINT1("Error: file object is not attached\n");
+        ObDereferenceObject(FileObject);
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+    ClientInfo = (PWDMAUD_CLIENT)IoStack->FileObject->FsContext;
+
+
+    /* setup stream context */
+    Packet = (PCONTEXT_WRITE)ExAllocatePool(NonPagedPool, sizeof(CONTEXT_WRITE));
+    if (!Packet)
+    {
+        /* no memory */
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+
+    Packet->Header.FrameExtent = DeviceInfo->BufferSize;
+    Packet->Header.DataUsed = DeviceInfo->BufferSize;
+    Packet->Header.Size = sizeof(KSSTREAM_HEADER);
+    Packet->Header.PresentationTime.Numerator = 1;
+    Packet->Header.PresentationTime.Denominator = 1;
+    Packet->Irp = Irp;
+
+    Buffer = ExAllocatePool(NonPagedPool, DeviceInfo->BufferSize);
+    if (!Buffer)
+    {
+        /* no memory */
+        ExFreePool(Packet);
+        ObDereferenceObject(FileObject);
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+    Packet->Header.Data = Buffer;
+
+    Mdl = IoAllocateMdl(DeviceInfo->Buffer, DeviceInfo->BufferSize, FALSE, FALSE, FALSE);
+    if (!Mdl)
+    {
+        /* no memory */
+        ExFreePool(Packet);
+        ObDereferenceObject(FileObject);
+        ExFreePool(Buffer);
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+
+    _SEH2_TRY
+    {
+        MmProbeAndLockPages(Mdl, UserMode, IoReadAccess);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Exception, get the error code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer supplied\n");
+        ExFreePool(Buffer);
+        ExFreePool(Packet);
+        IoFreeMdl(Mdl);
+        ObDereferenceObject(FileObject);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    SystemBuffer = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority );
+    if (!SystemBuffer)
+    {
+        DPRINT1("Invalid buffer supplied\n");
+        ExFreePool(Buffer);
+        ExFreePool(Packet);
+        IoFreeMdl(Mdl);
+        ObDereferenceObject(FileObject);
+        return SetIrpIoStatus(Irp, STATUS_INSUFFICIENT_RESOURCES, 0);
+    }
+
+    RtlMoveMemory(Buffer, SystemBuffer, DeviceInfo->BufferSize);
+    MmUnlockPages(Mdl);
+    IoFreeMdl(Mdl);
+
+#if 1
+    KsStreamIo(FileObject, NULL, NULL, NULL, NULL, 0, &IoStatusBlock, Packet, sizeof(CONTEXT_WRITE), KSSTREAM_WRITE, UserMode);
+    /* dereference file object */
+    ObDereferenceObject(FileObject);
+    return IoStatusBlock.Status;
+#else
+    Offset.QuadPart = 0L;
+
+    /* now build the irp */
+    LowerIrp = IoBuildAsynchronousFsdRequest (IRP_MJ_WRITE,
+                                              IoGetRelatedDeviceObject(FileObject),
+                                              Packet,
+                                              sizeof(KSSTREAM_HEADER),
+                                              &Offset,
+                                              NULL);
+
+    if (!LowerIrp)
+    {
+        /* failed to create an associated irp */
+        ExFreePool(Buffer);
+        ExFreePool(Packet);
+        ObDereferenceObject(FileObject);
+
+        return SetIrpIoStatus(Irp, STATUS_INSUFFICIENT_RESOURCES, 0);
+    }
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(LowerIrp);
+
+    /* attach file object */
+    IoStack->FileObject = FileObject;
+
+    /* set a completion routine */
+    IoSetCompletionRoutine(LowerIrp, WdmAudWriteCompletion, (PVOID)Irp, TRUE, TRUE, TRUE);
+
+    /* mark irp as pending */
+    //IoMarkIrpPending(Irp);
+    Irp->IoStatus.Information = DeviceInfo->BufferSize;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    DPRINT1("Wrote %u\n", DeviceInfo->BufferSize);
+    /* call the driver */
+    Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), LowerIrp);
+
+    /* dereference file object */
+    ObDereferenceObject(FileObject);
+
+    return STATUS_SUCCESS;
+#endif
 }

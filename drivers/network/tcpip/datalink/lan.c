@@ -254,6 +254,10 @@ VOID LanReceiveWorker( PVOID Context ) {
     Adapter = WorkItem->Adapter;
     BytesTransferred = WorkItem->BytesTransferred;
 
+    exFreePool(WorkItem);
+
+    IPInitializePacket(&IPPacket, 0);
+
     IPPacket.NdisPacket = Packet;
 
     NdisGetFirstBufferFromPacket(Packet,
@@ -289,6 +293,7 @@ VOID LanReceiveWorker( PVOID Context ) {
 	TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
 	ARPReceive(Adapter->Context, &IPPacket);
     default:
+        IPPacket.Free(&IPPacket);
 	break;
     }
 
@@ -300,19 +305,19 @@ VOID LanSubmitReceiveWork(
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
     UINT BytesTransferred) {
-    LAN_WQ_ITEM WQItem;
+    PLAN_WQ_ITEM WQItem = exAllocatePool(NonPagedPool, sizeof(LAN_WQ_ITEM));
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-    PVOID LanWorkItem;
 
     TI_DbgPrint(DEBUG_DATALINK,("called\n"));
 
-    WQItem.Packet = Packet;
-    WQItem.Adapter = Adapter;
-    WQItem.BytesTransferred = BytesTransferred;
+    if (!WQItem) return;
 
-    if( !ChewCreate
-	( &LanWorkItem, sizeof(LAN_WQ_ITEM),  LanReceiveWorker, &WQItem ) )
-	ASSERT(0);
+    WQItem->Packet = Packet;
+    WQItem->Adapter = Adapter;
+    WQItem->BytesTransferred = BytesTransferred;
+
+    if (!ChewCreate( LanReceiveWorker, WQItem ))
+        exFreePool(WQItem);
 }
 
 VOID NTAPI ProtocolTransferDataComplete(
@@ -512,6 +517,34 @@ VOID NTAPI ProtocolStatus(
     }
 }
 
+NDIS_STATUS NTAPI
+ProtocolPnPEvent(
+    NDIS_HANDLE NdisBindingContext,
+    PNET_PNP_EVENT PnPEvent)
+{
+    switch(PnPEvent->NetEvent)
+    {
+      case NetEventSetPower:
+         DbgPrint("Device transitioned to power state %ld\n", PnPEvent->Buffer);
+         return NDIS_STATUS_SUCCESS;
+
+      case NetEventQueryPower:
+         DbgPrint("Device wants to go into power state %ld\n", PnPEvent->Buffer);
+         return NDIS_STATUS_SUCCESS;
+
+      case NetEventQueryRemoveDevice:
+         DbgPrint("Device is about to be removed\n");
+         return NDIS_STATUS_SUCCESS;
+
+      case NetEventCancelRemoveDevice:
+         DbgPrint("Device removal cancelled\n");
+         return NDIS_STATUS_SUCCESS;
+
+      default:
+         DbgPrint("Unhandled event type: %ld\n", PnPEvent->NetEvent);
+         return NDIS_STATUS_SUCCESS;
+    }
+}
 
 VOID NTAPI ProtocolStatusComplete(
     NDIS_HANDLE NdisBindingContext)
@@ -570,6 +603,7 @@ VOID LANTransmit(
     UINT Size;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
     KIRQL OldIrql;
+    UINT PacketLength;
 
     TI_DbgPrint(DEBUG_DATALINK,
 		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
@@ -618,7 +652,7 @@ VOID LANTransmit(
                 EHeader->EType = ETYPE_IPv6;
                 break;
             default:
-#ifdef DBG
+#if DBG
                 /* Should not happen */
                 TI_DbgPrint(MIN_TRACE, ("Unknown LAN protocol.\n"));
 
@@ -647,6 +681,14 @@ VOID LANTransmit(
 		   ((PCHAR)LinkAddress)[4] & 0xff,
 		   ((PCHAR)LinkAddress)[5] & 0xff));
 	}
+
+        NdisQueryPacketLength(NdisPacket, &PacketLength);
+
+        if (Adapter->MTU < PacketLength) {
+            /* This is NOT a pointer. MSDN explicitly says so. */
+            NDIS_PER_PACKET_INFO_FROM_PACKET(NdisPacket,
+                                             TcpLargeSendPacketInfo) = (PVOID)((ULONG)Adapter->MTU);
+        }
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
@@ -811,6 +853,8 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
         ExAllocatePool(NonPagedPool, sizeof(KEY_BASIC_INFORMATION));
     ULONG KbioLength = sizeof(KEY_BASIC_INFORMATION), ResultLength;
 
+    RtlInitUnicodeString( DeviceDesc, NULL );
+
     if( !Kbio ) return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlInitUnicodeString
@@ -865,8 +909,6 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
         }
     }
 
-    RtlInitUnicodeString( DeviceDesc, L"" );
-    AppendUnicodeString( DeviceDesc, &TargetKeyName, FALSE );
     NtClose( EnumKey );
     ExFreePool( Kbio );
     return STATUS_UNSUCCESSFUL;
@@ -1236,6 +1278,52 @@ NDIS_STATUS LANUnregisterAdapter(
     return NdisStatus;
 }
 
+VOID 
+NTAPI
+LANUnregisterProtocol(VOID)
+/*
+ * FUNCTION: Unregisters this protocol driver with NDIS
+ * NOTES: Does not care wether we are already registered
+ */
+{
+    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+
+    if (ProtocolRegistered) {
+        NDIS_STATUS NdisStatus;
+        PLIST_ENTRY CurrentEntry;
+        PLIST_ENTRY NextEntry;
+        PLAN_ADAPTER Current;
+        KIRQL OldIrql;
+
+        TcpipAcquireSpinLock(&AdapterListLock, &OldIrql);
+
+        /* Search the list and remove every adapter we find */
+        CurrentEntry = AdapterListHead.Flink;
+        while (CurrentEntry != &AdapterListHead) {
+            NextEntry = CurrentEntry->Flink;
+            Current = CONTAINING_RECORD(CurrentEntry, LAN_ADAPTER, ListEntry);
+            /* Unregister it */
+            LANUnregisterAdapter(Current);
+            CurrentEntry = NextEntry;
+        }
+
+        TcpipReleaseSpinLock(&AdapterListLock, OldIrql);
+
+        NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
+        ProtocolRegistered = FALSE;
+    }
+}
+
+VOID
+NTAPI
+ProtocolUnbindAdapter(
+    PNDIS_STATUS Status,
+    NDIS_HANDLE ProtocolBindingContext,
+    NDIS_HANDLE UnbindContext)
+{
+    /* We don't pend any unbinding so we can just ignore UnbindContext */
+    *Status = LANUnregisterAdapter((PLAN_ADAPTER)ProtocolBindingContext);
+}
 
 NTSTATUS LANRegisterProtocol(
     PNDIS_STRING Name)
@@ -1273,6 +1361,9 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.StatusHandler                  = ProtocolStatus;
     ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;
     ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
+    ProtChars.PnPEventHandler                = ProtocolPnPEvent;
+    ProtChars.UnbindAdapterHandler           = ProtocolUnbindAdapter;
+    ProtChars.UnloadHandler                  = LANUnregisterProtocol;
 
     /* Try to register protocol */
     NdisRegisterProtocol(&NdisStatus,
@@ -1288,42 +1379,6 @@ NTSTATUS LANRegisterProtocol(
     ProtocolRegistered = TRUE;
 
     return STATUS_SUCCESS;
-}
-
-
-VOID LANUnregisterProtocol(
-    VOID)
-/*
- * FUNCTION: Unregisters this protocol driver with NDIS
- * NOTES: Does not care wether we are already registered
- */
-{
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
-    if (ProtocolRegistered) {
-        NDIS_STATUS NdisStatus;
-        PLIST_ENTRY CurrentEntry;
-        PLIST_ENTRY NextEntry;
-        PLAN_ADAPTER Current;
-        KIRQL OldIrql;
-
-        TcpipAcquireSpinLock(&AdapterListLock, &OldIrql);
-
-        /* Search the list and remove every adapter we find */
-        CurrentEntry = AdapterListHead.Flink;
-        while (CurrentEntry != &AdapterListHead) {
-            NextEntry = CurrentEntry->Flink;
-            Current = CONTAINING_RECORD(CurrentEntry, LAN_ADAPTER, ListEntry);
-            /* Unregister it */
-            LANUnregisterAdapter(Current);
-            CurrentEntry = NextEntry;
-        }
-
-        TcpipReleaseSpinLock(&AdapterListLock, OldIrql);
-
-        NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
-        ProtocolRegistered = FALSE;
-    }
 }
 
 /* EOF */

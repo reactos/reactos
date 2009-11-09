@@ -49,6 +49,27 @@ ProIndicatePacket(
     PLOGICAL_ADAPTER Adapter,
     PNDIS_PACKET Packet);
 
+VOID NTAPI
+ProSendPackets(
+    IN  NDIS_HANDLE     NdisBindingHandle,
+    IN  PPNDIS_PACKET   PacketArray,
+    IN  UINT            NumberOfPackets);
+
+NTSTATUS
+NTAPI
+NdisIPnPQueryStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
+
+NTSTATUS
+NTAPI
+NdisIPnPCancelStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
+
+NDIS_STATUS
+proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet);
+
 #endif /* __PROTOCOL_H */
 
 /* EOF */

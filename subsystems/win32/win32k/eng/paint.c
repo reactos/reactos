@@ -32,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
+static BOOL APIENTRY FillSolidUnlocked(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
 {
   LONG y;
   ULONG LineWidth;
@@ -41,7 +41,6 @@ BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
   ASSERT(pso);
   ASSERT(pRect);
   psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
-  SURFACE_LockBitmapBits(psurf);
   MouseSafetyOnDrawStart(pso, pRect->left, pRect->top, pRect->right, pRect->bottom);
   LineWidth  = pRect->right - pRect->left;
   DPRINT(" LineWidth: %d, top: %d, bottom: %d\n", LineWidth, pRect->top, pRect->bottom);
@@ -51,9 +50,19 @@ BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
       pso, pRect->left, pRect->right, y, iColor);
   }
   MouseSafetyOnDrawEnd(pso);
-  SURFACE_UnlockBitmapBits(psurf);
 
   return TRUE;
+}
+
+BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
+{
+  SURFACE *psurf;
+  BOOL Result;
+  psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
+  SURFACE_LockBitmapBits(psurf);
+  Result = FillSolidUnlocked(pso, pRect, iColor);
+  SURFACE_UnlockBitmapBits(psurf);
+  return Result;
 }
 
 BOOL APIENTRY
@@ -78,7 +87,7 @@ EngPaintRgn(SURFOBJ *pso, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
 
     if (ClipRegion->iDComplexity == DC_RECT)
     {
-      FillSolid(pso, &(ClipRegion->rclBounds), iColor);
+      FillSolidUnlocked(pso, &(ClipRegion->rclBounds), iColor);
     } else {
 
       /* Enumerate all the rectangles and draw them */
@@ -87,7 +96,7 @@ EngPaintRgn(SURFOBJ *pso, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
       do {
         EnumMore = CLIPOBJ_bEnum(ClipRegion, sizeof(RectEnum), (PVOID) &RectEnum);
         for (i = 0; i < RectEnum.c; i++) {
-          FillSolid(pso, RectEnum.arcl + i, iColor);
+          FillSolidUnlocked(pso, RectEnum.arcl + i, iColor);
         }
       } while (EnumMore);
     }

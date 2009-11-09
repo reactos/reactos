@@ -649,6 +649,10 @@ UINT WINAPI MsiDetermineApplicablePatchesA(LPCSTR, DWORD, PMSIPATCHSEQUENCEINFOA
 UINT WINAPI MsiDetermineApplicablePatchesW(LPCWSTR, DWORD, PMSIPATCHSEQUENCEINFOW);
 #define     MsiDetermineApplicablePatches WINELIB_NAME_AW(MsiDetermineApplicablePatches)
 
+UINT WINAPI MsiApplyMultiplePatchesA(LPCSTR, LPCSTR, LPCSTR);
+UINT WINAPI MsiApplyMultiplePatchesW(LPCWSTR, LPCWSTR, LPCWSTR);
+#define     MsiApplyMultiplePatches WINELIB_NAME_AW(MsiApplyMultiplePatches)
+
 /* Non Unicode */
 UINT WINAPI MsiCloseHandle(MSIHANDLE);
 UINT WINAPI MsiCloseAllHandles(void);

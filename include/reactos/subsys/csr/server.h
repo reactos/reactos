@@ -7,6 +7,11 @@
 #ifndef _CSRSERVER_H
 #define _CSRSERVER_H
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning (disable:4201)
+#endif
+
 /* DEPENDENCIES **************************************************************/
 
 /* TYPES **********************************************************************/
@@ -42,7 +47,7 @@ typedef struct _CSR_PROCESS
     ULONG Reserved;
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
-    PVOID ServerData[];
+    PVOID ServerData[ANYSIZE_ARRAY];
 } CSR_PROCESS, *PCSR_PROCESS;
 
 typedef struct _CSR_THREAD
@@ -102,7 +107,7 @@ typedef enum _CSR_DEBUG_FLAGS
 /* FUNCTION TYPES ************************************************************/
 typedef
 NTSTATUS
-(*PCSR_CONNECT_CALLBACK)(
+(NTAPI *PCSR_CONNECT_CALLBACK)(
     IN PCSR_PROCESS CsrProcess,
     IN OUT PVOID ConnectionInfo,
     IN OUT PULONG ConnectionInfoLength
@@ -110,25 +115,25 @@ NTSTATUS
 
 typedef
 VOID
-(*PCSR_DISCONNECT_CALLBACK)(IN PCSR_PROCESS CsrProcess);
+(NTAPI *PCSR_DISCONNECT_CALLBACK)(IN PCSR_PROCESS CsrProcess);
 
 typedef
 NTSTATUS
-(*PCSR_NEWPROCESS_CALLBACK)(
+(NTAPI *PCSR_NEWPROCESS_CALLBACK)(
     IN PCSR_PROCESS Parent,
     IN PCSR_PROCESS CsrProcess
 );
 
 typedef
 VOID
-(*PCSR_HARDERROR_CALLBACK)(
+(NTAPI *PCSR_HARDERROR_CALLBACK)(
     IN PCSR_THREAD CsrThread,
     IN PHARDERROR_MSG HardErrorMessage
 );
 
 typedef
 ULONG
-(*PCSR_SHUTDOWNPROCESS_CALLBACK)(
+(NTAPI *PCSR_SHUTDOWNPROCESS_CALLBACK)(
     IN PCSR_PROCESS CsrProcess,
     IN ULONG Flags,
     IN BOOLEAN FirstPhase
@@ -324,5 +329,9 @@ CsrServerInitialization(
     ULONG ArgumentCount,
     PCHAR Arguments[]
 );
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif

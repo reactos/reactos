@@ -58,7 +58,7 @@ void GetDataPtr( PNDIS_PACKET Packet,
 		 PCHAR *DataOut,
 		 PUINT Size );
 
-#ifdef DBG
+#if DBG
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket);
 #define DISPLAY_IP_PACKET(x) DisplayIPPacket(x)

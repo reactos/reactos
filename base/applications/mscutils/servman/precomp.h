@@ -75,6 +75,14 @@ BOOL CreateListView(PMAIN_WND_INFO Info);
 /* start */
 BOOL DoStart(PMAIN_WND_INFO Info);
 
+/* stop */
+typedef struct _STOP_INFO
+{
+    PMAIN_WND_INFO pInfo;
+    SC_HANDLE hSCManager;
+    SC_HANDLE hMainService;
+} STOP_INFO, *PSTOP_INFO;
+
 /* control */
 BOOL Control(PMAIN_WND_INFO Info, HWND hProgDlg, DWORD Control);
 BOOL DoStop(PMAIN_WND_INFO Info);
@@ -97,11 +105,31 @@ BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
 BOOL GetServiceList(PMAIN_WND_INFO Info, DWORD *NumServices);
 
-/* reg */
-BOOL SetDescription(LPTSTR, LPTSTR);
+/* dependencies */
+LPENUM_SERVICE_STATUS GetServiceDependents(SC_HANDLE hService, LPDWORD lpdwCount);
+BOOL HasDependentServices(SC_HANDLE hService);
+INT_PTR CALLBACK StopDependsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+LPTSTR GetDependentServices(SC_HANDLE hService);
 
 /* propsheet.c */
+typedef struct _SERVICEPROPSHEET
+{
+    PMAIN_WND_INFO Info;
+    ENUM_SERVICE_STATUS_PROCESS *pService;
+    HIMAGELIST hDependsImageList;
+} SERVICEPROPSHEET, *PSERVICEPROPSHEET;
+
 LONG APIENTRY OpenPropSheet(PMAIN_WND_INFO Info);
+
+/* propsheet window procs */
+INT_PTR CALLBACK DependenciesPageProc(HWND hwndDlg,
+                                      UINT uMsg,
+                                      WPARAM wParam,
+                                      LPARAM lParam);
+INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg,
+                                 UINT uMsg,
+                                 WPARAM wParam,
+                                 LPARAM lParam);
 
 /* export.c */
 VOID ExportFile(PMAIN_WND_INFO Info);
@@ -128,9 +156,10 @@ INT GetTextFromEdit(OUT LPTSTR lpString,
                     IN UINT Res);
 VOID GetError(VOID);
 VOID DisplayString(PTCHAR);
-HIMAGELIST InitImageList(UINT NumButtons,
-                         UINT StartResource,
+HIMAGELIST InitImageList(UINT StartResource,
+                         UINT EndResource,
                          UINT Width,
-                         UINT Height);
+                         UINT Height,
+                         ULONG type);
 
 #endif /* __SERVMAN_PRECOMP_H */

@@ -250,6 +250,7 @@ umss_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->driver_desc.dev_protocol = 0;      // Protocol Info.
 
     pdriver->driver_ext = usb_alloc_mem(NonPagedPool, sizeof(UMSS_DRVR_EXTENSION));
+    if (!pdriver->driver_ext) return FALSE;
     pdriver->driver_ext_size = sizeof(UMSS_DRVR_EXTENSION);
 
     RtlZeroMemory(pdriver->driver_ext, sizeof(UMSS_DRVR_EXTENSION));
@@ -1815,6 +1816,8 @@ umss_if_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->driver_desc.dev_protocol = 0;      // Protocol Info.
 
     pdriver->driver_ext = usb_alloc_mem(NonPagedPool, sizeof(UMSS_DRVR_EXTENSION));
+    if (!pdriver->driver_ext) return FALSE;
+
     pdriver->driver_ext_size = sizeof(UMSS_DRVR_EXTENSION);
 
     RtlZeroMemory(pdriver->driver_ext, sizeof(UMSS_DRVR_EXTENSION));
@@ -1946,10 +1949,11 @@ umss_schedule_workitem(PVOID context,
     PUMSS_WORKER_PACKET worker_packet;
 
     worker_packet = usb_alloc_mem(NonPagedPool, sizeof(WORK_QUEUE_ITEM) + sizeof(UMSS_WORKER_PACKET));
-    RtlZeroMemory(worker_packet, sizeof(WORK_QUEUE_ITEM) + sizeof(UMSS_WORKER_PACKET));
 
     if (worker_packet)
     {
+        RtlZeroMemory(worker_packet, sizeof(WORK_QUEUE_ITEM) + sizeof(UMSS_WORKER_PACKET));
+
         workitem = (PWORK_QUEUE_ITEM) & worker_packet[1];
         worker_packet->completion = completion;
         worker_packet->context = context;

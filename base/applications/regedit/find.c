@@ -192,16 +192,16 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
             hControl = GetDlgItem(hDlg, IDC_LOOKAT_VALUES);
             if (hControl)
             {
-                lStyle = GetWindowLong(hControl, GWL_STYLE);
-                SetWindowLong(hControl, GWL_STYLE, lStyle | WS_DISABLED);
+                lStyle = GetWindowLongPtr(hControl, GWL_STYLE);
+                SetWindowLongPtr(hControl, GWL_STYLE, lStyle | WS_DISABLED);
             }
 
             /* Looking at data is not yet implemented */
             hControl = GetDlgItem(hDlg, IDC_LOOKAT_DATA);
             if (hControl)
             {
-                lStyle = GetWindowLong(hControl, GWL_STYLE);
-                SetWindowLong(hControl, GWL_STYLE, lStyle | WS_DISABLED);
+                lStyle = GetWindowLongPtr(hControl, GWL_STYLE);
+                SetWindowLongPtr(hControl, GWL_STYLE, lStyle | WS_DISABLED);
             }
 
             /* Match whole string */
@@ -278,12 +278,12 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
                             hControl = GetDlgItem(hDlg, IDOK);
                             if (hControl)
                             {
-                                lStyle = GetWindowLong(hControl, GWL_STYLE);
+                                lStyle = GetWindowLongPtr(hControl, GWL_STYLE);
                                 if (s_szSavedFindValue[0])
                                     lStyle &= ~WS_DISABLED;
                                 else
                                     lStyle |= WS_DISABLED;
-                                SetWindowLong(hControl, GWL_STYLE, lStyle);
+                                SetWindowLongPtr(hControl, GWL_STYLE, lStyle);
                                 RedrawWindow(hControl, NULL, NULL, RDW_INVALIDATE);
                             }
                             break;

@@ -118,9 +118,9 @@ VOID error_invalid_drive (VOID)
 }
 
 
-VOID error_bad_command (VOID)
+VOID error_bad_command (LPTSTR s)
 {
-	ConErrResPuts(STRING_ERROR_BADCOMMAND);
+	ConErrResPrintf(STRING_ERROR_BADCOMMAND, s);
 	nErrorLevel = 9009;
 }
 
@@ -141,7 +141,7 @@ VOID error_out_of_memory (VOID)
 
 VOID error_invalid_parameter_format (LPTSTR s)
 {
-	ConErrResPuts(STRING_ERROR_INVALID_PARAM_FORMAT);
+	ConErrResPrintf(STRING_ERROR_INVALID_PARAM_FORMAT, s);
   nErrorLevel = 1;
 }
 

@@ -272,18 +272,6 @@ NtUserGetControlColor(
 
 DWORD
 APIENTRY
-NtUserGetCPD(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-APIENTRY
 NtUserGetImeHotKey(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -305,25 +293,29 @@ NtUserGetMouseMovePointsEx(
    int nBufPoints,
    DWORD resolution)
 {
+   UserEnterExclusive();
+
+   if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
+   {
+      UserLeave();
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return -1;
+   }
+
+   _SEH2_TRY
+   {
+      ProbeForRead(lppt, cbSize, 1);
+      ProbeForWrite(lpptBuf, cbSize, 1);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       SetLastNtError(_SEH2_GetExceptionCode());
+       SetLastWin32Error(ERROR_NOACCESS);
+   }
+   _SEH2_END;
+
 /*
-   if (cbSize != sizeof (MOUSEMOVEPOINT)
-   {
-       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
-       return GMMP_ERR_POINT_NOT_FOUND;
-   }
-
-   if (!lppt)
-   {
-       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
-       return GMMP_ERR_POINT_NOT_FOUND;
-   }
-
-   if (!lpptBuf)
-   {
-       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
-       return GMMP_ERR_POINT_NOT_FOUND;
-   }
-
+   Call a subfunction of GetMouseMovePointsEx!
    switch(resolution)
    {
      case GMMP_USE_DISPLAY_POINTS:
@@ -335,8 +327,8 @@ NtUserGetMouseMovePointsEx(
    }
   */
    UNIMPLEMENTED
-
-   return 0;
+   UserLeave();
+   return -1;
 }
 
 
@@ -360,9 +352,43 @@ NtUserInitializeClientPfnArrays(
   PPFNCLIENTWORKER pfnClientWorker,
   HINSTANCE hmodUser)
 {
-   UNIMPLEMENTED
+   NTSTATUS Status = STATUS_SUCCESS;
+   DPRINT("Enter NtUserInitializeClientPfnArrays User32 0x%x\n",hmodUser);
 
-   return STATUS_UNSUCCESSFUL;
+   if (ClientPfnInit) return Status;
+
+   UserEnterExclusive();
+
+   _SEH2_TRY
+   {
+      ProbeForRead( pfnClientA, sizeof(PFNCLIENT), 1);
+      ProbeForRead( pfnClientW, sizeof(PFNCLIENT), 1);
+      ProbeForRead( pfnClientWorker, sizeof(PFNCLIENTWORKER), 1);
+      RtlCopyMemory(&gpsi->apfnClientA, pfnClientA, sizeof(PFNCLIENT));
+      RtlCopyMemory(&gpsi->apfnClientW, pfnClientW, sizeof(PFNCLIENT));
+      RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
+
+      //// FIXME! HAX! Temporary until server side is finished.
+      //// Copy the client side procs for now.
+      RtlCopyMemory(&gpsi->aStoCidPfn, pfnClientW, sizeof(gpsi->aStoCidPfn));
+
+      hModClient = hmodUser;
+      ClientPfnInit = TRUE;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status =_SEH2_GetExceptionCode();
+   }
+   _SEH2_END
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed reading Client Pfns from user space.\n");
+      SetLastNtError(Status);
+   }
+   
+   UserLeave();
+   return Status;
 }
 
 DWORD
@@ -805,44 +831,6 @@ NtUserHardErrorControl(
     return 0;
 }
 
-/*
-    Called from win32csr.
- */
-NTSTATUS
-APIENTRY
-NtUserInitialize(
-  DWORD   dwWinVersion,
-  HANDLE  hPowerRequestEvent,
-  HANDLE  hMediaRequestEvent)
-{
-    UserEnterExclusive();
-    UNIMPLEMENTED;
-// Check to see we have the right version.
-// Initialize Power Request List.
-// Initialize Media Change.
-// Initialize CSRSS
-// {
-//    Startup DxGraphics.
-//    calls ** IntGdiGetLanguageID() and sets it **.
-//    Enables Fonts drivers, Initialize Font table & Stock Fonts.
-// }
-// Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
-// Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
-// Create Event for Diconnect Desktop.
-// Initialize Video.
-// {
-//     DrvInitConsole.
-//     DrvChangeDisplaySettings.
-//     Update Shared Device Caps.
-//     Initialize User Screen.
-// }
-// Create ThreadInfo for this Thread!
-// Set Global SERVERINFO Error flags.
-// Load Resources.
-    UserLeave();
-    return STATUS_SUCCESS;
-}
-
 DWORD
 APIENTRY
 NtUserMinMaximize(
@@ -884,8 +872,34 @@ NtUserProcessConnect(
     PUSERCONNECT pUserConnect,
     DWORD Size)
 {
-    UNIMPLEMENTED;
-    return 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+  DPRINT("NtUserProcessConnect\n");
+  if (pUserConnect && ( Size == sizeof(USERCONNECT) ))
+  {
+     PPROCESSINFO W32Process;
+     UserEnterShared();
+     GetW32ThreadInfo();
+     W32Process = PsGetCurrentProcessWin32Process();
+     _SEH2_TRY
+     {
+        pUserConnect->siClient.psi = gpsi;
+        pUserConnect->siClient.aheList = gHandleTable;
+        pUserConnect->siClient.ulSharedDelta = (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
+                                               (ULONG_PTR)W32Process->HeapMappings.UserMapping;
+     }
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+     {
+        Status = _SEH2_GetExceptionCode();
+     }
+     _SEH2_END
+     if (!NT_SUCCESS(Status))
+     {
+        SetLastNtError(Status);
+     }
+     UserLeave();
+     return Status;
+  }
+  return STATUS_UNSUCCESSFUL;
 }
 
 DWORD
@@ -935,13 +949,17 @@ NtUserRealWaitMessageEx(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRegisterUserApiHook(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    PUNICODE_STRING m_dllname1,
+    PUNICODE_STRING m_funname1,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
 {
+    UserEnterExclusive();
     UNIMPLEMENTED;
+    UserLeave();
     return 0;
 }
 
@@ -1066,7 +1084,7 @@ NtUserPaintMenuBar(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserUnregisterUserApiHook(VOID)
 {
@@ -1092,7 +1110,7 @@ BOOL
 APIENTRY
 NtUserValidateRect(
     HWND hWnd,
-    CONST RECT *lpRect)
+    const RECT *lpRect)
 {
     UNIMPLEMENTED;
     return 0;

@@ -143,7 +143,7 @@ BEGIN
     IDS_TOOLS_COLUMN_NAME    "Navn"
     IDS_TOOLS_COLUMN_DESCR   "Beskrivelse"
 
-    IDS_TOOLS_CMD_NAME       "ledertekst"
+    IDS_TOOLS_CMD_NAME       "Ledertekst"
     IDS_TOOLS_CMD_DESCR      ""
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
@@ -151,8 +151,8 @@ BEGIN
     IDS_TOOLS_INFO_DESCR     "Vis versjon informasjon."
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
-    IDS_TOOLS_REGEDIT_NAME   "Register-Editor"
-    IDS_TOOLS_REGEDIT_DESCR  "Åpne Register-Editor."
+    IDS_TOOLS_REGEDIT_NAME   "Registerredigering"
+    IDS_TOOLS_REGEDIT_DESCR  "Åpne registerredigering."
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
     IDS_TOOLS_SYSDM_NAME     "System egenskaper"
@@ -161,7 +161,7 @@ BEGIN
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
 
     IDS_STARTUP_COLUMN_ELEMENT "Element"
-    IDS_STARTUP_COLUMN_CMD     "kommando"
+    IDS_STARTUP_COLUMN_CMD     "Kommando"
     IDS_STARTUP_COLUMN_PATH    "Plassering"
 END
 

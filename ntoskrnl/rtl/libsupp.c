@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ATMT TAG('A', 't', 'o', 'T') /* Atom table */
+#define TAG_ATMT 'TotA' /* Atom table */
 
 extern ULONG NtGlobalFlag;
 
@@ -38,7 +38,7 @@ RtlInitializeRangeListPackage(VOID)
                                    NULL,
                                    POOL_COLD_ALLOCATION,
                                    sizeof(RTL_RANGE_ENTRY),
-                                   TAG('R', 'R', 'l', 'e'),
+                                   'elRR',
                                    16);
 }
 
@@ -76,9 +76,9 @@ RtlpAllocateMemory(ULONG Bytes,
 }
 
 
-#define TAG_USTR        TAG('U', 'S', 'T', 'R')
-#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
-#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
+#define TAG_USTR        'RTSU'
+#define TAG_ASTR        'RTSA'
+#define TAG_OSTR        'RTSO'
 VOID
 NTAPI
 RtlpFreeMemory(PVOID Mem,
@@ -159,7 +159,7 @@ RtlLeaveHeapLock(
     return STATUS_SUCCESS;
 }
 
-#ifdef DBG
+#if DBG
 VOID FASTCALL
 CHECK_PAGED_CODE_RTL(char *file, int line)
 {
@@ -516,29 +516,36 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
    HANDLE Handle;
    USHORT HandleIndex;
 
+   /* Initialize ex handle table entry */
    ExEntry.Object = Entry;
    ExEntry.GrantedAccess = 0x1; /* FIXME - valid handle */
 
+   /* Create ex handle */
    Handle = ExCreateHandle(AtomTable->ExHandleTable,
-                                &ExEntry);
-   if (Handle != NULL)
-   {
-      HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
-      /* FIXME - Handle Indexes >= 0xC000 ?! */
-      if ((ULONG_PTR)HandleIndex >> 2 < 0xC000)
-      {
-         Entry->HandleIndex = HandleIndex;
-         Entry->Atom = 0xC000 + HandleIndex;
+                           &ExEntry);
+   if (!Handle) return FALSE;
 
-         return TRUE;
-      }
-      else
-         ExDestroyHandle(AtomTable->ExHandleTable,
-                         Handle,
-                         NULL);
+   /* Calculate HandleIndex (by getting rid of the first two bits) */
+   HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
+
+   /* Index must be less than 0xC000 */
+   if (HandleIndex >= 0xC000)
+   {
+       /* Destroy ex handle */
+       ExDestroyHandle(AtomTable->ExHandleTable,
+                       Handle,
+                       NULL);
+
+       /* Return failure */
+       return FALSE;
    }
 
-   return FALSE;
+   /* Initialize atom table entry */
+   Entry->HandleIndex = HandleIndex;
+   Entry->Atom = 0xC000 + HandleIndex;
+
+   /* Return success */
+   return TRUE;
 }
 
 PRTL_ATOM_TABLE_ENTRY

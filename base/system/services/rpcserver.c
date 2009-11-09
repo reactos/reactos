@@ -2772,11 +2772,11 @@ DWORD RGetServiceDisplayNameW(
     {
         DPRINT1("Could not find a service!\n");
 
-        /* If the service could not be found and lpcchBuffer is 0, windows
-           puts null in lpDisplayName and puts 1 in lpcchBuffer */
-        if (*lpcchBuffer == 0)
+        /* If the service could not be found and lpcchBuffer is less than 2, windows
+           puts null in lpDisplayName and puts 2 in lpcchBuffer */
+        if (*lpcchBuffer < 2)
         {
-            *lpcchBuffer = 1;
+            *lpcchBuffer = 2;
             if (lpDisplayName != NULL)
             {
                 *lpDisplayName = '\0';
@@ -2846,9 +2846,9 @@ DWORD RGetServiceKeyNameW(
     {
         DPRINT1("Could not find a service!\n");
 
-        /* If the service could not be found and lpcchBuffer is 0, windows
+        /* If the service could not be found and lpcchBuffer is less than 2, windows
            puts null in lpDisplayName and puts 2 in lpcchBuffer */
-        if (*lpcchBuffer == 0)
+        if (*lpcchBuffer < 2)
         {
             *lpcchBuffer = 2;
             if (lpServiceName != NULL)
@@ -4333,6 +4333,8 @@ DWORD RQueryServiceConfig2W(
     HKEY hServiceKey = NULL;
     DWORD dwRequiredSize;
     LPWSTR lpDescription = NULL;
+    LPWSTR lpFailureCommand = NULL;
+    LPWSTR lpRebootMessage = NULL;
 
     DPRINT("RQueryServiceConfig2W() called\n");
 
@@ -4397,14 +4399,67 @@ DWORD RQueryServiceConfig2W(
     }
     else if (dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
     {
+        LPWSTR lpStr;
+        LPSERVICE_FAILURE_ACTIONSW lpFailureActions = (LPSERVICE_FAILURE_ACTIONSW)lpBuffer;
+
         UNIMPLEMENTED;
-        dwError = ERROR_CALL_NOT_IMPLEMENTED;
+
+        dwError = ScmReadString(hServiceKey,
+                                L"FailureCommand",
+                                &lpFailureCommand);
+
+        dwError = ScmReadString(hServiceKey,
+                                L"RebootMessage",
+                                &lpRebootMessage);
+
+        dwRequiredSize = sizeof(SERVICE_FAILURE_ACTIONSW);
+
+        if (lpFailureCommand)
+            dwRequiredSize += (wcslen(lpFailureCommand) + 1) * sizeof(WCHAR);
+
+        if (lpRebootMessage)
+            dwRequiredSize += (wcslen(lpRebootMessage) + 1) * sizeof(WCHAR);
+
+        if (cbBufSize < dwRequiredSize)
+        {
+            *pcbBytesNeeded = dwRequiredSize;
+            dwError = ERROR_INSUFFICIENT_BUFFER;
+            goto done;
+        }
+
+        lpFailureActions->cActions = 0; 
+        lpFailureActions->dwResetPeriod = 0;
+        lpFailureActions->lpCommand = NULL;
+        lpFailureActions->lpRebootMsg = NULL;
+        lpFailureActions->lpsaActions = NULL;
+
+        lpStr = (LPWSTR)(lpFailureActions + 1);
+        if (lpRebootMessage)
+        {
+            wcscpy(lpStr, lpRebootMessage);
+            lpFailureActions->lpRebootMsg = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpRebootMessage);
+            lpStr += wcslen(lpRebootMessage) + 1;
+        }
+
+        if (lpFailureCommand)
+        {
+            wcscpy(lpStr, lpFailureCommand);
+            lpFailureActions->lpCommand = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpFailureCommand);
+            lpStr += wcslen(lpRebootMessage) + 1;
+        }
+        dwError = STATUS_SUCCESS;
         goto done;
     }
 
 done:
     if (lpDescription != NULL)
         HeapFree(GetProcessHeap(), 0, lpDescription);
+
+    if (lpRebootMessage != NULL)
+        HeapFree(GetProcessHeap(), 0, lpRebootMessage);
+
+    if (lpFailureCommand != NULL)
+        HeapFree(GetProcessHeap(), 0, lpFailureCommand);
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
@@ -5029,7 +5084,7 @@ DWORD RFunction55(
 }
 
 
-void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
+void __RPC_FAR * __RPC_USER midl_user_allocate(SIZE_T len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }

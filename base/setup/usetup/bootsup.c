@@ -43,7 +43,7 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
   IniSection = IniCacheAppendSection(IniCache,
 				     L"FREELOADER");
 
-#ifdef DBG
+#if DBG
   if (IsUnattendedSetup)
   {
     /* DefaultOS=ReactOS */
@@ -64,7 +64,7 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 		    L"ReactOS");
   }
 
-#ifdef DBG
+#if DBG
   if (IsUnattendedSetup)
 #endif
   {
@@ -75,7 +75,7 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 		    L"TimeOut",
 		    L"0");
   }
-#ifdef DBG
+#if DBG
   else
   {
     /* Timeout=0 or 10 */
@@ -380,7 +380,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"ReactOS_Debug",
 		    L"\"ReactOS (Debug)\"");
 
-#ifdef DBG
+#if DBG
   /* ReactOS_KdSerial="ReactOS (RosDbg)" */
   IniCacheInsertKey(IniSection,
 		    NULL,
@@ -453,7 +453,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"Options",
 		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
-#ifdef DBG
+#if DBG
 
   /* Create "ReactOS_KdSerial" section */
   IniSection = IniCacheAppendSection(IniCache,

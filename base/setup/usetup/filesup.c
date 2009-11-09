@@ -28,7 +28,7 @@
 
 #include "usetup.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -218,6 +218,7 @@ SetupCopyFile(PWCHAR SourceFileName,
   RegionSize = (ULONG)PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
   IoStatusBlock.Status = 0;
   ByteOffset.QuadPart = 0;
+  DPRINT("Writing to the file for %x bytes\n", RegionSize);
   Status = NtWriteFile(FileHandleDest,
 		       NULL,
 		       NULL,
@@ -233,6 +234,7 @@ SetupCopyFile(PWCHAR SourceFileName,
       goto closedest;
     }
   /* Copy file date/time from source file */
+  DPRINT("Set basic information %wZ\n", &FileName);
   Status = NtSetInformationFile(FileHandleDest,
 				&IoStatusBlock,
 				&FileBasic,
@@ -245,6 +247,7 @@ SetupCopyFile(PWCHAR SourceFileName,
     }
 
   /* shorten the file back to it's real size after completing the write */
+  DPRINT("Setting end of file at %x\n", FileStandard.EndOfFile.u.LowPart);
   Status = NtSetInformationFile(FileHandleDest,
 		       &IoStatusBlock,
 		       &FileStandard.EndOfFile,

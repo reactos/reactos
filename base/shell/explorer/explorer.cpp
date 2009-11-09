@@ -723,16 +723,7 @@ void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 
 	g_Globals._prescan_nodes = false;
 
-	XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
-	XS_String mdiStr = XMLString(explorer_options, "mdi");
-
-	 // If there isn't yet the "mdi" setting in the configuration, display the MDI/SDI dialog.
-	if (mdiStr.empty())
-		Dialog::DoModal(IDD_MDI_SDI, WINDOW_CREATOR(MdiSdiDlg), g_Globals._hwndDesktop);
-
-	 // Now read the MDI attribute again and interpret it as boolean value.
-	cmd._mdi = XMLBool(explorer_options, "mdi", true);
-
+	cmd._mdi =  true;
 	cmd._cmdShow = cmdShow;
 
 	 // parse command line options, which may overwrite the MDI flag

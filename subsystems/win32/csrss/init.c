@@ -674,6 +674,7 @@ CsrpRunWinlogon (int argc, char ** argv, char ** envp)
 		DPRINT1("SM: %s: loading winlogon.exe failed (Status=%08lx)\n",
 				__FUNCTION__, Status);
 	}
+
    ZwResumeThread(ProcessInfo.ThreadHandle, NULL);
 	return Status;
 }

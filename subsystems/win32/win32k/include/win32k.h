@@ -28,15 +28,19 @@
 #include <include/dce.h>
 #include <include/dib.h>
 #include <include/driver.h>
+#include <include/driverobj.h>
 #include <include/error.h>
 #include <include/floatobj.h>
 #include <include/gdiobj.h>
 #include <include/palette.h>
+#include <include/pdevobj.h>
 #include <include/rect.h>
+#include <include/sysparams.h>
 #include <include/win32.h>
 #include <include/window.h>
 #include <include/winsta.h>
 #include <include/xformobj.h>
+#include <include/xlateobj.h>
 
 #include <include/region.h>
 #include <include/ntuser.h>
@@ -72,8 +76,8 @@
 #include <include/mmcopy.h>
 #include <include/misc.h>
 #include <include/gdifloat.h>
-#include <eng/objects.h>
-#include <eng/misc.h>
+#include <include/engobjects.h>
+#include <include/engevent.h>
 #include <dib/dib.h>
 
 #endif /* __WIN32K_H */

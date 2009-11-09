@@ -21,12 +21,17 @@
 #ifndef __WINE_WINCRYPT_H
 #define __WINE_WINCRYPT_H
 
+#include <bcrypt.h>
+/* FIXME: #include <ncrypt.h> */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <bcrypt.h>
-/* FIXME: #include <ncrypt.h> */
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
 
 #ifdef _ADVAPI32_
 # define WINADVAPI
@@ -1041,6 +1046,7 @@ typedef struct _CERT_CHAIN_PARA {
     DWORD            dwUrlRetrievalTimeout;
     BOOL             fCheckRevocationFreshnessTime;
     DWORD            dwRevocationFreshnessTime;
+    LPFILETIME       pftCacheResync;
 #endif
 } CERT_CHAIN_PARA, *PCERT_CHAIN_PARA;
 
@@ -3816,7 +3822,7 @@ WINADVAPI BOOL WINAPI CryptGetUserKey (HCRYPTPROV, DWORD, HCRYPTKEY *);
 WINADVAPI BOOL WINAPI CryptHashData (HCRYPTHASH, CONST BYTE *, DWORD, DWORD);
 WINADVAPI BOOL WINAPI CryptHashSessionKey (HCRYPTHASH, HCRYPTKEY, DWORD);
 WINADVAPI BOOL WINAPI CryptImportKey (HCRYPTPROV, CONST BYTE *, DWORD, HCRYPTKEY, DWORD, HCRYPTKEY *);
-WINADVAPI BOOL WINAPI CryptReleaseContext (HCRYPTPROV, DWORD);
+WINADVAPI BOOL WINAPI CryptReleaseContext (HCRYPTPROV, ULONG_PTR);
 WINADVAPI BOOL WINAPI CryptSetHashParam (HCRYPTHASH, DWORD, CONST BYTE *, DWORD);
 WINADVAPI BOOL WINAPI CryptSetKeyParam (HCRYPTKEY, DWORD, CONST BYTE *, DWORD);
 WINADVAPI BOOL WINAPI CryptSetProviderA (LPCSTR, DWORD);
@@ -4445,6 +4451,10 @@ BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
  HCRYPTASYNC hAsyncRetrieve, PCRYPT_CREDENTIALS pCredentials, LPVOID pvVerify,
  PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
 #define CryptRetrieveObjectByUrl WINELIB_NAME_AW(CryptRetrieveObjectByUrl)
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

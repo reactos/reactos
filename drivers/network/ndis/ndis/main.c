@@ -14,12 +14,14 @@
 #include "ndissys.h"
 
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 ULONG DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
+
+LONG CancelId;
 
 
 VOID NTAPI MainUnload(
@@ -60,6 +62,8 @@ DriverEntry(
   KeInitializeSpinLock(&AdapterListLock);
 
   DriverObject->DriverUnload = MainUnload;
+
+  CancelId = 0;
 
   return STATUS_SUCCESS;
 }

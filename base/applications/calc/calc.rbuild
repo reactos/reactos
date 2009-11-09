@@ -3,9 +3,10 @@
 <module name="calc" type="win32gui" installbase="system32" installname="calc.exe" unicode="yes">
 	<include base="calc">.</include>
 	<define name="DISABLE_HTMLHELP_SUPPORT">1</define>
-	<library>user32</library>
-	<library>gdi32</library>
+	<library>advapi32</library>
 	<library>kernel32</library>
+	<library>gdi32</library>
+	<library>user32</library>
 	<file>about.c</file>
 	<file>convert.c</file>
 	<file>function.c</file>

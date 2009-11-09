@@ -41,6 +41,8 @@ umss_class_specific_request(IN PUMSS_DEVICE_EXTENSION pdev_ext,
     UNREFERENCED_PARAMETER(dir);
 
     purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
+    if (!purb) return STATUS_NO_MEMORY;
+
     // Build URB for the ADSC command
     UsbBuildVendorRequest(purb,
                           pdev_ext->dev_handle | 0xffff,

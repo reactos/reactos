@@ -42,7 +42,7 @@ PCHAR ArmSharedHeap;
 extern ADDRESS_RANGE ArmBoardMemoryMap[16];
 extern ULONG ArmBoardMemoryMapRangeCount;
 extern ARM_TRANSLATION_TABLE ArmTranslationTable;
-extern ARM_COARSE_PAGE_TABLE BootTranslationTable, KernelTranslationTable, FlatMapTranslationTable, MasterTranslationTable, HyperSpaceTranslationTable;
+extern ARM_COARSE_PAGE_TABLE BootTranslationTable, KernelTranslationTable, FlatMapTranslationTable, MasterTranslationTable;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 extern ULONG_PTR KernelBase;
 extern ULONG_PTR AnsiData, OemData, UnicodeData, RegistryData, KernelData, HalData, DriverData[16];
@@ -683,7 +683,7 @@ ArmSetupPageDirectory(VOID)
     ARM_PTE Pte;
     ULONG i, j;
     PARM_TRANSLATION_TABLE ArmTable;
-    PARM_COARSE_PAGE_TABLE BootTable, KernelTable, FlatMapTable, MasterTable, HyperSpaceTable;
+    PARM_COARSE_PAGE_TABLE BootTable, KernelTable, FlatMapTable, MasterTable;
     
     //
     // Get the PDEs that we will use
@@ -693,7 +693,6 @@ ArmSetupPageDirectory(VOID)
     KernelTable = &KernelTranslationTable;
     FlatMapTable = &FlatMapTranslationTable;
     MasterTable = &MasterTranslationTable;
-    HyperSpaceTable = &HyperSpaceTranslationTable;
     
     //
     // Set the master L1 PDE as the TTB
@@ -810,12 +809,6 @@ ArmSetupPageDirectory(VOID)
     //
     Pte.L1.Coarse.BaseAddress = (ULONG)MasterTable >> CPT_SHIFT;
     ArmTable->Pte[PDE_BASE >> PDE_SHIFT] = Pte;
-    
-    //
-    // Now create the template for the hyperspace table which maps 1MB
-    //
-    Pte.L1.Coarse.BaseAddress = (ULONG)HyperSpaceTable >> CPT_SHIFT;
-    ArmTable->Pte[HYPER_SPACE >> PDE_SHIFT] = Pte;
 
     //
     // Now create the template for the coarse page tables which map the first 8MB
@@ -983,12 +976,6 @@ ArmSetupPageDirectory(VOID)
     Pte.L2.Small.BaseAddress = (ULONG)&MasterTranslationTable >> PTE_SHIFT;
     FlatMapTable->Pte[16] = Pte;
     
-    //
-    // And finally for the 0xC1100000 region (1MB)
-    //
-    Pte.L2.Small.BaseAddress = (ULONG)&HyperSpaceTranslationTable >> PTE_SHIFT;
-    FlatMapTable->Pte[17] = Pte;
-
     //
     // Now we handle the master translation area for our PDEs. We'll just make
     // the 4 page tables point to the ARM TTB.

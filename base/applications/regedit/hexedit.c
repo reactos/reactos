@@ -126,7 +126,7 @@ HEXEDIT_Update(PHEXEDIT_DATA hed)
   INT bufsize, cvislines;
 
   GetClientRect(hed->hWndSelf, &rcClient);
-  hed->style = GetWindowLong(hed->hWndSelf, GWL_STYLE);
+  hed->style = GetWindowLongPtr(hed->hWndSelf, GWL_STYLE);
 
   bufsize = (hed->hBuffer ? (INT) LocalSize(hed->hBuffer) : 0);
   hed->nLines = max(bufsize / hed->ColumnsPerLine, 1);

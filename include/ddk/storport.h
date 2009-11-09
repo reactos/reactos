@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 #if defined(_STORPORT_)
-  #define STORPORTAPI DECLSPEC_EXPORT
+  #define STORPORTAPI
 #else
   #define STORPORTAPI DECLSPEC_IMPORT
 #endif
@@ -391,8 +391,8 @@ StorPortGetScatterGatherList(
   IN PVOID  DeviceExtension,
   IN PSCSI_REQUEST_BLOCK  Srb);
 
-typedef BOOLEAN DDKAPI
-(*PSTOR_SYNCHRONIZED_ACCESS)(
+typedef BOOLEAN
+(DDKAPI *PSTOR_SYNCHRONIZED_ACCESS)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  Context);
 
@@ -404,7 +404,7 @@ StorPortSynchronizeAccess(
   IN PSTOR_SYNCHRONIZED_ACCESS  SynchronizedAccessRoutine,
   IN PVOID  Context);
 
-#ifdef DBG
+#if DBG
 #define DebugPrint(x) StorPortDebugPrint x
 #else
 #define DebugPrint(x)

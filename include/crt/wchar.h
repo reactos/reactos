@@ -8,10 +8,18 @@
 
 #include <crtdefs.h>
 
+#define __need___va_list
+#include <stdarg.h>
+
 #pragma pack(push,_CRT_PACKING)
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
 #endif
 
 #ifndef WCHAR_MIN
@@ -211,6 +219,9 @@ extern "C" {
   _CRTIMP int __cdecl __iswcsym(wint_t _C);
   _CRTIMP int __cdecl _iswcsym_l(wint_t _C,_locale_t _Locale);
   _CRTIMP int __cdecl is_wctype(wint_t _C,wctype_t _Type);
+#if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
+int __cdecl iswblank(wint_t _C);
+#endif 
 #endif
 
 #ifndef _WDIRECT_DEFINED
@@ -790,6 +801,11 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
     }
     return (_S);
   }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS kernel
+ * PURPOSE:           Window event handlers
+ * FILE:              subsystem/win32/win32k/ntuser/event.c
+ * PROGRAMER:         James Tabor (james.tabor@rectos.org)
+ */
 
 #include <w32k.h>
 
@@ -62,28 +69,28 @@ IntSetSrvEventMask( UINT EventMin, UINT EventMax)
           (event >= EVENT_CONSOLE_CARET && event <= EVENT_CONSOLE_END_APPLICATION) ||
           (event >= EVENT_OBJECT_CREATE && event <= EVENT_OBJECT_ACCELERATORCHANGE))
       {
-         gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+         gpsi->dwInstalledEventHooks |= GetMaskFromEvent(event);
       }
       if (event > EVENT_SYSTEM_MINIMIZEEND && event < EVENT_CONSOLE_CARET)
       {
           event = EVENT_CONSOLE_CARET-1;
-          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+          gpsi->dwInstalledEventHooks |= GetMaskFromEvent(event);
       }
       if (event > EVENT_CONSOLE_END_APPLICATION && event < EVENT_OBJECT_CREATE )
       {
           event = EVENT_OBJECT_CREATE-1;
-          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+          gpsi->dwInstalledEventHooks |= GetMaskFromEvent(event);
       }
       if (event > EVENT_OBJECT_ACCELERATORCHANGE && event < EVENT_MAX)
       {
           event = EVENT_MAX-1;
-          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+          gpsi->dwInstalledEventHooks |= GetMaskFromEvent(event);
           break;
-      }      
+      }
    }
-   if (!gpsi->SrvEventActivity)
-      gpsi->SrvEventActivity |= SRV_EVENT_RUNNING; // Set something.
-   DPRINT("SetSrvEventMask 2 : %x\n", gpsi->SrvEventActivity);
+   if (!gpsi->dwInstalledEventHooks)
+      gpsi->dwInstalledEventHooks |= SRV_EVENT_RUNNING; // Set something.
+   DPRINT("SetSrvEventMask 2 : %x\n", gpsi->dwInstalledEventHooks);
 }
 
 static
@@ -126,10 +133,13 @@ IntRemoveEvent(PEVENTHOOK pEH)
 {
    if (pEH)
    {
+      DPRINT("IntRemoveEvent pEH 0x%x\n",pEH);
+      KeEnterCriticalRegion();
       RemoveEntryList(&pEH->Chain);
       GlobalEvents->Counts--;
-      if (!GlobalEvents->Counts) gpsi->SrvEventActivity = 0;
-      UserDeleteObject(pEH->Self, otEvent);
+      if (!GlobalEvents->Counts) gpsi->dwInstalledEventHooks = 0;
+      UserDeleteObject(pEH->head.h, otEvent);
+      KeLeaveCriticalRegion();
       return TRUE;
    }
    return FALSE;
@@ -150,14 +160,14 @@ co_EVENT_CallEvents( DWORD event,
 
    pEH = pEP->pEH;
    
-   Result = co_IntCallEventProc( pEH->Self,
-                                     event,
-                                      hwnd,
-                             pEP->idObject,
-                              pEP->idChild,
+   Result = co_IntCallEventProc( pEH->head.h,
+                                       event,
+                                        hwnd,
+                               pEP->idObject,
+                                pEP->idChild,
  (DWORD)(NtCurrentTeb()->ClientId).UniqueThread,
-                  (DWORD)EngGetTickCount(),
-                                 pEH->Proc);
+                    (DWORD)EngGetTickCount(),
+                                   pEH->Proc);
    return Result;
 }
 
@@ -165,17 +175,24 @@ VOID
 FASTCALL
 IntNotifyWinEvent(
    DWORD Event,
-   PWINDOW_OBJECT Window,
+   PWND  pWnd,
    LONG  idObject,
    LONG  idChild)
 {
    PEVENTHOOK pEH;
+   PLIST_ENTRY pLE;
    LRESULT Result;
 
-   if (!GlobalEvents->Counts) return;
+   DPRINT("IntNotifyWinEvent GlobalEvents = 0x%x pWnd 0x%x\n",GlobalEvents, pWnd);
 
-   pEH = (PEVENTHOOK)GlobalEvents->Events.Flink;
+   if (!pWnd) return;
 
+   if (pWnd && pWnd->state & WNDS_DESTROYED) return;
+
+   if (!GlobalEvents || !GlobalEvents->Counts) return;
+
+   pLE = GlobalEvents->Events.Flink;
+   pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
    do
    { 
      UserReferenceObject(pEH);
@@ -187,7 +204,11 @@ IntNotifyWinEvent(
            if (!(pEH->idProcess) || !(pEH->idThread) || 
                (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess))
            {
-              Result = IntCallLowLevelEvent(pEH, Event, Window->hSelf, idObject, idChild);
+              Result = IntCallLowLevelEvent( pEH,
+                                             Event,
+                                             UserHMGetHandle(pWnd),
+                                             idObject,
+                                             idChild);
            }
         }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
@@ -196,20 +217,20 @@ IntNotifyWinEvent(
                      !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
                      !pEH->idProcess ) )
         {
-           Result = co_IntCallEventProc( pEH->Self,
-                                             Event,
-                                     Window->hSelf,
-                                          idObject,
-                                           idChild,
+           Result = co_IntCallEventProc( UserHMGetHandle(pEH),
+                                                        Event,
+                                        UserHMGetHandle(pWnd),
+                                                     idObject,
+                                                      idChild,
              PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
-                          (DWORD)EngGetTickCount(),
-                                         pEH->Proc);
+                                     (DWORD)EngGetTickCount(),
+                                                    pEH->Proc);
         }
      }
      UserDereferenceObject(pEH);
-
-     pEH = (PEVENTHOOK)pEH->Chain.Flink;
-   } while (pEH != (PEVENTHOOK)&GlobalEvents->Events.Flink);
+     pLE = pEH->Chain.Flink;
+     pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
+   } while (pLE != &GlobalEvents->Events);
 }            
 
 VOID
@@ -227,13 +248,14 @@ NtUserNotifyWinEvent(
    /* Validate input */
    if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
    {
+      UserLeave();
       return;
-   }   
-   
-   if (gpsi->SrvEventActivity & GetMaskFromEvent(Event))
+   }
+
+   if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
       UserRefObjectCo(Window, &Ref);
-      IntNotifyWinEvent( Event, Window, idObject, idChild);
+      IntNotifyWinEvent( Event, Window->Wnd, idObject, idChild);
       UserDerefObjectCo(Window);
    }
    UserLeave();
@@ -253,10 +275,11 @@ NtUserSetWinEventHook(
 {
    PEVENTHOOK pEH;
    HWINEVENTHOOK Ret = NULL;
-   UNICODE_STRING ModuleName;
    NTSTATUS Status;
    HANDLE Handle;
    PETHREAD Thread = NULL;
+
+   DPRINT("NtUserSetWinEventHook hmod 0x%x, pfn 0x%x\n",hmodWinEventProc, lpfnWinEventProc);
 
    UserEnterExclusive();
 
@@ -306,7 +329,8 @@ NtUserSetWinEventHook(
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);
       GlobalEvents->Counts++;
 
-      pEH->Self      = Handle;
+      UserHMGetHandle(pEH) = Handle;
+//      pEH->head.pti  =?
       if (Thread)
          pEH->Thread = Thread;
       else
@@ -315,54 +339,13 @@ NtUserSetWinEventHook(
       pEH->eventMax  = eventMax;
       pEH->idProcess = idProcess;
       pEH->idThread  = idThread;
-      pEH->Ansi      = FALSE;
       pEH->Flags     = dwflags;
-
 
       if (NULL != hmodWinEventProc)
       {
-         Status = MmCopyFromCaller(&ModuleName,
-                                      puString,
-                        sizeof(UNICODE_STRING));
-
-         if (! NT_SUCCESS(Status))
-         {
-            UserDereferenceObject(pEH);
-            IntRemoveEvent(pEH);
-            SetLastNtError(Status);
-            goto SetEventExit;
-         }
-
-         pEH->ModuleName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                   ModuleName.MaximumLength,
-                                   TAG_HOOK);
-
-         if (NULL == pEH->ModuleName.Buffer)
-         {
-            UserDereferenceObject(pEH);
-            IntRemoveEvent(pEH);
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-            goto SetEventExit;
-          }
-
-         pEH->ModuleName.MaximumLength = ModuleName.MaximumLength;
-
-         Status = MmCopyFromCaller(pEH->ModuleName.Buffer,
-                                   ModuleName.Buffer,
-                                   ModuleName.MaximumLength);
-
-         if (! NT_SUCCESS(Status))
-         {
-            ExFreePoolWithTag(pEH->ModuleName.Buffer, TAG_HOOK);
-            UserDereferenceObject(pEH);
-            IntRemoveEvent(pEH);
-            SetLastNtError(Status);
-            goto SetEventExit;
-         }
-
-         pEH->ModuleName.Length = ModuleName.Length;
-
-         pEH->Proc = (void *)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);
+         pEH->offPfn = (ULONG_PTR)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);
+         pEH->ihmod = (INT)hmodWinEventProc;
+         pEH->Proc = lpfnWinEventProc;
       }
       else
          pEH->Proc = lpfnWinEventProc;

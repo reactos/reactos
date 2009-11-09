@@ -92,8 +92,8 @@ NDIS_STATUS LANUnregisterAdapter(
 NTSTATUS LANRegisterProtocol(
     PNDIS_STRING Name);
 
-VOID LANUnregisterProtocol(
-    VOID);
+VOID NTAPI
+LANUnregisterProtocol(VOID);
 
 VOID LANStartup();
 VOID LANShutdown();

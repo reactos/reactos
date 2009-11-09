@@ -16,7 +16,7 @@ Control(PMAIN_WND_INFO Info,
 {
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
-    SERVICE_STATUS_PROCESS ServiceStatus;
+    SERVICE_STATUS_PROCESS ServiceStatus = {0};
     SERVICE_STATUS Status;
     DWORD BytesNeeded = 0;
     BOOL bRet = FALSE;

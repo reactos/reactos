@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
@@ -150,7 +152,7 @@ Caption "Tabulatorer"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tabulatorstop", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "&Tilføj", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Fjern", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15

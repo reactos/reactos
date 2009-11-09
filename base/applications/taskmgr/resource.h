@@ -4,7 +4,6 @@
 //
 #define IDS_IDLE_PROCESS                102
 #define IDD_TASKMGR_DIALOG              102
-#define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
 #define IDM_ABOUT                       104
 #define IDM_EXIT                        105
@@ -180,7 +179,6 @@
 #define ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL 32813
 #define ID_PROCESS_PAGE_SETPRIORITY_LOW 32814
 #define ID_PROCESS_PAGE_DEBUGCHANNELS   32815
-#define IDS_LICENSE                     32816
 #define IDC_STATIC                      -1
 
 #define IDS_TAB_APPS                    310

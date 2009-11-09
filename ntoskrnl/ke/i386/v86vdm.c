@@ -45,7 +45,7 @@ Ke386CallBios(IN ULONG Int,
 
     /* Start with a clean TEB */
     RtlZeroMemory(VdmTeb, sizeof(TEB));
-
+	
     /* Write the interrupt and bop */
     *Trampoline++ = 0xCD;
     *Trampoline++ = (UCHAR)Int;
@@ -74,7 +74,7 @@ Ke386CallBios(IN ULONG Int,
     /* Allocate VDM structure */
     VdmProcessObjects = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(VDM_PROCESS_OBJECTS),
-                                              TAG('K', 'e', ' ', ' '));
+                                              '  eK');
     if (!VdmProcessObjects) return STATUS_NO_MEMORY;
 
     /* Set it up */

@@ -1,0 +1,54 @@
+ADDING DOWNLOADABLE PROGRAMMS
+
+For an each programm would be creacted an INI alike syntax.
+Also an each field is language inhdepended and individual, an URL's to a source programm is
+also maybe different or even nonexisting for anothers languages.
+For instance a programm 1C which is mostly interested only for russian users and have no
+reason for peoples living in another countries.
+
+The File Overview:
+
+[Section]
+Name = program name
+RegName = Name in registry
+Version = 1.1.1
+Licence = GPL
+Description = Description
+Size = 10 mb
+Category = 5
+URLSite = http://www.site.com/
+URLDownload = http://ftp.site.com/pub/installer.exe
+CDPath = ; Пока не используется
+
+[Section.0419] ; 0419 - for Russian language
+Description = Description in Russian language
+
+
+Obligatory fields are: Name, Category, URLDownload
+Other fields to fill not necessarily.
+
+Categories list:
+1 - Audio
+2 - Video
+3 - Graphics
+4 - Games
+5 - Internet
+6 - Office
+7 - Development
+8 - Edutainment
+9 - Engineering
+10 - Finance
+11 - Science
+12 - Tools
+13 - Drivers
+14 - Libraries
+15 - Other
+
+The list downloadable programms is keeping on a server and updating from a server
+automatically at first time thes programm is running!
+For generating a list of a programm (usually a CAB archive), could be used a batch file CreateCabFile.bat
+After downloading (at first time the programm runs around), this file is placing
+in the same folder where downloaded programm located to future usage them.
+If in some cases an unpacked file is moved, deleted or not exist, then the procedure
+to create a new one would be repeated.
+If the CAB file is moved, deleted or not exist, then it would be downloaded again.

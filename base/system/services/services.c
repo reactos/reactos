@@ -34,7 +34,7 @@ BOOL ScmShutdown = FALSE;
 VOID
 PrintString(LPCSTR fmt, ...)
 {
-#ifdef DBG
+#if DBG
     CHAR buffer[512];
     va_list ap;
 

@@ -78,6 +78,7 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
             if (tmpFileObject != NULL)
             {
                 pFcb->FileObject = NULL;
+				DPRINT1("Uninitializing %wZ\n", &tmpFileObject->FileName);
                 CcUninitializeCacheMap(tmpFileObject, NULL, NULL);
                 ObDereferenceObject(tmpFileObject);
            }
@@ -86,6 +87,7 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
         }
 
         /* Uninitialize the cache (should be done even if caching was never initialized) */
+		DPRINT1("Uninitializing %wZ\n", &FileObject->FileName);
         CcUninitializeCacheMap(FileObject, &pFcb->RFCB.FileSize, NULL);
 
         if (pFcb->OpenHandleCount != 0)

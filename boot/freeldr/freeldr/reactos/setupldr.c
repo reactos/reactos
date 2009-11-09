@@ -60,11 +60,12 @@ VOID LoadReactOSSetup(VOID)
       NULL };
     CHAR FileName[256];
 
-  HINF InfHandle;
-  ULONG ErrorLine;
-  INFCONTEXT InfContext;
+    HINF InfHandle;
+    ULONG ErrorLine;
+    INFCONTEXT InfContext;
     PIMAGE_NT_HEADERS NtHeader;
     PVOID LoadBase;
+    extern BOOLEAN FrLdrBootType;
 
   /* Setup multiboot information structure */
   LoaderBlock.CommandLine = reactos_kernel_cmdline;
@@ -72,7 +73,7 @@ VOID LoadReactOSSetup(VOID)
   LoaderBlock.PageDirectoryEnd = (ULONG_PTR)&PageDirectoryEnd;
   LoaderBlock.ModsCount = 0;
   LoaderBlock.ModsAddr = reactos_modules;
-  LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
+  LoaderBlock.MmapLength = (unsigned long)MachVtbl.GetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
   if (LoaderBlock.MmapLength)
   {
 #if defined (_M_IX86) || defined (_M_AMD64)
@@ -108,8 +109,7 @@ VOID LoadReactOSSetup(VOID)
 #endif
   UiDrawStatusText("");
 
-    extern BOOLEAN FrLdrBootType;
-    FrLdrBootType = TRUE;
+  FrLdrBootType = TRUE;
 
   /* Detect hardware */
   UiDrawStatusText("Detecting hardware...");
@@ -118,13 +118,6 @@ VOID LoadReactOSSetup(VOID)
 
   /* set boot device */
   MachDiskGetBootDevice(&LoaderBlock.BootDevice);
-
-  /* Open boot drive */
-  if (!FsOpenBootVolume())
-    {
-      UiMessageBox("Failed to open boot drive.");
-      return;
-    }
 
   UiDrawStatusText("Loading txtsetup.sif...");
   /* Open 'txtsetup.sif' */
@@ -143,7 +136,7 @@ VOID LoadReactOSSetup(VOID)
   if (!*SourcePath)
     SourcePath = "\\";
 
-#ifdef DBG
+#if DBG
   /* Get load options */
   if (InfFindFirstLine (InfHandle,
 			"SetupData",
@@ -201,13 +194,6 @@ VOID LoadReactOSSetup(VOID)
   if (MachDiskBootingFromFloppy())
     {
       UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
-
-      /* Open boot drive */
-      if (!FsOpenBootVolume())
-	{
-	  UiMessageBox("Failed to open boot drive.");
-	  return;
-	}
 
       /* FIXME: check volume label or disk marker file */
     }

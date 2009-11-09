@@ -228,8 +228,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
     ANSI_STRING AValue;
     UNICODE_STRING WValue;
     KPROCESSOR_MODE PreviousMode;
-    NTSTATUS Status = STATUS_SUCCESS;
-
+    NTSTATUS Status;
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
@@ -248,13 +247,12 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
 
             if (ReturnLength != NULL) ProbeForWriteUlong(ReturnLength);
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /*
@@ -956,9 +954,11 @@ QSI_DEF(SystemProcessorPerformanceInformation)
     }
 
     CurrentTime.QuadPart = KeQueryInterruptTime();
-    Prcb = KeGetPcr()->Prcb;
     for (i = 0; i < KeNumberProcessors; i++)
     {
+        /* Get the PRCB on this processor */
+        Prcb = KiProcessorBlock[i];
+
         /* Calculate total user and kernel times */
         TotalTime = Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime;
         Spi->IdleTime.QuadPart = UInt32x32To64(TotalTime, KeMaximumIncrement);
@@ -968,7 +968,6 @@ QSI_DEF(SystemProcessorPerformanceInformation)
         Spi->InterruptTime.QuadPart = UInt32x32To64(Prcb->InterruptTime, KeMaximumIncrement);
         Spi->InterruptCount = Prcb->InterruptCount;
         Spi++;
-        Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
     }
 
     return STATUS_SUCCESS;
@@ -1426,7 +1425,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
     /* Check if enough storage was provided */
     if (sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION) > Size)
     {
-        * ReqSize = sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION);
+        * ReqSize = sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
@@ -1440,6 +1439,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
 
 SSI_DEF(SystemTimeAdjustmentInformation)
 {
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     /*PSYSTEM_SET_TIME_ADJUST_INFORMATION TimeInfo =
         (PSYSTEM_SET_TIME_ADJUST_INFORMATION)Buffer;*/
 
@@ -1447,7 +1447,15 @@ SSI_DEF(SystemTimeAdjustmentInformation)
     if (sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION) != Size)
         return STATUS_INFO_LENGTH_MISMATCH;
 
-    /* TODO: Check privileges */
+    /* Check who is calling */
+    if (PreviousMode != KernelMode)
+    {
+        /* Check access rights */
+        if (!SeSinglePrivilegeCheck(SeSystemtimePrivilege, PreviousMode))
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
 
     /* TODO: Set time adjustment information */
     DPRINT1("Setting of SystemTimeAdjustmentInformation is not implemented yet!\n");
@@ -1578,18 +1586,10 @@ SSI_DEF(SystemExtendServiceTableInformation)
             /* FIXME: We can't, fail */
             //return STATUS_PRIVILEGE_NOT_HELD;
         }
-
-        /* Probe and capture the driver name */
-        ProbeAndCaptureUnicodeString(&ImageName, UserMode, Buffer);
-
-        /* Force kernel as previous mode */
-        return ZwSetSystemInformation(SystemExtendServiceTableInformation,
-                                      &ImageName,
-                                      sizeof(ImageName));
     }
 
-    /* Just copy the string */
-    ImageName = *(PUNICODE_STRING)Buffer;
+    /* Probe and capture the driver name */
+    ProbeAndCaptureUnicodeString(&ImageName, PreviousMode, Buffer);
 
     /* Load the image */
     Status = MmLoadSystemImage(&ImageName,
@@ -1598,6 +1598,10 @@ SSI_DEF(SystemExtendServiceTableInformation)
                                0,
                                (PVOID)&ModuleObject,
                                &ImageBase);
+
+    /* Release String */
+    ReleaseCapturedUnicodeString(&ImageName, PreviousMode);
+
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the headers */

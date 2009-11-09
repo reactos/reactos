@@ -107,15 +107,12 @@ typedef struct _NOCC_BCB
     /* Public part */
     PUBLIC_BCB Bcb;
 
-    /* So we know the initial request that was made */
-    PFILE_OBJECT FileObject;
-	PMEMORY_AREA MemoryArea;
+	struct _NOCC_CACHE_MAP *Map;
+    PSECTION_OBJECT SectionObject;
     LARGE_INTEGER FileOffset;
     ULONG Length;
     PVOID BaseAddress;
     BOOLEAN Dirty;
-	BOOLEAN Zero;
-    BOOLEAN Pinned;
     PVOID OwnerPointer;
     
     /* Reference counts */
@@ -131,73 +128,13 @@ typedef struct _NOCC_BCB
 typedef struct _NOCC_CACHE_MAP
 {
     LIST_ENTRY AssociatedBcb;
-    PFILE_OBJECT FileObject;
+	LIST_ENTRY PrivateCacheMaps;
     ULONG NumberOfMaps;
     ULONG RefCount;
     CC_FILE_SIZES FileSizes;
+	CACHE_MANAGER_CALLBACKS Callbacks;
+	PVOID LazyContext;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
-
-/* io.c *****************************************************************/
-
-PDEVICE_OBJECT
-NTAPI
-MmGetDeviceObjectForFile
-(IN PFILE_OBJECT FileObject);
-
-PFILE_OBJECT
-NTAPI
-MmGetFileObjectForSection
-(IN PROS_SECTION_OBJECT Section);
-
-NTSTATUS
-NTAPI
-MmGetFileNameForSection
-(IN PROS_SECTION_OBJECT Section,
- OUT POBJECT_NAME_INFORMATION *ModuleName);
-
-NTSTATUS
-NTAPI
-MmGetFileNameForAddress
-(IN PVOID Address,
- OUT PUNICODE_STRING ModuleName);
-
-NTSTATUS
-NTAPI
-MiSimpleRead
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER FileOffset,
- PVOID Buffer,
- ULONG Length,
- PIO_STATUS_BLOCK ReadStatus);
-
-NTSTATUS
-NTAPI
-MiSimpleWrite
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER FileOffset,
- PVOID Buffer,
- ULONG Length,
- PIO_STATUS_BLOCK WriteStatus);
-
-NTSTATUS
-NTAPI
-MiScheduleForWrite
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER FileOffset,
- PFN_TYPE Page,
- ULONG Length);
-
-NTSTATUS
-NTAPI
-MmWriteThreadInit();
-
-/* other */
-
-NTSTATUS
-NTAPI
-CcReplaceCachePage(
-	PMEMORY_AREA MemoryArea, PVOID Address
-);
 
 VOID
 NTAPI
@@ -224,9 +161,17 @@ VOID
 NTAPI
 CcInitView(VOID);
 
+VOID
+NTAPI
+CcpUnpinData(PNOCC_BCB Bcb);
+
 BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID);
+
+VOID
+NTAPI
+CcShutdownSystem();
 
 VOID
 NTAPI
@@ -237,9 +182,30 @@ BOOLEAN
 NTAPI
 CcFlushImageSection(PSECTION_OBJECT_POINTERS SectionObjectPointer, MMFLUSH_TYPE FlushType);
 
+VOID
+NTAPI
+CcpFlushCache
+(IN PNOCC_CACHE_MAP Map,
+ IN OPTIONAL PLARGE_INTEGER FileOffset,
+ IN ULONG Length,
+ OUT OPTIONAL PIO_STATUS_BLOCK IoStatus,
+ BOOLEAN Delete);
+
 BOOLEAN
 NTAPI
 CcGetFileSizes(PFILE_OBJECT FileObject, PCC_FILE_SIZES FileSizes);
+
+ULONG
+NTAPI
+CcpCountCacheSections(PNOCC_CACHE_MAP Map);
+
+BOOLEAN
+NTAPI
+CcpAcquireFileLock(PNOCC_CACHE_MAP Map);
+
+VOID
+NTAPI
+CcpReleaseFileLock(PNOCC_CACHE_MAP Map);
 
 /*
  * Macro for generic cache manage bugchecking. Note that this macro assumes
@@ -272,18 +238,29 @@ extern ULONG CcCacheClockHand;
 extern LIST_ENTRY CcPendingUnmap;
 extern KEVENT CcpLazyWriteEvent;
 
-extern VOID CcpLock();
-extern VOID CcpUnlock();
-extern VOID CcpDereferenceCache(ULONG Sector);
+#define CcpLock() _CcpLock(__FILE__,__LINE__)
+#define CcpUnlock() _CcpUnlock(__FILE__,__LINE__)
+
+extern VOID _CcpLock(const char *file, int line);
+extern VOID _CcpUnlock(const char *file, int line);
+
+extern VOID CcpReferenceCache(ULONG Sector);
+extern VOID CcpDereferenceCache(ULONG Sector, BOOLEAN Immediate);
 BOOLEAN
 NTAPI
 CcpMapData
-(IN PNOCC_CACHE_MAP Map,
+(IN PFILE_OBJECT FileObject,
  IN PLARGE_INTEGER FileOffset,
  IN ULONG Length,
  IN ULONG Flags,
- IN BOOLEAN Zero,
  OUT PVOID *BcbResult,
  OUT PVOID *Buffer);
 
+BOOLEAN
+NTAPI
+CcpPinMappedData(IN PNOCC_CACHE_MAP Map,
+				 IN PLARGE_INTEGER FileOffset,
+				 IN ULONG Length,
+				 IN ULONG Flags,
+				 IN OUT PVOID *Bcb);
 #endif

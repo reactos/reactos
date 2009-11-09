@@ -153,7 +153,7 @@ INT CommandTimer (LPTSTR param)
 		cS=TRUE;
 
         ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-        PrintTime();
+		ConOutPuts(GetTimeString());
 		freep(p);
 		return 0;
 	}
@@ -163,7 +163,7 @@ INT CommandTimer (LPTSTR param)
 		if(cS)
 		{
             ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-            PrintTime();
+			ConOutPuts(GetTimeString());
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
@@ -172,7 +172,7 @@ INT CommandTimer (LPTSTR param)
 		cT=GetTickCount();
 		cS=TRUE;
 		ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-        PrintTime();
+		ConOutPuts(GetTimeString());
 		freep(p);
 		return 0;
 	}
@@ -183,7 +183,7 @@ INT CommandTimer (LPTSTR param)
 		{
 			cS=FALSE;
 			ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-            PrintTime();
+			ConOutPuts(GetTimeString());
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
@@ -192,7 +192,7 @@ INT CommandTimer (LPTSTR param)
 		cT=GetTickCount();
 		cS=TRUE;
 		ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-        PrintTime();
+		ConOutPuts(GetTimeString());
 		freep(p);
 		return 0;
 	}
@@ -204,13 +204,13 @@ INT CommandTimer (LPTSTR param)
 		{
 			cS=FALSE;
 			ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-            PrintTime();
+			ConOutPuts(GetTimeString());
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
 		}
 		ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-        PrintTime();
+		ConOutPuts(GetTimeString());
 		freep(p);
 		return 0;
 	}

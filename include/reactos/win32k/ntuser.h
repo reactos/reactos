@@ -1,9 +1,10 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
-struct _W32PROCESSINFO;
-struct _W32THREADINFO;
-struct _WINDOW;
+typedef struct _PROCESSINFO *PPROCESSINFO;
+typedef struct _THREADINFO *PTHREADINFO;
+struct _DESKTOP;
+struct _WND;
 
 typedef struct _LARGE_UNICODE_STRING
 {
@@ -35,36 +36,6 @@ VOID NTAPI RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING,IN PCSZ,IN INT);
 VOID NTAPI RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING,IN PCWSTR,IN INT);
 BOOL NTAPI RtlLargeStringToUnicodeString( PUNICODE_STRING, PLARGE_STRING);
 
-/* FIXME: UserHMGetHandle needs to be updated once the new handle manager is implemented */
-#define UserHMGetHandle(obj) ((obj)->hdr.Handle)
-
-typedef struct _REGISTER_SYSCLASS
-{
-    /* This is a reactos specific class used to initialize the
-       system window classes during user32 initialization */
-    UNICODE_STRING ClassName;
-    UINT Style;
-    WNDPROC ProcW;
-    WNDPROC ProcA;
-    UINT ExtraBytes;
-    HICON hCursor;
-    HBRUSH hBrush;
-    UINT ClassId;
-} REGISTER_SYSCLASS, *PREGISTER_SYSCLASS;
-
-typedef struct _CLSMENUNAME
-{
-  LPSTR     pszClientAnsiMenuName;
-  LPWSTR    pwszClientUnicodeMenuName;
-  PUNICODE_STRING pusMenuName;
-} CLSMENUNAME, *PCLSMENUNAME;
-
-typedef struct _USER_OBJHDR
-{
-    /* This is the common header for all user handle objects */
-    HANDLE Handle;
-} USER_OBJHDR, PUSER_OBJHDR;
-
 typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
@@ -75,7 +46,7 @@ typedef struct _DESKTOPINFO
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
-    struct _WINDOW *Wnd;
+    struct _WND *Wnd;
 
     union
     {
@@ -89,268 +60,6 @@ typedef struct _DESKTOPINFO
     WCHAR szDesktopName[1];
 } DESKTOPINFO, *PDESKTOPINFO;
 
-typedef struct _CALLPROC
-{
-    USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
-    struct _W32PROCESSINFO *pi;
-    WNDPROC WndProc;
-    struct _CALLPROC *Next;
-    UINT Unicode : 1;
-} CALLPROC, *PCALLPROC;
-
-typedef struct _WINDOWCLASS
-{
-    struct _WINDOWCLASS *Next;
-    struct _WINDOWCLASS *Clone;
-    struct _WINDOWCLASS *Base;
-    struct _DESKTOP *rpdeskParent;
-    RTL_ATOM Atom;
-    ULONG Windows;
-
-    UINT Style;
-    WNDPROC WndProc;
-    union
-    {
-        WNDPROC WndProcExtra;
-        PCALLPROC CallProc;
-    };
-    PCALLPROC CallProcList;
-    INT ClsExtra;
-    INT WndExtra;
-    PVOID Dce;
-    DWORD fnID; // New ClassId
-    HINSTANCE hInstance;
-    HANDLE hIcon; /* FIXME - Use pointer! */
-    HANDLE hIconSm; /* FIXME - Use pointer! */
-    HANDLE hCursor; /* FIXME - Use pointer! */
-    HBRUSH hbrBackground;
-    HANDLE hMenu; /* FIXME - Use pointer! */
-    PWSTR MenuName;
-    PSTR AnsiMenuName;
-
-    UINT Destroying : 1;
-    UINT Unicode : 1;
-    UINT System : 1;
-    UINT Global : 1;
-    UINT MenuNameIsString : 1;
-    UINT NotUsed : 27;
-} WINDOWCLASS, *PWINDOWCLASS;
-
-
-// Flags !Not Implemented!
-#define WNDF_CALLPROC 0x0004 // Call proc inside win32k.
-
-typedef struct _WINDOW
-{
-    USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
-
-    /* NOTE: This structure is located in the desktop heap and will
-             eventually replace WINDOW_OBJECT. Right now WINDOW_OBJECT
-             keeps a reference to this structure until all the information
-             is moved to this structure */
-    struct _W32PROCESSINFO *pi; /* FIXME: Move to object header some day */
-    struct _W32THREADINFO *ti;
-    struct _DESKTOP *pdesktop;
-    RECT WindowRect;
-    RECT ClientRect;
-
-    WNDPROC WndProc;
-    union
-    {
-        /* Pointer to a call procedure handle */
-        PCALLPROC CallProc;
-        /* Extra Wnd proc (windows of system classes) */
-        WNDPROC WndProcExtra;
-    };
-
-    struct _WINDOW *Parent;
-    struct _WINDOW *Owner;
-
-    /* Size of the extra data associated with the window. */
-    ULONG ExtraDataSize;
-    /* Style. */
-    DWORD Style;
-    /* Extended style. */
-    DWORD ExStyle;
-    /* Handle of the module that created the window. */
-    HINSTANCE Instance;
-    /* Window menu handle or window id */
-    UINT IDMenu;
-    LONG UserData;
-    /* Pointer to the window class. */
-    PWINDOWCLASS Class;
-    /* Window name. */
-    UNICODE_STRING WindowName;
-    /* Context help id */
-    DWORD ContextHelpId;
-
-    HWND hWndLastActive;
-    /* Property list head.*/
-    LIST_ENTRY PropListHead;
-    ULONG PropListItems;
-
-    struct
-    {
-        RECT NormalRect;
-        POINT IconPos;
-        POINT MaxPos;
-    } InternalPos;
-
-    UINT Unicode : 1;
-    /* Indicates whether the window is derived from a system class */
-    UINT IsSystem : 1;
-    UINT InternalPosInitialized : 1;
-    UINT HideFocus : 1;
-    UINT HideAccel : 1;
-} WINDOW, *PWINDOW;
-
-typedef struct _PFNCLIENT
-{
-   PROC pfnScrollBarC;
-   PROC pfnDefWndC;
-   PROC pfnMenuC;
-   PROC pfnDesktopC;
-   PROC pfnDefWnd1C;
-   PROC pfnDefWnd2C;
-   PROC pfnDefWnd3C;
-   PROC pfnButtomC;
-   PROC pfnComboBoxC;
-   PROC pfnComboListBoxC;
-   PROC pfnDefDlgC;
-   PROC pfnEditC;
-   PROC pfnListBoxC;
-   PROC pfnMDIClientC;
-   PROC pfnStaticC;
-   PROC pfnImeC;
-   PROC pfnHkINLPCWPSTRUCT;
-   PROC pfnHkINLPCWPRETSTRUCT;
-   PROC pfnDispatchHookC;
-   PROC pfnDispatchDefC;
-} PFNCLIENT, *PPFNCLIENT;
-
-typedef struct _PFNCLIENTWORKER
-{
-   PROC pfnButtonCW;
-   PROC pfnComboBoxCW;
-   PROC pfnComboListBoxCW;
-   PROC pfnDefDlgCW;
-   PROC pfnEditCW;
-   PROC pfnListBoxCW;
-   PROC pfnMDIClientCW;
-   PROC pfnStaticCW;
-   PROC pfnImeCW;
-} PFNCLIENTWORKER, *PPFNCLIENTWORKER;
-
-
-// FNID's for NtUserSetWindowFNID, NtUserMessageCall
-#define FNID_SCROLLBAR              0x029A
-#define FNID_ICONTITLE              0x029B
-#define FNID_MENU                   0x029C
-#define FNID_DESKTOP                0x029D
-#define FNID_DEFWINDOWPROC          0x029E
-#define FNID_SWITCH                 0x02A0
-#define FNID_BUTTON                 0x02A1
-#define FNID_COMBOBOX               0x02A2
-#define FNID_COMBOLBOX              0x02A3
-#define FNID_DIALOG                 0x02A4
-#define FNID_EDIT                   0x02A5
-#define FNID_LISTBOX                0x02A6
-#define FNID_MDICLIENT              0x02A7
-#define FNID_STATIC                 0x02A8
-#define FNID_IME                    0x02A9
-#define FNID_CALLWNDPROC            0x02AA
-#define FNID_CALLWNDPROCRET         0x02AB
-#define FNID_SENDMESSAGE            0x02B0
-// Kernel has option to use TimeOut or normal msg send, based on type of msg.
-#define FNID_SENDMESSAGEWTOOPTION   0x02B1
-#define FNID_SENDMESSAGETIMEOUT     0x02B2
-#define FNID_BROADCASTSYSTEMMESSAGE 0x02B4
-#define FNID_TOOLTIPS               0x02B5
-#define FNID_UNKNOWN                0x02B6
-#define FNID_SENDNOTIFYMESSAGE      0x02B7
-#define FNID_SENDMESSAGECALLBACK    0x02B8
-
- 
-#define FNID_DDEML       0x2000 // Registers DDEML
-#define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
-                                // Seen during WM_CREATE on error exit too.
-
-// ICLS's for NtUserGetClassName FNID to ICLS, NtUserInitializeClientPfnArrays
-#define ICLS_BUTTON       0
-#define ICLS_EDIT         1
-#define ICLS_STATIC       2
-#define ICLS_LISTBOX      3
-#define ICLS_SCROLLBAR    4
-#define ICLS_COMBOBOX     5
-#define ICLS_MDICLIENT    6
-#define ICLS_COMBOLBOX    7
-#define ICLS_DDEMLEVENT   8
-#define ICLS_DDEMLMOTHER  9
-#define ICLS_DDEML16BIT   10
-#define ICLS_DDEMLCLIENTA 11
-#define ICLS_DDEMLCLIENTW 12
-#define ICLS_DDEMLSERVERA 13
-#define ICLS_DDEMLSERVERW 14
-#define ICLS_IME          15
-#define ICLS_DESKTOP      16
-#define ICLS_DIALOG       17
-#define ICLS_MENU         18
-#define ICLS_SWITCH       19
-#define ICLS_ICONTITLE    20
-#define ICLS_TOOLTIPS     21
-#define ICLS_UNKNOWN      22
-#define ICLS_NOTUSED      23
-#define ICLS_END          31
-
-#define SRVINFO_METRICS 0x0020
-
-typedef struct _SERVERINFO
-{
-  DWORD    SRVINFO_Flags;
-  DWORD    SystemMetrics[SM_CMETRICS];       // System Metrics
-  COLORREF SysColors[COLOR_MENUBAR+1];       // GetSysColor
-  HBRUSH   SysColorBrushes[COLOR_MENUBAR+1]; // GetSysColorBrush
-  HPEN     SysColorPens[COLOR_MENUBAR+1];    // ReactOS exclusive
-  HBRUSH   hbrGray;
-  POINTL   ptCursor;
-  //
-  DWORD    cxSysFontChar;
-  DWORD    cySysFontChar;
-  DWORD    cxMsgFontChar;
-  DWORD    cyMsgFontChar;
-  TEXTMETRICW tmSysFont;
-  //
-  RECTL    rcScreen;
-  WORD     BitCount;
-  WORD     dmLogPixels;
-  BYTE     BitsPixel;
-  BYTE     Planes;
-  WORD     reserved;
-  DWORD    PUSIFlags; // PERUSERSERVERINFO Flags.
-  ULONG    uCaretWidth;
-  LANGID   UILangID;
-  UINT     LastRITWasKeyboard : 1;
-  UINT     bKeyboardPref : 1;
-  DWORD    TimeTick;
-  DWORD    SrvEventActivity;
-} SERVERINFO, *PSERVERINFO;
-
-typedef struct _W32PROCESSINFO
-{
-    PVOID UserHandleTable;
-    HANDLE hUserHeap;
-    ULONG_PTR UserHeapDelta;
-    HINSTANCE hModUser;
-    PWINDOWCLASS LocalClassList;
-    PWINDOWCLASS GlobalClassList;
-    PWINDOWCLASS SystemClassList;
-
-    UINT RegisteredSysClasses : 1;
-
-    PSERVERINFO psi;
-
-} W32PROCESSINFO, *PW32PROCESSINFO;
-
 #define CTI_INSENDMESSAGE 0x0002
 
 typedef struct _CLIENTTHREADINFO
@@ -360,30 +69,47 @@ typedef struct _CLIENTTHREADINFO
     WORD  fsWakeBits;
     WORD  fsWakeBitsJournal;
     WORD  fsWakeMask;
-    LONG  timeLastRead;
+    ULONG tickLastMsgChecked;
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 
-typedef struct _W32THREADINFO
+typedef struct _HEAD
 {
-    PW32PROCESSINFO pi; /* [USER] */
-    PW32PROCESSINFO kpi; /* [KERNEL] */
-    PDESKTOPINFO Desktop;
-//    PVOID DesktopHeapBase;
-//    ULONG_PTR DesktopHeapLimit;
-    /* A mask of what hooks are currently active */
-    ULONG Hooks;
-    CLIENTTHREADINFO ClientThreadInfo;
-} W32THREADINFO, *PW32THREADINFO;
+  HANDLE h;
+  DWORD  cLockObj;
+} HEAD, *PHEAD;
+
+typedef struct _THROBJHEAD
+{
+  HEAD;
+  PTHREADINFO pti;
+} THROBJHEAD, *PTHROBJHEAD;
+
+typedef struct _THRDESKHEAD
+{
+  THROBJHEAD;
+  struct _DESKTOP *rpdesk;
+  PVOID       pSelf;
+} THRDESKHEAD, *PTHRDESKHEAD;
+
+typedef struct _PROCDESKHEAD
+{
+  HANDLE h;
+  DWORD  cLockObj;  
+  DWORD hTaskWow;
+  struct _DESKTOP *rpdesk;
+  PVOID       pSelf;
+} PROCDESKHEAD, *PPROCDESKHEAD;
+
+#define UserHMGetHandle(obj) ((obj)->head.h)
 
 /* Window Client Information structure */
 struct  _ETHREAD;
 
-
 typedef struct tagHOOK
 {
+  THRDESKHEAD    head;
   LIST_ENTRY     Chain;      /* Hook chain entry */
-  HHOOK          Self;       /* user handle for this hook */
   struct _ETHREAD* Thread;   /* Thread owning the hook */
   int            HookId;     /* Hook table index */
   HOOKPROC       Proc;       /* Hook function */
@@ -402,8 +128,8 @@ typedef struct _CALLBACKWND
 
 typedef struct _CLIENTINFO
 {
-    ULONG CI_flags;
-    ULONG cSpins;
+    ULONG_PTR CI_flags;
+    ULONG_PTR cSpins;
     DWORD dwExpWinVer;
     DWORD dwCompatFlags;
     DWORD dwCompatFlags2;
@@ -413,26 +139,523 @@ typedef struct _CLIENTINFO
     PHOOK phkCurrent;
     ULONG fsHooks;
     CALLBACKWND CallbackWnd;
-    ULONG Win32ClientInfo;
     DWORD dwHookCurrent;
     INT cInDDEMLCallback;
     PCLIENTTHREADINFO pClientThreadInfo;
     ULONG_PTR dwHookData;
     DWORD dwKeyCache;
-    DWORD afKeyState[2];
+    BYTE afKeyState[8];
     DWORD dwAsyncKeyCache;
-    DWORD afAsyncKeyState[2];
-    DWORD afAsyncKeyStateRecentDow[2];
+    BYTE afAsyncKeyState[8];
+    BYTE afAsyncKeyStateRecentDow[8];
     HKL hKL;
     USHORT CodePage;
-    USHORT achDbcsCF;
-    ULONG Win32ClientInfo3[35];
+    UCHAR achDbcsCF[2];
+    MSG msgDbcsCB;
+    LPDWORD lpdwRegisteredClasses;
+    ULONG Win32ClientInfo3[27];
+/* It's just a pointer reference not to be used w the structure in user space. */
+    PPROCESSINFO ppi;
 } CLIENTINFO, *PCLIENTINFO;
 
 /* Make sure it fits exactly into the TEB */
 C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET(TEB, Win32ClientInfo));
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
+
+typedef struct _REGISTER_SYSCLASS
+{
+    /* This is a reactos specific class used to initialize the
+       system window classes during user32 initialization */
+    PWSTR ClassName;
+    UINT Style;
+    WNDPROC ProcW;
+    UINT ExtraBytes;
+    HICON hCursor;
+    HBRUSH hBrush;
+    WORD fiId;
+    WORD iCls;
+} REGISTER_SYSCLASS, *PREGISTER_SYSCLASS;
+
+typedef struct _CLSMENUNAME
+{
+  LPSTR     pszClientAnsiMenuName;
+  LPWSTR    pwszClientUnicodeMenuName;
+  PUNICODE_STRING pusMenuName;
+} CLSMENUNAME, *PCLSMENUNAME;
+
+typedef struct tagSBDATA
+{
+  INT posMin;
+  INT posMax;  
+  INT page;
+  INT pos;
+} SBDATA, *PSBDATA;
+
+typedef struct tagSBINFO
+{
+  INT WSBflags;
+  SBDATA Horz;
+  SBDATA Vert;
+} SBINFO, *PSBINFO;
+
+typedef enum _GETCPD
+{
+    UserGetCPDA2U      = 0x01, // " Unicode "
+    UserGetCPDU2A      = 0X02, // " Ansi "
+    UserGetCPDClass    = 0X10,
+    UserGetCPDWindow   = 0X20,
+    UserGetCPDDialog   = 0X40,
+    UserGetCPDWndtoCls = 0X80
+} GETCPD, *PGETCPD;
+
+typedef struct _CALLPROCDATA
+{
+    PROCDESKHEAD head;
+    struct _CALLPROCDATA *spcpdNext;
+    WNDPROC pfnClientPrevious;
+    GETCPD wType;
+} CALLPROCDATA, *PCALLPROCDATA;
+
+#define CSF_SERVERSIDEPROC      0x0001
+#define CSF_ANSIPROC            0x0002
+#define CSF_WOWDEFERDESTROY     0x0004
+#define CSF_SYSTEMCLASS         0x0008
+#define CSF_WOWCLASS            0x0010
+#define CSF_WOWEXTRA            0x0020
+#define CSF_CACHEDSMICON        0x0040
+#define CSF_WIN40COMPAT         0x0080
+
+typedef struct _CLS
+{
+    struct _CLS *pclsNext;
+    RTL_ATOM atomClassName;
+    ATOM atomNVClassName;
+    DWORD fnid;
+    struct _DESKTOP *rpdeskParent;
+    PVOID pdce;
+    DWORD CSF_flags;
+    PSTR  lpszClientAnsiMenuName;    // For client use
+    PWSTR lpszClientUnicodeMenuName; // "   "      "
+    PCALLPROCDATA spcpdFirst;
+    struct _CLS *pclsBase;
+    struct _CLS *pclsClone;
+    ULONG cWndReferenceCount;
+    UINT style;
+    WNDPROC lpfnWndProc;
+    INT cbclsExtra;
+    INT cbwndExtra;
+    HINSTANCE hModule;
+    HANDLE hIcon; /* FIXME - Use pointer! */
+    //PCURSOR spicn;
+    HANDLE hCursor; /* FIXME - Use pointer! */
+    //PCURSOR spcur;
+    HBRUSH hbrBackground;
+    PWSTR lpszMenuName;     // kernel use
+    PSTR lpszAnsiClassName; // " 
+    HANDLE hIconSm; /* FIXME - Use pointer! */
+    //PCURSOR spicnSm;
+
+    UINT Unicode : 1; // !CSF_ANSIPROC
+    UINT Global : 1;  // CS_GLOBALCLASS or CSF_SERVERSIDEPROC
+    UINT MenuNameIsString : 1;
+    UINT NotUsed : 29;
+} CLS, *PCLS;
+
+
+// State Flags !Not Implemented!
+#define WNDS_HASMENU                 0X00000001
+#define WNDS_HASVERTICALSCROOLLBAR   0X00000002
+#define WNDS_HASHORIZONTALSCROLLBAR  0X00000004
+#define WNDS_HASCAPTION              0X00000008
+#define WNDS_SENDSIZEMOVEMSGS        0X00000010
+#define WNDS_MSGBOX                  0X00000020
+#define WNDS_ACTIVEFRAME             0X00000040
+#define WNDS_HASSPB                  0X00000080
+#define WNDS_NONCPAINT               0X00000100
+#define WNDS_SENDERASEBACKGROUND     0X00000200
+#define WNDS_ERASEBACKGROUND         0X00000400
+#define WNDS_SENDNCPAINT             0X00000800
+#define WNDS_INTERNALPAINT           0X00001000
+#define WNDS_UPDATEDIRTY             0X00002000
+#define WNDS_HIDDENPOPUP             0X00004000
+#define WNDS_FORCEMENUDRAW           0X00008000
+#define WNDS_DIALOGWINDOW            0X00010000
+#define WNDS_HASCREATESTRUCTNAME     0X00020000
+#define WNDS_SERVERSIDEWINDOWPROC    0x00040000 // Call proc inside win32k.
+#define WNDS_ANSIWINDOWPROC          0x00080000
+#define WNDS_BEGINGACTIVATED         0x00100000
+#define WNDS_HASPALETTE              0x00200000
+#define WNDS_PAINTNOTPROCESSED       0x00400000
+#define WNDS_SYNCPAINTPENDING        0x00800000
+#define WNDS_RECIEVEDQUERYSUSPENDMSG 0x01000000
+#define WNDS_RECIEVEDSUSPENDMSG      0x02000000
+#define WNDS_TOGGLETOPMOST           0x04000000
+#define WNDS_REDRAWIFHUNG            0x08000000
+#define WNDS_REDRAWFRAMEIFHUNG       0x10000000
+#define WNDS_ANSICREATOR             0x20000000
+#define WNDS_MAXIMIZESTOMONITOR      0x40000000
+#define WNDS_DESTROYED               0x80000000
+
+// State2 Flags !Not Implemented!
+#define WNDS2_WMPAINTSENT               0X00000001
+#define WNDS2_ENDPAINTINVALIDATE        0X00000002
+#define WNDS2_STARTPAINT                0X00000004
+#define WNDS2_OLDUI                     0X00000008
+#define WNDS2_HASCLIENTEDGE             0X00000010
+#define WNDS2_BOTTOMMOST                0X00000020
+#define WNDS2_FULLSCREEN                0X00000040
+#define WNDS2_INDESTROY                 0X00000080
+#define WNDS2_WIN31COMPAT               0X00000100
+#define WNDS2_WIN40COMPAT               0X00000200
+#define WNDS2_WIN50COMPAT               0X00000400
+#define WNDS2_MAXIMIZEDMONITORREGION    0X00000800
+#define WNDS2_CLOSEBUTTONDOWN           0X00001000
+#define WNDS2_MAXIMIZEBUTTONDOWN        0X00002000
+#define WNDS2_MINIMIZEBUTTONDOWN        0X00004000
+#define WNDS2_HELPBUTTONDOWN            0X00008000
+#define WNDS2_SCROLLBARLINEUPBTNDOWN    0X00010000
+#define WNDS2_SCROLLBARPAGEUPBTNDOWN    0X00020000
+#define WNDS2_SCROLLBARPAGEDOWNBTNDOWN  0X00040000
+#define WNDS2_SCROLLBARLINEDOWNBTNDOWN  0X00080000
+#define WNDS2_ANYSCROLLBUTTONDOWN       0X00100000
+#define WNDS2_SCROLLBARVERTICALTRACKING 0X00200000
+#define WNDS2_FORCENCPAINT              0X00400000
+#define WNDS2_FORCEFULLNCPAINTCLIPRGN   0X00800000
+#define WNDS2_FULLSCREENMODE            0X01000000
+#define WNDS2_CAPTIONTEXTTRUNCATED      0X08000000
+#define WNDS2_NOMINMAXANIMATERECTS      0X10000000
+#define WNDS2_SMALLICONFROMWMQUERYDRAG  0X20000000
+#define WNDS2_SHELLHOOKREGISTERED       0X40000000
+#define WNDS2_WMCREATEMSGPROCESSED      0X80000000
+
+/* Non SDK ExStyles */
+#define WS_EX_MAKEVISIBLEWHENUNGHOSTED 0x00000800
+#define WS_EX_FORCELEGACYRESIZENCMETR  0x00800000
+#define WS_EX_UISTATEACTIVE            0x04000000
+#define WS_EX_REDIRECTED               0X20000000
+#define WS_EX_UISTATEKBACCELHIDDEN     0X40000000
+#define WS_EX_UISTATEFOCUSRECTHIDDEN   0X80000000
+#define WS_EX_SETANSICREATOR           0x80000000 // For WNDS_ANSICREATOR
+
+/* Non SDK Styles */
+#define WS_MAXIMIZED  WS_MAXIMIZE
+#define WS_MINIMIZED  WS_MINIMIZE
+
+/* ExStyles2 */
+#define WS_EX2_CLIPBOARDLISTENER        0X00000001
+#define WS_EX2_LAYEREDINVALIDATE        0X00000002
+#define WS_EX2_REDIRECTEDFORPRINT       0X00000004
+#define WS_EX2_LINKED                   0X00000008
+#define WS_EX2_LAYEREDFORDWM            0X00000010
+#define WS_EX2_LAYEREDLIMBO             0X00000020
+#define WS_EX2_HIGHTDPI_UNAWAR          0X00000040
+#define WS_EX2_VERTICALLYMAXIMIZEDLEFT  0X00000080
+#define WS_EX2_VERTICALLYMAXIMIZEDRIGHT 0X00000100
+#define WS_EX2_HASOVERLAY               0X00000200
+#define WS_EX2_CONSOLEWINDOW            0X00000400
+#define WS_EX2_CHILDNOACTIVATE          0X00000800
+
+typedef struct _WND
+{
+    THRDESKHEAD head;
+    DWORD state;
+    DWORD state2;
+    /* Extended style. */
+    DWORD ExStyle;
+    /* Style. */
+    DWORD style;
+    /* Handle of the module that created the window. */
+    HINSTANCE hModule;
+    DWORD fnid;
+    struct _WND *spwndNext;
+    struct _WND *spwndPrev;
+    struct _WND *spwndParent;
+    struct _WND *spwndChild;
+    struct _WND *spwndOwner;
+    RECT rcWindow;
+    RECT rcClient;
+    WNDPROC lpfnWndProc;
+    /* Pointer to the window class. */
+    PCLS pcls;
+    HRGN hrgnUpdate;
+    /* Property list head.*/
+    LIST_ENTRY PropListHead;
+    ULONG PropListItems;
+    /* Scrollbar info */
+    PSBINFO pSBInfo;
+    /* system menu handle. */
+    HMENU SystemMenu;
+    //PMENU spmenuSys;
+    /* Window menu handle or window id */
+    UINT IDMenu; // Use spmenu
+    //PMENU spmenu;
+    HRGN hrgnClip;
+    HRGN hrgnNewFrame;
+    /* Window name. */
+    UNICODE_STRING strName;
+    /* Size of the extra data associated with the window. */
+    ULONG cbwndExtra;
+    HWND hWndLastActive;
+    struct _WND *spwndLastActive;
+    //HIMC hImc; // Input context associated with this window.
+    LONG dwUserData;
+    //PACTIVATION_CONTEXT pActCtx;
+    //PD3DMATRIX pTransForm;
+    struct _WND *spwndClipboardListener;
+    DWORD ExStyle2;
+
+    struct
+    {
+        RECT NormalRect;
+        POINT IconPos;
+        POINT MaxPos;
+    } InternalPos;
+
+    UINT Unicode : 1; // !(WNDS_ANSICREATOR|WNDS_ANSIWINDOWPROC) ?
+    /* Indicates whether the window is derived from a system class */
+    UINT InternalPosInitialized : 1;
+    UINT HideFocus : 1; // WS_EX_UISTATEFOCUSRECTHIDDEN ?
+    UINT HideAccel : 1; // WS_EX_UISTATEKBACCELHIDDEN ?
+} WND, *PWND;
+
+typedef struct _PFNCLIENT
+{
+    WNDPROC pfnScrollBarWndProc;
+    WNDPROC pfnTitleWndProc;
+    WNDPROC pfnMenuWndProc;
+    WNDPROC pfnDesktopWndProc;
+    WNDPROC pfnDefWindowProc;
+    WNDPROC pfnMessageWindowProc;
+    WNDPROC pfnSwitchWindowProc;
+    WNDPROC pfnButtonWndProc;
+    WNDPROC pfnComboBoxWndProc;
+    WNDPROC pfnComboListBoxProc;
+    WNDPROC pfnDialogWndProc;
+    WNDPROC pfnEditWndProc;
+    WNDPROC pfnListBoxWndProc;
+    WNDPROC pfnMDIClientWndProc;
+    WNDPROC pfnStaticWndProc;
+    WNDPROC pfnImeWndProc;
+    WNDPROC pfnGhostWndProc;
+    WNDPROC pfnHkINLPCWPSTRUCT;
+    WNDPROC pfnHkINLPCWPRETSTRUCT;
+    WNDPROC pfnDispatchHook;
+    WNDPROC pfnDispatchDefWindowProc;
+    WNDPROC pfnDispatchMessage;
+    WNDPROC pfnMDIActivateDlgProc;
+} PFNCLIENT, *PPFNCLIENT;
+
+/*
+  Wine Common proc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL Unicode );
+  Windows uses Ansi == TRUE, Wine uses Unicode == TRUE.
+ */
+
+typedef LRESULT(CALLBACK *WNDPROC_EX)(HWND,UINT,WPARAM,LPARAM,BOOL);
+
+typedef struct _PFNCLIENTWORKER
+{
+    WNDPROC_EX pfnButtonWndProc;
+    WNDPROC_EX pfnComboBoxWndProc;
+    WNDPROC_EX pfnComboListBoxProc;
+    WNDPROC_EX pfnDialogWndProc;
+    WNDPROC_EX pfnEditWndProc;
+    WNDPROC_EX pfnListBoxWndProc;
+    WNDPROC_EX pfnMDIClientWndProc;
+    WNDPROC_EX pfnStaticWndProc;
+    WNDPROC_EX pfnImeWndProc;
+    WNDPROC_EX pfnGhostWndProc;
+    WNDPROC_EX pfnCtfHookProc;
+} PFNCLIENTWORKER, *PPFNCLIENTWORKER;
+
+typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
+
+// FNID's for NtUserSetWindowFNID, NtUserMessageCall
+#define FNID_FIRST                  0x029A
+#define FNID_SCROLLBAR              0x029A
+#define FNID_ICONTITLE              0x029B
+#define FNID_MENU                   0x029C
+#define FNID_DESKTOP                0x029D
+#define FNID_DEFWINDOWPROC          0x029E
+#define FNID_MESSAGEWND             0x029F
+#define FNID_SWITCH                 0x02A0
+#define FNID_BUTTON                 0x02A1
+#define FNID_COMBOBOX               0x02A2
+#define FNID_COMBOLBOX              0x02A3
+#define FNID_DIALOG                 0x02A4
+#define FNID_EDIT                   0x02A5
+#define FNID_LISTBOX                0x02A6
+#define FNID_MDICLIENT              0x02A7
+#define FNID_STATIC                 0x02A8
+#define FNID_IME                    0x02A9
+#define FNID_GHOST                  0x02AA
+#define FNID_CALLWNDPROC            0x02AB
+#define FNID_CALLWNDPROCRET         0x02AC
+#define FNID_HKINLPCWPEXSTRUCT      0x02AD
+#define FNID_HKINLPCWPRETEXSTRUCT   0x02AE
+#define FNID_MB_DLGPROC             0x02AF
+#define FNID_MDIACTIVATEDLGPROC     0x02B0
+#define FNID_SENDMESSAGE            0x02B1
+#define FNID_SENDMESSAGEFF          0x02B2
+// Kernel has option to use TimeOut or normal msg send, based on type of msg.
+#define FNID_SENDMESSAGEWTOOPTION   0x02B3
+#define FNID_SENDMESSAGETIMEOUT     0x02B4
+#define FNID_BROADCASTSYSTEMMESSAGE 0x02B5
+#define FNID_TOOLTIPS               0x02B6 
+#define FNID_SENDNOTIFYMESSAGE      0x02B7
+#define FNID_SENDMESSAGECALLBACK    0x02B8
+#define FNID_LAST                   0x02B9
+
+#define FNID_NUM FNID_LAST - FNID_FIRST + 1
+#define FNID_NUMSERVERPROC FNID_SWITCH - FNID_FIRST + 1
+
+#define FNID_DDEML       0x2000 // Registers DDEML
+#define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
+                                // Seen during WM_CREATE on error exit too.
+#define FNID_FREED       0x8000 // Window being Freed...
+
+#define ICLASS_TO_MASK(iCls) (1 << ((iCls)))
+
+#define GETPFNCLIENTA(fnid)\
+ (WNDPROC)(*(((ULONG_PTR *)&gpsi->apfnClientA) + (fnid - FNID_FIRST)))
+#define GETPFNCLIENTW(fnid)\
+ (WNDPROC)(*(((ULONG_PTR *)&gpsi->apfnClientW) + (fnid - FNID_FIRST)))
+
+#define GETPFNSERVER(fnid) gpsi->aStoCidPfn[fnid - FNID_FIRST]
+
+// ICLS's for NtUserGetClassName FNID to ICLS, NtUserInitializeClientPfnArrays
+#define ICLS_BUTTON       0
+#define ICLS_EDIT         1
+#define ICLS_STATIC       2
+#define ICLS_LISTBOX      3
+#define ICLS_SCROLLBAR    4
+#define ICLS_COMBOBOX     5
+#define ICLS_MDICLIENT    6
+#define ICLS_COMBOLBOX    7
+#define ICLS_DDEMLEVENT   8
+#define ICLS_DDEMLMOTHER  9
+#define ICLS_DDEML16BIT   10
+#define ICLS_DDEMLCLIENTA 11
+#define ICLS_DDEMLCLIENTW 12
+#define ICLS_DDEMLSERVERA 13
+#define ICLS_DDEMLSERVERW 14
+#define ICLS_IME          15
+#define ICLS_GHOST        16
+#define ICLS_DESKTOP      17
+#define ICLS_DIALOG       18
+#define ICLS_MENU         19
+#define ICLS_SWITCH       20
+#define ICLS_ICONTITLE    21
+#define ICLS_TOOLTIPS     22
+#if (_WIN32_WINNT <= 0x0501)
+#define ICLS_UNKNOWN      22
+#define ICLS_NOTUSED      23
+#else
+#define ICLS_SYSSHADOW    23
+#define ICLS_HWNDMESSAGE  24
+#define ICLS_NOTUSED      25
+#endif
+#define ICLS_END          31
+
+#define COLOR_LAST COLOR_MENUBAR
+#define MAX_MB_STRINGS 11
+
+#define SRVINFO_APIHOOK 0x0010
+#define SRVINFO_METRICS 0x0020
+
+typedef struct tagOEMBITMAPINFO
+{
+    INT x;
+    INT y;
+    INT cx;
+    INT cy;
+} OEMBITMAPINFO, *POEMBITMAPINFO;
+
+typedef struct tagMBSTRING
+{
+    WCHAR szName[16];
+    UINT uID;
+    UINT uStr;
+} MBSTRING, *PMBSTRING;
+
+typedef struct tagDPISERVERINFO
+{
+    INT gclBorder;                       /* 000 */
+    HFONT hCaptionFont;                  /* 004 */
+    HFONT hMsgFont;                      /* 008 */
+    INT cxMsgFontChar;                   /* 00C */
+    INT cyMsgFontChar;                   /* 010 */
+    UINT wMaxBtnSize;                    /* 014 */
+} DPISERVERINFO, *PDPISERVERINFO;
+
+typedef struct _PERUSERSERVERINFO
+{
+    INT           aiSysMet[SM_CMETRICS];
+    ULONG         argbSystemUnmatched[COLOR_LAST+1];
+    COLORREF      argbSystem[COLOR_LAST+1];
+    HBRUSH        ahbrSystem[COLOR_LAST+1];
+    HBRUSH        hbrGray;
+    POINT         ptCursor;
+    POINT         ptCursorReal;
+    DWORD         dwLastRITEventTickCount;
+    INT           nEvents;
+    UINT          dtScroll;
+    UINT          dtLBSearch;
+    UINT          dtCaretBlink;
+    UINT          ucWheelScrollLines;
+    UINT          ucWheelScrollChars;
+    INT           wMaxLeftOverlapChars;
+    INT           wMaxRightOverlapChars;
+    INT           cxSysFontChar;
+    INT           cySysFontChar;
+    TEXTMETRICW   tmSysFont;
+    DPISERVERINFO dpiSystem;
+    HICON         hIconSmWindows;
+    HICON         hIcoWindows;
+    DWORD         dwKeyCache;
+    DWORD         dwAsyncKeyCache;
+    ULONG         cCaptures;
+    OEMBITMAPINFO oembmi[93];
+    RECT          rcScreenReal;
+    USHORT        BitCount;
+    USHORT        dmLogPixels;
+    BYTE          Planes;
+    BYTE          BitsPixel;
+    ULONG         PUSIFlags;
+    UINT          uCaretWidth;
+    USHORT        UILangID;
+    DWORD         dwLastSystemRITEventTickCountUpdate;
+    ULONG         adwDBGTAGFlags[35];
+    DWORD         dwTagCount;
+    DWORD         dwRIPFlags;
+} PERUSERSERVERINFO, *PPERUSERSERVERINFO;
+
+typedef struct tagSERVERINFO
+{
+    DWORD           dwSRVIFlags;
+    ULONG_PTR       cHandleEntries;
+    PFN_FNID        mpFnidPfn[FNID_NUM];
+    WNDPROC         aStoCidPfn[FNID_NUMSERVERPROC];
+    USHORT          mpFnid_serverCBWndProc[FNID_NUM];
+    PFNCLIENT       apfnClientA;
+    PFNCLIENT       apfnClientW;
+    PFNCLIENTWORKER apfnClientWorker;
+    ULONG           cbHandleTable;
+    ATOM            atomSysClass[ICLS_NOTUSED+1];
+    DWORD           dwDefaultHeapBase;
+    DWORD           dwDefaultHeapSize;
+    UINT            uiShellMsg;
+    MBSTRING        MBStrings[MAX_MB_STRINGS];
+    ATOM            atomIconSmProp;
+    ATOM            atomIconProp;
+    ATOM            atomContextHelpIdProp;
+    ATOM            atomFrostedWindowProp;
+    CHAR            acOemToAnsi[256];
+    CHAR            acAnsiToOem[256];
+    DWORD           dwInstalledEventHooks;
+    PERUSERSERVERINFO;
+} SERVERINFO, *PSERVERINFO;
+
 
 // Server event activity bits.
 #define SRV_EVENT_MENU            0x0001
@@ -463,11 +686,11 @@ typedef struct _BROADCASTPARM
   DWORD recipients;
   HDESK hDesk;
   HWND  hWnd;
-  LUID  luid;  
+  LUID  luid;
 } BROADCASTPARM, *PBROADCASTPARM;
 
-PW32THREADINFO GetW32ThreadInfo(VOID);
-PW32PROCESSINFO GetW32ProcessInfo(VOID);
+PTHREADINFO GetW32ThreadInfo(VOID);
+PPROCESSINFO GetW32ProcessInfo(VOID);
 
 typedef struct _WNDMSG
 {
@@ -481,7 +704,7 @@ typedef struct _SHAREDINFO
   PVOID       aheList;       // Handle Entry List
   PVOID       pDispInfo;     // global PDISPLAYINFO pointer
   ULONG_PTR   ulSharedDelta; // Heap delta
-  WNDMSG      awmControl[31];
+  WNDMSG      awmControl[FNID_LAST - FNID_FIRST];
   WNDMSG      DefWindowMsgs;
   WNDMSG      DefWindowSpecMsgs;
 } SHAREDINFO, *PSHAREDINFO;
@@ -497,14 +720,23 @@ typedef struct _USERCONNECT
 //
 // Non SDK Window Message types.
 //
+#define WM_CLIENTSHUTDOWN 59
+#define WM_COPYGLOBALDATA 73
 #define WM_SYSTIMER 280
 #define WM_POPUPSYSTEMMENU 787
+#define WM_CBT 1023 // ReactOS only.
+#define WM_MAXIMUM 0x0001FFFF
 
 //
 // Non SDK DCE types.
 //
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
+
+//
+// Non SDK Queue message types.
+//
+#define QS_SMRESULT      0x8000
 
 DWORD
 NTAPI
@@ -1010,6 +1242,18 @@ NtUserChangeDisplaySettings(
   DWORD dwflags,
   LPVOID lParam);
 
+BOOL
+NTAPI
+NtUserCheckDesktopByThreadId(
+  DWORD dwThreadId);
+
+BOOL
+NTAPI
+NtUserCheckWindowThreadDesktop(
+  HWND hwnd,
+  DWORD dwThreadId,
+  ULONG ReturnValue);
+
 DWORD
 NTAPI
 NtUserCheckImeHotKey(
@@ -1083,11 +1327,11 @@ NtUserCreateCaret(
 HDESK
 NTAPI
 NtUserCreateDesktop(
-  PUNICODE_STRING lpszDesktopName,
+  POBJECT_ATTRIBUTES poa,
+  PUNICODE_STRING lpszDesktopDevice,
+  LPDEVMODEW lpdmw,
   DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpSecurity,
-  HWINSTA hWindowStation);
+  ACCESS_MASK dwDesiredAccess);
 
 DWORD
 NTAPI
@@ -1124,7 +1368,7 @@ NtUserCreateWindowEx(
 HWND
 NTAPI
 NtUserCreateWindowEx(
-  DWORD dwExStyle,
+  DWORD dwExStyle, // |= 0x80000000 == Ansi used to set WNDS_ANSICREATOR
   PLARGE_STRING plstrClassName,
   PLARGE_STRING plstrClsVesrion,
   PLARGE_STRING plstrWindowName,
@@ -1176,14 +1420,16 @@ NtUserDdeSetQualityOfService(
   OUT PSECURITY_QUALITY_OF_SERVICE pqosPrev);
 
 HDWP NTAPI
-NtUserDeferWindowPos(HDWP WinPosInfo,
-		     HWND Wnd,
-		     HWND WndInsertAfter,
-		     int x,
-         int y,
-         int cx,
-         int cy,
-		     UINT Flags);
+NtUserDeferWindowPos(
+  HDWP WinPosInfo,
+  HWND Wnd,
+  HWND WndInsertAfter,
+  int x,
+  int y,
+  int cx,
+  int cy,
+  UINT Flags);
+
 BOOL NTAPI
 NtUserDefSetText(HWND WindowHandle, PLARGE_STRING WindowText);
 
@@ -1477,12 +1723,12 @@ NtUserGetControlColor(
    HDC hdc,
    UINT CtlMsg);
 
-DWORD
+ULONG_PTR
 NTAPI
 NtUserGetCPD(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  GETCPD Flags,   
+  ULONG_PTR Proc);
 
 DWORD
 NTAPI
@@ -1722,7 +1968,9 @@ enum ThreadStateRoutines
     THREADSTATE_ACTIVEWINDOW,
     THREADSTATE_CAPTUREWINDOW,
     THREADSTATE_PROGMANWINDOW,
-    THREADSTATE_TASKMANWINDOW
+    THREADSTATE_TASKMANWINDOW,
+    THREADSTATE_GETMESSAGETIME,
+    THREADSTATE_GETINPUTSTATE
 };
 
 DWORD
@@ -1757,11 +2005,11 @@ NtUserGetWindowPlacement(
   HWND hWnd,
   WINDOWPLACEMENT *lpwndpl);
 
-DWORD
+PCLS
 NTAPI
 NtUserGetWOWClass(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HINSTANCE hInstance,
+  PUNICODE_STRING ClassName);
 
 DWORD
 NTAPI
@@ -1786,7 +2034,7 @@ NtUserInitialize(
 NTSTATUS
 NTAPI
 NtUserInitializeClientPfnArrays(
-  PPFNCLIENT pfnClientA, 
+  PPFNCLIENT pfnClientA,
   PPFNCLIENT pfnClientW,
   PPFNCLIENTWORKER pfnClientWorker,
   HINSTANCE hmodUser);
@@ -1872,7 +2120,7 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
-LRESULT
+BOOL
 NTAPI
 NtUserMessageCall(
   HWND hWnd,
@@ -2054,6 +2302,7 @@ NtUserQueryUserCounters(
 #define QUERY_WINDOW_ACTIVE     0x02
 #define QUERY_WINDOW_FOCUS      0x03
 #define QUERY_WINDOW_ISHUNG	0x04
+#define QUERY_WINDOW_REAL_ID	0x05
 DWORD
 NTAPI
 NtUserQueryWindow(
@@ -2111,11 +2360,13 @@ NtUserRegisterRawInputDevices(
     IN UINT uiNumDevices,
     IN UINT cbSize);
 
-DWORD
+BOOL
 NTAPI
 NtUserRegisterUserApiHook(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+    PUNICODE_STRING m_dllname1,
+    PUNICODE_STRING m_funname1,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
 
 BOOL
 NTAPI
@@ -2627,7 +2878,7 @@ NTAPI
 NtUserUnregisterHotKey(HWND hWnd,
 		       int id);
 
-DWORD
+BOOL
 NTAPI
 NtUserUnregisterUserApiHook(VOID);
 
@@ -2656,7 +2907,8 @@ NtUserUpdateLayeredWindow(
   POINT *pptSrc,
   COLORREF crKey,
   BLENDFUNCTION *pblend,
-  DWORD dwFlags);
+  DWORD dwFlags,
+  RECT *prcDirty);
 
 BOOL
 NTAPI
@@ -2695,7 +2947,7 @@ NTAPI
 NtUserVkKeyScanEx(
   WCHAR wChar,
   HKL KeyboardLayout,
-  DWORD Unknown2);
+  BOOL bUsehHK);
 
 DWORD
 NTAPI
@@ -2722,6 +2974,11 @@ NtUserWin32PoolAllocationStats(
   DWORD Unknown3,
   DWORD Unknown4,
   DWORD Unknown5);
+
+HWND
+NTAPI
+NtUserWindowFromPhysicalPoint(      
+  POINT Point);
 
 HWND
 NTAPI
@@ -2767,23 +3024,16 @@ typedef struct tagKMDDELPARAM
 #define NOPARAM_ROUTINE_ANYPOPUP              0xffff0006
 #define NOPARAM_ROUTINE_CSRSS_INITIALIZED     0xffff0007
 #define ONEPARAM_ROUTINE_CSRSS_GUICHECK       0xffff0008
-#define ONEPARAM_ROUTINE_GETMENU              0xfffe0001 // usermode
-#define ONEPARAM_ROUTINE_ISWINDOWUNICODE      0xfffe0002
-#define ONEPARAM_ROUTINE_GETCARETINFO         0xfffe0007
 #define ONEPARAM_ROUTINE_SWITCHCARETSHOWING   0xfffe0008
 #define ONEPARAM_ROUTINE_ISWINDOWINDESTROY    0xfffe000c
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0xfffe000d
 #define ONEPARAM_ROUTINE_GETDESKTOPMAPPING    0xfffe000e
-#define ONEPARAM_ROUTINE_GETWINDOWINSTANCE    0xfffe0010
 #define ONEPARAM_ROUTINE_CREATECURICONHANDLE  0xfffe0025 // CREATE_EMPTY_CURSOR_OBJECT ?
 #define ONEPARAM_ROUTINE_MSQSETWAKEMASK       0xfffe0027
-#define ONEPARAM_ROUTINE_REGISTERUSERMODULE   0xfffe0031
-#define ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID   0xfffe0047 // use HWND_ROUTINE_GETWNDCONTEXTHLPID
 #define ONEPARAM_ROUTINE_GETCURSORPOSITION    0xfffe0048 // use ONEPARAM_ or TWOPARAM routine ?
 #define TWOPARAM_ROUTINE_GETWINDOWRGNBOX    0xfffd0048 // user mode
 #define TWOPARAM_ROUTINE_GETWINDOWRGN       0xfffd0049 // user mode
 #define TWOPARAM_ROUTINE_SETMENUBARHEIGHT   0xfffd0050
-#define TWOPARAM_ROUTINE_SETMENUITEMRECT    0xfffd0051
 #define TWOPARAM_ROUTINE_SETGUITHRDHANDLE   0xfffd0052
   #define MSQ_STATE_CAPTURE	0x1
   #define MSQ_STATE_ACTIVE	0x2
@@ -2791,16 +3041,8 @@ typedef struct tagKMDDELPARAM
   #define MSQ_STATE_MENUOWNER	0x4
   #define MSQ_STATE_MOVESIZE	0x5
   #define MSQ_STATE_CARET	0x6
-#define TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID 0xfffd0058 // use HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID
 #define TWOPARAM_ROUTINE_SETCARETPOS        0xfffd0060
-#define TWOPARAM_ROUTINE_GETWINDOWINFO      0xfffd0061
 #define TWOPARAM_ROUTINE_REGISTERLOGONPROC  0xfffd0062
-#define TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES 0xfffd0063
-#define TWOPARAM_ROUTINE_GETSYSCOLORPENS    0xfffd0064
-#define TWOPARAM_ROUTINE_GETSYSCOLORS       0xfffd0065
-#define TWOPARAM_ROUTINE_ROS_ISACTIVEICON   0x1001
-#define TWOPARAM_ROUTINE_ROS_NCDESTROY      0x1002
-#define TWOPARAM_ROUTINE_ROS_REGSYSCLASSES  0x1003
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
 
 DWORD
@@ -2819,7 +3061,7 @@ NtUserCreateCursorIconHandle(
   BOOL Indirect);
 
 
-/* Should be done in usermode */
+/* Should be done in usermode and use NtUserGetCPD. */
 ULONG_PTR
 NTAPI
 NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
@@ -2861,7 +3103,7 @@ HWND
 NTAPI
 NtUserGetWindow(HWND hWnd, UINT Relationship);
 
-/* Should be done in usermode */
+/* Should be done in usermode and use NtUserGetCPD. */
 LONG
 NTAPI
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
@@ -2953,22 +3195,6 @@ NtUserMonitorFromWindow(
   IN DWORD dwFlags);
 
 
-/* FIXME: These flag constans aren't what Windows uses. */
-#define REGISTERCLASS_ANSI	2
-#define REGISTERCLASS_ALL	(REGISTERCLASS_ANSI)
-
-RTL_ATOM
-NTAPI
-NtUserRegisterClassEx(   // Need to use NtUserRegisterClassExWOW.
-   CONST WNDCLASSEXW* lpwcx,
-   PUNICODE_STRING ClassName,
-   PUNICODE_STRING MenuName,
-   WNDPROC wpExtra,
-   DWORD Flags,
-   HMENU hMenu);
-
-
-
 typedef struct tagNTUSERSENDMESSAGEINFO
 {
   BOOL HandledByKernel;
@@ -2994,16 +3220,6 @@ NtUserSendMessageTimeout(HWND hWnd,
 			 UINT uTimeout,
 			 ULONG_PTR *uResult,
              PNTUSERSENDMESSAGEINFO Info);
-
-/* use NtUserMessageCall */
-BOOL
-NTAPI
-NtUserSendNotifyMessage(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam);
-
 
 typedef struct _SETSCROLLBARINFO
 {

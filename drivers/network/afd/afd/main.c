@@ -17,7 +17,7 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
@@ -91,11 +91,15 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     RtlZeroMemory( FCB, sizeof( *FCB ) );
 
     FCB->Flags = ConnectInfo ? ConnectInfo->EndpointFlags : 0;
+    FCB->GroupID = ConnectInfo ? ConnectInfo->GroupID : 0;
+    FCB->GroupType = 0; /* FIXME */
     FCB->State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
     FCB->Recv.Size = DEFAULT_RECEIVE_WINDOW_SIZE;
     FCB->Send.Size = DEFAULT_SEND_WINDOW_SIZE;
+    FCB->AddressFile.Handle = INVALID_HANDLE_VALUE;
+    FCB->Connection.Handle = INVALID_HANDLE_VALUE;
 
     KeInitializeSpinLock( &FCB->SpinLock );
     ExInitializeFastMutex( &FCB->Mutex );
@@ -142,11 +146,14 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	/* Allocate our backup buffer */
 	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
 	if( !FCB->Recv.Window ) Status = STATUS_NO_MEMORY;
-        FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
-	if( !FCB->Send.Window ) {
-	    if( FCB->Recv.Window ) ExFreePool( FCB->Recv.Window );
-	    Status = STATUS_NO_MEMORY;
-	}
+        if( NT_SUCCESS(Status) )
+        {
+            FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
+	    if( !FCB->Send.Window ) {
+	         if( FCB->Recv.Window ) ExFreePool( FCB->Recv.Window );
+	         Status = STATUS_NO_MEMORY;
+            }
+	     }
 	/* A datagram socket is always sendable */
 	FCB->PollState |= AFD_EVENT_SEND;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
@@ -164,107 +171,93 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return Status;
 }
 
-VOID DestroySocket( PAFD_FCB FCB ) {
-    UINT i;
-    BOOLEAN ReturnEarly = FALSE;
-    PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
-
-    AFD_DbgPrint(MIN_TRACE,("Called (%x)\n", FCB));
-
-    if( !SocketAcquireStateLock( FCB ) ) return;
-
-    FCB->State = SOCKET_STATE_CLOSED;
-
-    InFlightRequest[0] = &FCB->ListenIrp;
-    InFlightRequest[1] = &FCB->ReceiveIrp;
-    InFlightRequest[2] = &FCB->SendIrp;
-    InFlightRequest[3] = &FCB->ConnectIrp;
-
-    /* Return early here because we might be called in the mean time. */
-    if( FCB->Critical ||
-	FCB->ListenIrp.InFlightRequest ||
-	FCB->ReceiveIrp.InFlightRequest ||
-	FCB->SendIrp.InFlightRequest ||
-	FCB->ConnectIrp.InFlightRequest ) {
-	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x %x)\n",
-				FCB->ListenIrp.InFlightRequest,
-				FCB->ReceiveIrp.InFlightRequest,
-				FCB->SendIrp.InFlightRequest,
-				FCB->ConnectIrp.InFlightRequest));
-        ReturnEarly = TRUE;
-    }
-
-    /* After PoolReeval, this FCB should not be involved in any outstanding
-     * poll requests */
-
-    /* Cancel our pending requests */
-    for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
-	if( InFlightRequest[i]->InFlightRequest ) {
-	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
-				    i, InFlightRequest[i]->InFlightRequest));
-	    IoCancelIrp(InFlightRequest[i]->InFlightRequest);
-	    InFlightRequest[i]->InFlightRequest = NULL;
-	}
-    }
-
-    SocketStateUnlock( FCB );
-
-    if( ReturnEarly ) return;
-
-    if( FCB->Recv.Window )
-	ExFreePool( FCB->Recv.Window );
-    if( FCB->Send.Window )
-	ExFreePool( FCB->Send.Window );
-    if( FCB->AddressFrom )
-	ExFreePool( FCB->AddressFrom );
-    if( FCB->LocalAddress )
-	ExFreePool( FCB->LocalAddress );
-    if( FCB->RemoteAddress )
-	ExFreePool( FCB->RemoteAddress );
-    if( FCB->TdiDeviceName.Buffer )
-	ExFreePool(FCB->TdiDeviceName.Buffer);
-
-	if (FCB->Connection.Object)
-	{
-		NtClose(FCB->Connection.Handle);
-		ObDereferenceObject(FCB->Connection.Object);
-	}
-	if (FCB->AddressFile.Object)
-	{
-		NtClose(FCB->AddressFile.Handle);
-		ObDereferenceObject(FCB->AddressFile.Object);
-	}
-
-    ExFreePool(FCB);
-    AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));
-
-    AFD_DbgPrint(MIN_TRACE,("Leaving\n"));
-}
-
 static NTSTATUS NTAPI
 AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp)
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
+    UINT i;
+    PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
 
-    AFD_DbgPrint(MID_TRACE,("FCB %x\n", FCB));
+    if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
-    FCB->PollState |= AFD_EVENT_CLOSE;
-    PollReeval( FCB->DeviceExt, FileObject );
+    FCB->State = SOCKET_STATE_CLOSED;
+    FCB->PollState = AFD_EVENT_CLOSE;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
+    InFlightRequest[0] = &FCB->ListenIrp;
+    InFlightRequest[1] = &FCB->ReceiveIrp;
+    InFlightRequest[2] = &FCB->SendIrp;
+    InFlightRequest[3] = &FCB->ConnectIrp;
+
+    /* Cancel our pending requests */
+    for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
+	if( InFlightRequest[i]->InFlightRequest ) {
+	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
+				    i, InFlightRequest[i]->InFlightRequest));
+            IoCancelIrp(InFlightRequest[i]->InFlightRequest);
+	}
+    }
+
     KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
 
-    if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
+    SocketStateUnlock( FCB );
 
-    FileObject->FsContext = NULL;
-    DestroySocket( FCB );
+    if( FCB->EventSelect )
+        ObDereferenceObject( FCB->EventSelect );
+
+    if( FCB->Context )
+        ExFreePool( FCB->Context );
+
+    if( FCB->Recv.Window )
+	ExFreePool( FCB->Recv.Window );
+
+    if( FCB->Send.Window )
+	ExFreePool( FCB->Send.Window );
+
+    if( FCB->AddressFrom )
+	ExFreePool( FCB->AddressFrom );
+
+    if( FCB->LocalAddress )
+	ExFreePool( FCB->LocalAddress );
+
+    if( FCB->RemoteAddress )
+	ExFreePool( FCB->RemoteAddress );
+
+    if( FCB->Connection.Object )
+	ObDereferenceObject(FCB->Connection.Object);
+
+    if( FCB->AddressFile.Object )
+	ObDereferenceObject(FCB->AddressFile.Object);
+
+    if( FCB->AddressFile.Handle != INVALID_HANDLE_VALUE )
+    {
+        if (ZwClose(FCB->AddressFile.Handle) == STATUS_INVALID_HANDLE)
+        {
+            DbgPrint("INVALID ADDRESS FILE HANDLE VALUE: %x %x\n", FCB->AddressFile.Handle, FCB->AddressFile.Object);
+        }
+    }
+
+    if( FCB->Connection.Handle != INVALID_HANDLE_VALUE )
+    {
+        if (ZwClose(FCB->Connection.Handle) == STATUS_INVALID_HANDLE)
+        {
+            DbgPrint("INVALID CONNECTION HANDLE VALUE: %x %x\n", FCB->Connection.Handle, FCB->Connection.Object);
+        }
+    }
+
+    if( FCB->TdiDeviceName.Buffer )
+	ExFreePool(FCB->TdiDeviceName.Buffer);
+
+    ExFreePool(FCB);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     AFD_DbgPrint(MID_TRACE, ("Returning success.\n"));
 
@@ -286,7 +279,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !(DisReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0, NULL );
+				       Irp, 0 );
 
     if (NULL == FCB->RemoteAddress)
       {
@@ -299,7 +292,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	if( !NT_SUCCESS(Status) || !ConnInfo )
 	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-					   Irp, 0, NULL );
+					   Irp, 0 );
       }
 
     if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
@@ -319,7 +312,10 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (ConnInfo) ExFreePool( ConnInfo );
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+    FCB->PollState |= AFD_EVENT_DISCONNECT;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
 static NTSTATUS NTAPI
@@ -327,7 +323,7 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status = STATUS_SUCCESS;
-#ifdef DBG
+#if DBG
     PFILE_OBJECT FileObject = IrpSp->FileObject;
 #endif
 
@@ -397,6 +393,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	case IOCTL_AFD_GET_INFO:
 	    return AfdGetInfo( DeviceObject, Irp, IrpSp );
 
+	case IOCTL_AFD_SET_INFO:
+	    return AfdSetInfo( DeviceObject, Irp, IrpSp );
+
 	case IOCTL_AFD_GET_CONTEXT:
 	    return AfdGetContext( DeviceObject, Irp, IrpSp );
 
@@ -413,17 +412,13 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    return AfdDisconnect( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_SOCK_NAME:
-	    return AfdGetSockOrPeerName( DeviceObject, Irp, IrpSp, TRUE );
+	    return AfdGetSockName( DeviceObject, Irp, IrpSp );
 
         case IOCTL_AFD_GET_PEER_NAME:
-            return AfdGetSockOrPeerName( DeviceObject, Irp, IrpSp, FALSE );
+            return AfdGetPeerName( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_TDI_HANDLES:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_TDI_HANDLES\n"));
-	    break;
-
-	case IOCTL_AFD_SET_INFO:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_INFO\n"));
 	    break;
 
 	case IOCTL_AFD_SET_CONNECT_DATA:

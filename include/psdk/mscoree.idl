@@ -27,6 +27,8 @@ cpp_quote("HRESULT     WINAPI GetCORSystemDirectory(LPWSTR,DWORD,DWORD*);")
 cpp_quote("HRESULT     WINAPI GetCORVersion(LPWSTR,DWORD,DWORD*);")
 cpp_quote("HRESULT     WINAPI GetRequestedRuntimeInfo(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,DWORD,LPWSTR,DWORD,DWORD*,LPWSTR,DWORD,DWORD*);")
 cpp_quote("HRESULT     WINAPI LoadLibraryShim(LPCWSTR,LPCWSTR,LPVOID,HMODULE*);")
+cpp_quote("typedef HRESULT (__stdcall *FLockClrVersionCallback)();")
+cpp_quote("HRESULT     WINAPI LockClrVersion(FLockClrVersionCallback,FLockClrVersionCallback*,FLockClrVersionCallback*);")
 
 typedef void* HDOMAINENUM;
 

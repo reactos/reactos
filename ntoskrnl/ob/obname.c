@@ -100,7 +100,8 @@ ObpCreateDosDevicesDirectory(VOID)
     /* FIXME: Hack Hack! */
     ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(*ObSystemDeviceMap),
-                                              TAG('O', 'b', 'D', 'm'));
+                                              'mDbO');
+    if (!ObSystemDeviceMap) return STATUS_INSUFFICIENT_RESOURCES;
     RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
 
     /* Return status */
@@ -329,12 +330,19 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
                                            AccessMode,
                                            (PVOID*)&RootDirectory,
                                            NULL);
-        if (!NT_SUCCESS(Status)) return Status;
+        if (!NT_SUCCESS(Status)) 
+		{
+			OBTRACE(OB_NAMESPACE_DEBUG, "Status %x\n", Status);
+			return Status;
+		}
 
         /* Get the header */
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(RootDirectory);
 
         /* The name cannot start with a separator, unless this is a file */
+
+		OBTRACE(OB_NAMESPACE_DEBUG, "ObjectName %wZ\n", ObjectName);
+
         if ((ObjectName->Buffer) &&
             (ObjectName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR) &&
             (ObjectHeader->Type != IoFileObjectType))
@@ -365,6 +373,8 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
                 /* Start with the full name */
                 RemainingName = *ObjectName;
 
+				OBTRACE(OB_NAMESPACE_DEBUG, "RemainingName %wZ\n", &RemainingName);
+
                 /* Call the Parse Procedure */
                 ObpCalloutStart(&CalloutIrql);
                 Status = ParseRoutine(RootDirectory,
@@ -392,12 +402,14 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
                     else if (!Object)
                     {
                         /* Modify status to reflect failure inside Ob */
+						OBTRACE(OB_NAMESPACE_DEBUG, "STATUS_OBJECT_NAME_NOT_FOUND\n");
                         Status = STATUS_OBJECT_NAME_NOT_FOUND;
                     }
 
                     /* We're done, return the status and object */
                     *FoundObject = Object;
                     ObDereferenceObject(RootDirectory);
+					OBTRACE(OB_NAMESPACE_DEBUG, "Status %x\n", Status);
                     return Status;
                 }
                 else if ((!ObjectName->Length) ||
@@ -425,6 +437,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
                     /* Return the object and normalized status */
                     *FoundObject = Object;
                     if (!Object) Status = STATUS_OBJECT_NAME_NOT_FOUND;
+					OBTRACE(OB_NAMESPACE_DEBUG, "Status %x\n", Status);
                     return Status;
                 }
             }
@@ -441,6 +454,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
             /* Remove the first reference we added and return the object */
             ObDereferenceObject(RootDirectory);
             *FoundObject = Object;
+			OBTRACE(OB_NAMESPACE_DEBUG, "Status %x\n", Status);
             return Status;
         }
     }
@@ -455,6 +469,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
             (ObjectName->Buffer[0] != OBJ_NAME_PATH_SEPARATOR))
         {
             /* This name is invalid, so fail */
+			OBTRACE(OB_NAMESPACE_DEBUG, "STATUS_OBJECT_PATH_SYNTAX_BAD\n");
             return STATUS_OBJECT_PATH_SYNTAX_BAD;
         }
 
@@ -473,6 +488,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
                                                         ObjectType,
                                                         AccessMode);
                     if (NT_SUCCESS(Status)) *FoundObject = InsertObject;
+					OBTRACE(OB_NAMESPACE_DEBUG, "Status %x\n", Status);
                     return Status;
                 }
                 else
@@ -490,6 +506,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
                                                     ObjectType,
                                                     AccessMode);
                 if (NT_SUCCESS(Status)) *FoundObject = RootDirectory;
+				OBTRACE(OB_NAMESPACE_DEBUG, "Status %x\n", Status);
                 return Status;
             }
         }
@@ -957,10 +974,11 @@ ReparseObject:
 
     /* Return status to caller */
     OBTRACE(OB_NAMESPACE_DEBUG,
-            "%s - Found Object: %p. Expected: %p\n",
+            "%s - Found Object: %p. Expected: %p. Status: %x\n",
             __FUNCTION__,
             *FoundObject,
-            InsertObject);
+            InsertObject,
+			Status);
     return Status;
 }
 

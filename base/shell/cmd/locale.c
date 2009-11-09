@@ -54,27 +54,30 @@ VOID InitLocale (VOID)
 #endif
 }
 
-
-VOID PrintDate (VOID)
+/* Return date string including weekday. Used for $D in prompt and %DATE% */
+LPTSTR
+GetDateString(VOID)
 {
-  TCHAR szDateDay[32];
-	TCHAR szDate[32];
+	static TCHAR szDate[32];
+	SYSTEMTIME t;
+	INT len;
+	GetLocalTime(&t);
 
-  GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), szDateDay, sizeof (szDateDay));
-
-	GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL,szDate, sizeof (szDate));
-	ConOutPrintf(_T("%s %s"),szDateDay, szDate);
+	len = GetDateFormat(LOCALE_USER_DEFAULT, 0, &t, _T("ddd"), szDate, sizeof szDate);
+	szDate[len - 1] = _T(' ');
+	FormatDate(&szDate[len], &t, TRUE);
+	return szDate;
 }
 
-
-VOID PrintTime (VOID)
+/* Return time in hh:mm:ss.xx format. Used for $T in prompt and %TIME% */
+LPTSTR
+GetTimeString(VOID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-        SYSTEMTIME t;
-        GetLocalTime(&t);
-
-	LoadString(CMD_ModuleHandle, STRING_LOCALE_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(_T("%s: %02d%c%02d%c%02d%c%02d\n"), szMsg,  t.wHour, cTimeSeparator,
-		             t.wMinute , cTimeSeparator,
-		             t.wSecond , cDecimalSeparator, t.wMilliseconds );
+	static TCHAR szTime[12];
+	SYSTEMTIME t;
+	GetLocalTime(&t);
+	_stprintf(szTime, _T("%2d%c%02d%c%02d%c%02d"),
+		t.wHour, cTimeSeparator, t.wMinute, cTimeSeparator,
+		t.wSecond, cDecimalSeparator, t.wMilliseconds / 10);
+	return szTime;
 }

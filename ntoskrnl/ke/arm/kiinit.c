@@ -42,7 +42,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN CCHAR Number,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    LARGE_INTEGER PageDirectory;
+    ULONG PageDirectory[2];
     PKPCR Pcr;
     ULONG i;
 
@@ -65,7 +65,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 #ifndef CONFIG_SMP
     Prcb->BuildType |= PRCB_BUILD_UNIPROCESSOR;
 #endif
-#ifdef DBG
+#if DBG
     Prcb->BuildType |= PRCB_BUILD_DEBUG;
 #endif
     Prcb->CurrentThread = InitThread;
@@ -200,11 +200,10 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         // Initialize the Idle Process and the Process Listhead
         //
         InitializeListHead(&KiProcessListHead);
-        PageDirectory.QuadPart = 0;
         KeInitializeProcess(InitProcess,
                             0,
                             0xFFFFFFFF,
-                            &PageDirectory,
+                            PageDirectory,
                             FALSE);
         InitProcess->QuantumReset = MAXCHAR;
     }

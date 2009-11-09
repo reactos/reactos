@@ -63,7 +63,7 @@ INT cmd_if (LPTSTR param)
 	return 1;
 }
 
-BOOL ExecuteIf(PARSED_COMMAND *Cmd)
+INT ExecuteIf(PARSED_COMMAND *Cmd)
 {
 	INT result = FALSE; /* when set cause 'then' clause to be executed */
 	LPTSTR param;
@@ -73,13 +73,13 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 	{
 		Left = DoDelayedExpansion(Cmd->If.LeftArg);
 		if (!Left)
-			return FALSE;
+			return 1;
 	}
 	Right = DoDelayedExpansion(Cmd->If.RightArg);
 	if (!Right)
 	{
 		cmd_free(Left);
-		return FALSE;
+		return 1;
 	}
 
 	if (Cmd->If.Operator == IF_CMDEXTVERSION)
@@ -91,7 +91,7 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 		{
 			error_syntax(Right);
 			cmd_free(Right);
-			return FALSE;
+			return 1;
 		}
 		result = (2 >= n);
 	}
@@ -103,28 +103,33 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 	else if (Cmd->If.Operator == IF_ERRORLEVEL)
 	{
 		/* IF ERRORLEVEL n: check if last exit code is greater or equal to n */
-		INT n = _tcstol(Cmd->If.RightArg, &param, 10);
+		INT n = _tcstol(Right, &param, 10);
 		if (*param != _T('\0'))
 		{
 			error_syntax(Right);
 			cmd_free(Right);
-			return FALSE;
+			return 1;
 		}
 		result = (nErrorLevel >= n);
 	}
 	else if (Cmd->If.Operator == IF_EXIST)
 	{
 		/* IF EXIST filename: check if file exists (wildcards allowed) */
-		WIN32_FIND_DATA f;
-		HANDLE hFind;
-
 		StripQuotes(Right);
 
-		hFind = FindFirstFile(Right, &f);
-		if (hFind != INVALID_HANDLE_VALUE)
+		if (_tcschr(Right, _T('*')) || _tcschr(Right, _T('?')))
 		{
-			result = TRUE;
-			FindClose(hFind);
+			WIN32_FIND_DATA f;
+			HANDLE hFind = FindFirstFile(Right, &f);
+			if (hFind != INVALID_HANDLE_VALUE)
+			{
+				result = TRUE;
+				FindClose(hFind);
+			}
+		}
+		else
+		{
+			result = (GetFileAttributes(Right) != INVALID_FILE_ATTRIBUTES);
 		}
 	}
 	else
@@ -166,7 +171,7 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 		/* full condition was false, do the "else" command if there is one */
 		if (Cmd->Subcommands->Next)
 			return ExecuteCommand(Cmd->Subcommands->Next);
-		return TRUE;
+		return 0;
 	}
 }
 

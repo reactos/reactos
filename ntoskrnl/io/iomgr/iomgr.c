@@ -31,7 +31,7 @@ POBJECT_TYPE IoDeviceObjectType = NULL;
 POBJECT_TYPE IoFileObjectType = NULL;
 extern POBJECT_TYPE IoControllerObjectType;
 extern UNICODE_STRING NtSystemRoot;
-BOOLEAN IoCountOperations;
+BOOLEAN IoCountOperations = TRUE;
 ULONG IoReadOperationCount = 0;
 LARGE_INTEGER IoReadTransferCount = {{0, 0}};
 ULONG IoWriteOperationCount = 0;
@@ -265,9 +265,10 @@ IopCreateObjectTypes(VOID)
                                        NULL,
                                        &IoControllerObjectType))) return FALSE;
 
-    /* Do the Device Type. FIXME: Needs Delete Routine! */
+    /* Do the Device Type */
     RtlInitUnicodeString(&Name, L"Device");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEVICE_OBJECT);
+    ObjectTypeInitializer.DeleteProcedure = IopDeleteDevice;
     ObjectTypeInitializer.ParseProcedure = IopParseDevice;
     ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
     if (!NT_SUCCESS(ObCreateObjectType(&Name,
@@ -524,8 +525,8 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     IopInitializePnpServices(IopRootDeviceNode);
 
     /* Load system start drivers */
-    PnpSystemInit = TRUE;
     IopInitializeSystemDrivers();
+    PnpSystemInit = TRUE;
 
     /* Destroy the group driver list */
     IoDestroyDriverList();

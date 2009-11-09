@@ -31,6 +31,7 @@ DbgPrint(
     IN ...
 );
 
+NTSYSAPI
 ULONG
 __cdecl
 DbgPrintEx(
@@ -78,7 +79,7 @@ RtlAssert(
 
 /* Print stuff only on Debug Builds*/
 #define DPFLTR_DEFAULT_ID -1
-#ifdef DBG
+#if DBG
 
     /* These are always printed */
     #define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
@@ -89,14 +90,9 @@ RtlAssert(
         #define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
 
     #else
-        #ifdef _MSC_VER
-            static __inline void DPRINT ( const char* fmt, ... )
-            {
-                UNREFERENCED_PARAMETER(fmt);
-            }
-        #else
-            #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-        #endif
+
+        #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+
     #endif
 
     #define UNIMPLEMENTED       DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);

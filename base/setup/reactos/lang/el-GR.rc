@@ -1,5 +1,3 @@
-/* $Id$ */
-
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -60,28 +58,29 @@ BEGIN
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
     PUSHBUTTON "&Δημιουργία", IDC_PARTCREATE, 20,155,50,15
     PUSHBUTTON "&Διαγραφή", IDC_PARTDELETE, 76,155,50,15
+    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
     PUSHBUTTON "&Επιλογές για προχωρημένους...", IDC_PARTMOREOPTS, 218,155,80,15
     LTEXT "Πατήστε Επόμενο για να ξεκινήσετε τη διαδικασία εγκατάστασης.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
-STYLE WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_THICKFRAME
+STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
 CAPTION "Δημιουργία Partition"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-  CONTROL "Create and format partition",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-  LTEXT "Μέγεθος:",IDC_STATIC, 13,24,27,9
-  EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
-  LTEXT "GB",IDC_UNIT, 117,24,14,9
-  LTEXT "Τύπος συστήματος:",IDC_STATIC,13,46,35,9
-  CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
-  PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
-  PUSHBUTTON "&’κυρο",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
+    CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
+    CONTROL "Create and format partition",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    LTEXT "Μέγεθος:",IDC_STATIC, 13,24,27,9
+    EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
+    LTEXT "GB",IDC_UNIT, 117,24,14,9
+    LTEXT "Τύπος συστήματος:",IDC_STATIC,13,46,35,9
+    CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
+    PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&’κυρο",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
-STYLE WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_THICKFRAME
+STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
 CAPTION "Ρυθμίσεις Partition για προχωρημένους"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -96,6 +95,15 @@ BEGIN
     PUSHBUTTON "&’κυρο", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
 END
 
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Installation summary", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Click Next to start the installation process.", IDC_STATIC, 10, 180 ,277, 20
+END
+
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Εγκατάσταση του ReactOS"
@@ -107,7 +115,6 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
-
 
 IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -122,22 +129,23 @@ BEGIN
     LTEXT "Αν υπάρχει κάποιο CD, αφαιρέστε το. Έπειτα, για να γίνει επανεκκίνηση, πατήστε Ολοκλήρωση.", IDC_STATIC, 10, 180, 297, 20
 END
 
-
 STRINGTABLE
 BEGIN
-	IDS_LANGTITLE		"Επιλογή Γλώσσας"
-	IDS_LANGSUBTITLE	"Επιλέξτε γλώσσα για την εγκατάσταση και το τελικό σύστημα."
-	IDS_TYPETITLE		"Καλώς ήλθατε στην Εγκατάσταση του ReactOS"
-	IDS_TYPESUBTITLE	"Επιλέξτε τύπο εγκατάστασης."
-	IDS_DEVICETITLE		"Setup the basic devices"
-	IDS_DEVICESUBTITLE	"Ορισμός ρυθμίσεων για εμφάνιση και πληκτρολόγιο."
-	IDS_DRIVETITLE		"Ρύθμιση του partition εγκατάστασης και του φακέλου συστήματος"
-	IDS_DRIVESUBTITLE	"Προετοιμασία του partition εγκατάστασης, φακέλου συστήματος και boot loader."
-	IDS_PROCESSTITLE	"Prepare partition, copy files and setup system"
-	IDS_PROCESSSUBTITLE	"Create and format partition, copy files, install and setup boot loader"
-	IDS_RESTARTTITLE	"Το πρώτο στάδιο της εγκατάστασης ολοκληρώθηκε"
-	IDS_RESTARTSUBTITLE	"Το πρώτο στάδιο της εγκατάστασης ολοκληρώθηκε, κάντε επανεκκίνηση για να συνεχίσετε με το δεύτερο στάδιο."
-	IDS_ABORTSETUP		"ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Really quit?"
-	IDS_ABORTSETUP2		"Abort installation?"
+    IDS_LANGTITLE       "Επιλογή Γλώσσας"
+    IDS_LANGSUBTITLE    "Επιλέξτε γλώσσα για την εγκατάσταση και το τελικό σύστημα."
+    IDS_TYPETITLE       "Καλώς ήλθατε στην Εγκατάσταση του ReactOS"
+    IDS_TYPESUBTITLE    "Επιλέξτε τύπο εγκατάστασης."
+    IDS_DEVICETITLE     "Setup the basic devices"
+    IDS_DEVICESUBTITLE  "Ορισμός ρυθμίσεων για εμφάνιση και πληκτρολόγιο."
+    IDS_DRIVETITLE      "Ρύθμιση του partition εγκατάστασης και του φακέλου συστήματος"
+    IDS_DRIVESUBTITLE   "Προετοιμασία του partition εγκατάστασης, φακέλου συστήματος και boot loader."
+    IDS_PROCESSTITLE    "Prepare partition, copy files and setup system"
+    IDS_PROCESSSUBTITLE "Create and format partition, copy files, install and setup boot loader"
+    IDS_RESTARTTITLE    "Το πρώτο στάδιο της εγκατάστασης ολοκληρώθηκε"
+    IDS_RESTARTSUBTITLE "Το πρώτο στάδιο της εγκατάστασης ολοκληρώθηκε, κάντε επανεκκίνηση για να συνεχίσετε με το δεύτερο στάδιο."
+    IDS_SUMMARYTITLE    "Installation Summary"
+    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
+    IDS_ABORTSETUP      "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Really quit?"
+    IDS_ABORTSETUP2     "Abort installation?"
 END
 /* EOF */

@@ -98,7 +98,7 @@ _KeUpdateRunTime@8:
 
     /* At dispatch, increase DPC time */
     inc dword ptr [eax+KPCR_PRCB_DPC_TIME]
-#ifdef DBG
+#if DBG
     /* Update the DPC time */
     inc dword ptr [eax+KPCR_PRCB_DEBUG_DPC_TIME]
 

@@ -11,7 +11,7 @@
 #include "w32csr.h"
 #include <debug.h>
 
-#define DESKTOP_WINDOW_ATOM 32880
+#define DESKTOP_WINDOW_ATOM 32769
 
 #define PM_SHOW_DESKTOP 1
 #define PM_HIDE_DESKTOP 2
@@ -126,7 +126,7 @@ DtbgInit()
    * Create the desktop window class
    */
   Class.cbSize = sizeof(WNDCLASSEXW);
-  Class.style = 0;
+  Class.style = CS_GLOBALCLASS;
   Class.lpfnWndProc = DtbgWindowProc;
   Class.cbClsExtra = 0;
   Class.cbWndExtra = 0;

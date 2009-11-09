@@ -275,7 +275,7 @@ CardRegion* CardWindow::CardRegionFromPoint(int x, int y)
 //
 LRESULT CALLBACK CardWindow::CardWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
-    CardWindow *cw = (CardWindow *)GetWindowLong(hwnd, 0);
+    CardWindow *cw = (CardWindow *)GetWindowLongPtr(hwnd, 0);
     return cw->WndProc(hwnd, iMsg, wParam, lParam);
 }
 
@@ -366,7 +366,7 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
         //
         // associate this class with the window
         //
-        SetWindowLong(hwnd, 0, (LONG_PTR)cs->lpCreateParams);
+        SetWindowLongPtr(hwnd, 0, (LONG_PTR)cs->lpCreateParams);
 
         return 1;
 

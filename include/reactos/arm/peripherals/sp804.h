@@ -11,7 +11,7 @@
 //
 // Timer Registers
 //
-#define TIMER_BASE(x)            (PVOID)(0xE00E2000 + (x * 0x1000))  /* HACK: freeldr mapped it here */
+#define TIMER_BASE(x)            (ULONG_PTR)(0xE00E2000 + (x * 0x1000))  /* HACK: freeldr mapped it here */
 #define TIMER0_LOAD              TIMER_BASE(0) + 0x00
 #define TIMER0_VALUE             TIMER_BASE(0) + 0x04
 #define TIMER0_CONTROL           TIMER_BASE(0) + 0x08

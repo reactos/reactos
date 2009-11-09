@@ -180,7 +180,7 @@ CsrInsertObject(
         RtlCopyMemory(Block,
                       ProcessData->HandleTable,
                       ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
-        Block = _InterlockedExchangePointer((volatile void*)&ProcessData->HandleTable, Block);
+        Block = _InterlockedExchangePointer((void* volatile)&ProcessData->HandleTable, Block);
         RtlFreeHeap( CsrssApiHeap, 0, Block );
         ProcessData->HandleTableSize += 64;
     }

@@ -1,0 +1,19 @@
+; UTF-8
+
+[Section]
+Name = PuTTY
+Version = 0.60
+Licence = MIT
+Description = A free SSH, Telnet, rlogin, and raw TCP client.
+Size = 1.7MB
+Category = 5
+URLSite = http://www.chiark.greenend.org.uk/~sgtatham/putty/
+URLDownload = http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.60-installer.exe
+CDPath = none
+
+
+[Section.0407]
+Description = Ein freier SSH-, Telnet-, rlogin- und TCP-Client
+
+[Section.0415]
+Description = Darmowy klient obs³uguj¹cy protoko³y SSH, Telnet, rlogin oraz bezpoœrednie TCP.

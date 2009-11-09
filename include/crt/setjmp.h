@@ -130,27 +130,27 @@ extern "C" {
 #define _JMP_BUF_DEFINED
 #endif
 
-  void * __cdecl __attribute__ ((__nothrow__)) mingw_getsp(void);
+  void * __cdecl __MINGW_NOTHROW mingw_getsp(void);
 
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
 #ifndef _INC_SETJMPEX
 #define setjmp(BUF) _setjmp((BUF),mingw_getsp())
-  int __cdecl __attribute__ ((__nothrow__)) _setjmp(jmp_buf _Buf,void *_Ctx);
+  int __cdecl __MINGW_NOTHROW _setjmp(jmp_buf _Buf,void *_Ctx);
 #else
 #undef setjmp
 #define setjmp(BUF) _setjmpex((BUF),mingw_getsp())
 #define setjmpex(BUF) _setjmpex((BUF),mingw_getsp())
-  int __cdecl __attribute__ ((__nothrow__)) _setjmpex(jmp_buf _Buf,void *_Ctx);
+  int __cdecl __MINGW_NOTHROW _setjmpex(jmp_buf _Buf,void *_Ctx);
 #endif
 #else
 #ifndef _INC_SETJMPEX
 #define setjmp _setjmp
 #endif
-  int __cdecl __attribute__ ((__nothrow__)) setjmp(jmp_buf _Buf);
+  int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
 #endif
 
-  __declspec(noreturn) __attribute__ ((__nothrow__)) void __cdecl ms_longjmp(jmp_buf _Buf,int _Value)/* throw(...)*/;
-  __declspec(noreturn) __attribute__ ((__nothrow__)) void __cdecl longjmp(jmp_buf _Buf,int _Value);
+  __declspec(noreturn) __MINGW_NOTHROW void __cdecl ms_longjmp(jmp_buf _Buf,int _Value)/* throw(...)*/;
+  __declspec(noreturn) __MINGW_NOTHROW void __cdecl longjmp(jmp_buf _Buf,int _Value);
 
 #ifdef __cplusplus
 }

@@ -4,5 +4,8 @@
 	<directory name="ks">
 		<xi:include href="ks/ks.rbuild" />
 	</directory>
+	<directory name="swenum">
+		<xi:include href="swenum/swenum.rbuild" />
+	</directory>
 </group>
 

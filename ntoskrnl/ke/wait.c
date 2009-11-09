@@ -123,6 +123,9 @@ KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 {
     ULONG BitsToRemove, BitsToAdd;
     LONG OldValue, NewValue;
+
+    /* We depend on these bits being just right */
+    C_ASSERT((GM_LOCK_WAITER_WOKEN * 2) == GM_LOCK_WAITER_INC);
     
     /* Increase the contention count */
     GuardedMutex->Contention++;
@@ -181,9 +184,6 @@ KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
         /* Ok, the wait is done, so set the new bits */
         BitsToRemove = GM_LOCK_BIT | GM_LOCK_WAITER_WOKEN;
         BitsToAdd = GM_LOCK_WAITER_WOKEN;
-        
-        /* We depend on these bits being just right */
-        C_ASSERT((GM_LOCK_WAITER_WOKEN * 2) == GM_LOCK_WAITER_INC);
     }
 }
 
@@ -417,6 +417,10 @@ KeWaitForSingleObject(IN PVOID Object,
     PLARGE_INTEGER OriginalDueTime = Timeout;
     ULONG Hand = 0;
 
+#ifdef DBG
+	KdbgDeclareWait(Object);
+#endif
+
     /* Check if the lock is already held */
     if (!Thread->WaitNext) goto WaitStart;
 
@@ -527,7 +531,13 @@ KeWaitForSingleObject(IN PVOID Object,
             WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Check if we were executing an APC */
-            if (WaitStatus != STATUS_KERNEL_APC) return WaitStatus;
+            if (WaitStatus != STATUS_KERNEL_APC) 
+			{
+#ifdef DBG
+				KdbgSatisfyWait(Object);
+#endif
+				return WaitStatus;
+			}
 
             /* Check if we had a timeout */
             if (Timeout)
@@ -547,6 +557,9 @@ WaitStart:
 
     /* Wait complete */
     KiReleaseDispatcherLock(Thread->WaitIrql);
+#ifdef DBG
+	KdbgSatisfyWait(Object);
+#endif
     return WaitStatus;
 
 DontWait:
@@ -555,6 +568,9 @@ DontWait:
 
     /* Adjust the Quantum and return the wait status */
     KiAdjustQuantumThread(Thread);
+#ifdef DBG
+	KdbgSatisfyWait(Object);
+#endif
     return WaitStatus;
 }
 
@@ -582,6 +598,10 @@ KeWaitForMultipleObjects(IN ULONG Count,
     PLARGE_INTEGER OriginalDueTime = Timeout;
     LARGE_INTEGER DueTime, NewDueTime, InterruptTime;
     ULONG Index, Hand = 0;
+
+#ifdef DBG
+	KdbgDeclareMultiWait(Object, Count);
+#endif
 
     /* Make sure the Wait Count is valid */
     if (!WaitBlockArray)
@@ -810,7 +830,13 @@ KeWaitForMultipleObjects(IN ULONG Count,
             WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Check if we were executing an APC */
-            if (WaitStatus != STATUS_KERNEL_APC) return WaitStatus;
+            if (WaitStatus != STATUS_KERNEL_APC)
+			{
+#ifdef DBG
+				KdbgSatisfyMultiWait(Object, Count);
+#endif
+				return WaitStatus;
+			}
 
             /* Check if we had a timeout */
             if (Timeout)
@@ -831,6 +857,9 @@ WaitStart:
 
     /* We are done */
     KiReleaseDispatcherLock(Thread->WaitIrql);
+#ifdef DBG
+	KdbgSatisfyMultiWait(Object, Count);
+#endif
     return WaitStatus;
 
 DontWait:
@@ -839,6 +868,9 @@ DontWait:
 
     /* Adjust the Quantum and return the wait status */
     KiAdjustQuantumThread(Thread);
+#ifdef DBG
+	KdbgSatisfyMultiWait(Object, Count);
+#endif
     return WaitStatus;
 }
 
@@ -849,10 +881,10 @@ NtDelayExecution(IN BOOLEAN Alertable,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     LARGE_INTEGER SafeInterval;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     /* Check the previous mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
         _SEH2_TRY
@@ -863,11 +895,10 @@ NtDelayExecution(IN BOOLEAN Alertable,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get SEH exception */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
    }
 
    /* Call the Kernel Function */

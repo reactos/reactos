@@ -23,8 +23,6 @@
 #ifndef __NTDDNDIS_H
 #define __NTDDNDIS_H
 
-#pragma pack(push,4)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,6 +42,81 @@ typedef enum _NDIS_DEVICE_POWER_STATE {
   NdisDeviceStateMaximum
 } NDIS_DEVICE_POWER_STATE, *PNDIS_DEVICE_POWER_STATE;
 
+typedef enum _NDIS_802_11_NETWORK_INFRASTRUCTURE
+{
+    Ndis802_11IBSS,
+    Ndis802_11Infrastructure,
+    Ndis802_11AutoUnknown,
+    Ndis802_11InfrastructureMax
+} NDIS_802_11_NETWORK_INFRASTRUCTURE, *PNDIS_802_11_NETWORK_INFRASTRUCTURE;
+
+typedef enum _NDIS_802_11_NETWORK_TYPE
+{
+    Ndis802_11FH,
+    Ndis802_11DS,
+    Ndis802_11OFDM5,
+    Ndis802_11OFDM24,
+    Ndis802_11Automode,
+    Ndis802_11NetworkTypeMax
+} NDIS_802_11_NETWORK_TYPE, *PNDIS_802_11_NETWORK_TYPE;
+
+typedef struct _NDIS_OBJECT_HEADER
+{
+    UCHAR Type;
+    UCHAR Revision;
+    USHORT Size;
+} NDIS_OBJECT_HEADER, *PNDIS_OBJECT_HEADER;
+
+#define NDIS_802_11_LENGTH_SSID  32
+#define NDIS_802_11_LENGTH_RATES 8
+
+typedef UCHAR NDIS_802_11_MAC_ADDRESS[6];
+typedef LONG NDIS_802_11_RSSI;
+typedef UCHAR NDIS_802_11_RATES[NDIS_802_11_LENGTH_RATES];
+
+typedef struct _NDIS_802_11_SSID
+{
+    ULONG SsidLength;
+    UCHAR Ssid[NDIS_802_11_LENGTH_SSID];
+} NDIS_802_11_SSID, *PNDIS_802_11_SSID;
+
+typedef struct _NDIS_802_11_CONFIGURATION_FH
+{
+    ULONG Length;
+    ULONG HopPattern;
+    ULONG HopSet;
+    ULONG DwellTime;
+} NDIS_802_11_CONFIGURATION_FH, *PNDIS_802_11_CONFIGURATION_FH;
+
+typedef struct _NDIS_802_11_CONFIGURATION
+{
+    ULONG Length;
+    ULONG BeaconPeriod;
+    ULONG ATIMWindow;
+    ULONG DSConfig;
+    NDIS_802_11_CONFIGURATION_FH FHConfig;
+} NDIS_802_11_CONFIGURATION, *PNDIS_802_11_CONFIGURATION;
+
+typedef struct _NDIS_WLAN_BSSID
+{
+    ULONG Length;
+    NDIS_802_11_MAC_ADDRESS MacAddress;
+    UCHAR Reserved[2];
+    NDIS_802_11_SSID Ssid;
+    ULONG Privacy;
+    NDIS_802_11_RSSI Rssi;
+    NDIS_802_11_NETWORK_TYPE NetworkTypeInUse;
+    NDIS_802_11_CONFIGURATION Configuration;
+    NDIS_802_11_NETWORK_INFRASTRUCTURE InfrastructureMode;
+    NDIS_802_11_RATES SupportedRates;
+} NDIS_WLAN_BSSID, *PNDIS_WLAN_BSSID;
+
+typedef struct _NDIS_802_11_BSSID_LIST
+{
+    ULONG NumberOfItems;
+    NDIS_WLAN_BSSID Bssid[1];
+} NDIS_802_11_BSSID_LIST, *PNDIS_802_11_BSSID_LIST;
+
 typedef struct _NDIS_PM_WAKE_UP_CAPABILITIES {
   NDIS_DEVICE_POWER_STATE  MinMagicPacketWakeUp;
   NDIS_DEVICE_POWER_STATE  MinPatternWakeUp;
@@ -59,6 +132,50 @@ typedef struct _NDIS_PNP_CAPABILITIES {
   ULONG  Flags;
   NDIS_PM_WAKE_UP_CAPABILITIES  WakeUpCapabilities;
 } NDIS_PNP_CAPABILITIES, *PNDIS_PNP_CAPABILITIES;
+
+/* NDIS driver medium (OID_GEN_MEDIA_SUPPORTED / OID_GEN_MEDIA_IN_USE) */
+typedef enum _NDIS_MEDIUM {
+  NdisMedium802_3,
+  NdisMedium802_5,
+  NdisMediumFddi,
+  NdisMediumWan,
+  NdisMediumLocalTalk,
+  NdisMediumDix,
+  NdisMediumArcnetRaw,
+  NdisMediumArcnet878_2,
+  NdisMediumAtm,
+  NdisMediumWirelessWan,
+  NdisMediumIrda,
+  NdisMediumBpc,
+  NdisMediumCoWan,
+  NdisMedium1394,
+  NdisMediumMax
+} NDIS_MEDIUM, *PNDIS_MEDIUM;
+
+typedef enum _NDIS_PHYSICAL_MEDIUM
+{
+    NdisPhysicalMediumUnspecified,
+    NdisPhysicalMediumWirelessLan,
+    NdisPhysicalMediumCableModem,
+    NdisPhysicalMediumPhoneLine,
+    NdisPhysicalMediumPowerLine,
+    NdisPhysicalMediumDSL,
+    NdisPhysicalMediumFibreChannel,
+    NdisPhysicalMedium1394,
+    NdisPhysicalMediumWirelessWan,
+    NdisPhysicalMediumNative802_11,
+    NdisPhysicalMediumBluetooth,
+    NdisPhysicalMediumInfiniband,
+    NdisPhysicalMediumWiMax,
+    NdisPhysicalMediumUWB,
+    NdisPhysicalMedium802_3,
+    NdisPhysicalMedium802_5,
+    NdisPhysicalMediumIrda,
+    NdisPhysicalMediumWiredWAN,
+    NdisPhysicalMediumWiredCoWan,
+    NdisPhysicalMediumOther,
+    NdisPhysicalMediumMax
+} NDIS_PHYSICAL_MEDIUM, *PNDIS_PHYSICAL_MEDIUM;
 
 /* Required Object IDs (OIDs) */
 #define OID_GEN_SUPPORTED_LIST            0x00010101
@@ -146,6 +263,9 @@ typedef struct _NDIS_PNP_CAPABILITIES {
 #define OID_802_3_XMIT_TIMES_CRS_LOST     0x01020206
 #define OID_802_3_XMIT_LATE_COLLISIONS    0x01020207
 
+#define OID_802_11_BSSID_LIST      0x0D010217
+#define OID_802_11_BSSID_LIST_SCAN 0x0D01011A
+
 /* OID_GEN_MINIPORT_INFO constants */
 #define NDIS_MINIPORT_BUS_MASTER                      0x00000001
 #define NDIS_MINIPORT_WDM_DRIVER                      0x00000002
@@ -173,7 +293,10 @@ typedef struct _NDIS_PNP_CAPABILITIES {
 #define NDIS_MINIPORT_SUPPORTS_CANCEL_SEND_PACKETS    0x00800000
 #define NDIS_MINIPORT_64BITS_DMA                      0x01000000
 
-#pragma pack(pop)
+#define IOCTL_NDIS_QUERY_GLOBAL_STATS CTL_CODE(FILE_DEVICE_PHYSICAL_NETCARD, \
+                                               0,                            \
+                                               METHOD_OUT_DIRECT,            \
+                                               FILE_ANY_ACCESS)
 
 #ifdef __cplusplus
 }

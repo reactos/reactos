@@ -8,6 +8,9 @@
 
 #include <crtdefs.h>
 
+#define __need___va_list
+#include <stdarg.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

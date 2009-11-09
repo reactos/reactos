@@ -39,6 +39,7 @@ FAT32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
   if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
   {
+	  DPRINT1("STATUS_UNSUCCESSFUL\n");
     return STATUS_UNSUCCESSFUL;
   }
   CurrentCluster = (*(PULONG)((char*)BaseAddress + (FATOffset % ChunkSize))) & 0x0fffffff;
@@ -68,6 +69,7 @@ FAT16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
   if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
   {
+	  ASSERT(FALSE);
     return STATUS_UNSUCCESSFUL;
   }
   CurrentCluster = *((PUSHORT)((char*)BaseAddress + (FATOffset % ChunkSize)));
@@ -98,6 +100,7 @@ FAT12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   Offset.QuadPart = 0;
   if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
   {
+	  DPRINT1("STATUS_UNSUCCESSFUL\n");
     return STATUS_UNSUCCESSFUL;
   }
   CBlock = (PUSHORT)((char*)BaseAddress + (CurrentCluster * 12) / 8);
@@ -148,7 +151,7 @@ FAT16FindAndMarkAvailableCluster(PDEVICE_EXTENSION DeviceExt,
       Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
       if(!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
       {
-        DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
+		  DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
         return STATUS_UNSUCCESSFUL;
       }
       Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
@@ -320,6 +323,7 @@ FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
   Offset.QuadPart = 0;
   if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
   {
+	  DPRINT1("STATUS_UNSUCCESSFUL\n");
     return STATUS_UNSUCCESSFUL;
   }
 
@@ -372,6 +376,7 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
     Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
     if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
     {
+	  DPRINT1("STATUS_UNSUCCESSFUL\n");
       return STATUS_UNSUCCESSFUL;
     }
     Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
@@ -488,6 +493,7 @@ FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
   Offset.QuadPart = 0;
   if(!CcPinRead(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
   {
+	  DPRINT1("STATUS_UNSUCCESSFUL\n");
     return STATUS_UNSUCCESSFUL;
   }
   CBlock = (PUCHAR)BaseAddress;
@@ -537,6 +543,7 @@ FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
   if(!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
   {
+	  DPRINT1("STATUS_UNSUCCESSFUL\n");
     return STATUS_UNSUCCESSFUL;
   }
   DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
@@ -571,6 +578,7 @@ FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
   if(!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
   {
+	  DPRINT1("STATUS_UNSUCCESSFUL\n");
     return STATUS_UNSUCCESSFUL;
   }
   DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,

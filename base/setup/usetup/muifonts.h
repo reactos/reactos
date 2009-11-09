@@ -51,11 +51,27 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Courier",         L"FreeMono" },
     { L"Courier New",     L"FreeMono" },
     { L"Times New Roman", L"DejaVu Serif" },
-    { L"Tahoma",          L"DejaVu Sans"      },
-    { L"MS Sans Serif",   L"DejaVu Sans"      },
-    { L"MS Shell Dlg",    L"DejaVu Sans"      },
-    { L"MS Shell Dlg 2",  L"DejaVu Sans"      },
-    { L"Helv",            L"DejaVu Sans"  },
+    { L"Tahoma",          L"DejaVu Sans" },
+    { L"MS Sans Serif",   L"DejaVu Sans" },
+    { L"MS Shell Dlg",    L"DejaVu Sans" },
+    { L"MS Shell Dlg 2",  L"DejaVu Sans" },
+    { L"Helv",            L"DejaVu Sans" },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT JapaneseFonts[] =
+{
+    { L"Arial",           L"Liberation Sans" },
+    { L"Courier",         L"FreeMono" },
+    { L"Courier New",     L"FreeMono" },
+    { L"Times New Roman", L"Liberation Serif" },
+    { L"Tahoma",          L"Systema" },
+    { L"MS Sans Serif",   L"Tahoma" },
+    { L"MS Shell Dlg",    L"Systema" },
+    { L"MS Shell Dlg 2",  L"Systema" },
+    { L"MS UI Gothic",    L"Systema" },
+    { L"MS UI Gothic 2",  L"Systema" },
+    { L"Helv",            L"Tahoma" },
     { NULL, NULL }
 };
 
@@ -65,11 +81,11 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"Courier",         L"DejaVu Sans Mono" },
     { L"Courier New",     L"DejaVu Sans Mono" },
     { L"Times New Roman", L"DejaVu Serif" },
-    { L"Tahoma",          L"DejaVu Sans"      },
-    { L"MS Sans Serif",   L"DejaVu Sans"      },
-    { L"MS Shell Dlg",    L"DejaVu Sans"      },
-    { L"MS Shell Dlg 2",  L"DejaVu Sans"      },
-    { L"Helv",            L"DejaVu Sans"  },
+    { L"Tahoma",          L"DejaVu Sans" },
+    { L"MS Sans Serif",   L"DejaVu Sans" },
+    { L"MS Shell Dlg",    L"DejaVu Sans" },
+    { L"MS Shell Dlg 2",  L"DejaVu Sans" },
+    { L"Helv",            L"DejaVu Sans" },
     { NULL, NULL }
 };
 

@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 IDM_MAINMENU MENU DISCARDABLE
@@ -151,7 +153,7 @@ Caption "Tabs"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tab stops", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "&Toevoegen", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Verwijderen", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
@@ -178,10 +180,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_RICHTEXT_FILES_RTF,     "Rich text formaat (*.rtf)"
+    STRING_ALL_FILES,              "Alle documenten (*.*)"
     STRING_TEXT_FILES_TXT,         "Tekst documenten (*.txt)"
     STRING_TEXT_FILES_UNICODE_TXT, "Unicode tekst document (*.txt)"
-    STRING_ALL_FILES,              "Alle documenten (*.*)"
+    STRING_RICHTEXT_FILES_RTF,     "Rich text formaat (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "Rich tekst document"
+    STRING_NEWFILE_TXT,            "Tekst document"
+    STRING_NEWFILE_TXT_UNICODE,    "Unicode tekst document"
+    STRING_PRINTER_FILES_PRN,      "Printer bestanden (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -189,18 +195,6 @@ BEGIN
     STRING_ALIGN_LEFT,            "Links"
     STRING_ALIGN_RIGHT,           "Rechts"
     STRING_ALIGN_CENTER,          "Gecentreerd"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_NEWFILE_RICHTEXT,     "Rich tekst document"
-    STRING_NEWFILE_TXT,          "Tekst document"
-    STRING_NEWFILE_TXT_UNICODE,  "Unicode tekst document"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_PRINTER_FILES_PRN,        "Printer bestanden (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -241,4 +235,5 @@ BEGIN
     STRING_OPEN_FAILED,          "Bestand kon niet geopend worden."
     STRING_OPEN_ACCESS_DENIED,   "Onvoldoende rechten om het bestand te openen."
     STRING_PRINTING_NOT_IMPLEMENTED, "Printen is nog niet geimplementeerd"
+    STRING_MAX_TAB_STOPS,        "Onmogelijk om meer dan 32 tab stops toe te voegen."
 END

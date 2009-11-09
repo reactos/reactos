@@ -248,7 +248,7 @@ FindFile (
 			}
 			else
 			{
-				DPRINT("FCB not found for %wZ\n", &PathNameU);
+				DPRINT1("FCB not found for %wZ\n", &PathNameU);
 				Status = STATUS_UNSUCCESSFUL;
 			}
 			vfatReleaseFCB(DeviceExt, rcFcb);

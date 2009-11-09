@@ -546,56 +546,8 @@ VBEResetHw(
    ULONG Columns,
    ULONG Rows)
 {
-   INT10_BIOS_ARGUMENTS BiosRegisters;
-   PVBE_DEVICE_EXTENSION VBEDeviceExtension =
-     (PVBE_DEVICE_EXTENSION)DeviceExtension;
-
-   if (!VBEResetDevice(DeviceExtension, NULL))
-      return FALSE;
-
-   /* Change number of columns/rows */
-   VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
-
-   if (Columns == 80 && Rows == 25)
-   {
-      /* Default text size, don't change anything. */
-      return TRUE;
-   }
-   else if (Columns == 80 && Rows == 28)
-   {
-      /* Use 9x14 font (80x28) */
-      BiosRegisters.Eax = 0x1111;
-   }
-   else if (Columns == 80 && Rows == 43)
-   {
-      /* Use 8x8 font in 350 scans mode (80x43) */
-      BiosRegisters.Eax = 0x1201;
-      BiosRegisters.Ebx = 0x30;
-      VBEDeviceExtension->Int10Interface.Int10CallBios(
-         VBEDeviceExtension->Int10Interface.Context,
-         &BiosRegisters);
-
-      BiosRegisters.Eax = 0x3;
-      BiosRegisters.Ebx = 0;
-      VBEDeviceExtension->Int10Interface.Int10CallBios(
-         VBEDeviceExtension->Int10Interface.Context,
-         &BiosRegisters);
-
-      BiosRegisters.Eax = 0x1112;
-   }
-   else if (Columns == 80 && Rows == 50)
-   {
-      /* Use 8x8 font (80x50) */
-      BiosRegisters.Eax = 0x1112;
-   }
-   else
-      return FALSE;
-
-   VBEDeviceExtension->Int10Interface.Int10CallBios(
-      VBEDeviceExtension->Int10Interface.Context,
-      &BiosRegisters);
-
-   return TRUE;
+   /* Return FALSE to let HAL reset the display with INT10 */
+   return FALSE;
 }
 
 /*

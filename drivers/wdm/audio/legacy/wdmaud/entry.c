@@ -98,7 +98,7 @@ WdmAudPnp(
 {
     PIO_STACK_LOCATION IrpStack;
 
-    DPRINT1("WdmAudPnp called\n");
+    DPRINT("WdmAudPnp called\n");
 
     IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -124,7 +124,7 @@ WdmAudCreate(
 
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
-    DPRINT1("WdmAudCreate\n");
+    DPRINT("WdmAudCreate\n");
 
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -165,7 +165,7 @@ WdmAudClose(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    DPRINT1("WdmAudClose\n");
+    DPRINT("WdmAudClose\n");
 
 #if KS_IMPLEMENTED
     Status = KsDereferenceSoftwareBusObject(DeviceExtension->DeviceHeader);
@@ -194,7 +194,7 @@ WdmAudCleanup(
     WDMAUD_CLIENT *pClient;
     ULONG Index;
 
-    DPRINT1("WdmAudCleanup\n");
+    DPRINT("WdmAudCleanup\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -204,9 +204,10 @@ WdmAudCleanup(
     {
         for (Index = 0; Index < pClient->NumPins; Index++)
         {
-           if (pClient->hPins[Index])
+           DPRINT("Index %u Pin %p Type %x\n", Index, pClient->hPins[Index].Handle, pClient->hPins[Index].Type);
+           if (pClient->hPins[Index].Handle && pClient->hPins[Index].Type != MIXER_DEVICE_TYPE)
            {
-               ZwClose(pClient->hPins[Index]);
+               ZwClose(pClient->hPins[Index].Handle);
            }
         }
 
@@ -215,8 +216,6 @@ WdmAudCleanup(
             ExFreePool(pClient->hPins);
         }
 
-        ObDereferenceObject(pClient->FileObject);
-        ZwClose(pClient->hSysAudio);
         ExFreePool(pClient);
         IoStack->FileObject->FsContext = NULL;
     }
@@ -224,7 +223,7 @@ WdmAudCleanup(
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    DPRINT1("WdmAudCleanup complete\n");
+    DPRINT("WdmAudCleanup complete\n");
     return STATUS_SUCCESS;
 }
 
@@ -247,6 +246,7 @@ DriverEntry(
     Driver->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = KsDefaultForwardIrp; 
     Driver->MajorFunction[IRP_MJ_CLEANUP] = WdmAudCleanup;
     Driver->MajorFunction[IRP_MJ_DEVICE_CONTROL] = WdmAudDeviceControl;
+    Driver->MajorFunction[IRP_MJ_WRITE] = WdmAudWrite;
     Driver->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;
 
     return WdmAudInstallDevice(Driver);
