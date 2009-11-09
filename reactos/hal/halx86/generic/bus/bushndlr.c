@@ -30,7 +30,7 @@ HalpAllocateArray(IN ULONG ArraySize)
     ULONG Size;
     
     /* Compute array size */
-    if (ArraySize == -1) ArraySize = 0;
+    if (ArraySize == MAXULONG) ArraySize = 0;
     Size = ArraySize * sizeof(PARRAY) + sizeof(ARRAY);
     
     /* Allocate the array */
