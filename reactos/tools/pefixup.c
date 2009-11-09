@@ -24,13 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#ifndef _WIN32
 #include <unistd.h>
-#endif
-
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
 
 /* The following definitions are ripped from MinGW W32API headers. We don't
    use these headers directly in order to allow compilation on Linux hosts. */
@@ -259,14 +253,14 @@ int main(int argc, char **argv)
       else if (!strcmp(argv[i], "-exports"))
          fixup_exports = 1;
       else
-         { printf("Invalid option: %s\n", argv[i]); return 1; }
+         { fprintf(stderr, "Invalid option: %s\n", argv[i]); return 1; }
    }
 
+   /*
+    * Nothing to do.
+    */
    if (fixup_sections == 0 && fixup_exports == 0)
-   {
-      printf("Nothing to do.\n");
       return 0;
-   }
 
    /*
     * Read the whole file to memory.
@@ -275,7 +269,7 @@ int main(int argc, char **argv)
    fd_in = open(argv[1], O_RDONLY | O_BINARY);
    if (fd_in == 0)
    {
-      printf("Can't open input file.\n");
+      fprintf(stderr, "Can't open input file.\n");
       return 1;
    }
 
@@ -290,7 +284,7 @@ int main(int argc, char **argv)
    if (len < sizeof(IMAGE_DOS_HEADER))
    {
       close(fd_in);
-      printf("'%s' isn't a PE image (too short)\n", argv[1]);
+      fprintf(stderr, "'%s' isn't a PE image (too short)\n", argv[1]);
       return 1;
    }
 
@@ -300,7 +294,7 @@ int main(int argc, char **argv)
    if (buffer == NULL)
    {
       close(fd_in);
-      printf("Not enough memory available.\n");
+      fprintf(stderr, "Not enough memory available.\n");
       return 1;
    }
 
@@ -323,7 +317,7 @@ int main(int argc, char **argv)
    if (dtohs(dos_header->e_magic) != IMAGE_DOS_SIGNATURE ||
        dtohl(nt_header->Signature) != IMAGE_NT_SIGNATURE)
    {
-      printf("'%s' isn't a PE image (bad headers)\n", argv[1]);
+      fprintf(stderr, "'%s' isn't a PE image (bad headers)\n", argv[1]);
       free(buffer);
       return 1;
    }
@@ -345,7 +339,7 @@ int main(int argc, char **argv)
             exports = malloc(sizeof(export_t) * dtohl(export_directory->NumberOfNames));
             if (exports == NULL)
             {
-               printf("Not enough memory.\n");
+               fprintf(stderr, "Not enough memory.\n");
                free(buffer);
                return 1;
             }
