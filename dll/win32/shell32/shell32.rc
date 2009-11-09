@@ -67,6 +67,7 @@ END
 #include "lang/pl-PL.rc"
 #include "lang/pt-BR.rc"
 #include "lang/pt-PT.rc"
+#include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sl-SI.rc"
 #include "lang/sk-SK.rc"

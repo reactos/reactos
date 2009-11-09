@@ -519,12 +519,12 @@ static HRESULT WINAPI domtext_put_data(
 
 static HRESULT WINAPI domtext_get_length(
     IXMLDOMText *iface,
-    long *len)
+    LONG *len)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pContent;
-    long nLength = 0;
+    LONG nLength = 0;
 
     TRACE("%p\n", iface);
 
@@ -545,12 +545,12 @@ static HRESULT WINAPI domtext_get_length(
 
 static HRESULT WINAPI domtext_substringData(
     IXMLDOMText *iface,
-    long offset, long count, BSTR *p)
+    LONG offset, LONG count, BSTR *p)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pContent;
-    long nLength = 0;
+    LONG nLength = 0;
     HRESULT hr = S_FALSE;
 
     TRACE("%p\n", iface);
@@ -620,14 +620,14 @@ static HRESULT WINAPI domtext_appendData(
 
 static HRESULT WINAPI domtext_insertData(
     IXMLDOMText *iface,
-    long offset, BSTR p)
+    LONG offset, BSTR p)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pXmlContent;
     BSTR sNewString;
     HRESULT hr = S_FALSE;
-    long nLength = 0, nLengthP = 0;
+    LONG nLength = 0, nLengthP = 0;
     xmlChar *str = NULL;
 
     TRACE("%p\n", This);
@@ -690,7 +690,7 @@ static HRESULT WINAPI domtext_insertData(
 
 static HRESULT WINAPI domtext_deleteData(
     IXMLDOMText *iface,
-    long offset, long count)
+    LONG offset, LONG count)
 {
     FIXME("\n");
     return E_NOTIMPL;
@@ -698,7 +698,7 @@ static HRESULT WINAPI domtext_deleteData(
 
 static HRESULT WINAPI domtext_replaceData(
     IXMLDOMText *iface,
-    long offset, long count, BSTR p)
+    LONG offset, LONG count, BSTR p)
 {
     FIXME("\n");
     return E_NOTIMPL;
@@ -706,7 +706,7 @@ static HRESULT WINAPI domtext_replaceData(
 
 static HRESULT WINAPI domtext_splitText(
     IXMLDOMText *iface,
-    long offset, IXMLDOMText **txtNode)
+    LONG offset, IXMLDOMText **txtNode)
 {
     FIXME("\n");
     return E_NOTIMPL;
@@ -772,7 +772,7 @@ static const struct IXMLDOMTextVtbl domtext_vtbl =
 IUnknown* create_text( xmlNodePtr text )
 {
     domtext *This;
-    HRESULT hr;
+    xmlnode *node;
 
     This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
     if ( !This )
@@ -781,22 +781,15 @@ IUnknown* create_text( xmlNodePtr text )
     This->lpVtbl = &domtext_vtbl;
     This->ref = 1;
 
-    This->node_unk = create_basic_node( text, (IUnknown*)&This->lpVtbl );
-    if(!This->node_unk)
+    node = create_basic_node( text, (IUnknown*)&This->lpVtbl, NULL );
+    if(!node)
     {
         HeapFree(GetProcessHeap(), 0, This);
         return NULL;
     }
 
-    hr = IUnknown_QueryInterface(This->node_unk, &IID_IXMLDOMNode, (LPVOID*)&This->node);
-    if(FAILED(hr))
-    {
-        IUnknown_Release(This->node_unk);
-        HeapFree( GetProcessHeap(), 0, This );
-        return NULL;
-    }
-    /* The ref on This->node is actually looped back into this object, so release it */
-    IXMLDOMNode_Release(This->node);
+    This->node_unk = (IUnknown*)&node->lpInternalUnkVtbl;
+    This->node = IXMLDOMNode_from_impl(node);
 
     return (IUnknown*) &This->lpVtbl;
 }

@@ -2914,6 +2914,26 @@ static HRESULT SHLWAPI_InvokeByIID(
 }
 
 /*************************************************************************
+ *  IConnectionPoint_InvokeWithCancel   [SHLWAPI.283]
+ */
+HRESULT WINAPI IConnectionPoint_InvokeWithCancel( IConnectionPoint* iCP,
+                                                  DISPID dispId, DISPPARAMS* dispParams,
+                                                  DWORD unknown1, DWORD unknown2 )
+{
+    IID iid;
+    HRESULT result;
+
+    FIXME("(%p)->(0x%x %p %x %x) partial stub\n", iCP, dispId, dispParams, unknown1, unknown2);
+
+    result = IConnectionPoint_GetConnectionInterface(iCP, &iid);
+    if (SUCCEEDED(result))
+        result = SHLWAPI_InvokeByIID(iCP, &iid, dispId, dispParams);
+
+    return result;
+}
+
+
+/*************************************************************************
  *      @	[SHLWAPI.284]
  *
  *  IConnectionPoint_SimpleInvoke

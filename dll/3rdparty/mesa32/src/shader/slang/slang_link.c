@@ -318,7 +318,7 @@ _slang_resolve_attributes(struct gl_shader_program *shProg,
 {
    GLint attribMap[MAX_VERTEX_ATTRIBS];
    GLuint i, j;
-   GLbitfield usedAttributes;
+   GLbitfield usedAttributes; /* generics only, not legacy attributes */
 
    assert(origProg != linkedProg);
    assert(origProg->Target == GL_VERTEX_PROGRAM_ARB);
@@ -340,6 +340,15 @@ _slang_resolve_attributes(struct gl_shader_program *shProg,
    for (i = 0; i < shProg->Attributes->NumParameters; i++) {
       GLint attr = shProg->Attributes->Parameters[i].StateIndexes[0];
       usedAttributes |= (1 << attr);
+   }
+
+   /* If gl_Vertex is used, that actually counts against the limit
+    * on generic vertex attributes.  This avoids the ambiguity of
+    * whether glVertexAttrib4fv(0, v) sets legacy attribute 0 (vert pos)
+    * or generic attribute[0].  If gl_Vertex is used, we want the former.
+    */
+   if (origProg->InputsRead & VERT_BIT_POS) {
+      usedAttributes |= 0x1;
    }
 
    /* initialize the generic attribute map entries to -1 */
@@ -384,7 +393,7 @@ _slang_resolve_attributes(struct gl_shader_program *shProg,
                    * Start at 1 since generic attribute 0 always aliases
                    * glVertex/position.
                    */
-                  for (attr = 1; attr < MAX_VERTEX_ATTRIBS; attr++) {
+                  for (attr = 0; attr < MAX_VERTEX_ATTRIBS; attr++) {
                      if (((1 << attr) & usedAttributes) == 0)
                         break;
                   }
@@ -486,8 +495,33 @@ _slang_update_inputs_outputs(struct gl_program *prog)
             maxAddrReg = MAX2(maxAddrReg, (GLuint) (inst->SrcReg[j].Index + 1));
          }
       }
+
       if (inst->DstReg.File == PROGRAM_OUTPUT) {
          prog->OutputsWritten |= 1 << inst->DstReg.Index;
+         if (inst->DstReg.RelAddr) {
+            /* If the output attribute is indexed with relative addressing
+             * we know that it must be a varying or texcoord such as
+             * gl_TexCoord[i] = v;  In this case, mark all the texcoords
+             * or varying outputs as being written.  It's not an error if
+             * a vertex shader writes varying vars that aren't used by the
+             * fragment shader.  But it is an error for a fragment shader
+             * to use varyings that are not written by the vertex shader.
+             */
+            if (prog->Target == GL_VERTEX_PROGRAM_ARB) {
+               if (inst->DstReg.Index == VERT_RESULT_TEX0) {
+                  /* mark all texcoord outputs as written */
+                  const GLbitfield mask =
+                     ((1 << MAX_TEXTURE_COORD_UNITS) - 1) << VERT_RESULT_TEX0;
+                  prog->OutputsWritten |= mask;
+               }
+               else if (inst->DstReg.Index == VERT_RESULT_VAR0) {
+                  /* mark all generic varying outputs as written */
+                  const GLbitfield mask =
+                     ((1 << MAX_VARYING) - 1) << VERT_RESULT_VAR0;
+                  prog->OutputsWritten |= mask;
+               }
+            }
+         }
       }
       else if (inst->DstReg.File == PROGRAM_ADDRESS) {
          maxAddrReg = MAX2(maxAddrReg, inst->DstReg.Index + 1);

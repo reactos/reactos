@@ -237,7 +237,7 @@ static HRESULT WINAPI IRecordInfoImpl_RecordClear(IRecordInfo *iface, PVOID pvEx
                 *(void**)var = NULL;
                 break;
             case VT_SAFEARRAY:
-                SafeArrayDestroy((SAFEARRAY*)var);
+                SafeArrayDestroy(var);
                 break;
             default:
                 FIXME("Not supported vt = %d\n", This->fields[i].vt);

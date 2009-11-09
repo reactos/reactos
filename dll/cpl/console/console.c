@@ -12,7 +12,7 @@
 #define WM_SETCONSOLE (WM_USER+10)
 
 
-LONG APIENTRY InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+LONG APIENTRY InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK OptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK FontProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK LayoutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -143,18 +143,18 @@ ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo)
 	if (res == IDCANCEL)
 	{
 		/* dont destroy when user presses cancel */
-		SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+		SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
 	}
 	else if ( res == IDC_RADIO_APPLY_ALL )
 	{
 		pConInfo->AppliedConfig = TRUE;
-		SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+		SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
 		SendMessage(pConInfo->hConsoleWindow, PM_APPLY_CONSOLE_INFO, (WPARAM)pConInfo, (LPARAM)TRUE);
 	}
 	else if ( res == IDC_RADIO_APPLY_CURRENT )
 	{
 		pConInfo->AppliedConfig = TRUE;
-		SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+		SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
 		SendMessage(pConInfo->hConsoleWindow, PM_APPLY_CONSOLE_INFO, (WPARAM)pConInfo, (LPARAM)TRUE);
 	}
 }

@@ -1,5 +1,5 @@
 /* Slovak translation
- * Copyleft 2007 Kario (kario@szm.sk)
+ * Copyleft 2007-2009, Kario (kario@szm.sk)
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -29,27 +29,27 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Sp‰ù", EM_UNDO
+    MENUITEM "&Sp‰ù",           EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Vystri&hn˙ù", WM_CUT
-    MENUITEM "&KopÌrovaù", WM_COPY
-    MENUITEM "&Prilepiù", WM_PASTE
-    MENUITEM "&Odstr·niù", WM_CLEAR
+    MENUITEM "Vystri&hn˙ù",     WM_CUT
+    MENUITEM "&KopÌrovaù",      WM_COPY
+    MENUITEM "&Prilepiù",       WM_PASTE
+    MENUITEM "&Odstr·niù",      WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Vybraù &vöetko", EM_SETSEL
+    MENUITEM "Vybraù &vöetko",  EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Obnoviù", 61728
-  MENUITEM "&Premiestniù", 61456
-  MENUITEM "&Veækosù", 61440
-  MENUITEM "&Minimalizovaù", 61472
-  MENUITEM "M&aximalizovaù", 61488
+  MENUITEM "&Obnoviù",          SC_RESTORE
+  MENUITEM "&Premiestniù",      SC_MOVE
+  MENUITEM "&Veækosù",          SC_SIZE
+  MENUITEM "&Minimalizovaù",    SC_MINIMIZE
+  MENUITEM "M&aximalizovaù",    SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Zavrieù\tAlt-F4", 61536
+  MENUITEM "&Zavrieù\tAlt-F4",  SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////

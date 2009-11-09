@@ -179,14 +179,14 @@ static HRESULT WINAPI HTMLTableRow_get_borderColorDark(IHTMLTableRow *iface, VAR
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTableRow_get_rowIndex(IHTMLTableRow *iface, long *p)
+static HRESULT WINAPI HTMLTableRow_get_rowIndex(IHTMLTableRow *iface, LONG *p)
 {
     HTMLTableRow *This = HTMLTABLEROW_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTableRow_get_selectionRowIndex(IHTMLTableRow *iface, long *p)
+static HRESULT WINAPI HTMLTableRow_get_selectionRowIndex(IHTMLTableRow *iface, LONG *p)
 {
     HTMLTableRow *This = HTMLTABLEROW_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -213,17 +213,17 @@ static HRESULT WINAPI HTMLTableRow_get_cells(IHTMLTableRow *iface, IHTMLElementC
     return S_OK;
 }
 
-static HRESULT WINAPI HTMLTableRow_insertCell(IHTMLTableRow *iface, long index, IDispatch **row)
+static HRESULT WINAPI HTMLTableRow_insertCell(IHTMLTableRow *iface, LONG index, IDispatch **row)
 {
     HTMLTableRow *This = HTMLTABLEROW_THIS(iface);
-    FIXME("(%p)->(%ld %p)\n", This, index, row);
+    FIXME("(%p)->(%d %p)\n", This, index, row);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTableRow_deleteCell(IHTMLTableRow *iface, long index)
+static HRESULT WINAPI HTMLTableRow_deleteCell(IHTMLTableRow *iface, LONG index)
 {
     HTMLTableRow *This = HTMLTABLEROW_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, index);
+    FIXME("(%p)->(%d)\n", This, index);
     return E_NOTIMPL;
 }
 

@@ -138,8 +138,8 @@ typedef enum
 
 static TIMER_DIRECTION LISTBOX_Timer = LB_TIMER_NONE;
 
-static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam,LPARAM lParam );
+//static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
 static LRESULT LISTBOX_GetItemRect( const LB_DESCR *descr, INT index, RECT *rect );
 
@@ -1714,12 +1714,19 @@ static LRESULT LISTBOX_InsertString( LB_DESCR *descr, INT index, LPCWSTR str )
  */
 static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
 {
+    /* save the item data before it gets freed by LB_RESETCONTENT */
+    ULONG_PTR item_data = descr->items[index].data;
+    LPWSTR item_str = descr->items[index].str;
+
+    if (!descr->nb_items)
+        SendMessageW( descr->self, LB_RESETCONTENT, 0, 0 );
+
     /* Note: Win 3.1 only sends DELETEITEM on owner-draw items,
      *       while Win95 sends it for all items with user data.
      *       It's probably better to send it too often than not
      *       often enough, so this is what we do here.
      */
-    if (IS_OWNERDRAW(descr) || descr->items[index].data)
+    if (IS_OWNERDRAW(descr) || item_data)
     {
         DELETEITEMSTRUCT dis;
         UINT id = (UINT)GetWindowLongPtrW( descr->self, GWLP_ID );
@@ -1728,11 +1735,11 @@ static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
         dis.CtlID    = id;
         dis.itemID   = index;
         dis.hwndItem = descr->self;
-        dis.itemData = descr->items[index].data;
+        dis.itemData = item_data;
         SendMessageW( descr->owner, WM_DELETEITEM, id, (LPARAM)&dis );
     }
     if (HAS_STRINGS(descr))
-        HeapFree( GetProcessHeap(), 0, descr->items[index].str );
+        HeapFree( GetProcessHeap(), 0, item_str );
 }
 
 
@@ -1751,15 +1758,17 @@ static LRESULT LISTBOX_RemoveItem( LB_DESCR *descr, INT index )
     /* We need to invalidate the original rect instead of the updated one. */
     LISTBOX_InvalidateItems( descr, index );
 
+    descr->nb_items--;
     LISTBOX_DeleteItem( descr, index );
+
+    if (!descr->nb_items) return LB_OKAY;
 
     /* Remove the item */
 
     item = &descr->items[index];
-    if (index < descr->nb_items-1)
+    if (index < descr->nb_items)
         RtlMoveMemory( item, item + 1,
-                       (descr->nb_items - index - 1) * sizeof(LB_ITEMDATA) );
-    descr->nb_items--;
+                       (descr->nb_items - index) * sizeof(LB_ITEMDATA) );
     if (descr->anchor_item == descr->nb_items) descr->anchor_item--;
 
     /* Shrink the item array if possible */
@@ -1891,8 +1900,7 @@ static LRESULT LISTBOX_Directory( LB_DESCR *descr, UINT attrib,
                 else  /* not a directory */
                 {
 #define ATTRIBS (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | \
-                 FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE | \
-                 FILE_ATTRIBUTE_DIRECTORY)
+                 FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE)
 
                     if ((attrib & DDL_EXCLUSIVE) &&
                         ((attrib & ATTRIBS) != (entry.dwFileAttributes & ATTRIBS)))
@@ -2159,7 +2167,7 @@ static LRESULT LISTBOX_HandleLButtonDown( LB_DESCR *descr, DWORD keys, INT x, IN
 
     if (!descr->lphc)
     {
-        if (GetWindowLongW( descr->self, GWL_EXSTYLE ) & WS_EX_DRAGDETECT)
+        if (GetWindowLongPtrW( descr->self, GWL_EXSTYLE ) & WS_EX_DRAGDETECT)
         {
             POINT pt;
 
@@ -2236,7 +2244,7 @@ static LRESULT LISTBOX_HandleLButtonDownCombo( LB_DESCR *descr, UINT msg, DWORD 
         {
             /* Check to see the NC is a scrollbar */
             INT nHitTestType=0;
-            LONG style = GetWindowLongW( descr->self, GWL_STYLE );
+            LONG style = GetWindowLongPtrW( descr->self, GWL_STYLE );
             /* Check Vertical scroll bar */
             if (style & WS_VSCROLL)
             {
@@ -2557,7 +2565,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     GetClientRect( hwnd, &rect );
     descr->self          = hwnd;
     descr->owner         = GetParent( descr->self );
-    descr->style         = GetWindowLongW( descr->self, GWL_STYLE );
+    descr->style         = GetWindowLongPtrW( descr->self, GWL_STYLE );
     descr->width         = rect.right - rect.left;
     descr->height        = rect.bottom - rect.top;
     descr->items         = NULL;
@@ -2651,8 +2659,8 @@ static BOOL LISTBOX_Destroy( LB_DESCR *descr )
 /***********************************************************************
  *           ListBoxWndProc_common
  */
-static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
-                                      WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
+                                   WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
     LB_DESCR *descr = (LB_DESCR *)GetWindowLongPtrW( hwnd, 0 );
     LPHEADCOMBO lphc = 0;
@@ -2665,7 +2673,7 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         if (msg == WM_CREATE)
         {
 	    CREATESTRUCTW *lpcs = (CREATESTRUCTW *)lParam;
-	    if (lpcs->style & LBS_COMBOBOX) lphc = (LPHEADCOMBO)lpcs->lpCreateParams;
+            if (lpcs->style & LBS_COMBOBOX) lphc = lpcs->lpCreateParams;
             if (!LISTBOX_Create( hwnd, lphc )) return -1;
             TRACE("creating hwnd %p descr %p\n", hwnd, (void *)GetWindowLongPtrW( hwnd, 0 ) );
             return 0;
@@ -3438,7 +3446,7 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
 /***********************************************************************
  *           ListBoxWndProcA
  */
-static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ListBoxWndProc_common( hwnd, msg, wParam, lParam, FALSE );
 }
@@ -3446,7 +3454,7 @@ static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARA
 /***********************************************************************
  *           ListBoxWndProcW
  */
-static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ListBoxWndProc_common( hwnd, msg, wParam, lParam, TRUE );
 }

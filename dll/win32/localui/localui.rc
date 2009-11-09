@@ -43,6 +43,7 @@
 #include "ui_En.rc"
 #include "ui_Fr.rc"
 #include "ui_Ko.rc"
+#include "ui_Lt.rc"
 #include "ui_Nl.rc"
 #include "ui_No.rc"
 #include "ui_Pl.rc"

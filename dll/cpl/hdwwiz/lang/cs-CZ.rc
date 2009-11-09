@@ -1,6 +1,6 @@
 /* FILE:        dll/cpl/hdwwiz/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2009-01-10 
+ * UPDATED:     2009-02-03 
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -148,5 +148,5 @@ BEGIN
 	IDS_PROBELISTTITLE "Následující hardware již je nainstalován na tomto poèítaèi"
 	IDS_ADDNEWDEVICE "Pøidat nové hardwarové zaøízení"
 	IDS_SELECTWAYTITLE "Prùvodce vám mùže pomoci nainstalovat jiný hardware"
-	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
+	IDS_HDTYPESTITLE "Ze seznamu níže zvolte typ instalovaného hardwaru"
 END

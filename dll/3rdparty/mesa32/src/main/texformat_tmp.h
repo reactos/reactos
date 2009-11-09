@@ -718,9 +718,9 @@ static void store_texel_rgb888(struct gl_texture_image *texImage,
 {
    const GLubyte *rgba = (const GLubyte *) texel;
    GLubyte *dst = TEXEL_ADDR(GLubyte, texImage, i, j, k, 3);
-   dst[0] = rgba[RCOMP];
+   dst[0] = rgba[BCOMP];
    dst[1] = rgba[GCOMP];
-   dst[2] = rgba[BCOMP];
+   dst[2] = rgba[RCOMP];
 }
 #endif
 
@@ -744,9 +744,9 @@ static void store_texel_bgr888(struct gl_texture_image *texImage,
 {
    const GLubyte *rgba = (const GLubyte *) texel;
    GLubyte *dst = TEXEL_ADDR(GLubyte, texImage, i, j, k, 3);
-   dst[0] = rgba[BCOMP];
+   dst[0] = rgba[RCOMP];
    dst[1] = rgba[GCOMP];
-   dst[2] = rgba[RCOMP];
+   dst[2] = rgba[BCOMP];
 }
 #endif
 
@@ -1131,7 +1131,7 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
          texelUB[GCOMP] =
          texelUB[BCOMP] = 0;
          texelUB[ACOMP] = table[index];
-         break;
+         break;;
       case GL_LUMINANCE:
          texelUB[RCOMP] =
          texelUB[GCOMP] =
@@ -1143,25 +1143,25 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
          texelUB[GCOMP] =
          texelUB[BCOMP] =
          texelUB[ACOMP] = table[index];
-         break;
+         break;;
       case GL_LUMINANCE_ALPHA:
          texelUB[RCOMP] =
          texelUB[GCOMP] =
          texelUB[BCOMP] = table[index * 2 + 0];
          texelUB[ACOMP] = table[index * 2 + 1];
-         break;
+         break;;
       case GL_RGB:
          texelUB[RCOMP] = table[index * 3 + 0];
          texelUB[GCOMP] = table[index * 3 + 1];
          texelUB[BCOMP] = table[index * 3 + 2];
          texelUB[ACOMP] = 255;
-         break;
+         break;;
       case GL_RGBA:
          texelUB[RCOMP] = table[index * 4 + 0];
          texelUB[GCOMP] = table[index * 4 + 1];
          texelUB[BCOMP] = table[index * 4 + 2];
          texelUB[ACOMP] = table[index * 4 + 3];
-         break;
+         break;;
       default:
          _mesa_problem(ctx, "Bad palette format in fetch_texel_ci8");
          return;

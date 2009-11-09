@@ -1,7 +1,6 @@
-<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" crt="dll" allowwarnings="true">
+<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" crt="dll">
 	<importlibrary definition="gdi32.spec" />
 	<include base="gdi32">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="LANGPACK" />
 	<library>user32</library>
 	<library>kernel32</library>
@@ -42,6 +41,7 @@
 		<file>linedda.c</file>
 		<file>metafile.c</file>
 		<file>painting.c</file>
+		<file>printdrv.c</file>
 		<file>palette.c</file>
 		<file>pen.c</file>
 		<file>region.c</file>
@@ -51,5 +51,5 @@
 	</directory>
 	<file>gdi32.rc</file>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

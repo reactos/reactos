@@ -19,4 +19,7 @@ MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt);
 VOID
 MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar);
 
+LRESULT WINAPI PopupMenuWndProcA(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 #endif /* __LIB_USER32_INCLUDE_MENU_H */

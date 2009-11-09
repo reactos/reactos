@@ -197,9 +197,9 @@
 197 stdcall -noname SHGlobalDefect(long)
 198 stdcall -noname SHAbortInvokeCommand()
 199 stdcall ExtractAssociatedIconA(long str ptr)
-200 stdcall -noname SHLocalAlloc(long long)
-201 stdcall -noname SHLocalFree(ptr)
-202 stdcall -noname SHLocalReAlloc(ptr long long)
+200 stdcall -noname SHCreateDesktop(ptr)
+201 stdcall -noname SHDesktopMessageLoop(ptr)
+202 stub -noname DDEHandleViewFolderNotify
 203 stdcall -noname AddCommasW(long wstr)
 204 stdcall -noname ShortSizeFormatW(double)
 205 stdcall Printer_LoadIconsW(wstr ptr ptr)

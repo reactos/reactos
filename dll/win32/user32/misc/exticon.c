@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <user32.h>
@@ -53,6 +53,7 @@ typedef struct
 } icoICONDIR, *LPicoICONDIR;
 
 #include "poppack.h"
+
 #if 0
 static void dumpIcoDirEnty ( LPicoICONDIRENTRY entry )
 {
@@ -86,7 +87,7 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( const IMAGE_RESOURCE_DI
     {
         pos = (min + max) / 2;
         if (entry[pos].Id == id)
-            return (IMAGE_RESOURCE_DIRECTORY *)((char *)root + entry[pos].OffsetToDirectory);
+            return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].OffsetToDirectory);
         if (entry[pos].Id > id) max = pos - 1;
         else min = pos + 1;
     }
@@ -104,7 +105,7 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_default( const IMAGE_RESOURCE_
 {
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry;
     entry = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(dir + 1);
-    return (IMAGE_RESOURCE_DIRECTORY *)((char *)root + entry->OffsetToDirectory);
+    return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry->OffsetToDirectory);
 }
 
 /*************************************************************************
@@ -182,7 +183,6 @@ static BYTE * ICO_LoadIcon( LPBYTE peimage, LPicoICONDIRENTRY lpiIDE, ULONG *uSi
  *                      ICO_GetIconDirectory
  *
  * Reads .ico file and build phony ICONDIR struct
- * see http://www.microsoft.com/win32dev/ui/icons.htm
  */
 #define HEADER_SIZE		(sizeof(CURSORICONDIR) - sizeof (CURSORICONDIRENTRY))
 #define HEADER_SIZE_FILE	(sizeof(icoICONDIR) - sizeof (icoICONDIRENTRY))
@@ -202,7 +202,7 @@ static BYTE * ICO_GetIconDirectory( LPBYTE peimage, LPicoICONDIR* lplpiID, ULONG
 
 	/* allocate the phony ICONDIR structure */
 	*uSize = lpcid->idCount * sizeof(CURSORICONDIRENTRY) + HEADER_SIZE;
-	if( (lpID = (CURSORICONDIR*)HeapAlloc(GetProcessHeap(),0, *uSize) ))
+	if( (lpID = HeapAlloc(GetProcessHeap(),0, *uSize) ))
 	{
 	  /* copy the header */
 	  lpID->idReserved = lpcid->idReserved;
@@ -212,7 +212,7 @@ static BYTE * ICO_GetIconDirectory( LPBYTE peimage, LPicoICONDIR* lplpiID, ULONG
 	  /* copy the entries */
 	  for( i=0; i < lpcid->idCount; i++ )
 	  {
-	    memcpy((void*)&(lpID->idEntries[i]),(void*)&(lpcid->idEntries[i]), sizeof(CURSORICONDIRENTRY) - 2);
+	    memcpy(&lpID->idEntries[i], &lpcid->idEntries[i], sizeof(CURSORICONDIRENTRY) - 2);
 	    lpID->idEntries[i].wResId = i;
 	  }
 
@@ -251,7 +251,6 @@ static UINT ICO_ExtractIconExW(
 	UINT16		iconDirCount = 0; //,iconCount = 0;
 	LPBYTE		peimage;
 	HANDLE		fmapping;
-	//ULONG		uSize;
 	DWORD		fsizeh,fsizel;
         WCHAR		szExePath[MAX_PATH];
         DWORD		dwSearchReturn;
@@ -409,7 +408,7 @@ static UINT ICO_ExtractIconExW(
 	    if (pe_sections[i].Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
 	      continue;
 	    if (fsizel < pe_sections[i].PointerToRawData+pe_sections[i].SizeOfRawData) {
-	      FIXME("File %s too short (section is at %ld bytes, real size is %ld)\n",
+              FIXME("File %s too short (section is at %ld bytes, real size is %ld)\n",
 		      debugstr_w(lpszExeFileName),
 		      pe_sections[i].PointerToRawData+pe_sections[i].SizeOfRawData,
 		      fsizel
@@ -450,7 +449,7 @@ static UINT ICO_ExtractIconExW(
 	    /* search resource id */
 	    int n = 0;
 	    int iId = abs(nIconIndex);
-	    PIMAGE_RESOURCE_DIRECTORY_ENTRY xprdeTmp = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(icongroupresdir+1);
+	    const IMAGE_RESOURCE_DIRECTORY_ENTRY* xprdeTmp = (const IMAGE_RESOURCE_DIRECTORY_ENTRY*)(icongroupresdir+1);
 
 	    while(n<iconDirCount && xprdeTmp)
 	    {
@@ -483,18 +482,18 @@ static UINT ICO_ExtractIconExW(
 	    nIcons = iconDirCount - nIconIndex;
 
 	  /* starting from specified index */
-	  xresent = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(icongroupresdir+1) + nIconIndex;
+	  xresent = (const IMAGE_RESOURCE_DIRECTORY_ENTRY*)(icongroupresdir+1) + nIconIndex;
 
 	  for (i=0; i < nIcons; i++,xresent++)
 	  {
 	    const IMAGE_RESOURCE_DIRECTORY *resdir;
 
 	    /* go down this resource entry, name */
-	    resdir = (PIMAGE_RESOURCE_DIRECTORY)((DWORD)rootresdir+(xresent->OffsetToDirectory));
+	    resdir = (const IMAGE_RESOURCE_DIRECTORY*)((const char *)rootresdir+(xresent->OffsetToDirectory));
 
 	    /* default language (0) */
 	    resdir = find_entry_default(resdir,rootresdir);
-	    igdataent = (PIMAGE_RESOURCE_DATA_ENTRY)resdir;
+	    igdataent = (const IMAGE_RESOURCE_DATA_ENTRY*)resdir;
 
 	    /* lookup address in mapped image for virtual address */
 	    igdata = NULL;
@@ -546,7 +545,7 @@ static UINT ICO_ExtractIconExW(
 	      RetPtr[i]=0;
 	      continue;
 	    }
-	    idataent = (PIMAGE_RESOURCE_DATA_ENTRY)xresdir;
+	    idataent = (const IMAGE_RESOURCE_DATA_ENTRY*)xresdir;
 	    idata = NULL;
 
 	    /* map virtual to address in image */
@@ -578,7 +577,6 @@ end:
 
 /***********************************************************************
  *           PrivateExtractIconsW			[USER32.@]
- * @implemented
  *
  * NOTES
  *  If HIWORD(sizeX) && HIWORD(sizeY) 2 * ((nIcons + 1) MOD 2) icons are
@@ -608,14 +606,13 @@ UINT WINAPI PrivateExtractIconsW (
 
 	if ((nIcons & 1) && HIWORD(sizeX) && HIWORD(sizeY))
 	{
-	  WARN("Uneven number %d of icons requested for small and large icons!", nIcons);
+	  WARN("Uneven number %d of icons requested for small and large icons!\n", nIcons);
 	}
 	return ICO_ExtractIconExW(lpwstrFile, phicon, nIndex, nIcons, sizeX, sizeY, pIconId, flags);
 }
 
 /***********************************************************************
  *           PrivateExtractIconsA			[USER32.@]
- * @implemented
  */
 
 UINT WINAPI PrivateExtractIconsA (
@@ -643,7 +640,6 @@ UINT WINAPI PrivateExtractIconsA (
 
 /***********************************************************************
  *           PrivateExtractIconExW			[USER32.@]
- * @implemented
  * NOTES
  *  if nIndex == -1 it returns the number of icons in any case !!!
  */
@@ -655,7 +651,7 @@ UINT WINAPI PrivateExtractIconExW (
 	UINT nIcons )
 {
 	DWORD cyicon, cysmicon, cxicon, cxsmicon;
-	INT ret = 0;
+	UINT ret = 0;
 
 	TRACE("%s %d %p %p %d\n",
 	debugstr_w(lpwstrFile),nIndex,phIconLarge, phIconSmall, nIcons);
@@ -672,10 +668,10 @@ UINT WINAPI PrivateExtractIconExW (
 	  cxsmicon = GetSystemMetrics(SM_CXSMICON);
 	  cysmicon = GetSystemMetrics(SM_CYSMICON);
 
-	  ret = ICO_ExtractIconExW(lpwstrFile, (HICON*) &hIcon, nIndex, 2, cxicon | (cxsmicon<<16),
+	  ret = ICO_ExtractIconExW(lpwstrFile, hIcon, nIndex, 2, cxicon | (cxsmicon<<16),
 	                           cyicon | (cysmicon<<16), NULL, LR_DEFAULTCOLOR);
-	  *phIconLarge = (1 <= ret ? hIcon[0] : NULL);
-	  *phIconSmall = (2 <= ret ? hIcon[1] : NULL);
+	  *phIconLarge = hIcon[0];
+	  *phIconSmall = hIcon[1];
  	  return ret;
 	}
 
@@ -700,7 +696,6 @@ UINT WINAPI PrivateExtractIconExW (
 
 /***********************************************************************
  *           PrivateExtractIconExA			[USER32.@]
- * @implemented
  */
 UINT WINAPI PrivateExtractIconExA (
 	LPCSTR lpstrFile,

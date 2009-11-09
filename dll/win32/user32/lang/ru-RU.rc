@@ -25,27 +25,27 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Отменить", EM_UNDO
+    MENUITEM "&Отменить",       EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "&Вырезать", WM_CUT
-    MENUITEM "&Копировать", WM_COPY
-    MENUITEM "В&ставить", WM_PASTE
-    MENUITEM "&Удалить", WM_CLEAR
+    MENUITEM "&Вырезать",       WM_CUT
+    MENUITEM "&Копировать",     WM_COPY
+    MENUITEM "В&ставить",       WM_PASTE
+    MENUITEM "&Удалить",        WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Выделить &все", EM_SETSEL
+    MENUITEM "Выделить &все",   EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Востановить", 61728
-  MENUITEM "&Переместить", 61456
-  MENUITEM "Р&азмер", 61440
-  MENUITEM "&Свернуть", 61472
-  MENUITEM "&Развернуть", 61488
+  MENUITEM "&Востановить",      SC_RESTORE
+  MENUITEM "&Переместить",      SC_MOVE
+  MENUITEM "Р&азмер",           SC_SIZE
+  MENUITEM "&Свернуть",         SC_MINIMIZE
+  MENUITEM "&Развернуть",       SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Закрыть\tAlt-F4", 61536
+  MENUITEM "&Закрыть\tAlt-F4",  SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////

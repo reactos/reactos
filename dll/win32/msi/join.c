@@ -194,13 +194,13 @@ static UINT JOIN_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *cols
 }
 
 static UINT JOIN_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
     JOINTABLE *table;
     UINT cols = 0;
 
-    TRACE("%p %d %p %p\n", jv, n, name, type );
+    TRACE("%p %d %p %p %p\n", jv, n, name, type, temporary );
 
     if (n == 0 || n > jv->columns)
         return ERROR_FUNCTION_FAILED;
@@ -208,7 +208,8 @@ static UINT JOIN_get_column_info( struct tagMSIVIEW *view,
     LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
     {
         if (n <= cols + table->columns)
-            return table->view->ops->get_column_info(table->view, n - cols, name, type);
+            return table->view->ops->get_column_info(table->view, n - cols,
+                                                     name, type, temporary);
 
         cols += table->columns;
     }
@@ -337,7 +338,10 @@ UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables )
 
         table = msi_alloc(sizeof(JOINTABLE));
         if (!table)
-            return ERROR_OUTOFMEMORY;
+        {
+            r = ERROR_OUTOFMEMORY;
+            goto end;
+        }
 
         r = TABLE_CreateView( db, tables, &table->view );
         if( r != ERROR_SUCCESS )

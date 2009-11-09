@@ -18,16 +18,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
 
 #include "windef.h"
 #include "winbase.h"
-#include "winerror.h"
 #include "wine/debug.h"
 #include "mmsystem.h"
+#define NOBITMAP
 #include "mmreg.h"
 #include "msacm.h"
 #include "msacmdrv.h"
@@ -44,7 +44,7 @@ HINSTANCE	MSACM_hInstance32 = 0;
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("%p 0x%lx %p\n", hInstDLL, fdwReason, lpvReserved);
+    TRACE("%p 0x%x %p\n", hInstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
@@ -86,7 +86,7 @@ DWORD WINAPI acmGetVersion(void)
     case VER_PLATFORM_WIN32_NT:
 	return 0x04000565; /* 4.0.1381 */
     default:
-        FIXME("%lx not supported\n", version.dwPlatformId);
+        FIXME("%x not supported\n", version.dwPlatformId);
     case VER_PLATFORM_WIN32_WINDOWS:
 	return 0x04030000; /* 4.3.0 */
     }
@@ -107,7 +107,7 @@ MMRESULT WINAPI acmMetrics(HACMOBJ hao, UINT uMetric, LPVOID pMetric)
     BOOL 		bLocal = TRUE;
     PWINE_ACMDRIVERID	padid;
     DWORD		val = 0;
-    int			i;
+    unsigned int	i;
     MMRESULT		mmr = MMSYSERR_NOERROR;
 
     TRACE("(%p, %d, %p);\n", hao, uMetric, pMetric);
@@ -220,11 +220,43 @@ MMRESULT WINAPI acmMetrics(HACMOBJ hao, UINT uMetric, LPVOID pMetric)
         FIXME("ACM_METRIC_COUNT_HARDWARE not implemented\n");
         break;
 
+    case ACM_METRIC_DRIVER_PRIORITY:
+        /* Return current list position of driver */
+        if (!hao) return MMSYSERR_INVALHANDLE;
+        mmr = MMSYSERR_INVALHANDLE;
+        for (i = 1, padid = MSACM_pFirstACMDriverID; padid; i++, padid = padid->pNextACMDriverID) {
+            if (padid == (PWINE_ACMDRIVERID)hao) {
+                if (pMetric) {
+                    *(LPDWORD)pMetric = i;
+                    mmr = MMSYSERR_NOERROR;
+                } else {
+                    mmr = MMSYSERR_INVALPARAM;
+                }
+                break;
+            }
+        }
+        break;
+        
+    case ACM_METRIC_DRIVER_SUPPORT:
+        /* Return fdwSupport for driver */
+        if (!hao) return MMSYSERR_INVALHANDLE;
+        mmr = MMSYSERR_INVALHANDLE;
+        for (padid = MSACM_pFirstACMDriverID; padid; padid = padid->pNextACMDriverID) {
+            if (padid == (PWINE_ACMDRIVERID)hao) {
+                if (pMetric) {
+                    *(LPDWORD)pMetric = padid->fdwSupport;
+                    mmr = MMSYSERR_NOERROR;
+                } else {
+                    mmr = MMSYSERR_INVALPARAM;
+                }
+                break;
+            }
+        }
+        break;
+
     case ACM_METRIC_HARDWARE_WAVE_INPUT:
     case ACM_METRIC_HARDWARE_WAVE_OUTPUT:
     case ACM_METRIC_MAX_SIZE_FILTER:
-    case ACM_METRIC_DRIVER_SUPPORT:
-    case ACM_METRIC_DRIVER_PRIORITY:
     default:
 	FIXME("(%p, %d, %p): stub\n", hao, uMetric, pMetric);
 	mmr = MMSYSERR_NOTSUPPORTED;

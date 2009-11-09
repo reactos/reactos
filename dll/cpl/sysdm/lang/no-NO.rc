@@ -10,6 +10,7 @@ BEGIN
     LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
     LTEXT       "Versjon ", IDC_STATIC, 10, 153, 25, 9
     LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
+    LTEXT       "32 bits operativsystem", IDC_STATIC, 10, 173, 85, 9
     LTEXT       REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 60, 9
     LTEXT       "Maskin:", IDC_STATIC, 124, 132, 34, 9
     LTEXT       "", IDC_MACHINELINE1, 130, 144, 118, 9
@@ -86,8 +87,8 @@ BEGIN
     GROUPBOX    "Valg av maskinvareprofil", IDC_STATIC, 7, 130, 240, 75
     LTEXT       "Når ReactOS starter:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Vent til jeg velger en maskinvareprofil", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
-    AUTORADIOBUTTON "&Velg første profil i listen ovenfor hvis jeg ikke velger profil innen", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    LTEXT       "sekunder", IDC_STATIC, 65, 187, 35, 8
+    AUTORADIOBUTTON "&Velg første profil i listen ovenfor hvis jeg ikke velger profil innen", IDC_HRDPROFSELECT, 14, 173, 220, 8
+    LTEXT       "Sekunder", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
 

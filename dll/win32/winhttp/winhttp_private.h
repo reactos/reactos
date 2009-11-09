@@ -26,6 +26,7 @@
 #include "wine/list.h"
 #include "wine/unicode.h"
 
+#include <sys/types.h>
 #ifdef HAVE_NETINET_IN_H
 # include <netinet/in.h>
 #endif
@@ -33,14 +34,17 @@
 # include <netdb.h>
 #endif
 #if defined(__MINGW32__) || defined (_MSC_VER)
-#  include "ws2tcpip.h"
-#  ifndef MSG_WAITALL
-#  define MSG_WAITALL 0
-#  endif
+# include <ws2tcpip.h>
 #else
-#  define closesocket close
-#  define ioctlsocket ioctl
-#endif /* __MINGW32__ */
+# define closesocket close
+# define ioctlsocket ioctl
+#endif
+
+static const WCHAR getW[]    = {'G','E','T',0};
+static const WCHAR postW[]   = {'P','O','S','T',0};
+static const WCHAR slashW[]  = {'/',0};
+static const WCHAR http1_0[] = {'H','T','T','P','/','1','.','0',0};
+static const WCHAR http1_1[] = {'H','T','T','P','/','1','.','1',0};
 
 typedef struct _object_header_t object_header_t;
 
@@ -71,6 +75,21 @@ struct _object_header_t
 
 typedef struct
 {
+    struct list entry;
+    WCHAR *name;
+    struct list cookies;
+} domain_t;
+
+typedef struct
+{
+    struct list entry;
+    WCHAR *name;
+    WCHAR *value;
+    WCHAR *path;
+} cookie_t;
+
+typedef struct
+{
     object_header_t hdr;
     LPWSTR agent;
     DWORD access;
@@ -78,6 +97,7 @@ typedef struct
     LPWSTR proxy_bypass;
     LPWSTR proxy_username;
     LPWSTR proxy_password;
+    struct list cookie_cache;
 } session_t;
 
 typedef struct
@@ -97,7 +117,6 @@ typedef struct
 {
     int socket;
     BOOL secure; /* SSL active on connection? */
-    void *ssl_ctx;
     void *ssl_conn;
     char *peek_msg;
     char *peek_msg_mem;
@@ -127,6 +146,52 @@ typedef struct
     DWORD num_headers;
 } request_t;
 
+typedef struct _task_header_t task_header_t;
+
+struct _task_header_t
+{
+    request_t *request;
+    void (*proc)( task_header_t * );
+};
+
+typedef struct
+{
+    task_header_t hdr;
+    LPWSTR headers;
+    DWORD headers_len;
+    LPVOID optional;
+    DWORD optional_len;
+    DWORD total_len;
+    DWORD_PTR context;
+} send_request_t;
+
+typedef struct
+{
+    task_header_t hdr;
+} receive_response_t;
+
+typedef struct
+{
+    task_header_t hdr;
+    LPDWORD available;
+} query_data_t;
+
+typedef struct
+{
+    task_header_t hdr;
+    LPVOID buffer;
+    DWORD to_read;
+    LPDWORD read;
+} read_data_t;
+
+typedef struct
+{
+    task_header_t hdr;
+    LPCVOID buffer;
+    DWORD to_write;
+    LPDWORD written;
+} write_data_t;
+
 object_header_t *addref_object( object_header_t * );
 object_header_t *grab_object( HINTERNET );
 void release_object( object_header_t * );
@@ -134,6 +199,7 @@ HINTERNET alloc_handle( object_header_t * );
 BOOL free_handle( HINTERNET );
 
 void set_last_error( DWORD );
+DWORD get_last_error( void );
 void send_callback( object_header_t *, DWORD, LPVOID, DWORD );
 void close_connection( request_t * );
 
@@ -148,6 +214,12 @@ BOOL netconn_recv( netconn_t *, void *, size_t, int, int * );
 BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr_in * );
 BOOL netconn_secure_connect( netconn_t * );
 BOOL netconn_send( netconn_t *, const void *, size_t, int, int * );
+const void *netconn_get_certificate( netconn_t * );
+
+BOOL set_cookies( request_t *, const WCHAR * );
+BOOL add_cookie_headers( request_t * );
+BOOL add_request_headers( request_t *, LPCWSTR, DWORD, DWORD );
+void delete_domain( domain_t * );
 
 static inline void *heap_alloc( SIZE_T size )
 {

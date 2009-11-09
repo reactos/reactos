@@ -452,7 +452,7 @@ static int get_rect_cy(const REBAR_INFO *infoPtr, const RECT *lpRect)
     return lpRect->bottom - lpRect->top;
 }
 
-static int round_child_height(REBAR_BAND *lpBand, int cyHeight)
+static int round_child_height(const REBAR_BAND *lpBand, int cyHeight)
 {
     int cy = 0;
     if (lpBand->cyIntegral == 0)
@@ -1699,11 +1699,11 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
     if( (lprbbi->fMask & RBBIM_CHILDSIZE) &&
         ( (lpBand->cxMinChild != lprbbi->cxMinChild) ||
           (lpBand->cyMinChild != lprbbi->cyMinChild ) ||
-          ( (lprbbi->cbSize >= sizeof (REBARBANDINFOA) && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) &&
+          ( (lprbbi->cbSize >= REBARBANDINFOA_V6_SIZE && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) &&
             ( (lpBand->cyChild    != lprbbi->cyChild ) ||
               (lpBand->cyMaxChild != lprbbi->cyMaxChild ) ||
               (lpBand->cyIntegral != lprbbi->cyIntegral ) ) ) ||
-          ( (lprbbi->cbSize < sizeof (REBARBANDINFOA)) &&
+          ( (lprbbi->cbSize < REBARBANDINFOA_V6_SIZE) &&
             ( (lpBand->cyChild || 
                lpBand->cyMaxChild || 
                lpBand->cyIntegral ) ) ) ) )
@@ -1711,7 +1711,7 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
 	lpBand->cxMinChild = lprbbi->cxMinChild;
 	lpBand->cyMinChild = lprbbi->cyMinChild;
         /* These fields where added in WIN32_IE == 0x400 and are set only for RBBS_VARIABLEHEIGHT bands */
-        if (lprbbi->cbSize >= sizeof (REBARBANDINFOA) && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
+        if (lprbbi->cbSize >= REBARBANDINFOA_V6_SIZE && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
 	    lpBand->cyMaxChild = lprbbi->cyMaxChild;
             lpBand->cyIntegral = lprbbi->cyIntegral;
 
@@ -1747,7 +1747,7 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
     }
 
     /* check for additional data */
-    if (lprbbi->cbSize >= sizeof (REBARBANDINFOA)) {
+    if (lprbbi->cbSize >= REBARBANDINFOA_V6_SIZE) {
 	if( (lprbbi->fMask & RBBIM_IDEALSIZE) &&
             ( lpBand->cxIdeal != lprbbi->cxIdeal ) )
         {
@@ -2167,7 +2167,7 @@ REBAR_GetBandInfoT(const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL
 	lprbbi->cyMinChild = lpBand->cyMinChild;
         /* to make tests pass we follow Windows behaviour and allow to read these fields only
          * for RBBS_VARIABLEHEIGHTS bands */
-        if (lprbbi->cbSize >= sizeof (REBARBANDINFOA) && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
+        if (lprbbi->cbSize >= REBARBANDINFOW_V6_SIZE && (lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
 	    lprbbi->cyChild    = lpBand->cyChild;
 	    lprbbi->cyMaxChild = lpBand->cyMaxChild;
 	    lprbbi->cyIntegral = lpBand->cyIntegral;
@@ -2184,7 +2184,7 @@ REBAR_GetBandInfoT(const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL
 	lprbbi->wID = lpBand->wID;
 
     /* check for additional data */
-    if (lprbbi->cbSize >= sizeof (REBARBANDINFOA)) {
+    if (lprbbi->cbSize >= REBARBANDINFOW_V6_SIZE) {
 	if (lprbbi->fMask & RBBIM_IDEALSIZE)
 	    lprbbi->cxIdeal = lpBand->cxIdeal;
 
@@ -2424,7 +2424,7 @@ REBAR_InsertBandT(REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL bUnico
     REBAR_CommonSetupBand(infoPtr->hwndSelf, lprbbi, lpBand);
 
     /* Make sure the defaults for these are correct */
-    if (lprbbi->cbSize < sizeof (REBARBANDINFOA) || !(lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
+    if (lprbbi->cbSize < REBARBANDINFOA_V6_SIZE || !(lpBand->fStyle & RBBS_VARIABLEHEIGHT)) {
         lpBand->cyChild    = lpBand->cyMinChild;
         lpBand->cyMaxChild = 0x7fffffff;
         lpBand->cyIntegral = 0;
@@ -3190,8 +3190,8 @@ REBAR_NCCreate (HWND hwnd, LPARAM lParam)
     /* initialize info structure - initial values are 0 */
     infoPtr->clrBk = CLR_NONE;
     infoPtr->clrText = CLR_NONE;
-    infoPtr->clrBtnText = GetSysColor (COLOR_BTNTEXT);
-    infoPtr->clrBtnFace = GetSysColor (COLOR_BTNFACE);
+    infoPtr->clrBtnText = comctl32_color.clrBtnText;
+    infoPtr->clrBtnFace = comctl32_color.clrBtnFace;
     infoPtr->iOldBand = -1;
     infoPtr->ichevronhotBand = -2;
     infoPtr->iGrabbedBand = -1;
@@ -3469,19 +3469,19 @@ REBAR_Size (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-REBAR_StyleChanged (REBAR_INFO *infoPtr, LPARAM lParam)
+REBAR_StyleChanged (REBAR_INFO *infoPtr, INT nType, const STYLESTRUCT *lpStyle)
 {
-    STYLESTRUCT *ss = (STYLESTRUCT *)lParam;
-
     TRACE("current style=%08x, styleOld=%08x, style being set to=%08x\n",
-	  infoPtr->dwStyle, ss->styleOld, ss->styleNew);
-    infoPtr->orgStyle = infoPtr->dwStyle = ss->styleNew;
-    if (GetWindowTheme (infoPtr->hwndSelf))
-        infoPtr->dwStyle &= ~WS_BORDER;
-    /* maybe it should be COMMON_STYLES like in toolbar */
-    if ((ss->styleNew ^ ss->styleOld) & CCS_VERT)
-        REBAR_Layout(infoPtr);
-
+	  infoPtr->dwStyle, lpStyle->styleOld, lpStyle->styleNew);
+    if (nType == GWL_STYLE)
+    {
+        infoPtr->orgStyle = infoPtr->dwStyle = lpStyle->styleNew;
+        if (GetWindowTheme (infoPtr->hwndSelf))
+            infoPtr->dwStyle &= ~WS_BORDER;
+        /* maybe it should be COMMON_STYLES like in toolbar */
+        if ((lpStyle->styleNew ^ lpStyle->styleOld) & CCS_VERT)
+            REBAR_Layout(infoPtr);
+    }
     return FALSE;
 }
 
@@ -3715,15 +3715,14 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return REBAR_Size (infoPtr, wParam, lParam);
 
         case WM_STYLECHANGED:
-	    return REBAR_StyleChanged (infoPtr, lParam);
+	    return REBAR_StyleChanged (infoPtr, wParam, (LPSTYLESTRUCT)lParam);
 
         case WM_THEMECHANGED:
             return theme_changed (infoPtr);
 
-/*      case WM_SYSCOLORCHANGE: supported according to ControlSpy */
-/*      "Applications that have brushes using the existing system colors
-         should delete those brushes and recreate them using the new
-         system colors."  per MSDN                                */
+        case WM_SYSCOLORCHANGE:
+            COMCTL32_RefreshSysColors();
+            return 0;
 
 /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
 /*	case WM_WININICHANGE: */

@@ -113,8 +113,11 @@ UINT DROP_CreateView(MSIDATABASE *db, MSIVIEW **view, LPCWSTR name)
         return ERROR_FUNCTION_FAILED;
 
     r = TABLE_CreateView(db, name, &dv->table);
-    if (r != ERROR_SUCCESS || !dv->table)
+    if (r != ERROR_SUCCESS)
+    {
+        msi_free( dv );
         return r;
+    }
 
     dv->view.ops = &drop_ops;
     dv->db = db;

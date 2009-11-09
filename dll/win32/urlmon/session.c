@@ -228,7 +228,7 @@ IInternetProtocolInfo *get_protocol_info(LPCWSTR url)
     return ret;
 }
 
-HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret)
+HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, BOOL *urlmon_protocol, IClassFactory **ret)
 {
     name_space *ns;
     WCHAR schema[64];
@@ -250,6 +250,8 @@ HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret)
         IClassFactory_AddRef(*ret);
         if(clsid)
             *clsid = ns->clsid;
+        if(urlmon_protocol)
+            *urlmon_protocol = ns->urlmon;
     }
 
     LeaveCriticalSection(&session_cs);
@@ -257,7 +259,39 @@ HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret)
     if(*ret)
         return S_OK;
 
+    if(urlmon_protocol)
+        *urlmon_protocol = FALSE;
     return get_protocol_cf(schema, schema_len, clsid, ret);
+}
+
+IInternetProtocol *get_mime_filter(LPCWSTR mime)
+{
+    IClassFactory *cf = NULL;
+    IInternetProtocol *ret;
+    mime_filter *iter;
+    HRESULT hres;
+
+    EnterCriticalSection(&session_cs);
+
+    for(iter = mime_filter_list; iter; iter = iter->next) {
+        if(!strcmpW(iter->mime, mime)) {
+            cf = iter->cf;
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&session_cs);
+
+    if(!cf)
+        return NULL;
+
+    hres = IClassFactory_CreateInstance(cf, NULL, &IID_IInternetProtocol, (void**)&ret);
+    if(FAILED(hres)) {
+        WARN("CreateInstance failed: %08x\n", hres);
+        return NULL;
+    }
+
+    return ret;
 }
 
 static HRESULT WINAPI InternetSession_QueryInterface(IInternetSession *iface,

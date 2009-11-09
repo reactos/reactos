@@ -129,19 +129,6 @@ static DWORD get_scheme_code(LPCWSTR scheme, DWORD scheme_len)
     return URL_SCHEME_UNKNOWN;
 }
 
-static BOOL URL_JustLocation(LPCWSTR str)
-{
-    while(*str && (*str == '/')) str++;
-    if (*str) {
-        while (*str && ((*str == '-') ||
-                        (*str == '.') ||
-			isalnumW(*str))) str++;
-        if (*str == '/') return FALSE;
-    }
-    return TRUE;
-}
-
-
 /*************************************************************************
  *      @	[SHLWAPI.1]
  *
@@ -608,7 +595,6 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     DWORD len, res1, res2, process_case = 0;
     LPWSTR work, preliminary, mbase, mrelative;
     static const WCHAR myfilestr[] = {'f','i','l','e',':','/','/','/','\0'};
-    static const WCHAR single_slash[] = {'/','\0'};
     HRESULT ret;
 
     TRACE("(base %s, Relative %s, Combine size %d, flags %08x)\n",
@@ -768,14 +754,8 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	strcatW(preliminary, mrelative);
 	break;
 
-    case 2:  /*
-	      * Same as case 1, but if URL_PLUGGABLE_PROTOCOL was specified
-	      * and pszRelative starts with "//", then append a "/"
-	      */
+    case 2:  /* case where pszRelative replaces scheme, and location */
 	strcpyW(preliminary, mrelative);
-	if (!(dwFlags & URL_PLUGGABLE_PROTOCOL) &&
-	    URL_JustLocation(relative.pszSuffix))
-	    strcatW(preliminary, single_slash);
 	break;
 
     case 3:  /*

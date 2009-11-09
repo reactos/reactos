@@ -553,14 +553,14 @@ static int COND_GetOperator( COND_input *cond )
         const WCHAR str[4];
         int id;
     } table[] = {
-        { {'~','=',0},     COND_IEQ },
         { {'~','<','=',0}, COND_ILE },
         { {'~','>','<',0}, COND_ISS },
         { {'~','>','>',0}, COND_IRHS },
         { {'~','<','>',0}, COND_INE },
-        { {'~','<',0},     COND_ILT },
         { {'~','>','=',0}, COND_IGE },
         { {'~','<','<',0}, COND_ILHS },
+        { {'~','=',0},     COND_IEQ },
+        { {'~','<',0},     COND_ILT },
         { {'~','>',0},     COND_IGT },
         { {'>','=',0},     COND_GE  },
         { {'>','<',0},     COND_SS  },

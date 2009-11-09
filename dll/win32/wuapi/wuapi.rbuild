@@ -4,7 +4,7 @@
 	<include base="wuapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>downloader.c</file>
 	<file>installer.c</file>
 	<file>main.c</file>

@@ -46,8 +46,8 @@ typedef struct _FTMarshalImpl {
 	IUnknown *pUnkOuter;
 } FTMarshalImpl;
 
-#define _IFTMUnknown_(This)(IUnknown*)&(This->lpVtbl)
-#define _IFTMarshal_(This) (IMarshal*)&(This->lpvtblFTM)
+#define _IFTMUnknown_(This) ((IUnknown*)&(This)->lpVtbl)
+#define _IFTMarshal_(This)  (&(This)->lpvtblFTM)
 
 static inline FTMarshalImpl *impl_from_IMarshal( IMarshal *iface )
 {
@@ -110,7 +110,7 @@ FTMarshalImpl_QueryInterface (LPMARSHAL iface, REFIID riid, LPVOID * ppv)
 
     FTMarshalImpl *This = impl_from_IMarshal(iface);
 
-    TRACE ("(%p)->(\n\tIID:\t%s,%p)\n", This, debugstr_guid (riid), ppv);
+    TRACE ("(%p)->(%s,%p)\n", This, debugstr_guid (riid), ppv);
     return IUnknown_QueryInterface (This->pUnkOuter, riid, ppv);
 }
 

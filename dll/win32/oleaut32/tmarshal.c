@@ -213,7 +213,7 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
 	goto fail;
     }
     
-    hres = IStream_Stat(pStm,&ststg,0);
+    hres = IStream_Stat(pStm,&ststg,STATFLAG_NONAME);
     if (hres) {
         ERR("Stream stat failed\n");
         goto fail;
@@ -254,7 +254,7 @@ fail:
 static HRESULT WINAPI
 PSFacBuf_QueryInterface(LPPSFACTORYBUFFER iface, REFIID iid, LPVOID *ppv) {
     if (IsEqualIID(iid,&IID_IPSFactoryBuffer)||IsEqualIID(iid,&IID_IUnknown)) {
-	*ppv = (LPVOID)iface;
+        *ppv = iface;
 	/* No ref counting, static class */
 	return S_OK;
     }
@@ -299,7 +299,7 @@ _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
 	return E_FAIL;
     }
     RegCloseKey(ikey);
-    sprintf(typelibkey,"Typelib\\%s\\%s\\0\\win32",tlguid,ver);
+    sprintf(typelibkey,"Typelib\\%s\\%s\\0\\win%u",tlguid,ver,(sizeof(void*) == 8) ? 64 : 32);
     tlfnlen = sizeof(tlfn);
     if (RegQueryValueA(HKEY_CLASSES_ROOT,typelibkey,tlfn,&tlfnlen)) {
 	ERR("Could not get typelib fn?\n");
@@ -410,7 +410,7 @@ TMProxyImpl_QueryInterface(LPRPCPROXYBUFFER iface, REFIID riid, LPVOID *ppv)
 {
     TRACE("()\n");
     if (IsEqualIID(riid,&IID_IUnknown)||IsEqualIID(riid,&IID_IRpcProxyBuffer)) {
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         IRpcProxyBuffer_AddRef(iface);
         return S_OK;
     }
@@ -1646,7 +1646,7 @@ static HRESULT WINAPI TMarshalDispatchChannel_QueryInterface(LPRPCCHANNELBUFFER 
     *ppv = NULL;
     if (IsEqualIID(riid,&IID_IRpcChannelBuffer) || IsEqualIID(riid,&IID_IUnknown))
     {
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         IUnknown_AddRef(iface);
         return S_OK;
     }
@@ -1937,8 +1937,8 @@ PSFacBuf_CreateProxy(
 
     if (hres == S_OK)
     {
-        *ppv		= (LPVOID)proxy;
-        *ppProxy		= (IRpcProxyBuffer *)&(proxy->lpvtbl2);
+        *ppv = proxy;
+        *ppProxy = (IRpcProxyBuffer *)&(proxy->lpvtbl2);
         IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
     }
@@ -1962,7 +1962,7 @@ static HRESULT WINAPI
 TMStubImpl_QueryInterface(LPRPCSTUBBUFFER iface, REFIID riid, LPVOID *ppv)
 {
     if (IsEqualIID(riid,&IID_IRpcStubBuffer)||IsEqualIID(riid,&IID_IUnknown)){
-	*ppv = (LPVOID)iface;
+        *ppv = iface;
 	IRpcStubBuffer_AddRef(iface);
 	return S_OK;
     }

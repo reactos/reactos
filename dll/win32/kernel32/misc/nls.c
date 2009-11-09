@@ -61,7 +61,7 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize);
 
 BOOL
 FASTCALL
-NlsInit()
+NlsInit(VOID)
 {
     UNICODE_STRING DirName;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -117,7 +117,7 @@ NlsInit()
 
 VOID
 FASTCALL
-NlsUninit()
+NlsUninit(VOID)
 {
     PCODEPAGE_ENTRY Current;
 
@@ -1252,6 +1252,7 @@ BOOL
 WINAPI
 IsValidCodePage(UINT CodePage)
 {
+    if (CodePage == 0) return FALSE;
     if (CodePage == CP_UTF8 || CodePage == CP_UTF7)
         return TRUE;
     if (IntGetLoadedCodePageEntry(CodePage))

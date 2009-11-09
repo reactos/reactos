@@ -119,7 +119,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
 
     uirow = MSI_CreateRecord(1);
     attributes = MSI_RecordGetInteger(rec,5);
-    
+
     while (rc == ERROR_SUCCESS)
     {
         rc = RegEnumValueW(hkey, index, product, &sz, NULL, NULL, NULL, NULL);
@@ -137,7 +137,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
             INT r;
 
             unsquash_guid(product, productid);
-            rc = MSIREG_OpenProductKey(productid, package->Context,
+            rc = MSIREG_OpenProductKey(productid, NULL, package->Context,
                                        &hukey, FALSE);
             if (rc != ERROR_SUCCESS)
             {

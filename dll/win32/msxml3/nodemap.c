@@ -44,7 +44,7 @@ typedef struct _xmlnodemap
     const struct ISupportErrorInfoVtbl *lpSEIVtbl;
     LONG ref;
     IXMLDOMNode *node;
-    long iterator;
+    LONG iterator;
 } xmlnodemap;
 
 static inline xmlnodemap *impl_from_IXMLDOMNamedNodeMap( IXMLDOMNamedNodeMap *iface )
@@ -329,15 +329,15 @@ static HRESULT WINAPI xmlnodemap_removeNamedItem(
 
 static HRESULT WINAPI xmlnodemap_get_item(
     IXMLDOMNamedNodeMap *iface,
-    long index,
+    LONG index,
     IXMLDOMNode** listItem)
 {
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
     xmlNodePtr node;
     xmlAttrPtr curr;
-    long attrIndex;
+    LONG attrIndex;
 
-    TRACE("%p %ld\n", This, index);
+    TRACE("%p %d\n", This, index);
 
     *listItem = NULL;
 
@@ -361,12 +361,12 @@ static HRESULT WINAPI xmlnodemap_get_item(
 
 static HRESULT WINAPI xmlnodemap_get_length(
     IXMLDOMNamedNodeMap *iface,
-    long* listLength)
+    LONG *listLength)
 {
     xmlNodePtr node;
     xmlAttrPtr first;
     xmlAttrPtr curr;
-    long attrCount;
+    LONG attrCount;
 
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
 
@@ -423,9 +423,9 @@ static HRESULT WINAPI xmlnodemap_nextNode(
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
     xmlNodePtr node;
     xmlAttrPtr curr;
-    long attrIndex;
+    LONG attrIndex;
 
-    TRACE("%p %ld\n", This, This->iterator);
+    TRACE("%p %d\n", This, This->iterator);
 
     *nextItem = NULL;
 
@@ -451,7 +451,7 @@ static HRESULT WINAPI xmlnodemap_reset(
 {
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
 
-    TRACE("%p %ld\n", This, This->iterator);
+    TRACE("%p %d\n", This, This->iterator);
 
     This->iterator = 0;
 

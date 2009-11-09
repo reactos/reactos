@@ -56,8 +56,7 @@ typedef struct
 
 #include "poppack.h"
 
-/*forward declerations... actualy in user32\windows\icon.c but usful here****/
-HICON ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
+/* forward declarations... actually in user32\windows\icon.c but useful here */
 HICON ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
 CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors);
 CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors);
@@ -266,7 +265,7 @@ LoadCursorIconImage(
       hIcon = CreateIconFromResourceEx((PBYTE)ResIcon,
                                        SizeofResource(hinst, hResInfo),
                                        Icon, 0x00030000, width, height,
-                                       fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+                                       (fuLoad & (LR_DEFAULTSIZE | LR_SHARED)) | LR_DEFAULTCOLOR);
 
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
@@ -286,7 +285,7 @@ LoadCursorIconImage(
 
    if (fuLoad & LR_SHARED)
    {
-      DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
+      FIXME("Need LR_SHARED support for loading icon images from files\n");
    }
 
    hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -449,18 +448,26 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
       BitmapInfo = (LPBITMAPINFO)((ULONG_PTR)BitmapInfo + sizeof(BITMAPFILEHEADER));
    }
 
-   if (BitmapInfo->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+   HeaderSize = BitmapInfo->bmiHeader.biSize;
+   if (HeaderSize == sizeof(BITMAPCOREHEADER))
    {
       BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)BitmapInfo;
       ColorCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
-      HeaderSize = sizeof(BITMAPCOREHEADER) + ColorCount * sizeof(RGBTRIPLE);
+      HeaderSize += ColorCount * sizeof(RGBTRIPLE);
    }
    else
    {
-      ColorCount = BitmapInfo->bmiHeader.biClrUsed;
-      if (ColorCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
-         ColorCount = 1 << BitmapInfo->bmiHeader.biBitCount;
-      HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
+      if (BitmapInfo->bmiHeader.biCompression == BI_BITFIELDS)
+      {
+         HeaderSize += 3 * sizeof(RGBQUAD);
+      }
+      else
+      {
+         ColorCount = BitmapInfo->bmiHeader.biClrUsed;
+         if (ColorCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
+            ColorCount = 1 << BitmapInfo->bmiHeader.biBitCount;
+         HeaderSize += ColorCount * sizeof(RGBQUAD);
+      }
    }
    Data = (PVOID)((ULONG_PTR)BitmapInfo + HeaderSize);
 
@@ -484,7 +491,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 
    if (Hit)
    {
-      DbgPrint("We have a thread overrun, these are already freed! pi -> %d bi -> %d\n", PrivateInfo, BitmapInfo);
+      ERR("We have a thread overrun, these are already freed! pi -> %d, bi -> %d\n", PrivateInfo, BitmapInfo);
       RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
       if (fuLoad & LR_LOADFROMFILE)
          UnmapViewOfFile(BitmapInfo);

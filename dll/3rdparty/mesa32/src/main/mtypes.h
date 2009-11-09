@@ -1108,20 +1108,34 @@ struct gl_scissor_attrib
 
 /**
  * Stencil attribute group (GL_STENCIL_BUFFER_BIT).
+ *
+ * Three sets of stencil data are tracked so that OpenGL 2.0,
+ * GL_EXT_stencil_two_side, and GL_ATI_separate_stencil can all be supported
+ * simultaneously.  In each of the stencil state arrays, element 0 corresponds
+ * to GL_FRONT.  Element 1 corresponds to the OpenGL 2.0 /
+ * GL_ATI_separate_stencil GL_BACK state.  Element 2 corresponds to the
+ * GL_EXT_stencil_two_side GL_BACK state.
+ *
+ * The derived value \c _BackFace is either 1 or 2 depending on whether or
+ * not GL_STENCIL_TEST_TWO_SIDE_EXT is enabled.
+ *
+ * The derived value \c _TestTwoSide is set when the front-face and back-face
+ * stencil state are different.
  */
 struct gl_stencil_attrib
 {
    GLboolean Enabled;		/**< Enabled flag */
    GLboolean TestTwoSide;	/**< GL_EXT_stencil_two_side */
-   GLubyte ActiveFace;		/**< GL_EXT_stencil_two_side (0 or 1) */
+   GLubyte ActiveFace;		/**< GL_EXT_stencil_two_side (0 or 2) */
    GLboolean _TestTwoSide;
-   GLenum Function[2];		/**< Stencil function */
-   GLenum FailFunc[2];		/**< Fail function */
-   GLenum ZPassFunc[2];		/**< Depth buffer pass function */
-   GLenum ZFailFunc[2];		/**< Depth buffer fail function */
-   GLint Ref[2];		/**< Reference value */
-   GLuint ValueMask[2];		/**< Value mask */
-   GLuint WriteMask[2];		/**< Write mask */
+   GLubyte _BackFace;           /**< Current back stencil state (1 or 2) */
+   GLenum Function[3];		/**< Stencil function */
+   GLenum FailFunc[3];		/**< Fail function */
+   GLenum ZPassFunc[3];		/**< Depth buffer pass function */
+   GLenum ZFailFunc[3];		/**< Depth buffer fail function */
+   GLint Ref[3];		/**< Reference value */
+   GLuint ValueMask[3];		/**< Value mask */
+   GLuint WriteMask[3];		/**< Write mask */
    GLuint Clear;		/**< Clear value */
 };
 
@@ -1527,15 +1541,11 @@ struct gl_texture_unit
     */
    struct gl_tex_env_combine_state *_CurrentCombine;
 
-   struct gl_texture_object *Current1D;
-   struct gl_texture_object *Current2D;
-   struct gl_texture_object *Current3D;
-   struct gl_texture_object *CurrentCubeMap; /**< GL_ARB_texture_cube_map */
-   struct gl_texture_object *CurrentRect;    /**< GL_NV_texture_rectangle */
-   struct gl_texture_object *Current1DArray; /**< GL_MESA_texture_array */
-   struct gl_texture_object *Current2DArray; /**< GL_MESA_texture_array */
+   /** Current texture object pointers */
+   struct gl_texture_object *CurrentTex[NUM_TEXTURE_TARGETS];
 
-   struct gl_texture_object *_Current; /**< Points to really enabled tex obj */
+   /** Points to highest priority, complete and enabled texture object */
+   struct gl_texture_object *_Current;
 
    /** GL_SGI_texture_color_table */
    /*@{*/
@@ -2172,18 +2182,8 @@ struct gl_shared_state
    struct _mesa_HashTable *DisplayList;	   /**< Display lists hash table */
    struct _mesa_HashTable *TexObjects;	   /**< Texture objects hash table */
 
-   /**
-    * \name Default texture objects (shared by all multi-texture units)
-    */
-   /*@{*/
-   struct gl_texture_object *Default1D;
-   struct gl_texture_object *Default2D;
-   struct gl_texture_object *Default3D;
-   struct gl_texture_object *DefaultCubeMap;
-   struct gl_texture_object *DefaultRect;
-   struct gl_texture_object *Default1DArray;
-   struct gl_texture_object *Default2DArray;
-   /*@}*/
+   /** Default texture objects (shared by all texture units) */
+   struct gl_texture_object *DefaultTex[NUM_TEXTURE_TARGETS];
 
    /**
     * \name Thread safety and statechange notification for texture
@@ -2376,8 +2376,16 @@ struct gl_renderbuffer_attachment
  */
 struct gl_framebuffer
 {
-   _glthread_Mutex Mutex;		   /**< for thread safety */
-   GLuint Name;      /* if zero, this is a window system framebuffer */
+   _glthread_Mutex Mutex;  /**< for thread safety */
+   /**
+    * If zero, this is a window system framebuffer.  If non-zero, this
+    * is a FBO framebuffer; note that for some devices (i.e. those with
+    * a natural pixel coordinate system for FBOs that differs from the
+    * OpenGL/Mesa coordinate system), this means that the viewport,
+    * polygon face orientation, and polygon stipple will have to be inverted.
+    */
+   GLuint Name;
+
    GLint RefCount;
    GLboolean DeletePending;
 

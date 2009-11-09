@@ -1068,9 +1068,9 @@ GetPrinterDataW(HANDLE Printer, LPWSTR Name, PDWORD Type, PBYTE Buffer, DWORD Bu
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
-GetPrinterDriverA(HANDLE Printer, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
+GetPrinterDriverA(HANDLE Printer, LPSTR Environment, DWORD Level, LPBYTE Buffer, DWORD BufSize, LPDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDriverA stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1082,9 +1082,9 @@ GetPrinterDriverA(HANDLE Printer, LPSTR Environment, DWORD Level, PBYTE Buffer, 
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
-GetPrinterDriverW(HANDLE Printer, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
+GetPrinterDriverW(HANDLE Printer, LPWSTR Environment, DWORD Level, LPBYTE Buffer, DWORD BufSize, LPDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDriverW stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1096,9 +1096,9 @@ GetPrinterDriverW(HANDLE Printer, LPWSTR Environment, DWORD Level, PBYTE Buffer,
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
-GetPrinterDriverDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
+GetPrinterDriverDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, LPBYTE Buffer, DWORD BufSize, LPDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDriverDirectoryA stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1110,9 +1110,9 @@ GetPrinterDriverDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buf
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
-GetPrinterDriverDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
+GetPrinterDriverDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, LPBYTE Buffer, DWORD BufSize, LPDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDriverDirectoryW stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1124,9 +1124,9 @@ GetPrinterDriverDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE B
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
-GetPrintProcessorDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
+GetPrintProcessorDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, LPBYTE Buffer, DWORD BufSize, LPDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrintProcessorDirectoryA stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1138,9 +1138,9 @@ GetPrintProcessorDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Bu
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
-GetPrintProcessorDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
+GetPrintProcessorDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, LPBYTE Buffer, DWORD BufSize, LPDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrintProcessorDirectoryW stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

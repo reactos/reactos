@@ -49,7 +49,7 @@ struct Knotvector { /* a knot vector */
 			~Knotvector( void );
     void		init( long, long, long, INREAL * );
     int			validate( void );
-    void 		show( char * );
+    void 		show( const char * );
 
     long		order;		/* order of spline  */
     long		knotcount;	/* number of knots  */

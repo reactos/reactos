@@ -1450,7 +1450,7 @@ parse_expression(slang_parse_ctx * C, slang_output_ctx * O,
       case OP_CALL:
          {
             GLboolean array_constructor = GL_FALSE;
-            GLint array_constructor_size;
+            GLint array_constructor_size = 0;
 
             op->type = SLANG_OPER_CALL;
             op->a_id = parse_identifier(C);

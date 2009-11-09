@@ -400,7 +400,7 @@ typedef struct _NetBTNameQueryData {
 static BOOL NetBTFindNameAnswerCallback(void *pVoid, WORD answerCount,
  WORD answerIndex, PUCHAR rData, WORD rLen)
 {
-    NetBTNameQueryData *queryData = (NetBTNameQueryData *)pVoid;
+    NetBTNameQueryData *queryData = pVoid;
     BOOL ret;
 
     if (queryData)
@@ -696,7 +696,7 @@ typedef struct _NetBTNodeQueryData
 static BOOL NetBTNodeStatusAnswerCallback(void *pVoid, WORD answerCount,
  WORD answerIndex, PUCHAR rData, WORD rLen)
 {
-    NetBTNodeQueryData *data = (NetBTNodeQueryData *)pVoid;
+    NetBTNodeQueryData *data = pVoid;
 
     if (data && !data->gotResponse && rData && rLen >= 1)
     {
@@ -811,7 +811,7 @@ static UCHAR NetBTAstatRemote(NetBTAdapter *adapter, PNCB ncb)
 
 static UCHAR NetBTAstat(void *adapt, PNCB ncb)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
+    NetBTAdapter *adapter = adapt;
     UCHAR ret;
 
     TRACE("adapt %p, NCB %p\n", adapt, ncb);
@@ -856,7 +856,7 @@ static UCHAR NetBTAstat(void *adapt, PNCB ncb)
 
 static UCHAR NetBTFindName(void *adapt, PNCB ncb)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
+    NetBTAdapter *adapter = adapt;
     UCHAR ret;
     const NBNameCacheEntry *cacheEntry = NULL;
     PFIND_NAME_HEADER foundName;
@@ -973,7 +973,7 @@ static UCHAR NetBTSessionReq(SOCKET fd, const UCHAR *calledName,
 
 static UCHAR NetBTCall(void *adapt, PNCB ncb, void **sess)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
+    NetBTAdapter *adapter = adapt;
     UCHAR ret;
     const NBNameCacheEntry *cacheEntry = NULL;
 
@@ -1074,8 +1074,8 @@ static UCHAR NetBTCall(void *adapt, PNCB ncb, void **sess)
  */
 static UCHAR NetBTSend(void *adapt, void *sess, PNCB ncb)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
-    NetBTSession *session = (NetBTSession *)sess;
+    NetBTAdapter *adapter = adapt;
+    NetBTSession *session = sess;
     UCHAR buffer[NBSS_HDRSIZE], ret;
     int r;
     WSABUF wsaBufs[2];
@@ -1123,8 +1123,8 @@ static UCHAR NetBTSend(void *adapt, void *sess, PNCB ncb)
 
 static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
-    NetBTSession *session = (NetBTSession *)sess;
+    NetBTAdapter *adapter = adapt;
+    NetBTSession *session = sess;
     UCHAR buffer[NBSS_HDRSIZE], ret;
     int r;
     WSABUF wsaBufs[2];
@@ -1231,7 +1231,7 @@ error:
 
 static UCHAR NetBTHangup(void *adapt, void *sess)
 {
-    NetBTSession *session = (NetBTSession *)sess;
+    NetBTSession *session = sess;
 
     TRACE("adapt %p, session %p\n", adapt, session);
 
@@ -1255,7 +1255,7 @@ static void NetBTCleanupAdapter(void *adapt)
     TRACE("adapt %p\n", adapt);
     if (adapt)
     {
-        NetBTAdapter *adapter = (NetBTAdapter *)adapt;
+        NetBTAdapter *adapter = adapt;
 
         if (adapter->nameCache)
             NBNameCacheDestroy(adapter->nameCache);
@@ -1310,7 +1310,7 @@ static BOOL NetBTEnumCallback(UCHAR totalLANAs, UCHAR lanaIndex,
  ULONG transport, const NetBIOSAdapterImpl *data, void *closure)
 {
     BOOL ret;
-    PMIB_IPADDRTABLE table = (PMIB_IPADDRTABLE)closure;
+    PMIB_IPADDRTABLE table = closure;
 
     if (table && data)
     {
@@ -1319,7 +1319,7 @@ static BOOL NetBTEnumCallback(UCHAR totalLANAs, UCHAR lanaIndex,
         ret = FALSE;
         for (ndx = 0; !ret && ndx < table->dwNumEntries; ndx++)
         {
-            const NetBTAdapter *adapter = (const NetBTAdapter *)data->data;
+            const NetBTAdapter *adapter = data->data;
 
             if (table->table[ndx].dwIndex == adapter->ipr.dwIndex)
             {

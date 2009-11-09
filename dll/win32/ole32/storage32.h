@@ -255,6 +255,8 @@ struct StorageImpl
    */
   HANDLE           hFile;      /* Physical support for the Docfile */
   LPOLESTR         pwcsName;   /* Full path of the document file */
+  BOOL             create;     /* Was the storage created or opened.
+                                  The behaviour of STGM_SIMPLE depends on this */
 
   /* FIXME: should this be in Storage32BaseImpl ? */
   WCHAR            filename[PROPERTY_NAME_BUFFER_LEN];
@@ -303,6 +305,10 @@ BOOL StorageImpl_WriteProperty(
 BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
                       StorageImpl* This,
                       SmallBlockChainStream** ppsbChain);
+
+SmallBlockChainStream* Storage32Impl_BigBlocksToSmallBlocks(
+                      StorageImpl* This,
+                      BlockChainStream** ppbbChain);
 
 /****************************************************************************
  * StgStreamImpl definitions.
@@ -376,15 +382,15 @@ StgStreamImpl* StgStreamImpl_Construct(
 
 #define htole32(x) RtlUlongByteSwap(x)
 #define htole16(x) RtlUshortByteSwap(x)
-#define le32toh(x) RtlUlongByteSwap(x)
-#define le16toh(x) RtlUshortByteSwap(x)
+#define lendian32toh(x) RtlUlongByteSwap(x)
+#define lendian16toh(x) RtlUshortByteSwap(x)
 
 #else
 
 #define htole32(x) (x)
 #define htole16(x) (x)
-#define le32toh(x) (x)
-#define le16toh(x) (x)
+#define lendian32toh(x) (x)
+#define lendian16toh(x) (x)
 
 #endif
 
@@ -462,14 +468,16 @@ struct SmallBlockChainStream
 {
   StorageImpl* parentStorage;
   ULONG          ownerPropertyIndex;
+  ULONG*         headOfStreamPlaceHolder;
 };
 
 /*
  * Methods of the SmallBlockChainStream class.
  */
 SmallBlockChainStream* SmallBlockChainStream_Construct(
-	       StorageImpl* parentStorage,
-	       ULONG          propertyIndex);
+           StorageImpl*   parentStorage,
+           ULONG*         headOfStreamPlaceHolder,
+           ULONG          propertyIndex);
 
 void SmallBlockChainStream_Destroy(
 	       SmallBlockChainStream* This);

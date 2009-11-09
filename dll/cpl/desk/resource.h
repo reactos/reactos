@@ -23,6 +23,7 @@
 #define IDD_APPEARANCE                  102
 #define IDD_SETTINGS                    103
 #define IDD_ADVAPPEARANCE               104
+#define IDD_EFFAPPEARANCE               105
 #define IDD_ADVANCED_GENERAL            200
 
 /* Background Page */
@@ -161,6 +162,22 @@
 
 #define IDS_APPLY_FAILED 		3500
 #define IDS_APPLY_NEEDS_RESTART         3501
+
+/* Effects Appearance Dialog */
+#define IDC_EFFAPPEARANCE_KEYBOARDCUES      3601
+#define IDC_EFFAPPEARANCE_ANIMATION         3602
+#define IDC_EFFAPPEARANCE_ANIMATIONTYPE     3603
+#define IDC_EFFAPPEARANCE_SMOOTHING         3604
+#define IDC_EFFAPPEARANCE_SMOOTHINGTYPE     3605
+#define IDC_EFFAPPEARANCE_LARGEICONS        3606
+#define IDC_EFFAPPEARANCE_SETDROPSHADOW     3607
+#define IDC_EFFAPPEARANCE_DRAGFULLWINDOWS   3608
+
+#define IDS_SLIDEEFFECT 3701
+#define IDS_FADEEFFECT  3702
+
+#define IDS_STANDARDEFFECT  3711
+#define IDS_CLEARTYPEEFFECT 3712
 
 /* Advanced General Dialog */
 #define IDC_FONTSIZE_COMBO              5000

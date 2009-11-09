@@ -7,15 +7,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
+
+PPROCESSINFO g_ppi = NULL;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
-PW32PROCESSINFO g_pi = NULL; /* User Mode Pointer */
-PW32PROCESSINFO g_kpi = NULL; /* Kernel Mode Pointer */
-PSERVERINFO g_psi = NULL;
-WCHAR szAppInit[KEY_LENGTH];
+PSERVERINFO gpsi = NULL;
+ULONG_PTR g_ulSharedDelta;
+BOOL gfServerProcess = FALSE;
 
-PW32PROCESSINFO
-GetW32ProcessInfo(VOID);
+WCHAR szAppInit[KEY_LENGTH];
 
 PUSER32_THREAD_DATA
 User32GetThreadData()
@@ -216,6 +216,8 @@ CleanupThread(VOID)
 BOOL
 Init(VOID)
 {
+   USERCONNECT UserCon;
+
    /* Set up the kernel callbacks. */
    NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
       (PVOID)User32CallWindowProcFromKernel;
@@ -229,12 +231,25 @@ Init(VOID)
       (PVOID)User32CallHookProcFromKernel;
    NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
       (PVOID)User32CallEventProcFromKernel;
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADMENU] =
+      (PVOID)User32CallLoadMenuFromKernel;
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_CLIENTTHREADSTARTUP] =
+      (PVOID)User32CallClientThreadSetupFromKernel;
 
-   g_pi = GetW32ProcessInfo();
-   g_kpi = SharedPtrToKernel(g_pi);
-   g_psi = SharedPtrToUser(g_pi->psi);
-   gHandleTable = SharedPtrToUser(g_pi->UserHandleTable);
+   NtUserProcessConnect( NtCurrentProcess(),
+                         &UserCon,
+                         sizeof(USERCONNECT));
+
+   g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
+   g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
+   gpsi = SharedPtrToUser(UserCon.siClient.psi);
+   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+
+   RtlInitializeCriticalSection(&gcsUserApiHook);
+   gfServerProcess = TRUE; // FIXME HAX! Used in CsrClientConnectToServer(,,,,&gfServerProcess);
+
+   //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
 
    /* Allocate an index for user32 thread local data. */
    User32TlsIndex = TlsAlloc();
@@ -281,8 +296,7 @@ DllMain(
    {
       case DLL_PROCESS_ATTACH:
          User32Instance = hInstanceDll;
-         if (!NtUserRegisterUserModule(hInstanceDll) ||
-             !RegisterSystemControls())
+         if (!RegisterClientPFN())
          {
              return FALSE;
          }
@@ -324,19 +338,33 @@ VOID
 FASTCALL
 GetConnected(VOID)
 {
-  PW32PROCESSINFO pi;
+  USERCONNECT UserCon;
+//  ERR("GetConnected\n");
 
-  if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
+  if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
 
-  if (g_pi && g_kpi && g_psi) return;
+  if (gpsi && g_ppi) return;
+// FIXME HAX: Due to the "Dll Initialization Bug" we have to call this too.
+  GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
-  pi = GetW32ProcessInfo();
-  if (!g_pi)  g_pi = pi;
-  if (!g_kpi) g_kpi = SharedPtrToKernel(pi);
-  if (!g_psi) g_psi = SharedPtrToUser(pi->psi);
-  if (!g_psi) { WARN("Global Share Information has not been initialized!\n"); }
-  if (!gHandleTable) gHandleTable = SharedPtrToUser(pi->UserHandleTable);
-  if (!gHandleEntries) gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+  NtUserProcessConnect( NtCurrentProcess(),
+                         &UserCon,
+                         sizeof(USERCONNECT));
 
+  g_ppi = GetWin32ClientInfo()->ppi;
+  g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
+  gpsi = SharedPtrToUser(UserCon.siClient.psi);
+  gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
+  gHandleEntries = SharedPtrToUser(gHandleTable->handles);  
+  
 }
+
+NTSTATUS
+WINAPI
+User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  ERR("GetConnected\n");
+  return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);  
+}
+

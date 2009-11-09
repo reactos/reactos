@@ -5,6 +5,7 @@
 	<importlibrary definition="dsound.spec" />
 	<include base="dsound">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<define name="_WINE" />
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ntdll</library>
@@ -18,6 +19,7 @@
 	<file>buffer.c</file>
 	<file>capture.c</file>
 	<file>dsound.c</file>
+	<file>dsound_convert.c</file>
 	<file>dsound_main.c</file>
 	<file>duplex.c</file>
 	<file>mixer.c</file>
@@ -25,10 +27,4 @@
 	<file>propset.c</file>
 	<file>regsvr.c</file>
 	<file>sound3d.c</file>
-	<directory name="dxroslayer">
-		<file>dxrosdrv_querydsounddesc.c</file>
-		<file>dxrosdrv_querydsoundiface.c</file>
-		<file>dxroslayer.c</file>
-		<file>getguidfromstring.c</file>
-	</directory>
 </module>

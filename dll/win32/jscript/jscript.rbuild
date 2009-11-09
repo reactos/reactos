@@ -3,18 +3,20 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="jscript.spec" />
 	<include base="jscript">.</include>
-	<include base="jscript" root="intermediate">.</include>
+	<include base="jscript" root="intermediate" compiler="rc">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<define name="RPC_NO_WINDOWS_H" />
 	<dependency>jsglobal</dependency>
 	<library>wine</library>
 	<library>kernel32</library>
+	<library>user32</library>
 	<library>oleaut32</library>
 	<library>advapi32</library>
 	<file>date.c</file>
 	<file>dispex.c</file>
 	<file>engine.c</file>
+	<file>error.c</file>
 	<file>jscript.c</file>
 	<file>jscript_main.c</file>
 	<file>jsutils.c</file>

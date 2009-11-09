@@ -262,7 +262,7 @@ static HRESULT ACMWrapper_ConnectInput(InputPin *pin, const AM_MEDIA_TYPE * pmt)
 	This->pWfOut = (WAVEFORMATEX*)outpmt->pbFormat;
 	This->pWfOut->wFormatTag = WAVE_FORMAT_PCM;
 	This->pWfOut->wBitsPerSample = 16;
-	This->pWfOut->nBlockAlign = 4;
+	This->pWfOut->nBlockAlign = This->pWfOut->wBitsPerSample * This->pWfOut->nChannels / 8;
 	This->pWfOut->cbSize = 0;
 	This->pWfOut->nAvgBytesPerSec = This->pWfOut->nChannels * This->pWfOut->nSamplesPerSec
 						* (This->pWfOut->wBitsPerSample/8);
@@ -331,7 +331,7 @@ HRESULT ACMWrapper_create(IUnknown * pUnkOuter, LPVOID * ppv)
     if (FAILED(hr))
         return hr;
 
-    *ppv = (LPVOID)This;
+    *ppv = This;
     This->lasttime_real = This->lasttime_sent = -1;
 
     return hr;

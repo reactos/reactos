@@ -65,11 +65,13 @@
 @ stdcall AdvancedDocumentPropertiesW(long long wstr ptr ptr)
 @ stub AdvancedSetupDialog
 @ stdcall ClosePrinter(long)
+@ stub CloseSpoolFileHandle
 @ stdcall ConfigurePortA(str long str)
 @ stdcall ConfigurePortW(wstr long wstr)
 @ stdcall ConnectToPrinterDlg(long long)
 @ stub ConvertAnsiDevModeToUnicodeDevMode
 @ stub ConvertUnicodeDevModeToAnsiDevMode
+@ stub CommitSpoolData
 @ stub CreatePrinterIC
 @ stub DEVICECAPABILITIES
 @ stub DEVICEMODE
@@ -147,16 +149,23 @@
 @ stdcall GetPrinterW(long long ptr long ptr)
 @ stdcall GetPrintProcessorDirectoryA(str str long ptr long ptr)
 @ stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
+@ stub GetSpoolFileHandle
+@ stub IsValidDevmodeA
+@ stub IsValidDevmodeW
 @ stdcall OpenPrinterA(str ptr ptr)
 @ stdcall OpenPrinterW(wstr ptr ptr)
 @ stub PlayGdiScriptOnPrinterIC
 @ stdcall PrinterMessageBoxA(ptr long ptr str str long)
 @ stdcall PrinterMessageBoxW(ptr long ptr wstr wstr long)
 @ stdcall PrinterProperties(long long)
+@ stub QueryColorProfile
+@ stub QuerySpoolMode
+@ stub QueryRemoteFonts
 @ stdcall ReadPrinter(long ptr long ptr)
 @ stdcall ResetPrinterA(long ptr)
 @ stdcall ResetPrinterW(long ptr)
 @ stdcall ScheduleJob(long long)
+@ stub SeekPrinter
 @ stub SetAllocFailCount
 @ stdcall SetFormA(long str long ptr)
 @ stdcall SetFormW(long wstr long ptr)
@@ -168,9 +177,12 @@
 @ stdcall SetPrinterDataExW(long wstr wstr long ptr long)
 @ stdcall SetPrinterDataW(long wstr long ptr long)
 @ stdcall SetPrinterW(long long ptr long)
+@ stub SplDriverUnloadComplete
 @ stub SpoolerDevQueryPrintW
 @ stdcall SpoolerInit()
 @ stub SpoolerPrinterEvent
+@ stub StartDocDlgA
+@ stub StartDocDlgW
 @ stdcall StartDocPrinterA(long long ptr)
 @ stdcall StartDocPrinterW(long long ptr)
 @ stdcall StartPagePrinter(long)

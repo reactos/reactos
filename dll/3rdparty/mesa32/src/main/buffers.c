@@ -247,13 +247,14 @@ _mesa_DrawBuffer(GLenum buffer)
       destMask = draw_buffer_enum_to_bitmask(buffer);
       if (destMask == BAD_MASK) {
          /* totally bogus buffer */
-         _mesa_error(ctx, GL_INVALID_ENUM, "glDrawBuffer(buffer)");
+         _mesa_error(ctx, GL_INVALID_ENUM, "glDrawBuffer(buffer=0x%x)", buffer);
          return;
       }
       destMask &= supportedMask;
       if (destMask == 0x0) {
          /* none of the named color buffers exist! */
-         _mesa_error(ctx, GL_INVALID_OPERATION, "glDrawBuffer(buffer)");
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glDrawBuffer(buffer=0x%x)", buffer);
          return;
       }
    }

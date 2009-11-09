@@ -18,6 +18,10 @@
 #ifndef __CRYPTUIRES_H_
 #define __CRYPTUIRES_H_
 
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
 #define IDS_CERTIFICATE 1000
 #define IDS_CERTIFICATEINFORMATION 1001
 #define IDS_CERT_INFO_BAD_SIG 1002

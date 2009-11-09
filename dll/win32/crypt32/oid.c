@@ -82,7 +82,8 @@ static const WCHAR MY[] = {'M','Y',0};
 static const WCHAR CA[] = {'C','A',0};
 static const WCHAR ADDRESSBOOK[] = {'A','D','D','R','E','S','S','B','O','O','K',0};
 static const WCHAR TRUSTEDPUBLISHER[] = {'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r',0};
-static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER};
+static const WCHAR DISALLOWED[] = {'D','i','s','a','l','l','o','w','e','d',0};
+static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER,DISALLOWED};
 static WCHAR LocalizedNames[sizeof(LocalizedKeys)/sizeof(LocalizedKeys[0])][256];
 
 static void free_function_sets(void)
@@ -197,7 +198,7 @@ BOOL WINAPI CryptGetDefaultOIDDllList(HCRYPTOIDFUNCSET hFuncSet,
     struct OIDFunctionSet *set = hFuncSet;
     char *keyName;
     HKEY key;
-    long rc;
+    LSTATUS rc;
 
     TRACE("(%p, %d, %p, %p)\n", hFuncSet, dwEncodingType, pwszDllList,
      pcchDllList);
@@ -299,7 +300,7 @@ static BOOL CRYPT_GetFuncFromReg(DWORD dwEncodingType, LPCSTR pszOID,
     char *keyName;
     const char *funcName;
     HKEY key;
-    long rc;
+    LSTATUS rc;
 
     keyName = CRYPT_GetKeyName(dwEncodingType, szFuncName, pszOID);
     rc = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ, &key);
@@ -662,6 +663,16 @@ error_close_key:
     }
 
     return TRUE;
+}
+
+/***********************************************************************
+ *             CryptRegisterOIDInfo (CRYPT32.@)
+ */
+BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO pInfo, DWORD dwFlags)
+{
+    FIXME("(%p, %x): stub\n", pInfo, dwFlags );
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /***********************************************************************

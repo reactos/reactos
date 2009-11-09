@@ -456,7 +456,7 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT 
   SYSTEMTIME localtime;
   int startofprescal;
 
-  oldTextColor = SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+  oldTextColor = SetTextColor(hdc, comctl32_color.clrWindowText);
 
   /* fill background */
   hbr = CreateSolidBrush (infoPtr->bk);
@@ -1926,12 +1926,12 @@ MONTHCAL_Create(HWND hwnd, LPARAM lParam)
   infoPtr->monthRange = 3;
   infoPtr->monthdayState = Alloc
                          (infoPtr->monthRange * sizeof(MONTHDAYSTATE));
-  infoPtr->titlebk     = GetSysColor(COLOR_ACTIVECAPTION);
-  infoPtr->titletxt    = GetSysColor(COLOR_WINDOW);
-  infoPtr->monthbk     = GetSysColor(COLOR_WINDOW);
-  infoPtr->trailingtxt = GetSysColor(COLOR_GRAYTEXT);
-  infoPtr->bk          = GetSysColor(COLOR_WINDOW);
-  infoPtr->txt	       = GetSysColor(COLOR_WINDOWTEXT);
+  infoPtr->titlebk     = comctl32_color.clrActiveCaption;
+  infoPtr->titletxt    = comctl32_color.clrWindow;
+  infoPtr->monthbk     = comctl32_color.clrWindow;
+  infoPtr->trailingtxt = comctl32_color.clrGrayText;
+  infoPtr->bk          = comctl32_color.clrWindow;
+  infoPtr->txt	       = comctl32_color.clrWindowText;
 
   /* set the current day for highlighing */
   infoPtr->minSel.wDay = infoPtr->todaysDate.wDay;
@@ -2081,6 +2081,10 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_DESTROY:
     return MONTHCAL_Destroy(infoPtr);
+
+  case WM_SYSCOLORCHANGE:
+    COMCTL32_RefreshSysColors();
+    return 0;
 
   default:
     if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))

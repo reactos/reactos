@@ -32,6 +32,11 @@ WSPAsyncSelect(IN  SOCKET Handle,
 
     /* Allocate the Async Data Structure to pass on to the Thread later */
     AsyncData = HeapAlloc(GetProcessHeap(), 0, sizeof(*AsyncData));
+    if (!AsyncData)
+    {
+        MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
+        return INVALID_SOCKET;
+    }
 
     /* Change the Socket to Non Blocking */
     BlockMode = 1;
@@ -98,7 +103,7 @@ WSPRecv(SOCKET Handle,
     NTSTATUS                Status;
     PVOID                   APCContext;
     PVOID                   APCFunction;
-    HANDLE                  Event;
+    HANDLE                  Event = NULL;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
 
@@ -130,18 +135,15 @@ WSPRecv(SOCKET Handle,
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_EXPEDITED;
         }
-        else
-        {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
-        }
 
         if (*ReceiveFlags & MSG_PEEK)
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_PEEK;
         }
 
-        if (*ReceiveFlags & MSG_PARTIAL) {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
+        if (*ReceiveFlags & MSG_PARTIAL)
+        {
+            RecvInfo.TdiFlags |= TDI_RECEIVE_PARTIAL;
         }
     }
 
@@ -169,7 +171,7 @@ WSPRecv(SOCKET Handle,
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
             APCFunction = NULL; // should be a private io completition function inside us
             APCContext = lpCompletionRoutine;
-            RecvInfo.AfdFlags = AFD_SKIP_FIO;
+            RecvInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
         IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
@@ -180,7 +182,7 @@ WSPRecv(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-        SockEvent,
+        Event ? Event : SockEvent,
         APCFunction,
         APCContext,
         IOSB,
@@ -253,7 +255,7 @@ WSPRecvFrom(SOCKET Handle,
     NTSTATUS                    Status;
     PVOID                       APCContext;
     PVOID                       APCFunction;
-    HANDLE                      Event;
+    HANDLE                      Event = NULL;
     HANDLE                      SockEvent;
     PSOCKET_INFORMATION         Socket;
 
@@ -285,10 +287,6 @@ WSPRecvFrom(SOCKET Handle,
         {
             RecvInfo.TdiFlags |= TDI_RECEIVE_EXPEDITED;
         }
-        else
-        {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
-        }
 
         if (*ReceiveFlags & MSG_PEEK)
         {
@@ -297,7 +295,7 @@ WSPRecvFrom(SOCKET Handle,
 
         if (*ReceiveFlags & MSG_PARTIAL)
         {
-            RecvInfo.TdiFlags |= TDI_RECEIVE_NORMAL;
+            RecvInfo.TdiFlags |= TDI_RECEIVE_PARTIAL;
         }
     }
 
@@ -325,7 +323,7 @@ WSPRecvFrom(SOCKET Handle,
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
             APCFunction = NULL; // should be a private io completition function inside us
             APCContext = lpCompletionRoutine;
-            RecvInfo.AfdFlags = AFD_SKIP_FIO;
+            RecvInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
         IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
@@ -336,7 +334,7 @@ WSPRecvFrom(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-                                    SockEvent,
+                                    Event ? Event : SockEvent,
                                     APCFunction,
                                     APCContext,
                                     IOSB,
@@ -395,7 +393,7 @@ WSPSend(SOCKET Handle,
     NTSTATUS                Status;
     PVOID                   APCContext;
     PVOID                   APCFunction;
-    HANDLE                  Event;
+    HANDLE                  Event = NULL;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
 
@@ -452,7 +450,7 @@ WSPSend(SOCKET Handle,
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
             APCFunction = NULL; // should be a private io completition function inside us
             APCContext = lpCompletionRoutine;
-            SendInfo.AfdFlags = AFD_SKIP_FIO;
+            SendInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
         IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
@@ -463,7 +461,7 @@ WSPSend(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-                                    SockEvent,
+                                    Event ? Event : SockEvent,
                                     APCFunction,
                                     APCContext,
                                     IOSB,
@@ -516,7 +514,7 @@ WSPSendTo(SOCKET Handle,
     NTSTATUS                Status;
     PVOID                   APCContext;
     PVOID                   APCFunction;
-    HANDLE                  Event;
+    HANDLE                  Event = NULL;
     PTRANSPORT_ADDRESS      RemoteAddress;
     UCHAR                   TdiBuffer[0x16];
     PSOCKADDR               BindAddress;
@@ -540,6 +538,11 @@ WSPSendTo(SOCKET Handle,
         /* Get the Wildcard Address */
         BindAddressLength = Socket->HelperData->MaxWSAddressLength;
         BindAddress = HeapAlloc(GlobalHeap, 0, BindAddressLength);
+        if (!BindAddress)
+        {
+            MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
+            return INVALID_SOCKET;
+        }
         Socket->HelperData->WSHGetWildcardSockaddr (Socket->HelperContext,
                                                     BindAddress,
                                                     &BindAddressLength);
@@ -584,7 +587,7 @@ WSPSendTo(SOCKET Handle,
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
             APCFunction = NULL; // should be a private io completition function inside us
             APCContext = lpCompletionRoutine;
-            SendInfo.AfdFlags = AFD_SKIP_FIO;
+            SendInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
         IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
@@ -593,7 +596,7 @@ WSPSendTo(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-             SockEvent,
+             Event ? Event : SockEvent,
              APCFunction,
              APCContext,
              IOSB,

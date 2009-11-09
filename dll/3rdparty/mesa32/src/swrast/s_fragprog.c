@@ -40,20 +40,27 @@ static void
 fetch_texel_lod( GLcontext *ctx, const GLfloat texcoord[4], GLfloat lambda,
                  GLuint unit, GLfloat color[4] )
 {
-   GLchan rgba[4];
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
    const struct gl_texture_object *texObj = ctx->Texture.Unit[unit]._Current;
 
-   if (texObj)
+   if (texObj) {
+      SWcontext *swrast = SWRAST_CONTEXT(ctx);
+      GLchan rgba[4];
+
       lambda = CLAMP(lambda, texObj->MinLod, texObj->MaxLod);
 
-   /* XXX use a float-valued TextureSample routine here!!! */
-   swrast->TextureSample[unit](ctx, texObj, 1, (const GLfloat (*)[4]) texcoord,
-                               &lambda, &rgba);
-   color[0] = CHAN_TO_FLOAT(rgba[0]);
-   color[1] = CHAN_TO_FLOAT(rgba[1]);
-   color[2] = CHAN_TO_FLOAT(rgba[2]);
-   color[3] = CHAN_TO_FLOAT(rgba[3]);
+      /* XXX use a float-valued TextureSample routine here!!! */
+      swrast->TextureSample[unit](ctx, texObj, 1,
+                                  (const GLfloat (*)[4]) texcoord,
+                                  &lambda, &rgba);
+      color[0] = CHAN_TO_FLOAT(rgba[0]);
+      color[1] = CHAN_TO_FLOAT(rgba[1]);
+      color[2] = CHAN_TO_FLOAT(rgba[2]);
+      color[3] = CHAN_TO_FLOAT(rgba[3]);
+   }
+   else {
+      color[0] = color[1] = color[2] = 0.0F;
+      color[3] = 1.0F;
+   }
 }
 
 
@@ -69,13 +76,14 @@ fetch_texel_deriv( GLcontext *ctx, const GLfloat texcoord[4],
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    const struct gl_texture_object *texObj = ctx->Texture.Unit[unit]._Current;
-   GLfloat lambda;
-   GLchan rgba[4];
 
    if (texObj) {
-      const struct gl_texture_image *texImg = texObj->Image[0][texObj->BaseLevel];
+      const struct gl_texture_image *texImg =
+         texObj->Image[0][texObj->BaseLevel];
       const GLfloat texW = (GLfloat) texImg->WidthScale;
       const GLfloat texH = (GLfloat) texImg->HeightScale;
+      GLfloat lambda;
+      GLchan rgba[4];
 
       lambda = _swrast_compute_lambda(texdx[0], texdy[0], /* ds/dx, ds/dy */
                                       texdx[1], texdy[1], /* dt/dx, dt/dy */
@@ -85,14 +93,20 @@ fetch_texel_deriv( GLcontext *ctx, const GLfloat texcoord[4],
                                       1.0F / texcoord[3]) + lodBias;
 
       lambda = CLAMP(lambda, texObj->MinLod, texObj->MaxLod);
-   }
 
-   swrast->TextureSample[unit](ctx, texObj, 1, (const GLfloat (*)[4]) texcoord,
-                               &lambda, &rgba);
-   color[0] = CHAN_TO_FLOAT(rgba[0]);
-   color[1] = CHAN_TO_FLOAT(rgba[1]);
-   color[2] = CHAN_TO_FLOAT(rgba[2]);
-   color[3] = CHAN_TO_FLOAT(rgba[3]);
+      /* XXX use a float-valued TextureSample routine here!!! */
+      swrast->TextureSample[unit](ctx, texObj, 1,
+                                  (const GLfloat (*)[4]) texcoord,
+                                  &lambda, &rgba);
+      color[0] = CHAN_TO_FLOAT(rgba[0]);
+      color[1] = CHAN_TO_FLOAT(rgba[1]);
+      color[2] = CHAN_TO_FLOAT(rgba[2]);
+      color[3] = CHAN_TO_FLOAT(rgba[3]);
+   }
+   else {
+      color[0] = color[1] = color[2] = 0.0F;
+      color[3] = 1.0F;
+   }
 }
 
 

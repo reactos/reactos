@@ -440,7 +440,7 @@ static HRESULT WINAPI RpcChannelBuffer_QueryInterface(LPRPCCHANNELBUFFER iface, 
     *ppv = NULL;
     if (IsEqualIID(riid,&IID_IRpcChannelBuffer) || IsEqualIID(riid,&IID_IUnknown))
     {
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         IUnknown_AddRef(iface);
         return S_OK;
     }
@@ -495,7 +495,7 @@ static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
 
     TRACE("(%p)->(%p,%s)\n", This, olemsg, debugstr_guid(riid));
 
-    message_state = (struct message_state *)msg->Handle;
+    message_state = msg->Handle;
     /* restore the binding handle and the real start of data */
     msg->Handle = message_state->binding_handle;
     msg->Buffer = (char *)msg->Buffer - message_state->prefix_data_len;
@@ -522,7 +522,7 @@ static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     else
         status = I_RpcGetBuffer(msg);
 
-    orpcthat = (ORPCTHAT *)msg->Buffer;
+    orpcthat = msg->Buffer;
     msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPCTHAT, extensions);
 
     orpcthat->flags = ORPCF_NULL /* FIXME? */;
@@ -702,7 +702,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
 
     if (status == RPC_S_OK)
     {
-        orpcthis = (ORPCTHIS *)msg->Buffer;
+        orpcthis = msg->Buffer;
         msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPCTHIS, extensions);
 
         orpcthis->version.MajorVersion = COM_MAJOR_VERSION;
@@ -765,7 +765,7 @@ static HRESULT WINAPI ServerRpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER ifac
 /* this thread runs an outgoing RPC */
 static DWORD WINAPI rpc_sendreceive_thread(LPVOID param)
 {
-    struct dispatch_params *data = (struct dispatch_params *) param;
+    struct dispatch_params *data = param;
 
     /* Note: I_RpcSendReceive doesn't raise exceptions like the higher-level
      * RPC functions do */
@@ -825,7 +825,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER ifac
         return RPC_E_CANTCALLOUT_ININPUTSYNCCALL;
     }
 
-    message_state = (struct message_state *)msg->Handle;
+    message_state = msg->Handle;
     /* restore the binding handle and the real start of data */
     msg->Handle = message_state->binding_handle;
     msg->Buffer = (char *)msg->Buffer - message_state->prefix_data_len;
@@ -950,7 +950,7 @@ static HRESULT WINAPI ServerRpcChannelBuffer_FreeBuffer(LPRPCCHANNELBUFFER iface
 
     TRACE("(%p)\n", msg);
 
-    message_state = (struct message_state *)msg->Handle;
+    message_state = msg->Handle;
     /* restore the binding handle and the real start of data */
     msg->Handle = message_state->binding_handle;
     msg->Buffer = (char *)msg->Buffer - message_state->prefix_data_len;
@@ -980,7 +980,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_FreeBuffer(LPRPCCHANNELBUFFER iface
 
     TRACE("(%p)\n", msg);
 
-    message_state = (struct message_state *)msg->Handle;
+    message_state = msg->Handle;
     /* restore the binding handle and the real start of data */
     msg->Handle = message_state->binding_handle;
     msg->Buffer = (char *)msg->Buffer - message_state->prefix_data_len;
@@ -1175,11 +1175,11 @@ static HRESULT unmarshal_ORPC_EXTENT_ARRAY(RPC_MESSAGE *msg, const char *end,
         /* arbitrary limit for security (don't know what native does) */
         if (extensions->size > 256)
         {
-            ERR("too many extensions: %ld\n", extensions->size);
+            ERR("too many extensions: %d\n", extensions->size);
             return RPC_S_INVALID_BOUND;
         }
 
-        *first_wire_orpc_extent = wire_orpc_extent = (WIRE_ORPC_EXTENT *)msg->Buffer;
+        *first_wire_orpc_extent = wire_orpc_extent = msg->Buffer;
         for (i = 0; i < ((extensions->size+1)&~1); i++)
         {
             if ((const char *)&wire_orpc_extent->data[0] > end)
@@ -1242,7 +1242,7 @@ static HRESULT unmarshal_ORPCTHIS(RPC_MESSAGE *msg, ORPCTHIS *orpcthis,
 
     if (orpcthis->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4))
     {
-        ERR("invalid flags 0x%lx\n", orpcthis->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4));
+        ERR("invalid flags 0x%x\n", orpcthis->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4));
         return RPC_E_INVALID_HEADER;
     }
 
@@ -1285,7 +1285,7 @@ static HRESULT unmarshal_ORPCTHAT(RPC_MESSAGE *msg, ORPCTHAT *orpcthat,
 
     if (orpcthat->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4))
     {
-        ERR("invalid flags 0x%lx\n", orpcthat->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4));
+        ERR("invalid flags 0x%x\n", orpcthat->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4));
         return RPC_E_INVALID_HEADER;
     }
 
@@ -1398,7 +1398,7 @@ void RPC_ExecuteCall(struct dispatch_params *params)
         HeapFree(GetProcessHeap(), 0, original_buffer);
 
 exit_reset_state:
-    message_state = (struct message_state *)msg->Handle;
+    message_state = msg->Handle;
     msg->Handle = message_state->binding_handle;
     msg->Buffer = (char *)msg->Buffer - message_state->prefix_data_len;
     msg->BufferLength += message_state->prefix_data_len;
@@ -1847,7 +1847,7 @@ struct local_server_params
 /* FIXME: should call to rpcss instead */
 static DWORD WINAPI local_server_thread(LPVOID param)
 {
-    struct local_server_params * lsp = (struct local_server_params *)param;
+    struct local_server_params * lsp = param;
     HANDLE		hPipe;
     WCHAR 		pipefn[100];
     HRESULT		hres;
@@ -1904,7 +1904,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 
         TRACE("marshalling IClassFactory to client\n");
         
-        hres = IStream_Stat(pStm,&ststg,0);
+        hres = IStream_Stat(pStm,&ststg,STATFLAG_NONAME);
         if (hres) return hres;
 
         seekto.u.LowPart = 0;

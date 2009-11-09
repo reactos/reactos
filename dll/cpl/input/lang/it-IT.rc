@@ -39,7 +39,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Lingua:", -1, 7, 7, 61, 10
     COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "&Disposizione/IME tastiera:", -1, 7, 36, 110, 10
+    LTEXT "&Layout/IME tastiera:", -1, 7, 36, 110, 10
     COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
     PUSHBUTTON "Annulla", IDCANCEL, 169, 68, 50, 14
@@ -56,7 +56,7 @@ BEGIN
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&Ctrl", IDC_CTRL_LANG, 29, 31, 30, 11
     AUTORADIOBUTTON "&ALT sinistro", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
-    AUTOCHECKBOX "Cambia &disposizione di tastiera", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
+    AUTOCHECKBOX "Cambia &layout di tastiera", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
     LTEXT "Shift", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
     AUTORADIOBUTTON "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
@@ -72,7 +72,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Lingua:", -1, 7, 7, 61, 8
     LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
-    LTEXT "&Disposizione/IME tastiera:", -1, 7, 21, 110, 10
+    LTEXT "&Layout/IME tastiera:", -1, 7, 21, 110, 10
     COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
     PUSHBUTTON "Annulla", IDCANCEL, 169, 53, 52, 14
@@ -88,11 +88,11 @@ BEGIN
     IDS_RESTART              "Volete riavviare il computer adesso?"
     IDS_WHATS_THIS           "Cosa è questo?"
     IDS_LANGUAGE             "Lingua"
-    IDS_LAYOUT               "Disposizione tastiera"
-    IDS_REM_QUESTION         "Volete rimuovere la disposizione di tastiera selezionata?"
+    IDS_LAYOUT               "Layout di tastiera"
+    IDS_REM_QUESTION         "Volete rimuovere il Layout di tastiera selezionato?"
     IDS_CONFIRMATION         "Conferma"
-    IDS_LAYOUT_EXISTS        "Questa disposizione esite già."
-    IDS_LAYOUT_EXISTS2       "Questa disposizione esite già e non può essere aggiunta."
+    IDS_LAYOUT_EXISTS        "Questo Layout di tastiera esite già."
+    IDS_LAYOUT_EXISTS2       "Questo Layout di tastiera esite già e non può essere aggiunto."
     IDS_CTRL_SHIFT           "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT       "Alt sinistro+Shift"
     IDS_SWITCH_BET_INLANG    "Cambia lingua di digitazione"

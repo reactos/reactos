@@ -3,24 +3,31 @@
 
 #include <debug.h>
 
-HRESULT DLLAPI ValidatePixelShader(void)
+HRESULT WINAPI ValidatePixelShader(DWORD* pixelshader, DWORD* reserved1, BOOL bool, DWORD* toto)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT DLLAPI ValidateVertexShader(void)
-{
-    UNIMPLEMENTED
-    return 0;
-}
-HRESULT DLLAPI DebugSetMute(DWORD dw1)
+HRESULT WINAPI ValidateVertexShader(DWORD* vertexshader, DWORD* reserved1, DWORD* reserved2, BOOL bool, DWORD* toto)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-DWORD DLLAPI Direct3DCreate8( UINT SDKVersion )
+HRESULT WINAPI D3D8GetSWInfo(void)
+{
+    UNIMPLEMENTED
+    return 0;
+}
+
+HRESULT WINAPI DebugSetMute(void)
+{
+    UNIMPLEMENTED
+    return 0;
+}
+
+DWORD WINAPI Direct3DCreate8( UINT SDKVersion )
 {
     UNIMPLEMENTED
     return 0;

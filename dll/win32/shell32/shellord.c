@@ -1265,11 +1265,19 @@ BOOL WINAPI FileIconInit(BOOL bFullInit)
 {	FIXME("(%s)\n", bFullInit ? "true" : "false");
 	return 0;
 }
-/*************************************************************************
- * IsUserAdmin					[SHELL32.680] NT 4.0
- *
- */
 
+/*************************************************************************
+ * IsUserAnAdmin    [SHELL32.680] NT 4.0
+ *
+ * Checks whether the current user is a member of the Administrators group.
+ *
+ * PARAMS
+ *     None
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+  */
 BOOL WINAPI IsUserAnAdmin(VOID)
 {
     SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
@@ -1331,7 +1339,6 @@ BOOL WINAPI IsUserAnAdmin(VOID)
 
     FreeSid(lpSid);
     HeapFree(GetProcessHeap(), 0, lpGroups);
-
     return bResult;
 }
 
@@ -1972,20 +1979,72 @@ BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWST
 BOOL WINAPI SHGetNewLinkInfoA(LPCSTR pszLinkTo, LPCSTR pszDir, LPSTR pszName, BOOL *pfMustCopy,
                               UINT uFlags)
 {
-    FIXME("%s, %s, %p, %p, 0x%08x - stub\n", debugstr_a(pszLinkTo), debugstr_a(pszDir),
-          pszName, pfMustCopy, uFlags);
+    WCHAR wszLinkTo[MAX_PATH];
+    WCHAR wszDir[MAX_PATH];
+    WCHAR wszName[MAX_PATH];
+    BOOL res;
 
-    return FALSE;
+    MultiByteToWideChar(CP_ACP, 0, pszLinkTo, -1, wszLinkTo, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, pszDir, -1, wszDir, MAX_PATH);
+
+    res = SHGetNewLinkInfoW(wszLinkTo, wszDir, wszName, pfMustCopy, uFlags);
+
+    if (res)
+        WideCharToMultiByte(CP_ACP, 0, wszName, -1, pszName, MAX_PATH, NULL, NULL);
+
+    return res;
 }
 
 BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName, BOOL *pfMustCopy,
                               UINT uFlags)
 {
-    FIXME("%s, %s, %p, %p, 0x%08x - stub\n", debugstr_w(pszLinkTo), debugstr_w(pszDir),
+    const WCHAR *basename;
+    WCHAR *dst_basename;
+    int i=2;
+    static const WCHAR lnkformat[] = {'%','s','.','l','n','k',0};
+    static const WCHAR lnkformatnum[] = {'%','s',' ','(','%','d',')','.','l','n','k',0};
+
+    TRACE("(%s, %s, %p, %p, 0x%08x)\n", debugstr_w(pszLinkTo), debugstr_w(pszDir),
           pszName, pfMustCopy, uFlags);
 
-    return FALSE;
+    *pfMustCopy = FALSE;
+
+    if (uFlags & SHGNLI_PIDL)
+    {
+        FIXME("SHGNLI_PIDL flag unsupported\n");
+        return FALSE;
+    }
+
+    if (uFlags)
+        FIXME("ignoring flags: 0x%08x\n", uFlags);
+
+    /* FIXME: should test if the file is a shortcut or DOS program */
+    if (GetFileAttributesW(pszLinkTo) == INVALID_FILE_ATTRIBUTES)
+        return FALSE;
+
+    basename = strrchrW(pszLinkTo, '\\');
+    if (basename)
+        basename = basename+1;
+    else
+        basename = pszLinkTo;
+
+    lstrcpynW(pszName, pszDir, MAX_PATH);
+    if (!PathAddBackslashW(pszName))
+        return FALSE;
+
+    dst_basename = pszName + strlenW(pszName);
+
+    snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, lnkformat, basename);
+
+    while (GetFileAttributesW(pszName) != INVALID_FILE_ATTRIBUTES)
+    {
+        snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, lnkformatnum, basename, i);
+        i++;
+    }
+
+    return TRUE;
 }
+
 /*************************************************************************
  *              SHStartNetConnectionDialog (SHELL32.@)
  */

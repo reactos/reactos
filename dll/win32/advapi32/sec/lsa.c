@@ -183,7 +183,7 @@ LsaAddAccountRights(
     ULONG CountOfRights)
 {
     FIXME("(%p,%p,%p,0x%08x) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -213,7 +213,7 @@ LsaDeleteTrustedDomain(
     PSID TrustedDomainSid)
 {
     FIXME("(%p,%p) stub\n", PolicyHandle, TrustedDomainSid);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -228,7 +228,9 @@ LsaEnumerateAccountRights(
     PULONG CountOfRights)
 {
     FIXME("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
-    return STATUS_NOT_IMPLEMENTED;
+    *UserRights = 0;
+    *CountOfRights = 0;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -243,7 +245,7 @@ LsaEnumerateAccountsWithUserRight(
     PULONG CountReturned)
 {
     FIXME("(%p,%p,%p,%p) stub\n", PolicyHandle, UserRights, EnumerationBuffer, CountReturned);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NO_MORE_ENTRIES;
 }
 
 /*
@@ -260,7 +262,9 @@ LsaEnumerateTrustedDomains(
 {
     FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, EnumerationContext,
         Buffer, PreferedMaximumLength, CountReturned);
-    return STATUS_NOT_IMPLEMENTED;
+    
+    if (CountReturned) *CountReturned = 0;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -277,7 +281,8 @@ LsaEnumerateTrustedDomainsEx(
 {
     FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, EnumerationContext, Buffer,
         PreferedMaximumLength, CountReturned);
-    return STATUS_NOT_IMPLEMENTED;
+    if (CountReturned) *CountReturned = 0;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -475,7 +480,7 @@ LsaOpenTrustedDomainByName(
     PLSA_HANDLE TrustedDomainHandle)
 {
     FIXME("(%p,%p,0x%08x,%p) stub\n", PolicyHandle, TrustedDomainName, DesiredAccess, TrustedDomainHandle);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -613,7 +618,7 @@ LsaQueryTrustedDomainInfoByName(
     PVOID *Buffer)
 {
     FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -628,7 +633,7 @@ LsaQueryTrustedDomainInfo(
     PVOID *Buffer)
 {
     FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -644,7 +649,7 @@ LsaRemoveAccountRights(
     ULONG CountOfRights)
 {
     FIXME("(%p,%p,%d,%p,0x%08x) stub\n", PolicyHandle, AccountSid, AllRights, UserRights, CountOfRights);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -686,7 +691,7 @@ LsaSetInformationPolicy(
     PVOID Buffer)
 {
     FIXME("(%p,0x%08x,%p) stub\n", PolicyHandle, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -717,7 +722,7 @@ LsaSetTrustedDomainInfoByName(
     PVOID Buffer)
 {
     FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -732,7 +737,7 @@ LsaSetTrustedDomainInformation(
     PVOID Buffer)
 {
     FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -746,7 +751,7 @@ LsaStorePrivateData(
     PLSA_UNICODE_STRING PrivateData)
 {
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, KeyName, PrivateData);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*

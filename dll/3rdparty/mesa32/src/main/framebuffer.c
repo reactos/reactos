@@ -115,6 +115,7 @@ _mesa_new_framebuffer(GLcontext *ctx, GLuint name)
       fb->ColorReadBuffer = GL_COLOR_ATTACHMENT0_EXT;
       fb->_ColorReadBufferIndex = BUFFER_COLOR0;
       fb->Delete = _mesa_destroy_framebuffer;
+      _glthread_INIT_MUTEX(fb->Mutex);
    }
    return fb;
 }

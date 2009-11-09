@@ -35,9 +35,6 @@
 #include "d3d8.h"
 #include "wine/wined3d.h"
 
-/* Device caps */
-#define INITIAL_SHADER_HANDLE_TABLE_SIZE        64
-
 /* CreateVertexShader can return > 0xFFFF */
 #define VS_HIGHESTFIXEDFXF 0xF0000000
 
@@ -100,6 +97,8 @@
     _pD3D8Caps->PixelShaderVersion                = _pWineCaps->PixelShaderVersion; \
     _pD3D8Caps->MaxPixelShaderValue               = _pWineCaps->PixelShader1xMaxValue;
 
+void fixup_caps(WINED3DCAPS *pWineCaps);
+
 /* Direct3D8 Interfaces: */
 typedef struct IDirect3DBaseTexture8Impl IDirect3DBaseTexture8Impl;
 typedef struct IDirect3DVolumeTexture8Impl IDirect3DVolumeTexture8Impl;
@@ -122,9 +121,6 @@ typedef struct IDirect3DVertexShaderDeclarationImpl IDirect3DVertexShaderDeclara
 
 /* Advance declaration of structures to satisfy compiler */
 typedef struct IDirect3DVertexShader8Impl IDirect3DVertexShader8Impl;
-
-/* Global critical section */
-extern CRITICAL_SECTION d3d8_cs;
 
 /* ===========================================================================
     The interfaces themselves
@@ -166,7 +162,30 @@ extern const IWineD3DDeviceParentVtbl d3d8_wined3d_device_parent_vtbl;
  * IDirect3DDevice8 implementation structure
  */
 
-typedef void * shader_handle;
+#define D3D8_INITIAL_HANDLE_TABLE_SIZE 64
+#define D3D8_INVALID_HANDLE ~0U
+
+enum d3d8_handle_type
+{
+    D3D8_HANDLE_FREE,
+    D3D8_HANDLE_VS,
+    D3D8_HANDLE_PS,
+    D3D8_HANDLE_SB,
+};
+
+struct d3d8_handle_entry
+{
+    void *object;
+    enum d3d8_handle_type type;
+};
+
+struct d3d8_handle_table
+{
+    struct d3d8_handle_entry *entries;
+    struct d3d8_handle_entry *free_entries;
+    UINT table_size;
+    UINT entry_count;
+};
 
 struct FvfToDecl
 {
@@ -182,10 +201,7 @@ struct IDirect3DDevice8Impl
     LONG                         ref;
 /* But what about baseVertexIndex in state blocks? hmm... it may be a better idea to pass this to wined3d */
     IWineD3DDevice               *WineD3DDevice;
-    DWORD                         shader_handle_table_size;
-    DWORD                         allocated_shader_handles;
-    shader_handle                *shader_handles;
-    shader_handle                *free_shader_handles;
+    struct d3d8_handle_table handle_table;
 
     /* FVF management */
     struct FvfToDecl       *decls;
@@ -299,7 +315,6 @@ struct IDirect3DResource8Impl
     /* IDirect3DResource8 fields */
     IWineD3DResource             *wineD3DResource;
 };
-extern HRESULT WINAPI IDirect3DResource8Impl_GetDevice(LPDIRECT3DRESOURCE8 iface, IDirect3DDevice8** ppDevice);
 
 /* ---------------------- */
 /* IDirect3DVertexBuffer8 */
@@ -320,10 +335,12 @@ struct IDirect3DVertexBuffer8Impl
     LONG                              ref;
 
     /* IDirect3DResource8 fields */
-    IWineD3DVertexBuffer             *wineD3DVertexBuffer;
+    IWineD3DBuffer *wineD3DVertexBuffer;
 
     /* Parent reference */
     LPDIRECT3DDEVICE8                 parentDevice;
+
+    DWORD                             fvf;
 };
 
 /* --------------------- */
@@ -345,10 +362,12 @@ struct IDirect3DIndexBuffer8Impl
     LONG                             ref;
 
     /* IDirect3DResource8 fields */
-    IWineD3DIndexBuffer             *wineD3DIndexBuffer;
+    IWineD3DBuffer                  *wineD3DIndexBuffer;
 
     /* Parent reference */
     LPDIRECT3DDEVICE8                parentDevice;
+
+    WINED3DFORMAT                    format;
 };
 
 /* --------------------- */
@@ -449,7 +468,7 @@ struct IDirect3DVolumeTexture8Impl
 
 /* TODO: Generate a valid GUIDs */
 /* {83B073CE-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IDirect3DStateBlock8, 
+DEFINE_GUID(IID_IDirect3DStateBlock8,
 0x83b073ce, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 DEFINE_GUID(IID_IDirect3DVertexDeclaration8,
@@ -595,6 +614,8 @@ struct IDirect3DVertexShader8Impl {
   IWineD3DVertexShader             *wineD3DVertexShader;
 };
 
+#define D3D8_MAX_VERTEX_SHADER_CONSTANTF 256
+
 
 /* ------------------------ */
 /* IDirect3DPixelShaderImpl */
@@ -622,6 +643,8 @@ typedef struct IDirect3DPixelShader8Impl {
  *
  * to see how not defined it here
  */
+D3DFORMAT d3dformat_from_wined3dformat(WINED3DFORMAT format);
+WINED3DFORMAT wined3dformat_from_d3dformat(D3DFORMAT format);
 void load_local_constants(const DWORD *d3d8_elements, IWineD3DVertexShader *wined3d_vertex_shader);
 UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elements_size, WINED3DVERTEXELEMENT **wined3d_elements);
 size_t parse_token(const DWORD* pToken);

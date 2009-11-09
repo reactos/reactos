@@ -95,7 +95,6 @@ typedef struct
 #define HORZ_BORDER 0
 #define VERT_BORDER 2
 #define HORZ_GAP    2
-#define MIN_PANE_HEIGHT 18
 
 static const WCHAR themeClass[] = { 'S','t','a','t','u','s',0 };
 
@@ -168,7 +167,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     pt.x = lpRect->right - 1;
     pt.y = lpRect->bottom - 1;
 
-    hPenFace = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DFACE ));
+    hPenFace = CreatePen( PS_SOLID, 1, comctl32_color.clr3dFace);
     hOldPen = SelectObject( hdc, hPenFace );
     MoveToEx (hdc, pt.x - 12, pt.y, NULL);
     LineTo (hdc, pt.x, pt.y);
@@ -177,7 +176,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     pt.x--;
     pt.y--;
 
-    hPenShadow = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DSHADOW ));
+    hPenShadow = CreatePen( PS_SOLID, 1, comctl32_color.clr3dShadow);
     SelectObject( hdc, hPenShadow );
     for (i = 1; i < 11; i += 4) {
 	MoveToEx (hdc, pt.x - i, pt.y, NULL);
@@ -187,7 +186,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
 	LineTo (hdc, pt.x + 1, pt.y - i - 2);
     }
 
-    hPenHighlight = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DHIGHLIGHT ));
+    hPenHighlight = CreatePen( PS_SOLID, 1, comctl32_color.clr3dHilight);
     SelectObject( hdc, hPenHighlight );
     for (i = 3; i < 13; i += 4) {
 	MoveToEx (hdc, pt.x - i, pt.y, NULL);
@@ -334,7 +333,7 @@ STATUSBAR_Refresh (STATUS_INFO *infoPtr, HDC hdc)
 
 
 static int
-STATUSBAR_InternalHitTest(const STATUS_INFO *infoPtr, const LPPOINT pt)
+STATUSBAR_InternalHitTest(const STATUS_INFO *infoPtr, const POINT *pt)
 {
     int i;
     if (infoPtr->simple)
@@ -649,7 +648,9 @@ STATUSBAR_SetIcon (STATUS_INFO *infoPtr, INT nPart, HICON hIcon)
 static BOOL
 STATUSBAR_SetMinHeight (STATUS_INFO *infoPtr, INT height)
 {
-    infoPtr->minHeight = max(height, MIN_PANE_HEIGHT);
+    DWORD ysize = GetSystemMetrics(SM_CYSIZE);
+    if (ysize & 1) ysize--;
+    infoPtr->minHeight = max(height, ysize);
     infoPtr->height = STATUSBAR_ComputeHeight(infoPtr);
     /* like native, don't resize the control */
     return TRUE;
@@ -758,11 +759,10 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
     if (style & SBT_OWNERDRAW) {
         if (!(oldStyle & SBT_OWNERDRAW))
             Free (part->text);
-        else if (part->text == text)
-            return TRUE;
         part->text = (LPWSTR)text;
     } else {
 	LPWSTR ntext;
+	WCHAR  *idx;
 
 	if (text && !isW) {
 	    LPCSTR atxt = (LPCSTR)text;
@@ -775,6 +775,16 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
 	    if (!ntext) return FALSE;
 	    strcpyW (ntext, text);
 	} else ntext = 0;
+
+	/* replace nonprintable characters with spaces */
+	if (ntext) {
+	    idx = ntext;
+	    while (*idx) {
+	        if(!isprintW(*idx))
+	            *idx = ' ';
+	        idx++;
+	    }
+	}
 
 	/* check if text is unchanged -> no need to redraw */
 	if (text) {
@@ -921,7 +931,8 @@ STATUSBAR_WMCreate (HWND hwnd, const CREATESTRUCTA *lpCreate)
     infoPtr->horizontalBorder = HORZ_BORDER;
     infoPtr->verticalBorder = VERT_BORDER;
     infoPtr->horizontalGap = HORZ_GAP;
-    infoPtr->minHeight = MIN_PANE_HEIGHT;
+    infoPtr->minHeight = GetSystemMetrics(SM_CYSIZE);
+    if (infoPtr->minHeight & 1) infoPtr->minHeight--;
 
     STATUSBAR_NotifyFormat(infoPtr, infoPtr->Notify, NF_REQUERY);
 
@@ -1005,12 +1016,17 @@ STATUSBAR_WMGetText (const STATUS_INFO *infoPtr, INT size, LPWSTR buf)
 
     len = strlenW (infoPtr->parts[0].text);
 
-    if (size > len) {
+    if (!size)
+        return len;
+    else if (size > len) {
         strcpyW (buf, infoPtr->parts[0].text);
 	return len;
     }
-
-    return -1;
+    else {
+        memcpy (buf, infoPtr->parts[0].text, (size - 1) * sizeof(WCHAR));
+        buf[size - 1] = 0;
+        return size - 1;
+    }
 }
 
 
@@ -1301,6 +1317,10 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 	    if (STATUSBAR_WMSize (infoPtr, (WORD)wParam)) return 0;
             return DefWindowProcW (hwnd, msg, wParam, lParam);
+
+        case WM_SYSCOLORCHANGE:
+            COMCTL32_RefreshSysColors();
+            return 0;
 
         case WM_THEMECHANGED:
             return theme_changed (infoPtr);

@@ -28,6 +28,9 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 PGDI_TABLE_ENTRY GdiHandleTable = NULL;
 PGDI_SHARED_HANDLE_TABLE GdiSharedHandleTable = NULL;
 HANDLE CurrentProcessId = NULL;
@@ -124,7 +127,7 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
   if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
     ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
-                                                                   GDI_HANDLE_GET_TYPE(hGdiObj))
+                                                                GDI_HANDLE_GET_TYPE(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
     if(pid == NULL || pid == CurrentProcessId)
@@ -146,7 +149,7 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
          }
          _SEH2_END
       }
-       else
+      else
          Result = FALSE; // Can not be zero.
       if (Result) *UserData = Entry->UserData;
       return Result;
@@ -156,12 +159,58 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
   return FALSE;
 }
 
-PLDC GdiGetLDC(HDC hDC)
+PLDC
+FASTCALL
+GdiGetLDC(HDC hDC)
 {
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
-      return NULL;
-    return Dc_Attr->pvLDC;
+  PDC_ATTR Dc_Attr;
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX((HGDIOBJ) hDC);
+  HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+  // Don't check the mask, just the object type.
+  if ( Entry->ObjectType == GDIObjType_DC_TYPE &&
+       (pid == NULL || pid == CurrentProcessId) )
+  {
+     BOOL Result = TRUE;
+     if (Entry->UserData)
+     {
+        volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
+        _SEH2_TRY
+        {
+          *Current = *Current;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+          Result = FALSE;
+        }
+        _SEH2_END
+     }
+     else
+        Result = FALSE;
+
+     if (Result)
+     {
+        Dc_Attr = (PDC_ATTR)Entry->UserData;
+        return Dc_Attr->pvLDC;
+     }
+  }
+  return NULL;
+}
+
+VOID GdiSAPCallback(PLDC pldc)
+{
+    DWORD Time, NewTime = GetTickCount();
+
+    Time = NewTime - pldc->CallBackTick;
+
+    if ( Time < SAPCALLBACKDELAY) return;
+
+    pldc->CallBackTick = NewTime;
+
+    if ( !pldc->pAbortProc(pldc->hDC, 0) )
+    {
+       CancelDC(pldc->hDC);
+       AbortDoc(pldc->hDC);
+    }
 }
 
 /*

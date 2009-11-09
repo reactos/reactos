@@ -3,7 +3,7 @@
 	<importlibrary definition="rpcrt4.spec" />
 	<include base="rpcrt4">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<define name="_RPCRT4_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<define name="MSWMSG" />
@@ -41,7 +41,7 @@
 	<file>epm.idl</file>
 	<include base="rpcrt4" root="intermediate">.</include>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="rpcrt4_epm_client" type="rpcclient">
 	<file>epm.idl</file>

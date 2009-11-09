@@ -57,6 +57,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Bitte geben Sie Ihren Namen und den Namen Ihrer Firma ein.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "Na&me:", IDC_STATIC, 54, 37, 44, 8
@@ -71,11 +72,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Bitte geben sie einen Computernamen ein (maximal 63 Zeichen). "\
           "Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Das Setup wird ein Administratorkonto erstellen. "\
           "Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.",
           IDC_STATIC, 54, 57, 250, 25
@@ -93,6 +96,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, "\
           "die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, "\
           "wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
@@ -114,6 +118,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Datum und Zeit", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
@@ -145,10 +150,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fertigstellung des ReactOS Setup Assistenten",IDC_FINISHTITLE,115,9,195,37
     LTEXT "Das ReactOS Setup wurde erfolgreich fertiggestellt.\n\n" \
-          "Wenn Sie auf Fertig klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
+          "Wenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Entfernen Sie die CD, wenn vorhanden. Danach klicken Sie "\
-          "auf Fertig, um den Computer neu zu starten.", IDC_STATIC, 115, 160, 195, 31
+          "auf Beenden, um den Computer neu zu starten.", IDC_STATIC, 115, 160, 195, 31
 END
 
 
@@ -208,6 +213,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Starte Remote Desktop"
     IDS_CMT_EVENTVIEW   "Starte Ereignisanzeige"
     IDS_CMT_MSCONFIG    "Starte Systemkonfigurations Programm"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -222,6 +228,7 @@ BEGIN
 	IDS_SYS_TOOLS        "Systemprogramme"
 	IDS_CMT_CHARMAP      "Zeichentabelle"
 	IDS_CMT_KBSWITCH     "Tastaturlayout-Umschalter"
+    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
 END
 
 
@@ -229,6 +236,13 @@ STRINGTABLE
 BEGIN
 	IDS_SYS_ACCESSIBILITY        "Eingabehilfen"
 	IDS_CMT_MAGNIFY      	     "Bildschirmlupe"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SYS_ENTERTAINMENT       "Entertainment"
+    IDS_CMT_MPLAY32             "Launch Multimedia Player"
+    IDS_CMT_SNDVOL32            "Launch Volume Control"
 END
 
 STRINGTABLE
@@ -248,9 +262,10 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Eingabeaufforderung.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Anwendungsmanager.lnk"
     IDS_SHORT_SERVICE    "Dienste-Manager.lnk"
     IDS_SHORT_DEVICE     "Geräte-Manager.lnk"
+    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
     IDS_SHORT_CALC       "Rechner.lnk"
     IDS_SHORT_REGEDIT    "Registrierungseditor.lnk"
     IDS_SHORT_NOTEPAD    "Editor.lnk"
@@ -264,6 +279,9 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Tastaturlayout-Umschalter.lnk"
     IDS_SHORT_EVENTVIEW  "Ereignisanzeige.lnk"
     IDS_SHORT_MSCONFIG   "Systemkonfiguration.lnk"
+    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

@@ -31,11 +31,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
  * Stateblock helper functions follow
  **************************************/
 
-/** Allocates the correct amount of space for pixel and vertex shader constants, 
+/* Allocates the correct amount of space for pixel and vertex shader constants,
  * along with their set/changed flags on the given stateblock object
  */
-HRESULT allocate_shader_constants(IWineD3DStateBlockImpl* object) {
-    
+HRESULT allocate_shader_constants(IWineD3DStateBlockImpl* object)
+{
     IWineD3DStateBlockImpl *This = object;
 
     /* Allocate space for floating point constants */
@@ -77,6 +77,7 @@ static void stateblock_savedstates_copy(IWineD3DStateBlock* iface, SAVEDSTATES *
     unsigned bsize = sizeof(BOOL);
 
     /* Single values */
+    dest->primitive_type = source->primitive_type;
     dest->indices = source->indices;
     dest->material = source->material;
     dest->viewport = source->viewport;
@@ -112,15 +113,13 @@ static inline void stateblock_set_bits(DWORD *map, UINT map_size)
 }
 
 /** Set all members of a stateblock savedstate to the given value */
-void stateblock_savedstates_set(
-    IWineD3DStateBlock* iface,
-    SAVEDSTATES* states,
-    BOOL value) {
-    
+void stateblock_savedstates_set(IWineD3DStateBlock *iface, SAVEDSTATES *states, BOOL value)
+{
     IWineD3DStateBlockImpl *This = (IWineD3DStateBlockImpl *)iface;
     unsigned bsize = sizeof(BOOL);
 
     /* Single values */
+    states->primitive_type = value;
     states->indices = value;
     states->material = value;
     states->viewport = value;
@@ -188,10 +187,12 @@ void stateblock_copy(
     stateblock_savedstates_copy(source, &Dest->changed, &This->changed);
 
     /* Single items */
+    Dest->gl_primitive_type = This->gl_primitive_type;
     Dest->vertexDecl = This->vertexDecl;
     Dest->vertexShader = This->vertexShader;
     Dest->streamIsUP = This->streamIsUP;
     Dest->pIndexData = This->pIndexData;
+    Dest->IndexFmt = This->IndexFmt;
     Dest->baseVertexIndex = This->baseVertexIndex;
     /* Dest->lights = This->lights; */
     Dest->clip_status = This->clip_status;
@@ -224,10 +225,10 @@ void stateblock_copy(
     memcpy(Dest->vertexShaderConstantI, This->vertexShaderConstantI, sizeof(INT) * MAX_CONST_I * 4);
     memcpy(Dest->pixelShaderConstantB, This->pixelShaderConstantB, sizeof(BOOL) * MAX_CONST_B);
     memcpy(Dest->pixelShaderConstantI, This->pixelShaderConstantI, sizeof(INT) * MAX_CONST_I * 4);
-    
+
     memcpy(Dest->streamStride, This->streamStride, sizeof(UINT) * MAX_STREAMS);
     memcpy(Dest->streamOffset, This->streamOffset, sizeof(UINT) * MAX_STREAMS);
-    memcpy(Dest->streamSource, This->streamSource, sizeof(IWineD3DVertexBuffer*) * MAX_STREAMS);
+    memcpy(Dest->streamSource, This->streamSource, sizeof(IWineD3DBuffer *) * MAX_STREAMS);
     memcpy(Dest->streamFreq,   This->streamFreq,   sizeof(UINT) * MAX_STREAMS);
     memcpy(Dest->streamFlags,  This->streamFlags,  sizeof(UINT) * MAX_STREAMS);
     memcpy(Dest->transforms,   This->transforms,   sizeof(WINED3DMATRIX) * (HIGHEST_TRANSFORMSTATE + 1));
@@ -292,12 +293,13 @@ static ULONG  WINAPI IWineD3DStateBlockImpl_Release(IWineD3DStateBlock *iface) {
 
         for (counter = 0; counter < MAX_STREAMS; counter++) {
             if(This->streamSource[counter]) {
-                if(0 != IWineD3DVertexBuffer_Release(This->streamSource[counter])) {
+                if (IWineD3DBuffer_Release(This->streamSource[counter]))
+                {
                     TRACE("Vertex buffer still referenced by stateblock, applications has leaked Stream %u, buffer %p\n", counter, This->streamSource[counter]);
                 }
             }
         }
-        if(This->pIndexData) IWineD3DIndexBuffer_Release(This->pIndexData);
+        if(This->pIndexData) IWineD3DBuffer_Release(This->pIndexData);
         if(This->vertexShader) IWineD3DVertexShader_Release(This->vertexShader);
         if(This->pixelShader) IWineD3DPixelShader_Release(This->pixelShader);
 
@@ -352,7 +354,7 @@ static inline void record_lights(IWineD3DStateBlockImpl *This, IWineD3DStateBloc
         LIST_FOR_EACH(e, &This->lightMap[i]) {
             BOOL updated = FALSE;
             PLIGHTINFOEL *src = LIST_ENTRY(e, PLIGHTINFOEL, entry), *realLight;
-            if(!src->changed || !src->enabledChanged) continue;
+            if (!src->changed && !src->enabledChanged) continue;
 
             /* Look up the light in the destination */
             LIST_FOR_EACH(f, &targetStateBlock->lightMap[i]) {
@@ -499,14 +501,18 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
                 targetStateBlock->transforms[This->contained_transform_states[i]];
         }
 
+        if (This->changed.primitive_type) This->gl_primitive_type = targetStateBlock->gl_primitive_type;
+
         if (This->changed.indices && ((This->pIndexData != targetStateBlock->pIndexData)
-                        || (This->baseVertexIndex != targetStateBlock->baseVertexIndex))) {
+                        || (This->baseVertexIndex != targetStateBlock->baseVertexIndex)
+                        || (This->IndexFmt != targetStateBlock->IndexFmt))) {
             TRACE("Updating pIndexData to %p, baseVertexIndex to %d\n",
                     targetStateBlock->pIndexData, targetStateBlock->baseVertexIndex);
-            if(targetStateBlock->pIndexData) IWineD3DIndexBuffer_AddRef(targetStateBlock->pIndexData);
-            if(This->pIndexData) IWineD3DIndexBuffer_Release(This->pIndexData);
+            if(targetStateBlock->pIndexData) IWineD3DBuffer_AddRef(targetStateBlock->pIndexData);
+            if(This->pIndexData) IWineD3DBuffer_Release(This->pIndexData);
             This->pIndexData = targetStateBlock->pIndexData;
             This->baseVertexIndex = targetStateBlock->baseVertexIndex;
+            This->IndexFmt = targetStateBlock->IndexFmt;
         }
 
         if(This->changed.vertexDecl && This->vertexDecl != targetStateBlock->vertexDecl){
@@ -548,8 +554,8 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
                 TRACE("Updating stream source %u to %p, stride to %u\n",
                         i, targetStateBlock->streamSource[i], targetStateBlock->streamStride[i]);
                 This->streamStride[i] = targetStateBlock->streamStride[i];
-                if(targetStateBlock->streamSource[i]) IWineD3DVertexBuffer_AddRef(targetStateBlock->streamSource[i]);
-                if(This->streamSource[i]) IWineD3DVertexBuffer_Release(This->streamSource[i]);
+                if (targetStateBlock->streamSource[i]) IWineD3DBuffer_AddRef(targetStateBlock->streamSource[i]);
+                if (This->streamSource[i]) IWineD3DBuffer_Release(This->streamSource[i]);
                 This->streamSource[i] = targetStateBlock->streamSource[i];
             }
         }
@@ -628,6 +634,7 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         memcpy(This->vertexShaderConstantB, targetStateBlock->vertexShaderConstantB, sizeof(This->vertexShaderConstantI));
         memcpy(This->vertexShaderConstantI, targetStateBlock->vertexShaderConstantI, sizeof(This->vertexShaderConstantF));
         memcpy(This->vertexShaderConstantF, targetStateBlock->vertexShaderConstantF, sizeof(float) * GL_LIMITS(vshader_constantsF) * 4);
+        This->gl_primitive_type = targetStateBlock->gl_primitive_type;
         memcpy(This->streamStride, targetStateBlock->streamStride, sizeof(This->streamStride));
         memcpy(This->streamOffset, targetStateBlock->streamOffset, sizeof(This->streamOffset));
         memcpy(This->streamFreq, targetStateBlock->streamFreq, sizeof(This->streamFreq));
@@ -648,15 +655,17 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         memcpy(This->samplerState, targetStateBlock->samplerState, sizeof(This->samplerState));
         This->scissorRect = targetStateBlock->scissorRect;
 
-        if(targetStateBlock->pIndexData != This->pIndexData) {
-            if(targetStateBlock->pIndexData) IWineD3DIndexBuffer_AddRef(targetStateBlock->pIndexData);
-            if(This->pIndexData) IWineD3DIndexBuffer_Release(This->pIndexData);
+        if(targetStateBlock->pIndexData != This->pIndexData ||
+           targetStateBlock->IndexFmt != This->IndexFmt) {
+            if (targetStateBlock->pIndexData) IWineD3DBuffer_AddRef(targetStateBlock->pIndexData);
+            if (This->pIndexData) IWineD3DBuffer_Release(This->pIndexData);
             This->pIndexData = targetStateBlock->pIndexData;
+            This->IndexFmt = targetStateBlock->IndexFmt;
         }
         for(i = 0; i < MAX_STREAMS; i++) {
             if(targetStateBlock->streamSource[i] != This->streamSource[i]) {
-                if(targetStateBlock->streamSource[i]) IWineD3DVertexBuffer_AddRef(targetStateBlock->streamSource[i]);
-                if(This->streamSource[i]) IWineD3DVertexBuffer_Release(This->streamSource[i]);
+                if(targetStateBlock->streamSource[i]) IWineD3DBuffer_AddRef(targetStateBlock->streamSource[i]);
+                if(This->streamSource[i]) IWineD3DBuffer_Release(This->streamSource[i]);
                 This->streamSource[i] = targetStateBlock->streamSource[i];
             }
         }
@@ -690,8 +699,8 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         }
         for(i = 0; i < MAX_STREAMS; i++) {
             if(targetStateBlock->streamSource[i] != This->streamSource[i]) {
-                if(targetStateBlock->streamSource[i]) IWineD3DVertexBuffer_AddRef(targetStateBlock->streamSource[i]);
-                if(This->streamSource[i]) IWineD3DVertexBuffer_Release(This->streamSource[i]);
+                if (targetStateBlock->streamSource[i]) IWineD3DBuffer_AddRef(targetStateBlock->streamSource[i]);
+                if (This->streamSource[i]) IWineD3DBuffer_Release(This->streamSource[i]);
                 This->streamSource[i] = targetStateBlock->streamSource[i];
             }
         }
@@ -827,8 +836,14 @@ should really perform a delta so that only the changes get updated*/
                                         &This->transforms[This->contained_transform_states[i]]);
         }
 
+        if (This->changed.primitive_type)
+        {
+                This->wineD3DDevice->updateStateBlock->changed.primitive_type = TRUE;
+                This->wineD3DDevice->updateStateBlock->gl_primitive_type = This->gl_primitive_type;
+        }
+
         if (This->changed.indices) {
-            IWineD3DDevice_SetIndices(pDevice, This->pIndexData);
+            IWineD3DDevice_SetIndices(pDevice, This->pIndexData, This->IndexFmt);
             IWineD3DDevice_SetBaseVertexIndex(pDevice, This->baseVertexIndex);
         }
 
@@ -1009,7 +1024,8 @@ should really perform a delta so that only the changes get updated*/
         for(i = 1; i <= HIGHEST_TRANSFORMSTATE; i++) {
             IWineD3DDevice_SetTransform(pDevice, i, &This->transforms[i]);
         }
-        IWineD3DDevice_SetIndices(pDevice, This->pIndexData);
+        This->wineD3DDevice->updateStateBlock->gl_primitive_type = This->gl_primitive_type;
+        IWineD3DDevice_SetIndices(pDevice, This->pIndexData, This->IndexFmt);
         IWineD3DDevice_SetBaseVertexIndex(pDevice, This->baseVertexIndex);
         IWineD3DDevice_SetVertexDeclaration(pDevice, This->vertexDecl);
         IWineD3DDevice_SetMaterial(pDevice, &This->material);
@@ -1068,9 +1084,6 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
     unsigned int i;
     IWineD3DSwapChain *swapchain;
     IWineD3DSurface *backbuffer;
-    WINED3DSURFACE_DESC desc = {0};
-    UINT width, height;
-    RECT scissorrect;
     HRESULT hr;
 
     /* Note this may have a large overhead but it should only be executed
@@ -1273,28 +1286,27 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
         This->textures[i]         = NULL;
     }
 
-    /* Set the default scissor rect values */
-    desc.Width = &width;
-    desc.Height = &height;
-
     /* check the return values, because the GetBackBuffer call isn't valid for ddraw */
     hr = IWineD3DDevice_GetSwapChain(device, 0, &swapchain);
     if( hr == WINED3D_OK && swapchain != NULL) {
         WINED3DVIEWPORT vp;
 
         hr = IWineD3DSwapChain_GetBackBuffer(swapchain, 0, WINED3DBACKBUFFER_TYPE_MONO, &backbuffer);
-        if( hr == WINED3D_OK && backbuffer != NULL) {
+        if (SUCCEEDED(hr) && backbuffer)
+        {
+            WINED3DSURFACE_DESC desc;
+            RECT scissorrect;
+
             IWineD3DSurface_GetDesc(backbuffer, &desc);
             IWineD3DSurface_Release(backbuffer);
 
+            /* Set the default scissor rect values */
             scissorrect.left = 0;
-            scissorrect.right = width;
+            scissorrect.right = desc.width;
             scissorrect.top = 0;
-            scissorrect.bottom = height;
+            scissorrect.bottom = desc.height;
             hr = IWineD3DDevice_SetScissorRect(device, &scissorrect);
-            if( hr != WINED3D_OK ) {
-                ERR("This should never happen, expect rendering issues!\n");
-            }
+            if (FAILED(hr)) ERR("This should never happen, expect rendering issues!\n");
         }
 
         /* Set the default viewport */

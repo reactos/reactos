@@ -104,35 +104,20 @@ UpdatePerUserSystemParameters(
    return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
 
-PW32THREADINFO
+PTHREADINFO
 GetW32ThreadInfo(VOID)
 {
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
 
-    ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+    ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
     if (ti == NULL)
     {
-        /* create the W32THREADINFO structure */
+        /* create the THREADINFO structure */
         NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-        ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+        ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
     }
 
     return ti;
-}
-
-PW32PROCESSINFO
-GetW32ProcessInfo(VOID)
-{
-    PW32THREADINFO ti;
-    PW32PROCESSINFO pi = NULL;
-
-    ti = GetW32ThreadInfo();
-    if (ti != NULL)
-    {
-        pi = ti->pi;
-    }
-
-    return pi;
 }
 
 
@@ -265,13 +250,13 @@ WINAPI
 IsGUIThread(
     BOOL bConvert)
 {
-  PW32THREADINFO ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+  PTHREADINFO ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
   if (ti == NULL)
   {
     if(bConvert)
     {
       NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-      if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo) return TRUE;
+      if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo) return TRUE;
       else
          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
@@ -279,6 +264,17 @@ IsGUIThread(
   }
   else
     return TRUE;
+}
+
+BOOL
+FASTCALL
+TestWindowProcess(PWND Wnd)
+{
+   if (Wnd->head.pti == (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo)
+      return TRUE;
+   else
+      return (NtUserQueryWindow(Wnd->head.h, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
+              (DWORD)NtCurrentTeb()->ClientId.UniqueProcess );
 }
 
 BOOL
@@ -430,25 +426,30 @@ ValidateHandleNoErr(HANDLE handle, UINT uType)
 //
 // Validate a callproc handle and return the pointer to the object.
 //
-PCALLPROC
+PCALLPROCDATA
 FASTCALL
 ValidateCallProc(HANDLE hCallProc)
 {
-    PCALLPROC CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
-    if (CallProc != NULL && CallProc->pi == g_kpi)
-        return CallProc;
+  PUSER_HANDLE_ENTRY pEntry;
 
-    return NULL;
+  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
+
+  pEntry = GetUser32Handle(hCallProc);
+
+  if (CallProc != NULL && pEntry->ppi == g_ppi)
+     return CallProc;
+
+  return NULL;
 }
 
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwnd(HWND hwnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -483,11 +484,11 @@ ValidateHwnd(HWND hwnd)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwndNoErr(HWND hwnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -519,11 +520,11 @@ ValidateHwndNoErr(HWND hwnd)
     return NULL;
 }
 
-PWINDOW
+PWND
 FASTCALL
 GetThreadDesktopWnd(VOID)
 {
-    PWINDOW Wnd = GetThreadDesktopInfo()->Wnd;
+    PWND Wnd = GetThreadDesktopInfo()->Wnd;
     if (Wnd != NULL)
         Wnd = DesktopPtrToUser(Wnd);
     return Wnd;
@@ -532,7 +533,7 @@ GetThreadDesktopWnd(VOID)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwndOrDesk(HWND hwnd)
 {

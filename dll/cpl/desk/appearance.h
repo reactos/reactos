@@ -30,14 +30,38 @@
 #define MAX_TEMPLATENAMELENTGH 80
 
 /* Some typedefs for appearance */
+
+/* Most (but not all) fields below correspond to HKCU\Control Panel\Desktop\UserPreferencesMask */
+typedef struct
+{
+	BOOL bActiveWindowTracking;
+	BOOL bMenuAnimation;
+	BOOL bComboBoxAnimation;
+	BOOL bListBoxSmoothScrolling;
+	BOOL bGradientCaptions;
+	BOOL bKeyboardCues;
+	BOOL bActiveWndTrkZorder;
+	BOOL bHotTracking;
+	BOOL bMenuFade;
+	BOOL bSelectionFade;
+	BOOL bTooltipAnimation;
+	BOOL bTooltipFade;
+	BOOL bCursorShadow;
+	BOOL bUiEffects;
+	BOOL bFontSmoothing;
+	UINT uiFontSmoothingType;
+} EFFECTS;
+
 typedef struct
 {
 	COLORREF crColor[NUM_COLORS];
 	LOGFONT lfFont[NUM_FONTS];
 	UINT64 Size[NUM_SIZES];
+	INT Id;
 	BOOL bFlatMenus;
 	BOOL bHasChanged;
 	BOOL bIsCustom;
+	EFFECTS Effects;
 } THEME;
 
 typedef struct
@@ -86,5 +110,8 @@ extern const INT g_SizeMetric[NUM_SIZES];
 /* prototypes for appearance.c */
 INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-/* prototypes for advappearancedlg.c */
+/* prototypes for advappdlg.c */
 INT_PTR CALLBACK AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+/* prototypes for effappdlg.c */
+INT_PTR CALLBACK EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

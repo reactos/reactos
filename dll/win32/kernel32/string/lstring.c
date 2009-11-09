@@ -82,6 +82,8 @@ lstrcpynA(LPSTR lpString1, LPCSTR lpString2, int iMaxLength)
         Ret = lpString1;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
     _SEH2_END;
 
     return Ret;
@@ -103,6 +105,8 @@ lstrcpyA(LPSTR lpString1, LPCSTR lpString2)
         Ret = lpString1;
      }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
     _SEH2_END;
 
     return Ret;
@@ -123,6 +127,8 @@ lstrcatA(LPSTR lpString1, LPCSTR lpString2)
         Ret = strcat(lpString1, lpString2);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
     _SEH2_END;
 
     return Ret;
@@ -143,6 +149,8 @@ lstrlenA(LPCSTR lpString)
         Ret = strlen(lpString);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
     _SEH2_END;
 
     return Ret;
@@ -223,6 +231,8 @@ lstrcpynW(LPWSTR lpString1, LPCWSTR lpString2, int iMaxLength)
         Ret = lpString1;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
     _SEH2_END;
 
     return Ret;
@@ -243,6 +253,8 @@ lstrcpyW(LPWSTR lpString1, LPCWSTR lpString2)
         Ret = wcscpy(lpString1, lpString2);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
     _SEH2_END;
 
     return Ret;
@@ -263,6 +275,8 @@ lstrcatW(LPWSTR lpString1, LPCWSTR lpString2)
         Ret = wcscat(lpString1, lpString2);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
     _SEH2_END;
 
     return Ret;
@@ -283,6 +297,8 @@ lstrlenW(LPCWSTR lpString)
         Ret = wcslen(lpString);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
     _SEH2_END;
 
     return Ret;

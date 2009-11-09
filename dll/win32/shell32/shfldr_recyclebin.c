@@ -1437,7 +1437,7 @@ BitBucketDlg(
                 }
                 if (StoreDriveSettings(hwndDlg))
                 {
-                    SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+                    SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
                     return TRUE;
                 }
             }

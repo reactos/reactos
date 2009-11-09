@@ -527,7 +527,7 @@ static slang_asm_info AsmInfo[] = {
    { "vec4_texp3d", IR_TEXP, 1, 2 },  /* 3d w/ projection */
    { "vec4_texcube", IR_TEX, 1, 2 },  /* cubemap */
    { "vec4_tex_rect", IR_TEX, 1, 2 }, /* rectangle */
-   { "vec4_texp_rect", IR_TEX, 1, 2 },/* rectangle w/ projection */
+   { "vec4_texp_rect", IR_TEXP, 1, 2 },/* rectangle w/ projection */
 
    /* unary op */
    { "ivec4_to_vec4", IR_I_TO_F, 1, 1 }, /* int[4] to float[4] */
@@ -3662,7 +3662,7 @@ _slang_gen_assignment(slang_assemble_ctx * A, slang_operation *oper)
       if (lhs && rhs) {
          /* convert lhs swizzle into writemask */
          const GLuint swizzle = root_swizzle(lhs->Store);
-         GLuint writemask, newSwizzle;
+         GLuint writemask, newSwizzle = 0x0;
          if (!swizzle_to_writemask(A, swizzle, &writemask, &newSwizzle)) {
             /* Non-simple writemask, need to swizzle right hand side in
              * order to put components into the right place.

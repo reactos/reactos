@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 /* C Headers */
+#include <limits.h>
 #include <stdio.h>
 
 /* PSDK/NDK Headers */

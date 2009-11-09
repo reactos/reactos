@@ -201,7 +201,7 @@ struct ContextList *ContextList_Create(
     return list;
 }
 
-static inline struct list *ContextList_ContextToEntry(struct ContextList *list,
+static inline struct list *ContextList_ContextToEntry(const struct ContextList *list,
  const void *context)
 {
     struct list *ret;
@@ -213,7 +213,7 @@ static inline struct list *ContextList_ContextToEntry(struct ContextList *list,
     return ret;
 }
 
-static inline void *ContextList_EntryToContext(struct ContextList *list,
+static inline void *ContextList_EntryToContext(const struct ContextList *list,
  struct list *entry)
 {
     return (LPBYTE)entry - sizeof(LINK_CONTEXT) - list->contextSize;

@@ -233,11 +233,12 @@ static HRESULT DSoundRender_SendSampleData(DSoundRenderImpl* This, const BYTE *d
 
 static HRESULT DSoundRender_Sample(LPVOID iface, IMediaSample * pSample)
 {
-    DSoundRenderImpl *This = (DSoundRenderImpl *)iface;
+    DSoundRenderImpl *This = iface;
     LPBYTE pbSrcStream = NULL;
     long cbSrcStream = 0;
     REFERENCE_TIME tStart, tStop;
     HRESULT hr;
+    AM_MEDIA_TYPE *amt;
 
     TRACE("%p %p\n", iface, pSample);
 
@@ -257,6 +258,39 @@ static HRESULT DSoundRender_Sample(LPVOID iface, IMediaSample * pSample)
     {
         LeaveCriticalSection(&This->csFilter);
         return VFW_E_WRONG_STATE;
+    }
+
+    if (IMediaSample_GetMediaType(pSample, &amt) == S_OK)
+    {
+        AM_MEDIA_TYPE *orig = &This->pInputPin->pin.mtCurrent;
+        WAVEFORMATEX *origfmt = (WAVEFORMATEX *)orig->pbFormat;
+        WAVEFORMATEX *newfmt = (WAVEFORMATEX *)amt->pbFormat;
+
+        if (origfmt->wFormatTag == newfmt->wFormatTag &&
+            origfmt->nChannels == newfmt->nChannels &&
+            origfmt->nBlockAlign == newfmt->nBlockAlign &&
+            origfmt->wBitsPerSample == newfmt->wBitsPerSample &&
+            origfmt->cbSize ==  newfmt->cbSize)
+        {
+            if (origfmt->nSamplesPerSec != newfmt->nSamplesPerSec)
+            {
+                hr = IDirectSoundBuffer_SetFrequency(This->dsbuffer,
+                                                     newfmt->nSamplesPerSec);
+                if (FAILED(hr))
+                {
+                    LeaveCriticalSection(&This->csFilter);
+                    return VFW_E_TYPE_NOT_ACCEPTED;
+                }
+                FreeMediaType(orig);
+                CopyMediaType(orig, amt);
+                IMediaSample_SetMediaType(pSample, NULL);
+            }
+        }
+        else
+        {
+            LeaveCriticalSection(&This->csFilter);
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
     }
 
     SetEvent(This->state_change);
@@ -404,7 +438,7 @@ HRESULT DSoundRender_create(IUnknown * pUnkOuter, LPVOID * ppv)
             return HRESULT_FROM_WIN32(GetLastError());
         }
 
-        *ppv = (LPVOID)pDSoundRender;
+        *ppv = pDSoundRender;
     }
     else
     {
@@ -426,17 +460,17 @@ static HRESULT WINAPI DSoundRender_QueryInterface(IBaseFilter * iface, REFIID ri
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IPersist))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IMediaFilter))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IBaseFilter))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IBasicAudio))
-        *ppv = (LPVOID)&(This->IBasicAudio_vtbl);
+        *ppv = &This->IBasicAudio_vtbl;
     else if (IsEqualIID(riid, &IID_IReferenceClock))
-        *ppv = (LPVOID)&(This->IReferenceClock_vtbl);
+        *ppv = &This->IReferenceClock_vtbl;
     else if (IsEqualIID(riid, &IID_IMediaSeeking))
         *ppv = &This->mediaSeeking.lpVtbl;
 
@@ -1073,10 +1107,10 @@ static HRESULT WINAPI Basicaudio_Invoke(IBasicAudio *iface,
 
 /*** IBasicAudio methods ***/
 static HRESULT WINAPI Basicaudio_put_Volume(IBasicAudio *iface,
-					    long lVolume) {
+                                            LONG lVolume) {
     ICOM_THIS_MULTI(DSoundRenderImpl, IBasicAudio_vtbl, iface);
 
-    TRACE("(%p/%p)->(%ld)\n", This, iface, lVolume);
+    TRACE("(%p/%p)->(%d)\n", This, iface, lVolume);
 
     if (lVolume > DSBVOLUME_MAX || lVolume < DSBVOLUME_MIN)
         return E_INVALIDARG;
@@ -1091,7 +1125,7 @@ static HRESULT WINAPI Basicaudio_put_Volume(IBasicAudio *iface,
 }
 
 static HRESULT WINAPI Basicaudio_get_Volume(IBasicAudio *iface,
-					    long *plVolume) {
+                                            LONG *plVolume) {
     ICOM_THIS_MULTI(DSoundRenderImpl, IBasicAudio_vtbl, iface);
 
     TRACE("(%p/%p)->(%p)\n", This, iface, plVolume);
@@ -1104,10 +1138,10 @@ static HRESULT WINAPI Basicaudio_get_Volume(IBasicAudio *iface,
 }
 
 static HRESULT WINAPI Basicaudio_put_Balance(IBasicAudio *iface,
-					     long lBalance) {
+                                             LONG lBalance) {
     ICOM_THIS_MULTI(DSoundRenderImpl, IBasicAudio_vtbl, iface);
 
-    TRACE("(%p/%p)->(%ld)\n", This, iface, lBalance);
+    TRACE("(%p/%p)->(%d)\n", This, iface, lBalance);
 
     if (lBalance < DSBPAN_LEFT || lBalance > DSBPAN_RIGHT)
         return E_INVALIDARG;
@@ -1122,7 +1156,7 @@ static HRESULT WINAPI Basicaudio_put_Balance(IBasicAudio *iface,
 }
 
 static HRESULT WINAPI Basicaudio_get_Balance(IBasicAudio *iface,
-					     long *plBalance) {
+                                             LONG *plBalance) {
     ICOM_THIS_MULTI(DSoundRenderImpl, IBasicAudio_vtbl, iface);
 
     TRACE("(%p/%p)->(%p)\n", This, iface, plBalance);

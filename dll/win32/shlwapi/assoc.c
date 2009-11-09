@@ -134,7 +134,8 @@ static BOOL SHLWAPI_ParamAToW(LPCSTR lpszParam, LPWSTR lpszBuff, DWORD dwLen,
  *  Failure: An HRESULT error code indicating the error.
  *
  * NOTES
- *  refiid must be equal to IID_IQueryAssociations, or this function will fail.
+ *  clsid  must be equal to CLSID_QueryAssociations and
+ *  refiid must be equal to IID_IQueryAssociations, IID_IUnknown or this function will fail
  */
 HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
 {
@@ -149,8 +150,8 @@ HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
 
   *(DWORD*)lpInterface = 0;
 
-  if (!IsEqualGUID(&clsid, &IID_IQueryAssociations))
-    return E_NOTIMPL;
+  if (!IsEqualGUID(&clsid,  &CLSID_QueryAssociations))
+    return CLASS_E_CLASSNOTAVAILABLE;
 
   lpAssoc = IQueryAssociations_Constructor();
 
@@ -159,6 +160,10 @@ HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
 
   hRet = IQueryAssociations_QueryInterface(lpAssoc, refiid, lpInterface);
   IQueryAssociations_Release(lpAssoc);
+
+  if(hRet == E_NOINTERFACE)
+    return CLASS_E_CLASSNOTAVAILABLE;
+
   return hRet;
 }
 

@@ -315,13 +315,13 @@ BEGIN
   AUTORADIOBUTTON "L&ežeče", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Robovi", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Levo:", stc15, 88, 172, 21, 8
-  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Desno:", stc16, 159, 172, 27, 8
-  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Zgoraj:", stc17, 88, 192, 21, 8
-  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Spodaj:", stc18, 159, 192, 23, 8
-  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "V redu", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "Prekliči", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "&Tiskalnik ...", psh3, 184, 220, 48, 14
@@ -413,8 +413,8 @@ poskusite znova."
     PD32_DEFAULT_PRINTER                  "Priveti tiskalnik; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "V čakalni vrsti je %d dokumentov"
     PD32_MARGINS_IN_INCHES                "Robovi [palci]"
-    PD32_MARGINS_IN_MILIMETERS            "Robovi [mm]"
-    PD32_MILIMETERS                       "mm"
+    PD32_MARGINS_IN_MILLIMETERS           "Robovi [mm]"
+    PD32_MILLIMETERS                      "mm"
 
     PD32_PRINTER_STATUS_READY             "Pripravljen"
     PD32_PRINTER_STATUS_PAUSED            "Začasno zaustavljen; "

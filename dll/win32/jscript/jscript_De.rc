@@ -1,0 +1,43 @@
+/*
+ * Copyright 2009 André Hentschel
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_TO_PRIMITIVE        "Fehler beim umwandeln des Objektes in einen Grundtyp"
+    IDS_INVALID_CALL_ARG    "Ungültiger Funktionsaufruf oder Argument"
+    IDS_NO_PROPERTY         "Das Objekt unterstützt diese Eigenschaft oder Methode nicht"
+    IDS_ARG_NOT_OPT         "Argument nicht optional"
+    IDS_SYNTAX_ERROR        "Syntax Fehler"
+    IDS_SEMICOLON           "';' erwartet"
+    IDS_LBRACKET            "'(' erwartet"
+    IDS_RBRACKET            "')' erwartet"
+    IDS_UNTERMINATED_STR    "konstante Zeichenkette nicht terminiert"
+    IDS_NOT_FUNC            "Funktion erwartet"
+    IDS_NOT_DATE            "'[Objekt]' ist kein Datums-Objekt"
+    IDS_NOT_NUM             "Nummer erwartet"
+    IDS_ILLEGAL_ASSIGN      "Unzulässige Zuweisung"
+    IDS_UNDEFINED           "'|' nicht definiert"
+    IDS_NOT_BOOL            "Boolisches Objekt erwartet"
+    IDS_INVALID_LENGTH      "Array-Größe muss eine endliche, positive Ganzzahl sein"
+}

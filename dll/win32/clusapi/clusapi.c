@@ -97,7 +97,7 @@ DWORD WINAPI ClusterCloseEnum(HCLUSENUM hEnum)
  */
 DWORD WINAPI ClusterEnum(HCLUSENUM hEnum, DWORD dwIndex, LPDWORD lpdwType, LPWSTR lpszName, LPDWORD lpcchName)
 {
-    FIXME("(%p, %u, %u, %s, %u) stub!\n", hEnum, dwIndex, *lpdwType, debugstr_w(lpszName), *lpcchName);
+    FIXME("(%p, %u, %u, %p, %u) stub!\n", hEnum, dwIndex, *lpdwType, lpszName, *lpcchName);
 
     return ERROR_NO_MORE_ITEMS;
 }

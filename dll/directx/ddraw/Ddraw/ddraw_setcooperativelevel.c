@@ -102,7 +102,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
                 _SEH2_LEAVE;
             }
 
-            if( (GetWindowLong(hwnd, GWL_STYLE) & WS_CHILD) )
+            if( (GetWindowLongPtr(hwnd, GWL_STYLE) & WS_CHILD) )
             {
                 retVal = DDERR_INVALIDPARAMS;
                 _SEH2_LEAVE;

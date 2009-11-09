@@ -927,23 +927,23 @@ static HRESULT WINAPI IPropertyStorage_fnStat(
 static int PropertyStorage_PropNameCompare(const void *a, const void *b,
  void *extra)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)extra;
+    PropertyStorage_impl *This = extra;
 
     if (This->codePage == CP_UNICODE)
     {
         TRACE("(%s, %s)\n", debugstr_w(a), debugstr_w(b));
         if (This->grfFlags & PROPSETFLAG_CASE_SENSITIVE)
-            return lstrcmpW((LPCWSTR)a, (LPCWSTR)b);
+            return lstrcmpW(a, b);
         else
-            return lstrcmpiW((LPCWSTR)a, (LPCWSTR)b);
+            return lstrcmpiW(a, b);
     }
     else
     {
         TRACE("(%s, %s)\n", debugstr_a(a), debugstr_a(b));
         if (This->grfFlags & PROPSETFLAG_CASE_SENSITIVE)
-            return lstrcmpA((LPCSTR)a, (LPCSTR)b);
+            return lstrcmpA(a, b);
         else
-            return lstrcmpiA((LPCSTR)a, (LPCSTR)b);
+            return lstrcmpiA(a, b);
     }
 }
 
@@ -961,13 +961,13 @@ static int PropertyStorage_PropCompare(const void *a, const void *b,
 
 static void PropertyStorage_PropertyDestroy(void *k, void *d, void *extra)
 {
-    PropVariantClear((PROPVARIANT *)d);
+    PropVariantClear(d);
     HeapFree(GetProcessHeap(), 0, d);
 }
 
 #ifdef WORDS_BIGENDIAN
 /* Swaps each character in str to or from little endian; assumes the conversion
- * is symmetric, that is, that le16toh is equivalent to htole16.
+ * is symmetric, that is, that lendian16toh is equivalent to htole16.
  */
 static void PropertyStorage_ByteSwapString(LPWSTR str, size_t len)
 {
@@ -977,7 +977,7 @@ static void PropertyStorage_ByteSwapString(LPWSTR str, size_t len)
      * FIXME: alignment?
      */
     for (i = 0; i < len; i++)
-        str[i] = le16toh(str[i]);
+        str[i] = lendian16toh(str[i]);
 }
 #else
 #define PropertyStorage_ByteSwapString(s, l)
@@ -1063,7 +1063,7 @@ static HRESULT PropertyStorage_ReadProperty(PropertyStorage_impl *This,
     case VT_INT:
     case VT_I4:
         StorageUtl_ReadDWord(data, 0, (DWORD*)&prop->u.lVal);
-        TRACE("Read long %ld\n", prop->u.lVal);
+        TRACE("Read long %d\n", prop->u.lVal);
         break;
     case VT_UINT:
     case VT_UI4:
@@ -1477,6 +1477,25 @@ static void PropertyStorage_MakePropertyIdOffset(DWORD propid, DWORD dwOffset,
      offsetof(PROPERTYIDOFFSET, dwOffset), dwOffset);
 }
 
+static inline HRESULT PropertStorage_WriteWStringToStream(IStream *stm,
+ LPCWSTR str, DWORD len, DWORD *written)
+{
+#ifdef WORDS_BIGENDIAN
+    WCHAR *leStr = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    HRESULT hr;
+
+    if (!leStr)
+        return E_OUTOFMEMORY;
+    memcpy(leStr, str, len * sizeof(WCHAR));
+    PropertyStorage_ByteSwapString(leStr, len);
+    hr = IStream_Write(stm, leStr, len, written);
+    HeapFree(GetProcessHeap(), 0, leStr);
+    return hr;
+#else
+    return IStream_Write(stm, str, len, written);
+#endif
+}
+
 struct DictionaryClosure
 {
     HRESULT hr;
@@ -1486,8 +1505,8 @@ struct DictionaryClosure
 static BOOL PropertyStorage_DictionaryWriter(const void *key,
  const void *value, void *extra, void *closure)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)extra;
-    struct DictionaryClosure *c = (struct DictionaryClosure *)closure;
+    PropertyStorage_impl *This = extra;
+    struct DictionaryClosure *c = closure;
     DWORD propid;
     ULONG count;
 
@@ -1508,15 +1527,11 @@ static BOOL PropertyStorage_DictionaryWriter(const void *key,
         if (FAILED(c->hr))
             goto end;
         c->bytesWritten += sizeof(DWORD);
-        /* Rather than allocate a copy, I'll swap the string to little-endian
-         * in-place, write it, then swap it back.
-         */
-        PropertyStorage_ByteSwapString(key, keyLen);
-        c->hr = IStream_Write(This->stm, key, keyLen, &count);
-        PropertyStorage_ByteSwapString(key, keyLen);
+        c->hr = PropertStorage_WriteWStringToStream(This->stm, key, keyLen,
+         &count);
         if (FAILED(c->hr))
             goto end;
-        c->bytesWritten += keyLen;
+        c->bytesWritten += keyLen * sizeof(WCHAR);
         if (keyLen % sizeof(DWORD))
         {
             c->hr = IStream_Write(This->stm, &pad,
@@ -1756,8 +1771,8 @@ struct PropertyClosure
 static BOOL PropertyStorage_PropertiesWriter(const void *key, const void *value,
  void *extra, void *closure)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)extra;
-    struct PropertyClosure *c = (struct PropertyClosure *)closure;
+    PropertyStorage_impl *This = extra;
+    struct PropertyClosure *c = closure;
 
     assert(key);
     assert(value);

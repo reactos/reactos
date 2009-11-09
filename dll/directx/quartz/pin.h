@@ -187,20 +187,6 @@ HRESULT OutputPin_DecommitAllocator(OutputPin * This);
 HRESULT OutputPin_GetDeliveryBuffer(OutputPin * This, IMediaSample ** ppSample, REFERENCE_TIME * tStart, REFERENCE_TIME * tStop, DWORD dwFlags);
 HRESULT OutputPin_SendSample(OutputPin * This, IMediaSample * pSample);
 HRESULT OutputPin_DeliverDisconnect(OutputPin * This);
-HRESULT OutputPin_DeliverNewSegment(OutputPin * This, REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
-
-/**********************************/
-/*** MemInputPin Implementation ***/
-
-HRESULT WINAPI MemInputPin_QueryInterface(IMemInputPin * iface, REFIID riid, LPVOID * ppv);
-ULONG   WINAPI MemInputPin_AddRef(IMemInputPin * iface);
-ULONG   WINAPI MemInputPin_Release(IMemInputPin * iface);
-HRESULT WINAPI MemInputPin_GetAllocator(IMemInputPin * iface, IMemAllocator ** ppAllocator);
-HRESULT WINAPI MemInputPin_NotifyAllocator(IMemInputPin * iface, IMemAllocator * pAllocator, BOOL bReadOnly);
-HRESULT WINAPI MemInputPin_GetAllocatorRequirements(IMemInputPin * iface, ALLOCATOR_PROPERTIES * pProps);
-HRESULT WINAPI MemInputPin_Receive(IMemInputPin * iface, IMediaSample * pSample);
-HRESULT WINAPI MemInputPin_ReceiveMultiple(IMemInputPin * iface, IMediaSample ** pSamples, long nSamples, long *nSamplesProcessed);
-HRESULT WINAPI MemInputPin_ReceiveCanBlock(IMemInputPin * iface);
 
 /* Pull Pin */
 HRESULT WINAPI PullPin_ReceiveConnection(IPin * iface, IPin * pReceivePin, const AM_MEDIA_TYPE * pmt);

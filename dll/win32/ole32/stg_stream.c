@@ -126,7 +126,7 @@ static HRESULT WINAPI StgStreamImpl_QueryInterface(
       IsEqualIID(&IID_ISequentialStream, riid) ||
       IsEqualIID(&IID_IStream, riid))
   {
-    *ppvObject = (IStream*)This;
+    *ppvObject = This;
   }
 
   /*
@@ -232,6 +232,7 @@ static void StgStreamImpl_OpenBlockChain(
       {
 	This->smallBlockChain = SmallBlockChainStream_Construct(
 								This->parentStorage->ancestorStorage,
+								NULL,
 								This->ownerProperty);
       }
       else
@@ -521,7 +522,7 @@ static HRESULT WINAPI StgStreamImpl_Seek(
       return STG_E_INVALIDFUNCTION;
   }
 
-  plibNewPosition->QuadPart = RtlLargeIntegerAdd( plibNewPosition->QuadPart, dlibMove.QuadPart );
+  plibNewPosition->QuadPart += dlibMove.QuadPart;
 
   /*
    * tell the caller what we calculated
@@ -535,8 +536,6 @@ static HRESULT WINAPI StgStreamImpl_Seek(
  * This method is part of the IStream interface.
  *
  * It will change the size of a stream.
- *
- * TODO: Switch from small blocks to big blocks and vice versa.
  *
  * See the documentation of IStream for more info.
  */
@@ -575,6 +574,10 @@ static HRESULT WINAPI StgStreamImpl_SetSize(
     return STG_E_ACCESSDENIED;
   }
 
+  /* In simple mode keep the stream size above the small block limit */
+  if (This->parentStorage->ancestorStorage->base.openFlags & STGM_SIMPLE)
+    libNewSize.u.LowPart = max(libNewSize.u.LowPart, LIMIT_TO_USE_SMALL_BLOCK);
+
   if (This->streamSize.u.LowPart == libNewSize.u.LowPart)
     return S_OK;
 
@@ -587,6 +590,7 @@ static HRESULT WINAPI StgStreamImpl_SetSize(
     {
       This->smallBlockChain = SmallBlockChainStream_Construct(
                                     This->parentStorage->ancestorStorage,
+                                    NULL,
                                     This->ownerProperty);
     }
     else
@@ -618,6 +622,19 @@ static HRESULT WINAPI StgStreamImpl_SetSize(
       This->bigBlockChain = Storage32Impl_SmallBlocksToBigBlocks(
                                 This->parentStorage->ancestorStorage,
                                 &This->smallBlockChain);
+    }
+  }
+  else if ( (This->bigBlockChain!=0) &&
+            (curProperty.size.u.LowPart >= LIMIT_TO_USE_SMALL_BLOCK) )
+  {
+    if (libNewSize.u.LowPart < LIMIT_TO_USE_SMALL_BLOCK)
+    {
+      /*
+       * Transform the big block chain into a small block chain
+       */
+      This->smallBlockChain = Storage32Impl_BigBlocksToSmallBlocks(
+                                This->parentStorage->ancestorStorage,
+                                &This->bigBlockChain);
     }
   }
 
@@ -841,11 +858,17 @@ static HRESULT WINAPI StgStreamImpl_Stat(
 
   if (readSuccessful)
   {
+    StorageImpl *root = This->parentStorage->ancestorStorage;
+
     StorageUtl_CopyPropertyToSTATSTG(pstatstg,
 				     &curProperty,
 				     grfStatFlag);
 
     pstatstg->grfMode = This->grfMode;
+
+    /* In simple create mode cbSize is the current pos */
+    if((root->base.openFlags & STGM_SIMPLE) && root->create)
+      pstatstg->cbSize = This->currentPosition;
 
     return S_OK;
   }

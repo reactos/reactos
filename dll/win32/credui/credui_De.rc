@@ -18,6 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "credui_resources.h"
+
+#pragma code_page(65001)
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
@@ -44,7 +48,7 @@ STRINGTABLE DISCARDABLE
     IDS_TITLEFORMAT     "Mit %s verbinden"
     IDS_MESSAGEFORMAT   "Verbindung mit %s wird hergestellt"
     IDS_INCORRECTPASSWORDTITLE  "Anmeldung fehlgeschlagen"
-    IDS_INCORRECTPASSWORD       "Bitte überprüfen Sie Ihren Benutzernamen\nund geben Sie das Kennwort neu ein."
+    IDS_INCORRECTPASSWORD       "Bitte Ã¼berprÃ¼fen Sie Ihren Benutzernamen\nund geben Sie das Kennwort neu ein."
     IDS_CAPSLOCKONTITLE "Die Feststelltaste ist aktiviert"
-    IDS_CAPSLOCKON      "Mit aktivierter Feststelltaste könnte das Kennwort falsch eingeben werden.\n\nVor der Eingabe des Kennworts sollten Sie die Feststelltaste deaktivieren."
+    IDS_CAPSLOCKON      "Mit aktivierter Feststelltaste kÃ¶nnte das Kennwort falsch eingeben werden.\n\nVor der Eingabe des Kennworts sollten Sie die Feststelltaste deaktivieren."
 }

@@ -24,7 +24,7 @@ static HINSTANCE hSetupApi = NULL;
 /*
  * @implemented (Synced with Wine 08.01.2009)
  */
-int
+INT
 WINAPI
 LoadStringA(HINSTANCE instance, UINT resource_id, LPSTR buffer, INT buflen)
 {
@@ -54,7 +54,7 @@ LoadStringA(HINSTANCE instance, UINT resource_id, LPSTR buffer, INT buflen)
 /*
  * @implemented (Synced with Wine 08.01.2009)
  */
-int
+INT
 WINAPI
 LoadStringW(HINSTANCE instance, UINT resource_id, LPWSTR buffer, INT buflen)
 {

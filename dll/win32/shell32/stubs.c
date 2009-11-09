@@ -17,41 +17,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /*
  * Unimplemented
  */
-HLOCAL
-WINAPI
-SHLocalAlloc(UINT uFlags, SIZE_T uBytes)
-{
-    FIXME("SHLocalAlloc() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
-HLOCAL
-WINAPI
-SHLocalFree(HLOCAL hMem)
-{
-    FIXME("SHLocalFree() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
-HLOCAL
-WINAPI
-SHLocalReAlloc(HLOCAL hMem,
-               SIZE_T uBytes,
-               UINT uFlags)
-{
-    FIXME("SHLocalReAlloc() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
 LPWSTR
 WINAPI
 AddCommasW(DWORD dwUnknown, LPWSTR lpNumber)
@@ -409,23 +374,6 @@ RealDriveTypeFlags(INT iDrive, BOOL bUnknown)
 {
     FIXME("RealDriveTypeFlags() stub\n");
     return 1;
-}
-
-/*
- * Unimplemented
- */
-HINSTANCE
-WINAPI
-WOWShellExecute(HWND hwnd,
-                LPCWSTR lpOperation,
-                LPCWSTR lpFile,
-                LPCWSTR lpParameters,
-                LPCWSTR lpDirectory,
-                INT nShowCmd,
-                void *lpfnCBWinExec)
-{
-    FIXME("WOWShellExecute() stub\n");
-    return NULL;
 }
 
 /*

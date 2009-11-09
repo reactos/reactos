@@ -1,0 +1,90 @@
+/*
+ * Polish resources for oleacc
+ *
+ * Copyright 2009 £ukasz Wojni³owicz
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    0 "unknown object" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "pasek tytu³u"
+    ROLE_SYSTEM_MENUBAR     "pasek menu"
+    ROLE_SYSTEM_SCROLLBAR   "pasek przewijania"
+    ROLE_SYSTEM_GRIP        "grip"
+    ROLE_SYSTEM_SOUND       "dŸwiêk"
+    ROLE_SYSTEM_CURSOR      "kursor"
+    ROLE_SYSTEM_CARET       "daszek"
+    ROLE_SYSTEM_ALERT       "ostrze¿enie"
+    ROLE_SYSTEM_WINDOW      "okno"
+    ROLE_SYSTEM_CLIENT      "klient"
+    ROLE_SYSTEM_MENUPOPUP   "menu rozwijane"
+    ROLE_SYSTEM_MENUITEM    "element menu"
+    ROLE_SYSTEM_TOOLTIP     "podpowiedŸ"
+    ROLE_SYSTEM_APPLICATION "aplikacja"
+    ROLE_SYSTEM_DOCUMENT    "dokument"
+    ROLE_SYSTEM_PANE        "pane"
+    ROLE_SYSTEM_CHART       "wykres"
+    ROLE_SYSTEM_DIALOG      "dialog"
+    ROLE_SYSTEM_BORDER      "obramowanie"
+    ROLE_SYSTEM_GROUPING    "grupowanie"
+    ROLE_SYSTEM_SEPARATOR   "separator"
+    ROLE_SYSTEM_TOOLBAR     "pasek narzêdzi"
+    ROLE_SYSTEM_STATUSBAR   "pasek stanu"
+    ROLE_SYSTEM_TABLE        "tabela"
+    ROLE_SYSTEM_COLUMNHEADER "nag³ówek kolumny"
+    ROLE_SYSTEM_ROWHEADER    "nag³ówek wiersza"
+    ROLE_SYSTEM_COLUMN       "kolumna"
+    ROLE_SYSTEM_ROW          "wiersz"
+    ROLE_SYSTEM_CELL         "komórka"
+    ROLE_SYSTEM_LINK         "link"
+    ROLE_SYSTEM_HELPBALLOON  "dymek pomocy"
+    ROLE_SYSTEM_CHARACTER    "znak"
+    ROLE_SYSTEM_LIST         "lista"
+    ROLE_SYSTEM_LISTITEM     "element listy"
+    ROLE_SYSTEM_OUTLINE      "zarys"
+    ROLE_SYSTEM_OUTLINEITEM  "element zarysu"
+    ROLE_SYSTEM_PAGETAB      "page tab"
+    ROLE_SYSTEM_PROPERTYPAGE "strona w³aœciwoœci"
+    ROLE_SYSTEM_INDICATOR    "wskaŸnik"
+    ROLE_SYSTEM_GRAPHIC      "grafika"
+    ROLE_SYSTEM_STATICTEXT   "tekst statyczny"
+    ROLE_SYSTEM_TEXT         "tekst"
+    ROLE_SYSTEM_PUSHBUTTON   "przycisk"
+    ROLE_SYSTEM_CHECKBUTTON  "przycisk zaznaczany"
+    ROLE_SYSTEM_RADIOBUTTON  "przycisk opcji"
+    ROLE_SYSTEM_COMBOBOX     "pole kombi"
+    ROLE_SYSTEM_DROPLIST     "lista rozwijana"
+    ROLE_SYSTEM_PROGRESSBAR  "pasek postêpu"
+    ROLE_SYSTEM_DIAL         "dial"
+    ROLE_SYSTEM_HOTKEYFIELD  "hot key field"
+    ROLE_SYSTEM_SLIDER       "suwak"
+    ROLE_SYSTEM_SPINBUTTON   "spin box"
+    ROLE_SYSTEM_DIAGRAM      "diagram"
+    ROLE_SYSTEM_ANIMATION    "animacja"
+    ROLE_SYSTEM_EQUATION     "równanie"
+    ROLE_SYSTEM_BUTTONDROPDOWN "przycisk rozwijany"
+    ROLE_SYSTEM_BUTTONMENU   "przycisk menu"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "siatka przycisków rozwijanych"
+    ROLE_SYSTEM_WHITESPACE   "bia³a spacja"
+    ROLE_SYSTEM_PAGETABLIST  "page tab list"
+    ROLE_SYSTEM_CLOCK        "zegar"
+    ROLE_SYSTEM_SPLITBUTTON  "przycisk rozdzielania"
+    ROLE_SYSTEM_IPADDRESS    "adres IP"
+    ROLE_SYSTEM_OUTLINEBUTTON "przycisk zarysu"
+}

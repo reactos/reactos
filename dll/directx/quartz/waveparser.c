@@ -73,7 +73,7 @@ static LONGLONG duration_to_bytepos(WAVEParserImpl *This, LONGLONG duration)
 
 static HRESULT WAVEParser_Sample(LPVOID iface, IMediaSample * pSample, DWORD_PTR cookie)
 {
-    WAVEParserImpl *This = (WAVEParserImpl *)iface;
+    WAVEParserImpl *This = iface;
     LPBYTE pbSrcStream = NULL;
     ULONG cbSrcStream = 0;
     REFERENCE_TIME tStart, tStop;
@@ -142,7 +142,7 @@ static HRESULT WAVEParser_Sample(LPVOID iface, IMediaSample * pSample, DWORD_PTR
 
     if (tStop >= This->EndOfFile || (bytepos_to_duration(This, tStop) >= This->Parser.mediaSeeking.llStop) || hr == VFW_E_NOT_CONNECTED)
     {
-        int i;
+        unsigned int i;
 
         TRACE("End of file reached\n");
 
@@ -151,7 +151,7 @@ static HRESULT WAVEParser_Sample(LPVOID iface, IMediaSample * pSample, DWORD_PTR
             IPin* ppin;
             HRESULT hr;
 
-            TRACE("Send End Of Stream to output pin %d\n", i);
+            TRACE("Send End Of Stream to output pin %u\n", i);
 
             hr = IPin_ConnectedTo(This->Parser.ppPins[i+1], &ppin);
             if (SUCCEEDED(hr))
@@ -333,7 +333,7 @@ static HRESULT WAVEParser_InputPin_PreConnect(IPin * iface, IPin * pConnectPin, 
 
 static HRESULT WAVEParser_Cleanup(LPVOID iface)
 {
-    WAVEParserImpl *This = (WAVEParserImpl*)iface;
+    WAVEParserImpl *This = iface;
 
     TRACE("(%p)->()\n", This);
 
@@ -342,7 +342,7 @@ static HRESULT WAVEParser_Cleanup(LPVOID iface)
 
 static HRESULT WAVEParser_first_request(LPVOID iface)
 {
-    WAVEParserImpl *This = (WAVEParserImpl *)iface;
+    WAVEParserImpl *This = iface;
     PullPin *pin = This->Parser.pInputPin;
     HRESULT hr;
     IMediaSample *sample;
@@ -431,7 +431,7 @@ HRESULT WAVEParser_create(IUnknown * pUnkOuter, LPVOID * ppv)
     if (FAILED(hr))
         return hr;
 
-    *ppv = (LPVOID)This;
+    *ppv = This;
 
     return hr;
 }

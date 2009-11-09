@@ -2010,7 +2010,7 @@ static void SPY_GetClassName( SPY_INSTANCE *sp_e )
     /* save and restore error code over the next call */
     save_error = GetLastError();
     /* special code to detect a property sheet dialog   */
-    if ((GetClassLongW(sp_e->msg_hwnd, GCW_ATOM) == (LONG)WC_DIALOG) &&
+    if ((GetClassLongPtrW(sp_e->msg_hwnd, GCW_ATOM) == (LONG)WC_DIALOG) &&
         (GetPropW(sp_e->msg_hwnd, PropSheetInfoStr))) {
         strcpyW(sp_e->wnd_class, WC_PROPSHEETW);
     }

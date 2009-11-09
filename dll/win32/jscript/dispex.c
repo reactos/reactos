@@ -293,7 +293,7 @@ static HRESULT prop_get(DispatchEx *This, dispex_prop_t *prop, LCID lcid, DISPPA
     case PROP_BUILTIN:
         if(prop->u.p->flags & PROPF_METHOD) {
             DispatchEx *obj;
-            hres = create_builtin_function(This->ctx, prop->u.p->invoke, prop->u.p->flags, NULL, &obj);
+            hres = create_builtin_function(This->ctx, prop->u.p->invoke, NULL, prop->u.p->flags, NULL, &obj);
             if(FAILED(hres))
                 break;
 
@@ -828,7 +828,7 @@ HRESULT jsdisp_call_value(DispatchEx *disp, LCID lcid, WORD flags, DISPPARAMS *d
     return disp->builtin_info->value_prop.invoke(disp, lcid, flags, dp, retv, ei, caller);
 }
 
-static HRESULT jsdisp_call(DispatchEx *disp, DISPID id, LCID lcid, WORD flags, DISPPARAMS *dp, VARIANT *retv,
+HRESULT jsdisp_call(DispatchEx *disp, DISPID id, LCID lcid, WORD flags, DISPPARAMS *dp, VARIANT *retv,
         jsexcept_t *ei, IServiceProvider *caller)
 {
     dispex_prop_t *prop;
@@ -840,6 +840,23 @@ static HRESULT jsdisp_call(DispatchEx *disp, DISPID id, LCID lcid, WORD flags, D
     prop = get_prop(disp, id);
     if(!prop)
         return DISP_E_MEMBERNOTFOUND;
+
+    return invoke_prop_func(disp, disp, prop, lcid, flags, dp, retv, ei, caller);
+}
+
+HRESULT jsdisp_call_name(DispatchEx *disp, const WCHAR *name, LCID lcid, WORD flags, DISPPARAMS *dp, VARIANT *retv,
+        jsexcept_t *ei, IServiceProvider *caller)
+{
+    dispex_prop_t *prop;
+    HRESULT hres;
+
+    hres = find_prop_name_prot(disp, name, TRUE, &prop);
+    if(FAILED(hres))
+        return hres;
+
+    memset(ei, 0, sizeof(*ei));
+    if(retv)
+        V_VT(retv) = VT_EMPTY;
 
     return invoke_prop_func(disp, disp, prop, lcid, flags, dp, retv, ei, caller);
 }
@@ -1009,4 +1026,20 @@ HRESULT disp_propget(IDispatch *disp, DISPID id, LCID lcid, VARIANT *val, jsexce
     IDispatchEx_Release(dispex);
 
     return hres;
+}
+
+HRESULT jsdisp_delete_idx(DispatchEx *obj, DWORD idx)
+{
+    static const WCHAR formatW[] = {'%','d',0};
+    WCHAR buf[12];
+    dispex_prop_t *prop;
+    HRESULT hres;
+
+    sprintfW(buf, formatW, idx);
+
+    hres = find_prop_name(obj, buf, &prop);
+    if(FAILED(hres) || !prop)
+        return hres;
+
+    return delete_prop(prop);
 }

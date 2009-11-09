@@ -3,7 +3,6 @@
 	<include base="dnsapi">include</include>
 	<include base="adns">src</include>
 	<include base="adns">adns_win32</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="ADNS_JGAA_WIN32" />
 	<library>adns</library>
 	<library>ntdll</library>

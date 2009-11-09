@@ -132,6 +132,7 @@ static ULONG WINAPI HTMLElementCollection_Release(IHTMLElementCollection *iface)
 
     if(!ref) {
         IUnknown_Release(This->ref_unk);
+        release_dispex(&This->dispex);
         heap_free(This->elems);
         heap_free(This);
     }
@@ -178,15 +179,15 @@ static HRESULT WINAPI HTMLElementCollection_toString(IHTMLElementCollection *ifa
 }
 
 static HRESULT WINAPI HTMLElementCollection_put_length(IHTMLElementCollection *iface,
-                                                       long v)
+                                                       LONG v)
 {
     HTMLElementCollection *This = ELEMCOL_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLElementCollection_get_length(IHTMLElementCollection *iface,
-                                                       long *p)
+                                                       LONG *p)
 {
     HTMLElementCollection *This = ELEMCOL_THIS(iface);
 
@@ -236,38 +237,42 @@ static BOOL is_elem_name(HTMLElement *elem, LPCWSTR name)
     return ret;
 }
 
+static HRESULT get_item_idx(HTMLElementCollection *This, UINT idx, IDispatch **ret)
+{
+    if(idx < This->len) {
+        *ret = (IDispatch*)This->elems[idx];
+        IDispatch_AddRef(*ret);
+    }
+
+    return S_OK;
+}
+
 static HRESULT WINAPI HTMLElementCollection_item(IHTMLElementCollection *iface,
         VARIANT name, VARIANT index, IDispatch **pdisp)
 {
     HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HRESULT hres = S_OK;
 
-    TRACE("(%p)->(v(%d) v(%d) %p)\n", This, V_VT(&name), V_VT(&index), pdisp);
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_variant(&name), debugstr_variant(&index), pdisp);
 
     *pdisp = NULL;
 
-    if(V_VT(&name) == VT_I4) {
-        TRACE("name is VT_I4: %d\n", V_I4(&name));
-
+    switch(V_VT(&name)) {
+    case VT_I4:
         if(V_I4(&name) < 0)
             return E_INVALIDARG;
-        if(V_I4(&name) >= This->len)
-            return S_OK;
+        hres = get_item_idx(This, V_I4(&name), pdisp);
+        break;
 
-        *pdisp = (IDispatch*)This->elems[V_I4(&name)];
-        IDispatch_AddRef(*pdisp);
-        TRACE("Returning pdisp=%p\n", pdisp);
-        return S_OK;
-    }
+    case VT_UINT:
+        hres = get_item_idx(This, V_UINT(&name), pdisp);
+        break;
 
-    if(V_VT(&name) == VT_BSTR) {
+    case VT_BSTR: {
         DWORD i;
-
-        TRACE("name is VT_BSTR: %s\n", debugstr_w(V_BSTR(&name)));
 
         if(V_VT(&index) == VT_I4) {
             LONG idx = V_I4(&index);
-
-            TRACE("index = %d\n", idx);
 
             if(idx < 0)
                 return E_INVALIDARG;
@@ -281,8 +286,6 @@ static HRESULT WINAPI HTMLElementCollection_item(IHTMLElementCollection *iface,
                 *pdisp = (IDispatch*)HTMLELEM(This->elems[i]);
                 IDispatch_AddRef(*pdisp);
             }
-
-            return S_OK;
         }else {
             elem_vector_t buf = {NULL, 0, 8};
 
@@ -304,13 +307,18 @@ static HRESULT WINAPI HTMLElementCollection_item(IHTMLElementCollection *iface,
 
                 heap_free(buf.buf);
             }
-
-            return S_OK;
         }
+        break;
     }
 
-    FIXME("unsupported arguments\n");
-    return E_INVALIDARG;
+    default:
+        FIXME("Unsupported name %s\n", debugstr_variant(&name));
+        hres = E_NOTIMPL;
+    }
+
+    if(SUCCEEDED(hres))
+        TRACE("returning %p\n", *pdisp);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLElementCollection_tags(IHTMLElementCollection *iface,
@@ -421,6 +429,7 @@ static const IHTMLElementCollectionVtbl HTMLElementCollectionVtbl = {
 };
 
 static const dispex_static_data_vtbl_t HTMLElementColection_dispex_vtbl = {
+    NULL,
     HTMLElementCollection_get_dispid,
     HTMLElementCollection_invoke
 };

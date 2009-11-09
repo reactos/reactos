@@ -572,6 +572,22 @@ static struct regsvr_coclass const coclass_list[] = {
         "Msxml2.SAXXMLReader",
         "3.0"
     },
+    {   &CLSID_MXXMLWriter,
+        "IMXWriter interface",
+        NULL,
+        "msxml3.dll",
+        "Both",
+        "Msxml2.MXXMLWriter",
+        "3.0"
+    },
+    {   &CLSID_MXXMLWriter30,
+        "IMXWriter interface 3.0",
+        NULL,
+        "msxml3.dll",
+        "Both",
+        "Msxml2.MXXMLWriter",
+        "3.0"
+    },
     { NULL }			/* list terminator */
 };
 
@@ -669,6 +685,16 @@ static struct progid const progid_list[] = {
     {   "Msxml2.SAXXMLReader.3.0",
         "SAX XML Reader 3.0",
         &CLSID_SAXXMLReader30,
+        NULL
+    },
+    {   "Msxml2.MXXMLWriter",
+        "MXXMLWriter",
+        &CLSID_MXXMLWriter,
+        "Msxml2.MXXMLWriter.3.0"
+    },
+    {   "Msxml2.MXXMLWriter.3.0",
+        "MXXMLWriter 3.0",
+        &CLSID_MXXMLWriter30,
         NULL
     },
 

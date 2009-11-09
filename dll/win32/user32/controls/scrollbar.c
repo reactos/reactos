@@ -69,8 +69,8 @@ static BOOL ScrollTrackVertical;
 
 HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 
-static LRESULT WINAPI ScrollBarWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ScrollBarWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 UINT WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
@@ -99,7 +99,6 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
    INT ThumbSize = ScrollBarInfo->xyThumbBottom - ScrollBarInfo->xyThumbTop;
    INT ThumbTop = ScrollBarInfo->xyThumbTop;
    RECT Rect;
-   HPEN hSavePen;
    HBRUSH hSaveBrush, hBrush;
    BOOL TopSelected = FALSE, BottomSelected = FALSE;
 
@@ -124,7 +123,6 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
       hBrush = DefWndControlColor(hDC, CTLCOLOR_SCROLLBAR);
    }
 
-   hSavePen = SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
    hSaveBrush = SelectObject(hDC, hBrush);
 
    /* Calculate the scroll rectangle */
@@ -150,7 +148,6 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
          Rect.bottom - Rect.top, PATCOPY);
 
       /* Cleanup and return */
-      SelectObject(hDC, hSavePen);
       SelectObject(hDC, hSaveBrush);
       return;
    }
@@ -207,7 +204,6 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
       DrawEdge(hDC, &Rect, EDGE_RAISED, BF_RECT | BF_MIDDLE);
 
    /* Cleanup */
-   SelectObject(hDC, hSavePen);
    SelectObject(hDC, hSaveBrush);
 }
 
@@ -336,7 +332,7 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
         break;
 
       case SB_CTL:
-        Vertical = (GetWindowLongW(Wnd, GWL_STYLE) & SBS_VERT) != 0;
+        Vertical = (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_VERT) != 0;
         break;
 
       default:
@@ -498,7 +494,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
       ClientToScreen(Wnd, (LPPOINT) &ClientRect.right);
       GetWindowRect(Wnd, &WindowRect);
     }
-  Style = GetWindowLongW(Wnd, GWL_STYLE);
+  Style = GetWindowLongPtrW(Wnd, GWL_STYLE);
 
   switch (Bar)
     {
@@ -520,7 +516,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
 	break;
 
       case SB_VERT:
-        ExStyle = GetWindowLongW(Wnd, GWL_EXSTYLE);
+        ExStyle = GetWindowLongPtrW(Wnd, GWL_EXSTYLE);
         if (0 != (ExStyle & WS_EX_LEFTSCROLLBAR))
           {
             Rect->left   = ClientRect.left - WindowRect.left - GetSystemMetrics(SM_CXVSCROLL);
@@ -769,7 +765,7 @@ IntScrollHandleKbdEvent(
     }
 
   SendMessageW(GetParent(Wnd),
-               (0 != (GetWindowLongW(Wnd, GWL_STYLE ) & SBS_VERT) ?
+               (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE ) & SBS_VERT) ?
                 WM_VSCROLL : WM_HSCROLL), wParam, (LPARAM) Wnd);
 }
 
@@ -810,7 +806,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
   memcpy(NewInfo.rgstate, ScrollBarInfo.rgstate, (CCHILDREN_SCROLLBAR + 1) * sizeof(DWORD));
 
   if (SB_CTL == SBType
-      && 0 != (GetWindowLongW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
+      && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
     {
       switch(Msg)
         {
@@ -850,7 +846,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
     }
   else
     {
-      Vertical = (0 != (GetWindowLongW(Wnd, GWL_STYLE) & SBS_VERT));
+      Vertical = (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_VERT));
     }
   WndOwner = (SB_CTL == SBType) ? GetParent(Wnd) : Wnd;
   WndCtl   = (SB_CTL == SBType) ? Wnd : NULL;
@@ -866,7 +862,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         LastMousePos  = LastClickPos;
         TrackThumbPos = ScrollBarInfo.xyThumbTop;
         PrevPt = Pt;
-        if (SB_CTL == SBType && 0 != (GetWindowLongW(Wnd, GWL_STYLE) & WS_TABSTOP))
+        if (SB_CTL == SBType && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP))
           {
             SetFocus(Wnd);
           }
@@ -1252,7 +1248,7 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
 /***********************************************************************
  *           ScrollBarWndProc
  */
-static LRESULT WINAPI
+LRESULT WINAPI
 ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   if (! IsWindow(Wnd))
@@ -1376,11 +1372,11 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
 
           Dc = (0 != wParam ? (HDC) wParam : BeginPaint(Wnd, &Ps));
 
-          if (GetWindowLongW(Wnd, GWL_STYLE) & SBS_SIZEGRIP)
+          if (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_SIZEGRIP)
             {
               IntScrollDrawSizeGrip(Wnd, Dc);
             }
-          else if (0 != (GetWindowLongW(Wnd, GWL_STYLE) & SBS_SIZEBOX))
+          else if (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_SIZEBOX))
             {
               RECT Rect;
               GetClientRect(Wnd, &Rect);
@@ -1461,13 +1457,13 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
   return 0;
 }
 
-static LRESULT WINAPI
+LRESULT WINAPI
 ScrollBarWndProcW(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   return ScrollBarWndProc(DefWindowProcW, Wnd, Msg, wParam, lParam);
 }
 
-static LRESULT WINAPI
+LRESULT WINAPI
 ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   return ScrollBarWndProc(DefWindowProcA, Wnd, Msg, wParam, lParam);
@@ -1479,8 +1475,33 @@ ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 /*
  * @implemented
  */
+BOOL WINAPI EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
+{
+   BOOL Hook, Ret = FALSE;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+     /* Bypass SEH and go direct. */
+   if (!Hook) return NtUserEnableScrollBar(hwnd, nBar, flags);
+
+   _SEH2_TRY
+   {
+      Ret = guah.EnableScrollBar(hwnd, nBar, flags);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
+}
+
 BOOL WINAPI
-GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
+RealGetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 {
   if (SB_CTL == SBType)
     {
@@ -1490,6 +1511,35 @@ GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
     {
       return NtUserGetScrollInfo(Wnd, SBType, Info);
     }
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
+{
+   BOOL Hook, Ret = FALSE;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+     /* Bypass SEH and go direct. */
+   if (!Hook) return RealGetScrollInfo(Wnd, SBType, Info);
+
+   _SEH2_TRY
+   {
+      Ret = guah.GetScrollInfo(Wnd, SBType, Info);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
 }
 
 /*
@@ -1530,11 +1580,8 @@ GetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
     }
 }
 
-/*
- * @implemented
- */
 INT WINAPI
-SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
+RealSetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 {
   if (SB_CTL == SBType)
     {
@@ -1544,6 +1591,37 @@ SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
     {
       return NtUserSetScrollInfo(Wnd, SBType, Info, bRedraw);
     }
+}
+
+/*
+ * @implemented
+ */
+INT WINAPI
+SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
+{
+   BOOL Hook;
+   INT Ret = 0;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+     /* Bypass SEH and go direct. */
+   if (!Hook) return RealSetScrollInfo(Wnd, SBType, Info, bRedraw);
+
+   _SEH2_TRY
+   {
+      Ret = guah.SetScrollInfo(Wnd, SBType, Info, bRedraw);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
+
 }
 
 /*

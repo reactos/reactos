@@ -58,7 +58,10 @@ static ULONG WINAPI IDirect3DStateBlock8Impl_Release(IDirect3DStateBlock8 *iface
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
+        wined3d_mutex_lock();
         IWineD3DStateBlock_Release(This->wineD3DStateBlock);
+        wined3d_mutex_unlock();
+
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -67,20 +70,47 @@ static ULONG WINAPI IDirect3DStateBlock8Impl_Release(IDirect3DStateBlock8 *iface
 /* IDirect3DStateBlock8 Interface follow: */
 static HRESULT WINAPI IDirect3DStateBlock8Impl_GetDevice(IDirect3DStateBlock8 *iface, IDirect3DDevice8 **ppDevice) {
     IDirect3DStateBlock8Impl *This = (IDirect3DStateBlock8Impl *)iface;
-    TRACE("(%p) Relay\n", This); 
-    return IDirect3DResource8Impl_GetDevice((LPDIRECT3DRESOURCE8) This, ppDevice);
+    IWineD3DDevice *wined3d_device;
+    HRESULT hr;
+
+    TRACE("(%p) Relay\n", This);
+
+    wined3d_mutex_lock();
+    hr = IWineD3DStateBlock_GetDevice(This->wineD3DStateBlock, &wined3d_device);
+    if (SUCCEEDED(hr))
+    {
+        IWineD3DDevice_GetParent(wined3d_device, (IUnknown **)ppDevice);
+        IWineD3DDevice_Release(wined3d_device);
+    }
+    wined3d_mutex_unlock();
+
+    return hr;
 }
 
 static HRESULT WINAPI IDirect3DStateBlock8Impl_Capture(IDirect3DStateBlock8 *iface) {
     IDirect3DStateBlock8Impl *This = (IDirect3DStateBlock8Impl *)iface;
-    TRACE("(%p) Relay\n", This); 
-    return IWineD3DStateBlock_Capture(This->wineD3DStateBlock);
+    HRESULT hr;
+
+    TRACE("(%p) Relay\n", This);
+
+    wined3d_mutex_lock();
+    hr = IWineD3DStateBlock_Capture(This->wineD3DStateBlock);
+    wined3d_mutex_unlock();
+
+    return hr;
 }
 
 static HRESULT WINAPI IDirect3DStateBlock8Impl_Apply(IDirect3DStateBlock8 *iface) {
     IDirect3DStateBlock8Impl *This = (IDirect3DStateBlock8Impl *)iface;
-    TRACE("(%p) Relay\n", This); 
-    return IWineD3DStateBlock_Apply(This->wineD3DStateBlock);
+    HRESULT hr;
+
+    TRACE("(%p) Relay\n", This);
+
+    wined3d_mutex_lock();
+    hr = IWineD3DStateBlock_Apply(This->wineD3DStateBlock);
+    wined3d_mutex_unlock();
+
+    return hr;
 }
 
 const IDirect3DStateBlock8Vtbl Direct3DStateBlock8_Vtbl =

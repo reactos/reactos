@@ -621,7 +621,7 @@ RtlQueueWorkItem
 RtlRaiseException
 RtlRaiseStatus
 RtlRandom
-RtlRandomEx=RtlRandom
+RtlRandomEx
 RtlReAllocateHeap
 RtlRealPredecessor
 RtlRealSuccessor

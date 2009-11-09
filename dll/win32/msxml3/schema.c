@@ -189,13 +189,13 @@ static HRESULT WINAPI schema_cache_remove( IXMLDOMSchemaCollection *iface, BSTR 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI schema_cache_get_length( IXMLDOMSchemaCollection *iface, long *length )
+static HRESULT WINAPI schema_cache_get_length( IXMLDOMSchemaCollection *iface, LONG *length )
 {
     FIXME("stub\n");
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI schema_cache_get_namespaceURI( IXMLDOMSchemaCollection *iface, long index, BSTR *len )
+static HRESULT WINAPI schema_cache_get_namespaceURI( IXMLDOMSchemaCollection *iface, LONG index, BSTR *len )
 {
     FIXME("stub\n");
     return E_NOTIMPL;

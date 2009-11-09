@@ -523,7 +523,7 @@ static BOOL CRYPT_AsnDecodeSequence(struct AsnDecodeSequenceItem items[],
                 for (i = 0; i < cItem; i++)
                 {
                     bytesNeeded += items[i].size;
-                    structSize += items[i].minSize;
+                    structSize = max( structSize, items[i].offset + items[i].minSize );
                 }
                 if (pcbDecoded)
                     *pcbDecoded = 1 + lenBytes + cbDecoded;
@@ -1724,9 +1724,8 @@ static BOOL CRYPT_AsnDecodeUnicodeNameValueInternal(const BYTE *pbEncoded,
                 case ASN_UTF8STRING:
                     value->Value.cbData = MultiByteToWideChar(CP_UTF8, 0,
                      (LPCSTR)pbEncoded + 1 + lenBytes, dataLen,
-                     str, bytesNeeded - sizeof(CERT_NAME_VALUE)) * 2;
-                    value->Value.pbData[value->Value.cbData / sizeof(WCHAR)]
-                     = 0;
+                     str, bytesNeeded - sizeof(CERT_NAME_VALUE)) * sizeof(WCHAR);
+                    *(WCHAR *)(value->Value.pbData + value->Value.cbData) = 0;
                     value->Value.cbData += sizeof(WCHAR);
                     break;
                 }

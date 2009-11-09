@@ -109,13 +109,13 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     WCHAR szText[MAX_PATH], szTitle[100], szFilter[100];
     OPENFILENAMEW ofn = {0};
 
-    PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)GetWindowLong(hwndDlg, DWLP_USER);
+    PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
     case WM_INITDIALOG:
         pIconContext = (PPICK_ICON_CONTEXT)lParam;
-        SetWindowLong(hwndDlg, DWLP_USER, (LONG)pIconContext);
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)pIconContext);
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
         EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
         if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))

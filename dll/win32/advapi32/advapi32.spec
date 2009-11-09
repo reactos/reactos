@@ -101,8 +101,8 @@
 @ stub CreateProcessWithLogonW #(wstr wstr wstr long wstr wstr long ptr wstr ptr ptr)
 @ stdcall CreateProcessWithTokenW(ptr long wstr wstr long ptr wstr ptr ptr)
 @ stdcall CreateRestrictedToken(long long long ptr long ptr long ptr ptr)
-@ stdcall CreateServiceA(long ptr ptr long long long long ptr ptr ptr ptr ptr ptr)
-@ stdcall CreateServiceW(long ptr ptr long long long long ptr ptr ptr ptr ptr ptr)
+@ stdcall CreateServiceA(long str str long long long long str str ptr str str str)
+@ stdcall CreateServiceW(long wstr wstr long long long long wstr wstr ptr wstr wstr wstr)
 @ stub CreateTraceInstanceId
 @ stdcall CreateWellKnownSid(long ptr ptr ptr)
 @ stdcall CredDeleteA(str long long)
@@ -645,7 +645,7 @@
 @ stdcall SystemFunction041(ptr long long)
 @ stdcall TraceEvent(double ptr)
 @ stub TraceEventInstance
-@ stdcall TraceMessage(ptr long ptr long) advapi32.TraceMessage
+@ varargs TraceMessage(ptr long ptr long)
 @ stub TraceMessageVa
 @ stdcall TreeResetNamedSecurityInfoA(str ptr ptr ptr ptr ptr ptr long ptr ptr ptr)
 @ stdcall TreeResetNamedSecurityInfoW(wstr ptr ptr ptr ptr ptr ptr long ptr ptr ptr)

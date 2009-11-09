@@ -428,7 +428,7 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_FINDSTRINGEXACT:
     case LB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
         if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & LBS_HASSTRINGS))
           {
@@ -443,7 +443,7 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case CB_FINDSTRINGEXACT:
     case CB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
         if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & CBS_HASSTRINGS))
           {
@@ -550,7 +550,7 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_FINDSTRINGEXACT:
     case LB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
         if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & LBS_HASSTRINGS))
           {
@@ -565,7 +565,7 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case CB_FINDSTRINGEXACT:
     case CB_SELECTSTRING:
       {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
         if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
             (dwStyle & CBS_HASSTRINGS))
           {
@@ -726,7 +726,7 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case LB_FINDSTRINGEXACT:
       case LB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
           if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
               (dwStyle & LBS_HASSTRINGS))
             {
@@ -741,7 +741,7 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case CB_FINDSTRINGEXACT:
       case CB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
           if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
                (dwStyle & CBS_HASSTRINGS))
             {
@@ -852,7 +852,7 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case LB_FINDSTRINGEXACT:
       case LB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
           if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
               (dwStyle & LBS_HASSTRINGS))
             {
@@ -867,7 +867,7 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case CB_FINDSTRINGEXACT:
       case CB_SELECTSTRING:
         {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
           if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
                (dwStyle & CBS_HASSTRINGS))
             {
@@ -1071,6 +1071,7 @@ GetMessageTime(VOID)
 {
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
   return(ThreadData->LastMessage.time);
+//  return NtUserGetThreadState(THREADSTATE_GETMESSAGETIME);
 }
 
 
@@ -1090,8 +1091,7 @@ InSendMessage(VOID)
        return TRUE;
     }
   }
-  return FALSE;
-/*    return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND);*/
+  return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND);
 }
 
 
@@ -1105,23 +1105,22 @@ InSendMessageEx(
 {
   PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
 //  FIXME("ISMEX %x\n",pcti);
-  if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE)) return ISMEX_NOSEND;
+  if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE))
+     return ISMEX_NOSEND;
   else
-  /* return NtUserGetThreadState(THREADSTATE_INSENDMESSAGE); */
-  return 0;
+     return NtUserGetThreadState(THREADSTATE_INSENDMESSAGE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 ReplyMessage(
   LRESULT lResult)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserCallOneParam(lResult, ONEPARAM_ROUTINE_REPLYMESSAGE);
 }
 
 
@@ -1139,6 +1138,7 @@ SetMessageExtraInfo(
 LRESULT FASTCALL
 IntCallWindowProcW(BOOL IsAnsiProc,
                    WNDPROC WndProc,
+                   PWND pWnd,
                    HWND hWnd,
                    UINT Msg,
                    WPARAM wParam,
@@ -1146,7 +1146,9 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  LRESULT Result;
+  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
+  LRESULT Result = 0, PreResult = 0;
+  DWORD Data = 0;
 
   if (WndProc == NULL)
   {
@@ -1154,33 +1156,116 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       return FALSE;
   }
 
+  if (pWnd)
+     Dialog = (pWnd->fnid == FNID_DIALOG);
+  else
+     Dialog = FALSE;
+
+  Hook = BeginIfHookedUserApiHook();
+  if (Hook)
+  {
+     if (!Dialog)
+        MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
+     else
+        MsgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+  }
+  
   if (IsAnsiProc)
-    {
+  {
       UnicodeMsg.hwnd = hWnd;
       UnicodeMsg.message = Msg;
       UnicodeMsg.wParam = wParam;
       UnicodeMsg.lParam = lParam;
       if (! MsgiUnicodeToAnsiMessage(&AnsiMsg, &UnicodeMsg))
-        {
-          return FALSE;
-        }
+      {
+          goto Exit;
+      }
+
+      if (Hook && MsgOverride)
+      {
+         _SEH2_TRY
+         {
+            if (!Dialog)
+               PreResult = guah.PreWndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
+            else
+               PreResult = guah.PreDefDlgProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
+         _SEH2_END;
+      }
+
+      if (PreResult) goto Exit;
+
       Result = WndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
 
+      if (Hook && MsgOverride)
+      {
+         _SEH2_TRY
+         {
+            if (!Dialog)
+               guah.PostWndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
+            else
+               guah.PostDefDlgProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
+         _SEH2_END;
+      }
+
       if (! MsgiUnicodeToAnsiReply(&AnsiMsg, &UnicodeMsg, &Result))
-        {
-          return FALSE;
-        }
-      return Result;
-    }
+      {
+          goto Exit;
+      }
+  }
   else
-    {
-      return WndProc(hWnd, Msg, wParam, lParam);
-    }
+  {
+      if (Hook && MsgOverride)
+      {
+         _SEH2_TRY
+         {
+            if (!Dialog)
+               PreResult = guah.PreWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
+            else
+               PreResult = guah.PreDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
+         _SEH2_END;
+      }
+
+      if (PreResult) goto Exit;
+
+      Result = WndProc(hWnd, Msg, wParam, lParam);
+
+      if (Hook && MsgOverride)
+      {
+         _SEH2_TRY
+         {
+            if (!Dialog)
+               guah.PostWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
+            else
+               guah.PostDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
+         _SEH2_END;
+      }
+  }
+
+Exit:
+  if (Hook) EndUserApiHook();
+  return Result;
 }
 
 static LRESULT FASTCALL
 IntCallWindowProcA(BOOL IsAnsiProc,
                    WNDPROC WndProc,
+                   PWND pWnd,
                    HWND hWnd,
                    UINT Msg,
                    WPARAM wParam,
@@ -1188,7 +1273,9 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  LRESULT Result;
+  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
+  LRESULT Result = 0, PreResult = 0;
+  DWORD Data = 0;
 
   if (WndProc == NULL)
   {
@@ -1196,36 +1283,163 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       return FALSE;
   }
 
-  if (IsAnsiProc)
-    {
-      return WndProc(hWnd, Msg, wParam, lParam);
-    }
+  if (pWnd)
+     Dialog = (pWnd->fnid == FNID_DIALOG);
   else
-    {
+     Dialog = FALSE;
+
+  Hook = BeginIfHookedUserApiHook();
+  if (Hook)
+  {
+     if (!Dialog)
+        MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
+     else
+        MsgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+  }
+
+  if (IsAnsiProc)
+  {
+      if (Hook && MsgOverride)
+      {
+         _SEH2_TRY
+         {
+            if (!Dialog)
+               PreResult = guah.PreWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
+            else
+               PreResult = guah.PreDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
+         _SEH2_END;
+      }
+
+      if (PreResult) goto Exit;
+
+      Result = WndProc(hWnd, Msg, wParam, lParam);
+
+      if (Hook && MsgOverride)
+      {
+         _SEH2_TRY
+         {
+            if (!Dialog)
+               guah.PostWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
+            else
+               guah.PostDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
+         _SEH2_END;
+      }
+  }
+  else
+  {
       AnsiMsg.hwnd = hWnd;
       AnsiMsg.message = Msg;
       AnsiMsg.wParam = wParam;
       AnsiMsg.lParam = lParam;
       if (! MsgiAnsiToUnicodeMessage(&UnicodeMsg, &AnsiMsg))
-        {
-          return FALSE;
-        }
+      {
+          goto Exit;
+      }
+
+      if (Hook && MsgOverride)
+      {
+         _SEH2_TRY
+         {
+            if (!Dialog)
+               PreResult = guah.PreWndProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
+            else
+               PreResult = guah.PreDefDlgProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
+         _SEH2_END;
+      }
+
+      if (PreResult) goto Exit;
+
       Result = WndProc(UnicodeMsg.hwnd, UnicodeMsg.message,
                        UnicodeMsg.wParam, UnicodeMsg.lParam);
 
+      if (Hook && MsgOverride)
+      {
+         _SEH2_TRY
+         {
+            if (!Dialog)
+               guah.PostWndProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
+            else
+               guah.PostDefDlgProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
+         _SEH2_END;
+      }
+
       if (! MsgiAnsiToUnicodeReply(&UnicodeMsg, &AnsiMsg, &Result))
-        {
-          return FALSE;
-        }
-      return Result;
-    }
+      {
+         goto Exit;
+      }
+  }
+
+Exit:
+  if (Hook) EndUserApiHook();
+  return Result;
 }
 
-static BOOL __inline
-IsCallProcHandle(IN WNDPROC lpWndProc)
+
+static LRESULT WINAPI
+IntCallMessageProc(IN PWND Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam, IN BOOL Ansi)
 {
-    /* FIXME - check for 64 bit architectures... */
-    return ((ULONG_PTR)lpWndProc & 0xFFFF0000) == 0xFFFF0000;
+    WNDPROC WndProc;
+    BOOL IsAnsi;
+    PCLS Class;
+    
+    Class = DesktopPtrToUser(Wnd->pcls); 
+    WndProc = NULL;
+  /*
+      This is the message exchange for user32. If there's a need to monitor messages,
+      do it here!
+   */
+    TRACE("HWND 0x%x, MSG %d, WPARAM 0x%x, LPARAM 0x%x, Ansi &d\n",hWnd,Msg,wParam,lParam,Ansi);
+//    if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_BUTTON )
+    if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_FIRST )
+    {
+       if (Ansi)
+       {
+          if (GETPFNCLIENTW(Class->fnid) == Wnd->lpfnWndProc)
+             WndProc = GETPFNCLIENTA(Class->fnid);
+       }
+       else
+       {
+          if (GETPFNCLIENTA(Class->fnid) == Wnd->lpfnWndProc)
+             WndProc = GETPFNCLIENTW(Class->fnid);
+       }
+
+       IsAnsi = Ansi;
+
+       if (!WndProc)
+       {
+          IsAnsi = !Wnd->Unicode;
+          WndProc = Wnd->lpfnWndProc;
+       }
+    }
+    else
+    {
+       IsAnsi = !Wnd->Unicode;
+       WndProc = Wnd->lpfnWndProc;
+    }
+/*
+   Message caller can be Ansi/Unicode and the receiver can be Unicode/Ansi or
+   the same.
+ */
+    if (!Ansi)
+        return IntCallWindowProcW(IsAnsi, WndProc, Wnd, hWnd, Msg, wParam, lParam);
+    else
+        return IntCallWindowProcA(IsAnsi, WndProc, Wnd, hWnd, Msg, wParam, lParam);
 }
 
 
@@ -1239,7 +1453,8 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-    PCALLPROC CallProc;
+    PWND pWnd;
+    PCALLPROCDATA CallProc;
 
     if (lpPrevWndFunc == NULL)
     {
@@ -1247,15 +1462,22 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
         return 0;
     }
 
+    pWnd = ValidateHwnd(hWnd);
+
     if (!IsCallProcHandle(lpPrevWndFunc))
-        return IntCallWindowProcA(TRUE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
+        return IntCallWindowProcA(TRUE, lpPrevWndFunc, pWnd, hWnd, Msg, wParam, lParam);
     else
     {
         CallProc = ValidateCallProc((HANDLE)lpPrevWndFunc);
         if (CallProc != NULL)
         {
-            return IntCallWindowProcA(!CallProc->Unicode, CallProc->WndProc,
-                                      hWnd, Msg, wParam, lParam);
+            return IntCallWindowProcA(!(CallProc->wType & UserGetCPDA2U),
+                                        CallProc->pfnClientPrevious,
+                                        pWnd,
+                                        hWnd,
+                                        Msg,
+                                        wParam,
+                                        lParam);
         }
         else
         {
@@ -1276,7 +1498,8 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-    PCALLPROC CallProc;
+    PWND pWnd;
+    PCALLPROCDATA CallProc;
 
     /* FIXME - can the first parameter be NULL? */
     if (lpPrevWndFunc == NULL)
@@ -1285,15 +1508,22 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
         return 0;
     }
 
+    pWnd = ValidateHwnd(hWnd);
+
     if (!IsCallProcHandle(lpPrevWndFunc))
-        return IntCallWindowProcW(FALSE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
+        return IntCallWindowProcW(FALSE, lpPrevWndFunc, pWnd, hWnd, Msg, wParam, lParam);
     else
     {
         CallProc = ValidateCallProc((HANDLE)lpPrevWndFunc);
         if (CallProc != NULL)
         {
-            return IntCallWindowProcW(!CallProc->Unicode, CallProc->WndProc,
-                                      hWnd, Msg, wParam, lParam);
+            return IntCallWindowProcW(!(CallProc->wType & UserGetCPDA2U),
+                                        CallProc->pfnClientPrevious,
+                                        pWnd,
+                                        hWnd,
+                                        Msg,
+                                        wParam,
+                                        lParam);
         }
         else
         {
@@ -1301,30 +1531,6 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
             return 0;
         }
     }
-}
-
-
-static LRESULT WINAPI
-IntCallMessageProc(IN PWINDOW Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam, IN BOOL Ansi)
-{
-    WNDPROC WndProc;
-    BOOL IsAnsi;
-
-    if (Wnd->IsSystem)
-    {
-        WndProc = (Ansi ? Wnd->WndProcExtra : Wnd->WndProc);
-        IsAnsi = Ansi;
-    }
-    else
-    {
-        WndProc = Wnd->WndProc;
-        IsAnsi = !Wnd->Unicode;
-    }
-
-    if (!Ansi)
-        return IntCallWindowProcW(IsAnsi, WndProc, hWnd, Msg, wParam, lParam);
-    else
-        return IntCallWindowProcA(IsAnsi, WndProc, hWnd, Msg, wParam, lParam);
 }
 
 
@@ -1336,12 +1542,12 @@ DispatchMessageA(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
     MSG UnicodeMsg;
-    PWINDOW Wnd;
+    PWND Wnd;
 
     if (lpmsg->hwnd != NULL)
     {
         Wnd = ValidateHwnd(lpmsg->hwnd);
-        if (!Wnd || SharedPtrToUser(Wnd->ti) != GetW32ThreadInfo())
+        if (!Wnd || Wnd->head.pti != GetW32ThreadInfo())
             return 0;
     }
     else
@@ -1361,8 +1567,7 @@ DispatchMessageA(CONST MSG *lpmsg)
     }
     else if (Wnd != NULL)
     {
-       // FIXME Need to test for calling proc inside win32k!
-       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->flags & WNDF_CALLPROC) )
+       if ( (lpmsg->message != WM_PAINT) && !(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) )
        {
            Ret = IntCallMessageProc(Wnd,
                                     lpmsg->hwnd,
@@ -1397,12 +1602,12 @@ LRESULT WINAPI
 DispatchMessageW(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
-    PWINDOW Wnd;
+    PWND Wnd;
 
     if (lpmsg->hwnd != NULL)
     {
         Wnd = ValidateHwnd(lpmsg->hwnd);
-        if (!Wnd || SharedPtrToUser(Wnd->ti) != GetW32ThreadInfo())
+        if (!Wnd || Wnd->head.pti != GetW32ThreadInfo())
             return 0;
     }
     else
@@ -1422,8 +1627,7 @@ DispatchMessageW(CONST MSG *lpmsg)
     }
     else if (Wnd != NULL)
     {
-       // FIXME Need to test for calling proc inside win32k!
-       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->flags & W32K_CALLPROC) )
+       if ( (lpmsg->message != WM_PAINT) && !(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) )
        {
            Ret = IntCallMessageProc(Wnd,
                                     lpmsg->hwnd,
@@ -1552,21 +1756,21 @@ PeekMessageA(LPMSG lpMsg,
 
   MsgConversionCleanup(lpMsg, TRUE, FALSE, NULL);
   Res = NtUserPeekMessage(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
-  if (-1 == (int) Res || ! Res)
+  if (-1 == (int) Res || !Res)
     {
-      return Res;
+      return FALSE;
     }
   Conversion.LParamSize = Info.LParamSize;
   Conversion.KMMsg = Info.Msg;
 
   if (! MsgiKMToUMMessage(&Conversion.KMMsg, &Conversion.UnicodeMsg))
     {
-      return (BOOL) -1;
+      return FALSE;
     }
   if (! MsgiUnicodeToAnsiMessage(&Conversion.AnsiMsg, &Conversion.UnicodeMsg))
     {
       MsgiKMToUMCleanup(&Info.Msg, &Conversion.UnicodeMsg);
-      return (BOOL) -1;
+      return FALSE;
     }
   if (!lpMsg)
   {
@@ -1605,16 +1809,16 @@ PeekMessageW(
 
   MsgConversionCleanup(lpMsg, FALSE, FALSE, NULL);
   Res = NtUserPeekMessage(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
-  if (-1 == (int) Res || ! Res)
+  if (-1 == (int) Res || !Res)
     {
-      return Res;
+      return FALSE;
     }
   Conversion.LParamSize = Info.LParamSize;
   Conversion.KMMsg = Info.Msg;
 
   if (! MsgiKMToUMMessage(&Conversion.KMMsg, &Conversion.UnicodeMsg))
     {
-      return (BOOL) -1;
+      return FALSE;
     }
   if (!lpMsg)
   {
@@ -1633,51 +1837,12 @@ PeekMessageW(
   return Res;
 }
 
-
-/*
- * @implemented
- */
+//
+// Worker function for post message.
+//
 BOOL
-WINAPI
-PostMessageA(
-  HWND Wnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  MSG AnsiMsg, UcMsg;
-  MSG KMMsg;
-  LRESULT Result;
-
-  AnsiMsg.hwnd = Wnd;
-  AnsiMsg.message = Msg;
-  AnsiMsg.wParam = wParam;
-  AnsiMsg.lParam = lParam;
-  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
-    {
-      return FALSE;
-    }
-
-  if (! MsgiUMToKMMessage(&UcMsg, &KMMsg, TRUE))
-    {
-      MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-      return FALSE;
-    }
-  Result = NtUserPostMessage(KMMsg.hwnd, KMMsg.message,
-                             KMMsg.wParam, KMMsg.lParam);
-  MsgiUMToKMCleanup(&UcMsg, &KMMsg);
-  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-
-  return Result;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-PostMessageW(
+FASTCALL
+PostMessageWorker(
   HWND Wnd,
   UINT Msg,
   WPARAM wParam,
@@ -1691,16 +1856,94 @@ PostMessageW(
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
-    {
-      return FALSE;
-    }
-  Result = NtUserPostMessage(KMMsg.hwnd, KMMsg.message,
-                             KMMsg.wParam, KMMsg.lParam);
+  {
+     return FALSE;
+  }
+  Result = NtUserPostMessage( Wnd,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam);
+
   MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
   return Result;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+PostMessageA(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  MSG AnsiMsg, UcMsg;
+  BOOL Ret;
+
+  AnsiMsg.hwnd = hWnd;
+  AnsiMsg.message = Msg;
+  AnsiMsg.wParam = wParam;
+  AnsiMsg.lParam = lParam;
+
+  if (!MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  {
+      return FALSE;
+  }
+
+  Ret = PostMessageW( hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+
+  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+
+  return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+PostMessageW(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  LRESULT Ret;
+
+  /* Check for combo box or a list box to send names. */
+  if (Msg == CB_DIR || Msg == LB_DIR)
+  {
+  /*
+     Set DDL_POSTMSGS, so use the PostMessage function to send messages to the
+     combo/list box. Forces a call like DlgDirListComboBox.
+  */
+    wParam |= DDL_POSTMSGS;
+    return PostMessageWorker(hWnd, Msg, wParam, lParam);
+  }
+
+  /* No drop files or current Process, just post message. */
+  if ( (Msg != WM_DROPFILES) ||
+       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) == 
+                  PtrToUint(NtCurrentTeb()->ClientId.UniqueProcess) ) )
+  {
+    return PostMessageWorker(hWnd, Msg, wParam, lParam);
+  }
+
+  /* We have drop files and this is not the same process for this window. */
+
+  /* Just incase, check wParam for Global memory handle and send size. */
+  Ret = SendMessageW( hWnd,
+                      WM_COPYGLOBALDATA,
+                      (WPARAM)GlobalSize((HGLOBAL)wParam), // Zero if not a handle.
+                      (LPARAM)wParam);                     // Send wParam as lParam.
+
+  if ( Ret ) return PostMessageWorker(hWnd, Msg, (WPARAM)Ret, lParam);
+
+  return FALSE;
+}
 
 /*
  * @implemented
@@ -1710,7 +1953,7 @@ WINAPI
 PostQuitMessage(
   int nExitCode)
 {
-  (void) NtUserPostMessage(NULL, WM_QUIT, nExitCode, 0);
+    NtUserCallOneParam(nExitCode, ONEPARAM_ROUTINE_POSTQUITMESSAGE);
 }
 
 
@@ -1756,14 +1999,15 @@ SendMessageW(HWND Wnd,
   MSG UMMsg, KMMsg;
   NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
+  PWND Window;
+  PTHREADINFO ti = GetW32ThreadInfo();
+
+  Window = ValidateHwnd(Wnd);
+  if (!Window) return FALSE;
 
   if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
-      PWINDOW Window;
-      PW32THREADINFO ti = GetW32ThreadInfo();
-
-      Window = ValidateHwnd(Wnd);
-      if (Window != NULL && SharedPtrToUser(Window->ti) == ti && !IsThreadHooked(ti))
+      if (Window != NULL && Window->head.pti == ti && !IsThreadHooked(GetWin32ClientInfo()))
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
@@ -1781,23 +2025,31 @@ SendMessageW(HWND Wnd,
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, FALSE))
-    {
-      return FALSE;
-    }
+  {
+     return FALSE;
+  }
   Info.Ansi = FALSE;
-  Result = NtUserSendMessage(KMMsg.hwnd, KMMsg.message,
-                             KMMsg.wParam, KMMsg.lParam, &Info);
+  Result = NtUserSendMessage( KMMsg.hwnd,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam,
+                              &Info);
   if (! Info.HandledByKernel)
-    {
-      MsgiUMToKMCleanup(&UMMsg, &KMMsg);
-      /* We need to send the message ourselves */
-      Result = IntCallWindowProcW(Info.Ansi, Info.Proc, UMMsg.hwnd, UMMsg.message,
-                                  UMMsg.wParam, UMMsg.lParam);
-    }
+  {
+     MsgiUMToKMCleanup(&UMMsg, &KMMsg);
+     /* We need to send the message ourselves */
+     Result = IntCallWindowProcW( Info.Ansi,
+                                  Info.Proc,
+                                  Window,
+                                  UMMsg.hwnd,
+                                  UMMsg.message,
+                                  UMMsg.wParam,
+                                  UMMsg.lParam);
+  }
   else if (! MsgiUMToKMReply(&UMMsg, &KMMsg, &Result))
-    {
-      return FALSE;
-    }
+  {
+     return FALSE;
+  }
 
   return Result;
 }
@@ -1813,14 +2065,15 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   MSG KMMsg;
   LRESULT Result;
   NTUSERSENDMESSAGEINFO Info;
+  PWND Window;
+  PTHREADINFO ti = GetW32ThreadInfo();
+
+  Window = ValidateHwnd(Wnd);
+  if (!Window) return FALSE;
 
   if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
-      PWINDOW Window;
-      PW32THREADINFO ti = GetW32ThreadInfo();
-
-      Window = ValidateHwnd(Wnd);
-      if (Window != NULL && SharedPtrToUser(Window->ti) == ti && !IsThreadHooked(ti))
+      if (Window != NULL && Window->head.pti == ti && !IsThreadHooked(GetWin32ClientInfo()))
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
@@ -1848,8 +2101,11 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       return FALSE;
     }
   Info.Ansi = TRUE;
-  Result = NtUserSendMessage(KMMsg.hwnd, KMMsg.message,
-                             KMMsg.wParam, KMMsg.lParam, &Info);
+  Result = NtUserSendMessage( KMMsg.hwnd,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam,
+                              &Info);
   if (! Info.HandledByKernel)
     {
       /* We need to send the message ourselves */
@@ -1859,15 +2115,20 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
              the Unicode message though */
           MsgiUMToKMCleanup(&UcMsg, &KMMsg);
           MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-          Result = IntCallWindowProcA(Info.Ansi, Info.Proc, Wnd, Msg, wParam, lParam);
+          Result = IntCallWindowProcA(Info.Ansi, Info.Proc, Window, Wnd, Msg, wParam, lParam);
         }
       else
         {
           /* Unicode winproc. Although we started out with an Ansi message we
              already converted it to Unicode for the kernel call. Reuse that
              message to avoid another conversion */
-          Result = IntCallWindowProcW(Info.Ansi, Info.Proc, UcMsg.hwnd,
-                                      UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+          Result = IntCallWindowProcW( Info.Ansi,
+                                       Info.Proc,
+                                       Window,
+                                       UcMsg.hwnd,
+                                       UcMsg.message,
+                                       UcMsg.wParam,
+                                       UcMsg.lParam);
           if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
             {
               return FALSE;
@@ -1969,21 +2230,28 @@ SendMessageTimeoutA(
   }
   if (! Info.HandledByKernel)
     {
+      PWND pWnd;
+      pWnd = ValidateHwnd(hWnd);
       /* We need to send the message ourselves */
       if (Info.Ansi)
         {
           /* Ansi message and Ansi window proc, that's easy. Clean up
              the Unicode message though */
           MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-          Result = IntCallWindowProcA(Info.Ansi, Info.Proc, hWnd, Msg, wParam, lParam);
+          Result = IntCallWindowProcA(Info.Ansi, Info.Proc, pWnd, hWnd, Msg, wParam, lParam);
         }
       else
         {
           /* Unicode winproc. Although we started out with an Ansi message we
              already converted it to Unicode for the kernel call. Reuse that
              message to avoid another conversion */
-          Result = IntCallWindowProcW(Info.Ansi, Info.Proc, UcMsg.hwnd,
-                                      UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+          Result = IntCallWindowProcW( Info.Ansi,
+                                       Info.Proc,
+                                       pWnd,
+                                       UcMsg.hwnd,
+                                       UcMsg.message,
+                                       UcMsg.wParam,
+                                       UcMsg.lParam);
           if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
             {
                 SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
@@ -2033,8 +2301,10 @@ SendMessageTimeoutW(
                                     lpdwResult, &Info);
   if (! Info.HandledByKernel)
     {
+      PWND pWnd;
+      pWnd = ValidateHwnd(hWnd);
       /* We need to send the message ourselves */
-      Result = IntCallWindowProcW(Info.Ansi, Info.Proc, hWnd, Msg, wParam, lParam);
+      Result = IntCallWindowProcW(Info.Ansi, Info.Proc, pWnd, hWnd, Msg, wParam, lParam);
       if(lpdwResult)
         *lpdwResult = Result;
 
@@ -2046,9 +2316,8 @@ SendMessageTimeoutW(
   return Result;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -2058,35 +2327,26 @@ SendNotifyMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
+  BOOL Ret;
   MSG AnsiMsg, UcMsg;
-  MSG KMMsg;
-  LRESULT Result;
 
   AnsiMsg.hwnd = hWnd;
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
   if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
-    {
-      return FALSE;
-    }
+  {
+     return FALSE;
+  }
+  Ret = SendNotifyMessageW(hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
 
-  if (! MsgiUMToKMMessage(&UcMsg, &KMMsg, TRUE))
-    {
-      MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-      return FALSE;
-    }
-  Result = NtUserSendNotifyMessage(KMMsg.hwnd, KMMsg.message,
-                                   KMMsg.wParam, KMMsg.lParam);
-  MsgiUMToKMCleanup(&UcMsg, &KMMsg);
   MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
 
-  return Result;
+  return Ret;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -2104,16 +2364,21 @@ SendNotifyMessageW(
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
-    {
-      return FALSE;
-    }
-  Result = NtUserSendNotifyMessage(KMMsg.hwnd, KMMsg.message,
-                                   KMMsg.wParam, KMMsg.lParam);
+  {
+     return FALSE;
+  }
+  Result = NtUserMessageCall( hWnd,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam,
+                              0,
+                              FNID_SENDNOTIFYMESSAGE,
+                              FALSE);
+
   MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
   return Result;
 }
-
 
 /*
  * @implemented
@@ -2130,6 +2395,8 @@ TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
             return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
 
         default:
+            if ( lpMsg->message & ~WM_MAXIMUM )
+               SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 }
@@ -2141,7 +2408,20 @@ TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 BOOL WINAPI
 TranslateMessage(CONST MSG *lpMsg)
 {
-  return(TranslateMessageEx((LPMSG)lpMsg, 0));
+  BOOL Ret = FALSE;
+  
+// Ref: msdn ImmGetVirtualKey:
+// http://msdn.microsoft.com/en-us/library/aa912145.aspx
+/*
+  if ( (LOWORD(lpMsg->wParam) != VK_PROCESSKEY) ||
+       !(Ret = IMM_ImmTranslateMessage( lpMsg->hwnd,
+                                        lpMsg->message,
+                                        lpMsg->wParam,
+                                        lpMsg->lParam)) )*/
+  {
+     Ret = TranslateMessageEx((LPMSG)lpMsg, 0);
+  }
+  return Ret;
 }
 
 
@@ -2199,51 +2479,32 @@ ReleaseCapture(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
 RealGetQueueStatus(UINT flags)
 {
-   DWORD ret;
-   WORD changed_bits, wake_bits;
-
-#if 0 /* wine stuff. don't know what it does... */
-
-   /* check for pending X events */
-   if (USER_Driver.pMsgWaitForMultipleObjectsEx)
-      USER_Driver.pMsgWaitForMultipleObjectsEx( 0, NULL, 0, 0, 0 );
-#endif
-
-   ret = NtUserCallOneParam(TRUE, ONEPARAM_ROUTINE_GETQUEUESTATUS);
-
-   changed_bits = LOWORD(ret);
-   wake_bits = HIWORD(ret);
-
-   return MAKELONG(changed_bits & flags, wake_bits & flags);
+   if (flags & ~(QS_SMRESULT|QS_ALLPOSTMESSAGE|QS_ALLINPUT))
+   {
+      SetLastError( ERROR_INVALID_FLAGS );
+      return 0;
+   }
+   return NtUserCallOneParam(flags, ONEPARAM_ROUTINE_GETQUEUESTATUS);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI GetInputState(VOID)
 {
-   DWORD ret;
-   WORD  wake_bits;
+   PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
 
-#if 0 /* wine stuff. don't know what it does... */
-
-   /* check for pending X events */
-   if (USER_Driver.pMsgWaitForMultipleObjectsEx)
-     USER_Driver.pMsgWaitForMultipleObjectsEx( 0, NULL, 0, 0, 0 );
-#endif
-
-   ret = NtUserCallOneParam(FALSE, ONEPARAM_ROUTINE_GETQUEUESTATUS);
-
-   wake_bits = HIWORD(ret);
-
-   return wake_bits & (QS_KEY | QS_MOUSEBUTTON);
+   if ((!pcti) || (pcti->fsChangeBits & (QS_KEY|QS_MOUSEBUTTON)))
+      return (BOOL)NtUserGetThreadState(THREADSTATE_GETINPUTSTATE);
+            
+   return FALSE;
 }
 
 
@@ -2252,6 +2513,8 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
   MSG KMMsg, UMMsg;
+  PWND pWnd = NULL;
+  PCLIENTINFO pci = GetWin32ClientInfo();
 
   /* Make sure we don't try to access mem beyond what we were given */
   if (ArgumentLength < sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
@@ -2292,9 +2555,16 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
     }
 
-  CallbackArgs->Result = IntCallWindowProcW(CallbackArgs->IsAnsiProc, CallbackArgs->Proc,
-                                            UMMsg.hwnd, UMMsg.message,
-                                            UMMsg.wParam, UMMsg.lParam);
+  if (pci->CallbackWnd.hWnd == UMMsg.hwnd)
+     pWnd  = pci->CallbackWnd.pvWnd;
+    
+  CallbackArgs->Result = IntCallWindowProcW( CallbackArgs->IsAnsiProc,
+                                             CallbackArgs->Proc,
+                                             pWnd,
+                                             UMMsg.hwnd,
+                                             UMMsg.message,
+                                             UMMsg.wParam,
+                                             UMMsg.lParam);
 
   if (! MsgiKMToUMReply(&KMMsg, &UMMsg, &CallbackArgs->Result))
     {

@@ -922,10 +922,13 @@ _mesa_set_enable(GLcontext *ctx, GLenum cap, GLboolean state)
             return;
          FLUSH_VERTICES(ctx, _NEW_STENCIL);
          ctx->Stencil.TestTwoSide = state;
-         if (state)
+         if (state) {
+            ctx->Stencil._BackFace = 2;
             ctx->_TriangleCaps |= DD_TRI_TWOSTENCIL;
-         else
+         } else {
+            ctx->Stencil._BackFace = 1;
             ctx->_TriangleCaps &= ~DD_TRI_TWOSTENCIL;
+         }
          break;
 
 #if FEATURE_ARB_fragment_program

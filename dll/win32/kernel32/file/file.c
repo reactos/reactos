@@ -996,9 +996,9 @@ GetFileAttributesA(LPCSTR lpFileName)
 {
    WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
    PWSTR FileNameW;
-	BOOL ret;
+   BOOL ret;
 
-   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
+   if (!lpFileName || !(FileNameW = FilenameA2W(lpFileName, FALSE)))
       return INVALID_FILE_ATTRIBUTES;
 
    ret = GetFileAttributesExW(FileNameW, GetFileExInfoStandard, &FileAttributeData);

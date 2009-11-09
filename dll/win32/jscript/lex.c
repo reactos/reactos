@@ -17,6 +17,7 @@
  */
 
 #include <math.h>
+#include <limits.h>
 
 #include "jscript.h"
 #include "activscp.h"
@@ -29,6 +30,8 @@
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
+
+#define LONGLONG_MAX (((LONGLONG)0x7fffffff<<32)|0xffffffff)
 
 static const WCHAR breakW[] = {'b','r','e','a','k',0};
 static const WCHAR caseW[] = {'c','a','s','e',0};
@@ -97,7 +100,8 @@ static const struct {
 
 static int lex_error(parser_ctx_t *ctx, HRESULT hres)
 {
-    ctx->hres = hres;
+    ctx->hres = JSCRIPT_ERROR|hres;
+    ctx->lexer_error = TRUE;
     return -1;
 }
 
@@ -172,6 +176,20 @@ static void skip_spaces(parser_ctx_t *ctx)
         if(is_endline(*ctx->ptr++))
             ctx->nl = TRUE;
     }
+}
+
+static BOOL skip_html_comment(parser_ctx_t *ctx)
+{
+    const WCHAR html_commentW[] = {'<','!','-','-',0};
+
+    if(!ctx->is_html || ctx->ptr+3 >= ctx->end ||
+        memcmp(ctx->ptr, html_commentW, sizeof(WCHAR)*4))
+        return FALSE;
+
+    ctx->nl = TRUE;
+    while(ctx->ptr < ctx->end && !is_endline(*ctx->ptr++));
+
+    return TRUE;
 }
 
 static BOOL skip_comment(parser_ctx_t *ctx)
@@ -325,10 +343,8 @@ static int parse_string_literal(parser_ctx_t *ctx, const WCHAR **ret, WCHAR endc
             ctx->ptr++;
     }
 
-    if(ctx->ptr == ctx->end) {
-        WARN("unexpected end of file\n");
-        return lex_error(ctx, E_FAIL);
-    }
+    if(ctx->ptr == ctx->end)
+        return lex_error(ctx, IDS_UNTERMINATED_STR);
 
     len = ctx->ptr-ptr;
 
@@ -358,16 +374,42 @@ static literal_t *alloc_int_literal(parser_ctx_t *ctx, LONG l)
 
 static int parse_double_literal(parser_ctx_t *ctx, LONG int_part, literal_t **literal)
 {
-    double d, tmp = 1.0;
+    LONGLONG d, hlp;
+    int exp = 0;
 
-    if(ctx->ptr == ctx->end || !isdigitW(*ctx->ptr)) {
-        ERR("No digit after point\n");
+    if(ctx->ptr == ctx->end || (!isdigitW(*ctx->ptr) &&
+        *ctx->ptr!='.' && *ctx->ptr!='e' && *ctx->ptr!='E')) {
+        ERR("Illegal character\n");
         return 0;
     }
 
     d = int_part;
+    while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
+        hlp = d*10 + *(ctx->ptr++) - '0';
+        if(d>LONGLONG_MAX/10 || hlp<0) {
+            exp++;
+            break;
+        }
+        else
+            d = hlp;
+    }
+    while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
+        exp++;
+        ctx->ptr++;
+    }
+
+    if(*ctx->ptr == '.') ctx->ptr++;
+
+    while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
+        hlp = d*10 + *(ctx->ptr++) - '0';
+        if(d>LONGLONG_MAX/10 || hlp<0)
+            break;
+
+        d = hlp;
+        exp--;
+    }
     while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr))
-        d += (tmp /= 10.0)*(*ctx->ptr++ - '0');
+        ctx->ptr++;
 
     if(ctx->ptr < ctx->end && (*ctx->ptr == 'e' || *ctx->ptr == 'E')) {
         int sign = 1, e = 0;
@@ -390,16 +432,20 @@ static int parse_double_literal(parser_ctx_t *ctx, LONG int_part, literal_t **li
             return lex_error(ctx, E_FAIL);
         }
 
-        while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr))
-            e = e*10 + *ctx->ptr++ - '0';
+        while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
+            if(e > INT_MAX/10 || (e = e*10 + *ctx->ptr++ - '0')<0)
+                e = INT_MAX;
+        }
         e *= sign;
 
-        d *= pow(10, e);
+        if(exp<0 && e<0 && e+exp>0) exp = INT_MIN;
+        else if(exp>0 && e>0 && e+exp<0) exp = INT_MAX;
+        else exp += e;
     }
 
     *literal = parser_alloc(ctx, sizeof(literal_t));
     (*literal)->vt = VT_R8;
-    (*literal)->u.dval = d;
+    (*literal)->u.dval = (double)d*pow(10, exp);
 
     return tNumericLiteral;
 }
@@ -444,13 +490,20 @@ static int parse_numeric_literal(parser_ctx_t *ctx, literal_t **literal)
     }
 
     while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr))
-        l = l*10 + *(ctx->ptr++)-'0';
+    {
+        d = l*10 + *(ctx->ptr)-'0';
+
+        /* Check for integer overflow */
+        if (l > INT_MAX/10 || d < 0)
+            return parse_double_literal(ctx, l, literal);
+
+        l = d;
+        ctx->ptr++;
+    }
 
     if(ctx->ptr < ctx->end) {
-        if(*ctx->ptr == '.') {
-            ctx->ptr++;
+        if(*ctx->ptr == '.' || *ctx->ptr == 'e' || *ctx->ptr == 'E')
             return parse_double_literal(ctx, l, literal);
-        }
 
         if(is_identifier_char(*ctx->ptr)) {
             WARN("unexpected identifier char\n");
@@ -466,13 +519,13 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
 {
     int ret;
 
-    ctx->nl = FALSE;
+    ctx->nl = ctx->ptr == ctx->begin;
 
     do {
         skip_spaces(ctx);
         if(ctx->ptr == ctx->end)
             return 0;
-    }while(skip_comment(ctx));
+    }while(skip_comment(ctx) || skip_html_comment(ctx));
 
     if(isalphaW(*ctx->ptr)) {
         ret = check_keywords(ctx, lval);
@@ -585,8 +638,12 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
         ctx->ptr++;
         if(ctx->ptr < ctx->end) {
             switch(*ctx->ptr) {
-            case '-':  /* -- */
+            case '-':  /* -- or --> */
                 ctx->ptr++;
+                if(ctx->is_html && ctx->nl && ctx->ptr < ctx->end && *ctx->ptr == '>') {
+                    ctx->ptr++;
+                    return tHTMLCOMMENT;
+                }
                 return tDEC;
             case '=':  /* -= */
                 ctx->ptr++;

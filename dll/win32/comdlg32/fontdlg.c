@@ -182,7 +182,7 @@ BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
 
     if ( (lpChFont->Flags&CF_ENABLETEMPLATEHANDLE)!=0 )
     {
-        template=(LPCVOID)lpChFont->hInstance;
+        template=lpChFont->hInstance;
     } else
     {
         if ( (lpChFont->Flags&CF_ENABLETEMPLATE)!=0 )
@@ -236,7 +236,7 @@ BOOL WINAPI ChooseFontA(LPCHOOSEFONTA lpChFont)
 
     if ( (lpChFont->Flags&CF_ENABLETEMPLATEHANDLE)!=0 )
     {
-        template=(LPCVOID)lpChFont->hInstance;
+        template=lpChFont->hInstance;
     } else
     {
         if ( (lpChFont->Flags&CF_ENABLETEMPLATE)!=0 )
@@ -601,7 +601,7 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
     HCURSOR hcursor=SetCursor(LoadCursorW(0,(LPWSTR)IDC_WAIT));
     static const WCHAR strColorName[] = {'[','c','o','l','o','r',' ','n','a','m','e',']',0};
 
-    SetPropW(hDlg, strWineFontData, (HANDLE)lpcf);
+    SetPropW(hDlg, strWineFontData, lpcf);
     lpxx=lpcf->lpLogFont;
     TRACE("WM_INITDIALOG lParam=%08lX\n", lParam);
 

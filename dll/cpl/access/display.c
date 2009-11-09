@@ -197,7 +197,7 @@ DisplayPageProc(HWND hwndDlg,
             break;
 
         case WM_HSCROLL:
-            switch (GetWindowLong((HWND) lParam, GWL_ID))
+            switch (GetWindowLongPtr((HWND) lParam, GWL_ID))
             {
                 case IDC_CURSOR_BLINK_TRACK:
                     i = SendDlgItemMessage(hwndDlg, IDC_CURSOR_BLINK_TRACK, TBM_GETPOS, 0, 0);
@@ -255,7 +255,7 @@ DisplayPageProc(HWND hwndDlg,
                 SetCaretBlinkTime(pGlobalData->uCaretBlinkTime);
                 SystemParametersInfo(SPI_SETCARETWIDTH,
                                      0,
-                                     (PVOID)pGlobalData->uCaretWidth,
+                                     IntToPtr(pGlobalData->uCaretWidth),
                                      SPIF_UPDATEINIFILE | SPIF_SENDCHANGE /*0*/);
                 SystemParametersInfo(SPI_SETHIGHCONTRAST,
                                      sizeof(HIGHCONTRAST),

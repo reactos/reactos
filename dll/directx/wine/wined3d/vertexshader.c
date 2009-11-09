@@ -34,156 +34,75 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
 #define GLINFO_LOCATION ((IWineD3DDeviceImpl *)This->baseShader.device)->adapter->gl_info
 
-/* TODO: Vertex and Pixel shaders are almost identical, the only exception being the way that some of the data is looked up or the availability of some of the data i.e. some instructions are only valid for pshaders and some for vshaders
-because of this the bulk of the software pipeline can be shared between pixel and vertex shaders... and it wouldn't surprise me if the program can be cross compiled using a large body of shared code */
+static void vshader_set_limits(IWineD3DVertexShaderImpl *This)
+{
+    DWORD shader_version = WINED3D_SHADER_VERSION(This->baseShader.reg_maps.shader_version.major,
+            This->baseShader.reg_maps.shader_version.minor);
 
-CONST SHADER_OPCODE IWineD3DVertexShaderImpl_shader_ins[] = {
-    /* This table is not order or position dependent. */
+    This->baseShader.limits.texcoord = 0;
+    This->baseShader.limits.attributes = 16;
+    This->baseShader.limits.packed_input = 0;
 
-    /* Arithmetic */
-    {WINED3DSIO_NOP,     "nop",     0, 0, WINED3DSIH_NOP,     0,                      0                     },
-    {WINED3DSIO_MOV,     "mov",     1, 2, WINED3DSIH_MOV,     0,                      0                     },
-    {WINED3DSIO_MOVA,    "mova",    1, 2, WINED3DSIH_MOVA,    WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_ADD,     "add",     1, 3, WINED3DSIH_ADD,     0,                      0                     },
-    {WINED3DSIO_SUB,     "sub",     1, 3, WINED3DSIH_SUB,     0,                      0                     },
-    {WINED3DSIO_MAD,     "mad",     1, 4, WINED3DSIH_MAD,     0,                      0                     },
-    {WINED3DSIO_MUL,     "mul",     1, 3, WINED3DSIH_MUL,     0,                      0                     },
-    {WINED3DSIO_RCP,     "rcp",     1, 2, WINED3DSIH_RCP,     0,                      0                     },
-    {WINED3DSIO_RSQ,     "rsq",     1, 2, WINED3DSIH_RSQ,     0,                      0                     },
-    {WINED3DSIO_DP3,     "dp3",     1, 3, WINED3DSIH_DP3,     0,                      0                     },
-    {WINED3DSIO_DP4,     "dp4",     1, 3, WINED3DSIH_DP4,     0,                      0                     },
-    {WINED3DSIO_MIN,     "min",     1, 3, WINED3DSIH_MIN,     0,                      0                     },
-    {WINED3DSIO_MAX,     "max",     1, 3, WINED3DSIH_MAX,     0,                      0                     },
-    {WINED3DSIO_SLT,     "slt",     1, 3, WINED3DSIH_SLT,     0,                      0                     },
-    {WINED3DSIO_SGE,     "sge",     1, 3, WINED3DSIH_SGE,     0,                      0                     },
-    {WINED3DSIO_ABS,     "abs",     1, 2, WINED3DSIH_ABS,     0,                      0                     },
-    {WINED3DSIO_EXP,     "exp",     1, 2, WINED3DSIH_EXP,     0,                      0                     },
-    {WINED3DSIO_LOG,     "log",     1, 2, WINED3DSIH_LOG,     0,                      0                     },
-    {WINED3DSIO_EXPP,    "expp",    1, 2, WINED3DSIH_EXPP,    0,                      0                     },
-    {WINED3DSIO_LOGP,    "logp",    1, 2, WINED3DSIH_LOGP,    0,                      0                     },
-    {WINED3DSIO_LIT,     "lit",     1, 2, WINED3DSIH_LIT,     0,                      0                     },
-    {WINED3DSIO_DST,     "dst",     1, 3, WINED3DSIH_DST,     0,                      0                     },
-    {WINED3DSIO_LRP,     "lrp",     1, 4, WINED3DSIH_LRP,     0,                      0                     },
-    {WINED3DSIO_FRC,     "frc",     1, 2, WINED3DSIH_FRC,     0,                      0                     },
-    {WINED3DSIO_POW,     "pow",     1, 3, WINED3DSIH_POW,     0,                      0                     },
-    {WINED3DSIO_CRS,     "crs",     1, 3, WINED3DSIH_CRS,     0,                      0                     },
-    /* TODO: sng can possibly be performed as
-        RCP tmp, vec
-        MUL out, tmp, vec*/
-    {WINED3DSIO_SGN,     "sgn",     1, 2, WINED3DSIH_SGN,     0,                      0                     },
-    {WINED3DSIO_NRM,     "nrm",     1, 2, WINED3DSIH_NRM,     0,                      0                     },
-    {WINED3DSIO_SINCOS,  "sincos",  1, 4, WINED3DSIH_SINCOS,  WINED3DVS_VERSION(2,0), WINED3DVS_VERSION(2,1)},
-    {WINED3DSIO_SINCOS,  "sincos",  1, 2, WINED3DSIH_SINCOS,  WINED3DVS_VERSION(3,0), -1                    },
-    /* Matrix */
-    {WINED3DSIO_M4x4,    "m4x4",    1, 3, WINED3DSIH_M4x4,    0,                      0                     },
-    {WINED3DSIO_M4x3,    "m4x3",    1, 3, WINED3DSIH_M4x3,    0,                      0                     },
-    {WINED3DSIO_M3x4,    "m3x4",    1, 3, WINED3DSIH_M3x4,    0,                      0                     },
-    {WINED3DSIO_M3x3,    "m3x3",    1, 3, WINED3DSIH_M3x3,    0,                      0                     },
-    {WINED3DSIO_M3x2,    "m3x2",    1, 3, WINED3DSIH_M3x2,    0,                      0                     },
-    /* Declare registers */
-    {WINED3DSIO_DCL,     "dcl",     0, 2, WINED3DSIH_DCL,     0,                      0                     },
-    /* Constant definitions */
-    {WINED3DSIO_DEF,     "def",     1, 5, WINED3DSIH_DEF,     0,                      0                     },
-    {WINED3DSIO_DEFB,    "defb",    1, 2, WINED3DSIH_DEFB,    0,                      0                     },
-    {WINED3DSIO_DEFI,    "defi",    1, 5, WINED3DSIH_DEFI,    0,                      0                     },
-    /* Flow control - requires GLSL or software shaders */
-    {WINED3DSIO_REP ,    "rep",     0, 1, WINED3DSIH_REP,     WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_ENDREP,  "endrep",  0, 0, WINED3DSIH_ENDREP,  WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_IF,      "if",      0, 1, WINED3DSIH_IF,      WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_IFC,     "ifc",     0, 2, WINED3DSIH_IFC,     WINED3DVS_VERSION(2,1), -1                    },
-    {WINED3DSIO_ELSE,    "else",    0, 0, WINED3DSIH_ELSE,    WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_ENDIF,   "endif",   0, 0, WINED3DSIH_ENDIF,   WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_BREAK,   "break",   0, 0, WINED3DSIH_BREAK,   WINED3DVS_VERSION(2,1), -1                    },
-    {WINED3DSIO_BREAKC,  "breakc",  0, 2, WINED3DSIH_BREAKC,  WINED3DVS_VERSION(2,1), -1                    },
-    {WINED3DSIO_BREAKP,  "breakp",  0, 1, WINED3DSIH_BREAKP,  0,                      0                     },
-    {WINED3DSIO_CALL,    "call",    0, 1, WINED3DSIH_CALL,    WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_CALLNZ,  "callnz",  0, 2, WINED3DSIH_CALLNZ,  WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_LOOP,    "loop",    0, 2, WINED3DSIH_LOOP,    WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_RET,     "ret",     0, 0, WINED3DSIH_RET,     WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_ENDLOOP, "endloop", 0, 0, WINED3DSIH_ENDLOOP, WINED3DVS_VERSION(2,0), -1                    },
-    {WINED3DSIO_LABEL,   "label",   0, 1, WINED3DSIH_LABEL,   WINED3DVS_VERSION(2,0), -1                    },
+    switch (shader_version)
+    {
+        case WINED3D_SHADER_VERSION(1,0):
+        case WINED3D_SHADER_VERSION(1,1):
+            This->baseShader.limits.temporary = 12;
+            This->baseShader.limits.constant_bool = 0;
+            This->baseShader.limits.constant_int = 0;
+            This->baseShader.limits.address = 1;
+            This->baseShader.limits.packed_output = 0;
+            This->baseShader.limits.sampler = 0;
+            This->baseShader.limits.label = 0;
+            /* TODO: vs_1_1 has a minimum of 96 constants. What happens if a vs_1_1 shader is used
+             * on a vs_3_0 capable card that has 256 constants? */
+            This->baseShader.limits.constant_float = min(256, GL_LIMITS(vshader_constantsF));
+            break;
 
-    {WINED3DSIO_SETP,    "setp",    1, 3, WINED3DSIH_SETP,    0,                      0                     },
-    {WINED3DSIO_TEXLDL,  "texldl",  1, 3, WINED3DSIH_TEXLDL,  WINED3DVS_VERSION(3,0), -1                    },
-    {0,                  NULL,      0, 0, 0,                  0,                      0                     }
-};
+        case WINED3D_SHADER_VERSION(2,0):
+        case WINED3D_SHADER_VERSION(2,1):
+            This->baseShader.limits.temporary = 12;
+            This->baseShader.limits.constant_bool = 16;
+            This->baseShader.limits.constant_int = 16;
+            This->baseShader.limits.address = 1;
+            This->baseShader.limits.packed_output = 0;
+            This->baseShader.limits.sampler = 0;
+            This->baseShader.limits.label = 16;
+            This->baseShader.limits.constant_float = min(256, GL_LIMITS(vshader_constantsF));
+            break;
 
-static void vshader_set_limits(
-      IWineD3DVertexShaderImpl *This) {
+        case WINED3D_SHADER_VERSION(4,0):
+            FIXME("Using 3.0 limits for 4.0 shader\n");
+            /* Fall through */
 
-      This->baseShader.limits.texcoord = 0;
-      This->baseShader.limits.attributes = 16;
-      This->baseShader.limits.packed_input = 0;
+        case WINED3D_SHADER_VERSION(3,0):
+            This->baseShader.limits.temporary = 32;
+            This->baseShader.limits.constant_bool = 32;
+            This->baseShader.limits.constant_int = 32;
+            This->baseShader.limits.address = 1;
+            This->baseShader.limits.packed_output = 12;
+            This->baseShader.limits.sampler = 4;
+            This->baseShader.limits.label = 16; /* FIXME: 2048 */
+            /* DX10 cards on Windows advertise a d3d9 constant limit of 256 even though they are capable
+             * of supporting much more(GL drivers advertise 1024). d3d9.dll and d3d8.dll clamp the
+             * wined3d-advertised maximum. Clamp the constant limit for <= 3.0 shaders to 256.s
+             * use constant buffers */
+            This->baseShader.limits.constant_float = min(256, GL_LIMITS(vshader_constantsF));
+            break;
 
-      /* Must match D3DCAPS9.MaxVertexShaderConst: at least 256 for vs_2_0 */
-      This->baseShader.limits.constant_float = GL_LIMITS(vshader_constantsF);
-
-      switch (This->baseShader.reg_maps.shader_version)
-      {
-          case WINED3DVS_VERSION(1,0):
-          case WINED3DVS_VERSION(1,1):
-                   This->baseShader.limits.temporary = 12;
-                   This->baseShader.limits.constant_bool = 0;
-                   This->baseShader.limits.constant_int = 0;
-                   This->baseShader.limits.address = 1;
-                   This->baseShader.limits.packed_output = 0;
-                   This->baseShader.limits.sampler = 0;
-                   This->baseShader.limits.label = 0;
-                   break;
-      
-          case WINED3DVS_VERSION(2,0):
-          case WINED3DVS_VERSION(2,1):
-                   This->baseShader.limits.temporary = 12;
-                   This->baseShader.limits.constant_bool = 16;
-                   This->baseShader.limits.constant_int = 16;
-                   This->baseShader.limits.address = 1;
-                   This->baseShader.limits.packed_output = 0;
-                   This->baseShader.limits.sampler = 0;
-                   This->baseShader.limits.label = 16;
-                   break;
-
-          case WINED3DVS_VERSION(3,0):
-                   This->baseShader.limits.temporary = 32;
-                   This->baseShader.limits.constant_bool = 32;
-                   This->baseShader.limits.constant_int = 32;
-                   This->baseShader.limits.address = 1;
-                   This->baseShader.limits.packed_output = 12;
-                   This->baseShader.limits.sampler = 4;
-                   This->baseShader.limits.label = 16; /* FIXME: 2048 */
-                   break;
-
-          default: This->baseShader.limits.temporary = 12;
-                   This->baseShader.limits.constant_bool = 16;
-                   This->baseShader.limits.constant_int = 16;
-                   This->baseShader.limits.address = 1;
-                   This->baseShader.limits.packed_output = 0;
-                   This->baseShader.limits.sampler = 0;
-                   This->baseShader.limits.label = 16;
-                   FIXME("Unrecognized vertex shader version %#x\n",
-                           This->baseShader.reg_maps.shader_version);
-      }
-}
-
-/* This is an internal function,
- * used to create fake semantics for shaders
- * that don't have them - d3d8 shaders where the declaration
- * stores the register for each input
- */
-static void vshader_set_input(
-    IWineD3DVertexShaderImpl* This,
-    unsigned int regnum,
-    BYTE usage, BYTE usage_idx) {
-
-    /* Fake usage: set reserved bit, usage, usage_idx */
-    DWORD usage_token = (0x1 << 31) |
-        (usage << WINED3DSP_DCL_USAGE_SHIFT) | (usage_idx << WINED3DSP_DCL_USAGEINDEX_SHIFT);
-
-    /* Fake register; set reserved bit, regnum, type: input, wmask: all */
-    DWORD reg_token = (0x1 << 31) |
-        WINED3DSP_WRITEMASK_ALL | (WINED3DSPR_INPUT << WINED3DSP_REGTYPE_SHIFT) | regnum;
-
-    This->semantics_in[regnum].usage = usage_token;
-    This->semantics_in[regnum].reg = reg_token;
+        default:
+            This->baseShader.limits.temporary = 12;
+            This->baseShader.limits.constant_bool = 16;
+            This->baseShader.limits.constant_int = 16;
+            This->baseShader.limits.address = 1;
+            This->baseShader.limits.packed_output = 0;
+            This->baseShader.limits.sampler = 0;
+            This->baseShader.limits.label = 16;
+            This->baseShader.limits.constant_float = min(256, GL_LIMITS(vshader_constantsF));
+            FIXME("Unrecognized vertex shader version %u.%u\n",
+                    This->baseShader.reg_maps.shader_version.major,
+                    This->baseShader.reg_maps.shader_version.minor);
+    }
 }
 
 static BOOL match_usage(BYTE usage1, BYTE usage_idx1, BYTE usage2, BYTE usage_idx2) {
@@ -195,20 +114,19 @@ static BOOL match_usage(BYTE usage1, BYTE usage_idx1, BYTE usage2, BYTE usage_id
     return FALSE;
 }
 
-BOOL vshader_get_input(
-    IWineD3DVertexShader* iface,
-    BYTE usage_req, BYTE usage_idx_req,
-    unsigned int* regnum) {
+BOOL vshader_get_input(IWineD3DVertexShader* iface, BYTE usage_req, BYTE usage_idx_req, unsigned int *regnum)
+{
+    IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
+    WORD map = This->baseShader.reg_maps.input_registers;
+    unsigned int i;
 
-    IWineD3DVertexShaderImpl* This = (IWineD3DVertexShaderImpl*) iface;
-    int i;
+    for (i = 0; map; map >>= 1, ++i)
+    {
+        if (!(map & 1)) continue;
 
-    for (i = 0; i < MAX_ATTRIBS; i++) {
-        DWORD usage_token = This->semantics_in[i].usage;
-        DWORD usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
-        DWORD usage_idx = (usage_token & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
-
-        if (usage_token && match_usage(usage, usage_idx, usage_req, usage_idx_req)) {
+        if (match_usage(This->attributes[i].usage,
+                This->attributes[i].usage_idx, usage_req, usage_idx_req))
+        {
             *regnum = i;
             return TRUE;
         }
@@ -268,7 +186,7 @@ static ULONG WINAPI IWineD3DVertexShaderImpl_Release(IWineD3DVertexShader *iface
 
 static HRESULT WINAPI IWineD3DVertexShaderImpl_GetParent(IWineD3DVertexShader *iface, IUnknown** parent){
     IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
-    
+
     *parent = This->parent;
     IUnknown_AddRef(*parent);
     TRACE("(%p) : returning %p\n", This, *parent);
@@ -308,17 +226,34 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_GetFunction(IWineD3DVertexShader*
  * shader is first used. The reason for this is that we need the vertex
  * declaration the shader will be used with in order to determine if
  * the data in a register is of type D3DCOLOR, and needs swizzling. */
-static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader *iface, CONST DWORD *pFunction) {
-
+static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader *iface,
+        const DWORD *pFunction, const struct wined3d_shader_signature *output_signature)
+{
     IWineD3DVertexShaderImpl *This =(IWineD3DVertexShaderImpl *)iface;
     IWineD3DDeviceImpl *deviceImpl = (IWineD3DDeviceImpl *) This->baseShader.device;
+    const struct wined3d_shader_frontend *fe;
+    unsigned int i;
     HRESULT hr;
     shader_reg_maps *reg_maps = &This->baseShader.reg_maps;
 
     TRACE("(%p) : pFunction %p\n", iface, pFunction);
 
+    fe = shader_select_frontend(*pFunction);
+    if (!fe)
+    {
+        FIXME("Unable to find frontend for shader.\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+    This->baseShader.frontend = fe;
+    This->baseShader.frontend_data = fe->shader_init(pFunction, output_signature);
+    if (!This->baseShader.frontend_data)
+    {
+        FIXME("Failed to initialize frontend.\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+
     /* First pass: trace shader */
-    if (TRACE_ON(d3d_shader)) shader_trace_init(pFunction, This->baseShader.shader_ins);
+    if (TRACE_ON(d3d_shader)) shader_trace_init(fe, This->baseShader.frontend_data, pFunction);
 
     /* Initialize immediate constant lists */
     list_init(&This->baseShader.constantsF);
@@ -328,19 +263,27 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader 
     /* Second pass: figure out registers used, semantics, etc.. */
     This->min_rel_offset = GL_LIMITS(vshader_constantsF);
     This->max_rel_offset = 0;
-    memset(reg_maps, 0, sizeof(shader_reg_maps));
-    hr = shader_get_registers_used((IWineD3DBaseShader*) This, reg_maps,
-            This->semantics_in, This->semantics_out, pFunction);
+    hr = shader_get_registers_used((IWineD3DBaseShader*) This, fe,
+            reg_maps, This->attributes, NULL, This->output_signature,
+            pFunction, GL_LIMITS(vshader_constantsF));
     if (hr != WINED3D_OK) return hr;
+
+    if (output_signature)
+    {
+        for (i = 0; i < output_signature->element_count; ++i)
+        {
+            struct wined3d_shader_signature_element *e = &output_signature->elements[i];
+            reg_maps->output_registers |= 1 << e->register_idx;
+            This->output_signature[e->register_idx] = *e;
+        }
+    }
 
     vshader_set_limits(This);
 
-    This->baseShader.shader_mode = deviceImpl->vs_selected_mode;
-
-    if(deviceImpl->vs_selected_mode == SHADER_ARB &&
-       (GLINFO_LOCATION).arb_vs_offset_limit      &&
-       This->min_rel_offset <= This->max_rel_offset) {
-
+    if (deviceImpl->vs_selected_mode == SHADER_ARB
+            && ((GLINFO_LOCATION).quirks & WINED3D_QUIRK_ARB_VS_OFFSET_LIMIT)
+            && This->min_rel_offset <= This->max_rel_offset)
+    {
         if(This->max_rel_offset - This->min_rel_offset > 127) {
             FIXME("The difference between the minimum and maximum relative offset is > 127\n");
             FIXME("Which this OpenGL implementation does not support. Try using GLSL\n");
@@ -361,18 +304,6 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader 
     memcpy(This->baseShader.function, pFunction, This->baseShader.functionLength);
 
     return WINED3D_OK;
-}
-
-/* Preload semantics for d3d8 shaders */
-static void WINAPI IWineD3DVertexShaderImpl_FakeSemantics(IWineD3DVertexShader *iface, IWineD3DVertexDeclaration *vertex_declaration) {
-    IWineD3DVertexShaderImpl *This =(IWineD3DVertexShaderImpl *)iface;
-    IWineD3DVertexDeclarationImpl* vdecl = (IWineD3DVertexDeclarationImpl*)vertex_declaration;
-
-    int i;
-    for (i = 0; i < vdecl->declarationWNumElements - 1; ++i) {
-        const WINED3DVERTEXELEMENT *element = vdecl->pDeclarationWine + i;
-        vshader_set_input(This, element->Reg, element->Usage, element->UsageIndex);
-    }
 }
 
 /* Set local constants for d3d8 shaders */
@@ -401,22 +332,6 @@ static HRESULT WINAPI IWIneD3DVertexShaderImpl_SetLocalConstantsF(IWineD3DVertex
     return WINED3D_OK;
 }
 
-static GLuint vertexshader_compile(IWineD3DVertexShaderImpl *This, const struct vs_compile_args *args) {
-    IWineD3DDeviceImpl *deviceImpl = (IWineD3DDeviceImpl *) This->baseShader.device;
-    SHADER_BUFFER buffer;
-    GLuint ret;
-
-    /* Generate the HW shader */
-    TRACE("(%p) : Generating hardware program\n", This);
-    shader_buffer_init(&buffer);
-    This->cur_args = args;
-    ret = deviceImpl->shader_backend->shader_generate_vshader((IWineD3DVertexShader *)This, &buffer, args);
-    This->cur_args = NULL;
-    shader_buffer_free(&buffer);
-
-    return ret;
-}
-
 const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl =
 {
     /*** IUnknown methods ***/
@@ -430,59 +345,10 @@ const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl =
     /*** IWineD3DVertexShader methods ***/
     IWineD3DVertexShaderImpl_GetDevice,
     IWineD3DVertexShaderImpl_GetFunction,
-    IWineD3DVertexShaderImpl_FakeSemantics,
     IWIneD3DVertexShaderImpl_SetLocalConstantsF
 };
 
 void find_vs_compile_args(IWineD3DVertexShaderImpl *shader, IWineD3DStateBlockImpl *stateblock, struct vs_compile_args *args) {
     args->fog_src = stateblock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE ? VS_FOG_COORD : VS_FOG_Z;
     args->swizzle_map = ((IWineD3DDeviceImpl *)shader->baseShader.device)->strided_streams.swizzle_map;
-}
-
-static inline BOOL vs_args_equal(const struct vs_compile_args *stored, const struct vs_compile_args *new,
-                                 const DWORD use_map) {
-    if((stored->swizzle_map & use_map) != new->swizzle_map) return FALSE;
-    return stored->fog_src == new->fog_src;
-}
-
-GLuint find_gl_vshader(IWineD3DVertexShaderImpl *shader, const struct vs_compile_args *args)
-{
-    UINT i;
-    DWORD new_size = shader->shader_array_size;
-    struct vs_compiled_shader *new_array;
-    DWORD use_map = ((IWineD3DDeviceImpl *)shader->baseShader.device)->strided_streams.use_map;
-
-    /* Usually we have very few GL shaders for each d3d shader(just 1 or maybe 2),
-     * so a linear search is more performant than a hashmap or a binary search
-     * (cache coherency etc)
-     */
-    for(i = 0; i < shader->num_gl_shaders; i++) {
-        if(vs_args_equal(&shader->gl_shaders[i].args, args, use_map)) {
-            return shader->gl_shaders[i].prgId;
-        }
-    }
-
-    TRACE("No matching GL shader found, compiling a new shader\n");
-
-    if(shader->shader_array_size == shader->num_gl_shaders) {
-        if(shader->gl_shaders) {
-            new_size = shader->shader_array_size + max(1, shader->shader_array_size / 2);
-            new_array = HeapReAlloc(GetProcessHeap(), 0, shader->gl_shaders,
-                                    new_size * sizeof(*shader->gl_shaders));
-        } else {
-            new_array = HeapAlloc(GetProcessHeap(), 0, sizeof(*shader->gl_shaders));
-            new_size = 1;
-        }
-
-        if(!new_array) {
-            ERR("Out of memory\n");
-            return 0;
-        }
-        shader->gl_shaders = new_array;
-        shader->shader_array_size = new_size;
-    }
-
-    shader->gl_shaders[shader->num_gl_shaders].args = *args;
-    shader->gl_shaders[shader->num_gl_shaders].prgId = vertexshader_compile(shader, args);
-    return shader->gl_shaders[shader->num_gl_shaders++].prgId;
 }

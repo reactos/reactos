@@ -67,22 +67,9 @@ typedef struct NullRendererImpl
     MediaSeekingImpl mediaSeeking;
 } NullRendererImpl;
 
-static const IMemInputPinVtbl MemInputPin_Vtbl =
-{
-    MemInputPin_QueryInterface,
-    MemInputPin_AddRef,
-    MemInputPin_Release,
-    MemInputPin_GetAllocator,
-    MemInputPin_NotifyAllocator,
-    MemInputPin_GetAllocatorRequirements,
-    MemInputPin_Receive,
-    MemInputPin_ReceiveMultiple,
-    MemInputPin_ReceiveCanBlock
-};
-
 static HRESULT NullRenderer_Sample(LPVOID iface, IMediaSample * pSample)
 {
-    NullRendererImpl *This = (NullRendererImpl *)iface;
+    NullRendererImpl *This = iface;
     HRESULT hr = S_OK;
 
     TRACE("%p %p\n", iface, pSample);
@@ -193,7 +180,7 @@ HRESULT NullRenderer_create(IUnknown * pUnkOuter, LPVOID * ppv)
         MediaSeekingImpl_Init((IBaseFilter*)pNullRenderer, NullRendererImpl_Change, NullRendererImpl_Change, NullRendererImpl_Change, &pNullRenderer->mediaSeeking, &pNullRenderer->csFilter);
         pNullRenderer->mediaSeeking.lpVtbl = &TransformFilter_Seeking_Vtbl;
 
-        *ppv = (LPVOID)pNullRenderer;
+        *ppv = pNullRenderer;
     }
     else
     {
@@ -216,13 +203,13 @@ static HRESULT WINAPI NullRendererInner_QueryInterface(IUnknown * iface, REFIID 
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = (LPVOID)&(This->IInner_vtbl);
+        *ppv = &This->IInner_vtbl;
     else if (IsEqualIID(riid, &IID_IPersist))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IMediaFilter))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IBaseFilter))
-        *ppv = (LPVOID)This;
+        *ppv = This;
     else if (IsEqualIID(riid, &IID_IMediaSeeking))
         *ppv = &This->mediaSeeking;
 

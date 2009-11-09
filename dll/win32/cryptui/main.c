@@ -2146,7 +2146,7 @@ static CRYPT_OBJID_BLOB *find_policy_qualifier(CERT_POLICIES_INFO *policies,
     return ret;
 }
 
-static WCHAR *get_cps_str_from_qualifier(CRYPT_OBJID_BLOB *qualifier)
+static WCHAR *get_cps_str_from_qualifier(const CRYPT_OBJID_BLOB *qualifier)
 {
     LPWSTR qualifierStr = NULL;
     CERT_NAME_VALUE *qualifierValue;
@@ -2167,7 +2167,7 @@ static WCHAR *get_cps_str_from_qualifier(CRYPT_OBJID_BLOB *qualifier)
     return qualifierStr;
 }
 
-static WCHAR *get_user_notice_from_qualifier(CRYPT_OBJID_BLOB *qualifier)
+static WCHAR *get_user_notice_from_qualifier(const CRYPT_OBJID_BLOB *qualifier)
 {
     LPWSTR str = NULL;
     CERT_POLICY_QUALIFIER_USER_NOTICE *qualifierValue;
@@ -2773,7 +2773,7 @@ static void add_v1_fields(HWND hwnd, struct detail_data *data)
         add_v1_field(hwnd, data, &v1_fields[i]);
 }
 
-static WCHAR *crypt_format_extension(PCERT_EXTENSION ext, DWORD formatStrType)
+static WCHAR *crypt_format_extension(const CERT_EXTENSION *ext, DWORD formatStrType)
 {
     WCHAR *str = NULL;
     DWORD size;
@@ -2788,7 +2788,7 @@ static WCHAR *crypt_format_extension(PCERT_EXTENSION ext, DWORD formatStrType)
     return str;
 }
 
-static WCHAR *field_format_extension_hex_with_ascii(PCERT_EXTENSION ext)
+static WCHAR *field_format_extension_hex_with_ascii(const CERT_EXTENSION *ext)
 {
     WCHAR *str = NULL;
 
@@ -3236,8 +3236,7 @@ static WCHAR *get_cert_property_as_string(PCCERT_CONTEXT cert, DWORD prop)
         name = HeapAlloc(GetProcessHeap(), 0, cb);
         if (name)
         {
-            if (!CertGetCertificateContextProperty(cert, prop, (LPBYTE)name,
-             &cb))
+            if (!CertGetCertificateContextProperty(cert, prop, name, &cb))
             {
                 HeapFree(GetProcessHeap(), 0, name);
                 name = NULL;
@@ -3338,7 +3337,7 @@ static void show_cert_usages(HWND hwnd, struct edit_cert_data *data)
     DWORD size;
     RECT rc;
     LVCOLUMNW column;
-    PurposeSelection purposeSelection;
+    PurposeSelection purposeSelection = PurposeEnableAll;
 
     GetWindowRect(lv, &rc);
     column.mask = LVCF_WIDTH;
@@ -3987,7 +3986,7 @@ static void show_cert_chain(HWND hwnd, struct hierarchy_data *data)
     }
 }
 
-static void set_certificate_status(HWND hwnd, CRYPT_PROVIDER_CERT *cert)
+static void set_certificate_status(HWND hwnd, const CRYPT_PROVIDER_CERT *cert)
 {
     /* Select all the text in the control, the next update will replace it */
     SendMessageW(hwnd, EM_SETSEL, 0, -1);
@@ -4460,7 +4459,7 @@ static BOOL is_ca_cert(PCCERT_CONTEXT cert, BOOL defaultIfNotSpecified)
 
         if (CryptDecodeObjectEx(X509_ASN_ENCODING, szOID_BASIC_CONSTRAINTS,
          ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_ALLOC_FLAG,
-         NULL, (LPBYTE)&info, &size))
+         NULL, &info, &size))
         {
             if (info->SubjectType.cbData == 1)
                 isCA = info->SubjectType.pbData[0] & CERT_CA_SUBJECT_FLAG;
@@ -4994,6 +4993,12 @@ static LRESULT CALLBACK import_file_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
 
         data = (struct ImportWizData *)page->lParam;
         SetWindowLongPtrW(hwnd, DWLP_USER, (LPARAM)data);
+        if (data->fileName)
+        {
+            HWND fileNameEdit = GetDlgItem(hwnd, IDC_IMPORT_FILENAME);
+
+            SendMessageW(fileNameEdit, WM_SETTEXT, 0, (LPARAM)data->fileName);
+        }
         break;
     }
     case WM_NOTIFY:
@@ -5165,7 +5170,8 @@ static LRESULT CALLBACK import_store_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             selectInfo.dwSize = sizeof(selectInfo);
             selectInfo.parent = hwnd;
             selectInfo.dwFlags = CRYPTUI_ENABLE_SHOW_PHYSICAL_STORE;
-            selectInfo.pwszTitle = selectInfo.pwszTitle = NULL;
+            selectInfo.pwszTitle = NULL;
+            selectInfo.pwszText = NULL;
             selectInfo.pEnumData = &enumData;
             selectInfo.pfnSelectedStoreCallback = NULL;
             if ((store = CryptUIDlgSelectStoreW(&selectInfo)))
@@ -5384,10 +5390,15 @@ static BOOL show_import_ui(DWORD dwFlags, HWND hwndParent,
     data.dwFlags = dwFlags;
     data.pwszWizardTitle = pwszWizardTitle;
     if (pImportSrc)
+    {
         memcpy(&data.importSrc, pImportSrc, sizeof(data.importSrc));
+        data.fileName = (LPWSTR)pImportSrc->u.pwszFileName;
+    }
     else
+    {
         memset(&data.importSrc, 0, sizeof(data.importSrc));
-    data.fileName = NULL;
+        data.fileName = NULL;
+    }
     data.freeSource = FALSE;
     data.hDestCertStore = hDestCertStore;
     data.freeDest = FALSE;
@@ -5471,7 +5482,8 @@ static BOOL show_import_ui(DWORD dwFlags, HWND hwndParent,
     hdr.u4.pszbmWatermark = MAKEINTRESOURCEW(IDB_CERT_WATERMARK);
     hdr.u5.pszbmHeader = MAKEINTRESOURCEW(IDB_CERT_HEADER);
     PropertySheetW(&hdr);
-    HeapFree(GetProcessHeap(), 0, data.fileName);
+    if (data.fileName != data.importSrc.u.pwszFileName)
+        HeapFree(GetProcessHeap(), 0, data.fileName);
     if (data.freeSource &&
      data.importSrc.dwSubjectChoice == CRYPTUI_WIZ_IMPORT_SUBJECT_CERT_STORE)
         CertCloseStore(data.importSrc.u.hCertStore, 0);
@@ -5591,7 +5603,7 @@ static PCRYPT_KEY_PROV_INFO export_get_private_key_info(PCCERT_CONTEXT cert)
     return info;
 }
 
-static BOOL export_acquire_private_key(PCRYPT_KEY_PROV_INFO info,
+static BOOL export_acquire_private_key(const CRYPT_KEY_PROV_INFO *info,
  HCRYPTPROV *phProv)
 {
     BOOL ret;
@@ -5722,7 +5734,7 @@ static BOOL export_info_has_private_key(PCCRYPTUI_WIZ_EXPORT_INFO pExportInfo)
     return ret;
 }
 
-static void export_format_enable_controls(HWND hwnd, struct ExportWizData *data)
+static void export_format_enable_controls(HWND hwnd, const struct ExportWizData *data)
 {
     int defaultFormatID;
 
@@ -5863,7 +5875,7 @@ static LRESULT CALLBACK export_format_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
     return ret;
 }
 
-static void export_password_mismatch(HWND hwnd, struct ExportWizData *data)
+static void export_password_mismatch(HWND hwnd, const struct ExportWizData *data)
 {
     WCHAR title[MAX_STRING_LEN], error[MAX_STRING_LEN];
     LPCWSTR pTitle;
@@ -5968,7 +5980,7 @@ static LRESULT CALLBACK export_password_dlg_proc(HWND hwnd, UINT msg,
     return ret;
 }
 
-static LPWSTR export_append_extension(struct ExportWizData *data,
+static LPWSTR export_append_extension(const struct ExportWizData *data,
  LPWSTR fileName)
 {
     static const WCHAR cer[] = { '.','c','e','r',0 };
@@ -6294,7 +6306,7 @@ static LRESULT CALLBACK export_file_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
     return ret;
 }
 
-static void show_export_details(HWND lv, struct ExportWizData *data)
+static void show_export_details(HWND lv, const struct ExportWizData *data)
 {
     WCHAR text[MAX_STRING_LEN];
     LVITEMW item;
@@ -6772,7 +6784,7 @@ static LRESULT CALLBACK export_finish_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
 }
 
 static BOOL show_export_ui(DWORD dwFlags, HWND hwndParent,
- LPCWSTR pwszWizardTitle, PCCRYPTUI_WIZ_EXPORT_INFO pExportInfo, void *pvoid)
+ LPCWSTR pwszWizardTitle, PCCRYPTUI_WIZ_EXPORT_INFO pExportInfo, const void *pvoid)
 {
     PROPSHEETHEADERW hdr;
     PROPSHEETPAGEW pages[6];

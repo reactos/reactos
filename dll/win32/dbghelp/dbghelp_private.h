@@ -78,11 +78,17 @@ struct hash_table_elt
     struct hash_table_elt*      next;
 };
 
+struct hash_table_bucket
+{
+    struct hash_table_elt*      first;
+    struct hash_table_elt*      last;
+};
+
 struct hash_table
 {
     unsigned                    num_elts;
     unsigned                    num_buckets;
-    struct hash_table_elt**     buckets;
+    struct hash_table_bucket*   buckets;
     struct pool*                pool;
 };
 
@@ -90,7 +96,6 @@ void     hash_table_init(struct pool* pool, struct hash_table* ht,
                          unsigned num_buckets);
 void     hash_table_destroy(struct hash_table* ht);
 void     hash_table_add(struct hash_table* ht, struct hash_table_elt* elt);
-void*    hash_table_find(const struct hash_table* ht, const char* name);
 unsigned hash_table_hash(const char* name, unsigned num_buckets);
 
 struct hash_table_iter

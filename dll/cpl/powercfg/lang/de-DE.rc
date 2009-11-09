@@ -79,14 +79,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
     LTEXT           "Wählen Sie die Energiesparoptionen aus, die Sie verwenden möchten.",-1,30,5,205,20
-    GROUPBOX        "Optionen",-1,5,35,225,55
+    GROUPBOX        "Optionen",-1,5,35,240,55
     CONTROL         "&Symbol in der Taskleiste anzeigen",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,45,200,10
     CONTROL         "&Kennwort beim Reaktivieren aus dem Standbymodus anfordern",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,15,55,210,10
+                    WS_TABSTOP,15,55,220,10
     CONTROL         "&Helligkeit der Anzeige beim Batteriebetrieb verringern",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,65,200,10
-    GROUPBOX        "Netzschaltervorgänge",-1,5,100,230,105
+    GROUPBOX        "Netzschaltervorgänge",-1,5,100,240,105
     LTEXT           "Beim Schließen des &Laptops:", IDC_SLIDCLOSE,10,110,210,10
     COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
@@ -106,7 +106,7 @@ BEGIN
     ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
     LTEXT           "Wenn der Computer in den Ruhezustand wechselt, wird der Inhalt des Arbeitsspeichers gespeichert und der Computer heruntergefahren. Wenn er wieder gestartet wird, kehrt er zum vorherigen Zustand zurück.",
                     -1,35,5,195,35
-    GROUPBOX        "Ruhezustand",-1,5,45,235,25
+    GROUPBOX        "Ruhezustand",-1,5,45,240,25
     CONTROL         "&Ruhezustand aktivieren",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,10,55,210,10
     GROUPBOX        "Speicherplatz für den Ruhezustand",-1,5,80,240,60

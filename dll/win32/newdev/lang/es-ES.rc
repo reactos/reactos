@@ -15,7 +15,7 @@ BEGIN
     CONTROL         "Instalar controlador automáticamente",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
     CONTROL         "Instalar controlador desde una ubicación específica",IDC_RADIO_MANUAL,
-                    "Button",BS_AUTORADIOBUTTON,120,133,164,14
+                    "Button",BS_AUTORADIOBUTTON,120,133,178,14
 END
 
 IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193

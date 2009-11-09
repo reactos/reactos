@@ -226,12 +226,6 @@ static HRESULT COMCAT_IsClassOfCategories(
     HKEY key,
     struct class_categories const* categories)
 {
-    static const WCHAR impl_keyname[] = { 'I', 'm', 'p', 'l', 'e', 'm', 'e', 'n',
-                                          't', 'e', 'd', ' ', 'C', 'a', 't', 'e',
-                                          'g', 'o', 'r', 'i', 'e', 's', 0 };
-    static const WCHAR req_keyname[]  = { 'R', 'e', 'q', 'u', 'i', 'r', 'e', 'd',
-                                          ' ', 'C', 'a', 't', 'e', 'g', 'o', 'r',
-                                          'i', 'e', 's', 0 };
     HKEY subkey;
     HRESULT res;
     DWORD index;
@@ -284,7 +278,7 @@ static HRESULT WINAPI COMCAT_ICatRegister_QueryInterface(
     LPVOID *ppvObj)
 {
     ComCatMgrImpl *This = (ComCatMgrImpl *)iface;
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -521,7 +515,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_GetCategoryDesc(
     HKEY key;
     HRESULT res;
 
-    TRACE("\n\tCATID:\t%s\n\tLCID:\t%X\n",debugstr_guid(rcatid), lcid);
+    TRACE("CATID: %s LCID: %x\n",debugstr_guid(rcatid), lcid);
 
     if (rcatid == NULL || ppszDesc == NULL) return E_INVALIDARG;
 
@@ -602,12 +596,12 @@ static HRESULT WINAPI COMCAT_ICatInformation_IsClassOfCategories(
 
     if (WINE_TRACE_ON(ole)) {
 	ULONG count;
-	TRACE("\n\tCLSID:\t%s\n\tImplemented %u\n",debugstr_guid(rclsid),cImplemented);
+	TRACE("CLSID: %s Implemented %u\n",debugstr_guid(rclsid),cImplemented);
 	for (count = 0; count < cImplemented; ++count)
-	    TRACE("\t\t%s\n",debugstr_guid(&rgcatidImpl[count]));
-	TRACE("\tRequired %u\n",cRequired);
+	    TRACE("    %s\n",debugstr_guid(&rgcatidImpl[count]));
+	TRACE("Required %u\n",cRequired);
 	for (count = 0; count < cRequired; ++count)
-	    TRACE("\t\t%s\n",debugstr_guid(&rgcatidReq[count]));
+	    TRACE("    %s\n",debugstr_guid(&rgcatidReq[count]));
     }
 
     if ((cImplemented && rgcatidImpl == NULL) ||
@@ -643,7 +637,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_EnumImplCategoriesOfClass(
 			  'n', 't', 'e', 'd', ' ', 'C', 'a', 't',
 			  'e', 'g', 'o', 'r', 'i', 'e', 's', 0 };
 
-    TRACE("\n\tCLSID:\t%s\n",debugstr_guid(rclsid));
+    TRACE("%s\n",debugstr_guid(rclsid));
 
     if (rclsid == NULL || ppenumCATID == NULL)
 	return E_POINTER;
@@ -665,7 +659,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_EnumReqCategoriesOfClass(
 			  'd', ' ', 'C', 'a', 't', 'e', 'g', 'o',
 			  'r', 'i', 'e', 's', 0 };
 
-    TRACE("\n\tCLSID:\t%s\n",debugstr_guid(rclsid));
+    TRACE("%s\n",debugstr_guid(rclsid));
 
     if (rclsid == NULL || ppenumCATID == NULL)
 	return E_POINTER;
@@ -725,14 +719,14 @@ static HRESULT WINAPI COMCAT_IClassFactory_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IClassFactory))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IUnknown_AddRef(iface);
 	return S_OK;
     }
@@ -766,7 +760,7 @@ static HRESULT WINAPI COMCAT_IClassFactory_CreateInstance(
     LPVOID *ppvObj)
 {
     HRESULT res;
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -840,14 +834,14 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IEnumCATEGORYINFO))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	COMCAT_IEnumCATEGORYINFO_AddRef(iface);
 	return S_OK;
     }
@@ -1023,14 +1017,14 @@ static HRESULT WINAPI COMCAT_CLSID_IEnumGUID_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IEnumGUID))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	COMCAT_CLSID_IEnumGUID_AddRef(iface);
 	return S_OK;
     }
@@ -1048,7 +1042,7 @@ static ULONG WINAPI COMCAT_CLSID_IEnumGUID_Release(LPENUMGUID iface)
     ref = InterlockedDecrement(&This->ref);
     if (ref == 0) {
 	if (This->key) RegCloseKey(This->key);
-	HeapFree(GetProcessHeap(), 0, (LPVOID)This->categories);
+        HeapFree(GetProcessHeap(), 0, This->categories);
 	HeapFree(GetProcessHeap(), 0, This);
 	return 0;
     }
@@ -1139,14 +1133,14 @@ static HRESULT WINAPI COMCAT_CLSID_IEnumGUID_Clone(
 
     new_this->lpVtbl = This->lpVtbl;
     new_this->ref = 1;
-    size = HeapSize(GetProcessHeap(), 0, (LPVOID)This->categories);
+    size = HeapSize(GetProcessHeap(), 0, This->categories);
     new_this->categories =
 	HeapAlloc(GetProcessHeap(), 0, size);
     if (new_this->categories == NULL) {
 	HeapFree(GetProcessHeap(), 0, new_this);
 	return E_OUTOFMEMORY;
     }
-    memcpy((LPVOID)new_this->categories, This->categories, size);
+    memcpy(new_this->categories, This->categories, size);
     /* FIXME: could we more efficiently use DuplicateHandle? */
     RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &new_this->key);
     new_this->next_index = This->next_index;
@@ -1209,14 +1203,14 @@ static HRESULT WINAPI COMCAT_CATID_IEnumGUID_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IEnumGUID))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	COMCAT_CATID_IEnumGUID_AddRef(iface);
 	return S_OK;
     }

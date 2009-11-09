@@ -18,7 +18,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * translated by Caemyr
- * updated by Caemyr - Olaf Siejka (Jan, 2008)
+ * updated by Caemyr - Olaf Siejka (Jan, 2008), (Aug, 2009)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl; 
@@ -65,6 +65,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+   ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
    LTEXT "Podaj swoje imiê i nazwisko, a tak¿e nazwê Twojej firmy lub organizacji.",
          IDC_STATIC, 54, 7, 242, 21
    LTEXT "Na&zwa:", IDC_STATIC, 54, 37, 44, 8
@@ -79,11 +80,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+   ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
    LTEXT "Podaj nazwê komputera, nie d³u¿sz¹ ni¿ 63 znaki. "\
          "Jeœli chcesz pracowaæ w sieci, nazwa musi pozostaæ unikalna.",
          IDC_STATIC, 54, 7, 250, 24
    LTEXT "&Nazwa komputera:", IDC_STATIC, 54, 38, 75, 8
    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+   ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
    LTEXT "Program konfiguracyjny stworzy konto Administrator. "\
          "Dziêki niemu uzyskasz, w razie potrzeby, pe³en dostêp do systemu.",
          IDC_STATIC, 54, 57, 250, 25
@@ -101,6 +104,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+   ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
    LTEXT "Lokalizacja systemu powinna byæ zgodna (jêzykowo) z aplikacjami, "\
          "których planujesz u¿ywaæ. Lokalizacja odpowiada równie¿ za wyœwietlanie "\
          "danych, liczb i walut.", IDC_STATIC, 53, 7, 238, 25
@@ -122,6 +126,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+   ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
    LTEXT "Data i czas", IDC_STATIC, 53, 7, 253, 8
    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
@@ -194,7 +199,7 @@ BEGIN
    IDS_DATETIMETITLE    "Data i czas"
    IDS_DATETIMESUBTITLE "Ustaw prawid³ow¹ datê i czas."
    IDS_PROCESSTITLE     "Rejestracja sk³adników"
-   IDS_PROCESSSUBTITLE  "Podtytu³ strony"
+   IDS_PROCESSSUBTITLE  "Proszê czekaæ..."
 END
 
 STRINGTABLE
@@ -214,9 +219,10 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Zrzut ekranu"
     IDS_CMT_DEVMGMT     "Uruchom Mened¿er urz¹dzeñ"
     IDS_CMT_SERVMAN     "Uruchom Mened¿er us³ug"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_CMT_RDESKTOP    "Uruchom Zdalny pulpit"
+    IDS_CMT_EVENTVIEW   "Uruchom Podgl¹d Zdarzeñ"
+    IDS_CMT_MSCONFIG    "Uruchom Narzêdzie konfiguracji systemu"
+    IDS_CMT_PAINT       "Uruchom Paint"
 END
 
 
@@ -228,9 +234,17 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "Character Map"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+    IDS_SYS_ENTERTAINMENT       "Rozrywka"
+    IDS_CMT_MPLAY32             "Uruchom Odtwarzacz multimedialny"
+    IDS_CMT_SNDVOL32            "Uruchom regulacjê g³oœnoœci"
+END
+
+STRINGTABLE
+BEGIN
+	IDS_SYS_TOOLS        "Narzêdzia systemowe"
+	IDS_CMT_CHARMAP      "Tablica znaków"
+	IDS_CMT_KBSWITCH     "Zmiana uk³adu klawiatury"
+    IDS_CMT_DXDIAG       "Uruchom program diagnostyczny ReactX"
 END
 
 STRINGTABLE
@@ -257,9 +271,10 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Wiersz poleceñ.lnk"
     IDS_SHORT_EXPLORER   "Eksplorator ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Download!.lnk"
+    IDS_SHORT_DOWNLOADER "Mened¿er aplikacji ReactOS.lnk"
     IDS_SHORT_SERVICE    "Mened¿er us³ug.lnk"
     IDS_SHORT_DEVICE     "Mened¿er urz¹dzeñ.lnk"
+    IDS_SHORT_MPLAY32    "Odtwarzacz multimedialny.lnk"
     IDS_SHORT_CALC       "Kalkulator.lnk"
     IDS_SHORT_REGEDIT    "Edytor rejestru.lnk"
     IDS_SHORT_NOTEPAD    "Notatnik.lnk"
@@ -269,9 +284,12 @@ BEGIN
     IDS_SHORT_WINEMINE   "Saper.lnk"
     IDS_SHORT_MAGNIFY    "Lupa.lnk"
     IDS_SHORT_RDESKTOP   "Dostêp zdalny.lnk"
-    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
+    IDS_SHORT_KBSWITCH   "Zmiana uk³adu klawiatury.lnk"
+    IDS_SHORT_EVENTVIEW  "Podgl¹d zdarzeñ.lnk"
+    IDS_SHORT_MSCONFIG   "Konfiguracja systemowa.lnk"
+    IDS_SHORT_SNDVOL32   "Regulacja g³oœnoœci.lnk"
+    IDS_SHORT_DXDIAG     "Program diagnostyczny ReactX.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

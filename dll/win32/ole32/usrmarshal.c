@@ -105,7 +105,7 @@ ULONG __RPC_USER CLIPFORMAT_UserSize(ULONG *pFlags, ULONG StartingSize, CLIPFORM
 
     TRACE("(%s, %d, %p\n", debugstr_user_flags(pFlags), StartingSize, pCF);
 
-    size += sizeof(userCLIPFORMAT);
+    size += 8;
 
     /* only need to marshal the name if it is not a pre-defined type and
      * we are going remote */
@@ -113,7 +113,7 @@ ULONG __RPC_USER CLIPFORMAT_UserSize(ULONG *pFlags, ULONG StartingSize, CLIPFORM
     {
         WCHAR format[255];
         INT ret;
-        size += 3 * sizeof(INT);
+        size += 3 * sizeof(UINT);
         /* urg! this function is badly designed because it won't tell us how
          * much space is needed without doing a dummy run of storing the
          * name into a buffer */
@@ -146,30 +146,30 @@ ULONG __RPC_USER CLIPFORMAT_UserSize(ULONG *pFlags, ULONG StartingSize, CLIPFORM
  */
 unsigned char * __RPC_USER CLIPFORMAT_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, CLIPFORMAT *pCF)
 {
-    wireCLIPFORMAT wirecf = (wireCLIPFORMAT)pBuffer;
-
     TRACE("(%s, %p, &0x%04x\n", debugstr_user_flags(pFlags), pBuffer, *pCF);
-
-    wirecf->u.dwValue = *pCF;
-    pBuffer += sizeof(*wirecf);
 
     /* only need to marshal the name if it is not a pre-defined type and
      * we are going remote */
     if ((*pCF >= 0xc000) && (LOWORD(*pFlags) == MSHCTX_DIFFERENTMACHINE))
     {
         WCHAR format[255];
-        INT len;
-        wirecf->fContext = WDT_REMOTE_CALL;
+        UINT len;
+
+        *(DWORD *)pBuffer = WDT_REMOTE_CALL;
+        pBuffer += 4;
+        *(DWORD *)pBuffer = *pCF;
+        pBuffer += 4;
+
         len = GetClipboardFormatNameW(*pCF, format, sizeof(format)/sizeof(format[0])-1);
         if (!len)
             RaiseException(DV_E_CLIPFORMAT, 0, 0, NULL);
         len += 1;
-        *(INT *)pBuffer = len;
-        pBuffer += sizeof(INT);
-        *(INT *)pBuffer = 0;
-        pBuffer += sizeof(INT);
-        *(INT *)pBuffer = len;
-        pBuffer += sizeof(INT);
+        *(UINT *)pBuffer = len;
+        pBuffer += sizeof(UINT);
+        *(UINT *)pBuffer = 0;
+        pBuffer += sizeof(UINT);
+        *(UINT *)pBuffer = len;
+        pBuffer += sizeof(UINT);
         TRACE("marshaling format name %s\n", debugstr_wn(format, len-1));
         lstrcpynW((LPWSTR)pBuffer, format, len);
         pBuffer += len * sizeof(WCHAR);
@@ -177,7 +177,12 @@ unsigned char * __RPC_USER CLIPFORMAT_UserMarshal(ULONG *pFlags, unsigned char *
         pBuffer += sizeof(WCHAR);
     }
     else
-        wirecf->fContext = WDT_INPROC_CALL;
+    {
+        *(DWORD *)pBuffer = WDT_INPROC_CALL;
+        pBuffer += 4;
+        *(DWORD *)pBuffer = *pCF;
+        pBuffer += 4;
+    }
 
     return pBuffer;
 }
@@ -203,24 +208,36 @@ unsigned char * __RPC_USER CLIPFORMAT_UserMarshal(ULONG *pFlags, unsigned char *
  */
 unsigned char * __RPC_USER CLIPFORMAT_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, CLIPFORMAT *pCF)
 {
-    wireCLIPFORMAT wirecf = (wireCLIPFORMAT)pBuffer;
+    LONG fContext;
 
     TRACE("(%s, %p, %p\n", debugstr_user_flags(pFlags), pBuffer, pCF);
 
-    pBuffer += sizeof(*wirecf);
-    if (wirecf->fContext == WDT_INPROC_CALL)
-        *pCF = (CLIPFORMAT)wirecf->u.dwValue;
-    else if (wirecf->fContext == WDT_REMOTE_CALL)
+    fContext = *(DWORD *)pBuffer;
+    pBuffer += 4;
+
+    if (fContext == WDT_INPROC_CALL)
+    {
+        *pCF = *(CLIPFORMAT *)pBuffer;
+        pBuffer += 4;
+    }
+    else if (fContext == WDT_REMOTE_CALL)
     {
         CLIPFORMAT cf;
-        INT len = *(INT *)pBuffer;
-        pBuffer += sizeof(INT);
-        if (*(INT *)pBuffer != 0)
+        UINT len;
+
+        /* pointer ID for registered clip format string */
+        if (*(DWORD *)pBuffer == 0)
             RaiseException(RPC_S_INVALID_BOUND, 0, 0, NULL);
-        pBuffer += sizeof(INT);
-        if (*(INT *)pBuffer != len)
+        pBuffer += 4;
+
+        len = *(UINT *)pBuffer;
+        pBuffer += sizeof(UINT);
+        if (*(UINT *)pBuffer != 0)
             RaiseException(RPC_S_INVALID_BOUND, 0, 0, NULL);
-        pBuffer += sizeof(INT);
+        pBuffer += sizeof(UINT);
+        if (*(UINT *)pBuffer != len)
+            RaiseException(RPC_S_INVALID_BOUND, 0, 0, NULL);
+        pBuffer += sizeof(UINT);
         if (((WCHAR *)pBuffer)[len] != '\0')
             RaiseException(RPC_S_INVALID_BOUND, 0, 0, NULL);
         TRACE("unmarshaling clip format %s\n", debugstr_w((LPCWSTR)pBuffer));
@@ -290,7 +307,7 @@ static unsigned char * handle_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffe
     RemotableHandle *remhandle = (RemotableHandle *)pBuffer;
     if (remhandle->fContext != WDT_INPROC_CALL)
         RaiseException(RPC_X_BAD_STUB_DATA, 0, 0, NULL);
-    *handle = (HANDLE)remhandle->u.hInproc;
+    *handle = (HANDLE)(LONG_PTR)remhandle->u.hInproc;
     return pBuffer + sizeof(RemotableHandle);
 }
 
@@ -1361,19 +1378,25 @@ ULONG __RPC_USER HMETAFILEPICT_UserSize(ULONG *pFlags, ULONG StartingSize, HMETA
     TRACE("(%s, %d, &%p)\n", debugstr_user_flags(pFlags), StartingSize, *phMfp);
 
     size += sizeof(ULONG);
-    size += sizeof(HMETAFILEPICT);
 
-    if ((LOWORD(*pFlags) != MSHCTX_INPROC) && *phMfp)
+    if(LOWORD(*pFlags) == MSHCTX_INPROC)
+        size += sizeof(HMETAFILEPICT);
+    else
     {
-        METAFILEPICT *mfpict = GlobalLock(*phMfp);
-
-        /* FIXME: raise an exception if mfpict is NULL? */
-        size += FIELD_OFFSET(remoteMETAFILEPICT, hMF);
         size += sizeof(ULONG);
 
-        size = HMETAFILE_UserSize(pFlags, size, &mfpict->hMF);
+        if (*phMfp)
+        {
+            METAFILEPICT *mfpict = GlobalLock(*phMfp);
 
-        GlobalUnlock(*phMfp);
+            /* FIXME: raise an exception if mfpict is NULL? */
+            size += 3 * sizeof(ULONG);
+            size += sizeof(ULONG);
+
+            size = HMETAFILE_UserSize(pFlags, size, &mfpict->hMF);
+
+            GlobalUnlock(*phMfp);
+        }
     }
 
     return size;
@@ -1403,32 +1426,40 @@ unsigned char * __RPC_USER HMETAFILEPICT_UserMarshal(ULONG *pFlags, unsigned cha
     TRACE("(%s, %p, &%p)\n", debugstr_user_flags(pFlags), pBuffer, *phMfp);
 
     if (LOWORD(*pFlags) == MSHCTX_INPROC)
-        *(ULONG *)pBuffer = WDT_INPROC_CALL;
-    else
-        *(ULONG *)pBuffer = WDT_REMOTE_CALL;
-    pBuffer += sizeof(ULONG);
-
-    *(HMETAFILEPICT *)pBuffer = *phMfp;
-    pBuffer += sizeof(HMETAFILEPICT);
-
-    if ((LOWORD(*pFlags) != MSHCTX_INPROC) && *phMfp)
     {
-        METAFILEPICT *mfpict = GlobalLock(*phMfp);
-        remoteMETAFILEPICT * remmfpict = (remoteMETAFILEPICT *)pBuffer;
-
-        /* FIXME: raise an exception if mfpict is NULL? */
-        remmfpict->mm = mfpict->mm;
-        remmfpict->xExt = mfpict->xExt;
-        remmfpict->yExt = mfpict->yExt;
-        pBuffer += FIELD_OFFSET(remoteMETAFILEPICT, hMF);
-        *(ULONG *)pBuffer = USER_MARSHAL_PTR_PREFIX;
+        if (sizeof(HMETAFILEPICT) == 8)
+            *(ULONG *)pBuffer = WDT_INPROC64_CALL;
+        else
+            *(ULONG *)pBuffer = WDT_INPROC_CALL;
+        pBuffer += sizeof(ULONG);
+        *(HMETAFILEPICT *)pBuffer = *phMfp;
+        pBuffer += sizeof(HMETAFILEPICT);
+    }
+    else
+    {
+        *(ULONG *)pBuffer = WDT_REMOTE_CALL;
+        pBuffer += sizeof(ULONG);
+        *(ULONG *)pBuffer = (ULONG)(ULONG_PTR)*phMfp;
         pBuffer += sizeof(ULONG);
 
-        pBuffer = HMETAFILE_UserMarshal(pFlags, pBuffer, &mfpict->hMF);
+        if (*phMfp)
+        {
+            METAFILEPICT *mfpict = GlobalLock(*phMfp);
+            remoteMETAFILEPICT * remmfpict = (remoteMETAFILEPICT *)pBuffer;
 
-        GlobalUnlock(*phMfp);
+            /* FIXME: raise an exception if mfpict is NULL? */
+            remmfpict->mm = mfpict->mm;
+            remmfpict->xExt = mfpict->xExt;
+            remmfpict->yExt = mfpict->yExt;
+            pBuffer += 3 * sizeof(ULONG);
+            *(ULONG *)pBuffer = USER_MARSHAL_PTR_PREFIX;
+            pBuffer += sizeof(ULONG);
+
+            pBuffer = HMETAFILE_UserMarshal(pFlags, pBuffer, &mfpict->hMF);
+
+            GlobalUnlock(*phMfp);
+        }
     }
-
     return pBuffer;
 }
 
@@ -1460,40 +1491,45 @@ unsigned char * __RPC_USER HMETAFILEPICT_UserUnmarshal(ULONG *pFlags, unsigned c
     fContext = *(ULONG *)pBuffer;
     pBuffer += sizeof(ULONG);
 
-    if ((fContext == WDT_INPROC_CALL) || !*(HMETAFILEPICT *)pBuffer)
+    if ((fContext == WDT_INPROC_CALL) || fContext == WDT_INPROC64_CALL)
     {
         *phMfp = *(HMETAFILEPICT *)pBuffer;
         pBuffer += sizeof(HMETAFILEPICT);
     }
     else
     {
-        METAFILEPICT *mfpict;
-        const remoteMETAFILEPICT *remmfpict;
-        ULONG user_marshal_prefix;
-
-        pBuffer += sizeof(HMETAFILEPICT);
-        remmfpict = (const remoteMETAFILEPICT *)pBuffer;
-
-        *phMfp = GlobalAlloc(GMEM_MOVEABLE, sizeof(METAFILEPICT));
-        if (!*phMfp)
-            RpcRaiseException(E_OUTOFMEMORY);
-
-        mfpict = GlobalLock(*phMfp);
-        mfpict->mm = remmfpict->mm;
-        mfpict->xExt = remmfpict->xExt;
-        mfpict->yExt = remmfpict->yExt;
-        pBuffer += FIELD_OFFSET(remoteMETAFILEPICT, hMF);
-        user_marshal_prefix = *(ULONG *)pBuffer;
+        ULONG handle = *(ULONG *)pBuffer;
         pBuffer += sizeof(ULONG);
+        *phMfp = NULL;
 
-        if (user_marshal_prefix != USER_MARSHAL_PTR_PREFIX)
-            RpcRaiseException(RPC_X_INVALID_TAG);
+        if(handle)
+        {
+            METAFILEPICT *mfpict;
+            const remoteMETAFILEPICT *remmfpict;
+            ULONG user_marshal_prefix;
 
-        pBuffer = HMETAFILE_UserUnmarshal(pFlags, pBuffer, &mfpict->hMF);
+            remmfpict = (const remoteMETAFILEPICT *)pBuffer;
 
-        GlobalUnlock(*phMfp);
+            *phMfp = GlobalAlloc(GMEM_MOVEABLE, sizeof(METAFILEPICT));
+            if (!*phMfp)
+                RpcRaiseException(E_OUTOFMEMORY);
+
+            mfpict = GlobalLock(*phMfp);
+            mfpict->mm = remmfpict->mm;
+            mfpict->xExt = remmfpict->xExt;
+            mfpict->yExt = remmfpict->yExt;
+            pBuffer += 3 * sizeof(ULONG);
+            user_marshal_prefix = *(ULONG *)pBuffer;
+            pBuffer += sizeof(ULONG);
+
+            if (user_marshal_prefix != USER_MARSHAL_PTR_PREFIX)
+                RpcRaiseException(RPC_X_INVALID_TAG);
+
+            pBuffer = HMETAFILE_UserUnmarshal(pFlags, pBuffer, &mfpict->hMF);
+
+            GlobalUnlock(*phMfp);
+        }
     }
-
     return pBuffer;
 }
 
@@ -1553,10 +1589,19 @@ void __RPC_USER HMETAFILEPICT_UserFree(ULONG *pFlags, HMETAFILEPICT *phMfp)
  *  pFlags, it actually takes a pointer to a USER_MARSHAL_CB structure, of which
  *  the first parameter is a ULONG.
  */
-ULONG __RPC_USER WdtpInterfacePointer_UserSize(ULONG *pFlags, ULONG RealFlags, IUnknown *punk, ULONG StartingSize, REFIID riid)
+ULONG __RPC_USER WdtpInterfacePointer_UserSize(ULONG *pFlags, ULONG RealFlags, ULONG StartingSize, IUnknown *punk, REFIID riid)
 {
-    FIXME("(%s, 0%x, %p, %d, %s): stub\n", debugstr_user_flags(pFlags), RealFlags, punk, StartingSize, debugstr_guid(riid));
-    return 0;
+    DWORD marshal_size = 0;
+    HRESULT hr;
+
+    TRACE("(%s, 0%x, %d, %p, %s)\n", debugstr_user_flags(pFlags), RealFlags, StartingSize, punk, debugstr_guid(riid));
+
+    hr = CoGetMarshalSizeMax(&marshal_size, riid, punk, LOWORD(RealFlags), NULL, MSHLFLAGS_NORMAL);
+    if(FAILED(hr)) return StartingSize;
+
+    ALIGN_LENGTH(StartingSize, 3);
+    StartingSize += 2 * sizeof(DWORD);
+    return StartingSize + marshal_size;
 }
 
 /******************************************************************************
@@ -1581,8 +1626,40 @@ ULONG __RPC_USER WdtpInterfacePointer_UserSize(ULONG *pFlags, ULONG RealFlags, I
  */
 unsigned char * WINAPI WdtpInterfacePointer_UserMarshal(ULONG *pFlags, ULONG RealFlags, unsigned char *pBuffer, IUnknown *punk, REFIID riid)
 {
-    FIXME("(%s, 0x%x, %p, &%p, %s): stub\n", debugstr_user_flags(pFlags), RealFlags, pBuffer, punk, debugstr_guid(riid));
-    return NULL;
+    HGLOBAL h = GlobalAlloc(GMEM_MOVEABLE, 0);
+    IStream *stm;
+    DWORD size;
+    void *ptr;
+
+    TRACE("(%s, 0x%x, %p, &%p, %s)\n", debugstr_user_flags(pFlags), RealFlags, pBuffer, punk, debugstr_guid(riid));
+
+    if(!h) return NULL;
+    if(CreateStreamOnHGlobal(h, TRUE, &stm) != S_OK)
+    {
+        GlobalFree(h);
+        return NULL;
+    }
+
+    if(CoMarshalInterface(stm, riid, punk, LOWORD(RealFlags), NULL, MSHLFLAGS_NORMAL) != S_OK)
+    {
+        IStream_Release(stm);
+        return NULL;
+    }
+
+    ALIGN_POINTER(pBuffer, 3);
+    size = GlobalSize(h);
+
+    *(DWORD *)pBuffer = size;
+    pBuffer += sizeof(DWORD);
+    *(DWORD *)pBuffer = size;
+    pBuffer += sizeof(DWORD);
+
+    ptr = GlobalLock(h);
+    memcpy(pBuffer, ptr, size);
+    GlobalUnlock(h);
+
+    IStream_Release(stm);
+    return pBuffer + size;
 }
 
 /******************************************************************************
@@ -1606,24 +1683,61 @@ unsigned char * WINAPI WdtpInterfacePointer_UserMarshal(ULONG *pFlags, ULONG Rea
  */
 unsigned char * WINAPI WdtpInterfacePointer_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, IUnknown **ppunk, REFIID riid)
 {
-    FIXME("(%s, %p, %p, %s): stub\n", debugstr_user_flags(pFlags), pBuffer, ppunk, debugstr_guid(riid));
-    return NULL;
+    HRESULT hr;
+    HGLOBAL h;
+    IStream *stm;
+    DWORD size;
+    void *ptr;
+
+    TRACE("(%s, %p, %p, %s)\n", debugstr_user_flags(pFlags), pBuffer, ppunk, debugstr_guid(riid));
+
+    ALIGN_POINTER(pBuffer, 3);
+
+    size = *(DWORD *)pBuffer;
+    pBuffer += sizeof(DWORD);
+    if(size != *(DWORD *)pBuffer)
+        RaiseException(RPC_X_BAD_STUB_DATA, 0, 0, NULL);
+
+    pBuffer += sizeof(DWORD);
+
+    /* FIXME: sanity check on size */
+
+    h = GlobalAlloc(GMEM_MOVEABLE, size);
+    if(!h) RaiseException(RPC_X_NO_MEMORY, 0, 0, NULL);
+
+    if(CreateStreamOnHGlobal(h, TRUE, &stm) != S_OK)
+    {
+        GlobalFree(h);
+        RaiseException(RPC_X_NO_MEMORY, 0, 0, NULL);
+    }
+
+    ptr = GlobalLock(h);
+    memcpy(ptr, pBuffer, size);
+    GlobalUnlock(h);
+
+    hr = CoUnmarshalInterface(stm, riid, (void**)ppunk);
+    IStream_Release(stm);
+
+    if(hr != S_OK) RaiseException(hr, 0, 0, NULL);
+
+    return pBuffer + size;
 }
 
 /******************************************************************************
  *           WdtpInterfacePointer_UserFree [OLE32.@]
  *
- * Frees an unmarshaled interface pointer.
+ * Releases an unmarshaled interface pointer.
  *
  * PARAMS
- *  punk    [I] Interface pointer to free.
+ *  punk    [I] Interface pointer to release.
  *
  * RETURNS
  *  Nothing.
  */
 void WINAPI WdtpInterfacePointer_UserFree(IUnknown *punk)
 {
-    FIXME("(%p): stub\n", punk);
+    TRACE("(%p)\n", punk);
+    if(punk) IUnknown_Release(punk);
 }
 
 /******************************************************************************
@@ -1681,14 +1795,20 @@ ULONG __RPC_USER STGMEDIUM_UserSize(ULONG *pFlags, ULONG StartingSize, STGMEDIUM
         TRACE("TYMED_ISTREAM\n");
         if (pStgMedium->u.pstm)
         {
-            FIXME("not implemented for IStream %p\n", pStgMedium->u.pstm);
+            IUnknown *unk;
+            IStream_QueryInterface(pStgMedium->u.pstm, &IID_IUnknown, (void**)&unk);
+            size = WdtpInterfacePointer_UserSize(pFlags, LOWORD(*pFlags), size, unk, &IID_IStream);
+            IUnknown_Release(unk);
         }
         break;
     case TYMED_ISTORAGE:
         TRACE("TYMED_ISTORAGE\n");
         if (pStgMedium->u.pstg)
         {
-            FIXME("not implemented for IStorage %p\n", pStgMedium->u.pstg);
+            IUnknown *unk;
+            IStorage_QueryInterface(pStgMedium->u.pstg, &IID_IUnknown, (void**)&unk);
+            size = WdtpInterfacePointer_UserSize(pFlags, LOWORD(*pFlags), size, unk, &IID_IStorage);
+            IUnknown_Release(unk);
         }
         break;
     case TYMED_GDI:
@@ -1713,7 +1833,7 @@ ULONG __RPC_USER STGMEDIUM_UserSize(ULONG *pFlags, ULONG StartingSize, STGMEDIUM
     }
 
     if (pStgMedium->pUnkForRelease)
-        FIXME("buffer size pUnkForRelease\n");
+        size = WdtpInterfacePointer_UserSize(pFlags, LOWORD(*pFlags), size, pStgMedium->pUnkForRelease, &IID_IUnknown);
 
     return size;
 }
@@ -1787,14 +1907,20 @@ unsigned char * __RPC_USER STGMEDIUM_UserMarshal(ULONG *pFlags, unsigned char *p
         TRACE("TYMED_ISTREAM\n");
         if (pStgMedium->u.pstm)
         {
-            FIXME("not implemented for IStream %p\n", pStgMedium->u.pstm);
+            IUnknown *unk;
+            IStream_QueryInterface(pStgMedium->u.pstm, &IID_IUnknown, (void**)&unk);
+            pBuffer = WdtpInterfacePointer_UserMarshal(pFlags, LOWORD(*pFlags), pBuffer, unk, &IID_IStream);
+            IUnknown_Release(unk);
         }
         break;
     case TYMED_ISTORAGE:
         TRACE("TYMED_ISTORAGE\n");
         if (pStgMedium->u.pstg)
         {
-            FIXME("not implemented for IStorage %p\n", pStgMedium->u.pstg);
+            IUnknown *unk;
+            IStorage_QueryInterface(pStgMedium->u.pstg, &IID_IUnknown, (void**)&unk);
+            pBuffer = WdtpInterfacePointer_UserMarshal(pFlags, LOWORD(*pFlags), pBuffer, unk, &IID_IStorage);
+            IUnknown_Release(unk);
         }
         break;
     case TYMED_GDI:
@@ -1819,7 +1945,7 @@ unsigned char * __RPC_USER STGMEDIUM_UserMarshal(ULONG *pFlags, unsigned char *p
     }
 
     if (pStgMedium->pUnkForRelease)
-        FIXME("marshal pUnkForRelease\n");
+        pBuffer = WdtpInterfacePointer_UserMarshal(pFlags, LOWORD(*pFlags), pBuffer, pStgMedium->pUnkForRelease, &IID_IUnknown);
 
     return pBuffer;
 }
@@ -1915,7 +2041,7 @@ unsigned char * __RPC_USER STGMEDIUM_UserUnmarshal(ULONG *pFlags, unsigned char 
         TRACE("TYMED_ISTREAM\n");
         if (content)
         {
-            FIXME("not implemented for IStream\n");
+            pBuffer = WdtpInterfacePointer_UserUnmarshal(pFlags, pBuffer, (IUnknown**)&pStgMedium->u.pstm, &IID_IStream);
         }
         else
             pStgMedium->u.pstm = NULL;
@@ -1924,7 +2050,7 @@ unsigned char * __RPC_USER STGMEDIUM_UserUnmarshal(ULONG *pFlags, unsigned char 
         TRACE("TYMED_ISTORAGE\n");
         if (content)
         {
-            FIXME("not implemented for IStorage\n");
+            pBuffer = WdtpInterfacePointer_UserUnmarshal(pFlags, pBuffer, (IUnknown**)&pStgMedium->u.pstg, &IID_IStorage);
         }
         else
             pStgMedium->u.pstg = NULL;
@@ -1958,7 +2084,7 @@ unsigned char * __RPC_USER STGMEDIUM_UserUnmarshal(ULONG *pFlags, unsigned char 
 
     pStgMedium->pUnkForRelease = NULL;
     if (releaseunk)
-        FIXME("unmarshal pUnkForRelease\n");
+        pBuffer = WdtpInterfacePointer_UserUnmarshal(pFlags, pBuffer, &pStgMedium->pUnkForRelease, &IID_IUnknown);
 
     return pBuffer;
 }
@@ -2280,8 +2406,15 @@ HRESULT CALLBACK ISequentialStream_Read_Proxy(
     ULONG cb,
     ULONG *pcbRead)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG read;
+    HRESULT hr;
+
+    TRACE("(%p)->(%p, %d, %p)\n", This, pv, cb, pcbRead);
+
+    hr = ISequentialStream_RemoteRead_Proxy(This, pv, cb, &read);
+    if(pcbRead) *pcbRead = read;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB ISequentialStream_Read_Stub(
@@ -2290,8 +2423,8 @@ HRESULT __RPC_STUB ISequentialStream_Read_Stub(
     ULONG cb,
     ULONG *pcbRead)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %d, %p)\n", This, pv, cb, pcbRead);
+    return ISequentialStream_Read(This, pv, cb, pcbRead);
 }
 
 HRESULT CALLBACK ISequentialStream_Write_Proxy(
@@ -2300,8 +2433,15 @@ HRESULT CALLBACK ISequentialStream_Write_Proxy(
     ULONG cb,
     ULONG *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG written;
+    HRESULT hr;
+
+    TRACE("(%p)->(%p, %d, %p)\n", This, pv, cb, pcbWritten);
+
+    hr = ISequentialStream_RemoteWrite_Proxy(This, pv, cb, &written);
+    if(pcbWritten) *pcbWritten = written;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB ISequentialStream_Write_Stub(
@@ -2310,8 +2450,8 @@ HRESULT __RPC_STUB ISequentialStream_Write_Stub(
     ULONG cb,
     ULONG *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %d, %p)\n", This, pv, cb, pcbWritten);
+    return ISequentialStream_Write(This, pv, cb, pcbWritten);
 }
 
 HRESULT CALLBACK IStream_Seek_Proxy(
@@ -2320,8 +2460,15 @@ HRESULT CALLBACK IStream_Seek_Proxy(
     DWORD dwOrigin,
     ULARGE_INTEGER *plibNewPosition)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULARGE_INTEGER newpos;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s, %d, %p)\n", This, wine_dbgstr_longlong(dlibMove.QuadPart), dwOrigin, plibNewPosition);
+
+    hr = IStream_RemoteSeek_Proxy(This, dlibMove, dwOrigin, &newpos);
+    if(plibNewPosition) *plibNewPosition = newpos;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB IStream_Seek_Stub(
@@ -2330,8 +2477,8 @@ HRESULT __RPC_STUB IStream_Seek_Stub(
     DWORD dwOrigin,
     ULARGE_INTEGER *plibNewPosition)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%s, %d, %p)\n", This, wine_dbgstr_longlong(dlibMove.QuadPart), dwOrigin, plibNewPosition);
+    return IStream_Seek(This, dlibMove, dwOrigin, plibNewPosition);
 }
 
 HRESULT CALLBACK IStream_CopyTo_Proxy(
@@ -2341,8 +2488,16 @@ HRESULT CALLBACK IStream_CopyTo_Proxy(
     ULARGE_INTEGER *pcbRead,
     ULARGE_INTEGER *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULARGE_INTEGER read, written;
+    HRESULT hr;
+
+    TRACE("(%p)->(%p, %s, %p, %p)\n", This, pstm, wine_dbgstr_longlong(cb.QuadPart), pcbRead, pcbWritten);
+
+    hr = IStream_RemoteCopyTo_Proxy(This, pstm, cb, &read, &written);
+    if(pcbRead) *pcbRead = read;
+    if(pcbWritten) *pcbWritten = written;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB IStream_CopyTo_Stub(
@@ -2352,8 +2507,9 @@ HRESULT __RPC_STUB IStream_CopyTo_Stub(
     ULARGE_INTEGER *pcbRead,
     ULARGE_INTEGER *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %s, %p, %p)\n", This, pstm, wine_dbgstr_longlong(cb.QuadPart), pcbRead, pcbWritten);
+
+    return IStream_CopyTo(This, pstm, cb, pcbRead, pcbWritten);
 }
 
 HRESULT CALLBACK IEnumSTATSTG_Next_Proxy(
@@ -2390,21 +2546,25 @@ HRESULT CALLBACK IStorage_OpenStream_Proxy(
     DWORD reserved2,
     IStream **ppstm)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%s, %p, %08x, %d %p)\n", This, debugstr_w(pwcsName), reserved1, grfMode, reserved2, ppstm);
+    if(reserved1) WARN("reserved1 %p\n", reserved1);
+
+    return IStorage_RemoteOpenStream_Proxy(This, pwcsName, 0, NULL, grfMode, reserved2, ppstm);
 }
 
 HRESULT __RPC_STUB IStorage_OpenStream_Stub(
     IStorage* This,
     LPCOLESTR pwcsName,
-    unsigned long cbReserved1,
+    ULONG cbReserved1,
     byte *reserved1,
     DWORD grfMode,
     DWORD reserved2,
     IStream **ppstm)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%s, %d, %p, %08x, %d %p)\n", This, debugstr_w(pwcsName), cbReserved1, reserved1, grfMode, reserved2, ppstm);
+    if(cbReserved1 || reserved1) WARN("cbReserved1 %d reserved1 %p\n", cbReserved1, reserved1);
+
+    return IStorage_OpenStream(This, pwcsName, NULL, grfMode, reserved2, ppstm);
 }
 
 HRESULT CALLBACK IStorage_EnumElements_Proxy(
@@ -2414,20 +2574,24 @@ HRESULT CALLBACK IStorage_EnumElements_Proxy(
     DWORD reserved3,
     IEnumSTATSTG **ppenum)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%d, %p, %d, %p)\n", This, reserved1, reserved2, reserved3, ppenum);
+    if(reserved2) WARN("reserved2 %p\n", reserved2);
+
+    return IStorage_RemoteEnumElements_Proxy(This, reserved1, 0, NULL, reserved3, ppenum);
 }
 
 HRESULT __RPC_STUB IStorage_EnumElements_Stub(
     IStorage* This,
     DWORD reserved1,
-    unsigned long cbReserved2,
+    ULONG cbReserved2,
     byte *reserved2,
     DWORD reserved3,
     IEnumSTATSTG **ppenum)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%d, %d, %p, %d, %p)\n", This, reserved1, cbReserved2, reserved2, reserved3, ppenum);
+    if(cbReserved2 || reserved2) WARN("cbReserved2 %d reserved2 %p\n", cbReserved2, reserved2);
+
+    return IStorage_EnumElements(This, reserved1, NULL, reserved3, ppenum);
 }
 
 HRESULT CALLBACK ILockBytes_ReadAt_Proxy(
@@ -2437,8 +2601,15 @@ HRESULT CALLBACK ILockBytes_ReadAt_Proxy(
     ULONG cb,
     ULONG *pcbRead)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG read;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s, %p, %d, %p)\n", This, wine_dbgstr_longlong(ulOffset.QuadPart), pv, cb, pcbRead);
+
+    hr = ILockBytes_RemoteReadAt_Proxy(This, ulOffset, pv, cb, &read);
+    if(pcbRead) *pcbRead = read;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB ILockBytes_ReadAt_Stub(
@@ -2448,8 +2619,8 @@ HRESULT __RPC_STUB ILockBytes_ReadAt_Stub(
     ULONG cb,
     ULONG *pcbRead)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%s, %p, %d, %p)\n", This, wine_dbgstr_longlong(ulOffset.QuadPart), pv, cb, pcbRead);
+    return ILockBytes_ReadAt(This, ulOffset, pv, cb, pcbRead);
 }
 
 HRESULT CALLBACK ILockBytes_WriteAt_Proxy(
@@ -2459,8 +2630,15 @@ HRESULT CALLBACK ILockBytes_WriteAt_Proxy(
     ULONG cb,
     ULONG *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG written;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s, %p, %d, %p)\n", This, wine_dbgstr_longlong(ulOffset.QuadPart), pv, cb, pcbWritten);
+
+    hr = ILockBytes_RemoteWriteAt_Proxy(This, ulOffset, pv, cb, &written);
+    if(pcbWritten) *pcbWritten = written;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB ILockBytes_WriteAt_Stub(
@@ -2470,8 +2648,8 @@ HRESULT __RPC_STUB ILockBytes_WriteAt_Stub(
     ULONG cb,
     ULONG *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%s, %p, %d, %p)\n", This, wine_dbgstr_longlong(ulOffset.QuadPart), pv, cb, pcbWritten);
+    return ILockBytes_WriteAt(This, ulOffset, pv, cb, pcbWritten);
 }
 
 HRESULT CALLBACK IFillLockBytes_FillAppend_Proxy(
@@ -2480,8 +2658,15 @@ HRESULT CALLBACK IFillLockBytes_FillAppend_Proxy(
     ULONG cb,
     ULONG *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG written;
+    HRESULT hr;
+
+    TRACE("(%p)->(%p, %d, %p)\n", This, pv, cb, pcbWritten);
+
+    hr = IFillLockBytes_RemoteFillAppend_Proxy(This, pv, cb, &written);
+    if(pcbWritten) *pcbWritten = written;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB IFillLockBytes_FillAppend_Stub(
@@ -2490,8 +2675,8 @@ HRESULT __RPC_STUB IFillLockBytes_FillAppend_Stub(
     ULONG cb,
     ULONG *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %d, %p)\n", This, pv, cb, pcbWritten);
+    return IFillLockBytes_FillAppend(This, pv, cb, pcbWritten);
 }
 
 HRESULT CALLBACK IFillLockBytes_FillAt_Proxy(
@@ -2501,8 +2686,15 @@ HRESULT CALLBACK IFillLockBytes_FillAt_Proxy(
     ULONG cb,
     ULONG *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG written;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s, %p, %d, %p)\n", This, wine_dbgstr_longlong(ulOffset.QuadPart), pv, cb, pcbWritten);
+
+    hr = IFillLockBytes_RemoteFillAt_Proxy(This, ulOffset, pv, cb, &written);
+    if(pcbWritten) *pcbWritten = written;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB IFillLockBytes_FillAt_Stub(
@@ -2512,8 +2704,8 @@ HRESULT __RPC_STUB IFillLockBytes_FillAt_Stub(
     ULONG cb,
     ULONG *pcbWritten)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%s, %p, %d, %p)\n", This, wine_dbgstr_longlong(ulOffset.QuadPart), pv, cb, pcbWritten);
+    return IFillLockBytes_FillAt(This, ulOffset, pv, cb, pcbWritten);
 }
 
 HRESULT CALLBACK IEnumFORMATETC_Next_Proxy(
@@ -2661,8 +2853,8 @@ HRESULT CALLBACK IDataObject_GetData_Proxy(
     FORMATETC *pformatetcIn,
     STGMEDIUM *pmedium)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %p)\n", This, pformatetcIn, pmedium);
+    return IDataObject_RemoteGetData_Proxy(This, pformatetcIn, pmedium);
 }
 
 HRESULT __RPC_STUB IDataObject_GetData_Stub(
@@ -2670,8 +2862,8 @@ HRESULT __RPC_STUB IDataObject_GetData_Stub(
     FORMATETC *pformatetcIn,
     STGMEDIUM *pRemoteMedium)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %p)\n", This, pformatetcIn, pRemoteMedium);
+    return IDataObject_GetData(This, pformatetcIn, pRemoteMedium);
 }
 
 HRESULT CALLBACK IDataObject_GetDataHere_Proxy(
@@ -2679,8 +2871,8 @@ HRESULT CALLBACK IDataObject_GetDataHere_Proxy(
     FORMATETC *pformatetc,
     STGMEDIUM *pmedium)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %p)\n", This, pformatetc, pmedium);
+    return IDataObject_RemoteGetDataHere_Proxy(This, pformatetc, pmedium);
 }
 
 HRESULT __RPC_STUB IDataObject_GetDataHere_Stub(
@@ -2688,8 +2880,8 @@ HRESULT __RPC_STUB IDataObject_GetDataHere_Stub(
     FORMATETC *pformatetc,
     STGMEDIUM *pRemoteMedium)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %p)\n", This, pformatetc, pRemoteMedium);
+    return IDataObject_GetDataHere(This, pformatetc, pRemoteMedium);
 }
 
 HRESULT CALLBACK IDataObject_SetData_Proxy(

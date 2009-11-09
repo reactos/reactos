@@ -213,7 +213,7 @@ static HRESULT WINAPI httprequest_abort(IXMLHTTPRequest *iface)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI httprequest_get_status(IXMLHTTPRequest *iface, long *plStatus)
+static HRESULT WINAPI httprequest_get_status(IXMLHTTPRequest *iface, LONG *plStatus)
 {
     httprequest *This = impl_from_IXMLHTTPRequest( iface );
 
@@ -267,7 +267,7 @@ static HRESULT WINAPI httprequest_get_responseStream(IXMLHTTPRequest *iface, VAR
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI httprequest_get_readyState(IXMLHTTPRequest *iface, long *plState)
+static HRESULT WINAPI httprequest_get_readyState(IXMLHTTPRequest *iface, LONG *plState)
 {
     httprequest *This = impl_from_IXMLHTTPRequest( iface );
 

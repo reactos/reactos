@@ -658,7 +658,7 @@ NetQueryDisplayInformation(
                              admin_size - sizeof(NET_DISPLAY_USER) +
                              guest_size - sizeof(NET_DISPLAY_USER),
                              SortedBuffer);
-        inf = (PNET_DISPLAY_USER) *SortedBuffer;
+        inf = *SortedBuffer;
         str = (LPWSTR) ((PBYTE) inf + sizeof(NET_DISPLAY_USER) * records);
         inf->usri1_name = str;
         str = (LPWSTR) (
@@ -826,8 +826,7 @@ NET_API_STATUS WINAPI NetUserModalsGet(
             }
 
             umi = (USER_MODALS_INFO_2 *) *pbuffer;
-            umi->usrmod2_domain_id = (PSID)(*pbuffer +
-                sizeof(USER_MODALS_INFO_2));
+            umi->usrmod2_domain_id = *pbuffer + sizeof(USER_MODALS_INFO_2);
             umi->usrmod2_domain_name = (LPWSTR)(*pbuffer +
                 sizeof(USER_MODALS_INFO_2) + GetLengthSid(domainIdentifier));
 

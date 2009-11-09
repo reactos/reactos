@@ -412,10 +412,14 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     RelativeName.Handle = NULL;
 
     /* Find the application name */
-    RtlDosPathNameToNtPathName_U(lpApplicationName,
-                                 ApplicationName,
-                                 NULL,
-                                 &RelativeName);
+    if (!RtlDosPathNameToNtPathName_U(lpApplicationName,
+                                      ApplicationName,
+                                      NULL,
+                                      &RelativeName))
+    {
+        return STATUS_OBJECT_PATH_NOT_FOUND;
+    }
+
     DPRINT("ApplicationName %wZ\n", ApplicationName);
     DPRINT("RelativeName %wZ\n", &RelativeName.DosPath);
     
@@ -442,7 +446,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open file\n");
-        SetLastErrorByStatus (Status);
+        SetLastErrorByStatus(Status);
         return Status;
     }
     

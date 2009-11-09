@@ -74,7 +74,6 @@ DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
                   PLONG compr,
                   PLONG size )
 {
-
   if (header->biSize == sizeof(BITMAPCOREHEADER))
   {
      BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)header;
@@ -418,7 +417,13 @@ GetDIBits(
            }
         }
      }
-     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+
+     if ((ULONG)lpvBits & (sizeof(DWORD) - 1))
+     {
+         pvSafeBits = RtlAllocateHeap(RtlGetProcessHeap(), 0, cjBmpScanSize);
+         if (!pvSafeBits)
+            return Ret;
+     }
   }
 
   Ret = NtGdiGetDIBitsInternal(hDC,
@@ -430,9 +435,12 @@ GetDIBits(
                                uUsage,
                                cjBmpScanSize,
                                0);
-  if ( lpvBits != pvSafeBits)
+  if (lpvBits != pvSafeBits)
   {
-     RtlCopyMemory( lpvBits, pvSafeBits, cjBmpScanSize);
+     if (Ret)
+     {
+        RtlCopyMemory(lpvBits, pvSafeBits, cjBmpScanSize);
+     }
      RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
   }
   return Ret;
@@ -458,6 +466,8 @@ CreateDIBitmap( HDC hDC,
   UINT cjBmpScanSize;
   PVOID pvSafeBits = NULL;
   HBITMAP hBmp;
+
+  if (!Header) return 0;
 
   pConvertedInfo = ConvertBitmapInfo(Data, ColorUse,
                                           &ConvertedInfoSize, FALSE);
@@ -491,11 +501,18 @@ CreateDIBitmap( HDC hDC,
      hBmp = GetStockObject(DEFAULT_BITMAP);
   else
   {
-     if ( Bits )
+     if ( Bits && Init == CBM_INIT )
      {
         pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
-        if ( pvSafeBits )
+        if (pvSafeBits == NULL)
+        {
+            hBmp = NULL;
+            goto Exit;
+        }
+        else
+        {
            RtlCopyMemory( pvSafeBits, Bits, cjBmpScanSize);
+        }
      }
 
      hBmp = NtGdiCreateDIBitmapInternal(hDC,
@@ -510,7 +527,7 @@ CreateDIBitmap( HDC hDC,
                                         0,
                                         0);
 
-     if ( Bits )
+     if ( Bits && Init == CBM_INIT )
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
   }
 Exit:

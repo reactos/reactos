@@ -16,7 +16,7 @@
 	<library>rpcrt4</library>
 	<library>pseh</library>
 	<file>version.rc</file> <!-- we need at least one file in the module -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="qmgrprxy_interface" type="idlinterface">
 	<file>qmgrprxy.idl</file>

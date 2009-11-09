@@ -157,7 +157,6 @@ typedef struct tagWDML_INSTANCE
     BOOL			monitor;        /* have these two as full Booleans cos they'll be tested frequently */
     BOOL			clientOnly;	/* bit wasteful of space but it will be faster */
     BOOL			unicode;	/* Flag to indicate Win32 API used to initialise */
-    BOOL			win16;          /* flag to indicate Win16 API used to initialize */
     HSZNode*			nodeList;	/* for cleaning upon exit */
     PFNCALLBACK     		callback;
     DWORD           		CBFflags;
@@ -191,9 +190,6 @@ typedef enum {
 extern	HDDEDATA 	WDML_InvokeCallback(WDML_INSTANCE* pInst, UINT uType, UINT uFmt, HCONV hConv,
 					    HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
 					    ULONG_PTR dwData1, ULONG_PTR dwData2);
-extern	HDDEDATA 	WDML_InvokeCallback16(PFNCALLBACK pfn, UINT uType, UINT uFmt, HCONV hConv,
-					      HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
-					      DWORD dwData1, DWORD dwData2);
 extern	WDML_SERVER*	WDML_AddServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic);
 extern	void		WDML_RemoveServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic);
 extern	WDML_SERVER*	WDML_FindServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic);
@@ -203,7 +199,7 @@ extern WDML_QUEUE_STATE WDML_ServerHandle(WDML_CONV* pConv, WDML_XACT* pXAct);
 HDDEDATA WDML_ClientHandle(WDML_CONV *pConv, WDML_XACT *pXAct, DWORD dwTimeout, LPDWORD pdwResult) DECLSPEC_HIDDEN;
 /* called both in DdeClientTransaction and server side. */
 extern	UINT		WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
-					DWORD afCmd, DWORD ulRes, BOOL bUnicode, BOOL b16);
+					DWORD afCmd, DWORD ulRes, BOOL bUnicode);
 extern	WDML_CONV* 	WDML_AddConv(WDML_INSTANCE* pInstance, WDML_SIDE side,
 				     HSZ hszService, HSZ hszTopic, HWND hwndClient, HWND hwndServer);
 extern	void		WDML_RemoveConv(WDML_CONV* pConv, WDML_SIDE side);
@@ -232,9 +228,9 @@ extern	void		WDML_QueueTransaction(WDML_CONV* pConv, WDML_XACT* pXAct);
 extern	BOOL		WDML_UnQueueTransaction(WDML_CONV* pConv, WDML_XACT*  pXAct);
 extern	void		WDML_FreeTransaction(WDML_INSTANCE* pInstance, WDML_XACT* pXAct, BOOL doFreePmt);
 extern	WDML_XACT*	WDML_FindTransaction(WDML_CONV* pConv, DWORD tid);
-extern	HGLOBAL		WDML_DataHandle2Global(HDDEDATA hDdeData, BOOL fResponse, BOOL fRelease,
-					       BOOL fDeferUpd, BOOL dAckReq);
-extern	HDDEDATA	WDML_Global2DataHandle(HGLOBAL hMem, WINE_DDEHEAD* da);
+extern  HGLOBAL     WDML_DataHandle2Global(HDDEDATA hDdeData, BOOL fResponse, BOOL fRelease,
+                           BOOL fDeferUpd, BOOL fAckReq);
+extern  HDDEDATA    WDML_Global2DataHandle(WDML_CONV* pConv, HGLOBAL hMem, WINE_DDEHEAD* p);
 extern  BOOL            WDML_IsAppOwned(HDDEDATA hDdeData);
 extern	WDML_INSTANCE*	WDML_GetInstance(DWORD InstId);
 extern	WDML_INSTANCE*	WDML_GetInstanceFromWnd(HWND hWnd);

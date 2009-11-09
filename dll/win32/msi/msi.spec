@@ -60,10 +60,10 @@
 64 stdcall MsiGetMode(long long)
 65 stdcall MsiGetProductCodeA(str str)
 66 stdcall MsiGetProductCodeW(wstr wstr)
-67 stdcall MsiGetProductInfoA(str str str long)
+67 stdcall MsiGetProductInfoA(str str ptr long)
 68 stub MsiGetProductInfoFromScriptA
 69 stub MsiGetProductInfoFromScriptW
-70 stdcall MsiGetProductInfoW(wstr wstr wstr long)
+70 stdcall MsiGetProductInfoW(wstr wstr ptr long)
 71 stdcall MsiGetProductPropertyA(long str ptr ptr)
 72 stdcall MsiGetProductPropertyW(long wstr ptr ptr)
 73 stdcall MsiGetPropertyA(ptr str ptr ptr)
@@ -232,8 +232,8 @@
 236 stub Migrate10CachedPackagesW
 237 stub MsiRemovePatchesA
 238 stub MsiRemovePatchesW
-239 stub MsiApplyMultiplePatchesA
-240 stub MsiApplyMultiplePatchesW
+239 stdcall MsiApplyMultiplePatchesA(str str str)
+240 stdcall MsiApplyMultiplePatchesW(wstr wstr wstr)
 241 stub MsiExtractPatchXMLDataA
 242 stub MsiExtractPatchXMLDataW
 243 stdcall MsiGetPatchInfoExA(str str str long str ptr ptr)
@@ -246,14 +246,14 @@
 250 stdcall MsiQueryComponentStateW(wstr wstr long wstr ptr)
 251 stub MsiQueryFeatureStateExA
 252 stub MsiQueryFeatureStateExW
-253 stub MsiDeterminePatchSequenceA
-254 stub MsiDeterminePatchSequenceW
+253 stdcall MsiDeterminePatchSequenceA(str str long long ptr)
+254 stdcall MsiDeterminePatchSequenceW(wstr wstr long long ptr)
 255 stdcall MsiSourceListAddSourceExA(str str long long str long)
 256 stdcall MsiSourceListAddSourceExW(wstr wstr long long wstr long)
 257 stdcall MsiSourceListClearSourceA(str str long long str)
 258 stdcall MsiSourceListClearSourceW(wstr wstr long long wstr)
-259 stub MsiSourceListClearAllExA
-260 stub MsiSourceListClearAllExW
+259 stdcall MsiSourceListClearAllExA(str str long long)
+260 stdcall MsiSourceListClearAllExW(wstr wstr long long)
 261 stub MsiSourceListForceResolutionExA
 262 stub MsiSourceListForceResolutionExW
 263 stdcall MsiSourceListEnumSourcesA(str str long long long ptr ptr)

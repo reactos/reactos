@@ -217,7 +217,7 @@ HRESULT WINAPI DPA_SaveStream (const HDPA hDpa, DPALOADPROC loadProc,
  * NOTES
  *     No more information available yet!
  */
-BOOL WINAPI DPA_Merge (const HDPA hdpa1, const HDPA hdpa2, DWORD dwFlags,
+BOOL WINAPI DPA_Merge (HDPA hdpa1, HDPA hdpa2, DWORD dwFlags,
                        PFNDPACOMPARE pfnCompare, PFNDPAMERGE pfnMerge,
                        LPARAM lParam)
 {
@@ -381,7 +381,7 @@ BOOL WINAPI DPA_Destroy (const HDPA hdpa)
  *     Success: TRUE
  *     Failure: FALSE
  */
-BOOL WINAPI DPA_Grow (const HDPA hdpa, INT nGrow)
+BOOL WINAPI DPA_Grow (HDPA hdpa, INT nGrow)
 {
     TRACE("(%p %d)\n", hdpa, nGrow);
 
@@ -504,7 +504,7 @@ LPVOID WINAPI DPA_GetPtr (const HDPA hdpa, INT nIndex)
  *     Success: index of the specified pointer
  *     Failure: -1
  */
-INT WINAPI DPA_GetPtrIndex (const HDPA hdpa, LPVOID p)
+INT WINAPI DPA_GetPtrIndex (HDPA hdpa, LPCVOID p)
 {
     INT i;
 
@@ -802,7 +802,8 @@ INT WINAPI DPA_Search (const HDPA hdpa, LPVOID pFind, INT nStart,
         INT l, r, x, n;
         LPVOID *lpPtr;
 
-        l = (nStart == -1) ? 0 : nStart;
+        /* for binary search ignore start index */
+        l = 0;
         r = hdpa->nItemCount - 1;
         lpPtr = hdpa->ptrs;
         while (r >= l) {

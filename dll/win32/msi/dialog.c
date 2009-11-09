@@ -135,6 +135,8 @@ static const WCHAR szMaskedEdit[] = { 'M','a','s','k','e','d','E','d','i','t',0 
 static const WCHAR szPathEdit[] = { 'P','a','t','h','E','d','i','t',0 };
 static const WCHAR szProgressBar[] = {
      'P','r','o','g','r','e','s','s','B','a','r',0 };
+static const WCHAR szSetProgress[] = {
+    'S','e','t','P','r','o','g','r','e','s','s',0 };
 static const WCHAR szRadioButtonGroup[] = { 
     'R','a','d','i','o','B','u','t','t','o','n','G','r','o','u','p',0 };
 static const WCHAR szIcon[] = { 'I','c','o','n',0 };
@@ -169,7 +171,7 @@ static HWND hMsiHiddenWindow;
 
 static INT msi_dialog_scale_unit( msi_dialog *dialog, INT val )
 {
-    return (dialog->scale * val + 5) / 10;
+    return MulDiv( val, dialog->scale, 12 );
 }
 
 static msi_control *msi_dialog_find_control( msi_dialog *dialog, LPCWSTR name )
@@ -415,7 +417,7 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
         return NULL;
 
     strcpyW( control->name, name );
-    list_add_head( &dialog->controls, &control->entry );
+    list_add_tail( &dialog->controls, &control->entry );
     control->handler = NULL;
     control->update = NULL;
     control->property = NULL;
@@ -1571,7 +1573,14 @@ end:
 
 static UINT msi_dialog_progress_bar( msi_dialog *dialog, MSIRECORD *rec )
 {
-    msi_dialog_add_control( dialog, rec, PROGRESS_CLASSW, WS_VISIBLE );
+    msi_control *control;
+
+    control = msi_dialog_add_control( dialog, rec, PROGRESS_CLASSW, WS_VISIBLE );
+    if( !control )
+        return ERROR_FUNCTION_FAILED;
+
+    ControlEvent_SubscribeToEvent( dialog->package, dialog,
+                                   szSetProgress, control->name, szProgress );
     return ERROR_SUCCESS;
 }
 
@@ -2902,7 +2911,7 @@ static INT msi_dialog_get_sans_serif_height( HWND hwnd )
     if (hdc)
     {
         memset( &lf, 0, sizeof lf );
-        lf.lfHeight = MulDiv(10, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        lf.lfHeight = MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 72);
         strcpyW( lf.lfFaceName, szSansSerif );
         hFont = CreateFontIndirectW(&lf);
         if (hFont)
@@ -2993,37 +3002,34 @@ static void msi_dialog_adjust_dialog_pos( msi_dialog *dialog, MSIRECORD *rec, LP
     AdjustWindowRect( pos, style, FALSE );
 }
 
-static BOOL msi_control_set_next( msi_control *control, msi_control *next )
+static void msi_dialog_set_tab_order( msi_dialog *dialog, LPCWSTR first )
 {
-    return SetWindowPos( next->hwnd, control->hwnd, 0, 0, 0, 0,
-                         SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOREDRAW |
-                         SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOSIZE );
-}
+    struct list tab_chain;
+    msi_control *control;
+    HWND prev = HWND_TOP;
 
-static UINT msi_dialog_set_tab_order( msi_dialog *dialog )
-{
-    msi_control *control, *tab_next;
+    list_init( &tab_chain );
+    if (!(control = msi_dialog_find_control( dialog, first ))) return;
 
-    LIST_FOR_EACH_ENTRY( control, &dialog->controls, msi_control, entry )
+    dialog->hWndFocus = control->hwnd;
+    while (control)
     {
-        tab_next = msi_dialog_find_control( dialog, control->tabnext );
-        if( !tab_next )
-            continue;
-        msi_control_set_next( control, tab_next );
+        list_remove( &control->entry );
+        list_add_tail( &tab_chain, &control->entry );
+        if (!control->tabnext) break;
+        control = msi_dialog_find_control( dialog, control->tabnext );
     }
 
-    return ERROR_SUCCESS;
-}
+    LIST_FOR_EACH_ENTRY( control, &tab_chain, msi_control, entry )
+    {
+        SetWindowPos( control->hwnd, prev, 0, 0, 0, 0,
+                      SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOREDRAW |
+                      SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOSIZE );
+        prev = control->hwnd;
+    }
 
-static void msi_dialog_set_first_control( msi_dialog* dialog, LPCWSTR name )
-{
-    msi_control *control;
-
-    control = msi_dialog_find_control( dialog, name );
-    if( control )
-        dialog->hWndFocus = control->hwnd;
-    else
-        dialog->hWndFocus = NULL;
+    /* put them back on the main list */
+    list_move_head( &dialog->controls, &tab_chain );
 }
 
 static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
@@ -3073,8 +3079,7 @@ static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
     msi_dialog_build_font_list( dialog );
     msi_dialog_fill_controls( dialog );
     msi_dialog_evaluate_control_conditions( dialog );
-    msi_dialog_set_tab_order( dialog );
-    msi_dialog_set_first_control( dialog, MSI_RecordGetString( rec, 8 ) );
+    msi_dialog_set_tab_order( dialog, MSI_RecordGetString( rec, 8 ) );
     msiobj_release( &rec->hdr );
 
     return 0;

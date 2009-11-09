@@ -1,6 +1,6 @@
 /* FILE:        dll/cpl/sysdm/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-07-01
+ * UPDATED:     2009-01-25
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -78,7 +78,7 @@ CAPTION "Hardwarové profily"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "Zde lze nastavovat hardwarofé profily pro rùzné konfigurace hardwaru. Nastavení, které bude použito, lze vybrat pøi startu systému.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "Zde lze nastavovat hardwarové profily pro rùzné konfigurace hardwaru. Nastavení, které bude použito, lze vybrat pøi startu systému.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "Dostupné hardwarové profily:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON

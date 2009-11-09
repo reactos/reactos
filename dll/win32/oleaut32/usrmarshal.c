@@ -232,7 +232,7 @@ static unsigned int get_type_size(ULONG *pFlags, VARTYPE vt)
     case VT_DECIMAL:
         return sizeof(DECIMAL);
     case VT_BSTR:
-        return sizeof(BSTR);
+        return sizeof(ULONG);
     case VT_VARIANT:
         return sizeof(VARIANT);
     case VT_UNKNOWN:
@@ -755,7 +755,7 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
     TRACE("("); dump_user_flags(pFlags); TRACE(", %d, %p\n", StartingSize, *ppsa);
 
     ALIGN_LENGTH(size, 3);
-    size += sizeof(ULONG_PTR);
+    size += sizeof(ULONG);
     if (*ppsa)
     {
         SAFEARRAY *psa = *ppsa;
@@ -764,13 +764,13 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
         HRESULT hr;
 
         size += sizeof(ULONG);
-        size += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+        size += 2 * sizeof(USHORT) + 2 * sizeof(ULONG);
 
         sftype = SAFEARRAY_GetUnionType(psa);
         size += sizeof(ULONG);
 
         size += sizeof(ULONG);
-        size += sizeof(ULONG_PTR);
+        size += sizeof(ULONG);
         if (sftype == SF_HAVEIID)
             size += sizeof(IID);
 
@@ -784,7 +784,7 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
             {
                 BSTR* lpBstr;
 
-                for (lpBstr = (BSTR*)psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
+                for (lpBstr = psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
                     size = BSTR_UserSize(pFlags, size, lpBstr);
 
                 break;
@@ -798,7 +798,7 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
             {
                 VARIANT* lpVariant;
 
-                for (lpVariant = (VARIANT*)psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
+                for (lpVariant = psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
                     size = VARIANT_UserSize(pFlags, size, lpVariant);
 
                 break;
@@ -843,30 +843,30 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
     TRACE("("); dump_user_flags(pFlags); TRACE(", %p, &%p\n", Buffer, *ppsa);
 
     ALIGN_POINTER(Buffer, 3);
-    *(ULONG_PTR *)Buffer = *ppsa ? TRUE : FALSE;
-    Buffer += sizeof(ULONG_PTR);
+    *(ULONG *)Buffer = *ppsa ? 0x1 : 0x0;
+    Buffer += sizeof(ULONG);
     if (*ppsa)
     {
         VARTYPE vt;
         SAFEARRAY *psa = *ppsa;
         ULONG ulCellCount = SAFEARRAY_GetCellCount(psa);
-        wireSAFEARRAY wiresa;
         SF_TYPE sftype;
         GUID guid;
 
         *(ULONG *)Buffer = psa->cDims;
         Buffer += sizeof(ULONG);
-        wiresa = (wireSAFEARRAY)Buffer;
-        wiresa->cDims = psa->cDims;
-        wiresa->fFeatures = psa->fFeatures;
-        wiresa->cbElements = psa->cbElements;
+        *(USHORT *)Buffer = psa->cDims;
+        Buffer += sizeof(USHORT);
+        *(USHORT *)Buffer = psa->fFeatures;
+        Buffer += sizeof(USHORT);
+        *(ULONG *)Buffer = psa->cbElements;
+        Buffer += sizeof(ULONG);
 
         hr = SafeArrayGetVartype(psa, &vt);
         if (FAILED(hr)) vt = 0;
 
-        wiresa->cLocks = (USHORT)psa->cLocks | (vt << 16);
-
-        Buffer += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+        *(ULONG *)Buffer = (USHORT)psa->cLocks | (vt << 16);
+        Buffer += sizeof(ULONG);
 
         sftype = SAFEARRAY_GetUnionType(psa);
         *(ULONG *)Buffer = sftype;
@@ -874,8 +874,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
 
         *(ULONG *)Buffer = ulCellCount;
         Buffer += sizeof(ULONG);
-        *(ULONG_PTR *)Buffer = (ULONG_PTR)psa->pvData;
-        Buffer += sizeof(ULONG_PTR);
+        *(ULONG *)Buffer = psa->pvData ? 0x2 : 0x0;
+        Buffer += sizeof(ULONG);
         if (sftype == SF_HAVEIID)
         {
             SafeArrayGetIID(psa, &guid);
@@ -897,7 +897,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
                 {
                     BSTR* lpBstr;
 
-                    for (lpBstr = (BSTR*)psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
+                    for (lpBstr = psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
                         Buffer = BSTR_UserMarshal(pFlags, Buffer, lpBstr);
 
                     break;
@@ -911,7 +911,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
                 {
                     VARIANT* lpVariant;
 
-                    for (lpVariant = (VARIANT*)psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
+                    for (lpVariant = psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
                         Buffer = VARIANT_UserMarshal(pFlags, Buffer, lpVariant);
 
                     break;
@@ -958,7 +958,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
 
 unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, LPSAFEARRAY *ppsa)
 {
-    ULONG_PTR ptr;
+    ULONG ptr;
     wireSAFEARRAY wiresa;
     ULONG cDims;
     HRESULT hr;
@@ -971,8 +971,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
     TRACE("("); dump_user_flags(pFlags); TRACE(", %p, %p\n", Buffer, ppsa);
 
     ALIGN_POINTER(Buffer, 3);
-    ptr = *(ULONG_PTR *)Buffer;
-    Buffer += sizeof(ULONG_PTR);
+    ptr = *(ULONG *)Buffer;
+    Buffer += sizeof(ULONG);
 
     if (!ptr)
     {
@@ -987,7 +987,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
     Buffer += sizeof(ULONG);
 
     wiresa = (wireSAFEARRAY)Buffer;
-    Buffer += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+    Buffer += 2 * sizeof(USHORT) + 2 * sizeof(ULONG);
 
     if (cDims != wiresa->cDims)
         RpcRaiseException(RPC_S_INVALID_BOUND);
@@ -1001,8 +1001,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
 
     cell_count = *(ULONG *)Buffer;
     Buffer += sizeof(ULONG);
-    ptr = *(ULONG_PTR *)Buffer;
-    Buffer += sizeof(ULONG_PTR);
+    ptr = *(ULONG *)Buffer;
+    Buffer += sizeof(ULONG);
     if (sftype == SF_HAVEIID)
     {
         memcpy(&guid, Buffer, sizeof(guid));
@@ -1052,7 +1052,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
             {
                 BSTR* lpBstr;
 
-                for (lpBstr = (BSTR*)(*ppsa)->pvData; cell_count; cell_count--, lpBstr++)
+                for (lpBstr = (*ppsa)->pvData; cell_count; cell_count--, lpBstr++)
                     Buffer = BSTR_UserUnmarshal(pFlags, Buffer, lpBstr);
 
                 break;
@@ -1066,7 +1066,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
             {
                 VARIANT* lpVariant;
 
-                for (lpVariant = (VARIANT*)(*ppsa)->pvData; cell_count; cell_count--, lpVariant++)
+                for (lpVariant = (*ppsa)->pvData; cell_count; cell_count--, lpVariant++)
                     Buffer = VARIANT_UserUnmarshal(pFlags, Buffer, lpVariant);
 
                 break;
@@ -2041,7 +2041,8 @@ HRESULT CALLBACK IPropertyBag_Read_Proxy(
       FIXME("Safearray support not yet implemented.\n");
       return E_NOTIMPL;
     default:
-      break;
+      FIXME("Unknown V_VT %d - support not yet implemented.\n", V_VT(pVar));
+      return E_NOTIMPL;
   }
 
   return IPropertyBag_RemoteRead_Proxy(This, pszPropName, pVar, pErrorLog,

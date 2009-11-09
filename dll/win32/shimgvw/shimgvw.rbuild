@@ -1,7 +1,6 @@
 <module name="shimgvw" type="win32dll" baseaddress="${BASEADDRESS_SHIMGVW}" installbase="system32" installname="shimgvw.dll">
 	<importlibrary definition="shimgvw.spec" />
 	<include base="shimgvw">.</include>
-	<define name="_DISABLE_TIDENTS" />
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>comctl32</library>

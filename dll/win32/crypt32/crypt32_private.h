@@ -79,7 +79,7 @@ typedef struct _CRYPT_DIGESTED_DATA
     CRYPT_HASH_BLOB            hash;
 } CRYPT_DIGESTED_DATA;
 
-BOOL CRYPT_AsnEncodePKCSDigestedData(CRYPT_DIGESTED_DATA *digestedData,
+BOOL CRYPT_AsnEncodePKCSDigestedData(const CRYPT_DIGESTED_DATA *digestedData,
  void *pvData, DWORD *pcbData);
 
 typedef struct _CRYPT_SIGNED_INFO

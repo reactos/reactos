@@ -673,19 +673,15 @@ static INT_PTR PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
   if( psInfo->unicode )
   {
     ret = (INT_PTR)CreateDialogIndirectParamW(psInfo->ppshheader.hInstance,
-                                          (LPDLGTEMPLATEW) temp,
-                                          psInfo->ppshheader.hwndParent,
-                                          PROPSHEET_DialogProc,
-                                          (LPARAM)psInfo);
+                                          temp, psInfo->ppshheader.hwndParent,
+                                          PROPSHEET_DialogProc, (LPARAM)psInfo);
     if ( !ret ) ret = -1;
   }
   else
   {
     ret = (INT_PTR)CreateDialogIndirectParamA(psInfo->ppshheader.hInstance,
-                                          (LPDLGTEMPLATEA) temp,
-                                          psInfo->ppshheader.hwndParent,
-                                          PROPSHEET_DialogProc,
-                                          (LPARAM)psInfo);
+                                          temp, psInfo->ppshheader.hwndParent,
+                                          PROPSHEET_DialogProc, (LPARAM)psInfo);
     if ( !ret ) ret = -1;
   }
 
@@ -740,9 +736,10 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
   HWND hwndTabCtrl = GetDlgItem(hwndDlg, IDC_TABCONTROL);
   HWND hwndButton = GetDlgItem(hwndDlg, IDOK);
   RECT rc,tabRect;
-  int tabOffsetX, tabOffsetY, buttonHeight;
+  int buttonHeight;
   PADDING_INFO padding = PROPSHEET_GetPaddingInfo(hwndDlg);
   RECT units;
+  LONG style;
 
   /* Get the height of buttons */
   GetClientRect(hwndButton, &rc);
@@ -784,9 +781,6 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
 
   SendMessageW(hwndTabCtrl, TCM_ADJUSTRECT, TRUE, (LPARAM)&rc);
 
-  tabOffsetX = -(rc.left);
-  tabOffsetY = -(rc.top);
-
   rc.right -= rc.left;
   rc.bottom -= rc.top;
   TRACE("setting tab %p, rc (0,0)-(%d,%d)\n",
@@ -798,8 +792,15 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
 
   TRACE("tab client rc %s\n", wine_dbgstr_rect(&rc));
 
-  rc.right += ((padding.x * 2) + tabOffsetX);
-  rc.bottom += (buttonHeight + (3 * padding.y) + tabOffsetY);
+  rc.right += (padding.x * 2);
+  rc.bottom += buttonHeight + (3 * padding.y);
+
+  style = GetWindowLongW(hwndDlg, GWL_STYLE);
+  if (!(style & WS_CHILD))
+    AdjustWindowRect(&rc, style, FALSE);
+
+  rc.right -= rc.left;
+  rc.bottom -= rc.top;
 
   /*
    * Resize the property sheet.
@@ -903,7 +904,7 @@ static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, const PropSheetInfo* psInfo
    */
   hwndButton = GetDlgItem(hwndParent, IDCANCEL);
 
-  x = rcSheet.right - ((padding.x + buttonWidth) * (num_buttons - 1));
+  x += padding.x + buttonWidth;
 
   SetWindowPos(hwndButton, 0, x, y, 0, 0,
                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -913,34 +914,25 @@ static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, const PropSheetInfo* psInfo
    */
   hwndButton = GetDlgItem(hwndParent, IDC_APPLY_BUTTON);
 
-  if (psInfo->hasApply)
-  {
-    if (psInfo->hasHelp)
-      x = rcSheet.right - ((padding.x + buttonWidth) * 2);
-    else
-      x = rcSheet.right - (padding.x + buttonWidth);
-
-    SetWindowPos(hwndButton, 0, x, y, 0, 0,
-                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-    EnableWindow(hwndButton, FALSE);
-  }
+  if(psInfo->hasApply)
+    x += padding.x + buttonWidth;
   else
     ShowWindow(hwndButton, SW_HIDE);
+
+  SetWindowPos(hwndButton, 0, x, y, 0, 0,
+              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+  EnableWindow(hwndButton, FALSE);
 
   /*
    * Position Help button.
    */
   hwndButton = GetDlgItem(hwndParent, IDHELP);
 
-  if (psInfo->hasHelp)
-  {
-    x = rcSheet.right - (padding.x + buttonWidth);
+  x += padding.x + buttonWidth;
+  SetWindowPos(hwndButton, 0, x, y, 0, 0,
+              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 
-    SetWindowPos(hwndButton, 0, x, y, 0, 0,
-                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-  }
-  else
+  if(!psInfo->hasHelp)
     ShowWindow(hwndButton, SW_HIDE);
 
   return TRUE;
@@ -1548,6 +1540,7 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 {
   HWND hwndTabCtrl;
   HWND hwndLineHeader;
+  HWND control;
   LPCPROPSHEETPAGEW ppshpage;
 
   TRACE("active_page %d, index %d\n", psInfo->active_page, index);
@@ -1568,6 +1561,10 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
   {
      PROPSHEET_SetTitleW(hwndDlg, psInfo->ppshheader.dwFlags,
                          psInfo->proppage[index].pszText);
+
+     control = GetNextDlgTabItem(psInfo->proppage[index].hwndPage, NULL, FALSE);
+     if(control != NULL)
+         SetFocus(control);
   }
 
   if (psInfo->active_page != -1)
@@ -1630,7 +1627,11 @@ static BOOL PROPSHEET_Back(HWND hwndDlg)
   if (idx >= 0 && idx < psInfo->nPages)
   {
      if (PROPSHEET_CanSetCurSel(hwndDlg))
+     {
+        SetFocus(GetDlgItem(hwndDlg, IDC_BACK_BUTTON));
+        SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
         PROPSHEET_SetCurSel(hwndDlg, idx, -1, 0);
+     }
   }
   return TRUE;
 }
@@ -1668,7 +1669,11 @@ static BOOL PROPSHEET_Next(HWND hwndDlg)
   if (idx < psInfo->nPages )
   {
      if (PROPSHEET_CanSetCurSel(hwndDlg) != FALSE)
+     {
+        SetFocus(GetDlgItem(hwndDlg, IDC_NEXT_BUTTON));
+        SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
         PROPSHEET_SetCurSel(hwndDlg, idx, 1, 0);
+     }
   }
 
   return TRUE;
@@ -2439,7 +2444,6 @@ EnumChildProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-
 /******************************************************************************
  *            PROPSHEET_SetWizButtons
  *
@@ -2756,7 +2760,7 @@ static void PROPSHEET_CleanUp(HWND hwndDlg)
   Free(psInfo->strPropertiesFor);
   ImageList_Destroy(psInfo->hImageList);
 
-  GlobalFree((HGLOBAL)psInfo);
+  GlobalFree(psInfo);
 }
 
 static INT do_loop(const PropSheetInfo *psInfo)
@@ -3268,7 +3272,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	MapWindowPoints(hwndLineHeader, hwnd, (LPPOINT) &r, 2);
 	SetRect(&rzone, 0, 0, r.right + 1, r.top - 1);
 
-	GetObjectW(psInfo->ppshheader.u5.hbmHeader, sizeof(BITMAP), (LPVOID)&bm);		
+	GetObjectW(psInfo->ppshheader.u5.hbmHeader, sizeof(BITMAP), &bm);
 
  	if (psInfo->ppshheader.dwFlags & PSH_WIZARD97_OLD)
  	{
@@ -3376,7 +3380,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	hbr = GetSysColorBrush(COLOR_WINDOW);
 	FillRect(hdc, &rzone, hbr);
 
-	GetObjectW(psInfo->ppshheader.u4.hbmWatermark, sizeof(BITMAP), (LPVOID)&bm);
+	GetObjectW(psInfo->ppshheader.u4.hbmWatermark, sizeof(BITMAP), &bm);
 	hbmp = SelectObject(hdcSrc, psInfo->ppshheader.u4.hbmWatermark);
 
         /* The watermark is truncated to a width of 164 pixels */
@@ -3431,7 +3435,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       /* Using PropSheetInfoStr to store extra data doesn't match the native
        * common control: native uses TCM_[GS]ETITEM
        */
-      SetPropW(hwnd, PropSheetInfoStr, (HANDLE)psInfo);
+      SetPropW(hwnd, PropSheetInfoStr, psInfo);
 
       /*
        * psInfo->hwnd is not being used by WINE code - it exists
@@ -3444,6 +3448,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       /* set up the Next and Back buttons by default */
       PROPSHEET_SetWizButtons(hwnd, PSWIZB_BACK|PSWIZB_NEXT);
+      SetFocus(GetDlgItem(hwnd, IDC_NEXT_BUTTON));
 
       /* Set up fonts */
       SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
@@ -3528,7 +3533,11 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
        * from which to switch to the next page */
       SendMessageW(hwndTabCtrl, TCM_SETCURSEL, psInfo->active_page, 0);
 
-      PROPSHEET_UnChanged(hwnd, (HWND)wParam);
+      PROPSHEET_UnChanged(hwnd, NULL);
+
+      /* wizards set their focus during init */
+      if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
+          return FALSE;
 
       return TRUE;
     }

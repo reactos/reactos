@@ -16,6 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
 #define IDS_HTMLDISABLED    7500
 #define IDS_HTMLDOCUMENT    7501
 #define IDS_DOWNLOADING     7502
@@ -25,6 +29,10 @@
 #define ID_DWL_PROGRESS     7601
 #define ID_DWL_INSTALL      7602
 #define ID_DWL_STATUS       7603
+
+#define ID_PROMPT_DIALOG    7700
+#define ID_PROMPT_PROMPT    7701
+#define ID_PROMPT_EDIT      7702
 
 #define IDS_MESSAGE_BOX_TITLE  2213
 

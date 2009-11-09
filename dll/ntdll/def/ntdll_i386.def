@@ -748,7 +748,7 @@ RtlIsGenericTableEmpty@4
 RtlIsGenericTableEmptyAvl@4
 RtlIsNameLegalDOS8Dot3@12
 RtlIsTextUnicode@12
-;RtlIsThreadWithinLoaderCallout
+RtlIsThreadWithinLoaderCallout@0
 RtlIsValidHandle@8
 RtlIsValidIndexHandle@12
 RtlLargeIntegerAdd@16
@@ -827,7 +827,7 @@ RtlQueueWorkItem@12
 RtlRaiseException@4
 RtlRaiseStatus@4
 RtlRandom@4
-RtlRandomEx=RtlRandom@4
+RtlRandomEx@4
 RtlReAllocateHeap@16
 ;RtlReadMemoryStream
 ;RtlReadOutOfProcessMemoryStream

@@ -234,17 +234,18 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_SET_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
+        SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
         return;
     }
 
-    if (mixerOpen(&pGlobalData->hMixer, 0, (DWORD)hwndDlg, 0, MIXER_OBJECTF_MIXER | CALLBACK_WINDOW) != MMSYSERR_NOERROR)
+    if (mixerOpen(&pGlobalData->hMixer, 0, PtrToUlong(hwndDlg), 0, MIXER_OBJECTF_MIXER | CALLBACK_WINDOW) != MMSYSERR_NOERROR)
     {
         MessageBox(hwndDlg, _T("Cannot open mixer"), NULL, MB_OK);
         return;
     }
 
     ZeroMemory(&mxc, sizeof(MIXERCAPS));
-    if (mixerGetDevCaps((UINT)pGlobalData->hMixer, &mxc, sizeof(MIXERCAPS)) != MMSYSERR_NOERROR)
+    if (mixerGetDevCaps(PtrToUint(pGlobalData->hMixer), &mxc, sizeof(MIXERCAPS)) != MMSYSERR_NOERROR)
     {
         MessageBox(hwndDlg, _T("mixerGetDevCaps failed"), NULL, MB_OK);
         return;
@@ -278,7 +279,7 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 VOID
 LaunchSoundControl(HWND hwndDlg)
 {
-    if ((INT)ShellExecuteW(NULL, L"open", L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL) > 32)
+    if ((INT_PTR)ShellExecuteW(NULL, L"open", L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL) > 32)
         return;
     MessageBox(hwndDlg, _T("Cannot run sndvol32.exe"), NULL, MB_OK);
 }
@@ -292,9 +293,9 @@ VolumeDlgProc(HWND hwndDlg,
               LPARAM lParam)
 {
     static IMGINFO ImgInfo;
+    PGLOBAL_DATA pGlobalData;
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
-    PGLOBAL_DATA pGlobalData;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 

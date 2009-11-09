@@ -513,10 +513,10 @@ static struct regsvr_interface const interface_list[] = {
 #define INF_SET_CLSID(clsid)                  \
     do                                        \
     {                                         \
-        static CHAR name[] = "CLSID_" #clsid; \
+        static CHAR name[] = #clsid;          \
                                               \
         pse[i].pszName = name;                \
-        clsids[i++] = &CLSID_ ## clsid;       \
+        clsids[i++] = &clsid;                 \
     } while (0)
 
 static HRESULT register_inf(BOOL doregister)
@@ -525,19 +525,20 @@ static HRESULT register_inf(BOOL doregister)
     HMODULE hAdvpack;
     HRESULT (WINAPI *pRegInstall)(HMODULE hm, LPCSTR pszSection, const STRTABLEA* pstTable);
     STRTABLEA strtable;
-    STRENTRYA pse[7];
-    static CLSID const *clsids[34];
+    STRENTRYA pse[8];
+    static CLSID const *clsids[8];
     unsigned int i = 0;
 
     static const WCHAR wszAdvpack[] = {'a','d','v','p','a','c','k','.','d','l','l',0};
 
-    INF_SET_CLSID(CdlProtocol);
-    INF_SET_CLSID(FileProtocol);
-    INF_SET_CLSID(FtpProtocol);
-    INF_SET_CLSID(GopherProtocol);
-    INF_SET_CLSID(HttpProtocol);
-    INF_SET_CLSID(HttpSProtocol);
-    INF_SET_CLSID(MkProtocol);
+    INF_SET_CLSID(CLSID_CdlProtocol);
+    INF_SET_CLSID(CLSID_FileProtocol);
+    INF_SET_CLSID(CLSID_FtpProtocol);
+    INF_SET_CLSID(CLSID_GopherProtocol);
+    INF_SET_CLSID(CLSID_HttpProtocol);
+    INF_SET_CLSID(CLSID_HttpSProtocol);
+    INF_SET_CLSID(CLSID_MkProtocol);
+    INF_SET_CLSID(CLSID_DeCompMimeFilter);
 
     for(i = 0; i < sizeof(pse)/sizeof(pse[0]); i++) {
         pse[i].pszValue = heap_alloc(39);

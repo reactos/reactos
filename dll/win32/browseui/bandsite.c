@@ -129,8 +129,8 @@ static DWORD GetBandSiteViewMode(BandSite *This)
     DWORD dwStyle;
 
     /* FIXME: What about DBIF_VIEWMODE_FLOATING and DBIF_VIEWMODE_TRANSPARENT? */
-    dwStyle = GetWindowLong(This->hWndRebar,
-                            GWL_STYLE);
+    dwStyle = GetWindowLongPtr(This->hWndRebar,
+                               GWL_STYLE);
 
     if (dwStyle & CCS_VERT)
         return DBIF_VIEWMODE_VERTICAL;
@@ -988,8 +988,8 @@ static HRESULT WINAPI BandSite_IDeskBarClient_SetModeDBC(IDeskBarClient *iface, 
     if (This->hWndRebar == NULL)
         return E_FAIL;
 
-    dwStyle = dwPrevStyle = GetWindowLong(This->hWndRebar,
-                                          GWL_STYLE);
+    dwStyle = dwPrevStyle = GetWindowLongPtr(This->hWndRebar,
+                                             GWL_STYLE);
     if (dwMode & DBIF_VIEWMODE_VERTICAL)
         dwStyle |= CCS_VERT;
 
@@ -998,9 +998,9 @@ static HRESULT WINAPI BandSite_IDeskBarClient_SetModeDBC(IDeskBarClient *iface, 
 
     if (dwStyle != dwPrevStyle)
     {
-        SetWindowLong(This->hWndRebar,
-                      GWL_STYLE,
-                      dwPrevStyle);
+        SetWindowLongPtr(This->hWndRebar,
+                         GWL_STYLE,
+                         dwPrevStyle);
     }
     
     return S_OK;

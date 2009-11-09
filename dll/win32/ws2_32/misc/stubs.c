@@ -11,7 +11,6 @@
 #include <catalog.h>
 #include <handle.h>
 
-
 /*
  * @implemented
  */
@@ -510,10 +509,33 @@ WSAHtons(IN  SOCKET s,
          IN  USHORT hostshort,
          OUT USHORT FAR* lpnetshort)
 {
-    UNIMPLEMENTED
+    PCATALOG_ENTRY provider;
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return SOCKET_ERROR;
+    }
 
-    WSASetLastError(WSASYSCALLFAILURE);
-    return SOCKET_ERROR;
+    if (!ReferenceProviderByHandle((HANDLE)s, &provider))
+    {
+        WSASetLastError(WSAENOTSOCK);
+        return SOCKET_ERROR;
+    }
+
+    switch (provider->ProtocolInfo.iNetworkByteOrder)
+    {
+    case BIGENDIAN:
+        *lpnetshort = htons(hostshort);
+        break;
+    case LITTLEENDIAN:
+#ifdef LE
+        *lpnetshort = hostshort;
+#else
+        *lpnetshort = (((hostshort & 0xFF00) >> 8) | ((hostshort & 0x00FF) << 8));
+#endif
+        break;
+    }
+    return 0;
 }
 
 
@@ -576,10 +598,33 @@ WSANtohs(IN  SOCKET s,
          IN  USHORT netshort,
          OUT USHORT FAR* lphostshort)
 {
-    UNIMPLEMENTED
+    PCATALOG_ENTRY provider;
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return SOCKET_ERROR;
+    }
 
-    WSASetLastError(WSASYSCALLFAILURE);
-    return SOCKET_ERROR;
+    if (!ReferenceProviderByHandle((HANDLE)s, &provider))
+    {
+        WSASetLastError(WSAENOTSOCK);
+        return SOCKET_ERROR;
+    }
+
+    switch (provider->ProtocolInfo.iNetworkByteOrder)
+    {
+    case BIGENDIAN:
+        *lphostshort = ntohs(netshort);
+        break;
+    case LITTLEENDIAN:
+#ifdef LE
+        *lphostshort = netshort;
+#else
+        *lphostshort = (((netshort & 0xFF00) >> 8) | ((netshort & 0x00FF) << 8));
+#endif
+        break;
+    }
+    return 0;
 }
 
 
@@ -729,8 +774,8 @@ WSCGetProviderPath(IN      LPGUID lpProviderId,
  */
 INT
 EXPORT
-WSCInstallProvider(IN  CONST LPGUID lpProviderId,
-                   IN  CONST LPWSTR lpszProviderDllPath,
+WSCInstallProvider(IN  LPGUID lpProviderId,
+                   IN  CONST WCHAR* lpszProviderDllPath,
                    IN  CONST LPWSAPROTOCOL_INFOW lpProtocolInfoList,
                    IN  DWORD dwNumberOfEntries,
                    OUT LPINT lpErrno)
@@ -889,5 +934,22 @@ BOOL EXPORT WSApSetPostRoutine(PVOID Routine)
 
     return FALSE;
 }
+
+/*
+ * @unimplemented
+ */
+INT
+EXPORT
+GetAddrInfoW(IN PCWSTR pszNodeName,
+             IN PCWSTR pszServiceName,
+             IN const ADDRINFOW *ptHints,
+             OUT PADDRINFOW *pptResult)
+{
+    UNIMPLEMENTED
+
+    WSASetLastError(EAI_FAIL);
+    return EAI_FAIL;
+}
+
 
 /* EOF */

@@ -1,5 +1,5 @@
 <module name="winsta" type="win32dll" baseaddress="${BASEADDRESS_WINSTA}" installbase="system32" installname="winsta.dll">
-	<importlibrary definition="winsta.def" />
+	<importlibrary definition="winsta.spec" />
 	<include base="winsta">.</include>
 	<library>wine</library>
 	<library>kernel32</library>

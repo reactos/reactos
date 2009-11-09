@@ -48,6 +48,8 @@
 #include "resinfo.h"
 #include "route.h"
 #include "wine/debug.h"
+#include "dhcpcsdk.h"
+#include "dhcp/rosdhcp_public.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -100,10 +102,11 @@ DWORD getInterfaceGatewayByIndex(DWORD index)
 {
    DWORD ndx, retVal = 0, numRoutes = getNumRoutes();
    RouteTable *table = getRouteTable();
+   if (!table) return 0;
 
     for (ndx = 0; ndx < numRoutes; ndx++)
     {
-        if ((table->routes[ndx].ifIndex == (index - 1)) && (table->routes[ndx].dest == 0))
+        if ((table->routes[ndx].ifIndex == (index)) && (table->routes[ndx].dest == 0))
             retVal = table->routes[ndx].gateway;
     }
     HeapFree(GetProcessHeap(), 0, table);
@@ -643,9 +646,12 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
               DWORD addrLen = sizeof(ptr->Address), type;
               const char *ifname =
                   getInterfaceNameByIndex(table->indexes[ndx]);
+              if (!ifname) {
+                  ret = ERROR_OUTOFMEMORY;
+                  break;
+              }
 
               /* on Win98 this is left empty, but whatever */
-
               strncpy(ptr->AdapterName,ifname,sizeof(ptr->AdapterName));
               consumeInterfaceName(ifname);
               ptr->AdapterName[MAX_ADAPTER_NAME_LENGTH] = '\0';
@@ -904,8 +910,9 @@ DWORD WINAPI GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
     ret = ERROR_INVALID_PARAMETER;
   else {
     DWORD numInterfaces = getNumInterfaces();
+    ULONG size;
     TRACE("GetIfTable: numInterfaces = %d\n", (int)numInterfaces);
-    ULONG size = sizeof(MIB_IFTABLE) + (numInterfaces - 1) * sizeof(MIB_IFROW);
+    size = sizeof(MIB_IFTABLE) + (numInterfaces - 1) * sizeof(MIB_IFROW);
 
     if (!pIfTable || *pdwSize < size) {
       *pdwSize = size;
@@ -969,8 +976,9 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
     ret = ERROR_INVALID_PARAMETER;
   else {
     DWORD numNonLoopbackInterfaces = getNumNonLoopbackInterfaces();
+    ULONG size;
     TRACE("numNonLoopbackInterfaces == 0x%x\n", numNonLoopbackInterfaces);
-    ULONG size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
+    size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
      sizeof(IP_ADAPTER_INDEX_MAP);
 
     if (!pIfTable || *dwOutBufLen < size) {
@@ -979,9 +987,9 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
     }
     else {
       InterfaceIndexTable *table = getNonLoopbackInterfaceIndexTable();
-      TRACE("table->numIndexes == 0x%x\n", table->numIndexes);
 
       if (table) {
+        TRACE("table->numIndexes == 0x%x\n", table->numIndexes);
         size = sizeof(IP_INTERFACE_INFO) + (table->numIndexes) *
          sizeof(IP_ADAPTER_INDEX_MAP);
         if (*dwOutBufLen < size) {
@@ -1880,19 +1888,33 @@ DWORD WINAPI GetUniDirectionalAdapterInfo(PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIP
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
  *
- * NOTES
- *  Since GetAdaptersInfo never returns adapters that have DHCP enabled,
- *  this function does nothing.
- *
- * FIXME
- *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
+  COMM_DHCP_REPLY Reply;
+  COMM_DHCP_REQ Request;
+  DWORD BytesRead;
+
+  Request.AdapterIndex = AdapterInfo->Index;
+  Request.Type = DhcpReqReleaseIpAddress;
+
   TRACE("AdapterInfo %p\n", AdapterInfo);
-  /* not a stub, never going to support this (and I never mark an adapter as
-     DHCP enabled, see GetAdaptersInfo, so this should never get called) */
-  return ERROR_NOT_SUPPORTED;
+
+  if (CallNamedPipe(DHCP_PIPE_NAME,
+                    &Request,
+                    sizeof(Request),
+                    &Reply,
+                    sizeof(Reply),
+                    &BytesRead,
+                    NMPWAIT_USE_DEFAULT_WAIT))
+  {
+      if (Reply.Reply)
+          return NO_ERROR;
+
+      return ERROR_INVALID_PARAMETER;
+  }
+
+  return ERROR_PROC_NOT_FOUND;
 }
 
 
@@ -1907,20 +1929,33 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
  * RETURNS
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
- *
- * NOTES
- *  Since GetAdaptersInfo never returns adapters that have DHCP enabled,
- *  this function does nothing.
- *
- * FIXME
- *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
+  COMM_DHCP_REPLY Reply;
+  COMM_DHCP_REQ Request;
+  DWORD BytesRead;
+
+  Request.AdapterIndex = AdapterInfo->Index;
+  Request.Type = DhcpReqRenewIpAddress;
+
   TRACE("AdapterInfo %p\n", AdapterInfo);
-  /* not a stub, never going to support this (and I never mark an adapter as
-     DHCP enabled, see GetAdaptersInfo, so this should never get called) */
-  return ERROR_NOT_SUPPORTED;
+
+  if (CallNamedPipe(DHCP_PIPE_NAME,
+                    &Request,
+                    sizeof(Request),
+                    &Reply,
+                    sizeof(Reply),
+                    &BytesRead,
+                    NMPWAIT_USE_DEFAULT_WAIT))
+  {
+      if (Reply.Reply)
+          return NO_ERROR;
+
+      return ERROR_INVALID_PARAMETER;
+  }
+
+  return ERROR_PROC_NOT_FOUND;
 }
 
 
@@ -2176,10 +2211,15 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
 /*
  * @unimplemented
  */
-DWORD WINAPI GetAdaptersAddresses(ULONG Family,DWORD Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
+DWORD WINAPI GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
+    if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
+    if (!pAdapterAddresses || *pOutBufLen == 0)
+      return ERROR_BUFFER_OVERFLOW;
+    if (Reserved) return ERROR_INVALID_PARAMETER;
+
     FIXME(":stub\n");
-    return 0L;
+    return ERROR_NO_DATA;
 }
 
 /*
@@ -2218,4 +2258,49 @@ DWORD WINAPI GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
     return 0L;
 }
 
+/******************************************************************
+ *    GetIfTable2 (IPHLPAPI.@)
+ *
+ * PARAMS
+ *  pIfTable [In/Out]
+ */
+ 
+NETIOAPI_API WINAPI GetIfTable2(PMIB_IF_TABLE2 *pIfTable)
+{
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
 
+/******************************************************************
+ *    GetIfEntry2 (IPHLPAPI.@)
+ *
+ * PARAMS
+ *  pIfRow [In/Out]
+ */
+NETIOAPI_API WINAPI GetIfEntry2(IN OUT PMIB_IF_ROW2 pIfRow)
+{
+  TRACE("pIfRow %p\n", pIfRow);
+  if (!pIfRow)
+    return ERROR_INVALID_PARAMETER;
+    
+  UNIMPLEMENTED;
+  return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+SetIpForwardEntryToStack(PMIB_IPFORWARDROW pRoute)
+{
+    FIXME("SetIpForwardEntryToStack() stub\n");
+    return 0L;
+}
+
+DWORD WINAPI
+NhGetInterfaceNameFromDeviceGuid(DWORD dwUnknown1,
+                                 DWORD dwUnknown2,
+                                 DWORD dwUnknown3,
+                                 DWORD dwUnknown4,
+                                 DWORD dwUnknown5)
+{
+    FIXME("NhGetInterfaceNameFromDeviceGuid() stub\n");
+    return 0L;
+}

@@ -19,6 +19,8 @@
 #include <winddi.h>
 #include <d3dnthal.h>
 #include <prntfont.h>
+#include <winddiui.h>
+#include <winspool.h>
 
 #include <pseh/pseh2.h>
 

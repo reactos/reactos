@@ -44,5 +44,6 @@ BEGIN
     IDS_HISTORY        "Paikalliset Asetukset\\Historia"
     IDS_COOKIES        "Keksit"
     IDS_PROGRAMFILES   "%SystemDrive%\\Program Files"
+    IDS_COMMONFILES    "Common Files"
 END
 

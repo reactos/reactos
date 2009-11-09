@@ -84,7 +84,7 @@ WPUCreateSocketHandle(IN  DWORD dwCatalogEntryId,
 /*
  * @unimplemented
  */
-SOCKET
+int
 WSPAPI
 WPUFDIsSet(IN  SOCKET s,
            IN  LPFD_SET set)

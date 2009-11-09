@@ -98,16 +98,6 @@ ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass)
   return NULL;
 }
 
-ME_DisplayItem *ME_FindItemFwdOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass)
-{
-  while(di!=NULL) {
-    if (ME_DITypesEqual(di->type, nTypeOrClass))
-      return di;
-    di = di->next;
-  }
-  return NULL;
-}
-
 void ME_DestroyDisplayItem(ME_DisplayItem *item) {
 /*  TRACE("type=%s\n", ME_GetDITypeName(item->type)); */
   if (item->type==diParagraph || item->type == diUndoSetParagraphFormat) {

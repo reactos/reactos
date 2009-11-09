@@ -7,12 +7,15 @@
 	<include base="winhttp">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<file>cookie.c</file>
 	<file>handle.c</file>
 	<file>main.c</file>
 	<file>net.c</file>
 	<file>request.c</file>
 	<file>session.c</file>
+	<file>url.c</file>
 	<library>wine</library>
+	<library>shlwapi</library>
 	<library>wininet</library>
 	<library>ws2_32</library>
 	<library>kernel32</library>

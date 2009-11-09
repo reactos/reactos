@@ -481,22 +481,22 @@
 @ stub ?xsgetn@streambuf@@UAEHPADH@Z
 @ stub ?xsputn@streambuf@@UAEHPBDH@Z
 @ cdecl $I10_OUTPUT() msvcrt.$I10_OUTPUT
-@ cdecl _CIacos() msvcrt._CIacos
-@ cdecl _CIasin() msvcrt._CIasin
-@ cdecl _CIatan() msvcrt._CIatan
-@ cdecl _CIatan2() msvcrt._CIatan2
-@ cdecl _CIcos() msvcrt._CIcos
-@ cdecl _CIcosh() msvcrt._CIcosh
-@ cdecl _CIexp() msvcrt._CIexp
-@ cdecl _CIfmod() msvcrt._CIfmod
-@ cdecl _CIlog() msvcrt._CIlog
-@ cdecl _CIlog10() msvcrt._CIlog10
-@ cdecl _CIpow() msvcrt._CIpow
-@ cdecl _CIsin() msvcrt._CIsin
-@ cdecl _CIsinh() msvcrt._CIsinh
-@ cdecl _CIsqrt() msvcrt._CIsqrt
-@ cdecl _CItan() msvcrt._CItan
-@ cdecl _CItanh() msvcrt._CItanh
+@ cdecl -arch=i386 _CIacos() msvcrt._CIacos
+@ cdecl -arch=i386 _CIasin() msvcrt._CIasin
+@ cdecl -arch=i386 _CIatan() msvcrt._CIatan
+@ cdecl -arch=i386 _CIatan2() msvcrt._CIatan2
+@ cdecl -arch=i386 _CIcos() msvcrt._CIcos
+@ cdecl -arch=i386 _CIcosh() msvcrt._CIcosh
+@ cdecl -arch=i386 _CIexp() msvcrt._CIexp
+@ cdecl -arch=i386 _CIfmod() msvcrt._CIfmod
+@ cdecl -arch=i386 _CIlog() msvcrt._CIlog
+@ cdecl -arch=i386 _CIlog10() msvcrt._CIlog10
+@ cdecl -arch=i386 _CIpow() msvcrt._CIpow
+@ cdecl -arch=i386 _CIsin() msvcrt._CIsin
+@ cdecl -arch=i386 _CIsinh() msvcrt._CIsinh
+@ cdecl -arch=i386 _CIsqrt() msvcrt._CIsqrt
+@ cdecl -arch=i386 _CItan() msvcrt._CItan
+@ cdecl -arch=i386 _CItanh() msvcrt._CItanh
 @ cdecl _CxxThrowException(long long) msvcrt._CxxThrowException
 @ cdecl -i386 _EH_prolog() msvcrt._EH_prolog
 @ extern _HUGE msvcrt._HUGE
@@ -519,33 +519,33 @@
 @ cdecl __iscsymf(long) msvcrt.__iscsymf
 @ cdecl __lconv_init() msvcrt.__lconv_init
 @ extern __mb_cur_max msvcrt.__mb_cur_max
-@ cdecl __p___argc() msvcrt.__p___argc
-@ cdecl __p___argv() msvcrt.__p___argv
-@ cdecl __p___initenv() msvcrt.__p___initenv
-@ cdecl __p___mb_cur_max() msvcrt.__p___mb_cur_max
-@ cdecl __p___wargv() msvcrt.__p___wargv
-@ cdecl __p___winitenv() msvcrt.__p___winitenv
-@ cdecl __p__acmdln() msvcrt.__p__acmdln
-@ cdecl __p__amblksiz() msvcrt.__p__amblksiz
-@ cdecl __p__commode() msvcrt.__p__commode
-@ cdecl __p__daylight() msvcrt.__p__daylight
-@ cdecl __p__dstbias() msvcrt.__p__dstbias
-@ cdecl __p__environ() msvcrt.__p__environ
-@ cdecl __p__fmode() msvcrt.__p__fmode
-@ cdecl __p__iob() msvcrt.__p__iob
-@ cdecl __p__mbctype() msvcrt.__p__mbctype
-@ cdecl __p__osver() msvcrt.__p__osver
-@ cdecl __p__pctype() msvcrt.__p__pctype
-@ cdecl __p__pgmptr() msvcrt.__p__pgmptr
-@ cdecl __p__pwctype() msvcrt.__p__pwctype
-@ cdecl __p__timezone() msvcrt.__p__timezone
-@ cdecl __p__tzname() msvcrt.__p__tzname
-@ cdecl __p__wcmdln() msvcrt.__p__wcmdln
-@ cdecl __p__wenviron() msvcrt.__p__wenviron
-@ cdecl __p__winmajor() msvcrt.__p__winmajor
-@ cdecl __p__winminor() msvcrt.__p__winminor
-@ cdecl __p__winver() msvcrt.__p__winver
-@ cdecl __p__wpgmptr() msvcrt.__p__wpgmptr
+@ cdecl -arch=i386 __p___argc() msvcrt.__p___argc
+@ cdecl -arch=i386 __p___argv() msvcrt.__p___argv
+@ cdecl -arch=i386 __p___initenv() msvcrt.__p___initenv
+@ cdecl -arch=i386 __p___mb_cur_max() msvcrt.__p___mb_cur_max
+@ cdecl -arch=i386 __p___wargv() msvcrt.__p___wargv
+@ cdecl -arch=i386 __p___winitenv() msvcrt.__p___winitenv
+@ cdecl -arch=i386 __p__acmdln() msvcrt.__p__acmdln
+@ cdecl -arch=i386 __p__amblksiz() msvcrt.__p__amblksiz
+@ cdecl -arch=i386 __p__commode() msvcrt.__p__commode
+@ cdecl -arch=i386 __p__daylight() msvcrt.__p__daylight
+@ cdecl -arch=i386 __p__dstbias() msvcrt.__p__dstbias
+@ cdecl -arch=i386 __p__environ() msvcrt.__p__environ
+@ cdecl -arch=i386 __p__fmode() msvcrt.__p__fmode
+@ cdecl -arch=i386 __p__iob() msvcrt.__p__iob
+@ cdecl -arch=i386 __p__mbctype() msvcrt.__p__mbctype
+@ cdecl -arch=i386 __p__osver() msvcrt.__p__osver
+@ cdecl -arch=i386 __p__pctype() msvcrt.__p__pctype
+@ cdecl -arch=i386 __p__pgmptr() msvcrt.__p__pgmptr
+@ cdecl -arch=i386 __p__pwctype() msvcrt.__p__pwctype
+@ cdecl -arch=i386 __p__timezone() msvcrt.__p__timezone
+@ cdecl -arch=i386 __p__tzname() msvcrt.__p__tzname
+@ cdecl -arch=i386 __p__wcmdln() msvcrt.__p__wcmdln
+@ cdecl -arch=i386 __p__wenviron() msvcrt.__p__wenviron
+@ cdecl -arch=i386 __p__winmajor() msvcrt.__p__winmajor
+@ cdecl -arch=i386 __p__winminor() msvcrt.__p__winminor
+@ cdecl -arch=i386 __p__winver() msvcrt.__p__winver
+@ cdecl -arch=i386 __p__wpgmptr() msvcrt.__p__wpgmptr
 @ cdecl __pxcptinfoptrs() msvcrt.__pxcptinfoptrs
 @ cdecl __set_app_type(long) msvcrt.__set_app_type
 @ cdecl __setusermatherr(ptr) msvcrt.__setusermatherr

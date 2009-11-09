@@ -1,0 +1,12 @@
+Index: jmorecfg.h
+===================================================================
+--- jmorecfg.h	(revision 42441)
++++ jmorecfg.h	(working copy)
+@@ -24,7 +24,6 @@
+ 
+ #if (defined (_MSC_VER) && (_MSC_VER >= 800))
+ #define HAVE_UNSIGNED_CHAR
+-#define HAVE_ALL_INTS
+ #define EXTERN(type)  extern type __cdecl
+ #endif
+ 

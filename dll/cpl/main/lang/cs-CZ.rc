@@ -1,7 +1,7 @@
 /* FILE:        dll/cpl/main/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   Kamil Hornicek, who translated major part of this file 
- * UPDATED:     2008-07-27
+ * UPDATED:     2009-02-03
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -160,7 +160,7 @@ BEGIN
   IDS_NWPEN "Psaní rukou"
   IDS_NO "Není k dispozici"
   IDS_SIZENS "Zmìna výšky"
-  IDS_SIZEWE "Horizontal Resize"
+  IDS_SIZEWE "Zmìna šíøky"
   IDS_SIZENWSE "Diagonální zmìna velikosti 1"
   IDS_SIZENESW "Diagonální zmìna velikosti 2"
   IDS_SIZEALL "Pøesunout"

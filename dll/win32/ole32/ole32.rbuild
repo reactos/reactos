@@ -7,7 +7,7 @@
 	<include base="ole32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<define name="_OLE32_" />
 	<define name="ENTRY_PREFIX">OLE32_</define>
 	<define name="PROXY_CLSID">CLSID_PSFactoryBuffer</define>
@@ -65,7 +65,7 @@
 	<file>irot.idl</file>
 	<include base="ole32" root="intermediate">.</include>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="ole32_irot_server" type="rpcserver">
 	<file>irot.idl</file>

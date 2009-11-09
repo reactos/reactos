@@ -810,7 +810,7 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    FIXME("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
+    TRACE("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
 
     if (!IsUserAdmin())
         return CR_ACCESS_DENIED;

@@ -477,6 +477,9 @@ ChangeDisplaySettingsExA(
 
   rc = NtUserChangeDisplaySettings ( pDeviceName, pDevModeW, hwnd, dwflags, lParam );
 
+  if (pDevModeW != NULL)
+    RtlFreeHeap(GetProcessHeap(), 0, pDevModeW);
+
   if (lpszDeviceName != NULL)
     RtlFreeUnicodeString ( &DeviceName );
 
@@ -493,6 +496,8 @@ ChangeDisplaySettingsA(
   LPDEVMODEA lpDevMode,
   DWORD dwflags)
 {
+  if(lpDevMode)
+    lpDevMode->dmDriverExtra = 0;
   return ChangeDisplaySettingsExA ( NULL, lpDevMode, NULL, dwflags, 0 );
 }
 
@@ -533,5 +538,7 @@ ChangeDisplaySettingsW(
   LPDEVMODEW lpDevMode,
   DWORD dwflags)
 {
+  if(lpDevMode)
+    lpDevMode->dmDriverExtra = 0; 
   return ChangeDisplaySettingsExW ( NULL, lpDevMode, NULL, dwflags, 0 );
 }

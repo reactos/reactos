@@ -2,7 +2,6 @@
 	<importlibrary definition="winspool.spec" />
 	<include base="winspool">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>

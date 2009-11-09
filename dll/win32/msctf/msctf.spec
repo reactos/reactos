@@ -11,7 +11,7 @@
 @ stub TF_CreateCategoryMgr
 @ stub TF_CreateCicLoadMutex
 @ stub TF_CreateDisplayAttributeMgr
-@ stub TF_CreateInputProcessorProfiles
+@ stdcall TF_CreateInputProcessorProfiles(ptr)
 @ stub TF_CreateLangBarItemMgr
 @ stub TF_CreateLangBarMgr
 @ stdcall TF_CreateThreadMgr(ptr)

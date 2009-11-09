@@ -41,6 +41,23 @@
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 
 
+/* Utility functions */
+void * WINAPI WINTRUST_Alloc(DWORD cb)
+{
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cb);
+}
+
+static void* WINTRUST_ReAlloc(void *ptr, DWORD cb) __WINE_ALLOC_SIZE(2);
+static void* WINTRUST_ReAlloc(void *ptr, DWORD cb)
+{
+    return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ptr, cb);
+}
+
+void WINAPI WINTRUST_Free(void *p)
+{
+    HeapFree(GetProcessHeap(), 0, p);
+}
+
 /***********************************************************************
  *		DllMain  (WINTRUST.@)
  */
@@ -286,7 +303,8 @@ static HRESULT WINAPI WINTRUST_CertVerifyObjTrust(CRYPT_PROVIDER_DATA *data)
     {
     case WTD_CHOICE_BLOB:
         if (data->pWintrustData->u.pBlob &&
-         data->pWintrustData->u.pBlob->cbStruct == sizeof(WINTRUST_BLOB_INFO) &&
+         WVT_IS_CBSTRUCT_GT_MEMBEROFFSET(WINTRUST_BLOB_INFO,
+         data->pWintrustData->u.pBlob->cbStruct, pbMemObject) &&
          data->pWintrustData->u.pBlob->cbMemObject ==
          sizeof(CERT_VERIFY_CERTIFICATE_TRUST) &&
          data->pWintrustData->u.pBlob->pbMemObject)
@@ -888,20 +906,6 @@ BOOL WINAPI WintrustSetRegPolicyFlags( DWORD dwPolicyFlags)
 }
 
 /* Utility functions */
-void * WINAPI WINTRUST_Alloc(DWORD cb)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cb);
-}
-
-void * WINAPI WINTRUST_ReAlloc(void *ptr, DWORD cb)
-{
-    return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ptr, cb);
-}
-
-void WINAPI WINTRUST_Free(void *p)
-{
-    HeapFree(GetProcessHeap(), 0, p);
-}
 
 BOOL WINAPI WINTRUST_AddStore(CRYPT_PROVIDER_DATA *data, HCERTSTORE store)
 {
@@ -1080,4 +1084,13 @@ BOOL WINAPI OpenPersonalTrustDBDialog(HWND hwnd)
     uiCertMgr.pwszTitle = NULL;
     uiCertMgr.pszInitUsageOID = NULL;
     return CryptUIDlgCertMgr(&uiCertMgr);
+}
+
+/***********************************************************************
+ *		WTHelperCertCheckValidSignature
+ */
+HRESULT WINAPI WTHelperCertCheckValidSignature(CRYPT_PROVIDER_DATA *pProvData)
+{
+    FIXME("Stub\n");
+    return S_OK;
 }

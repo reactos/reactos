@@ -17,7 +17,7 @@
 
 #define DEBUG_ULTRA    0xFFFFFFFF
 
-#ifdef DBG
+#if DBG
 
 extern DWORD DebugTraceLevel;
 

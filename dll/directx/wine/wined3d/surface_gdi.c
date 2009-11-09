@@ -29,11 +29,33 @@
 #include "wine/port.h"
 #include "wined3d_private.h"
 
-#include <assert.h>
 #include <stdio.h>
 
 /* Use the d3d_surface debug channel to have one channel for all surfaces */
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_surface);
+
+void surface_gdi_cleanup(IWineD3DSurfaceImpl *This)
+{
+    TRACE("(%p) : Cleaning up.\n", This);
+
+    if (This->Flags & SFLAG_DIBSECTION)
+    {
+        /* Release the DC. */
+        SelectObject(This->hDC, This->dib.holdbitmap);
+        DeleteDC(This->hDC);
+        /* Release the DIB section. */
+        DeleteObject(This->dib.DIBsection);
+        This->dib.bitmap_data = NULL;
+        This->resource.allocatedMemory = NULL;
+    }
+
+    if (This->Flags & SFLAG_USERPTR) IWineD3DSurface_SetMem((IWineD3DSurface *)This, NULL);
+    if (This->overlay_dest) list_remove(&This->overlay_entry);
+
+    HeapFree(GetProcessHeap(), 0, This->palette9);
+
+    resource_cleanup((IWineD3DResource *)This);
+}
 
 /*****************************************************************************
  * IWineD3DSurface::Release, GDI version
@@ -46,32 +68,15 @@ static ULONG WINAPI IWineGDISurfaceImpl_Release(IWineD3DSurface *iface) {
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
     ULONG ref = InterlockedDecrement(&This->resource.ref);
     TRACE("(%p) : Releasing from %d\n", This, ref + 1);
-    if (ref == 0) {
-        TRACE("(%p) : cleaning up\n", This);
 
-        if(This->Flags & SFLAG_DIBSECTION) {
-            /* Release the DC */
-            SelectObject(This->hDC, This->dib.holdbitmap);
-            DeleteDC(This->hDC);
-            /* Release the DIB section */
-            DeleteObject(This->dib.DIBsection);
-            This->dib.bitmap_data = NULL;
-            This->resource.allocatedMemory = NULL;
-        }
-        if(This->Flags & SFLAG_USERPTR) IWineD3DSurface_SetMem(iface, NULL);
+    if (!ref)
+    {
+        surface_gdi_cleanup(This);
 
-        HeapFree(GetProcessHeap(), 0, This->palette9);
-
-        resource_cleanup((IWineD3DResource *)iface);
-
-        if(This->overlay_dest) {
-            list_remove(&This->overlay_entry);
-        }
-
-        TRACE("(%p) Released\n", This);
+        TRACE("(%p) Released.\n", This);
         HeapFree(GetProcessHeap(), 0, This);
-
     }
+
     return ref;
 }
 
@@ -130,7 +135,7 @@ IWineGDISurfaceImpl_LockRect(IWineD3DSurface *iface,
     /* Already locked? */
     if(This->Flags & SFLAG_LOCKED)
     {
-        ERR("(%p) Surface already locked\n", This);
+        WARN("(%p) Surface already locked\n", This);
         /* What should I return here? */
         return WINED3DERR_INVALIDCALL;
     }
@@ -178,7 +183,8 @@ IWineGDISurfaceImpl_UnlockRect(IWineD3DSurface *iface)
             char buffer[4096];
             ++gen;
             if ((gen % 10) == 0) {
-                snprintf(buffer, sizeof(buffer), "/tmp/surface%p_type%u_level%u_%u.ppm", This, This->glDescription.target, This->glDescription.level, gen);
+                snprintf(buffer, sizeof(buffer), "/tmp/surface%p_type%u_level%u_%u.ppm",
+                        This, This->texture_target, This->texture_level, gen);
                 IWineD3DSurfaceImpl_SaveSnapshot(iface, buffer);
             }
             /*
@@ -194,7 +200,10 @@ IWineGDISurfaceImpl_UnlockRect(IWineD3DSurface *iface)
     /* Tell the swapchain to update the screen */
     if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **)&swapchain)))
     {
-        x11_copy_to_screen(swapchain, &This->lockedRect);
+        if(iface == swapchain->frontBuffer)
+        {
+            x11_copy_to_screen(swapchain, &This->lockedRect);
+        }
         IWineD3DSwapChain_Release((IWineD3DSwapChain *) swapchain);
     }
 
@@ -289,7 +298,7 @@ const char* filename)
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
     static char *output = NULL;
     static UINT size = 0;
-    const StaticPixelFormatDesc *formatEntry = getFormatDescEntry(This->resource.format, NULL, NULL);
+    const struct GlPixelFormatDesc *format_desc = This->resource.format_desc;
 
     if (This->pow2Width > size) {
         output = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pow2Width * 3);
@@ -304,7 +313,8 @@ const char* filename)
     }
     fprintf(f, "P6\n%d %d\n255\n", This->pow2Width, This->pow2Height);
 
-    if (This->resource.format == WINED3DFMT_P8) {
+    if (This->resource.format_desc->format == WINED3DFMT_P8)
+    {
         unsigned char table[256][3];
         int i;
 
@@ -332,12 +342,12 @@ const char* filename)
     } else {
         int red_shift, green_shift, blue_shift, pix_width, alpha_shift;
 
-        pix_width = This->bytesPerPixel;
+        pix_width = format_desc->byte_count;
 
-        red_shift = get_shift(formatEntry->redMask);
-        green_shift = get_shift(formatEntry->greenMask);
-        blue_shift = get_shift(formatEntry->blueMask);
-        alpha_shift = get_shift(formatEntry->alphaMask);
+        red_shift = get_shift(format_desc->red_mask);
+        green_shift = get_shift(format_desc->green_mask);
+        blue_shift = get_shift(format_desc->blue_mask);
+        alpha_shift = get_shift(format_desc->alpha_mask);
 
         for (y = 0; y < This->pow2Height; y++) {
             const unsigned char *src = This->resource.allocatedMemory + (y * 1 * IWineD3DSurface_GetPitch(iface));
@@ -352,11 +362,11 @@ const char* filename)
                 }
                 src += 1 * pix_width;
 
-                comp = color & formatEntry->redMask;
+                comp = color & format_desc->red_mask;
                 output[3 * x + 0] = red_shift > 0 ? comp >> red_shift : comp << -red_shift;
-                comp = color & formatEntry->greenMask;
+                comp = color & format_desc->green_mask;
                 output[3 * x + 1] = green_shift > 0 ? comp >> green_shift : comp << -green_shift;
-                comp = color & formatEntry->alphaMask;
+                comp = color & format_desc->alpha_mask;
                 output[3 * x + 2] = alpha_shift > 0 ? comp >> alpha_shift : comp << -alpha_shift;
             }
             fwrite(output, 3 * This->pow2Width, 1, f);
@@ -402,8 +412,9 @@ static HRESULT WINAPI IWineGDISurfaceImpl_GetDC(IWineD3DSurface *iface, HDC *pHD
         return hr;
     }
 
-    if(This->resource.format == WINED3DFMT_P8 ||
-       This->resource.format == WINED3DFMT_A8P8) {
+    if (This->resource.format_desc->format == WINED3DFMT_P8
+            || This->resource.format_desc->format == WINED3DFMT_A8P8)
+    {
         unsigned int n;
         const PALETTEENTRY *pal = NULL;
 
@@ -483,7 +494,10 @@ static HRESULT WINAPI IWineGDISurfaceImpl_RealizePalette(IWineD3DSurface *iface)
     /* Tell the swapchain to update the screen */
     if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **)&swapchain)))
     {
-        x11_copy_to_screen(swapchain, NULL);
+        if(iface == swapchain->frontBuffer)
+        {
+            x11_copy_to_screen(swapchain, NULL);
+        }
         IWineD3DSwapChain_Release((IWineD3DSwapChain *) swapchain);
     }
 
@@ -532,12 +546,6 @@ IWineGDISurfaceImpl_PrivateSetup(IWineD3DSurface *iface)
     This->resource.allocatedMemory = This->dib.bitmap_data;
 
     return WINED3D_OK;
-}
-
-static void WINAPI IWineGDISurfaceImpl_GetGlDesc(IWineD3DSurface *iface, glDescriptor **glDescription) {
-    IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
-    FIXME("(%p) : Should not be called on a GDI surface\n", This);
-    *glDescription = NULL;
 }
 
 static HRESULT WINAPI IWineGDISurfaceImpl_SetMem(IWineD3DSurface *iface, void *Mem) {
@@ -669,7 +677,6 @@ const IWineD3DSurfaceVtbl IWineGDISurface_Vtbl =
     IWineD3DBaseSurfaceImpl_BindTexture,
     IWineGDISurfaceImpl_SaveSnapshot,
     IWineD3DBaseSurfaceImpl_SetContainer,
-    IWineGDISurfaceImpl_GetGlDesc,
     IWineD3DBaseSurfaceImpl_GetData,
     IWineD3DBaseSurfaceImpl_SetFormat,
     IWineGDISurfaceImpl_PrivateSetup,
