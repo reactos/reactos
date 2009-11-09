@@ -17,6 +17,10 @@
 
 /* FUNCTIONS ******************************************************************/
 
+PDEVICE_OBJECT
+NTAPI
+MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject);
+
 VOID
 NTAPI
 CcSetReadAheadGranularity(IN PFILE_OBJECT FileObject,
@@ -41,13 +45,7 @@ NTAPI
 CcSetDirtyPinnedData(IN PVOID BcbVoid,
                      IN OPTIONAL PLARGE_INTEGER Lsn)
 {
-	PCHAR Buffer;
 	PNOCC_BCB Bcb = (PNOCC_BCB)BcbVoid;
-	Bcb->Dirty = TRUE;
-	for (Buffer = Bcb->BaseAddress; 
-	     Buffer < ((PCHAR)Bcb->BaseAddress) + Bcb->Length;
-	     Buffer += PAGE_SIZE)
-		MmSetDirtyPage(NULL, Buffer);
 	Bcb->Dirty = TRUE;
 }
 
@@ -61,7 +59,100 @@ CcGetFlushedValidData(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     while (TRUE);
     return Result;
 }
+
 
+VOID
+NTAPI
+CcpFlushCache(IN PNOCC_CACHE_MAP Map,
+			  IN OPTIONAL PLARGE_INTEGER FileOffset,
+			  IN ULONG Length,
+			  OUT OPTIONAL PIO_STATUS_BLOCK IoStatus,
+			  BOOLEAN Delete)
+{
+    PNOCC_BCB Bcb = NULL;
+	LARGE_INTEGER LowerBound, UpperBound;
+	PLIST_ENTRY ListEntry;
+    IO_STATUS_BLOCK IOSB = { };
+
+	DPRINT("CcFlushCache (while file)\n");
+
+	if (FileOffset && Length)
+	{
+		LowerBound.QuadPart = FileOffset->QuadPart;
+		UpperBound.QuadPart = LowerBound.QuadPart + Length;
+	}
+	else
+	{
+		LowerBound.QuadPart = 0;
+		UpperBound.QuadPart = 0x7fffffffffffffffull;
+	}
+
+	CcpLock();
+	ListEntry = Map->AssociatedBcb.Flink;
+
+	while (ListEntry != &Map->AssociatedBcb)
+	{
+		Bcb = CONTAINING_RECORD(ListEntry, NOCC_BCB, ThisFileList);
+		CcpReferenceCache(Bcb - CcCacheSections);
+
+		if (Bcb->FileOffset.QuadPart + Bcb->Length >= LowerBound.QuadPart &&
+			Bcb->FileOffset.QuadPart < UpperBound.QuadPart)
+		{
+			DPRINT
+				("Bcb #%x (@%08x%08x)\n", 
+				 Bcb - CcCacheSections, 
+				 Bcb->FileOffset.u.HighPart, Bcb->FileOffset.u.LowPart);
+
+			CcpUnlock();
+			MiFlushMappedSection(Bcb->BaseAddress, &Map->FileSizes.FileSize);
+			CcpLock();
+
+			Bcb->Dirty = FALSE;
+						
+			ListEntry = ListEntry->Flink;
+			if (Delete && Bcb->RefCount == 2)
+			{
+				Bcb->RefCount = 1;
+				CcpDereferenceCache(Bcb - CcCacheSections, FALSE);
+			}
+			else
+				CcpUnpinData(Bcb);
+		}
+		else
+		{
+			ListEntry = ListEntry->Flink;
+			CcpUnpinData(Bcb);
+		}
+
+		DPRINT("End loop\n");
+	}
+	CcpUnlock();
+	
+    if (IoStatus) *IoStatus = IOSB;
+}
+
+VOID
+NTAPI
+CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+             IN OPTIONAL PLARGE_INTEGER FileOffset,
+             IN ULONG Length,
+             OUT OPTIONAL PIO_STATUS_BLOCK IoStatus)
+{
+    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
+
+	// Not cached
+	if (!Map) 
+	{
+		if (IoStatus)
+		{
+			IoStatus->Status = STATUS_SUCCESS;
+			IoStatus->Information = 0;
+		}
+		return;
+	}
+
+	CcpFlushCache(Map, FileOffset, Length, IoStatus, FALSE);
+}
 
 BOOLEAN
 NTAPI
@@ -74,6 +165,8 @@ CcFlushImageSection
     PLIST_ENTRY Entry;
     IO_STATUS_BLOCK IOSB;
     BOOLEAN Result = TRUE;
+
+	if (!Map) return TRUE;
     
     for (Entry = Map->AssociatedBcb.Flink;
 	 Entry != &Map->AssociatedBcb;
@@ -87,17 +180,17 @@ CcFlushImageSection
 	{
 	case MmFlushForDelete:
 	    CcPurgeCacheSection
-		(Bcb->FileObject->SectionObjectPointer,
-		 &Bcb->FileOffset,
-		 Bcb->Length,
-		 FALSE);
+			(SectionObjectPointer,
+			 &Bcb->FileOffset,
+			 Bcb->Length,
+			 FALSE);
 	    break;
 	case MmFlushForWrite:
 	    CcFlushCache
-		(Bcb->FileObject->SectionObjectPointer,
-		 &Bcb->FileOffset,
-		 Bcb->Length,
-		 &IOSB);
+			(SectionObjectPointer,
+			 &Bcb->FileOffset,
+			 Bcb->Length,
+			 &IOSB);
 	    break;
 	}
     }
@@ -110,7 +203,38 @@ PVOID
 NTAPI
 CcRemapBcb(IN PVOID Bcb)
 {
+	CcpLock();
+	ASSERT(RtlTestBit(CcCacheBitmap, ((PNOCC_BCB)Bcb) - CcCacheSections));
+	CcpReferenceCache(((PNOCC_BCB)Bcb) - CcCacheSections);
+	CcpUnlock();
     return Bcb;
+}
+
+VOID
+NTAPI
+CcShutdownSystem()
+{
+	ULONG i;
+
+	DPRINT1("CC: Shutdown\n");
+
+	for (i = 0; i < CACHE_NUM_SECTIONS; i++)
+	{
+		PNOCC_BCB Bcb = &CcCacheSections[i];
+		if (Bcb->SectionObject)
+		{
+			DPRINT1
+				("Evicting #%02x %08x%08x %wZ\n", 
+				 i, 
+				 Bcb->FileOffset.u.HighPart, Bcb->FileOffset.u.LowPart,
+				 &MmGetFileObjectForSection
+				 ((PROS_SECTION_OBJECT)Bcb->SectionObject)->FileName);
+			CcpFlushCache(Bcb->Map, NULL, 0, NULL, FALSE);
+			Bcb->Dirty = FALSE;
+		}
+	}
+
+	DPRINT1("Done\n");
 }
 
 
@@ -118,14 +242,11 @@ VOID
 NTAPI
 CcRepinBcb(IN PVOID Bcb)
 {
-    PVOID TheBcb;
-    PNOCC_BCB RealBcb = (PNOCC_BCB)Bcb;
-    CcPinMappedData
-	(RealBcb->FileObject, 
-	 &RealBcb->FileOffset,
-	 RealBcb->Length,
-	 PIN_WAIT,
-	 &TheBcb);
+	CcpLock();
+	ASSERT(RtlTestBit(CcCacheBitmap, ((PNOCC_BCB)Bcb) - CcCacheSections));
+	DPRINT("CcRepinBcb(#%x)\n", ((PNOCC_BCB)Bcb) - CcCacheSections);
+	CcpReferenceCache(((PNOCC_BCB)Bcb) - CcCacheSections);
+	CcpUnlock();
 }
 
 VOID
@@ -138,79 +259,16 @@ CcUnpinRepinnedBcb(IN PVOID Bcb,
 
     if (WriteThrough)
     {
-		CcFlushCache
-			(RealBcb->FileObject->SectionObjectPointer,
+		DPRINT("BCB #%x\n", RealBcb - CcCacheSections);
+
+		CcpFlushCache
+			(RealBcb->Map,
 			 &RealBcb->FileOffset,
 			 RealBcb->Length,
-			 IoStatus);
+			 IoStatus, FALSE);
     }
 
     CcUnpinData(Bcb);
-}
-
-NTSTATUS
-NTAPI
-CcReplaceCachePage(PMEMORY_AREA MemoryArea, PVOID Address)
-{
-	NTSTATUS Status;
-	PFN_TYPE Page;
-	ULONG CacheRegion = MemoryArea->Data.CacheData.CacheRegion;
-	PVOID HyperspaceMapping;
-	LARGE_INTEGER ReadOffset;
-	IO_STATUS_BLOCK Iosb;
-    PNOCC_BCB Bcb = &CcCacheSections[CacheRegion];
-
-	ASSERT(Address >= Bcb->BaseAddress);
-	ASSERT(((PCHAR)Address - (PCHAR)Bcb->BaseAddress) < CACHE_STRIPE);
-	
-	ReadOffset.QuadPart = 
-		PAGE_ROUND_DOWN((PCHAR)Address - (PCHAR)Bcb->BaseAddress) +
-		Bcb->FileOffset.QuadPart;
-
-//#if 0
-	DPRINT("Replacing page at offset %08x%08x in file\n",
-			ReadOffset.u.HighPart, ReadOffset.u.LowPart);
-//#endif
-
-	Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page);
-	
-	if (!NT_SUCCESS(Status))
-		return Status;
-
-	ASSERT(Page);
-
-	MmCreateVirtualMapping
-		(NULL,
-		 (PVOID)PAGE_ROUND_DOWN((ULONG_PTR)Address), 
-		 PAGE_READWRITE, 
-		 &Page,
-		 1);
-	
-	MmUnlockAddressSpace(MmGetKernelAddressSpace());
-	
-	HyperspaceMapping = MmCreateHyperspaceMapping(Page);
-	if (!Bcb->Zero)
-	{
-		Status = MiSimpleRead
-			(Bcb->FileObject, 
-			 &ReadOffset, 
-			 HyperspaceMapping, 
-			 PAGE_SIZE,
-			 &Iosb);
-	}
-	MmDeleteHyperspaceMapping(HyperspaceMapping);
-
-	MmLockAddressSpace(MmGetKernelAddressSpace());
-
-	if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
-	{
-		MmReleasePageMemoryConsumer(MC_CACHE, Page);
-		return Status;
-	}
-	else
-		Status = STATUS_SUCCESS;
-	
-	return Status;
 }
 
 /* EOF */

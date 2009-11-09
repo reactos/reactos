@@ -18,8 +18,9 @@ BOOLEAN
 NTAPI
 FsRecIsExt2Volume(IN PVOID PackedBootSector)
 {
-    /* For now, always return failure... */
-    return FALSE;
+	BOOLEAN Result = ((USHORT*)PackedBootSector)[255] == 0xEF53;
+	DPRINT1("%s EXT2\n", Result ? "is" : "is not");
+	return Result;
 }
 
 NTSTATUS
@@ -32,7 +33,7 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
     PDEVICE_OBJECT MountDevice;
     PVOID Bpb = NULL;
     ULONG SectorSize;
-    LARGE_INTEGER Offset = {{0, 0}};
+    LARGE_INTEGER Offset = {{0, 512}};
     BOOLEAN DeviceError = FALSE;
     PAGED_CODE();
 

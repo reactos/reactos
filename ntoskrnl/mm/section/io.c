@@ -56,6 +56,18 @@
 
 KEVENT CcpLazyWriteEvent;
 
+/*
+ * FUNCTION:  Waits in kernel mode indefinitely for a file object lock.
+ * ARGUMENTS: PFILE_OBJECT to wait for.
+ * RETURNS:   Status of the wait.
+ */
+NTSTATUS
+MmspWaitForFileLock(PFILE_OBJECT File)
+{
+    return STATUS_SUCCESS;
+   //return KeWaitForSingleObject(&File->Lock, 0, KernelMode, FALSE, NULL);
+}
+
 PDEVICE_OBJECT
 NTAPI
 MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
@@ -92,9 +104,7 @@ MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
     }
 
     /* Allocate memory for our structure */
-    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool,
-                                           1024,
-                                           TAG('M', 'm', ' ', ' '));
+    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool, 1024, TAG_MM_PAGEOP);
     if (!ObjectNameInfo) return STATUS_NO_MEMORY;
 
     /* Query the name */
@@ -119,18 +129,59 @@ NTAPI
 MmGetFileNameForAddress(IN PVOID Address,
                         OUT PUNICODE_STRING ModuleName)
 {
-    /*
-     * FIXME: TODO.
-     * Filip says to get the MM_AVL_TABLE from EPROCESS,
-     * then use the MmMarea routines to locate the Marea that
-     * corresponds to the address. Then make sure it's a section
-     * view type (MEMORY_AREA_SECTION_VIEW) and use the marea's
-     * per-type union to get the .u.SectionView.Section pointer to
-     * the SECTION_OBJECT. Then we can use MmGetFileNameForSection
-     * to get the full filename.
-     */
-    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
-    return STATUS_SUCCESS;
+   PROS_SECTION_OBJECT Section;
+   PMEMORY_AREA MemoryArea;
+   PMMSUPPORT AddressSpace;
+   POBJECT_NAME_INFORMATION ModuleNameInformation;
+   NTSTATUS Status = STATUS_ADDRESS_NOT_ASSOCIATED;
+
+   /* Get the MM_AVL_TABLE from EPROCESS */
+   if (Address >= MmSystemRangeStart)
+   {
+      AddressSpace = MmGetKernelAddressSpace();
+   }
+   else
+   {
+      AddressSpace = &PsGetCurrentProcess()->Vm;
+   }
+
+   /* Lock address space */
+   MmLockAddressSpace(AddressSpace);
+
+   /* Locate the memory area for the process by address */
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
+
+   /* Make sure it's a section view type */
+   if ((MemoryArea != NULL) && (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW))
+   {
+      /* Get the section pointer to the SECTION_OBJECT */
+      Section = MemoryArea->Data.SectionData.Section;
+
+      /* Unlock address space */
+      MmUnlockAddressSpace(AddressSpace);
+
+      /* Get the filename of the section */
+      Status = MmGetFileNameForSection(Section,&ModuleNameInformation);
+
+      if (NT_SUCCESS(Status))
+      {
+         /* Init modulename */
+         RtlCreateUnicodeString(ModuleName,
+                                ModuleNameInformation->Name.Buffer);
+
+         /* Free temp taged buffer from MmGetFileNameForSection() */
+         ExFreePoolWithTag(ModuleNameInformation, '  mM');
+         DPRINT("Found ModuleName %S by address %p\n",
+                ModuleName->Buffer,Address);
+      }
+   }
+   else
+   {
+      /* Unlock address space */
+      MmUnlockAddressSpace(AddressSpace);
+   }
+
+   return Status;
 }
 
 NTSTATUS
@@ -140,10 +191,12 @@ MiSimpleReadComplete
  PIRP Irp,
  PVOID Context)
 {
-    /* Unlock MDL Pages, page 167. */
+   /* Unlock MDL Pages, page 167. */
+	DPRINT("MiSimpleReadComplete %x\n", Irp);
     PMDL Mdl = Irp->MdlAddress;
     while (Mdl)
     {
+		DPRINT("MDL Unlock %x\n", Mdl);
 		MmUnlockPages(Mdl);
         Mdl = Mdl->Next;
     }
@@ -180,17 +233,18 @@ MiSimpleRead
     ASSERT(ReadStatus);
     
     DeviceObject = MmGetDeviceObjectForFile(FileObject);
+	ReadStatus->Status = STATUS_INTERNAL_ERROR;
+	ReadStatus->Information = 0;
     
     ASSERT(DeviceObject);
-    
-//#if 0
-    DPRINT1
-		("PAGING READ: FileObject %x Offset %x Length %d\n", 
+
+    DPRINT
+		("PAGING READ: FileObject %x <%wZ> Offset %x Length %d\n", 
 		 &FileObject, 
+		 &FileObject->FileName,
 		 FileOffset->LowPart,
 		 Length);
-//#endif
-    
+
     KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
     
     Irp = IoBuildAsynchronousFsdRequest
@@ -206,7 +260,7 @@ MiSimpleRead
 		return STATUS_NO_MEMORY;
     }
     
-    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE;
+    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
     
     ObReferenceObject(FileObject);
     
@@ -214,6 +268,7 @@ MiSimpleRead
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
+	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
     IrpSp->CompletionRoutine = MiSimpleReadComplete;
     
@@ -237,7 +292,7 @@ MiSimpleRead
     
     ObDereferenceObject(FileObject);
     
-    DPRINT1("Paging IO Done: %08x\n", ReadStatus->Status);
+    DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
 	Status = 
 		ReadStatus->Status == STATUS_END_OF_FILE ? 
 		STATUS_SUCCESS : ReadStatus->Status;
@@ -268,14 +323,14 @@ MiSimpleWrite
     
     ASSERT(DeviceObject);
     
-    DPRINT1
+    DPRINT
 		("PAGING WRITE: FileObject %x Offset %x Length %d\n", 
 		 &FileObject, 
 		 FileOffset->LowPart,
 		 Length);
     
     KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
-    
+
     Irp = IoBuildAsynchronousFsdRequest
 		(IRP_MJ_WRITE,
 		 DeviceObject,
@@ -289,7 +344,7 @@ MiSimpleWrite
 		return STATUS_NO_MEMORY;
     }
     
-    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE;
+    Irp->Flags = IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
     
     ObReferenceObject(FileObject);
     
@@ -297,6 +352,7 @@ MiSimpleWrite
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
+	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
     IrpSp->CompletionRoutine = MiSimpleReadComplete;
     
@@ -318,9 +374,10 @@ MiSimpleWrite
 		}
     }
     
+
     ObDereferenceObject(FileObject);
     
-    DPRINT1("Paging IO Done: %08x\n", ReadStatus->Status);
+    DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
     return ReadStatus->Status;
 }
 
@@ -332,9 +389,7 @@ typedef struct _WRITE_SCHEDULE_ENTRY {
 	PFN_TYPE Page;
 } WRITE_SCHEDULE_ENTRY, *PWRITE_SCHEDULE_ENTRY;
 
-CLIENT_ID MiWriteThreadId;
-HANDLE MiWriteThreadHandle;
-KEVENT MiWriteEvent;
+extern KEVENT MpwThreadEvent;
 FAST_MUTEX MiWriteMutex;
 LIST_ENTRY MiWriteScheduleListHead;
 
@@ -363,94 +418,93 @@ MiScheduleForWrite
 	InsertTailList(&MiWriteScheduleListHead, &WriteEntry->Entry);
 	ExReleaseFastMutex(&MiWriteMutex);
 
-	KeSetEvent(&MiWriteEvent, IO_NO_INCREMENT, FALSE);
+	KeSetEvent(&MpwThreadEvent, IO_NO_INCREMENT, FALSE);
 
 	return STATUS_SUCCESS;
 }
 
-VOID
-NTAPI
-MiWriteThread(PVOID Unused)
-{
-	BOOLEAN Complete;
-	NTSTATUS Status;
-	PVOID Hyperspace;
-	LIST_ENTRY OldHead;
-	PLIST_ENTRY Entry;
-	IO_STATUS_BLOCK Iosb;
-	PWRITE_SCHEDULE_ENTRY WriteEntry;
-
-	while (TRUE)
-	{
-		ExAcquireFastMutex(&MiWriteMutex);
-		Complete = IsListEmpty(&MiWriteScheduleListHead);
-		ExReleaseFastMutex(&MiWriteMutex);
-		if (Complete)
-		{
-			DPRINT1("No items await writing\n");
-			KeSetEvent(&CcpLazyWriteEvent, IO_NO_INCREMENT, FALSE);
-			KeWaitForSingleObject
-				(&MiWriteEvent,
-				 Executive,
-				 KernelMode,
-				 TRUE,
-				 NULL);
-		}
-
-		DPRINT1("Lazy write items are available\n");
-		KeResetEvent(&CcpLazyWriteEvent);
-
-		ExAcquireFastMutex(&MiWriteMutex);
-		RtlCopyMemory(&OldHead, &MiWriteScheduleListHead, sizeof(OldHead));
-		OldHead.Flink->Blink = &OldHead;
-		OldHead.Blink->Flink = &OldHead;
-		InitializeListHead(&MiWriteScheduleListHead);
-		ExReleaseFastMutex(&MiWriteMutex);
-		
-		for (Entry = OldHead.Flink;
-			 !IsListEmpty(&OldHead);
-			 Entry = OldHead.Flink)
-		{
-			WriteEntry = CONTAINING_RECORD(Entry, WRITE_SCHEDULE_ENTRY, Entry);
-			Hyperspace = MmCreateHyperspaceMapping(WriteEntry->Page);
-			
-			Status = MiSimpleWrite
-				(WriteEntry->FileObject,
-				 &WriteEntry->FileOffset,
-				 Hyperspace,
-				 WriteEntry->Length,
-				 &Iosb);
-
-			if (!NT_SUCCESS(Status))
-			{
-				DPRINT1("MiSimpleWrite failed (%x)\n", Status);
-			}
-			
-			MmDeleteHyperspaceMapping(Hyperspace);
-			MmDereferencePage(WriteEntry->Page);
-			ObDereferenceObject(WriteEntry->FileObject);
-			RemoveEntryList(&WriteEntry->Entry);
-			ExFreePool(WriteEntry);
-		}
-
-		DPRINT1("Finished a lazy write pass\n");
-	}
-}
 
 NTSTATUS
 NTAPI
-MmWriteThreadInit()
+MiWriteBackPage
+(PFILE_OBJECT FileObject,
+ PLARGE_INTEGER FileOffset,
+ ULONG Length,
+ PFN_TYPE Page)
 {
-	KeInitializeEvent(&MiWriteEvent, SynchronizationEvent, FALSE);
-	ExInitializeFastMutex(&MiWriteMutex);
-	InitializeListHead(&MiWriteScheduleListHead);
-	return PsCreateSystemThread
-		(&MiWriteThreadHandle,
-		 THREAD_ALL_ACCESS,
-		 NULL,
-		 NULL,
-		 &MiWriteThreadId,
-		 (PKSTART_ROUTINE) MiWriteThread,
-		 NULL);
+	NTSTATUS Status;
+	PVOID Hyperspace;
+	IO_STATUS_BLOCK Iosb;
+	PVOID PageBuffer = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+
+	if (!PageBuffer) return STATUS_NO_MEMORY;
+
+	Hyperspace = MmCreateHyperspaceMapping(Page);
+	RtlCopyMemory(PageBuffer, Hyperspace, PAGE_SIZE);
+	MmDeleteHyperspaceMapping(Hyperspace);
+
+	DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart);
+	Status = MiSimpleWrite
+		(FileObject,
+		 FileOffset,
+		 PageBuffer,
+		 Length,
+		 &Iosb);
+
+	ExFreePool(PageBuffer);
+	
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("MiSimpleWrite failed (%x)\n", Status);
+	}
+
+	return Status;
 }
 
+VOID
+NTAPI
+MiWriteThread()
+{
+	BOOLEAN Complete;
+	NTSTATUS Status;
+	LIST_ENTRY OldHead;
+	PLIST_ENTRY Entry;
+	PWRITE_SCHEDULE_ENTRY WriteEntry;
+
+	ExAcquireFastMutex(&MiWriteMutex);
+	Complete = IsListEmpty(&MiWriteScheduleListHead);
+	ExReleaseFastMutex(&MiWriteMutex);
+	if (Complete)
+	{
+		DPRINT1("No items await writing\n");
+		KeSetEvent(&CcpLazyWriteEvent, IO_NO_INCREMENT, FALSE);
+	}
+	
+	DPRINT1("Lazy write items are available\n");
+	KeResetEvent(&CcpLazyWriteEvent);
+	
+	ExAcquireFastMutex(&MiWriteMutex);
+	RtlCopyMemory(&OldHead, &MiWriteScheduleListHead, sizeof(OldHead));
+	OldHead.Flink->Blink = &OldHead;
+	OldHead.Blink->Flink = &OldHead;
+	InitializeListHead(&MiWriteScheduleListHead);
+	ExReleaseFastMutex(&MiWriteMutex);
+	
+	for (Entry = OldHead.Flink;
+		 !IsListEmpty(&OldHead);
+		 Entry = OldHead.Flink)
+	{
+		WriteEntry = CONTAINING_RECORD(Entry, WRITE_SCHEDULE_ENTRY, Entry);
+		Status = MiWriteBackPage(WriteEntry->FileObject, &WriteEntry->FileOffset, WriteEntry->Length, WriteEntry->Page);
+
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT1("MiSimpleWrite failed (%x)\n", Status);
+		}
+
+		MmDereferencePage(WriteEntry->Page);
+		ObDereferenceObject(WriteEntry->FileObject);
+		RemoveEntryList(&WriteEntry->Entry);
+		ExFreePool(WriteEntry);
+	}
+}

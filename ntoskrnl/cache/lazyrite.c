@@ -9,7 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -18,11 +18,17 @@ KEVENT CcpLazyWriteEvent;
 
 /* FUNCTIONS ******************************************************************/
 
+VOID NTAPI
+CcpLazyWriteThread(PVOID Unused)
+{
+	/* Not implemented */
+}
+
 NTSTATUS
 NTAPI
 CcWaitForCurrentLazyWriterActivity(VOID)
 {
-    KeWaitForSingleObject(&CcpLazyWriteEvent, Executive, KernelMode, FALSE, NULL);
+    //KeWaitForSingleObject(&CcpLazyWriteEvent, Executive, KernelMode, FALSE, NULL);
     return STATUS_SUCCESS;
 }
 

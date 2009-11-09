@@ -358,6 +358,7 @@ PtrExt2CCB					PtrCCB)
 			RtlCopyMemory( PtrCCB->DirectorySearchPattern, L"*", 4 );*/
 
 			Ext2CopyWideCharToUnicodeString( &PtrCCB->DirectorySearchPattern, L"*" );
+			PtrSearchPattern = &PtrCCB->DirectorySearchPattern;
 			
 			FirstTimeQuery = TRUE;
 		} 
@@ -569,30 +570,15 @@ PtrExt2CCB					PtrCCB)
 				}
 
 				BothDirInformation->FileIndex = StartingIndexForSearch;
-				BothDirInformation->FileNameLength = PtrDirEntry->name_len*2 + 2;
+				BothDirInformation->FileNameLength = PtrDirEntry->name_len*2;
 				BothDirInformation->ShortNameLength = 0; 
 				BothDirInformation->ShortName[0] = 0;
 				
 				//	Copying out the name as WCHAR null terminated strings
 				for( j = 0; j< PtrDirEntry->name_len ; j ++ )
 				{
-					//	BothDirInformation->ShortName[ j ] = PtrDirEntry->name[j];
 					BothDirInformation->FileName[ j ] = PtrDirEntry->name[j];
-					//	if( j < 11 )
-					//		BothDirInformation->ShortName[j] = PtrDirEntry->name[j];
 				}
-
-				/*
-				if( j < 11 )
-				{
-					BothDirInformation->ShortNameLength = j * 2 + 2;
-					BothDirInformation->ShortName[ j ] = 0;
-				}
-				else
-				{
-					BothDirInformation->ShortNameLength = 24;
-					BothDirInformation->ShortName[ 11 ] = 0;
-				}*/
 
 				BothDirInformation->FileName[ j ]	= 0;
 				BytesReturned += ThisBlock;
@@ -673,7 +659,7 @@ PtrExt2CCB					PtrCCB)
 				}
 
 				DirectoryInformation->FileIndex = StartingIndexForSearch;
-				DirectoryInformation->FileNameLength = PtrDirEntry->name_len*2 + 2;
+				DirectoryInformation->FileNameLength = PtrDirEntry->name_len*2;
 				
 				//	Copying out the name as WCHAR null terminated strings
 				for( j = 0; j< PtrDirEntry->name_len ; j ++ )
@@ -721,7 +707,7 @@ PtrExt2CCB					PtrCCB)
 				RC = STATUS_NO_MORE_FILES;
 			try_return();
 		}
-		else if( BytesReturned )
+		else if( BytesReturned && BothDirInformation )
 		{
 			BothDirInformation->NextEntryOffset = 0;
 		}

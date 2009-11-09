@@ -19,7 +19,6 @@
 
 #define			DEBUG_LEVEL						(DEBUG_TRACE_READ)
 
-
 /*************************************************************************
 *
 * Function: Ext2Read()
@@ -530,8 +529,9 @@ BOOLEAN						FirstAttempt )
 			//	Read going beyond the end of file...
 			//	Adjusting the Read Length...
 			ReadLength = (UINT)(PtrReqdFCB->CommonFCBHeader.FileSize.QuadPart - ByteOffset.QuadPart);
+			LogicalBlockSize = EXT2_MIN_BLOCK_SIZE << PtrVCB->LogBlockSize;
 			if (PagingIo)
-				ReadLength = ROUND_TO_PAGES(ReadLength);
+				ReadLength = (ReadLength + (LogicalBlockSize - 1)) & ~(LogicalBlockSize - 1);
 			ReadTruncated = TRUE;
 		}
 
@@ -673,14 +673,13 @@ BOOLEAN						FirstAttempt )
 				
 				LARGE_INTEGER VolumeByteOffset;
 
-				DebugTrace(DEBUG_TRACE_MISC,   "Reading in some Single Indirect Blocks", 0);
-
+				DebugTrace(DEBUG_TRACE_MISC,   "Reading in some Single Indirect Blocks from IND block at %x", PtrFCB->IBlock[EXT2_IND_BLOCK]);
 				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
 
 				//
 				//	Asking the cache manager to oblige by pinning the single indirect block...
 				//
-				if (!CcMapData( PtrVCB->PtrStreamFileObject,
+				if (!CcPinRead( PtrVCB->PtrStreamFileObject,
                    &VolumeByteOffset,
                    LogicalBlockSize,
                    CanWait,
@@ -1034,8 +1033,6 @@ BOOLEAN						FirstAttempt )
 					IBlockIndex	= BlockNo / NoOfSingleIndirectBlocks;
 					BlockIndex	= BlockNo % NoOfSingleIndirectBlocks;
 
-					DbgPrint( "\nBlock No : 0x%I64X   IBlockIndex = 0x%I64X   BlockIndex = 0x%I64X", BlockNo, IBlockIndex, BlockIndex);
-
 					if( IBlockIndex >= TIArrayCount )
 					{
 						Ext2BreakPoint();
@@ -1046,7 +1043,6 @@ BOOLEAN						FirstAttempt )
 					}
 
 					PtrIoRuns[ Index ].LogicalBlock = PtrTIArray[ IBlockIndex ].PtrSIBlocks[ BlockIndex ];
-					DbgPrint( "LogicalBlock = 0x%lX", PtrIoRuns[ Index ].LogicalBlock );
 				}
 
 				if( PtrIoRuns[ Index ].LogicalBlock == 0 )
@@ -1065,11 +1061,11 @@ BOOLEAN						FirstAttempt )
 				PtrIoRuns[ Index ].EndOffset = End;
 				PtrIoRuns[ Index ].PtrAssociatedIrp = NULL;
 
-				DebugTrace( DEBUG_TRACE_MISC, "  Index = (%ld)", LogicalBlockIndex );
-				DebugTrace( DEBUG_TRACE_MISC, "  Logical Block = (0x%lX)", PtrIoRuns[ Index ].LogicalBlock );
-				DebugTrace( DEBUG_TRACE_MISC, "  Start = (0x%lX)", Start );
-				DebugTrace( DEBUG_TRACE_MISC, "  End = (0x%lX)  ", End );
-				DebugTrace( DEBUG_TRACE_MISC, "  Bytes read (0x%lX)", BytesReadSoFar );
+				DebugTrace( DEBUG_TRACE_READ_DETAILS, "  Index = (%ld)", LogicalBlockIndex );
+				DebugTrace( DEBUG_TRACE_READ_DETAILS, "  Logical Block = (0x%lX)", PtrIoRuns[ Index ].LogicalBlock );
+				DebugTrace( DEBUG_TRACE_READ_DETAILS, "  Start = (0x%lX)", Start );
+				DebugTrace( DEBUG_TRACE_READ_DETAILS, "  End = (0x%lX)  ", End );
+				DebugTrace( DEBUG_TRACE_READ_DETAILS, "  Bytes read (0x%lX)", BytesReadSoFar );
 				 
 				
 
@@ -1134,7 +1130,7 @@ BOOLEAN						FirstAttempt )
 			//
 			//	Pass down Associated IRPs to the Target Device Driver...
 			//
-			DebugTrace( DEBUG_TRACE_MISC, "Passing down the Read IRPs to the disk driver...", 0 );
+			DebugTrace( DEBUG_TRACE_READ_DETAILS, "Passing down the Read IRPs to the disk driver...", 0 );
 
 			RC = Ext2PassDownMultiReadWriteIRP( PtrIoRuns, Index+1, ReadLength, PtrIrpContext, PtrFCB, SynchronousIo );
 			

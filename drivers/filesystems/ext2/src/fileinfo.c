@@ -1023,8 +1023,8 @@ PFILE_ALLOCATION_INFORMATION	PtrBuffer)
 
 	try 
 	{
-			
 		// Are we increasing the allocation size?
+		ASSERT((PtrBuffer->AllocationSize.QuadPart & 0x3ff) == 0);			
 		if (RtlLargeIntegerLessThan(
 				PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize,
 				PtrBuffer->AllocationSize)) 

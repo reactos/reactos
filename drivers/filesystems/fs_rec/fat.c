@@ -91,6 +91,7 @@ FsRecIsFatVolume(IN PPACKED_BOOT_SECTOR PackedBootSector)
     }
 
     /* Return the result */
+	DPRINT1("%s FAT\n", Result ? "is" : "is not");
     return Result;
 }
 

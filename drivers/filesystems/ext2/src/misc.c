@@ -807,6 +807,7 @@ PtrExt2ObjectName		PtrObjectName)
 		// Initialize the file size values here.
 		PtrCommonFCBHeader->AllocationSize = AllocationSize;
 		PtrCommonFCBHeader->FileSize = EndOfFile;
+		ASSERT((PtrCommonFCBHeader->AllocationSize.QuadPart & 0x3ff) == 0);
 
 		// The following will disable ValidDataLength support. However, your
 		// FSD may choose to support this concept.
@@ -1640,7 +1641,6 @@ NTSTATUS NTAPI Ext2GetFCB_CCB_VCB_FromFileObject (
 				AssertFCB( (*PPtrFCB) );
 				(*PPtrVCB) = (*PPtrFCB)->PtrVCB;
 				AssertVCB( (*PPtrVCB) );
-
 			}
 		}
 		else
@@ -1668,7 +1668,6 @@ NTSTATUS NTAPI Ext2GetFCB_CCB_VCB_FromFileObject (
 				(*PPtrFCB) = NULL;
 				//found a VCB
 			}
-			
 		}
 	return STATUS_SUCCESS;
 }
@@ -1874,7 +1873,10 @@ BOOLEAN NTAPI Ext2CloseClosableFCB(
 	//	Deleting entry from VCB's FCB list...
 	RemoveEntryList( &PtrFCB->NextFCB );
 
-	PtrFCB->NodeIdentifier.NodeType = EXT2_NODE_TYPE_FREED;
+	// arty -- it must be the case that the real cache manager never 
+	// does any work in the CcFlushCache below...  if we do, then we
+	// wind up using the very FCB we're fuxoring here
+	//PtrFCB->NodeIdentifier.NodeType = EXT2_NODE_TYPE_FREED;
 
 	PtrFileObject = PtrFCB->DcbFcb.Dcb.PtrDirFileObject;
 
@@ -1901,6 +1903,9 @@ BOOLEAN NTAPI Ext2CloseClosableFCB(
 		PtrFCB->DcbFcb.Dcb.PtrDirFileObject = NULL;
 		PtrFileObject = NULL;
 	}
+
+	// arty -- added down here @see before above if
+	PtrFCB->NodeIdentifier.NodeType = EXT2_NODE_TYPE_FREED;
 
 	//	Uninitialize the Resources...
 	ExDeleteResourceLite( &PtrFCB->NTRequiredFCB.MainResource );
@@ -2111,7 +2116,7 @@ LONGLONG NTAPI Ext2Align64( LONGLONG NumberToBeAligned, LONGLONG Alignment )
 }
 
 
-ULONG Ext2GetCurrentTime()
+ULONG NTAPI Ext2GetCurrentTime()
 {
 	LARGE_INTEGER  CurrentTime;
 	ULONG Time;

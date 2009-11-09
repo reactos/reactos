@@ -115,9 +115,8 @@ extern Ext2Data				Ext2GlobalData;
 }
 
 #ifdef EXT2_POOL_WITH_TAG
-	#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 	#define Ext2AllocatePool(PoolType,NumberOfBytes)	\
-		ExAllocatePoolWithTag( PoolType, NumberOfBytes, TAG ( 'E','x','t','2' ) ) 
+		ExAllocatePoolWithTag( PoolType, NumberOfBytes, '2txE' ) 
 #else
 	#define Ext2AllocatePool(PoolType,NumberOfBytes)	\
 		ExAllocatePool( PoolType, NumberOfBytes ) 
@@ -158,13 +157,17 @@ extern Ext2Data				Ext2GlobalData;
 //
 //	The permitted DebugTrace types...
 //
+#if 1
 #define PERMITTED_DEBUG_TRACE_TYPES		DEBUG_TRACE_NONE
-/*
+#elif 0
+#define PERMITTED_DEBUG_TRACE_TYPES     DEBUG_TRACE_FILE_NAME | DEBUG_TRACE_MISC | \
+	                                    DEBUG_TRACE_LINENO
+#else
 #define PERMITTED_DEBUG_TRACE_TYPES		DEBUG_TRACE_ERROR | DEBUG_TRACE_IRP_ENTRY |		\
 										DEBUG_TRACE_FILE_NAME |	DEBUG_TRACE_SPECIAL	|	\
-										DEBUG_TRACE_ASYNC
-
-*/
+										DEBUG_TRACE_ASYNC | DEBUG_TRACE_MISC |          \
+	                                    DEBUG_TRACE_DIRINFO | DEBUG_TRACE_LINENO
+#endif
 
 
 #define DebugTrace( TYPE, X, Y )											\
@@ -232,5 +235,7 @@ extern Ext2Data				Ext2GlobalData;
 	#define AssertFCBorVCB( PtrVCBorFCB )
 
 #endif
+
+#define BLOCK_ROUND_UP(x) (((x) + LogicalBlockSize - 1) & ~(LogicalBlockSize - 1))
 
 #endif	// _EXT2_FSD_H_

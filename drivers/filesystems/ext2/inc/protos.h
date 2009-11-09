@@ -85,7 +85,8 @@ extern void NTAPI Ext2InitializeFCB(
 extern PtrExt2FCB	NTAPI Ext2LocateChildFCBInCore(
 	PtrExt2VCB				PtrVCB,	
 	PUNICODE_STRING			PtrName, 
-	ULONG					ParentInodeNo );
+	ULONG					ParentInodeNo,
+	BOOLEAN                 IgnoreCase );
 
 extern PtrExt2FCB	NTAPI Ext2LocateFCBInCore(
 	PtrExt2VCB				PtrVCB,	
@@ -96,7 +97,8 @@ extern ULONG	NTAPI Ext2LocateFileInDisk(
 	PtrExt2VCB				PtrVCB,
 	PUNICODE_STRING			PtrCurrentName, 
 	PtrExt2FCB				PtrParentFCB, 
-	ULONG					*Type );
+	ULONG					*Type,
+	BOOLEAN                 IgnoreCase );
 
 extern ULONG NTAPI Ext2CreateFile(
 	PtrExt2IrpContext		PtrIrpContext,

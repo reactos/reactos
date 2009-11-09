@@ -19,7 +19,6 @@
 
 #define			DEBUG_LEVEL						(DEBUG_TRACE_WRITE)
 
-
 /*************************************************************************
 *
 * Function: Ext2Write()
@@ -697,6 +696,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 			// First though, we need a buffer pointer (address) that is valid
 			PtrSystemBuffer = Ext2GetCallersBuffer(PtrIrp);
 			ASSERT(PtrSystemBuffer);
+
 			if ( !CcCopyWrite(PtrFileObject, &(ByteOffset), WriteLength, CanWait, PtrSystemBuffer)) 
 			{
 				// The caller was not prepared to block and data is not immediately
@@ -795,6 +795,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 				//
 				DebugTrace(DEBUG_TRACE_WRITE_DETAILS,   "Reading in some Indirect Blocks", 0);
 
+				DebugTrace(DEBUG_TRACE_WRITE_DETAILS,   "Indirect block at %x", PtrFCB->IBlock[EXT2_NDIR_BLOCKS]);
 				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_NDIR_BLOCKS ] * LogicalBlockSize;
 
 				//
@@ -813,9 +814,10 @@ NTSTATUS NTAPI Ext2CommonWrite(
 					// Mark Irp Pending ...
 					IoMarkIrpPending( PtrIrp );
 					RC = STATUS_PENDING;
-					try_return();
 					DebugTrace(DEBUG_TRACE_ASYNC,   "Cache read failiure while reading in volume meta data", 0);
+					try_return();
 				}
+				ASSERT(PtrPinnedSIndirectBlock);
 			}
 			if( ( ByteOffset.QuadPart + WriteLength ) > DirectBlockSize + SingleIndirectBlockSize &&
 				( ByteOffset.QuadPart ) < DirectBlockSize + SingleIndirectBlockSize + DoubleIndirectBlockSize )
@@ -1219,6 +1221,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 				else if( LogicalBlockIndex < (NoOfSingleIndirectBlocks + NoOfDirectBlocks) )
 				{
 					//	Single Indirect Block
+					DebugTrace(DEBUG_TRACE_WRITE_DETAILS, "PtrPinnedSIndirectBlock %x", PtrPinnedSIndirectBlock);
 					PtrIoRuns[ Index ].LogicalBlock = PtrPinnedSIndirectBlock[ LogicalBlockIndex - EXT2_NDIR_BLOCKS ];
 				}
 				else if( LogicalBlockIndex < (NoOfDoubleIndirectBlocks + NoOfSingleIndirectBlocks + NoOfDirectBlocks)  )
@@ -1249,10 +1252,12 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 					if( IBlockIndex >= TIArrayCount )
 					{
+						DbgPrint("%s:%d\n", __FILE__, __LINE__);
 						Ext2BreakPoint();
 					}
 					if( BlockIndex >= LogicalBlockSize )
 					{
+						DbgPrint("%s:%d\n", __FILE__, __LINE__);
 						Ext2BreakPoint();
 					}
 
@@ -1274,7 +1279,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 				PtrIoRuns[ Index ].PtrAssociatedIrp = NULL;
 
 				DebugTrace( DEBUG_TRACE_WRITE_DETAILS, "  Index = (%ld)", LogicalBlockIndex );
-				DebugTrace( DEBUG_TRACE_WRITE_DETAILS, "  Logical Block = (0x%lX)", PtrFCB->IBlock[ LogicalBlockIndex ] );
+				DebugTrace( DEBUG_TRACE_WRITE_DETAILS, "  Block = (0x%lX)", PtrIoRuns[Index].LogicalBlock);
 				DebugTrace( DEBUG_TRACE_WRITE_DETAILS, "  Start = (0x%lX)", Start );
 				DebugTrace( DEBUG_TRACE_WRITE_DETAILS, "  End = (0x%lX)  ", End );
 				DebugTrace( DEBUG_TRACE_WRITE_DETAILS, "  Bytes written (0x%lX)", BytesWrittenSoFar );
@@ -1299,12 +1304,14 @@ NTSTATUS NTAPI Ext2CommonWrite(
 			//
 			if( PtrPinnedSIndirectBCB )
 			{
+				DebugTrace( DEBUG_TRACE_WRITE_DETAILS, "Unpinning single indirect block", 0);
 				CcUnpinData( PtrPinnedSIndirectBCB );
 				PtrPinnedSIndirectBCB = NULL;
 				PtrPinnedSIndirectBlock = NULL;
 			}
 			if( PtrPinnedDIndirectBCB )
 			{
+				DebugTrace( DEBUG_TRACE_WRITE_DETAILS, "Unpinning double indirect block", 0);
 				CcUnpinData( PtrPinnedDIndirectBCB );
 				PtrPinnedDIndirectBCB = NULL;
 				PtrPinnedDIndirectBlock = NULL;

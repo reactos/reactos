@@ -102,9 +102,9 @@ NTSTATUS NTAPI Ext2ReadInode (
 		NumberOfBytesToRead = sizeof(EXT2_INODE);	//	LogicalBlockSize;
 
 		VolumeByteOffset.QuadPart = PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock
-				* LogicalBlockSize + Index * sizeof(EXT2_INODE);
+				* LogicalBlockSize + Index * PtrVcb->InodeSize;
 		//VolumeByteOffset.QuadPart = PtrVcb->InodeTableBlock[ GroupNo ] * LogicalBlockSize +
-		//	Index * sizeof(EXT2_INODE);
+		//	Index * PtrVcb->InodeSize;
 		
 		TempOffset.QuadPart = Ext2Align64( VolumeByteOffset.QuadPart, LogicalBlockSize );
 		if( TempOffset.QuadPart != VolumeByteOffset.QuadPart )
@@ -235,12 +235,8 @@ void NTAPI Ext2InitializeFCBInodeInfo (
 
 		PtrFCB->NTRequiredFCB.CommonFCBHeader.FileSize.QuadPart = Inode.i_size;
 		Ext2SetFlag( PtrFCB->FCBFlags, EXT2_FCB_BLOCKS_INITIALIZED );
-		PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize.QuadPart = Inode.i_blocks * 512;
 
-		if( PtrFCB->IBlock[ EXT2_IND_BLOCK ] )
-		{
-			PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize.QuadPart -= LogicalBlockSize / 512;
-		}
+		PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize.QuadPart = BLOCK_ROUND_UP(Inode.i_size);
 		DebugTrace( DEBUG_TRACE_FREE, "Freeing  = %lX [metadata]", Inode );
 	}
 }
@@ -324,9 +320,10 @@ ULONG NTAPI Ext2AllocInode(
 			ULONG i, j;
 			BYTE Bitmap;
 			
-			if( !CcPinRead( PtrVCB->PtrStreamFileObject,
+			if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   LogicalBlockSize, //NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrBitmapBCB,
 				   (PVOID*)&PtrBitmapBuffer ) )
@@ -407,9 +404,10 @@ ULONG NTAPI Ext2AllocInode(
 			NumberOfBytesToRead = PtrVCB->NoOfGroups * sizeof( struct ext2_group_desc );
 			NumberOfBytesToRead = Ext2Align( NumberOfBytesToRead, LogicalBlockSize );
 
-			if (!CcPinRead( PtrVCB->PtrStreamFileObject,
+			if (!CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrDescriptorBCB ,
 				   (PVOID*)&PtrGroupDescriptor )) 
@@ -450,9 +448,10 @@ ULONG NTAPI Ext2AllocInode(
 			//	THis shouldn't be more than a block in size...
 			NumberOfBytesToRead = Ext2Align( sizeof( EXT2_SUPER_BLOCK ), LogicalBlockSize );
 
-			if( !CcPinRead( PtrVCB->PtrStreamFileObject,
+			if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrSuperBlockBCB,
 				   (PVOID*)&PtrSuperBlock ) )
@@ -606,9 +605,10 @@ BOOLEAN NTAPI Ext2DeallocInode(
 			NumberOfBytesToRead = PtrVCB->NoOfGroups * sizeof( struct ext2_group_desc );
 			NumberOfBytesToRead = Ext2Align( NumberOfBytesToRead, LogicalBlockSize );
 
-			if (!CcPinRead( PtrVCB->PtrStreamFileObject,
+			if (!CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrDescriptorBCB ,
 				   (PVOID*)&PtrGroupDescriptor )) 
@@ -650,9 +650,10 @@ BOOLEAN NTAPI Ext2DeallocInode(
 			VolumeByteOffset.QuadPart = 1024;
 			NumberOfBytesToRead = Ext2Align( sizeof( EXT2_SUPER_BLOCK ), LogicalBlockSize );
 
-			if( !CcPinRead( PtrVCB->PtrStreamFileObject,
+			if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrSuperBlockBCB,
 				   (PVOID*)&PtrSuperBlock ) )
@@ -752,7 +753,7 @@ NTSTATUS NTAPI Ext2WriteInode(
 		NumberOfBytesToRead = sizeof(EXT2_INODE);
 
 		VolumeByteOffset.QuadPart = PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock
-				* LogicalBlockSize + Index * sizeof(EXT2_INODE);
+				* LogicalBlockSize + Index * PtrVcb->InodeSize;
 		
 		TempOffset.QuadPart = Ext2Align64( VolumeByteOffset.QuadPart, LogicalBlockSize );
 		if( TempOffset.QuadPart != VolumeByteOffset.QuadPart )
@@ -773,9 +774,10 @@ NTSTATUS NTAPI Ext2WriteInode(
 			Ext2BreakPoint();
 		}
 
-		if( !CcPinRead( PtrVcb->PtrStreamFileObject,
+		if( !CcPreparePinWrite( PtrVcb->PtrStreamFileObject,
 					&VolumeByteOffset,
 					NumberOfBytesToRead,
+					FALSE,
 					TRUE,			//	Can Wait...
 					&PtrBCB,
 					(PVOID*)&PtrPinnedBuffer ) )
@@ -922,6 +924,7 @@ BOOLEAN NTAPI Ext2MakeNewDirectoryEntry(
 					&PtrLastBlockBCB,
 					(PVOID*)&PtrLastBlock ) )
 				{
+					DbgPrint("(%s:%d) CcPreparePinWrite failed\n", __FILE__,__LINE__);
 					try_return( RC = FALSE );
 				}
 
@@ -984,12 +987,13 @@ BOOLEAN NTAPI Ext2MakeNewDirectoryEntry(
 				//	---------------->
 
 				//	Getting ready for updation...
-				CcPinMappedData( PtrFileObject,
-							   &VolumeByteOffset,
-							   LogicalBlockSize,
-							   TRUE,
-							   &PtrLastBlockBCB );
-
+				CcPreparePinWrite( PtrFileObject,
+								   &VolumeByteOffset,
+								   LogicalBlockSize,
+								   FALSE,
+								   TRUE,
+								   &PtrLastBlockBCB,
+								   (PVOID *)&PtrLastBlock );
 
 				DirEntry.rec_len = ActualLength - MinLength;
 
@@ -1112,9 +1116,10 @@ BOOLEAN NTAPI Ext2FreeDirectoryEntry(
 
 			VolumeByteOffset.QuadPart = ByteOffset;
 			
-			CcPinRead(	PtrFileObject,
+			CcPreparePinWrite(	PtrFileObject,
 						&VolumeByteOffset,
 						LogicalBlockSize,
+						FALSE,
 						TRUE,
 						&PtrDataBlockBCB,
 						(PVOID*)&PtrDataBlock );
@@ -1229,6 +1234,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 		Ext2InitializeFCBInodeInfo( PtrFCB );
 
 		//	Allocate a block...
+		DebugTrace(DEBUG_TRACE_SPECIAL, "Ext2AllocBlock", 0);
 		NewBlockNo = Ext2AllocBlock( PtrIrpContext, PtrVCB, 1 );
 
 		if( NewBlockNo == 0 )
@@ -1266,6 +1272,8 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 				//	Caching has been initiated...
 				//	Let the Cache manager in on these changes...
 				//	
+				DebugTrace(DEBUG_TRACE_SPECIAL, "CcSetFileSizes %08x", 
+						   PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize.u.LowPart);
 				CcSetFileSizes( PtrFileObject, (PCC_FILE_SIZES)&(PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize));
 			}
 			
@@ -1285,12 +1293,16 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 		{
 			//
 			//	A single indirect data block will do...
+			DebugTrace( DEBUG_TRACE_SPECIAL, "Adding single indirect block", 0 );
 			Ext2ReadInode( PtrVCB, PtrFCB->INodeNo, &Inode	);
 
 			if( PtrFCB->IBlock[ EXT2_IND_BLOCK ] == 0 )
 			{
 				//	A Single Indirect block should be allocated as well!!
+				DebugTrace( DEBUG_TRACE_SPECIAL, "Adding single indirect block and allocating indirect", 0 );
 				PtrFCB->IBlock[ EXT2_IND_BLOCK ] = Ext2AllocBlock( PtrIrpContext, PtrVCB, 1 );
+				ASSERT(PtrFCB->IBlock[EXT2_IND_BLOCK]);
+				DebugTrace( DEBUG_TRACE_SPECIAL, "Got block %x\n", PtrFCB->IBlock[ EXT2_IND_BLOCK ] );
 				if( PtrFCB->IBlock[ EXT2_IND_BLOCK ] == 0 )
 				{
 					try_return (RC = FALSE );
@@ -1319,9 +1331,10 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 				
 				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
 
-				if( !CcPinRead( PtrVCB->PtrStreamFileObject,
+				if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 							&VolumeByteOffset,
 							LogicalBlockSize,
+							FALSE,          // Zero
 							TRUE,			//	Can Wait...
 							&PtrSIBBCB,
 							(PVOID*)&PtrSIBBuffer ) )
@@ -1335,6 +1348,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 			Inode.i_block[ EXT2_IND_BLOCK ] = PtrFCB->IBlock[ EXT2_IND_BLOCK ];
 			Inode.i_blocks += ( LogicalBlockSize / 512 );
 			PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize.QuadPart += LogicalBlockSize;
+
 			if( UpdateFileSize )
 			{
 				Inode.i_size += LogicalBlockSize;
@@ -1357,6 +1371,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 
 			
 			//	Update the SIB...
+			DebugTrace(DEBUG_TRACE_MISC,"Allocated block %x", NewBlockNo);
 			PtrSIBBuffer[ NoOfBlocks - DirectBlocks ] = NewBlockNo;
 			CcSetDirtyPinnedData( PtrSIBBCB, NULL );
 			Ext2SaveBCB( PtrIrpContext, PtrSIBBCB, PtrVCB->PtrStreamFileObject );
@@ -1377,6 +1392,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 			if( PtrFCB->IBlock[ EXT2_DIND_BLOCK ] == 0 )
 			{
 				//	A double indirect pointer block should be allocated as well!!
+				DebugTrace(DEBUG_TRACE_SPECIAL, "Ext2AllocBlock", 0);
 				PtrFCB->IBlock[ EXT2_DIND_BLOCK ] = Ext2AllocBlock( PtrIrpContext, PtrVCB, 1 );
 				if( PtrFCB->IBlock[ EXT2_DIND_BLOCK ] == 0 )
 				{
@@ -1419,12 +1435,15 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 			
 			//	See if a single indirect 'pointer' block 
 			//	should also be allocated...
+			DebugTrace(DEBUG_TRACE_SPECIAL, "NoOfBlocks %x", NoOfBlocks);
 			BlockNo = ( NoOfBlocks - DirectBlocks - SingleIndirectBlocks );
+			DebugTrace(DEBUG_TRACE_SPECIAL, "BlockNo %x", BlockNo);
 			SBlockNo = BlockNo / SingleIndirectBlocks;
-			if( BlockNo % SingleIndirectBlocks )
+			if( !(BlockNo % SingleIndirectBlocks) )
 			{
 				//	A single indirect 'pointer' block 
 				//	should also be allocated...
+				DebugTrace(DEBUG_TRACE_SPECIAL, "Ext2AllocBlock", 0);
 				PtrDIBBuffer[SBlockNo] = Ext2AllocBlock( PtrIrpContext, PtrVCB, 1 );
 				CcSetDirtyPinnedData( PtrDIBBCB, NULL );
 				VolumeByteOffset.QuadPart = PtrDIBBuffer[SBlockNo] * LogicalBlockSize;
@@ -1509,6 +1528,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 			if( PtrFCB->IBlock[ EXT2_TIND_BLOCK ] == 0 )
 			{
 				//	A double indirect pointer block should be allocated as well!!
+				DebugTrace(DEBUG_TRACE_SPECIAL, "Ext2AllocBlock", 0);
 				PtrFCB->IBlock[ EXT2_DIND_BLOCK ] = Ext2AllocBlock( PtrIrpContext, PtrVCB, 1 );
 				if( PtrFCB->IBlock[ EXT2_DIND_BLOCK ] == 0 )
 				{
@@ -1557,6 +1577,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 			{
 				//	A single indirect 'pointer' block 
 				//	should also be allocated...
+				DebugTrace(DEBUG_TRACE_SPECIAL, "Ext2AllocBlock", 0);
 				PtrDIBBuffer[SBlockNo] = Ext2AllocBlock( PtrIrpContext, PtrVCB, 1 );
 				CcSetDirtyPinnedData( PtrDIBBCB, NULL );
 				VolumeByteOffset.QuadPart = PtrDIBBuffer[SBlockNo] * LogicalBlockSize;
@@ -1716,9 +1737,10 @@ ULONG NTAPI Ext2AllocBlock(
 			ULONG i, j;
 			BYTE Bitmap;
 					
-			if( !CcPinRead( PtrVCB->PtrStreamFileObject,
+			if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   LogicalBlockSize,					//	NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrBitmapBCB,
 				   (PVOID*)&PtrBitmapBuffer ) )
@@ -1798,9 +1820,10 @@ ULONG NTAPI Ext2AllocBlock(
 			NumberOfBytesToRead = PtrVCB->NoOfGroups * sizeof( struct ext2_group_desc );
 			NumberOfBytesToRead = Ext2Align( NumberOfBytesToRead, LogicalBlockSize );
 
-			if (!CcPinRead( PtrVCB->PtrStreamFileObject,
+			if (!CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrDescriptorBCB ,
 				   (PVOID*)&PtrGroupDescriptor )) 
@@ -1840,9 +1863,10 @@ ULONG NTAPI Ext2AllocBlock(
 			VolumeByteOffset.QuadPart = 1024;
 			NumberOfBytesToRead = Ext2Align( sizeof( EXT2_SUPER_BLOCK ), LogicalBlockSize );
 
-			if( !CcPinRead( PtrVCB->PtrStreamFileObject,
+			if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrSuperBlockBCB,
 				   (PVOID*)&PtrSuperBlock ) )
@@ -1929,9 +1953,10 @@ BOOLEAN NTAPI Ext2DeallocBlock(
 		//
 		//	Read in the bitmap block...
 		//
-		if( !CcPinRead( PtrVCB->PtrStreamFileObject,
+		if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				&VolumeByteOffset,
 				LogicalBlockSize,
+				FALSE,
 				TRUE,			//	Can Wait...
 				&PtrBitmapBCB,
 				(PVOID*)&PtrBitmapBuffer ) )
@@ -1996,9 +2021,10 @@ BOOLEAN NTAPI Ext2DeallocBlock(
 			NumberOfBytesToRead = PtrVCB->NoOfGroups * sizeof( struct ext2_group_desc );
 			NumberOfBytesToRead = Ext2Align( NumberOfBytesToRead, LogicalBlockSize );
 
-			if (!CcPinRead( PtrVCB->PtrStreamFileObject,
+			if (!CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrDescriptorBCB ,
 				   (PVOID*)&PtrGroupDescriptor )) 
@@ -2039,9 +2065,10 @@ BOOLEAN NTAPI Ext2DeallocBlock(
 			VolumeByteOffset.QuadPart = 1024;
 			NumberOfBytesToRead = Ext2Align( sizeof( EXT2_SUPER_BLOCK ), LogicalBlockSize );
 
-			if( !CcPinRead( PtrVCB->PtrStreamFileObject,
+			if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   NumberOfBytesToRead,
+				   FALSE,
 				   TRUE,
 				   &PtrSuperBlockBCB,
 				   (PVOID*)&PtrSuperBlock ) )

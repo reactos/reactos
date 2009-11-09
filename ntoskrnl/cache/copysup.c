@@ -9,7 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -54,41 +54,41 @@ CcCopyRead(IN PFILE_OBJECT FileObject,
 
     while (CacheOffset.QuadPart < EndOfExtent.QuadPart)
     {
-		NextOffset.QuadPart = (CacheOffset.QuadPart + CACHE_STRIPE) & ~(CACHE_STRIPE-1);
-		ReadLen = EndOfExtent.QuadPart - CacheOffset.QuadPart;
-		if (CacheOffset.QuadPart + ReadLen > NextOffset.QuadPart)
-		{
-			ReadLen = NextOffset.QuadPart - CacheOffset.QuadPart;
-		}
-		
-		DPRINT("Reading %d bytes in this go (at %08x%08x)\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
-		
-		if (!CcPinRead
-			(FileObject,
-			 &CacheOffset,
-			 ReadLen,
-			 Wait ? PIN_WAIT : PIN_IF_BCB,
-			 &Bcb,
-			 (PVOID*)&ReadBuffer))
-		{
-			IoStatus->Status = STATUS_UNSUCCESSFUL;
-			IoStatus->Information = 0;
-			DPRINT("Failed CcCopyRead\n");
-			return FALSE;
-		}
-		
-		DPRINT("Copying %d bytes at %08x%08x\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
-		RtlCopyMemory
-			(BufferTarget,
-			 ReadBuffer,
-			 ReadLen);
-		
-		BufferTarget += ReadLen;
-		
-		CacheOffset = NextOffset;
-		CcUnpinData(Bcb);
-    }
+	NextOffset.QuadPart = (CacheOffset.QuadPart + CACHE_STRIPE) & ~(CACHE_STRIPE-1);
+	ReadLen = EndOfExtent.QuadPart - CacheOffset.QuadPart;
+	if (CacheOffset.QuadPart + ReadLen > NextOffset.QuadPart)
+	{
+	    ReadLen = NextOffset.QuadPart - CacheOffset.QuadPart;
+	}
+
+	DPRINT("Reading %d bytes in this go (at %08x%08x)\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
+
+	if (!CcPinRead
+	    (FileObject,
+	     &CacheOffset,
+	     ReadLen,
+	     Wait ? PIN_WAIT : PIN_IF_BCB,
+	     &Bcb,
+	     (PVOID*)&ReadBuffer))
+	{
+	    IoStatus->Status = STATUS_UNSUCCESSFUL;
+	    IoStatus->Information = 0;
+	    DPRINT("Failed CcCopyRead\n");
+	    return FALSE;
+	}
+
+	DPRINT("Copying %d bytes at %08x%08x\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
+	RtlCopyMemory
+	    (BufferTarget,
+	     ReadBuffer,
+	     ReadLen);
+
+	BufferTarget += ReadLen;
 	
+	CacheOffset = NextOffset;
+	CcUnpinData(Bcb);
+    }
+
     IoStatus->Status = STATUS_SUCCESS;
     IoStatus->Information = Length;
     
@@ -118,69 +118,56 @@ CcCopyWrite(IN PFILE_OBJECT FileObject,
             IN BOOLEAN Wait,
             IN PVOID Buffer)
 {
-    PCHAR WriteBuffer;
-    ULONG WriteLen;
-    PCHAR BufferTarget = (PCHAR)Buffer;
-    PNOCC_BCB Bcb;
-	IO_STATUS_BLOCK IoStatus;
-    LARGE_INTEGER CacheOffset, EndOfExtent, NextOffset;
-    
-    DPRINT
-	("CcCopyWrite(%x,%x,%d,%d,%x)\n", 
-	 FileObject, 
-	 FileOffset->LowPart,
-	 Length,
-	 Wait,
-	 Buffer);
-    
-    CacheOffset.QuadPart = FileOffset->QuadPart;
-    EndOfExtent.QuadPart = FileOffset->QuadPart + Length;
+	INT Count = 0;
+	BOOLEAN Result;
+	PNOCC_BCB Bcb;
+	PVOID WriteBuf;
+	ULONG WriteLen;
+	LARGE_INTEGER CurrentOffset = *FileOffset;
+	LARGE_INTEGER EndOffset;
+	LARGE_INTEGER NextOffset;
 
-    while (CacheOffset.QuadPart < EndOfExtent.QuadPart)
-    {
-		NextOffset.QuadPart = (CacheOffset.QuadPart + CACHE_STRIPE) & ~(CACHE_STRIPE-1);
-		WriteLen = EndOfExtent.QuadPart - CacheOffset.QuadPart;
-		if (CacheOffset.QuadPart + WriteLen > NextOffset.QuadPart)
+	EndOffset.QuadPart = CurrentOffset.QuadPart + Length;
+
+	DPRINT
+		("CcCopyWrite(%x,%x,%d,%d,%x)\n", 
+		 FileObject, 
+		 FileOffset->LowPart,
+		 Length,
+		 Wait,
+		 Buffer);
+
+	while (CurrentOffset.QuadPart < EndOffset.QuadPart)
+	{
+		NextOffset.QuadPart = (CurrentOffset.QuadPart + CACHE_STRIPE) & ~(CACHE_STRIPE - 1);
+		DPRINT("NextOffset %08x%08x\n", NextOffset.u.HighPart, NextOffset.u.LowPart);
+		WriteLen = MIN(NextOffset.QuadPart - CurrentOffset.QuadPart, Length);
+		DPRINT("Copying %x bytes from %08x%08x\n", 
+				WriteLen, 
+				CurrentOffset.u.HighPart, CurrentOffset.u.LowPart);
+		DPRINT("CcPreparePinWrite\n");
+		Result = CcPreparePinWrite
+			(FileObject, &CurrentOffset, WriteLen, FALSE, Wait ? PIN_WAIT : PIN_IF_BCB, 
+			 (PVOID *)&Bcb, &WriteBuf);
+		DPRINT("Result %s %x %x\n", Result ? "TRUE" : "FALSE", Bcb, WriteBuf);
+		if (!Result)
 		{
-			WriteLen = NextOffset.QuadPart - CacheOffset.QuadPart;
+			DPRINT1("CcPreparePinWrite Failed?\n");
+			if (Wait) RtlRaiseStatus(STATUS_NOT_MAPPED_DATA); else return FALSE;
 		}
-		
-		DPRINT("Writeing %d bytes in this go (at %08x%08x)\n", WriteLen, CacheOffset.HighPart, CacheOffset.LowPart);
-		
-		if (!CcPreparePinWrite
-			(FileObject,
-			 &CacheOffset,
-			 WriteLen,
-			 (!(CacheOffset.QuadPart & (CACHE_STRIPE - 1)) &&
-			  WriteLen == CACHE_STRIPE),
-			 Wait ? PIN_WAIT : PIN_IF_BCB,
-			 (PVOID*)&Bcb,
-			 (PVOID*)&WriteBuffer))
-		{
-			DPRINT("Failed CcCopyWrite\n");
-			return FALSE;
-		}
-		
-		DPRINT("Copying %d bytes at %08x%08x\n", WriteLen, CacheOffset.HighPart, CacheOffset.LowPart);
-		RtlCopyMemory
-			(WriteBuffer,
-			 BufferTarget,
-			 WriteLen);
-		
-		BufferTarget += WriteLen;
-		
-		CcFlushCache
-			(Bcb->FileObject->SectionObjectPointer,
-			 &CacheOffset,
-			 WriteLen,
-			 &IoStatus);
-		CacheOffset = NextOffset;
+		DPRINT("Copying actual memory to BCB#%x (@%x) (from buffer at %x)\n", Bcb - CcCacheSections, WriteBuf, Bcb->BaseAddress);
+		MiZeroFillSection(WriteBuf, &CurrentOffset, WriteLen);
+		RtlCopyMemory(WriteBuf, ((PCHAR)Buffer) + Count, WriteLen);
+		Count += WriteLen;
+		Length -= WriteLen;
+		CurrentOffset = NextOffset;
+		Bcb->Dirty = TRUE;
 		CcUnpinData(Bcb);
-    }
-	
-    DPRINT("Done with CcCopyWrite\n");
-    
-    return TRUE;
+	}
+
+	DPRINT("Done with CcCopyWrite\n");
+
+	return TRUE;
 }
 
 VOID

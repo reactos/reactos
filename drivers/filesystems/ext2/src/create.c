@@ -295,7 +295,9 @@ BOOLEAN						FirstAttempt)
 		OpenByFileId = ((RequestedOptions & FILE_OPEN_BY_FILE_ID) ? TRUE : FALSE);
 		PageFileManipulation = ((PtrIoStackLocation->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE);
 		OpenTargetDirectory = ((PtrIoStackLocation->Flags & SL_OPEN_TARGET_DIRECTORY) ? TRUE : FALSE);
-		IgnoreCaseWhenChecking = ((PtrIoStackLocation->Flags & SL_CASE_SENSITIVE) ? TRUE : FALSE);
+		IgnoreCaseWhenChecking = ((PtrIoStackLocation->Flags & SL_CASE_SENSITIVE) ? FALSE : TRUE);
+
+		ASSERT(IgnoreCaseWhenChecking);
 
 		// Ensure that the operation has been directed to a valid VCB ...
 		PtrVCB =	(PtrExt2VCB)(PtrIrpContext->TargetDeviceObject->DeviceExtension);
@@ -510,7 +512,7 @@ BOOLEAN						FirstAttempt)
 				//	Current Name is its name...
 
 
-				PtrNextFCB = Ext2LocateChildFCBInCore ( PtrVCB, &CurrentName, CurrInodeNo );
+				PtrNextFCB = Ext2LocateChildFCBInCore ( PtrVCB, &CurrentName, CurrInodeNo, IgnoreCaseWhenChecking );
 				
 				if( PtrNextFCB )
 				{
@@ -570,7 +572,7 @@ BOOLEAN						FirstAttempt)
 				}
 				else	//	searching on the disk...
 				{
-					CurrInodeNo = Ext2LocateFileInDisk( PtrVCB, &CurrentName, PtrCurrFCB, &Type );
+					CurrInodeNo = Ext2LocateFileInDisk( PtrVCB, &CurrentName, PtrCurrFCB, &Type, IgnoreCaseWhenChecking );
 					if( !CurrInodeNo )
 					{
 						//
@@ -1156,7 +1158,8 @@ NTSTATUS NTAPI Ext2OpenRootDirectory(
 PtrExt2FCB NTAPI Ext2LocateChildFCBInCore(
 	PtrExt2VCB				PtrVCB,	
 	PUNICODE_STRING			PtrName, 
-	ULONG					ParentInodeNo )
+	ULONG					ParentInodeNo,
+	BOOLEAN                 CaseInsensitive )
 {
 
 	PtrExt2FCB PtrFCB = NULL;
@@ -1175,7 +1178,8 @@ PtrExt2FCB NTAPI Ext2LocateChildFCBInCore(
 		ASSERT( PtrFCB );
 		if( PtrFCB->ParentINodeNo == ParentInodeNo )
 		{
-			if( RtlCompareUnicodeString( &PtrFCB->FCBName->ObjectName, PtrName, TRUE ) == 0 )
+			DebugTrace(DEBUG_TRACE_FILE_NAME, "Comparing %wZ", &PtrFCB->FCBName->ObjectName);
+			if( RtlCompareUnicodeString( &PtrFCB->FCBName->ObjectName, PtrName, CaseInsensitive ) == 0 )
 				return PtrFCB;
 		}
 	}
@@ -1215,7 +1219,8 @@ ULONG NTAPI Ext2LocateFileInDisk (
 	PtrExt2VCB				PtrVCB,
 	PUNICODE_STRING			PtrCurrentName, 
 	PtrExt2FCB				PtrParentFCB,
-	ULONG					*Type )
+	ULONG					*Type,
+	BOOLEAN                 CaseInsensitive )
 {
 
 	PFILE_OBJECT		PtrFileObject = NULL;
@@ -1301,7 +1306,6 @@ ULONG NTAPI Ext2LocateFileInDisk (
 		BYTE *			PtrPinnedBlockBuffer = NULL;
 		PEXT2_DIR_ENTRY	PtrDirEntry = NULL;
 		BOOLEAN			Found;
-		int				i;
 
 
 		StartBufferOffset.QuadPart = 0;
@@ -1328,31 +1332,25 @@ ULONG NTAPI Ext2LocateFileInDisk (
 		
 		for( BufferIndex = 0, Found = FALSE; !Found && BufferIndex < ( PtrParentFCB->NTRequiredFCB.CommonFCBHeader.FileSize.QuadPart - 1) ; BufferIndex += PtrDirEntry->rec_len )
 		{
+			ANSI_STRING FileNameString;
+			UNICODE_STRING WideFileNameString;
+
 			PtrDirEntry = (PEXT2_DIR_ENTRY) &PtrPinnedBlockBuffer[ BufferIndex ];
 			if( PtrDirEntry->name_len == 0 || PtrDirEntry->rec_len == 0 || PtrDirEntry->inode == 0)
 			{
 				//	Invalid entry...
 				//  Ignore...
+				DebugTrace(DEBUG_TRACE_FILE_NAME, "Ignored entry", 0);
 				continue;
 			}
-			//
-			//	Comparing ( case sensitive )
-			//	Directory entry is not NULL terminated...
-			//	nor is the CurrentName...
-			//
-			if( PtrDirEntry->name_len != (PtrCurrentName->Length / 2) )
-				continue;
-			
-			for( i = 0, Found = TRUE ; i < PtrDirEntry->name_len ; i++ )
-			{
-				if( PtrDirEntry->name[ i ] != PtrCurrentName->Buffer[ i ] )
-				{
-					Found = FALSE;
-					break;
 
-				}
-			}
-			
+			FileNameString.Buffer = PtrDirEntry->name;
+			FileNameString.Length = FileNameString.MaximumLength = PtrDirEntry->name_len;
+			RtlAnsiStringToUnicodeString(&WideFileNameString, &FileNameString, TRUE);
+
+			Found = !RtlCompareUnicodeString( &WideFileNameString, PtrCurrentName, CaseInsensitive );
+
+			RtlFreeUnicodeString(&WideFileNameString);
 		}
 		if( Found )
 		{
