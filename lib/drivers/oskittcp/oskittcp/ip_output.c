@@ -301,7 +301,7 @@ ip_output(m0, opt, ro, flags, imo)
 	}
 #endif
 
-#ifndef notdef
+#ifdef notdef
 	/*
 	 * If source address not specified yet, use address
 	 * of outgoing interface.

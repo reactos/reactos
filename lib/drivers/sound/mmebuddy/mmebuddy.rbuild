@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="mmebuddy" type="staticlibrary" allowwarnings="false" unicode="yes">
 	<include base="ReactOS">include/reactos/libs/sound</include>
-	<define name="DEBUG_NT4">1</define>
+	<define name="NDEBUG">1</define>
 	<file>capabilities.c</file>
 	<file>devicelist.c</file>
 	<file>deviceinstance.c</file>

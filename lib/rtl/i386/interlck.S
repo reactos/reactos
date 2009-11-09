@@ -24,13 +24,13 @@ _RtlInterlockedPopEntrySList@4:
     push ebp
 
     /* Load ListHead into ebp */
-    mov ebp, [esp + 8]
+    mov ebp, [esp + 12]
 
     /* Load ListHead->Next into eax */
     mov eax, [ebp]
 
     /* Load ListHead->Depth and ListHead->Sequence into edx */
-    mov edx, [ebp+4]
+    mov edx, [ebp + 4]
 
 1:
     /* Check if ListHead->Next is NULL */
@@ -70,10 +70,10 @@ _RtlInterlockedPushEntrySList@8:
     push ebp
 
     /* Load ListHead into ebp */
-    mov ebp, [esp + 4]
+    mov ebp, [esp + 12]
 
     /* Load ListEntry into ebx */
-    mov ebx, [esp + 12]
+    mov ebx, [esp + 16]
 
     /* Load ListHead->Next into eax */
     mov eax, [ebp]
@@ -116,7 +116,7 @@ _RtlInterlockedFlushSList@4:
     xor ebx, ebx
 
     /* Load ListHead into ebp */
-    mov ebp, [esp + 4]
+    mov ebp, [esp + 12]
 
     /* Load ListHead->Next into eax */
     mov eax, [ebp]

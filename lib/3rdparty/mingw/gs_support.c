@@ -1,3 +1,9 @@
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
+ */
+
 #include <windows.h>
 #ifdef _WIN64
 #include <intrin.h>
@@ -13,11 +19,12 @@
 #ifdef _WIN64
 PRUNTIME_FUNCTION RtlLookupFunctionEntry (ULONG64, PULONG64, PVOID);
 PVOID RtlVirtualUnwind (ULONG HandlerType, ULONG64, ULONG64, PRUNTIME_FUNCTION,
-			PCONTEXT, PVOID *, PULONG64, PKNONVOLATILE_CONTEXT_POINTERS);
+			PCONTEXT, PVOID *, PULONG64, PVOID);
 #endif
 
 typedef LONG NTSTATUS;
 
+#define UNW_FLAG_NHANDLER 0x00
 #define STATUS_STACK_BUFFER_OVERRUN ((NTSTATUS)0xC0000409L)
 
 typedef union
@@ -33,8 +40,8 @@ static const EXCEPTION_POINTERS GS_ExceptionPointers = {
   &GS_ExceptionRecord,&GS_ContextRecord
 };
 
-__declspec(selectany) UINT_PTR __security_cookie = DEFAULT_SECURITY_COOKIE;
-__declspec(selectany) UINT_PTR __security_cookie_complement = ~(DEFAULT_SECURITY_COOKIE);
+DECLSPEC_SELECTANY UINT_PTR __security_cookie = DEFAULT_SECURITY_COOKIE;
+DECLSPEC_SELECTANY UINT_PTR __security_cookie_complement = ~(DEFAULT_SECURITY_COOKIE);
 
 void __cdecl
 __security_init_cookie (void)
@@ -89,7 +96,6 @@ __report_gsfailure (ULONGLONG StackCookie)
   PVOID hndData;
 #endif
 
-
 #ifdef _WIN64
   RtlCaptureContext (&GS_ContextRecord);
   controlPC = GS_ContextRecord.Rip;
@@ -102,12 +108,22 @@ __report_gsfailure (ULONGLONG StackCookie)
   else
 #endif
     {
+#ifdef __GNUC__
 #ifdef _WIN64
       GS_ContextRecord.Rip = (ULONGLONG) __builtin_return_address (0);
       GS_ContextRecord.Rsp = (ULONGLONG) __builtin_frame_address (0) + 8;
 #else
       GS_ContextRecord.Eip = (DWORD) __builtin_return_address (0);
       GS_ContextRecord.Esp = (DWORD) __builtin_frame_address (0) + 4;
+#endif
+#else
+#ifdef _WIN64
+      GS_ContextRecord.Rip = (ULONGLONG) _ReturnAddress();
+      GS_ContextRecord.Rsp = (ULONGLONG) _AddressOfReturnAddress();
+#else
+      GS_ContextRecord.Eip = (DWORD) _ReturnAddress();
+      GS_ContextRecord.Esp = (DWORD) _AddressOfReturnAddress();
+#endif
 #endif
     }
 

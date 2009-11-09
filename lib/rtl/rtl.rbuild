@@ -13,7 +13,6 @@
 			<file>except_asm.s</file>
 			<file>except.c</file>
 			<file>interlck.S</file>
-			<file>random_asm.S</file>
 			<file>rtlswap.S</file>
 			<file>rtlmem.s</file>
 			<file>res_asm.s</file>
@@ -101,5 +100,5 @@
 	<pch>rtl.h</pch>
 	-->
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

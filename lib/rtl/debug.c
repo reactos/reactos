@@ -54,7 +54,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
                               IN va_list ap,
                               IN BOOLEAN HandleBreakpoint)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ANSI_STRING DebugString;
     CHAR Buffer[512];
     ULONG Length, PrefixLength;
@@ -65,11 +65,11 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
         !(NtQueryDebugFilterState(ComponentId, Level)))
     {
         /* This message is masked */
-        return Status;
+        return STATUS_SUCCESS;
     }
 
     /* For user mode, don't recursively DbgPrint */
-    if (RtlpSetInDbgPrint(TRUE)) return Status;
+    if (RtlpSetInDbgPrint(TRUE)) return STATUS_SUCCESS;
 
     /* Guard against incorrect pointers */
     _SEH2_TRY
@@ -91,10 +91,9 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     {
         /* Fail */
         Length = PrefixLength = 0;
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if we went past the buffer */
     if (Length == -1U)

@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* PAGED_CODE equivalent for user-mode RTL */
-#ifdef DBG
+#if DBG
 extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define PAGED_CODE_RTL() CHECK_PAGED_CODE_RTL(__FILE__, __LINE__)
 #else
@@ -165,9 +165,9 @@ DebugService2(IN PVOID Argument1,
               IN ULONG Service);
 
 /* Tags for the String Allocators */
-#define TAG_USTR        TAG('U', 'S', 'T', 'R')
-#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
-#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
+#define TAG_USTR        'RTSU'
+#define TAG_ASTR        'RTSA'
+#define TAG_OSTR        'RTSO'
 
 /* Timer Queue */
 

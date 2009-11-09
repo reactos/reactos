@@ -123,6 +123,11 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
 
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
+    /* If Address is NULL then the caller wants an
+     * gratuitous ARP packet sent */
+    if (!Address)
+        Address = &Interface->Unicast;
+
     switch (Address->Type) {
         case IP_ADDRESS_V4:
             ProtoType    = (USHORT)ETYPE_IPv4; /* IPv4 */
@@ -147,7 +152,7 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
         Interface->Address,              /* Sender's (local) hardware address */
         &Interface->Unicast.Address.IPv4Address,/* Sender's (local) protocol address */
         NULL,                            /* Don't care */
-        &Address->Address,               /* Target's (remote) protocol address */
+        &Address->Address.IPv4Address,   /* Target's (remote) protocol address */
         ARP_OPCODE_REQUEST);             /* ARP request */
 
     if( !NdisPacket ) return FALSE;
@@ -179,7 +184,6 @@ VOID ARPReceive(
     IP_ADDRESS Address;
     PVOID SenderHWAddress;
     PVOID SenderProtoAddress;
-    PVOID TargetProtoAddress;
     PNEIGHBOR_CACHE_ENTRY NCE;
     PNDIS_PACKET NdisPacket;
     PIP_INTERFACE Interface = (PIP_INTERFACE)Context;
@@ -203,34 +207,24 @@ VOID ARPReceive(
     SenderHWAddress    = (PVOID)((ULONG_PTR)Header + sizeof(ARP_HEADER));
     SenderProtoAddress = (PVOID)((ULONG_PTR)SenderHWAddress + Header->HWAddrLen);
 
-    /* Check if we have the target protocol address */
-
-    TargetProtoAddress = (PVOID)((ULONG_PTR)SenderProtoAddress +
-        Header->ProtoAddrLen + Header->HWAddrLen);
-
-    if( !AddrLocateADEv4( *((PIPv4_RAW_ADDRESS)TargetProtoAddress),
-			  &Address) ) {
-        TI_DbgPrint(DEBUG_ARP, ("Target address (0x%X) is not mine.\n", *((PULONG)TargetProtoAddress)));
-        return;
-    }
-
     /* Check if we know the sender */
 
     AddrInitIPv4(&Address, *((PULONG)SenderProtoAddress));
+
     NCE = NBLocateNeighbor(&Address);
     if (NCE) {
         /* We know the sender. Update the hardware address
            and state in our neighbor address cache */
-        NBUpdateNeighbor(NCE, SenderHWAddress, NUD_REACHABLE);
+        NBUpdateNeighbor(NCE, SenderHWAddress, 0);
     } else {
         /* The packet had our protocol address as target. The sender
            may want to communicate with us soon, so add his address
            to our address cache */
         NCE = NBAddNeighbor(Interface, &Address, SenderHWAddress,
-            Header->HWAddrLen, NUD_REACHABLE);
+            Header->HWAddrLen, 0, ARP_TIMEOUT);
     }
 
-    if (Header->Opcode != ARP_OPCODE_REQUEST || !NCE)
+    if (Header->Opcode != ARP_OPCODE_REQUEST)
         return;
 
     /* This is a request for our address. Swap the addresses and
@@ -253,6 +247,8 @@ VOID ARPReceive(
                                SenderHWAddress,
                                LAN_PROTO_ARP);
     }
+
+    Packet->Free(Packet);
 }
 
 /* EOF */

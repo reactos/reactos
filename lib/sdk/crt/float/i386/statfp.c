@@ -24,19 +24,18 @@
  */
 unsigned int CDECL _statusfp(void)
 {
-   unsigned int retVal = 0;
-#if defined(__GNUC__) && defined(__i386__)
+  unsigned int retVal = 0;
   unsigned int fpword;
-
+#if defined(__GNUC__)
   __asm__ __volatile__( "fstsw %0" : "=m" (fpword) : );
+#else
+  __asm fstsw [fpword];
+#endif
   if (fpword & 0x1)  retVal |= _SW_INVALID;
   if (fpword & 0x2)  retVal |= _SW_DENORMAL;
   if (fpword & 0x4)  retVal |= _SW_ZERODIVIDE;
   if (fpword & 0x8)  retVal |= _SW_OVERFLOW;
   if (fpword & 0x10) retVal |= _SW_UNDERFLOW;
   if (fpword & 0x20) retVal |= _SW_INEXACT;
-#else
-  FIXME(":Not implemented!\n");
-#endif
   return retVal;
 }

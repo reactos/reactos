@@ -1,28 +1,3 @@
-;
-; moldname-msvcrt.def
-;
-; Exports from the runtime except that these exports are actually preceeded
-; by a underscore in the actual DLL. These correspond to functions which
-; are non-ANSI and were prefixed with an underscore to avoid name space
-; clutter. However many, in fact most programs still use a few of these
-; functions without the underscore. This .def file is specially processed
-; to make those non-underscored name function calls call the equivalent
-; underscored functions.
-;
-; Contributors:
-; Created by Colin Peters <colin@bird.fu.is.saga-u.ac.jp>
-; Maintained by Mumit Khan <khan@xraylith.wisc.edu>
-;
-; THIS SOFTWARE IS NOT COPYRIGHTED
-;
-; This source code is offered for use in the public domain. You may
-; use, modify or distribute it freely.
-;
-; This code is distributed in the hope that it will be useful but
-; WITHOUT ANY WARRANTY. ALL WARRENTIES, EXPRESS OR IMPLIED ARE HEREBY
-; DISCLAMED. This includes but is not limited to warrenties of
-; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-;
 EXPORTS
 access
 chdir
@@ -31,9 +6,7 @@ chsize
 close
 creat
 cwait
-
 daylight DATA
-
 dup
 dup2
 ecvt
@@ -52,10 +25,10 @@ fgetchar
 fgetwchar
 filelength
 fileno
-; Alias fpreset is set in CRT_fp10,c and CRT_fp8.c.
 ; fpreset
 fputchar
 fputwchar
+;fstat
 ftime
 gcvt
 getch
@@ -95,6 +68,7 @@ spawnv
 spawnve
 spawnvp
 spawnvpe
+;stat
 strcmpi
 strdup
 stricmp
@@ -108,10 +82,7 @@ strupr
 swab
 tell
 tempnam
-
 timezone DATA
-
-; export tzname for both. See <time.h>
 tzname DATA
 tzset
 umask
@@ -127,9 +98,7 @@ wcsnset
 wcsrev
 wcsset
 wcsupr
-
 wpopen
-
 write
 ; non-ANSI functions declared in math.h
 j0
@@ -139,7 +108,7 @@ y0
 y1
 yn
 chgsign
-scalb
+;scalb
 finite
 fpclass
 ; C99 functions

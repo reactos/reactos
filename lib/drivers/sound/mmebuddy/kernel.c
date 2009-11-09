@@ -127,6 +127,8 @@ SyncOverlappedDeviceIoControl(
     if ( ! IoResult )
         return Win32ErrorToMmResult(GetLastError());
 
+    SND_TRACE(L"Transferred %d bytes in Sync overlapped I/O\n", Transferred);
+
     if ( BytesTransferred )
         *BytesTransferred = Transferred;
 

@@ -207,7 +207,6 @@ NTSTATUS NTAPI
 RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
 {
    UNICODE_STRING full;
-   UNICODE_STRING envvar;
    FILE_FS_DEVICE_INFORMATION device_info;
    OBJECT_ATTRIBUTES Attr;
    IO_STATUS_BLOCK iosb;
@@ -215,7 +214,6 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    NTSTATUS Status;
    ULONG size;
    HANDLE handle = NULL;
-   WCHAR var[4];
    PWSTR ptr;
 
    DPRINT("RtlSetCurrentDirectory %wZ\n", dir);
@@ -281,19 +279,6 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    memcpy( cd->DosPath.Buffer, ptr, size * sizeof(WCHAR));
    cd->DosPath.Buffer[size] = 0;
    cd->DosPath.Length = size * sizeof(WCHAR);
-
-
-   /* FIXME: whats this all about??? Wine doesnt have this. -Gunnar */
-   if (cd->DosPath.Buffer[1]==':')
-   {
-      envvar.Length = 2 * swprintf (var, L"=%c:", cd->DosPath.Buffer[0]);
-      envvar.MaximumLength = 8;
-      envvar.Buffer = var;
-
-      RtlSetEnvironmentVariable(NULL,
-                 &envvar,
-                 &cd->DosPath);
-   }
 
    RtlFreeUnicodeString( &full);
    RtlReleasePebLock();

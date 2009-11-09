@@ -79,7 +79,7 @@ _FUNCTION_ {
     if (!*format) return 0;
 #ifndef WIDE_SCANF
 #ifdef CONSOLE
-    TRACE("(%s): \n", debugstr_a(format));
+    TRACE("(%s):\n", debugstr_a(format));
 #else /* CONSOLE */
 #ifdef STRING
     TRACE("%s (%s)\n", file, debugstr_a(format));
@@ -151,6 +151,8 @@ _FUNCTION_ {
             switch(*format) {
 	    case 'p':
 	    case 'P': /* pointer. */
+                if (sizeof(void *) == sizeof(LONGLONG)) I64_prefix = 1;
+                /* fall through */
 	    case 'x':
 	    case 'X': /* hexadecimal integer. */
 		base = 16;
@@ -224,7 +226,7 @@ _FUNCTION_ {
                     if (!suppress) {
 #define _SET_NUMBER_(type) *va_arg(ap, type*) = negative ? -cur : cur
 			if (I64_prefix) _SET_NUMBER_(LONGLONG);
-			else if (l_prefix) _SET_NUMBER_(long int);
+			else if (l_prefix) _SET_NUMBER_(LONG);
 			else if (h_prefix) _SET_NUMBER_(short int);
 			else _SET_NUMBER_(int);
 		    }

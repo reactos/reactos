@@ -19,23 +19,9 @@ UINT MaxLLHeaderSize; /* Largest maximum header size */
 UINT MinLLFrameSize;  /* Largest minimum frame size */
 BOOLEAN IPInitialized = FALSE;
 BOOLEAN IpWorkItemQueued = FALSE;
-NPAGED_LOOKASIDE_LIST IPPacketList;
 /* Work around calling timer at Dpc level */
 
 IP_PROTOCOL_HANDLER ProtocolTable[IP_PROTOCOL_TABLE_SIZE];
-
-
-VOID FreePacket(
-    PVOID Object)
-/*
- * FUNCTION: Frees an IP packet object
- * ARGUMENTS:
- *     Object = Pointer to an IP packet structure
- */
-{
-    exFreeToNPagedLookasideList(&IPPacketList, Object);
-}
-
 
 VOID DontFreePacket(
     PVOID Object)
@@ -58,34 +44,6 @@ VOID FreeIF(
     exFreePool(Object);
 }
 
-
-PIP_PACKET IPCreatePacket(ULONG Type)
-/*
- * FUNCTION: Creates an IP packet object
- * ARGUMENTS:
- *     Type = Type of IP packet
- * RETURNS:
- *     Pointer to the created IP packet. NULL if there was not enough free resources.
- */
-{
-  PIP_PACKET IPPacket;
-
-  IPPacket = exAllocateFromNPagedLookasideList(&IPPacketList);
-  if (!IPPacket)
-    return NULL;
-
-    /* FIXME: Is this needed? */
-  RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
-
-  INIT_TAG(IPPacket, TAG('I','P','K','T'));
-
-  IPPacket->Free       = FreePacket;
-  IPPacket->Type       = Type;
-  IPPacket->HeaderSize = 20;
-
-  return IPPacket;
-}
-
 PIP_PACKET IPInitializePacket(
     PIP_PACKET IPPacket,
     ULONG Type)
@@ -100,7 +58,7 @@ PIP_PACKET IPInitializePacket(
     /* FIXME: Is this needed? */
     RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
 
-    INIT_TAG(IPPacket, TAG('I','P','K','T'));
+    INIT_TAG(IPPacket, 'TKPI');
 
     IPPacket->Free     = DontFreePacket;
     IPPacket->Type     = Type;
@@ -155,11 +113,6 @@ VOID IPDispatchProtocol(
     {
        /* Call the appropriate protocol handler */
        (*ProtocolTable[Protocol])(Interface, IPPacket);
-
-       /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
-        * must be handled here. */
-        if( Protocol == IPPROTO_ICMP )
-            ICMPReceive( Interface, IPPacket );
     }
 }
 
@@ -179,7 +132,7 @@ PIP_INTERFACE IPCreateInterface(
 
     TI_DbgPrint(DEBUG_IP, ("Called. BindInfo (0x%X).\n", BindInfo));
 
-#ifdef DBG
+#if DBG
     if (BindInfo->Address) {
         PUCHAR A = BindInfo->Address;
         TI_DbgPrint(DEBUG_IP, ("Interface address (%02X %02X %02X %02X %02X %02X).\n",
@@ -193,7 +146,7 @@ PIP_INTERFACE IPCreateInterface(
         return NULL;
     }
 
-    INIT_TAG(IF, TAG('F','A','C','E'));
+    INIT_TAG(IF, 'ECAF');
 
 	RtlZeroMemory(IF, sizeof(IP_INTERFACE));
 
@@ -219,6 +172,13 @@ PIP_INTERFACE IPCreateInterface(
 
     TcpipInitializeSpinLock(&IF->Lock);
 
+    IF->TCPContext = exAllocatePool
+	( NonPagedPool, sizeof(OSK_IFADDR) + 2 * sizeof( struct sockaddr_in ) );
+    if (!IF->TCPContext) {
+        exFreePool(IF);
+        return NULL;
+    }
+
 #ifdef __NTDRIVER__
     InsertTDIInterfaceEntity( IF );
 #endif
@@ -241,6 +201,7 @@ VOID IPDestroyInterface(
     RemoveTDIInterfaceEntity( IF );
 #endif
 
+    exFreePool(IF->TCPContext);
     exFreePool(IF);
 }
 
@@ -251,7 +212,7 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
     /* Add a permanent neighbor for this NTE */
     NCE = NBAddNeighbor(IF, &IF->Unicast,
 			IF->Address, IF->AddressLength,
-			NUD_PERMANENT);
+			NUD_PERMANENT, 0);
     if (!NCE) {
 	TI_DbgPrint(MIN_TRACE, ("Could not create NCE.\n"));
         return;
@@ -261,11 +222,12 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
 
     if (!RouterAddRoute(&NetworkAddress, &IF->Netmask, NCE, 1)) {
 	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
-        return;
     }
 
-    /* Allow TCP to hang some configuration on this interface */
-    IF->TCPContext = TCPPrepareInterface( IF );
+    /* Send a gratuitous ARP packet to update the route caches of
+     * other computers */
+    if (IF != Loopback)
+       ARPTransmit(NULL, IF);
 }
 
 BOOLEAN IPRegisterInterface(
@@ -279,7 +241,7 @@ BOOLEAN IPRegisterInterface(
  */
 {
     KIRQL OldIrql;
-    UINT ChosenIndex = 1;
+    UINT ChosenIndex = 0;
     BOOLEAN IndexHasBeenChosen;
     IF_LIST_ITER(Interface);
 
@@ -317,11 +279,6 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     NCE = NBLocateNeighbor(&IF->Unicast);
     if (NCE)
     {
-       if ( IF->TCPContext ) {
-           TCPDisposeInterfaceData( IF->TCPContext );
-           IF->TCPContext = NULL;
-       }
-
        TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
        TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
 
@@ -365,6 +322,8 @@ VOID DefaultProtocolHandler(
 {
     TI_DbgPrint(MID_TRACE, ("[IF %x] Packet of unknown Internet protocol "
 			    "discarded.\n", Interface));
+
+    Interface->Stats.InDiscardedUnknownProto++;
 }
 
 
@@ -412,16 +371,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IPDATAGRAM_REASSEMBLY),  /* Size of each entry */
-	    TAG('I','P','D','R'),           /* Tag */
-	    0);                             /* Depth */
-
-    ExInitializeNPagedLookasideList(
-      &IPPacketList,                  /* Lookaside list */
-	    NULL,                           /* Allocate routine */
-	    NULL,                           /* Free routine */
-	    0,                              /* Flags */
-	    sizeof(IP_PACKET),              /* Size of each entry */
-	    TAG('I','P','P','K'),           /* Tag */
+	    'RDPI',                         /* Tag */
 	    0);                             /* Depth */
 
     ExInitializeNPagedLookasideList(
@@ -430,7 +380,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IP_FRAGMENT),            /* Size of each entry */
-	    TAG('I','P','F','G'),           /* Tag */
+	    'GFPI',                         /* Tag */
 	    0);                             /* Depth */
 
     ExInitializeNPagedLookasideList(
@@ -439,7 +389,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IPDATAGRAM_HOLE),        /* Size of each entry */
-	    TAG('I','P','H','L'),           /* Tag */
+	    'LHPI',                         /* Tag */
 	    0);                             /* Depth */
 
     /* Start routing subsystem */
@@ -491,7 +441,6 @@ NTSTATUS IPShutdown(
     /* Destroy lookaside lists */
     ExDeleteNPagedLookasideList(&IPHoleList);
     ExDeleteNPagedLookasideList(&IPDRList);
-    ExDeleteNPagedLookasideList(&IPPacketList);
     ExDeleteNPagedLookasideList(&IPFragmentList);
 
     IPInitialized = FALSE;

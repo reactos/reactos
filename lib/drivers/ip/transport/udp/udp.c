@@ -88,8 +88,6 @@ NTSTATUS BuildUDPPacket(
 
     /* FIXME: Assumes IPv4 */
     IPInitializePacket(Packet, IP_ADDRESS_V4);
-    if (!Packet)
-	return STATUS_INSUFFICIENT_RESOURCES;
 
     Packet->TotalSize = sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
 
@@ -163,7 +161,7 @@ NTSTATUS UDPSendDatagram(
     IP_PACKET Packet;
     PTA_IP_ADDRESS RemoteAddressTa = (PTA_IP_ADDRESS)ConnInfo->RemoteAddress;
     IP_ADDRESS RemoteAddress;
-	IP_ADDRESS LocalAddress;
+    IP_ADDRESS LocalAddress;
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
@@ -188,12 +186,15 @@ NTSTATUS UDPSendDatagram(
 		return STATUS_NETWORK_UNREACHABLE;
     }
 
-	LocalAddress = AddrFile->Address;
-	if (AddrIsUnspecified(&LocalAddress))
-	{
-		if (!IPGetDefaultAddress(&LocalAddress))
-			return FALSE;
-	}
+    LocalAddress = AddrFile->Address;
+    if (AddrIsUnspecified(&LocalAddress))
+    {
+        /* If the local address is unspecified (0),
+         * then use the unicast address of the
+         * interface we're sending over
+         */
+        LocalAddress = NCE->Interface->Unicast;
+    }
 
     Status = BuildUDPPacket( &Packet,
 							 &RemoteAddress,
@@ -311,12 +312,12 @@ NTSTATUS UDPStartup(
  *     Status of operation
  */
 {
+  NTSTATUS Status;
+
 #ifdef __NTDRIVER__
   RtlZeroMemory(&UDPStats, sizeof(UDP_STATISTICS));
 #endif
   
-  NTSTATUS Status;
-
   Status = PortsStartup( &UDPPorts, 1, UDP_STARTING_PORT + UDP_DYNAMIC_PORTS );
 
   if( !NT_SUCCESS(Status) ) return Status;

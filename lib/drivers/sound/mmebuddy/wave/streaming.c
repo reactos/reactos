@@ -17,14 +17,6 @@
 
 
 /*
-    Restrain ourselves from flooding the kernel device!
-*/
-
-#define SOUND_KERNEL_BUFFER_COUNT       10
-#define SOUND_KERNEL_BUFFER_SIZE        16384
-
-
-/*
     DoWaveStreaming
         Check if there is streaming to be done, and if so, do it.
 */
@@ -52,7 +44,7 @@ DoWaveStreaming(
     SND_ASSERT( FunctionTable->CommitWaveBuffer );
 
     /* No point in doing anything if no resources available to use */
-    if ( SoundDeviceInstance->OutstandingBuffers >= SOUND_KERNEL_BUFFER_COUNT )
+    if ( SoundDeviceInstance->OutstandingBuffers >= SoundDeviceInstance->BufferCount )
     {
         SND_TRACE(L"DoWaveStreaming: No available buffers to stream with - doing nothing\n");
         return;
@@ -67,7 +59,7 @@ DoWaveStreaming(
         return;
     }
 
-    while ( ( SoundDeviceInstance->OutstandingBuffers < SOUND_KERNEL_BUFFER_COUNT ) &&
+    while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
             ( Header ) )
     {
         HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
@@ -98,8 +90,8 @@ DoWaveStreaming(
             BytesRemaining = Header->dwBufferLength - HeaderExtension->BytesCommitted;
 
             /* We can commit anything up to the buffer size limit */
-            BytesToCommit = BytesRemaining > SOUND_KERNEL_BUFFER_SIZE ?
-                            SOUND_KERNEL_BUFFER_SIZE :
+            BytesToCommit = BytesRemaining > SoundDeviceInstance->FrameSize ?
+                            SoundDeviceInstance->FrameSize :
                             BytesRemaining;
 
             /* Should always have something to commit by this point */

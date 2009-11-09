@@ -35,7 +35,10 @@ VOID DeallocatePort( PPORT_SET PortSet, ULONG Port ) {
     Port = htons(Port);
     ASSERT(Port >= PortSet->StartingPort);
     ASSERT(Port < PortSet->StartingPort + PortSet->PortsToOversee);
+
+    ExAcquireFastMutex( &PortSet->Mutex );
     RtlClearBits( &PortSet->ProtoBitmap, Port - PortSet->StartingPort, 1 );
+    ExReleaseFastMutex( &PortSet->Mutex );
 }
 
 BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {

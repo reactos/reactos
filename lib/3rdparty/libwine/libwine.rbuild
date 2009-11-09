@@ -3,7 +3,6 @@
 <group>
 <module name="wine" type="staticlibrary">
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="__WINESRC__" />
 	<file>config.c</file>
 	<file>debug_ros.c</file>
@@ -12,7 +11,6 @@
 </module>
 <module name="wineldr" type="staticlibrary">
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="__WINESRC__" />
 	<file>loader.c</file>
 </module>

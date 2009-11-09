@@ -190,7 +190,7 @@ soclose(so)
 				goto drop;
 			while (so->so_state & SS_ISCONNECTED) {
 				error = tsleep((caddr_t)&so->so_timeo,
-				    PSOCK | PCATCH, netcls, so->so_linger);
+				    PSOCK | PCATCH, netcls, so->so_linger * 1000);
 				if (error)
 					break;
 			}

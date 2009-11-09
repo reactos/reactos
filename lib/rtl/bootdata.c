@@ -45,7 +45,7 @@ RtlpSysVolCreateSecurityDescriptor(OUT PISECURITY_DESCRIPTOR *SecurityDescriptor
 
     /* allocate and initialize the security descriptor */
     AbsSD = RtlpAllocateMemory(sizeof(SECURITY_DESCRIPTOR),
-                               TAG('S', 'e', 'S', 'd'));
+                               'dSeS');
     if (AbsSD == NULL)
     {
         Status = STATUS_NO_MEMORY;
@@ -63,7 +63,7 @@ RtlpSysVolCreateSecurityDescriptor(OUT PISECURITY_DESCRIPTOR *SecurityDescriptor
     DaclSize = sizeof(ACL) + sizeof(ACE) +
                RtlLengthSid(LocalSystemSid);
     Dacl = RtlpAllocateMemory(DaclSize,
-                              TAG('S', 'e', 'A', 'c'));
+                              'cAeS');
     if (Dacl == NULL)
     {
         Status = STATUS_NO_MEMORY;
@@ -111,13 +111,13 @@ Cleanup:
         if (Dacl != NULL)
         {
             RtlpFreeMemory(Dacl,
-                           TAG('S', 'e', 'A', 'c'));
+                           'cAeS');
         }
 
         if (AbsSD != NULL)
         {
             RtlpFreeMemory(AbsSD,
-                           TAG('S', 'e', 'S', 'd'));
+                           'dSeS');
         }
     }
 
@@ -162,7 +162,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
 
     /* allocate enough memory for the security descriptor */
     RelSD = RtlpAllocateMemory(DescriptorSize,
-                               TAG('S', 'e', 'S', 'd'));
+                               'dSeS');
     if (RelSD == NULL)
     {
         Status = STATUS_NO_MEMORY;
@@ -297,7 +297,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
         ASSERT(AbsSDSize > DescriptorSize);
 
         AbsSD = RtlpAllocateMemory(DescriptorSize,
-                                   TAG('S', 'e', 'S', 'd'));
+                                   'dSeS');
         if (AbsSD == NULL)
         {
             Status = STATUS_NO_MEMORY;
@@ -357,7 +357,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
 
     /* allocate enough memory for the new self-relative descriptor */
     NewRelSD = RtlpAllocateMemory(RelSDSize,
-                                  TAG('S', 'e', 'S', 'd'));
+                                  'dSeS');
     if (NewRelSD == NULL)
     {
         Status = STATUS_NO_MEMORY;
@@ -392,20 +392,20 @@ Cleanup:
     if (RelSD != NULL)
     {
         RtlpFreeMemory(RelSD,
-                       TAG('S', 'e', 'S', 'd'));
+                       'dSeS');
     }
 
     if (NewRelSD != NULL)
     {
         RtlpFreeMemory(NewRelSD,
-                       TAG('S', 'e', 'S', 'd'));
+                       'dSeS');
     }
 
 #ifdef _WIN64
     if (AbsSDAllocated)
     {
         RtlpFreeMemory(AbsSD,
-                       TAG('S', 'e', 'S', 'd'));
+                       'dSeS');
     }
 #endif
 
@@ -660,9 +660,9 @@ RtlCreateSystemVolumeInformationFolder(
         ASSERT(SecurityDescriptor->Dacl != NULL);
 
         RtlpFreeMemory(SecurityDescriptor->Dacl,
-                       TAG('S', 'e', 'A', 'c'));
+                       'cAeS');
         RtlpFreeMemory(SecurityDescriptor,
-                       TAG('S', 'e', 'S', 'd'));
+                       'dSeS');
 
         RtlFreeSid(SystemSid);
     }

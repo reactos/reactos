@@ -7,7 +7,9 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#define _NTOSKRNL_
+#include <ntdef.h>
+#undef DECLSPEC_IMPORT
+#define DECLSPEC_IMPORT
 #include <ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"
@@ -15,8 +17,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define TAG_ROSSYM TAG('R', 'S', 'Y', 'M')
+#define TAG_ROSSYM 'MYSR'
 
 static PVOID
 RosSymAllocMemKM(ULONG_PTR Size)

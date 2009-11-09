@@ -1,8 +1,15 @@
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
+ */
+
 #ifdef CRTDLL
 #undef CRTDLL
 #endif
 
-#include "internal.h"
+#include <internal.h>
+#include <sect_attribs.h>
 #include <windows.h>
 #include <malloc.h>
 #include <crtdbg.h>
@@ -54,13 +61,11 @@ __dyn_tls_init (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
   _PVFV *pfunc;
 
-  //DbgPrint("__dyn_tls_init: hDllHandle %p, dwReason %d\n", hDllHandle,dwReason);
   if (dwReason != DLL_THREAD_ATTACH)
     return TRUE;
 
   for (pfunc = &__xd_a + 1; pfunc != &__xd_z; ++pfunc)
     {
-    //DbgPrint("pfunc at %p\n",pfunc);
       if (*pfunc != NULL)
 	(*pfunc)();
     }
@@ -74,9 +79,7 @@ _CRTALLOC(".CRT$XLC") PIMAGE_TLS_CALLBACK __xl_c = (PIMAGE_TLS_CALLBACK) __dyn_t
 int __cdecl
 __tlregdtor (_PVFV func)
 {
-    //DbgPrint("__tlregdtor: func %p\n",func);
-
-    if (dtor_list == NULL)
+  if (dtor_list == NULL)
     {
       dtor_list = &dtor_list_head;
       dtor_list_head.count = 0;
@@ -99,11 +102,9 @@ __tlregdtor (_PVFV func)
 static BOOL WINAPI
 __dyn_tls_dtor (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
-
   TlsDtorNode *pnode, *pnext;
   int i;
 
-  //DbgPrint("__dyn_tls_dtor: hDllHandle %p, dwReason %d\n");
   if (dwReason != DLL_THREAD_DETACH && dwReason != DLL_PROCESS_DETACH)
     return TRUE;
 

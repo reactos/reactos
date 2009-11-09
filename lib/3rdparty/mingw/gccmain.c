@@ -1,15 +1,9 @@
-/*
- * gccmain.c
+/**
  * This file has no copyright assigned and is placed in the Public Domain.
- * This file is a part of the mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within the package.
- *
- * A separate version of __main, __do_global_ctors and __do_global_dtors for
- * Mingw32 for use with Cygwin32 b19. Hopefully this object file will only
- * be linked if the libgcc.a doesn't include __main, __do_global_dtors and
- * __do_global_ctors.
- *
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+
 #include <windows.h>
 #include <stdlib.h>
 #include <setjmp.h>

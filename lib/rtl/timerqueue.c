@@ -239,6 +239,7 @@ static void WINAPI timer_queue_thread_proc(LPVOID p)
     NtClose(q->event);
     RtlDeleteCriticalSection(&q->cs);
     RtlFreeHeap(RtlGetProcessHeap(), 0, q);
+    RtlExitUserThread(STATUS_SUCCESS);
 }
 
 static void queue_destroy_timer(struct queue_timer *t)

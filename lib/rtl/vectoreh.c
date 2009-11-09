@@ -15,16 +15,15 @@
 
 static RTL_CRITICAL_SECTION RtlpVectoredExceptionLock;
 static LIST_ENTRY RtlpVectoredExceptionHead;
+static volatile LONG RtlpVectoredExceptionsInstalled;
 
 typedef struct _RTL_VECTORED_EXCEPTION_HANDLER
 {
   LIST_ENTRY ListEntry;
   PVECTORED_EXCEPTION_HANDLER VectoredHandler;
+  ULONG Refs;
+  BOOLEAN Deleted;
 } RTL_VECTORED_EXCEPTION_HANDLER, *PRTL_VECTORED_EXCEPTION_HANDLER;
-
-/* FIXME - stupid ld won't resolve RtlDecodePointer! Since their implementation
-           is the same just use RtlEncodePointer for now! */
-#define RtlDecodePointer RtlEncodePointer
 
 /* FUNCTIONS ***************************************************************/
 
@@ -34,37 +33,70 @@ RtlCallVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
                                  IN PCONTEXT  Context)
 {
   PLIST_ENTRY CurrentEntry;
-  PRTL_VECTORED_EXCEPTION_HANDLER veh;
+  PRTL_VECTORED_EXCEPTION_HANDLER veh = NULL;
   PVECTORED_EXCEPTION_HANDLER VectoredHandler;
   EXCEPTION_POINTERS ExceptionInfo;
+  BOOLEAN Remove = FALSE;
+  BOOLEAN Ret = FALSE;
 
   ExceptionInfo.ExceptionRecord = ExceptionRecord;
   ExceptionInfo.ContextRecord = Context;
 
-  if(RtlpVectoredExceptionHead.Flink != &RtlpVectoredExceptionHead)
+  if(RtlpVectoredExceptionsInstalled)
   {
     RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
-    for(CurrentEntry = RtlpVectoredExceptionHead.Flink;
-        CurrentEntry != &RtlpVectoredExceptionHead;
-        CurrentEntry = CurrentEntry->Flink)
+    CurrentEntry = RtlpVectoredExceptionHead.Flink;
+    while (CurrentEntry != &RtlpVectoredExceptionHead)
     {
       veh = CONTAINING_RECORD(CurrentEntry,
                               RTL_VECTORED_EXCEPTION_HANDLER,
                               ListEntry);
-      VectoredHandler = RtlDecodePointer(veh->VectoredHandler);
+      veh->Refs++;
       RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
-
+      
+      VectoredHandler = RtlDecodePointer(veh->VectoredHandler);
       if(VectoredHandler(&ExceptionInfo) == EXCEPTION_CONTINUE_EXECUTION)
       {
-        return TRUE;
+        RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
+        if (--veh->Refs == 0)
+        {
+          RemoveEntryList (&veh->ListEntry);
+          _InterlockedDecrement (&RtlpVectoredExceptionsInstalled);
+          Remove = TRUE;
+        }
+        Ret = TRUE;
+        break;
       }
 
       RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
+      
+      if (--veh->Refs == 0)
+      {
+        CurrentEntry = veh->ListEntry.Flink;
+        RemoveEntryList (&veh->ListEntry);
+        _InterlockedDecrement (&RtlpVectoredExceptionsInstalled);
+        RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
+        
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    veh);
+        RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
+      }
+      else
+        CurrentEntry = CurrentEntry->Flink;
     }
+    
     RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
   }
+  
+  if (Remove)
+  {
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                veh);
+  }
 
-  return FALSE;
+  return Ret;
 }
 
 VOID
@@ -72,6 +104,7 @@ RtlpInitializeVectoredExceptionHandling(VOID)
 {
   InitializeListHead(&RtlpVectoredExceptionHead);
   RtlInitializeCriticalSection(&RtlpVectoredExceptionLock);
+  RtlpVectoredExceptionsInstalled = 0;
 }
 
 
@@ -90,6 +123,8 @@ RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
   if(veh != NULL)
   {
     veh->VectoredHandler = RtlEncodePointer(VectoredHandler);
+    veh->Refs = 1;
+    veh->Deleted = FALSE;
     RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
     if(FirstHandler != 0)
     {
@@ -101,6 +136,7 @@ RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
       InsertTailList(&RtlpVectoredExceptionHead,
                      &veh->ListEntry);
     }
+    _InterlockedIncrement (&RtlpVectoredExceptionsInstalled);
     RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
   }
 
@@ -116,7 +152,8 @@ RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
 {
   PLIST_ENTRY CurrentEntry;
   PRTL_VECTORED_EXCEPTION_HANDLER veh = NULL;
-  ULONG Removed = FALSE;
+  BOOLEAN Remove = FALSE;
+  ULONG Ret = FALSE;
 
   RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
   for(CurrentEntry = RtlpVectoredExceptionHead.Flink;
@@ -128,21 +165,29 @@ RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
                             ListEntry);
     if(veh == VectoredHandlerHandle)
     {
-      RemoveEntryList(&veh->ListEntry);
-      Removed = TRUE;
-      break;
+      if (!veh->Deleted)
+      {
+        if (--veh->Refs == 0)
+        {
+          RemoveEntryList (&veh->ListEntry);
+          Remove = TRUE;
+        }
+        veh->Deleted = TRUE;
+        Ret = TRUE;
+        break;
+      }
     }
   }
   RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
 
-  if(Removed)
+  if(Remove)
   {
     RtlFreeHeap(RtlGetProcessHeap(),
                 0,
                 veh);
   }
 
-  return Removed;
+  return Ret;
 }
 
 /* EOF */
