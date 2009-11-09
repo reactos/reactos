@@ -453,9 +453,6 @@ typedef enum
         NULL, 0, NULL, NULL, 0)
 
 
-#define KSEVENTSETID_Connection \
-    0x7f4bcbe0L, 0x9ea5, 0x11cf, 0xa5, 0xd6, 0x28, 0xdb, 0x04, 0xc1, 0x00, 0x00
-
 typedef enum
 {
     KSEVENT_CONNECTION_POSITIONUPDATE,
