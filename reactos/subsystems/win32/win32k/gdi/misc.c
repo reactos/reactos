@@ -89,6 +89,9 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     pt[1].x += pDC->rcVport.left + pDC->rcDcRect.left;
     pt[1].y += pDC->rcVport.top + pDC->rcDcRect.top;
 
+    /* Update the pen */
+    GreUpdateBrush(pDC->pLineBrush, pDC);
+
     GreLineTo(&pDC->pBitmap->SurfObj,
               pDC->CombinedClip,
               &(pDC->pLineBrush->BrushObj),

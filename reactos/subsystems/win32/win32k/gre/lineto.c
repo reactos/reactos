@@ -32,22 +32,19 @@ GreLineTo(SURFOBJ *psoDest,
 {
     BOOLEAN ret;
     SURFACE *psurfDest;
-    //PEBRUSHOBJ GdiBrush;
+    PBRUSHGDI GdiBrush;
     RECTL b;
 
     ASSERT(psoDest);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
     ASSERT(psurfDest);
 
-    /*GdiBrush = CONTAINING_RECORD(
-                   pbo,
-                   EBRUSHOBJ,
-                   BrushObject);
+    GdiBrush = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
     ASSERT(GdiBrush);
-    ASSERT(GdiBrush->pbrush);
 
-    if (GdiBrush->pbrush->flAttrs & GDIBRUSH_IS_NULL)
-        return TRUE;*/
+    /* Don't do anything if null pen is selected */
+    if (GdiBrush->flAttrs & GDIBRUSH_IS_NULL)
+        return TRUE;
 
     /* No success yet */
     ret = FALSE;

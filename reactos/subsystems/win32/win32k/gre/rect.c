@@ -42,6 +42,7 @@ GreRectangle(PDC pDC,
     {
         if (!(pDC->pFillBrush->flAttrs & GDIBRUSH_IS_NULL))
         {
+            GreUpdateBrush(pDC->pFillBrush, pDC);
             bRet = GrepBitBltEx(&pDC->pBitmap->SurfObj,
                                NULL,
                                NULL,
@@ -61,6 +62,7 @@ GreRectangle(PDC pDC,
     /* Draw pen-based rectangle */
     if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))
     {
+        GreUpdateBrush(pDC->pLineBrush, pDC);
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         GreLineTo(&pDC->pBitmap->SurfObj,
                   pDC->CombinedClip,
@@ -118,6 +120,7 @@ GrePolygon(PDC pDC,
     {
         if (!(pDC->pFillBrush->flAttrs & GDIBRUSH_IS_NULL))
         {
+            GreUpdateBrush(pDC->pFillBrush, pDC);
             GrepFillPolygon(pDC,
                             &pDC->pBitmap->SurfObj,
                             &pDC->pFillBrush->BrushObj,
@@ -131,6 +134,7 @@ GrePolygon(PDC pDC,
     /* Draw pen-based polygon */
     if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))
     {
+        GreUpdateBrush(pDC->pLineBrush, pDC);
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         for (i=0; i<count-1; i++)
         {

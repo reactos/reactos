@@ -92,6 +92,9 @@ GreCreatePen(
         return NULL;
     }
 
+    /* Default to a pen which needs realization */
+    pBrush->BrushObj.iSolidColor = 0xFFFFFFFF;
+
     switch (dwPenStyle & PS_STYLE_MASK)
     {
     case PS_NULL:
