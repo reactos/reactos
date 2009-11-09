@@ -1,6 +1,6 @@
 /* PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/rapps/download.c
+ * FILE:        base/applications/rapps/loaddlg.c
  * PURPOSE:     Displaying a download dialog
  * COPYRIGHT:   Copyright 2001 John R. Sheets (for CodeWeavers)
  *              Copyright 2004 Mike McCormack (for CodeWeavers)
@@ -218,7 +218,7 @@ ThreadFunc(LPVOID Context)
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
     HWND Dlg = (HWND) Context;
-    DWORD r;
+    DWORD r, len;
     BOOL bCancelled = FALSE;
     BOOL bTempfile = FALSE;
     BOOL bCab = FALSE;
@@ -227,12 +227,13 @@ ThreadFunc(LPVOID Context)
     p = wcsrchr(AppInfo->szUrlDownload, L'/');
     if (!p) goto end;
 
-    if (wcslen(AppInfo->szUrlDownload) > 4)
+    len = wcslen(AppInfo->szUrlDownload);
+    if (len > 4)
     {
-        if (AppInfo->szUrlDownload[wcslen(AppInfo->szUrlDownload) - 4] == '.' &&
-            AppInfo->szUrlDownload[wcslen(AppInfo->szUrlDownload) - 3] == 'c' &&
-            AppInfo->szUrlDownload[wcslen(AppInfo->szUrlDownload) - 2] == 'a' &&
-            AppInfo->szUrlDownload[wcslen(AppInfo->szUrlDownload) - 1] == 'b')
+        if (AppInfo->szUrlDownload[len - 4] == '.' &&
+            AppInfo->szUrlDownload[len - 3] == 'c' &&
+            AppInfo->szUrlDownload[len - 2] == 'a' &&
+            AppInfo->szUrlDownload[len - 1] == 'b')
         {
             bCab = TRUE;
             if (!GetCurrentDirectoryW(MAX_PATH, path))
