@@ -529,6 +529,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         DPRINT1("SMP Boot support not yet present\n");
     }
 
+    /* HACK for MmUpdatePageDir */
+    ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
+
     /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,
                        InitThread,
@@ -545,9 +548,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitThread->Affinity = 1 << Number;
     InitThread->WaitIrql = DISPATCH_LEVEL;
     InitProcess->ActiveProcessors = 1 << Number;
-
-    /* HACK for MmUpdatePageDir */
-    ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
     /* Set basic CPU Features that user mode can read */
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
@@ -621,7 +621,7 @@ NTAPI
 KiSystemStartup(IN ULONG_PTR Dummy,
                 IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    FrLdrDbgPrint = ((PLOADER_PARAMETER_BLOCK)Dummy)->u.Amd64.DbgPrint;
+    FrLdrDbgPrint = ((PLOADER_PARAMETER_BLOCK)Dummy)->u.I386.CommonDataArea;
     FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
 
     KiSystemStartupReal((PLOADER_PARAMETER_BLOCK)Dummy);
