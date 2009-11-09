@@ -17,8 +17,8 @@ MmGetPageDirectory(VOID)
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 
-#define MI_HYPER_SPACE_START 0xFFFFF70000000000ULL
-#define MI_HYPER_SPACE_END   0xFFFFF77FFFFFFFFFULL
+#define HYPER_SPACE 0xFFFFF70000000000ULL
+#define HYPER_SPACE_END   0xFFFFF77FFFFFFFFFULL
 
 /* Base addresses of PTE and PDE */
 //#define PAGETABLE_MAP       PTE_BASE

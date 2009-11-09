@@ -32,8 +32,8 @@ BOOLEAN
 FORCEINLINE
 MiIsHyperspaceAddress(PVOID Address)
 {
-    return ((ULONG64)Address >= MI_HYPER_SPACE_START && 
-            (ULONG64)Address <= MI_HYPER_SPACE_END);
+    return ((ULONG64)Address >= HYPER_SPACE && 
+            (ULONG64)Address <= HYPER_SPACE_END);
 }
 
 VOID
@@ -497,7 +497,7 @@ MmInitGlobalKernelPageDirectory(VOID)
     for (i = VAtoPXI(MmSystemRangeStart); i < 512; i++)
     {
         if ((i < VAtoPXI(PTE_BASE) || i > VAtoPXI(PTE_TOP)) &&
-            (i < VAtoPXI(MI_HYPER_SPACE_START) || i > VAtoPXI(MI_HYPER_SPACE_END)) &&
+            (i < VAtoPXI(HYPER_SPACE) || i > VAtoPXI(HYPER_SPACE_END)) &&
             MmGlobalKernelPageDirectory[i] == 0 && 
             CurrentPageDirectory[i] != 0)
         {
