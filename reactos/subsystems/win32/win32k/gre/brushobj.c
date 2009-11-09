@@ -116,7 +116,7 @@ GreCreatePen(
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
         pBrush->hbmPattern = GreCreateBitmap(szPatSize, 0, BMF_1BPP, BMF_NOZEROINIT, NULL);
         pPattern = SURFACE_Lock(pBrush->hbmPattern);
-        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternAlternate);
+        GreSetBitmapBits(pPattern, sizeof(PatternAlternate), (PVOID)PatternAlternate);
         SURFACE_Unlock(pPattern);
         break;
 
@@ -124,7 +124,7 @@ GreCreatePen(
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
         pBrush->hbmPattern = GreCreateBitmap(szPatSize, 0, BMF_1BPP, BMF_NOZEROINIT, NULL);
         pPattern = SURFACE_Lock(pBrush->hbmPattern);
-        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternDot);
+        GreSetBitmapBits(pPattern, sizeof(PatternDot), (PVOID)PatternDot);
         SURFACE_Unlock(pPattern);
         break;
 
@@ -132,7 +132,7 @@ GreCreatePen(
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
         pBrush->hbmPattern = GreCreateBitmap(szPatSize, 0, BMF_1BPP, BMF_NOZEROINIT, NULL);
         pPattern = SURFACE_Lock(pBrush->hbmPattern);
-        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternDash);
+        GreSetBitmapBits(pPattern, sizeof(PatternDash), (PVOID)PatternDash);
         SURFACE_Unlock(pPattern);
         break;
 
@@ -140,7 +140,7 @@ GreCreatePen(
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
         pBrush->hbmPattern = GreCreateBitmap(szPatSize, 0, BMF_1BPP, BMF_NOZEROINIT, NULL);
         pPattern = SURFACE_Lock(pBrush->hbmPattern);
-        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternDashDot);
+        GreSetBitmapBits(pPattern, sizeof(PatternDashDot), (PVOID)PatternDashDot);
         SURFACE_Unlock(pPattern);
         break;
 
