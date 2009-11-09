@@ -272,7 +272,7 @@
 			<file>pnproot.c</file>
 		</directory>
 	</directory>
-	<if property="KDBG" value="1">
+	<if property="_WINKD_" value="0">
 		<directory name="kd">
 			<if property="ARCH" value="i386">
 				<directory name="i386">
