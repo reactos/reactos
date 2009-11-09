@@ -235,8 +235,9 @@ _InternalDispatchException:
 
     /* Set up EXCEPTION_RECORD */
     mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionCode], ecx
-    mov dword ptr [rsp + 0x28 + EXCEPTION_RECORD_ExceptionFlags], 0
-    mov qword ptr [rsp + 0x28 + EXCEPTION_RECORD_ExceptionRecord], 0
+    xor rax, rax
+    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionFlags], eax
+    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionRecord], rax
     mov rax, [rbp + KTRAP_FRAME_Rip]
     mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionAddress], rax
     mov [rsp + 0x28 + EXCEPTION_RECORD_NumberParameters], edx
@@ -494,28 +495,66 @@ KiDebugTrapOrFaultKMode:
     .pushframe 1
     /* We have an error code */
 
-    lea rcx, _MsgPageFault[rip]
-    mov rdx, [rsp]
-    mov r8, [rsp+8]
-    mov r9, rsp
-    call _FrLdrDbgPrint[rip]
-
-    jmp $
+//    lea rcx, _MsgPageFault[rip]
+//    mov rdx, [rsp]
+//    mov r8, [rsp+8]
+//    mov r9, rsp
+//    call _FrLdrDbgPrint[rip]
 
     ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
     /* Save page fault address */
-    mov rax, cr2
-    mov [rbp  + KTRAP_FRAME_FaultAddress], rax
+    mov rdx, cr2
+    mov [rbp  + KTRAP_FRAME_FaultAddress], rdx
 
-    /* Dispatch the exception */
-    mov ecx, STATUS_BREAKPOINT
-    mov edx, 0
-    mov r9, 0
-    mov r10, 0
-    mov r11, 0
+    /* Call page fault handler */
+    mov ecx, [ebp + KTRAP_FRAME_ErrorCode] // StoreInstruction
+    and ecx, 1
+    // rdx == Address
+    mov r8b, [ebp + KTRAP_FRAME_SegCs] // Mode
+    and r8b, 1
+    mov r9, rbp // TrapInformation
+//    call _MmAccessFault
+
+    // HACK
+    mov eax, STATUS_ACCESS_VIOLATION
+
+    /* Check for success */
+    test eax, eax
+    jge PageFaultReturn
+
+    /* Set parameter 1 to error code */
+    mov r9d, [ebp + KTRAP_FRAME_ErrorCode]
+
+    /* Set parameter2 to faulting address */
+    mov r10, cr2  // Param2 = faulting address
+
+    cmp eax, STATUS_ACCESS_VIOLATION
+    je AccessViolation
+    cmp eax, STATUS_GUARD_PAGE_VIOLATION
+    je SpecialCode
+    cmp eax, STATUS_STACK_OVERFLOW
+    je SpecialCode
+
+InPageException:
+    /* Dispatch in-page exception */
+    mov ecx, STATUS_IN_PAGE_ERROR // ExceptionCode
+    mov r11d, eax // Param3 = Status
+    mov edx, 3    // ParamCount
+    call _InternalDispatchException
+    jmp PageFaultReturn
+
+AccessViolation:
+    /* Use more proper status code */
+    mov eax, KI_EXCEPTION_ACCESS_VIOLATION
+
+SpecialCode:
+    /* Setup a normal page fault exception */
+    mov ecx, eax // ExceptionCode
+    mov edx, 2   // ParamCount
     call _InternalDispatchException
 
+PageFaultReturn:
     LEAVE_TRAP_FRAME;
     iretq
 .endproc
