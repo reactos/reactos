@@ -26,6 +26,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 /* The following definitions are ripped from MinGW W32API headers. We don't
    use these headers directly in order to allow compilation on Linux hosts. */
 
