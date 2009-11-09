@@ -534,7 +534,6 @@ Author:
 #define CBSTACK_EBP                             0x18
 #define CBSTACK_RESULT                          0x20
 #define CBSTACK_RESULT_LENGTH                   0x24
-#define CBSTACK_FRAME_POINTER                   CBSTACK_EBP
 
 //
 // NTSTATUS, Bugcheck Codes and Debug Codes
