@@ -35,7 +35,30 @@ _MsgInvalidOpcodeFault:
 
 /* Helper Macros *************************************************************/
 
-#define TRAPFLAG_SYSTEMSERVICE 1
+#define TRAPFLAG_VOLATILES 0x01
+#define TRAPFLAG_NONVOLATILES 0x02
+#define TRAPFLAG_XMM 0x04
+#define TRAPFLAG_SEGMENTS 0x08
+#define TRAPFLAG_DEBUG 0x10
+
+#define TRAPFLAG_SYSTEMSERVICE (TRAPFLAG_VOLATILES|TRAPFLAG_DEBUG)
+#define TRAPFLAG_ALL 0xff
+
+/* 
+ * Stack Layout:
+ * |-------------------|
+ * | KTRAP_FRAME       |
+ * |-------------------| <- rbp
+ * | 0x20 bytes params |
+ * |-------------------|
+ * | KEXCEPTION_FRAME  |
+ * |-------------------|
+ * | EXCEPTION_RECORD  |
+ * |-------------------|
+ * | 0x28 bytes params |
+ * |-------------------| <- rsp
+ *
+ */
 
 /*
  * ENTER_TRAP_FRAME - Allocate SIZE_KTRAP_FRAME and save registers to it
@@ -63,12 +86,14 @@ _MsgInvalidOpcodeFault:
 // KTRAP_FRAME_P4Home
 // KTRAP_FRAME_P5
 
-.if (TRAPFLAGS & TRAPFLAG_SYSTEMSERVICE)
+.if (TRAPFLAGS & TRAPFLAG_NONVOLATILES)
     /* Save non-volatile registers */
     mov [rbp + KTRAP_FRAME_Rbx], rbx
     mov [rbp + KTRAP_FRAME_Rdi], rdi
     mov [rbp + KTRAP_FRAME_Rsi], rsi
-.else
+.endif
+
+.if (TRAPFLAGS & TRAPFLAG_VOLATILES)
     /* Save volatile registers */
     mov [rbp + KTRAP_FRAME_Rax], rax
     mov [rbp + KTRAP_FRAME_Rcx], rcx
@@ -77,7 +102,9 @@ _MsgInvalidOpcodeFault:
     mov [rbp + KTRAP_FRAME_R9], r9
     mov [rbp + KTRAP_FRAME_R10], r10
     mov [rbp + KTRAP_FRAME_R11], r11
+.endif
 
+.if (TRAPFLAGS & TRAPFLAG_XMM)
     /* Save xmm registers */
 //    movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
 //    movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
@@ -87,6 +114,7 @@ _MsgInvalidOpcodeFault:
 //    movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
 .endif
 
+.if (TRAPFLAGS & TRAPFLAG_SEGMENTS)
     /* Save segment selectors */
     mov ax, ds
     mov [rbp + KTRAP_FRAME_SegDs], ax
@@ -96,6 +124,7 @@ _MsgInvalidOpcodeFault:
     mov [rbp + KTRAP_FRAME_SegFs], ax
     mov ax, gs
     mov [rbp + KTRAP_FRAME_SegGs], ax
+.endif
 
     /* Save previous mode and swap gs when it was UserMode */
     mov ax, [rbp + KTRAP_FRAME_SegCs]
@@ -113,7 +142,7 @@ _MsgInvalidOpcodeFault:
 // KTRAP_FRAME_ExceptionActive
 // KTRAP_FRAME_MxCsr
 
-
+.if (TRAPFLAGS & TRAPFLAG_DEBUG)
     /* Save debug registers */
     mov rax, dr0
     mov [rbp + KTRAP_FRAME_Dr0], rax
@@ -127,6 +156,7 @@ _MsgInvalidOpcodeFault:
     mov [rbp + KTRAP_FRAME_Dr6], rax
     mov rax, dr7
     mov [rbp + KTRAP_FRAME_Dr7], rax
+.endif
 
 // KTRAP_FRAME_DebugControl
 // KTRAP_FRAME_LastBranchToRip
@@ -145,6 +175,7 @@ _MsgInvalidOpcodeFault:
  */
 .macro LEAVE_TRAP_FRAME
 
+.if (TRAPFLAGS & TRAPFLAG_SEGMENTS)
     /* Restore segment selectors */
     mov ax, [rbp + KTRAP_FRAME_SegDs]
     mov ds, ax
@@ -152,17 +183,21 @@ _MsgInvalidOpcodeFault:
     mov es, ax
     mov ax, [rbp + KTRAP_FRAME_SegFs]
     mov fs, ax
+.endif
+
     test byte ptr [rbp + KTRAP_FRAME_PreviousMode], 1
     jz 1f
     swapgs
 1:
 
-.if (TRAPFLAGS & TRAPFLAG_SYSTEMSERVICE)
+.if (TRAPFLAGS & TRAPFLAG_NONVOLATILES)
     /* Restore non-volatile registers */
     mov rbx, [rbp + KTRAP_FRAME_Rbx]
     mov rdi, [rbp + KTRAP_FRAME_Rdi]
     mov rsi, [rbp + KTRAP_FRAME_Rsi]
-.else
+.endif
+
+.if (TRAPFLAGS & TRAPFLAG_VOLATILES)
     /* Restore volatile registers */
     mov rax, [rbp + KTRAP_FRAME_Rax]
     mov rcx, [rbp + KTRAP_FRAME_Rcx]
@@ -171,7 +206,9 @@ _MsgInvalidOpcodeFault:
     mov r9, [rbp + KTRAP_FRAME_R9]
     mov r10, [rbp + KTRAP_FRAME_R10]
     mov r11, [rbp + KTRAP_FRAME_R11]
+.endif
 
+.if (TRAPFLAGS & TRAPFLAG_XMM)
     /* Restore xmm registers */
 //    movdqa xmm0, [rbp + KTRAP_FRAME_Xmm0]
 //    movdqa xmm1, [rbp + KTRAP_FRAME_Xmm1]
@@ -189,37 +226,47 @@ _MsgInvalidOpcodeFault:
 .endm
 
 
-/*
- *  DISPATCH_EXCEPTION - prepare EXCEPTION_RECORD and call KiDispatchException
- */
-.macro DISPATCH_EXCEPTION Code, NumParams, p1, p2, p3
 
-    /* rsp+0x28 points to EXCEPTION_RECORD, set it up */
-    mov dword ptr [rsp + 0x28 + EXCEPTION_RECORD_ExceptionCode], \Code
+// rbp = TrapFrame, ecx = ExceptionCode, edx = NumParams, r9,r10,r11 = params
+_InternalDispatchException:
+
+    /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
+    sub rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME + 0x28
+
+    /* Set up EXCEPTION_RECORD */
+    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionCode], ecx
     mov dword ptr [rsp + 0x28 + EXCEPTION_RECORD_ExceptionFlags], 0
     mov qword ptr [rsp + 0x28 + EXCEPTION_RECORD_ExceptionRecord], 0
     mov rax, [rbp + KTRAP_FRAME_Rip]
     mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionAddress], rax
-    mov dword ptr [rsp + 0x28 + EXCEPTION_RECORD_NumberParameters], \NumParams
+    mov [rsp + 0x28 + EXCEPTION_RECORD_NumberParameters], edx
+    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x00], r9
+    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x08], r10
+    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x10], r11
 
-.if \NumParams >= 1
-    mov qword ptr [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x00], \p1
-.endif
-.if \NumParams >= 2
-    mov qword ptr [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x08], \p2
-.endif
-.if \NumParams >= 3
-    mov qword ptr [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x10], \p3
-.endif
+    /* Set up KEXCEPTION_FRAME */
+    lea rdx, [rsp + 0x28 + SIZE_EXCEPTION_RECORD]
+    mov rax, [rbp + KTRAP_FRAME_Rbp]
+    mov [rdx + KEXCEPTION_FRAME_Rbp], rax
+    mov [rdx + KEXCEPTION_FRAME_Rbx], rbx
+    mov [rdx + KEXCEPTION_FRAME_Rdi], rdi
+    mov [rdx + KEXCEPTION_FRAME_Rsi], rsi
+    mov [rdx + KEXCEPTION_FRAME_R12], r12
+    mov [rdx + KEXCEPTION_FRAME_R13], r13
+    mov [rdx + KEXCEPTION_FRAME_R14], r14
+    mov [rdx + KEXCEPTION_FRAME_R15], r15
+    mov qword ptr [rdx + KEXCEPTION_FRAME_Return], 0
 
+    /* Call KiDispatchException */
+    lea rcx, [rsp + 0x28] // ExceptionRecord
+    // rdx already points to ExceptionFrame
+    mov r8, rbp // TrapFrame
+    mov r9b, [r8 + KTRAP_FRAME_PreviousMode] // PreviousMode
     mov byte ptr [rsp + 0x20], 1  // FirstChance
-    mov r9b, [rbp + KTRAP_FRAME_PreviousMode] // PreviousMode
-    mov r8, rbp                   // TrapFrame
-    xor rdx, rdx                  // ExceptionFrame
-    lea rcx, [rsp + 0x28]         // ExceptionRecord
     call _KiDispatchException
-.endm
 
+    add rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME + 0x28
+    ret
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 .text
@@ -242,7 +289,7 @@ _MsgInvalidOpcodeFault:
     push 0
     .allocstack 0x8
 
-    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
+    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
     /* Check if the frame was from kernelmode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
@@ -253,7 +300,13 @@ _MsgInvalidOpcodeFault:
 
 KiDebugTrapOrFaultKMode:
 
-    DISPATCH_EXCEPTION STATUS_SINGLE_STEP, 0, 0, 0, 0
+    /* Dispatch the exception */
+    mov ecx, STATUS_SINGLE_STEP
+    mov edx, 0
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
 
     /* Return */
     LEAVE_TRAP_FRAME
@@ -277,13 +330,19 @@ KiDebugTrapOrFaultKMode:
     push 0
     .allocstack 0x8
 
-    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
+    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
     lea rcx, _MsgBreakpointTrap[rip]
     mov rdx, rbp
     call _FrLdrDbgPrint[rip]
 
-    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
+    /* Dispatch the exception */
+    mov ecx, STATUS_BREAKPOINT
+    mov edx, 3
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
 
     /* Return */
     LEAVE_TRAP_FRAME
@@ -323,7 +382,7 @@ KiDebugTrapOrFaultKMode:
     push 0
     .allocstack 0x8
 
-    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
+    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
 //    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
 
@@ -416,7 +475,7 @@ KiDebugTrapOrFaultKMode:
     .pushframe 1
     /* We have an error code */
 
-    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
+    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
 //    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
 
@@ -443,13 +502,19 @@ KiDebugTrapOrFaultKMode:
 
     jmp $
 
-    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
+    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
     /* Save page fault address */
     mov rax, cr2
     mov [rbp  + KTRAP_FRAME_FaultAddress], rax
 
-    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 0, 0, 0, 0
+    /* Dispatch the exception */
+    mov ecx, STATUS_BREAKPOINT
+    mov edx, 0
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
 
     LEAVE_TRAP_FRAME;
     iretq
@@ -520,16 +585,18 @@ KiDebugTrapOrFaultKMode:
     push 0
     .allocstack 0x08
 
-    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
+    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
     /* Increase Rip to skip the int3 */
     inc qword ptr [rbp + KTRAP_FRAME_Rip]
 
-    /* Call KiDispatchException */
-    mov r8, [rbp+KTRAP_FRAME_Rax] // Service
-    mov rcx, [rbp+KTRAP_FRAME_Rcx] // Buffer
-    mov rdx, [rbp+KTRAP_FRAME_Rdx] // Length
-    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, r8, rcx, rdx
+    /* Dispatch the exception */
+    mov ecx, STATUS_BREAKPOINT
+    mov edx, 3
+    mov r9, [rbp+KTRAP_FRAME_Rax] // Service
+    mov r10, [rbp+KTRAP_FRAME_Rcx] // Buffer
+    mov r11, [rbp+KTRAP_FRAME_Rdx] // Length
+    call _InternalDispatchException
 
     LEAVE_TRAP_FRAME;
     iretq
