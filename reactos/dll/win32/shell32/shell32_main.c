@@ -84,7 +84,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         }
         argv[0]=(LPWSTR)(argv+1);
         if (numargs)
-            *numargs=2;
+            *numargs=1;
 
         return argv;
     }
@@ -323,8 +323,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
           (flags & SHGFI_PIDL)? "pidl" : debugstr_w(path), dwFileAttributes,
           psfi, psfi->dwAttributes, sizeofpsfi, flags);
 
-    if ( (flags & SHGFI_USEFILEATTRIBUTES) &&
-         (flags & (SHGFI_ATTRIBUTES|SHGFI_EXETYPE|SHGFI_PIDL)))
+    if (!path)
         return FALSE;
 
     /* windows initializes these values regardless of the flags */
@@ -403,7 +402,8 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         {
             psfi->dwAttributes = 0xffffffff;
         }
-        IShellFolder_GetAttributesOf( psfParent, 1, (LPCITEMIDLIST*)&pidlLast,
+        if (psfParent)
+            IShellFolder_GetAttributesOf( psfParent, 1, (LPCITEMIDLIST*)&pidlLast,
                                       &(psfi->dwAttributes) );
     }
 
@@ -520,7 +520,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 &uDummy, (LPVOID*)&pei);
             if (SUCCEEDED(hr))
             {
-                hr = pei->lpVtbl->GetIconLocation(pei, uGilFlags,
+                hr = IExtractIconW_GetIconLocation(pei, uGilFlags,
                     szLocation, MAX_PATH, &iIndex, &uFlags);
 
                 if (uFlags & GIL_NOTFILENAME)
@@ -530,7 +530,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                     wcscpy (psfi->szDisplayName, szLocation);
                     psfi->iIcon = iIndex;
                 }
-                pei->lpVtbl->Release(pei);
+                IExtractIconW_Release(pei);
             }
         }
     }
@@ -553,7 +553,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 static const WCHAR p1W[] = {'%','1',0};
 
                 psfi->iIcon = 0;
-                szExt = (LPWSTR) PathFindExtensionW(sTemp);
+                szExt = PathFindExtensionW(sTemp);
                 if ( szExt &&
                      HCR_MapTypeToValueW(szExt, sTemp, MAX_PATH, TRUE) &&
                      HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &icon_idx))
@@ -569,18 +569,22 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                     }
                     else
                     {
-                        IconNotYetLoaded=FALSE;
+                        UINT ret;
                         if (flags & SHGFI_SMALLICON)
-                            PrivateExtractIconsW( sTemp,icon_idx,
+                            ret = PrivateExtractIconsW( sTemp,icon_idx,
                                 GetSystemMetrics( SM_CXSMICON ),
                                 GetSystemMetrics( SM_CYSMICON ),
                                 &psfi->hIcon, 0, 1, 0);
                         else
-                            PrivateExtractIconsW( sTemp, icon_idx,
+                            ret = PrivateExtractIconsW( sTemp, icon_idx,
                                 GetSystemMetrics( SM_CXICON),
                                 GetSystemMetrics( SM_CYICON),
                                 &psfi->hIcon, 0, 1, 0);
-                        psfi->iIcon = icon_idx;
+                        if (ret != 0 && ret != 0xFFFFFFFF)
+                        {
+                            IconNotYetLoaded=FALSE;
+                            psfi->iIcon = icon_idx;
+                        }
                     }
                 }
             }
@@ -593,7 +597,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 ret = FALSE;
             }
         }
-        if (ret)
+        if (ret && (flags & SHGFI_SYSICONINDEX))
         {
             if (flags & SHGFI_SMALLICON)
                 ret = (DWORD_PTR) ShellSmallIconList;
@@ -633,6 +637,11 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
 /*************************************************************************
  * SHGetFileInfoA            [SHELL32.@]
+ *
+ * Note:
+ *    MSVBVM60.__vbaNew2 expects this function to return a value in range
+ *    1 .. 0x7fff when the function succeeds and flags does not contain
+ *    SHGFI_EXETYPE or SHGFI_SYSICONINDEX (see bug 7701)
  */
 DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
                                 SHFILEINFOA *psfi, UINT sizeofpsfi,
