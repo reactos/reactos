@@ -145,40 +145,29 @@ static DWORD get_scheme_code(LPCWSTR scheme, DWORD scheme_len)
 HRESULT WINAPI ParseURLA(LPCSTR x, PARSEDURLA *y)
 {
     WCHAR scheme[INTERNET_MAX_SCHEME_LENGTH];
-    DWORD cnt, len;
+    const char *ptr = x;
+    int len;
 
-    y->nScheme = URL_SCHEME_INVALID;
-    if (y->cbSize != sizeof(*y)) return E_INVALIDARG;
-    /* FIXME: leading white space generates error of 0x80041001 which
-     *        is undefined
-     */
-    if (*x <= ' ') return 0x80041001;
-    cnt = 0;
-    y->cchProtocol = 0;
-    y->pszProtocol = x;
-    while (*x) {
-	if (*x == ':') {
-	    y->cchProtocol = cnt;
-	    cnt = -1;
-	    y->pszSuffix = x+1;
-	    break;
-	}
-	x++;
-	cnt++;
-    }
+    TRACE("%s %p\n", debugstr_a(x), y);
 
-    /* check for no scheme in string start */
-    /* (apparently schemes *must* be larger than a single character)  */
-    if ((*x == '\0') || (y->cchProtocol <= 1)) {
+    if(y->cbSize != sizeof(*y))
+        return E_INVALIDARG;
+
+    while(*ptr && (isalnum(*ptr) || *ptr == '-'))
+        ptr++;
+
+    if (*ptr != ':' || ptr <= x+1) {
 	y->pszProtocol = NULL;
 	return 0x80041001;
     }
 
-    /* found scheme, set length of remainder */
-    y->cchSuffix = lstrlenA(y->pszSuffix);
+    y->pszProtocol = x;
+    y->cchProtocol = ptr-x;
+    y->pszSuffix = ptr+1;
+    y->cchSuffix = strlen(y->pszSuffix);
 
-    len = MultiByteToWideChar(CP_ACP, 0, y->pszProtocol, y->cchProtocol,
-                              scheme, sizeof(scheme)/sizeof(WCHAR));
+    len = MultiByteToWideChar(CP_ACP, 0, x, ptr-x,
+            scheme, sizeof(scheme)/sizeof(WCHAR));
     y->nScheme = get_scheme_code(scheme, len);
 
     return S_OK;
@@ -191,38 +180,26 @@ HRESULT WINAPI ParseURLA(LPCSTR x, PARSEDURLA *y)
  */
 HRESULT WINAPI ParseURLW(LPCWSTR x, PARSEDURLW *y)
 {
-    DWORD cnt;
+    const WCHAR *ptr = x;
 
-    y->nScheme = URL_SCHEME_INVALID;
-    if (y->cbSize != sizeof(*y)) return E_INVALIDARG;
-    /* FIXME: leading white space generates error of 0x80041001 which
-     *        is undefined
-     */
-    if (*x <= ' ') return 0x80041001;
-    cnt = 0;
-    y->cchProtocol = 0;
-    y->pszProtocol = x;
-    while (*x) {
-        if (*x == ':') {
-	    y->cchProtocol = cnt;
-	    cnt = -1;
-	    y->pszSuffix = x+1;
-	    break;
-	}
-	x++;
-	cnt++;
-    }
+    TRACE("%s %p\n", debugstr_w(x), y);
 
-    /* check for no scheme in string start */
-    /* (apparently schemes *must* be larger than a single character)  */
-    if ((*x == '\0') || (y->cchProtocol <= 1)) {
+    if(y->cbSize != sizeof(*y))
+        return E_INVALIDARG;
+
+    while(*ptr && (isalnumW(*ptr) || *ptr == '-'))
+        ptr++;
+
+    if (*ptr != ':' || ptr <= x+1) {
 	y->pszProtocol = NULL;
 	return 0x80041001;
     }
 
-    /* found scheme, set length of remainder */
-    y->cchSuffix = lstrlenW(y->pszSuffix);
-    y->nScheme = get_scheme_code(y->pszProtocol, y->cchProtocol);
+    y->pszProtocol = x;
+    y->cchProtocol = ptr-x;
+    y->pszSuffix = ptr+1;
+    y->cchSuffix = strlenW(y->pszSuffix);
+    y->nScheme = get_scheme_code(x, ptr-x);
 
     return S_OK;
 }
@@ -2141,6 +2118,7 @@ HRESULT WINAPI UrlGetPartW(LPCWSTR pszIn, LPWSTR pszOut, LPDWORD pcchOut,
 BOOL WINAPI PathIsURLA(LPCSTR lpstrPath)
 {
     PARSEDURLA base;
+    HRESULT hres;
 
     TRACE("%s\n", debugstr_a(lpstrPath));
 
@@ -2148,8 +2126,8 @@ BOOL WINAPI PathIsURLA(LPCSTR lpstrPath)
 
     /* get protocol        */
     base.cbSize = sizeof(base);
-    ParseURLA(lpstrPath, &base);
-    return (base.nScheme != URL_SCHEME_INVALID);
+    hres = ParseURLA(lpstrPath, &base);
+    return hres == S_OK && (base.nScheme != URL_SCHEME_INVALID);
 }
 
 /*************************************************************************
@@ -2160,6 +2138,7 @@ BOOL WINAPI PathIsURLA(LPCSTR lpstrPath)
 BOOL WINAPI PathIsURLW(LPCWSTR lpstrPath)
 {
     PARSEDURLW base;
+    HRESULT hres;
 
     TRACE("%s\n", debugstr_w(lpstrPath));
 
@@ -2167,8 +2146,8 @@ BOOL WINAPI PathIsURLW(LPCWSTR lpstrPath)
 
     /* get protocol        */
     base.cbSize = sizeof(base);
-    ParseURLW(lpstrPath, &base);
-    return (base.nScheme != URL_SCHEME_INVALID);
+    hres = ParseURLW(lpstrPath, &base);
+    return hres == S_OK && (base.nScheme != URL_SCHEME_INVALID);
 }
 
 /*************************************************************************
