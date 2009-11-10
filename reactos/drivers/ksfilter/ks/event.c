@@ -285,7 +285,7 @@ KsFreeEventList(
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -293,8 +293,38 @@ NTAPI
 KsGenerateEvent(
     IN  PKSEVENT_ENTRY EntryEvent)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    if (EntryEvent->NotificationType == KSEVENTF_EVENT_HANDLE || EntryEvent->NotificationType == KSEVENTF_EVENT_OBJECT)
+    {
+        // signal event
+        KeSetEvent(EntryEvent->Object, 0, FALSE);
+    }
+    else if (EntryEvent->NotificationType == KSEVENTF_SEMAPHORE_HANDLE || EntryEvent->NotificationType == KSEVENTF_SEMAPHORE_OBJECT)
+    {
+        // release semaphore
+        KeReleaseSemaphore(EntryEvent->Object, 0, EntryEvent->SemaphoreAdjustment, FALSE);
+    }
+    else if (EntryEvent->NotificationType == KSEVENTF_DPC)
+    {
+        // queue dpc
+        KeInsertQueueDpc((PRKDPC)EntryEvent->Object, NULL, NULL);
+    }
+    else if (EntryEvent->NotificationType == KSEVENTF_WORKITEM)
+    {
+        // queue work item
+        ExQueueWorkItem((PWORK_QUEUE_ITEM)EntryEvent->Object, PtrToUlong(EntryEvent->BufferItem));
+    }
+    else if (EntryEvent->NotificationType == KSEVENTF_KSWORKITEM)
+    {
+        // queue work item of ks worker
+        return KsQueueWorkItem((PKSWORKER)EntryEvent->Object, (PWORK_QUEUE_ITEM)EntryEvent->DpcItem);
+    }
+    else
+    {
+        UNIMPLEMENTED;
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*
