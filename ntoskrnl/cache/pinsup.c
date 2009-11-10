@@ -304,7 +304,6 @@ CcpMapData
     DPRINT("CcMapData(F->%x,%x:%d)\n", FileObject, FileOffset->LowPart, Length);
 
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
-	ASSERT(FileOffset->QuadPart < 0x10000000);
 
     Target.QuadPart = CACHE_ROUND_DOWN(FileOffset->QuadPart);
 
@@ -429,8 +428,6 @@ retry:
 	
 	*BcbResult = &CcCacheSections[BcbHead];
 	*Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
-
-	ASSERT(FileOffset->QuadPart < 0x10000000);
 
 	DPRINT
 		("Bcb #%x Buffer maps (%x) At %x Length %x (Getting %x:%x) %wZ\n", 
