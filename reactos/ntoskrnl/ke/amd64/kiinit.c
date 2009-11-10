@@ -18,6 +18,9 @@
 
 /* GLOBALS *******************************************************************/
 
+/* Function pointer for early debug prints */
+ULONG (*FrLdrDbgPrint)(const char *Format, ...);
+
 /* Spinlocks used only on X86 */
 KSPIN_LOCK KiFreezeExecutionLock;
 

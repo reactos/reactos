@@ -70,6 +70,11 @@ ULONG64 MmNumberOfSystemPtes;
 PMMPTE MmSystemPagePtes;
 ULONG64 MxPfnAllocation;
 
+PVOID MmSystemCacheStart;
+PVOID MmSystemCacheEnd;
+MMSUPPORT MmSystemCacheWs;
+
+
 ///////////////////////////////////////////////
 
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;

@@ -566,39 +566,6 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 
 BOOLEAN
 NTAPI
-KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
-                  IN PKEXCEPTION_FRAME ExceptionFrame)
-{
-    ULONG64 Flags = 0;
-
-    /* Disable interrupts and get previous state */
-    Flags = __readeflags();
-    //Flags = __getcallerseflags();
-    _disable();
-
-    /* Save freeze flag */
-    KiFreezeFlag = 4;
-
-    /* Save the old IRQL */
-    KiOldIrql = KeGetCurrentIrql();
-
-    /* Return whether interrupts were enabled */
-    return (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
-}
-
-VOID
-NTAPI
-KeThawExecution(IN BOOLEAN Enable)
-{
-    /* Cleanup CPU caches */
-    KeFlushCurrentTb();
-
-    /* Re-enable interrupts */
-    if (Enable) _enable();
-}
-
-BOOLEAN
-NTAPI
 KeInvalidateAllCaches(VOID)
 {
     /* Invalidate all caches */

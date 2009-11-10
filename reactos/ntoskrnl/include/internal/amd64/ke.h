@@ -66,6 +66,11 @@ typedef struct _KIDT_INIT
 #define KfReleaseSpinLock KeReleaseSpinLock
 
 extern ULONG Ke386CacheAlignment;
+extern ULONG KeI386NpxPresent;
+extern ULONG KeI386XMMIPresent;
+extern ULONG KeI386FxsrPresent;
+extern ULONG KeI386CpuType;
+extern ULONG KeI386CpuStep;
 
 #define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_AMD64
 
@@ -101,6 +106,16 @@ extern ULONG Ke386CacheAlignment;
 #define KeGetTrapFrameInterruptState(TrapFrame) \
         BooleanFlagOn((TrapFrame)->EFlags, EFLAGS_INTERRUPT_MASK)
 
+//
+// Invalidates the TLB entry for a specified address
+//
+FORCEINLINE
+VOID
+KeInvalidateTlbEntry(IN PVOID Address)
+{
+    /* Invalidate the TLB entry for this address */
+    __invlpg(Address);
+}
 
 struct _KPCR;
 VOID
