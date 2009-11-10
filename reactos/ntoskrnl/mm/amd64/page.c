@@ -96,12 +96,12 @@ MiGetPteForProcess(
 
         /* Get the PPE */
         Pte = MiAddressToPpe(Address);
-        if (Pte->u.Hard.Valid)
+        if (!Pte->u.Hard.Valid)
             return NULL;
 
         /* Get the PDE */
         Pte = MiAddressToPde(Address);
-        if (Pte->u.Hard.Valid)
+        if (!Pte->u.Hard.Valid)
             return NULL;
 
         /* Get the PTE */
@@ -540,6 +540,17 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
 {
     UNIMPLEMENTED;
     return 0;
+}
+
+BOOLEAN
+NTAPI
+MmIsAddressValid(IN PVOID VirtualAddress)
+{
+    /* Check all four page table levels */
+    return (MiAddressToPxe(VirtualAddress)->u.Hard.Valid != 0 &&
+            MiAddressToPpe(VirtualAddress)->u.Hard.Valid != 0 &&
+            MiAddressToPde(VirtualAddress)->u.Hard.Valid != 0 &&
+            MiAddressToPte(VirtualAddress)->u.Hard.Valid != 0);
 }
 
 
