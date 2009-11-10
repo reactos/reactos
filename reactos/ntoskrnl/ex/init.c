@@ -956,7 +956,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Make sure interrupts are active now */
-    _enable();
+// FIXME HAX!!!
+    //_enable();
 
     /* Clear the crypto exponent */
     SharedUserData->CryptoExponent = 0;
