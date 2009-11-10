@@ -61,6 +61,34 @@ KsoGetIrpTargetFromIrp(
 
 NTSTATUS
 NTAPI
+PcHandleEnableEventWithTable(
+    IN PIRP Irp,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor)
+{
+    // store descriptor
+    KSEVENT_ITEM_IRP_STORAGE(Irp) = (PKSEVENT_ITEM)Descriptor;
+
+    // FIXME seh probing
+    return KsEnableEvent(Irp, Descriptor->EventSetCount, Descriptor->EventSet, NULL, KSEVENTS_NONE, NULL);
+}
+
+NTSTATUS
+NTAPI
+PcHandleDisableEventWithTable(
+    IN PIRP Irp,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor)
+{
+    // store descriptor
+    KSEVENT_ITEM_IRP_STORAGE(Irp) = (PKSEVENT_ITEM)Descriptor;
+
+    // FIXME seh probing
+
+    return KsDisableEvent(Irp, Descriptor->EventList, KSEVENTS_SPINLOCK, (PVOID)Descriptor->EventListLock);
+}
+
+
+NTSTATUS
+NTAPI
 PcHandlePropertyWithTable(
     IN PIRP Irp,
     IN ULONG PropertySetCount,
