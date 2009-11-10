@@ -204,6 +204,7 @@ KdDebuggerInitialize0(
 
     /* Get base address */
     ComPortBase = UlongToPtr(BaseArray[ComPortNumber]);
+    KdComPortInUse = ComPortBase;
 
     /* Initialize the port */
     return KdpPortInitialize();
