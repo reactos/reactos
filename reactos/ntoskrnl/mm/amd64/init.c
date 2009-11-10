@@ -238,6 +238,9 @@ MiArmIninializeMemoryLayout(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Use the default */
     MmNumberOfSystemPtes = 22000;
 
+    /* FIXME: should start below paged pool */
+    MmPfnDatabase = (PVOID)0xFFFFFD5FC0000000ULL;
+
 }
 
 VOID
@@ -307,9 +310,10 @@ MiArmEvaluateMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             /* Update the highest page */
             MmHighestPhysicalPage = LastPage;
         }
-
+DPRINT1("BasePage = %ld, LastPage = %ld\n", BasePage, LastPage);
+__debugbreak();
         /* Map pages for the PFN database */
-        PageCount = (MdBlock->PageCount * sizeof(MMPFN)) / PAGE_SIZE;
+        PageCount = PAGE_ROUND_UP(MdBlock->PageCount * sizeof(MMPFN)) / PAGE_SIZE;
         MxMapPageRange(&MmPfnDatabase[BasePage], PageCount);
 
         /* Zero out the pages */
@@ -444,14 +448,11 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize the memory layout */
         MiArmIninializeMemoryLayout(LoaderBlock);
-        DPRINT1("MmArmInitSystem 3\n");
 
         /* Loop descriptors and prepare PFN database */
         MiArmEvaluateMemoryDescriptors(LoaderBlock);
-        DPRINT1("MmArmInitSystem 4\n");
 
         MiArmInitializePageTable();
-        DPRINT1("MmArmInitSystem 5\n");
 
         /* Configure size of the non paged pool */
         MiArmPrepareNonPagedPool();
