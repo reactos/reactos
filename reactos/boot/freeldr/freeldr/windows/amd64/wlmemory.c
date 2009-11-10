@@ -80,7 +80,7 @@ MempGetOrCreatePageDir(PPAGE_DIRECTORY_AMD64 pDir, ULONG Index)
 
 	if (!pDir->Pde[Index].Valid)
 	{
-		pSubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderSpecialMemory);
+		pSubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
 		if (!pSubDir)
 			return NULL;
 		RtlZeroMemory(pSubDir, PAGE_SIZE);
