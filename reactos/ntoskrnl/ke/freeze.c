@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/ke/freeze.c
  * PURPOSE:         Routines for freezing and unfreezing processors for
  *                  kernel debugger synchronization.
- * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
