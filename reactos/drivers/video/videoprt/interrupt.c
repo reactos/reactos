@@ -106,42 +106,56 @@ IntVideoPortSetupInterrupt(
 /*
  * @implemented
  */
-
-VP_STATUS NTAPI
+VP_STATUS
+NTAPI
 VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 {
-   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   BOOLEAN Status;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+    BOOLEAN InterruptValid;
 
-   TRACE_(VIDEOPRT, "VideoPortEnableInterrupt\n");
+    /* Get the device extension */
+    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    /* Fail if the driver didn't register an ISR */
+    if (!DeviceExtension->DriverExtension->InitializationData.HwInterrupt)
+    {
+        /* No ISR, no interrupts */
+        return ERROR_INVALID_FUNCTION;
+    }
 
-   Status = HalEnableSystemInterrupt(
-      DeviceExtension->InterruptVector,
-      0,
-      DeviceExtension->InterruptLevel);
+    /* Re-enable the interrupt and return */
+    InterruptValid = HalEnableSystemInterrupt(DeviceExtension->InterruptVector,
+                                              0,
+                                              DeviceExtension->InterruptLevel);
 
-   return Status ? NO_ERROR : ERROR_INVALID_PARAMETER;
+    /* Make sure the interrupt was valid */
+    ASSERT(InterruptValid == TRUE);
+
+    /* Return to caller */
+    return NO_ERROR;
 }
 
 /*
  * @implemented
  */
-
-VP_STATUS NTAPI
+VP_STATUS
+NTAPI
 VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
 {
-   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   BOOLEAN Status;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-   TRACE_(VIDEOPRT, "VideoPortDisableInterrupt\n");
+    /* Get the device extension */
+    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    /* Fail if the driver didn't register an ISR */
+    if (!DeviceExtension->DriverExtension->InitializationData.HwInterrupt)
+    {
+        /* No ISR, no interrupts */
+        return ERROR_INVALID_FUNCTION;
+    }
 
-   Status = HalDisableSystemInterrupt(
-      DeviceExtension->InterruptVector,
-      0);
-
-   return Status ? NO_ERROR : ERROR_INVALID_PARAMETER;
+    /* Disable the interrupt and return */
+    HalDisableSystemInterrupt(DeviceExtension->InterruptVector,
+                              0);
+    return NO_ERROR;
 }
