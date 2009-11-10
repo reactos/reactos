@@ -336,9 +336,10 @@ HalEndSystemInterrupt (KIRQL Irql,
   HalpLowerIrql (Irql, TRUE);
 }
   
-BOOLEAN NTAPI
-HalDisableSystemInterrupt (ULONG Vector,
-			   KIRQL Irql)
+VOID
+NTAPI
+HalDisableSystemInterrupt(ULONG Vector,
+			              KIRQL Irql)
 {
   ULONG irq;
 
@@ -348,13 +349,14 @@ HalDisableSystemInterrupt (ULONG Vector,
       Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS)  
   {
     DPRINT1("Not a device interrupt, vector=%x\n", Vector);
-    return FALSE;
+    ASSERT(FALSE);
+    return;
   }
 
   irq = VECTOR2IRQ (Vector);
   IOAPICMaskIrq (irq);
 
-  return TRUE;  
+  return;  
 }
 
 

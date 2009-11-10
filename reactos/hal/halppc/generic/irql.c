@@ -356,7 +356,7 @@ VOID NTAPI HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
   HalpEndSystemInterrupt(Irql);
 }
 
-BOOLEAN
+VOID
 NTAPI
 HalDisableSystemInterrupt(
   ULONG Vector,
@@ -365,7 +365,10 @@ HalDisableSystemInterrupt(
   ULONG irq;
 
   if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
-    return FALSE;
+  {
+    ASSERT(FALSE);
+    return;
+  }
 
   irq = Vector - IRQ_BASE;
   pic_mask.both |= (1 << irq);
@@ -378,7 +381,7 @@ HalDisableSystemInterrupt(
       WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
     }
 
-  return TRUE;
+  return;
 }
 
 
