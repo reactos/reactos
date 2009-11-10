@@ -173,9 +173,26 @@ TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID ID,
 				      PNDIS_BUFFER Buffer,
 				      PUINT BufferSize);
 
-/* Insert and remove interface entities */
+TDI_STATUS SetAddressFileInfo(TDIObjectID *ID,
+                              PADDRESS_FILE AddrFile,
+                              PVOID Buffer,
+                              UINT BufferSize);
+
+TDI_STATUS GetAddressFileInfo(TDIObjectID *ID,
+                              PADDRESS_FILE AddrFile,
+                              PVOID Buffer,
+                              PUINT BufferSize);
+
+/* Insert and remove entities */
 VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface );
+
 VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface );
+
+VOID AddEntity(ULONG EntityType,
+               PVOID Context,
+               ULONG Flags);
+
+VOID RemoveEntityByContext(PVOID Context);
 
 #endif /* __INFO_H */
 

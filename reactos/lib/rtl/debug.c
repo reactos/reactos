@@ -69,7 +69,7 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
     }
 
     /* For user mode, don't recursively DbgPrint */
-    if (RtlpSetInDbgPrint(TRUE)) return STATUS_SUCCESS;
+    if (RtlpSetInDbgPrint()) return STATUS_SUCCESS;
 
     /* Guard against incorrect pointers */
     _SEH2_TRY
@@ -142,13 +142,13 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
         if (Status == STATUS_BREAKPOINT)
         {
             /* Breakpoint */
-            //DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+            DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
             Status = STATUS_SUCCESS;
         }
     }
 
-    /* In user-mode, remove the InDbgPrint Flag */
-    RtlpSetInDbgPrint(FALSE);
+    /* In user-mode, clear the InDbgPrint Flag */
+    RtlpClearInDbgPrint();
 
     /* Return */
     return Status;
@@ -282,7 +282,7 @@ DbgPrompt(IN PCCH Prompt,
 
     /* Setup the output string */
     Output.Length = strlen(Prompt);
-    Output.Buffer = (PCH)Prompt;
+    Output.Buffer = (PCHAR)Prompt;
 
     /* Call the system service */
     return DebugPrompt(&Output, &Input);
@@ -340,7 +340,8 @@ DbgLoadImageSymbols(IN PSTRING Name,
     else
     {
         /* No data available */
-        SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
+        SymbolInfo.CheckSum =
+        SymbolInfo.SizeOfImage = 0;
     }
 
     /* Load the symbols */
@@ -365,4 +366,24 @@ DbgUnLoadImageSymbols(IN PSTRING Name,
 
     /* Load the symbols */
     DebugService2(Name, &SymbolInfo, BREAKPOINT_UNLOAD_SYMBOLS);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+DbgCommandString(IN PCCH Name,
+                 IN PCCH Command)
+{
+    STRING NameString, CommandString;
+
+    /* Setup the strings */
+    NameString.Buffer = (PCHAR)Name;
+    NameString.Length = strlen(Name);
+    CommandString.Buffer = (PCHAR)Command;
+    CommandString.Length = strlen(Command);
+
+    /* Send them to the debugger */
+    DebugService2(&NameString, &CommandString, BREAKPOINT_COMMAND_STRING);
 }

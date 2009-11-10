@@ -67,7 +67,7 @@ typedef struct
 typedef struct
 {
     MIXERCAPSW    MixCaps;
-
+    ULONG DeviceIndex;
     LIST_ENTRY    LineList;
     ULONG ControlId;
 }MIXER_INFO, *LPMIXER_INFO;
@@ -276,5 +276,18 @@ InsertPinHandle(
     IN  HANDLE PinHandle,
     IN  ULONG FreeIndex);
 
+
+NTSTATUS
+GetWaveInfoByIndexAndType(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  ULONG DeviceIndex,
+    IN  SOUND_DEVICE_TYPE DeviceType,
+    OUT LPWAVE_INFO *OutWaveInfo);
+
+NTSTATUS
+GetSysAudioDevicePnpName(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  ULONG DeviceIndex,
+    OUT LPWSTR * Device);
 
 #endif

@@ -34,6 +34,7 @@ GENERATE_ARM_STUB KeSynchronizeExecution
 GENERATE_ARM_STUB KeSwitchKernelStack
 GENERATE_ARM_STUB RtlCreateUserThread
 GENERATE_ARM_STUB RtlInitializeContext
-GENERATE_ARM_STUB KeUserModeCallback 
+GENERATE_ARM_STUB KeUserModeCallback
+GENERATE_ARM_STUB KiCallUserMode
 GENERATE_ARM_STUB NtCallbackReturn
 GENERATE_ARM_STUB NtContinue

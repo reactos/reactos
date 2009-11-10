@@ -203,6 +203,110 @@ WdmAudFrameSize(
 
 }
 
+NTSTATUS
+NTAPI
+WdmAudGetDeviceInterface(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo)
+{
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    LPWSTR Device;
+    LPWAVE_INFO WaveInfo;
+    ULONG Size, Length;
+
+    /* get device extension */
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get device interface string input length */
+    Size = DeviceInfo->u.Interface.DeviceInterfaceStringSize;
+
+    if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE || DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        /* get wave info */
+        Status = GetWaveInfoByIndexAndType(DeviceObject, DeviceInfo->DeviceIndex, DeviceInfo->DeviceType, &WaveInfo);
+
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* invalid device id */
+            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+        }
+
+        Status = GetSysAudioDevicePnpName(DeviceObject, WaveInfo->FilterId, &Device);
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* invalid device id */
+            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+        }
+
+        /* calculate length */
+        Length = (wcslen(Device)+1) * sizeof(WCHAR);
+
+        if (!Size)
+        {
+            /* store device interface size */
+            DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
+        }
+        else if (Size < Length)
+        {
+            /* buffer too small */
+            DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
+            return SetIrpIoStatus(Irp, STATUS_BUFFER_OVERFLOW, sizeof(WDMAUD_DEVICE_INFO));
+        }
+        else
+        {
+            //FIXME SEH
+            RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
+        }
+
+        ExFreePool(Device);
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+    else if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
+    {
+        if (DeviceInfo->DeviceIndex >= DeviceExtension->MixerInfoCount)
+        {
+            /* invalid device id */
+            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, sizeof(WDMAUD_DEVICE_INFO));
+        }
+
+        Status = GetSysAudioDevicePnpName(DeviceObject, DeviceExtension->MixerInfo[DeviceInfo->DeviceIndex].DeviceIndex, &Device);
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* invalid device id */
+            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+        }
+
+        /* calculate length */
+        Length = (wcslen(Device)+1) * sizeof(WCHAR);
+
+        if (!Size)
+        {
+            /* store device interface size */
+            DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
+        }
+        else if (Size < Length)
+        {
+            /* buffer too small */
+            DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
+            return SetIrpIoStatus(Irp, STATUS_BUFFER_OVERFLOW, sizeof(WDMAUD_DEVICE_INFO));
+        }
+        else
+        {
+            //FIXME SEH
+            RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
+        }
+
+        ExFreePool(Device);
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
+    return SetIrpIoStatus(Irp, STATUS_INVALID_DEVICE_REQUEST, sizeof(WDMAUD_DEVICE_INFO));
+}
 
 NTSTATUS
 NTAPI
@@ -266,6 +370,8 @@ WdmAudDeviceControl(
             return WdmAudSetControlDetails(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETCONTROLDETAILS:
             return WdmAudGetControlDetails(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_QUERYDEVICEINTERFACESTRING:
+            return WdmAudGetDeviceInterface(DeviceObject, Irp, DeviceInfo);
         case IOCTL_GETPOS:
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
@@ -291,6 +397,7 @@ WdmAudReadWrite(
     PIO_STACK_LOCATION IoStack;
     ULONG Length;
     PMDL Mdl;
+    BOOLEAN Read = TRUE;
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -318,6 +425,7 @@ WdmAudReadWrite(
     if (IoStack->MajorFunction == IRP_MJ_WRITE)
     {
         /* probe the write stream irp */
+        Read = FALSE;
         Status = KsProbeStreamIrp(Irp, KSPROBE_STREAMWRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK, Length);
     }
     else
@@ -353,13 +461,22 @@ WdmAudReadWrite(
     /* get next stack location */
     IoStack = IoGetNextIrpStackLocation(Irp);
 
+    if (Read)
+    {
+        IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_READ_STREAM;
+    }
+    else
+    {
+        IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_WRITE_STREAM;
+    }
+
     /* attach file object */
     IoStack->FileObject = FileObject;
     IoStack->Parameters.Write.Length = Length;
     IoStack->MajorFunction = IRP_MJ_WRITE;
 
     /* mark irp as pending */
-    IoMarkIrpPending(Irp);
+//    IoMarkIrpPending(Irp);
     /* call the driver */
     Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);
 

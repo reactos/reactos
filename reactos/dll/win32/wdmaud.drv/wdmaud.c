@@ -428,16 +428,18 @@ SetWdmWaveDeviceFormat(
         Instance->BufferCount = 100;
     }
 
-
-    /* Now start the stream */
-    DeviceInfo.u.State = KSSTATE_RUN;
-    SyncOverlappedDeviceIoControl(KernelHandle,
-                                  IOCTL_SETDEVICE_STATE,
-                                  (LPVOID) &DeviceInfo,
-                                  sizeof(WDMAUD_DEVICE_INFO),
-                                  (LPVOID) &DeviceInfo,
-                                  sizeof(WDMAUD_DEVICE_INFO),
-                                  NULL);
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        /* Now start the stream */
+        DeviceInfo.u.State = KSSTATE_RUN;
+        SyncOverlappedDeviceIoControl(KernelHandle,
+                                      IOCTL_SETDEVICE_STATE,
+                                      (LPVOID) &DeviceInfo,
+                                      sizeof(WDMAUD_DEVICE_INFO),
+                                      (LPVOID) &DeviceInfo,
+                                      sizeof(WDMAUD_DEVICE_INFO),
+                                      NULL);
+    }
 
     return MMSYSERR_NOERROR;
 }
@@ -502,11 +504,119 @@ WriteFileEx_Committer2(
     else if (DeviceType == WAVE_IN_DEVICE_TYPE)
     {
         Ret = ReadFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
-        if (Ret)
-            WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
+        //if (Ret)
+        //    WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
     }
 
     return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+SetWdmWaveState(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN BOOL bStart)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    MMDEVICE_TYPE DeviceType;
+    HANDLE Handle;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.hDevice = Handle;
+    DeviceInfo.DeviceType = DeviceType;
+
+    if (bStart)
+        DeviceInfo.u.State = KSSTATE_RUN;
+    else
+        DeviceInfo.u.State = KSSTATE_PAUSE;
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_SETDEVICE_STATE,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+    return Result;
+}
+
+MMRESULT
+GetDeviceInterfaceString(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize)
+{
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    MMRESULT Result;
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.DeviceType = DeviceType;
+    DeviceInfo.DeviceIndex = DeviceId;
+
+
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_QUERYDEVICEINTERFACESTRING,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+
+    if (!Interface)
+    {
+        SND_ASSERT(InterfaceSize);
+
+        *InterfaceSize = DeviceInfo.u.Interface.DeviceInterfaceStringSize;
+        return MMSYSERR_NOERROR;
+    }
+
+    if (InterfaceLength < DeviceInfo.u.Interface.DeviceInterfaceStringSize)
+    {
+        /* buffer is too small */
+        return MMSYSERR_MOREDATA;
+    }
+
+    DeviceInfo.u.Interface.DeviceInterfaceStringSize = InterfaceLength;
+    DeviceInfo.u.Interface.DeviceInterfaceString = Interface;
+
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_QUERYDEVICEINTERFACESTRING,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+    if (  MMSUCCESS(Result) && InterfaceLength > 2)
+    {
+        Interface[1] = L'\\';
+        Interface[InterfaceLength-1] = L'\0';
+    }
+
+    return Result;
 }
 
 MMRESULT
@@ -605,6 +715,7 @@ QueryMixerInfo(
             break;
        default:
            SND_ASSERT(0);
+           return MMSYSERR_NOTSUPPORTED;
     }
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
@@ -682,8 +793,14 @@ PopulateWdmDeviceList(
             FuncTable.SetWaveFormat = SetWdmWaveDeviceFormat;
         }
 
+        if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+        {
+            FuncTable.SetState = SetWdmWaveState;
+        }
+
         FuncTable.Open = OpenWdmSoundDevice;
         FuncTable.Close = CloseWdmSoundDevice;
+        FuncTable.GetDeviceInterfaceString = GetDeviceInterfaceString;
 #ifndef USERMODE_MIXER
         FuncTable.CommitWaveBuffer = WriteFileEx_Committer2;
 #else

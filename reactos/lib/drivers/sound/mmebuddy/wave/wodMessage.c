@@ -117,6 +117,18 @@ wodMessage(
             Result = MmeGetPosition(WAVE_OUT_DEVICE_TYPE, DeviceId, PrivateHandle, (MMTIME*)Parameter1, Parameter2);
             break;
         }
+
+        case DRV_QUERYDEVICEINTERFACESIZE :
+        {
+            Result = MmeGetDeviceInterfaceString(WAVE_OUT_DEVICE_TYPE, DeviceId, NULL, 0, (DWORD*)Parameter1); //FIXME DWORD_PTR
+            break;
+        }
+
+        case DRV_QUERYDEVICEINTERFACE :
+        {
+            Result = MmeGetDeviceInterfaceString(WAVE_OUT_DEVICE_TYPE, DeviceId, (LPWSTR)Parameter1, Parameter2, NULL); //FIXME DWORD_PTR
+            break;
+        }
     }
 
     SND_TRACE(L"wodMessage returning MMRESULT %d\n", Result);

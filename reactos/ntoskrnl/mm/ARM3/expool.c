@@ -21,8 +21,11 @@
 
 /* GLOBALS ********************************************************************/
 
+ULONG ExpNumberOfPagedPools;
 POOL_DESCRIPTOR NonPagedPoolDescriptor;
+PPOOL_DESCRIPTOR ExpPagedPoolDescriptor[16 + 1];
 PPOOL_DESCRIPTOR PoolVector[2];
+PVOID PoolTrackTable;
 PKGUARDED_MUTEX ExpPagedPoolMutex;
 
 /* PRIVATE FUNCTIONS **********************************************************/

@@ -2417,7 +2417,7 @@ TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         }
     }
     else if (lParam == NF_REQUERY) {
-        nResult = SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
+        nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
                     (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
         if (nResult == NFR_ANSI) {
             toolPtr->bNotifyUnicode = FALSE;

@@ -17,11 +17,37 @@ _HalpLastPerfCounterLow:    .long 0
 _HalpLastPerfCounterHigh:   .long 0
 _HalpPerfCounterLow:        .long 0
 _HalpPerfCounterHigh:       .long 0
+_HalpSystemHardwareFlags:   .long 0
 
 _UnhandledMsg:
     .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
 
 /* FUNCTIONS *****************************************************************/
+
+.global _HalpReleaseCmosSpinLock
+.func HalpReleaseCmosSpinLock
+_HalpReleaseCmosSpinLock:
+
+.endfunc
+
+.global _HalpAcquireSystemHardwareSpinLock
+.func HalpAcquireSystemHardwareSpinLock
+_HalpAcquireSystemHardwareSpinLock:
+
+.endfunc
+
+.global _HalpCalibrateStallExecution@0
+.func HalpCalibrateStallExecution@0
+_HalpCalibrateStallExecution@0:
+
+.endfunc
+
+.globl _HalpProfileInterrupt
+.func HalpProfileInterrupt
+_HalpProfileInterrupt:
+
+.endfunc
+
 
 .globl _KeStallExecutionProcessor
 .func KeStallExecutionProcessor

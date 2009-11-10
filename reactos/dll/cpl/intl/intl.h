@@ -3,10 +3,31 @@
 
 #include <cpl.h>
 
-#define MAX_FMT_SIZE          30
+#define DECIMAL_RADIX          10
+
+/* limits */
+#define MAX_FMT_SIZE           30
 #define MAX_STR_SIZE          128
-#define MAX_SAMPLES_STR_SIZE  70
-#define DECIMAL_RADIX         10
+#define MAX_SAMPLES_STR_SIZE   70
+
+#define MAX_NUMBERDSYMBOL       3
+#define MAX_NUMBERSDIGITGRSYM   3
+#define MAX_NUMBERSNSIGNSYM     4
+#define MAX_NUMBERSLSEP         3
+
+#define MAX_CURRENCYSYMBOL      5
+#define MAX_CURRENCYDECSEP      3
+#define MAX_CURRENCYGRPSEP      3
+
+#define MAX_TIMEFORMAT         80
+#define MAX_TIMESEPARATOR       3
+#define MAX_TIMEAMSYMBOL       12
+#define MAX_TIMEPMSYMBOL       12
+
+#define MAX_SHRTDATEFMT        80
+#define MAX_SHRTDATESEP         3
+#define MAX_LONGDATEFMT        80
+#define MAX_YEAR_EDIT           4
 
 typedef struct _APPLET
 {

@@ -208,7 +208,7 @@ ComputeCompatibleFormat(
 
     MultipleItem = (PKSMULTIPLE_ITEM)(PinRequest + 1);
     MultipleItem->Count = 1;
-    MultipleItem->Size = sizeof(KSMULTIPLE_ITEM) + ClientFormat->DataFormat.FormatSize;
+    MultipleItem->Size = ClientFormat->DataFormat.FormatSize;
 
     RtlMoveMemory(MultipleItem + 1, ClientFormat, ClientFormat->DataFormat.FormatSize);
     /* Query the miniport data intersection handler */
@@ -229,7 +229,7 @@ ComputeCompatibleFormat(
 
     if (Status != STATUS_MORE_ENTRIES)
     {
-        /* Failed to data ranges */
+        /* Failed to get data ranges */
         return Status;
     }
 
@@ -276,7 +276,7 @@ ComputeCompatibleFormat(
         MixerFormat->WaveFormatEx.wBitsPerSample = 16;
 
 #else
-        MixerFormat->WaveFormatEx.nChannels = min(ClientFormat->WaveFormatEx.nSamplesPerSec, AudioRange->MaximumChannels);
+        MixerFormat->WaveFormatEx.nChannels = min(ClientFormat->WaveFormatEx.nChannels, AudioRange->MaximumChannels);
         MixerFormat->WaveFormatEx.wBitsPerSample = AudioRange->MaximumBitsPerSample;
 #endif
 

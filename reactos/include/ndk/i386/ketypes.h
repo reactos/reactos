@@ -67,6 +67,11 @@ Author:
 #define KGDT_NMI_TSS            0x58
 
 //
+// Define the number of GDTs that can be queried by user mode
+//
+#define KGDT_NUMBER             10
+
+//
 // CR4
 //
 #define CR4_VME                 0x1
@@ -119,7 +124,7 @@ Author:
 //
 // HAL Variables
 //
-#define INITIAL_STALL_COUNT     0x64
+#define INITIAL_STALL_COUNT     100
 
 //
 // IOPM Definitions
@@ -195,6 +200,23 @@ typedef struct _KTRAP_FRAME
     ULONG V86Fs;
     ULONG V86Gs;
 } KTRAP_FRAME, *PKTRAP_FRAME;
+
+//
+// Defines the Callback Stack Layout for User Mode Callbacks
+//
+typedef struct _KCALLOUT_FRAME
+{
+    ULONG InitialStack;
+    ULONG TrapFrame;
+    ULONG CallbackStack;
+    ULONG Edi;
+    ULONG Esi;
+    ULONG Ebx;
+    ULONG Ebp;
+    ULONG ReturnAddress;
+    ULONG Result;
+    ULONG ResultLength;
+} KCALLOUT_FRAME, *PKCALLOUT_FRAME;
 
 //
 // LDT Entry Definition

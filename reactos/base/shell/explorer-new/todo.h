@@ -29,9 +29,6 @@ static const GUID IID_HACK_IInitializeObject = {0x4622AD16,0xFF23,0x11D0,{0x8D,0
 static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x00,0xC0,0x4F,0xD9,0x18,0xB4}};
 #define SID_SMenuPopup SID_HACK_SMenuPopup
 
-
-
-
 #ifdef COBJMACROS
 #define IDeskBarClient_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
 #define IDeskBarClient_AddRef(T) (T)->lpVtbl->AddRef(T)
@@ -42,28 +39,6 @@ static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x0
 #define IDeskBarClient_SetModeDBC(T,a) (T)->lpVtbl->SetModeDBC(T,a)
 #define IDeskBarClient_UIActivateDBC(T,a) (T)->lpVtbl->UIActivateDBC(T,a)
 #define IDeskBarClient_GetSize(T,a,b) (T)->lpVtbl->GetSize(T,a,b)
-#endif
-
-static const GUID IID_HACK_IShellService = {0x5836FB00,0x8187,0x11CF,{0xA1,0x2B,0x00,0xAA,0x00,0x4A,0xE8,0x37}};
-#define IID_IShellService IID_HACK_IShellService
-
-#define INTERFACE IShellService
-DECLARE_INTERFACE_(IShellService,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IShellService methods ***/
-    STDMETHOD_(HRESULT,SetOwner)(THIS_ IUnknown*) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IShellService_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IShellService_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IShellService_Release(T) (T)->lpVtbl->Release(T)
-#define IShellService_SetOwner(T,a) (T)->lpVtbl->SetOwner(T,a)
 #endif
 
 #endif /* __TODO_H */

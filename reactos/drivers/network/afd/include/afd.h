@@ -226,6 +226,9 @@ NTSTATUS NTAPI
 AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 NTSTATUS NTAPI
+AfdGetContextSize( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+	           PIO_STACK_LOCATION IrpSp );
+NTSTATUS NTAPI
 AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 

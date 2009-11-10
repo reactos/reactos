@@ -48,8 +48,7 @@ VOID TcpipReleaseFastMutex( PFAST_MUTEX Mutex ) {
 VOID TcpipRecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
 }
 
-UINT TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOL ToWrite ) {
-    return 0;
+VOID TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex ) {
 }
 
 VOID TcpipRecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex ) {

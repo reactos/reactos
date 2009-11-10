@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef _atlbase_h
@@ -52,8 +52,6 @@
 #endif
 
 #define offsetofclass(base, derived) (reinterpret_cast<DWORD_PTR>(static_cast<base *>(reinterpret_cast<derived *>(_ATL_PACKING))) - _ATL_PACKING)
-
-extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace ATL
 {
@@ -244,15 +242,6 @@ inline BOOL WINAPI InlineIsEqualUnknown(REFGUID rguid1)
 	  ((unsigned long *)&rguid1)[3] == 0x46000000);
 }
 
-inline BOOL WINAPI InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
-{
-   return (
-	  ((unsigned long *)&rguid1)[0] == ((unsigned long *)&rguid2)[0] &&
-	  ((unsigned long *)&rguid1)[1] == ((unsigned long *)&rguid2)[1] &&
-	  ((unsigned long *)&rguid1)[2] == ((unsigned long *)&rguid2)[2] &&
-	  ((unsigned long *)&rguid1)[3] == ((unsigned long *)&rguid2)[3]);
-}
-
 class CComMultiThreadModelNoCS
 {
 public:
@@ -331,6 +320,8 @@ public:
 
 class CAtlModule : public _ATL_MODULE
 {
+protected:
+	static GUID								m_libid;
 public:
 	CAtlModule()
 	{
@@ -435,6 +426,8 @@ private:
 	}
 };
 
+__declspec(selectany) GUID					CAtlModule::m_libid = {0x0, 0x0, 0x0, {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0} };
+
 template <class T>
 class CAtlModuleT : public CAtlModule
 {
@@ -456,7 +449,7 @@ class CAtlComModule : public _ATL_COM_MODULE
 public:
 	CAtlComModule()
 	{
-		m_hInstTypeLib = reinterpret_cast<HINSTANCE>(&__ImageBase);
+		GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)this, &m_hInstTypeLib);
 		m_ppAutoObjMapFirst = NULL;
 		m_ppAutoObjMapLast = NULL;
 		if (FAILED(m_csObjMap.Init()))
@@ -551,6 +544,47 @@ public:
 	~CComModule()
 	{
 		_pModule = NULL;
+	}
+
+	HRESULT Init(_ATL_OBJMAP_ENTRY *p, HINSTANCE /* h */, const GUID *plibid)
+	{
+		_ATL_OBJMAP_ENTRY					*objectMapEntry;
+
+		if (plibid != NULL)
+			m_libid = *plibid;
+
+		if (p != reinterpret_cast<_ATL_OBJMAP_ENTRY *>(-1))
+		{
+			m_pObjMap = p;
+			if (p != NULL)
+			{
+				objectMapEntry = p;
+				while (objectMapEntry->pclsid != NULL)
+				{
+					objectMapEntry->pfnObjectMain(true);
+					objectMapEntry++;
+				}
+			}
+		}
+		return S_OK;
+	}
+
+	void Term()
+	{
+		_ATL_OBJMAP_ENTRY					*objectMapEntry;
+
+		if (m_pObjMap != NULL)
+		{
+			objectMapEntry = m_pObjMap;
+			while (objectMapEntry->pclsid != NULL)
+			{
+				if (objectMapEntry->pCF != NULL)
+					objectMapEntry->pCF->Release();
+				objectMapEntry->pCF = NULL;
+				objectMapEntry->pfnObjectMain(false);
+				objectMapEntry++;
+			}
+		}
 	}
 
 	HRESULT GetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)

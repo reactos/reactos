@@ -314,6 +314,8 @@ DEFINE_GUIDSTRUCT("8C6F932C-E771-11D0-B8FF-00A0C9223196", KSINTERFACESETID_FileI
 #define KSINTERFACESETID_FileIo DEFINE_GUIDNAMED(KSINTERFACESETID_FileIo)
 
 
+
+
 /* ===============================================================
     Mediums
 */
@@ -450,9 +452,6 @@ typedef enum
         (Handler),\
         NULL, 0, NULL, NULL, 0)
 
-
-#define KSEVENTSETID_Connection \
-    0x7f4bcbe0L, 0x9ea5, 0x11cf, 0xa5, 0xd6, 0x28, 0xdb, 0x04, 0xc1, 0x00, 0x00
 
 typedef enum
 {
@@ -1140,7 +1139,7 @@ typedef enum
 {
     KSPIN_DATAFLOW_IN = 1,
     KSPIN_DATAFLOW_OUT
-} KSPIN_DATAFLOW;
+} KSPIN_DATAFLOW, *PKSPIN_DATAFLOW;
 
 typedef enum
 {
@@ -1149,7 +1148,7 @@ typedef enum
     KSPIN_COMMUNICATION_SOURCE,
     KSPIN_COMMUNICATION_BOTH,
     KSPIN_COMMUNICATION_BRIDGE
-} KSPIN_COMMUNICATION;
+} KSPIN_COMMUNICATION, *PKSPIN_COMMUNICATION;
 
 typedef enum
 {
@@ -1722,6 +1721,26 @@ typedef struct
         } Alignment;
     };
 } KSEVENTDATA, *PKSEVENTDATA;
+
+#define KSEVENTF_EVENT_HANDLE       0x00000001
+#define KSEVENTF_SEMAPHORE_HANDLE   0x00000002
+#if defined(_NTDDK_)
+#define KSEVENTF_EVENT_OBJECT       0x00000004
+#define KSEVENTF_SEMAPHORE_OBJECT   0x00000008
+#define KSEVENTF_DPC                0x00000010
+#define KSEVENTF_WORKITEM           0x00000020
+#define KSEVENTF_KSWORKITEM         0x00000080
+#endif
+
+
+#define KSEVENT_TYPE_ENABLE         0x00000001
+#define KSEVENT_TYPE_ONESHOT        0x00000002
+#define KSEVENT_TYPE_ENABLEBUFFERED 0x00000004
+#define KSEVENT_TYPE_SETSUPPORT     0x00000100
+#define KSEVENT_TYPE_BASICSUPPORT   0x00000200
+#define KSEVENT_TYPE_QUERYBUFFER    0x00000400
+
+#define KSEVENT_TYPE_TOPOLOGY 0x10000000
 
 typedef struct
 {

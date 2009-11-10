@@ -7,8 +7,8 @@ Licence = GPL
 Description = Word processor.
 Size = 5.9MB 
 Category = 6
-URLSite = http://www.abiword.org
-URLDownload = http://www.abiword.org/downloads/abiword/2.6.4/Windows/abiword-setup-2.6.4.exe
+URLSite = http://www.abisource.com/
+URLDownload = http://www.abisource.com/downloads/abiword/2.6.4/Windows/abiword-setup-2.6.4.exe
 CDPath = none
 
 [Section.0407]
@@ -16,3 +16,6 @@ Description = Textverarbeitung
 
 [Section.0415]
 Description = Edytor tekstu
+
+[Section.040a]
+Description = Procesador de texto

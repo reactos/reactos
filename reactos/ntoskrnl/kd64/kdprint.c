@@ -123,16 +123,41 @@ KdpPromptString(IN PSTRING PromptString,
 
 VOID
 NTAPI
-KdpCommandString(IN ULONG Length,
-                 IN LPSTR String,
+KdpCommandString(IN PSTRING NameString,
+                 IN PSTRING CommandString,
                  IN KPROCESSOR_MODE PreviousMode,
                  IN PCONTEXT ContextRecord,
                  IN PKTRAP_FRAME TrapFrame,
                  IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    /* FIXME */
-    KdpDprintf("KdpCommandString called\n");
-    while (TRUE);
+    BOOLEAN Enable;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Check if we need to do anything */
+    if ((PreviousMode != KernelMode) || (KdDebuggerNotPresent)) return;
+
+    /* Enter the debugger */
+    Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
+
+    /* Save the CPU Control State and save the context */
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
+    RtlCopyMemory(&Prcb->ProcessorState.ContextFrame,
+                  ContextRecord,
+                  sizeof(CONTEXT));
+
+    /* Send the command string to the debugger */
+    KdpReportCommandStringStateChange(NameString,
+                                      CommandString,
+                                      &Prcb->ProcessorState.ContextFrame);
+
+    /* Restore the processor state */
+    RtlCopyMemory(ContextRecord,
+                  &Prcb->ProcessorState.ContextFrame,
+                  sizeof(CONTEXT));
+    KiRestoreProcessorControlState(&Prcb->ProcessorState);
+
+    /* Exit the debugger and return */
+    KdExitDebugger(Enable);
 }
 
 VOID
@@ -145,15 +170,14 @@ KdpSymbol(IN PSTRING DllPath,
           IN PKTRAP_FRAME TrapFrame,
           IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    BOOLEAN Entered;
+    BOOLEAN Enable;
     PKPRCB Prcb = KeGetCurrentPrcb();
-    ULONG Status;
 
     /* Check if we need to do anything */
     if ((PreviousMode != KernelMode) || (KdDebuggerNotPresent)) return;
 
     /* Enter the debugger */
-    Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
+    Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
 
     /* Save the CPU Control State and save the context */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
@@ -162,20 +186,19 @@ KdpSymbol(IN PSTRING DllPath,
                   sizeof(CONTEXT));
 
     /* Report the new state */
-    Status = KdpReportLoadSymbolsStateChange(DllPath,
-                                             SymbolInfo,
-                                             Unload,
-                                             &Prcb->ProcessorState.
-                                             ContextFrame);
+    KdpReportLoadSymbolsStateChange(DllPath,
+                                    SymbolInfo,
+                                    Unload,
+                                    &Prcb->ProcessorState.ContextFrame);
 
-    /* Now restore the processor state, manually again. */
+    /* Restore the processor state */
     RtlCopyMemory(ContextRecord,
                   &Prcb->ProcessorState.ContextFrame,
                   sizeof(CONTEXT));
     KiRestoreProcessorControlState(&Prcb->ProcessorState);
 
-    /* Exit the debugger and clear the CTRL-C state */
-    KdExitDebugger(Entered);
+    /* Exit the debugger and return */
+    KdExitDebugger(Enable);
 }
 
 USHORT
@@ -189,7 +212,7 @@ KdpPrompt(IN LPSTR PromptString,
           IN PKEXCEPTION_FRAME ExceptionFrame)
 {
     STRING PromptBuffer, ResponseBuffer;
-    BOOLEAN Entered, Resend;
+    BOOLEAN Enable, Resend;
 
     /* Normalize the lengths */
     PromptLength = min(PromptLength, 512);
@@ -212,7 +235,7 @@ KdpPrompt(IN LPSTR PromptString,
     //KdLogDbgPrint(&PromptBuffer);
 
     /* Enter the debugger */
-    Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
+    Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
 
     /* Enter prompt loop */
     do
@@ -224,7 +247,7 @@ KdpPrompt(IN LPSTR PromptString,
     } while (Resend);
 
     /* Exit the debugger */
-    KdExitDebugger(Entered);
+    KdExitDebugger(Enable);
 
     /* Return the number of characters received */
     return ResponseBuffer.Length;
@@ -233,30 +256,30 @@ KdpPrompt(IN LPSTR PromptString,
 NTSTATUS
 NTAPI
 KdpPrint(IN ULONG ComponentId,
-         IN ULONG ComponentMask,
+         IN ULONG Level,
          IN LPSTR String,
          IN USHORT Length,
          IN KPROCESSOR_MODE PreviousMode,
          IN PKTRAP_FRAME TrapFrame,
          IN PKEXCEPTION_FRAME ExceptionFrame,
-         OUT PBOOLEAN Status)
+         OUT PBOOLEAN Handled)
 {
     NTSTATUS ReturnStatus;
-    BOOLEAN Entered;
+    BOOLEAN Enable;
     STRING OutputString;
 
     /* Assume failure */
-    *Status = FALSE;
+    *Handled = FALSE;
 
     /* Validate the mask */
-    if (ComponentMask < 0x20) ComponentMask = 1 << ComponentMask;
-    if (!(Kd_WIN2000_Mask & ComponentMask) ||
+    if (Level < 32) Level = 1 << Level;
+    if (!(Kd_WIN2000_Mask & Level) ||
         ((ComponentId < KdComponentTableSize) &&
-        !(*KdComponentTable[ComponentId] & ComponentMask)))
+        !(*KdComponentTable[ComponentId] & Level)))
     {
         /* Mask validation failed */
-        *Status = TRUE;
-        return FALSE;
+        *Handled = TRUE;
+        return STATUS_SUCCESS;
     }
 
     /* Normalize the length */
@@ -279,12 +302,12 @@ KdpPrint(IN ULONG ComponentId,
     if (KdDebuggerNotPresent)
     {
         /* Fail */
-        *Status = TRUE;
+        *Handled = TRUE;
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
     /* Enter the debugger */
-    Entered = KdEnterDebugger(TrapFrame, ExceptionFrame);
+    Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
 
     /* Print the string */
     if (KdpPrintString(&OutputString))
@@ -299,8 +322,8 @@ KdpPrint(IN ULONG ComponentId,
     }
 
     /* Exit the debugger and return */
-    KdExitDebugger(Entered);
-    *Status = TRUE;
+    KdExitDebugger(Enable);
+    *Handled = TRUE;
     return ReturnStatus;
 }
 

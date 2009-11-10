@@ -2682,6 +2682,13 @@ DbgUnLoadImageSymbols(
     IN ULONG_PTR ProcessId
 );
 
+VOID
+NTAPI
+DbgCommandString(
+    IN PCCH Name,
+    IN PCCH Command
+);
+
 //
 // Generic Table Functions
 //

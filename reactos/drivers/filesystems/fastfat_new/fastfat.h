@@ -95,6 +95,18 @@ FatiOpenExistingDcb(IN PFAT_IRP_CONTEXT IrpContext,
 
 /*  --------------------------------------------------------  create.c  */
 
+IO_STATUS_BLOCK
+NTAPI
+FatiOverwriteFile(PFAT_IRP_CONTEXT IrpContext,
+                  PFILE_OBJECT FileObject,
+                  PFCB Fcb,
+                  ULONG AllocationSize,
+                  PFILE_FULL_EA_INFORMATION EaBuffer,
+                  ULONG EaLength,
+                  UCHAR FileAttributes,
+                  ULONG CreateDisposition,
+                  BOOLEAN NoEaKnowledge);
+
 NTSTATUS NTAPI
 FatCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 

@@ -219,35 +219,35 @@ static HRESULT ShellLink_QueryInterface( IShellLinkImpl *This, REFIID riid,  LPV
     }
     else if(IsEqualIID(riid, &IID_IShellLinkW))
     {
-        *ppvObj = &(This->lpvtblw);
+        *ppvObj = (void *)&(This->lpvtblw);
     }
     else if(IsEqualIID(riid, &IID_IPersistFile))
     {
-        *ppvObj = &(This->lpvtblPersistFile);
+        *ppvObj = (void *)&(This->lpvtblPersistFile);
     }
     else if(IsEqualIID(riid, &IID_IPersistStream))
     {
-        *ppvObj = &(This->lpvtblPersistStream);
+        *ppvObj = (void *)&(This->lpvtblPersistStream);
     }
     else if(IsEqualIID(riid, &IID_IShellLinkDataList))
     {
-        *ppvObj = &(This->lpvtblShellLinkDataList);
+        *ppvObj = (void *)&(This->lpvtblShellLinkDataList);
     }
     else if(IsEqualIID(riid, &IID_IShellExtInit))
     {
-        *ppvObj = &(This->lpvtblShellExtInit);
+        *ppvObj = (void *)&(This->lpvtblShellExtInit);
     }
     else if(IsEqualIID(riid, &IID_IContextMenu))
     {
-        *ppvObj = &(This->lpvtblContextMenu);
+        *ppvObj = (void *)&(This->lpvtblContextMenu);
     }
     else if(IsEqualIID(riid, &IID_IObjectWithSite))
     {
-        *ppvObj = &(This->lpvtblObjectWithSite);
+        *ppvObj = (void *)&(This->lpvtblObjectWithSite);
     }
     else if(IsEqualIID(riid, &IID_IShellPropSheetExt))
     {
-        *ppvObj = &(This->lpvtblPropSheetExt);
+        *ppvObj = (void *)&(This->lpvtblPropSheetExt);
     }
 
     if(*ppvObj)

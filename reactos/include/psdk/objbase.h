@@ -510,6 +510,7 @@ typedef struct tagSTGOPTIONS
     const WCHAR* pwcsTemplateFile;
 } STGOPTIONS;
 
+HRESULT WINAPI StringFromIID(REFIID rclsid, LPOLESTR *lplpsz);
 HRESULT WINAPI StgCreateDocfile(LPCOLESTR pwcsName,DWORD grfMode,DWORD reserved,IStorage **ppstgOpen);
 HRESULT WINAPI StgCreateStorageEx(const WCHAR*,DWORD,DWORD,DWORD,STGOPTIONS*,void*,REFIID,void**);
 HRESULT WINAPI StgIsStorageFile(LPCOLESTR fn);

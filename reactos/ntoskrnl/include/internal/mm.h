@@ -18,12 +18,34 @@ extern UCHAR MmDisablePagingExecutive;
 extern ULONG MmLowestPhysicalPage;
 extern ULONG MmHighestPhysicalPage;
 extern ULONG MmAvailablePages;
+extern ULONG MmResidentAvailablePages;
 
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
 
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
+
+extern LIST_ENTRY MmLoadedUserImageList;
+
+extern ULONG MmNumberOfPagingFiles;
+
+extern PVOID MmUnloadedDrivers;
+extern PVOID MmLastUnloadedDrivers;
+extern PVOID MmTriageActionTaken;
+extern PVOID KernelVerifier;
+extern MM_DRIVER_VERIFIER_DATA MmVerifierData;
+
+extern SIZE_T MmTotalCommitLimit;
+extern SIZE_T MmTotalCommittedPages;
+extern SIZE_T MmSharedCommit;
+extern SIZE_T MmDriverCommit;
+extern SIZE_T MmProcessCommit;
+extern SIZE_T MmPagedPoolCommit;
+extern SIZE_T MmPeakCommitment;
+extern SIZE_T MmtotalCommitLimitMaximum;
+
+extern BOOLEAN MiDbgReadyForPhysical;
 
 struct _KTRAP_FRAME;
 struct _EPROCESS;
@@ -33,7 +55,7 @@ typedef ULONG SWAPENTRY;
 typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
 //
-//MmDbgCopyMemory Flags
+// MmDbgCopyMemory Flags
 //
 #define MMDBG_COPY_WRITE            0x00000001
 #define MMDBG_COPY_PHYSICAL         0x00000002
@@ -47,8 +69,11 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 //
 #define MMDBG_COPY_MAX_SIZE         0x8
 
-
-#define MI_STATIC_MEMORY_AREAS              (12)
+#if defined(_X86_)
+#define MI_STATIC_MEMORY_AREAS              (14)
+#else
+#define MI_STATIC_MEMORY_AREAS              (13)
+#endif
 
 #define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)
@@ -369,6 +394,20 @@ typedef struct _MMPFN
 
 extern PMMPFN MmPfnDatabase;
 
+typedef struct _MMPFNLIST
+{
+    PFN_NUMBER Total;
+    MMLISTS ListName;
+    PFN_NUMBER Flink;
+    PFN_NUMBER Blink;
+} MMPFNLIST, *PMMPFNLIST;
+
+extern MMPFNLIST MmZeroedPageListHead;
+extern MMPFNLIST MmFreePageListHead;
+extern MMPFNLIST MmStandbyPageListHead;
+extern MMPFNLIST MmModifiedPageListHead;
+extern MMPFNLIST MmModifiedNoWritePageListHead;
+
 typedef struct _MM_PAGEOP
 {
   /* Type of operation. */
@@ -470,6 +509,15 @@ MmDbgCopyMemory(
     IN PVOID Buffer,
     IN ULONG Size,
     IN ULONG Flags
+);
+
+//
+// Determines if a given address is a session address
+//
+BOOLEAN
+NTAPI
+MmIsSessionAddress(
+    IN PVOID Address
 );
 
 /* marea.c *******************************************************************/

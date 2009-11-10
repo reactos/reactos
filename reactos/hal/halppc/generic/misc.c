@@ -83,7 +83,7 @@ HalHandleNMI(IN PVOID NmiInfo)
 /*
  * @implemented
  */
-BOOLEAN
+UCHAR
 FASTCALL
 HalSystemVectorDispatchEntry(IN ULONG Vector,
                              OUT PKINTERRUPT_ROUTINE **FlatDispatch,

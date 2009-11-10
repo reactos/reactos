@@ -651,29 +651,33 @@ SetThreadPriorityBoost(IN HANDLE hThread,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 GetThreadSelectorEntry(IN HANDLE hThread,
-		       IN DWORD dwSelector,
-		       OUT LPLDT_ENTRY lpSelectorEntry)
+                       IN DWORD dwSelector,
+                       OUT LPLDT_ENTRY lpSelectorEntry)
 {
 #ifdef _M_IX86
-  DESCRIPTOR_TABLE_ENTRY DescriptionTableEntry;
-  NTSTATUS Status;
+    DESCRIPTOR_TABLE_ENTRY DescriptionTableEntry;
+    NTSTATUS Status;
 
-  DescriptionTableEntry.Selector = dwSelector;
-  Status = NtQueryInformationThread(hThread,
-                                    ThreadDescriptorTableEntry,
-                                    &DescriptionTableEntry,
-                                    sizeof(DESCRIPTOR_TABLE_ENTRY),
-                                    NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
+    /* Set the selector and do the query */
+    DescriptionTableEntry.Selector = dwSelector;
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadDescriptorTableEntry,
+                                      &DescriptionTableEntry,
+                                      sizeof(DESCRIPTOR_TABLE_ENTRY),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
 
-  *lpSelectorEntry = DescriptionTableEntry.Descriptor;
-  return TRUE;
+    /* Success, return the selector */
+    *lpSelectorEntry = DescriptionTableEntry.Descriptor;
+    return TRUE;
 #else
     DPRINT1("Calling GetThreadSelectorEntry!\n");
     return FALSE;

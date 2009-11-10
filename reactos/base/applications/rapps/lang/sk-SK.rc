@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  29-08-2009
- * LAST CHANGE:  20-09-2009
+ * LAST CHANGE:  05-10-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -19,7 +19,7 @@ BEGIN
 		MENUITEM "O&dinötalovaù", ID_UNINSTALL
 		MENUITEM "&Zmeniù",       ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "Odst&r·niù z Registrov", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Obnoviù",      ID_REFRESH
 	END
@@ -47,7 +47,7 @@ BEGIN
 		MENUITEM "O&dinötalovaù", ID_UNINSTALL
 		MENUITEM "&Zmeniù",       ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "Odst&r·niù z Registrov", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Obnoviù",      ID_REFRESH
 	END
@@ -129,12 +129,12 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_INFO_VERSION "\nVerzia: "
 	IDS_INFO_DESCRIPTION "\nPopis: "
-	IDS_INFO_PUBLISHER "\nPublisher: "
+	IDS_INFO_PUBLISHER "\nVydavateæ: "
 	IDS_INFO_HELPLINK "\nHelp Link: "
 	IDS_INFO_HELPPHONE "\nHelp Telephone: "
-	IDS_INFO_README "\nReadme: "
-	IDS_INFO_REGOWNER "\nRegistered Owner: "
-	IDS_INFO_PRODUCTID "\nProductID: "
+	IDS_INFO_README "\n»ÌtajMa: "
+	IDS_INFO_REGOWNER "\nRegistrovan˝ vlastnÌk: "
+	IDS_INFO_PRODUCTID "\nID Produktu: "
 	IDS_INFO_CONTACT "\nKontakt: "
 	IDS_INFO_UPDATEINFO "\nUpdate Information: "
 	IDS_INFO_INFOABOUT "\nInformation About: "
@@ -192,7 +192,7 @@ BEGIN
 	IDS_CHOOSE_FOLDER_TEXT "Vyberte prieËinok, ktor˝ sa pouûije pre sùahovanie programov:"
 	IDS_CHOOSE_FOLDER_ERROR "Zvolili ste si neexistuj˙ci prieËinok!"
 	IDS_USER_NOT_ADMIN "Mali by ste byù administr·tor pre spustenie ""ManaûÈra aplik·ciÌ systÈmu ReactOS""!"
-	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
+	IDS_APP_REG_REMOVE "Naozaj chcete vymazaù ˙daje o nainötalovanom programe z registrov?"
 	IDS_INFORMATION "Information"
 	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
 END

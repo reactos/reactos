@@ -81,6 +81,14 @@
                 *((POINTER_TO_(y))Buffer));                             \
     TYPE2_END(y)
 
+typedef NTSTATUS
+(NTAPI *PciIrqRange)(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler,
+    IN PCI_SLOT_NUMBER PciSlot,
+    OUT PSUPPORTED_RANGE *Interrupt
+);
+
 typedef struct _PCIPBUSDATA
 {
     PCIBUSDATA CommonData;
@@ -99,6 +107,14 @@ typedef struct _PCIPBUSDATA
         } Type2;
     } Config;
     ULONG MaxDevice;
+    PciIrqRange GetIrqRange;
+    BOOLEAN BridgeConfigRead;
+    UCHAR ParentBus;
+    UCHAR Subtractive;
+    UCHAR reserved[1];
+    UCHAR SwizzleIn[4];
+    RTL_BITMAP DeviceConfigured;
+    ULONG ConfiguredBits[PCI_MAX_DEVICES * PCI_MAX_FUNCTION / 32];
 } PCIPBUSDATA, *PPCIPBUSDATA;
 
 typedef ULONG
@@ -135,11 +151,24 @@ typedef struct _PCI_REGISTRY_INFO_INTERNAL
 {
     UCHAR MajorRevision;
     UCHAR MinorRevision;
-    UCHAR NoBuses;
+    UCHAR NoBuses; // Number Of Buses
     UCHAR HardwareMechanism;
     ULONG ElementCount;
     PCI_CARD_DESCRIPTOR CardList[ANYSIZE_ARRAY];
 } PCI_REGISTRY_INFO_INTERNAL, *PPCI_REGISTRY_INFO_INTERNAL;
+
+typedef struct _ARRAY
+{
+    ULONG ArraySize;
+    PVOID Element[ANYSIZE_ARRAY];
+} ARRAY, *PARRAY;
+
+typedef struct _HAL_BUS_HANDLER
+{
+    LIST_ENTRY AllHandlers;
+    ULONG ReferenceCount;
+    BUS_HANDLER Handler;
+} HAL_BUS_HANDLER, *PHAL_BUS_HANDLER;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -249,7 +278,7 @@ HalpGetPCIData(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootBusHandler,
     IN PCI_SLOT_NUMBER SlotNumber,
-    IN PUCHAR Buffer,
+    IN PVOID Buffer,
     IN ULONG Offset,
     IN ULONG Length
 );
@@ -260,7 +289,7 @@ HalpSetPCIData(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootBusHandler,
     IN PCI_SLOT_NUMBER SlotNumber,
-    IN PUCHAR Buffer,
+    IN PVOID Buffer,
     IN ULONG Offset,
     IN ULONG Length
 );
@@ -282,6 +311,51 @@ VOID
 NTAPI
 HalpInitializePciBus(
     VOID
+);
+
+VOID
+NTAPI
+HalpInitializePciStubs(
+    VOID
+);
+
+VOID
+NTAPI
+HalpInitBusHandler(
+    VOID
+);
+
+BOOLEAN
+NTAPI
+HalpTranslateBusAddress(
+    IN INTERFACE_TYPE InterfaceType,
+    IN ULONG BusNumber,
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress
+);
+
+NTSTATUS
+NTAPI
+HalpAssignSlotResources(
+    IN PUNICODE_STRING RegistryPath,
+    IN PUNICODE_STRING DriverClassName,
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN INTERFACE_TYPE BusType,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN OUT PCM_RESOURCE_LIST *AllocatedResources
+);
+
+BOOLEAN
+NTAPI
+HalpFindBusAddressTranslation(
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress,
+    IN OUT PULONG_PTR Context,
+    IN BOOLEAN NextBus
 );
 
 extern ULONG HalpBusType;

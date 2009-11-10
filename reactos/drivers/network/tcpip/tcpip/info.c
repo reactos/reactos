@@ -12,6 +12,48 @@
 #include <debug.h>
 #include <route.h>
 
+VOID AddEntity(ULONG EntityType, PVOID Context, ULONG Flags)
+{
+    KIRQL OldIrql;
+    ULONG i, Count = 0;
+
+    TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
+
+    for (i = 0; i < EntityCount; i++)
+         if (EntityList[i].tei_entity == EntityType)
+             Count++;
+
+    EntityList[EntityCount].tei_entity = EntityType;
+    EntityList[EntityCount].tei_instance = Count;
+    EntityList[EntityCount].context = Context;
+    EntityList[EntityCount].flags = Flags;
+    EntityCount++;
+
+    TcpipReleaseSpinLock(&EntityListLock, OldIrql);
+}
+
+VOID RemoveEntityByContext(PVOID Context)
+{
+   ULONG i;
+   KIRQL OldIrql;
+
+   TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
+
+   for (i = 0; i < EntityCount; i++) {
+	if( EntityList[i].context == Context ) {
+	    if( i != EntityCount - 1 ) {
+		memcpy( &EntityList[i],
+			&EntityList[--EntityCount],
+			sizeof(EntityList[i]) );
+	    } else {
+		EntityCount--;
+	    }
+	}
+    }
+
+    TcpipReleaseSpinLock(&EntityListLock, OldIrql);
+}
+
 PVOID GetContext(TDIEntityID ID)
 {
     UINT i;
@@ -178,9 +220,20 @@ TDI_STATUS InfoTdiQueryInformationEx(
            }
 
         case INFO_CLASS_PROTOCOL:
+           if (ID->toi_type == INFO_TYPE_ADDRESS_OBJECT)
+           {
+               if ((EntityListContext = GetContext(ID->toi_entity)))
+                    return GetAddressFileInfo(ID, EntityListContext, Buffer, BufferSize);
+               else
+                    return TDI_INVALID_PARAMETER;
+           }
+
            switch (ID->toi_id)
            {
               case IF_MIB_STATS_ID:
+                 if (ID->toi_type != INFO_TYPE_PROVIDER)
+                     return TDI_INVALID_PARAMETER;
+
                  if (ID->toi_entity.tei_entity == IF_ENTITY)
                      if ((EntityListContext = GetContext(ID->toi_entity)))
                          return InfoTdiQueryGetInterfaceMIB(ID->toi_entity, EntityListContext, Buffer, BufferSize);
@@ -262,6 +315,14 @@ TDI_STATUS InfoTdiSetInformationEx
     switch (ID->toi_class)
     {
        case INFO_CLASS_PROTOCOL:
+          if (ID->toi_type == INFO_TYPE_ADDRESS_OBJECT)
+          {
+              if ((EntityListContext = GetContext(ID->toi_entity)))
+                   return SetAddressFileInfo(ID, EntityListContext, Buffer, BufferSize);
+              else
+                   return TDI_INVALID_PARAMETER;
+          }
+
 	  switch (ID->toi_id)
           {
 	      case IP_MIB_ARPTABLE_ENTRY_ID:

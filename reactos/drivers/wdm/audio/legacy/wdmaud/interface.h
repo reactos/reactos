@@ -44,6 +44,11 @@ typedef struct
         AUXCAPSW     AuxCaps;
         WAVEINCAPSW  WaveInCaps;
         ULONGLONG    Position;
+        struct
+        {
+            LPWSTR DeviceInterfaceString;
+            ULONG DeviceInterfaceStringSize;
+        }Interface;
         KSSTATE State;
         ULONG Volume;
         ULONG FrameSize;
@@ -310,6 +315,24 @@ typedef struct
 #define IOCTL_GETCONTROLDETAILS \
     CTL_CODE(FILE_DEVICE_SOUND, \
              14, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_QUERYDEVICEINTERFACESTRING
+///
+/// Description: This IOCTL queries the mixer / playback / recording device for its device interface string
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The DeviceType, DeviceIndex must be set
+/// Result:     The size is returned in Interface.DeviceInterfaceStringSize and if a buffer is supplied in Interface.DeviceInterfaceString
+///             the device interface string is stored
+/// ReturnCode:  STATUS_SUCCESS indicates success
+
+#define IOCTL_QUERYDEVICEINTERFACESTRING \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             15, \
              METHOD_BUFFERED, \
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 

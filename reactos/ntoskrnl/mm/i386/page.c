@@ -67,7 +67,7 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 {
     if ((Pt && MmUnmapPageTable(Pt)) || Address >= MmSystemRangeStart)
     {
-        __invlpg(Address);
+        KeInvalidateTlbEntry(Address);
     }
 }
 

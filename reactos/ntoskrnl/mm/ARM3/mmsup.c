@@ -63,6 +63,32 @@ MmSetAddressRangeModified(IN PVOID Address,
 }
 
 /*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+MmIsAddressValid(IN PVOID VirtualAddress)
+{
+    //
+    // Just check the Valid bit in the Address' PDE and PTE
+    //
+    if ((MiAddressToPde(VirtualAddress)->u.Hard.Valid == 0) ||
+        (MiAddressToPte(VirtualAddress)->u.Hard.Valid == 0))
+    {
+        //
+        // Attempting to access this page is guranteed to result in a page fault
+        //
+        return FALSE;
+    }
+
+    //
+    // This address is valid now, but it will only stay so if the caller holds
+    // the PFN lock
+    //
+    return TRUE;
+}
+
+/*
  * @unimplemented
  */
 BOOLEAN

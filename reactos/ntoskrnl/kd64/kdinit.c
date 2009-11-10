@@ -116,7 +116,7 @@ KdInitSystem(IN ULONG BootPhase,
                                     sizeof(KdDebuggerDataBlock));
 
         /* Fill out the KD Version Block */
-        KdVersionBlock.MajorVersion = (USHORT)(NtBuildNumber >> 28);
+        KdVersionBlock.MajorVersion = (USHORT)((DBGKD_MAJOR_NT << 8) | (NtBuildNumber >> 28));
         KdVersionBlock.MinorVersion = (USHORT)(NtBuildNumber & 0xFFFF);
 
 #ifdef CONFIG_SMP
@@ -161,13 +161,18 @@ KdInitSystem(IN ULONG BootPhase,
             /* Assume we'll disable KD */
             EnableKd = FALSE;
 
-            /* Check for CRASHDEBUG and NODEBUG */
-            if (strstr(CommandLine, "CRASHDEBUG")) KdPitchDebugger = FALSE;
-            if (strstr(CommandLine, "NODEBUG")) KdPitchDebugger = TRUE;
-
-            /* Check if DEBUG was on */
-            DebugLine = strstr(CommandLine, "DEBUG");
-            if (DebugLine)
+            /* Check for CRASHDEBUG, NODEBUG and just DEBUG */
+            if (strstr(CommandLine, "CRASHDEBUG"))
+            {
+                /* Don't enable KD now, but allow it to be enabled later */
+                KdPitchDebugger = FALSE;
+            }
+            else if (strstr(CommandLine, "NODEBUG"))
+            {
+                /* Don't enable KD and don't let it be enabled later */
+                KdPitchDebugger = TRUE;
+            }
+            else if ((DebugLine = strstr(CommandLine, "DEBUG")) != NULL)
             {
                 /* Enable KD */
                 EnableKd = TRUE;

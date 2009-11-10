@@ -20,6 +20,8 @@ BOOLEAN KdBreakAfterSymbolLoad = FALSE;
 BOOLEAN KdpBreakPending = FALSE;
 BOOLEAN KdPitchDebugger = TRUE;
 BOOLEAN KdIgnoreUmExceptions = FALSE;
+KD_CONTEXT KdpContext;
+ULONG Kd_WIN2000_Mask;
 VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct

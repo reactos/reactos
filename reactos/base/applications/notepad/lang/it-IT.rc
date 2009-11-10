@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -164,7 +164,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

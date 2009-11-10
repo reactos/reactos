@@ -14,6 +14,7 @@ BOOLEAN UDPInitialized = FALSE;
 PORT_SET UDPPorts;
 
 NTSTATUS AddUDPHeaderIPv4(
+    PADDRESS_FILE AddrFile,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
     PIP_ADDRESS LocalAddress,
@@ -39,7 +40,7 @@ NTSTATUS AddUDPHeaderIPv4(
 			    IPPacket, IPPacket->NdisPacket));
 
     Status = AddGenericHeaderIPv4
-        ( RemoteAddress, RemotePort,
+        ( AddrFile, RemoteAddress, RemotePort,
           LocalAddress, LocalPort,
           IPPacket, DataLength, IPPROTO_UDP,
           sizeof(UDP_HEADER), (PVOID *)&UDPHeader );
@@ -75,6 +76,7 @@ NTSTATUS AddUDPHeaderIPv4(
 
 
 NTSTATUS BuildUDPPacket(
+    PADDRESS_FILE AddrFile,
     PIP_PACKET Packet,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
@@ -115,7 +117,7 @@ NTSTATUS BuildUDPPacket(
 
     switch (RemoteAddress->Type) {
     case IP_ADDRESS_V4:
-	Status = AddUDPHeaderIPv4(RemoteAddress, RemotePort,
+	Status = AddUDPHeaderIPv4(AddrFile, RemoteAddress, RemotePort,
 				  LocalAddress, LocalPort, Packet, DataBuffer, DataLen);
 	break;
     case IP_ADDRESS_V6:
@@ -201,7 +203,8 @@ NTSTATUS UDPSendDatagram(
         LocalAddress = NCE->Interface->Unicast;
     }
 
-    Status = BuildUDPPacket( &Packet,
+    Status = BuildUDPPacket( AddrFile,
+							 &Packet,
 							 &RemoteAddress,
 							 RemotePort,
 							 &LocalAddress,

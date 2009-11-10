@@ -21,6 +21,7 @@ KdpAddBreakpoint(IN PVOID Address)
 {
     KD_BREAKPOINT_TYPE Content;
     ULONG i;
+    NTSTATUS Status;
 
     /* Loop current breakpoints */
     for (i = 0; i < KD_BREAKPOINT_MAX; i++)
@@ -51,15 +52,39 @@ KdpAddBreakpoint(IN PVOID Address)
     if (i == KD_BREAKPOINT_MAX) return 0;
 
     /* Save the old instruction */
-    RtlCopyMemory(&Content, Address, KD_BREAKPOINT_SIZE);
+    Status = KdpCopyMemoryChunks((ULONG_PTR)Address,
+                                 &Content,
+                                 KD_BREAKPOINT_SIZE,
+                                 0,
+                                 MMDBG_COPY_UNSAFE,
+                                 NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* TODO: Set it as a owed breakpoint */
+        KdpDprintf("Failed to set breakpoint at address 0x%p\n", Address);
+        return 0;
+    }
 
     /* Write the entry */
     KdpBreakpointTable[i].Address = Address;
     KdpBreakpointTable[i].Content = Content;
     KdpBreakpointTable[i].Flags = KdpBreakpointActive;
 
-    /* Write the breakpoint and return the handle */
-    RtlCopyMemory(Address, &KdpBreakpointInstruction, KD_BREAKPOINT_SIZE);
+    /* Write the breakpoint */
+    Status = KdpCopyMemoryChunks((ULONG_PTR)Address,
+                                 &KdpBreakpointInstruction,
+                                 KD_BREAKPOINT_SIZE,
+                                 0,
+                                 MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* This should never happen */
+        KdpDprintf("Unable to write breakpoint to address 0x%p\n", Address);
+    }
+
+    /* Return the breakpoint handle */
     return i + 1;
 }
 
@@ -67,6 +92,8 @@ BOOLEAN
 NTAPI
 KdpLowWriteContent(IN ULONG BpIndex)
 {
+    NTSTATUS Status;
+
     /* Make sure that the breakpoint is actually active */
     if (KdpBreakpointTable[BpIndex].Flags & KdpBreakpointPending)
     {
@@ -83,9 +110,20 @@ KdpLowWriteContent(IN ULONG BpIndex)
     }
 
     /* We have an active breakpoint with an instruction to bring back. Do it. */
-    RtlCopyMemory(KdpBreakpointTable[BpIndex].Address,
-                  &KdpBreakpointTable[BpIndex].Content,
-                  KD_BREAKPOINT_SIZE);
+    Status = KdpCopyMemoryChunks((ULONG_PTR)KdpBreakpointTable[BpIndex].
+                                 Address,
+                                 &KdpBreakpointTable[BpIndex].Content,
+                                 KD_BREAKPOINT_SIZE,
+                                 0,
+                                 MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* TODO: Set it as a owed breakpoint */
+        KdpDprintf("Failed to delete breakpoint at address 0x%p\n",
+                   KdpBreakpointTable[BpIndex].Address);
+        return FALSE;
+    }
 
     /* Everything went fine, return */
     return TRUE;
@@ -95,6 +133,8 @@ BOOLEAN
 NTAPI
 KdpLowRestoreBreakpoint(IN ULONG BpIndex)
 {
+    NTSTATUS Status;
+
     /* Were we not able to remove it earlier? */
     if (KdpBreakpointTable[BpIndex].Flags & KdpBreakpointExpired)
     {
@@ -111,9 +151,20 @@ KdpLowRestoreBreakpoint(IN ULONG BpIndex)
     }
 
     /* Ok, we actually have to overwrite the instruction now */
-    RtlCopyMemory(KdpBreakpointTable[BpIndex].Address,
-                  &KdpBreakpointInstruction,
-                  KD_BREAKPOINT_SIZE);
+    Status = KdpCopyMemoryChunks((ULONG_PTR)KdpBreakpointTable[BpIndex].
+                                 Address,
+                                 &KdpBreakpointInstruction,
+                                 KD_BREAKPOINT_SIZE,
+                                 0,
+                                 MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* FIXME: Set it as a owed breakpoint */
+        KdpDprintf("Failed to restore breakpoint at address 0x%p\n",
+                   KdpBreakpointTable[BpIndex].Address);
+        return FALSE;
+    }
 
     /* Clear any possible previous pending flag and return success */
     KdpBreakpointTable[BpIndex].Flags &= ~KdpBreakpointPending;

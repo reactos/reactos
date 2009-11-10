@@ -534,7 +534,6 @@ Author:
 #define CBSTACK_EBP                             0x18
 #define CBSTACK_RESULT                          0x20
 #define CBSTACK_RESULT_LENGTH                   0x24
-#define CBSTACK_FRAME_POINTER                   CBSTACK_EBP
 
 //
 // NTSTATUS, Bugcheck Codes and Debug Codes
@@ -588,6 +587,7 @@ Author:
 #define PASSIVE_LEVEL                           0x0
 #define APC_LEVEL                               0x1
 #define DISPATCH_LEVEL                          0x2
+#define PROFILE_LEVEL                           0x1B
 #define CLOCK2_LEVEL                            0x1C
 #define IPI_LEVEL                               0x1D
 #define HIGH_LEVEL                              0x1F

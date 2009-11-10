@@ -1393,11 +1393,7 @@ User32DefWindowProc(HWND hWnd,
              /* if( HIWORD(lParam) & ~KEYDATA_PREVSTATE ) */
                 if ( (wParam == VK_MENU || wParam == VK_LMENU
                                     || wParam == VK_RMENU) && !iMenuSysKey )
-                {
                    iMenuSysKey = 1;
-                   /* mimic behaviour of XP, sending a WM_SYSCOMMAND when pressing <alt> */
-                   SendMessageW( top, WM_SYSCOMMAND, SC_KEYMENU, 0L );
-                }
                 else
                    iMenuSysKey = 0;
 

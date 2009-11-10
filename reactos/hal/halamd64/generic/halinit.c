@@ -130,8 +130,8 @@ DPRINT1("HalInitSystem 6\n");
     }
     else if (BootPhase == 1)
     {
-        /* Initialize the default HAL stubs for bus handling functions */
-        HalpInitNonBusHandler();
+        /* Initialize bus handlers */
+        //HalpInitBusHandler();
 
         /* Enable the clock interrupt */
         PKIDTENTRY64 IdtEntry = &((PKIPCR)KeGetPcr())->IdtBase[0x30];

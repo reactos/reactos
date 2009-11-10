@@ -15,7 +15,7 @@ CPPFLAG_UNICODE:=/DUNICODE /D_UNICODE
 
 BUILTIN_CPPFLAGS+= /X
 
-cl=$(Q)$(RBUILD_HELPER_TARGET) "RBUILD_CL_" "$(notdir $<)" cl /nologo
+cl=$(Q)$(rbuild_helper_TARGET) "RBUILD_CL_" "$(notdir $<)" cl /nologo
 
 #(module, source, dependencies, cflags, output)
 #TODO
@@ -31,7 +31,7 @@ RBUILD_PIPE_CXX_CPP=${call RBUILD_PIPE_CL_CPP,$(1),$(2) /TP}
 #(module, source, dependencies, cflags, output)
 define RBUILD_CL_CPP
 
-$(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
+$(5): $(2) $(3) $$(rbuild_helper_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CPP)
 	${call RBUILD_PIPE_CL_CPP,$$<,$(4)} > $$@
 
@@ -50,13 +50,13 @@ ifeq ($(ROS_BUILDDEPS),full)
 ${call RBUILD_DEPENDS,$(1),$(2),,${call RBUILD_cflags,$(1),$(4)},$(5).d}
 -include $(5).d
 
-$(5): $(2) $(5).d $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
+$(5): $(2) $(5).d $(3) $$(rbuild_helper_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
 	$${cl} /TC /Fo$$@ /Fd$(basename $$@).pdb ${call RBUILD_cflags,$(1),$(4)} /c $$<
 
 else
 
-$(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
+$(5): $(2) $(3) $$(rbuild_helper_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
 	$${cl} /TC /Fo$$@ /Fd$(basename $$@).pdb ${call RBUILD_cflags,$(1),$(4)} /c $$<
 
@@ -74,13 +74,13 @@ ifeq ($(ROS_BUILDDEPS),full)
 ${call RBUILD_CXX_DEPENDS,$(1),$(2),,${call RBUILD_cflags,$(1),$(4)},$(5).d}
 -include $(5).d
 
-$(5): $(2) $(5).d $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
+$(5): $(2) $(5).d $(3) $$(rbuild_helper_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
 	$${cl} /TP /Fo$$@ /Fd$(basename $$@).pdb ${call RBUILD_cxxflags,$(1),$(4)} /c $$<
 
 else
 
-$(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
+$(5): $(2) $(3) $$(rbuild_helper_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
 	$${cl} /TP /Fo$$@ /Fd$(basename $$@).pdb ${call RBUILD_cxxflags,$(1),$(4)} /c $$<
 

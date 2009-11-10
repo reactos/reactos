@@ -19,3 +19,4 @@ BEGIN
 	IDS_ERROR_NOCLASS, "窗口無法初始化。"
 	IDS_ERROR_BADCMD, "沒有提供字體文件。\n語法：\n  fontview.exe <字體檔案>"
 END
+

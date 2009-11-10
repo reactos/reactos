@@ -30,6 +30,7 @@
 
 #define MI_PAGED_POOL_START                    (PVOID)0xE1000000
 #define MI_NONPAGED_POOL_END                   (PVOID)0xFFBE0000
+#define MI_DEBUG_MAPPING                       (PVOID)0xFFBFF000
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
@@ -91,7 +92,10 @@ typedef struct _POOL_HEADER
 C_ASSERT(sizeof(POOL_HEADER) == 8);
 //C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
 
+extern ULONG ExpNumberOfPagedPools;
 extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
+extern PPOOL_DESCRIPTOR ExpPagedPoolDescriptor[16 + 1];
+extern PVOID PoolTrackTable;
 
 //
 // END FIXFIX
@@ -160,6 +164,12 @@ extern PVOID MmSessionBase;
 extern PVOID MiSessionSpaceEnd;
 extern ULONG_PTR MmSizeOfPagedPoolInBytes;
 extern PMMPTE MmSystemPagePtes;
+extern PVOID MmSystemCacheStart;
+extern PVOID MmSystemCacheEnd;
+extern MMSUPPORT MmSystemCacheWs;
+extern SIZE_T MmAllocatedNonPagedPool;
+extern ULONG_PTR MmSubsectionBase;
+extern ULONG MmSpecialPoolTag;
 
 NTSTATUS
 NTAPI

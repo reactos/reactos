@@ -300,8 +300,9 @@ PspDestroyQuotaBlock(
     IN PEPROCESS Process
 );
 
+#if defined(_X86_)
 //
-// VDM Support
+// VDM and LDT Support
 //
 NTSTATUS
 NTAPI
@@ -314,6 +315,16 @@ NTAPI
 PspDeleteVdmObjects(
     IN PEPROCESS Process
 );
+
+NTSTATUS
+NTAPI
+PspQueryDescriptorThread(
+    IN PETHREAD Thread,
+    IN PVOID ThreadInformation,
+    IN ULONG ThreadInformationLength,
+    OUT PULONG ReturnLength OPTIONAL
+);
+#endif
 
 //
 // Job Routines

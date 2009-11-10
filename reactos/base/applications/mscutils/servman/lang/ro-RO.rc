@@ -208,7 +208,7 @@ BEGIN
   IDS_NUM_SERVICES "Num. servicii: %d"
   IDS_STOP_DEPENDS "Dacă %s se oprește aceste procese se vor opri de asemenea."
   IDS_NO_DEPENDS "<Fără dependențe>"
-  IDS_LICENSE "Tradus în limba română de Petru Dimitriu.\r\nAcest program este software liber; puteți redistribui sau modifica programul sub termenii licenței publice GNU așa cum este publicată de Free Software Foundation - fie versiunea 2 a licenței, sau (la alegerea dvs.) oricare versiune ulterioară.\r\n\r\nAcest program este distribuit în speranța că va fi de folos, dar FĂRĂ NICIO GARANțIE, nici măcar garanția VANDABILITĂțII sau a POTRIVIRII PENTRU UN SCOP ANUME.  Vedeți Licența GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui să fi primit o copie a licenței împreună cu acest program; dacă nu, scrieți la Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_LICENSE "Tradus în limba română de Petru Dimitriu.\r\nAcest program este software liber; puteți redistribui sau modifica programul sub termenii licenței publice GNU așa cum este publicată de Free Software Foundation - fie versiunea 2 a licenței, sau (la alegerea dvs.) oricare versiune ulterioară.\r\n\r\nAcest program este distribuit în speranța că va fi de folos, dar FĂRĂ NICIO GARANțIE, nici măcar garanția VANDABILITĂțII sau a POTRIVIRII PENTRU UN SCOP ANUME.  Vedeți Licența GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui să fi primit o copie a licenței împreună cu acest program; dacă nu, scrieți la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

@@ -360,6 +360,8 @@ extern LIST_ENTRY KdProviders;
 extern BOOLEAN KdpEarlyBreak;
 
 extern PKDEBUG_ROUTINE KiDebugRoutine;
+extern KD_CONTEXT KdpContext;
+extern ULONG Kd_WIN2000_Mask;
 
 #endif
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

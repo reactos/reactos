@@ -14,34 +14,11 @@
 
 /* GLOBALS *******************************************************************/
 
-/* The Boot TSS */
-KTSS KiBootTss;
-
 /* The TSS to use for Double Fault Traps (INT 0x9) */
 UCHAR KiDoubleFaultTSS[KTSS_IO_MAPS];
 
 /* The TSS to use for NMI Fault Traps (INT 0x2) */
 UCHAR KiNMITSS[KTSS_IO_MAPS];
-
-/* The Boot GDT */
-KGDTENTRY KiBootGdt[256] =
-{
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_NULL */
-    {0xffff, 0x0000, {{0x00, 0x9b, 0xcf, 0x00}}},       /* KGDT_R0_CODE */
-    {0xffff, 0x0000, {{0x00, 0x93, 0xcf, 0x00}}},       /* KGDT_R0_DATA */
-    {0xffff, 0x0000, {{0x00, 0xfb, 0xcf, 0x00}}},       /* KGDT_R3_CODE */
-    {0xffff, 0x0000, {{0x00, 0xf3, 0xcf, 0x00}}},       /* KGDT_R3_DATA*/
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_TSS */
-    {0x0001, 0xf000, {{0xdf, 0x93, 0xc0, 0xff}}},       /* KGDT_R0_PCR */
-    {0x0fff, 0x0000, {{0x00, 0xf3, 0x40, 0x00}}},       /* KGDT_R3_TEB */
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_UNUSED */
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_LDT */
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_DF_TSS */
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}}        /* KGDT_NMI_TSS */
-};
-
-/* GDT Descriptor */
-KDESCRIPTOR KiGdtDescriptor = {0, sizeof(KiBootGdt) - 1, (ULONG)KiBootGdt};
 
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
@@ -67,10 +44,6 @@ CHAR KeNumberProcessors;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
-
-/* Freeze data */
-KIRQL KiOldIrql;
-ULONG KiFreezeFlag;
 
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
@@ -915,35 +888,18 @@ KiI386PentiumLockErrataFixup(VOID)
 
 BOOLEAN
 NTAPI
-KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
-                  IN PKEXCEPTION_FRAME ExceptionFrame)
+KeDisableInterrupts(VOID)
 {
     ULONG Flags;
+    BOOLEAN Return;
 
-    /* Disable interrupts and get previous state */
+    /* Get EFLAGS and check if the interrupt bit is set */
     Flags = __readeflags();
-    //Flags = __getcallerseflags();
+    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+
+    /* Disable interrupts */
     _disable();
-
-    /* Save freeze flag */
-    KiFreezeFlag = 4;
-
-    /* Save the old IRQL */
-    KiOldIrql = KeGetCurrentIrql();
-
-    /* Return whether interrupts were enabled */
-    return (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
-}
-
-VOID
-NTAPI
-KeThawExecution(IN BOOLEAN Enable)
-{
-    /* Cleanup CPU caches */
-    KeFlushCurrentTb();
-
-    /* Re-enable interrupts */
-    if (Enable) _enable();
+    return Return;
 }
 
 BOOLEAN

@@ -47,14 +47,14 @@ KdpPhysMap(ULONG_PTR PhysAddr, LONG Len)
         PointerPte = MiAddressToPte(MI_KDBG_TMP_PAGE_1);
         *PointerPte = TempPte;
         VirtAddr = (ULONG_PTR)PointerPte << 10;
-        __invlpg((PVOID)VirtAddr);
+        KeInvalidateTlbEntry((PVOID)VirtAddr);
     }
 
     TempPte.u.Hard.PageFrameNumber = PhysAddr >> PAGE_SHIFT;
     PointerPte = MiAddressToPte(MI_KDBG_TMP_PAGE_0);
     *PointerPte = TempPte;
     VirtAddr = (ULONG_PTR)PointerPte << 10;
-    __invlpg((PVOID)VirtAddr);
+    KeInvalidateTlbEntry((PVOID)VirtAddr);
 
     return VirtAddr + (PhysAddr & (PAGE_SIZE - 1));
 }

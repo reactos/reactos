@@ -48,7 +48,7 @@ VOID TcpipRecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
     RecursiveMutexInit( RecMutex );
 }
 
-VOID TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
+VOID TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex ) {
     //TI_DbgPrint(DEBUG_LOCK,("Locking\n"));
     RecursiveMutexEnter( RecMutex );
 }

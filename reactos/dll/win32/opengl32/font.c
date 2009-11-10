@@ -461,12 +461,12 @@ INT MakeLinesFromTTPolygon(UCHAR** pp, FLOAT chordalDeviation)
 * Used by tessellator to handle output vertexes.
 *****************************************************************************/
 
-VOID CALLBACK TessVertexOutData(FLOAT p[3], GLfloat z)
+VOID CALLBACK TessVertexOutData(FLOAT p[3], GLfloat *pz)
 {
     GLfloat v[3];
     v[0] = (GLfloat) p[0];
     v[1] = (GLfloat) p[1];
-    v[2] = z;
+    v[2] = *pz;
     glVertex3fv(v);
 }
 
@@ -647,7 +647,7 @@ INT DrawGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation, FLOAT ex
         v[2] = 0.0;
         z_value = 0.0f;
 
-        gluTessBeginPolygon(tess, (VOID *)*(INT_PTR *)&z_value);
+        gluTessBeginPolygon(tess, &z_value);
 
         for (loop = (DWORD) *p++; loop; --loop)
         {
@@ -718,7 +718,7 @@ INT DrawGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation, FLOAT ex
             glNormal3f(0.0f, 0.0f, -1.0f);
             gluTessNormal(tess, 0.0F, 0.0F, -1.0F);
 
-            gluTessBeginPolygon(tess, (VOID *)*(INT_PTR *)&thickness);
+            gluTessBeginPolygon(tess, &thickness);
 
             for (loop = (DWORD) *p++; loop; --loop)
             {

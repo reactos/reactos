@@ -1,6 +1,6 @@
 /* TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  09-02-2008
- * LAST CHANGE:  14-05-2009
+ * LAST CHANGE:  13-10-2009
  * THANKS TO  :  Filip Navara and Kamil Hornicek and all good people ;-)
  */
 
@@ -207,7 +207,7 @@ BEGIN
     IDS_GAMES           "Hry"
     IDS_CMT_SOLITAIRE   "Solitér"
     IDS_CMT_WINEMINE    "Míny"
-	IDS_CMT_SPIDER      "Spider Solitaire"
+    IDS_CMT_SPIDER      "Pavúèí solitér"
 END
 
 STRINGTABLE
@@ -249,7 +249,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Príkazový riadok.lnk"
     IDS_SHORT_EXPLORER   "Prieskumník systému ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
+    IDS_SHORT_DOWNLOADER "Manažér aplikácií systému ReactOS.lnk"
     IDS_SHORT_SERVICE    "Správca služieb.lnk"
     IDS_SHORT_DEVICE     "Správca zariadení.lnk"
     IDS_SHORT_MPLAY32    "Multimediálny prehrávaè.lnk"
@@ -269,7 +269,7 @@ BEGIN
     IDS_SHORT_SNDVOL32   "Ovládanie hlasitosti.lnk" //Volume Control
     IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
     IDS_SHORT_PAINT      "Skicár.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
+    IDS_SHORT_SPIDER     "Pavúèí solitér.lnk"
 END
 
 STRINGTABLE

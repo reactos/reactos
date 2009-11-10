@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  20-06-2009
+ * LastChange:  01-11-2009
  */
 
 #ifndef LANG_SK_SK_H__
@@ -994,7 +994,7 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         8,
         12,
-        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (MBR).",
+        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (zav dzac¡ sektor).",
         TEXT_STYLE_NORMAL
     },
     {

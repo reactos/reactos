@@ -1536,6 +1536,7 @@ InitializeMixer(
     MixerInfo->MixCaps.vDriverVersion = 1; //FIXME
     MixerInfo->MixCaps.fdwSupport = 0;
     MixerInfo->MixCaps.cDestinations = 1;
+    MixerInfo->DeviceIndex = DeviceIndex;
 
     /* get target pnp name */
     Status = GetSysAudioDevicePnpName(DeviceObject, DeviceIndex, &Device);
@@ -1887,6 +1888,12 @@ WdmAudGetLineInfo(
         }
 
         MixerLineSrc = GetSourceMixerLineByComponentType(&DeviceExtension->MixerInfo[(ULONG_PTR)DeviceInfo->hDevice], DeviceInfo->u.MixLine.dwComponentType);
+        if (!MixerLineSrc)
+        {
+            DPRINT1("Failed to find component type %x\n", DeviceInfo->u.MixLine.dwComponentType);
+            return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+        }
+
         ASSERT(MixerLineSrc);
 
         /* copy cached data */

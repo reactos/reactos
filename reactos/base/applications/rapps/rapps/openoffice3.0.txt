@@ -2,13 +2,13 @@
 
 [Section]
 Name = OpenOffice 3.0
-Version = 3.1.0
+Version = 3.1.1
 Licence = LGPL
 Description = THE Open Source Office Suite.
 Size = 134.3MB
 Category = 6
 URLSite = http://www.openoffice.org
-URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/stable/3.1.0/OOo_3.1.0_Win32Intel_install_en-US.exe
+URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/stable/3.1.1/OOo_3.1.1_Win32Intel_install_en-US.exe
 CDPath = none
 
 
@@ -23,4 +23,4 @@ URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/de/3.1.1/OOo_3.
 Description = Otwarty pakiet biurowy
 URLSite = http://pl.openoffice.org
 Size = 147.1MB
-URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/pl/3.1.0/OOo_3.1.0_Win32Intel_install_wJRE_pl.exe
+URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/pl/3.1.1/OOo_3.1.1_Win32Intel_install_pl.exe
