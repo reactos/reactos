@@ -6,7 +6,7 @@
 #define HAVE_MALLOC_H
 #define HAVE_ERRNO_H
 
-#ifdef _WIN32_WCE
+#if defined(_WIN32_WCE)
 #undef HAVE_ERRNO_H
 #include <windows.h>
 #include "wincecompat.h"
@@ -23,18 +23,27 @@
 
 #include <libxml/xmlversion.h>
 
+#ifndef ICONV_CONST
+#define ICONV_CONST const
+#endif
+
 #ifdef NEED_SOCKETS
 #include <wsockcompat.h>
 #endif
+
+/*
+ * Windows platforms may define except 
+ */
+#undef except
 
 #define HAVE_ISINF
 #define HAVE_ISNAN
 #include <math.h>
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 /* MS C-runtime has functions which can be used in order to determine if
-   a given floating-point variable contains NaN, (+-)INF. These are
+   a given floating-point variable contains NaN, (+-)INF. These are 
    preferred, because floating-point technology is considered propriatary
-   by MS and we can assume that their functions know more about their
+   by MS and we can assume that their functions know more about their 
    oddities than we do. */
 #include <float.h>
 /* Bjorn Reese figured a quite nice construct for isinf() using the _fpclass
@@ -84,16 +93,20 @@ static int isnan (double d) {
 #endif
 #endif /* _MSC_VER */
 
-#if defined(_MSC_VER) || defined(__MINGW32__)
+#if defined(_MSC_VER)
 #define mkdir(p,m) _mkdir(p)
 #define snprintf _snprintf
+#if _MSC_VER < 1500
 #define vsnprintf(b,c,f,a) _vsnprintf(b,c,f,a)
+#endif
+#elif defined(__MINGW32__)
+#define mkdir(p,m) _mkdir(p)
 #endif
 
 /* Threading API to use should be specified here for compatibility reasons.
    This is however best specified on the compiler's command-line. */
 #if defined(LIBXML_THREAD_ENABLED)
-#if !defined(HAVE_PTHREAD_H) && !defined(HAVE_WIN32_THREADS)
+#if !defined(HAVE_PTHREAD_H) && !defined(HAVE_WIN32_THREADS) && !defined(_WIN32_WCE)
 #define HAVE_WIN32_THREADS
 #endif
 #endif

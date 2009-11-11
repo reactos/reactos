@@ -13,7 +13,7 @@
 #include <sect_attribs.h>
 #include <locale.h>
 
-const PIMAGE_TLS_CALLBACK __dyn_tls_init_callback;
+extern const PIMAGE_TLS_CALLBACK __dyn_tls_init_callback;
 
 void * __cdecl
 _decode_pointer (void *codedptr)

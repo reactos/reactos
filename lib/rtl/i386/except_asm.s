@@ -4,6 +4,7 @@
  * FILE:            lib/rtl/i386/except_asm.S
  * PURPOSE:         User-mode exception support for IA-32
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -39,17 +40,6 @@ _RtlpSetExceptionList@4:
 
     /* Return */
     ret 4
-.endfunc
-
-.func RtlpGetExceptionAddress@0
-.globl _RtlpGetExceptionAddress@0
-_RtlpGetExceptionAddress@0:
-
-    /* Return the address from the stack */
-    mov eax, [ebp+4]
-
-    /* Return */
-    ret
 .endfunc
 
 .func RtlCaptureContext@4
@@ -262,3 +252,150 @@ _RtlpUnwindProtector:
     ret 16
 .endfunc
 
+.func RtlRaiseException@4
+.globl _RtlRaiseException@4
+_RtlRaiseException@4:
+
+    /* Set up stack frame */
+    push ebp
+    mov ebp, esp
+
+    /*
+     * Save the context while preserving everything but ESP and EBP.
+     * This is vital because the caller will be restored with this context
+     * in case the execution is continued, which means we must not clobber
+     * the non-volatiles. We preserve the volatiles too because the context
+     * could get passed to a debugger.
+     */
+    lea esp, [esp-CONTEXT_FRAME_LENGTH]
+    push esp
+    call _RtlCaptureContext@4
+
+    /* Adjust ESP to account for the argument that was passed */
+    add dword ptr [esp+CONTEXT_ESP], 4
+
+    /* Save the exception address */
+    mov edx, [ebp+4]
+    mov eax, [ebp+8]
+    mov [eax+EXCEPTION_RECORD_EXCEPTION_ADDRESS], edx
+
+    /* Write the context flag */
+    mov dword ptr [esp+CONTEXT_FLAGS], CONTEXT_FULL
+
+    /* Check if user mode debugger is active */
+    call _RtlpCheckForActiveDebugger@0
+    test al, al
+    jnz DebuggerActive1
+
+    /* Dispatch the exception */
+    push esp
+    push [ebp+8]
+    call _RtlDispatchException@8
+    test al, al
+    jz RaiseException
+
+    /* Continue, go back to previous context */
+    mov ecx, esp
+    push 0
+    push ecx
+    call  _ZwContinue@8
+    jmp RaiseStatus1
+
+DebuggerActive1:
+
+    /* Raise an exception immediately */
+    mov ecx, esp
+    push 1
+    push ecx
+    push [ebp+8]
+    call _ZwRaiseException@12
+    jmp RaiseStatus1
+
+RaiseException:
+
+    /* Raise the exception */
+    mov ecx, esp
+    push 0
+    push ecx
+    push [ebp+8]
+    call _ZwRaiseException@12
+
+RaiseStatus1:
+
+    /* If we returned, raise a status */
+    push eax
+    call _RtlRaiseStatus@4
+.endfunc
+
+.func RtlRaiseStatus@4
+.globl _RtlRaiseStatus@4
+_RtlRaiseStatus@4:
+
+    /* Set up stack frame */
+    push ebp
+    mov ebp, esp
+
+    /*
+     * Save the context while preserving everything but ESP and EBP.
+     * This is vital because the caller will be restored with this context
+     * in case the execution is continued, which means we must not clobber
+     * the non-volatiles. We preserve the volatiles too because the context
+     * could get passed to a debugger.
+     */
+    lea esp, [esp-CONTEXT_FRAME_LENGTH-EXCEPTION_RECORD_LENGTH]
+    push esp
+    call _RtlCaptureContext@4
+
+    /* Adjust ESP to account for the argument that was passed */
+    add dword ptr [esp+CONTEXT_ESP], 4
+
+    /* Set up the exception record */
+    lea ecx, [esp+CONTEXT_FRAME_LENGTH]
+    mov eax, [ebp+8]
+    mov dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_CODE], eax
+    mov dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_NONCONTINUABLE
+    and dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_RECORD], 0
+    mov eax, [ebp+4]
+    mov dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_ADDRESS], eax
+    and dword ptr [ecx+EXCEPTION_RECORD_NUMBER_PARAMETERS], 0
+
+    /* Write the context flag */
+    mov dword ptr [esp+CONTEXT_FLAGS], CONTEXT_FULL
+
+    /* Check if user mode debugger is active */
+    call _RtlpCheckForActiveDebugger@0
+
+    /* Restore ECX and jump if debugger is active */
+    lea ecx, [esp+CONTEXT_FRAME_LENGTH]
+    test al, al
+    jnz DebuggerActive2
+
+    /* Dispatch the exception */
+    push esp
+    push ecx
+    call _RtlDispatchException@8
+
+    /* Raise exception if we got here */
+    lea ecx, [esp+CONTEXT_FRAME_LENGTH]
+    mov edx, esp
+    push 0
+    push edx
+    push ecx
+    call _ZwRaiseException@12
+    jmp RaiseStatus2
+
+DebuggerActive2:
+
+    /* Raise an exception immediately */
+    mov edx, esp
+    push 1
+    push edx
+    push ecx
+    call _ZwRaiseException@12
+
+RaiseStatus2:
+
+    /* If we returned, raise a status */
+    push eax
+    call _RtlRaiseStatus@4
+.endfunc

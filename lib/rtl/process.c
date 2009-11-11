@@ -11,7 +11,7 @@
 
 #include <rtl.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* INTERNAL FUNCTIONS *******************************************************/
@@ -41,7 +41,7 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to read image file from disk (%x)\n", Status);
+        DPRINT1("Failed to read image file from disk\n");
         return(Status);
     }
 

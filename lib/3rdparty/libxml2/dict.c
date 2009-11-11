@@ -698,7 +698,6 @@ xmlDictFree(xmlDictPtr dict) {
 		inside_dict = 0;
 		iter = next;
 	    }
-	    inside_dict = 0;
 	}
 	xmlFree(dict->dict);
     }

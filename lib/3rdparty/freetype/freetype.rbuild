@@ -2,9 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="freetype" type="staticlibrary" allowwarnings="true">
 	<include base="freetype">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTDRIVER__" />
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="FT2_BUILD_LIBRARY"  />
 	<if property="NSWPAT" value="0">
 		<define name="TT_CONFIG_OPTION_UNPATENTED_HINTING" />

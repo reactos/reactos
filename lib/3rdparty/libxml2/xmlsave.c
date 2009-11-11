@@ -690,8 +690,8 @@ htmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
 
     xmlInitParser();
 
-    doc = cur->doc; {
-    if (doc != NULL)
+    doc = cur->doc;
+    if (doc != NULL) {
         oldenc = doc->encoding;
 	if (ctxt->encoding != NULL) {
 	    doc->encoding = BAD_CAST ctxt->encoding;
@@ -976,7 +976,6 @@ xmlDocContentDumpOutput(xmlSaveCtxtPtr ctxt, xmlDocPtr cur) {
 		cur->encoding = oldenc;
 		return(-1);
 	    }
-	    switched_encoding = 1;
 	}
         if (ctxt->options & XML_SAVE_FORMAT)
 	    htmlDocContentDumpFormatOutput(buf, cur,

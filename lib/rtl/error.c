@@ -594,7 +594,7 @@ static const WORD table_c0000202[109] =
       ERROR_MR_MID_NOT_FOUND,                 /* c0000222 */
       ERROR_MR_MID_NOT_FOUND,                 /* c0000223 */
       ERROR_PASSWORD_MUST_CHANGE,             /* c0000224 (STATUS_PASSWORD_MUST_CHANGE) */
-      ERROR_MR_MID_NOT_FOUND,                 /* c0000225 */
+      ERROR_NOT_FOUND,                        /* c0000225 (STATUS_NOT_FOUND)*/
       ERROR_MR_MID_NOT_FOUND,                 /* c0000226 */
       ERROR_MR_MID_NOT_FOUND,                 /* c0000227 */
       ERROR_MR_MID_NOT_FOUND,                 /* c0000228 */
@@ -808,35 +808,6 @@ static const ERROR_TABLE ErrorTable[] =
 
 
 /* FUNCTIONS ***************************************************************/
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-RtlAssert(PVOID FailedAssertion,
-          PVOID FileName,
-          ULONG LineNumber,
-          PCHAR Message)
-{
-   if (NULL != Message)
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber,
-               Message);
-   }
-   else
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %d\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber);
-   }
-
-   DbgBreakPoint();
-}
 
 /*
 * @unimplemented

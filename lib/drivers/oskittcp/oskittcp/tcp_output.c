@@ -86,9 +86,6 @@ tcp_output(tp)
 	int idle, sendalot;
 	struct rmxp_tao *taop;
 	struct rmxp_tao tao_noncached;
-#ifdef __REACTOS__
-	struct mbuf *n;
-#endif
 
 	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
 
@@ -411,7 +408,6 @@ send:
 		 * CC or CC.new.
 		 */
 		case TH_SYN:
-#if 0
 			opt[optlen++] = TCPOPT_NOP;
 			opt[optlen++] = TCPOPT_NOP;
 			opt[optlen++] = tp->t_flags & TF_SENDCCNEW ?
@@ -419,7 +415,6 @@ send:
 			opt[optlen++] = TCPOLEN_CC;
 			*(u_int32_t *)&opt[optlen] = htonl(tp->cc_send);
  			optlen += 4;
-#endif
 			break;
 
 		/*
@@ -742,8 +737,7 @@ send:
            data block */
 	while (NULL != m) {
 	    m->m_flags &= ~M_EXT;
-	    MFREE(m, n);
-	    m = n;
+	    m = m_free(m);
 	}
 #endif
     }

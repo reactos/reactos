@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="rtl" type="staticlibrary">
 	<define name="_NTOSKRNL_" />
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
@@ -44,6 +43,7 @@
 	<file>access.c</file>
 	<file>acl.c</file>
 	<file>actctx.c</file>
+	<file>assert.c</file>
 	<file>atom.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
