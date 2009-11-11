@@ -113,15 +113,9 @@ protected:
 	std::string GetLinkerMacro () const;
 	static std::string GetDebugFormat ();
 	void GenerateCleanObjectsAsYouGoCode () const;
-	void GenerateRunRsymCode () const;
-	void GenerateRunStripCode () const;
-	void GenerateLinkerCommand ( const std::string& dependencies,
-	                             const std::string& linkerParameters,
-	                             const std::string& pefixupParameters );
-	void GeneratePhonyTarget() const;
+	void GenerateLinkerCommand () const;
 	void GenerateBuildMapCode ( const FileLocation *mapTarget = NULL );
 	void GenerateRules ();
-	void GenerateImportLibraryTarget (const FileLocation *defFilename, const FileLocation *library_target, bool delayimp);
 	void GenerateImportLibraryTargetIfNeeded ();
 	void GetDefinitionDependencies ( std::vector<FileLocation>& dependencies ) const;
 	std::string GetLinkingDependencies () const;

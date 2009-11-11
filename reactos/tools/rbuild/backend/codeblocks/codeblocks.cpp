@@ -598,7 +598,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 		if ( sys )
 		{
-			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint(false) == "" ? "DriverEntry@8" : module.GetEntryPoint(false).c_str ());
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint() == "" ? "DriverEntry@8" : module.GetEntryPoint().c_str ());
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str () );
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -Wl,--nostdlib\" />\r\n" );
 		}
@@ -623,7 +623,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 		}
 		else if ( dll )
 		{
-			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint(false).c_str () );
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--entry,%s%s\" />\r\n", "_", module.GetEntryPoint().c_str () );
 			fprintf ( OUT, "\t\t\t\t\t<Add option=\"-Wl,--image-base,%s\" />\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str () );
 
 			if ( module.type == Win32DLL)

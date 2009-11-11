@@ -38,16 +38,16 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostTrue, "", "", "" }, // BuildTool
 	{ HostFalse, "", "", "" }, // StaticLibrary
 	{ HostFalse, "", "", "" }, // ObjectLibrary
-	{ HostFalse, "", "", "" }, // Kernel
-	{ HostFalse, "", "", "" }, // KernelModeDLL
-	{ HostFalse, "-D__NTDRIVER__", "", "" }, // KernelModeDriver
-	{ HostFalse, "", "", "" }, // NativeDLL
-	{ HostFalse, "-D__NTAPP__", "", "" }, // NativeCUI
-	{ HostFalse, "", "", "" }, // Win32DLL
-	{ HostFalse, "", "", "" }, // Win32OCX
-	{ HostFalse, "", "", "" }, // Win32CUI
-	{ HostFalse, "", "", "" }, // Win32GUI
-	{ HostFalse, "", "", "-nostartfiles -nostdlib" }, // BootLoader
+	{ HostFalse, "", "", "$(LDFLAG_DRIVER)" }, // Kernel
+	{ HostFalse, "", "", "$(LDFLAG_DRIVER)" }, // KernelModeDLL
+	{ HostFalse, "-D__NTDRIVER__", "", "$(LDFLAG_DRIVER)" }, // KernelModeDriver
+	{ HostFalse, "", "", "$(LDFLAG_DLL)" }, // NativeDLL
+	{ HostFalse, "-D__NTAPP__", "", "$(LDFLAG_NATIVE)" }, // NativeCUI
+	{ HostFalse, "", "", "$(LDFLAG_DLL)" }, // Win32DLL
+	{ HostFalse, "", "", "$(LDFLAG_DLL)" }, // Win32OCX
+	{ HostFalse, "", "", "$(LDFLAG_CONSOLE)" }, // Win32CUI
+	{ HostFalse, "", "", "$(LDFLAG_WINDOWS)" }, // Win32GUI
+	{ HostFalse, "", "", "" }, // BootLoader
 	{ HostFalse, "", "-f bin", "" }, // BootSector
 	{ HostFalse, "", "", "" }, // Iso
 	{ HostFalse, "", "", "" }, // LiveIso
@@ -55,8 +55,8 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostFalse, "", "", "" }, // RpcServer
 	{ HostFalse, "", "", "" }, // RpcClient
 	{ HostFalse, "", "", "" }, // Alias
-	{ HostFalse, "", "", "-nostartfiles -nostdlib" }, // BootProgram
-	{ HostFalse, "", "", "" }, // Win32SCR
+	{ HostFalse, "", "", "" }, // BootProgram
+	{ HostFalse, "", "", "$(LDFLAG_WINDOWS)" }, // Win32SCR
 	{ HostFalse, "", "", "" }, // IdlHeader
 	{ HostFalse, "", "", "" }, // IdlInterface
 	{ HostFalse, "", "", "" }, // EmbeddedTypeLib
@@ -64,7 +64,7 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostFalse, "", "", "" }, // RpcProxy
 	{ HostTrue, "", "", "" }, // HostStaticLibrary
 	{ HostFalse, "", "", "" }, // Cabinet
-	{ HostFalse, "", "", "" }, // KeyboardLayout
+	{ HostFalse, "", "", "$(LDFLAG_DLL)" }, // KeyboardLayout
 	{ HostFalse, "", "", "" }, // MessageHeader
 };
 
@@ -413,17 +413,17 @@ MingwBackend::GenerateGlobalProperties (
 }
 
 string
-MingwBackend::GenerateProjectLFLAGS () const
+MingwBackend::GenerateProjectLDFLAGS () const
 {
-	string lflags;
+	string ldflags;
 	for ( size_t i = 0; i < ProjectNode.linkerFlags.size (); i++ )
 	{
 		LinkerFlag& linkerFlag = *ProjectNode.linkerFlags[i];
-		if ( lflags.length () > 0 )
-			lflags += " ";
-		lflags += linkerFlag.flag;
+		if ( ldflags.length () > 0 )
+			ldflags += " ";
+		ldflags += linkerFlag.flag;
 	}
-	return lflags;
+	return ldflags;
 }
 
 void
@@ -478,24 +478,21 @@ MingwBackend::GenerateGlobalVariables () const
 
 		// Would be nice to have our own C++ runtime
 		fputs ( "BUILTIN_CXXINCLUDES+= $(TARGET_CPPFLAGS)\n", fMakefile );
-	}
 
-	// Because RosBE gcc is built to suck
-	fputs ( "BUILTIN_HOST_CINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
-	fputs ( "BUILTIN_HOST_CPPINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
-	fputs ( "BUILTIN_HOST_CXXINCLUDES+= $(HOST_CPPFLAGS)\n", fMakefile );
+		fprintf ( fMakefile, "PROJECT_CCLIBS := $(shell ${TARGET_CC} -print-libgcc-file-name)\n" );
+		fprintf ( fMakefile, "PROJECT_CXXLIBS := $(shell ${TARGET_CPP} -print-file-name=libstdc++.a) $(shell ${TARGET_CPP} -print-file-name=libgcc.a) $(shell ${TARGET_CPP} -print-file-name=libmingw32.a) $(shell ${TARGET_CPP} -print-file-name=libmingwex.a) $(shell ${TARGET_CPP} -print-file-name=libcoldname.a)\n" );
+
+		/* hack to get libgcc_eh.a, should check mingw version or something */
+		if (Environment::GetArch() == "amd64")
+		{
+			fprintf ( fMakefile, "PROJECT_LPPFLAGS += $(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)\n" );
+		}
+	}
 
 	MingwModuleHandler::GenerateParameters ( "PROJECT", "+=", ProjectNode.non_if_data );
 	MingwModuleHandler::GenerateParameters ( "PROJECT_HOST", "+=", ProjectNode.host_non_if_data );
 
-	// TODO: linker flags
-	fprintf ( fMakefile, "PROJECT_LFLAGS := '$(shell ${TARGET_CC} -print-libgcc-file-name)' %s\n", GenerateProjectLFLAGS ().c_str () );
-	fprintf ( fMakefile, "PROJECT_LPPFLAGS := '$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)' '$(shell ${TARGET_CPP} -print-file-name=libgcc.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)' '$(shell ${TARGET_CPP} -print-file-name=libcoldname.a)'\n" );
-	/* hack to get libgcc_eh.a, should check mingw version or something */
-	if (Environment::GetArch() == "amd64")
-	{
-	    fprintf ( fMakefile, "PROJECT_LPPFLAGS += '$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)'\n" );
-	}
+	fprintf ( fMakefile, "PROJECT_LDFLAGS := %s\n", GenerateProjectLDFLAGS ().c_str () );
 
 	// TODO: use symbolic names for module types
 	for ( size_t i = 0; i < sizeof(ModuleHandlerInformations) / sizeof(ModuleHandlerInformations[0]); ++ i )
@@ -509,15 +506,6 @@ MingwBackend::GenerateGlobalVariables () const
 						  ModuleHandlerInformations[i].cflags );
 		}
 
-		if ( ModuleHandlerInformations[i].cflags && ModuleHandlerInformations[i].cflags[0] )
-		{
-				fprintf ( fMakefile,
-						  "MODULETYPE%d_%sFLAGS:=%s\n",
-						  (int)i,
-						  "CXX",
-						  ModuleHandlerInformations[i].cflags );
-		}
-
 		if ( ModuleHandlerInformations[i].nasmflags && ModuleHandlerInformations[i].nasmflags[0] )
 		{
 				fprintf ( fMakefile,
@@ -526,7 +514,28 @@ MingwBackend::GenerateGlobalVariables () const
 						  "NASM",
 						  ModuleHandlerInformations[i].nasmflags );
 		}
+
+		if ( ModuleHandlerInformations[i].linkerflags && ModuleHandlerInformations[i].linkerflags[0] )
+		{
+				fprintf ( fMakefile,
+						  "MODULETYPE%d_%sFLAGS:=%s\n",
+						  (int)i,
+						  "LD",
+						  ModuleHandlerInformations[i].linkerflags );
+		}
 	}
+
+	fprintf ( fMakefile,
+			  "MODULETYPE%d_KMODE:=yes\n",
+			  (int)Kernel );
+
+	fprintf ( fMakefile,
+			  "MODULETYPE%d_KMODE:=yes\n",
+			  (int)KernelModeDLL );
+
+	fprintf ( fMakefile,
+			  "MODULETYPE%d_KMODE:=yes\n",
+			  (int)KernelModeDriver );
 
 	fprintf ( fMakefile, "\n" );
 }

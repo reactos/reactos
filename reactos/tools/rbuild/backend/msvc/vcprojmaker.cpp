@@ -467,7 +467,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			fprintf ( OUT, "\t\t\t<Tool\r\n" );
 			fprintf ( OUT, "\t\t\t\tName=\"VCLinkerTool\"\r\n" );
-			if (module.GetEntryPoint(false) == "0" && sys == false)
+			if (module.GetEntryPoint() == "0" && sys == false)
 				fprintf ( OUT, "AdditionalOptions=\"/noentry\"" );
 
 			if (configuration.VSProjectVersion == "9.00")
@@ -540,7 +540,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 			if ( sys )
 			{
-				if (module.GetEntryPoint(false) == "0")
+				if (module.GetEntryPoint() == "0")
 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /noentry /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
 				else
 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
@@ -548,7 +548,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 				fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
-				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false) == "" ? "DriverEntry" : module.GetEntryPoint(false).c_str ());
+				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint() == "" ? "DriverEntry" : module.GetEntryPoint().c_str ());
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());
 			}
 			else if ( exe )
@@ -583,16 +583,16 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 			else if ( dll )
 			{
-				if (module.GetEntryPoint(false) == "0")
+				if (module.GetEntryPoint() == "0")
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
 				else
 				{
 					// get rid of DllMain@12 because MSVC needs to link to _DllMainCRTStartup@12
 					// when using CRT
-					if (module.GetEntryPoint(false) == "DllMain@12")
+					if (module.GetEntryPoint() == "DllMain@12")
 						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
 					else
-						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false).c_str ());
+						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint().c_str ());
 				}
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
 				if ( use_msvcrt_lib )

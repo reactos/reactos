@@ -8,17 +8,16 @@
 	</xi:include>
 
     <xi:include href="ReactOS-generic.rbuild" />
-                
+
     <!-- <define name="_M_ARM" /> Already defined by toolchain -->
 	<define name="_ARM_" />
 	<define name="__arm__" />
 	<define name="TARGET_arm" host="true" />
-    
+
     <define name="USE_COMPILER_EXCEPTIONS" />
-    
-    <property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
+
     <property name="WINEBUILD_FLAGS" value="--kill-at"/>
-        
+
     <include>include/reactos/arm</include>
 
 	<if property="SARCH" value="versatile">
@@ -32,12 +31,14 @@
         <compilerflag>-Wno-attributes</compilerflag>
 	</group>
 
-    
+
 	<define name="__MSVCRT__"/> <!-- DUBIOUS -->
-    
+
 	<group linkerset="ld">
         <linkerflag>--strip-debug</linkerflag> <!-- INVESTIGATE -->
         <linkerflag>-static</linkerflag> <!-- INVESTIGATE -->
+		<linkerflag>-file-alignment=0x1000</linkerflag>
+		<linkerflag>-section-alignment=0x1000</linkerflag>
 	</group>
 
 	<directory name="media">
