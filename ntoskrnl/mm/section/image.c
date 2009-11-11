@@ -86,15 +86,15 @@ NTAPI
 MmUnsharePageEntryImageSectionSegment
 (PROS_SECTION_OBJECT Section,
  PMM_SECTION_SEGMENT Segment,
- ULONG Offset,
+ PLARGE_INTEGER Offset,
  BOOLEAN Dirty,
  BOOLEAN PageOut)
 {
    ULONG Entry;
 
-   DPRINT("MmUnsharePageEntrySectionSegment(%p,%x)\n", Segment, Offset);
+   DPRINT("MmUnsharePageEntrySectionSegment(%p,%x)\n", Segment, Offset->u.LowPart);
 
-   Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+   Entry = MiGetPageEntrySectionSegment(Segment, Offset);
    if (Entry == 0)
    {
       DPRINT1("Entry == 0 for MmUnsharePageEntrySectionSegment\n");
@@ -120,7 +120,7 @@ MmUnsharePageEntryImageSectionSegment
       PFN_TYPE Page;
       LARGE_INTEGER FileOffset;
 
-      FileOffset.QuadPart = Offset + Segment->Image.FileOffset/*.QuadPart*/;
+      FileOffset.QuadPart = Offset->QuadPart + Segment->Image.FileOffset/*.QuadPart*/;
 
       Page = PFN_FROM_SSE(Entry);
 
@@ -136,11 +136,11 @@ MmUnsharePageEntryImageSectionSegment
              *   for this page. The pager thread can't page out a
              *   page without a rmap entry.
              */
-            MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+			MiSetPageEntrySectionSegment(Segment, Offset, Entry);
          }
          else
          {
-            MmSetPageEntrySectionSegment(Segment, Offset, 0);
+            MiSetPageEntrySectionSegment(Segment, Offset, 0);
 			MmReleasePageMemoryConsumer(MC_USER, Page);
          }
       }
@@ -165,7 +165,7 @@ MmUnsharePageEntryImageSectionSegment
                      ASSERT(FALSE);
                   }
                }
-               MmSetPageEntrySectionSegment(Segment, Offset, MAKE_SWAP_SSE(SavedSwapEntry));
+               MiSetPageEntrySectionSegment(Segment, Offset, MAKE_SWAP_SSE(SavedSwapEntry));
                MmSetSavedSwapEntryPage(Page, 0);
             }
             MmReleasePageMemoryConsumer(MC_USER, Page);
@@ -179,9 +179,9 @@ MmUnsharePageEntryImageSectionSegment
    }
    else
    {
-      MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+      MiSetPageEntrySectionSegment(Segment, Offset, Entry);
    }
-   DPRINT("MmUnsharePageEntrySectionSegment(%p,%x) -> Done\n", Segment, Offset);
+   DPRINT("MmUnsharePageEntrySectionSegment(%p,%x) -> Done\n", Segment, Offset->u.LowPart);
    return(SHARE_COUNT_FROM_SSE(Entry) > 0);
 }
 
@@ -193,7 +193,7 @@ MmNotPresentFaultImageFile
  PVOID Address,
  BOOLEAN Locked)
 {
-	ULONG Offset;
+	LARGE_INTEGER Offset;
 	PFN_TYPE Page;
 	NTSTATUS Status;
 	PVOID PAddress;
@@ -226,7 +226,7 @@ MmNotPresentFaultImageFile
 	}
 
 	PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-	Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
+	Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
 
 	Segment = MemoryArea->Data.SectionData.Segment;
 	Section = MemoryArea->Data.SectionData.Section;
@@ -239,13 +239,13 @@ MmNotPresentFaultImageFile
 	 */
 	MmLockSectionSegment(Segment);
 
-	Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+	Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
 	HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
-	DPRINT("Entry %x HasSwapEntry %x Offset %x\n", Entry, HasSwapEntry, Offset);
+	DPRINT("Entry %x HasSwapEntry %x Offset %x\n", Entry, HasSwapEntry, Offset.u.LowPart);
 
-	if (Entry == 0 && !HasSwapEntry && Offset < PAGE_ROUND_UP(Segment->RawLength.QuadPart))
+	if (Entry == 0 && !HasSwapEntry && Offset.QuadPart < PAGE_ROUND_UP(Segment->RawLength.QuadPart))
 	{
-		TotalOffset.QuadPart = Offset + Segment->Image.FileOffset/*.QuadPart*/;
+		TotalOffset.QuadPart = Offset.QuadPart + Segment->Image.FileOffset/*.QuadPart*/;
 
 		MmUnlockSectionSegment(Segment);
 		MmUnlockAddressSpace(AddressSpace);
@@ -258,7 +258,7 @@ MmNotPresentFaultImageFile
 		}
 
 		MmLockSectionSegment(Segment);
-		Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+		Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
 		if (Entry != 0) // Handled elsewhere
 		{
 			MmUnlockSectionSegment(Segment);
@@ -385,7 +385,7 @@ MmNotPresentFaultImageFile
 	 * Get the entry corresponding to the offset within the section
 	 */
 	DPRINT("MmNotPresentFaultSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
-	Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+	Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
 	DPRINT("Got entry %x\n", Entry);
 
 	if (Entry == 0)
@@ -400,7 +400,7 @@ MmNotPresentFaultImageFile
 		 */
 		MmUnlockAddressSpace(AddressSpace);
 
-		if (Offset >= PAGE_ROUND_UP(Segment->RawLength.QuadPart))
+		if (Offset.QuadPart >= PAGE_ROUND_UP(Segment->RawLength.QuadPart))
 		{
 			Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
 			if (!NT_SUCCESS(Status))
@@ -453,7 +453,7 @@ MmNotPresentFaultImageFile
 		 * data
 		 */
 		Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
-		MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+		MiSetPageEntrySectionSegment(Segment, &Offset, Entry);
 
 		MmInsertRmap(Page, Process, (PVOID)PAddress);
 
@@ -485,7 +485,7 @@ MmNotPresentFaultImageFile
 
 		Page = PFN_FROM_SSE(Entry);
 
-		MmSharePageEntrySectionSegment(Segment, Offset);
+		MmSharePageEntrySectionSegment(Segment, &Offset);
 
 		Status = MmCreateVirtualMapping(Process,
 										Address,
@@ -534,8 +534,8 @@ MmPageOutImageFile(PMMSUPPORT AddressSpace,
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
 
-   Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
-   FileOffset.QuadPart = Context.Offset + Context.Segment->Image.FileOffset/*.QuadPart*/;
+   Context.Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+   FileOffset.QuadPart = Context.Offset.QuadPart + Context.Segment->Image.FileOffset/*.QuadPart*/;
 
    IsImageSection = Context.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
 
@@ -549,7 +549,7 @@ MmPageOutImageFile(PMMSUPPORT AddressSpace,
        * then note this is a direct mapped page.
        */
       if ((FileOffset.QuadPart % PAGE_SIZE) == 0 &&
-            (Context.Offset + PAGE_SIZE <= Context.Segment->RawLength.QuadPart || !IsImageSection))
+            (Context.Offset.QuadPart + PAGE_SIZE <= Context.Segment->RawLength.QuadPart || !IsImageSection))
       {
          DirectMapped = TRUE;
       }
@@ -559,7 +559,7 @@ MmPageOutImageFile(PMMSUPPORT AddressSpace,
     * Get the section segment entry and the physical address.
     */
    DPRINT("MmPageOutSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Context.Segment, Context.Offset);
-   Entry = MmGetPageEntrySectionSegment(Context.Segment, Context.Offset);
+   Entry = MiGetPageEntrySectionSegment(Context.Segment, &Context.Offset);
    if (!MmIsPagePresent(Process, Address))
    {
       DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
@@ -608,7 +608,7 @@ MmPageOutImageFile(PMMSUPPORT AddressSpace,
          MmSetSavedSwapEntryPage(Page, 0);
          if (SwapEntry != 0)
          {
-            MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, MAKE_SWAP_SSE(SwapEntry));
+            MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, MAKE_SWAP_SSE(SwapEntry));
          }
          MmReleasePageMemoryConsumer(MC_USER, Page);
          PageOp->Status = STATUS_SUCCESS;
@@ -715,7 +715,7 @@ MmPageOutImageFile(PMMSUPPORT AddressSpace,
                          Process,
                          Address);
             Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
-            MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, Entry);
+            MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
          }
          MmUnlockAddressSpace(AddressSpace);
          PageOp->Status = STATUS_UNSUCCESSFUL;
@@ -761,7 +761,7 @@ MmPageOutImageFile(PMMSUPPORT AddressSpace,
                       Process,
                       Address);
          Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
-         MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, Entry);
+         MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
       }
       MmUnlockAddressSpace(AddressSpace);
       PageOp->Status = STATUS_UNSUCCESSFUL;
@@ -776,7 +776,7 @@ MmPageOutImageFile(PMMSUPPORT AddressSpace,
    MmSetSavedSwapEntryPage(Page, 0);
    if (Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
    {
-      MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, MAKE_SWAP_SSE(SwapEntry));
+      MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, MAKE_SWAP_SSE(SwapEntry));
    }
    else
    {
@@ -798,7 +798,7 @@ MmPageOutImageFile(PMMSUPPORT AddressSpace,
    else
    {
       Entry = MAKE_SWAP_SSE(SwapEntry);
-      MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, Entry);
+      MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
    }
 
    PageOp->Status = STATUS_SUCCESS;
@@ -1438,9 +1438,7 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
       ExInitializeFastMutex(&ImageSectionObject->Segments[i].Lock);
 	  ImageSectionObject->Segments[i].Flags = MM_IMAGE_SEGMENT;
       ImageSectionObject->Segments[i].ReferenceCount = 1;
-
-      RtlZeroMemory(&ImageSectionObject->Segments[i].PageDirectory,
-                    sizeof(ImageSectionObject->Segments[i].PageDirectory));
+	  MiInitializeSectionPageTable(&ImageSectionObject->Segments[i]);
    }
 
    ASSERT(NT_SUCCESS(Status));
@@ -1618,18 +1616,18 @@ NTAPI
 MmpFreeSharedSegment(PMM_SECTION_SEGMENT Segment)
 {
    ULONG Length;
-   ULONG Offset;
    ULONG Entry;
    ULONG SavedSwapEntry;
    PFN_TYPE Page;
+   LARGE_INTEGER Offset;
 
    Page = 0;
 
    Length = PAGE_ROUND_UP(Segment->Length.QuadPart);
-   for (Offset = 0; Offset < Length; Offset += PAGE_SIZE)
+   for (Offset.QuadPart = 0; Offset.QuadPart < Length; Offset.QuadPart += PAGE_SIZE)
    {
-      DPRINT("MmAlterViewAttributes -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
-      Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+      DPRINT("MmAlterViewAttributes -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset.u.LowPart);
+      Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
       if (Entry)
       {
          if (IS_SWAP_FROM_SSE(Entry))
@@ -1647,7 +1645,7 @@ MmpFreeSharedSegment(PMM_SECTION_SEGMENT Segment)
             }
             MmReleasePageMemoryConsumer(MC_USER, Page);
          }
-         MmSetPageEntrySectionSegment(Segment, Offset, 0);
+         MiSetPageEntrySectionSegment(Segment,& Offset, 0);
       }
    }
 }
@@ -1784,10 +1782,10 @@ MmFreeImagePage
 {
    ULONG Entry;
    PFILE_OBJECT FileObject;
-   ULONG Offset;
    SWAPENTRY SavedSwapEntry;
    PMM_PAGEOP PageOp;
    NTSTATUS Status;
+   LARGE_INTEGER Offset;
    PROS_SECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
    PMMSUPPORT AddressSpace;
@@ -1798,13 +1796,13 @@ MmFreeImagePage
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset = ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress) +
+   Offset.QuadPart = ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress) +
             MemoryArea->Data.SectionData.ViewOffset;
 
    Section = MemoryArea->Data.SectionData.Section;
    Segment = MemoryArea->Data.SectionData.Segment;
 
-   PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset);
+   PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset.QuadPart);
 
    while (PageOp)
    {
@@ -1821,11 +1819,11 @@ MmFreeImagePage
       MmLockAddressSpace(AddressSpace);
       MmLockSectionSegment(Segment);
       MmspCompleteAndReleasePageOp(PageOp);
-      PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset);
+      PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset.QuadPart);
    }
 
-   DPRINT("MmFreeSectionPage -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
-   Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+   DPRINT("MmFreeSectionPage -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset.u.LowPart);
+   Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
 
    /*
     * For a dirty, datafile, non-private page mark it as dirty in the
@@ -1872,7 +1870,7 @@ MmFreeImagePage
       else
       {
          MmDeleteRmap(Page, Process, Address);
-         MmUnsharePageEntryImageSectionSegment(Section, Segment, Offset, Dirty, FALSE);
+         MmUnsharePageEntryImageSectionSegment(Section, Segment, &Offset, Dirty, FALSE);
       }
    }
 }

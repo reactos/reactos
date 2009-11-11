@@ -256,16 +256,6 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define InterlockedExchangePte(PointerPte, Value) \
     InterlockedExchange((PLONG)(PointerPte), Value)
 
-typedef struct
-{
-    ULONG Entry[NR_SECTION_PAGE_ENTRIES];
-} SECTION_PAGE_TABLE, *PSECTION_PAGE_TABLE;
-
-typedef struct
-{
-    PSECTION_PAGE_TABLE PageTables[NR_SECTION_PAGE_TABLES];
-} SECTION_PAGE_DIRECTORY, *PSECTION_PAGE_DIRECTORY;
-
 typedef struct _MM_SECTION_SEGMENT
 {
     FAST_MUTEX Lock;		/* lock which protects the page directory */
@@ -276,7 +266,6 @@ typedef struct _MM_SECTION_SEGMENT
     ULONG Protection;
     ULONG Flags;
     BOOLEAN WriteCopy;
-    SECTION_PAGE_DIRECTORY PageDirectory;
 
 	struct 
 	{
@@ -284,6 +273,8 @@ typedef struct _MM_SECTION_SEGMENT
 		ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
 		ULONG Characteristics;
 	} Image;
+
+	RTL_GENERIC_TABLE PageTable;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
@@ -517,7 +508,7 @@ typedef struct
 {
    PROS_SECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
-   ULONG Offset;
+   LARGE_INTEGER Offset;
    BOOLEAN WasDirty;
    BOOLEAN Private;
 }
@@ -1054,7 +1045,30 @@ NTAPI
 MmDeleteKernelStack(PVOID Stack,
                     BOOLEAN GuiStack);
 
-/* balace.c ******************************************************************/
+/* sptab.c *******************************************************************/
+
+VOID
+NTAPI
+MiInitializeSectionPageTable(PMM_SECTION_SEGMENT Segment);
+
+NTSTATUS
+NTAPI
+MiSetPageEntrySectionSegment
+(PMM_SECTION_SEGMENT Segment,
+ PLARGE_INTEGER Offset,
+ ULONG Entry);
+
+ULONG
+NTAPI
+MiGetPageEntrySectionSegment
+(PMM_SECTION_SEGMENT Segment,
+ PLARGE_INTEGER Offset);
+
+VOID
+NTAPI
+MiFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment);
+
+/* balance.c ******************************************************************/
 
 VOID
 NTAPI
@@ -1699,21 +1713,16 @@ MiZeroFillSection(PVOID Address, PLARGE_INTEGER FileOffsetPtr, ULONG Length);
 VOID
 MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address);
 
-ULONG
-NTAPI
-MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
-                             ULONG Offset);
-
 VOID
 NTAPI
 MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
-                               ULONG Offset);
+                               PLARGE_INTEGER Offset);
 
 BOOLEAN
 NTAPI
 MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                                  PMM_SECTION_SEGMENT Segment,
-                                 ULONG Offset,
+								 PLARGE_INTEGER Offset,
                                  BOOLEAN Dirty,
                                  BOOLEAN PageOut);
 

@@ -457,6 +457,7 @@
 				<file>pagefile.c</file>
 				<file>pe.c</file>
 				<file>physical.c</file>
+				<file>sptab.c</file>
 			</directory>
 		</if>
 	</directory>
