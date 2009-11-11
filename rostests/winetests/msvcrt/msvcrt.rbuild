@@ -6,8 +6,21 @@
 	<include base="msvcrt">include/reactos/wine/msvcrt</include>
 	<define name="__ROS_LONG64__" />
 	<define name="_CRT_NONSTDC_NO_DEPRECATE" />
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="open">_open</define>
+	<define name="close">_close</define>
+	<define name="tell">_tell</define>
+	<define name="unlink">_unlink</define>
+	<define name="fdopen">_fdopen</define>
+	<define name="lseek">_lseek</define>
+	<define name="read">_read</define>
+	<define name="write">_write</define>
+	<define name="mkdir">_mkdir</define>
+	<define name="rmdir">_rmdir</define>
+	<define name="putenv">_putenv</define>
+
 	<library>kernel32</library>
-	<library>msvcrt</library>
 	<file>cpp.c</file>
 	<file>data.c</file>
 	<file>dir.c</file>

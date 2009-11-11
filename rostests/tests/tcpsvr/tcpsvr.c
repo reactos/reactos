@@ -130,7 +130,7 @@ int read_line(int newSd, char *line_to_return) {
 	return ERROR;
       } else if (n==0) {
 	printf(" connection closed by client\n");
-	close(newSd);
+	closesocket(newSd);
         WSACleanup();
 	return ERROR;
       }
