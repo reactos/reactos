@@ -12,19 +12,19 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
 #include <debug.h>
 
-BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
+BOOLEAN	Ext2OpenVolume(ULONG DeviceId);
 PEXT2_FILE_INFO	Ext2OpenFile(PCSTR FileName);
 BOOLEAN	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
 BOOLEAN	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
-BOOLEAN	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
+BOOLEAN	Ext2ReadVolumeSectors(ULONG DeviceId, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
 
 BOOLEAN	Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
 BOOLEAN	Ext2ReadSuperBlock(VOID);
@@ -45,13 +45,11 @@ BOOLEAN	Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInLis
 BOOLEAN	Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock);
 BOOLEAN	Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock);
 
-GEOMETRY		Ext2DiskGeometry;				// Ext2 file system disk geometry
+ULONG           Ext2DeviceId;                   // Device Id
 
 PEXT2_SUPER_BLOCK	Ext2SuperBlock = NULL;			// Ext2 file system super block
 PEXT2_GROUP_DESC	Ext2GroupDescriptors = NULL;	// Ext2 file system group descriptors
 
-UCHAR					Ext2DriveNumber = 0;			// Ext2 file system drive number
-ULONGLONG				Ext2VolumeStartSector = 0;		// Ext2 file system starting sector
 ULONG					Ext2BlockSizeInBytes = 0;		// Block size in bytes
 ULONG					Ext2BlockSizeInSectors = 0;		// Block size in sectors
 ULONG					Ext2FragmentSizeInBytes = 0;	// Fragment size in bytes
@@ -60,27 +58,12 @@ ULONG					Ext2GroupCount = 0;				// Number of groups in this file system
 ULONG					Ext2InodesPerBlock = 0;			// Number of inodes in one block
 ULONG					Ext2GroupDescPerBlock = 0;		// Number of group descriptors in one block
 
-BOOLEAN Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
+BOOLEAN Ext2OpenVolume(ULONG DeviceId)
 {
 
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2OpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector);
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2OpenVolume() DeviceId = 0x%x\n", DeviceId);
 
-	// Store the drive number and start sector
-	Ext2DriveNumber = DriveNumber;
-	Ext2VolumeStartSector = VolumeStartSector;
-
-	if (!MachDiskGetDriveGeometry(DriveNumber, &Ext2DiskGeometry))
-	{
-		return FALSE;
-	}
-
-	//
-	// Initialize the disk cache for this drive
-	//
-	if (!CacheInitializeDrive(DriveNumber))
-	{
-		return FALSE;
-	}
+	Ext2DeviceId = DeviceId;
 
 	// Read in the super block
 	if (!Ext2ReadSuperBlock())
@@ -255,11 +238,11 @@ BOOLEAN Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 		//
 		if (!Ext2SearchDirectoryBufferForFile(DirectoryBuffer, (ULONG)Ext2GetInodeFileSize(&InodeData), PathPart, &DirectoryEntry))
 		{
-			MmFreeMemory(DirectoryBuffer);
+			MmHeapFree(DirectoryBuffer);
 			return FALSE;
 		}
 
-		MmFreeMemory(DirectoryBuffer);
+		MmHeapFree(DirectoryBuffer);
 
 		DirectoryInode = DirectoryEntry.inode;
 	}
@@ -275,9 +258,6 @@ BOOLEAN Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 		FileSystemError("Inode is not a regular file or symbolic link.");
 		return FALSE;
 	}
-
-	// Set the drive number
-	Ext2FileInfoPointer->DriveNumber = Ext2DriveNumber;
 
 	// If it's a regular file or a regular symbolic link
 	// then get the block pointer list otherwise it must
@@ -543,23 +523,20 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
 	return TRUE;
 }
 
-BOOLEAN Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer)
+BOOLEAN Ext2ReadVolumeSectors(ULONG DeviceId, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer)
 {
-	//GEOMETRY	DiskGeometry;
-	//BOOLEAN		ReturnValue;
-	//if (!DiskGetDriveGeometry(DriveNumber, &DiskGeometry))
-	//{
-	//	return FALSE;
-	//}
-	//ReturnValue = MachDiskReadLogicalSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER);
-	//RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * DiskGeometry.BytesPerSector);
-	//return ReturnValue;
-
-	return CacheReadDiskSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, Buffer);
+	LARGE_INTEGER ByteOffset;
+	ULONG Size = SectorCount * 512, Result;
+	ByteOffset.QuadPart = SectorNumber * 512;
+	if (ArcSeek(Ext2DeviceId, &ByteOffset, SeekAbsolute) != ESUCCESS) return FALSE;
+	if (ArcRead(Ext2DeviceId, Buffer, Size, &Result) != ESUCCESS || Result != Size) return FALSE;
+	return TRUE;
 }
 
 BOOLEAN Ext2ReadSuperBlock(VOID)
 {
+	ULONG Result;
+	LARGE_INTEGER Position;
 
 	DPRINTM(DPRINT_FILESYSTEM, "Ext2ReadSuperBlock()\n");
 
@@ -583,17 +560,23 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 	//
 	if (Ext2SuperBlock == NULL)
 	{
-		FileSystemError("a - Out of memory.");
+		FileSystemError("Out of memory.");
 		return FALSE;
 	}
 
 	// Now try to read the super block
 	// If this fails then abort
-	if (!MachDiskReadLogicalSectors(Ext2DriveNumber, Ext2VolumeStartSector, 8, (PVOID)DISKREADBUFFER))
+	Position.QuadPart = 1024;
+	if (ArcSeek(Ext2DeviceId, &Position, SeekAbsolute) != ESUCCESS)
 	{
+		MmHeapFree(Ext2SuperBlock);
 		return FALSE;
 	}
-	RtlCopyMemory(Ext2SuperBlock, (PVOID)((ULONG_PTR)DISKREADBUFFER + 1024), 1024);
+	if (ArcRead(Ext2DeviceId, Ext2SuperBlock, 1024, &Result) != ESUCCESS || Result != 1024)
+	{
+		MmHeapFree(Ext2SuperBlock);
+		return FALSE;
+	}
 
 	DPRINTM(DPRINT_FILESYSTEM, "Dumping super block:\n");
 	DPRINTM(DPRINT_FILESYSTEM, "total_inodes: %d\n", Ext2SuperBlock->total_inodes);
@@ -671,7 +654,7 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 
 	// Calculate the block size
 	Ext2BlockSizeInBytes = 1024 << Ext2SuperBlock->log2_block_size;
-	Ext2BlockSizeInSectors = Ext2BlockSizeInBytes / Ext2DiskGeometry.BytesPerSector;
+	Ext2BlockSizeInSectors = Ext2BlockSizeInBytes / 512;
 	DPRINTM(DPRINT_FILESYSTEM, "Ext2BlockSizeInBytes: %d\n", Ext2BlockSizeInBytes);
 	DPRINTM(DPRINT_FILESYSTEM, "Ext2BlockSizeInSectors: %d\n", Ext2BlockSizeInSectors);
 
@@ -684,7 +667,7 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 	{
 		Ext2FragmentSizeInBytes = 1024 >> -(Ext2SuperBlock->log2_fragment_size);
 	}
-	Ext2FragmentSizeInSectors = Ext2FragmentSizeInBytes / Ext2DiskGeometry.BytesPerSector;
+	Ext2FragmentSizeInSectors = Ext2FragmentSizeInBytes / 512;
 	DPRINTM(DPRINT_FILESYSTEM, "Ext2FragmentSizeInBytes: %d\n", Ext2FragmentSizeInBytes);
 	DPRINTM(DPRINT_FILESYSTEM, "Ext2FragmentSizeInSectors: %d\n", Ext2FragmentSizeInSectors);
 
@@ -718,21 +701,23 @@ BOOLEAN Ext2ReadGroupDescriptors(VOID)
 	//
 	if (Ext2GroupDescriptors != NULL)
 	{
-		return TRUE;
+		MmHeapFree(Ext2GroupDescriptors);
+
+		Ext2GroupDescriptors = NULL;
 	}
 
 	//
 	// Now allocate the memory to hold the group descriptors
 	//
 	GroupDescBlockCount = ROUND_UP(Ext2GroupCount, Ext2GroupDescPerBlock) / Ext2GroupDescPerBlock;
-	Ext2GroupDescriptors = (PEXT2_GROUP_DESC)MmAllocateMemory(GroupDescBlockCount * Ext2BlockSizeInBytes);
+	Ext2GroupDescriptors = (PEXT2_GROUP_DESC)MmHeapAlloc(GroupDescBlockCount * Ext2BlockSizeInBytes);
 
 	//
 	// Make sure we got the memory
 	//
 	if (Ext2GroupDescriptors == NULL)
 	{
-		FileSystemError("b - Out of memory.");
+		FileSystemError("Out of memory.");
 		return FALSE;
 	}
 
@@ -771,7 +756,6 @@ BOOLEAN Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE Inode
 
 	// Fill in file info struct so we can call Ext2ReadFileBig()
 	RtlZeroMemory(&DirectoryFileInfo, sizeof(EXT2_FILE_INFO));
-	DirectoryFileInfo.DriveNumber = Ext2DriveNumber;
 	DirectoryFileInfo.FileBlockList = Ext2ReadBlockPointerList(InodePointer);
 	DirectoryFileInfo.FilePointer = 0;
 	DirectoryFileInfo.FileSize = Ext2GetInodeFileSize(InodePointer);
@@ -784,7 +768,7 @@ BOOLEAN Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE Inode
 	//
 	// Now allocate the memory to hold the group descriptors
 	//
-	*DirectoryBuffer = (PEXT2_DIR_ENTRY)MmAllocateMemory(DirectoryFileInfo.FileSize);
+	*DirectoryBuffer = (PEXT2_DIR_ENTRY)MmHeapAlloc(DirectoryFileInfo.FileSize);
 
 	//
 	// Make sure we got the memory
@@ -792,14 +776,14 @@ BOOLEAN Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE Inode
 	if (*DirectoryBuffer == NULL)
 	{
 		MmHeapFree(DirectoryFileInfo.FileBlockList);
-		FileSystemError("c - Out of memory.");
+		FileSystemError("Out of memory.");
 		return FALSE;
 	}
 
 	// Now read the root directory data
 	if (!Ext2ReadFileBig(&DirectoryFileInfo, DirectoryFileInfo.FileSize, NULL, *DirectoryBuffer))
 	{
-		MmFreeMemory(*DirectoryBuffer);
+		MmHeapFree(*DirectoryBuffer);
 		*DirectoryBuffer = NULL;
 		MmHeapFree(DirectoryFileInfo.FileBlockList);
 		return FALSE;
@@ -833,7 +817,7 @@ BOOLEAN Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 		return TRUE;
 	}
 
-	return Ext2ReadVolumeSectors(Ext2DriveNumber, (ULONGLONG)BlockNumber * Ext2BlockSizeInSectors, Ext2BlockSizeInSectors, Buffer);
+	return Ext2ReadVolumeSectors(Ext2DeviceId, (ULONGLONG)BlockNumber * Ext2BlockSizeInSectors, Ext2BlockSizeInSectors, Buffer);
 }
 
 /*
@@ -999,8 +983,6 @@ ULONG* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 	FileSize = ROUND_UP(FileSize, Ext2BlockSizeInBytes);
 	BlockCount = (FileSize / Ext2BlockSizeInBytes);
 
-	DPRINTM(DPRINT_FILESYSTEM, "%d Blocks in list\n", BlockCount);
-
 	// Allocate the memory for the block list
 	BlockList = MmHeapAlloc(BlockCount * sizeof(ULONG));
 	if (BlockList == NULL)
@@ -1097,7 +1079,6 @@ BOOLEAN Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
 
 	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
-	DPRINTM(DPRINT_CACHE, "Allocating %d bytes\n", Ext2BlockSizeInBytes);
 	BlockBuffer = (ULONG*)MmHeapAlloc(Ext2BlockSizeInBytes);
 	if (BlockBuffer == NULL)
 	{
@@ -1133,7 +1114,6 @@ BOOLEAN Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
 
 	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
-	DPRINTM(DPRINT_CACHE, "Allocating %d bytes\n", Ext2BlockSizeInBytes);
 	BlockBuffer = (ULONG*)MmHeapAlloc(Ext2BlockSizeInBytes);
 	if (BlockBuffer == NULL)
 	{
@@ -1259,6 +1239,7 @@ const DEVVTBL Ext2FuncTable =
 	Ext2Open,
 	Ext2Read,
 	Ext2Seek,
+	L"ext2",
 };
 
 const DEVVTBL* Ext2Mount(ULONG DeviceId)
@@ -1280,23 +1261,6 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
 	if (ret != ESUCCESS || Count != sizeof(SuperBlock))
 		return NULL;
 
-	//
-	// Check if SuperBlock is valid. If yes, return Ext2 function table
-	//
-	if (SuperBlock.magic == EXT2_MAGIC)
-	{
-		//
-		// Compatibility hack as long as FS is not using underlying device DeviceId
-		//
-		ULONG DriveNumber;
-		ULONGLONG StartSector;
-		ULONGLONG SectorCount;
-		int Type;
-		if (!DiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
-			return NULL;
-		Ext2OpenVolume(DriveNumber, StartSector, SectorCount);
-		return &Ext2FuncTable;
-	}
-	else
-		return NULL;
+	Ext2OpenVolume(DeviceId);
+	return &Ext2FuncTable;
 }

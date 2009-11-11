@@ -48,7 +48,7 @@ HalpInitializeClock(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Increment;
     USHORT RollOver;
-    ULONG Flags;
+    ULONG_PTR Flags;
 
     /* Check the CPU Type */
     if (Prcb->CpuType <= 4)
@@ -92,7 +92,7 @@ NTAPI
 HalCalibratePerformanceCounter(IN volatile PLONG Count,
                                IN ULONGLONG NewCount)
 {
-    ULONG Flags;
+    ULONG_PTR Flags;
 
     /* Disable interrupts */
     Flags = __readeflags();

@@ -112,15 +112,15 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage(((PTHREADINFO)pEH->Thread->Tcb.Win32Thread)->MessageQueue,
-                                           hwnd,
-                                          event,
-                                              0,
-                                    (LPARAM)&EP,
-                                           5000,
-                                           TRUE,
-                                    MSQ_ISEVENT,
-                                       &uResult);
+   Status = co_MsqSendMessage( pEH->head.pti->MessageQueue,
+                               hwnd,
+                               event,
+                               0,
+                              (LPARAM)&EP,
+                               5000,
+                               TRUE,
+                               MSQ_ISEVENT,
+                              &uResult);
 
    return NT_SUCCESS(Status) ? uResult : 0;
 }
@@ -199,7 +199,7 @@ IntNotifyWinEvent(
      // Must be inside the event window.
      if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
      {
-        if ((pEH->Thread != PsGetCurrentThread()) && (pEH->Thread != NULL))
+        if (pEH->head.pti->pEThread != PsGetCurrentThread())
         { // if all process || all thread || other thread same process
            if (!(pEH->idProcess) || !(pEH->idThread) || 
                (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess))
@@ -330,11 +330,10 @@ NtUserSetWinEventHook(
       GlobalEvents->Counts++;
 
       UserHMGetHandle(pEH) = Handle;
-//      pEH->head.pti  =?
       if (Thread)
-         pEH->Thread = Thread;
+         pEH->head.pti = Thread->Tcb.Win32Thread;
       else
-         pEH->Thread = PsGetCurrentThread();
+         pEH->head.pti = GetW32ThreadInfo();
       pEH->eventMin  = eventMin;
       pEH->eventMax  = eventMax;
       pEH->idProcess = idProcess;

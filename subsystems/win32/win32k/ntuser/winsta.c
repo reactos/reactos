@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -537,24 +537,29 @@ NtUserCreateWindowStation(
    CurInfo->LastBtnDown = 0;
    CurInfo->CurrentCursorObject = NULL;
    CurInfo->ShowingCursor = 0;
+   CurInfo->ClickLockActive = FALSE;
+   CurInfo->ClickLockTime = 0;
 
-   /* FIXME: Obtain the following information from the registry */
+/*
+   // not used anymore
+   CurInfo->WheelScroLines = gspv.iWheelScrollLines;
+#if (_WIN32_WINNT >= 0x0600)
+   CurInfo->WheelScroChars = gspv.iWheelScrollChars;
+#endif
+   CurInfo->SwapButtons = gspv.bMouseBtnSwap;
+   CurInfo->DblClickSpeed = gspv.iDblClickTime;
+   CurInfo->DblClickWidth = gspv.iDblClickWidth;
+   CurInfo->DblClickHeight = gspv.iDblClickHeight;
 
-//   CurInfo->WheelScroLines = 3;
-//   CurInfo->WheelScroChars = 3;
-   CurInfo->SwapButtons = FALSE;
-   CurInfo->DblClickSpeed = 500;
-   CurInfo->DblClickWidth = 4;
-   CurInfo->DblClickHeight = 4;
+   CurInfo->MouseSpeed = gspv.iMouseSpeed;
+   CurInfo->CursorAccelerationInfo.FirstThreshold  = gspv.caiMouse.FirstThreshold;
+   CurInfo->CursorAccelerationInfo.SecondThreshold = gspv.caiMouse.SecondThreshold;
+   CurInfo->CursorAccelerationInfo.Acceleration = gspv.caiMouse.Acceleration;
 
-//   CurInfo->MouseSpeed = 10;
-//   CurInfo->CursorAccelerationInfo.FirstThreshold  = 6;
-//   CurInfo->CursorAccelerationInfo.SecondThreshold = 10;
-//   CurInfo->CursorAccelerationInfo.Acceleration    = 1;
-
-//   CurInfo->MouseHoverTime = 80;
-//   CurInfo->MouseHoverWidth = 4;
-//   CurInfo->MouseHoverHeight = 4;
+   CurInfo->MouseHoverTime = gspv.iMouseHoverTime;
+   CurInfo->MouseHoverWidth = gspv.iMouseHoverWidth;
+   CurInfo->MouseHoverHeight = gspv.iMouseHoverHeight;
+*/
 
 //   WindowStationObject->ScreenSaverActive = FALSE;
 //   WindowStationObject->ScreenSaverTimeOut = 10;

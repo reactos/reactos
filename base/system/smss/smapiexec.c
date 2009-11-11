@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 #include "smss.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 static const WCHAR szSystemDirectory[] = L"\\System32";

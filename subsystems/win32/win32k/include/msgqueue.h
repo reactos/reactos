@@ -197,6 +197,8 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg);
 BOOL FASTCALL
+MsqIsClkLck(LPMSG Msg, BOOL Remove);
+BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove);
 HWND FASTCALL
 MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);

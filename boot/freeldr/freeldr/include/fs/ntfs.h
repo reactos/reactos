@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifndef __NTFS_H
@@ -214,11 +214,14 @@ typedef struct
 	NTFS_ATTR_RECORD	Record;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 
+typedef struct _NTFS_VOLUME_INFO *PNTFS_VOLUME_INFO;
+
 #include <pshpack1.h>
 typedef struct
 {
 	PNTFS_ATTR_CONTEXT	DataContext;
 	ULONGLONG			Offset;
+	PNTFS_VOLUME_INFO	Volume;
 } NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 #include <poppack.h>
 

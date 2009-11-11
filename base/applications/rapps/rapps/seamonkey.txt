@@ -2,26 +2,26 @@
 
 [Section]
 Name = Mozilla SeaMonkey
-Version = 1.1.17
+Version = 1.1.18
 Licence = MPL/GPL/LGPL
 Description = Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.
 Size = 12.4MB
 Category = 5
 URLSite = http://www.seamonkey-project.org/
-URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.17/seamonkey-1.1.17.en-US.win32.installer.exe
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.18/seamonkey-1.1.18.en-US.win32.installer.exe
 CDPath = none
 
 [Section.0419]
 Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.
 Size = 9.0MB
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.17/contrib-localized/seamonkey-1.1.17.ru-RU.win32.installer.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.18/contrib-localized/seamonkey-1.1.18.ru-RU.win32.installer.exe
 
 [Section.0407]
 Description = Mozilla Suite ist lebendig. Dies ist das einzige Browser-, Mail-, Chat- and Composerwerkzeug-Bundle welches Sie benötigen.
 Size = 9.0MB
-URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.17/contrib-localized/seamonkey-1.1.17.de-AT.win32.installer.exe
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.18/contrib-localized/seamonkey-1.1.18.de-AT.win32.installer.exe
 
 [Section.0415]
 Description = Pakiet Mozilla żyje. W zestawie: przeglądarka, klient poczty, IRC oraz Edytor HTML - wszystko, czego potrzebujesz.
 Size = 12.4MB
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.17/contrib-localized/seamonkey-1.1.17.pl-PL.win32.installer.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.18/contrib-localized/seamonkey-1.1.18.pl-PL.win32.installer.exe

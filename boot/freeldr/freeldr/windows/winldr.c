@@ -14,15 +14,21 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
 
 #include <ndk/ldrtypes.h>
 #include <debug.h>
+
+// TODO: Move to .h
+void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
+                      PVOID *GdtIdt,
+                      ULONG *PcrBasePage,
+                      ULONG *TssBasePage);
 
 //FIXME: Do a better way to retrieve Arc disk information
 extern ULONG reactos_disk_count;
@@ -90,8 +96,6 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	CHAR	MiscFiles[256];
 	ULONG i, PathSeparator;
 	PLOADER_PARAMETER_EXTENSION Extension;
-
-	LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
 
 	/* Construct SystemRoot and ArcBoot from SystemPath */
 	PathSeparator = strstr(BootPath, "\\") - BootPath;
@@ -203,54 +207,6 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	if (LoaderBlock->SetupLdrBlock)
 		LoaderBlock->SetupLdrBlock = PaToVa(LoaderBlock->SetupLdrBlock);
-}
-
-// Last step before going virtual
-void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                      PVOID *GdtIdt,
-                      ULONG *PcrBasePage,
-                      ULONG *TssBasePage)
-{
-	ULONG TssSize;
-	ULONG TssPages;
-	ULONG_PTR Pcr = 0;
-	ULONG_PTR Tss = 0;
-	ULONG BlockSize, NumPages;
-
-	LoaderBlock->u.I386.CommonDataArea = NULL; //CommonDataArea;
-	LoaderBlock->u.I386.MachineType = 0; // ntldr sets this to 0
-
-	/* Allocate 2 pages for PCR */
-	Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
-	*PcrBasePage = Pcr >> MM_PAGE_SHIFT;
-
-	if (Pcr == 0)
-	{
-		UiMessageBox("Can't allocate PCR\n");
-		return;
-	}
-
-	/* Allocate TSS */
-	TssSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);
-	TssPages = TssSize / MM_PAGE_SIZE;
-
-	Tss = (ULONG_PTR)MmAllocateMemoryWithType(TssSize, LoaderMemoryData);
-
-	*TssBasePage = Tss >> MM_PAGE_SHIFT;
-
-	/* Allocate space for new GDT + IDT */
-	BlockSize = NUM_GDT*sizeof(KGDTENTRY) + NUM_IDT*sizeof(KIDTENTRY);//FIXME: Use GDT/IDT limits here?
-	NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
-	*GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
-
-	if (*GdtIdt == NULL)
-	{
-		UiMessageBox("Can't allocate pages for GDT+IDT!\n");
-		return;
-	}
-
-	/* Zero newly prepared GDT+IDT */
-	RtlZeroMemory(*GdtIdt, NumPages << MM_PAGE_SHIFT);
 }
 
 BOOLEAN
@@ -427,13 +383,37 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 }
 
 
-VOID
-LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
+USHORT
+WinLdrDetectVersion()
 {
-	CHAR  MsgBuffer[256];
-	CHAR  FullPath[MAX_PATH], SystemRoot[MAX_PATH], BootPath[MAX_PATH];
+	LONG rc;
+	FRLDRHKEY hKey;
+
+	rc = RegOpenKey(
+		NULL,
+		L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server",
+		&hKey);
+	if (rc != ERROR_SUCCESS)
+	{
+		// Key doesn't exist; assume NT 4.0
+		return _WIN32_WINNT_NT4;
+	}
+
+	// We may here want to read the value of ProductVersion
+	return _WIN32_WINNT_WS03;
+}
+
+
+VOID
+LoadAndBootWindows(PCSTR OperatingSystemName,
+                   PSTR SettingsValue,
+                   USHORT OperatingSystemVersion)
+{
+	BOOLEAN HasSection;
+	char  FullPath[MAX_PATH], SystemRoot[MAX_PATH], BootPath[MAX_PATH];
 	CHAR  FileName[MAX_PATH];
 	CHAR  BootOptions[256];
+	PCHAR File;
 	PCHAR PathSeparator;
 	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
@@ -446,27 +426,18 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	ULONG PcrBasePage=0;
 	ULONG TssBasePage=0;
 
-	//sprintf(MsgBuffer,"Booting Microsoft(R) Windows(R) OS version '%04x' is not implemented yet", OperatingSystemVersion);
-	//UiMessageBox(MsgBuffer);
-
 	// Open the operating system section
 	// specified in the .ini file
-	if (!IniOpenSection(OperatingSystemName, &SectionId))
-	{
-		sprintf(MsgBuffer,"Operating System section '%s' not found in freeldr.ini", OperatingSystemName);
-		UiMessageBox(MsgBuffer);
-		return;
-	}
+	HasSection = IniOpenSection(OperatingSystemName, &SectionId);
 
 	UiDrawBackdrop();
 	UiDrawStatusText("Detecting Hardware...");
-	UiDrawProgressBarCenter(1, 100, "Loading Windows...");
+	UiDrawProgressBarCenter(1, 100, "Loading NT...");
 
-	/* Make sure the system path is set in the .ini file */
-	if (!IniReadSettingByName(SectionId, "SystemPath", FullPath, sizeof(FullPath)))
+	/* Read the system path is set in the .ini file */
+	if (!HasSection || !IniReadSettingByName(SectionId, "SystemPath", FullPath, sizeof(FullPath)))
 	{
-		UiMessageBox("System path not specified for selected operating system.");
-		return;
+		strcpy(FullPath, OperatingSystemName);
 	}
 
 	/* Special case for LiveCD */
@@ -483,10 +454,38 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	strcat(SystemRoot, "\\");
 
 	/* Read booting options */
-	if (!IniReadSettingByName(SectionId, "Options", BootOptions, sizeof(BootOptions)))
+	if (!HasSection || !IniReadSettingByName(SectionId, "Options", BootOptions, sizeof(BootOptions)))
 	{
-		/* Nothing read, make the string empty */
-		strcpy(BootOptions, "");
+		/* Get options after the title */
+		const CHAR*p = SettingsValue;
+		while (*p == ' ' || *p == '"')
+			p++;
+		while (*p != '\0' && *p != '"')
+			p++;
+		strcpy(BootOptions, p);
+		DPRINTM(DPRINT_WINDOWS,"BootOptions: '%s'\n", BootOptions);
+	}
+
+	//
+	// Check if a ramdisk file was given
+	//
+	File = strstr(BootOptions, "/RDPATH=");
+	if (File)
+	{
+		//
+		// Copy the file name and everything else after it
+		//
+		strcpy(FileName, File + 8);
+
+		//
+		// Null-terminate
+		//
+		*strstr(FileName, " ") = ANSI_NULL;
+
+		//
+		// Load the ramdisk
+		//
+		RamDiskLoadVirtualFile(FileName);
 	}
 
 	/* Let user know we started loading */
@@ -506,6 +505,13 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	/* Detect hardware */
 	UseRealHeap = TRUE;
 	LoaderBlock->ConfigurationRoot = MachHwDetect();
+
+	/* Load Hive */
+	Status = WinLdrInitSystemHive(LoaderBlock, BootPath);
+	DPRINTM(DPRINT_WINDOWS, "SYSTEM hive loaded with status %d\n", Status);
+
+	if (OperatingSystemVersion == 0)
+		OperatingSystemVersion = WinLdrDetectVersion();
 
 	/* Load kernel */
 	strcpy(FileName, BootPath);
@@ -547,9 +553,9 @@ LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 	if (KdComDTE)
 		WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KdComDTE);
 
-	/* Load Hive, and then NLS data, OEM font, and prepare boot drivers list */
-	Status = WinLdrLoadAndScanSystemHive(LoaderBlock, BootPath);
-	DPRINTM(DPRINT_WINDOWS, "SYSTEM hive loaded and scanned with status %d\n", Status);
+	/* Load NLS data, OEM font, and prepare boot drivers list */
+	Status = WinLdrScanSystemHive(LoaderBlock, BootPath);
+	DPRINTM(DPRINT_WINDOWS, "SYSTEM hive scanned with status %d\n", Status);
 
 	/* Load boot drivers */
 	Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);

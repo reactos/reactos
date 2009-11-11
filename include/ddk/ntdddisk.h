@@ -213,8 +213,8 @@ extern "C" {
 	((PartitionType) == PARTITION_IFS) || \
 	((PartitionType) == PARTITION_FAT32) || \
 	((PartitionType) == PARTITION_FAT32_XINT13) || \
-	((PartitionType) == PARTITION_XINT13) || \
-	((PartitionType) == PARTITION_LINUX))
+	((PartitionType) == PARTITION_LINUX) || \
+	((PartitionType) == PARTITION_XINT13))
 
 #define WMI_DISK_GEOMETRY_GUID \
   {0x25007f51, 0x57c2, 0x11d1, {0xa5, 0x28, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0x10}}

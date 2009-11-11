@@ -18,6 +18,17 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+HaliHaltSystem(VOID)
+{
+    /* Disable interrupts and halt the CPU */
+    _disable();
+    __halt();
+}
+
 /* FUNCTIONS *****************************************************************/
 
 VOID NTAPI

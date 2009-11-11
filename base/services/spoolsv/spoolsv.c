@@ -19,6 +19,7 @@
 #define SERVICE_NAME TEXT("Spooler")
 
 SERVICE_STATUS_HANDLE ServiceStatusHandle;
+SERVICE_STATUS ServiceStatus;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -55,8 +56,16 @@ ServiceMain(DWORD argc, LPTSTR *argv)
                                                         ServiceControlHandler,
                                                         NULL);
 
-
-
+    /* Service is now running */
+    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwWin32ExitCode = NO_ERROR;
+    ServiceStatus.dwWaitHint = 0;
+    ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+    ServiceStatus.dwCheckPoint = 0;
+    ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+    SetServiceStatus(ServiceStatusHandle, &ServiceStatus);
+    
     DPRINT("ServiceMain() done\n");
 }
 

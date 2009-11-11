@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        mouse.h
+ * FILE:        base/applications/paint/mouse.h
  * PURPOSE:     Things which should not be in the mouse event handler itself
  * PROGRAMMERS: Benedikt Freisen
  */

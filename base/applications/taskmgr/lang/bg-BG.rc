@@ -16,7 +16,7 @@ IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Нова задача (Изпълнение...)",          ID_FILE_NEW
+        MENUITEM "&Нова задача (изпълнение...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "Из&ход от задачния управител",          ID_FILE_EXIT
     END
@@ -33,7 +33,7 @@ BEGIN
     END
     POPUP "Из&глед"
     BEGIN
-        MENUITEM "О&пресни веднага",                ID_VIEW_REFRESH
+        MENUITEM "О&пресняване веднага",                ID_VIEW_REFRESH
         POPUP "&Скорост на обновяване"
         BEGIN
             MENUITEM "&Висока",                       ID_VIEW_UPDATESPEED_HIGH
@@ -200,7 +200,7 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Натовареност ЦПУ",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Заетост на ЦПУ",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Заета памет",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Общо",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Заделена памет (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
@@ -226,7 +226,7 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Общо",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
     LTEXT           "Налична",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,60,8
-    LTEXT           "Системен склад",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,60,8
+    LTEXT           "Системен склад",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,65,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
@@ -646,7 +646,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY  "Невъзможно намаляване на първенство"
     IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ: Промяната на първенството на това действие може да\nпричини нежелани последствия, включително неустойчивост на системата. Сигурен ли сте, \nче искате да смените старшинството?"
     IDS_MSG_TRAYICONCPUUSAGE      "Заетост на ЦПУ: %d%%"
-    IDS_STATUS_MEMUSAGE           "Заета на памет: %dK / %dK"
+    IDS_STATUS_MEMUSAGE           "Заета памет: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Заетост на ЦПУ: %3d%%"
     IDS_STATUS_PROCESSES          "Действия: %d"
     IDS_Not_Responding            "Не отговаря"

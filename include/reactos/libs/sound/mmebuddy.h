@@ -197,6 +197,11 @@ typedef MMRESULT (*WAVE_COMMIT_FUNC)(
     IN  PSOUND_OVERLAPPED Overlap,
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
+typedef MMRESULT (*MMMIXERQUERY_FUNC) (
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN UINT uMsg,
+    IN LPVOID Parameter,
+    IN DWORD Flags);
 
 
 typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
@@ -231,6 +236,20 @@ typedef MMRESULT(*MMGETPOS_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  MMTIME* Time);
 
+
+typedef MMRESULT(*MMSETSTATE_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  BOOL bStart);
+
+
+typedef MMRESULT(*MMQUERYDEVICEINTERFACESTRING_FUNC)(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize);
+
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -248,9 +267,13 @@ typedef struct _MMFUNCTION_TABLE
     MMWAVEQUERYFORMATSUPPORT_FUNC   QueryWaveFormatSupport;
     MMWAVESETFORMAT_FUNC            SetWaveFormat;
 
+    MMMIXERQUERY_FUNC               QueryMixerInfo;
+
     WAVE_COMMIT_FUNC                CommitWaveBuffer;
 
     MMGETPOS_FUNC                   GetPos;
+    MMSETSTATE_FUNC                 SetState;
+    MMQUERYDEVICEINTERFACESTRING_FUNC     GetDeviceInterfaceString;
 
     // Redundant
     //MMWAVEHEADER_FUNC               PrepareWaveHeader;
@@ -399,6 +422,20 @@ MmeGetPosition(
     IN  DWORD PrivateHandle,
     IN  MMTIME* Time,
     IN  DWORD Size);
+
+MMRESULT
+MmeGetDeviceInterfaceString(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize);
+
+
+MMRESULT
+MmeSetState(
+    IN  DWORD PrivateHandle,
+    IN  BOOL bStart);
 
 
 #define MmePrepareWaveHeader(private_handle, header) \

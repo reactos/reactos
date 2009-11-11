@@ -311,6 +311,45 @@ interface IBindStatusCallback : IUnknown
 }
 
 /*****************************************************************************
+ * IBindStatusCallbackEx interface
+ */
+[
+    object,
+    uuid(aaa74ef9-8ee7-4659-88d9-f8c504da73cc),
+    pointer_default(unique)
+]
+interface IBindStatusCallbackEx : IBindStatusCallback
+{
+    typedef [unique] IBindStatusCallbackEx *LPBINDSTATUSCALLBACKEX;
+
+    typedef enum {
+        BINDF2_DISABLEBASICOVERHTTP               = 0x00000001,
+        BINDF2_DISABLEAUTOCOOKIEHANDLING          = 0x00000002,
+        BINDF2_READ_DATA_GREATER_THAN_4GB         = 0x00000004,
+        BINDF2_DISABLE_HTTP_REDIRECT_XSECURITYID  = 0x00000008,
+        BINDF2_RESERVED_3                         = 0x20000000,
+        BINDF2_RESERVED_2                         = 0x40000000,
+        BINDF2_RESERVED_1                         = 0x80000000,
+    } BINDF2;
+
+    [local]
+    HRESULT GetBindInfoEx(
+            [out] DWORD *grfBINDF,
+            [in, out, unique] BINDINFO *pbindinfo,
+            [out] DWORD *grfBINDF2,
+            [out] DWORD *pdwReserved);
+
+    [call_as(GetBindInfoEx)]
+    HRESULT RemoteGetBindInfoEx(
+            [out] DWORD *grfBINDF,
+            [in, out, unique] RemBINDINFO *pbindinfo,
+            [in, out, unique] RemSTGMEDIUM *pstgmed,
+            [out] DWORD *grfBINDF2,
+            [out] DWORD *pdwReserved);
+}
+
+
+/*****************************************************************************
  * IAuthenticate interface
  */
 [
@@ -1026,6 +1065,42 @@ cpp_quote("#define MAX_SIZE_SECURITY_ID 512")
         [in] DWORD dwFlags);
 }
 
+/*****************************************************************************
+ * IInternetHostSecurityManager interface
+ */
+cpp_quote("#define SID_SInternetHostSecurityManager IID_IInternetHostSecurityManager")
+
+[
+    local,
+    object,
+    uuid(3af280b6-cb3f-11d0-891e-00c04fb6bfc4),
+    pointer_default(unique)
+]
+interface IInternetHostSecurityManager : IUnknown
+{
+    HRESULT GetSecurityId(
+            [out, size_is(*pcbSecurityId)] BYTE *pbSecurityId,
+            [in, out] DWORD *pcbSecurityId,
+            [in] DWORD_PTR dwReserved);
+
+    HRESULT ProcessUrlAction(
+            [in] DWORD dwAction,
+            [out, size_is(cbPolicy)] BYTE *pPolicy,
+            [in] DWORD cbPolicy,
+            [in] BYTE *pContext,
+            [in] DWORD cbContext,
+            [in] DWORD dwFlags,
+            [in] DWORD dwReserved);
+
+    HRESULT QueryCustomPolicy(
+            [in] REFGUID guidKey,
+            [out, size_is(,*pcbPolicy)] BYTE **ppPolicy,
+            [out] DWORD *pcbPolicy,
+            [in] BYTE *pContext,
+            [in] DWORD cbContext,
+            [in] DWORD dwReserved);
+}
+
 cpp_quote("#define URLACTION_MIN                        0x00001000")
 cpp_quote("#define URLACTION_DOWNLOAD_MIN               0x00001000")
 cpp_quote("#define URLACTION_DOWNLOAD_SIGNED_ACTIVEX    0x00001001")
@@ -1171,20 +1246,26 @@ interface IInternetZoneManager : IUnknown
         URLTEMPLATE_CUSTOM         = 0x00000,
         URLTEMPLATE_PREDEFINED_MIN = 0x10000,
         URLTEMPLATE_LOW            = 0x10000,
+        URLTEMPLATE_MEDLOW         = 0x10500,
         URLTEMPLATE_MEDIUM         = 0x11000,
+        URLTEMPLATE_MEDHIGH        = 0x11500,
         URLTEMPLATE_HIGH           = 0x12000,
         URLTEMPLATE_PREDEFINED_MAX = 0x20000,
     } URLTEMPLATE ;
 
     typedef enum {
-        ZAFLAGS_CUSTOM_EDIT            = 0x00000001,
-        ZAFLAGS_ADD_SITES              = 0x00000002,
-        ZAFLAGS_REQUIRE_VERIFICATION   = 0x00000004,
-        ZAFLAGS_INCLUDE_PROXY_OVERRIDE = 0x00000008,
-        ZAFLAGS_INCLUDE_INTRANET_SITES = 0x00000010,
-        ZAFLAGS_NO_UI                  = 0x00000020,
-        ZAFLAGS_SUPPORTS_VERIFICATION  = 0x00000040,
-        ZAFLAGS_UNC_AS_INTRANET        = 0x00000080,
+        ZAFLAGS_CUSTOM_EDIT              = 0x00000001,
+        ZAFLAGS_ADD_SITES                = 0x00000002,
+        ZAFLAGS_REQUIRE_VERIFICATION     = 0x00000004,
+        ZAFLAGS_INCLUDE_PROXY_OVERRIDE   = 0x00000008,
+        ZAFLAGS_INCLUDE_INTRANET_SITES   = 0x00000010,
+        ZAFLAGS_NO_UI                    = 0x00000020,
+        ZAFLAGS_SUPPORTS_VERIFICATION    = 0x00000040,
+        ZAFLAGS_UNC_AS_INTRANET          = 0x00000080,
+        ZAFLAGS_DETECT_INTRANET          = 0x00000100,
+        ZAFLAGS_USE_LOCKED_ZONES         = 0x00010000,
+        ZAFLAGS_VERIFY_TEMPLATE_SETTINGS = 0x00020000,
+        ZAFLAGS_NO_CACHE                 = 0x00040000,
     } ZAFLAGS ;
 
     enum {
@@ -1276,6 +1357,72 @@ interface IInternetZoneManager : IUnknown
         [in] DWORD dwZone,
         [in] DWORD dwReserved);
 }
+
+/*****************************************************************************
+ * IInternetZoneManagerEx interface
+ */
+[
+    local,
+    object,
+    uuid(A4C23339-8E06-431E-9BF4-7E711C085648),
+    pointer_default(unique)
+]
+interface IInternetZoneManagerEx : IInternetZoneManager
+{
+    HRESULT GetZoneActionPolicyEx(
+        [in]  DWORD dwZone,
+        [in]  DWORD dwAction,
+        [out] BYTE* pPolicy,
+        [in]  DWORD cbPolicy,
+        [in]  URLZONEREG urlZoneReg,
+        [in]  DWORD dwFlags);
+
+    HRESULT SetZoneActionPolicyEx(
+        [in] DWORD dwZone,
+        [in] DWORD dwAction,
+        [in] BYTE* pPolicy,
+        [in] DWORD cbPolicy,
+        [in] URLZONEREG urlZoneReg,
+        [in] DWORD dwFlags);
+
+}
+
+/*****************************************************************************
+ * IInternetZoneManagerEx2 interface
+ */
+
+cpp_quote("#define SECURITY_IE_STATE_GREEN 0")
+cpp_quote("#define SECURITY_IE_STATE_RED   1")
+
+[
+    local,
+    object,
+    uuid(EDC17559-DD5D-4846-8EEF-8BECBA5A4ABF),
+    pointer_default(unique)
+]
+interface IInternetZoneManagerEx2 : IInternetZoneManagerEx
+{
+    HRESULT GetZoneAttributesEx(
+        [in]              DWORD dwZone,
+        [in, out, unique] ZONEATTRIBUTES* pZoneAttributes,
+        [in]              DWORD dwFlags);
+
+    HRESULT GetZoneSecurityState(
+        [in]      DWORD dwZoneIndex,
+        [in]      BOOL fRespectPolicy,
+        [in, out] LPDWORD pdwState,
+        [in, out] BOOL *pfPolicyEncountered);
+
+    HRESULT GetIESecurityState(
+        [in]      BOOL fRespectPolicy,
+        [in, out] LPDWORD pdwState,
+        [in, out] BOOL *pfPolicyEncountered,
+        [in]      BOOL fNoCache);
+
+    HRESULT FixInsecureSettings(void);
+
+}
+
 
 typedef struct _tagSOFTDISTINFO
 {
@@ -1531,6 +1678,17 @@ interface IInternetProtocolEx : IInternetProtocol
         [in] DWORD grfPI,
         [in] HANDLE *dwReserved);
 }
+
+cpp_quote("#define CONFIRMSAFETYACTION_LOADOBJECT  0x00000001")
+
+struct CONFIRMSAFETY
+{
+    CLSID clsid;
+    IUnknown *pUnk;
+    DWORD dwFlags;
+};
+
+cpp_quote("EXTERN_C const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY;")
 
 cpp_quote("DEFINE_GUID(CLSID_InternetSecurityManager, 0x7b8a2d94, 0x0ac9, 0x11d1, 0x89, 0x6c, 0x00, 0xc0, 0x4f, 0xB6, 0xbf, 0xc4);")
 cpp_quote("DEFINE_GUID(CLSID_InternetZoneManager, 0x7B8A2D95, 0x0AC9, 0x11D1, 0x89, 0x6C, 0x00, 0xC0, 0x4F, 0xB6, 0xBF, 0xC4);")

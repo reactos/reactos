@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -1056,7 +1056,7 @@ TaskSwitchWnd_ActivateTask(IN OUT PTASK_SWITCH_WND This,
         TaskItem = TaskSwitchWnd_FindOtherTaskItem(This,
                                                    hWnd);
     }
-    
+
     if (TaskItem == NULL)
     {
         DbgPrint("Activate window 0x%p, could not find task\n", hWnd);
@@ -1690,7 +1690,7 @@ TaskSwitchWnd_HandleButtonClick(IN OUT PTASK_SWITCH_WND This,
 {
     PTASK_ITEM TaskItem;
     PTASK_GROUP TaskGroup;
-    
+
     if (This->IsGroupingEnabled)
     {
         TaskGroup = FindTaskGroupByIndex(This,
@@ -1702,7 +1702,7 @@ TaskSwitchWnd_HandleButtonClick(IN OUT PTASK_SWITCH_WND This,
             return TRUE;
         }
     }
-    
+
     TaskItem = FindTaskItemByIndex(This,
                                    (INT)wIndex);
     if (TaskItem != NULL)
@@ -1711,7 +1711,7 @@ TaskSwitchWnd_HandleButtonClick(IN OUT PTASK_SWITCH_WND This,
                                           TaskItem);
         return TRUE;
     }
-    
+
     return FALSE;
 }
 

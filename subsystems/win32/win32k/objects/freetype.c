@@ -237,7 +237,6 @@ IntLoadSystemFonts(VOID)
 
         while (1)
         {
-			DPRINT("Query Directory %wZ", &Directory);
             Status = ZwQueryDirectoryFile(
                          hDirectory,
                          NULL,
@@ -253,7 +252,6 @@ IntLoadSystemFonts(VOID)
 
             if (!NT_SUCCESS(Status) || Status == STATUS_NO_MORE_FILES)
             {
-				DPRINT("Status %x\n", Status);
                 break;
             }
 
@@ -265,13 +263,9 @@ IntLoadSystemFonts(VOID)
                     TempString.MaximumLength = DirInfo->FileNameLength;
                 RtlCopyUnicodeString(&FileName, &Directory);
                 RtlAppendUnicodeStringToString(&FileName, &TempString);
-				DPRINT("Add font %wZ\n", &FileName);
                 IntGdiAddFontResource(&FileName, 0);
                 if (DirInfo->NextEntryOffset == 0)
-				{
-					DPRINT("No 'NextEntryOffset'\n");
                     break;
-				}
                 DirInfo = (PFILE_DIRECTORY_INFORMATION)((ULONG_PTR)DirInfo + DirInfo->NextEntryOffset);
             }
 

@@ -29,28 +29,28 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * the version string like "1.2.3"
  */
-#define LIBXML_DOTTED_VERSION "2.7.3"
+#define LIBXML_DOTTED_VERSION "2.7.6"
 
 /**
  * LIBXML_VERSION:
  *
  * the version number: 1.2.3 value is 10203
  */
-#define LIBXML_VERSION 20703
+#define LIBXML_VERSION 20706
 
 /**
  * LIBXML_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "10203"
  */
-#define LIBXML_VERSION_STRING "20703"
+#define LIBXML_VERSION_STRING "20706"
 
 /**
  * LIBXML_VERSION_EXTRA:
  *
  * extra version information, used to show a CVS compilation
  */
-#define LIBXML_VERSION_EXTRA "-CVS2831"
+#define LIBXML_VERSION_EXTRA "-GITv2.7.6"
 
 /**
  * LIBXML_TEST_VERSION:
@@ -58,7 +58,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  * Macro to check that the libxml version in use is compatible with
  * the version the software has been compiled against
  */
-#define LIBXML_TEST_VERSION xmlCheckVersion(20703);
+#define LIBXML_TEST_VERSION xmlCheckVersion(20706);
 
 #ifndef VMS
 #if 0
@@ -398,35 +398,35 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #endif
 
 /**
- * ATTRIBUTE_ALLOC_SIZE:
+ * LIBXML_ATTR_ALLOC_SIZE:
  *
  * Macro used to indicate to GCC this is an allocator function
  */
 
-#ifndef ATTRIBUTE_ALLOC_SIZE
+#ifndef LIBXML_ATTR_ALLOC_SIZE
 # if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
-#  define ATTRIBUTE_ALLOC_SIZE(x) __attribute__((alloc_size(x)))
+#  define LIBXML_ATTR_ALLOC_SIZE(x) __attribute__((alloc_size(x)))
 # else
-#  define ATTRIBUTE_ALLOC_SIZE(x)
+#  define LIBXML_ATTR_ALLOC_SIZE(x)
 # endif
 #else
-# define ATTRIBUTE_ALLOC_SIZE(x)
+# define LIBXML_ATTR_ALLOC_SIZE(x)
 #endif
 
 /**
- * ATTRIBUTE_PRINTF:
+ * LIBXML_ATTR_FORMAT:
  *
  * Macro used to indicate to GCC the parameter are printf like
  */
 
-#ifndef ATTRIBUTE_PRINTF
+#ifndef LIBXML_ATTR_FORMAT
 # if ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)))
-#  define ATTRIBUTE_PRINTF(fmt,args) __attribute__((__format__(__printf__,fmt,args)))
+#  define LIBXML_ATTR_FORMAT(fmt,args) __attribute__((__format__(__printf__,fmt,args)))
 # else
-#  define ATTRIBUTE_PRINTF(fmt,args)
+#  define LIBXML_ATTR_FORMAT(fmt,args)
 # endif
 #else
-# define ATTRIBUTE_PRINTF(fmt,args)
+# define LIBXML_ATTR_FORMAT(fmt,args)
 #endif
 
 #else /* ! __GNUC__ */
@@ -437,17 +437,17 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  */
 #define ATTRIBUTE_UNUSED
 /**
- * ATTRIBUTE_ALLOC_SIZE:
+ * LIBXML_ATTR_ALLOC_SIZE:
  *
  * Macro used to indicate to GCC this is an allocator function
  */
-#define ATTRIBUTE_ALLOC_SIZE(x)
+#define LIBXML_ATTR_ALLOC_SIZE(x)
 /**
- * ATTRIBUTE_PRINTF:
+ * LIBXML_ATTR_FORMAT:
  *
  * Macro used to indicate to GCC the parameter are printf like
  */
-#define ATTRIBUTE_PRINTF(fmt,args)
+#define LIBXML_ATTR_FORMAT(fmt,args)
 #endif /* __GNUC__ */
 
 #ifdef __cplusplus

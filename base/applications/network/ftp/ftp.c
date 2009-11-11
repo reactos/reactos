@@ -1136,13 +1136,6 @@ null();//		(void) signal(SIGINT,oldintr);
 null();//	(void) signal(SIGINT,oldintr);
 }
 
-/*
- * Need to start a listen on the data channel
- * before we send the command, otherwise the
- * server's connect may fail.
- */
-int sendport = -1;
-
 int
 initconn()
 {

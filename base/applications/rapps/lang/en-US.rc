@@ -14,6 +14,8 @@ BEGIN
 		MENUITEM "&Uninstall",ID_UNINSTALL
 		MENUITEM "&Modify",   ID_MODIFY
 		MENUITEM SEPARATOR
+		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM SEPARATOR
 		MENUITEM "&Refresh",  ID_REFRESH
 	END
 	POPUP "Help"
@@ -39,6 +41,8 @@ BEGIN
 		MENUITEM "&Install",   ID_INSTALL
 		MENUITEM "&Uninstall", ID_UNINSTALL
 		MENUITEM "&Modify",    ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Remove from Registry", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Refresh",   ID_REFRESH
 	END
@@ -174,7 +178,7 @@ BEGIN
 	IDS_MODIFY "Modify"
 	IDS_APPS_COUNT "Applications count: %d"
 	IDS_WELCOME_TITLE "Welcome to ReactOS Applications Manager!\n\n"
-	IDS_WELCOME_TEXT "Choose a category on the left, then choose a application for install or uninstall.\nReactOS Web Site: "
+	IDS_WELCOME_TEXT "Choose a category on the left, then choose an application to install or uninstall.\nReactOS Web Site: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installed"
 	IDS_AVAILABLEFORINST "Available for installation"
@@ -183,4 +187,7 @@ BEGIN
 	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will be used for downloading of programs:"
 	IDS_CHOOSE_FOLDER_ERROR "You have specified a nonexistent folder!"
 	IDS_USER_NOT_ADMIN "You should be administrator for start ""ReactOS Applications Manager""!"
+	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
+	IDS_INFORMATION "Information"
+	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
 END

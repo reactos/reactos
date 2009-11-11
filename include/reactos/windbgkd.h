@@ -142,7 +142,7 @@
 // Control Report Flags
 //
 #define REPORT_INCLUDES_SEGS                0x0001
-#define REPORT_INCLUDES_CS                  0x0002
+#define REPORT_STANDARD_CS                  0x0002
 
 //
 // Protocol Versions
@@ -178,7 +178,7 @@
 // Fill Memory Flags
 //
 #define DBGKD_FILL_MEMORY_VIRTUAL           0x01
-#define DBGKD_FILL_MEMORY_PHYSICAL          0x002
+#define DBGKD_FILL_MEMORY_PHYSICAL          0x02
 
 //
 // Physical Memory Caching Flags
@@ -227,6 +227,11 @@ typedef struct _X86_DBGKD_CONTROL_SET
     ULONG CurrentSymbolEnd;
 } X86_DBGKD_CONTROL_SET, *PX86_DBGKD_CONTROL_SET;
 
+typedef struct _ALPHA_DBGKD_CONTROL_SET
+{
+    ULONG __padding;
+} ALPHA_DBGKD_CONTROL_SET, *PALPHA_DBGKD_CONTROL_SET;
+
 typedef struct _IA64_DBGKD_CONTROL_SET
 {
     ULONG Continue;
@@ -254,14 +259,23 @@ typedef struct _DBGKD_ANY_CONTROL_SET
     union
     {
         X86_DBGKD_CONTROL_SET X86ControlSet;
+        ALPHA_DBGKD_CONTROL_SET AlphaControlSet;
         IA64_DBGKD_CONTROL_SET IA64ControlSet;
         AMD64_DBGKD_CONTROL_SET Amd64ControlSet;
-        ARM_DBGKD_CONTROL_SET ArmControlSet;
+        ARM_DBGKD_CONTROL_SET ARMControlSet;
     };
 } DBGKD_ANY_CONTROL_SET, *PDBGKD_ANY_CONTROL_SET;
 #include <poppack.h>
 
+#if defined(_M_IX86)
 typedef X86_DBGKD_CONTROL_SET DBGKD_CONTROL_SET, *PDBGKD_CONTROL_SET;
+#elif defined(_M_AMD64)
+typedef AMD64_DBGKD_CONTROL_SET DBGKD_CONTROL_SET, *PDBGKD_CONTROL_SET;
+#elif defined(_M_ARM)
+typedef ARM_DBGKD_CONTROL_SET DBGKD_CONTROL_SET, *PDBGKD_CONTROL_SET;
+#else
+#error Unsupported Architecture
+#endif
 
 //
 // DBGKM Structure for Exceptions
@@ -321,7 +335,12 @@ typedef struct _AMD64_DBGKD_CONTROL_REPORT
     USHORT SegFs;
 } AMD64_DBGKD_CONTROL_REPORT, *PAMD64_DBGKD_CONTROL_REPORT;
 
-typedef X86_DBGKD_CONTROL_REPORT DBGKD_CONTROL_REPORT;
+typedef struct _ARM_DBGKD_CONTROL_REPORT
+{
+    ULONG Cpsr;
+    ULONG InstructionCount;
+    UCHAR InstructionStream[DBGKD_MAXSTREAM];
+} ARM_DBGKD_CONTROL_REPORT, *PARM_DBGKD_CONTROL_REPORT;
 
 typedef struct _DBGKD_ANY_CONTROL_REPORT
 {
@@ -331,8 +350,19 @@ typedef struct _DBGKD_ANY_CONTROL_REPORT
         ALPHA_DBGKD_CONTROL_REPORT AlphaControlReport;
         IA64_DBGKD_CONTROL_REPORT IA64ControlReport;
         AMD64_DBGKD_CONTROL_REPORT Amd64ControlReport;
+        ARM_DBGKD_CONTROL_REPORT ARMControlReport;
     };
 } DBGKD_ANY_CONTROL_REPORT, *PDBGKD_ANY_CONTROL_REPORT;
+
+#if defined(_M_IX86)
+typedef X86_DBGKD_CONTROL_REPORT DBGKD_CONTROL_REPORT, *PDBGKD_CONTROL_REPORT;
+#elif defined(_M_AMD64)
+typedef AMD64_DBGKD_CONTROL_REPORT DBGKD_CONTROL_REPORT, *PDBGKD_CONTROL_REPORT;
+#elif defined(_M_ARM)
+typedef ARM_DBGKD_CONTROL_REPORT DBGKD_CONTROL_REPORT, *PDBGKD_CONTROL_REPORT;
+#else
+#error Unsupported Architecture
+#endif
 
 //
 // DBGKD Structure for Debug I/O Type Print String
@@ -416,8 +446,6 @@ typedef struct _DBGKD_WAIT_STATE_CHANGE32
         DBGKM_EXCEPTION32 Exception;
         DBGKD_LOAD_SYMBOLS32 LoadSymbols;
     } u;
-    DBGKD_CONTROL_REPORT ControlReport;
-    CONTEXT Context;
 } DBGKD_WAIT_STATE_CHANGE32, *PDBGKD_WAIT_STATE_CHANGE32;
 
 typedef struct _DBGKD_WAIT_STATE_CHANGE64
@@ -433,8 +461,6 @@ typedef struct _DBGKD_WAIT_STATE_CHANGE64
         DBGKM_EXCEPTION64 Exception;
         DBGKD_LOAD_SYMBOLS64 LoadSymbols;
     } u;
-    DBGKD_CONTROL_REPORT ControlReport;
-    CONTEXT Context;
 } DBGKD_WAIT_STATE_CHANGE64, *PDBGKD_WAIT_STATE_CHANGE64;
 
 typedef struct _DBGKD_ANY_WAIT_STATE_CHANGE
@@ -834,8 +860,10 @@ typedef struct _DBGKD_TRACE_IO
    } u;
 } DBGKD_TRACE_IO, *PDBGKD_TRACE_IO;
 
-FORCEINLINE
+static
+__inline
 VOID
+NTAPI
 ExceptionRecord32To64(IN PEXCEPTION_RECORD32 Ex32,
                       OUT PEXCEPTION_RECORD64 Ex64)
 {

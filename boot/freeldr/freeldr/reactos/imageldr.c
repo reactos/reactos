@@ -177,7 +177,7 @@ FrLdrCloseModule(ULONG_PTR ModuleBase,
     if (ModuleData) {
         
         /* Make sure this is the right module and that it hasn't been closed */
-        if ((ModuleBase == ModuleData->ModStart) && (ModuleData->ModEnd == (ULONG_PTR)-1)) {
+        if ((ModuleBase == ModuleData->ModStart) && (ModuleData->ModEnd == MAXULONG_PTR)) {
             
             /* Close the Module */
             ModuleData->ModEnd = ModuleData->ModStart + ModuleSize;

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -27,7 +27,6 @@ BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayName
 	CHAR	SettingValue[260];
 	ULONG		OperatingSystemCount;
 	ULONG_PTR	SectionId;
-	ULONG_PTR	OperatingSystemSectionId;
 	ULONG		SectionSettingCount;
 	PCHAR	*OperatingSystemSectionNames;
 	PCHAR	*OperatingSystemDisplayNames;
@@ -60,17 +59,14 @@ BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayName
 	{
 		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
-		if (IniOpenSection(SettingName, &OperatingSystemSectionId))
-		{
-			// Copy the section name
-			strcpy(OperatingSystemSectionNames[CurrentOperatingSystemIndex], SettingName);
+		// Copy the section name
+		strcpy(OperatingSystemSectionNames[CurrentOperatingSystemIndex], SettingName);
 
-			// Copy the display name
-			RemoveQuotes(SettingValue);
-			strcpy(OperatingSystemDisplayNames[CurrentOperatingSystemIndex], SettingValue);
+		// Copy the display name
+		RemoveQuotes(SettingValue);
+		strcpy(OperatingSystemDisplayNames[CurrentOperatingSystemIndex], SettingValue);
 
-			CurrentOperatingSystemIndex++;
-		}
+		CurrentOperatingSystemIndex++;
 	}
 
 	*OperatingSystemCountPointer = OperatingSystemCount;
@@ -82,32 +78,7 @@ BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayName
 
 ULONG CountOperatingSystems(ULONG SectionId)
 {
-	ULONG		Idx;
-	CHAR	SettingName[260];
-	CHAR	SettingValue[260];
-	ULONG		OperatingSystemCount = 0;
-	ULONG		SectionSettingCount;
-
-	//
-	// Loop through and count the operating systems
-	//
-	SectionSettingCount = IniGetNumSectionItems(SectionId);
-	for (Idx=0; Idx<SectionSettingCount; Idx++)
-	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
-
-		if (IniOpenSection(SettingName, NULL))
-		{
-			OperatingSystemCount++;
-		}
-		else
-		{
-			sprintf(SettingName, "Operating System '%s' is listed in\nfreeldr.ini but doesn't have a [section].", SettingValue);
-			UiMessageBox(SettingName);
-		}
-	}
-
-	return OperatingSystemCount;
+	return IniGetNumSectionItems(SectionId);
 }
 
 BOOLEAN AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount)
@@ -198,29 +169,28 @@ AllocateListMemoryFailed:
 BOOLEAN RemoveQuotes(PCHAR QuotedString)
 {
 	CHAR	TempString[200];
+	PCHAR p;
+	PSTR Start;
 
 	//
-	// If this string is not quoted then return FALSE
+	// Skip spaces up to "
 	//
-	if ((QuotedString[0] != '\"') && (QuotedString[strlen(QuotedString)-1] != '\"'))
-	{
-		return FALSE;
-	}
+	p = QuotedString;
+	while (*p == ' ' || *p == '"')
+		p++;
+	Start = p;
 
-	if (QuotedString[0] == '\"')
-	{
-		strcpy(TempString, (QuotedString + 1));
-	}
-	else
-	{
-		strcpy(TempString, QuotedString);
-	}
+	//
+	// Go up to next "
+	//
+	while (*p != '"' && *p != ANSI_NULL)
+		p++;
+	*p = ANSI_NULL;
 
-	if (TempString[strlen(TempString)-1] == '\"')
-	{
-		TempString[strlen(TempString)-1] = '\0';
-	}
-
+	//
+	// Copy result
+	//
+	strcpy(TempString, Start);
 	strcpy(QuotedString, TempString);
 
 	return TRUE;

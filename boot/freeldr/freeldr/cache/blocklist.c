@@ -12,16 +12,13 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
 #include <debug.h>
-
-extern ULONG FreeCacheBlocks;
-extern LIST_ENTRY FreeBlockList;
 
 // Returns a pointer to a CACHE_BLOCK structure
 // Adds the block to the cache manager block list
@@ -46,7 +43,7 @@ PCACHE_BLOCK CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 	CacheBlock = CacheInternalAddBlockToCache(CacheDrive, BlockNumber);
 
 	// Optimize the block list so it has a LRU structure
-	if (CacheBlock) CacheInternalOptimizeBlockList(CacheDrive, CacheBlock);
+	CacheInternalOptimizeBlockList(CacheDrive, CacheBlock);
 
 	return CacheBlock;
 }
@@ -101,41 +98,28 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 	// We will need to add the block to the
 	// drive's list of cached blocks. So allocate
 	// the block memory.
-
-	if (IsListEmpty(&FreeBlockList))
+	CacheBlock = MmHeapAlloc(sizeof(CACHE_BLOCK));
+	if (CacheBlock == NULL)
 	{
-		CacheBlock = MmHeapAlloc(sizeof(CACHE_BLOCK));
-		if (CacheBlock == NULL)
-		{
-			DPRINTM(DPRINT_CACHE, "Failed to alloc cache hdr\n");
-			return NULL;
-		}
-		
-		// Now initialize the structure and
-		// allocate room for the block data
-		RtlZeroMemory(CacheBlock, sizeof(CACHE_BLOCK));
-		CacheBlock->BlockNumber = BlockNumber;
-		CacheBlock->BlockData = MmAllocateHighestMemoryBelowAddress(CacheDrive->BlockSize * CacheDrive->BytesPerSector, (PVOID)0x80000000, 'CACH');
-		if (CacheBlock->BlockData ==NULL)
-		{
-			DPRINTM(DPRINT_CACHE, "Failed to alloc block data\n");
-			MmHeapFree(CacheBlock);
-			return NULL;
-		}
+		return NULL;
 	}
-	else
+
+	// Now initialize the structure and
+	// allocate room for the block data
+	RtlZeroMemory(CacheBlock, sizeof(CACHE_BLOCK));
+	CacheBlock->BlockNumber = BlockNumber;
+	CacheBlock->BlockData = MmHeapAlloc(CacheDrive->BlockSize * CacheDrive->BytesPerSector);
+	if (CacheBlock->BlockData ==NULL)
 	{
-		PLIST_ENTRY Entry = RemoveHeadList(&FreeBlockList);
-		FreeCacheBlocks--;
-		CacheBlock = CONTAINING_RECORD(Entry, CACHE_BLOCK, ListEntry);
+		MmHeapFree(CacheBlock);
+		return NULL;
 	}
 
 	// Now try to read in the block
 	if (!MachDiskReadLogicalSectors(CacheDrive->DriveNumber, (BlockNumber * CacheDrive->BlockSize), CacheDrive->BlockSize, (PVOID)DISKREADBUFFER))
 	{
-		DPRINTM(DPRINT_CACHE, "Failed to read block data\n");
-		FreeCacheBlocks++;
-		InsertTailList(&FreeBlockList, &CacheBlock->ListEntry);
+		MmHeapFree(CacheBlock->BlockData);
+		MmHeapFree(CacheBlock);
 		return NULL;
 	}
 	RtlCopyMemory(CacheBlock->BlockData, (PVOID)DISKREADBUFFER, CacheDrive->BlockSize * CacheDrive->BytesPerSector);
@@ -175,8 +159,10 @@ BOOLEAN CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
 	}
 
 	RemoveEntryList(&CacheBlockToFree->ListEntry);
-	FreeCacheBlocks++;
-	InsertTailList(&FreeBlockList, &CacheBlockToFree->ListEntry);
+
+	// Free the block memory and the block structure
+	MmHeapFree(CacheBlockToFree->BlockData);
+	MmHeapFree(CacheBlockToFree);
 
 	// Update the cache data
 	CacheBlockCount--;
@@ -195,11 +181,10 @@ VOID CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive)
 	NewCacheSize = (CacheBlockCount + 1) * (CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 
 	// Check the new size against the cache size limit
-	while (NewCacheSize > CacheSizeLimit)
+	if (NewCacheSize > CacheSizeLimit)
 	{
 		CacheInternalFreeBlock(CacheDrive);
 		CacheInternalDumpBlockList(CacheDrive);
-		NewCacheSize = (CacheBlockCount + 1) * (CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 	}
 }
 
@@ -236,12 +221,6 @@ VOID CacheInternalOptimizeBlockList(PCACHE_DRIVE CacheDrive, PCACHE_BLOCK CacheB
 {
 
 	DPRINTM(DPRINT_CACHE, "CacheInternalOptimizeBlockList()\n");
-
-	if (!CacheBlock)
-	{
-		DPRINTM(DPRINT_CACHE, "DIE!\n");
-		while(1);
-	}
 
 	// Don't do this if this block is already at the head of the list
 	if (&CacheBlock->ListEntry != CacheDrive->CacheBlockHead.Flink)

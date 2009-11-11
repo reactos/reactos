@@ -96,21 +96,21 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyGetPinControl(
 STDMETHODIMP_(NTSTATUS) BdaPropertyNodeDescriptors(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
-    OUT GUID *pguidProperty);
+    OUT BDANODE_DESCRIPTOR *pNodeDescriptorProperty);
 
 STDMETHODIMP_(NTSTATUS) BdaPropertyNodeEvents(
     IN PIRP Irp,
-    IN KSPROPERTY *pKSProperty,
+    IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty);
 
 STDMETHODIMP_(NTSTATUS) BdaPropertyNodeMethods(
     IN PIRP Irp,
-    IN KSPROPERTY *pKSProperty,
+    IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty);
 
 STDMETHODIMP_(NTSTATUS) BdaPropertyNodeProperties(
     IN PIRP Irp,
-    IN KSPROPERTY *pKSProperty,
+    IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty);
 
 STDMETHODIMP_(NTSTATUS) BdaPropertyNodeTypes(

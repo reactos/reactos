@@ -203,6 +203,7 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
         if(!XML_Parse(parser, buffer, len, done))
         {
             MessageBoxW(0,Strings[IDS_XMLERROR_2],0,0);
+            fclose(file);
             return FALSE;
         }
     }

@@ -810,7 +810,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
           HandleType != ExpectedType) ||
          HandleType == 0 )
     {
-        DPRINT1("Attempted to lock object 0x%x of wrong type (Handle: 0x%x, requested: 0x%x)\n",
+        DPRINT("Attempted to lock object 0x%x of wrong type (Handle: 0x%x, requested: 0x%x)\n",
                 hObj, HandleType, ExpectedType);
         GDIDBG_TRACECALLER();
         GDIDBG_TRACEALLOCATOR(hObj);

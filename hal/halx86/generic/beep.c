@@ -31,9 +31,9 @@ HalMakeBeep(IN ULONG Frequency)
 {
     UCHAR Data;
     ULONG Divider;
-    BOOLEAN Result = TRUE;
 
-    /* FIXME: Acquire CMOS Lock */
+    /* Acquire CMOS Lock */
+    HalpAcquireSystemHardwareSpinLock();
 
     /* Turn the register off */
     Data = READ_PORT_UCHAR(PORT_B);
@@ -49,8 +49,8 @@ HalMakeBeep(IN ULONG Frequency)
         if (Divider > 0x10000)
         {
             /* Fail */
-            Result = FALSE;
-            goto Cleanup;
+            HalpReleaseCmosSpinLock();
+            return FALSE;
         }
 
         /* Set timer divider */
@@ -62,11 +62,9 @@ HalMakeBeep(IN ULONG Frequency)
         WRITE_PORT_UCHAR(PORT_B, READ_PORT_UCHAR(PORT_B) | 0x03);
     }
 
-Cleanup:
-    /* FIXME: Release hardware lock */
+    /* Release CMOS lock */
+    HalpReleaseCmosSpinLock();
 
-    /* Return result */
-    return Result;
+    /* Return success */
+    return TRUE;
 }
-
-

@@ -50,6 +50,7 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	ULONG_PTR HiveDataPhysical;
 	PVOID HiveDataVirtual;
 	ULONG BytesRead;
+	LPCWSTR FsService;
 
 	/* Concatenate path and filename to get the full name */
 	strcpy(FullHiveName, DirectoryPath);
@@ -95,21 +96,38 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	/* Finally read from file to the memory */
 	Status = ArcRead(FileId, (PVOID)HiveDataPhysical, HiveFileSize, &BytesRead);
-	ArcClose(FileId);
 	if (Status != ESUCCESS)
 	{
+		ArcClose(FileId);
 		UiMessageBox("Unable to read from hive file!");
 		return FALSE;
 	}
 
+	// Add boot filesystem driver to the list
+	FsService = FsGetServiceName(FileId);
+	if (FsService)
+	{
+		DPRINTM(DPRINT_WINDOWS, "  Adding filesystem service %S\n", FsService);
+		Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
+			L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+			NULL,
+			(LPWSTR)FsService);
+		if (!Status)
+			DPRINTM(DPRINT_WINDOWS, " Failed to add filesystem service\n");
+	}
+	else
+	{
+		DPRINTM(DPRINT_WINDOWS, "  No required filesystem service\n");
+	}
+
+	ArcClose(FileId);
 	return TRUE;
 }
 
-BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                                    IN LPCSTR DirectoryPath)
+BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                             IN LPCSTR DirectoryPath)
 {
 	CHAR SearchPath[1024];
-	CHAR AnsiName[256], OemName[256], LangName[256];
 	BOOLEAN Status;
 
 	// There is a simple logic here: try to load usual hive (system), if it
@@ -142,16 +160,18 @@ BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
+	return TRUE;
+}
+
+BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                             IN LPCSTR DirectoryPath)
+{
+	CHAR SearchPath[1024];
+	CHAR AnsiName[256], OemName[256], LangName[256];
+	BOOLEAN Status;
+
 	// Scan registry and prepare boot drivers list
 	WinLdrScanRegistry(LoaderBlock, DirectoryPath);
-
-	// Add boot filesystem driver to the list
-	//FIXME: Use corresponding driver instead of hardcoding
-	Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
-		L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
-		NULL,
-		L"fastfat");
-
 
 	// Get names of NLS files
 	Status = WinLdrGetNLSNames(AnsiName, OemName, LangName);

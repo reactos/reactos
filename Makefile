@@ -112,6 +112,10 @@
 #        will go from 80 to 40MB, memory usage from 58 to 38MB and the install CD
 #        from 18 to 13MB. The variable defaults to no.
 #
+#    ROS_GENERATE_RSYM
+#        This variable controls generation of RSYM symbol data. The value can be
+#        either yes (to generate symbol data) or no. The variable defaults to yes.
+#
 #    ROS_RBUILDFLAGS
 #        Pass parameters to rbuild.
 #            -v           Be verbose.
@@ -317,6 +321,10 @@ endif
 ifeq ($(TARGET_CPP),)
   TARGET_CPP = $(PREFIX_)g++
 endif
+ifneq ($(ANALYZER),)
+  TARGET_CC = $(ANALYZER) $(TARGET_CC)
+endif
+
 gcc = $(Q)$(TARGET_CC)
 gpp = $(Q)$(TARGET_CPP)
 gas = $(Q)$(TARGET_CC) -x assembler-with-cpp

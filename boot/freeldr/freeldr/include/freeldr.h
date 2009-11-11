@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifndef __FREELDR_H
@@ -59,7 +59,6 @@
 #include <reactos.h>
 #include <registry.h>
 #include <winldr.h>
-#include <fsrec.h>
 /* file system headers */
 #include <fs/ext2.h>
 #include <fs/fat.h>
@@ -72,10 +71,13 @@
 #include <ui/tui.h>
 /* arch files */
 #if defined(_M_IX86)
+#include <arch/i386/custom.h>
+#include <arch/i386/drivemap.h>
 #include <arch/i386/hardware.h>
 #include <arch/i386/i386.h>
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
+#include <arch/i386/miscboot.h>
 #include <internal/i386/intrin_i.h>
 #include <internal/i386/ke.h>
 #elif defined(_M_PPC)
@@ -97,8 +99,6 @@
 /* Needed by boot manager */
 #include <bootmgr.h>
 #include <oslist.h>
-#include <drivemap.h>
-#include <miscboot.h>
 #include <options.h>
 #include <linux.h>
 /* Externals */

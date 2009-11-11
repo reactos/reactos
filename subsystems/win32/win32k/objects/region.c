@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*
@@ -37,7 +37,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /************************************************************************
@@ -2988,20 +2988,47 @@ BOOL
 FASTCALL
 REGION_RectInRegion(
     PROSRGNDATA Rgn,
-    const RECTL *rc
+    const RECTL *rect
 )
 {
     PRECTL pCurRect, pRectEnd;
+    RECT rc;
 
-    // this is (just) a useful optimization
-    if ((Rgn->rdh.nCount > 0) && EXTENTCHECK(&Rgn->rdh.rcBound, rc))
+    /* swap the coordinates to make right >= left and bottom >= top */
+    /* (region building rectangles are normalized the same way) */
+    if( rect->top > rect->bottom) {
+        rc.top = rect->bottom;
+        rc.bottom = rect->top;
+    } else {
+        rc.top = rect->top;
+        rc.bottom = rect->bottom;
+    }
+    if( rect->right < rect->left) {
+        rc.right = rect->left;
+        rc.left = rect->right;
+    } else {
+        rc.right = rect->right;
+        rc.left = rect->left;
+    }
+
+    /* this is (just) a useful optimization */
+    if ((Rgn->rdh.nCount > 0) && EXTENTCHECK(&Rgn->rdh.rcBound, &rc))
     {
-        for (pCurRect = Rgn->Buffer, pRectEnd = pCurRect + Rgn->rdh.nCount; pCurRect < pRectEnd; pCurRect++)
+        for (pCurRect = Rgn->Buffer, pRectEnd = pCurRect +
+         Rgn->rdh.nCount; pCurRect < pRectEnd; pCurRect++)
         {
-            if (pCurRect->bottom <= rc->top) continue; // not far enough down yet
-            if (pCurRect->top >= rc->bottom) break;    // too far down
-            if (pCurRect->right <= rc->left) continue; // not far enough over yet
-            if (pCurRect->left >= rc->right) continue;
+            if (pCurRect->bottom <= rc.top)
+            continue;             /* not far enough down yet */
+
+            if (pCurRect->top >= rc.bottom)
+                break;                /* too far down */
+
+            if (pCurRect->right <= rc.left)
+                continue;              /* not far enough over yet */
+
+            if (pCurRect->left >= rc.right) {
+                continue;
+            }
 
             return TRUE;
         }

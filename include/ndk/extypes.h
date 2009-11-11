@@ -531,7 +531,7 @@ typedef struct _EPROFILE
     PKPROFILE ProfileObject;
     PVOID LockedBufferAddress;
     PMDL Mdl;
-    PVOID Segment;
+    ULONG_PTR Segment;
     KPROFILE_SOURCE ProfileSource;
     KAFFINITY Affinity;
 } EPROFILE, *PEPROFILE;

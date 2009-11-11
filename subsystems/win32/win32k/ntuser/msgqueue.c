@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
@@ -233,6 +233,49 @@ MsqInsertSystemMessage(MSG* Msg)
 }
 
 BOOL FASTCALL
+MsqIsClkLck(LPMSG Msg, BOOL Remove)
+{
+   PTHREADINFO pti;
+   PWINSTATION_OBJECT WinStaObject;
+   PSYSTEM_CURSORINFO CurInfo;
+   BOOL Res = FALSE;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->Desktop == NULL)
+   {
+      return FALSE;
+   }
+
+   WinStaObject = pti->Desktop->WindowStation;
+
+   CurInfo = IntGetSysCursorInfo(WinStaObject);
+
+   switch (Msg->message)
+   {
+     case WM_LBUTTONUP:
+       Res = ((Msg->time - CurInfo->ClickLockTime) >= gspv.dwMouseClickLockTime);
+       if (Res && (!CurInfo->ClickLockActive))
+       {
+         CurInfo->ClickLockActive = TRUE;
+       }
+       break;
+     case WM_LBUTTONDOWN:
+       if (CurInfo->ClickLockActive)
+       {
+         Res = TRUE;
+         CurInfo->ClickLockActive = FALSE;
+         CurInfo->ClickLockTime = 0;
+       }
+       else
+       {
+         CurInfo->ClickLockTime = Msg->time;
+       }
+       break;
+   }
+   return Res;
+}
+
+BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove)
 {
    PTHREADINFO pti;
@@ -251,7 +294,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 
    CurInfo = IntGetSysCursorInfo(WinStaObject);
    Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) &&
-         ((Msg->time - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
+         ((Msg->time - CurInfo->LastBtnDown) < gspv.iDblClickTime);
    if(Res)
    {
 
@@ -262,8 +305,8 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
       if(dY < 0)
          dY = -dY;
 
-      Res = (dX <= CurInfo->DblClickWidth) &&
-            (dY <= CurInfo->DblClickHeight);
+      Res = (dX <= gspv.iDblClickWidth) &&
+            (dY <= gspv.iDblClickHeight);
 
       if(Res)
       {
@@ -274,21 +317,18 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 
    if(Remove)
    {
+      CurInfo->LastBtnDownX = Msg->pt.x;
+      CurInfo->LastBtnDownY = Msg->pt.y;
+      CurInfo->ButtonsDown = Msg->message;
       if (Res)
       {
          CurInfo->LastBtnDown = 0;
-         CurInfo->LastBtnDownX = Msg->pt.x;
-         CurInfo->LastBtnDownY = Msg->pt.y;
          CurInfo->LastClkWnd = NULL;
-		 CurInfo->ButtonsDown = Msg->message;
       }
       else
       {
-         CurInfo->LastBtnDownX = Msg->pt.x;
-         CurInfo->LastBtnDownY = Msg->pt.y;
          CurInfo->LastClkWnd = (HANDLE)Msg->hwnd;
          CurInfo->LastBtnDown = Msg->time;
-		 CurInfo->ButtonsDown = Msg->message;
       }
    }
 
@@ -534,11 +574,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT Windo
                                             UserMode, FALSE, NULL, NULL);
 
       UserEnterCo();
-
-      while (co_MsqDispatchOneSentMessage(MessageQueue))
-      {
-         ;
-      }
    }
    while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
 

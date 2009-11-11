@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef _NTSTATUS_
@@ -922,6 +922,7 @@
 #define STATUS_AUTHENTICATION_FIREWALL_FAILED ((NTSTATUS)0xC0000413)
 #define STATUS_VDM_DISALLOWED            ((NTSTATUS)0xC0000414)
 #define STATUS_HUNG_DISPLAY_DRIVER_THREAD ((NTSTATUS)0xC0000415)
+#define STATUS_ASSERTION_FAILURE         ((NTSTATUS)0xC0000420L)
 #define STATUS_CALLBACK_POP_STACK        ((NTSTATUS)0xC0000423)
 #define STATUS_WOW_ASSERTION             ((NTSTATUS)0xC0009898)
 

@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         This file is in the public domain.
  * FILE:            include/ddk/ntstrsafe.h
  * PURPOSE:         Safe String Library for NT Code (Native/Kernel)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

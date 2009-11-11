@@ -1,23 +1,4 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
@@ -42,6 +23,7 @@ extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
 PTHREADINFO ptiRawInput;
 PKTIMER MasterTimer;
+PATTACHINFO gpai = NULL;
 
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
@@ -53,6 +35,8 @@ static HANDLE RawInputThreadHandle;
 static CLIENT_ID RawInputThreadId;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
+static BYTE TrackSysKey = 0; /* determine whether ALT key up will cause a WM_SYSKEYUP
+                                or a WM_KEYUP message */
 
 /* FUNCTIONS *****************************************************************/
 DWORD IntLastInputTick(BOOL LastInputTickSetGet);
@@ -764,7 +748,7 @@ KeyboardThreadMain(PVOID StartContext)
                }
                else
                {
-                  RepeatCount = 0;
+                  RepeatCount = 1;
                   LastFlags = KeyInput.Flags & (KEY_E0 | KEY_E1);
                   LastMakeCode = KeyInput.MakeCode;
                }
@@ -899,7 +883,7 @@ RawInputThreadMain(PVOID StartContext)
   }
 
   ptiRawInput = PsGetCurrentThreadWin32Thread();
-  DPRINT1("\nRaw Input Thread 0x%x \n", ptiRawInput);
+  DPRINT("\nRaw Input Thread 0x%x \n", ptiRawInput);
 
 
   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
@@ -1008,7 +992,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    PTHREADINFO OldBlock;
    ASSERT(W32Thread);
 
-   if(!W32Thread->Desktop || (W32Thread->IsExiting && BlockIt))
+   if(!W32Thread->Desktop || ((W32Thread->TIF_flags & TIF_INCLEANUP) && BlockIt))
    {
       /*
        * fail blocking if exiting the thread
@@ -1120,7 +1104,7 @@ IntMouseInput(MOUSEINPUT *mi)
       mi->time = MsqCalculateMessageTime(&LargeTickCount);
    }
 
-   SwapButtons = CurInfo->SwapButtons;
+   SwapButtons = gspv.bMouseBtnSwap;
    DoMove = FALSE;
 
    IntGetCursorLocation(WinSta, &MousePos);
@@ -1321,7 +1305,228 @@ IntMouseInput(MOUSEINPUT *mi)
 BOOL FASTCALL
 IntKeyboardInput(KEYBDINPUT *ki)
 {
-   return FALSE;
+   PUSER_MESSAGE_QUEUE FocusMessageQueue;
+   PTHREADINFO pti;
+   MSG Msg;
+   LARGE_INTEGER LargeTickCount;
+   KBDLLHOOKSTRUCT KbdHookData;
+   WORD flags, wVkStripped, wVkL, wVkR, wVk = ki->wVk, vk_hook = ki->wVk;
+   BOOLEAN Entered = FALSE;
+
+   Msg.lParam = 0;
+
+  // Condition may arise when calling MsqPostMessage and waiting for an event.
+   if (!UserIsEntered())
+   {
+         // Fixme: Not sure ATM if this thread is locked.
+         UserEnterExclusive();
+         Entered = TRUE;
+   }
+
+   wVk = LOBYTE(wVk);
+   Msg.wParam = wVk;
+   flags = LOBYTE(ki->wScan);
+
+   if (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) flags |= KF_EXTENDED;
+   /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */
+
+   /* strip left/right for menu, control, shift */
+   switch (wVk)
+   {
+   case VK_MENU:
+   case VK_LMENU:
+   case VK_RMENU:
+      wVk = (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) ? VK_RMENU : VK_LMENU;
+      wVkStripped = VK_MENU;
+      wVkL = VK_LMENU;
+      wVkR = VK_RMENU;
+      break;
+   case VK_CONTROL:
+   case VK_LCONTROL:
+   case VK_RCONTROL:
+      wVk = (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) ? VK_RCONTROL : VK_LCONTROL;
+      wVkStripped = VK_CONTROL;
+      wVkL = VK_LCONTROL;
+      wVkR = VK_RCONTROL;
+      break;
+   case VK_SHIFT:
+   case VK_LSHIFT:
+   case VK_RSHIFT:
+      wVk = (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) ? VK_RSHIFT : VK_LSHIFT;
+      wVkStripped = VK_SHIFT;
+      wVkL = VK_LSHIFT;
+      wVkR = VK_RSHIFT;
+      break;
+   default:
+      wVkStripped = wVkL = wVkR = wVk;
+   }
+
+   if (ki->dwFlags & KEYEVENTF_KEYUP)
+   {
+      Msg.message = WM_KEYUP;
+      if ((gQueueKeyStateTable[VK_MENU] & 0x80) &&
+          ((wVkStripped == VK_MENU) || (wVkStripped == VK_CONTROL)
+           || !(gQueueKeyStateTable[VK_CONTROL] & 0x80)))
+      {
+         if( TrackSysKey == VK_MENU || /* <ALT>-down/<ALT>-up sequence */
+             (wVkStripped != VK_MENU)) /* <ALT>-down...<something else>-up */
+             Msg.message = WM_SYSKEYUP;
+         TrackSysKey = 0;
+      }
+      flags |= KF_REPEAT | KF_UP;
+   }
+   else
+   {
+      Msg.message = WM_KEYDOWN;
+      if ((gQueueKeyStateTable[VK_MENU] & 0x80 || wVkStripped == VK_MENU) &&
+          !(gQueueKeyStateTable[VK_CONTROL] & 0x80 || wVkStripped == VK_CONTROL))
+      {
+         Msg.message = WM_SYSKEYDOWN;
+         TrackSysKey = wVkStripped;
+      }
+      if (!(ki->dwFlags & KEYEVENTF_UNICODE) && gQueueKeyStateTable[wVk] & 0x80) flags |= KF_REPEAT;
+   }
+
+   if (ki->dwFlags & KEYEVENTF_UNICODE)
+   {
+      vk_hook = Msg.wParam = wVk = VK_PACKET;
+      Msg.lParam = MAKELPARAM(1 /* repeat count */, ki->wScan);
+   }
+
+   FocusMessageQueue = IntGetFocusMessageQueue();
+
+   Msg.hwnd = 0;
+
+   if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
+       Msg.hwnd = FocusMessageQueue->FocusWindow;
+
+   if (!ki->time)
+   {
+      KeQueryTickCount(&LargeTickCount);
+      Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+   }
+   else
+      Msg.time = ki->time;
+
+   /* All messages have to contain the cursor point. */
+   pti = PsGetCurrentThreadWin32Thread();
+   IntGetCursorLocation(pti->Desktop->WindowStation,
+                        &Msg.pt);
+
+    DPRINT1("Kbd Hook msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+             Msg.message, vk_hook, Msg.lParam);
+
+   KbdHookData.vkCode = vk_hook;
+   KbdHookData.scanCode = ki->wScan;
+   KbdHookData.flags = flags >> 8;
+   KbdHookData.time = Msg.time;
+   KbdHookData.dwExtraInfo = ki->dwExtraInfo;
+   if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
+   {
+      DPRINT("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+             Msg.message, vk_hook, Msg.lParam);
+      if (Entered) UserLeave();
+      return FALSE;
+   }
+
+   if (!(ki->dwFlags & KEYEVENTF_UNICODE))
+   {
+      if (ki->dwFlags & KEYEVENTF_KEYUP)
+      {
+         gQueueKeyStateTable[wVk] &= ~0x80;
+         gQueueKeyStateTable[wVkStripped] = gQueueKeyStateTable[wVkL] | gQueueKeyStateTable[wVkR];
+      }
+      else
+      {
+         if (!(gQueueKeyStateTable[wVk] & 0x80)) gQueueKeyStateTable[wVk] ^= 0x01;
+         gQueueKeyStateTable[wVk] |= 0xc0;
+         gQueueKeyStateTable[wVkStripped] = gQueueKeyStateTable[wVkL] | gQueueKeyStateTable[wVkR];
+      }
+
+      if (gQueueKeyStateTable[VK_MENU] & 0x80) flags |= KF_ALTDOWN;
+
+      if (wVkStripped == VK_SHIFT) flags &= ~KF_EXTENDED;
+
+      Msg.lParam = MAKELPARAM(1 /* repeat count */, flags);
+   }
+
+   if (FocusMessageQueue == NULL)
+   {
+         DPRINT("No focus message queue\n");
+         if (Entered) UserLeave();
+         return FALSE;
+   }
+
+   if (FocusMessageQueue->FocusWindow != (HWND)0)
+   {
+         Msg.hwnd = FocusMessageQueue->FocusWindow;
+         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
+
+         FocusMessageQueue->Desktop->DesktopInfo->LastInputWasKbd = TRUE;
+
+         IntGetCursorLocation(FocusMessageQueue->Desktop->WindowStation,
+                              &Msg.pt);
+         MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
+   }
+   else
+   {
+         DPRINT("Invalid focus window handle\n");
+   }
+
+   if (Entered) UserLeave();
+
+   return TRUE;
+}
+
+BOOL FASTCALL
+UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
+{
+   PATTACHINFO pai;
+
+   /* Can not be the same thread.*/
+   if (pti == ptiTo) return FALSE;
+
+   /* Do not attach to system threads or between different desktops. */
+   if ( pti->TIF_flags & TIF_DONTATTACHQUEUE ||
+        ptiTo->TIF_flags & TIF_DONTATTACHQUEUE ||
+        pti->Desktop != ptiTo->Desktop )
+      return FALSE;
+
+   /* If Attach set, allocate and link. */
+   if ( fAttach )
+   {
+      pai = ExAllocatePoolWithTag(PagedPool, sizeof(ATTACHINFO), TAG_ATTACHINFO);
+      if ( !pai ) return FALSE;
+
+      pai->paiNext = gpai;
+      pai->pti1 = pti;
+      pai->pti2 = ptiTo;
+      gpai = pai;
+   }
+   else /* If clear, unlink and free it. */
+   {
+      PATTACHINFO paiprev = NULL;
+
+      if ( !gpai ) return FALSE;
+
+      pai = gpai;
+
+      /* Search list and free if found or return false. */
+      do
+      {
+        if ( pai->pti2 == ptiTo && pai->pti1 == pti ) break;
+        paiprev = pai;
+        pai = pai->paiNext;
+      } while (pai);
+
+      if ( !pai ) return FALSE;
+
+      if (paiprev) paiprev->paiNext = pai->paiNext;
+
+      ExFreePoolWithTag(pai, TAG_ATTACHINFO);
+  }
+
+  return TRUE;
 }
 
 UINT

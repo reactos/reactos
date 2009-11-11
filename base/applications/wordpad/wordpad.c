@@ -644,7 +644,7 @@ static void set_toolbar_state(int bandId, BOOL show)
         REBARBANDINFOW rbbinfo;
         int index = SendMessageW(hwndReBar, RB_IDTOINDEX, BANDID_FONTLIST, 0);
 
-        rbbinfo.cbSize = sizeof(rbbinfo);
+        rbbinfo.cbSize = REBARBANDINFOW_V6_SIZE;
         rbbinfo.fMask = RBBIM_STYLE;
 
         SendMessageW(hwndReBar, RB_GETBANDINFO, index, (LPARAM)&rbbinfo);
@@ -1795,7 +1795,7 @@ static LRESULT OnCreate( HWND hWnd )
 
     SendMessageW(hToolBarWnd, TB_AUTOSIZE, 0, 0);
 
-    rbb.cbSize = sizeof(rbb);
+    rbb.cbSize = REBARBANDINFOW_V6_SIZE;
     rbb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_CHILD | RBBIM_STYLE | RBBIM_ID;
     rbb.fStyle = RBBS_CHILDEDGE | RBBS_BREAK | RBBS_NOGRIPPER;
     rbb.cx = 0;

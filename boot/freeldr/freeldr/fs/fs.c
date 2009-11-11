@@ -13,9 +13,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -163,7 +163,7 @@ ULONG FsGetNumPathParts(PCSTR Path)
 	}
 	num++;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FatGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
+	DPRINTM(DPRINT_FILESYSTEM, "FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
 
 	return num;
 }
@@ -195,10 +195,9 @@ VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 
 	Buffer[i] = 0;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FatGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
+	DPRINTM(DPRINT_FILESYSTEM, "FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
 
-#define MAX_FDS 60
 typedef struct tagFILEDATA
 {
     ULONG DeviceId;
@@ -398,6 +397,8 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
     DEVICE* pNewEntry;
     ULONG dwLength;
 
+    DPRINTM(DPRINT_FILESYSTEM, "FsRegisterDevice() Prefix = %s\n", Prefix);
+
     dwLength = strlen(Prefix) + 1;
     pNewEntry = MmHeapAlloc(sizeof(DEVICE) + dwLength);
     if (!pNewEntry)
@@ -408,6 +409,13 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
     memcpy(pNewEntry->Prefix, Prefix, dwLength);
 
     InsertHeadList(&DeviceListHead, &pNewEntry->ListEntry);
+}
+
+LPCWSTR FsGetServiceName(ULONG FileId)
+{
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return NULL;
+    return FileData[FileId].FuncTable->ServiceName;
 }
 
 VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific)

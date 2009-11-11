@@ -19,6 +19,9 @@
 	<directory name="more">
 		<xi:include href="more/more.rbuild" />
 	</directory>
+	<directory name="reg">
+		<xi:include href="reg/reg.rbuild" />
+	</directory>
 	<directory name="xcopy">
 		<xi:include href="xcopy/xcopy.rbuild" />
 	</directory>

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "resource.h"
-#include "cardlib/cardlib.h"
+#include "cardlib.h"
 
 #include "solitaire.h"
 
@@ -195,6 +195,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
     }
 
     SaveSettings();
+
+    try { throw 0; } catch (int i) { } /* HACK */
 
     return msg.wParam;
 }

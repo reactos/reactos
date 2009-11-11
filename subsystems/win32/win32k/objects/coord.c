@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  *
@@ -198,7 +198,21 @@ NtGdiGetTransform(
                 MatrixS2XForm(XForm, &dc->dclevel.mxWorldToPage);
                 break;
 
+            case GdiWorldSpaceToDeviceSpace:
+                MatrixS2XForm(XForm, &dc->dclevel.mxWorldToDevice);
+                break;
+
+            case GdiPageSpaceToDeviceSpace:
+                DPRINT1("Page space -> device space is unsupported!\n");
+                break;
+
+            case GdiDeviceSpaceToWorldSpace:
+                MatrixS2XForm(XForm, &dc->dclevel.mxDeviceToWorld);
+                break;
+
             default:
+                DPRINT1("Unknown transform %lu\n", iXform);
+                Status = STATUS_INVALID_PARAMETER;
                 break;
         }
     }

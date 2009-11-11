@@ -89,15 +89,15 @@
 <property name="_WINKD_" value="0" />
 
 <!--
-	Compile with experimental section and cache separation and reimplementation.
--->
-<property name="_NEWSECT_" value="0" />
-
-<!--
 	Whether to compile support for ELF files. Do not enable unless you know what
 	you're doing.
 -->
 <property name="_ELF_" value="0" />
+
+<!--
+	Compile with new cache manager and section refactor.
+-->
+<property name="_NEWCC_" value="0" />
 
 <!--
 	Whether to compile the multi processor versions for ntoskrnl and hal.

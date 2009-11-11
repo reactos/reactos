@@ -251,7 +251,7 @@ HalpGrowMapBuffers(
     * to prevent corruption.
     */
 
-   OldIrql = KfAcquireSpinLock(&AdapterObject->SpinLock);
+   KeAcquireSpinLock(&AdapterObject->SpinLock, &OldIrql);
 
    /*
     * Setup map register entries for the buffer allocated. Each entry has
@@ -315,7 +315,7 @@ HalpGrowMapBuffers(
       while (MapRegisterCount != 0);
    }
 
-   KfReleaseSpinLock(&AdapterObject->SpinLock, OldIrql);
+   KeReleaseSpinLock(&AdapterObject->SpinLock, OldIrql);
 
    return TRUE;
 }
@@ -1075,7 +1075,7 @@ HalAllocateAdapterChannel(
 {
    PADAPTER_OBJECT MasterAdapter;
    PGROW_WORK_ITEM WorkItem;
-   ULONG Index = ~0U;
+   ULONG Index = MAXULONG;
    ULONG Result;
    KIRQL OldIrql;
 
@@ -1125,13 +1125,13 @@ HalAllocateAdapterChannel(
        *   PASSIVE_LEVEL and calling the ExecutionRoutine.
        */
 
-      OldIrql = KfAcquireSpinLock(&MasterAdapter->SpinLock);
+      KeAcquireSpinLock(&MasterAdapter->SpinLock, &OldIrql);
 
       if (IsListEmpty(&MasterAdapter->AdapterQueue))
       {
          Index = RtlFindClearBitsAndSet(
             MasterAdapter->MapRegisters, NumberOfMapRegisters, 0);
-         if (Index != ~0U)
+         if (Index != MAXULONG)
          {
             AdapterObject->MapRegisterBase =
                MasterAdapter->MapRegisterBase + Index;
@@ -1145,13 +1145,13 @@ HalAllocateAdapterChannel(
          }
       }
 
-      if (Index == ~0U)
+      if (Index == MAXULONG)
       {
          WorkItem = ExAllocatePoolWithTag(
             NonPagedPool, sizeof(GROW_WORK_ITEM), TAG_DMA);
          if (WorkItem == NULL)
          {
-            KfReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
+            KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
             AdapterObject->NumberOfMapRegisters = 0;
             IoFreeAdapterChannel(AdapterObject);
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -1166,12 +1166,12 @@ HalAllocateAdapterChannel(
 
          ExQueueWorkItem(&WorkItem->WorkQueueItem, DelayedWorkQueue);
 
-         KfReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
+         KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
 
          return STATUS_SUCCESS;
       }
 
-      KfReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
+      KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
    }
    else
    {
@@ -1244,7 +1244,7 @@ IoFreeAdapterChannel(
    PADAPTER_OBJECT MasterAdapter;
    PKDEVICE_QUEUE_ENTRY DeviceQueueEntry;
    PWAIT_CONTEXT_BLOCK WaitContextBlock;
-   ULONG Index = ~0;
+   ULONG Index = MAXULONG;
    ULONG Result;
    KIRQL OldIrql;
 
@@ -1282,14 +1282,14 @@ IoFreeAdapterChannel(
       if (WaitContextBlock->NumberOfMapRegisters &&
           AdapterObject->MasterAdapter)
       {
-         OldIrql = KfAcquireSpinLock(&MasterAdapter->SpinLock);
+          KeAcquireSpinLock(&MasterAdapter->SpinLock, &OldIrql);
 
          if (IsListEmpty(&MasterAdapter->AdapterQueue))
          {
             Index = RtlFindClearBitsAndSet(
                MasterAdapter->MapRegisters,
                WaitContextBlock->NumberOfMapRegisters, 0);
-            if (Index != ~0U)
+            if (Index != MAXULONG)
             {
                AdapterObject->MapRegisterBase =
                   MasterAdapter->MapRegisterBase + Index;
@@ -1303,14 +1303,14 @@ IoFreeAdapterChannel(
             }
          }
 
-         if (Index == ~0U)
+         if (Index == MAXULONG)
          {
             InsertTailList(&MasterAdapter->AdapterQueue, &AdapterObject->AdapterQueue);
-            KfReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
+            KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
             break;
          }
 
-         KfReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
+         KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
       }
       else
       {
@@ -1378,7 +1378,7 @@ IoFreeMapRegisters(
    if (MasterAdapter == NULL || MapRegisterBase == NULL)
       return;
 
-   OldIrql = KfAcquireSpinLock(&MasterAdapter->SpinLock);
+   KeAcquireSpinLock(&MasterAdapter->SpinLock, &OldIrql);
 
    if (NumberOfMapRegisters != 0)
    {
@@ -1406,13 +1406,13 @@ IoFreeMapRegisters(
          MasterAdapter->MapRegisters,
          AdapterObject->NumberOfMapRegisters,
          MasterAdapter->NumberOfMapRegisters);
-      if (Index == ~0U)
+      if (Index == MAXULONG)
       {
          InsertHeadList(&MasterAdapter->AdapterQueue, ListEntry);
          break;
       }
 
-      KfReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
+      KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
 
       AdapterObject->MapRegisterBase =
          MasterAdapter->MapRegisterBase + Index;
@@ -1439,12 +1439,12 @@ IoFreeMapRegisters(
          case DeallocateObject:
             if (AdapterObject->NumberOfMapRegisters)
             {
-               OldIrql = KfAcquireSpinLock(&MasterAdapter->SpinLock);
+               KeAcquireSpinLock(&MasterAdapter->SpinLock, &OldIrql);
                RtlClearBits(MasterAdapter->MapRegisters,
                             AdapterObject->MapRegisterBase -
                             MasterAdapter->MapRegisterBase,
                             AdapterObject->NumberOfMapRegisters);
-               KfReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
+               KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
             }
             IoFreeAdapterChannel(AdapterObject);
             break;
@@ -1453,10 +1453,10 @@ IoFreeMapRegisters(
             break;
       }
 
-      OldIrql = KfAcquireSpinLock(&MasterAdapter->SpinLock);
+      KeAcquireSpinLock(&MasterAdapter->SpinLock, &OldIrql);
    }
 
-   KfReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
+   KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
 }
 
 /**
@@ -1487,9 +1487,7 @@ HalpCopyBufferMap(
        * NOTE: On real NT a mechanism with reserved pages is implemented
        * to handle this case in a slow, but graceful non-fatal way.
        */
-      /* FIXME: The correct bug check code isn't defined. */
-      /* KEBUGCHECKEX(HAL_MEMORY_ALLOCATION, PAGE_SIZE, 0, (ULONG_PTR)__FILE__, 0); */
-      ASSERT(FALSE);
+      KeBugCheckEx(HAL_MEMORY_ALLOCATION, PAGE_SIZE, 0, (ULONG_PTR)__FILE__, 0);
    }
 
    CurrentAddress = (ULONG_PTR)VirtualAddress +
@@ -1604,7 +1602,7 @@ IoFlushAdapterBuffers(
    {
       if ((ULONG_PTR)MapRegisterBase & MAP_BASE_SW_SG)
       {
-         if (RealMapRegisterBase->Counter != ~0U)
+         if (RealMapRegisterBase->Counter != MAXULONG)
          {
             if (SlaveDma && !AdapterObject->IgnoreCount)
                Length -= HalReadDmaCounter(AdapterObject);
@@ -1783,7 +1781,7 @@ IoMapTransfer(
       PhysicalAddress = RealMapRegisterBase->PhysicalAddress;
       PhysicalAddress.QuadPart += ByteOffset;
       TransferLength = *Length;
-      RealMapRegisterBase->Counter = ~0;
+      RealMapRegisterBase->Counter = MAXULONG;
       Counter = 0;
    }
    else
@@ -1813,7 +1811,7 @@ IoMapTransfer(
          PhysicalAddress.QuadPart += ByteOffset;
          if ((ULONG_PTR)MapRegisterBase & MAP_BASE_SW_SG)
          {
-            RealMapRegisterBase->Counter = ~0;
+            RealMapRegisterBase->Counter = MAXULONG;
             Counter = 0;
          }
       }
@@ -1867,7 +1865,7 @@ IoMapTransfer(
          TransferOffset >>= 1;
       }
 
-      OldIrql = KfAcquireSpinLock(&AdapterObject->MasterAdapter->SpinLock);
+      KeAcquireSpinLock(&AdapterObject->MasterAdapter->SpinLock, &OldIrql);
 
       if (AdapterObject->AdapterNumber == 1)
       {
@@ -1934,7 +1932,7 @@ IoMapTransfer(
                           AdapterObject->ChannelNumber | DMA_CLEARMASK);
       }
 
-      KfReleaseSpinLock(&AdapterObject->MasterAdapter->SpinLock, OldIrql);
+      KeReleaseSpinLock(&AdapterObject->MasterAdapter->SpinLock, OldIrql);
    }
 
    /*
@@ -1991,7 +1989,7 @@ HalAllocateCrashDumpRegisters(IN PADAPTER_OBJECT AdapterObject,
                                                    0);
 
         /* Check if nothing was found */
-        if (MapRegisterNumber == -1U)
+        if (MapRegisterNumber == MAXULONG)
         {
             /* No free registers found, so use the base registers */
             RtlSetBits(MasterAdapter->MapRegisters,

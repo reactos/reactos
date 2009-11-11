@@ -29,6 +29,8 @@ extern "C" {
 #define DNS_UPDATE_FORCE_SECURITY_NEGO 0x800
 #define DNS_UPDATE_RESERVED 0xffff0000
 
+#define DNS_CONFIG_FLAG_ALLOC TRUE
+
 #ifndef RC_INVOKE
 typedef DWORD IP4_ADDRESS;
 typedef DWORD DNS_STATUS;
@@ -171,6 +173,10 @@ typedef struct _DnsRecordFlags {
 	DWORD Unused	:3;
 	DWORD Reserved	:24;
 } DNS_RECORD_FLAGS;
+#define DNSREC_QUESTION 0
+#define DNSREC_ANSWER 1
+#define DNSREC_AUTHORITY 2
+#define DNSREC_ADDITIONAL 3
 typedef struct {
 	IP4_ADDRESS IpAddress;
 } DNS_A_DATA, *PDNS_A_DATA;

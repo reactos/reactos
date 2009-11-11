@@ -13,9 +13,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #define _NTSYSTEM_
@@ -25,15 +25,11 @@
 extern ULONG PageDirectoryStart;
 extern ULONG PageDirectoryEnd;
 
-ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
-char					reactos_kernel_cmdline[255];	// Command line passed to kernel
-LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
-char					reactos_module_strings[64][256];	// Array to hold module names
-reactos_mem_data_t reactos_mem_data;
+extern CHAR szBootPath[255];
+extern CHAR SystemRoot[255];
+extern CHAR szHalName[255];
+
 extern char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE];
-char szBootPath[256];
-char szHalName[256];
-CHAR SystemRoot[255];
 extern ULONG_PTR KernelBase;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
@@ -47,6 +43,7 @@ VOID LoadReactOSSetup(VOID)
     ULONG i;
     LPCSTR SourcePath;
     LPCSTR LoadOptions, DbgLoadOptions = "";
+    BOOLEAN BootFromFloppy;
     LPCSTR sourcePaths[] = {
       "", /* Only for floppy boot */
 #if defined(_M_IX86)
@@ -116,12 +113,13 @@ VOID LoadReactOSSetup(VOID)
   LoaderBlock.ArchExtra = (ULONG_PTR)MachHwDetect();
   UiDrawStatusText("");
 
-  /* set boot device */
-  MachDiskGetBootDevice(&LoaderBlock.BootDevice);
+  /* Check if we booted from floppy */
+  MachDiskGetBootPath(reactos_kernel_cmdline, sizeof(reactos_kernel_cmdline));
+  BootFromFloppy = strstr(reactos_kernel_cmdline, "fdisk") != NULL;
 
   UiDrawStatusText("Loading txtsetup.sif...");
   /* Open 'txtsetup.sif' */
-  for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)
+  for (i = BootFromFloppy ? 0 : 1; ; i++)
   {
     SourcePath = sourcePaths[i];
     if (!SourcePath)
@@ -191,7 +189,7 @@ VOID LoadReactOSSetup(VOID)
     LoaderBlock.KernelBase = KernelBase;
 
   /* Insert boot disk 2 */
-  if (MachDiskBootingFromFloppy())
+  if (BootFromFloppy)
     {
       UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
 

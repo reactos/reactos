@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -44,7 +44,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /* INCLUDES ******************************************************************/
@@ -384,6 +384,15 @@ NtUserCreateAcceleratorTable(
           {
               Accel->Table[Index].key = Entries[Index].key;
           }
+          else
+          {
+             RtlMultiByteToUnicodeN(&Accel->Table[Index].key, 
+                                    sizeof(WCHAR), 
+                                    NULL, 
+                                    (PCSTR)&Entries[Index].key, 
+                                    sizeof(CHAR));
+          }
+
           Accel->Table[Index].cmd = Entries[Index].cmd;
       }
 

@@ -338,7 +338,7 @@ static BOOL Setup(VOID)
         Target.sin_family = AF_INET;
 
     TargetIP = inet_ntoa(Target.sin_addr);
-    CurrentSeqNum = 0;
+    CurrentSeqNum = 1;
     SentCount = 0;
     LostCount = 0;
     MinRTT.QuadPart = 0;

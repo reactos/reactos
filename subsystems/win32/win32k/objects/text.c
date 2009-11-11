@@ -176,6 +176,8 @@ NtGdiGetRasterizerCaps(
            SetLastNtError(Status);
            return FALSE;
         }
+
+        return TRUE;
      }
   }
   return FALSE;

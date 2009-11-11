@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
@@ -28,7 +28,7 @@
 
 #include "usetup.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -218,7 +218,6 @@ SetupCopyFile(PWCHAR SourceFileName,
   RegionSize = (ULONG)PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
   IoStatusBlock.Status = 0;
   ByteOffset.QuadPart = 0;
-  DPRINT("Writing to the file for %x bytes\n", RegionSize);
   Status = NtWriteFile(FileHandleDest,
 		       NULL,
 		       NULL,
@@ -234,7 +233,6 @@ SetupCopyFile(PWCHAR SourceFileName,
       goto closedest;
     }
   /* Copy file date/time from source file */
-  DPRINT("Set basic information %wZ\n", &FileName);
   Status = NtSetInformationFile(FileHandleDest,
 				&IoStatusBlock,
 				&FileBasic,
@@ -247,7 +245,6 @@ SetupCopyFile(PWCHAR SourceFileName,
     }
 
   /* shorten the file back to it's real size after completing the write */
-  DPRINT("Setting end of file at %x\n", FileStandard.EndOfFile.u.LowPart);
   Status = NtSetInformationFile(FileHandleDest,
 		       &IoStatusBlock,
 		       &FileStandard.EndOfFile,

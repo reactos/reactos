@@ -2,6 +2,7 @@
  *  FreeLoader
  *
  *  Copyright (C) 2003, 2004  Eric Kohl
+ *  Copyright (C) 2009  Hervé Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,9 +14,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -439,7 +440,7 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     SectorSize = (DrivePartition == 0xff ? 2048 : 512);
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
-        if (!MachDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
+        if (!DiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
         SectorCount = PartitionTableEntry.PartitionSectorCount;
@@ -466,15 +467,16 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
     UCHAR* Ptr = (UCHAR*)Buffer;
-    ULONG i;
+    ULONG i, Length;
     BOOLEAN ret;
 
     *Count = 0;
-    if (N & (Context->SectorSize - 1))
-        return EINVAL;
-
-    for (i = 0; i < N / Context->SectorSize; i++)
+    i = 0;
+    while (N > 0)
     {
+        Length = N;
+        if (Length > Context->SectorSize)
+            Length = Context->SectorSize;
         ret = MachDiskReadLogicalSectors(
             Context->DriveNumber,
             Context->SectorNumber + Context->SectorOffset + i,
@@ -482,11 +484,13 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
             (PVOID)DISKREADBUFFER);
         if (!ret)
             return EIO;
-        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Context->SectorSize);
-        Ptr += Context->SectorSize;
+        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Length);
+        Ptr += Length;
+        *Count += Length;
+        N -= Length;
+        i++;
     }
 
-    *Count = N;
     return ESUCCESS;
 }
 
@@ -559,9 +563,9 @@ GetHarddiskIdentifier(PCHAR Identifier,
   FsRegisterDevice(ArcName, &DiskVtbl);
 
   /* Add partitions */
-  i = 0;
+  i = 1;
   DiskReportError(FALSE);
-  while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
+  while (DiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
   {
     if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
     {
@@ -917,7 +921,7 @@ GetDiskCount(PCONFIGURATION_COMPONENT_DATA BusKey)
     //
     // Return number of disks
     //
-    DPRINTM(DPRINT_HWDETECT, "Retrieving %lu INT13 disks\\0\n");
+    DPRINTM(DPRINT_HWDETECT, "Retrieving %lu INT13 disks\\0\n", DiskCount);
     return DiskCount;
 };
 
@@ -977,6 +981,29 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
         DiskIsDriveRemovable(BootDrive))
     {
         /* TODO: Check if it's really a cdrom drive */
+        ULONG* Buffer;
+        ULONG Checksum = 0;
+
+        /* Read the MBR */
+        if (!MachDiskReadLogicalSectors(BootDrive, 16ULL, 1, (PVOID)DISKREADBUFFER))
+        {
+          DPRINTM(DPRINT_HWDETECT, "Reading MBR failed\n");
+          return;
+        }
+
+        Buffer = (ULONG*)DISKREADBUFFER;
+
+        /* Calculate the MBR checksum */
+        for (i = 0; i < 2048 / sizeof(ULONG); i++) Checksum += Buffer[i];
+        DPRINTM(DPRINT_HWDETECT, "Checksum: %x\n", Checksum);
+
+        /* Fill out the ARC disk block */
+        reactos_arc_disk_info[reactos_disk_count].CheckSum = Checksum;
+        strcpy(reactos_arc_strings[reactos_disk_count], BootPath);
+        reactos_arc_disk_info[reactos_disk_count].ArcName =
+            reactos_arc_strings[reactos_disk_count];
+        reactos_disk_count++;
+
         FsRegisterDevice(BootPath, &DiskVtbl);
     }
 }

@@ -229,7 +229,7 @@ IntPrepareDriver(VOID)
 
         RtlZeroMemory(&PrimarySurface, sizeof(PrimarySurface));
 
-//      if (!pPrimarySurface) pPrimarySurface = ExAllocatePoolWithTag(PagedPool, sizeof(PDEVOBJ), TAG_GDIPDEV);
+//      if (!pPrimarySurface) pPrimarySurface = ExAllocatePoolWithTag(PagedPool, gdwDirectDrawContext + sizeof(PDEVOBJ), TAG_GDIPDEV);
 
         PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(DisplayNumber);
 

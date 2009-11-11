@@ -11,6 +11,10 @@
 		<compilerflag>-fno-inline</compilerflag>
 		<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
 	</group>
+	<directory name="arcemul">
+		<file>mm.c</file>
+		<file>time.c</file>
+	</directory>
 	<directory name="cache">
 		<file>blocklist.c</file>
 		<file>cache.c</file>
@@ -27,7 +31,6 @@
 		<file>ext2.c</file>
 		<file>fat.c</file>
 		<file>fs.c</file>
-		<file>fsrec.c</file>
 		<file>iso.c</file>
 		<file>ntfs.c</file>
 	</directory>
@@ -82,10 +85,7 @@
 	<directory name="include">
 		<pch>freeldr.h</pch>
 	</directory>
-	<file>drivemap.c</file>
-	<file>miscboot.c</file>
 	<file>options.c</file>
 	<file>linuxboot.c</file>
 	<file>oslist.c</file>
-	<file>custom.c</file>
 </module>

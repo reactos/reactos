@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifndef __FS_H
@@ -27,6 +27,7 @@ typedef struct tagDEVVTBL
   ARC_OPEN Open;
   ARC_READ Read;
   ARC_SEEK Seek;
+  LPCWSTR ServiceName;
 } DEVVTBL;
 
 #define	FS_FAT			1
@@ -37,6 +38,7 @@ typedef struct tagDEVVTBL
 #define PFILE			ULONG
 
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
+LPCWSTR FsGetServiceName(ULONG FileId);
 VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific);
 VOID* FsGetDeviceSpecific(ULONG FileId);
 ULONG FsGetDeviceId(ULONG FileId);
@@ -56,5 +58,7 @@ ULONG		FsGetFileSize(PFILE FileHandle);
 VOID	FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
 ULONG		FsGetNumPathParts(PCSTR Path);
 VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
+
+#define MAX_FDS 60
 
 #endif // #defined __FS_H

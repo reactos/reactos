@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include "freeldr.h"
 #include "machine.h"
@@ -252,14 +252,6 @@ BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
     return TRUE;
 }
 
-VOID PpcDiskGetBootDevice( PULONG BootDevice ) {
-    BootDevice[0] = BootDevice[1] = 0;
-}
-
-BOOLEAN PpcDiskBootingFromFloppy(VOID) {
-    return FALSE;
-}
-
 BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
 				   ULONG SectorCount, PVOID Buffer ) {
     int rlen = 0;
@@ -287,12 +279,6 @@ BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
 
     rlen = ofw_read( part_handle, Buffer, (ULONG)(SectorCount * 512) );
     return rlen > 0;
-}
-
-BOOLEAN PpcDiskGetPartitionEntry( ULONG DriveNumber, ULONG PartitionNumber,
-                               PPARTITION_TABLE_ENTRY PartitionTableEntry ) {
-    printf("GetPartitionEntry(%d,%d)\n", DriveNumber, PartitionNumber);
-    return FALSE;
 }
 
 BOOLEAN PpcDiskGetDriveGeometry( ULONG DriveNumber, PGEOMETRY DriveGeometry ) {
@@ -428,44 +414,6 @@ PCONFIGURATION_COMPONENT_DATA PpcHwDetect() {
     return RootKey;
 }
 
-BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
-	CHAR BootPath[256];
-	ULONG PartitionNumber;
-	ULONG DriveNumber;
-	PARTITION_TABLE_ENTRY PartEntry;
-	char *p;
-
-	if (!DissectArcPath(SystemPath, BootPath, &DriveNumber, &PartitionNumber))
-	{
-		return FALSE;
-	}
-
-	if (0 != PartitionNumber)
-	{
-		return TRUE;
-	}
-
-	if (! DiskGetActivePartitionEntry(DriveNumber,
-	                                  &PartEntry,
-	                                  &PartitionNumber) ||
-	    PartitionNumber < 1 || 9 < PartitionNumber)
-	{
-		return FALSE;
-	}
-
-	p = SystemPath;
-	while ('\0' != *p && 0 != _strnicmp(p, "partition(", 10)) {
-		p++;
-	}
-	p = strchr(p, ')');
-	if (NULL == p || '0' != *(p - 1)) {
-		return FALSE;
-	}
-	*(p - 1) = '0' + PartitionNumber;
-
-	return TRUE;
-}
-
 /* Compatibility functions that don't do much */
 VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
 }
@@ -492,12 +440,9 @@ void PpcDefaultMachVtbl()
 
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
-    MachVtbl.DiskNormalizeSystemPath = PpcDiskNormalizeSystemPath;
+    MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
     MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
-    MachVtbl.DiskGetBootDevice = PpcDiskGetBootDevice;
-    MachVtbl.DiskBootingFromFloppy = PpcDiskBootingFromFloppy;
     MachVtbl.DiskReadLogicalSectors = PpcDiskReadLogicalSectors;
-    MachVtbl.DiskGetPartitionEntry = PpcDiskGetPartitionEntry;
     MachVtbl.DiskGetDriveGeometry = PpcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PpcDiskGetCacheableBlockCount;
 

@@ -88,7 +88,7 @@ GetServiceDependents(SC_HANDLE hService,
     DWORD dwCount;
 
     if (EnumDependentServices(hService,
-                              SERVICE_ACTIVE,
+                              SERVICE_STATE_ALL,
                               NULL,
                               0,
                               &dwBytesNeeded,
@@ -108,7 +108,7 @@ GetServiceDependents(SC_HANDLE hService,
         if (lpDependencies)
         {
             if (EnumDependentServices(hService,
-                                       SERVICE_ACTIVE,
+                                       SERVICE_STATE_ALL,
                                        lpDependencies,
                                        dwBytesNeeded,
                                        &dwBytesNeeded,
@@ -141,7 +141,7 @@ HasDependentServices(SC_HANDLE hService)
     if (hService)
     {
         if (!EnumDependentServices(hService,
-                                   SERVICE_ACTIVE,
+                                   SERVICE_STATE_ALL,
                                    NULL,
                                    0,
                                    &dwBytesNeeded,

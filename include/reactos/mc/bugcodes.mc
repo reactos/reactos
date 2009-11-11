@@ -1168,6 +1168,14 @@ Language=English
 The system is booting in safemode - Directory Services Repair
 .
 
+MessageId=0xAC
+Severity=Success
+Facility=System
+SymbolicName=HAL_MEMORY_ALLOCATION
+Language=English
+HAL_MEMORY_ALLOCATION
+.
+
 MessageId=0xB4
 Severity=Success
 Facility=System

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -38,7 +38,9 @@ ULONG		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
 ULONG		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_FILESYSTEM | DPRINT_CACHE | DPRINT_MEMORY;
+ULONG		DebugPrintMask = DPRINT_WARNING |
+		                 DPRINT_UI | DPRINT_CACHE | DPRINT_REACTOS |
+		                 DPRINT_LINUX;
 #else //#elif defined (DEBUG_NONE)
 ULONG		DebugPrintMask = 0;
 #endif
@@ -157,7 +159,7 @@ VOID DebugPrintHeader(ULONG Mask)
 	    DbgPrint("CACHE: ");
 		break;
 	case DPRINT_REGISTRY:
-	    DbgPrint("REGISTER: ");
+	    DbgPrint("REGISTRY: ");
 		break;
 	case DPRINT_REACTOS:
 	    DbgPrint("REACTOS: ");
@@ -309,7 +311,7 @@ MsgBoxPrint(const char *Format, ...)
 	Length = _vsnprintf(Buffer, 512, Format, ap);
 
 	/* Check if we went past the buffer */
-	if (Length == -1U)
+	if (Length == MAXULONG)
 	{
 		/* Terminate it if we went over-board */
 		Buffer[sizeof(Buffer) - 1] = '\n';

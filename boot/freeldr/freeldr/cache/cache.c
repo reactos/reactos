@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -31,8 +31,6 @@ BOOLEAN			CacheManagerDataInvalid = FALSE;
 ULONG			CacheBlockCount = 0;
 ULONG			CacheSizeLimit = 0;
 ULONG			CacheSizeCurrent = 0;
-ULONG           FreeCacheBlocks = 0;
-LIST_ENTRY      FreeBlockList;
 
 BOOLEAN CacheInitializeDrive(ULONG DriveNumber)
 {
@@ -51,7 +49,6 @@ BOOLEAN CacheInitializeDrive(ULONG DriveNumber)
 	}
 
 	CacheManagerDataInvalid = FALSE;
-	InitializeListHead(&FreeBlockList);
 
 	//
 	// If we have already been initialized then free
@@ -94,9 +91,9 @@ BOOLEAN CacheInitializeDrive(ULONG DriveNumber)
 	CacheBlockCount = 0;
 	CacheSizeLimit = GetSystemMemorySize() / 8;
 	CacheSizeCurrent = 0;
-	if (CacheSizeLimit > (8 * 1024 * 1024))
+	if (CacheSizeLimit < (64 * 1024))
 	{
-		CacheSizeLimit = (8 * 1024 * 1024);
+		CacheSizeLimit = (64 * 1024);
 	}
 
 	CacheManagerInitialized = TRUE;
@@ -286,7 +283,7 @@ BOOLEAN CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULON
 		//
 		// Lock the sectors into the cache
 		//
-		//CacheBlock->LockedInCache = TRUE;
+		CacheBlock->LockedInCache = TRUE;
 	}
 
 	return TRUE;

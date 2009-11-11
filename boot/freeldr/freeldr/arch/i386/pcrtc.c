@@ -12,25 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
-
-FORCEINLINE
-VOID
-ClearCarryFlag(VOID)
-{
-#if defined(__GNUC__)
-    __asm__ ("clc");
-#elif defined(_MSC_VER)
-    __asm clc;
-#else
-#error
-#endif
-}
 
 #define BCD_INT(bcd) (((bcd & 0xf0) >> 4) * 10 + (bcd &0x0f))
 
@@ -44,7 +31,7 @@ PcGetTime(VOID)
      * in the Compaq Deskpro EP/SB, leave CF unchanged
      * if successful, so CF should be cleared before
      * calling this function. */
-    ClearCarryFlag();
+    __writeeflags(__readeflags() & ~EFLAGS_CF);
 
     /* Int 1Ah AH=04h
      * TIME - GET REAL-TIME CLOCK DATE (AT,XT286,PS)
@@ -68,7 +55,7 @@ PcGetTime(VOID)
 
     /* Some BIOSes leave CF unchanged if successful,
      * so CF should be cleared before calling this function. */
-    ClearCarryFlag();
+    __writeeflags(__readeflags() & ~EFLAGS_CF);
 
     /* Int 1Ah AH=02h
      * TIME - GET REAL-TIME CLOCK TIME (AT,XT286,PS)

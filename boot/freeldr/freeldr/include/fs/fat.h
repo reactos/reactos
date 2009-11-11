@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifndef __FAT_H
@@ -144,12 +144,16 @@ typedef struct
 } FATX_DIRENTRY, * PFATX_DIRENTRY;
 #include <poppack.h>
 
+typedef struct _FAT_VOLUME_INFO *PFAT_VOLUME_INFO;
+
 typedef struct
 {
+	UCHAR	Attributes;		/* File attributes */
 	ULONG	FileSize;		/* File size */
 	ULONG	FilePointer;		/* File pointer */
 	ULONG*	FileFatChain;		/* File fat chain array */
 	ULONG	DriveNumber;
+	PFAT_VOLUME_INFO	Volume;
 } FAT_FILE_INFO, * PFAT_FILE_INFO;
 
 #define	ATTR_NORMAL		0x00
