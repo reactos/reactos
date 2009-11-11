@@ -16,7 +16,6 @@
 
 ULONG DummyData;
 ULONG CmNtGlobalFlag;
-ULONG CmNtCSDVersion;
 
 WCHAR CmDefaultLanguageId[12];
 ULONG CmDefaultLanguageIdLength = sizeof(CmDefaultLanguageId);
@@ -388,7 +387,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"DisablePagingExecutive",
-        &DummyData,
+        &MmDisablePagingExecutive,
         NULL,
         NULL
     },
@@ -781,10 +780,20 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager",
         L"Debugger Retries",
-        &DummyData,
+        &KdpContext.KdpDefaultRetries,
         NULL,
         NULL
     },
+
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WIN2000",
+        &Kd_WIN2000_Mask,
+        NULL,
+        NULL
+    },
+
+    /* TODO: Add the other masks */
 
     {
         L"WMI",

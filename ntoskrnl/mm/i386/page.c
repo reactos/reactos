@@ -67,7 +67,7 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 {
     if ((Pt && MmUnmapPageTable(Pt)) || Address >= MmSystemRangeStart)
     {
-        __invlpg(Address);
+        KeInvalidateTlbEntry(Address);
     }
 }
 
@@ -1031,50 +1031,6 @@ MmInitGlobalKernelPageDirectory(VOID)
                 CurrentPageDirectory[i] |= PA_GLOBAL;
             }
         }
-    }
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-MiInitPageDirectoryMap(VOID)
-{
-    MEMORY_AREA* kernel_map_desc = NULL;
-    MEMORY_AREA* hyperspace_desc = NULL;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    PVOID BaseAddress;
-    NTSTATUS Status;
-    
-    DPRINT("MiInitPageDirectoryMap()\n");
-    
-    BoundaryAddressMultiple.QuadPart = 0;
-    BaseAddress = (PVOID)PAGETABLE_MAP;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                0x400000,
-                                PAGE_READWRITE,
-                                &kernel_map_desc,
-                                TRUE,
-                                0,
-                                BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status))
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-    BaseAddress = (PVOID)HYPERSPACE;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                0x400000,
-                                PAGE_READWRITE,
-                                &hyperspace_desc,
-                                TRUE,
-                                0,
-                                BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status))
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
     }
 }
 

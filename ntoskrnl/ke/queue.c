@@ -252,10 +252,6 @@ KeRemoveQueue(IN PKQUEUE Queue,
     ASSERT_QUEUE(Queue);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-#ifdef DBG
-	KdbgDeclareWait(Queue);
-#endif
-
     /* Check if the Lock is already held */
     if (Thread->WaitNext)
     {
@@ -407,13 +403,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 Thread->WaitReason = 0;
 
                 /* Check if we were executing an APC */
-                if (Status != STATUS_KERNEL_APC) 
-				{
-#ifdef DBG
-					KdbgSatisfyWait(Queue);
-#endif
-					return (PLIST_ENTRY)Status;
-				}
+                if (Status != STATUS_KERNEL_APC) return (PLIST_ENTRY)Status;
 
                 /* Check if we had a timeout */
                 if (Timeout)
@@ -436,9 +426,6 @@ KeRemoveQueue(IN PKQUEUE Queue,
     /* Unlock Database and return */
     KiReleaseDispatcherLockFromDpcLevel();
     KiExitDispatcher(Thread->WaitIrql);
-#ifdef DBG
-	KdbgSatisfyWait(Queue);
-#endif
     return QueueEntry;
 }
 

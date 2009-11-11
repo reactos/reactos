@@ -58,10 +58,26 @@ ExpSystemErrorHandler(IN NTSTATUS ErrorStatus,
                       IN PULONG_PTR Parameters,
                       IN BOOLEAN Shutdown)
 {
+    ULONG_PTR BugCheckParameters[MAXIMUM_HARDERROR_PARAMETERS] = {0, 0, 0, 0};
+    ULONG i;
+
+    /* Sanity check */
+    ASSERT(NumberOfParameters <= MAXIMUM_HARDERROR_PARAMETERS);
+
+    /*
+     * KeBugCheck expects MAXIMUM_HARDERROR_PARAMETERS parameters,
+     * but we might get called with less, so use a local buffer here.
+     */
+    for (i = 0; i < NumberOfParameters; i++)
+    {
+        /* Copy them over */
+        BugCheckParameters[i] = Parameters[i];
+    }
+
     /* FIXME: STUB */
     KeBugCheckEx(FATAL_UNHANDLED_HARD_ERROR,
                  ErrorStatus,
-                 0,
+                 (ULONG_PTR)BugCheckParameters,
                  0,
                  0);
     return STATUS_SUCCESS;
@@ -113,12 +129,6 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PAGED_CODE();
 
-	DPRINT1("ExpRaiseHardError %x %x %x %x %x\n",
-			ErrorStatus,
-			NumberOfParameters,
-			UnicodeStringParameterMask,
-			Parameters,
-			ValidResponseOptions);
     /* Check if this error will shutdown the system */
     if (ValidResponseOptions == OptionShutdownSystem)
     {
@@ -386,8 +396,6 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
     NTSTATUS Status;
     PAGED_CODE();
 
-	ASSERT(FALSE);
-
     /* Check if we have parameters */
     if (Parameters)
     {
@@ -442,34 +450,20 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                     ParameterBase[i] = (ULONG_PTR)&StringBase[i];
 
                     /* Copy the string buffer */
-					_SEH2_TRY
-					{
-						DPRINT("Buffer Base %x, CapturedParams[%d].Buffer %x, Length %x\n",
-							   BufferBase, i, 
-							   CapturedParams[i].Buffer, 
-							   CapturedParams[i].MaximumLength);
+                    RtlMoveMemory(BufferBase,
+                                  CapturedParams[i].Buffer,
+                                  CapturedParams[i].MaximumLength);
 
-						RtlMoveMemory(BufferBase,
-									  CapturedParams[i].Buffer,
-									  CapturedParams[i].MaximumLength);
+                    /* Set buffer */
+                    CapturedParams[i].Buffer = BufferBase;
 
-						/* Set buffer */
-						CapturedParams[i].Buffer = BufferBase;
-						
-						/* Copy the string structure */
-						RtlMoveMemory(&StringBase[i],
-									  &CapturedParams[i],
-									  sizeof(UNICODE_STRING));
-						
-						/* Update the pointer */
-						BufferBase += CapturedParams[i].MaximumLength;
-					}
-					_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-					{
-						DPRINT1("Couldn't capture parameter string %d!\n", i);
-						CapturedParams[i].Buffer = BufferBase;
-					}
-					_SEH2_END;
+                    /* Copy the string structure */
+                    RtlMoveMemory(&StringBase[i],
+                                  &CapturedParams[i],
+                                  sizeof(UNICODE_STRING));
+
+                    /* Update the pointer */
+                    BufferBase += CapturedParams[i].MaximumLength;
                 }
                 else
                 {
@@ -527,7 +521,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
  *        Optional string parameter (can be only one per error code)
  *
  * @param Parameters
- *        Array of ULONG parameters for use in error message string
+ *        Array of ULONG_PTR parameters for use in error message string
  *
  * @param ValidResponseOptions
  *        See HARDERROR_RESPONSE_OPTION for possible values description

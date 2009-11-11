@@ -1008,7 +1008,7 @@ KdbpDisableBreakPoint(
             }
         }
 
-        if (i != (ULONG)-1) /* not found */
+        if (i != MAXULONG) /* not found */
             ASSERT(0);
     }
     else
@@ -1033,7 +1033,7 @@ KdbpDisableBreakPoint(
             }
         }
 
-        if (i != (ULONG)-1) /* not found */
+        if (i != MAXULONG) /* not found */
             ASSERT(0);
     }
 
@@ -1334,7 +1334,7 @@ KdbpGetExceptionNumberFromStatus(
  *
  * \returns KD_CONTINUE_TYPE
  */
-KD_CONTINUE_TYPE
+enum _KD_CONTINUE_TYPE
 KdbEnterDebuggerException(
     IN PEXCEPTION_RECORD ExceptionRecord  OPTIONAL,
     IN KPROCESSOR_MODE PreviousMode,
@@ -1675,15 +1675,6 @@ continue_execution:
     }
 
     return ContinueType;
-}
-
-VOID
-KdbDeleteProcessHook(
-    IN PEPROCESS Process)
-{
-    KdbSymFreeProcessSymbols(Process);
-
-    /* FIXME: Delete breakpoints for process */
 }
 
 VOID

@@ -14,34 +14,11 @@
 
 /* GLOBALS *******************************************************************/
 
-/* The Boot TSS */
-KTSS KiBootTss;
-
 /* The TSS to use for Double Fault Traps (INT 0x9) */
 UCHAR KiDoubleFaultTSS[KTSS_IO_MAPS];
 
 /* The TSS to use for NMI Fault Traps (INT 0x2) */
 UCHAR KiNMITSS[KTSS_IO_MAPS];
-
-/* The Boot GDT */
-KGDTENTRY KiBootGdt[256] =
-{
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_NULL */
-    {0xffff, 0x0000, {{0x00, 0x9b, 0xcf, 0x00}}},       /* KGDT_R0_CODE */
-    {0xffff, 0x0000, {{0x00, 0x93, 0xcf, 0x00}}},       /* KGDT_R0_DATA */
-    {0xffff, 0x0000, {{0x00, 0xfb, 0xcf, 0x00}}},       /* KGDT_R3_CODE */
-    {0xffff, 0x0000, {{0x00, 0xf3, 0xcf, 0x00}}},       /* KGDT_R3_DATA*/
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_TSS */
-    {0x0001, 0xf000, {{0xdf, 0x93, 0xc0, 0xff}}},       /* KGDT_R0_PCR */
-    {0x0fff, 0x0000, {{0x00, 0xf3, 0x40, 0x00}}},       /* KGDT_R3_TEB */
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_UNUSED */
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_LDT */
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_DF_TSS */
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}}        /* KGDT_NMI_TSS */
-};
-
-/* GDT Descriptor */
-KDESCRIPTOR KiGdtDescriptor = {0, sizeof(KiBootGdt) - 1, (ULONG)KiBootGdt};
 
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
@@ -68,10 +45,6 @@ KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
 
-/* Freeze data */
-KIRQL KiOldIrql;
-ULONG KiFreezeFlag;
-
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
 
@@ -87,11 +60,22 @@ static const CHAR CmpRiseID[]        = "RiseRiseRise";
 
 VOID
 NTAPI
-CPUID(OUT ULONG CpuInfo[4],
-      IN ULONG InfoType)
+CPUID(IN ULONG InfoType,
+      OUT PULONG CpuInfoEax,
+      OUT PULONG CpuInfoEbx,
+      OUT PULONG CpuInfoEcx,
+      OUT PULONG CpuInfoEdx)
 {
+    ULONG CpuInfo[4];
+
     /* Perform the CPUID Operation */
     __cpuid((int*)CpuInfo, InfoType);
+
+    /* Return the results */
+    *CpuInfoEax = CpuInfo[0];
+    *CpuInfoEbx = CpuInfo[1];
+    *CpuInfoEcx = CpuInfo[2];
+    *CpuInfoEdx = CpuInfo[3];
 }
 
 VOID
@@ -104,7 +88,7 @@ WRMSR(IN ULONG Register,
 }
 
 LONGLONG
-NTAPI
+FASTCALL
 RDMSR(IN ULONG Register)
 {
     /* Read from the MSR */
@@ -118,7 +102,7 @@ NTAPI
 KiSetProcessorType(VOID)
 {
     ULONG EFlags, NewEFlags;
-    ULONG Reg[4];
+    ULONG Reg, Dummy;
     ULONG Stepping, Type;
 
     /* Start by assuming no CPUID data */
@@ -140,11 +124,11 @@ KiSetProcessorType(VOID)
         __writeeflags(EFlags);
 
         /* Peform CPUID 0 to see if CPUID 1 is supported */
-        CPUID(Reg, 0);
-        if (Reg[0] > 0)
+        CPUID(0, &Reg, &Dummy, &Dummy, &Dummy);
+        if (Reg > 0)
         {
             /* Do CPUID 1 now */
-            CPUID(Reg, 1);
+            CPUID(1, &Reg, &Dummy, &Dummy, &Dummy);
 
             /*
              * Get the Stepping and Type. The stepping contains both the
@@ -153,11 +137,11 @@ KiSetProcessorType(VOID)
              *
              * For the stepping, we convert this: zzzzzzxy into this: x0y
              */
-            Stepping = Reg[0] & 0xF0;
+            Stepping = Reg & 0xF0;
             Stepping <<= 4;
-            Stepping += (Reg[0] & 0xFF);
+            Stepping += (Reg & 0xFF);
             Stepping &= 0xF0F;
-            Type = Reg[0] & 0xF00;
+            Type = Reg & 0xF00;
             Type >>= 8;
 
             /* Save them in the PRCB */
@@ -192,7 +176,7 @@ KiGetCpuVendor(VOID)
     if (!Prcb->CpuID) return 0;
 
     /* Get the Vendor ID and null-terminate it */
-    CPUID(Vendor, 0);
+    CPUID(0, &Vendor[0], &Vendor[1], &Vendor[2], &Vendor[3]);
     Vendor[4] = 0;
 
     /* Re-arrange vendor string */
@@ -247,7 +231,7 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
-    ULONG Reg[4];
+    ULONG Reg[4], Dummy;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
 
@@ -258,7 +242,7 @@ KiGetFeatureBits(VOID)
     if (!Vendor) return FeatureBits;
 
     /* Get the CPUID Info. Features are in Reg[3]. */
-    CPUID(Reg, 1);
+    CPUID(1, &Reg[0], &Reg[1], &Dummy, &Reg[3]);
 
     /* Set the initial APIC ID */
     Prcb->InitialApicId = (UCHAR)(Reg[1] >> 24);
@@ -267,12 +251,13 @@ KiGetFeatureBits(VOID)
     {
         /* Intel CPUs */
         case CPU_INTEL:
+
             /* Check if it's a P6 */
             if (Prcb->CpuType == 6)
             {
                 /* Perform the special sequence to get the MicroCode Signature */
                 WRMSR(0x8B, 0);
-                CPUID(Reg, 1);
+                CPUID(1, &Dummy, &Dummy, &Dummy, &Dummy);
                 Prcb->UpdateSignature.QuadPart = RDMSR(0x8B);
             }
             else if (Prcb->CpuType == 5)
@@ -356,10 +341,14 @@ KiGetFeatureBits(VOID)
 
         /* Cyrix CPUs */
         case CPU_CYRIX:
+
+            /* FIXME: CMPXCGH8B */
+
             break;
 
         /* Transmeta CPUs */
         case CPU_TRANSMETA:
+
             /* Enable CMPXCHG8B if the family (>= 5), model and stepping (>= 4.2) support it */
             if ((Reg[0] & 0x0FFF) >= 0x0542)
             {
@@ -372,6 +361,7 @@ KiGetFeatureBits(VOID)
         /* Centaur, IDT, Rise and VIA CPUs */
         case CPU_CENTAUR:
         case CPU_RISE:
+
             /* These CPUs don't report the presence of CMPXCHG8B through CPUID.
                However, this feature exists and operates properly without any additional steps. */
             FeatureBits |= KF_CMPXCHG8B;
@@ -416,14 +406,14 @@ KiGetFeatureBits(VOID)
     if (ExtendedCPUID)
     {
         /* Do the call */
-        CPUID(Reg, 0x80000000);
+        CPUID(0x80000000, &Reg[0], &Dummy, &Dummy, &Dummy);
         if ((Reg[0] & 0xffffff00) == 0x80000000)
         {
             /* Check if CPUID 0x80000001 is supported */
             if (Reg[0] >= 0x80000001)
             {
                 /* Check which extended features are available. */
-                CPUID(Reg, 0x80000001);
+                CPUID(0x80000001, &Dummy, &Dummy, &Dummy, &Reg[3]);
 
                 /* Check if NX-bit is supported */
                 if (Reg[3] & 0x00100000) FeatureBits |= KF_NX_BIT;
@@ -450,7 +440,7 @@ KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     ULONG Vendor;
-    ULONG Data[4];
+    ULONG Data[4], Dummy;
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
     UCHAR RegisterByte;
@@ -470,14 +460,14 @@ KiGetCacheInformation(VOID)
         case CPU_INTEL:
 
             /*Check if we support CPUID 2 */
-            CPUID(Data, 0);
+            CPUID(0, &Data[0], &Dummy, &Dummy, &Dummy);
             if (Data[0] >= 2)
             {
                 /* We need to loop for the number of times CPUID will tell us to */
                 do
                 {
                     /* Do the CPUID call */
-                    CPUID(Data, 2);
+                    CPUID(2, &Data[0], &Data[1], &Data[2], &Data[3]);
 
                     /* Check if it was the first call */
                     if (FirstPass)
@@ -539,15 +529,23 @@ KiGetCacheInformation(VOID)
         case CPU_AMD:
 
             /* Check if we support CPUID 0x80000006 */
-            CPUID(Data, 0x80000000);
+            CPUID(0x80000000, &Data[0], &Dummy, &Dummy, &Dummy);
             if (Data[0] >= 6)
             {
                 /* Get 2nd level cache and tlb size */
-                CPUID(Data, 0x80000006);
+                CPUID(0x80000006, &Dummy, &Dummy, &Data[2], &Dummy);
 
                 /* Set the L2 Cache Size */
                 Pcr->SecondLevelCacheSize = (Data[2] & 0xFFFF0000) >> 6;
             }
+            break;
+
+        case CPU_CYRIX:
+        case CPU_TRANSMETA:
+        case CPU_CENTAUR:
+        case CPU_RISE:
+
+            /* FIXME */
             break;
     }
 }
@@ -712,7 +710,11 @@ VOID
 NTAPI
 KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
 {
-    /* Restore the CR registers */
+    PKGDTENTRY TssEntry;
+
+    //
+    // Restore the CR registers
+    //
     __writecr0(ProcessorState->SpecialRegisters.Cr0);
     Ke386SetCr2(ProcessorState->SpecialRegisters.Cr2);
     __writecr3(ProcessorState->SpecialRegisters.Cr3);
@@ -729,10 +731,21 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     __writedr(7, ProcessorState->SpecialRegisters.KernelDr7);
 
     //
-    // Restore GDT, IDT, LDT and TSS
+    // Restore GDT and IDT
     //
     Ke386SetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
     __lidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
+
+    //
+    // Clear the busy flag so we don't crash if we reload the same selector
+    //
+    TssEntry = (PKGDTENTRY)(ProcessorState->SpecialRegisters.Gdtr.Base +
+                            ProcessorState->SpecialRegisters.Tr);
+    TssEntry->HighWord.Bytes.Flags1 &= ~0x2;
+
+    //
+    // Restore TSS and LDT
+    //
     Ke386SetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386SetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }
@@ -760,8 +773,8 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     /* Save GDT, IDT, LDT and TSS */
     Ke386GetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
     __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
-    Ke386GetTr(&ProcessorState->SpecialRegisters.Tr);
-    Ke386GetLocalDescriptorTable(&ProcessorState->SpecialRegisters.Ldtr);
+    ProcessorState->SpecialRegisters.Tr = Ke386GetTr();
+    ProcessorState->SpecialRegisters.Ldtr = Ke386GetLocalDescriptorTable();
 }
 
 VOID
@@ -875,35 +888,18 @@ KiI386PentiumLockErrataFixup(VOID)
 
 BOOLEAN
 NTAPI
-KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
-                  IN PKEXCEPTION_FRAME ExceptionFrame)
+KeDisableInterrupts(VOID)
 {
     ULONG Flags;
+    BOOLEAN Return;
 
-    /* Disable interrupts and get previous state */
+    /* Get EFLAGS and check if the interrupt bit is set */
     Flags = __readeflags();
-    //Flags = __getcallerseflags();
+    Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
+
+    /* Disable interrupts */
     _disable();
-
-    /* Save freeze flag */
-    KiFreezeFlag = 4;
-
-    /* Save the old IRQL */
-    KiOldIrql = KeGetCurrentIrql();
-
-    /* Return whether interrupts were enabled */
-    return (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
-}
-
-VOID
-NTAPI
-KeThawExecution(IN BOOLEAN Enable)
-{
-    /* Cleanup CPU caches */
-    KeFlushCurrentTb();
-
-    /* Re-enable interrupts */
-    if (Enable) _enable();
+    return Return;
 }
 
 BOOLEAN

@@ -243,11 +243,6 @@ KdInitSystem(ULONG BootPhase,
             InitRoutines[i](&DispatchTable[i], 0);
         }
 
-#ifdef DBG
-		/* Start waiter tracking */
-		KdbgInitWaitReporting();
-#endif
-
         /* Call Wrapper at Phase 0 */
         if (WrapperInitRoutine) WrapperInitRoutine(&WrapperTable, 0);
         return TRUE;

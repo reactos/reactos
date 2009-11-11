@@ -55,22 +55,15 @@ protected:
 
 };
 
-typedef struct
-{
-    PIRP Irp;
-    IIrpTarget *Filter;
-    PIO_WORKITEM WorkItem;
-}PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
-
 static GUID InterfaceGuids[2] = 
 {
     {
-        /// KS_CATEGORY_TOPOLOGY
-        0xDDA54A40, 0x1E4C, 0x11D1, {0xA0, 0x50, 0x40, 0x57, 0x05, 0xC1, 0x00, 0x00}
-    },
-    {
         /// KS_CATEGORY_AUDIO
         0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        /// KS_CATEGORY_TOPOLOGY
+        0xDDA54A40, 0x1E4C, 0x11D1, {0xA0, 0x50, 0x40, 0x57, 0x05, 0xC1, 0x00, 0x00}
     }
 };
 
@@ -171,7 +164,7 @@ CPortTopology::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IPortTopology_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IPortTopology_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
     return STATUS_UNSUCCESSFUL;
@@ -219,14 +212,14 @@ CPortTopology::Init(
 
     if (m_bInitialized)
     {
-        DPRINT1("IPortTopology_Init called again\n");
+        DPRINT("IPortTopology_Init called again\n");
         return STATUS_SUCCESS;
     }
 
     Status = UnknownMiniport->QueryInterface(IID_IMiniportTopology, (PVOID*)&Miniport);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IPortTopology_Init called with invalid IMiniport adapter\n");
+        DPRINT("IPortTopology_Init called with invalid IMiniport adapter\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -239,7 +232,7 @@ CPortTopology::Init(
     Status = Miniport->Init(UnknownAdapter, ResourceList, this);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IPortTopology_Init failed with %x\n", Status);
+        DPRINT("IPortTopology_Init failed with %x\n", Status);
         m_bInitialized = FALSE;
         Miniport->Release();
         return Status;
@@ -249,7 +242,7 @@ CPortTopology::Init(
     Status = Miniport->GetDescription(&m_pDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("failed to get description\n");
+        DPRINT("failed to get description\n");
         Miniport->Release();
         m_bInitialized = FALSE;
         return Status;
@@ -273,6 +266,12 @@ CPortTopology::Init(
 
 
     DPRINT("IPortTopology_fnInit success\n");
+    if (NT_SUCCESS(Status))
+    {
+        // store for node property requests
+        m_SubDeviceDescriptor->UnknownMiniport = UnknownMiniport;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -314,7 +313,7 @@ NTSTATUS
 NTAPI
 CPortTopology::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
@@ -365,7 +364,7 @@ NTSTATUS
 NTAPI
 CPortTopology::ReleaseChildren()
 {
-    DPRINT1("ISubDevice_fnReleaseChildren\n");
+    DPRINT("ISubDevice_fnReleaseChildren\n");
 
     // release the filter
     m_Filter->Release();
@@ -442,120 +441,68 @@ CPortTopology::PinCount(
 }
 
 
-VOID
-NTAPI
-CreatePinWorkerRoutine(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID  Context)
-{
-    NTSTATUS Status;
-    IIrpTarget *Pin;
-    PPIN_WORKER_CONTEXT WorkerContext = (PPIN_WORKER_CONTEXT)Context;
-
-    DPRINT("CreatePinWorkerRoutine called\n");
-    // create the pin
-    Status = WorkerContext->Filter->NewIrpTarget(&Pin,
-                                                 NULL,
-                                                 NULL,
-                                                 NonPagedPool,
-                                                 DeviceObject,
-                                                 WorkerContext->Irp,
-                                                 NULL);
-
-    DPRINT1("CreatePinWorkerRoutine Status %x\n", Status);
-
-    if (NT_SUCCESS(Status))
-    {
-        // create the dispatch object
-        // FIXME need create item for clock
-        Status = NewDispatchObject(WorkerContext->Irp, Pin, 0, NULL);
-        DPRINT("Pin %p\n", Pin);
-    }
-
-    DPRINT("CreatePinWorkerRoutine completing irp %p\n", WorkerContext->Irp);
-    // save status in irp
-    WorkerContext->Irp->IoStatus.Status = Status;
-    WorkerContext->Irp->IoStatus.Information = 0;
-    // complete the request
-    IoCompleteRequest(WorkerContext->Irp, IO_SOUND_INCREMENT);
-    // free allocated work item
-    IoFreeWorkItem(WorkerContext->WorkItem);
-    // free context
-    FreeItem(WorkerContext, TAG_PORTCLASS);
-}
-
 NTSTATUS
 NTAPI
 PcCreatePinDispatch(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    NTSTATUS Status;
     IIrpTarget *Filter;
+    IIrpTarget *Pin;
     PKSOBJECT_CREATE_ITEM CreateItem;
-    PPIN_WORKER_CONTEXT Context;
 
     // access the create item
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
     // sanity check
     PC_ASSERT(CreateItem);
 
-    DPRINT1("PcCreatePinDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
+    DPRINT("PcCreatePinDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
 
     Filter = (IIrpTarget*)CreateItem->Context;
 
     // sanity checks
     PC_ASSERT(Filter != NULL);
+    PC_ASSERT_IRQL(PASSIVE_LEVEL);
 
 
 #if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
     {
-        DPRINT1("PcCreatePinDispatch failed to reference device header\n");
+        DPRINT("PcCreatePinDispatch failed to reference device header\n");
 
         FreeItem(Entry, TAG_PORTCLASS);
         goto cleanup;
     }
 #endif
 
-     // new pins are instantiated at passive level,
-     // so allocate a work item and context for it 
-     
+    Status = Filter->NewIrpTarget(&Pin,
+                                  KSSTRING_Pin,
+                                  NULL,
+                                  NonPagedPool,
+                                  DeviceObject,
+                                  Irp,
+                                  NULL);
 
-	Context = (PPIN_WORKER_CONTEXT)AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
-     if (!Context)
-     {
-         DPRINT("Failed to allocate worker context\n");
-         Irp->IoStatus.Information = 0;
-         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-         return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    DPRINT("PcCreatePinDispatch Status %x\n", Status);
 
-    // allocate work item
-    Context->WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!Context->WorkItem)
+    if (NT_SUCCESS(Status))
     {
-        DPRINT("Failed to allocate workitem\n");
-        FreeItem(Context, TAG_PORTCLASS);
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        // create the dispatch object
+        // FIXME need create item for clock
+        Status = NewDispatchObject(Irp, Pin, 0, NULL);
+        DPRINT("Pin %p\n", Pin);
     }
 
-    Context->Filter = Filter;
-    Context->Irp = Irp;
-
-    DPRINT("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
+    DPRINT("CreatePinWorkerRoutine completing irp %p\n", Irp);
+    // save status in irp
+    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_PENDING;
-    IoMarkIrpPending(Irp);
-    IoQueueWorkItem(Context->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
-    return STATUS_PENDING;
+    // complete the request
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
-
-
 
 NTSTATUS
 NTAPI
@@ -571,7 +518,7 @@ PcCreateItemDispatch(
     // access the create item
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
 
-    DPRINT1("PcCreateItemDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
+    DPRINT("PcCreateItemDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
 
     // get the subdevice
     SubDevice = (ISubdevice*)CreateItem->Context;
@@ -579,11 +526,12 @@ PcCreateItemDispatch(
     // sanity checks
     PC_ASSERT(SubDevice != NULL);
 
+
 #if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
     {
-        DPRINT1("PcCreateItemDispatch failed to reference device header\n");
+        DPRINT("PcCreateItemDispatch failed to reference device header\n");
 
         FreeItem(Entry, TAG_PORTCLASS);
         goto cleanup;
@@ -600,7 +548,7 @@ PcCreateItemDispatch(
                                      NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get filter object\n");
+        DPRINT("Failed to get filter object\n");
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;

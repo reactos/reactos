@@ -12,7 +12,7 @@
 #include <ntdddisk.h>
 #include <ntddstor.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 //

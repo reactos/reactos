@@ -51,7 +51,7 @@ HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
     (pHalSetWakeAlarm)NULL,
     (pHalTranslateBusAddress)NULL,
     (pHalAssignSlotResources)NULL,
-    (pHalHaltSystem)NULL,
+    xHalHaltSystem,
     (pHalFindBusAddressTranslation)NULL,
     (pHalResetDisplay)NULL,
     (pHalAllocateMapRegisters)NULL,
@@ -59,12 +59,25 @@ HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
     (pKdReleasePciDeviceForDebugging)NULL,
     (pKdGetAcpiTablePhase0)NULL,
     (pKdCheckPowerButton)NULL,
-    (pHalVectorToIDTEntry)NULL,
+    (pHalVectorToIDTEntry)xHalVectorToIDTEntry,
     (pKdMapPhysicalMemory64)NULL,
     (pKdUnmapVirtualAddress)NULL
 };
 
 /* FUNCTIONS *****************************************************************/
 
+UCHAR
+NTAPI
+xHalVectorToIDTEntry(IN ULONG Vector)
+{
+    /* Return the vector */
+    return Vector;
+}
 
-/* EOF */
+VOID
+NTAPI
+xHalHaltSystem(VOID)
+{
+    /* Halt execution */
+    while (TRUE);
+}

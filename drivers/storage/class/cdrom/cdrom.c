@@ -14,7 +14,7 @@
 #include <include/class2.h>
 #include <stdio.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #define CDB12GENERIC_LENGTH 12

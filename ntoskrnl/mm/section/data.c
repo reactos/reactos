@@ -59,6 +59,8 @@ extern KEVENT MpwThreadEvent;
 
 POBJECT_TYPE MmSectionObjectType = NULL;
 
+ULONG_PTR MmSubsectionBase;
+
 NTSTATUS
 NTAPI
 MiSimpleRead
@@ -633,6 +635,25 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 		DPRINT("Address 0x%.8X\n", Address);
 		return(STATUS_SUCCESS);
 	}
+}
+
+NTSTATUS
+NTAPI
+MiCopyFromUserPage(PFN_TYPE DestPage, PVOID SourceAddress)
+{
+    PEPROCESS Process;
+    KIRQL Irql;
+    PVOID TempAddress;
+    
+    Process = PsGetCurrentProcess();
+    TempAddress = MiMapPageInHyperSpace(Process, DestPage, &Irql);
+    if (TempAddress == NULL)
+    {
+        return(STATUS_NO_MEMORY);
+    }
+    memcpy(TempAddress, SourceAddress, PAGE_SIZE);
+    MiUnmapPageInHyperSpace(Process, TempAddress, Irql);
+    return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -1608,14 +1629,6 @@ MmInitSectionImplementation(VOID)
 
    MmCreatePhysicalMemorySection();
 
-#if DBG
-   UNICODE_STRING KASpaceLockName = RTL_CONSTANT_STRING(L"KASpaceLock");
-   UNICODE_STRING MpwThreadEventName = RTL_CONSTANT_STRING(L"MpwThreadEvent");
-   PMMSUPPORT KernelASpace = MmGetKernelAddressSpace();
-   KdbgRegisterNamedObject(&KASpaceLockName, 1, &CONTAINING_RECORD(KernelASpace, EPROCESS, Vm)->AddressCreationLock);
-   KdbgRegisterNamedObject(&MpwThreadEventName, 1, &MpwThreadEvent);
-#endif
-
    return(STATUS_SUCCESS);
 }
 
@@ -1751,11 +1764,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
 
    ExInitializeFastMutex(&Segment->Lock);
 
-#if DBG
-	UNICODE_STRING SegLockName = RTL_CONSTANT_STRING(L"SegLock");
-	KdbgRegisterNamedObject(&SegLockName, 1, &Segment->Lock);
-#endif
-
    Segment->ReferenceCount = 1;
    Section->Segment = Segment;
    
@@ -1795,10 +1803,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    {
       KeReleaseSpinLock(&FileObject->IrpListLock, OldIrql);
       ExFreePool(Segment);
-
-#if DBG
-	  KdbgDeleteNamedObject(&Segment->Lock);
-#endif
 
       DPRINT("Filling out Segment info (previous data section)\n");
 
@@ -2265,10 +2269,6 @@ MiFreeDataSectionSegment(PFILE_OBJECT FileObject)
 	}
 	MiFreePageTablesSectionSegment(Segment);
 	ExFreePool(Segment);
-
-#if DBG
-	  KdbgDeleteNamedObject(&Segment->Lock);
-#endif
 
 	FileObject->SectionObjectPointer->DataSectionObject = NULL;
 }
@@ -3236,22 +3236,6 @@ MmUnmapViewInSessionSpace (
 	return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-MmSetBankedSection (ULONG Unknown0,
-                    ULONG Unknown1,
-                    ULONG Unknown2,
-                    ULONG Unknown3,
-                    ULONG Unknown4,
-                    ULONG Unknown5)
-{
-   UNIMPLEMENTED;
-   return (STATUS_NOT_IMPLEMENTED);
-}
-
-
 /**********************************************************************
  * NAME       EXPORTED
  *  MmCreateSection@
@@ -3419,46 +3403,6 @@ MmCreateSection (OUT PVOID  * Section,
     }
 
     return(Status);   
-}
-
-NTSTATUS
-NTAPI
-NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
-                            IN OUT PULONG NumberOfPages,
-                            IN OUT PULONG UserPfnArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtMapUserPhysicalPages(IN PVOID VirtualAddresses,
-                       IN ULONG NumberOfPages,
-                       IN OUT PULONG UserPfnArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtMapUserPhysicalPagesScatter(IN PVOID *VirtualAddresses,
-                              IN ULONG NumberOfPages,
-                              IN OUT PULONG UserPfnArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtFreeUserPhysicalPages(IN HANDLE ProcessHandle,
-                        IN OUT PULONG NumberOfPages,
-                        IN OUT PULONG UserPfnArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS

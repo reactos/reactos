@@ -699,17 +699,7 @@ DriverEntry(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
-  EntityList[0].tei_entity   = CL_NL_ENTITY;
-  EntityList[0].tei_instance = 0;
-  EntityList[0].context      = 0;
-  EntityList[0].info_req     = InfoNetworkLayerTdiQueryEx;
-  EntityList[0].info_set     = InfoNetworkLayerTdiSetEx;
-  EntityList[1].tei_entity   = CL_TL_ENTITY;
-  EntityList[1].tei_instance = 0;
-  EntityList[1].context      = 0;
-  EntityList[1].info_req     = InfoTransportLayerTdiQueryEx;
-  EntityList[1].info_set     = InfoTransportLayerTdiSetEx;
-  EntityCount = 2;
+  EntityCount = 0;
   EntityMax   = MAX_TDI_ENTITIES;
 
   /* Allocate NDIS packet descriptors */

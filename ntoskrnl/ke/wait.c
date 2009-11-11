@@ -417,10 +417,6 @@ KeWaitForSingleObject(IN PVOID Object,
     PLARGE_INTEGER OriginalDueTime = Timeout;
     ULONG Hand = 0;
 
-#ifdef DBG
-	KdbgDeclareWait(Object);
-#endif
-
     /* Check if the lock is already held */
     if (!Thread->WaitNext) goto WaitStart;
 
@@ -531,13 +527,7 @@ KeWaitForSingleObject(IN PVOID Object,
             WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Check if we were executing an APC */
-            if (WaitStatus != STATUS_KERNEL_APC) 
-			{
-#ifdef DBG
-				KdbgSatisfyWait(Object);
-#endif
-				return WaitStatus;
-			}
+            if (WaitStatus != STATUS_KERNEL_APC) return WaitStatus;
 
             /* Check if we had a timeout */
             if (Timeout)
@@ -557,9 +547,6 @@ WaitStart:
 
     /* Wait complete */
     KiReleaseDispatcherLock(Thread->WaitIrql);
-#ifdef DBG
-	KdbgSatisfyWait(Object);
-#endif
     return WaitStatus;
 
 DontWait:
@@ -568,9 +555,6 @@ DontWait:
 
     /* Adjust the Quantum and return the wait status */
     KiAdjustQuantumThread(Thread);
-#ifdef DBG
-	KdbgSatisfyWait(Object);
-#endif
     return WaitStatus;
 }
 
@@ -598,10 +582,6 @@ KeWaitForMultipleObjects(IN ULONG Count,
     PLARGE_INTEGER OriginalDueTime = Timeout;
     LARGE_INTEGER DueTime, NewDueTime, InterruptTime;
     ULONG Index, Hand = 0;
-
-#ifdef DBG
-	KdbgDeclareMultiWait(Object, Count);
-#endif
 
     /* Make sure the Wait Count is valid */
     if (!WaitBlockArray)
@@ -830,13 +810,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
             WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Check if we were executing an APC */
-            if (WaitStatus != STATUS_KERNEL_APC)
-			{
-#ifdef DBG
-				KdbgSatisfyMultiWait(Object, Count);
-#endif
-				return WaitStatus;
-			}
+            if (WaitStatus != STATUS_KERNEL_APC) return WaitStatus;
 
             /* Check if we had a timeout */
             if (Timeout)
@@ -857,9 +831,6 @@ WaitStart:
 
     /* We are done */
     KiReleaseDispatcherLock(Thread->WaitIrql);
-#ifdef DBG
-	KdbgSatisfyMultiWait(Object, Count);
-#endif
     return WaitStatus;
 
 DontWait:
@@ -868,9 +839,6 @@ DontWait:
 
     /* Adjust the Quantum and return the wait status */
     KiAdjustQuantumThread(Thread);
-#ifdef DBG
-	KdbgSatisfyMultiWait(Object, Count);
-#endif
     return WaitStatus;
 }
 

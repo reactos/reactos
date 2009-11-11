@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
@@ -2777,32 +2777,20 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     Stack = IoGetCurrentIrpStackLocation(Irp);
     DeviceExtension = DeviceObject->DeviceExtension;
 
-/*
-#define IOCTL_SCSI_PASS_THROUGH_DIRECT  CTL_CODE(IOCTL_SCSI_BASE, 0x0405, METHOD
-_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-#define IOCTL_SCSI_GET_ADDRESS          CTL_CODE(IOCTL_SCSI_BASE, 0x0406, METHOD
-_BUFFERED, FILE_ANY_ACCESS)
-#define IOCTL_SCSI_RESCAN_BUS           CTL_CODE(IOCTL_SCSI_BASE, 0x0407, METHOD
-_BUFFERED, FILE_ANY_ACCESS)
-#define IOCTL_SCSI_FREE_DUMP_POINTERS   CTL_CODE(IOCTL_SCSI_BASE, 0x0409, METHOD
-_BUFFERED, FILE_ANY_ACCESS)
-#define IOCTL_IDE_PASS_THROUGH          CTL_CODE(IOCTL_SCSI_BASE, 0x040a, METHOD
-_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-*/
     switch (Stack->Parameters.DeviceIoControl.IoControlCode)
     {
-	case IOCTL_SCSI_GET_DUMP_POINTERS:
+      case IOCTL_SCSI_GET_DUMP_POINTERS:
 	{
-		PDUMP_POINTERS DumpPointers;
-		DPRINT("  IOCTL_SCSI_GET_DUMP_POINTERS\n");
-		DumpPointers = (PDUMP_POINTERS)Irp->AssociatedIrp.SystemBuffer;
-		DumpPointers->DeviceObject = DeviceObject;
+	  PDUMP_POINTERS DumpPointers;
+	  DPRINT("  IOCTL_SCSI_GET_DUMP_POINTERS\n");
+	  DumpPointers = (PDUMP_POINTERS)Irp->AssociatedIrp.SystemBuffer;
+	  DumpPointers->DeviceObject = DeviceObject;
 
-		Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
+	  Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
 	}
 	break;
 
-	case IOCTL_SCSI_GET_CAPABILITIES:
+      case IOCTL_SCSI_GET_CAPABILITIES:
         DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
         if (Stack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(PVOID))
         {
@@ -2827,45 +2815,25 @@ _BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
         Status = STATUS_SUCCESS;
         break;
 
-	case IOCTL_SCSI_GET_INQUIRY_DATA:
-		DPRINT("  IOCTL_SCSI_GET_INQUIRY_DATA\n");
+      case IOCTL_SCSI_GET_INQUIRY_DATA:
+          DPRINT("  IOCTL_SCSI_GET_INQUIRY_DATA\n");
 
-		/* Copy inquiry data to the port device extension */
-		Status = SpiGetInquiryData(DeviceExtension, Irp);
-		break;
+          /* Copy inquiry data to the port device extension */
+          Status = SpiGetInquiryData(DeviceExtension, Irp);
+          break;
 
-	case IOCTL_SCSI_MINIPORT:
-		DPRINT1("IOCTL_SCSI_MINIPORT unimplemented!\n");
-		break;
+      case IOCTL_SCSI_MINIPORT:
+          DPRINT1("IOCTL_SCSI_MINIPORT unimplemented!\n");
+          break;
 
-	case IOCTL_SCSI_PASS_THROUGH:
-		DPRINT1("IOCTL_SCSI_PASS_THROUGH unimplemented!\n");
-		break;
+      case IOCTL_SCSI_PASS_THROUGH:
+          DPRINT1("IOCTL_SCSI_PASS_THROUGH unimplemented!\n");
+          break;
 
-	case IOCTL_SCSI_PASS_THROUGH_DIRECT:
-		DPRINT1("IOCTL_SCSI_PASS_THROUGH_DIRECT unimplemented!\n");
-		break;
-
-	case IOCTL_SCSI_GET_ADDRESS:
-		DPRINT1("IOCTL_SCSI_GET_ADDRESS unimplemented!\n");
-		break;
-
-	case IOCTL_SCSI_RESCAN_BUS:
-		DPRINT1("IOCTL_SCSI_RESCAN_BUS unimplemented!\n");
-		break;
-
-	case IOCTL_SCSI_FREE_DUMP_POINTERS:
-		DPRINT1("IOCTL_SCSI_FREE_DUMP_POINTERS unimplemented!\n");
-		break;
-
-	case IOCTL_IDE_PASS_THROUGH:
-		DPRINT1("IOCTL_IDE_PASS_THROUGH unimplemented!\n");
-		break;
-
-	default:
-		DPRINT1("  unknown ioctl code: 0x%lX\n",
-				Stack->Parameters.DeviceIoControl.IoControlCode);
-		break;
+      default:
+	DPRINT1("  unknown ioctl code: 0x%lX\n",
+	       Stack->Parameters.DeviceIoControl.IoControlCode);
+	break;
     }
 
     /* Complete the request with the given status */

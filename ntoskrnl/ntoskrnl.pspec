@@ -47,7 +47,7 @@
 @ stdcall CmUnRegisterCallback(long long)
 @ stdcall DbgBreakPoint()
 @ stdcall DbgBreakPointWithStatus(long)
-;DbgCommandString
+@ stdcall DbgCommandString(ptr ptr)
 @ stdcall DbgLoadImageSymbols(ptr ptr long)
 @ cdecl DbgPrint(str)
 @ cdecl DbgPrintEx(long long str)
@@ -718,7 +718,7 @@
 @ fastcall KiReleaseSpinLock(ptr)
 @ cdecl KiUnexpectedInterrupt()
 #ifdef _M_IX86
-;Kii386SpinOnSpinLock
+@ stdcall Kii386SpinOnSpinLock(ptr long)
 #endif
 @ stdcall LdrAccessResource(ptr ptr ptr ptr)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
@@ -1094,7 +1094,6 @@
 @ stdcall RtlDescribeChunk(long ptr ptr ptr ptr)
 @ stdcall RtlDestroyAtomTable(ptr)
 @ stdcall RtlDestroyHeap(ptr)
-@ stdcall RtlDowncaseUnicodeChar(long)
 @ stdcall RtlDowncaseUnicodeString(ptr ptr long)
 @ stdcall RtlEmptyAtomTable(ptr long)
 @ stdcall RtlEnlargedIntegerMultiply(long long)

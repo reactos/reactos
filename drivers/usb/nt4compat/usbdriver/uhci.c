@@ -840,6 +840,8 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
                                    &irql,
                                    &affinity);
 
+    KeInitializeDpc(&pdev_ext->uhci_dpc, uhci_dpc_callback, (PVOID) pdev_ext->uhci);
+
     //connect the interrupt
     DbgPrint("uhci_alloc(): the int=0x%x\n", vector);
     if (IoConnectInterrupt(&pdev_ext->uhci_int,
@@ -858,8 +860,6 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         uhci_release(pdev);
         return NULL;
     }
-
-    KeInitializeDpc(&pdev_ext->uhci_dpc, uhci_dpc_callback, (PVOID) pdev_ext->uhci);
 
     return pdev;
 }

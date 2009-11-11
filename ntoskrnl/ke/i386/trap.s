@@ -132,7 +132,6 @@ _KiTrapIoTable:
 
 _KiGetTickCount:
 _KiCallbackReturn:
-_KiRaiseAssertion:
     /* FIXME: TODO */
     UNHANDLED_PATH
 
@@ -461,6 +460,29 @@ AbiosExit:
     /* FIXME: TODO */
     UNHANDLED_PATH
 
+.func KiRaiseAssertion
+TRAP_FIXUPS kira_a, kira_t, DoFixupV86, DoFixupAbios
+_KiRaiseAssertion:
+
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG kira_a, kira_t
+
+    /*
+     * Modify EIP so it points to the faulting instruction and set it as the
+     * exception address. Note that the 'int 2C' instruction used for this call
+     * is 2 bytes long as opposed to 1 byte 'int 3'.
+     */
+    sub dword ptr [ebp+KTRAP_FRAME_EIP], 2
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+
+    /* Raise an assertion failure */
+    mov eax, STATUS_ASSERTION_FAILURE
+    jmp _DispatchNoParam
+.endfunc
+
 .func KiDebugService
 TRAP_FIXUPS kids_a, kids_t, DoFixupV86, DoFixupAbios
 _KiDebugService:
@@ -780,8 +802,11 @@ _KiTrap3:
     /* Enter trap */
     TRAP_PROLOG kit3_a, kit3_t
 
-    /* Set status code */
-    mov eax, 0 //STATUS_SUCCESS
+    /*
+     * Set the special code to indicate that this is a software breakpoint
+     * and not a debug service call
+     */
+    mov eax, BREAKPOINT_BREAK
 
     /* Check for V86 */
 PrepareInt3:
@@ -922,6 +947,7 @@ _KiTrap6:
     /* Enter V86 Trap */
     V86_TRAP_PROLOG kit6_a, kit6_v
 
+VdmOpCodeFault:
     /* Not yet supported (Invalid OPCODE from V86) */
     UNHANDLED_PATH
 
@@ -932,6 +958,7 @@ NotV86UD:
     /* Enter trap */
     TRAP_PROLOG kit6_a, kit6_t
 
+DispatchLockErrata:
     /* Check if this happened in kernel mode */
     test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
     jz KmodeOpcode
@@ -1924,14 +1951,21 @@ _KiTrap14:
 NoFixUp:
     mov edi, cr2
 
-    /* REACTOS Mm Hack of Doom */
+    /* Check if this processor has the cmpxchg8b lock errata */
+    cmp byte ptr _KiI386PentiumLockErrataPresent, 0
+    jnz HandleLockErrata
+
+NotLockErrata:
+    /* HACK: Handle page faults with interrupts disabled */
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
     je HandlePf
 
     /* Enable interrupts and check if we got here with interrupts disabled */
     sti
-    /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
-    jz IllegalState */
+#ifdef HACK_ABOVE_FIXED
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+    jz IllegalState
+#endif
 
 HandlePf:
     /* Send trap frame and check if this is kernel-mode or usermode */
@@ -2050,6 +2084,33 @@ VdmAlertGpf:
 
     /* FIXME: NOT SUPPORTED */
     UNHANDLED_PATH
+
+HandleLockErrata:
+
+    /* Fail if this isn't a write fault */
+    test word ptr [ebp+KTRAP_FRAME_ERROR_CODE], 0x4
+    jnz NotLockErrata
+
+    /* Also make sure the page fault is for IDT entry 6 */
+    mov eax, PCR[KPCR_IDT]
+    add eax, 0x30
+    cmp eax, edi
+    jne NotLockErrata
+
+    /*
+     * This is a write fault to the Invalid Opcode handler entry.
+     * We assume this is the lock errata and not a real write fault.
+     */
+
+    /* Clear the error code */
+    and dword ptr [ebp+KTRAP_FRAME_ERROR_CODE], 0
+
+    /* Check if this happened in V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz VdmOpCodeFault
+
+    /* Dispatch this to the invalid opcode handler */
+    jmp DispatchLockErrata
 .endfunc
 
 .func KiTrap0F
@@ -2736,11 +2797,25 @@ _KeSynchronizeExecution@12:
     /* Go to DIRQL */
     mov cl, [ebx+KINTERRUPT_SYNCHRONIZE_IRQL]
     call @KfRaiseIrql@4
+    push eax
+
+#ifdef CONFIG_SMP
+    /* Acquire the interrupt spinlock FIXME: Write this in assembly */
+    mov ecx, [ebx+KINTERRUPT_ACTUAL_LOCK]
+    call @KefAcquireSpinLockAtDpcLevel@4
+#endif
 
     /* Call the routine */
-    push eax
     push [esp+20]
     call [esp+20]
+
+#ifdef CONFIG_SMP
+    /* Release the interrupt spinlock FIXME: Write this in assembly */
+    push eax
+    mov ecx, [ebx+KINTERRUPT_ACTUAL_LOCK]
+    call @KefReleaseSpinLockFromDpcLevel@4
+    pop eax
+#endif
 
     /* Lower IRQL */
     mov ebx, eax
@@ -2751,4 +2826,33 @@ _KeSynchronizeExecution@12:
     mov eax, ebx
     pop ebx
     ret 12
+.endfunc
+
+/*++
+ * Kii386SpinOnSpinLock 
+ *
+ *     FILLMEIN
+ *
+ * Params:
+ *     SpinLock - FILLMEIN
+ *
+ *     Flags - FILLMEIN
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     FILLMEIN
+ *
+ *--*/
+.globl _Kii386SpinOnSpinLock@8
+.func Kii386SpinOnSpinLock@8
+_Kii386SpinOnSpinLock@8:
+
+#ifdef CONFIG_SMP
+    /* FIXME: TODO */
+    int 3
+#endif
+
+    ret 8
 .endfunc

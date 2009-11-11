@@ -10,7 +10,6 @@ GENERATE_ARM_STUB _global_unwind2
 GENERATE_ARM_STUB _local_unwind2  
 GENERATE_ARM_STUB RtlGetCallersAddress 
 GENERATE_ARM_STUB RtlUnwind 
-GENERATE_ARM_STUB RtlpGetExceptionAddress
 GENERATE_ARM_STUB RtlDispatchException
 GENERATE_ARM_STUB RtlpGetStackLimits
 GENERATE_ARM_STUB DbgBreakPointWithStatus 
@@ -35,6 +34,7 @@ GENERATE_ARM_STUB KeSynchronizeExecution
 GENERATE_ARM_STUB KeSwitchKernelStack
 GENERATE_ARM_STUB RtlCreateUserThread
 GENERATE_ARM_STUB RtlInitializeContext
-GENERATE_ARM_STUB KeUserModeCallback 
+GENERATE_ARM_STUB KeUserModeCallback
+GENERATE_ARM_STUB KiCallUserMode
 GENERATE_ARM_STUB NtCallbackReturn
 GENERATE_ARM_STUB NtContinue

@@ -82,7 +82,7 @@ CDmaChannelInit::QueryInterface(
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
-    DPRINT1("No interface!!!\n");
+    DPRINT("No interface!!!\n");
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -101,20 +101,20 @@ CDmaChannelInit::AllocateBuffer(
     // Did the caller already allocate a buffer ?*/
     if (m_Buffer)
     {
-        DPRINT1("CDmaChannelInit_AllocateBuffer free common buffer first \n");
+        DPRINT("CDmaChannelInit_AllocateBuffer free common buffer first \n");
         return STATUS_UNSUCCESSFUL;
     }
 
     m_Buffer = m_pAdapter->DmaOperations->AllocateCommonBuffer(m_pAdapter, BufferSize, &m_Address, FALSE);
     if (!m_Buffer)
     {
-        DPRINT1("CDmaChannelInit_AllocateBuffer fAllocateCommonBuffer failed \n");
+        DPRINT("CDmaChannelInit_AllocateBuffer fAllocateCommonBuffer failed \n");
         return STATUS_UNSUCCESSFUL;
     }
 
     m_BufferSize = BufferSize;
     m_AllocatedBufferSize = BufferSize;
-    DPRINT1("CDmaChannelInit::AllocateBuffer Success Buffer %p BufferSize %u Address %x\n", m_Buffer, BufferSize, m_Address);
+    DPRINT("CDmaChannelInit::AllocateBuffer Success Buffer %p BufferSize %u Address %x\n", m_Buffer, BufferSize, m_Address);
 
     return STATUS_SUCCESS;
 }
@@ -162,7 +162,7 @@ CDmaChannelInit::FreeBuffer()
 
     if (!m_Buffer)
     {
-        DPRINT1("CDmaChannelInit_FreeBuffer allocate common buffer first \n");
+        DPRINT("CDmaChannelInit_FreeBuffer allocate common buffer first \n");
         return;
     }
 
@@ -222,6 +222,7 @@ ULONG
 NTAPI
 CDmaChannelInit::BufferSize()
 {
+    DPRINT("BufferSize %u\n", m_BufferSize);
     return m_BufferSize;
 }
 
@@ -254,6 +255,8 @@ CDmaChannelInit::ReadCounter()
 
     if (!m_DmaStarted || Counter >= m_LastTransferCount)
         Counter = 0;
+
+    DPRINT("ReadCounter %u\n", Counter);
 
     return Counter;
 }

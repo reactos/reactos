@@ -215,6 +215,7 @@ MmFreePagesFromMdl(IN PMDL Mdl)
     PPFN_NUMBER Pages;
     LONG NumberOfPages;
     PMMPFN Pfn1;
+    KIRQL OldIrql;
     DPRINT("Freeing MDL: %p\n", Mdl);
     
     //
@@ -229,7 +230,12 @@ MmFreePagesFromMdl(IN PMDL Mdl)
     //
     Base = (PVOID)((ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset);
     NumberOfPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
-    
+
+    //
+    // Acquire PFN lock
+    //
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
     //
     // Loop all the MDL pages
     //
@@ -268,7 +274,12 @@ MmFreePagesFromMdl(IN PMDL Mdl)
         //
         *Pages++ = -1;
     } while (--NumberOfPages != 0);
-    
+
+    //
+    // Release the lock
+    //
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
     //
     // Remove the pages locked flag
     //
@@ -496,8 +507,13 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
         // Get the PTE
         //
         PointerPte = MiAddressToPte(BaseAddress);
+
+        //
+        // This should be a resident system PTE
+        //
         ASSERT(PointerPte >= MmSystemPtesStart[SystemPteSpace]);
         ASSERT(PointerPte <= MmSystemPtesEnd[SystemPteSpace]);
+        ASSERT(PointerPte->u.Hard.Valid == 1);
         
         //
         // Check if the caller wants us to free advanced pages
@@ -568,7 +584,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PMMPFN Pfn1;
     BOOLEAN UsePfnLock;
     KIRQL OldIrql;
-    DPRINT("Probing MDL: %p from %x\n", Mdl, __builtin_return_address(0));
+    DPRINT("Probing MDL: %p\n", Mdl);
     
     //
     // Sanity checks
@@ -704,7 +720,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
     //
     // Sanity check
     //
-    ASSERT(MdlPages = (PPFN_NUMBER)(Mdl + 1));
+    ASSERT(MdlPages == (PPFN_NUMBER)(Mdl + 1));
     
     //
     // Check what kind of operation this is

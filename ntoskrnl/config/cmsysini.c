@@ -23,14 +23,13 @@ LONG CmpLoadWorkerIncrement;
 PEPROCESS CmpSystemProcess;
 BOOLEAN HvShutdownComplete;
 PVOID CmpRegistryLockCallerCaller, CmpRegistryLockCaller;
-BOOLEAN CmpFlushStarveWriters;
 BOOLEAN CmpFlushOnLockRelease;
 BOOLEAN CmpSpecialBootCondition;
 BOOLEAN CmpNoWrite;
-BOOLEAN CmpForceForceFlush;
 BOOLEAN CmpWasSetupBoot;
 ULONG CmpTraceLevel = 0;
 
+extern LONG CmpFlushStarveWriters;
 extern BOOLEAN CmFirstTime;
 
 /* FUNCTIONS *****************************************************************/
@@ -1134,7 +1133,6 @@ CmpLoadHiveThread(IN PVOID StartContext)
         {
             /* We failed or couldn't get a log file, raise a hard error */
             ErrorParameters = &FileName;
-			DPRINT1("FAILED TO LOAD REGISTRY HIVE %wZ\n", &FileName);
             NtRaiseHardError(STATUS_CANNOT_LOAD_REGISTRY_FILE,
                              1,
                              1,

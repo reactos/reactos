@@ -18,9 +18,9 @@ extern ERESOURCE ExpFirmwareTableResource;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
 extern BOOLEAN ExpIsWinPEMode;
 extern LIST_ENTRY ExpSystemResourcesList;
-ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
-ULONG ExpUnicodeCaseTableDataOffset;
-PVOID ExpNlsSectionPointer;
+extern ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
+extern ULONG ExpUnicodeCaseTableDataOffset;
+extern PVOID ExpNlsSectionPointer;
 extern CHAR NtBuildLab[];
 extern ULONG CmNtCSDVersion;
 extern ULONG NtGlobalFlag;
@@ -1217,10 +1217,6 @@ _ExAcquireFastMutexUnsafe(IN PFAST_MUTEX FastMutex)
 {
     PKTHREAD Thread = KeGetCurrentThread();
     
-#ifdef DBG
-	KdbgDeclareWait(FastMutex);
-#endif
-
     /* Sanity check */
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
            (Thread->CombinedApcDisable != 0) ||
@@ -1237,11 +1233,6 @@ _ExAcquireFastMutexUnsafe(IN PFAST_MUTEX FastMutex)
     
     /* Set the owner */
     FastMutex->Owner = Thread;
-
-#ifdef DBG
-	KdbgSatisfyWait(FastMutex);
-	KdbgEnterWaitable(FastMutex);
-#endif
 }
 
 FORCEINLINE
@@ -1263,10 +1254,6 @@ _ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
         /* Someone was waiting for it, signal the waiter */
         KeSetEventBoostPriority(&FastMutex->Gate, NULL);
     }
-
-#ifdef DBG
-	KdbgLeaveWaitable(FastMutex);
-#endif
 }
 
 FORCEINLINE
@@ -1276,10 +1263,6 @@ _ExAcquireFastMutex(IN PFAST_MUTEX FastMutex)
     KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
     
-#ifdef DBG
-	KdbgDeclareWait(FastMutex);
-#endif
-
     /* Raise IRQL to APC */
     KeRaiseIrql(APC_LEVEL, &OldIrql);
     
@@ -1293,11 +1276,6 @@ _ExAcquireFastMutex(IN PFAST_MUTEX FastMutex)
     /* Set the owner and IRQL */
     FastMutex->Owner = KeGetCurrentThread();
     FastMutex->OldIrql = OldIrql;
-
-#ifdef DBG
-	KdbgSatisfyWait(FastMutex);
-	KdbgEnterWaitable(FastMutex);
-#endif
 }
 
 FORCEINLINE
@@ -1320,10 +1298,6 @@ _ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
     
     /* Lower IRQL back */
     KeLowerIrql(OldIrql);
-
-#ifdef DBG
-	KdbgLeaveWaitable(FastMutex);
-#endif
 }
 
 FORCEINLINE
@@ -1342,9 +1316,6 @@ _ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex)
         /* We have, set us as owners */
         FastMutex->Owner = KeGetCurrentThread();
         FastMutex->OldIrql = OldIrql;
-#ifdef DBG
-		KdbgEnterWaitable(FastMutex);
-#endif
         return TRUE;
     }
     else

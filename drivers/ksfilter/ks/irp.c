@@ -772,7 +772,7 @@ ProbeMdl:
 
         /* check all stream headers */
         StreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
-
+        ASSERT(StreamHeader);
         _SEH2_TRY
         {
             do
@@ -880,11 +880,18 @@ ProbeMdl:
 
         /* now probe the allocated mdl's */
         if (!NT_SUCCESS(Status))
+		{
+            DPRINT("Status %x\n", Status);
             return Status;
+		}
         else
             goto ProbeMdl;
     }
 
+#if 0
+    // HACK for MS PORTCLS
+	HeaderSize = Length;
+#endif
     /* probe user mode buffers */
     if (Length && ( (!HeaderSize) || (Length % HeaderSize == 0) || ((ProbeFlags & KSPROBE_ALLOWFORMATCHANGE) && (Length == sizeof(KSSTREAM_HEADER))) ) )
     {
@@ -1233,6 +1240,7 @@ KsCancelIo(
     PDRIVER_CANCEL OldDriverCancel;
     PIO_STACK_LOCATION IoStack;
     PLIST_ENTRY Entry;
+    PLIST_ENTRY NextEntry;
     PIRP Irp;
     KIRQL OldLevel;
 
@@ -1245,6 +1253,9 @@ KsCancelIo(
     {
         /* get irp offset */
         Irp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+
+        /* get next entry */
+        NextEntry = Entry->Flink;
 
         /* set cancelled bit */
         Irp->Cancel = TRUE;
@@ -1268,8 +1279,9 @@ KsCancelIo(
             /* re-acquire spinlock */
             KeAcquireSpinLock(SpinLock, &OldLevel);
         }
+
         /* move on to next entry */
-        Entry = Entry->Flink;
+        Entry = NextEntry;
     }
 
     /* the irp has already been canceled */
@@ -1607,7 +1619,7 @@ KsAddIrpToCancelableQueue(
     PIO_STACK_LOCATION IoStack;
     KIRQL OldLevel;
 
-    DPRINT1("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
+    DPRINT("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
     /* check for required parameters */
     if (!QueueHead || !SpinLock || !Irp)
         return;
@@ -1687,7 +1699,7 @@ KsCancelRoutine(
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
     /* release spinlock */
-    KeReleaseSpinLockFromDpcLevel(SpinLock);
+    KeReleaseSpinLock(SpinLock, Irp->CancelIrql);
 
     /* has the irp already been canceled */
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
@@ -1739,7 +1751,7 @@ FindMatchingCreateItem(
 
         ASSERT(CreateItemEntry->CreateItem->ObjectClass.Buffer);
 
-        DPRINT1("CreateItem %S Length %u Request %S %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
+        DPRINT("CreateItem %S Length %u Request %S %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
                                                            CreateItemEntry->CreateItem->ObjectClass.Length,
                                                            Buffer,
                                                            BufferSize);
@@ -1778,7 +1790,7 @@ KspCreate(
     PKSIOBJECT_HEADER ObjectHeader;
     NTSTATUS Status;
 
-    DPRINT("KS / CREATE\n");
+    DPRINT1("KS / CREATE\n");
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get device extension */
@@ -1830,7 +1842,6 @@ KspCreate(
         }
         return Status;
     }
-
 
     Irp->IoStatus.Information = 0;
     /* set return status */
@@ -1937,7 +1948,7 @@ KsSetMajorFunctionHandler(
     IN  ULONG MajorFunction)
 {
     DPRINT("KsSetMajorFunctionHandler Function %x\n", MajorFunction);
-#if 0
+#if 1
     // HACK
     // for MS PORTCLS
     //
@@ -2075,6 +2086,6 @@ KsGetNodeIdFromIrp(
     IN PIRP Irp)
 {
     UNIMPLEMENTED
-    return (ULONG)-1;
+    return KSFILTER_NODE;
 }
 

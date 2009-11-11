@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * PROJECT:         ReactOS kernel
@@ -81,7 +81,6 @@ static BOOLEAN KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdFilter(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
-static BOOLEAN KdbpDescribeObject(ULONG Argc, PCHAR Argv[]);
 
 /* GLOBALS *******************************************************************/
 
@@ -136,7 +135,6 @@ static const struct
     { NULL, NULL, "Process/Thread", NULL },
     { "thread", "thread [list[ pid]|[attach ]tid]", "List threads in current or specified process, display thread with given id or attach to thread.", KdbpCmdThread },
     { "proc", "proc [list|[attach ]pid]", "List processes, display process with given id or attach to process.", KdbpCmdProc },
-	{ "object", "object [addr]", "List known properties of the object (wait status)\n", KdbpDescribeObject },
 
     /* System information */
     { NULL, NULL, "System info", NULL },
@@ -449,9 +447,9 @@ KdbpCmdFilter(
         else
         {
             if (*p == '-')
-                clear = ~0;
+                clear = MAXULONG;
             else
-                set = ~0;
+                set = MAXULONG;
         }
         if (*p == '+' || *p == '-')
             p++;
@@ -650,8 +648,8 @@ KdbpCmdRegs(
     else if (Argv[0][0] == 'c') /* cregs */
     {
         ULONG Cr0, Cr2, Cr3, Cr4;
-        KDESCRIPTOR Gdtr, Ldtr, Idtr;
-        ULONG Tr;
+        KDESCRIPTOR Gdtr, Idtr;
+        USHORT Ldtr;
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                            " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
@@ -668,11 +666,8 @@ KdbpCmdRegs(
 
         /* Get descriptor table regs */
         Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
-        Ke386GetLocalDescriptorTable(&Ldtr.Limit);
+        Ldtr = Ke386GetLocalDescriptorTable();
         __sidt(&Idtr.Limit);
-
-        /* Get the task register */
-        Ke386GetTr((PUSHORT)&Tr);
 
         /* Display the control registers */
         KdbpPrint("CR0  0x%08x ", Cr0);
@@ -702,7 +697,7 @@ KdbpCmdRegs(
 
         /* Display the descriptor table regs */
         KdbpPrint("\nGDTR  Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
-        KdbpPrint("LDTR  Base 0x%08x  Size 0x%04x\n", Ldtr.Base, Ldtr.Limit);
+        KdbpPrint("LDTR  0x%04x\n", Ldtr);
         KdbpPrint("IDTR  Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
     }
     else if (Argv[0][0] == 's') /* sregs */
@@ -1346,8 +1341,6 @@ KdbpCmdThread(
             /* Release our reference if we had one */
             if (ReferencedThread)
                 ObDereferenceObject(Thread);
-
-			KdbgWaitDescribeThread((ULONG)Thread->Cid.UniqueThread);
     }
 
     return TRUE;
@@ -1471,25 +1464,6 @@ KdbpCmdProc(
     return TRUE;
 }
 
-/*!\brief Describes properties of a waitable or lockable object
- */
-static BOOLEAN
-KdbpDescribeObject(ULONG Argc, PCHAR Argv[])
-{
-	ULONG ul;
-	PCHAR pend;
-
-	if (Argc < 2)
-	{
-		KdbpPrint("Specify an object address\n");
-		return TRUE;
-	}
-
-	ul = strtoul(Argv[1], &pend, 0);
-	KdbgWaitDescribeObject((PVOID)ul);
-	return TRUE;
-}
-
 /*!\brief Lists loaded modules or the one containing the specified address.
  */
 static BOOLEAN
@@ -1499,7 +1473,7 @@ KdbpCmdMod(
 {
     ULONGLONG Result = 0;
     ULONG_PTR Address;
-    KDB_MODULE_INFO Info;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN DisplayOnlyOneModule = FALSE;
     INT i = 0;
 
@@ -1521,7 +1495,7 @@ KdbpCmdMod(
 
         Address = (ULONG_PTR)Result;
 
-        if (!KdbpSymFindModuleByAddress((PVOID)Address, &Info))
+        if (!KdbpSymFindModule((PVOID)Address, NULL, -1, &LdrEntry))
         {
             KdbpPrint("No module containing address 0x%p found!\n", Address);
             return TRUE;
@@ -1531,7 +1505,7 @@ KdbpCmdMod(
     }
     else
     {
-        if (!KdbpSymFindModuleByIndex(0, &Info))
+        if (!KdbpSymFindModule(NULL, NULL, 0, &LdrEntry))
         {
             ULONG_PTR ntoskrnlBase = ((ULONG_PTR)KdbpCmdMod) & 0xfff00000;
             KdbpPrint("  Base      Size      Name\n");
@@ -1545,13 +1519,10 @@ KdbpCmdMod(
     KdbpPrint("  Base      Size      Name\n");
     for (;;)
     {
-        KdbpPrint("  %08x  %08x  %ws\n", Info.Base, Info.Size, Info.Name);
+        KdbpPrint("  %08x  %08x  %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->BaseDllName);
 
-        if ((!DisplayOnlyOneModule && !KdbpSymFindModuleByIndex(i++, &Info)) ||
-            DisplayOnlyOneModule)
-        {
+        if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, NULL, i++, &LdrEntry))
             break;
-        }
     }
 
     return TRUE;
@@ -1645,7 +1616,8 @@ KdbpCmdGdtLdtIdt(
             ASSERT(Argv[0][0] == 'l');
 
             /* Read LDTR */
-            Ke386GetLocalDescriptorTable(&Reg.Limit);
+            Reg.Limit = Ke386GetLocalDescriptorTable();
+            Reg.Base = 0;
             i = 0;
             ul = 1 << 2;
         }
@@ -2828,4 +2800,143 @@ KdbpCliInit()
     __writeeflags(OldEflags);
 
     ExFreePool(FileBuffer);
+}
+
+VOID
+NTAPI
+KdpSerialDebugPrint(
+    LPSTR Message,
+    ULONG Length
+);
+
+STRING KdpPromptString = RTL_CONSTANT_STRING("kdb:> ");
+extern KSPIN_LOCK KdpSerialSpinLock;
+
+ULONG
+NTAPI
+KdpPrompt(IN LPSTR InString,
+          IN USHORT InStringLength,
+          OUT LPSTR OutString,
+          IN USHORT OutStringLength)
+{
+    USHORT i;
+    CHAR Response;
+    ULONG DummyScanCode;
+    KIRQL OldIrql;
+
+    /* Acquire the printing spinlock without waiting at raised IRQL */
+    while (TRUE)
+    {
+        /* Wait when the spinlock becomes available */
+        while (!KeTestSpinLock(&KdpSerialSpinLock));
+
+        /* Spinlock was free, raise IRQL */
+        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+        /* Try to get the spinlock */
+        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpSerialSpinLock))
+            break;
+
+        /* Someone else got the spinlock, lower IRQL back */
+        KeLowerIrql(OldIrql);
+    }
+
+    /* Loop the string to send */
+    for (i = 0; i < InStringLength; i++)
+    {
+        /* Print it to serial */
+        KdPortPutByteEx(&SerialPortInfo, *(PCHAR)(InString + i));
+    }
+
+    /* Print a new line for log neatness */
+    KdPortPutByteEx(&SerialPortInfo, '\r');
+    KdPortPutByteEx(&SerialPortInfo, '\n');
+
+    /* Print the kdb prompt */
+    for (i = 0; i < KdpPromptString.Length; i++)
+    {
+        /* Print it to serial */
+        KdPortPutByteEx(&SerialPortInfo,
+                        *(KdpPromptString.Buffer + i));
+    }
+
+    /* Loop the whole string */
+    for (i = 0; i < OutStringLength; i++)
+    {
+        /* Check if this is serial debugging mode */
+        if (KdbDebugState & KD_DEBUG_KDSERIAL)
+        {
+            /* Get the character from serial */
+            do
+            {
+                Response = KdbpTryGetCharSerial(MAXULONG);
+            } while (Response == -1);
+        }
+        else
+        {
+            /* Get the response from the keyboard */
+            do
+            {
+                Response = KdbpTryGetCharKeyboard(&DummyScanCode, MAXULONG);
+            } while (Response == -1);
+        }
+
+        /* Check for return */
+        if (Response == '\r')
+        {
+            /*
+             * We might need to discard the next '\n'.
+             * Wait a bit to make sure we receive it.
+             */
+            KeStallExecutionProcessor(100000);
+
+            /* Check the mode */
+            if (KdbDebugState & KD_DEBUG_KDSERIAL)
+            {
+                /* Read and discard the next character, if any */
+                KdbpTryGetCharSerial(5);
+            }
+            else
+            {
+                /* Read and discard the next character, if any */
+                KdbpTryGetCharKeyboard(&DummyScanCode, 5);
+            }
+
+            /* 
+             * Null terminate the output string -- documentation states that
+             * DbgPrompt does not null terminate, but it does
+             */
+            *(PCHAR)(OutString + i) = 0;
+
+            /* Print a new line */
+            KdPortPutByteEx(&SerialPortInfo, '\r');
+            KdPortPutByteEx(&SerialPortInfo, '\n');         
+
+            /* Release spinlock */
+            KiReleaseSpinLock(&KdpSerialSpinLock);
+
+            /* Lower IRQL back */
+            KeLowerIrql(OldIrql);
+
+            /* Return the length  */
+            return OutStringLength + 1;
+        }
+
+        /* Write it back and print it to the log */
+        *(PCHAR)(OutString + i) = Response;
+        KdPortPutByteEx(&SerialPortInfo, Response);
+    }
+
+    /* Print a new line */
+    KdPortPutByteEx(&SerialPortInfo, '\r');
+    KdPortPutByteEx(&SerialPortInfo, '\n');
+
+    /* Release spinlock */
+    KiReleaseSpinLock(&KdpSerialSpinLock);
+
+    /* Lower IRQL back */
+    KeLowerIrql(OldIrql);
+
+    /* Return the length  */
+    return OutStringLength;
 }

@@ -22,6 +22,12 @@ csum_partial(
   int len,
   unsigned int sum);
 
+ULONG
+UDPv4ChecksumCalculate(
+  PIPv4_HEADER IPHeader,
+  PUCHAR PacketBuffer,
+  ULONG DataLength);
+
 #define IPv4Checksum(Data, Count, Seed)(~ChecksumFold(ChecksumCompute(Data, Count, Seed)))
 #define TCPv4Checksum(Data, Count, Seed)(~ChecksumFold(csum_partial(Data, Count, Seed)))
 //#define TCPv4Checksum(Data, Count, Seed)(~ChecksumFold(ChecksumCompute(Data, Count, Seed)))

@@ -12,7 +12,7 @@
 #include <include/class2.h>
 #include <stdio.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #ifdef ALLOC_PRAGMA

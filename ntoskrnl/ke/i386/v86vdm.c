@@ -45,7 +45,7 @@ Ke386CallBios(IN ULONG Int,
 
     /* Start with a clean TEB */
     RtlZeroMemory(VdmTeb, sizeof(TEB));
-	
+
     /* Write the interrupt and bop */
     *Trampoline++ = 0xCD;
     *Trampoline++ = (UCHAR)Int;

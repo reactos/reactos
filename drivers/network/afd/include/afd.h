@@ -226,6 +226,9 @@ NTSTATUS NTAPI
 AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 NTSTATUS NTAPI
+AfdGetContextSize( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+	           PIO_STACK_LOCATION IrpSp );
+NTSTATUS NTAPI
 AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 
@@ -279,6 +282,8 @@ VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 VOID OskitDumpBuffer( PCHAR Buffer, UINT Len );
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function );
 VOID DestroySocket( PAFD_FCB FCB );
+VOID NTAPI AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
+                 PIRP Irp);
 
 /* read.c */
 
@@ -313,6 +318,11 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceObject, PFILE_OBJECT FileObject );
 VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
                         PFILE_OBJECT FileObject, BOOLEAN ExclusiveOnly );
+VOID ZeroEvents( PAFD_HANDLE HandleArray,
+		 UINT HandleCount );
+VOID SignalSocket(
+   PAFD_ACTIVE_POLL Poll OPTIONAL, PIRP _Irp OPTIONAL,
+   PAFD_POLL_INFO PollReq, NTSTATUS Status);
 
 /* tdi.c */
 

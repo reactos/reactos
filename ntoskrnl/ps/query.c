@@ -193,8 +193,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                         Process->Vm.MinimumWorkingSetSize << PAGE_SHIFT;
 
                 /* Set default time limits */
-                QuotaLimits->TimeLimit.LowPart = (ULONG)-1;
-                QuotaLimits->TimeLimit.HighPart = (ULONG)-1;
+                QuotaLimits->TimeLimit.LowPart = MAXULONG;
+                QuotaLimits->TimeLimit.HighPart = MAXULONG;
 
                 /* Is quota block a default one? */
                 if (Process->QuotaBlock == &PspDefaultQuotaBlock)
@@ -1819,9 +1819,19 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
             KeLowerIrql(OldIrql);
             break;
 
+        /* LDT and GDT information */
         case ThreadDescriptorTableEntry:
-            DPRINT1("NtQueryInformationThread(): case ThreadDescriptorTableEntry not implemented!\n");
+
+#if defined(_X86_)
+            /* Call the worker routine */
+            Status = PspQueryDescriptorThread(Thread,
+                                              ThreadInformation,
+                                              ThreadInformationLength,
+                                              ReturnLength);
+#else
+            /* Only implemented on x86 */
             Status = STATUS_NOT_IMPLEMENTED;
+#endif
             break;
 
         case ThreadPriorityBoost:

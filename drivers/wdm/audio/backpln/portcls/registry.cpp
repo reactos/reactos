@@ -64,7 +64,6 @@ CRegistryKey::QueryInterface(
     }
 
     DPRINT("IRegistryKey_QueryInterface: This %p\n", this);
-    DbgBreakPoint();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -154,7 +153,7 @@ CRegistryKey::NewSubKey(
     Status = ZwCreateKey(&hKey, KEY_READ | KEY_WRITE, &Attributes, 0, NULL, 0, Disposition);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CRegistryKey::NewSubKey failed with %x\n", Status);
+        DPRINT("CRegistryKey::NewSubKey failed with %x\n", Status);
         return Status;
     }
 

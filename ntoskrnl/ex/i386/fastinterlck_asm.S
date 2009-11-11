@@ -410,7 +410,7 @@ _ExpInterlockedPopEntrySListResume@0:
 _ExpInterlockedPopEntrySListFault@0:
     mov ebx, [eax]
 _ExpInterlockedPopEntrySListEnd@0:
-    LOCK cmpxchg8b [ebp]
+    LOCK cmpxchg8b qword ptr [ebp]
     jnz _ExpInterlockedPopEntrySListResume@0
 
     /* Restore registers and return */
@@ -454,7 +454,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     lea ecx, [edx+0x10001]
 
     /* Do the exchange */
-    LOCK cmpxchg8b [ebp]
+    LOCK cmpxchg8b qword ptr [ebp]
     jnz 1b
 
     /* Restore registers and return */
@@ -494,7 +494,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     mov cx, bx
 
     /* Do the exchange */
-    LOCK cmpxchg8b [ebp]
+    LOCK cmpxchg8b qword ptr [ebp]
     jnz 1b
 
     /* Restore registers and return */
@@ -578,7 +578,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     mov edx, [edx+4]
 
     /* Do the op */
-    LOCK cmpxchg8b [ebp]
+    LOCK cmpxchg8b qword ptr [ebp]
 
     /* Restore volatiles */
     pop ebp
@@ -610,7 +610,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     mov edx, [edx+4]
 
     /* Do the op */
-    LOCK cmpxchg8b [ebp]
+    LOCK cmpxchg8b qword ptr [ebp]
 
     /* Restore volatiles */
     pop ebp

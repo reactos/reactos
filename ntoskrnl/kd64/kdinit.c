@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/kd64/kdinit.c
  * PURPOSE:         KD64 Initialization Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -13,6 +14,15 @@
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+KdUpdateDataBlock(VOID)
+{
+    /* Update the KeUserCallbackDispatcher pointer */
+    KdDebuggerDataBlock.KeUserCallbackDispatcher =
+        (ULONG_PTR)KeUserCallbackDispatcher;
+}
 
 BOOLEAN
 NTAPI
@@ -63,14 +73,19 @@ NTAPI
 KdInitSystem(IN ULONG BootPhase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    BOOLEAN EnableKd;
-    LPSTR CommandLine, DebugLine;
-    ANSI_STRING ImageName;
+    BOOLEAN EnableKd, DisableKdAfterInit = FALSE, BlockEnable;
+    LPSTR CommandLine, DebugLine, DebugOptionStart, DebugOptionEnd;
+    STRING ImageName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
-    ULONG i, j, Length;
+    ULONG i, j, Length, DebugOptionLength;
     CHAR NameBuffer[256];
     PWCHAR Name;
+
+#if defined(__GNUC__)
+    /* Make gcc happy */
+    BlockEnable = FALSE;
+#endif
 
     /* Check if this is Phase 1 */
     if (BootPhase)
@@ -101,7 +116,7 @@ KdInitSystem(IN ULONG BootPhase,
                                     sizeof(KdDebuggerDataBlock));
 
         /* Fill out the KD Version Block */
-        KdVersionBlock.MajorVersion = (USHORT)(NtBuildNumber >> 28);
+        KdVersionBlock.MajorVersion = (USHORT)((DBGKD_MAJOR_NT << 8) | (NtBuildNumber >> 28));
         KdVersionBlock.MinorVersion = (USHORT)(NtBuildNumber & 0xFFFF);
 
 #ifdef CONFIG_SMP
@@ -110,8 +125,8 @@ KdInitSystem(IN ULONG BootPhase,
 #endif
 
         /* Save Pointers to Loaded Module List and Debugger Data */
-        KdVersionBlock.PsLoadedModuleList = (ULONGLONG)(LONG_PTR)&PsLoadedModuleList;
-        KdVersionBlock.DebuggerDataList = (ULONGLONG)(LONG_PTR)&KdpDebuggerDataListHead;
+        KdVersionBlock.PsLoadedModuleList = (ULONG64)(LONG_PTR)&PsLoadedModuleList;
+        KdVersionBlock.DebuggerDataList = (ULONG64)(LONG_PTR)&KdpDebuggerDataListHead;
 
         /* Set protocol limits */
         KdVersionBlock.MaxStateChange = DbgKdMaximumStateChange -
@@ -133,8 +148,8 @@ KdInitSystem(IN ULONG BootPhase,
                                      InLoadOrderLinks);
 
         /* Save the Kernel Base */
-        PsNtosImageBase = (ULONG)LdrEntry->DllBase;
-        KdVersionBlock.KernBase = (ULONGLONG)(LONG_PTR)LdrEntry->DllBase;
+        PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
+        KdVersionBlock.KernBase = (ULONG64)(LONG_PTR)LdrEntry->DllBase;
 
         /* Check if we have a command line */
         CommandLine = LoaderBlock->LoadOptions;
@@ -146,21 +161,103 @@ KdInitSystem(IN ULONG BootPhase,
             /* Assume we'll disable KD */
             EnableKd = FALSE;
 
-            /* Check for CRASHDEBUG and NODEBUG */
-            if (strstr(CommandLine, "CRASHDEBUG")) KdPitchDebugger = FALSE;
-            if (strstr(CommandLine, "NODEBUG")) KdPitchDebugger = TRUE;
-
-            /* Check if DEBUG was on */
-            DebugLine = strstr(CommandLine, "DEBUG");
-            if (DebugLine)
+            /* Check for CRASHDEBUG, NODEBUG and just DEBUG */
+            if (strstr(CommandLine, "CRASHDEBUG"))
+            {
+                /* Don't enable KD now, but allow it to be enabled later */
+                KdPitchDebugger = FALSE;
+            }
+            else if (strstr(CommandLine, "NODEBUG"))
+            {
+                /* Don't enable KD and don't let it be enabled later */
+                KdPitchDebugger = TRUE;
+            }
+            else if ((DebugLine = strstr(CommandLine, "DEBUG")) != NULL)
             {
                 /* Enable KD */
                 EnableKd = TRUE;
 
-                /* Check if there was additional data */
+                /* Check if there are any options */
                 if (DebugLine[5] == '=')
                 {
-                    /* FIXME: Check for NOUMEX, DISABLE, AUTOENABLE */
+                    /* Save pointers */
+                    DebugOptionStart = DebugOptionEnd = &DebugLine[6];
+
+                    /* Scan the string for debug options */
+                    for (;;)
+                    {
+                        /* Loop until we reach the end of the string */
+                        while (*DebugOptionEnd != ANSI_NULL)
+                        {
+                            /* Check if this is a comma, a space or a tab */
+                            if ((*DebugOptionEnd == ',') ||
+                                (*DebugOptionEnd == ' ') ||
+                                (*DebugOptionEnd == '	'))
+                            {
+                                /*
+                                 * We reached the end of the option or
+                                 * the end of the string, break out
+                                 */
+                                break;
+                            }
+                            else
+                            {
+                                /* Move on to the next character */
+                                DebugOptionEnd++;
+                            }
+                        }
+
+                        /* Calculate the length of the current option */
+                        DebugOptionLength = ((ULONG_PTR)DebugOptionEnd -
+                                             (ULONG_PTR)DebugOptionStart);
+
+                       /*
+                        * Break out if we reached the last option
+                        * or if there were no options at all
+                        */
+                       if (!DebugOptionLength) break;
+
+                        /* Now check which option this is */
+                        if ((DebugOptionLength == 10) &&
+                            !(strncmp(DebugOptionStart, "AUTOENABLE", 10)))
+                        {
+                            /*
+                             * Disable the debugger, but
+                             * allow it to be reenabled 
+                             */
+                            DisableKdAfterInit = TRUE;
+                            BlockEnable = FALSE;
+                            KdAutoEnableOnEvent = TRUE;
+                        }
+                        else if ((DebugOptionLength == 7) &&
+                                 !(strncmp(DebugOptionStart, "DISABLE", 7)))
+                        {
+                            /* Disable the debugger */
+                            DisableKdAfterInit = TRUE;
+                            BlockEnable = TRUE;
+                            KdAutoEnableOnEvent = FALSE;
+                        }
+                        else if ((DebugOptionLength == 6) &&
+                                 !(strncmp(DebugOptionStart, "NOUMEX", 6)))
+                        {
+                            /* Ignore user mode exceptions */
+                            KdIgnoreUmExceptions = TRUE;
+                        }
+
+                        /*
+                         * If there are more options then 
+                         * the next character should be a comma
+                         */
+                        if (*DebugOptionEnd != ',')
+                        {
+                            /* It isn't, break out  */
+                            break;
+                        }
+
+                        /* Move on to the next option */
+                        DebugOptionEnd++;
+                        DebugOptionStart = DebugOptionEnd;
+                    }
                 }
             }
         }
@@ -173,15 +270,15 @@ KdInitSystem(IN ULONG BootPhase,
     }
     else
     {
-        /* Called from a bugcheck...Save the Kernel Base */
-        KdVersionBlock.KernBase = (ULONGLONG)(LONG_PTR)PsNtosImageBase;
+        /* Called from a bugcheck or a re-enable. Save the Kernel Base */
+        KdVersionBlock.KernBase = (ULONG64)(LONG_PTR)PsNtosImageBase;
 
         /* Unconditionally enable KD */
         EnableKd = TRUE;
     }
 
     /* Set the Kernel Base in the Data Block */
-    KdDebuggerDataBlock.KernBase = (ULONGLONG)(LONG_PTR)KdVersionBlock.KernBase;
+    KdDebuggerDataBlock.KernBase = (ULONG_PTR)KdVersionBlock.KernBase;
 
     /* Initialize the debugger if requested */
     if ((EnableKd) && (NT_SUCCESS(KdDebuggerInitialize0(LoaderBlock))))
@@ -217,6 +314,20 @@ KdInitSystem(IN ULONG BootPhase,
         SharedUserData->KdDebuggerEnabled = TRUE;
 #define KdDebuggerEnabled _KdDebuggerEnabled
 
+        /* Check if the debugger should be disabled initially */
+        if (DisableKdAfterInit)
+        {
+            /* Disable it */
+            KdDisableDebuggerWithLock(FALSE);
+
+            /*
+             * Save the enable block state and return initialized
+             * (the debugger is active but disabled).
+             */
+            KdBlockEnable = BlockEnable;
+            return TRUE;
+        }
+
         /* Check if we have a loader block */
         if (LoaderBlock)
         {
@@ -244,8 +355,10 @@ KdInitSystem(IN ULONG BootPhase,
                 NameBuffer[j] = ANSI_NULL;
 
                 /* Load symbols for image */
-                RtlInitAnsiString(&ImageName, NameBuffer);
-                DbgLoadImageSymbols(&ImageName, LdrEntry->DllBase, -1);
+                RtlInitString(&ImageName, NameBuffer);
+                DbgLoadImageSymbols(&ImageName,
+                                    LdrEntry->DllBase,
+                                    (ULONG_PTR)ZwCurrentProcess());
 
                 /* Go to the next entry */
                 NextEntry = NextEntry->Flink;

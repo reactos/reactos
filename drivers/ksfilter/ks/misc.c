@@ -81,25 +81,6 @@ KspForwardIrpSynchronous(
     return Status;
 }
 
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsPinDataIntersectionEx(
-    IN  PIRP Irp,
-    IN  PKSP_PIN Pin,
-    OUT PVOID Data,
-    IN  ULONG DescriptorsCount,
-    IN  const KSPIN_DESCRIPTOR* Descriptor,
-    IN  ULONG DescriptorSize,
-    IN  PFNKSINTERSECTHANDLEREX IntersectHandler OPTIONAL,
-    IN  PVOID HandlerContext OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-
 NTSTATUS
 KspCopyCreateRequest(
     IN PIRP Irp,

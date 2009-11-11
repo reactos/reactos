@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #include <ppcmmu/mmu.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #if defined (ALLOC_PRAGMA)

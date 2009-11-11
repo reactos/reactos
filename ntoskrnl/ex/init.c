@@ -466,7 +466,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Make sure the buffer is a valid string which within the given length */
     if ((NtInitialUserProcessBufferType != REG_SZ) ||
-        ((NtInitialUserProcessBufferLength != -1U) &&
+        ((NtInitialUserProcessBufferLength != MAXULONG) &&
          ((NtInitialUserProcessBufferLength < sizeof(WCHAR)) ||
           (NtInitialUserProcessBufferLength >
            sizeof(NtInitialUserProcessBuffer) - sizeof(WCHAR)))))
@@ -734,7 +734,7 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN OverFlow = FALSE;
     CHAR NameBuffer[256];
-    ANSI_STRING SymbolString;
+    STRING SymbolString;
 
     /* Loop the driver list */
     NextEntry = LoaderBlock->LoadOrderListHead.Flink;
@@ -799,13 +799,13 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             /* Check if the buffer was ok */
             if (!OverFlow)
             {
-                /* Initialize the ANSI_STRING for the debugger */
+                /* Initialize the STRING for the debugger */
                 RtlInitString(&SymbolString, NameBuffer);
 
                 /* Load the symbols */
                 DbgLoadImageSymbols(&SymbolString,
                                     LdrEntry->DllBase,
-                                    0xFFFFFFFF);
+                                    (ULONG_PTR)ZwCurrentProcess());
             }
         }
 
@@ -1226,21 +1226,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->NtMinorVersion = NtMinorVersion;
 
     /* Set the machine type */
-#if defined(_X86_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_I386;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_I386;
-#elif defined(_PPC_) // <3 Arty
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_POWERPC;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_POWERPC;
-#elif defined(_MIPS_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_R4000;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_R4000;
-#elif defined(_ARM_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARM;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARM;
-#else
-#error "Unsupported ReactOS Target"
-#endif
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARCHITECTURE;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARCHITECTURE;
 }
 
 VOID
@@ -1408,7 +1395,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvDisplayString(EndBuffer);
 
     /* Initialize Power Subsystem in Phase 0 */
-    if (!PoInitSystem(0, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
+    if (!PoInitSystem(0)) KeBugCheck(INTERNAL_POWER_ERROR);
 
     /* Check for Y2K hack */
     Y2KHackRequired = strstr(CommandLine, "YEAR");
@@ -1429,7 +1416,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         if (!ExpRealTimeIsUniversal)
         {
             /* Check if we don't have a valid bias */
-            if (ExpLastTimeZoneBias == -1U)
+            if (ExpLastTimeZoneBias == MAXULONG)
             {
                 /* Reset */
                 ResetBias = TRUE;
@@ -1841,12 +1828,12 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(80);
 
     /* Initialize VDM support */
-#ifdef i386
+#if defined(_M_IX86)
     KeI386VdmInitialize();
 #endif
 
     /* Initialize Power Subsystem in Phase 1*/
-    if (!PoInitSystem(1, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
+    if (!PoInitSystem(1)) KeBugCheck(INTERNAL_POWER_ERROR);
 
     /* Initialize the Process Manager at Phase 1 */
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);

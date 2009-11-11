@@ -32,7 +32,7 @@ KiInitMachineDependent(VOID)
     ULONG i, Affinity, Sample = 0;
     PFX_SAVE_AREA FxSaveArea;
     ULONG MXCsrMask = 0xFFBF;
-    ULONG Dummy[4];
+    ULONG Dummy;
     KI_SAMPLE_MAP Samples[4];
     PKI_SAMPLE_MAP CurrentSample = Samples;
 
@@ -40,7 +40,7 @@ KiInitMachineDependent(VOID)
     if (KeFeatureBits & KF_LARGE_PAGE)
     {
         /* FIXME: Support this */
-        DPRINT1("Large Page support detected but not yet taken advantage of!\n");
+        DPRINT1("Large Page support detected but not yet taken advantage of\n");
     }
 
     /* Check for global page support */
@@ -179,7 +179,7 @@ KiInitMachineDependent(VOID)
                 for (;;)
                 {
                     /* Do a dummy CPUID to start the sample */
-                    CPUID(Dummy, 0);
+                    CPUID(0, &Dummy, &Dummy, &Dummy, &Dummy);
 
                     /* Fill out the starting data */
                     CurrentSample->PerfStart = KeQueryPerformanceCounter(NULL);
@@ -192,7 +192,7 @@ KiInitMachineDependent(VOID)
                                            &CurrentSample->PerfFreq);
 
                     /* Do another dummy CPUID */
-                    CPUID(Dummy, 0);
+                    CPUID(0, &Dummy, &Dummy, &Dummy, &Dummy);
 
                     /* Fill out the ending data */
                     CurrentSample->PerfEnd =
@@ -620,8 +620,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
     *Idt = (PKIDTENTRY)IdtDescriptor.Base;
 
     /* Get TSS and FS Selectors */
-    Ke386GetTr(&Tr);
-    if (Tr != KGDT_TSS) Tr = KGDT_TSS; // FIXME: HACKHACK
+    Tr = Ke386GetTr();
     Fs = Ke386GetFs();
 
     /* Get PCR Selector, mask it and get its GDT Entry */
@@ -753,7 +752,7 @@ AppCpuInit:
         KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
-        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
+        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
 
     /* Raise to HIGH_LEVEL */

@@ -108,7 +108,7 @@ typedef struct _WORKITEM_DATA
 
 #define SERIAL_TAG 'lreS'
 
-#define INFINITE ((ULONG)-1)
+#define INFINITE MAXULONG
 
 /* Baud master clock */
 #define BAUD_CLOCK      1843200

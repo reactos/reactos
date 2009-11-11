@@ -10,7 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 #include <ndk/powerpc/ketypes.h>
 #include <ppcmmu/mmu.h>
@@ -50,11 +50,11 @@ typedef struct _KKINIT_FRAME
 
 VOID
 NTAPI
-KePPCInitThreadWithContext(IN PKTHREAD Thread,
-                           IN PKSYSTEM_ROUTINE SystemRoutine,
-                           IN PKSTART_ROUTINE StartRoutine,
-                           IN PVOID StartContext,
-                           IN PCONTEXT ContextPointer)
+KiInitializeContextThread(IN PKTHREAD Thread,
+                          IN PKSYSTEM_ROUTINE SystemRoutine,
+                          IN PKSTART_ROUTINE StartRoutine,
+                          IN PVOID StartContext,
+                          IN PCONTEXT ContextPointer)
 {
     PFX_SAVE_AREA FxSaveArea;
     PKSTART_FRAME StartFrame;

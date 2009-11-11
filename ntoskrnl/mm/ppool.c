@@ -19,7 +19,7 @@
 #endif
 
 #undef ASSERT
-#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
 
 // enable "magic"
 //#define R_MAGIC
@@ -27,7 +27,7 @@
 #define R_ACQUIRE_MUTEX(pool) /*DPRINT1("Acquiring PPool Mutex\n");*/ ExAcquireFastMutex(&pool->Mutex)
 #define R_RELEASE_MUTEX(pool) /*DPRINT1("Releasing PPool Mutex\n");*/ ExReleaseFastMutex(&pool->Mutex)
 #define R_PRINT_ADDRESS(addr) KeRosPrintAddress(addr)
-#define R_PANIC() KeBugCheck(0)
+#define R_PANIC() KeBugCheck(MEMORY_MANAGEMENT)
 #define R_DEBUG DbgPrint
 
 #ifdef _ARM_
@@ -51,23 +51,7 @@ VOID
 INIT_FUNCTION
 NTAPI
 MmInitializePagedPool(VOID)
-{
-    PVOID BaseAddress;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    PMEMORY_AREA MArea;
-    BoundaryAddressMultiple.QuadPart = 0;
-    
-    BaseAddress = MmPagedPoolBase;
-    MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                       MEMORY_AREA_PAGED_POOL,
-                       &BaseAddress,
-                       MmPagedPoolSize,
-                       PAGE_READWRITE,
-                       &MArea,
-                       TRUE,
-                       0,
-                       BoundaryAddressMultiple);
-    
+{   
 	/*
 	 * We are still at a high IRQL level at this point so explicitly commit
 	 * the first page of the paged pool before writing the first block header.

@@ -774,8 +774,6 @@ ExAcquireResourceExclusiveLite(IN PERESOURCE Resource,
     ERESOURCE_THREAD Thread;
     BOOLEAN Success;
 
-	DPRINT("Acquire %x from %x\n", Resource,__builtin_return_address(1));
-
     /* Sanity check */
     ASSERT((Resource->Flag & ResourceNeverExclusive) == 0);
 
@@ -1819,7 +1817,6 @@ FASTCALL
 ExReleaseResourceLite(IN PERESOURCE Resource)
 {
     /* Just call the For-Thread function */
-	DPRINT("Release %x from %x\n",Resource,__builtin_return_address(1));
     ExReleaseResourceForThreadLite(Resource, (ERESOURCE_THREAD)PsGetCurrentThread());
 }
 

@@ -11,10 +11,10 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
  *****************************************************************************
  */
 
-#define IMP_IIrpTarget                                      \
+#define IMP_IIrpTarget                                     \
     STDMETHODIMP_(NTSTATUS) NewIrpTarget(THIS_             \
         OUT struct IIrpTarget **OutTarget,                 \
-        IN WCHAR * Name,                                   \
+        IN PCWSTR Name,                                    \
         IN PUNKNOWN Unknown,                               \
         IN POOL_TYPE PoolType,                             \
         IN PDEVICE_OBJECT DeviceObject,                    \
@@ -25,23 +25,23 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp);                                      \
                                                            \
-    STDMETHODIMP_(NTSTATUS) Read(THIS_                       \
+    STDMETHODIMP_(NTSTATUS) Read(THIS_                     \
         IN PDEVICE_OBJECT DeviceObject,                    \
-        IN PIRP Irp);                                  \
+        IN PIRP Irp);                                      \
                                                            \
-    STDMETHODIMP_(NTSTATUS) Write(THIS_                      \
+    STDMETHODIMP_(NTSTATUS) Write(THIS_                    \
         IN PDEVICE_OBJECT DeviceObject,                    \
-        IN PIRP Irp);                                  \
+        IN PIRP Irp);                                      \
                                                            \
-    STDMETHODIMP_(NTSTATUS) Flush(THIS_                      \
+    STDMETHODIMP_(NTSTATUS) Flush(THIS_                    \
         IN PDEVICE_OBJECT DeviceObject,                    \
-        IN PIRP Irp);                                  \
+        IN PIRP Irp);                                      \
                                                            \
-    STDMETHODIMP_(NTSTATUS) Close(THIS_                      \
+    STDMETHODIMP_(NTSTATUS) Close(THIS_                    \
         IN PDEVICE_OBJECT DeviceObject,                    \
-        IN PIRP Irp);                                  \
+        IN PIRP Irp);                                      \
                                                            \
-    STDMETHODIMP_(NTSTATUS) QuerySecurity(THIS_           \
+    STDMETHODIMP_(NTSTATUS) QuerySecurity(THIS_            \
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp);                                      \
                                                            \
@@ -83,7 +83,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
 #define DEFINE_ABSTRACT_IRPTARGET()                        \
     STDMETHOD_(NTSTATUS, NewIrpTarget)(THIS_               \
         OUT struct IIrpTarget **OutTarget,                 \
-        IN WCHAR * Name,                                   \
+        IN PCWSTR Name,                                    \
         IN PUNKNOWN Unknown,                               \
         IN POOL_TYPE PoolType,                             \
         IN PDEVICE_OBJECT DeviceObject,                    \
@@ -118,7 +118,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp)PURE;                                  \
                                                            \
-    STDMETHOD_(BOOLEAN, FastDeviceIoControl)(THIS_        \
+    STDMETHOD_(BOOLEAN, FastDeviceIoControl)(THIS_         \
         IN PFILE_OBJECT FileObject,                        \
         IN BOOLEAN Wait,                                   \
         IN PVOID InputBuffer,                              \
@@ -161,12 +161,27 @@ DECLARE_INTERFACE_(IIrpTarget, IUnknown)
     DEFINE_ABSTRACT_IRPTARGET()
 };
 
+typedef IIrpTarget *PIRPTARGET;
+
 /*****************************************************************************
  * ISubdevice
  *****************************************************************************
  */
 
 struct IIrpTargetFactory;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    UNICODE_STRING SymbolicLink;
+}SYMBOLICLINK_ENTRY, *PSYMBOLICLINK_ENTRY;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    ULONG FromPin;
+    KSPIN_PHYSICALCONNECTION Connection;
+}PHYSICAL_CONNECTION_ENTRY, *PPHYSICAL_CONNECTION_ENTRY;
 
 typedef struct
 {
@@ -188,20 +203,20 @@ typedef struct
 
 typedef struct
 {
-    ULONG MaxKsPropertySetCount;
-    ULONG FreeKsPropertySetOffset;
-    PKSPROPERTY_SET Properties;
-}KSPROPERTY_SET_LIST;
-
-typedef struct
-{
     ULONG InterfaceCount;
     GUID *Interfaces;
     KSPIN_FACTORY Factory;
-    KSPROPERTY_SET_LIST FilterPropertySet;
+    ULONG FilterPropertySetCount;
+    PKSPROPERTY_SET FilterPropertySet;
 
     PPCFILTER_DESCRIPTOR DeviceDescriptor;
     KSTOPOLOGY*  Topology;
+    LIST_ENTRY SymbolicLinkList;
+    LIST_ENTRY PhysicalConnectionList;
+    UNICODE_STRING RefString;
+    PUNKNOWN UnknownMiniport;
+    PUNKNOWN UnknownStream;
+    PVOID PortPin;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
@@ -210,7 +225,7 @@ typedef struct
 #define DEFINE_ABSTRACT_ISUBDEVICE()                          \
     STDMETHOD_(NTSTATUS, NewIrpTarget)(THIS_                  \
         OUT IIrpTarget **OutTarget,                           \
-        IN WCHAR * Name,                                      \
+        IN PCWSTR Name,                                       \
         IN PUNKNOWN Unknown,                                  \
         IN POOL_TYPE PoolType,                                \
         IN PDEVICE_OBJECT DeviceObject,                       \
@@ -246,7 +261,7 @@ typedef struct
 #define IMP_ISubdevice                                        \
     STDMETHODIMP_(NTSTATUS) NewIrpTarget(                     \
         OUT IIrpTarget **OutTarget,                           \
-        IN WCHAR * Name,                                      \
+        IN PCWSTR Name,                                       \
         IN PUNKNOWN Unknown,                                  \
         IN POOL_TYPE PoolType,                                \
         IN PDEVICE_OBJECT DeviceObject,                       \
@@ -307,9 +322,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PVOID SilenceBuffer) PURE;
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
-        IN PUCHAR Buffer,
-        IN ULONG BufferSize,
-        IN PIRP Irp) PURE;
+        IN PIRP Irp,
+        OUT PULONG Data) PURE;
 
     STDMETHOD_(NTSTATUS, GetMapping)(THIS_
         OUT PUCHAR * Buffer,
@@ -340,7 +354,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PVOID Tag) PURE;
 
     STDMETHOD_(BOOL, HasLastMappingFailed)(THIS) PURE;
-    STDMETHOD_(VOID, PrintQueueStatus)(THIS) PURE;
+    STDMETHOD_(ULONG, GetCurrentIrpOffset)(THIS) PURE;
     STDMETHOD_(VOID, SetMinimumDataThreshold)(THIS_
         IN ULONG MinimumDataThreshold) PURE;
     STDMETHOD_(ULONG, GetMinimumDataThreshold)(THIS) PURE;
@@ -356,42 +370,41 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN ULONG Alignment,                            \
         IN PVOID SilenceBuffer);                       \
                                                        \
-    STDMETHODIMP_(NTSTATUS) AddMapping(THIS_          \
-        IN PUCHAR Buffer,                              \
-        IN ULONG BufferSize,                           \
-        IN PIRP Irp);                                  \
+    STDMETHODIMP_(NTSTATUS) AddMapping(THIS_           \
+        IN PIRP Irp,                                   \
+        OUT PULONG Data);                              \
                                                        \
-    STDMETHODIMP_(NTSTATUS) GetMapping(THIS_          \
+    STDMETHODIMP_(NTSTATUS) GetMapping(THIS_           \
         OUT PUCHAR * Buffer,                           \
         OUT PULONG BufferSize);                        \
                                                        \
-    STDMETHODIMP_(VOID) UpdateMapping(THIS_           \
+    STDMETHODIMP_(VOID) UpdateMapping(THIS_            \
         IN ULONG BytesWritten);                        \
                                                        \
-    STDMETHODIMP_(ULONG) NumMappings(THIS);           \
+    STDMETHODIMP_(ULONG) NumMappings(THIS);            \
                                                        \
-    STDMETHODIMP_(ULONG) NumData(THIS);               \
+    STDMETHODIMP_(ULONG) NumData(THIS);                \
                                                        \
-    STDMETHODIMP_(BOOL) MinimumDataAvailable(THIS);   \
+    STDMETHODIMP_(BOOL) MinimumDataAvailable(THIS);    \
                                                        \
-    STDMETHODIMP_(BOOL) CancelBuffers(THIS);          \
+    STDMETHODIMP_(BOOL) CancelBuffers(THIS);           \
                                                        \
-    STDMETHODIMP_(VOID) UpdateFormat(THIS_            \
+    STDMETHODIMP_(VOID) UpdateFormat(THIS_             \
         IN PKSDATAFORMAT DataFormat);                  \
                                                        \
-    STDMETHODIMP_(NTSTATUS) GetMappingWithTag(THIS_   \
+    STDMETHODIMP_(NTSTATUS) GetMappingWithTag(THIS_    \
         IN PVOID Tag,                                  \
         OUT PPHYSICAL_ADDRESS  PhysicalAddress,        \
         OUT PVOID  *VirtualAddress,                    \
         OUT PULONG  ByteCount,                         \
         OUT PULONG  Flags);                            \
                                                        \
-    STDMETHODIMP_(NTSTATUS) ReleaseMappingWithTag(    \
+    STDMETHODIMP_(NTSTATUS) ReleaseMappingWithTag(     \
         IN PVOID Tag);                                 \
                                                        \
-    STDMETHODIMP_(BOOL) HasLastMappingFailed(THIS);   \
-    STDMETHODIMP_(VOID) PrintQueueStatus(THIS);       \
-    STDMETHODIMP_(VOID) SetMinimumDataThreshold(      \
+    STDMETHODIMP_(BOOL) HasLastMappingFailed(THIS);    \
+    STDMETHODIMP_(ULONG) GetCurrentIrpOffset(THIS);    \
+    STDMETHODIMP_(VOID) SetMinimumDataThreshold(       \
         IN ULONG MinimumDataThreshold);                \
     STDMETHODIMP_(ULONG) GetMinimumDataThreshold(VOID)
 
@@ -664,6 +677,10 @@ typedef IPortPinWavePci *PPORTPINWAVEPCI;
 #undef INTERFACE
 #define INTERFACE IPortFilterWaveRT
 
+#ifndef PPORTWAVERT
+typedef IPortWaveRT *PPORTWAVERT;
+#endif
+
 DECLARE_INTERFACE_(IPortFilterWaveRT, IIrpTarget)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -778,6 +795,8 @@ DECLARE_INTERFACE_(IPortPinWaveCyclic, IIrpTarget)
     STDMETHOD_(PMINIPORT, GetMiniport)(THIS) PURE;
 };
 
+typedef IPortPinWaveCyclic *PPORTPINWAVECYCLIC;
+
 #define IMP_IPortPinWaveCyclic                           \
     IMP_IIrpTarget;                                      \
     STDMETHODIMP_(NTSTATUS) Init(THIS_                   \
@@ -858,7 +877,7 @@ DECLARE_INTERFACE_(IPortPinDMus, IIrpTarget)
         IN PPORTFILTERDMUS Filter,             \
         IN KSPIN_CONNECT * ConnectDetails,     \
         IN KSPIN_DESCRIPTOR * PinDescriptor,   \
-        IN PDEVICE_OBJECT DeviceObject);        \
+        IN PDEVICE_OBJECT DeviceObject);       \
     STDMETHODIMP_(VOID) Notify(THIS)
 
 typedef IPortPinDMus *PPORTPINDMUS;
@@ -1087,5 +1106,16 @@ DECLARE_INTERFACE_(IPortWaveRTStreamInit, IUnknown)
         IN      PMDL              MemoryDescriptorList,                   \
         IN      ULONG             Index                                   \
     )
+
+#ifndef IMP_IPortClsVersion
+
+#define IMP_IPortClsVersion \
+    STDMETHODIMP_(DWORD) GetVersion(void);
+
+#endif
+
+#ifdef IMP_IPortWaveRT
+#define IMP_IPortWaveRT IMP_IPort
+#endif
 
 #endif

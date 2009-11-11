@@ -114,7 +114,7 @@ _KeUpdateRunTime@8:
 
     /* Check if the debugger is enabled */
     cmp byte ptr __KdDebuggerEnabled, 0
-    je ResetDpcTime
+    jz ResetDpcTime
 
     /* Breakpoint */
     call _DbgBreakPoint@0
@@ -276,7 +276,7 @@ _KeUpdateSystemTime@0:
     /* Put tick count back in EBX */
     mov ebx, eax
 
-    /* Copyit in ECX and get hich count */
+    /* Copy it in ECX and get high count */
     mov ecx, eax
     mov edx, _KeTickCount + 4
 
@@ -338,7 +338,7 @@ TimerExpired:
 
 DebugCheck:
     /* Check if the debugger is enabled */
-    cmp dword ptr __KdDebuggerEnabled, 0
+    cmp byte ptr __KdDebuggerEnabled, 0
     jnz DebuggerEnabled
 
     /* Check if this was a full tick */
@@ -372,7 +372,7 @@ DebuggerEnabled:
     jz NoDebug
 
     /* Break-in requested! */
-    push 1
+    push DBG_STATUS_CONTROL_C
     call _DbgBreakPointWithStatus@4
     jmp NoDebug
 

@@ -25,6 +25,7 @@
 		<file>recmutex.c</file>
 	</directory>
 	<directory name="tcpip">
+		<file>ainfo.c</file>
 		<file>buffer.c</file>
 		<file>dispatch.c</file>
 		<file>fileobjs.c</file>

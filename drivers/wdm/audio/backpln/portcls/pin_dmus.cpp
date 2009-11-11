@@ -238,7 +238,7 @@ SetStreamWorkerRoutineDMus(
         {
             // reset start stream
             This->m_IrpQueue->CancelBuffers(); //FIX function name
-            DPRINT1("Stopping PreCompleted %u PostCompleted %u\n", This->m_PreCompleted, This->m_PostCompleted);
+            DPRINT("Stopping PreCompleted %u PostCompleted %u\n", This->m_PreCompleted, This->m_PostCompleted);
         }
     }
 }
@@ -358,7 +358,7 @@ CPortPinDMus::TransferMidiDataToDMus()
         //set up struct
         //Event->Event.usFlags = DMUS_KEF_EVENT_COMPLETE;
         Event->Event.cbStruct = sizeof(DMUS_KERNEL_EVENT);
-        Event->Event.cbEvent = BufferSize;
+        Event->Event.cbEvent = (USHORT)BufferSize;
         Event->Event.uData.pbData = (PBYTE)Buffer;
 
 
@@ -424,7 +424,7 @@ NTSTATUS
 NTAPI
 CPortPinDMus::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
@@ -546,7 +546,7 @@ CloseStreamRoutineDMus(
 
     if (Stream)
     {
-        DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
+        DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->Release();
     }
 }
@@ -564,14 +564,14 @@ CPortPinDMus::Close(
         Ctx = (PCLOSESTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
         if (!Ctx)
         {
-            DPRINT1("Failed to allocate stream context\n");
+            DPRINT("Failed to allocate stream context\n");
             goto cleanup;
         }
 
         Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
         if (!Ctx->WorkItem)
         {
-            DPRINT1("Failed to allocate work item\n");
+            DPRINT("Failed to allocate work item\n");
             goto cleanup;
         }
 
@@ -698,7 +698,7 @@ CPortPinDMus::Init(
 
     DPRINT("CPortPinDMus::Init entered\n");
 
-    m_Format = (PKSDATAFORMAT)ExAllocatePoolWithTag(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+    m_Format = (PKSDATAFORMAT)AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
     if (!m_Format)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -714,14 +714,15 @@ CPortPinDMus::Init(
     }
     else
     {
-        DPRINT1("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
-        KeBugCheck(0);
+        DPRINT("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
+        DbgBreakPoint();
+        while(TRUE);
     }
 
     Status = NewIrpQueue(&m_IrpQueue);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to allocate IrpQueue with %x\n", Status);
+        DPRINT("Failed to allocate IrpQueue with %x\n", Status);
         return Status;
     }
 
@@ -762,7 +763,7 @@ CPortPinDMus::Init(
         Status = m_ServiceGroup->AddMember(PSERVICESINK(this));
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to add pin to service group\n");
+            DPRINT("Failed to add pin to service group\n");
             return Status;
         }
         m_ServiceGroup->SupportDelayedService();
@@ -771,7 +772,7 @@ CPortPinDMus::Init(
     Status = m_IrpQueue->Init(ConnectDetails, m_Format, DeviceObject, 0, 0, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IrpQueue_Init failed with %x\n", Status);
+        DPRINT("IrpQueue_Init failed with %x\n", Status);
         return Status;
     }
 

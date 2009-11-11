@@ -35,11 +35,11 @@ public:
     virtual ~CIrpQueue(){}
 
 protected:
-    ULONG m_CurrentOffset;
+    volatile ULONG m_CurrentOffset;
     LONG m_NumMappings;
     ULONG m_NumDataAvailable;
     BOOL m_StartStream;
-    KSPIN_CONNECT * m_ConnectDetails;
+    PKSPIN_CONNECT m_ConnectDetails;
     PKSDATAFORMAT_WAVEFORMATEX m_DataFormat;
 
     KSPIN_LOCK m_IrpListLock;
@@ -56,6 +56,16 @@ protected:
     LONG m_Ref;
 
 };
+
+#define OFFSET_HEADERINDEX  (0)
+#define OFFSET_STREAMHEADER (2)
+#define OFFSET_HEADERCOUNT  (3)
+
+
+#define STREAMHEADER_INDEX(Irp)   (PtrToUlong(Irp->Tail.Overlay.DriverContext[OFFSET_HEADERINDEX]))
+#define STREAMHEADER_COUNT(Irp)   (PtrToUlong(Irp->Tail.Overlay.DriverContext[OFFSET_HEADERCOUNT]))
+#define STREAMHEADER_CURRENT(Irp) (Irp->Tail.Overlay.DriverContext[OFFSET_STREAMHEADER])
+
 
 NTSTATUS
 NTAPI
@@ -100,60 +110,104 @@ CIrpQueue::Init(
 NTSTATUS
 NTAPI
 CIrpQueue::AddMapping(
-    IN PUCHAR Buffer,
-    IN ULONG BufferSize,
-    IN PIRP Irp)
+    IN PIRP Irp,
+    OUT PULONG Data)
 {
     PKSSTREAM_HEADER Header;
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStack;
+    ULONG NumHeaders, NumData, Index;
+    PMDL Mdl;
+
+    PC_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (!Buffer)
+    if (!Irp->MdlAddress)
     {
+        // ioctl from KsStudio
+        // Wdmaud already probes buffers, therefore no need to probe it again
         // probe the stream irp
-        Status = KsProbeStreamIrp(Irp, KSSTREAM_WRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
+        if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM)
+            Status = KsProbeStreamIrp(Irp, KSSTREAM_WRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_SYSTEMADDRESS, 0);
+        else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
+            Status = KsProbeStreamIrp(Irp, KSSTREAM_READ  | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_SYSTEMADDRESS, 0);
+        else 
+            PC_ASSERT(0);
 
         // check for success
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("KsProbeStreamIrp failed with %x\n", Status);
+            DPRINT("KsProbeStreamIrp failed with %x\n", Status);
             return Status;
         }
-
-        // get the stream header
-        Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
-        PC_ASSERT(Header);
-        PC_ASSERT(Irp->MdlAddress);
-
-        if (Irp->RequestorMode != KernelMode)
-        {
-           // use allocated mdl
-           Header->Data = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
-        }
     }
-    else
+
+    // get first stream header
+    Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+
+    // calculate num headers
+    NumHeaders = IoStack->Parameters.DeviceIoControl.OutputBufferLength / Header->Size;
+
+    // assume headers of same length
+    PC_ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength % Header->Size == 0);
+
+
+    // get first audio buffer
+    Mdl = Irp->MdlAddress;
+
+
+    // store the current stream header
+    Irp->Tail.Overlay.DriverContext[OFFSET_STREAMHEADER] = (PVOID)Header;
+    // store header count
+    Irp->Tail.Overlay.DriverContext[OFFSET_HEADERCOUNT] = UlongToPtr(NumHeaders);
+
+    // store current header index
+    Irp->Tail.Overlay.DriverContext[OFFSET_HEADERINDEX] = UlongToPtr(0);
+
+
+    NumData = 0;
+    // prepare all headers
+    for(Index = 0; Index < NumHeaders; Index++)
     {
-        // HACK
-        Header = (PKSSTREAM_HEADER)Buffer;
+        // sanity checks
+        PC_ASSERT(Header);
+        PC_ASSERT(Mdl);
+
+        Header->Data = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
+
+        if (!Header->Data)
+        {
+            // insufficient resources
+            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+            Irp->AssociatedIrp.SystemBuffer = NULL;
+            // complete and forget request
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            Irp->IoStatus.Information = 0;
+
+            IoCompleteRequest(Irp, IO_NO_INCREMENT); 
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        // increment num mappings
+        InterlockedIncrement(&m_NumMappings);
+
+        // increment available data
+        InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, 
+                                      (max(Header->DataUsed, Header->FrameExtent)));
+
+        NumData += max(Header->DataUsed, Header->FrameExtent);
+
+        // move to next header
+        Header = (PKSSTREAM_HEADER)((ULONG_PTR)Header + Header->Size);
+        
+        // move to next mdl
+        Mdl = Mdl->Next;
     }
 
-    // HACK
-    Irp->Tail.Overlay.DriverContext[2] = (PVOID)Header;
-
-    // sanity check
-    PC_ASSERT(Header);
-
-    // dont exceed max frame size
-    //PC_ASSERT(m_MaxFrameSize >= Header->DataUsed);
-
-    // increment num mappings
-    InterlockedIncrement(&m_NumMappings);
-
-    // increment num data available
-    m_NumDataAvailable += Header->DataUsed;
+    DPRINT("StreamHeaders %u NumData %u FrameSize %u NumDataAvailable %u\n", NumHeaders, NumData, m_MaxFrameSize, m_NumDataAvailable);
+    *Data = NumData;
 
     // mark irp as pending
     IoMarkIrpPending(Irp);
@@ -202,6 +256,8 @@ CIrpQueue::GetMapping(
 
     if (!Irp)
     {
+        DPRINT("NoIrp\n");
+        return STATUS_UNSUCCESSFUL;
         // no irp available, use silence buffer
         *Buffer = (PUCHAR)m_SilenceBuffer;
         *BufferSize = m_MaxFrameSize;
@@ -212,22 +268,19 @@ CIrpQueue::GetMapping(
         return STATUS_SUCCESS;
     }
 
-#if 0
-    // get current irp stack location
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
     // get stream header
-    StreamHeader = (PKSSTREAM_HEADER)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-#else
-    // HACK get stream header
     StreamHeader = (PKSSTREAM_HEADER)Irp->Tail.Overlay.DriverContext[2];
-#endif
 
     // sanity check
     PC_ASSERT(StreamHeader);
 
     // store buffersize
-    *BufferSize = StreamHeader->DataUsed - Offset;
+    if (StreamHeader->DataUsed)
+        *BufferSize = StreamHeader->DataUsed - Offset;
+    else
+        *BufferSize = StreamHeader->FrameExtent - Offset;
+
+    PC_ASSERT(*BufferSize);
 
     // store buffer
     *Buffer = &((PUCHAR)StreamHeader->Data)[Offset];
@@ -243,8 +296,8 @@ NTAPI
 CIrpQueue::UpdateMapping(
     IN ULONG BytesWritten)
 {
-    //PIO_STACK_LOCATION IoStack;
     PKSSTREAM_HEADER StreamHeader;
+    ULONG Size, NumData, Index;
 
     if (!m_Irp)
     {
@@ -252,42 +305,90 @@ CIrpQueue::UpdateMapping(
         return;
     }
 
-#if 0
-    // get current irp stack location
-    IoStack = IoGetCurrentIrpStackLocation(m_Irp);
-
     // get stream header
-    StreamHeader = (PKSSTREAM_HEADER)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-#else
-    // HACK get stream header
-    StreamHeader = (PKSSTREAM_HEADER)m_Irp->Tail.Overlay.DriverContext[2];
-#endif
+    StreamHeader = (PKSSTREAM_HEADER)STREAMHEADER_CURRENT(m_Irp);
 
     // sanity check
    // ASSERT(StreamHeader);
 
     // add to current offset
-    m_CurrentOffset += BytesWritten;
+    InterlockedExchangeAdd((volatile PLONG)&m_CurrentOffset, (LONG)BytesWritten);
 
     // decrement available data counter
     m_NumDataAvailable -= BytesWritten;
 
-    if (m_CurrentOffset >= StreamHeader->DataUsed)
+    if (StreamHeader->DataUsed)
+        Size = StreamHeader->DataUsed;
+    else
+        Size = StreamHeader->FrameExtent;
+
+    PC_ASSERT(Size);
+
+    if (m_CurrentOffset >= Size)
     {
-        // irp has been processed completly
-        m_Irp->IoStatus.Status = STATUS_SUCCESS;
-
-        // frame extend contains the original request size, DataUsed contains the real buffer size
-         //is different when kmixer performs channel conversion, upsampling etc
-        
-        m_Irp->IoStatus.Information = StreamHeader->FrameExtent;
-
-        if (m_Irp->RequestorMode == KernelMode)
+        if (STREAMHEADER_INDEX(m_Irp) + 1 < STREAMHEADER_COUNT(m_Irp))
         {
-            // HACK - WDMAUD should pass PKSSTREAM_HEADERs
-            ExFreePool(StreamHeader->Data);
-            ExFreePool(StreamHeader);
+            // the irp has at least one more stream header
+            m_Irp->Tail.Overlay.DriverContext[OFFSET_HEADERINDEX] = UlongToPtr(STREAMHEADER_INDEX(m_Irp) + 1);
+
+            // get next stream header         
+            StreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamHeader + StreamHeader->Size);
+
+            // store next stream header
+            STREAMHEADER_CURRENT(m_Irp) = (PVOID)StreamHeader;
+
+            // reset current offset
+            m_CurrentOffset = 0;
+
+            // done
+            return;
         }
+
+        // irp has been processed completly
+
+        NumData = 0;
+        StreamHeader = (PKSSTREAM_HEADER)m_Irp->AssociatedIrp.SystemBuffer;
+
+        // loop all stream headers
+        for(Index = 0; Index < STREAMHEADER_COUNT(m_Irp); Index++)
+        {
+            PC_ASSERT(StreamHeader);
+
+            // add size of buffer
+            // depends on if the buffer is input / output
+            if (StreamHeader->DataUsed)
+                Size = StreamHeader->DataUsed;
+            else
+                Size = StreamHeader->FrameExtent;
+
+            // increment size
+            NumData += Size;
+
+            // get next stream header
+            StreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamHeader + StreamHeader->Size);
+        }
+
+        if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
+        {
+            // looped streaming repeat the buffers untill
+            // the caller decides to stop the streams
+
+            // reset stream header index
+            m_Irp->Tail.Overlay.DriverContext[OFFSET_HEADERINDEX] = UlongToPtr(0);
+            // re-insert irp
+            KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, m_Irp, KsListEntryTail, NULL);
+            // clear current irp
+            m_Irp = NULL;
+            // reset offset
+            m_CurrentOffset = 0;
+            // increment available data
+            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, NumData);
+            // done
+            return;
+        }
+
+        m_Irp->IoStatus.Status = STATUS_SUCCESS;
+        m_Irp->IoStatus.Information = NumData;
 
         // complete the request
         IoCompleteRequest(m_Irp, IO_SOUND_INCREMENT);
@@ -340,8 +441,20 @@ BOOL
 NTAPI
 CIrpQueue::CancelBuffers()
 {
+    // is there an active irp
+    if (m_Irp)
+    {
+        // re-insert it to cancelable queue
+        KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, m_Irp, KsListEntryTail, NULL);
+        //set it to zero
+        m_Irp = NULL;
+    }
 
+    // cancel all irps
+    KsCancelIo(&m_IrpList, &m_IrpListLock);
+    // reset stream start flag
     m_StartStream = FALSE;
+    // done
     return TRUE;
 }
 
@@ -382,6 +495,9 @@ CIrpQueue::GetMappingWithTag(
         m_StartStream = FALSE;
         return STATUS_UNSUCCESSFUL;
     }
+
+    //FIXME support more than one stream header
+    PC_ASSERT(STREAMHEADER_COUNT(Irp) == 1);
 
     // HACK get stream header
     StreamHeader = (PKSSTREAM_HEADER)Irp->Tail.Overlay.DriverContext[2];
@@ -439,9 +555,6 @@ CIrpQueue::ReleaseMappingWithTag(
     
     Irp->IoStatus.Information = StreamHeader->FrameExtent;
 
-    // free stream data, no tag as wdmaud.drv does it atm
-    ExFreePool(StreamHeader->Data);
-
     // free stream header, no tag as wdmaud.drv allocates it atm
     ExFreePool(StreamHeader);
 
@@ -458,11 +571,12 @@ CIrpQueue::HasLastMappingFailed()
     return m_OutOfMapping;
 }
 
-VOID
+ULONG
 NTAPI
-CIrpQueue::PrintQueueStatus()
+CIrpQueue::GetCurrentIrpOffset()
 {
 
+    return m_CurrentOffset;
 }
 
 VOID

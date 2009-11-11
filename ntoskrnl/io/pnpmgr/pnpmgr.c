@@ -1420,7 +1420,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                              sizeof(ULONG));
 
       /* Set 'UINumber' value */
-      if (DeviceCapabilities.UINumber != (ULONG)-1)
+      if (DeviceCapabilities.UINumber != MAXULONG)
       {
          RtlInitUnicodeString(&ValueName, L"UINumber");
          Status = ZwSetValueKey(InstanceKey,
@@ -2850,6 +2850,7 @@ PnpInit(VOID)
 
     KeInitializeSpinLock(&IopDeviceTreeLock);
 	ExInitializeFastMutex(&IopBusTypeGuidListLock);
+	
     /* Initialize the Bus Type GUID List */
     IopBusTypeGuidList = ExAllocatePool(NonPagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
     if (!IopBusTypeGuidList) {
@@ -3077,7 +3078,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     case DevicePropertyAddress:
         /* Query the device caps */
         Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
-        if (NT_SUCCESS(Status) && (DeviceCaps.Address != (ULONG)-1))
+        if (NT_SUCCESS(Status) && (DeviceCaps.Address != MAXULONG))
         {
             /* Return length */
             *ResultLength = sizeof(ULONG);

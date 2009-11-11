@@ -65,16 +65,16 @@ protected:
 static GUID InterfaceGuids[3] = 
 {
     {
+        /// KS_CATEGORY_AUDIO
+        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
         /// KSCATEGORY_RENDER
         0x65E8773EL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     },
     {
         /// KSCATEGORY_CAPTURE
         0x65E8773DL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
-    },
-    {
-        /// KS_CATEGORY_AUDIO
-        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     }
 };
 
@@ -201,7 +201,7 @@ CPortWavePci::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IPortWavePci_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IPortWavePci_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 
@@ -269,7 +269,7 @@ CPortWavePci::Init(
     Status = Miniport->GetDescription(&m_pDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("failed to get description\n");
+        DPRINT("failed to get description\n");
         Miniport->Release();
         m_bInitialized = FALSE;
         return Status;
@@ -294,7 +294,7 @@ CPortWavePci::Init(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("PcCreateSubdeviceDescriptor failed with %x\n", Status);
+        DPRINT("PcCreateSubdeviceDescriptor failed with %x\n", Status);
         Miniport->Release();
         m_bInitialized = FALSE;
         return Status;
@@ -438,7 +438,7 @@ NTSTATUS
 NTAPI
 CPortWavePci::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
@@ -489,7 +489,7 @@ NTAPI
 CPortWavePci::GetDescriptor(
     IN SUBDEVICE_DESCRIPTOR ** Descriptor)
 {
-    DPRINT1("ISubDevice_GetDescriptor this %p\n", this);
+    DPRINT("ISubDevice_GetDescriptor this %p\n", this);
     *Descriptor = m_SubDeviceDescriptor;
     return STATUS_SUCCESS;
 }

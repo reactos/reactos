@@ -194,6 +194,15 @@ static __inline BOOLEAN AlignUp(OUT PULONG AlignedAddress, IN ULONG Address, IN 
 
 
 
+
+
+
+
+
+
+
+
+
 //
 // PeFmtCreateSection depends on the following:
 //

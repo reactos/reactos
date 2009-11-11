@@ -91,14 +91,6 @@ MmNotPresentFaultPhysicalMemory
 		KeBugCheck(MEMORY_MANAGEMENT);
 		return(Status);
 	}
-	/*
-	 * Don't add an rmap entry since the page mapped could be for
-	 * anything.
-	 */
-	if (Locked)
-	{
-		MmLockPageUnsafe(Page);
-	}
 	
 	/*
 	 * Cleanup and release locks

@@ -86,7 +86,7 @@ typedef struct _PCI_REGISTRY_INFO
 {
     UCHAR MajorRevision;
     UCHAR MinorRevision;
-    UCHAR NoBuses;
+    UCHAR NoBuses; // Number Of Buses
     UCHAR HardwareMechanism;
 } PCI_REGISTRY_INFO, *PPCI_REGISTRY_INFO;
 

@@ -9,6 +9,8 @@
 
 //#define _KS_NO_ANONYMOUS_STRUCTURES_
 #define PC_IMPLEMENTATION
+#define COM_STDMETHOD_CAN_THROW
+#define PC_NO_IMPORTS
 
 #include <ntddk.h>
 #include <portcls.h>
@@ -20,7 +22,7 @@
 #include "interfaces.hpp"
 #include <ks.h>
 #include <ksmedia.h>
-#include <intrin.h>
+//#include <intrin.h>
 
 #define TAG_PORTCLASS 'SLCP'
 
@@ -244,8 +246,8 @@ NTAPI
 PcDmaSlaveDescription(
     IN PRESOURCELIST  ResourceList OPTIONAL,
     IN ULONG DmaIndex,
-    IN BOOL DemandMode,
-    IN ULONG AutoInitialize,
+    IN BOOLEAN DemandMode,
+    IN BOOLEAN AutoInitialize,
     IN DMA_SPEED DmaSpeed,
     IN ULONG MaximumLength,
     IN ULONG DmaPort,
@@ -286,26 +288,6 @@ PcCreateItemDispatch(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
-NTSTATUS
-NTAPI
-PcPropertyHandler(
-    IN PIRP Irp,
-    IN PSUBDEVICE_DESCRIPTOR Descriptor);
-
-NTSTATUS
-NTAPI
-FastPropertyHandler(
-    IN PFILE_OBJECT  FileObject,
-    IN PKSPROPERTY UNALIGNED  Property,
-    IN ULONG  PropertyLength,
-    IN OUT PVOID UNALIGNED  Data,
-    IN ULONG  DataLength,
-    OUT PIO_STATUS_BLOCK  IoStatus,
-    IN ULONG  PropertySetsCount,
-    IN const KSPROPERTY_SET *PropertySet,
-    IN PSUBDEVICE_DESCRIPTOR Descriptor,
-    IN ISubdevice *SubDevice);
-
 PDEVICE_OBJECT
 GetDeviceObject(
     IPortWaveCyclic* iface);
@@ -325,6 +307,37 @@ NTSTATUS
 NTAPI
 NewIUnregisterPhysicalConnection(
     OUT PUNREGISTERPHYSICALCONNECTION *OutConnection);
+
+NTSTATUS
+NTAPI
+PcHandlePropertyWithTable(
+    IN PIRP Irp,
+    IN ULONG PropertySetCount,
+    IN PKSPROPERTY_SET PropertySet,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor);
+
+#define DEFINE_KSPROPERTY_CONNECTIONSET(PinSet,\
+    PropStateHandler, PropDataFormatHandler, PropAllocatorFraming)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(PropStateHandler, PropStateHandler),\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(PropDataFormatHandler, PropDataFormatHandler),\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING(PropAllocatorFraming)\
+}
+
+#define DEFINE_KSPROPERTY_ITEM_AUDIO_POSITION(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_AUDIO_POSITION,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSAUDIO_POSITION),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_AUDIOSET(PinSet,\
+    PropPositionHandler)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_AUDIO_POSITION(PropPositionHandler, PropPositionHandler)\
+}
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\
@@ -348,32 +361,6 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
 
 typedef struct
 {
-    LIST_ENTRY Entry;
-    UNICODE_STRING SymbolicLink;
-}SYMBOLICLINK_ENTRY, *PSYMBOLICLINK_ENTRY;
-
-
-typedef struct
-{
-    LIST_ENTRY Entry;
-    ISubdevice *SubDevice;
-    UNICODE_STRING Name;
-    LIST_ENTRY SymbolicLinkList;
-}SUBDEVICE_ENTRY, *PSUBDEVICE_ENTRY;
-
-typedef struct
-{
-    LIST_ENTRY Entry;
-    ISubdevice * FromSubDevice;
-    UNICODE_STRING FromUnicodeString;
-    ULONG FromPin;
-    ISubdevice * ToSubDevice;
-    UNICODE_STRING ToUnicodeString;
-    ULONG ToPin;
-}PHYSICAL_CONNECTION, *PPHYSICAL_CONNECTION;
-
-typedef struct
-{
     KSDEVICE_HEADER KsDeviceHeader;
     PDEVICE_OBJECT PhysicalDeviceObject;
     PDEVICE_OBJECT PrevDeviceObject;
@@ -384,20 +371,12 @@ typedef struct
     KSOBJECT_CREATE_ITEM * CreateItems;
 
     IResourceList* resources;
-    LIST_ENTRY SubDeviceList;
-    LIST_ENTRY PhysicalConnectionList;
 
     LIST_ENTRY TimerList;
     KSPIN_LOCK TimerListLock;
 
 } PCLASS_DEVICE_EXTENSION, *PPCLASS_DEVICE_EXTENSION;
 
-
-typedef struct
-{
-    KSSTREAM_HEADER Header;
-    PIRP Irp;
-}CONTEXT_WRITE, *PCONTEXT_WRITE;
 
 typedef struct
 {

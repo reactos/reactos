@@ -511,11 +511,6 @@ MmCreateVirtualMappingInternal(IN PEPROCESS Process,
         OldPdeOffset = PdeOffset;
         
         //
-        // Mark it as mapped
-        //
-        if (MarkAsMapped) MmMarkPageMapped(*Pages);
-        
-        //
         // Set the PFN
         //
         TempPte.u.Hard.PageFrameNumber = *Pages++;
@@ -676,7 +671,6 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
         // Unmap the PFN
         //
         Pfn = Pte.u.Hard.PageFrameNumber;
-        if (Pfn) MmMarkPageUnmapped(Pfn);
         
         //
         // Release the PFN if it was ours

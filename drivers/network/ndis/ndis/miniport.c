@@ -1472,7 +1472,7 @@ NdisInitializeWrapper(
   *NdisWrapperHandle = NULL;
 
 #if BREAK_ON_MINIPORT_INIT
-  __asm__ ("int $3\n");
+  DbgBreakPoint();
 #endif
 
   Miniport = ExAllocatePool(NonPagedPool, sizeof(NDIS_M_DRIVER_BLOCK));

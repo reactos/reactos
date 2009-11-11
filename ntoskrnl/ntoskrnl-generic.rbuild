@@ -6,10 +6,12 @@
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="_IN_KERNEL_" />
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
+	</if>
+	<if property="_NEWCC_" value="1">
+		<define name="_NEWCC_" />
 	</if>
 	<if property="_ELF_" value="1">
 		<define name="_ELF_" />
@@ -97,6 +99,7 @@
 		<file>eventobj.c</file>
 		<file>except.c</file>
 		<file>freeldr.c</file>
+		<file>freeze.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>
 		<file>ipi.c</file>
@@ -112,16 +115,27 @@
 		<file>timerobj.c</file>
 		<file>wait.c</file>
 	</directory>
-	<directory name="cache">
-		<file>cachesub.c</file>
-		<file>copysup.c</file>
-		<file>fssup.c</file>
-		<file>lazyrite.c</file>
-		<file>logsup.c</file>
-		<file>mdlsup.c</file>
-		<file>pinsup.c</file>
-		<file>vacbsup.c</file>
-	</directory>
+	<if property="_NEWCC_" value="0">
+		<directory name="cc">
+			<file>cacheman.c</file>
+			<file>copy.c</file>
+			<file>fs.c</file>
+			<file>mdl.c</file>
+			<file>pin.c</file>
+			<file>view.c</file>
+		</directory>
+	</if>
+	<if property="_NEWCC_" value="1">
+		<directory name="cache">
+			<file>cachesub.c</file>
+			<file>copysup.c</file>
+			<file>fssup.c</file>
+			<file>lazyrite.c</file>
+			<file>logsup.c</file>
+			<file>mdlsup.c</file>
+			<file>pinsup.c</file>
+		</directory>
+	</if>
 	<directory name="config">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -274,13 +288,15 @@
 			<file>pnproot.c</file>
 		</directory>
 	</directory>
-	<directory name="kd">
-		<if property="ARCH" value="i386">
-			<directory name="i386">
-				<file>kdmemsup.c</file>
-			</directory>
-		</if>
-	</directory>
+	<if property="_WINKD_" value="0">
+		<directory name="kd">
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>kdmemsup.c</file>
+				</directory>
+			</if>
+		</directory>
+	</if>
 	<if property="_WINKD_" value="0">
 		<directory name="kdbg">
 			<if property="ARCH" value="i386">
@@ -298,7 +314,6 @@
 			<if property="KDBG" value="1">
 				<file>kdb.c</file>
 				<file>kdb_cli.c</file>
-				<file>kdb_lock.c</file>
 				<file>kdb_expr.c</file>
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
@@ -325,6 +340,21 @@
 	</if>
 	<if property="_WINKD_" value ="1">
 		<directory name="kd64">
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>kdx86.c</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>kdx64.c</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="arm">
+				<directory name="arm">
+					<file>kdarm.c</file>
+				</directory>
+			</if>
 			<file>kdapi.c</file>
 			<file>kdbreak.c</file>
 			<file>kddata.c</file>
@@ -379,30 +409,23 @@
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
 			<file>mdlsup.c</file>
+			<file>mmsup.c</file>
 			<file>ncache.c</file>
+			<file>pagfault.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
 			<file>syspte.c</file>
-		</directory>
-		<directory name="section">
-			<file>data.c</file>
-			<if property="_ELF_" value="1">
-				<file>elf32.c</file>
-				<file>elf64.c</file>
-			</if>
-			<file>image.c</file>
-			<file>io.c</file>
-			<file>pagefile.c</file>
-			<file>pe.c</file>
-			<file>physical.c</file>
+			<file>virtual.c</file>
 		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
 		<file>dbgpool.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
+		<if property="_WINKD_" value ="1">
+			<file>mmdbg.c</file>
+		</if>
 		<file>mmfault.c</file>
-		<file>mmsup.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
 		<file>pagefile.c</file>
@@ -414,6 +437,28 @@
 		<file>rmap.c</file>
 		<file>sysldr.c</file>
 		<file>virtual.c</file>
+		<if property="_NEWCC_" value="0">
+			<file>pe.c</file>
+			<file>section.c</file>
+			<if property="_ELF_" value="1">
+				<file>elf32.c</file>
+				<file>elf64.c</file>
+			</if>
+		</if>
+		<if property="_NEWCC_" value="1">
+			<directory name="section">
+				<file>data.c</file>
+				<if property="_ELF_" value="1">
+					<file>elf32.c</file>
+					<file>elf64.c</file>
+				</if>
+				<file>image.c</file>
+				<file>io.c</file>
+				<file>pagefile.c</file>
+				<file>pe.c</file>
+				<file>physical.c</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="ob">
 		<file>obdir.c</file>
@@ -435,6 +480,7 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>psctx.c</file>
+				<file>psldt.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="arm">

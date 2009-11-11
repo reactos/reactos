@@ -57,6 +57,7 @@ static NTSTATUS NTAPI SendComplete
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );
@@ -82,7 +83,7 @@ static NTSTATUS NTAPI SendComplete
 			NextIrp->IoStatus.Information = 0;
 
 			if ( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
-
+                        (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		}
 
@@ -197,6 +198,7 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
 	       NextIrp->IoStatus.Information = 0;
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );
@@ -414,13 +416,13 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint
 		(MID_TRACE,("RemoteAddress #%d Type %d\n",
-					((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
+					((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
 					TAAddressCount,
-					((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
+					((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
 					Address[0].AddressType));
 
     TdiBuildConnectionInfo( &TargetAddress,
-							((PTRANSPORT_ADDRESS)SendReq->RemoteAddress) );
+							((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress) );
 
     /* Check the size of the Address given ... */
 

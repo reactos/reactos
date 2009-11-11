@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../../tools/rbuild/project.dtd">
-<module name="mpu401" type="kernelmodedriver" installbase="system32/drivers" installname="mpu401.sys" allowwarnings="true">
+<module name="mpu401" type="kernelmodedriver" installbase="system32/drivers" installname="mpu401.sys">
 	<include base="mpu401">.</include>
 	<include base="mpu401">..</include>
 	<group compilerset="gcc">

@@ -6,88 +6,6 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
-//
-// Thread Dispatcher Header DebugActive Mask
-//
-#define DR_MASK(x)                              1 << x
-#define DR_ACTIVE_MASK                          0x10
-#define DR_REG_MASK                             0x4F
-
-#ifdef _M_IX86
-//
-// Sanitizes a selector
-//
-FORCEINLINE
-ULONG
-Ke386SanitizeSeg(IN ULONG Cs,
-                IN KPROCESSOR_MODE Mode)
-{
-    //
-    // Check if we're in kernel-mode, and force CPL 0 if so.
-    // Otherwise, force CPL 3.
-    //
-    return ((Mode == KernelMode) ?
-            (Cs & (0xFFFF & ~RPL_MASK)) :
-            (RPL_MASK | (Cs & 0xFFFF)));
-}
-
-//
-// Sanitizes EFLAGS
-//
-FORCEINLINE
-ULONG
-Ke386SanitizeFlags(IN ULONG Eflags,
-                   IN KPROCESSOR_MODE Mode)
-{
-    //
-    // Check if we're in kernel-mode, and sanitize EFLAGS if so.
-    // Otherwise, also force interrupt mask on.
-    //
-    return ((Mode == KernelMode) ?
-            (Eflags & (EFLAGS_USER_SANITIZE | EFLAGS_INTERRUPT_MASK)) :
-            (EFLAGS_INTERRUPT_MASK | (Eflags & EFLAGS_USER_SANITIZE)));
-}
-
-//
-// Gets a DR register from a CONTEXT structure
-//
-FORCEINLINE
-PVOID
-KiDrFromContext(IN ULONG Dr,
-                IN PCONTEXT Context)
-{
-    return *(PVOID*)((ULONG_PTR)Context + KiDebugRegisterContextOffsets[Dr]);
-}
-
-//
-// Gets a DR register from a KTRAP_FRAME structure
-//
-FORCEINLINE
-PVOID*
-KiDrFromTrapFrame(IN ULONG Dr,
-                  IN PKTRAP_FRAME TrapFrame)
-{
-    return (PVOID*)((ULONG_PTR)TrapFrame + KiDebugRegisterTrapOffsets[Dr]);
-}
-
-//
-//
-//
-FORCEINLINE
-PVOID
-Ke386SanitizeDr(IN PVOID DrAddress,
-                IN KPROCESSOR_MODE Mode)
-{
-    //
-    // Check if we're in kernel-mode, and return the address directly if so.
-    // Otherwise, make sure it's not inside the kernel-mode address space.
-    // If it is, then clear the address.
-    //
-    return ((Mode == KernelMode) ? DrAddress :
-            (DrAddress <= MM_HIGHEST_USER_ADDRESS) ? DrAddress : 0);
-}
-#endif /* _M_IX86 */
-
 #ifndef _M_ARM
 FORCEINLINE
 PRKTHREAD
@@ -392,7 +310,7 @@ KiRundownThread(IN PKTHREAD Thread)
     {
         /* Clear it */
         KeGetCurrentPrcb()->NpxThread = NULL;
-        KeArchFnInit();
+        Ke386FnInit();
     }
 #endif
 }
@@ -437,12 +355,20 @@ FORCEINLINE
 VOID
 KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 {
+    /* Make sure that we don't own the lock already */
+    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
+    {
+        /* We do, bugcheck! */
+        KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
+    }
+
+    /* Start acquire loop */
     for (;;)
     {
         /* Try to acquire it */
         if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
         {
-            /* Value changed... wait until it's locked */
+            /* Value changed... wait until it's unlocked */
             while (*(volatile KSPIN_LOCK *)SpinLock == 1)
             {
 #if DBG
@@ -497,10 +423,6 @@ KiAcquireDispatcherObject(IN DISPATCHER_HEADER* Object)
     /* Make sure we're at a safe level to touch the lock */
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
-#ifdef DBG
-	KdbgDeclareWait(Object);
-#endif
-
     /* Start acquire loop */
     do
     {
@@ -519,11 +441,6 @@ KiAcquireDispatcherObject(IN DISPATCHER_HEADER* Object)
     } while (InterlockedCompareExchange(&Object->Lock,
                                         OldValue | KOBJECT_LOCK_BIT,
                                         OldValue) != OldValue);
-
-#ifdef DBG
-	KdbgSatisfyWait(Object);
-	KdbgEnterWaitable(Object);
-#endif
 }
 
 FORCEINLINE
@@ -535,10 +452,6 @@ KiReleaseDispatcherObject(IN DISPATCHER_HEADER* Object)
 
     /* Release it */
     InterlockedAnd(&Object->Lock, ~KOBJECT_LOCK_BIT);
-
-#ifdef DBG
-	KdbgLeaveWaitable(Object);
-#endif
 }
 
 FORCEINLINE
@@ -566,7 +479,8 @@ VOID
 KiAcquireDispatcherLockAtDpcLevel(VOID)
 {
     /* Acquire the dispatcher lock */
-    KeAcquireQueuedSpinLockAtDpcLevel(LockQueueDispatcherLock);
+    KeAcquireQueuedSpinLockAtDpcLevel(&KeGetCurrentPrcb()->
+                                      LockQueue[LockQueueDispatcherLock]);
 }
 
 FORCEINLINE
@@ -574,11 +488,12 @@ VOID
 KiReleaseDispatcherLockFromDpcLevel(VOID)
 {
     /* Release the dispatcher lock */
-    KeReleaseQueuedSpinLockFromDpcLevel(LockQueueDispatcherLock);
+    KeReleaseQueuedSpinLockFromDpcLevel(&KeGetCurrentPrcb()->
+                                        LockQueue[LockQueueDispatcherLock]);
 }
 
 //
-// This routine inserts a thread into the deferred ready list of the given CPU
+// This routine inserts a thread into the deferred ready list of the current CPU
 //
 FORCEINLINE
 VOID
@@ -626,7 +541,7 @@ KiSetThreadSwapBusy(IN PKTHREAD Thread)
 // This routine acquires the PRCB lock so that only one caller can touch
 // volatile PRCB data.
 //
-// Since this is a simple optimized spin-lock, it must be be only acquired
+// Since this is a simple optimized spin-lock, it must only be acquired
 // at dispatcher level or higher!
 //
 FORCEINLINE
@@ -662,7 +577,8 @@ FORCEINLINE
 VOID
 KiReleasePrcbLock(IN PKPRCB Prcb)
 {
-    /* Make sure it's acquired! */
+    /* Make sure we are above dispatch and the lock is acquired! */
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
     ASSERT(Prcb->PrcbLock != 0);
 
     /* Release it */
@@ -683,10 +599,6 @@ KiAcquireThreadLock(IN PKTHREAD Thread)
     /* Make sure we're at a safe level to touch the thread lock */
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
-#ifdef DBG
-	KdbgDeclareWait(Thread);
-#endif
-
     /* Start acquire loop */
     for (;;)
     {
@@ -700,11 +612,6 @@ KiAcquireThreadLock(IN PKTHREAD Thread)
             YieldProcessor();
         } while (Thread->ThreadLock);
     }
-
-#ifdef DBG
-	KdbgSatisfyWait(Thread);
-	KdbgEnterWaitable(Thread);
-#endif
 }
 
 //
@@ -718,11 +625,11 @@ FORCEINLINE
 VOID
 KiReleaseThreadLock(IN PKTHREAD Thread)
 {
+    /* Make sure we are still above dispatch */
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
     /* Release it */
     InterlockedAnd((PLONG)&Thread->ThreadLock, 0);
-#ifdef DBG
-	KdbgLeaveWaitable(Thread);
-#endif
 }
 
 FORCEINLINE
@@ -739,9 +646,6 @@ KiTryThreadLock(IN PKTHREAD Thread)
     Value = InterlockedExchange((PLONG)&Thread->ThreadLock, Value);
 
     /* Return the lock state */
-#ifdef DBG
-	if (Value) KdbgEnterWaitable(Thread);
-#endif
     return (Value == TRUE);
 }
 
@@ -757,10 +661,8 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
-#if defined(_M_IX86) || defined(_M_AMD64)
-    /* FIXME: TODO */
-    ASSERTMSG("Not yet implemented\n", FALSE);
-#endif
+    /* Nothing to do */
+    return;
 }
 
 FORCEINLINE
@@ -1756,10 +1658,6 @@ VOID
 _KeAcquireGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
 {
     PKTHREAD Thread = KeGetCurrentThread();
-
-#ifdef DBG
-	KdbgDeclareWait(GuardedMutex);
-#endif
     
     /* Sanity checks */
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
@@ -1777,11 +1675,6 @@ _KeAcquireGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
     
     /* Set the Owner */
     GuardedMutex->Owner = Thread;
-
-#ifdef DBG
-	KdbgSatisfyWait(GuardedMutex);
-	KdbgEnterWaitable(GuardedMutex);
-#endif
 }
 
 FORCEINLINE
@@ -1823,10 +1716,6 @@ _KeReleaseGuardedMutexUnsafe(IN OUT PKGUARDED_MUTEX GuardedMutex)
             KeSignalGateBoostPriority(&GuardedMutex->Gate);
         }
     }
-
-#ifdef DBG
-	KdbgLeaveWaitable(GuardedMutex);
-#endif
 }
 
 FORCEINLINE
@@ -1838,10 +1727,6 @@ _KeAcquireGuardedMutex(IN PKGUARDED_MUTEX GuardedMutex)
     /* Sanity checks */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
     ASSERT(GuardedMutex->Owner != Thread);
-
-#ifdef DBG
-	KdbgDeclareWait(GuardedMutex);
-#endif
     
     /* Disable Special APCs */
     KeEnterGuardedRegion();
@@ -1856,11 +1741,6 @@ _KeAcquireGuardedMutex(IN PKGUARDED_MUTEX GuardedMutex)
     /* Set the Owner and Special APC Disable state */
     GuardedMutex->Owner = Thread;
     GuardedMutex->SpecialApcDisable = Thread->SpecialApcDisable;
-
-#ifdef DBG
-	KdbgSatisfyWait(GuardedMutex);
-	KdbgEnterWaitable(GuardedMutex);
-#endif
 }
 
 FORCEINLINE
@@ -1904,10 +1784,6 @@ _KeReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     
     /* Re-enable APCs */
     KeLeaveGuardedRegion();
-
-#ifdef DBG
-	KdbgLeaveWaitable(GuardedMutex);
-#endif
 }
 
 FORCEINLINE
@@ -1933,8 +1809,5 @@ _KeTryToAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     /* Set the Owner and APC State */
     GuardedMutex->Owner = Thread;
     GuardedMutex->SpecialApcDisable = Thread->SpecialApcDisable;
-#ifdef DBG
-	KdbgEnterWaitable(GuardedMutex);
-#endif
     return TRUE;
 }

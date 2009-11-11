@@ -411,7 +411,13 @@ IopParseDevice(IN PVOID ParseObject,
         ((wcsstr(CompleteName->Buffer, L"Harddisk"))) &&
         !(UseDummyFile))
     {
-        DPRINT1("Using IopParseDevice() hack\n");
+        DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
+        DesiredAccess & ~(SYNCHRONIZE |
+                          FILE_READ_ATTRIBUTES |
+                          READ_CONTROL |
+                          ACCESS_SYSTEM_SECURITY |
+                          WRITE_OWNER |
+                          WRITE_DAC));
         DirectOpen = TRUE;
     }
 
@@ -1315,7 +1321,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
                                LocalInfo,
                                Length,
                                &LocalReturnLength);
-    if (!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH) && (Status != STATUS_BUFFER_OVERFLOW))
+    if (!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
     {
         /* Free the buffer and fail */
         ExFreePool(LocalInfo);
@@ -1370,8 +1376,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     if (LengthMismatch)
     {
         /* Add the required length */
-		/* Length in buffer for just the file name */
-        *ReturnLength += LocalReturnLength - sizeof(ULONG); 
+        *ReturnLength += LocalFileInfo->FileNameLength;
 
         /* Free the allocated buffer and return failure */
         ExFreePool(LocalInfo);
@@ -1662,9 +1667,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
     ULONG EaErrorOffset;
 
     PAGED_CODE();
-    IOTRACE(IO_FILE_DEBUG, "FileName: %wZ case %ssensitive\n", 
-			ObjectAttributes->ObjectName, 
-			(ObjectAttributes->Attributes & OBJ_CASE_INSENSITIVE) ? "in" : "");
+    IOTRACE(IO_FILE_DEBUG, "FileName: %wZ\n", ObjectAttributes->ObjectName);
 
     /* Check if we have no parameter checking to do */
     if (Options & IO_NO_PARAMETER_CHECKING)

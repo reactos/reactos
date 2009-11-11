@@ -25,22 +25,30 @@ typedef enum
 
 typedef struct
 {
+    KSSTREAM_HEADER Header;
     SOUND_DEVICE_TYPE DeviceType;
     ULONG DeviceIndex;
 
     HANDLE hDevice;
     ULONG DeviceCount;
-
-    ULONG BufferSize;
-    PUCHAR Buffer;
+    ULONG Flags;
 
     union
     {
+        MIXERCAPSW    MixCaps;
+        MIXERCONTROLDETAILS MixDetails;
+        MIXERLINECONTROLSW MixControls;
+        MIXERLINEW MixLine;
         WAVEFORMATEX WaveFormatEx;
         WAVEOUTCAPSW WaveOutCaps;
         AUXCAPSW     AuxCaps;
         WAVEINCAPSW  WaveInCaps;
         ULONGLONG    Position;
+        struct
+        {
+            LPWSTR DeviceInterfaceString;
+            ULONG DeviceInterfaceStringSize;
+        }Interface;
         KSSTATE State;
         ULONG Volume;
         ULONG FrameSize;
@@ -240,5 +248,92 @@ typedef struct
              METHOD_BUFFERED, \
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
+/// IOCTL_GETLINEINFO
+///
+/// Description: This IOCTL retrieves information on a mixerline
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// Result:     The result is returned in MixLine
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETLINEINFO \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             11, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_GETLINECONTROLS
+///
+/// Description: This IOCTL retrieves controls of a mixerline
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// Result:     The result is returned in MixControls
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETLINECONTROLS \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             12, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_SETCONTROLDETAILS
+///
+/// Description: This IOCTL sets details of a control of a mixerline
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_SETCONTROLDETAILS \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             13, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_GETCONTROLDETAILS
+///
+/// Description: This IOCTL gets details of a control of a mixerline
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// Result:     The result is returned in MixDetails
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETCONTROLDETAILS \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             14, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_QUERYDEVICEINTERFACESTRING
+///
+/// Description: This IOCTL queries the mixer / playback / recording device for its device interface string
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The DeviceType, DeviceIndex must be set
+/// Result:     The size is returned in Interface.DeviceInterfaceStringSize and if a buffer is supplied in Interface.DeviceInterfaceString
+///             the device interface string is stored
+/// ReturnCode:  STATUS_SUCCESS indicates success
+
+#define IOCTL_QUERYDEVICEINTERFACESTRING \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             15, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 #endif

@@ -17,6 +17,11 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+#if 0
+//
+// FIXME: The queued spinlock routines are broken.
+//
+
 VOID
 FASTCALL
 KeAcquireQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
@@ -84,6 +89,55 @@ KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
 #endif
 }
 
+#else
+//
+// HACK: Hacked to work like normal spinlocks
+//
+
+VOID
+FASTCALL
+KeAcquireQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
+{
+#ifdef CONFIG_SMP
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)LockHandle->Lock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Do the inlined function */
+    KxAcquireSpinLock(LockHandle->Lock);
+#endif
+}
+
+VOID
+FASTCALL
+KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
+{
+#ifdef CONFIG_SMP
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)LockHandle->Lock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Do the inlined function */
+    KxReleaseSpinLock(LockHandle->Lock);
+#endif
+}
+
+#endif
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -137,6 +191,17 @@ VOID
 NTAPI
 KeAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
     /* Do the inlined function */
     KxAcquireSpinLock(SpinLock);
 }
@@ -149,7 +214,18 @@ VOID
 NTAPI
 KeReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
-    /* Do the lined function */
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Do the inlined function */
     KxReleaseSpinLock(SpinLock);
 }
 
@@ -160,6 +236,17 @@ VOID
 FASTCALL
 KefAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
     /* Do the inlined function */
     KxAcquireSpinLock(SpinLock);
 }
@@ -171,7 +258,18 @@ VOID
 FASTCALL
 KefReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
-    /* Do the lined function */
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Do the inlined function */
     KxReleaseSpinLock(SpinLock);
 }
 
@@ -243,7 +341,23 @@ KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,
     /* Set it up properly */
     LockHandle->LockQueue.Next = NULL;
     LockHandle->LockQueue.Lock = SpinLock;
+#if 0
     KeAcquireQueuedSpinLockAtDpcLevel(LockHandle->LockQueue.Next);
+#else
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)LockHandle->LockQueue.Lock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(LockHandle->LockQueue.Lock); // HACK
+#endif
 #endif
 }
 
@@ -255,8 +369,24 @@ FASTCALL
 KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
 #ifdef CONFIG_SMP
+#if 0
     /* Call the internal function */
     KeReleaseQueuedSpinLockFromDpcLevel(LockHandle->LockQueue.Next);
+#else
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)LockHandle->LockQueue.Lock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Release the lock */
+    KxReleaseSpinLock(LockHandle->LockQueue.Lock); // HACK
+#endif
 #endif
 }
 
@@ -324,5 +454,3 @@ KeTestSpinLock(IN PKSPIN_LOCK SpinLock)
     /* Spinlock appears to be free */
     return TRUE;
 }
-
-/* EOF */

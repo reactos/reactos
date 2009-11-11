@@ -600,11 +600,11 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   WriteOffset.QuadPart = StartOffset->QuadPart;
 
   if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
-  {
+    {
       /* File is not cached */
-	  
+
       Mdl = _alloca(MmSizeOfMdl(NULL, MAX_ZERO_LENGTH));
-	  
+
       while (Length > 0)
 	{
 	  if (Length + WriteOffset.u.LowPart % PAGE_SIZE > MAX_ZERO_LENGTH)

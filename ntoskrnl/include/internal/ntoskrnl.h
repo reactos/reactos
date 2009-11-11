@@ -62,11 +62,19 @@
 
 #include "ke.h"
 #include "ob.h"
+#ifndef _NEWCC_
 #include "mm.h"
+#else
+#include "newmm.h"
+#endif
 #include "ex.h"
 #include "cm.h"
 #include "ps.h"
-#include "nocc.h"
+#ifndef _NEWCC_
+#include "cc.h"
+#else
+#include "newcc.h"
+#endif
 #include "io.h"
 #include "po.h"
 #include "se.h"

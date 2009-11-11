@@ -427,7 +427,7 @@ IopCompleteRequest(IN PKAPC Apc,
                             KeGetCurrentThread(),
                             CurrentApcEnvironment,
                             IopFreeIrpKernelApc,
-                            (PKRUNDOWN_ROUTINE)IopAbortIrpKernelApc,
+                            IopAbortIrpKernelApc,
                             (PKNORMAL_ROUTINE)Irp->
                             Overlay.AsynchronousParameters.UserApcRoutine,
                             Irp->RequestorMode,
@@ -1131,11 +1131,11 @@ FASTCALL
 IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
-	NTSTATUS Status;
     PDRIVER_OBJECT DriverObject;
     PIO_STACK_LOCATION StackPtr;
 
-	DPRINT("IofCallDriver(%x,%x)\n", DeviceObject, Irp);
+    /* Make sure this is a valid IRP */
+    ASSERT(Irp->Type == IO_TYPE_IRP);
 
     /* Get the Driver Object */
     DriverObject = DeviceObject->DriverObject;
@@ -1156,10 +1156,8 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
     StackPtr->DeviceObject = DeviceObject;
 
     /* Call it */
-	DPRINT("Calling %x\n", DriverObject->MajorFunction[StackPtr->MajorFunction]);
-    Status = DriverObject->MajorFunction[StackPtr->MajorFunction](DeviceObject, Irp);
-	DPRINT("Status: %x\n", Status);
-	return Status;
+    return DriverObject->MajorFunction[StackPtr->MajorFunction](DeviceObject,
+                                                                Irp);
 }
 
 FORCEINLINE
@@ -1343,11 +1341,12 @@ IofCompleteRequest(IN PIRP Irp,
         }
         else
         {
+#if 0
             /* Page 166 */
-            KeInitializeApc(&Irp->Tail.Apc,
+            KeInitializeApc(&Irp->Tail.Apc
                             &Irp->Tail.Overlay.Thread->Tcb,
                             Irp->ApcEnvironment,
-                            IopCompleteRequest,
+                            IopCompletePageWrite,
                             NULL,
                             NULL,
                             KernelMode,
@@ -1356,6 +1355,11 @@ IofCompleteRequest(IN PIRP Irp,
                              NULL,
                              NULL,
                              PriorityBoost);
+#else
+            /* Not implemented yet. */
+            DPRINT1("Not supported!\n");
+            while (TRUE);
+#endif
         }
 
         /* Get out of here */

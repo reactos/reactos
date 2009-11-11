@@ -7,6 +7,20 @@
  */
 
 //
+// Maximum supported number of breakpoints
+//
+#define KD_BREAKPOINT_MAX                               32
+
+//
+// Default size of the DbgPrint log buffer
+//
+#if DBG
+#define KD_DEFAULT_LOG_BUFFER_SIZE                      0x8000
+#else
+#define KD_DEFAULT_LOG_BUFFER_SIZE                      0x1000
+#endif
+
+//
 // Breakpoint Status Flags
 //
 typedef enum _KDP_BREAKPOINT_FLAGS
@@ -25,7 +39,7 @@ typedef struct _BREAKPOINT_ENTRY
     ULONG Flags;
     PKPROCESS Process;
     PVOID Address;
-    UCHAR Content;
+    KD_BREAKPOINT_TYPE Content;
 } BREAKPOINT_ENTRY, *PBREAKPOINT_ENTRY;
 
 //
@@ -60,20 +74,26 @@ KdInitSystem(
     PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+VOID
+NTAPI
+KdUpdateDataBlock(
+    VOID
+);
+
 //
-// Debug and Multi-Processor Switch Routines
+// Determines if the kernel debugger must handle a particular trap
 //
 BOOLEAN
 NTAPI
-KdpEnterDebuggerException(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame,
+KdIsThisAKdTrap(
     IN PEXCEPTION_RECORD ExceptionRecord,
     IN PCONTEXT Context,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN BOOLEAN SecondChance
+    IN KPROCESSOR_MODE PreviousMode
 );
 
+//
+// Multi-Processor Switch Support
+//
 BOOLEAN
 NTAPI
 KdpSwitchProcessor(
@@ -147,7 +167,7 @@ KdpPollBreakInWithPortLock(
 );
 
 //
-// Debugger Enable, Enter and Exit
+// Debugger Enter, Exit, Enable and Disable
 //
 BOOLEAN
 NTAPI
@@ -159,7 +179,7 @@ KdEnterDebugger(
 VOID
 NTAPI
 KdExitDebugger(
-    IN BOOLEAN Entered
+    IN BOOLEAN Enable
 );
 
 NTSTATUS
@@ -168,28 +188,57 @@ KdEnableDebuggerWithLock(
     IN BOOLEAN NeedLock
 );
 
+NTSTATUS
+NTAPI
+KdDisableDebuggerWithLock(
+    IN BOOLEAN NeedLock
+);
+
 //
 // Debug Event Handlers
 //
-ULONG
+NTSTATUS
 NTAPI
 KdpPrint(
     IN ULONG ComponentId,
-    IN ULONG ComponentMask,
+    IN ULONG Level,
     IN LPSTR String,
-    IN ULONG Length,
+    IN USHORT Length,
     IN KPROCESSOR_MODE PreviousMode,
     IN PKTRAP_FRAME TrapFrame,
     IN PKEXCEPTION_FRAME ExceptionFrame,
-    OUT PBOOLEAN Status
+    OUT PBOOLEAN Handled
 );
 
-ULONG
+USHORT
+NTAPI
+KdpPrompt(
+    IN LPSTR PromptString,
+    IN USHORT PromptLength,
+    OUT LPSTR ResponseString,
+    IN USHORT MaximumResponseLength,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame
+);
+
+VOID
 NTAPI
 KdpSymbol(
     IN PSTRING DllPath,
-    IN PKD_SYMBOLS_INFO DllBase,
+    IN PKD_SYMBOLS_INFO SymbolInfo,
     IN BOOLEAN Unload,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PCONTEXT ContextRecord,
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame
+);
+
+VOID
+NTAPI
+KdpCommandString(
+    IN PSTRING NameString,
+    IN PSTRING CommandString,
     IN KPROCESSOR_MODE PreviousMode,
     IN PCONTEXT ContextRecord,
     IN PKTRAP_FRAME TrapFrame,
@@ -199,12 +248,20 @@ KdpSymbol(
 //
 // State Change Notifications
 //
-BOOLEAN
+VOID
 NTAPI
 KdpReportLoadSymbolsStateChange(
     IN PSTRING PathName,
     IN PKD_SYMBOLS_INFO SymbolInfo,
     IN BOOLEAN Unload,
+    IN OUT PCONTEXT Context
+);
+
+VOID
+NTAPI
+KdpReportCommandStringStateChange(
+    IN PSTRING NameString,
+    IN PSTRING CommandString,
     IN OUT PCONTEXT Context
 );
 
@@ -219,10 +276,10 @@ KdpReportExceptionStateChange(
 //
 // Breakpoint Support
 //
-VOID
+ULONG
 NTAPI
-KdpRestoreAllBreakpoints(
-    VOID
+KdpAddBreakpoint(
+    IN PVOID Address
 );
 
 BOOLEAN
@@ -238,10 +295,188 @@ KdpDeleteBreakpointRange(
     IN PVOID Limit
 );
 
-ULONG
+VOID
 NTAPI
-KdpAddBreakpoint(
-    IN PVOID Address
+KdpSuspendBreakPoint(
+    IN ULONG BpEntry
+);
+
+VOID
+NTAPI
+KdpRestoreAllBreakpoints(
+    VOID
+);
+
+VOID
+NTAPI
+KdpSuspendAllBreakPoints(
+    VOID
+);
+
+//
+// Routine to determine if it is safe to disable the debugger
+//
+NTSTATUS
+NTAPI
+KdpAllowDisable(
+    VOID
+);
+
+//
+// Safe memory read & write Support
+//
+NTSTATUS
+NTAPI
+KdpCopyMemoryChunks(
+    IN ULONG64 Address,
+    IN PVOID Buffer,
+    IN ULONG TotalSize,
+    IN ULONG ChunkSize,
+    IN ULONG Flags,
+    OUT PULONG ActualSize OPTIONAL
+);
+
+//
+// Low Level Support Routines for the KD API
+//
+
+//
+// Version
+//
+VOID
+NTAPI
+KdpSysGetVersion(
+    IN PDBGKD_GET_VERSION64 Version
+);
+
+//
+// Context
+//
+VOID
+NTAPI
+KdpGetStateChange(
+    IN PDBGKD_MANIPULATE_STATE64 State,
+    IN PCONTEXT Context
+);
+
+VOID
+NTAPI
+KdpSetContextState(
+    IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
+    IN PCONTEXT Context
+);
+
+//
+// MSR
+//
+NTSTATUS
+NTAPI
+KdpSysReadMsr(
+    IN ULONG Msr,
+    OUT PLARGE_INTEGER MsrValue
+);
+
+NTSTATUS
+NTAPI
+KdpSysWriteMsr(
+    IN ULONG Msr,
+    IN PLARGE_INTEGER MsrValue
+);
+
+//
+// Bus
+//
+NTSTATUS
+NTAPI
+KdpSysReadBusData(
+    IN ULONG BusDataType,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN ULONG Offset,
+    IN PVOID Buffer,
+    IN ULONG Length,
+    OUT PULONG ActualLength
+);
+
+NTSTATUS
+NTAPI
+KdpSysWriteBusData(
+    IN ULONG BusDataType,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN ULONG Offset,
+    IN PVOID Buffer,
+    IN ULONG Length,
+    OUT PULONG ActualLength
+);
+
+//
+// Control Space
+//
+NTSTATUS
+NTAPI
+KdpSysReadControlSpace(
+    IN ULONG Processor,
+    IN ULONG64 BaseAddress,
+    IN PVOID Buffer,
+    IN ULONG Length,
+    OUT PULONG ActualLength
+);
+
+NTSTATUS
+NTAPI
+KdpSysWriteControlSpace(
+    IN ULONG Processor,
+    IN ULONG64 BaseAddress,
+    IN PVOID Buffer,
+    IN ULONG Length,
+    OUT PULONG ActualLength
+);
+
+//
+// I/O Space
+//
+NTSTATUS
+NTAPI
+KdpSysReadIoSpace(
+    IN ULONG InterfaceType,
+    IN ULONG BusNumber,
+    IN ULONG AddressSpace,
+    IN ULONG64 IoAddress,
+    IN PVOID DataValue,
+    IN ULONG DataSize,
+    OUT PULONG ActualDataSize
+);
+
+NTSTATUS
+NTAPI
+KdpSysWriteIoSpace(
+    IN ULONG InterfaceType,
+    IN ULONG BusNumber,
+    IN ULONG AddressSpace,
+    IN ULONG64 IoAddress,
+    IN PVOID DataValue,
+    IN ULONG DataSize,
+    OUT PULONG ActualDataSize
+);
+
+//
+// Low Memory
+//
+NTSTATUS
+NTAPI
+KdpSysCheckLowMemory(
+    IN ULONG Flags
+);
+
+//
+// Internal routine for sending strings directly to the debugger
+//
+VOID
+__cdecl
+KdpDprintf(
+    IN PCHAR Format,
+    ...
 );
 
 //
@@ -262,6 +497,8 @@ extern BOOLEAN KdPitchDebugger;
 extern BOOLEAN _KdDebuggerNotPresent;
 extern BOOLEAN _KdDebuggerEnabled;
 extern BOOLEAN KdAutoEnableOnEvent;
+extern BOOLEAN KdBlockEnable;
+extern BOOLEAN KdIgnoreUmExceptions;
 extern BOOLEAN KdPreviouslyEnabled;
 extern BOOLEAN KdpDebuggerStructuresInitialized;
 extern BOOLEAN KdEnteredDebugger;
@@ -273,14 +510,16 @@ extern PKEVENT KdpTimeSlipEvent;
 extern KSPIN_LOCK KdpTimeSlipEventLock;
 extern BOOLEAN KdpPortLocked;
 extern BOOLEAN KdpControlCPressed;
+extern BOOLEAN KdpContextSent;
 extern KSPIN_LOCK KdpDebuggerLock;
 extern LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 extern ULONG KdComponentTableSize;
 extern ULONG Kd_WIN2000_Mask;
 extern PULONG KdComponentTable[104];
-extern CHAR KdpMessageBuffer[4096], KdpPathBuffer[4096];
-extern BREAKPOINT_ENTRY KdpBreakpointTable[20];
-extern ULONG KdpBreakpointInstruction;
+extern CHAR KdpMessageBuffer[0x1000], KdpPathBuffer[0x1000];
+extern CHAR KdPrintDefaultCircularBuffer[KD_DEFAULT_LOG_BUFFER_SIZE];
+extern BREAKPOINT_ENTRY KdpBreakpointTable[KD_BREAKPOINT_MAX];
+extern KD_BREAKPOINT_TYPE KdpBreakpointInstruction;
 extern BOOLEAN KdpOweBreakpoint;
 extern BOOLEAN BreakpointsSuspended;
 extern ULONG KdpNumInternalBreakpoints;

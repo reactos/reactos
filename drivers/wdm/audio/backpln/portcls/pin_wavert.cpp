@@ -8,8 +8,7 @@
 
 #include "private.hpp"
 
-class CPortPinWaveRT : public IPortPinWaveRT,
-                       public IServiceSink //hack
+class CPortPinWaveRT : public IPortPinWaveRT
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -31,7 +30,6 @@ public:
         return m_Ref;
     }
     IMP_IPortPinWaveRT;
-    IMP_IServiceSink; //HACK
     CPortPinWaveRT(IUnknown *OuterUnknown){}
     virtual ~CPortPinWaveRT(){}
 
@@ -43,7 +41,6 @@ protected:
     PMINIPORTWAVERT m_Miniport;
     PMINIPORTWAVERTSTREAM m_Stream;
     PPORTWAVERTSTREAM m_PortStream;
-    PSERVICEGROUP m_ServiceGroup;
     KSSTATE m_State;
     PKSDATAFORMAT m_Format;
     KSPIN_CONNECT * m_ConnectDetails;
@@ -70,8 +67,6 @@ protected:
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
     VOID NTAPI SetStreamState(IN KSSTATE State);
-    VOID UpdateCommonBuffer(ULONG Position);
-    VOID UpdateCommonBufferOverlap(ULONG Position);
     friend VOID NTAPI SetStreamWorkerRoutine(IN PDEVICE_OBJECT  DeviceObject, IN PVOID  Context);
     friend VOID NTAPI CloseStreamRoutine(IN PDEVICE_OBJECT  DeviceObject, IN PVOID Context);
 
@@ -86,81 +81,6 @@ typedef struct
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
 
 
-VOID
-CPortPinWaveRT::UpdateCommonBuffer(
-    ULONG Position)
-{
-    ULONG BufferLength;
-    ULONG BytesToCopy;
-    ULONG BufferSize;
-    PUCHAR Buffer;
-    NTSTATUS Status;
-
-    BufferLength = Position - m_CommonBufferOffset;
-    while(BufferLength)
-    {
-        Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
-        if (!NT_SUCCESS(Status))
-            return;
-
-        BytesToCopy = min(BufferLength, BufferSize);
-
-        if (m_Capture)
-        {
-            RtlMoveMemory(Buffer, (PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BytesToCopy);
-        }
-        else
-        {
-            RtlMoveMemory((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, Buffer, BytesToCopy);
-        }
-
-        m_IrpQueue->UpdateMapping(BytesToCopy);
-        m_CommonBufferOffset += BytesToCopy;
-
-        BufferLength = Position - m_CommonBufferOffset;
-    }
-}
-
-VOID
-CPortPinWaveRT::UpdateCommonBufferOverlap(
-    ULONG Position)
-{
-    ULONG BufferLength;
-    ULONG BytesToCopy;
-    ULONG BufferSize;
-    PUCHAR Buffer;
-    NTSTATUS Status;
-
-
-    BufferLength = m_CommonBufferSize - m_CommonBufferOffset;
-    while(BufferLength)
-    {
-        Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
-        if (!NT_SUCCESS(Status))
-            return;
-
-        BytesToCopy = min(BufferLength, BufferSize);
-
-        if (m_Capture)
-        {
-            RtlMoveMemory(Buffer, (PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BytesToCopy);
-        }
-        else
-        {
-            RtlMoveMemory((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, Buffer, BytesToCopy);
-        }
-
-        m_IrpQueue->UpdateMapping(BytesToCopy);
-        m_CommonBufferOffset += BytesToCopy;
-
-        BufferLength = m_CommonBufferSize - m_CommonBufferOffset;
-    }
-    m_CommonBufferOffset = 0;
-    UpdateCommonBuffer(Position);
-}
-
-
-
 //==================================================================================================================================
 NTSTATUS
 NTAPI
@@ -170,13 +90,6 @@ CPortPinWaveRT::QueryInterface(
 {
     DPRINT("IServiceSink_fnQueryInterface entered\n");
 
-    if (IsEqualGUIDAligned(refiid, IID_IServiceSink))
-    {
-        *Output = PVOID(PSERVICEGROUP(this));
-        PUNKNOWN(*Output)->AddRef();
-        return STATUS_SUCCESS;
-    }
-
     if (IsEqualGUIDAligned(refiid, IID_IIrpTarget) || 
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
@@ -185,37 +98,6 @@ CPortPinWaveRT::QueryInterface(
         return STATUS_SUCCESS;
     }
     return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-NTAPI
-CPortPinWaveRT::RequestService()
-{
-    KSAUDIO_POSITION Position;
-    NTSTATUS Status;
-    PUCHAR Buffer;
-    ULONG BufferSize;
-
-    PC_ASSERT_IRQL(DISPATCH_LEVEL);
-
-    Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
-    if (!NT_SUCCESS(Status))
-    {
-        SetStreamState(KSSTATE_STOP);
-        return;
-    }
-
-    Status = m_Stream->GetPosition(&Position);
-    DPRINT("PlayOffset %lu WriteOffset %lu Buffer %p BufferSize %u CommonBufferSize %u\n", Position.PlayOffset, Position.WriteOffset, Buffer, BufferSize, m_CommonBufferSize);
-
-    if (Position.PlayOffset < m_CommonBufferOffset)
-    {
-        UpdateCommonBufferOverlap(Position.PlayOffset);
-    }
-    else if (Position.PlayOffset >= m_CommonBufferOffset)
-    {
-        UpdateCommonBuffer(Position.PlayOffset);
-    }
 }
 
 VOID
@@ -248,14 +130,12 @@ SetStreamWorkerRoutine(
         {
             // reset start stream
             This->m_IrpQueue->CancelBuffers(); //FIX function name
-            This->m_ServiceGroup->CancelDelayedService();
-            DPRINT1("Stopping PreCompleted %u PostCompleted %u\n", This->m_PreCompleted, This->m_PostCompleted);
+            DPRINT("Stopping PreCompleted %u PostCompleted %u\n", This->m_PreCompleted, This->m_PostCompleted);
         }
 
         if (This->m_State == KSSTATE_RUN)
         {
             // start the notification timer
-            This->m_ServiceGroup->RequestDelayedService(This->m_Delay);
         }
     }
 }
@@ -311,7 +191,7 @@ NTSTATUS
 NTAPI
 CPortPinWaveRT::NewIrpTarget(
     OUT struct IIrpTarget **OutTarget,
-    IN WCHAR * Name,
+    IN PCWSTR Name,
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
@@ -369,7 +249,7 @@ CPortPinWaveRT::HandleKsProperty(
                 {
                     Status = m_Stream->SetState(*State);
 
-                    DPRINT1("Setting state %u %x\n", *State, Status);
+                    DPRINT("Setting state %u %x\n", *State, Status);
                     if (NT_SUCCESS(Status))
                     {
                         m_State = *State;
@@ -423,7 +303,7 @@ CPortPinWaveRT::HandleKsProperty(
 
                     ASSERT(m_State == KSSTATE_STOP);
 #endif
-                    DPRINT1("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
+                    DPRINT("NewDataFormat: Channels %u Bits %u Samples %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nChannels,
                                                                                  ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.wBitsPerSample,
                                                                                  ((PKSDATAFORMAT_WAVEFORMATEX)NewDataFormat)->WaveFormatEx.nSamplesPerSec);
 
@@ -441,7 +321,7 @@ CPortPinWaveRT::HandleKsProperty(
                         return STATUS_SUCCESS;
                     }
                 }
-                DPRINT1("Failed to set format\n");
+                DPRINT("Failed to set format\n");
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -451,7 +331,7 @@ CPortPinWaveRT::HandleKsProperty(
             {
                 if (!m_Format)
                 {
-                    DPRINT1("No format\n");
+                    DPRINT("No format\n");
                     Irp->IoStatus.Information = 0;
                     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
                     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -475,7 +355,7 @@ CPortPinWaveRT::HandleKsProperty(
 
     }
     RtlStringFromGUID(Property->Set, &GuidString);
-    DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
     RtlFreeUnicodeString(&GuidString);
 
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
@@ -534,7 +414,6 @@ CPortPinWaveRT::DeviceIoControl(
     }
 
     UNIMPLEMENTED
-    DbgBreakPoint();
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -631,7 +510,7 @@ CloseStreamRoutine(
     {
         Stream = This->m_Stream;
         This->m_Stream = NULL;
-        DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
+        DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->Release();
     }
 }
@@ -649,14 +528,14 @@ CPortPinWaveRT::Close(
         Ctx = (PCLOSESTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
         if (!Ctx)
         {
-            DPRINT1("Failed to allocate stream context\n");
+            DPRINT("Failed to allocate stream context\n");
             goto cleanup;
         }
 
         Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
         if (!Ctx->WorkItem)
         {
-            DPRINT1("Failed to allocate work item\n");
+            DPRINT("Failed to allocate work item\n");
             goto cleanup;
         }
 
@@ -722,7 +601,6 @@ CPortPinWaveRT::FastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
     return FALSE;
 }
 
@@ -767,7 +645,7 @@ CPortPinWaveRT::Init(
 {
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
-    BOOL Capture;
+    BOOLEAN Capture;
     KSRTAUDIO_HWLATENCY Latency;
 
     Port->AddRef();
@@ -807,15 +685,6 @@ CPortPinWaveRT::Init(
         goto cleanup;
     }
 
-    Status = PcNewServiceGroup(&m_ServiceGroup, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        goto cleanup;
-    }
-
-    m_ServiceGroup->AddMember(PSERVICESINK(this));
-    m_ServiceGroup->SupportDelayedService();
-
     if (KsPinDescriptor->Communication == KSPIN_COMMUNICATION_SINK && KsPinDescriptor->DataFlow == KSPIN_DATAFLOW_IN)
     {
         Capture = FALSE;
@@ -826,8 +695,9 @@ CPortPinWaveRT::Init(
     }
     else
     {
-        DPRINT1("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
+        DPRINT("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
         KeBugCheck(0);
+        while(TRUE);
     }
 
     Status = m_Miniport->NewStream(&m_Stream, m_PortStream, ConnectDetails->PinId, Capture, m_Format);
@@ -843,21 +713,21 @@ CPortPinWaveRT::Init(
 	Status = m_Stream->AllocateAudioBuffer(16384 * 11, &m_Mdl, &m_CommonBufferSize, &m_CommonBufferOffset, &m_CacheType);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("AllocateAudioBuffer failed with %x\n", Status);
+        DPRINT("AllocateAudioBuffer failed with %x\n", Status);
         goto cleanup;
     }
 
     m_CommonBuffer = MmGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get system address %x\n", Status);
+        DPRINT("Failed to get system address %x\n", Status);
         IoFreeMdl(m_Mdl);
         m_Mdl = NULL;
         goto cleanup;
     }
 
-    DPRINT1("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
-    DPRINT1("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
+    DPRINT("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
+    DPRINT("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
     m_State = KSSTATE_PAUSE;
     return STATUS_SUCCESS;
 

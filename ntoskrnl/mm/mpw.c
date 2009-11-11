@@ -20,10 +20,6 @@ HANDLE MpwThreadHandle;
 static CLIENT_ID MpwThreadId;
 KEVENT MpwThreadEvent;
 BOOLEAN MpwThreadShouldTerminate;
-extern FAST_MUTEX MiWriteMutex;
-extern LIST_ENTRY MiWriteScheduleListHead;
-
-VOID NTAPI MiWriteThread();
 
 /* FUNCTIONS *****************************************************************/
 
@@ -65,8 +61,6 @@ MmMpwThreadMain(PVOID Ignored)
 
    Timeout.QuadPart = -50000000;
 
-   ExInitializeFastMutex(&MiWriteMutex);
-
    for(;;)
    {
       Status = KeWaitForSingleObject(&MpwThreadEvent,
@@ -87,11 +81,12 @@ MmMpwThreadMain(PVOID Ignored)
       }
 
       PagesWritten = 0;
+#if 0
       /*
        *  FIXME: MmWriteDirtyPages doesn't work correctly.
        */
-      //MmWriteDirtyPages(128, &PagesWritten);
-	  //MiWriteThread();
+      MmWriteDirtyPages(128, &PagesWritten);
+#endif
    }
 }
 
@@ -104,7 +99,6 @@ MmInitMpwThread(VOID)
 
    MpwThreadShouldTerminate = FALSE;
    KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
-   InitializeListHead(&MiWriteScheduleListHead);
 
    Status = PsCreateSystemThread(&MpwThreadHandle,
                                  THREAD_ALL_ACCESS,

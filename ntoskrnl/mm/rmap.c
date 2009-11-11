@@ -149,6 +149,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       Status = MmWritePageSectionView(AddressSpace, MemoryArea,
                                       Address, PageOp);
    }
+#ifdef _NEWCC_
    else if ((Type == MEMORY_AREA_PHYSICAL_MEMORY_SECTION) ||
 			(Type == MEMORY_AREA_PAGE_FILE_SECTION) ||
 			(Type == MEMORY_AREA_IMAGE_SECTION))
@@ -156,6 +157,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
 	   MmUnlockAddressSpace(AddressSpace);
 	   Status = STATUS_SUCCESS;
    }
+#endif
    else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
    {
       PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
@@ -281,6 +283,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       Status = MmPageOutSectionView(AddressSpace, MemoryArea,
                                     Address, PageOp);
    }
+#ifdef _NEWCC_
    else if (Type == MEMORY_AREA_PAGE_FILE_SECTION)
    {
       Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
@@ -341,10 +344,11 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 
       /*
        * Do the actual page out work.
-       */
+      */
       Status = MmPageOutImageFile
 		  (AddressSpace, MemoryArea, Address, PageOp);
    }
+#endif
    else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
    {
       PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,

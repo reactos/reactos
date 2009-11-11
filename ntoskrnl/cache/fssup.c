@@ -55,17 +55,6 @@ CcInitializeCacheManager(VOID)
 	DPRINT("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
 	ExInitializeFastMutex(&CcMutex);
 
-#if DBG
-	UNICODE_STRING CcDeleteEventName = RTL_CONSTANT_STRING(L"CcDeleteEvent");
-	UNICODE_STRING CcFinalizeEventName = RTL_CONSTANT_STRING(L"CcFinalizeEvent");
-	UNICODE_STRING CcpLazyWriteEventName = RTL_CONSTANT_STRING(L"CcpLazyWriteEventName");
-	UNICODE_STRING CcMutexName = RTL_CONSTANT_STRING(L"CcMutex");
-	KdbgRegisterNamedObject(&CcDeleteEventName, 1, &CcDeleteEvent);
-	KdbgRegisterNamedObject(&CcFinalizeEventName, 1, &CcFinalizeEvent);
-	KdbgRegisterNamedObject(&CcpLazyWriteEventName, 1, &CcpLazyWriteEvent);
-	KdbgRegisterNamedObject(&CcMutexName, 1, &CcMutex);
-#endif
-
     return TRUE;
 }
 

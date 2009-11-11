@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define MODULE_INVOLVED_IN_ARM3
+#include "ARM3/miarm.h"
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -115,8 +118,9 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
                                               MemoryArea,
                                               (PVOID)Address,
                                               Locked);
-			break;
-			
+            break;
+
+#ifdef _NEWCC_
 	     case MEMORY_AREA_IMAGE_SECTION:
 			 Status = MmAccessFaultImageFile
 				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
@@ -130,7 +134,8 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
 	     case MEMORY_AREA_PHYSICAL_MEMORY_SECTION:
 			 Status = MmAccessFaultPhysicalMemory
 				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
-            break;
+			 break;
+#endif
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
             Status = STATUS_ACCESS_VIOLATION;
@@ -240,6 +245,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
                                                   Locked);
             break;
 
+#ifdef _NEWCC_
 	     case MEMORY_AREA_IMAGE_SECTION:
 			 Status = MmNotPresentFaultImageFile
 				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
@@ -254,6 +260,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
 			 Status = MmNotPresentFaultPhysicalMemory
 				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
 			 break;
+#endif
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
          case MEMORY_AREA_PEB_OR_TEB:
@@ -275,9 +282,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    }
    while (Status == STATUS_MM_RESTART_OPERATION);
 
-   if (Status != STATUS_SUCCESS)
-	   DPRINT("Completed page fault handling: %x\n", Status);
-
+   DPRINT("Completed page fault handling\n");
    if (!FromMdl)
    {
       MmUnlockAddressSpace(AddressSpace);
@@ -294,6 +299,8 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
               IN KPROCESSOR_MODE Mode,
               IN PVOID TrapInformation)
 {
+    PMEMORY_AREA MemoryArea;
+
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
     {
@@ -306,6 +313,18 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
         }
 #endif
     }
+    
+    //
+    // Check if this is an ARM3 memory area
+    //
+    MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
+    if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3))
+    {
+        //
+        // Hand it off to more competent hands...
+        //
+        return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
+    }   
 
     /* Keep same old ReactOS Behaviour */
     if (StoreInstruction)
@@ -326,6 +345,8 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 {
    NTSTATUS Status;
    PFN_TYPE AllocatedPage;
+   KIRQL OldIrql;
+
    Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
    if (!NT_SUCCESS(Status))
    {
@@ -341,45 +362,9 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
                              1);
    if (Locked)
    {
+      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       MmLockPage(AllocatedPage);
+      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
    return(Status);
 }
-
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-MmIsAddressValid(IN PVOID VirtualAddress)
-{
-    MEMORY_AREA* MemoryArea;
-    PMMSUPPORT AddressSpace;
-    
-    DPRINT1("WARNING: %s returns bogus result\n", __FUNCTION__);
-    
-    if (VirtualAddress >= MmSystemRangeStart)
-    {
-        AddressSpace = MmGetKernelAddressSpace();
-    }
-    else
-    {
-        AddressSpace = &PsGetCurrentProcess()->Vm;
-    }
-    
-    MmLockAddressSpace(AddressSpace);
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
-                                             VirtualAddress);
-    
-    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        return(FALSE);
-    }
-    MmUnlockAddressSpace(AddressSpace);
-    return(TRUE);
-}
-
-/* EOF */

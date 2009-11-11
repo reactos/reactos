@@ -154,6 +154,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 			RetBytesCopied = TotalBytesCopied;
 		}
 		if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+                (void)IoSetCancelRoutine(NextIrp, NULL);
 		IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 	   }
     }
@@ -210,6 +211,7 @@ NTSTATUS NTAPI ReceiveComplete
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );
@@ -292,6 +294,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     } else if( Status == STATUS_PENDING ) {
         AFD_DbgPrint(MID_TRACE,("Leaving read irp\n"));
         IoMarkIrpPending( Irp );
+        (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
     } else {
         AFD_DbgPrint(MID_TRACE,("Completed with status %x\n", Status));
     }
@@ -427,6 +430,7 @@ PacketSocketRecvComplete(
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 
@@ -489,6 +493,7 @@ PacketSocketRecvComplete(
 			NextIrp->IoStatus.Information = DatagramRecv->Len;
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
             if ( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+                        (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		} else {
 			AFD_DbgPrint(MID_TRACE,("Satisfying\n"));
@@ -499,6 +504,7 @@ PacketSocketRecvComplete(
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
             if ( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 			AFD_DbgPrint(MID_TRACE,("Completing\n"));
+                        (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		}
     }

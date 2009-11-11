@@ -39,10 +39,6 @@ KeWaitForGate(IN PKGATE Gate,
     ASSERT_GATE(Gate);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-#ifdef DBG
-	KdbgDeclareWait(Gate);
-#endif
-
     /* Start wait loop */
     do
     {
@@ -129,17 +125,9 @@ KeWaitForGate(IN PKGATE Gate,
             Status = KiSwapThread(Thread, KeGetCurrentPrcb());
 
             /* Make sure we weren't executing an APC */
-            if (Status == STATUS_SUCCESS) {
-#ifdef DBG
-				KdbgSatisfyWait(Gate);
-#endif
-				return;
-			}
+            if (Status == STATUS_SUCCESS) return;
         }
     } while (TRUE);
-#ifdef DBG
-	KdbgSatisfyWait(Gate);
-#endif
 }
 
 VOID

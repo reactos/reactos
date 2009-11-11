@@ -53,7 +53,6 @@ KeInitExceptions(VOID)
 {
     ULONG i;
     USHORT FlippedSelector;
-    extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
 
     /* Loop the IDT */
     for (i = 0; i <= MAXIMUM_IDTVECTOR; i++)
@@ -928,11 +927,18 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* User mode exception, was it first-chance? */
         if (FirstChance)
         {
-            /* Make sure a debugger is present, and ignore user-mode if requested */
-            if ((KiDebugRoutine) &&
-                (!(PsGetCurrentProcess()->DebugPort)))
+            /* 
+             * Break into the kernel debugger unless a user mode debugger
+             * is present or user mode exceptions are ignored, except if this
+             * is a debug service which we must always pass to KD
+             */
+            if ((!(PsGetCurrentProcess()->DebugPort) &&
+                 !(KdIgnoreUmExceptions)) ||
+                 (KdIsThisAKdTrap(ExceptionRecord,
+                                  &Context,
+                                  PreviousMode)))
             {
-                /* Call the debugger */
+                /* Call the kernel debugger */
                 if (KiDebugRoutine(TrapFrame,
                                    ExceptionFrame,
                                    ExceptionRecord,
@@ -946,7 +952,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             }
 
             /* Forward exception to user mode debugger */
-            if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) goto Exit;
+            if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) return;
 
             /* Set up the user-stack */
 DispatchToUser:
@@ -1032,12 +1038,12 @@ DispatchToUser:
         if (DbgkForwardException(ExceptionRecord, TRUE, TRUE))
         {
             /* Handled, get out */
-            goto Exit;
+            return;
         }
         else if (DbgkForwardException(ExceptionRecord, FALSE, TRUE))
         {
             /* Handled, get out */
-            goto Exit;
+            return;
         }
 
         /* 3rd strike, kill the process */
@@ -1061,7 +1067,6 @@ Handled:
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);
-Exit:
     return;
 }
 

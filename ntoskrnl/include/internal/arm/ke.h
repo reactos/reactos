@@ -7,17 +7,49 @@
 #define PCR_ENTRY            0
 #define PDR_ENTRY            2
 
-#define KeArchHaltProcessor() KeArmHaltProcessor()
+#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_ARM
 
+//
+// BKPT is 4 bytes long
+//
+#define KD_BREAKPOINT_TYPE        ULONG
+#define KD_BREAKPOINT_SIZE        sizeof(ULONG)
+//#define KD_BREAKPOINT_VALUE
+
+//
+// Macros for getting and setting special purpose registers in portable code
+//
+#define KeGetContextPc(Context) \
+    ((Context)->Pc)
+
+#define KeSetContextPc(Context, ProgramCounter) \
+    ((Context)->Pc = (ProgramCounter))
+
+#define KeGetTrapFramePc(TrapFrame) \
+    ((TrapFrame)->Pc)
+
+#define KeGetContextReturnRegister(Context) \
+    ((Context)->R0)
+
+#define KeSetContextReturnRegister(Context, ReturnValue) \
+    ((Context)->R0 = (ReturnValue))
+
+//
+// Returns the Interrupt State from a Trap Frame.
+// ON = TRUE, OFF = FALSE
+//
+//#define KeGetTrapFrameInterruptState(TrapFrame) \
+
+//
+// Invalidates the TLB entry for a specified address
+//
+FORCEINLINE
 VOID
-NTAPI
-KeArmInitThreadWithContext(
-    IN PKTHREAD Thread,
-    IN PKSYSTEM_ROUTINE SystemRoutine,
-    IN PKSTART_ROUTINE StartRoutine,
-    IN PVOID StartContext,
-    IN PCONTEXT Context
-);
+KeInvalidateTlbEntry(IN PVOID Address)
+{
+    /* Invalidate the TLB entry for this address */
+    KeArmInvalidateTlbEntry(Address);
+}
 
 VOID
 KiPassiveRelease(
@@ -44,7 +76,6 @@ KeFlushTb(
     VOID
 );
 
-#define KeArchInitThreadWithContext KeArmInitThreadWithContext
 #define KiSystemStartupReal KiSystemStartup
 
 #define KiGetPreviousMode(tf) \
