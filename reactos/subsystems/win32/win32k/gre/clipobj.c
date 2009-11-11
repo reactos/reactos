@@ -30,6 +30,11 @@
 /* INCLUDES ******************************************************************/
 
 #include <win32k.h>
+
+#include "object.h"
+#include "handle.h"
+#include "user.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -270,6 +275,72 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 
     return NULL;
 }
+
+CLIPOBJ* FASTCALL
+IntEngCreateClipRegionFromRegion(struct region *Region)
+{
+    CLIPGDI *Clip;
+    ULONG count = Region->num_rects;
+    rectangle_t *pRect = Region->rects;
+
+    if(count > 1)
+    {
+        RECTL *dest;
+
+        Clip = EngAllocMem(0, sizeof(CLIPGDI) + ((count - 1) * sizeof(RECTL)), TAG_CLIPOBJ);
+
+        if(Clip != NULL)
+        {
+            Clip->EnumRects.c = count;
+            Clip->EnumOrder = CD_ANY;
+            for(dest = Clip->EnumRects.arcl;count > 0; count--, dest++, pRect++)
+            {
+                dest->left = pRect->left;
+                dest->top = pRect->top;
+                dest->right = pRect->right;
+                dest->bottom = pRect->bottom;
+            }
+
+            Clip->ClipObj.iDComplexity = DC_COMPLEX;
+            Clip->ClipObj.iFComplexity = ((Clip->EnumRects.c <= 4) ? FC_RECT4 : FC_COMPLEX);
+            Clip->ClipObj.iMode = TC_RECTANGLES;
+            Clip->ClipObj.rclBounds.left = Region->extents.left;
+            Clip->ClipObj.rclBounds.top = Region->extents.top;
+            Clip->ClipObj.rclBounds.right = Region->extents.right;
+            Clip->ClipObj.rclBounds.bottom = Region->extents.bottom;
+
+            return GDIToObj(Clip, CLIP);
+        }
+    }
+    else
+    {
+        Clip = EngAllocMem(0, sizeof(CLIPGDI), TAG_CLIPOBJ);
+
+        if(Clip != NULL)
+        {
+            Clip->EnumRects.c = 1;
+            Clip->EnumOrder = CD_ANY;
+
+            Clip->ClipObj.iDComplexity = (((Region->extents.top == Region->extents.bottom) &&
+                                         (Region->extents.left == Region->extents.right))
+                                         ? DC_TRIVIAL : DC_RECT);
+
+            Clip->ClipObj.iFComplexity = FC_RECT;
+            Clip->ClipObj.iMode = TC_RECTANGLES;
+            Clip->ClipObj.rclBounds.left = Region->extents.left;
+            Clip->ClipObj.rclBounds.top = Region->extents.top;
+            Clip->ClipObj.rclBounds.right = Region->extents.right;
+            Clip->ClipObj.rclBounds.bottom = Region->extents.bottom;
+
+            Clip->EnumRects.arcl[0] = Clip->ClipObj.rclBounds;
+
+            return GDIToObj(Clip, CLIP);
+        }
+    }
+
+    return NULL;
+}
+
 
 /*
  * @implemented

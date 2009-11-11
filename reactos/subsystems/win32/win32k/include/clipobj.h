@@ -33,6 +33,9 @@ typedef struct _CLIPGDI
 CLIPOBJ* FASTCALL
 IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds);
 
+CLIPOBJ* FASTCALL
+IntEngCreateClipRegionFromRegion(struct region *Region);
+
 VOID FASTCALL
 IntEngDeleteClipRegion(CLIPOBJ *ClipObj);
 
