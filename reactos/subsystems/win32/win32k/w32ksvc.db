@@ -91,3 +91,4 @@ SwmSetForeground                   1
 SwmPosChanging                     2
 SwmPosChanged                      3
 SwmGetWindowFromPoint              2
+SwmShowWindow                      2

@@ -124,6 +124,14 @@ SwmMarkInvisible(struct region *Region)
     {
         Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
 
+        /* Skip hidden windows */
+        if (Window->Hidden)
+        {
+            /* Advance to the next window */
+            Current = Current->Flink;
+            continue;
+        }
+
         /* Get window's region */
         WindowRegion = create_empty_region();
         set_region_rect(WindowRegion, &Window->Window);
@@ -178,6 +186,14 @@ SwmMarkVisible(struct region *Region)
     {
         Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
 
+        /* Skip hidden windows */
+        if (Window->Hidden)
+        {
+            /* Advance to the next window */
+            Current = Current->Flink;
+            continue;
+        }
+
         /* Get window's region */
         WindowRegion = create_empty_region();
         set_region_rect(WindowRegion, &Window->Window);
@@ -231,6 +247,14 @@ SwmRecalculateVisibility(PSWM_WINDOW CalcWindow)
     while(Current != &SwmWindows)
     {
         Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
+
+        /* Skip hidden windows */
+        if (Window->Hidden)
+        {
+            /* Advance to the next window */
+            Current = Current->Blink;
+            continue;
+        }
 
         union_region(Region, Region, Window->Visible);
 
@@ -525,6 +549,48 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
     SwmRelease();
 }
 
+VOID
+NTAPI
+SwmShowWindow(HWND hWnd, BOOLEAN Show)
+{
+    PSWM_WINDOW Win;
+
+    /* Acquire the lock */
+    SwmAcquire();
+
+    DPRINT1("SwmShowWindow %x, Show %d\n", hWnd, Show);
+
+    /* Allocate entry */
+    Win = SwmFindByHwnd(hWnd);
+    if (!Win)
+    {
+        /* Release the lock */
+        SwmRelease();
+        return;
+    }
+
+    if (Show && Win->Hidden)
+    {
+        /* Change state from hidden to visible */
+        Win->Hidden = FALSE;
+    }
+    else if (!Show && !Win->Hidden)
+    {
+        /* Change state from visible to hidden */
+        Win->Hidden = TRUE;
+
+        /* Mark its region as visible */
+        SwmMarkVisible(Win->Visible);
+
+        /* Its visible region is now empty */
+        free_region(Win->Visible);
+        Win->Visible = create_empty_region();
+    }
+
+    /* Release the lock */
+    SwmRelease();
+}
+
 HWND
 NTAPI
 SwmGetWindowFromPoint(LONG x, LONG y)
@@ -540,6 +606,14 @@ SwmGetWindowFromPoint(LONG x, LONG y)
     while(Current != &SwmWindows)
     {
         Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
+
+        /* Skip hidden windows */
+        if (Window->Hidden)
+        {
+            /* Advance to the next window */
+            Current = Current->Flink;
+            continue;
+        }
 
         if (point_in_region(Window->Visible, x, y))
         {

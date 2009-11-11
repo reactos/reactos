@@ -876,6 +876,13 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
             FIXME("change2\n");
         }
     }
+
+    /* Pass show/hide information to the window manager */
+    if (swp_flags & SWP_SHOWWINDOW)
+        SwmShowWindow(hwnd, TRUE);
+    else if (swp_flags & SWP_HIDEWINDOW)
+        SwmShowWindow(hwnd, FALSE);
+
 // visible: 0x1843, hide: 0x1883. 1843 = 1 + 2 + 64 + 2048 + 4096
     //RosDrv_UpdateZOrder(hwnd, (RECT*)visible_rect);
 }

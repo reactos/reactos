@@ -157,5 +157,7 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect);
 HWND NTAPI
 SwmGetWindowFromPoint(LONG x, LONG y);
 
+VOID NTAPI
+SwmShowWindow(HWND hWnd, BOOLEAN Show);
 
 #endif /* __WIN32K_NTUSER_H */
