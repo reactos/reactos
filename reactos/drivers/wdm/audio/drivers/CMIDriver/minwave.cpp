@@ -31,7 +31,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma code_seg("PAGE")
 
-NTSTATUS CreateMiniportWaveCMI(PUNKNOWN *Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
+HRESULT NTAPI CreateMiniportWaveCMI(PUNKNOWN *Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
 {
 	//PAGED_CODE();
 	//ASSERT(Unknown);
@@ -77,7 +77,7 @@ NTSTATUS CMiniportWaveCMI::newDMAChannel(PDMACHANNEL *dmaChannel, UInt32 bufferL
 #endif
 
 //generic crap
-STDMETHODIMP CMiniportWaveCMI::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object)
+STDMETHODIMP CMiniportWaveCMI::QueryInterface(REFIID Interface, PVOID *Object)
 {
 	//PAGED_CODE();
 	//ASSERT(Object);
@@ -482,7 +482,7 @@ STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE C
 		}
 
 
-		if (!IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF)
+		if (!IsEqualGUIDAligned(ClientDataRange->SubFormat, GUID_NULL)//KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF) //HACK
 		  && !IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_WILDCARD)) {
 			// check for Vista
 			isAC3Pin = false;
@@ -1215,7 +1215,7 @@ CMiniportWaveStreamCMI::~CMiniportWaveStreamCMI(void)
     }
 }
 
-STDMETHODIMP CMiniportWaveStreamCMI::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object)
+STDMETHODIMP CMiniportWaveStreamCMI::QueryInterface(REFIID Interface, PVOID *Object)
 {
 	//PAGED_CODE();
 	//ASSERT(Object);

@@ -33,14 +33,14 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma code_seg("PAGE")
 
-NTSTATUS CreateMiniportTopologyCMI(PUNKNOWN* Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
+HRESULT NTAPI CreateMiniportTopologyCMI(PUNKNOWN* Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
 {
 	//PAGED_CODE();
 	//ASSERT(Unknown);
 	STD_CREATE_BODY_(CCMITopology,Unknown,UnknownOuter,PoolType,PMINIPORTTOPOLOGY);
 }
 
-STDMETHODIMP CCMITopology::NonDelegatingQueryInterface(REFIID Interface, PVOID* Object)
+STDMETHODIMP CCMITopology::QueryInterface(REFIID Interface, PVOID* Object)
 {
 	//PAGED_CODE();
 	//ASSERT(Object);
