@@ -335,10 +335,13 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
 	/* Set the new PML4 */
 	__writecr3((ULONGLONG)pPML4);
 
-	RtlZeroMemory(GdtIdt, PAGE_SIZE);
+    /* Get kernel mode address of gdt / idt */
+	GdtIdt = (PVOID)((LONG64)GdtIdt + KSEG0_BASE);
 
+    /* Create gdt entries and load gdtr */
     WinLdrSetupGdt(GdtIdt, Tss);
 
+    /* Copy old Idt and set idtr */
     WinLdrSetupIdt((PVOID)((ULONG64)GdtIdt + 2048)); // HACK!
 
     /* LDT is unused */
