@@ -17,16 +17,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct _SWM_WINDOW
-{
-    HWND hwnd;
-    rectangle_t Window;
-    struct region *Visible;
-    struct region *Invisible;
-
-    LIST_ENTRY Entry;
-} SWM_WINDOW, *PSWM_WINDOW;
-
 /*static*/ inline struct window *get_window( user_handle_t handle );
 void redraw_window( struct window *win, struct region *region, int frame, unsigned int flags );
 void req_update_window_zorder( const struct update_window_zorder_request *req, struct update_window_zorder_reply *reply );
@@ -35,7 +25,6 @@ VOID NTAPI SwmDumpRegion(struct region *Region);
 VOID NTAPI SwmDumpWindows();
 VOID NTAPI SwmDebugDrawWindows();
 VOID NTAPI SwmTest();
-
 
 /* GLOBALS *******************************************************************/
 
@@ -66,10 +55,12 @@ VOID
 NTAPI
 SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect)
 {
+#if 1
     struct window *Win;
     struct update_window_zorder_request req;
-    //struct update_window_zorder_reply reply;
+    struct update_window_zorder_reply reply;
     struct region *ClientRegion;
+    UINT i;
 
     ClientRegion = create_empty_region();
     copy_region(ClientRegion, Region);
@@ -86,20 +77,24 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
         return;
     }
 
-    /* Convert region to client coordinates */
-    offset_region(ClientRegion, -Window->Window.left, -Window->Window.top);
-
     //DPRINT1("rect (%d,%d)-(%d,%d)\n", TmpRect.left, TmpRect.top, TmpRect.right, TmpRect.bottom);
 
-    /* Update zorder */
-    if (Rect)
+    /* Bring every rect in a region to front */
+    for (i=0; i<Region->num_rects; i++)
     {
-        req.rect = *Rect;
-        req.rect.left -= Window->Window.left;  req.rect.top -= Window->Window.top;
-        req.rect.right -= Window->Window.left; req.rect.bottom -= Window->Window.left;
+        DbgPrint("(%d,%d)-(%d,%d), and redraw coords (%d,%d)-(%d,%d); ", Region->rects[i].left, Region->rects[i].top,
+            Region->rects[i].right, Region->rects[i].bottom,
+            Region->rects[i].left - Window->Window.left, Region->rects[i].top - Window->Window.top,
+            Region->rects[i].right - Window->Window.left, Region->rects[i].bottom - Window->Window.top);
+
+        req.rect = Region->rects[i];
         req.window = (UINT_PTR)Window->hwnd;
-        //req_update_window_zorder(&req, &reply);
+        req_update_window_zorder(&req, &reply);
     }
+    DbgPrint("\n");
+
+    /* Convert region to client coordinates */
+    offset_region(ClientRegion, -Window->Window.left, -Window->Window.top);
 
     /* Redraw window */
     redraw_window(Win, ClientRegion, 1, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN );
@@ -107,6 +102,7 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
     UserLeave();
 
     free_region(ClientRegion);
+#endif
 }
 
 VOID
@@ -292,6 +288,52 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect)
     SwmRelease();
 }
 
+VOID
+NTAPI
+SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height)
+{
+    PSWM_WINDOW Desktop;
+
+    /* Acquire the lock */
+    SwmAcquire();
+
+    /* Check if it's already there */
+    Desktop = SwmFindByHwnd(hWnd);
+
+    if (Desktop)
+    {
+        // TODO: Check if dimensions are the same!
+
+        /* Release the lock */
+        SwmRelease();
+
+        return;
+    }
+
+    /* Add a desktop window */
+    Desktop = ExAllocatePool(PagedPool, sizeof(SWM_WINDOW));
+    RtlZeroMemory(Desktop, sizeof(SWM_WINDOW));
+    Desktop->hwnd = hWnd;
+    Desktop->Window.left = 0;
+    Desktop->Window.top = 0;
+    Desktop->Window.right = Width;
+    Desktop->Window.bottom = Height;
+
+    Desktop->Visible = create_empty_region();
+    set_region_rect(Desktop->Visible, &Desktop->Window);
+
+    /* Now go through the list and remove this rect from all underlying windows visible region */
+    SwmMarkInvisible(Desktop->Visible);
+
+    InsertTailList(&SwmWindows, &Desktop->Entry);
+
+    /* Now ensure it is visible on screen */
+    SwmInvalidateRegion(Desktop, Desktop->Visible, &Desktop->Window);
+
+    /* Release the lock */
+    SwmRelease();
+}
+
 PSWM_WINDOW
 NTAPI
 SwmFindByHwnd(HWND hWnd)
@@ -394,20 +436,23 @@ SwmSetForeground(HWND hWnd)
     /* Add it to the head of the list */
     InsertHeadList(&SwmWindows, &SwmWin->Entry);
 
-    /* Make it fully visible */
+    /* Subtruct old visible from the new one to find region for updating */
     OldVisible = create_empty_region();
-    copy_region(OldVisible, SwmWin->Visible);
+    set_region_rect(OldVisible, &SwmWin->Window);
 
+    subtract_region(OldVisible, OldVisible, SwmWin->Visible);
+
+    /* Make it fully visible */
     free_region(SwmWin->Visible);
     SwmWin->Visible = create_empty_region();
     set_region_rect(SwmWin->Visible, &SwmWin->Window);
 
-    /* Intersect new visible and old visible to find region for updating */
-    intersect_region(OldVisible, OldVisible, SwmWin->Visible);
-
-    /* If it's not empty - draw missing parts */
+    /* If update region is not empty - draw missing parts */
     if (!is_region_empty(OldVisible))
+    {
+        DPRINT1("Intersection isn't empty\n");
         SwmInvalidateRegion(SwmWin, OldVisible, NULL);
+    }
 
     free_region(OldVisible);
 
@@ -534,15 +579,6 @@ SwmInitialize()
 
     SwmTest();
 }
-
-// haaaaaaaaaaaaaaaaaaack
-struct region
-{
-    int size;
-    int num_rects;
-    rectangle_t *rects;
-    rectangle_t extents;
-};
 
 VOID
 NTAPI
