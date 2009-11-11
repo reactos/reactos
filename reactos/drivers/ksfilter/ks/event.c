@@ -71,9 +71,312 @@ KspSynchronizedEventRoutine(
     return Result;
 }
 
+BOOLEAN
+NTAPI
+SyncAddEvent(
+    PKSEVENT_CTX Context)
+{
+    InsertTailList(Context->List, &Context->EventEntry->ListEntry);
+    return TRUE;
+}
+
+NTSTATUS
+KspEnableEvent(
+    IN  PIRP Irp,
+    IN  ULONG EventSetsCount,
+    IN  PKSEVENT_SET EventSet,
+    IN  OUT PLIST_ENTRY EventsList OPTIONAL,
+    IN  KSEVENTS_LOCKTYPE EventsFlags OPTIONAL,
+    IN  PVOID EventsLock OPTIONAL,
+    IN  PFNKSALLOCATOR Allocator OPTIONAL,
+    IN  ULONG EventItemSize OPTIONAL)
+{
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    KSEVENT Event;
+    PKSEVENT_ITEM EventItem, FoundEventItem;
+    PKSEVENTDATA EventData;
+    PKSEVENT_SET FoundEventSet;
+    PKSEVENT_ENTRY EventEntry;
+    ULONG Index, SubIndex, Size;
+    PVOID Object;
+    KSEVENT_CTX Ctx;
+    LPGUID Guid;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSEVENT))
+    {
+        /* invalid parameter */
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    if (Irp->RequestorMode == UserMode)
+    {
+        _SEH2_TRY
+        {
+           ProbeForRead(IoStack->Parameters.DeviceIoControl.Type3InputBuffer, sizeof(KSEVENT), sizeof(UCHAR));
+           ProbeForRead(Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength, sizeof(UCHAR));
+           RtlMoveMemory(&Event, IoStack->Parameters.DeviceIoControl.Type3InputBuffer, sizeof(KSEVENT));
+           Status = STATUS_SUCCESS;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Exception, get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* failed to probe parameters */
+            return Status;
+        }
+    }
+    else
+    {
+        /* copy event struct */
+        RtlMoveMemory(&Event, IoStack->Parameters.DeviceIoControl.Type3InputBuffer, sizeof(KSEVENT));
+    }
+
+    FoundEventItem = NULL;
+    FoundEventSet = NULL;
+
+
+    if (IsEqualGUIDAligned(&Event.Set, &GUID_NULL) && Event.Id == 0 && Event.Flags == KSEVENT_TYPE_SETSUPPORT)
+    {
+        // store output size
+        Irp->IoStatus.Information = sizeof(GUID) * EventSetsCount;
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GUID) * EventSetsCount)
+        {
+            // buffer too small
+            return STATUS_MORE_ENTRIES;
+        }
+
+        // get output buffer
+        Guid = (LPGUID)Irp->UserBuffer;
+
+       // copy property guids from property sets
+       for(Index = 0; Index < EventSetsCount; Index++)
+       {
+           RtlMoveMemory(&Guid[Index], EventSet[Index].Set, sizeof(GUID));
+       }
+       return STATUS_SUCCESS;
+    }
+
+    /* now try to find event set */
+    for(Index = 0; Index < EventSetsCount; Index++)
+    {
+        if (IsEqualGUIDAligned(&Event.Set, EventSet[Index].Set))
+        {
+            EventItem = (PKSEVENT_ITEM)EventSet[Index].EventItem;
+
+            /* sanity check */
+            ASSERT(EventSet[Index].EventsCount);
+            ASSERT(EventItem);
+
+            /* now find matching event id */
+            for(SubIndex = 0; SubIndex < EventSet[Index].EventsCount; SubIndex++)
+            {
+                if (EventItem[SubIndex].EventId == Event.Id)
+                {
+                    /* found event item */
+                    FoundEventItem = &EventItem[SubIndex];
+                    FoundEventSet = &EventSet[Index];
+                    break;
+                }
+            }
+
+            if (FoundEventSet)
+                break;
+        }
+    }
+
+    if (!FoundEventSet)
+    {
+        UNICODE_STRING GuidString;
+
+        RtlStringFromGUID(&Event.Set, &GuidString);
+
+        DPRINT("Guid %S Id %u Flags %x not found\n", GuidString.Buffer, Event.Id, Event.Flags);
+        RtlFreeUnicodeString(&GuidString);
+        return STATUS_PROPSET_NOT_FOUND;
+
+
+    }
+
+    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < FoundEventItem->DataInput)
+    {
+        /* buffer too small */
+        DPRINT1("Got %u expected %u\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength, FoundEventItem->DataInput);
+        return STATUS_SUCCESS;
+    }
+
+    if (!FoundEventItem->AddHandler && !EventsList)
+    {
+        /* no add handler and no list to add the new entry to */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* get event data */
+    EventData = Irp->UserBuffer;
+
+    /* sanity check */
+    ASSERT(EventData);
+
+    if (Irp->RequestorMode == UserMode)
+    {
+        if (EventData->NotificationType == KSEVENTF_SEMAPHORE_HANDLE)
+        {
+            /* get semaphore object handle */
+            Status = ObReferenceObjectByHandle(EventData->SemaphoreHandle.Semaphore, SEMAPHORE_MODIFY_STATE, ExSemaphoreObjectType, Irp->RequestorMode, &Object, NULL);
+
+            if (!NT_SUCCESS(Status))
+            {
+                /* invalid semaphore handle */
+                return STATUS_INVALID_PARAMETER;
+            }
+        }
+        else if (EventData->NotificationType == KSEVENTF_EVENT_HANDLE)
+        {
+            /* get event object handle */
+            Status = ObReferenceObjectByHandle(EventData->EventHandle.Event, EVENT_MODIFY_STATE, ExEventObjectType, Irp->RequestorMode, &Object, NULL);
+
+            if (!NT_SUCCESS(Status))
+            {
+                /* invalid event handle */
+                return STATUS_INVALID_PARAMETER;
+            }
+        }
+        else
+        {
+            /* user mode client can only pass an event or semaphore handle */
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        if (EventData->NotificationType != KSEVENTF_EVENT_OBJECT &&
+            EventData->NotificationType != KSEVENTF_SEMAPHORE_OBJECT &&
+            EventData->NotificationType != KSEVENTF_DPC &&
+            EventData->NotificationType != KSEVENTF_WORKITEM &&
+            EventData->NotificationType != KSEVENTF_KSWORKITEM)
+        {
+            /* invalid type requested */
+            return STATUS_INVALID_PARAMETER;
+        }
+    } 
+
+
+    /* calculate request size */
+    Size = sizeof(KSEVENT_ENTRY) + FoundEventItem->ExtraEntryData;
+
+    /* do we have an allocator */
+    if (Allocator)
+    {
+        /* allocate event entry */
+        Status = Allocator(Irp, Size, FALSE);
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* failed */
+            return Status;
+        }
+
+        /* assume the caller put it there */
+        EventEntry = KSEVENT_ENTRY_IRP_STORAGE(Irp);
+
+    }
+    else
+    {
+        /* allocate it from nonpaged pool */
+        EventEntry = ExAllocatePool(NonPagedPool, Size);
+    }
+
+    if (!EventEntry)
+    {
+        /* not enough memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* zero event entry */
+    RtlZeroMemory(EventEntry, Size);
+
+    /* initialize event entry */
+    EventEntry->EventData = EventData;
+    EventEntry->NotificationType = EventData->NotificationType;
+    EventEntry->EventItem = FoundEventItem;
+    EventEntry->EventSet = FoundEventSet;
+    EventEntry->FileObject = IoStack->FileObject;
+
+    switch(EventEntry->NotificationType)
+    {
+        case KSEVENTF_EVENT_HANDLE:
+            EventEntry->Object = Object;
+            EventEntry->Reserved = 0;
+            break;
+        case KSEVENTF_SEMAPHORE_HANDLE:
+            EventEntry->Object = Object;
+            EventEntry->SemaphoreAdjustment = EventData->SemaphoreHandle.Adjustment;
+            EventEntry->Reserved = 0;
+            break;
+        case KSEVENTF_EVENT_OBJECT:
+            EventEntry->Object = EventData->EventObject.Event;
+            EventEntry->Reserved = EventData->EventObject.Increment;
+            break;
+        case KSEVENTF_SEMAPHORE_OBJECT:
+            EventEntry->Object = EventData->SemaphoreObject.Semaphore;
+            EventEntry->SemaphoreAdjustment = EventData->SemaphoreObject.Adjustment;
+            EventEntry->Reserved = EventData->SemaphoreObject.Increment;
+            break;
+        case KSEVENTF_DPC:
+            EventEntry->Object = EventData->Dpc.Dpc;
+            EventData->Dpc.ReferenceCount = 0;
+            break;
+        case KSEVENTF_WORKITEM:
+            EventEntry->Object = EventData->WorkItem.WorkQueueItem;
+            EventEntry->BufferItem = (PKSBUFFER_ITEM)UlongToPtr(EventData->WorkItem.WorkQueueType);
+            break;
+        case KSEVENTF_KSWORKITEM:
+            EventEntry->Object = EventData->KsWorkItem.KsWorkerObject;
+            EventEntry->DpcItem = (PKSDPC_ITEM)EventData->KsWorkItem.WorkQueueItem;
+            break;
+        default:
+            /* should not happen */
+            ASSERT(0);
+    }
+
+    if (FoundEventItem->AddHandler)
+    {
+        /* now add the event */
+        Status = FoundEventItem->AddHandler(Irp, EventData, EventEntry);
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* discard event entry */
+            KsDiscardEvent(EventEntry);
+        }
+    }
+    else
+    {
+        /* setup context */
+        Ctx.List = EventsList;
+        Ctx.EventEntry = EventEntry;
+
+         /* add the event */
+        (void)KspSynchronizedEventRoutine(EventsFlags, EventsLock, SyncAddEvent, &Ctx);
+
+        Status = STATUS_SUCCESS;
+    }
+
+    /* done */
+    return Status;
+}
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -86,12 +389,11 @@ KsEnableEvent(
     IN  KSEVENTS_LOCKTYPE EventsFlags OPTIONAL,
     IN  PVOID EventsLock OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_SUCCESS;
+    return KspEnableEvent(Irp, EventSetsCount, EventSet, EventsList, EventsFlags, EventsLock, NULL, 0);
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -106,8 +408,7 @@ KsEnableEventWithAllocator(
     IN  PFNKSALLOCATOR Allocator OPTIONAL,
     IN  ULONG EventItemSize OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    return KspEnableEvent(Irp, EventSetsCount, EventSet, EventsList, EventsFlags, EventsLock, Allocator, EventItemSize);
 }
 
 BOOLEAN
@@ -210,7 +511,7 @@ KsDisableEvent(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -218,7 +519,17 @@ NTAPI
 KsDiscardEvent(
     IN  PKSEVENT_ENTRY EventEntry)
 {
-    //UNIMPLEMENTED;
+    /* sanity check */
+    ASSERT(EventEntry->Object);
+
+    if (EventEntry->NotificationType == KSEVENTF_SEMAPHORE_HANDLE || EventEntry->NotificationType == KSEVENTF_EVENT_HANDLE)
+    {
+        /* release object */
+        ObDereferenceObject(EventEntry->Object);
+    }
+
+    /* free event entry */
+    ExFreePool(EventEntry);
 }
 
 
@@ -295,33 +606,35 @@ KsGenerateEvent(
 {
     if (EntryEvent->NotificationType == KSEVENTF_EVENT_HANDLE || EntryEvent->NotificationType == KSEVENTF_EVENT_OBJECT)
     {
-        // signal event
-        KeSetEvent(EntryEvent->Object, 0, FALSE);
+        /* signal event */
+        KeSetEvent(EntryEvent->Object, EntryEvent->Reserved, FALSE);
     }
     else if (EntryEvent->NotificationType == KSEVENTF_SEMAPHORE_HANDLE || EntryEvent->NotificationType == KSEVENTF_SEMAPHORE_OBJECT)
     {
-        // release semaphore
-        KeReleaseSemaphore(EntryEvent->Object, 0, EntryEvent->SemaphoreAdjustment, FALSE);
+        /* release semaphore */
+        KeReleaseSemaphore(EntryEvent->Object, EntryEvent->Reserved, EntryEvent->SemaphoreAdjustment, FALSE);
     }
     else if (EntryEvent->NotificationType == KSEVENTF_DPC)
     {
-        // queue dpc
+        /* increment reference count to indicate dpc is pending */
+        InterlockedIncrement((PLONG)&EntryEvent->EventData->Dpc.ReferenceCount);
+        /* queue dpc */
         KeInsertQueueDpc((PRKDPC)EntryEvent->Object, NULL, NULL);
     }
     else if (EntryEvent->NotificationType == KSEVENTF_WORKITEM)
     {
-        // queue work item
+        /* queue work item */
         ExQueueWorkItem((PWORK_QUEUE_ITEM)EntryEvent->Object, PtrToUlong(EntryEvent->BufferItem));
     }
     else if (EntryEvent->NotificationType == KSEVENTF_KSWORKITEM)
     {
-        // queue work item of ks worker
+        /* queue work item of ks worker */
         return KsQueueWorkItem((PKSWORKER)EntryEvent->Object, (PWORK_QUEUE_ITEM)EntryEvent->DpcItem);
     }
     else
     {
-        UNIMPLEMENTED;
-        return STATUS_UNSUCCESSFUL;
+        /* unsupported type requested */
+        return STATUS_INVALID_PARAMETER;
     }
 
     return STATUS_SUCCESS;
