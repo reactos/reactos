@@ -5,7 +5,11 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_AMD64_MM_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_AMD64_MM_H
 
-struct _EPROCESS;
+#define PAGE_MASK(x)		((x)&(~0xfff))
+#define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
+
+#define HYPER_SPACE 0xFFFFF70000000000ULL
+#define HYPER_SPACE_END   0xFFFFF77FFFFFFFFFULL
 
 PULONG64
 FORCEINLINE
@@ -14,25 +18,41 @@ MmGetPageDirectory(VOID)
     return (PULONG64)__readcr3();
 }
 
-#define PAGE_MASK(x)		((x)&(~0xfff))
-#define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
+PMMPTE
+FORCEINLINE
+MiAddressToPxe(PVOID Address)
+{
+    ULONG64 Offset = (ULONG64)Address >> (PXI_SHIFT - 3);
+    Offset &= PXI_MASK << 3;
+    return (PMMPTE)(PXE_BASE + Offset);
+}
 
-#define HYPER_SPACE 0xFFFFF70000000000ULL
-#define HYPER_SPACE_END   0xFFFFF77FFFFFFFFFULL
+PMMPTE
+FORCEINLINE
+MiAddressToPpe(PVOID Address)
+{
+    ULONG64 Offset = (ULONG64)Address >> (PPI_SHIFT - 3);
+    Offset &= 0x3FFFF << 3;
+    return (PMMPTE)(PPE_BASE + Offset);
+}
 
-/* Base addresses of PTE and PDE */
-//#define PAGETABLE_MAP       PTE_BASE
-//#define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
+PMMPTE
+FORCEINLINE
+MiAddressToPde(PVOID Address)
+{
+    ULONG64 Offset = (ULONG64)Address >> (PDI_SHIFT - 3);
+    Offset &= 0x7FFFFFF << 3;
+    return (PMMPTE)(PDE_BASE + Offset);
+}
 
-/* Converting address to a corresponding PDE or PTE entry */
-#define MiAddressToPxe(x) \
-    ((PMMPTE)((((((ULONG64)(x)) >> PXI_SHIFT) & PXI_MASK) << 3) + PXE_BASE))
-#define MiAddressToPpe(x) \
-    ((PMMPTE)((((((ULONG64)(x)) >> PPI_SHIFT) & PPI_MASK) << 3) + PPE_BASE))
-#define MiAddressToPde(x) \
-    ((PMMPTE)((((((ULONG64)(x)) >> PDI_SHIFT) & PDI_MASK_AMD64) << 3) + PDE_BASE))
-#define MiAddressToPte(x) \
-    ((PMMPTE)((((((ULONG64)(x)) >> PTI_SHIFT) & PTI_MASK_AMD64) << 3) + PTE_BASE))
+PMMPTE
+FORCEINLINE
+MiAddressToPte(PVOID Address)
+{
+    ULONG64 Offset = (ULONG64)Address >> (PTI_SHIFT - 3);
+    Offset &= 0xFFFFFFFFFULL << 3;
+    return (PMMPTE)(PTE_BASE + Offset);
+}
 
 /* Convert a PTE into a corresponding address */
 #define MiPteToAddress(PTE) ((PVOID)((ULONG64)(PTE) << 9))
