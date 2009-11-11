@@ -56,6 +56,7 @@ static char** myARGV;
 static char tmpdir[MAX_PATH];
 static char child_file[MAX_PATH];
 static DLLVERSIONINFO dllver;
+static BOOL skip_noassoc_tests = FALSE;
 
 
 /***
@@ -117,7 +118,18 @@ static int shell_execute(LPCSTR operation, LPCSTR file, LPCSTR parameters, LPCST
     {
         int wait_rc;
         wait_rc=WaitForSingleObject(hEvent, 5000);
-        ok(wait_rc==WAIT_OBJECT_0, "WaitForSingleObject returned %d\n", wait_rc);
+        if (wait_rc == WAIT_TIMEOUT)
+        {
+            HWND wnd = FindWindowA("#32770", "Windows");
+            if (wnd != NULL)
+            {
+                SendMessage(wnd, WM_CLOSE, 0, 0);
+                win_skip("Skipping shellexecute of file with unassociated extension\n");
+                skip_noassoc_tests = TRUE;
+                rc = SE_ERR_NOASSOC;
+            }
+        }
+        ok(wait_rc==WAIT_OBJECT_0 || rc <= 32, "WaitForSingleObject returned %d\n", wait_rc);
     }
     /* The child process may have changed the result file, so let profile
      * functions know about it
@@ -462,11 +474,67 @@ static void     childPrintf(HANDLE h, const char* fmt, ...)
     WriteFile(h, buffer, strlen(buffer), &w, NULL);
 }
 
+static DWORD ddeInst;
+static HSZ hszTopic;
+static char ddeExec[MAX_PATH], ddeApplication[MAX_PATH];
+static BOOL post_quit_on_execute;
+
+static HDDEDATA CALLBACK ddeCb(UINT uType, UINT uFmt, HCONV hConv,
+                               HSZ hsz1, HSZ hsz2, HDDEDATA hData,
+                               ULONG_PTR dwData1, ULONG_PTR dwData2)
+{
+    DWORD size = 0;
+
+    if (winetest_debug > 2)
+        trace("dde_cb: %04x, %04x, %p, %p, %p, %p, %08lx, %08lx\n",
+              uType, uFmt, hConv, hsz1, hsz2, hData, dwData1, dwData2);
+
+    switch (uType)
+    {
+        case XTYP_CONNECT:
+            if (!DdeCmpStringHandles(hsz1, hszTopic))
+            {
+                size = DdeQueryString(ddeInst, hsz2, ddeApplication, MAX_PATH, CP_WINANSI);
+                assert(size < MAX_PATH);
+                return (HDDEDATA)TRUE;
+            }
+            return (HDDEDATA)FALSE;
+
+        case XTYP_EXECUTE:
+            size = DdeGetData(hData, (LPBYTE)ddeExec, MAX_PATH, 0L);
+            assert(size < MAX_PATH);
+            DdeFreeDataHandle(hData);
+            if (post_quit_on_execute)
+                PostQuitMessage(0);
+            return (HDDEDATA)DDE_FACK;
+
+        default:
+            return NULL;
+    }
+}
+
+/*
+ * This is just to make sure the child won't run forever stuck in a GetMessage()
+ * loop when DDE fails for some reason.
+ */
+static void CALLBACK childTimeout(HWND wnd, UINT msg, UINT_PTR timer, DWORD time)
+{
+    trace("childTimeout called\n");
+
+    PostQuitMessage(0);
+}
+
 static void doChild(int argc, char** argv)
 {
     char* filename;
-    HANDLE hFile;
+    HANDLE hFile, map;
     int i;
+    int rc;
+    HSZ hszApplication;
+    UINT_PTR timer;
+    HANDLE dde_ready;
+    MSG msg;
+    char *shared_block;
 
     filename=argv[2];
     hFile=CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
@@ -484,6 +552,51 @@ static void doChild(int argc, char** argv)
             trace("argvA%d=%s\n", i, argv[i]);
         childPrintf(hFile, "argvA%d=%s\r\n", i, encodeA(argv[i]));
     }
+
+    map = OpenFileMappingA(FILE_MAP_READ, FALSE, "winetest_shlexec_dde_map");
+    if (map != NULL)
+    {
+        shared_block = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 4096);
+        CloseHandle(map);
+        if (shared_block[0] != '\0' || shared_block[1] != '\0')
+        {
+            post_quit_on_execute = TRUE;
+            ddeInst = 0;
+            rc = DdeInitializeA(&ddeInst, ddeCb, CBF_SKIP_ALLNOTIFICATIONS | CBF_FAIL_ADVISES |
+                                CBF_FAIL_POKES | CBF_FAIL_REQUESTS, 0L);
+            assert(rc == DMLERR_NO_ERROR);
+            hszApplication = DdeCreateStringHandleA(ddeInst, shared_block, CP_WINANSI);
+            hszTopic = DdeCreateStringHandleA(ddeInst, shared_block + strlen(shared_block) + 1, CP_WINANSI);
+            assert(hszApplication && hszTopic);
+            assert(DdeNameService(ddeInst, hszApplication, 0L, DNS_REGISTER | DNS_FILTEROFF));
+
+            timer = SetTimer(NULL, 0, 2500, childTimeout);
+
+            dde_ready = CreateEvent(NULL, FALSE, FALSE, "winetest_shlexec_dde_ready");
+            SetEvent(dde_ready);
+            CloseHandle(dde_ready);
+
+            while (GetMessage(&msg, NULL, 0, 0))
+                DispatchMessage(&msg);
+
+            KillTimer(NULL, timer);
+            assert(DdeNameService(ddeInst, hszApplication, 0L, DNS_UNREGISTER));
+            assert(DdeFreeStringHandle(ddeInst, hszTopic));
+            assert(DdeFreeStringHandle(ddeInst, hszApplication));
+            assert(DdeUninitialize(ddeInst));
+        }
+        else
+        {
+            dde_ready = CreateEvent(NULL, FALSE, FALSE, "winetest_shlexec_dde_ready");
+            SetEvent(dde_ready);
+            CloseHandle(dde_ready);
+        }
+
+        UnmapViewOfFile(shared_block);
+
+        childPrintf(hFile, "ddeExec=%s\r\n", encodeA(ddeExec));
+    }
+
     CloseHandle(hFile);
 
     init_event(filename);
@@ -750,6 +863,13 @@ static void test_filename(void)
     while (test->basename)
     {
         BOOL quotedfile = FALSE;
+
+        if (skip_noassoc_tests && test->rc == SE_ERR_NOASSOC)
+        {
+            win_skip("Skipping shellexecute of file with unassociated extension\n");
+            test++;
+            continue;
+        }
 
         sprintf(filename, test->basename, tmpdir);
         if (strchr(filename, '/'))
@@ -1117,7 +1237,7 @@ static void test_lnks(void)
             {
                 okChildInt("argcA", 5);
             }
-            else 
+            else
             {
                 okChildInt("argcA", 5);
             }
@@ -1159,13 +1279,20 @@ static void test_exes(void)
     okChildInt("argcA", 4);
     okChildString("argvA3", "Exec");
 
-    sprintf(filename, "%s\\test file.noassoc", tmpdir);
-    if (CopyFile(argv0, filename, FALSE))
+    if (! skip_noassoc_tests)
     {
-        rc=shell_execute(NULL, filename, params, NULL);
-        todo_wine {
-        ok(rc==SE_ERR_NOASSOC, "%s succeeded: rc=%d\n", shell_call, rc);
+        sprintf(filename, "%s\\test file.noassoc", tmpdir);
+        if (CopyFile(argv0, filename, FALSE))
+        {
+            rc=shell_execute(NULL, filename, params, NULL);
+            todo_wine {
+                ok(rc==SE_ERR_NOASSOC, "%s succeeded: rc=%d\n", shell_call, rc);
+            }
         }
+    }
+    else
+    {
+        win_skip("Skipping shellexecute of file with unassociated extension\n");
     }
 }
 
@@ -1190,13 +1317,20 @@ static void test_exes_long(void)
     okChildInt("argcA", 4);
     okChildString("argvA3", longparam);
 
-    sprintf(filename, "%s\\test file.noassoc", tmpdir);
-    if (CopyFile(argv0, filename, FALSE))
+    if (! skip_noassoc_tests)
     {
-        rc=shell_execute(NULL, filename, params, NULL);
-        todo_wine {
-        ok(rc==SE_ERR_NOASSOC, "%s succeeded: rc=%d\n", shell_call, rc);
+        sprintf(filename, "%s\\test file.noassoc", tmpdir);
+        if (CopyFile(argv0, filename, FALSE))
+        {
+            rc=shell_execute(NULL, filename, params, NULL);
+            todo_wine {
+                ok(rc==SE_ERR_NOASSOC, "%s succeeded: rc=%d\n", shell_call, rc);
+            }
         }
+    }
+    else
+    {
+        win_skip("Skipping shellexecute of file with unassociated extension\n");
     }
 }
 
@@ -1210,121 +1344,133 @@ typedef struct
     int expectedArgs;
     const char* expectedDdeExec;
     int todo;
-    int rc;
 } dde_tests_t;
 
 static dde_tests_t dde_tests[] =
 {
     /* Test passing and not passing command-line
      * argument, no DDE */
-    {"", NULL, NULL, NULL, NULL, FALSE, "", 0x0, 33},
-    {"\"%1\"", NULL, NULL, NULL, NULL, TRUE, "", 0x0, 33},
+    {"", NULL, NULL, NULL, NULL, FALSE, "", 0x0},
+    {"\"%1\"", NULL, NULL, NULL, NULL, TRUE, "", 0x0},
 
     /* Test passing and not passing command-line
      * argument, with DDE */
-    {"", "[open(\"%1\")]", "shlexec", "dde", NULL, FALSE, "[open(\"%s\")]", 0x0, 33},
-    {"\"%1\"", "[open(\"%1\")]", "shlexec", "dde", NULL, TRUE, "[open(\"%s\")]", 0x0, 33},
+    {"", "[open(\"%1\")]", "shlexec", "dde", NULL, FALSE, "[open(\"%s\")]", 0x0},
+    {"\"%1\"", "[open(\"%1\")]", "shlexec", "dde", NULL, TRUE, "[open(\"%s\")]", 0x0},
 
     /* Test unquoted %1 in command and ddeexec
      * (test filename has space) */
-    {"%1", "[open(%1)]", "shlexec", "dde", NULL, 2, "[open(%s)]", 0x0, 33},
+    {"%1", "[open(%1)]", "shlexec", "dde", NULL, 2, "[open(%s)]", 0x0},
 
     /* Test ifexec precedence over ddeexec */
-    {"", "[open(\"%1\")]", "shlexec", "dde", "[ifexec(\"%1\")]", FALSE, "[ifexec(\"%s\")]", 0x0, 33},
+    {"", "[open(\"%1\")]", "shlexec", "dde", "[ifexec(\"%1\")]", FALSE, "[ifexec(\"%s\")]", 0x0},
 
     /* Test default DDE topic */
-    {"", "[open(\"%1\")]", "shlexec", NULL, NULL, FALSE, "[open(\"%s\")]", 0x0, 33},
+    {"", "[open(\"%1\")]", "shlexec", NULL, NULL, FALSE, "[open(\"%s\")]", 0x0},
 
     /* Test default DDE application */
-    {"", "[open(\"%1\")]", NULL, "dde", NULL, FALSE, "[open(\"%s\")]", 0x0, 33},
+    {"", "[open(\"%1\")]", NULL, "dde", NULL, FALSE, "[open(\"%s\")]", 0x0},
 
-    {NULL, NULL, NULL, NULL, NULL, 0, 0x0, 0}
+    {NULL, NULL, NULL, NULL, NULL, 0, 0x0}
 };
 
-static DWORD ddeInst;
-static HSZ hszTopic;
-static char ddeExec[MAX_PATH], ddeApplication[MAX_PATH];
-static BOOL denyNextConnection;
-
-static HDDEDATA CALLBACK ddeCb(UINT uType, UINT uFmt, HCONV hConv,
-                                HSZ hsz1, HSZ hsz2, HDDEDATA hData,
-                                ULONG_PTR dwData1, ULONG_PTR dwData2)
+static DWORD WINAPI hooked_WaitForInputIdle(HANDLE process, DWORD timeout)
 {
-    DWORD size = 0;
+    HANDLE dde_ready;
+    DWORD wait_result;
 
-    if (winetest_debug > 2)
-        trace("dde_cb: %04x, %04x, %p, %p, %p, %p, %08lx, %08lx\n",
-              uType, uFmt, hConv, hsz1, hsz2, hData, dwData1, dwData2);
+    dde_ready = CreateEventA(NULL, FALSE, FALSE, "winetest_shlexec_dde_ready");
+    wait_result = WaitForSingleObject(dde_ready, timeout);
+    CloseHandle(dde_ready);
 
-    switch (uType)
+    return wait_result;
+}
+
+/*
+ * WaitForInputIdle() will normally return immediately for console apps. That's
+ * a problem for us because ShellExecute will assume that an app is ready to
+ * receive DDE messages after it has called WaitForInputIdle() on that app.
+ * To work around that we install our own version of WaitForInputIdle() that
+ * will wait for the child to explicitly tell us that it is ready. We do that
+ * by changing the entry for WaitForInputIdle() in the shell32 import address
+ * table.
+ */
+static void hook_WaitForInputIdle(void *new_func)
+{
+    char *base;
+    PIMAGE_NT_HEADERS nt_headers;
+    DWORD import_directory_rva;
+    PIMAGE_IMPORT_DESCRIPTOR import_descriptor;
+
+    base = (char *) GetModuleHandleA("shell32.dll");
+    nt_headers = (PIMAGE_NT_HEADERS)(base + ((PIMAGE_DOS_HEADER) base)->e_lfanew);
+    import_directory_rva = nt_headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+
+    /* Search for the correct imported module by walking the import descriptors */
+    import_descriptor = (PIMAGE_IMPORT_DESCRIPTOR)(base + import_directory_rva);
+    while (U(*import_descriptor).OriginalFirstThunk != 0)
     {
-        case XTYP_CONNECT:
-            if (!DdeCmpStringHandles(hsz1, hszTopic))
+        char *import_module_name;
+
+        import_module_name = base + import_descriptor->Name;
+        if (lstrcmpiA(import_module_name, "user32.dll") == 0 ||
+            lstrcmpiA(import_module_name, "user32") == 0)
+        {
+            PIMAGE_THUNK_DATA int_entry;
+            PIMAGE_THUNK_DATA iat_entry;
+
+            /* The import name table and import address table are two parallel
+             * arrays. We need the import name table to find the imported
+             * routine and the import address table to patch the address, so
+             * walk them side by side */
+            int_entry = (PIMAGE_THUNK_DATA)(base + U(*import_descriptor).OriginalFirstThunk);
+            iat_entry = (PIMAGE_THUNK_DATA)(base + import_descriptor->FirstThunk);
+            while (int_entry->u1.Ordinal != 0)
             {
-                if (denyNextConnection)
-                    denyNextConnection = FALSE;
-                else
+                if (! IMAGE_SNAP_BY_ORDINAL(int_entry->u1.Ordinal))
                 {
-                    size = DdeQueryString(ddeInst, hsz2, ddeApplication, MAX_PATH, CP_WINANSI);
-                    assert(size < MAX_PATH);
-                    return (HDDEDATA)TRUE;
+                    PIMAGE_IMPORT_BY_NAME import_by_name;
+                    import_by_name = (PIMAGE_IMPORT_BY_NAME)(base + int_entry->u1.AddressOfData);
+                    if (lstrcmpA((char *) import_by_name->Name, "WaitForInputIdle") == 0)
+                    {
+                        /* Found the correct routine in the correct imported module. Patch it. */
+                        DWORD old_prot;
+                        VirtualProtect(&iat_entry->u1.Function, sizeof(ULONG_PTR), PAGE_READWRITE, &old_prot);
+                        iat_entry->u1.Function = (ULONG_PTR) new_func;
+                        VirtualProtect(&iat_entry->u1.Function, sizeof(ULONG_PTR), old_prot, &old_prot);
+                        break;
+                    }
                 }
+                int_entry++;
+                iat_entry++;
             }
-            return (HDDEDATA)FALSE;
+            break;
+        }
 
-        case XTYP_EXECUTE:
-            size = DdeGetData(hData, (LPBYTE)ddeExec, MAX_PATH, 0L);
-            assert(size < MAX_PATH);
-            DdeFreeDataHandle(hData);
-            return (HDDEDATA)DDE_FACK;
-
-        default:
-            return NULL;
+        import_descriptor++;
     }
 }
 
-typedef struct
-{
-    char *filename;
-    DWORD threadIdParent;
-} dde_thread_info_t;
-
-static DWORD CALLBACK ddeThread(LPVOID arg)
-{
-    dde_thread_info_t *info = arg;
-    assert(info && info->filename);
-    PostThreadMessage(info->threadIdParent,
-                      WM_QUIT,
-                      shell_execute_ex(SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI, NULL, info->filename, NULL, NULL),
-                      0L);
-    ExitThread(0);
-}
-
-/* ShellExecute won't successfully send DDE commands to console applications after starting them,
- * so we run a DDE server in this application, deny the first connection request to make
- * ShellExecute start the application, and then process the next DDE connection in this application
- * to see the execute command that is sent. */
 static void test_dde(void)
 {
     char filename[MAX_PATH], defApplication[MAX_PATH];
-    HSZ hszApplication;
-    dde_thread_info_t info = { filename, GetCurrentThreadId() };
     const dde_tests_t* test;
     char params[1024];
-    DWORD threadId;
-    MSG msg;
     int rc;
+    HANDLE map;
+    char *shared_block;
 
-    ddeInst = 0;
-    rc = DdeInitializeA(&ddeInst, ddeCb, CBF_SKIP_ALLNOTIFICATIONS | CBF_FAIL_ADVISES |
-                        CBF_FAIL_POKES | CBF_FAIL_REQUESTS, 0L);
-    assert(rc == DMLERR_NO_ERROR);
+    hook_WaitForInputIdle((void *) hooked_WaitForInputIdle);
 
     sprintf(filename, "%s\\test file.sde", tmpdir);
 
     /* Default service is application name minus path and extension */
     strcpy(defApplication, strrchr(argv0, '\\')+1);
     *strchr(defApplication, '.') = 0;
+
+    map = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0,
+                             4096, "winetest_shlexec_dde_map");
+    shared_block = MapViewOfFile(map, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 4096);
 
     test = dde_tests;
     while (test->command)
@@ -1336,29 +1482,31 @@ static void test_dde(void)
         }
         create_test_verb_dde(".sde", "Open", 0, test->command, test->ddeexec,
                              test->application, test->topic, test->ifexec);
-        hszApplication = DdeCreateStringHandleA(ddeInst, test->application ?
-                                                test->application : defApplication, CP_WINANSI);
-        hszTopic = DdeCreateStringHandleA(ddeInst, test->topic ? test->topic : SZDDESYS_TOPIC,
-                                          CP_WINANSI);
-        assert(hszApplication && hszTopic);
-        assert(DdeNameService(ddeInst, hszApplication, 0L, DNS_REGISTER));
-        denyNextConnection = TRUE;
+
+        if (test->application != NULL || test->topic != NULL)
+        {
+            strcpy(shared_block, test->application ? test->application : defApplication);
+            strcpy(shared_block + strlen(shared_block) + 1, test->topic ? test->topic : SZDDESYS_TOPIC);
+        }
+        else
+        {
+            shared_block[0] = '\0';
+            shared_block[1] = '\0';
+        }
         ddeExec[0] = 0;
 
-        assert(CreateThread(NULL, 0, ddeThread, &info, 0, &threadId));
-        while (GetMessage(&msg, NULL, 0, 0)) DispatchMessage(&msg);
-        rc = msg.wParam > 32 ? 33 : msg.wParam;
+        rc = shell_execute_ex(SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI, NULL, filename, NULL, NULL);
         if ((test->todo & 0x1)==0)
         {
-            ok(rc==test->rc, "%s failed: rc=%d err=%d\n", shell_call,
+            ok(32 < rc, "%s failed: rc=%d err=%d\n", shell_call,
                rc, GetLastError());
         }
         else todo_wine
         {
-            ok(rc==test->rc, "%s failed: rc=%d err=%d\n", shell_call,
+            ok(32 < rc, "%s failed: rc=%d err=%d\n", shell_call,
                rc, GetLastError());
         }
-        if (rc == 33)
+        if (32 < rc)
         {
             if ((test->todo & 0x2)==0)
             {
@@ -1382,25 +1530,22 @@ static void test_dde(void)
             if ((test->todo & 0x8) == 0)
             {
                 sprintf(params, test->expectedDdeExec, filename);
-                ok(StrCmpPath(params, ddeExec) == 0,
-                   "ddeexec expected '%s', got '%s'\n", params, ddeExec);
+                okChildPath("ddeExec", params);
             }
             else todo_wine
             {
                 sprintf(params, test->expectedDdeExec, filename);
-                ok(StrCmpPath(params, ddeExec) == 0,
-                   "ddeexec expected '%s', got '%s'\n", params, ddeExec);
+                okChildPath("ddeExec", params);
             }
         }
 
-        assert(DdeNameService(ddeInst, hszApplication, 0L, DNS_UNREGISTER));
-        assert(DdeFreeStringHandle(ddeInst, hszTopic));
-        assert(DdeFreeStringHandle(ddeInst, hszApplication));
         delete_test_association(".sde");
         test++;
     }
 
-    assert(DdeUninitialize(ddeInst));
+    UnmapViewOfFile(shared_block);
+    CloseHandle(map);
+    hook_WaitForInputIdle((void *) WaitForInputIdle);
 }
 
 #define DDE_DEFAULT_APP_VARIANTS 2
@@ -1454,6 +1599,23 @@ static dde_default_app_tests_t dde_default_app_tests[] =
     {NULL, {NULL}, 0, {0}}
 };
 
+typedef struct
+{
+    char *filename;
+    DWORD threadIdParent;
+} dde_thread_info_t;
+
+static DWORD CALLBACK ddeThread(LPVOID arg)
+{
+    dde_thread_info_t *info = arg;
+    assert(info && info->filename);
+    PostThreadMessage(info->threadIdParent,
+                      WM_QUIT,
+                      shell_execute_ex(SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI, NULL, info->filename, NULL, NULL),
+                      0L);
+    ExitThread(0);
+}
+
 static void test_dde_default_app(void)
 {
     char filename[MAX_PATH];
@@ -1465,6 +1627,7 @@ static void test_dde_default_app(void)
     MSG msg;
     int rc, which = 0;
 
+    post_quit_on_execute = FALSE;
     ddeInst = 0;
     rc = DdeInitializeA(&ddeInst, ddeCb, CBF_SKIP_ALLNOTIFICATIONS | CBF_FAIL_ADVISES |
                         CBF_FAIL_POKES | CBF_FAIL_REQUESTS, 0L);
@@ -1491,7 +1654,6 @@ static void test_dde_default_app(void)
         sprintf(params, test->command, tmpdir);
         create_test_verb_dde(".sde", "Open", 1, params, "[test]", NULL,
                              "shlexec", NULL);
-        denyNextConnection = FALSE;
         ddeApplication[0] = 0;
 
         /* No application will be run as we will respond to the first DDE event,

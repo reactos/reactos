@@ -43,6 +43,9 @@
 #endif
 
 /* from pidl.h, not included here: */
+#ifndef PT_CPL             /* Guess, Win7 uses this for CSIDL_CONTROLS */
+#define PT_CPL        0x01 /* no path */
+#endif
 #ifndef PT_GUID
 #define PT_GUID       0x1f /* no path */
 #endif
@@ -93,7 +96,7 @@ static UINT (WINAPI *pGetSystemWow64DirectoryA)(LPSTR,UINT);
 static DLLVERSIONINFO shellVersion = { 0 };
 static LPMALLOC pMalloc;
 static const BYTE guidType[] = { PT_GUID };
-static const BYTE controlPanelType[] = { PT_SHELLEXT, PT_GUID };
+static const BYTE controlPanelType[] = { PT_SHELLEXT, PT_GUID, PT_CPL };
 static const BYTE folderType[] = { PT_FOLDER, PT_FOLDERW };
 static const BYTE favoritesType[] = { PT_FOLDER, PT_FOLDERW, 0, PT_IESPECIAL2 /* Win98 */ };
 static const BYTE folderOrSpecialType[] = { PT_FOLDER, PT_IESPECIAL2 };

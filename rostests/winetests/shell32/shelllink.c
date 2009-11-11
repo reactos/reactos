@@ -107,6 +107,7 @@ static void test_get_set(void)
 {
     HRESULT r;
     IShellLinkA *sl;
+    IShellLinkW *slW = NULL;
     char mypath[MAX_PATH];
     char buffer[INFOTIPSIZE];
     LPITEMIDLIST pidl, tmp_pidl;
@@ -155,6 +156,19 @@ static void test_get_set(void)
     r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), NULL, SLGP_RAWPATH);
     ok(SUCCEEDED(r), "GetPath failed (0x%08x)\n", r);
     ok(*buffer=='\0', "GetPath returned '%s'\n", buffer);
+
+    CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                     &IID_IShellLinkW, (LPVOID*)&slW);
+    if (!slW)
+        skip("SetPath with NULL parameter crashes on Win9x\n");
+    else
+    {
+        IShellLinkW_Release(slW);
+        r = IShellLinkA_SetPath(sl, NULL);
+        ok(r==E_INVALIDARG ||
+           broken(r==S_OK), /* Some Win95 and NT4 */
+           "SetPath failed (0x%08x)\n", r);
+    }
 
     r = IShellLinkA_SetPath(sl, "");
     ok(r==S_OK, "SetPath failed (0x%08x)\n", r);
@@ -651,16 +665,12 @@ static void test_load_save(void)
 static void test_datalink(void)
 {
     static const WCHAR lnk[] = {
-      ':',':','{','9','d','b','1','1','8','6','f','-','4','0','d','f','-','1',
+      ':',':','{','9','d','b','1','1','8','6','e','-','4','0','d','f','-','1',
       '1','d','1','-','a','a','8','c','-','0','0','c','0','4','f','b','6','7',
-      '8','6','3','}',':','{','0','0','0','1','0','4','0','9','-','7','8','E',
-      '1','-','1','1','D','2','-','B','6','0','F','-','0','0','6','0','9','7',
-      'C','9','9','8','E','7','}',':',':','{','9','d','b','1','1','8','6','e',
-      '-','4','0','d','f','-','1','1','d','1','-','a','a','8','c','-','0','0',
-      'c','0','4','f','b','6','7','8','6','3','}',':','2','6',',','!','!','g',
-      'x','s','f','(','N','g',']','q','F','`','H','{','L','s','A','C','C','E',
-      'S','S','F','i','l','e','s','>','p','l','T',']','j','I','{','j','f','(',
-      '=','1','&','L','[','-','8','1','-',']',':',':',0 };
+      '8','6','3','}',':','2','6',',','!','!','g','x','s','f','(','N','g',']',
+      'q','F','`','H','{','L','s','A','C','C','E','S','S','F','i','l','e','s',
+      '>','p','l','T',']','j','I','{','j','f','(','=','1','&','L','[','-','8',
+      '1','-',']',':',':',0 };
     static const WCHAR comp[] = {
       '2','6',',','!','!','g','x','s','f','(','N','g',']','q','F','`','H','{',
       'L','s','A','C','C','E','S','S','F','i','l','e','s','>','p','l','T',']',
@@ -704,6 +714,9 @@ static void test_datalink(void)
     ok( r == E_FAIL, "CopyDataBlock failed\n");
     ok( dar == NULL, "should be null\n");
 
+    r = IShellLinkW_SetPath(sl, NULL);
+    ok(r == E_INVALIDARG, "set path failed\n");
+
     r = IShellLinkW_SetPath(sl, lnk);
     ok(r == S_OK, "set path failed\n");
 
@@ -715,7 +728,8 @@ static void test_datalink(void)
     flags = 0;
     r = IShellLinkDataList_GetFlags( dl, &flags );
     ok( r == S_OK, "GetFlags failed\n");
-    ok( flags == (SLDF_HAS_DARWINID|SLDF_HAS_LOGO3ID),
+    /* SLDF_HAS_LOGO3ID is no longer supported on Vista+, filter it out */
+    ok( (flags & (~ SLDF_HAS_LOGO3ID)) == SLDF_HAS_DARWINID,
         "GetFlags returned wrong flags\n");
 
     dar = NULL;

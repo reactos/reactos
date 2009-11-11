@@ -205,6 +205,7 @@ static void test_setpos(void)
     RECT rc;
     int screen_width, screen_height;
     BOOL ret;
+    int org_bottom1;
 
     screen_width = GetSystemMetrics(SM_CXSCREEN);
     screen_height = GetSystemMetrics(SM_CYSCREEN);
@@ -336,6 +337,9 @@ static void test_setpos(void)
 
     /* removing windows[0] will cause windows[1] to move down into its space */
     expected_bottom = max(windows[0].allocated_rect.bottom, windows[1].allocated_rect.bottom);
+    org_bottom1 = windows[1].allocated_rect.bottom;
+    ok(windows[0].allocated_rect.bottom > windows[1].allocated_rect.bottom,
+        "Expected windows[0] to be lower than windows[1]\n");
 
     abd.hWnd = windows[0].hwnd;
     windows[0].to_be_deleted = TRUE;
@@ -346,7 +350,12 @@ static void test_setpos(void)
 
     do_events_until(got_expected_bottom);
 
-    ok(windows[1].allocated_rect.bottom == expected_bottom, "windows[1]'s bottom is %i, expected %i\n", windows[1].allocated_rect.bottom, expected_bottom);
+    if (windows[1].allocated_rect.bottom == org_bottom1)
+        win_skip("Some broken Vista boxes don't move the higher appbar down\n");
+    else
+        ok(windows[1].allocated_rect.bottom == expected_bottom,
+            "windows[1]'s bottom is %i, expected %i\n",
+            windows[1].allocated_rect.bottom, expected_bottom);
 
     test_window_rects(1, 2);
 
