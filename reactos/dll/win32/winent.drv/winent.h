@@ -19,14 +19,12 @@ enum ntdrv_escape_codes
 struct ntdrv_escape_set_drawable
 {
     enum ntdrv_escape_codes  code;         /* escape code (X11DRV_SET_DRAWABLE) */
-    //Drawable                 drawable;     /* X drawable */
-    int                      mode;         /* ClipByChildren or IncludeInferiors */
+    BOOL                     clip_children;/* ClipByChildren or IncludeInferiors */
     RECT                     dc_rect;      /* DC rectangle relative to drawable */
     RECT                     drawable_rect;/* Drawable rectangle relative to screen */
-    //XID                      fbconfig_id;  /* fbconfig id used by the GL drawable */
-    //Drawable                 gl_drawable;  /* GL drawable */
-    //Pixmap                   pixmap;       /* Pixmap for a GLXPixmap gl_drawable */
+    HWND                     hwnd;         /* hwnd of which the GetDC is performed */
     int                      gl_copy;      /* whether the GL contents need explicit copying */
+    BOOL                     release;      /* whether the DC is acquired or released */
 };
 
 /* ntdrv private window data */

@@ -9,6 +9,11 @@
 /* INCLUDES ******************************************************************/
 
 #include <win32k.h>
+
+#include "object.h"
+#include "handle.h"
+#include "user.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -143,6 +148,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
 
     /* Create an empty combined clipping region */
     pNewDC->CombinedClip = EngCreateClip();
+    pNewDC->Clipping = create_empty_region();
 
     /* Set default palette */
     pNewDC->hPalette = hSystemPal;
@@ -447,6 +453,36 @@ COLORREF APIENTRY RosGdiSetDCPenColor( HDC physDev, COLORREF crColor )
     return 0;
 }
 
+VOID APIENTRY RosGdiUpdateClipping(PDC pDC)
+{
+    struct region *inter;
+    if (!pDC->pWindow)
+    {
+        /* Easy case, just copy the existing clipping region */
+        if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
+        pDC->CombinedClip = IntEngCreateClipRegionFromRegion(pDC->Clipping);
+    }
+    else
+    {
+        /* Intersect with window's visibility */
+        inter = create_empty_region();
+        copy_region(inter, pDC->Clipping);
+
+        /* Acquire SWM lock */
+        SwmAcquire();
+
+        /* Intersect current clipping region and window's visible region */
+        intersect_region(inter, inter, pDC->pWindow->Visible);
+
+        /* Release SWM lock */
+        SwmRelease();
+
+        if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
+        pDC->CombinedClip = IntEngCreateClipRegionFromRegion(inter);
+        free_region(inter);
+    }
+}
+
 void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, PRECTL rcBounds )
 {
     PDC pDC;
@@ -510,8 +546,8 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
                       pDC->rcDcRect.top + pDC->rcVport.top);
 
     /* Delete old clipping region */
-    if (pDC->CombinedClip)
-        IntEngDeleteClipRegion(pDC->CombinedClip);
+    if (pDC->Clipping)
+        free_region(pDC->Clipping);
 
     if (count == 0)
     {
@@ -534,12 +570,12 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
         RECTL_bIntersectRect(&rcSafeBounds, &rcSafeBounds, &rcSurface);
 
         /* Set the clipping object */
-        pDC->CombinedClip = IntEngCreateClipRegion(1, &rcSafeBounds, &rcSafeBounds);
+        pDC->Clipping = create_region_from_rects(&rcSafeBounds, 1);
     }
     else
     {
         /* Set the clipping object */
-        pDC->CombinedClip = IntEngCreateClipRegion(count, pSafeRects, &rcSafeBounds);
+        pDC->Clipping = create_region_from_rects(pSafeRects, count);
     }
 
     DPRINT("RosGdiSetDeviceClipping() for DC %x, bounding rect (%d,%d)-(%d, %d)\n",
@@ -550,6 +586,9 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     {
         DPRINT("%d: (%d,%d)-(%d, %d)\n", i, pSafeRects[i].left, pSafeRects[i].top, pSafeRects[i].right, pSafeRects[i].bottom);
     }
+
+    /* Update the combined clipping */
+    RosGdiUpdateClipping(pDC);
 
     /* Release the object */
     DC_Unlock(pDC);
@@ -636,6 +675,40 @@ VOID APIENTRY RosGdiGetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     {
     }
     _SEH2_END;
+
+    /* Release the object */
+    DC_Unlock(pDC);
+}
+
+VOID APIENTRY RosGdiGetDC(HDC physDev, HWND hwnd, BOOL clipChildren)
+{
+    PDC pDC;
+
+    /* Acquire SWM lock before locking the DC */
+    SwmAcquire();
+
+    /* Get a pointer to the DC */
+    pDC = DC_Lock(physDev);
+
+    /* Get a pointer to this window */
+    pDC->pWindow = SwmFindByHwnd(hwnd);
+
+    /* Release the object */
+    DC_Unlock(pDC);
+
+    /* Release SWM lock */
+    SwmRelease();
+}
+
+VOID APIENTRY RosGdiReleaseDC(HDC physDev)
+{
+    PDC pDC;
+
+    /* Get a pointer to the DC */
+    pDC = DC_Lock(physDev);
+
+    /* No window clipping is to be performed */
+    pDC->pWindow = NULL;
 
     /* Release the object */
     DC_Unlock(pDC);

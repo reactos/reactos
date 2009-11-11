@@ -39,6 +39,7 @@ RosGdiEnumDeviceFonts              4
 RosGdiGetCharWidth                 4
 RosGdiGetDeviceCaps                2
 RosGdiGetDeviceGammaRamp           2
+RosGdiGetDC                        3
 RosGdiGetICMProfile                3
 RosGdiGetNearestColor              2
 RosGdiGetPixelFormat               1
@@ -60,6 +61,7 @@ RosGdiPolyline                     3
 RosGdiRealizeDefaultPalette        1
 RosGdiRealizePalette               3
 RosGdiRectangle                    2
+RosGdiReleaseDC                    1
 RosGdiRoundRect                    7
 RosGdiSwapBuffers                  1
 RosGdiUnrealizePalette             1
@@ -83,6 +85,7 @@ RosUserToUnicodeEx                 7
 RosUserMapVirtualKeyEx             4
 RosUserGetAsyncKeyState            1
 SwmAddWindow                       2
+SwmAddDesktopWindow                3
 SwmRemoveWindow                    1
 SwmSetForeground                   1
 SwmPosChanging                     2

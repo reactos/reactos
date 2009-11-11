@@ -140,6 +140,9 @@ VOID NTAPI
 SwmAddWindow(HWND hWnd, RECT *WindowRect);
 
 VOID NTAPI
+SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height);
+
+VOID NTAPI
 SwmRemoveWindow(HWND hWnd);
 
 VOID NTAPI

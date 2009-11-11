@@ -20,7 +20,9 @@ typedef struct _DC
     POINT        ptBrushOrg;
 
     /* Combined clipping region */
-    CLIPOBJ *CombinedClip;
+    struct region *Clipping;
+    CLIPOBJ      *CombinedClip;
+    PSWM_WINDOW  pWindow;
 
     /* Transformations */
     MATRIX       mxWorldToDevice;

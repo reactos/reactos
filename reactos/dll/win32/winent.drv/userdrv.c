@@ -458,6 +458,8 @@ BOOL CDECL RosDrv_CreateDesktopWindow( HWND hwnd )
 
     TRACE("RosDrv_CreateDesktopWindow(%x), w %d h %d\n", hwnd, width, height);
 
+    SwmAddDesktopWindow(hwnd, width, height);
+
     if (!width && !height)  /* not initialized yet */
     {
         SERVER_START_REQ( set_window_pos )
@@ -490,27 +492,25 @@ void CDECL RosDrv_DestroyWindow( HWND hwnd )
     NTDRV_destroy_win_data( hwnd );
 }
 
-void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top_win, const RECT *win_rect,
+void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
                                  const RECT *top_rect, DWORD flags )
 {
     struct ntdrv_escape_set_drawable escape;
-    //struct ntdrv_win_data *data = X11DRV_get_win_data( hwnd );
+    struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
 
     escape.code        = NTDRV_SET_DRAWABLE;
-    //escape.mode        = IncludeInferiors;
-    //escape.fbconfig_id = 0;
-    //escape.gl_drawable = 0;
-    //escape.pixmap      = 0;
+    escape.clip_children = FALSE;
     escape.gl_copy     = FALSE;
+    escape.hwnd        = hwnd;
+    escape.release     = FALSE;
 
-#if 0
-    if (top == hwnd && data && IsIconic( hwnd ) && data->icon_window)
+    if (top == hwnd && data && IsIconic( hwnd ) /*&& data->icon_window*/)
     {
         //escape.drawable = data->icon_window;
     }
     else if (top == hwnd)
     {
-        escape.fbconfig_id = data ? data->fbconfig_id : (XID)GetPropA( hwnd, fbconfig_id_prop );
+        //escape.fbconfig_id = data ? data->fbconfig_id : (XID)GetPropA( hwnd, fbconfig_id_prop );
         /* GL draws to the client area even for window DCs */
         /*escape.gl_drawable = data ? data->client_window : X11DRV_get_client_window( hwnd );
         if (flags & DCX_WINDOW)
@@ -525,9 +525,9 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top_win, const RECT *win_rect,
         //escape.gl_drawable = data ? data->gl_drawable : (Drawable)GetPropA( hwnd, gl_drawable_prop );
         //escape.pixmap      = data ? data->pixmap : (Pixmap)GetPropA( hwnd, pixmap_prop );
         //escape.gl_copy     = (escape.gl_drawable != 0);
-        if (flags & DCX_CLIPCHILDREN) escape.mode = ClipByChildren;
+
+        if (flags & DCX_CLIPCHILDREN) escape.clip_children = TRUE;
     }
-#endif
 
     escape.dc_rect.left         = win_rect->left - top_rect->left;
     escape.dc_rect.top          = win_rect->top - top_rect->top;
@@ -544,7 +544,7 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top_win, const RECT *win_rect,
 DWORD CDECL RosDrv_MsgWaitForMultipleObjectsEx( DWORD count, const HANDLE *handles, DWORD timeout,
                                                         DWORD mask, DWORD flags )
 {
-    TRACE("WaitForMultipleObjectsEx(%d %p %d %x %x %x\n", count, handles, timeout, mask, flags);
+    //TRACE("WaitForMultipleObjectsEx(%d %p %d %x %x %x\n", count, handles, timeout, mask, flags);
 
     if (!count && !timeout) return WAIT_TIMEOUT;
     return WaitForMultipleObjectsEx( count, handles, flags & MWMO_WAITALL,
@@ -557,6 +557,8 @@ void CDECL RosDrv_ReleaseDC( HWND hwnd, HDC hdc )
 
     escape.code        = NTDRV_SET_DRAWABLE;
     escape.gl_copy     = FALSE;
+    escape.hwnd        = hwnd;
+    escape.release     = TRUE;
 
     escape.dc_rect.left         = 0;
     escape.dc_rect.top          = 0;
@@ -840,8 +842,8 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
 
     if (!data) return;
 
-    TRACE( "win %x pos changed. new vis rect %s, old whole rect %s\n",
-           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect) );
+    TRACE( "win %x pos changed. new vis rect %s, old whole rect %s, swp_flags %x\n",
+           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect), swp_flags );
 
     old_whole_rect  = data->whole_rect;
     old_client_rect = data->client_rect;
@@ -864,15 +866,17 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
             old_client_rect.bottom - data->client_rect.bottom == y_offset &&
             !memcmp( &valid_rects[0], &data->client_rect, sizeof(RECT) ))
         {
-             //move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
+            //move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
             SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
+            FIXME("change1\n");
         }
         else
         {
-            //move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
+            move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
+            FIXME("change2\n");
         }
     }
-
+// visible: 0x1843, hide: 0x1883. 1843 = 1 + 2 + 64 + 2048 + 4096
     //RosDrv_UpdateZOrder(hwnd, (RECT*)visible_rect);
 }
 
