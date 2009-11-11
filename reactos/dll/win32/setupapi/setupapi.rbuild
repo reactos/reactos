@@ -5,6 +5,10 @@
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="pnp_client">.</include>
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="wcsnicmp">_wcsnicmp</define>
+
 	<define name="_SETUPAPI_" />
 	<library>pnp_client</library>
 	<library>uuid</library>

@@ -1,13 +1,18 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="mshtml" type="win32dll" baseaddress="${BASEADDRESS_MSHTML}" installbase="system32" installname="mshtml.dll" allowwarnings="true">
+<module name="mshtml" type="win32dll" baseaddress="${BASEADDRESS_MSHTML}" installbase="system32" installname="mshtml.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="mshtml.spec" />
 	<include base="mshtml">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="open">_open</define>
+	<define name="close">_close</define>
+
 	<file>conpoint.c</file>
 	<file>dispex.c</file>
 	<file>editor.c</file>
