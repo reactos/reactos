@@ -135,42 +135,42 @@ extern "C" {
 #define WAIT_CHILD _WAIT_CHILD
 #define WAIT_GRANDCHILD _WAIT_GRANDCHILD
 
-  intptr_t __cdecl cwait(int *_TermStat,intptr_t _ProcHandle,int _Action);
+  _CRTIMP intptr_t __cdecl cwait(int *_TermStat,intptr_t _ProcHandle,int _Action);
 #ifdef __GNUC__
-  int __cdecl execl(const char *_Filename,const char *_ArgList,...);
-  int __cdecl execle(const char *_Filename,const char *_ArgList,...);
-  int __cdecl execlp(const char *_Filename,const char *_ArgList,...);
-  int __cdecl execlpe(const char *_Filename,const char *_ArgList,...);
+  _CRTIMP int __cdecl execl(const char *_Filename,const char *_ArgList,...);
+  _CRTIMP int __cdecl execle(const char *_Filename,const char *_ArgList,...);
+  _CRTIMP int __cdecl execlp(const char *_Filename,const char *_ArgList,...);
+  _CRTIMP int __cdecl execlpe(const char *_Filename,const char *_ArgList,...);
 #else
-    intptr_t __cdecl execl(const char *_Filename,const char *_ArgList,...);
-  intptr_t __cdecl execle(const char *_Filename,const char *_ArgList,...);
-  intptr_t __cdecl execlp(const char *_Filename,const char *_ArgList,...);
-  intptr_t __cdecl execlpe(const char *_Filename,const char *_ArgList,...);
+  _CRTIMP intptr_t __cdecl execl(const char *_Filename,const char *_ArgList,...);
+  _CRTIMP intptr_t __cdecl execle(const char *_Filename,const char *_ArgList,...);
+  _CRTIMP intptr_t __cdecl execlp(const char *_Filename,const char *_ArgList,...);
+  _CRTIMP intptr_t __cdecl execlpe(const char *_Filename,const char *_ArgList,...);
 #endif
-  intptr_t __cdecl spawnl(int,const char *_Filename,const char *_ArgList,...);
-  intptr_t __cdecl spawnle(int,const char *_Filename,const char *_ArgList,...);
-  intptr_t __cdecl spawnlp(int,const char *_Filename,const char *_ArgList,...);
-  intptr_t __cdecl spawnlpe(int,const char *_Filename,const char *_ArgList,...);
-  int __cdecl getpid(void);
+  _CRTIMP intptr_t __cdecl spawnl(int,const char *_Filename,const char *_ArgList,...);
+  _CRTIMP intptr_t __cdecl spawnle(int,const char *_Filename,const char *_ArgList,...);
+  _CRTIMP intptr_t __cdecl spawnlp(int,const char *_Filename,const char *_ArgList,...);
+  _CRTIMP intptr_t __cdecl spawnlpe(int,const char *_Filename,const char *_ArgList,...);
+  _CRTIMP int __cdecl getpid(void);
 #ifdef __GNUC__
   /* Those methods are predefined by gcc builtins to return int. So to prevent
      stupid warnings, define them in POSIX way.  This is save, because those
      methods do not return in success case, so that the return value is not
      really dependent to its scalar width.  */
-  int __cdecl execv(const char *_Filename,char *const _ArgList[]);
-  int __cdecl execve(const char *_Filename,char *const _ArgList[],char *const _Env[]);
-  int __cdecl execvp(const char *_Filename,char *const _ArgList[]);
-  int __cdecl execvpe(const char *_Filename,char *const _ArgList[],char *const _Env[]);
+  _CRTIMP int __cdecl execv(const char *_Filename,char *const _ArgList[]);
+  _CRTIMP int __cdecl execve(const char *_Filename,char *const _ArgList[],char *const _Env[]);
+  _CRTIMP int __cdecl execvp(const char *_Filename,char *const _ArgList[]);
+  _CRTIMP int __cdecl execvpe(const char *_Filename,char *const _ArgList[],char *const _Env[]);
 #else
-  intptr_t __cdecl execv(const char *_Filename,char *const _ArgList[]);
-  intptr_t __cdecl execve(const char *_Filename,char *const _ArgList[],char *const _Env[]);
-  intptr_t __cdecl execvp(const char *_Filename,char *const _ArgList[]);
-  intptr_t __cdecl execvpe(const char *_Filename,char *const _ArgList[],char *const _Env[]);
+  _CRTIMP intptr_t __cdecl execv(const char *_Filename,char *const _ArgList[]);
+  _CRTIMP intptr_t __cdecl execve(const char *_Filename,char *const _ArgList[],char *const _Env[]);
+  _CRTIMP intptr_t __cdecl execvp(const char *_Filename,char *const _ArgList[]);
+  _CRTIMP intptr_t __cdecl execvpe(const char *_Filename,char *const _ArgList[],char *const _Env[]);
 #endif
-  intptr_t __cdecl spawnv(int,const char *_Filename,char *const _ArgList[]);
-  intptr_t __cdecl spawnve(int,const char *_Filename,char *const _ArgList[],char *const _Env[]);
-  intptr_t __cdecl spawnvp(int,const char *_Filename,char *const _ArgList[]);
-  intptr_t __cdecl spawnvpe(int,const char *_Filename,char *const _ArgList[],char *const _Env[]);
+  _CRTIMP intptr_t __cdecl spawnv(int,const char *_Filename,char *const _ArgList[]);
+  _CRTIMP intptr_t __cdecl spawnve(int,const char *_Filename,char *const _ArgList[],char *const _Env[]);
+  _CRTIMP intptr_t __cdecl spawnvp(int,const char *_Filename,char *const _ArgList[]);
+  _CRTIMP intptr_t __cdecl spawnvpe(int,const char *_Filename,char *const _ArgList[],char *const _Env[]);
 #endif
 
 #ifdef __cplusplus
