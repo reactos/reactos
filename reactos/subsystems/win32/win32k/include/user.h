@@ -64,6 +64,14 @@ struct desktop
     unsigned int         users;          /* processes and threads using this desktop */
 };
 
+struct region
+{
+    int size;
+    int num_rects;
+    rectangle_t *rects;
+    rectangle_t extents;
+};
+
 /* user handles functions */
 
 extern user_handle_t alloc_user_handle( void *ptr, enum user_object type );
@@ -105,6 +113,7 @@ extern void post_win_event( PTHREADINFO thread, unsigned int event,
 
 extern struct region *create_empty_region(void);
 extern struct region *create_region_from_req_data( const void *data, data_size_t size );
+extern struct region *create_region_from_rects( const void *data, unsigned long count );
 extern void free_region( struct region *region );
 extern void set_region_rect( struct region *region, const rectangle_t *rect );
 extern rectangle_t *get_region_data( const struct region *region, data_size_t max_size,

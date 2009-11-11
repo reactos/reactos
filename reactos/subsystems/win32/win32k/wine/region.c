@@ -84,14 +84,6 @@ SOFTWARE.
 #define NDEBUG
 #include <debug.h>
 
-struct region
-{
-    int size;
-    int num_rects;
-    rectangle_t *rects;
-    rectangle_t extents;
-};
-
 
 #define RGN_DEFAULT_RECTS 2
 
@@ -611,6 +603,39 @@ struct region *create_region_from_req_data( const void *data, data_size_t size )
     region->size = alloc_rects;
     region->num_rects = nb_rects;
     memcpy( region->rects, rects, nb_rects * sizeof(*rects) );
+    set_region_extents( region );
+    return region;
+}
+
+/* create a region from request data */
+struct region *create_region_from_rects( const void *data, unsigned long nb_rects )
+{
+    unsigned int alloc_rects;
+    struct region *region;
+    const RECTL *rects = data;
+    int i;
+
+    /* special case: empty region can be specified by a single all-zero rectangle */
+    if (nb_rects == 1 && rects->left == 0 && rects->top == 0 &&
+        rects->right == 0 && rects->bottom == 0) nb_rects = 0;
+
+    if (!(region = mem_alloc( sizeof(*region) ))) return NULL;
+
+    alloc_rects = max( nb_rects, RGN_DEFAULT_RECTS );
+    if (!(region->rects = mem_alloc( alloc_rects * sizeof(*region->rects) )))
+    {
+        ExFreePool( region );
+        return NULL;
+    }
+    region->size = alloc_rects;
+    region->num_rects = nb_rects;
+    for (i=0; i<region->num_rects; i++)
+    {
+        region->rects[i].left = rects[i].left;
+        region->rects[i].top = rects[i].top;
+        region->rects[i].right = rects[i].right;
+        region->rects[i].bottom = rects[i].bottom;
+    }
     set_region_extents( region );
     return region;
 }
