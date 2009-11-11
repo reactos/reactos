@@ -37,12 +37,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 static const WCHAR cszTargetDir[] = {'T','A','R','G','E','T','D','I','R',0};
 static const WCHAR cszDatabase[]={'D','A','T','A','B','A','S','E',0};
 
-const WCHAR cszSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
-const WCHAR cszSOURCEDIR[] = {'S','O','U','R','C','E','D','I','R',0};
-const WCHAR cszRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
-const WCHAR cszbs[]={'\\',0};
-const WCHAR szLocalSid[] = {'S','-','1','-','5','-','1','8',0};
-
 LPWSTR build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name )
 {
     LPWSTR SystemFolder, dest, FilePath;
@@ -724,7 +718,7 @@ LPWSTR build_directory_name(DWORD count, ...)
             continue;
         strcatW(dir, str);
         if( ((i+1)!=count) && dir[strlenW(dir)-1]!='\\')
-            strcatW(dir, cszbs);
+            strcatW(dir, szBackSlash);
     }
     return dir;
 }

@@ -73,7 +73,7 @@ static LPWSTR query_http_info(HttpProtocol *This, DWORD option)
 #define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(HttpProtocol, base, iface)
 
 static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD request_flags,
-                                         IInternetBindInfo *bind_info)
+        HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
     HttpProtocol *This = ASYNCPROTOCOL_THIS(prot);
     LPWSTR addl_header = NULL, post_cookie = NULL, optional = NULL;
@@ -106,7 +106,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
     host = heap_strndupW(url_comp.lpszHostName, url_comp.dwHostNameLength);
     user = heap_strndupW(url_comp.lpszUserName, url_comp.dwUserNameLength);
     pass = heap_strndupW(url_comp.lpszPassword, url_comp.dwPasswordLength);
-    This->base.connection = InternetConnectW(This->base.internet, host, url_comp.nPort, user, pass,
+    This->base.connection = InternetConnectW(internet_session, host, url_comp.nPort, user, pass,
             INTERNET_SERVICE_HTTP, This->https ? INTERNET_FLAG_SECURE : 0, (DWORD_PTR)&This->base);
     heap_free(pass);
     heap_free(user);

@@ -548,33 +548,8 @@ BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
 
 /* Shell Desktop functions */
 
-#undef INTERFACE
-#define INTERFACE IShellDesktop
-DECLARE_INTERFACE_(IShellDesktop,IUnknown)
-{
-    /*** IUnknown ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IShellDesktopTray ***/
-    STDMETHOD_(ULONG,GetState)(THIS) PURE;
-    STDMETHOD(GetTrayWindow)(THIS_ HWND*) PURE;
-    STDMETHOD(RegisterDesktopWindow)(THIS_ HWND) PURE;
-    STDMETHOD(Unknown)(THIS_ DWORD,DWORD) PURE;
-};
-#undef INTERFACE
-
-#define IShellDesktop_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IShellDesktop_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IShellDesktop_Release(T) (T)->lpVtbl->Release(T)
-#define IShellDesktop_GetState(T) (T)->lpVtbl->GetState(T)
-#define IShellDesktop_GetTrayWindow(T,a) (T)->lpVtbl->GetTrayWindow(T,a)
-#define IShellDesktop_RegisterDesktopWindow(T,a) (T)->lpVtbl->RegisterDesktopWindow(T,a)
-#define IShellDesktop_Unknown(T,a,b) (T)->lpVtbl->Unknown(T,a,b)
-
 #define WM_GETISHELLBROWSER (WM_USER+7)
 
-HANDLE WINAPI SHCreateDesktop(IShellDesktop*);
 BOOL WINAPI SHDesktopMessageLoop(HANDLE);
 
 #define CSIDL_FOLDER_MASK	0x00ff

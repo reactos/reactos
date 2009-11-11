@@ -311,10 +311,10 @@ HTMLElement *HTMLScriptElement_Create(nsIDOMHTMLElement *nselem)
     HTMLScriptElement *ret = heap_alloc_zero(sizeof(HTMLScriptElement));
     nsresult nsres;
 
-    HTMLElement_Init(&ret->element);
-
     ret->lpHTMLScriptElementVtbl = &HTMLScriptElementVtbl;
     ret->element.node.vtbl = &HTMLScriptElementImplVtbl;
+
+    HTMLElement_Init(&ret->element, NULL);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLScriptElement, (void**)&ret->nsscript);
     if(NS_FAILED(nsres))

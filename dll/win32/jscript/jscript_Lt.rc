@@ -27,6 +27,7 @@ STRINGTABLE DISCARDABLE
 {
     IDS_TO_PRIMITIVE        "Klaida keičiant objektą į primityvų tipą"
     IDS_INVALID_CALL_ARG    "Netinkamas kreipinys į procedūrą ar argumentas"
+    IDS_CREATE_OBJ_ERROR    "Automatizacijos serveriui nepavyko sukurti objekto"
     IDS_NO_PROPERTY         "Objektas nepalaiko šios savybės ar metodo"
     IDS_ARG_NOT_OPT         "Argumentas nėra neprivalomas"
     IDS_SYNTAX_ERROR        "Sintaksės klaida"
@@ -37,8 +38,12 @@ STRINGTABLE DISCARDABLE
     IDS_NOT_FUNC            "Tikėtasi funkcijos"
     IDS_NOT_DATE            "„[objektas]“ nėra datos objektas"
     IDS_NOT_NUM             "Tikėtasi skaičiaus"
+    IDS_OBJECT_EXPECTED     "Tikėtasi objekto"
     IDS_ILLEGAL_ASSIGN      "Neleistinas priskyrimas"
     IDS_UNDEFINED           "„|“ yra neapibrėžtas"
     IDS_NOT_BOOL            "Tikėtasi loginio objekto"
+    IDS_JSCRIPT_EXPECTED    "Tikėtasi JScript objekto"
+    IDS_REGEXP_SYNTAX_ERROR "Sintaksės klaida reguliariajame reiškinyje"
     IDS_INVALID_LENGTH      "Masyvo dydis turi būti teigiamas sveikasis skaičius"
+    IDS_ARRAY_EXPECTED      "Tikėtasi masyvo objekto"
 }

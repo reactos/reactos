@@ -125,7 +125,8 @@ struct arb_ps_np2fixup_info
 struct arb_ps_compile_args
 {
     struct ps_compile_args          super;
-    DWORD                           bools; /* WORD is enough, use DWORD for alignment */
+    WORD                            bools;
+    WORD                            clip;  /* only a boolean, use a WORD for alignment */
     unsigned char                   loop_ctrl[MAX_CONST_I][3];
 };
 
@@ -276,10 +277,11 @@ static unsigned int shader_arb_load_constantsF(IWineD3DBaseShaderImpl *This, con
         GLuint target_type, unsigned int max_constants, const float *constants, char *dirty_consts)
 {
     local_constant* lconst;
-    DWORD i = 0, j;
+    DWORD i, j;
     unsigned int ret;
 
-    if (TRACE_ON(d3d_shader)) {
+    if (TRACE_ON(d3d_constants))
+    {
         for(i = 0; i < max_constants; i++) {
             if(!dirty_consts[i]) continue;
             TRACE_(d3d_constants)("Loading constants %i: %f, %f, %f, %f\n", i,
@@ -287,6 +289,9 @@ static unsigned int shader_arb_load_constantsF(IWineD3DBaseShaderImpl *This, con
                         constants[i * 4 + 2], constants[i * 4 + 3]);
         }
     }
+
+    i = 0;
+
     /* In 1.X pixel shaders constants are implicitly clamped in the range [-1;1] */
     if (target_type == GL_FRAGMENT_PROGRAM_ARB && This->baseShader.reg_maps.shader_version.major == 1)
     {
@@ -3237,7 +3242,7 @@ static GLuint shader_arb_generate_pshader(IWineD3DPixelShaderImpl *This, struct 
     struct shader_arb_ctx_priv priv_ctx;
     BOOL dcl_tmp = args->super.srgb_correction, dcl_td = FALSE;
     BOOL want_nv_prog = FALSE;
-    struct arb_pshader_private *shader_priv = This->backend_priv;
+    struct arb_pshader_private *shader_priv = This->baseShader.backend_data;
     GLint errPos;
     DWORD map;
 
@@ -3496,7 +3501,7 @@ static GLuint shader_arb_generate_pshader(IWineD3DPixelShaderImpl *This, struct 
         next_local += fixup->super.num_consts;
     }
 
-    if (shader_priv->clipplane_emulation != ~0U)
+    if (shader_priv->clipplane_emulation != ~0U && args->clip)
     {
         shader_addline(buffer, "KIL fragment.texcoord[%u];\n", shader_priv->clipplane_emulation);
     }
@@ -3965,13 +3970,14 @@ static struct arb_ps_compiled_shader *find_arb_pshader(IWineD3DPixelShaderImpl *
     struct arb_pshader_private *shader_data;
     GLuint ret;
 
-    if(!shader->backend_priv) {
+    if (!shader->baseShader.backend_data)
+    {
         IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *) shader->baseShader.device;
         const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
         struct shader_arb_priv *priv = device->shader_priv;
 
-        shader->backend_priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*shader_data));
-        shader_data = shader->backend_priv;
+        shader->baseShader.backend_data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*shader_data));
+        shader_data = shader->baseShader.backend_data;
         shader_data->clamp_consts = shader->baseShader.reg_maps.shader_version.major == 1;
 
         if(shader->baseShader.reg_maps.shader_version.major < 3) shader_data->input_signature_idx = ~0;
@@ -3986,7 +3992,7 @@ static struct arb_ps_compiled_shader *find_arb_pshader(IWineD3DPixelShaderImpl *
         else
             shader_data->clipplane_emulation = ~0U;
     }
-    shader_data = shader->backend_priv;
+    shader_data = shader->baseShader.backend_data;
 
     /* Usually we have very few GL shaders for each d3d shader(just 1 or maybe 2),
      * so a linear search is more performant than a hashmap or a binary search
@@ -4060,10 +4066,11 @@ static struct arb_vs_compiled_shader *find_arb_vshader(IWineD3DVertexShaderImpl 
     GLuint ret;
     const struct wined3d_gl_info *gl_info = &((IWineD3DDeviceImpl *)shader->baseShader.device)->adapter->gl_info;
 
-    if(!shader->backend_priv) {
-        shader->backend_priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*shader_data));
+    if (!shader->baseShader.backend_data)
+    {
+        shader->baseShader.backend_data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*shader_data));
     }
-    shader_data = shader->backend_priv;
+    shader_data = shader->baseShader.backend_data;
 
     /* Usually we have very few GL shaders for each d3d shader(just 1 or maybe 2),
      * so a linear search is more performant than a hashmap or a binary search
@@ -4128,6 +4135,20 @@ static inline void find_arb_ps_compile_args(IWineD3DPixelShaderImpl *shader, IWi
         if(stateblock->pixelShaderConstantB[i]) args->bools |= ( 1 << i);
     }
 
+    /* Only enable the clip plane emulation KIL if at least one clipplane is enabled. The KIL instruction
+     * is quite expensive because it forces the driver to disable early Z discards. It is cheaper to
+     * duplicate the shader than have a no-op KIL instruction in every shader
+     */
+    if((!((IWineD3DDeviceImpl *) shader->baseShader.device)->vs_clipping) && use_vs(stateblock) &&
+       stateblock->renderState[WINED3DRS_CLIPPING] && stateblock->renderState[WINED3DRS_CLIPPLANEENABLE])
+    {
+        args->clip = 1;
+    }
+    else
+    {
+        args->clip = 0;
+    }
+
     /* Skip if unused or local, or supported natively */
     int_skip = ~shader->baseShader.reg_maps.integer_constants | shader->baseShader.reg_maps.local_int_consts;
     if(int_skip == 0xffff || GL_SUPPORT(NV_FRAGMENT_PROGRAM_OPTION))
@@ -4166,7 +4187,7 @@ static inline void find_arb_vs_compile_args(IWineD3DVertexShaderImpl *shader, IW
     if(use_ps(stateblock))
     {
         IWineD3DPixelShaderImpl *ps = (IWineD3DPixelShaderImpl *) stateblock->pixelShader;
-        struct arb_pshader_private *shader_priv = ps->backend_priv;
+        struct arb_pshader_private *shader_priv = ps->baseShader.backend_data;
         args->ps_signature = shader_priv->input_signature_idx;
 
         args->boolclip.clip_control[0] = shader_priv->clipplane_emulation + 1;
@@ -4262,9 +4283,9 @@ static void shader_arb_select(const struct wined3d_context *context, BOOL usePS,
         /* Pixel Shader 1.x constants are clamped to [-1;1], Pixel Shader 2.0 constants are not. If switching between
          * a 1.x and newer shader, reload the first 8 constants
          */
-        if(priv->last_ps_const_clamped != ((struct arb_pshader_private *) ps->backend_priv)->clamp_consts)
+        if(priv->last_ps_const_clamped != ((struct arb_pshader_private *)ps->baseShader.backend_data)->clamp_consts)
         {
-            priv->last_ps_const_clamped = ((struct arb_pshader_private *) ps->backend_priv)->clamp_consts;
+            priv->last_ps_const_clamped = ((struct arb_pshader_private *)ps->baseShader.backend_data)->clamp_consts;
             This->highest_dirty_ps_const = max(This->highest_dirty_ps_const, 8);
             for(i = 0; i < 8; i++)
             {
@@ -4380,7 +4401,7 @@ static void shader_arb_destroy(IWineD3DBaseShader *iface) {
     if (shader_is_pshader_version(baseShader->baseShader.reg_maps.shader_version.type))
     {
         IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *) iface;
-        struct arb_pshader_private *shader_data = This->backend_priv;
+        struct arb_pshader_private *shader_data = This->baseShader.backend_data;
         UINT i;
 
         if(!shader_data) return; /* This can happen if a shader was never compiled */
@@ -4395,10 +4416,10 @@ static void shader_arb_destroy(IWineD3DBaseShader *iface) {
         LEAVE_GL();
         HeapFree(GetProcessHeap(), 0, shader_data->gl_shaders);
         HeapFree(GetProcessHeap(), 0, shader_data);
-        This->backend_priv = NULL;
+        This->baseShader.backend_data = NULL;
     } else {
         IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *) iface;
-        struct arb_vshader_private *shader_data = This->backend_priv;
+        struct arb_vshader_private *shader_data = This->baseShader.backend_data;
         UINT i;
 
         if(!shader_data) return; /* This can happen if a shader was never compiled */
@@ -4413,7 +4434,7 @@ static void shader_arb_destroy(IWineD3DBaseShader *iface) {
         LEAVE_GL();
         HeapFree(GetProcessHeap(), 0, shader_data->gl_shaders);
         HeapFree(GetProcessHeap(), 0, shader_data);
-        This->backend_priv = NULL;
+        This->baseShader.backend_data = NULL;
     }
 }
 
@@ -4423,7 +4444,7 @@ static int sig_tree_compare(const void *key, const struct wine_rb_entry *entry)
     return compare_sig(key, e->sig);
 }
 
-struct wine_rb_functions sig_tree_functions =
+static const struct wine_rb_functions sig_tree_functions =
 {
     wined3d_rb_alloc,
     wined3d_rb_realloc,

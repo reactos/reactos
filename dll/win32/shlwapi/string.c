@@ -319,6 +319,25 @@ LPWSTR WINAPI StrChrIW(LPCWSTR lpszStr, WCHAR ch)
 }
 
 /*************************************************************************
+ * StrChrNW	[SHLWAPI.@]
+ */
+LPWSTR WINAPI StrChrNW(LPCWSTR lpszStr, WCHAR ch, UINT cchMax)
+{
+  TRACE("(%s(%i),%i)\n", debugstr_wn(lpszStr,cchMax), cchMax, ch);
+
+  if (lpszStr)
+  {
+    while (*lpszStr && cchMax-- > 0)
+    {
+      if (*lpszStr == ch)
+        return (LPWSTR)lpszStr;
+      lpszStr++;
+    }
+  }
+  return NULL;
+}
+
+/*************************************************************************
  * StrCmpIW	[SHLWAPI.@]
  *
  * Compare two strings, ignoring case.

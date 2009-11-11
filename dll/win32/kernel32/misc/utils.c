@@ -257,6 +257,8 @@ BasepCreateStack(HANDLE hProcess,
     /* Now set up some basic Initial TEB Parameters */
     InitialTeb->AllocatedStackBase = (PVOID)Stack;
     InitialTeb->StackBase = (PVOID)(Stack + StackReserve);
+    InitialTeb->PreviousStackBase = NULL;
+    InitialTeb->PreviousStackLimit = NULL;
     
     /* Update the Stack Position */
     Stack += StackReserve - StackCommit;

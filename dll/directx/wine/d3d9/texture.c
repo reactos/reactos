@@ -49,6 +49,14 @@ static ULONG WINAPI IDirect3DTexture9Impl_AddRef(LPDIRECT3DTEXTURE9 iface) {
 
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
+    if (ref == 1)
+    {
+        IDirect3DDevice9Ex_AddRef(This->parentDevice);
+        wined3d_mutex_lock();
+        IWineD3DTexture_AddRef(This->wineD3DTexture);
+        wined3d_mutex_unlock();
+    }
+
     return ref;
 }
 
@@ -59,12 +67,10 @@ static ULONG WINAPI IDirect3DTexture9Impl_Release(LPDIRECT3DTEXTURE9 iface) {
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
-        wined3d_mutex_lock();
-        IWineD3DTexture_Destroy(This->wineD3DTexture, D3D9CB_DestroySurface);
-        wined3d_mutex_unlock();
-
         IDirect3DDevice9Ex_Release(This->parentDevice);
-        HeapFree(GetProcessHeap(), 0, This);
+        wined3d_mutex_lock();
+        IWineD3DTexture_Release(This->wineD3DTexture);
+        wined3d_mutex_unlock();
     }
     return ref;
 }
@@ -350,43 +356,37 @@ static const IDirect3DTexture9Vtbl Direct3DTexture9_Vtbl =
     IDirect3DTexture9Impl_AddDirtyRect
 };
 
+static void STDMETHODCALLTYPE d3d9_texture_wined3d_object_destroyed(void *parent)
+{
+    HeapFree(GetProcessHeap(), 0, parent);
+}
 
-/* IDirect3DDevice9 IDirect3DTexture9 Methods follow: */
-HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9EX iface, UINT Width, UINT Height, UINT Levels, DWORD Usage,
-                                                    D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle) {
-    IDirect3DTexture9Impl *object;
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    HRESULT hrc = D3D_OK;
+static const struct wined3d_parent_ops d3d9_texture_wined3d_parent_ops =
+{
+    d3d9_texture_wined3d_object_destroyed,
+};
 
-    TRACE("(%p) : W(%d) H(%d), Lvl(%d) d(%d), Fmt(%#x), Pool(%d)\n", This, Width, Height, Levels, Usage, Format,  Pool);
+HRESULT texture_init(IDirect3DTexture9Impl *texture, IDirect3DDevice9Impl *device,
+        UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
+{
+    HRESULT hr;
 
-    /* Allocate the storage for the device */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DTexture9Impl));
-
-    if (NULL == object) {
-        ERR("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
-
-    object->lpVtbl = &Direct3DTexture9_Vtbl;
-    object->ref = 1;
+    texture->lpVtbl = &Direct3DTexture9_Vtbl;
+    texture->ref = 1;
 
     wined3d_mutex_lock();
-    hrc = IWineD3DDevice_CreateTexture(This->WineD3DDevice, Width, Height, Levels, Usage & WINED3DUSAGE_MASK,
-            wined3dformat_from_d3dformat(Format), Pool, &object->wineD3DTexture, (IUnknown *)object);
+    hr = IWineD3DDevice_CreateTexture(device->WineD3DDevice, width, height, levels,
+            usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(format), pool,
+            &texture->wineD3DTexture, (IUnknown *)texture, &d3d9_texture_wined3d_parent_ops);
     wined3d_mutex_unlock();
-
-    if (FAILED(hrc))
+    if (FAILED(hr))
     {
-        /* free up object */
-        WARN("(%p) call to IWineD3DDevice_CreateTexture failed\n", This);
-        HeapFree(GetProcessHeap(), 0, object);
-   } else {
-        IDirect3DDevice9Ex_AddRef(iface);
-        object->parentDevice = iface;
-        *ppTexture= (LPDIRECT3DTEXTURE9) object;
-        TRACE("(%p) Created Texture %p, %p\n", This, object, object->wineD3DTexture);
-   }
+        WARN("Failed to create wined3d texture, hr %#x.\n", hr);
+        return hr;
+    }
 
-   return hrc;
+    texture->parentDevice = (IDirect3DDevice9Ex *)device;
+    IDirect3DDevice9Ex_AddRef(texture->parentDevice);
+
+    return D3D_OK;
 }

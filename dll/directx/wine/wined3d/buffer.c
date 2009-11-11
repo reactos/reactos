@@ -223,11 +223,11 @@ static BOOL buffer_check_attribute(struct wined3d_buffer *This, const struct win
         else if (is_ffp_color) FIXME("test FLOAT16 fixed function processing colors\n");
         *float16_used = TRUE;
     }
-    else if (check_d3dcolor && format == WINED3DFMT_A8R8G8B8)
+    else if (check_d3dcolor && format == WINED3DFMT_B8G8R8A8_UNORM)
     {
         ret = buffer_process_converted_attribute(This, CONV_D3DCOLOR, attrib, stride_this_run);
 
-        if (!is_ffp_color) FIXME("Test for non-color fixed function WINED3DFMT_A8R8G8B8 format\n");
+        if (!is_ffp_color) FIXME("Test for non-color fixed function WINED3DFMT_B8G8R8A8_UNORM format\n");
     }
     else if (is_ffp_position && format == WINED3DFMT_R32G32B32A32_FLOAT)
     {
@@ -635,6 +635,7 @@ static ULONG STDMETHODCALLTYPE buffer_Release(IWineD3DBuffer *iface)
     {
         buffer_UnLoad(iface);
         resource_cleanup((IWineD3DResource *)iface);
+        This->resource.parent_ops->wined3d_object_destroyed(This->resource.parent);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -1035,7 +1036,7 @@ static HRESULT STDMETHODCALLTYPE buffer_GetDesc(IWineD3DBuffer *iface, WINED3DBU
     return WINED3D_OK;
 }
 
-const struct IWineD3DBufferVtbl wined3d_buffer_vtbl =
+static const struct IWineD3DBufferVtbl wined3d_buffer_vtbl =
 {
     /* IUnknown methods */
     buffer_QueryInterface,
@@ -1058,3 +1059,58 @@ const struct IWineD3DBufferVtbl wined3d_buffer_vtbl =
     buffer_Unmap,
     buffer_GetDesc,
 };
+
+HRESULT buffer_init(struct wined3d_buffer *buffer, IWineD3DDeviceImpl *device,
+        UINT size, DWORD usage, WINED3DFORMAT format, WINED3DPOOL pool, GLenum bind_hint,
+        const char *data, IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    const struct GlPixelFormatDesc *format_desc = getFormatDescEntry(format, &device->adapter->gl_info);
+    HRESULT hr;
+
+    if (!size)
+    {
+        WARN("Size 0 requested, returning WINED3DERR_INVALIDCALL\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+
+    buffer->vtbl = &wined3d_buffer_vtbl;
+
+    hr = resource_init((IWineD3DResource *)buffer, WINED3DRTYPE_BUFFER,
+            device, size, usage, format_desc, pool, parent, parent_ops);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize resource, hr %#x\n", hr);
+        return hr;
+    }
+    buffer->buffer_type_hint = bind_hint;
+
+    TRACE("size %#x, usage %#x, format %s, memory @ %p, iface @ %p.\n", buffer->resource.size, buffer->resource.usage,
+            debug_d3dformat(buffer->resource.format_desc->format), buffer->resource.allocatedMemory, buffer);
+
+    if (data)
+    {
+        BYTE *ptr;
+
+        hr = IWineD3DBuffer_Map((IWineD3DBuffer *)buffer, 0, size, &ptr, 0);
+        if (FAILED(hr))
+        {
+            ERR("Failed to map buffer, hr %#x\n", hr);
+            buffer_UnLoad((IWineD3DBuffer *)buffer);
+            resource_cleanup((IWineD3DResource *)buffer);
+            return hr;
+        }
+
+        memcpy(ptr, data, size);
+
+        hr = IWineD3DBuffer_Unmap((IWineD3DBuffer *)buffer);
+        if (FAILED(hr))
+        {
+            ERR("Failed to unmap buffer, hr %#x\n", hr);
+            buffer_UnLoad((IWineD3DBuffer *)buffer);
+            resource_cleanup((IWineD3DResource *)buffer);
+            return hr;
+        }
+    }
+
+    return WINED3D_OK;
+}

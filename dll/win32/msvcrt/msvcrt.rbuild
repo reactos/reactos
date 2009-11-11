@@ -6,7 +6,6 @@
 	<define name="_MSVCRT_" />
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MT" />
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="_CTYPE_DISABLE_MACROS" />
 	<define name="_NO_INLINING" />
 	<linkerflag linkerset="ld">-enable-stdcall-fixup</linkerflag>

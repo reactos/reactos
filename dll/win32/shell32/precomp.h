@@ -22,8 +22,10 @@
 #include <windows.h>
 
 #include <shlguid.h>
+#include <shlguid_undoc.h>
 #include <shlwapi.h>
 #include <shlobj.h>
+#include <shlobj_undoc.h>
 #include <shldisp.h>
 #include <commdlg.h>
 #include <commctrl.h>
@@ -68,6 +70,7 @@
 extern const GUID CLSID_AdminFolderShortcut;
 extern const GUID CLSID_FontsFolderShortcut;
 extern const GUID CLSID_StartMenu;
+extern const GUID CLSID_MenuBandSite;
 extern const GUID CLSID_OpenWith;
 extern const GUID CLSID_UnixFolder;
 extern const GUID CLSID_UnixDosFolder;

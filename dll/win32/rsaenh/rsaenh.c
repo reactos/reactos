@@ -777,6 +777,8 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
     peaAlgidInfo = get_algid_info(hProv, aiAlgid);
     if (!peaAlgidInfo) return (HCRYPTKEY)INVALID_HANDLE_VALUE;
 
+    TRACE("alg = %s, dwKeyLen = %d\n", debugstr_a(peaAlgidInfo->szName),
+          dwKeyLen);
     /*
      * Assume the default key length, if none is specified explicitly
      */
@@ -822,7 +824,9 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
                 dwKeyLen > peaAlgidInfo->dwMaxLen || 
                 dwKeyLen < peaAlgidInfo->dwMinLen) 
             {
-                SetLastError(NTE_BAD_FLAGS);
+                TRACE("key len %d out of bounds (%d, %d)\n", dwKeyLen,
+                      peaAlgidInfo->dwMinLen, peaAlgidInfo->dwMaxLen);
+                SetLastError(NTE_BAD_DATA);
                 return (HCRYPTKEY)INVALID_HANDLE_VALUE;
             }
     }
@@ -2481,6 +2485,33 @@ static BOOL crypt_export_private_key(CRYPTKEY *pCryptKey, BOOL force,
     return TRUE;
 }
 
+static BOOL crypt_export_plaintext_key(CRYPTKEY *pCryptKey, BYTE *pbData,
+    DWORD *pdwDataLen)
+{
+    BLOBHEADER *pBlobHeader = (BLOBHEADER*)pbData;
+    DWORD *pKeyLen = (DWORD*)(pBlobHeader+1);
+    BYTE *pbKey = (BYTE*)(pKeyLen+1);
+    DWORD dwDataLen;
+
+    dwDataLen = sizeof(BLOBHEADER) + sizeof(DWORD) + pCryptKey->dwKeyLen;
+    if (pbData) {
+        if (*pdwDataLen < dwDataLen) {
+            SetLastError(ERROR_MORE_DATA);
+            *pdwDataLen = dwDataLen;
+            return FALSE;
+        }
+
+        pBlobHeader->bType = PLAINTEXTKEYBLOB;
+        pBlobHeader->bVersion = CUR_BLOB_VERSION;
+        pBlobHeader->reserved = 0;
+        pBlobHeader->aiKeyAlg = pCryptKey->aiAlgid;
+
+        *pKeyLen = pCryptKey->dwKeyLen;
+        memcpy(pbKey, &pCryptKey->abKeyValue, pCryptKey->dwKeyLen);
+    }
+    *pdwDataLen = dwDataLen;
+    return TRUE;
+}
 /******************************************************************************
  * crypt_export_key [Internal]
  *
@@ -2535,6 +2566,9 @@ static BOOL crypt_export_key(CRYPTKEY *pCryptKey, HCRYPTKEY hPubKey,
 
         case PRIVATEKEYBLOB:
             return crypt_export_private_key(pCryptKey, force, pbData, pdwDataLen);
+
+        case PLAINTEXTKEYBLOB:
+            return crypt_export_plaintext_key(pCryptKey, pbData, pdwDataLen);
             
         default:
             SetLastError(NTE_BAD_TYPE); /* FIXME: error code? */
@@ -2834,6 +2868,53 @@ static BOOL import_symmetric_key(HCRYPTPROV hProv, CONST BYTE *pbData,
 }
 
 /******************************************************************************
+ * import_plaintext_key [Internal]
+ *
+ * Import a plaintext key into a key container.
+ *
+ * PARAMS
+ *  hProv     [I] Key container into which the symmetric key is to be imported.
+ *  pbData    [I] Pointer to a buffer which holds the plaintext key BLOB.
+ *  dwDataLen [I] Length of data in buffer at pbData.
+ *  dwFlags   [I] One of:
+ *                CRYPT_EXPORTABLE: the imported key is marked exportable
+ *  phKey     [O] Handle to the imported key.
+ *
+ *
+ * NOTES
+ *  Assumes the caller has already checked the BLOBHEADER at pbData to ensure
+ *  it's a PLAINTEXTKEYBLOB.
+ *
+ * RETURNS
+ *  Success: TRUE.
+ *  Failure: FALSE.
+ */
+static BOOL import_plaintext_key(HCRYPTPROV hProv, CONST BYTE *pbData,
+                                 DWORD dwDataLen, DWORD dwFlags,
+                                 HCRYPTKEY *phKey)
+{
+    CRYPTKEY *pCryptKey;
+    CONST BLOBHEADER *pBlobHeader = (CONST BLOBHEADER*)pbData;
+    CONST DWORD *pKeyLen = (CONST DWORD *)(pBlobHeader + 1);
+    CONST BYTE *pbKeyStream = (CONST BYTE*)(pKeyLen + 1);
+
+    if (dwDataLen < sizeof(BLOBHEADER)+sizeof(DWORD)+*pKeyLen)
+    {
+        SetLastError(NTE_BAD_DATA); /* FIXME: error code */
+        return FALSE;
+    }
+
+    *phKey = new_key(hProv, pBlobHeader->aiKeyAlg, *pKeyLen<<19, &pCryptKey);
+    if (*phKey == (HCRYPTKEY)INVALID_HANDLE_VALUE)
+        return FALSE;
+    memcpy(pCryptKey->abKeyValue, pbKeyStream, *pKeyLen);
+    setup_key(pCryptKey);
+    if (dwFlags & CRYPT_EXPORTABLE)
+        pCryptKey->dwPermissions |= CRYPT_EXPORT;
+    return TRUE;
+}
+
+/******************************************************************************
  * import_key [Internal]
  *
  * Import a BLOB'ed key into a key container, optionally storing the key's
@@ -2871,6 +2952,8 @@ static BOOL import_key(HCRYPTPROV hProv, CONST BYTE *pbData, DWORD dwDataLen,
         pBlobHeader->bVersion != CUR_BLOB_VERSION ||
         pBlobHeader->reserved != 0) 
     {
+        TRACE("bVersion = %d, reserved = %d\n", pBlobHeader->bVersion,
+              pBlobHeader->reserved);
         SetLastError(NTE_BAD_DATA);
         return FALSE;
     }
@@ -2879,6 +2962,7 @@ static BOOL import_key(HCRYPTPROV hProv, CONST BYTE *pbData, DWORD dwDataLen,
      * fStoreKey's original value.
      */
     fStoreKey = fStoreKey && !(dwFlags & CRYPT_VERIFYCONTEXT);
+    TRACE("blob type: %x\n", pBlobHeader->bType);
     switch (pBlobHeader->bType)
     {
         case PRIVATEKEYBLOB:    
@@ -2892,6 +2976,10 @@ static BOOL import_key(HCRYPTPROV hProv, CONST BYTE *pbData, DWORD dwDataLen,
         case SIMPLEBLOB:
             return import_symmetric_key(hProv, pbData, dwDataLen, hPubKey,
                                         dwFlags, phKey);
+
+        case PLAINTEXTKEYBLOB:
+            return import_plaintext_key(hProv, pbData, dwDataLen, dwFlags,
+                                        phKey);
 
         default:
             SetLastError(NTE_BAD_TYPE); /* FIXME: error code? */
@@ -2923,6 +3011,12 @@ BOOL WINAPI RSAENH_CPImportKey(HCRYPTPROV hProv, CONST BYTE *pbData, DWORD dwDat
     TRACE("(hProv=%08lx, pbData=%p, dwDataLen=%d, hPubKey=%08lx, dwFlags=%08x, phKey=%p)\n",
         hProv, pbData, dwDataLen, hPubKey, dwFlags, phKey);
 
+    if (dwFlags & CRYPT_IPSEC_HMAC_KEY)
+    {
+        FIXME("unimplemented for CRYPT_IPSEC_HMAC_KEY\n");
+        SetLastError(NTE_BAD_FLAGS);
+        return FALSE;
+    }
     return import_key(hProv, pbData, dwDataLen, hPubKey, dwFlags, TRUE, phKey);
 }
 
@@ -2971,11 +3065,9 @@ BOOL WINAPI RSAENH_CPGenKey(HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYP
             if (pCryptKey) { 
                 new_key_impl(pCryptKey->aiAlgid, &pCryptKey->context, pCryptKey->dwKeyLen);
                 setup_key(pCryptKey);
-                if (Algid == AT_SIGNATURE) {
-                    RSAENH_CPDestroyKey(hProv, pKeyContainer->hSignatureKeyPair);
-                    copy_handle(&handle_table, *phKey, RSAENH_MAGIC_KEY,
-                                &pKeyContainer->hSignatureKeyPair);
-                }
+                RSAENH_CPDestroyKey(hProv, pKeyContainer->hSignatureKeyPair);
+                copy_handle(&handle_table, *phKey, RSAENH_MAGIC_KEY,
+                            &pKeyContainer->hSignatureKeyPair);
             }
             break;
 
@@ -2985,11 +3077,9 @@ BOOL WINAPI RSAENH_CPGenKey(HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYP
             if (pCryptKey) { 
                 new_key_impl(pCryptKey->aiAlgid, &pCryptKey->context, pCryptKey->dwKeyLen);
                 setup_key(pCryptKey);
-                if (Algid == AT_KEYEXCHANGE) {
-                    RSAENH_CPDestroyKey(hProv, pKeyContainer->hKeyExchangeKeyPair);
-                    copy_handle(&handle_table, *phKey, RSAENH_MAGIC_KEY,
-                                &pKeyContainer->hKeyExchangeKeyPair);
-                }
+                RSAENH_CPDestroyKey(hProv, pKeyContainer->hKeyExchangeKeyPair);
+                copy_handle(&handle_table, *phKey, RSAENH_MAGIC_KEY,
+                            &pKeyContainer->hKeyExchangeKeyPair);
             }
             break;
             
@@ -4371,7 +4461,8 @@ HRESULT WINAPI DllRegisterServer(void)
             {
                 static const WCHAR szName[] = { 'N','a','m','e',0 };
                 static const WCHAR szRSAName[3][54] = {
-                  { 'M','i','c','r','o','s','o','f','t',' ', 'B','a','s','e',' ',
+                  { 'M','i','c','r','o','s','o','f','t',' ',
+                    'E','n','h','a','n','c','e','d',' ',
                     'C','r','y','p','t','o','g','r','a','p','h','i','c',' ', 
                     'P','r','o','v','i','d','e','r',' ','v','1','.','0',0 },
                   { 'M','i','c','r','o','s','o','f','t',' ','R','S','A',' ',

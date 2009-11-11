@@ -32,6 +32,7 @@
 #include <string.h>
 #include <limits.h>
 
+#define NONAMELESSUNION
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -4379,15 +4380,15 @@ RPC_STATUS RPC_ENTRY NdrGetUserMarshalInfo(ULONG *flags, ULONG level, NDR_USER_M
     if (level != 1)
         return RPC_S_INVALID_ARG;
 
-    memset(&umi->Level1, 0, sizeof(umi->Level1));
+    memset(&umi->u1.Level1, 0, sizeof(umi->u1.Level1));
     umi->InformationLevel = level;
 
     if (umcb->Signature != USER_MARSHAL_CB_SIGNATURE)
         return RPC_S_INVALID_ARG;
 
-    umi->Level1.pfnAllocate = umcb->pStubMsg->pfnAllocate;
-    umi->Level1.pfnFree = umcb->pStubMsg->pfnFree;
-    umi->Level1.pRpcChannelBuffer = umcb->pStubMsg->pRpcChannelBuffer;
+    umi->u1.Level1.pfnAllocate = umcb->pStubMsg->pfnAllocate;
+    umi->u1.Level1.pfnFree = umcb->pStubMsg->pfnFree;
+    umi->u1.Level1.pRpcChannelBuffer = umcb->pStubMsg->pRpcChannelBuffer;
 
     switch (umcb->CBType)
     {
@@ -4403,8 +4404,8 @@ RPC_STATUS RPC_ENTRY NdrGetUserMarshalInfo(ULONG *flags, ULONG level, NDR_USER_M
             umcb->pStubMsg->Buffer > buffer_end)
             return ERROR_INVALID_USER_BUFFER;
 
-        umi->Level1.Buffer = umcb->pStubMsg->Buffer;
-        umi->Level1.BufferSize = buffer_end - umcb->pStubMsg->Buffer;
+        umi->u1.Level1.Buffer = umcb->pStubMsg->Buffer;
+        umi->u1.Level1.BufferSize = buffer_end - umcb->pStubMsg->Buffer;
         break;
     }
     case USER_MARSHAL_CB_BUFFER_SIZE:

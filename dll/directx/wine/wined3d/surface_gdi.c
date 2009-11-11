@@ -313,7 +313,7 @@ const char* filename)
     }
     fprintf(f, "P6\n%d %d\n255\n", This->pow2Width, This->pow2Height);
 
-    if (This->resource.format_desc->format == WINED3DFMT_P8)
+    if (This->resource.format_desc->format == WINED3DFMT_P8_UINT)
     {
         unsigned char table[256][3];
         int i;
@@ -384,6 +384,12 @@ static HRESULT WINAPI IWineGDISurfaceImpl_GetDC(IWineD3DSurface *iface, HDC *pHD
 
     TRACE("(%p)->(%p)\n",This,pHDC);
 
+    if(!(This->Flags & SFLAG_DIBSECTION))
+    {
+        WARN("DC not supported on this surface\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+
     if(This->Flags & SFLAG_USERPTR) {
         ERR("Not supported on surfaces with an application-provided surfaces\n");
         return WINEDDERR_NODC;
@@ -412,8 +418,8 @@ static HRESULT WINAPI IWineGDISurfaceImpl_GetDC(IWineD3DSurface *iface, HDC *pHD
         return hr;
     }
 
-    if (This->resource.format_desc->format == WINED3DFMT_P8
-            || This->resource.format_desc->format == WINED3DFMT_A8P8)
+    if (This->resource.format_desc->format == WINED3DFMT_P8_UINT
+            || This->resource.format_desc->format == WINED3DFMT_P8_UINT_A8_UNORM)
     {
         unsigned int n;
         const PALETTEENTRY *pal = NULL;
@@ -525,25 +531,28 @@ static HRESULT WINAPI
 IWineGDISurfaceImpl_PrivateSetup(IWineD3DSurface *iface)
 {
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *) iface;
+    HRESULT hr;
 
     if(This->resource.usage & WINED3DUSAGE_OVERLAY)
     {
         ERR("(%p) Overlays not yet supported by GDI surfaces\n", This);
         return WINED3DERR_INVALIDCALL;
     }
+
     /* Sysmem textures have memory already allocated -
      * release it, this avoids an unnecessary memcpy
      */
-    HeapFree(GetProcessHeap(), 0, This->resource.heapMemory);
-    This->resource.allocatedMemory = NULL;
-    This->resource.heapMemory = NULL;
+    hr = IWineD3DBaseSurfaceImpl_CreateDIBSection(iface);
+    if(SUCCEEDED(hr))
+    {
+        HeapFree(GetProcessHeap(), 0, This->resource.heapMemory);
+        This->resource.heapMemory = NULL;
+        This->resource.allocatedMemory = This->dib.bitmap_data;
+    }
 
     /* We don't mind the nonpow2 stuff in GDI */
     This->pow2Width = This->currentDesc.Width;
     This->pow2Height = This->currentDesc.Height;
-
-    IWineD3DBaseSurfaceImpl_CreateDIBSection(iface);
-    This->resource.allocatedMemory = This->dib.bitmap_data;
 
     return WINED3D_OK;
 }

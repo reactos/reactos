@@ -1124,7 +1124,7 @@ BOOL WINAPI DAD_DragEnter(HWND hwnd)
  * DAD_DragEnterEx				[SHELL32.131]
  *
  */
-BOOL WINAPI DAD_DragEnterEx(HWND hwnd, const POINT p)
+BOOL WINAPI DAD_DragEnterEx(HWND hwnd, POINT p)
 {
     FIXME("hwnd = %p (%d,%d)\n",hwnd,p.x,p.y);
     return FALSE;

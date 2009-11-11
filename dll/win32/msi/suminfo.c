@@ -443,7 +443,6 @@ MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount )
     if( !si )
         return si;
 
-    memset( si->property, 0, sizeof si->property );
     si->update_count = uiUpdateCount;
     IStorage_AddRef( stg );
     si->storage = stg;
@@ -475,7 +474,9 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
 
     if( szDatabase )
     {
-        ret = MSI_OpenDatabaseW( szDatabase, NULL, &db );
+        LPCWSTR persist = uiUpdateCount ? MSIDBOPEN_TRANSACT : MSIDBOPEN_READONLY;
+
+        ret = MSI_OpenDatabaseW( szDatabase, persist, &db );
         if( ret != ERROR_SUCCESS )
             return ret;
     }
@@ -606,9 +607,8 @@ static UINT get_prop( MSIHANDLE handle, UINT uiProperty, UINT *puiDataType,
 
             if( str->unicode )
             {
-                len = MultiByteToWideChar( CP_ACP, 0, prop->u.pszVal, -1,
-                                           str->str.w, *pcchValueBuf );
-                len--;
+                len = MultiByteToWideChar( CP_ACP, 0, prop->u.pszVal, -1, NULL, 0 ) - 1;
+                MultiByteToWideChar( CP_ACP, 0, prop->u.pszVal, -1, str->str.w, *pcchValueBuf );
             }
             else
             {

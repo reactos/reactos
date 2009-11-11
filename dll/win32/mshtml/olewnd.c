@@ -68,12 +68,12 @@ static HRESULT WINAPI OleInPlaceActiveObject_GetWindow(IOleInPlaceActiveObject *
     if(!phwnd)
         return E_INVALIDARG;
 
-    if(!This->in_place_active) {
+    if(!This->doc_obj->in_place_active) {
         *phwnd = NULL;
         return E_FAIL;
     }
 
-    *phwnd = This->hwnd;
+    *phwnd = This->doc_obj->hwnd;
     return S_OK;
 }
 
@@ -98,8 +98,8 @@ static HRESULT WINAPI OleInPlaceActiveObject_OnFrameWindowActivate(IOleInPlaceAc
 
     TRACE("(%p)->(%x)\n", This, fActivate);
 
-    if(This->hostui)
-        IDocHostUIHandler_OnFrameWindowActivate(This->hostui, fActivate);
+    if(This->doc_obj->hostui)
+        IDocHostUIHandler_OnFrameWindowActivate(This->doc_obj->hostui, fActivate);
 
     return S_OK;
 }
@@ -186,35 +186,35 @@ static HRESULT WINAPI OleInPlaceObjectWindowless_InPlaceDeactivate(IOleInPlaceOb
 
     TRACE("(%p)\n", This);
 
-    if(This->ui_active)
+    if(This->doc_obj->ui_active)
         IOleDocumentView_UIActivate(DOCVIEW(This), FALSE);
-    This->window_active = FALSE;
+    This->doc_obj->window_active = FALSE;
 
-    if(!This->in_place_active)
+    if(!This->doc_obj->in_place_active)
         return S_OK;
 
-    if(This->frame)
-        IOleInPlaceFrame_Release(This->frame);
+    if(This->doc_obj->frame)
+        IOleInPlaceFrame_Release(This->doc_obj->frame);
 
-    if(This->hwnd) {
-        ShowWindow(This->hwnd, SW_HIDE);
-        SetWindowPos(This->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+    if(This->doc_obj->hwnd) {
+        ShowWindow(This->doc_obj->hwnd, SW_HIDE);
+        SetWindowPos(This->doc_obj->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
     }
 
-    This->focus = FALSE;
-    notif_focus(This);
+    This->doc_obj->focus = FALSE;
+    notif_focus(This->doc_obj);
 
-    This->in_place_active = FALSE;
-    if(This->ipsite) {
+    This->doc_obj->in_place_active = FALSE;
+    if(This->doc_obj->ipsite) {
         IOleInPlaceSiteEx *ipsiteex;
         HRESULT hres;
 
-        hres = IOleInPlaceSite_QueryInterface(This->ipsite, &IID_IOleInPlaceSiteEx, (void**)&ipsiteex);
+        hres = IOleInPlaceSite_QueryInterface(This->doc_obj->ipsite, &IID_IOleInPlaceSiteEx, (void**)&ipsiteex);
         if(SUCCEEDED(hres)) {
             IOleInPlaceSiteEx_OnInPlaceDeactivateEx(ipsiteex, TRUE);
             IOleInPlaceSiteEx_Release(ipsiteex);
         }else {
-            IOleInPlaceSite_OnInPlaceDeactivate(This->ipsite);
+            IOleInPlaceSite_OnInPlaceDeactivate(This->doc_obj->ipsite);
         }
     }
 

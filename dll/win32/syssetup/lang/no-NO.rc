@@ -15,9 +15,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
@@ -225,6 +225,7 @@ BEGIN
     IDS_GAMES           "Spill"
     IDS_CMT_SOLITAIRE   "Kabal"
     IDS_CMT_WINEMINE    "Minnesveiper"
+	IDS_CMT_SPIDER      "Spider Solitaire"
 END
 
 STRINGTABLE
@@ -285,6 +286,7 @@ BEGIN
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
+	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

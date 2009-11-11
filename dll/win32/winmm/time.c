@@ -42,6 +42,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mmtime);
 
+typedef struct tagWINE_TIMERENTRY {
+    UINT			wDelay;
+    UINT			wResol;
+    LPTIMECALLBACK              lpFunc; /* can be lots of things */
+    DWORD			dwUser;
+    UINT16			wFlags;
+    UINT16			wTimerID;
+    DWORD			dwTriggerTime;
+    struct tagWINE_TIMERENTRY*	lpNext;
+} WINE_TIMERENTRY, *LPWINE_TIMERENTRY;
+
 static    HANDLE                TIME_hMMTimer;
 static    LPWINE_TIMERENTRY 	TIME_TimersList;
 static    HANDLE                TIME_hKillEvent;
@@ -91,11 +102,7 @@ static	void	TIME_TriggerCallBack(LPWINE_TIMERENTRY lpTimer)
      */
     switch (lpTimer->wFlags & 0x30) {
     case TIME_CALLBACK_FUNCTION:
-	if (lpTimer->wFlags & WINE_TIMER_IS32)
 	    (lpTimer->lpFunc)(lpTimer->wTimerID, 0, lpTimer->dwUser, 0, 0);
-	else if (pFnCallMMDrvFunc16)
-	    pFnCallMMDrvFunc16((DWORD)lpTimer->lpFunc, lpTimer->wTimerID, 0,
-                               lpTimer->dwUser, 0, 0);
 	break;
     case TIME_CALLBACK_EVENT_SET:
 	SetEvent((HANDLE)lpTimer->lpFunc);
@@ -113,7 +120,7 @@ static	void	TIME_TriggerCallBack(LPWINE_TIMERENTRY lpTimer)
 /**************************************************************************
  *           TIME_MMSysTimeCallback
  */
-static DWORD CALLBACK TIME_MMSysTimeCallback(LPWINE_MM_IDATA iData)
+static DWORD CALLBACK TIME_MMSysTimeCallback()
 {
 static    int				nSizeLpTimers;
 static    LPWINE_TIMERENTRY		lpTimers;
@@ -147,7 +154,7 @@ static    LPWINE_TIMERENTRY		lpTimers;
     idx = 0;
     cur_time = GetTickCount();
 
-    EnterCriticalSection(&iData->cs);
+    EnterCriticalSection(&WINMM_cs);
     for (ptimer = &TIME_TimersList; *ptimer != NULL; ) {
         timer = *ptimer;
         next_ptimer = &timer->lpNext;
@@ -201,7 +208,7 @@ static    LPWINE_TIMERENTRY		lpTimers;
         ptimer = next_ptimer;
     }
     if (TIME_hKillEvent) ResetEvent(TIME_hKillEvent);
-    LeaveCriticalSection(&iData->cs);
+    LeaveCriticalSection(&WINMM_cs);
 
     while (idx > 0) TIME_TriggerCallBack(&lpTimers[--idx]);
     if (TIME_hKillEvent) SetEvent(TIME_hKillEvent);
@@ -225,7 +232,6 @@ static    LPWINE_TIMERENTRY		lpTimers;
  */
 static DWORD CALLBACK TIME_MMSysTimeThread(LPVOID arg)
 {
-    LPWINE_MM_IDATA iData = (LPWINE_MM_IDATA)arg;
     DWORD sleep_time;
     DWORD rc;
 
@@ -239,7 +245,7 @@ static DWORD CALLBACK TIME_MMSysTimeThread(LPVOID arg)
 
     while (! TIME_TimeToDie)
     {
-	sleep_time = TIME_MMSysTimeCallback(iData);
+	sleep_time = TIME_MMSysTimeCallback();
 
         if (sleep_time == 0)
             continue;
@@ -264,7 +270,7 @@ void	TIME_MMTimeStart(void)
 	TIME_TimersList = NULL;
         TIME_hWakeEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
         TIME_TimeToDie = FALSE;
-	TIME_hMMTimer = CreateThread(NULL, 0, TIME_MMSysTimeThread, &WINMM_IData, 0, NULL);
+	TIME_hMMTimer = CreateThread(NULL, 0, TIME_MMSysTimeThread, NULL, 0, NULL);
         SetThreadPriority(TIME_hMMTimer, THREAD_PRIORITY_TIME_CRITICAL);
     }
 }
@@ -335,7 +341,7 @@ WORD	TIME_SetEventInternal(UINT wDelay, UINT wResol,
     lpNewTimer->dwUser = dwUser;
     lpNewTimer->wFlags = wFlags;
 
-    EnterCriticalSection(&WINMM_IData.cs);
+    EnterCriticalSection(&WINMM_cs);
 
     if ((wFlags & TIME_KILL_SYNCHRONOUS) && !TIME_hKillEvent)
         TIME_hKillEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
@@ -348,7 +354,7 @@ WORD	TIME_SetEventInternal(UINT wDelay, UINT wResol,
     TIME_TimersList = lpNewTimer;
     lpNewTimer->wTimerID = wNewID + 1;
 
-    LeaveCriticalSection(&WINMM_IData.cs);
+    LeaveCriticalSection(&WINMM_cs);
 
     /* Wake the service thread in case there is work to be done */
     SetEvent(TIME_hWakeEvent);
@@ -364,11 +370,8 @@ WORD	TIME_SetEventInternal(UINT wDelay, UINT wResol,
 MMRESULT WINAPI timeSetEvent(UINT wDelay, UINT wResol, LPTIMECALLBACK lpFunc,
                             DWORD_PTR dwUser, UINT wFlags)
 {
-    if (wFlags & WINE_TIMER_IS32)
-	WARN("Unknown windows flag... wine internally used.. ooch\n");
-
     return TIME_SetEventInternal(wDelay, wResol, lpFunc,
-                                 dwUser, wFlags|WINE_TIMER_IS32);
+                                 dwUser, wFlags);
 }
 
 /**************************************************************************
@@ -379,7 +382,7 @@ MMRESULT WINAPI timeKillEvent(UINT wID)
     LPWINE_TIMERENTRY   lpSelf = NULL, *lpTimer;
 
     TRACE("(%u)\n", wID);
-    EnterCriticalSection(&WINMM_IData.cs);
+    EnterCriticalSection(&WINMM_cs);
     /* remove WINE_TIMERENTRY from list */
     for (lpTimer = &TIME_TimersList; *lpTimer; lpTimer = &(*lpTimer)->lpNext) {
 	if (wID == (*lpTimer)->wTimerID) {
@@ -389,7 +392,7 @@ MMRESULT WINAPI timeKillEvent(UINT wID)
 	    break;
 	}
     }
-    LeaveCriticalSection(&WINMM_IData.cs);
+    LeaveCriticalSection(&WINMM_cs);
 
     if (!lpSelf)
     {

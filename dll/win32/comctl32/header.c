@@ -218,6 +218,14 @@ HEADER_PrevItem(const HEADER_INFO *infoPtr, INT iItem)
     return HEADER_OrderToIndex(infoPtr, HEADER_IndexToOrder(infoPtr, iItem)-1);
 }
 
+/* TRUE when item is not resizable with dividers,
+   note that valid index should be supplied */
+static inline BOOL
+HEADER_IsItemFixed(const HEADER_INFO *infoPtr, INT iItem)
+{
+    return (infoPtr->dwStyle & HDS_NOSIZING) || (infoPtr->items[iItem].fmt & HDF_FIXEDWIDTH);
+}
+
 static void
 HEADER_SetItemBounds (HEADER_INFO *infoPtr)
 {
@@ -624,6 +632,13 @@ HEADER_InternalHitTest (const HEADER_INFO *infoPtr, const POINT *lpPt, UINT *pFl
 			rcTest = rect;
 			rcTest.right = rcTest.left + DIVIDER_WIDTH;
 			if (PtInRect (&rcTest, *lpPt)) {
+			    if (HEADER_IsItemFixed(infoPtr, HEADER_PrevItem(infoPtr, iCount)))
+			    {
+				*pFlags |= HHT_ONHEADER;
+                                *pItem = iCount;
+				TRACE("ON HEADER %d\n", *pItem);
+				return;
+			    }
 			    if (bNoWidth) {
 				*pFlags |= HHT_ONDIVOPEN;
                                 *pItem = HEADER_PrevItem(infoPtr, iCount);
@@ -640,7 +655,8 @@ HEADER_InternalHitTest (const HEADER_INFO *infoPtr, const POINT *lpPt, UINT *pFl
 		    }
 		    rcTest = rect;
 		    rcTest.left = rcTest.right - DIVIDER_WIDTH;
-		    if (PtInRect (&rcTest, *lpPt)) {
+		    if (!HEADER_IsItemFixed(infoPtr, iCount) && PtInRect (&rcTest, *lpPt))
+		    {
 			*pFlags |= HHT_ONDIVIDER;
 			*pItem = iCount;
 			TRACE("ON DIVIDER %d\n", *pItem);
@@ -655,21 +671,24 @@ HEADER_InternalHitTest (const HEADER_INFO *infoPtr, const POINT *lpPt, UINT *pFl
 	    }
 
 	    /* check for last divider part (on nowhere) */
-	    rect = infoPtr->items[infoPtr->uNumItem-1].rect;
-	    rect.left = rect.right;
-	    rect.right += DIVIDER_WIDTH;
-	    if (PtInRect (&rect, *lpPt)) {
-		if (bNoWidth) {
-		    *pFlags |= HHT_ONDIVOPEN;
-		    *pItem = infoPtr->uNumItem - 1;
-		    TRACE("ON DIVOPEN %d\n", *pItem);
-		    return;
-		}
-		else {
-		    *pFlags |= HHT_ONDIVIDER;
-		    *pItem = infoPtr->uNumItem-1;
-		    TRACE("ON DIVIDER %d\n", *pItem);
-		    return;
+	    if (!HEADER_IsItemFixed(infoPtr, infoPtr->uNumItem - 1))
+	    {
+		rect = infoPtr->items[infoPtr->uNumItem-1].rect;
+		rect.left = rect.right;
+		rect.right += DIVIDER_WIDTH;
+		if (PtInRect (&rect, *lpPt)) {
+		    if (bNoWidth) {
+			*pFlags |= HHT_ONDIVOPEN;
+			*pItem = infoPtr->uNumItem - 1;
+			TRACE("ON DIVOPEN %d\n", *pItem);
+			return;
+		    }
+		    else {
+			*pFlags |= HHT_ONDIVIDER;
+			*pItem = infoPtr->uNumItem - 1;
+			TRACE("ON DIVIDER %d\n", *pItem);
+			return;
+		    }
 		}
 	    }
 

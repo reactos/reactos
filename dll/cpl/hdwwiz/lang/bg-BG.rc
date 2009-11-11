@@ -80,7 +80,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Вълшебник за добавяне на оборудване"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Търсвенето на оборудването може да отнеме известно време.", -1, 21, 8, 275, 15
+	LTEXT "Търсенето на оборудването може да отнеме известно време.", -1, 21, 8, 275, 15
 	LTEXT "Общ ход:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
 	CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
 	LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX

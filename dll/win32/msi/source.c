@@ -57,7 +57,6 @@ static UINT OpenSourceKey(LPCWSTR szProduct, HKEY* key, DWORD dwOptions,
 {
     HKEY rootkey = 0; 
     UINT rc = ERROR_FUNCTION_FAILED;
-    static const WCHAR szSourceList[] = {'S','o','u','r','c','e','L','i','s','t',0};
 
     if (context == MSIINSTALLCONTEXT_USERUNMANAGED)
     {
@@ -1096,9 +1095,6 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
     DWORD index;
 
     static const WCHAR fmt[] = {'%','i',0};
-    static const WCHAR one[] = {'1',0};
-    static const WCHAR backslash[] = {'\\',0};
-    static const WCHAR forwardslash[] = {'/',0};
 
     TRACE("%s %s %x %x %s %i\n", debugstr_w(szProduct), debugstr_w(szUserSid),
           dwContext, dwOptions, debugstr_w(szSource), dwIndex);
@@ -1138,7 +1134,7 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
         return ERROR_FUNCTION_FAILED;
     }
 
-    postfix = (dwOptions & MSISOURCETYPE_NETWORK) ? backslash : forwardslash;
+    postfix = (dwOptions & MSISOURCETYPE_NETWORK) ? szBackSlash : szForwardSlash;
     if (szSource[lstrlenW(szSource) - 1] == *postfix)
         source = strdupW(szSource);
     else
@@ -1158,7 +1154,7 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
 
     if (count == 0)
     {
-        rc = RegSetValueExW(typekey, one, 0, REG_EXPAND_SZ, (LPBYTE)source, size);
+        rc = RegSetValueExW(typekey, szOne, 0, REG_EXPAND_SZ, (LPBYTE)source, size);
         goto done;
     }
     else if (dwIndex > count || dwIndex == 0)
@@ -1248,7 +1244,6 @@ UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid,
     DWORD size;
 
     static const WCHAR fmt[] = {'%','i',0};
-    static const WCHAR semicolon[] = {';',0};
 
     TRACE("%s %s %x %x %i %s %s\n", debugstr_w(szProduct),
             debugstr_w(szUserSid), dwContext, dwOptions, dwDiskId,
@@ -1289,7 +1284,7 @@ UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid,
     *buffer = '\0';
 
     if (szVolumeLabel) lstrcpyW(buffer, szVolumeLabel);
-    lstrcatW(buffer, semicolon);
+    lstrcatW(buffer, szSemiColon);
     if (szDiskPrompt) lstrcatW(buffer, szDiskPrompt);
 
     RegSetValueExW(mediakey, szIndex, 0, REG_SZ, (LPBYTE)buffer, size);

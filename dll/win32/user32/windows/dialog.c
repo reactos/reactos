@@ -104,13 +104,6 @@ typedef struct
     BOOL       dialogEx;
 } DLG_TEMPLATE;
 
-/* GetDlgItem structure */
-typedef struct
-{
-    INT        nIDDlgItem;
-    HWND       control;
-} GETDLGITEMINFO;
-
 /* CheckRadioButton structure */
 typedef struct
 {
@@ -188,10 +181,11 @@ void DIALOG_EnableOwner( HWND hOwner )
     if (hOwner)
         hOwner = GetAncestor( hOwner, GA_ROOT );
     if (!hOwner) return;
-        EnableWindow( hOwner, TRUE );
+    EnableWindow( hOwner, TRUE );
 }
 
- /***********************************************************************
+
+/***********************************************************************
  *           DIALOG_DisableOwner
  *
  * Helper function for modal dialogs to disable the
@@ -212,7 +206,7 @@ BOOL DIALOG_DisableOwner( HWND hOwner )
         return FALSE;
 }
 
- /***********************************************************************
+/***********************************************************************
  *           DIALOG_GetControl32
  *
  * Return the class and text of the control pointed to by ptr,
@@ -310,10 +304,11 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
     p++;
 
     /* Next control is on dword boundary */
-    return (const WORD *)((((int)p) + 3) & ~3);
+    return (const WORD *)(((UINT_PTR)p + 3) & ~3);
 }
 
- /***********************************************************************
+
+/***********************************************************************
  *           DIALOG_CreateControls32
  *
  * Create the control windows for a dialog.
@@ -652,9 +647,9 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     /* Get the font name */
 
     result->pointSize = 0;
+    result->faceName = NULL;
     result->weight = FW_DONTCARE;
     result->italic = FALSE;
-    result->faceName = NULL;
 
     if (result->style & DS_SETFONT)
     {
@@ -667,18 +662,18 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
          */
         if (result->pointSize == 0x7fff)
         {
-           /* We could call SystemParametersInfo here, but then we'd have
-            * to convert from pixel size to point size (which can be
-            * imprecise).
-            */
+            /* We could call SystemParametersInfo here, but then we'd have
+             * to convert from pixel size to point size (which can be
+             * imprecise).
+             */
             TRACE(" FONT: Using message box font\n");
         }
         else
         {
             if (result->dialogEx)
             {
-               result->weight = GET_WORD(p); p++;
-               result->italic = LOBYTE(GET_WORD(p)); p++;
+                result->weight = GET_WORD(p); p++;
+                result->italic = LOBYTE(GET_WORD(p)); p++;
             }
             result->faceName = (LPCWSTR)p;
             p += wcslen( result->faceName ) + 1;
@@ -689,7 +684,59 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     return (LPCSTR)((((UINT_PTR)p) + 3) & ~3);
 }
 
- /***********************************************************************
+/***********************************************************************
+ *           DEFDLG_SetFocus
+ *
+ * Set the focus to a control of the dialog, selecting the text if
+ * the control is an edit dialog.
+ */
+static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
+{
+    if (SendMessageW( hwndCtrl, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
+        SendMessageW( hwndCtrl, EM_SETSEL, 0, -1 );
+    SetFocus( hwndCtrl );
+}
+
+
+/***********************************************************************
+ *           DEFDLG_SaveFocus
+ */
+static void DEFDLG_SaveFocus( HWND hwnd )
+{
+    DIALOGINFO *infoPtr;
+    HWND hwndFocus = GetFocus();
+
+    if (!hwndFocus || !IsChild( hwnd, hwndFocus )) return;
+    if (!(infoPtr = GETDLGINFO(hwnd))) return;
+    infoPtr->hwndFocus = hwndFocus;
+    /* Remove default button */
+}
+
+
+/***********************************************************************
+ *           DEFDLG_RestoreFocus
+ */
+static void DEFDLG_RestoreFocus( HWND hwnd )
+{
+    DIALOGINFO *infoPtr;
+
+    if (IsIconic( hwnd )) return;
+    if (!(infoPtr = GETDLGINFO(hwnd))) return;
+    /* Don't set the focus back to controls if EndDialog is already called.*/
+    if (infoPtr->flags & DF_END) return;
+    if (!IsWindow(infoPtr->hwndFocus) || infoPtr->hwndFocus == hwnd) {
+        /* If no saved focus control exists, set focus to the first visible,
+           non-disabled, WS_TABSTOP control in the dialog */
+        infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
+        if (!IsWindow( infoPtr->hwndFocus )) return;
+    }
+    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
+
+    /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
+       sometimes losing focus when receiving WM_SETFOCUS messages. */
+}
+
+/***********************************************************************
  *           DIALOG_CreateIndirect
  *       Creates a dialog box window
  *
@@ -738,20 +785,19 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             ncMetrics.cbSize = sizeof(NONCLIENTMETRICSW);
             if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
                                       sizeof(NONCLIENTMETRICSW), &ncMetrics, 0))
-           {
-               hUserFont = CreateFontIndirectW( &ncMetrics.lfMessageFont );
-           }
+            {
+                hUserFont = CreateFontIndirectW( &ncMetrics.lfMessageFont );
+            }
         }
-        else  
+        else
         {
-          /* We convert the size to pixels and then make it -ve.  This works
-           * for both +ve and -ve template.pointSize */
-          int pixels;
-          pixels = MulDiv(template.pointSize, GetDeviceCaps(dc , LOGPIXELSY), 72);
-          hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
-                                          template.italic, FALSE, FALSE, DEFAULT_CHARSET, 0, 0,
-                                          PROOF_QUALITY, FF_DONTCARE,
-                                          template.faceName );
+            /* We convert the size to pixels and then make it -ve.  This works
+             * for both +ve and -ve template.pointSize */
+            int pixels = MulDiv(template.pointSize, GetDeviceCaps(dc , LOGPIXELSY), 72);
+            hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
+                                              template.italic, FALSE, FALSE, DEFAULT_CHARSET, 0, 0,
+                                              PROOF_QUALITY, FF_DONTCARE,
+                                              template.faceName );
         }
 
         if (hUserFont)
@@ -795,7 +841,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     {
         HMONITOR monitor = 0;
         MONITORINFO mon_info;
-        
+
         mon_info.cbSize = sizeof(mon_info);
         if (template.style & DS_CENTER)
         {
@@ -902,7 +948,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     dlgInfo->hMenu       = hMenu;
     dlgInfo->xBaseUnit   = xBaseUnit;
     dlgInfo->yBaseUnit   = yBaseUnit;
-    dlgInfo->idResult    = 0;
+    dlgInfo->idResult    = IDOK;
     dlgInfo->flags       = flags;
     /* dlgInfo->hDialogHeap = 0; */
 
@@ -930,6 +976,9 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                 if( dlgInfo->hwndFocus )
                     SetFocus( dlgInfo->hwndFocus );
             }
+//// ReactOS
+            DEFDLG_SaveFocus( hwnd );
+////
         }
 //// ReactOS Rev 30613 & 30644
         if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_CHILD))
@@ -944,59 +993,6 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
     return 0;
-}
-
-
-/***********************************************************************
- *           DEFDLG_SetFocus
- *
- * Set the focus to a control of the dialog, selecting the text if
- * the control is an edit dialog.
- */
-static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
-{
-    if (SendMessageW( hwndCtrl, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
-        SendMessageW( hwndCtrl, EM_SETSEL, 0, -1 );
-    SetFocus( hwndCtrl );
-}
-
-
-/***********************************************************************
- *           DEFDLG_SaveFocus
- */
-static void DEFDLG_SaveFocus( HWND hwnd )
-{
-    DIALOGINFO *infoPtr;
-    HWND hwndFocus = GetFocus();
-
-    if (!hwndFocus || !IsChild( hwnd, hwndFocus )) return;
-    if (!(infoPtr = GETDLGINFO(hwnd))) return;
-    infoPtr->hwndFocus = hwndFocus;
-    /* Remove default button */
-}
-
-
-/***********************************************************************
- *           DEFDLG_RestoreFocus
- */
-static void DEFDLG_RestoreFocus( HWND hwnd )
-{
-    DIALOGINFO *infoPtr;
-
-    if (IsIconic( hwnd )) return;
-    if (!(infoPtr = GETDLGINFO(hwnd))) return;
-    /* Don't set the focus back to controls if EndDialog is already called.*/
-    if (infoPtr->flags & DF_END) return;
-    if (!IsWindow(infoPtr->hwndFocus) || infoPtr->hwndFocus == hwnd) {
-        /* If no saved focus control exists, set focus to the first visible,
-           non-disabled, WS_TABSTOP control in the dialog */
-        infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
-       if (!IsWindow( infoPtr->hwndFocus )) return;
-    }
-    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
-
-    /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
-       sometimes losing focus when receiving WM_SETFOCUS messages. */
 }
 
 
@@ -1459,22 +1455,6 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
     HeapFree( GetProcessHeap(), 0, buffer );
     TRACE("Returning %d %s\n", ret, unicode ? debugstr_w(str) : debugstr_a((LPSTR)str) );
     return ret;
-}
-
-/***********************************************************************
- *           GetDlgItemEnumProc
- *
- * Callback for GetDlgItem
- */
-BOOL CALLBACK GetDlgItemEnumProc (HWND hwnd, LPARAM lParam )
-{
-    GETDLGITEMINFO * info = (GETDLGITEMINFO *)lParam;
-    if(info->nIDDlgItem == GetWindowLongPtrW( hwnd, GWL_ID ))
-    {
-        info->control = hwnd;
-        return FALSE;
-    }
-    return TRUE;
 }
 
 
@@ -2029,13 +2009,16 @@ GetDlgItem(
   HWND hDlg,
   int nIDDlgItem)
 {
-    GETDLGITEMINFO info;
-    info.nIDDlgItem = nIDDlgItem;
-    info.control = 0;
-    if(hDlg && !EnumChildWindows(hDlg, (WNDENUMPROC)&GetDlgItemEnumProc, (LPARAM)&info))
-        return info.control;
-    else
-        return 0;
+    int i;
+    HWND *list = WIN_ListChildren(hDlg);
+    HWND ret = 0;
+
+    if (!list) return 0;
+
+    for (i = 0; list[i]; i++) if (GetWindowLongPtrW(list[i], GWLP_ID) == nIDDlgItem) break;
+    ret = list[i];
+    HeapFree(GetProcessHeap(), 0, list);
+    return ret;
 }
 
 

@@ -4,6 +4,7 @@
  * Copyright 2002-2005 Jason Edmeades
  * Copyright 2002-2005 Raphael Junqueira
  * Copyright 2005 Oliver Stieber
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -122,6 +123,7 @@ static ULONG WINAPI IWineD3DVolumeImpl_Release(IWineD3DVolume *iface) {
     ref = InterlockedDecrement(&This->resource.ref);
     if (ref == 0) {
         resource_cleanup((IWineD3DResource *)iface);
+        This->resource.parent_ops->wined3d_object_destroyed(This->resource.parent);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -264,7 +266,8 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LockBox(IWineD3DVolume *iface, WINED3DL
 
         if (containerType == WINED3DRTYPE_VOLUMETEXTURE) {
           IWineD3DBaseTextureImpl* pTexture = (IWineD3DBaseTextureImpl*) cont;
-          pTexture->baseTexture.dirty = TRUE;
+          pTexture->baseTexture.texture_rgb.dirty = TRUE;
+          pTexture->baseTexture.texture_srgb.dirty = TRUE;
         } else {
           FIXME("Set dirty on container type %d\n", containerType);
         }
@@ -346,7 +349,7 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int 
 
 }
 
-const IWineD3DVolumeVtbl IWineD3DVolume_Vtbl =
+static const IWineD3DVolumeVtbl IWineD3DVolume_Vtbl =
 {
     /* IUnknown */
     IWineD3DVolumeImpl_QueryInterface,
@@ -372,3 +375,40 @@ const IWineD3DVolumeVtbl IWineD3DVolume_Vtbl =
     IWineD3DVolumeImpl_LoadTexture,
     IWineD3DVolumeImpl_SetContainer
 };
+
+HRESULT volume_init(IWineD3DVolumeImpl *volume, IWineD3DDeviceImpl *device, UINT width,
+        UINT height, UINT depth, DWORD usage, WINED3DFORMAT format, WINED3DPOOL pool,
+        IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct GlPixelFormatDesc *format_desc = getFormatDescEntry(format, gl_info);
+    HRESULT hr;
+
+    if (!gl_info->supported[EXT_TEXTURE3D])
+    {
+        WARN("Volume cannot be created - no volume texture support.\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+
+    volume->lpVtbl = &IWineD3DVolume_Vtbl;
+
+    hr = resource_init((IWineD3DResource *)volume, WINED3DRTYPE_VOLUME, device,
+            width * height * depth * format_desc->byte_count, usage, format_desc, pool, parent, parent_ops);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize resource, returning %#x.\n", hr);
+        return hr;
+    }
+
+    volume->currentDesc.Width = width;
+    volume->currentDesc.Height = height;
+    volume->currentDesc.Depth = depth;
+    volume->lockable = TRUE;
+    volume->locked = FALSE;
+    memset(&volume->lockedBox, 0, sizeof(volume->lockedBox));
+    volume->dirty = TRUE;
+
+    volume_add_dirty_box((IWineD3DVolume *)volume, NULL);
+
+    return WINED3D_OK;
+}

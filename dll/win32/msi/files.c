@@ -47,13 +47,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-extern const WCHAR szInstallFiles[];
-extern const WCHAR szDuplicateFiles[];
-extern const WCHAR szMoveFiles[];
-extern const WCHAR szPatchFiles[];
-extern const WCHAR szRemoveDuplicateFiles[];
-extern const WCHAR szRemoveFiles[];
-
 static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f, const WCHAR *action )
 {
     MSIRECORD *uirow;
@@ -139,7 +132,7 @@ static UINT copy_file(MSIFILE *file, LPWSTR source)
     return ERROR_SUCCESS;
 }
 
-static UINT copy_install_file(MSIFILE *file, LPWSTR source)
+static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
 {
     UINT gle;
 
@@ -153,7 +146,7 @@ static UINT copy_install_file(MSIFILE *file, LPWSTR source)
     if (gle == ERROR_ALREADY_EXISTS && file->state == msifs_overwrite)
     {
         TRACE("overwriting existing file\n");
-        gle = ERROR_SUCCESS;
+        return ERROR_SUCCESS;
     }
     else if (gle == ERROR_ACCESS_DENIED)
     {
@@ -161,6 +154,37 @@ static UINT copy_install_file(MSIFILE *file, LPWSTR source)
 
         gle = copy_file(file, source);
         TRACE("Overwriting existing file: %d\n", gle);
+    }
+    if ((gle == ERROR_SHARING_VIOLATION) || (gle == ERROR_USER_MAPPED_FILE))
+    {
+        WCHAR tmpfileW[MAX_PATH], *pathW, *p;
+        DWORD len;
+
+        TRACE("file in use, scheduling rename operation\n");
+
+        GetTempFileNameW(szBackSlash, szMsi, 0, tmpfileW);
+        len = strlenW(file->TargetPath) + strlenW(tmpfileW) + 1;
+        if (!(pathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
+            return ERROR_OUTOFMEMORY;
+
+        strcpyW(pathW, file->TargetPath);
+        if ((p = strrchrW(pathW, '\\'))) *p = 0;
+        strcatW(pathW, tmpfileW);
+
+        if (CopyFileW(source, pathW, FALSE) &&
+            MoveFileExW(file->TargetPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT) &&
+            MoveFileExW(pathW, file->TargetPath, MOVEFILE_DELAY_UNTIL_REBOOT))
+        {
+            file->state = msifs_installed;
+            package->need_reboot = 1;
+            gle = ERROR_SUCCESS;
+        }
+        else
+        {
+            gle = GetLastError();
+            WARN("failed to schedule rename operation: %d)\n", gle);
+        }
+        HeapFree(GetProcessHeap(), 0, pathW);
     }
 
     return gle;
@@ -296,7 +320,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
                   debugstr_w(file->TargetPath));
 
             msi_file_update_ui(package, file, szInstallFiles);
-            rc = copy_install_file(file, source);
+            rc = copy_install_file(package, file, source);
             if (rc != ERROR_SUCCESS)
             {
                 ERR("Failed to copy %s to %s (%d)\n", debugstr_w(source),

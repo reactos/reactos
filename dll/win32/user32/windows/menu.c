@@ -1035,6 +1035,7 @@ PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
       break;
 
     case MM_GETMENUHANDLE:
+    case MN_GETHMENU: 
       return GetWindowLongPtrA(Wnd, 0);
 
     default:
@@ -1106,6 +1107,7 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
       break;
 
     case MM_GETMENUHANDLE:
+    case MN_GETHMENU:
       return GetWindowLongPtrW(Wnd, 0);
 
     default:
@@ -1926,12 +1928,15 @@ MenuInitTracking(HWND Wnd, HMENU Menu, BOOL Popup, UINT Flags)
  * Display a popup menu.
  */
 static BOOL FASTCALL
-MenuShowPopup(HWND WndOwner, HMENU Menu, UINT Id,
+MenuShowPopup(HWND WndOwner, HMENU Menu, UINT Id, UINT flags,
               INT X, INT Y, INT XAnchor, INT YAnchor )
 {
   ROSMENUINFO MenuInfo;
   ROSMENUITEMINFO ItemInfo;
   UINT Width, Height;
+  POINT pt;
+  HMONITOR monitor;
+  MONITORINFO info;
 
   TRACE("owner=%x hmenu=%x id=0x%04x x=0x%04x y=0x%04x xa=0x%04x ya=0x%04x\n",
          WndOwner, Menu, Id, X, Y, XAnchor, YAnchor);
@@ -1965,38 +1970,40 @@ MenuShowPopup(HWND WndOwner, HMENU Menu, UINT Id,
   Width = MenuInfo.Width + GetSystemMetrics(SM_CXBORDER);
   Height = MenuInfo.Height + GetSystemMetrics(SM_CYBORDER);
 
-  if (GetSystemMetrics(SM_CXSCREEN ) < X + Width)
-    {
-      if (0 != XAnchor && X >= Width - XAnchor)
-        {
-          X -= Width - XAnchor;
-        }
-      if (GetSystemMetrics(SM_CXSCREEN) < X + Width)
-        {
-          X = GetSystemMetrics(SM_CXSCREEN) - Width;
-        }
-    }
-  if (X < 0 )
-    {
-      X = 0;
-    }
+  /* FIXME: should use item rect */
+  pt.x = X;
+  pt.y = Y;
+  monitor = MonitorFromPoint( pt, MONITOR_DEFAULTTONEAREST );
+  info.cbSize = sizeof(info);
+  GetMonitorInfoW( monitor, &info );
 
-  if (GetSystemMetrics(SM_CYSCREEN) < Y + Height)
-    {
-      if (0 != YAnchor && Y >= Height + YAnchor)
-        {
-          Y -= Height + YAnchor;
-        }
-      if (GetSystemMetrics(SM_CYSCREEN) < Y + Height)
-        {
-          Y = GetSystemMetrics(SM_CYSCREEN) - Height;
-        }
-    }
-  if (Y < 0 )
-    {
-      Y = 0;
-    }
+  if( flags & TPM_RIGHTALIGN ) X -= Width;
+  if( flags & TPM_CENTERALIGN ) X -= Width / 2;
+    
+  if( flags & TPM_BOTTOMALIGN ) Y -= Height;
+  if( flags & TPM_VCENTERALIGN ) Y -= Height / 2;
 
+  if (X + Width > info.rcWork.right)
+  {
+      if ( XAnchor && X >= Width - XAnchor)
+         X -= Width - XAnchor;
+
+      if ( X + Width > info.rcWork.right)
+         X = info.rcWork.right - Width;
+  }
+
+  if ( X < info.rcWork.left ) X = info.rcWork.left;
+
+  if (Y + Height > info.rcWork.bottom)
+  {
+      if ( YAnchor && Y >= Height + YAnchor)
+         Y -= Height + YAnchor;
+
+      if ( Y + Height > info.rcWork.bottom)
+         Y = info.rcWork.bottom - Height;
+  }
+
+  if ( Y < info.rcWork.top ) Y = info.rcWork.top;
 
   /* NOTE: In Windows, top menu popup is not owned. */
   MenuInfo.Wnd = CreateWindowExW(0, POPUPMENU_CLASS_ATOMW, NULL,
@@ -2411,7 +2418,7 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
         }
     }
 
-  MenuShowPopup(WndOwner, ItemInfo.hSubMenu, MenuInfo->FocusedItem,
+  MenuShowPopup(WndOwner, ItemInfo.hSubMenu, MenuInfo->FocusedItem, Flags,
                 Rect.left, Rect.top, Rect.right, Rect.bottom );
   if (SelectFirst && MenuGetRosMenuInfo(&SubMenuInfo, ItemInfo.hSubMenu))
     {
@@ -3365,6 +3372,12 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
          Menu, Flags, x, y, Wnd, Rect ? Rect->left : 0, Rect ? Rect->top : 0,
          Rect ? Rect->right : 0, Rect ? Rect->bottom : 0);
 
+  if (!IsMenu(Menu))
+  {
+    SetLastError( ERROR_INVALID_MENU_HANDLE );
+    return FALSE;
+  }
+
   fEndMenu = FALSE;
   if (! MenuGetRosMenuInfo(&MenuInfo, Menu))
     {
@@ -3381,8 +3394,13 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
   SetCapture(Mt.OwnerWnd);
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt.OwnerWnd);
 
+  ERR("MenuTrackMenu 1\n");
   while (! fEndMenu)
     {
+      PVOID menu = ValidateHandle(Mt.CurrentMenu, VALIDATE_TYPE_MENU);
+      if (!menu) /* sometimes happens if I do a window manager close */
+         break;
+
       /* we have to keep the message in the queue until it's
        * clear that menu loop is not over yet. */
 
@@ -3516,17 +3534,12 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                         {
                           MenuSelectItem(Mt.OwnerWnd, &MenuInfo, NO_SELECTED_ITEM,
                                          FALSE, 0 );
-                        }
-                      /* fall through */
-
-                    case VK_UP:
-                      if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
-                        {
                           MenuMoveSelection(Mt.OwnerWnd, &MenuInfo,
                                             VK_HOME == Msg.wParam ? ITEM_NEXT : ITEM_PREV);
                         }
                       break;
 
+                    case VK_UP:
                     case VK_DOWN: /* If on menu bar, pull-down the menu */
                       if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
                         {
@@ -3540,7 +3553,8 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                             }
                           else      /* otherwise try to move selection */
                             {
-                              MenuMoveSelection(Mt.OwnerWnd, &MenuInfo, ITEM_NEXT);
+                              MenuMoveSelection(Mt.OwnerWnd, &MenuInfo,
+                                            VK_DOWN == Msg.wParam ? ITEM_NEXT : ITEM_PREV);
                             }
                         }
                       break;
@@ -3662,6 +3676,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
           Mt.TrackFlags &= ~TF_SKIPREMOVE;
         }
     }
+  ERR("MenuTrackMenu 2\n");
 
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
   SetCapture(NULL);  /* release the capture */
@@ -3682,6 +3697,11 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                 {
                   DestroyWindow(MenuInfo.Wnd);
                   MenuInfo.Wnd = NULL;
+
+                  if (!(MenuInfo.Flags & TPM_NONOTIFY))
+                    SendMessageW( Mt.OwnerWnd, WM_UNINITMENUPOPUP, (WPARAM)Mt.TopMenu,
+                                 MAKELPARAM(0, IS_SYSTEM_MENU(&MenuInfo)) );
+
                 }
               MenuSelectItem(Mt.OwnerWnd, &MenuInfo, NO_SELECTED_ITEM, FALSE, NULL);
             }
@@ -3968,7 +3988,7 @@ User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength)
   Common = (PLOADMENU_CALLBACK_ARGUMENTS) Arguments;
   
   Result = (LRESULT)LoadMenuW( Common->hModule,
-                               IS_INTRESOURCE(Common->MenuName) ?
+                               IS_INTRESOURCE(Common->MenuName[0]) ?
                                   MAKEINTRESOURCE(Common->MenuName[0]) :
                                         (LPCWSTR)&Common->MenuName);
 
@@ -4779,9 +4799,8 @@ WINAPI
 IsMenu(
   HMENU Menu)
 {
-  ROSMENUINFO MenuInfo;
-
-  return MenuGetRosMenuInfo(&MenuInfo, Menu);
+  if (ValidateHandle(Menu, VALIDATE_TYPE_MENU)) return TRUE;
+  return FALSE;
 }
 
 
@@ -5183,6 +5202,12 @@ TrackPopupMenu(
 {
   BOOL ret = FALSE;
 
+  if (!IsMenu(Menu))
+  {
+    SetLastError( ERROR_INVALID_MENU_HANDLE );
+    return FALSE;
+  }
+
   MenuInitTracking(Wnd, Menu, TRUE, Flags);
 
   /* Send WM_INITMENUPOPUP message only if TPM_NONOTIFY flag is not specified */
@@ -5191,12 +5216,11 @@ TrackPopupMenu(
       SendMessageW(Wnd, WM_INITMENUPOPUP, (WPARAM) Menu, 0);
     }
 
-  if (MenuShowPopup(Wnd, Menu, 0, x, y, 0, 0 ))
+  if (MenuShowPopup(Wnd, Menu, 0, Flags, x, y, 0, 0 ))
     {
       ret = MenuTrackMenu(Menu, Flags | TPM_POPUPMENU, 0, 0, Wnd, Rect);
     }
   MenuExitTracking(Wnd);
-
   return ret;
 }
 

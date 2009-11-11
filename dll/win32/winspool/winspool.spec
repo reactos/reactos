@@ -124,6 +124,8 @@
 @ stdcall EnumPrinterDriversW(wstr wstr long ptr long ptr ptr)
 @ stdcall EnumPrintersA(long ptr long ptr long ptr ptr)
 @ stdcall EnumPrintersW(long ptr long ptr long ptr ptr)
+@ stdcall EnumPrinterKeyA(long str str long ptr)
+@ stdcall EnumPrinterKeyW(long wstr wstr long ptr)
 @ stdcall ExtDeviceMode(long long ptr str str ptr str long)
 @ stdcall EnumPrintProcessorDatatypesA(str str long ptr long ptr ptr)
 @ stdcall EnumPrintProcessorDatatypesW(wstr wstr long ptr long ptr ptr)

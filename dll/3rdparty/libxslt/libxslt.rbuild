@@ -30,5 +30,6 @@
 	<file>transform.c</file>
 	<file>variables.c</file>
 	<file>xslt.c</file>
+	<file>xsltlocale.c</file>
 	<file>xsltutils.c</file>
 </module>

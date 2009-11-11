@@ -38,7 +38,7 @@ typedef struct {
     LONG ref;
 
     nsISelection *nsselection;
-    HTMLDocument *doc;
+    HTMLDocumentNode *doc;
 
     struct list entry;
 } HTMLSelectionObject;
@@ -140,7 +140,9 @@ static HRESULT WINAPI HTMLSelectionObject_Invoke(IHTMLSelectionObject *iface, DI
 static HRESULT WINAPI HTMLSelectionObject_createRange(IHTMLSelectionObject *iface, IDispatch **range)
 {
     HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    IHTMLTxtRange *range_obj = NULL;
     nsIDOMRange *nsrange = NULL;
+    HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, range);
 
@@ -154,12 +156,12 @@ static HRESULT WINAPI HTMLSelectionObject_createRange(IHTMLSelectionObject *ifac
 
             TRACE("nsrange_cnt = 0\n");
 
-            if(!This->doc->nsdoc) {
+            if(!This->doc->basedoc.nsdoc) {
                 WARN("nsdoc is NULL\n");
                 return E_UNEXPECTED;
             }
 
-            nsres = nsIDOMHTMLDocument_GetBody(This->doc->nsdoc, &nsbody);
+            nsres = nsIDOMHTMLDocument_GetBody(This->doc->basedoc.nsdoc, &nsbody);
             if(NS_FAILED(nsres) || !nsbody) {
                 ERR("Could not get body: %08x\n", nsres);
                 return E_FAIL;
@@ -178,8 +180,11 @@ static HRESULT WINAPI HTMLSelectionObject_createRange(IHTMLSelectionObject *ifac
             ERR("GetRangeAt failed: %08x\n", nsres);
     }
 
-    *range = (IDispatch*)HTMLTxtRange_Create(This->doc, nsrange);
-    return S_OK;
+    hres = HTMLTxtRange_Create(This->doc, nsrange, &range_obj);
+
+    if (nsrange) nsIDOMRange_Release(nsrange);
+    *range = (IDispatch*)range_obj;
+    return hres;
 }
 
 static HRESULT WINAPI HTMLSelectionObject_empty(IHTMLSelectionObject *iface)
@@ -230,21 +235,26 @@ static const IHTMLSelectionObjectVtbl HTMLSelectionObjectVtbl = {
     HTMLSelectionObject_get_type
 };
 
-IHTMLSelectionObject *HTMLSelectionObject_Create(HTMLDocument *doc, nsISelection *nsselection)
+HRESULT HTMLSelectionObject_Create(HTMLDocumentNode *doc, nsISelection *nsselection, IHTMLSelectionObject **ret)
 {
-    HTMLSelectionObject *ret = heap_alloc(sizeof(HTMLSelectionObject));
+    HTMLSelectionObject *selection;
 
-    ret->lpHTMLSelectionObjectVtbl = &HTMLSelectionObjectVtbl;
-    ret->ref = 1;
-    ret->nsselection = nsselection; /* We shouldn't call AddRef here */
+    selection = heap_alloc(sizeof(HTMLSelectionObject));
+    if(!selection)
+        return E_OUTOFMEMORY;
 
-    ret->doc = doc;
-    list_add_head(&doc->selection_list, &ret->entry);
+    selection->lpHTMLSelectionObjectVtbl = &HTMLSelectionObjectVtbl;
+    selection->ref = 1;
+    selection->nsselection = nsselection; /* We shouldn't call AddRef here */
 
-    return HTMLSELOBJ(ret);
+    selection->doc = doc;
+    list_add_head(&doc->selection_list, &selection->entry);
+
+    *ret = HTMLSELOBJ(selection);
+    return S_OK;
 }
 
-void detach_selection(HTMLDocument *This)
+void detach_selection(HTMLDocumentNode *This)
 {
     HTMLSelectionObject *iter;
 

@@ -480,6 +480,7 @@ static HRESULT HTMLSelectElementImpl_get_disabled(HTMLDOMNode *iface, VARIANT_BO
 static const NodeImplVtbl HTMLSelectElementImplVtbl = {
     HTMLSelectElement_QI,
     HTMLSelectElement_destructor,
+    NULL,
     HTMLSelectElementImpl_put_disabled,
     HTMLSelectElementImpl_get_disabled
 };
@@ -509,8 +510,7 @@ HTMLElement *HTMLSelectElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLSelectElementVtbl = &HTMLSelectElementVtbl;
     ret->element.node.vtbl = &HTMLSelectElementImplVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLSELECT(ret), &HTMLSelectElement_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, &HTMLSelectElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLSelectElement,
                                              (void**)&ret->nsselect);

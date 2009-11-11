@@ -35,11 +35,11 @@ typedef struct {
 #define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(GopherProtocol, base, iface)
 
 static HRESULT GopherProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD request_flags,
-                                        IInternetBindInfo *bind_info)
+        HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
     GopherProtocol *This = ASYNCPROTOCOL_THIS(prot);
 
-    This->base.request = InternetOpenUrlW(This->base.internet, url, NULL, 0,
+    This->base.request = InternetOpenUrlW(internet_session, url, NULL, 0,
             request_flags, (DWORD_PTR)&This->base);
     if (!This->base.request && GetLastError() != ERROR_IO_PENDING) {
         WARN("InternetOpenUrl failed: %d\n", GetLastError());

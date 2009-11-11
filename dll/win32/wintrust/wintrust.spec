@@ -42,9 +42,9 @@
 @ stdcall CryptSIPVerifyIndirectData(ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
-@ stub DriverCleanupPolicy
-@ stub DriverFinalPolicy
-@ stub DriverInitializePolicy
+@ stdcall DriverCleanupPolicy(ptr)
+@ stdcall DriverFinalPolicy(ptr)
+@ stdcall DriverInitializePolicy(ptr)
 @ stub FindCertsByIssuer
 @ stdcall GenericChainCertificateTrust(ptr)
 @ stdcall GenericChainFinalProv(ptr)

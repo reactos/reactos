@@ -916,6 +916,10 @@ GetGlyphIndicesA(
     INT countW;
 
     lpstrW = FONT_mbtowc(hdc, lpstr, count, &countW, NULL);
+
+    if (lpstrW == NULL)
+        return GDI_ERROR;
+
     Ret = NtGdiGetGlyphIndicesW(hdc, lpstrW, countW, pgi, flags);
     HeapFree(GetProcessHeap(), 0, lpstrW);
     return Ret;
@@ -1720,13 +1724,13 @@ TranslateCharsetInfo(
     int index = 0;
     switch (flags) {
     case TCI_SRCFONTSIG:
-	while (!(*lpSrc>>index & 0x0001) && index<MAXTCIINDEX) index++;
+      while (index < MAXTCIINDEX && !(*lpSrc>>index & 0x0001)) index++;
       break;
     case TCI_SRCCODEPAGE:
-      while (PtrToUlong(lpSrc) != FONT_tci[index].ciACP && index < MAXTCIINDEX) index++;
+      while (index < MAXTCIINDEX && PtrToUlong(lpSrc) != FONT_tci[index].ciACP) index++;
       break;
     case TCI_SRCCHARSET:
-      while (PtrToUlong(lpSrc) != FONT_tci[index].ciCharset && index < MAXTCIINDEX) index++;
+      while (index < MAXTCIINDEX && PtrToUlong(lpSrc) != FONT_tci[index].ciCharset) index++;
       break;
     default:
       return FALSE;

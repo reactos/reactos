@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:         See COPYING in the top level directory
@@ -806,6 +806,7 @@ CreateShortcuts(VOID)
     {
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SOLITAIRE, _T("%SystemRoot%\\system32\\sol.exe"), IDS_CMT_SOLITAIRE, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WINEMINE, _T("%SystemRoot%\\system32\\winemine.exe"), IDS_CMT_WINEMINE, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SPIDER, _T("%SystemRoot%\\system32\\spider.exe"), IDS_CMT_SPIDER, TRUE);
     }
 
     CoUninitialize();

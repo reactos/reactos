@@ -94,6 +94,9 @@ void remove_doc_tasks(const HTMLDocument *doc)
     task_timer_t *timer;
     task_t *iter, *tmp;
 
+    if(!thread_data)
+        return;
+
     LIST_FOR_EACH_SAFE(liter, ltmp, &thread_data->timer_list) {
         timer = LIST_ENTRY(liter, task_timer_t, entry);
         if(timer->doc == doc)
@@ -104,9 +107,6 @@ void remove_doc_tasks(const HTMLDocument *doc)
         timer = LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry);
         SetTimer(thread_data->thread_hwnd, TIMER_ID, timer->time - GetTickCount(), NULL);
     }
-
-    if(!thread_data)
-        return;
 
     while(thread_data->task_queue_head
           && thread_data->task_queue_head->doc == doc)
@@ -191,7 +191,7 @@ HRESULT clear_task_timer(HTMLDocument *doc, BOOL interval, DWORD id)
     return S_OK;
 }
 
-static void set_downloading(HTMLDocument *doc)
+static void set_downloading(HTMLDocumentObj *doc)
 {
     IOleCommandTarget *olecmd;
     HRESULT hres;
@@ -228,7 +228,7 @@ static void set_downloading(HTMLDocument *doc)
 }
 
 /* Calls undocumented 69 cmd of CGID_Explorer */
-static void call_explorer_69(HTMLDocument *doc)
+static void call_explorer_69(HTMLDocumentObj *doc)
 {
     IOleCommandTarget *olecmd;
     VARIANT var;
@@ -254,20 +254,20 @@ static void set_parsecomplete(HTMLDocument *doc)
 
     TRACE("(%p)\n", doc);
 
-    if(doc->usermode == EDITMODE)
+    if(doc->doc_obj->usermode == EDITMODE)
         init_editor(doc);
 
-    call_explorer_69(doc);
+    call_explorer_69(doc->doc_obj);
     call_property_onchanged(&doc->cp_propnotif, 1005);
-    call_explorer_69(doc);
+    call_explorer_69(doc->doc_obj);
 
     /* FIXME: IE7 calls EnableModelless(TRUE), EnableModelless(FALSE) and sets interactive state here */
 
-    doc->readystate = READYSTATE_INTERACTIVE;
+    doc->doc_obj->readystate = READYSTATE_INTERACTIVE;
     call_property_onchanged(&doc->cp_propnotif, DISPID_READYSTATE);
 
-    if(doc->client)
-        IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
+    if(doc->doc_obj->client)
+        IOleClientSite_QueryInterface(doc->doc_obj->client, &IID_IOleCommandTarget, (void**)&olecmd);
 
     if(olecmd) {
         VARIANT state, progress;
@@ -289,15 +289,15 @@ static void set_parsecomplete(HTMLDocument *doc)
         IOleCommandTarget_Release(olecmd);
     }
 
-    doc->readystate = READYSTATE_COMPLETE;
+    doc->doc_obj->readystate = READYSTATE_COMPLETE;
     call_property_onchanged(&doc->cp_propnotif, DISPID_READYSTATE);
 
-    if(doc->frame) {
+    if(doc->doc_obj->frame) {
         static const WCHAR wszDone[] = {'D','o','n','e',0};
-        IOleInPlaceFrame_SetStatusText(doc->frame, wszDone);
+        IOleInPlaceFrame_SetStatusText(doc->doc_obj->frame, wszDone);
     }
 
-    update_title(doc);
+    update_title(doc->doc_obj);
 }
 
 static void set_progress(HTMLDocument *doc)
@@ -307,8 +307,8 @@ static void set_progress(HTMLDocument *doc)
 
     TRACE("(%p)\n", doc);
 
-    if(doc->client)
-        IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
+    if(doc->doc_obj->client)
+        IOleClientSite_QueryInterface(doc->doc_obj->client, &IID_IOleCommandTarget, (void**)&olecmd);
 
     if(olecmd) {
         VARIANT progress_max, progress;
@@ -324,12 +324,12 @@ static void set_progress(HTMLDocument *doc)
                                &progress, NULL);
     }
 
-    if(doc->usermode == EDITMODE && doc->hostui) {
+    if(doc->doc_obj->usermode == EDITMODE && doc->doc_obj->hostui) {
         DOCHOSTUIINFO hostinfo;
 
         memset(&hostinfo, 0, sizeof(DOCHOSTUIINFO));
         hostinfo.cbSize = sizeof(DOCHOSTUIINFO);
-        hres = IDocHostUIHandler_GetHostInfo(doc->hostui, &hostinfo);
+        hres = IDocHostUIHandler_GetHostInfo(doc->doc_obj->hostui, &hostinfo);
         if(SUCCEEDED(hres))
             /* FIXME: use hostinfo */
             TRACE("hostinfo = {%u %08x %08x %s %s}\n",
@@ -349,7 +349,7 @@ static void process_task(task_t *task)
 {
     switch(task->task_id) {
     case TASK_SETDOWNLOADSTATE:
-        set_downloading(task->doc);
+        set_downloading(task->doc->doc_obj);
         break;
     case TASK_PARSECOMPLETE:
         set_parsecomplete(task->doc);
@@ -374,8 +374,14 @@ static void call_timer_disp(IDispatch *disp)
 
     V_VT(&res) = VT_EMPTY;
     memset(&ei, 0, sizeof(ei));
+
+    TRACE(">>>\n");
     hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dp, &res, &ei, NULL);
-    TRACE("ret %08x %s\n", hres, debugstr_variant(&res));
+    if(hres == S_OK)
+        TRACE("<<<\n");
+    else
+        WARN("<<< %08x\n", hres);
+
     VariantClear(&res);
 }
 

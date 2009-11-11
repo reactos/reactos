@@ -1230,7 +1230,7 @@ WSPAccept(SOCKET Handle,
                               NULL);
 
     /* Set up the Accept Structure */
-    AcceptData.ListenHandle = AcceptSocket;
+    AcceptData.ListenHandle = (HANDLE)AcceptSocket;
     AcceptData.SequenceNumber = ListenReceiveData->SequenceNumber;
 
     /* Send IOCTL to Accept */
@@ -1735,12 +1735,19 @@ WSPIoctl(IN  SOCKET Handle,
     switch( dwIoControlCode )
     {
         case FIONBIO:
-            if( cbInBuffer < sizeof(INT) )
+            if( cbInBuffer < sizeof(INT) || IS_INTRESOURCE(lpvInBuffer) )
+            {
+                *lpErrno = WSAEFAULT;
                 return SOCKET_ERROR;
-            Socket->SharedData.NonBlocking = *((PINT)lpvInBuffer) ? 1 : 0;
-            AFD_DbgPrint(MID_TRACE,("[%x] Set nonblocking %d\n", Handle, Socket->SharedData.NonBlocking));
-            return 0;
+            }
+            Socket->SharedData.NonBlocking = *((PULONG)lpvInBuffer) ? 1 : 0;
+            return SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, (PULONG)lpvInBuffer, NULL);
         case FIONREAD:
+            if( cbOutBuffer < sizeof(INT) || IS_INTRESOURCE(lpvOutBuffer) )
+            {
+                *lpErrno = WSAEFAULT;
+                return SOCKET_ERROR;
+            }
             return GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, (PULONG)lpvOutBuffer, NULL);
         default:
             *lpErrno = WSAEINVAL;

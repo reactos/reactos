@@ -667,14 +667,14 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DeleteObject(DesktopRgn);
     }
   }
-//#if 0
-//  if (ISITHOOKED(WH_CBT))
+
+  if (ISITHOOKED(WH_CBT))
   {
       LRESULT lResult;
       NtUserMessageCall( hwnd, WM_CBT, HCBT_MOVESIZE, (LPARAM)&sizingRect, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
       if (lResult) moved = FALSE;
   }
-//#endif
+
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
   SendMessageA( hwnd, WM_EXITSIZEMOVE, 0, 0 );
   SendMessageA( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
@@ -756,14 +756,13 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   if (!IsWindowEnabled( hWnd )) return 0;
 
-//#if 0
-//  if (ISITHOOKED(WH_CBT))
+  if (ISITHOOKED(WH_CBT))
   {
      LRESULT lResult;
      NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
      if (lResult) return 0;
   }
-//#endif
+
   switch (wParam & 0xfff0)
     {
       case SC_MOVE:
@@ -1394,11 +1393,7 @@ User32DefWindowProc(HWND hWnd,
              /* if( HIWORD(lParam) & ~KEYDATA_PREVSTATE ) */
                 if ( (wParam == VK_MENU || wParam == VK_LMENU
                                     || wParam == VK_RMENU) && !iMenuSysKey )
-                {
                    iMenuSysKey = 1;
-                   /* mimic behaviour of XP, sending a WM_SYSCOMMAND when pressing <alt> */
-                   SendMessageW( top, WM_SYSCOMMAND, SC_KEYMENU, 0L );
-                }
                 else
                    iMenuSysKey = 0;
 

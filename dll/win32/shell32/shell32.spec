@@ -316,7 +316,7 @@
 316 stdcall SHGetSpecialFolderLocation(long long ptr)
 317 stdcall SHGetSpecialFolderPathA(long ptr long long)
 318 stdcall SHGetSpecialFolderPathW(long ptr long long)
-319 stub SHGetUnreadMailCountW
+319 stdcall SHGetUnreadMailCountW (long wstr long ptr wstr long)
 320 stdcall SHHelpShortcuts_RunDLL(long long long long) SHHelpShortcuts_RunDLLA
 321 stdcall SHHelpShortcuts_RunDLLA(long long long long)
 322 stdcall SHHelpShortcuts_RunDLLW(long long long long)
@@ -332,7 +332,7 @@
 332 stdcall SHQueryRecycleBinA(str ptr)
 333 stdcall SHQueryRecycleBinW(wstr ptr)
 334 stdcall SHSetLocalizedName(wstr wstr long)
-335 stub SHSetUnreadMailCountW
+335 stdcall SHSetUnreadMailCountW (wstr long wstr)
 336 stdcall SHUpdateRecycleBinIcon()
 337 stdcall SheChangeDirA(str)
 338 stdcall SheChangeDirExA(str)

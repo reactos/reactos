@@ -118,7 +118,7 @@ extern IUnknown         *create_comment( xmlNodePtr comment );
 extern IUnknown         *create_cdata( xmlNodePtr text );
 extern IXMLDOMNodeList  *create_children_nodelist( xmlNodePtr );
 extern IXMLDOMNamedNodeMap *create_nodemap( IXMLDOMNode *node );
-extern IUnknown         *create_doc_Implementation();
+extern IUnknown         *create_doc_Implementation(void);
 extern IUnknown         *create_doc_fragment( xmlNodePtr fragment );
 extern IUnknown         *create_doc_entity_ref( xmlNodePtr entity );
 
@@ -144,7 +144,6 @@ typedef struct _xmlnode
 {
     DispatchEx dispex;
     const struct IXMLDOMNodeVtbl *lpVtbl;
-    const struct IUnknownVtbl *lpInternalUnkVtbl;
     IUnknown *pUnkOuter;
     LONG ref;
     xmlNodePtr node;
@@ -160,7 +159,8 @@ static inline IXMLDOMNode *IXMLDOMNode_from_impl(xmlnode *This)
     return (IXMLDOMNode*)&This->lpVtbl;
 }
 
-extern xmlnode *create_basic_node(xmlNodePtr,IUnknown*,dispex_static_data_t*);
+extern void init_xmlnode(xmlnode*,xmlNodePtr,IUnknown*,dispex_static_data_t*);
+extern void destroy_xmlnode(xmlnode*);
 
 extern HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **document);
 

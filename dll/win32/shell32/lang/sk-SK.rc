@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  09-02-2009
+ * LAST CHANGE:  20-09-2009
  */   
 
 /*
@@ -754,5 +754,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "&Nainötalovaù novÈ pÌsmo..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Predvolen· alokaËn· veækosù" //Default allocation size
-	IDS_COPY_OF                 "Copy of"
+	IDS_COPY_OF                 "KÛpia" //Copy of
 END

@@ -54,6 +54,24 @@ HRESULT WINAPI SoftpubInitialize(CRYPT_PROVIDER_DATA *data)
     return ret;
 }
 
+HRESULT WINAPI DriverInitializePolicy(CRYPT_PROVIDER_DATA *data)
+{
+    FIXME("stub\n");
+    return S_OK;
+}
+
+HRESULT WINAPI DriverCleanupPolicy(CRYPT_PROVIDER_DATA *data)
+{
+    FIXME("stub\n");
+    return S_OK;
+}
+
+HRESULT WINAPI DriverFinalPolicy(CRYPT_PROVIDER_DATA *data)
+{
+    FIXME("stub\n");
+    return S_OK;
+}
+
 /* Assumes data->pWintrustData->u.pFile exists.  Makes sure a file handle is
  * open for the file.
  */

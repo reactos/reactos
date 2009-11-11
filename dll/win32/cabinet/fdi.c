@@ -2279,9 +2279,10 @@ static void free_decompression_temps(HFDI hfdi, const struct fdi_folder *fol,
   }
 }
 
-static void free_decompression_mem(HFDI hfdi, struct fdi_folder *fol,
+static void free_decompression_mem(HFDI hfdi,
   fdi_decomp_state *decomp_state, struct fdi_file *file)
 {
+  struct fdi_folder *fol;
   while (decomp_state) {
     fdi_decomp_state *prev_fds;
 
@@ -2896,17 +2897,17 @@ BOOL __cdecl FDICopy(
   }
 
   free_decompression_temps(hfdi, fol, decomp_state);
-  free_decompression_mem(hfdi, fol, decomp_state, file);
+  free_decompression_mem(hfdi, decomp_state, file);
  
   return TRUE;
 
   bail_and_fail: /* here we free ram before error returns */
 
-  free_decompression_temps(hfdi, fol, decomp_state);
+  if (fol) free_decompression_temps(hfdi, fol, decomp_state);
 
   if (filehf) PFDI_CLOSE(hfdi, filehf);
 
-  free_decompression_mem(hfdi, fol, decomp_state, file);
+  free_decompression_mem(hfdi, decomp_state, file);
 
   return FALSE;
 }

@@ -206,11 +206,15 @@ int shader_addline(struct wined3d_shader_buffer *buffer, const char *format, ...
     return ret;
 }
 
-void shader_init(struct IWineD3DBaseShaderClass *shader, IWineD3DDevice *device)
+void shader_init(struct IWineD3DBaseShaderClass *shader, IWineD3DDeviceImpl *device,
+        IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
 {
     shader->ref = 1;
-    shader->device = device;
+    shader->device = (IWineD3DDevice *)device;
+    shader->parent = parent;
+    shader->parent_ops = parent_ops;
     list_init(&shader->linked_programs);
+    list_add_head(&device->shaders, &shader->shader_list_entry);
 }
 
 /* Convert floating point offset relative

@@ -49,11 +49,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 #define _O_TEXT        0x4000
 #define _O_BINARY      0x8000
 
-static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPWSTR source_root)
+static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
 {
     WCHAR volume_name[MAX_PATH + 1];
+    WCHAR root[MAX_PATH + 1];
 
-    if (!GetVolumeInformationW(source_root, volume_name, MAX_PATH + 1,
+    strcpyW(root, source_root);
+    PathStripToRootW(root);
+    PathAddBackslashW(root);
+
+    if (!GetVolumeInformationW(root, volume_name, MAX_PATH + 1,
                                NULL, NULL, NULL, NULL, 0))
     {
         ERR("Failed to get volume information\n");
@@ -70,7 +75,6 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     LPWSTR source_dir;
     UINT r = ERROR_SUCCESS;
 
-    static const WCHAR szUILevel[] = {'U','I','L','e','v','e','l',0};
     static const WCHAR error_prop[] = {'E','r','r','o','r','D','i','a','l','o','g',0};
 
     if ((msi_get_property_int(package, szUILevel, 0) & INSTALLUILEVEL_MASK) ==
@@ -80,7 +84,6 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     error = generate_error_string(package, 1302, 1, mi->disk_prompt);
     error_dialog = msi_dup_property(package, error_prop);
     source_dir = msi_dup_property(package, cszSourceDir);
-    PathStripToRootW(source_dir);
 
     while (r == ERROR_SUCCESS &&
            !source_matches_volume(mi, source_dir))
@@ -333,11 +336,54 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
                          NULL, CREATE_ALWAYS, attrs, NULL);
     if (handle == INVALID_HANDLE_VALUE)
     {
-        if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES)
-            ERR("failed to create %s (error %d)\n",
-                debugstr_w(path), GetLastError());
+        DWORD err = GetLastError();
+        DWORD attrs2 = GetFileAttributesW(path);
 
-        goto done;
+        if (attrs2 == INVALID_FILE_ATTRIBUTES)
+        {
+            ERR("failed to create %s (error %d)\n", debugstr_w(path), err);
+            goto done;
+        }
+        else if (err == ERROR_ACCESS_DENIED && (attrs2 & FILE_ATTRIBUTE_READONLY))
+        {
+            TRACE("removing read-only attribute on %s\n", debugstr_w(path));
+            SetFileAttributesW( path, attrs2 & ~FILE_ATTRIBUTE_READONLY );
+            handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs2, NULL);
+
+            if (handle != INVALID_HANDLE_VALUE) goto done;
+            err = GetLastError();
+        }
+        if ((err == ERROR_SHARING_VIOLATION) || (err == ERROR_USER_MAPPED_FILE))
+        {
+            WCHAR tmpfileW[MAX_PATH], *tmppathW, *p;
+            DWORD len;
+
+            TRACE("file in use, scheduling rename operation\n");
+
+            GetTempFileNameW(szBackSlash, szMsi, 0, tmpfileW);
+            len = strlenW(path) + strlenW(tmpfileW) + 1;
+            if (!(tmppathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
+                return ERROR_OUTOFMEMORY;
+
+            strcpyW(tmppathW, path);
+            if ((p = strrchrW(tmppathW, '\\'))) *p = 0;
+            strcatW(tmppathW, tmpfileW);
+
+            handle = CreateFileW(tmppathW, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
+
+            if (handle != INVALID_HANDLE_VALUE &&
+                MoveFileExW(path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT) &&
+                MoveFileExW(tmppathW, path, MOVEFILE_DELAY_UNTIL_REBOOT))
+            {
+                data->package->need_reboot = 1;
+            }
+            else
+                WARN("failed to schedule rename operation %s (error %d)\n", debugstr_w(path), GetLastError());
+
+            HeapFree(GetProcessHeap(), 0, tmppathW);
+        }
+        else
+            WARN("failed to create %s (error %d)\n", debugstr_w(path), err);
     }
 
 done:
@@ -455,6 +501,17 @@ void msi_free_media_info(MSIMEDIAINFO *mi)
     msi_free(mi);
 }
 
+static UINT get_drive_type(const WCHAR *path)
+{
+    WCHAR root[MAX_PATH + 1];
+
+    strcpyW(root, path);
+    PathStripToRootW(root);
+    PathAddBackslashW(root);
+
+    return GetDriveTypeW(root);
+}
+
 static UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
 {
     MSIRECORD *row;
@@ -494,9 +551,7 @@ static UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO
 
     source_dir = msi_dup_property(package, cszSourceDir);
     lstrcpyW(mi->source, source_dir);
-
-    PathStripToRootW(source_dir);
-    mi->type = GetDriveTypeW(source_dir);
+    mi->type = get_drive_type(source_dir);
 
     if (file->IsCompressed && mi->cabinet)
     {
@@ -576,7 +631,6 @@ static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
         {
             /* FIXME: what about SourceDir */
             lstrcpyW(mi->source, source);
-            lstrcatW(mi->source, mi->cabinet);
             return ERROR_SUCCESS;
         }
     }

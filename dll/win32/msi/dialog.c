@@ -495,7 +495,6 @@ static LPWSTR msi_create_tmp_path(void)
 {
     WCHAR tmp[MAX_PATH];
     LPWSTR path = NULL;
-    static const WCHAR prefix[] = { 'm','s','i',0 };
     DWORD len, r;
 
     r = GetTempPathW( MAX_PATH, tmp );
@@ -505,7 +504,7 @@ static LPWSTR msi_create_tmp_path(void)
     path = msi_alloc( len * sizeof (WCHAR) );
     if( path )
     {
-        r = GetTempFileNameW( tmp, prefix, 0, path );
+        r = GetTempFileNameW( tmp, szMsi, 0, path );
         if (!r)
         {
             msi_free( path );
@@ -588,8 +587,6 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
     LPCWSTR font_text, text = NULL;
     LPWSTR font;
 
-    static const WCHAR empty[] = {0};
-
     ctrl = msi_dialog_find_control( dialog, control );
     if (!ctrl)
         return;
@@ -597,7 +594,7 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
     {
         font_text = MSI_RecordGetString( rec , 1 );
         font = msi_dialog_get_style( font_text, &text );
-        if (!text) text = empty;
+        if (!text) text = szEmpty;
         SetWindowTextW( ctrl->hwnd, text );
         msi_free( font );
         msi_dialog_check_messages( NULL );
@@ -2390,8 +2387,6 @@ static void msi_dialog_update_directory_list( msi_dialog *dialog, msi_control *c
     HANDLE file;
 
     static const WCHAR asterisk[] = {'*',0};
-    static const WCHAR dot[] = {'.',0};
-    static const WCHAR dotdot[] = {'.','.',0};
 
     if (!control && !(control = msi_dialog_find_control_by_type( dialog, szDirectoryList )))
         return;
@@ -2415,7 +2410,7 @@ static void msi_dialog_update_directory_list( msi_dialog *dialog, msi_control *c
         if ( wfd.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY )
             continue;
 
-        if ( !lstrcmpW( wfd.cFileName, dot ) || !lstrcmpW( wfd.cFileName, dotdot ) )
+        if ( !lstrcmpW( wfd.cFileName, szDot ) || !lstrcmpW( wfd.cFileName, szDotDot ) )
             continue;
 
         item.mask = LVIF_TEXT;
@@ -2471,8 +2466,6 @@ static UINT msi_dialog_dirlist_handler( msi_dialog *dialog,
     LVITEMW item;
     int index;
 
-    static const WCHAR backslash[] = {'\\',0};
-
     if (nmhdr->code != LVN_ITEMACTIVATE)
         return ERROR_SUCCESS;
 
@@ -2494,7 +2487,7 @@ static UINT msi_dialog_dirlist_handler( msi_dialog *dialog,
 
     lstrcpyW( new_path, path );
     lstrcatW( new_path, text );
-    lstrcatW( new_path, backslash );
+    lstrcatW( new_path, szBackSlash );
 
     MSI_SetPropertyW( dialog->package, prop, new_path );
 
@@ -2564,7 +2557,6 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
     LVCOLUMNW lvc;
     DWORD count = 0;
 
-    static const WCHAR zero[] = {'0',0};
     static const WCHAR negative[] = {'-',0};
 
     if (!text) return;
@@ -2582,7 +2574,7 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
         begin += end - begin + 1;
 
         /* empty braces or '0' hides the column */ 
-        if ( !num[0] || !lstrcmpW( num, zero ) )
+        if ( !num[0] || !lstrcmpW( num, szZero ) )
         {
             count++;
             msi_free( num );
@@ -3760,7 +3752,6 @@ UINT msi_spawn_error_dialog( MSIPACKAGE *package, LPWSTR error_dialog, LPWSTR er
     DWORD size = MAX_PATH;
     int res;
 
-    static const WCHAR szUILevel[] = {'U','I','L','e','v','e','l',0};
     static const WCHAR pn_prop[] = {'P','r','o','d','u','c','t','N','a','m','e',0};
     static const WCHAR title_fmt[] = {'%','s',' ','W','a','r','n','i','n','g',0};
     static const WCHAR error_abort[] = {'E','r','r','o','r','A','b','o','r','t',0};

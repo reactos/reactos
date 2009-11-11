@@ -36,7 +36,7 @@ static D3DDECLTYPE_INFO const d3d_dtype_lookup[D3DDECLTYPE_UNUSED] = {
    {D3DDECLTYPE_FLOAT2,    WINED3DFMT_R32G32_FLOAT,       2, sizeof(float)},
    {D3DDECLTYPE_FLOAT3,    WINED3DFMT_R32G32B32_FLOAT,    3, sizeof(float)},
    {D3DDECLTYPE_FLOAT4,    WINED3DFMT_R32G32B32A32_FLOAT, 4, sizeof(float)},
-   {D3DDECLTYPE_D3DCOLOR,  WINED3DFMT_A8R8G8B8,           4, sizeof(BYTE)},
+   {D3DDECLTYPE_D3DCOLOR,  WINED3DFMT_B8G8R8A8_UNORM,     4, sizeof(BYTE)},
    {D3DDECLTYPE_UBYTE4,    WINED3DFMT_R8G8B8A8_UINT,      4, sizeof(BYTE)},
    {D3DDECLTYPE_SHORT2,    WINED3DFMT_R16G16_SINT,        2, sizeof(short int)},
    {D3DDECLTYPE_SHORT4,    WINED3DFMT_R16G16B16A16_SINT,  4, sizeof(short int)},
@@ -217,6 +217,12 @@ static ULONG WINAPI IDirect3DVertexDeclaration9Impl_AddRef(LPDIRECT3DVERTEXDECLA
 
     if(ref == 1) {
         IDirect3DDevice9Ex_AddRef(This->parentDevice);
+        if (!This->convFVF)
+        {
+            wined3d_mutex_lock();
+            IWineD3DVertexDeclaration_AddRef(This->wineD3DVertexDeclaration);
+            wined3d_mutex_unlock();
+        }
     }
 
     return ref;
@@ -233,9 +239,6 @@ void IDirect3DVertexDeclaration9Impl_Destroy(LPDIRECT3DVERTEXDECLARATION9 iface)
     wined3d_mutex_lock();
     IWineD3DVertexDeclaration_Release(This->wineD3DVertexDeclaration);
     wined3d_mutex_unlock();
-
-    HeapFree(GetProcessHeap(), 0, This->elements);
-    HeapFree(GetProcessHeap(), 0, This);
 }
 
 static ULONG WINAPI IDirect3DVertexDeclaration9Impl_Release(LPDIRECT3DVERTEXDECLARATION9 iface) {
@@ -245,12 +248,10 @@ static ULONG WINAPI IDirect3DVertexDeclaration9Impl_Release(LPDIRECT3DVERTEXDECL
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
-        IDirect3DDevice9Ex *parentDevice = This->parentDevice;
-
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         if(!This->convFVF) {
-            IDirect3DVertexDeclaration9Impl_Release(iface);
+            IDirect3DVertexDeclaration9Impl_Destroy(iface);
         }
-        IDirect3DDevice9Ex_Release(parentDevice);
     }
     return ref;
 }
@@ -304,6 +305,18 @@ static const IDirect3DVertexDeclaration9Vtbl Direct3DVertexDeclaration9_Vtbl =
     IDirect3DVertexDeclaration9Impl_GetDeclaration
 };
 
+static void STDMETHODCALLTYPE d3d9_vertexdeclaration_wined3d_object_destroyed(void *parent)
+{
+    IDirect3DVertexDeclaration9Impl *declaration = parent;
+    HeapFree(GetProcessHeap(), 0, declaration->elements);
+    HeapFree(GetProcessHeap(), 0, declaration);
+}
+
+static const struct wined3d_parent_ops d3d9_vertexdeclaration_wined3d_parent_ops =
+{
+    d3d9_vertexdeclaration_wined3d_object_destroyed,
+};
+
 static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9* d3d9_elements,
         WINED3DVERTEXELEMENT **wined3d_elements, UINT *element_count)
 {
@@ -349,72 +362,51 @@ static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9* d3d9_elem
     return D3D_OK;
 }
 
-/* IDirect3DDevice9 IDirect3DVertexDeclaration9 Methods follow: */
-HRESULT WINAPI IDirect3DDevice9Impl_CreateVertexDeclaration(IDirect3DDevice9Ex *iface,
-        const D3DVERTEXELEMENT9 *pVertexElements, IDirect3DVertexDeclaration9 **ppDecl)
+HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration9Impl *declaration,
+        IDirect3DDevice9Impl *device, const D3DVERTEXELEMENT9 *elements)
 {
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    IDirect3DVertexDeclaration9Impl *object = NULL;
-    WINED3DVERTEXELEMENT* wined3d_elements;
+    WINED3DVERTEXELEMENT *wined3d_elements;
     UINT wined3d_element_count;
     UINT element_count;
     HRESULT hr;
 
-    TRACE("(%p) : Relay\n", iface);
-    if (NULL == ppDecl) {
-        WARN("(%p) : Caller passed NULL As ppDecl, returning D3DERR_INVALIDCALL\n",This);
-        return D3DERR_INVALIDCALL;
-    }
-
-    hr = convert_to_wined3d_declaration(pVertexElements, &wined3d_elements, &wined3d_element_count);
+    hr = convert_to_wined3d_declaration(elements, &wined3d_elements, &wined3d_element_count);
     if (FAILED(hr))
     {
-        WARN("(%p) : Error parsing vertex declaration\n", This);
+        WARN("Failed to create wined3d vertex declaration elements, hr %#x.\n", hr);
         return hr;
     }
 
-    /* Allocate the storage for the device */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DVertexDeclaration9Impl));
-    if (NULL == object) {
-        HeapFree(GetProcessHeap(), 0, wined3d_elements);
-        FIXME("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
-
-    object->lpVtbl = &Direct3DVertexDeclaration9_Vtbl;
-    object->ref = 0;
+    declaration->lpVtbl = &Direct3DVertexDeclaration9_Vtbl;
+    declaration->ref = 1;
 
     element_count = wined3d_element_count + 1;
-    object->elements = HeapAlloc(GetProcessHeap(), 0, element_count * sizeof(D3DVERTEXELEMENT9));
-    if (!object->elements) {
+    declaration->elements = HeapAlloc(GetProcessHeap(), 0, element_count * sizeof(*declaration->elements));
+    if (!declaration->elements)
+    {
         HeapFree(GetProcessHeap(), 0, wined3d_elements);
-        HeapFree(GetProcessHeap(), 0, object);
-        ERR("Memory allocation failed\n");
+        ERR("Failed to allocate vertex declaration elements memory.\n");
         return D3DERR_OUTOFVIDEOMEMORY;
     }
-    CopyMemory(object->elements, pVertexElements, element_count * sizeof(D3DVERTEXELEMENT9));
-    object->element_count = element_count;
+    memcpy(declaration->elements, elements, element_count * sizeof(*elements));
+    declaration->element_count = element_count;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateVertexDeclaration(This->WineD3DDevice, &object->wineD3DVertexDeclaration,
-            (IUnknown *)object, wined3d_elements, wined3d_element_count);
+    hr = IWineD3DDevice_CreateVertexDeclaration(device->WineD3DDevice, &declaration->wineD3DVertexDeclaration,
+            (IUnknown *)declaration, &d3d9_vertexdeclaration_wined3d_parent_ops,
+            wined3d_elements, wined3d_element_count);
     wined3d_mutex_unlock();
-
     HeapFree(GetProcessHeap(), 0, wined3d_elements);
-
-    if (FAILED(hr)) {
-
-        /* free up object */
-        WARN("(%p) call to IWineD3DDevice_CreateVertexDeclaration failed\n", This);
-        HeapFree(GetProcessHeap(), 0, object->elements);
-        HeapFree(GetProcessHeap(), 0, object);
-    } else {
-        object->parentDevice = iface;
-        *ppDecl = (LPDIRECT3DVERTEXDECLARATION9) object;
-        IDirect3DVertexDeclaration9_AddRef(*ppDecl);
-         TRACE("(%p) : Created vertex declaration %p\n", This, object);
+    if (FAILED(hr))
+    {
+        WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);
+        return hr;
     }
-    return hr;
+
+    declaration->parentDevice = (IDirect3DDevice9Ex *)device;
+    IDirect3DDevice9Ex_AddRef(declaration->parentDevice);
+
+    return D3D_OK;
 }
 
 HRESULT  WINAPI  IDirect3DDevice9Impl_SetVertexDeclaration(LPDIRECT3DDEVICE9EX iface, IDirect3DVertexDeclaration9* pDecl) {

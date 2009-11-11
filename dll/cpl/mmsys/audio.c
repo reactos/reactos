@@ -20,7 +20,7 @@
 VOID
 InitAudioDlg(HWND hwnd)
 {
-    WAVEOUTCAPS waveOutputPaps;
+    WAVEOUTCAPSW waveOutputPaps;
     WAVEINCAPS waveInputPaps;
     MIDIOUTCAPS midiOutCaps;
     TCHAR szNoDevices[256];
@@ -42,20 +42,33 @@ InitAudioDlg(HWND hwnd)
     }
     else
     {
+        WCHAR DefaultDevice[MAX_PATH] = {0};
+        HKEY hKey;
+        DWORD dwSize = sizeof(DefaultDevice);
+        UINT DefaultIndex = 0;
+
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Multimedia\\Sound Mapper", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            RegQueryValueExW(hKey, L"Playback", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
+            DefaultDevice[MAX_PATH-1] = L'\0';
+            RegCloseKey(hKey);
+        }
+
         for (uIndex = 0; uIndex < DevsNum; uIndex++)
         {
-            if (waveOutGetDevCaps(uIndex, &waveOutputPaps, sizeof(waveOutputPaps)))
+            if (waveOutGetDevCapsW(uIndex, &waveOutputPaps, sizeof(waveOutputPaps)))
                 continue;
 
-            Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) waveOutputPaps.szPname);
+            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM) waveOutputPaps.szPname);
 
             if (CB_ERR != Res)
             {
                 SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-                // TODO: Getting default device
-                SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+                if (!wcsicmp(waveOutputPaps.szPname, DefaultDevice))
+                    DefaultIndex = Res;
             }
         }
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
     }
 
     // Init sound recording devices list
@@ -69,6 +82,19 @@ InitAudioDlg(HWND hwnd)
     }
     else
     {
+        WCHAR DefaultDevice[MAX_PATH] = {0};
+        HKEY hKey;
+        DWORD dwSize = sizeof(DefaultDevice);
+        UINT DefaultIndex = 0;
+
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Multimedia\\Sound Mapper", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            RegQueryValueExW(hKey, L"Record", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
+            DefaultDevice[MAX_PATH-1] = L'\0';
+            RegCloseKey(hKey);
+        }
+
+
         for (uIndex = 0; uIndex < DevsNum; uIndex++)
         {
             if (waveInGetDevCaps(uIndex, &waveInputPaps, sizeof(waveInputPaps)))
@@ -79,10 +105,11 @@ InitAudioDlg(HWND hwnd)
             if (CB_ERR != Res)
             {
                 SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-                // TODO: Getting default device
-                SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+                if (!wcsicmp(waveInputPaps.szPname, DefaultDevice))
+                    DefaultIndex = Res;
             }
         }
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
     }
 
     // Init MIDI devices list

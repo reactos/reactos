@@ -32,20 +32,26 @@ typedef struct {
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 
+static inline BoolInstance *bool_this(vdisp_t *jsthis)
+{
+    return is_vclass(jsthis, JSCLASS_BOOLEAN) ? (BoolInstance*)jsthis->u.jsdisp : NULL;
+}
+
 /* ECMA-262 3rd Edition    15.6.4.2 */
-static HRESULT Bool_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Bool_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
+    BoolInstance *bool;
+
     static const WCHAR trueW[] = {'t','r','u','e',0};
     static const WCHAR falseW[] = {'f','a','l','s','e',0};
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_BOOLEAN))
-        return throw_type_error(dispex->ctx, ei, IDS_NOT_BOOL, NULL);
+    if(!(bool = bool_this(jsthis)))
+        return throw_type_error(ctx, ei, IDS_NOT_BOOL, NULL);
 
     if(retv) {
-        BoolInstance *bool = (BoolInstance*)dispex;
         BSTR val;
 
         if(bool->val) val = SysAllocString(trueW);
@@ -62,17 +68,17 @@ static HRESULT Bool_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
 }
 
 /* ECMA-262 3rd Edition    15.6.4.3 */
-static HRESULT Bool_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Bool_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
+    BoolInstance *bool;
+
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_BOOLEAN))
-        return throw_type_error(dispex->ctx, ei, IDS_NOT_BOOL, NULL);
+    if(!(bool = bool_this(jsthis)))
+        return throw_type_error(ctx, ei, IDS_NOT_BOOL, NULL);
 
     if(retv) {
-        BoolInstance *bool = (BoolInstance*)dispex;
-
         V_VT(retv) = VT_BOOL;
         V_BOOL(retv) = bool->val;
     }
@@ -80,14 +86,14 @@ static HRESULT Bool_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
     return S_OK;
 }
 
-static HRESULT Bool_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Bool_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
 
     switch(flags) {
     case INVOKE_FUNC:
-        return throw_type_error(dispex->ctx, ei, IDS_NOT_FUNC, NULL);
+        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
     default:
         FIXME("unimplemented flags %x\n", flags);
         return E_NOTIMPL;
@@ -111,7 +117,7 @@ static const builtin_info_t Bool_info = {
     NULL
 };
 
-static HRESULT BoolConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT BoolConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     HRESULT hres;
@@ -127,7 +133,7 @@ static HRESULT BoolConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
     case DISPATCH_CONSTRUCT: {
         DispatchEx *bool;
 
-        hres = create_bool(dispex->ctx, value, &bool);
+        hres = create_bool(ctx, value, &bool);
         if(FAILED(hres))
             return hres;
 
@@ -179,11 +185,13 @@ HRESULT create_bool_constr(script_ctx_t *ctx, DispatchEx *object_prototype, Disp
     BoolInstance *bool;
     HRESULT hres;
 
+    static const WCHAR BooleanW[] = {'B','o','o','l','e','a','n',0};
+
     hres = alloc_bool(ctx, object_prototype, &bool);
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, BoolConstr_value, NULL, PROPF_CONSTR, &bool->dispex, ret);
+    hres = create_builtin_function(ctx, BoolConstr_value, BooleanW, NULL, PROPF_CONSTR, &bool->dispex, ret);
 
     jsdisp_release(&bool->dispex);
     return hres;

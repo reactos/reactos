@@ -7,6 +7,7 @@
  * Copyright 2005 Oliver Stieber
  * Copyright 2006 Ivan Gyurdiev
  * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -174,6 +175,7 @@ static ULONG WINAPI IWineD3DVertexShaderImpl_Release(IWineD3DVertexShader *iface
     if (!refcount)
     {
         shader_cleanup((IWineD3DBaseShader *)iface);
+        This->baseShader.parent_ops->wined3d_object_destroyed(This->baseShader.parent);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -187,7 +189,7 @@ static ULONG WINAPI IWineD3DVertexShaderImpl_Release(IWineD3DVertexShader *iface
 static HRESULT WINAPI IWineD3DVertexShaderImpl_GetParent(IWineD3DVertexShader *iface, IUnknown** parent){
     IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
 
-    *parent = This->parent;
+    *parent = This->baseShader.parent;
     IUnknown_AddRef(*parent);
     TRACE("(%p) : returning %p\n", This, *parent);
     return WINED3D_OK;
@@ -222,50 +224,46 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_GetFunction(IWineD3DVertexShader*
     return WINED3D_OK;
 }
 
-/* Note that for vertex shaders CompileShader isn't called until the
- * shader is first used. The reason for this is that we need the vertex
- * declaration the shader will be used with in order to determine if
- * the data in a register is of type D3DCOLOR, and needs swizzling. */
-static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader *iface,
-        const DWORD *pFunction, const struct wined3d_shader_signature *output_signature)
+static HRESULT vertexshader_set_function(IWineD3DVertexShaderImpl *shader,
+        const DWORD *byte_code, const struct wined3d_shader_signature *output_signature)
 {
-    IWineD3DVertexShaderImpl *This =(IWineD3DVertexShaderImpl *)iface;
-    IWineD3DDeviceImpl *deviceImpl = (IWineD3DDeviceImpl *) This->baseShader.device;
+    IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *)shader->baseShader.device;
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     const struct wined3d_shader_frontend *fe;
     unsigned int i;
     HRESULT hr;
-    shader_reg_maps *reg_maps = &This->baseShader.reg_maps;
+    shader_reg_maps *reg_maps = &shader->baseShader.reg_maps;
 
-    TRACE("(%p) : pFunction %p\n", iface, pFunction);
+    TRACE("shader %p, byte_code %p, output_signature %p.\n", shader, byte_code, output_signature);
 
-    fe = shader_select_frontend(*pFunction);
+    fe = shader_select_frontend(*byte_code);
     if (!fe)
     {
         FIXME("Unable to find frontend for shader.\n");
         return WINED3DERR_INVALIDCALL;
     }
-    This->baseShader.frontend = fe;
-    This->baseShader.frontend_data = fe->shader_init(pFunction, output_signature);
-    if (!This->baseShader.frontend_data)
+    shader->baseShader.frontend = fe;
+    shader->baseShader.frontend_data = fe->shader_init(byte_code, output_signature);
+    if (!shader->baseShader.frontend_data)
     {
         FIXME("Failed to initialize frontend.\n");
         return WINED3DERR_INVALIDCALL;
     }
 
     /* First pass: trace shader */
-    if (TRACE_ON(d3d_shader)) shader_trace_init(fe, This->baseShader.frontend_data, pFunction);
+    if (TRACE_ON(d3d_shader)) shader_trace_init(fe, shader->baseShader.frontend_data, byte_code);
 
     /* Initialize immediate constant lists */
-    list_init(&This->baseShader.constantsF);
-    list_init(&This->baseShader.constantsB);
-    list_init(&This->baseShader.constantsI);
+    list_init(&shader->baseShader.constantsF);
+    list_init(&shader->baseShader.constantsB);
+    list_init(&shader->baseShader.constantsI);
 
     /* Second pass: figure out registers used, semantics, etc.. */
-    This->min_rel_offset = GL_LIMITS(vshader_constantsF);
-    This->max_rel_offset = 0;
-    hr = shader_get_registers_used((IWineD3DBaseShader*) This, fe,
-            reg_maps, This->attributes, NULL, This->output_signature,
-            pFunction, GL_LIMITS(vshader_constantsF));
+    shader->min_rel_offset = gl_info->max_vshader_constantsF;
+    shader->max_rel_offset = 0;
+    hr = shader_get_registers_used((IWineD3DBaseShader *)shader, fe,
+            reg_maps, shader->attributes, NULL, shader->output_signature,
+            byte_code, gl_info->max_vshader_constantsF);
     if (hr != WINED3D_OK) return hr;
 
     if (output_signature)
@@ -274,34 +272,42 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader 
         {
             struct wined3d_shader_signature_element *e = &output_signature->elements[i];
             reg_maps->output_registers |= 1 << e->register_idx;
-            This->output_signature[e->register_idx] = *e;
+            shader->output_signature[e->register_idx] = *e;
         }
     }
 
-    vshader_set_limits(This);
+    vshader_set_limits(shader);
 
-    if (deviceImpl->vs_selected_mode == SHADER_ARB
-            && ((GLINFO_LOCATION).quirks & WINED3D_QUIRK_ARB_VS_OFFSET_LIMIT)
-            && This->min_rel_offset <= This->max_rel_offset)
+    if (device->vs_selected_mode == SHADER_ARB
+            && (gl_info->quirks & WINED3D_QUIRK_ARB_VS_OFFSET_LIMIT)
+            && shader->min_rel_offset <= shader->max_rel_offset)
     {
-        if(This->max_rel_offset - This->min_rel_offset > 127) {
+        if (shader->max_rel_offset - shader->min_rel_offset > 127)
+        {
             FIXME("The difference between the minimum and maximum relative offset is > 127\n");
             FIXME("Which this OpenGL implementation does not support. Try using GLSL\n");
-            FIXME("Min: %d, Max: %d\n", This->min_rel_offset, This->max_rel_offset);
-        } else if(This->max_rel_offset - This->min_rel_offset > 63) {
-            This->rel_offset = This->min_rel_offset + 63;
-        } else if(This->max_rel_offset > 63) {
-            This->rel_offset = This->min_rel_offset;
-        } else {
-            This->rel_offset = 0;
+            FIXME("Min: %d, Max: %d\n", shader->min_rel_offset, shader->max_rel_offset);
+        }
+        else if (shader->max_rel_offset - shader->min_rel_offset > 63)
+        {
+            shader->rel_offset = shader->min_rel_offset + 63;
+        }
+        else if (shader->max_rel_offset > 63)
+        {
+            shader->rel_offset = shader->min_rel_offset;
+        }
+        else
+        {
+            shader->rel_offset = 0;
         }
     }
-    This->baseShader.load_local_constsF = This->baseShader.reg_maps.usesrelconstF && !list_empty(&This->baseShader.constantsF);
+    shader->baseShader.load_local_constsF = shader->baseShader.reg_maps.usesrelconstF
+            && !list_empty(&shader->baseShader.constantsF);
 
     /* copy the function ... because it will certainly be released by application */
-    This->baseShader.function = HeapAlloc(GetProcessHeap(), 0, This->baseShader.functionLength);
-    if (!This->baseShader.function) return E_OUTOFMEMORY;
-    memcpy(This->baseShader.function, pFunction, This->baseShader.functionLength);
+    shader->baseShader.function = HeapAlloc(GetProcessHeap(), 0, shader->baseShader.functionLength);
+    if (!shader->baseShader.function) return E_OUTOFMEMORY;
+    memcpy(shader->baseShader.function, byte_code, shader->baseShader.functionLength);
 
     return WINED3D_OK;
 }
@@ -332,7 +338,7 @@ static HRESULT WINAPI IWIneD3DVertexShaderImpl_SetLocalConstantsF(IWineD3DVertex
     return WINED3D_OK;
 }
 
-const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl =
+static const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl =
 {
     /*** IUnknown methods ***/
     IWineD3DVertexShaderImpl_QueryInterface,
@@ -341,14 +347,35 @@ const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl =
     /*** IWineD3DBase methods ***/
     IWineD3DVertexShaderImpl_GetParent,
     /*** IWineD3DBaseShader methods ***/
-    IWineD3DVertexShaderImpl_SetFunction,
-    /*** IWineD3DVertexShader methods ***/
     IWineD3DVertexShaderImpl_GetDevice,
     IWineD3DVertexShaderImpl_GetFunction,
+    /*** IWineD3DVertexShader methods ***/
     IWIneD3DVertexShaderImpl_SetLocalConstantsF
 };
 
 void find_vs_compile_args(IWineD3DVertexShaderImpl *shader, IWineD3DStateBlockImpl *stateblock, struct vs_compile_args *args) {
     args->fog_src = stateblock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE ? VS_FOG_COORD : VS_FOG_Z;
     args->swizzle_map = ((IWineD3DDeviceImpl *)shader->baseShader.device)->strided_streams.swizzle_map;
+}
+
+HRESULT vertexshader_init(IWineD3DVertexShaderImpl *shader, IWineD3DDeviceImpl *device,
+        const DWORD *byte_code, const struct wined3d_shader_signature *output_signature,
+        IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    HRESULT hr;
+
+    if (!byte_code) return WINED3DERR_INVALIDCALL;
+
+    shader->lpVtbl = &IWineD3DVertexShader_Vtbl;
+    shader_init(&shader->baseShader, device, parent, parent_ops);
+
+    hr = vertexshader_set_function(shader, byte_code, output_signature);
+    if (FAILED(hr))
+    {
+        WARN("Failed to set function, hr %#x.\n", hr);
+        shader_cleanup((IWineD3DBaseShader *)shader);
+        return hr;
+    }
+
+    return WINED3D_OK;
 }

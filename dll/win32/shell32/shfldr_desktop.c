@@ -81,11 +81,11 @@ static HRESULT WINAPI ISF_Desktop_fnQueryInterface(
     else if (IsEqualIID (riid, &IID_IPersistFolder) ||
              IsEqualIID (riid, &IID_IPersistFolder2))
     {
-        *ppvObj = &This->lpPF2;
+        *ppvObj = (void *)&This->lpPF2;
     }
     else if (IsEqualIID(riid, &IID_ISFHelper))
     {
-        *ppvObj = &This->lpvtblSFHelper;
+        *ppvObj = (void *)&This->lpvtblSFHelper;
     }
     if (*ppvObj)
     {

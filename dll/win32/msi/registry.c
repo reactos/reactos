@@ -416,9 +416,8 @@ DWORD msi_version_str_to_dword(LPCWSTR p)
 
 LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value )
 {
-    static const WCHAR emptyW[] = {0};
     DWORD len;
-    if (!value) value = emptyW;
+    if (!value) value = szEmpty;
     len = (lstrlenW(value) + 1) * sizeof (WCHAR);
     return RegSetValueExW( hkey, name, 0, REG_SZ, (const BYTE *)value, len );
 }
@@ -1779,9 +1778,6 @@ static UINT msi_get_patch_state(LPCWSTR prodcode, LPCWSTR usersid,
     LONG res;
     UINT r = ERROR_NO_MORE_ITEMS;
 
-    static const WCHAR szPatches[] = {'P','a','t','c','h','e','s',0};
-    static const WCHAR szState[] = {'S','t','a','t','e',0};
-
     *state = MSIPATCHSTATE_INVALID;
 
     r = MSIREG_OpenUserDataProductKey(prodcode, context,
@@ -1829,10 +1825,6 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
     DWORD type, size;
     LONG res;
     UINT temp, r = ERROR_NO_MORE_ITEMS;
-
-    static const WCHAR szPatches[] = {'P','a','t','c','h','e','s',0};
-    static const WCHAR szState[] = {'S','t','a','t','e',0};
-    static const WCHAR szEmpty[] = {0};
 
     if (MSIREG_OpenProductKey(prodcode, usersid, context,
                               &prod, FALSE) != ERROR_SUCCESS)

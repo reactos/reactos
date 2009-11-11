@@ -47,6 +47,14 @@ static ULONG WINAPI IDirect3DTexture8Impl_AddRef(LPDIRECT3DTEXTURE8 iface) {
 
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
+    if (ref == 1)
+    {
+        IDirect3DDevice8_AddRef(This->parentDevice);
+        wined3d_mutex_lock();
+        IWineD3DTexture_AddRef(This->wineD3DTexture);
+        wined3d_mutex_unlock();
+    }
+
     return ref;
 }
 
@@ -57,12 +65,10 @@ static ULONG WINAPI IDirect3DTexture8Impl_Release(LPDIRECT3DTEXTURE8 iface) {
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
+        IDirect3DDevice8_Release(This->parentDevice);
         wined3d_mutex_lock();
-        IWineD3DTexture_Destroy(This->wineD3DTexture, D3D8CB_DestroySurface);
+        IWineD3DTexture_Release(This->wineD3DTexture);
         wined3d_mutex_unlock();
-
-        IUnknown_Release(This->parentDevice);
-        HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
 }
@@ -285,7 +291,7 @@ static HRESULT WINAPI IDirect3DTexture8Impl_AddDirtyRect(LPDIRECT3DTEXTURE8 ifac
     return hr;
 }
 
-const IDirect3DTexture8Vtbl Direct3DTexture8_Vtbl =
+static const IDirect3DTexture8Vtbl Direct3DTexture8_Vtbl =
 {
     /* IUnknown */
     IDirect3DTexture8Impl_QueryInterface,
@@ -311,3 +317,38 @@ const IDirect3DTexture8Vtbl Direct3DTexture8_Vtbl =
     IDirect3DTexture8Impl_UnlockRect,
     IDirect3DTexture8Impl_AddDirtyRect
 };
+
+static void STDMETHODCALLTYPE d3d8_texture_wined3d_object_destroyed(void *parent)
+{
+    HeapFree(GetProcessHeap(), 0, parent);
+}
+
+static const struct wined3d_parent_ops d3d8_texture_wined3d_parent_ops =
+{
+    d3d8_texture_wined3d_object_destroyed,
+};
+
+HRESULT texture_init(IDirect3DTexture8Impl *texture, IDirect3DDevice8Impl *device,
+        UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
+{
+    HRESULT hr;
+
+    texture->lpVtbl = &Direct3DTexture8_Vtbl;
+    texture->ref = 1;
+
+    wined3d_mutex_lock();
+    hr = IWineD3DDevice_CreateTexture(device->WineD3DDevice, width, height, levels,
+            usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(format), pool,
+            &texture->wineD3DTexture, (IUnknown *)texture, &d3d8_texture_wined3d_parent_ops);
+    wined3d_mutex_unlock();
+    if (FAILED(hr))
+    {
+        WARN("Failed to create wined3d texture, hr %#x.\n", hr);
+        return hr;
+    }
+
+    texture->parentDevice = (IDirect3DDevice8 *)device;
+    IDirect3DDevice8_AddRef(texture->parentDevice);
+
+    return D3D_OK;
+}

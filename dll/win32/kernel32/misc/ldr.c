@@ -63,6 +63,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 	}
 
 	Length += GetCurrentDirectoryW(0, NULL);
+	Length += GetDllDirectoryW(0, NULL);
 	Length += GetSystemDirectoryW(NULL, 0);
 	Length += GetWindowsDirectoryW(NULL, 0);
 	Length += GetEnvironmentVariableW(L"PATH", NULL, 0);
@@ -84,12 +85,13 @@ GetDllLoadPath(LPCWSTR lpModule)
 
 	Pos += GetCurrentDirectoryW(Length, EnvironmentBufferW + Pos);
 	EnvironmentBufferW[Pos++] = L';';
+	Pos += GetDllDirectoryW(Length - Pos, EnvironmentBufferW + Pos);
+	EnvironmentBufferW[Pos++] = L';';
 	Pos += GetSystemDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
 	EnvironmentBufferW[Pos++] = L';';
 	Pos += GetWindowsDirectoryW(EnvironmentBufferW + Pos, Length - Pos);
 	EnvironmentBufferW[Pos++] = L';';
 	Pos += GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
-	EnvironmentBufferW[Pos] = 0;
 
 	SetLastError(LastError);
 	return EnvironmentBufferW;

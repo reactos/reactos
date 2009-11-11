@@ -76,7 +76,7 @@
 #define IDC_LISTBOX_CURSOR                  2015
 #define IDC_COMBO_CURSOR_SCHEME             2030
 #define IDC_BUTTON_DELETE_SCHEME            2033
-#define IDC_CHECK_DROP_SHADOW               2034
+#define IDC_CHECK_CURSOR_SHADOW             2034
 #define IDC_IMAGE_SWAP_MOUSE                2035
 #define IDC_IMAGE_DOUBLE_CLICK_SPEED        2036
 #define IDC_ICON_MOUSE_SPEED                2037

@@ -164,6 +164,7 @@ typedef struct
 		     (LPARAM)(es->hwndSelf)); \
 	} while(0)
 
+
 /*********************************************************************
  *
  *	EM_CANUNDO
@@ -1225,7 +1226,7 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 	{
 	    WARN("edit hwnd %p already destroyed\n", es->hwndSelf);
 	    return;
-    	}
+	}
 
 	if (!es->lock_count) {
 		ERR("lock_count == 0 ... please report\n");
@@ -3382,43 +3383,6 @@ static LRESULT EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 
 /*********************************************************************
  *
- *	WM_COMMAND
- *
- */
-static void EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND control)
-{
-	if (code || control)
-		return;
-
-	switch (id) {
-		case EM_UNDO:
-                        SendMessageW(es->hwndSelf, WM_UNDO, 0, 0);
-			break;
-		case WM_CUT:
-                        SendMessageW(es->hwndSelf, WM_CUT, 0, 0);
-			break;
-		case WM_COPY:
-                        SendMessageW(es->hwndSelf, WM_COPY, 0, 0);
-			break;
-		case WM_PASTE:
-                        SendMessageW(es->hwndSelf, WM_PASTE, 0, 0);
-			break;
-		case WM_CLEAR:
-                        SendMessageW(es->hwndSelf, WM_CLEAR, 0, 0);
-			break;
-		case EM_SETSEL:
-			EDIT_EM_SetSel(es, 0, (UINT)-1, FALSE);
-			EDIT_EM_ScrollCaret(es);
-			break;
-		default:
-			ERR("unknown menu item, please report\n");
-			break;
-	}
-}
-
-
-/*********************************************************************
- *
  *	WM_CONTEXTMENU
  *
  *	Note: the resource files resource/sysres_??.rc cannot define a
@@ -3444,6 +3408,7 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
 	UINT start = es->selection_start;
 	UINT end = es->selection_end;
 
+    BOOL selectedItem;
 	ORDER_UINT(start, end);
 
 	/* undo */
@@ -3469,7 +3434,33 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
             y = rc.top + (rc.bottom - rc.top) / 2;
         }
 
-	TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, x, y, 0, es->hwndSelf, NULL);
+	selectedItem = TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, x, y, 0, es->hwndSelf, NULL);
+
+	switch (selectedItem) {
+		case EM_UNDO:
+                        SendMessageW(es->hwndSelf, WM_UNDO, 0, 0);
+			break;
+		case WM_CUT:
+                        SendMessageW(es->hwndSelf, WM_CUT, 0, 0);
+			break;
+		case WM_COPY:
+                        SendMessageW(es->hwndSelf, WM_COPY, 0, 0);
+			break;
+		case WM_PASTE:
+                        SendMessageW(es->hwndSelf, WM_PASTE, 0, 0);
+			break;
+		case WM_CLEAR:
+                        SendMessageW(es->hwndSelf, WM_CLEAR, 0, 0);
+			break;
+		case EM_SETSEL:
+			EDIT_EM_SetSel(es, 0, (UINT)-1, FALSE);
+			EDIT_EM_ScrollCaret(es);
+			break;
+		default:
+			ERR("unknown menu item, please report\n");
+			break;
+	}
+
 	DestroyMenu(menu);
 }
 
@@ -3676,8 +3667,8 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
 	    }
 	    break;
         case VK_ESCAPE:
-	    if (!(es->style & ES_MULTILINE) && EDIT_IsInsideDialog(es))
-	        PostMessageW(es->hwndParent, WM_CLOSE, 0, 0);
+            if ((es->style & ES_MULTILINE) && EDIT_IsInsideDialog(es))
+                PostMessageW(es->hwndParent, WM_CLOSE, 0, 0);
             break;
         case VK_TAB:
             if ((es->style & ES_MULTILINE) && EDIT_IsInsideDialog(es))
@@ -4601,8 +4592,8 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
         *            WM_XXX messages before WM_NCCREATE is completed.
         */
 
- 	es->is_unicode = unicode;
- 	es->style = lpcs->style;
+	es->is_unicode = unicode;
+	es->style = lpcs->style;
 
         es->bEnableState = !(es->style & WS_DISABLED);
 
@@ -4670,7 +4661,7 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
          * If WS_BORDER without WS_EX_CLIENTEDGE is specified we shouldn't have
          * a nonclient area and we should handle painting the border ourselves.
          *
-         * When making modifications please ensure that the code still works 
+         * When making modifications please ensure that the code still works
          * for edit controls created directly with style 0x50800000, exStyle 0
          * (which should have a single pixel border)
 	 */
@@ -4691,7 +4682,7 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
 {
         RECT clientRect;
-        
+
 	TRACE("%s\n", debugstr_w(name));
        /*
         *	To initialize some final structure members, we call some helper
@@ -4701,7 +4692,7 @@ static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
         */
         EDIT_WM_SetFont(es, 0, FALSE);
         EDIT_EM_EmptyUndoBuffer(es);
-        
+
         /* We need to calculate the format rect
            (applications may send EM_SETMARGINS before the control gets visible) */
         GetClientRect(es->hwndSelf, &clientRect);
@@ -4803,7 +4794,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 	LRESULT result = 0;
 
         TRACE("hwnd=%p msg=%x (%s) wparam=%lx lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
-	
+
 	if (!es && msg != WM_NCCREATE)
 		return DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
 
@@ -5121,6 +5112,9 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 	case EM_SETREADONLY16:
 #endif
 	case EM_SETREADONLY:
+	{
+		DWORD old_style = es->style;
+
 		if (wParam) {
                     SetWindowLongPtrW( hwnd, GWL_STYLE,
                                        GetWindowLongPtrW( hwnd, GWL_STYLE ) | ES_READONLY );
@@ -5130,8 +5124,13 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
                                        GetWindowLongPtrW( hwnd, GWL_STYLE ) & ~ES_READONLY );
                     es->style &= ~ES_READONLY;
 		}
-                result = 1;
- 		break;
+
+		if (old_style ^ es->style)
+		    InvalidateRect(es->hwndSelf, NULL, TRUE);
+
+		result = 1;
+		break;
+	}
 
 #ifndef __REACTOS__
 	case EM_SETWORDBREAKPROC16:
@@ -5208,7 +5207,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 
 	case WM_GETDLGCODE:
 		result = DLGC_HASSETSEL | DLGC_WANTCHARS | DLGC_WANTARROWS;
-		
+
 		if (es->style & ES_MULTILINE)
 		   result |= DLGC_WANTALLKEYS;
 
@@ -5291,11 +5290,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		EDIT_WM_Clear(es);
 		break;
 
-	case WM_COMMAND:
-		EDIT_WM_Command(es, HIWORD(wParam), LOWORD(wParam), (HWND)lParam);
-		break;
-
-        case WM_CONTEXTMENU:
+    case WM_CONTEXTMENU:
 		EDIT_WM_ContextMenu(es, (short)LOWORD(lParam), (short)HIWORD(lParam));
 		break;
 
@@ -5483,12 +5478,12 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 
 	case WM_IME_CONTROL:
 		break;
-                
+
 	default:
 		result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
 		break;
 	}
-	
+
 	if (es) EDIT_UnlockBuffer(es, FALSE);
 
         TRACE("hwnd=%p msg=%x (%s) -- 0x%08lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), result);
@@ -5524,7 +5519,11 @@ const struct builtin_class_descr EDIT_builtin_class =
     CS_DBLCLKS | CS_PARENTDC,   /* style */
     EditWndProcA,         /* procA */
     EditWndProcW,         /* procW */
+#ifdef _WIN64
     sizeof(EDITSTATE *),  /* extra */
+#else
+    sizeof(EDITSTATE *) + sizeof(WORD), /* extra */
+#endif
     IDC_IBEAM,            /* cursor */
     0                     /* brush */
 };

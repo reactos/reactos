@@ -1195,31 +1195,32 @@ BOOL
 APIENTRY
 rosglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    BOOL ret = FALSE;
+
+    if(fuPlanes & WGL_SWAP_MAIN_PLANE)
+        ret = rosglSwapBuffers(hdc);
+
+    if(fuPlanes &~WGL_SWAP_MAIN_PLANE)
+        DBGTRACE("wglSwapLayerBuffers is not fully implemented\n");
+
+    return ret;
 }
 
 
 BOOL
 APIENTRY
-rosglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+rosglUseFontBitmapsA( HDC hdc, DWORD first, DWORD count, DWORD listBase )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    return IntUseFontBitmapsA(hdc, first, count, listBase);
 }
 
 
 BOOL
 APIENTRY
-rosglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+rosglUseFontBitmapsW( HDC hdc, DWORD first, DWORD count, DWORD listBase )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    return IntUseFontBitmapsW(hdc, first, count, listBase);
 }
-
 
 BOOL
 APIENTRY
@@ -1227,9 +1228,7 @@ rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                        FLOAT deviation, FLOAT extrusion, int format,
                        GLYPHMETRICSFLOAT *pgmf )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    return IntUseFontOutlinesA(hdc, first, count, listBase, deviation, extrusion, format, pgmf);
 }
 
 
@@ -1239,9 +1238,7 @@ rosglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                        FLOAT deviation, FLOAT extrusion, int format,
                        GLYPHMETRICSFLOAT *pgmf )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    return IntUseFontOutlinesW(hdc, first, count, listBase, deviation, extrusion, format, pgmf);
 }
 
 #ifdef __cplusplus

@@ -251,9 +251,9 @@ typedef BOOL
 extern HINSTANCE WsDllHandle;
 extern HANDLE WsSockHeap;
 extern PWAH_HANDLE_TABLE WsSockHandleTable;
-extern DWORD TlsIndex;
 extern PWSPROCESS CurrentWsProcess;
 extern DWORD GlobalTlsIndex;
+#define TlsIndex GlobalTlsIndex
 extern BOOLEAN WsAsyncThreadInitialized;
 extern PWS_SOCK_POST_ROUTINE WsSockPostRoutine;
 

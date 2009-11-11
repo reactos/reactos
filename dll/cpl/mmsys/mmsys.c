@@ -435,7 +435,26 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
             swprintf(WaveName, L"wave%u", Index);
             if (RegQueryValueExW(hKey, WaveName, 0, NULL, NULL, &BufferSize) != ERROR_MORE_DATA)
             {
+                /* Store new audio driver entry */
                 RegSetValueExW(hKey, WaveName, 0, REG_SZ, (LPBYTE)szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR));
+                break;
+            }
+            else
+            {
+                WCHAR Buffer[MAX_PATH];
+                BufferSize = sizeof(Buffer);
+
+                if (RegQueryValueExW(hKey, WaveName, 0, NULL, (LPBYTE)Buffer, &BufferSize) == ERROR_SUCCESS)
+                {
+                    /* Make sure the buffer is zero terminated */
+                    Buffer[MAX_PATH-1] = L'\0';
+
+                    if (!wcsicmp(Buffer, szBuffer))
+                    {
+                        /* an entry already exists */
+                        break;
+                    }
+                }
             }
         }
         RegCloseKey(hKey);

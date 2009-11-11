@@ -193,7 +193,7 @@ static dispex_static_data_t HTMLDOMTextNode_dispex = {
     HTMLDOMTextNode_iface_tids
 };
 
-HTMLDOMNode *HTMLDOMTextNode_Create(HTMLDocument *doc, nsIDOMNode *nsnode)
+HTMLDOMNode *HTMLDOMTextNode_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode)
 {
     HTMLDOMTextNode *ret ;
 

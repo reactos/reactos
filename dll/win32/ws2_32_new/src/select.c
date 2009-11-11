@@ -48,72 +48,69 @@ select(IN INT s,
     PWSSOCKET Socket;
     INT Status;
     INT ErrorCode;
-    BOOL Found = FALSE;
     SOCKET Handle;
+    LPWSPSELECT WSPSelect;
+
     DPRINT("select: %lx %p %p %p %p\n", s, readfds, writefds, exceptfds, timeout);
 
-#if defined(__GNUC__) && \
-    (__GNUC__ * 100 + __GNUC_MINOR__ == 404)
-    /* Silence incorrect GCC 4.4.x warning */
-    Handle = 0;
-#endif
-
     /* Check for WSAStartup */
-    if ((ErrorCode = WsQuickProlog()) == ERROR_SUCCESS)
+    ErrorCode = WsQuickProlog();
+
+    if (ErrorCode != ERROR_SUCCESS)
     {
-        /* Use the first Socket from the first valid set */
-        if (readfds && readfds->fd_count) 
-        {
-            Handle = readfds->fd_array[0];
-            Found = TRUE;
-        } 
-        if (!Found && writefds && writefds->fd_count) 
-        {
-            Handle = writefds->fd_array[0];
-            Found = TRUE;
-        } 
-        if (!Found && exceptfds && exceptfds->fd_count) 
-        {
-            Handle = exceptfds->fd_array[0];
-            Found = TRUE;
-        }
-
-        /* Make sure we found one */
-        if (Found)
-        {
-            /* Get the Socket Context */
-            if ((Socket = WsSockGetSocket(Handle)))
-            {
-                /* Make the call */
-                Status = Socket->Provider->Service.lpWSPSelect(s,
-                                                               readfds, 
-                                                               writefds,
-                                                               exceptfds, 
-                                                               (struct timeval *)timeout, 
-                                                               &ErrorCode);
-                /* Deference the Socket Context */
-                WsSockDereference(Socket);
-
-                /* Return Provider Value */
-                if (Status != SOCKET_ERROR) return Status;
-
-                /* If everything seemed fine, then the WSP call failed itself */
-                if (ErrorCode == NO_ERROR) ErrorCode = WSASYSCALLFAILURE;
-            }
-            else
-            {
-                /* No Socket Context Found */
-                ErrorCode = WSAENOTSOCK;
-            }
-        }
-        else
-        {
-            /* Invalid handles */
-            ErrorCode = WSAEINVAL;
-        }
+        SetLastError(ErrorCode);
+        return SOCKET_ERROR;
     }
 
-    /* Return with an Error */
+    /* Use the first Socket from the first valid set */
+    if (readfds && readfds->fd_count)
+    {
+        Handle = readfds->fd_array[0];
+    }
+    else if (writefds && writefds->fd_count)
+    {
+        Handle = writefds->fd_array[0];
+    }
+    else if (exceptfds && exceptfds->fd_count)
+    {
+        Handle = exceptfds->fd_array[0];
+    }
+    else
+    {
+        /* Invalid handles */
+        SetLastError(WSAEINVAL);
+        return SOCKET_ERROR;
+    }
+
+    /* Get the Socket Context */
+    Socket = WsSockGetSocket(Handle);
+
+    if (!Socket)
+    {
+        /* No Socket Context Found */
+        SetLastError(WSAENOTSOCK);
+        return SOCKET_ERROR;
+    }
+
+    /* Get the select procedure */
+    WSPSelect = Socket->Provider->Service.lpWSPSelect;
+
+    /* Make the call */
+    Status = WSPSelect(s, readfds, writefds, exceptfds, (struct timeval *)timeout,
+                       &ErrorCode);
+
+    /* Deference the Socket Context */
+    WsSockDereference(Socket);
+
+    /* Return Provider Value */
+    if (Status != SOCKET_ERROR)
+        return Status;
+
+    /* If everything seemed fine, then the WSP call failed itself */
+    if (ErrorCode == NO_ERROR)
+        ErrorCode = WSASYSCALLFAILURE;
+
+    /* Return with an error */
     SetLastError(ErrorCode);
     return SOCKET_ERROR;
 }

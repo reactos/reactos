@@ -428,12 +428,6 @@ LdrpInit2(PCONTEXT Context,
     InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
                    &NtModule->InInitializationOrderModuleList);
 
-#if DBG || defined(KDBG)
-
-    LdrpLoadUserModuleSymbols(NtModule);
-
-#endif /* DBG || KDBG */
-
     /* add entry for executable (becomes first list entry) */
     ExeModule = (PLDR_DATA_TABLE_ENTRY)
                  RtlAllocateHeap(Peb->ProcessHeap,
@@ -477,12 +471,6 @@ LdrpInit2(PCONTEXT Context,
                    &ExeModule->InLoadOrderLinks);
 
     LdrpInitLoader();
-
-#if DBG || defined(KDBG)
-
-    LdrpLoadUserModuleSymbols(ExeModule);
-
-#endif /* DBG || KDBG */
 
     EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL, NULL, NULL);
     ExeModule->EntryPoint = EntryPoint;

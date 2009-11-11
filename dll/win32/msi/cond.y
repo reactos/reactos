@@ -64,7 +64,6 @@ struct cond_str {
 static LPWSTR COND_GetString( const struct cond_str *str );
 static LPWSTR COND_GetLiteral( const struct cond_str *str );
 static int cond_lex( void *COND_lval, COND_input *info);
-static const WCHAR szEmpty[] = { 0 };
 
 static INT compare_int( INT a, INT operator, INT b );
 static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert );

@@ -46,6 +46,14 @@ static ULONG WINAPI IDirect3DIndexBuffer8Impl_AddRef(LPDIRECT3DINDEXBUFFER8 ifac
 
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
+    if (ref == 1)
+    {
+        IDirect3DDevice8_AddRef(This->parentDevice);
+        wined3d_mutex_lock();
+        IWineD3DBuffer_AddRef(This->wineD3DIndexBuffer);
+        wined3d_mutex_unlock();
+    }
+
     return ref;
 }
 
@@ -56,12 +64,10 @@ static ULONG WINAPI IDirect3DIndexBuffer8Impl_Release(LPDIRECT3DINDEXBUFFER8 ifa
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
+        IDirect3DDevice8_Release(This->parentDevice);
         wined3d_mutex_lock();
         IWineD3DBuffer_Release(This->wineD3DIndexBuffer);
         wined3d_mutex_unlock();
-
-        IUnknown_Release(This->parentDevice);
-        HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
 }
@@ -207,8 +213,7 @@ static HRESULT WINAPI IDirect3DIndexBuffer8Impl_GetDesc(LPDIRECT3DINDEXBUFFER8 i
     return hr;
 }
 
-
-const IDirect3DIndexBuffer8Vtbl Direct3DIndexBuffer8_Vtbl =
+static const IDirect3DIndexBuffer8Vtbl Direct3DIndexBuffer8_Vtbl =
 {
     /* IUnknown */
     IDirect3DIndexBuffer8Impl_QueryInterface,
@@ -228,3 +233,39 @@ const IDirect3DIndexBuffer8Vtbl Direct3DIndexBuffer8_Vtbl =
     IDirect3DIndexBuffer8Impl_Unlock,
     IDirect3DIndexBuffer8Impl_GetDesc
 };
+
+static void STDMETHODCALLTYPE d3d8_indexbuffer_wined3d_object_destroyed(void *parent)
+{
+    HeapFree(GetProcessHeap(), 0, parent);
+}
+
+static const struct wined3d_parent_ops d3d8_indexbuffer_wined3d_parent_ops =
+{
+    d3d8_indexbuffer_wined3d_object_destroyed,
+};
+
+HRESULT indexbuffer_init(IDirect3DIndexBuffer8Impl *buffer, IDirect3DDevice8Impl *device,
+        UINT size, DWORD usage, D3DFORMAT format, D3DPOOL pool)
+{
+    HRESULT hr;
+
+    buffer->lpVtbl = &Direct3DIndexBuffer8_Vtbl;
+    buffer->ref = 1;
+    buffer->format = wined3dformat_from_d3dformat(format);
+
+    wined3d_mutex_lock();
+    hr = IWineD3DDevice_CreateIndexBuffer(device->WineD3DDevice, size,
+            usage & WINED3DUSAGE_MASK, (WINED3DPOOL)pool, &buffer->wineD3DIndexBuffer,
+            (IUnknown *)buffer, &d3d8_indexbuffer_wined3d_parent_ops);
+    wined3d_mutex_unlock();
+    if (FAILED(hr))
+    {
+        WARN("Failed to create wined3d buffer, hr %#x.\n", hr);
+        return hr;
+    }
+
+    buffer->parentDevice = (IDirect3DDevice8 *)device;
+    IUnknown_AddRef(buffer->parentDevice);
+
+    return D3D_OK;
+}

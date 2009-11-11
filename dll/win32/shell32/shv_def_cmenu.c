@@ -277,7 +277,6 @@ SH_AddStaticEntryForFileClass(IDefaultContextMenuImpl * This, WCHAR * szExt)
            RegCloseKey(hKey);
         }
     }
-    RegCloseKey(hKey);
 }
 
 static

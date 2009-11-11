@@ -42,34 +42,37 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 static BOOL use_gecko_script(LPCWSTR url)
 {
     static const WCHAR fileW[] = {'f','i','l','e',':'};
-    return strncmpiW(fileW, url, sizeof(fileW)/sizeof(WCHAR));
+    static const WCHAR aboutW[] = {'a','b','o','u','t',':'};
+
+    return strncmpiW(fileW, url, sizeof(fileW)/sizeof(WCHAR))
+        && strncmpiW(aboutW, url, sizeof(aboutW)/sizeof(WCHAR));
 }
 
 void set_current_mon(HTMLDocument *This, IMoniker *mon)
 {
     HRESULT hres;
 
-    if(This->mon) {
-        IMoniker_Release(This->mon);
-        This->mon = NULL;
+    if(This->doc_obj->mon) {
+        IMoniker_Release(This->doc_obj->mon);
+        This->doc_obj->mon = NULL;
     }
 
-    if(This->url) {
-        CoTaskMemFree(This->url);
-        This->url = NULL;
+    if(This->doc_obj->url) {
+        CoTaskMemFree(This->doc_obj->url);
+        This->doc_obj->url = NULL;
     }
 
     if(!mon)
         return;
 
     IMoniker_AddRef(mon);
-    This->mon = mon;
+    This->doc_obj->mon = mon;
 
-    hres = IMoniker_GetDisplayName(mon, NULL, NULL, &This->url);
+    hres = IMoniker_GetDisplayName(mon, NULL, NULL, &This->doc_obj->url);
     if(FAILED(hres))
         WARN("GetDisplayName failed: %08x\n", hres);
 
-    set_script_mode(This, use_gecko_script(This->url) ? SCRIPTMODE_GECKO : SCRIPTMODE_ACTIVESCRIPT);
+    set_script_mode(This->window, use_gecko_script(This->doc_obj->url) ? SCRIPTMODE_GECKO : SCRIPTMODE_ACTIVESCRIPT);
 }
 
 static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BOOL *bind_complete)
@@ -110,11 +113,11 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
         }
     }
 
-    This->readystate = READYSTATE_LOADING;
+    This->doc_obj->readystate = READYSTATE_LOADING;
     call_property_onchanged(&This->cp_propnotif, DISPID_READYSTATE);
     update_doc(This, UPDATE_TITLE);
 
-    HTMLDocument_LockContainer(This, TRUE);
+    HTMLDocument_LockContainer(This->doc_obj, TRUE);
     
     hres = IMoniker_GetDisplayName(mon, pibc, NULL, &url);
     if(FAILED(hres)) {
@@ -126,11 +129,11 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
 
     set_current_mon(This, mon);
 
-    if(This->client) {
+    if(This->doc_obj->client) {
         VARIANT silent, offline;
         IOleCommandTarget *cmdtrg = NULL;
 
-        hres = get_client_disp_property(This->client, DISPID_AMBIENT_SILENT, &silent);
+        hres = get_client_disp_property(This->doc_obj->client, DISPID_AMBIENT_SILENT, &silent);
         if(SUCCEEDED(hres)) {
             if(V_VT(&silent) != VT_BOOL)
                 WARN("V_VT(silent) = %d\n", V_VT(&silent));
@@ -138,7 +141,7 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
                 FIXME("silent == true\n");
         }
 
-        hres = get_client_disp_property(This->client,
+        hres = get_client_disp_property(This->doc_obj->client,
                 DISPID_AMBIENT_OFFLINEIFNOTCONNECTED, &offline);
         if(SUCCEEDED(hres)) {
             if(V_VT(&silent) != VT_BOOL)
@@ -147,7 +150,7 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
                 FIXME("offline == true\n");
         }
 
-        hres = IOleClientSite_QueryInterface(This->client, &IID_IOleCommandTarget,
+        hres = IOleClientSite_QueryInterface(This->doc_obj->client, &IID_IOleCommandTarget,
                 (void**)&cmdtrg);
         if(SUCCEEDED(hres)) {
             VARIANT var;
@@ -162,7 +165,7 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
 
     bscallback = create_channelbsc(mon);
 
-    if(This->frame) {
+    if(This->doc_obj->frame) {
         task = heap_alloc(sizeof(task_t));
 
         task->doc = This;
@@ -180,11 +183,11 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
 
     push_task(task);
 
-    if(This->nscontainer) {
-        This->nscontainer->bscallback = bscallback;
-        nsres = nsIWebNavigation_LoadURI(This->nscontainer->navigation, url,
+    if(This->doc_obj->nscontainer) {
+        This->doc_obj->nscontainer->bscallback = bscallback;
+        nsres = nsIWebNavigation_LoadURI(This->doc_obj->nscontainer->navigation, url,
                 LOAD_FLAGS_NONE, NULL, NULL, NULL);
-        This->nscontainer->bscallback = NULL;
+        This->doc_obj->nscontainer->bscallback = NULL;
         if(NS_FAILED(nsres)) {
             WARN("LoadURI failed: %08x\n", nsres);
             IUnknown_Release((IUnknown*)bscallback);
@@ -289,7 +292,7 @@ static HRESULT WINAPI PersistMoniker_Load(IPersistMoniker *iface, BOOL fFullyAva
         return hres;
 
     if(!bind_complete)
-        return start_binding(This, (BSCallback*)This->bscallback, pibc);
+        return start_binding(This, (BSCallback*)This->doc_obj->bscallback, pibc);
 
     return S_OK;
 }
@@ -315,11 +318,11 @@ static HRESULT WINAPI PersistMoniker_GetCurMoniker(IPersistMoniker *iface, IMoni
 
     TRACE("(%p)->(%p)\n", This, ppimkName);
 
-    if(!This->mon)
+    if(!This->doc_obj->mon)
         return E_UNEXPECTED;
 
-    IMoniker_AddRef(This->mon);
-    *ppimkName = This->mon;
+    IMoniker_AddRef(This->doc_obj->mon);
+    *ppimkName = This->doc_obj->mon;
     return S_OK;
 }
 
@@ -367,8 +370,8 @@ static HRESULT WINAPI MonikerProp_PutProperty(IMonikerProp *iface, MONIKERPROPER
 
     switch(mkp) {
     case MIMETYPEPROP:
-        heap_free(This->mime);
-        This->mime = heap_strdupW(val);
+        heap_free(This->doc_obj->mime);
+        This->doc_obj->mime = heap_strdupW(val);
         break;
 
     case CLASSIDPROP:
@@ -526,7 +529,7 @@ static HRESULT WINAPI PersistStreamInit_IsDirty(IPersistStreamInit *iface)
 
     TRACE("(%p)\n", This);
 
-    if(This->usermode == EDITMODE)
+    if(This->doc_obj->usermode == EDITMODE)
         return editor_is_dirty(This);
 
     return S_FALSE;
@@ -553,7 +556,7 @@ static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, LPSTREAM
     if(FAILED(hres))
         return hres;
 
-    return channelbsc_load_stream(This->bscallback, pStm);
+    return channelbsc_load_stream(This->doc_obj->bscallback, pStm);
 }
 
 static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, LPSTREAM pStm,
@@ -689,9 +692,4 @@ void HTMLDocument_Persist_Init(HTMLDocument *This)
     This->lpMonikerPropVtbl = &MonikerPropVtbl;
     This->lpPersistStreamInitVtbl = &PersistStreamInitVtbl;
     This->lpPersistHistoryVtbl = &PersistHistoryVtbl;
-
-    This->bscallback = NULL;
-    This->mon = NULL;
-    This->url = NULL;
-    This->mime = NULL;
 }

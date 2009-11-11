@@ -40,6 +40,7 @@ extern "C" {
 #include <ndk/ntndk.h>
 
 #include <GL/gl.h>
+#include <GL/glu.h>
 
 /* gl function list */
 #include "glfuncs.h"
@@ -190,6 +191,14 @@ extern GLPROCESSDATA OPENGL32_processdata;
 GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 BOOL APIENTRY rosglMakeCurrent( HDC hdc, HGLRC hglrc );
+BOOL APIENTRY IntUseFontBitmapsA( HDC hDC, DWORD first, DWORD count, DWORD listBase );
+BOOL APIENTRY IntUseFontBitmapsW( HDC hDC, DWORD first, DWORD count, DWORD listBase );
+BOOL APIENTRY IntUseFontOutlinesA( HDC hDC, DWORD first, DWORD count, DWORD listBase,
+                                  FLOAT chordalDeviation, FLOAT extrusion, INT format,
+                                  GLYPHMETRICSFLOAT *glyphMetricsFloatArray );
+BOOL APIENTRY IntUseFontOutlinesW( HDC hDC, DWORD first, DWORD count, DWORD listBase,
+                                  FLOAT chordalDeviation, FLOAT extrusion, INT format,
+                                  GLYPHMETRICSFLOAT *glyphMetricsFloatArray );
 
 /* empty gl functions from gl.c */
 int WINAPI glEmptyFunc0( void );

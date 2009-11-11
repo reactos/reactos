@@ -582,8 +582,7 @@ HTMLElement *HTMLTable_Create(nsIDOMHTMLElement *nselem)
     ret->element.node.vtbl = &HTMLTableImplVtbl;
     ret->lpHTMLTableVtbl = &HTMLTableVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLTABLE(ret), &HTMLTable_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, &HTMLTable_dispex);
 
     ConnectionPoint_Init(&ret->cp, &ret->element.cp_container, &DIID_HTMLTableEvents);
 
