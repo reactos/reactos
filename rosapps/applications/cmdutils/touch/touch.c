@@ -146,9 +146,9 @@ main(int argc, char *argv[])
 		if (stat(*argv, &sb)) {
 			if (!cflag) {
 				/* Create the file. */
-				fd = open(*argv,
+				fd = _open(*argv,
 				    O_WRONLY | O_CREAT, DEFFILEMODE);
-				if (fd == -1 || fstat(fd, &sb) || close(fd)) {
+				if (fd == -1 || fstat(fd, &sb) || _close(fd)) {
 					rval = 1;
 					warn("%s", *argv);
 					continue;
@@ -300,37 +300,37 @@ rw(char *fname, struct stat *sbp, int force)
 	}
 
 	needed_chmod = rval = 0;
-	if ((fd = open(fname, O_RDWR, 0)) == -1) {
-		if (!force || chmod(fname, DEFFILEMODE))
+	if ((fd = _open(fname, O_RDWR, 0)) == -1) {
+		if (!force || _chmod(fname, DEFFILEMODE))
 			goto err;
-		if ((fd = open(fname, O_RDWR, 0)) == -1)
+		if ((fd = _open(fname, O_RDWR, 0)) == -1)
 			goto err;
 		needed_chmod = 1;
 	}
 
 	if (sbp->st_size != 0) {
-		if (read(fd, &byte, sizeof(byte)) != sizeof(byte))
+		if (_read(fd, &byte, sizeof(byte)) != sizeof(byte))
 			goto err;
-		if (lseek(fd, (off_t)0, SEEK_SET) == -1)
+		if (_lseek(fd, (off_t)0, SEEK_SET) == -1)
 			goto err;
-		if (write(fd, &byte, sizeof(byte)) != sizeof(byte))
+		if (_write(fd, &byte, sizeof(byte)) != sizeof(byte))
 			goto err;
 	} else {
-		if (write(fd, &byte, sizeof(byte)) != sizeof(byte)) {
+		if (_write(fd, &byte, sizeof(byte)) != sizeof(byte)) {
 err:			rval = 1;
 			warn("%s", fname);
 /*		} else if (ftruncate(fd, (off_t)0)) {*/
-		} else if (chsize(fd, (off_t)0)) {
+		} else if (_chsize(fd, (off_t)0)) {
 			rval = 1;
 			warn("%s: file modified", fname);
 		}
 	}
 
-	if (close(fd) && rval != 1) {
+	if (_close(fd) && rval != 1) {
 		rval = 1;
 		warn("%s", fname);
 	}
-	if (needed_chmod && chmod(fname, sbp->st_mode) && rval != 1) {
+	if (needed_chmod && _chmod(fname, sbp->st_mode) && rval != 1) {
 		rval = 1;
 		warn("%s: permissions modified", fname);
 	}

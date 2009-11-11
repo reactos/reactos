@@ -125,7 +125,7 @@ OpenTrace(void)
 
 	fp = fopen(pathName, FOPEN_WRITE_TEXT);
 	if (fp != NULL) {
-		(void) chmod(pathName, 00600);
+		(void) _chmod(pathName, 00600);
 #ifdef HAVE_SETVBUF
 		(void) setvbuf(fp, gTraceLBuf, _IOLBF, sizeof(gTraceLBuf));
 #endif	/* HAVE_SETVBUF */

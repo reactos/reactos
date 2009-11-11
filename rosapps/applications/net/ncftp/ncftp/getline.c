@@ -506,7 +506,7 @@ gl_init(void)
 	}
         hist_init();
     }
-    if (isatty(0) == 0 || isatty(1) == 0)
+    if (_isatty(0) == 0 || _isatty(1) == 0)
 	gl_error("\n*** Error: getline(): not interactive, use stdio.\n");
     gl_char_init();
     gl_init_done = 1;
@@ -2398,7 +2398,7 @@ gl_local_filename_completion_proc(const char *start, int idx)
 		if ((name[0] == '.') && ((name[1] == '\0') || ((name[1] == '.') && (name[2] == '\0'))))
 			goto next;	/* Skip . and .. */
 
-		if ((filepfxlen == 0) || (strnicmp(name, filepfx, filepfxlen) == 0)) {
+		if ((filepfxlen == 0) || (_strnicmp(name, filepfx, filepfxlen) == 0)) {
 			/* match */
 			len = strlen(name);
 			cp = (char *) malloc(filepfxoffset + len + 4 /* spare */ + 1 /* NUL */);

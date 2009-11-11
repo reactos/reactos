@@ -1075,14 +1075,14 @@ FTPRebuildConnectionInfo(const FTPLIPtr lip, const FTPCIPtr cip)
 	/* Reattach the FILE pointers for use with the Std I/O library
 	 * routines.
 	 */
-	if ((cip->cin = fdopen(cip->ctrlSocketR, "r")) == NULL) {
+	if ((cip->cin = _fdopen(cip->ctrlSocketR, "r")) == NULL) {
 		cip->errNo = kErrFdopenR;
 		cip->ctrlSocketR = kClosedFileDescriptor;
 		cip->ctrlSocketW = kClosedFileDescriptor;
 		return (kErrFdopenR);
 	}
 
-	if ((cip->cout = fdopen(cip->ctrlSocketW, "w")) == NULL) {
+	if ((cip->cout = _fdopen(cip->ctrlSocketW, "w")) == NULL) {
 		CloseFile(&cip->cin);
 		cip->errNo = kErrFdopenW;
 		cip->ctrlSocketR = kClosedFileDescriptor;

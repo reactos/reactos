@@ -2540,7 +2540,7 @@ PageCmd(const int argc, const char **const argv, const CommandPtr cmdp, const Ar
 #endif
 
 	for (i=1; i<argc; i++) {
-		result = FTPGetOneFile2(&gConn, argv[i], NULL, kTypeAscii, fileno(stream), kResumeNo, kAppendNo);
+		result = FTPGetOneFile2(&gConn, argv[i], NULL, kTypeAscii, _fileno(stream), kResumeNo, kAppendNo);
 		if (result < 0) {
 			if (errno != EPIPE) {
 				ClosePager(stream);

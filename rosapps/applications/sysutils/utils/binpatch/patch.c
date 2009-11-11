@@ -69,7 +69,7 @@ loadFile(const char *fileName, int *fileSize_)
    }
 
    /* Get file size */
-   if (fstat(fileno(f), &sb) < 0)
+   if (fstat(_fileno(f), &sb) < 0)
    {
       fclose(f);
       printf("Couldn't get size of file %s!\n", fileName);
@@ -506,7 +506,7 @@ applyPatch_file_open_error:
             _snprintf(buffer, MAX_PATH, "%s.bak", fileName);
             buffer[MAX_PATH-1] = '\0';
             makeBackup = 1;
-            if (access(buffer, 0) >= 0) /* file exists */
+            if (_access(buffer, 0) >= 0) /* file exists */
             {
                printf("File %s already exists, overwrite? (Y)es, (N)o, (A)bort", buffer);
                do
