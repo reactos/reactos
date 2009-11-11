@@ -124,16 +124,29 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
     if (pgp->psurfColor)
     {
         GrepBitBltEx(psoDest,
-                       &pgp->psurfColor->SurfObj,
                        &pgp->psurfMask->SurfObj,
                        NULL,
-                       pgp->XlateObject,
+                       NULL,
+                       NULL,
                        &rclSurf,
                        (POINTL*)&rclPointer,
+                       NULL,
+                       NULL,
+                       NULL,
+                       ROP3_TO_ROP4(SRCAND),
+                       FALSE);
+
+        GrepBitBltEx(psoDest,
+                       &pgp->psurfColor->SurfObj,
+                       NULL,
+                       NULL,
+                       NULL,
+                       &rclSurf,
                        (POINTL*)&rclPointer,
                        NULL,
                        NULL,
-                       R4_MASK,
+                       NULL,
+                       ROP3_TO_ROP4(SRCINVERT),
                        FALSE);
     }
     else
@@ -142,7 +155,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        &pgp->psurfMask->SurfObj,
                        NULL,
                        NULL,
-                       pgp->XlateObject,
+                       NULL,
                        &rclSurf,
                        (POINTL*)&rclPointer,
                        NULL,
@@ -157,7 +170,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        &pgp->psurfMask->SurfObj,
                        NULL,
                        NULL,
-                       pgp->XlateObject,
+                       NULL,
                        &rclSurf,
                        (POINTL*)&rclPointer,
                        NULL,
@@ -377,8 +390,8 @@ EngSetPointerShape(
                                   RGB(0xff,0xff,0xff),
                                   RGB(0,0,0));*/
             xlo = IntEngCreateSrcMonoXlate(ppdev->DevInfo.hpalDefault,
-                                           RGB(0xff,0xff,0xff),
-                                           RGB(0,0,0)
+                                           RGB(0x0,0x0,0x0),
+                                           RGB(0xff,0xff,0xff)
                                            );
 
             rcl.bottom = psoMask->sizlBitmap.cy;

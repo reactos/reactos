@@ -200,6 +200,7 @@ VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
 {
     INT height;
     BITMAP bitmap;
+    PVOID pbits;
     static const WORD ICON_HOTSPOT = 0x4242; /* From user32/cursoricon.c:128 */
 
     TRACE("%p => %dx%d, %d bpp\n", ciconinfo,
@@ -223,13 +224,13 @@ VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
 
     if (ciconinfo->bBitsPerPixel > 1)
     {
+        pbits = (char *)(ciconinfo + 1) + ciconinfo->nHeight * get_bitmap_width_bytes (ciconinfo->nWidth,1);
+
         iconinfo->hbmColor = CreateBitmap( ciconinfo->nWidth, ciconinfo->nHeight,
-                                ciconinfo->bPlanes, ciconinfo->bBitsPerPixel,
-                                (char *)(ciconinfo + 1)
-                                + ciconinfo->nHeight *
-                                get_bitmap_width_bytes (ciconinfo->nWidth,1) );
-        if( GetObjectW(iconinfo->hbmColor, sizeof(bitmap), &bitmap))
-            RosGdiCreateBitmap(NULL, iconinfo->hbmColor, &bitmap, bitmap.bmBits);
+                                           ciconinfo->bPlanes, ciconinfo->bBitsPerPixel,
+                                           pbits);
+        if(GetObjectW(iconinfo->hbmColor, sizeof(bitmap), &bitmap))
+            RosGdiCreateBitmap(NULL, iconinfo->hbmColor, &bitmap, pbits);
     }
     else
     {
@@ -237,13 +238,14 @@ VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
         height *= 2;
     }
 
+    pbits = (char *)(ciconinfo + 1);
+
     /* Create the mask bitmap */
     iconinfo->hbmMask = CreateBitmap ( ciconinfo->nWidth, height,
-                                1, 1, ciconinfo + 1);
+                                       1, 1, pbits);
     if( GetObjectW(iconinfo->hbmMask, sizeof(bitmap), &bitmap))
     {
-        // FIXME: Why bitmap.bmBits is NULL when it's supposed to be a valid pointer from above ?!
-        RosGdiCreateBitmap(NULL, iconinfo->hbmMask, &bitmap, /*bitmap.bmBits*/ ciconinfo + 1);
+        RosGdiCreateBitmap(NULL, iconinfo->hbmMask, &bitmap, pbits);
     }
 }
 
