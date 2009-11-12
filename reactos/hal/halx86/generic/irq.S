@@ -20,7 +20,7 @@ PICInitTable:
 
     /* Master PIC */
     .short 0x20                         /* Port */
-    .byte 0x11                          /* Edge,, cascade, CAI 8, ICW4 */
+    .byte 0x11                          /* Edge, cascade, CAI 8, ICW4 */
     .byte PRIMARY_VECTOR_BASE           /* Base */
     .byte 4                             /* IRQ 4 connected to slave */
     .byte 1                             /* Non buffered, not nested, 8086 */
@@ -798,7 +798,7 @@ _KeRaiseIrqlToDpcLevel@0:
     mov dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
 
 #if DBG
-    /* Make sure we were not higher then dispatch */
+    /* Make sure we were not higher then synch */
     cmp eax, DISPATCH_LEVEL
     ja InvalidRaise
 #endif
