@@ -422,37 +422,22 @@ SwmRemoveWindow(HWND hWnd)
 
 VOID
 NTAPI
-SwmSetForeground(HWND hWnd)
+SwmBringToFront(PSWM_WINDOW SwmWin)
 {
-    PSWM_WINDOW SwmWin, Previous;
+    PSWM_WINDOW Previous;
     struct region *OldVisible;
-
-    /* Acquire the lock */
-    SwmAcquire();
-
-    /* Allocate entry */
-    SwmWin = SwmFindByHwnd(hWnd);
-    //ASSERT(SwmWin != NULL);
-    if (!SwmWin)
-    {
-        /* Release the lock */
-        SwmRelease();
-        return;
-    }
 
     /* Save previous focus window */
     Previous = CONTAINING_RECORD(SwmWindows.Flink, SWM_WINDOW, Entry);
 
     /* It's already on top */
-    if (Previous->hwnd == hWnd)
+    if (Previous->hwnd == SwmWin->hwnd)
     {
-        DPRINT1("hwnd %x is already on top\n", hWnd);
-        /* Release the lock */
-        SwmRelease();
+        DPRINT1("hwnd %x is already on top\n", SwmWin->hwnd);
         return;
     }
 
-    DPRINT1("Setting %x as foreground, previous window was %x\n", hWnd, Previous->hwnd);
+    DPRINT1("Setting %x as foreground, previous window was %x\n", SwmWin->hwnd, Previous->hwnd);
 
     /* Remove it from the list */
     RemoveEntryList(&SwmWin->Entry);
@@ -482,6 +467,28 @@ SwmSetForeground(HWND hWnd)
 
     /* Update previous window's visible region */
     SwmRecalculateVisibility(Previous);
+}
+
+VOID
+NTAPI
+SwmSetForeground(HWND hWnd)
+{
+    PSWM_WINDOW SwmWin;
+
+    /* Acquire the lock */
+    SwmAcquire();
+
+    /* Allocate entry */
+    SwmWin = SwmFindByHwnd(hWnd);
+    //ASSERT(SwmWin != NULL);
+    if (!SwmWin)
+    {
+        /* Release the lock */
+        SwmRelease();
+        return;
+    }
+
+    SwmBringToFront(SwmWin);
 
     /* Release the lock */
     SwmRelease();
@@ -573,6 +580,7 @@ SwmShowWindow(HWND hWnd, BOOLEAN Show)
     {
         /* Change state from hidden to visible */
         Win->Hidden = FALSE;
+        SwmBringToFront(Win);
     }
     else if (!Show && !Win->Hidden)
     {
