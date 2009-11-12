@@ -26,13 +26,6 @@
 #include <debug.h>
 
 
-typedef struct _DRIVERS
-{
-	LIST_ENTRY ListEntry;
-    PVOID SectionPointer;
-	UNICODE_STRING DriverName;
-}DRIVERS, *PDRIVERS;
-
 extern LIST_ENTRY GlobalDriverListHead;
 
 
@@ -181,7 +174,7 @@ EngFindImageProcAddress(IN HANDLE Module,
       return NULL;
     }
   RtlInitAnsiString(&ProcNameString, ProcName);
-  Status = LdrGetProcedureAddress(Module,
+  Status = LdrGetProcedureAddress(((PDRIVERS)Module)->BaseAddress,
 				  &ProcNameString,
 				  0,
 				  &Function);
@@ -235,6 +228,7 @@ EngLoadImage (LPWSTR DriverName)
 			DriverInfo->DriverName.Buffer = ExAllocatePool(PagedPool, GdiDriverInfo.DriverName.MaximumLength);
 			RtlCopyUnicodeString(&DriverInfo->DriverName, &GdiDriverInfo.DriverName);
 			DriverInfo->SectionPointer = GdiDriverInfo.SectionPointer;
+            DriverInfo->BaseAddress = GdiDriverInfo.ImageAddress;
 			InsertHeadList(&GlobalDriverListHead, &DriverInfo->ListEntry);
 		}
 	}
