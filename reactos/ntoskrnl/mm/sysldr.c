@@ -30,6 +30,7 @@ sprintf_nt(IN PCHAR Buffer,
 LIST_ENTRY PsLoadedModuleList;
 LIST_ENTRY MmLoadedUserImageList;
 KSPIN_LOCK PsLoadedModuleSpinLock;
+ERESOURCE PsLoadedModuleResource;
 ULONG_PTR PsNtosImageBase;
 KMUTANT MmSystemLoadLock;
 
@@ -438,15 +439,21 @@ MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 {
     KIRQL OldIrql;
 
-    /* Acquire the lock */
-    KeAcquireSpinLock(&PsLoadedModuleSpinLock, &OldIrql);
+    /* Acquire module list lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
+
+    /* Acquire the spinlock too as we will insert or remove the entry */
+    OldIrql = KeAcquireSpinLockRaiseToSynch(&PsLoadedModuleSpinLock);
 
     /* Insert or remove from the list */
     Insert ? InsertTailList(&PsLoadedModuleList, &LdrEntry->InLoadOrderLinks) :
              RemoveEntryList(&LdrEntry->InLoadOrderLinks);
 
-    /* Release the lock */
+    /* Release locks */
     KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
+    ExReleaseResourceLite(&PsLoadedModuleResource);
+    KeLeaveCriticalRegion();
 }
 
 VOID
@@ -1332,7 +1339,8 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListHead, NextEntry;
     ULONG EntrySize;
 
-    /* Setup the loaded module list and lock */
+    /* Setup the loaded module list and locks */
+    ExInitializeResourceLite(&PsLoadedModuleResource);
     KeInitializeSpinLock(&PsLoadedModuleSpinLock);
     InitializeListHead(&PsLoadedModuleList);
 
@@ -2005,6 +2013,7 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
 
     /* Lock the list */
     KeEnterCriticalRegion();
+    ExAcquireResourceSharedLite(&PsLoadedModuleResource, TRUE);
 
     /* Loop the loaded module list */
     NextEntry = PsLoadedModuleList.Flink;
@@ -2046,6 +2055,7 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
     }
 
     /* Release the lock */
+    ExReleaseResourceLite(&PsLoadedModuleResource);
     KeLeaveCriticalRegion();
 
     /* Free the string and return */

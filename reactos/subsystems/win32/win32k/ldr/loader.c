@@ -29,11 +29,12 @@
 typedef struct _DRIVERS
 {
 	LIST_ENTRY ListEntry;
-	HANDLE ImageHandle;
+    PVOID SectionPointer;
 	UNICODE_STRING DriverName;
 }DRIVERS, *PDRIVERS;
 
 extern LIST_ENTRY GlobalDriverListHead;
+
 
 /*
  * Blatantly stolen from ldr/utils.c in ntdll.  I can't link ntdll from
@@ -199,8 +200,8 @@ HANDLE
 APIENTRY
 EngLoadImage (LPWSTR DriverName)
 {
-	HANDLE hImageHandle = NULL;
 	SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
+	PDRIVERS DriverInfo = NULL;
 	NTSTATUS Status;
 
 	RtlInitUnicodeString(&GdiDriverInfo.DriverName, DriverName);
@@ -213,14 +214,14 @@ EngLoadImage (LPWSTR DriverName)
 		{
 			Current = CONTAINING_RECORD(CurrentEntry, DRIVERS, ListEntry);
 			if( Current && (0 == RtlCompareUnicodeString(&GdiDriverInfo.DriverName, &Current->DriverName, FALSE)) ) {
-				hImageHandle = Current->ImageHandle;
+				DriverInfo = Current;
 				break;
 			}
 			CurrentEntry = CurrentEntry->Flink;
 		};
 	}
 
-	if( !hImageHandle )
+	if( !DriverInfo )
 	{
 		/* the driver was not loaded before, so let's do that */
 		Status = ZwSetSystemInformation(SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
@@ -228,19 +229,17 @@ EngLoadImage (LPWSTR DriverName)
 			DPRINT1("ZwSetSystemInformation failed with Status 0x%lx\n", Status);
 		}
 		else {
-            PDRIVERS DriverInfo;
-			hImageHandle = (HANDLE)GdiDriverInfo.ImageAddress;
 			DriverInfo = ExAllocatePool(PagedPool, sizeof(DRIVERS));
 			DriverInfo->DriverName.MaximumLength = GdiDriverInfo.DriverName.MaximumLength;
 			DriverInfo->DriverName.Length = GdiDriverInfo.DriverName.Length;
 			DriverInfo->DriverName.Buffer = ExAllocatePool(PagedPool, GdiDriverInfo.DriverName.MaximumLength);
 			RtlCopyUnicodeString(&DriverInfo->DriverName, &GdiDriverInfo.DriverName);
-			DriverInfo->ImageHandle = hImageHandle;
+			DriverInfo->SectionPointer = GdiDriverInfo.SectionPointer;
 			InsertHeadList(&GlobalDriverListHead, &DriverInfo->ListEntry);
 		}
 	}
 
-	return hImageHandle;
+	return DriverInfo;
 }
 
 VOID
@@ -248,11 +247,12 @@ APIENTRY
 EngUnloadImage ( IN HANDLE hModule )
 {
   NTSTATUS Status;
+  PDRIVERS DriverInfo = (PDRIVERS)hModule;
 
   DPRINT("hModule 0x%x\n", hModule);
 
   Status = ZwSetSystemInformation(SystemUnloadGdiDriverInformation,
-    &hModule, sizeof(HANDLE));
+    DriverInfo->SectionPointer, sizeof(PVOID));
 
   if(!NT_SUCCESS(Status))
   {
@@ -261,27 +261,9 @@ EngUnloadImage ( IN HANDLE hModule )
   }
   else
   {
-	  /* remove from the list */
-	  if( !IsListEmpty(&GlobalDriverListHead) )
-	  {
-		  PLIST_ENTRY CurrentEntry = GlobalDriverListHead.Flink;
-		  PDRIVERS Current;
-		  /* probably the driver was already loaded, let's try to find it out */
-		  while( CurrentEntry != &GlobalDriverListHead )
-		  {
-			  Current = CONTAINING_RECORD(CurrentEntry, DRIVERS, ListEntry);
-
-			  if( Current ) {
-				  if(Current->ImageHandle == hModule) {
-					  ExFreePool(Current->DriverName.Buffer);
-					  RemoveEntryList(&Current->ListEntry);
-					  ExFreePool(Current);
-					  break;
-				  }
-			  }
-			  CurrentEntry = CurrentEntry->Flink;
-		  };
-	  }
+    ExFreePool(DriverInfo->DriverName.Buffer);
+    RemoveEntryList(&DriverInfo->ListEntry);
+    ExFreePool(DriverInfo);
   }
 }
 
