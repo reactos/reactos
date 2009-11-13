@@ -20,3 +20,5 @@ typedef struct _GDIPOINTER
   SURFACE  *psurfSave;
   RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
 } GDIPOINTER, *PGDIPOINTER;
+
+extern SYSTEM_CURSORINFO CursorInfo;

@@ -152,7 +152,7 @@ GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
                                 NewCursor->yHotspot,
                                 CursorInfo->CursorPos.x,
                                 CursorInfo->CursorPos.y,
-                                NULL,
+                                &(GDIDEV(pso)->Pointer.Exclude),
                                 SPS_CHANGE);
 
    if (Status != SPS_ACCEPT_NOEXCLUDE)

@@ -10,7 +10,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static SYSTEM_CURSORINFO CursorInfo;
+SYSTEM_CURSORINFO CursorInfo;
 
 extern PDEVOBJ PrimarySurface;
 
@@ -60,7 +60,7 @@ RosUserSetCursorPos(INT x, INT y)
     if (CursorInfo.ShowingCursor)
     {
         pso = EngLockSurface(PrimarySurface.pSurface);
-        GreMovePointer(pso, pos.x, pos.y, NULL);
+        GreMovePointer(pso, pos.x, pos.y, &(GDIDEV(pso)->Pointer.Exclude));
         EngUnlockSurface(pso);
     }
 

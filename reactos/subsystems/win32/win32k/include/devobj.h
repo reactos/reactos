@@ -5,6 +5,7 @@ typedef struct _PDEVOBJ
 {
     DEVINFO                   DevInfo;
     GDIINFO                   GDIInfo;
+    POINTL                    ptlPointer;
     PFN_DrvMovePointer        pfnMovePointer;
     DHPDEV                    hPDev;
     PVOID                     pdmwDev;

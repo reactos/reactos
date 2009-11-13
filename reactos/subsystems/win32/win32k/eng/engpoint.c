@@ -16,8 +16,6 @@
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-POINTL        ptlPointer;
-
 VOID
 IntHideMousePointer(
     PDEVOBJ *ppdev,
@@ -46,8 +44,8 @@ IntHideMousePointer(
     }
 
     /* Calculate cursor coordinates */
-    pt.x = ptlPointer.x - pgp->HotSpot.x;
-    pt.y = ptlPointer.y - pgp->HotSpot.y;
+    pt.x = ppdev->ptlPointer.x - pgp->HotSpot.x;
+    pt.y = ppdev->ptlPointer.y - pgp->HotSpot.y;
 
     rclDest.left = max(pt.x, 0);
     rclDest.top = max(pt.y, 0);
@@ -91,8 +89,8 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
     pgp->Enabled = TRUE;
 
     /* Calculate pointer coordinates */
-    pt.x = ptlPointer.x - pgp->HotSpot.x;
-    pt.y = ptlPointer.y - pgp->HotSpot.y;
+    pt.x = ppdev->ptlPointer.x - pgp->HotSpot.x;
+    pt.y = ppdev->ptlPointer.y - pgp->HotSpot.y;
 
     /* Calculate the rect on the surface */
     rclSurf.left = max(pt.x, 0);
@@ -259,7 +257,7 @@ MouseSafetyOnDrawEnd(SURFOBJ *pso)
     if (--ppdev->SafetyRemoveCount >= ppdev->SafetyRemoveLevel)
         return FALSE;
 
-    ppdev->pfnMovePointer(pso, ptlPointer.x, ptlPointer.y, &pgp->Exclude);
+    ppdev->pfnMovePointer(pso, CursorInfo.CursorPos.x, CursorInfo.CursorPos.y, &pgp->Exclude);
 
     ppdev->SafetyRemoveLevel = 0;
 
@@ -441,8 +439,8 @@ EngSetPointerShape(
 
     if (x != -1)
     {
-        ptlPointer.x = x;
-        ptlPointer.y = y;
+        ppdev->ptlPointer.x = x;
+        ppdev->ptlPointer.y = y;
 
         IntShowMousePointer(ppdev, pso);
 
@@ -485,8 +483,8 @@ EngMovePointer(
 
     IntHideMousePointer(ppdev, pso);
 
-    ptlPointer.x = x;
-    ptlPointer.y = y;
+    ppdev->ptlPointer.x = x;
+    ppdev->ptlPointer.y = y;
 
     if (x != -1)
     {
