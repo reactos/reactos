@@ -101,8 +101,10 @@ NTSTATUS NTAPI Ext2ReadInode (
 		LogicalBlockSize = EXT2_MIN_BLOCK_SIZE << PtrVcb->LogBlockSize;
 		NumberOfBytesToRead = sizeof(EXT2_INODE);	//	LogicalBlockSize;
 
-		VolumeByteOffset.QuadPart = PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock
+		VolumeByteOffset.QuadPart = (ULONGLONG)PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock
 				* LogicalBlockSize + Index * PtrVcb->InodeSize;
+		DebugTrace(DEBUG_TRACE_MISC, "VolumeByteOffset.HighPart %08x", VolumeByteOffset.HighPart);
+		DebugTrace(DEBUG_TRACE_MISC, "VolumeByteOffset.LowPart  %08x", VolumeByteOffset.LowPart);
 		//VolumeByteOffset.QuadPart = PtrVcb->InodeTableBlock[ GroupNo ] * LogicalBlockSize +
 		//	Index * PtrVcb->InodeSize;
 		
@@ -298,7 +300,7 @@ ULONG NTAPI Ext2AllocInode(
 		}
 
 		VolumeByteOffset.QuadPart = 
-			PtrVCB->PtrGroupDescriptors[ GroupNo ].InodeBitmapBlock * LogicalBlockSize;
+			(ULONGLONG)PtrVCB->PtrGroupDescriptors[ GroupNo ].InodeBitmapBlock * LogicalBlockSize;
 		
 		NumberOfBytesToRead = PtrVCB->InodesCount / PtrVCB->NoOfGroups;
 
@@ -534,7 +536,7 @@ BOOLEAN NTAPI Ext2DeallocInode(
 		BitmapIndex = BitmapIndex - ( BlockIndex * LogicalBlockSize );
 
 		VolumeByteOffset.QuadPart = 
-			( PtrVCB->PtrGroupDescriptors[ GroupNo ].InodeBitmapBlock + BlockIndex ) 
+			(ULONGLONG)( PtrVCB->PtrGroupDescriptors[ GroupNo ].InodeBitmapBlock + BlockIndex ) 
 			* LogicalBlockSize;
 
 		//
@@ -752,7 +754,7 @@ NTSTATUS NTAPI Ext2WriteInode(
 		LogicalBlockSize = EXT2_MIN_BLOCK_SIZE << PtrVcb->LogBlockSize;
 		NumberOfBytesToRead = sizeof(EXT2_INODE);
 
-		VolumeByteOffset.QuadPart = PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock
+		VolumeByteOffset.QuadPart = (ULONGLONG)PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock
 				* LogicalBlockSize + Index * PtrVcb->InodeSize;
 		
 		TempOffset.QuadPart = Ext2Align64( VolumeByteOffset.QuadPart, LogicalBlockSize );
@@ -936,7 +938,7 @@ BOOLEAN NTAPI Ext2MakeNewDirectoryEntry(
 			}
 		}
 
-		VolumeByteOffset.QuadPart = BlockNo * LogicalBlockSize;
+		VolumeByteOffset.QuadPart = (ULONGLONG)BlockNo * LogicalBlockSize;
 		CcMapData(	PtrFileObject,
 					&VolumeByteOffset,
 					LogicalBlockSize,
@@ -1243,7 +1245,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 		}
 
 		//	No of blocks CURRENTLY allocated...
-		NoOfBlocks = (ULONG) PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize.QuadPart / LogicalBlockSize;
+		NoOfBlocks = (ULONG) (PtrFCB->NTRequiredFCB.CommonFCBHeader.AllocationSize.QuadPart / LogicalBlockSize);
 		
 		
 		if( NoOfBlocks < EXT2_NDIR_BLOCKS )
@@ -1311,7 +1313,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 
 				//	Bring in the new block to the cache
 				//	Zero it out
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
 
 				if( !CcPreparePinWrite( 
 					PtrVCB->PtrStreamFileObject,
@@ -1329,7 +1331,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 			{
 				//	 Just bring in the SIB to the cache
 				
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
 
 				if( !CcPreparePinWrite( PtrVCB->PtrStreamFileObject,
 							&VolumeByteOffset,
@@ -1402,7 +1404,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 
 				//	Bring in the new block to the cache
 				//	Zero it out
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
 
 				if( !CcPreparePinWrite( 
 					PtrVCB->PtrStreamFileObject,
@@ -1446,7 +1448,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 				DebugTrace(DEBUG_TRACE_SPECIAL, "Ext2AllocBlock", 0);
 				PtrDIBBuffer[SBlockNo] = Ext2AllocBlock( PtrIrpContext, PtrVCB, 1 );
 				CcSetDirtyPinnedData( PtrDIBBCB, NULL );
-				VolumeByteOffset.QuadPart = PtrDIBBuffer[SBlockNo] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrDIBBuffer[SBlockNo] * LogicalBlockSize;
 
 				Inode.i_blocks += ( LogicalBlockSize / 512 );
 
@@ -1538,7 +1540,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 
 				//	Bring in the new block to the cache
 				//	Zero it out
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
 
 				if( !CcPreparePinWrite( 
 					PtrVCB->PtrStreamFileObject,
@@ -1580,7 +1582,7 @@ BOOLEAN NTAPI Ext2AddBlockToFile(
 				DebugTrace(DEBUG_TRACE_SPECIAL, "Ext2AllocBlock", 0);
 				PtrDIBBuffer[SBlockNo] = Ext2AllocBlock( PtrIrpContext, PtrVCB, 1 );
 				CcSetDirtyPinnedData( PtrDIBBCB, NULL );
-				VolumeByteOffset.QuadPart = PtrDIBBuffer[SBlockNo] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrDIBBuffer[SBlockNo] * LogicalBlockSize;
 
 				Inode.i_blocks += ( LogicalBlockSize / 512 );
 
@@ -1715,7 +1717,7 @@ ULONG NTAPI Ext2AllocBlock(
 		}
 
 		VolumeByteOffset.QuadPart = 
-			PtrVCB->PtrGroupDescriptors[ GroupNo ].BlockBitmapBlock * LogicalBlockSize;
+			(ULONGLONG)PtrVCB->PtrGroupDescriptors[ GroupNo ].BlockBitmapBlock * LogicalBlockSize;
 		
 		NumberOfBytesToRead = PtrVCB->BlocksCount / PtrVCB->NoOfGroups;
 
@@ -1947,7 +1949,7 @@ BOOLEAN NTAPI Ext2DeallocBlock(
 		BitmapIndex = BitmapIndex - ( BlockIndex * LogicalBlockSize );
 
 		VolumeByteOffset.QuadPart = 
-			( PtrVCB->PtrGroupDescriptors[ GroupNo ].BlockBitmapBlock + BlockIndex ) 
+			(ULONGLONG)( PtrVCB->PtrGroupDescriptors[ GroupNo ].BlockBitmapBlock + BlockIndex ) 
 			* LogicalBlockSize;
 		
 		//
@@ -2259,7 +2261,7 @@ BOOLEAN NTAPI Ext2ReleaseDataBlocks(
 		ULONG			TIndex, DIndex, SIndex;
 
 		//	Pin the Double Indirect Pointer Block...
-		VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_TIND_BLOCK ] * LogicalBlockSize;
+		VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_TIND_BLOCK ] * LogicalBlockSize;
 		if (!CcMapData( PtrVCB->PtrStreamFileObject,
 		   &VolumeByteOffset,
 		   LogicalBlockSize,
@@ -2275,7 +2277,7 @@ BOOLEAN NTAPI Ext2ReleaseDataBlocks(
 		{
 			if( PtrPinnedTIndirectBlock[ TIndex ] )
 			{
-				VolumeByteOffset.QuadPart = PtrPinnedTIndirectBlock[TIndex] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrPinnedTIndirectBlock[TIndex] * LogicalBlockSize;
 				if (!CcMapData( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   LogicalBlockSize,
@@ -2291,7 +2293,7 @@ BOOLEAN NTAPI Ext2ReleaseDataBlocks(
 				{
 					if( PtrPinnedDIndirectBlock[DIndex] )
 					{
-						VolumeByteOffset.QuadPart = PtrPinnedDIndirectBlock[DIndex] * LogicalBlockSize;
+						VolumeByteOffset.QuadPart = (ULONGLONG)PtrPinnedDIndirectBlock[DIndex] * LogicalBlockSize;
 						if (!CcMapData( PtrVCB->PtrStreamFileObject,
 						   &VolumeByteOffset,
 						   LogicalBlockSize,
@@ -2350,7 +2352,7 @@ BOOLEAN NTAPI Ext2ReleaseDataBlocks(
 		ULONG			DIndex, SIndex;
 
 		//	Pin the Double Indirect Pointer Block...
-		VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
+		VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
 		if (!CcMapData( PtrVCB->PtrStreamFileObject,
 		   &VolumeByteOffset,
 		   LogicalBlockSize,
@@ -2366,7 +2368,7 @@ BOOLEAN NTAPI Ext2ReleaseDataBlocks(
 		{
 			if( PtrPinnedDIndirectBlock[DIndex] )
 			{
-				VolumeByteOffset.QuadPart = PtrPinnedDIndirectBlock[DIndex] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrPinnedDIndirectBlock[DIndex] * LogicalBlockSize;
 				if (!CcMapData( PtrVCB->PtrStreamFileObject,
 				   &VolumeByteOffset,
 				   LogicalBlockSize,
@@ -2416,7 +2418,7 @@ BOOLEAN NTAPI Ext2ReleaseDataBlocks(
 		ULONG			Index;
 
 		//	Pin the Single Indirect Pointer Block...
-		VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
+		VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
 		if (!CcMapData( PtrVCB->PtrStreamFileObject,
 		   &VolumeByteOffset,
 		   LogicalBlockSize,
@@ -2513,7 +2515,7 @@ BOOLEAN NTAPI Ext2TruncateFileAllocationSize(
 		ULONG			Index;
 
 		//	Pin the Single Indirect Pointer Block...
-		VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
+		VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
 		if (!CcMapData( PtrVCB->PtrStreamFileObject,
 		   &VolumeByteOffset,
 		   LogicalBlockSize,

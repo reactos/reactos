@@ -1797,7 +1797,7 @@ MmFreeImagePage
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
    Offset.QuadPart = ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress) +
-            MemoryArea->Data.SectionData.ViewOffset;
+            MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
    Section = MemoryArea->Data.SectionData.Section;
    Segment = MemoryArea->Data.SectionData.Segment;

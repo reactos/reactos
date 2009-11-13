@@ -140,13 +140,13 @@ NTSTATUS NTAPI Ext2PassDownMultiReadWriteIRP(
 			{
 				PtrIrpSp->Parameters.Read.Length = ReadWriteLength;
 				PtrIrpSp->Parameters.Read.ByteOffset.QuadPart = 
-					PtrIoRuns[i].LogicalBlock * ( LogicalBlockSize );
+					(ULONGLONG)PtrIoRuns[i].LogicalBlock * ( LogicalBlockSize );
 			}
 			else if( PtrIrpContext->MajorFunction == IRP_MJ_WRITE )
 			{
 				PtrIrpSp->Parameters.Write.Length = ReadWriteLength;
 				PtrIrpSp->Parameters.Write.ByteOffset.QuadPart = 
-					PtrIoRuns[i].LogicalBlock * ( LogicalBlockSize );
+					(ULONGLONG)PtrIoRuns[i].LogicalBlock * ( LogicalBlockSize );
 			}
 
 			//	PtrIrpSp->Parameters.Read.Length = ReadWriteLength;
@@ -170,12 +170,12 @@ NTSTATUS NTAPI Ext2PassDownMultiReadWriteIRP(
 			if( PtrIrpContext->MajorFunction == IRP_MJ_READ )
 			{
 				PtrIrpSp->Parameters.Read.Length = ReadWriteLength;
-				PtrIrpSp->Parameters.Read.ByteOffset.QuadPart = PtrIoRuns[i].LogicalBlock * ( LogicalBlockSize );
+				PtrIrpSp->Parameters.Read.ByteOffset.QuadPart = (ULONGLONG)PtrIoRuns[i].LogicalBlock * ( LogicalBlockSize );
 			}
 			else if( PtrIrpContext->MajorFunction == IRP_MJ_WRITE )
 			{
 				PtrIrpSp->Parameters.Write.Length = ReadWriteLength;
-				PtrIrpSp->Parameters.Write.ByteOffset.QuadPart = PtrIoRuns[i].LogicalBlock * ( LogicalBlockSize );
+				PtrIrpSp->Parameters.Write.ByteOffset.QuadPart = (ULONGLONG)PtrIoRuns[i].LogicalBlock * ( LogicalBlockSize );
 			}
 
 			//	PtrIrpSp->Parameters.Read.Length = ReadWriteLength;

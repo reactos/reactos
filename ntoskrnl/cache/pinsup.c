@@ -39,14 +39,14 @@ LONG CcOutstandingDeletes;
 PETHREAD LastThread;
 VOID _CcpLock(const char *file, int line)
 {
-    DPRINT("<<<---<<< CC In Mutex(%s:%d %x)!\n", file, line, PsGetCurrentThread());
+    //DPRINT("<<<---<<< CC In Mutex(%s:%d %x)!\n", file, line, PsGetCurrentThread());
     ExAcquireFastMutex(&CcMutex);
 }
 
 VOID _CcpUnlock(const char *file, int line)
 {
     ExReleaseFastMutex(&CcMutex);
-    DPRINT(">>>--->>> CC Exit Mutex!\n", file, line);
+    //DPRINT(">>>--->>> CC Exit Mutex!\n", file, line);
 }
 
 PDEVICE_OBJECT
@@ -301,11 +301,12 @@ CcpMapData
 		return FALSE;
 	}
 
-    DPRINT("CcMapData(F->%x,%x:%d)\n", FileObject, FileOffset->LowPart, Length);
+    DPRINT("CcMapData(F->%x,%08x%08x:%d)\n", FileObject, FileOffset->HighPart, FileOffset->LowPart, Length);
 
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 
-    Target.QuadPart = CACHE_ROUND_DOWN(FileOffset->QuadPart);
+    Target.HighPart = FileOffset->HighPart;
+	Target.LowPart = CACHE_ROUND_DOWN(FileOffset->LowPart);
 
     CcpLock();
 
@@ -320,8 +321,9 @@ CcpMapData
 		*BcbResult = Bcb;
 		*Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
 		DPRINT
-			("Bcb #%x Buffer maps (%x) At %x Length %x (Getting %x:%x) %wZ\n", 
+			("Bcb #%x Buffer maps (%08x%08x) At %x Length %x (Getting %x:%x) %wZ\n", 
 			 Bcb - CcCacheSections,
+			 Bcb->FileOffset.HighPart,
 			 Bcb->FileOffset.LowPart, 
 			 Bcb->BaseAddress,
 			 Bcb->Length,
@@ -430,8 +432,9 @@ retry:
 	*Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
 
 	DPRINT
-		("Bcb #%x Buffer maps (%x) At %x Length %x (Getting %x:%x) %wZ\n", 
+		("Bcb #%x Buffer maps (%08x%08x) At %x Length %x (Getting %x:%x) %wZ\n", 
 		 Bcb - CcCacheSections,
+			 Bcb->FileOffset.HighPart,
 		 Bcb->FileOffset.LowPart, 
 		 Bcb->BaseAddress,
 		 Bcb->Length,

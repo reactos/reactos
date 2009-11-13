@@ -54,41 +54,42 @@ CcCopyRead(IN PFILE_OBJECT FileObject,
 
     while (CacheOffset.QuadPart < EndOfExtent.QuadPart)
     {
-	NextOffset.QuadPart = (CacheOffset.QuadPart + CACHE_STRIPE) & ~(CACHE_STRIPE-1);
-	ReadLen = EndOfExtent.QuadPart - CacheOffset.QuadPart;
-	if (CacheOffset.QuadPart + ReadLen > NextOffset.QuadPart)
-	{
-	    ReadLen = NextOffset.QuadPart - CacheOffset.QuadPart;
-	}
-
-	DPRINT("Reading %d bytes in this go (at %08x%08x)\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
-
-	if (!CcPinRead
-	    (FileObject,
-	     &CacheOffset,
-	     ReadLen,
-	     Wait ? PIN_WAIT : PIN_IF_BCB,
-	     &Bcb,
-	     (PVOID*)&ReadBuffer))
-	{
-	    IoStatus->Status = STATUS_UNSUCCESSFUL;
-	    IoStatus->Information = 0;
-	    DPRINT("Failed CcCopyRead\n");
-	    return FALSE;
-	}
-
-	DPRINT("Copying %d bytes at %08x%08x\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
-	RtlCopyMemory
-	    (BufferTarget,
-	     ReadBuffer,
-	     ReadLen);
-
-	BufferTarget += ReadLen;
-	
-	CacheOffset = NextOffset;
-	CcUnpinData(Bcb);
+		NextOffset.QuadPart = CacheOffset.QuadPart;
+		NextOffset.LowPart = (NextOffset.LowPart + CACHE_STRIPE) & ~(CACHE_STRIPE-1);
+		ReadLen = EndOfExtent.QuadPart - CacheOffset.QuadPart;
+		if (CacheOffset.QuadPart + ReadLen > NextOffset.QuadPart)
+		{
+			ReadLen = NextOffset.QuadPart - CacheOffset.QuadPart;
+		}
+		
+		DPRINT("Reading %d bytes in this go (at %08x%08x)\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
+		
+		if (!CcPinRead
+			(FileObject,
+			 &CacheOffset,
+			 ReadLen,
+			 Wait ? PIN_WAIT : PIN_IF_BCB,
+			 &Bcb,
+			 (PVOID*)&ReadBuffer))
+		{
+			IoStatus->Status = STATUS_UNSUCCESSFUL;
+			IoStatus->Information = 0;
+			DPRINT("Failed CcCopyRead\n");
+			return FALSE;
+		}
+		
+		DPRINT("Copying %d bytes at %08x%08x\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
+		RtlCopyMemory
+			(BufferTarget,
+			 ReadBuffer,
+			 ReadLen);
+		
+		BufferTarget += ReadLen;
+		
+		CacheOffset = NextOffset;
+		CcUnpinData(Bcb);
     }
-
+	
     IoStatus->Status = STATUS_SUCCESS;
     IoStatus->Information = Length;
     
@@ -139,7 +140,8 @@ CcCopyWrite(IN PFILE_OBJECT FileObject,
 
 	while (CurrentOffset.QuadPart < EndOffset.QuadPart)
 	{
-		NextOffset.QuadPart = (CurrentOffset.QuadPart + CACHE_STRIPE) & ~(CACHE_STRIPE - 1);
+		NextOffset.HighPart = CurrentOffset.HighPart;
+		NextOffset.LowPart = (CurrentOffset.LowPart + CACHE_STRIPE) & ~(CACHE_STRIPE - 1);
 		DPRINT("NextOffset %08x%08x\n", NextOffset.u.HighPart, NextOffset.u.LowPart);
 		WriteLen = MIN(NextOffset.QuadPart - CurrentOffset.QuadPart, Length);
 		DPRINT("Copying %x bytes from %08x%08x\n", 

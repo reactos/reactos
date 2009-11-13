@@ -119,8 +119,8 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-               + MemoryArea->Data.SectionData.ViewOffset;
+	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+
       /*
        * Get or create a pageop
        */
@@ -253,8 +253,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-             + MemoryArea->Data.SectionData.ViewOffset;
+	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
 
       /*
        * Get or create a pageop
@@ -286,8 +285,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 #ifdef _NEWCC_
    else if (Type == MEMORY_AREA_PAGE_FILE_SECTION)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-             + MemoryArea->Data.SectionData.ViewOffset;
+	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
 
       /*
        * Get or create a pageop
@@ -318,8 +316,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    }
    else if (Type == MEMORY_AREA_IMAGE_SECTION)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-             + MemoryArea->Data.SectionData.ViewOffset;
+	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
 
       /*
        * Get or create a pageop

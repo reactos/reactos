@@ -627,6 +627,16 @@ NTSTATUS NTAPI Ext2CommonWrite(
 					PtrReqdFCB->CommonFCBHeader.FileSize.QuadPart = 
 						ByteOffset.QuadPart + WriteLength;				
 					
+					if ( PtrReqdFCB->CommonFCBHeader.FileSize.QuadPart > PtrReqdFCB->CommonFCBHeader.AllocationSize.QuadPart )
+					{
+						DbgPrint
+							("File size greater than allocation size: %08x%08x vs %08x%08x %wZ\n",
+							 PtrReqdFCB->CommonFCBHeader.FileSize.HighPart,
+							 PtrReqdFCB->CommonFCBHeader.FileSize.LowPart,
+							 PtrReqdFCB->CommonFCBHeader.AllocationSize.HighPart,
+							 PtrReqdFCB->CommonFCBHeader.AllocationSize.LowPart,
+							 &PtrFileObject->FileName);
+					}
 					ASSERT( PtrReqdFCB->CommonFCBHeader.FileSize.QuadPart <= PtrReqdFCB->CommonFCBHeader.AllocationSize.QuadPart );
 
 					Ext2UpdateFileSize( PtrIrpContext, PtrFileObject, PtrFCB );
@@ -796,7 +806,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 				DebugTrace(DEBUG_TRACE_WRITE_DETAILS,   "Reading in some Indirect Blocks", 0);
 
 				DebugTrace(DEBUG_TRACE_WRITE_DETAILS,   "Indirect block at %x", PtrFCB->IBlock[EXT2_NDIR_BLOCKS]);
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_NDIR_BLOCKS ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_NDIR_BLOCKS ] * LogicalBlockSize;
 
 				//
 				//	Asking the cache manager to oblige by pinning the single indirect block...
@@ -836,7 +846,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 				DebugTrace(DEBUG_TRACE_MISC,   "Reading in some Double Indirect Blocks", 0);
 
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
 
 				//
 				//	Asking the cache manager to oblige by pinning the double indirect block...
@@ -895,7 +905,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 					for( i = 0; i < DIArrayCount; i++ )
 					{
-						VolumeByteOffset.QuadPart =  PtrPinnedDIndirectBlock[StartIndirectBlock+i] * LogicalBlockSize;
+						VolumeByteOffset.QuadPart = (ULONGLONG)PtrPinnedDIndirectBlock[StartIndirectBlock+i] * LogicalBlockSize;
 						if (!CcMapData( PtrVCB->PtrStreamFileObject,
 						   &VolumeByteOffset,
 						   LogicalBlockSize,
@@ -928,7 +938,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 				DebugTrace(DEBUG_TRACE_MISC,   "Reading in some Double Indirect Blocks", 0);
 
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
 
 				//
 				//	Asking the cache manager to oblige by pinning the double indirect block...
@@ -991,7 +1001,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 					for( i = 0; i < DIArrayCount; i++ )
 					{
-						VolumeByteOffset.QuadPart =  PtrPinnedDIndirectBlock[StartIndirectBlock+i] * LogicalBlockSize;
+						VolumeByteOffset.QuadPart = (ULONGLONG)PtrPinnedDIndirectBlock[StartIndirectBlock+i] * LogicalBlockSize;
 						if (!CcMapData( PtrVCB->PtrStreamFileObject,
 						   &VolumeByteOffset,
 						   LogicalBlockSize,
@@ -1036,7 +1046,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 				DebugTrace(DEBUG_TRACE_MISC,   "Reading in some Triple Indirect Blocks", 0);
 
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_TIND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_TIND_BLOCK ] * LogicalBlockSize;
 
 				DebugTrace(DEBUG_TRACE_TRIPLE,   "ByteOffset = 0x%I64X", ByteOffset );
 				DebugTrace(DEBUG_TRACE_TRIPLE,   "WriteLength = 0x%lX", WriteLength );
@@ -1109,7 +1119,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 					for( i = 0; i < Count; i++, ByteOffsetTillHere += DoubleIndirectBlockSize)
 					{
-						VolumeByteOffset.QuadPart =  PtrPinnedTIndirectBlock[StartDIndirectBlock+i] * LogicalBlockSize;
+						VolumeByteOffset.QuadPart = (ULONGLONG)PtrPinnedTIndirectBlock[StartDIndirectBlock+i] * LogicalBlockSize;
 						
 						DebugTrace(DEBUG_TRACE_TRIPLE,   "Double VolOffset = 0x%I64X", VolumeByteOffset );
 
@@ -1159,7 +1169,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 								
 							for( i = 0; i < (EndIndirectBlock - StartIndirectBlock); i++ )
 							{
-								VolumeByteOffset.QuadPart =  TempDIBuffer[StartIndirectBlock+i] * LogicalBlockSize;
+								VolumeByteOffset.QuadPart = (ULONGLONG)TempDIBuffer[StartIndirectBlock+i] * LogicalBlockSize;
 								DebugTrace(DEBUG_TRACE_TRIPLE,   "Single VolOffset = 0x%I64X", VolumeByteOffset );
 
 								if (!CcMapData( PtrVCB->PtrStreamFileObject,

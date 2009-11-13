@@ -393,12 +393,12 @@ Ext2MountVolume (
 			if( PtrVCB->LogBlockSize )
 			{
 				//	First block contains the descriptors...
-				VolumeByteOffset.QuadPart = LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)LogicalBlockSize;
 			}
 			else
 			{
 				//	Second block contains the descriptors...
-				VolumeByteOffset.QuadPart = LogicalBlockSize * 2;
+				VolumeByteOffset.QuadPart = (ULONGLONG)LogicalBlockSize * 2;
 			}
 
 			NumberOfBytesToRead = PtrVCB->NoOfGroups * sizeof( struct ext2_group_desc );

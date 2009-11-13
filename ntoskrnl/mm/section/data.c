@@ -206,6 +206,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 
 	  if (MmIsDirtyPageRmap(Page))
 	  {
+		  DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, Offset->u.HighPart, Offset->u.LowPart);
 		  Status = MiWriteBackPage(FileObject, Offset, PAGE_SIZE, Page);
 		  if (!NT_SUCCESS(Status))
 		  {
@@ -358,7 +359,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 	Region = MmFindRegion(MemoryArea->StartingAddress,
 						  &MemoryArea->Data.SectionData.RegionListHead,
 						  Address, NULL);
-	TotalOffset.QuadPart = Offset + MemoryArea->Data.SectionData.ViewOffset;
+	TotalOffset.QuadPart = MemoryArea->Data.SectionData.ViewOffset.QuadPart + Offset;
 
 	/*
 	 * Lock the segment
@@ -367,13 +368,13 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
 	Entry = MiGetPageEntrySectionSegment(Segment, &TotalOffset);
 	HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
-	DPRINT("Entry %x HasSwapEntry %x Offset %x\n", Entry, HasSwapEntry, TotalOffset.QuadPart);
+	DPRINT("Entry %x HasSwapEntry %x Offset %08x%08x\n", Entry, HasSwapEntry, TotalOffset.u.HighPart, TotalOffset.u.LowPart);
 
 	if (Entry == 0 && !HasSwapEntry)
 	{
 		DPRINT("Segment->RawLength %08x%08x\n", Segment->RawLength.u.HighPart, Segment->RawLength.u.LowPart);
 		DPRINT("Segment->Length    %08x%08x\n", Segment->Length.u.HighPart, Segment->Length.u.LowPart);
-		DPRINT("Reading at offset %x (relative %x)\n", TotalOffset.LowPart, Offset);
+		DPRINT("Reading at offset %08x%08x (relative %x)\n", TotalOffset.HighPart, TotalOffset.LowPart, Offset);
 	
 		MmUnlockSectionSegment(Segment);
 		MmUnlockAddressSpace(AddressSpace);
@@ -616,8 +617,8 @@ MiCowSectionPage
     * Find the offset of the page
     */
    PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-   Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress
-	   + MemoryArea->Data.SectionData.ViewOffset;
+   Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress +
+	   MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
    Segment = MemoryArea->Data.SectionData.Segment;
    Section = MemoryArea->Data.SectionData.Section;
@@ -728,7 +729,8 @@ MiSwapInSectionPage
 	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 	
 	Address = MM_ROUND_DOWN(Address, PAGE_SIZE);
-	Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+	Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress +
+		MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 	Region = MmFindRegion(MemoryArea->StartingAddress,
 						  &MemoryArea->Data.SectionData.RegionListHead,
 						  Address, NULL);
@@ -819,9 +821,10 @@ MiZeroFillSection
 	}
 
 	Segment = MemoryArea->Data.SectionData.Segment;
-	End.QuadPart = PAGE_ROUND_DOWN(FileOffset.QuadPart + Length);
-	FileOffset.QuadPart = PAGE_ROUND_UP(FileOffset.QuadPart);
-	FirstMapped.QuadPart = MemoryArea->Data.SectionData.ViewOffset;
+	End.QuadPart = FileOffset.QuadPart + Length;
+	End.LowPart = PAGE_ROUND_DOWN(End.LowPart);
+	FileOffset.LowPart = PAGE_ROUND_UP(FileOffset.LowPart);
+	FirstMapped.QuadPart = MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 	DPRINT1
 		("Pulling zero pages for %08x%08x-%08x%08x\n",
 		 FileOffset.u.HighPart, FileOffset.u.LowPart,
@@ -917,7 +920,6 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    MM_SECTION_PAGEOUT_CONTEXT Context;
    SWAPENTRY SwapEntry;
    ULONG Entry;
-   LARGE_INTEGER FileOffset;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
@@ -929,9 +931,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
-
-   Context.Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
-   FileOffset = Context.Offset;
+   Context.Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress +
+	   MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
    FileObject = Context.Section->FileObject;
 
@@ -984,7 +985,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
 
 	  if (Context.WasDirty)
 	  {
-		  Status = MiWriteBackPage(FileObject, &FileOffset, PAGE_SIZE, Page);
+		  DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, Context.Offset.u.HighPart, Context.Offset.u.LowPart);
+		  Status = MiWriteBackPage(FileObject, &Context.Offset, PAGE_SIZE, Page);
 		  if (!NT_SUCCESS(Status))
 		  {
 			  DPRINT1("CCRosUnmapCacheSegment failed, status = %x\n", Status);
@@ -1161,7 +1163,8 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+   Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress +
+	   MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
    /*
     * Get the segment and section.
@@ -1209,6 +1212,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    if (!Private)
    {
       ASSERT(SwapEntry == 0);
+	  DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, Offset.u.HighPart, Offset.u.LowPart);
       Status = PageOp->Status = MiWriteBackPage(FileObject, &Offset, PAGE_SIZE, Page);
       MmspCompleteAndReleasePageOp(PageOp);
       return(Status);
@@ -1280,7 +1284,7 @@ MiFlushMappedSection
 	BeginningAddress = PAGE_ROUND_DOWN((ULONG_PTR)MemoryArea->StartingAddress);
 	EndingAddress = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress);
 	Segment = MemoryArea->Data.SectionData.Segment;
-	ViewOffset.QuadPart = MemoryArea->Data.SectionData.ViewOffset;
+	ViewOffset.QuadPart = MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
 	MmLockSectionSegment(Segment);
 
@@ -1325,6 +1329,7 @@ MiFlushMappedSection
 		Page = Pages[(PageAddress - BeginningAddress) >> PAGE_SHIFT];
 		if (Page)
 		{
+			DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &Segment->FileObject->FileName, FileOffset.u.HighPart, FileOffset.u.LowPart);
 			Status = MiWriteBackPage(Segment->FileObject, &FileOffset, PAGE_SIZE, Page);
 			MmUnlockPage(Page);
 			MmSetCleanAllRmaps(Page);
@@ -1394,7 +1399,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
             PFN_TYPE Page;
 
             Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-                     + MemoryArea->Data.SectionData.ViewOffset;
+                     + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
             Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
             Page = MmGetPfnForProcess(Process, Address);
 
@@ -1919,7 +1924,7 @@ MiMapViewOfSegment(PMMSUPPORT AddressSpace,
                    PVOID* BaseAddress,
                    SIZE_T ViewSize,
                    ULONG Protect,
-                   ULONG ViewOffset,
+                   PLARGE_INTEGER ViewOffset,
                    ULONG AllocationType)
 {
    PMEMORY_AREA MArea;
@@ -1954,7 +1959,10 @@ MiMapViewOfSegment(PMMSUPPORT AddressSpace,
 
    MArea->Data.SectionData.Segment = Segment;
    MArea->Data.SectionData.Section = Section;
-   MArea->Data.SectionData.ViewOffset = ViewOffset;
+   if (ViewOffset)
+	   MArea->Data.SectionData.ViewOffset = *ViewOffset;
+   else
+	   MArea->Data.SectionData.ViewOffset.QuadPart = 0;
    MArea->Data.SectionData.WriteCopyView = FALSE;
    MmInitializeRegion(&MArea->Data.SectionData.RegionListHead,
                       ViewSize, 0, Protect);
@@ -2219,7 +2227,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
    Offset.QuadPart = ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress) +
-            MemoryArea->Data.SectionData.ViewOffset;
+            MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
    Section = MemoryArea->Data.SectionData.Section;
    Segment = MemoryArea->Data.SectionData.Segment;
@@ -2352,7 +2360,7 @@ MiAwaitPageOps(PMMSUPPORT AddressSpace, PMEMORY_AREA MemoryArea, PVOID BaseAddre
 			Offset -= PAGE_SIZE;
 			PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL,
 									  MemoryArea->Data.SectionData.Segment,
-									  Offset + MemoryArea->Data.SectionData.ViewOffset);
+									  Offset);
 			if (PageOp)
 			{
 				MmUnlockAddressSpace(AddressSpace);
@@ -2648,7 +2656,7 @@ MmExtendSection
 
 	MmLockSectionSegment(Segment);
 	Segment->RawLength.QuadPart = NewSize->QuadPart;
-	Segment->Length.QuadPart = MAX(Segment->Length.QuadPart, PAGE_ROUND_UP(Segment->RawLength.QuadPart));
+	Segment->Length.QuadPart = MAX(Segment->Length.QuadPart, PAGE_ROUND_UP(Segment->RawLength.LowPart));
 	MmUnlockSectionSegment(Segment);
 	Section->MaximumSize = *NewSize;
 	return STATUS_SUCCESS;
@@ -2842,7 +2850,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 {
    PROS_SECTION_OBJECT Section;
    PMMSUPPORT AddressSpace;
-   ULONG ViewOffset;
+   LARGE_INTEGER ViewOffset;
    NTSTATUS Status = STATUS_SUCCESS;
 
    ASSERT(Process);
@@ -2900,14 +2908,14 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
       if (SectionOffset == NULL)
       {
-         ViewOffset = 0;
+         ViewOffset.QuadPart = 0;
       }
       else
       {
-         ViewOffset = SectionOffset->u.LowPart;
+         ViewOffset = *SectionOffset;
       }
 
-      if ((ViewOffset % PAGE_SIZE) != 0)
+      if ((ViewOffset.QuadPart % PAGE_SIZE) != 0)
       {
          MmUnlockAddressSpace(AddressSpace);
          return(STATUS_MAPPED_ALIGNMENT);
@@ -2915,11 +2923,11 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
       if ((*ViewSize) == 0)
       {
-         (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
+         (*ViewSize) = Section->MaximumSize.QuadPart - ViewOffset.QuadPart;
       }
-      else if (((*ViewSize)+ViewOffset) > Section->MaximumSize.u.LowPart)
+      else if (((*ViewSize)+ViewOffset.QuadPart) > Section->MaximumSize.QuadPart)
       {
-         (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
+         (*ViewSize) = Section->MaximumSize.QuadPart - ViewOffset.QuadPart;
       }
 
       MmLockSectionSegment(Section->Segment);
@@ -2929,7 +2937,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                                   BaseAddress,
                                   *ViewSize,
                                   Protect,
-                                  ViewOffset,
+                                  &ViewOffset,
                                   AllocationType & (MEM_TOP_DOWN|SEC_NO_CHANGE));
       MmUnlockSectionSegment(Section->Segment);
       if (!NT_SUCCESS(Status))
@@ -3085,7 +3093,7 @@ MmMapViewInSystemSpaceAtOffset
     PMMSUPPORT AddressSpace;
     NTSTATUS Status;
     
-    DPRINT("MmMapViewInSystemSpaceAtOffset() called offset %x\n", FileOffset->LowPart);
+    DPRINT("MmMapViewInSystemSpaceAtOffset() called offset %08x%08x\n", FileOffset->HighPart, FileOffset->LowPart);
     
     Section = (PROS_SECTION_OBJECT)SectionObject;
     AddressSpace = MmGetKernelAddressSpace();
@@ -3100,7 +3108,7 @@ MmMapViewInSystemSpaceAtOffset
 				MappedBase,
 				*ViewSize,
 				Section->SectionPageProtection,
-				FileOffset->LowPart,
+				FileOffset,
 				0);
     
     MmUnlockSectionSegment(Section->Segment);

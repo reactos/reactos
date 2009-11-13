@@ -239,9 +239,10 @@ MiSimpleRead
     ASSERT(DeviceObject);
 
     DPRINT
-		("PAGING READ: FileObject %x <%wZ> Offset %x Length %d\n", 
+		("PAGING READ: FileObject %x <%wZ> Offset %08x%08x Length %d\n", 
 		 &FileObject, 
 		 &FileObject->FileName,
+		 FileOffset->HighPart,
 		 FileOffset->LowPart,
 		 Length);
 

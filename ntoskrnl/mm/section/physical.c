@@ -75,11 +75,11 @@ MmNotPresentFaultPhysicalMemory
 	 * Just map the desired physical page
 	 */
 	PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-	Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress + MemoryArea->Data.SectionData.ViewOffset;
+	Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
 	Region = MmFindRegion(MemoryArea->StartingAddress,
 						  &MemoryArea->Data.SectionData.RegionListHead,
 						  Address, NULL);
-	Page = Offset >> PAGE_SHIFT;
+	Page = (Offset + MemoryArea->Data.SectionData.ViewOffset.QuadPart) >> PAGE_SHIFT;
 	Status = MmCreateVirtualMappingUnsafe(Process,
 										  Address,
 										  Region->Protect,

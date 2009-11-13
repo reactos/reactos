@@ -326,8 +326,8 @@ typedef struct _MEMORY_AREA
         struct
         {
             ROS_SECTION_OBJECT* Section;
-            ULONG ViewOffset;
             PMM_SECTION_SEGMENT Segment;
+            LARGE_INTEGER ViewOffset;
             BOOLEAN WriteCopyView;
             LIST_ENTRY RegionListHead;
         } SectionData;
@@ -1859,7 +1859,7 @@ MiMapViewOfSegment(PMMSUPPORT AddressSpace,
                    PVOID* BaseAddress,
                    SIZE_T ViewSize,
                    ULONG Protect,
-                   ULONG ViewOffset,
+                   PLARGE_INTEGER ViewOffset,
                    ULONG AllocationType);
 
 /* section/image.c ***********************************************************/

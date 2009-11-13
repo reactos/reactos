@@ -19,7 +19,6 @@
 
 #define			DEBUG_LEVEL						( DEBUG_TRACE_DISKIO )
 
-
 /*************************************************************************
 *
 * Function: Ext2ReadLogicalBlocks()
@@ -80,9 +79,9 @@ NTSTATUS NTAPI Ext2ReadLogicalBlocks (
 	LogicalBlockSize = EXT2_MIN_BLOCK_SIZE << PtrVCB->LogBlockSize;
 	PhysicalBlockSize = PtrTargetDeviceObject->SectorSize;
 	
-	NoOfPhysicalBlocks = NoOfLogicalBlocks * LogicalBlockSize / PhysicalBlockSize;
+	NoOfPhysicalBlocks = (ULONGLONG)NoOfLogicalBlocks * LogicalBlockSize / PhysicalBlockSize;
 
-	StartPhysicalBlock.QuadPart = ( StartLogicalBlock.QuadPart ) * 
+	StartPhysicalBlock.QuadPart = (ULONGLONG)( StartLogicalBlock.QuadPart ) * 
 									( LogicalBlockSize / PhysicalBlockSize );
 
 	Status = Ext2ReadPhysicalBlocks( PtrTargetDeviceObject,
@@ -144,7 +143,7 @@ NTSTATUS NTAPI Ext2ReadPhysicalBlocks (
 	
 	NumberOfBytesToRead = PhysicalBlockSize * NoOfBlocks;
 
-	ByteOffset.QuadPart = StartPhysicalBlock.QuadPart * PhysicalBlockSize;
+	ByteOffset.QuadPart = (ULONGLONG)StartPhysicalBlock.QuadPart * PhysicalBlockSize;
 
 	try
 	{

@@ -81,6 +81,11 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
                         break;
 
                     case MEMORY_AREA_SECTION_VIEW:
+#ifdef _NEWCC_
+				    case MEMORY_AREA_PHYSICAL_MEMORY_SECTION:
+				    case MEMORY_AREA_PAGE_FILE_SECTION:
+				    case MEMORY_AREA_IMAGE_SECTION:
+#endif
                         Status = MmQuerySectionView(MemoryArea, Address, Info,
                                                     ResultLength);
                         break;

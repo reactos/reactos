@@ -212,6 +212,7 @@ BOOLEAN						FirstAttempt )
 		}
 		
 		DebugTrace(DEBUG_TRACE_READ_DETAILS,   "  ->ByteCount           = 0x%8lx", PtrIoStackLocation->Parameters.Read.Length);
+		DebugTrace(DEBUG_TRACE_READ_DETAILS,   "  ->ByteOffset.HighPart = 0x%8lx", PtrIoStackLocation->Parameters.Read.ByteOffset.HighPart);
 		DebugTrace(DEBUG_TRACE_READ_DETAILS,   "  ->ByteOffset.LowPart  = 0x%8lx", PtrIoStackLocation->Parameters.Read.ByteOffset.LowPart);
 		
 		if( CanWait )
@@ -674,7 +675,7 @@ BOOLEAN						FirstAttempt )
 				LARGE_INTEGER VolumeByteOffset;
 
 				DebugTrace(DEBUG_TRACE_MISC,   "Reading in some Single Indirect Blocks from IND block at %x", PtrFCB->IBlock[EXT2_IND_BLOCK]);
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_IND_BLOCK ] * LogicalBlockSize;
 
 				//
 				//	Asking the cache manager to oblige by pinning the single indirect block...
@@ -713,7 +714,9 @@ BOOLEAN						FirstAttempt )
 
 				DebugTrace(DEBUG_TRACE_MISC,   "Reading in some Double Indirect Blocks", 0);
 
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_DIND_BLOCK ] * LogicalBlockSize;
+				DebugTrace(DEBUG_TRACE_MISC, "VolumeByteOffset.HighPart %08x", VolumeByteOffset.HighPart);
+				DebugTrace(DEBUG_TRACE_MISC, "VolumeByteOffset.LowPart  %08x", VolumeByteOffset.LowPart);
 
 				//
 				//	Asking the cache manager to oblige by pinning the double indirect block...
@@ -772,7 +775,7 @@ BOOLEAN						FirstAttempt )
 
 					for( i = 0; i < DIArrayCount; i++ )
 					{
-						VolumeByteOffset.QuadPart =  PtrPinnedDIndirectBlock[StartIndirectBlock+i] * LogicalBlockSize;
+						VolumeByteOffset.QuadPart =  (ULONGLONG)PtrPinnedDIndirectBlock[StartIndirectBlock+i] * LogicalBlockSize;
 						if (!CcMapData( PtrVCB->PtrStreamFileObject,
 						   &VolumeByteOffset,
 						   LogicalBlockSize,
@@ -817,7 +820,7 @@ BOOLEAN						FirstAttempt )
 
 				DebugTrace(DEBUG_TRACE_MISC,   "Reading in some Triple Indirect Blocks", 0);
 
-				VolumeByteOffset.QuadPart = PtrFCB->IBlock[ EXT2_TIND_BLOCK ] * LogicalBlockSize;
+				VolumeByteOffset.QuadPart = (ULONGLONG)PtrFCB->IBlock[ EXT2_TIND_BLOCK ] * LogicalBlockSize;
 
 				DebugTrace(DEBUG_TRACE_TRIPLE,   "ByteOffset = 0x%I64X", ByteOffset );
 				DebugTrace(DEBUG_TRACE_TRIPLE,   "ReadLength = 0x%lX", ReadLength );
@@ -890,7 +893,7 @@ BOOLEAN						FirstAttempt )
 
 					for( i = 0; i < Count; i++, ByteOffsetTillHere += DoubleIndirectBlockSize)
 					{
-						VolumeByteOffset.QuadPart =  PtrPinnedTIndirectBlock[StartDIndirectBlock+i] * LogicalBlockSize;
+						VolumeByteOffset.QuadPart = (ULONGLONG)PtrPinnedTIndirectBlock[StartDIndirectBlock+i] * LogicalBlockSize;
 						
 						DebugTrace(DEBUG_TRACE_TRIPLE,   "Double VolOffset = 0x%I64X", VolumeByteOffset );
 
@@ -940,7 +943,7 @@ BOOLEAN						FirstAttempt )
 								
 							for( i = 0; i < (EndIndirectBlock - StartIndirectBlock); i++ )
 							{
-								VolumeByteOffset.QuadPart =  TempDIBuffer[StartIndirectBlock+i] * LogicalBlockSize;
+								VolumeByteOffset.QuadPart = (ULONGLONG)TempDIBuffer[StartIndirectBlock+i] * LogicalBlockSize;
 								DebugTrace(DEBUG_TRACE_TRIPLE,   "Single VolOffset = 0x%I64X", VolumeByteOffset );
 
 								if (!CcMapData( PtrVCB->PtrStreamFileObject,
