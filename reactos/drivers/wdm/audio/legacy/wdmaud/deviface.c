@@ -205,22 +205,41 @@ WdmAudOpenSysaudio(
     PWDMAUD_CLIENT Client;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
+    /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     if (!DeviceExtension->NumSysAudioDevices)
+    {
+        /* wdmaud failed to open sysaudio */
         return STATUS_UNSUCCESSFUL;
+    }
 
+    /* sanity check */
     ASSERT(!IsListEmpty(&DeviceExtension->SysAudioDeviceList));
 
+    /* allocate client context struct */
     Client = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_CLIENT));
+
+    /* check for allocation failure */
     if (!Client)
     {
+        /* not enough memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* zero client context struct */
     RtlZeroMemory(Client, sizeof(WDMAUD_CLIENT));
+
+    /* initialize mixer event list */
+    InitializeListHead(&Client->MixerEventList);
+
+    /* store result */
     *pClient = Client;
 
+    /* insert client into list */
+    ExInterlockedInsertTailList(&DeviceExtension->WdmAudClientList, &Client->Entry, &DeviceExtension->Lock);
+
+    /* done */
     return STATUS_SUCCESS;
 }
 

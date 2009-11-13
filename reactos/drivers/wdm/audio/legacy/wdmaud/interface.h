@@ -49,9 +49,17 @@ typedef struct
             LPWSTR DeviceInterfaceString;
             ULONG DeviceInterfaceStringSize;
         }Interface;
+
+        struct
+        {
+            HANDLE hMixer;
+            ULONG NotificationType;
+            ULONG Value;
+        }MixerEvent;
         KSSTATE State;
         ULONG Volume;
         ULONG FrameSize;
+        HANDLE hNotifyEvent;
     }u;
 
 }WDMAUD_DEVICE_INFO, *PWDMAUD_DEVICE_INFO;
@@ -335,5 +343,22 @@ typedef struct
              15, \
              METHOD_BUFFERED, \
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+/// IOCTL_GET_MIXER_EVENT
+///
+/// Description: This IOCTL queries for 
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// Result:     The result is returned in the struct MixerInfo
+/// ReturnCode:  STATUS_SUCCESS indicates success
+
+#define IOCTL_GET_MIXER_EVENT \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             16, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
 
 #endif
