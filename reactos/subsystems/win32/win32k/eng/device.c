@@ -407,6 +407,8 @@ IntPrepareDriver()
             PrimarySurface.GDIInfo.ulLogPixelsY = 96;
         }
 
+        PrimarySurface.Pointer.Exclude.right = -1;
+
         /* Complete initialization of the physical device */
         PrimarySurface.DriverFunctions.CompletePDEV(
             PrimarySurface.hPDev,
