@@ -362,7 +362,7 @@ InstantiatePins(
     DispatchContext->AudioEntry = DeviceEntry;
 
 
-    DPRINT1("RealPinHandle %p\n", RealPinHandle);
+    DPRINT("RealPinHandle %p\n", RealPinHandle);
 
     /* Do we need to transform the audio stream */
     if (OutputFormat != NULL)
