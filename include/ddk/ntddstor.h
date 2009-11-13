@@ -349,6 +349,14 @@ typedef struct _PREVENT_MEDIA_REMOVAL {
     BOOLEAN PreventMediaRemoval;
 } PREVENT_MEDIA_REMOVAL, *PPREVENT_MEDIA_REMOVAL;
 
+typedef struct _STORAGE_HOTPLUG_INFO {
+	ULONG Size;
+	UCHAR MediaRemovable;
+	UCHAR MediaHotplug;
+	UCHAR DeviceHotplug;
+	UCHAR WriteCacheEnableOverride;
+} STORAGE_HOTPLUG_INFO, *PSTORAGE_HOTPLUG_INFO;
+
 #ifdef __cplusplus
 }
 #endif

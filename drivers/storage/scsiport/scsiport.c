@@ -2826,6 +2826,25 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           DPRINT1("IOCTL_SCSI_MINIPORT unimplemented!\n");
           break;
 
+	  case IOCTL_STORAGE_GET_HOTPLUG_INFO:
+		  if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_HOTPLUG_INFO))
+		  {
+			  Status = STATUS_BUFFER_TOO_SMALL;
+		  }
+		  else
+		  {
+			  STORAGE_HOTPLUG_INFO HotplugInfo = { };
+			  HotplugInfo.Size = sizeof(HotplugInfo);
+			  // XXX Stub
+			  RtlCopyMemory
+				  (Irp->AssociatedIrp.SystemBuffer,
+				   &HotplugInfo,
+				   sizeof(HotplugInfo));
+			  Irp->IoStatus.Information = sizeof(HotplugInfo);
+			  Status = STATUS_SUCCESS;
+		  }
+		  break;
+
       case IOCTL_SCSI_PASS_THROUGH:
           DPRINT1("IOCTL_SCSI_PASS_THROUGH unimplemented!\n");
           break;
