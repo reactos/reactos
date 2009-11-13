@@ -975,11 +975,17 @@
    `char[]'. */
 #define YYTEXT_POINTER 1
 
+/* Define to a macro to output a .cfi assembly pseudo-op */
+#define __ASM_CFI(x)
+
 /* Define to a macro to generate an assembly function directive */
 #define __ASM_FUNC(name) ".def " __ASM_NAME(name) "; .scl 2; .type 32; .endef"
 
 /* Define to a macro to generate an assembly name from a C symbol */
 #define __ASM_NAME(name) "_" name
+
+/* Define to a macro to generate an stdcall suffix */
+#define __ASM_STDCALL(args) "@" #args
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
