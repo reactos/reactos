@@ -416,9 +416,10 @@ typedef struct {
 typedef struct tMIXEROPENDESC
 {
 	HMIXEROBJ		hmx;
-        LPVOID			pReserved0;
-	DWORD			dwCallback;
-	DWORD			dwInstance;
+	LPVOID			pReserved0;
+	DWORD_PTR			dwCallback;
+	DWORD_PTR			dwInstance;
+	DWORD_PTR			dnDevNode;
 } MIXEROPENDESC, *LPMIXEROPENDESC;
 
 typedef struct {

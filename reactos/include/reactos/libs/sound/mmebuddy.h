@@ -334,8 +334,8 @@ typedef struct _SOUND_DEVICE_INSTANCE
     {
         HDRVR Handle;
         DWORD Flags;
-        DWORD ClientCallback;
-        DWORD ClientCallbackInstanceData;
+        DWORD_PTR ClientCallback;
+        DWORD_PTR ClientCallbackInstanceData;
     } WinMM;
 
     /* DO NOT TOUCH THESE OUTSIDE OF THE SOUND THREAD */
@@ -357,6 +357,8 @@ typedef struct _SOUND_DEVICE_INSTANCE
     DWORD FrameSize;
     DWORD BufferCount;
     WAVEFORMATEX WaveFormatEx;
+    HANDLE hNotifyEvent;
+    HANDLE hStopEvent;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -561,8 +563,8 @@ MMRESULT
 SetSoundDeviceInstanceMmeData(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  HDRVR MmeHandle,
-    IN  DWORD ClientCallback,
-    IN  DWORD ClientCallbackData,
+    IN  DWORD_PTR ClientCallback,
+    IN  DWORD_PTR ClientCallbackData,
     IN  DWORD Flags);
 
 
