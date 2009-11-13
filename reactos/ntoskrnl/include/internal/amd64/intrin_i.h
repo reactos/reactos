@@ -9,6 +9,57 @@
 
 #define KeSetCurrentIrql(x) __writecr8(x)
 
+PKGDTENTRY64
+FORCEINLINE
+KiGetGdtEntry(PVOID pGdt, USHORT Selector)
+{
+    return (PKGDTENTRY64)((ULONG64)pGdt + (Selector & ~RPL_MASK));
+}
+
+PVOID
+FORCEINLINE
+KiGetGdtDescriptorBase(PKGDTENTRY Entry)
+{
+    return (PVOID)((ULONG64)Entry->BaseLow |
+                   (ULONG64)Entry->Bytes.BaseMiddle << 16 |
+                   (ULONG64)Entry->Bytes.BaseHigh << 24 |
+                   (ULONG64)Entry->BaseUpper << 32);
+}
+
+VOID
+FORCEINLINE
+KiSetGdtDescriptorBase(PKGDTENTRY Entry, ULONG64 Base)
+{
+    Entry->BaseLow = Base & 0xffff;
+    Entry->Bits.BaseMiddle = (Base >> 16) & 0xff;
+    Entry->Bits.BaseHigh = (Base >> 24) & 0xff;
+    Entry->BaseUpper = Base >> 32;
+}
+
+PVOID
+FORCEINLINE
+KiSetGdtDescriptorLimit(PKGDTENTRY Entry, ULONG Limit)
+{
+    Entry->LimitLow = Limit & 0xffff;
+    Entry->Bits.LimitHigh = Limit >> 16;
+}
+
+VOID
+FORCEINLINE
+KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, ULONG Size, UCHAR Type, UCHAR Dpl)
+{
+    KiSetGdtDescriptorBase(Entry, Base);
+    KiSetGdtDescriptorLimit(Entry, Size - 1);
+    Entry->Bits.Type = Type;
+    Entry->Bits.Dpl = Dpl;
+    Entry->Bits.Present = 1;
+    Entry->Bits.System = 0;
+    Entry->Bits.LongMode = 0;
+    Entry->Bits.DefaultBig = 0;
+    Entry->Bits.Granularity = 0;
+    Entry->MustBeZero = 0;
+}
+
 #if defined(__GNUC__)
 
 static __inline__ __attribute__((always_inline)) void __lgdt(void *Source)
@@ -41,9 +92,9 @@ static __inline__ __attribute__((always_inline)) void __stmxcsr(unsigned long *D
 	__asm__ __volatile__("stmxcsr %0" : : "m"(*Destination) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __ltr(unsigned short *Source)
+static __inline__ __attribute__((always_inline)) void __ltr(unsigned short Source)
 {
-	__asm__ __volatile__("ltr %0" : : "m"(*Source));
+	__asm__ __volatile__("ltr %0" : : "rm"(Source));
 }
 
 static __inline__ __attribute__((always_inline)) void __str(unsigned short *Destination)
@@ -51,25 +102,6 @@ static __inline__ __attribute__((always_inline)) void __str(unsigned short *Dest
 	__asm__ __volatile__("str %0" : : "m"(*Destination) : "memory");
 }
 
-#define Ke386GetLocalDescriptorTable(X) \
-    __asm__("sldt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
-
-#define Ke386SetLocalDescriptorTable(X) \
-    __asm__("lldt %w0\n\t" \
-    : /* no outputs */ \
-    : "q" (X));
-
-#define Ke386SetTr(X)                   __asm__ __volatile__("ltr %%ax" : :"a" (X));
-
-#define Ke386GetTr(X) \
-    __asm__("str %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
-
-#define Ke386SaveFlags(x)        __asm__ __volatile__("pushfq ; popq %0":"=rm" (x): /* no input */)
-#define Ke386RestoreFlags(x)     __asm__ __volatile__("pushq %0 ; popfq": /* no output */ :"irm" (x):"memory")
 
 #define _Ke386GetSeg(N)           ({ \
                                      unsigned int __d; \

@@ -354,8 +354,8 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
 	Ke386SetGs(KGDT_64_DATA | RPL_MASK);   // 0x2b
 	Ke386SetSs(KGDT_64_R0_SS);             // 0x18
 
-	// Load TSR
-	Ke386SetTr(KGDT_TSS);
+	/* Load TSR */
+	__ltr(KGDT_TSS);
 
     DPRINTM(DPRINT_WINDOWS, "leave WinLdrSetProcessorContext\n");
 }

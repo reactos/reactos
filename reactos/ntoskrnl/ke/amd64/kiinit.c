@@ -337,7 +337,7 @@ KiInitializePcr(IN PKIPCR Pcr,
                 IN PVOID DpcStack)
 {
     KDESCRIPTOR GdtDescriptor = {{0},0,0}, IdtDescriptor = {{0},0,0};
-    KGDTENTRY64 TssSelector;
+    PKGDTENTRY64 TssEntry;
     USHORT Tr = 0;
 
     /* Zero out the PCR */
@@ -375,19 +375,16 @@ KiInitializePcr(IN PKIPCR Pcr,
     Pcr->IdtBase = (PKIDTENTRY)IdtDescriptor.Base;
 
     /* Get TSS Selector */
-    Ke386GetTr(Tr); // <- FIXME: this is ugly!
-    if (Tr != KGDT_TSS) Tr = KGDT_TSS; // FIXME: HACKHACK
+    __str(&Tr);
+    ASSERT(Tr == KGDT_TSS);
 
-    /* Get TSS Selector, mask it and get its GDT Entry */
-    TssSelector = *(PKGDTENTRY)((ULONG_PTR)Pcr->GdtBase + (Tr & ~RPL_MASK));
+    /* Get TSS Entry */
+    TssEntry = KiGetGdtEntry(Pcr->GdtBase, Tr);
 
     /* Get the KTSS itself */
-    Pcr->TssBase = (PKTSS)(ULONG_PTR)(TssSelector.BaseLow |
-                              TssSelector.Bytes.BaseMiddle << 16 |
-                              TssSelector.Bytes.BaseHigh << 24 |
-                              (ULONG64)TssSelector.BaseUpper << 32);
+    Pcr->TssBase = KiGetGdtDescriptorBase(TssEntry);
 
-    Pcr->Prcb.RspBase = Pcr->TssBase->Rsp0;
+    Pcr->Prcb.RspBase = Pcr->TssBase->Rsp0; // FIXME
 
     /* Set DPC Stack */
     Pcr->Prcb.DpcStack = DpcStack;
@@ -403,7 +400,7 @@ KiInitializePcr(IN PKIPCR Pcr,
     Pcr->Prcb.CurrentThread = IdleThread;
 
     /* Start us out at PASSIVE_LEVEL */
-//    Pcr->Irql = PASSIVE_LEVEL;
+    Pcr->Irql = PASSIVE_LEVEL;
     KeSetCurrentIrql(PASSIVE_LEVEL);
 
 }
@@ -627,6 +624,9 @@ KiSystemStartup(IN ULONG_PTR Dummy,
     FrLdrDbgPrint = ((PLOADER_PARAMETER_BLOCK)Dummy)->u.I386.CommonDataArea;
     FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
 
+    /* HACK, because freeldr maps page 0 */
+    MiAddressToPte((PVOID)0)->u.Hard.Valid = 0;
+
     KiSystemStartupReal((PLOADER_PARAMETER_BLOCK)Dummy);
 
 //    KiRosPrepareForSystemStartup(Dummy, LoaderBlock);
@@ -699,7 +699,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (Cpu == 0)
     {
         /* Setup the TSS descriptors and entries */
-        Ki386InitializeTss(Pcr->TssBase, Pcr->GdtBase, InitialStack);
+        KiInitializeTss(Pcr->TssBase, InitialStack);
 
         /* Setup the IDT */
         KeInitExceptions();
@@ -711,7 +711,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
-//        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
+        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
         /* Hack! Wait for the debugger! */
         while (!KdPollBreakIn());
@@ -728,7 +728,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 //    DPRINT1("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
 
-    DbgBreakPointWithStatus(0);
+    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);

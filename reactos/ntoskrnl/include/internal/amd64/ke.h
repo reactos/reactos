@@ -46,6 +46,8 @@
 #define X86_MSR_CSTAR           0xC0000083
 #define X86_MSR_SFMASK          0xC0000084
 
+#define AMD64_TSS 9
+
 #ifndef __ASM__
 
 #include "intrin_i.h"
@@ -118,21 +120,10 @@ KeInvalidateTlbEntry(IN PVOID Address)
 }
 
 struct _KPCR;
-VOID
-KiInitializeGdt(struct _KPCR* Pcr);
-VOID
-Ki386ApplicationProcessorInitializeTSS(VOID);
-
-// Hack
-VOID KiRosPrepareForSystemStartup(ULONG, PROS_LOADER_PARAMETER_BLOCK);
 
 VOID
 FASTCALL
-Ki386InitializeTss(
-    IN PKTSS Tss,
-    IN PVOID GdtBase,
-    IN UINT64 Stack
-);
+KiInitializeTss(IN PKTSS Tss, IN UINT64 Stack);
 
 VOID KiDivideErrorFault();
 VOID KiDebugTrapOrFault();

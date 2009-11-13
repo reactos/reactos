@@ -46,6 +46,9 @@ BOOLEAN KiSMTProcessorsPresent;
 KIRQL KiOldIrql;
 ULONG KiFreezeFlag;
 
+/* Flush data */
+volatile LONG KiTbFlushTimeStamp;
+
 /* CPU Signatures */
 static const CHAR CmpIntelID[]       = "GenuineIntel";
 static const CHAR CmpAmdID[]         = "AuthenticAMD";
@@ -90,7 +93,7 @@ KiSetProcessorType(VOID)
     KeGetCurrentPrcb()->CpuID = 0;
 
     /* Save EFlags */
-    Ke386SaveFlags(EFlags);
+    EFlags = __readeflags();
 
     /* Do CPUID 1 now */
     __cpuid(Reg, 1);
@@ -115,7 +118,7 @@ KiSetProcessorType(VOID)
     KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
 
     /* Restore EFLAGS */
-    Ke386RestoreFlags(EFlags);
+    __writeeflags(EFlags);
 }
 
 ULONG
@@ -389,35 +392,19 @@ KiGetCacheInformation(VOID)
 
 VOID
 FASTCALL
-Ki386InitializeTss(IN PKTSS64 Tss,
-                   IN PVOID GdtBase,
-                   IN UINT64 Stack)
+KiInitializeTss(IN PKTSS64 Tss,
+                IN UINT64 Stack)
 {
     PKGDTENTRY64 TssEntry;
 
-    /* Initialize the TSS descriptor entry */
-    TssEntry = (PVOID)((ULONG64)GdtBase + KGDT_TSS);
-    TssEntry->Bits.Type = 9;//AMD64_TSS;
-    TssEntry->Bits.Dpl = 0;
-    TssEntry->Bits.Present = 1;
-    TssEntry->Bits.System = 0;
-    TssEntry->Bits.LongMode = 0;
-    TssEntry->Bits.DefaultBig = 0;
-    TssEntry->Bits.Granularity = 0;
-    TssEntry->MustBeZero = 0;
+    /* Get pointer to the GDT entry */
+    TssEntry = KiGetGdtEntry(KeGetPcr()->GdtBase, KGDT_TSS);
 
-    /* Descriptor base is the TSS address */
-    TssEntry->BaseLow = (ULONG64)Tss & 0xffff;
-    TssEntry->Bits.BaseMiddle = ((ULONG64)Tss >> 16) & 0xff;
-    TssEntry->Bits.BaseHigh = ((ULONG64)Tss >> 24) & 0xff;
-    TssEntry->BaseUpper = (ULONG64)Tss >> 32;
-
-    /* Set the limit */
-    TssEntry->LimitLow = sizeof(KTSS64) -1;
-    TssEntry->Bits.LimitHigh = 0;
+    /* Initialize the GDT entry */
+    KiInitGdtEntry(TssEntry, (ULONG64)Tss, sizeof(KTSS64), AMD64_TSS, 0);
 
     /* Zero out the TSS */
-    RtlZeroMemory(Tss, sizeof(KTSS));
+    RtlZeroMemory(Tss, sizeof(KTSS64));
 
     /* FIXME: I/O Map? */
     Tss->IoMapBase = 0x68;
@@ -435,8 +422,7 @@ Ki386InitializeTss(IN PKTSS64 Tss,
     Tss->Ist[3] = (ULONG64)KiDoubleFaultStack;
 
     /* Load the task register */
-    Ke386SetTr(KGDT_TSS);
-
+    __ltr(KGDT_TSS);
 }
 
 VOID
@@ -535,7 +521,19 @@ NTAPI
 KeFlushEntireTb(IN BOOLEAN Invalid,
                 IN BOOLEAN AllProcessors)
 {
-    UNIMPLEMENTED;
+    KIRQL OldIrql;
+
+    // FIXME: halfplemented
+    /* Raise the IRQL for the TB Flush */
+    OldIrql = KeRaiseIrqlToSynchLevel();
+
+    /* Flush the TB for the Current CPU, and update the flush stamp */
+    KeFlushCurrentTb();
+
+    /* Update the flush stamp and return to original IRQL */
+    InterlockedExchangeAdd(&KiTbFlushTimeStamp, 1);
+    KeLowerIrql(OldIrql);
+
 }
 
 KAFFINITY
