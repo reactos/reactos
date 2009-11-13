@@ -4,11 +4,9 @@
 	<directory name="cmd">
 		<xi:include href="cmd/cmd.rbuild" />
 	</directory>
-	<ifnot property="ARCH" value="amd64">
-		<directory name="explorer">
-			<xi:include href="explorer/explorer.rbuild" />
-		</directory>
-	</ifnot>
+	<directory name="explorer">
+		<xi:include href="explorer/explorer.rbuild" />
+	</directory>
 	<directory name="explorer-new">
 		<xi:include href="explorer-new/explorer.rbuild" />
 	</directory>
