@@ -13,6 +13,12 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifndef NDEBUG
+#define KDDBGPRINT KdpDprintf
+#else
+#define KDDBGPRINT if (0) KdpDprintf
+#endif
+
 /* GLOBALS ********************************************************************/
 
 PMMPTE MmDebugPte = MiAddressToPte(MI_DEBUG_MAPPING);
@@ -47,7 +53,7 @@ MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
         //
         // The structures we require aren't initialized yet, fail
         //
-        KdpDprintf("MiDbgTranslatePhysicalAddress called too early! "
+        KDDBGPRINT("MiDbgTranslatePhysicalAddress called too early! "
                    "Address: 0x%I64x\n", PhysicalAddress);
         return NULL;
     }
@@ -62,7 +68,7 @@ MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
         //
         // Fail
         //
-        KdpDprintf("MiDbgTranslatePhysicalAddress: Cache Flags not yet supported. "
+        KDDBGPRINT("MiDbgTranslatePhysicalAddress: Cache Flags not yet supported. "
                    "Flags: 0x%lx\n", Flags & (MMDBG_COPY_CACHED |
                                               MMDBG_COPY_UNCACHED |
                                               MMDBG_COPY_WRITE_COMBINED));
@@ -92,7 +98,7 @@ MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
         //
         // FIXME: We don't support this yet
         //
-        KdpDprintf("MiDbgTranslatePhysicalAddress: I/O Space not yet supported. "
+        KDDBGPRINT("MiDbgTranslatePhysicalAddress: I/O Space not yet supported. "
                    "PFN: 0x%I64x\n", (ULONG64)Pfn);
         return NULL;
     }
@@ -161,7 +167,7 @@ MmDbgCopyMemory(IN ULONG64 Address,
         //
         // Invalid size, fail
         //
-        KdpDprintf("MmDbgCopyMemory: Received Illegal Size 0x%lx\n", Size);
+        KDDBGPRINT("MmDbgCopyMemory: Received Illegal Size 0x%lx\n", Size);
         return STATUS_INVALID_PARAMETER_3;
     }
 
@@ -173,7 +179,7 @@ MmDbgCopyMemory(IN ULONG64 Address,
         //
         // Fail
         //
-        KdpDprintf("MmDbgCopyMemory: Received Unaligned Address 0x%I64x Size %lx\n",
+        KDDBGPRINT("MmDbgCopyMemory: Received Unaligned Address 0x%I64x Size %lx\n",
                   Address, Size);
         return STATUS_INVALID_PARAMETER_3;
     }
@@ -196,7 +202,7 @@ MmDbgCopyMemory(IN ULONG64 Address,
             //
             // Fail
             //
-            KdpDprintf("MmDbgCopyMemory: Failed to Translate Physical Address "
+            KDDBGPRINT("MmDbgCopyMemory: Failed to Translate Physical Address "
                        "%I64x\n", Address);
             return STATUS_UNSUCCESSFUL;
         }
@@ -221,7 +227,7 @@ MmDbgCopyMemory(IN ULONG64 Address,
             //
             // Fail
             //
-            KdpDprintf("MmDbgCopyMemory: Failing %s for invalid "
+            KDDBGPRINT("MmDbgCopyMemory: Failing %s for invalid "
                        "Virtual Address 0x%p\n",
                        Flags & MMDBG_COPY_WRITE ? "write" : "read",
                        TargetAddress);
@@ -257,7 +263,7 @@ MmDbgCopyMemory(IN ULONG64 Address,
         // FIXME: We should attempt to override the write protection instead of
         // failing here
         //
-        KdpDprintf("MmDbgCopyMemory: Failing Write for Protected Address 0x%p\n",
+        KDDBGPRINT("MmDbgCopyMemory: Failing Write for Protected Address 0x%p\n",
                    TargetAddress);
         return STATUS_UNSUCCESSFUL;
     }
