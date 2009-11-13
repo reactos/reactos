@@ -299,8 +299,32 @@ VolumeDlgProc(HWND hwndDlg,
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
+
+
     switch(uMsg)
     {
+        case MM_MIXM_LINE_CHANGE:
+        {
+            GetMuteState(pGlobalData);
+            if (pGlobalData->muteVal)
+            {
+                SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
+            }
+            else
+            {
+                SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
+            }
+            break;
+        }
+        case MM_MIXM_CONTROL_CHANGE:
+        {
+            GetVolumeValue(pGlobalData);
+            SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETSEL, (WPARAM)FALSE, (LPARAM)MAKELONG(pGlobalData->volumeMinimum, pGlobalData->volumeValue/VOLUME_DIVIDER));
+            SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pGlobalData->volumeValue/VOLUME_DIVIDER);
+            break;
+        }
         case WM_INITDIALOG:
         {
             pGlobalData = (GLOBAL_DATA*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
