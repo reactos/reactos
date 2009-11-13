@@ -161,7 +161,7 @@ MempMapRangeOfPages(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress, ULONG c
 
 	for (i = 0; i < cPages; i++)
 	{
-		if (!FrLdrMapSinglePage(VirtualAddress, PhysicalAddress))
+		if (!MempMapSinglePage(VirtualAddress, PhysicalAddress))
 		{
 			return i;
 		}
