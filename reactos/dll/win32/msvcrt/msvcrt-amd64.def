@@ -232,7 +232,7 @@ EXPORTS
 ;  _cputws @226
   _creat @227
   _cscanf @228
-;  _ctime64 @229
+  _ctime64 @229
   _ctype @230 DATA
   _cwait @231
 ;  _cwprintf @232

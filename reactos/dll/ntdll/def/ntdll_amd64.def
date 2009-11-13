@@ -648,6 +648,7 @@ RtlComputeCrc32
 ;RtlConsoleMultiByteToUnicodeN
 RtlConvertExclusiveToShared
 ;RtlConvertLCIDToString
+RtlConvertUlongToLargeInteger
 RtlConvertSharedToExclusive
 RtlConvertSidToUnicodeString
 ;RtlConvertToAutoInheritSecurityObject
@@ -934,11 +935,13 @@ RtlIsGenericTableEmptyAvl
 RtlIsNameLegalDOS8Dot3
 ;RtlIsNormalizedString
 RtlIsTextUnicode
-;RtlIsThreadWithinLoaderCallout
+RtlIsThreadWithinLoaderCallout
 RtlIsValidHandle
 RtlIsValidIndexHandle
 ;RtlIsValidLocaleName
 ;RtlLCIDToCultureName
+RtlLargeIntegerSubtract
+RtlLargeIntegerDivide
 RtlLargeIntegerToChar
 ;RtlLcidToLocaleName
 RtlLeaveCriticalSection
