@@ -30,7 +30,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "interfaces.hpp"
 #include "debug.hpp"
-#include "DMusicKS.h"
+#include "dmusicks.h"
 
 #ifdef UART
 const ULONG MAX_MINIPORTS = 3;
