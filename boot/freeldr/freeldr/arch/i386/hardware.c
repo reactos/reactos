@@ -503,8 +503,7 @@ static LONG DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     if (Position->LowPart & (Context->SectorSize - 1))
         return EINVAL;
 
-    /* FIXME: take HighPart into account */
-    Context->SectorNumber = Position->LowPart / Context->SectorSize;
+    Context->SectorNumber = Position->QuadPart / Context->SectorSize;
     return ESUCCESS;
 }
 
