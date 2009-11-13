@@ -86,7 +86,7 @@ WdmAudControlDeviceState(
     ULONG BytesReturned;
     PFILE_OBJECT FileObject;
 
-    //DPRINT1("WdmAudControlDeviceState\n");
+    DPRINT("WdmAudControlDeviceState\n");
 
     Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
@@ -105,7 +105,7 @@ WdmAudControlDeviceState(
 
     ObDereferenceObject(FileObject);
 
-    //DPRINT1("WdmAudControlDeviceState Status %x\n", Status);
+    DPRINT("WdmAudControlDeviceState Status %x\n", Status);
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 
@@ -154,6 +154,14 @@ WdmAudIoctlClose(
             ClientInfo->hPins[Index].Handle = NULL;
             SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
             return STATUS_SUCCESS;
+        }
+        else if (ClientInfo->hPins[Index].Handle == DeviceInfo->hDevice && ClientInfo->hPins[Index].Type == MIXER_DEVICE_TYPE)
+        {
+            if (ClientInfo->hPins[Index].NotifyEvent)
+            {
+                ObDereferenceObject(ClientInfo->hPins[Index].NotifyEvent);
+                ClientInfo->hPins[Index].NotifyEvent = NULL;
+            }
         }
     }
 
