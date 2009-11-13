@@ -29,9 +29,9 @@
 @ stdcall DwmFlush()
 @ stdcall DwmGetColorizationColor(ptr long)
 @ stub DwmGetCompositionTimingInfo
-@ stub DwmGetGraphicsStreamClient
-@ stub DwmGetGraphicsStreamTransformHint
-@ stub DwmGetTransportAttributes
+@ stdcall DwmGetGraphicsStreamClient(long ptr)
+@ stdcall DwmGetGraphicsStreamTransformHint(long ptr)
+@ stdcall DwmGetTransportAttributes(ptr ptr ptr)
 @ stub DwmGetWindowAttribute
 @ stdcall DwmIsCompositionEnabled(ptr)
 @ stub DwmModifyPreviousDxFrameDuration

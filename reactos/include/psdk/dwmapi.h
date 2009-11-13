@@ -31,7 +31,18 @@ extern "C" {
 
 DECLARE_HANDLE(HTHUMBNAIL);
 
+typedef struct _MilMatrix3x2D
+{
+    DOUBLE S_11;
+    DOUBLE S_12;
+    DOUBLE S_21;
+    DOUBLE S_22;
+    DOUBLE DX;
+    DOUBLE DY;
+} MilMatrix3x2D;
+
 DWMAPI DwmEnableComposition(UINT);
+DWMAPI DwmEnableMMCSS(BOOL);
 DWMAPI DwmExtendFrameIntoClientArea(HWND,const MARGINS*);
 DWMAPI DwmGetColorizationColor(DWORD*,BOOL);
 DWMAPI DwmIsCompositionEnabled(BOOL*);
