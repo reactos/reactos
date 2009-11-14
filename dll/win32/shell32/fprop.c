@@ -699,6 +699,7 @@ EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA 
     UINT Length;
     DWORD dwName;
     int Pages;
+    CLSID clsid;
 
     pOffset = wcsrchr(wFileName, L'.');
 
@@ -804,10 +805,9 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
         wcscpy(wFileName, lpf);
     }
 
-    if (PathIsDirectoryW(wFileName) || strlenW(wFileName) == 3)
+    if (PathIsDirectoryW(wFileName))
     {
-        FIXME("directory / drive resources are missing\n");
-        return FALSE;
+        return SH_ShowFolderProperties(wFileName);
     }
 
     if (wcslen(wFileName) == 3)

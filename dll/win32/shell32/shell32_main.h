@@ -238,4 +238,5 @@ HPROPSHEETPAGE SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM
 BOOL SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl);
 BOOL SH_ShowRecycleBinProperties(WCHAR sDrive);
 BOOL SH_ShowPropertiesDialog(LPWSTR lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl);
+BOOL SH_ShowFolderProperties(LPWSTR pwszFolder);
 #endif

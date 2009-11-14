@@ -22,6 +22,7 @@
 
 
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
+#define MAX_PROPERTY_SHEET_PAGE (32)
 
 /// Folder Options:
 /// CLASSKEY = HKEY_CLASSES_ROOT\CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}
@@ -252,7 +253,12 @@ FolderOptionsFileTypesDlg(
     LPARAM lParam
 )
 {
-
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            InitializeFileTypesListCtrl(hwndDlg);
+            return TRUE;
+    }
 
     return FALSE;
 }
@@ -264,7 +270,7 @@ ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
     PROPSHEETHEADERW pinfo;
     HPROPSHEETPAGE hppages[3];
     HPROPSHEETPAGE hpage;
-	UINT num_pages = 0;
+    UINT num_pages = 0;
     WCHAR szOptions[100];
 
     hpage = SH_CreatePropertySheetPage("FOLDER_OPTIONS_GENERAL_DLG", FolderOptionsGeneralDlg, 0, NULL);
@@ -278,14 +284,14 @@ ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
     hpage = SH_CreatePropertySheetPage("FOLDER_OPTIONS_FILETYPES_DLG", FolderOptionsFileTypesDlg, 0, NULL);
     if (hpage)
         hppages[num_pages++] = hpage;
-    
+
     szOptions[0] = L'\0';
-    LoadStringW(hInst, IDS_FOLDER_OPTIONS, szOptions, sizeof(szOptions) / sizeof(WCHAR));
-    szOptions[99] = L'\0';
-    
+    LoadStringW(shell32_hInstance, IDS_FOLDER_OPTIONS, szOptions, sizeof(szOptions) / sizeof(WCHAR));
+    szOptions[(sizeof(szOptions)/sizeof(WCHAR))-1] = L'\0';
+
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
+    pinfo.dwFlags = PSH_NOCONTEXTHELP;
     pinfo.nPages = num_pages;
     pinfo.u3.phpage = hppages;
     pinfo.pszCaption = szOptions;
@@ -334,7 +340,20 @@ VOID WINAPI Options_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
     Options_RunDLLCommon(hWnd, hInst, StrToIntW(cmd), nCmdShow);
 }
 
+static
+DWORD WINAPI
+CountFolderAndFiles(LPVOID lParam)
+{
+    WIN32_FIND_DATAW FindData;
+    HANDLE hFile;
+    UINT Length;
+    LPWSTR pOffset;
+    BOOL ret;
+    PFOLDER_PROPERTIES_CONTEXT pContext = (PFOLDER_PROPERTIES_CONTEXT) lParam;
 
+    pOffset = PathAddBackslashW(pContext->szFolderPath);
+    if (!pOffset)
+       return 0;
 
     Length = pOffset - pContext->szFolderPath;
 

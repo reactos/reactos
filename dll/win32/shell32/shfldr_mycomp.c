@@ -653,18 +653,20 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
         }
         else if (_ILIsDrive(pidl))
         {
-            _ILSimpleGetTextW (pidl, pszPath, MAX_PATH);    /* append my own path */
 
+            _ILSimpleGetTextW (pidl, pszPath, MAX_PATH);    /* append my own path */
             /* long view "lw_name (C:)" */
             if (!(dwFlags & SHGDN_FORPARSING))
             {
-                DWORD dwVolumeSerialNumber, dwMaximumComponetLength, dwFileSystemFlags;
                 WCHAR wszDrive[18] = {0};
+                DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
                 static const WCHAR wszOpenBracket[] = {' ','(',0};
                 static const WCHAR wszCloseBracket[] = {')',0};
 
-                GetVolumeInformationW (pszPath, wszDrive,
-                           sizeof(wszDrive)/sizeof(wszDrive[0]) - 6,
+                lstrcpynW(wszDrive, pszPath, 4);
+                pszPath[0] = L'\0';
+                GetVolumeInformationW (wszDrive, pszPath,
+                           MAX_PATH - 7,
                            &dwVolumeSerialNumber,
                            &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
                 pszPath[MAX_PATH-1] = L'\0';

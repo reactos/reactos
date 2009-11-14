@@ -1472,6 +1472,11 @@ GetMessageA(LPMSG lpMsg,
       MsgiKMToUMCleanup(&Info.Msg, &Conversion.UnicodeMsg);
       return (BOOL) -1;
     }
+  if (!lpMsg)
+  {
+     SetLastError( ERROR_NOACCESS );
+     return FALSE;
+  }
   *lpMsg = Conversion.AnsiMsg;
   Conversion.Ansi = TRUE;
   Conversion.FinalMsg = lpMsg;
@@ -1512,6 +1517,11 @@ GetMessageW(LPMSG lpMsg,
     {
       return (BOOL) -1;
     }
+  if (!lpMsg)
+  {
+     SetLastError( ERROR_NOACCESS );
+     return FALSE;
+  }
   *lpMsg = Conversion.UnicodeMsg;
   Conversion.Ansi = FALSE;
   Conversion.FinalMsg = lpMsg;
@@ -1558,6 +1568,11 @@ PeekMessageA(LPMSG lpMsg,
       MsgiKMToUMCleanup(&Info.Msg, &Conversion.UnicodeMsg);
       return (BOOL) -1;
     }
+  if (!lpMsg)
+  {
+     SetLastError( ERROR_NOACCESS );
+     return FALSE;
+  }
   *lpMsg = Conversion.AnsiMsg;
   Conversion.Ansi = TRUE;
   Conversion.FinalMsg = lpMsg;
@@ -1601,6 +1616,11 @@ PeekMessageW(
     {
       return (BOOL) -1;
     }
+  if (!lpMsg)
+  {
+     SetLastError( ERROR_NOACCESS );
+     return FALSE;
+  }
   *lpMsg = Conversion.UnicodeMsg;
   Conversion.Ansi = FALSE;
   Conversion.FinalMsg = lpMsg;
@@ -1882,7 +1902,7 @@ SendMessageCallbackA(
                          wParam,
                          lParam,
          (ULONG_PTR)&lpCallBack,
-       NUMC_SENDMESSAGECALLBACK,
+       FNID_SENDMESSAGECALLBACK,
                            TRUE);
 }
 
@@ -1904,7 +1924,7 @@ SendMessageCallbackW(
                          wParam,
                          lParam,
          (ULONG_PTR)&lpCallBack,
-       NUMC_SENDMESSAGECALLBACK,
+       FNID_SENDMESSAGECALLBACK,
                           FALSE);
 }
 
@@ -2571,15 +2591,6 @@ IsDialogMessageA( HWND hwndDlg, LPMSG pmsg )
     return IsDialogMessageW( hwndDlg, &msg );
 }
 
-typedef struct _BROADCASTPARM
-{
-    DWORD flags;
-    DWORD recipients;
-    HDESK hDesk;
-    HWND  hWnd;
-    LUID  luid;
-} BROADCASTPARM, *PBROADCASTPARM;
-
 LONG
 WINAPI
 IntBroadcastSystemMessage(
@@ -2647,7 +2658,7 @@ IntBroadcastSystemMessage(
                                             wParam,
                                             lParam,
                                   (ULONG_PTR)&parm,
-                       NUMC_BROADCASTSYSTEMMESSAGE,
+                       FNID_BROADCASTSYSTEMMESSAGE,
                                               Ansi);
     }
 

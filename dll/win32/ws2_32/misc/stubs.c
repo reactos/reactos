@@ -313,7 +313,8 @@ WSACancelBlockingCall(VOID)
 
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -346,7 +347,8 @@ WSADuplicateSocketA(IN  SOCKET s,
 
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -402,7 +404,8 @@ WSAEnumProtocolsA(IN      LPINT lpiProtocols,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -417,7 +420,8 @@ WSAEnumProtocolsW(IN      LPINT lpiProtocols,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -476,6 +480,7 @@ WSAGetQOSByName(IN      SOCKET s,
 {
     UNIMPLEMENTED
 
+    WSASetLastError(WSASYSCALLFAILURE);
     return FALSE;
 }
 
@@ -491,7 +496,8 @@ WSAHtonl(IN  SOCKET s,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -506,7 +512,8 @@ WSAHtons(IN  SOCKET s,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -539,6 +546,7 @@ WSAJoinLeaf(IN  SOCKET s,
 {
     UNIMPLEMENTED
 
+    WSASetLastError(WSASYSCALLFAILURE);
     return INVALID_SOCKET;
 }
 
@@ -554,7 +562,8 @@ WSANtohl(IN  SOCKET s,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -569,7 +578,8 @@ WSANtohs(IN  SOCKET s,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -610,7 +620,8 @@ WSAProviderConfigChange(IN OUT  LPHANDLE lpNotificationHandle,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -623,7 +634,8 @@ WSACancelAsyncRequest(IN  HANDLE hAsyncTaskHandle)
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 /* WinSock Service Provider support functions */
@@ -641,7 +653,8 @@ WPUCompleteOverlappedRequest(IN  SOCKET s,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -658,7 +671,7 @@ WSPStartup(IN  WORD wVersionRequested,
 {
     UNIMPLEMENTED
 
-    return 0;
+    return WSASYSCALLFAILURE;
 }
 
 
@@ -672,7 +685,8 @@ WSCDeinstallProvider(IN  LPGUID lpProviderId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -688,7 +702,8 @@ WSCEnumProtocols(IN      LPINT lpiProtocols,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -704,7 +719,8 @@ WSCGetProviderPath(IN      LPGUID lpProviderId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -721,7 +737,8 @@ WSCInstallProvider(IN  CONST LPGUID lpProviderId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -735,7 +752,8 @@ WSCEnableNSProvider(IN  LPGUID lpProviderId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -752,7 +770,8 @@ WSCInstallNameSpace(IN  LPWSTR lpszIdentifier,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -765,7 +784,8 @@ WSCUnInstallNameSpace(IN  LPGUID lpProviderId)
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -779,7 +799,7 @@ WSCWriteProviderOrder(IN  LPDWORD lpwdCatalogEntryId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    return WSASYSCALLFAILURE;
 }
 
 /*
@@ -796,9 +816,10 @@ WSANSPIoctl(HANDLE           hLookup,
             LPDWORD          lpcbBytesReturned,
             LPWSACOMPLETION  lpCompletion)
 {
-    //UNIMPLEMENTED
+    UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -815,7 +836,8 @@ WSCUpdateProvider(LPGUID lpProviderId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 /*
@@ -828,32 +850,7 @@ WSCWriteNameSpaceOrder(LPGUID lpProviderId,
 {
     UNIMPLEMENTED
 
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-freeaddrinfo(struct addrinfo *pAddrInfo)
-{
-    UNIMPLEMENTED
-}
-
-/*
- * @unimplemented
- */
-INT
-EXPORT
-getaddrinfo(const char FAR * nodename,
-            const char FAR * servname,
-            const struct addrinfo FAR * hints,
-            struct addrinfo FAR * FAR * res)
-{
-    UNIMPLEMENTED
-
-    return EAI_NONAME;
+    return WSASYSCALLFAILURE;
 }
 
 /*
@@ -871,7 +868,8 @@ getnameinfo(const struct sockaddr FAR * sa,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 /*
@@ -889,7 +887,7 @@ BOOL EXPORT WSApSetPostRoutine(PVOID Routine)
 {
     UNIMPLEMENTED
 
-    return 0;
+    return FALSE;
 }
 
 /* EOF */
