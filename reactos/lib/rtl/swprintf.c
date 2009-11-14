@@ -395,8 +395,10 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
 	wchar_t * str, * end;
 	const char *s;
 	const wchar_t *sw;
+#if 0
 	const wchar_t *ss;
-//	double _double;
+	double _double;
+#endif
 
 	int flags;		/* flags to number() */
 
