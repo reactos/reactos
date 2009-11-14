@@ -23,7 +23,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
-#include "wine/winuser16.h"
+#include "winuser.h"
 #include "controls.h"
 #include "win.h"
 #include "user_private.h"
@@ -317,22 +317,6 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
 }
 
 /***********************************************************************
- *           DEFDLG_Epilog
- */
-static LRESULT DEFDLG_Epilog(HWND hwnd, UINT msg, BOOL fResult)
-{
-    /* see SDK 3.1 */
-
-    if ((msg >= WM_CTLCOLORMSGBOX && msg <= WM_CTLCOLORSTATIC) ||
-         msg == WM_CTLCOLOR || msg == WM_COMPAREITEM ||
-         msg == WM_VKEYTOITEM || msg == WM_CHARTOITEM ||
-         msg == WM_QUERYDRAGICON || msg == WM_INITDIALOG)
-        return fResult;
-
-    return GetWindowLongPtrW( hwnd, DWLP_MSGRESULT );
-}
-
-/***********************************************************************
 *               DIALOG_get_info
 *
 * Get the DIALOGINFO structure of a window, allocating it if needed
@@ -374,68 +358,13 @@ out:
 }
 
 /***********************************************************************
- *              DefDlgProc (USER.308)
- */
-#ifndef __REACTOS__
-LRESULT WINAPI DefDlgProc16( HWND16 hwnd, UINT16 msg, WPARAM16 wParam,
-                             LPARAM lParam )
-{
-    DIALOGINFO *dlgInfo;
-    DLGPROC16 dlgproc;
-    HWND hwnd32 = WIN_Handle32( hwnd );
-    BOOL result = FALSE;
-
-    /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info(hwnd32, TRUE))) return 0;
-
-    SetWindowLongPtrW( hwnd32, DWLP_MSGRESULT, 0 );
-
-    if ((dlgproc = (DLGPROC16)DEFDLG_GetDlgProc( hwnd32 ))) /* Call dialog procedure */
-        result = WINPROC_CallDlgProc16( dlgproc, hwnd, msg, wParam, lParam );
-
-    if (!result && IsWindow(hwnd32))
-    {
-        /* callback didn't process this message */
-
-        switch(msg)
-        {
-            case WM_ERASEBKGND:
-            case WM_SHOWWINDOW:
-            case WM_ACTIVATE:
-            case WM_SETFOCUS:
-            case DM_SETDEFID:
-            case DM_GETDEFID:
-            case WM_NEXTDLGCTL:
-            case WM_GETFONT:
-            case WM_CLOSE:
-            case WM_NCDESTROY:
-            case WM_ENTERMENULOOP:
-            case WM_LBUTTONDOWN:
-            case WM_NCLBUTTONDOWN:
-                return DEFDLG_Proc( hwnd32, msg, (WPARAM)wParam, lParam, dlgInfo );
-            case WM_INITDIALOG:
-            case WM_VKEYTOITEM:
-            case WM_COMPAREITEM:
-            case WM_CHARTOITEM:
-                break;
-
-            default:
-                return DefWindowProc16( hwnd, msg, wParam, lParam );
-        }
-    }
-    return DEFDLG_Epilog( hwnd32, msg, result);
-}
-#endif
-
-
-/***********************************************************************
  *              DefDlgProcA (USER32.@)
  */
 LRESULT WINAPI DefDlgProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     DIALOGINFO *dlgInfo;
     DLGPROC dlgproc;
-    BOOL result = FALSE;
+    LRESULT result = 0;
 
     /* Perform DIALOGINFO initialization if not done */
     if(!(dlgInfo = DIALOG_get_info( hwnd, TRUE ))) return 0;
@@ -475,7 +404,14 @@ LRESULT WINAPI DefDlgProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
                  return DefWindowProcA( hwnd, msg, wParam, lParam );
         }
     }
-    return DEFDLG_Epilog(hwnd, msg, result);
+
+    if ((msg >= WM_CTLCOLORMSGBOX && msg <= WM_CTLCOLORSTATIC) ||
+         msg == WM_CTLCOLOR || msg == WM_COMPAREITEM ||
+         msg == WM_VKEYTOITEM || msg == WM_CHARTOITEM ||
+         msg == WM_QUERYDRAGICON || msg == WM_INITDIALOG)
+        return result;
+
+    return GetWindowLongPtrW( hwnd, DWLP_MSGRESULT );
 }
 
 
@@ -485,8 +421,8 @@ LRESULT WINAPI DefDlgProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 LRESULT WINAPI DefDlgProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     DIALOGINFO *dlgInfo;
-    BOOL result = FALSE;
     DLGPROC dlgproc;
+    LRESULT result = 0;
 
     /* Perform DIALOGINFO initialization if not done */
     if(!(dlgInfo = DIALOG_get_info( hwnd, TRUE ))) return 0;
@@ -526,5 +462,12 @@ LRESULT WINAPI DefDlgProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
                  return DefWindowProcW( hwnd, msg, wParam, lParam );
         }
     }
-    return DEFDLG_Epilog(hwnd, msg, result);
+
+    if ((msg >= WM_CTLCOLORMSGBOX && msg <= WM_CTLCOLORSTATIC) ||
+         msg == WM_CTLCOLOR || msg == WM_COMPAREITEM ||
+         msg == WM_VKEYTOITEM || msg == WM_CHARTOITEM ||
+         msg == WM_QUERYDRAGICON || msg == WM_INITDIALOG)
+        return result;
+
+    return GetWindowLongPtrW( hwnd, DWLP_MSGRESULT );
 }

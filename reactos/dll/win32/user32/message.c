@@ -3367,28 +3367,6 @@ DWORD WINAPI WaitForInputIdle( HANDLE hProcess, DWORD dwTimeOut )
 
 
 /***********************************************************************
- *		UserYield (USER.332)
- */
-void WINAPI UserYield16(void)
-{
-   DWORD count;
-
-    /* Handle sent messages */
-    process_sent_messages();
-
-    /* Yield */
-    ReleaseThunkLock(&count);
-
-    if (count)
-    {
-        RestoreThunkLock(count);
-        /* Handle sent messages again */
-        process_sent_messages();
-    }
-}
-
-
-/***********************************************************************
  *		RegisterWindowMessageA (USER32.@)
  *		RegisterWindowMessage (USER.118)
  */

@@ -600,7 +600,7 @@ static int ConvertAttribWGLtoGLX(const int* iWGLAttr, int* oGLXAttr, Wine_GLPBuf
   int pop;
   int drawattrib = 0;
   int nvfloatattrib = GLX_DONT_CARE;
-  int pixelattrib = 0;
+  int pixelattrib = ~0;
 
   /* The list of WGL attributes is allowed to be NULL. We don't return here for NULL
    * because we need to do fixups for GLX_DRAWABLE_TYPE/GLX_RENDER_TYPE/GLX_FLOAT_COMPONENTS_NV. */
@@ -756,7 +756,6 @@ static int ConvertAttribWGLtoGLX(const int* iWGLAttr, int* oGLXAttr, Wine_GLPBuf
           ERR("trying to use WGL_render_texture Attributes without support (was %x)\n", iWGLAttr[cur]);
           return -1; /** error: don't support it */
         } else {
-          PUSH2(oGLXAttr, GLX_X_RENDERABLE, pop);
           drawattrib |= GLX_PBUFFER_BIT;
         }
       }
@@ -796,12 +795,16 @@ static int ConvertAttribWGLtoGLX(const int* iWGLAttr, int* oGLXAttr, Wine_GLPBuf
     ++cur;
   }
 
-  /* Apply the OR'd drawable type bitmask now EVEN when WGL_DRAW_TO* is unset.
-   * It is needed in all cases because GLX_DRAWABLE_TYPE default to GLX_WINDOW_BIT. */
+  /* By default glXChooseFBConfig defaults to GLX_WINDOW_BIT. wglChoosePixelFormatARB searches through
+   * all formats. Unless drawattrib is set to a non-zero value override it with ~0, so that pixmap and pbuffer
+   * formats appear as well. */
+  if(!drawattrib) drawattrib = ~0;
   PUSH2(oGLXAttr, GLX_DRAWABLE_TYPE, drawattrib);
   TRACE("pAttr[?] = GLX_DRAWABLE_TYPE: %#x\n", drawattrib);
 
-  /* Set GLX_RENDER_TYPE all the time */
+  /* By default glXChooseFBConfig uses GLX_RGBA_BIT as the default value. Since wglChoosePixelFormatARB
+   * searches in all formats we have to do the same. For this reason we set GLX_RENDER_TYPE to ~0 unless
+   * it is overridden. */
   PUSH2(oGLXAttr, GLX_RENDER_TYPE, pixelattrib);
   TRACE("pAttr[?] = GLX_RENDER_TYPE: %#x\n", pixelattrib);
 

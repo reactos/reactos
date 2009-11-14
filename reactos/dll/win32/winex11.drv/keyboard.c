@@ -1684,11 +1684,29 @@ void X11DRV_InitKeyboard( Display *display )
     KeySym keysym;
     KeyCode *kcp;
     XKeyEvent e2;
-    WORD scan, vkey, OEMvkey;
+    WORD scan, vkey;
     int keyc, i, keyn, syms;
     char ckey[4]={0,0,0,0};
     const char (*lkey)[MAIN_LEN][4];
     char vkey_used[256] = { 0 };
+
+    /* Ranges of OEM, function key, and character virtual key codes.
+     * Don't include those handled specially in X11DRV_ToUnicodeEx and
+     * X11DRV_MapVirtualKeyEx, like VK_NUMPAD0 - VK_DIVIDE. */
+    static const struct {
+        WORD first, last;
+    } vkey_ranges[] = {
+        { VK_OEM_1, VK_OEM_3 },
+        { VK_OEM_4, VK_ICO_00 },
+        { 0xe6, 0xe6 },
+        { 0xe9, 0xf5 },
+        { VK_OEM_NEC_EQUAL, VK_OEM_NEC_EQUAL },
+        { VK_F1, VK_F24 },
+        { 0x30, 0x39 }, /* VK_0 - VK_9 */
+        { 0x41, 0x5a }, /* VK_A - VK_Z */
+        { 0, 0 }
+    };
+    int vkey_range;
 
     set_kbd_layout_preload_key();
 
@@ -1738,7 +1756,6 @@ void X11DRV_InitKeyboard( Display *display )
     e2.display = display;
     e2.state = 0;
 
-    OEMvkey = VK_OEM_8; /* next is available.  */
     memset(keyc2vkey, 0, sizeof(keyc2vkey));
     for (keyc = min_keycode; keyc <= max_keycode; keyc++)
     {
@@ -1855,46 +1872,65 @@ void X11DRV_InitKeyboard( Display *display )
             }
         }
 
-        if (!vkey)
-        {
-            /* Others keys: let's assign OEM virtual key codes in the allowed range,
-             * that is ([0xba,0xc0], [0xdb,0xe4], 0xe6 (given up) et [0xe9,0xf5]) */
-            do
-            {
-                switch (++OEMvkey)
-                {
-                case 0xc1 : OEMvkey=0xdb; break;
-                case 0xe5 : OEMvkey=0xe9; break;
-                case 0xf6 : OEMvkey=0xf5; WARN("No more OEM vkey available!\n");
-                }
-            } while (OEMvkey < 0xf5 && vkey_used[OEMvkey]);
-
-            vkey = VKEY_IF_NOT_USED(OEMvkey);
-
-            if (TRACE_ON(keyboard))
-            {
-                TRACE("OEM specific virtual key %X assigned to keycode %X:\n",
-                                 OEMvkey, e2.keycode);
-                TRACE("(");
-                for (i = 0; i < keysyms_per_keycode; i += 1)
-                {
-                    const char *ksname;
-
-                    keysym = XLookupKeysym(&e2, i);
-                    ksname = XKeysymToString(keysym);
-                    if (!ksname)
-                        ksname = "NoSymbol";
-                    TRACE( "%lX (%s) ", keysym, ksname);
-                }
-                TRACE(")\n");
-            }
-        }
-
         if (vkey)
         {
             TRACE("keycode %04x => vkey %04x\n", e2.keycode, vkey);
             keyc2vkey[e2.keycode] = vkey;
         }
+    } /* for */
+
+    /* For any keycodes which still don't have a vkey, assign any spare
+     * character, function key, or OEM virtual key code. */
+    vkey_range = 0;
+    vkey = vkey_ranges[vkey_range].first;
+    for (keyc = min_keycode; keyc <= max_keycode; keyc++)
+    {
+        if (keyc2vkey[keyc] & 0xff)
+            continue;
+
+        e2.keycode = (KeyCode)keyc;
+        keysym = XLookupKeysym(&e2, 0);
+        if (!keysym)
+           continue;
+
+        while (vkey && vkey_used[vkey])
+        {
+            if (vkey == vkey_ranges[vkey_range].last)
+            {
+                vkey_range++;
+                vkey = vkey_ranges[vkey_range].first;
+            }
+            else
+                vkey++;
+        }
+
+        if (!vkey)
+        {
+            WARN("No more vkeys available!\n");
+            break;
+        }
+
+        if (TRACE_ON(keyboard))
+        {
+            TRACE("spare virtual key %X assigned to keycode %X:\n",
+                             vkey, e2.keycode);
+            TRACE("(");
+            for (i = 0; i < keysyms_per_keycode; i += 1)
+            {
+                const char *ksname;
+
+                keysym = XLookupKeysym(&e2, i);
+                ksname = XKeysymToString(keysym);
+                if (!ksname)
+                    ksname = "NoSymbol";
+                TRACE( "%lX (%s) ", keysym, ksname);
+            }
+            TRACE(")\n");
+        }
+
+        TRACE("keycode %04x => vkey %04x\n", e2.keycode, vkey);
+        keyc2vkey[e2.keycode] = vkey;
+        vkey_used[vkey] = 1;
     } /* for */
 #undef VKEY_IF_NOT_USED
 

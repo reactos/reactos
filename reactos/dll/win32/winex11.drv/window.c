@@ -2026,14 +2026,11 @@ void CDECL X11DRV_SetFocus( HWND hwnd )
     wine_tsx11_lock();
     changes.stack_mode = Above;
     XConfigureWindow( display, data->whole_window, CWStackMode, &changes );
-    if (root_window == DefaultRootWindow(display))
-    {
-        /* we must not use CurrentTime (ICCCM), so try to use last message time instead */
-        /* FIXME: this is not entirely correct */
-        XSetInputFocus( display, data->whole_window, RevertToParent,
-                        /* CurrentTime */
-                        GetMessageTime() - EVENT_x11_time_to_win32_time(0));
-    }
+    /* we must not use CurrentTime (ICCCM), so try to use last message time instead */
+    /* FIXME: this is not entirely correct */
+    XSetInputFocus( display, data->whole_window, RevertToParent,
+                    /* CurrentTime */
+                    GetMessageTime() - EVENT_x11_time_to_win32_time(0));
     wine_tsx11_unlock();
 }
 

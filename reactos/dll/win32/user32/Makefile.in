@@ -25,9 +25,7 @@ C_SRCS = \
 	defwnd.c \
 	desktop.c \
 	dialog.c \
-	dialog16.c \
 	driver.c \
-	driver16.c \
 	edit.c \
 	exticon.c \
 	focus.c \
@@ -40,7 +38,6 @@ C_SRCS = \
 	menu.c \
 	message.c \
 	misc.c \
-	msg16.c \
 	msgbox.c \
 	nonclient.c \
 	painting.c \
@@ -63,7 +60,9 @@ C_SRCS = \
 C_SRCS16 = \
 	bidi16.c \
 	comm16.c \
+	dialog16.c \
 	hook16.c \
+	msg16.c \
 	network.c \
 	user16.c \
 	wnd16.c

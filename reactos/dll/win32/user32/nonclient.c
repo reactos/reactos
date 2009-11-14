@@ -1630,6 +1630,11 @@ BOOL WINAPI GetTitleBarInfo(HWND hwnd, PTITLEBARINFO tbi) {
 
     TRACE("(%p %p)\n", hwnd, tbi);
 
+    if(!tbi) {
+        SetLastError(ERROR_NOACCESS);
+        return FALSE;
+    }
+
     if(tbi->cbSize != sizeof(TITLEBARINFO)) {
         TRACE("Invalid TITLEBARINFO size: %d\n", tbi->cbSize);
         SetLastError(ERROR_INVALID_PARAMETER);

@@ -1956,9 +1956,6 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
         return FALSE;
     }
 
-    if ((blendfn.AlphaFormat & AC_SRC_ALPHA) && blendfn.SourceConstantAlpha != 0xff)
-        FIXME("Ignoring SourceConstantAlpha %d for AC_SRC_ALPHA\n", blendfn.SourceConstantAlpha);
-
     if(dib.dsBm.bmBitsPixel != 32) {
         FIXME("not a 32 bpp dibsection\n");
         return FALSE;
@@ -1979,11 +1976,35 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
 
     if (blendfn.AlphaFormat & AC_SRC_ALPHA)
     {
-        for(; y >= y2; y--)
+        if (blendfn.SourceConstantAlpha == 0xff)
         {
-            memcpy(dstbits, (char *)dib.dsBm.bmBits + y * dib.dsBm.bmWidthBytes + xSrc * 4,
-                   widthSrc * 4);
-            dstbits += (top_down ? -1 : 1) * widthSrc;
+            for (; y >= y2; y--)
+            {
+                memcpy(dstbits, (char *)dib.dsBm.bmBits + y * dib.dsBm.bmWidthBytes + xSrc * 4,
+                       widthSrc * 4);
+                dstbits += (top_down ? -1 : 1) * widthSrc;
+            }
+        }
+        else
+        {
+            /* SourceConstantAlpha combined with source alpha */
+            for (; y >= y2; y--)
+            {
+                int x;
+                DWORD *srcbits = (DWORD *)((char *)dib.dsBm.bmBits + y * dib.dsBm.bmWidthBytes) + xSrc;
+                for (x = 0; x < widthSrc; x++)
+                {
+                    DWORD argb = *srcbits++;
+                    BYTE *s = (BYTE *) &argb;
+                    s[0] = (s[0] * blendfn.SourceConstantAlpha) / 255;
+                    s[1] = (s[1] * blendfn.SourceConstantAlpha) / 255;
+                    s[2] = (s[2] * blendfn.SourceConstantAlpha) / 255;
+                    s[3] = (s[3] * blendfn.SourceConstantAlpha) / 255;
+                    *dstbits++ = argb;
+                }
+                if (top_down)  /* we traversed the row forward so we should go back by two rows */
+                    dstbits -= 2 * widthSrc;
+            }
         }
     }
     else
@@ -2063,21 +2084,20 @@ void X11DRV_XRender_CopyBrush(X11DRV_PDEVICE *physDev, X_PHYSBITMAP *physBitmap,
 {
     /* At depths >1, the depth of physBitmap and physDev might not be the same e.g. the physbitmap might be a 16-bit DIB while the physdev uses 24-bit */
     int depth = physBitmap->pixmap_depth == 1 ? 1 : physDev->depth;
+    const WineXRenderFormat *src_format = get_xrender_format_from_color_shifts(physBitmap->pixmap_depth, &physBitmap->pixmap_color_shifts);
+    const WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDev->depth, physDev->color_shifts);
 
     wine_tsx11_lock();
     physDev->brush.pixmap = XCreatePixmap(gdi_display, root_window, width, height, depth);
 
-    /* Use XCopyArea when the physBitmap and brush.pixmap have the same depth. */
-    if(physBitmap->pixmap_depth == 1 || physDev->depth == physBitmap->pixmap_depth)
+    /* Use XCopyArea when the physBitmap and brush.pixmap have the same format. */
+    if(physBitmap->pixmap_depth == 1 || src_format->format == dst_format->format)
     {
         XCopyArea( gdi_display, physBitmap->pixmap, physDev->brush.pixmap,
                    get_bitmap_gc(physBitmap->pixmap_depth), 0, 0, width, height, 0, 0 );
     }
-    else /* We meed depth conversion */
+    else /* We need depth conversion */
     {
-        const WineXRenderFormat *src_format = get_xrender_format_from_color_shifts(physBitmap->pixmap_depth, &physBitmap->pixmap_color_shifts);
-        const WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDev->depth, physDev->color_shifts);
-
         Picture src_pict, dst_pict;
         XRenderPictureAttributes pa;
         pa.subwindow_mode = IncludeInferiors;
@@ -2104,6 +2124,7 @@ BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE
     int height = visRectDst->bottom - visRectDst->top;
     int x_src = physDevSrc->dc_rect.left + visRectSrc->left;
     int y_src = physDevSrc->dc_rect.top + visRectSrc->top;
+    struct xrender_info *src_info = get_xrender_info(physDevSrc);
     const WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDevDst->depth, physDevDst->color_shifts);
     Picture src_pict=0, dst_pict=0, mask_pict=0;
 
@@ -2131,8 +2152,8 @@ BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE
     if((physDevDst->depth == 1) && (physDevSrc->depth > 1))
         return FALSE;
 
-    /* Just use traditional X copy when the depths match and we don't need stretching */
-    if((physDevSrc->depth == physDevDst->depth) && !stretch)
+    /* Just use traditional X copy when the formats match and we don't need stretching */
+    if((src_info->format->format == dst_format->format) && !stretch)
     {
         TRACE("Source and destination depth match and no stretching needed falling back to XCopyArea\n");
         wine_tsx11_lock();

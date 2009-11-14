@@ -477,11 +477,13 @@ static void set_focus( Display *display, HWND hwnd, Time time )
 {
     HWND focus;
     Window win;
+    GUITHREADINFO threadinfo;
 
     TRACE( "setting foreground window to %p\n", hwnd );
     SetForegroundWindow( hwnd );
 
-    focus = GetFocus();
+    GetGUIThreadInfo(0, &threadinfo);
+    focus = threadinfo.hwndFocus;
     if (focus) focus = GetAncestor( focus, GA_ROOT );
     win = X11DRV_get_whole_window(focus);
 
@@ -677,6 +679,7 @@ static void X11DRV_FocusOut( HWND hwnd, XEvent *xev )
         wine_tsx11_unlock();
     }
     if (hwnd != GetForegroundWindow()) return;
+    if (root_window != DefaultRootWindow(event->display)) return;
     SendMessageW( hwnd, WM_CANCELMODE, 0, 0 );
 
     /* don't reset the foreground window, if the window which is

@@ -826,11 +826,10 @@ BOOL CDECL EMFDRV_ExtTextOut( PHYSDEV dev, INT x, INT y, UINT flags,
         pemr->rclBounds.bottom = y + textHeight + 1;
     }
     }
+    EMFDRV_UpdateBBox( dev, &pemr->rclBounds );
 
 no_bounds:
     ret = EMFDRV_WriteRecord( dev, &pemr->emr );
-    if(ret)
-        EMFDRV_UpdateBBox( dev, &pemr->rclBounds );
     HeapFree( GetProcessHeap(), 0, pemr );
     return ret;
 }

@@ -77,6 +77,13 @@ static LRESULT get_message_callback( HWND16 hwnd, UINT16 msg, WPARAM16 wp, LPARA
     return 0;
 }
 
+static LRESULT defdlg_proc_callback( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
+                                     LRESULT *result, void *arg )
+{
+    *result = DefDlgProcA( hwnd, msg, wp, lp );
+    return *result;
+}
+
 
 /***********************************************************************
  *		SendMessage  (USER.111)
@@ -265,6 +272,17 @@ LRESULT WINAPI DefWindowProc16( HWND16 hwnd16, UINT16 msg, WPARAM16 wParam, LPAR
     }
 
     SPY_ExitMessage( SPY_RESULT_DEFWND16, hwnd, msg, result, wParam, lParam );
+    return result;
+}
+
+
+/***********************************************************************
+ *              DefDlgProc (USER.308)
+ */
+LRESULT WINAPI DefDlgProc16( HWND16 hwnd, UINT16 msg, WPARAM16 wParam, LPARAM lParam )
+{
+    LRESULT result;
+    WINPROC_CallProc16To32A( defdlg_proc_callback, hwnd, msg, wParam, lParam, &result, 0 );
     return result;
 }
 
@@ -502,6 +520,16 @@ BOOL WINAPI SetKeyboardState16( LPBYTE state )
 BOOL16 WINAPI SetMessageQueue16( INT16 size )
 {
     return SetMessageQueue( size );
+}
+
+
+/***********************************************************************
+ *		UserYield (USER.332)
+ */
+void WINAPI UserYield16(void)
+{
+    MSG msg;
+    PeekMessageW( &msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE );
 }
 
 

@@ -189,7 +189,8 @@ static const char * const atom_names[NB_XATOMS - FIRST_XATOM] =
  */
 static inline BOOL ignore_error( Display *display, XErrorEvent *event )
 {
-    if (event->request_code == X_SetInputFocus && event->error_code == BadMatch) return TRUE;
+    if (event->request_code == X_SetInputFocus &&
+        (event->error_code == BadMatch || event->error_code == BadWindow)) return TRUE;
 
     /* ignore a number of errors on gdi display caused by creating/destroying windows */
     if (display == gdi_display)

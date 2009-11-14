@@ -1852,7 +1852,7 @@ static char* XFONT_UserMetricsCache( char* buffer, int* buf_size )
     **
     **  - on Red Hat systems, DISPLAY is commonly set to one of
     **    either 'unix:0.0' or ':0' or ':0.0'.
-    **  - on MacOS X systems, DISPLAY is commonly set to
+    **  - on Mac OS X systems, DISPLAY is commonly set to
     **    /tmp/foo/:0
     **
     **  after this code, all of the above will resolve to ':0.0'.

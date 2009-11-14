@@ -1350,6 +1350,14 @@ static BOOL client_side_dib_copy( X11DRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc
     return TRUE;
 }
 
+static BOOL same_format(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE *physDevDst)
+{
+    if (physDevSrc->depth != physDevDst->depth) return FALSE;
+    if (!physDevSrc->color_shifts && !physDevDst->color_shifts) return TRUE;
+    if (physDevSrc->color_shifts && physDevDst->color_shifts)
+        return !memcmp(physDevSrc->color_shifts, physDevDst->color_shifts, sizeof(ColorShifts));
+    return FALSE;
+}
 
 /***********************************************************************
  *           X11DRV_StretchBlt
@@ -1446,7 +1454,7 @@ BOOL CDECL X11DRV_StretchBlt( X11DRV_PDEVICE *physDevDst, INT xDst, INT yDst, IN
     /* try client-side DIB copy */
     if (!fStretch && rop == SRCCOPY &&
         sSrc == DIB_Status_AppMod && sDst == DIB_Status_AppMod &&
-        physDevSrc->depth == physDevDst->depth)
+        same_format(physDevSrc, physDevDst))
     {
         if (client_side_dib_copy( physDevSrc, visRectSrc.left, visRectSrc.top,
                                   physDevDst, visRectDst.left, visRectDst.top, width, height ))
@@ -1519,7 +1527,7 @@ BOOL CDECL X11DRV_StretchBlt( X11DRV_PDEVICE *physDevDst, INT xDst, INT yDst, IN
         }
         else if (OP_SRCDST(*opcode) == OP_ARGS(SRC,DST))
         {
-            if (physDevSrc->depth == physDevDst->depth)
+            if (same_format(physDevSrc, physDevDst))
             {
                 wine_tsx11_lock();
                 XSetFunction( gdi_display, physDevDst->gc, OP_ROP(*opcode) );

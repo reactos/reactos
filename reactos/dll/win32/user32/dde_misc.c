@@ -380,6 +380,7 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
     pInstance->nodeList = NULL; /* node will be added later */
     pInstance->monitorFlags = afCmd & MF_MASK;
     pInstance->wStatus = 0;
+    pInstance->lastError = DMLERR_NO_ERROR;
     pInstance->servers = NULL;
     pInstance->convs[0] = NULL;
     pInstance->convs[1] = NULL;
