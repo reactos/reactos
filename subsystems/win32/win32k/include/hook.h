@@ -2,7 +2,7 @@
 #define _WIN32K_HOOK_H
 
 #define HOOK_THREAD_REFERENCED	(0x1)
-
+#if 0
 typedef struct tagHOOK
 {
   LIST_ENTRY Chain;          /* Hook chain entry */
@@ -14,7 +14,7 @@ typedef struct tagHOOK
   ULONG      Flags;          /* Some internal flags */
   UNICODE_STRING ModuleName; /* Module name for global hooks */
 } HOOK, *PHOOK;
-
+#endif
 #define NB_HOOKS (WH_MAXHOOK-WH_MINHOOK+1)
 #define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
@@ -33,6 +33,8 @@ typedef struct tagEVENTHOOK
   PETHREAD       Thread;     /* Thread owning the event */
   UINT           eventMin;
   UINT           eventMax; 
+  DWORD          idProcess;
+  DWORD          idThread;
   WINEVENTPROC   Proc;       /* Event function */
   BOOLEAN        Ansi;       /* Is it an Ansi event? */
   ULONG          Flags;      /* Some internal flags */
@@ -49,6 +51,8 @@ LRESULT FASTCALL co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM l
 LRESULT FASTCALL co_EVENT_CallEvents(DWORD, HWND, UINT_PTR, LONG_PTR);
 VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
 PHOOK FASTCALL IntGetHookObject(HHOOK);
+PHOOK FASTCALL IntGetNextHook(PHOOK Hook);
+LRESULT FASTCALL UserCallNextHookEx( PHOOK pHook, int Code, WPARAM wParam, LPARAM lParam, BOOL Ansi);
 
 #endif /* _WIN32K_HOOK_H */
 

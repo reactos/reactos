@@ -22,5 +22,6 @@ IntEngWindowChanged(
 
 VOID FASTCALL IntGdiAcquireSemaphore ( HSEMAPHORE hsem );
 VOID FASTCALL IntGdiReleaseSemaphore ( HSEMAPHORE hsem );
+ULONGLONG APIENTRY EngGetTickCount(VOID);
 
 #endif /* _WIN32K_ENG_H */

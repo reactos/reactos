@@ -32,10 +32,7 @@
 typedef struct _WIN_DC_INFO
 {
   HRGN     hClipRgn;     /* Clip region (may be 0) */
-  HRGN     hrgnMeta;     /* Meta region (may be 0) */
-  HRGN     hMetaClipRgn; /* Intersection of meta and clip regions (may be 0) */
   HRGN     hVisRgn;      /* Should me to DC. Visible region (must never be 0) */
-
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
   HBITMAP  hBitmap;
 
@@ -93,7 +90,7 @@ typedef struct _DCLEVEL
   FLOATOBJ          efPr22;
   PSURFACE          pSurface;
   SIZE              sizl;
-} DCLEVEL, PDCLEVEL;
+} DCLEVEL, *PDCLEVEL;
 
 /* The DC object structure */
 typedef struct _DC
@@ -141,8 +138,6 @@ typedef struct _DC
 
   /* Reactos specific members */
   WIN_DC_INFO w;
-  HRGN        hprgnAPI; // should use prgnAPI
-  HRGN        hprgnVis; // should use prgnVis
   CLIPOBJ     *CombinedClip;
   XLATEOBJ    *XlateBrush;
   XLATEOBJ    *XlatePen;

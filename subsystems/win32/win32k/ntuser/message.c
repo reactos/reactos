@@ -407,9 +407,11 @@ IntDispatchMessage(PMSG pMsg)
 BOOL
 APIENTRY
 NtUserCallMsgFilter(
-   LPMSG msg,
+   LPMSG lpmsg,
    INT code)
 {
+   BOOL BadChk = FALSE, Ret = TRUE;
+   MSG Msg;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserCallMsgFilter\n");
@@ -434,9 +436,7 @@ NtUserCallMsgFilter(
    else
      RETURN( FALSE);
 
-   if (co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)msg))
-      RETURN( TRUE);
-   RETURN( co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)msg));
+   if (BadChk) RETURN( FALSE);
 
    if (!co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)&Msg))
    {
@@ -747,6 +747,7 @@ co_IntPeekMessage(PUSER_MESSAGE Msg,
    BOOL Present, RemoveMessages;
    USER_REFERENCE_ENTRY Ref;
    USHORT HitTest;
+   MOUSEHOOKSTRUCT MHook;
 
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
@@ -784,7 +785,7 @@ CheckMessages:
       {
          ThreadQueue->QuitPosted = FALSE;
       }
-      return TRUE;
+      goto MsgExit;
    }
 
    /* Now check for normal messages. */
@@ -831,7 +832,7 @@ CheckMessages:
    if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, pti, &Msg->Msg, RemoveMessages))
    {
       Msg->FreeLParam = FALSE;
-      return TRUE;
+      goto MsgExit;
    }
 
    if (ThreadQueue->WakeMask & QS_TIMER)
@@ -897,7 +898,7 @@ MessageFound:
 //            UserDereferenceObject(MsgWindow);
 //         }
 
-         return TRUE;
+         goto MsgExit;
       }
 
       if((Msg->Msg.hwnd && Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST) &&
@@ -1000,12 +1001,9 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    }
 
    Present = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
-   // The WH_GETMESSAGE hook enables an application to monitor messages about to
-   // be returned by the GetMessage or PeekMessage function.
-   co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg);
-
    if (Present)
    {
+
       Info.Msg = Msg.Msg;
       /* See if this message type is present in the table */
       MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
@@ -1491,7 +1489,6 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    DECLARE_RETURN(LRESULT);
    USER_REFERENCE_ENTRY Ref;
 
-   /* FIXME: Call hooks. */
    if (!(Window = UserGetWindowObject(hWnd)))
    {
        RETURN( FALSE);
@@ -1501,8 +1498,10 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
 
+   IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+
    if (NULL != Win32Thread &&
-         Window->MessageQueue == Win32Thread->MessageQueue)
+       Window->MessageQueue == Win32Thread->MessageQueue)
    {
       if (Win32Thread->IsExiting)
       {
@@ -1523,7 +1522,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
       if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam)))
       {
-         DPRINT1("Failed to pack message parameters\n");
+          DPRINT1("Failed to pack message parameters\n");
           RETURN( FALSE);
       }
 
@@ -1535,31 +1534,47 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
          *uResult = Result;
       }
 
+      IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
+
       if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam)))
       {
          DPRINT1("Failed to unpack message parameters\n");
-          RETURN( TRUE);
+         RETURN( TRUE);
       }
 
-       RETURN( TRUE);
+      RETURN( TRUE);
    }
 
-   if(uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
+   if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
    {
       /* FIXME - Set a LastError? */
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
-   if(Window->Status & WINDOWSTATUS_DESTROYING)
+   if (Window->Status & WINDOWSTATUS_DESTROYING)
    {
       /* FIXME - last error? */
       DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
-   Status = co_MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam,
-                              uTimeout, (uFlags & SMTO_BLOCK), FALSE, uResult);
+   do
+   {
+      Status = co_MsqSendMessage( Window->MessageQueue,
+                                                  hWnd,
+                                                   Msg,
+                                                wParam,
+                                                lParam,
+                                              uTimeout,
+                                 (uFlags & SMTO_BLOCK),
+                                            MSQ_NORMAL,
+                                               uResult);
+   }
+   while ((STATUS_TIMEOUT == Status) &&
+          (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
+          !MsqIsHung(Window->MessageQueue));
 
+   IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
    if (STATUS_TIMEOUT == Status)
    {
@@ -1577,7 +1592,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    else if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
    RETURN( TRUE);
@@ -1659,8 +1674,7 @@ co_IntPostOrSendMessage(HWND hWnd,
    }
    else
    {
-      if(!co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
-      {
+      if(!co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))      {
          Result = 0;
       }
    }
@@ -1719,6 +1733,8 @@ co_IntDoSendMessage(HWND hWnd,
          Info.Ansi = ! Window->Wnd->Unicode;
       }
 
+      IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+
       if (Window->Wnd->IsSystem)
       {
           Info.Proc = (!Info.Ansi ? Window->Wnd->WndProc : Window->Wnd->WndProcExtra);
@@ -1728,6 +1744,9 @@ co_IntDoSendMessage(HWND hWnd,
           Info.Ansi = !Window->Wnd->Unicode;
           Info.Proc = Window->Wnd->WndProc;
       }
+
+      IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, &Result);
+
    }
    else
    {
@@ -2022,11 +2041,12 @@ NtUserMessageCall(
    {
       return 0;
    }
-   UserRefObjectCo(Window, &Ref);
    switch(dwType)
    {
-      case NUMC_DEFWINDOWPROC:
-         lResult = IntDefWindowProc(Window, Msg, wParam, lParam);
+      case FNID_DEFWINDOWPROC:
+         UserRefObjectCo(Window, &Ref);
+         lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
+         UserDerefObjectCo(Window);
       break;
       case FNID_BROADCASTSYSTEMMESSAGE:
       {
@@ -2165,7 +2185,6 @@ NtUserMessageCall(
       }
       break;
    }
-   UserDerefObjectCo(Window);
    UserLeave();
    return lResult;
 }
@@ -2198,6 +2217,7 @@ NtUserWaitForInputIdle(
 
   if (!NT_SUCCESS(Status))
   {
+     UserLeave();
      SetLastNtError(Status);
      return WAIT_FAILED;
   }
@@ -2206,16 +2226,22 @@ NtUserWaitForInputIdle(
   if (!W32Process)
   {
       ObDereferenceObject(Process);
+      UserLeave();
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return WAIT_FAILED;
   }
 
   EngCreateEvent((PEVENT *)&W32Process->InputIdleEvent);
 
-  Handles[0] = hProcess;
+  Handles[0] = Process;
   Handles[1] = W32Process->InputIdleEvent;
 
-  if (!Handles[1]) return STATUS_SUCCESS;  /* no event to wait on */
+  if (!Handles[1])
+  {
+      ObDereferenceObject(Process);
+      UserLeave();
+      return STATUS_SUCCESS;  /* no event to wait on */
+  }
 
   StartTime = EngGetTickCount();
 

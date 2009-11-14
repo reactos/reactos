@@ -1172,6 +1172,12 @@ extern "C" {
 #define SMTO_ABORTIFHUNG 2
 #define SMTO_BLOCK 1
 #define SMTO_NORMAL 0
+#if (WINVER >= 0x0500)
+#define SMTO_NOTIMEOUTIFNOTHUNG 8
+#endif
+#if (WINVER >= 0x0600)
+#define SMTO_ERRORONEXIT 32
+#endif
 #define SIF_ALL 23
 #define SIF_PAGE 2
 #define SIF_POS 4
@@ -2834,7 +2840,7 @@ typedef struct tagCWPRETSTRUCT {
 	WPARAM wParam;
 	DWORD message;
 	HWND hwnd;
-} CWPRETSTRUCT;
+} CWPRETSTRUCT,*PCWPRETSTRUCT, *LPCWPRETSTRUCT;
 typedef struct tagCWPSTRUCT {
 	LPARAM lParam;
 	WPARAM wParam;
@@ -3236,6 +3242,20 @@ typedef struct tagMOUSEHOOKSTRUCT {
 	UINT wHitTestCode;
 	ULONG_PTR dwExtraInfo;
 } MOUSEHOOKSTRUCT,*LPMOUSEHOOKSTRUCT,*PMOUSEHOOKSTRUCT;
+#if ( _WIN32_WINNT >= 0x0500 )
+#ifdef __cplusplus
+typedef struct tagMOUSEHOOKSTRUCTEX : public tagMOUSEHOOKSTRUCT
+{
+        DWORD   mouseData;
+} MOUSEHOOKSTRUCTEX, *LPMOUSEHOOKSTRUCTEX, *PMOUSEHOOKSTRUCTEX;
+#else
+typedef struct tagMOUSEHOOKSTRUCTEX
+{
+        MOUSEHOOKSTRUCT MOUSEHOOKSTRUCT;
+        DWORD   mouseData;
+} MOUSEHOOKSTRUCTEX, *LPMOUSEHOOKSTRUCTEX, *PMOUSEHOOKSTRUCTEX;
+#endif
+#endif
 typedef struct tagTRACKMOUSEEVENT {
 	DWORD cbSize;
 	DWORD dwFlags;

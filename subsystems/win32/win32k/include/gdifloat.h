@@ -31,16 +31,20 @@ static __inline INT GDI_ROUND(FLOAT val)
 static __inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
 {
     FLOAT x, y;
+    XFORM xformWorld2Vport;
+    
+    MatrixS2XForm(&xformWorld2Vport, &dc->DcLevel.mxWorldToDevice);
 
     /* Perform the transformation */
     x = point->x;
     y = point->y;
-    point->x = x * dc->DcLevel.xformWorld2Vport.eM11 +
-               y * dc->DcLevel.xformWorld2Vport.eM21 +
-	       dc->DcLevel.xformWorld2Vport.eDx;
-    point->y = x * dc->DcLevel.xformWorld2Vport.eM12 +
-               y * dc->DcLevel.xformWorld2Vport.eM22 +
-	       dc->DcLevel.xformWorld2Vport.eDy;
+    point->x = x * xformWorld2Vport.eM11 +
+               y * xformWorld2Vport.eM21 +
+	          xformWorld2Vport.eDx;
+
+    point->y = x * xformWorld2Vport.eM12 +
+               y * xformWorld2Vport.eM22 +
+	          xformWorld2Vport.eDy;
 }
 
 /* Performs a viewport-to-world transformation on the specified point (which
@@ -105,8 +109,6 @@ static __inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
 #define YLSTODS(Dc_Attr,ty) \
     MulDiv((ty), (Dc_Attr)->szlViewportExt.cy, (Dc_Attr)->szlWindowExt.cy)
 
-VOID FASTCALL XForm2MatrixS( MATRIX_S *, PXFORM);
-VOID FASTCALL MatrixS2XForm( PXFORM, MATRIX_S *);
-
 #endif
+
 

@@ -13,7 +13,6 @@ typedef struct _EVENTPACK
 
 static PEVENTTABLE GlobalEvents = NULL;
 
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static
@@ -237,6 +236,7 @@ NtUserNotifyWinEvent(
       IntNotifyWinEvent( Event, Window, idObject, idChild);
       UserDerefObjectCo(Window);
    }
+   UserLeave();
 }
 
 HWINEVENTHOOK
@@ -251,11 +251,14 @@ NtUserSetWinEventHook(
    DWORD idThread,
    UINT dwflags)
 {
-   gpsi->SrvEventActivity |= GetMaskFromEvent(eventMin);
-   gpsi->SrvEventActivity &= ~GetMaskFromEvent(eventMin);
+   PEVENTHOOK pEH;
+   HWINEVENTHOOK Ret = NULL;
+   UNICODE_STRING ModuleName;
+   NTSTATUS Status;
+   HANDLE Handle;
    PETHREAD Thread = NULL;
 
-   UNIMPLEMENTED
+   UserEnterExclusive();
 
    if ( !GlobalEvents )
    {
@@ -381,7 +384,8 @@ APIENTRY
 NtUserUnhookWinEvent(
    HWINEVENTHOOK hWinEventHook)
 {
-   UNIMPLEMENTED
+   PEVENTHOOK pEH;
+   BOOL Ret = FALSE;
 
    UserEnterExclusive();
 

@@ -436,18 +436,16 @@ IntGetSystemPaletteEntries(HDC  hDC,
     {
         if (pe != NULL)
         {
-            UINT CopyEntries;
-
-            if (StartIndex + Entries < palGDI->NumColors)
-                CopyEntries = StartIndex + Entries;
-            else
-                CopyEntries = palGDI->NumColors - StartIndex;
+            if (StartIndex >= palGDI->NumColors)
+                Entries = 0;
+            else if (Entries > palGDI->NumColors - StartIndex)
+                Entries = palGDI->NumColors - StartIndex;
 
             memcpy(pe,
                    palGDI->IndexedColors + StartIndex,
-                   CopyEntries * sizeof(pe[0]));
+                   Entries * sizeof(pe[0]));
 
-            Ret = CopyEntries;
+            Ret = Entries;
         }
         else
         {
@@ -498,33 +496,26 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   USHORT sysMode, palMode;
 
   dc = DC_LockDc(hDC);
-  if (!dc)
-  	return 0;
+  if (!dc) return 0;
 
   systemPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
 
   if (palGDI == NULL)
   {
-	 /* FIXME - Handle palGDI == NULL!!!!
-	    we should not unlock dc and return 0 ??
-		shall we create the pallete ??
-	 */
-     DC_UnlockDc(dc);
-	 return 0;
+    DPRINT1("IntGdiRealizePalette(): palGDI is NULL, exiting\n");
+    DC_UnlockDc(dc);
+    return 0;
   }
 
   sysGDI = PALETTE_LockPalette(systemPalette);
 
   if (sysGDI == NULL)
   {
-	 /* FIXME - Handle sysGDI == NULL!!!!!
-	    we should not unlock dc and return 0 ??
-		shall we create the pallete ??
-	 */
-     PALETTE_UnlockPalette(palGDI);
-     DC_UnlockDc(dc);
-	 return 0;
+    DPRINT1("IntGdiRealizePalette(): sysGDI is NULL, exiting\n");
+    PALETTE_UnlockPalette(palGDI);
+    DC_UnlockDc(dc);
+    return 0;
   }
 
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
@@ -799,6 +790,7 @@ NtGdiDoPalette(
     IN BOOL bInbound)
 {
 	LONG ret;
+	LPVOID pEntries = NULL;
 
 	/* FIXME: Handle bInbound correctly */
 
@@ -808,9 +800,12 @@ NtGdiDoPalette(
 		return 0;
 	}
 
-	_SEH_TRY
+	if (pUnsafeEntries)
 	{
-		switch(iFunc)
+		pEntries = ExAllocatePool(PagedPool, cEntries * sizeof(PALETTEENTRY));
+		if (!pEntries)
+			return 0;
+		if (bInbound)
 		{
 			_SEH2_TRY
 			{
@@ -847,13 +842,10 @@ NtGdiDoPalette(
 			ret = IntGetSystemPaletteEntries((HDC)hObj, iStart, cEntries, (LPPALETTEENTRY)pEntries);
 			break;
 
-			case GdiPalGetColorTable:
-				if (pUnsafeEntries)
-				{
-					ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				}
-				ret = IntGetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pUnsafeEntries);
-				break;
+		case GdiPalSetColorTable:
+			if (pEntries)
+				ret = IntSetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pEntries);
+			break;
 
 		case GdiPalGetColorTable:
 			if (pEntries)
@@ -876,12 +868,8 @@ NtGdiDoPalette(
 			}
 			_SEH2_END
 		}
+		ExFreePool(pEntries);
 	}
-	_SEH_HANDLE
-	{
-		ret = 0;
-	}
-	_SEH_END
 
 	return ret;
 }

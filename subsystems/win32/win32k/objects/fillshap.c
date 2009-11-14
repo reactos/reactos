@@ -73,10 +73,6 @@ IntGdiPolygon(PDC    dc,
     Dc_Attr = dc->pDc_Attr;
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    /* FIXME - BitmapObj can be NULL!!!! don't assert but handle this case gracefully! */
-    ASSERT(BitmapObj);
-
     /* Convert to screen coordinates */
     IntLPtoDP(dc, Points, Count);
     for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
@@ -113,16 +109,14 @@ IntGdiPolygon(PDC    dc,
         ASSERT(psurf);
 
         /* Now fill the polygon with the current brush. */
-        FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
         if (FillBrushObj && !(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
             IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
             ret = FillPolygon ( dc, psurf, &FillBrushInst.BrushObject, ROP2_TO_MIX(Dc_Attr->jROP2), Points, Count, DestRect );
         }
-        BRUSHOBJ_UnlockBrush(FillBrushObj);
+        if (FillBrushObj)
+            BRUSHOBJ_UnlockBrush(FillBrushObj);
 
-        /* get BRUSHOBJ from current pen. */
-        PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
         // Draw the Polygon Edges with the current pen ( if not a NULL pen )
         if (PenBrushObj && !(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
@@ -162,7 +156,8 @@ IntGdiPolygon(PDC    dc,
                                    ROP2_TO_MIX(Dc_Attr->jROP2)); /* MIX */
             }
         }
-        PENOBJ_UnlockPen(PenBrushObj);
+        if (PenBrushObj)
+            PENOBJ_UnlockPen(PenBrushObj);
     }
     SURFACE_UnlockSurface(psurf);
 
@@ -519,8 +514,6 @@ IntRectangle(PDC dc,
     PDC_ATTR Dc_Attr;
 
     ASSERT ( dc ); // caller's responsibility to set this up
-    /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
-    ASSERT ( BitmapObj );
 
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
@@ -541,42 +534,27 @@ IntRectangle(PDC dc,
     // Rectangle Path only.
     if ( PATH_IsPathOpen(dc->DcLevel) )
     {
-        ret = PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
+        return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
-    else
+
+    DestRect.left = LeftRect;
+    DestRect.right = RightRect;
+    DestRect.top = TopRect;
+    DestRect.bottom = BottomRect;
+
+    IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+
+    DestRect.left   += dc->ptlDCOrig.x;
+    DestRect.right  += dc->ptlDCOrig.x;
+    DestRect.top    += dc->ptlDCOrig.y;
+    DestRect.bottom += dc->ptlDCOrig.y;
+
+    /* In GM_COMPATIBLE, don't include bottom and right edges */
+    if (IntGetGraphicsMode(dc) == GM_COMPATIBLE)
     {
-        LeftRect   += dc->ptlDCOrig.x;
-        RightRect  += dc->ptlDCOrig.x - 1;
-        TopRect    += dc->ptlDCOrig.y;
-        BottomRect += dc->ptlDCOrig.y - 1;
-
-        DestRect.left = LeftRect;
-        DestRect.right = RightRect;
-        DestRect.top = TopRect;      
-        DestRect.bottom = BottomRect;
-
-        FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-
-        if ( FillBrushObj )
-        {
-            if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
-            {
-                IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-                ret = IntEngBitBlt(&BitmapObj->SurfObj,
-                                   NULL,
-                                   NULL,
-                                   dc->CombinedClip,
-                                   NULL,
-                                   &DestRect,
-                                   NULL,
-                                   NULL,
-                                   &FillBrushInst.BrushObject,
-                                   NULL,
-                                   ROP3_TO_ROP4(PATCOPY));
-            }
-        }
-
-        BRUSHOBJ_UnlockBrush(FillBrushObj);
+        DestRect.right--;
+        DestRect.bottom--;
+    }
 
     if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
        IntGdiSelectBrush(dc,Dc_Attr->hbrush);
@@ -616,12 +594,13 @@ IntRectangle(PDC dc,
                                NULL,
                                ROP3_TO_ROP4(PATCOPY));
         }
+    }
 
-        IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+    IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
 
-        // Draw the rectangle with the current pen
+    // Draw the rectangle with the current pen
 
-        ret = TRUE; // change default to success
+    ret = TRUE; // change default to success
 
     if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
     {
@@ -655,8 +634,12 @@ IntRectangle(PDC dc,
                                   Mix);
     }
 
+cleanup:
+    if (FillBrushObj)
+        BRUSHOBJ_UnlockBrush(FillBrushObj);
+
+    if (PenBrushObj)
         PENOBJ_UnlockPen(PenBrushObj);
-    }
 
     if (psurf)
         SURFACE_UnlockSurface(psurf);
@@ -664,7 +647,7 @@ IntRectangle(PDC dc,
     /* Move current position in DC?
        MSDN: The current position is neither used nor updated by Rectangle. */
 
-    return TRUE;
+    return ret;
 }
 
 BOOL

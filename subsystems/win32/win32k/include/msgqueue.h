@@ -4,6 +4,9 @@
 #include "hook.h"
 
 #define MSQ_HUNG        5000
+#define MSQ_NORMAL      0
+#define MSQ_ISHOOK      1
+#define MSQ_ISEVENT     2
 
 typedef struct _USER_MESSAGE
 {
@@ -25,7 +28,7 @@ typedef struct _USER_SENT_MESSAGE
   ULONG_PTR CompletionCallbackContext;
   /* entry in the dispatching list of the sender's message queue */
   LIST_ENTRY DispatchingListEntry;
-  BOOL HookMessage;
+  INT HookMessage;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
 
 typedef struct _USER_SENT_MESSAGE_NOTIFY
@@ -121,7 +124,7 @@ MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
 co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
-               UINT uTimeout, BOOL Block, BOOL HookMessage,
+               UINT uTimeout, BOOL Block, INT HookMessage,
                ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL
 MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam);

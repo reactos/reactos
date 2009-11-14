@@ -165,7 +165,7 @@ BOOL FASTCALL
 IntShowOwnedPopups( PWINDOW_OBJECT owner, BOOL fShow );
 
 LRESULT FASTCALL
-IntDefWindowProc( PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
+IntDefWindowProc( PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Ansi);
 
 VOID FASTCALL IntNotifyWinEvent(DWORD, PWINDOW_OBJECT, LONG, LONG);
 
