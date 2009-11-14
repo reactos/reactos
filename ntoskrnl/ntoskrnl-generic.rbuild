@@ -13,7 +13,7 @@
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
 	</if>
-	<if property="_ELF" value="1">
+	<if property="_ELF_" value="1">
 		<define name="_ELF_" />
 	</if>
 	<include base="cmlib">.</include>
@@ -275,6 +275,13 @@
 			<file>pnpreport.c</file>
 			<file>pnproot.c</file>
 		</directory>
+	</directory>
+	<directory name="kd">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>kdmemsup.c</file>
+			</directory>
+		</if>
 	</directory>
 	<if property="_WINKD_" value="0">
 		<directory name="kdbg">
