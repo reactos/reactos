@@ -1840,7 +1840,7 @@ HWND WINAPI GetDesktopWindow(void)
         }
     }
     SERVER_END_REQ;
-
+#ifndef __REACTOS__
     if (!thread_info->top_window)
     {
         USEROBJECTFLAGS flags;
@@ -1886,7 +1886,7 @@ HWND WINAPI GetDesktopWindow(void)
         }
         SERVER_END_REQ;
     }
-
+#endif
     if (!thread_info->top_window || !USER_Driver->pCreateDesktopWindow( thread_info->top_window ))
         ERR( "failed to create desktop window\n" );
 
