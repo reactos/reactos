@@ -1905,6 +1905,13 @@ MmCreateImageSection
  ULONG AllocationAttributes,
  PFILE_OBJECT FileObject);
 
+BOOLEAN
+NTAPI
+MmUnsharePageEntryImageSectionSegment
+(PROS_SECTION_OBJECT Section,
+ PMM_SECTION_SEGMENT Segment,
+ PLARGE_INTEGER Offset);
+
 NTSTATUS
 NTAPI
 MiAwaitPageOps(PMMSUPPORT AddressSpace, PMEMORY_AREA MemoryArea, PVOID BaseAddress);

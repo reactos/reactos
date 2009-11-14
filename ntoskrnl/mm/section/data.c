@@ -662,6 +662,7 @@ MiCowSectionPage
    {
       ASSERT(FALSE);
    }
+   DPRINT("Allocated page %x\n", NewPage);
 
    /*
     * Copy the old page
@@ -705,7 +706,10 @@ MiCowSectionPage
     */
    MmDeleteRmap(OldPage, Process, PAddress);
    MmInsertRmap(NewPage, Process, PAddress);
-   MmUnsharePageEntrySectionSegment(Section, Segment, &Offset, FALSE, FALSE);
+   if (MemoryArea->Type == MEMORY_AREA_IMAGE_SECTION)
+	   MmUnsharePageEntryImageSectionSegment(Section, Segment, &Offset);
+   else
+	   MmUnsharePageEntrySectionSegment(Section, Segment, &Offset, FALSE, FALSE);
    MmUnlockSectionSegment(Segment);
 
    DPRINT("Address 0x%.8X\n", Address);
