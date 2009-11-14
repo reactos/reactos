@@ -83,10 +83,10 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     RtlZeroMemory(&RamdiskCreate, sizeof(RamdiskCreate));
     RamdiskCreate.Version = sizeof(RamdiskCreate);
-    RamdiskCreate.DiskType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
+    RamdiskCreate.DiskType = RAMDISK_BOOT_DISK;
     RamdiskCreate.BasePage = MemoryDescriptor->BasePage;
     RamdiskCreate.DiskOffset = 0;
-    RamdiskCreate.DiskLength = MemoryDescriptor->PageCount << PAGE_SHIFT;
+    RamdiskCreate.DiskLength.QuadPart = MemoryDescriptor->PageCount << PAGE_SHIFT;
     RamdiskCreate.DiskGuid = RAMDISK_BOOTDISK_GUID;
     RamdiskCreate.DriveLetter = L'C';
     RamdiskCreate.Options.Fixed = TRUE;
@@ -124,7 +124,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         //
         // Reduce the disk length
         //
-        RamdiskCreate.DiskLength -= RamdiskCreate.DiskOffset;
+        RamdiskCreate.DiskLength.QuadPart -= RamdiskCreate.DiskOffset;
         
         //
         // Check for length parameter
@@ -141,7 +141,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 //
                 // Set the offset
                 //
-                RamdiskCreate.DiskLength = _atoi64(LengthValue + 1);
+                RamdiskCreate.DiskLength.QuadPart = _atoi64(LengthValue + 1);
             }
         }
     }

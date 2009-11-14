@@ -11,8 +11,10 @@
 #include <initguid.h>
 #include <ntddk.h>
 #include <ntdddisk.h>
+#include <ntddcdrm.h>
 #include <scsi.h>
 #include <ntddscsi.h>
+#include <ntddvol.h>
 #include <mountdev.h>
 #include <mountmgr.h>
 #include <ketypes.h>
@@ -20,15 +22,25 @@
 #include <rtlfuncs.h>
 #include <arc/arc.h>
 #include <reactos/drivers/ntddrdsk.h>
+#include "../../../filesystems/fs_rec/fs_rec.h"
+#include <stdio.h>
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
+#define RAMDISK_SESSION_SIZE \
+    FIELD_OFFSET(CDROM_TOC, TrackData) + sizeof(TRACK_DATA)
+    
+#define RAMDISK_TOC_SIZE \
+    FIELD_OFFSET(CDROM_TOC, TrackData) + 2 * sizeof(TRACK_DATA)
+                                    
+#define TOC_DATA_TRACK              (0x04)
+
 typedef enum _RAMDISK_DEVICE_TYPE
 {
-    RamdiskFdo,
-    RamdiskPdo
+    RamdiskBus,
+    RamdiskDrive
 } RAMDISK_DEVICE_TYPE;
 
 typedef enum _RAMDISK_DEVICE_STATE
@@ -39,6 +51,7 @@ typedef enum _RAMDISK_DEVICE_STATE
     RamdiskStateStopped,
     RamdiskStateRemoved,
     RamdiskStateBusRemoved,
+    RamdiskStateEnumerated,
 } RAMDISK_DEVICE_STATE;
 
 DEFINE_GUID(RamdiskBusInterface,
@@ -55,10 +68,46 @@ typedef struct _RAMDISK_EXTENSION
     PDEVICE_OBJECT PhysicalDeviceObject;
     PDEVICE_OBJECT AttachedDevice;
     IO_REMOVE_LOCK RemoveLock;
-    UNICODE_STRING SymbolicLinkName;
+    UNICODE_STRING DriveDeviceName;
+    UNICODE_STRING BusDeviceName;
     FAST_MUTEX DiskListLock;
-    LIST_ENTRY DiskListHead;
+    LIST_ENTRY DiskList;
 } RAMDISK_EXTENSION, *PRAMDISK_EXTENSION;
+
+typedef struct _RAMDISK_BUS_EXTENSION
+{
+    RAMDISK_EXTENSION;
+} RAMDISK_BUS_EXTENSION, *PRAMDISK_BUS_EXTENSION;
+
+typedef struct _RAMDISK_DRIVE_EXTENSION
+{
+    //
+    // Inherited base class
+    //
+    RAMDISK_EXTENSION;
+    
+    //
+    // Data we get from the creator
+    //
+    GUID DiskGuid;
+    UNICODE_STRING GuidString;
+    UNICODE_STRING SymbolicLinkName;
+    ULONG DiskType;
+    RAMDISK_CREATE_OPTIONS DiskOptions;
+    LARGE_INTEGER DiskLength;
+    LONG DiskOffset;
+    WCHAR DriveLetter;
+    ULONG BasePage;
+    
+    //
+    // Data we get from the disk
+    //
+    ULONG BytesPerSector;
+    ULONG SectorsPerTrack;
+    ULONG NumberOfHeads;
+    ULONG Cylinders;
+    ULONG HiddenSectors;
+} RAMDISK_DRIVE_EXTENSION, *PRAMDISK_DRIVE_EXTENSION;
 
 ULONG MaximumViewLength;
 ULONG MaximumPerDiskViewLength;
@@ -230,37 +279,495 @@ QueryParameters(IN PUNICODE_STRING RegistryPath)
     }
 }
 
-NTSTATUS
+PVOID
 NTAPI
-RamdiskOpenClose(IN PDEVICE_OBJECT DeviceObject,
-                 IN PIRP Irp)
+RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
+                IN LARGE_INTEGER Offset,
+                IN ULONG Length,
+                OUT PULONG OutputLength)
 {
+    PHYSICAL_ADDRESS PhysicalAddress;
+    PVOID MappedBase;
+    ULONG PageOffset;
+    SIZE_T ActualLength;
+    LARGE_INTEGER ActualOffset;
+    LARGE_INTEGER ActualPages;
+    
     //
-    // Complete the IRP
+    // We only support boot disks for now
     //
-    Irp->IoStatus.Information = 1;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    ASSERT(DeviceExtension->DiskType == RAMDISK_BOOT_DISK);
+    
+    //
+    // Calculate the actual offset in the drive
+    //
+    ActualOffset.QuadPart = DeviceExtension->DiskOffset + Offset.QuadPart;
+    
+    //
+    // Convert to pages
+    //
+    ActualPages.QuadPart = ActualOffset.QuadPart >> PAGE_SHIFT;
+    
+    //
+    // Now add the base page
+    //
+    ActualPages.QuadPart = DeviceExtension->BasePage + ActualPages.QuadPart;
+    
+    //
+    // Calculate final amount of bytes
+    //
+    PhysicalAddress.QuadPart = ActualPages.QuadPart << PAGE_SHIFT;
+    
+    //
+    // Calculate pages spanned for the mapping
+    //
+    ActualLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(ActualOffset.QuadPart, Length);
+    
+    //
+    // And convert this back to bytes
+    //
+    ActualLength <<= PAGE_SHIFT;
+    
+    //
+    // Get the offset within the page
+    //
+    PageOffset = BYTE_OFFSET(ActualOffset.QuadPart);
+    
+    //
+    // Map the I/O Space from the loader
+    //
+    MappedBase = MmMapIoSpace(PhysicalAddress, ActualLength, MmCached);
+    
+    //
+    // Return actual offset within the page as well as the length
+    //
+    if (MappedBase) MappedBase = (PVOID)((ULONG_PTR)MappedBase + PageOffset);
+    *OutputLength = Length;
+    return MappedBase;
+}
+
+VOID
+NTAPI
+RamdiskUnmapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
+                  IN PVOID BaseAddress,
+                  IN LARGE_INTEGER Offset,
+                  IN ULONG Length)
+{
+    LARGE_INTEGER ActualOffset;
+    SIZE_T ActualLength;
+    ULONG PageOffset;
+    
+    //
+    // We only support boot disks for now
+    //
+    ASSERT(DeviceExtension->DiskType == RAMDISK_BOOT_DISK);
+    
+    //
+    // Calculate the actual offset in the drive
+    //
+    ActualOffset.QuadPart = DeviceExtension->DiskOffset + Offset.QuadPart;
+    
+    //
+    // Calculate pages spanned for the mapping
+    //
+    ActualLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(ActualOffset.QuadPart, Length);
+    
+    //
+    // And convert this back to bytes
+    //
+    ActualLength <<= PAGE_SHIFT;
+    
+    //
+    // Get the offset within the page
+    //
+    PageOffset = BYTE_OFFSET(ActualOffset.QuadPart);
+    
+    //
+    // Calculate actual base address where we mapped this
+    //
+    BaseAddress = (PVOID)((ULONG_PTR)BaseAddress - PageOffset);
+    
+    //
+    // Unmap the I/O space we got from the loader
+    //
+    MmUnmapIoSpace(BaseAddress, ActualLength);
 }
 
 NTSTATUS
 NTAPI
-RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
-                 IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-RamdiskCreateDiskDevice(IN PRAMDISK_EXTENSION DeviceExtension,
+RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
 						IN PRAMDISK_CREATE_INPUT Input,
 						IN BOOLEAN ValidateOnly,
-						OUT PDEVICE_OBJECT *DeviceObject)
+						OUT PRAMDISK_DRIVE_EXTENSION *NewDriveExtension)
 {
+	ULONG BasePage, ViewCount, DiskType, Length;
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension;
+    PVOID Buffer;
+    WCHAR LocalBuffer[16];
+    UNICODE_STRING SymbolicLinkName, DriveString, GuidString, DeviceName;
+    PPACKED_BOOT_SECTOR BootSector;
+    BIOS_PARAMETER_BLOCK BiosBlock;
+    ULONG BytesPerSector, SectorsPerTrack, Heads, BytesRead;
+    PVOID BaseAddress;
+    LARGE_INTEGER CurrentOffset, CylinderSize, DiskLength;
+    ULONG CylinderCount, SizeByCylinders;
+	
+	//
+	// Check if we're a boot RAM disk
+	//
+	DiskType = Input->DiskType;
+	if (DiskType >= RAMDISK_BOOT_DISK)
+	{
+		//
+		// Check if we're an ISO
+		// 
+		if (DiskType == RAMDISK_BOOT_DISK)
+		{
+			//
+			// NTLDR mounted us somewhere
+			//
+			BasePage = Input->BasePage;
+			if (!BasePage) return STATUS_INVALID_PARAMETER;
+			
+			//
+			// Sanitize disk options
+			//
+			Input->Options.Fixed = TRUE;
+			Input->Options.Readonly = Input->Options.ExportAsCd |
+                                      Input->Options.Readonly;
+			Input->Options.Hidden = FALSE;
+			Input->Options.NoDosDevice = FALSE;
+			Input->Options.NoDriveLetter = IsWinPEBoot ? TRUE : FALSE;
+		}
+		else
+		{
+			//
+			// The only other possibility is a WIM disk
+			//
+			if (DiskType != RAMDISK_WIM_DISK)
+            {
+                //
+                // Fail
+                //
+                return STATUS_INVALID_PARAMETER;
+            }
+			
+			//
+			// Read the view count instead
+			//
+			ViewCount = Input->ViewCount;
+			
+			//
+			// Sanitize disk options
+			//
+			Input->Options.Hidden = FALSE;
+			Input->Options.NoDosDevice = FALSE;
+			Input->Options.Readonly = FALSE;
+			Input->Options.NoDriveLetter = TRUE;
+			Input->Options.Fixed = TRUE;
+		}
+		
+		//
+		// Are we just validating and returning to the user?
+		//
+		if (ValidateOnly) return STATUS_SUCCESS;
+        
+        //
+        // Build the GUID string
+        //
+        Status = RtlStringFromGUID(&Input->DiskGuid, &GuidString);
+        if (!(NT_SUCCESS(Status)) || !(GuidString.Buffer))
+        {
+            //
+            // Fail
+            //
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto FailCreate;
+        }
+        
+        //
+        // Allocate our device name
+        //
+        Length = GuidString.Length + 32;
+        Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                       Length,
+                                       TAG('R', 'a', 'm', 'd'));
+        if (!Buffer)
+        {
+            //
+            // Fail
+            //
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto FailCreate;
+        }
+        
+        // 
+        // Build the device name string
+        //
+        DeviceName.Buffer = Buffer;
+        DeviceName.Length = Length - 2;
+        DeviceName.MaximumLength = Length;
+        wcsncpy(Buffer, L"\\Device\\Ramdisk", Length / sizeof(WCHAR));
+        wcsncat(Buffer, GuidString.Buffer, Length / sizeof(WCHAR));
+        
+        //
+        // Create the drive device
+        //
+        Status = IoCreateDevice(DeviceExtension->DeviceObject->DriverObject,
+                                sizeof(RAMDISK_DRIVE_EXTENSION),
+                                &DeviceName,
+                                (Input->Options.ExportAsCd) ?
+                                FILE_DEVICE_CD_ROM : FILE_DEVICE_DISK,
+                                0,
+                                0,
+                                &DeviceObject);
+        if (!NT_SUCCESS(Status)) goto FailCreate;
+        
+        //
+        // Grab the drive extension
+        //
+        DriveExtension = DeviceObject->DeviceExtension;
+       
+        //
+        // Check if we need a DOS device
+        //
+        if (!Input->Options.NoDosDevice)
+        {
+            //
+            // Build the symbolic link name
+            //
+            SymbolicLinkName.MaximumLength = GuidString.Length + 36;
+            SymbolicLinkName.Length = GuidString.Length + 34;
+            Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                           SymbolicLinkName.MaximumLength,
+                                           TAG('R', 'a', 'm', 'd'));
+            SymbolicLinkName.Buffer = Buffer;
+            if (Buffer)
+            {
+                //
+                // Create it
+                //
+                wcsncpy(Buffer,
+                        L"\\GLOBAL??\\Ramdisk",
+                        SymbolicLinkName.MaximumLength / sizeof(WCHAR));
+                wcsncat(Buffer,
+                        GuidString.Buffer,
+                        SymbolicLinkName.MaximumLength / sizeof(WCHAR));
+                Status = IoCreateSymbolicLink(&SymbolicLinkName, &DeviceName);
+                if (!NT_SUCCESS(Status))
+                {
+                    //
+                    // Nevermind...
+                    //
+                    Input->Options.NoDosDevice = TRUE;
+                    ExFreePool(Buffer);
+                    SymbolicLinkName.Buffer = NULL;
+                }
+            }
+            else
+            {
+                //
+                // No DOS device
+                //
+                Input->Options.NoDosDevice = TRUE;
+            }
+            
+            //
+            // It this an ISO boot ramdisk?
+            //
+            if (Input->DiskType == RAMDISK_BOOT_DISK)
+            {
+                //
+                // Does it need a drive letter?
+                //
+                if (!Input->Options.NoDriveLetter)
+                {
+                    //
+                    // Build it and take over the existing symbolic link
+                    //
+                    _snwprintf(LocalBuffer,
+                               30,
+                               L"\\DosDevices\\%wc:",
+                               Input->DriveLetter);
+                    RtlInitUnicodeString(&DriveString, LocalBuffer);
+                    IoDeleteSymbolicLink(&DriveString);
+                    IoCreateSymbolicLink(&DriveString, &DeviceName);
+                    
+                    //
+                    // Save the drive letter
+                    //
+                    DriveExtension->DriveLetter = Input->DriveLetter;
+                }
+            }
+            
+        }
+        
+        //
+        // Setup the device object flags
+        //
+        DeviceObject->Flags |= (DO_XIP | DO_POWER_PAGABLE | DO_DIRECT_IO);
+        DeviceObject->AlignmentRequirement = 1;
+        
+        //
+        // Build the drive FDO
+        //
+        *NewDriveExtension = DriveExtension;
+        DriveExtension->Type = RamdiskDrive;
+        DiskLength = Input->DiskLength;
+		ExInitializeFastMutex(&DriveExtension->DiskListLock);
+	    IoInitializeRemoveLock(&DriveExtension->RemoveLock,
+                               TAG('R', 'a', 'm', 'd'),
+                               0,
+                               1);
+        DriveExtension->DriveDeviceName = DeviceName;
+        DriveExtension->SymbolicLinkName = SymbolicLinkName;
+        DriveExtension->GuidString = GuidString;
+        DriveExtension->DiskGuid = Input->DiskGuid;
+	    DriveExtension->PhysicalDeviceObject = DeviceObject;
+	    DriveExtension->DeviceObject = RamdiskBusFdo;
+        DriveExtension->AttachedDevice = RamdiskBusFdo;
+        DriveExtension->DiskType = Input->DiskType;
+        DriveExtension->DiskOptions = Input->Options;
+        DriveExtension->DiskLength = DiskLength;
+        DriveExtension->DiskOffset = Input->DiskOffset;
+        DriveExtension->BasePage = Input->BasePage;
+        DriveExtension->BytesPerSector = 0;
+        DriveExtension->SectorsPerTrack = 0;
+        DriveExtension->NumberOfHeads = 0;
+        
+        //
+        // Make sure we don't free it later
+        //
+        DeviceName.Buffer = NULL;
+        SymbolicLinkName.Buffer = NULL;
+        GuidString.Buffer = NULL;
+        
+        //
+        // Check if this is an boot disk, or a registry ram drive
+        //
+        if (!(Input->Options.ExportAsCd) &&
+            (Input->DiskType == RAMDISK_BOOT_DISK))
+        {
+            //
+            // Not an ISO boot, but it's a boot FS -- map it to figure out the
+            // drive settings
+            //
+            CurrentOffset.QuadPart = 0;
+            BaseAddress = RamdiskMapPages(DriveExtension,
+                                          CurrentOffset,
+                                          PAGE_SIZE,
+                                          &BytesRead);
+            if (BaseAddress)
+            {
+                //
+                // Get the data
+                //
+                BootSector = (PPACKED_BOOT_SECTOR)BaseAddress;
+                FatUnpackBios(&BiosBlock, &BootSector->PackedBpb);
+                BytesPerSector = BiosBlock.BytesPerSector;
+                SectorsPerTrack = BiosBlock.SectorsPerTrack;
+                Heads = BiosBlock.Heads;
+                
+                //
+                // Save it
+                //
+                DriveExtension->BytesPerSector = BytesPerSector;
+                DriveExtension->SectorsPerTrack = SectorsPerTrack;
+                DriveExtension->NumberOfHeads = Heads;
+                
+                //
+                // Unmap now
+                //
+                CurrentOffset.QuadPart = 0;
+                RamdiskUnmapPages(DriveExtension,
+                                  BaseAddress,
+                                  CurrentOffset,
+                                  BytesRead);
+            }
+            else
+            {
+                //
+                // Fail
+                //
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto FailCreate;
+            }
+        }
+                
+        //
+        // Check if the drive settings haven't been set yet
+        //
+        if ((DriveExtension->BytesPerSector == 0) ||
+            (DriveExtension->SectorsPerTrack == 0) ||
+            (DriveExtension->NumberOfHeads == 0))
+        {
+            //
+            // Check if this is a CD
+            //
+            if (Input->Options.ExportAsCd)
+            {
+                //
+                // Setup partition parameters default for ISO 9660
+                //
+                DriveExtension->BytesPerSector = 2048;
+                DriveExtension->SectorsPerTrack = 32;
+                DriveExtension->NumberOfHeads = 64;
+            }
+            else
+            {
+                //
+                // Setup partition parameters default for FAT
+                //
+                DriveExtension->BytesPerSector = 512;
+                DriveExtension->SectorsPerTrack = 128;
+                DriveExtension->NumberOfHeads = 16;
+            }
+        }
+        
+        //
+        // Calculate the cylinder size
+        //
+        CylinderSize.QuadPart = DriveExtension->BytesPerSector *
+                                DriveExtension->SectorsPerTrack *
+                                DriveExtension->NumberOfHeads;
+        CylinderCount = DiskLength.QuadPart / CylinderSize.QuadPart;
+        SizeByCylinders = CylinderSize.QuadPart * CylinderCount;
+        DriveExtension->Cylinders = CylinderCount;
+        if ((DiskLength.HighPart > 0) || (SizeByCylinders < DiskLength.LowPart))
+        {
+            //
+            // Align cylinder size up
+            //
+            DriveExtension->Cylinders++;
+        }
+        
+        //
+        // Acquire the disk lock
+        //
+        KeEnterCriticalRegion();
+        ExAcquireFastMutex(&DeviceExtension->DiskListLock);
+        
+        //
+        // Insert us
+        //
+        InsertTailList(&DeviceExtension->DiskList, &DriveExtension->DiskList);
+        
+        //
+        // Release the lock
+        //
+        ExReleaseFastMutex(&DeviceExtension->DiskListLock);
+        KeLeaveCriticalRegion();
+        
+        //
+        // Clear init flag
+        //
+        DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+        return STATUS_SUCCESS;
+    }
+    
+FailCreate:
     UNIMPLEMENTED;
     while (TRUE);
     return STATUS_SUCCESS;
@@ -274,7 +781,8 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 {
 	PRAMDISK_CREATE_INPUT Input;
 	ULONG Length;
-	PRAMDISK_EXTENSION DeviceExtension; 
+	PRAMDISK_BUS_EXTENSION DeviceExtension;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension; 
 	ULONG DiskType;
 	PWCHAR FileNameStart, FileNameEnd;
 	NTSTATUS Status;
@@ -283,7 +791,7 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	//
 	// Get the device extension and our input data
 	//
-	DeviceExtension = (PRAMDISK_EXTENSION)DeviceObject->DeviceExtension;
+	DeviceExtension = DeviceObject->DeviceExtension;
 	Length = IoStackLocation->Parameters.DeviceIoControl.InputBufferLength;
 	Input = (PRAMDISK_CREATE_INPUT)Irp->AssociatedIrp.SystemBuffer;
 	
@@ -303,12 +811,12 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	// Validate the disk type
 	//
 	DiskType = Input->DiskType;
-	if (DiskType == FILE_DEVICE_CONTROLLER) return STATUS_INVALID_PARAMETER;
+	if (DiskType == RAMDISK_WIM_DISK) return STATUS_INVALID_PARAMETER;
 	
 	//
 	// Look at the disk type
 	//
-	if (DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+	if (DiskType == RAMDISK_BOOT_DISK)
 	{
 		//
 		// We only allow this as an early-init boot
@@ -325,18 +833,18 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	//
 	// Validate the disk type
 	//
-	if ((Input->Options.ExportAsCd) && (DiskType != FILE_DEVICE_CD_ROM_FILE_SYSTEM))
+	if ((Input->Options.ExportAsCd) && (DiskType != RAMDISK_BOOT_DISK))
 	{
 		//
 		// If the type isn't CDFS, it has to at least be raw CD
 		//
-		if (DiskType != FILE_DEVICE_CD_ROM) return STATUS_INVALID_PARAMETER;
+		if (DiskType != RAMDISK_MEMORY_MAPPED_DISK) return STATUS_INVALID_PARAMETER;
 	}
 	
 	//
 	// Check if this is an actual file
 	//
-	if (DiskType <= FILE_DEVICE_CD_ROM)
+	if (DiskType <= RAMDISK_MEMORY_MAPPED_DISK)
 	{
 		//
 		// Validate the file name
@@ -353,7 +861,7 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	Status = RamdiskCreateDiskDevice(DeviceExtension,
 									 Input, 
 									 ValidateOnly,
-									 &DeviceObject);
+									 &DriveExtension);
 	if (NT_SUCCESS(Status))
 	{
 		//
@@ -367,6 +875,152 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	// We're done
 	//
 	return Status;
+}
+
+VOID
+NTAPI
+RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
+                    IN PVOID Context)
+{
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    PIRP Irp = Context;
+    
+    //
+    // Get the stack location
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    
+    //
+    // Free the work item
+    //
+    IoFreeWorkItem(Irp->Tail.Overlay.DriverContext[0]);
+    
+    //
+    // Grab the device extension and lock it
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // Discriminate by major code
+        //
+        switch (IoStackLocation->MajorFunction)
+        {
+            //
+            // Device control
+            //
+            case IRP_MJ_DEVICE_CONTROL:
+                               
+                //
+                // Let's take a look at the IOCTL
+                //
+                switch (IoStackLocation->Parameters.DeviceIoControl.IoControlCode)
+                {
+                    //
+                    // Ramdisk create request
+                    //
+                    case FSCTL_CREATE_RAM_DISK:
+                        
+                        //
+                        // This time we'll do it for real
+                        //
+                        Status = RamdiskCreateRamdisk(DeviceObject, Irp, FALSE);
+                        break;
+                        
+                    case IOCTL_DISK_SET_PARTITION_INFO:
+                        
+                        DPRINT1("Set partition info request\n");
+                        UNIMPLEMENTED;
+                        while (TRUE);
+                        break;
+                        
+                    case IOCTL_DISK_GET_DRIVE_LAYOUT:
+                        
+                        DPRINT1("Get drive layout request\n");
+                        UNIMPLEMENTED;
+                        while (TRUE);
+                        break;
+                        
+                    case IOCTL_DISK_GET_PARTITION_INFO:
+                        
+                        DPRINT1("Get partitinon info request\n");
+                        UNIMPLEMENTED;
+                        while (TRUE);
+                        break;
+                        
+                    default:
+                        
+                        DPRINT1("Invalid request\n");
+                        UNIMPLEMENTED;
+                        while (TRUE);
+                        break;
+                }
+                
+                //
+                // We're  here
+                //
+                break;
+                
+            //
+            // Read or write request
+            //
+            case IRP_MJ_READ:
+            case IRP_MJ_WRITE:
+                
+                DPRINT1("Read/Write request\n");
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            //
+            // Internal request (SCSI?)
+            //
+            case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+
+                DPRINT1("SCSI request\n");
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            //
+            // Flush request
+            //
+            case IRP_MJ_FLUSH_BUFFERS:
+                
+                DPRINT1("Flush request\n");
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+
+            //
+            // Anything else
+            //
+            default:
+                
+                DPRINT1("Invalid request: %lx\n", IoStackLocation->MajorFunction);
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+        }
+        
+        //
+        // Complete the I/O
+        //
+        IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    }
+    
+    //
+    // Fail the I/O
+    //
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    return IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
 NTSTATUS
@@ -721,8 +1375,11 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    PRAMDISK_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-    ULONG Information = 0;
+    PRAMDISK_BUS_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension = (PVOID)DeviceExtension;
+    ULONG Information;
+    PCDROM_TOC Toc;
+    PDISK_GEOMETRY DiskGeometry;
     
     //
     // Grab the remove lock
@@ -740,9 +1397,15 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     }
     
     //
-    // Check if this is an FDO or PDO
+    // Setup some defaults
     //
-    if (DeviceExtension->Type == RamdiskFdo)
+    Status = STATUS_INVALID_DEVICE_REQUEST;
+    Information = 0;
+    
+    //
+    // Check if this is an bus device or the drive
+    //
+    if (DeviceExtension->Type == RamdiskBus)
     {
         //
         // Check what the request is
@@ -773,16 +1436,266 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     else
     {
         //
-        // PDO code not yet done
+        // Check what the request is
         //
-        ASSERT(FALSE);
+        switch (IoStackLocation->Parameters.DeviceIoControl.IoControlCode)
+        {
+            case IOCTL_DISK_CHECK_VERIFY:
+            case IOCTL_STORAGE_CHECK_VERIFY:
+            case IOCTL_STORAGE_CHECK_VERIFY2:
+            case IOCTL_CDROM_CHECK_VERIFY:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+
+            case IOCTL_STORAGE_GET_MEDIA_TYPES:
+            case IOCTL_DISK_GET_MEDIA_TYPES:
+            case IOCTL_DISK_GET_DRIVE_GEOMETRY:
+            case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
+                
+                //
+                // Validate the length
+                //
+                if (IoStackLocation->Parameters.DeviceIoControl.
+                    OutputBufferLength < sizeof(DISK_GEOMETRY))
+                {
+                    //
+                    // Invalid length
+                    //
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+                
+                //
+                // Fill it out
+                //
+                DiskGeometry = Irp->AssociatedIrp.SystemBuffer;
+                DiskGeometry->Cylinders.QuadPart = DriveExtension->Cylinders;
+                DiskGeometry->BytesPerSector = DriveExtension->BytesPerSector;
+                DiskGeometry->SectorsPerTrack = DriveExtension->SectorsPerTrack;
+                DiskGeometry->TracksPerCylinder = DriveExtension->NumberOfHeads;
+                DiskGeometry->MediaType = DriveExtension->DiskOptions.Fixed ?
+                                          FixedMedia : RemovableMedia;
+                
+                //
+                // We're done
+                //
+                Status = STATUS_SUCCESS;
+                Information = sizeof(DISK_GEOMETRY);
+                break;
+            
+            //
+            // Hack to support ReactOS's broken CDFS
+            //
+            case IOCTL_CDROM_GET_LAST_SESSION:
+            
+                //
+                // Validate the length
+                //
+                if (IoStackLocation->Parameters.DeviceIoControl.
+                    OutputBufferLength < RAMDISK_SESSION_SIZE)
+                {
+                    //
+                    // Invalid length
+                    //
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+                
+                //
+                // Fill out the TOC
+                //
+                Toc = Irp->AssociatedIrp.SystemBuffer;
+                Toc->Length[0] = 0;
+                Toc->Length[1] = RAMDISK_SESSION_SIZE - sizeof(Toc->Length);
+                Toc->FirstTrack = 1;
+                Toc->LastTrack = 1;
+                Toc->TrackData[0].Adr = 1;
+                Toc->TrackData[0].Control = TOC_DATA_TRACK;
+                Toc->TrackData[0].TrackNumber = 1;
+                Toc->TrackData[0].Address[0] =
+                Toc->TrackData[0].Address[1] =
+                Toc->TrackData[0].Address[2] =
+                Toc->TrackData[0].Address[3] = 0;
+                                
+                //
+                // We're done
+                //
+                Status = STATUS_SUCCESS;
+                Information = RAMDISK_SESSION_SIZE;
+                break;
+                                
+            case IOCTL_CDROM_READ_TOC:
+                
+                //
+                // Validate the length
+                //
+                if (IoStackLocation->Parameters.DeviceIoControl.
+                    OutputBufferLength < sizeof(CDROM_TOC))
+                {
+                    //
+                    // Invalid length
+                    //
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+                
+                //
+                // Clear the TOC
+                //
+                Toc = Irp->AssociatedIrp.SystemBuffer;
+                RtlZeroMemory(Toc, sizeof(CDROM_TOC));
+                
+                //
+                // Fill it out
+                //
+                Toc->Length[0] = 0;
+                Toc->Length[1] = RAMDISK_TOC_SIZE - sizeof(Toc->Length);
+                Toc->FirstTrack = 1;
+                Toc->LastTrack = 1;
+                Toc->TrackData[0].Adr = 1;
+                Toc->TrackData[0].Control = TOC_DATA_TRACK;
+                Toc->TrackData[0].TrackNumber = 1;
+                
+                //
+                // We're done
+                //
+                Status = STATUS_SUCCESS;
+                Information = RAMDISK_TOC_SIZE;
+                break;
+                
+            case IOCTL_DISK_SET_PARTITION_INFO:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_DISK_GET_PARTITION_INFO:
+                
+                //
+                // Validate the length
+                //
+                if (IoStackLocation->Parameters.DeviceIoControl.
+                    OutputBufferLength < sizeof(PARTITION_INFORMATION))
+                {
+                    //
+                    // Invalid length
+                    //
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+                
+                //
+                // Check if we need to do this sync or async
+                //
+                if (DriveExtension->DiskType > RAMDISK_MEMORY_MAPPED_DISK)
+                {
+                    //
+                    // Call the helper function
+                    //
+                    Status = RamdiskGetPartitionInfo(Irp, DriveExtension);
+                }
+                else
+                {
+                    //
+                    // Do it asynchronously later
+                    //
+                    goto CallWorker;
+                }
+                
+                //
+                // We're done
+                //
+                Information = Irp->IoStatus.Information;
+                break;
+                
+            case IOCTL_DISK_GET_DRIVE_LAYOUT:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_DISK_GET_LENGTH_INFO:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_DISK_IS_WRITABLE:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_SCSI_MINIPORT:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_STORAGE_QUERY_PROPERTY:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_MOUNTDEV_QUERY_STABLE_GUID:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_VOLUME_SET_GPT_ATTRIBUTES:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_VOLUME_GET_GPT_ATTRIBUTES:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_VOLUME_OFFLINE:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            default:
+         
+                //
+                // Drive code not emulated
+                //
+                DPRINT1("IOCTL: %lx\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);                
+                break;
+        }
+
+        //
+        // If requests drop down here, we just return them complete them
+        //
+        goto CompleteRequest;
     }
     
     //
     // Queue the request to our worker thread
     //
-    UNIMPLEMENTED;
-    while (TRUE);
+CallWorker:
+    Status = SendIrpToThread(DeviceObject, Irp);
     
 CompleteRequest:
     //
@@ -807,11 +1720,216 @@ CompleteRequest:
 
 NTSTATUS
 NTAPI
+RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
+                            IN PDEVICE_OBJECT DeviceObject,
+                            IN PIRP Irp)
+{
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension;
+    PDEVICE_RELATIONS DeviceRelations, OurDeviceRelations;
+    ULONG Count, DiskCount, FinalCount;
+    PLIST_ENTRY ListHead, NextEntry;
+    PDEVICE_OBJECT* DriveDeviceObject;
+    RAMDISK_DEVICE_STATE State;
+    
+    //
+    // Get the device extension and check if this is a drive
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    if (DeviceExtension->Type == RamdiskDrive)
+    {
+        //
+        // FIXME: TODO
+        //
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    //
+    // Anything but bus relations, we don't handle
+    //
+    if (Type) goto PassToNext;
+    
+    //
+    // Acquire the disk list lock
+    //
+    KeEnterCriticalRegion();
+    ExAcquireFastMutex(&DeviceExtension->DiskListLock);
+    
+    //
+    // Did a device already fill relations?
+    //
+    DeviceRelations = (PDEVICE_RELATIONS)Irp->IoStatus.Information;
+    if (DeviceRelations)
+    {
+        //
+        // Use the data
+        //
+        Count = DeviceRelations->Count;
+    }
+    else
+    {
+        //
+        // We're the first
+        //
+        Count = 0;
+    }
+    
+    //
+    // Now loop our drives
+    //
+    DiskCount = 0;
+    ListHead = &DeviceExtension->DiskList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        //
+        // As long as it wasn't removed, count it in
+        //
+        DriveExtension = CONTAINING_RECORD(NextEntry,
+                                           RAMDISK_DRIVE_EXTENSION,
+                                           DiskList);
+        if (DriveExtension->State < RamdiskStateBusRemoved) DiskCount++;
+        
+        //
+        // Move to the next one
+        //
+        NextEntry = NextEntry->Flink;
+    }
+    
+    //
+    // Now we know our final count
+    //
+    FinalCount = Count + DiskCount;
+    
+    //
+    // Allocate the structure
+    //
+    OurDeviceRelations = ExAllocatePoolWithTag(PagedPool,
+                                               FIELD_OFFSET(DEVICE_RELATIONS,
+                                                            Objects) +
+                                               FinalCount *
+                                               sizeof(PDEVICE_OBJECT),
+                                               TAG('R', 'a', 'm', 'd'));
+    if (!OurDeviceRelations)
+    {
+        //
+        // Fail
+        //
+        ExReleaseFastMutex(&DeviceExtension->DiskListLock);
+        KeLeaveCriticalRegion();
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    //
+    // Check if we already had some relations
+    //
+    if (Count)
+    {
+        //
+        // Copy them in
+        //
+        RtlCopyMemory(OurDeviceRelations->Objects,
+                      DeviceRelations->Objects,
+                      Count * sizeof(PDEVICE_OBJECT));
+    }
+    
+    //
+    // Save the count
+    //
+    OurDeviceRelations->Count = FinalCount;
+    
+    //
+    // Now loop our drives again
+    //
+    ListHead = &DeviceExtension->DiskList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        //
+        // Go to the end of the list
+        //
+        DriveDeviceObject = &OurDeviceRelations->Objects[Count];
+        
+        //
+        // Get the drive state
+        //
+        DriveExtension = CONTAINING_RECORD(NextEntry,
+                                           RAMDISK_DRIVE_EXTENSION,
+                                           DiskList);
+        State = DriveExtension->State;
+        
+        //
+        // If it was removed or enumerated, we don't touch the device object
+        //
+        if (State >= RamdiskStateBusRemoved)
+        {
+            //
+            // If it was removed, we still have to keep track of this though
+            //
+            if (State == RamdiskStateBusRemoved)
+            {
+                //
+                // Mark it as enumerated now, but don't actually reference it
+                //
+                DriveExtension->State = RamdiskStateEnumerated;
+            }
+        }
+        else
+        {
+            //
+            // First time it's enumerated, reference the device object
+            //
+            ObReferenceObject(DriveExtension->DeviceObject);
+            
+            //
+            // Save the object pointer, and move on
+            //
+            *DriveDeviceObject++ = DriveExtension->DeviceObject;
+        }
+        
+        if (DriveExtension->State < RamdiskStateBusRemoved) DiskCount++;
+        
+        //
+        // Move to the next one
+        //
+        NextEntry = NextEntry->Flink;
+    }
+
+    //
+    // Release the lock
+    //
+    ExReleaseFastMutex(&DeviceExtension->DiskListLock);
+    KeLeaveCriticalRegion();
+    
+    //
+    // Cleanup old relations
+    //
+    if (DeviceRelations) ExFreePool(DeviceRelations);
+    
+    //
+    // Complete our IRP
+    //
+    Irp->IoStatus.Information = (ULONG_PTR)OurDeviceRelations;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    
+    //
+    // Pass to the next driver
+    //
+PassToNext:
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+    return IoCallDriver(DeviceExtension->AttachedDevice, Irp);  
+}
+
+NTSTATUS
+NTAPI
 RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStackLocation;
-    PRAMDISK_EXTENSION DeviceExtension;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
     NTSTATUS Status;
     UCHAR Minor;
     
@@ -913,9 +2031,9 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
         case IRP_MN_QUERY_ID:
             
             //
-            // Are we a PDO?
+            // Are we a drive?
             //
-            if (DeviceExtension->Type == RamdiskPdo)
+            if (DeviceExtension->Type == RamdiskDrive)
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
                 while (TRUE);
@@ -925,9 +2043,9 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
         case IRP_MN_QUERY_BUS_INFORMATION:
             
             //
-            // Are we a PDO?
+            // Are we a drive?
             //
-            if (DeviceExtension->Type == RamdiskPdo)
+            if (DeviceExtension->Type == RamdiskDrive)
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
                 while (TRUE);
@@ -943,9 +2061,9 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
         case IRP_MN_QUERY_DEVICE_TEXT:
             
             //
-            // Are we a PDO?
+            // Are we a drive?
             //
-            if (DeviceExtension->Type == RamdiskPdo)
+            if (DeviceExtension->Type == RamdiskDrive)
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
                 while (TRUE);
@@ -954,16 +2072,22 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             
         case IRP_MN_QUERY_DEVICE_RELATIONS:
 
-            DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);            
-            break;
+            //
+            // Call our main routine
+            //
+            Status = RamdiskQueryDeviceRelations(IoStackLocation->
+                                                 Parameters.
+                                                 QueryDeviceRelations.Type,
+                                                 DeviceObject,
+                                                 Irp);
+            goto ReleaseAndReturn;
             
         case IRP_MN_QUERY_CAPABILITIES:
             
             //
-            // Are we a PDO?
+            // Are we a drive?
             //
-            if (DeviceExtension->Type == RamdiskPdo)
+            if (DeviceExtension->Type == RamdiskDrive)
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
                 while (TRUE);
@@ -986,9 +2110,9 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
     }
     
     //
-    // Are we an FDO?
+    // Are we the bus?
     //
-    if (DeviceExtension->Type == RamdiskFdo)
+    if (DeviceExtension->Type == RamdiskBus)
     {
         //
         // Do we have an attached device?
@@ -1064,23 +2188,23 @@ NTAPI
 RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject, 
                  IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-	PRAMDISK_EXTENSION DeviceExtension;
+	PRAMDISK_BUS_EXTENSION DeviceExtension;
 	PDEVICE_OBJECT AttachedDevice;
 	NTSTATUS Status; 
 	UNICODE_STRING DeviceName;
 	PDEVICE_OBJECT DeviceObject;
 	
 	//
-	// Only create the FDO once
+	// Only create the bus FDO once
 	//
 	if (RamdiskBusFdo) return STATUS_DEVICE_ALREADY_ATTACHED;
 	
 	//
-	// Create the FDO
+	// Create the bus FDO
 	//
 	RtlInitUnicodeString(&DeviceName, L"\\Device\\Ramdisk");
 	Status = IoCreateDevice(DriverObject,
-						    sizeof(RAMDISK_EXTENSION),
+						    sizeof(RAMDISK_BUS_EXTENSION),
 							&DeviceName,
 							FILE_DEVICE_BUS_EXTENDER,
 							FILE_DEVICE_SECURE_OPEN,
@@ -1089,26 +2213,27 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 	if (NT_SUCCESS(Status))
 	{
 		//
-		// Initialize the FDO extension
+		// Initialize the bus FDO extension
 		//
-	    DeviceExtension = (PRAMDISK_EXTENSION)DeviceObject->DeviceExtension;
-	    RtlZeroMemory(DeviceObject->DeviceExtension, sizeof(RAMDISK_EXTENSION));
+	    DeviceExtension = DeviceObject->DeviceExtension;
+	    RtlZeroMemory(DeviceObject->DeviceExtension,
+                      sizeof(RAMDISK_BUS_EXTENSION));
 
 		//
-		// Set FDO flags
+		// Set bus FDO flags
 		//
 	    DeviceObject->Flags |= DO_POWER_PAGABLE | DO_DIRECT_IO;
 
 		//
-		// Setup the FDO extension
+		// Setup the bus FDO extension
 		//
-	    DeviceExtension->Type = RamdiskFdo;
+	    DeviceExtension->Type = RamdiskBus;
 		ExInitializeFastMutex(&DeviceExtension->DiskListLock);
 	    IoInitializeRemoveLock(&DeviceExtension->RemoveLock,
                                TAG('R', 'a', 'm', 'd'),
                                0,
                                1);
-		InitializeListHead(&DeviceExtension->DiskListHead);
+		InitializeListHead(&DeviceExtension->DiskList);
 	    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
 	    DeviceExtension->DeviceObject = DeviceObject;
 
@@ -1118,7 +2243,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 	    Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
 										   &RamdiskBusInterface,
 										   NULL,
-										   &DeviceExtension->SymbolicLinkName);
+										   &DeviceExtension->BusDeviceName);
 	    if (!NT_SUCCESS(Status))
 	    {
 			//
@@ -1139,14 +2264,14 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 			//
 			// Fail
 			//
-			IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName, 0);
-			RtlFreeUnicodeString(&DeviceExtension->SymbolicLinkName);
+			IoSetDeviceInterfaceState(&DeviceExtension->BusDeviceName, 0);
+			RtlFreeUnicodeString(&DeviceExtension->BusDeviceName);
 			IoDeleteDevice(DeviceObject);
 			return STATUS_NO_SUCH_DEVICE;
 	    }
 
 		//
-		// FDO is initialized
+		// Bus FDO is initialized
 		//
 	    RamdiskBusFdo = DeviceObject;
 
@@ -1300,7 +2425,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
             // the required keys when reporting a detected device.
             // We hack around this ourselves.
             //
-            RtlCreateUnicodeString(&((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode->InstancePath,
+            RtlCreateUnicodeString(&((PEXTENDED_DEVOBJ_EXTENSION)
+                                   PhysicalDeviceObject->DeviceObjectExtension)
+                                   ->DeviceNode->InstancePath,
                                    L"Root\\UNKNOWN\\0000");
             
             //

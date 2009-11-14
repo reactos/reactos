@@ -21,7 +21,8 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS GUI first stage setup application
  * FILE:        subsys/system/reactos/reactos.c
- * PROGRAMMERS: Eric Kohl, Matthias Kupfer
+ * PROGRAMMERS: Eric Kohl
+ *              Matthias Kupfer
  *              Dmitry Chapyshev (dmitry@reactos.org)
  */
 
@@ -150,6 +151,29 @@ CreateTitleFont(VOID)
     ReleaseDC(NULL, hdc);
 
     return hFont;
+}
+
+static VOID
+InitImageInfo(PIMGINFO ImgInfo)
+{
+    BITMAP bitmap;
+
+    ZeroMemory(ImgInfo, sizeof(*ImgInfo));
+
+    ImgInfo->hBitmap = LoadImage(hInstance,
+                                 MAKEINTRESOURCE(IDB_ROSLOGO),
+                                 IMAGE_BITMAP,
+                                 0,
+                                 0,
+                                 LR_DEFAULTCOLOR);
+
+    if (ImgInfo->hBitmap != NULL)
+    {
+        GetObject(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
+
+        ImgInfo->cxSource = bitmap.bmWidth;
+        ImgInfo->cySource = bitmap.bmHeight;
+    }
 }
 
 static INT_PTR CALLBACK
