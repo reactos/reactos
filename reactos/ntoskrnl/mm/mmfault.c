@@ -231,7 +231,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_SHARED_DATA:
-              *MiAddressToPte(USER_SHARED_DATA) = *MmSharedUserDataPte;
+              *MiAddressToPte((PVOID)USER_SHARED_DATA) = *MmSharedUserDataPte;
               Status = STATUS_SUCCESS;
             break;
 
