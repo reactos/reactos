@@ -31,6 +31,7 @@ struct ntdrv_escape_set_drawable
 struct ntdrv_win_data
 {
     HWND        hwnd;           /* hwnd that this private data belongs to */
+    PVOID       whole_window;   /* SWM window for the complete window */
     RECT        window_rect;    /* USER window rectangle relative to parent */
     RECT        whole_rect;     /* X window rectangle for the whole window relative to parent */
     RECT        client_rect;    /* client area relative to parent */
@@ -60,5 +61,6 @@ BOOL CDECL RosDrv_GetCursorPos( LPPOINT pt );
 /* wnd.c */
 struct ntdrv_win_data *NTDRV_get_win_data( HWND hwnd );
 struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd );
+struct ntdrv_win_data *NTDRV_create_desktop_win_data( HWND hwnd );
 void NTDRV_destroy_win_data( HWND hwnd );
 VOID CDECL RosDrv_UpdateZOrder(HWND hwnd, RECT *rect);

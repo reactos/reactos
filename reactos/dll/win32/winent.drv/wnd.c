@@ -78,8 +78,9 @@ struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd )
     /* don't create win data for HWND_MESSAGE windows */
     if (parent != GetDesktopWindow() && !GetAncestor( parent, GA_PARENT )) return NULL;
 
-    data = HeapAlloc(GetProcessHeap(), 0, sizeof(struct ntdrv_win_data));
+    data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ntdrv_win_data));
     if (!data) return NULL;
+    data->hwnd = hwnd;
 
     /* Add it as a property to the window */
     SetPropA( hwnd, window_data_prop, (HANDLE)data );
@@ -98,11 +99,26 @@ struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd )
 
         /* Inform window manager about window rect in screen coords */
         SwmAddWindow(hwnd, &data->window_rect);
+        data->whole_window = (PVOID)1;
     }
 
-    /* Add desktop window too */
-    if (hwnd == GetDesktopWindow())
-        SwmAddWindow(hwnd, &data->window_rect);
+    return data;
+}
+
+/* initialize the desktop window id in the desktop manager process */
+struct ntdrv_win_data *NTDRV_create_desktop_win_data( HWND hwnd )
+{
+    struct ntdrv_win_data *data;
+
+    data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ntdrv_win_data));
+    if (!data) return NULL;
+    data->hwnd = hwnd;
+
+    /* Add it as a property to the window */
+    SetPropA( hwnd, window_data_prop, (HANDLE)data );
+
+    /* Mark it as being a whole window */
+    data->whole_window = (PVOID)1;
 
     return data;
 }

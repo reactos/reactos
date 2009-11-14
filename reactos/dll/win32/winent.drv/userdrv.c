@@ -42,9 +42,9 @@ void move_window_bits( struct ntdrv_win_data *data, const RECT *old_rect, const 
     HRGN rgn = 0;
     HWND parent = 0;
 
-    if (TRUE)
+    if (!data->whole_window)
     {
-        //OffsetRect( &dst_rect, -data->window_rect.left, -data->window_rect.top );
+        OffsetRect( &dst_rect, -data->window_rect.left, -data->window_rect.top );
         parent = GetAncestor( data->hwnd, GA_PARENT );
         hdc_src = GetDCEx( parent, 0, DCX_CACHE );
         hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE | DCX_WINDOW );
@@ -70,7 +70,7 @@ void move_window_bits( struct ntdrv_win_data *data, const RECT *old_rect, const 
 
     if (rgn)
     {
-        if (/*!data->whole_window*/TRUE)
+        if (!data->whole_window)
         {
             /* map region to client rect since we are using DCX_WINDOW */
             OffsetRgn( rgn, data->window_rect.left - data->client_rect.left,
@@ -203,8 +203,8 @@ VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
     PVOID pbits;
     static const WORD ICON_HOTSPOT = 0x4242; /* From user32/cursoricon.c:128 */
 
-    TRACE("%p => %dx%d, %d bpp\n", ciconinfo,
-          ciconinfo->nWidth, ciconinfo->nHeight, ciconinfo->bBitsPerPixel);
+    //TRACE("%p => %dx%d, %d bpp\n", ciconinfo,
+    //      ciconinfo->nWidth, ciconinfo->nHeight, ciconinfo->bBitsPerPixel);
 
     if ( (ciconinfo->ptHotSpot.x == ICON_HOTSPOT) &&
          (ciconinfo->ptHotSpot.y == ICON_HOTSPOT) )
@@ -483,6 +483,13 @@ BOOL CDECL RosDrv_CreateDesktopWindow( HWND hwnd )
 BOOL CDECL RosDrv_CreateWindow( HWND hwnd )
 {
     WARN("RosDrv_CreateWindow(%x)\n", hwnd);
+
+    if (hwnd == GetDesktopWindow())
+    {
+        /* create desktop win data */
+        if (!NTDRV_create_desktop_win_data( hwnd )) return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -725,11 +732,34 @@ void CDECL RosDrv_SetCapture( HWND hwnd, UINT flags )
     }
 }
 
+/*******************************************************************
+ *         can_activate_window
+ *
+ * Check if we can activate the specified window.
+ */
+/*static inline BOOL can_activate_window( HWND hwnd )
+{
+    LONG style = GetWindowLongW( hwnd, GWL_STYLE );
+    if (!(style & WS_VISIBLE)) return FALSE;
+    if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
+    if (style & WS_MINIMIZE) return FALSE;
+    if (GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_NOACTIVATE) return FALSE;
+    if (hwnd == GetDesktopWindow()) return FALSE;
+    return !(style & WS_DISABLED);
+}*/
+
 void CDECL RosDrv_SetFocus( HWND hwnd )
 {
+    struct ntdrv_win_data *data;
+
+    if (!(hwnd = GetAncestor( hwnd, GA_ROOT ))) return;
+    if (!(data = NTDRV_get_win_data( hwnd ))) return;
+    if (!data->whole_window) return;
+
     TRACE("SetFocus %x, desk %x\n", hwnd, GetDesktopWindow());
-    if (GetDesktopWindow() != hwnd)
-        SwmSetForeground(hwnd);
+
+    /* Bring this window to foreground */
+    SwmSetForeground(hwnd);
 }
 
 void CDECL RosDrv_SetLayeredWindowAttributes( HWND hwnd, COLORREF key, BYTE alpha, DWORD flags )
@@ -790,8 +820,18 @@ void CDECL RosDrv_SetWindowText( HWND hwnd, LPCWSTR text )
 
 UINT CDECL RosDrv_ShowWindow( HWND hwnd, INT cmd, RECT *rect, UINT swp )
 {
+    DWORD style = GetWindowLongW( hwnd, GWL_STYLE );
+    struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
+
+    if (!data || !data->whole_window) return swp;
+    if (style & WS_MINIMIZE) return swp;
+    if (IsRectEmpty( rect )) return swp;
+
     FIXME( "win %p cmd %d at %s flags %08x\n",
            hwnd, cmd, wine_dbgstr_rect(rect), swp );
+
+    /* ???: only fetch the new rectangle if the ShowWindow was a result of a window manager event */
+    // TODO: Need to think about this
 
     return swp;
 }
@@ -842,8 +882,8 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
 
     if (!data) return;
 
-    TRACE( "win %x pos changed. new vis rect %s, old whole rect %s, swp_flags %x\n",
-           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect), swp_flags );
+    TRACE( "win %x pos changed. new vis rect %s, old whole rect %s, swp_flags %x insert_after %x\n",
+           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect), swp_flags, insert_after );
 
     old_whole_rect  = data->whole_rect;
     old_client_rect = data->client_rect;
@@ -866,20 +906,31 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
             old_client_rect.bottom - data->client_rect.bottom == y_offset &&
             !memcmp( &valid_rects[0], &data->client_rect, sizeof(RECT) ))
         {
-            //move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
-            SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
+            /* if we have an SWM window the bits will be moved by the SWM */
+            if (!data->whole_window)
+                ;//move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
+            else
+                SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
             FIXME("change1\n");
         }
         else
         {
-            move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
+            //move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
             FIXME("change2\n");
         }
     }
 
+    if (!data->whole_window) return;
+
     /* Pass show/hide information to the window manager */
     if (swp_flags & SWP_SHOWWINDOW)
+    {
+        if (swp_flags & SWP_NOZORDER) FIXME("no zorder change, ignoring!\n");
+        if (swp_flags & SWP_NOACTIVATE) FIXME("no activate change, ignoring!\n");
+
+        SwmSetForeground(hwnd);
         SwmShowWindow(hwnd, TRUE);
+    }
     else if (swp_flags & SWP_HIDEWINDOW)
         SwmShowWindow(hwnd, FALSE);
 
