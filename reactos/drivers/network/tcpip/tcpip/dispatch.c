@@ -210,9 +210,8 @@ VOID NTAPI DispCancelListenRequest(
 
     TCPRemoveIRP(Connection, Irp);
 
-    TCPAbortListenForSocket(
-	    Connection->AddressFile->Listener,
-	    Connection );
+    TCPAbortListenForSocket(Connection->AddressFile->Listener,
+                            Connection);
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
@@ -1044,7 +1043,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
   Parameters = (PTDI_REQUEST_KERNEL_SET_EVENT)&IrpSp->Parameters;
   Status     = STATUS_SUCCESS;
 
-  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+  KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
   /* Set the event handler. if an event handler is associated with
      a specific event, it's flag (RegisteredXxxHandler) is TRUE.
@@ -1165,7 +1164,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
     Status = STATUS_INVALID_PARAMETER;
   }
 
-  TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
   return Status;
 }

@@ -21,9 +21,6 @@
 	<directory name="datalink">
 		<file>lan.c</file>
 	</directory>
-	<directory name="recmutex">
-		<file>recmutex.c</file>
-	</directory>
 	<directory name="tcpip">
 		<file>ainfo.c</file>
 		<file>buffer.c</file>
