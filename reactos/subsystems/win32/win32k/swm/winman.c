@@ -204,9 +204,9 @@ SwmMarkVisible(struct region *Region)
         /* Check if it's empty */
         if (!is_region_empty(WindowRegion))
         {
-            DPRINT1("Invalidating region\n");
+            DPRINT("Invalidating region\n");
             SwmDumpRegion(WindowRegion);
-            DPRINT1("of window %x\n", Window->hwnd);
+            DPRINT("of window %x\n", Window->hwnd);
 
             /* If it's not empty, subtract it from the source region */
             subtract_region(Region, Region, WindowRegion);
@@ -217,7 +217,7 @@ SwmMarkVisible(struct region *Region)
             /* Invalidate this region of target window */
             SwmInvalidateRegion(Window, WindowRegion, NULL);
 
-            DPRINT1("Rest of the update region is:\n");
+            DPRINT("Rest of the update region is:\n");
             SwmDumpRegion(Region);
         }
 
@@ -279,8 +279,8 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect)
 {
     PSWM_WINDOW Win;
 
-    DPRINT1("SwmAddWindow %x\n", hWnd);
-    DPRINT1("rect (%d,%d)-(%d,%d)\n", WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
+    DPRINT("SwmAddWindow %x\n", hWnd);
+    DPRINT("rect (%d,%d)-(%d,%d)\n", WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
 
     /* Acquire the lock */
     SwmAcquire();
@@ -394,7 +394,7 @@ SwmRemoveWindow(HWND hWnd)
     /* Acquire the lock */
     SwmAcquire();
 
-    DPRINT1("SwmRemoveWindow %x\n", hWnd);
+    DPRINT("SwmRemoveWindow %x\n", hWnd);
 
     /* Allocate entry */
     Win = SwmFindByHwnd(hWnd);
@@ -420,6 +420,31 @@ SwmRemoveWindow(HWND hWnd)
     SwmRelease();
 }
 
+PSWM_WINDOW
+NTAPI
+SwmGetTopWindow()
+{
+    PLIST_ENTRY Current;
+    PSWM_WINDOW Window;
+
+    /* Traverse the list to find top non-hidden window */
+    Current = SwmWindows.Flink;
+    while(Current != &SwmWindows)
+    {
+        Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
+
+        /* If this window is not hidden - it's the top one */
+        if (!Window->Hidden) return Window;
+
+        Current = Current->Flink;
+    }
+
+    /* This should never happen */
+    ASSERT(FALSE);
+    return NULL;
+}
+
+
 VOID
 NTAPI
 SwmBringToFront(PSWM_WINDOW SwmWin)
@@ -428,16 +453,16 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
     struct region *OldVisible;
 
     /* Save previous focus window */
-    Previous = CONTAINING_RECORD(SwmWindows.Flink, SWM_WINDOW, Entry);
+    Previous = SwmGetTopWindow();
 
     /* It's already on top */
     if (Previous->hwnd == SwmWin->hwnd)
     {
-        DPRINT1("hwnd %x is already on top\n", SwmWin->hwnd);
+        DPRINT("hwnd %x is already on top\n", SwmWin->hwnd);
         return;
     }
 
-    DPRINT1("Setting %x as foreground, previous window was %x\n", SwmWin->hwnd, Previous->hwnd);
+    DPRINT("Setting %x as foreground, previous window was %x\n", SwmWin->hwnd, Previous->hwnd);
 
     /* Remove it from the list */
     RemoveEntryList(&SwmWin->Entry);
@@ -445,7 +470,7 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
     /* Add it to the head of the list */
     InsertHeadList(&SwmWindows, &SwmWin->Entry);
 
-    /* Subtruct old visible from the new one to find region for updating */
+    /* Subtract old visible from the new one to find region for updating */
     OldVisible = create_empty_region();
     set_region_rect(OldVisible, &SwmWin->Window);
 
@@ -459,7 +484,7 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
     /* If update region is not empty - draw missing parts */
     if (!is_region_empty(OldVisible))
     {
-        DPRINT1("Intersection isn't empty\n");
+        DPRINT("Intersection isn't empty\n");
         SwmInvalidateRegion(SwmWin, OldVisible, NULL);
     }
 
@@ -520,6 +545,17 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
         return;
     }
 
+    /* Check if window really moved anywhere */
+    if (WindowRect->left - OldRect->left == 0 &&
+        WindowRect->top - OldRect->top == 0 &&
+        WindowRect->right - OldRect->right == 0 &&
+        WindowRect->bottom - OldRect->bottom == 0)
+    {
+        /* Release the lock */
+        SwmRelease();
+        return;
+    }
+
     SwmWin->Window.left = WindowRect->left;
     SwmWin->Window.top = WindowRect->top;
     SwmWin->Window.right = WindowRect->right;
@@ -565,7 +601,7 @@ SwmShowWindow(HWND hWnd, BOOLEAN Show)
     /* Acquire the lock */
     SwmAcquire();
 
-    DPRINT1("SwmShowWindow %x, Show %d\n", hWnd, Show);
+    DPRINT("SwmShowWindow %x, Show %d\n", hWnd, Show);
 
     /* Allocate entry */
     Win = SwmFindByHwnd(hWnd);
@@ -579,11 +615,13 @@ SwmShowWindow(HWND hWnd, BOOLEAN Show)
     if (Show && Win->Hidden)
     {
         /* Change state from hidden to visible */
+        DPRINT("Unhiding %x\n", Win->hwnd);
         Win->Hidden = FALSE;
         SwmBringToFront(Win);
     }
     else if (!Show && !Win->Hidden)
     {
+        DPRINT("Hiding %x\n", Win->hwnd);
         /* Change state from visible to hidden */
         Win->Hidden = TRUE;
 
