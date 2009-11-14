@@ -365,10 +365,9 @@ MiArmInitializePageTable()
     /* Set directory base for the system process */
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameOffset;
 
-    /* HACK: don't use freeldr debug pront anymore */
+    /* HACK: don't use freeldr debug print anymore */
     FrLdrDbgPrint = NoDbgPrint;
 
-#if 1
     /* Clear user mode mappings in PML4 */
     StartPte = MiAddressToPxe(0);
     EndPte = MiAddressToPxe(MmHighestUserAddress);
@@ -378,29 +377,6 @@ MiArmInitializePageTable()
         /* Zero the pte */
         Pte->u.Long = 0;
     }
-#else
-    /* Clear user mode mappings in PML4 */
-    StartPte = MiAddressToPte(0);
-    EndPte = MiAddressToPte((PVOID)0xa00000);
-
-    for (Pte = StartPte; Pte < EndPte; Pte++)
-    {
-        /* Zero the pte */
-        //Pte->u.Long = 0;
-    }
-
-    /* Flush the TLB */
-    KeFlushCurrentTb();
-
-//    MiAddressToPde(0)->u.Long = 0;
-//    MiAddressToPde((PVOID)0x200000)->u.Long = 0;
-//    MiAddressToPde((PVOID)0x400000)->u.Long = 0;
-//    MiAddressToPde((PVOID)0x600000)->u.Long = 0;
-//    MiAddressToPde((PVOID)0x800000)->u.Long = 0;
-
-   // MiAddressToPpe->u.Long = 0;
-
-#endif
 
     /* Flush the TLB */
     KeFlushCurrentTb();
@@ -416,8 +392,8 @@ MiArmPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     PLIST_ENTRY ListEntry;
-    PFN_COUNT PageCount;
-    PVOID PageBase;
+    SIZE_T Size;
+    PUCHAR Page, FirstPage;
 
     /* The PFN database is at the start of the non paged region */
     MmPfnDatabase = (PVOID)((ULONG64)MmNonPagedPoolEnd - MmMaximumNonPagedPoolInBytes);
@@ -437,18 +413,28 @@ MiArmPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             (MdBlock->MemoryType == LoaderBBTMemory) ||
             (MdBlock->MemoryType == LoaderHALCachedMemory) ||
             (MdBlock->MemoryType == LoaderSpecialMemory) ||
-            (MdBlock->MemoryType != LoaderBad))
+            (MdBlock->MemoryType == LoaderBad))
         {
             continue;
         }
 
-        /* Map pages for the PFN database */
-        PageCount = ROUND_TO_PAGES(MdBlock->PageCount * sizeof(MMPFN)) / PAGE_SIZE;
-        PageBase = PAGE_ALIGN(&MmPfnDatabase[MdBlock->BasePage]);
-        MxMapPageRange(PageBase, PageCount);
+        /* Get the base and size of this pfn database entry */
+        FirstPage = PAGE_ALIGN(&MmPfnDatabase[MdBlock->BasePage]);
+        Size = ROUND_TO_PAGES(MdBlock->PageCount * sizeof(MMPFN));
+
+        /* Loop the pages of this Pfn database entry */
+        for (Page = FirstPage; Page < FirstPage + Size; Page += PAGE_SIZE)
+        {
+            /* Is the page already mapped? */
+            if (!MmIsAddressValid(Page))
+            {
+                /* It's not, map it now */
+                MxMapPageRange(Page, 1);
+            }
+        }
 
         /* Zero out the pages */
-        RtlZeroMemory(PageBase, PageCount * PAGE_SIZE);
+        RtlZeroMemory(FirstPage, Size);
     }
 
     /* Calculate the number of bytes, and then convert to pages */
@@ -537,11 +523,11 @@ MmArmInitSystem(IN ULONG Phase,
         /* Initialize the memory layout */
         MiArmInitializeMemoryLayout(LoaderBlock);
 
-        /* Prepare PFN database mappings */
-        MiArmPreparePfnDatabse(LoaderBlock);
-
         /* Initialize some mappings */
         MiArmInitializePageTable();
+
+        /* Prepare PFN database mappings */
+        MiArmPreparePfnDatabse(LoaderBlock);
 
         /* Prepare paged pool mappings */
         MiArmPrepareNonPagedPool();
