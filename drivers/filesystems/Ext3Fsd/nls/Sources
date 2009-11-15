@@ -1,0 +1,44 @@
+#
+# Sources for Ext2 file system driver for windows
+# mattwu@163.com / http://ext2fsd.sf.net
+#
+
+# Name and type of the output file:
+MAJORCOMP=ext2fsd
+MINORCOMP=nlssup
+
+TARGETNAME=nlssup
+TARGETTYPE=LIBRARY
+TARGETPATH=..\$(DDK_TARGET_OS)\$(DDKBUILDENV)\
+
+# Creates a file used by Visual Studio to navigate the source code.
+BROWSER_INFO=TRUE
+RCNOFONTMAP=TRUE
+
+C_DEFINES = $(C_DEFINES) /D__KERNEL__
+DRIVERTYPE=FS
+
+INCLUDES=..\include;.;$(DRIVER_INC_PATH);
+
+# The source code:
+SOURCES=nls_base.c         nls_cp1250.c                     \
+        nls_cp1251.c       nls_cp1255.c                     \
+        nls_cp437.c        nls_cp737.c                      \
+        nls_cp775.c        nls_cp850.c                      \
+        nls_cp852.c        nls_cp855.c                      \
+        nls_cp857.c        nls_cp860.c                      \
+        nls_cp861.c        nls_cp862.c                      \
+        nls_cp863.c        nls_cp864.c                      \
+        nls_cp865.c        nls_cp866.c                      \
+        nls_cp869.c        nls_cp874.c                      \
+        nls_cp932.c        nls_cp936.c                      \
+        nls_cp949.c        nls_cp950.c                      \
+        nls_euc-jp.c       nls_koi8-r.c                     \
+        nls_ascii.c        nls_iso8859-1.c                  \
+        nls_iso8859-13.c   nls_iso8859-14.c                 \
+        nls_iso8859-15.c   nls_iso8859-2.c                  \
+        nls_iso8859-3.c    nls_iso8859-4.c                  \
+        nls_iso8859-5.c    nls_iso8859-6.c                  \
+        nls_iso8859-7.c    nls_iso8859-9.c                  \
+        nls_koi8-ru.c      nls_koi8-u.c                     \
+        nls_utf8.c 

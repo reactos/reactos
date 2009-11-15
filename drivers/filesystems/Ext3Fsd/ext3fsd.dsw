@@ -1,0 +1,49 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "ext3fsd"=.\ext3fsd.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    Perforce Project
+    ..\ext3fsd
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "jbd"=.\jbd\jbd.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    jbd
+    .\jbd
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
