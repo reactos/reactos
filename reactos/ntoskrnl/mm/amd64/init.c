@@ -5,12 +5,13 @@
  * PURPOSE:         Memory Manager Initialization for amd64
  *
  * PROGRAMMERS:     Timo kreuzer (timo.kreuzer@reactos.org)
+ *                  ReactOS Portable Systems Group
  */
 
 /* INCLUDES ***************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #include "../ARM3/miarm.h"
@@ -21,7 +22,7 @@ extern PMMPTE MmDebugPte;
 
 ULONG64 MmUserProbeAddress = 0x7FFFFFF0000ULL;
 PVOID MmHighestUserAddress = (PVOID)0x7FFFFFEFFFFULL;
-PVOID MmSystemRangeStart = (PVOID)KSEG0_BASE; // FFFF080000000000
+PVOID MmSystemRangeStart = (PVOID)0xFFFF080000000000ULL;
 
 /* Size of session view, pool, and image */
 ULONG64 MmSessionSize = MI_SESSION_SIZE;
@@ -346,7 +347,7 @@ MiArmInitializeMemoryLayout(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                 MmSystemViewSize);
 
     /* Use the default */
-    MmNumberOfSystemPtes = 22000;
+    MmNumberOfSystemPtes = MI_NUMBER_SYSTEM_PTES;
 
     ASSERT(MiSessionViewEnd <= MiSessionImageStart);
     ASSERT(MmSessionBase <= MiSessionPoolStart);
@@ -357,6 +358,7 @@ MiArmInitializePageTable()
 {
     ULONG64 PageFrameOffset;
     PMMPTE Pte, StartPte, EndPte;
+    MMPTE TmpPte;
 
     /* Get current directory base */
     PageFrameOffset = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber << PAGE_SHIFT;
@@ -366,22 +368,54 @@ MiArmInitializePageTable()
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameOffset;
 
     /* HACK: don't use freeldr debug print anymore */
-    FrLdrDbgPrint = NoDbgPrint;
+//    FrLdrDbgPrint = NoDbgPrint;
 
     /* Clear user mode mappings in PML4 */
     StartPte = MiAddressToPxe(0);
     EndPte = MiAddressToPxe(MmHighestUserAddress);
 
+    /* Loop the user mode PXEs */
     for (Pte = StartPte; Pte <= EndPte; Pte++)
     {
-        /* Zero the pte */
-        Pte->u.Long = 0;
+        /* Zero the PXE */
+//        Pte->u.Long = 0;
+    }
+
+    /* Setup a template PTE */
+    TmpPte.u.Long = 0;
+    TmpPte.u.Flush.Valid = 1;
+    TmpPte.u.Flush.Write = 1;
+
+    HyperTemplatePte = TmpPte;
+
+    /* Create PDPTs (1MB total) for shared system address space */
+    StartPte = MiAddressToPxe(MmSystemRangeStart);
+    EndPte = MiAddressToPxe(MI_HIGHEST_SYSTEM_ADDRESS);
+
+    /* Loop the system space PXEs */
+    for (Pte = StartPte; Pte <= EndPte; Pte++)
+    {
+        /* Is the PXE already valid? */
+        if (!Pte->u.Hard.Valid)
+        {
+            /* It's not Initialize it, creating a PDPT. */
+            TmpPte.u.Flush.PageFrameNumber = MxGetNextPage(1);
+            *Pte = TmpPte;
+
+            /* Zero the page. The PXE is the PTE for the PDPT. */
+            RtlZeroMemory(MiPteToAddress(Pte), PAGE_SIZE);
+        }
     }
 
     /* Flush the TLB */
     KeFlushCurrentTb();
 
-    /* Setup debug mapping pte */
+    /* Setup the mapping PTEs */
+    MmFirstReservedMappingPte = MxGetPte((PVOID)MI_MAPPING_RANGE_START);
+    MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
+    MmLastReservedMappingPte = MiAddressToPte((PVOID)MI_MAPPING_RANGE_END);
+
+    /* Setup debug mapping PTE */
     MmDebugPte = MxGetPte(MI_DEBUG_MAPPING);
 }
 
@@ -500,12 +534,84 @@ MiArmPrepareNonPagedPool()
         MxGetPte(Address)->u.Long = 0;
     }
 
-//DPRINT1("MmNonPagedPoolStart = %p, Pte=%p \n", MmNonPagedPoolStart, MiAddressToPte(MmNonPagedPoolStart));
     /* Sanity check */
     ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
            MiAddressToPte(MmNonPagedPoolExpansionStart));
 
 }
+
+PPHYSICAL_MEMORY_DESCRIPTOR
+NTAPI
+MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                         IN PBOOLEAN IncludeType)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+VOID
+NTAPI
+MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    BOOLEAN IncludeType[LoaderMaximum];
+    PPHYSICAL_MEMORY_RUN Run;
+    PULONG Bitmap;
+    ULONG Size, i;
+
+    /* Instantiate memory that we don't consider RAM/usable */
+    for (i = 0; i < LoaderMaximum; i++) IncludeType[i] = TRUE;
+    IncludeType[LoaderBad] = FALSE;
+    IncludeType[LoaderFirmwarePermanent] = FALSE;
+    IncludeType[LoaderSpecialMemory] = FALSE;
+    IncludeType[LoaderBBTMemory] = FALSE;
+
+    /* Build the physical memory block */
+    MmPhysicalMemoryBlock = MmInitializeMemoryLimits(LoaderBlock, IncludeType);
+
+    /* Calculate size for the PFN bitmap */
+    Size = (MmHighestPhysicalPage + sizeof(ULONG)) / sizeof(ULONG);
+
+    /* Allocate the PFN bitmap */
+    Bitmap = ExAllocatePoolWithTag(NonPagedPool, Size, '  mM');
+    if (!Bitmap)
+    {
+        /* This is critical */
+        KeBugCheckEx(INSTALL_MORE_MEMORY,
+                     MmNumberOfPhysicalPages,
+                     MmLowestPhysicalPage,
+                     MmHighestPhysicalPage,
+                     0x101);
+    }
+
+    /* Initialize it and clear all the bits to begin with */
+    RtlInitializeBitMap(&MiPfnBitMap, Bitmap, MmHighestPhysicalPage + 1);
+    RtlClearAllBits(&MiPfnBitMap);
+
+    /* Loop physical memory runs */
+    for (i = 0; i < MmPhysicalMemoryBlock->NumberOfRuns; i++)
+    {
+        /* Get the run */
+        Run = &MmPhysicalMemoryBlock->Run[i];
+        DPRINT("PHYSICAL RAM [0x%08p to 0x%08p]\n",
+               Run->BasePage << PAGE_SHIFT,
+               (Run->BasePage + Run->PageCount) << PAGE_SHIFT);
+
+        /* Make sure it has pages inside it */
+        if (Run->PageCount)
+        {
+            /* Set the bits in the PFN bitmap */
+            RtlSetBits(&MiPfnBitMap, Run->BasePage, Run->PageCount);
+        }
+    }
+}
+
+VOID
+NTAPI
+MiBuildPagedPool(VOID)
+{
+    UNIMPLEMENTED;
+}
+
 
 NTSTATUS
 NTAPI
@@ -543,11 +649,39 @@ MmArmInitSystem(IN ULONG Phase,
     }
     else if (Phase == 1)
     {
+        PMMPTE Pte;
+        ULONG OldCount;
+        PPHYSICAL_MEMORY_RUN Run;
+
+        __debugbreak();
+
         /* The PFN database was created, restore the free descriptor */
         *MxFreeDescriptor = MxOldFreeDescriptor;
 
-        ASSERT(FALSE);
+        __debugbreak();
 
+        /* Initialize the nonpaged pool */
+        InitializePool(NonPagedPool, 0);
+
+#if 0
+        /* Create the system PTE space */
+        Pte = MiAddressToPte(MI_SYSTEM_PTE_START);
+        MiInitializeSystemPtes(Pte, MmNumberOfSystemPtes, SystemPteSpace);
+
+        /* Reserve system PTEs for zeroing PTEs and clear them */
+        MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES,
+                                                        SystemPteSpace);
+        RtlZeroMemory(MiFirstReservedZeroingPte, MI_ZERO_PTES * sizeof(MMPTE));
+
+        /* Set the counter to maximum */
+        MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
+#endif
+
+        /* Build the physical memory block */
+        MiBuildPhysicalMemoryBlock(LoaderBlock);
+
+        /* Size up paged pool and build the shadow system page directory */
+        MiBuildPagedPool();
     }
 
     return STATUS_SUCCESS;

@@ -22,9 +22,6 @@ extern MMPTE HyperTemplatePte;
 
 /* GLOBALS *****************************************************************/
 
-ULONG64 MmGlobalKernelPageDirectory[512];
-ULONG Ke386GlobalPagesEnabled = 0;
-
 
 /* PRIVATE FUNCTIONS *******************************************************/
 
@@ -432,84 +429,6 @@ MmCreateVirtualMapping(PEPROCESS Process,
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-NTAPI
-MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
-{
-    ULONG StartIndex, EndIndex, Index;
-    PMMPTE Pte;
-
-    /* Sanity check */
-    if (Address < MmSystemRangeStart)
-    {
-        KeBugCheck(0);
-    }
-
-    /* Get pointer to the page directory to update */
-    if (Process && Process != PsGetCurrentProcess())
-    {
-//       Pte = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
-    }
-    else
-    {
-        Pte = (PMMPTE)PXE_BASE;
-    }
-
-    /* Update PML4 entries */
-    StartIndex = VAtoPXI(Address);
-    EndIndex = VAtoPXI((ULONG64)Address + Size - 1);
-    for (Index = StartIndex; Index <= EndIndex; Index++)
-    {
-        if (Index != VAtoPXI(PXE_BASE))
-        {
-            InterlockedCompareExchange64(&Pte[Index].u.Long,
-                                         MmGlobalKernelPageDirectory[Index],
-                                         0);
-            if (!MiIsHyperspaceAddress(Pte))
-                __invlpg((PVOID)((ULONG64)Index * PAGE_SIZE));
-        }
-    }
-
-    if (MiIsHyperspaceAddress(Pte))
-        MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pte));
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-MmInitGlobalKernelPageDirectory(VOID)
-{
-    PULONG64 CurrentPageDirectory = (PULONG64)PXE_BASE;
-    MMPTE Pte;
-    ULONG i;
-
-    /* Setup template pte */
-    HyperTemplatePte.u.Long = 0;
-    HyperTemplatePte.u.Hard.Valid = 1;
-    HyperTemplatePte.u.Hard.Write = 1;
-    HyperTemplatePte.u.Hard.Dirty = 1;
-    HyperTemplatePte.u.Hard.Accessed = 1;
-    if (Ke386GlobalPagesEnabled)
-        HyperTemplatePte.u.Hard.Global = 1;
-
-    for (i = VAtoPXI(MmSystemRangeStart); i < 512; i++)
-    {
-        if ((i < VAtoPXI(PTE_BASE) || i > VAtoPXI(PTE_TOP)) &&
-            (i < VAtoPXI(HYPER_SPACE) || i > VAtoPXI(HYPER_SPACE_END)) &&
-            MmGlobalKernelPageDirectory[i] == 0 && 
-            CurrentPageDirectory[i] != 0)
-        {
-            Pte.u.Long = CurrentPageDirectory[i];
-            if (Ke386GlobalPagesEnabled)
-            {
-                Pte.u.Hard.Global = 1;
-                CurrentPageDirectory[i] = Pte.u.Hard.Global;
-            }
-            MmGlobalKernelPageDirectory[i] = Pte.u.Hard.Global;
-        }
-    }
 }
 
 NTSTATUS
