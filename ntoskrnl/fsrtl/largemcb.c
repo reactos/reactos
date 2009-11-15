@@ -11,7 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -78,14 +78,19 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 
 	while (!NewElement)
 	{
+		DPRINT("Inserting %x:%x\n", Node.RunStartVbn.LowPart, Node.SectorCount.LowPart);
 		Existing = RtlInsertElementGenericTable
 			(Mcb->Mapping, &Node, sizeof(Node), &NewElement);
+		DPRINT("Existing %x\n", Existing);
 		if (!Existing) break;
 
+		DPRINT("NewElement %d\n", NewElement);
 		if (!NewElement)
 		{
 			// We merge the existing runs
 			LARGE_INTEGER StartVbn, FinalVbn;
+			DPRINT("Existing: %x:%x\n", 
+				   Existing->RunStartVbn.LowPart, Node.SectorCount.LowPart);
 			if (Existing->RunStartVbn.QuadPart < Node.RunStartVbn.QuadPart)
 			{
 				StartVbn = Existing->RunStartVbn;
@@ -95,6 +100,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 			{
 				StartVbn = Node.RunStartVbn;
 			}
+			DPRINT("StartVbn %x\n", StartVbn.LowPart);
 			if (Existing->RunStartVbn.QuadPart + Existing->SectorCount.QuadPart >
 				Node.RunStartVbn.QuadPart + Node.SectorCount.QuadPart)
 			{
@@ -106,6 +112,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 				FinalVbn.QuadPart =
 					Node.RunStartVbn.QuadPart + Node.SectorCount.QuadPart;
 			}
+			DPRINT("FinalVbn %x\n", FinalVbn.LowPart);
 			Node.RunStartVbn.QuadPart = StartVbn.QuadPart;
 			Node.SectorCount.QuadPart = FinalVbn.QuadPart - StartVbn.QuadPart;
 			RemoveHeadList(&Existing->Sequence);
@@ -114,12 +121,14 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 		}
 		else
 		{
+			DPRINT("Mapping added %x\n", Existing);
 			Mcb->MaximumPairCount++;
 			Mcb->PairCount++;
 			InsertHeadList(GET_LIST_HEAD(Mcb->Mapping), &Existing->Sequence);
 		}
 	}
 
+	DPRINT("!!Existing %d\n", !!Existing);
 	return !!Existing;
 }
 
@@ -135,7 +144,7 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-	DPRINT1("Mcb %x Vbn %x Lbn %x SectorCount %x\n", Mcb, Vbn, Lbn, SectorCount);
+	DPRINT("Mcb %x Vbn %x Lbn %x SectorCount %x\n", Mcb, Vbn, Lbn, SectorCount);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlAddBaseMcbEntry(&(Mcb->BaseMcb),
@@ -143,6 +152,8 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
                                   Lbn,
                                   SectorCount);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
+
+	DPRINT("Done %d\n", Result);
 
     return Result;
 }
@@ -193,6 +204,8 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
+	DPRINT("FsRtlGetNextLargeMcbEntry Mcb %x RunIndex %x\n", Mcb, RunIndex);
+
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlGetNextBaseMcbEntry(&(Mcb->BaseMcb),
                                       RunIndex,
@@ -200,6 +213,8 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
                                       Lbn,
                                       SectorCount);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
+
+	DPRINT("Done %d\n", Result);
 
     return Result;
 }
@@ -353,6 +368,8 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
+	DPRINT("FsRtlLookupLargeMcbEntry Mcb %x Vbn %x\n", Mcb, (ULONG)Vbn);
+
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlLookupBaseMcbEntry(&(Mcb->BaseMcb),
                                      Vbn,
@@ -362,6 +379,8 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
                                      SectorCountFromStartingLbn,
                                      Index);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
+
+	DPRINT("Done %d\n", Result);
 
     return Result;
 }
@@ -412,12 +431,16 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
 {
     BOOLEAN Result;
 
+	DPRINT("FsRtlLookupLastLargeMcbEntryAndIndex %x\n", OpaqueMcb);
+
     KeAcquireGuardedMutex(OpaqueMcb->GuardedMutex);
     Result = FsRtlLookupLastBaseMcbEntryAndIndex(&(OpaqueMcb->BaseMcb),
                                                  LargeVbn,
                                                  LargeLbn,
                                                  Index);
     KeReleaseGuardedMutex(OpaqueMcb->GuardedMutex);
+
+	DPRINT("Done %d\n", Result);
 
     return Result;
 }
@@ -458,11 +481,15 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
+	DPRINT("FsRtlLookupLastLargeMcbEntry Mcb %x\n", Mcb);
+
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlLookupLastBaseMcbEntry(&(Mcb->BaseMcb),
                                          Vbn,
                                          Lbn);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
+
+	DPRINT("Done %d\n", Result);
 
     return Result;
 }
@@ -487,10 +514,14 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
     ULONG NumberOfRuns;
 
+	DPRINT("FsRtlNumberOfRunsInLargeMcb Mcb %x\n", Mcb);
+
     /* Read the number of runs while holding the MCB lock */
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     NumberOfRuns = Mcb->BaseMcb.PairCount;
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
+
+	DPRINT("Done %d\n", NumberOfRuns);
 
     /* Return the count */
     return NumberOfRuns;
@@ -600,11 +631,15 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
                          IN LONGLONG Vbn,
                          IN LONGLONG SectorCount)
 {
+	DPRINT("FsRtlRemoveLargeMcbEntry Mcb %x, Vbn %x, SectorCount %x\n", Mcb, (ULONG)Vbn, (ULONG)SectorCount);
+
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     FsRtlRemoveBaseMcbEntry(&(Mcb->BaseMcb),
                             Vbn,
                             SectorCount);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
+
+	DPRINT("Done\n");
 }
 
 /*
@@ -656,14 +691,18 @@ static ULONG NTAPI McbBump(PBASE_MCB Mcb, PLARGE_MCB_MAPPING_ENTRY FixedPart)
 	LARGE_MCB_MAPPING_ENTRY Reimagined;
 	PLARGE_MCB_MAPPING_ENTRY Found = NULL;
 
+	DPRINT("McbBump %x (%x:%x)\n", Mcb, FixedPart->RunStartVbn.LowPart, FixedPart->SectorCount.LowPart);
+
 	Reimagined = *FixedPart;
 	while ((Found = RtlLookupElementGenericTable(Mcb->Mapping, &Reimagined)))
 	{
 		Reimagined = *Found;
 		Reimagined.RunStartVbn.QuadPart = 
 			FixedPart->RunStartVbn.QuadPart + FixedPart->SectorCount.QuadPart;
+		DPRINT("Reimagined %x\n", Reimagined.RunStartVbn.LowPart);
 	}
 
+	DPRINT("Found %x\n", Found);
 	if (!Found) return MCB_BUMP_NO_MORE;
 	DPRINT1
 		("Moving %x-%x to %x because %x-%x overlaps\n",
@@ -674,6 +713,8 @@ static ULONG NTAPI McbBump(PBASE_MCB Mcb, PLARGE_MCB_MAPPING_ENTRY FixedPart)
 		 Reimagined.RunStartVbn.LowPart + Reimagined.SectorCount.LowPart);
 	Found->RunStartVbn.QuadPart = Reimagined.RunStartVbn.QuadPart + Reimagined.SectorCount.QuadPart;
 	Found->StartingLbn.QuadPart = Reimagined.StartingLbn.QuadPart + Reimagined.SectorCount.QuadPart;
+
+	DPRINT("Again\n");
 	return MCB_BUMP_AGAIN;
 }
 
@@ -713,7 +754,12 @@ FsRtlSplitBaseMcb(IN PBASE_MCB Mcb,
 		
 		Node = UpperPart;
 
-		while ((Result = McbBump(Mcb, &Node)) == MCB_BUMP_AGAIN);
+		DPRINT("Loop: %x\n", Node.RunStartVbn.LowPart);
+		while ((Result = McbBump(Mcb, &Node)) == MCB_BUMP_AGAIN)
+		{
+			DPRINT("Node: %x\n", Node.RunStartVbn.LowPart);
+		}
+		DPRINT("Done\n");
 
 		if (Result == MCB_BUMP_NO_MORE)
 		{
@@ -744,6 +790,8 @@ FsRtlSplitBaseMcb(IN PBASE_MCB Mcb,
 			return Result == MCB_BUMP_NO_MORE;
 		}
 	}
+
+	DPRINT("Done\n");
 	
 	return TRUE;
 }
@@ -759,11 +807,15 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
+	DPRINT("FsRtlSplitLargeMcb %x, Vbn %x, Amount %x\n", Mcb, (ULONG)Vbn, (ULONG)Amount);
+
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlSplitBaseMcb(&(Mcb->BaseMcb),
                                Vbn,
                                Amount);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
+
+	DPRINT("Done %d\n", Result);
 
     return Result;
 }
@@ -803,10 +855,12 @@ NTAPI
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
                       IN LONGLONG Vbn)
 {
+	DPRINT("FsRtlTruncateLargeMcb %x Vbn %x\n", Mcb, (ULONG)Vbn);
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     FsRtlTruncateBaseMcb(&(Mcb->BaseMcb),
                          Vbn);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
+	DPRINT("Done\n");
 }
 
 /*

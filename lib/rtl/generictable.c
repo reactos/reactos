@@ -134,6 +134,8 @@ RtlInsertElementGenericTable(IN PRTL_GENERIC_TABLE Table,
     /* Get the splay links and table search result immediately */
     Result = RtlpFindGenericTableNodeOrParent(Table, Buffer, &NodeOrParent);
 
+	DPRINT1("Result %d\n", Result);
+
     /* Now call the routine to do the full insert */
     return RtlInsertElementGenericTableFull(Table,
                                             Buffer,
@@ -619,7 +621,7 @@ RtlEnumerateGenericTableWithoutSplayingAvl(IN PRTL_AVL_TABLE Table,
                                            IN OUT PVOID *RestartKey)
 {
     /* FIXME! */
-	return RtlEnumerateGenericTableWithoutSplayingAvl(Table, RestartKey);
+	return NULL;
 }
 
 /*
@@ -689,14 +691,7 @@ RtlInsertElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
 	if(NodeOrParent) *NodeOrParent = OurNodeOrParent;
 	if(SearchResult) *SearchResult = OurSearchResult;
 
-	if(OurSearchResult == TableFoundNode)
-	{
-		RtlDeleteElementGenericTableAvl(Table, Buffer);
-		return RtlInsertElementGenericTableFullAvl
-			(Table, Buffer, BufferSize,
-			 NewElement, NodeOrParent, SearchResult);
-	}
-	else
+	if(OurSearchResult != TableFoundNode)
 	{
 		PRTL_BALANCED_LINKS NewNode =
 			Table->AllocateRoutine
@@ -711,8 +706,12 @@ RtlInsertElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
 		OurNodeOrParent = NewNode;
 
 		avl_insert_node(Table, NewNode);
+		if (NewElement) *NewElement = TRUE;
 		return avl_data(NewNode);
 	}
+	
+	if (NewElement) *NewElement = FALSE;
+	return avl_data(OurNodeOrParent);
 }
 
 /*
