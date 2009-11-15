@@ -1270,3 +1270,4 @@ Ext2IsDirectoryEmpty (
     
     return bEmpty;
 }
+

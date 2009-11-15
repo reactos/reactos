@@ -708,3 +708,4 @@ Ext2DiskShutDown(PEXT2_VCB Vcb)
 
     return Status;
 }
+
