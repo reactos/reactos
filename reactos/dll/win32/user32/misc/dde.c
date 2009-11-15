@@ -368,6 +368,7 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
     pInstance->nodeList = NULL; /* node will be added later */
     pInstance->monitorFlags = afCmd & MF_MASK;
     pInstance->wStatus = 0;
+    pInstance->lastError = DMLERR_NO_ERROR;
     pInstance->servers = NULL;
     pInstance->convs[0] = NULL;
     pInstance->convs[1] = NULL;
@@ -718,7 +719,7 @@ HDDEDATA 	WDML_InvokeCallback(WDML_INSTANCE* pInstance, UINT uType, UINT uFmt, H
     TRACE("invoking CB[%p] (%x %x %p %p %p %p %lx %lx)\n",
 	  pInstance->callback, uType, uFmt,
 	  hConv, hsz1, hsz2, hdata, dwData1, dwData2);
-	ret = pInstance->callback(uType, uFmt, hConv, hsz1, hsz2, hdata, dwData1, dwData2);
+    ret = pInstance->callback(uType, uFmt, hConv, hsz1, hsz2, hdata, dwData1, dwData2);
     TRACE("done => %p\n", ret);
     return ret;
 }
