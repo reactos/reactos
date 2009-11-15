@@ -187,6 +187,21 @@ static void testCreateCTL(void)
         CertFreeCTLContext(ctl);
 }
 
+static void testDupCTL(void)
+{
+    PCCTL_CONTEXT context, dupContext;
+
+    context = CertDuplicateCTLContext(NULL);
+    ok(context == NULL, "expected NULL\n");
+    context = CertCreateCTLContext(X509_ASN_ENCODING,
+     signedCTLWithCTLInnerContent, sizeof(signedCTLWithCTLInnerContent));
+    dupContext = CertDuplicateCTLContext(context);
+    ok(dupContext != NULL, "expected a context\n");
+    ok(dupContext == context, "expected identical context addresses\n");
+    CertFreeCTLContext(dupContext);
+    CertFreeCTLContext(context);
+}
+
 static void checkHash(const BYTE *data, DWORD dataLen, ALG_ID algID,
  PCCTL_CONTEXT context, DWORD propID)
 {
@@ -444,6 +459,7 @@ static void testAddCTLToStore(void)
 START_TEST(ctl)
 {
     testCreateCTL();
+    testDupCTL();
     testCTLProperties();
     testAddCTLToStore();
 }

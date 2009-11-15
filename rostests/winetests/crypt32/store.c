@@ -277,11 +277,53 @@ static void testMemStore(void)
     CertCloseStore(store1, 0);
 }
 
+static void compareFile(LPCWSTR filename, const BYTE *pb, DWORD cb)
+{
+    HANDLE h;
+    BYTE buf[200];
+    BOOL ret;
+    DWORD cbRead = 0, totalRead = 0;
+
+    h = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+     FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE)
+        return;
+    do {
+        ret = ReadFile(h, buf, sizeof(buf), &cbRead, NULL);
+        if (ret && cbRead)
+        {
+            ok(totalRead + cbRead <= cb, "Expected total count %d, see %d\n",
+             cb, totalRead + cbRead);
+            ok(!memcmp(pb + totalRead, buf, cbRead),
+             "Unexpected data in file\n");
+            totalRead += cbRead;
+        }
+    } while (ret && cbRead);
+    CloseHandle(h);
+}
+
+static const BYTE serializedStoreWithCert[] = {
+ 0x00,0x00,0x00,0x00,0x43,0x45,0x52,0x54,0x20,0x00,0x00,0x00,0x01,0x00,0x00,
+ 0x00,0x7c,0x00,0x00,0x00,0x30,0x7a,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,
+ 0x15,0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,
+ 0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x22,0x18,0x0f,0x31,0x36,0x30,0x31,
+ 0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x18,0x0f,0x31,0x36,
+ 0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x30,0x15,
+ 0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,
+ 0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x07,0x30,0x02,0x06,0x00,0x03,0x01,0x00,
+ 0xa3,0x16,0x30,0x14,0x30,0x12,0x06,0x03,0x55,0x1d,0x13,0x01,0x01,0xff,0x04,
+ 0x08,0x30,0x06,0x01,0x01,0xff,0x02,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+ 0x00,0x00,0x00,0x00,0x00,0x00 };
+
 static void testCollectionStore(void)
 {
     HCERTSTORE store1, store2, collection, collection2;
     PCCERT_CONTEXT context;
     BOOL ret;
+    static const WCHAR szPrefix[] = { 'c','e','r',0 };
+    static const WCHAR szDot[] = { '.',0 };
+    WCHAR filename[MAX_PATH];
+    HANDLE file;
 
     if (!pCertAddStoreToCollection)
     {
@@ -573,6 +615,86 @@ static void testCollectionStore(void)
     CertCloseStore(collection, 0);
     CertCloseStore(store2, 0);
     CertCloseStore(store1, 0);
+
+    /* Test adding certificates to and deleting certificates from collections.
+     */
+    store1 = CertOpenSystemStoreA(0, "My");
+    collection = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+
+    ret = CertAddEncodedCertificateToStore(store1, X509_ASN_ENCODING,
+     bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, &context);
+    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
+    CertDeleteCertificateFromStore(context);
+
+    CertAddStoreToCollection(collection, store1,
+     CERT_PHYSICAL_STORE_ADD_ENABLE_FLAG, 0);
+
+    ret = CertAddEncodedCertificateToStore(collection, X509_ASN_ENCODING,
+     bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, &context);
+    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
+    CertDeleteCertificateFromStore(context);
+
+    CertCloseStore(collection, 0);
+    CertCloseStore(store1, 0);
+
+    /* Test whether a collection store can be committed */
+    if (!pCertControlStore)
+    {
+        win_skip("CertControlStore() is not available\n");
+        return;
+    }
+    collection = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+
+    SetLastError(0xdeadbeef);
+    ret = pCertControlStore(collection, 0, CERT_STORE_CTRL_COMMIT, NULL);
+    ok(ret, "CertControlStore failed: %08x\n", GetLastError());
+
+    /* Adding a mem store that can't be committed prevents a successful commit.
+     */
+    store1 = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    pCertAddStoreToCollection(collection, store1, 0, 0);
+    SetLastError(0xdeadbeef);
+    ret = pCertControlStore(collection, 0, CERT_STORE_CTRL_COMMIT, NULL);
+    ok(!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED,
+     "expected ERROR_CALL_NOT_IMPLEMENTED, got %d\n", GetLastError());
+    pCertRemoveStoreFromCollection(collection, store1);
+    CertCloseStore(store1, 0);
+
+    /* Test adding a cert to a collection with a file store, committing the
+     * change to the collection, and comparing the resulting file.
+     */
+    if (!GetTempFileNameW(szDot, szPrefix, 0, filename))
+        return;
+
+    DeleteFileW(filename);
+    file = CreateFileW(filename, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+     CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+        return;
+
+    store1 = CertOpenStore(CERT_STORE_PROV_FILE, 0, 0,
+     CERT_FILE_STORE_COMMIT_ENABLE_FLAG, file);
+    ok(store1 != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    CloseHandle(file);
+    pCertAddStoreToCollection(collection, store1,
+     CERT_PHYSICAL_STORE_ADD_ENABLE_FLAG, 0);
+    CertCloseStore(store1, 0);
+
+    ret = CertAddEncodedCertificateToStore(collection, X509_ASN_ENCODING,
+     bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, NULL);
+    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
+     GetLastError());
+    ret = pCertControlStore(collection, 0, CERT_STORE_CTRL_COMMIT, NULL);
+    ok(ret, "CertControlStore failed: %d\n", ret);
+
+    CertCloseStore(collection, 0);
+
+    compareFile(filename, serializedStoreWithCert,
+     sizeof(serializedStoreWithCert));
+    DeleteFileW(filename);
 }
 
 /* Looks for the property with ID propID in the buffer buf.  Returns a pointer
@@ -1046,18 +1168,6 @@ static void testSystemStore(void)
     RegDeleteKeyW(HKEY_CURRENT_USER, BogusPathW);
 }
 
-static const BYTE serializedStoreWithCert[] = {
- 0x00,0x00,0x00,0x00,0x43,0x45,0x52,0x54,0x20,0x00,0x00,0x00,0x01,0x00,0x00,
- 0x00,0x7c,0x00,0x00,0x00,0x30,0x7a,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,
- 0x15,0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,
- 0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x22,0x18,0x0f,0x31,0x36,0x30,0x31,
- 0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x18,0x0f,0x31,0x36,
- 0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x30,0x15,
- 0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,
- 0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x07,0x30,0x02,0x06,0x00,0x03,0x01,0x00,
- 0xa3,0x16,0x30,0x14,0x30,0x12,0x06,0x03,0x55,0x1d,0x13,0x01,0x01,0xff,0x04,
- 0x08,0x30,0x06,0x01,0x01,0xff,0x02,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,
- 0x00,0x00,0x00,0x00,0x00,0x00 };
 static const BYTE serializedStoreWithCertAndCRL[] = {
  0x00,0x00,0x00,0x00,0x43,0x45,0x52,0x54,0x20,0x00,0x00,0x00,0x01,0x00,0x00,
  0x00,0x7c,0x00,0x00,0x00,0x30,0x7a,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,
@@ -1075,31 +1185,6 @@ static const BYTE serializedStoreWithCertAndCRL[] = {
  0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x30,0x02,0x06,0x00,0x03,0x11,
  0x00,0x0f,0x0e,0x0d,0x0c,0x0b,0x0a,0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,
  0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
-
-static void compareFile(LPCWSTR filename, const BYTE *pb, DWORD cb)
-{
-    HANDLE h;
-    BYTE buf[200];
-    BOOL ret;
-    DWORD cbRead = 0, totalRead = 0;
-
-    h = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
-     FILE_ATTRIBUTE_NORMAL, NULL);
-    if (h == INVALID_HANDLE_VALUE)
-        return;
-    do {
-        ret = ReadFile(h, buf, sizeof(buf), &cbRead, NULL);
-        if (ret && cbRead)
-        {
-            ok(totalRead + cbRead <= cb, "Expected total count %d, see %d\n",
-             cb, totalRead + cbRead);
-            ok(!memcmp(pb + totalRead, buf, cbRead),
-             "Unexpected data in file\n");
-            totalRead += cbRead;
-        }
-    } while (ret && cbRead);
-    CloseHandle(h);
-}
 
 static void testFileStore(void)
 {
@@ -2074,7 +2159,6 @@ static void test_I_UpdateStore(void)
     certs = countCertsInStore(store1);
     ok(certs == 0, "Expected 0 certs, got %d\n", certs);
 
-    CertFreeCertificateContext(cert);
     CertCloseStore(store1, 0);
     CertCloseStore(store2, 0);
 }

@@ -98,16 +98,8 @@ static void testOIDToAlgID(void)
     DWORD alg;
 
     /* Test with a bogus one */
-    SetLastError(0xdeadbeef);
     alg = CertOIDToAlgId("1.2.3");
     ok(!alg, "Expected failure, got %d\n", alg);
-    ok(GetLastError() == 0xdeadbeef ||
-       GetLastError() == ERROR_RESOURCE_NAME_NOT_FOUND ||
-       GetLastError() == ERROR_INVALID_PARAMETER || /* Vista */
-       GetLastError() == ERROR_SUCCESS || /* win2k */
-       GetLastError() == ERROR_FILE_INVALID, /* another Vista */
-       "Expected ERROR_RESOURCE_NAME_NOT_FOUND, ERROR_INVALID_PARAMETER, "
-       "ERROR_SUCCESS or no error set, got %08x\n", GetLastError());
 
     for (i = 0; i < sizeof(oidToAlgID) / sizeof(oidToAlgID[0]); i++)
     {

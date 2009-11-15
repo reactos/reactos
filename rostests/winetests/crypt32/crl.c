@@ -118,6 +118,21 @@ static void testCreateCRL(void)
         CertFreeCRLContext(context);
 }
 
+static void testDupCRL(void)
+{
+    PCCRL_CONTEXT context, dupContext;
+
+    context = CertDuplicateCRLContext(NULL);
+    ok(context == NULL, "expected NULL\n");
+    context = CertCreateCRLContext(X509_ASN_ENCODING, signedCRL,
+     sizeof(signedCRL));
+    dupContext = CertDuplicateCRLContext(context);
+    ok(dupContext != NULL, "expected a context\n");
+    ok(dupContext == context, "expected identical context addresses\n");
+    CertFreeCRLContext(dupContext);
+    CertFreeCRLContext(context);
+}
+
 static void testAddCRL(void)
 {
     HCERTSTORE store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
@@ -722,6 +737,7 @@ START_TEST(crl)
     init_function_pointers();
 
     testCreateCRL();
+    testDupCRL();
     testAddCRL();
     testFindCRL();
     testGetCRLFromStore();

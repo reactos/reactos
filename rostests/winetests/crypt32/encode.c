@@ -1264,6 +1264,9 @@ static BYTE bmpCommonNameValue[] = {
  0x61,0x00,0x6e,0x00,0x67,0x00,0x00 };
 static BYTE utf8CommonNameValue[] = {
  0x0c,0x0a,0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00 };
+static char embedded_null[] = "foo\0com";
+static BYTE ia5EmbeddedNull[] = {
+ 0x16,0x07,0x66,0x6f,0x6f,0x00,0x63,0x6f,0x6d };
 
 static struct EncodedNameValue nameValues[] = {
  { { CERT_RDN_OCTET_STRING, { sizeof(commonName), (BYTE *)commonName } },
@@ -1299,6 +1302,12 @@ static struct EncodedNameValue nameValues[] = {
  { { CERT_RDN_NUMERIC_STRING, { sizeof(bogusNumeric), (BYTE *)bogusNumeric } },
      bin44, sizeof(bin44) },
 };
+/* This is kept separate, because the decoding doesn't return to the original
+ * value.
+ */
+static struct EncodedNameValue embeddedNullNameValue = {
+ { CERT_RDN_IA5_STRING, { sizeof(embedded_null) - 1, (BYTE *)embedded_null } },
+   ia5EmbeddedNull, sizeof(ia5EmbeddedNull) };
 
 static void test_encodeNameValue(DWORD dwEncoding)
 {
@@ -1337,6 +1346,19 @@ static void test_encodeNameValue(DWORD dwEncoding)
             LocalFree(buf);
         }
     }
+    ret = pCryptEncodeObjectEx(dwEncoding, X509_NAME_VALUE,
+     &embeddedNullNameValue.value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret || broken(GetLastError() == OSS_PDU_MISMATCH) /* NT4/Win9x */,
+     "Type %d: CryptEncodeObjectEx failed: %08x\n",
+     embeddedNullNameValue.value.dwValueType, GetLastError());
+    if (ret)
+    {
+        ok(size == embeddedNullNameValue.encodedSize,
+         "Expected size %d, got %d\n", embeddedNullNameValue.encodedSize, size);
+        ok(!memcmp(buf, embeddedNullNameValue.encoded, size),
+         "Got unexpected encoding\n");
+        LocalFree(buf);
+    }
 }
 
 static void test_decodeNameValue(DWORD dwEncoding)
@@ -1360,6 +1382,45 @@ static void test_decodeNameValue(DWORD dwEncoding)
              (const CERT_NAME_VALUE *)buf);
             LocalFree(buf);
         }
+    }
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_NAME_VALUE,
+     embeddedNullNameValue.encoded, embeddedNullNameValue.encodedSize,
+     CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_SHARE_OID_STRING_FLAG, NULL,
+     &buf, &bufSize);
+    ok(ret, "Value type %d: CryptDecodeObjectEx failed: %08x\n",
+     embeddedNullNameValue.value.dwValueType, GetLastError());
+    if (ret)
+    {
+        CERT_NAME_VALUE rdnEncodedValue = { CERT_RDN_ENCODED_BLOB,
+         { sizeof(ia5EmbeddedNull), ia5EmbeddedNull } };
+        CERT_NAME_VALUE embeddedNullValue = { CERT_RDN_IA5_STRING,
+         { sizeof(embedded_null) - 1, (BYTE *)embedded_null } };
+        const CERT_NAME_VALUE *got = (const CERT_NAME_VALUE *)buf,
+         *expected = NULL;
+
+        /* Some Windows versions decode name values with embedded NULLs,
+         * others leave them encoded, even with the same version of crypt32.
+         * Accept either.
+         */
+        ok(got->dwValueType == CERT_RDN_ENCODED_BLOB ||
+         got->dwValueType == CERT_RDN_IA5_STRING,
+         "Expected CERT_RDN_ENCODED_BLOB or CERT_RDN_IA5_STRING, got %d\n",
+         got->dwValueType);
+        if (got->dwValueType == CERT_RDN_ENCODED_BLOB)
+            expected = &rdnEncodedValue;
+        else if (got->dwValueType == CERT_RDN_IA5_STRING)
+            expected = &embeddedNullValue;
+        if (expected)
+        {
+            ok(got->Value.cbData == expected->Value.cbData,
+             "String type %d: unexpected data size, got %d, expected %d\n",
+             got->dwValueType, got->Value.cbData, expected->Value.cbData);
+            if (got->Value.cbData && got->Value.pbData)
+                ok(!memcmp(got->Value.pbData, expected->Value.pbData,
+                 min(got->Value.cbData, expected->Value.cbData)),
+                 "String type %d: unexpected value\n", expected->dwValueType);
+        }
+        LocalFree(buf);
     }
 }
 
@@ -1504,6 +1565,12 @@ static void test_decodeAltName(DWORD dwEncoding)
      0x00, 0x00, 0x01 };
     static const BYTE bogusType[] = { 0x30, 0x06, 0x89, 0x04, 0x7f, 0x00, 0x00,
      0x01 };
+    static const BYTE dns_embedded_null[] = { 0x30,0x10,0x82,0x0e,0x66,0x6f,
+     0x6f,0x2e,0x63,0x6f,0x6d,0x00,0x62,0x61,0x64,0x64,0x69,0x65 };
+    static const BYTE dns_embedded_bell[] = { 0x30,0x10,0x82,0x0e,0x66,0x6f,
+     0x6f,0x2e,0x63,0x6f,0x6d,0x07,0x62,0x61,0x64,0x64,0x69,0x65 };
+    static const BYTE url_embedded_null[] = { 0x30,0x10,0x86,0x0e,0x66,0x6f,
+     0x6f,0x2e,0x63,0x6f,0x6d,0x00,0x62,0x61,0x64,0x64,0x69,0x65 };
     BOOL ret;
     BYTE *buf = NULL;
     DWORD bufSize = 0;
@@ -1642,6 +1709,40 @@ static void test_decodeAltName(DWORD dwEncoding)
          "Unexpected directory name value\n");
         LocalFree(buf);
     }
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_ALTERNATE_NAME,
+     dns_embedded_null, sizeof(dns_embedded_null), CRYPT_DECODE_ALLOC_FLAG,
+     NULL, &buf, &bufSize);
+    /* Fails on WinXP with CRYPT_E_ASN1_RULE.  I'm not too concerned about the
+     * particular failure, just that it doesn't decode.
+     * It succeeds on (broken) Windows versions that haven't addressed
+     * embedded NULLs in alternate names.
+     */
+    ok(!ret || broken(ret), "expected failure\n");
+    /* An embedded bell character is allowed, however. */
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_ALTERNATE_NAME,
+     dns_embedded_bell, sizeof(dns_embedded_bell), CRYPT_DECODE_ALLOC_FLAG,
+     NULL, &buf, &bufSize);
+    ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        info = (CERT_ALT_NAME_INFO *)buf;
+
+        ok(info->cAltEntry == 1, "Expected 1 entries, got %d\n",
+         info->cAltEntry);
+        ok(info->rgAltEntry[0].dwAltNameChoice == CERT_ALT_NAME_DNS_NAME,
+         "Expected CERT_ALT_NAME_DNS_NAME, got %d\n",
+         info->rgAltEntry[0].dwAltNameChoice);
+        LocalFree(buf);
+    }
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_ALTERNATE_NAME,
+     url_embedded_null, sizeof(dns_embedded_null), CRYPT_DECODE_ALLOC_FLAG,
+     NULL, &buf, &bufSize);
+    /* Again, fails on WinXP with CRYPT_E_ASN1_RULE.  I'm not too concerned
+     * about the particular failure, just that it doesn't decode.
+     * It succeeds on (broken) Windows versions that haven't addressed
+     * embedded NULLs in alternate names.
+     */
+    ok(!ret || broken(ret), "expected failure\n");
 }
 
 struct UnicodeExpectedError
@@ -2613,8 +2714,8 @@ static void test_decodeExtensions(DWORD dwEncoding)
 
 /* MS encodes public key info with a NULL if the algorithm identifier's
  * parameters are empty.  However, when encoding an algorithm in a CERT_INFO,
- * it encodes them by omitting the algorithm parameters.  This latter approach
- * seems more correct, so accept either form.
+ * it encodes them by omitting the algorithm parameters.  It accepts either
+ * form for decoding.
  */
 struct encodedPublicKey
 {
@@ -2692,16 +2793,11 @@ static void test_encodePublicKeyInfo(DWORD dwEncoding)
          "CryptEncodeObjectEx failed: %08x\n", GetLastError());
         if (buf)
         {
-            ok(bufSize == pubKeys[i].encoded[1] + 2 ||
-             bufSize == pubKeys[i].encodedNoNull[1] + 2,
-             "Expected %d or %d bytes, got %d\n", pubKeys[i].encoded[1] + 2,
-             pubKeys[i].encodedNoNull[1] + 2, bufSize);
+            ok(bufSize == pubKeys[i].encoded[1] + 2,
+             "Expected %d bytes, got %d\n", pubKeys[i].encoded[1] + 2, bufSize);
             if (bufSize == pubKeys[i].encoded[1] + 2)
                 ok(!memcmp(buf, pubKeys[i].encoded, pubKeys[i].encoded[1] + 2),
                  "Unexpected value\n");
-            else if (bufSize == pubKeys[i].encodedNoNull[1] + 2)
-                ok(!memcmp(buf, pubKeys[i].encodedNoNull,
-                 pubKeys[i].encodedNoNull[1] + 2), "Unexpected value\n");
             LocalFree(buf);
         }
     }
@@ -2789,6 +2885,11 @@ static const BYTE v3Cert[] = { 0x30, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x02,
  0x30, 0x31, 0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x5a, 0x18, 0x0f,
  0x31, 0x36, 0x30, 0x31, 0x30, 0x31, 0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30,
  0x30, 0x5a, 0x30, 0x07, 0x30, 0x02, 0x06, 0x00, 0x03, 0x01, 0x00 };
+static const BYTE v4Cert[] = {
+0x30,0x38,0xa0,0x03,0x02,0x01,0x03,0x02,0x00,0x30,0x02,0x06,0x00,0x30,0x22,
+0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,
+0x30,0x5a,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,
+0x30,0x30,0x30,0x5a,0x30,0x07,0x30,0x02,0x06,0x00,0x03,0x01,0x00 };
 static const BYTE v1CertWithConstraints[] = { 0x30, 0x4b, 0x02, 0x00, 0x30,
  0x02, 0x06, 0x00, 0x30, 0x22, 0x18, 0x0f, 0x31, 0x36, 0x30, 0x31, 0x30, 0x31,
  0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x5a, 0x18, 0x0f, 0x31, 0x36,
@@ -2846,6 +2947,35 @@ static const BYTE v1CertWithSubjectKeyId[] = {
 0x00,0x30,0x07,0x30,0x02,0x06,0x00,0x03,0x01,0x00,0xa3,0x17,0x30,0x15,0x30,
 0x13,0x06,0x03,0x55,0x1d,0x0e,0x04,0x0c,0x04,0x0a,0x4a,0x75,0x61,0x6e,0x20,
 0x4c,0x61,0x6e,0x67,0x00 };
+static const BYTE v1CertWithIssuerUniqueId[] = {
+0x30,0x38,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,0x22,0x18,0x0f,0x31,0x36,
+0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x18,0x0f,
+0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,
+0x30,0x07,0x30,0x02,0x06,0x00,0x03,0x01,0x00,0x81,0x02,0x00,0x01 };
+static const BYTE v1CertWithSubjectIssuerSerialAndIssuerUniqueId[] = {
+0x30,0x81,0x99,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,0x15,0x31,0x13,0x30,
+0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,
+0x6e,0x67,0x00,0x30,0x22,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,
+0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,
+0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x30,0x15,0x31,0x13,0x30,0x11,
+0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,
+0x67,0x00,0x30,0x22,0x30,0x0d,0x06,0x09,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,
+0x01,0x01,0x05,0x00,0x03,0x11,0x00,0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
+0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x81,0x02,0x00,0x01,0xa3,0x16,0x30,
+0x14,0x30,0x12,0x06,0x03,0x55,0x1d,0x13,0x01,0x01,0xff,0x04,0x08,0x30,0x06,
+0x01,0x01,0xff,0x02,0x01,0x01 };
+static const BYTE v1CertWithSubjectIssuerSerialAndIssuerUniqueIdNoNull[] = {
+0x30,0x81,0x97,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,0x15,0x31,0x13,0x30,
+0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,
+0x6e,0x67,0x00,0x30,0x22,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,
+0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,
+0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x30,0x15,0x31,0x13,0x30,0x11,
+0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,
+0x67,0x00,0x30,0x20,0x30,0x0b,0x06,0x09,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,
+0x01,0x01,0x03,0x11,0x00,0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,
+0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x81,0x02,0x00,0x01,0xa3,0x16,0x30,0x14,0x30,
+0x12,0x06,0x03,0x55,0x1d,0x13,0x01,0x01,0xff,0x04,0x08,0x30,0x06,0x01,0x01,
+0xff,0x02,0x01,0x01 };
 
 static const BYTE serialNum[] = { 0x01 };
 
@@ -2903,6 +3033,16 @@ static void test_encodeCertToBeSigned(DWORD dwEncoding)
         ok(!memcmp(buf, v3Cert, size), "Got unexpected value\n");
         LocalFree(buf);
     }
+    /* A v4 cert? */
+    info.dwVersion = 3; /* Not a typo, CERT_V3 is 2 */
+    ret = pCryptEncodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED, &info,
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+    if (buf)
+    {
+        ok(size == sizeof(v4Cert), "Wrong size %d\n", size);
+        ok(!memcmp(buf, v4Cert, size), "Unexpected value\n");
+        LocalFree(buf);
+    }
     /* see if a V1 cert can have basic constraints set (RFC3280 says no, but
      * API doesn't prevent it)
      */
@@ -2930,7 +3070,27 @@ static void test_encodeCertToBeSigned(DWORD dwEncoding)
         ok(!memcmp(buf, v1CertWithSerial, size), "Got unexpected value\n");
         LocalFree(buf);
     }
+    /* Test v1 cert with an issuer name, serial number, and issuer unique id */
+    info.dwVersion = CERT_V1;
+    info.cExtension = 0;
+    info.IssuerUniqueId.cbData = sizeof(serialNum);
+    info.IssuerUniqueId.pbData = (BYTE *)serialNum;
+    ret = pCryptEncodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED, &info,
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret || broken(GetLastError() == OSS_BAD_PTR /* Win98 */),
+     "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+    if (buf)
+    {
+        ok(size == sizeof(v1CertWithIssuerUniqueId), "Wrong size %d\n", size);
+        ok(!memcmp(buf, v1CertWithIssuerUniqueId, size),
+         "Got unexpected value\n");
+        LocalFree(buf);
+    }
     /* Test v1 cert with an issuer name, a subject name, and a serial number */
+    info.IssuerUniqueId.cbData = 0;
+    info.IssuerUniqueId.pbData = NULL;
+    info.cExtension = 1;
+    info.rgExtension = &criticalExt;
     info.Issuer.cbData = sizeof(encodedCommonName);
     info.Issuer.pbData = (BYTE *)encodedCommonName;
     info.Subject.cbData = sizeof(encodedCommonName);
@@ -2960,7 +3120,30 @@ static void test_encodeCertToBeSigned(DWORD dwEncoding)
              "Got unexpected value\n");
         LocalFree(buf);
     }
+    /* Again add an issuer unique id */
+    info.IssuerUniqueId.cbData = sizeof(serialNum);
+    info.IssuerUniqueId.pbData = (BYTE *)serialNum;
+    ret = pCryptEncodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED, &info,
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+    if (buf)
+    {
+        ok(size == sizeof(v1CertWithSubjectIssuerSerialAndIssuerUniqueId) ||
+         size == sizeof(v1CertWithSubjectIssuerSerialAndIssuerUniqueIdNoNull),
+         "Wrong size %d\n", size);
+        if (size == sizeof(v1CertWithSubjectIssuerSerialAndIssuerUniqueId))
+            ok(!memcmp(buf, v1CertWithSubjectIssuerSerialAndIssuerUniqueId,
+             size), "unexpected value\n");
+        else if (size ==
+         sizeof(v1CertWithSubjectIssuerSerialAndIssuerUniqueIdNoNull))
+            ok(!memcmp(buf,
+             v1CertWithSubjectIssuerSerialAndIssuerUniqueIdNoNull, size),
+             "unexpected value\n");
+        LocalFree(buf);
+    }
     /* Remove the public key, and add a subject key identifier extension */
+    info.IssuerUniqueId.cbData = 0;
+    info.IssuerUniqueId.pbData = NULL;
     info.SubjectPublicKeyInfo.Algorithm.pszObjId = NULL;
     info.SubjectPublicKeyInfo.PublicKey.cbData = 0;
     info.SubjectPublicKeyInfo.PublicKey.pbData = NULL;
@@ -2982,8 +3165,8 @@ static void test_encodeCertToBeSigned(DWORD dwEncoding)
 
 static void test_decodeCertToBeSigned(DWORD dwEncoding)
 {
-    static const BYTE *corruptCerts[] = { v1Cert, v2Cert, v3Cert,
-     v1CertWithConstraints, v1CertWithSerial };
+    static const BYTE *corruptCerts[] = { v1Cert, v2Cert, v3Cert, v4Cert,
+     v1CertWithConstraints, v1CertWithSerial, v1CertWithIssuerUniqueId };
     BOOL ret;
     BYTE *buf = NULL;
     DWORD size = 0, i;
@@ -3002,9 +3185,9 @@ static void test_decodeCertToBeSigned(DWORD dwEncoding)
         ok(!ret && GetLastError() == STATUS_ACCESS_VIOLATION,
          "Expected STATUS_ACCESS_VIOLATION, got %08x\n", GetLastError());
     }
-    /* The following certs all fail with CRYPT_E_ASN1_CORRUPT, because at a
-     * minimum a cert must have a non-zero serial number, an issuer, and a
-     * subject.
+    /* The following certs all fail with CRYPT_E_ASN1_CORRUPT or
+     * CRYPT_E_ASN1_BADTAG, because at a minimum a cert must have a non-zero
+     * serial number, an issuer, a subject, and a public key.
      */
     for (i = 0; i < sizeof(corruptCerts) / sizeof(corruptCerts[0]); i++)
     {
@@ -3012,6 +3195,45 @@ static void test_decodeCertToBeSigned(DWORD dwEncoding)
          corruptCerts[i], corruptCerts[i][1] + 2, CRYPT_DECODE_ALLOC_FLAG, NULL,
          &buf, &size);
         ok(!ret, "Expected failure\n");
+    }
+    /* The following succeeds, even though v1 certs are not allowed to have
+     * extensions.
+     */
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED,
+     v1CertWithSubjectKeyId, sizeof(v1CertWithSubjectKeyId),
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        CERT_INFO *info = (CERT_INFO *)buf;
+
+        ok(size >= sizeof(CERT_INFO), "Wrong size %d\n", size);
+        ok(info->dwVersion == CERT_V1, "expected CERT_V1, got %d\n",
+         info->dwVersion);
+        ok(info->cExtension == 1, "expected 1 extension, got %d\n",
+         info->cExtension);
+        LocalFree(buf);
+    }
+    /* The following also succeeds, even though V1 certs are not allowed to
+     * have issuer unique ids.
+     */
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED,
+     v1CertWithSubjectIssuerSerialAndIssuerUniqueId,
+     sizeof(v1CertWithSubjectIssuerSerialAndIssuerUniqueId),
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        CERT_INFO *info = (CERT_INFO *)buf;
+
+        ok(size >= sizeof(CERT_INFO), "Wrong size %d\n", size);
+        ok(info->dwVersion == CERT_V1, "expected CERT_V1, got %d\n",
+         info->dwVersion);
+        ok(info->IssuerUniqueId.cbData == sizeof(serialNum),
+         "unexpected issuer unique id size %d\n", info->IssuerUniqueId.cbData);
+        ok(!memcmp(info->IssuerUniqueId.pbData, serialNum, sizeof(serialNum)),
+         "unexpected issuer unique id value\n");
+        LocalFree(buf);
     }
     /* Now check with serial number, subject and issuer specified */
     ret = pCryptDecodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED, bigCert,
@@ -5520,7 +5742,10 @@ static void test_decodeCTL(DWORD dwEncoding)
     SetLastError(0xdeadbeef);
     ret = pCryptDecodeObjectEx(dwEncoding, PKCS_CTL, ctlWithBogusEntry,
      sizeof(ctlWithBogusEntry), CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
-    ok(!ret && (GetLastError() == CRYPT_E_ASN1_EOD || CRYPT_E_ASN1_CORRUPT),
+    ok(!ret &&
+     (GetLastError() == CRYPT_E_ASN1_EOD ||
+      GetLastError() == CRYPT_E_ASN1_CORRUPT ||
+      GetLastError() == OSS_MORE_INPUT), /* Win9x */
      "expected CRYPT_E_ASN1_EOD or CRYPT_E_ASN1_CORRUPT, got %08x\n",
      GetLastError());
     info.SubjectAlgorithm.Parameters.cbData = 0;
@@ -7302,6 +7527,305 @@ static void test_decodeCertPolicies(DWORD dwEncoding)
     }
 }
 
+static const BYTE policyMappingWithOneMapping[] = {
+0x30,0x0a,0x30,0x08,0x06,0x02,0x2a,0x03,0x06,0x02,0x53,0x04 };
+static const BYTE policyMappingWithTwoMappings[] = {
+0x30,0x14,0x30,0x08,0x06,0x02,0x2a,0x03,0x06,0x02,0x53,0x04,0x30,0x08,0x06,
+0x02,0x2b,0x04,0x06,0x02,0x55,0x06 };
+static const LPCSTR mappingOids[] = { X509_POLICY_MAPPINGS,
+ szOID_POLICY_MAPPINGS, szOID_LEGACY_POLICY_MAPPINGS };
+
+static void test_encodeCertPolicyMappings(DWORD dwEncoding)
+{
+    static char oid2[] = "2.3.4";
+    static char oid3[] = "1.3.4";
+    static char oid4[] = "2.5.6";
+    BOOL ret;
+    CERT_POLICY_MAPPINGS_INFO info = { 0 };
+    CERT_POLICY_MAPPING mapping[2];
+    LPBYTE buf;
+    DWORD size, i;
+
+    /* Each of the mapping OIDs is equivalent, so check with all of them */
+    for (i = 0; i < sizeof(mappingOids) / sizeof(mappingOids[0]); i++)
+    {
+        memset(&info, 0, sizeof(info));
+        ret = pCryptEncodeObjectEx(dwEncoding, mappingOids[i], &info,
+         CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+        ok(ret || broken(GetLastError() == ERROR_FILE_NOT_FOUND),
+         "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+        if (!ret && GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            win_skip("no policy mappings support\n");
+            return;
+        }
+        if (ret)
+        {
+            ok(size == sizeof(emptySequence), "unexpected size %d\n", size);
+            ok(!memcmp(buf, emptySequence, sizeof(emptySequence)),
+             "unexpected value\n");
+            LocalFree(buf);
+        }
+        mapping[0].pszIssuerDomainPolicy = NULL;
+        mapping[0].pszSubjectDomainPolicy = NULL;
+        info.cPolicyMapping = 1;
+        info.rgPolicyMapping = mapping;
+        SetLastError(0xdeadbeef);
+        ret = pCryptEncodeObjectEx(dwEncoding, mappingOids[i], &info,
+         CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+        ok(!ret && GetLastError() == E_INVALIDARG,
+         "expected E_INVALIDARG, got %08x\n", GetLastError());
+        mapping[0].pszIssuerDomainPolicy = oid1;
+        mapping[0].pszSubjectDomainPolicy = oid2;
+        ret = pCryptEncodeObjectEx(dwEncoding, mappingOids[i], &info,
+         CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+        ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+        if (ret)
+        {
+            ok(size == sizeof(policyMappingWithOneMapping),
+             "unexpected size %d\n", size);
+            ok(!memcmp(buf, policyMappingWithOneMapping, size),
+             "unexpected value\n");
+            LocalFree(buf);
+        }
+        mapping[1].pszIssuerDomainPolicy = oid3;
+        mapping[1].pszSubjectDomainPolicy = oid4;
+        info.cPolicyMapping = 2;
+        ret = pCryptEncodeObjectEx(dwEncoding, mappingOids[i], &info,
+         CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+        ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+        if (ret)
+        {
+            ok(size == sizeof(policyMappingWithTwoMappings),
+             "unexpected size %d\n", size);
+            ok(!memcmp(buf, policyMappingWithTwoMappings, size),
+             "unexpected value\n");
+            LocalFree(buf);
+        }
+    }
+}
+
+static void test_decodeCertPolicyMappings(DWORD dwEncoding)
+{
+    DWORD size, i;
+    CERT_POLICY_MAPPINGS_INFO *info;
+    BOOL ret;
+
+    /* Each of the mapping OIDs is equivalent, so check with all of them */
+    for (i = 0; i < sizeof(mappingOids) / sizeof(mappingOids[0]); i++)
+    {
+        ret = pCryptDecodeObjectEx(dwEncoding, mappingOids[i],
+         emptySequence, sizeof(emptySequence), CRYPT_DECODE_ALLOC_FLAG, NULL,
+         &info, &size);
+        ok(ret || broken(GetLastError() == ERROR_FILE_NOT_FOUND),
+         "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+        if (!ret && GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            win_skip("no policy mappings support\n");
+            return;
+        }
+        if (ret)
+        {
+            ok(info->cPolicyMapping == 0,
+             "expected 0 policy mappings, got %d\n", info->cPolicyMapping);
+            LocalFree(info);
+        }
+        ret = pCryptDecodeObjectEx(dwEncoding, mappingOids[i],
+         policyMappingWithOneMapping, sizeof(policyMappingWithOneMapping),
+         CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &size);
+        ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+        if (ret)
+        {
+            ok(info->cPolicyMapping == 1,
+             "expected 1 policy mappings, got %d\n", info->cPolicyMapping);
+            ok(!strcmp(info->rgPolicyMapping[0].pszIssuerDomainPolicy, "1.2.3"),
+             "unexpected issuer policy %s\n",
+             info->rgPolicyMapping[0].pszIssuerDomainPolicy);
+            ok(!strcmp(info->rgPolicyMapping[0].pszSubjectDomainPolicy,
+             "2.3.4"), "unexpected subject policy %s\n",
+             info->rgPolicyMapping[0].pszSubjectDomainPolicy);
+            LocalFree(info);
+        }
+        ret = pCryptDecodeObjectEx(dwEncoding, mappingOids[i],
+         policyMappingWithTwoMappings, sizeof(policyMappingWithTwoMappings),
+         CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &size);
+        ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+        if (ret)
+        {
+            ok(info->cPolicyMapping == 2,
+             "expected 2 policy mappings, got %d\n", info->cPolicyMapping);
+            ok(!strcmp(info->rgPolicyMapping[0].pszIssuerDomainPolicy, "1.2.3"),
+             "unexpected issuer policy %s\n",
+             info->rgPolicyMapping[0].pszIssuerDomainPolicy);
+            ok(!strcmp(info->rgPolicyMapping[0].pszSubjectDomainPolicy,
+             "2.3.4"), "unexpected subject policy %s\n",
+             info->rgPolicyMapping[0].pszSubjectDomainPolicy);
+            ok(!strcmp(info->rgPolicyMapping[1].pszIssuerDomainPolicy, "1.3.4"),
+             "unexpected issuer policy %s\n",
+             info->rgPolicyMapping[1].pszIssuerDomainPolicy);
+            ok(!strcmp(info->rgPolicyMapping[1].pszSubjectDomainPolicy,
+             "2.5.6"), "unexpected subject policy %s\n",
+             info->rgPolicyMapping[1].pszSubjectDomainPolicy);
+            LocalFree(info);
+        }
+    }
+}
+
+static const BYTE policyConstraintsWithRequireExplicit[] = {
+0x30,0x03,0x80,0x01,0x00 };
+static const BYTE policyConstraintsWithInhibitMapping[] = {
+0x30,0x03,0x81,0x01,0x01 };
+static const BYTE policyConstraintsWithBoth[] = {
+0x30,0x06,0x80,0x01,0x01,0x81,0x01,0x01 };
+
+static void test_encodeCertPolicyConstraints(DWORD dwEncoding)
+{
+    CERT_POLICY_CONSTRAINTS_INFO info = { 0 };
+    LPBYTE buf;
+    DWORD size;
+    BOOL ret;
+
+    /* Even though RFC 5280 explicitly states CAs must not issue empty
+     * policy constraints (section 4.2.1.11), the API doesn't prevent it.
+     */
+    ret = pCryptEncodeObjectEx(dwEncoding, X509_POLICY_CONSTRAINTS, &info,
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret || broken(GetLastError() == ERROR_FILE_NOT_FOUND),
+     "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+    if (!ret && GetLastError() == ERROR_FILE_NOT_FOUND)
+    {
+        win_skip("no policy constraints support\n");
+        return;
+    }
+    if (ret)
+    {
+        ok(size == sizeof(emptySequence), "unexpected size %d\n", size);
+        ok(!memcmp(buf, emptySequence, sizeof(emptySequence)),
+         "unexpected value\n");
+        LocalFree(buf);
+    }
+    /* If fRequireExplicitPolicy is set but dwRequireExplicitPolicySkipCerts
+     * is not, then a skip of 0 is encoded.
+     */
+    info.fRequireExplicitPolicy = TRUE;
+    ret = pCryptEncodeObjectEx(dwEncoding, X509_POLICY_CONSTRAINTS, &info,
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(size == sizeof(policyConstraintsWithRequireExplicit),
+         "unexpected size %d\n", size);
+        ok(!memcmp(buf, policyConstraintsWithRequireExplicit,
+         sizeof(policyConstraintsWithRequireExplicit)), "unexpected value\n");
+        LocalFree(buf);
+    }
+    /* With inhibit policy mapping */
+    info.fRequireExplicitPolicy = FALSE;
+    info.dwRequireExplicitPolicySkipCerts = 0;
+    info.fInhibitPolicyMapping = TRUE;
+    info.dwInhibitPolicyMappingSkipCerts = 1;
+    ret = pCryptEncodeObjectEx(dwEncoding, X509_POLICY_CONSTRAINTS, &info,
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(size == sizeof(policyConstraintsWithInhibitMapping),
+         "unexpected size %d\n", size);
+        ok(!memcmp(buf, policyConstraintsWithInhibitMapping,
+         sizeof(policyConstraintsWithInhibitMapping)), "unexpected value\n");
+        LocalFree(buf);
+    }
+    /* And with both */
+    info.fRequireExplicitPolicy = TRUE;
+    info.dwRequireExplicitPolicySkipCerts = 1;
+    ret = pCryptEncodeObjectEx(dwEncoding, X509_POLICY_CONSTRAINTS, &info,
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(size == sizeof(policyConstraintsWithBoth), "unexpected size %d\n",
+         size);
+        ok(!memcmp(buf, policyConstraintsWithBoth,
+         sizeof(policyConstraintsWithBoth)), "unexpected value\n");
+        LocalFree(buf);
+    }
+}
+
+static void test_decodeCertPolicyConstraints(DWORD dwEncoding)
+{
+    CERT_POLICY_CONSTRAINTS_INFO *info;
+    DWORD size;
+    BOOL ret;
+
+    /* Again, even though CAs must not issue such constraints, they can be
+     * decoded.
+     */
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_POLICY_CONSTRAINTS,
+     emptySequence, sizeof(emptySequence), CRYPT_DECODE_ALLOC_FLAG, NULL,
+     &info, &size);
+    ok(ret || broken(GetLastError() == ERROR_FILE_NOT_FOUND),
+     "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+    if (!ret && GetLastError() == ERROR_FILE_NOT_FOUND)
+    {
+        win_skip("no policy mappings support\n");
+        return;
+    }
+    if (ret)
+    {
+        ok(!info->fRequireExplicitPolicy,
+         "expected require explicit = FALSE\n");
+        ok(!info->fInhibitPolicyMapping,
+         "expected implicit mapping = FALSE\n");
+        LocalFree(info);
+    }
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_POLICY_CONSTRAINTS,
+     policyConstraintsWithRequireExplicit,
+     sizeof(policyConstraintsWithRequireExplicit), CRYPT_DECODE_ALLOC_FLAG,
+     NULL, &info, &size);
+    ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(info->fRequireExplicitPolicy,
+         "expected require explicit = TRUE\n");
+        ok(info->dwRequireExplicitPolicySkipCerts == 0, "expected 0, got %d\n",
+         info->dwRequireExplicitPolicySkipCerts);
+        ok(!info->fInhibitPolicyMapping,
+         "expected implicit mapping = FALSE\n");
+        LocalFree(info);
+    }
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_POLICY_CONSTRAINTS,
+     policyConstraintsWithInhibitMapping,
+     sizeof(policyConstraintsWithInhibitMapping), CRYPT_DECODE_ALLOC_FLAG,
+     NULL, &info, &size);
+    ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(!info->fRequireExplicitPolicy,
+         "expected require explicit = FALSE\n");
+        ok(info->fInhibitPolicyMapping,
+         "expected implicit mapping = TRUE\n");
+        ok(info->dwInhibitPolicyMappingSkipCerts == 1, "expected 1, got %d\n",
+         info->dwInhibitPolicyMappingSkipCerts);
+        LocalFree(info);
+    }
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_POLICY_CONSTRAINTS,
+     policyConstraintsWithBoth, sizeof(policyConstraintsWithBoth),
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &size);
+    ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(info->fRequireExplicitPolicy,
+         "expected require explicit = TRUE\n");
+        ok(info->dwRequireExplicitPolicySkipCerts == 1, "expected 1, got %d\n",
+         info->dwRequireExplicitPolicySkipCerts);
+        ok(info->fInhibitPolicyMapping,
+         "expected implicit mapping = TRUE\n");
+        ok(info->dwInhibitPolicyMappingSkipCerts == 1, "expected 1, got %d\n",
+         info->dwInhibitPolicyMappingSkipCerts);
+        LocalFree(info);
+    }
+}
+
 /* Free *pInfo with HeapFree */
 static void testExportPublicKey(HCRYPTPROV csp, PCERT_PUBLIC_KEY_INFO *pInfo)
 {
@@ -7572,6 +8096,10 @@ START_TEST(encode)
         test_decodePolicyQualifierUserNotice(encodings[i]);
         test_encodeCertPolicies(encodings[i]);
         test_decodeCertPolicies(encodings[i]);
+        test_encodeCertPolicyMappings(encodings[i]);
+        test_decodeCertPolicyMappings(encodings[i]);
+        test_encodeCertPolicyConstraints(encodings[i]);
+        test_decodeCertPolicyConstraints(encodings[i]);
     }
     testPortPublicKeyInfo();
 }

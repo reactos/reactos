@@ -1015,6 +1015,10 @@ static void testFindCert(void)
     CERT_INFO certInfo = { 0 };
     CRYPT_HASH_BLOB blob;
     BYTE otherSerialNumber[] = { 2 };
+    DWORD count;
+    static const WCHAR juan[] = { 'j','u','a','n',0 };
+    static const WCHAR lang[] = { 'L','A','N','G',0 };
+    static const WCHAR malcolm[] = { 'm','a','l','c','o','l','m',0 };
 
     store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
@@ -1085,7 +1089,7 @@ static void testFindCert(void)
      * the issuer, not the subject
      */
     context = CertFindCertificateInStore(store, X509_ASN_ENCODING, 0,
-     CERT_FIND_SUBJECT_CERT, &certInfo.Subject, NULL);
+     CERT_FIND_SUBJECT_CERT, &certInfo, NULL);
     ok(context == NULL, "Expected no certificate\n");
     certInfo.Subject.pbData = NULL;
     certInfo.Subject.cbData = 0;
@@ -1098,7 +1102,7 @@ static void testFindCert(void)
     if (context)
     {
         context = CertFindCertificateInStore(store, X509_ASN_ENCODING, 0,
-         CERT_FIND_SUBJECT_CERT, &certInfo.Subject, context);
+         CERT_FIND_SUBJECT_CERT, &certInfo, context);
         ok(context == NULL, "Expected one cert only\n");
     }
     /* A non-matching serial number will not match. */
@@ -1134,6 +1138,41 @@ static void testFindCert(void)
          CERT_FIND_SHA1_HASH, &certInfo.Subject, context);
         ok(context == NULL, "Expected one cert only\n");
     }
+
+    /* Searching for NULL string matches any context. */
+    count = 0;
+    context = NULL;
+    do {
+        context = CertFindCertificateInStore(store, X509_ASN_ENCODING, 0,
+         CERT_FIND_ISSUER_STR, NULL, context);
+        if (context)
+            count++;
+    } while (context);
+    ok(count == 3, "expected 3 contexts\n");
+    count = 0;
+    context = NULL;
+    do {
+        context = CertFindCertificateInStore(store, X509_ASN_ENCODING, 0,
+         CERT_FIND_ISSUER_STR, juan, context);
+        if (context)
+            count++;
+    } while (context);
+    ok(count == 2, "expected 2 contexts\n");
+    count = 0;
+    context = NULL;
+    do {
+        context = CertFindCertificateInStore(store, X509_ASN_ENCODING, 0,
+         CERT_FIND_ISSUER_STR, lang, context);
+        if (context)
+            count++;
+    } while (context);
+    ok(count == 3, "expected 3 contexts\n");
+    SetLastError(0xdeadbeef);
+    context = CertFindCertificateInStore(store, X509_ASN_ENCODING, 0,
+     CERT_FIND_ISSUER_STR, malcolm, NULL);
+    ok(!context, "expected no certs\n");
+    ok(GetLastError() == CRYPT_E_NOT_FOUND,
+     "expected CRYPT_E_NOT_FOUND, got %08x\n", GetLastError());
 
     CertCloseStore(store, 0);
 
@@ -1624,12 +1663,14 @@ static void testSignCert(HCRYPTPROV csp, const CRYPT_DATA_BLOB *toBeSigned,
     algoID.pszObjId = (LPSTR)sigOID;
     ret = CryptSignCertificate(0, 0, 0, toBeSigned->pbData, toBeSigned->cbData,
      &algoID, NULL, NULL, &size);
-    ok(!ret && (GetLastError() == ERROR_INVALID_PARAMETER || NTE_BAD_ALGID),
+    ok(!ret &&
+     (GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == NTE_BAD_ALGID),
      "Expected ERROR_INVALID_PARAMETER or NTE_BAD_ALGID, got %08x\n",
      GetLastError());
     ret = CryptSignCertificate(0, AT_SIGNATURE, 0, toBeSigned->pbData,
      toBeSigned->cbData, &algoID, NULL, NULL, &size);
-    ok(!ret && (GetLastError() == ERROR_INVALID_PARAMETER || NTE_BAD_ALGID),
+    ok(!ret &&
+     (GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == NTE_BAD_ALGID),
      "Expected ERROR_INVALID_PARAMETER or NTE_BAD_ALGID, got %08x\n",
      GetLastError());
 
@@ -1851,7 +1892,10 @@ static void testSignAndEncodeCert(void)
     algID.pszObjId = oid_rsa_md5rsa;
     ret = CryptSignAndEncodeCertificate(0, 0, X509_ASN_ENCODING,
      X509_CERT_TO_BE_SIGNED, &info, &algID, NULL, NULL, &size);
-    ok(!ret && (GetLastError() == ERROR_INVALID_PARAMETER || NTE_BAD_ALGID),
+    ok(!ret &&
+     (GetLastError() == ERROR_INVALID_PARAMETER ||
+      GetLastError() == NTE_BAD_ALGID ||
+      GetLastError() == OSS_BAD_PTR), /* Win9x */
      "Expected ERROR_INVALID_PARAMETER or NTE_BAD_ALGID, got %08x\n",
      GetLastError());
     algID.pszObjId = oid_rsa_md5;
@@ -2019,6 +2063,54 @@ static void testCreateSelfSignCert(void)
 
     pCryptAcquireContextA(&csp, cspNameA, MS_DEF_PROV_A, PROV_RSA_FULL,
         CRYPT_DELETEKEYSET);
+}
+
+static void testIntendedKeyUsage(void)
+{
+    BOOL ret;
+    CERT_INFO info = { 0 };
+    static char oid_key_usage[] = szOID_KEY_USAGE;
+    /* A couple "key usages".  Really they're just encoded bits which aren't
+     * necessarily restricted to the defined key usage values.
+     */
+    static BYTE usage1[] = { 0x03,0x03,0x00,0xff,0xff };
+    static BYTE usage2[] = { 0x03,0x03,0x01,0xff,0xfe };
+    static const BYTE expected_usage1[] = { 0xff,0xff,0x00,0x00 };
+    static const BYTE expected_usage2[] = { 0xff,0xfe,0x00,0x00 };
+    CERT_EXTENSION ext = { oid_key_usage, TRUE, { sizeof(usage1), usage1 } };
+    BYTE usage_bytes[4];
+
+    if (0)
+    {
+        /* Crash */
+        ret = CertGetIntendedKeyUsage(0, NULL, NULL, 0);
+    }
+    ret = CertGetIntendedKeyUsage(0, &info, NULL, 0);
+    ok(!ret, "expected failure\n");
+    ret = CertGetIntendedKeyUsage(0, &info, usage_bytes, sizeof(usage_bytes));
+    ok(!ret, "expected failure\n");
+    ret = CertGetIntendedKeyUsage(X509_ASN_ENCODING, &info, NULL, 0);
+    ok(!ret, "expected failure\n");
+    ret = CertGetIntendedKeyUsage(X509_ASN_ENCODING, &info, usage_bytes,
+     sizeof(usage_bytes));
+    info.cExtension = 1;
+    info.rgExtension = &ext;
+    ret = CertGetIntendedKeyUsage(X509_ASN_ENCODING, &info, NULL, 0);
+    ok(!ret, "expected failure\n");
+    /* The unused bytes are filled with 0. */
+    ret = CertGetIntendedKeyUsage(X509_ASN_ENCODING, &info, usage_bytes,
+     sizeof(usage_bytes));
+    ok(ret, "CertGetIntendedKeyUsage failed: %08x\n", GetLastError());
+    ok(!memcmp(usage_bytes, expected_usage1, sizeof(expected_usage1)),
+     "unexpected value\n");
+    /* The usage bytes are copied in big-endian order. */
+    ext.Value.cbData = sizeof(usage2);
+    ext.Value.pbData = usage2;
+    ret = CertGetIntendedKeyUsage(X509_ASN_ENCODING, &info, usage_bytes,
+     sizeof(usage_bytes));
+    ok(ret, "CertGetIntendedKeyUsage failed: %08x\n", GetLastError());
+    ok(!memcmp(usage_bytes, expected_usage2, sizeof(expected_usage2)),
+     "unexpected value\n");
 }
 
 static const LPCSTR keyUsages[] = { szOID_PKIX_KP_CODE_SIGNING,
@@ -3138,7 +3230,8 @@ static void testGetPublicKeyLength(void)
      ret, GetLastError());
     SetLastError(0xdeadbeef);
     ret = CertGetPublicKeyLength(X509_ASN_ENCODING, &info);
-    ok(ret == 56, "Expected length 56, got %d\n", ret);
+    ok(ret == 56 || broken(ret == 0 && GetLastError() == NTE_BAD_LEN) /* Win7 */,
+       "Expected length 56, got %d\n", ret);
     /* An RSA key with the DH OID */
     info.Algorithm.pszObjId = oid_rsa_dh;
     SetLastError(0xdeadbeef);
@@ -3152,12 +3245,14 @@ static void testGetPublicKeyLength(void)
     info.Algorithm.pszObjId = oid_rsa_rsa;
     SetLastError(0xdeadbeef);
     ret = CertGetPublicKeyLength(X509_ASN_ENCODING, &info);
-    ok(ret == 56, "Expected length 56, got %d\n", ret);
+    ok(ret == 56 || broken(ret == 0 && GetLastError() == NTE_BAD_LEN) /* Win7 */,
+       "Expected length 56, got %d\n", ret);
     /* With the RSA OID and a message encoding */
     info.Algorithm.pszObjId = oid_rsa_rsa;
     SetLastError(0xdeadbeef);
     ret = CertGetPublicKeyLength(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, &info);
-    ok(ret == 56, "Expected length 56, got %d\n", ret);
+    ok(ret == 56 || broken(ret == 0 && GetLastError() == NTE_BAD_LEN) /* Win7 */,
+       "Expected length 56, got %d\n", ret);
 }
 
 START_TEST(cert)
@@ -3175,6 +3270,7 @@ START_TEST(cert)
     testCertSigs();
     testSignAndEncodeCert();
     testCreateSelfSignCert();
+    testIntendedKeyUsage();
     testKeyUsage();
     testGetValidUsages();
     testCompareCertName();

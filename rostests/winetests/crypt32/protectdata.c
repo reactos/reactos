@@ -213,6 +213,40 @@ static void test_cryptunprotectdata(void)
     plain.cbData=0;
 }
 
+static void test_simpleroundtrip(const char *plaintext, int wine_fails)
+{
+    DATA_BLOB input;
+    DATA_BLOB encrypted;
+    DATA_BLOB output;
+    int res;
+    WCHAR emptyW[1];
+
+    emptyW[0] = 0;
+    input.pbData = (unsigned char *)plaintext;
+    input.cbData = strlen(plaintext);
+    res = pCryptProtectData(&input, emptyW, NULL, NULL, NULL, 0, &encrypted);
+    ok(res != 0 || broken(!res), "can't protect\n");
+    if (!res)
+    {
+        /* Fails on Win9x, NT4 */
+        win_skip("CryptProtectData failed\n");
+        return;
+    }
+
+    res = pCryptUnprotectData(&encrypted, NULL, NULL, NULL, NULL, 0, &output);
+    if (wine_fails) {
+      todo_wine
+        ok(res != 0, "can't unprotect; last error %u\n", GetLastError());
+    } else {
+      ok(res != 0, "can't unprotect; last error %u\n", GetLastError());
+    }
+
+    if (res) {
+      ok(output.cbData == strlen(plaintext), "output wrong length %d for input '%s', wanted %d\n", output.cbData, plaintext, strlen(plaintext));
+      ok(!memcmp(plaintext, (char *)output.pbData, output.cbData), "output wrong contents for input '%s'\n", plaintext);
+    }
+}
+
 START_TEST(protectdata)
 {
     HMODULE hCrypt32 = GetModuleHandleA("crypt32.dll");
@@ -228,6 +262,8 @@ START_TEST(protectdata)
     protected=FALSE;
     test_cryptprotectdata();
     test_cryptunprotectdata();
+    test_simpleroundtrip("", 1);
+    test_simpleroundtrip("hello", 0);
 
     /* deinit globals here */
     if (cipher.pbData) LocalFree(cipher.pbData);

@@ -181,8 +181,10 @@ static void test_SIPRetrieveSubjectGUID(void)
     memset(&subject, 1, sizeof(GUID));
     ret = CryptSIPRetrieveSubjectGuid(deadbeef, NULL, &subject);
     ok ( !ret, "Expected CryptSIPRetrieveSubjectGuid to fail\n");
-    ok (GetLastError() == ERROR_FILE_NOT_FOUND,
-        "Expected ERROR_FILE_NOT_FOUND, got %d.\n", GetLastError());
+    ok (GetLastError() == ERROR_FILE_NOT_FOUND ||
+        GetLastError() == ERROR_PATH_NOT_FOUND,
+        "Expected ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND, got %d.\n",
+        GetLastError());
     ok ( !memcmp(&subject, &nullSubject, sizeof(GUID)),
         "Expected a NULL GUID for c:\\deadbeef.dbf, not %s\n", show_guid(&subject, guid1));
 
