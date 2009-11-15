@@ -482,6 +482,7 @@ struct font_mapping
     void       *data;
     size_t      size;
     HANDLE      file;
+    const char  *filename;     /* HACK see map_font_file */
 };
 
 static struct list mappings_list = LIST_INIT( mappings_list );
@@ -1013,7 +1014,7 @@ static void split_subst_info(NameCs *nc, LPSTR str)
     MultiByteToWideChar(CP_ACP, 0, str, -1, nc->name, len);
 }
 
-static void LoadSubstList(void)
+static void LoadSubstList(LPCSTR lpKey)
 {
     FontSubst *psub;
     HKEY hkey;
@@ -1022,8 +1023,8 @@ static void LoadSubstList(void)
     LPVOID data;
 
     if(RegOpenKeyA(HKEY_LOCAL_MACHINE,
-		   "Software\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes",
-		   &hkey) == ERROR_SUCCESS) {
+		   lpKey,
+           &hkey) == ERROR_SUCCESS) {
 
         RegQueryInfoKeyA(hkey, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 			 &valuelen, &datalen, NULL, NULL);
@@ -2937,7 +2938,8 @@ BOOL WineEngInit(void)
     }
 
     DumpFontList();
-    LoadSubstList();
+    LoadSubstList("Software\\Microsoft\\Windows NT\\CurrentVersion\\SysFontSubstitutes");
+    LoadSubstList("Software\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
     DumpSubstList();
     LoadReplaceList();
     update_reg_entries();
@@ -3004,9 +3006,11 @@ static struct font_mapping *map_font_file( const char *name )
 
     LIST_FOR_EACH_ENTRY( mapping, &mappings_list, struct font_mapping, entry )
     {
-        if (mapping->volumeserial == hfi.dwVolumeSerialNumber &&
-            mapping->indexhigh == hfi.nFileIndexHigh &&
-            mapping->indexlow == hfi.nFileIndexLow )
+/*
+        HACK: check for filename until proper support for GetFileInformationByHandle
+        is implemented in our fs driver
+*/
+        if (!_stricmp(mapping->filename, name))
         {
             mapping->refcount++;
             CloseHandle( file );
@@ -3031,6 +3035,7 @@ static struct font_mapping *map_font_file( const char *name )
     mapping->indexlow = hfi.nFileIndexLow;
     mapping->file = mapped_file;
     mapping->size = hfi.nFileSizeLow;
+    mapping->filename = name;
     list_add_tail( &mappings_list, &mapping->entry );
     return mapping;
 
