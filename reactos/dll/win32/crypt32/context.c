@@ -24,7 +24,7 @@
 #include "wine/list.h"
 #include "crypt32_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(crypt);
+WINE_DEFAULT_DEBUG_CHANNEL(context);
 
 typedef enum _ContextType {
     ContextTypeData,
@@ -94,7 +94,7 @@ void *Context_CreateLinkContext(unsigned int contextSize, void *linked, unsigned
         linkContext->type = ContextTypeLink;
         linkContext->linked = linkedBase;
         if (addRef)
-            InterlockedIncrement(&linkedBase->ref);
+            Context_AddRef(linked, contextSize);
         TRACE("%p's ref count is %d\n", context, linkContext->ref);
     }
     TRACE("returning %p\n", context);
@@ -106,6 +106,37 @@ void Context_AddRef(void *context, size_t contextSize)
     PBASE_CONTEXT baseContext = BASE_CONTEXT_FROM_CONTEXT(context, contextSize);
 
     InterlockedIncrement(&baseContext->ref);
+    TRACE("%p's ref count is %d\n", context, baseContext->ref);
+    if (baseContext->type == ContextTypeLink)
+    {
+        void *linkedContext = Context_GetLinkedContext(context, contextSize);
+        PBASE_CONTEXT linkedBase = BASE_CONTEXT_FROM_CONTEXT(linkedContext,
+         contextSize);
+
+        /* Add-ref the linked contexts too */
+        while (linkedContext && linkedBase->type == ContextTypeLink)
+        {
+            InterlockedIncrement(&linkedBase->ref);
+            TRACE("%p's ref count is %d\n", linkedContext, linkedBase->ref);
+            linkedContext = Context_GetLinkedContext(linkedContext,
+             contextSize);
+            if (linkedContext)
+                linkedBase = BASE_CONTEXT_FROM_CONTEXT(linkedContext,
+                 contextSize);
+            else
+                linkedBase = NULL;
+        }
+        if (linkedContext)
+        {
+            /* It's not a link context, so it wasn't add-ref'ed in the while
+             * loop, so add-ref it here.
+             */
+            linkedBase = BASE_CONTEXT_FROM_CONTEXT(linkedContext,
+             contextSize);
+            InterlockedIncrement(&linkedBase->ref);
+            TRACE("%p's ref count is %d\n", linkedContext, linkedBase->ref);
+        }
+    }
 }
 
 void *Context_GetExtra(const void *context, size_t contextSize)
@@ -135,35 +166,39 @@ PCONTEXT_PROPERTY_LIST Context_GetProperties(const void *context, size_t context
      ((PDATA_CONTEXT)ptr)->properties : NULL;
 }
 
-void Context_Release(void *context, size_t contextSize,
+BOOL Context_Release(void *context, size_t contextSize,
  ContextFreeFunc dataContextFree)
 {
     PBASE_CONTEXT base = BASE_CONTEXT_FROM_CONTEXT(context, contextSize);
+    BOOL ret = TRUE;
 
+    if (base->ref <= 0)
+    {
+        ERR("%p's ref count is %d\n", context, base->ref);
+        return FALSE;
+    }
+    if (base->type == ContextTypeLink)
+    {
+        /* The linked context is of the same type as this, so release
+         * it as well, using the same offset and data free function.
+         */
+        ret = Context_Release(CONTEXT_FROM_BASE_CONTEXT(
+         ((PLINK_CONTEXT)base)->linked, contextSize), contextSize,
+         dataContextFree);
+    }
     if (InterlockedDecrement(&base->ref) == 0)
     {
         TRACE("freeing %p\n", context);
-        switch (base->type)
+        if (base->type == ContextTypeData)
         {
-        case ContextTypeData:
             ContextPropertyList_Free(((PDATA_CONTEXT)base)->properties);
             dataContextFree(context);
-            break;
-        case ContextTypeLink:
-            /* The linked context is of the same type as this, so release
-             * it as well, using the same offset and data free function.
-             */
-            Context_Release(CONTEXT_FROM_BASE_CONTEXT(
-             ((PLINK_CONTEXT)base)->linked, contextSize), contextSize,
-             dataContextFree);
-            break;
-        default:
-            assert(0);
         }
         CryptMemFree(context);
     }
     else
         TRACE("%p's ref count is %d\n", context, base->ref);
+    return ret;
 }
 
 void Context_CopyProperties(const void *to, const void *from,
@@ -278,14 +313,21 @@ void *ContextList_Enum(struct ContextList *list, void *pPrev)
     return ret;
 }
 
-void ContextList_Delete(struct ContextList *list, void *context)
+BOOL ContextList_Remove(struct ContextList *list, void *context)
 {
     struct list *entry = ContextList_ContextToEntry(list, context);
+    BOOL inList = FALSE;
 
     EnterCriticalSection(&list->cs);
-    list_remove(entry);
+    if (!list_empty(entry))
+    {
+        list_remove(entry);
+        inList = TRUE;
+    }
     LeaveCriticalSection(&list->cs);
-    list->contextInterface->free(context);
+    if (inList)
+        list_init(entry);
+    return inList;
 }
 
 static void ContextList_Empty(struct ContextList *list)

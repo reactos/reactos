@@ -60,6 +60,8 @@ static const char b64[] =
 
 typedef BOOL (*BinaryToStringAFunc)(const BYTE *pbBinary,
  DWORD cbBinary, DWORD dwFlags, LPSTR pszString, DWORD *pcchString);
+typedef BOOL (*BinaryToStringWFunc)(const BYTE *pbBinary,
+ DWORD cbBinary, DWORD dwFlags, LPWSTR pszString, DWORD *pcchString);
 
 static BOOL EncodeBinaryToBinaryA(const BYTE *pbBinary,
  DWORD cbBinary, DWORD dwFlags, LPSTR pszString, DWORD *pcchString)
@@ -97,7 +99,8 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
 
     TRACE("bytes is %d, pad bytes is %d\n", bytes, pad_bytes);
     needed = bytes + pad_bytes + 1;
-    needed += (needed / 64 + 1) * strlen(sep);
+    if (sep)
+        needed += (needed / 64 + 1) * strlen(sep);
 
     if (needed > *out_len)
     {
@@ -114,7 +117,7 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
     i = 0;
     while (div > 0)
     {
-        if (i && i % 64 == 0)
+        if (sep && i && i % 64 == 0)
         {
             strcpy(ptr, sep);
             ptr += strlen(sep);
@@ -160,7 +163,8 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
             *ptr++ = '=';
             break;
     }
-    strcpy(ptr, sep);
+    if (sep)
+        strcpy(ptr, sep);
 
     return ERROR_SUCCESS;
 }
@@ -170,14 +174,16 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
 {
     static const char crlf[] = "\r\n", lf[] = "\n";
     BOOL ret = TRUE;
-    LPCSTR header = NULL, trailer = NULL, sep = NULL;
+    LPCSTR header = NULL, trailer = NULL, sep;
     DWORD charsNeeded;
 
     if (dwFlags & CRYPT_STRING_NOCR)
         sep = lf;
+    else if (dwFlags & CRYPT_STRING_NOCRLF)
+        sep = NULL;
     else
         sep = crlf;
-    switch (dwFlags & 0x7fffffff)
+    switch (dwFlags & 0x0fffffff)
     {
     case CRYPT_STRING_BASE64:
         /* no header or footer */
@@ -198,7 +204,8 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
 
     charsNeeded = 0;
     encodeBase64A(pbBinary, cbBinary, sep, NULL, &charsNeeded);
-    charsNeeded += strlen(sep);
+    if (sep)
+        charsNeeded += strlen(sep);
     if (header)
         charsNeeded += strlen(header) + strlen(sep);
     if (trailer)
@@ -212,8 +219,11 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
         {
             strcpy(ptr, header);
             ptr += strlen(ptr);
-            strcpy(ptr, sep);
-            ptr += strlen(sep);
+            if (sep)
+            {
+                strcpy(ptr, sep);
+                ptr += strlen(sep);
+            }
         }
         encodeBase64A(pbBinary, cbBinary, sep, ptr, &size);
         ptr += size - 1;
@@ -221,8 +231,11 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
         {
             strcpy(ptr, trailer);
             ptr += strlen(ptr);
-            strcpy(ptr, sep);
-            ptr += strlen(sep);
+            if (sep)
+            {
+                strcpy(ptr, sep);
+                ptr += strlen(sep);
+            }
         }
         *pcchString = charsNeeded - 1;
     }
@@ -256,7 +269,7 @@ BOOL WINAPI CryptBinaryToStringA(const BYTE *pbBinary,
         return FALSE;
     }
 
-    switch (dwFlags & 0x7fffffff)
+    switch (dwFlags & 0x0fffffff)
     {
     case CRYPT_STRING_BINARY:
         encoder = EncodeBinaryToBinaryA;
@@ -271,7 +284,210 @@ BOOL WINAPI CryptBinaryToStringA(const BYTE *pbBinary,
     case CRYPT_STRING_HEXASCII:
     case CRYPT_STRING_HEXADDR:
     case CRYPT_STRING_HEXASCIIADDR:
-        FIXME("Unimplemented type %d\n", dwFlags & 0x7fffffff);
+        FIXME("Unimplemented type %d\n", dwFlags & 0x0fffffff);
+        /* fall through */
+    default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    return encoder(pbBinary, cbBinary, dwFlags, pszString, pcchString);
+}
+
+static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
+ WCHAR* out_buf, DWORD *out_len)
+{
+    int div, i;
+    const BYTE *d = in_buf;
+    int bytes = (in_len*8 + 5)/6, pad_bytes = (bytes % 4) ? 4 - (bytes % 4) : 0;
+    DWORD needed;
+    LPWSTR ptr;
+
+    TRACE("bytes is %d, pad bytes is %d\n", bytes, pad_bytes);
+    needed = bytes + pad_bytes + 1;
+    if (sep)
+        needed += (needed / 64 + 1) * strlenW(sep);
+
+    if (needed > *out_len)
+    {
+        *out_len = needed;
+        return ERROR_INSUFFICIENT_BUFFER;
+    }
+    else
+        *out_len = needed;
+
+    /* Three bytes of input give 4 chars of output */
+    div = in_len / 3;
+
+    ptr = out_buf;
+    i = 0;
+    while (div > 0)
+    {
+        if (sep && i && i % 64 == 0)
+        {
+            strcpyW(ptr, sep);
+            ptr += strlenW(sep);
+        }
+        /* first char is the first 6 bits of the first byte*/
+        *ptr++ = b64[ ( d[0] >> 2) & 0x3f ];
+        /* second char is the last 2 bits of the first byte and the first 4
+         * bits of the second byte */
+        *ptr++ = b64[ ((d[0] << 4) & 0x30) | (d[1] >> 4 & 0x0f)];
+        /* third char is the last 4 bits of the second byte and the first 2
+         * bits of the third byte */
+        *ptr++ = b64[ ((d[1] << 2) & 0x3c) | (d[2] >> 6 & 0x03)];
+        /* fourth char is the remaining 6 bits of the third byte */
+        *ptr++ = b64[   d[2]       & 0x3f];
+        i += 4;
+        d += 3;
+        div--;
+    }
+
+    switch(pad_bytes)
+    {
+        case 1:
+            /* first char is the first 6 bits of the first byte*/
+            *ptr++ = b64[ ( d[0] >> 2) & 0x3f ];
+            /* second char is the last 2 bits of the first byte and the first 4
+             * bits of the second byte */
+            *ptr++ = b64[ ((d[0] << 4) & 0x30) | (d[1] >> 4 & 0x0f)];
+            /* third char is the last 4 bits of the second byte padded with
+             * two zeroes */
+            *ptr++ = b64[ ((d[1] << 2) & 0x3c) ];
+            /* fourth char is a = to indicate one byte of padding */
+            *ptr++ = '=';
+            break;
+        case 2:
+            /* first char is the first 6 bits of the first byte*/
+            *ptr++ = b64[ ( d[0] >> 2) & 0x3f ];
+            /* second char is the last 2 bits of the first byte padded with
+             * four zeroes*/
+            *ptr++ = b64[ ((d[0] << 4) & 0x30)];
+            /* third char is = to indicate padding */
+            *ptr++ = '=';
+            /* fourth char is = to indicate padding */
+            *ptr++ = '=';
+            break;
+    }
+    if (sep)
+        strcpyW(ptr, sep);
+
+    return ERROR_SUCCESS;
+}
+
+static BOOL BinaryToBase64W(const BYTE *pbBinary,
+ DWORD cbBinary, DWORD dwFlags, LPWSTR pszString, DWORD *pcchString)
+{
+    static const WCHAR crlf[] = { '\r','\n',0 }, lf[] = { '\n',0 };
+    BOOL ret = TRUE;
+    LPCWSTR header = NULL, trailer = NULL, sep;
+    DWORD charsNeeded;
+
+    if (dwFlags & CRYPT_STRING_NOCR)
+        sep = lf;
+    else if (dwFlags & CRYPT_STRING_NOCRLF)
+        sep = NULL;
+    else
+        sep = crlf;
+    switch (dwFlags & 0x0fffffff)
+    {
+    case CRYPT_STRING_BASE64:
+        /* no header or footer */
+        break;
+    case CRYPT_STRING_BASE64HEADER:
+        header = CERT_HEADER_W;
+        trailer = CERT_TRAILER_W;
+        break;
+    case CRYPT_STRING_BASE64REQUESTHEADER:
+        header = CERT_REQUEST_HEADER_W;
+        trailer = CERT_REQUEST_TRAILER_W;
+        break;
+    case CRYPT_STRING_BASE64X509CRLHEADER:
+        header = X509_HEADER_W;
+        trailer = X509_TRAILER_W;
+        break;
+    }
+
+    charsNeeded = 0;
+    encodeBase64W(pbBinary, cbBinary, sep, NULL, &charsNeeded);
+    if (sep)
+        charsNeeded += strlenW(sep);
+    if (header)
+        charsNeeded += strlenW(header) + strlenW(sep);
+    if (trailer)
+        charsNeeded += strlenW(trailer) + strlenW(sep);
+    if (charsNeeded <= *pcchString)
+    {
+        LPWSTR ptr = pszString;
+        DWORD size = charsNeeded;
+
+        if (header)
+        {
+            strcpyW(ptr, header);
+            ptr += strlenW(ptr);
+            if (sep)
+            {
+                strcpyW(ptr, sep);
+                ptr += strlenW(sep);
+            }
+        }
+        encodeBase64W(pbBinary, cbBinary, sep, ptr, &size);
+        ptr += size - 1;
+        if (trailer)
+        {
+            strcpyW(ptr, trailer);
+            ptr += strlenW(ptr);
+            if (sep)
+            {
+                strcpyW(ptr, sep);
+                ptr += strlenW(sep);
+            }
+        }
+        *pcchString = charsNeeded - 1;
+    }
+    else if (pszString)
+    {
+        *pcchString = charsNeeded;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        ret = FALSE;
+    }
+    else
+        *pcchString = charsNeeded;
+    return ret;
+}
+
+BOOL WINAPI CryptBinaryToStringW(const BYTE *pbBinary,
+ DWORD cbBinary, DWORD dwFlags, LPWSTR pszString, DWORD *pcchString)
+{
+    BinaryToStringWFunc encoder = NULL;
+
+    TRACE("(%p, %d, %08x, %p, %p)\n", pbBinary, cbBinary, dwFlags, pszString,
+     pcchString);
+
+    if (!pbBinary)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (!pcchString)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (dwFlags & 0x0fffffff)
+    {
+    case CRYPT_STRING_BASE64:
+    case CRYPT_STRING_BASE64HEADER:
+    case CRYPT_STRING_BASE64REQUESTHEADER:
+    case CRYPT_STRING_BASE64X509CRLHEADER:
+        encoder = BinaryToBase64W;
+        break;
+    case CRYPT_STRING_BINARY:
+    case CRYPT_STRING_HEX:
+    case CRYPT_STRING_HEXASCII:
+    case CRYPT_STRING_HEXADDR:
+    case CRYPT_STRING_HEXASCIIADDR:
+        FIXME("Unimplemented type %d\n", dwFlags & 0x0fffffff);
         /* fall through */
     default:
         SetLastError(ERROR_INVALID_PARAMETER);

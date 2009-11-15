@@ -71,6 +71,53 @@ BOOL WINAPI CertAddEncodedCertificateToStore(HCERTSTORE hCertStore,
     return ret;
 }
 
+BOOL WINAPI CertAddEncodedCertificateToSystemStoreA(LPCSTR pszCertStoreName,
+ const BYTE *pbCertEncoded, DWORD cbCertEncoded)
+{
+    HCERTSTORE store;
+    BOOL ret = FALSE;
+
+    TRACE("(%s, %p, %d)\n", debugstr_a(pszCertStoreName), pbCertEncoded,
+     cbCertEncoded);
+
+    store = CertOpenSystemStoreA(0, pszCertStoreName);
+    if (store)
+    {
+        ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
+         pbCertEncoded, cbCertEncoded, CERT_STORE_ADD_USE_EXISTING, NULL);
+        CertCloseStore(store, 0);
+    }
+    return ret;
+}
+
+BOOL WINAPI CertAddEncodedCertificateToSystemStoreW(LPCWSTR pszCertStoreName,
+ const BYTE *pbCertEncoded, DWORD cbCertEncoded)
+{
+    HCERTSTORE store;
+    BOOL ret = FALSE;
+
+    TRACE("(%s, %p, %d)\n", debugstr_w(pszCertStoreName), pbCertEncoded,
+     cbCertEncoded);
+
+    store = CertOpenSystemStoreW(0, pszCertStoreName);
+    if (store)
+    {
+        ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
+         pbCertEncoded, cbCertEncoded, CERT_STORE_ADD_USE_EXISTING, NULL);
+        CertCloseStore(store, 0);
+    }
+    return ret;
+}
+
+BOOL WINAPI CertAddCertificateLinkToStore(HCERTSTORE hCertStore,
+ PCCERT_CONTEXT pCertContext, DWORD dwAddDisposition,
+ PCCERT_CONTEXT *ppCertContext)
+{
+    FIXME("(%p, %p, %08x, %p)\n", hCertStore, pCertContext, dwAddDisposition,
+     ppCertContext);
+    return FALSE;
+}
+
 PCCERT_CONTEXT WINAPI CertCreateCertificateContext(DWORD dwCertEncodingType,
  const BYTE *pbCertEncoded, DWORD cbCertEncoded)
 {
@@ -133,12 +180,14 @@ static void CertDataContext_Free(void *context)
 
 BOOL WINAPI CertFreeCertificateContext(PCCERT_CONTEXT pCertContext)
 {
+    BOOL ret = TRUE;
+
     TRACE("(%p)\n", pCertContext);
 
     if (pCertContext)
-        Context_Release((void *)pCertContext, sizeof(CERT_CONTEXT),
+        ret = Context_Release((void *)pCertContext, sizeof(CERT_CONTEXT),
          CertDataContext_Free);
-    return TRUE;
+    return ret;
 }
 
 DWORD WINAPI CertEnumCertificateContextProperties(PCCERT_CONTEXT pCertContext,
@@ -1120,12 +1169,6 @@ DWORD WINAPI CertGetPublicKeyLength(DWORD dwCertEncodingType,
 typedef BOOL (*CertCompareFunc)(PCCERT_CONTEXT pCertContext, DWORD dwType,
  DWORD dwFlags, const void *pvPara);
 
-static BOOL compare_cert_any(PCCERT_CONTEXT pCertContext, DWORD dwType,
- DWORD dwFlags, const void *pvPara)
-{
-    return TRUE;
-}
-
 static BOOL compare_cert_by_md5_hash(PCCERT_CONTEXT pCertContext, DWORD dwType,
  DWORD dwFlags, const void *pvPara)
 {
@@ -1202,7 +1245,7 @@ static BOOL compare_cert_by_subject_cert(PCCERT_CONTEXT pCertContext,
 
     /* Matching serial number and subject match.. */
     ret = CertCompareCertificateName(pCertContext->dwCertEncodingType,
-     &pCertInfo->Issuer, &pCertContext->pCertInfo->Subject);
+     &pCertContext->pCertInfo->Subject, &pCertInfo->Issuer);
     if (ret)
         ret = CertCompareIntegerBlob(&pCertContext->pCertInfo->SerialNumber,
          &pCertInfo->SerialNumber);
@@ -1213,7 +1256,7 @@ static BOOL compare_cert_by_subject_cert(PCCERT_CONTEXT pCertContext,
          &pCertInfo->SerialNumber);
         if (ret)
             ret = CertCompareCertificateName(pCertContext->dwCertEncodingType,
-             &pCertInfo->Issuer, &pCertContext->pCertInfo->Issuer);
+             &pCertContext->pCertInfo->Issuer, &pCertInfo->Issuer);
     }
     TRACE("returning %d\n", ret);
     return ret;
@@ -1267,11 +1310,70 @@ static BOOL compare_cert_by_cert_id(PCCERT_CONTEXT pCertContext, DWORD dwType,
     return ret;
 }
 
-static BOOL compare_cert_by_issuer(PCCERT_CONTEXT pCertContext, DWORD dwType,
+static BOOL compare_existing_cert(PCCERT_CONTEXT pCertContext, DWORD dwType,
  DWORD dwFlags, const void *pvPara)
 {
-    BOOL ret = FALSE;
-    PCCERT_CONTEXT subject = pvPara;
+    PCCERT_CONTEXT toCompare = pvPara;
+    return CertCompareCertificate(pCertContext->dwCertEncodingType,
+     pCertContext->pCertInfo, toCompare->pCertInfo);
+}
+
+static BOOL compare_cert_by_signature_hash(PCCERT_CONTEXT pCertContext, DWORD dwType,
+ DWORD dwFlags, const void *pvPara)
+{
+    const CRYPT_HASH_BLOB *hash = pvPara;
+    DWORD size = 0;
+    BOOL ret;
+
+    ret = CertGetCertificateContextProperty(pCertContext,
+     CERT_SIGNATURE_HASH_PROP_ID, NULL, &size);
+    if (ret && size == hash->cbData)
+    {
+        LPBYTE buf = CryptMemAlloc(size);
+
+        if (buf)
+        {
+            CertGetCertificateContextProperty(pCertContext,
+             CERT_SIGNATURE_HASH_PROP_ID, buf, &size);
+            ret = !memcmp(buf, hash->pbData, size);
+            CryptMemFree(buf);
+        }
+    }
+    else
+        ret = FALSE;
+    return ret;
+}
+
+static inline PCCERT_CONTEXT cert_compare_certs_in_store(HCERTSTORE store,
+ PCCERT_CONTEXT prev, CertCompareFunc compare, DWORD dwType, DWORD dwFlags,
+ const void *pvPara)
+{
+    BOOL matches = FALSE;
+    PCCERT_CONTEXT ret;
+
+    ret = prev;
+    do {
+        ret = CertEnumCertificatesInStore(store, ret);
+        if (ret)
+            matches = compare(ret, dwType, dwFlags, pvPara);
+    } while (ret != NULL && !matches);
+    return ret;
+}
+
+typedef PCCERT_CONTEXT (*CertFindFunc)(HCERTSTORE store, DWORD dwType,
+ DWORD dwFlags, const void *pvPara, PCCERT_CONTEXT prev);
+
+static PCCERT_CONTEXT find_cert_any(HCERTSTORE store, DWORD dwType,
+ DWORD dwFlags, const void *pvPara, PCCERT_CONTEXT prev)
+{
+    return CertEnumCertificatesInStore(store, prev);
+}
+
+static PCCERT_CONTEXT find_cert_by_issuer(HCERTSTORE store, DWORD dwType,
+ DWORD dwFlags, const void *pvPara, PCCERT_CONTEXT prev)
+{
+    BOOL ret;
+    PCCERT_CONTEXT found = NULL, subject = pvPara;
     PCERT_EXTENSION ext;
     DWORD size;
 
@@ -1295,18 +1397,17 @@ static BOOL compare_cert_by_issuer(PCCERT_CONTEXT pCertContext, DWORD dwType,
                  sizeof(CERT_NAME_BLOB));
                 memcpy(&id.u.IssuerSerialNumber.SerialNumber,
                  &info->CertSerialNumber, sizeof(CRYPT_INTEGER_BLOB));
-                ret = compare_cert_by_cert_id(pCertContext, dwType, dwFlags,
-                 &id);
             }
             else if (info->KeyId.cbData)
             {
                 id.dwIdChoice = CERT_ID_KEY_IDENTIFIER;
                 memcpy(&id.u.KeyId, &info->KeyId, sizeof(CRYPT_HASH_BLOB));
-                ret = compare_cert_by_cert_id(pCertContext, dwType, dwFlags,
-                 &id);
             }
             else
                 ret = FALSE;
+            if (ret)
+                found = cert_compare_certs_in_store(store, prev,
+                 compare_cert_by_cert_id, dwType, dwFlags, &id);
             LocalFree(info);
         }
     }
@@ -1343,8 +1444,6 @@ static BOOL compare_cert_by_issuer(PCCERT_CONTEXT pCertContext, DWORD dwType,
                     memcpy(&id.u.IssuerSerialNumber.SerialNumber,
                      &info->AuthorityCertSerialNumber,
                      sizeof(CRYPT_INTEGER_BLOB));
-                    ret = compare_cert_by_cert_id(pCertContext, dwType, dwFlags,
-                     &id);
                 }
                 else
                 {
@@ -1356,53 +1455,83 @@ static BOOL compare_cert_by_issuer(PCCERT_CONTEXT pCertContext, DWORD dwType,
             {
                 id.dwIdChoice = CERT_ID_KEY_IDENTIFIER;
                 memcpy(&id.u.KeyId, &info->KeyId, sizeof(CRYPT_HASH_BLOB));
-                ret = compare_cert_by_cert_id(pCertContext, dwType, dwFlags,
-                 &id);
             }
             else
                 ret = FALSE;
+            if (ret)
+                found = cert_compare_certs_in_store(store, prev,
+                 compare_cert_by_cert_id, dwType, dwFlags, &id);
             LocalFree(info);
         }
     }
     else
-       ret = compare_cert_by_name(pCertContext,
-        CERT_COMPARE_NAME | CERT_COMPARE_SUBJECT_CERT, dwFlags,
-        &subject->pCertInfo->Issuer);
+       found = cert_compare_certs_in_store(store, prev,
+        compare_cert_by_name, CERT_COMPARE_NAME | CERT_COMPARE_SUBJECT_CERT,
+        dwFlags, &subject->pCertInfo->Issuer);
+    return found;
+}
+
+static BOOL compare_cert_by_name_str(PCCERT_CONTEXT pCertContext,
+ DWORD dwType, DWORD dwFlags, const void *pvPara)
+{
+    PCERT_NAME_BLOB name;
+    DWORD len;
+    BOOL ret = FALSE;
+
+    if (dwType & CERT_INFO_SUBJECT_FLAG)
+        name = &pCertContext->pCertInfo->Subject;
+    else
+        name = &pCertContext->pCertInfo->Issuer;
+    len = CertNameToStrW(pCertContext->dwCertEncodingType, name,
+     CERT_SIMPLE_NAME_STR, NULL, 0);
+    if (len)
+    {
+        LPWSTR str = CryptMemAlloc(len * sizeof(WCHAR));
+
+        if (str)
+        {
+            LPWSTR ptr;
+
+            CertNameToStrW(pCertContext->dwCertEncodingType, name,
+             CERT_SIMPLE_NAME_STR, str, len);
+            for (ptr = str; *ptr; ptr++)
+                *ptr = tolowerW(*ptr);
+            if (strstrW(str, pvPara))
+                ret = TRUE;
+            CryptMemFree(str);
+        }
+    }
     return ret;
 }
 
-static BOOL compare_existing_cert(PCCERT_CONTEXT pCertContext, DWORD dwType,
- DWORD dwFlags, const void *pvPara)
+static PCCERT_CONTEXT find_cert_by_name_str(HCERTSTORE store, DWORD dwType,
+ DWORD dwFlags, const void *pvPara, PCCERT_CONTEXT prev)
 {
-    PCCERT_CONTEXT toCompare = pvPara;
-    return CertCompareCertificate(pCertContext->dwCertEncodingType,
-     pCertContext->pCertInfo, toCompare->pCertInfo);
-}
+    PCCERT_CONTEXT found = NULL;
 
-static BOOL compare_cert_by_signature_hash(PCCERT_CONTEXT pCertContext, DWORD dwType,
- DWORD dwFlags, const void *pvPara)
-{
-    const CRYPT_HASH_BLOB *hash = pvPara;
-    DWORD size = 0;
-    BOOL ret;
+    TRACE("%s\n", debugstr_w(pvPara));
 
-    ret = CertGetCertificateContextProperty(pCertContext,
-     CERT_SIGNATURE_HASH_PROP_ID, NULL, &size);
-    if (ret && size == hash->cbData)
+    if (pvPara)
     {
-        LPBYTE buf = CryptMemAlloc(size);
+        DWORD len = strlenW(pvPara);
+        LPWSTR str = CryptMemAlloc((len + 1) * sizeof(WCHAR));
 
-        if (buf)
+        if (str)
         {
-            CertGetCertificateContextProperty(pCertContext,
-             CERT_SIGNATURE_HASH_PROP_ID, buf, &size);
-            ret = !memcmp(buf, hash->pbData, size);
-            CryptMemFree(buf);
+            LPCWSTR src;
+            LPWSTR dst;
+
+            for (src = pvPara, dst = str; *src; src++, dst++)
+                *dst = tolowerW(*src);
+            *dst = 0;
+           found = cert_compare_certs_in_store(store, prev,
+            compare_cert_by_name_str, dwType, dwFlags, str);
+           CryptMemFree(str);
         }
     }
     else
-        ret = FALSE;
-    return ret;
+        found = find_cert_any(store, dwType, dwFlags, NULL, prev);
+    return found;
 }
 
 PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE hCertStore,
@@ -1410,7 +1539,8 @@ PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE hCertStore,
  PCCERT_CONTEXT pPrevCertContext)
 {
     PCCERT_CONTEXT ret;
-    CertCompareFunc compare;
+    CertFindFunc find = NULL;
+    CertCompareFunc compare = NULL;
 
     TRACE("(%p, %08x, %08x, %08x, %p, %p)\n", hCertStore, dwCertEncodingType,
 	 dwFlags, dwType, pvPara, pPrevCertContext);
@@ -1418,7 +1548,7 @@ PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE hCertStore,
     switch (dwType >> CERT_COMPARE_SHIFT)
     {
     case CERT_COMPARE_ANY:
-        compare = compare_cert_any;
+        find = find_cert_any;
         break;
     case CERT_COMPARE_MD5_HASH:
         compare = compare_cert_by_md5_hash;
@@ -1432,6 +1562,9 @@ PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE hCertStore,
     case CERT_COMPARE_PUBLIC_KEY:
         compare = compare_cert_by_public_key;
         break;
+    case CERT_COMPARE_NAME_STR_W:
+        find = find_cert_by_name_str;
+        break;
     case CERT_COMPARE_SUBJECT_CERT:
         compare = compare_cert_by_subject_cert;
         break;
@@ -1439,7 +1572,7 @@ PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE hCertStore,
         compare = compare_cert_by_cert_id;
         break;
     case CERT_COMPARE_ISSUER_OF:
-        compare = compare_cert_by_issuer;
+        find = find_cert_by_issuer;
         break;
     case CERT_COMPARE_EXISTING:
         compare = compare_existing_cert;
@@ -1449,27 +1582,17 @@ PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE hCertStore,
         break;
     default:
         FIXME("find type %08x unimplemented\n", dwType);
-        compare = NULL;
     }
 
-    if (compare)
-    {
-        BOOL matches = FALSE;
-
-        ret = pPrevCertContext;
-        do {
-            ret = CertEnumCertificatesInStore(hCertStore, ret);
-            if (ret)
-                matches = compare(ret, dwType, dwFlags, pvPara);
-        } while (ret != NULL && !matches);
-        if (!ret)
-            SetLastError(CRYPT_E_NOT_FOUND);
-    }
+    if (find)
+        ret = find(hCertStore, dwFlags, dwType, pvPara, pPrevCertContext);
+    else if (compare)
+        ret = cert_compare_certs_in_store(hCertStore, pPrevCertContext,
+         compare, dwType, dwFlags, pvPara);
     else
-    {
-        SetLastError(CRYPT_E_NOT_FOUND);
         ret = NULL;
-    }
+    if (!ret)
+        SetLastError(CRYPT_E_NOT_FOUND);
     TRACE("returning %p\n", ret);
     return ret;
 }
@@ -1781,13 +1904,19 @@ BOOL WINAPI CryptHashPublicKeyInfo(HCRYPTPROV_LEGACY hCryptProv, ALG_ID Algid,
         hCryptProv = CRYPT_GetDefaultProvider();
     if (!Algid)
         Algid = CALG_MD5;
+    if ((dwCertEncodingType & CERT_ENCODING_TYPE_MASK) != X509_ASN_ENCODING)
+    {
+        SetLastError(ERROR_FILE_NOT_FOUND);
+        return FALSE;
+    }
     if (ret)
     {
         BYTE *buf;
         DWORD size = 0;
 
-        ret = CryptEncodeObjectEx(dwCertEncodingType, X509_PUBLIC_KEY_INFO,
-         pInfo, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+        ret = CRYPT_AsnEncodePubKeyInfoNoNull(dwCertEncodingType,
+         X509_PUBLIC_KEY_INFO, pInfo, CRYPT_ENCODE_ALLOC_FLAG, NULL,
+         (LPBYTE)&buf, &size);
         if (ret)
         {
             ret = CryptCreateHash(hCryptProv, Algid, 0, 0, &hHash);
@@ -2114,6 +2243,43 @@ BOOL WINAPI CryptVerifyCertificateSignatureEx(HCRYPTPROV_LEGACY hCryptProv,
             LocalFree(signedCert);
         }
     }
+    return ret;
+}
+
+BOOL WINAPI CertGetIntendedKeyUsage(DWORD dwCertEncodingType,
+ PCERT_INFO pCertInfo, BYTE *pbKeyUsage, DWORD cbKeyUsage)
+{
+    PCERT_EXTENSION ext;
+    BOOL ret = FALSE;
+
+    TRACE("(%08x, %p, %p, %d)\n", dwCertEncodingType, pCertInfo, pbKeyUsage,
+     cbKeyUsage);
+
+    ext = CertFindExtension(szOID_KEY_USAGE, pCertInfo->cExtension,
+     pCertInfo->rgExtension);
+    if (ext)
+    {
+        CRYPT_BIT_BLOB usage;
+        DWORD size = sizeof(usage);
+
+        ret = CryptDecodeObjectEx(dwCertEncodingType, X509_BITS,
+         ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_NOCOPY_FLAG, NULL,
+         &usage, &size);
+        if (ret)
+        {
+            if (cbKeyUsage < usage.cbData)
+                ret = FALSE;
+            else
+            {
+                memcpy(pbKeyUsage, usage.pbData, usage.cbData);
+                if (cbKeyUsage > usage.cbData)
+                    memset(pbKeyUsage + usage.cbData, 0,
+                     cbKeyUsage - usage.cbData);
+            }
+        }
+    }
+    else
+        SetLastError(0);
     return ret;
 }
 
@@ -2727,7 +2893,10 @@ static void CRYPT_MakeCertInfo(PCERT_INFO info, const CRYPT_DATA_BLOB *pSerialNu
     assert(pSubjectIssuerBlob);
     assert(pubKey);
 
-    info->dwVersion = CERT_V3;
+    if (pExtensions && pExtensions->cExtension)
+        info->dwVersion = CERT_V3;
+    else
+        info->dwVersion = CERT_V1;
     info->SerialNumber.cbData = pSerialNumber->cbData;
     info->SerialNumber.pbData = pSerialNumber->pbData;
     if (pSignatureAlgorithm)

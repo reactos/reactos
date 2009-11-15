@@ -261,9 +261,23 @@ static void check_and_store_certs(HCERTSTORE from, HCERTSTORE to)
                      "chain creation failed");
                 else
                 {
-                    /* The only allowed error is CERT_TRUST_IS_UNTRUSTED_ROOT */
-                    if (chain->TrustStatus.dwErrorStatus &
-                     ~CERT_TRUST_IS_UNTRUSTED_ROOT)
+                    DWORD allowedErrors = CERT_TRUST_IS_UNTRUSTED_ROOT |
+                     CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
+                     CERT_TRUST_INVALID_BASIC_CONSTRAINTS |
+                     CERT_TRUST_IS_NOT_TIME_VALID;
+
+                    /* The certificate chain verification only allows certain
+                     * invalid CA certs if they're installed locally:  CA
+                     * certs missing the key usage extension, and CA certs
+                     * missing the basic constraints extension.  Of course
+                     * there's a chicken and egg problem:  we have to accept
+                     * them here in order for them to be accepted later.
+                     * Expired, locally installed certs are also allowed here,
+                     * because we don't know (yet) what date will be checked
+                     * for an item signed by one of these certs.
+                     * Thus, accept certs with any of the allowed errors.
+                     */
+                    if (chain->TrustStatus.dwErrorStatus & ~allowedErrors)
                         TRACE("rejecting %s: %s\n", get_cert_common_name(cert),
                          trust_status_to_str(chain->TrustStatus.dwErrorStatus &
                          ~CERT_TRUST_IS_UNTRUSTED_ROOT));
@@ -705,6 +719,7 @@ static void read_trusted_roots_from_known_locations(HCERTSTORE store)
             ret = import_certs_from_path(CRYPT_knownLocations[i], from, TRUE);
         check_and_store_certs(from, store);
     }
+    CertCloseStore(from, 0);
 }
 
 static HCERTSTORE create_root_store(void)

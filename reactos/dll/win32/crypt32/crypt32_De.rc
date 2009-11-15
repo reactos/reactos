@@ -41,7 +41,7 @@ STRINGTABLE DISCARDABLE
     IDS_ENHANCED_KEY_USAGE "Erweiterte Schlüsselbenutzung"
     IDS_AUTHORITY_INFO_ACCESS "Autoritätsinformationszugriff"
     IDS_CERT_EXTENSIONS "Zertifikatserweiterung"
-    IDS_NEXT_UPDATE_LOCATION "Next Update Location"
+    IDS_NEXT_UPDATE_LOCATION "nächster Aktualisierungsort"
     IDS_YES_OR_NO_TRUST "Vertrauen oder nicht vertrauen"
     IDS_EMAIL_ADDRESS "E-Mail-Adresse"
     IDS_UNSTRUCTURED_NAME "Unstrukturierter Name"
