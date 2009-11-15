@@ -383,7 +383,7 @@ int WINAPIV ShellMessageBoxW(
 	va_end(args);
 
 	ret = MessageBoxW(hWnd,pszTemp,pszTitle,uType);
-	LocalFree((HLOCAL)pszTemp);
+        LocalFree(pszTemp);
 	return ret;
 }
 
@@ -441,16 +441,18 @@ int WINAPIV ShellMessageBoxA(
 	va_end(args);
 
 	ret = MessageBoxA(hWnd,pszTemp,pszTitle,uType);
-	LocalFree((HLOCAL)pszTemp);
+        LocalFree(pszTemp);
 	return ret;
 }
 
 /*************************************************************************
  * SHRegisterDragDrop				[SHELL32.86]
  *
- * Probably equivalent to RegisterDragDrop but under Windows 9x it could use the
+ * Probably equivalent to RegisterDragDrop but under Windows 95 it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
- * for details
+ * for details. Under Windows 98 this function initializes the true OLE when called
+ * the first time, on XP always returns E_OUTOFMEMORY and it got removed from Vista.
+ *
  *
  * NOTES
  *     exported by ordinal
@@ -471,7 +473,7 @@ HRESULT WINAPI SHRegisterDragDrop(
  *
  * Probably equivalent to RevokeDragDrop but under Windows 9x it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
- * for details
+ * for details. Function removed from Windows Vista.
  *
  * NOTES
  *     exported by ordinal
@@ -648,7 +650,7 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
 
     /* Add the new entry into the MRU list
      */
-    return AddMRUData(mruhandle, (LPCVOID)buffer, *len);
+    return AddMRUData(mruhandle, buffer, *len);
 }
 
 /*************************************************************************
@@ -704,7 +706,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     /* See if we need to do anything.
      */
     datalen = 64;
-    ret=SHADD_get_policy( "NoRecentDocsHistory", &type, &data, &datalen);
+    ret=SHADD_get_policy( "NoRecentDocsHistory", &type, data, &datalen);
     if ((ret > 0) && (ret != ERROR_FILE_NOT_FOUND)) {
 	ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
 	return;
@@ -799,15 +801,15 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     switch (uFlags)
     {
     case SHARD_PIDL:
-	SHGetPathFromIDListA((LPCITEMIDLIST) pv, doc_name);
+        SHGetPathFromIDListA(pv, doc_name);
         break;
 
     case SHARD_PATHA:
-        lstrcpynA(doc_name, (LPCSTR)pv, MAX_PATH);
+        lstrcpynA(doc_name, pv, MAX_PATH);
         break;
 
     case SHARD_PATHW:
-        WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)pv, -1, doc_name, MAX_PATH, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, pv, -1, doc_name, MAX_PATH, NULL, NULL);
         break;
 
     default:
@@ -955,9 +957,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 
 	    /* Set the document path or pidl */
 	    if (uFlags == SHARD_PIDL) {
-		hres = IShellLinkA_SetIDList(psl, (LPCITEMIDLIST) pv);
+                hres = IShellLinkA_SetIDList(psl, pv);
 	    } else {
-		hres = IShellLinkA_SetPath(psl, (LPCSTR) pv);
+                hres = IShellLinkA_SetPath(psl, pv);
 	    }
 	    if(FAILED(hres)) {
 		/* bombed */
@@ -1277,7 +1279,7 @@ BOOL WINAPI FileIconInit(BOOL bFullInit)
  * RETURNS
  *     Success: TRUE
  *     Failure: FALSE
-  */
+ */
 BOOL WINAPI IsUserAnAdmin(VOID)
 {
     SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
@@ -1289,7 +1291,6 @@ BOOL WINAPI IsUserAnAdmin(VOID)
     BOOL bResult = FALSE;
 
     TRACE("\n");
-
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
     {
         return FALSE;
@@ -1706,7 +1707,7 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
     if (lRet == ERROR_SUCCESS)
     {
         /* Create and initialize the Property Sheet Extensions Array */
-        psxa = (PPSXA)LocalAlloc(LMEM_FIXED, FIELD_OFFSET(PSXA, pspsx[max_iface]));
+        psxa = LocalAlloc(LMEM_FIXED, FIELD_OFFSET(PSXA, pspsx[max_iface]));
         if (psxa)
         {
             ZeroMemory(psxa, FIELD_OFFSET(PSXA, pspsx[max_iface]));
@@ -1836,7 +1837,7 @@ void WINAPI SHDestroyPropSheetExtArray(HPSXA hpsxa)
             psxa->pspsx[i]->lpVtbl->Release(psxa->pspsx[i]);
         }
 
-        LocalFree((HLOCAL)psxa);
+        LocalFree(psxa);
     }
 }
 
