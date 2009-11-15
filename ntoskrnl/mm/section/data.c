@@ -1630,6 +1630,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     * Reference the file handle
     */
    ObReferenceObject(FileObject);
+   Section->FileObject = FileObject;
 
    DPRINT("Getting original file size\n");
    /* A hack: If we're cached, we can overcome deadlocking with the upper
@@ -1655,7 +1656,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
        if (!NT_SUCCESS(Status))
        {
 		   ObDereferenceObject(Section);
-		   ObDereferenceObject(FileObject);
 		   return Status;
        }
 	   ASSERT(Status != STATUS_PENDING);
@@ -1683,7 +1683,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    if (MaximumSize.QuadPart == 0)
    {
 	   ObDereferenceObject(Section);
-	   ObDereferenceObject(FileObject);
 	   return STATUS_FILE_INVALID;
    }
 
@@ -1692,7 +1691,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    if (Segment == NULL)
    {
        ObDereferenceObject(Section);
-       ObDereferenceObject(FileObject);
        return(STATUS_NO_MEMORY);
    }
 
@@ -1762,7 +1760,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
 
    MmUnlockSectionSegment(Segment);
 
-   Section->FileObject = FileObject;
    Section->MaximumSize.QuadPart = MaximumSize.QuadPart;
 
    /* Extend file if section is longer */
@@ -1778,7 +1775,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
 	   {
 		   DPRINT1("Could not expand section\n");
 		   ObDereferenceObject(Section);
-		   ObDereferenceObject(FileObject);
 		   return Status;
 	   }
    }
