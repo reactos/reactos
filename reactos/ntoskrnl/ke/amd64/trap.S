@@ -33,6 +33,24 @@ _MsgUnexpectedInterrupt:
 _MsgInvalidOpcodeFault:
 .ascii "General protection fault at %p!\n\0"
 
+_MsgTrapInfo:
+.ascii "Trap: %s at %p\n\0"
+
+.macro TRAPINFO func
+#if 0
+    jmp 2f
+    .equ expr, 12
+1:  .asciz "\func"
+2:
+    sub rsp, 0x20
+    lea rcx, _MsgTrapInfo[rip]
+    lea rdx, 1b[rip]
+    mov r8, [rbp + KTRAP_FRAME_Rip]
+    call _FrLdrDbgPrint[rip]
+    add rsp, 0x20
+#endif
+.endm
+
 /* Helper Macros *************************************************************/
 
 #define TRAPFLAG_VOLATILES 0x01
@@ -292,6 +310,8 @@ _InternalDispatchException:
 
     ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
+    TRAPINFO KiDebugTrapOrFault
+
     /* Check if the frame was from kernelmode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
     jz KiDebugTrapOrFaultKMode
@@ -332,6 +352,8 @@ KiDebugTrapOrFaultKMode:
     .allocstack 0x8
 
     ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+
+    TRAPINFO KiBreakpointTrap
 
 //    lea rcx, _MsgBreakpointTrap[rip]
 //    mov rdx, rsp
@@ -384,6 +406,8 @@ KiDebugTrapOrFaultKMode:
     .allocstack 0x8
 
     ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+
+    TRAPINFO KiInvalidOpcodeFault
 
 //    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
 
@@ -478,6 +502,8 @@ KiDebugTrapOrFaultKMode:
 
     ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
+    TRAPINFO KiGeneralProtectionFault
+
 //    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
 
     mov rdx, [rbp + KTRAP_FRAME_Rip]
@@ -496,6 +522,8 @@ KiDebugTrapOrFaultKMode:
     /* We have an error code */
 
     ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+
+    TRAPINFO KiPageFault
 
 #if 0
     lea rcx, _MsgPageFault[rip]
@@ -628,6 +656,8 @@ PageFaultReturn:
 
     ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
 
+    TRAPINFO KiDebugServiceTrap
+
     /* Increase Rip to skip the int3 */
     inc qword ptr [rbp + KTRAP_FRAME_Rip]
 
@@ -646,12 +676,18 @@ PageFaultReturn:
 
 .proc KiDpcInterrupt
     .pushframe 1
+
+    UNIMPLEMENTED KiDpcInterrupt
+
     jmp $
 .endproc
 
 
 .proc KiIpiInterrupt
     .pushframe 1
+
+    UNIMPLEMENTED KiIpiInterrupt
+
     jmp $
 .endproc
 
