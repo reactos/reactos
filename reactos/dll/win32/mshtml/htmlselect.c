@@ -481,6 +481,7 @@ static const NodeImplVtbl HTMLSelectElementImplVtbl = {
     HTMLSelectElement_QI,
     HTMLSelectElement_destructor,
     NULL,
+    NULL,
     HTMLSelectElementImpl_put_disabled,
     HTMLSelectElementImpl_get_disabled
 };
@@ -502,7 +503,7 @@ static dispex_static_data_t HTMLSelectElement_dispex = {
     HTMLSelectElement_tids
 };
 
-HTMLElement *HTMLSelectElement_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLSelectElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLSelectElement *ret = heap_alloc_zero(sizeof(HTMLSelectElement));
     nsresult nsres;
@@ -510,7 +511,7 @@ HTMLElement *HTMLSelectElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLSelectElementVtbl = &HTMLSelectElementVtbl;
     ret->element.node.vtbl = &HTMLSelectElementImplVtbl;
 
-    HTMLElement_Init(&ret->element, &HTMLSelectElement_dispex);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLSelectElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLSelectElement,
                                              (void**)&ret->nsselect);

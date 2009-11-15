@@ -37,15 +37,32 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 static HRESULT get_url(HTMLLocation *This, const WCHAR **ret)
 {
-    if(!This->window || !This->window->doc_obj || !This->window->doc_obj->url) {
+    if(!This->window || !This->window->url) {
         FIXME("No current URL\n");
         return E_NOTIMPL;
     }
 
-    *ret = This->window->doc_obj->url;
+    *ret = This->window->url;
     return S_OK;
 }
 
+static HRESULT get_url_components(HTMLLocation *This, URL_COMPONENTSW *url)
+{
+    const WCHAR *doc_url;
+    HRESULT hres;
+
+    hres = get_url(This, &doc_url);
+    if(FAILED(hres))
+        return hres;
+
+    if(!InternetCrackUrlW(doc_url, 0, 0, url)) {
+        FIXME("InternetCrackUrlW failed: 0x%08x\n", GetLastError());
+        SetLastError(0);
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
 
 #define HTMLLOCATION_THIS(iface) DEFINE_THIS(HTMLLocation, HTMLLocation, iface)
 
@@ -134,27 +151,115 @@ static HRESULT WINAPI HTMLLocation_Invoke(IHTMLLocation *iface, DISPID dispIdMem
 static HRESULT WINAPI HTMLLocation_put_href(IHTMLLocation *iface, BSTR v)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(!This->window || !This->window->doc) {
+        FIXME("No document available\n");
+        return E_FAIL;
+    }
+
+    return navigate_url(This->window->doc, v);
 }
 
 static HRESULT WINAPI HTMLLocation_get_href(IHTMLLocation *iface, BSTR *p)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    const WCHAR *url;
-    HRESULT hres;
+    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    WCHAR *buf = NULL, *url_path = NULL;
+    HRESULT hres, ret;
+    DWORD len = 0;
+    int i;
 
     TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_POINTER;
 
-    hres = get_url(This, &url);
+    url.dwSchemeLength = 1;
+    url.dwHostNameLength = 1;
+    url.dwUrlPathLength = 1;
+    url.dwExtraInfoLength = 1;
+    hres = get_url_components(This, &url);
     if(FAILED(hres))
         return hres;
 
-    *p = SysAllocString(url);
-    return *p ? S_OK : E_OUTOFMEMORY;
+    switch(url.nScheme) {
+    case INTERNET_SCHEME_FILE:
+        {
+            /* prepend a slash */
+            url_path = HeapAlloc(GetProcessHeap(), 0, (url.dwUrlPathLength + 1) * sizeof(WCHAR));
+            if(!url_path)
+                return E_OUTOFMEMORY;
+            url_path[0] = '/';
+            memcpy(url_path + 1, url.lpszUrlPath, url.dwUrlPathLength * sizeof(WCHAR));
+            url.lpszUrlPath = url_path;
+            url.dwUrlPathLength = url.dwUrlPathLength + 1;
+        }
+        break;
+
+    case INTERNET_SCHEME_HTTP:
+    case INTERNET_SCHEME_HTTPS:
+    case INTERNET_SCHEME_FTP:
+        if(!url.dwUrlPathLength) {
+            /* add a slash if it's blank */
+            url_path = url.lpszUrlPath = HeapAlloc(GetProcessHeap(), 0, 1 * sizeof(WCHAR));
+            if(!url.lpszUrlPath)
+                return E_OUTOFMEMORY;
+            url.lpszUrlPath[0] = '/';
+            url.dwUrlPathLength = 1;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    /* replace \ with / */
+    for(i = 0; i < url.dwUrlPathLength; ++i)
+        if(url.lpszUrlPath[i] == '\\')
+            url.lpszUrlPath[i] = '/';
+
+    if(InternetCreateUrlW(&url, ICU_ESCAPE, NULL, &len)) {
+        FIXME("InternetCreateUrl succeeded with NULL buffer?\n");
+        ret = E_FAIL;
+        goto cleanup;
+    }
+
+    if(GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+        FIXME("InternetCreateUrl failed with error: %08x\n", GetLastError());
+        SetLastError(0);
+        ret = E_FAIL;
+        goto cleanup;
+    }
+    SetLastError(0);
+
+    buf = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if(!buf) {
+        ret = E_OUTOFMEMORY;
+        goto cleanup;
+    }
+
+    if(!InternetCreateUrlW(&url, ICU_ESCAPE, buf, &len)) {
+        FIXME("InternetCreateUrl failed with error: %08x\n", GetLastError());
+        SetLastError(0);
+        ret = E_FAIL;
+        goto cleanup;
+    }
+
+    *p = SysAllocStringLen(buf, len);
+    if(!*p) {
+        ret = E_OUTOFMEMORY;
+        goto cleanup;
+    }
+
+    ret = S_OK;
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, url_path);
+
+    return ret;
 }
 
 static HRESULT WINAPI HTMLLocation_put_protocol(IHTMLLocation *iface, BSTR v)
@@ -167,12 +272,31 @@ static HRESULT WINAPI HTMLLocation_put_protocol(IHTMLLocation *iface, BSTR v)
 static HRESULT WINAPI HTMLLocation_get_protocol(IHTMLLocation *iface, BSTR *p)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
+    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_POINTER;
 
-    return E_NOTIMPL;
+    url.dwSchemeLength = 1;
+    hres = get_url_components(This, &url);
+    if(FAILED(hres))
+        return hres;
+
+    if(!url.dwSchemeLength) {
+        FIXME("Unexpected blank protocol\n");
+        return E_NOTIMPL;
+    }else {
+        WCHAR buf[url.dwSchemeLength + 1];
+        memcpy(buf, url.lpszScheme, url.dwSchemeLength * sizeof(WCHAR));
+        buf[url.dwSchemeLength] = ':';
+        *p = SysAllocStringLen(buf, url.dwSchemeLength + 1);
+    }
+    if(!*p)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_put_host(IHTMLLocation *iface, BSTR v)
@@ -185,12 +309,40 @@ static HRESULT WINAPI HTMLLocation_put_host(IHTMLLocation *iface, BSTR v)
 static HRESULT WINAPI HTMLLocation_get_host(IHTMLLocation *iface, BSTR *p)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
+    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_POINTER;
 
-    return E_NOTIMPL;
+    url.dwHostNameLength = 1;
+    hres = get_url_components(This, &url);
+    if(FAILED(hres))
+        return hres;
+
+    if(!url.dwHostNameLength){
+        *p = NULL;
+        return S_OK;
+    }
+
+    if(url.nPort) {
+        /* <hostname>:<port> */
+        const WCHAR format[] = {'%','d',0};
+        DWORD len = url.dwHostNameLength + 1 + 5 + 1;
+        WCHAR buf[len];
+
+        memcpy(buf, url.lpszHostName, url.dwHostNameLength * sizeof(WCHAR));
+        buf[url.dwHostNameLength] = ':';
+        snprintfW(buf + url.dwHostNameLength + 1, 6, format, url.nPort);
+        *p = SysAllocString(buf);
+    }else
+        *p = SysAllocStringLen(url.lpszHostName, url.dwHostNameLength);
+
+    if(!*p)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_put_hostname(IHTMLLocation *iface, BSTR v)
@@ -203,12 +355,28 @@ static HRESULT WINAPI HTMLLocation_put_hostname(IHTMLLocation *iface, BSTR v)
 static HRESULT WINAPI HTMLLocation_get_hostname(IHTMLLocation *iface, BSTR *p)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
+    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_POINTER;
 
-    return E_NOTIMPL;
+    url.dwHostNameLength = 1;
+    hres = get_url_components(This, &url);
+    if(FAILED(hres))
+        return hres;
+
+    if(!url.dwHostNameLength){
+        *p = NULL;
+        return S_OK;
+    }
+
+    *p = SysAllocStringLen(url.lpszHostName, url.dwHostNameLength);
+    if(!*p)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_put_port(IHTMLLocation *iface, BSTR v)
@@ -221,12 +389,31 @@ static HRESULT WINAPI HTMLLocation_put_port(IHTMLLocation *iface, BSTR v)
 static HRESULT WINAPI HTMLLocation_get_port(IHTMLLocation *iface, BSTR *p)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
+    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_POINTER;
 
-    return E_NOTIMPL;
+    hres = get_url_components(This, &url);
+    if(FAILED(hres))
+        return hres;
+
+    if(url.nPort) {
+        const WCHAR format[] = {'%','d',0};
+        WCHAR buf[6];
+        snprintfW(buf, 6, format, url.nPort);
+        *p = SysAllocString(buf);
+    }else {
+        const WCHAR empty[] = {0};
+        *p = SysAllocString(empty);
+    }
+
+    if(!*p)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_put_pathname(IHTMLLocation *iface, BSTR v)
@@ -239,10 +426,7 @@ static HRESULT WINAPI HTMLLocation_put_pathname(IHTMLLocation *iface, BSTR v)
 static HRESULT WINAPI HTMLLocation_get_pathname(IHTMLLocation *iface, BSTR *p)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    WCHAR buf[INTERNET_MAX_PATH_LENGTH];
-    URL_COMPONENTSW url = {sizeof(url)};
-    const WCHAR *doc_url;
-    DWORD size = 0;
+    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
     HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, p);
@@ -250,30 +434,17 @@ static HRESULT WINAPI HTMLLocation_get_pathname(IHTMLLocation *iface, BSTR *p)
     if(!p)
         return E_POINTER;
 
-    hres = get_url(This, &doc_url);
+    url.dwUrlPathLength = 1;
+    url.dwExtraInfoLength = 1;
+    hres = get_url_components(This, &url);
     if(FAILED(hres))
         return hres;
 
-    hres = CoInternetParseUrl(doc_url, PARSE_PATH_FROM_URL, 0, buf, sizeof(buf), &size, 0);
-    if(SUCCEEDED(hres)) {
-        *p = SysAllocString(buf);
-        if(!*p)
-            return E_OUTOFMEMORY;
-        return S_OK;
-    }
+    if(url.dwUrlPathLength && url.lpszUrlPath[0] == '/')
+        *p = SysAllocStringLen(url.lpszUrlPath + 1, url.dwUrlPathLength - 1);
+    else
+        *p = SysAllocStringLen(url.lpszUrlPath, url.dwUrlPathLength);
 
-    url.dwUrlPathLength = 1;
-    if(!InternetCrackUrlW(doc_url, 0, 0, &url)) {
-        FIXME("InternetCrackUrl failed\n");
-        return E_FAIL;
-    }
-
-    if(!url.dwUrlPathLength) {
-        *p = NULL;
-        return S_OK;
-    }
-
-    *p = SysAllocStringLen(url.lpszUrlPath, url.dwUrlPathLength);
     if(!*p)
         return E_OUTOFMEMORY;
     return S_OK;
@@ -289,12 +460,32 @@ static HRESULT WINAPI HTMLLocation_put_search(IHTMLLocation *iface, BSTR v)
 static HRESULT WINAPI HTMLLocation_get_search(IHTMLLocation *iface, BSTR *p)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
+    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HRESULT hres;
+    const WCHAR hash[] = {'#',0};
+
+    TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_POINTER;
 
-    return E_NOTIMPL;
+    url.dwExtraInfoLength = 1;
+    hres = get_url_components(This, &url);
+    if(FAILED(hres))
+        return hres;
+
+    if(!url.dwExtraInfoLength){
+        *p = NULL;
+        return S_OK;
+    }
+
+    url.dwExtraInfoLength = strcspnW(url.lpszExtraInfo, hash);
+
+    *p = SysAllocStringLen(url.lpszExtraInfo, url.dwExtraInfoLength);
+
+    if(!*p)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_put_hash(IHTMLLocation *iface, BSTR v)
@@ -307,12 +498,34 @@ static HRESULT WINAPI HTMLLocation_put_hash(IHTMLLocation *iface, BSTR v)
 static HRESULT WINAPI HTMLLocation_get_hash(IHTMLLocation *iface, BSTR *p)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
+    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    const WCHAR hash[] = {'#',0};
+    DWORD hash_pos = 0;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_POINTER;
 
-    return E_NOTIMPL;
+    url.dwExtraInfoLength = 1;
+    hres = get_url_components(This, &url);
+    if(FAILED(hres))
+        return hres;
+
+    if(!url.dwExtraInfoLength){
+        *p = NULL;
+        return S_OK;
+    }
+
+    hash_pos = strcspnW(url.lpszExtraInfo, hash);
+    url.dwExtraInfoLength -= hash_pos;
+
+    *p = SysAllocStringLen(url.lpszExtraInfo + hash_pos, url.dwExtraInfoLength);
+
+    if(!*p)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_reload(IHTMLLocation *iface, VARIANT_BOOL flag)

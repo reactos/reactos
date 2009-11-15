@@ -169,7 +169,7 @@ static dispex_static_data_t HTMLGenericElement_dispex = {
     HTMLGenericElement_iface_tids
 };
 
-HTMLElement *HTMLGenericElement_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLGenericElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLGenericElement *ret;
 
@@ -178,7 +178,7 @@ HTMLElement *HTMLGenericElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLGenericElementVtbl = &HTMLGenericElementVtbl;
     ret->element.node.vtbl = &HTMLGenericElementImplVtbl;
 
-    HTMLElement_Init(&ret->element, &HTMLGenericElement_dispex);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLGenericElement_dispex);
 
     return &ret->element;
 }

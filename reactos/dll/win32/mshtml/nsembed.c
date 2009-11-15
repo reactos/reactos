@@ -807,63 +807,6 @@ void set_ns_editmode(NSContainer *This)
     nsIWebBrowser_SetParentURIContentListener(This->webbrowser, NSURICL(This));
 }
 
-void update_nsdocument(HTMLDocumentObj *doc)
-{
-    HTMLDocumentNode *doc_node;
-    nsIDOMHTMLDocument *nsdoc;
-    nsIDOMDocument *nsdomdoc;
-    nsresult nsres;
-    HRESULT hres;
-
-    if(!doc->nscontainer || !doc->nscontainer->navigation)
-        return;
-
-    nsres = nsIWebNavigation_GetDocument(doc->nscontainer->navigation, &nsdomdoc);
-    if(NS_FAILED(nsres) || !nsdomdoc) {
-        ERR("GetDocument failed: %08x\n", nsres);
-        return;
-    }
-
-    nsres = nsIDOMDocument_QueryInterface(nsdomdoc, &IID_nsIDOMHTMLDocument, (void**)&nsdoc);
-    nsIDOMDocument_Release(nsdomdoc);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIDOMHTMLDocument iface: %08x\n", nsres);
-        return;
-    }
-
-    if(nsdoc == doc->basedoc.nsdoc) {
-        nsIDOMHTMLDocument_Release(nsdoc);
-        return;
-    }
-
-    if(doc->basedoc.nsdoc) {
-        remove_mutation_observer(doc->nscontainer, doc->basedoc.nsdoc);
-        nsIDOMHTMLDocument_Release(doc->basedoc.nsdoc);
-
-        doc_node = doc->basedoc.doc_node;
-        doc_node->basedoc.doc_obj = NULL;
-        IHTMLDocument2_Release(HTMLDOC(&doc_node->basedoc));
-        doc->basedoc.doc_node = NULL;
-    }
-
-    doc->basedoc.nsdoc = nsdoc;
-    if(!nsdoc) {
-        window_set_docnode(doc->basedoc.window, NULL);
-        return;
-    }
-
-    set_mutation_observer(doc->nscontainer, nsdoc);
-
-    hres = create_doc_from_nsdoc(nsdoc, doc, doc->basedoc.window, &doc_node);
-    if(FAILED(hres)) {
-        ERR("Could not create document: %08x\n", hres);
-        return;
-    }
-
-    doc->basedoc.doc_node = doc_node;
-    window_set_docnode(doc->basedoc.window, doc_node);
-}
-
 void close_gecko(void)
 {
     TRACE("()\n");
@@ -963,13 +906,7 @@ static nsresult NSAPI nsWebBrowserChrome_SetStatus(nsIWebBrowserChrome *iface,
         PRUint32 statusType, const PRUnichar *status)
 {
     NSContainer *This = NSWBCHROME_THIS(iface);
-
     TRACE("(%p)->(%d %s)\n", This, statusType, debugstr_w(status));
-
-    /* FIXME: This hack should be removed when we'll load all pages by URLMoniker */
-    if(This->doc)
-        update_nsdocument(This->doc);
-
     return NS_OK;
 }
 
@@ -1678,7 +1615,7 @@ NSContainer *NSContainer_Create(HTMLDocumentObj *doc, NSContainer *parent)
     NSContainer *ret;
     nsresult nsres;
 
-    if(!load_gecko(FALSE))
+    if(!load_gecko(TRUE))
         return NULL;
 
     ret = heap_alloc_zero(sizeof(NSContainer));
@@ -1694,7 +1631,6 @@ NSContainer *NSContainer_Create(HTMLDocumentObj *doc, NSContainer *parent)
 
     ret->doc = doc;
     ret->ref = 1;
-    init_mutation(ret);
 
     nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr, NS_WEBBROWSER_CONTRACTID,
             NULL, &IID_nsIWebBrowser, (void**)&ret->webbrowser);
@@ -1760,8 +1696,6 @@ NSContainer *NSContainer_Create(HTMLDocumentObj *doc, NSContainer *parent)
     nsres = nsIWebBrowser_SetParentURIContentListener(ret->webbrowser, NSURICL(ret));
     if(NS_FAILED(nsres))
         ERR("SetParentURIContentListener failed: %08x\n", nsres);
-
-    init_nsevents(ret);
 
     nsres = nsIWebBrowser_QueryInterface(ret->webbrowser, &IID_nsIScrollable, (void**)&scrollable);
     if(NS_SUCCEEDED(nsres)) {

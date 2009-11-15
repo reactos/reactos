@@ -3686,6 +3686,42 @@ interface IHTMLDOMImplementation : IDispatch
 }
 
 /*****************************************************************************
+ *    IHTMLDocumentCompatibleInfo interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3051041a-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLDocumentCompatibleInfo : IDispatch
+{
+    [propget, id(DISPID_IHTMLDOCUMENTCOMPATIBLEINFO_USERAGENT)]
+    HRESULT userAgent([retval, out] BSTR *p);
+
+    [propget, id(DISPID_IHTMLDOCUMENTCOMPATIBLEINFO_VERSION)]
+    HRESULT version([retval, out] BSTR *p);
+}
+
+/*****************************************************************************
+ *    IHTMLDocumentCompatibleInfoCollection interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(30510418-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLDocumentCompatibleInfoCollection : IDispatch
+{
+    [propget, id(DISPID_IHTMLDOCUMENTCOMPATIBLEINFOCOLLECTION_LENGTH)]
+    HRESULT length([retval, out] long *p);
+
+    [id(DISPID_IHTMLDOCUMENTCOMPATIBLEINFOCOLLECTION_ITEM)]
+    HRESULT item([in] long i, [retval, out]IHTMLDocumentCompatibleInfo **p);
+}
+
+/*****************************************************************************
  *    DispHTMLDOMTextNode dispinterface
  */
 [
@@ -6586,7 +6622,7 @@ interface IHTMLImgElement : IDispatch
     odl,
     oleautomation,
     dual,
-    uuid(3050F38E-98B5-11CF-BB82-00AAA0BDCE0B)
+    uuid(3050F38E-98B5-11CF-BB82-00AA00BDCE0B)
 ]
 interface IHTMLImageElementFactory : IDispatch
 {
@@ -11741,6 +11777,44 @@ interface IHTMLDocument5 : IDispatch
 }
 
 /*****************************************************************************
+ *    IHTMLDocument6 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(30510417-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLDocument6 : IDispatch
+{
+    [propget, id(DISPID_IHTMLDOCUMENT6_COMPATIBLE)]
+    HRESULT compatible([retval, out] IHTMLDocumentCompatibleInfoCollection **p);
+
+    [propget, id(DISPID_IHTMLDOCUMENT6_DOCUMENTMODE)]
+    HRESULT documentMode([retval, out] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT6_ONSTORAGE), displaybind, bindable]
+    HRESULT onstorage([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT6_ONSTORAGE), displaybind, bindable]
+    HRESULT onstorage([out] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT6_ONSTORAGECOMMIT), displaybind, bindable]
+    HRESULT onstoragecommit([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT6_ONSTORAGECOMMIT), displaybind, bindable]
+    HRESULT onstoragecommit([out] VARIANT *p);
+
+    [id(DISPID_IHTMLDOCUMENT6_IE8_GETELEMENTBYID)]
+    HRESULT getElementById(
+        [in] BSTR bstrId,
+        [retval, out] IHTMLElement2 **p);
+
+    [id(DISPID_IHTMLDOCUMENT6_UPDATESETTINGS)]
+    HRESULT updateSettings();
+}
+
+/*****************************************************************************
  *    DispHTMLDocument dispinterface
  */
 [
@@ -12316,6 +12390,30 @@ methods:
     [propget, id(DISPID_IHTMLDOCUMENT5_COMPATMODE)]
     BSTR compatMode();
 
+    [propget, id(DISPID_IHTMLDOCUMENT6_COMPATIBLE)]
+    IHTMLDocumentCompatibleInfoCollection *compatible();
+
+    [propget, id(DISPID_IHTMLDOCUMENT6_DOCUMENTMODE)]
+    VARIANT documentMode();
+
+    [propput, id(DISPID_IHTMLDOCUMENT6_ONSTORAGE), displaybind, bindable]
+    void onstorage(VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT6_ONSTORAGE), displaybind, bindable]
+    VARIANT onstorage();
+
+    [propput, id(DISPID_IHTMLDOCUMENT6_ONSTORAGECOMMIT), displaybind, bindable]
+    void onstoragecommit(VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT6_ONSTORAGECOMMIT), displaybind, bindable]
+    VARIANT onstoragecommit();
+
+    [id(DISPID_IHTMLDOCUMENT6_IE8_GETELEMENTBYID)]
+    IHTMLElement2 *ie8_getElementById([in] BSTR bstrId);
+
+    [id(DISPID_IHTMLDOCUMENT6_UPDATESETTINGS)]
+    void updateSettings();
+
     WINE_HTMLDOMNODE_DISPINTERFACE_DECL;
 }
 
@@ -12334,6 +12432,7 @@ coclass HTMLDocument
                       interface IHTMLDocument3;
                       interface IHTMLDocument4;
                       interface IHTMLDocument5;
+                      interface IHTMLDocument6;
                       interface IHTMLDOMNode;
                       interface IHTMLDOMNode2;
 }

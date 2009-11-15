@@ -26,6 +26,8 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "mshtmcid.h"
+#include "shlguid.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -34,6 +36,35 @@
 #include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+
+typedef struct {
+    const nsIDOMEventListenerVtbl      *lpDOMEventListenerVtbl;
+    nsDocumentEventListener *This;
+} nsEventListener;
+
+struct nsDocumentEventListener {
+    nsEventListener blur_listener;
+    nsEventListener focus_listener;
+    nsEventListener keypress_listener;
+    nsEventListener load_listener;
+    nsEventListener htmlevent_listener;
+
+    LONG ref;
+
+    HTMLDocumentNode *doc;
+};
+
+static LONG release_listener(nsDocumentEventListener *This)
+{
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref)
+        heap_free(This);
+
+    return ref;
+}
 
 #define NSEVENTLIST_THIS(iface) DEFINE_THIS(nsEventListener, DOMEventListener, iface)
 
@@ -63,37 +94,44 @@ static nsresult NSAPI nsDOMEventListener_QueryInterface(nsIDOMEventListener *ifa
 
 static nsrefcnt NSAPI nsDOMEventListener_AddRef(nsIDOMEventListener *iface)
 {
-    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
-    return nsIWebBrowserChrome_AddRef(NSWBCHROME(This));
+    nsDocumentEventListener *This = NSEVENTLIST_THIS(iface)->This;
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
 }
 
 static nsrefcnt NSAPI nsDOMEventListener_Release(nsIDOMEventListener *iface)
 {
-    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
-    return nsIWebBrowserChrome_Release(NSWBCHROME(This));
+    nsDocumentEventListener *This = NSEVENTLIST_THIS(iface)->This;
+
+    return release_listener(This);
 }
 
-static BOOL is_doc_child_focus(NSContainer *This)
+static BOOL is_doc_child_focus(HTMLDocumentObj *doc)
 {
     HWND hwnd;
 
-    if(!This->doc)
-        return FALSE;
-
-    for(hwnd = GetFocus(); hwnd && hwnd != This->doc->basedoc.doc_obj->hwnd; hwnd = GetParent(hwnd));
+    for(hwnd = GetFocus(); hwnd && hwnd != doc->hwnd; hwnd = GetParent(hwnd));
 
     return hwnd != NULL;
 }
 
 static nsresult NSAPI handle_blur(nsIDOMEventListener *iface, nsIDOMEvent *event)
 {
-    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
+    HTMLDocumentNode *doc = NSEVENTLIST_THIS(iface)->This->doc;
+    HTMLDocumentObj *doc_obj;
 
-    TRACE("(%p)\n", This);
+    TRACE("(%p)\n", doc);
 
-    if(!This->reset_focus && This->doc && This->doc->basedoc.doc_obj->focus && !is_doc_child_focus(This)) {
-        This->doc->basedoc.doc_obj->focus = FALSE;
-        notif_focus(This->doc);
+    if(!doc || !doc->basedoc.doc_obj)
+        return NS_ERROR_FAILURE;
+    doc_obj = doc->basedoc.doc_obj;
+
+    if(!doc_obj->nscontainer->reset_focus && doc_obj->focus && !is_doc_child_focus(doc_obj)) {
+        doc_obj->focus = FALSE;
+        notif_focus(doc_obj);
     }
 
     return NS_OK;
@@ -101,13 +139,18 @@ static nsresult NSAPI handle_blur(nsIDOMEventListener *iface, nsIDOMEvent *event
 
 static nsresult NSAPI handle_focus(nsIDOMEventListener *iface, nsIDOMEvent *event)
 {
-    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
+    HTMLDocumentNode *doc = NSEVENTLIST_THIS(iface)->This->doc;
+    HTMLDocumentObj *doc_obj;
 
-    TRACE("(%p)\n", This);
+    TRACE("(%p)\n", doc);
 
-    if(!This->reset_focus && This->doc && !This->doc->focus) {
-        This->doc->focus = TRUE;
-        notif_focus(This->doc);
+    if(!doc)
+        return NS_ERROR_FAILURE;
+    doc_obj = doc->basedoc.doc_obj;
+
+    if(!doc_obj->nscontainer->reset_focus && !doc_obj->focus) {
+        doc_obj->focus = TRUE;
+        notif_focus(doc_obj);
     }
 
     return NS_OK;
@@ -116,46 +159,96 @@ static nsresult NSAPI handle_focus(nsIDOMEventListener *iface, nsIDOMEvent *even
 static nsresult NSAPI handle_keypress(nsIDOMEventListener *iface,
         nsIDOMEvent *event)
 {
-    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
+    HTMLDocumentNode *doc = NSEVENTLIST_THIS(iface)->This->doc;
+    HTMLDocumentObj *doc_obj;
 
-    TRACE("(%p)->(%p)\n", This, event);
+    if(!doc)
+        return NS_ERROR_FAILURE;
+    doc_obj = doc->basedoc.doc_obj;
 
-    update_doc(&This->doc->basedoc, UPDATE_UI);
-    if(This->doc->usermode == EDITMODE)
-        handle_edit_event(&This->doc->basedoc, event);
+    TRACE("(%p)->(%p)\n", doc, event);
+
+    update_doc(&doc_obj->basedoc, UPDATE_UI);
+    if(doc_obj->usermode == EDITMODE)
+        handle_edit_event(&doc_obj->basedoc, event);
 
     return NS_OK;
 }
 
+static void handle_docobj_load(HTMLDocumentObj *doc)
+{
+    IOleCommandTarget *olecmd = NULL;
+    HRESULT hres;
+
+    if(!doc->client)
+        return;
+
+    hres = IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
+    if(SUCCEEDED(hres)) {
+        VARIANT state, progress;
+
+        V_VT(&progress) = VT_I4;
+        V_I4(&progress) = 0;
+        IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETPROGRESSPOS, OLECMDEXECOPT_DONTPROMPTUSER,
+                               &progress, NULL);
+
+        V_VT(&state) = VT_I4;
+        V_I4(&state) = 0;
+        IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETDOWNLOADSTATE, OLECMDEXECOPT_DONTPROMPTUSER,
+                               &state, NULL);
+
+        IOleCommandTarget_Exec(olecmd, &CGID_ShellDocView, 103, 0, NULL, NULL);
+        IOleCommandTarget_Exec(olecmd, &CGID_MSHTML, IDM_PARSECOMPLETE, 0, NULL, NULL);
+        IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_HTTPEQUIV_DONE, 0, NULL, NULL);
+
+        IOleCommandTarget_Release(olecmd);
+    }
+}
+
 static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event)
 {
-    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
+    HTMLDocumentNode *doc = NSEVENTLIST_THIS(iface)->This->doc;
+    HTMLDocumentObj *doc_obj;
     nsIDOMHTMLElement *nsbody = NULL;
 
-    TRACE("(%p)\n", This);
+    TRACE("(%p)\n", doc);
 
-    if(!This->doc)
-        return NS_OK;
+    if(!doc)
+        return NS_ERROR_FAILURE;
+    doc_obj = doc->basedoc.doc_obj;
 
-    update_nsdocument(This->doc);
-    connect_scripts(This->doc->basedoc.window);
+    connect_scripts(doc->basedoc.window);
 
-    if(This->editor_controller) {
-        nsIController_Release(This->editor_controller);
-        This->editor_controller = NULL;
+    if(doc_obj->nscontainer->editor_controller) {
+        nsIController_Release(doc_obj->nscontainer->editor_controller);
+        doc_obj->nscontainer->editor_controller = NULL;
     }
 
-    if(This->doc->usermode == EDITMODE)
-        handle_edit_load(&This->doc->basedoc);
+    if(doc_obj->usermode == EDITMODE)
+        handle_edit_load(&doc_obj->basedoc);
 
-    if(!This->doc->basedoc.nsdoc) {
+    if(doc == doc_obj->basedoc.doc_node)
+        handle_docobj_load(doc_obj);
+
+    set_ready_state(doc->basedoc.window, READYSTATE_COMPLETE);
+
+    if(doc == doc_obj->basedoc.doc_node) {
+        if(doc_obj->frame) {
+            static const WCHAR wszDone[] = {'D','o','n','e',0};
+            IOleInPlaceFrame_SetStatusText(doc_obj->frame, wszDone);
+        }
+
+        update_title(doc_obj);
+    }
+
+    if(!doc->nsdoc) {
         ERR("NULL nsdoc\n");
         return NS_ERROR_FAILURE;
     }
 
-    nsIDOMHTMLDocument_GetBody(This->doc->basedoc.nsdoc, &nsbody);
+    nsIDOMHTMLDocument_GetBody(doc->nsdoc, &nsbody);
     if(nsbody) {
-        fire_event(This->doc->basedoc.doc_node, EVENTID_LOAD, (nsIDOMNode*)nsbody, event);
+        fire_event(doc, EVENTID_LOAD, (nsIDOMNode*)nsbody, event);
         nsIDOMHTMLElement_Release(nsbody);
     }
 
@@ -164,7 +257,7 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
 
 static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *event)
 {
-    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
+    HTMLDocumentNode *doc = NSEVENTLIST_THIS(iface)->This->doc;
     const PRUnichar *type;
     nsIDOMEventTarget *event_target;
     nsIDOMNode *nsnode;
@@ -191,7 +284,7 @@ static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *
         return NS_OK;
     }
 
-    fire_event(This->doc->basedoc.doc_node, eid, nsnode, event);
+    fire_event(doc, eid, nsnode, event);
 
     nsIDOMNode_Release(nsnode);
 
@@ -228,31 +321,40 @@ static void init_event(nsIDOMEventTarget *target, const PRUnichar *type,
 
 }
 
-static void init_listener(nsEventListener *This, NSContainer *container,
+static void init_listener(nsEventListener *This, nsDocumentEventListener *listener,
         const nsIDOMEventListenerVtbl *vtbl)
 {
     This->lpDOMEventListenerVtbl = vtbl;
-    This->This = container;
+    This->This = listener;
 }
 
-void add_nsevent_listener(HTMLWindow *window, LPCWSTR type)
+void add_nsevent_listener(HTMLDocumentNode *doc, LPCWSTR type)
 {
     nsIDOMEventTarget *target;
     nsresult nsres;
 
-    nsres = nsIDOMWindow_QueryInterface(window->nswindow, &IID_nsIDOMEventTarget, (void**)&target);
+    nsres = nsIDOMWindow_QueryInterface(doc->basedoc.window->nswindow, &IID_nsIDOMEventTarget, (void**)&target);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMEventTarget interface: %08x\n", nsres);
         return;
     }
 
-    init_event(target, type, NSEVENTLIST(&window->doc_obj->nscontainer->htmlevent_listener), TRUE);
+    init_event(target, type, NSEVENTLIST(&doc->nsevent_listener->htmlevent_listener), TRUE);
     nsIDOMEventTarget_Release(target);
 }
 
-void init_nsevents(NSContainer *This)
+void release_nsevents(HTMLDocumentNode *doc)
 {
-    nsIDOMWindow *dom_window;
+    if(doc->nsevent_listener) {
+        doc->nsevent_listener->doc = NULL;
+        release_listener(doc->nsevent_listener);
+        doc->nsevent_listener = NULL;
+    }
+}
+
+void init_nsevents(HTMLDocumentNode *doc)
+{
+    nsDocumentEventListener *listener;
     nsIDOMEventTarget *target;
     nsresult nsres;
 
@@ -261,29 +363,31 @@ void init_nsevents(NSContainer *This)
     static const PRUnichar wsz_keypress[]  = {'k','e','y','p','r','e','s','s',0};
     static const PRUnichar wsz_load[]      = {'l','o','a','d',0};
 
-    init_listener(&This->blur_listener,        This, &blur_vtbl);
-    init_listener(&This->focus_listener,       This, &focus_vtbl);
-    init_listener(&This->keypress_listener,    This, &keypress_vtbl);
-    init_listener(&This->load_listener,        This, &load_vtbl);
-    init_listener(&This->htmlevent_listener,   This, &htmlevent_vtbl);
-
-    nsres = nsIWebBrowser_GetContentDOMWindow(This->webbrowser, &dom_window);
-    if(NS_FAILED(nsres)) {
-        ERR("GetContentDOMWindow failed: %08x\n", nsres);
+    listener = heap_alloc(sizeof(nsDocumentEventListener));
+    if(!listener)
         return;
-    }
 
-    nsres = nsIDOMWindow_QueryInterface(dom_window, &IID_nsIDOMEventTarget, (void**)&target);
-    nsIDOMWindow_Release(dom_window);
+    listener->ref = 1;
+    listener->doc = doc;
+
+    init_listener(&listener->blur_listener,        listener, &blur_vtbl);
+    init_listener(&listener->focus_listener,       listener, &focus_vtbl);
+    init_listener(&listener->keypress_listener,    listener, &keypress_vtbl);
+    init_listener(&listener->load_listener,        listener, &load_vtbl);
+    init_listener(&listener->htmlevent_listener,   listener, &htmlevent_vtbl);
+
+    doc->nsevent_listener = listener;
+
+    nsres = nsIDOMWindow_QueryInterface(doc->basedoc.window->nswindow, &IID_nsIDOMEventTarget, (void**)&target);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMEventTarget interface: %08x\n", nsres);
         return;
     }
 
-    init_event(target, wsz_blur,       NSEVENTLIST(&This->blur_listener),        TRUE);
-    init_event(target, wsz_focus,      NSEVENTLIST(&This->focus_listener),       TRUE);
-    init_event(target, wsz_keypress,   NSEVENTLIST(&This->keypress_listener),    FALSE);
-    init_event(target, wsz_load,       NSEVENTLIST(&This->load_listener),        TRUE);
+    init_event(target, wsz_blur,       NSEVENTLIST(&listener->blur_listener),        TRUE);
+    init_event(target, wsz_focus,      NSEVENTLIST(&listener->focus_listener),       TRUE);
+    init_event(target, wsz_keypress,   NSEVENTLIST(&listener->keypress_listener),    FALSE);
+    init_event(target, wsz_load,       NSEVENTLIST(&listener->load_listener),        TRUE);
 
     nsIDOMEventTarget_Release(target);
 }

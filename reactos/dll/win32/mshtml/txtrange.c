@@ -342,7 +342,7 @@ static nsIDOMNode *prev_node(HTMLTxtRange *This, nsIDOMNode *iter)
     if(!iter) {
         nsIDOMHTMLElement *nselem;
 
-        nsIDOMHTMLDocument_GetBody(This->doc->basedoc.nsdoc, &nselem);
+        nsIDOMHTMLDocument_GetBody(This->doc->nsdoc, &nselem);
         nsIDOMElement_GetLastChild(nselem, &tmp);
         if(!tmp)
             return (nsIDOMNode*)nselem;
@@ -1139,7 +1139,7 @@ static HRESULT WINAPI HTMLTxtRange_put_text(IHTMLTxtRange *iface, BSTR v)
         return MSHTML_E_NODOC;
 
     nsAString_Init(&text_str, v);
-    nsres = nsIDOMHTMLDocument_CreateTextNode(This->doc->basedoc.nsdoc, &text_str, &text_node);
+    nsres = nsIDOMHTMLDocument_CreateTextNode(This->doc->nsdoc, &text_str, &text_node);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {
         ERR("CreateTextNode failed: %08x\n", nsres);
@@ -1348,7 +1348,7 @@ static HRESULT WINAPI HTMLTxtRange_expand(IHTMLTxtRange *iface, BSTR Unit, VARIA
         nsIDOMHTMLElement *nsbody = NULL;
         nsresult nsres;
 
-        nsres = nsIDOMHTMLDocument_GetBody(This->doc->basedoc.nsdoc, &nsbody);
+        nsres = nsIDOMHTMLDocument_GetBody(This->doc->nsdoc, &nsbody);
         if(NS_FAILED(nsres) || !nsbody) {
             ERR("Could not get body: %08x\n", nsres);
             break;
@@ -1778,28 +1778,22 @@ static HRESULT WINAPI RangeCommandTarget_QueryStatus(IOleCommandTarget *iface, c
 
 static HRESULT exec_indent(HTMLTxtRange *This, VARIANT *in, VARIANT *out)
 {
+    nsIDOMHTMLElement *blockquote_elem, *p_elem;
     nsIDOMDocumentFragment *fragment;
-    nsIDOMElement *blockquote_elem, *p_elem;
     nsIDOMNode *tmp;
-    nsAString tag_str;
 
     static const PRUnichar blockquoteW[] = {'B','L','O','C','K','Q','U','O','T','E',0};
     static const PRUnichar pW[] = {'P',0};
 
     TRACE("(%p)->(%p %p)\n", This, in, out);
 
-    if(!This->doc->basedoc.nsdoc) {
+    if(!This->doc->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_NOTIMPL;
     }
 
-    nsAString_Init(&tag_str, blockquoteW);
-    nsIDOMHTMLDocument_CreateElement(This->doc->basedoc.nsdoc, &tag_str, &blockquote_elem);
-    nsAString_Finish(&tag_str);
-
-    nsAString_Init(&tag_str, pW);
-    nsIDOMDocument_CreateElement(This->doc->basedoc.nsdoc, &tag_str, &p_elem);
-    nsAString_Finish(&tag_str);
+    create_nselem(This->doc, blockquoteW, &blockquote_elem);
+    create_nselem(This->doc, pW, &p_elem);
 
     nsIDOMRange_ExtractContents(This->nsrange, &fragment);
     nsIDOMElement_AppendChild(p_elem, (nsIDOMNode*)fragment, &tmp);

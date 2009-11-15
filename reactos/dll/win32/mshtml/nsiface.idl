@@ -89,6 +89,7 @@ interface nsIDocumentStateListener;
 interface nsIDOMCSSStyleSheet;
 interface nsIDOMDocumentView;
 interface nsIDocumentObserver;
+interface nsIDOMWindow;
 
 interface IMoniker;
 
@@ -109,7 +110,6 @@ typedef nsISupports nsISHistory;
 typedef nsISupports nsIWidget;
 typedef nsISupports nsIHttpHeaderVisitor;
 typedef nsISupports nsIDOMBarProp;
-typedef nsISupports nsIDOMWindowCollection;
 typedef nsISupports nsIPrompt;
 typedef nsISupports nsIAuthPrompt;
 typedef nsISupports nsIDOMNamedNodeMap;
@@ -135,7 +135,6 @@ typedef nsISupports nsIDOMHTMLTableSectionElement;
 typedef nsISupports nsIDOMClientRectList;
 typedef nsISupports nsIDOMClientRect;
 typedef nsISupports nsIDOMLocation;
-typedef nsISupports nsIBoxObject;
 typedef nsISupports nsIDocument;
 typedef nsISupports nsIContent;
 typedef nsISupports nsINode;
@@ -1013,6 +1012,18 @@ interface nsIDOMDocumentView : nsISupports
 
 [
     object,
+    uuid(46b91d66-28e2-11d4-ab1e-0010830123b4),
+    local
+    /* FROZEN */
+]
+interface nsIDOMDocumentEvent : nsISupports
+{
+cpp_quote("#undef CreateEvent")
+    nsresult CreateEvent(const nsAString *eventType, nsIDOMEvent **_retval);
+}
+
+[
+    object,
     uuid(a6cf90ce-15b3-11d2-932e-00805f8add32),
     local
     /* FROZEN */
@@ -1104,6 +1115,19 @@ interface nsISelection : nsISupports
     nsresult DeleteFromDocument();
     nsresult SelectionLanguageChange(PRBool langRTL);
     nsresult ToString(PRUnichar **_retval);
+}
+
+[
+    object,
+    uuid(a6cf906f-15b3-11d2-932e-00805f8add32),
+    local
+    /* FROZEN */
+]
+interface nsIDOMWindowCollection : nsISupports
+{
+    nsresult GetLength(PRUint32 *aLength);
+    nsresult Item(PRUint32 index, nsIDOMWindow **_retval);
+    nsresult NamedItem(const nsAString *name, nsIDOMWindow **_retval);
 }
 
 [
@@ -1489,6 +1513,33 @@ interface nsIDOMHTMLIFrameElement : nsIDOMHTMLElement
 
 [
     object,
+    uuid(a6cf90b9-15b3-11d2-932e-00805f8add32),
+    local
+    /* FROZEN */
+]
+interface nsIDOMHTMLFrameElement : nsIDOMHTMLElement
+{
+    nsresult GetFrameBorder(nsAString *aFrameBorder);
+    nsresult SetFrameBorder(const nsAString *aFrameBorder);
+    nsresult GetLongDesc(nsAString *aLongDesc);
+    nsresult SetLongDesc(const nsAString *aLongDesc);
+    nsresult GetMarginHeight(nsAString *aMarginHeight);
+    nsresult SetMarginHeight(const nsAString *aMarginHeight);
+    nsresult GetMarginWidth(nsAString *aMarginWidth);
+    nsresult SetMarginWidth(const nsAString *aMarginWidth);
+    nsresult GetName(nsAString *aName);
+    nsresult SetName(const nsAString *aName);
+    nsresult GetNoResize(PRBool *aNoResize);
+    nsresult SetNoResize(PRBool aNoResize);
+    nsresult GetScrolling(nsAString *aScrolling);
+    nsresult SetScrolling(const nsAString *aScrolling);
+    nsresult GetSrc(nsAString *aSrc);
+    nsresult SetSrc(const nsAString *aSrc);
+    nsresult GetContentDocument(nsIDOMDocument **aContentDocument);
+}
+
+[
+    object,
     uuid(94928ab3-8b63-11d3-989d-001083010e9b),
     local
     /* FROZEN */
@@ -1611,6 +1662,20 @@ interface nsIWebNavigation : nsISupports
     nsresult GetReferringURI(nsIURI **aReferringURI);
     nsresult GetSessionHistory(nsISHistory **aSessionHistory);
     nsresult SetSessionHistory(nsISHistory *aSessionHistory);
+}
+
+[
+    object,
+    uuid(570f39d0-efd0-11d3-b093-00a024ffc08c),
+    local
+    /* FROZEN */
+]
+interface nsIWebProgress : nsISupports
+{
+    nsresult AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask);
+    nsresult RemoveProgressListener(nsIWebProgressListener *aListener);
+    nsresult GetDOMWindow(nsIDOMWindow **aDOMWindow);
+    nsresult GetIsLoadingDocument(PRBool *aIsLoadingDocument);
 }
 
 [
@@ -2619,9 +2684,12 @@ interface nsIDocumentObserver : nsIMutationObserver
 interface nsIWineURI : nsIURL
 {
     typedef struct NSContainer NSContainer;
+    typedef struct HTMLWindow HTMLWindow;
 
     nsresult GetNSContainer(NSContainer **aNSContainer);
     nsresult SetNSContainer(NSContainer *aNSContainer);
+    nsresult GetWindow(HTMLWindow **aHTMLWindow);
+    nsresult SetWindow(HTMLWindow *aHTMLWindow);
     nsresult GetIsDocumentURI(PRBool *aIsDocumentURI);
     nsresult SetIsDocumentURI(PRBool aIsDocumentURI);
     nsresult GetWineURL(LPCWSTR *aURL);

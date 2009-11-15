@@ -29,6 +29,7 @@
 	<file>htmlelem3.c</file>
 	<file>htmlelemcol.c</file>
 	<file>htmlevent.c</file>
+	<file>htmlframebase.c</file>
 	<file>htmlgeneric.c</file>
 	<file>htmliframe.c</file>
 	<file>htmlimg.c</file>
