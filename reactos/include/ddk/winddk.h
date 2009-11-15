@@ -5236,7 +5236,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     USHORT SegFs;
     USHORT SegGs;
     USHORT SegSs;
-    USHORT EFlags;
+    ULONG EFlags;
 
     /* Debug */
     ULONG64 Dr0;
