@@ -748,6 +748,24 @@ static void test_MapViewOfFile(void)
     ret = UnmapViewOfFile(ptr);
     ok(ret, "UnmapViewOfFile failed with error %d\n", GetLastError());
     CloseHandle(mapping);
+
+    addr = VirtualAlloc(NULL, 0x10000, MEM_COMMIT, PAGE_READONLY );
+    ok( addr != NULL, "VirtualAlloc failed with error %u\n", GetLastError() );
+
+    SetLastError(0xdeadbeef);
+    ok( !UnmapViewOfFile(addr), "UnmapViewOfFile should fail on VirtualAlloc mem\n" );
+    ok( GetLastError() == ERROR_INVALID_ADDRESS,
+        "got %u, expected ERROR_INVALID_ADDRESS\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    ok( !UnmapViewOfFile((char *)addr + 0x3000), "UnmapViewOfFile should fail on VirtualAlloc mem\n" );
+    ok( GetLastError() == ERROR_INVALID_ADDRESS,
+        "got %u, expected ERROR_INVALID_ADDRESS\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    ok( !UnmapViewOfFile((void *)0xdeadbeef), "UnmapViewOfFile should fail on VirtualAlloc mem\n" );
+    ok( GetLastError() == ERROR_INVALID_ADDRESS,
+       "got %u, expected ERROR_INVALID_ADDRESS\n", GetLastError());
+
+    ok( VirtualFree(addr, 0, MEM_RELEASE), "VirtualFree failed\n" );
 }
 
 static DWORD (WINAPI *pNtMapViewOfSection)( HANDLE handle, HANDLE process, PVOID *addr_ptr,

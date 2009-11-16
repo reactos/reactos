@@ -743,6 +743,18 @@ static void test_GetCurrencyFormatA(void)
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   EXPECT_LENA; EXPECT_EQA;
 
+  STRINGSA("235","$235.0"); /* Grouping of a positive number */
+  format.Grouping = 3;
+  ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
+
+  STRINGSA("-235","$-235.0"); /* Grouping of a negative number */
+  format.NegativeOrder = 2;
+  ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
+
   format.LeadingZero = 1; /* Always provide leading zero */
   STRINGSA(".5","$0.5");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
@@ -986,6 +998,18 @@ static void test_GetNumberFormatA(void)
 
   format.Grouping = 2; /* Group by 100's */
   STRINGSA("2353","23,53.0");
+  ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
+
+  STRINGSA("235","235.0"); /* Grouping of a positive number */
+  format.Grouping = 3;
+  ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
+
+  STRINGSA("-235","-235.0"); /* Grouping of a negative number */
+  format.NegativeOrder = NEG_LEFT;
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   EXPECT_LENA; EXPECT_EQA;

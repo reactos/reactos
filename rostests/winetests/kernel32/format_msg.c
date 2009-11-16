@@ -26,29 +26,29 @@
 
 /* #define ok(cond,failstr) if(!(cond)) {printf("line %d : %s\n",__LINE__,failstr);exit(1);} */
 
-static DWORD doit(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
-           LPSTR out, DWORD outsize, ... )
+static DWORD __cdecl doit(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
+                          LPSTR out, DWORD outsize, ... )
 {
-    va_list list;
+    __ms_va_list list;
     DWORD r;
 
-    va_start(list, outsize);
+    __ms_va_start(list, outsize);
     r = FormatMessageA(flags, src, msg_id,
         lang_id, out, outsize, &list);
-    va_end(list);
+    __ms_va_end(list);
     return r;
 }
 
-static DWORD doitW(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
-           LPWSTR out, DWORD outsize, ... )
+static DWORD __cdecl doitW(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
+                           LPWSTR out, DWORD outsize, ... )
 {
-    va_list list;
+    __ms_va_list list;
     DWORD r;
 
-    va_start(list, outsize);
+    __ms_va_start(list, outsize);
     r = FormatMessageW(flags, src, msg_id,
         lang_id, out, outsize, &list);
-    va_end(list);
+    __ms_va_end(list);
     return r;
 }
 
@@ -87,6 +87,14 @@ static void test_message_from_string_wide(void)
     static const WCHAR fmt_hi_crlf[] = {'h','i','\r','\n',0};
     static const WCHAR fmt_cr[]      = {'\r',0};
     static const WCHAR fmt_crcrlf[]  = {'\r','\r','\n',0};
+    static const WCHAR fmt_13s[]     = {'%','1','!','3','s','!',0};
+    static const WCHAR fmt_1os[]     = {'%','1','!','*','s','!',0};
+    static const WCHAR fmt_142u[]    = {'%','1','!','4','.','2','u','!',0};
+    static const WCHAR fmt_1oou[]    = {'%','1','!','*','.','*','u','!',0};
+    static const WCHAR fmt_1oou1oou[] = {'%','1','!','*','.','*','u','!',',','%','1','!','*','.','*','u','!',0};
+    static const WCHAR fmt_1oou3oou[] = {'%','1','!','*','.','*','u','!',',','%','3','!','*','.','*','u','!',0};
+    static const WCHAR fmt_1oou4oou[] = {'%','1','!','*','.','*','u','!',',','%','4','!','*','.','*','u','!',0};
+
     static const WCHAR s_123d[]      = {'1','2','3',0};
     static const WCHAR s_14d[]       = {' ',' ',' ','1',0};
     static const WCHAR s_14x[]       = {' ',' ',' ','b',0};
@@ -105,6 +113,16 @@ static void test_message_from_string_wide(void)
     static const WCHAR s_hi_sp[]     = {'h','i',' ',0};
     static const WCHAR s_sp[]        = {' ',0};
     static const WCHAR s_2sp[]       = {' ',' ',0};
+    static const WCHAR s_spt[]       = {' ',' ','t',0};
+    static const WCHAR s_sp3t[]      = {' ',' ',' ','t',0};
+    static const WCHAR s_sp03[]      = {' ',' ','0','3',0};
+    static const WCHAR s_sp001[]     = {' ',' ','0','0','1',0};
+    static const WCHAR s_sp001002[]  = {' ',' ','0','0','1',',',' ','0','0','0','2',0};
+    static const WCHAR s_sp001sp002[] = {' ',' ','0','0','1',',',' ',' ','0','0','0','2',0};
+    static const WCHAR s_sp002sp001[] = {' ',' ','0','0','0','2',',',' ',' ','0','0','1',0};
+    static const WCHAR s_sp002sp003[] = {' ',' ','0','0','0','2',',',' ','0','0','0','0','3',0};
+    static const WCHAR s_sp001004[]   = {' ',' ','0','0','1',',','0','0','0','0','0','4',0};
+
     WCHAR out[0x100] = {0};
     DWORD r, error;
 
@@ -295,6 +313,46 @@ static void test_message_from_string_wide(void)
         0, out, sizeof(out)/sizeof(WCHAR));
     ok(!lstrcmpW(s_crlfcrlf, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
+
+    /* precision and width */
+
+    r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_13s,
+              0, 0, out, sizeof(out)/sizeof(WCHAR), t );
+    ok(!lstrcmpW(s_spt, out),"failed out=[%s]\n", wine_dbgstr_w(out));
+    ok(r==3, "failed: r=%d\n",r);
+    r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1os,
+              0, 0, out, sizeof(out)/sizeof(WCHAR), 4, t );
+    ok(!lstrcmpW( s_sp3t, out),"failed out=[%s]\n", wine_dbgstr_w(out));
+    ok(r==4,"failed: r=%d\n",r);
+    r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_142u,
+              0, 0, out, sizeof(out)/sizeof(WCHAR), 3 );
+    ok(!lstrcmpW( s_sp03, out),"failed out=[%s]\n", wine_dbgstr_w(out));
+    ok(r==4,"failed: r=%d\n",r);
+    r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1oou,
+              0, 0, out, sizeof(out)/sizeof(WCHAR), 5, 3, 1 );
+    ok(!lstrcmpW( s_sp001, out),"failed out=[%s]\n", wine_dbgstr_w(out));
+    ok(r==5,"failed: r=%d\n",r);
+    r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1oou1oou,
+              0, 0, out, sizeof(out)/sizeof(WCHAR), 5, 3, 1, 4, 2 );
+    ok(!lstrcmpW( s_sp001002, out),"failed out=[%s]\n", wine_dbgstr_w(out));
+    ok(r==11,"failed: r=%d\n",r);
+    r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1oou3oou,
+              0, 0, out, sizeof(out)/sizeof(WCHAR), 5, 3, 1, 6, 4, 2 );
+    ok(!lstrcmpW( s_sp001sp002, out) || broken(!lstrcmpW(s_sp001004, out)),
+       "failed out=[%s]\n", wine_dbgstr_w(out));
+    ok(r==12,"failed: r=%d\n",r);
+    /* args are not counted the same way with an argument array */
+    {
+        ULONG_PTR args[] = { 6, 4, 2, 5, 3, 1 };
+        r = FormatMessageW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY, fmt_1oou1oou,
+                           0, 0, out, sizeof(out)/sizeof(WCHAR), (__ms_va_list *)args );
+        ok(!lstrcmpW(s_sp002sp003, out),"failed out=[%s]\n", wine_dbgstr_w(out));
+        ok(r==13,"failed: r=%d\n",r);
+        r = FormatMessageW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY, fmt_1oou4oou,
+                           0, 0, out, sizeof(out)/sizeof(WCHAR), (__ms_va_list *)args );
+        ok(!lstrcmpW(s_sp002sp001, out),"failed out=[%s]\n", wine_dbgstr_w(out));
+        ok(r==12,"failed: r=%d\n",r);
+    }
 
     /* change of pace... test the low byte of dwflags */
 
@@ -509,6 +567,52 @@ static void test_message_from_string(void)
     ok(!strcmp("\r\n\r\n", out),"failed out=[%s]\n",out);
     ok(r==4,"failed: r=%d\n",r);
 
+    /* precision and width */
+
+    r = doit(FORMAT_MESSAGE_FROM_STRING, "%1!3s!",
+             0, 0, out, sizeof(out), "t" );
+    ok(!strcmp("  t", out),"failed out=[%s]\n",out);
+    ok(r==3, "failed: r=%d\n",r);
+    r = doit(FORMAT_MESSAGE_FROM_STRING, "%1!*s!",
+             0, 0, out, sizeof(out), 4, "t");
+    if (!strcmp("*s",out)) win_skip( "width/precision not supported\n" );
+    else
+    {
+        ok(!strcmp( "   t", out),"failed out=[%s]\n",out);
+        ok(r==4,"failed: r=%d\n",r);
+        r = doit(FORMAT_MESSAGE_FROM_STRING, "%1!4.2u!",
+                 0, 0, out, sizeof(out), 3 );
+        ok(!strcmp( "  03", out),"failed out=[%s]\n",out);
+        ok(r==4,"failed: r=%d\n",r);
+        r = doit(FORMAT_MESSAGE_FROM_STRING, "%1!*.*u!",
+                 0, 0, out, sizeof(out), 5, 3, 1 );
+        ok(!strcmp( "  001", out),"failed out=[%s]\n",out);
+        ok(r==5,"failed: r=%d\n",r);
+        r = doit(FORMAT_MESSAGE_FROM_STRING, "%1!*.*u!,%1!*.*u!",
+                 0, 0, out, sizeof(out), 5, 3, 1, 4, 2 );
+        ok(!strcmp( "  001, 0002", out),"failed out=[%s]\n",out);
+        ok(r==11,"failed: r=%d\n",r);
+        r = doit(FORMAT_MESSAGE_FROM_STRING, "%1!*.*u!,%3!*.*u!",
+                 0, 0, out, sizeof(out), 5, 3, 1, 6, 4, 2 );
+        /* older Win versions marked as broken even though this is arguably the correct behavior */
+        /* but the new (brain-damaged) behavior is specified on MSDN */
+        ok(!strcmp( "  001,  0002", out) || broken(!strcmp("  001,000004", out)),
+           "failed out=[%s]\n",out);
+        ok(r==12,"failed: r=%d\n",r);
+        /* args are not counted the same way with an argument array */
+        {
+            ULONG_PTR args[] = { 6, 4, 2, 5, 3, 1 };
+            r = FormatMessageA(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                               "%1!*.*u!,%1!*.*u!", 0, 0, out, sizeof(out), (__ms_va_list *)args );
+            ok(!strcmp("  0002, 00003", out),"failed out=[%s]\n",out);
+            ok(r==13,"failed: r=%d\n",r);
+            r = FormatMessageA(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                               "%1!*.*u!,%4!*.*u!", 0, 0, out, sizeof(out), (__ms_va_list *)args );
+            ok(!strcmp("  0002,  001", out),"failed out=[%s]\n",out);
+            ok(r==12,"failed: r=%d\n",r);
+        }
+    }
+
     /* change of pace... test the low byte of dwflags */
 
     /* line feed */
@@ -561,9 +665,68 @@ static void test_message_null_buffer(void)
     ok(error == ERROR_INVALID_PARAMETER, "last error %u\n", error);
 }
 
+static void test_message_from_hmodule(void)
+{
+    DWORD ret, error;
+    HMODULE h;
+    CHAR out[0x100] = {0};
+
+    h = GetModuleHandle("kernel32.dll");
+    ok(h != 0, "GetModuleHandle failed\n");
+
+    /*Test existing messageID; as the message strings from wine's kernel32 differ from windows' kernel32 we don't compare
+    the strings but only test that FormatMessage doesn't return 0*/
+    ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, h, 7/*=ERROR_ARENA_TRASHED*/,
+                         MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), out, sizeof(out)/sizeof(CHAR), NULL);
+    ok(ret != 0, "FormatMessageA returned 0\n");
+
+    /*Test nonexistent messageID with varying language ID's Note: FormatMessageW behaves the same*/
+    SetLastError(0xdeadbeef);
+    ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, h, 3044,
+                         MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), out, sizeof(out)/sizeof(CHAR), NULL);
+    error = GetLastError();
+    ok(ret == 0, "FormatMessageA returned %u instead of 0\n", ret);
+    ok(error == ERROR_MR_MID_NOT_FOUND || error == ERROR_MUI_FILE_NOT_FOUND, "last error %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, h, 3044,
+                         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), out, sizeof(out)/sizeof(CHAR), NULL);
+    error = GetLastError();
+    ok(ret == 0, "FormatMessageA returned %u instead of 0\n", ret);
+    ok(error == ERROR_MR_MID_NOT_FOUND || error == ERROR_MUI_FILE_NOT_LOADED, "last error %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, h, 3044,
+                         MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT), out, sizeof(out)/sizeof(CHAR), NULL);
+    error = GetLastError();
+    ok(ret == 0, "FormatMessageA returned %u instead of 0\n", ret);
+    ok(error == ERROR_MR_MID_NOT_FOUND || error == ERROR_MUI_FILE_NOT_LOADED, "last error %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, h, 3044,
+                         MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), out, sizeof(out)/sizeof(CHAR), NULL);
+    error = GetLastError();
+    ok(ret == 0, "FormatMessageA returned %u instead of 0\n", ret);
+    ok(error == ERROR_RESOURCE_LANG_NOT_FOUND ||
+       error == ERROR_MR_MID_NOT_FOUND ||
+       error == ERROR_MUI_FILE_NOT_LOADED,
+       "last error %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, h, 3044,
+                         MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_UK), out, sizeof(out)/sizeof(CHAR), NULL);
+    error = GetLastError();
+    ok(ret == 0, "FormatMessageA returned %u instead of 0\n", ret);
+    ok(error == ERROR_RESOURCE_LANG_NOT_FOUND ||
+       error == ERROR_MR_MID_NOT_FOUND ||
+       error == ERROR_MUI_FILE_NOT_FOUND,
+       "last error %u\n", error);
+}
+
 START_TEST(format_msg)
 {
     test_message_from_string();
     test_message_from_string_wide();
     test_message_null_buffer();
+    test_message_from_hmodule();
 }

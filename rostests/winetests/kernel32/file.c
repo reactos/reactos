@@ -563,6 +563,7 @@ static void test_CopyFileA(void)
     char source[MAX_PATH], dest[MAX_PATH];
     static const char prefix[] = "pfx";
     HANDLE hfile;
+    HANDLE hmapfile;
     FILETIME ft1, ft2;
     char buf[10];
     DWORD ret;
@@ -628,6 +629,34 @@ static void test_CopyFileA(void)
     ok( retok && ret == sizeof(prefix),
        "ReadFile: error %d\n", GetLastError());
     ok(!memcmp(prefix, buf, sizeof(prefix)), "buffer contents mismatch\n");
+
+    /* check error on copying over a mapped file that was opened with FILE_SHARE_READ */
+    hmapfile = CreateFileMapping(hfile, NULL, PAGE_READONLY | SEC_COMMIT, 0, 0, NULL);
+    ok(hmapfile != NULL, "CreateFileMapping: error %d\n", GetLastError());
+
+    ret = CopyFileA(source, dest, FALSE);
+    ok(!ret && GetLastError() == ERROR_SHARING_VIOLATION,
+       "CopyFileA with mapped dest file: expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+
+    CloseHandle(hmapfile);
+    CloseHandle(hfile);
+
+    hfile = CreateFileA(dest, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "failed to open destination file\n");
+
+    /* check error on copying over a mapped file that was opened with FILE_SHARE_WRITE */
+    hmapfile = CreateFileMapping(hfile, NULL, PAGE_READONLY | SEC_COMMIT, 0, 0, NULL);
+    ok(hmapfile != NULL, "CreateFileMapping: error %d\n", GetLastError());
+
+    ret = CopyFileA(source, dest, FALSE);
+    todo_wine {
+        ok(!ret, "CopyFileA: expected failure\n");
+        ok(GetLastError() == ERROR_USER_MAPPED_FILE ||
+           broken(GetLastError() == ERROR_SHARING_VIOLATION), /* Win9x and WinMe */
+           "CopyFileA with mapped dest file: expected ERROR_USER_MAPPED_FILE, got %d\n", GetLastError());
+    }
+
+    CloseHandle(hmapfile);
     CloseHandle(hfile);
 
     ret = DeleteFileA(source);
@@ -1263,7 +1292,10 @@ static void test_MoveFileA(void)
     char tempdir[MAX_PATH];
     char source[MAX_PATH], dest[MAX_PATH];
     static const char prefix[] = "pfx";
+    HANDLE hfile;
+    HANDLE hmapfile;
     DWORD ret;
+    BOOL retok;
 
     ret = GetTempPathA(MAX_PATH, tempdir);
     ok(ret != 0, "GetTempPathA error %d\n", GetLastError());
@@ -1281,6 +1313,50 @@ static void test_MoveFileA(void)
 
     ret = DeleteFileA(dest);
     ok(ret, "DeleteFileA: error %d\n", GetLastError());
+
+    hfile = CreateFileA(source, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "failed to open source file\n");
+
+    retok = WriteFile(hfile, prefix, sizeof(prefix), &ret, NULL );
+    ok( retok && ret == sizeof(prefix),
+       "WriteFile error %d\n", GetLastError());
+
+    hmapfile = CreateFileMapping(hfile, NULL, PAGE_READONLY | SEC_COMMIT, 0, 0, NULL);
+    ok(hmapfile != NULL, "CreateFileMapping: error %d\n", GetLastError());
+
+    ret = MoveFileA(source, dest);
+    todo_wine {
+        ok(!ret, "MoveFileA: expected failure\n");
+        ok(GetLastError() == ERROR_SHARING_VIOLATION ||
+           broken(GetLastError() == ERROR_ACCESS_DENIED), /* Win9x and WinMe */
+           "MoveFileA: expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+    }
+
+    CloseHandle(hmapfile);
+    CloseHandle(hfile);
+
+    /* if MoveFile succeeded, move back to dest */
+    if (ret) MoveFile(dest, source);
+
+    hfile = CreateFileA(source, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "failed to open source file\n");
+
+    hmapfile = CreateFileMapping(hfile, NULL, PAGE_READONLY | SEC_COMMIT, 0, 0, NULL);
+    ok(hmapfile != NULL, "CreateFileMapping: error %d\n", GetLastError());
+
+    ret = MoveFileA(source, dest);
+    todo_wine {
+        ok(!ret, "MoveFileA: expected failure\n");
+        ok(GetLastError() == ERROR_SHARING_VIOLATION ||
+           broken(GetLastError() == ERROR_ACCESS_DENIED), /* Win9x and WinMe */
+           "MoveFileA: expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+    }
+
+    CloseHandle(hmapfile);
+    CloseHandle(hfile);
+
+    /* if MoveFile succeeded, move back to dest */
+    if (ret) MoveFile(dest, source);
 
     ret = MoveFileA(source, dest);
     ok(ret, "MoveFileA: failed, error %d\n", GetLastError());
