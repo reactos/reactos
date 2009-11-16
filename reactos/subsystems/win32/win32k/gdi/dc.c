@@ -222,6 +222,9 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
     pDC = DC_Lock(physDev);
     pSurface = SURFACE_ShareLock(hBmpKern);
 
+    /* Release the old bitmap */
+    SURFACE_ShareUnlock(pDC->pBitmap);
+
     /* Select it */
     pDC->pBitmap = pSurface;
 
