@@ -74,6 +74,8 @@ PVOID MmSystemCacheStart;
 PVOID MmSystemCacheEnd;
 MMSUPPORT MmSystemCacheWs;
 
+ULONG MiNumberDescriptors = 0;
+BOOLEAN MiIncludeType[LoaderMaximum];
 
 ///////////////////////////////////////////////
 
@@ -96,6 +98,14 @@ MiEvaluateMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     PLIST_ENTRY ListEntry;
     PFN_NUMBER LastPage;
+    ULONG i;
+
+    /* Instantiate memory that we don't consider RAM/usable */
+    for (i = 0; i < LoaderMaximum; i++) MiIncludeType[i] = TRUE;
+    MiIncludeType[LoaderBad] = FALSE;
+    MiIncludeType[LoaderFirmwarePermanent] = FALSE;
+    MiIncludeType[LoaderSpecialMemory] = FALSE;
+    MiIncludeType[LoaderBBTMemory] = FALSE;
 
     /* Loop the memory descriptors */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
@@ -107,12 +117,11 @@ MiEvaluateMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                     MEMORY_ALLOCATION_DESCRIPTOR,
                                     ListEntry);
 
+        /* Count it */
+        MiNumberDescriptors++;
+
         /* Skip pages that are not part of the PFN database */
-        if ((MdBlock->MemoryType == LoaderFirmwarePermanent) ||
-            (MdBlock->MemoryType == LoaderBBTMemory) ||
-            (MdBlock->MemoryType == LoaderHALCachedMemory) ||
-            (MdBlock->MemoryType == LoaderSpecialMemory) ||
-            (MdBlock->MemoryType == LoaderBad))
+        if (!MiIncludeType[MdBlock->MemoryType])
         {
             continue;
         }
@@ -353,12 +362,16 @@ MiArmInitializeMemoryLayout(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ASSERT(MmSessionBase <= MiSessionPoolStart);
 }
 
+
 VOID
 MiArmInitializePageTable()
 {
     ULONG64 PageFrameOffset;
     PMMPTE Pte, StartPte, EndPte;
-    MMPTE TmpPte;
+    MMPTE TmplPte;
+
+    /* HACK: don't use freeldr debug print anymore */
+    FrLdrDbgPrint = NoDbgPrint;
 
     /* Get current directory base */
     PageFrameOffset = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber << PAGE_SHIFT;
@@ -367,44 +380,58 @@ MiArmInitializePageTable()
     /* Set directory base for the system process */
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameOffset;
 
-    /* HACK: don't use freeldr debug print anymore */
-//    FrLdrDbgPrint = NoDbgPrint;
+    /* Enable global pages */
+    __writecr4(__readcr4() | CR4_PGE);
+    ASSERT(__readcr4() & CR4_PGE);
 
-    /* Clear user mode mappings in PML4 */
+    /* Set user mode address range */
     StartPte = MiAddressToPxe(0);
     EndPte = MiAddressToPxe(MmHighestUserAddress);
 
     /* Loop the user mode PXEs */
     for (Pte = StartPte; Pte <= EndPte; Pte++)
     {
-        /* Zero the PXE */
-//        Pte->u.Long = 0;
+        /* Zero the PXE, clear all mappings */
+        Pte->u.Long = 0;
     }
 
-    /* Setup a template PTE */
-    TmpPte.u.Long = 0;
-    TmpPte.u.Flush.Valid = 1;
-    TmpPte.u.Flush.Write = 1;
+    /* Set up a template PTE */
+    TmplPte.u.Long = 0;
+    TmplPte.u.Flush.Valid = 1;
+    TmplPte.u.Flush.Write = 1;
+    HyperTemplatePte = TmplPte;
 
-    HyperTemplatePte = TmpPte;
+    /* Create PDPTs (72 KB) for shared system address space, 
+     * skip page tables and hyperspace */
 
-    /* Create PDPTs (1MB total) for shared system address space */
-    StartPte = MiAddressToPxe(MmSystemRangeStart);
+    /* Set the range */
+    StartPte = MiAddressToPxe((PVOID)(HYPER_SPACE_END + 1));
     EndPte = MiAddressToPxe(MI_HIGHEST_SYSTEM_ADDRESS);
 
-    /* Loop the system space PXEs */
+    /* Loop the PXEs */
     for (Pte = StartPte; Pte <= EndPte; Pte++)
     {
         /* Is the PXE already valid? */
         if (!Pte->u.Hard.Valid)
         {
-            /* It's not Initialize it, creating a PDPT. */
-            TmpPte.u.Flush.PageFrameNumber = MxGetNextPage(1);
-            *Pte = TmpPte;
+            /* It's not Initialize it */
+            TmplPte.u.Flush.PageFrameNumber = MxGetNextPage(1);
+            *Pte = TmplPte;
 
             /* Zero the page. The PXE is the PTE for the PDPT. */
             RtlZeroMemory(MiPteToAddress(Pte), PAGE_SIZE);
         }
+    }
+
+    /* Set the range of system PTEs */
+    StartPte = MiAddressToPte(MI_SYSTEM_PTE_START);
+    EndPte = StartPte + MmNumberOfSystemPtes - 1;
+
+    /* Loop the system PTEs */
+    for (Pte = StartPte; Pte <= EndPte; Pte++)
+    {
+        /* Make sure the PTE is valid */
+        MxGetPte(MiPteToAddress(Pte));
     }
 
     /* Flush the TLB */
@@ -443,11 +470,7 @@ MiArmPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                     ListEntry);
 
         /* Skip pages that are not part of the PFN database */
-        if ((MdBlock->MemoryType == LoaderFirmwarePermanent) ||
-            (MdBlock->MemoryType == LoaderBBTMemory) ||
-            (MdBlock->MemoryType == LoaderHALCachedMemory) ||
-            (MdBlock->MemoryType == LoaderSpecialMemory) ||
-            (MdBlock->MemoryType == LoaderBad))
+        if (!MiIncludeType[MdBlock->MemoryType])
         {
             continue;
         }
@@ -540,40 +563,32 @@ MiArmPrepareNonPagedPool()
 
 }
 
-PPHYSICAL_MEMORY_DESCRIPTOR
-NTAPI
-MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                         IN PBOOLEAN IncludeType)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
 
 VOID
 NTAPI
 MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    BOOLEAN IncludeType[LoaderMaximum];
-    PPHYSICAL_MEMORY_RUN Run;
+    PPHYSICAL_MEMORY_DESCRIPTOR Buffer, NewBuffer;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    PLIST_ENTRY ListEntry;
+    PFN_NUMBER NextPage = -1;
     PULONG Bitmap;
+    ULONG Runs = 0;
     ULONG Size, i;
-
-    /* Instantiate memory that we don't consider RAM/usable */
-    for (i = 0; i < LoaderMaximum; i++) IncludeType[i] = TRUE;
-    IncludeType[LoaderBad] = FALSE;
-    IncludeType[LoaderFirmwarePermanent] = FALSE;
-    IncludeType[LoaderSpecialMemory] = FALSE;
-    IncludeType[LoaderBBTMemory] = FALSE;
-
-    /* Build the physical memory block */
-    MmPhysicalMemoryBlock = MmInitializeMemoryLimits(LoaderBlock, IncludeType);
 
     /* Calculate size for the PFN bitmap */
     Size = (MmHighestPhysicalPage + sizeof(ULONG)) / sizeof(ULONG);
 
     /* Allocate the PFN bitmap */
     Bitmap = ExAllocatePoolWithTag(NonPagedPool, Size, '  mM');
-    if (!Bitmap)
+
+    /* Allocate enough memory for the physical memory block */
+    Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                   sizeof(PHYSICAL_MEMORY_DESCRIPTOR) +
+                                   sizeof(PHYSICAL_MEMORY_RUN) *
+                                   (MiNumberDescriptors - 1),
+                                   'lMmM');
+    if (!Bitmap || !Buffer)
     {
         /* This is critical */
         KeBugCheckEx(INSTALL_MORE_MEMORY,
@@ -583,26 +598,52 @@ MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                      0x101);
     }
 
-    /* Initialize it and clear all the bits to begin with */
+    /* Initialize the bitmap and clear all bits */
     RtlInitializeBitMap(&MiPfnBitMap, Bitmap, MmHighestPhysicalPage + 1);
     RtlClearAllBits(&MiPfnBitMap);
 
-    /* Loop physical memory runs */
-    for (i = 0; i < MmPhysicalMemoryBlock->NumberOfRuns; i++)
+    /* Loop the memory descriptors */
+    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+         ListEntry = ListEntry->Flink)
     {
-        /* Get the run */
-        Run = &MmPhysicalMemoryBlock->Run[i];
-        DPRINT("PHYSICAL RAM [0x%08p to 0x%08p]\n",
-               Run->BasePage << PAGE_SHIFT,
-               (Run->BasePage + Run->PageCount) << PAGE_SHIFT);
+        /* Get the memory descriptor */
+        MdBlock = CONTAINING_RECORD(ListEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
 
-        /* Make sure it has pages inside it */
-        if (Run->PageCount)
+        /* Skip pages that are not part of the PFN database */
+        if (!MiIncludeType[MdBlock->MemoryType])
         {
-            /* Set the bits in the PFN bitmap */
-            RtlSetBits(&MiPfnBitMap, Run->BasePage, Run->PageCount);
+            continue;
         }
+
+        /* Does the memory block begin where the last ended? */
+        if (MdBlock->BasePage == NextPage)
+        {
+            /* Add it to the current run */
+            Buffer->Run[Runs - 1].PageCount += MdBlock->PageCount;
+        }
+        else
+        {
+            /* Create a new run */
+            Runs++;
+            Buffer->Run[Runs - 1].BasePage = MdBlock->BasePage;
+            Buffer->Run[Runs - 1].PageCount = MdBlock->PageCount;
+        }
+
+        /* Set the bits in the PFN bitmap */
+        RtlSetBits(&MiPfnBitMap, MdBlock->BasePage, MdBlock->PageCount);
+
+        /* Set the next page */
+        NextPage = MdBlock->BasePage + MdBlock->PageCount;
     }
+
+    // FIXME: allocate a buffer of better size
+
+    Buffer->NumberOfRuns = Runs;
+    Buffer->NumberOfPages = MmNumberOfPhysicalPages;
+    MmPhysicalMemoryBlock = Buffer;
 }
 
 VOID
@@ -629,14 +670,14 @@ MmArmInitSystem(IN ULONG Phase,
         /* Initialize the memory layout */
         MiArmInitializeMemoryLayout(LoaderBlock);
 
-        /* Initialize some mappings */
-        MiArmInitializePageTable();
-
         /* Prepare PFN database mappings */
         MiArmPreparePfnDatabse(LoaderBlock);
 
         /* Prepare paged pool mappings */
         MiArmPrepareNonPagedPool();
+
+        /* Initialize some mappings */
+        MiArmInitializePageTable();
 
         /* Initialize the ARM3 nonpaged pool */
         MiInitializeArmPool();
@@ -653,17 +694,12 @@ MmArmInitSystem(IN ULONG Phase,
         ULONG OldCount;
         PPHYSICAL_MEMORY_RUN Run;
 
-        __debugbreak();
-
         /* The PFN database was created, restore the free descriptor */
         *MxFreeDescriptor = MxOldFreeDescriptor;
-
-        __debugbreak();
 
         /* Initialize the nonpaged pool */
         InitializePool(NonPagedPool, 0);
 
-#if 0
         /* Create the system PTE space */
         Pte = MiAddressToPte(MI_SYSTEM_PTE_START);
         MiInitializeSystemPtes(Pte, MmNumberOfSystemPtes, SystemPteSpace);
@@ -675,7 +711,6 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Set the counter to maximum */
         MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
-#endif
 
         /* Build the physical memory block */
         MiBuildPhysicalMemoryBlock(LoaderBlock);
