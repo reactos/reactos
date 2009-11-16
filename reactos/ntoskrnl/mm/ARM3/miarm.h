@@ -62,6 +62,7 @@ typedef struct _POOL_DESCRIPTOR
     LIST_ENTRY ListHeads[POOL_LISTS_PER_PAGE];
 } POOL_DESCRIPTOR, *PPOOL_DESCRIPTOR;
 
+#ifndef _WIN64
 typedef struct _POOL_HEADER
 {
     union
@@ -85,12 +86,37 @@ typedef struct _POOL_HEADER
         };
     };
 } POOL_HEADER, *PPOOL_HEADER;
+#else
+typedef struct _POOL_HEADER
+{
+    union
+    {
+        struct
+        {
+            ULONG PreviousSize : 8;
+            ULONG PoolIndex : 8;
+            ULONG BlockSize : 8;
+            ULONG PoolType : 8;
+        };
+        ULONG      Ulong1;
+    };
+    ULONG PoolTag;
+    union
+    {
+        PEPROCESS* ProcessBilled;
+        struct
+        {
+             USHORT AllocatorBackTraceIndex;
+             USHORT PoolTagHash;
+        };
+    };
+} POOL_HEADER, *PPOOL_HEADER;
+#endif
 
 //
 // Everything depends on this
 //
-C_ASSERT(sizeof(POOL_HEADER) == 8);
-//C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
+C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
 
 extern ULONG ExpNumberOfPagedPools;
 extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
