@@ -1203,19 +1203,28 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
         }
     }
 
-    TRACE("(%p %x %x %s)\n", gUIHandlerA, gUIFilter, log_type,
-                             debugstr_w(message));
+    TRACE("%p %p %p %x %x %s\n", gUIHandlerA, gUIHandlerW, gUIHandlerRecord,
+          gUIFilter, log_type, debugstr_w(message));
 
     /* convert it to ASCII */
-    len = WideCharToMultiByte( CP_ACP, 0, message, -1,
-                               NULL, 0, NULL, NULL );
+    len = WideCharToMultiByte( CP_ACP, 0, message, -1, NULL, 0, NULL, NULL );
     msg = msi_alloc( len );
-    WideCharToMultiByte( CP_ACP, 0, message, -1,
-                         msg, len, NULL, NULL );
+    WideCharToMultiByte( CP_ACP, 0, message, -1, msg, len, NULL, NULL );
 
-    if (gUIHandlerA && (gUIFilter & log_type))
+    if (gUIHandlerW && (gUIFilter & log_type))
     {
-        rc = gUIHandlerA(gUIContext,eMessageType,msg);
+        rc = gUIHandlerW( gUIContext, eMessageType, message );
+    }
+    else if (gUIHandlerA && (gUIFilter & log_type))
+    {
+        rc = gUIHandlerA( gUIContext, eMessageType, msg );
+    }
+    else if (gUIHandlerRecord && (gUIFilter & log_type))
+    {
+        MSIHANDLE rec = MsiCreateRecord( 1 );
+        MsiRecordSetStringW( rec, 0, message );
+        rc = gUIHandlerRecord( gUIContext, eMessageType, rec );
+        MsiCloseHandle( rec );
     }
 
     if ((!rc) && (gszLogFile[0]) && !((eMessageType & 0xff000000) ==
@@ -1234,8 +1243,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
         }
     }
     msi_free( msg );
-
-    msi_free( message);
+    msi_free( message );
 
     switch (eMessageType & 0xff000000)
     {
@@ -1890,6 +1898,14 @@ static HRESULT WINAPI mrp_EvaluateCondition( IWineMsiRemotePackage *iface, BSTR 
     return HRESULT_FROM_WIN32(r);
 }
 
+static HRESULT WINAPI mrp_GetFeatureCost( IWineMsiRemotePackage *iface, BSTR feature,
+                                          INT cost_tree, INSTALLSTATE state, INT *cost )
+{
+    msi_remote_package_impl* This = mrp_from_IWineMsiRemotePackage( iface );
+    UINT r = MsiGetFeatureCostW(This->package, feature, cost_tree, state, cost);
+    return HRESULT_FROM_WIN32(r);
+}
+
 static const IWineMsiRemotePackageVtbl msi_remote_package_vtbl =
 {
     mrp_QueryInterface,
@@ -1914,6 +1930,7 @@ static const IWineMsiRemotePackageVtbl msi_remote_package_vtbl =
     mrp_SetInstallLevel,
     mrp_FormatRecord,
     mrp_EvaluateCondition,
+    mrp_GetFeatureCost,
 };
 
 HRESULT create_msi_remote_package( IUnknown *pOuter, LPVOID *ppObj )
