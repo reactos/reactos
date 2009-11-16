@@ -595,6 +595,20 @@ int OskitTCPGetAddress( void *socket,
     return 0;
 }
 
+int OskitTCPGetSocketError(void *socket) {
+    struct socket *so = socket;
+    int error;
+
+    if (!socket)
+        return OSK_ESHUTDOWN;
+
+    OSKLock();
+    error = so->so_error;
+    OSKUnlock();
+
+    return error;
+}
+
 struct ifaddr *ifa_iffind(struct sockaddr *addr, int type)
 {
     if( OtcpEvent.FindInterface )

@@ -27,6 +27,7 @@ static VOID DrainSignals() {
     PLIST_ENTRY Entry;
     PIRP Irp;
     PMDL Mdl;
+    ULONG SocketError;
 
     KeAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
     CurrentEntry = ConnectionEndpointListHead.Flink;
@@ -44,8 +45,19 @@ static VOID DrainSignals() {
                                Connection, Connection->SocketContext));
 
         if( !Connection->SocketContext || Connection->SignalState & SEL_FIN ) {
-            KeReleaseSpinLock(&Connection->Lock, OldIrql);
             TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
+
+            Connection->SignalState = 0;
+
+            /* If OskitTCP initiated the disconnect, try to read the socket error that occurred */
+            if (Connection->SocketContext)
+                SocketError = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+
+            /* Default to STATUS_CANCELLED if we initiated the disconnect or no socket error was reported */
+            if (!Connection->SocketContext || !SocketError)
+                SocketError = STATUS_CANCELLED;
+
+            KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
             while ((Entry = ExInterlockedRemoveHeadList( &Connection->ReceiveRequest,
                                                          &Connection->Lock )) != NULL)
@@ -53,7 +65,7 @@ static VOID DrainSignals() {
                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
                Complete = Bucket->Request.RequestNotifyObject;
 
-               Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+               Complete( Bucket->Request.RequestContext, SocketError, 0 );
 
                exFreePool(Bucket);
             }
@@ -64,7 +76,7 @@ static VOID DrainSignals() {
                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
                Complete = Bucket->Request.RequestNotifyObject;
 
-               Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+               Complete( Bucket->Request.RequestContext, SocketError, 0 );
 
                exFreePool(Bucket);
             }
@@ -75,7 +87,7 @@ static VOID DrainSignals() {
                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
                Complete = Bucket->Request.RequestNotifyObject;
 
-               Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+               Complete( Bucket->Request.RequestContext, SocketError, 0 );
 
                exFreePool(Bucket);
             }
@@ -86,7 +98,7 @@ static VOID DrainSignals() {
                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
                Complete = Bucket->Request.RequestNotifyObject;
 
-               Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+               Complete( Bucket->Request.RequestContext, SocketError, 0 );
 
                exFreePool(Bucket);
             }
@@ -573,8 +585,9 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     case 0: Status = STATUS_SUCCESS; break;
     case OSK_EADDRNOTAVAIL: Status = STATUS_INVALID_ADDRESS; break;
     case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
-    case OSK_ECONNREFUSED:
-    case OSK_ECONNRESET: Status = STATUS_REMOTE_NOT_LISTENING; break;
+    case OSK_ECONNREFUSED: Status = STATUS_REMOTE_NOT_LISTENING; break;
+    case OSK_ECONNRESET:
+    case OSK_ECONNABORTED: Status = STATUS_REMOTE_DISCONNECT; break;
     case OSK_EWOULDBLOCK:
     case OSK_EINPROGRESS: Status = STATUS_PENDING; break;
     case OSK_EINVAL: Status = STATUS_INVALID_PARAMETER; break;

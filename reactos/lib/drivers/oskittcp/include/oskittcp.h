@@ -164,6 +164,8 @@ int OskitTCPSetSockOpt(void *socket,
 
 int OskitTCPDisconnect(void *socket);
 
+int OskitTCPGetSocketError(void *socket);
+
 #undef errno
 
 void *fbsd_malloc( unsigned int bytes, char *file, unsigned line, ... );
