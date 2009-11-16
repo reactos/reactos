@@ -1201,6 +1201,7 @@ static void test_MsiQueryFeatureState(void)
     RegCloseKey(compkey2);
     RegCloseKey(localkey);
     RegCloseKey(userkey);
+    LocalFree(usersid);
 }
 
 static void test_MsiQueryComponentState(void)
@@ -1520,6 +1521,7 @@ static void test_MsiQueryComponentState(void)
     RegDeleteKeyA(compkey, "");
     RegCloseKey(prodkey);
     RegCloseKey(compkey);
+    LocalFree(usersid);
 }
 
 static void test_MsiGetComponentPath(void)
@@ -1872,6 +1874,7 @@ static void test_MsiGetComponentPath(void)
     RegCloseKey(prodkey);
     RegCloseKey(compkey);
     DeleteFileA("C:\\imapath");
+    LocalFree(usersid);
 }
 
 static void test_MsiGetProductCode(void)
@@ -2128,6 +2131,7 @@ static void test_MsiGetProductCode(void)
     RegDeleteValueA(compkey, prod2_squashed);
     RegDeleteKeyA(compkey, "");
     RegCloseKey(compkey);
+    LocalFree(usersid);
 }
 
 static void test_MsiEnumClients(void)
@@ -2314,6 +2318,7 @@ static void test_MsiEnumClients(void)
     RegDeleteValueA(compkey, prod2_squashed);
     RegDeleteKeyA(compkey, "");
     RegCloseKey(compkey);
+    LocalFree(usersid);
 }
 
 static void get_version_info(LPSTR path, LPSTR *vercheck, LPDWORD verchecksz,
@@ -3845,6 +3850,7 @@ static void test_MsiGetProductInfo(void)
     RegCloseKey(localkey);
     RegCloseKey(source);
     RegCloseKey(prodkey);
+    LocalFree(usersid);
 }
 
 static void test_MsiGetProductInfoEx(void)
@@ -6582,6 +6588,7 @@ static void test_MsiGetProductInfoEx(void)
     RegDeleteValueA(prodkey, "HelpLink");
     RegDeleteKeyA(prodkey, "");
     RegCloseKey(prodkey);
+    LocalFree(usersid);
 }
 
 #define INIT_USERINFO() \
@@ -7161,6 +7168,7 @@ static void test_MsiGetUserInfo(void)
     RegCloseKey(userprod);
     RegDeleteKeyA(prodkey, "");
     RegCloseKey(prodkey);
+    LocalFree(usersid);
 }
 
 static void test_MsiOpenProduct(void)
@@ -7473,6 +7481,7 @@ static void test_MsiOpenProduct(void)
     RegCloseKey(prodkey);
 
     DeleteFileA(msifile);
+    LocalFree(usersid);
 }
 
 static void test_MsiEnumPatchesEx_usermanaged(LPCSTR usersid, LPCSTR expectedsid)
@@ -9201,6 +9210,7 @@ static void test_MsiEnumPatchesEx(void)
     test_MsiEnumPatchesEx_userunmanaged(NULL, usersid);
     /* FIXME: Successfully test userunmanaged with a different user */
     test_MsiEnumPatchesEx_machine();
+    LocalFree(usersid);
 }
 
 static void test_MsiEnumPatches(void)
@@ -9864,6 +9874,7 @@ static void test_MsiEnumPatches(void)
     RegCloseKey(udprod);
     RegDeleteKeyA(prodkey, "");
     RegCloseKey(prodkey);
+    LocalFree(usersid);
 }
 
 static void test_MsiGetPatchInfoEx(void)
@@ -10876,6 +10887,7 @@ static void test_MsiGetPatchInfoEx(void)
     RegCloseKey(props);
     RegDeleteKeyA(udprod, "");
     RegCloseKey(udprod);
+    LocalFree(usersid);
 }
 
 static void test_MsiEnumProducts(void)

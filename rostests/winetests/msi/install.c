@@ -35,6 +35,8 @@
 
 static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE*);
+static UINT (WINAPI *pMsiSetExternalUIRecord)
+    (INSTALLUI_HANDLER_RECORD, DWORD, LPVOID, PINSTALLUI_HANDLER_RECORD);
 static UINT (WINAPI *pMsiSourceListEnumSourcesA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPSTR, LPDWORD);
 static UINT (WINAPI *pMsiSourceListGetInfoA)
@@ -172,7 +174,13 @@ static const CHAR environment_dat[] = "Environment\tName\tValue\tComponent_\n"
                                       "Var1\t=-MSITESTVAR1\t1\tOne\n"
                                       "Var2\tMSITESTVAR2\t1\tOne\n"
                                       "Var3\t=-MSITESTVAR3\t1\tOne\n"
-                                      "Var4\tMSITESTVAR4\t1\tOne\n";
+                                      "Var4\tMSITESTVAR4\t1\tOne\n"
+                                      "Var5\t-MSITESTVAR5\t\tOne\n"
+                                      "Var6\tMSITESTVAR6\t\tOne\n"
+                                      "Var7\t!-MSITESTVAR7\t\tOne\n"
+                                      "Var8\t!-*MSITESTVAR8\t\tOne\n"
+                                      "Var9\t=-MSITESTVAR9\t\tOne\n"
+                                      "Var10\t=MSITESTVAR10\t\tOne\n";
 
 static const CHAR condition_dat[] = "Feature_\tLevel\tCondition\n"
                                     "s38\ti2\tS255\n"
@@ -1684,6 +1692,7 @@ static void init_functionpointers(void)
       trace("GetProcAddress(%s) failed\n", #func);
 
     GET_PROC(hmsi, MsiQueryComponentStateA);
+    GET_PROC(hmsi, MsiSetExternalUIRecord);
     GET_PROC(hmsi, MsiSourceListEnumSourcesA);
     GET_PROC(hmsi, MsiSourceListGetInfoA);
 
@@ -3944,6 +3953,7 @@ static void test_publish_registeruser(void)
     DeleteFile(msifile);
     DeleteFile("msitest\\maximus");
     RemoveDirectory("msitest");
+    LocalFree(usersid);
 }
 
 static void test_publish_processcomponents(void)
@@ -4068,6 +4078,7 @@ static void test_publish_processcomponents(void)
     DeleteFile(msifile);
     DeleteFile("msitest\\maximus");
     RemoveDirectory("msitest");
+    LocalFree(usersid);
 }
 
 static void test_publish(void)
@@ -6605,6 +6616,24 @@ static void test_envvar(void)
     res = RegDeleteValueA(env, "MSITESTVAR4");
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
+    res = RegDeleteValueA(env, "MSITESTVAR5");
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
+    res = RegDeleteValueA(env, "MSITESTVAR6");
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
+    res = RegDeleteValueA(env, "MSITESTVAR7");
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
+    res = RegDeleteValueA(env, "MSITESTVAR8");
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
+    res = RegDeleteValueA(env, "MSITESTVAR9");
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
+    res = RegDeleteValueA(env, "MSITESTVAR10");
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
     RegCloseKey(env);
 
     delete_pf("msitest\\cabout\\new\\five.txt", TRUE);
@@ -6869,6 +6898,84 @@ static void test_file_in_use_cab(void)
     delete_test_files();
 }
 
+static INT CALLBACK handler_a(LPVOID context, UINT type, LPCSTR msg)
+{
+    return IDOK;
+}
+
+static INT CALLBACK handler_w(LPVOID context, UINT type, LPCWSTR msg)
+{
+    return IDOK;
+}
+
+static INT CALLBACK handler_record(LPVOID context, UINT type, MSIHANDLE record)
+{
+    return IDOK;
+}
+
+static void test_MsiSetExternalUI(void)
+{
+    INSTALLUI_HANDLERA ret_a;
+    INSTALLUI_HANDLERW ret_w;
+    INSTALLUI_HANDLER_RECORD prev;
+    UINT error;
+
+    ret_a = MsiSetExternalUIA(handler_a, INSTALLLOGMODE_ERROR, NULL);
+    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
+
+    ret_a = MsiSetExternalUIA(NULL, 0, NULL);
+    ok(ret_a == handler_a, "expected %p, got %p\n", handler_a, ret_a);
+
+    /* Not present before Installer 3.1 */
+    if (!pMsiSetExternalUIRecord) {
+        win_skip("MsiSetExternalUIRecord is not available\n");
+        return;
+    }
+
+    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, &prev);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+    ok(prev == NULL, "expected NULL, got %p\n", prev);
+
+    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
+    error = pMsiSetExternalUIRecord(NULL, INSTALLLOGMODE_ERROR, NULL, &prev);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+    ok(prev == handler_record, "expected %p, got %p\n", handler_record, prev);
+
+    ret_w = MsiSetExternalUIW(handler_w, INSTALLLOGMODE_ERROR, NULL);
+    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
+
+    ret_w = MsiSetExternalUIW(NULL, 0, NULL);
+    ok(ret_w == handler_w, "expected %p, got %p\n", handler_w, ret_w);
+
+    ret_a = MsiSetExternalUIA(handler_a, INSTALLLOGMODE_ERROR, NULL);
+    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
+
+    ret_w = MsiSetExternalUIW(handler_w, INSTALLLOGMODE_ERROR, NULL);
+    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
+
+    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
+    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, &prev);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+    ok(prev == NULL, "expected NULL, got %p\n", prev);
+
+    ret_a = MsiSetExternalUIA(NULL, 0, NULL);
+    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
+
+    ret_w = MsiSetExternalUIW(NULL, 0, NULL);
+    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
+
+    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
+    error = pMsiSetExternalUIRecord(NULL, 0, NULL, &prev);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+    ok(prev == handler_record, "expected %p, got %p\n", handler_record, prev);
+
+    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, NULL);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+
+    error = pMsiSetExternalUIRecord(NULL, 0, NULL, NULL);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+}
+
 START_TEST(install)
 {
     DWORD len;
@@ -6957,6 +7064,7 @@ START_TEST(install)
     test_installed_prop();
     test_file_in_use();
     test_file_in_use_cab();
+    test_MsiSetExternalUI();
 
     DeleteFileA(log_file);
 
