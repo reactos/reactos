@@ -5,7 +5,7 @@ LDFLAG_CONSOLE:=--subsystem=console
 LDFLAG_WINDOWS:=--subsystem=windows
 LDFLAG_NATIVE:=--subsystem=native
 
-#(module, objs, deps, ldflags, output, def, libs, entry, base, extralibs)
+#(module, objs, deps, ldflags, output, def, libs, entry, base)
 define RBUILD_LINK
 
 ifneq ($(6),)
@@ -29,7 +29,7 @@ endif
 
 $(5): $(2) $$(if $(6),${call RBUILD_intermediate_path_noext,$(5)}.exp) $(7) $(3) $$(RSYM_TARGET) $$(PEFIXUP_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_LD)
-	$${ld} --entry=$(8) --image-base=$(9) $(2) $$(if $(6),${call RBUILD_intermediate_path_noext,$(5)}.exp) $(10) $(7) $(10) ${call RBUILD_ldflags,$(1),$(4)} -o $$@
+	$${ld} --entry=$(8) --image-base=$(9) $(2) $$(if $(6),${call RBUILD_intermediate_path_noext,$(5)}.exp) $(7) ${call RBUILD_ldflags,$(1),$(4)} -o $$@
 ifneq ($(or $(6),$$(MODULETYPE$$($(1)_TYPE)_KMODE)),)
 	$$(ECHO_PEFIXUP)
 	$$(Q)$$(PEFIXUP_TARGET) $$@ $(if $(6),-exports) $$(if $$(MODULETYPE$($(1)_TYPE)_KMODE),-sections)
@@ -67,6 +67,4 @@ endif
 endef
 
 #(module, def, deps, ldflags, libs, entry, base)
-#~ RBUILD_LINK_RULE=${call RBUILD_LINK,$(1),$(value $(1)_OBJS),$(3),$(4),$(value $(1)_TARGET),$(2),$(5) $(value $(1)_LIBS) $(5),$(6),$(7)}
-#(module, def, deps, ldflags, libs, entry, base, extralibs)
-RBUILD_LINK_RULE=${call RBUILD_LINK,$(1),$(value $(1)_OBJS),$(3),$(4),$(value $(1)_TARGET),$(2),$(value $(1)_LIBS),$(6),$(7),$(5)}
+RBUILD_LINK_RULE=${call RBUILD_LINK,$(1),$(value $(1)_OBJS),$(3),$(4),$(value $(1)_TARGET),$(2),$(5) $(value $(1)_LIBS) $(5),$(6),$(7)}
