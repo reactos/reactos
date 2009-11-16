@@ -89,7 +89,7 @@ FsRtlCopyRead(IN PFILE_OBJECT FileObject,
         return TRUE;
     }
 
-    if (MAXLONGLONG < (LONGLONG) FileOffset->QuadPart + Length)
+    if (Length > MAXLONGLONG - FileOffset->QuadPart)
     {
         IoStatus->Status = STATUS_INVALID_PARAMETER;
         IoStatus->Information = 0;
@@ -292,6 +292,11 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
 
     ASSERT(FileObject);
     ASSERT(FileObject->FsContext);
+
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ == 405)
+    /* Silence incorrect GCC 4.5.x warning */
+    OldFileSize.LowPart = 0;
+#endif
 
     /* Initialize some of the vars and pointers */
     NewSize.QuadPart = 0;
@@ -540,6 +545,11 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
     {
         LARGE_INTEGER OldFileSize;
 
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ == 405)
+        /* Silence incorrect GCC 4.5.x warning */
+        OldFileSize.QuadPart = 0;
+#endif
+
         /* Sanity check */
         ASSERT(!KeIsExecutingDpc());
 
@@ -586,7 +596,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
         if ((FileObject->PrivateCacheMap != NULL) &&
             (FcbHeader->IsFastIoPossible != FastIoIsNotPossible) &&
             (FcbHeader->ValidDataLength.QuadPart + 0x2000 > Offset.QuadPart) &&
-            (MAXLONGLONG > Offset.QuadPart + Length) &&
+            (Length <= MAXLONGLONG - Offset.QuadPart) &&
             (FcbHeader->AllocationSize.QuadPart >= NewSize.QuadPart))
         {
             /* Check if we can keep the lock shared */
@@ -1349,7 +1359,7 @@ FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
 
     if ((FileObject->PrivateCacheMap) &&
         (FcbHeader->IsFastIoPossible) &&
-        (MAXLONGLONG >= (LONGLONG) FileOffset->QuadPart + Length) &&
+        (Length <= MAXLONGLONG - FileOffset->QuadPart) &&
         (NewSize.QuadPart <= FcbHeader->AllocationSize.QuadPart))
     {
         /* Check if we can keep the lock shared */
