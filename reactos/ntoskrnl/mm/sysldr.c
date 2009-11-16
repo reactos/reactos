@@ -38,7 +38,6 @@ PVOID MmUnloadedDrivers;
 PVOID MmLastUnloadedDrivers;
 PVOID MmTriageActionTaken;
 PVOID KernelVerifier;
-MM_DRIVER_VERIFIER_DATA MmVerifierData;
 
 /* FUNCTIONS *****************************************************************/
 
