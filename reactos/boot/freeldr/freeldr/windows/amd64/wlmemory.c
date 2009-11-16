@@ -15,23 +15,13 @@
 
 //extern ULONG LoaderPagesSpanned;
 
-#define HYPER_SPACE_ENTRY       0x300
-
-// This is needed only for SetProcessorContext routine
-#pragma pack(2)
-	typedef struct
-	{
-		USHORT Limit;
-		ULONG Base;
-	} GDTIDT;
-#pragma pack(4)
+#define HYPER_SPACE_ENTRY       0x1EE
 
 /* GLOBALS ***************************************************************/
 
-//PHARDWARE_PTE PDE;
+PHARDWARE_PTE PxeBase;
 //PHARDWARE_PTE HalPageTable;
 
-PPAGE_DIRECTORY_AMD64 pPML4;
 
 /* FUNCTIONS **************************************************************/
 
@@ -44,8 +34,8 @@ MempAllocatePageTables()
     DPRINTM(DPRINT_WINDOWS,">>> MempAllocatePageTables\n");
 
 	/* Allocate a page for the PML4 */
-	pPML4 = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
-    if (!pPML4)
+	PxeBase = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
+    if (!PxeBase)
     {
         DPRINTM(DPRINT_WINDOWS,"failed to allocate PML4\n");
         return FALSE;
@@ -54,14 +44,14 @@ MempAllocatePageTables()
 	// FIXME: Physical PTEs = FirmwareTemporary ?
 
 	/* Zero the PML4 */
-	RtlZeroMemory(pPML4, PAGE_SIZE);
+	RtlZeroMemory(PxeBase, PAGE_SIZE);
 
 	/* The page tables are located at 0xfffff68000000000 
 	 * We create a recursive self mapping through all 4 levels at 
 	 * virtual address 0xfffff6fb7dbedf68 */
-	pPML4->Pde[VAtoPXI(PXE_BASE)].Valid = 1;
-	pPML4->Pde[VAtoPXI(PXE_BASE)].Write = 1;
-	pPML4->Pde[VAtoPXI(PXE_BASE)].PageFrameNumber = PtrToPfn(pPML4);
+	PxeBase[VAtoPXI(PXE_BASE)].Valid = 1;
+	PxeBase[VAtoPXI(PXE_BASE)].Write = 1;
+	PxeBase[VAtoPXI(PXE_BASE)].PageFrameNumber = PtrToPfn(PxeBase);
 
     // FIXME: map PDE's for hals memory mapping
 
@@ -70,57 +60,57 @@ MempAllocatePageTables()
 	return TRUE;
 }
 
-PPAGE_DIRECTORY_AMD64
-MempGetOrCreatePageDir(PPAGE_DIRECTORY_AMD64 pDir, ULONG Index)
+PHARDWARE_PTE
+MempGetOrCreatePageDir(PHARDWARE_PTE PdeBase, ULONG Index)
 {
-	PPAGE_DIRECTORY_AMD64 pSubDir;
+	PHARDWARE_PTE SubDir;
 
-	if (!pDir)
+	if (!PdeBase)
 		return NULL;
 
-	if (!pDir->Pde[Index].Valid)
+	if (!PdeBase[Index].Valid)
 	{
-		pSubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
-		if (!pSubDir)
+		SubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
+		if (!SubDir)
 			return NULL;
-		RtlZeroMemory(pSubDir, PAGE_SIZE);
-		pDir->Pde[Index].PageFrameNumber = PtrToPfn(pSubDir);
-		pDir->Pde[Index].Valid = 1;
-		pDir->Pde[Index].Write = 1;
+		RtlZeroMemory(SubDir, PAGE_SIZE);
+		PdeBase[Index].PageFrameNumber = PtrToPfn(SubDir);
+		PdeBase[Index].Valid = 1;
+		PdeBase[Index].Write = 1;
 	}
 	else
 	{
-		pSubDir = (PPAGE_DIRECTORY_AMD64)((ULONGLONG)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+		SubDir = (PVOID)((ULONG64)(PdeBase[Index].PageFrameNumber) * PAGE_SIZE);
 	}
-	return pSubDir;
+	return SubDir;
 }
 
 BOOLEAN
 MempMapSinglePage(ULONG64 VirtualAddress, ULONG64 PhysicalAddress)
 {
-	PPAGE_DIRECTORY_AMD64 pDir3, pDir2, pDir1;
+	PHARDWARE_PTE PpeBase, PdeBase, PteBase;
 	ULONG Index;
 
-	pDir3 = MempGetOrCreatePageDir(pPML4, VAtoPXI(VirtualAddress));
-	pDir2 = MempGetOrCreatePageDir(pDir3, VAtoPPI(VirtualAddress));
-	pDir1 = MempGetOrCreatePageDir(pDir2, VAtoPDI(VirtualAddress));
+	PpeBase = MempGetOrCreatePageDir(PxeBase, VAtoPXI(VirtualAddress));
+	PdeBase = MempGetOrCreatePageDir(PpeBase, VAtoPPI(VirtualAddress));
+	PteBase = MempGetOrCreatePageDir(PdeBase, VAtoPDI(VirtualAddress));
 
-	if (!pDir1)
+	if (!PteBase)
 	{
-        DPRINTM(DPRINT_WINDOWS,"!!!No Dir %p, %p, %p, %p\n", pPML4, pDir3, pDir2, pDir1);
+        DPRINTM(DPRINT_WINDOWS,"!!!No Dir %p, %p, %p, %p\n", PxeBase, PpeBase, PdeBase, PteBase);
 		return FALSE;
 	}
 
 	Index = VAtoPTI(VirtualAddress);
-	if (pDir1->Pde[Index].Valid)
+	if (PteBase[Index].Valid)
 	{
         DPRINTM(DPRINT_WINDOWS,"!!!Already mapped %ld\n", Index);
 		return FALSE;
 	}
 
-	pDir1->Pde[Index].Valid = 1;
-	pDir1->Pde[Index].Write = 1;
-	pDir1->Pde[Index].PageFrameNumber = PhysicalAddress / PAGE_SIZE;
+	PteBase[Index].Valid = 1;
+	PteBase[Index].Write = 1;
+	PteBase[Index].PageFrameNumber = PhysicalAddress / PAGE_SIZE;
 
 	return TRUE;
 }
@@ -128,34 +118,33 @@ MempMapSinglePage(ULONG64 VirtualAddress, ULONG64 PhysicalAddress)
 BOOLEAN
 MempIsPageMapped(PVOID VirtualAddress)
 {
-    PPAGE_DIRECTORY_AMD64 pDir;
+	PHARDWARE_PTE PpeBase, PdeBase, PteBase;
     ULONG Index;
     
-    pDir = pPML4;
     Index = VAtoPXI(VirtualAddress);
-    if (!pDir->Pde[Index].Valid)
+    if (!PxeBase[Index].Valid)
         return FALSE;
 
-    pDir = (PPAGE_DIRECTORY_AMD64)((ULONG64)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+    PpeBase = (PVOID)((ULONG64)(PxeBase[Index].PageFrameNumber) * PAGE_SIZE);
     Index = VAtoPPI(VirtualAddress);
-    if (!pDir->Pde[Index].Valid)
+    if (!PpeBase[Index].Valid)
         return FALSE;
 
-    pDir = (PPAGE_DIRECTORY_AMD64)((ULONG64)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+    PdeBase = (PVOID)((ULONG64)(PpeBase[Index].PageFrameNumber) * PAGE_SIZE);
     Index = VAtoPDI(VirtualAddress);
-    if (!pDir->Pde[Index].Valid)
+    if (!PdeBase[Index].Valid)
         return FALSE;
 
-    pDir = (PPAGE_DIRECTORY_AMD64)((ULONG64)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+    PteBase = (PVOID)((ULONG64)(PdeBase[Index].PageFrameNumber) * PAGE_SIZE);
     Index = VAtoPTI(VirtualAddress);
-    if (!pDir->Pde[Index].Valid)
+    if (!PteBase[Index].Valid)
         return FALSE;
 
     return TRUE;
 }
 
 ULONG
-MempMapRangeOfPages(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress, ULONG cPages)
+MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, ULONG cPages)
 {
 	ULONG i;
 
@@ -333,10 +322,10 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
 	__writeeflags(0);
 
 	/* Set the new PML4 */
-	__writecr3((ULONGLONG)pPML4);
+	__writecr3((ULONG64)PxeBase);
 
     /* Get kernel mode address of gdt / idt */
-	GdtIdt = (PVOID)((LONG64)GdtIdt + KSEG0_BASE);
+	GdtIdt = (PVOID)((ULONG64)GdtIdt + KSEG0_BASE);
 
     /* Create gdt entries and load gdtr */
     WinLdrSetupGdt(GdtIdt, Tss);
