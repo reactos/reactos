@@ -411,7 +411,6 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     PDBGKD_READ_MEMORY64 ReadMemory = &State->u.ReadMemory;
     STRING Header;
     ULONG Length = ReadMemory->TransferCount;
-    ULONG64 TargetBaseAddress = State->u.ReadMemory.TargetBaseAddress;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
