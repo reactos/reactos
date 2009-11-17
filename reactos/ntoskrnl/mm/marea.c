@@ -932,7 +932,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    ULONG tmpLength;
    PMEMORY_AREA MemoryArea;
 
-   DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %p, "
+   DPRINT("MmCreateMemoryArea(Type 0x%lx, BaseAddress %p, "
           "*BaseAddress %p, Length %p, AllocationFlags %x, "
           "FixedAddress %x, Result %p)\n",
           Type, BaseAddress, *BaseAddress, Length, AllocationFlags,
@@ -968,6 +968,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
       if (MmGetAddressSpaceOwner(AddressSpace) &&
           (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
       {
+         DPRINT("Memory area for user mode address space exceeds MmSystemRangeStart\n");
          return STATUS_ACCESS_VIOLATION;
       }
 
@@ -1008,7 +1009,11 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
                                            TAG_MAREA);
     }
 
-    if (!MemoryArea) return STATUS_NO_MEMORY;
+   if (!MemoryArea)
+   {
+      DPRINT("Not enough memory.\n");
+      return STATUS_NO_MEMORY;
+   }
 
    RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
    MemoryArea->Type = Type;
