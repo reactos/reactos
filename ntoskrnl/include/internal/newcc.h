@@ -134,6 +134,8 @@ typedef struct _NOCC_CACHE_MAP
     CC_FILE_SIZES FileSizes;
 	CACHE_MANAGER_CALLBACKS Callbacks;
 	PVOID LazyContext;
+	PVOID LogHandle;
+	PFLUSH_TO_LSN FlushToLsn;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 
 VOID

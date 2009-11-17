@@ -32,8 +32,10 @@ CcSetLogHandleForFile(IN PFILE_OBJECT FileObject,
                       IN PVOID LogHandle,
                       IN PFLUSH_TO_LSN FlushToLsnRoutine)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+	PNOCC_CACHE_MAP Map = FileObject->SectionObjectPointer->SharedCacheMap;
+	if (!Map) return;
+	Map->LogHandle = LogHandle;
+	Map->FlushToLsn = FlushToLsnRoutine;
 }
 
 LARGE_INTEGER
