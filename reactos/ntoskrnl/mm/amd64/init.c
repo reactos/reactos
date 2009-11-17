@@ -20,30 +20,8 @@ extern PMMPTE MmDebugPte;
 
 /* GLOBALS *****************************************************************/
 
-ULONG64 MmUserProbeAddress = 0x7FFFFFF0000ULL;
-PVOID MmHighestUserAddress = (PVOID)0x7FFFFFEFFFFULL;
-PVOID MmSystemRangeStart = (PVOID)0xFFFF080000000000ULL;
-
-/* Size of session view, pool, and image */
-ULONG64 MmSessionSize = MI_SESSION_SIZE;
-ULONG64 MmSessionViewSize = MI_SESSION_VIEW_SIZE;
-ULONG64 MmSessionPoolSize = MI_SESSION_POOL_SIZE;
-ULONG64 MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
-
-/* Session space addresses */
-PVOID MiSessionSpaceEnd = MI_SESSION_SPACE_END; // FFFFF98000000000
-PVOID MiSessionImageEnd;    // FFFFF98000000000 = MiSessionSpaceEnd
-PVOID MiSessionImageStart;  // ?FFFFF97FFF000000 = MiSessionImageEnd - MmSessionImageSize
-PVOID MiSessionViewEnd;     // FFFFF97FFF000000
-PVOID MiSessionViewStart;   //  = MiSessionViewEnd - MmSessionViewSize
-PVOID MiSessionPoolEnd;     //  = MiSessionViewStart
-PVOID MiSessionPoolStart;   // FFFFF90000000000 = MiSessionPoolEnd - MmSessionPoolSize
-PVOID MmSessionBase;        // FFFFF90000000000 = MiSessionPoolStart
-
-/* System view */
-ULONG64 MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
-PVOID MiSystemViewStart;
-
+/* Sizes */
+ULONG64 MmBootImageSize;
 ULONG64 MmMinimumNonPagedPoolSize = 256 * 1024;
 ULONG64 MmSizeOfNonPagedPoolInBytes;
 ULONG64 MmMaximumNonPagedPoolInBytes;
@@ -51,39 +29,57 @@ ULONG64 MmMaximumNonPagedPoolPercent;
 ULONG64 MmMinAdditionNonPagedPoolPerMb = 32 * 1024;
 ULONG64 MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 ULONG64 MmDefaultMaximumNonPagedPool = 1024 * 1024; 
-PVOID MmNonPagedSystemStart;
+ULONG64 MmSessionSize = MI_SESSION_SIZE;
+ULONG64 MmSessionViewSize = MI_SESSION_VIEW_SIZE;
+ULONG64 MmSessionPoolSize = MI_SESSION_POOL_SIZE;
+ULONG64 MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
+ULONG64 MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
+ULONG64 MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
+ULONG64 MiNonPagedSystemSize;
+
+/* Address ranges */
+ULONG64 MmUserProbeAddress = 0x7FFFFFF0000ULL;
+PVOID MmHighestUserAddress = (PVOID)0x7FFFFFEFFFFULL;
+PVOID MmSystemRangeStart = (PVOID)0xFFFF080000000000ULL;
+PVOID MmSessionBase;                            // FFFFF90000000000 = MiSessionPoolStart
+PVOID MiSessionPoolStart;                       // FFFFF90000000000 = MiSessionPoolEnd - MmSessionPoolSize
+PVOID MiSessionPoolEnd;                         //                  = MiSessionViewStart
+PVOID MiSessionViewStart;                       //                  = MiSessionViewEnd - MmSessionViewSize
+PVOID MiSessionViewEnd;                         // FFFFF97FFF000000
+PVOID MiSessionImageStart;                      // ?FFFFF97FFF000000 = MiSessionImageEnd - MmSessionImageSize
+PVOID MiSessionImageEnd;                        // FFFFF98000000000 = MiSessionSpaceEnd
+PVOID MiSessionSpaceEnd = MI_SESSION_SPACE_END; // FFFFF98000000000
+PVOID MmSystemCacheStart;                       // FFFFF98000000000
+PVOID MmSystemCacheEnd;                         // FFFFFA8000000000
+PVOID MmPagedPoolStart = MI_PAGED_POOL_START;   // FFFFFA8000000000
+PVOID MmPagedPoolEnd;                           // FFFFFAA000000000
+PVOID MiSystemViewStart;
+PVOID MmNonPagedSystemStart;                    // FFFFFAA000000000
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
-PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END;
+PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END; // 0xFFFFFAE000000000
 
-ULONG64 MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
-PVOID MmPagedPoolStart = MI_PAGED_POOL_START;
-PVOID MmPagedPoolEnd;
-
-
-ULONG64 MmBootImageSize;
 PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
-RTL_BITMAP MiPfnBitMap;
 ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1; // FIXME: ULONG64
-ULONG64 MmNumberOfSystemPtes;
+
+ULONG MmNumberOfSystemPtes;
 PMMPTE MmSystemPagePtes;
+MMSUPPORT MmSystemCacheWs;
+
+RTL_BITMAP MiPfnBitMap;
 ULONG64 MxPfnAllocation;
 ULONG64 MxPfnSizeInBytes;
 
-PVOID MmSystemCacheStart;
-PVOID MmSystemCacheEnd;
-MMSUPPORT MmSystemCacheWs;
-
+PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
+MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 ULONG MiNumberDescriptors = 0;
 BOOLEAN MiIncludeType[LoaderMaximum];
 
-///////////////////////////////////////////////
-
-PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
-MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
-
 PFN_NUMBER MxFreePageBase;
 ULONG64 MxFreePageCount = 0;
+
+
+/* FUNCTIONS *****************************************************************/
 
 ULONG
 NoDbgPrint(const char *Format, ...)
@@ -291,7 +287,7 @@ MiArmConfigureMemorySizes(IN PLOADER_PARAMETER_BLOCK LoaderBloc)
     /* Check if the registy setting or our dynamic calculation was too high */
     if (MmSizeOfNonPagedPoolInBytes > MI_MAX_INIT_NONPAGED_POOL_SIZE)
     {
-        // Set it to the maximum */
+        /* Set it to the maximum */
         MmSizeOfNonPagedPoolInBytes = MI_MAX_INIT_NONPAGED_POOL_SIZE;
     }
 
@@ -333,33 +329,117 @@ MiArmInitializeMemoryLayout(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* This is where we will load Win32k.sys and the video driver */
     MiSessionImageEnd = MiSessionSpaceEnd;
-    MiSessionImageStart = (PVOID)((ULONG_PTR)MiSessionImageEnd -
-                                  MmSessionImageSize);
+    MiSessionImageStart = (PCHAR)MiSessionImageEnd - MmSessionImageSize;
 
     /* The view starts right below the session working set (itself below
      * the image area) */
     MiSessionViewEnd = MI_SESSION_VIEW_END;
-    MiSessionViewStart = (PVOID)((ULONG_PTR)MiSessionViewStart -
-                                 MmSessionViewSize);
+    MiSessionViewStart = (PCHAR)MiSessionViewEnd - MmSessionViewSize;
+    ASSERT(IS_PAGE_ALIGNED(MiSessionViewStart));
 
     /* Session pool follows */
     MiSessionPoolEnd = MiSessionViewStart;
-    MiSessionPoolStart = (PVOID)((ULONG_PTR)MiSessionPoolEnd -
-                                 MmSessionPoolSize);
+    MiSessionPoolStart = (PCHAR)MiSessionPoolEnd - MmSessionPoolSize;
+    ASSERT(IS_PAGE_ALIGNED(MiSessionPoolStart));
 
     /* And it all begins here */
     MmSessionBase = MiSessionPoolStart;
 
     /* System view space ends at session space, so now that we know where
      * this is, we can compute the base address of system view space itself. */
-    MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
-                                MmSystemViewSize);
+    MiSystemViewStart = (PCHAR)MmSessionBase - MmSystemViewSize;
+    ASSERT(IS_PAGE_ALIGNED(MiSystemViewStart));
 
-    /* Use the default */
+    /* Calculate the size of the PFN database and convert to pages */
+    MxPfnSizeInBytes = ROUND_TO_PAGES((MmHighestPhysicalPage + 1) * sizeof(MMPFN));
+    MxPfnAllocation = MxPfnSizeInBytes >> PAGE_SHIFT;
+
+    /* The PFN database is at the start of the non paged region */
+    MmPfnDatabase = (PVOID)((PCHAR)MmNonPagedPoolEnd - 
+                          MmMaximumNonPagedPoolInBytes);
+
+    /* Reduce maximum non paged pool size */
+    MmMaximumNonPagedPoolInBytes -= MxPfnSizeInBytes;
+
+    /* Put non paged pool after the PFN database */
+    MmNonPagedPoolStart = (PCHAR)MmPfnDatabase + MxPfnSizeInBytes;
+    ASSERT(IS_PAGE_ALIGNED(MmNonPagedPoolStart));
+
+    /* Calculate the nonpaged pool expansion start region */
+    MmNonPagedPoolExpansionStart = (PCHAR)MmNonPagedPoolStart +
+                                          MmSizeOfNonPagedPoolInBytes;
+    ASSERT(IS_PAGE_ALIGNED(MmNonPagedPoolExpansionStart));
+
+    /* Use the default numer of system PTEs */
     MmNumberOfSystemPtes = MI_NUMBER_SYSTEM_PTES;
 
+    /* System PTE pool is below the PFN database */
+    MiNonPagedSystemSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
+    MmNonPagedSystemStart = (PCHAR)MmPfnDatabase - MiNonPagedSystemSize;
+    MmNonPagedSystemStart = MM_ROUND_DOWN(MmNonPagedSystemStart, 512 * PAGE_SIZE);
+
+    /* Don't let it go below the minimum */
+    if (MmNonPagedSystemStart < (PVOID)MI_NON_PAGED_SYSTEM_START_MIN)
+    {
+        /* This is a hard-coded limit in the Windows NT address space */
+        MmNonPagedSystemStart = (PVOID)MI_NON_PAGED_SYSTEM_START_MIN;
+
+        /* Reduce the amount of system PTEs to reach this point */
+        MmNumberOfSystemPtes = ((ULONG64)MmPfnDatabase -
+                                (ULONG64)MmNonPagedSystemStart) >>
+                                PAGE_SHIFT;
+        MmNumberOfSystemPtes--;
+        ASSERT(MmNumberOfSystemPtes > 1000);
+    }
+
+    /* Sanity checks */
     ASSERT(MiSessionViewEnd <= MiSessionImageStart);
     ASSERT(MmSessionBase <= MiSessionPoolStart);
+}
+
+VOID
+NTAPI
+MiArmPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    PLIST_ENTRY ListEntry;
+    PUCHAR Page, FirstPage;
+    SIZE_T Size;
+
+    /* Loop the memory descriptors */
+    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        /* Get the memory descriptor */
+        MdBlock = CONTAINING_RECORD(ListEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+
+        /* Skip pages that are not part of the PFN database */
+        if (!MiIncludeType[MdBlock->MemoryType])
+        {
+            continue;
+        }
+
+        /* Get the base and size of this pfn database entry */
+        FirstPage = PAGE_ALIGN(&MmPfnDatabase[MdBlock->BasePage]);
+        Size = ROUND_TO_PAGES(MdBlock->PageCount * sizeof(MMPFN));
+
+        /* Loop the pages of this Pfn database entry */
+        for (Page = FirstPage; Page < FirstPage + Size; Page += PAGE_SIZE)
+        {
+            /* Is the page already mapped? */
+            if (!MmIsAddressValid(Page))
+            {
+                /* It's not, map it now */
+                MxMapPageRange(Page, 1);
+            }
+        }
+
+        /* Zero out the pages */
+        RtlZeroMemory(FirstPage, Size);
+    }
 }
 
 
@@ -369,6 +449,8 @@ MiArmInitializePageTable()
     ULONG64 PageFrameOffset;
     PMMPTE Pte, StartPte, EndPte;
     MMPTE TmplPte;
+    PFN_NUMBER PageCount;
+    PVOID Address;
 
     /* HACK: don't use freeldr debug print anymore */
     FrLdrDbgPrint = NoDbgPrint;
@@ -394,6 +476,9 @@ MiArmInitializePageTable()
         /* Zero the PXE, clear all mappings */
         Pte->u.Long = 0;
     }
+
+    /* Flush the TLB */
+    KeFlushCurrentTb();
 
     /* Set up a template PTE */
     TmplPte.u.Long = 0;
@@ -434,116 +519,6 @@ MiArmInitializePageTable()
         MxGetPte(MiPteToAddress(Pte));
     }
 
-    /* Flush the TLB */
-    KeFlushCurrentTb();
-
-    /* Setup the mapping PTEs */
-    MmFirstReservedMappingPte = MxGetPte((PVOID)MI_MAPPING_RANGE_START);
-    MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
-    MmLastReservedMappingPte = MiAddressToPte((PVOID)MI_MAPPING_RANGE_END);
-
-    /* Setup debug mapping PTE */
-    MmDebugPte = MxGetPte(MI_DEBUG_MAPPING);
-}
-
-
-VOID
-NTAPI
-MiArmPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-    PLIST_ENTRY ListEntry;
-    SIZE_T Size;
-    PUCHAR Page, FirstPage;
-
-    /* The PFN database is at the start of the non paged region */
-    MmPfnDatabase = (PVOID)((ULONG64)MmNonPagedPoolEnd - MmMaximumNonPagedPoolInBytes);
-
-    /* Loop the memory descriptors */
-    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        /* Get the memory descriptor */
-        MdBlock = CONTAINING_RECORD(ListEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
-
-        /* Skip pages that are not part of the PFN database */
-        if (!MiIncludeType[MdBlock->MemoryType])
-        {
-            continue;
-        }
-
-        /* Get the base and size of this pfn database entry */
-        FirstPage = PAGE_ALIGN(&MmPfnDatabase[MdBlock->BasePage]);
-        Size = ROUND_TO_PAGES(MdBlock->PageCount * sizeof(MMPFN));
-
-        /* Loop the pages of this Pfn database entry */
-        for (Page = FirstPage; Page < FirstPage + Size; Page += PAGE_SIZE)
-        {
-            /* Is the page already mapped? */
-            if (!MmIsAddressValid(Page))
-            {
-                /* It's not, map it now */
-                MxMapPageRange(Page, 1);
-            }
-        }
-
-        /* Zero out the pages */
-        RtlZeroMemory(FirstPage, Size);
-    }
-
-    /* Calculate the number of bytes, and then convert to pages */
-    MxPfnSizeInBytes = ROUND_TO_PAGES(MmHighestPhysicalPage + 1) * sizeof(MMPFN);
-    MxPfnAllocation = MxPfnSizeInBytes >> PAGE_SHIFT;
-
-    /* Reduce maximum pool size */
-    MmMaximumNonPagedPoolInBytes -= MxPfnSizeInBytes;
-}
-
-
-VOID
-NTAPI
-MiArmPrepareNonPagedPool()
-{
-    PFN_NUMBER PageCount;
-    PVOID Address;
-
-    /* Non paged pool comes after the PFN database */
-    MmNonPagedPoolStart = (PVOID)((ULONG64)MmPfnDatabase +
-                                  MxPfnSizeInBytes);
-    ASSERT((ULONG64)MmNonPagedPoolEnd == (ULONG64)MmNonPagedPoolStart +
-                                  MmMaximumNonPagedPoolInBytes);
-
-    /* Calculate the nonpaged pool expansion start region */
-    MmNonPagedPoolExpansionStart = (PVOID)((ULONG_PTR)MmNonPagedPoolEnd -
-                                  MmMaximumNonPagedPoolInBytes +
-                                  MmSizeOfNonPagedPoolInBytes);
-    MmNonPagedPoolExpansionStart = (PVOID)PAGE_ALIGN(MmNonPagedPoolExpansionStart);
-
-    /* Now calculate the nonpaged system VA region, which includes the
-     * nonpaged pool expansion (above) and the system PTEs. Note that it is
-     * then aligned to a PDE boundary (4MB). */
-    MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolExpansionStart -
-                                    (MmNumberOfSystemPtes + 1) * PAGE_SIZE);
-    MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
-                                    ~((4 * 1024 * 1024) - 1));
-
-    /* Don't let it go below the minimum */
-    if (MmNonPagedSystemStart < (PVOID)MI_NON_PAGED_SYSTEM_START_MIN)
-    {
-        /* This is a hard-coded limit in the Windows NT address space */
-        MmNonPagedSystemStart = (PVOID)MI_NON_PAGED_SYSTEM_START_MIN;
-
-        /* Reduce the amount of system PTEs to reach this point */
-        MmNumberOfSystemPtes = ((ULONG_PTR)MmNonPagedPoolExpansionStart -
-                                (ULONG_PTR)MmNonPagedSystemStart) >>
-                                PAGE_SHIFT;
-        MmNumberOfSystemPtes--;
-        ASSERT(MmNumberOfSystemPtes > 1000);
-    }
-
     /* Map the nonpaged pool */
     PageCount = (MmSizeOfNonPagedPoolInBytes + PAGE_SIZE - 1) / PAGE_SIZE;
     MxMapPageRange(MmNonPagedPoolStart, PageCount);
@@ -557,10 +532,13 @@ MiArmPrepareNonPagedPool()
         MxGetPte(Address)->u.Long = 0;
     }
 
-    /* Sanity check */
-    ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
-           MiAddressToPte(MmNonPagedPoolExpansionStart));
+    /* Setup the mapping PTEs */
+    MmFirstReservedMappingPte = MxGetPte((PVOID)MI_MAPPING_RANGE_START);
+    MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
+    MmLastReservedMappingPte = MiAddressToPte((PVOID)MI_MAPPING_RANGE_END);
 
+    /* Setup debug mapping PTE */
+    MmDebugPte = MxGetPte(MI_DEBUG_MAPPING);
 }
 
 
@@ -672,9 +650,6 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Prepare PFN database mappings */
         MiArmPreparePfnDatabse(LoaderBlock);
-
-        /* Prepare paged pool mappings */
-        MiArmPrepareNonPagedPool();
 
         /* Initialize some mappings */
         MiArmInitializePageTable();

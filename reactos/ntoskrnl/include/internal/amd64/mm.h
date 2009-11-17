@@ -12,6 +12,7 @@
 /* Memory layout base addresses */
 #define HYPER_SPACE                            0xFFFFF70000000000ULL
 #define HYPER_SPACE_END                        0xFFFFF77FFFFFFFFFULL
+#define MI_SESSION_SPACE_MINIMUM        (PVOID)0xFFFFF90000000000ULL
 #define MI_SESSION_VIEW_END             (PVOID)0xFFFFF97FFF000000ULL
 #define MI_SESSION_SPACE_END            (PVOID)0xFFFFF98000000000ULL
 #define MI_SYSTEM_PTE_START             (PVOID)0xFFFFFAA000000000ULL
@@ -103,6 +104,8 @@ MmInitGlobalKernelPageDirectory(VOID)
     /* Nothing to do */
 }
 
+#define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
+#define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
 
 /// MIARM.H 
 
