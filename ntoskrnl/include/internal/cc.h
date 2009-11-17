@@ -297,7 +297,7 @@ CcRosRequestCacheSegment(
     CACHE_SEGMENT **CacheSeg
 );
 
-NTSTATUS
+VOID
 NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
