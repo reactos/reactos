@@ -2713,6 +2713,7 @@ RtlEnumerateGenericTable(
 
 NTSYSAPI
 PVOID
+NTAPI
 RtlGetElementGenericTable(
 	IN PRTL_GENERIC_TABLE,
 	IN ULONG I
@@ -2720,6 +2721,7 @@ RtlGetElementGenericTable(
 
 NTSYSAPI
 ULONG
+NTAPI
 RtlNumberGenericTableElements(
 	IN PRTL_GENERIC_TABLE Table
 	);
