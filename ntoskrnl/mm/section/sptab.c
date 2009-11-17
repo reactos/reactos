@@ -33,9 +33,6 @@
 
 #define ENTRIES_PER_ELEMENT 244
 
-PVOID NTAPI RtlGetElementGenericTable(PRTL_GENERIC_TABLE Table, PVOID Data);
-ULONG NTAPI RtlNumberGenericTableElements(PRTL_GENERIC_TABLE Table);
-
 typedef struct _SECTION_PAGE_TABLE 
 {
     LARGE_INTEGER FileOffset;

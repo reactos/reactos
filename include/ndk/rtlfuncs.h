@@ -2706,6 +2706,27 @@ RtlInsertElementGenericTable(
 NTSYSAPI
 PVOID
 NTAPI
+RtlEnumerateGenericTable(
+	IN PRTL_GENERIC_TABLE, 
+	IN BOOLEAN Reset
+	);
+
+NTSYSAPI
+PVOID
+RtlGetElementGenericTable(
+	IN PRTL_GENERIC_TABLE,
+	IN ULONG I
+	);
+
+NTSYSAPI
+ULONG
+RtlNumberGenericTableElements(
+	IN PRTL_GENERIC_TABLE Table
+	);
+
+NTSYSAPI
+PVOID
+NTAPI
 RtlInsertElementGenericTableFull(
     IN PRTL_GENERIC_TABLE Table,
     IN PVOID Buffer,
