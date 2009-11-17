@@ -7,8 +7,14 @@
 <directory name="ext2">
 	<xi:include href="ext2/ext2.rbuild" />
 </directory>
+<!-- <directory name="ext3fsd">
+	<xi:include href="ext3fsd/ext3fsd.rbuild" />
+</directory> -->
 <directory name="fs_rec">
 	<xi:include href="fs_rec/fs_rec.rbuild" />
+</directory>
+<directory name="ksecdd">
+	<xi:include href="ksecdd/ksecdd.rbuild" />
 </directory>
 <directory name="msfs">
 	<xi:include href="msfs/msfs.rbuild" />

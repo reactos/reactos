@@ -5,6 +5,7 @@
  * PURPOSE:         Provides name parsing and other support routines for FSDs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
+ *                  Pierre Schweitzer (heis_spiter@hotmail.com) 
  */
 
 /* INCLUDES ******************************************************************/
@@ -13,27 +14,76 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+BOOLEAN
+NTAPI
+FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
+                               IN PUNICODE_STRING Name,
+                               IN BOOLEAN IgnoreCase,
+                               IN PWCHAR UpcaseTable OPTIONAL)
+{
+    ULONG i, j, k = 0;
+	
+    ASSERT(!FsRtlDoesNameContainWildCards(Name));
+
+    for (i = 0 ; i < Expression->Length / sizeof(WCHAR) ; i++)
+    {
+        if ((Expression->Buffer[i] == (IgnoreCase ? UpcaseTable[Name->Buffer[k]] : Name->Buffer[k])) ||
+            (Expression->Buffer[i] == L'?') || (Expression->Buffer[i] == DOS_QM) ||
+            (Expression->Buffer[i] == DOS_DOT && (Name->Buffer[k] == L'.' || Name->Buffer[k] == L'0')))
+        {
+            k++;
+        }
+        else if (Expression->Buffer[i] == L'*')
+        {
+            k = Name->Length / sizeof(WCHAR);
+        }
+        else if (Expression->Buffer[i] == DOS_STAR)
+        {
+            for (j = k ; j < Name->Length / sizeof(WCHAR) ; j++)
+            {
+                if (Name->Buffer[j] == L'.')
+                {
+                    k = j;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            k = 0;
+        }
+        if (k >= Expression->Length / sizeof(WCHAR))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
  * @name FsRtlAreNamesEqual
  * @implemented
  *
- * FILLME
+ * Compare two strings to check if they match
  *
  * @param Name1
- *        FILLME
+ *        First unicode string to compare
  *
  * @param Name2
- *        FILLME
+ *        Second unicode string to compare
  *
  * @param IgnoreCase
- *        FILLME
+ *        If TRUE, Case will be ignored when comparing strings
  *
  * @param UpcaseTable
- *        FILLME
+ *        Table for upcase letters. If NULL is given, system one will be used
  *
- * @return None
+ * @return TRUE if the strings are equal
  *
  * @remarks From Bo Branten's ntifs.h v25.
  *
@@ -188,7 +238,7 @@ FsRtlDissectName(IN UNICODE_STRING Name,
  * @name FsRtlDoesNameContainWildCards
  * @implemented
  *
- * FILLME
+ * Checks if the given string contains WildCards
  *
  * @param Name
  *        Pointer to a UNICODE_STRING containing Name to examine
@@ -224,13 +274,21 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  * @name FsRtlIsNameInExpression
  * @implemented
  *
- * FILLME
+ * Check if the Name string is in the Expression string.
  *
- * @param DeviceObject
- *        FILLME
+ * @param Expression
+ *        The string in which we've to find Name. It can contain wildcards.
+ *        If IgnoreCase is set to TRUE, this string MUST BE uppercase. 
  *
- * @param Irp
- *        FILLME
+ * @param Name
+ *        The string to find. It cannot contain wildcards
+ *
+ * @param IgnoreCase
+ *        If set to TRUE, case will be ignore with upcasing both strings
+ *
+ * @param UpcaseTable
+ *        If not NULL, and if IgnoreCase is set to TRUE, it will be used to
+ *        upcase the both strings 
  *
  * @return TRUE if Name is in Expression, FALSE otherwise
  *
@@ -246,80 +304,31 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                         IN BOOLEAN IgnoreCase,
                         IN PWCHAR UpcaseTable OPTIONAL)
 {
-    USHORT ExpressionPosition, NamePosition;
-    UNICODE_STRING TempExpression, TempName;
+    BOOLEAN Result;
+    NTSTATUS Status;
+    UNICODE_STRING IntName;
 
-    ExpressionPosition = 0;
-    NamePosition = 0;
-    while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
-        NamePosition < (Name->Length / sizeof(WCHAR)))
+    if (IgnoreCase && !UpcaseTable)
     {
-        if (Expression->Buffer[ExpressionPosition] == L'*')
+        Status = RtlUpcaseUnicodeString(&IntName, Name, TRUE);
+        if (Status != STATUS_SUCCESS)
         {
-            ExpressionPosition++;
-            if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)))
-            {
-                return TRUE;
-            }
-            while (NamePosition < (Name->Length / sizeof(WCHAR)))
-            {
-                TempExpression.Length =
-                    TempExpression.MaximumLength =
-                    Expression->Length - (ExpressionPosition * sizeof(WCHAR));
-                TempExpression.Buffer = Expression->Buffer + ExpressionPosition;
-                TempName.Length =
-                    TempName.MaximumLength =
-                    Name->Length - (NamePosition * sizeof(WCHAR));
-                TempName.Buffer = Name->Buffer + NamePosition;
-                /* FIXME: Rewrite to get rid of recursion */
-                if (FsRtlIsNameInExpression(&TempExpression, &TempName,
-                    IgnoreCase, UpcaseTable))
-                {
-                    return TRUE;
-                }
-                NamePosition++;
-            }
+            ExRaiseStatus(Status);
         }
-        else
-        {
-            /* FIXME: Take UpcaseTable into account! */
-            if (Expression->Buffer[ExpressionPosition] == L'?' ||
-                (IgnoreCase &&
-                RtlUpcaseUnicodeChar(Expression->Buffer[ExpressionPosition]) ==
-                RtlUpcaseUnicodeChar(Name->Buffer[NamePosition])) ||
-                (!IgnoreCase &&
-                Expression->Buffer[ExpressionPosition] ==
-                Name->Buffer[NamePosition]))
-            {
-                NamePosition++;
-                ExpressionPosition++;
-            }
-            else
-            {
-                return FALSE;
-            }
-        }
+        Name = &IntName;
+        IgnoreCase = FALSE;
+    }
+    else
+    {
+        IntName.Buffer = NULL;
     }
 
-    /* Handle matching of "f0_*.*" expression to "f0_000" file name. */
-    if (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
-        Expression->Buffer[ExpressionPosition] == L'.')
+    Result = FsRtlIsNameInExpressionPrivate(Expression, Name, IgnoreCase, UpcaseTable);
+
+    if (IntName.Buffer != NULL)
     {
-        while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
-            (Expression->Buffer[ExpressionPosition] == L'.' ||
-            Expression->Buffer[ExpressionPosition] == L'*' ||
-            Expression->Buffer[ExpressionPosition] == L'?'))
-        {
-            ExpressionPosition++;
-        }
+        RtlFreeUnicodeString(&IntName);
     }
 
-    if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)) &&
-        NamePosition == (Name->Length / sizeof(WCHAR)))
-    {
-        return TRUE;
-    }
-
-    return FALSE;
+    return Result;
 }
-

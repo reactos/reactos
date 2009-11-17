@@ -70,7 +70,16 @@ NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 static NPAGED_LOOKASIDE_LIST BcbLookasideList;
 static NPAGED_LOOKASIDE_LIST CacheSegLookasideList;
 
-#if DBG
+
+#if defined(__GNUC__)
+/* void * alloca(size_t size); */
+#elif defined(_MSC_VER)
+void* _alloca(size_t size);
+#else
+#error Unknown compiler for alloca intrinsic stack allocation "function"
+#endif
+
+#if defined(DBG) || defined(KDBG)
 static void CcRosCacheSegmentIncRefCount_ ( PCACHE_SEGMENT cs, const char* file, int line )
 {
 	++cs->ReferenceCount;
@@ -108,7 +117,7 @@ CcRosTraceCacheMap (
 	PBCB Bcb,
 	BOOLEAN Trace )
 {
-#if DBG
+#if defined(DBG) || defined(KDBG)
 	KIRQL oldirql;
 	PLIST_ENTRY current_entry;
 	PCACHE_SEGMENT current;
@@ -587,7 +596,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   current->PageOut = FALSE;
   current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
   current->Bcb = Bcb;
-#if DBG
+#if defined(DBG) || defined(KDBG)
   if ( Bcb->Trace )
   {
     DPRINT1("CacheMap 0x%p: new Cache Segment: 0x%p\n", Bcb, current );
@@ -619,7 +628,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
      {
 	CcRosCacheSegmentIncRefCount(current);
 	KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
-#if DBG
+#if defined(DBG) || defined(KDBG)
 	if ( Bcb->Trace )
 	{
 		DPRINT1("CacheMap 0x%p: deleting newly created Cache Segment 0x%p ( found existing one 0x%p )\n",
@@ -728,8 +737,15 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 
   Length = ROUND_UP(Length, Bcb->CacheSegmentSize);
 
+#if defined(__GNUC__)
+  CacheSegList = alloca(sizeof(PCACHE_SEGMENT) *
+			(Length / Bcb->CacheSegmentSize));
+#elif defined(_MSC_VER)
   CacheSegList = _alloca(sizeof(PCACHE_SEGMENT) *
 			(Length / Bcb->CacheSegmentSize));
+#else
+#error Unknown compiler for alloca intrinsic stack allocation "function"
+#endif
 
   /*
    * Look for a cache segment already mapping the same data.
@@ -865,7 +881,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
   KIRQL oldIrql;
 #endif
   DPRINT("Freeing cache segment 0x%p\n", CacheSeg);
-#if DBG
+#if defined(DBG) || defined(KDBG)
 	if ( CacheSeg->Bcb->Trace )
 	{
 		DPRINT1("CacheMap 0x%p: deleting Cache Segment: 0x%p\n", CacheSeg->Bcb, CacheSeg );
@@ -1065,7 +1081,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 	 }
          InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
       }
-#if DBG
+#if defined(DBG) || defined(KDBG)
       Bcb->Trace = FALSE;
 #endif
       KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
@@ -1189,7 +1205,6 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
 
    KeAcquireGuardedMutex(&ViewLock);
 
-   ASSERT(FileObject->SectionObjectPointer);
    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
    if (Bcb == NULL)
    {
@@ -1215,7 +1230,7 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
 }
 
 
-NTSTATUS NTAPI
+VOID NTAPI
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
                          ULONG CacheSegmentSize,
                          PCACHE_MANAGER_CALLBACKS CallBacks,
@@ -1237,7 +1252,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
        if (Bcb == NULL)
        {
            KeReleaseGuardedMutex(&ViewLock);
-           return(STATUS_UNSUCCESSFUL);
+           ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
        }
        memset(Bcb, 0, sizeof(BCB));
        ObReferenceObjectByPointer(FileObject,
@@ -1270,8 +1285,6 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
        Bcb->BcbRemoveListEntry.Flink = NULL;
    }
    KeReleaseGuardedMutex(&ViewLock);
-
-   return(STATUS_SUCCESS);
 }
 
 /*
@@ -1325,10 +1338,6 @@ CcInitView(VOID)
     }
 
   Buffer = ExAllocatePool(NonPagedPool, CI_CACHESEG_MAPPING_REGION_SIZE / (PAGE_SIZE * 8));
-  if (!Buffer)
-  {
-    KeBugCheck(CACHE_MANAGER);
-  }
 
   RtlInitializeBitMap(&CiCacheSegMappingRegionAllocMap, Buffer, CI_CACHESEG_MAPPING_REGION_SIZE / PAGE_SIZE);
   RtlClearAllBits(&CiCacheSegMappingRegionAllocMap);

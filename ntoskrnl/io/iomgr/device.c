@@ -580,7 +580,7 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
                           OUT PDEVICE_NODE *DeviceNode)
 {
     NTSTATUS Status;
-    IO_STACK_LOCATION Stack = {0};
+    IO_STACK_LOCATION Stack;
     IO_STATUS_BLOCK IoStatusBlock;
     PDEVICE_RELATIONS DeviceRelations;
     PDEVICE_OBJECT DeviceObject = NULL;
@@ -589,32 +589,34 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
 
     /* Get DeviceObject related to given FileObject */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
-    if (!DeviceObject) return STATUS_NO_SUCH_DEVICE;
+    if (!DeviceObject)
+    {
+        return STATUS_NO_SUCH_DEVICE;
+    }
 
     /* Define input parameters */
     Stack.Parameters.QueryDeviceRelations.Type = TargetDeviceRelation;
     Stack.FileObject = FileObject;
 
-    /* Call the driver to query all relations (IRP_MJ_PNP) */
-    Status = IopInitiatePnpIrp(DeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_DEVICE_RELATIONS,
-                               &Stack);
-    if (!NT_SUCCESS(Status)) return Status;
+    /* Call the driver to query all the relations (IRP_MJ_PNP) */
+    Status = IopInitiatePnpIrp(DeviceObject, &IoStatusBlock,
+                               IRP_MN_QUERY_DEVICE_RELATIONS, &Stack);
+    if (NT_SUCCESS(Status))
+    {
+        DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+        ASSERT(DeviceRelations);
+        ASSERT(DeviceRelations->Count == 1);
 
-    /* Get returned pointer to DEVICE_RELATIONS */
-    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+        /* We finally get the device node */
+        *DeviceNode = IopGetDeviceNode(DeviceRelations->Objects[0]);
+        if (!*DeviceNode)
+        {
+            Status = STATUS_NO_SUCH_DEVICE;
+        }
 
-    /* Make sure it's not NULL and contains only one object */
-    ASSERT(DeviceRelations);
-    ASSERT(DeviceRelations->Count == 1);
-
-    /* Finally get the device node */
-    *DeviceNode = IopGetDeviceNode(DeviceRelations->Objects[0]);
-    if (!*DeviceNode) Status = STATUS_NO_SUCH_DEVICE;
-
-    /* Free the DEVICE_RELATIONS structure, it's not needed anymore */
-    ExFreePool(DeviceRelations);
+        /* Free the DEVICE_RELATIONS structure, it's not needed anymore */
+        ExFreePool(DeviceRelations);
+    }
 
     return Status;
 }

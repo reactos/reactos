@@ -20,6 +20,14 @@ static PFN_TYPE CcZeroPage = 0;
 #define MAX_ZERO_LENGTH	(256 * 1024)
 #define MAX_RW_LENGTH	(256 * 1024)
 
+#if defined(__GNUC__)
+/* void * alloca(size_t size); */
+#elif defined(_MSC_VER)
+void* _alloca(size_t size);
+#else
+#error Unknown compiler for alloca intrinsic stack allocation "function"
+#endif
+
 ULONG CcFastMdlReadWait;
 ULONG CcFastMdlReadNotPossible;
 ULONG CcFastReadNotPossible;
@@ -64,7 +72,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
   KEVENT Event;
   PMDL Mdl;
 
-  Mdl = _alloca(MmSizeOfMdl(NULL, MAX_RW_LENGTH));
+  Mdl = alloca(MmSizeOfMdl(NULL, MAX_RW_LENGTH));
 
   Status = CcRosGetCacheSegmentChain(Bcb, ReadOffset, Length, &head);
   if (!NT_SUCCESS(Status))
@@ -196,7 +204,7 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
     }
-  Mdl = _alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
+  Mdl = alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
   MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
   MmBuildMdlForNonPagedPool(Mdl);
   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
@@ -239,18 +247,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
     }
-    //
-    // Nonpaged pool PDEs in ReactOS must actually be synchronized between the
-    // MmGlobalPageDirectory and the real system PDE directory. What a mess...
-    //
-    {
-        int i = 0;
-        do
-        {
-            MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)CacheSeg->BaseAddress + (i << PAGE_SHIFT)));
-        } while (++i < (Size >> PAGE_SHIFT));
-    }
-  Mdl = _alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
+  Mdl = alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
   MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
   MmBuildMdlForNonPagedPool(Mdl);
   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
@@ -603,7 +600,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
     {
       /* File is not cached */
 
-      Mdl = _alloca(MmSizeOfMdl(NULL, MAX_ZERO_LENGTH));
+      Mdl = alloca(MmSizeOfMdl(NULL, MAX_ZERO_LENGTH));
 
       while (Length > 0)
 	{

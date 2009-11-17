@@ -746,7 +746,7 @@ FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
         IoStackLocation->Parameters.QueryFile.FileInformationClass = FileStandardInformation;
 
         /* Send the IRP to the related device object */
-        Status = IoCallDriver(DeviceObject,Irp);
+        Status = IofCallDriver(DeviceObject,Irp);
 
         /* Standard DDK IRP result processing */
         if (Status == STATUS_PENDING)

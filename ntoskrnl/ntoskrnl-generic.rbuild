@@ -17,6 +17,7 @@
 		<define name="_ELF_" />
 	</if>
 	<include base="cmlib">.</include>
+	<include base="ioevent">ioevent</include>
 	<include base="ntoskrnl">include</include>
 	<include base="ntoskrnl" root="intermediate"></include>
 	<include base="ntoskrnl" root="intermediate">include</include>
@@ -26,12 +27,14 @@
 	<library>hal</library>
 	<library>pseh</library>
 	<library>cmlib</library>
+	<library>ioevent</library>
 	<library>rtl</library>
 	<library>rossym</library>
 	<library>libcntpr</library>
 	<library>kdcom</library>
 	<library>bootvid</library>
 	<library>wdmguid</library>
+	<library>ioevent</library>
 	<dependency>bugcodes</dependency>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
@@ -234,6 +237,7 @@
 		<file>fsfilter.c</file>
 		<file>fsrtlpc.c</file>
 		<file>largemcb.c</file>
+		<file>mcb.c</file>
 		<file>name.c</file>
 		<file>notify.c</file>
 		<file>oplock.c</file>

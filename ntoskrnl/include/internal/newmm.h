@@ -784,6 +784,10 @@ MmInitializeMdlImplementation(VOID);
 
 /* pagefile.c ****************************************************************/
 
+BOOLEAN
+NTAPI
+MmIsFileAPagingFile(PFILE_OBJECT FileObject);
+
 SWAPENTRY
 NTAPI
 MmAllocSwapPage(VOID);

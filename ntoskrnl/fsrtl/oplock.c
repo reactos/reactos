@@ -78,24 +78,23 @@ FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
 
 /*++
  * @name FsRtlInitializeOplock
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * This function initializes the given opportunistic lock pointer
  *
  * @param Oplock
- *        FILLME
+ *        The opportunistic lock to initialize
  *
  * @return None
  *
- * @remarks None
+ * @remarks Truth is this function does nothing!
  *
  *--*/
 VOID
 NTAPI
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
 {
-    /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNREFERENCED_PARAMETER(Oplock);
 }
 
 /*++

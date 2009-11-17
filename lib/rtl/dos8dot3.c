@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+extern BOOLEAN NlsMbOemCodePageTag;
+extern PUSHORT _NlsOemLeadByteInfo;
+
 
 /* CONSTANTS *****************************************************************/
 
@@ -55,6 +60,20 @@ RtlpGetIndexLength(ULONG Index)
    return Length ? Length : 1;
 }
 
+static WCHAR
+RtlpUpcaseUnicodeCharIfLegal(IN WCHAR LowChar)
+{
+    if (RtlpIsShortIllegal(LowChar))
+    {
+        return L'_';
+    }
+    if (LowChar >= L'a' && LowChar <= L'z')
+    {
+        return LowChar - 32;
+    }
+    return LowChar;
+}
+
 
 /*
  * @implemented
@@ -65,7 +84,6 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                      IN OUT PGENERATE_NAME_CONTEXT Context,
                      OUT PUNICODE_STRING Name8dot3)
 {
-   ULONG Count;
    WCHAR NameBuffer[8];
    WCHAR ExtBuffer[4];
    ULONG StrLength;
@@ -77,7 +95,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    ULONG IndexLength;
    ULONG CurrentIndex;
    USHORT Checksum;
-   CHAR c;
+   BOOLEAN SkipDots = TRUE;
 
    StrLength = Name->Length / sizeof(WCHAR);
    DPRINT("StrLength: %lu\n", StrLength);
@@ -88,7 +106,14 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    {
       if (Name->Buffer[i] == L'.')
       {
-         DotPos = i;
+         if (!SkipDots)
+         {
+            DotPos = i;
+         }
+      }
+      else
+      {
+          SkipDots = FALSE;
       }
    }
 
@@ -97,15 +122,9 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    /* Copy name (6 valid characters max) */
    for (i = 0, NameLength = 0; NameLength < 6 && i < DotPos; i++)
    {
-      c = 0;
-      RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
-      if (Count != 1 || c == 0 || RtlpIsShortIllegal(c))
+      if (Name->Buffer[i] != L'.' && Name->Buffer[i] != L' ')
       {
-         NameBuffer[NameLength++] = L'_';
-      }
-      else if (c != '.')
-      {
-         NameBuffer[NameLength++] = (WCHAR)c;
+         NameBuffer[NameLength++] = RtlpUpcaseUnicodeCharIfLegal(Name->Buffer[i]);
       }
    }
 
@@ -117,16 +136,10 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    {
       for (i = DotPos, ExtLength = 0; ExtLength < 4 && i < StrLength; i++)
       {
-         c = 0;
-         RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
-         if (Count != 1 || c == 0 || RtlpIsShortIllegal(Name->Buffer[i]))
-         {
-            ExtBuffer[ExtLength++] = L'_';
-         }
-         else
-         {
-            ExtBuffer[ExtLength++] = c;
-         }
+          if (Name->Buffer[i] != L' ')
+          {
+             ExtBuffer[ExtLength++] = RtlpUpcaseUnicodeCharIfLegal(Name->Buffer[i]);
+          }
       }
    }
    else
@@ -187,7 +200,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    }
 
    /* Build the short name */
-   memcpy(Name8dot3->Buffer, NameBuffer, CopyLength * sizeof(WCHAR));
+   RtlCopyMemory(Name8dot3->Buffer, NameBuffer, CopyLength * sizeof(WCHAR));
    j = CopyLength;
    if (Context->CheckSumInserted)
    {
@@ -210,7 +223,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    }
    j += IndexLength + 1;
 
-   memcpy(Name8dot3->Buffer + j, ExtBuffer, ExtLength * sizeof(WCHAR));
+   RtlCopyMemory(Name8dot3->Buffer + j, ExtBuffer, ExtLength * sizeof(WCHAR));
    Name8dot3->Length = (j + ExtLength) * sizeof(WCHAR);
 
    DPRINT("Name8dot3: '%wZ'\n", Name8dot3);
@@ -218,8 +231,8 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    /* Update context */
    Context->NameLength = CopyLength;
    Context->ExtensionLength = ExtLength;
-   memcpy(Context->NameBuffer, NameBuffer, CopyLength * sizeof(WCHAR));
-   memcpy(Context->ExtensionBuffer, ExtBuffer, ExtLength * sizeof(WCHAR));
+   RtlCopyMemory(Context->NameBuffer, NameBuffer, CopyLength * sizeof(WCHAR));
+   RtlCopyMemory(Context->ExtensionBuffer, ExtBuffer, ExtLength * sizeof(WCHAR));
 }
 
 
@@ -261,20 +274,29 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
 
     for (i = 0; i < AnsiName->Length; i++)
     {
-        switch (AnsiName->Buffer[i])
+        /* First make sure the character it's not the Lead DBCS */
+        if (NlsMbOemCodePageTag && _NlsOemLeadByteInfo[(UCHAR)AnsiName->Buffer[i]])
         {
-        case ' ':
-            /* leading/trailing spaces not allowed */
-            if (!i || i == AnsiName->Length-1 || AnsiName->Buffer[i+1] == '.') return FALSE;
-            GotSpace = TRUE;
-            break;
-        case '.':
-            if (Dot != -1) return FALSE;
-            Dot = i;
-            break;
-        default:
-            if (strchr(Illegal, AnsiName->Buffer[i])) return FALSE;
-            break;
+            if (i == AnsiName->Length - 1) return FALSE;
+            i++;
+        }
+        else
+        {
+            switch (AnsiName->Buffer[i])
+            {
+                case ' ':
+                    /* leading/trailing spaces not allowed */
+                    if (!i || i == AnsiName->Length-1 || AnsiName->Buffer[i+1] == '.') return FALSE;
+                    GotSpace = TRUE;
+                    break;
+                case '.':
+                    if (Dot != -1) return FALSE;
+                    Dot = i;
+                    break;
+                default:
+                    if (strchr(Illegal, AnsiName->Buffer[i])) return FALSE;
+                    break;
+            }
         }
     }
     /* check file part is shorter than 8, extension shorter than 3

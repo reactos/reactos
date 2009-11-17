@@ -11,7 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -48,12 +48,18 @@ static RTL_GENERIC_COMPARE_RESULTS NTAPI McbMappingCompare
 (RTL_GENERIC_TABLE Table, PVOID PtrA, PVOID PtrB)
 {
 	PLARGE_MCB_MAPPING_ENTRY A = PtrA, B = PtrB;
-	return 
+	RTL_GENERIC_COMPARE_RESULTS Result;
+	Result = 
 		(A->RunStartVbn.QuadPart + A->SectorCount.QuadPart <
 		 B->RunStartVbn.QuadPart) ? GenericLessThan :
 		(A->RunStartVbn.QuadPart > 
 		 B->RunStartVbn.QuadPart + B->SectorCount.QuadPart) ? 
 		GenericGreaterThan : GenericEqual;
+	DPRINT("Compare: %x:%x to %x:%x => %d\n", 
+		   A->RunStartVbn.LowPart, A->SectorCount.LowPart,
+		   B->RunStartVbn.LowPart, B->SectorCount.LowPart,
+		   Result);
+	return Result;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -75,6 +81,10 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 	Node.RunStartVbn.QuadPart = Vbn;
 	Node.StartingLbn.QuadPart = Lbn;
 	Node.SectorCount.QuadPart = SectorCount;
+
+	DPRINT("RunStartVbn %x\n", Node.RunStartVbn.LowPart);
+	DPRINT("StartingLbn %x\n", Node.StartingLbn.LowPart);
+	DPRINT("SectorCount %x\n", Node.SectorCount.LowPart);
 
 	while (!NewElement)
 	{
@@ -144,7 +154,9 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-	DPRINT("Mcb %x Vbn %x Lbn %x SectorCount %x\n", Mcb, Vbn, Lbn, SectorCount);
+	DPRINT
+		("Mcb %x Vbn %x Lbn %x SectorCount %x\n", 
+		 Mcb, (ULONG)Vbn, (ULONG)Lbn, (ULONG)SectorCount);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlAddBaseMcbEntry(&(Mcb->BaseMcb),
@@ -530,7 +542,7 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 /*
  * @unimplemented
  */
-BOOLEAN
+VOID
 NTAPI
 FsRtlRemoveBaseMcbEntry(IN PBASE_MCB Mcb,
                         IN LONGLONG Vbn,
@@ -618,8 +630,6 @@ FsRtlRemoveBaseMcbEntry(IN PBASE_MCB Mcb,
 			Mcb->PairCount++;			
 		}
 	}
-
-	return TRUE;
 }
 
 /*
