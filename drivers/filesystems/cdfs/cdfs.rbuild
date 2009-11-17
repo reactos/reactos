@@ -5,6 +5,7 @@
 	<include base="cdfs">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<library>pseh</library>
 	<file>cdfs.c</file>
 	<file>cleanup.c</file>
 	<file>close.c</file>

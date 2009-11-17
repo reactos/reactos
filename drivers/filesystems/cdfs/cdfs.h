@@ -4,6 +4,7 @@
 #include <ntifs.h>
 #include <ntddk.h>
 #include <ntddcdrm.h>
+#include <pseh/pseh.h>
 
 #define CDFS_BASIC_SECTOR 2048
 #define CDFS_PRIMARY_DESCRIPTOR_LOCATION 16
@@ -227,8 +228,12 @@ typedef struct _CCB
   ULONG LastOffset;
 } CCB, *PCCB;
 
-#define TAG_CCB 'BCCI'
-#define TAG_FCB 'BCFI'
+#ifndef TAG
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
+
+#define TAG_CCB TAG('I', 'C', 'C', 'B')
+#define TAG_FCB TAG('I', 'F', 'C', 'B')
 
 typedef struct
 {
@@ -399,6 +404,7 @@ CdfsShortNameCacheGet
  PLARGE_INTEGER StreamOffset, 
  PUNICODE_STRING LongName, 
  PUNICODE_STRING ShortName);
+
 
 /* rw.c */
 

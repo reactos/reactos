@@ -313,7 +313,6 @@ CdfsOpenRootFCB(PDEVICE_EXTENSION Vcb)
     return(Fcb);
 }
 
-#define ch(x) (((x) < 127 && (x) > 31) ? (x) : '.')
 
 static VOID
 CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
@@ -333,34 +332,12 @@ CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
     }
     else
     {
-		int i;
-		for (i = 0; i < 32; i += 8)
-		{
-			DPRINT("%08x: %02x %02x %02x %02x-%02x %02x %02x %02x %c%c%c%c%c%c%c%c\n", ((char *)Record->FileId) + i, 
-				   ((char *)Record->FileId)[i+0] & 0xff,
-				   ((char *)Record->FileId)[i+1] & 0xff,
-				   ((char *)Record->FileId)[i+2] & 0xff,
-				   ((char *)Record->FileId)[i+3] & 0xff,
-				   ((char *)Record->FileId)[i+4] & 0xff,
-				   ((char *)Record->FileId)[i+5] & 0xff,
-				   ((char *)Record->FileId)[i+6] & 0xff,
-				   ((char *)Record->FileId)[i+7] & 0xff,
-				   ch(((char *)Record->FileId)[i+0] & 0xff),
-				   ch(((char *)Record->FileId)[i+1] & 0xff),
-				   ch(((char *)Record->FileId)[i+2] & 0xff),
-				   ch(((char *)Record->FileId)[i+3] & 0xff),
-				   ch(((char *)Record->FileId)[i+4] & 0xff),
-				   ch(((char *)Record->FileId)[i+5] & 0xff),
-				   ch(((char *)Record->FileId)[i+6] & 0xff),
-				   ch(((char *)Record->FileId)[i+7] & 0xff));
-		}
         if (DeviceExt->CdInfo.JolietLevel == 0)
         {
             ULONG i;
+
             for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
-			{
                 Name[i] = (WCHAR)Record->FileId[i];
-			}
             Name[i] = 0;
         }
         else
@@ -437,7 +414,7 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
     CdfsAddFCBToTable(Vcb, rcFCB);
     *fileFCB = rcFCB;
 
-    DPRINT("%S %d %I64d %x %x\n", LongName, Size, rcFCB->RFCB.AllocationSize.QuadPart, rcFCB->IndexNumber.u.HighPart, rcFCB->IndexNumber.u.LowPart);
+    DPRINT("%S %d %I64d\n", LongName, Size, rcFCB->RFCB.AllocationSize.QuadPart);
 
     return(STATUS_SUCCESS);
 }
@@ -522,7 +499,6 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
     DirSize = DirectoryFcb->Entry.DataLengthL;
     StreamOffset.QuadPart = (LONGLONG)DirectoryFcb->Entry.ExtentLocationL * (LONGLONG)BLOCKSIZE;
 
-	DPRINT("Directory is at block %x, Offset %I64x\n", DirectoryFcb->Entry.ExtentLocationL, StreamOffset.QuadPart);
     if (!CcMapData(DeviceExt->StreamFileObject,
         &StreamOffset,
         BLOCKSIZE,
@@ -547,7 +523,6 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 
     while(TRUE)
     {
-		DPRINT("Record %x\n", Record);
         if (Record->RecordLength == 0)
         {
             DPRINT("RecordLength == 0  Stopped!\n");
