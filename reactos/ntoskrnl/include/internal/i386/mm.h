@@ -18,6 +18,7 @@ PULONG MmGetPageDirectory(VOID);
 #define PTE_BASE    0xC0000000
 #define PDE_BASE    0xC0300000
 #define PTE_TOP     0xC03FFFFF
+#define PTE_PER_PAGE 1024
 #define HYPER_SPACE 0xC0400000
 #define HYPER_SPACE_END 0xC07FFFFF
 

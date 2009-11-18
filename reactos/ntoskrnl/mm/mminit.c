@@ -433,7 +433,7 @@ MmInitSystem(IN ULONG Phase,
                 Test[i] = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
                 if (!Test[i]) 
                 {
-                    ASSERT(i == 1024);
+                    ASSERT(i == PTE_PER_PAGE);
                     break;
                 }
             }
