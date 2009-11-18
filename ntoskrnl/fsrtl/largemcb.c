@@ -29,6 +29,23 @@ typedef struct _LARGE_MCB_MAPPING_ENTRY
 	LIST_ENTRY Sequence;
 } LARGE_MCB_MAPPING_ENTRY, *PLARGE_MCB_MAPPING_ENTRY;
 
+static VOID McbPrintTree(PBASE_MCB Mcb)
+{
+	PLARGE_MCB_MAPPING_ENTRY Entry;
+	for (Entry = (PLARGE_MCB_MAPPING_ENTRY)
+			 RtlEnumerateGenericTable(Mcb->Mapping, TRUE);
+		 Entry;
+		 Entry = (PLARGE_MCB_MAPPING_ENTRY)
+			 RtlEnumerateGenericTable(Mcb->Mapping, FALSE))
+	{
+		DPRINT1
+			("Vbn %x Lbn %x Count %x\n", 
+			 Entry->RunStartVbn.LowPart,
+			 Entry->StartingLbn.LowPart,
+			 Entry->SectorCount.LowPart);
+	}
+}
+
 static PVOID NTAPI McbMappingAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
 	PVOID Result;
@@ -45,17 +62,19 @@ static VOID NTAPI McbMappingFree(PRTL_GENERIC_TABLE Table, PVOID Buffer)
 }
 
 static RTL_GENERIC_COMPARE_RESULTS NTAPI McbMappingCompare
-(RTL_GENERIC_TABLE Table, PVOID PtrA, PVOID PtrB)
+(PRTL_GENERIC_TABLE Table, PVOID PtrA, PVOID PtrB)
 {
 	PLARGE_MCB_MAPPING_ENTRY A = PtrA, B = PtrB;
 	RTL_GENERIC_COMPARE_RESULTS Result;
+	DPRINT("Starting to compare element %x to element %x\n", PtrA, PtrB);
 	Result = 
-		(A->RunStartVbn.QuadPart + A->SectorCount.QuadPart <
+		(A->RunStartVbn.QuadPart + A->SectorCount.QuadPart <=
 		 B->RunStartVbn.QuadPart) ? GenericLessThan :
-		(A->RunStartVbn.QuadPart > 
+		(A->RunStartVbn.QuadPart >= 
 		 B->RunStartVbn.QuadPart + B->SectorCount.QuadPart) ? 
 		GenericGreaterThan : GenericEqual;
-	DPRINT("Compare: %x:%x to %x:%x => %d\n", 
+	DPRINT("Compare(%x:%x): %x:%x to %x:%x => %d\n", 
+		   A,B,
 		   A->RunStartVbn.LowPart, A->SectorCount.LowPart,
 		   B->RunStartVbn.LowPart, B->SectorCount.LowPart,
 		   Result);
@@ -77,6 +96,8 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 	LARGE_MCB_MAPPING_ENTRY Node;
 	PLARGE_MCB_MAPPING_ENTRY Existing = NULL;
 	BOOLEAN NewElement = FALSE;
+
+	McbPrintTree(Mcb);
 
 	Node.RunStartVbn.QuadPart = Vbn;
 	Node.StartingLbn.QuadPart = Lbn;
@@ -139,6 +160,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 	}
 
 	DPRINT("!!Existing %d\n", !!Existing);
+	McbPrintTree(Mcb);
 	return !!Existing;
 }
 
@@ -392,7 +414,7 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
                                      Index);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
-	DPRINT("Done %d\n", Result);
+	DPRINT("Done %d (%x)\n", Result, Lbn ? (ULONG)*Lbn : 0);
 
     return Result;
 }
