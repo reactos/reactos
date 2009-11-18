@@ -263,8 +263,6 @@ MiSimpleRead
     
     Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
     
-    ObReferenceObject(FileObject);
-    
     Irp->UserEvent = &ReadWait;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
@@ -286,12 +284,9 @@ MiSimpleRead
 		{
 			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
 			ASSERT(FALSE);
-			ObDereferenceObject(FileObject);
 			return Status;
 		}
     }
-    
-    ObDereferenceObject(FileObject);
     
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
 	Status = 

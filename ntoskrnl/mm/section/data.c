@@ -1715,6 +1715,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
       ExAcquireFastMutex(&Segment->Lock);
 
       DPRINT("Filling out Segment info (No previous data section)\n");
+	  ObReferenceObject(FileObject);
 	  Segment->FileObject = FileObject;
       Segment->Protection = SectionPageProtection;
       Segment->Flags = MM_DATAFILE_SEGMENT;
@@ -2201,6 +2202,7 @@ MiFreeDataSectionSegment(PFILE_OBJECT FileObject)
 		ASSERT(FALSE);
 	}
 	MiFreePageTablesSectionSegment(Segment);
+	ObDereferenceObject(Segment->FileObject);
 	ExFreePool(Segment);
 
 	FileObject->SectionObjectPointer->DataSectionObject = NULL;
@@ -3078,6 +3080,9 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 
    MmUnlockSectionSegment(Section->Segment);
    MmUnlockAddressSpace(AddressSpace);
+
+   if (Status == STATUS_SUCCESS)
+	   ObReferenceObject(Section);
 
    return Status;
 }
