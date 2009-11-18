@@ -99,7 +99,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     /* Make sure this IRP is waitable */
     ASSERT(IrpContext->Flags & IRPCONTEXT_CANWAIT);
 
-    /* Request media changes count, mostly usefull for removable devices */
+    /* Request media changes count, mostly useful for removable devices */
     Status = FatPerformDevIoCtrl(TargetDeviceObject,
                                  IOCTL_STORAGE_CHECK_VERIFY,
                                  NULL,
