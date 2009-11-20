@@ -266,19 +266,22 @@ FsRtlInitializeBaseMcb(IN PBASE_MCB Mcb,
     if (PoolType == PagedPool)
     {
         Mcb->Mapping = ExAllocateFromPagedLookasideList(&FsRtlFirstMappingLookasideList);
+		DPRINT("Get from lookaside list\n");
     }
     else
     {
         Mcb->Mapping = ExAllocatePoolWithTag(PoolType | POOL_RAISE_IF_ALLOCATION_FAILURE,
 											 sizeof(RTL_GENERIC_TABLE) + sizeof(LIST_ENTRY),
                                              'FSBC');
+		DPRINT("Allocate\n");
     }
 
+	DPRINT("Mcb->Mapping %x\n", Mcb->Mapping);
     Mcb->PoolType = PoolType;
     Mcb->MaximumPairCount = MAXIMUM_PAIR_COUNT;
 	RtlInitializeGenericTable
 		(Mcb->Mapping,
-		 (PRTL_GENERIC_COMPARE_ROUTINE)McbMappingCompare,
+		 McbMappingCompare,
 		 McbMappingAllocate,
 		 McbMappingFree,
 		 Mcb);
@@ -683,14 +686,17 @@ FsRtlResetBaseMcb(IN PBASE_MCB Mcb)
 {
 	PLARGE_MCB_MAPPING_ENTRY Element;
 
+	DPRINT("Reset MCB %x\n", Mcb);
 	while (RtlNumberGenericTableElements(Mcb->Mapping) &&
 		   (Element = (PLARGE_MCB_MAPPING_ENTRY)RtlGetElementGenericTable(Mcb->Mapping, 0)))
 	{
+		DPRINT("Deleting %x\n", Element);
 		RtlDeleteElementGenericTable(Mcb->Mapping, Element);
 	}
 
 	Mcb->PairCount = 0;
 	Mcb->MaximumPairCount = 0;
+	DPRINT("Done\n");
 }
 
 /*
@@ -860,8 +866,10 @@ NTAPI
 FsRtlTruncateBaseMcb(IN PBASE_MCB Mcb,
                      IN LONGLONG Vbn)
 {
+	DPRINT("FsRtlTruncateBaseMcb(%x,%x)\n", Mcb, (ULONG)Vbn);
 	if (!Vbn)
 	{
+		DPRINT("Resetting\n");
 		FsRtlResetBaseMcb(Mcb);
 	}
 	else
@@ -872,11 +880,13 @@ FsRtlTruncateBaseMcb(IN PBASE_MCB Mcb,
 		Truncate.SectorCount.QuadPart = (1ull<<62) - Truncate.RunStartVbn.QuadPart;
 		while ((Found = RtlLookupElementGenericTable(Mcb->Mapping, &Truncate)))
 		{
+			DPRINT("Deleting %x\n", Found);
 			RemoveEntryList(&Found->Sequence);
 			RtlDeleteElementGenericTable(Mcb->Mapping, Found);
 			Mcb->PairCount--;
 		}
 	}
+	DPRINT("Done\n");
 }
 
 /*
@@ -902,17 +912,23 @@ VOID
 NTAPI
 FsRtlUninitializeBaseMcb(IN PBASE_MCB Mcb)
 {
+	DPRINT("FsRtlUninitializeBaseMcb(%x)\n", Mcb);
 	FsRtlResetBaseMcb(Mcb);
 
-    if ((Mcb->PoolType == PagedPool) && (Mcb->MaximumPairCount == MAXIMUM_PAIR_COUNT))
+	DPRINT("Mcb->Mapping %x\n", Mcb->Mapping);
+    if (Mcb->PoolType == PagedPool)
     {
+		DPRINT("Deallocate to lookaside list\n");
         ExFreeToPagedLookasideList(&FsRtlFirstMappingLookasideList,
                                    Mcb->Mapping);
     }
     else
     {
+		DPRINT("Deallocate\n");
         ExFreePoolWithTag(Mcb->Mapping, 'FSBC');
     }
+	Mcb->Mapping = NULL;
+	DPRINT("Done\n");
 }
 
 /*
@@ -926,6 +942,7 @@ FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
     {
         ExFreeToNPagedLookasideList(&FsRtlFastMutexLookasideList,
                                     Mcb->GuardedMutex);
+		Mcb->GuardedMutex = NULL;
         FsRtlUninitializeBaseMcb(&(Mcb->BaseMcb));
     }
 }
