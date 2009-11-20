@@ -112,6 +112,7 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
 		FileObject->SectionObjectPointer->SharedCacheMap = Map;
 		Map->FileSizes = *FileSizes;
 		Map->LazyContext = LazyWriteContext;
+		Map->ReadAheadGranularity = PAGE_SIZE;
 		RtlCopyMemory(&Map->Callbacks, Callbacks, sizeof(*Callbacks));
 		// For now ...
 		DPRINT("FileSizes->ValidDataLength %08x%08x\n", FileSizes->ValidDataLength.HighPart, FileSizes->ValidDataLength.LowPart);

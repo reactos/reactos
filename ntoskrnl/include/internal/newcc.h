@@ -136,6 +136,7 @@ typedef struct _NOCC_CACHE_MAP
 	PVOID LazyContext;
 	PVOID LogHandle;
 	PFLUSH_TO_LSN FlushToLsn;
+	ULONG ReadAheadGranularity;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 
 VOID
