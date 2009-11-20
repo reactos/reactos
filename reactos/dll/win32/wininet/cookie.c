@@ -163,7 +163,6 @@ static cookie_domain *COOKIE_addDomain(LPCWSTR domain, LPCWSTR path)
 static BOOL COOKIE_crackUrlSimple(LPCWSTR lpszUrl, LPWSTR hostName, int hostNameLen, LPWSTR path, int pathLen)
 {
     URL_COMPONENTSW UrlComponents;
-    BOOL rc;
 
     UrlComponents.lpszExtraInfo = NULL;
     UrlComponents.lpszPassword = NULL;
@@ -178,22 +177,28 @@ static BOOL COOKIE_crackUrlSimple(LPCWSTR lpszUrl, LPWSTR hostName, int hostName
     UrlComponents.dwHostNameLength = hostNameLen;
     UrlComponents.dwUrlPathLength = pathLen;
 
-    rc = InternetCrackUrlW(lpszUrl, 0, 0, &UrlComponents);
+    if (!InternetCrackUrlW(lpszUrl, 0, 0, &UrlComponents)) return FALSE;
 
     /* discard the webpage off the end of the path */
-    if (pathLen > 0 && path[pathLen-1] != '/')
+    if (UrlComponents.dwUrlPathLength)
     {
-        LPWSTR ptr;
-        ptr = strrchrW(path,'/');
-        if (ptr)
-            *(++ptr) = 0;
-        else
+        if (path[UrlComponents.dwUrlPathLength - 1] != '/')
         {
-            path[0] = '/';
-            path[1] = 0;
+            WCHAR *ptr;
+            if ((ptr = strrchrW(path, '/'))) *(++ptr) = 0;
+            else
+            {
+                path[0] = '/';
+                path[1] = 0;
+            }
         }
     }
-    return rc;
+    else if (pathLen >= 2)
+    {
+        path[0] = '/';
+        path[1] = 0;
+    }
+    return TRUE;
 }
 
 /* match a domain. domain must match if the domain is not NULL. path must match if the path is not NULL */
@@ -569,7 +574,7 @@ BOOL WINAPI InternetSetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
         return FALSE;
     }
 
-    hostName[0] = path[0] = 0;
+    hostName[0] = 0;
     ret = COOKIE_crackUrlSimple(lpszUrl, hostName, sizeof(hostName)/sizeof(hostName[0]), path, sizeof(path)/sizeof(path[0]));
     if (!ret || !hostName[0]) return FALSE;
 

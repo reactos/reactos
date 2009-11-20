@@ -289,14 +289,6 @@ void NETCON_unload(void)
 #if defined(SONAME_LIBSSL) && defined(SONAME_LIBCRYPTO)
     if (OpenSSL_crypto_handle)
     {
-        if (ssl_locks)
-        {
-            int i;
-
-            for (i = 0; i < pCRYPTO_num_locks(); i++)
-                DeleteCriticalSection(&ssl_locks[i]);
-            HeapFree(GetProcessHeap(), 0, ssl_locks);
-        }
         wine_dlclose(OpenSSL_crypto_handle, NULL, 0);
     }
     if (OpenSSL_ssl_handle)
@@ -304,6 +296,12 @@ void NETCON_unload(void)
         if (ctx)
             pSSL_CTX_free(ctx);
         wine_dlclose(OpenSSL_ssl_handle, NULL, 0);
+    }
+    if (ssl_locks)
+    {
+        int i;
+        for (i = 0; i < pCRYPTO_num_locks(); i++) DeleteCriticalSection(&ssl_locks[i]);
+        HeapFree(GetProcessHeap(), 0, ssl_locks);
     }
 #endif
 }

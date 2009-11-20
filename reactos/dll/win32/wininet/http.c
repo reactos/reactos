@@ -3340,8 +3340,16 @@ BOOL WINAPI HttpSendRequestExW(HINTERNET hRequest,
         req = &workRequest.u.HttpSendRequestW;
         if (lpBuffersIn)
         {
-            /* FIXME: this should use dwHeadersLength or may not be necessary at all */
-            req->lpszHeader = heap_strdupW(lpBuffersIn->lpcszHeader);
+            DWORD size;
+
+            if (lpBuffersIn->dwHeadersLength == ~0u)
+                size = (strlenW( lpBuffersIn->lpcszHeader ) + 1) * sizeof(WCHAR);
+            else
+                size = lpBuffersIn->dwHeadersLength * sizeof(WCHAR);
+
+            req->lpszHeader = HeapAlloc( GetProcessHeap(), 0, size );
+            memcpy( req->lpszHeader, lpBuffersIn->lpcszHeader, size );
+
             req->dwHeaderLength = lpBuffersIn->dwHeadersLength;
             req->lpOptional = lpBuffersIn->lpvBuffer;
             req->dwOptionalLength = lpBuffersIn->dwBufferLength;

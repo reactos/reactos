@@ -1449,6 +1449,28 @@ static BOOL URLCache_EnumHashTableEntries(LPCURLCACHE_HEADER pHeader, const HASH
 }
 
 /***********************************************************************
+ *           FreeUrlCacheSpaceA (WININET.@)
+ *
+ */
+BOOL WINAPI FreeUrlCacheSpaceA(LPCSTR lpszCachePath, DWORD dwSize, DWORD dwFilter)
+{
+    FIXME("stub!\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+ /***********************************************************************
+ *           FreeUrlCacheSpaceW (WININET.@)
+ *
+ */
+BOOL WINAPI FreeUrlCacheSpaceW(LPCWSTR lpszCachePath, DWORD dwSize, DWORD dwFilter)
+{
+    FIXME("stub!\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
  *           GetUrlCacheEntryInfoExA (WININET.@)
  *
  */

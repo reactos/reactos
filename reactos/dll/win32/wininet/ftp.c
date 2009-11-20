@@ -1293,6 +1293,7 @@ HINTERNET FTP_FtpOpenFileW(ftp_session_t *lpwfs,
         lpwh->hdr.vtbl = &FTPFILEVtbl;
         lpwh->hdr.dwFlags = dwFlags;
         lpwh->hdr.dwContext = dwContext;
+        lpwh->hdr.dwInternalFlags = 0;
         lpwh->hdr.refs = 1;
         lpwh->hdr.lpfnStatusCB = lpwfs->hdr.lpfnStatusCB;
         lpwh->nDataSocket = nDataSocket;

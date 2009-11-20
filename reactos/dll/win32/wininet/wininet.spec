@@ -50,8 +50,8 @@
 @ stdcall FindNextUrlCacheGroup(long ptr ptr)
 @ stub ForceNexusLookup
 @ stub ForceNexusLookupExW
-@ stub FreeUrlCacheSpaceA
-@ stub FreeUrlCacheSpaceW
+@ stdcall FreeUrlCacheSpaceA(str long long)
+@ stdcall FreeUrlCacheSpaceW(wstr long long)
 @ stdcall FtpCommandA(long long long str ptr ptr)
 @ stdcall FtpCommandW(long long long wstr ptr ptr)
 @ stdcall FtpCreateDirectoryA(ptr str)

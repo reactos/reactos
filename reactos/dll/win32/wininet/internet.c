@@ -1133,11 +1133,14 @@ static void ConvertUrlComponentValue(LPSTR* lppszComponent, LPDWORD dwComponentL
         DWORD nASCIILength=WideCharToMultiByte(CP_ACP,0,lpwszComponent,dwwComponentLen,NULL,0,NULL,NULL);
         if (*lppszComponent == NULL)
         {
-            int nASCIIOffset=WideCharToMultiByte(CP_ACP,0,lpwszStart,lpwszComponent-lpwszStart,NULL,0,NULL,NULL);
             if (lpwszComponent)
-                *lppszComponent = (LPSTR)lpszStart+nASCIIOffset;
+            {
+                int offset = WideCharToMultiByte(CP_ACP, 0, lpwszStart, lpwszComponent-lpwszStart, NULL, 0, NULL, NULL);
+                *lppszComponent = (LPSTR)lpszStart + offset;
+            }
             else
                 *lppszComponent = NULL;
+
             *dwComponentLen = nASCIILength;
         }
         else
@@ -1184,7 +1187,7 @@ BOOL WINAPI InternetCrackUrlA(LPCSTR lpszUrl, DWORD dwUrlLength, DWORD dwFlags,
        InternetCrackUrlW should not include it                  */
   if (dwUrlLength == -1) nLength--;
 
-  lpwszUrl=HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WCHAR)*nLength);
+  lpwszUrl = HeapAlloc(GetProcessHeap(), 0, nLength * sizeof(WCHAR));
   MultiByteToWideChar(CP_ACP,0,lpszUrl,dwUrlLength,lpwszUrl,nLength);
 
   memset(&UCW,0,sizeof(UCW));
