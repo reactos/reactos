@@ -31,7 +31,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     {
         if ((Expression->Buffer[i] == (IgnoreCase ? UpcaseTable[Name->Buffer[k]] : Name->Buffer[k])) ||
             (Expression->Buffer[i] == L'?') || (Expression->Buffer[i] == DOS_QM) ||
-            (Expression->Buffer[i] == DOS_DOT && (Name->Buffer[k] == L'.' || Name->Buffer[k] == L'0')))
+            (Expression->Buffer[i] == DOS_DOT && (Name->Buffer[k] == L'.' || Name->Buffer[k]== L'0')))
         {
             k++;
         }
@@ -304,31 +304,80 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                         IN BOOLEAN IgnoreCase,
                         IN PWCHAR UpcaseTable OPTIONAL)
 {
-    BOOLEAN Result;
-    NTSTATUS Status;
-    UNICODE_STRING IntName;
+    USHORT ExpressionPosition, NamePosition;
+    UNICODE_STRING TempExpression, TempName;
 
-    if (IgnoreCase && !UpcaseTable)
+    ExpressionPosition = 0;
+    NamePosition = 0;
+    while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+        NamePosition < (Name->Length / sizeof(WCHAR)))
     {
-        Status = RtlUpcaseUnicodeString(&IntName, Name, TRUE);
-        if (Status != STATUS_SUCCESS)
+        if (Expression->Buffer[ExpressionPosition] == L'*')
         {
-            ExRaiseStatus(Status);
+            ExpressionPosition++;
+            if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)))
+            {
+                return TRUE;
+            }
+            while (NamePosition < (Name->Length / sizeof(WCHAR)))
+            {
+                TempExpression.Length =
+                    TempExpression.MaximumLength =
+                    Expression->Length - (ExpressionPosition * sizeof(WCHAR));
+                TempExpression.Buffer = Expression->Buffer + ExpressionPosition;
+                TempName.Length =
+                    TempName.MaximumLength =
+                    Name->Length - (NamePosition * sizeof(WCHAR));
+                TempName.Buffer = Name->Buffer + NamePosition;
+                /* FIXME: Rewrite to get rid of recursion */
+                if (FsRtlIsNameInExpression(&TempExpression, &TempName,
+                    IgnoreCase, UpcaseTable))
+                {
+                    return TRUE;
+                }
+                NamePosition++;
+            }
         }
-        Name = &IntName;
-        IgnoreCase = FALSE;
+        else
+        {
+            /* FIXME: Take UpcaseTable into account! */
+            if (Expression->Buffer[ExpressionPosition] == L'?' ||
+                (IgnoreCase &&
+                RtlUpcaseUnicodeChar(Expression->Buffer[ExpressionPosition]) ==
+                RtlUpcaseUnicodeChar(Name->Buffer[NamePosition])) ||
+                (!IgnoreCase &&
+                Expression->Buffer[ExpressionPosition] ==
+                Name->Buffer[NamePosition]))
+            {
+                NamePosition++;
+                ExpressionPosition++;
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
     }
-    else
+
+    /* Handle matching of "f0_*.*" expression to "f0_000" file name. */
+    if (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+        Expression->Buffer[ExpressionPosition] == L'.')
     {
-        IntName.Buffer = NULL;
+        while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+            (Expression->Buffer[ExpressionPosition] == L'.' ||
+            Expression->Buffer[ExpressionPosition] == L'*' ||
+            Expression->Buffer[ExpressionPosition] == L'?'))
+        {
+            ExpressionPosition++;
+        }
     }
 
-    Result = FsRtlIsNameInExpressionPrivate(Expression, Name, IgnoreCase, UpcaseTable);
-
-    if (IntName.Buffer != NULL)
+    if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)) &&
+        NamePosition == (Name->Length / sizeof(WCHAR)))
     {
-        RtlFreeUnicodeString(&IntName);
+        return TRUE;
     }
 
-    return Result;
+    return FALSE;
 }
+
