@@ -187,9 +187,9 @@ Ext2DeQueueRequest (IN PVOID Context)
     ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
            (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
 
-    __try {
+    _SEH2_TRY {
 
-        __try {
+        _SEH2_TRY {
 
             FsRtlEnterFileSystem();
 
@@ -199,17 +199,17 @@ Ext2DeQueueRequest (IN PVOID Context)
 
             Ext2DispatchRequest(IrpContext);
 
-        } __except (Ext2ExceptionFilter(IrpContext, GetExceptionInformation())) {
+        } _SEH2_EXCEPT (Ext2ExceptionFilter(IrpContext, _SEH2_GetExceptionInformation())) {
 
             Ext2ExceptionHandler(IrpContext);
-        }
+        } _SEH2_END;
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         IoSetTopLevelIrp(NULL);
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 }
 
 
@@ -282,8 +282,7 @@ Ext2DispatchRequest (IN PEXT2_IRP_CONTEXT IrpContext)
     }
 }
 
-
-NTSTATUS
+NTSTATUS NTAPI
 Ext2BuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
 {
     BOOLEAN             AtIrqlPassiveLevel = FALSE;
@@ -291,9 +290,9 @@ Ext2BuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
     PEXT2_IRP_CONTEXT   IrpContext = NULL;
     NTSTATUS            Status = STATUS_UNSUCCESSFUL;
     
-    __try {
+    _SEH2_TRY {
 
-        __try {
+        _SEH2_TRY {
 
 #if EXT2_DEBUG
             Ext2DbgPrintCall(DeviceObject, Irp);
@@ -329,12 +328,12 @@ Ext2BuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
 
                 Status = Ext2DispatchRequest(IrpContext);
             }
-        } __except (Ext2ExceptionFilter(IrpContext, GetExceptionInformation())) {
+        } _SEH2_EXCEPT (Ext2ExceptionFilter(IrpContext, _SEH2_GetExceptionInformation())) {
 
             Status = Ext2ExceptionHandler(IrpContext);
-        }
+        } _SEH2_END;
 
-    } __finally  {
+    } _SEH2_FINALLY  {
 
         if (IsTopLevelIrp) {
             IoSetTopLevelIrp(NULL);
@@ -343,7 +342,7 @@ Ext2BuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
         if (AtIrqlPassiveLevel) {
             FsRtlExitFileSystem();
         }       
-    }
+    } _SEH2_END;
     
     return Status;
 }

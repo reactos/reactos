@@ -36,7 +36,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
     PVOID                   Buffer;
     BOOLEAN                 VcbResourceAcquired = FALSE;
 
-    __try {
+    _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
@@ -49,7 +49,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
         //
         if (IsExt2FsDevice(DeviceObject)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH2_LEAVE;
         }
         
         Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
@@ -59,7 +59,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
         if (!IsMounted(Vcb)) {
             Status = STATUS_VOLUME_DISMOUNTED;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (!ExAcquireResourceSharedLite(
@@ -68,7 +68,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
             )) {
 
             Status = STATUS_PENDING;
-            __leave;
+            _SEH2_LEAVE;
         }
         VcbResourceAcquired = TRUE;
 
@@ -92,7 +92,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if (Length < sizeof(FILE_FS_VOLUME_INFORMATION)) {
                     Status = STATUS_BUFFER_OVERFLOW;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 FsVolInfo = (PFILE_FS_VOLUME_INFORMATION) Buffer;
@@ -110,7 +110,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                     Irp->IoStatus.Information =
                         sizeof(FILE_FS_VOLUME_INFORMATION);
                     Status = STATUS_BUFFER_OVERFLOW;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 RtlCopyMemory(FsVolInfo->VolumeLabel, Vcb->Vpb->VolumeLabel, Vcb->Vpb->VolumeLabelLength);
@@ -126,7 +126,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if (Length < sizeof(FILE_FS_SIZE_INFORMATION)) {
                     Status = STATUS_BUFFER_OVERFLOW;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 FsSizeInfo = (PFILE_FS_SIZE_INFORMATION) Buffer;
@@ -150,7 +150,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if (Length < sizeof(FILE_FS_DEVICE_INFORMATION)) {
                     Status = STATUS_BUFFER_OVERFLOW;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 FsDevInfo = (PFILE_FS_DEVICE_INFORMATION) Buffer;
@@ -182,7 +182,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if (Length < sizeof(FILE_FS_ATTRIBUTE_INFORMATION)) {
                     Status = STATUS_BUFFER_OVERFLOW;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 FsAttrInfo =
@@ -199,7 +199,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                     Irp->IoStatus.Information =
                         sizeof(FILE_FS_ATTRIBUTE_INFORMATION);
                     Status = STATUS_BUFFER_OVERFLOW;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 if (Vcb->IsExt3fs) {
@@ -221,7 +221,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if (Length < sizeof(FILE_FS_FULL_SIZE_INFORMATION)) {
                     Status = STATUS_BUFFER_OVERFLOW;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 PFFFSI = (PFILE_FS_FULL_SIZE_INFORMATION) Buffer;
@@ -266,7 +266,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
             break;
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (VcbResourceAcquired) {
             ExReleaseResourceLite(&Vcb->MainResource);
@@ -279,7 +279,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 Ext2CompleteIrpContext(IrpContext, Status);
             }
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -295,7 +295,7 @@ Ext2SetVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
     FS_INFORMATION_CLASS    FsInformationClass;
     BOOLEAN                 VcbResourceAcquired = FALSE;
 
-    __try {
+    _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
         
@@ -309,7 +309,7 @@ Ext2SetVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
         //
         if (IsExt2FsDevice(DeviceObject)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
@@ -320,13 +320,13 @@ Ext2SetVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
         if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
             Status = STATUS_MEDIA_WRITE_PROTECTED;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (!ExAcquireResourceExclusiveLite(
                 &Vcb->MainResource, TRUE)) {
             Status = STATUS_PENDING;
-            __leave;
+            _SEH2_LEAVE;
         }
         VcbResourceAcquired = TRUE;
 
@@ -355,7 +355,7 @@ Ext2SetVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if(VolLabelLen > (16 * sizeof(WCHAR))) {
                     Status = STATUS_INVALID_VOLUME_LABEL;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 RtlCopyMemory( Vcb->Vpb->VolumeLabel,
@@ -386,7 +386,7 @@ Ext2SetVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_INFO_CLASS;
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (VcbResourceAcquired) {
             ExReleaseResourceLite(&Vcb->MainResource);
@@ -399,7 +399,7 @@ Ext2SetVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 Ext2CompleteIrpContext(IrpContext, Status);
             }
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }

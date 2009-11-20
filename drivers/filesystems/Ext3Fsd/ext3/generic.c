@@ -426,7 +426,7 @@ Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
         return FALSE;
     }
 
-    __try {
+    _SEH2_TRY {
 
         RtlCopyMemory(Buffer, Buf, Size);
         CcSetDirtyPinnedData(Bcb, NULL );
@@ -439,9 +439,9 @@ Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
             rc = Ext2AddVcbExtent(Vcb, Offset, (LONGLONG)Size);
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
         CcUnpinData(Bcb);
-    }
+    } _SEH2_END;
 
 
     return rc;
@@ -2010,7 +2010,7 @@ Ext2AddEntry (
     ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
     MainResourceAcquired = TRUE;
 
-    __try {
+    _SEH2_TRY {
 
         Ext2ReferXcb(&Dcb->ReferenceCount);
 
@@ -2023,7 +2023,7 @@ Ext2AddEntry (
         if (!pDir) {
             DEBUG(DL_ERR, ( "Ex2AddEntry: failed to allocate pDir.\n"));
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         pTarget = (PEXT2_DIR_ENTRY2)
@@ -2035,7 +2035,7 @@ Ext2AddEntry (
         if (!pTarget) {
             DEBUG(DL_ERR, ( "Ex2AddEntry: failed to allocate pTarget.\n"));
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (IsFlagOn( SUPER_BLOCK->s_feature_incompat, 
@@ -2052,7 +2052,7 @@ Ext2AddEntry (
         Status = Ext2UnicodeToOEM(Vcb, &OemName, FileName);
 
         if (!NT_SUCCESS(Status)) {
-            __leave;
+            _SEH2_LEAVE;
         }
 
         pDir->name_len = (CCHAR) OemName.Length;
@@ -2080,7 +2080,7 @@ Repeat:
 
             if (!NT_SUCCESS(Status)) {
                 DEBUG(DL_ERR, ( "Ext2AddDirectory: failed to read directory.\n"));
-                __leave;
+                _SEH2_LEAVE;
             }
 
             if (pTarget->rec_len == 0) {
@@ -2111,7 +2111,7 @@ Repeat:
 
                     if (!NT_SUCCESS(Status)) {
                         DEBUG(DL_ERR, ( "Ext2AddDirectory: Reading Directory Content error.\n"));
-                        __leave;
+                        _SEH2_LEAVE;
                     }
 
                     Length = EXT2_DIR_REC_LEN(pTarget->name_len);
@@ -2205,15 +2205,15 @@ Repeat:
                 }
 
                 /* failed to allocate new block for this directory */
-                __leave;
+                _SEH2_LEAVE;
 
             } else { 
                 /* Something must be error, since we already allocated new block ! */
-                __leave;
+                _SEH2_LEAVE;
             }
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         Ext2DerefXcb(&Dcb->ReferenceCount);
 
@@ -2228,7 +2228,7 @@ Repeat:
         if (pDir) {
             ExFreePoolWithTag(pDir, EXT2_DENTRY_MAGIC);
         }
-    }
+    } _SEH2_END;
     
     return Status;
 }
@@ -2266,7 +2266,7 @@ Ext2RemoveEntry (
     ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
     MainResourceAcquired = TRUE;
 
-    __try {
+    _SEH2_TRY {
 
         Ext2ReferXcb(&Dcb->ReferenceCount);
 
@@ -2278,7 +2278,7 @@ Ext2RemoveEntry (
         if (!pTarget) {
             DEBUG(DL_ERR, ( "Ex2RemoveEntry: failed to allocate pTarget.\n"));
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
         
         pPrevDir = (PEXT2_DIR_ENTRY2)
@@ -2290,7 +2290,7 @@ Ext2RemoveEntry (
         if (!pPrevDir) {
             DEBUG(DL_ERR, ( "Ex2RemoveEntry: failed to allocate pPrevDir.\n"));
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         /* we only need search the block where the entry is stored */
@@ -2312,7 +2312,7 @@ Ext2RemoveEntry (
 
             if (!NT_SUCCESS(Status)) {
                 DEBUG(DL_ERR, ( "Ext2RemoveEntry: failed to read directory.\n"));
-                __leave;
+                _SEH2_LEAVE;
             }
 
             if (pTarget->rec_len == 0) {
@@ -2425,7 +2425,7 @@ Ext2RemoveEntry (
             ByteOffset += RecLen;
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         Ext2DerefXcb(&Dcb->ReferenceCount);
 
@@ -2439,7 +2439,7 @@ Ext2RemoveEntry (
         if (pPrevDir != NULL) {
             ExFreePoolWithTag(pPrevDir, EXT2_DENTRY_MAGIC);
         }
-    }
+    } _SEH2_END;
     
     return Status;
 }
@@ -2470,7 +2470,7 @@ Ext2SetParentEntry (
     MainResourceAcquired = 
         ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
 
-    __try {
+    _SEH2_TRY {
 
         Ext2ReferXcb(&Dcb->ReferenceCount);
 
@@ -2483,7 +2483,7 @@ Ext2SetParentEntry (
         if (!pSelf) {
             DEBUG(DL_ERR, ( "Ex2SetParentEntry: failed to allocate pSelf.\n"));
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         dwBytes = 0;
@@ -2504,7 +2504,7 @@ Ext2SetParentEntry (
 
         if (!NT_SUCCESS(Status)) {
             DEBUG(DL_ERR, ( "Ext2SetParentEntry: failed to read directory.\n"));
-            __leave;
+            _SEH2_LEAVE;
         }
 
         ASSERT(dwBytes == EXT2_DIR_REC_LEN(1) + EXT2_DIR_REC_LEN(2));
@@ -2533,7 +2533,7 @@ Ext2SetParentEntry (
             DbgBreak();
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
 
         if (Ext2DerefXcb(&Dcb->ReferenceCount) == 0) {
@@ -2547,7 +2547,7 @@ Ext2SetParentEntry (
         if (pSelf) {
             ExFreePoolWithTag(pSelf, EXT2_DENTRY_MAGIC);
         }
-    }
+    } _SEH2_END;
     
     return Status;
 }

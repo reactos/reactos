@@ -81,7 +81,7 @@ Ext2FollowLink (
 
     USHORT          i;
 
-    __try {
+    _SEH2_TRY {
 
         RtlZeroMemory(&UniName, sizeof(UNICODE_STRING));
         RtlZeroMemory(&OemName, sizeof(OEM_STRING));
@@ -89,7 +89,7 @@ Ext2FollowLink (
         /* exit if we jump into a possible symlink forever loop */
         if ((Linkdep + 1) > EXT2_MAX_NESTED_LINKS ||
             IoGetRemainingStackSize() < 1024) {
-            __leave;
+            _SEH2_LEAVE;
         }
 
         /* read the symlink target path */
@@ -108,7 +108,7 @@ Ext2FollowLink (
                                     'NL2E');
             if (OemName.Buffer == NULL) {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
-                __leave;
+                _SEH2_LEAVE;
             }
             bOemBuffer = TRUE;
             RtlZeroMemory(OemName.Buffer, OemName.MaximumLength);
@@ -123,7 +123,7 @@ Ext2FollowLink (
                             FALSE,
                             NULL);
             if (!NT_SUCCESS(Status)) {
-                __leave;
+                _SEH2_LEAVE;
             }
         }
 
@@ -138,7 +138,7 @@ Ext2FollowLink (
         UniName.MaximumLength = (USHORT)Ext2OEMToUnicodeSize(Vcb, &OemName);
         if (UniName.MaximumLength <= 0) {
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         UniName.MaximumLength += 2;
@@ -147,13 +147,13 @@ Ext2FollowLink (
                                     'NL2E');
         if (UniName.Buffer == NULL) {
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
         RtlZeroMemory(UniName.Buffer, UniName.MaximumLength);
         Status = Ext2OEMToUnicode(Vcb, &UniName, &OemName);
         if (!NT_SUCCESS(Status)) {
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         /* search the real target */
@@ -167,7 +167,7 @@ Ext2FollowLink (
                     );
         if (!NT_SUCCESS(Status)) {
             Status = STATUS_LINK_FAILED;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         /* we get the link target */
@@ -186,7 +186,7 @@ Ext2FollowLink (
         Mcb->FileSize = Target->FileSize;
         Mcb->FileAttr = Target->FileAttr;
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (bOemBuffer) {
             ExFreePoolWithTag(OemName.Buffer, 'NL2E');
@@ -195,7 +195,7 @@ Ext2FollowLink (
         if (UniName.Buffer) {
             ExFreePoolWithTag(UniName.Buffer, 'NL2E');
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -268,7 +268,7 @@ Ext2LookupFile (
     BOOLEAN         bDirectory = FALSE;
     BOOLEAN         LockAcquired = FALSE;
 
-    __try {
+    _SEH2_TRY {
 
         ExAcquireResourceExclusiveLite(&Vcb->McbLock, TRUE);
         LockAcquired = TRUE;
@@ -295,7 +295,7 @@ Ext2LookupFile (
         if ( (End == 0) || (End == 1 && 
               FullName->Buffer[0] == L'\\')) {
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         /* is a directory expected ? */
@@ -471,7 +471,7 @@ Ext2LookupFile (
             }
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (NT_SUCCESS(Status)) {
             if (bDirectory) {
@@ -489,7 +489,7 @@ Ext2LookupFile (
         if (LockAcquired) {
             ExReleaseResourceLite(&Vcb->McbLock);
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -524,7 +524,7 @@ Ext2ScanDir (
     /* initialize InodeFileName */
     InodeFileName.Buffer = NULL;
 
-    __try {
+    _SEH2_TRY {
 
         /* grab parent's reference first */
         Ext2ReferMcb(Parent);
@@ -532,7 +532,7 @@ Ext2ScanDir (
         /* bad request ! Can a man be pregnant ? Maybe:) */
         if (!IsMcbDirectory(Parent)) {
             Status = STATUS_NOT_A_DIRECTORY;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         /* parent is a symlink ? */
@@ -544,7 +544,7 @@ Ext2ScanDir (
             } else {
                 DbgBreak();
                 Status = STATUS_NOT_A_DIRECTORY;
-                __leave;
+                _SEH2_LEAVE;
             }
         }
 
@@ -558,7 +558,7 @@ Ext2ScanDir (
         if (!InodeFileName.Buffer) {
             DEBUG(DL_ERR, ( "Ex2ScanDir: failed to allocate InodeFileName.\n"));
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
         INC_MEM_COUNT(PS_INODE_NAME, InodeFileName.Buffer, (EXT2_NAME_LEN + 1) * 2);
 
@@ -571,7 +571,7 @@ Ext2ScanDir (
         if (!pDir) {
             DEBUG(DL_ERR, ( "Ex2ScanDir: failed to allocate pDir.\n"));
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH2_LEAVE;
         }
         INC_MEM_COUNT(PS_DIR_ENTRY, pDir, sizeof(EXT2_DIR_ENTRY2));
 
@@ -599,7 +599,7 @@ Ext2ScanDir (
 
             if (!NT_SUCCESS(Status)) {
                 DEBUG(DL_ERR, ( "Ext2ScanDir: failed to read directory.\n"));
-                __leave;
+                _SEH2_LEAVE;
             }
 
             if (pDir->rec_len == 0) {
@@ -612,7 +612,7 @@ Ext2ScanDir (
 
                 if ((pDir->inode >= INODES_COUNT)) {
                     Status = STATUS_FILE_CORRUPT_ERROR;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 OemName.Buffer = pDir->name;
@@ -624,7 +624,7 @@ Ext2ScanDir (
                 if (InodeFileNameLength <= 0) {
                     DEBUG(DL_CP, ("Ext2ScanDir: failed to count unicode length of %s.\n", OemName.Buffer));
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 InodeFileName.Length = 0;
@@ -637,7 +637,7 @@ Ext2ScanDir (
                 if (!NT_SUCCESS(Status)) {
                     DEBUG(DL_CP, ("Ext2ScanDir: failed to convert %s to unicode.\n", OemName.Buffer));
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 if (!RtlCompareUnicodeString(
@@ -663,7 +663,7 @@ Ext2ScanDir (
             Status = STATUS_NO_SUCH_FILE;
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (InodeFileName.Buffer != NULL) {
             ExFreePoolWithTag(InodeFileName.Buffer, EXT2_INAME_MAGIC);
@@ -677,7 +677,7 @@ Ext2ScanDir (
         }
 
         Ext2DerefMcb(Parent);
-    }
+    } _SEH2_END;
     
     return Status;
 }
@@ -766,7 +766,7 @@ Ext2CreateFile(
 
     *OpPostIrp = FALSE;
 
-    __try {
+    _SEH2_TRY {
 
         FileName.MaximumLength = IrpSp->FileObject->FileName.MaximumLength;
         FileName.Length = IrpSp->FileObject->FileName.Length;
@@ -790,7 +790,7 @@ Ext2CreateFile(
             } else {
                 DbgBreak();
                 Status = STATUS_INVALID_PARAMETER;
-                __leave;
+                _SEH2_LEAVE;
             }
         }
 
@@ -806,7 +806,7 @@ Ext2CreateFile(
             if (ParentFcb) {
                 Ext2DerefMcb(ParentMcb);
             }
-            __leave;
+            _SEH2_LEAVE;
         }
 
         INC_MEM_COUNT(PS_FILE_NAME, FileName.Buffer, FileName.MaximumLength);
@@ -817,7 +817,7 @@ Ext2CreateFile(
         if (ParentFcb && FileName.Buffer[0] == L'\\') {
             Status = STATUS_INVALID_PARAMETER;
             Ext2DerefMcb(ParentMcb);
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if ((FileName.Length > sizeof(WCHAR)) &&
@@ -843,7 +843,7 @@ Ext2CreateFile(
                 }
 
                 Status = STATUS_OBJECT_NAME_INVALID;
-                __leave;
+                _SEH2_LEAVE;
             }
         }
 
@@ -852,7 +852,7 @@ Ext2CreateFile(
             if (ParentFcb) {
                 Ext2DerefMcb(ParentMcb);
             }
-            __leave;
+            _SEH2_LEAVE;
         }
 
         DEBUG(DL_INF, ( "Ext2CreateFile: %wZ Paging=%d Option: %xh:"
@@ -888,10 +888,10 @@ McbExisting:
                 if (CreateDisposition == FILE_CREATE) {
                     Irp->IoStatus.Information = FILE_EXISTS;
                     Status = STATUS_OBJECT_NAME_COLLISION;
-                    __leave;
+                    _SEH2_LEAVE;
                 } else {
                     Status = STATUS_OBJECT_NAME_INVALID;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -901,14 +901,14 @@ McbExisting:
                     PathName.Buffer[PathName.Length/2] = 0;
                 } else {
                     Status = STATUS_NOT_A_DIRECTORY;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
             }
 
             if (!ParentMcb) {
                 if (PathName.Buffer[0] != L'\\') {
                     Status = STATUS_OBJECT_PATH_NOT_FOUND;
-                    __leave;
+                    _SEH2_LEAVE;
                 } else {
                     ParentMcb = Vcb->McbTree;
                 }
@@ -923,7 +923,7 @@ Dissecting:
                 (RealName.Length >= 256 * sizeof(WCHAR))) {
                 Status = STATUS_OBJECT_NAME_INVALID;
                 Ext2DerefMcb(ParentMcb);
-                __leave;
+                _SEH2_LEAVE;
             }
 
             if (RemainName.Length != 0) {
@@ -949,7 +949,7 @@ Dissecting:
                     if (Status == STATUS_NO_SUCH_FILE && RemainName.Length != 0) {
                         Status = STATUS_OBJECT_PATH_NOT_FOUND;
                     }
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 /* RetMcb is already refered */
@@ -964,7 +964,7 @@ Dissecting:
                 !Ext2IsNameValid(&RealName)) {
                 Status = STATUS_OBJECT_NAME_INVALID;
                 Ext2DerefMcb(ParentMcb);
-                __leave;
+                _SEH2_LEAVE;
             }
 
             /* symlink must use it's target */
@@ -986,7 +986,7 @@ Dissecting:
                 if (!ParentFcb) {
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     Ext2DerefMcb(ParentMcb);
-                    __leave;
+                    _SEH2_LEAVE;
                 }
                 bParentFcbCreated = TRUE;
                 Ext2ReferXcb(&ParentFcb->ReferenceCount);
@@ -1003,7 +1003,7 @@ Dissecting:
 
                 if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
                     Status = STATUS_MEDIA_WRITE_PROTECTED;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 if (IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
@@ -1017,13 +1017,13 @@ Dissecting:
                     if (TemporaryFile) {
                         DbgBreak();
                         Status = STATUS_INVALID_PARAMETER;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
                 }
 
                 if (!ParentFcb) {
                     Status = STATUS_OBJECT_PATH_NOT_FOUND;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 /* allocate inode and construct entry for this file */
@@ -1038,7 +1038,7 @@ Dissecting:
                 
                 if (!NT_SUCCESS(Status)) {
                     DbgBreak();
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 bCreated = TRUE;
@@ -1061,12 +1061,12 @@ Dissecting:
 
                 if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
                     Status = STATUS_MEDIA_WRITE_PROTECTED;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 if (!ParentFcb) {
                     Status = STATUS_OBJECT_PATH_NOT_FOUND;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 RtlZeroMemory( IrpSp->FileObject->FileName.Buffer,
@@ -1085,7 +1085,7 @@ Dissecting:
             } else {
 
                 Status = STATUS_OBJECT_NAME_NOT_FOUND;
-                __leave;
+                _SEH2_LEAVE;
             }
 
         } else { // File / Dir already exists.
@@ -1096,7 +1096,7 @@ Dissecting:
                 if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
                     Status = STATUS_MEDIA_WRITE_PROTECTED;
                     Ext2DerefMcb(Mcb);
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 Irp->IoStatus.Information = FILE_EXISTS;
@@ -1123,7 +1123,7 @@ Dissecting:
                 Irp->IoStatus.Information = FILE_EXISTS;
                 Status = STATUS_OBJECT_NAME_COLLISION;
                 Ext2DerefMcb(Mcb);
-                __leave;
+                _SEH2_LEAVE;
             }
 
             /* directory forbits us to do the followings ... */
@@ -1134,13 +1134,13 @@ Dissecting:
 
                     Status = STATUS_OBJECT_NAME_COLLISION;
                     Ext2DerefMcb(Mcb);
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 if (NonDirectoryFile) {
                     Status = STATUS_FILE_IS_A_DIRECTORY;
                     Ext2DerefMcb(Mcb);
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 if (Mcb->iNo == EXT2_ROOT_INO) {
@@ -1148,14 +1148,14 @@ Dissecting:
                     if (DeleteOnClose) {
                         Status = STATUS_CANNOT_DELETE;
                         Ext2DerefMcb(Mcb);
-                        __leave;
+                        _SEH2_LEAVE;
                     }
 
                     if (OpenTargetDirectory) {
                         DbgBreak();
                         Status = STATUS_INVALID_PARAMETER;
                         Ext2DerefMcb(Mcb);
-                        __leave;
+                        _SEH2_LEAVE;
                     }
                 }
 
@@ -1164,7 +1164,7 @@ Dissecting:
                 if (DirectoryFile) {
                     Status = STATUS_NOT_A_DIRECTORY;;
                     Ext2DerefMcb(Mcb);
-                    __leave;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -1221,7 +1221,7 @@ Openit:
             /* file delted ? */
             if (IsFlagOn(Fcb->Flags, FCB_FILE_DELETED)) {
                 Status = STATUS_FILE_DELETED;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             /* check access and oplock access for opened files */
@@ -1242,7 +1242,7 @@ Openit:
                     if ( Status != STATUS_SUCCESS &&
                          Status != STATUS_OPLOCK_BREAK_IN_PROGRESS) {
                         *OpPostIrp = TRUE;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
                 }
             }
@@ -1320,7 +1320,7 @@ Openit:
 
                     if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
                         Status = STATUS_MEDIA_WRITE_PROTECTED;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
 
                     if (IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
@@ -1392,7 +1392,7 @@ Openit:
                     if ( Status != STATUS_SUCCESS &&
                          Status != STATUS_OPLOCK_BREAK_IN_PROGRESS) {
                         *OpPostIrp = TRUE;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
                 }
             }
@@ -1406,7 +1406,7 @@ Openit:
                                              &(Fcb->ShareAccess),
                                              TRUE );
                 if (!NT_SUCCESS(Status)) {
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
             } else {
@@ -1422,7 +1422,7 @@ Openit:
             if (!Ccb) {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
                 DbgBreak();
-                __leave;
+                _SEH2_LEAVE;
             }
 
             Ext2ReferXcb(&Fcb->OpenHandleCount);
@@ -1478,7 +1478,7 @@ Openit:
 
                         Status = DeleteOnClose ? STATUS_CANNOT_DELETE :
                                                  STATUS_SHARING_VIOLATION;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
                 }
 
@@ -1488,18 +1488,18 @@ Openit:
 
                     if (IsDirectory(Fcb)) {
                         Status = STATUS_FILE_IS_A_DIRECTORY;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
 
                     if (SymLink != NULL) {
                         DbgBreak();
                         Status = STATUS_INVALID_PARAMETER;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
 
                     if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
                         Status = STATUS_MEDIA_WRITE_PROTECTED;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
 
                     if (IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
@@ -1520,7 +1520,7 @@ Openit:
 
                     if (!NT_SUCCESS(Status)) {
                         DbgBreak();
-                        __leave;
+                        _SEH2_LEAVE;
                     }
 
                     Ext2NotifyReportChange(
@@ -1543,10 +1543,10 @@ Openit:
 
         } else {
             DbgBreak();
-            __leave;
+            _SEH2_LEAVE;
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         /* cleanup Fcb and Ccb, Mcb if necessary */
         if (!NT_SUCCESS(Status)) {
@@ -1592,13 +1592,13 @@ Openit:
 
                 LARGE_INTEGER Size;
                 ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, TRUE);
-                __try {
+                _SEH2_TRY {
                     Size.QuadPart = 0;
                     Mcb->FileSize = Fcb->RealSize;
                     Ext2TruncateFile(IrpContext, Vcb, Mcb, &Size);
-                } __finally {
+                } _SEH2_FINALLY {
                     ExReleaseResourceLite(&Fcb->PagingIoResource);
-                }
+                } _SEH2_END;
             }
 
             if (bCreated) {
@@ -1635,7 +1635,7 @@ Openit:
         if (SymLink) {
             Ext2DerefMcb(SymLink);
         }
-    }
+    } _SEH2_END;
     
     return Status;
 }
@@ -1764,7 +1764,7 @@ Ext2Create (IN PEXT2_IRP_CONTEXT IrpContext)
         return Status;
     }
    
-    __try {
+    _SEH2_TRY {
 
         Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
         ASSERT(Vcb->Identifier.Type == EXT2VCB);
@@ -1777,13 +1777,13 @@ Ext2Create (IN PEXT2_IRP_CONTEXT IrpContext)
             } else {
                 Status = STATUS_VOLUME_DISMOUNTED;
             }
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (!ExAcquireResourceExclusiveLite(
                 &Vcb->MainResource, TRUE)) {
             Status = STATUS_PENDING;
-            __leave;
+            _SEH2_LEAVE;
         }
         VcbResourceAcquired = TRUE;
 
@@ -1794,7 +1794,7 @@ Ext2Create (IN PEXT2_IRP_CONTEXT IrpContext)
             if (IsFlagOn(Vcb->Flags, VCB_DISMOUNT_PENDING)) {
                 Status = STATUS_VOLUME_DISMOUNTED;
             }
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if ( ((IrpSp->FileObject->FileName.Length == 0) &&
@@ -1806,7 +1806,7 @@ Ext2Create (IN PEXT2_IRP_CONTEXT IrpContext)
             Status = Ext2CreateFile(IrpContext, Vcb, &PostIrp);
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (VcbResourceAcquired) {
             ExReleaseResourceLite(&Vcb->MainResource);
@@ -1820,7 +1820,7 @@ Ext2Create (IN PEXT2_IRP_CONTEXT IrpContext)
                 Ext2CompleteIrpContext(IrpContext, Status);
             }
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }

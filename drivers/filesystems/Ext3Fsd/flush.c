@@ -156,7 +156,7 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
 
     BOOLEAN                 MainResourceAcquired = FALSE;
 
-    __try {
+    _SEH2_TRY {
 
         ASSERT(IrpContext);
     
@@ -170,7 +170,7 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
         //
         if (IsExt2FsDevice(DeviceObject)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH2_LEAVE;
         }
         
         Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
@@ -182,7 +182,7 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
         if ( IsFlagOn(Vcb->Flags, VCB_READ_ONLY) ||
              IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
             Status =  STATUS_SUCCESS;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         Irp = IrpContext->Irp;
@@ -195,7 +195,7 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
         Ccb = (PEXT2_CCB) FileObject->FsContext2;
         if (Ccb == NULL) {
             Status =  STATUS_SUCCESS;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         MainResourceAcquired = 
@@ -211,7 +211,7 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
             Ext2VerifyVcb(IrpContext, Vcb);
             Status = Ext2FlushFiles(IrpContext, (PEXT2_VCB)(FcbOrVcb), FALSE);
             if (NT_SUCCESS(Status)) {
-                __leave;
+                _SEH2_LEAVE;
             }
 
             Status = Ext2FlushVolume(IrpContext, (PEXT2_VCB)(FcbOrVcb), FALSE);
@@ -237,7 +237,7 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
                         FsRtlNumberOfRunsInLargeMcb(&Vcb->Extents)));
 
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (MainResourceAcquired) {
             ExReleaseResourceLite(&FcbOrVcb->MainResource);
@@ -272,7 +272,7 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
 
             Ext2CompleteIrpContext(IrpContext, Status);
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }

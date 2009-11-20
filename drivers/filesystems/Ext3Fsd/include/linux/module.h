@@ -33,7 +33,8 @@
 //
 
 /* use the runtime routine or compiler's implementation */
-#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || \
+#if 1
+//#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || \
     ((defined(_M_AMD64) || defined(_M_IA64)) &&         \
      (_MSC_FULL_VER > 13009175))
 #ifdef __cplusplus

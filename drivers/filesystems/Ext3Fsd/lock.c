@@ -32,7 +32,7 @@ Ext2LockControl (IN PEXT2_IRP_CONTEXT IrpContext)
     PEXT2_FCB       Fcb;
     PIRP            Irp;
     
-    __try {
+    _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
         
@@ -43,7 +43,7 @@ Ext2LockControl (IN PEXT2_IRP_CONTEXT IrpContext)
         
         if (IsExt2FsDevice(DeviceObject)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH2_LEAVE;
         }
         
         FileObject = IrpContext->FileObject;
@@ -54,7 +54,7 @@ Ext2LockControl (IN PEXT2_IRP_CONTEXT IrpContext)
         
         if (Fcb->Identifier.Type == EXT2VCB) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH2_LEAVE;
         }
         
         ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
@@ -62,7 +62,7 @@ Ext2LockControl (IN PEXT2_IRP_CONTEXT IrpContext)
         
         if (FlagOn(Fcb->Mcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY)) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH2_LEAVE;
         }
         
         Irp = IrpContext->Irp;
@@ -77,7 +77,7 @@ Ext2LockControl (IN PEXT2_IRP_CONTEXT IrpContext)
 
         if (Status != STATUS_SUCCESS) {
             CompleteContext = FALSE;
-            __leave;
+            _SEH2_LEAVE;
         }
         
         //
@@ -100,7 +100,7 @@ Ext2LockControl (IN PEXT2_IRP_CONTEXT IrpContext)
 #endif
         Fcb->Header.IsFastIoPossible = Ext2IsFastIoPossible(Fcb);
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (!IrpContext->ExceptionInProgress) {
 
@@ -112,7 +112,7 @@ Ext2LockControl (IN PEXT2_IRP_CONTEXT IrpContext)
                 Ext2CompleteIrpContext(IrpContext, Status);
             }
         }
-    }
+    } _SEH2_END;
     
     return Status;
 }

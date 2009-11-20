@@ -14,7 +14,7 @@ typedef	signed   __int64	__s64;
 typedef	unsigned __int64	__u64;
 
 
-#ifdef _MSC_VER
+#if 1 //#if MSC_VER
 typedef __s16       s16;
 typedef __u16       u16;
 typedef __s32       s32;
@@ -23,9 +23,9 @@ typedef __s64       s64;
 typedef __u64       u64;
 #endif
 
-#define __le16      u16
-#define __le32      u32
-#define __le64      u64
+typedef __u16 __le16;
+typedef __u32 __le32;
+typedef __u64 __le64;
 
 #define bool        BOOLEAN
 
@@ -46,8 +46,8 @@ typedef unsigned __int64    loff_t;
 typedef __u32 __bitwise __be32;
 typedef __u16 __bitwise __be16;
 
-#define uid_t       u16
-#define gid_t       u16
+typedef u16 uid_t;
+typedef u16 gid_t;
 typedef int         pid_t;
 typedef unsigned __bitwise gfp_t;
 

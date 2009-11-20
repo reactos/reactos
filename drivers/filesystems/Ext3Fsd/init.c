@@ -24,10 +24,14 @@ CHAR            gDate[] = __DATE__;
 
 /* DEFINITIONS ***********************************************************/
 
-NTSTATUS
+#if 1
+NTSTATUS NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath   );
+#else
+DRIVER_INITIALIZE DriverEntry;
+#endif
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(INIT, Ext2QueryGlobalParameters)
@@ -365,7 +369,7 @@ Ext2QueryGlobalParameters( IN PUNICODE_STRING  RegistryPath)
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
-NTSTATUS
+NTSTATUS NTAPI
 DriverEntry (
          IN PDRIVER_OBJECT   DriverObject,
          IN PUNICODE_STRING  RegistryPath

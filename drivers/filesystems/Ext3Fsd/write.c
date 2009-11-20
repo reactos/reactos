@@ -243,7 +243,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
     PEXT2_EXTENT        Chain = NULL;
     EXT2_EXTENT         BlockArray;
 
-    __try {
+    _SEH2_TRY {
 
         ASSERT(IrpContext);
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
@@ -261,7 +261,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
         
         if (!(FcbOrVcb->Identifier.Type == EXT2VCB && (PVOID)FcbOrVcb == (PVOID)Vcb)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         Ccb = (PEXT2_CCB) FileObject->FsContext2;
@@ -285,27 +285,27 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
         if (Length == 0) {
             Irp->IoStatus.Information = 0;
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (Nocache &&
            (ByteOffset.LowPart & (SECTOR_SIZE - 1) ||
             Length & (SECTOR_SIZE - 1))) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (FlagOn(IrpContext->MinorFunction, IRP_MN_DPC)) {
             ClearFlag(IrpContext->MinorFunction, IRP_MN_DPC);
             Status = STATUS_PENDING;
-            __leave;
+            _SEH2_LEAVE;
         }
         
         if (ByteOffset.QuadPart >=
             Vcb->PartitionInformation.PartitionLength.QuadPart  ) {
             Irp->IoStatus.Information = 0;
             Status = STATUS_END_OF_FILE;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (!Nocache) {
@@ -336,7 +336,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                     bDeferred = TRUE;
                     Status = STATUS_PENDING;
 
-                    __leave;
+                    _SEH2_LEAVE;
                 }
             }
         }
@@ -377,7 +377,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
 
             if (!NT_SUCCESS(Irp->IoStatus.Status))  {
                 Status = Irp->IoStatus.Status;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             ExAcquireSharedStarveExclusive(&Vcb->PagingIoResource, TRUE);
@@ -416,7 +416,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                     DbgBreak();
 
                     Status = STATUS_INVALID_USER_BUFFER;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 if (!CcCopyWrite( Vcb->Volume,
@@ -425,7 +425,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                                   TRUE,
                                   Buffer )) {
                     Status = STATUS_PENDING;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
                 Status = Irp->IoStatus.Status;
@@ -450,7 +450,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
 
             Status = Ext2LockUserBuffer(IrpContext->Irp, Length, IoReadAccess);
             if (!NT_SUCCESS(Status)) {
-                __leave;
+                _SEH2_LEAVE;
             }
 
             DirtyLba = ByteOffset.QuadPart;
@@ -485,7 +485,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                     if (!Extent) {
                         DEBUG(DL_ERR, ( "Ex2WriteVolume: failed to allocate Extent\n"));
                         Status = STATUS_INSUFFICIENT_RESOURCES;
-                        __leave;
+                        _SEH2_LEAVE;
                     }
 
                     Extent->Irp = NULL;
@@ -544,14 +544,14 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                 }
 
                 if (!Irp) {
-                    __leave;
+                    _SEH2_LEAVE;
                 }
 
             } else {
 
                 Irp->IoStatus.Information = Length;
                 Status = STATUS_SUCCESS;
-                __leave;
+                _SEH2_LEAVE;
             }
 
         } else {
@@ -564,7 +564,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                 IoWriteAccess );
                 
             if (!NT_SUCCESS(Status)) {
-                __leave;
+                _SEH2_LEAVE;
             }
 
             BlockArray.Irp = NULL;
@@ -585,11 +585,11 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
 
             Irp = IrpContext->Irp;
             if (!Irp) {
-                __leave;
+                _SEH2_LEAVE;
             }
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (MainResourceAcquired) {
             ExReleaseResourceLite(&Vcb->MainResource);
@@ -637,7 +637,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
         if (Chain) {
             Ext2DestroyExtentChain(Chain);
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -659,7 +659,7 @@ Ext2WriteInode (
 
     BOOLEAN         bAlloc = FALSE;
 
-    __try {
+    _SEH2_TRY {
 
         if (dwRet) {
             *dwRet = 0;
@@ -684,12 +684,12 @@ Ext2WriteInode (
                     );
 
         if (!NT_SUCCESS(Status)) {
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (Chain == NULL) {
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (bDirectIo) {
@@ -720,7 +720,7 @@ Ext2WriteInode (
                         Extent->Length,
                         (PVOID)((PUCHAR)Buffer + Extent->Offset)
                        )) {
-                    __leave;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -733,7 +733,7 @@ Ext2WriteInode (
             Status = STATUS_SUCCESS;
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (Chain) {
             Ext2DestroyExtentChain(Chain);
@@ -742,7 +742,7 @@ Ext2WriteInode (
         if (NT_SUCCESS(Status)) {
             if (dwRet) *dwRet = Size;
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -780,7 +780,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
 
     PUCHAR              Buffer;
 
-    __try {
+    _SEH2_TRY {
 
         ASSERT(IrpContext);
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
@@ -819,18 +819,18 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
         if (Length == 0) {
             Irp->IoStatus.Information = 0;
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (Nocache && (ByteOffset.LowPart & (SECTOR_SIZE - 1))) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (FlagOn(IrpContext->MinorFunction, IRP_MN_DPC)) {
             ClearFlag(IrpContext->MinorFunction, IRP_MN_DPC);
             Status = STATUS_PENDING;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (!Nocache) {
@@ -860,7 +860,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                                   bAgain );
                     bDeferred = TRUE;
                     Status = STATUS_PENDING;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
             }
         }
@@ -871,7 +871,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
 
         if (IsDirectory(Fcb) && !PagingIo) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH2_LEAVE;
         }
 
         if (IsFlagOn(Irp->Flags, IRP_SYNCHRONOUS_PAGING_IO) && !IrpContext->IsTopLevel) {
@@ -916,7 +916,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
 
             if (!NT_SUCCESS(Irp->IoStatus.Status)) {
                 Status = Irp->IoStatus.Status;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             ExAcquireSharedStarveExclusive( &Fcb->PagingIoResource, TRUE);
@@ -939,7 +939,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                 &Fcb->MainResource,
                 IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
                 Status = STATUS_PENDING;
-                __leave;
+                _SEH2_LEAVE;
             }
             
             MainResourceAcquired = TRUE;
@@ -948,7 +948,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                 &Fcb->FileLockAnchor,
                 Irp         )) {
                 Status = STATUS_FILE_LOCK_CONFLICT;
-                __leave;
+                _SEH2_LEAVE;
             }
 
         } else {
@@ -957,7 +957,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                  &Fcb->PagingIoResource,
                  IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
                 Status = STATUS_PENDING;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             PagingIoResourceAcquired = TRUE;
@@ -973,7 +973,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
 
             if (Status != STATUS_SUCCESS) {
                 OpPostIrp = TRUE;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             //
@@ -991,7 +991,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
 
                     Status = STATUS_SUCCESS;
                     Irp->IoStatus.Information = 0;
-                    __leave;
+                    _SEH2_LEAVE;
 
                 } else {
 
@@ -1002,7 +1002,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
         } else {
 
             if (IsDirectory(Fcb)) {
-                __leave;
+                _SEH2_LEAVE;
             }
 
             //
@@ -1028,7 +1028,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                         SetLongFlag(Fcb->Flags, FCB_ALLOC_IN_WRITE);
                         ClearLongFlag(Fcb->Flags, FCB_ALLOC_IN_CREATE);
                     } else {
-                        __leave;
+                        _SEH2_LEAVE;
                     }
                 }
 
@@ -1105,7 +1105,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                 if (Buffer == NULL) {
                     DbgBreak();
                     Status = STATUS_INVALID_USER_BUFFER;
-                    __leave;
+                    _SEH2_LEAVE;
                 }
                 
                 if (!CcCopyWrite(
@@ -1116,7 +1116,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                         Buffer  )) {
                     Status = STATUS_PENDING;
                     DbgBreak();
-                    __leave;
+                    _SEH2_LEAVE;
                 }
                 
                 Status = STATUS_SUCCESS;
@@ -1149,7 +1149,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                 IoReadAccess );
                 
             if (!NT_SUCCESS(Status)) {
-                __leave;
+                _SEH2_LEAVE;
             }
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -1184,7 +1184,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                   &Fcb->Mcb->ShortName, ByteOffset, Length, ReturnedLength, 
                   Fcb->Header.ValidDataLength.QuadPart, Status));
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (Irp) {
             if (PagingIoResourceAcquired) {
@@ -1228,7 +1228,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                 Ext2FreeIrpContext(IrpContext);
             }
         }
-    }
+    } _SEH2_END;
     
     return Status;
 }
@@ -1241,7 +1241,7 @@ Ext2WriteComplete (IN PEXT2_IRP_CONTEXT IrpContext)
     PIRP            Irp;
     PIO_STACK_LOCATION IrpSp;
     
-    __try {
+    _SEH2_TRY {
 
         ASSERT(IrpContext);
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
@@ -1256,12 +1256,12 @@ Ext2WriteComplete (IN PEXT2_IRP_CONTEXT IrpContext)
         Irp->MdlAddress = NULL;
         Status = STATUS_SUCCESS;
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (!IrpContext->ExceptionInProgress) {
             Ext2CompleteIrpContext(IrpContext, Status);
         }
-    }
+    } _SEH2_END;
     
     return Status;
 }
@@ -1282,7 +1282,7 @@ Ext2Write (IN PEXT2_IRP_CONTEXT IrpContext)
     ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
         (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
 
-    __try {
+    _SEH2_TRY {
 
         if (IsFlagOn(IrpContext->MinorFunction, IRP_MN_COMPLETE)) {
 
@@ -1295,7 +1295,7 @@ Ext2Write (IN PEXT2_IRP_CONTEXT IrpContext)
 
             if (IsExt2FsDevice(DeviceObject)) {
                 Status = STATUS_INVALID_DEVICE_REQUEST;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
@@ -1303,17 +1303,17 @@ Ext2Write (IN PEXT2_IRP_CONTEXT IrpContext)
             if (Vcb->Identifier.Type != EXT2VCB ||
                 Vcb->Identifier.Size != sizeof(EXT2_VCB) ) {
                  Status = STATUS_INVALID_PARAMETER;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             if (IsFlagOn(Vcb->Flags, VCB_DISMOUNT_PENDING)) {
                 Status = STATUS_TOO_LATE;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
                 Status = STATUS_MEDIA_WRITE_PROTECTED;
-                __leave;
+                _SEH2_LEAVE;
             }
 
             FileObject = IrpContext->FileObject;
@@ -1342,12 +1342,12 @@ Ext2Write (IN PEXT2_IRP_CONTEXT IrpContext)
             }
         }
 
-    } __finally {
+    } _SEH2_FINALLY {
 
         if (bCompleteRequest) {
             Ext2CompleteIrpContext(IrpContext, Status);
         }
-    }
+    } _SEH2_END;
     
     return Status;
 }
