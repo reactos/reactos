@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -261,7 +261,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 	PLOCK_INFORMATION LockInfo;
 	BOOLEAN InsertedNew;
 
-    DPRINT1("FsRtlPrivateLock(FileLock %x,FileObject %x,FileOffset %x,Length %x,Process %x, Key %x, FailImmediately %x, Exclusive %x)\n",
+    DPRINT("FsRtlPrivateLock(FileLock %x,FileObject %x,FileOffset %x,Length %x,Process %x, Key %x, FailImmediately %x, Exclusive %x)\n",
 			FileLock,
 			FileObject,
 			FileOffset->LowPart,
@@ -277,7 +277,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     {
 		LockInfo = ExAllocatePool(PagedPool, sizeof(LOCK_INFORMATION));
 		FileLock->LockInformation = LockInfo;
-		if (!FileLock)
+		if (!LockInfo)
 		{
 			DPRINT("out of memory\n");
 			return FALSE;
