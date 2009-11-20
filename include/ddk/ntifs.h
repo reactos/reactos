@@ -3925,6 +3925,13 @@ FsRtlSplitLargeMcb (
 NTKERNELAPI
 VOID
 NTAPI
+FsRtlTeardownPerStreamContexts (
+    IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader
+);
+
+NTKERNELAPI
+VOID
+NTAPI
 FsRtlTruncateBaseMcb (
     IN PBASE_MCB  Mcb,
     IN LONGLONG   Vbn
