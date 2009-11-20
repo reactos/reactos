@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -49,8 +49,9 @@ FsRtlCheckOplock(IN POPLOCK Oplock,
                  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL)
 {
     /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
-    return STATUS_NOT_IMPLEMENTED;
+    //KeBugCheck(FILE_SYSTEM);
+	DPRINT("FsRtlCheckOplock\n");
+    return STATUS_SUCCESS; // STATUS_NOT_IMPLEMENTED
 }
 
 /*++
@@ -72,7 +73,8 @@ NTAPI
 FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
 {
     /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    //KeBugCheck(FILE_SYSTEM);
+	DPRINT("FsRtlCurrentBatchOplock\n");
     return FALSE;
 }
 
@@ -95,6 +97,7 @@ NTAPI
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
 {
     UNREFERENCED_PARAMETER(Oplock);
+	DPRINT("FsRtlInitializeOplock\n");
 }
 
 /*++
@@ -124,7 +127,8 @@ FsRtlOplockFsctrl(IN POPLOCK Oplock,
                   IN ULONG OpenCount)
 {
     /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    //KeBugCheck(FILE_SYSTEM);
+	DPRINT("FsRtlOplockFsctrl\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -147,7 +151,8 @@ NTAPI
 FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
 {
     /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    //KeBugCheck(FILE_SYSTEM);
+	DPRINT("FsRtlOplockIsFastIoPossible\n");
     return FALSE;
 }
 
@@ -170,6 +175,7 @@ NTAPI
 FsRtlUninitializeOplock(IN POPLOCK Oplock)
 {
     /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    //KeBugCheck(FILE_SYSTEM);
+	DPRINT("FsRtlUninitializeOplock\n");
 }
 
