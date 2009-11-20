@@ -216,6 +216,8 @@ BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
 INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LPCVOID in_data,
                             INT out_count, LPVOID out_data )
 {
+    HWND hwnd;
+
     switch(escape)
     {
     case NTDRV_ESCAPE:
@@ -227,10 +229,13 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
                 if (in_count >= sizeof(struct ntdrv_escape_set_drawable))
                 {
                     const struct ntdrv_escape_set_drawable *data = in_data;
+
                     RosGdiSetDcRects(physDev->hKernelDC, (RECT*)&data->dc_rect, (RECT*)&data->drawable_rect);
 
+                    hwnd = GetAncestor(data->hwnd, GA_ROOT);
+
                     if (!data->release)
-                        RosGdiGetDC(physDev->hKernelDC, data->hwnd, data->clip_children);
+                        RosGdiGetDC(physDev->hKernelDC, hwnd, data->clip_children);
                     else
                         RosGdiReleaseDC(physDev->hKernelDC);
 
