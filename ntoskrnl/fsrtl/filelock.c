@@ -218,10 +218,23 @@ FsRtlGetNextFileLock(IN PFILE_LOCK FileLock,
                      IN BOOLEAN Restart)
 {
 	PCOMBINED_LOCK_ELEMENT Entry;
-	if (!FileLock->LockInformation) return NULL;
+	DPRINT("FsRtlGetNextFileLock(%x,%d)\n", FileLock, Restart);
+	if (!FileLock->LockInformation)
+	{
+		DPRINT("No locks at all\n");
+		return NULL;
+	}
 	Entry = RtlEnumerateGenericTable(FileLock->LockInformation, Restart);
-	if (!Entry) return NULL;
-	else return &Entry->Exclusive.FileLock;
+	if (!Entry)
+	{
+		DPRINT("No next entry\n");
+		return NULL;
+	}
+	else
+	{
+		DPRINT("Lock info %x\n", &Entry->Exclusive.FileLock);
+		return &Entry->Exclusive.FileLock;
+	}
 }
 
 /*
@@ -248,7 +261,15 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 	PLOCK_INFORMATION LockInfo;
 	BOOLEAN InsertedNew;
 
-    DPRINT1("FsRtlPrivateLock() is stubplemented!\n");
+    DPRINT1("FsRtlPrivateLock(FileLock %x,FileObject %x,FileOffset %x,Length %x,Process %x, Key %x, FailImmediately %x, Exclusive %x)\n",
+			FileLock,
+			FileObject,
+			FileOffset->LowPart,
+			Length->LowPart,
+			Process,
+			Key,
+			FailImmediately,
+			ExclusiveLock);
 	ASSERT(AlreadySynchronized);
 
     /* Initialize the lock, if necessary */
@@ -257,7 +278,10 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 		LockInfo = ExAllocatePool(PagedPool, sizeof(LOCK_INFORMATION));
 		FileLock->LockInformation = LockInfo;
 		if (!FileLock)
+		{
+			DPRINT("out of memory\n");
 			return FALSE;
+		}
 
 		LockInfo->BelongsTo = FileLock;
 
@@ -311,6 +335,10 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 						 &Status,
 						 FileObject);
 				}
+				DPRINT("fail immediately and conflicting lock (%x-%x,%x)\n",
+					   Conflict->Exclusive.FileLock.StartingByte.LowPart,
+					   Conflict->Exclusive.FileLock.EndingByte.LowPart,
+					   Conflict->Exclusive.FileLock.Key);
 				return FALSE;
 			}
 			else
@@ -325,8 +353,9 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 						 NULL,
 						 NULL);
 				}
+				DPRINT("Pending ...\n");
+				return TRUE;
 			}
-			return FALSE;
 		}
 		else
 		{
@@ -341,7 +370,8 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 					 &Status,
 					 FileObject);
 			}
-			return FALSE;
+			DPRINT("Yes, completed the lock\n");
+			return TRUE;
 		}
 	}
 	else if (!Conflict)
@@ -349,6 +379,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 		/* Conflict here is (or would be) the newly inserted element, but we ran
 		 * out of space probably. */
 		IoStatus->Status = STATUS_NO_MEMORY;
+		DPRINT("ran out of memory adding the new lock node\n");
 		return FALSE;
 	}
 	else
@@ -373,9 +404,9 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 			/* Update the status */
 			IoStatus->Status = Status;
 		}
+		DPRINT("Added %x successfully\n", Conflict);
+		return TRUE;
 	}
-
-    return TRUE;
 }
 
 /*
@@ -386,20 +417,35 @@ NTAPI
 FsRtlCheckLockForReadAccess(IN PFILE_LOCK FileLock,
                             IN PIRP Irp)
 {
+	BOOLEAN Result;
 	PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
 	COMBINED_LOCK_ELEMENT ToFind;
 	PCOMBINED_LOCK_ELEMENT Found;
-	if (!FileLock->LockInformation) return TRUE;
+	if (!FileLock->LockInformation)
+	{
+		DPRINT("No locks\n");
+		return TRUE;
+	}
 	ToFind.Exclusive.FileLock.StartingByte = IoStack->Parameters.Read.ByteOffset;
 	ToFind.Exclusive.FileLock.EndingByte.QuadPart = 
 		ToFind.Exclusive.FileLock.StartingByte.QuadPart + 
 		IoStack->Parameters.Read.Length;
+	DPRINT("FsRtlCheckLockForReadAccess(%x,%x-%x)\n",
+		   FileLock, 
+		   ToFind.Exclusive.FileLock.StartingByte.LowPart,
+		   ToFind.Exclusive.FileLock.EndingByte.LowPart);
 	Found = RtlLookupElementGenericTable
 		(FileLock->LockInformation,
 		 &ToFind);
-	if (!Found) return TRUE;
-	return !Found->Exclusive.FileLock.ExclusiveLock || 
+	if (!Found)
+	{
+		DPRINT("Not matched\n");
+		return TRUE;
+	}
+	Result = !Found->Exclusive.FileLock.ExclusiveLock || 
 		IoStack->Parameters.Read.Key == Found->Exclusive.FileLock.Key;
+	DPRINT("Allowed %d\n", Result);
+	return Result;
 }
 
 /*
@@ -410,20 +456,35 @@ NTAPI
 FsRtlCheckLockForWriteAccess(IN PFILE_LOCK FileLock,
                              IN PIRP Irp)
 {
+	BOOLEAN Result;
 	PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
 	COMBINED_LOCK_ELEMENT ToFind;
 	PCOMBINED_LOCK_ELEMENT Found;
 	PEPROCESS Process = Irp->Tail.Overlay.Thread->ThreadsProcess;
-	if (!FileLock->LockInformation) return TRUE;
+	if (!FileLock->LockInformation)
+	{
+		DPRINT("No locks\n");
+		return TRUE;
+	}
 	ToFind.Exclusive.FileLock.StartingByte = IoStack->Parameters.Write.ByteOffset;
 	ToFind.Exclusive.FileLock.EndingByte.QuadPart = 
 		ToFind.Exclusive.FileLock.StartingByte.QuadPart + 
 		IoStack->Parameters.Write.Length;
+	DPRINT("FsRtlCheckLockForReadAccess(%x,%x-%x)\n",
+		   FileLock, 
+		   ToFind.Exclusive.FileLock.StartingByte.LowPart,
+		   ToFind.Exclusive.FileLock.EndingByte.LowPart);
 	Found = RtlLookupElementGenericTable
 		(FileLock->LockInformation,
 		 &ToFind);
-	if (!Found) return TRUE;
-	return Process->UniqueProcessId == Found->Exclusive.FileLock.ProcessId;
+	if (!Found) 
+	{
+		DPRINT("Not matched\n");
+		return TRUE;
+	}
+	Result = Process->UniqueProcessId == Found->Exclusive.FileLock.ProcessId;
+	DPRINT("Allowed %d\n", Result);
+	return Result;
 }
 
 /*
@@ -441,14 +502,29 @@ FsRtlFastCheckLockForRead(IN PFILE_LOCK FileLock,
 	PEPROCESS EProcess = Process;
 	COMBINED_LOCK_ELEMENT ToFind;
 	PCOMBINED_LOCK_ELEMENT Found;
+	DPRINT("FsRtlFastCheckLockForRead(FileLock %x, FileOffset %x, Length %x, Key %x, FileObject %x, Process %x)\n",
+		   FileLock,
+		   FileOffset->LowPart,
+		   Length->LowPart,
+		   Key,
+		   FileObject,
+		   Process);
 	ToFind.Exclusive.FileLock.StartingByte = *FileOffset;
 	ToFind.Exclusive.FileLock.EndingByte.QuadPart = 
 		FileOffset->QuadPart + Length->QuadPart;
-	if (!FileLock->LockInformation) return TRUE;
+	if (!FileLock->LockInformation)
+	{
+		DPRINT("Not found\n");
+		return TRUE;
+	}
 	Found = RtlLookupElementGenericTable
 		(FileLock->LockInformation,
 		 &ToFind);
-	if (!Found || !Found->Exclusive.FileLock.ExclusiveLock) return TRUE;
+	if (!Found || !Found->Exclusive.FileLock.ExclusiveLock)
+	{
+		DPRINT("Not matched\n");
+		return TRUE;
+	}
 	return Found->Exclusive.FileLock.Key == Key && 
 		Found->Exclusive.FileLock.ProcessId == EProcess->UniqueProcessId;
 }
@@ -465,19 +541,37 @@ FsRtlFastCheckLockForWrite(IN PFILE_LOCK FileLock,
                            IN PFILE_OBJECT FileObject,
                            IN PVOID Process)
 {
+	BOOLEAN Result;
 	PEPROCESS EProcess = Process;
 	COMBINED_LOCK_ELEMENT ToFind;
 	PCOMBINED_LOCK_ELEMENT Found;
+	DPRINT("FsRtlFastCheckLockForWrite(FileLock %x,FileOffset %x,Length %x,Key %x,FileObject %x, Process %x)\n",
+		   FileLock,
+		   FileOffset->LowPart,
+		   Length->LowPart,
+		   Key,
+		   FileObject,
+		   Process);
 	ToFind.Exclusive.FileLock.StartingByte = *FileOffset;
 	ToFind.Exclusive.FileLock.EndingByte.QuadPart = 
 		FileOffset->QuadPart + Length->QuadPart;
-	if (!FileLock->LockInformation) return TRUE;
+	if (!FileLock->LockInformation)
+	{
+		DPRINT("Not Found\n");
+		return TRUE;
+	}
 	Found = RtlLookupElementGenericTable
 		(FileLock->LockInformation,
 		 &ToFind);
-	if (!Found) return TRUE;
-	return Found->Exclusive.FileLock.Key == Key && 
+	if (!Found)
+	{
+		DPRINT("Not Matched\n");
+		return TRUE;
+	}
+	Result = Found->Exclusive.FileLock.Key == Key && 
 		Found->Exclusive.FileLock.ProcessId == EProcess->UniqueProcessId;
+	DPRINT("Allowed: %d\n", Result);
+	return Result;
 }
 
 /*
@@ -500,21 +594,39 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
 	PLOCK_INFORMATION InternalInfo = FileLock->LockInformation;
 	// The region to unlock must correspond exactly to a previously locked region
 	// -- msdn
+	DPRINT("FsRtlFastUnlockSingle(FileLock %x, FileObject %x,FileOffset %x,Length %x,Process %x, Key %x)\n",
+		   FileLock,
+		   FileObject,
+		   FileOffset->LowPart,
+		   Length->LowPart,
+		   Process,
+		   Key);
 	ASSERT(AlreadySynchronized);
 	Find.Exclusive.FileLock.StartingByte = *FileOffset;
 	Find.Exclusive.FileLock.EndingByte.QuadPart = 
 		FileOffset->QuadPart + Length->QuadPart;
 	Entry = RtlLookupElementGenericTable(&InternalInfo->RangeTable, &Find);
-	if (!Entry) return STATUS_RANGE_NOT_LOCKED;
+	if (!Entry) 
+	{
+		DPRINT("STATUS_RANGE_NOT_LOCKED\n");
+		return STATUS_RANGE_NOT_LOCKED;
+	}
 	if (Entry->Exclusive.FileLock.Key != Key || 
 		Entry->Exclusive.FileLock.ProcessId != Process->UniqueProcessId)
+	{
+		DPRINT("STATUS_RANGE_NOT_LOCKED\n");
 		return STATUS_RANGE_NOT_LOCKED;
+	}
 	if (Entry->Exclusive.FileLock.StartingByte.QuadPart != FileOffset->QuadPart ||
 		Entry->Exclusive.FileLock.EndingByte.QuadPart != 
 		FileOffset->QuadPart + Length->QuadPart)
+	{
+		DPRINT("STATUS_RANGE_NOT_LOCKED\n");	
 		return STATUS_RANGE_NOT_LOCKED;
+	}
 	// this is definitely the thing we want
 	RtlCopyMemory(&Find, Entry, sizeof(Find));
+	DPRINT("Deleting last IRP\n");
 	RtlDeleteElementGenericTable(&InternalInfo->RangeTable, Entry);
 	NextMatchingLockIrp = IoCsqRemoveNextIrp(&InternalInfo->Csq, &Find);
 	if (NextMatchingLockIrp)
@@ -523,8 +635,10 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
 		// Note that we pick an operation that would succeed at the time
 		// we looked, but can't guarantee that it won't just be re-queued
 		// because somebody else snatched part of the range in a new thread.
+		DPRINT("Locking next IRP\n");
 		FsRtlProcessFileLock(InternalInfo->BelongsTo, NextMatchingLockIrp, NULL);
 	}
+	DPRINT("Done\n");
 	return STATUS_SUCCESS;
 }
 
@@ -541,8 +655,14 @@ FsRtlFastUnlockAll(IN PFILE_LOCK FileLock,
 	PCOMBINED_LOCK_ELEMENT Entry;
 	PRTL_GENERIC_TABLE InternalInfo = FileLock->LockInformation;
 
+	DPRINT("FsRtlFastUnlockAll(%x,%x,%x)\n", FileLock, FileObject, Process);
+
 	// XXX Synchronize somehow
-	if (!FileLock->LockInformation) return STATUS_RANGE_NOT_LOCKED; // no locks
+	if (!FileLock->LockInformation)
+	{
+		DPRINT("No locks to unlock!\n");
+		return STATUS_SUCCESS;
+	}
 	for (Entry = RtlEnumerateGenericTable(InternalInfo, TRUE);
 			 Entry;
 		 Entry = RtlEnumerateGenericTable(InternalInfo, FALSE))
@@ -563,6 +683,7 @@ FsRtlFastUnlockAll(IN PFILE_LOCK FileLock,
 			 TRUE);
 	}
 
+	DPRINT("Done\n");
     return STATUS_SUCCESS;
 }
 
@@ -580,6 +701,8 @@ FsRtlFastUnlockAllByKey(IN PFILE_LOCK FileLock,
 	PCOMBINED_LOCK_ELEMENT Entry;
 	PRTL_GENERIC_TABLE InternalInfo = FileLock->LockInformation;
 
+	DPRINT("FsRtlFastUnlockAllByKey(%x,%x,%x,%x)\n",
+		   FileLock, FileObject, Process, Key);
 	// XXX Synchronize somehow
 	if (!FileLock->LockInformation) return STATUS_RANGE_NOT_LOCKED; // no locks
 	for (Entry = RtlEnumerateGenericTable(InternalInfo, TRUE);
@@ -606,6 +729,7 @@ FsRtlFastUnlockAllByKey(IN PFILE_LOCK FileLock,
 		}
 	}
 
+	DPRINT("Done\n");
     return STATUS_SUCCESS;
 }
 
@@ -625,6 +749,10 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
     /* Get the I/O Stack location */
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStackLocation->MajorFunction == IRP_MJ_LOCK_CONTROL);
+	DPRINT("FsRtlProcessFileLock(%x,%x,%x)\n", 
+		   FileLock, 
+		   IoStackLocation->MajorFunction,
+		   IoStackLocation->MinorFunction);
 
     /* Clear the I/O status block and check what function this is */
     IoStatusBlock.Information = 0;
@@ -632,7 +760,7 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
     {
         /* A lock */
         case IRP_MN_LOCK:
-
+			DPRINT("IRP_MN_LOCK\n");
             /* Call the private lock routine */
             FsRtlPrivateLock(FileLock,
                              IoStackLocation->FileObject,
@@ -651,7 +779,7 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
 
         /* A single unlock */
         case IRP_MN_UNLOCK_SINGLE:
-
+			DPRINT("IRP_MN_UNLOCK_SINGLE\n");
             /* Call fast unlock */
             IoStatusBlock.Status =
                 FsRtlFastUnlockSingle(FileLock,
@@ -677,7 +805,7 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
 
         /* Total unlock */
         case IRP_MN_UNLOCK_ALL:
-
+			DPRINT("IRP_MN_UNLOCK_ALL\n");
             /* Do a fast unlock */
             IoStatusBlock.Status = FsRtlFastUnlockAll(FileLock,
                                                       IoStackLocation->
@@ -696,7 +824,7 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
 
         /* Unlock by key */
         case IRP_MN_UNLOCK_ALL_BY_KEY:
-
+			DPRINT("IRP_MN_UNLOCK_ALL_BY_KEY\n");
             /* Do it */
             IoStatusBlock.Status =
                 FsRtlFastUnlockAllByKey(FileLock,
@@ -717,7 +845,7 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
 
         /* Invalid request */
         default:
-
+			DPRINT("Invalid request\n");
             /* Complete it */
             FsRtlCompleteRequest(Irp, STATUS_INVALID_DEVICE_REQUEST);
             IoStatusBlock.Status = STATUS_INVALID_DEVICE_REQUEST;
@@ -725,6 +853,7 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
     }
 
     /* Return the status */
+	DPRINT("Status %x\n", Status);
     return IoStatusBlock.Status;
 }
 
@@ -738,6 +867,7 @@ FsRtlInitializeFileLock (IN PFILE_LOCK FileLock,
                          IN PUNLOCK_ROUTINE UnlockRoutine OPTIONAL)
 {
     /* Setup the lock */
+	DPRINT("Initialize %x\n", FileLock);
     FileLock->FastIoIsQuestionable = FALSE;
     FileLock->CompleteLockIrpRoutine = CompleteLockIrpRoutine;
     FileLock->UnlockRoutine = UnlockRoutine;
@@ -791,6 +921,7 @@ NTAPI
 FsRtlFreeFileLock(IN PFILE_LOCK FileLock)
 {
     /* Uninitialize and free the lock */
+	DPRINT("FsRtlFreeFileLock(%x)\n", FileLock);
     FsRtlUninitializeFileLock(FileLock);
     ExFreeToPagedLookasideList(&FsRtlFileLockLookasideList, FileLock);
 }
