@@ -1273,16 +1273,14 @@ typedef struct _FILE_NOTIFY_INFORMATION
 
 /* raw internal file lock struct returned from FsRtlGetNextFileLock */
 typedef struct _FILE_SHARED_LOCK_ENTRY {
-    PVOID           Unknown1;
-    PVOID           Unknown2;
+	ERESOURCE       Resource;
     FILE_LOCK_INFO  FileLock;
 } FILE_SHARED_LOCK_ENTRY, *PFILE_SHARED_LOCK_ENTRY;
 
 /* raw internal file lock struct returned from FsRtlGetNextFileLock */
 typedef struct _FILE_EXCLUSIVE_LOCK_ENTRY {
     LIST_ENTRY      ListEntry;
-    PVOID           Unknown1;
-    PVOID           Unknown2;
+	ERESOURCE       Resource;
     FILE_LOCK_INFO  FileLock;
 } FILE_EXCLUSIVE_LOCK_ENTRY, *PFILE_EXCLUSIVE_LOCK_ENTRY;
 
