@@ -1660,6 +1660,7 @@ MiMapImageFileSection
 	ULONG NrSegments;
 	ULONG_PTR ImageBase;
 	ULONG ImageSize;
+	NTSTATUS Status = STATUS_SUCCESS;
 	PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
 	PMM_SECTION_SEGMENT SectionSegments;
 	
@@ -1694,14 +1695,12 @@ MiMapImageFileSection
 		/* Fail if the user requested a fixed base address. */
 		if ((*BaseAddress) != NULL)
 		{
-            MmUnlockAddressSpace(AddressSpace);
             return(STATUS_UNSUCCESSFUL);
 		}
 		/* Otherwise find a gap to map the image. */
 		ImageBase = (ULONG_PTR)MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), PAGE_SIZE, FALSE);
 		if (ImageBase == 0)
 		{
-            MmUnlockAddressSpace(AddressSpace);
             return(STATUS_UNSUCCESSFUL);
 		}
 	}
@@ -1710,7 +1709,6 @@ MiMapImageFileSection
 	{
 		if (!(SectionSegments[i].Image.Characteristics & IMAGE_SCN_TYPE_NOLOAD))
 		{
-			NTSTATUS Status;
             PVOID SBaseAddress = (PVOID)
 				((char*)ImageBase + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
             MmLockSectionSegment(&SectionSegments[i]);
@@ -1723,16 +1721,13 @@ MiMapImageFileSection
                                         0,
                                         0);
             MmUnlockSectionSegment(&SectionSegments[i]);
-            if (!NT_SUCCESS(Status))
-            {
-				MmUnlockAddressSpace(AddressSpace);
-				return(Status);
-            }
 		}
 	}
 	
-	*BaseAddress = (PVOID)ImageBase;
-	return STATUS_SUCCESS;
+	if (NT_SUCCESS(Status))
+		*BaseAddress = (PVOID)ImageBase;
+
+	return Status;
 }
 
 VOID static

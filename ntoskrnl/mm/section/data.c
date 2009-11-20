@@ -2878,7 +2878,9 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    if (Section->AllocationAttributes & SEC_IMAGE)
    {
+	   DPRINT1("Mapping as image: %wZ\n", &Section->FileObject->FileName);
 	   Status = MiMapImageFileSection(AddressSpace, Section, BaseAddress);
+	   DPRINT1("Mapping %x\n", Status);
    }
    else
    {
@@ -2886,18 +2888,21 @@ MmMapViewOfSection(IN PVOID SectionObject,
       if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
           !(Section->SectionPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
       {
+         MmUnlockAddressSpace(AddressSpace);
          return STATUS_SECTION_PROTECTION;
       }
       /* check for read access */
       if ((Protect & (PAGE_READONLY|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_WRITECOPY)) &&
           !(Section->SectionPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
       {
+         MmUnlockAddressSpace(AddressSpace);
          return STATUS_SECTION_PROTECTION;
       }
       /* check for execute access */
       if ((Protect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)) &&
           !(Section->SectionPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
       {
+         MmUnlockAddressSpace(AddressSpace);
          return STATUS_SECTION_PROTECTION;
       }
 
@@ -2933,6 +2938,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
       }
 
       MmLockSectionSegment(Section->Segment);
+	  DPRINT1("Mapping as data\n");
       Status = MiMapViewOfSegment(AddressSpace,
                                   Section,
                                   Section->Segment,
@@ -2941,17 +2947,14 @@ MmMapViewOfSection(IN PVOID SectionObject,
                                   Protect,
                                   &ViewOffset,
                                   AllocationType & (MEM_TOP_DOWN|SEC_NO_CHANGE));
+	  DPRINT1("Status %x\n", Status);
       MmUnlockSectionSegment(Section->Segment);
-      if (!NT_SUCCESS(Status))
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         return(Status);
-      }
    }
 
+   DPRINT1("Unlock address space\n");
    MmUnlockAddressSpace(AddressSpace);
-
-   return(STATUS_SUCCESS);
+   DPRINT1("Done\n");
+   return(Status);
 }
 
 /*
