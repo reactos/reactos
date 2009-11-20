@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="ext3fsd" type="kernelmodedriver" installbase="system32/drivers" installname="Ext3Fsd.sys" allowwarnings="true">
+<module name="ext3fsd" type="kernelmodedriver" installbase="system32/drivers" installname="Ext3Fsd.sys" allowwarnings="true" entrypoint="DriverEntry">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="ext3fsd">.</include>
 	<include base="ext3fsd">include</include>
@@ -9,6 +9,7 @@
 	<library>hal</library>
 	<library>pseh</library>
 	<library>libcntpr</library>
+	<file>init.c</file>
 	<file>block.c</file>
 	<file>cleanup.c</file>
 	<file>close.c</file>
@@ -23,7 +24,6 @@
 	<file>fileinfo.c</file>
 	<file>flush.c</file>
 	<file>fsctl.c</file>
-	<file>init.c</file>
 	<file>linux.c</file>
 	<file>lock.c</file>
 	<file>memory.c</file>

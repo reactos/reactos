@@ -24,14 +24,10 @@ CHAR            gDate[] = __DATE__;
 
 /* DEFINITIONS ***********************************************************/
 
-#if 1
 NTSTATUS NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath   );
-#else
-DRIVER_INITIALIZE DriverEntry;
-#endif
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(INIT, Ext2QueryGlobalParameters)

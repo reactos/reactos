@@ -7,9 +7,9 @@
 <directory name="ext2">
 	<xi:include href="ext2/ext2.rbuild" />
 </directory>
-<!-- <directory name="Ext3Fsd">
+<directory name="Ext3Fsd">
 	<xi:include href="Ext3Fsd/Ext3Fsd.rbuild" />
-</directory> -->
+</directory>
 <directory name="fs_rec">
 	<xi:include href="fs_rec/fs_rec.rbuild" />
 </directory>
