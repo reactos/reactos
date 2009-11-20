@@ -13,7 +13,15 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ********************************************************************/
+/* STRUCTURES *****************************************************************/
+
+typedef struct _WORK_QUEUE_WITH_READ_AHEAD
+{
+	WORK_QUEUE_ITEM WorkItem;
+	PFILE_OBJECT FileObject;
+	LARGE_INTEGER FileOffset;
+	ULONG Length;
+} WORK_QUEUE_WITH_READ_AHEAD, *PWORK_QUEUE_WITH_READ_AHEAD;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -26,18 +34,76 @@ NTAPI
 CcSetReadAheadGranularity(IN PFILE_OBJECT FileObject,
                           IN ULONG Granularity)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+	if (Map)
+	{
+		Map->ReadAheadGranularity = Granularity;
+	}
 }
 
+VOID
+NTAPI
+CcpReadAhead(PVOID Context)
+{
+	LARGE_INTEGER Offset;
+	PWORK_QUEUE_WITH_READ_AHEAD WorkItem = (PWORK_QUEUE_WITH_READ_AHEAD)Context;
+	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)WorkItem->FileObject->SectionObjectPointer->SharedCacheMap;
+	DPRINT("Reading ahead %08x%08x:%x %wZ\n",
+		   WorkItem->FileOffset.HighPart,
+		   WorkItem->FileOffset.LowPart,
+		   WorkItem->Length,
+		   &WorkItem->FileObject->FileName);
+	Offset.HighPart = WorkItem->FileOffset.HighPart;
+	Offset.LowPart = PAGE_ROUND_DOWN(WorkItem->FileOffset.LowPart);
+	if (Map)
+	{
+		PLIST_ENTRY ListEntry;
+		volatile char *chptr;
+		PNOCC_BCB Bcb;
+		for (ListEntry = Map->AssociatedBcb.Flink;
+			 ListEntry != &Map->AssociatedBcb;
+			 ListEntry = ListEntry->Flink)
+		{
+			Bcb = CONTAINING_RECORD(ListEntry, NOCC_BCB, ThisFileList);
+			if ((Offset.QuadPart + WorkItem->Length < Bcb->FileOffset.QuadPart) ||
+				(Bcb->FileOffset.QuadPart + Bcb->Length < Offset.QuadPart))
+				continue;
+			for (chptr = Bcb->BaseAddress, Offset = Bcb->FileOffset;
+				 chptr < ((PCHAR)Bcb->BaseAddress) + Bcb->Length && 
+					 Offset.QuadPart < 
+					 WorkItem->FileOffset.QuadPart + WorkItem->Length;
+				 chptr += PAGE_SIZE, Offset.QuadPart += PAGE_SIZE)
+			{
+				*chptr ^= 0;
+			}
+		}
+	}
+	ObDereferenceObject(WorkItem->FileObject);
+	ExFreePool(WorkItem);
+	DPRINT("Done\n");
+}
+
 VOID
 NTAPI
 CcScheduleReadAhead(IN PFILE_OBJECT FileObject,
                     IN PLARGE_INTEGER FileOffset,
                     IN ULONG Length)
 {
-    UNIMPLEMENTED;
-    while (TRUE);  
+	PWORK_QUEUE_WITH_READ_AHEAD WorkItem;
+	DPRINT("Schedule read ahead %08x%08x:%x %wZ\n",
+		   FileOffset->HighPart,
+		   FileOffset->LowPart,
+		   Length,
+		   &FileObject->FileName);
+	WorkItem = ExAllocatePool(NonPagedPool, sizeof(*WorkItem));
+	if (!WorkItem) KeBugCheck(0);
+	ObReferenceObject(FileObject);
+	WorkItem->FileObject = FileObject;
+	WorkItem->FileOffset = *FileOffset;
+	WorkItem->Length = Length;
+	ExInitializeWorkItem(((PWORK_QUEUE_ITEM)WorkItem), (PWORKER_THREAD_ROUTINE)CcpReadAhead, WorkItem);
+	ExQueueWorkItem((PWORK_QUEUE_ITEM)WorkItem, DelayedWorkQueue);
+	DPRINT("Done\n");
 }
 
 VOID
