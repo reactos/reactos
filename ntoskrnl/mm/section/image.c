@@ -1689,7 +1689,9 @@ MiMapImageFileSection
 	ImageSectionObject->ImageSize = ImageSize;
 	
 	/* Check there is enough space to map the section at that point. */
-	if (MmLocateMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
+	if ((AddressSpace != MmGetKernelAddressSpace() &&
+		 (ULONG_PTR)ImageBase >= (ULONG_PTR)MM_HIGHEST_USER_ADDRESS) ||
+		MmLocateMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
 								   PAGE_ROUND_UP(ImageSize)) != NULL)
 	{
 		/* Fail if the user requested a fixed base address. */

@@ -829,7 +829,7 @@ MiZeroFillSection
 	End.LowPart = PAGE_ROUND_DOWN(End.LowPart);
 	FileOffset.LowPart = PAGE_ROUND_UP(FileOffset.LowPart);
 	FirstMapped.QuadPart = MemoryArea->Data.SectionData.ViewOffset.QuadPart;
-	DPRINT1
+	DPRINT
 		("Pulling zero pages for %08x%08x-%08x%08x\n",
 		 FileOffset.u.HighPart, FileOffset.u.LowPart,
 		 End.u.HighPart, End.u.LowPart);
@@ -2878,9 +2878,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    if (Section->AllocationAttributes & SEC_IMAGE)
    {
-	   DPRINT1("Mapping as image: %wZ\n", &Section->FileObject->FileName);
 	   Status = MiMapImageFileSection(AddressSpace, Section, BaseAddress);
-	   DPRINT1("Mapping %x\n", Status);
    }
    else
    {
@@ -2938,7 +2936,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
       }
 
       MmLockSectionSegment(Section->Segment);
-	  DPRINT1("Mapping as data\n");
       Status = MiMapViewOfSegment(AddressSpace,
                                   Section,
                                   Section->Segment,
@@ -2947,13 +2944,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
                                   Protect,
                                   &ViewOffset,
                                   AllocationType & (MEM_TOP_DOWN|SEC_NO_CHANGE));
-	  DPRINT1("Status %x\n", Status);
       MmUnlockSectionSegment(Section->Segment);
    }
 
-   DPRINT1("Unlock address space\n");
    MmUnlockAddressSpace(AddressSpace);
-   DPRINT1("Done\n");
    return(Status);
 }
 
