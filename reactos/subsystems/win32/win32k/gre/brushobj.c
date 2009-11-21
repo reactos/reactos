@@ -300,10 +300,14 @@ GreRealizeBrush(PBRUSHGDI GdiBrush, PSURFACE psurfPattern, SURFOBJ *OutputObj)
     RECTL rclDest;
     HPALETTE hPalette;
     LONG lWidth;
+    SURFACE *pSurfDest;
 
     rclDest = (RECTL){0, 0, psurfPattern->SurfObj.sizlBitmap.cx, psurfPattern->SurfObj.sizlBitmap.cy};
 
-    hPalette = NULL;//pDC->pBitmap->hDIBPalette; // FIXME: use dest surface palette!
+    pSurfDest = CONTAINING_RECORD(OutputObj, SURFACE, SurfObj);
+
+    hPalette = pSurfDest->hDIBPalette;
+
     if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
 
     lWidth = DIB_GetDIBWidthBytes(psurfPattern->SurfObj.sizlBitmap.cx, BitsPerFormat(OutputObj->iBitmapFormat));
