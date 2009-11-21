@@ -737,10 +737,10 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
          MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
                             (ULONG_PTR)MemoryArea->StartingAddress;
 
-         if (((ULONG)BaseAddress + RegionSize) > (ULONG)MemoryArea->EndingAddress)
+         if (((ULONG_PTR)BaseAddress + RegionSize) > (ULONG_PTR)MemoryArea->EndingAddress)
          {
             DPRINT("BaseAddress + RegionSize %x is larger than MemoryArea's EndingAddress %x\n",
-                  (ULONG)BaseAddress + RegionSize, MemoryArea->EndingAddress);
+                  (ULONG_PTR)BaseAddress + RegionSize, MemoryArea->EndingAddress);
 
             MmUnlockAddressSpace(AddressSpace);
             ObDereferenceObject(Process);
