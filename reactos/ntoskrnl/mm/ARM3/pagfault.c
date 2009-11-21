@@ -200,7 +200,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                  IN PVOID TrapInformation)
 {
     KIRQL OldIrql = KeGetCurrentIrql(), LockIrql;
-    PMMPTE PointerPde, PointerPte;
+    PMMPTE PointerPte;
     MMPTE TempPte;
     PETHREAD CurrentThread;
     NTSTATUS Status;
@@ -210,7 +210,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     // Get the PTE and PDE
     //
     PointerPte = MiAddressToPte(Address);
-    PointerPde = MiAddressToPde(Address);
     
     //
     // Check for dispatch-level snafu
@@ -239,7 +238,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         //
         // Is the PDE valid?
         //
-        if (!PointerPde->u.Hard.Valid == 0)
+        if (!MiIsPdeForAddressValid(Address))
         {
             //
             // Debug spew (eww!)
@@ -254,7 +253,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             //
             // Now we SHOULD be good
             //
-            if (PointerPde->u.Hard.Valid == 0)
+            if (!MiIsPdeForAddressValid(Address))
             {
                 //
                 // FIXFIX: Do the S-LIST hack
@@ -297,9 +296,8 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         
         //
         // Check for a fault on the page table or hyperspace itself
-        // FIXME: Use MmHyperSpaceEnd
         //
-        if ((Address >= (PVOID)PTE_BASE) && (Address <= (PVOID)0xC0800000))
+        if ((Address >= (PVOID)PTE_BASE) && (Address <= (PVOID)HYPER_SPACE_END))
         {
             //
             // This might happen...not sure yet

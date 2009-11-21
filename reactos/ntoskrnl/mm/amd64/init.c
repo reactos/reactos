@@ -242,6 +242,7 @@ MxGetPte(PVOID Address)
 }
 
 VOID
+NTAPI
 MxMapPage(PVOID Address)
 {
     MMPTE TmplPte, *Pte;
@@ -286,8 +287,8 @@ MiPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MxPfnSizeInBytes = ROUND_TO_PAGES((MmHighestPhysicalPage + 1) * sizeof(MMPFN));
     MxPfnAllocation = MxPfnSizeInBytes >> PAGE_SHIFT;
 
-    /* Sinply start at hardcoded address */
-    MmPfnDatabase = (PVOID)0xFFFFFAC000000000ULL;
+    /* Simply start at hardcoded address */
+    MmPfnDatabase = MI_PFN_DATABASE;
 
     /* Loop the memory descriptors */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
@@ -363,8 +364,7 @@ VOID
 MiInitializePageTable()
 {
     ULONG64 PageFrameOffset;
-    PMMPTE Pte, StartPte, EndPte;
-    MMPTE TmplPte;
+    MMPTE TmplPte, *Pte;
     PFN_NUMBER PageCount;
 
     /* HACK: don't use freeldr debug print anymore */
@@ -382,12 +382,10 @@ MiInitializePageTable()
     __writecr4(__readcr4() | CR4_PGE);
     ASSERT(__readcr4() & CR4_PGE);
 
-    /* Set user mode address range */
-    StartPte = MiAddressToPxe(0);
-    EndPte = MiAddressToPxe(MmHighestUserAddress);
-
     /* Loop the user mode PXEs */
-    for (Pte = StartPte; Pte <= EndPte; Pte++)
+    for (Pte = MiAddressToPxe(0);
+         Pte <= MiAddressToPxe(MmHighestUserAddress);
+         Pte++)
     {
         /* Zero the PXE, clear all mappings */
         Pte->u.Long = 0;
@@ -405,12 +403,10 @@ MiInitializePageTable()
     /* Create PDPTs (72 KB) for shared system address space, 
      * skip page tables and hyperspace */
 
-    /* Set the range */
-    StartPte = MiAddressToPxe((PVOID)(HYPER_SPACE_END + 1));
-    EndPte = MiAddressToPxe(MI_HIGHEST_SYSTEM_ADDRESS);
-
     /* Loop the PXEs */
-    for (Pte = StartPte; Pte <= EndPte; Pte++)
+    for (Pte = MiAddressToPxe((PVOID)(HYPER_SPACE_END + 1));
+         Pte <= MiAddressToPxe(MI_HIGHEST_SYSTEM_ADDRESS);
+         Pte++)
     {
         /* Is the PXE already valid? */
         if (!Pte->u.Hard.Valid)
@@ -764,7 +760,6 @@ MiBuildPagedPool(VOID)
         ExAllocatePoolWithTag(NonPagedPool, Size, '  mM');
     ASSERT(MmPagedPoolInfo.PagedPoolAllocationMap);
 
-    DPRINT1("BitMapSize = 0x%lx, Size = 0x%lx\n", BitMapSize, Size);
     // Initialize it such that at first, only the first page's worth of PTEs is
     // marked as allocated (incidentially, the first PDE we allocated earlier).
     RtlInitializeBitMap(MmPagedPoolInfo.PagedPoolAllocationMap,
@@ -780,9 +775,6 @@ MiBuildPagedPool(VOID)
     MmPagedPoolInfo.EndOfPagedPoolBitmap = 
         ExAllocatePoolWithTag(NonPagedPool, Size, '  mM');
     ASSERT(MmPagedPoolInfo.EndOfPagedPoolBitmap);
-
-    DPRINT1("PagedPoolAllocationMap=%p, EndOfPagedPoolBitmap=%p\n", 
-            MmPagedPoolInfo.PagedPoolAllocationMap, MmPagedPoolInfo.EndOfPagedPoolBitmap);
 
     /* Initialize the bitmap */
     RtlInitializeBitMap(MmPagedPoolInfo.EndOfPagedPoolBitmap,

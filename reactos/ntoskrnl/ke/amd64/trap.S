@@ -544,10 +544,7 @@ KiDebugTrapOrFaultKMode:
     mov r8b, [rbp + KTRAP_FRAME_SegCs] // Mode
     and r8b, 1
     mov r9, rbp // TrapInformation
-//    call _MmAccessFault
-
-    // HACK
-    mov eax, STATUS_ACCESS_VIOLATION
+    call _MmAccessFault
 
     /* Check for success */
     test eax, eax

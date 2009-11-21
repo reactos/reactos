@@ -18,6 +18,7 @@
 #define MI_SYSTEM_PTE_START             (PVOID)0xFFFFFAA000000000ULL
 #define MI_PAGED_POOL_START             (PVOID)0xFFFFFA8000000000ULL
 #define MI_NON_PAGED_SYSTEM_START_MIN          0xFFFFFAA000000000ULL
+#define MI_PFN_DATABASE                 (PVOID)0xFFFFFAC000000000ULL
 #define MI_NONPAGED_POOL_END            (PVOID)0xFFFFFAE000000000ULL
 #define MI_DEBUG_MAPPING                (PVOID)0xFFFFFFFF80000000ULL // FIXME
 #define MI_HIGHEST_SYSTEM_ADDRESS       (PVOID)0xFFFFFFFFFFFFFFFFULL
@@ -78,6 +79,15 @@ MiPteToAddress(PMMPTE Pte)
     Temp <<= 25;
     Temp >>= 16;
     return (PVOID)Temp;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsPdeForAddressValid(PVOID Address)
+{
+    return ((MiAddressToPxe(Address)->u.Hard.Valid) &&
+            (MiAddressToPpe(Address)->u.Hard.Valid) &&
+            (MiAddressToPde(Address)->u.Hard.Valid));
 }
 
 //#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
