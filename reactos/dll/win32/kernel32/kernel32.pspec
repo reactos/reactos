@@ -627,7 +627,7 @@
 @ stdcall LocalShrink(long long)
 @ stdcall LocalSize(long)
 @ stdcall LocalUnlock(long)
-@ stub LocaleNameToLCID ; missing in XP SP3
+;@ stub LocaleNameToLCID ; missing in XP SP3
 @ stdcall LockFile(long long long long long)
 @ stdcall LockFileEx(long long long long long ptr)
 @ stdcall LockResource(long)
