@@ -14,6 +14,8 @@
 #include <ntddmou.h>
 #include <ntddkbd.h>
 
+static HHOOK gKeyboardHook, gMouseHook;
+
 #define ClearMouseInput(mi) \
   mi.dx = 0; \
   mi.dy = 0; \
@@ -26,6 +28,12 @@
   if(mi.dwFlags) \
     mouse_event(mi.dwFlags,mi.dx,mi.dy, mi.mouseData, 0); \
   ClearMouseInput(mi);
+
+
+static LRESULT CALLBACK DummyHookProc( INT code, WPARAM wparam, LPARAM lparam ){
+    return CallNextHookEx( 0, code, wparam, lparam );
+}
+
 
 VOID FASTCALL
 ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
@@ -172,6 +180,9 @@ DWORD WINAPI MouseInputThread(LPVOID lpParameter)
             return Status;
         }
         DPRINT("MouseEvent\n");
+
+        if(!gMouseHook)
+            gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, DummyHookProc, NULL, 0);
 
         ProcessMouseInputData(&MouseInput, Iosb.Information / sizeof(MOUSE_INPUT_DATA));
     }
@@ -350,6 +361,9 @@ DWORD WINAPI KeyboardInputThread(LPVOID lpParameter)
 
         if (KeyInput.Flags & KEY_BREAK)
             flags |= KEYEVENTF_KEYUP;
+
+        if(!gKeyboardHook)
+            gKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, DummyHookProc, NULL, 0);
 
         keybd_event(MapVirtualKey(KeyInput.MakeCode & 0xff, MAPVK_VSC_TO_VK), KeyInput.MakeCode & 0xff, flags , 0);
     }
