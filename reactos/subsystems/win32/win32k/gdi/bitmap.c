@@ -17,12 +17,31 @@ HGDIOBJ hStockBmp;
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-BOOL APIENTRY RosGdiAlphaBlend(HDC devDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
-                             HDC devSrc, INT xSrc, INT ySrc, INT widthSrc, INT heightSrc,
+BOOL APIENTRY RosGdiAlphaBlend(HDC physDevDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
+                             HDC physDevSrc, INT xSrc, INT ySrc, INT widthSrc, INT heightSrc,
                              BLENDFUNCTION blendfn)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    BOOLEAN bRes;
+    PDC pSrc, pDst;
+
+    DPRINT("AlphaBlend %x -> %x\n", physDevSrc, physDevDst);
+
+    /* Get a pointer to the DCs */
+    pSrc = DC_Lock(physDevSrc);
+    if (physDevSrc != physDevDst)
+        pDst = DC_Lock(physDevDst);
+    else
+        pDst = pSrc;
+
+    /* Call the internal helper */
+    bRes = GreAlphaBlend(pDst, xDst, yDst, widthDst, heightDst, pSrc, xSrc, ySrc, widthSrc, heightSrc, blendfn);
+
+    /* Release DC objects */
+    if (physDevSrc != physDevDst) DC_Unlock(pDst);
+    DC_Unlock(pSrc);
+
+    /* Return status */
+    return bRes;
 }
 
 BOOL APIENTRY RosGdiBitBlt( HDC physDevDst, INT xDst, INT yDst,

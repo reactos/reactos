@@ -5,6 +5,12 @@
 INT NTAPI DIB_GetDIBWidthBytes(INT width, INT depth);
 
 BOOLEAN NTAPI
+GreAlphaBlend(PDC pDest, INT XDest, INT YDest,
+              INT WidthDst, INT HeightDst, PDC pSrc,
+              INT XSrc, INT YSrc, INT WidthSrc, INT HeightSrc,
+              BLENDFUNCTION blendfn);
+
+BOOLEAN NTAPI
 GreBitBlt(PDC pDevDst, INT xDst, INT yDst,
           INT width, INT height, PDC pDevSrc,
           INT xSrc, INT ySrc, DWORD rop);

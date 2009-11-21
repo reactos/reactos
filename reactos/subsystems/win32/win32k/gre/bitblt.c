@@ -61,6 +61,69 @@ INT NTAPI DIB_GetDIBWidthBytes(INT width, INT depth)
     return ((width * depth + 31) & ~31) >> 3;
 }
 
+BOOL APIENTRY
+GrepAlphaBlend(IN SURFOBJ *psoDest,
+                 IN SURFOBJ *psoSource,
+                 IN CLIPOBJ *ClipRegion,
+                 IN XLATEOBJ *ColorTranslation,
+                 IN PRECTL DestRect,
+                 IN PRECTL SourceRect,
+                 IN BLENDOBJ *BlendObj)
+{
+    BOOL ret = FALSE;
+    SURFACE *psurfDest;
+    SURFACE *psurfSource;
+
+    ASSERT(psoDest);
+    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+
+    ASSERT(psoSource);
+    psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
+
+    ASSERT(DestRect);
+    ASSERT(SourceRect);
+
+    /* Check if there is anything to draw */
+    if (ClipRegion != NULL &&
+            (ClipRegion->rclBounds.left >= ClipRegion->rclBounds.right ||
+             ClipRegion->rclBounds.top >= ClipRegion->rclBounds.bottom))
+    {
+        /* Nothing to do */
+        return TRUE;
+    }
+
+    SURFACE_LockBitmapBits(psurfDest);
+    MouseSafetyOnDrawStart(psoDest, DestRect->left, DestRect->top,
+                           DestRect->right, DestRect->bottom);
+
+    if (psoSource != psoDest)
+        SURFACE_LockBitmapBits(psurfSource);
+    MouseSafetyOnDrawStart(psoSource, SourceRect->left, SourceRect->top,
+                           SourceRect->right, SourceRect->bottom);
+
+    /* Call the driver's DrvAlphaBlend if available */
+    if (psurfDest->flHooks & HOOK_ALPHABLEND)
+    {
+        ret = GDIDEVFUNCS(psoDest).AlphaBlend(
+                  psoDest, psoSource, ClipRegion, ColorTranslation,
+                  DestRect, SourceRect, BlendObj);
+    }
+
+    if (! ret)
+    {
+        ret = EngAlphaBlend(psoDest, psoSource, ClipRegion, ColorTranslation,
+                            DestRect, SourceRect, BlendObj);
+    }
+
+    MouseSafetyOnDrawEnd(psoSource);
+    if (psoSource != psoDest)
+        SURFACE_UnlockBitmapBits(psurfSource);
+    MouseSafetyOnDrawEnd(psoDest);
+    SURFACE_UnlockBitmapBits(psurfDest);
+
+    return ret;
+}
+
 BOOLEAN
 NTAPI
 GrepBitBltEx(
@@ -192,6 +255,67 @@ GrepBitBltEx(
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
+
+BOOLEAN
+NTAPI
+GreAlphaBlend(PDC pDest, INT XDest, INT YDest,
+              INT WidthDst, INT HeightDst, PDC pSrc,
+              INT XSrc, INT YSrc, INT WidthSrc, INT HeightSrc,
+              BLENDFUNCTION blendfn)
+{
+    RECTL DestRect, SrcRect;
+    BOOL Status;
+    XLATEOBJ *XlateObj;
+    BLENDOBJ BlendObj;
+    BlendObj.BlendFunction = blendfn;
+
+    DestRect.left   = XDest;
+    DestRect.top    = YDest;
+    DestRect.right  = XDest+WidthDst;
+    DestRect.bottom = YDest+HeightDst;
+
+    DestRect.left += pDest->rcVport.left + pDest->rcDcRect.left;
+    DestRect.top += pDest->rcVport.top + pDest->rcDcRect.top;
+    DestRect.right += pDest->rcVport.left + pDest->rcDcRect.left;
+    DestRect.bottom += pDest->rcVport.top + pDest->rcDcRect.top;
+
+    SrcRect.left   = XSrc;
+    SrcRect.top    = YSrc;
+    SrcRect.right  = XSrc+WidthSrc;
+    SrcRect.bottom = YSrc+HeightSrc;
+
+    SrcRect.left += pSrc->rcVport.left + pSrc->rcDcRect.left;
+    SrcRect.top += pSrc->rcVport.top + pSrc->rcDcRect.top;
+    SrcRect.right += pSrc->rcVport.left + pSrc->rcDcRect.left;
+    SrcRect.bottom += pSrc->rcVport.top + pSrc->rcDcRect.top;
+
+    /* Create the XLATEOBJ. */
+    XlateObj = IntCreateXlateForBlt(pDest, pSrc, pDest->pBitmap, pSrc->pBitmap);
+
+    if (XlateObj == (XLATEOBJ*)-1)
+    {
+        DPRINT1("couldn't create XlateObj\n");
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        XlateObj = NULL;
+        Status = FALSE;
+    }
+    else
+    {
+        /* Perform the alpha blend operation */
+        Status = GrepAlphaBlend(&pDest->pBitmap->SurfObj,
+                                &pSrc->pBitmap->SurfObj,
+                                pDest->CombinedClip,
+                                XlateObj,
+                                &DestRect,
+                                &SrcRect,
+                                &BlendObj);
+    }
+
+    if (XlateObj != NULL)
+        EngDeleteXlate(XlateObj);
+
+    return Status;
+}
 
 BOOLEAN
 NTAPI
