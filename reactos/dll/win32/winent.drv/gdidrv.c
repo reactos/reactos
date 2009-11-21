@@ -25,12 +25,46 @@ HANDLE hStockBitmap;
 
 /* FUNCTIONS **************************************************************/
 
-BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *devDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
-                             NTDRV_PDEVICE *devSrc, INT xSrc, INT ySrc, INT widthSrc, INT heightSrc,
+BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
+                             NTDRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc, INT widthSrc, INT heightSrc,
                              BLENDFUNCTION blendfn)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    POINT pts[2], ptBrush;
+
+    /* map source coordinates */
+    if (physDevSrc)
+    {
+        pts[0].x = xSrc;
+        pts[0].y = ySrc;
+        pts[1].x = xSrc + widthSrc;
+        pts[1].y = ySrc + heightSrc;
+
+        LPtoDP(physDevSrc->hUserDC, pts, 2);
+        widthSrc = pts[1].x - pts[0].x;
+        heightSrc = pts[1].y - pts[0].y;
+        xSrc = pts[0].x;
+        ySrc = pts[0].y;
+    }
+
+    /* map dest coordinates */
+    pts[0].x = xDst;
+    pts[0].y = yDst;
+    pts[1].x = xDst + widthDst;
+    pts[1].y = yDst + heightDst;
+
+    LPtoDP(physDevDst->hUserDC, pts, 2);
+    widthDst = pts[1].x - pts[0].x;
+    heightDst = pts[1].y - pts[0].y;
+    xDst = pts[0].x;
+    yDst = pts[0].y;
+
+    /* Update brush origin */
+    GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
+    RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
+
+    return RosGdiAlphaBlend(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst,
+        physDevSrc->hKernelDC, xSrc, ySrc, widthSrc, heightSrc, blendfn);
+
 }
 
 BOOL CDECL RosDrv_Arc( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
