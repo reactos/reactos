@@ -263,6 +263,8 @@ typedef struct _TDI_BUCKET {
     LIST_ENTRY Entry;
     struct _CONNECTION_ENDPOINT *AssociatedEndpoint;
     TDI_REQUEST Request;
+    NTSTATUS Status;
+    ULONG Information;
 } TDI_BUCKET, *PTDI_BUCKET;
 
 /* Transport connection context structure A.K.A. Transmission Control Block
@@ -280,6 +282,7 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
     LIST_ENTRY SendRequest;    /* Queued send requests */
+    LIST_ENTRY CompletionQueue;/* Completed requests to finish */
 
     /* Signals */
     UINT    SignalState;       /* Active signals from oskit */

@@ -73,9 +73,6 @@ void NTAPI IPTimeout( PVOID Context ) {
 
     /* Clean possible outdated cached neighbor addresses */
     NBTimeout();
-
-    /* Call upper layer timeout routines */
-    TCPTimeout();
 }
 
 

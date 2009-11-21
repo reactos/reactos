@@ -285,11 +285,16 @@ int OskitTCPShutdown( void *socket, int disconn_type ) {
 
 int OskitTCPClose( void *socket ) {
     int error;
+    struct socket *so = socket;
 
     if (!socket)
         return OSK_ESHUTDOWN;
 
     OSKLock();
+    /* We have to remove the socket context here otherwise we end up
+     * back in HandleSignalledConnection with a freed connection context
+     */
+    so->so_connection = NULL;
     error = soclose( socket );
     OSKUnlock();
 
@@ -435,16 +440,12 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 			      OSK_UINT IpHeaderLen ) {
     struct mbuf *Ip;
     struct ip *iph;
-    KIRQL OldIrql;
 
-    /* This function is a special case in which we cannot use OSKLock/OSKUnlock 
-     * because we don't enter with the connection lock held */
-
-    OSKLockAndRaise(&OldIrql);
+    OSKLock();
     Ip = m_devget( (char *)Data, Len, 0, NULL, NULL );
     if( !Ip )
     {
-       OSKUnlockAndLower(OldIrql);
+       OSKUnlock();
        return; /* drop the segment */
     }
 
@@ -461,7 +462,7 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 		 IpHeaderLen));
 
     tcp_input(Ip, IpHeaderLen);
-    OSKUnlockAndLower(OldIrql);
+    OSKUnlock();
 
     /* The buffer Ip is freed by tcp_input */
 }

@@ -29,7 +29,8 @@ int TCPSocketState(void *ClientData,
         return 0;
     }
 
-    KeAcquireSpinLockAtDpcLevel(&Connection->Lock);
+    if (ClientInfo.Unlocked)
+        KeAcquireSpinLockAtDpcLevel(&Connection->Lock);
 
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
                NewState, Connection,
@@ -38,7 +39,10 @@ int TCPSocketState(void *ClientData,
 
     Connection->SignalState |= NewState;
 
-    KeReleaseSpinLockFromDpcLevel(&Connection->Lock);
+    HandleSignalledConnection(Connection);
+
+    if (ClientInfo.Unlocked)
+        KeReleaseSpinLockFromDpcLevel(&Connection->Lock);
 
     return 0;
 }

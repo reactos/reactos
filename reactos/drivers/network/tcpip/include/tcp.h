@@ -59,6 +59,11 @@ typedef struct _SLEEPING_THREAD {
     KEVENT Event;
 } SLEEPING_THREAD, *PSLEEPING_THREAD;
 
+typedef struct _CLIENT_DATA {
+    BOOLEAN Unlocked;
+    KSPIN_LOCK Lock;
+} CLIENT_DATA, *PCLIENT_DATA;
+
 /* Retransmission timeout constants */
 
 /* Lower bound for retransmission timeout in TCP timer ticks */
@@ -84,6 +89,7 @@ typedef struct _SLEEPING_THREAD {
 #define SRF_FIN   TCP_FIN
 
 extern LONG TCP_IPIdentification;
+extern CLIENT_DATA ClientInfo;
 
 /* accept.c */
 NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
@@ -105,6 +111,8 @@ VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
 
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 		    UINT Family, UINT Type, UINT Proto );
+
+VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection);
 
 PTCP_SEGMENT TCPCreateSegment(
   PIP_PACKET IPPacket,
@@ -155,8 +163,6 @@ NTSTATUS TCPSendData(
 NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection );
 
 NTSTATUS TCPTranslateError( int OskitError );
-
-VOID TCPTimeout();
 
 UINT TCPAllocatePort( UINT HintPort );
 

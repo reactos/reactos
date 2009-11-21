@@ -991,6 +991,11 @@ BOOLEAN BindAdapter(
     GetName( RegistryPath, &IF->Name );
 
     Status = FindDeviceDescForAdapter( &IF->Name, &IF->Description );
+    if (!NT_SUCCESS(Status)) {
+        TI_DbgPrint(MIN_TRACE, ("Failed to get device description.\n"));
+        IPDestroyInterface(IF);
+        return FALSE;
+    }
 
     TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
                 &IF->Description));

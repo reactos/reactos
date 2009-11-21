@@ -322,7 +322,6 @@ TiDispatchOpenClose(
 {
   PIO_STACK_LOCATION IrpSp;
   NTSTATUS Status;
-  PTRANSPORT_CONTEXT Context;
 
   IRPRemember(Irp, __FILE__, __LINE__);
 
@@ -338,8 +337,7 @@ TiDispatchOpenClose(
 
   /* Close an address file, connection endpoint, or control connection */
   case IRP_MJ_CLOSE:
-    Context = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
-	Status = TiCloseFileObject(DeviceObject, Irp);
+    Status = TiCloseFileObject(DeviceObject, Irp);
     break;
 
   default:
