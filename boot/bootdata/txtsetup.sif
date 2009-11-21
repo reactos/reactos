@@ -33,7 +33,7 @@ pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
 ramdisk.sys=,,,,,,x,,,,,,4
-ext2.sys=,,,,,,x,,,,,,4
+ext3fsd.sys=,,,,,,x,,,,,,4
 
 [HardwareIdsDatabase]
 *PNP0C08 = acpi
