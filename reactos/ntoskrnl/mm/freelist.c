@@ -105,7 +105,7 @@ static ULONG UnzeroedPageCount = 0;
 
 /* FUNCTIONS *************************************************************/
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetLRUFirstUserPage(VOID)
 {
@@ -128,7 +128,7 @@ MmGetLRUFirstUserPage(VOID)
 
 VOID
 NTAPI
-MmInsertLRULastUserPage(PFN_TYPE Pfn)
+MmInsertLRULastUserPage(PFN_NUMBER Pfn)
 {
    KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
@@ -142,9 +142,9 @@ MmInsertLRULastUserPage(PFN_TYPE Pfn)
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
-MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
+MmGetLRUNextUserPage(PFN_NUMBER PreviousPfn)
 {
    PLIST_ENTRY NextListEntry;
    PHYSICAL_PAGE* PageDescriptor;
@@ -169,7 +169,7 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
 
 VOID
 NTAPI
-MmRemoveLRUUserPage(PFN_TYPE Page)
+MmRemoveLRUUserPage(PFN_NUMBER Page)
 {
    RemoveEntryList(&MiGetPfnEntry(Page)->ListEntry);
 }
@@ -815,7 +815,7 @@ MmInitializePageList(VOID)
 
 VOID
 NTAPI
-MmSetRmapListHeadPage(PFN_TYPE Pfn, struct _MM_RMAP_ENTRY* ListHead)
+MmSetRmapListHeadPage(PFN_NUMBER Pfn, struct _MM_RMAP_ENTRY* ListHead)
 {
    KIRQL oldIrql;
     
@@ -826,7 +826,7 @@ MmSetRmapListHeadPage(PFN_TYPE Pfn, struct _MM_RMAP_ENTRY* ListHead)
 
 struct _MM_RMAP_ENTRY*
 NTAPI
-MmGetRmapListHeadPage(PFN_TYPE Pfn)
+MmGetRmapListHeadPage(PFN_NUMBER Pfn)
 {
    KIRQL oldIrql;
    struct _MM_RMAP_ENTRY* ListHead;
@@ -840,7 +840,7 @@ MmGetRmapListHeadPage(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SwapEntry)
+MmSetSavedSwapEntryPage(PFN_NUMBER Pfn,  SWAPENTRY SwapEntry)
 {
    KIRQL oldIrql;
 
@@ -851,7 +851,7 @@ MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SwapEntry)
 
 SWAPENTRY
 NTAPI
-MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
+MmGetSavedSwapEntryPage(PFN_NUMBER Pfn)
 {
    SWAPENTRY SwapEntry;
    KIRQL oldIrql;
@@ -865,7 +865,7 @@ MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmReferencePage(PFN_TYPE Pfn)
+MmReferencePage(PFN_NUMBER Pfn)
 {
    PPHYSICAL_PAGE Page;
 
@@ -889,7 +889,7 @@ MmReferencePage(PFN_TYPE Pfn)
 
 ULONG
 NTAPI
-MmGetReferenceCountPage(PFN_TYPE Pfn)
+MmGetReferenceCountPage(PFN_NUMBER Pfn)
 {
    KIRQL oldIrql;
    ULONG RCount;
@@ -914,7 +914,7 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
 
 BOOLEAN
 NTAPI
-MmIsPageInUse(PFN_TYPE Pfn)
+MmIsPageInUse(PFN_NUMBER Pfn)
 {
 
    DPRINT("MmIsPageInUse(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
@@ -924,7 +924,7 @@ MmIsPageInUse(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmDereferencePage(PFN_TYPE Pfn)
+MmDereferencePage(PFN_NUMBER Pfn)
 {
    PPHYSICAL_PAGE Page;
 
@@ -984,7 +984,7 @@ MmDereferencePage(PFN_TYPE Pfn)
 
 ULONG
 NTAPI
-MmGetLockCountPage(PFN_TYPE Pfn)
+MmGetLockCountPage(PFN_NUMBER Pfn)
 {
    KIRQL oldIrql;
    ULONG CurrentLockCount;
@@ -1010,7 +1010,7 @@ MmGetLockCountPage(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmLockPage(PFN_TYPE Pfn)
+MmLockPage(PFN_NUMBER Pfn)
 {
    PPHYSICAL_PAGE Page;
 
@@ -1029,7 +1029,7 @@ MmLockPage(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmUnlockPage(PFN_TYPE Pfn)
+MmUnlockPage(PFN_NUMBER Pfn)
 {
    PPHYSICAL_PAGE Page;
 
@@ -1046,11 +1046,11 @@ MmUnlockPage(PFN_TYPE Pfn)
    Page->LockCount--;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
 {
-   PFN_TYPE PfnOffset;
+   PFN_NUMBER PfnOffset;
    PLIST_ENTRY ListEntry;
    PPHYSICAL_PAGE PageDescriptor;
    BOOLEAN NeedClear = FALSE;
@@ -1112,7 +1112,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
 
 NTSTATUS
 NTAPI
-MiZeroPage(PFN_TYPE Page)
+MiZeroPage(PFN_NUMBER Page)
 {
     KIRQL Irql;
     PVOID TempAddress;
@@ -1137,7 +1137,7 @@ MmZeroPageThreadMain(PVOID Ignored)
    KIRQL oldIrql;
    PLIST_ENTRY ListEntry;
    PPHYSICAL_PAGE PageDescriptor;
-   PFN_TYPE Pfn;
+   PFN_NUMBER Pfn;
    ULONG Count;
 
    /* Free initial kernel memory */

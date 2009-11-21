@@ -26,8 +26,8 @@ BOOLEAN MpwThreadShouldTerminate;
 NTSTATUS NTAPI
 MmWriteDirtyPages(ULONG Target, PULONG Actual)
 {
-   PFN_TYPE Page;
-   PFN_TYPE NextPage;
+   PFN_NUMBER Page;
+   PFN_NUMBER NextPage;
    NTSTATUS Status;
 
    Page = MmGetLRUFirstUserPage();

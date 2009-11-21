@@ -50,7 +50,7 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
              IN MEMORY_CACHING_TYPE CacheType)
 {
     
-    PFN_TYPE Pfn, PageCount;
+    PFN_NUMBER Pfn, PageCount;
     PMMPTE PointerPte;
     PVOID BaseAddress;
     MMPTE TempPte;

@@ -131,7 +131,7 @@ MiGetPteValueForProcess(
 
 /* FUNCTIONS ***************************************************************/
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(PEPROCESS Process,
                    PVOID Address)
@@ -321,7 +321,7 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
 {
     UNIMPLEMENTED;
 }
@@ -340,7 +340,7 @@ MmDeleteVirtualMapping(
     PVOID Address,
     BOOLEAN FreePage,
     BOOLEAN* WasDirty,
-    PPFN_TYPE Page)
+    PPFN_NUMBER Page)
 {
     PFN_NUMBER Pfn;
     PMMPTE Pte;
@@ -412,7 +412,7 @@ NTAPI
 MmCreateVirtualMappingUnsafe(PEPROCESS Process,
                              PVOID Address,
                              ULONG flProtect,
-                             PPFN_TYPE Pages,
+                             PPFN_NUMBER Pages,
                              ULONG PageCount)
 {
     UNIMPLEMENTED;
@@ -424,7 +424,7 @@ NTAPI
 MmCreateVirtualMapping(PEPROCESS Process,
                        PVOID Address,
                        ULONG flProtect,
-                       PPFN_TYPE Pages,
+                       PPFN_NUMBER Pages,
                        ULONG PageCount)
 {
     UNIMPLEMENTED;

@@ -191,17 +191,17 @@ MmGetPhysicalAddress(PVOID vaddr)
     return Addr;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(PEPROCESS Process,
                    PVOID Address)
 {
-    return((PFN_TYPE)MmGetPhysicalAddressProcess(Process, Address) >> PAGE_SHIFT);
+    return((PFN_NUMBER)MmGetPhysicalAddressProcess(Process, Address) >> PAGE_SHIFT);
 }
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
@@ -221,7 +221,7 @@ MmRawDeleteVirtualMapping(PVOID Address)
 VOID
 NTAPI
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
-                       BOOLEAN* WasDirty, PPFN_TYPE Page)
+                       BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
@@ -358,7 +358,7 @@ NTSTATUS
 NTAPI
 MmCreateVirtualMappingForKernel(PVOID Address,
                                 ULONG flProtect,
-                                PPFN_TYPE Pages,
+                                PPFN_NUMBER Pages,
 				ULONG PageCount)
 {
     ULONG i;
@@ -424,7 +424,7 @@ NTAPI
 MmCreateVirtualMappingUnsafe(PEPROCESS Process,
                              PVOID Address,
                              ULONG flProtect,
-                             PPFN_TYPE Pages,
+                             PPFN_NUMBER Pages,
                              ULONG PageCount)
 {
     ULONG Attributes;
@@ -498,7 +498,7 @@ NTAPI
 MmCreateVirtualMapping(PEPROCESS Process,
                        PVOID Address,
                        ULONG flProtect,
-                       PPFN_TYPE Pages,
+                       PPFN_NUMBER Pages,
                        ULONG PageCount)
 {
    ULONG i;
@@ -573,7 +573,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 
 PVOID
 NTAPI
-MmCreateHyperspaceMapping(PFN_TYPE Page)
+MmCreateHyperspaceMapping(PFN_NUMBER Page)
 {
     PVOID Address;
     ppc_map_info_t info = { 0 };
@@ -587,11 +587,11 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
     return Address;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
-MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
+MmChangeHyperspaceMapping(PVOID Address, PFN_NUMBER NewPage)
 {
-    PFN_TYPE OldPage;
+    PFN_NUMBER OldPage;
     ppc_map_info_t info = { 0 };
 
     info.proc = 0;
@@ -604,7 +604,7 @@ MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
     return NewPage;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmDeleteHyperspaceMapping(PVOID Address)
 {
@@ -616,7 +616,7 @@ MmDeleteHyperspaceMapping(PVOID Address)
 
     MmuUnmapPage(&info, 1);
 
-    return (PFN_TYPE)info.phys;
+    return (PFN_NUMBER)info.phys;
 }
 
 VOID
@@ -658,7 +658,7 @@ NTSTATUS MmPPCCreatePrimitiveMapping(ULONG_PTR PageAddr)
 }
 
 /* Use our primitive allocator */
-PFN_TYPE MmPPCPrimitiveAllocPage()
+PFN_NUMBER MmPPCPrimitiveAllocPage()
 {
     paddr_t Result = MmuGetPage();
     DbgPrint("Got Page %x\n", Result);

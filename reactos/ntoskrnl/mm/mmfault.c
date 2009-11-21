@@ -304,7 +304,7 @@ NTAPI
 MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 {
    NTSTATUS Status;
-   PFN_TYPE AllocatedPage;
+   PFN_NUMBER AllocatedPage;
    KIRQL OldIrql;
 
    Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
