@@ -374,6 +374,9 @@ typedef struct _MMPFN
             USHORT ShortFlags;
         } e2;
     } u3;
+#ifdef _WIN64
+    ULONG UsedPageTableEntries;
+#endif
     union
     {
         MMPTE OriginalPte;
@@ -384,7 +387,7 @@ typedef struct _MMPFN
         ULONG_PTR EntireFrame;               // SavedSwapEntry
         struct
         {
-            ULONG_PTR PteFrame:25;
+            ULONG_PTR PteFrame: 8*sizeof(PVOID)-7;
             ULONG_PTR InPageError:1;
             ULONG_PTR VerifierAllocation:1;
             ULONG_PTR AweAllocation:1;
