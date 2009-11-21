@@ -536,6 +536,9 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
         if (flags & DCX_CLIPCHILDREN) escape.clip_children = TRUE;
     }
 
+    //FIXME("hdc %x, hwnd %x, top %x\n win_rect %s, top_rect %s\n", hdc, hwnd, top,
+    //    wine_dbgstr_rect(win_rect), wine_dbgstr_rect(top_rect));
+
     escape.dc_rect.left         = win_rect->left - top_rect->left;
     escape.dc_rect.top          = win_rect->top - top_rect->top;
     escape.dc_rect.right        = win_rect->right - top_rect->left;
@@ -838,7 +841,7 @@ UINT CDECL RosDrv_ShowWindow( HWND hwnd, INT cmd, RECT *rect, UINT swp )
 
 LRESULT CDECL RosDrv_SysCommand( HWND hwnd, WPARAM wparam, LPARAM lparam )
 {
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
     return -1;
 }
 
@@ -864,8 +867,8 @@ void CDECL RosDrv_WindowPosChanging( HWND hwnd, HWND insert_after, UINT swp_flag
 
     SwmPosChanging(hwnd, window_rect);
 
-    TRACE( "win %x pos is changing. vis rect %s, win rect %s\n",
-           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(window_rect) );
+    //TRACE( "win %x pos is changing. vis rect %s, win rect %s\n",
+    //       hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(window_rect) );
 
     *visible_rect = *window_rect;
 }
@@ -882,8 +885,8 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
 
     if (!data) return;
 
-    TRACE( "win %x pos changed. new vis rect %s, old whole rect %s, swp_flags %x insert_after %x\n",
-           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect), swp_flags, insert_after );
+    //TRACE( "win %x pos changed. new vis rect %s, old whole rect %s, swp_flags %x insert_after %x\n",
+    //       hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect), swp_flags, insert_after );
 
     old_whole_rect  = data->whole_rect;
     old_client_rect = data->client_rect;
@@ -911,12 +914,13 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
                 ;//move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
             else
                 SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
-            FIXME("change1\n");
+            //FIXME("change1\n");
         }
         else
         {
             //move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
-            FIXME("change2\n");
+            //FIXME("change2\n");
+            SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
         }
     }
 
@@ -925,10 +929,10 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
     /* Pass show/hide information to the window manager */
     if (swp_flags & SWP_SHOWWINDOW)
     {
-        if (swp_flags & SWP_NOZORDER) FIXME("no zorder change, ignoring!\n");
-        if (swp_flags & SWP_NOACTIVATE) FIXME("no activate change, ignoring!\n");
+        if (swp_flags & SWP_NOZORDER) FIXME("no zorder change for hwnd %x, ignoring!\n", hwnd);
+        //if (swp_flags & SWP_NOACTIVATE) FIXME("no activate change, ignoring!\n");
 
-        SwmSetForeground(hwnd);
+        //SwmSetForeground(hwnd);
         SwmShowWindow(hwnd, TRUE);
     }
     else if (swp_flags & SWP_HIDEWINDOW)

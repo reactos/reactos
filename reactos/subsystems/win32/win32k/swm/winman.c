@@ -21,6 +21,10 @@
 void redraw_window( struct window *win, struct region *region, int frame, unsigned int flags );
 void req_update_window_zorder( const struct update_window_zorder_request *req, struct update_window_zorder_reply *reply );
 
+PSWM_WINDOW NTAPI SwmGetTopWindow();
+VOID NTAPI SwmClipAllWindows();
+VOID NTAPI SwmDrawAllWindows();
+
 VOID NTAPI SwmDumpRegion(struct region *Region);
 VOID NTAPI SwmDumpWindows();
 VOID NTAPI SwmDebugDrawWindows();
@@ -55,7 +59,6 @@ VOID
 NTAPI
 SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect)
 {
-#if 1
     struct window *Win;
     struct update_window_zorder_request req;
     struct update_window_zorder_reply reply;
@@ -68,8 +71,8 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
     /* Calculate what areas to paint */
     UserEnterExclusive();
 
-    DPRINT1("SwmInvalidateRegion hwnd %x, region:\n", Window->hwnd);
-    SwmDumpRegion(Region);
+    DPRINT("SwmInvalidateRegion hwnd %x, region:\n", Window->hwnd);
+    //SwmDumpRegion(Region);
     Win = get_window((UINT_PTR)Window->hwnd);
     if (!Win)
     {
@@ -82,10 +85,12 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
     /* Bring every rect in a region to front */
     for (i=0; i<Region->num_rects; i++)
     {
+#if 0
         DbgPrint("(%d,%d)-(%d,%d), and redraw coords (%d,%d)-(%d,%d); ", Region->rects[i].left, Region->rects[i].top,
             Region->rects[i].right, Region->rects[i].bottom,
             Region->rects[i].left - Window->Window.left, Region->rects[i].top - Window->Window.top,
             Region->rects[i].right - Window->Window.left, Region->rects[i].bottom - Window->Window.top);
+#endif
 
         req.rect = Region->rects[i];
         req.window = (UINT_PTR)Window->hwnd;
@@ -102,21 +107,170 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
     UserLeave();
 
     free_region(ClientRegion);
-#endif
 }
 
 VOID
 NTAPI
-SwmMarkInvisible(struct region *Region)
+SwmPaintRegion(struct region *Region)
 {
     PLIST_ENTRY Current;
     PSWM_WINDOW Window;
-    struct region *WindowRegion;
-    struct region *InvisibleRegion;
+    struct region *RegionToPaint;
+    struct region *Intersection;
 
-    /* Make a copy of the invisible region */
-    InvisibleRegion = create_empty_region();
-    copy_region(InvisibleRegion, Region);
+    /* Make a copy of the region */
+    RegionToPaint = create_empty_region();
+    copy_region(RegionToPaint, Region);
+
+    Intersection = create_empty_region();
+
+    /* Traverse the list of windows and paint if something intersects */
+    Current = SwmWindows.Flink;
+    while(Current != &SwmWindows)
+    {
+        Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
+
+        /* Skip hidden windows */
+        if (Window->Hidden)
+        {
+            /* Advance to the next window */
+            Current = Current->Flink;
+            continue;
+        }
+
+        /* Check if this window has something in common with the */
+        intersect_region(Intersection, RegionToPaint, Window->Visible);
+        if (!is_region_empty(Intersection))
+        {
+            /* We have a region to paint, subtract it from total update region */
+            subtract_region(RegionToPaint, RegionToPaint, Intersection);
+
+            /* Paint it */
+            SwmInvalidateRegion(Window, Intersection, NULL);
+        }
+
+        /* If we exhausted the painting region - break out of this loop */
+        if (is_region_empty(RegionToPaint)) break;
+
+        /* Advance to the next window */
+        Current = Current->Flink;
+    }
+
+    /* Free allocated regions */
+    free_region(RegionToPaint);
+    free_region(Intersection);
+}
+
+VOID
+NTAPI
+SwmRecalculateVisibility(PSWM_WINDOW CalcWindow)
+{
+    PLIST_ENTRY Current;
+    PSWM_WINDOW Window;
+    struct region *TempRegion;
+    struct region *NewRegion, *DiffRegion, *ParentRegion;
+
+    DPRINT("Calculating visibility for %x\n", CalcWindow->hwnd);
+
+    /* Check if this window is already on top */
+    if (CalcWindow == SwmGetTopWindow())
+    {
+        /* It is, make sure it's fully visible */
+        NewRegion = create_empty_region();
+        set_region_rect(NewRegion, &CalcWindow->Window);
+
+        /* Compute the difference into the temp region */
+        DiffRegion = create_empty_region();
+        subtract_region(DiffRegion, NewRegion, CalcWindow->Visible);
+
+        /* Now get rid of the old visible region */
+        free_region(CalcWindow->Visible);
+        CalcWindow->Visible = NewRegion;
+
+        /* Show the difference, if any */
+        //if (!is_region_empty(DiffRegion))
+        //    SwmInvalidateRegion(CalcWindow, DiffRegion, NULL);
+
+        /* Free up temporary regions */
+        free_region(DiffRegion);
+
+        return;
+    }
+
+    ParentRegion = create_empty_region();
+
+    /* Create a whole window region */
+    NewRegion = create_empty_region();
+    set_region_rect(NewRegion, &CalcWindow->Window);
+
+    /* Compile a total region clipped by parent windows */
+    Current = CalcWindow->Entry.Blink;
+    while(Current != &SwmWindows)
+    {
+        Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
+
+        /* Skip hidden windows */
+        if (Window->Hidden)
+        {
+            /* Advance to the next window */
+            Current = Current->Blink;
+            continue;
+        }
+        DPRINT("hwnd: %x\n", Window->hwnd);
+
+        /* Calculate window's region */
+        TempRegion = create_empty_region();
+        set_region_rect(TempRegion, &Window->Window);
+
+        /* Intersect it with the target window's region */
+        intersect_region(TempRegion, TempRegion, NewRegion);
+
+        /* Union it with parent if it's not empty and free temp region */
+        if (!is_region_empty(TempRegion))
+            union_region(ParentRegion, ParentRegion, TempRegion);
+        free_region(TempRegion);
+
+        /* Advance to the previous window */
+        Current = Current->Blink;
+    }
+
+    DPRINT("Parent region:\n");
+    //SwmDumpRegion(ParentRegion);
+
+    /* Remove parts clipped by parents from the window region */
+    if (!is_region_empty(ParentRegion))
+        subtract_region(NewRegion, NewRegion, ParentRegion);
+
+    DPRINT("New visible region:\n");
+    //SwmDumpRegion(NewRegion);
+
+    /* Compute the difference between old and new visible
+       regions into the temp region */
+    DiffRegion = create_empty_region();
+    subtract_region(DiffRegion, CalcWindow->Visible, NewRegion);
+
+    DPRINT("Diff between old and new:\n");
+    //SwmDumpRegion(DiffRegion);
+
+    /* Now get rid of the old visible region */
+    free_region(CalcWindow->Visible);
+    CalcWindow->Visible = NewRegion;
+
+    /* Show the difference if any */
+    //if (!is_region_empty(DiffRegion))
+    //    SwmInvalidateRegion(CalcWindow, DiffRegion, NULL);
+
+    /* Free allocated temporary regions */
+    free_region(DiffRegion);
+    free_region(ParentRegion);
+}
+
+VOID
+NTAPI
+SwmClipAllWindows()
+{
+    PLIST_ENTRY Current;
+    PSWM_WINDOW Window;
 
     /* Traverse the list to find our window */
     Current = SwmWindows.Flink;
@@ -132,55 +286,22 @@ SwmMarkInvisible(struct region *Region)
             continue;
         }
 
-        /* Get window's region */
-        WindowRegion = create_empty_region();
-        set_region_rect(WindowRegion, &Window->Window);
-
-        //DPRINT1("Window region ext:\n");
-        //SwmDumpRegion(WindowRegion);
-        //DPRINT1("Region to mark invisible ext:\n");
-        //SwmDumpRegion(Region);
-
-        /* Region to mark invisible for this window = Update region X Window region */
-        intersect_region(WindowRegion, WindowRegion, InvisibleRegion);
-
-        /* Check if it's empty */
-        if (!is_region_empty(WindowRegion))
-        {
-            //DPRINT1("Subtracting region\n");
-            //SwmDumpRegion(WindowRegion);
-            //DPRINT1("From visible region\n");
-            //SwmDumpRegion(Window->Visible);
-
-            /* If it's not empty, subtract it from visible region */
-            subtract_region(Window->Visible, Window->Visible, WindowRegion);
-
-            /* And subtract that part from our invisible region */
-            subtract_region(InvisibleRegion, InvisibleRegion, WindowRegion);
-        }
-
-        free_region(WindowRegion);
-
-        /* Break if our whole invisible region is mapped to underlying windows */
-        if (is_region_empty(InvisibleRegion)) break;
+        /* Recalculate visibility for this window */
+        SwmRecalculateVisibility(Window);
 
         /* Advance to the next window */
         Current = Current->Flink;
     }
-
-    free_region(InvisibleRegion);
 }
 
-/* NOTE: It alters the passed region! */
 VOID
 NTAPI
-SwmMarkVisible(struct region *Region)
+SwmDrawAllWindows()
 {
     PLIST_ENTRY Current;
     PSWM_WINDOW Window;
-    struct region *WindowRegion;
 
-    /* Go through every window from nearest to farthest */
+    /* Traverse the list to find our window */
     Current = SwmWindows.Flink;
     while(Current != &SwmWindows)
     {
@@ -194,37 +315,8 @@ SwmMarkVisible(struct region *Region)
             continue;
         }
 
-        /* Get window's region */
-        WindowRegion = create_empty_region();
-        set_region_rect(WindowRegion, &Window->Window);
-
-        /* Region to mark invisible for this window = Update region X Window region */
-        intersect_region(WindowRegion, WindowRegion, Region);
-
-        /* Check if it's empty */
-        if (!is_region_empty(WindowRegion))
-        {
-            DPRINT("Invalidating region\n");
-            SwmDumpRegion(WindowRegion);
-            DPRINT("of window %x\n", Window->hwnd);
-
-            /* If it's not empty, subtract it from the source region */
-            subtract_region(Region, Region, WindowRegion);
-
-            /* And add it to this window's visible region */
-            union_region(Window->Visible, Window->Visible, WindowRegion);
-
-            /* Invalidate this region of target window */
-            SwmInvalidateRegion(Window, WindowRegion, NULL);
-
-            DPRINT("Rest of the update region is:\n");
-            SwmDumpRegion(Region);
-        }
-
-        free_region(WindowRegion);
-
-        /* If region to update became empty, quit */
-        if (is_region_empty(Region)) break;
+        /* Draw its visible region */
+        SwmInvalidateRegion(Window, Window->Visible, NULL);
 
         /* Advance to the next window */
         Current = Current->Flink;
@@ -233,54 +325,12 @@ SwmMarkVisible(struct region *Region)
 
 VOID
 NTAPI
-SwmRecalculateVisibility(PSWM_WINDOW CalcWindow)
-{
-    PLIST_ENTRY Current;
-    PSWM_WINDOW Window;
-    struct region *Region = create_empty_region();
-    struct region *WindowRegion = create_empty_region();
-
-    set_region_rect(WindowRegion, &CalcWindow->Window);
-
-    /* Compile a total region of visible regions of "higher" windows */
-    Current = &CalcWindow->Entry;
-    while(Current != &SwmWindows)
-    {
-        Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
-
-        /* Skip hidden windows */
-        if (Window->Hidden)
-        {
-            /* Advance to the next window */
-            Current = Current->Blink;
-            continue;
-        }
-
-        union_region(Region, Region, Window->Visible);
-
-        /* Advance to the previous window */
-        Current = Current->Blink;
-    }
-
-    /* Crop the region against target window */
-    intersect_region(Region, Region, WindowRegion);
-
-    /* Subtract result from target window's visible region */
-    subtract_region(CalcWindow->Visible, WindowRegion, Region);
-
-    /* Free allocated temporary regions */
-    free_region(Region);
-    free_region(WindowRegion);
-}
-
-VOID
-NTAPI
 SwmAddWindow(HWND hWnd, RECT *WindowRect)
 {
     PSWM_WINDOW Win;
 
-    DPRINT("SwmAddWindow %x\n", hWnd);
-    DPRINT("rect (%d,%d)-(%d,%d)\n", WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
+    DPRINT1("SwmAddWindow %x\n", hWnd);
+    DPRINT1("rect (%d,%d)-(%d,%d)\n", WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
 
     /* Acquire the lock */
     SwmAcquire();
@@ -298,15 +348,16 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect)
     set_region_rect(Win->Visible, &Win->Window);
 
     /* Now go through the list and remove this rect from all underlying windows visible region */
-    SwmMarkInvisible(Win->Visible);
+    //SwmMarkInvisible(Win->Visible);
 
     InsertHeadList(&SwmWindows, &Win->Entry);
 
     /* Now ensure it is visible on screen */
     SwmInvalidateRegion(Win, Win->Visible, &Win->Window);
 
+    SwmClipAllWindows();
+
     //SwmDumpWindows();
-    //SwmDebugDrawWindows();
 
     /* Release the lock */
     SwmRelease();
@@ -346,10 +397,10 @@ SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height)
     Desktop->Visible = create_empty_region();
     set_region_rect(Desktop->Visible, &Desktop->Window);
 
-    /* Now go through the list and remove this rect from all underlying windows visible region */
-    SwmMarkInvisible(Desktop->Visible);
-
     InsertTailList(&SwmWindows, &Desktop->Entry);
+
+    /* Calculate windows clipping */
+    SwmClipAllWindows();
 
     /* Now ensure it is visible on screen */
     SwmInvalidateRegion(Desktop, Desktop->Visible, &Desktop->Window);
@@ -394,7 +445,7 @@ SwmRemoveWindow(HWND hWnd)
     /* Acquire the lock */
     SwmAcquire();
 
-    DPRINT("SwmRemoveWindow %x\n", hWnd);
+    DPRINT1("SwmRemoveWindow %x\n", hWnd);
 
     /* Allocate entry */
     Win = SwmFindByHwnd(hWnd);
@@ -410,11 +461,13 @@ SwmRemoveWindow(HWND hWnd)
     RemoveEntryList(&Win->Entry);
 
     /* Mark this region as visible in other window */
-    SwmMarkVisible(Win->Visible);
+    //SwmMarkVisible(Win->Visible);
 
     /* Free the entry */
     free_region(Win->Visible);
     ExFreePool(Win);
+
+    SwmClipAllWindows();
 
     /* Release the lock */
     SwmRelease();
@@ -450,7 +503,9 @@ NTAPI
 SwmBringToFront(PSWM_WINDOW SwmWin)
 {
     PSWM_WINDOW Previous;
+#ifdef INCREMENTAL_CLIPPING
     struct region *OldVisible;
+#endif
 
     /* Save previous focus window */
     Previous = SwmGetTopWindow();
@@ -470,6 +525,7 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
     /* Add it to the head of the list */
     InsertHeadList(&SwmWindows, &SwmWin->Entry);
 
+#ifdef INCREMENTAL_CLIPPING
     /* Subtract old visible from the new one to find region for updating */
     OldVisible = create_empty_region();
     set_region_rect(OldVisible, &SwmWin->Window);
@@ -492,6 +548,16 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
 
     /* Update previous window's visible region */
     SwmRecalculateVisibility(Previous);
+#else
+    /* Make it fully visible */
+    free_region(SwmWin->Visible);
+    SwmWin->Visible = create_empty_region();
+    set_region_rect(SwmWin->Visible, &SwmWin->Window);
+
+    // TODO: Redraw only new parts!
+    SwmClipAllWindows();
+    SwmInvalidateRegion(SwmWin, SwmWin->Visible, NULL);
+#endif
 }
 
 VOID
@@ -530,8 +596,10 @@ NTAPI
 SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
 {
     PSWM_WINDOW SwmWin;
+#ifdef INCREMENTAL_CLIPPING
     struct region *NewRegion;
     rectangle_t WinRect;
+#endif
 
     /* Acquire the lock */
     SwmAcquire();
@@ -555,12 +623,14 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
         SwmRelease();
         return;
     }
+//DPRINT1("rect (%d,%d)-(%d,%d)\n", TmpRect.left, TmpRect.top, TmpRect.right, TmpRect.bottom);
+    DPRINT1("SwmPosChanged hwnd %x, new rect (%d,%d)-(%d,%d)\n", hWnd, WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
 
     SwmWin->Window.left = WindowRect->left;
     SwmWin->Window.top = WindowRect->top;
     SwmWin->Window.right = WindowRect->right;
     SwmWin->Window.bottom = WindowRect->bottom;
-
+#ifdef INCREMENTAL_CLIPPING
     //SwmDebugDrawWindows();
 
     /* Assure the moving window is foreground */
@@ -587,6 +657,9 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
 
     /* Redraw window itself too */
     //SwmInvalidateRegion(SwmWin, SwmWin->Visible, NULL);
+#else
+    SwmClipAllWindows();
+#endif
 
     /* Release the lock */
     SwmRelease();
@@ -597,6 +670,7 @@ NTAPI
 SwmShowWindow(HWND hWnd, BOOLEAN Show)
 {
     PSWM_WINDOW Win;
+    struct region *OldRegion;
 
     /* Acquire the lock */
     SwmAcquire();
@@ -615,22 +689,28 @@ SwmShowWindow(HWND hWnd, BOOLEAN Show)
     if (Show && Win->Hidden)
     {
         /* Change state from hidden to visible */
-        DPRINT("Unhiding %x\n", Win->hwnd);
+        DPRINT1("Unhiding %x\n", Win->hwnd);
         Win->Hidden = FALSE;
         SwmBringToFront(Win);
     }
     else if (!Show && !Win->Hidden)
     {
-        DPRINT("Hiding %x\n", Win->hwnd);
+        DPRINT1("Hiding %x\n", Win->hwnd);
         /* Change state from visible to hidden */
         Win->Hidden = TRUE;
 
-        /* Mark its region as visible */
-        SwmMarkVisible(Win->Visible);
+        /* Save its visible region */
+        OldRegion = Win->Visible;
 
-        /* Its visible region is now empty */
-        free_region(Win->Visible);
+        /* Put an empty visible region */
         Win->Visible = create_empty_region();
+
+        /* Recalculate clipping */
+        SwmClipAllWindows();
+
+        /* Show region which was taken by this window and free it */
+        SwmPaintRegion(OldRegion);
+        free_region(OldRegion);
     }
 
     /* Release the lock */
