@@ -1361,7 +1361,7 @@ Ext2DbgPrintComplete (
         IN BOOLEAN bPrint
         );
 
-PUCHAR
+PCHAR
 Ext2NtStatusToString (IN NTSTATUS Status );
 
 //

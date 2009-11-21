@@ -36,7 +36,7 @@ ULONG  ProcessNameOffset = 0;
 
 /* Static Definitions ****************************************************/
 
-static PUCHAR IrpMjStrings[] = {
+static PCHAR IrpMjStrings[] = {
     "IRP_MJ_CREATE",
     "IRP_MJ_CREATE_NAMED_PIPE",
     "IRP_MJ_CLOSE",
@@ -67,7 +67,7 @@ static PUCHAR IrpMjStrings[] = {
     "IRP_MJ_PNP"
 };
 
-static PUCHAR FileInformationClassStrings[] = {
+static PCHAR FileInformationClassStrings[] = {
     "Unknown FileInformationClass 0",
     "FileDirectoryInformation",
     "FileFullDirectoryInformation",
@@ -107,7 +107,7 @@ static PUCHAR FileInformationClassStrings[] = {
     "FileTrackingInformation"
 };
 
-static PUCHAR FsInformationClassStrings[] = {
+static PCHAR FsInformationClassStrings[] = {
     "Unknown FsInformationClass 0",
     "FileFsVolumeInformation",
     "FileFsLabelInformation",
@@ -742,7 +742,7 @@ Ext2DbgPrintComplete (IN PIRP Irp, IN BOOLEAN bPrint)
     }
 }
 
-PUCHAR
+PCHAR
 Ext2NtStatusToString ( IN NTSTATUS Status )
 {
     switch (Status) {
