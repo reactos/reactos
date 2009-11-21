@@ -1,0 +1,39 @@
+
+==================================
+Release Notes for Ext2Fsd V0.48
+==================================
+
+Modifications from V0.46:
+
+    1, Acronis TrueImage compatible issue solved:
+       Verified with Acronis True Image Home 2009. Also verified with
+       FreeOFTE 3.0, TrueCrypt 6.2a.
+    2, Driver code-signed for Vista and Server 2008
+    3, Bo Branten's 5+ patches merged, lots ifstest failures resolved
+    4, Code improvements for FastIo routines and drive letter & mount
+       points management
+    5, Mount point automatic assignment for USB key and other removable
+       disks or removable media devices
+
+Features to be implemented in future:
+
+    1, EXT3 features support (htree, journal)
+    2, Documents improvement: clear and elaborate
+    3, LVM support
+    4, Performance improvement, code optimization
+    5, Automatic check & update of new versions
+
+    Since 0.38, Ext2fsd is much stable even under heavy i/o loads,
+    both for reading and writing. Performance and stability are
+    highly, improved especially stability. A new and strong era of
+    Ext2Fsd in product shape is coming :)
+
+WARNINGS:
+ 
+    The driver may crash your system and ruin your data unexpectedly,
+    since there might be software conflicts and I could only test it
+    on some of the popular platforms. You should use it with care and
+    use it at your own risk!
+
+Matt <mattwu@163.com>
+http://www.ext2fsd.com

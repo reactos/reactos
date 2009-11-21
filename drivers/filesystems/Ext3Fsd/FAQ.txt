@@ -1,0 +1,175 @@
+================
+ FAQ - Ext2Fsd
+================
+
+-------------------------------------------------------------------------
+Q) What systems could Ext2Fsd 0.42 support
+
+A) Windows 2000, xp and 2003 (X86, AMD64)
+   Windows NT 4.0 is no longer supported.
+   Vista/Longhorn: Need turn off "Driver signature check"
+
+   My stress test systems:
+   Vista AMD64, 2003 server AMD64, XP pro X86, Win2k SP4
+
+-------------------------------------------------------------------------
+Q) Vista always reports "The parameter is not right" when executing any
+   applications from my linux partition
+
+A) The exact reason is unknown yet. But it's related to UAC. This issue
+   can be cured by disabling UAC.
+
+-------------------------------------------------------------------------
+Q) Ext2Mgr hotkeys
+
+A) F1:  Help (this FAQ.txt)
+   F2:  About Ext2Mgr
+   F3:  Ext2 Volume Management
+   F4:  Mountpoint Management (Drive Letter)
+   F5:  Reload and Refresh
+   F6:  Show Properties
+   F7:  Ext2Fsd Service Management
+   F8:  Ext2Fsd Statistics
+   F9:  Remove Dead Letters
+   F10: Copy Everything to Clipboard
+   F11: Flush Cache to Disk
+   F12: Change Partition Type
+
+-------------------------------------------------------------------------
+Q) How to install and start Ext2fsd on Vista
+
+A) 1, Turn on system signature checking (it needs reboot to take effect)
+      bcdedit.exe /set TESTSIGNING ON
+
+   2, Import Ext2Fsd test certification
+      certmgr.exe /add Ext2Fsd.cer /s /r localMachine root
+      certmgr.exe /add Ext2Fsd.cer /s /r localMachine trustedpublisher
+
+   3, Then install Ext2Fsd package and start Ext2Fsd 
+
+-------------------------------------------------------------------------
+Q) Why is Ext2Mgr only listing CD/DVD devices or nothing on Vista ?
+
+A) Vista's User Account Control (UAC) prohibits Ext2Mgr to query system
+   SECRET of harddisk/volume configurations.
+
+   You need run Ext2Mgr as administrator or disable UAC to stop Vista's
+   endless natter forever :)
+
+-------------------------------------------------------------------------
+Q) How to turn off "Driver signature check" on Vista
+
+A) Normally you can disable it by pressing F8 when booting and select
+   "Disable Driver Signature Enforcement"
+
+   If you want to disable it forever, do as the followings guide:
+
+   1, Run cmd.exe as administrator
+   2. Execute the followings in the cmd shell: 
+
+      bcdedit -set loadoptions DDISABLE_INTEGRITY_CHECKS
+      bcdedit -set nointegritychecks ON 
+
+WARNING: Turning off "siging check" might put you in danger of other
+         evil softwares like virus/trojan horse.
+
+-------------------------------------------------------------------------
+Q) I don't like Ext2Mgr showing the splash screen
+
+A) Add a parameter "/quiet" in command when executing Ext2Mgr, like
+   "Ext2Mgr /quiet" or ""Ext2Mgr -quiet""
+
+-------------------------------------------------------------------------
+Q) What's a permanent mountpoint ?
+
+A) Windows system's mount manager will automatically mount volumes and
+   assign driver letters during booting. For xp and later systems, windows
+   only create unique volume ids for all the recognized volume/partitions,
+   such as FAT32, NTFS. The ext2/ext3 volumes could not be mounted by the
+   windows mount manager.
+
+   Ext2Mgr provides 3 methods to mount a Linux volume:
+
+   1, Using Windows API DefineDosDevice
+      Driver letter won't be kept and be lost after reboot. But it's convenient
+      for a temporary usage.
+
+   2, Using Windows MountMgr + Ext2Mgr
+      This method provides automatic mounting when Ext2Mgr detects new
+      disk is plugged and removal of driver letters after disk is removed.
+      If you are heavily using removable disks, this is the best choice.
+
+   3, Using registry to store the driver letter as a DosDevice
+      This method always works and it's better for fixed harddisks. Under
+      some conditions, you need a reboot to see the driver letter in explorer.
+
+      You could also modify the registry manually, see below:
+
+      [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices]
+      "X:"="\\Device\\HarddiskVolume1"
+
+-------------------------------------------------------------------------
+Q) How to install ext2fsd version 0.42
+
+A) Just click the file of ext2fsd-0.42.exe. It will guide you for all.
+   and writing on ext3 partition:
+
+   Senior users can try the setup.bat or registry manually editing.
+
+-------------------------------------------------------------------------
+Q) How to uninstall
+
+A) If you created group "Ext2Fsd" in your "Start Menu", just click
+   the link of "Uninstall Ext2Fsd".
+
+   Or you need "Add/Remove Programs" in "Control Panel" to remove
+   the program.
+
+-------------------------------------------------------------------------
+Q) How to start Ext2Fsd automatically during system booting
+
+A) Open program "Ext2 Volume Manager" and click menu "Service Management"
+   in submenu "Tools". Select "SERVICE_SYSTEM_START" and apply the changes.
+
+   You could click the "Start" button to start ext2fsd service. But it's
+   only start the service, not enabling auto-starting.
+
+-------------------------------------------------------------------------
+Q) How to mount an ext2fsd partition or a volume ?
+
+A) It's becoming easy with the help of the program "Ext2 Volume Manager".
+   Just "right click" on the dialog list, and select "Change Drive Letter".
+   Then you'll see the mount point dialog, you can add, change or remove
+   any driver letters.
+
+-------------------------------------------------------------------------
+Q) The system configuration changed, but Ext2Mgr didn't refresh ?
+
+A) Current version of "Ext2 Volume Manager" does not monitor system changes.
+   You must refresh it manually: click "Tools" -> "Reload and Refresh". Or
+   just simply close and reopen the program :)
+
+-------------------------------------------------------------------------
+Q) How could I change the volume's codepage and other attributes ?
+
+A) Right click the Ext2/Ext3 partition or volume in the list with your mouse,
+   you could see the menu item of "Ext2 Management", or double click and then
+   click the "Properties" button in Properties dialog.
+
+   Do not forget to apply your changes. These settings won't be kept after
+   booting, I'll implement it in next version.
+
+   Make sure the ext2fsd service is already started, or you won't get the
+   chance of changing ext2 volume information.
+
+-------------------------------------------------------------------------
+Q) How to build Ext2Fsd package ?
+
+A) You need NTDDK (sold by Microsoft) and use the gnu ntifs.h header file.
+   But you have the ifskit if you want building for X86_64 systems. Then
+   you just select a build environment (such as windows 2003 free), and then
+   execute "build" under the root directory of Ext2Fsd source code.
+
+
+Matt <mattwu@163.com>
+http://www.ext2fsd.com
