@@ -33,7 +33,7 @@ ProcessCompletions(PCONNECTION_ENDPOINT Connection)
 
          Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
 
-         exFreePool(Bucket);
+         ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
     }
 
     if (!Connection->SocketContext)
@@ -315,7 +315,8 @@ VOID DrainSignals(VOID) {
 
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     PCONNECTION_ENDPOINT Connection =
-        exAllocatePool(NonPagedPool, sizeof(CONNECTION_ENDPOINT));
+        ExAllocatePoolWithTag(NonPagedPool, sizeof(CONNECTION_ENDPOINT),
+                              CONN_ENDPT_TAG);
     if (!Connection)
         return Connection;
 
@@ -351,7 +352,7 @@ VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection ) {
     RemoveEntryList(&Connection->ListEntry);
     TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
 
-    exFreePool( Connection );
+    ExFreePoolWithTag( Connection, CONN_ENDPT_TAG );
 }
 
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
@@ -667,7 +668,7 @@ NTSTATUS TCPConnect
 
         if (Status == STATUS_PENDING)
         {
-            Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
+            Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
             if( !Bucket )
             {
                return STATUS_NO_MEMORY;
@@ -776,7 +777,7 @@ NTSTATUS TCPReceiveData
     /* Keep this request around ... there was no data yet */
     if( Status == STATUS_PENDING ) {
         /* Freed in TCPSocketState */
-        Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
+        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
         if( !Bucket ) {
             TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
             return STATUS_NO_MEMORY;
@@ -835,7 +836,7 @@ NTSTATUS TCPSendData
     /* Keep this request around ... there was no data yet */
     if( Status == STATUS_PENDING ) {
         /* Freed in TCPSocketState */
-        Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
+        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
         if( !Bucket ) {
             TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
             return STATUS_NO_MEMORY;
@@ -927,7 +928,7 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
             if( Bucket->Request.RequestContext == Irp )
             {
                 RemoveEntryList( &Bucket->Entry );
-                exFreePool( Bucket );
+                ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
                 break;
             }
         }

@@ -35,7 +35,7 @@ PIPDATAGRAM_HOLE CreateHoleDescriptor(
 
 	TI_DbgPrint(DEBUG_IP, ("Called. First (%d)  Last (%d).\n", First, Last));
 
-	Hole = exAllocateFromNPagedLookasideList(&IPHoleList);
+	Hole = ExAllocateFromNPagedLookasideList(&IPHoleList);
 	if (!Hole) {
 	    TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
 	    return NULL;
@@ -76,7 +76,7 @@ VOID FreeIPDR(
     TI_DbgPrint(DEBUG_IP, ("Freeing hole descriptor at (0x%X).\n", CurrentH));
 
     /* And free the hole descriptor */
-    exFreeToNPagedLookasideList(&IPHoleList, CurrentH);
+    ExFreeToNPagedLookasideList(&IPHoleList, CurrentH);
 
     CurrentEntry = NextEntry;
   }
@@ -92,18 +92,18 @@ VOID FreeIPDR(
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment data at (0x%X).\n", CurrentF->Data));
 
     /* Free the fragment data buffer */
-    exFreePool(CurrentF->Data);
+    ExFreePoolWithTag(CurrentF->Data, FRAGMENT_DATA_TAG);
 
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment at (0x%X).\n", CurrentF));
 
     /* And free the fragment descriptor */
-    exFreeToNPagedLookasideList(&IPFragmentList, CurrentF);
+    ExFreeToNPagedLookasideList(&IPFragmentList, CurrentF);
     CurrentEntry = NextEntry;
   }
 
   TI_DbgPrint(DEBUG_IP, ("Freeing IPDR data at (0x%X).\n", IPDR));
 
-  exFreeToNPagedLookasideList(&IPDRList, IPDR);
+  ExFreeToNPagedLookasideList(&IPDRList, IPDR);
 }
 
 
@@ -205,7 +205,7 @@ ReassembleDatagram(
   RtlCopyMemory(&IPPacket->DstAddr, &IPDR->DstAddr, sizeof(IP_ADDRESS));
 
   /* Allocate space for full IP datagram */
-  IPPacket->Header = exAllocatePool(NonPagedPool, IPPacket->TotalSize);
+  IPPacket->Header = ExAllocatePoolWithTag(NonPagedPool, IPPacket->TotalSize, PACKET_BUFFER_TAG);
   if (!IPPacket->Header) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     (*IPPacket->Free)(IPPacket);
@@ -297,7 +297,7 @@ VOID ProcessFragment(
     TI_DbgPrint(DEBUG_IP, ("Starting new assembly.\n"));
 
     /* We don't have a reassembly structure, create one */
-    IPDR = exAllocateFromNPagedLookasideList(&IPDRList);
+    IPDR = ExAllocateFromNPagedLookasideList(&IPDRList);
     if (!IPDR)
       /* We don't have the resources to process this packet, discard it */
       return;
@@ -308,7 +308,7 @@ VOID ProcessFragment(
     Hole = CreateHoleDescriptor(0, 65536);
     if (!Hole) {
       /* We don't have the resources to process this packet, discard it */
-      exFreeToNPagedLookasideList(&IPDRList, IPDR);
+      ExFreeToNPagedLookasideList(&IPDRList, IPDR);
       return;
     }
     AddrInitIPv4(&IPDR->SrcAddr, IPv4Header->SrcAddr);
@@ -361,7 +361,7 @@ VOID ProcessFragment(
       NewHole = CreateHoleDescriptor(Hole->First, FragFirst - 1);
       if (!NewHole) {
         /* We don't have the resources to process this packet, discard it */
-        exFreeToNPagedLookasideList(&IPHoleList, Hole);
+        ExFreeToNPagedLookasideList(&IPHoleList, Hole);
         Cleanup(&IPDR->Lock, OldIrql, IPDR);
         return;
       }
@@ -374,7 +374,7 @@ VOID ProcessFragment(
       NewHole = CreateHoleDescriptor(FragLast + 1, Hole->Last);
       if (!NewHole) {
         /* We don't have the resources to process this packet, discard it */
-        exFreeToNPagedLookasideList(&IPHoleList, Hole);
+        ExFreeToNPagedLookasideList(&IPHoleList, Hole);
         Cleanup(&IPDR->Lock, OldIrql, IPDR);
         return;
       }
@@ -383,7 +383,7 @@ VOID ProcessFragment(
       InsertTailList(&IPDR->HoleListHead, &NewHole->ListEntry);
     }
 
-    exFreeToNPagedLookasideList(&IPHoleList, Hole);
+    ExFreeToNPagedLookasideList(&IPHoleList, Hole);
 
     /* If this is the first fragment, save the IP header */
     if (FragFirst == 0) {
@@ -397,7 +397,7 @@ VOID ProcessFragment(
     /* Create a buffer, copy the data into it and put it
        in the fragment list */
 
-    Fragment = exAllocateFromNPagedLookasideList(&IPFragmentList);
+    Fragment = ExAllocateFromNPagedLookasideList(&IPFragmentList);
     if (!Fragment) {
       /* We don't have the resources to process this packet, discard it */
       Cleanup(&IPDR->Lock, OldIrql, IPDR);
@@ -407,10 +407,10 @@ VOID ProcessFragment(
     TI_DbgPrint(DEBUG_IP, ("Fragment descriptor allocated at (0x%X).\n", Fragment));
 
     Fragment->Size = IPPacket->TotalSize - IPPacket->HeaderSize;
-    Fragment->Data = exAllocatePool(NonPagedPool, Fragment->Size);
+    Fragment->Data = ExAllocatePoolWithTag(NonPagedPool, Fragment->Size, FRAGMENT_DATA_TAG);
     if (!Fragment->Data) {
       /* We don't have the resources to process this packet, discard it */
-      exFreeToNPagedLookasideList(&IPFragmentList, Fragment);
+      ExFreeToNPagedLookasideList(&IPFragmentList, Fragment);
       Cleanup(&IPDR->Lock, OldIrql, IPDR);
       return;
     }
@@ -465,7 +465,7 @@ VOID ProcessFragment(
     IF->Stats.InBytes += Datagram.TotalSize;
 
     /* We're done with this datagram */
-    exFreePool(Datagram.Header);
+    ExFreePoolWithTag(Datagram.Header, PACKET_BUFFER_TAG);
     TI_DbgPrint(MAX_TRACE, ("Freeing datagram at (0x%X).\n", Datagram));
     (*Datagram.Free)(&Datagram);
   } else

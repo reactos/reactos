@@ -126,8 +126,6 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 #define SIGNATURE_LARGE 'LLLL'
 #define SIGNATURE_SMALL 'SSSS'
 #define SIGNATURE_OTHER 'OOOO'
-#define TCP_TAG ' PCT'
-
 static NPAGED_LOOKASIDE_LIST LargeLookasideList;
 static NPAGED_LOOKASIDE_LIST SmallLookasideList;
 
@@ -139,14 +137,14 @@ TCPMemStartup( void )
                                      NULL,
                                      0,
                                      LARGE_SIZE + sizeof( ULONG ),
-                                     TCP_TAG,
+                                     OSK_LARGE_TAG,
                                      0 );
     ExInitializeNPagedLookasideList( &SmallLookasideList,
                                      NULL,
                                      NULL,
                                      0,
                                      SMALL_SIZE + sizeof( ULONG ),
-                                     TCP_TAG,
+                                     OSK_SMALL_TAG,
                                      0 );
 
     return STATUS_SUCCESS;
@@ -216,13 +214,13 @@ void *TCPMalloc( void *ClientData,
     v = ExAllocateFromNPagedLookasideList( &LargeLookasideList );
     Signature = SIGNATURE_LARGE;
     } else {
-    v = ExAllocatePool( NonPagedPool, Bytes + sizeof(ULONG) );
+    v = ExAllocatePoolWithTag( NonPagedPool, Bytes + sizeof(ULONG),
+                               OSK_OTHER_TAG );
     Signature = SIGNATURE_OTHER;
     }
     if( v ) {
     *((ULONG *) v) = Signature;
     v = (void *)((char *) v + sizeof(ULONG));
-    TrackWithTag( FOURCC('f','b','s','d'), v, (PCHAR)File, Line );
     }
 
     return v;
@@ -232,7 +230,6 @@ void TCPFree( void *ClientData,
           void *data, OSK_PCHAR File, OSK_UINT Line ) {
     ULONG Signature;
 
-    UntrackFL( (PCHAR)File, Line, data, FOURCC('f','b','s','d') );
     data = (void *)((char *) data - sizeof(ULONG));
     Signature = *((ULONG *) data);
     if ( SIGNATURE_SMALL == Signature ) {
@@ -240,7 +237,7 @@ void TCPFree( void *ClientData,
     } else if ( SIGNATURE_LARGE == Signature ) {
     ExFreeToNPagedLookasideList( &LargeLookasideList, data );
     } else if ( SIGNATURE_OTHER == Signature ) {
-    ExFreePool( data );
+    ExFreePoolWithTag( data, OSK_OTHER_TAG );
     } else {
     ASSERT( FALSE );
     }

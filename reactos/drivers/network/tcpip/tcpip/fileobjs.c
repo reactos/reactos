@@ -153,7 +153,7 @@ VOID AddrFileFree(
  *     Object = Pointer to address file object to free
  */
 {
-    exFreePool(Object);
+    ExFreePoolWithTag(Object, ADDR_FILE_TAG);
 }
 
 
@@ -165,7 +165,7 @@ VOID ControlChannelFree(
  *     Object = Pointer to address file object to free
  */
 {
-    exFreePool(Object);
+    ExFreePoolWithTag(Object, CONTROL_CHANNEL_TAG);
 }
 
 
@@ -189,7 +189,8 @@ NTSTATUS FileOpenAddress(
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
-  AddrFile = exAllocatePool(NonPagedPool, sizeof(ADDRESS_FILE));
+  AddrFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(ADDRESS_FILE),
+                                   ADDR_FILE_TAG);
   if (!AddrFile) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -212,7 +213,7 @@ NTSTATUS FileOpenAddress(
 
   if (!AddrIsUnspecified(&AddrFile->Address) &&
       !AddrLocateInterface(&AddrFile->Address)) {
-	  exFreePool(AddrFile);
+	  ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
 	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", A2S(&AddrFile->Address)));
 	  return STATUS_INVALID_PARAMETER;
   }
@@ -230,7 +231,7 @@ NTSTATUS FileOpenAddress(
            AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
            AddrFile->Port == 0xffff)
       {
-          exFreePool(AddrFile);
+          ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
           return STATUS_INVALID_PARAMETER;
       }
 
@@ -248,7 +249,7 @@ NTSTATUS FileOpenAddress(
            AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
            AddrFile->Port == 0xffff)
       {
-          exFreePool(AddrFile);
+          ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
           return STATUS_INVALID_PARAMETER;
       }
 
@@ -346,7 +347,7 @@ NTSTATUS FileCloseAddress(
   while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
     ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
     (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
-    /* exFreePool(ReceiveRequest); FIXME: WTF? */
+    /* ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG); FIXME: WTF? */
   }
 
   TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
@@ -355,7 +356,7 @@ NTSTATUS FileCloseAddress(
   while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
     SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
     (*SendRequest->Complete)(SendRequest->Context, STATUS_CANCELLED, 0);
-    exFreePool(SendRequest);
+    ExFreePoolWithTag(SendRequest, DATAGRAM_SEND_TAG);
   }
 
   /* Protocol specific handling */
@@ -454,7 +455,8 @@ NTSTATUS FileOpenControlChannel(
   PCONTROL_CHANNEL ControlChannel;
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-  ControlChannel = exAllocatePool(NonPagedPool, sizeof(*ControlChannel));
+  ControlChannel = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ControlChannel),
+                                         CONTROL_CHANNEL_TAG);
 
   if (!ControlChannel) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -494,7 +496,7 @@ NTSTATUS FileCloseControlChannel(
   PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;
   NTSTATUS Status = STATUS_SUCCESS;
 
-  exFreePool(ControlChannel);
+  ExFreePoolWithTag(ControlChannel, CONTROL_CHANNEL_TAG);
   Request->Handle.ControlChannel = NULL;
 
   return Status;

@@ -10,10 +10,6 @@
 
 #if DBG
 
-#define DEFINE_TAG ULONG Tag;
-#define INIT_TAG(_Object, _Tag) \
-  ((_Object)->Tag = (_Tag))
-
 #define DEBUG_REFCHECK(Object) {        \
    if ((Object)->RefCount <= 0) {       \
       TI_DbgPrint(MIN_TRACE, ("Object at (0x%X) has invalid reference count (%d).\n", \
@@ -63,9 +59,6 @@
 }
 
 #else /* DBG */
-
-#define DEFINE_TAG
-#define INIT_TAG(Object, Tag)
 
 /*
  * VOID ReferenceObject(
@@ -149,7 +142,6 @@ typedef struct _DATAGRAM_SEND_REQUEST {
 /* Transport address file context structure. The FileObject->FsContext2
    field holds a pointer to this structure */
 typedef struct _ADDRESS_FILE {
-    DEFINE_TAG
     LIST_ENTRY ListEntry;                 /* Entry on list */
     KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */

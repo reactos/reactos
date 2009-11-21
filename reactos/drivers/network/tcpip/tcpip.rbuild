@@ -28,7 +28,6 @@
 		<file>fileobjs.c</file>
 		<file>iinfo.c</file>
 		<file>info.c</file>
-		<file>irp.c</file>
 		<file>lock.c</file>
 		<file>main.c</file>
 		<file>ninfo.c</file>

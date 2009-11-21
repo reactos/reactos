@@ -71,8 +71,6 @@
 
 #define CP CHECKPOINT
 
-#include <memtrack.h>
-
 #define ASSERT_KM_POINTER(_x) \
    ASSERT(((PVOID)_x) != (PVOID)0xcccccccc); \
    ASSERT(((PVOID)_x) >= (PVOID)0x80000000);

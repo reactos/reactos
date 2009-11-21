@@ -35,7 +35,7 @@ VOID DGRemoveIRP(
         if (ReceiveRequest->Irp == Irp)
         {
             RemoveEntryList(&ReceiveRequest->ListEntry);
-            exFreePool(ReceiveRequest);
+            ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG);
             break;
         }
     }
@@ -197,7 +197,7 @@ VOID DGReceiveComplete(PVOID Context, NTSTATUS Status, ULONG Count) {
 	(PDATAGRAM_RECEIVE_REQUEST)Context;
     TI_DbgPrint(MAX_TRACE,("Called (%08x:%08x)\n", Status, Count));
     ReceiveRequest->UserComplete( ReceiveRequest->UserContext, Status, Count );
-    exFreePool( ReceiveRequest );
+    ExFreePoolWithTag( ReceiveRequest, DATAGRAM_RECV_TAG );
     TI_DbgPrint(MAX_TRACE,("Done\n"));
 }
 
@@ -236,7 +236,8 @@ NTSTATUS DGReceiveDatagram(
 
     KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
-    ReceiveRequest = exAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
+    ReceiveRequest = ExAllocatePoolWithTag(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST),
+                                           DATAGRAM_RECV_TAG);
     if (ReceiveRequest)
     {
 	/* Initialize a receive request */
@@ -250,7 +251,7 @@ NTSTATUS DGReceiveDatagram(
 				    &ReceiveRequest->RemotePort);
 	    if (!NT_SUCCESS(Status))
             {
-		exFreePool(ReceiveRequest);
+		ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG);
 	        KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 		return Status;
             }

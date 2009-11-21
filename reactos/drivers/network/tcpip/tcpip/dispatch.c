@@ -12,6 +12,25 @@
 #include "precomp.h"
 #include <pseh/pseh2.h>
 
+
+NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
+    KIRQL OldIrql;
+
+    Irp->IoStatus.Status = Status;
+
+    if( Status == STATUS_PENDING )
+	IoMarkIrpPending( Irp );
+    else {
+        IoAcquireCancelSpinLock(&OldIrql);
+	(void)IoSetCancelRoutine( Irp, NULL );
+        IoReleaseCancelSpinLock(OldIrql);
+
+	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+    }
+
+    return Status;
+}
+
 NTSTATUS DispPrepareIrpForCancel(
     PTRANSPORT_CONTEXT Context,
     PIRP Irp,
@@ -1253,7 +1272,7 @@ VOID DispTdiQueryInformationExComplete(
     QueryContext->Irp->IoStatus.Information = ByteCount;
     QueryContext->Irp->IoStatus.Status      = Status;
 
-    exFreePool(QueryContext);
+    ExFreePoolWithTag(QueryContext, QUERY_CONTEXT_TAG);
 }
 
 
@@ -1316,7 +1335,7 @@ NTSTATUS DispTdiQueryInformationEx(
             IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
         OutputBuffer = Irp->UserBuffer;
 
-        QueryContext = exAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
+        QueryContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(TI_QUERY_CONTEXT), QUERY_CONTEXT_TAG);
         if (QueryContext) {
 	    _SEH2_TRY {
                 InputMdl = IoAllocateMdl(InputBuffer,
@@ -1379,7 +1398,7 @@ NTSTATUS DispTdiQueryInformationEx(
                 IoFreeMdl(OutputMdl);
             }
 
-            exFreePool(QueryContext);
+            ExFreePoolWithTag(QueryContext, QUERY_CONTEXT_TAG);
         } else
             Status = STATUS_INSUFFICIENT_RESOURCES;
     } else if( InputBufferLength ==
@@ -1392,7 +1411,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
 	Size = 0;
 
-        QueryContext = exAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
+        QueryContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(TI_QUERY_CONTEXT), QUERY_CONTEXT_TAG);
         if (!QueryContext) return STATUS_INSUFFICIENT_RESOURCES;
 
 	_SEH2_TRY {
@@ -1412,7 +1431,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
 	if( !NT_SUCCESS(Status) || !InputMdl ) {
 	    if( InputMdl ) IoFreeMdl( InputMdl );
-	    exFreePool(QueryContext);
+	    ExFreePoolWithTag(QueryContext, QUERY_CONTEXT_TAG);
 	    return Status;
 	}
 

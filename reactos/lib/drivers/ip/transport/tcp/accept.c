@@ -118,7 +118,7 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
 
     if( Bucket->AssociatedEndpoint == Connection ) {
         RemoveEntryList( &Bucket->Entry );
-        exFreePool( Bucket );
+        ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
         break;
     }
 
@@ -148,7 +148,8 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
     KeReleaseSpinLock(&Listener->Lock, OldIrql);
 
     if( Status == STATUS_PENDING ) {
-        Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
+        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket),
+                                        TDI_BUCKET_TAG );
 
         if( Bucket ) {
             Bucket->AssociatedEndpoint = Connection;

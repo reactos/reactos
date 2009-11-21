@@ -15,7 +15,6 @@
  */
 #define AddrInitIPv4(IPAddress, RawAddress)           \
 {                                                     \
-    INIT_TAG((IPAddress), '4VPI');      \
     (IPAddress)->Type                = IP_ADDRESS_V4; \
     (IPAddress)->Address.IPv4Address = (RawAddress);  \
 }

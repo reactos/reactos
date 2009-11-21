@@ -1,6 +1,7 @@
 #include <limits.h>
 #include <ntddk.h>
 #include <ntifs.h>
+#include <tags.h>
 #include <tdi.h>
 #include <tdistat.h>
 #include <tcpip.h>
@@ -23,13 +24,11 @@
 #include <udp.h>
 #include <tcp.h>
 #include <arp.h>
-#include <irp.h>
 #include <tilists.h>
 #include <dispatch.h>
 #include <fileobjs.h>
 #include <lock.h>
 #include <wait.h>
-#include <memtrack.h>
 #include <oskittcp.h>
 #include <interface.h>
 #include <ports.h>
