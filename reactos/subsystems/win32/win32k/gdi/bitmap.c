@@ -130,6 +130,9 @@ HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
     SIZEL szSize;
     ULONG ulFormat;
     HBITMAP hbmDIB;
+    RGBQUAD *lpRGB = NULL;
+    PDC pDC;
+    SURFACE *dibSurf;
 
     /* Get DIB section size */
     szSize.cx = dib->dsBm.bmWidth;
@@ -145,6 +148,52 @@ HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
                              BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
                              0,
                              dib->dsBm.bmBits);
+
+    dib->dsBmih.biClrUsed = 0;
+    /* set number of entries in bmi.bmiColors table */
+    if (dib->dsBmih.biBitCount == 1)
+    {
+        dib->dsBmih.biClrUsed = 2;
+    }
+    else if (dib->dsBmih.biBitCount == 4)
+    {
+        dib->dsBmih.biClrUsed = 16;
+    }
+    else if (dib->dsBmih.biBitCount == 8)
+    {
+        dib->dsBmih.biClrUsed = 256;
+    }
+
+    dibSurf = SURFACE_Lock(hbmDIB);
+
+    if (dib->dsBmih.biClrUsed != 0)
+    {
+        if (usage == DIB_PAL_COLORS)
+        {
+            pDC = DC_Lock(physDev);
+            lpRGB = DIB_MapPaletteColors(pDC, bmi);
+            DC_Unlock(pDC);
+            dibSurf->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(dib->dsBmih.biClrUsed, lpRGB);
+        }
+        else
+        {
+            dibSurf->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(dib->dsBmih.biClrUsed, bmi->bmiColors);
+        }
+    }
+    else
+    {
+        dibSurf->hDIBPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
+                                                    dib->dsBitfields[0],
+                                                    dib->dsBitfields[1],
+                                                    dib->dsBitfields[2]);
+    }
+
+    SURFACE_Unlock(dibSurf);
+
+    if (lpRGB)
+    {
+        ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
+    }
 
     /* Map handles */
     GDI_AddHandleMapping(hbmDIB, hbitmap);

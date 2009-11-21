@@ -303,7 +303,7 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
 
     case BS_SOLID:
         DPRINT("BS_SOLID\n" );
-        pDC->pFillBrush = GreCreateSolidBrush(pLogBrush->lbColor);
+        pDC->pFillBrush = GreCreateSolidBrush(pDC->pBitmap->hDIBPalette, pLogBrush->lbColor);
         break;
 
     case BS_HATCHED:

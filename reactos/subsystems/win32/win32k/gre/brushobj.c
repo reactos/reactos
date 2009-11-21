@@ -187,7 +187,7 @@ GreCreateNullBrush()
 
 PBRUSHGDI
 NTAPI
-GreCreateSolidBrush(COLORREF crColor)
+GreCreateSolidBrush(HPALETTE hDIBPalette, COLORREF crColor)
 {
     PBRUSHGDI pBrush;
     XLATEOBJ *pXlate;
@@ -201,8 +201,11 @@ GreCreateSolidBrush(COLORREF crColor)
     pBrush->flAttrs |= GDIBRUSH_IS_SOLID;
 
     /* Set color */
-    // FIXME: Take hDIBPalette in account if it exists!
-    hPalette = pPrimarySurface->DevInfo.hpalDefault;
+    if(hDIBPalette)
+        hPalette = hDIBPalette;
+    else
+        hPalette = pPrimarySurface->DevInfo.hpalDefault;
+
     pXlate = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
     pBrush->BrushObj.iSolidColor = XLATEOBJ_iXlate(pXlate, crColor);
     EngDeleteXlate(pXlate);

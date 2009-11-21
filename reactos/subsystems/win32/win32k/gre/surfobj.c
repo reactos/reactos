@@ -333,7 +333,7 @@ GreSetPixel(
     PBRUSHGDI pOldBrush = pDC->pFillBrush;
 
     /* Create a solid brush with this color */
-    pDC->pFillBrush = GreCreateSolidBrush(crColor);
+    pDC->pFillBrush = GreCreateSolidBrush(pDC->pBitmap->hDIBPalette, crColor);
 
     /* Put pixel */
     GrePatBlt(pDC, x, y, 1, 1, PATCOPY, pDC->pFillBrush);

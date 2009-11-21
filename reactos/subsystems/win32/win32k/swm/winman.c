@@ -878,7 +878,7 @@ SwmDebugDrawWindows()
     RosGdiCreateDC(&RosDc, &ScreenDc, L"", L"", L"", NULL);
 
     /* Create a pen and select it */
-    Brush = GreCreateSolidBrush(RGB(0xFF, 0, 0));
+    Brush = GreCreateSolidBrush(NULL, RGB(0xFF, 0, 0));
 
     /* Get a pointer to the DC */
     pDC = DC_Lock(ScreenDc);
@@ -897,7 +897,7 @@ SwmDebugDrawWindows()
 
     /* Clear the area */
     BrushBack = pDC->pFillBrush;
-    pDC->pFillBrush = GreCreateSolidBrush(RGB(0,0,0));
+    pDC->pFillBrush = GreCreateSolidBrush(NULL, RGB(0,0,0));
     GreRectangle(pDC, 0, 0, 800/4, 600/4);
     GreFreeBrush(pDC->pFillBrush);
     pDC->pFillBrush = BrushBack;

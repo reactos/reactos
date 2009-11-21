@@ -60,7 +60,7 @@ PBRUSHGDI NTAPI
 GreCreateHatchedBrush(INT iHatchStyle, COLORREF crColor);
 
 PBRUSHGDI NTAPI
-GreCreateSolidBrush(COLORREF crColor);
+GreCreateSolidBrush(HPALETTE hDIBPalette, COLORREF crColor);
 
 PBRUSHGDI NTAPI
 GreCreatePatternBrush(HBITMAP hbmPattern);
