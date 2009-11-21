@@ -428,6 +428,7 @@ PREAUTO := \
 	$(BIN2RES_TARGET) \
 	$(BUILDNO_H) \
 	$(GENDIB_DIB_FILES) \
+	$(LOG2LINES_TARGET) \
 	$(NCI_SERVICE_FILES)
 
 ifeq ($(ARCH),powerpc)
