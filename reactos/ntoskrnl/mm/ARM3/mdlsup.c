@@ -581,7 +581,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
     NTSTATUS ProbeStatus;
     PMMPTE PointerPte, PointerPde, LastPte;
     PFN_NUMBER PageFrameIndex;
-    PMMPFN Pfn1;
     BOOLEAN UsePfnLock;
     KIRQL OldIrql;
     DPRINT("Probing MDL: %p\n", Mdl);
@@ -958,7 +957,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
             //
             // Get the PFN entry
             //
-            Pfn1 = MiGetPfnEntry(PageFrameIndex);
             ASSERT((CurrentProcess == NULL) || (UsePfnLock == FALSE));
             
             //

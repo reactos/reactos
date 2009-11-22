@@ -54,7 +54,6 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     PMMPTE PointerPte;
     PVOID BaseAddress;
     MMPTE TempPte;
-    PMMPFN Pfn1 = NULL;
     MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
     BOOLEAN IsIoMapping;
 
@@ -91,7 +90,6 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     //
     Pfn = (PFN_NUMBER)(PhysicalAddress.QuadPart >> PAGE_SHIFT);
     IsIoMapping = (Pfn > MmHighestPhysicalPage) ? TRUE : FALSE;
-    if (!IsIoMapping) Pfn1 = MiGetPfnEntry(Pfn);
     CacheAttribute = MiPlatformCacheAttributes[IsIoMapping][CacheType];
     
     //
@@ -159,10 +157,8 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     }
     
     //
-    // Sanity check and re-flush
+    // Re-flush
     //
-    Pfn = (PFN_NUMBER)(PhysicalAddress.QuadPart >> PAGE_SHIFT);
-    ASSERT((Pfn1 == MiGetPfnEntry(Pfn)) || (Pfn1 == NULL));
     KeFlushEntireTb(TRUE, TRUE);
     KeInvalidateAllCaches();
     
