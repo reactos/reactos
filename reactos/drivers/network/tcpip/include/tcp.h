@@ -96,8 +96,8 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
 				    PCONNECTION_ENDPOINT Connection,
 				    PTDI_REQUEST_KERNEL Request );
 NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog );
-VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
-			      PCONNECTION_ENDPOINT Connection );
+BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
+			         PCONNECTION_ENDPOINT Connection );
 NTSTATUS TCPAccept
 ( PTDI_REQUEST Request,
   PCONNECTION_ENDPOINT Listener,
@@ -179,6 +179,6 @@ NTSTATUS TCPStartup(
 NTSTATUS TCPShutdown(
   VOID);
 
-VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
+BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
 
 #endif /* __TCP_H */

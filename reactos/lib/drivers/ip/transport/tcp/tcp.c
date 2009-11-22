@@ -904,12 +904,13 @@ NTSTATUS TCPGetSockAddress
     return Status;
 }
 
-VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
+BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
     PLIST_ENTRY Entry;
     PLIST_ENTRY ListHead[4];
     KIRQL OldIrql;
     PTDI_BUCKET Bucket;
     UINT i = 0;
+    BOOLEAN Found = FALSE;
 
     ListHead[0] = &Endpoint->SendRequest;
     ListHead[1] = &Endpoint->ReceiveRequest;
@@ -929,12 +930,15 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
             {
                 RemoveEntryList( &Bucket->Entry );
                 ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
+                Found = TRUE;
                 break;
             }
         }
     }
 
     TcpipReleaseSpinLock( &Endpoint->Lock, OldIrql );
+
+    return Found;
 }
 
 /* EOF */

@@ -10,13 +10,14 @@
 
 #include "precomp.h"
 
-VOID DGRemoveIRP(
+BOOLEAN DGRemoveIRP(
     PADDRESS_FILE AddrFile,
     PIRP Irp)
 {
     PLIST_ENTRY ListEntry;
     PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
     KIRQL OldIrql;
+    BOOLEAN Found = FALSE;
 
     TI_DbgPrint(MAX_TRACE, ("Called (Cancel IRP %08x for file %08x).\n",
                             Irp, AddrFile));
@@ -36,6 +37,7 @@ VOID DGRemoveIRP(
         {
             RemoveEntryList(&ReceiveRequest->ListEntry);
             ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG);
+            Found = TRUE;
             break;
         }
     }
@@ -43,6 +45,8 @@ VOID DGRemoveIRP(
     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
     TI_DbgPrint(MAX_TRACE, ("Done.\n"));
+
+    return Found;
 }
 
 VOID DGDeliverData(

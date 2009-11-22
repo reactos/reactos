@@ -104,11 +104,12 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     return Status;
 }
 
-VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
+BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
                   PCONNECTION_ENDPOINT Connection ) {
     PLIST_ENTRY ListEntry;
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
+    BOOLEAN Found = FALSE;
 
     KeAcquireSpinLock(&Listener->Lock, &OldIrql);
 
@@ -119,6 +120,7 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     if( Bucket->AssociatedEndpoint == Connection ) {
         RemoveEntryList( &Bucket->Entry );
         ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
+        Found = TRUE;
         break;
     }
 
@@ -126,6 +128,8 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     }
 
     KeReleaseSpinLock(&Listener->Lock, OldIrql);
+
+    return Found;
 }
 
 NTSTATUS TCPAccept ( PTDI_REQUEST Request,

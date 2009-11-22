@@ -133,6 +133,7 @@ VOID NTAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
+    BOOLEAN DequeuedIrp = TRUE;
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
@@ -157,7 +158,7 @@ VOID NTAPI DispCancelRequest(
     switch(MinorFunction) {
     case TDI_SEND:
     case TDI_RECEIVE:
-	TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
+	DequeuedIrp = TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
         break;
 
     case TDI_SEND_DATAGRAM:
@@ -166,7 +167,7 @@ VOID NTAPI DispCancelRequest(
             break;
         }
 
-        DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
+        DequeuedIrp = DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
     case TDI_RECEIVE_DATAGRAM:
@@ -175,19 +176,21 @@ VOID NTAPI DispCancelRequest(
             break;
         }
 
-        DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
+        DequeuedIrp = DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
     case TDI_CONNECT:
-        TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
         break;
 
     default:
         TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
+        ASSERT(FALSE);
         break;
     }
 
-    IRPFinish(Irp, STATUS_CANCELLED);
+    if (DequeuedIrp)
+       IRPFinish(Irp, STATUS_CANCELLED);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -207,7 +210,6 @@ VOID NTAPI DispCancelListenRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     PCONNECTION_ENDPOINT Connection;
-    /*NTSTATUS Status = STATUS_SUCCESS;*/
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
@@ -228,13 +230,12 @@ VOID NTAPI DispCancelListenRequest(
     /* Try canceling the request */
     Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
 
-    TCPRemoveIRP(Connection, Irp);
-
-    TCPAbortListenForSocket(Connection->AddressFile->Listener,
-                            Connection);
-
-    Irp->IoStatus.Information = 0;
-    IRPFinish(Irp, STATUS_CANCELLED);
+    if (TCPAbortListenForSocket(Connection->AddressFile->Listener,
+                                Connection))
+    {
+        Irp->IoStatus.Information = 0;
+        IRPFinish(Irp, STATUS_CANCELLED);
+    }
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
