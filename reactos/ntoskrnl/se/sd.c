@@ -436,10 +436,10 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
                 {
                     PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
                     
-                    DescriptorCopy.Owner = (PSID)RelSD->Owner;
-                    DescriptorCopy.Group = (PSID)RelSD->Group;
-                    DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
-                    DescriptorCopy.Dacl = (PACL)RelSD->Dacl;
+                    DescriptorCopy.Owner = (PSID)((PCHAR)RelSD + RelSD->Owner);
+                    DescriptorCopy.Group = (PSID)((PCHAR)RelSD + RelSD->Group);
+                    DescriptorCopy.Sacl = (PACL)((PCHAR)RelSD + RelSD->Sacl);
+                    DescriptorCopy.Dacl = (PACL)((PCHAR)RelSD + RelSD->Dacl);
                 }
                 else
                 {
@@ -483,10 +483,10 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
             {
                 PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
                 
-                DescriptorCopy.Owner = (PSID)RelSD->Owner;
-                DescriptorCopy.Group = (PSID)RelSD->Group;
-                DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
-                DescriptorCopy.Dacl = (PACL)RelSD->Dacl;
+                DescriptorCopy.Owner = (PSID)((PCHAR)RelSD + RelSD->Owner);
+                DescriptorCopy.Group = (PSID)((PCHAR)RelSD + RelSD->Group);
+                DescriptorCopy.Sacl = (PACL)((PCHAR)RelSD + RelSD->Sacl);
+                DescriptorCopy.Dacl = (PACL)((PCHAR)RelSD + RelSD->Dacl);
             }
             else
             {
@@ -494,30 +494,6 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
                 DescriptorCopy.Group = OriginalSecurityDescriptor->Group;
                 DescriptorCopy.Sacl = OriginalSecurityDescriptor->Sacl;
                 DescriptorCopy.Dacl = OriginalSecurityDescriptor->Dacl;
-            }
-        }
-        
-        if(DescriptorCopy.Control & SE_SELF_RELATIVE)
-        {
-            /* in case we're dealing with a self-relative descriptor, do a basic convert
-             to an absolute descriptor. We do this so we can simply access the data
-             using the pointers without calculating them again. */
-            DescriptorCopy.Control &= ~SE_SELF_RELATIVE;
-            if(DescriptorCopy.Owner != NULL)
-            {
-                DescriptorCopy.Owner = (PSID)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Owner);
-            }
-            if(DescriptorCopy.Group != NULL)
-            {
-                DescriptorCopy.Group = (PSID)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Group);
-            }
-            if(DescriptorCopy.Dacl != NULL)
-            {
-                DescriptorCopy.Dacl = (PACL)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Dacl);
-            }
-            if(DescriptorCopy.Sacl != NULL)
-            {
-                DescriptorCopy.Sacl = (PACL)((ULONG_PTR)OriginalSecurityDescriptor + (ULONG_PTR)DescriptorCopy.Sacl);
             }
         }
         
