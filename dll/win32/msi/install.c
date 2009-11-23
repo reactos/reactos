@@ -934,8 +934,24 @@ UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
                   MSICOSTTREE iCostTree, INSTALLSTATE iState, LPINT piCost)
 {
-    FIXME("(%d %s %i %i %p): stub\n", hInstall, debugstr_a(szFeature),
-          iCostTree, iState, piCost);
+    LPWSTR szwFeature = NULL;
+    UINT rc;
+
+    szwFeature = strdupAtoW(szFeature);
+
+    rc = MsiGetFeatureCostW(hInstall, szwFeature, iCostTree, iState, piCost);
+
+    msi_free(szwFeature);
+
+    return rc;
+}
+
+UINT MSI_GetFeatureCost(MSIPACKAGE *package, MSIFEATURE *feature,
+                        MSICOSTTREE iCostTree, INSTALLSTATE iState,
+                        LPINT piCost)
+{
+    FIXME("(%s %i %i %p): not implemented yet\n",
+        debugstr_w(feature->Feature), iCostTree, iState, piCost);
     if (piCost) *piCost = 0;
     return ERROR_SUCCESS;
 }
@@ -946,10 +962,57 @@ UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
 UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
                   MSICOSTTREE iCostTree, INSTALLSTATE iState, LPINT piCost)
 {
-    FIXME("(%d %s %i %i %p): stub\n", hInstall, debugstr_w(szFeature),
+    MSIPACKAGE *package;
+    MSIFEATURE *feature;
+    UINT ret;
+
+    TRACE("(%d %s %i %i %p)\n", hInstall, debugstr_w(szFeature),
           iCostTree, iState, piCost);
-    if (piCost) *piCost = 0;
-    return ERROR_SUCCESS;
+
+    package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
+    if (!package)
+    {
+        HRESULT hr;
+        BSTR feature;
+        IWineMsiRemotePackage *remote_package;
+
+        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
+        if (!remote_package)
+            return ERROR_INVALID_HANDLE;
+
+        feature = SysAllocString(szFeature);
+        if (!feature)
+        {
+            IWineMsiRemotePackage_Release(remote_package);
+            return ERROR_OUTOFMEMORY;
+        }
+
+        hr = IWineMsiRemotePackage_GetFeatureCost(remote_package, feature,
+                                                  iCostTree, iState, piCost);
+
+        SysFreeString(feature);
+        IWineMsiRemotePackage_Release(remote_package);
+
+        if (FAILED(hr))
+        {
+            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+                return HRESULT_CODE(hr);
+
+            return ERROR_FUNCTION_FAILED;
+        }
+
+        return ERROR_SUCCESS;
+    }
+
+    feature = get_loaded_feature(package, szFeature);
+
+    if (feature)
+        ret = MSI_GetFeatureCost(package, feature, iCostTree, iState, piCost);
+    else
+        ret = ERROR_UNKNOWN_FEATURE;
+
+    msiobj_release( &package->hdr );
+    return ret;
 }
 
 /***********************************************************************

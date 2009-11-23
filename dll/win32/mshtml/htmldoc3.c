@@ -111,13 +111,13 @@ static HRESULT WINAPI HTMLDocument3_createTextNode(IHTMLDocument3 *iface, BSTR t
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(text), newTextNode);
 
-    if(!This->nsdoc) {
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
     nsAString_Init(&text_str, text);
-    nsres = nsIDOMHTMLDocument_CreateTextNode(This->nsdoc, &text_str, &nstext);
+    nsres = nsIDOMHTMLDocument_CreateTextNode(This->doc_node->nsdoc, &text_str, &nstext);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {
         ERR("CreateTextNode failed: %08x\n", nsres);
@@ -141,12 +141,17 @@ static HRESULT WINAPI HTMLDocument3_get_documentElement(IHTMLDocument3 *iface, I
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    if(!This->nsdoc) {
+    if(This->window->readystate == READYSTATE_UNINITIALIZED) {
+        *p = NULL;
+        return S_OK;
+    }
+
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
-    nsres = nsIDOMHTMLDocument_GetDocumentElement(This->nsdoc, &nselem);
+    nsres = nsIDOMHTMLDocument_GetDocumentElement(This->doc_node->nsdoc, &nselem);
     if(NS_FAILED(nsres)) {
         ERR("GetDocumentElement failed: %08x\n", nsres);
         return E_FAIL;
@@ -431,13 +436,13 @@ static HRESULT WINAPI HTMLDocument3_getElementById(IHTMLDocument3 *iface, BSTR v
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
 
-    if(!This->nsdoc) {
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
     nsAString_Init(&id_str, v);
-    nsres = nsIDOMHTMLDocument_GetElementById(This->nsdoc, &id_str, &nselem);
+    nsres = nsIDOMHTMLDocument_GetElementById(This->doc_node->nsdoc, &id_str, &nselem);
     nsAString_Finish(&id_str);
     if(FAILED(nsres)) {
         ERR("GetElementById failed: %08x\n", nsres);
@@ -468,14 +473,14 @@ static HRESULT WINAPI HTMLDocument3_getElementsByTagName(IHTMLDocument3 *iface, 
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pelColl);
 
-    if(!This->nsdoc) {
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
     nsAString_Init(&id_str, v);
     nsAString_Init(&ns_str, str);
-    nsres = nsIDOMHTMLDocument_GetElementsByTagNameNS(This->nsdoc, &ns_str, &id_str, &nslist);
+    nsres = nsIDOMHTMLDocument_GetElementsByTagNameNS(This->doc_node->nsdoc, &ns_str, &id_str, &nslist);
     nsAString_Finish(&id_str);
     nsAString_Finish(&ns_str);
     if(FAILED(nsres)) {
@@ -602,7 +607,7 @@ static HRESULT WINAPI HTMLDocument4_focus(IHTMLDocument4 *iface)
 
     TRACE("(%p)->()\n", This);
 
-    nsres = nsIDOMHTMLDocument_GetBody(This->nsdoc, &nsbody);
+    nsres = nsIDOMHTMLDocument_GetBody(This->doc_node->nsdoc, &nsbody);
     if(NS_FAILED(nsres) || !nsbody) {
         ERR("GetBody failed: %08x\n", nsres);
         return E_FAIL;

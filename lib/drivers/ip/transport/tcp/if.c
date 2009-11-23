@@ -37,8 +37,6 @@ POSK_IFADDR TCPGetInterfaceData( PIP_INTERFACE IF ) {
     struct sockaddr_in *dstaddr_in;
     ASSERT(ifaddr);
 
-    ASSERT_LOCKED(&TCPLock);
-
     RtlZeroMemory(ifaddr, sizeof(OSK_IFADDR) + 2 * sizeof( struct sockaddr_in ));
 
     addr_in = (struct sockaddr_in *)&ifaddr[1];
@@ -80,8 +78,6 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
     IP_ADDRESS Destination;
     struct sockaddr_in *addr_in = (struct sockaddr_in *)ReqAddr;
     POSK_IFADDR InterfaceData;
-
-    ASSERT_LOCKED(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCPIF,("called for type %d\n", FindType));
 

@@ -21,7 +21,7 @@ VOID NBCompleteSend( PVOID Context,
     ASSERT_KM_POINTER(Packet->Complete);
     Packet->Complete( Packet->Context, Packet->Packet, Status );
     TI_DbgPrint(MID_TRACE, ("Completed\n"));
-    exFreePool( Packet );
+    ExFreePoolWithTag( Packet, NEIGHBOR_PACKET_TAG );
     TI_DbgPrint(MID_TRACE, ("Freed\n"));
 }
 
@@ -84,7 +84,7 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
                           Packet->Packet,
                           ErrorCode );
 
-	exFreePool( Packet );
+	ExFreePoolWithTag( Packet, NEIGHBOR_PACKET_TAG );
     }
 }
 
@@ -128,7 +128,7 @@ VOID NBTimeout(VOID)
                     *PrevNCE = NCE->Next;
 
                     NBFlushPacketQueue(NCE, NDIS_STATUS_REQUEST_ABORTED);
-                    exFreePool(NCE);
+                    ExFreePoolWithTag(NCE, NCE_TAG);
 
                     continue;
                 }
@@ -179,7 +179,7 @@ VOID NBShutdown(VOID)
           /* Flush wait queue */
 	  NBFlushPacketQueue( CurNCE, NDIS_STATUS_NOT_ACCEPTED );
 
-          exFreePool(CurNCE);
+          ExFreePoolWithTag(CurNCE, NCE_TAG);
 
 	  CurNCE = NextNCE;
       }
@@ -241,15 +241,14 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
 	"LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
 	Interface, Address, LinkAddress, LinkAddressLength, State));
 
-  NCE = exAllocatePool
-      (NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
+  NCE = ExAllocatePoolWithTag
+      (NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength,
+       NCE_TAG);
   if (NCE == NULL)
     {
       TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
       return NULL;
     }
-
-  INIT_TAG(NCE, ' ECN');
 
   NCE->Interface = Interface;
   NCE->Address = *Address;
@@ -452,7 +451,8 @@ BOOLEAN NBQueuePacket(
       (DEBUG_NCACHE,
        ("Called. NCE (0x%X)  NdisPacket (0x%X).\n", NCE, NdisPacket));
 
-  Packet = exAllocatePool( NonPagedPool, sizeof(NEIGHBOR_PACKET) );
+  Packet = ExAllocatePoolWithTag( NonPagedPool, sizeof(NEIGHBOR_PACKET),
+                                  NEIGHBOR_PACKET_TAG );
   if( !Packet ) return FALSE;
 
   /* FIXME: Should we limit the number of queued packets? */
@@ -514,7 +514,7 @@ VOID NBRemoveNeighbor(
           *PrevNCE = CurNCE->Next;
 
 	  NBFlushPacketQueue( CurNCE, NDIS_STATUS_REQUEST_ABORTED );
-          exFreePool(CurNCE);
+          ExFreePoolWithTag(CurNCE, NCE_TAG);
 
 	  break;
         }

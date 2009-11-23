@@ -41,6 +41,7 @@ protected:
 
     VOID UpdateCommonBuffer(ULONG Position, ULONG MaxTransferCount);
     VOID UpdateCommonBufferOverlap(ULONG Position, ULONG MaxTransferCount);
+    VOID GeneratePositionEvents(IN ULONGLONG OldOffset, IN ULONGLONG NewOffset);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
 
@@ -49,6 +50,8 @@ protected:
     friend NTSTATUS NTAPI PinWaveCyclicDataFormat(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
     friend NTSTATUS NTAPI PinWaveCyclicAudioPosition(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
     friend NTSTATUS NTAPI PinWaveCyclicAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+    friend NTSTATUS NTAPI PinWaveCyclicAddEndOfStreamEvent(IN PIRP Irp, IN PKSEVENTDATA EventData, IN PKSEVENT_ENTRY EventEntry);
+    friend NTSTATUS NTAPI PinWaveCyclicAddLoopedStreamEvent(IN PIRP Irp, IN PKSEVENTDATA  EventData, IN PKSEVENT_ENTRY EventEntry);
 
     IPortWaveCyclic * m_Port;
     IPortFilterWaveCyclic * m_Filter;
@@ -76,6 +79,9 @@ protected:
     KSALLOCATOR_FRAMING m_AllocatorFraming;
     SUBDEVICE_DESCRIPTOR m_Descriptor;
 
+    KSPIN_LOCK m_EventListLock;
+    LIST_ENTRY m_EventList;
+
     ULONG m_Delay;
 
     LONG m_Ref;
@@ -84,18 +90,48 @@ protected:
 
 typedef struct
 {
-    CPortPinWaveCyclic *Pin;
-    PIO_WORKITEM WorkItem;
-    KSSTATE State;
-}SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
+    ULONG bLoopedStreaming;
+    ULONGLONG Position;
+}LOOPEDSTREAMING_EVENT_CONTEXT, *PLOOPEDSTREAMING_EVENT_CONTEXT;
+
+typedef struct
+{
+    ULONG bLoopedStreaming;
+}ENDOFSTREAM_EVENT_CONTEXT, *PENDOFSTREAM_EVENT_CONTEXT;
+
+
 
 NTSTATUS NTAPI PinWaveCyclicState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWaveCyclicDataFormat(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWaveCyclicAudioPosition(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWaveCyclicAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
+NTSTATUS NTAPI PinWaveCyclicAddEndOfStreamEvent(IN PIRP Irp, IN PKSEVENTDATA  EventData, IN PKSEVENT_ENTRY  EventEntry);
+NTSTATUS NTAPI PinWaveCyclicAddLoopedStreamEvent(IN PIRP Irp, IN PKSEVENTDATA  EventData, IN PKSEVENT_ENTRY EventEntry);
+
 
 DEFINE_KSPROPERTY_CONNECTIONSET(PinWaveCyclicConnectionSet, PinWaveCyclicState, PinWaveCyclicDataFormat, PinWaveCyclicAllocatorFraming);
 DEFINE_KSPROPERTY_AUDIOSET(PinWaveCyclicAudioSet, PinWaveCyclicAudioPosition);
+
+KSEVENT_ITEM PinWaveCyclicConnectionEventSet =
+{
+    KSEVENT_CONNECTION_ENDOFSTREAM,
+    sizeof(KSEVENTDATA),
+    sizeof(ENDOFSTREAM_EVENT_CONTEXT),
+    PinWaveCyclicAddEndOfStreamEvent,
+    0,
+    0
+};
+
+KSEVENT_ITEM PinWaveCyclicStreamingEventSet =
+{
+    KSEVENT_LOOPEDSTREAMING_POSITION,
+    sizeof(LOOPEDSTREAMING_POSITION_EVENT_DATA),
+    sizeof(LOOPEDSTREAMING_EVENT_CONTEXT),
+    PinWaveCyclicAddLoopedStreamEvent,
+    0,
+    0
+};
+
 
 KSPROPERTY_SET PinWaveCyclicPropertySet[] =
 {
@@ -114,6 +150,21 @@ KSPROPERTY_SET PinWaveCyclicPropertySet[] =
         NULL
     }
 };
+
+KSEVENT_SET PinWaveCyclicEventSet[] = 
+{
+    {
+        &KSEVENTSETID_LoopedStreaming,
+        sizeof(PinWaveCyclicStreamingEventSet) / sizeof(KSEVENT_ITEM),
+        (const KSEVENT_ITEM*)&PinWaveCyclicStreamingEventSet
+    },
+    {
+        &KSEVENTSETID_Connection,
+        sizeof(PinWaveCyclicConnectionEventSet) / sizeof(KSEVENT_ITEM),
+        (const KSEVENT_ITEM*)&PinWaveCyclicConnectionEventSet
+    }
+};
+
 
 //==================================================================================================================================
 
@@ -145,6 +196,82 @@ CPortPinWaveCyclic::QueryInterface(
 
 NTSTATUS
 NTAPI
+PinWaveCyclicAddEndOfStreamEvent(
+    IN PIRP Irp,
+    IN PKSEVENTDATA  EventData,
+    IN PKSEVENT_ENTRY EventEntry)
+{
+    PENDOFSTREAM_EVENT_CONTEXT Entry;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
+    CPortPinWaveCyclic *Pin;
+
+    // get sub device descriptor 
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    // sanity check 
+    PC_ASSERT(Descriptor);
+    PC_ASSERT(Descriptor->PortPin);
+    PC_ASSERT_IRQL(DISPATCH_LEVEL);
+
+    // cast to pin impl
+    Pin = (CPortPinWaveCyclic*)Descriptor->PortPin;
+
+     // get extra size
+    Entry = (PENDOFSTREAM_EVENT_CONTEXT)(EventEntry + 1);
+
+    // not a looped event
+    Entry->bLoopedStreaming = FALSE;
+
+    // insert item
+    (void)ExInterlockedInsertTailList(&Pin->m_EventList, &EventEntry->ListEntry, &Pin->m_EventListLock);
+
+    // done
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PinWaveCyclicAddLoopedStreamEvent(
+    IN PIRP Irp,
+    IN PKSEVENTDATA  EventData,
+    IN PKSEVENT_ENTRY EventEntry)
+{
+    PLOOPEDSTREAMING_POSITION_EVENT_DATA Data;
+    PLOOPEDSTREAMING_EVENT_CONTEXT Entry;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
+    CPortPinWaveCyclic *Pin;
+
+    // get sub device descriptor 
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSEVENT_ITEM_IRP_STORAGE(Irp);
+
+    // sanity check 
+    PC_ASSERT(Descriptor);
+    PC_ASSERT(Descriptor->PortPin);
+    PC_ASSERT_IRQL(DISPATCH_LEVEL);
+
+    // cast to pin impl
+    Pin = (CPortPinWaveCyclic*)Descriptor->PortPin;
+
+    // cast to looped event
+    Data = (PLOOPEDSTREAMING_POSITION_EVENT_DATA)EventData;
+
+    // get extra size
+    Entry = (PLOOPEDSTREAMING_EVENT_CONTEXT)(EventEntry + 1);
+
+    Entry->bLoopedStreaming = TRUE;
+    Entry->Position = Data->Position;
+
+    DPRINT1("Added event\n");
+
+    // insert item
+    (void)ExInterlockedInsertTailList(&Pin->m_EventList, &EventEntry->ListEntry, &Pin->m_EventListLock);
+
+    // done
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 PinWaveCyclicAllocatorFraming(
     IN PIRP Irp,
     IN PKSIDENTIFIER Request,
@@ -154,7 +281,7 @@ PinWaveCyclicAllocatorFraming(
     PSUBDEVICE_DESCRIPTOR Descriptor;
 
     // get sub device descriptor 
-    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSEVENT_ITEM_IRP_STORAGE(Irp);
 
     // sanity check 
     PC_ASSERT(Descriptor);
@@ -217,7 +344,7 @@ PinWaveCyclicAudioPosition(
         }
         else if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
-            Position->PlayOffset = Pin->m_Position.PlayOffset % Pin->m_Position.WriteOffset;
+            Position->PlayOffset = Pin->m_Position.PlayOffset;
             Position->WriteOffset = (ULONGLONG)Pin->m_IrpQueue->GetCurrentIrpOffset();
             DPRINT("Play %lu Write %lu\n", Position->PlayOffset, Position->WriteOffset);
         }
@@ -413,6 +540,66 @@ PinWaveCyclicDataFormat(
     return STATUS_NOT_SUPPORTED;
 }
 
+VOID
+CPortPinWaveCyclic::GeneratePositionEvents(
+    IN ULONGLONG OldOffset,
+    IN ULONGLONG NewOffset)
+{
+    PLIST_ENTRY Entry;
+    PKSEVENT_ENTRY EventEntry;
+    PLOOPEDSTREAMING_EVENT_CONTEXT Context;
+
+    // acquire event lock
+    KeAcquireSpinLockAtDpcLevel(&m_EventListLock);
+
+    // point to first entry
+    Entry = m_EventList.Flink;
+
+    while(Entry != &m_EventList)
+    {
+        // get event entry
+        EventEntry = (PKSEVENT_ENTRY)CONTAINING_RECORD(Entry, KSEVENT_ENTRY, ListEntry);
+
+        // get event entry context
+        Context = (PLOOPEDSTREAMING_EVENT_CONTEXT)(EventEntry + 1);
+
+        if (Context->bLoopedStreaming == TRUE)
+        {
+            if (NewOffset > OldOffset)
+            {
+                /* buffer progress no overlap */
+                if (OldOffset < Context->Position && Context->Position <= NewOffset)
+                {
+                    /* when someone eventually fixes sprintf... */
+                    DPRINT("Generating event at OldOffset %I64u\n", OldOffset);
+                    DPRINT("Context->Position %I64u\n", Context->Position);
+                    DPRINT("NewOffset %I64u\n", NewOffset);
+                    /* generate event */
+                    KsGenerateEvent(EventEntry);
+                }
+            }
+            else
+            {
+                /* buffer wrap-arround */
+                if (OldOffset < Context->Position || NewOffset > Context->Position)
+                {
+                    /* when someone eventually fixes sprintf... */
+                    DPRINT("Generating event at OldOffset %I64u\n", OldOffset);
+                    DPRINT("Context->Position %I64u\n", Context->Position);
+                    DPRINT("NewOffset %I64u\n", NewOffset);
+                    /* generate event */
+                    KsGenerateEvent(EventEntry);
+                }
+            }
+        }
+
+        // move to next entry
+        Entry = Entry->Flink;
+    }
+
+    // release lock
+    KeReleaseSpinLockFromDpcLevel(&m_EventListLock);
+}
 
 VOID
 CPortPinWaveCyclic::UpdateCommonBuffer(
@@ -450,6 +637,12 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
 
         BufferLength = Position - m_CommonBufferOffset;
         m_Position.PlayOffset += BytesToCopy;
+
+        if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
+        {
+            // normalize position
+            m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+        }
     }
 }
 
@@ -493,6 +686,13 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
         m_Position.PlayOffset += BytesToCopy;
 
         BufferLength = m_CommonBufferSize - m_CommonBufferOffset;
+
+        if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
+        {
+            // normalize position
+            m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+        }
+
     }
 
     if (Gap == Length)
@@ -516,6 +716,7 @@ CPortPinWaveCyclic::RequestService()
     NTSTATUS Status;
     PUCHAR Buffer;
     ULONG BufferSize;
+    ULONGLONG OldOffset, NewOffset;
 
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
@@ -528,6 +729,8 @@ CPortPinWaveCyclic::RequestService()
     Status = m_Stream->GetPosition(&Position);
     DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u Capture %u\n", Position, Buffer, m_CommonBufferSize, BufferSize, m_Capture);
 
+    OldOffset = m_Position.PlayOffset;
+
     if (Position < m_CommonBufferOffset)
     {
         UpdateCommonBufferOverlap(Position, m_FrameSize);
@@ -536,6 +739,10 @@ CPortPinWaveCyclic::RequestService()
     {
         UpdateCommonBuffer(Position, m_FrameSize);
     }
+
+    NewOffset = m_Position.PlayOffset;
+
+    GeneratePositionEvents(OldOffset, NewOffset);
 }
 
 NTSTATUS
@@ -568,16 +775,6 @@ CPortPinWaveCyclic::HandleKsProperty(
     DPRINT("IPortPinWave_HandleKsProperty entered\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
-    {
-        DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
-        
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
-    }
 
     Status = PcHandlePropertyWithTable(Irp,  m_Descriptor.FilterPropertySetCount, m_Descriptor.FilterPropertySet, &m_Descriptor);
 
@@ -629,6 +826,7 @@ CPortPinWaveCyclic::DeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status = STATUS_NOT_SUPPORTED;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -639,13 +837,11 @@ CPortPinWaveCyclic::DeviceIoControl(
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
     {
-        /// FIXME
-        /// handle enable event
+        Status = PcHandleEnableEventWithTable(Irp, &m_Descriptor);
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_DISABLE_EVENT)
     {
-        /// FIXME
-        /// handle disable event
+        Status = PcHandleDisableEventWithTable(Irp, &m_Descriptor);
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_RESET_STATE)
     {
@@ -661,13 +857,13 @@ CPortPinWaveCyclic::DeviceIoControl(
         return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
     }
 
-    UNIMPLEMENTED
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_UNSUCCESSFUL;
+    return Status;
 }
 
 NTSTATUS
@@ -912,8 +1108,8 @@ CPortPinWaveCyclic::Init(
     }
 #endif
 
-    DPRINT("CPortPinWaveCyclic::Init Status %x PinId %u Capture %u\n", Status, ConnectDetails->PinId, Capture);
-    DPRINT("Bits %u Samples %u Channels %u Tag %u FrameSize %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize);
+    DPRINT1("CPortPinWaveCyclic::Init Status %x PinId %u Capture %u\n", Status, ConnectDetails->PinId, Capture);
+    DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize);
 
     if (!NT_SUCCESS(Status))
         return Status;
@@ -933,6 +1129,10 @@ CPortPinWaveCyclic::Init(
         return Status;
     }
 
+    /* initialize event management */
+    InitializeListHead(&m_EventList);
+    KeInitializeSpinLock(&m_EventListLock);
+
     /* set up subdevice descriptor */
     RtlZeroMemory(&m_Descriptor, sizeof(SUBDEVICE_DESCRIPTOR));
     m_Descriptor.FilterPropertySet = PinWaveCyclicPropertySet;
@@ -941,6 +1141,10 @@ CPortPinWaveCyclic::Init(
     m_Descriptor.DeviceDescriptor = SubDeviceDescriptor->DeviceDescriptor;
     m_Descriptor.UnknownMiniport = SubDeviceDescriptor->UnknownMiniport;
     m_Descriptor.PortPin = (PVOID)this;
+    m_Descriptor.EventSetCount = sizeof(PinWaveCyclicEventSet) / sizeof(KSEVENT_SET);
+    m_Descriptor.EventSet = PinWaveCyclicEventSet;
+    m_Descriptor.EventList = &m_EventList;
+    m_Descriptor.EventListLock = &m_EventListLock;
 
     // release subdevice descriptor
     Subdevice->Release();
@@ -992,12 +1196,6 @@ CPortPinWaveCyclic::Init(
         return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlMoveMemory(m_Format, DataFormat, DataFormat->FormatSize);
-
-    PKSDATAFORMAT_WAVEFORMATEX Wave = (PKSDATAFORMAT_WAVEFORMATEX)m_Format;
-
-	DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u\n", Wave->WaveFormatEx.wBitsPerSample, Wave->WaveFormatEx.nSamplesPerSec, Wave->WaveFormatEx.nChannels, Wave->WaveFormatEx.wFormatTag, m_FrameSize);
-
-
 
     Port->AddRef();
     Filter->AddRef();

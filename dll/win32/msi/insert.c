@@ -114,8 +114,8 @@ static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
 
     for (i = 1; i <= col_count; i++)
     {
-        iv->sv->ops->get_column_info(iv->sv, i, &a, NULL, NULL);
-        iv->table->ops->get_column_info(iv->table, i, &b, NULL, NULL);
+        iv->sv->ops->get_column_info(iv->sv, i, &a, NULL, NULL, NULL);
+        iv->table->ops->get_column_info(iv->table, i, &b, NULL, NULL, NULL);
 
         res = lstrcmpW(a, b);
         msi_free(a);
@@ -157,13 +157,14 @@ static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
 
     for (colidx = 1; colidx <= val_count; colidx++)
     {
-        r = iv->sv->ops->get_column_info(iv->sv, colidx, &a, NULL, NULL);
+        r = iv->sv->ops->get_column_info(iv->sv, colidx, &a, NULL, NULL, NULL);
         if (r != ERROR_SUCCESS)
             goto err;
 
         for (i = 1; i <= col_count; i++)
         {
-            r = iv->table->ops->get_column_info(iv->table, i, &b, NULL, NULL);
+            r = iv->table->ops->get_column_info(iv->table, i, &b, NULL,
+                                                NULL, NULL);
             if (r != ERROR_SUCCESS)
                 goto err;
 
@@ -200,7 +201,8 @@ static BOOL row_has_null_primary_keys(MSIINSERTVIEW *iv, MSIRECORD *row)
 
     for (i = 1; i <= col_count; i++)
     {
-        r = iv->table->ops->get_column_info(iv->table, i, NULL, &type, NULL);
+        r = iv->table->ops->get_column_info(iv->table, i, NULL, &type,
+                                            NULL, NULL);
         if (r != ERROR_SUCCESS)
             return FALSE;
 
@@ -291,18 +293,19 @@ static UINT INSERT_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
 }
 
 static UINT INSERT_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
+                LPWSTR *table_name)
 {
     MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
     MSIVIEW *sv;
 
-    TRACE("%p %d %p %p %p\n", iv, n, name, type, temporary );
+    TRACE("%p %d %p %p %p %p\n", iv, n, name, type, temporary, table_name );
 
     sv = iv->sv;
     if( !sv )
         return ERROR_FUNCTION_FAILED;
 
-    return sv->ops->get_column_info( sv, n, name, type, temporary );
+    return sv->ops->get_column_info( sv, n, name, type, temporary, table_name );
 }
 
 static UINT INSERT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRECORD *rec, UINT row)

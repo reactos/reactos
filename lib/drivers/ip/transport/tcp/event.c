@@ -15,56 +15,34 @@ int TCPSocketState(void *ClientData,
            void *WhichConnection,
            OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = WhichConnection;
-    ULONG OldState;
-    KIRQL OldIrql;
 
-    ASSERT_LOCKED(&TCPLock);
-
-    TI_DbgPrint(MID_TRACE,("Flags: %c%c%c%c\n",
+    TI_DbgPrint(DEBUG_TCP,("Connection: %x Flags: %c%c%c%c%c\n",
+               Connection,
                NewState & SEL_CONNECT ? 'C' : 'c',
                NewState & SEL_READ    ? 'R' : 'r',
                NewState & SEL_FIN     ? 'F' : 'f',
-               NewState & SEL_ACCEPT  ? 'A' : 'a'));
+               NewState & SEL_ACCEPT  ? 'A' : 'a',
+               NewState & SEL_WRITE   ? 'W' : 'w'));
+
+    if (!Connection)
+    {
+        return 0;
+    }
+
+    if (ClientInfo.Unlocked)
+        KeAcquireSpinLockAtDpcLevel(&Connection->Lock);
 
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
                NewState, Connection,
-               Connection ? Connection->SignalState ^ NewState :
+               Connection->SignalState ^ NewState,
                NewState));
-
-    if( !Connection ) {
-    TI_DbgPrint(DEBUG_TCP,("Socket closing.\n"));
-    Connection = FileFindConnectionByContext( WhichSocket );
-    if( !Connection )
-        return 0;
-    else
-        TI_DbgPrint(DEBUG_TCP,("Found socket %x\n", Connection));
-    }
-
-    OldState = Connection->SignalState;
 
     Connection->SignalState |= NewState;
 
-    TcpipRecursiveMutexLeave(&TCPLock);
+    HandleSignalledConnection(Connection);
 
-    /* We must not be locked when handling signalled connections 
-     * because a completion could trigger another IOCTL which
-     * would cause a deadlock
-     */
-    NewState = HandleSignalledConnection(Connection);
-
-    TcpipRecursiveMutexEnter(&TCPLock);
-
-    KeAcquireSpinLock(&SignalledConnectionsLock, &OldIrql);
-    if ((NewState == 0 || NewState == SEL_FIN) &&
-        (OldState != 0 && OldState != SEL_FIN))
-    {
-        RemoveEntryList(&Connection->SignalList);
-    }
-    else if (NewState != 0 && NewState != SEL_FIN)
-    {
-        InsertTailList(&SignalledConnectionsList, &Connection->SignalList);
-    }
-    KeReleaseSpinLock(&SignalledConnectionsLock, OldIrql);
+    if (ClientInfo.Unlocked)
+        KeReleaseSpinLockFromDpcLevel(&Connection->Lock);
 
     return 0;
 }
@@ -85,8 +63,6 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     IP_PACKET Packet = { 0 };
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
-
-    ASSERT_LOCKED(&TCPLock);
 
     if( *data == 0x45 ) { /* IPv4 */
     Header = (PIPv4_HEADER)data;
@@ -150,8 +126,6 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 #define SIGNATURE_LARGE 'LLLL'
 #define SIGNATURE_SMALL 'SSSS'
 #define SIGNATURE_OTHER 'OOOO'
-#define TCP_TAG ' PCT'
-
 static NPAGED_LOOKASIDE_LIST LargeLookasideList;
 static NPAGED_LOOKASIDE_LIST SmallLookasideList;
 
@@ -163,14 +137,14 @@ TCPMemStartup( void )
                                      NULL,
                                      0,
                                      LARGE_SIZE + sizeof( ULONG ),
-                                     TCP_TAG,
+                                     OSK_LARGE_TAG,
                                      0 );
     ExInitializeNPagedLookasideList( &SmallLookasideList,
                                      NULL,
                                      NULL,
                                      0,
                                      SMALL_SIZE + sizeof( ULONG ),
-                                     TCP_TAG,
+                                     OSK_SMALL_TAG,
                                      0 );
 
     return STATUS_SUCCESS;
@@ -180,8 +154,6 @@ void *TCPMalloc( void *ClientData,
          OSK_UINT Bytes, OSK_PCHAR File, OSK_UINT Line ) {
     void *v;
     ULONG Signature;
-
-    ASSERT_LOCKED(&TCPLock);
 
 #if 0 != MEM_PROFILE
     static OSK_UINT *Sizes = NULL, *Counts = NULL, ArrayAllocated = 0;
@@ -242,13 +214,13 @@ void *TCPMalloc( void *ClientData,
     v = ExAllocateFromNPagedLookasideList( &LargeLookasideList );
     Signature = SIGNATURE_LARGE;
     } else {
-    v = ExAllocatePool( NonPagedPool, Bytes + sizeof(ULONG) );
+    v = ExAllocatePoolWithTag( NonPagedPool, Bytes + sizeof(ULONG),
+                               OSK_OTHER_TAG );
     Signature = SIGNATURE_OTHER;
     }
     if( v ) {
     *((ULONG *) v) = Signature;
     v = (void *)((char *) v + sizeof(ULONG));
-    TrackWithTag( FOURCC('f','b','s','d'), v, (PCHAR)File, Line );
     }
 
     return v;
@@ -258,9 +230,6 @@ void TCPFree( void *ClientData,
           void *data, OSK_PCHAR File, OSK_UINT Line ) {
     ULONG Signature;
 
-    ASSERT_LOCKED(&TCPLock);
-
-    UntrackFL( (PCHAR)File, Line, data, FOURCC('f','b','s','d') );
     data = (void *)((char *) data - sizeof(ULONG));
     Signature = *((ULONG *) data);
     if ( SIGNATURE_SMALL == Signature ) {
@@ -268,7 +237,7 @@ void TCPFree( void *ClientData,
     } else if ( SIGNATURE_LARGE == Signature ) {
     ExFreeToNPagedLookasideList( &LargeLookasideList, data );
     } else if ( SIGNATURE_OTHER == Signature ) {
-    ExFreePool( data );
+    ExFreePoolWithTag( data, OSK_OTHER_TAG );
     } else {
     ASSERT( FALSE );
     }

@@ -1146,6 +1146,7 @@ LookupAccountSidW(LPCWSTR pSystemName,
 	PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain = NULL;
 	PLSA_TRANSLATED_NAME TranslatedName = NULL;
 	BOOL ret;
+	DWORD dwAccountName, dwDomainName;
 
 	RtlInitUnicodeString ( &SystemName, pSystemName );
 	Status = LsaOpenPolicy ( &SystemName, &ObjectAttributes, POLICY_LOOKUP_NAMES, &PolicyHandle );
@@ -1166,49 +1167,37 @@ LookupAccountSidW(LPCWSTR pSystemName,
 	else
 	{
 		ret = TRUE;
-		if ( TranslatedName )
+		
+		dwAccountName = TranslatedName->Name.Length / sizeof(WCHAR);
+		if (ReferencedDomain && ReferencedDomain->Entries > 0)
+			dwDomainName = ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR);
+		else
+			dwDomainName = 0;
+		
+		if (*pdwAccountName <= dwAccountName || *pdwDomainName <= dwDomainName)
 		{
-			DWORD dwSrcLen = TranslatedName->Name.Length / sizeof(WCHAR);
-			if ( *pdwAccountName <= dwSrcLen )
-			{
-				*pdwAccountName = dwSrcLen + 1;
-				ret = FALSE;
-			}
-			else
-			{
-				*pdwAccountName = dwSrcLen;
-				if (pAccountName)
-				{
-					RtlCopyMemory ( pAccountName, TranslatedName->Name.Buffer, TranslatedName->Name.Length );
-					pAccountName[TranslatedName->Name.Length / sizeof(WCHAR)] = L'\0';
-				}
-			}
-			if ( peUse )
+			/* One or two buffers are insufficient, add up a char for NULL termination */
+			*pdwAccountName = dwAccountName + 1;
+			*pdwDomainName = dwDomainName + 1;
+			ret = FALSE;
+		} else
+		{
+			/* Lengths are sufficient, copy the data */
+			if(dwAccountName)
+				RtlCopyMemory(pAccountName, TranslatedName->Name.Buffer, dwAccountName * sizeof(WCHAR));
+			pAccountName[dwAccountName] = L'\0';
+			
+			if(dwDomainName)
+				RtlCopyMemory(pDomainName, ReferencedDomain->Domains[0].Name.Buffer, dwDomainName * sizeof(WCHAR));
+			pDomainName[dwDomainName] = L'\0';
+
+			*pdwAccountName = dwAccountName;
+			*pdwDomainName = dwDomainName;
+
+			if (peUse)
 				*peUse = TranslatedName->Use;
 		}
-
-		if ( ReferencedDomain )
-		{
-			if ( ReferencedDomain->Entries > 0 )
-			{
-				DWORD dwSrcLen = ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR);
-				if ( *pdwDomainName <= dwSrcLen )
-				{
-					*pdwDomainName = dwSrcLen + 1;
-					ret = FALSE;
-				}
-				else
-				{
-					*pdwDomainName = dwSrcLen;
-					if (pDomainName)
-					{
-					    RtlCopyMemory ( pDomainName, ReferencedDomain->Domains[0].Name.Buffer, ReferencedDomain->Domains[0].Name.Length );
-					    pDomainName[ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR)] = L'\0';
-					}
-				}
-			}
-		}
-
+		
 		if ( !ret )
 			SetLastError(ERROR_INSUFFICIENT_BUFFER);
 	}

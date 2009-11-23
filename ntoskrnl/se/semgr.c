@@ -348,22 +348,18 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     }
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * @implemented
- */
 BOOLEAN NTAPI
-SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-              IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-              IN BOOLEAN SubjectContextLocked,
-              IN ACCESS_MASK DesiredAccess,
-              IN ACCESS_MASK PreviouslyGrantedAccess,
-              OUT PPRIVILEGE_SET* Privileges,
-              IN PGENERIC_MAPPING GenericMapping,
-              IN KPROCESSOR_MODE AccessMode,
-              OUT PACCESS_MASK GrantedAccess,
-              OUT PNTSTATUS AccessStatus)
+SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+               IN BOOLEAN SubjectContextLocked,
+               IN ACCESS_MASK DesiredAccess,
+               IN ACCESS_MASK PreviouslyGrantedAccess,
+               OUT PPRIVILEGE_SET* Privileges,
+               IN PGENERIC_MAPPING GenericMapping,
+               IN KPROCESSOR_MODE AccessMode,
+               OUT PACCESS_MASK GrantedAccess,
+               OUT PNTSTATUS AccessStatus,
+               SECURITY_IMPERSONATION_LEVEL LowestImpersonationLevel)
 {
     LUID_AND_ATTRIBUTES Privilege;
     ACCESS_MASK CurrentAccess, AccessMask;
@@ -409,7 +405,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     /* Check for invalid impersonation */
     if ((SubjectSecurityContext->ClientToken) &&
-        (SubjectSecurityContext->ImpersonationLevel < SecurityImpersonation))
+        (SubjectSecurityContext->ImpersonationLevel < LowestImpersonationLevel))
     {
         *AccessStatus = STATUS_BAD_IMPERSONATION_LEVEL;
         return FALSE;
@@ -619,6 +615,37 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
 }
 
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+BOOLEAN NTAPI
+SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+              IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+              IN BOOLEAN SubjectContextLocked,
+              IN ACCESS_MASK DesiredAccess,
+              IN ACCESS_MASK PreviouslyGrantedAccess,
+              OUT PPRIVILEGE_SET* Privileges,
+              IN PGENERIC_MAPPING GenericMapping,
+              IN KPROCESSOR_MODE AccessMode,
+              OUT PACCESS_MASK GrantedAccess,
+              OUT PNTSTATUS AccessStatus)
+{
+    /* Call the internal function */
+    return SepAccessCheck(SecurityDescriptor,
+                          SubjectSecurityContext,
+                          SubjectContextLocked,
+                          DesiredAccess,
+                          PreviouslyGrantedAccess,
+                          Privileges,
+                          GenericMapping,
+                          AccessMode,
+                          GrantedAccess,
+                          AccessStatus,
+                          SecurityImpersonation);
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 /*
@@ -691,16 +718,17 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     SeLockSubjectContext(&SubjectSecurityContext);
 
     /* Now perform the access check */
-    SeAccessCheck(SecurityDescriptor,
-                  &SubjectSecurityContext,
-                  TRUE,
-                  DesiredAccess,
-                  0,
-                  &PrivilegeSet, //FIXME
-                  GenericMapping,
-                  PreviousMode,
-                  GrantedAccess,
-                  AccessStatus);
+    SepAccessCheck(SecurityDescriptor,
+                   &SubjectSecurityContext,
+                   TRUE,
+                   DesiredAccess,
+                   0,
+                   &PrivilegeSet, //FIXME
+                   GenericMapping,
+                   PreviousMode,
+                   GrantedAccess,
+                   AccessStatus,
+                   SecurityIdentification);
 
     /* Unlock subject context and dereference the token */
     SeUnlockSubjectContext(&SubjectSecurityContext);

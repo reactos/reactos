@@ -145,6 +145,41 @@ static const IPSFactoryBufferVtbl CStdPSFactory_Vtbl =
   CStdPSFactory_CreateStub
 };
 
+
+static void init_psfactory( CStdPSFactoryBuffer *psfac, const ProxyFileInfo **file_list )
+{
+    DWORD i, j, k;
+
+    psfac->lpVtbl = &CStdPSFactory_Vtbl;
+    psfac->RefCount = 0;
+    psfac->pProxyFileList = file_list;
+    for (i = 0; file_list[i]; i++)
+    {
+        const PCInterfaceProxyVtblList *proxies = file_list[i]->pProxyVtblList;
+        const PCInterfaceStubVtblList *stubs = file_list[i]->pStubVtblList;
+
+        for (j = 0; j < file_list[i]->TableSize; j++)
+        {
+            /* FIXME: i think that different vtables should be copied for
+             * async interfaces */
+            void * const *pSrcRpcStubVtbl = (void * const *)&CStdStubBuffer_Vtbl;
+            void **pRpcStubVtbl = (void **)&stubs[j]->Vtbl;
+
+            if (file_list[i]->pDelegatedIIDs && file_list[i]->pDelegatedIIDs[j])
+            {
+                void **vtbl = proxies[j]->Vtbl;
+                if (file_list[i]->TableVersion > 1) vtbl++;
+                fill_delegated_proxy_table( (IUnknownVtbl *)vtbl, stubs[j]->header.DispatchTableCount );
+                pSrcRpcStubVtbl = (void * const *)&CStdStubBuffer_Delegating_Vtbl;
+            }
+
+            for (k = 0; k < sizeof(IRpcStubBufferVtbl)/sizeof(void *); k++)
+                if (!pRpcStubVtbl[k]) pRpcStubVtbl[k] = pSrcRpcStubVtbl[k];
+        }
+    }
+}
+
+
 /***********************************************************************
  *           NdrDllGetClassObject [RPCRT4.@]
  */
@@ -158,35 +193,8 @@ HRESULT WINAPI NdrDllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv,
     pPSFactoryBuffer);
 
   *ppv = NULL;
-  if (!pPSFactoryBuffer->lpVtbl) {
-    const ProxyFileInfo **pProxyFileList2;
-    DWORD max_delegating_vtbl_size = 0;
-    pPSFactoryBuffer->lpVtbl = &CStdPSFactory_Vtbl;
-    pPSFactoryBuffer->RefCount = 0;
-    pPSFactoryBuffer->pProxyFileList = pProxyFileList;
-    for (pProxyFileList2 = pProxyFileList; *pProxyFileList2; pProxyFileList2++) {
-      int i;
-      for (i = 0; i < (*pProxyFileList2)->TableSize; i++) {
-        /* FIXME: i think that different vtables should be copied for
-         * async interfaces */
-        void * const *pSrcRpcStubVtbl = (void * const *)&CStdStubBuffer_Vtbl;
-        void **pRpcStubVtbl = (void **)&(*pProxyFileList2)->pStubVtblList[i]->Vtbl;
-        unsigned int j;
+  if (!pPSFactoryBuffer->lpVtbl) init_psfactory( pPSFactoryBuffer, pProxyFileList );
 
-        if ((*pProxyFileList2)->pDelegatedIIDs && (*pProxyFileList2)->pDelegatedIIDs[i]) {
-          pSrcRpcStubVtbl = (void * const *)&CStdStubBuffer_Delegating_Vtbl;
-          if ((*pProxyFileList2)->pStubVtblList[i]->header.DispatchTableCount > max_delegating_vtbl_size)
-            max_delegating_vtbl_size = (*pProxyFileList2)->pStubVtblList[i]->header.DispatchTableCount;
-        }
-
-        for (j = 0; j < sizeof(IRpcStubBufferVtbl)/sizeof(void *); j++)
-          if (!pRpcStubVtbl[j])
-            pRpcStubVtbl[j] = pSrcRpcStubVtbl[j];
-      }
-    }
-    if(max_delegating_vtbl_size > 0)
-      create_delegating_vtbl(max_delegating_vtbl_size);
-  }
   if (pclsid && IsEqualGUID(rclsid, pclsid))
     return IPSFactoryBuffer_QueryInterface((LPPSFACTORYBUFFER)pPSFactoryBuffer, iid, ppv);
   else {
@@ -207,7 +215,7 @@ HRESULT WINAPI NdrDllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv,
  */
 HRESULT WINAPI NdrDllCanUnloadNow(CStdPSFactoryBuffer *pPSFactoryBuffer)
 {
-  return !(pPSFactoryBuffer->RefCount);
+  return pPSFactoryBuffer->RefCount != 0 ? S_FALSE : S_OK;
 }
 
 
@@ -266,7 +274,7 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
   if (len && len < sizeof(module)) {
       TRACE("registering CLSID %s => %s\n", debugstr_w(clsid), debugstr_w(module));
       if (RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key) == ERROR_SUCCESS) {
-          RegSetValueExW(subkey, NULL, 0, REG_SZ, (const BYTE *)psfactoryW, sizeof(psfactoryW));
+          RegSetValueExW(key, NULL, 0, REG_SZ, (const BYTE *)psfactoryW, sizeof(psfactoryW));
           if (RegCreateKeyW(key, inprocserverW, &subkey) == ERROR_SUCCESS) {
               RegSetValueExW(subkey, NULL, 0, REG_SZ, (LPBYTE)module, (strlenW(module)+1)*sizeof(WCHAR));
               RegSetValueExW(subkey, threadingmodelW, 0, REG_SZ, (const BYTE *)bothW, sizeof(bothW));

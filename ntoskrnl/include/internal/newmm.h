@@ -28,6 +28,8 @@ extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
 
 extern LIST_ENTRY MmLoadedUserImageList;
 
+extern KMUTANT MmSystemLoadLock;
+
 extern ULONG MmNumberOfPagingFiles;
 
 extern PVOID MmUnloadedDrivers;

@@ -1582,7 +1582,8 @@ static UINT TABLE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *col
 }
 
 static UINT TABLE_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
+                LPWSTR *table_name )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
 
@@ -1595,6 +1596,13 @@ static UINT TABLE_get_column_info( struct tagMSIVIEW *view,
     {
         *name = strdupW( tv->columns[n-1].colname );
         if( !*name )
+            return ERROR_FUNCTION_FAILED;
+    }
+
+    if( table_name )
+    {
+        *table_name = strdupW( tv->columns[n-1].tablename );
+        if( !*table_name )
             return ERROR_FUNCTION_FAILED;
     }
 
@@ -2118,6 +2126,7 @@ done:
 static UINT order_add_column(struct tagMSIVIEW *view, MSIORDERINFO *order, LPCWSTR name)
 {
     UINT n, r, count;
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
 
     r = TABLE_get_dimensions(view, NULL, &count);
     if (r != ERROR_SUCCESS)
@@ -2126,7 +2135,7 @@ static UINT order_add_column(struct tagMSIVIEW *view, MSIORDERINFO *order, LPCWS
     if (order->num_cols >= count)
         return ERROR_FUNCTION_FAILED;
 
-    r = VIEW_find_column(view, name, &n);
+    r = VIEW_find_column(view, name, tv->name, &n);
     if (r != ERROR_SUCCESS)
         return r;
 

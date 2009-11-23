@@ -391,9 +391,6 @@ static HRESULT register_server(BOOL do_register)
     if(FAILED(hres))
         ERR("typelib registration failed: %08x\n", hres);
 
-    if(do_register && SUCCEEDED(hres))
-        load_gecko(TRUE);
-
     return hres;
 }
 
@@ -405,7 +402,13 @@ static HRESULT register_server(BOOL do_register)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    return register_server(TRUE);
+    HRESULT hres;
+
+    hres = register_server(TRUE);
+    if(SUCCEEDED(hres))
+        load_gecko(FALSE);
+
+    return hres;
 }
 
 /***********************************************************************

@@ -12,6 +12,25 @@
 #include "precomp.h"
 #include <pseh/pseh2.h>
 
+
+NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
+    KIRQL OldIrql;
+
+    Irp->IoStatus.Status = Status;
+
+    if( Status == STATUS_PENDING )
+	IoMarkIrpPending( Irp );
+    else {
+        IoAcquireCancelSpinLock(&OldIrql);
+	(void)IoSetCancelRoutine( Irp, NULL );
+        IoReleaseCancelSpinLock(OldIrql);
+
+	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+    }
+
+    return Status;
+}
+
 NTSTATUS DispPrepareIrpForCancel(
     PTRANSPORT_CONTEXT Context,
     PIRP Irp,
@@ -72,7 +91,6 @@ VOID DispDataRequestComplete(
 {
     PIRP Irp;
     PIO_STACK_LOCATION IrpSp;
-    PTRANSPORT_CONTEXT TranContext;
     KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_IRP, ("Called for irp %x (%x, %d).\n",
@@ -80,7 +98,6 @@ VOID DispDataRequestComplete(
 
     Irp         = Context;
     IrpSp       = IoGetCurrentIrpStackLocation(Irp);
-    TranContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
 
     IoAcquireCancelSpinLock(&OldIrql);
 
@@ -116,6 +133,9 @@ VOID NTAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
+    BOOLEAN DequeuedIrp = TRUE;
+
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -138,7 +158,7 @@ VOID NTAPI DispCancelRequest(
     switch(MinorFunction) {
     case TDI_SEND:
     case TDI_RECEIVE:
-	TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
+	DequeuedIrp = TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
         break;
 
     case TDI_SEND_DATAGRAM:
@@ -147,7 +167,7 @@ VOID NTAPI DispCancelRequest(
             break;
         }
 
-        DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
+        DequeuedIrp = DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
     case TDI_RECEIVE_DATAGRAM:
@@ -156,20 +176,21 @@ VOID NTAPI DispCancelRequest(
             break;
         }
 
-        DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
+        DequeuedIrp = DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
     case TDI_CONNECT:
-        TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
         break;
 
     default:
         TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
+        ASSERT(FALSE);
         break;
     }
 
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
-    IRPFinish(Irp, STATUS_CANCELLED);
+    if (DequeuedIrp)
+       IRPFinish(Irp, STATUS_CANCELLED);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -189,7 +210,8 @@ VOID NTAPI DispCancelListenRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     PCONNECTION_ENDPOINT Connection;
-    /*NTSTATUS Status = STATUS_SUCCESS;*/
+
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -208,16 +230,12 @@ VOID NTAPI DispCancelListenRequest(
     /* Try canceling the request */
     Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
 
-    TCPRemoveIRP(Connection, Irp);
-
-    TCPAbortListenForSocket(
-	    Connection->AddressFile->Listener,
-	    Connection );
-
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-    Irp->IoStatus.Information = 0;
-    IRPFinish(Irp, STATUS_CANCELLED);
+    if (TCPAbortListenForSocket(Connection->AddressFile->Listener,
+                                Connection))
+    {
+        Irp->IoStatus.Information = 0;
+        IRPFinish(Irp, STATUS_CANCELLED);
+    }
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -256,6 +274,7 @@ NTSTATUS DispTdiAssociateAddress(
   PFILE_OBJECT FileObject;
   PADDRESS_FILE AddrFile = NULL;
   NTSTATUS Status;
+  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -275,11 +294,6 @@ NTSTATUS DispTdiAssociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
-  if (Connection->AddressFile) {
-    TI_DbgPrint(MID_TRACE, ("An address file is already asscociated.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
-
   Parameters = (PTDI_REQUEST_KERNEL_ASSOCIATE)&IrpSp->Parameters;
 
   Status = ObReferenceObjectByHandle(
@@ -295,8 +309,18 @@ NTSTATUS DispTdiAssociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
+  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
+  if (Connection->AddressFile) {
+    ObDereferenceObject(FileObject);
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    TI_DbgPrint(MID_TRACE, ("An address file is already asscociated.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
   if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
     ObDereferenceObject(FileObject);
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
     TI_DbgPrint(MID_TRACE, ("Bad address file object. Magic (0x%X).\n",
       FileObject->FsContext2));
     return STATUS_INVALID_PARAMETER;
@@ -307,16 +331,20 @@ NTSTATUS DispTdiAssociateAddress(
   TranContext = FileObject->FsContext;
   if (!TranContext) {
     ObDereferenceObject(FileObject);
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 
   AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
   if (!AddrFile) {
+      KeReleaseSpinLock(&Connection->Lock, OldIrql);
       ObDereferenceObject(FileObject);
       TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
       return STATUS_INVALID_PARAMETER;
   }
+
+  KeAcquireSpinLockAtDpcLevel(&AddrFile->Lock);
 
   Connection->AddressFile = AddrFile;
 
@@ -325,6 +353,9 @@ NTSTATUS DispTdiAssociateAddress(
 
   /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
   ObDereferenceObject(FileObject);
+
+  KeReleaseSpinLockFromDpcLevel(&AddrFile->Lock);
+  KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
   return Status;
 }
@@ -406,6 +437,7 @@ NTSTATUS DispTdiDisassociateAddress(
   PCONNECTION_ENDPOINT Connection;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
+  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -425,16 +457,25 @@ NTSTATUS DispTdiDisassociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
+  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
   if (!Connection->AddressFile) {
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
     TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 
+  KeAcquireSpinLockAtDpcLevel(&Connection->AddressFile->Lock);
+
   /* Remove this connection from the address file */
   Connection->AddressFile->Connection = NULL;
 
+  KeReleaseSpinLockFromDpcLevel(&Connection->AddressFile->Lock);
+
   /* Remove the address file from this connection */
   Connection->AddressFile = NULL;
+
+  KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
   return STATUS_SUCCESS;
 }
@@ -512,6 +553,7 @@ NTSTATUS DispTdiListen(
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
   NTSTATUS Status = STATUS_SUCCESS;
+  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -537,14 +579,22 @@ NTSTATUS DispTdiListen(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  TI_DbgPrint(MIN_TRACE, ("Connection->AddressFile: %x\n",
-			  Connection->AddressFile ));
-  ASSERT(Connection->AddressFile);
-
   Status = DispPrepareIrpForCancel
       (TranContext->Handle.ConnectionContext,
        Irp,
        (PDRIVER_CANCEL)DispCancelListenRequest);
+
+  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
+  if (Connection->AddressFile == NULL)
+  {
+     TI_DbgPrint(MID_TRACE, ("No associated address file\n"));
+     KeReleaseSpinLock(&Connection->Lock, OldIrql);
+     Status = STATUS_INVALID_PARAMETER;
+     goto done;
+  }
+
+  KeAcquireSpinLockAtDpcLevel(&Connection->AddressFile->Lock);
 
   /* Listening will require us to create a listening socket and store it in
    * the address file.  It will be signalled, and attempt to complete an irp
@@ -581,6 +631,9 @@ NTSTATUS DispTdiListen(
 	    DispDataRequestComplete,
 	    Irp );
   }
+
+  KeReleaseSpinLockFromDpcLevel(&Connection->AddressFile->Lock);
+  KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
 done:
   if (Status != STATUS_PENDING) {
@@ -658,12 +711,10 @@ NTSTATUS DispTdiQueryInformation(
           case TDI_CONNECTION_FILE:
             Endpoint =
 				(PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-			TCPGetSockAddress( Endpoint, (PTRANSPORT_ADDRESS)Address, FALSE );
-			DbgPrint("Returning socket address %x\n", Address->Address[0].Address[0].in_addr);
 			RtlZeroMemory(
 				&Address->Address[0].Address[0].sin_zero,
 				sizeof(Address->Address[0].Address[0].sin_zero));
-			return STATUS_SUCCESS;
+			return TCPGetSockAddress( Endpoint, (PTRANSPORT_ADDRESS)Address, FALSE );
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
@@ -991,8 +1042,10 @@ NTSTATUS DispTdiSendDatagram(
                 DataBuffer,
                 BufferSize,
                 &Irp->IoStatus.Information);
-        else
+        else {
             Status = STATUS_UNSUCCESSFUL;
+            ASSERT(FALSE);
+        }
     }
 
 done:
@@ -1044,7 +1097,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
   Parameters = (PTDI_REQUEST_KERNEL_SET_EVENT)&IrpSp->Parameters;
   Status     = STATUS_SUCCESS;
 
-  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+  KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
   /* Set the event handler. if an event handler is associated with
      a specific event, it's flag (RegisteredXxxHandler) is TRUE.
@@ -1165,7 +1218,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
     Status = STATUS_INVALID_PARAMETER;
   }
 
-  TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
   return Status;
 }
@@ -1200,11 +1253,10 @@ VOID DispTdiQueryInformationExComplete(
  */
 {
     PTI_QUERY_CONTEXT QueryContext;
-    UINT Count = 0;
 
     QueryContext = (PTI_QUERY_CONTEXT)Context;
     if (NT_SUCCESS(Status)) {
-        Count = CopyBufferToBufferChain(
+        CopyBufferToBufferChain(
             QueryContext->InputMdl,
             FIELD_OFFSET(TCP_REQUEST_QUERY_INFORMATION_EX, Context),
             (PCHAR)&QueryContext->QueryInfo.Context,
@@ -1221,7 +1273,7 @@ VOID DispTdiQueryInformationExComplete(
     QueryContext->Irp->IoStatus.Information = ByteCount;
     QueryContext->Irp->IoStatus.Status      = Status;
 
-    exFreePool(QueryContext);
+    ExFreePoolWithTag(QueryContext, QUERY_CONTEXT_TAG);
 }
 
 
@@ -1284,7 +1336,7 @@ NTSTATUS DispTdiQueryInformationEx(
             IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
         OutputBuffer = Irp->UserBuffer;
 
-        QueryContext = exAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
+        QueryContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(TI_QUERY_CONTEXT), QUERY_CONTEXT_TAG);
         if (QueryContext) {
 	    _SEH2_TRY {
                 InputMdl = IoAllocateMdl(InputBuffer,
@@ -1347,7 +1399,7 @@ NTSTATUS DispTdiQueryInformationEx(
                 IoFreeMdl(OutputMdl);
             }
 
-            exFreePool(QueryContext);
+            ExFreePoolWithTag(QueryContext, QUERY_CONTEXT_TAG);
         } else
             Status = STATUS_INSUFFICIENT_RESOURCES;
     } else if( InputBufferLength ==
@@ -1360,7 +1412,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
 	Size = 0;
 
-        QueryContext = exAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
+        QueryContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(TI_QUERY_CONTEXT), QUERY_CONTEXT_TAG);
         if (!QueryContext) return STATUS_INSUFFICIENT_RESOURCES;
 
 	_SEH2_TRY {
@@ -1380,7 +1432,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
 	if( !NT_SUCCESS(Status) || !InputMdl ) {
 	    if( InputMdl ) IoFreeMdl( InputMdl );
-	    exFreePool(QueryContext);
+	    ExFreePoolWithTag(QueryContext, QUERY_CONTEXT_TAG);
 	    return Status;
 	}
 

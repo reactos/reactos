@@ -306,7 +306,7 @@ static const NodeImplVtbl HTMLScriptElementImplVtbl = {
     HTMLScriptElement_destructor
 };
 
-HTMLElement *HTMLScriptElement_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLScriptElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLScriptElement *ret = heap_alloc_zero(sizeof(HTMLScriptElement));
     nsresult nsres;
@@ -314,7 +314,7 @@ HTMLElement *HTMLScriptElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLScriptElementVtbl = &HTMLScriptElementVtbl;
     ret->element.node.vtbl = &HTMLScriptElementImplVtbl;
 
-    HTMLElement_Init(&ret->element, NULL);
+    HTMLElement_Init(&ret->element, doc, nselem, NULL);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLScriptElement, (void**)&ret->nsscript);
     if(NS_FAILED(nsres))

@@ -406,11 +406,12 @@ static const NodeImplVtbl HTMLTextAreaElementImplVtbl = {
     HTMLTextAreaElement_QI,
     HTMLTextAreaElement_destructor,
     NULL,
+    NULL,
     HTMLTextAreaElementImpl_put_disabled,
     HTMLTextAreaElementImpl_get_disabled
 };
 
-HTMLElement *HTMLTextAreaElement_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLTextAreaElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLTextAreaElement *ret = heap_alloc_zero(sizeof(HTMLTextAreaElement));
     nsresult nsres;
@@ -418,7 +419,7 @@ HTMLElement *HTMLTextAreaElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLTextAreaElementVtbl = &HTMLTextAreaElementVtbl;
     ret->element.node.vtbl = &HTMLTextAreaElementImplVtbl;
 
-    HTMLElement_Init(&ret->element, NULL);
+    HTMLElement_Init(&ret->element, doc, nselem, NULL);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTextAreaElement,
                                              (void**)&ret->nstextarea);

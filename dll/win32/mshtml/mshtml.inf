@@ -3,7 +3,7 @@ Signature="$CHICAGO$"
 
 
 [RegisterDll]
-AddReg=Classes.Reg, Protocols.Reg, IE.Reg, FileAssoc.Reg
+AddReg=Classes.Reg, Protocols.Reg, IE.Reg, FileAssoc.Reg, WineGecko.Reg
 
 
 [UnregisterDll]
@@ -270,7 +270,17 @@ HKLM,"Software\Microsoft\Internet Explorer\AboutURLs","mozilla",2,"res://mshtml.
 HKLM,"Software\Microsoft\Internet Explorer\Default Behaviors","VML",,  "CLSID:10072CEC-8CC1-11D1-986E-00A0C955B42E"
 HKLM,"Software\Microsoft\Internet Explorer\Default Behaviors","TIME",, "CLSID:476C391C-3E0D-11D2-B948-00C04FA32195"
 
+
+[WineGecko.Reg]
+HKCU,Software\Wine\MSHTML,"GeckoUrl",,"http://source.winehq.org/winegecko.php"
+
+
 [FileAssoc.Reg]
+
+;; AVI
+HKCR,"MIME\Database\Content Type\video/avi","CLSID",,"{CD3AFA88-B84F-48F0-9393-7EDC34128127}"
+HKCR,"MIME\Database\Content Type\video/avi","Extension",,".avi"
+HKCR,".avi","Content Type",,"video/avi"
 
 ;; BMP
 HKCR,"MIME\Database\Content Type\image/bmp","Extension",,".bmp"
@@ -284,6 +294,14 @@ HKCR,".css","Content Type",,"text/css"
 
 ;; DIB
 HKCR,".dib","Content Type",,"image/bmp"
+
+;; DLL
+HKCR,".dll","Content Type",,"application/x-msdownload"
+HKCR,".dll",,,"dllfile"
+
+;; EXE
+HKCR,".exe","Content Type",,"application/x-msdownload"
+HKCR,".exe",,,"exefile"
 
 ;; GIF
 HKCR,"MIME\Database\Content Type\image/gif","CLSID",,"%CLSID_HTMLDocument%"
@@ -299,6 +317,10 @@ HKCR,"giffile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
 ;; HKCR,"giffile\shell\open\ddeexec\Application",,,"IExplore"
 HKCR,"giffile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
 ;; HKCR,"giffile\DefaultIcon",,,"%IEXPLORE%,9"
+
+;; GZIP
+HKCR,"MIME\Database\Content Type\application/x-gzip","Extension",,".gz"
+HKCR,".gz","Content Type",,"application/x-gzip"
 
 ;; HTC
 HKCR,"MIME\Database\Content Type\text/x-component","CLSID",,"%CLSID_CHtmlComponentConstructor%"
@@ -321,6 +343,10 @@ HKCR,"htmlfile\CLSID",,,"%CLSID_HTMLDocument%"
 HKCR,"htmlfile_FullWindowEmbed",,,"HTML Plugin Document"
 HKCR,"htmlfile_FullWindowEmbed\BrowseInPlace",,,""
 HKCR,"htmlfile_FullWindowEmbed\CLSID",,,"%CLSID_HTMLPluginDocument%"
+HKCR,".htm",,,"htmlfile"
+HKCR,".htm","Content Type",,"text/html"
+HKCR,".html",,,"htmlfile"
+HKCR,".html","Content Type",,"text/html"
 
 ;; ICO
 HKCR,"MIME\Database\Content Type\image/x-icon","CLSID",,"%CLSID_HTMLDocument%"
@@ -375,6 +401,18 @@ HKCR,"mhtmlfile",,,"MHTML Document"
 HKCR,"mhtmlfile\BrowseInPlace",,,""
 HKCR,"mhtmlfile\CLSID",,,"%CLSID_MHTMLDocument%"
 
+;; MPEG
+HKCR,"MIME\Database\Content Type\audio/mpeg","CLSID",,"{CD3AFA76-B84F-48F0-9393-7EDC34128127}"
+HKCR,"MIME\Database\Content Type\audio/mpeg","Extension",,".mp3"
+HKCR,"MIME\Database\Content Type\audio/mpg","CLSID",,"{CD3AFA76-B84F-48F0-9393-7EDC34128127}"
+HKCR,"MIME\Database\Content Type\audio/mpg","Extension",,".mp3"
+HKCR,"MIME\Database\Content Type\video/mpeg","CLSID",,"{CD3AFA89-B84F-48F0-9393-7EDC34128127}"
+HKCR,"MIME\Database\Content Type\video/mpeg","Extension",,".mpeg"
+HKCR,".mp3","Content Type",,"audio/mpeg"
+HKCR,".mpe","Content Type",,"video/mpeg"
+HKCR,".mpeg","Content Type",,"video/mpeg"
+HKCR,".mpg","Content Type",,"video/mpeg"
+
 ;; PJPG
 HKCR,"MIME\Database\Content Type\image/pjpeg","CLSID",,"%CLSID_HTMLDocument%"
 HKCR,"MIME\Database\Content Type\image/pjpeg","Extension",,".jpg"
@@ -403,11 +441,36 @@ HKCR,"pngfile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
 HKCR,"pngfile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
 ;; HKCR,"pngfile\DefaultIcon",,,"%IEXPLORE%,9"
 
+;; PS
+HKCR,"MIME\Database\Content Type\application/postscript","Extension",,".ps"
+HKCR,".ai","Content Type",,"application/postscript"
+HKCR,".eps","Content Type",,"application/postscript"
+HKCR,".ps","Content Type",,"application/postscript"
+
+;; TAR
+HKCR,"MIME\Database\Content Type\application/x-tar","Extension",,".tar"
+HKCR,".tar","Content Type",,"application/x-tar"
+
+;; TGZ
+HKCR,"MIME\Database\Content Type\application/x-compressed","Extension",,".tgz"
+HKCR,".tgz","Content Type",,"application/x-compressed"
+
+;; TIFF
+HKCR,"MIME\Database\Content Type\image/tiff","Extension",,".tiff"
+HKCR,".tif","Content Type",,"image/tiff"
+HKCR,".tiff","Content Type",,"image/tiff"
+
 ;; TXT
 HKCR,"MIME\Database\Content Type\text/plain","CLSID",,"%CLSID_HTMLDocument%"
 HKCR,"MIME\Database\Content Type\text/plain","Extension",,".txt"
 HKCR,"MIME\Database\Content Type\text/plain","Encoding",1,07,00,00,00
+HKCR,".txt",,,"txtfile"
 HKCR,".txt","Content Type",,"text/plain"
+
+;; WAV
+HKCR,"MIME\Database\Content Type\audio/wav","CLSID",,"{CD3AFA7B-B84F-48F0-9393-7EDC34128127}"
+HKCR,"MIME\Database\Content Type\audio/wav","Extension",,".wav"
+HKCR,".wav","Content Type",,"audio/wav"
 
 ;; XBM
 HKCR,"MIME\Database\Content Type\image/xbm","Extension",,".xbm"
@@ -420,3 +483,19 @@ HKCR,"xbmfile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
 ;; HKCR,"xbmfile\shell\open\ddeexec\Application",,,"IExplore"
 HKCR,"xbmfile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
 ;; HKCR,"xbmfile\DefaultIcon",,,"%IEXPLORE%,9"
+
+;; XML
+HKCR,"MIME\Database\Content Type\application/xml","CLSID",,"{48123BC4-99D9-11D1-A6B3-00C04FD91555}"
+HKCR,"MIME\Database\Content Type\application/xml","Extension",,".xml"
+HKCR,"MIME\Database\Content Type\application/xml","Encoding",1,08,00,00,00
+HKCR,"MIME\Database\Content Type\text/xml","CLSID",,"{48123BC4-99D9-11D1-A6B3-00C04FD91555}"
+HKCR,"MIME\Database\Content Type\text/xml","Extension",,".xml"
+HKCR,"MIME\Database\Content Type\text/xml","Encoding",1,08,00,00,00
+HKCR,".xml",,,"xmlfile"
+HKCR,".xml","Content Type",,"text/xml"
+HKCR,".xsl",,,"xslfile"
+HKCR,".xsl","Content Type",,"text/xml"
+
+;; ZIP
+HKCR,"MIME\Database\Content Type\application/x-zip-compressed","Extension",,".zip"
+HKCR,".zip","Content Type",,"application/x-zip-compressed"

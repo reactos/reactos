@@ -220,8 +220,8 @@ extern "C" {
   _CRTIMP int __cdecl _iswcsym_l(wint_t _C,_locale_t _Locale);
   _CRTIMP int __cdecl is_wctype(wint_t _C,wctype_t _Type);
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
-int __cdecl iswblank(wint_t _C);
-#endif 
+_CRTIMP int __cdecl iswblank(wint_t _C);
+#endif
 #endif
 
 #ifndef _WDIRECT_DEFINED
@@ -714,16 +714,16 @@ int __cdecl iswblank(wint_t _C);
   _CRTIMP int __cdecl _wcsnicoll_l(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount,_locale_t _Locale);
 
 #ifndef	NO_OLDNAMES
-  wchar_t *__cdecl wcsdup(const wchar_t *_Str);
+  _CRTIMP wchar_t *__cdecl wcsdup(const wchar_t *_Str);
 #define wcswcs wcsstr
-  int __cdecl wcsicmp(const wchar_t *_Str1,const wchar_t *_Str2);
-  int __cdecl wcsnicmp(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
-  wchar_t *__cdecl wcsnset(wchar_t *_Str,wchar_t _Val,size_t _MaxCount);
-  wchar_t *__cdecl wcsrev(wchar_t *_Str);
-  wchar_t *__cdecl wcsset(wchar_t *_Str,wchar_t _Val);
-  wchar_t *__cdecl wcslwr(wchar_t *_Str);
-  wchar_t *__cdecl wcsupr(wchar_t *_Str);
-  int __cdecl wcsicoll(const wchar_t *_Str1,const wchar_t *_Str2);
+  _CRTIMP int __cdecl wcsicmp(const wchar_t *_Str1,const wchar_t *_Str2);
+  _CRTIMP int __cdecl wcsnicmp(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
+  _CRTIMP wchar_t *__cdecl wcsnset(wchar_t *_Str,wchar_t _Val,size_t _MaxCount);
+  _CRTIMP wchar_t *__cdecl wcsrev(wchar_t *_Str);
+  _CRTIMP wchar_t *__cdecl wcsset(wchar_t *_Str,wchar_t _Val);
+  _CRTIMP wchar_t *__cdecl wcslwr(wchar_t *_Str);
+  _CRTIMP wchar_t *__cdecl wcsupr(wchar_t *_Str);
+  _CRTIMP int __cdecl wcsicoll(const wchar_t *_Str1,const wchar_t *_Str2);
 #endif
 #endif
 

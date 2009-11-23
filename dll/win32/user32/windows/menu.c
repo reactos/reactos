@@ -1224,8 +1224,16 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
     }
     else  /* Not a popup */
     {
-      if (*str == 0)
-        flags = MF_SEPARATOR;
+      if(!unicode)
+      {
+        if (*str == 0)
+          flags = MF_SEPARATOR;
+      }
+      else
+      {
+        if (*(LPCWSTR)str == 0)
+          flags = MF_SEPARATOR;
+      }
 
       if (flags & MF_SEPARATOR)
       {

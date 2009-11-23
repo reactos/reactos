@@ -316,6 +316,20 @@ PcHandlePropertyWithTable(
     IN PKSPROPERTY_SET PropertySet,
     IN PSUBDEVICE_DESCRIPTOR Descriptor);
 
+NTSTATUS
+NTAPI
+PcHandleEnableEventWithTable(
+    IN PIRP Irp,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor);
+
+NTSTATUS
+NTAPI
+PcHandleDisableEventWithTable(
+    IN PIRP Irp,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor);
+
+
+
 #define DEFINE_KSPROPERTY_CONNECTIONSET(PinSet,\
     PropStateHandler, PropDataFormatHandler, PropAllocatorFraming)\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\

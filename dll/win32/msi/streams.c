@@ -255,14 +255,16 @@ static UINT STREAMS_get_dimensions(struct tagMSIVIEW *view, UINT *rows, UINT *co
 }
 
 static UINT STREAMS_get_column_info(struct tagMSIVIEW *view, UINT n,
-                                    LPWSTR *name, UINT *type, BOOL *temporary)
+                                    LPWSTR *name, UINT *type, BOOL *temporary,
+                                    LPWSTR *table_name)
 {
     LPCWSTR name_ptr = NULL;
 
     static const WCHAR Name[] = {'N','a','m','e',0};
     static const WCHAR Data[] = {'D','a','t','a',0};
 
-    TRACE("(%p, %d, %p, %p, %p)\n", view, n, name, type, temporary);
+    TRACE("(%p, %d, %p, %p, %p, %p)\n", view, n, name, type, temporary,
+          table_name);
 
     if (n == 0 || n > NUM_STREAMS_COLS)
         return ERROR_INVALID_PARAMETER;

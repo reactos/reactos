@@ -59,13 +59,13 @@ enum secure_packet_direction
 
 static RPC_STATUS I_RpcReAllocateBuffer(PRPC_MESSAGE pMsg);
 
-static DWORD RPCRT4_GetHeaderSize(const RpcPktHdr *Header)
+DWORD RPCRT4_GetHeaderSize(const RpcPktHdr *Header)
 {
   static const DWORD header_sizes[] = {
     sizeof(Header->request), 0, sizeof(Header->response),
     sizeof(Header->fault), 0, 0, 0, 0, 0, 0, 0, sizeof(Header->bind),
     sizeof(Header->bind_ack), sizeof(Header->bind_nack),
-    0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, sizeof(Header->http)
   };
   ULONG ret = 0;
   
@@ -76,7 +76,7 @@ static DWORD RPCRT4_GetHeaderSize(const RpcPktHdr *Header)
     if (Header->common.flags & RPC_FLG_OBJECT_UUID)
       ret += sizeof(UUID);
   } else {
-    TRACE("invalid packet type\n");
+    WARN("invalid packet type %u\n", Header->common.ptype);
   }
 
   return ret;
@@ -96,7 +96,7 @@ static int packet_has_auth_verifier(const RpcPktHdr *Header)
 }
 
 static VOID RPCRT4_BuildCommonHeader(RpcPktHdr *Header, unsigned char PacketType,
-                              unsigned long DataRepresentation)
+                                     ULONG DataRepresentation)
 {
   Header->common.rpc_ver = RPC_VER_MAJOR;
   Header->common.rpc_ver_minor = RPC_VER_MINOR;
@@ -111,8 +111,8 @@ static VOID RPCRT4_BuildCommonHeader(RpcPktHdr *Header, unsigned char PacketType
   /* Flags and fragment length are computed in RPCRT4_Send. */
 }                              
 
-static RpcPktHdr *RPCRT4_BuildRequestHeader(unsigned long DataRepresentation,
-                                     unsigned long BufferLength,
+static RpcPktHdr *RPCRT4_BuildRequestHeader(ULONG DataRepresentation,
+                                     ULONG BufferLength,
                                      unsigned short ProcNum,
                                      UUID *ObjectUuid)
 {
@@ -141,8 +141,7 @@ static RpcPktHdr *RPCRT4_BuildRequestHeader(unsigned long DataRepresentation,
   return header;
 }
 
-RpcPktHdr *RPCRT4_BuildResponseHeader(unsigned long DataRepresentation,
-                                      unsigned long BufferLength)
+RpcPktHdr *RPCRT4_BuildResponseHeader(ULONG DataRepresentation, ULONG BufferLength)
 {
   RpcPktHdr *header;
 
@@ -158,8 +157,7 @@ RpcPktHdr *RPCRT4_BuildResponseHeader(unsigned long DataRepresentation,
   return header;
 }
 
-RpcPktHdr *RPCRT4_BuildFaultHeader(unsigned long DataRepresentation,
-                                   RPC_STATUS Status)
+RpcPktHdr *RPCRT4_BuildFaultHeader(ULONG DataRepresentation, RPC_STATUS Status)
 {
   RpcPktHdr *header;
 
@@ -175,10 +173,10 @@ RpcPktHdr *RPCRT4_BuildFaultHeader(unsigned long DataRepresentation,
   return header;
 }
 
-RpcPktHdr *RPCRT4_BuildBindHeader(unsigned long DataRepresentation,
+RpcPktHdr *RPCRT4_BuildBindHeader(ULONG DataRepresentation,
                                   unsigned short MaxTransmissionSize,
                                   unsigned short MaxReceiveSize,
-                                  unsigned long  AssocGroupId,
+                                  ULONG  AssocGroupId,
                                   const RPC_SYNTAX_IDENTIFIER *AbstractId,
                                   const RPC_SYNTAX_IDENTIFIER *TransferId)
 {
@@ -202,7 +200,7 @@ RpcPktHdr *RPCRT4_BuildBindHeader(unsigned long DataRepresentation,
   return header;
 }
 
-static RpcPktHdr *RPCRT4_BuildAuthHeader(unsigned long DataRepresentation)
+static RpcPktHdr *RPCRT4_BuildAuthHeader(ULONG DataRepresentation)
 {
   RpcPktHdr *header;
 
@@ -218,7 +216,7 @@ static RpcPktHdr *RPCRT4_BuildAuthHeader(unsigned long DataRepresentation)
   return header;
 }
 
-RpcPktHdr *RPCRT4_BuildBindNackHeader(unsigned long DataRepresentation,
+RpcPktHdr *RPCRT4_BuildBindNackHeader(ULONG DataRepresentation,
                                       unsigned char RpcVersion,
                                       unsigned char RpcVersionMinor)
 {
@@ -239,17 +237,17 @@ RpcPktHdr *RPCRT4_BuildBindNackHeader(unsigned long DataRepresentation,
   return header;
 }
 
-RpcPktHdr *RPCRT4_BuildBindAckHeader(unsigned long DataRepresentation,
+RpcPktHdr *RPCRT4_BuildBindAckHeader(ULONG DataRepresentation,
                                      unsigned short MaxTransmissionSize,
                                      unsigned short MaxReceiveSize,
-                                     unsigned long AssocGroupId,
+                                     ULONG AssocGroupId,
                                      LPCSTR ServerAddress,
-                                     unsigned long Result,
-                                     unsigned long Reason,
+                                     unsigned short Result,
+                                     unsigned short Reason,
                                      const RPC_SYNTAX_IDENTIFIER *TransferId)
 {
   RpcPktHdr *header;
-  unsigned long header_size;
+  ULONG header_size;
   RpcAddressString *server_address;
   RpcResults *results;
   RPC_SYNTAX_IDENTIFIER *transfer_id;
@@ -280,6 +278,118 @@ RpcPktHdr *RPCRT4_BuildBindAckHeader(unsigned long DataRepresentation,
   transfer_id = (RPC_SYNTAX_IDENTIFIER*)(results + 1);
   *transfer_id = *TransferId;
 
+  return header;
+}
+
+RpcPktHdr *RPCRT4_BuildHttpHeader(ULONG DataRepresentation,
+                                  unsigned short flags,
+                                  unsigned short num_data_items,
+                                  unsigned int payload_size)
+{
+  RpcPktHdr *header;
+
+  header = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(header->http) + payload_size);
+  if (header == NULL) {
+      ERR("failed to allocate memory\n");
+    return NULL;
+  }
+
+  RPCRT4_BuildCommonHeader(header, PKT_HTTP, DataRepresentation);
+  /* since the packet isn't current sent using RPCRT4_Send, set the flags
+   * manually here */
+  header->common.flags = RPC_FLG_FIRST|RPC_FLG_LAST;
+  header->common.call_id = 0;
+  header->common.frag_len = sizeof(header->http) + payload_size;
+  header->http.flags = flags;
+  header->http.num_data_items = num_data_items;
+
+  return header;
+}
+
+#define WRITE_HTTP_PAYLOAD_FIELD_UINT32(payload, type, value) \
+    do { \
+        *(unsigned int *)(payload) = (type); \
+        (payload) += 4; \
+        *(unsigned int *)(payload) = (value); \
+        (payload) += 4; \
+    } while (0)
+
+#define WRITE_HTTP_PAYLOAD_FIELD_UUID(payload, type, uuid) \
+    do { \
+        *(unsigned int *)(payload) = (type); \
+        (payload) += 4; \
+        *(UUID *)(payload) = (uuid); \
+        (payload) += sizeof(UUID); \
+    } while (0)
+
+#define WRITE_HTTP_PAYLOAD_FIELD_FLOW_CONTROL(payload, bytes_transmitted, flow_control_increment, uuid) \
+    do { \
+        *(unsigned int *)(payload) = 0x00000001; \
+        (payload) += 4; \
+        *(unsigned int *)(payload) = (bytes_transmitted); \
+        (payload) += 4; \
+        *(unsigned int *)(payload) = (flow_control_increment); \
+        (payload) += 4; \
+        *(UUID *)(payload) = (uuid); \
+        (payload) += sizeof(UUID); \
+    } while (0)
+
+RpcPktHdr *RPCRT4_BuildHttpConnectHeader(unsigned short flags, int out_pipe,
+                                         const UUID *connection_uuid,
+                                         const UUID *pipe_uuid,
+                                         const UUID *association_uuid)
+{
+  RpcPktHdr *header;
+  unsigned int size;
+  char *payload;
+
+  size = 8 + 4 + sizeof(UUID) + 4 + sizeof(UUID) + 8;
+  if (!out_pipe)
+    size += 8 + 4 + sizeof(UUID);
+
+  header = RPCRT4_BuildHttpHeader(NDR_LOCAL_DATA_REPRESENTATION, flags,
+                                  out_pipe ? 4 : 6, size);
+  if (!header) return NULL;
+  payload = (char *)(&header->http+1);
+
+  /* FIXME: what does this part of the payload do? */
+  WRITE_HTTP_PAYLOAD_FIELD_UINT32(payload, 0x00000006, 0x00000001);
+
+  WRITE_HTTP_PAYLOAD_FIELD_UUID(payload, 0x00000003, *connection_uuid);
+  WRITE_HTTP_PAYLOAD_FIELD_UUID(payload, 0x00000003, *pipe_uuid);
+
+  if (out_pipe)
+    /* FIXME: what does this part of the payload do? */
+    WRITE_HTTP_PAYLOAD_FIELD_UINT32(payload, 0x00000000, 0x00010000);
+  else
+  {
+    /* FIXME: what does this part of the payload do? */
+    WRITE_HTTP_PAYLOAD_FIELD_UINT32(payload, 0x00000004, 0x40000000);
+    /* FIXME: what does this part of the payload do? */
+    WRITE_HTTP_PAYLOAD_FIELD_UINT32(payload, 0x00000005, 0x000493e0);
+
+    WRITE_HTTP_PAYLOAD_FIELD_UUID(payload, 0x0000000c, *association_uuid);
+  }
+
+  return header;
+}
+
+RpcPktHdr *RPCRT4_BuildHttpFlowControlHeader(BOOL server, ULONG bytes_transmitted,
+                                             ULONG flow_control_increment,
+                                             const UUID *pipe_uuid)
+{
+  RpcPktHdr *header;
+  char *payload;
+
+  header = RPCRT4_BuildHttpHeader(NDR_LOCAL_DATA_REPRESENTATION, 0x2, 2,
+                                  5 * sizeof(ULONG) + sizeof(UUID));
+  if (!header) return NULL;
+  payload = (char *)(&header->http+1);
+
+  WRITE_HTTP_PAYLOAD_FIELD_UINT32(payload, 0x0000000d, (server ? 0x0 : 0x3));
+
+  WRITE_HTTP_PAYLOAD_FIELD_FLOW_CONTROL(payload, bytes_transmitted,
+                                        flow_control_increment, *pipe_uuid);
   return header;
 }
 
@@ -361,6 +471,206 @@ static RPC_STATUS NCA2RPC_STATUS(NCA_STATUS status)
     default:                            return status;
     }
 }
+
+/* assumes the common header fields have already been validated */
+BOOL RPCRT4_IsValidHttpPacket(RpcPktHdr *hdr, unsigned char *data,
+                              unsigned short data_len)
+{
+  unsigned short i;
+  BYTE *p = data;
+
+  for (i = 0; i < hdr->http.num_data_items; i++)
+  {
+    ULONG type;
+
+    if (data_len < sizeof(ULONG))
+      return FALSE;
+
+    type = *(ULONG *)p;
+    p += sizeof(ULONG);
+    data_len -= sizeof(ULONG);
+
+    switch (type)
+    {
+      case 0x3:
+      case 0xc:
+        if (data_len < sizeof(GUID))
+          return FALSE;
+        p += sizeof(GUID);
+        data_len -= sizeof(GUID);
+        break;
+      case 0x0:
+      case 0x2:
+      case 0x4:
+      case 0x5:
+      case 0x6:
+      case 0xd:
+        if (data_len < sizeof(ULONG))
+          return FALSE;
+        p += sizeof(ULONG);
+        data_len -= sizeof(ULONG);
+        break;
+      case 0x1:
+        if (data_len < 24)
+          return FALSE;
+        p += 24;
+        data_len -= 24;
+        break;
+      default:
+        FIXME("unimplemented type 0x%x\n", type);
+        break;
+    }
+  }
+  return TRUE;
+}
+
+/* assumes the HTTP packet has been validated */
+static unsigned char *RPCRT4_NextHttpHeaderField(unsigned char *data)
+{
+  ULONG type;
+
+  type = *(ULONG *)data;
+  data += sizeof(ULONG);
+
+  switch (type)
+  {
+    case 0x3:
+    case 0xc:
+      return data + sizeof(GUID);
+    case 0x0:
+    case 0x2:
+    case 0x4:
+    case 0x5:
+    case 0x6:
+    case 0xd:
+      return data + sizeof(ULONG);
+    case 0x1:
+      return data + 24;
+    default:
+      FIXME("unimplemented type 0x%x\n", type);
+      return data;
+  }
+}
+
+#define READ_HTTP_PAYLOAD_FIELD_TYPE(data) *(ULONG *)(data)
+#define GET_HTTP_PAYLOAD_FIELD_DATA(data) ((data) + sizeof(ULONG))
+
+/* assumes the HTTP packet has been validated */
+RPC_STATUS RPCRT4_ParseHttpPrepareHeader1(RpcPktHdr *header,
+                                          unsigned char *data, ULONG *field1)
+{
+  ULONG type;
+  if (header->http.flags != 0x0)
+  {
+    ERR("invalid flags 0x%x\n", header->http.flags);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  if (header->http.num_data_items != 1)
+  {
+    ERR("invalid number of data items %d\n", header->http.num_data_items);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  type = READ_HTTP_PAYLOAD_FIELD_TYPE(data);
+  if (type != 0x00000002)
+  {
+    ERR("invalid type 0x%08x\n", type);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  *field1 = *(ULONG *)GET_HTTP_PAYLOAD_FIELD_DATA(data);
+  return RPC_S_OK;
+}
+
+/* assumes the HTTP packet has been validated */
+RPC_STATUS RPCRT4_ParseHttpPrepareHeader2(RpcPktHdr *header,
+                                          unsigned char *data, ULONG *field1,
+                                          ULONG *bytes_until_next_packet,
+                                          ULONG *field3)
+{
+  ULONG type;
+  if (header->http.flags != 0x0)
+  {
+    ERR("invalid flags 0x%x\n", header->http.flags);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  if (header->http.num_data_items != 3)
+  {
+    ERR("invalid number of data items %d\n", header->http.num_data_items);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+
+  type = READ_HTTP_PAYLOAD_FIELD_TYPE(data);
+  if (type != 0x00000006)
+  {
+    ERR("invalid type for field 1: 0x%08x\n", type);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  *field1 = *(ULONG *)GET_HTTP_PAYLOAD_FIELD_DATA(data);
+  data = RPCRT4_NextHttpHeaderField(data);
+
+  type = READ_HTTP_PAYLOAD_FIELD_TYPE(data);
+  if (type != 0x00000000)
+  {
+    ERR("invalid type for field 2: 0x%08x\n", type);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  *bytes_until_next_packet = *(ULONG *)GET_HTTP_PAYLOAD_FIELD_DATA(data);
+  data = RPCRT4_NextHttpHeaderField(data);
+
+  type = READ_HTTP_PAYLOAD_FIELD_TYPE(data);
+  if (type != 0x00000002)
+  {
+    ERR("invalid type for field 3: 0x%08x\n", type);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  *field3 = *(ULONG *)GET_HTTP_PAYLOAD_FIELD_DATA(data);
+
+  return RPC_S_OK;
+}
+
+RPC_STATUS RPCRT4_ParseHttpFlowControlHeader(RpcPktHdr *header,
+                                             unsigned char *data, BOOL server,
+                                             ULONG *bytes_transmitted,
+                                             ULONG *flow_control_increment,
+                                             UUID *pipe_uuid)
+{
+  ULONG type;
+  if (header->http.flags != 0x2)
+  {
+    ERR("invalid flags 0x%x\n", header->http.flags);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  if (header->http.num_data_items != 2)
+  {
+    ERR("invalid number of data items %d\n", header->http.num_data_items);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+
+  type = READ_HTTP_PAYLOAD_FIELD_TYPE(data);
+  if (type != 0x0000000d)
+  {
+    ERR("invalid type for field 1: 0x%08x\n", type);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  if (*(ULONG *)GET_HTTP_PAYLOAD_FIELD_DATA(data) != (server ? 0x3 : 0x0))
+  {
+    ERR("invalid type for 0xd field data: 0x%08x\n", *(ULONG *)GET_HTTP_PAYLOAD_FIELD_DATA(data));
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  data = RPCRT4_NextHttpHeaderField(data);
+
+  type = READ_HTTP_PAYLOAD_FIELD_TYPE(data);
+  if (type != 0x00000001)
+  {
+    ERR("invalid type for field 2: 0x%08x\n", type);
+    return RPC_S_PROTOCOL_ERROR;
+  }
+  *bytes_transmitted = *(ULONG *)GET_HTTP_PAYLOAD_FIELD_DATA(data);
+  *flow_control_increment = *(ULONG *)(GET_HTTP_PAYLOAD_FIELD_DATA(data) + 4);
+  *pipe_uuid = *(UUID *)(GET_HTTP_PAYLOAD_FIELD_DATA(data) + 8);
+
+  return RPC_S_OK;
+}
+
 
 static RPC_STATUS RPCRT4_SecurePacket(RpcConnection *Connection,
     enum secure_packet_direction dir,
@@ -509,7 +819,7 @@ static RPC_STATUS RPCRT4_SendWithAuth(RpcConnection *Connection, RpcPktHdr *Head
       auth_hdr->auth_pad_length = auth_pad_len;
       auth_hdr->auth_reserved = 0;
       /* a unique number... */
-      auth_hdr->auth_context_id = (unsigned long)Connection;
+      auth_hdr->auth_context_id = Connection->auth_context_id;
 
       if (AuthLength)
         memcpy(auth_hdr + 1, Auth, AuthLength);
@@ -687,7 +997,7 @@ RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
 }
 
 /* validates version and frag_len fields */
-static RPC_STATUS RPCRT4_ValidateCommonHeader(const RpcPktCommonHdr *hdr)
+RPC_STATUS RPCRT4_ValidateCommonHeader(const RpcPktCommonHdr *hdr)
 {
   DWORD hdr_length;
 
@@ -716,11 +1026,11 @@ static RPC_STATUS RPCRT4_ValidateCommonHeader(const RpcPktCommonHdr *hdr)
 }
 
 /***********************************************************************
- *           RPCRT4_receive_fragment (internal)
+ *           RPCRT4_default_receive_fragment (internal)
  * 
  * Receive a fragment from a connection.
  */
-static RPC_STATUS RPCRT4_receive_fragment(RpcConnection *Connection, RpcPktHdr **Header, void **Payload)
+static RPC_STATUS RPCRT4_default_receive_fragment(RpcConnection *Connection, RpcPktHdr **Header, void **Payload)
 {
   RPC_STATUS status;
   DWORD hdr_length;
@@ -794,6 +1104,14 @@ fail:
   return status;
 }
 
+static RPC_STATUS RPCRT4_receive_fragment(RpcConnection *Connection, RpcPktHdr **Header, void **Payload)
+{
+    if (Connection->ops->receive_fragment)
+        return Connection->ops->receive_fragment(Connection, Header, Payload);
+    else
+        return RPCRT4_default_receive_fragment(Connection, Header, Payload);
+}
+
 /***********************************************************************
  *           RPCRT4_ReceiveWithAuth (internal)
  *
@@ -803,14 +1121,14 @@ fail:
 RPC_STATUS RPCRT4_ReceiveWithAuth(RpcConnection *Connection, RpcPktHdr **Header,
                                   PRPC_MESSAGE pMsg,
                                   unsigned char **auth_data_out,
-                                  unsigned long *auth_length_out)
+                                  ULONG *auth_length_out)
 {
   RPC_STATUS status;
   DWORD hdr_length;
   unsigned short first_flag;
-  unsigned long data_length;
-  unsigned long buffer_length;
-  unsigned long auth_length = 0;
+  ULONG data_length;
+  ULONG buffer_length;
+  ULONG auth_length = 0;
   unsigned char *auth_data = NULL;
   RpcPktHdr *CurrentHeader = NULL;
   void *payload = NULL;
@@ -874,7 +1192,7 @@ RPC_STATUS RPCRT4_ReceiveWithAuth(RpcConnection *Connection, RpcPktHdr **Header,
     }
 
     if (CurrentHeader->common.auth_len != auth_length) {
-      WARN("auth_len header field changed from %ld to %d\n",
+      WARN("auth_len header field changed from %d to %d\n",
         auth_length, CurrentHeader->common.auth_len);
       status = RPC_S_PROTOCOL_ERROR;
       goto fail;
@@ -888,7 +1206,7 @@ RPC_STATUS RPCRT4_ReceiveWithAuth(RpcConnection *Connection, RpcPktHdr **Header,
 
     data_length = CurrentHeader->common.frag_len - hdr_length - header_auth_len;
     if (data_length + buffer_length > pMsg->BufferLength) {
-      TRACE("allocation hint exceeded, new buffer length = %ld\n",
+      TRACE("allocation hint exceeded, new buffer length = %d\n",
         data_length + buffer_length);
       pMsg->BufferLength = data_length + buffer_length;
       status = I_RpcReAllocateBuffer(pMsg);
@@ -998,7 +1316,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
  */
 RPC_STATUS WINAPI I_RpcNegotiateTransferSyntax(PRPC_MESSAGE pMsg)
 {
-  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
+  RpcBinding* bind = pMsg->Handle;
   RpcConnection* conn;
   RPC_STATUS status = RPC_S_OK;
 
@@ -1063,7 +1381,7 @@ RPC_STATUS WINAPI I_RpcNegotiateTransferSyntax(PRPC_MESSAGE pMsg)
 RPC_STATUS WINAPI I_RpcGetBuffer(PRPC_MESSAGE pMsg)
 {
   RPC_STATUS status;
-  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
+  RpcBinding* bind = pMsg->Handle;
 
   TRACE("(%p): BufferLength=%d\n", pMsg, pMsg->BufferLength);
 
@@ -1120,7 +1438,7 @@ static RPC_STATUS I_RpcReAllocateBuffer(PRPC_MESSAGE pMsg)
  */
 RPC_STATUS WINAPI I_RpcFreeBuffer(PRPC_MESSAGE pMsg)
 {
-  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
+  RpcBinding* bind = pMsg->Handle;
 
   TRACE("(%p) Buffer=%p\n", pMsg, pMsg->Buffer);
 
@@ -1214,7 +1532,7 @@ static DWORD WINAPI async_notifier_proc(LPVOID p)
  */
 RPC_STATUS WINAPI I_RpcSend(PRPC_MESSAGE pMsg)
 {
-  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
+  RpcBinding* bind = pMsg->Handle;
   RpcConnection* conn;
   RPC_STATUS status;
   RpcPktHdr *hdr;
@@ -1268,7 +1586,7 @@ static inline BOOL is_hard_error(RPC_STATUS status)
  */
 RPC_STATUS WINAPI I_RpcReceive(PRPC_MESSAGE pMsg)
 {
-  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
+  RpcBinding* bind = pMsg->Handle;
   RPC_STATUS status;
   RpcPktHdr *hdr = NULL;
   RpcConnection *conn;
@@ -1287,7 +1605,7 @@ RPC_STATUS WINAPI I_RpcReceive(PRPC_MESSAGE pMsg)
   case PKT_RESPONSE:
     break;
   case PKT_FAULT:
-    ERR ("we got fault packet with status 0x%lx\n", hdr->fault.status);
+    ERR ("we got fault packet with status 0x%x\n", hdr->fault.status);
     status = NCA2RPC_STATUS(hdr->fault.status);
     if (is_hard_error(status))
         goto fail;
@@ -1360,7 +1678,7 @@ RPC_STATUS WINAPI I_RpcSendReceive(PRPC_MESSAGE pMsg)
  */
 RPC_STATUS WINAPI I_RpcAsyncSetHandle(PRPC_MESSAGE pMsg, PRPC_ASYNC_STATE pAsync)
 {
-    RpcBinding* bind = (RpcBinding*)pMsg->Handle;
+    RpcBinding* bind = pMsg->Handle;
     RpcConnection *conn;
 
     TRACE("(%p, %p)\n", pMsg, pAsync);

@@ -2222,6 +2222,8 @@ extern "C" {
 #if (_WIN32_WINNT >= 0x0500)
 #define VK_OEM_102	0xE2
 #endif
+#define VK_ICO_HELP	0xE3  /* Help key on ICO */
+#define VK_ICO_00	0xE4  /* 00 key on ICO */
 #define VK_PROCESSKEY	0xE5
 #if (_WIN32_WINNT >= 0x0500)
 #define VK_PACKET	0xE7

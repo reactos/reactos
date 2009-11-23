@@ -260,6 +260,13 @@ CloseWdmSoundDevice(
                                       NULL);
     }
 
+    if (DeviceType == MIXER_DEVICE_TYPE)
+    {
+        SetEvent(SoundDeviceInstance->hStopEvent);
+        CloseHandle(SoundDeviceInstance->hStopEvent);
+        CloseHandle(SoundDeviceInstance->hNotifyEvent);
+    }
+
     --OpenCount;
 
     if ( OpenCount < 1 )
@@ -283,6 +290,62 @@ QueryWdmWaveDeviceFormatSupport(
 }
 
 
+DWORD
+WINAPI
+MixerEventThreadRoutine(
+    LPVOID Parameter)
+{
+    HANDLE WaitObjects[2];
+    DWORD dwResult;
+    MMRESULT Result;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    PSOUND_DEVICE_INSTANCE Instance = (PSOUND_DEVICE_INSTANCE)Parameter;
+
+    /* setup wait objects */
+    WaitObjects[0] = Instance->hNotifyEvent;
+    WaitObjects[1] = Instance->hStopEvent;
+
+    /* zero device info */
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+
+    DeviceInfo.hDevice = Instance->Handle;
+    DeviceInfo.DeviceType = MIXER_DEVICE_TYPE;
+
+    do
+    {
+        dwResult = WaitForMultipleObjects(2, WaitObjects, FALSE, INFINITE);
+
+        if (dwResult == WAIT_OBJECT_0 + 1)
+        {
+            /* stop event was signalled */
+            break;
+        }
+
+        Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                               IOCTL_GET_MIXER_EVENT,
+                                               (LPVOID) &DeviceInfo,
+                                               sizeof(WDMAUD_DEVICE_INFO),
+                                               (LPVOID) &DeviceInfo,
+                                               sizeof(WDMAUD_DEVICE_INFO),
+                                               NULL);
+
+        if (Result == MMSYSERR_NOERROR)
+        {
+            DriverCallback(Instance->WinMM.ClientCallback,
+                           HIWORD(Instance->WinMM.Flags),
+                           Instance->WinMM.Handle,
+                           DeviceInfo.u.MixerEvent.NotificationType,
+                           Instance->WinMM.ClientCallbackInstanceData,
+                           (DWORD_PTR)DeviceInfo.u.MixerEvent.Value,
+                           0);
+        }
+    }while(TRUE);
+
+    /* done */
+    return 0;
+}
+
+
 MMRESULT
 SetWdmMixerDeviceFormat(
     IN  PSOUND_DEVICE_INSTANCE Instance,
@@ -292,6 +355,7 @@ SetWdmMixerDeviceFormat(
 {
     MMRESULT Result;
     WDMAUD_DEVICE_INFO DeviceInfo;
+    HANDLE hThread;
 
     if (Instance->Handle != KernelHandle)
     {
@@ -299,10 +363,18 @@ SetWdmMixerDeviceFormat(
         return MMSYSERR_NOERROR;
     }
 
+    Instance->hNotifyEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if ( ! Instance->hNotifyEvent )
+        return MMSYSERR_NOMEM;
+
+    Instance->hStopEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if ( ! Instance->hStopEvent )
+        return MMSYSERR_NOMEM;
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.DeviceType = MIXER_DEVICE_TYPE;
     DeviceInfo.DeviceIndex = DeviceId;
+    DeviceInfo.u.hNotifyEvent = Instance->hNotifyEvent;
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
                                            IOCTL_OPEN_WDMAUD,
@@ -314,7 +386,15 @@ SetWdmMixerDeviceFormat(
 
     if ( ! MMSUCCESS(Result) )
     {
+        CloseHandle(Instance->hNotifyEvent);
+        CloseHandle(Instance->hStopEvent);
         return TranslateInternalMmResult(Result);
+    }
+
+    hThread = CreateThread(NULL, 0, MixerEventThreadRoutine, (LPVOID)Instance, 0, NULL);
+    if (  hThread )
+    {
+        CloseHandle(hThread);
     }
 
     /* Store sound device handle instance handle */

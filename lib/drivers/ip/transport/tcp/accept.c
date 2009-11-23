@@ -10,6 +10,7 @@
 
 #include "precomp.h"
 
+/* Listener->Lock MUST be acquired */
 NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
                     PCONNECTION_ENDPOINT Connection,
                     PTDI_REQUEST_KERNEL Request ) {
@@ -26,17 +27,14 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     WhoIsConnecting = (PTDI_CONNECTION_INFORMATION)
     Request->ReturnConnectionInformation;
 
-    TcpipRecursiveMutexEnter(&TCPLock);
-
     Status = TCPTranslateError
     ( OskitTCPAccept( Listener->SocketContext,
               &Connection->SocketContext,
+              Connection,
               &OutAddr,
               sizeof(OutAddr),
               &OutAddrLen,
               Request->RequestFlags & TDI_QUERY_ACCEPT ? 0 : 1 ) );
-
-    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
@@ -71,10 +69,13 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
 NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     NTSTATUS Status = STATUS_SUCCESS;
     SOCKADDR_IN AddressToBind;
+    KIRQL OldIrql;
 
     ASSERT(Connection);
     ASSERT_KM_POINTER(Connection->SocketContext);
     ASSERT_KM_POINTER(Connection->AddressFile);
+
+    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
 
@@ -89,8 +90,6 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
 
     TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
 
-    TcpipRecursiveMutexEnter( &TCPLock );
-
     Status = TCPTranslateError( OskitTCPBind( Connection->SocketContext,
                         &AddressToBind,
                         sizeof(AddressToBind) ) );
@@ -98,18 +97,19 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     if (NT_SUCCESS(Status))
         Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext, Backlog ) );
 
-    TcpipRecursiveMutexLeave( &TCPLock );
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("TCPListen finished %x\n", Status));
 
     return Status;
 }
 
-VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
+BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
                   PCONNECTION_ENDPOINT Connection ) {
     PLIST_ENTRY ListEntry;
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
+    BOOLEAN Found = FALSE;
 
     KeAcquireSpinLock(&Listener->Lock, &OldIrql);
 
@@ -119,7 +119,8 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
 
     if( Bucket->AssociatedEndpoint == Connection ) {
         RemoveEntryList( &Bucket->Entry );
-        exFreePool( Bucket );
+        ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
+        Found = TRUE;
         break;
     }
 
@@ -127,6 +128,8 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     }
 
     KeReleaseSpinLock(&Listener->Lock, OldIrql);
+
+    return Found;
 }
 
 NTSTATUS TCPAccept ( PTDI_REQUEST Request,
@@ -137,21 +140,27 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
 {
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
+    KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_TCP,("TCPAccept started\n"));
+
+    KeAcquireSpinLock(&Listener->Lock, &OldIrql);
 
     Status = TCPServiceListeningSocket( Listener, Connection,
                        (PTDI_REQUEST_KERNEL)Request );
 
+    KeReleaseSpinLock(&Listener->Lock, OldIrql);
+
     if( Status == STATUS_PENDING ) {
-        Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
+        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket),
+                                        TDI_BUCKET_TAG );
 
         if( Bucket ) {
             Bucket->AssociatedEndpoint = Connection;
             Bucket->Request.RequestNotifyObject = Complete;
             Bucket->Request.RequestContext = Context;
-            IoMarkIrpPending((PIRP)Context);
-            ExInterlockedInsertTailList( &Listener->ListenRequest, &Bucket->Entry, &Listener->Lock );
+            ExInterlockedInsertTailList( &Listener->ListenRequest, &Bucket->Entry,
+                                         &Listener->Lock );
         } else
             Status = STATUS_NO_MEMORY;
     }

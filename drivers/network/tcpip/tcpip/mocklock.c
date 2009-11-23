@@ -45,11 +45,3 @@ VOID TcpipAcquireFastMutex( PFAST_MUTEX Mutex ) {
 VOID TcpipReleaseFastMutex( PFAST_MUTEX Mutex ) {
 }
 
-VOID TcpipRecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
-}
-
-VOID TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex ) {
-}
-
-VOID TcpipRecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex ) {
-}

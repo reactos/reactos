@@ -76,9 +76,9 @@ static HRESULT WINAPI InternetHostSecurityManager_ProcessUrlAction(IInternetHost
     HTMLDocumentNode *This = HOSTSECMGR_THIS(iface);
     const WCHAR *url;
 
-    TRACE("%p)->(%d %p %d %p %d %x %x)\n", This, dwAction, pPolicy, cbPolicy, pContext, cbContext, dwFlags, dwReserved);
+    TRACE("(%p)->(%d %p %d %p %d %x %x)\n", This, dwAction, pPolicy, cbPolicy, pContext, cbContext, dwFlags, dwReserved);
 
-    url = This->basedoc.doc_obj->url ? This->basedoc.doc_obj->url : about_blankW;
+    url = This->basedoc.window->url ? This->basedoc.window->url : about_blankW;
 
     return IInternetSecurityManager_ProcessUrlAction(This->secmgr, url, dwAction, pPolicy, cbPolicy,
             pContext, cbContext, dwFlags, dwReserved);
@@ -124,7 +124,7 @@ static HRESULT WINAPI InternetHostSecurityManager_QueryCustomPolicy(IInternetHos
 
     TRACE("(%p)->(%s %p %p %p %d %x)\n", This, debugstr_guid(guidKey), ppPolicy, pcbPolicy, pContext, cbContext, dwReserved);
 
-    url = This->basedoc.doc_obj->url ? This->basedoc.doc_obj->url : about_blankW;
+    url = This->basedoc.window->url ? This->basedoc.window->url : about_blankW;
 
     hres = IInternetSecurityManager_QueryCustomPolicy(This->secmgr, url, guidKey, ppPolicy, pcbPolicy,
             pContext, cbContext, dwReserved);

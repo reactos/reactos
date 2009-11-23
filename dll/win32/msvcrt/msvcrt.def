@@ -365,9 +365,10 @@ EXPORTS
   _isnan @359
   _itoa @360
   _itow @361
-  _j0 @362
-  _j1 @363
-  _jn @364
+; FIXME: these aren't actually implemented in CRT
+; _j0 @362
+; _j1 @363
+; _jn @364
   _kbhit @365
   _lfind @366
   _loaddll @367
@@ -648,9 +649,10 @@ EXPORTS
   _wunlink @642
   _wutime @643
 ;  _wutime64 @644
-  _y0 @645
-  _y1 @646
-  _yn @647
+; FIXME: these aren't actually implemented in CRT
+; _y0 @645
+; _y1 @646
+; _yn @647
   abort @648
   abs @649
   acos @650

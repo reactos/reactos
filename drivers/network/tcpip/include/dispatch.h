@@ -72,6 +72,8 @@ NTSTATUS DispTdiDeleteIPAddress(
 VOID DispDoDisconnect(
     PVOID Data);
 
+NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status );
+
 #endif /* __DISPATCH_H */
 
 /* EOF */

@@ -2750,6 +2750,7 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define CRYPT_STRING_BASE64X509CRLHEADER 0x00000009
 #define CRYPT_STRING_HEXADDR             0x0000000a
 #define CRYPT_STRING_HEXASCIIADDR        0x0000000b
+#define CRYPT_STRING_NOCRLF              0x40000000
 #define CRYPT_STRING_NOCR                0x80000000
 
 /* OIDs */
@@ -2946,6 +2947,7 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define szOID_POLICY_CONSTRAINTS            "2.5.29.36"
 #define szOID_ENHANCED_KEY_USAGE            "2.5.29.37"
 #define szOID_FRESHEST_CRL                  "2.5.29.46"
+#define szOID_INHIBIT_ANY_POLICY            "2.5.29.54"
 #define szOID_DOMAIN_COMPONENT              "0.9.2342.19200300.100.1.25"
 #define szOID_PKCS_12_FRIENDLY_NAME_ATTR     "1.2.840.113549.1.9.20"
 #define szOID_PKCS_12_LOCAL_KEY_ID           "1.2.840.113549.1.9.21"
@@ -4053,6 +4055,13 @@ BOOL WINAPI CertAddEncodedCertificateToStore(HCERTSTORE hCertStore,
  DWORD dwCertEncodingType, const BYTE *pbCertEncoded, DWORD cbCertEncoded,
  DWORD dwAddDisposition, PCCERT_CONTEXT *ppCertContext);
 
+BOOL WINAPI CertAddEncodedCertificateToSystemStoreA(LPCSTR pszCertStoreName,
+ const BYTE *pbCertEncoded, DWORD cbCertEncoded);
+BOOL WINAPI CertAddEncodedCertificateToSystemStoreW(LPCWSTR pszCertStoreName,
+ const BYTE *pbCertEncoded, DWORD cbCertEncoded);
+#define CertAddEncodedCertificateToSystemStore \
+ WINELIB_NAME_AW(CertAddEncodedCertificateToSystemStore)
+
 BOOL WINAPI CertAddEncodedCRLToStore(HCERTSTORE hCertStore,
  DWORD dwCertEncodingType, const BYTE *pbCrlEncoded, DWORD cbCrlEncoded,
  DWORD dwAddDisposition, PCCRL_CONTEXT *ppCrlContext);
@@ -4138,6 +4147,9 @@ BOOL WINAPI CertSerializeCRLStoreElement(PCCRL_CONTEXT pCrlContext,
 
 BOOL WINAPI CertSerializeCTLStoreElement(PCCTL_CONTEXT pCtlContext,
  DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
+
+BOOL WINAPI CertGetIntendedKeyUsage(DWORD dwCertEncodingType,
+ PCERT_INFO pCertInfo, BYTE *pbKeyUsage, DWORD cbKeyUsage);
 
 BOOL WINAPI CertGetEnhancedKeyUsage(PCCERT_CONTEXT pCertContext, DWORD dwFlags,
  PCERT_ENHKEY_USAGE pUsage, DWORD *pcbUsage);

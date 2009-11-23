@@ -574,7 +574,7 @@ static dispex_static_data_t HTMLTable_dispex = {
     HTMLTable_iface_tids
 };
 
-HTMLElement *HTMLTable_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLTable_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLTable *ret = heap_alloc_zero(sizeof(HTMLTable));
     nsresult nsres;
@@ -582,7 +582,7 @@ HTMLElement *HTMLTable_Create(nsIDOMHTMLElement *nselem)
     ret->element.node.vtbl = &HTMLTableImplVtbl;
     ret->lpHTMLTableVtbl = &HTMLTableVtbl;
 
-    HTMLElement_Init(&ret->element, &HTMLTable_dispex);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLTable_dispex);
 
     ConnectionPoint_Init(&ret->cp, &ret->element.cp_container, &DIID_HTMLTableEvents);
 

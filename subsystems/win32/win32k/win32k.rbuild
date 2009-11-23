@@ -1,10 +1,17 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="win32k_base" type="objectlibrary">
-	<include base="win32k_base">.</include>
-	<include base="win32k_base">include</include>
-	<include base="win32k_base" root="intermediate">.</include>
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
+	<importlibrary definition="win32k.pspec" />
+	<library>pseh</library>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<library>ftfd</library>
+	<library>dxguid</library>
+	<file>win32k.rc</file>
+	<include base="win32k">.</include>
+	<include base="win32k">include</include>
+	<include base="win32k" root="intermediate">.</include>
 	<include base="ntoskrnl">include</include>
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
@@ -201,15 +208,5 @@
 
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
 	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
-</module>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
-	<importlibrary definition="win32k.pspec" />
-	<library>win32k_base</library>
-	<library>pseh</library>
-	<library>ntoskrnl</library>
-	<library>hal</library>
-	<library>ftfd</library>
-	<library>dxguid</library>
-	<file>win32k.rc</file>
 </module>
 </group>

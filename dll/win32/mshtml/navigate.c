@@ -41,6 +41,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 #define CONTENT_LENGTH "Content-Length"
 #define UTF16_STR "utf-16"
 
+static WCHAR emptyW[] = {0};
+
 typedef struct {
     const nsIInputStreamVtbl *lpInputStreamVtbl;
 
@@ -82,7 +84,7 @@ struct BSCallback {
     IMoniker *mon;
     IBinding *binding;
 
-    HTMLDocument *doc;
+    HTMLDocumentNode *doc;
 
     struct list entry;
 };
@@ -313,7 +315,7 @@ static HRESULT WINAPI BindStatusCallback_OnStartBinding(IBindStatusCallback *ifa
     This->binding = pbind;
 
     if(This->doc)
-        list_add_head(&This->doc->doc_obj->bindings, &This->entry);
+        list_add_head(&This->doc->bindings, &This->entry);
 
     return This->vtbl->start_binding(This);
 }
@@ -705,7 +707,7 @@ static void parse_post_data(nsIInputStream *post_data_stream, LPWSTR *headers_re
     *post_data_len_ret = post_data_len;
 }
 
-HRESULT start_binding(HTMLDocument *doc, BSCallback *bscallback, IBindCtx *bctx)
+HRESULT start_binding(HTMLWindow *window, HTMLDocumentNode *doc, BSCallback *bscallback, IBindCtx *bctx)
 {
     IStream *str = NULL;
     HRESULT hres;
@@ -714,7 +716,8 @@ HRESULT start_binding(HTMLDocument *doc, BSCallback *bscallback, IBindCtx *bctx)
 
     /* NOTE: IE7 calls IsSystemMoniker here*/
 
-    call_docview_84(doc->doc_obj);
+    if(window)
+        call_docview_84(window->doc_obj);
 
     if(bctx) {
         RegisterBindStatusCallback(bctx, STATUSCLB(bscallback), NULL, 0);
@@ -846,14 +849,14 @@ static BufferBSC *create_bufferbsc(IMoniker *mon)
     return ret;
 }
 
-HRESULT bind_mon_to_buffer(HTMLDocument *doc, IMoniker *mon, void **buf, DWORD *size)
+HRESULT bind_mon_to_buffer(HTMLDocumentNode *doc, IMoniker *mon, void **buf, DWORD *size)
 {
     BufferBSC *bsc = create_bufferbsc(mon);
     HRESULT hres;
 
     *buf = NULL;
 
-    hres = start_binding(doc, &bsc->bsc, NULL);
+    hres = start_binding(NULL, doc, &bsc->bsc, NULL);
     if(SUCCEEDED(hres)) {
         hres = bsc->hres;
         if(SUCCEEDED(hres)) {
@@ -871,6 +874,8 @@ HRESULT bind_mon_to_buffer(HTMLDocument *doc, IMoniker *mon, void **buf, DWORD *
 
 struct nsChannelBSC {
     BSCallback bsc;
+
+    HTMLWindow *window;
 
     nsChannel *nschannel;
     nsIStreamListener *nslistener;
@@ -948,11 +953,8 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
 
             on_start_nsrequest(This);
 
-            /* events are reset when a new document URI is loaded, so re-initialise them here */
-            if(This->bsc.doc && This->bsc.doc->doc_obj->bscallback == This && This->bsc.doc->doc_obj->nscontainer) {
-                update_nsdocument(This->bsc.doc->doc_obj);
-                init_nsevents(This->bsc.doc->doc_obj->nscontainer);
-            }
+            if(This->window)
+                update_window_doc(This->window);
         }
 
         This->bsc.readed += This->nsstream->buf_size;
@@ -1105,27 +1107,34 @@ IMoniker *get_channelbsc_mon(nsChannelBSC *This)
     return This->bsc.mon;
 }
 
-void set_document_bscallback(HTMLDocument *doc, nsChannelBSC *callback)
+void set_window_bscallback(HTMLWindow *window, nsChannelBSC *callback)
+{
+    if(window->bscallback) {
+        if(window->bscallback->bsc.binding)
+            IBinding_Abort(window->bscallback->bsc.binding);
+        window->bscallback->bsc.doc = NULL;
+        window->bscallback->window = NULL;
+        IBindStatusCallback_Release(STATUSCLB(&window->bscallback->bsc));
+    }
+
+    window->bscallback = callback;
+
+    if(callback) {
+        callback->window = window;
+        IBindStatusCallback_AddRef(STATUSCLB(&callback->bsc));
+        callback->bsc.doc = window->doc;
+    }
+}
+
+void abort_document_bindings(HTMLDocumentNode *doc)
 {
     BSCallback *iter;
 
-    if(doc->doc_obj->bscallback) {
-        if(doc->doc_obj->bscallback->bsc.binding)
-            IBinding_Abort(doc->doc_obj->bscallback->bsc.binding);
-        doc->doc_obj->bscallback->bsc.doc = NULL;
-        IBindStatusCallback_Release(STATUSCLB(&doc->doc_obj->bscallback->bsc));
-    }
-
-    LIST_FOR_EACH_ENTRY(iter, &doc->doc_obj->bindings, BSCallback, entry) {
+    LIST_FOR_EACH_ENTRY(iter, &doc->bindings, BSCallback, entry) {
+        if(iter->binding)
+            IBinding_Abort(iter->binding);
         iter->doc = NULL;
         list_remove(&iter->entry);
-    }
-
-    doc->doc_obj->bscallback = callback;
-
-    if(callback) {
-        IBindStatusCallback_AddRef(STATUSCLB(&callback->bsc));
-        callback->bsc.doc = doc;
     }
 }
 
@@ -1133,12 +1142,16 @@ HRESULT channelbsc_load_stream(nsChannelBSC *bscallback, IStream *stream)
 {
     HRESULT hres;
 
-    const char text_html[] = "text/html";
+    if(!bscallback->nschannel) {
+        ERR("NULL nschannel\n");
+        return E_FAIL;
+    }
+
+    bscallback->nschannel->content_type = heap_strdupA("text/html");
+    if(!bscallback->nschannel->content_type)
+        return E_OUTOFMEMORY;
 
     add_nsrequest(bscallback);
-
-    if(bscallback->nschannel)
-        bscallback->nschannel->content_type = heap_strdupA(text_html);
 
     hres = read_stream_data(bscallback, stream);
     IBindStatusCallback_OnStopBinding(STATUSCLB(&bscallback->bsc), hres, ERROR_SUCCESS);
@@ -1160,14 +1173,27 @@ void channelbsc_set_channel(nsChannelBSC *This, nsChannel *channel, nsIStreamLis
     }
 }
 
-void hlink_frame_navigate(HTMLDocument *doc, IHlinkFrame *hlink_frame,
-                          LPCWSTR uri, nsIInputStream *post_data_stream, DWORD hlnf)
+HRESULT hlink_frame_navigate(HTMLDocument *doc, LPCWSTR url,
+        nsIInputStream *post_data_stream, DWORD hlnf)
 {
+    IHlinkFrame *hlink_frame;
+    IServiceProvider *sp;
     BSCallback *callback;
     IBindCtx *bindctx;
     IMoniker *mon;
     IHlink *hlink;
-    HRESULT hr;
+    HRESULT hres;
+
+    hres = IOleClientSite_QueryInterface(doc->doc_obj->client, &IID_IServiceProvider,
+            (void**)&sp);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IServiceProvider_QueryService(sp, &IID_IHlinkFrame, &IID_IHlinkFrame,
+            (void**)&hlink_frame);
+    IServiceProvider_Release(sp);
+    if(FAILED(hres))
+        return hres;
 
     callback = &create_channelbsc(NULL)->bsc;
 
@@ -1178,33 +1204,52 @@ void hlink_frame_navigate(HTMLDocument *doc, IHlinkFrame *hlink_frame,
               debugstr_an(callback->post_data, callback->post_data_len));
     }
 
-    hr = CreateAsyncBindCtx(0, STATUSCLB(callback), NULL, &bindctx);
-    if (FAILED(hr)) {
-        IBindStatusCallback_Release(STATUSCLB(callback));
-        return;
-    }
+    hres = CreateAsyncBindCtx(0, STATUSCLB(callback), NULL, &bindctx);
+    if(SUCCEEDED(hres))
+        hres = CoCreateInstance(&CLSID_StdHlink, NULL, CLSCTX_INPROC_SERVER,
+                &IID_IHlink, (LPVOID*)&hlink);
 
-    hr = CoCreateInstance(&CLSID_StdHlink, NULL, CLSCTX_INPROC_SERVER, &IID_IHlink, (LPVOID*)&hlink);
-    if (FAILED(hr)) {
-        IBindCtx_Release(bindctx);
-        IBindStatusCallback_Release(STATUSCLB(callback));
-        return;
-    }
+    if(SUCCEEDED(hres))
+        hres = CreateURLMoniker(NULL, url, &mon);
 
-    hr = CreateURLMoniker(NULL, uri, &mon);
-    if (SUCCEEDED(hr)) {
-        IHlink_SetMonikerReference(hlink, 0, mon, NULL);
+    if(SUCCEEDED(hres)) {
+        IHlink_SetMonikerReference(hlink, HLINKSETF_TARGET, mon, NULL);
 
         if(hlnf & HLNF_OPENINNEWWINDOW) {
             static const WCHAR wszBlank[] = {'_','b','l','a','n','k',0};
             IHlink_SetTargetFrameName(hlink, wszBlank); /* FIXME */
         }
 
-        IHlinkFrame_Navigate(hlink_frame, hlnf, bindctx, STATUSCLB(callback), hlink);
+        hres = IHlinkFrame_Navigate(hlink_frame, hlnf, bindctx, STATUSCLB(callback), hlink);
 
         IMoniker_Release(mon);
     }
 
+    IHlinkFrame_Release(hlink_frame);
     IBindCtx_Release(bindctx);
     IBindStatusCallback_Release(STATUSCLB(callback));
+    return hres;
+}
+
+HRESULT navigate_url(HTMLDocumentNode *doc, OLECHAR *url)
+{
+    OLECHAR *translated_url = NULL;
+    HRESULT hres;
+
+    if(!url)
+        url = emptyW;
+
+    if(doc->basedoc.doc_obj->hostui) {
+        hres = IDocHostUIHandler_TranslateUrl(doc->basedoc.doc_obj->hostui, 0, url,
+                &translated_url);
+        if(hres == S_OK)
+            url = translated_url;
+    }
+
+    hres = hlink_frame_navigate(&doc->basedoc, url, NULL, 0);
+    if(FAILED(hres))
+        FIXME("hlink_frame_navigate failed: %08x\n", hres);
+
+    CoTaskMemFree(translated_url);
+    return hres;
 }

@@ -996,15 +996,16 @@ GetVolumeNameForVolumeMountPointW(
                                      MountPoints, BufferLength);
       if (!NT_SUCCESS(Status))
       {
-         RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
          if (Status == STATUS_BUFFER_OVERFLOW)
          {
             BufferLength = MountPoints->Size;
+            RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
             continue;
          }
          else if (!NT_SUCCESS(Status))
          {
             RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoint);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
             NtClose(FileHandle);
             SetLastErrorByStatus(Status);
             return FALSE;

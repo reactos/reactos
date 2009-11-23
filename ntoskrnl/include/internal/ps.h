@@ -434,6 +434,8 @@ extern POBJECT_TYPE PsJobType;
 extern LARGE_INTEGER ShortPsLockDelay;
 extern UNICODE_STRING PsNtDllPathName;
 extern LIST_ENTRY PsLoadedModuleList;
+extern KSPIN_LOCK PsLoadedModuleSpinLock;
+extern ERESOURCE PsLoadedModuleResource;
 extern ULONG_PTR PsNtosImageBase;
 
 //

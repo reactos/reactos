@@ -526,15 +526,15 @@ extern "C" {
 #define sys_errlist _sys_errlist
 #define sys_nerr _sys_nerr
 #define environ _environ
-  char *__cdecl ecvt(double _Val,int _NumOfDigits,int *_PtDec,int *_PtSign);
-  char *__cdecl fcvt(double _Val,int _NumOfDec,int *_PtDec,int *_PtSign);
-  char *__cdecl gcvt(double _Val,int _NumOfDigits,char *_DstBuf);
-  char *__cdecl itoa(int _Val,char *_DstBuf,int _Radix);
-  char *__cdecl ltoa(long _Val,char *_DstBuf,int _Radix);
-  int __cdecl putenv(const char *_EnvString);
-  void __cdecl swab(char *_Buf1,char *_Buf2,int _SizeInBytes);
-  char *__cdecl ultoa(unsigned long _Val,char *_Dstbuf,int _Radix);
-  onexit_t __cdecl onexit(onexit_t _Func);
+  _CRTIMP char *__cdecl ecvt(double _Val,int _NumOfDigits,int *_PtDec,int *_PtSign);
+  _CRTIMP char *__cdecl fcvt(double _Val,int _NumOfDec,int *_PtDec,int *_PtSign);
+  _CRTIMP char *__cdecl gcvt(double _Val,int _NumOfDigits,char *_DstBuf);
+  _CRTIMP char *__cdecl itoa(int _Val,char *_DstBuf,int _Radix);
+  _CRTIMP char *__cdecl ltoa(long _Val,char *_DstBuf,int _Radix);
+  _CRTIMP int __cdecl putenv(const char *_EnvString);
+  _CRTIMP void __cdecl swab(char *_Buf1,char *_Buf2,int _SizeInBytes);
+  _CRTIMP char *__cdecl ultoa(unsigned long _Val,char *_Dstbuf,int _Radix);
+  _CRTIMP onexit_t __cdecl onexit(onexit_t _Func);
 #endif
 #endif
 

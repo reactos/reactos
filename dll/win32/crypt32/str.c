@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdarg.h>
+
+#define NONAMELESSUNION
+
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
@@ -1017,11 +1020,11 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
         if (entry)
         {
             if (!pszNameString)
-                ret = strlenW(entry->pwszRfc822Name) + 1;
+                ret = strlenW(entry->u.pwszRfc822Name) + 1;
             else if (cchNameString)
             {
-                ret = min(strlenW(entry->pwszRfc822Name), cchNameString - 1);
-                memcpy(pszNameString, entry->pwszRfc822Name,
+                ret = min(strlenW(entry->u.pwszRfc822Name), cchNameString - 1);
+                memcpy(pszNameString, entry->u.pwszRfc822Name,
                  ret * sizeof(WCHAR));
                 pszNameString[ret++] = 0;
             }
@@ -1045,7 +1048,7 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
 
             if (entry)
                 ret = CertNameToStrW(pCertContext->dwCertEncodingType,
-                 &entry->DirectoryName, *(DWORD *)pvTypePara, pszNameString,
+                 &entry->u.DirectoryName, *(DWORD *)pvTypePara, pszNameString,
                  cchNameString);
             if (info)
                 LocalFree(info);
@@ -1062,7 +1065,7 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
 
             if (entry)
                 ret = cert_name_to_str_with_indent(X509_ASN_ENCODING, 0,
-                 &entry->DirectoryName, 0, pszNameString, cchNameString);
+                 &entry->u.DirectoryName, 0, pszNameString, cchNameString);
             if (altInfo)
                 LocalFree(altInfo);
         }
@@ -1102,12 +1105,12 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
                 if (entry)
                 {
                     if (!pszNameString)
-                        ret = strlenW(entry->pwszRfc822Name) + 1;
+                        ret = strlenW(entry->u.pwszRfc822Name) + 1;
                     else if (cchNameString)
                     {
-                        ret = min(strlenW(entry->pwszRfc822Name),
+                        ret = min(strlenW(entry->u.pwszRfc822Name),
                          cchNameString - 1);
-                        memcpy(pszNameString, entry->pwszRfc822Name,
+                        memcpy(pszNameString, entry->u.pwszRfc822Name,
                          ret * sizeof(WCHAR));
                         pszNameString[ret++] = 0;
                     }
@@ -1139,11 +1142,11 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
         if (entry)
         {
             if (!pszNameString)
-                ret = strlenW(entry->pwszDNSName) + 1;
+                ret = strlenW(entry->u.pwszDNSName) + 1;
             else if (cchNameString)
             {
-                ret = min(strlenW(entry->pwszDNSName), cchNameString - 1);
-                memcpy(pszNameString, entry->pwszDNSName, ret * sizeof(WCHAR));
+                ret = min(strlenW(entry->u.pwszDNSName), cchNameString - 1);
+                memcpy(pszNameString, entry->u.pwszDNSName, ret * sizeof(WCHAR));
                 pszNameString[ret++] = 0;
             }
         }
@@ -1163,11 +1166,11 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
         if (entry)
         {
             if (!pszNameString)
-                ret = strlenW(entry->pwszURL) + 1;
+                ret = strlenW(entry->u.pwszURL) + 1;
             else if (cchNameString)
             {
-                ret = min(strlenW(entry->pwszURL), cchNameString - 1);
-                memcpy(pszNameString, entry->pwszURL, ret * sizeof(WCHAR));
+                ret = min(strlenW(entry->u.pwszURL), cchNameString - 1);
+                memcpy(pszNameString, entry->u.pwszURL, ret * sizeof(WCHAR));
                 pszNameString[ret++] = 0;
             }
         }
