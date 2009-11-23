@@ -474,6 +474,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
     {
         DPRINT1 ("Volume has been verified!\n");
         ExReleaseResourceLite (&DeviceExt->VcbResource);
+		FsRtlExitFileSystem();
         return STATUS_SUCCESS;
     }
 
