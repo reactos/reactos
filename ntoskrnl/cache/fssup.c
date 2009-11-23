@@ -160,6 +160,9 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
 
     ASSERT(UninitializeEvent == NULL);
 
+	if (Map)
+		CcpFlushCache(Map, NULL, 0, NULL, TRUE);
+
 	CcpLock();
 	if (PrivateCacheMap)
 	{

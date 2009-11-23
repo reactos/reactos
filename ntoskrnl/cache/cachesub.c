@@ -176,7 +176,7 @@ CcpFlushCache(IN PNOCC_CACHE_MAP Map,
 			Bcb->Dirty = FALSE;
 						
 			ListEntry = ListEntry->Flink;
-			if (Delete && Bcb->RefCount == 2)
+			if (Delete && Bcb->RefCount < 2)
 			{
 				Bcb->RefCount = 1;
 				CcpDereferenceCache(Bcb - CcCacheSections, FALSE);
