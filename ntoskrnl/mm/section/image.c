@@ -1848,8 +1848,6 @@ MiUnmapImageSection
 	//DPRINT("MiUnmapImageSection @ %x\n", BaseAddress);
 	MemoryArea->DeleteInProgress = TRUE;
 
-	MiAwaitPageOps(AddressSpace, MemoryArea, BaseAddress);
-
 	Section = MemoryArea->Data.SectionData.Section;
 
 	if (Section->AllocationAttributes & SEC_IMAGE)

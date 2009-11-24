@@ -83,11 +83,11 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
     */
    if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Segment) ^ (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
    else
    {
-      Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Pid) ^ (((ULONG_PTR)Address) / PAGE_SIZE));
    }
    Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 
@@ -151,11 +151,11 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
     */
    if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Segment) ^ (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
    else
    {
-      Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Pid) ^ (((ULONG_PTR)Address) / PAGE_SIZE));
    }
    Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 

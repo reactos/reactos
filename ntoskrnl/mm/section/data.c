@@ -2333,50 +2333,6 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-NTAPI
-MiAwaitPageOps(PMMSUPPORT AddressSpace, PMEMORY_AREA MemoryArea, PVOID BaseAddress)
-{
-	NTSTATUS Status;
-	PMM_PAGEOP PageOp;
-	ULONG Offset;
-
-	while (MemoryArea->PageOpCount)
-	{
-		Offset = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress);
-		
-		while (Offset)
-		{
-			Offset -= PAGE_SIZE;
-			PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL,
-									  MemoryArea->Data.SectionData.Segment,
-									  Offset);
-			if (PageOp)
-			{
-				MmUnlockAddressSpace(AddressSpace);
-				Status = MmspWaitForPageOpCompletionEvent(PageOp);
-				if (Status != STATUS_SUCCESS)
-				{
-					DPRINT1("Failed to wait for page op, status = %x\n", Status);
-					ASSERT(FALSE);
-				}
-				MmLockAddressSpace(AddressSpace);
-				MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
-														 BaseAddress);
-				if (MemoryArea == NULL ||
-					MemoryArea->Type != MEMORY_AREA_SECTION_VIEW)
-				{
-					MmUnlockAddressSpace(AddressSpace);
-					DPRINT("STATUS_NOT_MAPPED_VIEW\n");
-					return STATUS_NOT_MAPPED_VIEW;
-				}
-				break;
-			}
-		}
-	}
-	return STATUS_SUCCESS;
-}
-
 /*
  * @implemented
  */
@@ -2409,18 +2365,14 @@ MmUnmapViewOfSection(PEPROCESS Process,
    if (MemoryArea->Type == MEMORY_AREA_IMAGE_SECTION)
    {
 	   MemoryArea->DeleteInProgress = TRUE;
-	   Status = MiAwaitPageOps(AddressSpace, MemoryArea, BaseAddress);
-	   if (NT_SUCCESS(Status))
-		   Status = MiUnmapImageSection(AddressSpace, MemoryArea, BaseAddress);
+	   Status = MiUnmapImageSection(AddressSpace, MemoryArea, BaseAddress);
    }
    else if (MemoryArea->Type == MEMORY_AREA_PHYSICAL_MEMORY_SECTION ||
 			MemoryArea->Type == MEMORY_AREA_PAGE_FILE_SECTION ||
 			MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
    {
 	   MemoryArea->DeleteInProgress = TRUE;
-	   Status = MiAwaitPageOps(AddressSpace, MemoryArea, BaseAddress);
-	   if (NT_SUCCESS(Status))
-		   Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
+	   Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
    }
    else
    {

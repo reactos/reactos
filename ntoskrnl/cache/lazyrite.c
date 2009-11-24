@@ -14,21 +14,15 @@
 
 /* GLOBALS ********************************************************************/
 
-KEVENT CcpLazyWriteEvent;
+extern KEVENT MpwCompleteEvent;
 
 /* FUNCTIONS ******************************************************************/
-
-VOID NTAPI
-CcpLazyWriteThread(PVOID Unused)
-{
-	/* Not implemented */
-}
 
 NTSTATUS
 NTAPI
 CcWaitForCurrentLazyWriterActivity(VOID)
 {
-    //KeWaitForSingleObject(&CcpLazyWriteEvent, Executive, KernelMode, FALSE, NULL);
+    KeWaitForSingleObject(&MpwCompleteEvent, Executive, KernelMode, FALSE, NULL);
     return STATUS_SUCCESS;
 }
 

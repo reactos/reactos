@@ -99,6 +99,7 @@ MmGetLRUFirstUserPage(VOID)
       return 0;
    }
    PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
+   MmReferencePage(PageDescriptor - MmPfnDatabase);
    ASSERT_PFN(PageDescriptor);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
    return PageDescriptor - MmPfnDatabase;
@@ -137,10 +138,13 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
    NextListEntry = (PLIST_ENTRY)Page->ListEntry.Flink;
    if (NextListEntry == &UserPageListHead)
    {
+	  MmDereferencePage(PreviousPfn);
 	  KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
       return 0;
    }
    PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
+   MmReferencePage(PageDescriptor - MmPfnDatabase);
+   MmDereferencePage(PreviousPfn);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
    return PageDescriptor - MmPfnDatabase;
 }
@@ -906,6 +910,7 @@ VOID
 NTAPI
 MmDereferencePage(PFN_TYPE Pfn)
 {
+   KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
    DPRINT("MmDereferencePage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
@@ -928,7 +933,12 @@ MmDereferencePage(PFN_TYPE Pfn)
    if (Page->ReferenceCount == 0)
    {
       MmAvailablePages++;
-      if (Page->Flags.Consumer == MC_USER) RemoveEntryList(&Page->ListEntry);
+      if (Page->Flags.Consumer == MC_USER)
+	  {
+		  oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+		  RemoveEntryList(&Page->ListEntry);
+		  KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+	  }		  
       if (Page->RmapListHead != (LONG)NULL)
       {
          DPRINT1("Freeing page with rmap entries.\n");
