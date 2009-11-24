@@ -459,11 +459,11 @@ MmNotPresentFaultImageFile
 	else if (IS_SWAP_FROM_SSE(Entry))
 	{
 		Status = MiSwapInSectionPage(AddressSpace, MemoryArea, Segment, Address, &Page);
+		// MiSwapInSectionPage unlocks the section segment
 		if (Locked)
 		{
 			MmLockPage(Page);
 		}
-		MmUnlockSectionSegment(Segment);
 		//DPRINT("Address 0x%.8X\n", Address);
 		return(STATUS_SUCCESS);
 	}

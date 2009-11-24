@@ -297,6 +297,7 @@ MmNotPresentFaultPageFile
 	else if (IS_SWAP_FROM_SSE(Entry))
 	{
 		Status = MiSwapInSectionPage(AddressSpace, MemoryArea, Segment, Address, &Page);
+		// MiSwapInSectionPage unlocks the section segment
 		if (NT_SUCCESS(Status) && Locked)
 		{
 			MmLockPage(Page);
