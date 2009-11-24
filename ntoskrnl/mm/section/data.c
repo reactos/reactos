@@ -2216,8 +2216,6 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    PFILE_OBJECT FileObject;
    LARGE_INTEGER Offset;
    SWAPENTRY SavedSwapEntry;
-   PMM_PAGEOP PageOp;
-   NTSTATUS Status;
    PROS_SECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
    PMMSUPPORT AddressSpace;
@@ -2235,26 +2233,6 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    Segment = MemoryArea->Data.SectionData.Segment;
    FileObject = Section->FileObject;
 
-   PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset.QuadPart);
-
-   while (PageOp)
-   {
-      MmUnlockSectionSegment(Segment);
-      MmUnlockAddressSpace(AddressSpace);
-
-      Status = MmspWaitForPageOpCompletionEvent(PageOp);
-      if (Status != STATUS_SUCCESS)
-      {
-         DPRINT1("Failed to wait for page op, status = %x\n", Status);
-         ASSERT(FALSE);
-      }
-
-      MmLockAddressSpace(AddressSpace);
-      MmLockSectionSegment(Segment);
-      MmspCompleteAndReleasePageOp(PageOp);
-      PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset.QuadPart);
-   }
-
    Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
 
    /*
@@ -2263,8 +2241,17 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
     */
    if (Page == PFN_FROM_SSE(Entry) && Dirty)
    {
-	   DPRINT("Writing back dirty section page %08x%08x\n", Offset.u.HighPart, Offset.u.LowPart);
-	   Status = MiWriteBackPage(FileObject, &Offset, PAGE_SIZE, Page);
+	   MmReferencePage(Page);
+	   MmUnlockSectionSegment(Segment);
+	   MiWriteBackPage(FileObject, &Offset, PAGE_SIZE, Page);
+	   MmLockSectionSegment(Segment);
+	   MmDereferencePage(Page);
+	   Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
+	   if (Page != PFN_FROM_SSE(Entry)) 
+	   {
+		   // Somebody else freed the page while we were unlocked
+		   return;
+	   }
    }
 
    if (SwapEntry != 0)

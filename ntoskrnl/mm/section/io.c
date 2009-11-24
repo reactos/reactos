@@ -431,13 +431,16 @@ MiWriteBackPage
 	NTSTATUS Status;
 	PVOID Hyperspace;
 	IO_STATUS_BLOCK Iosb;
+	KIRQL OldIrql;
 	PVOID PageBuffer = ExAllocatePool(NonPagedPool, PAGE_SIZE);
 
 	if (!PageBuffer) return STATUS_NO_MEMORY;
 
+	OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
 	Hyperspace = MmCreateHyperspaceMapping(Page);
 	RtlCopyMemory(PageBuffer, Hyperspace, PAGE_SIZE);
 	MmDeleteHyperspaceMapping(Hyperspace);
+	KfLowerIrql(OldIrql);
 
 	DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart);
 	Status = MiSimpleWrite
