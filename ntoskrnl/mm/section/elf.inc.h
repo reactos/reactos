@@ -3,6 +3,50 @@
 
 #include <reactos/exeformat.h>
 
+#define IMAGE_SUBSYSTEM_UNKNOWN                      0
+#define IMAGE_SUBSYSTEM_NATIVE                       1
+#define IMAGE_SUBSYSTEM_WINDOWS_GUI                  2
+#define IMAGE_SUBSYSTEM_WINDOWS_CUI                  3
+#define IMAGE_SUBSYSTEM_OS2_CUI                      5
+#define IMAGE_SUBSYSTEM_POSIX_CUI                    7
+#define IMAGE_SUBSYSTEM_NATIVE_WINDOWS               8
+#define IMAGE_SUBSYSTEM_WINDOWS_CE_GUI               9
+#define IMAGE_SUBSYSTEM_EFI_APPLICATION             10
+#define IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER     11
+#define IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER          12
+#define IMAGE_SUBSYSTEM_EFI_ROM                     13
+#define IMAGE_SUBSYSTEM_XBOX                        14
+
+#define IMAGE_FILE_MACHINE_UNKNOWN	0
+#define IMAGE_FILE_MACHINE_AM33       0x1d3
+#define IMAGE_FILE_MACHINE_AMD64      0x8664
+#define IMAGE_FILE_MACHINE_ARM        0x1c0
+#define IMAGE_FILE_MACHINE_EBC        0xebc
+#define IMAGE_FILE_MACHINE_I386       0x14c
+#define IMAGE_FILE_MACHINE_IA64       0x200
+#define IMAGE_FILE_MACHINE_M32R       0x9041
+#define IMAGE_FILE_MACHINE_MIPS16     0x266
+#define IMAGE_FILE_MACHINE_MIPSFPU    0x366
+#define IMAGE_FILE_MACHINE_MIPSFPU16  0x466
+#define IMAGE_FILE_MACHINE_POWERPC    0x1f0
+#define IMAGE_FILE_MACHINE_POWERPCFP  0x1f1
+#define IMAGE_FILE_MACHINE_R4000      0x166
+#define IMAGE_FILE_MACHINE_SH3        0x1a2
+#define IMAGE_FILE_MACHINE_SH3E       0x01a4
+#define IMAGE_FILE_MACHINE_SH3DSP     0x1a3
+#define IMAGE_FILE_MACHINE_SH4        0x1a6
+#define IMAGE_FILE_MACHINE_SH5        0x1a8
+#define IMAGE_FILE_MACHINE_THUMB      0x1c2
+#define IMAGE_FILE_MACHINE_WCEMIPSV2  0x169
+#define IMAGE_FILE_MACHINE_R3000      0x162
+#define IMAGE_FILE_MACHINE_R10000     0x168
+#define IMAGE_FILE_MACHINE_ALPHA      0x184
+#define IMAGE_FILE_MACHINE_ALPHA64    0x0284
+#define IMAGE_FILE_MACHINE_AXP64      IMAGE_FILE_MACHINE_ALPHA64
+#define IMAGE_FILE_MACHINE_CEE        0xC0EE
+#define IMAGE_FILE_MACHINE_TRICORE    0x0520
+#define IMAGE_FILE_MACHINE_CEF        0x0CEF
+
 #ifndef __ELF_WORD_SIZE
 #error __ELF_WORD_SIZE must be defined
 #endif
@@ -560,8 +604,8 @@ Elf64FmtCreateSection
 
     ASSERT(nFileSize <= MAXULONG);
 
-    pssSegments[j].Length = (ULONG)(nVirtualSize & 0xFFFFFFFF);
-    pssSegments[j].RawLength = (ULONG)(nFileSize & 0xFFFFFFFF);
+    pssSegments[j].Length.QuadPart = (ULONG)(nVirtualSize & 0xFFFFFFFF);
+    pssSegments[j].RawLength.QuadPart = (ULONG)(nFileSize & 0xFFFFFFFF);
 
     /* File offset */
     nFileOffset = ElfFmtpAlignDown(nFileOffset, nAlignment);
@@ -573,7 +617,7 @@ Elf64FmtCreateSection
      DIE(("File offset of loadable segment is too large\n"));
 #endif
 
-    pssSegments[j].FileOffset = (LONG64)nFileOffset;
+    pssSegments[j].Image.FileOffset = (LONG64)nFileOffset;
 
     /* Virtual address */
     nVirtualAddr = ElfFmtpAlignDown(nVirtualAddr, nAlignment);
@@ -582,10 +626,10 @@ Elf64FmtCreateSection
     {
      /* First segment: its address is the base address of the image */
      nImageBase = nVirtualAddr;
-     pssSegments[j].VirtualAddress = 0;
+     pssSegments[j].Image.VirtualAddress = 0;
 
      /* Several places make this assumption */
-     if(pssSegments[j].FileOffset != 0)
+     if(pssSegments[j].Image.FileOffset != 0)
       DIE(("First loadable segment doesn't contain the ELF header\n"));
     }
     else
@@ -601,9 +645,9 @@ Elf64FmtCreateSection
      if(nVirtualOffset > MAXULONG)
       DIE(("Virtual image larger than 4GB\n"));
 
-     pssSegments[j].VirtualAddress = (ULONG)(nVirtualOffset & 0xFFFFFFFF);
+     pssSegments[j].Image.VirtualAddress = (ULONG)(nVirtualOffset & 0xFFFFFFFF);
 
-     if(pssSegments[j].VirtualAddress != nPrevVirtualEndOfSegment)
+     if(pssSegments[j].Image.VirtualAddress != nPrevVirtualEndOfSegment)
       DIE(("Loadable segments are not sorted and contiguous\n"));
     }
 
@@ -622,23 +666,23 @@ Elf64FmtCreateSection
     if(pssSegments[j].Protection & PAGE_IS_EXECUTABLE)
     {
      ImageSectionObject->Executable = TRUE;
-     pssSegments[j].Characteristics = IMAGE_SCN_CNT_CODE;
+     pssSegments[j].Image.Characteristics = IMAGE_SCN_CNT_CODE;
     }
-    else if(pssSegments[j].RawLength == 0)
-     pssSegments[j].Characteristics = IMAGE_SCN_CNT_UNINITIALIZED_DATA;
+    else if(pssSegments[j].RawLength.QuadPart == 0)
+     pssSegments[j].Image.Characteristics = IMAGE_SCN_CNT_UNINITIALIZED_DATA;
     else
-     pssSegments[j].Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA;
+     pssSegments[j].Image.Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA;
 
     /*
      FIXME: see the TODO above. This is the safest way to load ELF drivers, for
      now, if a bit wasteful of memory
     */
-    pssSegments[j].Characteristics |= IMAGE_SCN_MEM_NOT_PAGED;
+    pssSegments[j].Image.Characteristics |= IMAGE_SCN_MEM_NOT_PAGED;
 
     /* Copy-on-write */
     pssSegments[j].WriteCopy = TRUE;
 
-    if(!Intsafe_AddULong32(&nPrevVirtualEndOfSegment, pssSegments[j].VirtualAddress, pssSegments[j].Length))
+    if(!Intsafe_AddULong32(&nPrevVirtualEndOfSegment, pssSegments[j].Image.VirtualAddress, (ULONG)pssSegments[j].Length.QuadPart))
      DIE(("Virtual image larger than 4GB\n"));
 
     ++ j;
