@@ -193,6 +193,7 @@ SAFEARRAY{ws}*/\(	return tSAFEARRAY;
 <INITIAL,ATTR>\<=	return LESSEQUAL;
 <INITIAL,ATTR>\|\|	return LOGICALOR;
 <INITIAL,ATTR>&&	return LOGICALAND;
+<INITIAL,ATTR>\.\.\.	return ELLIPSIS;
 <INITIAL,ATTR>.		return yytext[0];
 <<EOF>>			{
 				if (import_stack_ptr)
@@ -220,6 +221,7 @@ static const struct keyword keywords[] = {
 	{"TRUE",			tTRUE},
 	{"__cdecl",			tCDECL},
 	{"__fastcall",			tFASTCALL},
+	{"__int3264",			tINT3264},
 	{"__int64",			tINT64},
 	{"__pascal",			tPASCAL},
 	{"__stdcall",			tSTDCALL},
@@ -279,6 +281,7 @@ static const struct keyword attr_keywords[] =
 {
         {"aggregatable",                tAGGREGATABLE},
         {"allocate",                    tALLOCATE},
+        {"annotation",                  tANNOTATION},
         {"appobject",                   tAPPOBJECT},
         {"async",                       tASYNC},
         {"async_uuid",                  tASYNCUUID},

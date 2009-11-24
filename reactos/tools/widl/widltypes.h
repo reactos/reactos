@@ -81,6 +81,7 @@ typedef struct list statement_list_t;
 enum attr_type
 {
     ATTR_AGGREGATABLE,
+    ATTR_ANNOTATION,
     ATTR_APPOBJECT,
     ATTR_ASYNC,
     ATTR_AUTO_HANDLE,
@@ -238,6 +239,7 @@ enum type_basic_type
     TYPE_BASIC_INT32,
     TYPE_BASIC_INT64,
     TYPE_BASIC_INT,
+    TYPE_BASIC_INT3264,
     TYPE_BASIC_CHAR,
     TYPE_BASIC_HYPER,
     TYPE_BASIC_BYTE,
@@ -350,6 +352,12 @@ struct pointer_details
   unsigned char def_fc;
 };
 
+struct bitfield_details
+{
+  struct _type_t *field;
+  const expr_t *bits;
+};
+
 enum type_type
 {
     TYPE_VOID,
@@ -365,6 +373,7 @@ enum type_type
     TYPE_INTERFACE,
     TYPE_POINTER,
     TYPE_ARRAY,
+    TYPE_BITFIELD,
 };
 
 struct _type_t {
@@ -382,6 +391,7 @@ struct _type_t {
     struct coclass_details coclass;
     struct basic_details basic;
     struct pointer_details pointer;
+    struct bitfield_details bitfield;
   } details;
   type_t *orig;                   /* dup'd types */
   unsigned int typestring_offset;
@@ -415,6 +425,7 @@ struct _declarator_t {
   type_t *type;
   type_t *func_type;
   array_dims_t *array;
+  expr_t *bits;
 
   /* parser-internal */
   struct list entry;

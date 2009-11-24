@@ -180,6 +180,21 @@ unsigned short get_type_vt(type_t *t)
         return VT_UI8;
       else
         return VT_I8;
+    case TYPE_BASIC_INT3264:
+      if (typelib_kind == SYS_WIN64)
+      {
+        if (type_basic_get_sign(t) > 0)
+          return VT_UI8;
+        else
+          return VT_I8;
+      }
+      else
+      {
+        if (type_basic_get_sign(t) > 0)
+          return VT_UI4;
+        else
+          return VT_I4;
+      }
     case TYPE_BASIC_FLOAT:
       return VT_R4;
     case TYPE_BASIC_DOUBLE:
@@ -227,6 +242,10 @@ unsigned short get_type_vt(type_t *t)
 
   case TYPE_FUNCTION:
     error("get_type_vt: functions not supported\n");
+    break;
+
+  case TYPE_BITFIELD:
+    error("get_type_vt: bitfields not supported\n");
     break;
   }
   return 0;
