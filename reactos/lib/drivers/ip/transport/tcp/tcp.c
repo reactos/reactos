@@ -47,7 +47,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
         NTSTATUS Status;
         PIRP Irp;
         PMDL Mdl;
-        ULONG SocketError;
+        ULONG SocketError = 0;
 
         TI_DbgPrint(MID_TRACE,("Handling signalled state on %x (%x)\n",
                                Connection, Connection->SocketContext));
