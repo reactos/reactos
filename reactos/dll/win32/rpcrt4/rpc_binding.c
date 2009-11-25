@@ -661,11 +661,11 @@ RPC_STATUS WINAPI RpcStringBindingParseA( RPC_CSTR StringBinding, RPC_CSTR *ObjU
   return RPC_S_OK;
 
 fail:
-  if (ObjUuid) RpcStringFreeA(ObjUuid);
-  if (Protseq) RpcStringFreeA(Protseq);
-  if (NetworkAddr) RpcStringFreeA(NetworkAddr);
-  if (Endpoint) RpcStringFreeA(Endpoint);
-  if (Options) RpcStringFreeA(Options);
+  if (ObjUuid) RpcStringFreeA((unsigned char**)ObjUuid);
+  if (Protseq) RpcStringFreeA((unsigned char**)Protseq);
+  if (NetworkAddr) RpcStringFreeA((unsigned char**)NetworkAddr);
+  if (Endpoint) RpcStringFreeA((unsigned char**)Endpoint);
+  if (Options) RpcStringFreeA((unsigned char**)Options);
   return RPC_S_INVALID_STRING_BINDING;
 }
 
@@ -796,7 +796,7 @@ RPC_STATUS WINAPI RpcBindingFree( RPC_BINDING_HANDLE* Binding )
 RPC_STATUS WINAPI RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
 {
   RPC_STATUS status;
-  ULONG c;
+  unsigned long c;
 
   TRACE("(%p)\n", BindingVector);
   for (c=0; c<(*BindingVector)->Count; c++) {
@@ -812,7 +812,7 @@ RPC_STATUS WINAPI RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
  */
 RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid )
 {
-  RpcBinding* bind = Binding;
+  RpcBinding* bind = (RpcBinding*)Binding;
 
   TRACE("(%p,%p) = %s\n", Binding, ObjectUuid, debugstr_guid(&bind->ObjectUuid));
   *ObjectUuid = bind->ObjectUuid;
@@ -824,7 +824,7 @@ RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectU
  */
 RPC_STATUS WINAPI RpcBindingSetObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid )
 {
-  RpcBinding* bind = Binding;
+  RpcBinding* bind = (RpcBinding*)Binding;
 
   TRACE("(%p,%s)\n", Binding, debugstr_guid(ObjectUuid));
   if (bind->server) return RPC_S_WRONG_KIND_OF_BINDING;
@@ -856,11 +856,11 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( RPC_CSTR StringBinding, RPC_BIND
   if (ret == RPC_S_OK)
     ret = RPCRT4_CompleteBindingA(bind, (char*)NetworkAddr, (char*)Endpoint, (char*)Options);
 
-  RpcStringFreeA(&Options);
-  RpcStringFreeA(&Endpoint);
-  RpcStringFreeA(&NetworkAddr);
-  RpcStringFreeA(&Protseq);
-  RpcStringFreeA(&ObjectUuid);
+  RpcStringFreeA((unsigned char**)&Options);
+  RpcStringFreeA((unsigned char**)&Endpoint);
+  RpcStringFreeA((unsigned char**)&NetworkAddr);
+  RpcStringFreeA((unsigned char**)&Protseq);
+  RpcStringFreeA((unsigned char**)&ObjectUuid);
 
   if (ret == RPC_S_OK) 
     *Binding = (RPC_BINDING_HANDLE)bind;
@@ -915,7 +915,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingW( RPC_WSTR StringBinding, RPC_BIND
 RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, RPC_CSTR *StringBinding )
 {
   RPC_STATUS ret;
-  RpcBinding* bind = Binding;
+  RpcBinding* bind = (RpcBinding*)Binding;
   RPC_CSTR ObjectUuid;
 
   TRACE("(%p,%p)\n", Binding, StringBinding);
@@ -946,7 +946,7 @@ RPC_STATUS WINAPI RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, RPC_WS
   TRACE("(%p,%p)\n", Binding, StringBinding);
   ret = RpcBindingToStringBindingA(Binding, &str);
   *StringBinding = RPCRT4_strdupAtoW((char*)str);
-  RpcStringFreeA(&str);
+  RpcStringFreeA((unsigned char**)&str);
   return ret;
 }
 
@@ -969,7 +969,7 @@ RPC_STATUS WINAPI I_RpcBindingInqTransportType( RPC_BINDING_HANDLE Binding, unsi
  */
 RPC_STATUS WINAPI I_RpcBindingSetAsync( RPC_BINDING_HANDLE Binding, RPC_BLOCKING_FN BlockingFn)
 {
-  RpcBinding* bind = Binding;
+  RpcBinding* bind = (RpcBinding*)Binding;
 
   TRACE( "(%p,%p): stub\n", Binding, BlockingFn );
 
@@ -986,7 +986,7 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
   RPC_BINDING_HANDLE* DestinationBinding)
 {
   RpcBinding *DestBinding;
-  RpcBinding *SrcBinding = SourceBinding;
+  RpcBinding *SrcBinding = (RpcBinding*)SourceBinding;
   RPC_STATUS status;
 
   TRACE("(%p, %p)\n", SourceBinding, DestinationBinding);
@@ -1501,7 +1501,7 @@ RpcBindingSetAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR ServerPrincName,
                           RPC_AUTH_IDENTITY_HANDLE AuthIdentity, ULONG AuthzSvr,
                           RPC_SECURITY_QOS *SecurityQos )
 {
-  RpcBinding* bind = Binding;
+  RpcBinding* bind = (RpcBinding*)Binding;
   SECURITY_STATUS r;
   CredHandle cred;
   TimeStamp exp;
@@ -1631,7 +1631,7 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
                           ULONG AuthnSvc, RPC_AUTH_IDENTITY_HANDLE AuthIdentity, ULONG AuthzSvr,
                           RPC_SECURITY_QOS *SecurityQos )
 {
-  RpcBinding* bind = Binding;
+  RpcBinding* bind = (RpcBinding*)Binding;
   SECURITY_STATUS r;
   CredHandle cred;
   TimeStamp exp;
@@ -1640,7 +1640,7 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
   PSecPkgInfoW packages;
   ULONG cbMaxToken;
 
-  TRACE("%p %s %u %u %p %u %p\n", Binding, debugstr_w(ServerPrincName),
+  TRACE("%p %s %u %u %p %u %p\n", Binding, debugstr_w((const WCHAR*)ServerPrincName),
         AuthnLevel, AuthnSvc, AuthIdentity, AuthzSvr, SecurityQos);
 
   if (SecurityQos)
@@ -1772,7 +1772,7 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 RpcBindingSetAuthInfoW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, ULONG AuthnLevel,
                         ULONG AuthnSvc, RPC_AUTH_IDENTITY_HANDLE AuthIdentity, ULONG AuthzSvr )
 {
-    TRACE("%p %s %u %u %p %u\n", Binding, debugstr_w(ServerPrincName),
+    TRACE("%p %s %u %u %p %u\n", Binding, debugstr_w((const WCHAR*)ServerPrincName),
           AuthnLevel, AuthnSvc, AuthIdentity, AuthzSvr);
     return RpcBindingSetAuthInfoExW(Binding, ServerPrincName, AuthnLevel, AuthnSvc, AuthIdentity, AuthzSvr, NULL);
 }
