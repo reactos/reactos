@@ -490,6 +490,18 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
 
 //
+// Internal structure for notifications
+//
+typedef struct _INTERNAL_WORK_QUEUE_ITEM
+{
+  WORK_QUEUE_ITEM WorkItem;
+  PDEVICE_OBJECT PhysicalDeviceObject;
+  PDEVICE_CHANGE_COMPLETE_CALLBACK Callback;
+  PVOID Context;
+  PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure;
+} INTERNAL_WORK_QUEUE_ITEM, *PINTERNAL_WORK_QUEUE_ITEM;
+
+//
 // PNP Routines
 //
 VOID
@@ -506,6 +518,16 @@ PpInitSystem(
 VOID
 PnpInit2(
     VOID
+);
+
+NTSTATUS
+PpSetCustomTargetEvent(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PKEVENT NotifyEvent,
+    IN OUT PNTSTATUS NotifyStatus,
+    IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback,
+    IN PVOID Context,
+    IN PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure
 );
 
 VOID
@@ -613,6 +635,9 @@ NTAPI
 IopGetRegistryValue(IN HANDLE Handle,
                     IN PWSTR ValueName,
                     OUT PKEY_VALUE_FULL_INFORMATION *Information);
+
+VOID
+IopReportTargetDeviceChangeAsyncWorker(PVOID Context);
 
 
 //
