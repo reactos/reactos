@@ -233,14 +233,17 @@ MmNotPresentFaultImageFile
 	Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
 	HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
 
-	if (Entry == 0 && !HasSwapEntry && Offset.QuadPart < PAGE_ROUND_UP(Segment->RawLength.QuadPart))
+	if (Entry == 0 && !HasSwapEntry && 
+		(Offset.QuadPart < PAGE_ROUND_UP(Segment->RawLength.QuadPart)))
 	{
 		TotalOffset.QuadPart = Offset.QuadPart + Segment->Image.FileOffset/*.QuadPart*/;
 
 		MmUnlockSectionSegment(Segment);
-		MmUnlockAddressSpace(AddressSpace);
-		Status = MiReadFilePage(Section->FileObject, &TotalOffset, &Page);
-		MmLockAddressSpace(AddressSpace);
+		if (!Locked)
+			MmUnlockAddressSpace(AddressSpace);
+		Status = MiReadFilePage(Section->FileObject, &TotalOffset, &Page, Locked);
+		if (!Locked)
+			MmLockAddressSpace(AddressSpace);
 
 		if (!NT_SUCCESS(Status))
 		{
@@ -282,10 +285,15 @@ MmNotPresentFaultImageFile
 
 		MmDeletePageFileMapping(Process, (PVOID)PAddress, &SwapEntry);
 
+		MmUnlockSectionSegment(Segment);
+		if (!Locked)
+			MmUnlockAddressSpace(AddressSpace);
 		Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
 		if (!NT_SUCCESS(Status))
 		{
-			ASSERT(FALSE);
+			if (!Locked)
+				MmLockAddressSpace(AddressSpace);
+			return Status;
 		}
 		DPRINT("Allocated page %x\n", Page);
 
@@ -296,6 +304,14 @@ MmNotPresentFaultImageFile
 			ASSERT(FALSE);
 		}
 		MmLockAddressSpace(AddressSpace);
+		MmLockSectionSegment(Segment);
+		if (MmIsPagePresent(Process, Address))
+		{
+			// Handled elsewhere
+			MmReleasePageMemoryConsumer(MC_USER, Page);
+			MmUnlockSectionSegment(Segment);
+			return STATUS_SUCCESS;
+		}
 		Status = MmCreateVirtualMapping(Process,
 										Address,
 										Region->Protect,
@@ -335,16 +351,26 @@ MmNotPresentFaultImageFile
 	 */
 	if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
 	{
-		MmUnlockAddressSpace(AddressSpace);
+		MmUnlockSectionSegment(Segment);
+		if (!Locked)
+			MmUnlockAddressSpace(AddressSpace);
 		Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT("Status %x\n", Status);
-			MmUnlockSectionSegment(Segment);
+			if (!Locked)
+				MmLockAddressSpace(AddressSpace);
 			return Status;
 		}
 		DPRINT("Allocated page %x\n", Page);
-		MmLockAddressSpace(AddressSpace);
+		if (!Locked)
+			MmLockAddressSpace(AddressSpace);
+		if (MmIsPagePresent(Process, Address))
+		{
+			// Handled elsewhere
+			MmReleasePageMemoryConsumer(MC_USER, Page);
+			return STATUS_SUCCESS;
+		}
 		Status = MmCreateVirtualMapping(Process,
 										Address,
 										Region->Protect,
@@ -354,7 +380,6 @@ MmNotPresentFaultImageFile
 		{
 			MmReleasePageMemoryConsumer(MC_USER, Page);
 			DPRINT("Release page %x\n", Page);
-			MmUnlockSectionSegment(Segment);
 			return(Status);
 		}
 		MmInsertRmap(Page, Process, (PVOID)PAddress);
@@ -366,7 +391,6 @@ MmNotPresentFaultImageFile
 		/*
 		 * Cleanup and release locks
 		 */
-		MmUnlockSectionSegment(Segment);
 		//DPRINT("Address 0x%.8X\n", Address);
 		return(STATUS_SUCCESS);
 	}
@@ -386,7 +410,9 @@ MmNotPresentFaultImageFile
 		/*
 		 * Release all our locks and read in the page from disk
 		 */
-		MmUnlockAddressSpace(AddressSpace);
+		MmUnlockSectionSegment(Segment);
+		if (!Locked)
+			MmUnlockAddressSpace(AddressSpace);
 
 		if (Offset.QuadPart >= PAGE_ROUND_UP(Segment->RawLength.QuadPart))
 		{
@@ -394,8 +420,8 @@ MmNotPresentFaultImageFile
 			if (!NT_SUCCESS(Status))
 			{
 				DPRINT1("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
-				MmLockAddressSpace(AddressSpace);
-				MmUnlockSectionSegment(Segment);
+				if (!Locked)
+					MmLockAddressSpace(AddressSpace);
 				return Status;
 			}
 			DPRINT("Allocated page %x\n", Page);
@@ -409,8 +435,8 @@ MmNotPresentFaultImageFile
 				DPRINT1("Unable to create virtual mapping\n");
 				MmReleasePageMemoryConsumer(MC_USER, Page);
 				DPRINT("Release page %x\n", Page);
-				MmLockAddressSpace(AddressSpace);
-				MmUnlockSectionSegment(Segment);
+				if (!Locked)
+					MmLockAddressSpace(AddressSpace);
 				return Status;
 			}
 		}
@@ -426,8 +452,8 @@ MmNotPresentFaultImageFile
 				DPRINT1("Unable to create virtual mapping\n");
 				MmReleasePageMemoryConsumer(MC_USER, Page);
 				DPRINT("Release page %x\n", Page);
-				MmLockAddressSpace(AddressSpace);
-				MmUnlockSectionSegment(Segment);
+				if (!Locked)
+					MmLockAddressSpace(AddressSpace);
 				return Status;
 			}
 
@@ -437,12 +463,21 @@ MmNotPresentFaultImageFile
 		/*
 		 * Relock the address space and segment
 		 */
-		MmLockAddressSpace(AddressSpace);
+		if (!Locked)
+			MmLockAddressSpace(AddressSpace);
 
 		/*
 		 * Mark the offset within the section as having valid, in-memory
 		 * data
 		 */
+		MmLockSectionSegment(Segment);
+		if (Entry != MiGetPageEntrySectionSegment(Segment, &Offset))
+		{
+			// Handled elsewhere
+			MmUnlockSectionSegment(Segment);
+			return STATUS_SUCCESS;
+		}
+
 		Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
 		MiSetPageEntrySectionSegment(Segment, &Offset, Entry);
 
@@ -497,6 +532,8 @@ MmNotPresentFaultImageFile
 		//DPRINT("Address 0x%.8X\n", Address);
 		return(STATUS_SUCCESS);
 	}
+
+	ASSERT(FALSE);
 }
 
 NTSTATUS
@@ -1400,7 +1437,7 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
    /* And finish their initialization */
    for ( i = 0; i < ImageSectionObject->NrSegments; ++ i )
    {
-      ExInitializeFastMutex(&ImageSectionObject->Segments[i].Lock);
+      KeInitializeGuardedMutex(&ImageSectionObject->Segments[i].Lock);
 	  ImageSectionObject->Segments[i].Flags = MM_IMAGE_SEGMENT;
       ImageSectionObject->Segments[i].ReferenceCount = 1;
 	  MiInitializeSectionPageTable(&ImageSectionObject->Segments[i]);

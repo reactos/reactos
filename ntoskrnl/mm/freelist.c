@@ -116,7 +116,7 @@ MmInsertLRULastUserPage(PFN_TYPE Pfn)
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
    ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
-   ASSERT(Page->Flags.Consumer == MC_USER);
+   ASSERT(Page->Flags.Consumer == MC_USER || Page->Flags.Consumer == MC_PPOOL);
    InsertTailList(&UserPageListHead, &Page->ListEntry);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
@@ -134,7 +134,7 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
    Page = MiGetPfnEntry(PreviousPfn);
    ASSERT(Page);
    ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
-   ASSERT(Page->Flags.Consumer == MC_USER);
+   ASSERT(Page->Flags.Consumer == MC_USER || Page->Flags.Consumer == MC_PPOOL);
    NextListEntry = (PLIST_ENTRY)Page->ListEntry.Flink;
    if (NextListEntry == &UserPageListHead)
    {

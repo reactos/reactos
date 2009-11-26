@@ -123,13 +123,15 @@ MmNotPresentFaultPageFile
 
 	if (Entry == 0)
 	{
-		MmUnlockAddressSpace(AddressSpace);
+		MmUnlockSectionSegment(Segment);
+		if (!Locked)
+			MmUnlockAddressSpace(AddressSpace);
 		Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT1("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
-			MmLockAddressSpace(AddressSpace);
-			MmUnlockSectionSegment(Segment);
+			if (!Locked)
+				MmLockAddressSpace(AddressSpace);
 			return Status;
 		}
 
@@ -144,16 +146,24 @@ MmNotPresentFaultPageFile
 			DPRINT1("Unable to create virtual mapping\n");
 			MmReleasePageMemoryConsumer(MC_USER, Page);
 			DPRINT("Release page %x\n", Page);
-			MmLockAddressSpace(AddressSpace);
-			MmUnlockSectionSegment(Segment);
+			if (!Locked)
+				MmLockAddressSpace(AddressSpace);
 			return Status;
 		}
 
 		/*
 		 * Relock the address space and segment
 		 */
-		MmLockAddressSpace(AddressSpace);
+		if (!Locked)
+			MmLockAddressSpace(AddressSpace);
 
+		MmLockSectionSegment(Segment);
+		if (Entry != MiGetPageEntrySectionSegment(Segment, &Offset))
+		{
+			// Already handled
+			MmUnlockSectionSegment(Segment);
+			return STATUS_SUCCESS;
+		}
 		/*
 		 * Mark the offset within the section as having valid, in-memory
 		 * data
@@ -282,7 +292,7 @@ MmCreatePageFileSection
    }
    Section->Segment = Segment;
    Segment->ReferenceCount = 1;
-   ExInitializeFastMutex(&Segment->Lock);
+   KeInitializeGuardedMutex(&Segment->Lock);
    Segment->Protection = SectionPageProtection;
    Segment->RawLength.QuadPart = MaximumSize.QuadPart;
    Segment->Length.QuadPart = PAGE_ROUND_UP(MaximumSize.QuadPart);
@@ -418,8 +428,6 @@ MmPageOutPageFileView
          ASSERT(FALSE);
       }
       MmReleasePageMemoryConsumer(MC_USER, Page);
-      PageOp->Status = STATUS_SUCCESS;
-      MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
    }
    else if (!Context.WasDirty && Context.Private && SwapEntry != 0)
@@ -435,8 +443,6 @@ MmPageOutPageFileView
          ASSERT(FALSE);
       }
       MmReleasePageMemoryConsumer(MC_USER, Page);
-      PageOp->Status = STATUS_SUCCESS;
-      MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
    }
 
@@ -485,8 +491,6 @@ MmPageOutPageFileView
             MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
          }
          MmUnlockAddressSpace(AddressSpace);
-         PageOp->Status = STATUS_UNSUCCESSFUL;
-         MmspCompleteAndReleasePageOp(PageOp);
          return(STATUS_PAGEFILE_QUOTA);
       }
    }
@@ -531,8 +535,6 @@ MmPageOutPageFileView
          MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
       }
       MmUnlockAddressSpace(AddressSpace);
-      PageOp->Status = STATUS_UNSUCCESSFUL;
-      MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -561,8 +563,6 @@ MmPageOutPageFileView
       MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
    }
 
-   PageOp->Status = STATUS_SUCCESS;
-   MmspCompleteAndReleasePageOp(PageOp);
    return(STATUS_SUCCESS);
 }
 

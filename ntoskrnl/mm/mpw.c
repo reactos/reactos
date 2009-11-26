@@ -17,7 +17,7 @@
 /* GLOBALS *******************************************************************/
 
 HANDLE MpwThreadHandle;
-static CLIENT_ID MpwThreadId;
+CLIENT_ID MpwThreadId;
 KEVENT MpwThreadEvent, MpwCompleteEvent;
 BOOLEAN MpwThreadShouldTerminate;
 

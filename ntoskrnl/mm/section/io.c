@@ -54,8 +54,6 @@
 #pragma alloc_text(INIT, MmInitSectionImplementation)
 #endif
 
-KEVENT CcpLazyWriteEvent;
-
 /*
  * FUNCTION:  Waits in kernel mode indefinitely for a file object lock.
  * ARGUMENTS: PFILE_OBJECT to wait for.
@@ -428,82 +426,65 @@ MiWriteBackPage
  ULONG Length,
  PFN_TYPE Page)
 {
+	PFN_TYPE XPage;
 	NTSTATUS Status;
-	PVOID Hyperspace;
 	IO_STATUS_BLOCK Iosb;
-	KIRQL OldIrql;
-	PVOID PageBuffer = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+	PVOID PageBuf = 0;
+	PMEMORY_AREA TmpArea;
+	PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
-	if (!PageBuffer) return STATUS_NO_MEMORY;
+	BoundaryAddressMultiple.QuadPart = 0;
 
-	OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
-	Hyperspace = MmCreateHyperspaceMapping(Page);
-	RtlCopyMemory(PageBuffer, Hyperspace, PAGE_SIZE);
-	MmDeleteHyperspaceMapping(Hyperspace);
-	KfLowerIrql(OldIrql);
+	MmLockAddressSpace(MmGetKernelAddressSpace());
+
+	Status = MmCreateMemoryArea
+		(MmGetKernelAddressSpace(),
+		 MEMORY_AREA_VIRTUAL_MEMORY, 
+		 &PageBuf,
+		 PAGE_SIZE,
+		 PAGE_READWRITE,
+		 &TmpArea,
+		 FALSE,
+		 MEM_TOP_DOWN,
+		 BoundaryAddressMultiple);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("STATUS_NO_MEMORY: %x\n", Status);
+		MmUnlockAddressSpace(MmGetKernelAddressSpace());
+		return STATUS_NO_MEMORY;
+	}
+	
+	Status = MmCreateVirtualMapping(NULL, PageBuf, PAGE_READWRITE, &Page, 1);
+	if (!NT_SUCCESS(Status))
+	{
+		MmFreeMemoryArea(MmGetKernelAddressSpace(), TmpArea, NULL, NULL);
+		MmUnlockAddressSpace(MmGetKernelAddressSpace());
+		DPRINT1("Status: %x\n", Status);
+		return Status;
+	}
+	MmReferencePage(Page);
+	MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
 	DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart);
 	Status = MiSimpleWrite
 		(FileObject,
 		 FileOffset,
-		 PageBuffer,
+		 PageBuf,
 		 Length,
 		 &Iosb);
 
-	ExFreePool(PageBuffer);
-	
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT1("MiSimpleWrite failed (%x)\n", Status);
 	}
 
+	MmLockAddressSpace(MmGetKernelAddressSpace());
+	MmDeleteVirtualMapping(NULL, PageBuf, FALSE, NULL, &XPage);
+	ASSERT(XPage == Page);
+	MmFreeMemoryArea(MmGetKernelAddressSpace(), TmpArea, NULL, NULL);
+	MmDereferencePage(Page);
+	MmUnlockAddressSpace(MmGetKernelAddressSpace());
+
 	return Status;
-}
-
-VOID
-NTAPI
-MiWriteThread()
-{
-	BOOLEAN Complete;
-	NTSTATUS Status;
-	LIST_ENTRY OldHead;
-	PLIST_ENTRY Entry;
-	PWRITE_SCHEDULE_ENTRY WriteEntry;
-
-	ExAcquireFastMutex(&MiWriteMutex);
-	Complete = IsListEmpty(&MiWriteScheduleListHead);
-	ExReleaseFastMutex(&MiWriteMutex);
-	if (Complete)
-	{
-		DPRINT1("No items await writing\n");
-		KeSetEvent(&CcpLazyWriteEvent, IO_NO_INCREMENT, FALSE);
-	}
-	
-	DPRINT1("Lazy write items are available\n");
-	KeResetEvent(&CcpLazyWriteEvent);
-	
-	ExAcquireFastMutex(&MiWriteMutex);
-	RtlCopyMemory(&OldHead, &MiWriteScheduleListHead, sizeof(OldHead));
-	OldHead.Flink->Blink = &OldHead;
-	OldHead.Blink->Flink = &OldHead;
-	InitializeListHead(&MiWriteScheduleListHead);
-	ExReleaseFastMutex(&MiWriteMutex);
-	
-	for (Entry = OldHead.Flink;
-		 !IsListEmpty(&OldHead);
-		 Entry = OldHead.Flink)
-	{
-		WriteEntry = CONTAINING_RECORD(Entry, WRITE_SCHEDULE_ENTRY, Entry);
-		Status = MiWriteBackPage(WriteEntry->FileObject, &WriteEntry->FileOffset, WriteEntry->Length, WriteEntry->Page);
-
-		if (!NT_SUCCESS(Status))
-		{
-			DPRINT1("MiSimpleWrite failed (%x)\n", Status);
-		}
-
-		MmDereferencePage(WriteEntry->Page);
-		ObDereferenceObject(WriteEntry->FileObject);
-		RemoveEntryList(&WriteEntry->Entry);
-		ExFreePool(WriteEntry);
-	}
 }

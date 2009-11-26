@@ -278,6 +278,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     {
         /* Fail */
         ObDereferenceObject(FileObject);
+		DPRINT1("STATUS_INVALID_PARAMETER\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1122,6 +1123,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
         /* Check if CompletionFilter is valid */
         if (!CompletionFilter || (CompletionFilter & ~FILE_NOTIFY_VALID_MASK))
         {
+		DPRINT1("STATUS_INVALID_PARAMETER\n");
             return STATUS_INVALID_PARAMETER;
         }
     }
@@ -2050,6 +2052,7 @@ NtReadFile(IN HANDLE FileHandle,
         /* Otherwise, this was async I/O without a byte offset, so fail */
         if (EventObject) ObDereferenceObject(EventObject);
         ObDereferenceObject(FileObject);
+		DPRINT1("STATUS_INVALID_PARAMETER\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -2424,6 +2427,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
             (FileObject->CompletionContext))
         {
             /* Fail */
+		DPRINT1("STATUS_INVALID_PARAMETER\n");
             Status = STATUS_INVALID_PARAMETER;
         }
         else
@@ -2458,6 +2462,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
                          */
                         ExFreePool(Context);
                         ObDereferenceObject(Queue);
+		DPRINT1("STATUS_INVALID_PARAMETER\n");
                         Status = STATUS_INVALID_PARAMETER;
                     }
                 }
@@ -2903,6 +2908,7 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Otherwise, this was async I/O without a byte offset, so fail */
         if (EventObject) ObDereferenceObject(EventObject);
         ObDereferenceObject(FileObject);
+		DPRINT1("STATUS_INVALID_PARAMETER\n");
         return STATUS_INVALID_PARAMETER;
     }
 

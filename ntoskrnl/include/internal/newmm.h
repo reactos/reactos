@@ -260,7 +260,7 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
 typedef struct _MM_SECTION_SEGMENT
 {
-    FAST_MUTEX Lock;		/* lock which protects the page directory */
+    KGUARDED_MUTEX Lock;		/* lock which protects the page directory */
 	PFILE_OBJECT FileObject;
     ULARGE_INTEGER RawLength;		/* length of the segment which is part of the mapped file */
     ULARGE_INTEGER Length;			/* absolute length of the segment */
@@ -1685,7 +1685,8 @@ MmFindRegion(
 
 NTSTATUS
 NTAPI
-MiReadFilePage(PFILE_OBJECT FileObject, PLARGE_INTEGER Offset, PPFN_TYPE Page);
+MiReadFilePage
+(PFILE_OBJECT FileObject, PLARGE_INTEGER Offset, PPFN_TYPE Page, BOOLEAN Locked);
 
 VOID
 NTAPI
@@ -1743,11 +1744,15 @@ MmspWaitForPageOpCompletionEvent(PMM_PAGEOP PageOp);
 
 VOID
 NTAPI
-MmLockSectionSegment(PMM_SECTION_SEGMENT Segment);
+_MmLockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line);
 
 VOID
 NTAPI
-MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment);
+_MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line);
+
+#define MmLockSectionSegment(S)	_MmLockSectionSegment(S,__FILE__,__LINE__)
+
+#define MmUnlockSectionSegment(S) _MmUnlockSectionSegment(S,__FILE__,__LINE__)
 
 VOID
 MmspCompleteAndReleasePageOp(PMM_PAGEOP PageOp);
