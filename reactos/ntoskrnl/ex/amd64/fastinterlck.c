@@ -111,27 +111,3 @@ ExInterlockedRemoveHeadList(IN PLIST_ENTRY ListHead,
     return OldHead;
 }
 
-PSLIST_ENTRY
-ExpInterlockedFlushSList(
-    PSLIST_HEADER ListHead)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-PSLIST_ENTRY
-ExpInterlockedPopEntrySList(
-    IN PSLIST_HEADER ListHead)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-PSLIST_ENTRY
-ExpInterlockedPushEntrySList(
-    PSLIST_HEADER ListHead,
-    PSLIST_ENTRY ListEntry)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}

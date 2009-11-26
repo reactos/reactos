@@ -339,12 +339,12 @@
 @ stdcall InbvSetTextColor(long)
 @ stdcall InbvSolidColorFill(long long long long long)
 @ extern InitSafeBootMode
+#ifndef __x86_64__
 @ FASTCALL InterlockedCompareExchange(ptr long long)
 @ FASTCALL InterlockedDecrement(ptr)
 @ FASTCALL InterlockedExchange(ptr long)
 @ FASTCALL InterlockedExchangeAdd(ptr long)
 @ FASTCALL InterlockedIncrement(ptr)
-#ifndef __x86_64__
 @ FASTCALL InterlockedPopEntrySList(ptr)
 @ FASTCALL InterlockedPushEntrySList(ptr ptr)
 #endif
