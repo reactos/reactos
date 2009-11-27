@@ -358,14 +358,14 @@ ObpFreeCapturedAttributes(IN PVOID Buffer,
         {
             /* The free was within the Depth */
             InterlockedPushEntrySList(&List->L.ListHead,
-                                      (PSINGLE_LIST_ENTRY)Buffer);
+                                      (PSLIST_ENTRY)Buffer);
         }
     }
     else
     {
         /* The free was within the Depth */
         InterlockedPushEntrySList(&List->L.ListHead,
-                                  (PSINGLE_LIST_ENTRY)Buffer);
+                                  (PSLIST_ENTRY)Buffer);
     }
 }
 
