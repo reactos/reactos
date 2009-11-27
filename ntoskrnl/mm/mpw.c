@@ -17,8 +17,8 @@
 /* GLOBALS *******************************************************************/
 
 HANDLE MpwThreadHandle;
-CLIENT_ID MpwThreadId;
-KEVENT MpwThreadEvent, MpwCompleteEvent;
+static CLIENT_ID MpwThreadId;
+KEVENT MpwThreadEvent;
 BOOLEAN MpwThreadShouldTerminate;
 
 /* FUNCTIONS *****************************************************************/
@@ -81,11 +81,12 @@ MmMpwThreadMain(PVOID Ignored)
       }
 
       PagesWritten = 0;
+#if 0
       /*
        *  FIXME: MmWriteDirtyPages doesn't work correctly.
        */
       MmWriteDirtyPages(128, &PagesWritten);
-	  KeSetEvent(&MpwCompleteEvent, IO_NO_INCREMENT, TRUE);
+#endif
    }
 }
 
@@ -98,7 +99,6 @@ MmInitMpwThread(VOID)
 
    MpwThreadShouldTerminate = FALSE;
    KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
-   KeInitializeEvent(&MpwCompleteEvent, SynchronizationEvent, FALSE);
 
    Status = PsCreateSystemThread(&MpwThreadHandle,
                                  THREAD_ALL_ACCESS,

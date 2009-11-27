@@ -32,7 +32,6 @@ MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
 
 /* GLOBALS ******************************************************************/
 
-ULONG RmapPagingOut = 0;
 static FAST_MUTEX RmapListLock;
 static NPAGED_LOOKASIDE_LIST RmapLookasideList;
 
@@ -63,7 +62,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
-   PMM_PAGEOP PageOp = NULL;
+   PMM_PAGEOP PageOp;
    ULONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -122,7 +121,6 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    {
 	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
 
-#ifndef _NEWCC_
       /*
        * Get or create a pageop
        */
@@ -139,7 +137,6 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
          }
          return(STATUS_UNSUCCESSFUL);
       }
-#endif
 
       /*
        * Release locks now we have a page op.
@@ -208,7 +205,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
-   PMM_PAGEOP PageOp = NULL;
+   PMM_PAGEOP PageOp;
    ULONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -258,7 +255,6 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    {
 	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
 
-#ifndef _NEWCC_
       /*
        * Get or create a pageop
        */
@@ -274,7 +270,6 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
          }
          return(STATUS_UNSUCCESSFUL);
       }
-#endif
 
       /*
        * Release locks now we have a page op.
@@ -393,8 +388,6 @@ MmSetCleanAllRmaps(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
-   ASSERT(Page);
-
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
    if (current_entry == NULL)
@@ -416,8 +409,6 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
-   ASSERT(Page);
-
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
    if (current_entry == NULL)
@@ -438,8 +429,6 @@ NTAPI
 MmIsDirtyPageRmap(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
-
-   ASSERT(Page);
 
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
@@ -470,7 +459,6 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    PMM_RMAP_ENTRY new_entry;
    ULONG PrevSize;
 
-   ASSERT(Page);
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
    new_entry = ExAllocateFromNPagedLookasideList(&RmapLookasideList);
@@ -542,8 +530,6 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
    PMM_RMAP_ENTRY previous_entry;
    PEPROCESS Process;
 
-   ASSERT(Page);
-
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
    if (current_entry == NULL)
@@ -581,8 +567,6 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;
-
-   ASSERT(Page);
 
    ExAcquireFastMutex(&RmapListLock);
    previous_entry = NULL;

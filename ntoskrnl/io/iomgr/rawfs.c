@@ -239,7 +239,6 @@ RawCreate(IN PVCB Vcb,
     else
     {
         /* Invalid create request */
-		DPRINT1("STATUS_INVALID_PARAMETER\n");
         Status = STATUS_INVALID_PARAMETER;
         Irp->IoStatus.Information = 0;
     }
@@ -436,7 +435,6 @@ RawUserFsCtrl(IN PIO_STACK_LOCATION IoStackLocation,
         default:
 
             /* Fail */
-		DPRINT1("STATUS_INVALID_PARAMETER\n");
             Status = STATUS_INVALID_PARAMETER;
             break;
     }
@@ -578,7 +576,6 @@ RawSetInformation(IN PVCB Vcb,
             DeviceObject->AlignmentRequirement))
         {
             /* It's not, fail */
-		DPRINT1("STATUS_INVALID_PARAMETER\n");
             Status = STATUS_INVALID_PARAMETER;
         }
         else
@@ -851,7 +848,6 @@ RawQueryVolumeInformation(IN PVCB Vcb,
         default:
 
             /* Fail it */
-		DPRINT1("STATUS_INVALID_PARAMETER\n");
             Status = STATUS_INVALID_PARAMETER;
             break;
     }

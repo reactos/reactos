@@ -1150,11 +1150,7 @@ IoGetDiskDeviceObject(IN PDEVICE_OBJECT FileSystemDeviceObject,
     NTSTATUS Status;
 
     /* Make sure there's a VPB */
-    if (!FileSystemDeviceObject->Vpb)
-	{
-		DPRINT1("STATUS_INVALID_PARAMETER\n");
-		return STATUS_INVALID_PARAMETER;
-	}
+    if (!FileSystemDeviceObject->Vpb) return STATUS_INVALID_PARAMETER;
 
     /* Acquire it */
     IoAcquireVpbSpinLock(&OldIrql);
@@ -1186,7 +1182,6 @@ IoGetDiskDeviceObject(IN PDEVICE_OBJECT FileSystemDeviceObject,
     else
     {
         /* Fail */
-		DPRINT1("STATUS_INVALID_PARAMETER\n");
         Status = STATUS_INVALID_PARAMETER;
     }
 

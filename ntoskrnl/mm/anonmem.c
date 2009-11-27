@@ -377,10 +377,13 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
    /*
     * Try to allocate a page
     */
-   MmUnlockAddressSpace(AddressSpace);
-   Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-   MmLockAddressSpace(AddressSpace);
-
+   Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
+   if (Status == STATUS_NO_MEMORY)
+   {
+      MmUnlockAddressSpace(AddressSpace);
+      Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
+      MmLockAddressSpace(AddressSpace);
+   }
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MmRequestPageMemoryConsumer failed, status = %x\n", Status);

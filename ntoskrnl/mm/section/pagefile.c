@@ -69,7 +69,9 @@ MmNotPresentFaultPageFile
 	PROS_SECTION_OBJECT Section;
 	PMM_SECTION_SEGMENT Segment;
 	ULONG Entry;
+	ULONG Entry1;
 	ULONG Attributes;
+	PMM_PAGEOP PageOp;
 	PMM_REGION Region;
 	BOOLEAN HasSwapEntry;
 	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
@@ -98,14 +100,10 @@ MmNotPresentFaultPageFile
 	Region = MmFindRegion(MemoryArea->StartingAddress,
 						  &MemoryArea->Data.SectionData.RegionListHead,
 						  Address, NULL);
-
 	/*
 	 * Lock the segment
 	 */
 	MmLockSectionSegment(Segment);
-
-	Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
-	HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
 
 	/*
 	 * Check if this page needs to be mapped COW
@@ -121,63 +119,178 @@ MmNotPresentFaultPageFile
 		Attributes = Region->Protect;
 	}
 
-	if (Entry == 0)
+	/*
+	 * Get or create a page operation descriptor
+	 */
+	PageOp = MmGetPageOp(MemoryArea, NULL, 0, Segment, Offset.QuadPart, MM_PAGEOP_PAGEIN, FALSE);
+	if (PageOp == NULL)
+	{
+		DPRINT1("MmGetPageOp failed\n");
+		ASSERT(FALSE);
+	}
+
+	/*
+	 * Check if someone else is already handling this fault, if so wait
+	 * for them
+	 */
+	if (PageOp->Thread != PsGetCurrentThread())
 	{
 		MmUnlockSectionSegment(Segment);
-		if (!Locked)
-			MmUnlockAddressSpace(AddressSpace);
+		MmUnlockAddressSpace(AddressSpace);
+		Status = MmspWaitForPageOpCompletionEvent(PageOp);
+		/*
+		 * Check for various strange conditions
+		 */
+		if (Status != STATUS_SUCCESS)
+		{
+			DPRINT1("Failed to wait for page op, status = %x\n", Status);
+			ASSERT(FALSE);
+		}
+		if (PageOp->Status == STATUS_PENDING)
+		{
+			DPRINT1("Woke for page op before completion\n");
+			ASSERT(FALSE);
+		}
+		MmLockAddressSpace(AddressSpace);
+		/*
+		 * If this wasn't a pagein then restart the operation
+		 */
+		if (PageOp->OpType != MM_PAGEOP_PAGEIN)
+		{
+			MmspCompleteAndReleasePageOp(PageOp);
+			DPRINT("Address 0x%.8X\n", Address);
+			return(STATUS_MM_RESTART_OPERATION);
+		}
+
+		/*
+		 * If the thread handling this fault has failed then we don't retry
+		 */
+		if (!NT_SUCCESS(PageOp->Status))
+		{
+			Status = PageOp->Status;
+			MmspCompleteAndReleasePageOp(PageOp);
+			DPRINT("Address 0x%.8X\n", Address);
+			return(Status);
+		}
+		MmLockSectionSegment(Segment);
+		/*
+		 * If the completed fault was for another address space then set the
+		 * page in this one.
+		 */
+		if (!MmIsPagePresent(Process, Address))
+		{
+			DPRINT("!MmIsPagePresent(%p, %p)\n", Process, Address);
+
+			Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
+			HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
+
+			if (PAGE_FROM_SSE(Entry) == 0 || HasSwapEntry)
+			{
+				/*
+				 * The page was a private page in another or in our address space
+				 */
+				MmUnlockSectionSegment(Segment);
+				MmspCompleteAndReleasePageOp(PageOp);
+				return(STATUS_MM_RESTART_OPERATION);
+			}
+
+			Page = PFN_FROM_SSE(Entry);
+
+			MmSharePageEntrySectionSegment(Segment, &Offset);
+
+			/* FIXME: Should we call MmCreateVirtualMappingUnsafe if
+			 * (Section->AllocationAttributes & SEC_PHYSICALMEMORY) is true?
+			 */
+			Status = MmCreateVirtualMapping(Process,
+											Address,
+											Attributes,
+											&Page,
+											1);
+			if (!NT_SUCCESS(Status))
+			{
+				DPRINT1("Unable to create virtual mapping\n");
+				ASSERT(FALSE);
+			}
+			MmInsertRmap(Page, Process, (PVOID)PAddress);
+		}
+		if (Locked)
+		{
+			MmLockPage(Page);
+		}
+		MmUnlockSectionSegment(Segment);
+		PageOp->Status = STATUS_SUCCESS;
+		MmspCompleteAndReleasePageOp(PageOp);
+		DPRINT("Address 0x%.8X\n", Address);
+		return(STATUS_SUCCESS);
+	}
+
+	/*
+	 * Get the entry corresponding to the offset within the section
+	 */
+	Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
+
+	if (Entry == 0)
+	{
+		/*
+		 * If the entry is zero (and it can't change because we have
+		 * locked the segment) then we need to load the page.
+		 */
+
+		/*
+		 * Release all our locks and read in the page from disk
+		 */
+		MmUnlockSectionSegment(Segment);
+		MmUnlockAddressSpace(AddressSpace);
+
 		Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT1("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
-			if (!Locked)
-				MmLockAddressSpace(AddressSpace);
-			return Status;
 		}
-
-		DPRINT("Allocated page %x\n", Page);
 		Status = MmCreateVirtualMapping(Process,
-										PAddress,
+										Address,
 										Attributes,
 										&Page,
 										1);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT1("Unable to create virtual mapping\n");
-			MmReleasePageMemoryConsumer(MC_USER, Page);
-			DPRINT("Release page %x\n", Page);
-			if (!Locked)
-				MmLockAddressSpace(AddressSpace);
-			return Status;
+			ASSERT(FALSE);
 		}
 
 		/*
 		 * Relock the address space and segment
 		 */
-		if (!Locked)
-			MmLockAddressSpace(AddressSpace);
-
+		MmLockAddressSpace(AddressSpace);
 		MmLockSectionSegment(Segment);
-		if (Entry != MiGetPageEntrySectionSegment(Segment, &Offset))
+
+		/*
+		 * Check the entry. No one should change the status of a page
+		 * that has a pending page-in.
+		 */
+		Entry1 = MiGetPageEntrySectionSegment(Segment, &Offset);
+		if (Entry != Entry1)
 		{
-			// Already handled
-			MmUnlockSectionSegment(Segment);
-			return STATUS_SUCCESS;
+			DPRINT1("Someone changed ppte entry while we slept\n");
+			ASSERT(FALSE);
 		}
+
 		/*
 		 * Mark the offset within the section as having valid, in-memory
 		 * data
 		 */
 		Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
 		MiSetPageEntrySectionSegment(Segment, &Offset, Entry);
+		MmUnlockSectionSegment(Segment);
+
 		MmInsertRmap(Page, Process, (PVOID)PAddress);
 
 		if (Locked)
 		{
 			MmLockPage(Page);
 		}
-
-		MmUnlockSectionSegment(Segment);
+		PageOp->Status = STATUS_SUCCESS;
+		MmspCompleteAndReleasePageOp(PageOp);
 		DPRINT("Address 0x%.8X\n", Address);
 		return(STATUS_SUCCESS);
 	}
@@ -189,6 +302,8 @@ MmNotPresentFaultPageFile
 		{
 			MmLockPage(Page);
 		}
+		PageOp->Status = Status;
+		MmspCompleteAndReleasePageOp(PageOp);
 		return Status;
 	}
 	else
@@ -218,6 +333,8 @@ MmNotPresentFaultPageFile
 		{
 			MmLockPage(Page);
 		}
+		PageOp->Status = STATUS_SUCCESS;
+		MmspCompleteAndReleasePageOp(PageOp);
 		DPRINT("Address 0x%.8X\n", Address);
 		return(STATUS_SUCCESS);
 	}
@@ -292,7 +409,7 @@ MmCreatePageFileSection
    }
    Section->Segment = Segment;
    Segment->ReferenceCount = 1;
-   KeInitializeGuardedMutex(&Segment->Lock);
+   ExInitializeFastMutex(&Segment->Lock);
    Segment->Protection = SectionPageProtection;
    Segment->RawLength.QuadPart = MaximumSize.QuadPart;
    Segment->Length.QuadPart = PAGE_ROUND_UP(MaximumSize.QuadPart);
@@ -428,6 +545,8 @@ MmPageOutPageFileView
          ASSERT(FALSE);
       }
       MmReleasePageMemoryConsumer(MC_USER, Page);
+      PageOp->Status = STATUS_SUCCESS;
+      MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
    }
    else if (!Context.WasDirty && Context.Private && SwapEntry != 0)
@@ -443,6 +562,8 @@ MmPageOutPageFileView
          ASSERT(FALSE);
       }
       MmReleasePageMemoryConsumer(MC_USER, Page);
+      PageOp->Status = STATUS_SUCCESS;
+      MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
    }
 
@@ -491,6 +612,8 @@ MmPageOutPageFileView
             MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
          }
          MmUnlockAddressSpace(AddressSpace);
+         PageOp->Status = STATUS_UNSUCCESSFUL;
+         MmspCompleteAndReleasePageOp(PageOp);
          return(STATUS_PAGEFILE_QUOTA);
       }
    }
@@ -535,6 +658,8 @@ MmPageOutPageFileView
          MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
       }
       MmUnlockAddressSpace(AddressSpace);
+      PageOp->Status = STATUS_UNSUCCESSFUL;
+      MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -563,6 +688,8 @@ MmPageOutPageFileView
       MiSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
    }
 
+   PageOp->Status = STATUS_SUCCESS;
+   MmspCompleteAndReleasePageOp(PageOp);
    return(STATUS_SUCCESS);
 }
 
@@ -572,6 +699,8 @@ MmFreePageFilePage
  PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
    ULONG Entry;
+   PMM_PAGEOP PageOp;
+   NTSTATUS Status;
    LARGE_INTEGER Offset;
    PROS_SECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
@@ -588,6 +717,26 @@ MmFreePageFilePage
 
    Section = MemoryArea->Data.SectionData.Section;
    Segment = MemoryArea->Data.SectionData.Segment;
+
+   PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset.QuadPart);
+
+   while (PageOp)
+   {
+      MmUnlockSectionSegment(Segment);
+      MmUnlockAddressSpace(AddressSpace);
+
+      Status = MmspWaitForPageOpCompletionEvent(PageOp);
+      if (Status != STATUS_SUCCESS)
+      {
+         DPRINT1("Failed to wait for page op, status = %x\n", Status);
+         ASSERT(FALSE);
+      }
+
+      MmLockAddressSpace(AddressSpace);
+      MmLockSectionSegment(Segment);
+      MmspCompleteAndReleasePageOp(PageOp);
+      PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset.QuadPart);
+   }
 
    DPRINT("MmFreeSectionPage -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset.u.LowPart);
    Entry = MiGetPageEntrySectionSegment(Segment, &Offset);

@@ -17,7 +17,12 @@
 
 PFSN_PREFETCHER_GLOBALS CcPfGlobals;
 extern LONG CcOutstandingDeletes;
+extern KEVENT CcpLazyWriteEvent;
 extern KEVENT CcFinalizeEvent;
+extern VOID NTAPI CcpUnmapThread(PVOID Unused);
+extern VOID NTAPI CcpLazyWriteThread(PVOID Unused);
+HANDLE CcUnmapThreadHandle, CcLazyWriteThreadHandle;
+CLIENT_ID CcUnmapThreadId, CcLazyWriteThreadId;
 
 typedef struct _NOCC_PRIVATE_CACHE_MAP
 {
@@ -43,6 +48,7 @@ CcInitializeCacheManager(VOID)
 
 	KeInitializeEvent(&CcDeleteEvent, SynchronizationEvent, FALSE);
 	KeInitializeEvent(&CcFinalizeEvent, SynchronizationEvent, FALSE);
+	KeInitializeEvent(&CcpLazyWriteEvent, SynchronizationEvent, FALSE);
 
 	CcCacheBitmap->Buffer = ((PULONG)&CcCacheBitmap[1]);
 	CcCacheBitmap->SizeOfBitMap = ROUND_UP(CACHE_NUM_SECTIONS, 32);
