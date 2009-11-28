@@ -231,6 +231,8 @@ CInterruptSync::Connect()
     if (IsListEmpty(&m_ServiceRoutines))
         return STATUS_UNSUCCESSFUL;
 
+    DPRINT("Vector %u Level %u Flags %x Affinity %x\n", Descriptor->u.Interrupt.Vector, Descriptor->u.Interrupt.Level, Descriptor->Flags, Descriptor->u.Interrupt.Affinity);
+
     Status = IoConnectInterrupt(&m_Interrupt, 
                                 IInterruptServiceRoutine,
                                 (PVOID)this,

@@ -183,7 +183,7 @@ PinPropertyHandler(
     IIrpTarget * IrpTarget;
     IPort *Port;
     ISubdevice *SubDevice;
-
+    PDISPATCH_CONTEXT DispatchContext;
 
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -193,8 +193,11 @@ PinPropertyHandler(
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    // get dispatch context 
+    DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
+
     // Get the IrpTarget
-    IrpTarget = (IIrpTarget*)IoStack->FileObject->FsContext;
+    IrpTarget = DispatchContext->Target;
     PC_ASSERT(IrpTarget);
 
     // Get the parent

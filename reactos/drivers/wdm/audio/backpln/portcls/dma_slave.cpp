@@ -223,6 +223,7 @@ NTAPI
 CDmaChannelInit::BufferSize()
 {
     DPRINT("BufferSize %u\n", m_BufferSize);
+    PC_ASSERT(m_BufferSize);
     return m_BufferSize;
 }
 

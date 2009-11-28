@@ -50,13 +50,13 @@ NTAPI
 KsoGetIrpTargetFromIrp(
     PIRP Irp)
 {
-    PKSOBJECT_CREATE_ITEM CreateItem;
+    PIO_STACK_LOCATION IoStack;
 
-    // access the create item
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+    // get current irp stack location
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     // IIrpTarget is stored in Context member
-    return (IIrpTarget*)CreateItem->Context;
+    return (IIrpTarget*)IoStack->FileObject->FsContext;
 }
 
 NTSTATUS
@@ -110,6 +110,9 @@ PcHandlePropertyWithTable(
     /* try first KsPropertyHandler */
     Status = KsPropertyHandler(Irp, PropertySetCount, PropertySet);
 
+    if (Status != STATUS_NOT_FOUND)
+        return Status;
+
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -119,7 +122,7 @@ PcHandlePropertyWithTable(
     // check if this a GUID_NULL request
     if (Status == STATUS_NOT_FOUND)
     {
-        if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_NODE))
+        if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_NODE) || !(Property->Property.Flags & KSPROPERTY_TYPE_TOPOLOGY))
             return Status;
 
         // check if its a request for a topology node
@@ -350,16 +353,21 @@ VOID
 DumpFilterDescriptor(
     IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
-    ULONG Index;
+    ULONG Index, SubIndex;
     PPCPROPERTY_ITEM PropertyItem;
+    PPCEVENT_ITEM EventItem;
+    PPCNODE_DESCRIPTOR NodeDescriptor;
     UNICODE_STRING GuidString;
 
-    DPRINT("======================\n");
-    DPRINT("Descriptor Automation Table%p\n",FilterDescription->AutomationTable);
+
+
+    DPRINT1("======================\n");
+    DPRINT1("Descriptor Automation Table%p\n",FilterDescription->AutomationTable);
 
     if (FilterDescription->AutomationTable)
     {
-        DPRINT("FilterPropertiesCount %u FilterPropertySize %u Expected %u\n", FilterDescription->AutomationTable->PropertyCount, FilterDescription->AutomationTable->PropertyItemSize, sizeof(PCPROPERTY_ITEM));
+        DPRINT1("FilterPropertiesCount %u FilterPropertySize %u Expected %u Events %u EventItemSize %u expected %u\n", FilterDescription->AutomationTable->PropertyCount, FilterDescription->AutomationTable->PropertyItemSize, sizeof(PCPROPERTY_ITEM),
+                FilterDescription->AutomationTable->EventCount, FilterDescription->AutomationTable->EventItemSize, sizeof(PCEVENT_ITEM));
         if (FilterDescription->AutomationTable->PropertyCount)
         {
             PropertyItem = (PPCPROPERTY_ITEM)FilterDescription->AutomationTable->Properties;
@@ -367,15 +375,56 @@ DumpFilterDescriptor(
             for(Index = 0; Index < FilterDescription->AutomationTable->PropertyCount; Index++)
             {
                 RtlStringFromGUID(*PropertyItem->Set, &GuidString);
-                DPRINT("Index %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
+                DPRINT("Property Index %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
 
                 PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + FilterDescription->AutomationTable->PropertyItemSize);
             }
+
+            EventItem = (PPCEVENT_ITEM)FilterDescription->AutomationTable->Events;
+            for(Index = 0; Index < FilterDescription->AutomationTable->EventCount; Index++)
+            {
+                RtlStringFromGUID(*EventItem->Set, &GuidString);
+                DPRINT1("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
+
+                EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + FilterDescription->AutomationTable->EventItemSize);
+            }
+
         }
     }
 
+    if (FilterDescription->Nodes)
+    {
+        DPRINT1("NodeCount %u NodeSize %u expected %u\n", FilterDescription->NodeCount, FilterDescription->NodeSize, sizeof(PCNODE_DESCRIPTOR));
+        NodeDescriptor = (PPCNODE_DESCRIPTOR)FilterDescription->Nodes;
+        for(Index = 0; Index < FilterDescription->NodeCount; Index++)
+        {
+            DPRINT("Index %u AutomationTable %p\n", Index, NodeDescriptor->AutomationTable);
 
-    DPRINT("======================\n");
+            if (NodeDescriptor->AutomationTable)
+            {
+                DPRINT1("Index %u EventCount %u\n", Index, NodeDescriptor->AutomationTable->EventCount);
+                EventItem = (PPCEVENT_ITEM)NodeDescriptor->AutomationTable->Events;
+                for(SubIndex = 0; SubIndex < NodeDescriptor->AutomationTable->EventCount; SubIndex++)
+                {
+                    RtlStringFromGUID(*EventItem->Set, &GuidString);
+                    DPRINT1("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
+
+                    EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + FilterDescription->AutomationTable->EventItemSize);
+                }
+
+            }
+
+
+            NodeDescriptor = (PPCNODE_DESCRIPTOR)((ULONG_PTR)NodeDescriptor + FilterDescription->NodeSize);
+        }
+
+
+
+    }
+
+
+
+    DPRINT1("======================\n");
 }
 
 NTSTATUS
