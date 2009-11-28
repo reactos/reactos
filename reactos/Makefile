@@ -19,6 +19,11 @@
 #        This target installs all of ReactOS to a location specified by the
 #        ROS_INSTALL environment variable.
 #
+#    module_install
+#        These targets installs a single module to a location specified by the
+#        ROS_INSTALL environment variable. Replace module with the name of the
+#        module you want to install.
+#
 #    clean
 #        This target cleans (deletes) all files that are generated when building
 #        ReactOS.
