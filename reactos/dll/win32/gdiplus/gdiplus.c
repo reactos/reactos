@@ -86,7 +86,7 @@ Status WINAPI GdiplusStartup(ULONG_PTR *token, const struct GdiplusStartupInput 
           input->DebugEventCallback, input->SuppressBackgroundThread,
           input->SuppressExternalCodecs);
 
-    if(input->GdiplusVersion != 1)
+    if(input->GdiplusVersion < 1 || input->GdiplusVersion > 2)
         return UnsupportedGdiplusVersion;
 
     if(input->SuppressBackgroundThread){
@@ -211,38 +211,37 @@ static void unstretch_angle(REAL * angle, REAL rad_x, REAL rad_y)
 INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
     REAL startAngle, REAL sweepAngle)
 {
-    INT i, count;
+    INT i;
     REAL end_angle, start_angle, endAngle;
 
     endAngle = startAngle + sweepAngle;
     unstretch_angle(&startAngle, x2 / 2.0, y2 / 2.0);
     unstretch_angle(&endAngle, x2 / 2.0, y2 / 2.0);
 
-    count = ceilf(fabs(endAngle - startAngle) / M_PI_2) * 3 + 1;
-    /* don't make more than a full circle */
-    count = min(MAX_ARC_PTS, count);
-
-    if(count == 1)
-        return 0;
-    if(!points)
-        return count;
-
     /* start_angle and end_angle are the iterative variables */
     start_angle = startAngle;
 
-    for(i = 0; i < count - 1; i += 3){
+    for(i = 0; i < MAX_ARC_PTS - 1; i += 3){
         /* check if we've overshot the end angle */
         if( sweepAngle > 0.0 )
+        {
+            if (start_angle >= endAngle) break;
             end_angle = min(start_angle + M_PI_2, endAngle);
+        }
         else
+        {
+            if (start_angle <= endAngle) break;
             end_angle = max(start_angle - M_PI_2, endAngle);
+        }
 
-        add_arc_part(&points[i], x1, y1, x2, y2, start_angle, end_angle, i == 0);
+        if (points)
+            add_arc_part(&points[i], x1, y1, x2, y2, start_angle, end_angle, i == 0);
 
         start_angle += M_PI_2 * (sweepAngle < 0.0 ? -1.0 : 1.0);
     }
 
-    return count;
+    if (i == 0) return 0;
+    else return i+1;
 }
 
 COLORREF ARGB2COLORREF(ARGB color)
@@ -419,7 +418,7 @@ void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
 }
 
 /* recursive deletion of GpRegion nodes */
-inline void delete_element(region_element* element)
+void delete_element(region_element* element)
 {
     switch(element->type)
     {

@@ -304,8 +304,8 @@
 @ stdcall GdipGetLineBlendCount(ptr ptr)
 @ stdcall GdipGetLineColors(ptr ptr)
 @ stdcall GdipGetLineGammaCorrection(ptr ptr)
-@ stub GdipGetLinePresetBlend
-@ stub GdipGetLinePresetBlendCount
+@ stdcall GdipGetLinePresetBlend(ptr ptr ptr long)
+@ stdcall GdipGetLinePresetBlendCount(ptr ptr)
 @ stdcall GdipGetLineRect(ptr ptr)
 @ stdcall GdipGetLineRectI(ptr ptr)
 @ stdcall GdipGetLineSpacing(ptr long ptr)
@@ -476,7 +476,7 @@
 @ stdcall GdipRemovePropertyItem(ptr long)
 @ stdcall GdipResetClip(ptr)
 @ stub GdipResetImageAttributes
-@ stub GdipResetLineTransform
+@ stdcall GdipResetLineTransform(ptr)
 @ stub GdipResetPageTransform
 @ stdcall GdipResetPath(ptr)
 @ stub GdipResetPathGradientTransform
@@ -496,7 +496,7 @@
 @ stdcall GdipSaveGraphics(ptr ptr)
 @ stdcall GdipSaveImageToFile(ptr ptr ptr ptr)
 @ stdcall GdipSaveImageToStream(ptr ptr ptr ptr)
-@ stub GdipScaleLineTransform
+@ stdcall GdipScaleLineTransform(ptr long long long)
 @ stdcall GdipScaleMatrix(ptr long long long)
 @ stub GdipScalePathGradientTransform
 @ stdcall GdipScalePenTransform(ptr long long long)
