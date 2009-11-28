@@ -266,7 +266,7 @@ _FUNCTION_ {
 		    }
 		    /* handle decimals */
                     if (width!=0 && nch == '.') {
-                        float dec = 1;
+                        long double dec = 1;
                         nch = _GETC_(file);
 			if (width>0) width--;
                         while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
