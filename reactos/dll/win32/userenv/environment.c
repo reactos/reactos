@@ -379,6 +379,9 @@ CreateEnvironmentBlock (LPVOID *lpEnvironment,
 				 L"USERPROFILE",
 				 Buffer,
 				 FALSE);
+
+      wcscat(Buffer, L"\\Application Data");
+      SetUserEnvironmentVariable(lpEnvironment, L"APPDATA", Buffer, FALSE);
     }
 
   /* FIXME: Set 'USERDOMAIN' variable */
