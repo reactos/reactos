@@ -122,7 +122,7 @@ PcHandlePropertyWithTable(
     // check if this a GUID_NULL request
     if (Status == STATUS_NOT_FOUND)
     {
-        if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_NODE) || !(Property->Property.Flags & KSPROPERTY_TYPE_TOPOLOGY))
+        if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_NODE))
             return Status;
 
         // check if its a request for a topology node
