@@ -21,6 +21,9 @@
 	<directory name="datalink">
 		<file>lan.c</file>
 	</directory>
+	<directory name="recmutex">
+		<file>recmutex.c</file>
+	</directory>
 	<directory name="tcpip">
 		<file>ainfo.c</file>
 		<file>buffer.c</file>
@@ -28,6 +31,7 @@
 		<file>fileobjs.c</file>
 		<file>iinfo.c</file>
 		<file>info.c</file>
+		<file>irp.c</file>
 		<file>lock.c</file>
 		<file>main.c</file>
 		<file>ninfo.c</file>

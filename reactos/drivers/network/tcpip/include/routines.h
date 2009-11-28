@@ -49,10 +49,9 @@ UINT ResizePacket(
     PNDIS_PACKET Packet,
     UINT Size);
 
-NDIS_STATUS AllocatePacketWithBuffer( PNDIS_PACKET *NdisPacket,
-				       PCHAR Data, UINT Len );
-
-VOID FreeNdisPacket( PNDIS_PACKET Packet );
+NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
+				       PCHAR Data, UINT Len,
+				       PCHAR File, UINT Line );
 
 void GetDataPtr( PNDIS_PACKET Packet,
 		 UINT Offset,

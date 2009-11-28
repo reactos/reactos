@@ -16,33 +16,36 @@ int TCPSocketState(void *ClientData,
            OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = WhichConnection;
 
-    TI_DbgPrint(DEBUG_TCP,("Connection: %x Flags: %c%c%c%c%c\n",
-               Connection,
+    ASSERT_LOCKED(&TCPLock);
+
+    TI_DbgPrint(MID_TRACE,("Flags: %c%c%c%c\n",
                NewState & SEL_CONNECT ? 'C' : 'c',
                NewState & SEL_READ    ? 'R' : 'r',
                NewState & SEL_FIN     ? 'F' : 'f',
-               NewState & SEL_ACCEPT  ? 'A' : 'a',
-               NewState & SEL_WRITE   ? 'W' : 'w'));
-
-    if (!Connection)
-    {
-        return 0;
-    }
-
-    if (ClientInfo.Unlocked)
-        KeAcquireSpinLockAtDpcLevel(&Connection->Lock);
+               NewState & SEL_ACCEPT  ? 'A' : 'a'));
 
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
                NewState, Connection,
-               Connection->SignalState ^ NewState,
+               Connection ? Connection->State ^ NewState :
                NewState));
 
+    if( !Connection ) {
+    TI_DbgPrint(DEBUG_TCP,("Socket closing.\n"));
+    Connection = FileFindConnectionByContext( WhichSocket );
+    if( !Connection )
+        return 0;
+    else
+        TI_DbgPrint(DEBUG_TCP,("Found socket %x\n", Connection));
+    }
+
+    TI_DbgPrint(MID_TRACE,("Connection signalled: %d\n",
+               Connection->Signalled));
+
     Connection->SignalState |= NewState;
-
-    HandleSignalledConnection(Connection);
-
-    if (ClientInfo.Unlocked)
-        KeReleaseSpinLockFromDpcLevel(&Connection->Lock);
+    if( !Connection->Signalled ) {
+    Connection->Signalled = TRUE;
+    ExInterlockedInsertTailList( &SignalledConnectionsList, &Connection->SignalList, &SignalledConnectionsLock );
+    }
 
     return 0;
 }
@@ -63,6 +66,8 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     IP_PACKET Packet = { 0 };
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
+
+    ASSERT_LOCKED(&TCPLock);
 
     if( *data == 0x45 ) { /* IPv4 */
     Header = (PIPv4_HEADER)data;
@@ -107,6 +112,74 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     return 0;
 }
 
+int TCPSleep( void *ClientData, void *token, int priority, char *msg,
+          int tmio ) {
+    PSLEEPING_THREAD SleepingThread;
+    LARGE_INTEGER Timeout;
+
+    ASSERT_LOCKED(&TCPLock);
+
+    TI_DbgPrint(DEBUG_TCP,
+        ("Called TSLEEP: tok = %x, pri = %d, wmesg = %s, tmio = %x\n",
+         token, priority, msg, tmio));
+
+    SleepingThread = exAllocatePool( NonPagedPool, sizeof( *SleepingThread ) );
+    if( SleepingThread ) {
+    KeInitializeEvent( &SleepingThread->Event, NotificationEvent, FALSE );
+    SleepingThread->SleepToken = token;
+
+    /* We're going to sleep and need to release the lock, otherwise
+           it's impossible to re-enter oskittcp to deliver the event that's
+           going to wake us */
+    TcpipRecursiveMutexLeave( &TCPLock );
+
+    TcpipAcquireFastMutex( &SleepingThreadsLock );
+    InsertTailList( &SleepingThreadsList, &SleepingThread->Entry );
+    TcpipReleaseFastMutex( &SleepingThreadsLock );
+
+        Timeout.QuadPart = Int32x32To64(tmio, -10000);
+
+    TI_DbgPrint(DEBUG_TCP,("Waiting on %x\n", token));
+    KeWaitForSingleObject( &SleepingThread->Event,
+                   Executive,
+                   KernelMode,
+                   TRUE,
+                   (tmio != 0) ? &Timeout : NULL );
+
+    TcpipAcquireFastMutex( &SleepingThreadsLock );
+    RemoveEntryList( &SleepingThread->Entry );
+    TcpipReleaseFastMutex( &SleepingThreadsLock );
+
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+
+    exFreePool( SleepingThread );
+    } else
+        return OSK_ENOBUFS;
+
+    TI_DbgPrint(DEBUG_TCP,("Waiting finished: %x\n", token));
+    return 0;
+}
+
+void TCPWakeup( void *ClientData, void *token ) {
+    PLIST_ENTRY Entry;
+    PSLEEPING_THREAD SleepingThread;
+
+    ASSERT_LOCKED(&TCPLock);
+
+    TcpipAcquireFastMutex( &SleepingThreadsLock );
+    Entry = SleepingThreadsList.Flink;
+    while( Entry != &SleepingThreadsList ) {
+    SleepingThread = CONTAINING_RECORD(Entry, SLEEPING_THREAD, Entry);
+    TI_DbgPrint(DEBUG_TCP,("Sleeper @ %x\n", SleepingThread));
+    if( SleepingThread->SleepToken == token ) {
+        TI_DbgPrint(DEBUG_TCP,("Setting event to wake %x\n", token));
+        KeSetEvent( &SleepingThread->Event, IO_NETWORK_INCREMENT, FALSE );
+    }
+    Entry = Entry->Flink;
+    }
+    TcpipReleaseFastMutex( &SleepingThreadsLock );
+}
+
 /* Memory management routines
  *
  * By far the most requests for memory are either for 128 or 2048 byte blocks,
@@ -126,6 +199,8 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 #define SIGNATURE_LARGE 'LLLL'
 #define SIGNATURE_SMALL 'SSSS'
 #define SIGNATURE_OTHER 'OOOO'
+#define TCP_TAG ' PCT'
+
 static NPAGED_LOOKASIDE_LIST LargeLookasideList;
 static NPAGED_LOOKASIDE_LIST SmallLookasideList;
 
@@ -137,14 +212,14 @@ TCPMemStartup( void )
                                      NULL,
                                      0,
                                      LARGE_SIZE + sizeof( ULONG ),
-                                     OSK_LARGE_TAG,
+                                     TCP_TAG,
                                      0 );
     ExInitializeNPagedLookasideList( &SmallLookasideList,
                                      NULL,
                                      NULL,
                                      0,
                                      SMALL_SIZE + sizeof( ULONG ),
-                                     OSK_SMALL_TAG,
+                                     TCP_TAG,
                                      0 );
 
     return STATUS_SUCCESS;
@@ -154,6 +229,8 @@ void *TCPMalloc( void *ClientData,
          OSK_UINT Bytes, OSK_PCHAR File, OSK_UINT Line ) {
     void *v;
     ULONG Signature;
+
+    ASSERT_LOCKED(&TCPLock);
 
 #if 0 != MEM_PROFILE
     static OSK_UINT *Sizes = NULL, *Counts = NULL, ArrayAllocated = 0;
@@ -214,13 +291,13 @@ void *TCPMalloc( void *ClientData,
     v = ExAllocateFromNPagedLookasideList( &LargeLookasideList );
     Signature = SIGNATURE_LARGE;
     } else {
-    v = ExAllocatePoolWithTag( NonPagedPool, Bytes + sizeof(ULONG),
-                               OSK_OTHER_TAG );
+    v = ExAllocatePool( NonPagedPool, Bytes + sizeof(ULONG) );
     Signature = SIGNATURE_OTHER;
     }
     if( v ) {
     *((ULONG *) v) = Signature;
     v = (void *)((char *) v + sizeof(ULONG));
+    TrackWithTag( FOURCC('f','b','s','d'), v, (PCHAR)File, Line );
     }
 
     return v;
@@ -230,6 +307,9 @@ void TCPFree( void *ClientData,
           void *data, OSK_PCHAR File, OSK_UINT Line ) {
     ULONG Signature;
 
+    ASSERT_LOCKED(&TCPLock);
+
+    UntrackFL( (PCHAR)File, Line, data, FOURCC('f','b','s','d') );
     data = (void *)((char *) data - sizeof(ULONG));
     Signature = *((ULONG *) data);
     if ( SIGNATURE_SMALL == Signature ) {
@@ -237,7 +317,7 @@ void TCPFree( void *ClientData,
     } else if ( SIGNATURE_LARGE == Signature ) {
     ExFreeToNPagedLookasideList( &LargeLookasideList, data );
     } else if ( SIGNATURE_OTHER == Signature ) {
-    ExFreePoolWithTag( data, OSK_OTHER_TAG );
+    ExFreePool( data );
     } else {
     ASSERT( FALSE );
     }

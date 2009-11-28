@@ -318,16 +318,13 @@ NDIS_STATUS PrependPacket( PNDIS_PACKET Packet, PCHAR Data, UINT Length,
     PCHAR NewBuf;
 
     if( Copy ) {
-	NewBuf = ExAllocatePoolWithTag( NonPagedPool, Length, PACKET_BUFFER_TAG );
+	NewBuf = exAllocatePool( NonPagedPool, Length );
 	if( !NewBuf ) return NDIS_STATUS_RESOURCES;
 	RtlCopyMemory( NewBuf, Data, Length );
     } else NewBuf = Data;
 
     NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewBuf, Length );
-    if( Status != NDIS_STATUS_SUCCESS ) {
-        if (Copy) ExFreePoolWithTag(NewBuf, PACKET_BUFFER_TAG);
-        return Status;
-    }
+    if( Status != NDIS_STATUS_SUCCESS ) return Status;
 
     NdisChainBufferAtFront( Packet, Buffer );
 
@@ -345,30 +342,33 @@ void GetDataPtr( PNDIS_PACKET Packet,
     SkipToOffset( Buffer, Offset, DataOut, Size );
 }
 
-NDIS_STATUS AllocatePacketWithBuffer( PNDIS_PACKET *NdisPacket,
-				      PCHAR Data, UINT Len ) {
+NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
+				       PCHAR Data, UINT Len,
+				       PCHAR File, UINT Line ) {
     PNDIS_PACKET Packet;
     PNDIS_BUFFER Buffer;
     NDIS_STATUS Status;
     PCHAR NewData;
 
-    NewData = ExAllocatePoolWithTag( NonPagedPool, Len, PACKET_BUFFER_TAG );
+    NewData = exAllocatePool( NonPagedPool, Len );
     if( !NewData ) return NDIS_STATUS_RESOURCES;
 
     if( Data ) RtlCopyMemory(NewData, Data, Len);
 
     NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );
     if( Status != NDIS_STATUS_SUCCESS ) {
-	ExFreePoolWithTag( NewData, PACKET_BUFFER_TAG );
+	exFreePool( NewData );
 	return Status;
     }
+    TrackWithTag(NDIS_PACKET_TAG, Packet, File, Line);
 
     NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewData, Len );
     if( Status != NDIS_STATUS_SUCCESS ) {
-	ExFreePoolWithTag( NewData, PACKET_BUFFER_TAG );
+	exFreePool( NewData );
 	FreeNdisPacket( Packet );
 	return Status;
     }
+    TrackWithTag(NDIS_BUFFER_TAG, Buffer, File, Line);
 
     NdisChainBufferAtFront( Packet, Buffer );
     *NdisPacket = Packet;
@@ -377,8 +377,10 @@ NDIS_STATUS AllocatePacketWithBuffer( PNDIS_PACKET *NdisPacket,
 }
 
 
-VOID FreeNdisPacket
-( PNDIS_PACKET Packet )
+VOID FreeNdisPacketX
+( PNDIS_PACKET Packet,
+  PCHAR File,
+  UINT Line )
 /*
  * FUNCTION: Frees an NDIS packet
  * ARGUMENTS:
@@ -398,11 +400,13 @@ VOID FreeNdisPacket
         NdisGetNextBuffer(Buffer, &NextBuffer);
         NdisQueryBuffer(Buffer, &Data, &Length);
 	TI_DbgPrint(DEBUG_PBUFFER, ("Freeing ndis buffer (0x%X)\n", Buffer));
+	UntrackFL(File,Line,Buffer,NDIS_BUFFER_TAG);
         NdisFreeBuffer(Buffer);
 	TI_DbgPrint(DEBUG_PBUFFER, ("Freeing exal buffer (0x%X)\n", Data));
-        ExFreePoolWithTag(Data, PACKET_BUFFER_TAG);
+        exFreePool(Data);
     }
 
     /* Finally free the NDIS packet discriptor */
+    UntrackFL(File,Line,Packet,NDIS_PACKET_TAG);
     NdisFreePacket(Packet);
 }
