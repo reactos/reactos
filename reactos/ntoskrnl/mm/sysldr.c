@@ -1200,10 +1200,13 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PIMAGE_NT_HEADERS NtHeader;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PIMAGE_FILE_HEADER FileHeader;
-    BOOLEAN ValidRelocs;
+    BOOLEAN ValidRelocs = FALSE;
     PIMAGE_DATA_DIRECTORY DataDirectory;
     PVOID DllBase, NewImageAddress;
     NTSTATUS Status;
+
+    /* Sanity check */
+    ASSERT(ExpInitializationPhase == 0);
 
     /* Loop driver list */
     for (NextEntry = LoaderBlock->LoadOrderListHead.Flink;
@@ -1230,32 +1233,28 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Skip non-drivers */
         if (!NtHeader) continue;
 
-        /* Get the file header and make sure we can relocate */
+        /* Get the file header and check if we can relocate */
         FileHeader = &NtHeader->FileHeader;
-        if (FileHeader->Characteristics & IMAGE_FILE_RELOCS_STRIPPED) continue;
-        if (NtHeader->OptionalHeader.NumberOfRvaAndSizes <
-            IMAGE_DIRECTORY_ENTRY_BASERELOC) continue;
-
-        /* Everything made sense until now, check the relocation section too */
-        DataDirectory = &NtHeader->OptionalHeader.
-                        DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
-        if (!DataDirectory->VirtualAddress)
+        if ( !(FileHeader->Characteristics & IMAGE_FILE_RELOCS_STRIPPED) &&
+             (NtHeader->OptionalHeader.NumberOfRvaAndSizes >
+              IMAGE_DIRECTORY_ENTRY_BASERELOC) )
         {
-            /* We don't really have relocations */
-            ValidRelocs = FALSE;
-        }
-        else
-        {
-            /* Make sure the size is valid */
-            if ((DataDirectory->VirtualAddress + DataDirectory->Size) >
-                LdrEntry->SizeOfImage)
+            /* Everything made sense until now, check the relocation section too */
+            DataDirectory = &NtHeader->OptionalHeader.
+                            DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
+            if (DataDirectory->VirtualAddress)
             {
-                /* They're not, skip */
-                continue;
-            }
+                /* Make sure the size is valid */
+                if ((DataDirectory->VirtualAddress + DataDirectory->Size) >
+                    LdrEntry->SizeOfImage)
+                {
+                    /* They're not, skip */
+                    continue;
+                }
 
-            /* We have relocations */
-            ValidRelocs = TRUE;
+                /* We have relocations */
+                ValidRelocs = TRUE;
+            }
         }
 
         /* Remember the original address */
@@ -1270,9 +1269,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             while (TRUE);
         }
 
-        /* Sanity check */
         DPRINT("[Mm0]: Copying from: %p to: %p\n", DllBase, NewImageAddress);
-        ASSERT(ExpInitializationPhase == 0);
 
         /* Now copy the entire driver over */
         RtlCopyMemory(NewImageAddress, DllBase, LdrEntry->SizeOfImage);
