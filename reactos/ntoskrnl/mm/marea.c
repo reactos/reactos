@@ -929,7 +929,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 {
    PVOID EndAddress;
    ULONG Granularity;
-   ULONG tmpLength;
+   ULONG_PTR tmpLength;
    PMEMORY_AREA MemoryArea;
 
    DPRINT("MmCreateMemoryArea(Type 0x%lx, BaseAddress %p, "
