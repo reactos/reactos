@@ -84,7 +84,7 @@ MiInitSystemMemoryAreas()
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                                 &BaseAddress,
-                                PTE_BASE - PTE_TOP + 1,
+                                PTE_TOP - PTE_BASE + 1,
                                 PAGE_READWRITE,
                                 &MArea,
                                 TRUE,
@@ -308,13 +308,13 @@ MiDbgDumpAddressSpace(VOID)
             MiSessionSpaceEnd,
             "Session Space");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            PTE_BASE, PDE_BASE,
+            PTE_BASE, PTE_TOP,
             "Page Tables");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            PDE_BASE, HYPER_SPACE,
+            PDE_BASE, PDE_TOP,
             "Page Directories");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            HYPER_SPACE, HYPER_SPACE + (4 * 1024 * 1024),
+            HYPER_SPACE, HYPER_SPACE_END,
             "Hyperspace");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPagedPoolStart,
