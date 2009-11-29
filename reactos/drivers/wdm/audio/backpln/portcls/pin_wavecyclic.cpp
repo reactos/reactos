@@ -1243,8 +1243,8 @@ CPortPinWaveCyclic::Init(
     m_Port = Port;
     m_Filter = Filter;
 
-    //DPRINT("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
-    //DPRINT("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
+    DPRINT("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
+    DPRINT("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
 
     return STATUS_SUCCESS;
 }
