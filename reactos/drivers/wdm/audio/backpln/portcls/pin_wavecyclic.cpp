@@ -415,10 +415,10 @@ PinWaveCyclicState(
     IN PKSIDENTIFIER Request,
     IN OUT PVOID Data)
 {
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
     CPortPinWaveCyclic *Pin;
     PSUBDEVICE_DESCRIPTOR Descriptor;
     PKSSTATE State = (PKSSTATE)Data;
-    PSETPIN_CONTEXT PinWorkContext;
 
     // get sub device descriptor 
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
@@ -436,20 +436,24 @@ PinWaveCyclicState(
 
     if (Request->Flags & KSPROPERTY_TYPE_SET)
     {
-        PinWorkContext = (PSETPIN_CONTEXT)AllocateItem(NonPagedPool, sizeof(PSETPIN_CONTEXT), TAG_PORTCLASS);
-        PC_ASSERT(PinWorkContext);
+        // try set stream
+        Status = Pin->m_Stream->SetState(*State);
 
-        PinWorkContext->WorkItem = IoAllocateWorkItem(IoGetCurrentIrpStackLocation(Irp)->DeviceObject);
-        PC_ASSERT(PinWorkContext->WorkItem);
-        // initialize work item context
-        PinWorkContext->NewState = *State;
-        PinWorkContext->Pin = Pin;
-        PinWorkContext->Irp = Irp;
+        DPRINT("Setting state %u %x\n", *State, Status);
+        if (NT_SUCCESS(Status))
+        {
+            // store new state
+            Pin->m_State = *State;
 
-        IoMarkIrpPending(Irp);
-
-        IoQueueWorkItem(PinWorkContext->WorkItem, PinSetStateWorkerRoutine, DelayedWorkQueue, (PVOID)PinWorkContext);
-        return STATUS_PENDING;
+            if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING && Pin->m_State == KSSTATE_STOP)
+            {
+                // FIXME
+                // complete with successful state
+                Pin->m_IrpQueue->CancelBuffers();
+            }
+            // store result
+            Irp->IoStatus.Information = sizeof(KSSTATE);
+        }
     }
     else if (Request->Flags & KSPROPERTY_TYPE_GET)
     {
@@ -457,7 +461,7 @@ PinWaveCyclicState(
         *State = Pin->m_State;
         // store result
         Irp->IoStatus.Information = sizeof(KSSTATE);
-        DPRINT1("Getting state %u %x\n", *State, STATUS_SUCCESS);
+
         return STATUS_SUCCESS;
     }
 
@@ -1243,8 +1247,8 @@ CPortPinWaveCyclic::Init(
     m_Port = Port;
     m_Filter = Filter;
 
-    DPRINT("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
-    DPRINT("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
+    //DPRINT("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
+    //DPRINT("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
 
     return STATUS_SUCCESS;
 }
