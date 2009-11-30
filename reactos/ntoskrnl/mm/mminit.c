@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/mm/mminit.c
@@ -77,6 +77,21 @@ MiInitSystemMemoryAreas()
     NTSTATUS Status;
     BoundaryAddressMultiple.QuadPart = 0;
     
+    //
+    // Create the memory area to define the loader mappings
+    //
+    BaseAddress = (PVOID)KSEG0_BASE;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                MmBootImageSize,
+                                PAGE_EXECUTE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+
     //
     // Create the memory area to define the PTE base
     //
@@ -284,8 +299,8 @@ MiDbgDumpAddressSpace(VOID)
     // Print the memory layout
     //
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmSystemRangeStart,
-            (ULONG_PTR)MmSystemRangeStart + MmBootImageSize,
+            KSEG0_BASE,
+            (ULONG_PTR)KSEG0_BASE + MmBootImageSize,
             "Boot Loaded Image");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPagedPoolBase,

@@ -469,13 +469,12 @@ MmFindGapBottomUp(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
+    // HACK: csrss really wants to map video memory at 0x000a0000 - 0x00100000, so keep that free
+   PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? (PVOID)0x00100000 : MmSystemRangeStart;
    PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
-                          (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
+                          MmHighestUserAddress : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
-   PMEMORY_AREA Node;
-   PMEMORY_AREA FirstNode;
-   PMEMORY_AREA PreviousNode;
+   PMEMORY_AREA Root, Node;
 
    MmVerifyMemoryAreas(AddressSpace);
 
@@ -484,53 +483,30 @@ MmFindGapBottomUp(
 
    AlignedAddress = MM_ROUND_UP(LowestAddress, Granularity);
 
-   /* Special case for empty tree. */
-   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
-   {
-      if ((ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
-      {
-         DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
-         return AlignedAddress;
-      }
-      DPRINT("MmFindGapBottomUp: 0\n");
-      return 0;
-   }
+   Root = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
 
    /* Go to the node with lowest address in the tree. */
-   FirstNode = Node = MmIterateFirstNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
+   if (Root)
+      Node = MmIterateFirstNode(Root);
+   else
+      Node = NULL;
 
-   /* Traverse the tree from left to right. */
-   PreviousNode = Node;
-   for (;;)
+   while (Node)
    {
-      Node = MmIterateNextNode(Node);
-      if (Node == NULL)
-         break;
-
-      AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
       if (Node->StartingAddress > AlignedAddress &&
-          (ULONG_PTR)Node->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
+          (ULONG_PTR)Node->StartingAddress >= (ULONG_PTR)AlignedAddress + Length)
       {
          DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
          return AlignedAddress;
       }
 
-      PreviousNode = Node;
+      AlignedAddress = MM_ROUND_UP(Node->EndingAddress, Granularity);
+      Node = MmIterateNextNode(Node);
    }
 
    /* Check if there is enough space after the last memory area. */
-   AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
    if ((ULONG_PTR)HighestAddress > (ULONG_PTR)AlignedAddress &&
        (ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
-   {
-      DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
-      return AlignedAddress;
-   }
-
-   /* Check if there is enough space before the first memory area. */
-   AlignedAddress = MM_ROUND_UP(LowestAddress, Granularity);
-   if (FirstNode->StartingAddress > AlignedAddress &&
-       (ULONG_PTR)FirstNode->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
    {
       DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
       return AlignedAddress;
@@ -549,72 +525,46 @@ MmFindGapTopDown(
 {
    PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
    PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
-                          (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
+                          MmHighestUserAddress : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
-   PMEMORY_AREA Node;
-   PMEMORY_AREA PreviousNode;
+   PMEMORY_AREA Root, Node;
 
    MmVerifyMemoryAreas(AddressSpace);
 
    DPRINT("LowestAddress: %p HighestAddress: %p\n",
           LowestAddress, HighestAddress);
 
-   AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)HighestAddress - Length + 1, Granularity);
+   AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)HighestAddress - Length, Granularity);
 
    /* Check for overflow. */
    if (AlignedAddress > HighestAddress)
       return NULL;
 
-   /* Special case for empty tree. */
-   if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
-   {
-      if (AlignedAddress >= LowestAddress)
-      {
-         DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
-         return AlignedAddress;
-      }
-      DPRINT("MmFindGapTopDown: 0\n");
-      return 0;
-   }
+   Root = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
 
    /* Go to the node with highest address in the tree. */
-   Node = MmIterateLastNode((PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink);
-
-   /* Check if there is enough space after the last memory area. */
-   if (Node->EndingAddress <= AlignedAddress)
-   {
-      DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
-      return AlignedAddress;
-   }
+   if (Root)
+      Node = MmIterateLastNode(Root);
+   else
+      Node = NULL;
 
    /* Traverse the tree from left to right. */
-   PreviousNode = Node;
-   for (;;)
+   while (Node)
    {
-      Node = MmIteratePrevNode(Node);
-      if (Node == NULL)
-         break;
-
-      AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)PreviousNode->StartingAddress - Length + 1, Granularity);
-
-      /* Check for overflow. */
-      if (AlignedAddress > PreviousNode->StartingAddress)
-         return NULL;
-
       if (Node->EndingAddress <= AlignedAddress)
       {
          DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
          return AlignedAddress;
       }
 
-      PreviousNode = Node;
+      AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)Node->StartingAddress - Length, Granularity);
+
+      /* Check for overflow. */
+      if (AlignedAddress > Node->StartingAddress)
+         return NULL;
+
+      Node = MmIteratePrevNode(Node);
    }
-
-   AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)PreviousNode->StartingAddress - Length + 1, Granularity);
-
-   /* Check for overflow. */
-   if (AlignedAddress > PreviousNode->StartingAddress)
-      return NULL;
 
    if (AlignedAddress >= LowestAddress)
    {
@@ -944,6 +894,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
       tmpLength = PAGE_ROUND_UP(Length);
+      __debugbreak();
       *BaseAddress = MmFindGap(AddressSpace,
                                tmpLength,
                                Granularity,
