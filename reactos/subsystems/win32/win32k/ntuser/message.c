@@ -1324,7 +1324,7 @@ UserPostThreadMessage( DWORD idThread,
    if( Status == STATUS_SUCCESS )
    {
       pThread = (PTHREADINFO)peThread->Tcb.Win32Thread;
-      if( !pThread || !pThread->MessageQueue )
+      if( !pThread || !pThread->MessageQueue  || (pThread->TIF_flags & TIF_INCLEANUP))
       {
          ObDereferenceObject( peThread );
          return FALSE;
