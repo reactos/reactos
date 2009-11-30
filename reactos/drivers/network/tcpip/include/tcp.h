@@ -59,11 +59,6 @@ typedef struct _SLEEPING_THREAD {
     KEVENT Event;
 } SLEEPING_THREAD, *PSLEEPING_THREAD;
 
-typedef struct _CLIENT_DATA {
-    BOOLEAN Unlocked;
-    KSPIN_LOCK Lock;
-} CLIENT_DATA, *PCLIENT_DATA;
-
 /* Retransmission timeout constants */
 
 /* Lower bound for retransmission timeout in TCP timer ticks */
@@ -89,15 +84,19 @@ typedef struct _CLIENT_DATA {
 #define SRF_FIN   TCP_FIN
 
 extern LONG TCP_IPIdentification;
-extern CLIENT_DATA ClientInfo;
+extern LIST_ENTRY SignalledConnectionsList;
+extern KSPIN_LOCK SignalledConnectionsLock;
+extern LIST_ENTRY SleepingThreadsList;
+extern FAST_MUTEX SleepingThreadsLock;
+extern RECURSIVE_MUTEX TCPLock;
 
 /* accept.c */
 NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
 				    PCONNECTION_ENDPOINT Connection,
 				    PTDI_REQUEST_KERNEL Request );
 NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog );
-BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
-			         PCONNECTION_ENDPOINT Connection );
+VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
+			      PCONNECTION_ENDPOINT Connection );
 NTSTATUS TCPAccept
 ( PTDI_REQUEST Request,
   PCONNECTION_ENDPOINT Listener,
@@ -111,8 +110,6 @@ VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
 
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 		    UINT Family, UINT Type, UINT Proto );
-
-VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection);
 
 PTCP_SEGMENT TCPCreateSegment(
   PIP_PACKET IPPacket,
@@ -164,6 +161,8 @@ NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection );
 
 NTSTATUS TCPTranslateError( int OskitError );
 
+VOID TCPTimeout();
+
 UINT TCPAllocatePort( UINT HintPort );
 
 VOID TCPFreePort( UINT Port );
@@ -179,6 +178,6 @@ NTSTATUS TCPStartup(
 NTSTATUS TCPShutdown(
   VOID);
 
-BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
+VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
 
 #endif /* __TCP_H */

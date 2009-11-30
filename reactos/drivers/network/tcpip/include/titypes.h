@@ -10,6 +10,10 @@
 
 #if DBG
 
+#define DEFINE_TAG ULONG Tag;
+#define INIT_TAG(_Object, _Tag) \
+  ((_Object)->Tag = (_Tag))
+
 #define DEBUG_REFCHECK(Object) {        \
    if ((Object)->RefCount <= 0) {       \
       TI_DbgPrint(MIN_TRACE, ("Object at (0x%X) has invalid reference count (%d).\n", \
@@ -59,6 +63,9 @@
 }
 
 #else /* DBG */
+
+#define DEFINE_TAG
+#define INIT_TAG(Object, Tag)
 
 /*
  * VOID ReferenceObject(
@@ -142,9 +149,11 @@ typedef struct _DATAGRAM_SEND_REQUEST {
 /* Transport address file context structure. The FileObject->FsContext2
    field holds a pointer to this structure */
 typedef struct _ADDRESS_FILE {
+    DEFINE_TAG
     LIST_ENTRY ListEntry;                 /* Entry on list */
     KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */
+    USHORT Flags;                         /* Flags for address file (see below) */
     IP_ADDRESS Address;                   /* Address of this address file */
     USHORT Family;                        /* Address family */
     USHORT Protocol;                      /* Protocol number */
@@ -204,6 +213,29 @@ typedef struct _ADDRESS_FILE {
     BOOLEAN RegisteredChainedReceiveExpeditedHandler;
 } ADDRESS_FILE, *PADDRESS_FILE;
 
+/* Address File Flag constants */
+#define AFF_VALID    0x0001 /* Address file object is valid for use */
+#define AFF_BUSY     0x0002 /* Address file object is exclusive to someone */
+#define AFF_DELETE   0x0004 /* Address file object is sheduled to be deleted */
+#define AFF_SEND     0x0008 /* A send request is pending */
+#define AFF_RECEIVE  0x0010 /* A receive request is pending */
+#define AFF_PENDING  0x001C /* A request is pending */
+
+/* Macros for manipulating address file object flags */
+
+#define AF_IS_VALID(ADF)  ((ADF)->Flags & AFF_VALID)
+#define AF_SET_VALID(ADF) ((ADF)->Flags |= AFF_VALID)
+#define AF_CLR_VALID(ADF) ((ADF)->Flags &= ~AFF_VALID)
+
+#define AF_IS_BUSY(ADF)  ((ADF)->Flags & AFF_BUSY)
+#define AF_SET_BUSY(ADF) ((ADF)->Flags |= AFF_BUSY)
+#define AF_CLR_BUSY(ADF) ((ADF)->Flags &= ~AFF_BUSY)
+
+#define AF_IS_PENDING(ADF, X)  (ADF->Flags & X)
+#define AF_SET_PENDING(ADF, X) (ADF->Flags |= X)
+#define AF_CLR_PENDING(ADF, X) (ADF->Flags &= ~X)
+
+
 /* Structure used to search through Address Files */
 typedef struct _AF_SEARCH {
     PLIST_ENTRY Next;       /* Next address file to check */
@@ -255,8 +287,6 @@ typedef struct _TDI_BUCKET {
     LIST_ENTRY Entry;
     struct _CONNECTION_ENDPOINT *AssociatedEndpoint;
     TDI_REQUEST Request;
-    NTSTATUS Status;
-    ULONG Information;
 } TDI_BUCKET, *PTDI_BUCKET;
 
 /* Transport connection context structure A.K.A. Transmission Control Block
@@ -269,15 +299,19 @@ typedef struct _CONNECTION_ENDPOINT {
     PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
     PVOID SocketContext;        /* Context for lower layer */
 
+    UINT State;                 /* Socket state W.R.T. oskit */
+
     /* Requests */
     LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
     LIST_ENTRY SendRequest;    /* Queued send requests */
-    LIST_ENTRY CompletionQueue;/* Completed requests to finish */
 
     /* Signals */
+    LIST_ENTRY SignalList;     /* Entry in the list of sockets waiting for
+				* notification service to the client */
     UINT    SignalState;       /* Active signals from oskit */
+    BOOLEAN Signalled;         /* Are we a member of the signal list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 
