@@ -77,8 +77,10 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       /* Send palette messages */
       if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
-         co_IntPostOrSendMessage(HWND_BROADCAST, WM_PALETTEISCHANGING,
-                                 (WPARAM)hWnd, 0);
+         UserPostMessage( HWND_BROADCAST,
+                          WM_PALETTEISCHANGING,
+                         (WPARAM)hWnd,
+                          0);
       }
 
       if (UserGetWindow(hWnd, GW_HWNDPREV) != NULL)

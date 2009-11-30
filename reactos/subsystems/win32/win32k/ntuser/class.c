@@ -628,7 +628,7 @@ IntDereferenceClass(IN OUT PCLS Class,
         {
             ASSERT(Class->pclsBase == Class);
 
-            DPRINT("IntDereferenceClass 0x%x\n", Class);
+            DPRINT1("IntDereferenceClass 0x%x\n", Class);
             /* check if there are clones of the class on other desktops,
                link the first clone in if possible. If there are no clones
                then leave the class on the desktop heap. It will get moved
@@ -666,7 +666,7 @@ IntDereferenceClass(IN OUT PCLS Class,
         }
         else
         {
-            DPRINT("IntDereferenceClass1 0x%x\n", Class);
+            DPRINT1("IntDereferenceClass1 0x%x\n", Class);
 
             /* locate the cloned class and unlink it */
             PrevLink = &BaseClass->pclsClone;
@@ -1154,7 +1154,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
-        {
+        {  DPRINT1("Step 1: 0x%x\n",Class );
             goto FoundClass;
         }
 
@@ -1165,7 +1165,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPublicList,
                              Link);
         if (Class != NULL)
-        {
+        { DPRINT1("Step 2: 0x%x 0x%x\n",Class, Class->hModule);
             goto FoundClass;
         }
 
@@ -1175,7 +1175,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
-        {
+        { DPRINT1("Step 3: 0x%x\n",Class );
             goto FoundClass;
         }
 
@@ -1188,7 +1188,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
         {
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
             return (RTL_ATOM)0;
-        }
+        }else{DPRINT1("Step 4: 0x%x\n",Class );}
 
 FoundClass:
         *BaseClass = Class;
@@ -1294,7 +1294,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
     pi = GetW32ProcessInfo();
 
-    DPRINT("UserUnregisterClass(%wZ, 0x%x)\n", ClassName, hInstance);
+    DPRINT1("UserUnregisterClass(%wZ, 0x%x)\n", ClassName, hInstance);
 
     /* NOTE: Accessing the buffer in ClassName may raise an exception! */
     ClassAtom = IntGetClassAtom(ClassName,
@@ -1326,8 +1326,8 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
     if (NT_SUCCESS(IntDeregisterClassAtom(Class->atomClassName)))
     {
-        DPRINT("Class 0x%x\n", Class);
-        DPRINT("UserUnregisterClass: Good Exit!\n");
+        DPRINT1("Class 0x%x\n", Class);
+        DPRINT1("UserUnregisterClass: Good Exit!\n");
         /* finally free the resources */
         IntDestroyClass(Class);
         return TRUE;
@@ -2402,6 +2402,7 @@ InvalidParameter:
 
    if (Ret)
    {
+      DPRINT1("GetClassInfo(%wZ, 0x%x)\n", ClassName, hInstance);
       ClassAtom = IntGetClassAtom( &SafeClassName,
                                     hInstance,
                                     ppi,
