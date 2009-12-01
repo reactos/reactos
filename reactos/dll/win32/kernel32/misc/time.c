@@ -318,7 +318,10 @@ DosDateTimeToFileTime(WORD wFatDate,
     SystemTime.wMonth = pddate->Month;
     SystemTime.wYear = 1980 + pddate->Year;
 
-    SystemTimeToFileTime(&SystemTime,lpFileTime);
+    if (SystemTimeToFileTime(&SystemTime, lpFileTime) == FALSE)
+    {
+        return FALSE;
+    }
 
     return TRUE;
 }
