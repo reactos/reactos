@@ -25,6 +25,7 @@
 
 #include "../backend.h"
 
+
 class FileUnit
 {
 	public:
@@ -34,9 +35,28 @@ class FileUnit
 
 enum OptimizationType
 {
+	RosBuild,
 	Debug,
 	Release,
-	Speed
+	Speed,
+};
+
+enum ConfigurationType
+{
+	ConfigUnknown,
+	ConfigApp,
+	ConfigDll,
+	ConfigEmpty,
+	ConfigLib
+};
+
+enum BinaryType
+{
+	BinUnknown,
+	Lib,
+	Dll,
+	Exe,
+	Sys
 };
 
 enum HeadersType
@@ -123,7 +143,23 @@ class MSVCBackend : public Backend
 
 		std::string _get_vc_dir ( void ) const;
 
+		// These are used in both _generate_vcproj and _generate_standard_configuration
+		std::vector<std::string> header_files;
+		std::vector<std::string> includes;
+		std::vector<std::string> includes_ros;
+		std::vector<std::string> libraries;
+		std::set<std::string> common_defines;
+		std::string baseaddr;
+
+		void _generate_standard_configuration(
+			FILE* OUT,
+			const Module& module,
+			const MSVCConfiguration& cfg,
+			BinaryType binaryType );
+		void _generate_makefile_configuration( FILE* OUT, const Module& module, const MSVCConfiguration& cfg );
+
 		void _generate_vcproj ( const Module& module );
+		void _generate_vcxproj ( const Module& module );
 
 		void _generate_sln_header ( FILE* OUT );
 		void _generate_sln_footer ( FILE* OUT );
