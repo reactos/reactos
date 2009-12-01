@@ -61,14 +61,6 @@ static int DaysSinceEpoch(int Year)
    return Days;
 }
 
-static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
-      CSHORT *CarryField,
-      int Modulus)
-{
-   *FieldToNormalize = (CSHORT) (*FieldToNormalize - Modulus);
-   *CarryField = (CSHORT) (*CarryField + 1);
-}
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -197,39 +189,6 @@ RtlTimeFieldsToTime(
        TimeFields->Year < 1601)
    {
        return FALSE;
-   }
-
-   /* Normalize the TIME_FIELDS structure here */
-   while (IntTimeFields.Second >= SECSPERMIN)
-   {
-      NormalizeTimeFields(&IntTimeFields.Second,
-                          &IntTimeFields.Minute,
-                          SECSPERMIN);
-   }
-   while (IntTimeFields.Minute >= MINSPERHOUR)
-   {
-      NormalizeTimeFields(&IntTimeFields.Minute,
-                          &IntTimeFields.Hour,
-                          MINSPERHOUR);
-   }
-   while (IntTimeFields.Hour >= HOURSPERDAY)
-   {
-      NormalizeTimeFields(&IntTimeFields.Hour,
-                          &IntTimeFields.Day,
-                          HOURSPERDAY);
-   }
-   while (IntTimeFields.Day >
-          MonthLengths[IsLeapYear(IntTimeFields.Year)][IntTimeFields.Month - 1])
-   {
-      NormalizeTimeFields(&IntTimeFields.Day,
-                          &IntTimeFields.Month,
-                          SECSPERMIN);
-   }
-   while (IntTimeFields.Month > MONSPERYEAR)
-   {
-      NormalizeTimeFields(&IntTimeFields.Month,
-                          &IntTimeFields.Year,
-                          MONSPERYEAR);
    }
 
    /* Compute the time */
