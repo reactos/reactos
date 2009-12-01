@@ -335,6 +335,9 @@ IntDispatchMessage(PMSG pMsg)
   LARGE_INTEGER TickCount;
   LONG Time;
   LRESULT retval;
+  PMSGMEMORY MsgMemoryEntry;
+  INT lParamBufferSize;
+  LPARAM lParamPacked;
   PWINDOW_OBJECT Window = NULL;
 
   if (pMsg->hwnd)
@@ -376,9 +379,37 @@ IntDispatchMessage(PMSG pMsg)
      }
   }
   // Need a window!
-  if (!Window) return 0;
+  if ( !Window || !Window->Wnd ) return 0;
 
-  retval = co_IntPostOrSendMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
+  /* See if this message type is present in the table */
+  MsgMemoryEntry = FindMsgMemory(pMsg->message);
+  if ( !MsgMemoryEntry )
+  {
+     lParamBufferSize = -1;
+  }
+  else
+  {
+     lParamBufferSize = MsgMemorySize(MsgMemoryEntry, pMsg->wParam, pMsg->lParam);
+  }
+
+  if (! NT_SUCCESS(PackParam(&lParamPacked, pMsg->message, pMsg->wParam, pMsg->lParam)))
+  {
+     DPRINT1("Failed to pack message parameters\n");
+     return 0;
+  }
+
+  retval = co_IntCallWindowProc( Window->Wnd->lpfnWndProc,
+                                !Window->Wnd->Unicode,
+                                 pMsg->hwnd,
+                                 pMsg->message,
+                                 pMsg->wParam,
+                                 lParamPacked,
+                                 lParamBufferSize);
+
+  if (! NT_SUCCESS(UnpackParam(lParamPacked, pMsg->message, pMsg->wParam, pMsg->lParam)))
+  {
+     DPRINT1("Failed to unpack message parameters\n");
+  }
 
   if (pMsg->message == WM_PAINT)
   {
@@ -1324,7 +1355,7 @@ UserPostThreadMessage( DWORD idThread,
    if( Status == STATUS_SUCCESS )
    {
       pThread = (PTHREADINFO)peThread->Tcb.Win32Thread;
-      if( !pThread || !pThread->MessageQueue  || (pThread->TIF_flags & TIF_INCLEANUP))
+      if( !pThread || !pThread->MessageQueue || (pThread->TIF_flags & TIF_INCLEANUP))
       {
          ObDereferenceObject( peThread );
          return FALSE;
@@ -1370,7 +1401,6 @@ UserPostMessage(HWND Wnd,
                                     wParam,
                                     lParam);
 
-   pti = PsGetCurrentThreadWin32Thread();
    if (Wnd == HWND_BROADCAST)
    {
       HWND *List;
@@ -1392,11 +1422,19 @@ UserPostMessage(HWND Wnd,
       PWINDOW_OBJECT Window;
 
       Window = UserGetWindowObject(Wnd);
-      if (NULL == Window)
+      if ( !Window || !Window->Wnd )
       {
          return FALSE;
       }
-      if(Window->Status & WINDOWSTATUS_DESTROYING)
+
+      pti = Window->Wnd->head.pti;
+      if ( pti->TIF_flags & TIF_INCLEANUP )
+      {
+         DPRINT1("Attempted to post message to window 0x%x when the thread is in cleanup!\n", Wnd);
+         return FALSE;
+      }
+
+      if ( Window->Status & WINDOWSTATUS_DESTROYING )
       {
          DPRINT1("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
          /* FIXME - last error code? */
@@ -1760,6 +1798,9 @@ co_IntDoSendMessage(HWND hWnd,
 
       Info.Ansi = !Window->Wnd->Unicode;
       Info.Proc = Window->Wnd->lpfnWndProc;
+
+      // Make the call from here if CALLWNDPROC or CALLWNDPROCRET are hooked
+      // or just do it in User32!
 
       IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, &Result);
    }
