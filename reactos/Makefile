@@ -529,6 +529,11 @@ msvc9: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
 	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs9.00 -voversionconfiguration msvc
 
+.PHONY: msvc10
+msvc10: $(ROS_BUILDENGINE)
+	$(ECHO_RBUILD)
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs10.00 -voversionconfiguration msvc
+
 .PHONY: msvc6_clean
 msvc6_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
@@ -553,6 +558,11 @@ msvc8_clean: $(ROS_BUILDENGINE)
 msvc9_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
 	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs9.00 -voversionconfiguration msvc
+
+.PHONY: msvc10_clean
+msvc10_clean: $(ROS_BUILDENGINE)
+	$(ECHO_RBUILD)
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs10.00 -voversionconfiguration msvc
 
 .PHONY: msvc_clean
 msvc_clean: $(ROS_BUILDENGINE)
