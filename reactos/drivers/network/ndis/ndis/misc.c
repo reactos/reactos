@@ -426,7 +426,7 @@ NdisInterlockedPopEntrySList(
  *    NDIS 5.0
  */
 {
-  return ExInterlockedPopEntrySList ( ListHead, Lock );
+  return (PSINGLE_LIST_ENTRY)ExInterlockedPopEntrySList ( ListHead, Lock );
 }
 
 
@@ -447,7 +447,7 @@ NdisInterlockedPushEntrySList(
  *    NDIS 5.0
  */
 {
-  return ExInterlockedPushEntrySList ( ListHead, ListEntry, Lock );
+  return (PSINGLE_LIST_ENTRY)ExInterlockedPushEntrySList ( ListHead, (PSLIST_ENTRY)ListEntry, Lock );
 }
 
 
