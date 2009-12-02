@@ -20,9 +20,10 @@ GreMovePointer(
     IN RECTL *prcl)
 {
     SURFACE *pSurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
+    PPDEVOBJ ppdev = GDIDEV(pso);
 
     SURFACE_LockBitmapBits(pSurf);
-    GDIDEVFUNCS(pso).MovePointer(pso, x, y, prcl);
+    ppdev->pfnMovePointer(pso, x, y, prcl);
     SURFACE_UnlockBitmapBits(pSurf);
 }
 
