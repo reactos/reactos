@@ -21,7 +21,7 @@ NTSTATUS DGReceiveDatagram(
     PVOID Context,
     PIRP Irp);
 
-VOID DGRemoveIRP(
+BOOLEAN DGRemoveIRP(
     PADDRESS_FILE AddrFile,
     PIRP Irp);
 

@@ -13,6 +13,8 @@ TDI_STATUS SetAddressFileInfo(TDIObjectID *ID,
                               PVOID Buffer,
                               UINT BufferSize)
 {
+    //KIRQL OldIrql;
+
     switch (ID->toi_id)
     {
 #if 0
@@ -20,7 +22,10 @@ TDI_STATUS SetAddressFileInfo(TDIObjectID *ID,
          if (BufferSize < sizeof(UCHAR))
              return TDI_INVALID_PARAMETER;
 
+         KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
          AddrFile->TTL = *((PUCHAR)Buffer);
+         KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+
          return TDI_SUCCESS;
 #endif
       default:
