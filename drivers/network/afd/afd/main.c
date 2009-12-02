@@ -144,11 +144,11 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->Flags & SGID_CONNECTIONLESS ) {
         AFD_DbgPrint(MID_TRACE,("Packet oriented socket\n"));
 	/* Allocate our backup buffer */
-	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+	FCB->Recv.Window = ExAllocatePool( PagedPool, FCB->Recv.Size );
 	if( !FCB->Recv.Window ) Status = STATUS_NO_MEMORY;
         if( NT_SUCCESS(Status) )
         {
-            FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
+            FCB->Send.Window = ExAllocatePool( PagedPool, FCB->Send.Size );
 	    if( !FCB->Send.Window ) {
 	         if( FCB->Recv.Window ) ExFreePool( FCB->Recv.Window );
 	         Status = STATUS_NO_MEMORY;

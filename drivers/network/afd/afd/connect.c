@@ -37,12 +37,12 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
 
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window =
-	ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+	ExAllocatePool( PagedPool, FCB->Recv.Size );
 
     if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
 
     FCB->Send.Window =
-	ExAllocatePool( NonPagedPool, FCB->Send.Size );
+	ExAllocatePool( PagedPool, FCB->Send.Size );
 
     if( !FCB->Send.Window ) {
 	ExFreePool( FCB->Recv.Window );
