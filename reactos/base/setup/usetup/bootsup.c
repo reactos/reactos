@@ -415,13 +415,13 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
     /* ReactOS */
     CreateFreeLoaderEntry(IniCache, IniSection,
         L"ReactOS", L"\"ReactOS\"",
-        L"Windows2003", ArcPath,
+        L"ReactOS", ArcPath,
         L"");
 
     /* ReactOS_Debug */
     CreateFreeLoaderEntry(IniCache, IniSection,
         L"ReactOS_Debug", L"\"ReactOS (Debug)\"",
-        L"Windows2003", ArcPath,
+        L"ReactOS", ArcPath,
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
 #if DBG
@@ -443,18 +443,6 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
         L"ReactOS", L"ramdisk(0)\\ReactOS",
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256");
 #endif
-
-    /* ReactOS_old */
-    CreateFreeLoaderEntry(IniCache, IniSection,
-        L"ReactOS_old", L"\"ReactOS (old boot method)\"",
-        L"ReactOS", ArcPath,
-        L"");
-
-    /* ReactOS_Debug_old */
-    CreateFreeLoaderEntry(IniCache, IniSection,
-        L"ReactOS_Debug_old", L"\"ReactOS (Debug, old boot method)\"",
-        L"ReactOS", ArcPath,
-        L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
   /* Save the ini file */
   IniCacheSave(IniCache, IniPath);
