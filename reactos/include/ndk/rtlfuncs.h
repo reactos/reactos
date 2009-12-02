@@ -2914,16 +2914,21 @@ NTSYSAPI
 VOID
 NTAPI
 RtlReleaseActivationContext(
-    IN PVOID *Context
+    IN HANDLE handle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlDeactivateActivationContext(
-    DWORD dwFlags,
+    ULONG dwFlags,
     ULONG_PTR ulCookie
 );
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFreeThreadActivationContextStack(void);
 
 NTSYSAPI
 NTSTATUS
