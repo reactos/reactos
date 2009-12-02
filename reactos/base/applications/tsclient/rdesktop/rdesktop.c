@@ -1405,7 +1405,10 @@ load_licence(RDPCLIENT * This, unsigned char **data)
 		return -1;
 
 	if (fstat(fd, &st))
+	{
+		close(fd);
 		return -1;
+	}
 
 	*data = (uint8 *) xmalloc(st.st_size);
 	length = read(fd, *data, st.st_size);

@@ -1475,6 +1475,8 @@ int load_licence(uint8 ** data)
   }
   if (fstat(fd, &st))
   {
+    close(fd);
+    xfree(path);
     return -1;
   }
   *data = (uint8 *) xmalloc(st.st_size);

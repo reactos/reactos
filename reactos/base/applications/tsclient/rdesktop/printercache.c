@@ -180,6 +180,7 @@ printercache_load_blob(char *printer_name, uint8 ** data)
 	if (fstat(fd, &st))
 	{
 		xfree(path);
+		close(fd);
 		return 0;
 	}
 
