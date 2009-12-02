@@ -232,8 +232,47 @@ EngCreateDeviceSurface(IN DHSURF dhSurf,
                        IN SIZEL Size,
                        IN ULONG Format)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    HSURF hSurf;
+    SURFOBJ *pso;
+    PSURFACE pSurf;
+
+    pSurf = (PSURFACE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP);
+
+    if (!pSurf)
+    {
+        return 0;
+    }
+
+    hSurf = pSurf->BaseObject.hHmgr;
+    GDIOBJ_SetOwnership(hSurf, NULL);
+
+    pSurf->pBitsLock = ExAllocatePoolWithTag(NonPagedPool,
+                                             sizeof(FAST_MUTEX),
+                                             TAG_SURFOBJ);
+
+    if (!pSurf->pBitsLock)
+    {
+        SURFACE_Unlock(pSurf);
+        GDIOBJ_FreeObjByHandle(hSurf, GDI_OBJECT_TYPE_BITMAP);
+        return 0;
+    }
+
+    ExInitializeFastMutex(pSurf->pBitsLock);
+
+    pso = &pSurf->SurfObj;
+    pso->dhsurf = dhSurf;
+    pso->hsurf = hSurf;
+    pso->sizlBitmap = Size;
+    pso->iBitmapFormat = Format;
+    pso->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
+    pso->iType = STYPE_DEVICE;
+    pso->iUniq = 0;
+
+    pSurf->flHooks = 0;
+
+    SURFACE_Unlock(pSurf);
+
+    return hSurf;
 }
 
 BOOL
