@@ -1,0 +1,25 @@
+#
+# nanoxrdesktop makefile
+#
+# These two following lines must point to the currently installed version of
+# nano-X. You can override them on the make command line to point at your
+# installation without changing this file.
+#
+NXINCLUDES=/usr/local/nanox/src/include
+NXLIBS=/usr/local/nanox/src/lib/libnano-X.a
+
+CC = gcc
+CFLAGS = -Os -Wall -I$(NXINCLUDES)
+RESTOBJ = ../tcp.o ../iso.o ../mcs.o ../secure.o ../rdp.o ../rdp5.o ../orders.o ../cache.o ../mppc.o ../licence.o ../bitmap.o ../channels.o ../pstcache.o
+LDFLAGS = -lcrypto
+
+all: nanoxrd
+
+nanoxrd: $(RESTOBJ) nanoxwin.o
+	$(CC) -o nanoxrdesktop nanoxwin.o $(NXLIBS) $(RESTOBJ) $(LDFLAGS)
+	strip nanoxrdesktop
+
+clean:
+	rm -f nanoxrdesktop
+	rm -f *.o
+	rm -f ../*.o

@@ -1,0 +1,60 @@
+# Dutch (Netherlands)
+include common
+map 0x413
+
+exclam 0x02 shift
+onesuperior 0x02 altgr
+quotebl 0x03 shift
+twosuperior 0x03 altgr
+numbersign 0x04 shift
+threesuperior 0x04 altgr
+dollar 0x05 shift
+onequarter 0x05 altgr
+percent 0x06 shift
+onehalf 0x06 altgr
+ampersand 0x07 shift
+threequarters 0x07 altgr
+underscore 0x08 shift
+sterling 0x08 altgr
+parenleft 0x09 shift
+braceleft 0x09 altgr
+parenright 0x0a shift
+braceright 0x0a altgr
+apostrophe 0x0b shift
+slash 0x0c
+question 0x0c shift
+backslash 0x0c altgr
+degree 0x0d
+dead_tilde 0x0d shift
+dead_cedilla 0x0d altgr
+EuroSign 0x12 altgr
+paragraph 0x13 altgr
+dead_diaeresis 0x1a
+dead_circumflex 0x1a shift
+asterisk 0x1b
+bar 0x1b shift
+ssharp 0x1f altgr
+plus 0x27
+plusminus 0x27 shift
+dead_acute 0x28
+dead_grave 0x28 shift
+at 0x29
+section 0x29 shift
+notsign 0x29 altgr
+less 0x2b
+greater 0x2b shift
+guillemotleft 0x2c altgr
+guillemotright 0x2d altgr
+copyright 0x2e altgr 
+mu 0x32 altgr
+comma 0x33
+semicolon 0x33 shift
+period 0x34
+colon 0x34 shift
+periodcentered 0x34 altgr
+hyphen 0x35
+equal 0x35 shift
+bracketright 0x56
+bracketleft 0x56 shift
+brokenbar 0x56 altgr
+

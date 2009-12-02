@@ -1,0 +1,131 @@
+# generated from XKB map th
+include common
+map 0x41e
+exclam 0x02 shift
+Thai_lakkhangyao 0x02 altgr
+plus 0x02 shift altgr
+at 0x03 shift
+slash 0x03 altgr
+Thai_leknung 0x03 shift altgr
+numbersign 0x04 shift
+minus 0x04 altgr
+Thai_leksong 0x04 shift altgr
+dollar 0x05 shift
+Thai_phosamphao 0x05 altgr
+Thai_leksam 0x05 shift altgr
+percent 0x06 shift
+Thai_thothung 0x06 altgr
+Thai_leksi 0x06 shift altgr
+asciicircum 0x07 shift
+Thai_sarau 0x07 altgr
+Thai_sarauu 0x07 shift altgr
+ampersand 0x08 shift
+Thai_saraue 0x08 altgr
+Thai_baht 0x08 shift altgr
+asterisk 0x09 shift
+Thai_khokhwai 0x09 altgr
+Thai_lekha 0x09 shift altgr
+parenleft 0x0a shift
+Thai_totao 0x0a altgr
+Thai_lekhok 0x0a shift altgr
+parenright 0x0b shift
+Thai_chochan 0x0b altgr
+Thai_lekchet 0x0b shift altgr
+minus 0x0c
+underscore 0x0c shift
+Thai_khokhai 0x0c altgr
+Thai_lekpaet 0x0c shift altgr
+equal 0x0d
+plus 0x0d shift
+Thai_chochang 0x0d altgr
+Thai_lekkao 0x0d shift altgr
+Thai_maiyamok 0x10 altgr
+Thai_leksun 0x10 shift altgr
+Thai_saraaimaimalai 0x11 altgr
+quotedbl 0x11 shift altgr
+Thai_saraam 0x12 altgr
+Thai_dochada 0x12 shift altgr
+Thai_phophan 0x13 altgr
+Thai_thonangmontho 0x13 shift altgr
+Thai_saraa 0x14 altgr
+Thai_thothong 0x14 shift altgr
+Thai_maihanakat 0x15 altgr
+Thai_nikhahit 0x15 shift altgr
+Thai_saraii 0x16 altgr
+Thai_maitri 0x16 shift altgr
+Thai_rorua 0x17 altgr
+Thai_nonen 0x17 shift altgr
+Thai_nonu 0x18 altgr
+Thai_paiyannoi 0x18 shift altgr
+Thai_yoyak 0x19 altgr
+Thai_yoying 0x19 shift altgr
+bracketleft 0x1a
+braceleft 0x1a shift
+Thai_bobaimai 0x1a altgr
+Thai_thothan 0x1a shift altgr
+bracketright 0x1b
+braceright 0x1b shift
+Thai_loling 0x1b altgr
+comma 0x1b shift altgr
+Thai_fofan 0x1e altgr
+Thai_ru 0x1e shift altgr
+Thai_hohip 0x1f altgr
+Thai_khorakhang 0x1f shift altgr
+Thai_kokai 0x20 altgr
+Thai_topatak 0x20 shift altgr
+Thai_dodek 0x21 altgr
+Thai_sarao 0x21 shift altgr
+Thai_sarae 0x22 altgr
+Thai_chochoe 0x22 shift altgr
+Thai_maitho 0x23 altgr
+Thai_maitaikhu 0x23 shift altgr
+Thai_maiek 0x24 altgr
+Thai_maichattawa 0x24 shift altgr
+Thai_saraaa 0x25 altgr
+Thai_sorusi 0x25 shift altgr
+Thai_sosua 0x26 altgr
+Thai_sosala 0x26 shift altgr
+semicolon 0x27
+colon 0x27 shift
+Thai_wowaen 0x27 altgr
+Thai_soso 0x27 shift altgr
+apostrophe 0x28
+quotedbl 0x28 shift
+Thai_ngongu 0x28 altgr
+period 0x28 shift altgr
+grave 0x29
+asciitilde 0x29 shift
+underscore 0x29 altgr
+percent 0x29 shift altgr
+ISO_First_Group 0x2a shift
+backslash 0x2b
+bar 0x2b shift
+Thai_khokhuat 0x2b altgr
+Thai_khokhon 0x2b shift altgr
+Thai_phophung 0x2c altgr
+parenleft 0x2c shift altgr
+Thai_popla 0x2d altgr
+parenright 0x2d shift altgr
+Thai_saraae 0x2e altgr
+Thai_choching 0x2e shift altgr
+Thai_oang 0x2f altgr
+Thai_honokhuk 0x2f shift altgr
+Thai_sarai 0x30 altgr
+Thai_phinthu 0x30 shift altgr
+Thai_sarauee 0x31 altgr
+Thai_thanthakhat 0x31 shift altgr
+Thai_thothahan 0x32 altgr
+question 0x32 shift altgr
+comma 0x33
+less 0x33 shift
+Thai_moma 0x33 altgr
+Thai_thophuthao 0x33 shift altgr
+period 0x34
+greater 0x34 shift
+Thai_saraaimaimuan 0x34 altgr
+Thai_lochula 0x34 shift altgr
+slash 0x35
+question 0x35 shift
+Thai_fofa 0x35 altgr
+Thai_lu 0x35 shift altgr
+ISO_Last_Group 0x36 shift
