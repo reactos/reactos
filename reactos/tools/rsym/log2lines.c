@@ -10,11 +10,12 @@
 
 #include "rsym.h"
 
-#define LOG2LINES_VERSION   "1.4"
+#define LOG2LINES_VERSION   "1.5"
 
 #define INVALID_BASE    0xFFFFFFFFL
 
 #define DEF_OPT_DIR     "output-i386"
+#define SOURCES_ENV     "_ROSBE_ROSSOURCEDIR"
 
 #if defined (__DJGPP__) || defined (__WIN32__)
 
@@ -52,6 +53,7 @@
 "%s x -y -r %s" PATH_STR "reactos" PATH_STR "reactos.cab -o%s" PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
 
 #define LINESIZE        1024
+#define NAMESIZE        80
 
 #define log(outFile, fmt, ...)                          \
     {                                                   \
@@ -90,13 +92,26 @@ struct summ_struct
     int total;
 };
 
+struct lineinfo_struct
+{
+    int     valid; 
+    char    file1[LINESIZE];
+    char    func1[NAMESIZE];
+    int     nr1;
+    char    file2[LINESIZE];
+    char    func2[NAMESIZE];
+    int     nr2;
+};
+
 typedef struct cache_struct CACHE;
 typedef struct summ_struct SUMM;
+typedef struct lineinfo_struct LINEINFO;
 
 static CACHE cache;
 static SUMM summ;
+static LINEINFO lastLine;
 
-static char *optchars  = "bcd:fFhl:mMrstTuUvz:";
+static char *optchars  = "bcd:fFhl:mMrsS:tTuUvz:";
 static int opt_buffered= 0;         // -b
 static int opt_help    = 0;         // -h
 static int opt_force   = 0;         // -f
@@ -107,6 +122,7 @@ static int opt_mark    = 0;         // -m
 static int opt_Mark    = 0;         // -M
 static int opt_raw     = 0;         // -r
 static int opt_stats   = 0;         // -s
+static int opt_Source  = 0;         // -S
 static int opt_twice   = 0;         // -t
 static int opt_Twice   = 0;         // -T
 static int opt_undo    = 0;         // -u
@@ -119,6 +135,63 @@ static FILE *logFile   = NULL;
 
 static char *cache_name;
 static char *tmp_name;
+
+static char sources_path[LINESIZE];
+
+static void
+clearLastLine(void)
+{
+    memset(&lastLine, 0, sizeof(LINEINFO));
+}
+
+static void
+log_file(FILE *outFile, char *fileName, int max )
+{
+    int i = 0, min = 0;
+    char s[LINESIZE];
+    char p[LINESIZE];
+    FILE *src;
+
+    strcpy(p, sources_path);
+    strcat(p, fileName);
+    if ((src = fopen(p, "r")))
+    {
+        min = max - opt_Source;
+        min = (min < 0) ? 0 : min;
+        while (i < max && fgets(s, LINESIZE, src))
+        {
+            if (i >= min)
+                log(outFile, "| %4.4d  %s", i + 1, s);
+            i++;
+        }
+        fclose(src);
+    }
+    else if (opt_verbose)
+        fprintf(stderr, "Can't open: %s (check " SOURCES_ENV ")\n", p);
+}
+
+static void
+logSource(FILE *outFile)
+{
+    log_file(outFile, lastLine.file1, lastLine.nr1);
+    if (lastLine.nr2)
+    {
+        log(outFile, "| ---- [%u] ----\n", lastLine.nr2);
+        log_file(outFile, lastLine.file2, lastLine.nr2);
+    }
+}
+
+static void
+reportSource(FILE *outFile)
+{
+    if (!opt_Source)
+        return;
+    if (lastLine.valid)
+    {
+        logSource(outFile);
+    }
+    clearLastLine();
+}
 
 static char *
 basename(char *path)
@@ -206,17 +279,24 @@ print_offset(void *data, size_t offset, char *toString)
     }
     if (e || e2)
     {
+        strcpy(lastLine.file1, &Strings[e->FileOffset]);
+        strcpy(lastLine.func1, &Strings[e->FunctionOffset]);
+        lastLine.nr1 = e->SourceLine;
+        lastLine.valid = 1;
         if (e2)
         {
+            strcpy(lastLine.file2, &Strings[e2->FileOffset]);
+            strcpy(lastLine.func2, &Strings[e2->FunctionOffset]);
+            lastLine.nr2 = e2->SourceLine;
             bFileOffsetChanged = e->FileOffset != e2->FileOffset;
             if (e->FileOffset != e2->FileOffset || e->FunctionOffset != e2->FunctionOffset)
                 summ.majordiff++;
 
             /*
-             * - "%.0s" displays nothing, but processes argument
-             * - bFileOffsetChanged implies always display 2nd SourceLine even if the same
-             * - also for FunctionOffset
-             */
+            * - "%.0s" displays nothing, but processes argument
+            * - bFileOffsetChanged implies always display 2nd SourceLine even if the same
+            * - also for FunctionOffset
+            */
             strcat(fmt, "%s");
             if (bFileOffsetChanged)
                 strcat(fmt, "[%s]");
@@ -238,23 +318,23 @@ print_offset(void *data, size_t offset, char *toString)
             if (toString)
             {   // put in toString if provided
                 snprintf(toString, LINESIZE, fmt,
-                         &Strings[e->FileOffset],
-                         &Strings[e2->FileOffset],
-                         (unsigned int)e->SourceLine,
-                         (unsigned int)e2->SourceLine,
-                         &Strings[e->FunctionOffset],
-                         &Strings[e2->FunctionOffset]);
+                    &Strings[e->FileOffset],
+                    &Strings[e2->FileOffset],
+                    (unsigned int)e->SourceLine,
+                    (unsigned int)e2->SourceLine,
+                    &Strings[e->FunctionOffset],
+                    &Strings[e2->FunctionOffset]);
             }
             else
             {
-               strcat(fmt, "\n");
-               printf(fmt,
-                      &Strings[e->FileOffset],
-                      &Strings[e2->FileOffset],
-                      (unsigned int)e->SourceLine,
-                      (unsigned int)e2->SourceLine,
-                      &Strings[e->FunctionOffset],
-                      &Strings[e2->FunctionOffset]);
+                strcat(fmt, "\n");
+                printf(fmt,
+                    &Strings[e->FileOffset],
+                    &Strings[e2->FileOffset],
+                    (unsigned int)e->SourceLine,
+                    (unsigned int)e2->SourceLine,
+                    &Strings[e->FunctionOffset],
+                    &Strings[e2->FunctionOffset]);
             }
         }
         else
@@ -262,16 +342,16 @@ print_offset(void *data, size_t offset, char *toString)
             if (toString)
             {   // put in toString if provided
                 snprintf(toString, LINESIZE, "%s:%u (%s)",
-                         &Strings[e->FileOffset],
-                         (unsigned int)e->SourceLine,
-                         &Strings[e->FunctionOffset]);
+                    &Strings[e->FileOffset],
+                    (unsigned int)e->SourceLine,
+                    &Strings[e->FunctionOffset]);
             }
             else
             {
                 printf("%s:%u (%s)\n",
-                       &Strings[e->FileOffset],
-                       (unsigned int)e->SourceLine,
-                       &Strings[e->FunctionOffset]);
+                    &Strings[e->FileOffset],
+                    (unsigned int)e->SourceLine,
+                    &Strings[e->FunctionOffset]);
             }
         }
         return 0;
@@ -831,9 +911,19 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
 
     if (!*Line)
         return;
+
     res = 1;
     mark = "";
     s = remove_mark(Line);
+    if (opt_undo)
+    {
+        /* Strip all lines added by this tool: */
+        char buf[NAMESIZE];
+        if (sscanf(s, "| %s", buf) == 1)
+            if (buf[0] == '0' || strcmp(buf, "----") == 0 || atoi(buf))
+                res = 0;
+    }
+
     sep = strchr(s, ':');
     if (sep)
     {
@@ -947,6 +1037,7 @@ translate_files(FILE *inFile, FILE *outFile)
                         translate_line(outFile, Line, path, LineOut);
                         i = 0;
                         translate_char(c, outFile);
+                        reportSource(outFile);
                         break;
                     case '<':
                         i = 0;
@@ -1005,6 +1096,7 @@ translate_files(FILE *inFile, FILE *outFile)
                 if (!opt_raw)
                 {
                     translate_line(outFile, Line, path, LineOut);
+                    reportSource(outFile);
                 }
                 else
                 {
@@ -1075,20 +1167,27 @@ static char *verboseUsage =
 "       - Offset error:    Image exists, but error retrieving offset info.\n"
 "       - Total:           Total number of lines attempted to translate.\n"
 "       Also some version info is displayed.\n\n"
-"  -t   Translate twice. The address itself and for (address - 1)\n"
+"  -S <context>\n"
+"       Source lines. Display up to <context> lines until linenumber.\n"
+"       The environment variable _ROSBE_ROSSOURCEDIR should be correctly set.\n"
+"       For a reliable result, these sources should be up to date with\n"
+"       the revision you test.\n"
+"       Can be combined with -tT.\n"
+"       Implies -U. Retranslation needed for retrieving source info.\n\n"
+"  -t   Translate twice. The address itself and for (address - 1).\n"
 "       Show extra filename, func and linenumber between [..] if they differ\n"
 "       So if only the linenumbers differ, then only show the extra\n"
 "       linenumber.\n\n"
-"  -T   As -t, but the original filename+func+linenumber gets replaced\n\n"
+"  -T   As -t, but show only filename+func+linenumber for (address - 1.)\n\n"
 "  -u   Undo translations.\n"
 "       Lines are translated back (reverted) to the form <IMAGENAME:ADDRESS>\n"
-"       Overrides console mode -c.\n\n"
+"       Also removes all lines previously added by this tool (see -S)\n\n"
 "  -U   Undo and reprocess.\n"
 "       Reverted to the form <IMAGENAME:ADDRESS>, and then retranslated\n"
-"       Overrides console mode -c, implies -u.\n\n"
+"       Implies -u.\n\n"
 "  -v   Show detailed errors and tracing.\n"
 "       Repeating this option adds more verbosity.\n"
-"       Default: only (major) errors\n" "\n\n"
+"       Default: only (major) errors\n\n"
 "  -z <path to 7z>\n"
 "       Specify path to 7z. See also option -d.\n"
 "       Default: '7z'\n"
@@ -1113,6 +1212,14 @@ static char *verboseUsage =
 "  The following command line invocations are equivalent:\n"
 "       log2lines msi.dll 2e35d msi.dll 2235 msiexec.exe 30a8 msiexec.exe 2e89\n"
 "       log2lines msi.dll 2e35d 2235 msiexec.exe 30a8 2e89\n\n"
+"  Generate source lines from backtrace ('bt') output. Show 2 lines of context:\n"
+"       log2lines -S 2 -d bootcd-38701-dbg.7z < bugxxxx.log\n"
+"       <msiexec.exe:2e89 (lib/3rdparty/mingw/crtexe.c:259 (__tmainCRTStartup))>\n"
+"       | 0258  #else\n"
+"       | 0259      mainret = main (\n"
+"       <msiexec.exe:2fad (lib/3rdparty/mingw/crtexe.c:160 (WinMainCRTStartup))>\n"
+"       | 0159    return __tmainCRTStartup ();\n"
+"       | 0160  }\n"
 "\n";
 
 static void
@@ -1277,6 +1384,14 @@ main(int argc, const char **argv)
     int opt;
     int optCount = 0;
     int i;
+    char *s;
+
+    strcpy(sources_path, "");
+    if ((s = getenv(SOURCES_ENV)))
+    {
+        strcpy(sources_path, s);
+        strcat(sources_path, PATH_STR);
+    }
 
     strcpy(opt_scanned, "");
     for (i = 1; i < argc; i++)
@@ -1289,6 +1404,7 @@ main(int argc, const char **argv)
     strcpy(opt_7z, CMD_7Z);
 
     memset(&summ, 0, sizeof(SUMM));
+    clearLastLine();
 
     while (-1 != (opt = getopt(argc, (char **const)argv, optchars)))
     {
@@ -1332,6 +1448,10 @@ main(int argc, const char **argv)
         case 's':
             opt_stats++;
             break;
+        case 'S':
+            optCount++;
+            opt_Source = atoi(optarg);
+            break;
         case 't':
             opt_twice++;
             break;
@@ -1360,9 +1480,12 @@ main(int argc, const char **argv)
         }
         optCount++;
     }
-    if (opt_undo)
-        opt_console = 0;
-
+    if (opt_Source)
+    {
+        /* need to retranslate for source info: */
+        opt_undo++;
+        opt_redo++;
+    }
     argc -= optCount;
     if (check_directory(opt_force))
         return 3;
@@ -1413,6 +1536,7 @@ main(int argc, const char **argv)
                     if (opt_verbose > 1)
                         fprintf(stderr, "translating %s %s\n", base, offset);
                     translate_file(base, my_atoi(offset), NULL);
+                    reportSource(stdout);
                 }
                 else
                 {
