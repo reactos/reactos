@@ -5,7 +5,6 @@
 	<include base="schannel_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>main.c</file>
 	<file>testlist.c</file>

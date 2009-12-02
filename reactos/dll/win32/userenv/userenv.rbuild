@@ -3,7 +3,6 @@
 	<include base="userenv">.</include>
 	<library>uuid</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<pch>precomp.h</pch>

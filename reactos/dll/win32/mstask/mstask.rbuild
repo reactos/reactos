@@ -19,7 +19,6 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 <module name="mstask_local_interface" type="idlinterface">

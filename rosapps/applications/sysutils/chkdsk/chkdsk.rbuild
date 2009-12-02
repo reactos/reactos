@@ -5,7 +5,6 @@
 	<library>fmifs</library>
 	<library>win32err</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 
 	<file>chkdsk.c</file>
 	<file>chkdsk.rc</file>

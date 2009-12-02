@@ -3,7 +3,6 @@
 	<include base="xinput1_2">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<library>kernel32</library>
 	<file>xinput1_2_main.c</file>
 	<file>version.rc</file>
 </module>

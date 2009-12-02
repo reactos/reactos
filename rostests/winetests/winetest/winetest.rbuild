@@ -9,7 +9,6 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>ws2_32</library>
-	<library>kernel32</library>
 	<file>gui.c</file>
 	<file>main.c</file>
 	<file>send.c</file>

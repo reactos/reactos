@@ -4,7 +4,6 @@
 	<include base="sndrec32">.</include>
 	<library>winmm</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<library>msacm32</library>
 	<library>comctl32</library>
 	<library>comdlg32</library>

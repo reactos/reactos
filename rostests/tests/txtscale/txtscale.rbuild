@@ -1,5 +1,4 @@
 <module name="txtscale" type="win32gui" installbase="bin" installname="txtscale.exe" allowwarnings ="true" stdlib="host">
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comctl32</library>

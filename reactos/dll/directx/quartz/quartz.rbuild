@@ -10,7 +10,6 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>dsound</library>
 	<library>strmiids</library>
 	<library>ole32</library>
@@ -48,4 +47,3 @@
 	<file>avisplit.c</file>
 	<file>version.rc</file>
 </module>
-</group>

@@ -20,7 +20,6 @@
 	<define name="rmdir">_rmdir</define>
 	<define name="putenv">_putenv</define>
 
-	<library>kernel32</library>
 	<file>cpp.c</file>
 	<file>data.c</file>
 	<file>dir.c</file>

@@ -28,7 +28,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
 	<file>attribute.c</file>
@@ -63,4 +62,3 @@
 	<dependency>stdole2</dependency>
 	<file>msxml3_v1.idl</file>
 </module>
-</group>

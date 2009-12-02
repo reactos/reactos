@@ -6,7 +6,6 @@
 	<include base="ncftp">ncftp</include>
 
 	<define name="ncftp" />
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>ws2_32</library>

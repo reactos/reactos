@@ -2,7 +2,6 @@
 	<importlibrary definition="hid.spec" />
 	<include base="hid">.</include>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<file>hid.c</file>
 	<file>stubs.c</file>
 	<file>hid.rc</file>

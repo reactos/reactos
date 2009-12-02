@@ -1,7 +1,6 @@
 <module name="vgafontedit" type="win32gui" installname="vgafontedit.exe" unicode="yes">
 	<include base="vgafontedit">.</include>
 	
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comdlg32</library>

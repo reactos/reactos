@@ -2,7 +2,6 @@
 	<include base="w32knapi">.</include>
 	<library>apitest</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>shell32</library>

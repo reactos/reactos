@@ -2,6 +2,5 @@
 	<include base="gdihv">.</include>
 	<library>dbghelp</library>
 	<library>shlwapi</library>
-	<library>kernel32</library>
 	<file>symdump.c</file>
 </module>

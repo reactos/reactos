@@ -1,6 +1,5 @@
 <module name="kill" type="win32cui" installbase="system32" installname="kill.exe">
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 
 	<file>kill.c</file>

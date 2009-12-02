@@ -8,7 +8,6 @@
 	<file>testlist.c</file>
 	<library>wine</library>
 	<library>lz32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

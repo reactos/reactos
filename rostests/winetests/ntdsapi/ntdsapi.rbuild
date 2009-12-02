@@ -5,6 +5,5 @@
 	<file>testlist.c</file>
 	<library>wine</library>
 	<library>ntdsapi</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>

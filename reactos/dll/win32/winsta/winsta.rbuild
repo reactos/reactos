@@ -2,7 +2,6 @@
 	<importlibrary definition="winsta.spec" />
 	<include base="winsta">.</include>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<pch>winsta.h</pch>
 	<file>logon.c</file>

@@ -3,7 +3,6 @@
 <module name="usrmgr" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_USRMGR}" installbase="system32" installname="usrmgr.cpl" unicode="yes" crt="msvcrt">
 	<importlibrary definition="usrmgr.spec" />
 	<include base="usrmgr">.</include>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>gdi32</library>

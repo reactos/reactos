@@ -4,7 +4,6 @@
 	<file>main.c</file>
 	<file>testlist.c</file>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>oleacc</library>
 	<library>ntdll</library>
 </module>

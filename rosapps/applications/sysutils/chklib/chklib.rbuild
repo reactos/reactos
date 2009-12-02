@@ -2,7 +2,6 @@
 	<include base="chklib">..</include>
 
 	<library>win32err</library>
-	<library>kernel32</library>
 
 	<file>chklib.c</file>
 	<file>chklib.rc</file>

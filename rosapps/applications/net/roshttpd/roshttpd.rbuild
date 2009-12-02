@@ -3,7 +3,6 @@
 <module name="roshttpd" type="win32cui" installbase="system32" installname="roshttpd.exe" stdlib="host">
 	<include base="roshttpd">include</include>
 	<define name="__USE_W32_SOCKETS" />
-	<library>kernel32</library>
 	<library>ws2_32</library>
 	<library>user32</library>
 	<compilerflag compiler="cxx" compilerset="gcc">-Wno-non-virtual-dtor</compilerflag>

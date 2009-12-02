@@ -6,7 +6,6 @@
 	<define name="__ROS_LONG64__" />
 	<library>wine</library>
 	<library>wlanapi</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>wlanapi.c</file>
 	<file>testlist.c</file>

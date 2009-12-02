@@ -2,7 +2,6 @@
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 	<module name="imagesoft" type="win32gui" installbase="system32" installname="imagesoft.exe" unicode="yes">
 		<include base="imagesoft">.</include>
-		<library>kernel32</library>
 		<library>gdi32</library>
 		<library>user32</library>
 		<library>advapi32</library>

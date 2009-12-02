@@ -6,7 +6,6 @@
 	<define name="ADNS_JGAA_WIN32" />
 	<library>adns</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>

@@ -5,7 +5,6 @@
 	<include base="msacm32_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>msacm32</library>
 	<file>msacm.c</file>
 	<file>testlist.c</file>

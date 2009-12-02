@@ -6,7 +6,6 @@
 	<library>powrprof</library>
 	<library>ntdll</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<file>testlist.c</file>
 	<file>pwrprof.c</file>
 </module>

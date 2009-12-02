@@ -9,7 +9,6 @@
 	<library>wine</library>
 	<library>hlink</library>
 	<library>ole32</library>
-	<library>kernel32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
 </module>

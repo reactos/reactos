@@ -1,6 +1,5 @@
 <module name="regexpl" type="win32cui" installbase="system32" installname="regexpl.exe" stdlib="host">
 	<include base="regexpl">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 
@@ -31,4 +30,3 @@
 	<file>Pattern.cpp</file>
 	<file>Settings.cpp</file>
 	<file>Prompt.cpp</file>
-</module>

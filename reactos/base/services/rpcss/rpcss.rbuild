@@ -7,7 +7,6 @@
 	<library>rpcss_epm_server</library>
 	<library>rpcss_irot_server</library>
 	<library>rpcrt4</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>pseh</library>
 	<file>epmp.c</file>

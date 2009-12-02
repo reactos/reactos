@@ -7,7 +7,6 @@
 	<library>wine</library>
 	<library>ole32</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
 	<file>autocomplete.c</file>

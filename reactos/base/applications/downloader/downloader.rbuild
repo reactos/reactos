@@ -5,7 +5,6 @@
 		<include base="downloader">.</include>
 		<include base="expat">.</include>
 
-		<library>kernel32</library>
 		<library>advapi32</library>
 		<library>ntdll</library>
 		<library>user32</library>

@@ -6,7 +6,6 @@
 	<redefine name="_WIN32_WINNT">0x501</redefine>
     <define name="__ROS_LONG64__" />
 	<library>gdi32</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
 	<file>browsewnd.c</file>

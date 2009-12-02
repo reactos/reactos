@@ -3,7 +3,6 @@
 <module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll" unicode="yes" crt="msvcrt">
 	<importlibrary definition="ddraw.spec" />
 	<include base="ddraw">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>d3d8thk</library>

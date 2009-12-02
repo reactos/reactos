@@ -2,7 +2,6 @@
 	<importlibrary definition="fmifs.spec" />
 	<include base="fmifs">.</include>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<file>chkdsk.c</file>
 	<file>compress.c</file>
 	<file>diskcopy.c</file>

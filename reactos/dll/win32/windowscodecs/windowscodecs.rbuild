@@ -12,7 +12,6 @@
 	<library>uuid</library>
 	<library>ole32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 
 	<file>bmpdecode.c</file>
 	<file>bmpencode.c</file>

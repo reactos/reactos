@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="old_wordpad" type="win32gui" installbase="system32" installname="old_wordpad.exe" unicode="yes">
 	<include base="old_wordpad">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comdlg32</library>
