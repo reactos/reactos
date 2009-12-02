@@ -49,12 +49,29 @@ RosUserClipCursor( LPCRECT clip );
 void NTAPI 
 RosUserSetCursor( ICONINFO* IconInfo );
 
+LONG
+APIENTRY
+RosUserChangeDisplaySettings(
+   PUNICODE_STRING lpszDeviceName,
+   LPDEVMODEW lpDevMode,
+   HWND hwnd,
+   DWORD dwflags,
+   LPVOID lParam);
+
 INT
 APIENTRY
 RosUserEnumDisplayMonitors(
    OPTIONAL OUT HMONITOR *hMonitorList,
    OPTIONAL OUT PRECTL monitorRectList,
    OPTIONAL IN DWORD listSize);
+
+NTSTATUS
+APIENTRY
+RosUserEnumDisplaySettings(
+   PUNICODE_STRING pusDeviceName,
+   DWORD iModeNum,
+   LPDEVMODEW lpDevMode,
+   DWORD dwFlags );
 
 BOOL
 APIENTRY

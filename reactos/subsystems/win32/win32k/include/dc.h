@@ -34,7 +34,4 @@ typedef struct _DC
   ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
 #define  DC_Unlock(pDC)  \
   GDIOBJ_UnlockObjByPtr ((PBASEOBJECT)pDC)
-
-INT APIENTRY GreGetDeviceCaps(PDC pDC, INT cap);
-
 #endif

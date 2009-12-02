@@ -70,7 +70,9 @@ RosUserGetCursorPos                1
 RosUserSetCursorPos                2
 RosUserClipCursor                  1
 RosUserSetCursor                   1
+RosUserChangeDisplaySettings       5
 RosUserEnumDisplayMonitors         3
+RosUserEnumDisplaySettings         4
 RosUserGetMonitorInfo              2
 RosUserGetKeyboardLayout           1
 RosUserGetKeyboardLayoutName       1

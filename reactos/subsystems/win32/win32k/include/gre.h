@@ -83,6 +83,14 @@ BitsPerFormat(ULONG Format);
 extern HGDIOBJ hStockBmp;
 VOID CreateStockBitmap();
 
+/* device.c */
+LONG FASTCALL GreChangeDisplaySettings(PUNICODE_STRING pDeviceName,
+                                       LPDEVMODEW DevMode, DWORD dwflags,
+                                       PVOID lParam);
+NTSTATUS FASTCALL GreEnumDisplaySettings(PUNICODE_STRING pDeviceName, DWORD iModeNum,
+                                         LPDEVMODEW pDevMode, DWORD dwFlags);
+INT APIENTRY GreGetDeviceCaps(PDC pDC, INT cap);
+
 /* font.c */
 VOID NTAPI
 GreTextOut(PDC pDC, INT x, INT y, UINT flags,

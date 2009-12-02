@@ -112,6 +112,7 @@
 		<file>err.c</file>
 		<file>init.c</file>
 		<file>cursor.c</file>
+		<file>display.c</file>
 		<file>monitor.c</file>
 		<file>kbdlayout.c</file>
 		<file>keyboard.c</file>

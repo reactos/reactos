@@ -366,8 +366,15 @@ BOOL CDECL RosDrv_SetClipboardData( UINT format, HANDLE16 h16, HANDLE h32, BOOL 
 LONG CDECL RosDrv_ChangeDisplaySettingsEx( LPCWSTR name, LPDEVMODEW mode, HWND hwnd,
                                              DWORD flags, LPVOID lparam )
 {
-    UNIMPLEMENTED;
-    return DISP_CHANGE_FAILED;
+    UNICODE_STRING usDeviceName, *pusDeviceName = NULL;
+
+    if (name)
+    {
+        RtlInitUnicodeString(&usDeviceName, name);
+        pusDeviceName = &usDeviceName;
+    }
+
+    return RosUserChangeDisplaySettings(pusDeviceName, mode, hwnd, flags, lparam);
 }
 
 BOOL CDECL RosDrv_EnumDisplayMonitors( HDC hdc, LPRECT rect, MONITORENUMPROC proc, LPARAM lp )
@@ -433,8 +440,15 @@ BOOL CDECL RosDrv_EnumDisplayMonitors( HDC hdc, LPRECT rect, MONITORENUMPROC pro
 
 BOOL CDECL RosDrv_EnumDisplaySettingsEx( LPCWSTR name, DWORD num, LPDEVMODEW mode, DWORD flags )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    UNICODE_STRING usDeviceName, *pusDeviceName = NULL;
+
+    if (name)
+    {
+        RtlInitUnicodeString(&usDeviceName, name);
+        pusDeviceName = &usDeviceName;
+    }
+
+    return NT_SUCCESS(RosUserEnumDisplaySettings(pusDeviceName, num, mode, flags));
 }
 
 BOOL CDECL RosDrv_GetMonitorInfo( HMONITOR handle, LPMONITORINFO info )

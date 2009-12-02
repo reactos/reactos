@@ -508,10 +508,10 @@ IntCreatePrimarySurface()
         return FALSE;
     }
 
-    /*if (! PrepareVideoPrt())
+    if (! PrepareVideoPrt())
     {
         return FALSE;
-    }*/
+    }
 
     /* Enable the drawing surface */
     PrimarySurface.pSurface =
@@ -568,6 +568,612 @@ IntDestroyPrimarySurface()
     KeResetEvent(&VideoDriverPrepared);
 
     ObDereferenceObject(PrimarySurface.VideoFileObject);
+}
+
+NTSTATUS FASTCALL
+GetVideoRegistryKey(
+    OUT PUNICODE_STRING RegistryPath,
+    IN PCUNICODE_STRING DeviceName) /* ex: "\Device\Video0" */
+{
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(RegistryPath, NULL);
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].Name = DeviceName->Buffer;
+    QueryTable[0].EntryContext = RegistryPath;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
+                                    L"VIDEO",
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("No %wZ value in DEVICEMAP\\VIDEO found (Status 0x%08lx)\n", DeviceName, Status);
+        return STATUS_NO_SUCH_DEVICE;
+    }
+
+    DPRINT("RegistryPath %wZ\n", RegistryPath);
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS FASTCALL
+GetVideoDeviceName(
+    OUT PUNICODE_STRING VideoDeviceName,
+    IN PCUNICODE_STRING DisplayDevice) /* ex: "\.\DISPLAY1" or "\??\DISPLAY1" */
+{
+    UNICODE_STRING Prefix = RTL_CONSTANT_STRING(L"\\??\\");
+    UNICODE_STRING ObjectName;
+    UNICODE_STRING KernelModeName = { 0, };
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    USHORT LastSlash;
+    ULONG Length;
+    HANDLE LinkHandle = NULL;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(VideoDeviceName, NULL);
+
+    /* Get device name (DisplayDevice is "\.\xxx") */
+    for (LastSlash = DisplayDevice->Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
+    {
+        if (DisplayDevice->Buffer[LastSlash - 1] == L'\\')
+            break;
+    }
+
+    if (LastSlash == 0)
+    {
+        DPRINT1("Invalid device name '%wZ'\n", DisplayDevice);
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto cleanup;
+    }
+    ObjectName = *DisplayDevice;
+    ObjectName.Length -= LastSlash * sizeof(WCHAR);
+    ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
+    ObjectName.Buffer += LastSlash;
+
+    /* Create "\??\xxx" (ex: "\??\DISPLAY1") */
+    KernelModeName.MaximumLength = Prefix.Length + ObjectName.Length + sizeof(UNICODE_NULL);
+    KernelModeName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                            KernelModeName.MaximumLength,
+                            TAG_DC);
+    if (!KernelModeName.Buffer)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto cleanup;
+    }
+    RtlCopyUnicodeString(&KernelModeName, &Prefix);
+    Status = RtlAppendUnicodeStringToString(&KernelModeName, &ObjectName);
+    if (!NT_SUCCESS(Status))
+        goto cleanup;
+
+    /* Open \??\xxx (ex: "\??\DISPLAY1") */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KernelModeName,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSymbolicLinkObject(&LinkHandle,
+                                      GENERIC_READ,
+                                      &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to open symbolic link %wZ (Status 0x%08lx)\n", &KernelModeName, Status);
+        Status = STATUS_NO_SUCH_DEVICE;
+        goto cleanup;
+    }
+
+    Status = ZwQuerySymbolicLinkObject(LinkHandle, VideoDeviceName, &Length);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        DPRINT1("Unable to query symbolic link %wZ (Status 0x%08lx)\n", &KernelModeName, Status);
+        Status = STATUS_NO_SUCH_DEVICE;
+        goto cleanup;
+    }
+    VideoDeviceName->MaximumLength = Length;
+    VideoDeviceName->Buffer = ExAllocatePoolWithTag(PagedPool,
+                              VideoDeviceName->MaximumLength + sizeof(UNICODE_NULL),
+                              TAG_DC);
+    if (!VideoDeviceName->Buffer)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto cleanup;
+    }
+    Status = ZwQuerySymbolicLinkObject(LinkHandle, VideoDeviceName, NULL);
+    VideoDeviceName->Buffer[VideoDeviceName->MaximumLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to query symbolic link %wZ (Status 0x%08lx)\n", &KernelModeName, Status);
+        Status = STATUS_NO_SUCH_DEVICE;
+        goto cleanup;
+    }
+    Status = STATUS_SUCCESS;
+
+cleanup:
+    if (!NT_SUCCESS(Status) && VideoDeviceName->Buffer)
+        ExFreePoolWithTag(VideoDeviceName->Buffer, TAG_DC);
+    if (KernelModeName.Buffer)
+        ExFreePoolWithTag(KernelModeName.Buffer, TAG_DC);
+    if (LinkHandle)
+        ZwClose(LinkHandle);
+    return Status;
+}
+
+LONG
+FASTCALL
+GreChangeDisplaySettings(
+    IN PUNICODE_STRING pDeviceName  OPTIONAL,
+    IN LPDEVMODEW DevMode,
+    IN DWORD dwflags,
+    IN PVOID lParam  OPTIONAL)
+{
+    BOOLEAN Global = FALSE;
+    BOOLEAN NoReset = FALSE;
+    BOOLEAN Reset = FALSE;
+    BOOLEAN SetPrimary = FALSE;
+    LONG Ret = DISP_CHANGE_SUCCESSFUL;
+    NTSTATUS Status ;
+
+    DPRINT1("display flags : %x\n",dwflags);
+
+    if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
+    {
+        /* Check global, reset and noreset flags */
+        if ((dwflags & CDS_GLOBAL) == CDS_GLOBAL)
+            Global = TRUE;
+        if ((dwflags & CDS_NORESET) == CDS_NORESET)
+            NoReset = TRUE;
+        dwflags &= ~(CDS_GLOBAL | CDS_NORESET);
+    }
+    if ((dwflags & CDS_RESET) == CDS_RESET)
+        Reset = TRUE;
+    if ((dwflags & CDS_SET_PRIMARY) == CDS_SET_PRIMARY)
+        SetPrimary = TRUE;
+    dwflags &= ~(CDS_RESET | CDS_SET_PRIMARY);
+
+    if (Reset && NoReset)
+        return DISP_CHANGE_BADFLAGS;
+
+    if (dwflags == 0)
+    {
+        /* Dynamically change graphics mode */
+        DPRINT1("flag 0 UNIMPLEMENTED\n");
+        return DISP_CHANGE_FAILED;
+        SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+
+    if ((dwflags & CDS_TEST) == CDS_TEST)
+    {
+        /* Test resolution */
+        dwflags &= ~CDS_TEST;
+        Status = GreEnumDisplaySettings(pDeviceName, ENUM_REGISTRY_SETTINGS, DevMode, 0);
+        if (!NT_SUCCESS(Status))
+            Ret = DISP_CHANGE_BADMODE;
+        return Ret;
+    }
+
+    if ((dwflags & CDS_FULLSCREEN) == CDS_FULLSCREEN)
+    {
+        DEVMODEW lpDevMode;
+        /* Full Screen */
+        dwflags &= ~CDS_FULLSCREEN;
+        DPRINT1("flag CDS_FULLSCREEN partially implemented\n");
+        Ret = DISP_CHANGE_FAILED;
+
+        RtlZeroMemory(&lpDevMode, sizeof(DEVMODEW));
+        lpDevMode.dmSize = sizeof(DEVMODEW);
+
+        Status = GreEnumDisplaySettings(pDeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode, 0);
+        if (!NT_SUCCESS(Status))
+            return DISP_CHANGE_FAILED;
+
+        DPRINT1("Req Mode     : %d x %d x %d\n", DevMode->dmPelsWidth,DevMode->dmPelsHeight,DevMode->dmBitsPerPel);
+        DPRINT1("Current Mode : %d x %d x %d\n", lpDevMode.dmPelsWidth,lpDevMode.dmPelsHeight, lpDevMode.dmBitsPerPel);
+
+
+        if ((lpDevMode.dmBitsPerPel == DevMode->dmBitsPerPel) &&
+                (lpDevMode.dmPelsWidth  == DevMode->dmPelsWidth) &&
+                (lpDevMode.dmPelsHeight == DevMode->dmPelsHeight))
+            Ret = DISP_CHANGE_SUCCESSFUL;
+    }
+
+    if ((dwflags & CDS_VIDEOPARAMETERS) == CDS_VIDEOPARAMETERS)
+    {
+        dwflags &= ~CDS_VIDEOPARAMETERS;
+        if (lParam == NULL)
+            Ret=DISP_CHANGE_BADPARAM;
+        else
+        {
+            DPRINT1("flag CDS_VIDEOPARAMETERS UNIMPLEMENTED\n");
+            Ret = DISP_CHANGE_FAILED;
+            SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
+        }
+
+    }
+
+    if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
+    {
+
+        UNICODE_STRING DeviceName;
+        UNICODE_STRING RegistryKey;
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        HANDLE DevInstRegKey;
+        ULONG NewValue;
+
+        DPRINT1("set CDS_UPDATEREGISTRY\n");
+
+        dwflags &= ~CDS_UPDATEREGISTRY;
+
+        /* Check if pDeviceName is NULL, we need to retrieve it */
+        if (pDeviceName == NULL)
+        {
+            // FIXME
+            DPRINT1("fixme: pDeviceName is NULL\n");
+            return DISP_CHANGE_FAILED;
+        }
+
+        Status = GetVideoDeviceName(&DeviceName, pDeviceName);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Unable to get destination of '%wZ' (Status 0x%08lx)\n", pDeviceName, Status);
+            return DISP_CHANGE_FAILED;
+        }
+        Status = GetVideoRegistryKey(&RegistryKey, &DeviceName);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Unable to get registry key for '%wZ' (Status 0x%08lx)\n", &DeviceName, Status);
+            ExFreePoolWithTag(DeviceName.Buffer, TAG_DC);
+            return DISP_CHANGE_FAILED;
+        }
+        ExFreePoolWithTag(DeviceName.Buffer, TAG_DC);
+
+        InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
+                                   OBJ_CASE_INSENSITIVE, NULL, NULL);
+        Status = ZwOpenKey(&DevInstRegKey, KEY_SET_VALUE, &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Unable to open registry key %wZ (Status 0x%08lx)\n", &RegistryKey, Status);
+            ExFreePoolWithTag(RegistryKey.Buffer, TAG_RTLREGISTRY);
+            return DISP_CHANGE_FAILED;
+        }
+        ExFreePoolWithTag(RegistryKey.Buffer, TAG_RTLREGISTRY);
+
+        /* Update needed fields */
+        if (NT_SUCCESS(Status) && DevMode->dmFields & DM_BITSPERPEL)
+        {
+            RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.BitsPerPel");
+            NewValue = DevMode->dmBitsPerPel;
+            Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+        }
+
+        if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSWIDTH)
+        {
+            RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.XResolution");
+            NewValue = DevMode->dmPelsWidth;
+            Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+        }
+
+        if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSHEIGHT)
+        {
+            RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.YResolution");
+            NewValue = DevMode->dmPelsHeight;
+            Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+        }
+
+        if (NT_SUCCESS(Status) && DevMode->dmFields & DM_DISPLAYFREQUENCY)
+        {
+            RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.VRefresh");
+            NewValue = DevMode->dmDisplayFrequency;
+            Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+        }
+
+        ZwClose(DevInstRegKey);
+        if (NT_SUCCESS(Status))
+            Ret = DISP_CHANGE_RESTART;
+        else
+            /* return DISP_CHANGE_NOTUPDATED when we can save to reg only valid for NT */
+            Ret = DISP_CHANGE_NOTUPDATED;
+    }
+
+    if (dwflags != 0)
+        Ret = DISP_CHANGE_BADFLAGS;
+
+    DPRINT("IntChangeDisplaySettings returning %x\n", Ret);
+    return Ret;
+}
+
+NTSTATUS FASTCALL
+GetDisplayNumberFromDeviceName(
+    IN PUNICODE_STRING pDeviceName  OPTIONAL,
+    OUT ULONG *DisplayNumber)
+{
+    UNICODE_STRING DisplayString = RTL_CONSTANT_STRING(L"\\\\.\\DISPLAY");
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG Length;
+    ULONG Number;
+    ULONG i;
+
+    if (DisplayNumber == NULL)
+        return STATUS_INVALID_PARAMETER_2;
+
+    /* Check if DeviceName is valid */
+    if (pDeviceName &&
+            pDeviceName->Length > 0 && pDeviceName->Length <= DisplayString.Length)
+        return STATUS_OBJECT_NAME_INVALID;
+
+    if (pDeviceName == NULL || pDeviceName->Length == 0)
+    {
+        /* FIXME
+        
+        PWINDOW_OBJECT DesktopObject;
+        HDC DesktopHDC;
+        PDC pDC;
+
+        DesktopObject = UserGetDesktopWindow();
+        DesktopHDC = UserGetWindowDC(DesktopObject);
+        pDC = DC_LockDc(DesktopHDC);
+
+        *DisplayNumber = pDC->ppdev->DisplayNumber;
+
+        DC_UnlockDc(pDC);
+        UserReleaseDC(DesktopObject, DesktopHDC, FALSE);
+        */
+        *DisplayNumber = 1;
+        DPRINT1("FIXME: DeviceName is NULL, trying display nr. 1\n");
+        return STATUS_SUCCESS;
+    }
+
+    /* Hack to check if the first parts are equal, by faking the device name length */
+    Length = pDeviceName->Length;
+    pDeviceName->Length = DisplayString.Length;
+    if (RtlEqualUnicodeString(&DisplayString, pDeviceName, FALSE) == FALSE)
+        Status = STATUS_OBJECT_NAME_INVALID;
+    pDeviceName->Length = Length;
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Convert the last part of pDeviceName to a number */
+        Number = 0;
+        Length = pDeviceName->Length / sizeof(WCHAR);
+        for (i = DisplayString.Length / sizeof(WCHAR); i < Length; i++)
+        {
+            WCHAR Char = pDeviceName->Buffer[i];
+            if (Char >= L'0' && Char <= L'9')
+                Number = Number * 10 + Char - L'0';
+            else if (Char != L'\0')
+                return STATUS_OBJECT_NAME_INVALID;
+        }
+
+        *DisplayNumber = Number - 1;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+FASTCALL
+GreEnumDisplaySettings(
+    IN PUNICODE_STRING pDeviceName  OPTIONAL,
+    IN DWORD iModeNum,
+    IN OUT LPDEVMODEW pDevMode,
+    IN DWORD dwFlags)
+{
+    static DEVMODEW *CachedDevModes = NULL, *CachedDevModesEnd = NULL;
+    static DWORD SizeOfCachedDevModes = 0;
+    static UNICODE_STRING CachedDeviceName;
+    PDEVMODEW CachedMode = NULL;
+    DEVMODEW DevMode;
+    ULONG DisplayNumber;
+    NTSTATUS Status;
+
+    Status = GetDisplayNumberFromDeviceName(pDeviceName, &DisplayNumber);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    DPRINT("DevMode->dmSize = %d\n", pDevMode->dmSize);
+    DPRINT("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
+
+    if (iModeNum == ENUM_CURRENT_SETTINGS)
+    {
+        CachedMode = &PrimarySurface.DMW;
+        ASSERT(CachedMode->dmSize > 0);
+    }
+    else if (iModeNum == ENUM_REGISTRY_SETTINGS)
+    {
+        RtlZeroMemory(&DevMode, sizeof (DevMode));
+        DevMode.dmSize = sizeof (DevMode);
+        DevMode.dmDriverExtra = 0;
+        if (SetupDevMode(&DevMode, DisplayNumber))
+            CachedMode = &DevMode;
+        else
+        {
+            return STATUS_UNSUCCESSFUL; // FIXME: what status?
+        }
+        /* FIXME: Maybe look for the matching devmode supplied by the
+         *        driver so we can provide driver private/extra data?
+         */
+    }
+    else
+    {
+        BOOL IsCachedDevice = (CachedDevModes != NULL);
+
+        if (CachedDevModes &&
+                ((pDeviceName == NULL && CachedDeviceName.Length > 0) ||
+                 (pDeviceName != NULL && pDeviceName->Buffer != NULL && CachedDeviceName.Length == 0) ||
+                 (pDeviceName != NULL && pDeviceName->Buffer != NULL && CachedDeviceName.Length > 0 && RtlEqualUnicodeString(pDeviceName, &CachedDeviceName, TRUE) == FALSE)))
+        {
+            IsCachedDevice = FALSE;
+        }
+
+        if (iModeNum == 0 || IsCachedDevice == FALSE) /* query modes from drivers */
+        {
+            UNICODE_STRING DriverFileNames;
+            LPWSTR CurrentName;
+            DRVENABLEDATA DrvEnableData;
+
+            /* Free resources from last driver cache */
+            if (IsCachedDevice == FALSE && CachedDeviceName.Buffer != NULL)
+            {
+                RtlFreeUnicodeString(&CachedDeviceName);
+            }
+
+            /* Retrieve DDI driver names from registry */
+            RtlInitUnicodeString(&DriverFileNames, NULL);
+            if (!FindDriverFileNames(&DriverFileNames, DisplayNumber))
+            {
+                DPRINT1("FindDriverFileNames failed\n");
+                return STATUS_UNSUCCESSFUL;
+            }
+
+            if (!IntPrepareDriverIfNeeded())
+            {
+                DPRINT1("IntPrepareDriverIfNeeded failed\n");
+                return STATUS_UNSUCCESSFUL;
+            }
+
+            /*
+             * DriverFileNames may be a list of drivers in REG_SZ_MULTI format,
+             * scan all of them until a good one found.
+             */
+            CurrentName = DriverFileNames.Buffer;
+            for (;CurrentName < DriverFileNames.Buffer + (DriverFileNames.Length / sizeof (WCHAR));
+                    CurrentName += wcslen(CurrentName) + 1)
+            {
+                INT i;
+                PFN_DrvEnableDriver GDEnableDriver;
+                PFN_DrvGetModes GetModes = NULL;
+                INT SizeNeeded, SizeUsed;
+
+                /* Get the DDI driver's entry point */
+                //GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
+                GDEnableDriver = DRIVER_FindExistingDDIDriver(L"DISPLAY");
+                if (NULL == GDEnableDriver)
+                {
+                    DPRINT("FindDDIDriver failed for %S\n", CurrentName);
+                    continue;
+                }
+
+                /*  Call DDI driver's EnableDriver function  */
+                RtlZeroMemory(&DrvEnableData, sizeof(DrvEnableData));
+
+                if (!GDEnableDriver(DDI_DRIVER_VERSION_NT5_01, sizeof (DrvEnableData), &DrvEnableData))
+                {
+                    DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
+                    continue;
+                }
+
+                CachedDevModesEnd = CachedDevModes;
+
+                /* find DrvGetModes function */
+                for (i = 0; i < DrvEnableData.c; i++)
+                {
+                    PDRVFN DrvFn = DrvEnableData.pdrvfn + i;
+
+                    if (DrvFn->iFunc == INDEX_DrvGetModes)
+                    {
+                        GetModes = (PFN_DrvGetModes)DrvFn->pfn;
+                        break;
+                    }
+                }
+
+                if (GetModes == NULL)
+                {
+                    DPRINT("DrvGetModes doesn't exist for %S\n", CurrentName);
+                    continue;
+                }
+
+                /* make sure we have enough memory to hold the modes */
+                SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject), 0, NULL);
+                if (SizeNeeded <= 0)
+                {
+                    DPRINT("DrvGetModes failed for %S\n", CurrentName);
+                    break;
+                }
+
+                SizeUsed = (PCHAR)CachedDevModesEnd - (PCHAR)CachedDevModes;
+                if (SizeOfCachedDevModes < SizeUsed + SizeNeeded)
+                {
+                    PVOID NewBuffer;
+
+                    SizeOfCachedDevModes += SizeNeeded;
+                    NewBuffer = ExAllocatePool(PagedPool, SizeOfCachedDevModes);
+                    if (NewBuffer == NULL)
+                    {
+                        /* clean up */
+                        ExFreePool(CachedDevModes);
+                        CachedDevModes = NULL;
+                        CachedDevModesEnd = NULL;
+                        SizeOfCachedDevModes = 0;
+
+                        if (CachedDeviceName.Buffer != NULL)
+                            RtlFreeUnicodeString(&CachedDeviceName);
+
+                        return STATUS_NO_MEMORY;
+                    }
+                    if (CachedDevModes != NULL)
+                    {
+                        RtlCopyMemory(NewBuffer, CachedDevModes, SizeUsed);
+                        ExFreePool(CachedDevModes);
+                    }
+                    CachedDevModes = NewBuffer;
+                    CachedDevModesEnd = (DEVMODEW *)((PCHAR)NewBuffer + SizeUsed);
+                }
+
+                if (!IsCachedDevice)
+                {
+                    if (CachedDeviceName.Buffer != NULL)
+                        RtlFreeUnicodeString(&CachedDeviceName);
+
+                    if (pDeviceName)
+                        RtlCopyUnicodeString(&CachedDeviceName, pDeviceName);
+
+                    IsCachedDevice = TRUE;
+                }
+
+                /* query modes */
+                SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject),
+                                      SizeNeeded,
+                                      CachedDevModesEnd);
+                if (SizeNeeded <= 0)
+                {
+                    DPRINT("DrvGetModes failed for %S\n", CurrentName);
+                }
+                else
+                {
+                    CachedDevModesEnd = (DEVMODEW *)((PCHAR)CachedDevModesEnd + SizeNeeded);
+                }
+            }
+
+            ExFreePoolWithTag(DriverFileNames.Buffer, TAG_RTLREGISTRY);
+        }
+
+        /* return cached info */
+        CachedMode = CachedDevModes;
+        if (CachedMode >= CachedDevModesEnd)
+        {
+            return STATUS_NO_MORE_ENTRIES;
+        }
+        while (iModeNum-- > 0 && CachedMode < CachedDevModesEnd)
+        {
+            assert(CachedMode->dmSize > 0);
+            CachedMode = (DEVMODEW *)((PCHAR)CachedMode + CachedMode->dmSize + CachedMode->dmDriverExtra);
+        }
+        if (CachedMode >= CachedDevModesEnd)
+        {
+            return STATUS_NO_MORE_ENTRIES;
+        }
+    }
+
+    ASSERT(CachedMode != NULL);
+
+    RtlCopyMemory(pDevMode, CachedMode, min(pDevMode->dmSize, CachedMode->dmSize));
+    RtlZeroMemory(pDevMode + pDevMode->dmSize, pDevMode->dmDriverExtra);
+    RtlCopyMemory(pDevMode + min(pDevMode->dmSize, CachedMode->dmSize), CachedMode + CachedMode->dmSize, min(pDevMode->dmDriverExtra, CachedMode->dmDriverExtra));
+
+    return STATUS_SUCCESS;
 }
 
 INT APIENTRY
