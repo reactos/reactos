@@ -260,7 +260,8 @@ NTSTATUS TdiOpenConnectionEndpointFile(
 NTSTATUS TdiConnect(
     PIRP *Irp,
     PFILE_OBJECT ConnectionObject,
-    PTDI_CONNECTION_INFORMATION RemoteAddress,
+    PTDI_CONNECTION_INFORMATION ConnectionCallInfo,
+    PTDI_CONNECTION_INFORMATION ConnectionReturnInfo,
     PIO_STATUS_BLOCK Iosb,
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext)
@@ -306,8 +307,8 @@ NTSTATUS TdiConnect(
 					CompletionRoutine,      /* Completion routine */
 					CompletionContext,      /* Completion routine context */
 					NULL,                   /* Time */
-					RemoteAddress,          /* Request connection information */
-					RemoteAddress);         /* Return connection information */
+					ConnectionCallInfo,     /* Request connection information */
+					ConnectionReturnInfo);  /* Return connection information */
 
 	Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
 
