@@ -120,7 +120,7 @@ EXPORTS
   __fpecode @115
   __getmainargs @116
   __initenv @117
-;  __iob_func @118
+  __iob_func=__p__iob @118
   __isascii @119
   __iscsym @120
   __iscsymf @121
@@ -271,11 +271,11 @@ EXPORTS
   _fileno @265
   _findclose @266
   _findfirst @267
-;  _findfirst64 @268
-  ;_findfirsti64 @269
+  _findfirst64 @268
+  _findfirsti64 @269
   _findnext @270
-;  _findnext64 @271
-  ;_findnexti64 @272
+  _findnext64 @271
+  _findnexti64 @272
   _finite @273
   _flsbuf @274
   _flushall @275
@@ -288,8 +288,8 @@ EXPORTS
   _fsopen @282
   _fstat @283
   _fstat64 @284
-  ;_fstati64 @285
-  ;_ftime @286
+  _fstati64 @285
+  _ftime @286
 ;  _ftime64 @287
   _ftol @288
   _fullpath @289
@@ -365,9 +365,10 @@ EXPORTS
   _isnan @359
   _itoa @360
   _itow @361
-  _j0 @362
-  _j1 @363
-  _jn @364
+; FIXME: these aren't actually implemented in CRT
+; _j0 @362
+; _j1 @363
+; _jn @364
   _kbhit @365
   _lfind @366
   _loaddll @367
@@ -513,7 +514,7 @@ EXPORTS
   _splitpath @507
   _stat @508
   _stat64 @509
-  ;_stati64 @510
+  _stati64 @510
   _statusfp @511
   _strcmpi @512
   _strdate @513
@@ -529,7 +530,7 @@ EXPORTS
   _strrev @523
   _strset @524
   _strtime @525
-;  _strtoi64 @526
+  _strtoi64 @526
   _strtoui64=strtoull @527
   _strupr @528
   _swab @529
@@ -577,8 +578,8 @@ EXPORTS
   _wcsnset @571
   _wcsrev @572
   _wcsset @573
-;  _wcstoi64 @574
-;  _wcstoui64 @575
+  _wcstoi64 @574
+  _wcstoui64 @575
   _wcsupr @576
   _wctime @577
 ;  _wctime64 @578
@@ -593,12 +594,12 @@ EXPORTS
   _wexecvp @587
   _wexecvpe @588
   _wfdopen @589
-  ;_wfindfirst @590
-;  _wfindfirst64 @591
-  ;_wfindfirsti64 @592
-  ;_wfindnext @593
-;  _wfindnext64 @594
-  ;_wfindnexti64 @595
+  _wfindfirst @590
+  _wfindfirst64 @591
+  _wfindfirsti64 @592
+  _wfindnext @593
+  _wfindnext64 @594
+  _wfindnexti64 @595
   _wfopen @596
   _wfreopen @597
   _wfsopen @598
@@ -635,7 +636,7 @@ EXPORTS
   _wsplitpath @629
   _wstat @630
   _wstat64 @631
-  ;_wstati64 @632
+  _wstati64 @632
   _wstrdate @633
   _wstrtime @634
   _wsystem @635
@@ -648,9 +649,10 @@ EXPORTS
   _wunlink @642
   _wutime @643
 ;  _wutime64 @644
-  _y0 @645
-  _y1 @646
-  _yn @647
+; FIXME: these aren't actually implemented in CRT
+; _y0 @645
+; _y1 @646
+; _yn @647
   abort @648
   abs @649
   acos @650
@@ -750,7 +752,7 @@ EXPORTS
   mbtowc @744
   memchr @745
   memcmp @746
-  memcpy=memmove @747
+  memcpy @747
   memmove @748
   memset @749
   mktime @750
@@ -846,5 +848,13 @@ EXPORTS
   wctomb @840
   wprintf @841
   wscanf @842
+
+  _mbsnbcpy_s
+  wcscpy_s
+  wcsncpy_s
+  _ftol2=_ftol
+  _ftol2_sse=_ftol
+  strcat_s
+  strcpy_s
 
   _swprintf=swprintf
