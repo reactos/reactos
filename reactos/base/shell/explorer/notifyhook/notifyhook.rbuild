@@ -4,7 +4,6 @@
 	<importlibrary definition="notifyhook.def" />
 	<include base="notifyhook">.</include>
 	<define name="_NOTIFYHOOK_IMPL" />
-	<library>kernel32</library>
 	<library>user32</library>
 	<file>notifyhook.c</file>
 	<file>notifyhook.rc</file>

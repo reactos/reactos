@@ -17,10 +17,12 @@ static BOOLEAN TCPInitialized = FALSE;
 static NPAGED_LOOKASIDE_LIST TCPSegmentList;
 LIST_ENTRY SignalledConnectionsList;
 KSPIN_LOCK SignalledConnectionsLock;
+LIST_ENTRY SleepingThreadsList;
+FAST_MUTEX SleepingThreadsLock;
 RECURSIVE_MUTEX TCPLock;
 PORT_SET TCPPorts;
 
-ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
+static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
@@ -28,37 +30,54 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
     PIRP Irp;
     PMDL Mdl;
 
+    ASSERT_LOCKED(&TCPLock);
+
     TI_DbgPrint(MID_TRACE,("Handling signalled state on %x (%x)\n",
                            Connection, Connection->SocketContext));
 
     if( Connection->SignalState & SEL_FIN ) {
         TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
 
-        Connection->SignalState &= ~SEL_READ;
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ReceiveRequest,
                                                      &Connection->Lock )) != NULL)
         {
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
 
+           /* We have to notify oskittcp of the abortion */
+           TCPDisconnect
+	     ( Connection,
+	       TDI_DISCONNECT_RELEASE | TDI_DISCONNECT_ABORT,
+	       NULL,
+	       NULL,
+	       Bucket->Request.RequestNotifyObject,
+	       (PIRP)Bucket->Request.RequestContext );
+
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
 
            exFreePool(Bucket);
         }
 
-        Connection->SignalState &= ~SEL_WRITE;
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->SendRequest,
                                                      &Connection->Lock )) != NULL)
         {
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
 
+           /* We have to notify oskittcp of the abortion */
+           TCPDisconnect
+	     ( Connection,
+	       TDI_DISCONNECT_RELEASE,
+	       NULL,
+	       NULL,
+	       Bucket->Request.RequestNotifyObject,
+	       (PIRP)Bucket->Request.RequestContext );
+
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
 
            exFreePool(Bucket);
         }
 
-        Connection->SignalState &= ~SEL_ACCEPT;
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ListenRequest,
                                                      &Connection->Lock )) != NULL)
         {
@@ -70,11 +89,8 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                Connection);
 
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
-
-           exFreePool(Bucket);
         }
 
-        Connection->SignalState &= ~SEL_CONNECT;
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ConnectRequest,
                                                      &Connection->Lock )) != NULL)
         {
@@ -82,14 +98,13 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
            Complete = Bucket->Request.RequestNotifyObject;
 
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
-
-           exFreePool(Bucket);
         }
-    }
+
+        Connection->SignalState = 0;
+        }
 
     /* Things that can happen when we try the initial connection */
     if( Connection->SignalState & SEL_CONNECT ) {
-        Connection->SignalState &= ~SEL_CONNECT;
         while( (Entry = ExInterlockedRemoveHeadList( &Connection->ConnectRequest,
                                                      &Connection->Lock )) != NULL ) {
             
@@ -117,7 +132,6 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                IsListEmpty(&Connection->ListenRequest) ?
                                "empty" : "nonempty"));
 
-        Connection->SignalState &= ~SEL_ACCEPT;
         while( (Entry = ExInterlockedRemoveHeadList( &Connection->ListenRequest,
                                                      &Connection->Lock )) != NULL ) {
             PIO_STACK_LOCATION IrpSp;
@@ -137,7 +151,6 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
             TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n"));
 
             if( Status == STATUS_PENDING ) {
-                Connection->SignalState |= SEL_ACCEPT;
                 ExInterlockedInsertHeadList( &Connection->ListenRequest, &Bucket->Entry, &Connection->Lock );
                 break;
             } else {
@@ -153,7 +166,6 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                IsListEmpty(&Connection->ReceiveRequest) ?
                                "empty" : "nonempty"));
 
-        Connection->SignalState &= ~SEL_READ;
         while( (Entry = ExInterlockedRemoveHeadList( &Connection->ReceiveRequest,
                                                      &Connection->Lock )) != NULL ) {
             OSK_UINT RecvLen = 0, Received = 0;
@@ -199,7 +211,6 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
             } else if( Status == STATUS_PENDING ) {
                 ExInterlockedInsertHeadList
                     ( &Connection->ReceiveRequest, &Bucket->Entry, &Connection->Lock );
-                Connection->SignalState |= SEL_READ;
                 break;
             } else {
                 TI_DbgPrint(DEBUG_TCP,
@@ -215,7 +226,6 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                IsListEmpty(&Connection->SendRequest) ?
                                "empty" : "nonempty"));
 
-        Connection->SignalState &= ~SEL_WRITE;
         while( (Entry = ExInterlockedRemoveHeadList( &Connection->SendRequest,
                                                      &Connection->Lock )) != NULL ) {
             OSK_UINT SendLen = 0, Sent = 0;
@@ -260,7 +270,6 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
             } else if( Status == STATUS_PENDING ) {
                 ExInterlockedInsertHeadList
                     ( &Connection->SendRequest, &Bucket->Entry, &Connection->Lock );
-                Connection->SignalState |= SEL_WRITE;
                 break;
             } else {
                 TI_DbgPrint(DEBUG_TCP,
@@ -272,36 +281,21 @@ ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
         }
     }
 
-    return Connection->SignalState;
+    Connection->SignalState = 0;
+    Connection->Signalled = FALSE;
 }
 
-static VOID DrainSignals() {
+VOID DrainSignals() {
     PCONNECTION_ENDPOINT Connection;
-    PLIST_ENTRY CurrentEntry, NextEntry;
-    ULONG NewState;
-    KIRQL OldIrql;
+    PLIST_ENTRY ListEntry;
 
-    KeAcquireSpinLock(&SignalledConnectionsLock, &OldIrql);
-    CurrentEntry = SignalledConnectionsList.Flink;
-    while (CurrentEntry != &SignalledConnectionsList)
-    {
-        NextEntry = CurrentEntry->Flink;
-        Connection = CONTAINING_RECORD( CurrentEntry, CONNECTION_ENDPOINT,
+    while( (ListEntry = ExInterlockedRemoveHeadList(&SignalledConnectionsList,
+                                                    &SignalledConnectionsLock)) != NULL) {
+        Connection = CONTAINING_RECORD( ListEntry, CONNECTION_ENDPOINT,
                                         SignalList );
-
-        KeReleaseSpinLock(&SignalledConnectionsLock, OldIrql);
-        NewState = HandleSignalledConnection(Connection);
-        KeAcquireSpinLock(&SignalledConnectionsLock, &OldIrql);
-
-        if (NewState == SEL_FIN || NewState == 0)
-        {
-            RemoveEntryList(CurrentEntry);
+        HandleSignalledConnection( Connection );
         }
-
-        CurrentEntry = NextEntry;
     }
-    KeReleaseSpinLock(&SignalledConnectionsLock, OldIrql);
-}
 
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     PCONNECTION_ENDPOINT Connection =
@@ -335,7 +329,7 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
                     UINT Family, UINT Type, UINT Proto ) {
     NTSTATUS Status;
 
-    TcpipRecursiveMutexEnter(&TCPLock);
+    ASSERT_LOCKED(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("Called: Connection %x, Family %d, Type %d, "
                            "Proto %d\n",
@@ -351,8 +345,6 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
                            Connection->SocketContext));
-
-    TcpipRecursiveMutexLeave(&TCPLock);
 
     return Status;
 }
@@ -370,11 +362,13 @@ VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
                            IPPacket->TotalSize,
                            IPPacket->HeaderSize));
 
-    TcpipRecursiveMutexEnter( &TCPLock );
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     OskitTCPReceiveDatagram( IPPacket->Header,
                              IPPacket->TotalSize,
                              IPPacket->HeaderSize );
+
+    DrainSignals();
 
     TcpipRecursiveMutexLeave( &TCPLock );
 }
@@ -401,6 +395,11 @@ void TCPFree( void *ClientData,
               void *data, OSK_PCHAR file, OSK_UINT line );
 void TCPMemShutdown( void );
 
+int TCPSleep( void *ClientData, void *token, int priority, char *msg,
+              int tmio );
+
+void TCPWakeup( void *ClientData, void *token );
+
 OSKITTCP_EVENT_HANDLERS EventHandlers = {
     NULL,             /* Client Data */
     TCPSocketState,   /* SocketState */
@@ -408,8 +407,8 @@ OSKITTCP_EVENT_HANDLERS EventHandlers = {
     TCPFindInterface, /* FindInterface */
     TCPMalloc,        /* Malloc */
     TCPFree,          /* Free */
-    NULL,             /* Sleep */
-    NULL,             /* Wakeup */
+    TCPSleep,         /* Sleep */
+    TCPWakeup         /* Wakeup */
 };
 
 static KEVENT TimerLoopEvent;
@@ -447,13 +446,12 @@ TimerThread(PVOID Context)
             PsTerminateSystemThread(Status);
         }
 
-        TcpipRecursiveMutexEnter( &TCPLock );
+        TcpipRecursiveMutexEnter( &TCPLock, TRUE );
         TimerOskitTCP( Next == NextFast, Next == NextSlow );
-        TcpipRecursiveMutexLeave( &TCPLock );
-
         if (Next == NextSlow) {
             DrainSignals();
         }
+        TcpipRecursiveMutexLeave( &TCPLock );
 
         Current = Next;
         if (10 <= Current) {
@@ -484,7 +482,9 @@ NTSTATUS TCPStartup(VOID)
     NTSTATUS Status;
 
     TcpipRecursiveMutexInit( &TCPLock );
+    ExInitializeFastMutex( &SleepingThreadsLock );
     KeInitializeSpinLock( &SignalledConnectionsLock );
+    InitializeListHead( &SleepingThreadsList );
     InitializeListHead( &SignalledConnectionsList );
     Status = TCPMemStartup();
     if ( ! NT_SUCCESS(Status) ) {
@@ -497,7 +497,7 @@ NTSTATUS TCPStartup(VOID)
         return Status;
     }
 
-    TcpipRecursiveMutexEnter(&TCPLock);
+    TcpipRecursiveMutexEnter(&TCPLock, TRUE);
     RegisterOskitTCPEventHandlers( &EventHandlers );
     InitOskitTCP();
     TcpipRecursiveMutexLeave(&TCPLock);
@@ -545,9 +545,7 @@ NTSTATUS TCPShutdown(VOID)
 
     TCPInitialized = FALSE;
 
-    TcpipRecursiveMutexEnter(&TCPLock);
     DeinitOskitTCP();
-    TcpipRecursiveMutexLeave(&TCPLock);
 
     PortsShutdown( &TCPPorts );
 
@@ -600,6 +598,8 @@ NTSTATUS TCPConnect
 
     TI_DbgPrint(DEBUG_TCP,("TCPConnect: Called\n"));
 
+    ASSERT_LOCKED(&TCPLock);
+
     Status = AddrBuildAddress
         ((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress,
          &RemoteAddress,
@@ -615,6 +615,11 @@ NTSTATUS TCPConnect
         return STATUS_NETWORK_UNREACHABLE;
     }
 
+    if (Connection->State & SEL_FIN)
+    {
+        return STATUS_REMOTE_DISCONNECT;
+    }
+
     /* Freed in TCPSocketState */
     TI_DbgPrint(DEBUG_TCP,
                 ("Connecting to address %x:%x\n",
@@ -624,8 +629,6 @@ NTSTATUS TCPConnect
     AddressToConnect.sin_family = AF_INET;
     AddressToBind = AddressToConnect;
     AddressToBind.sin_addr.s_addr = NCE->Interface->Unicast.Address.IPv4Address;
-
-    TcpipRecursiveMutexEnter(&TCPLock);
 
     Status = TCPTranslateError
         ( OskitTCPBind( Connection->SocketContext,
@@ -658,8 +661,6 @@ NTSTATUS TCPConnect
         }
     }
 
-    TcpipRecursiveMutexLeave(&TCPLock);
-
     return Status;
 }
 
@@ -670,21 +671,29 @@ NTSTATUS TCPDisconnect
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context ) {
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    NTSTATUS Status;
 
     ASSERT_LOCKED(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("started\n"));
 
-    TcpipRecursiveMutexEnter(&TCPLock);
+    switch( Flags & (TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE) ) {
+    case 0:
+    case TDI_DISCONNECT_ABORT:
+        Flags = 0;
+        break;
 
-    if (Flags & TDI_DISCONNECT_RELEASE)
-        Status = TCPTranslateError(OskitTCPDisconnect(Connection->SocketContext));
+    case TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE:
+        Flags = 2;
+        break;
 
-    if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
-        Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE | FREAD));
+    case TDI_DISCONNECT_RELEASE:
+        Flags = 1;
+        break;
+    }
 
-    TcpipRecursiveMutexLeave(&TCPLock);
+    Status = TCPTranslateError
+        ( OskitTCPShutdown( Connection->SocketContext, Flags ) );
 
     TI_DbgPrint(DEBUG_TCP,("finished %x\n", Status));
 
@@ -697,17 +706,15 @@ NTSTATUS TCPClose
 
     TI_DbgPrint(DEBUG_TCP,("TCPClose started\n"));
 
-    /* Make our code remove all pending IRPs */
-    Connection->SignalState |= SEL_FIN;
-    HandleSignalledConnection(Connection);
+    ASSERT_LOCKED(&TCPLock);
 
-    TcpipRecursiveMutexEnter(&TCPLock);
+    /* Make our code remove all pending IRPs */
+    Connection->State |= SEL_FIN;
+    DrainSignals();
 
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
     if (Status == STATUS_SUCCESS)
         Connection->SocketContext = NULL;
-
-    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("TCPClose finished %x\n", Status));
 
@@ -730,13 +737,20 @@ NTSTATUS TCPReceiveData
     TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n",
                            ReceiveLength, Connection->SocketContext));
 
+    ASSERT_LOCKED(&TCPLock);
+
     ASSERT_KM_POINTER(Connection->SocketContext);
+
+    /* Closing */
+    if (Connection->State & SEL_FIN)
+    {
+        *BytesReceived = 0;
+        return STATUS_REMOTE_DISCONNECT;
+    }
 
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
     TI_DbgPrint(DEBUG_TCP,("TCP>|< Got an MDL %x (%x:%d)\n", Buffer, DataBuffer, DataLen));
-
-    TcpipRecursiveMutexEnter(&TCPLock);
 
     Status = TCPTranslateError
         ( OskitTCPRecv
@@ -745,8 +759,6 @@ NTSTATUS TCPReceiveData
             DataLen,
             &Received,
             ReceiveFlags ) );
-
-    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("OskitTCPReceive: %x, %d\n", Status, Received));
 
@@ -800,14 +812,17 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
                            Connection->SocketContext));
 
-    TcpipRecursiveMutexEnter(&TCPLock);
+    /* Closing */
+    if (Connection->State & SEL_FIN)
+    {
+        *BytesSent = 0;
+        return STATUS_REMOTE_DISCONNECT;
+    }
 
     Status = TCPTranslateError
         ( OskitTCPSend( Connection->SocketContext,
                         (OSK_PCHAR)BufferData, SendLength,
                         &Sent, 0 ) );
-
-    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("OskitTCPSend: %x, %d\n", Status, Sent));
 
@@ -866,14 +881,11 @@ NTSTATUS TCPGetSockAddress
     PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
     NTSTATUS Status;
 
-    TcpipRecursiveMutexEnter(&TCPLock);
+    ASSERT_LOCKED(&TCPLock);
 
     Status = TCPTranslateError(OskitTCPGetAddress(Connection->SocketContext,
                                                   &LocalAddress, &LocalPort,
                                                   &RemoteAddress, &RemotePort));
-
-    TcpipRecursiveMutexLeave(&TCPLock);
-
     if (!NT_SUCCESS(Status))
         return Status;
 

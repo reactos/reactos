@@ -3,7 +3,6 @@
 <module name="appwiz" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_APPWIZ}" installbase="system32" installname="appwiz.cpl" unicode="yes">
 	<importlibrary definition="appwiz.spec" />
 	<include base="appwiz">.</include>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>comctl32</library>

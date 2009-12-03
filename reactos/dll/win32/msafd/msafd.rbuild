@@ -5,7 +5,6 @@
 	<include base="ReactOS">include/reactos/drivers</include>
 	<pch>msafd.h</pch>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<directory name="misc">
 		<file>dllmain.c</file>

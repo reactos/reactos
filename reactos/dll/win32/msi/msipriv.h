@@ -228,11 +228,11 @@ typedef struct tagMSIVIEWOPS
     /*
      * get_column_info - returns the name and type of a specific column
      *
-     *  The name is HeapAlloc'ed by this function and should be freed by
-     *   the caller.
+     *  The name and tablename is HeapAlloc'ed by this function and should be
+     *  freed by the caller.
      *  The column information can be queried at any time.
      */
-    UINT (*get_column_info)( struct tagMSIVIEW *view, UINT n, LPWSTR *name, UINT *type, BOOL *temporary );
+    UINT (*get_column_info)( struct tagMSIVIEW *view, UINT n, LPWSTR *name, UINT *type, BOOL *temporary, LPWSTR *tableName);
 
     /*
      * modify - not yet implemented properly
@@ -737,7 +737,7 @@ extern UINT MSI_ViewFetch( MSIQUERY*, MSIRECORD ** );
 extern UINT MSI_ViewClose( MSIQUERY* );
 extern UINT MSI_ViewGetColumnInfo(MSIQUERY *, MSICOLINFO, MSIRECORD **);
 extern UINT MSI_ViewModify( MSIQUERY *, MSIMODIFY, MSIRECORD * );
-extern UINT VIEW_find_column( MSIVIEW *, LPCWSTR, UINT * );
+extern UINT VIEW_find_column( MSIVIEW *, LPCWSTR, LPCWSTR, UINT * );
 extern UINT msi_view_get_row(MSIDATABASE *, MSIVIEW *, UINT, MSIRECORD **);
 
 /* install internals */
@@ -759,6 +759,7 @@ extern LPCWSTR msi_download_file( LPCWSTR szUrl, LPWSTR filename );
 extern UINT msi_package_add_info(MSIPACKAGE *, DWORD, DWORD, LPCWSTR, LPWSTR);
 extern UINT msi_package_add_media_disk(MSIPACKAGE *, DWORD, DWORD, DWORD, LPWSTR, LPWSTR);
 extern UINT msi_clone_properties(MSIPACKAGE *);
+extern UINT MSI_GetFeatureCost(MSIPACKAGE *, MSIFEATURE *, MSICOSTTREE, INSTALLSTATE, LPINT);
 
 /* for deformating */
 extern UINT MSI_FormatRecordW( MSIPACKAGE *, MSIRECORD *, LPWSTR, LPDWORD );
@@ -843,6 +844,7 @@ extern INSTALLUILEVEL gUILevel;
 extern HWND gUIhwnd;
 extern INSTALLUI_HANDLERA gUIHandlerA;
 extern INSTALLUI_HANDLERW gUIHandlerW;
+extern INSTALLUI_HANDLER_RECORD gUIHandlerRecord;
 extern DWORD gUIFilter;
 extern LPVOID gUIContext;
 extern WCHAR gszLogFile[MAX_PATH];

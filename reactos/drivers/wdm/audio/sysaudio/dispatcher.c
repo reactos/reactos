@@ -67,7 +67,7 @@ DispatchCreateSysAudio(
     KSOBJECT_HEADER ObjectHeader;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    DPRINT1("DispatchCreateSysAudio entered\n");
+    DPRINT("DispatchCreateSysAudio entered\n");
 
     /* allocate create item */
     CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
@@ -89,7 +89,7 @@ DispatchCreateSysAudio(
     /* allocate object header */
     Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
 
-    DPRINT1("KsAllocateObjectHeader result %x\n", Status);
+    DPRINT("KsAllocateObjectHeader result %x\n", Status);
     /* complete the irp */
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;

@@ -130,8 +130,15 @@ static HRESULT WINAPI HTMLElement2_componentFromPoint(IHTMLElement2 *iface,
 static HRESULT WINAPI HTMLElement2_doScroll(IHTMLElement2 *iface, VARIANT component)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&component));
+
+    if(!This->node.doc->content_ready
+       || !This->node.doc->basedoc.doc_obj->in_place_active)
+        return E_PENDING;
+
+    WARN("stub\n");
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement2_put_onscroll(IHTMLElement2 *iface, VARIANT v)

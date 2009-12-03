@@ -36,10 +36,10 @@ NewCMIAdapter(
     PUNKNOWN UnknownOuter, 
     POOL_TYPE PoolType)
 {
-#if 0
+#if 1
 	//PAGED_CODE();
 	DBGPRINT(("NewCMIAdapter()"));
-	//ASSERT (Unknown);
+	ASSERT (Unknown);
 #endif
 	STD_CREATE_BODY_(CCMIAdapter, Unknown, UnknownOuter, PoolType, PCMIADAPTER);
 }
@@ -129,7 +129,7 @@ CCMIAdapter::~CCMIAdapter()
 	}
 }
 
-STDMETHODIMP_(NTSTATUS) CCMIAdapter::NonDelegatingQueryInterface(REFIID Interface, PVOID* Object)
+STDMETHODIMP_(NTSTATUS) CCMIAdapter::QueryInterface(REFIID Interface, PVOID* Object)
 {
     //PAGED_CODE();
 
@@ -449,7 +449,7 @@ STDMETHODIMP_(void) CCMIAdapter::clearMixerBit(UInt8 index, UInt8 flag)
 	writeMixer(index, readMixer(index) & ~flag);
 }
 
-NTSTATUS CCMIAdapter::InterruptServiceRoutine(PINTERRUPTSYNC InterruptSync, PVOID DynamicContext)
+NTSTATUS NTAPI CCMIAdapter::InterruptServiceRoutine(PINTERRUPTSYNC InterruptSync, PVOID DynamicContext)
 {
 	UInt32 status, mask = 0;
 

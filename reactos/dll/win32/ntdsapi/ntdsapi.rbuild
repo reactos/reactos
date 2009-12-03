@@ -5,7 +5,6 @@
         <define name="__WINESRC__" />
         <library>wine</library>
         <library>user32</library>
-        <library>kernel32</library>
         <library>ntdll</library>
         <file>ntdsapi.c</file>
 </module>

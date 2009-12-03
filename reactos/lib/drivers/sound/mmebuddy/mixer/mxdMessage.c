@@ -21,16 +21,16 @@
 MMRESULT
 MmeGetLineInfo(
     IN  DWORD Message,
-    IN  DWORD PrivateHandle,
-    IN  DWORD Parameter1,
-    IN  DWORD Parameter2)
+    IN  DWORD_PTR PrivateHandle,
+    IN  DWORD_PTR Parameter1,
+    IN  DWORD_PTR Parameter2)
 {
     MMRESULT Result;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
     PSOUND_DEVICE SoundDevice;
     PMMFUNCTION_TABLE FunctionTable;
 
-    SND_TRACE(L"Getting mixer info %u\n", Message);
+    //SND_TRACE(L"Getting mixer info %u\n", Message);
 
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
@@ -54,7 +54,7 @@ MmeGetLineInfo(
 
 MMRESULT
 MmeCloseMixerDevice(
-    IN  DWORD PrivateHandle)
+    IN  DWORD_PTR PrivateHandle)
 {
     MMRESULT Result;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
@@ -122,7 +122,7 @@ MmeOpenMixerDevice(
     }
 
     /* Store the device instance pointer in the private handle - is DWORD safe here? */
-    *PrivateHandle = (DWORD) SoundDeviceInstance;
+    *PrivateHandle = (DWORD_PTR) SoundDeviceInstance;
 
     /* Store the additional information we were given - FIXME: Need flags! */
     SetSoundDeviceInstanceMmeData(SoundDeviceInstance,
@@ -175,7 +175,7 @@ mxdMessage(
         {
             Result = MmeGetSoundDeviceCapabilities(MIXER_DEVICE_TYPE,
                                                    DeviceId,
-                                                   Parameter1,
+                                                   (PVOID)Parameter1,
                                                    Parameter2);
             break;
         }

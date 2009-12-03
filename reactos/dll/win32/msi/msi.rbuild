@@ -68,7 +68,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>odbccp32</library>
 	<library>ntdll</library>
 	<library>pseh</library>

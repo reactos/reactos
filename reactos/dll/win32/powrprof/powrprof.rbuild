@@ -5,7 +5,6 @@
 	<include base="powrprof">.</include>
 	<library>wine</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>user32</library>
 	<library>comctl32</library>

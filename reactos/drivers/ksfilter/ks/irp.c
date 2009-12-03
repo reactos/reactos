@@ -1790,7 +1790,8 @@ KspCreate(
     PKSIOBJECT_HEADER ObjectHeader;
     NTSTATUS Status;
 
-    DPRINT1("KS / CREATE\n");
+    DPRINT("KS / CREATE\n");
+
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get device extension */

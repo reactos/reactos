@@ -86,6 +86,9 @@ IClassFactory_fnCreateInstance(
 {
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 
+    if (!ppvObject)
+        return E_INVALIDARG;
+
     *ppvObject = NULL;
 
     if ( This->riidInst==NULL || IsEqualCLSID(riid, This->riidInst) || IsEqualCLSID(riid, &IID_IUnknown) )

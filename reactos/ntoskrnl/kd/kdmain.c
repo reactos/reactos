@@ -85,7 +85,7 @@ KdpServiceDispatcher(ULONG Service,
         /* Special  case for stack frame dumps */
         case 'DsoR':
         {
-            KeRosDumpStackFrames((PULONG)Buffer1, Buffer1Length);
+            KeRosDumpStackFrames((PULONG_PTR)Buffer1, Buffer1Length);
             break;
         }
 #endif
@@ -145,8 +145,15 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             USHORT OutStringLength;
 
             /* Get the response string  and length */
+#ifdef _X86_
             OutString = (LPSTR)Context->Ebx;
             OutStringLength = (USHORT)Context->Edi;
+#elif _AMD64_
+			OutString = (LPSTR)Context->Rbx;
+			OutStringLength = (USHORT)Context->Rdi;
+#else
+#error Unknown Architecture
+#endif
 
             /* Call KDBG */
             ReturnValue = KdpPrompt((LPSTR)ExceptionRecord->
@@ -157,7 +164,13 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                                     OutStringLength);
 
             /* Return the number of characters that we received */
+#ifdef _X86_
             Context->Eax = ReturnValue;
+#elif _AMD64_
+			Context->Rax = ReturnValue;
+#else
+#error Unknown Architecture
+#endif
         }
 #endif
 
@@ -170,12 +183,24 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
     /* Check if this is an assertion failure */
     if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
     {
+#ifdef _X86_
         /* Warn about it */
         DbgPrint("\n!!! Assertion Failure at Address 0x%p !!!\n\n",
                  (PVOID)Context->Eip);
 
         /* Bump EIP to the instruction following the int 2C and return */
         Context->Eip += 2;
+#elif _AMD64_
+#else
+        /* Warn about it */
+        DbgPrint("\n!!! Assertion Failure at Address 0x%p !!!\n\n",
+                 (PVOID)Context->Rip);
+
+        /* Bump RIP to the instruction following the int 2C and return */
+        Context->Rip += 2;
+
+#error Unknown Architecture
+#endif
         return TRUE;
     }
 #endif

@@ -29,6 +29,7 @@
 #include "wine/unicode.h"
 
 #include "mshtml_private.h"
+#include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
@@ -292,8 +293,11 @@ static HRESULT WINAPI HTMLElement3_fireEvent(IHTMLElement3 *iface, BSTR bstrEven
         VARIANT *pvarEventObject, VARIANT_BOOL *pfCancelled)
 {
     HTMLElement *This = HTMLELEM3_THIS(iface);
-    FIXME("(%p)->(%s %p %p)\n", This, debugstr_w(bstrEventName), pvarEventObject, pfCancelled);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_w(bstrEventName), debugstr_variant(pvarEventObject),
+          pfCancelled);
+
+    return dispatch_event(&This->node, bstrEventName, pvarEventObject, pfCancelled);
 }
 
 static HRESULT WINAPI HTMLElement3_put_onresizestart(IHTMLElement3 *iface, VARIANT v)

@@ -56,7 +56,6 @@ ULONG MmReadClusterSize;
 UCHAR MmDisablePagingExecutive = 1; // Forced to off
 PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
-extern KMUTANT MmSystemLoadLock;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
 TRUE;

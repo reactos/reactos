@@ -138,6 +138,9 @@ BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR pa
     return SUCCEEDED(ret);
 }
 
+/*************************************************************************
+ * ILGetDisplayNameEx        [SHELL32.186]
+ */
 BOOL WINAPI ILGetDisplayNameEx(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPVOID path, DWORD type)
 {
     TRACE_(shell)("%p %p %p %d\n", psf, pidl, path, type);
@@ -1367,14 +1370,31 @@ LPITEMIDLIST _ILCreateIExplore(void)
 
 LPITEMIDLIST _ILCreateControlPanel(void)
 {
-    LPITEMIDLIST ret = NULL;
-    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer);
+    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
 
     TRACE("()\n");
-
     if (parent)
     {
-        LPITEMIDLIST printers = _ILCreateGuid(PT_YAGUID, &CLSID_ControlPanel);
+        LPITEMIDLIST cpl = _ILCreateGuid(PT_SHELLEXT, &CLSID_ControlPanel);
+
+        if (cpl)
+        {
+            ret = ILCombine(parent, cpl);
+            SHFree(cpl);
+        }
+        SHFree(parent);
+    }
+    return ret;
+}
+
+LPITEMIDLIST _ILCreatePrinters(void)
+{
+    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
+
+    TRACE("()\n");
+    if (parent)
+    {
+        LPITEMIDLIST printers = _ILCreateGuid(PT_YAGUID, &CLSID_Printers);
 
         if (printers)
         {
@@ -1384,13 +1404,6 @@ LPITEMIDLIST _ILCreateControlPanel(void)
         SHFree(parent);
     }
     return ret;
-
-    return _ILCreateGuid(PT_SHELLEXT, &CLSID_ControlPanel);
-}
-
-LPITEMIDLIST _ILCreatePrinters(void)
-{
-    return _ILCreateGuid(PT_YAGUID, &CLSID_Printers);
 }
 
 LPITEMIDLIST _ILCreateNetwork(void)

@@ -22,7 +22,7 @@
 
 MMRESULT
 MmeSetState(
-    IN  DWORD PrivateHandle,
+    IN  DWORD_PTR PrivateHandle,
     IN  BOOL bStart)
 {
     MMRESULT Result;
@@ -170,8 +170,8 @@ MmeOpenWaveDevice(
         return TranslateInternalMmResult(Result);
     }
 
-    /* Store the device instance pointer in the private handle - is DWORD safe here? */
-    *PrivateHandle = (DWORD) SoundDeviceInstance;
+    /* Store the device instance pointer in the private handle */
+    *PrivateHandle = (DWORD_PTR)SoundDeviceInstance;
 
     /* Store the additional information we were given - FIXME: Need flags! */
     SetSoundDeviceInstanceMmeData(SoundDeviceInstance,
@@ -195,7 +195,7 @@ MmeOpenWaveDevice(
 
 MMRESULT
 MmeCloseDevice(
-    IN  DWORD PrivateHandle)
+    IN  DWORD_PTR PrivateHandle)
 {
     MMRESULT Result;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
@@ -235,7 +235,7 @@ MmeCloseDevice(
 
 MMRESULT
 MmeResetWavePlayback(
-    IN  DWORD PrivateHandle)
+    IN  DWORD_PTR PrivateHandle)
 {
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
 
@@ -284,7 +284,7 @@ MMRESULT
 MmeGetPosition(
     IN  MMDEVICE_TYPE DeviceType,
     IN  DWORD DeviceId,
-    IN  DWORD PrivateHandle,
+    IN  DWORD_PTR PrivateHandle,
     IN  MMTIME* Time,
     IN  DWORD Size)
 {

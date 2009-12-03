@@ -5836,7 +5836,7 @@ KeAcquireSpinLockRaiseToDpc(
 
 #define ASSERTMSG(msg, exp) \
   (VOID)((!(exp)) ? \
-    RtlAssert( #exp, __FILE__, __LINE__, msg ), FALSE : TRUE)
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, msg ), FALSE : TRUE)
 
 #define RTL_SOFT_ASSERT(exp) \
   (VOID)((!(exp)) ? \

@@ -142,17 +142,6 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
 /*
  * @implemented
  */
-#undef ExGetPreviousMode
-KPROCESSOR_MODE
-NTAPI
-ExGetPreviousMode (VOID)
-{
-    return KeGetPreviousMode();
-}
-
-/*
- * @implemented
- */
 VOID
 NTAPI
 ExGetCurrentProcessorCpuUsage(PULONG CpuUsage)
@@ -1006,12 +995,23 @@ QSI_DEF(SystemCallTimeInformation)
 /* Class 11 - Module Information */
 QSI_DEF(SystemModuleInformation)
 {
-    extern LIST_ENTRY PsLoadedModuleList;
-    return ExpQueryModuleInformation(&PsLoadedModuleList,
-                                     NULL,
+    NTSTATUS Status;
+
+    /* Acquire system module list lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
+
+    /* Call the generic handler with the system module list */
+    Status = ExpQueryModuleInformation(&PsLoadedModuleList,
+                                       &MmLoadedUserImageList,
                                      (PRTL_PROCESS_MODULES)Buffer,
                                      Size,
                                      ReqSize);
+
+    /* Release list lock and return status */
+    ExReleaseResourceLite(&PsLoadedModuleResource);
+    KeLeaveCriticalRegion();
+    return Status;
 }
 
 /* Class 12 - Locks Information */
@@ -1326,10 +1326,9 @@ QSI_DEF(SystemFullMemoryInformation)
 SSI_DEF(SystemLoadGdiDriverInformation)
 {
     PSYSTEM_GDI_DRIVER_INFORMATION DriverInfo = (PVOID)Buffer;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     UNICODE_STRING ImageName;
     PVOID ImageBase;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
+    PVOID SectionPointer;
     ULONG_PTR EntryPoint;
     NTSTATUS Status;
     ULONG DirSize;
@@ -1342,8 +1341,8 @@ SSI_DEF(SystemLoadGdiDriverInformation)
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    /* Only kernel-mode can call this function */
-    if (PreviousMode != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
+    /* Only kernel mode can call this function */
+    if (ExGetPreviousMode() != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
 
     /* Load the driver */
     ImageName = DriverInfo->DriverName;
@@ -1351,7 +1350,7 @@ SSI_DEF(SystemLoadGdiDriverInformation)
                                NULL,
                                NULL,
                                0,
-                               (PVOID)&ModuleObject,
+                               &SectionPointer,
                                &ImageBase);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -1369,7 +1368,7 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 
     /* Save other data */
     DriverInfo->ImageAddress = ImageBase;
-    DriverInfo->SectionPointer = NULL;
+    DriverInfo->SectionPointer = SectionPointer;
     DriverInfo->EntryPoint = (PVOID)EntryPoint;
     DriverInfo->ImageLength = NtHeader->OptionalHeader.SizeOfImage;
 
@@ -1380,45 +1379,22 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 /* Class 27 - Unload Image */
 SSI_DEF(SystemUnloadGdiDriverInformation)
 {
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PLIST_ENTRY NextEntry;
-    PVOID BaseAddr = *((PVOID*)Buffer);
+    PVOID SectionPointer = Buffer;
 
+    /* Validate size */
     if(Size != sizeof(PVOID))
-        return STATUS_INFO_LENGTH_MISMATCH;
-
-    if(KeGetPreviousMode() != KernelMode)
-        return STATUS_PRIVILEGE_NOT_HELD;
-
-    // Scan the module list
-    NextEntry = PsLoadedModuleList.Flink;
-    while(NextEntry != &PsLoadedModuleList)
     {
-        LdrEntry = CONTAINING_RECORD(NextEntry,
-                                     LDR_DATA_TABLE_ENTRY,
-                                     InLoadOrderLinks);
-
-        if (LdrEntry->DllBase == BaseAddr)
-        {
-            // Found it.
-            break;
+        /* Incorrect length, fail */
+        return STATUS_INFO_LENGTH_MISMATCH;
         }
 
-        NextEntry = NextEntry->Flink;
-    }
+    /* Only kernel mode can call this function */
+    if (ExGetPreviousMode() != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
 
-    // Check if we found the image
-    if(NextEntry != &PsLoadedModuleList)
-    {
-        return MmUnloadSystemImage(LdrEntry);
+    /* Unload the image */
+    MmUnloadSystemImage(SectionPointer);
+    return STATUS_SUCCESS;
     }
-    else
-    {
-        DPRINT1("Image 0x%x not found.\n", BaseAddr);
-        return STATUS_DLL_NOT_FOUND;
-    }
-
-}
 
 /* Class 28 - Time Adjustment Information */
 QSI_DEF(SystemTimeAdjustmentInformation)
@@ -1990,7 +1966,6 @@ NtSetSystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     return STATUS_INVALID_INFO_CLASS;
 }
 
-
 NTSTATUS
 NTAPI
 NtFlushInstructionCache(IN HANDLE ProcessHandle,
@@ -2022,4 +1997,13 @@ NtGetCurrentProcessorNumber(VOID)
     return KeGetCurrentProcessorNumber();
 }
 
-/* EOF */
+/*
+ * @implemented
+ */
+#undef ExGetPreviousMode
+KPROCESSOR_MODE
+NTAPI
+ExGetPreviousMode (VOID)
+{
+    return KeGetPreviousMode();
+}

@@ -13,11 +13,9 @@
 	<directory name="uartmidi">
 		<xi:include href="uartmidi/uartmidi.rbuild" />
 	</directory>
-	<ifnot property="ARCH" value="amd64">
-		<directory name="mmebuddy">
-			<xi:include href="mmebuddy/mmebuddy.rbuild" />
-		</directory>
-	</ifnot>
+	<directory name="mmebuddy">
+		<xi:include href="mmebuddy/mmebuddy.rbuild" />
+	</directory>
 	<directory name="mment4">
 		<xi:include href="mment4/mment4.rbuild" />
 	</directory>

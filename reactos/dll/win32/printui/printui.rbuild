@@ -5,7 +5,6 @@
         <define name="__WINESRC__" />
         <library>wine</library>
         <library>shell32</library>
-        <library>kernel32</library>
         <library>ntdll</library>
         <file>printui.c</file>
         <file>printui.rc</file>

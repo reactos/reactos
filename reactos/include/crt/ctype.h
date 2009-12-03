@@ -112,7 +112,7 @@ extern "C" {
   _CRTIMP int __cdecl __iscsymf(int _C);
   _CRTIMP int __cdecl __iscsym(int _C);
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
-int __cdecl isblank(int _C);
+  _CRTIMP int __cdecl isblank(int _C);
 #endif
 #endif /* !_CTYPE_DEFINED */
 
@@ -156,7 +156,7 @@ int __cdecl isblank(int _C);
   _CRTIMP int __cdecl is_wctype(wint_t _C,wctype_t _Type);
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
-int __cdecl iswblank(wint_t _C);
+  _CRTIMP int __cdecl iswblank(wint_t _C);
 #endif
 #endif
 
@@ -241,10 +241,10 @@ int __cdecl iswblank(wint_t _C);
 
 #ifndef NO_OLDNAMES
 #ifndef _CTYPE_DEFINED
-  _CRT_NONSTDC_DEPRECATE(__isascii) _CRTIMP int __cdecl isascii(int _C);
-  _CRT_NONSTDC_DEPRECATE(__toascii) _CRTIMP int __cdecl toascii(int _C);
-  _CRT_NONSTDC_DEPRECATE(__iscsymf) _CRTIMP int __cdecl iscsymf(int _C);
-  _CRT_NONSTDC_DEPRECATE(__iscsym) _CRTIMP int __cdecl iscsym(int _C);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(__isascii) _CRTIMP int __cdecl isascii(int _C);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(__toascii) _CRTIMP int __cdecl toascii(int _C);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(__iscsymf) _CRTIMP int __cdecl iscsymf(int _C);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(__iscsym) _CRTIMP int __cdecl iscsym(int _C);
 #else
 #define isascii __isascii
 #define toascii __toascii

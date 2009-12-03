@@ -157,7 +157,8 @@ static LONG
 BasepCheckForReadOnlyResource(IN PVOID Ptr)
 {
     PVOID Data;
-    ULONG Size, OldProtect;
+    SIZE_T Size;
+	ULONG OldProtect;
     MEMORY_BASIC_INFORMATION mbi;
     NTSTATUS Status;
     LONG Ret = EXCEPTION_CONTINUE_SEARCH;

@@ -16,7 +16,9 @@
 
 #include "../ARM3/miarm.h"
 
+#ifndef KDBG
 extern PMMPTE MmDebugPte;
+#endif
 
 /* GLOBALS *****************************************************************/
 
@@ -425,8 +427,10 @@ MiInitializePageTable()
     MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
     MmLastReservedMappingPte = MiAddressToPte((PVOID)MI_MAPPING_RANGE_END);
 
+#ifndef KDBG
     /* Setup debug mapping PTE */
     MmDebugPte = MxGetPte(MI_DEBUG_MAPPING);
+#endif
 }
 
 VOID

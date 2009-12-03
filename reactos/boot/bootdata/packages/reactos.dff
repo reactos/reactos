@@ -668,8 +668,11 @@ boot\bootdata\bootcdregtest\regtest.cmd             7   optional
 ;subsystems\win32\win32k\win32k.sys                  1
 
 ; Optional/proprietary files
-modules\optional\kvmnet.inf                         6  optional
-modules\optional\kvmnet.sys                         2  optional
+modules\optional\DroidSansFallback.ttf              3  optional
+modules\optional\NOTICE_for_Droid_Font.txt          4  optional
+modules\optional\netkvm2k.inf                       6  optional
+modules\optional\netkvm2k.cat                       6  optional
+modules\optional\netkvm.sys                         2  optional
 modules\optional\alcxwdm.inf                        6  optional
 modules\optional\alcxwdm.sys                        2  optional
 modules\optional\mfc42.dll                          1  optional
@@ -681,7 +684,6 @@ modules\optional\msvbvm60.dll                       1  optional
 modules\optional\msvcirt.dll                        1  optional
 modules\optional\msvcp71.dll                        1  optional
 modules\optional\msvcr71.dll                        1  optional
-modules\optional\Systema.ttf                        3  optional
 modules\optional\vmx_fb.dll                         1  optional
 modules\optional\vmx_mode.dll                       1  optional
 modules\optional\vmx_svga.inf                       6  optional

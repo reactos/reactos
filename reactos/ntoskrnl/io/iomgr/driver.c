@@ -692,8 +692,6 @@ MiResolveImageReferences(IN PVOID ImageBase,
                          OUT PWCHAR *MissingDriver,
                          OUT PLOAD_IMPORTS *LoadImports);
 
-extern KSPIN_LOCK PsLoadedModuleSpinLock;
-
 //
 // Used for images already loaded (boot drivers)
 //

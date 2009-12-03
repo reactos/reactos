@@ -106,24 +106,34 @@ IntVideoPortSetupInterrupt(
 /*
  * @implemented
  */
-
-VP_STATUS NTAPI
+VP_STATUS
+NTAPI
 VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 {
 #ifndef _M_AMD64
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   BOOLEAN Status;
+    BOOLEAN InterruptValid;
 
-   TRACE_(VIDEOPRT, "VideoPortEnableInterrupt\n");
-
+    /* Get the device extension */
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   Status = HalEnableSystemInterrupt(
-      DeviceExtension->InterruptVector,
+    /* Fail if the driver didn't register an ISR */
+    if (!DeviceExtension->DriverExtension->InitializationData.HwInterrupt)
+    {
+        /* No ISR, no interrupts */
+        return ERROR_INVALID_FUNCTION;
+    }
+
+    /* Re-enable the interrupt and return */
+    InterruptValid = HalEnableSystemInterrupt(DeviceExtension->InterruptVector,
       0,
       DeviceExtension->InterruptLevel);
 
-   return Status ? NO_ERROR : ERROR_INVALID_PARAMETER;
+    /* Make sure the interrupt was valid */
+    ASSERT(InterruptValid == TRUE);
+
+    /* Return to caller */
+    return NO_ERROR;
 #else
     /* FIXME: Function still present? If so what to use instead of HalEnableSystemInterrupt? */
     UNIMPLEMENTED;
@@ -134,23 +144,27 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 /*
  * @implemented
  */
-
-VP_STATUS NTAPI
+VP_STATUS
+NTAPI
 VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
 {
 #ifndef _M_AMD64
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   BOOLEAN Status;
 
-   TRACE_(VIDEOPRT, "VideoPortDisableInterrupt\n");
-
+    /* Get the device extension */
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   Status = HalDisableSystemInterrupt(
-      DeviceExtension->InterruptVector,
-      0);
+    /* Fail if the driver didn't register an ISR */
+    if (!DeviceExtension->DriverExtension->InitializationData.HwInterrupt)
+    {
+        /* No ISR, no interrupts */
+        return ERROR_INVALID_FUNCTION;
+    }
 
-   return Status ? NO_ERROR : ERROR_INVALID_PARAMETER;
+    /* Disable the interrupt and return */
+    HalDisableSystemInterrupt(DeviceExtension->InterruptVector,
+      0);
+    return NO_ERROR;
 #else
     /* FIXME: Function still present? If so what to use instead of HalDisableSystemInterrupt? */
     UNIMPLEMENTED;

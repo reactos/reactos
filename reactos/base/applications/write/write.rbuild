@@ -4,7 +4,6 @@
 	<include base="write">.</include>
 	<library>user32</library>
 	<library>gdi32</library>
-	<library>kernel32</library>
 	<file>write.c</file>
 	<file>rsrc.rc</file>
 </module>

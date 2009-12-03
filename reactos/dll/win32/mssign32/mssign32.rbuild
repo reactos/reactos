@@ -6,6 +6,5 @@
 	<define name="__WINESRC__" />
 	<file>mssign32_main.c</file>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>

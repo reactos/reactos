@@ -17,7 +17,6 @@
 	<library>urlmon</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

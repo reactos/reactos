@@ -156,12 +156,12 @@ static HRESULT WINAPI HTMLSelectionObject_createRange(IHTMLSelectionObject *ifac
 
             TRACE("nsrange_cnt = 0\n");
 
-            if(!This->doc->basedoc.nsdoc) {
+            if(!This->doc->nsdoc) {
                 WARN("nsdoc is NULL\n");
                 return E_UNEXPECTED;
             }
 
-            nsres = nsIDOMHTMLDocument_GetBody(This->doc->basedoc.nsdoc, &nsbody);
+            nsres = nsIDOMHTMLDocument_GetBody(This->doc->nsdoc, &nsbody);
             if(NS_FAILED(nsres) || !nsbody) {
                 ERR("Could not get body: %08x\n", nsres);
                 return E_FAIL;

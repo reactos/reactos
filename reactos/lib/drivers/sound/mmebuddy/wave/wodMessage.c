@@ -58,7 +58,7 @@ wodMessage(
         {
             Result = MmeGetSoundDeviceCapabilities(WAVE_OUT_DEVICE_TYPE,
                                                    DeviceId,
-                                                   Parameter1,
+                                                   (PVOID)Parameter1,
                                                    Parameter2);
             break;
         }
@@ -69,7 +69,7 @@ wodMessage(
                                        DeviceId,
                                        (LPWAVEOPENDESC) Parameter1,
                                        Parameter2,
-                                       (SIZE_T*)PrivateHandle);
+                                       (DWORD*)PrivateHandle);
             break;
         }
 

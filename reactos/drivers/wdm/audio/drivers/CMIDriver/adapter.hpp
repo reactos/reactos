@@ -30,7 +30,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "interfaces.hpp"
 #include "debug.hpp"
-#include "DMusicKS.h"
+#include "dmusicks.h"
 
 #ifdef UART
 const ULONG MAX_MINIPORTS = 3;
@@ -38,7 +38,7 @@ const ULONG MAX_MINIPORTS = 3;
 const ULONG MAX_MINIPORTS = 2;
 #endif
 
-extern NTSTATUS CreateMiniportWaveCMI
+extern HRESULT NTAPI CreateMiniportWaveCMI
 (
     OUT     PUNKNOWN *  Unknown,
     IN      REFCLSID,
@@ -46,7 +46,7 @@ extern NTSTATUS CreateMiniportWaveCMI
     IN      POOL_TYPE   PoolType
 );
 
-extern NTSTATUS CreateMiniportTopologyCMI
+extern HRESULT NTAPI CreateMiniportTopologyCMI
 (
     OUT     PUNKNOWN *  Unknown,
     IN      REFCLSID,

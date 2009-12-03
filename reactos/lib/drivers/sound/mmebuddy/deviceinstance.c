@@ -353,8 +353,8 @@ MMRESULT
 SetSoundDeviceInstanceMmeData(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  HDRVR MmeHandle,
-    IN  DWORD ClientCallback,
-    IN  DWORD ClientCallbackData,
+    IN  DWORD_PTR ClientCallback,
+    IN  DWORD_PTR ClientCallbackData,
     IN  DWORD Flags)
 {
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );

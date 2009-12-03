@@ -160,23 +160,29 @@ CreateRemoteThread(HANDLE hProcess,
 
     #ifdef SXS_SUPPORT_ENABLED
     /* Are we in the same process? */
-    if (Process = NtCurrentProcess())
+    if (hProcess == NtCurrentProcess())
     {
         PTEB Teb;
         PVOID ActivationContextStack;
-        PTHREAD_BASIC_INFORMATION ThreadBasicInfo;
-        PACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
+        THREAD_BASIC_INFORMATION ThreadBasicInfo;
+        ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
         ULONG_PTR Cookie;
+        ULONG retLen;
 
         /* Get the TEB */
         Status = NtQueryInformationThread(hThread,
-                                          ThreadBasicIformation,
+                                          ThreadBasicInformation,
                                           &ThreadBasicInfo,
                                           sizeof(ThreadBasicInfo),
-                                          NULL);
-
+                                          &retLen);
+        if (NT_SUCCESS(Status))
+        {
         /* Allocate the Activation Context Stack */
         Status = RtlAllocateActivationContextStack(&ActivationContextStack);
+        }
+
+        if (NT_SUCCESS(Status))
+        {
         Teb = ThreadBasicInfo.TebBaseAddress;
 
         /* Save it */
@@ -189,17 +195,25 @@ CreateRemoteThread(HANDLE hProcess,
                                                       ActivationContextBasicInformation,
                                                       &ActivationCtxInfo,
                                                       sizeof(ActivationCtxInfo),
-                                                      NULL);
-
+                                                          &retLen);
+            if (NT_SUCCESS(Status))
+            {
         /* Does it need to be activated? */
         if (!ActivationCtxInfo.hActCtx)
         {
             /* Activate it */
-            Status = RtlActivateActivationContextEx(1,
-                                                    Teb,
+                    Status = RtlActivateActivationContext(1,
                                                     ActivationCtxInfo.hActCtx,
                                                     &Cookie);
+                    if (!NT_SUCCESS(Status))
+                        DPRINT1("RtlActivateActivationContext failed %x\n", Status);
         }
+    }
+            else
+                DPRINT1("RtlQueryInformationActivationContext failed %x\n", Status);
+        }
+        else
+            DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
     }
     #endif
 

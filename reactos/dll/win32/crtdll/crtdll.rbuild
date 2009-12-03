@@ -1,4 +1,4 @@
-<module name="crtdll" type="win32dll" baseaddress="${BASEADDRESS_CRTDLL}" mangledsymbols="true" installbase="system32" installname="crtdll.dll" iscrt="true">
+<module name="crtdll" type="win32dll" baseaddress="${BASEADDRESS_CRTDLL}" installbase="system32" installname="crtdll.dll" iscrt="true">
 	<importlibrary definition="crtdll.spec" />
 	<include base="crtdll">.</include>
 	<include base="crt">include</include>
@@ -14,7 +14,6 @@
 
 	<library>crt</library>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<pch>precomp.h</pch>
 	<file>dllmain.c</file>

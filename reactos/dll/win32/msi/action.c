@@ -4888,7 +4888,6 @@ static UINT ACTION_InstallODBC( MSIPACKAGE *package )
 static LONG env_set_flags( LPCWSTR *name, LPCWSTR *value, DWORD *flags )
 {
     LPCWSTR cptr = *name;
-    LPCWSTR ptr = *value;
 
     static const WCHAR prefix[] = {'[','~',']',0};
     static const int prefix_len = 3;
@@ -4919,6 +4918,9 @@ static LONG env_set_flags( LPCWSTR *name, LPCWSTR *value, DWORD *flags )
         return ERROR_FUNCTION_FAILED;
     }
 
+    if (*value)
+    {
+        LPCWSTR ptr = *value;
     if (!strncmpW(ptr, prefix, prefix_len))
     {
         *flags |= ENV_MOD_APPEND;
@@ -4932,6 +4934,7 @@ static LONG env_set_flags( LPCWSTR *name, LPCWSTR *value, DWORD *flags )
             *flags |= ENV_MOD_PREFIX;
             /* the "[~]" will be removed by deformat_string */;
         }
+    }
     }
 
     if (check_flag_combo(*flags, ENV_ACT_SETALWAYS | ENV_ACT_SETABSENT) ||
@@ -4978,8 +4981,7 @@ static UINT ITERATE_WriteEnvironmentString( MSIRECORD *rec, LPVOID param )
     if (res != ERROR_SUCCESS)
        goto done;
 
-    deformat_string(package, value, &deformatted);
-    if (!deformatted)
+    if (value && !deformat_string(package, value, &deformatted))
     {
         res = ERROR_OUTOFMEMORY;
         goto done;
@@ -5066,7 +5068,7 @@ static UINT ITERATE_WriteEnvironmentString( MSIRECORD *rec, LPVOID param )
             }
         }
     }
-    else
+    else if (value)
     {
         size = (lstrlenW(value) + 1) * sizeof(WCHAR);
         newval = msi_alloc(size);
@@ -5079,8 +5081,13 @@ static UINT ITERATE_WriteEnvironmentString( MSIRECORD *rec, LPVOID param )
         lstrcpyW(newval, value);
     }
 
+    if (newval)
+    {
     TRACE("setting %s to %s\n", debugstr_w(name), debugstr_w(newval));
     res = RegSetValueExW(env, name, 0, type, (LPVOID)newval, size);
+    }
+    else
+        res = ERROR_SUCCESS;
 
 done:
     if (env) RegCloseKey(env);

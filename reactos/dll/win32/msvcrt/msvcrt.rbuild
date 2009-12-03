@@ -1,4 +1,4 @@
-<module name="msvcrt" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT}" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" iscrt="yes">
+<module name="msvcrt" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT}" installbase="system32" installname="msvcrt.dll" iscrt="yes">
 	<importlibrary definition="msvcrt-$(ARCH).def" />
 	<include base="msvcrt">.</include>
 	<include base="crt">include</include>
@@ -16,7 +16,6 @@
 
 	<library>crt</library>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>pseh</library>
 	<pch>precomp.h</pch>

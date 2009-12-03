@@ -190,7 +190,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
   int __cdecl rename(const char *_OldFilename,const char *_NewFilename);
   _CRTIMP int __cdecl _unlink(const char *_Filename);
 #ifndef	NO_OLDNAMES
-  int __cdecl unlink(const char *_Filename);
+  _CRTIMP int __cdecl unlink(const char *_Filename);
 #endif
 #endif
 
@@ -240,12 +240,12 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
 
 #ifndef NO_OLDNAMES
 #ifndef _UWIN
-  int __cdecl chdir (const char *);
-  char *__cdecl getcwd (char *, int);
-  int __cdecl mkdir (const char *);
-  char *__cdecl mktemp(char *);
-  int __cdecl rmdir (const char*);
-  int __cdecl chmod (const char *, int);
+  _CRTIMP int __cdecl chdir (const char *);
+  _CRTIMP char *__cdecl getcwd (char *, int);
+  _CRTIMP int __cdecl mkdir (const char *);
+  _CRTIMP char *__cdecl mktemp(char *);
+  _CRTIMP int __cdecl rmdir (const char*);
+  _CRTIMP int __cdecl chmod (const char *, int);
 #endif /* _UWIN */
 #endif /* Not NO_OLDNAMES */
 
@@ -297,26 +297,26 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
   _CRTIMP int __cdecl _open_osfhandle(intptr_t _OSFileHandle,int _Flags);
 
 #ifndef	NO_OLDNAMES
-  int __cdecl access(const char *_Filename,int _AccessMode);
-  int __cdecl chmod(const char *_Filename,int _AccessMode);
-  int __cdecl chsize(int _FileHandle,long _Size);
-  int __cdecl close(int _FileHandle);
-  int __cdecl creat(const char *_Filename,int _PermissionMode);
-  int __cdecl dup(int _FileHandle);
-  int __cdecl dup2(int _FileHandleSrc,int _FileHandleDst);
-  int __cdecl eof(int _FileHandle);
-  long __cdecl filelength(int _FileHandle);
-  int __cdecl isatty(int _FileHandle);
-  int __cdecl locking(int _FileHandle,int _LockMode,long _NumOfBytes);
-  long __cdecl lseek(int _FileHandle,long _Offset,int _Origin);
-  char *__cdecl mktemp(char *_TemplateName);
-  int __cdecl open(const char *_Filename,int _OpenFlag,...);
-  int __cdecl read(int _FileHandle,void *_DstBuf,unsigned int _MaxCharCount);
-  int __cdecl setmode(int _FileHandle,int _Mode);
-  int __cdecl sopen(const char *_Filename,int _OpenFlag,int _ShareFlag,...);
-  long __cdecl tell(int _FileHandle);
-  int __cdecl umask(int _Mode);
-  int __cdecl write(int _Filehandle,const void *_Buf,unsigned int _MaxCharCount);
+  _CRTIMP int __cdecl access(const char *_Filename,int _AccessMode);
+  _CRTIMP int __cdecl chmod(const char *_Filename,int _AccessMode);
+  _CRTIMP int __cdecl chsize(int _FileHandle,long _Size);
+  _CRTIMP int __cdecl close(int _FileHandle);
+  _CRTIMP int __cdecl creat(const char *_Filename,int _PermissionMode);
+  _CRTIMP int __cdecl dup(int _FileHandle);
+  _CRTIMP int __cdecl dup2(int _FileHandleSrc,int _FileHandleDst);
+  _CRTIMP int __cdecl eof(int _FileHandle);
+  _CRTIMP long __cdecl filelength(int _FileHandle);
+  _CRTIMP int __cdecl isatty(int _FileHandle);
+  _CRTIMP int __cdecl locking(int _FileHandle,int _LockMode,long _NumOfBytes);
+  _CRTIMP long __cdecl lseek(int _FileHandle,long _Offset,int _Origin);
+  _CRTIMP char *__cdecl mktemp(char *_TemplateName);
+  _CRTIMP int __cdecl open(const char *_Filename,int _OpenFlag,...);
+  _CRTIMP int __cdecl read(int _FileHandle,void *_DstBuf,unsigned int _MaxCharCount);
+  _CRTIMP int __cdecl setmode(int _FileHandle,int _Mode);
+  _CRTIMP int __cdecl sopen(const char *_Filename,int _OpenFlag,int _ShareFlag,...);
+  _CRTIMP long __cdecl tell(int _FileHandle);
+  _CRTIMP int __cdecl umask(int _Mode);
+  _CRTIMP int __cdecl write(int _Filehandle,const void *_Buf,unsigned int _MaxCharCount);
 #endif
 
 #ifdef __cplusplus

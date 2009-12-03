@@ -15,8 +15,6 @@ int TCPSocketState(void *ClientData,
            void *WhichConnection,
            OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = WhichConnection;
-    ULONG OldState;
-    KIRQL OldIrql;
 
     ASSERT_LOCKED(&TCPLock);
 
@@ -28,7 +26,7 @@ int TCPSocketState(void *ClientData,
 
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
                NewState, Connection,
-               Connection ? Connection->SignalState ^ NewState :
+               Connection ? Connection->State ^ NewState :
                NewState));
 
     if( !Connection ) {
@@ -40,31 +38,14 @@ int TCPSocketState(void *ClientData,
         TI_DbgPrint(DEBUG_TCP,("Found socket %x\n", Connection));
     }
 
-    OldState = Connection->SignalState;
+    TI_DbgPrint(MID_TRACE,("Connection signalled: %d\n",
+               Connection->Signalled));
 
     Connection->SignalState |= NewState;
-
-    TcpipRecursiveMutexLeave(&TCPLock);
-
-    /* We must not be locked when handling signalled connections 
-     * because a completion could trigger another IOCTL which
-     * would cause a deadlock
-     */
-    NewState = HandleSignalledConnection(Connection);
-
-    TcpipRecursiveMutexEnter(&TCPLock);
-
-    KeAcquireSpinLock(&SignalledConnectionsLock, &OldIrql);
-    if ((NewState == 0 || NewState == SEL_FIN) &&
-        (OldState != 0 && OldState != SEL_FIN))
-    {
-        RemoveEntryList(&Connection->SignalList);
+    if( !Connection->Signalled ) {
+    Connection->Signalled = TRUE;
+    ExInterlockedInsertTailList( &SignalledConnectionsList, &Connection->SignalList, &SignalledConnectionsLock );
     }
-    else if (NewState != 0 && NewState != SEL_FIN)
-    {
-        InsertTailList(&SignalledConnectionsList, &Connection->SignalList);
-    }
-    KeReleaseSpinLock(&SignalledConnectionsLock, OldIrql);
 
     return 0;
 }
@@ -129,6 +110,74 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     }
 
     return 0;
+}
+
+int TCPSleep( void *ClientData, void *token, int priority, char *msg,
+          int tmio ) {
+    PSLEEPING_THREAD SleepingThread;
+    LARGE_INTEGER Timeout;
+
+    ASSERT_LOCKED(&TCPLock);
+
+    TI_DbgPrint(DEBUG_TCP,
+        ("Called TSLEEP: tok = %x, pri = %d, wmesg = %s, tmio = %x\n",
+         token, priority, msg, tmio));
+
+    SleepingThread = exAllocatePool( NonPagedPool, sizeof( *SleepingThread ) );
+    if( SleepingThread ) {
+    KeInitializeEvent( &SleepingThread->Event, NotificationEvent, FALSE );
+    SleepingThread->SleepToken = token;
+
+    /* We're going to sleep and need to release the lock, otherwise
+           it's impossible to re-enter oskittcp to deliver the event that's
+           going to wake us */
+    TcpipRecursiveMutexLeave( &TCPLock );
+
+    TcpipAcquireFastMutex( &SleepingThreadsLock );
+    InsertTailList( &SleepingThreadsList, &SleepingThread->Entry );
+    TcpipReleaseFastMutex( &SleepingThreadsLock );
+
+        Timeout.QuadPart = Int32x32To64(tmio, -10000);
+
+    TI_DbgPrint(DEBUG_TCP,("Waiting on %x\n", token));
+    KeWaitForSingleObject( &SleepingThread->Event,
+                   Executive,
+                   KernelMode,
+                   TRUE,
+                   (tmio != 0) ? &Timeout : NULL );
+
+    TcpipAcquireFastMutex( &SleepingThreadsLock );
+    RemoveEntryList( &SleepingThread->Entry );
+    TcpipReleaseFastMutex( &SleepingThreadsLock );
+
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+
+    exFreePool( SleepingThread );
+    } else
+        return OSK_ENOBUFS;
+
+    TI_DbgPrint(DEBUG_TCP,("Waiting finished: %x\n", token));
+    return 0;
+}
+
+void TCPWakeup( void *ClientData, void *token ) {
+    PLIST_ENTRY Entry;
+    PSLEEPING_THREAD SleepingThread;
+
+    ASSERT_LOCKED(&TCPLock);
+
+    TcpipAcquireFastMutex( &SleepingThreadsLock );
+    Entry = SleepingThreadsList.Flink;
+    while( Entry != &SleepingThreadsList ) {
+    SleepingThread = CONTAINING_RECORD(Entry, SLEEPING_THREAD, Entry);
+    TI_DbgPrint(DEBUG_TCP,("Sleeper @ %x\n", SleepingThread));
+    if( SleepingThread->SleepToken == token ) {
+        TI_DbgPrint(DEBUG_TCP,("Setting event to wake %x\n", token));
+        KeSetEvent( &SleepingThread->Event, IO_NETWORK_INCREMENT, FALSE );
+    }
+    Entry = Entry->Flink;
+    }
+    TcpipReleaseFastMutex( &SleepingThreadsLock );
 }
 
 /* Memory management routines

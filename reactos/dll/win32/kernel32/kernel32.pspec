@@ -1,6 +1,6 @@
 @ stdcall AcquireSRWLockExclusive(ptr) ntdll.RtlAcquireSRWLockExclusive
 @ stdcall AcquireSRWLockShare(ptr) ntdll.RtlAcquireSRWLockShared
-;@ stdcall ActivateActCtx(ptr ptr)
+@ stdcall ActivateActCtx(ptr ptr)
 @ stdcall AddAtomA(str)
 @ stdcall AddAtomW(wstr)
 @ stdcall AddConsoleAliasA(str str str) ;check
@@ -8,7 +8,7 @@
 ;@ stdcall -arch=x86_64 AddIntegrityLabelToBoundaryDescriptor ; Win 7
 @ stdcall AddLocalAlternateComputerNameA(str ptr)
 @ stdcall AddLocalAlternateComputerNameW(wstr ptr)
-;@ stdcall AddRefActCtx(ptr)
+@ stdcall AddRefActCtx(ptr)
 ;@ stdcall AddSIDToBoundaryDescriptor ; Win 7
 ;@ stdcall AddSecureMemoryCacheCallback ; Win 7
 @ stdcall AddVectoredContinueHandler(long ptr) ntdll.RtlAddVectoredContinueHandler
@@ -124,8 +124,8 @@
 ;@ stdcall CopyFileTransactedW ; Win 7
 @ stdcall CopyFileW(wstr wstr long)
 @ stdcall CopyLZFile(long long) LZCopy
-;@ stdcall CreateActCtxA(ptr)
-;@ stdcall CreateActCtxW(ptr)
+@ stdcall CreateActCtxA(ptr)
+@ stdcall CreateActCtxW(ptr)
 ;@ stdcall CreateBoundaryDescriptorA ; Win 7
 ;@ stdcall CreateBoundaryDescriptorW ; Win 7
 @ stdcall CreateConsoleScreenBuffer(long long ptr long ptr)
@@ -205,9 +205,8 @@
 @ stdcall CreateWaitableTimerA(ptr long str)
 @ stdcall CreateWaitableTimerExA (ptr str long long)
 @ stdcall CreateWaitableTimerExW (ptr wstr long long)
-@ stdcall CreateWaitableTimerW(ptr long wstr)
+@ stdcall DeactivateActCtx(long ptr)
 ;@ stdcall CtrlRoutine ; Win 7
-;@ stdcall DeactivateActCtx(long ptr)
 @ stdcall DebugActiveProcess(long)
 @ stdcall DebugActiveProcessStop(long)
 @ stdcall DebugBreak() ntdll.DbgBreakPoint
@@ -313,9 +312,9 @@
 @ stdcall FillConsoleOutputAttribute(long long long long ptr)
 @ stdcall FillConsoleOutputCharacterA(long long long long ptr)
 @ stdcall FillConsoleOutputCharacterW(long long long long ptr)
-;@ stdcall FindActCtxSectionGuid(long ptr long ptr ptr)
-;@ stdcall FindActCtxSectionStringA(long ptr long str ptr)
-;@ stdcall FindActCtxSectionStringW(long ptr long wstr ptr)
+@ stdcall FindActCtxSectionGuid(long ptr long ptr ptr)
+@ stdcall FindActCtxSectionStringA(long ptr long str ptr)
+@ stdcall FindActCtxSectionStringW(long ptr long wstr ptr)
 @ stdcall FindAtomA(str)
 @ stdcall FindAtomW(wstr)
 @ stdcall FindClose(long)
@@ -461,7 +460,7 @@
 @ stdcall GetCurrencyFormatA(long long str ptr str long)
 ;@ stdcall GetCurrencyFormatEx ; Win 7
 @ stdcall GetCurrencyFormatW(long long str ptr str long)
-;@ stdcall GetCurrentActCtx(ptr)
+@ stdcall GetCurrentActCtx(ptr)
 @ stdcall GetCurrentConsoleFont(long long ptr)
 ;@ stdcall GetCurrentConsoleFontEx ; Win 7
 @ stdcall GetCurrentDirectoryA(long ptr)
@@ -888,7 +887,7 @@
 @ stdcall LocalShrink(long long)
 @ stdcall LocalSize(long)
 @ stdcall LocalUnlock(long)
-@ stub LocaleNameToLCID ; missing in XP SP3
+;@ stub LocaleNameToLCID ; missing in XP SP3
 ;@ stdcall LocateExtendedFeature api-ms-win-core-xstate-l1-1-0.RtlLocateExtendedFeature ; Win 7
 ;@ stdcall LocateLegacyContext api-ms-win-core-xstate-l1-1-0.RtlLocateLegacyContext ; Win 7
 @ stdcall LockFile(long long long long long)
@@ -971,7 +970,7 @@
 @ stdcall PulseEvent(long)
 @ stdcall PurgeComm(long long)
 ;@ stdcall QueryActCtxSettingsW ; Win 7
-;@ stdcall QueryActCtxW(long ptr ptr long ptr long ptr)
+@ stdcall QueryActCtxW(long ptr ptr long ptr long ptr)
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
 @ stdcall QueryDosDeviceW(wstr ptr long)
@@ -1069,7 +1068,7 @@
 @ stdcall RegisterWaitForSingleObjectEx(long ptr ptr long long)
 @ stdcall RegisterWowBaseHandlers(long)
 @ stdcall RegisterWowExec(long)
-;@ stdcall ReleaseActCtx(ptr)
+@ stdcall ReleaseActCtx(ptr)
 @ stdcall ReleaseMutex(long)
 ;@ stdcall ReleaseMutexWhenCallbackReturns ntdll.TpCallbackReleaseMutexOnCompletion ; Win 7
 @ stdcall ReleaseSRWLockExclusive(ptr) ntdll.RtlReleaseSRWLockExclusive
@@ -1407,7 +1406,7 @@
 @ stdcall WriteProfileStringW(wstr wstr wstr)
 @ stdcall WriteTapemark(ptr long long long)
 @ stdcall WTSGetActiveConsoleSessionId() ; missing in win 7
-;@ stdcall ZombifyActCtx(ptr)
+@ stdcall ZombifyActCtx(ptr)
 ;@ stdcall -arch=x86_64 __C_specific_handler ntdll.__C_specific_handler
 ;@ stdcall -arch=x86_64 __chkstk ntdll.__chkstk
 ;@ stdcall -arch=x86_64 __misaligned_access ntdll.__misaligned_access

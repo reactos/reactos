@@ -28,17 +28,18 @@ STRINGTABLE DISCARDABLE
     IDS_INSTALLING      "Installerar..."
 }
 
-ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 85
+ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Wine Gecko Installationsprogram"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Detta program försöker visa en HTML-sida. Wine behöver ha Gecko (Mozillas HTML-" \
-          "programvara) installerad för att visa sidan. Välj Installera om du vill att Wine " \
-          "automatiskt ska hämta och installera Gecko.", ID_DWL_STATUS, 10, 10, 240, 30, SS_LEFT
+    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML " \
+          "to work correctly. Wine can automatically download and install it for you.\n\n" \
+          "Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
+          ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
     CONTROL "Förlopp", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Installera", ID_DWL_INSTALL, 200, 60, 50, 15, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Avbryt", IDCANCEL, 140, 60, 50, 15, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Installera", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Avbryt", IDCANCEL, 140, 70, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
 

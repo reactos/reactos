@@ -182,11 +182,12 @@ static const IHTMLTextContainerVtbl HTMLTextContainerVtbl = {
     HTMLTextContainer_get_onscroll
 };
 
-void HTMLTextContainer_Init(HTMLTextContainer *This, dispex_static_data_t *dispex_data)
+void HTMLTextContainer_Init(HTMLTextContainer *This, HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem,
+        dispex_static_data_t *dispex_data)
 {
     This->lpHTMLTextContainerVtbl = &HTMLTextContainerVtbl;
 
-    HTMLElement_Init(&This->element, dispex_data);
+    HTMLElement_Init(&This->element, doc, nselem, dispex_data);
 
     ConnectionPoint_Init(&This->cp, &This->element.cp_container, &DIID_HTMLTextContainerEvents);
 }

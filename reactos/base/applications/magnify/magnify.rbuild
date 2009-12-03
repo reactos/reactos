@@ -6,7 +6,6 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>shell32</library>
-	<library>kernel32</library>
 	<file>magnifier.c</file>
 	<file>settings.c</file>
 	<file>magnify.rc</file>

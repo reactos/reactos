@@ -37,7 +37,7 @@ SysAudio_Shutdown(
     PSYSAUDIODEVEXT DeviceExtension;
     PLIST_ENTRY Entry;
 
-    DPRINT1("SysAudio_Shutdown called\n");
+    DPRINT("SysAudio_Shutdown called\n");
 
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
 
@@ -46,7 +46,7 @@ SysAudio_Shutdown(
         Entry = RemoveHeadList(&DeviceExtension->KsAudioDeviceList);
         DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)CONTAINING_RECORD(Entry, KSAUDIO_DEVICE_ENTRY, Entry);
 
-        DPRINT1("Freeing item %wZ\n", &DeviceEntry->DeviceName);
+        DPRINT("Freeing item %wZ\n", &DeviceEntry->DeviceName);
 
         /* dereference audio device file object */
         ObDereferenceObject(DeviceEntry->FileObject);
@@ -149,7 +149,7 @@ SysAudio_InstallDevice(
         if (!NT_SUCCESS(Status))
         {
             IoDeleteDevice(DeviceObject);
-            DPRINT("Failed to create sysaudio symlink!\n");
+            DPRINT1("Failed to create sysaudio symlink!\n");
             return Status;
         }
     }

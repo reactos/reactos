@@ -2,13 +2,13 @@
 
 [Section]
 Name = MinGW
-Version = 5.1.4
+Version = 5.1.6
 Licence = Public domain/GPL
 Description = A Port of the GNU toolchain with GCC, GDB, GNU make, etc.
-Size = 136kb
+Size = 155kb
 Category = 7
 URLSite = http://mingw.org/
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.4.exe
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.6.exe
 CDPath = none
 
 

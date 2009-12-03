@@ -1,14 +1,14 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = Simple Direct Media Layer (SDL) Mixer
-Version = 1.2.9
+Version = 1.2.11
 Licence = LGPL
 Description = Needed for some Open Source Games to run. You need 7-Zip or a similar Utility to extract it.
 Size = 307kB
 Category = 14
 URLSite = http://www.libsdl.org/projects/SDL_mixer/
-URLDownload = http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.9-win32.zip
+URLDownload = http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.11-win32.zip
 CDPath = none
 
 

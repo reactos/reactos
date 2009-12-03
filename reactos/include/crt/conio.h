@@ -84,15 +84,15 @@ extern "C" {
 #endif
 
 #ifndef	NO_OLDNAMES
-  _CRT_NONSTDC_DEPRECATE(_cgets) _CRT_INSECURE_DEPRECATE(_cgets_s) _CRTIMP char *__cdecl cgets(char *_Buffer);
-  _CRT_NONSTDC_DEPRECATE(_cprintf) _CRTIMP int __cdecl cprintf(const char *_Format,...);
-  _CRT_NONSTDC_DEPRECATE(_cputs) _CRTIMP int __cdecl cputs(const char *_Str);
-  _CRT_NONSTDC_DEPRECATE(_cscanf) _CRTIMP int __cdecl cscanf(const char *_Format,...);
-  _CRT_NONSTDC_DEPRECATE(_getch) _CRTIMP int __cdecl getch(void);
-  _CRT_NONSTDC_DEPRECATE(_getche) _CRTIMP int __cdecl getche(void);
-  _CRT_NONSTDC_DEPRECATE(_kbhit) _CRTIMP int __cdecl kbhit(void);
-  _CRT_NONSTDC_DEPRECATE(_putch) _CRTIMP int __cdecl putch(int _Ch);
-  _CRT_NONSTDC_DEPRECATE(_ungetch) _CRTIMP int __cdecl ungetch(int _Ch);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_cgets) _CRT_INSECURE_DEPRECATE(_cgets_s) _CRTIMP char *__cdecl cgets(char *_Buffer);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_cprintf) _CRTIMP int __cdecl cprintf(const char *_Format,...);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_cputs) _CRTIMP int __cdecl cputs(const char *_Str);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_cscanf) _CRTIMP int __cdecl cscanf(const char *_Format,...);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_getch) _CRTIMP int __cdecl getch(void);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_getche) _CRTIMP int __cdecl getche(void);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_kbhit) _CRTIMP int __cdecl kbhit(void);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_putch) _CRTIMP int __cdecl putch(int _Ch);
+  _CRTIMP _CRT_NONSTDC_DEPRECATE(_ungetch) _CRTIMP int __cdecl ungetch(int _Ch);
 
 #if (defined(_X86_) && !defined(__x86_64))
   _CRT_NONSTDC_DEPRECATE(_inp) _CRTIMP int __cdecl inp(unsigned short);

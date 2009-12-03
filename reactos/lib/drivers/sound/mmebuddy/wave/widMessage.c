@@ -62,7 +62,7 @@ widMessage(
 
             Result = MmeGetSoundDeviceCapabilities(WAVE_IN_DEVICE_TYPE,
                                                    DeviceId,
-                                                   Parameter1,
+                                                  (PVOID)Parameter1,
                                                    Parameter2);
             break;
         }

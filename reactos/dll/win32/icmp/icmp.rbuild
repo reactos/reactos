@@ -3,7 +3,6 @@
 	<include base="icmp">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ws2_32</library>
 	<library>wine</library>
 	<file>icmp_main.c</file>

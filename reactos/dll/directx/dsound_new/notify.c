@@ -157,7 +157,6 @@ IDirectSoundNotify_fnSetNotificationPositions(
             if (Result != ERROR_SUCCESS)
             {
                 DPRINT1("Failed to enable event %p Position %u\n", pcPositionNotifies[Index].hEventNotify, pcPositionNotifies[Index].dwOffset);
-                return DSERR_GENERIC;
             }
         }
     }

@@ -91,11 +91,12 @@ static UINT CREATE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
 }
 
 static UINT CREATE_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
+                LPWSTR *table_name)
 {
     MSICREATEVIEW *cv = (MSICREATEVIEW*)view;
 
-    TRACE("%p %d %p %p %p\n", cv, n, name, type, temporary );
+    TRACE("%p %d %p %p %p %p\n", cv, n, name, type, temporary, table_name );
 
     return ERROR_FUNCTION_FAILED;
 }

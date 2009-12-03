@@ -6,7 +6,6 @@
 
 	<redefine name="_WIN32_WINNT">0x600</redefine>
 
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>shell32</library>
 	<file>ncpa.c</file>

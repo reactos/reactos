@@ -3,7 +3,6 @@
 	<importlibrary definition="pstorec.spec" />
 	<include base="pstorec">.</include>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>uuid</library>
 	<file>pstorec.c</file>
 </module>

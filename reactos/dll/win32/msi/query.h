@@ -68,6 +68,12 @@ struct complex_expr
     struct expr *right;
 };
 
+struct ext_column
+{
+    LPCWSTR column;
+    LPCWSTR table;
+};
+
 struct expr
 {
     int type;
@@ -77,7 +83,7 @@ struct expr
         INT   ival;
         UINT  uval;
         LPCWSTR sval;
-        LPCWSTR column;
+        struct ext_column column;
         UINT col_number;
     } u;
 };

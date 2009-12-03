@@ -708,23 +708,6 @@ WPUCompleteOverlappedRequest(IN  SOCKET s,
  */
 INT
 EXPORT
-WSPStartup(IN  WORD wVersionRequested,
-           OUT LPWSPDATA lpWSPData,
-           IN  LPWSAPROTOCOL_INFOW lpProtocolInfo,
-           IN  WSPUPCALLTABLE UpcallTable,
-           OUT LPWSPPROC_TABLE lpProcTable)
-{
-    UNIMPLEMENTED
-
-    return WSASYSCALLFAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-INT
-EXPORT
 WSCDeinstallProvider(IN  LPGUID lpProviderId,
                      OUT LPINT lpErrno)
 {

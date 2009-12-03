@@ -48,7 +48,7 @@ modMessage(
         {
             Result = MmeGetSoundDeviceCapabilities(MIDI_OUT_DEVICE_TYPE,
                                                    DeviceId,
-                                                   Parameter1,
+                                                   (PVOID)Parameter1,
                                                    Parameter2);
             break;
         }

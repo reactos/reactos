@@ -219,35 +219,35 @@ static HRESULT ShellLink_QueryInterface( IShellLinkImpl *This, REFIID riid,  LPV
     }
     else if(IsEqualIID(riid, &IID_IShellLinkW))
     {
-        *ppvObj = (void *)&(This->lpvtblw);
+        *ppvObj = &(This->lpvtblw);
     }
     else if(IsEqualIID(riid, &IID_IPersistFile))
     {
-        *ppvObj = (void *)&(This->lpvtblPersistFile);
+        *ppvObj = &(This->lpvtblPersistFile);
     }
     else if(IsEqualIID(riid, &IID_IPersistStream))
     {
-        *ppvObj = (void *)&(This->lpvtblPersistStream);
+        *ppvObj = &(This->lpvtblPersistStream);
     }
     else if(IsEqualIID(riid, &IID_IShellLinkDataList))
     {
-        *ppvObj = (void *)&(This->lpvtblShellLinkDataList);
+        *ppvObj = &(This->lpvtblShellLinkDataList);
     }
     else if(IsEqualIID(riid, &IID_IShellExtInit))
     {
-        *ppvObj = (void *)&(This->lpvtblShellExtInit);
+        *ppvObj = &(This->lpvtblShellExtInit);
     }
     else if(IsEqualIID(riid, &IID_IContextMenu))
     {
-        *ppvObj = (void *)&(This->lpvtblContextMenu);
+        *ppvObj = &(This->lpvtblContextMenu);
     }
     else if(IsEqualIID(riid, &IID_IObjectWithSite))
     {
-        *ppvObj = (void *)&(This->lpvtblObjectWithSite);
+        *ppvObj = &(This->lpvtblObjectWithSite);
     }
     else if(IsEqualIID(riid, &IID_IShellPropSheetExt))
     {
-        *ppvObj = (void *)&(This->lpvtblPropSheetExt);
+        *ppvObj = &(This->lpvtblPropSheetExt);
     }
 
     if(*ppvObj)
@@ -299,7 +299,7 @@ static ULONG ShellLink_Release( IShellLinkImpl *This )
     if (This->pPidl)
         ILFree(This->pPidl);
 
-    LocalFree((HANDLE)This);
+    LocalFree(This);
 
     return 0;
 }
@@ -308,7 +308,7 @@ static HRESULT ShellLink_GetClassID( IShellLinkImpl *This, CLSID *pclsid )
 {
     TRACE("%p %p\n", This, pclsid);
 
-    memcpy( pclsid, &CLSID_ShellLink, sizeof (CLSID) );
+    *pclsid = CLSID_ShellLink;
     return S_OK;
 }
 
@@ -1650,6 +1650,8 @@ static HRESULT WINAPI IShellLinkA_fnSetPath(IShellLinkA * iface, LPCSTR pszFile)
     IShellLinkImpl *This = (IShellLinkImpl *)iface;
 
     TRACE("(%p)->(path=%s)\n",This, pszFile);
+
+    if (!pszFile) return E_INVALIDARG;
 
     str = HEAP_strdupAtoW(GetProcessHeap(), 0, pszFile);
     if( !str )

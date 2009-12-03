@@ -276,15 +276,12 @@ HalCalibratePerformanceCounter(
 }
 
 
-BOOLEAN
+VOID
 NTAPI
-HalDisableSystemInterrupt(
-  ULONG Vector,
+HalDisableSystemInterrupt(ULONG Vector,
   KIRQL Irql)
 {
   UNIMPLEMENTED;
-
-  return TRUE;
 }
 
 VOID

@@ -442,6 +442,13 @@ NewDirectSound(
     LPOLESTR pStr;
     LPCDirectSoundImpl This;
 
+    /* check param */
+    if (!ppvObject)
+    {
+        /* invalid param */
+        return E_INVALIDARG;
+    }
+
     /* check requested interface */
     if (!IsEqualIID(riid, &IID_IUnknown) && !IsEqualIID(riid, &IID_IDirectSound) && !IsEqualIID(riid, &IID_IDirectSound8))
     {

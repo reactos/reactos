@@ -2,7 +2,6 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbswitch" type="win32gui" installbase="system32" installname="kbswitch.exe" unicode="yes">
 	<include base="kbswitch">.</include>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>shell32</library>
