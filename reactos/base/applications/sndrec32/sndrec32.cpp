@@ -11,8 +11,10 @@
 #include "stdafx.h"
 #include "sndrec32.h"
 
-#include "kkaudio.hpp"
 
+
+
+//#pragma comment(lib, "comctl32.lib")
 
 
 HINSTANCE hInst;								
@@ -31,6 +33,7 @@ HWND main_win;
 HWND slider;
 HWND buttons[5];
 HBITMAP butbmps[5];
+HBITMAP butbmps_dis[5];
 WNDPROC buttons_std_proc;
 
 BOOL butdisabled[5];
@@ -42,19 +45,15 @@ DWORD slider_pos;
 WORD slider_min;
 WORD slider_max;
 
-long long samples_max;
+DWORD samples_max;
 
 OPENFILENAME ofn;
 TCHAR file_path[MAX_PATH];
 BOOL path_set;
 
-using snd::audio_membuffer;
-using snd::audio_wavein;
-using snd::audio_waveout;
-
-audio_membuffer * AUD_BUF;
-audio_waveout * AUD_OUT;
-audio_wavein * AUD_IN;
+snd::audio_membuffer * AUD_BUF;
+snd::audio_waveout * AUD_OUT;
+snd::audio_wavein * AUD_IN;
 
 
 BOOL s_recording;
@@ -88,9 +87,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     butbmps[3] = LoadBitmap( hInstance, MAKEINTRESOURCE( IDB_BITMAP2_STOP ));
     butbmps[4] = LoadBitmap( hInstance, MAKEINTRESOURCE( IDB_BITMAP2_REC ));
 
-
-
-
+	butbmps_dis[0] = LoadBitmap( hInstance, MAKEINTRESOURCE( IDB_BITMAP2_START_DIS ));
+	butbmps_dis[1] = LoadBitmap( hInstance, MAKEINTRESOURCE( IDB_BITMAP2_END_DIS ));
+	butbmps_dis[2] = LoadBitmap( hInstance, MAKEINTRESOURCE( IDB_BITMAP2_PLAY_DIS ));
+	butbmps_dis[3] = LoadBitmap( hInstance, MAKEINTRESOURCE( IDB_BITMAP2_STOP_DIS ));
+	butbmps_dis[4] = LoadBitmap( hInstance, MAKEINTRESOURCE( IDB_BITMAP2_REC_DIS ));
 
 
     snd::audio_membuffer AUD_buffer( snd::A44100_16BIT_STEREO );
@@ -123,10 +124,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     samples_max = AUD_buffer.total_samples();
 
 
+	LoadString(hInstance, 
+		IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 
 
-    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadString(hInstance, IDC_REACTOS_SNDREC32, szWindowClass, MAX_LOADSTRING);
+
+	LoadString(hInstance, 
+		IDC_REACTOS_SNDREC32, szWindowClass, MAX_LOADSTRING);
+
+
+
     MyRegisterClass(hInstance);
 
 
@@ -136,7 +143,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return FALSE;
     }
 
-    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_REACTOS_SNDREC32));
+	hAccelTable = LoadAccelerators(hInstance, 
+				MAKEINTRESOURCE( IDC_REACTOS_SNDREC32 ));
 
 
 
@@ -188,12 +196,12 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra		= 0;
     wcex.cbWndExtra		= 0;
     wcex.hInstance		= hInstance;
-    wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REACTOS_SNDREC32LL));
+	wcex.hIcon			= LoadIcon( hInstance, MAKEINTRESOURCE( IDI_SNDREC32 ));
     wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground	= (HBRUSH)(16);
     wcex.lpszMenuName	= MAKEINTRESOURCE(IDR_MENU1);
     wcex.lpszClassName	= szWindowClass;
-    wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_REACTOS_SNDREC32LL));
+	wcex.hIconSm		= LoadIcon( wcex.hInstance, MAKEINTRESOURCE( IDI_SNDREC32 ));
 
 
     return RegisterClassEx(&wcex);
@@ -284,9 +292,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             }
 
-            butdisabled[ i ] = TRUE;
-
-
 
             //
             // Realize the button bmp image
@@ -294,8 +299,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             SendMessage(buttons[i], BM_SETIMAGE, ( WPARAM )IMAGE_BITMAP, ( LPARAM )butbmps[i]);
 
-
             UpdateWindow( buttons[i] );
+
+			disable_but( i );
 
         }
 
@@ -325,8 +331,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // Sets slider limits
         //
 
-        //slider_min = 0;
-        //slider_max = 100;
 
         SendMessage( 
             slider, 
@@ -338,12 +342,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         UpdateWindow( slider );
 
+		enable_but( BUTREC_ID );
 
-        //
-        // Enables REC button.
-        //
-
-        butdisabled[ BUTREC_ID ] = FALSE;
+		EnableWindow( slider, FALSE );
 
 
 
@@ -367,7 +368,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case SB_PAGERIGHT:
             case SB_PAGELEFT:
             case TB_THUMBTRACK:
+
+
+			//
+			// If the user touch the slider bar,
+			// set the audio start position properly
+			//
+
+
                 slider_pos = SendMessage(slider, TBM_GETPOS, 0, 0); 
+
+
+			AUD_BUF->set_position(
+					AUD_BUF->audinfo().bytes_in_samples(
+									(( slider_pos * samples_max ) / slider_max )
+								)
+				);
+			
+
                 break;
 
             }
@@ -407,16 +425,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 AUD_BUF->reset();
 
-                butdisabled[ BUTREC_ID   ] = FALSE;
-                butdisabled[ BUTSTART_ID ] = TRUE;
-                butdisabled[ BUTEND_ID   ] = TRUE;
-                butdisabled[ BUTSTOP_ID  ] = TRUE;
-                butdisabled[ BUTPLAY_ID  ] = TRUE;
+				enable_but( BUTREC_ID );
+				disable_but( BUTSTART_ID );
+				disable_but( BUTEND_ID );
+				disable_but( BUTSTOP_ID );
+				disable_but( BUTPLAY_ID );
+
 
                 samples_max = AUD_BUF->total_samples();
                 slider_pos = 0;
 
                 SendMessage(slider, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) slider_pos);
+
+				EnableMenuItem( GetMenu( hWnd ), ID_FILE_SAVEAS, MF_GRAYED );
+				EnableMenuItem( GetMenu( hWnd ), ID_FILE_SAVE, MF_GRAYED );
+
+				isnew = TRUE;
+
+				ZeroMemory( file_path, MAX_PATH );
+
+				EnableWindow( slider, FALSE );
 
             }
 
@@ -442,6 +470,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if( GetOpenFileName( &ofn ))
             {
                 open_wav( file_path );
+				EnableMenuItem( GetMenu( hWnd ), ID_FILE_SAVE, MF_ENABLED );
+				EnableMenuItem( GetMenu( hWnd ), ID_FILE_SAVEAS, MF_ENABLED );
+
+				EnableWindow( slider, TRUE );
+
             }
 
             break;
@@ -471,9 +504,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             if ( GetSaveFileName ( &ofn )) 
             {
-
                 write_wav( file_path );
 
+				EnableMenuItem( GetMenu( hWnd ), ID_FILE_SAVE, MF_ENABLED );
             }
 
             break;
@@ -488,22 +521,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //
 
         case BUTSTART_ID:
-            Beep(200,200);
+
+			AUD_BUF->set_position_start();
+
+			slider_pos = 0;
+
+			SendMessage( slider, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) slider_pos );
+
             break;
 
 
         case BUTEND_ID:
-            Beep(300,200);
+			//Beep(300,200);
             break;
 
         case BUTPLAY_ID:
 
             AUD_OUT->play();
 
-            butdisabled[ BUTSTART_ID ] = TRUE;
-            butdisabled[ BUTEND_ID   ] = TRUE;
-            butdisabled[ BUTREC_ID   ] = TRUE;
-            butdisabled[ BUTPLAY_ID  ] = TRUE;
+			disable_but( BUTSTART_ID );
+			disable_but( BUTEND_ID );
+			disable_but( BUTREC_ID );
+			disable_but( BUTPLAY_ID );
+
 
             SetTimer( hWnd, 1, 250, 0 );
 
@@ -515,11 +555,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 s_recording = FALSE;
 
                 AUD_IN->stop_recording();
-
-                butdisabled[ BUTSTART_ID ] = FALSE;
-                butdisabled[ BUTEND_ID   ] = FALSE;
-                butdisabled[ BUTREC_ID   ] = FALSE;
-                butdisabled[ BUTPLAY_ID  ] = FALSE;
 
 
 
@@ -535,14 +570,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 EnableMenuItem((HMENU)IDR_MENU1, ID_FILE_SAVEAS, MF_ENABLED );
 
+
+				enable_but( BUTSTART_ID );
+				enable_but( BUTEND_ID );
+				enable_but( BUTREC_ID );
+				enable_but( BUTPLAY_ID );
+
+				EnableMenuItem( GetMenu( hWnd ), ID_FILE_SAVEAS, MF_ENABLED );
+				EnableWindow( slider, TRUE );
+
+
+
             } else {
 
                 AUD_OUT->pause();
 
-                butdisabled[ BUTSTART_ID ] = FALSE;
-                butdisabled[ BUTEND_ID   ] = FALSE;
-                butdisabled[ BUTREC_ID   ] = FALSE;
-                butdisabled[ BUTPLAY_ID  ] = FALSE;
+				enable_but( BUTSTART_ID );
+				enable_but( BUTEND_ID );
+				enable_but( BUTREC_ID );
+				enable_but( BUTPLAY_ID );
 
             }
 
@@ -558,15 +604,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             AUD_IN->start_recording();
 
-            butdisabled[ BUTSTOP_ID  ] = FALSE;
-            butdisabled[ BUTSTART_ID ] = TRUE;
-            butdisabled[ BUTEND_ID   ] = TRUE;
-            butdisabled[ BUTREC_ID   ] = TRUE;
-            butdisabled[ BUTPLAY_ID  ] = TRUE;
+			enable_but( BUTSTOP_ID );
 
-            isnew = FALSE;
+			disable_but( BUTSTART_ID );
+			disable_but( BUTEND_ID );
+			disable_but( BUTREC_ID );
+			disable_but( BUTPLAY_ID );
 
+			isnew = FALSE;
 
+			EnableWindow( slider, FALSE );
 
             SetTimer( hWnd, 1, 150, 0 );
 
@@ -586,7 +633,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             KillTimer(hWnd, 1);
             slider_pos = 0;
 
-            butdisabled[ BUTPLAY_ID ] = FALSE;
+			enable_but( BUTPLAY_ID );
 
             stopped_flag = FALSE;
         }
@@ -613,6 +660,61 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
+}
+
+
+
+
+
+void l_play_finished ( void )
+{
+
+	stopped_flag = true;
+
+
+	enable_but( BUTSTART_ID );
+	enable_but( BUTEND_ID );
+	enable_but( BUTREC_ID );
+	enable_but( BUTPLAY_ID );
+
+	
+
+}
+
+void l_audio_arrival ( unsigned int samples_arrival )
+{
+
+
+	slider_pos += (DWORD) (( slider_max * samples_arrival ) / samples_max );
+	
+
+}
+
+void l_buffer_resized ( unsigned int new_size )
+{
+
+
+
+
+
+}
+
+VOID enable_but( DWORD id )
+{
+
+	butdisabled[ id ] = FALSE;
+
+	SendMessage(buttons[ id ], BM_SETIMAGE, ( WPARAM )IMAGE_BITMAP, ( LPARAM )butbmps[ id ]);
+
+
+}
+VOID disable_but( DWORD id )
+{
+
+	butdisabled[ id ] = TRUE;
+
+	SendMessage(buttons[ id ], BM_SETIMAGE, ( WPARAM )IMAGE_BITMAP, ( LPARAM )butbmps_dis[ id ]);
+
 }
 
 
@@ -663,14 +765,9 @@ BOOL open_wav( TCHAR * f )
 
     if ( !b )
     {
-        DWORD t = GetLastError();
-        TCHAR p[100];
-        wsprintf(p,TEXT("Errore n: %i"),t);
-
         MessageBox( 
             main_win, 
-            //TEXT("Cannot read RIFF header."), 
-            p,
+					TEXT("Cannot read RIFF header."), 
             TEXT("ERROR"), 
             MB_OK|MB_ICONERROR
             );
@@ -721,25 +818,8 @@ BOOL open_wav( TCHAR * f )
     bytes_recorded_in_wav = r.chunksize - 36;
 
 
-    /*
-    unsigned char * gg = (unsigned char*)&bytes_recorded_in_wav;
-
-    gg[0] = gg[3];
-    gg[1] = gg[2];
-
-    bytes_recorded_in_wav = (DWORD) *gg;
-
-
-
-    TCHAR p [100];
-    wsprintf(p,TEXT("bytes: %i"),bytes_recorded_in_wav);
-    MessageBox(0,p,0,0);
-
-    */
-
     if ( bytes_recorded_in_wav == 0 )
     {
-
         MessageBox( 
             main_win, 
             TEXT("Cannot read file. No audio data."), 
@@ -795,12 +875,11 @@ BOOL open_wav( TCHAR * f )
 
     CloseHandle( file );
 
-    butdisabled[ BUTPLAY_ID ] = FALSE;
-    butdisabled[ BUTSTOP_ID ] = FALSE;
-    butdisabled[ BUTEND_ID   ] = FALSE;
-    butdisabled[ BUTSTART_ID   ] = FALSE;
-    butdisabled[ BUTREC_ID   ] = FALSE;
-
+	enable_but( BUTPLAY_ID );
+	enable_but( BUTSTOP_ID );
+	enable_but( BUTSTART_ID );
+	enable_but( BUTEND_ID );
+	enable_but( BUTREC_ID );
 
 
     samples_max = AUD_BUF->samples_received();
@@ -994,49 +1073,3 @@ BOOL
 
     return TRUE;
 }
-
-
-
-void l_play_finished ( void )
-{
-
-    stopped_flag = true;
-
-
-
-}
-
-void l_audio_arrival ( unsigned int samples_arrival )
-{
-
-
-    slider_pos += (DWORD) (( slider_max * samples_arrival ) / samples_max );
-
-
-}
-
-void l_buffer_resized ( unsigned int new_size )
-{
-
-
-
-
-
-}
-
-VOID enable_but( DWORD id )
-{
-
-
-
-
-
-}
-VOID disable_but( DWORD id )
-{
-
-
-
-}
-
-

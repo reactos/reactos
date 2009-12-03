@@ -108,7 +108,7 @@ void
     if ( err != MMSYSERR_NOERROR )
     {
         //TODO: throw error
-        printf("acmOpen error: %i\n", err);
+		MessageBox( 0, _T("acmOpen error: %i"), _T("ERROR"), MB_ICONERROR );
 
     }
 
@@ -138,7 +138,8 @@ void
     if ( err != MMSYSERR_NOERROR )
     {
         //TODO: throw error
-        printf("acmSize error\n");
+		MessageBox( 0, _T("acmStreamSize error"), _T("ERROR"), MB_ICONERROR );
+
 
     }
 
@@ -178,7 +179,9 @@ void
     if ( err != MMSYSERR_NOERROR )
     {
         //TODO: throw error
-        printf("prep. header error\n");
+		MessageBox( 0, _T("acmStreamPrepareHeader error"), _T("ERROR"), MB_ICONERROR );
+
+
     }
 
 
@@ -243,6 +246,8 @@ void
 
 
                 //TODO: throw error
+				MessageBox( 0, _T("acmStreamUnPrepareHeader error"), _T("ERROR"), MB_ICONERROR );
+
 
             }
         }
@@ -280,6 +285,9 @@ void
 
 
             //TODO: throw error!
+
+			MessageBox( 0, _T("acmStreamClose error"), _T("ERROR"), MB_ICONERROR );
+
 
         }
 
@@ -357,7 +365,8 @@ void
         if ( err != MMSYSERR_NOERROR )
         {
             //TODO: throw error
-            printf("acm convert error\n");
+			MessageBox( 0, _T("acmStreamConvert error"), _T("ERROR"), MB_ICONERROR );
+
 
         }
 
@@ -369,7 +378,7 @@ void
         while(( ACMSTREAMHEADER_STATUSF_DONE & acm_header.fdwStatus ) == 0 );
 
 
-        printf("Processed successfully %lu bytes of audio.\n", acm_header.cbDstLengthUsed );
+		//printf("Processed successfully %i bytes of audio.\n", acm_header.cbDstLengthUsed );
 
 
 

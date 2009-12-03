@@ -33,8 +33,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_REACTOS_SNDREC32LL  ICON                    "reactOS_sndrec32.ico"
-IDI_SMALL               ICON                    "small.ico"
+IDI_SNDREC32            ICON                    "reactOS_sndrec32.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -125,6 +124,11 @@ IDB_BITMAP2_END         BITMAP                  "but_end.bmp"
 IDB_BITMAP2_PLAY        BITMAP                  "but_play.bmp"
 IDB_BITMAP2_STOP        BITMAP                  "but_stop.bmp"
 IDB_BITMAP2_REC         BITMAP                  "but_rec.bmp"
+IDB_BITMAP2_END_DIS     BITMAP                  "but_end_dis.bmp"
+IDB_BITMAP2_PLAY_DIS    BITMAP                  "but_play_dis.bmp"
+IDB_BITMAP2_REC_DIS     BITMAP                  "but_rec_dis.bmp"
+IDB_BITMAP2_START_DIS   BITMAP                  "but_start_dis.bmp"
+IDB_BITMAP2_STOP_DIS    BITMAP                  "but_stop_dis.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -138,7 +142,7 @@ BEGIN
         MENUITEM "New",                         ID_NEW
         MENUITEM "Open...",                     ID_FILE_OPEN
         MENUITEM "Save",                        ID_FILE_SAVE, GRAYED
-        MENUITEM "Save As...",                  ID_FILE_SAVEAS
+        MENUITEM "Save As...",                  ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Exit",                        ID_EXIT
     END

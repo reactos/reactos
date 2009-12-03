@@ -12,6 +12,13 @@
 _AUDIO_NAMESPACE_START_
 
 
+
+
+//////////////////////////////////////
+/////// Protected Functions  /////////
+//////////////////////////////////////
+
+
 void 
     audio_membuffer::alloc_mem_( unsigned int bytes )
 {

@@ -531,7 +531,7 @@ audio_waveout::play( void )
     // Reads the audio from the start.
     //
 
-    audio_buf.set_position_start();
+	//audio_buf.set_position_start();
 
     
 
@@ -643,7 +643,7 @@ audio_waveout::stop( void )
     if ( err != MMSYSERR_NOERROR )
     {
 
-        MessageBox(0, _T("err waveout reset.\n"),_T("ERROR"), 0);
+		MessageBox(0, _T("err WaveOutReset.\n"),_T("ERROR"), 0);
         //TODO: throw error
 
     }

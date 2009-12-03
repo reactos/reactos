@@ -6,7 +6,6 @@
  * PROGRAMMERS:     Marco Pagliaricci <ms_blue (at) hotmail (dot) it>
  */
 
-
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "audio_producer.hpp"
 

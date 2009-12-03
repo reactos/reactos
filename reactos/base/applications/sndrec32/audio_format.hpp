@@ -122,6 +122,13 @@ class audio_format
 
 		}
 
+		unsigned int bytes_in_samples( unsigned int samples ) const
+		{
+
+			return (( samples * ( bits_psample / 8 )) * chan );
+
+		}
+
 };
 
 

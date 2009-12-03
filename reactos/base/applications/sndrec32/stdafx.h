@@ -11,7 +11,7 @@
 // File di intestazione di Windows:
 #include <windows.h>
 #include <commctrl.h>
-#include <Commdlg.h>
+#include <commdlg.h>
 
 // File di intestazione Runtime C
 #include <stdlib.h>
