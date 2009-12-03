@@ -53,38 +53,38 @@ struct SortFilesAscending
 	}
 };
 
-MSVCConfiguration::MSVCConfiguration ( const OptimizationType optimization, const HeadersType headers, const std::string &name )
+
+VCProjMaker::VCProjMaker ( )
 {
-	this->optimization = optimization;
-	this->headers = headers;
-	if ( name != "" )
-		this->name = name;
-	else
+	vcproj_file = "";
+}
+
+VCProjMaker::VCProjMaker ( Configuration& buildConfig,
+						   const std::vector<MSVCConfiguration*>& msvc_configs,
+						   std::string filename )
+{
+	configuration = buildConfig;
+	m_configurations = msvc_configs;
+	vcproj_file = filename;
+
+	OUT = fopen ( vcproj_file.c_str(), "wb" );
+
+	if ( !OUT )
 	{
-		std::string headers_name;
-		if ( headers == MSVCHeaders )
-			headers_name = "";
-		else
-			headers_name = " - ReactOS headers";
-		if ( optimization == Debug )
-			this->name = "Debug" + headers_name;
-		else if ( optimization == Release )
-			this->name = "Release" + headers_name;
-		else if ( optimization == Speed )
-			this->name = "Speed" + headers_name;
-		else if ( optimization == RosBuild )
-			this->name = "RosBuild";
-		else
-			this->name = "Unknown" + headers_name;
+		printf ( "Could not create file '%s'.\n", vcproj_file.c_str() );
 	}
 }
 
+VCProjMaker::~VCProjMaker()
+{
+	fclose ( OUT );
+}
+
 void
-MSVCBackend::_generate_vcproj ( const Module& module )
+VCProjMaker::_generate_proj_file ( const Module& module )
 {
 	size_t i;
 
-	string vcproj_file = VcprojFileName(module);
 	string computername;
 	string username;
 
@@ -108,7 +108,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		vcproj_file_user = vcproj_file + "." + computername + "." + username + ".user";
 
 	printf ( "Creating MSVC.NET project: '%s'\n", vcproj_file.c_str() );
-	FILE* OUT = fopen ( vcproj_file.c_str(), "wb" );
 
 	string path_basedir = module.GetPathToBaseDir ();
 	string intenv = Environment::GetIntermediatePath ();
@@ -263,11 +262,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		if ( cfg.optimization == RosBuild )
 		{
-			_generate_makefile_configuration( OUT, module, cfg );
+			_generate_makefile_configuration( module, cfg );
 		}
 		else
 		{
-			_generate_standard_configuration( OUT, module, cfg, binaryType );
+			_generate_standard_configuration( module, cfg, binaryType );
 		}
 	}
 	fprintf ( OUT, "\t</Configurations>\r\n" );
@@ -440,70 +439,15 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	fprintf ( OUT, "\t<Globals>\r\n" );
 	fprintf ( OUT, "\t</Globals>\r\n" );
 	fprintf ( OUT, "</VisualStudioProject>\r\n" );
-	fclose ( OUT );
-
-#if 0
-	/* User configuration file */
-	if (vcproj_file_user != "")
-	{
-		OUT = fopen ( vcproj_file_user.c_str(), "wb" );
-		fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
-		fprintf ( OUT, "<VisualStudioUserFile\r\n" );
-		fprintf ( OUT, "\tProjectType=\"Visual C++\"\r\n" );
-		fprintf ( OUT, "\tVersion=\"%s\"\r\n", configuration.VSProjectVersion.c_str() );
-		fprintf ( OUT, "\tShowAllFiles=\"false\"\r\n" );
-		fprintf ( OUT, "\t>\r\n" );
-
-		fprintf ( OUT, "\t<Configurations>\r\n" );
-		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
-		{
-			const MSVCConfiguration& cfg = *m_configurations[icfg];
-			fprintf ( OUT, "\t\t<Configuration\r\n" );
-			fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
-			fprintf ( OUT, "\t\t\t>\r\n" );
-			fprintf ( OUT, "\t\t\t<DebugSettings\r\n" );
-			if ( module_type == ".cpl" )
-			{
-				fprintf ( OUT, "\t\t\t\tCommand=\"rundll32.exe\"\r\n" );
-				fprintf ( OUT, "\t\t\t\tCommandArguments=\" shell32,Control_RunDLL &quot;$(TargetPath)&quot;,@\"\r\n" );
-			}
-			else
-			{
-				fprintf ( OUT, "\t\t\t\tCommand=\"$(TargetPath)\"\r\n" );
-				fprintf ( OUT, "\t\t\t\tCommandArguments=\"\"\r\n" );
-			}
-			fprintf ( OUT, "\t\t\t\tAttach=\"false\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tDebuggerType=\"3\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tRemote=\"1\"\r\n" );
-			string remote_machine = "\t\t\t\tRemoteMachine=\"" + computername + "\"\r\n";
-			fprintf ( OUT, remote_machine.c_str() );
-			fprintf ( OUT, "\t\t\t\tRemoteCommand=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tHttpUrl=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tPDBPath=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tSQLDebugging=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tEnvironment=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tEnvironmentMerge=\"true\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tDebuggerFlavor=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tMPIRunCommand=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tMPIRunArguments=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tMPIRunWorkingDirectory=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tApplicationCommand=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tApplicationArguments=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tShimCommand=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tMPIAcceptMode=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tMPIAcceptFilter=\"\"\r\n" );
-			fprintf ( OUT, "\t\t\t/>\r\n" );
-			fprintf ( OUT, "\t\t</Configuration>\r\n" );
-		}
-		fprintf ( OUT, "\t</Configurations>\r\n" );
-		fprintf ( OUT, "</VisualStudioUserFile>\r\n" );
-		fclose ( OUT );
-	}
-#endif
 }
 
-void MSVCBackend::_generate_standard_configuration( FILE* OUT,
-													const Module& module,
+void VCProjMaker::_generate_user_configuration ()
+{
+	// Call base implementation
+	ProjMaker::_generate_user_configuration ();
+}
+
+void VCProjMaker::_generate_standard_configuration( const Module& module,
 													const MSVCConfiguration& cfg,
 													BinaryType binaryType )
 {
@@ -942,7 +886,7 @@ void MSVCBackend::_generate_standard_configuration( FILE* OUT,
 
 
 void
-MSVCBackend::_generate_makefile_configuration( FILE* OUT, const Module& module, const MSVCConfiguration& cfg )
+VCProjMaker::_generate_makefile_configuration( const Module& module, const MSVCConfiguration& cfg )
 {
 	string path_basedir = module.GetPathToBaseDir ();
 	string intenv = Environment::GetIntermediatePath ();
@@ -1001,249 +945,4 @@ MSVCBackend::_generate_makefile_configuration( FILE* OUT, const Module& module, 
 
 	fprintf ( OUT, "\t\t\t/>\r\n" );
 	fprintf ( OUT, "\t\t</Configuration>\r\n" );
-}
-
-
-std::string
-MSVCBackend::_strip_gcc_deffile(std::string Filename, std::string sourcedir, std::string objdir)
-{
-	std::string NewFilename = Environment::GetIntermediatePath () + "\\" + objdir + "\\" + Filename;
-	// we don't like infinite loops - so replace it in two steps
-	NewFilename = _replace_str(NewFilename, ".def", "_msvc.de");
-	NewFilename = _replace_str(NewFilename, "_msvc.de", "_msvc.def");
-	Filename = sourcedir + "\\" + Filename;
-
-	Directory dir(objdir);
-	dir.GenerateTree(IntermediateDirectory, false);
-
-	std::fstream in_file(Filename.c_str(), std::ios::in);
-	std::fstream out_file(NewFilename.c_str(), std::ios::out);
-	std::string::size_type pos;
-	DWORD i = 0;
-
-	std::string line;
-	while (std::getline(in_file, line))
-	{
-		pos = line.find("@", 0);
-		while (std::string::npos != pos)
-		{
-			if (pos > 1)
-			{
-				// make sure it is stdcall and no ordinal
-				if (line[pos -1] != ' ')
-				{
-					i = 0;
-					while (true)
-					{
-						i++;
-						if ((line[pos + i] < '0') || (line[pos + i] > '9'))
-							break;
-					}
-					line.replace(pos, i, "");
-				}
-			}
-			pos = line.find("@", pos + 1);
-		}
-
-		line += "\n";
-		out_file << line;
-	}
-	in_file.close();
-	out_file.close();
-
-	return NewFilename;
-}
-
-std::string
-MSVCBackend::_replace_str(std::string string1, const std::string &find_str, const std::string &replace_str)
-{
-	std::string::size_type pos = string1.find(find_str, 0);
-	int intLen = find_str.length();
-
-	while(std::string::npos != pos)
-	{
-		string1.replace(pos, intLen, replace_str);
-		pos = string1.find(find_str, intLen + pos);
-	}
-
-	return string1;
-}
-
-std::string
-MSVCBackend::_get_solution_version ( void )
-{
-	string version;
-
-	if (configuration.VSProjectVersion.empty())
-		configuration.VSProjectVersion = MS_VS_DEF_VERSION;
-
-	else if (configuration.VSProjectVersion == "7.00")
-		version = "7.00";
-
-	else if (configuration.VSProjectVersion == "7.10")
-		version = "8.00";
-
-	else if (configuration.VSProjectVersion == "8.00")
-		version = "9.00";
-
-	else if (configuration.VSProjectVersion == "9.00")
-		version = "10.00";
-
-	else if (configuration.VSProjectVersion == "10.00")
-		version = "11.00";
-
-	return version;
-}
-
-std::string
-MSVCBackend::_get_studio_version ( void )
-{
-	string version;
-
-	if (configuration.VSProjectVersion.empty())
-		configuration.VSProjectVersion = MS_VS_DEF_VERSION;
-
-	else if (configuration.VSProjectVersion == "7.00")
-		version = "2002";
-
-	else if (configuration.VSProjectVersion == "7.10")
-		version = "2003";
-
-	else if (configuration.VSProjectVersion == "8.00")
-		version = "2005";
-
-	else if (configuration.VSProjectVersion == "9.00")
-		version = "2008";
-
-	else if (configuration.VSProjectVersion == "10.00")
-		version = "2010";
-
-	return version;
-}
-
-void
-MSVCBackend::_generate_sln_header ( FILE* OUT )
-{
-	fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version %s\r\n", _get_solution_version().c_str() );
-	fprintf ( OUT, "# Visual Studio %s\r\n", _get_studio_version().c_str() );
-	fprintf ( OUT, "\r\n" );
-}
-
-
-void
-MSVCBackend::_generate_sln_project (
-	FILE* OUT,
-	const Module& module,
-	std::string vcproj_file,
-	std::string sln_guid,
-	std::string vcproj_guid,
-	const std::vector<Library*>& libraries )
-{
-	vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
-
-	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
-
-	//FIXME: only omit ProjectDependencies in VS 2005 when there are no dependencies
-	//NOTE: VS 2002 do not use ProjectSection; it uses GlobalSection instead
-	if ((configuration.VSProjectVersion == "7.10") || (libraries.size() > 0)) {
-		fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
-		for ( size_t i = 0; i < libraries.size(); i++ )
-		{
-			const Module& module = *libraries[i]->importedModule;
-			fprintf ( OUT, "\t\t%s = %s\r\n", module.guid.c_str(), module.guid.c_str() );
-		}
-		fprintf ( OUT, "\tEndProjectSection\r\n" );
-	}
-
-	fprintf ( OUT, "EndProject\r\n" );
-}
-
-
-void
-MSVCBackend::_generate_sln_footer ( FILE* OUT )
-{
-	fprintf ( OUT, "Global\r\n" );
-	fprintf ( OUT, "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n" );
-	for ( size_t i = 0; i < m_configurations.size(); i++ )
-		fprintf ( OUT, "\t\t%s = %s\r\n", m_configurations[i]->name.c_str(), m_configurations[i]->name.c_str() );
-	fprintf ( OUT, "\tEndGlobalSection\r\n" );
-
-	fprintf ( OUT, "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
-	for( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p )
-	{
-		Module& module = *p->second;
-		std::string guid = module.guid;
-		_generate_sln_configurations ( OUT, guid.c_str() );
-	}
-	fprintf ( OUT, "\tEndGlobalSection\r\n" );
-/*
-	fprintf ( OUT, "\tGlobalSection(ExtensibilityGlobals) = postSolution\r\n" );
-	fprintf ( OUT, "\tEndGlobalSection\r\n" );
-	fprintf ( OUT, "\tGlobalSection(ExtensibilityAddIns) = postSolution\r\n" );
-	fprintf ( OUT, "\tEndGlobalSection\r\n" );
-*/
-	if (configuration.VSProjectVersion == "7.00") {
-		fprintf ( OUT, "\tGlobalSection(ProjectDependencies) = postSolution\r\n" );
-		//FIXME: Add dependencies for VS 2002
-		fprintf ( OUT, "\tEndGlobalSection\r\n" );
-	}
-	else {
-		fprintf ( OUT, "\tGlobalSection(SolutionProperties) = preSolution\r\n" );
-		fprintf ( OUT, "\t\tHideSolutionNode = FALSE\r\n" );
-		fprintf ( OUT, "\tEndGlobalSection\r\n" );
-	}
-
-	fprintf ( OUT, "EndGlobal\r\n" );
-	fprintf ( OUT, "\r\n" );
-}
-
-
-void
-MSVCBackend::_generate_sln_configurations ( FILE* OUT, std::string vcproj_guid )
-{
-	for ( size_t i = 0; i < m_configurations.size (); i++)
-	{
-		const MSVCConfiguration& cfg = *m_configurations[i];
-		fprintf ( OUT, "\t\t%s.%s|Win32.ActiveCfg = %s|Win32\r\n", vcproj_guid.c_str(), cfg.name.c_str(), cfg.name.c_str() );
-		fprintf ( OUT, "\t\t%s.%s|Win32.Build.0 = %s|Win32\r\n", vcproj_guid.c_str(), cfg.name.c_str(), cfg.name.c_str() );
-	}
-}
-
-void
-MSVCBackend::_generate_sln ( FILE* OUT )
-{
-	string sln_guid = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
-	vector<string> guids;
-
-	_generate_sln_header(OUT);
-	// TODO FIXME - is it necessary to sort them?
-	for( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p )
-	{
-		Module& module = *p->second;
-
-		std::string vcproj_file = VcprojFileName ( module );
-		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, module.guid, module.non_if_data.libraries );
-	}
-	_generate_sln_footer ( OUT );
-}
-
-const Property*
-MSVCBackend::_lookup_property ( const Module& module, const std::string& name ) const
-{
-	std::map<std::string, Property*>::const_iterator p;
-
-	/* Check local values */
-	p = module.non_if_data.properties.find(name);
-
-	if ( p != module.non_if_data.properties.end() )
-		return p->second;
-
-	// TODO FIXME - should we check local if-ed properties?
-	p = module.project.non_if_data.properties.find(name);
-
-	if ( p != module.project.non_if_data.properties.end() )
-		return p->second;
-
-	// TODO FIXME - should we check global if-ed properties?
-	return NULL;
 }

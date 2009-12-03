@@ -4,6 +4,7 @@
  * Copyright (C) 2005 Steven Edwards
  * Copyright (C) 2005 Royce Mitchell
  * Copyright (C) 2006 Christoph von Wittich
+ * Copyright (C) 2009 Ged Murphy
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +49,31 @@ static class MSVCFactory : public Backend::Factory
 
 } factory;
 
+MSVCConfiguration::MSVCConfiguration ( const OptimizationType optimization, const HeadersType headers, const std::string &name )
+{
+	this->optimization = optimization;
+	this->headers = headers;
+	if ( name != "" )
+		this->name = name;
+	else
+	{
+		std::string headers_name;
+		if ( headers == MSVCHeaders )
+			headers_name = "";
+		else
+			headers_name = " - ReactOS headers";
+		if ( optimization == Debug )
+			this->name = "Debug" + headers_name;
+		else if ( optimization == Release )
+			this->name = "Release" + headers_name;
+		else if ( optimization == Speed )
+			this->name = "Speed" + headers_name;
+		else if ( optimization == RosBuild )
+			this->name = "RosBuild";
+		else
+			this->name = "Unknown" + headers_name;
+	}
+}
 
 MSVCBackend::MSVCBackend(Project &project,
 	Configuration& configuration) : Backend(project, configuration)
@@ -89,28 +115,16 @@ void MSVCBackend::Process()
 	}
 	string filename_sln ( ProjectNode.name );
 
-	if ( configuration.VSProjectVersion == "6.00" )
-		filename_sln += "_auto.dsw";
-	else
-		filename_sln += "_auto.sln";
-
+	filename_sln += "_auto.sln";
 	printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
 
+	// Write out the project files
 	ProcessModules();
-	m_slnFile = fopen ( filename_sln.c_str(), "wb" );
 
-	if ( !m_slnFile )
-	{
-		printf ( "Could not create file '%s'.\n", filename_sln.c_str() );
-		return;
-	}
+	// Write the solution file
+	SlnMaker slnMaker( configuration, ProjectNode, m_configurations, filename_sln );
+	slnMaker._generate_sln ( _get_solution_version(), _get_studio_version() );
 
-	if ( configuration.VSProjectVersion == "6.00" )
-		_generate_wine_dsw ( m_slnFile );
-	else
-		_generate_sln ( m_slnFile );
-
-	fclose ( m_slnFile );
 	printf ( "Done.\n" );
 }
 
@@ -122,12 +136,14 @@ void MSVCBackend::ProcessModules()
 
 		module.guid = _gen_guid();
 
-		if (configuration.VSProjectVersion == "6.00")
-			_generate_dsp ( module );
-		else if (configuration.VSProjectVersion == "10.00")
-			_generate_vcxproj ( module );
+		ProjMaker *projMaker;
+
+		if (configuration.VSProjectVersion == "10.00")
+			projMaker = new VCXProjMaker( configuration, m_configurations, "test" );
 		else
-			_generate_vcproj ( module );
+			projMaker = new VCProjMaker( configuration, m_configurations, "test" );
+
+		projMaker->_generate_proj_file ( module );
 	}
 }
 
@@ -225,26 +241,10 @@ void MSVCBackend::OutputFolders()
 }
 
 std::string
-MSVCBackend::OptFileName ( const Module& module ) const
-{
-	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_" + _get_vc_dir() + "_auto.opt" )
-		);
-}
-
-std::string
 MSVCBackend::SuoFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
 		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_" + _get_vc_dir() + "_auto.suo" )
-		);
-}
-
-std::string
-MSVCBackend::DswFileName ( const Module& module ) const
-{
-	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_auto.dsw" )
 		);
 }
 
@@ -265,14 +265,6 @@ MSVCBackend::NcbFileName ( const Module& module ) const
 }
 
 std::string
-MSVCBackend::DspFileName ( const Module& module ) const
-{
-	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_auto.dsp" )
-		);
-}
-
-std::string
 MSVCBackend::VcprojFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
@@ -282,20 +274,12 @@ MSVCBackend::VcprojFileName ( const Module& module ) const
 
 std::string MSVCBackend::_get_vc_dir ( void ) const
 {
-	if ( configuration.VSProjectVersion == "6.00" )
-		return "vc6";
-	else if ( configuration.VSProjectVersion == "7.00" )
-		return "vc70";
-	else if ( configuration.VSProjectVersion == "7.10" )
-		return "vc71";
-	else if ( configuration.VSProjectVersion == "8.00" )
+	if ( configuration.VSProjectVersion == "8.00" )
 		return "vc8";
 	else if ( configuration.VSProjectVersion == "10.00" )
 		return "vc10";
 	else /* default to VS2008 */
 		return "vc9";
-
-
 }
 
 void
@@ -404,9 +388,6 @@ MSVCBackend::_clean_project_files ( void )
 
 		string basepath = module.output->relative_path;
 		remove ( NcbFileName ( module ).c_str () );
-		remove ( DspFileName ( module ).c_str () );
-		remove ( DswFileName ( module ).c_str () );
-		remove ( OptFileName ( module ).c_str () );
 		remove ( SlnFileName ( module ).c_str () );
 		remove ( SuoFileName ( module ).c_str () );
 		remove ( VcprojFileName ( module ).c_str () );
@@ -414,12 +395,12 @@ MSVCBackend::_clean_project_files ( void )
 		string username = getenv ( "USERNAME" );
 		string computername = getenv ( "COMPUTERNAME" );
 		string vcproj_file_user = "";
-
+#if 0
 		if ((computername != "") && (username != ""))
 			vcproj_file_user = VcprojFileName ( module ) + "." + computername + "." + username + ".user";
 
 		remove ( vcproj_file_user.c_str () );
-
+#endif
 		_get_object_files ( module, out );
 		_get_def_files ( module, out );
 		for ( size_t j = 0; j < out.size (); j++)
@@ -430,10 +411,8 @@ MSVCBackend::_clean_project_files ( void )
 	}
 
 	string filename_sln = ProjectNode.name + ".sln";
-	string filename_dsw = ProjectNode.name + ".dsw";
 
 	remove ( filename_sln.c_str () );
-	remove ( filename_dsw.c_str () );
 }
 
 bool
@@ -474,4 +453,65 @@ MSVCBackend::_install_files (const std::string& vcdir, const::string& config)
 		if ( _copy_file( inputname, installdir ) )
 			printf ("Installed File :'%s'\n",installdir.c_str () );
 	}
+}
+
+std::string
+MSVCBackend::_get_solution_version ( void )
+{
+	string version;
+
+	if (configuration.VSProjectVersion.empty())
+		configuration.VSProjectVersion = MS_VS_DEF_VERSION;
+
+	else if (configuration.VSProjectVersion == "8.00")
+		version = "9.00";
+
+	else if (configuration.VSProjectVersion == "9.00")
+		version = "10.00";
+
+	else if (configuration.VSProjectVersion == "10.00")
+		version = "11.00";
+
+	return version;
+}
+
+std::string
+MSVCBackend::_get_studio_version ( void )
+{
+	string version;
+
+	if (configuration.VSProjectVersion.empty())
+		configuration.VSProjectVersion = MS_VS_DEF_VERSION;
+
+	else if (configuration.VSProjectVersion == "8.00")
+		version = "2005";
+
+	else if (configuration.VSProjectVersion == "9.00")
+		version = "2008";
+
+	else if (configuration.VSProjectVersion == "10.00")
+		version = "2010";
+
+	return version;
+}
+
+const Property*
+MSVCBackend::_lookup_property ( const Module& module, const std::string& name ) const
+{
+	std::map<std::string, Property*>::const_iterator p;
+
+	/* Check local values */
+	p = module.non_if_data.properties.find(name);
+
+	if ( p != module.non_if_data.properties.end() )
+		return p->second;
+
+	// TODO FIXME - should we check local if-ed properties?
+	p = module.project.non_if_data.properties.find(name);
+
+	if ( p != module.project.non_if_data.properties.end() )
+		return p->second;
+
+	// TODO FIXME - should we check global if-ed properties?
+	return NULL;
 }

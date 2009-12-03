@@ -227,7 +227,8 @@ RBUILD_BACKEND_MSBUILD_BASE_SOURCES = $(addprefix $(RBUILD_MSBUILD_BASE_), \
 RBUILD_BACKEND_MSVC_BASE_SOURCES = $(addprefix $(RBUILD_MSVC_BASE_), \
 	genguid.cpp \
 	msvc.cpp \
-	msvcmaker.cpp \
+	projmaker.cpp \
+	slnmaker.cpp \
 	vcprojmaker.cpp \
 	vcxprojmaker.cpp \
 	)
@@ -522,8 +523,12 @@ $(RBUILD_MSVC_INT_)genguid.o: $(RBUILD_MSVC_BASE_)genguid.cpp $(RBUILD_HEADERS) 
 $(RBUILD_MSVC_INT_)msvc.o: $(RBUILD_MSVC_BASE_)msvc.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
 	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
-
-$(RBUILD_MSVC_INT_)msvcmaker.o: $(RBUILD_MSVC_BASE_)msvcmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
+	
+$(RBUILD_MSVC_INT_)projmaker.o: $(RBUILD_MSVC_BASE_)projmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
+	$(ECHO_HOSTCC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+	
+$(RBUILD_MSVC_INT_)slnmaker.o: $(RBUILD_MSVC_BASE_)slnmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
 	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
