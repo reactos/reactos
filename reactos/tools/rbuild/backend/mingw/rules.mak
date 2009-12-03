@@ -19,7 +19,7 @@ RBUILD_intermediate_dir=${call RBUILD_fullpath,$(value INTERMEDIATE)$(SEP)$(dir 
 RBUILD_output_dir=${call RBUILD_fullpath,$(value OUTPUT)$(SEP)$(dir ${call RBUILD_strip_prefixes,$(1)})}
 
 #(source)
-RBUILD_source_name=$(basename $(notdir $(1)))
+RBUILD_name=$(basename $(notdir $(1)))
 
 #(source)
 RBUILD_dir=${call RBUILD_fullpath,$(dir ${call RBUILD_compress_prefixes,$(1)})}

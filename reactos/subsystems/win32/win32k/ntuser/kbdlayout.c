@@ -163,7 +163,7 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
       DPRINT("Loaded %wZ\n", &FullLayoutPath);
 
       RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
-      LdrGetProcedureAddress((PVOID)*phModule,
+      LdrGetProcedureAddress((*(PDRIVERS*)phModule)->BaseAddress,
                              &kbdProcedureName,
                              0,
                              (PVOID*)&layerDescGetFn);

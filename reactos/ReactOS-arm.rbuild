@@ -16,7 +16,6 @@
     
     <define name="USE_COMPILER_EXCEPTIONS" />
     
-    <property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
     <property name="WINEBUILD_FLAGS" value="--kill-at"/>
         
     <include>include/reactos/arm</include>
@@ -38,6 +37,8 @@
 	<group linkerset="ld">
         <linkerflag>--strip-debug</linkerflag> <!-- INVESTIGATE -->
         <linkerflag>-static</linkerflag> <!-- INVESTIGATE -->
+		<linkerflag>-file-alignment=0x1000</linkerflag>
+		<linkerflag>-section-alignment=0x1000</linkerflag>
 	</group>
 
 	<directory name="media">

@@ -152,6 +152,11 @@ $(error ReactOS's makefiles use GNU Make 3.80+ features, you have $(MAKE_VERSION
 endif
 # END of code borrowed from GMSL ( http://gmsl.sourceforge.net/ )
 
+define NL
+
+
+endef
+
 .PHONY: all
 .PHONY: clean
 .PHONY: world
@@ -234,7 +239,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_CVTRES  =@echo $(QUOTE)[CVTRES]   $@$(QUOTE)
   ECHO_WIDL    =@echo $(QUOTE)[WIDL]     $@$(QUOTE)
   ECHO_BIN2RES =@echo $(QUOTE)[BIN2RES]  $<$(QUOTE)
-  ECHO_DLLTOOL =@echo $(QUOTE)[DLLTOOL]  $@$(QUOTE)
+  ECHO_IMPLIB  =@echo $(QUOTE)[IMPLIB]   $@$(QUOTE)
   ECHO_LD      =@echo $(QUOTE)[LD]       $@$(QUOTE)
   ECHO_HOSTLD  =@echo $(QUOTE)[HOST-LD]  $@$(QUOTE)
   ECHO_LINK    =@echo $(QUOTE)[LINK]     $@$(QUOTE)
@@ -242,6 +247,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_OBJDUMP =@echo $(QUOTE)[OBJDUMP]  $@$(QUOTE)
   ECHO_RBUILD  =@echo $(QUOTE)[RBUILD]   $@$(QUOTE)
   ECHO_RSYM    =@echo $(QUOTE)[RSYM]     $@$(QUOTE)
+  ECHO_PEFIXUP =@echo $(QUOTE)[PEFIXUP]  $@$(QUOTE)
   ECHO_WMC     =@echo $(QUOTE)[WMC]      $@$(QUOTE)
   ECHO_NCI     =@echo $(QUOTE)[NCI]      $@$(QUOTE)
   ECHO_CABMAN  =@echo $(QUOTE)[CABMAN]   $<$(QUOTE)
@@ -253,6 +259,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_STRIP   =@echo $(QUOTE)[STRIP]    $@$(QUOTE)
   ECHO_RGENSTAT=@echo $(QUOTE)[RGENSTAT] $@$(QUOTE)
   ECHO_DEPENDS =@echo $(QUOTE)[DEPENDS]  $<$(QUOTE)
+  ECHO_RSP     =@echo $(QUOTE)[RSP]      $@$(QUOTE)
 else
   ECHO_CP      =
   ECHO_MKDIR   =
@@ -272,7 +279,7 @@ else
   ECHO_CVTRES  =
   ECHO_WIDL    =
   ECHO_BIN2RES =
-  ECHO_DLLTOOL =
+  ECHO_IMPLIB  =
   ECHO_LD      =
   ECHO_HOSTLD  =
   ECHO_NM      =
@@ -290,6 +297,7 @@ else
   ECHO_STRIP   =
   ECHO_RGENSTAT=
   ECHO_DEPENDS =
+  ECHO_RSP     =
 endif
 
 # Set host compiler/linker
@@ -521,6 +529,11 @@ msvc9: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
 	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs9.00 -voversionconfiguration msvc
 
+.PHONY: msvc10
+msvc10: $(ROS_BUILDENGINE)
+	$(ECHO_RBUILD)
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs10.00 -voversionconfiguration msvc
+
 .PHONY: msvc6_clean
 msvc6_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
@@ -545,6 +558,11 @@ msvc8_clean: $(ROS_BUILDENGINE)
 msvc9_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
 	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs9.00 -voversionconfiguration msvc
+
+.PHONY: msvc10_clean
+msvc10_clean: $(ROS_BUILDENGINE)
+	$(ECHO_RBUILD)
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs10.00 -voversionconfiguration msvc
 
 .PHONY: msvc_clean
 msvc_clean: $(ROS_BUILDENGINE)

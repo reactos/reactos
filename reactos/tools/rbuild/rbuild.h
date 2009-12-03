@@ -378,8 +378,6 @@ public:
 	ImportLibrary* delayImportLibrary;
 	Metadata* metadata;
 	Bootsector* bootSector;
-	bool mangledSymbols;
-	bool underscoreSymbols;
 	bool isUnicode;
 	bool isDefaultEntryPoint;
 	Bootstrap* bootstrap;
@@ -420,7 +418,7 @@ public:
 	bool IsDLL () const;
 	std::string GetPathWithPrefix ( const std::string& prefix ) const; // "path/prefixfoo.exe"
 	std::string GetPathToBaseDir() const; // "../" offset to rootdirectory
-	std::string GetEntryPoint(bool leadingUnderscore) const;
+	std::string GetEntryPoint() const;
 	void GetTargets ( string_list& ) const;
 	std::string GetInvocationTarget ( const int index ) const;
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;

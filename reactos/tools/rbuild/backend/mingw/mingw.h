@@ -66,7 +66,7 @@ private:
 	void GenerateHeader () const;
 	void GenerateGlobalProperties ( const char* assignmentOperation,
 									  const IfableData& data ) const;
-	std::string GenerateProjectLFLAGS () const;
+	std::string GenerateProjectLDFLAGS () const;
 	void GenerateDirectories ();
 	void GenerateGlobalVariables () const;
 	bool IncludeInAllTarget ( const Module& module ) const;

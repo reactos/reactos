@@ -39,6 +39,7 @@ type_t *type_new_enum(const char *name, int defined, var_list_t *enums);
 type_t *type_new_struct(char *name, int defined, var_list_t *fields);
 type_t *type_new_nonencapsulated_union(const char *name, int defined, var_list_t *fields);
 type_t *type_new_encapsulated_union(char *name, var_t *switch_field, var_t *union_field, var_list_t *cases);
+type_t *type_new_bitfield(type_t *field_type, const expr_t *bits);
 void type_interface_define(type_t *iface, type_t *inherit, statement_list_t *stmts);
 void type_dispinterface_define(type_t *iface, var_list_t *props, func_list_t *methods);
 void type_dispinterface_define_from_iface(type_t *dispiface, type_t *iface);
@@ -190,6 +191,7 @@ static inline int type_is_complete(const type_t *type)
     case TYPE_COCLASS:
     case TYPE_POINTER:
     case TYPE_ARRAY:
+    case TYPE_BITFIELD:
         return TRUE;
     }
     return FALSE;
@@ -281,6 +283,20 @@ static inline unsigned char type_pointer_get_default_fc(const type_t *type)
     type = type_get_real_type(type);
     assert(type_get_type(type) == TYPE_POINTER);
     return type->details.pointer.def_fc;
+}
+
+static inline type_t *type_bitfield_get_field(const type_t *type)
+{
+    type = type_get_real_type(type);
+    assert(type_get_type(type) == TYPE_BITFIELD);
+    return type->details.bitfield.field;
+}
+
+static inline const expr_t *type_bitfield_get_bits(const type_t *type)
+{
+    type = type_get_real_type(type);
+    assert(type_get_type(type) == TYPE_BITFIELD);
+    return type->details.bitfield.bits;
 }
 
 #endif /* WIDL_TYPE_TREE_H */

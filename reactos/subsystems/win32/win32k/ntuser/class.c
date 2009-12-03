@@ -1154,7 +1154,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
-        {
+        {  DPRINT("Step 1: 0x%x\n",Class );
             goto FoundClass;
         }
 
@@ -1165,7 +1165,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPublicList,
                              Link);
         if (Class != NULL)
-        {
+        { DPRINT("Step 2: 0x%x 0x%x\n",Class, Class->hModule);
             goto FoundClass;
         }
 
@@ -1175,7 +1175,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
-        {
+        { DPRINT("Step 3: 0x%x\n",Class );
             goto FoundClass;
         }
 
@@ -1188,7 +1188,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
         {
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
             return (RTL_ATOM)0;
-        }
+        }else{DPRINT("Step 4: 0x%x\n",Class );}
 
 FoundClass:
         *BaseClass = Class;
@@ -2402,6 +2402,7 @@ InvalidParameter:
 
    if (Ret)
    {
+      DPRINT("GetClassInfo(%wZ, 0x%x)\n", ClassName, hInstance);
       ClassAtom = IntGetClassAtom( &SafeClassName,
                                     hInstance,
                                     ppi,

@@ -343,14 +343,6 @@ Module::Module ( const Project& project,
 	else
 		baseaddress = GetDefaultModuleBaseaddress ();
 
-	mangledSymbols = GetBooleanAttribute ( moduleNode, "mangledsymbols" );
-
-	att = moduleNode.GetAttribute ( "underscoresymbols", false );
-	if ( att != NULL )
-		underscoreSymbols = att->value == "true";
-	else
-		underscoreSymbols = false;
-
 	isStartupLib = GetBooleanAttribute ( moduleNode, "isstartuplib" );
 	isCRT = GetBooleanAttribute ( moduleNode, "iscrt", GetDefaultModuleIsCRT () );
 
@@ -1359,12 +1351,13 @@ Module::GetInvocationTarget ( const int index ) const
 }
 
 string
-Module::GetEntryPoint(bool leadingUnderscore) const
+Module::GetEntryPoint() const
 {
 	string result = "";
 	if (entrypoint == "0" || entrypoint == "0x0")
 		return "0";
-	if (leadingUnderscore)
+	
+	if (Environment::GetArch() != "arm")
 		result = "_";
 
 	result += entrypoint;
@@ -1874,10 +1867,6 @@ ImportLibrary::ImportLibrary ( const Project& project,
 
 	if ( dllname )
 		this->dllname = dllname->value;
-	else if ( module->type == StaticLibrary || module->type == HostStaticLibrary )
-		throw XMLInvalidBuildFileException (
-		    node.location,
-		    "<importlibrary> dllname attribute required." );
 
 	size_t index = definition->value.find_last_of ( "/\\" );
 	if ( index == string::npos )

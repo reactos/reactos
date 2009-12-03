@@ -20,7 +20,6 @@
 	<property name="PLATFORM" value="PC"/>
 	<property name="usewrc" value="false"/>
 	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
-	<property name="NTOSKRNL_SHARED" value="-shared"/>
 
 	<if property="OPTIMIZE" value="1">
 		<compilerflag>-Os</compilerflag>
@@ -49,9 +48,14 @@
 	<compilerflag>-Wno-multichar</compilerflag>
 	<compilerflag>-Wno-format</compilerflag>
 	<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
+
+	<group linkerset="ld">
 	<linkerflag>-disable-stdcall-fixup</linkerflag>
 	<linkerflag>-static</linkerflag>
 	<linkerflag>--unique=.eh_frame</linkerflag>
+	<linkerflag>-file-alignment=0x1000</linkerflag>
+	<linkerflag>-section-alignment=0x1000</linkerflag>
+	</group>
 
 <!-- Here starts <xi:include href="ReactOS-generic.rbuild" /> -->
 
@@ -173,9 +177,9 @@
 			<xi:include href="drivers/ksfilter/directory.rbuild" />
 		</directory>
 
-		<!-- directory name="multimedia">
+		<directory name="multimedia">
 			<xi:include href="drivers/multimedia/directory.rbuild" />
-		</directory -->
+		</directory >
 
 		<directory name="network">
 			<xi:include href="drivers/network/directory.rbuild" />
@@ -190,7 +194,7 @@
 			<xi:include href="drivers/setup/directory.rbuild" />
 		</directory>
 		<directory name="storage">
-            <xi:include href="drivers/storage/directory.rbuild" />
+            			<xi:include href="drivers/storage/directory.rbuild" />
 		</directory>
 		<directory name="usb">	
 			<xi:include href="drivers/usb/directory.rbuild" />
@@ -255,6 +259,11 @@
 				<xi:include href="lib/3rdparty/zlib/zlib.rbuild" />
 			</directory>
 		</directory>
+		<if property="USERMODE" value="1">
+		<directory name="atl">
+			<xi:include href="lib/atl/atl.rbuild" />
+		</directory>
+		</if>
 		<directory name="sdk">
 			<xi:include href="lib/sdk/sdk.rbuild" />
 		</directory>

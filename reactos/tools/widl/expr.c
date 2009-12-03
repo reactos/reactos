@@ -101,9 +101,16 @@ expr_t *make_exprs(enum expr_type type, char *val)
     return e;
 }
 
-expr_t *make_exprt(enum expr_type type, type_t *tref, expr_t *expr)
+expr_t *make_exprt(enum expr_type type, var_t *var, expr_t *expr)
 {
     expr_t *e;
+    type_t *tref;
+
+    if (var->stgclass != STG_NONE && var->stgclass != STG_REGISTER)
+        error_loc("invalid storage class for type expression\n");
+
+    tref = var->type;
+
     e = xmalloc(sizeof(expr_t));
     e->type = type;
     e->ref = expr;
@@ -125,6 +132,7 @@ expr_t *make_exprt(enum expr_type type, type_t *tref, expr_t *expr)
         e->is_const = TRUE;
         e->cval = expr->cval;
     }
+    free(var);
     return e;
 }
 
@@ -297,15 +305,19 @@ static int is_integer_type(const type_t *type)
         case TYPE_BASIC_INT32:
         case TYPE_BASIC_INT64:
         case TYPE_BASIC_INT:
+        case TYPE_BASIC_INT3264:
         case TYPE_BASIC_CHAR:
         case TYPE_BASIC_HYPER:
         case TYPE_BASIC_BYTE:
         case TYPE_BASIC_WCHAR:
         case TYPE_BASIC_ERROR_STATUS_T:
             return TRUE;
-        default:
+        case TYPE_BASIC_FLOAT:
+        case TYPE_BASIC_DOUBLE:
+        case TYPE_BASIC_HANDLE:
             return FALSE;
         }
+        return FALSE;
     default:
         return FALSE;
     }
@@ -376,6 +388,7 @@ static type_t *find_identifier(const char *identifier, const type_t *cont_type, 
         case TYPE_INTERFACE:
         case TYPE_POINTER:
         case TYPE_ARRAY:
+        case TYPE_BITFIELD:
             /* nothing to do */
             break;
         case TYPE_ALIAS:
