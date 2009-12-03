@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include "audio_resampler_acm.hpp"
+#include <stdio.h>
 
 _AUDIO_NAMESPACE_START_
 
