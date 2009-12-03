@@ -239,7 +239,6 @@ OpenFile(LPCSTR lpFileName,
 		return HFILE_ERROR;
 	}
 
-    lpReOpenBuff->cBytes = sizeof(OFSTRUCT);
     lpReOpenBuff->nErrCode = 0;
 
 	if (uStyle & OF_REOPEN) lpFileName = lpReOpenBuff->szPathName;
@@ -282,10 +281,11 @@ OpenFile(LPCSTR lpFileName,
                 return -1;
 
             default:
+                lpReOpenBuff->cBytes = sizeof(OFSTRUCT);
                 return 1;
         }
     }
-
+    lpReOpenBuff->cBytes = sizeof(OFSTRUCT);
 	if ((uStyle & OF_CREATE) == OF_CREATE)
 	{
 		DWORD Sharing;
