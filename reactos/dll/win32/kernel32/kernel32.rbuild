@@ -77,8 +77,8 @@
 		<file>dllmain.c</file>
 		<file>env.c</file>
 		<file>error.c</file>
-		<file>errormsg.c</file>
 		<file>fold.c</file>
+		<file>format_msg.c</file>
 		<file>handle.c</file>
 		<file>lang.c</file>
 		<file>ldr.c</file>
