@@ -270,7 +270,7 @@ static	DWORD	modOpen(LPDWORD lpdwUser, LPMIDIOPENDESC lpDesc, DWORD dwFlags)
 
     if (MIDIMAP_LoadSettings(mom))
     {
-	*lpdwUser = (DWORD)mom;
+	*lpdwUser = (DWORD_PTR)mom;
 	mom->self = mom;
 
 	return MMSYSERR_NOERROR;
@@ -451,8 +451,8 @@ static	DWORD	modReset(MIDIMAPDATA* mom)
 /**************************************************************************
  * 				modMessage (MIDIMAP.@)
  */
-DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD dwUser,
-				DWORD dwParam1, DWORD dwParam2)
+DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD_PTR dwUser,
+				DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
     TRACE("(%u, %04X, %08lX, %08lX, %08lX);\n",
 	  wDevID, wMsg, dwUser, dwParam1, dwParam2);
@@ -541,8 +541,8 @@ static	DWORD	MIDIMAP_drvClose(DWORD dwDevID)
 /**************************************************************************
  * 				DriverProc (MIDIMAP.@)
  */
-LONG CALLBACK	MIDIMAP_DriverProc(DWORD dwDevID, HDRVR hDriv, DWORD wMsg,
-				   DWORD dwParam1, DWORD dwParam2)
+LRESULT CALLBACK	MIDIMAP_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
+				   LPARAM  dwParam1, LPARAM  dwParam2)
 {
 /* EPP     TRACE("(%08lX, %04X, %08lX, %08lX, %08lX)\n",  */
 /* EPP 	  dwDevID, hDriv, wMsg, dwParam1, dwParam2); */
