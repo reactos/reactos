@@ -19,7 +19,7 @@ _AUDIO_NAMESPACE_START_
 class audio_format
 {
 	protected:
-	
+
 
 		unsigned int samples_psec;
 		unsigned short int bits_psample;
@@ -27,13 +27,13 @@ class audio_format
 
 
 	public:
-		
-		
+
+
 		//
 		// Ctors
 		//
 
-		audio_format( unsigned int samples_per_second, 
+		audio_format( unsigned int samples_per_second,
 			unsigned short int bits_per_sample, unsigned short int channels )
 
 			: samples_psec( samples_per_second ), bits_psample( bits_per_sample ),
@@ -71,7 +71,7 @@ class audio_format
 			// bit per sample, and channels mono/stereo are equal.
 			//
 
-			return (( samples_psec == eq.samples_psec ) 
+			return (( samples_psec == eq.samples_psec )
 				&& ( bits_psample == eq.bits_psample ) && ( chan == eq.chan ));
 		}
 

@@ -19,7 +19,7 @@ class audio_membuffer : public audio_receiver, public audio_producer
 {
 
 
-	
+
 
 
 	protected:
@@ -58,11 +58,11 @@ class audio_membuffer : public audio_receiver, public audio_producer
 
 	public:
 
-		
+
 		void ( * audio_arrival )( unsigned int );
 		void ( * buffer_resized ) ( unsigned int );
 
-		
+
 		//
 		// Ctors
 		//
@@ -70,8 +70,8 @@ class audio_membuffer : public audio_receiver, public audio_producer
 		audio_membuffer( void )
 			: audio_data( 0 ), aud_info( _AUDIO_DEFAULT_FORMAT ),
 			buf_size( 0 ), init_size( 0 )
-		{  
-			
+		{
+
 			//
 			// Allocs memory for at least 1 or some seconds
 			// of recording.
@@ -82,7 +82,7 @@ class audio_membuffer : public audio_receiver, public audio_producer
 
 			alloc_mem_( init_size );
 
-		
+
 		}
 
 
@@ -90,8 +90,8 @@ class audio_membuffer : public audio_receiver, public audio_producer
 		audio_membuffer( audio_format aud_fmt )
 			: audio_data( 0 ), aud_info( aud_fmt ), buf_size( 0 ),
 			init_size( 0 )
-		{  
-		
+		{
+
 			//
 			// Allocs memory for at least 1 or some seconds
 			// of recording.
@@ -101,7 +101,7 @@ class audio_membuffer : public audio_receiver, public audio_producer
 
 
 			alloc_mem_( init_size );
-		
+
 		}
 
 
@@ -110,15 +110,15 @@ class audio_membuffer : public audio_receiver, public audio_producer
 		audio_membuffer( audio_format aud_fmt, unsigned int seconds )
 			: audio_data( 0 ), aud_info( aud_fmt ), buf_size( 0 ),
 			init_size( 0 )
-		{  
-			
+		{
+
 			//
 			// Allocs memory for audio recording
 			// the specified number of seconds.
 			//
 			init_size = aud_info.byte_rate() * seconds;
 			alloc_mem_( init_size );
-		
+
 		}
 
 
@@ -126,18 +126,18 @@ class audio_membuffer : public audio_receiver, public audio_producer
 		audio_membuffer( audio_format aud_fmt, float seconds )
 			: audio_data( 0 ), aud_info( aud_fmt ), buf_size( 0 ),
 			init_size( 0 )
-		{  
-			
+		{
+
 			//
 			// Allocs memory for audio recording
 			// the specified number of seconds.
 			//
-			init_size = ( unsigned int )(( float ) aud_info.byte_rate() * 
+			init_size = ( unsigned int )(( float ) aud_info.byte_rate() *
 				seconds <= 0 ? 1 : seconds );
 
 
 			alloc_mem_( init_size );
-		
+
 		}
 
 
@@ -146,14 +146,14 @@ class audio_membuffer : public audio_receiver, public audio_producer
 		audio_membuffer( unsigned int bytes )
 			: audio_data( 0 ), aud_info( _AUDIO_DEFAULT_FORMAT ),
 			buf_size( 0 ), init_size( 0 )
-		{  
-		
+		{
+
 			//
 			// Allocs memory for the specified bytes
 			//
 			init_size = bytes;
 			alloc_mem_( init_size );
-		
+
 		}
 
 
@@ -164,14 +164,14 @@ class audio_membuffer : public audio_receiver, public audio_producer
 		//
 
 		virtual ~audio_membuffer( void )
-		{ 
-		
+		{
+
 			//
 			// Frees memory and reset values.
 			//
 
 			clear();
-		
+
 		}
 
 
@@ -214,14 +214,14 @@ class audio_membuffer : public audio_receiver, public audio_producer
 		//returns the float number of seconds
 		//that the buffer can record
 		float fseconds_total( void ) const
-		{ return ( float )(( float ) buf_size / 
+		{ return ( float )(( float ) buf_size /
 						( float ) aud_info.byte_rate()); }
 
 
 		//returns the float number of seconds
 		//that has been recorded
 		float fseconds_recorded( void ) const
-		{ return ( float )(( float ) bytes_received / 
+		{ return ( float )(( float ) bytes_received /
 						( float ) aud_info.byte_rate()); }
 
 
@@ -270,26 +270,26 @@ class audio_membuffer : public audio_receiver, public audio_producer
 
 
 		//if there is a buffer, discards current buffer
-		//memory and realloc a new memory buffer with a 
+		//memory and realloc a new memory buffer with a
 		//new size expressed in bytes.
 		void alloc_bytes( unsigned int );
 
 
 
 		//if there is a buffer, discards current buffer
-		//memory and realloc a new memory buffer with a 
+		//memory and realloc a new memory buffer with a
 		//new size expressed in seconds, integer and float.
 		void alloc_seconds( unsigned int );
 		void alloc_seconds( float );
 
 
 
-		//resizes in bytes the current buffer, 
+		//resizes in bytes the current buffer,
 		//without discarding previsiously audio data received.
 		void resize_bytes( unsigned int );
 
 
-		//resizes in seconds the current buffer, 
+		//resizes in seconds the current buffer,
 		//without discarding previsiously audio data received.
 		void resize_seconds( unsigned int );
 		void resize_seconds( float );
@@ -300,8 +300,8 @@ class audio_membuffer : public audio_receiver, public audio_producer
 
 
 
-		
-		
+
+
 		//
 		// Inherited Functions from `audio_receiver'
 		//
@@ -310,7 +310,7 @@ class audio_membuffer : public audio_receiver, public audio_producer
 
 
 
-		
+
 		//
 		// Inherited Functions from `audio_buffer'
 		//
@@ -318,7 +318,7 @@ class audio_membuffer : public audio_receiver, public audio_producer
 
 		unsigned int read( BYTE *, unsigned int );
 		bool finished( void );
-		
+
 
 
 };

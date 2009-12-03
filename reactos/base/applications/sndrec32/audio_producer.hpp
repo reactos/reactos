@@ -14,8 +14,8 @@ class audio_producer
 
 
 	protected:
-		
-		
+
+
 		unsigned int bytes_played_;
 
 
@@ -33,13 +33,13 @@ class audio_producer
 		{  }
 
 
-		
 
 
 
 
 
-		
+
+
 		//
 		// Dtor
 		//

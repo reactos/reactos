@@ -54,18 +54,18 @@ class audio_resampler_acm : public audio_receiver
 			stream_opened( false ), audfmt_in( fmt_in ), audfmt_out( fmt_out ),
 			buf_secs( _AUDIO_DEFAULT_BUFSECS )
 
-		{   
-		
+		{
+
 
 			init_();
-		
-		
+
+
 		}
 
 
 
-		
-		
+
+
 		//
 		// Dtor
 		//

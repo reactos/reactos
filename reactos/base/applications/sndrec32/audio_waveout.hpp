@@ -10,11 +10,18 @@
 
 _AUDIO_NAMESPACE_START_
 
-enum audio_waveout_status { WAVEOUT_NOTREADY, WAVEOUT_READY, 
+
+
+
+
+enum audio_waveout_status { WAVEOUT_NOTREADY, WAVEOUT_READY,
 						    WAVEOUT_PLAYING, WAVEOUT_ERR,
 						    WAVEOUT_PAUSED, WAVEOUT_STOP
-						
+
 						   };
+
+
+
 
 
 class audio_waveout
@@ -30,28 +37,28 @@ class audio_waveout
 		static DWORD WINAPI playing_procedure( LPVOID );
 
 
-		
+
 		HANDLE wakeup_playthread;
 
-		
+
 
 
 	protected:
 
-		
+
 		WAVEFORMATEX   wave_format;
 		WAVEHDR        * wave_headers;
 		HWAVEOUT       waveout_handle;
 
-		
-		
 
-		
+
+
+
 		const audio_format & aud_info;
 		audio_producer & audio_buf;
 
 
-		
+
 
 
 
@@ -91,7 +98,7 @@ class audio_waveout
 		unsigned int buffers;
 
 
-		
+
 
 
 
@@ -110,7 +117,7 @@ class audio_waveout
 
 
 
-		
+
 
 
 
@@ -124,7 +131,7 @@ class audio_waveout
 								audio_producer & a_buf )
 
 			: wave_headers( 0 ), aud_info( aud_fmt ),
-			audio_buf( a_buf ),  status( WAVEOUT_NOTREADY ), 
+			audio_buf( a_buf ),  status( WAVEOUT_NOTREADY ),
 			main_buffer( 0 ), mb_size( 0 ),
 			buffers( _AUDIO_DEFAULT_WAVEOUTBUFFERS )
 		{
@@ -132,17 +139,17 @@ class audio_waveout
 			//
 			// Initializing internal wavein data
 			//
-			
-			
+
+
 			init_();
 
 		}
 
-		
 
 
 
-		
+
+
 		//
 		// Dtor
 		//

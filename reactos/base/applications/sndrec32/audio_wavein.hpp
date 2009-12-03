@@ -14,10 +14,10 @@ _AUDIO_NAMESPACE_START_
 
 
 
-enum audio_wavein_status { WAVEIN_NOTREADY, WAVEIN_READY, 
+enum audio_wavein_status { WAVEIN_NOTREADY, WAVEIN_READY,
 						   WAVEIN_RECORDING, WAVEIN_ERR,
 						   WAVEIN_STOP, WAVEIN_FLUSHING
-						
+
 						  };
 
 
@@ -67,14 +67,14 @@ class audio_wavein
 
 
 
-	
+
 
 		audio_format aud_info;
-		
+
 		audio_receiver & audio_rcvd;
 
 
-		
+
 		//
 		// Audio Recorder Thread id
 		//
@@ -82,7 +82,7 @@ class audio_wavein
 		DWORD     recthread_id;
 
 
-		
+
 
 		//
 		// Object status
@@ -99,7 +99,7 @@ class audio_wavein
 		//
 		// How many seconds of audio
 		// can record the internal buffer
-		// before flushing audio data 
+		// before flushing audio data
 		// to the `audio_receiver' class?
 		//
 
@@ -154,7 +154,7 @@ class audio_wavein
 			const audio_format & a_info, audio_receiver & a_receiver )
 
 			: wave_headers( 0 ),
-			aud_info( a_info ), audio_rcvd( a_receiver ), 
+			aud_info( a_info ), audio_rcvd( a_receiver ),
 			status( WAVEIN_NOTREADY ), main_buffer( 0 ), mb_size( 0 ),
 			buffers( _AUDIO_DEFAULT_WAVEINBUFFERS )
 		{
@@ -162,8 +162,8 @@ class audio_wavein
 			//
 			// Initializing internal wavein data
 			//
-			
-			
+
+
 			init_();
 
 			aud_info = a_info;
@@ -181,7 +181,7 @@ class audio_wavein
 
 		~audio_wavein( void )
 		{
-			
+
 			//close(); TODO!
 
 		}
@@ -211,7 +211,7 @@ class audio_wavein
 
 
 		void buffer_secs( float bsecs )
-		{ 
+		{
 			//
 			// Some checking
 			//
@@ -225,7 +225,7 @@ class audio_wavein
 			// buffer.
 			//
 
-			buf_secs = bsecs; 
+			buf_secs = bsecs;
 		}
 
 
@@ -244,7 +244,7 @@ class audio_wavein
 			if ( tot_bufs == 0 )
 				return;
 
-			
+
 			//
 			// Sets the number of total buffers.
 			//
@@ -257,7 +257,7 @@ class audio_wavein
 		{ return aud_info; }
 
 
-	
+
 };
 
 

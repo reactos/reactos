@@ -1,8 +1,8 @@
 #pragma once
 
 // Le macro seguenti definiscono la piattaforma minima richiesta. La piattaforma minima richiesta
-// è costituita dalla versione meno recente di Windows, Internet Explorer e così via contenenti le funzionalità necessarie per eseguire 
-// l'applicazione. Le macro consentono di attivare tutte le funzionalità disponibili nelle versioni delle piattaforme fino 
+// è costituita dalla versione meno recente di Windows, Internet Explorer e così via contenenti le funzionalità necessarie per eseguire
+// l'applicazione. Le macro consentono di attivare tutte le funzionalità disponibili nelle versioni delle piattaforme fino
 // alla versione specificata compresa.
 
 // Modificare le seguenti definizioni se è necessario utilizzare come destinazione una piattaforma prima di quelle specificate di seguito.

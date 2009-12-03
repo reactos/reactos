@@ -48,7 +48,7 @@ struct riff_hdr
 
 struct wave_hdr
 {
-	
+
 	DWORD Subchunkid;
 	DWORD Subchunk1Size;
 	WORD AudioFormat;
@@ -71,7 +71,7 @@ struct data_chunk
 //
 // Functions prototypes
 //
-LRESULT CALLBACK 
+LRESULT CALLBACK
 Buttons_proc(HWND, UINT, WPARAM, LPARAM);
 
 
@@ -87,11 +87,11 @@ VOID disable_but( DWORD );
 
 
 
-void 
+void
 l_play_finished ( void );
 
-void 
+void
 l_audio_arrival ( unsigned int );
 
-void 
+void
 l_buffer_resized ( unsigned int );

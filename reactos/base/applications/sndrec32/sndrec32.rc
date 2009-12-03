@@ -40,7 +40,7 @@ IDI_SNDREC32            ICON                    "reactOS_sndrec32.ico"
 // Accelerator
 //
 
-IDC_REACTOS_SNDREC32 ACCELERATORS 
+IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -70,7 +70,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -89,12 +89,12 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#ifndef APSTUDIO_INVOKED\r\n"
     "#include ""targetver.h""\r\n"
@@ -105,7 +105,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -135,7 +135,7 @@ IDB_BITMAP2_STOP_DIS    BITMAP                  "but_stop_dis.bmp"
 // Menu
 //
 
-IDR_MENU1 MENU 
+IDR_MENU1 MENU
 BEGIN
     POPUP "File"
     BEGIN
@@ -160,7 +160,7 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "reactOS_sndrec32"
     IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"

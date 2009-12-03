@@ -25,6 +25,7 @@
 
 #define _AUDIO_NAMESPACE_START_ namespace snd {
 #define _AUDIO_NAMESPACE_END_ };
+
 //
 // Platform depend stuff
 //

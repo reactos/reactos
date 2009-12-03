@@ -25,7 +25,7 @@ class audio_receiver
 
 		//
 		// The `audio_wavein' class, while is
-		// recording audio, has to access to 
+		// recording audio, has to access to
 		// protected members of `audio_receiver'
 		// such as `bytes_received' protected
 		// variable.
@@ -47,8 +47,8 @@ class audio_receiver
 
 
 	public:
-		
-		
+
+
 		//
 		// Ctors
 		//
@@ -70,13 +70,13 @@ class audio_receiver
 
 
 
-		
+
 		//
 		// Public Functions
 		//
 
 		virtual void audio_receive( unsigned char *, unsigned int ) = 0;
-		
+
 		//virtual void start_rec( void ) = 0;
 		//virtual void stop_rec( void ) = 0;
 
