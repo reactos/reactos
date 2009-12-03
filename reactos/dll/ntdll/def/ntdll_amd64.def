@@ -1015,7 +1015,7 @@ RtlQueryEnvironmentVariable_U
 RtlQueryHeapInformation
 RtlQueryInformationAcl
 RtlQueryInformationActivationContext
-RtlQueryInformationActiveActivationContext
+;RtlQueryInformationActiveActivationContext
 ;RtlQueryInterfaceMemoryStream
 ;RtlQueryModuleInformation
 ;RtlQueryProcessBackTraceInformation

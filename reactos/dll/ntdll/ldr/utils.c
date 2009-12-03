@@ -3477,7 +3477,7 @@ LdrLockLoaderLock(IN ULONG Flags,
     }
 
     /* FIXME: Cookie is based on part of the thread id */
-    *Cookie = (ULONG)NtCurrentTeb()->RealClientId.UniqueThread;
+    *Cookie = (ULONG_PTR)NtCurrentTeb()->RealClientId.UniqueThread;
     return Status;
 }
 
@@ -3489,7 +3489,7 @@ LdrUnlockLoaderLock(IN ULONG Flags,
     if (Flags != 0x01)
         return STATUS_INVALID_PARAMETER_1;
 
-    if (Cookie != (ULONG)NtCurrentTeb()->RealClientId.UniqueThread)
+    if (Cookie != (ULONG_PTR)NtCurrentTeb()->RealClientId.UniqueThread)
         return STATUS_INVALID_PARAMETER_2;
 
     RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);

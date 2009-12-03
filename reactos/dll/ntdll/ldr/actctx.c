@@ -15,8 +15,8 @@ NTSTATUS create_module_activation_context( LDR_DATA_TABLE_ENTRY *module )
     LDR_RESOURCE_INFO info;
     IMAGE_RESOURCE_DATA_ENTRY *entry;
 
-    info.Type = (ULONG)RT_MANIFEST;
-    info.Name = (ULONG)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
+    info.Type = (ULONG_PTR)RT_MANIFEST;
+    info.Name = (ULONG_PTR)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
     info.Language = 0;
     if (!(status = LdrFindResource_U( module->DllBase, &info, 3, &entry )))
     {
