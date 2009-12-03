@@ -61,6 +61,9 @@ static NTSTATUS LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
 static NTSTATUS LdrpAttachProcess(VOID);
 static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
 
+NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fulldosname );
+NTSTATUS create_module_activation_context( LDR_DATA_TABLE_ENTRY *module );
+
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -699,13 +702,23 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                           MAX_PATH,
                           DosName,
                           NULL) == 0)
-    return STATUS_DLL_NOT_FOUND;
+  {
+      /* try to find active context dll */
+    Status = find_actctx_dll(DllName->Buffer, DosName);
+    if(Status == STATUS_SUCCESS)
+        DPRINT("found %S for %S\n", DosName,DllName->Buffer);
+    else
+        return STATUS_DLL_NOT_FOUND;
+  }
 
   if (!RtlDosPathNameToNtPathName_U (DosName,
                                      &FullNtFileName,
                                      NULL,
                                      NULL))
+  {
+    DPRINT("Dll %wZ not found!\n", DllName);
     return STATUS_DLL_NOT_FOUND;
+  }
 
   DPRINT("FullNtFileName %wZ\n", &FullNtFileName);
 
@@ -1426,10 +1439,10 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
    if (Load && !NT_SUCCESS(Status))
      {
        Status = LdrpLoadModule(SearchPath,
-							   0,
+                               0,
                                &DllName,
                                Module,
-							   NULL);
+                               NULL);
        if (NT_SUCCESS(Status))
          {
            Status = LdrFindEntryForName (&DllName, Module, FALSE);
@@ -1440,6 +1453,7 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
            ULONG_PTR ErrorParameter = (ULONG_PTR)&DllName;
 
            DPRINT1("failed to load %wZ\n", &DllName);
+
            NtRaiseHardError(STATUS_DLL_NOT_FOUND,
                             1,
                             1,
@@ -1761,6 +1775,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
    PCHAR ImportedName;
    PWSTR ModulePath;
    ULONG Size;
+   ULONG_PTR cookie;
 
    DPRINT("LdrFixupImports(SearchPath %S, Module %p)\n", SearchPath, Module);
 
@@ -1783,6 +1798,16 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
            TlsDirectory = NULL;
          }
      }
+
+       if (!create_module_activation_context( Module ))
+         {
+           if (Module->EntryPointActivationContext == NULL)
+             {
+               DPRINT("EntryPointActivationContext has not be allocated\n");
+               DPRINT("Module->DllBaseName %wZ\n", Module->BaseDllName);
+             }
+           RtlActivateActivationContext( 0, Module->EntryPointActivationContext, &cookie );
+         }
 
    /*
     * Process each import module.
@@ -1977,6 +2002,8 @@ Success:
        LdrpAcquireTlsSlot(Module, TlsSize, FALSE);
      }
 
+    if (Module->EntryPointActivationContext) RtlDeactivateActivationContext( 0, cookie );
+
    return STATUS_SUCCESS;
 }
 
@@ -2019,6 +2046,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    PIMAGE_DOS_HEADER    DosHeader;
    PIMAGE_NT_HEADERS    NTHeaders;
    PLDR_DATA_TABLE_ENTRY tmpModule;
+   PVOID ActivationContextStack;
 
    DPRINT("LdrPEStartup(ImageBase %p SectionHandle %p)\n",
            ImageBase, SectionHandle);
@@ -2065,6 +2093,19 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
      {
        (*Module)->Flags |= LDRP_IMAGE_NOT_AT_BASE;
      }
+
+   /* Allocate memory for the ActivationContextStack */
+   /* FIXME: Verify RtlAllocateActivationContextStack behavior */
+   Status = RtlAllocateActivationContextStack(&ActivationContextStack);
+   if (NT_SUCCESS(Status))
+   {
+      DPRINT("ActivationContextStack %x\n",ActivationContextStack);
+      DPRINT("ActiveFrame %x\n", ((PACTIVATION_CONTEXT_STACK)ActivationContextStack)->ActiveFrame);
+      NtCurrentTeb()->ActivationContextStackPointer = ActivationContextStack;
+      NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NULL;
+   }
+   else
+      DPRINT1("Warning: Unable to allocate ActivationContextStack\n");
 
    /*
     * If the DLL's imports symbols from other
