@@ -3,6 +3,7 @@
 <group>
 <module name="mingw_common" type="staticlibrary" isstartuplib="true" crt="dll">
 	<define name="_CRTBLD" />
+	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
 	<library>kernel32</library>
 	<file>_newmode.c</file>
