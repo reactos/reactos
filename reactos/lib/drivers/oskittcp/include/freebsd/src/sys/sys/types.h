@@ -112,29 +112,6 @@ __END_DECLS
 #include <machine/ansi.h>
 #include <machine/types.h>
 
-#ifdef	_BSD_CLOCK_T_
-#define _CLOCK_T_DEFINED
-typedef	_BSD_CLOCK_T_	clock_t;
-#undef	_BSD_CLOCK_T_
-#endif
-
-#ifdef	_BSD_SIZE_T_
-#define _SIZE_T_DEFINED
-typedef	_BSD_SIZE_T_	size_t;
-#undef	_BSD_SIZE_T_
-#endif
-
-#ifdef	_BSD_SSIZE_T_
-typedef	_BSD_SSIZE_T_	ssize_t;
-#define _SSIZE_T_DEFINED
-#undef	_BSD_SSIZE_T_
-#endif
-
-#ifdef	_BSD_TIME_T_
-#define _TIME_T_DEFINED
-typedef	_BSD_TIME_T_	time_t;
-#undef	_BSD_TIME_T_
-#endif
 
 #ifndef _POSIX_SOURCE
 #define	NBBY	8		/* number of bits in a byte */

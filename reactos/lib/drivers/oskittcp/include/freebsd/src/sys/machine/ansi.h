@@ -36,6 +36,8 @@
 #ifndef _MACHINE_ANSI_H_
 #define	_MACHINE_ANSI_H_
 
+#include <stddef.h>
+
 /*
  * Types which are fundamental to the implementation and must be declared
  * in more than one standard header are defined here.  Standard headers
@@ -45,13 +47,13 @@
  *	#undef	_BSD_SIZE_T_
  *	#endif
  */
-#define	_BSD_CLOCK_T_	unsigned long		/* clock() */
-#define	_BSD_PTRDIFF_T_	int			/* ptr1 - ptr2 */
+#define	_BSD_CLOCK_T_	clock_t		/* clock() */
+#define	_BSD_PTRDIFF_T_	ptrdiff_t			/* ptr1 - ptr2 */
 #ifndef _BSD_SIZE_T_
-#define	_BSD_SIZE_T_	unsigned int		/* sizeof() */
+#define	_BSD_SIZE_T_	size_t		/* sizeof() */
 #endif
-#define	_BSD_SSIZE_T_	int			/* byte count or error */
-#define	_BSD_TIME_T_	long			/* time() */
+#define	_BSD_SSIZE_T_	ssize_t			/* byte count or error */
+#define	_BSD_TIME_T_	time_t			/* time() */
 
 /*
  * Types which are fundamental to the implementation and must be used
@@ -59,9 +61,9 @@
  * one (perhaps nonstandard) header are defined here.  Standard headers
  * use _BSD_XXX_T_ without undef'ing it.
  */
-#define	_BSD_OFF_T_	long long		/* file offset */
-#define	_BSD_PID_T_	long			/* process [group] */
-#define	_BSD_VA_LIST_	char *			/* va_list */
+#define	_BSD_OFF_T_	off_t		/* file offset */
+#define	_BSD_PID_T_	pid_t			/* process [group] */
+#define	_BSD_VA_LIST_	va_list			/* va_list */
 
 /*
  * Runes (wchar_t) is declared to be an ``int'' instead of the more natural
@@ -77,8 +79,8 @@
  * and rune_t are typedef'd, _WCHAR_T_ will be undef'd, but _RUNE_T remains
  * defined for ctype.h.
  */
-#define	_BSD_WCHAR_T_	int			/* wchar_t */
-#define	_BSD_RUNE_T_	int			/* rune_t */
+#define	_BSD_WCHAR_T_	wchar_t			/* wchar_t */
+#define	_BSD_RUNE_T_	rune_t			/* rune_t */
 
 /*
  * Frequencies of the clock ticks reported by clock() and times().  They
