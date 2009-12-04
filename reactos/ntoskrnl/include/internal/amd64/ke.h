@@ -41,10 +41,18 @@
 
 #define X86_MSR_GSBASE          0xC0000101
 #define X86_MSR_KERNEL_GSBASE   0xC0000102
+#define X86_MSR_EFER            0xC0000080
 #define X86_MSR_STAR            0xC0000081
 #define X86_MSR_LSTAR           0xC0000082
 #define X86_MSR_CSTAR           0xC0000083
 #define X86_MSR_SFMASK          0xC0000084
+
+#define EFER_SCE 0x01
+#define EFER_LME 0x10
+#define EFER_LMA 0x40
+#define EFER_NXE 0x80
+#define EFER_SVME 0x100
+#define EFER_FFXSR 0x400
 
 #define AMD64_TSS 9
 
