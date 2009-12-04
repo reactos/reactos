@@ -138,12 +138,16 @@ void MSVCBackend::ProcessModules()
 
 		ProjMaker *projMaker;
 
-		string vcproj_file = VcprojFileName(module);
-
 		if (configuration.VSProjectVersion == "10.00")
+		{
+			string vcproj_file = VcprojFileName(module);
 			projMaker = new VCXProjMaker( configuration, m_configurations, vcproj_file );
+		}
 		else
-			projMaker = new VCProjMaker( configuration, m_configurations, vcproj_file );
+		{
+			string vcxproj_file = VcxprojFileName(module);
+			projMaker = new VCProjMaker( configuration, m_configurations, vcxproj_file );
+		}
 
 		projMaker->_generate_proj_file ( module );
 		delete projMaker;
@@ -272,6 +276,14 @@ MSVCBackend::VcprojFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
 			ReplaceExtension ( module.output->relative_path + "\\" + module.name, "_" + _get_vc_dir() + "_auto.vcproj" )
+			);
+}
+
+std::string
+MSVCBackend::VcxprojFileName ( const Module& module ) const
+{
+	return FixSeparatorForSystemCommand(
+			ReplaceExtension ( module.output->relative_path + "\\" + module.name, "_" + _get_vc_dir() + "_auto.vcxproj" )
 			);
 }
 

@@ -103,6 +103,7 @@ class MSVCBackend : public Backend
 		void OutputFileUnits();
 
 		std::string VcprojFileName ( const Module& module ) const;
+		std::string VcxprojFileName ( const Module& module ) const;
 		std::string SlnFileName ( const Module& module ) const;
 		std::string SuoFileName ( const Module& module ) const;
 		std::string NcbFileName ( const Module& module ) const;

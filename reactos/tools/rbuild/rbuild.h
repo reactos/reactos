@@ -68,7 +68,7 @@ extern char cBadSep;
 #define DEF_SBAD_SEP "\\"
 #endif
 
-#define MS_VS_DEF_VERSION "8.00"
+#define MS_VS_DEF_VERSION "9.00"
 
 class XmlNode;
 class Directory;

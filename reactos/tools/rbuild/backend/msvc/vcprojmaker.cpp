@@ -107,7 +107,7 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 	if ((computername != "") && (username != ""))
 		vcproj_file_user = vcproj_file + "." + computername + "." + username + ".user";
 
-	printf ( "Creating MSVC.NET project: '%s'\n", vcproj_file.c_str() );
+	printf ( "Creating MSVC project: '%s'\n", vcproj_file.c_str() );
 
 	string path_basedir = module.GetPathToBaseDir ();
 	string intenv = Environment::GetIntermediatePath ();
