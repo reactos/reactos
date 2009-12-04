@@ -233,6 +233,7 @@ typedef ULONG SWAPENTRY;
     (PAGE_WRITECOPY | \
     PAGE_EXECUTE_WRITECOPY)
 
+#define MI_PFN_ELEMENT(Pfn) (&MmPfnDatabase[Pfn])
 
 #define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
     InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)

@@ -780,8 +780,8 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
         }
     }
 
-    /* FIXME: Free the driver */
-    //MmFreeSection(LdrEntry->DllBase);
+    /* Free the driver */
+    MmFreeSection(LdrEntry->DllBase);
 
     /* Check if we're linked in */
     if (LdrEntry->InLoadOrderLinks.Flink)
