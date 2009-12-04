@@ -752,7 +752,7 @@ CmpFindSubKeyByName(IN PHHIVE Hive,
                             return HCELL_NIL;
                         }
 
-                        if ((Found) && (SubKey != HCELL_NIL))
+                        if (SubKey != HCELL_NIL)
                         {
                             HvReleaseCell(Hive, CellToRelease);
                             return SubKey;
