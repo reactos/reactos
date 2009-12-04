@@ -794,7 +794,7 @@ GetProcessVersion(DWORD ProcessId)
     IMAGE_DOS_HEADER DosHeader;
     PROCESS_BASIC_INFORMATION ProcessBasicInfo;
     PVOID BaseAddress = NULL;
-    HANDLE ProcessHandle;
+    HANDLE ProcessHandle = NULL;
     NTSTATUS Status;
     SIZE_T Count;
     PEB Peb;
