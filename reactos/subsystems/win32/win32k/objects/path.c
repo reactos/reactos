@@ -1504,9 +1504,9 @@ BOOL
 FASTCALL
 PATH_WidenPath(DC *dc)
 {
-    INT i, j, numStrokes, numOldStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
+    INT i, j, numStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
     BOOL ret = FALSE;
-    PPATH pPath, pNewPath, *pStrokes, *pOldStrokes, pUpPath, pDownPath;
+    PPATH pPath, pNewPath, *pStrokes = NULL, *pOldStrokes, pUpPath, pDownPath;
     EXTLOGPEN *elp;
     DWORD obj_type, joint, endcap, penType;
     PDC_ATTR pdcattr = dc->pdcattr;
@@ -1572,14 +1572,6 @@ PATH_WidenPath(DC *dc)
         penWidthOut++;
 
     numStrokes = 0;
-    numOldStrokes = 1;
-
-    pStrokes    = ExAllocatePoolWithTag(PagedPool, sizeof(PPATH), TAG_PATH);
-    pStrokes[0] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
-    PATH_InitGdiPath(pStrokes[0]);
-    pStrokes[0]->pFlags =   ExAllocatePoolWithTag(PagedPool, pPath->numEntriesUsed * sizeof(INT), TAG_PATH);
-    pStrokes[0]->pPoints =  ExAllocatePoolWithTag(PagedPool, pPath->numEntriesUsed * sizeof(POINT), TAG_PATH);
-    pStrokes[0]->numEntriesUsed = 0;
 
     for(i = 0, j = 0; i < pPath->numEntriesUsed; i++, j++)
     {
@@ -1601,11 +1593,17 @@ PATH_WidenPath(DC *dc)
                 }
                 numStrokes++;
                 j = 0;
-                pOldStrokes = pStrokes; // Save old pointer.
-                pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
-                RtlCopyMemory(pStrokes, pOldStrokes, numOldStrokes * sizeof(PPATH));
-                numOldStrokes = numStrokes; // Save orig count.
-                ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
+                if (numStrokes == 1)
+                   pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);                
+                else
+                {
+                   pOldStrokes = pStrokes; // Save old pointer.
+                   pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
+                   if (!pStrokes) return FALSE;
+                   RtlCopyMemory(pStrokes, pOldStrokes, numStrokes * sizeof(PPATH));
+                   ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
+                }
+                if (!pStrokes) return FALSE;
                 pStrokes[numStrokes - 1] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
 
                 PATH_InitGdiPath(pStrokes[numStrokes - 1]);
