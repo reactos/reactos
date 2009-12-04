@@ -200,38 +200,6 @@
 			Name="backends"
 			>
 			<Filter
-				Name="devcpp"
-				>
-				<File
-					RelativePath="backend\devcpp\devcpp.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="2"
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-							BasicRuntimeChecks="3"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="backend\devcpp\devcpp.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="msvc"
 				>
 				<File
