@@ -388,8 +388,6 @@ main ( int argc, char** argv )
 		if ( RootXmlFile.length () == 0 )
 			throw MissingArgumentException ( "-r" );
 
-		DWORD start = GetTickCount();
-
 		string projectFilename ( RootXmlFile );
 
 		printf ( "Reading build files..." );
@@ -403,9 +401,6 @@ main ( int argc, char** argv )
 
 		project.ExecuteInvocations ();
 		project.GetBackend().Process();
-
-		DWORD end = GetTickCount();
-		printf("time - %lu.%d\n", (end - start) / 1000, (end - start) % 1000);
 
 		return 0;
 	}
