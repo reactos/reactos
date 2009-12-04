@@ -227,6 +227,7 @@ MiInitSystemMemoryAreas()
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
     
+#ifndef _M_AMD64
     //
     // Next, the KPCR
     //
@@ -241,6 +242,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
+#endif
     
     //
     // Now the KUSER_SHARED_DATA
@@ -474,8 +476,10 @@ MmInitSystem(IN ULONG Phase,
         /* Dump the address space */
         MiDbgDumpAddressSpace();
         
+#ifndef _M_AMD64 // skip old paged pool
         /* Initialize paged pool */
         MmInitializePagedPool();
+#endif
         
         /* Initialize working sets */
         MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
