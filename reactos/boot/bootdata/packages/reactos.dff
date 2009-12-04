@@ -157,7 +157,7 @@ dll\directx\dplay\dplay.dll                         1
 dll\directx\dplayx\dplayx.dll                       1
 dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
-dll\directx\wine\ddraw\ddraw.dll                    1
+dll\directx\wine\ddraw\ddraw.dll                    1 optional
 dll\directx\d3d8thk\d3d8thk.dll                     1
 dll\directx\devenum\devenum.dll                     1
 dll\directx\ksproxy\ksproxy.ax                      1
@@ -165,9 +165,9 @@ dll\directx\ksuser\ksuser.dll                       1
 dll\directx\msdmo\msdmo.dll                         1
 dll\directx\quartz\quartz.dll                       1
 dll\directx\qedit\qedit.dll                         1
-dll\directx\wine\d3d8\d3d8.dll                      1
-dll\directx\wine\wined3d\wined3d.dll                1
-dll\directx\wine\d3d9\d3d9.dll                      1
+dll\directx\wine\d3d8\d3d8.dll                      1 optional
+dll\directx\wine\wined3d\wined3d.dll                1 optional
+dll\directx\wine\d3d9\d3d9.dll                      1 optional
 
 dll\keyboard\kbda1\kbda1.dll                        1
 dll\keyboard\kbda2\kbda2.dll                        1
@@ -513,7 +513,7 @@ drivers\storage\ide\pciidex\pciidex.sys             2
 ;drivers\usb\miniport\usbuhci\usbuhci.sys           2
 ;drivers\usb\usbhub\usbhub.sys                      2
 ;drivers\usb\usbport\usbport.sys                    2
-drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
+drivers\usb\nt4compat\usbdriver\usbdriver.sys       2 optional
 
 drivers\video\displays\vga\vgaddi.dll               1
 drivers\video\displays\framebuf\framebuf.dll        1
@@ -663,7 +663,7 @@ boot\bootdata\bootcdregtest\regtest.cmd             7   optional
 ; Subsystems
 subsystems\win32\csrss\csrss.exe                    1
 subsystems\win32\csrss\win32csr\win32csr.dll        1
-subsystems\ntvdm\ntvdm.exe                          1
+subsystems\ntvdm\ntvdm.exe                          1 optional
 subsystems\win32\win32k\win32k.sys                  1
 
 ; Optional/proprietary files
