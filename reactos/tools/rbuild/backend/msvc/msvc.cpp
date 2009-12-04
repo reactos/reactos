@@ -138,12 +138,15 @@ void MSVCBackend::ProcessModules()
 
 		ProjMaker *projMaker;
 
+		string vcproj_file = VcprojFileName(module);
+
 		if (configuration.VSProjectVersion == "10.00")
-			projMaker = new VCXProjMaker( configuration, m_configurations, "test" );
+			projMaker = new VCXProjMaker( configuration, m_configurations, vcproj_file );
 		else
-			projMaker = new VCProjMaker( configuration, m_configurations, "test" );
+			projMaker = new VCProjMaker( configuration, m_configurations, vcproj_file );
 
 		projMaker->_generate_proj_file ( module );
+		delete projMaker;
 	}
 }
 
