@@ -623,7 +623,7 @@ NTAPI
 RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
 {
     CONTEXT Context;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_INVALID_DISPOSITION;
     ULONG64 ImageBase;
     PRUNTIME_FUNCTION FunctionEntry;
     PVOID HandlerData;
