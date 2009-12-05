@@ -1253,7 +1253,7 @@ QSI_DEF(SystemInterruptInformation)
     for (i = 0; i < KeNumberProcessors; i++)
     {
         Prcb = KiProcessorBlock[i];
-        Pcr = CONTAINING_RECORD(Prcb, KPCR, Prcb);
+        Pcr = (PKPCR)CONTAINING_RECORD(Prcb, KIPCR, PrcbData);
 #ifdef _M_ARM // This code should probably be done differently
         sii->ContextSwitches = Pcr->ContextSwitches;
 #else
