@@ -28,9 +28,6 @@ PHARDWARE_PTE PxeBase;
 BOOLEAN
 MempAllocatePageTables()
 {
-	ULONG KernelPages;
-	PVOID UserSharedData;
-
     DPRINTM(DPRINT_WINDOWS,">>> MempAllocatePageTables\n");
 
 	/* Allocate a page for the PML4 */
