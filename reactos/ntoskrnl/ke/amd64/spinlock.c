@@ -24,8 +24,10 @@ KIRQL
 KeAcquireSpinLockRaiseToSynch(PKSPIN_LOCK SpinLock)
 {
 #ifndef CONFIG_SMP
+    KIRQL OldIrql;
     /* Simply raise to dispatch */
-    return KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    return OldIrql;
 #else
     UNIMPLEMENTED;
 #endif
@@ -39,8 +41,10 @@ NTAPI
 KeAcquireSpinLockRaiseToDpc(PKSPIN_LOCK SpinLock)
 {
 #ifndef CONFIG_SMP
+    KIRQL OldIrql;
     /* Simply raise to dispatch */
-    return KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    return OldIrql;
 #else
     UNIMPLEMENTED;
 #endif
@@ -56,7 +60,7 @@ KeReleaseSpinLock(PKSPIN_LOCK SpinLock,
 {
 #ifndef CONFIG_SMP
     /* Simply lower IRQL back */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 #else
     UNIMPLEMENTED;
 #endif
@@ -69,8 +73,10 @@ KIRQL
 KeAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 {
 #ifndef CONFIG_SMP
+    KIRQL OldIrql;
     /* Simply raise to dispatch */
-    return KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    return OldIrql;
 #else
     UNIMPLEMENTED;
 #endif
@@ -83,8 +89,10 @@ KIRQL
 KeAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 {
 #ifndef CONFIG_SMP
+    KIRQL OldIrql;
     /* Simply raise to dispatch */
-    return KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    return OldIrql;
 #else
     UNIMPLEMENTED;
 #endif
@@ -99,7 +107,7 @@ KeAcquireInStackQueuedSpinLock(IN PKSPIN_LOCK SpinLock,
 {
 #ifndef CONFIG_SMP
     /* Simply raise to dispatch */
-    LockHandle->OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL, &LockHandle->OldIrql);
 #else
     UNIMPLEMENTED;
 #endif
@@ -114,7 +122,7 @@ KeAcquireInStackQueuedSpinLockRaiseToSynch(IN PKSPIN_LOCK SpinLock,
 {
 #ifndef CONFIG_SMP
     /* Simply raise to synch */
-    LockHandle->OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+    KeRaiseIrql(SYNCH_LEVEL, &LockHandle->OldIrql);
 #else
     UNIMPLEMENTED;
 #endif
@@ -129,7 +137,7 @@ KeReleaseQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 {
 #ifndef CONFIG_SMP
     /* Simply lower IRQL back */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 #else
     UNIMPLEMENTED;
 #endif
@@ -143,7 +151,7 @@ KeReleaseInStackQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
 #ifndef CONFIG_SMP
     /* Simply lower IRQL back */
-    KfLowerIrql(LockHandle->OldIrql);
+    KeLowerIrql(LockHandle->OldIrql);
 #else
     UNIMPLEMENTED;
 #endif
@@ -158,7 +166,7 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 {
 #ifndef CONFIG_SMP
     /* Simply raise to dispatch */
-    *OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
 
     /* Always return true on UP Machines */
     return TRUE;
@@ -176,7 +184,7 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 {
 #ifndef CONFIG_SMP
     /* Simply raise to dispatch */
-    *OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
 
     /* Always return true on UP Machines */
     return TRUE;
