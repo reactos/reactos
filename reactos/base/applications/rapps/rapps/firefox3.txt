@@ -24,7 +24,7 @@ Size = 6.9M
 URLSite = http://www.mozilla-europe.org/de/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/3.0.15/win32/de/Firefox%20Setup%203.0.15.exe
 
-[Section.0405]
+[Section.0414]
 Description = Mest populÃ¦re og best ogsÃ¥ gratis nettleserene der ute.
 Size = 6.9M
 URLSite = http://www.mozilla-europe.org/no/
