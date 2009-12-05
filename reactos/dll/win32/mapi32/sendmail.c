@@ -59,7 +59,7 @@ static ULONG sendmail_extended_mapi(LHANDLE mapi_session, ULONG_PTR uiparam, lpM
     IMAPITable* msg_table;
     LPSRowSet rows = NULL;
     IMsgStore* msg_store;
-    IMAPIFolder* folder = NULL;
+    IMAPIFolder* folder = NULL, *draft_folder = NULL;
     LPENTRYID entry_id;
     LPSPropValue props;
     ULONG entry_len;
@@ -151,10 +151,10 @@ static ULONG sendmail_extended_mapi(LHANDLE mapi_session, ULONG_PTR uiparam, lpM
         goto logoff;
 
     IMsgStore_OpenEntry(msg_store, props[0].Value.bin.cb, (LPENTRYID) props[0].Value.bin.lpb,
-        NULL, MAPI_MODIFY, &obj_type, (LPUNKNOWN *) &folder);
+        NULL, MAPI_MODIFY, &obj_type, (LPUNKNOWN *) &draft_folder);
 
     /* Create a new message */
-    if (IMAPIFolder_CreateMessage(folder, NULL, 0, &msg) == S_OK)
+    if (IMAPIFolder_CreateMessage(draft_folder, NULL, 0, &msg) == S_OK)
     {
         ULONG token;
         SPropValue p;
@@ -329,7 +329,7 @@ static ULONG sendmail_extended_mapi(LHANDLE mapi_session, ULONG_PTR uiparam, lpM
             {
                 /* Show the message form (edit window) */
 
-                ret = IMAPISession_ShowForm(session, 0, msg_store, folder, NULL,
+                ret = IMAPISession_ShowForm(session, 0, msg_store, draft_folder, NULL,
                                             token, NULL, 0, status, flags, access,
                                             props->Value.lpszA);
 
@@ -354,7 +354,8 @@ static ULONG sendmail_extended_mapi(LHANDLE mapi_session, ULONG_PTR uiparam, lpM
     }
 
     /* Free up the resources we've used */
-    IMAPIFolder_Release(folder);
+    IMAPIFolder_Release(draft_folder);
+    if (folder) IMAPIFolder_Release(folder);
     IMsgStore_Release(msg_store);
 
 logoff: ;

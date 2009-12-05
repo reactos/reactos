@@ -68,6 +68,9 @@ MAPI_FUNCTIONS mapiFunctions;
  */
 SCODE WINAPI ScInitMapiUtil(ULONG ulReserved)
 {
+    if (mapiFunctions.ScInitMapiUtil)
+        return mapiFunctions.ScInitMapiUtil(ulReserved);
+
     FIXME("(0x%08x)stub!\n", ulReserved);
     if (ulReserved)
         return MAPI_E_INVALID_PARAMETER;
@@ -91,7 +94,10 @@ SCODE WINAPI ScInitMapiUtil(ULONG ulReserved)
  */
 VOID WINAPI DeinitMapiUtil(void)
 {
-    FIXME("()stub!\n");
+    if (mapiFunctions.DeinitMapiUtil)
+        mapiFunctions.DeinitMapiUtil();
+    else
+        FIXME("()stub!\n");
 }
 
 typedef LPVOID *LPMAPIALLOCBUFFER;
@@ -123,6 +129,9 @@ SCODE WINAPI MAPIAllocateBuffer(ULONG cbSize, LPVOID *lppBuffer)
     LPMAPIALLOCBUFFER lpBuff;
 
     TRACE("(%d,%p)\n", cbSize, lppBuffer);
+
+    if (mapiFunctions.MAPIAllocateBuffer)
+        return mapiFunctions.MAPIAllocateBuffer(cbSize, lppBuffer);
 
     if (!lppBuffer)
         return E_INVALIDARG;
@@ -164,6 +173,9 @@ SCODE WINAPI MAPIAllocateMore(ULONG cbSize, LPVOID lpOrig, LPVOID *lppBuffer)
 
     TRACE("(%d,%p,%p)\n", cbSize, lpOrig, lppBuffer);
 
+    if (mapiFunctions.MAPIAllocateMore)
+        return mapiFunctions.MAPIAllocateMore(cbSize, lpOrig, lppBuffer);
+
     if (!lppBuffer || !lpBuff || !--lpBuff)
         return E_INVALIDARG;
 
@@ -199,6 +211,9 @@ ULONG WINAPI MAPIFreeBuffer(LPVOID lpBuffer)
     LPMAPIALLOCBUFFER lpBuff = lpBuffer;
 
     TRACE("(%p)\n", lpBuffer);
+
+    if (mapiFunctions.MAPIFreeBuffer)
+        return mapiFunctions.MAPIFreeBuffer(lpBuffer);
 
     if (lpBuff && --lpBuff)
     {
@@ -239,6 +254,9 @@ HRESULT WINAPI WrapProgress(PVOID unk1, PVOID unk2, PVOID unk3, PVOID unk4, PVOI
  */
 HRESULT WINAPI HrThisThreadAdviseSink(LPMAPIADVISESINK lpSink, LPMAPIADVISESINK* lppNewSink)
 {
+    if (mapiFunctions.HrThisThreadAdviseSink)
+        return mapiFunctions.HrThisThreadAdviseSink(lpSink, lppNewSink);
+
     FIXME("(%p,%p)semi-stub\n", lpSink, lppNewSink);
 
     if (!lpSink || !lppNewSink)
@@ -695,6 +713,9 @@ HRESULT WINAPI OpenStreamOnFile(LPALLOCATEBUFFER lpAlloc, LPFREEBUFFER lpFree,
     TRACE("(%p,%p,0x%08x,%s,%s,%p)\n", lpAlloc, lpFree, ulFlags,
           debugstr_a((LPSTR)lpszPath), debugstr_a((LPSTR)lpszPrefix), lppStream);
 
+    if (mapiFunctions.OpenStreamOnFile)
+        return mapiFunctions.OpenStreamOnFile(lpAlloc, lpFree, ulFlags, lpszPath, lpszPrefix, lppStream);
+
     if (lppStream)
         *lppStream = NULL;
 
@@ -857,6 +878,9 @@ BOOL WINAPI FGetComponentPath(LPCSTR component, LPCSTR qualifier, LPSTR dll_path
 
     TRACE("%s %s %p %u %d\n", component, qualifier, dll_path, dll_path_length, install);
 
+    if (mapiFunctions.FGetComponentPath)
+        return mapiFunctions.FGetComponentPath(component, qualifier, dll_path, dll_path_length, install);
+
     dll_path[0] = 0;
 
     hmsi = LoadLibraryA("msi.dll");
@@ -903,6 +927,9 @@ HRESULT WINAPI HrQueryAllRows(LPMAPITABLE lpTable, LPSPropTagArray lpPropTags,
     LPSRestriction lpRestriction, LPSSortOrderSet lpSortOrderSet,
     LONG crowsMax, LPSRowSet *lppRows)
 {
+    if (mapiFunctions.HrQueryAllRows)
+        return mapiFunctions.HrQueryAllRows(lpTable, lpPropTags, lpRestriction, lpSortOrderSet, crowsMax, lppRows);
+
     FIXME("(%p, %p, %p, %p, %d, %p): stub\n", lpTable, lpPropTags, lpRestriction, lpSortOrderSet, crowsMax, lppRows);
     *lppRows = NULL;
     return MAPI_E_CALL_FAILED;
@@ -1057,7 +1084,20 @@ void load_mapi_providers(void)
         mapiFunctions.MAPILogonEx = (void*) GetProcAddress(mapi_ex_provider, "MAPILogonEx");
         mapiFunctions.MAPIUninitialize = (void*) GetProcAddress(mapi_ex_provider, "MAPIUninitialize");
 
+        mapiFunctions.DeinitMapiUtil = (void*) GetProcAddress(mapi_ex_provider, "DeinitMapiUtil@0");
+        mapiFunctions.DllCanUnloadNow = (void*) GetProcAddress(mapi_ex_provider, "DllCanUnloadNow");
         mapiFunctions.DllGetClassObject = (void*) GetProcAddress(mapi_ex_provider, "DllGetClassObject");
+        mapiFunctions.FGetComponentPath = (void*) GetProcAddress(mapi_ex_provider, "FGetComponentPath");
+        mapiFunctions.HrThisThreadAdviseSink = (void*) GetProcAddress(mapi_ex_provider, "HrThisThreadAdviseSink@8");
+        mapiFunctions.HrQueryAllRows = (void*) GetProcAddress(mapi_ex_provider, "HrQueryAllRows@24");
+        mapiFunctions.MAPIAdminProfiles = (void*) GetProcAddress(mapi_ex_provider, "MAPIAdminProfiles");
+        mapiFunctions.MAPIAllocateBuffer = (void*) GetProcAddress(mapi_ex_provider, "MAPIAllocateBuffer");
+        mapiFunctions.MAPIAllocateMore = (void*) GetProcAddress(mapi_ex_provider, "MAPIAllocateMore");
+        mapiFunctions.MAPIFreeBuffer = (void*) GetProcAddress(mapi_ex_provider, "MAPIFreeBuffer");
+        mapiFunctions.MAPIGetDefaultMalloc = (void*) GetProcAddress(mapi_ex_provider, "MAPIGetDefaultMalloc@0");
+        mapiFunctions.MAPIOpenLocalFormContainer = (void *) GetProcAddress(mapi_ex_provider, "MAPIOpenLocalFormContainer");
+        mapiFunctions.OpenStreamOnFile = (void*) GetProcAddress(mapi_ex_provider, "OpenStreamOnFile@24");
+        mapiFunctions.ScInitMapiUtil = (void*) GetProcAddress(mapi_ex_provider, "ScInitMapiUtil@4");
     }
 
 cleanUp:
