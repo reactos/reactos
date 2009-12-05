@@ -158,7 +158,6 @@ CreateRemoteThread(HANDLE hProcess,
         return NULL;
     }
 
-    #ifdef SXS_SUPPORT_ENABLED
     /* Are we in the same process? */
     if (hProcess == NtCurrentProcess())
     {
@@ -215,7 +214,6 @@ CreateRemoteThread(HANDLE hProcess,
         else
             DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
     }
-    #endif
 
     /* FIXME: Notify CSR */
 
