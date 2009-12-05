@@ -572,6 +572,7 @@ static void test_instances(void)
     SetClassLongPtrA( hwnd, GCLP_HMODULE, 0xdeadbeef );
     check_instance( "EDIT", (HINSTANCE)0x12345678, (HINSTANCE)0x12345678, (HINSTANCE)0xdeadbeef );
     check_thread_instance( "EDIT", (HINSTANCE)0x12345678, (HINSTANCE)0x12345678, (HINSTANCE)0xdeadbeef );
+    DestroyWindow(hwnd);
 }
 
 static void test_builtinproc(void)
@@ -707,6 +708,7 @@ static void test_builtinproc(void)
 
         oldproc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ClassTest_WndProc);
         ok(IS_WNDPROC_HANDLE(oldproc) == FALSE, "Class %s shouldn't return a handle\n", NORMAL_CLASSES[i]);
+        SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)oldproc);
         DestroyWindow(hwnd);
     }
 
@@ -747,6 +749,8 @@ static void test_builtinproc(void)
     CallWindowProcW((WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC), hwnd, WM_GETTEXT, 120, (LPARAM)buf);
     ok(memcmp(buf, classW, sizeof(classW)) == 0, "WM_GETTEXT invalid return\n");
 
+    SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)oldproc);
+
     DestroyWindow(hwnd);
 
     hwnd = CreateWindowA(WC_EDITA, classA, WS_OVERLAPPEDWINDOW,
@@ -768,7 +772,7 @@ static void test_builtinproc(void)
     CallWindowProcW((WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC), hwnd, WM_GETTEXT, 120, (LPARAM)buf);
     ok(memcmp(buf, classW, sizeof(classW)) == 0, "WM_GETTEXT invalid return\n");
 
-    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ClassTest_WndProc);
+    oldproc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ClassTest_WndProc);
     SetWindowTextW(hwnd, unistring);
     CallWindowProcW((WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC), hwnd, WM_GETTEXT, 120, (LPARAM)buf);
     ok(memcmp(buf, unistring, sizeof(unistring)) == 0, "WM_GETTEXT invalid return\n");
@@ -780,6 +784,8 @@ static void test_builtinproc(void)
     SetWindowTextW(hwnd, classW);
     CallWindowProcA((WNDPROC)GetWindowLongPtrA(hwnd, GWLP_WNDPROC), hwnd, WM_GETTEXT, 120, (LPARAM)buf);
     ok(memcmp(buf, classA, sizeof(classA)) == 0, "WM_GETTEXT invalid return\n");
+
+    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)oldproc);
 
     DestroyWindow(hwnd);
 }

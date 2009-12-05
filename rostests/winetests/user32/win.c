@@ -2298,7 +2298,7 @@ static LRESULT WINAPI set_focus_on_activate_proc(HWND hwnd, UINT msg, WPARAM wp,
 
 static void test_SetFocus(HWND hwnd)
 {
-    HWND child;
+    HWND child, child2;
     WNDPROC old_wnd_proc;
 
     /* check if we can set focus to non-visible windows */
@@ -2324,6 +2324,14 @@ static void test_SetFocus(HWND hwnd)
     ShowWindow(child, SW_HIDE);
     ok( !(GetWindowLong(child,GWL_STYLE) & WS_VISIBLE), "Child %p is visible\n", child );
     ok( GetFocus() == hwnd, "Focus should be on parent %p, not %p\n", hwnd, GetFocus() );
+    ShowWindow(child, SW_SHOW);
+    child2 = CreateWindowExA(0, "static", NULL, WS_CHILD, 0, 0, 0, 0, child, 0, 0, NULL);
+    assert(child2);
+    ShowWindow(child2, SW_SHOW);
+    SetFocus(child2);
+    ShowWindow(child, SW_HIDE);
+    ok( !(GetWindowLong(child,GWL_STYLE) & WS_VISIBLE), "Child %p is visible\n", child );
+    ok( GetFocus() == child2, "Focus should be on %p, not %p\n", child2, GetFocus() );
     ShowWindow(child, SW_SHOW);
     SetFocus(child);
     ok( GetFocus() == child, "Focus should be on child %p\n", child );
@@ -2368,6 +2376,7 @@ todo_wine
 
     SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)old_wnd_proc);
 
+    DestroyWindow( child2 );
     DestroyWindow( child );
 }
 

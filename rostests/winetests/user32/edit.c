@@ -1239,6 +1239,45 @@ static void test_edit_control_5(void)
     DestroyWindow(hWnd);
 }
 
+/* Test WM_GETTEXT processing
+ * after destroy messages
+ */
+static void test_edit_control_6(void)
+{
+    static const char *str = "test\r\ntest";
+    char buf[MAXLEN];
+    LONG ret;
+    HWND hWnd;
+
+    hWnd = CreateWindowEx(0,
+              "EDIT",
+              "Test",
+              0,
+              10, 10, 1, 1,
+              NULL, NULL, hinst, NULL);
+    assert(hWnd);
+
+    ret = SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)str);
+    ok(ret == TRUE, "Expected %d, got %d\n", TRUE, ret);
+    ret = SendMessageA(hWnd, WM_GETTEXT, MAXLEN, (LPARAM)buf);
+    ok(ret == lstrlen(str), "Expected %s, got len %d\n", str, ret);
+    ok(!lstrcmp(buf, str), "Expected %s, got %s\n", str, buf);
+    buf[0] = 0;
+    ret = SendMessageA(hWnd, WM_DESTROY, 0, 0);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ret = SendMessageA(hWnd, WM_GETTEXT, MAXLEN, (LPARAM)buf);
+    ok(ret == lstrlen(str), "Expected %s, got len %d\n", str, ret);
+    ok(!lstrcmp(buf, str), "Expected %s, got %s\n", str, buf);
+    buf[0] = 0;
+    ret = SendMessageA(hWnd, WM_NCDESTROY, 0, 0);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ret = SendMessageA(hWnd, WM_GETTEXT, MAXLEN, (LPARAM)buf);
+    ok(ret == 0, "Expected 0, got len %d\n", ret);
+    ok(!lstrcmp(buf, ""), "Expected empty string, got %s\n", buf);
+
+    DestroyWindow(hWnd);
+}
+
 static void test_edit_control_limittext(void)
 {
     HWND hwEdit;
@@ -2270,6 +2309,7 @@ START_TEST(edit)
     test_edit_control_3();
     test_edit_control_4();
     test_edit_control_5();
+    test_edit_control_6();
     test_edit_control_limittext();
     test_margins();
     test_margins_font_change();

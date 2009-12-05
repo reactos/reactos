@@ -2013,7 +2013,7 @@ static void test_UnpackDDElParam(void)
        broken(hi == 0xbeef), /* win2k */
        "Expected 0, got %08lx\n", hi);
 
-    hglobal = GlobalAlloc(GMEM_DDESHARE, 2);
+    hglobal = GlobalAlloc(GMEM_DDESHARE, 2 * sizeof(*ptr));
     ptr = GlobalLock(hglobal);
     ptr[0] = 0xcafebabe;
     ptr[1] = 0xdeadbeef;
@@ -2067,6 +2067,8 @@ static void test_UnpackDDElParam(void)
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
     ok(lo == 0, "Expected 0, got %08lx\n", lo);
     ok(hi == 0xcafebabe, "Expected 0xcafebabe, got %08lx\n", hi);
+
+    GlobalFree(hglobal);
 }
 
 static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV hconv,
