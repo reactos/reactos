@@ -36,7 +36,7 @@ KiSetGdtDescriptorBase(PKGDTENTRY Entry, ULONG64 Base)
     Entry->BaseUpper = Base >> 32;
 }
 
-PVOID
+VOID
 FORCEINLINE
 KiSetGdtDescriptorLimit(PKGDTENTRY Entry, ULONG Limit)
 {
