@@ -68,13 +68,6 @@ typedef struct _KIDT_INIT
     PVOID ServiceRoutine;
 } KIDT_INIT, *PKIDT_INIT;
 
-//#define KeArchFnInit() Ke386FnInit()
-#define KeArchFnInit() DbgPrint("KeArchFnInit is unimplemented!\n");
-#define KeArchHaltProcessor() Ke386HaltProcessor()
-#define KfLowerIrql KeLowerIrql
-#define KfAcquireSpinLock KeAcquireSpinLock
-#define KfReleaseSpinLock KeReleaseSpinLock
-
 extern ULONG Ke386CacheAlignment;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
@@ -125,6 +118,32 @@ KeInvalidateTlbEntry(IN PVOID Address)
 {
     /* Invalidate the TLB entry for this address */
     __invlpg(Address);
+}
+
+FORCEINLINE
+VOID
+KeFlushProcessTb(VOID)
+{
+    /* Flush the TLB by resetting CR3 */
+    __writecr3(__readcr3());
+}
+
+FORCEINLINE
+PRKTHREAD
+KeGetCurrentThread(VOID)
+{
+    return (PRKTHREAD)__readgsqword(FIELD_OFFSET(KIPCR, Prcb.CurrentThread));
+}
+
+FORCEINLINE
+VOID
+KiRundownThread(IN PKTHREAD Thread)
+{
+#ifndef CONFIG_SMP
+    DbgPrint("KiRundownThread is unimplemented\n");
+#else
+    /* Nothing to do */
+#endif
 }
 
 struct _KPCR;
