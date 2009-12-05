@@ -3854,7 +3854,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
    {
       if ((Index + sizeof(LONG)) > Wnd->cbwndExtra)
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         SetLastWin32Error(ERROR_INVALID_INDEX);
          return( 0);
       }
 
