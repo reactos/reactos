@@ -211,6 +211,13 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
     ASSERT(!FCB->Recv.Window);
     ASSERT(!FCB->Send.Window);
 
+    Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
+                                       &FCB->Send.Size);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    FCB->Recv.Size = FCB->Send.Size;
+
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window =
 	ExAllocatePool( PagedPool, FCB->Recv.Size );

@@ -32,6 +32,20 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
                                 FCB->LocalAddress,
                                 &FCB->AddressFile.Handle,
                                 &FCB->AddressFile.Object );
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
+    {
+        Status = TdiQueryMaxDatagramLength(FCB->AddressFile.Object,
+                                           &FCB->Recv.Size);
+        if (NT_SUCCESS(Status))
+        {
+            FCB->Recv.Window = ExAllocatePool(PagedPool, FCB->Recv.Size);
+            if (!FCB->Recv.Window)
+                Status = STATUS_NO_MEMORY;
+        }
+    }
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
@@ -68,10 +82,6 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS ) {
 	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
-
-        FCB->Recv.Window = ExAllocatePool(PagedPool, FCB->Recv.Size);
-        if (!FCB->Recv.Window)
-            return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
 	Status = TdiReceiveDatagram
 	    ( &FCB->ReceiveIrp.InFlightRequest,

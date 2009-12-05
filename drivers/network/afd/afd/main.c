@@ -268,8 +268,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
-    FCB->Recv.Size = DEFAULT_RECEIVE_WINDOW_SIZE;
-    FCB->Send.Size = DEFAULT_SEND_WINDOW_SIZE;
     FCB->AddressFile.Handle = INVALID_HANDLE_VALUE;
     FCB->Connection.Handle = INVALID_HANDLE_VALUE;
 
@@ -313,13 +311,10 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* It seems that UDP sockets are writable from inception */
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS ) {
         AFD_DbgPrint(MID_TRACE,("Packet oriented socket\n"));
-        FCB->Send.Window = ExAllocatePool( PagedPool, FCB->Send.Size );
-	if (FCB->Send.Window)
-        {
-	    /* A datagram socket is always sendable */
-	    FCB->PollState |= AFD_EVENT_SEND;
-            PollReeval( FCB->DeviceExt, FCB->FileObject );
-        } else Status = STATUS_NO_MEMORY;
+        
+	/* A datagram socket is always sendable */
+	FCB->PollState |= AFD_EVENT_SEND;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
     if( !NT_SUCCESS(Status) ) {

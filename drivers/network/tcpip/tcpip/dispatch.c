@@ -761,6 +761,15 @@ NTSTATUS DispTdiQueryInformation(
 
         return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
       }
+
+      case TDI_QUERY_MAX_DATAGRAM_INFO:
+      {
+         PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo = MmGetSystemAddressForMdl(Irp->MdlAddress);
+
+         MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
+
+         return STATUS_SUCCESS;
+     }
   }
 
   return STATUS_NOT_IMPLEMENTED;

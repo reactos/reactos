@@ -108,9 +108,6 @@ typedef struct IPADDR_ENTRY {
 					   * for ancillary data on packet
 					   * requests. */
 
-#define DEFAULT_SEND_WINDOW_SIZE        16384
-#define DEFAULT_RECEIVE_WINDOW_SIZE     16384
-
 /* XXX This is a hack we should clean up later
  * We do this in order to get some storage for the locked handle table
  * Maybe I'll use some tail item in the irp instead */
@@ -411,6 +408,10 @@ NTSTATUS TdiSendDatagram(
     PIO_STATUS_BLOCK Iosb,
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext);
+
+NTSTATUS TdiQueryMaxDatagramLength(
+        PFILE_OBJECT FileObject,
+        PUINT MaxDatagramLength);
 
 /* write.c */
 
