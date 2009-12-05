@@ -40,6 +40,9 @@
 #include "winternl.h"
 #include "wine/debug.h"
 #include "crypt32_private.h"
+#ifdef __APPLE__
+#include <Security/Security.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -712,6 +715,35 @@ static void read_trusted_roots_from_known_locations(HCERTSTORE store)
     {
         DWORD i;
         BOOL ret = FALSE;
+
+#ifdef __APPLE__
+        OSStatus status;
+        CFArrayRef rootCerts;
+
+        status = SecTrustCopyAnchorCertificates(&rootCerts);
+        if (status == noErr)
+        {
+            int i;
+            for (i = 0; i < CFArrayGetCount(rootCerts); i++)
+            {
+                SecCertificateRef cert = (SecCertificateRef)CFArrayGetValueAtIndex(rootCerts, i);
+                CFDataRef certData;
+                if ((status = SecKeychainItemExport(cert, kSecFormatX509Cert, 0, NULL, &certData)) == noErr)
+                {
+                    if (CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
+                            CFDataGetBytePtr(certData), CFDataGetLength(certData),
+                            CERT_STORE_ADD_NEW, NULL))
+                        ret = TRUE;
+                    else
+                        WARN("adding root cert %d failed: %08x\n", i, GetLastError());
+                    CFRelease(certData);
+                }
+                else
+                    WARN("could not export certificate %d to X509 format: 0x%08x\n", i, (unsigned int)status);
+            }
+            CFRelease(rootCerts);
+        }
+#endif
 
         for (i = 0; !ret &&
          i < sizeof(CRYPT_knownLocations) / sizeof(CRYPT_knownLocations[0]);
