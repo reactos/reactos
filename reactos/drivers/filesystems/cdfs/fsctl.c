@@ -332,7 +332,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
         sizeof(DEVICE_EXTENSION),
         NULL,
         FILE_DEVICE_CD_ROM_FILE_SYSTEM,
-        0,
+        DeviceToMount->Characteristics,
         FALSE,
         &NewDeviceObject);
     if (!NT_SUCCESS(Status))
