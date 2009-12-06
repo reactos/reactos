@@ -147,8 +147,33 @@ static  const CHAR szTransformOutput[] =
 "</h1></body></html>";
 
 static const CHAR szTypeValueXML[] =
-"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-"<string>Wine</string>";
+"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+"<root xmlns:dt=\"urn:schemas-microsoft-com:datatypes\">\n"
+"   <string>Wine</string>\n"
+"   <string2 dt:dt=\"string\">String</string2>\n"
+"   <number dt:dt=\"number\">12.44</number>\n"
+"   <number2 dt:dt=\"NUMbEr\">-3.71e3</number2>\n"
+"   <int dt:dt=\"int\">-13</int>\n"
+"   <fixed dt:dt=\"fixed.14.4\">7322.9371</fixed>\n"
+"   <bool dt:dt=\"boolean\">1</bool>\n"
+"   <datetime dt:dt=\"datetime\">2009-11-18T03:21:33.12</datetime>\n"
+"   <datetimetz dt:dt=\"datetime.tz\">2003-07-11T11:13:57+03:00</datetimetz>\n"
+"   <date dt:dt=\"date\">3721-11-01</date>\n"
+"   <time dt:dt=\"time\">13:57:12.31321</time>\n"
+"   <timetz dt:dt=\"time.tz\">23:21:01.13+03:21</timetz>\n"
+"   <i1 dt:dt=\"i1\">-13</i1>\n"
+"   <i2 dt:dt=\"i2\">31915</i2>\n"
+"   <i4 dt:dt=\"i4\">-312232</i4>\n"
+"   <ui1 dt:dt=\"ui1\">123</ui1>\n"
+"   <ui2 dt:dt=\"ui2\">48282</ui2>\n"
+"   <ui4 dt:dt=\"ui4\">949281</ui4>\n"
+"   <r4 dt:dt=\"r4\">213124.0</r4>\n"
+"   <r8 dt:dt=\"r8\">0.412</r8>\n"
+"   <float dt:dt=\"float\">41221.421</float>\n"
+"   <uuid dt:dt=\"uuid\">333C7BC4-460F-11D0-BC04-0080C7055a83</uuid>\n"
+"   <binhex dt:dt=\"bin.hex\">fffca012003c</binhex>\n"
+"   <binbase64 dt:dt=\"bin.base64\">YmFzZTY0IHRlc3Q=</binbase64>\n"
+"</root>";
 
 static const CHAR szBasicTransformSSXMLPart1[] =
 "<?xml version=\"1.0\"?>"
@@ -183,6 +208,9 @@ static const CHAR szBasicTransformOutput[] =
 
 static const WCHAR szNonExistentFile[] = {
     'c', ':', '\\', 'N', 'o', 'n', 'e', 'x', 'i', 's', 't', 'e', 'n', 't', '.', 'x', 'm', 'l', 0
+};
+static const WCHAR szNonExistentAttribute[] = {
+    'n','o','n','E','x','i','s','i','t','i','n','g','A','t','t','r','i','b','u','t','e',0
 };
 static const WCHAR szDocument[] = {
     '#', 'd', 'o', 'c', 'u', 'm', 'e', 'n', 't', 0
@@ -243,6 +271,8 @@ static WCHAR szStrangeChars[] = {'&','x',' ',0x2103, 0};
     HRESULT r = expr; \
     ok(r == (expect), #expr " returned %x, expected %x\n", r, expect); \
 }
+
+#define double_eq(x, y) ok((x)-(y)<=1e-14*(x) && (x)-(y)>=-1e-14*(x), "expected %.16g, got %.16g\n", x, y)
 
 static BSTR alloc_str_from_narrow(const char *str)
 {
@@ -1003,6 +1033,10 @@ static void test_domnode( void )
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
     if( r != S_OK )
         return;
+    if (!doc) {
+        ok( FALSE, "no document\n");
+        return;
+    }
 
     b = FALSE;
     str = SysAllocString( szComplete4 );
@@ -1011,19 +1045,14 @@ static void test_domnode( void )
     ok( b == VARIANT_TRUE, "failed to load XML string\n");
     SysFreeString( str );
 
-    if (doc)
-    {
-        b = 1;
-        r = IXMLDOMNode_hasChildNodes( doc, &b );
-        ok( r == S_OK, "hasChildNoes bad return\n");
-        ok( b == VARIANT_TRUE, "hasChildNoes wrong result\n");
+    b = 1;
+    r = IXMLDOMNode_hasChildNodes( doc, &b );
+    ok( r == S_OK, "hasChildNoes bad return\n");
+    ok( b == VARIANT_TRUE, "hasChildNoes wrong result\n");
 
-        r = IXMLDOMDocument_get_documentElement( doc, &element );
-        ok( r == S_OK, "should be a document element\n");
-        ok( element != NULL, "should be an element\n");
-    }
-    else
-        ok( FALSE, "no document\n");
+    r = IXMLDOMDocument_get_documentElement( doc, &element );
+    ok( r == S_OK, "should be a document element\n");
+    ok( element != NULL, "should be an element\n");
 
     VariantInit(&var);
     ok( V_VT(&var) == VT_EMPTY, "variant init failed\n");
@@ -1084,7 +1113,7 @@ static void test_domnode( void )
         SysFreeString( str );
 
         attr = (IXMLDOMAttribute*)0xdeadbeef;
-        str = _bstr_("nonExisitingAttribute");
+        str = SysAllocString( szNonExistentAttribute );
         r = IXMLDOMElement_getAttributeNode( element, str, &attr);
         ok( r == S_FALSE, "getAttributeNode ret %08x\n", r );
         ok( attr == NULL, "getAttributeNode ret %p, expected NULL\n", attr );
@@ -1290,7 +1319,6 @@ todo_wine
     /* now traverse the tree from the root element */
     if (element)
     {
-        IXMLDOMNode *node;
         r = IXMLDOMNode_get_childNodes( element, &list );
         ok( r == S_OK, "get_childNodes returned wrong code\n");
 
@@ -1306,18 +1334,18 @@ todo_wine
         IXMLDOMNodeList_AddRef(list);
         expect_list_and_release(list, "E1.E2.D1 E2.E2.D1 E3.E2.D1 E4.E2.D1");
         ole_check(IXMLDOMNodeList_reset(list));
+
+        node = (void*)0xdeadbeef;
+        r = IXMLDOMNode_selectSingleNode( element, szdl, &node );
+        ok( r == S_FALSE, "ret %08x\n", r );
+        ok( node == NULL, "node %p\n", node );
+        r = IXMLDOMNode_selectSingleNode( element, szbs, &node );
+        ok( r == S_OK, "ret %08x\n", r );
+        r = IXMLDOMNode_Release( node );
+        ok( r == 0, "ret %08x\n", r );
     }
     else
         ok( FALSE, "no element\n");
-
-    node = (void*)0xdeadbeef;
-    r = IXMLDOMNode_selectSingleNode( element, szdl, &node );
-    ok( r == S_FALSE, "ret %08x\n", r );
-    ok( node == NULL, "node %p\n", node );
-    r = IXMLDOMNode_selectSingleNode( element, szbs, &node );
-    ok( r == S_OK, "ret %08x\n", r );
-    r = IXMLDOMNode_Release( node );
-    ok( r == 0, "ret %08x\n", r );
 
     if (list)
     {
@@ -1412,8 +1440,7 @@ todo_wine
 
     if (element)
         IXMLDOMElement_Release( element );
-    if (doc)
-        ok(IXMLDOMDocument_Release( doc ) == 0, "document is not destroyed\n");
+    ok(IXMLDOMDocument_Release( doc ) == 0, "document is not destroyed\n");
 }
 
 static void test_refs(void)
@@ -3972,7 +3999,7 @@ static void test_NodeTypeValue(void)
         hr = IXMLDOMDocument2_get_nodeTypedValue(doc, &v);
         ok(hr == S_FALSE, "ret %08x\n", hr );
 
-        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("string"), &pNode);
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/string"), &pNode);
         ok(hr == S_OK, "ret %08x\n", hr );
         if(hr == S_OK)
         {
@@ -3987,8 +4014,315 @@ static void test_NodeTypeValue(void)
 
             hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
             ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_BSTR, "incorrect type\n");
             ok(!lstrcmpW( V_BSTR(&v), _bstr_("Wine") ), "incorrect value\n");
             VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/string2"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_BSTR, "incorrect type\n");
+            ok(!lstrcmpW( V_BSTR(&v), _bstr_("String") ), "incorrect value\n");
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/number"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_BSTR, "incorrect type\n");
+            ok(!lstrcmpW( V_BSTR(&v), _bstr_("12.44") ), "incorrect value\n");
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/number2"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_BSTR, "incorrect type\n");
+            ok(!lstrcmpW( V_BSTR(&v), _bstr_("-3.71e3") ), "incorrect value\n");
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/int"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_I4, "incorrect type\n");
+            ok(V_I4(&v) == -13, "incorrect value\n");
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/fixed"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_CY, "incorrect type\n");
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/bool"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_BOOL, "incorrect type\n");
+            ok(V_BOOL(&v) == VARIANT_TRUE, "incorrect value\n");
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/datetime"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_DATE, "incorrect type\n");
+            double_eq(40135.13996527778, V_DATE(&v));
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/datetimetz"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_DATE, "incorrect type\n");
+            double_eq(37813.59302083334, V_DATE(&v));
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/date"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_DATE, "incorrect type\n");
+            double_eq(665413.0, V_DATE(&v));
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/time"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_DATE, "incorrect type\n");
+            double_eq(0.5813888888888888, V_DATE(&v));
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/timetz"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_DATE, "incorrect type\n");
+            double_eq(1.112511574074074, V_DATE(&v));
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/i1"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_I1, "incorrect type\n");
+            ok(V_I1(&v) == -13, "incorrect value\n");
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/i2"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_I2, "incorrect type\n");
+            ok(V_I2(&v) == 31915, "incorrect value\n");
+            VariantClear( &v );
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/i4"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_I4, "incorrect type\n");
+            ok(V_I4(&v) == -312232, "incorrect value\n");
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/ui1"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_UI1, "incorrect type\n");
+            ok(V_UI1(&v) == 123, "incorrect value\n");
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/ui2"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_UI2, "incorrect type\n");
+            ok(V_UI2(&v) == 48282, "incorrect value\n");
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/ui4"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_UI4, "incorrect type\n");
+            ok(V_UI4(&v) == 949281, "incorrect value\n");
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/r4"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_R4, "incorrect type\n");
+            double_eq(213124.0, V_R4(&v));
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/r8"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_R8, "incorrect type\n");
+            double_eq(0.412, V_R8(&v));
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/float"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_R8, "incorrect type\n");
+            double_eq(41221.421, V_R8(&v));
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/uuid"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == VT_BSTR, "incorrect type\n");
+            ok(!lstrcmpW(V_BSTR(&v), _bstr_("333C7BC4-460F-11D0-BC04-0080C7055a83")), "incorrect value\n");
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/binhex"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            BYTE bytes[] = {0xff,0xfc,0xa0,0x12,0x00,0x3c};
+
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == (VT_ARRAY|VT_UI1), "incorrect type\n");
+            ok(V_ARRAY(&v)->rgsabound[0].cElements == 6, "incorrect array size\n");
+            if(V_ARRAY(&v)->rgsabound[0].cElements == 6)
+                ok(!memcmp(bytes, V_ARRAY(&v)->pvData, sizeof(bytes)), "incorrect value\n");
+            VariantClear(&v);
+
+            IXMLDOMNode_Release(pNode);
+        }
+
+        hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_("root/binbase64"), &pNode);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        if(hr == S_OK)
+        {
+            BYTE bytes[] = {0x62,0x61,0x73,0x65,0x36,0x34,0x20,0x74,0x65,0x73,0x74};
+
+            hr = IXMLDOMNode_get_nodeTypedValue(pNode, &v);
+            ok(hr == S_OK, "ret %08x\n", hr );
+            ok(V_VT(&v) == (VT_ARRAY|VT_UI1), "incorrect type\n");
+            ok(V_ARRAY(&v)->rgsabound[0].cElements == 11, "incorrect array size\n");
+            if(V_ARRAY(&v)->rgsabound[0].cElements == 11)
+                ok(!memcmp(bytes, V_ARRAY(&v)->pvData, sizeof(bytes)), "incorrect value\n");
+            VariantClear(&v);
 
             IXMLDOMNode_Release(pNode);
         }
