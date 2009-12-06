@@ -173,7 +173,8 @@ static void run_wkstatransportenum_tests(void)
 
         ok(bufPtr != NULL, "got data back\n");
         ok(entriesRead > 0, "read at least one transport\n");
-        ok(totalEntries > 0, "at least one transport\n");
+        ok(totalEntries > 0 || broken(totalEntries == 0) /* Win7 */,
+           "at least one transport\n");
         pNetApiBufferFree(bufPtr);
     }
 }
@@ -198,7 +199,10 @@ START_TEST(wksta)
     }
 
     if (init_wksta_tests()) {
-        run_get_comp_name_tests();
+        if (pNetpGetComputerName)
+            run_get_comp_name_tests();
+        else
+            win_skip("Function NetpGetComputerName not available\n");
         run_wkstausergetinfo_tests();
         run_wkstatransportenum_tests();
     }

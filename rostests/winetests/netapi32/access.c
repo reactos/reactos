@@ -155,16 +155,19 @@ static void run_usergetinfo_tests(void)
     todo_wine {
         /* FIXME - Currently Wine can't verify whether the network path is good or bad */
         rc=pNetUserGetInfo(sBadNetPath, sTestUserName, 0, (LPBYTE *)&ui0);
-        ok(rc == ERROR_BAD_NETPATH || rc == ERROR_NETWORK_UNREACHABLE,
+        ok(rc == ERROR_BAD_NETPATH ||
+           rc == ERROR_NETWORK_UNREACHABLE ||
+           rc == RPC_S_SERVER_UNAVAILABLE ||
+           rc == RPC_S_INVALID_NET_ADDR, /* Some Win7 */
            "Bad Network Path: rc=%d\n",rc);
     }
     rc=pNetUserGetInfo(sEmptyStr, sTestUserName, 0, (LPBYTE *)&ui0);
     ok(rc == ERROR_BAD_NETPATH || rc == NERR_Success,
        "Bad Network Path: rc=%d\n",rc);
     rc=pNetUserGetInfo(sInvalidName, sTestUserName, 0, (LPBYTE *)&ui0);
-    ok(rc == ERROR_INVALID_NAME,"Invalid Server Name: rc=%d\n",rc);
+    ok(rc == ERROR_INVALID_NAME || rc == ERROR_INVALID_HANDLE,"Invalid Server Name: rc=%d\n",rc);
     rc=pNetUserGetInfo(sInvalidName2, sTestUserName, 0, (LPBYTE *)&ui0);
-    ok(rc == ERROR_INVALID_NAME,"Invalid Server Name: rc=%d\n",rc);
+    ok(rc == ERROR_INVALID_NAME || rc == ERROR_INVALID_HANDLE,"Invalid Server Name: rc=%d\n",rc);
 
     if(delete_test_user() != NERR_Success)
         trace("Deleting the test user failed. You might have to manually delete it.\n");
