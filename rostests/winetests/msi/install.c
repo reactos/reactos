@@ -920,6 +920,32 @@ static const CHAR ip_custom_action_dat[] = "Action\tType\tSource\tTarget\tISComm
                                            "CustomAction\tAction\n"
                                            "TestInstalledProp\t19\t\tTest failed\t\n";
 
+static const CHAR aup_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
+                                               "s72\tS255\tI2\n"
+                                               "InstallExecuteSequence\tAction\n"
+                                               "CostFinalize\t\t1000\n"
+                                               "ValidateProductID\t\t700\n"
+                                               "CostInitialize\t\t800\n"
+                                               "FileCost\t\t900\n"
+                                               "RemoveFiles\t\t3500\n"
+                                               "InstallFiles\t\t4000\n"
+                                               "RegisterUser\t\t6000\n"
+                                               "RegisterProduct\t\t6100\n"
+                                               "PublishFeatures\t\t6300\n"
+                                               "PublishProduct\t\t6400\n"
+                                               "InstallFinalize\t\t6600\n"
+                                               "InstallInitialize\t\t1500\n"
+                                               "ProcessComponents\t\t1600\n"
+                                               "UnpublishFeatures\t\t1800\n"
+                                               "InstallValidate\t\t1400\n"
+                                               "LaunchConditions\t\t100\n"
+                                               "TestAllUsersProp\tALLUSERS AND NOT REMOVE\t50\n";
+
+static const CHAR aup_custom_action_dat[] = "Action\tType\tSource\tTarget\tISComments\n"
+                                            "s72\ti2\tS64\tS0\tS255\n"
+                                            "CustomAction\tAction\n"
+                                            "TestAllUsersProp\t19\t\tTest failed\t\n";
+
 typedef struct _msi_table
 {
     const CHAR *filename;
@@ -1543,6 +1569,19 @@ static const msi_table ip_tables[] =
     ADD_TABLE(file),
     ADD_TABLE(ip_install_exec_seq),
     ADD_TABLE(ip_custom_action),
+    ADD_TABLE(media),
+    ADD_TABLE(property)
+};
+
+static const msi_table aup_tables[] =
+{
+    ADD_TABLE(component),
+    ADD_TABLE(directory),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(file),
+    ADD_TABLE(aup_install_exec_seq),
+    ADD_TABLE(aup_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
@@ -2810,7 +2849,7 @@ static void test_readonlyfile_cab(void)
         ReadFile(file, buf, sizeof(buf) - 1, &size, NULL);
         CloseHandle(file);
     }
-    ok( !lstrcmp( buf, "maximus" ), "Expected file to be overwritten, got '%s'\n", buf );
+    ok(!memcmp( buf, "maximus", sizeof("maximus")-1 ), "Expected file to be overwritten, got '%s'\n", buf);
     ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "File not installed\n");
 
@@ -6730,6 +6769,37 @@ static void test_installed_prop(void)
     delete_test_files();
 }
 
+static void test_allusers_prop(void)
+{
+    UINT r;
+
+    create_test_files();
+    create_database(msifile, aup_tables, sizeof(aup_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    r = MsiInstallProductA(msifile, "FULL=1");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout\\new", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\changed", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\first", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\one.txt", TRUE), "File installed\n");
+    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf("msitest", FALSE), "File not installed\n");
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    delete_test_files();
+}
+
 static char session_manager[] = "System\\CurrentControlSet\\Control\\Session Manager";
 static char rename_ops[]      = "PendingFileRenameOperations";
 
@@ -7065,6 +7135,7 @@ START_TEST(install)
     test_file_in_use();
     test_file_in_use_cab();
     test_MsiSetExternalUI();
+    test_allusers_prop();
 
     DeleteFileA(log_file);
 

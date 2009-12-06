@@ -1506,8 +1506,7 @@ static void test_SummaryInfo(IDispatch *pSummaryInfo, const msi_summary_info *in
 
         hr = SummaryInfo_PropertyGet(pSummaryInfo, PID_LASTSAVE_DTM, &varresult, V_VT(&var));
         ok(hr == S_OK, "SummaryInfo_PropertyGet failed, hresult 0x%08x\n", hr);
-        /* FIXME: Off by one second */
-        todo_wine ok(V_DATE(&var) == V_DATE(&varresult), "SummaryInfo_PropertyGet expected %lf, but returned %lf\n", V_DATE(&var), V_DATE(&varresult));
+        ok(V_DATE(&var) == V_DATE(&varresult), "SummaryInfo_PropertyGet expected %lf, but returned %lf\n", V_DATE(&var), V_DATE(&varresult));
         VariantClear(&varresult);
         VariantClear(&var);
 
@@ -1714,12 +1713,12 @@ static void test_Session(IDispatch *pSession)
 
     /* Session::Mode, put */
     hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTATEND, TRUE);
-    todo_wine ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
+    ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
     hr = Session_ModeGet(pSession, MSIRUNMODE_REBOOTATEND, &bool);
     ok(hr == S_OK, "Session_ModeGet failed, hresult 0x%08x\n", hr);
     ok(bool, "Reboot at end session mode is %d, expected 1\n", bool);
     hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTATEND, FALSE);  /* set it again so we don't reboot */
-    todo_wine ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
+    ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
 
     /* Session::Database, get */
     hr = Session_Database(pSession, &pDatabase);

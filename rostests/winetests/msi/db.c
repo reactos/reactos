@@ -7901,6 +7901,80 @@ static void test_dbmerge(void)
     DeleteFileA("binary.dat");
 }
 
+static void test_select_with_tablenames(void)
+{
+    MSIHANDLE hdb, view, rec;
+    LPCSTR query;
+    UINT r;
+    int i;
+
+    int vals[4][2] = {
+        {1,12},
+        {4,12},
+        {1,15},
+        {4,15}};
+
+    hdb = create_db();
+    ok(hdb, "failed to create db\n");
+
+    /* Build a pair of tables with the same column names, but unique data */
+    query = "CREATE TABLE `T1` ( `A` SHORT, `B` SHORT PRIMARY KEY `A`)";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    query = "INSERT INTO `T1` ( `A`, `B` ) VALUES ( 1, 2 )";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    query = "INSERT INTO `T1` ( `A`, `B` ) VALUES ( 4, 5 )";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    query = "CREATE TABLE `T2` ( `A` SHORT, `B` SHORT PRIMARY KEY `A`)";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    query = "INSERT INTO `T2` ( `A`, `B` ) VALUES ( 11, 12 )";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    query = "INSERT INTO `T2` ( `A`, `B` ) VALUES ( 14, 15 )";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+
+    /* Test that selection based on prefixing the column with the table
+     * actually selects the right data */
+
+    query = "SELECT T1.A, T2.B FROM T1,T2";
+    r = MsiDatabaseOpenView(hdb, query, &view);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    for (i = 0; i < 4; i++)
+    {
+        r = MsiViewFetch(view, &rec);
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+        r = MsiRecordGetInteger(rec, 1);
+        ok(r == vals[i][0], "Expected %d, got %d\n", vals[i][0], r);
+
+        r = MsiRecordGetInteger(rec, 2);
+        ok(r == vals[i][1], "Expected %d, got %d\n", vals[i][1], r);
+
+        MsiCloseHandle(rec);
+    }
+
+    r = MsiViewFetch(view, &rec);
+    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+
+    MsiViewClose(view);
+    MsiCloseHandle(view);
+    MsiCloseHandle(hdb);
+    DeleteFileA(msifile);
+}
+
 UINT ordervals[6][3] =
 {
     { MSI_NULL_INTEGER, 12, 13 },
@@ -8579,6 +8653,7 @@ START_TEST(db)
     test_dbtopackage();
     test_droptable();
     test_dbmerge();
+    test_select_with_tablenames();
     test_insertorder();
     test_columnorder();
     test_suminfo_import();
