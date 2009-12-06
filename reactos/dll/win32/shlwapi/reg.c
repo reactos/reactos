@@ -200,7 +200,7 @@ LONG WINAPI SHRegCloseUSKey(
     if (hKey->HKLMkey)
         ret = RegCloseKey(hKey->HKLMkey);
     if (hKey->HKLMstart && hKey->HKLMstart != HKEY_LOCAL_MACHINE)
-        ret = RegCloseKey(hKey->HKCUstart);
+        ret = RegCloseKey(hKey->HKLMstart);
 
     HeapFree(GetProcessHeap(), 0, hKey);
     return ret;
