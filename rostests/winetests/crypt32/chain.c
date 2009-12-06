@@ -2927,7 +2927,8 @@ static CONST_DATA_BLOB chain19[] = {
 static const CERT_TRUST_STATUS elementStatus19[] = {
  { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
  { CERT_TRUST_IS_UNTRUSTED_ROOT,
-   CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
+   CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER |
+   CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
 };
 static const SimpleChainStatusCheck simpleStatus19[] = {
  { sizeof(elementStatus19) / sizeof(elementStatus19[0]), elementStatus19 },
@@ -2951,7 +2952,8 @@ static CONST_DATA_BLOB chain21[] = {
 static const CERT_TRUST_STATUS elementStatus21[] = {
  { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
  { CERT_TRUST_IS_UNTRUSTED_ROOT,
-   CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
+   CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER |
+   CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
 };
 static const SimpleChainStatusCheck simpleStatus21[] = {
  { sizeof(elementStatus21) / sizeof(elementStatus21[0]), elementStatus21 },
@@ -3257,7 +3259,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT,
        CERT_TRUST_HAS_PREFERRED_ISSUER | CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS
      },
-     { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 },
+     { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
      1, simpleStatus19 },
    0 },
  /* Older versions of crypt32 do not set
@@ -3278,7 +3280,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT,
        CERT_TRUST_HAS_PREFERRED_ISSUER | CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS
      },
-     { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 },
+     { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
      1, simpleStatus21 },
    0 },
  { { sizeof(chain22) / sizeof(chain22[0]), chain22 },
@@ -3405,8 +3407,9 @@ static ChainCheck chainCheckEmbeddedNullBroken = {
  { sizeof(chain27) / sizeof(chain27[0]), chain27 },
  { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
      CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT,
-     CERT_TRUST_HAS_PREFERRED_ISSUER },
-   { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
+     CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS | CERT_TRUST_HAS_PREFERRED_ISSUER },
+   { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT,
+     CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
    1, simpleStatus27Broken },
  0 };
 
@@ -3421,7 +3424,12 @@ static void testGetCertChain(void)
     PCCERT_CONTEXT cert;
     CERT_CHAIN_PARA para = { 0 };
     PCCERT_CHAIN_CONTEXT chain;
+    FILETIME fileTime;
     DWORD i;
+    HCERTSTORE store;
+    static char one_two_three[] = "1.2.3";
+    static char oid_server_auth[] = szOID_PKIX_KP_SERVER_AUTH;
+    LPSTR oids[2];
 
     /* Basic parameter checks */
     if (0)
@@ -3481,6 +3489,68 @@ static void testGetCertChain(void)
 
     CertFreeCertificateContext(cert);
 
+    /* Test usage match with Google's cert */
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
+     verisignCA, sizeof(verisignCA), CERT_STORE_ADD_ALWAYS, NULL);
+    CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
+     thawte_sgc_ca, sizeof(thawte_sgc_ca), CERT_STORE_ADD_ALWAYS, NULL);
+    cert = CertCreateCertificateContext(X509_ASN_ENCODING,
+     google, sizeof(google));
+    SystemTimeToFileTime(&oct2009, &fileTime);
+    memset(&para, 0, sizeof(para));
+    para.cbSize = sizeof(para);
+    oids[0] = one_two_three;
+    para.RequestedUsage.dwType = USAGE_MATCH_TYPE_AND;
+    para.RequestedUsage.Usage.rgpszUsageIdentifier = oids;
+    para.RequestedUsage.Usage.cUsageIdentifier = 1;
+    ret = pCertGetCertificateChain(NULL, cert, &fileTime, store, &para,
+     0, NULL, &chain);
+    ok(ret, "CertGetCertificateChain failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(chain->TrustStatus.dwErrorStatus & CERT_TRUST_IS_NOT_VALID_FOR_USAGE,
+         "expected CERT_TRUST_IS_NOT_VALID_FOR_USAGE\n");
+        CertFreeCertificateChain(chain);
+    }
+    oids[0] = oid_server_auth;
+    ret = pCertGetCertificateChain(NULL, cert, &fileTime, store, &para,
+     0, NULL, &chain);
+    ok(ret, "CertGetCertificateChain failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(!(chain->TrustStatus.dwErrorStatus &
+         CERT_TRUST_IS_NOT_VALID_FOR_USAGE),
+         "didn't expect CERT_TRUST_IS_NOT_VALID_FOR_USAGE\n");
+        CertFreeCertificateChain(chain);
+    }
+    oids[1] = one_two_three;
+    para.RequestedUsage.Usage.cUsageIdentifier = 2;
+    para.RequestedUsage.dwType = USAGE_MATCH_TYPE_AND;
+    ret = pCertGetCertificateChain(NULL, cert, &fileTime, store, &para,
+     0, NULL, &chain);
+    ok(ret, "CertGetCertificateChain failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(chain->TrustStatus.dwErrorStatus & CERT_TRUST_IS_NOT_VALID_FOR_USAGE,
+         "expected CERT_TRUST_IS_NOT_VALID_FOR_USAGE\n");
+        CertFreeCertificateChain(chain);
+    }
+    para.RequestedUsage.dwType = USAGE_MATCH_TYPE_OR;
+    ret = pCertGetCertificateChain(NULL, cert, &fileTime, store, &para,
+     0, NULL, &chain);
+    ok(ret, "CertGetCertificateChain failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(!(chain->TrustStatus.dwErrorStatus &
+         CERT_TRUST_IS_NOT_VALID_FOR_USAGE),
+         "didn't expect CERT_TRUST_IS_NOT_VALID_FOR_USAGE\n");
+        CertFreeCertificateChain(chain);
+    }
+    CertCloseStore(store, 0);
+    CertFreeCertificateContext(cert);
+
     for (i = 0; i < sizeof(chainCheck) / sizeof(chainCheck[0]); i++)
     {
         chain = getChain(&chainCheck[i].certs, 0, TRUE, &oct2007,
@@ -3510,8 +3580,10 @@ static void testGetCertChain(void)
     {
         ok(chain->TrustStatus.dwErrorStatus ==
          chainCheckEmbeddedNull.status.status.dwErrorStatus ||
-         broken(chain->TrustStatus.dwErrorStatus ==
-         chainCheckEmbeddedNullBroken.status.status.dwErrorStatus),
+         broken((chain->TrustStatus.dwErrorStatus &
+         ~chainCheckEmbeddedNullBroken.status.statusToIgnore.dwErrorStatus) ==
+         (chainCheckEmbeddedNullBroken.status.status.dwErrorStatus &
+         ~chainCheckEmbeddedNullBroken.status.statusToIgnore.dwErrorStatus)),
          "unexpected chain error status %08x\n",
          chain->TrustStatus.dwErrorStatus);
         if (chainCheckEmbeddedNull.status.status.dwErrorStatus ==

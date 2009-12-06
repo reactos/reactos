@@ -1387,8 +1387,9 @@ static void test_decodeNameValue(DWORD dwEncoding)
      embeddedNullNameValue.encoded, embeddedNullNameValue.encodedSize,
      CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_SHARE_OID_STRING_FLAG, NULL,
      &buf, &bufSize);
-    ok(ret, "Value type %d: CryptDecodeObjectEx failed: %08x\n",
-     embeddedNullNameValue.value.dwValueType, GetLastError());
+    /* Some Windows versions disallow name values with embedded NULLs, so
+     * either success or failure is acceptable.
+     */
     if (ret)
     {
         CERT_NAME_VALUE rdnEncodedValue = { CERT_RDN_ENCODED_BLOB,
@@ -3851,23 +3852,14 @@ static const BYTE v2CRLWithExt[] = { 0x30,0x5c,0x02,0x01,0x01,0x30,0x02,0x06,
  0x02,0x01,0x01,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,
  0x30,0x30,0x30,0x30,0x5a,0xa0,0x13,0x30,0x11,0x30,0x0f,0x06,0x03,0x55,0x1d,
  0x13,0x04,0x08,0x30,0x06,0x01,0x01,0xff,0x02,0x01,0x01 };
-static const BYTE v2CRLWithIssuingDistPoint[] = { 0x30,0x5c,0x02,0x01,0x01,
- 0x30,0x02,0x06,0x00,0x30,0x15,0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,
- 0x13,0x0a,0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,0x18,0x0f,0x31,
- 0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x30,
- 0x16,0x30,0x14,0x02,0x01,0x01,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,
- 0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0xa0,0x13,0x30,0x11,0x30,0x0f,0x06,
- 0x03,0x55,0x1d,0x13,0x04,0x08,0x30,0x06,0x01,0x01,0xff,0x02,0x01,0x01 };
 
 static void test_encodeCRLToBeSigned(DWORD dwEncoding)
 {
     BOOL ret;
     BYTE *buf = NULL;
-    static CHAR oid_issuing_dist_point[] = szOID_ISSUING_DIST_POINT;
     DWORD size = 0;
     CRL_INFO info = { 0 };
     CRL_ENTRY entry = { { 0 }, { 0 }, 0, 0 };
-    CERT_EXTENSION ext;
 
     /* Test with a V1 CRL */
     ret = pCryptEncodeObjectEx(dwEncoding, X509_CERT_CRL_TO_BE_SIGNED, &info,
@@ -3976,21 +3968,6 @@ static void test_encodeCRLToBeSigned(DWORD dwEncoding)
     {
         ok(size == sizeof(v2CRLWithExt), "Wrong size %d\n", size);
         ok(!memcmp(buf, v2CRLWithExt, size), "Got unexpected value\n");
-        LocalFree(buf);
-    }
-    /* a v2 CRL with an issuing dist point extension */
-    ext.pszObjId = oid_issuing_dist_point;
-    ext.fCritical = TRUE;
-    ext.Value.cbData = sizeof(urlIDP);
-    ext.Value.pbData = (LPBYTE)urlIDP;
-    entry.rgExtension = &ext;
-    ret = pCryptEncodeObjectEx(dwEncoding, X509_CERT_CRL_TO_BE_SIGNED, &info,
-     CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
-    ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
-    if (buf)
-    {
-        ok(size == sizeof(v2CRLWithIssuingDistPoint), "Wrong size %d\n", size);
-        ok(!memcmp(buf, v2CRLWithIssuingDistPoint, size), "Unexpected value\n");
         LocalFree(buf);
     }
 }
@@ -4677,19 +4654,6 @@ static void test_decodeCRLToBeSigned(DWORD dwEncoding)
     ret = pCryptDecodeObjectEx(dwEncoding, X509_CERT_CRL_TO_BE_SIGNED,
      v2CRLWithExt, sizeof(v2CRLWithExt), CRYPT_DECODE_ALLOC_FLAG,
      NULL, &buf, &size);
-    ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
-    if (buf)
-    {
-        CRL_INFO *info = (CRL_INFO *)buf;
-
-        ok(info->cExtension == 1, "Expected 1 extensions, got %d\n",
-         info->cExtension);
-        LocalFree(buf);
-    }
-    /* And again, with an issuing dist point */
-    ret = pCryptDecodeObjectEx(dwEncoding, X509_CERT_CRL_TO_BE_SIGNED,
-     v2CRLWithIssuingDistPoint, sizeof(v2CRLWithIssuingDistPoint),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (buf)
     {
