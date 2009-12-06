@@ -663,6 +663,8 @@ IntSetWindowProc(PWND pWnd,
       if (pWnd->state & WNDS_SERVERSIDEWINDOWPROC)
          pWnd->state &= ~WNDS_SERVERSIDEWINDOWPROC;
 
+      if (!NewWndProc) NewWndProc = pWnd->lpfnWndProc;
+
       if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_BUTTON)
       {
          if (Ansi)

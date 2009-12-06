@@ -385,6 +385,8 @@ IntSetClassWndProc(IN OUT PCLS Class,
       Class->Unicode = !Ansi;
    }
 
+   if (!WndProc) WndProc = Class->lpfnWndProc;
+
    chWndProc = WndProc;
 
    // Check if CallProc handle and retrieve previous call proc address and set.
