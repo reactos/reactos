@@ -1201,7 +1201,7 @@ static UINT msi_stream_name( const MSITABLEVIEW *tv, UINT row, LPWSTR *pstname )
                 switch( n )
                 {
                 case 2:
-                    sprintfW( number, fmt, ival^0x8000 );
+                    sprintfW( number, fmt, ival-0x8000 );
                     break;
                 case 4:
                     sprintfW( number, fmt, ival^0x80000000 );
@@ -2573,7 +2573,7 @@ static MSIRECORD *msi_get_transform_record( const MSITABLEVIEW *tv, const string
             case 2:
                 val = read_raw_int(rawdata, ofs, n);
                 if (val)
-                    MSI_RecordSetInteger( rec, i+1, val^0x8000 );
+                    MSI_RecordSetInteger( rec, i+1, val-0x8000 );
                 TRACE(" field %d [0x%04x]\n", i+1, val );
                 break;
             case 4:

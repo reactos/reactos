@@ -345,7 +345,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     WCHAR *ptr;
     OSVERSIONINFOEXW OSVersion;
     MEMORYSTATUSEX msex;
-    DWORD verval;
+    DWORD verval, len;
     WCHAR verstr[10], bufstr[20];
     HDC dc;
     HKEY hkey;
@@ -445,11 +445,12 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szUserLangID[] = {'U','s','e','r','L','a','n','g','u','a','g','e','I','D',0};
     static const WCHAR szSystemLangID[] = {'S','y','s','t','e','m','L','a','n','g','u','a','g','e','I','D',0};
     static const WCHAR szProductState[] = {'P','r','o','d','u','c','t','S','t','a','t','e',0};
+    static const WCHAR szLogonUser[] = {'L','o','g','o','n','U','s','e','r',0};
 
     /*
      * Other things that probably should be set:
      *
-     * ComputerName LogonUser VirtualMemory
+     * ComputerName VirtualMemory
      * ShellAdvSupport DefaultUIFont PackagecodeChanging
      * CaptionHeight BorderTop BorderSide TextHeight
      * RedirectedDllSupport
@@ -653,6 +654,18 @@ static VOID set_installer_properties(MSIPACKAGE *package)
 
     sprintfW(bufstr, szIntFormat, MsiQueryProductStateW(package->ProductCode));
     MSI_SetPropertyW( package, szProductState, bufstr );
+
+    len = 0;
+    if (!GetUserNameW( NULL, &len ) && GetLastError() == ERROR_MORE_DATA)
+    {
+        WCHAR *username;
+        if ((username = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+        {
+            if (GetUserNameW( username, &len ))
+                MSI_SetPropertyW( package, szLogonUser, username );
+            HeapFree( GetProcessHeap(), 0, username );
+        }
+    }
 }
 
 static UINT msi_load_summary_properties( MSIPACKAGE *package )
