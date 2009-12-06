@@ -5541,7 +5541,7 @@ static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type)
 }
 
 static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const declarator_t *decl,
-                     int top)
+                       int top)
 {
   var_t *v = decl->var;
   expr_list_t *sizes = get_attrp(attrs, ATTR_SIZEIS);
@@ -5614,8 +5614,8 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
     type_t *t = type;
 
     if (!is_ptr(v->type) && !arr)
-    error_loc("'%s': [string] attribute applied to non-pointer, non-array type\n",
-              v->name);
+      error_loc("'%s': [string] attribute applied to non-pointer, non-array type\n",
+                v->name);
 
     while (is_ptr(t))
       t = type_pointer_get_ref(t);
@@ -6712,7 +6712,7 @@ static void check_remoting_args(const var_t *func)
         var.name = xstrdup("return value");
         check_field_common(func->type, funcname, &var);
         free(var.name);
-}
+    }
 }
 
 static void add_explicit_handle_if_necessary(var_t *func)

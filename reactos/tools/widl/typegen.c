@@ -3249,7 +3249,7 @@ void print_phase_basetype(FILE *file, int indent, const char *local_var_prefix,
                    local_var_prefix,
                    var->name);
         print_file(file, indent+1, "0x%02x /* %s */);\n", fc, string_of_type(fc));
-        }
+    }
     else
     {
         const type_t *ref = is_ptr(type) ? type_pointer_get_ref(type) : type;
@@ -3298,45 +3298,45 @@ void print_phase_basetype(FILE *file, int indent, const char *local_var_prefix,
             size = 0;
         }
 
-    if (phase == PHASE_MARSHAL)
-        print_file(file, indent, "MIDL_memset(__frame->_StubMsg.Buffer, 0, (0x%x - (ULONG_PTR)__frame->_StubMsg.Buffer) & 0x%x);\n", alignment, alignment - 1);
-    print_file(file, indent, "__frame->_StubMsg.Buffer = (unsigned char *)(((ULONG_PTR)__frame->_StubMsg.Buffer + %u) & ~0x%x);\n",
-                alignment - 1, alignment - 1);
+        if (phase == PHASE_MARSHAL)
+            print_file(file, indent, "MIDL_memset(__frame->_StubMsg.Buffer, 0, (0x%x - (ULONG_PTR)__frame->_StubMsg.Buffer) & 0x%x);\n", alignment, alignment - 1);
+        print_file(file, indent, "__frame->_StubMsg.Buffer = (unsigned char *)(((ULONG_PTR)__frame->_StubMsg.Buffer + %u) & ~0x%x);\n",
+                    alignment - 1, alignment - 1);
 
-    if (phase == PHASE_MARSHAL)
-    {
-        print_file(file, indent, "*(");
-        write_type_decl(file, is_ptr(type) ? type_pointer_get_ref(type) : type, NULL);
-        if (is_ptr(type))
-            fprintf(file, " *)__frame->_StubMsg.Buffer = *");
-        else
-            fprintf(file, " *)__frame->_StubMsg.Buffer = ");
-        fprintf(file, "%s%s", local_var_prefix, varname);
-        fprintf(file, ";\n");
-    }
-    else if (phase == PHASE_UNMARSHAL)
-    {
-        print_file(file, indent, "if (__frame->_StubMsg.Buffer + sizeof(");
-        write_type_decl(file, is_ptr(type) ? type_pointer_get_ref(type) : type, NULL);
-        fprintf(file, ") > __frame->_StubMsg.BufferEnd)\n");
-        print_file(file, indent, "{\n");
-        print_file(file, indent + 1, "RpcRaiseException(RPC_X_BAD_STUB_DATA);\n");
-        print_file(file, indent, "}\n");
-        print_file(file, indent, "%s%s%s",
-                   (pass == PASS_IN || pass == PASS_RETURN) ? "" : "*",
-                   local_var_prefix, varname);
-        if (pass == PASS_IN && is_ptr(type))
-            fprintf(file, " = (");
-        else
-            fprintf(file, " = *(");
-        write_type_decl(file, is_ptr(type) ? type_pointer_get_ref(type) : type, NULL);
-        fprintf(file, " *)__frame->_StubMsg.Buffer;\n");
-    }
+        if (phase == PHASE_MARSHAL)
+        {
+            print_file(file, indent, "*(");
+            write_type_decl(file, is_ptr(type) ? type_pointer_get_ref(type) : type, NULL);
+            if (is_ptr(type))
+                fprintf(file, " *)__frame->_StubMsg.Buffer = *");
+            else
+                fprintf(file, " *)__frame->_StubMsg.Buffer = ");
+            fprintf(file, "%s%s", local_var_prefix, varname);
+            fprintf(file, ";\n");
+        }
+        else if (phase == PHASE_UNMARSHAL)
+        {
+            print_file(file, indent, "if (__frame->_StubMsg.Buffer + sizeof(");
+            write_type_decl(file, is_ptr(type) ? type_pointer_get_ref(type) : type, NULL);
+            fprintf(file, ") > __frame->_StubMsg.BufferEnd)\n");
+            print_file(file, indent, "{\n");
+            print_file(file, indent + 1, "RpcRaiseException(RPC_X_BAD_STUB_DATA);\n");
+            print_file(file, indent, "}\n");
+            print_file(file, indent, "%s%s%s",
+                       (pass == PASS_IN || pass == PASS_RETURN) ? "" : "*",
+                       local_var_prefix, varname);
+            if (pass == PASS_IN && is_ptr(type))
+                fprintf(file, " = (");
+            else
+                fprintf(file, " = *(");
+            write_type_decl(file, is_ptr(type) ? type_pointer_get_ref(type) : type, NULL);
+            fprintf(file, " *)__frame->_StubMsg.Buffer;\n");
+        }
 
-    print_file(file, indent, "__frame->_StubMsg.Buffer += sizeof(");
-    write_type_decl(file, is_ptr(type) ? type_pointer_get_ref(type) : type, NULL);
-    fprintf(file, ");\n");
-}
+        print_file(file, indent, "__frame->_StubMsg.Buffer += sizeof(");
+        write_type_decl(file, is_ptr(type) ? type_pointer_get_ref(type) : type, NULL);
+        fprintf(file, ");\n");
+    }
 }
 
 /* returns whether the MaxCount, Offset or ActualCount members need to be
@@ -3589,7 +3589,7 @@ static void write_remoting_arg(FILE *file, int indent, const var_t *func, const 
         break;
     }
     case TGT_BASIC:
-            print_phase_basetype(file, indent, local_var_prefix, phase, pass, var, var->name);
+        print_phase_basetype(file, indent, local_var_prefix, phase, pass, var, var->name);
         break;
     case TGT_ENUM:
         print_phase_basetype(file, indent, local_var_prefix, phase, pass, var, var->name);
@@ -3661,7 +3661,7 @@ static void write_remoting_arg(FILE *file, int indent, const var_t *func, const 
         if (pointer_type == RPC_FC_RP) switch (typegen_detect_type(ref, NULL, TDT_ALL_TYPES))
         {
         case TGT_BASIC:
-                print_phase_basetype(file, indent, local_var_prefix, phase, pass, var, var->name);
+            print_phase_basetype(file, indent, local_var_prefix, phase, pass, var, var->name);
             break;
         case TGT_ENUM:
             /* base types have known sizes, so don't need a sizing pass

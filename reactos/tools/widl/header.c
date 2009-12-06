@@ -318,14 +318,14 @@ void write_type_right(FILE *h, type_t *t, int is_field)
     {
       if (is_conformant_array(t))
       {
-      fprintf(h, "[%s]", is_field ? "1" : "");
-      t = type_array_get_element(t);
+        fprintf(h, "[%s]", is_field ? "1" : "");
+        t = type_array_get_element(t);
+      }
+      for ( ;
+           type_get_type(t) == TYPE_ARRAY && !type_array_is_decl_as_ptr(t);
+           t = type_array_get_element(t))
+        fprintf(h, "[%u]", type_array_get_dim(t));
     }
-    for ( ;
-         type_get_type(t) == TYPE_ARRAY && !type_array_is_decl_as_ptr(t);
-         t = type_array_get_element(t))
-      fprintf(h, "[%u]", type_array_get_dim(t));
-  }
     break;
   case TYPE_BITFIELD:
     fprintf(h, " : %lu", type_bitfield_get_bits(t)->cval);
@@ -343,7 +343,7 @@ void write_type_right(FILE *h, type_t *t, int is_field)
   case TYPE_INTERFACE:
   case TYPE_POINTER:
     break;
-}
+  }
 }
 
 static void write_type_v(FILE *h, type_t *t, int is_field, int declonly, const char *name)
@@ -354,40 +354,40 @@ static void write_type_v(FILE *h, type_t *t, int is_field, int declonly, const c
   if (!h) return;
 
   if (t) {
-  for (pt = t; is_ptr(pt); pt = type_pointer_get_ref(pt), ptr_level++)
-    ;
+    for (pt = t; is_ptr(pt); pt = type_pointer_get_ref(pt), ptr_level++)
+      ;
 
-  if (type_get_type_detect_alias(pt) == TYPE_FUNCTION) {
-    int i;
-    const char *callconv = get_attrp(pt->attrs, ATTR_CALLCONV);
-    if (!callconv) callconv = "";
-    if (is_attr(pt->attrs, ATTR_INLINE)) fprintf(h, "inline ");
-    write_type_left(h, type_function_get_rettype(pt), declonly);
-    fputc(' ', h);
-    if (ptr_level) fputc('(', h);
-    fprintf(h, "%s ", callconv);
-    for (i = 0; i < ptr_level; i++)
-      fputc('*', h);
-  } else
-    write_type_left(h, t, declonly);
+    if (type_get_type_detect_alias(pt) == TYPE_FUNCTION) {
+      int i;
+      const char *callconv = get_attrp(pt->attrs, ATTR_CALLCONV);
+      if (!callconv) callconv = "";
+      if (is_attr(pt->attrs, ATTR_INLINE)) fprintf(h, "inline ");
+      write_type_left(h, type_function_get_rettype(pt), declonly);
+      fputc(' ', h);
+      if (ptr_level) fputc('(', h);
+      fprintf(h, "%s ", callconv);
+      for (i = 0; i < ptr_level; i++)
+        fputc('*', h);
+    } else
+      write_type_left(h, t, declonly);
   }
 
   if (name) fprintf(h, "%s%s", !t || needs_space_after(t) ? " " : "", name );
 
   if (t) {
-  if (type_get_type_detect_alias(pt) == TYPE_FUNCTION) {
-    const var_list_t *args = type_function_get_args(pt);
+    if (type_get_type_detect_alias(pt) == TYPE_FUNCTION) {
+      const var_list_t *args = type_function_get_args(pt);
 
-    if (ptr_level) fputc(')', h);
-    fputc('(', h);
-    if (args)
-        write_args(h, args, NULL, 0, FALSE);
-    else
-        fprintf(h, "void");
-    fputc(')', h);
-  } else
-    write_type_right(h, t, is_field);
-}
+      if (ptr_level) fputc(')', h);
+      fputc('(', h);
+      if (args)
+          write_args(h, args, NULL, 0, FALSE);
+      else
+          fprintf(h, "void");
+      fputc(')', h);
+    } else
+      write_type_right(h, t, is_field);
+  }
 }
 
 void write_type_def_or_decl(FILE *f, type_t *t, int field, const char *name)
