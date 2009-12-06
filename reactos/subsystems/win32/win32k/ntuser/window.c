@@ -3944,7 +3944,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
          default:
             DPRINT1("NtUserSetWindowLong(): Unsupported index %d\n", Index);
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            SetLastWin32Error(ERROR_INVALID_INDEX);
             OldValue = 0;
             break;
       }
