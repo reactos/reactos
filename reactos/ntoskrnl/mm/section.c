@@ -2472,6 +2472,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    LARGE_INTEGER Offset;
    CHAR Buffer;
    FILE_STANDARD_INFORMATION FileInfo;
+   ULONG Length;
 
    /*
     * Create the section
@@ -2534,7 +2535,8 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
                                    FileStandardInformation,
                                    sizeof(FILE_STANDARD_INFORMATION),
                                    &FileInfo,
-                                   &Iosb.Information);
+                                   &Length);
+   Iosb.Information = Length;
    if (!NT_SUCCESS(Status))
    {
       ObDereferenceObject(Section);
@@ -4294,8 +4296,8 @@ NTSTATUS NTAPI
 NtQuerySection(IN HANDLE SectionHandle,
                IN SECTION_INFORMATION_CLASS SectionInformationClass,
                OUT PVOID SectionInformation,
-               IN ULONG SectionInformationLength,
-               OUT PULONG ResultLength  OPTIONAL)
+               IN SIZE_T SectionInformationLength,
+               OUT PSIZE_T ResultLength  OPTIONAL)
 {
    PROS_SECTION_OBJECT Section;
    KPROCESSOR_MODE PreviousMode;
@@ -4874,7 +4876,7 @@ MmForceSectionClosed (
 NTSTATUS NTAPI
 MmMapViewInSystemSpace (IN PVOID SectionObject,
                         OUT PVOID * MappedBase,
-                        IN OUT PULONG ViewSize)
+                        IN OUT PSIZE_T ViewSize)
 {
    PROS_SECTION_OBJECT Section;
    PMMSUPPORT AddressSpace;

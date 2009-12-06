@@ -92,7 +92,7 @@ EiAllocatePool(POOL_TYPE PoolType,
  * @implemented
  */
 PVOID NTAPI
-ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
+ExAllocatePool (POOL_TYPE PoolType, SIZE_T NumberOfBytes)
 /*
  * FUNCTION: Allocates pool memory of a specified type and returns a pointer
  * to the allocated block. This routine is used for general purpose allocation
@@ -141,7 +141,7 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
  * @implemented
  */
 PVOID NTAPI
-ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
+ExAllocatePoolWithTag (POOL_TYPE PoolType, SIZE_T NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
 

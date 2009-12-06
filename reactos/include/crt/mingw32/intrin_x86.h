@@ -968,6 +968,23 @@ __INTRIN_INLINE unsigned long long __emulu(const unsigned int a, const unsigned 
 	return retval;
 }
 
+#ifdef _M_AMD64
+
+__INTRIN_INLINE __int64 __mulh(__int64 a, __int64 b)
+{
+	__int64 retval;
+	__asm__("imulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
+	return retval;
+}
+
+__INTRIN_INLINE unsigned __int64 __umulh(unsigned __int64 a, unsigned __int64 b)
+{
+	unsigned __int64 retval;
+	__asm__("mulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
+	return retval;
+}
+
+#endif
 
 /*** Port I/O ***/
 __INTRIN_INLINE unsigned char __inbyte(const unsigned short Port)

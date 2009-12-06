@@ -12,7 +12,7 @@
 
 typedef unsigned long rulong;
 
-#define R_IS_POOL_PTR(pool,ptr) (void*)(ptr) >= pool->UserBase && (ULONG_PTR)(ptr) < ((ULONG_PTR)pool->UserBase + pool->UserSize)
+#define R_IS_POOL_PTR(pool,ptr) (((void*)(ULONG_PTR)(ptr) >= pool->UserBase) && ((ULONG_PTR)(ptr) < ((ULONG_PTR)pool->UserBase + pool->UserSize)))
 #define R_ASSERT_PTR(pool,ptr) ASSERT( R_IS_POOL_PTR(pool,ptr) )
 #define R_ASSERT_SIZE(pool,sz) ASSERT( sz > (sizeof(R_USED)+2*R_RZ) && sz >= sizeof(R_FREE) && sz < pool->UserSize )
 
@@ -712,7 +712,7 @@ RPoolAlloc ( PR_POOL pool, rulong NumberOfBytes, rulong Tag, rulong align )
 		if ( R_IS_POOL_PTR(pool,NumberOfBytes) )
 		{
 			R_DEBUG("red zone verification requested for block 0x%X\n", NumberOfBytes );
-			RUsedRedZoneCheck(pool,RBodyToHdr((void*)NumberOfBytes), (char*)NumberOfBytes, __FILE__, __LINE__ );
+			RUsedRedZoneCheck(pool,RBodyToHdr((void*)(ULONG_PTR)NumberOfBytes), (char*)(ULONG_PTR)NumberOfBytes, __FILE__, __LINE__ );
 			R_RELEASE_MUTEX(pool);
 			return NULL;
 		}
