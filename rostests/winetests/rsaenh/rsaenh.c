@@ -72,9 +72,15 @@ static void uniquecontainer(char *unique)
     HKEY hkey;
     char guid[MAX_PATH];
     DWORD size = MAX_PATH;
+    HRESULT ret;
 
     /* Get the MachineGUID */
-    RegOpenKeyA(HKEY_LOCAL_MACHINE, szCryptography, &hkey);
+    ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, szCryptography, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
+    if (ret == ERROR_ACCESS_DENIED)
+    {
+        /* Windows 2000 can't handle KEY_WOW64_64KEY */
+        RegOpenKeyA(HKEY_LOCAL_MACHINE, szCryptography, &hkey);
+    }
     RegQueryValueExA(hkey, szMachineGuid, NULL, NULL, (LPBYTE)guid, &size);
     RegCloseKey(hkey);
 
@@ -2085,7 +2091,7 @@ static void test_rsa_round_trip(void)
     if (result)
     {
         ok(dataLen == sizeof(test_string), "unexpected size %d\n", dataLen);
-        ok(!memcmp(data, test_string, sizeof(test_string)), "unexpected value");
+        ok(!memcmp(data, test_string, sizeof(test_string)), "unexpected value\n");
     }
     CryptReleaseContext(prov, 0);
 
