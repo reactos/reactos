@@ -1,7 +1,0 @@
-<package>
-  <name>Samba-TNG</name>
-  <version>snapshot</version>
-  <description>Command line clients to access files and print over SMB protocol</description>
-  <scripts inst="samba-tng.inst.rps"/>
-</package>
-

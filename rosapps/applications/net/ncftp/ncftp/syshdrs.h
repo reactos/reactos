@@ -24,6 +24,8 @@
 //#	include <shlobj.h>
 #	ifdef HAVE_UNISTD_H
 #		include <unistd.h>
+#	else
+#		include <process.h>
 #	endif
 #	include <errno.h>
 #	include <stdio.h>
@@ -42,7 +44,9 @@
 #	include <fcntl.h>
 #	include <signal.h>
 #	include <assert.h>
+#	undef strcasecmp
 #	define strcasecmp stricmp
+#	undef strncasecmp
 #	define strncasecmp strnicmp
 #	define sleep WinSleep
 #	ifndef S_ISREG

@@ -1,7 +1,0 @@
-<package>
-  <name>AbiWord</name>
-  <version>2.4.1</version>
-  <description>Word processor.</description>
-  <scripts inst="abiword.inst.rps"/>
-</package>
-

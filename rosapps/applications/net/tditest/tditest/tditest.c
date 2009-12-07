@@ -10,9 +10,10 @@
  *   26-Nov-2003 Vizzini Updated to run properly on Win2ksp4
  */
 #include <tditest.h>
+#include <pseh/pseh2.h>
 
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 ULONG DebugTraceLevel = -1;
@@ -544,22 +545,18 @@ NTSTATUS TdiSendDatagram(
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
 
-#ifdef _MSC_VER
-	try
+	_SEH2_TRY
 		{
-#endif
 			MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
 		}
-	except(EXCEPTION_EXECUTE_HANDLER)
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 			IoFreeMdl(Mdl);
 			IoFreeIrp(Irp);
 			ExFreePool(ConnectInfo);
 			return STATUS_UNSUCCESSFUL;
-		}
-#endif
+	} _SEH2_END;
 
 	TdiBuildSendDatagram(
 		Irp,               /* I/O Request Packet */
@@ -675,14 +672,11 @@ NTSTATUS TdiReceiveDatagram(
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
 
-#ifdef _MSC_VER
-	try
+	_SEH2_TRY
 		{
-#endif
 			MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
 		}
-	except (EXCEPTION_EXECUTE_HANDLER)
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 		{
 			TDI_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 			IoFreeMdl(Mdl);
@@ -690,8 +684,7 @@ NTSTATUS TdiReceiveDatagram(
 			ExFreePool(MdlBuffer);
 			ExFreePool(ReceiveInfo);
 			return STATUS_INSUFFICIENT_RESOURCES;
-		}
-#endif
+	} _SEH2_END;
 
 	TdiBuildReceiveDatagram(
 		Irp,                    /* I/O Request Packet */
@@ -892,9 +885,7 @@ VOID TdiUnload(
 
 
 NTSTATUS
-#ifndef _MSC_VER
-STDCALL
-#endif
+NTAPI
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath)

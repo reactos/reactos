@@ -113,7 +113,7 @@ HaveSpool(void)
 		gHaveSpool = 0;
 		if (gOurInstallationPath[0] != '\0') {
 			OurInstallationPath(ncftpbatch, sizeof(ncftpbatch), "ncftpbatch.exe");
-			gHaveSpool = (access(ncftpbatch, F_OK) == 0) ? 1 : 0;
+			gHaveSpool = (_access(ncftpbatch, F_OK) == 0) ? 1 : 0;
 		}
 	}
 #elif defined(BINDIR)

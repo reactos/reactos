@@ -321,7 +321,7 @@ LoadFirewallPrefs(int forceReload)
 		if (fp != NULL) {
 			WriteDefaultFirewallPrefs(fp);
 			(void) fclose(fp);
-			(void) chmod(pathName, 00600);
+			(void) _chmod(pathName, 00600);
 			gNumProgramRuns = 1;
 		}
 	}

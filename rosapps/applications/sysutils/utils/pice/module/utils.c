@@ -2331,7 +2331,7 @@ size_t PICE_len( HANDLE hFile )
  */
 
 INT
-STDCALL
+WINAPI
 PICE_MultiByteToWideChar (
 	UINT	CodePage,
 	DWORD	dwFlags,

@@ -1,9 +1,0 @@
-Sub Main
-  ' ToDo: Choose from different mirrors
-  download ("http://download.mozilla.org/?lang=de&product=firefox-1.5&os=win", "firefoxinstaller.exe")
-End Sub
-
-Sub After
-  shell "firefoxinstaller.exe"
-  ' ToDo: Delete firefoxinstaller.exe
-End Sub

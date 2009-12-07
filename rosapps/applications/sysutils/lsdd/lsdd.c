@@ -31,7 +31,7 @@ static char DeviceName [DEVICE_SIZE];
 
 
 BOOL
-STDCALL
+WINAPI
 GetNextString (
 	char *	BufferIn,
 	char *	BufferOut,

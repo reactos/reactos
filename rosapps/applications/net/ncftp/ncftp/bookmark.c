@@ -297,7 +297,7 @@ OpenBookmarkFile(int *numBookmarks0)
 		return NULL;		/* Okay to not have one yet. */
 	}
 
-	(void) chmod(pathName, 00600);
+	(void) _chmod(pathName, 00600);
 	if (FGets(line, sizeof(line), fp) == NULL) {
 		(void) fprintf(stderr, "%s: invalid format.\n", pathName);
 		(void) fclose(fp);
@@ -683,7 +683,7 @@ OpenTmpBookmarkFile(int nb)
 		perror(pathName);
 		return (NULL);
 	}
-	(void) chmod(pathName, 00600);
+	(void) _chmod(pathName, 00600);
 	if (nb > 0) {
 		if (fprintf(outfp, "NcFTP bookmark-file version: %d\nNumber of bookmarks: %d\n", kBookmarkVersion, nb) < 0) {
 			(void) fprintf(stderr, "Could not save bookmark.\n");

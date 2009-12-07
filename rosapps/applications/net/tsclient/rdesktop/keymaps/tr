@@ -1,0 +1,139 @@
+# rdesktop Turkish Q Keyboard Layout
+#
+# Modified by Umit Oztosun <umit@liqia.com> 20040328
+#
+# Modified from the original mapping file provided with rdesktop 1.3.1.
+# This version works correctly with the right X settings.
+
+include common
+map 0x41f
+
+# First row
+quotedbl 0x29
+eacute 0x29 shift
+backslash 0x29 altgr
+
+exclam 0x02 shift
+onesuperior 0x02 altgr
+exclamdown 0x02 shift altgr
+
+apostrophe 0x03 shift
+sterling 0x03 altgr
+twosuperior 0x03 shift altgr
+
+dead_circumflex 0x04 shift
+numbersign 0x04 altgr
+threesuperior 0x04 shift altgr
+
+plus 0x05 shift
+dollar 0x05 altgr
+onequarter 0x05 shift altgr
+
+percent 0x06 shift
+onehalf 0x06 altgr
+threeeighths 0x06 shift altgr
+
+ampersand 0x07 shift
+threequarters 0x07 altgr
+
+slash 0x08 shift
+braceleft 0x08 altgr
+
+parenleft 0x09 shift
+bracketleft 0x09 altgr
+
+parenright 0x0a shift
+bracketright 0x0a altgr
+plusminus 0x0a shift altgr
+
+equal 0x0b shift
+braceright 0x0b altgr
+degree 0x0b shift altgr
+
+asterisk 0x0c
+question 0x0c shift
+backslash 0x0c altgr
+questiondown 0x0c shift altgr
+
+minus 0x0d
+underscore 0x0d shift
+division 0x0d altgr
+
+at 0x10 altgr
+
+EuroSign 0x12 altgr
+
+trademark 0x14 altgr
+
+ucircumflex 0x16 altgr
+Ucircumflex 0x16 shift altgr
+
+idotless 0x17
+I 0x17 shift
+icircumflex 0x17 altgr
+Icircumflex 0x17 altgr shift
+
+ocircumflex 0x18 altgr
+Ocircumflex 0x18 shift altgr
+
+gbreve 0x1a
+Gbreve 0x1a shift
+
+udiaeresis 0x1b
+Udiaeresis 0x1b shift
+asciitilde 0x1b altgr
+dead_macron 0x1b shift altgr
+
+comma 0x2b
+semicolon 0x2b shift
+grave 0x2b altgr
+dead_grave 0x2b altgr shift
+
+# Second row
+
+acircumflex 0x1e altgr
+Acircumflex 0x1e shift altgr
+
+section 0x1f altgr
+
+ordfeminine 0x21 altgr
+
+scedilla 0x27
+Scedilla 0x27 shift
+acute 0x27 altgr
+dead_acute 0x27 shift altgr
+
+i 0x28
+Iabovedot 0x28 shift
+apostrophe 0x28 altgr
+dead_caron 0x28 shift altgr
+
+less 0x56
+greater 0x56 shift
+bar 0x56 altgr
+brokenbar 0x56 shift altgr
+
+cent 0x2e altgr
+copyright 0x2e shift altgr
+
+leftdoublequotemark 0x2f altgr
+
+rightdoublequotemark 0x30 altgr
+
+mu 0x32 altgr
+masculine 0x32 shift altgr
+
+odiaeresis 0x33
+Odiaeresis 0x33 shift
+multiply 0x33 altgr
+
+ccedilla 0x34
+Ccedilla 0x34 shift
+periodcentered 0x34 altgr
+division 0x34 shift altgr
+
+period 0x35
+colon 0x35 shift
+dead_abovedot 0x35 altgr
+dead_abovedot 0x35 shift altgr
+

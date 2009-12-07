@@ -108,10 +108,11 @@ DrawProc(IN PFONT_WND_INFO Info, IN PAINTSTRUCT* ps)
     UCHAR uCharacterRow;
     UCHAR uBit;
     WCHAR szInfoText[9];
+    HBITMAP hBitmapOld;
 
     // Preparations
     hBoxDC = CreateCompatibleDC(NULL);
-    SelectObject(hBoxDC, Info->MainWndInfo->hBoxBmp);
+    hBitmapOld = SelectObject(hBoxDC, Info->MainWndInfo->hBoxBmp);
 
     hFont = CreateFontW(13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, L"Tahoma");
     hOldFont = SelectObject(ps->hdc, hFont);
@@ -177,6 +178,7 @@ DrawProc(IN PFONT_WND_INFO Info, IN PAINTSTRUCT* ps)
         }
     }
 
+    SelectObject(hBoxDC, hBitmapOld);
     SelectObject(ps->hdc, hOldFont);
     DeleteObject(hFont);
     SelectObject(ps->hdc, hOldBrush);

@@ -146,7 +146,7 @@ FontWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     LoadAndFormatString(IDS_SAVEPROMPT, &pszPrompt, szFile);
 
                     nMsgBoxResult = MessageBoxW(hwnd, pszPrompt, szAppName, MB_YESNOCANCEL | MB_ICONQUESTION);
-                    HeapFree(hProcessHeap, 0, pszPrompt);
+                    LocalFree(pszPrompt);
 
                     switch(nMsgBoxResult)
                     {
@@ -394,7 +394,7 @@ CreateFontWindow(IN PMAIN_WND_INFO MainWndInfo, IN PFONT_OPEN_INFO OpenInfo)
                                          (LPARAM)Info );
 
             if(!OpenInfo->pszFileName)
-                HeapFree(hProcessHeap, 0, pszWindowTitle);
+                LocalFree(pszWindowTitle);
 
             if(hFontWnd)
             {

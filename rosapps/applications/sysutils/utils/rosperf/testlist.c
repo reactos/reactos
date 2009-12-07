@@ -26,6 +26,7 @@ static TEST TestList[] =
     { L"hlines", L"Horizontal Lines", NullInit, LinesHorizontalProc, NullCleanup, NullCleanup },
     { L"vlines", L"Vertical Lines", NullInit, LinesVerticalProc, NullCleanup, NullCleanup },
     { L"lines", L"Lines", NullInit, LinesProc, NullCleanup, NullCleanup },
+    { L"scroll", L"Scroll", NullInit, ScrollProc, NullCleanup, NullCleanup },
     { L"text", L"Text", NullInit, TextProc, NullCleanup, NullCleanup },
     { L"alpha", L"Alpha Blend", AlphaBlendInit, AlphaBlendProc, NullCleanup, AlphaBlendCleanup },
     { L"hgradient", L"Horizontal Gradient", NullInit, GradientHorizontalProc, NullCleanup, NullCleanup },

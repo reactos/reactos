@@ -220,7 +220,7 @@ unsigned int CConsole::GetTabWidth()
   return TAB_WIDTH;
 }
 
-BOOL CConsole::SetTitle(TCHAR *p)
+BOOL CConsole::SetTitle(const TCHAR *p)
 {
 	return SetConsoleTitle(p);
 }
@@ -640,7 +640,7 @@ Paste:
 			m_pchBuffer[dwLastCharOffset] = 0;	// terminate string in buffer
 			ret = Write(m_pchBuffer);
 			m_History.AddHistoryLine(m_pchBuffer);
-			TCHAR *strLF = _T("\n");
+			static TCHAR strLF[] = _T("\n");
 			ret = Write(strLF);
 			break;
 		}
@@ -1008,7 +1008,7 @@ void CConsole::BeginScrollingOperation()
 	m_Lines = 0;
 }
 
-BOOL CConsole::WriteString(TCHAR *pchString, COORD Position)
+BOOL CConsole::WriteString(const TCHAR *pchString, COORD Position)
 {
 	CHAR_INFO ciBuffer[256];
 	int nSize = _tcslen(pchString);

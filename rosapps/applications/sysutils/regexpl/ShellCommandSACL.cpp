@@ -75,7 +75,7 @@ int CShellCommandSACL::Execute(CConsole &rConsole, CArgumentParser& rArguments)
   const TCHAR *pszParameter;
   const TCHAR *pszCommandItself = rArguments.GetNextArgument();
   DWORD dwError;
-  PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
+  PISECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
   CSecurityDescriptor sd;
   HANDLE hThreadToken = INVALID_HANDLE_VALUE;
 
@@ -220,7 +220,7 @@ CheckSACLArgument:
     goto Error;
   }
 
-  pSecurityDescriptor = (PSECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
+  pSecurityDescriptor = (PISECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
   if (!pSecurityDescriptor)
   {
       _tcsncpy(pszError_msg,_T("\nOut of memory.\n"),ERROR_MSG_BUFFER_SIZE-1);

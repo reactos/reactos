@@ -22,10 +22,10 @@ Lista parametrów:\n\
 	                   Program sam zapyta o has³o, jeœli nie jest podane.\n\n\
   /FO     format           Wyznacza format w którym wyœwietlone zostan¹\n\
 	                   informacje o systemie.\n\
-	                   Dostêpne formaty: \"TABLE\", \"LIST\", \"CSV\".\n\n\
-  /NH                      Blokuje wyœwietlanie kolumny \"Column Header\" w\n\
+	                   Dostêpne formaty: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                      Blokuje wyœwietlanie kolumny ""Column Header"" w\n\
 	                   informacjach systemowych.\n\
-	                   Dzia³a tylko z formatami \"TABLE\" i \"CSV\".\n\n\
+	                   Dzia³a tylko z formatami ""TABLE"" i ""CSV"".\n\n\
   /?                       Wyœwietla niniejszy tekst pomocy.\n\n\
 Przyk³ady:\n\
   SYSTEMINFO\n\

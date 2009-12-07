@@ -59,7 +59,7 @@ HINSTANCE hInst;
 DWORD inConMode;
 DWORD outConMode;
 
-DWORD columnRightPositions[5];
+DWORD columnRightPositions[6];
 TCHAR lpSeparator[80];
 TCHAR lpHeader[80];
 TCHAR lpMemUnit[3];
@@ -277,10 +277,11 @@ void DisplayScreen()
 int ProcessKeys(int numEvents)
 {
 	DWORD numChars;
+	TCHAR key;
 	if ((ProcessCount-scrolled < 17) && (ProcessCount > 17))
 		scrolled = ProcessCount-17;
 
-	TCHAR key = GetKeyPressed(numEvents);
+	key = GetKeyPressed(numEvents);
 	if (key == KEY_QUIT)
 		return TRUE;
 	else if (key == KEY_KILL)

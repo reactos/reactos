@@ -26,7 +26,7 @@
 #define PARAMS_SEPARATOR " "
 #define PARAMS_SEPARATOR_LEN strlen(PARAMS_SEPARATOR);
 
-void DisplayError(char *pszAPI);
+void DisplayError(const char *pszAPI);
 void ReadAndHandleOutput(HANDLE hPipeRead);
 void PrepAndLaunchRedirectedChild(HANDLE hChildStdOut,
 								  HANDLE hChildStdIn,
@@ -177,6 +177,7 @@ void PrepAndLaunchRedirectedChild(HANDLE hChildStdOut,
 {
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si;
+    static CHAR Title[] = "debugged program console";
 
 	// Set up the start up info struct.
 	ZeroMemory(&si,sizeof(STARTUPINFO));
@@ -185,7 +186,7 @@ void PrepAndLaunchRedirectedChild(HANDLE hChildStdOut,
 	si.hStdOutput = hChildStdOut;
 	si.hStdInput  = hChildStdIn;
 	si.hStdError  = hChildStdErr;
-	si.lpTitle = "debugged program console";
+	si.lpTitle = Title;
 	// Use this if you want to hide the child:
 	//     si.wShowWindow = SW_HIDE;
 	// Note that dwFlags must include STARTF_USESHOWWINDOW if you want to
@@ -274,7 +275,7 @@ DWORD WINAPI GetAndSendInputThread(LPVOID lpvThreadParam)
 // DisplayError
 // Displays the error number and corresponding message.
 ///////////////////////////////////////////////////////////////////////
-void DisplayError(char *pszAPI)
+void DisplayError(const char *pszAPI)
 {
 	LPVOID lpvMessageBuffer;
 	CHAR szPrintBuffer[512];

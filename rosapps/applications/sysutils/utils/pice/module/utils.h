@@ -314,7 +314,7 @@ int PICE_close (HANDLE	hFile);
 size_t PICE_len( HANDLE hFile );
 WCHAR * PICE_wcscpy(WCHAR * str1,const WCHAR * str2);
 INT
-STDCALL
+WINAPI
 PICE_MultiByteToWideChar (
 	UINT	CodePage,
 	DWORD	dwFlags,

@@ -69,7 +69,7 @@ loadFile(const char *fileName, int *fileSize_)
    }
 
    /* Get file size */
-   if (fstat(fileno(f), &sb) < 0)
+   if (fstat(_fileno(f), &sb) < 0)
    {
       fclose(f);
       printf("Couldn't get size of file %s!\n", fileName);
@@ -444,7 +444,7 @@ applyPatch_file_open_error:
             printf("(S)kip, (R)etry, (A)bort, (M)anually enter filename");
             do
             {
-               c = getch();
+               c = _getch();
             }
             while (c != 's' && c != 'r' && c != 'a' && c != 'm');
             printf("\n");
@@ -496,7 +496,7 @@ applyPatch_file_open_error:
          printf("Do you want to make a backup of %s? (Y)es, (N)o, (A)bort", fileName);
          do
          {
-            c = getch();
+            c = _getch();
          }
          while (c != 'y' && c != 'n' && c != 'a');
          printf("\n");
@@ -506,12 +506,12 @@ applyPatch_file_open_error:
             _snprintf(buffer, MAX_PATH, "%s.bak", fileName);
             buffer[MAX_PATH-1] = '\0';
             makeBackup = 1;
-            if (access(buffer, 0) >= 0) /* file exists */
+            if (_access(buffer, 0) >= 0) /* file exists */
             {
                printf("File %s already exists, overwrite? (Y)es, (N)o, (A)bort", buffer);
                do
                {
-                  c = getch();
+                  c = _getch();
                }
                while (c != 'y' && c != 'n' && c != 'a');
                printf("\n");

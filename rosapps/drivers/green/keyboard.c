@@ -213,7 +213,6 @@ KeyboardDeviceWorker(
 		if (!Irp)
 		{
 			/* no memory actually, try later */
-			CHECKPOINT;
 			KeStallExecutionProcessor(10);
 			continue;
 		}
