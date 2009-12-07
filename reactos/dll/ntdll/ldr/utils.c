@@ -838,7 +838,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 {
   NTSTATUS              Status;
   PLDR_DATA_TABLE_ENTRY Module;
-
+  ULONG_PTR cookie;
   PPEB Peb = NtCurrentPeb();
 
   TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n",
@@ -851,12 +851,18 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   if (NT_SUCCESS(Status) &&
       (!LoadFlags || 0 == (*LoadFlags & LOAD_LIBRARY_AS_DATAFILE)))
     {
+      if (!create_module_activation_context( Module ))
+	  {
+        RtlActivateActivationContext(0, Module->EntryPointActivationContext, &cookie);
+      }
+
       if (!(Module->Flags & LDRP_PROCESS_ATTACH_CALLED))
         {
           RtlEnterCriticalSection(Peb->LoaderLock);
           Status = LdrpAttachProcess();
           RtlLeaveCriticalSection(Peb->LoaderLock);
         }
+       if (Module->EntryPointActivationContext) RtlDeactivateActivationContext(0, cookie);
     }
 
  if ((!Module) && (NT_SUCCESS(Status)))

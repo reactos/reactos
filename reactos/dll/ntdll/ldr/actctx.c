@@ -66,8 +66,8 @@ NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fullname )
         size = needed;
     }
 
-    DPRINT1("manafestpath === %S\n", info->lpAssemblyManifestPath);
-    DPRINT1("DirectoryName === %S\n", info->lpAssemblyDirectoryName);
+    DPRINT("manafestpath === %S\n", info->lpAssemblyManifestPath);
+    DPRINT("DirectoryName === %S\n", info->lpAssemblyDirectoryName);
     if (!info->lpAssemblyManifestPath || !info->lpAssemblyDirectoryName)
     {
         status = STATUS_SXS_KEY_NOT_FOUND;
