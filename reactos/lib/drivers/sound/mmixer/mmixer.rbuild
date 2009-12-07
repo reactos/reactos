@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
+<module name="mmixer" type="staticlibrary" allowwarnings="false" unicode="yes">
+	<include base="ReactOS">include/reactos/libs/sound</include>
+	<define name="NDEBUG">1</define>
+	<file>mixer.c</file>
+</module>
