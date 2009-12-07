@@ -61,6 +61,7 @@ static NTSTATUS LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                OUT PVOID *BaseAddress OPTIONAL);
 static NTSTATUS LdrpAttachProcess(VOID);
 static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
+static NTSTATUS LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Unload);
 
 NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fulldosname );
 NTSTATUS create_module_activation_context( LDR_DATA_TABLE_ENTRY *module );
@@ -1836,7 +1837,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptorCurrent;
    PIMAGE_TLS_DIRECTORY TlsDirectory;
    ULONG TlsSize = 0;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    PLDR_DATA_TABLE_ENTRY ImportedModule;
    PCHAR ImportedName;
    PWSTR ModulePath;
@@ -2043,7 +2044,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
            if (!NT_SUCCESS(Status))
              {
                DPRINT1("failed to load %s\n", ImportedName);
-               return Status;
+               break;
              }
 Success:
            if (Module == ImportedModule)
@@ -2057,10 +2058,28 @@ Success:
            if (!NT_SUCCESS(Status))
              {
                DPRINT1("failed to import %s\n", ImportedName);
-               return Status;
+               break;
              }
            ImportModuleDirectoryCurrent++;
          }
+         if(!NT_SUCCESS(Status))
+           {
+            NTSTATUS errorStatus = Status;
+
+            while(ImportModuleDirectoryCurrent-- >= ImportModuleDirectory)
+              {
+                ImportedName = (PCHAR)Module->DllBase + ImportModuleDirectoryCurrent->Name;
+
+                Status = LdrpGetOrLoadModule(NULL, ImportedName, &ImportedModule, FALSE);
+                if(NT_SUCCESS(Status) && Module != ImportedModule)
+                  {
+                    Status = LdrpUnloadModule(ImportedModule, FALSE);
+                    if (!NT_SUCCESS(Status)) DPRINT1("unable to unload %s\n", ImportedName);
+                  }
+              }
+            return errorStatus;
+           }
+
      }
 
    if (TlsDirectory && TlsSize > 0)
@@ -2357,6 +2376,13 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
         if (!NT_SUCCESS(Status))
           {
             DPRINT1("LdrFixupImports failed for %wZ, status=%x\n", &(*Module)->BaseDllName, Status);
+            NtUnmapViewOfSection (NtCurrentProcess (), ImageBase);
+            NtClose (SectionHandle);
+            RtlFreeUnicodeString (&FullDosName);
+            RtlFreeUnicodeString (&(*Module)->FullDllName);
+            RtlFreeUnicodeString (&(*Module)->BaseDllName);
+            RemoveEntryList (&(*Module)->InLoadOrderLinks);
+            RtlFreeHeap (RtlGetProcessHeap (), 0, Module);
             return Status;
           }
 
@@ -2377,7 +2403,7 @@ LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module,
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptorCurrent;
    PCHAR ImportedName;
    PLDR_DATA_TABLE_ENTRY ImportedModule;
-   NTSTATUS Status;
+   NTSTATUS Status = 0;
    LONG LoadCount;
    ULONG Size;
 
