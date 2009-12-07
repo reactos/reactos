@@ -87,9 +87,9 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 		      (ProcessId == (HANDLE)2) )
 		{
 			if (ProcessId == (HANDLE)1 || ProcessId == (HANDLE)2 ||
-			    ((LONG)ProcessId & 0xfffc) == ((ULONG)pEntry->ProcessId & 0xfffc))
+			    ((LONG_PTR)ProcessId & 0xfffc) == ((ULONG_PTR)pEntry->ProcessId & 0xfffc))
 			{
-				handle = GDI_HANDLE_CREATE(i, pEntry->Type);
+				handle = GDI_HANDLE_CREATE(i, (ULONG_PTR)pEntry->Type);
 				index = ListView_GetItemCount(hHandleListCtrl);
 				item.iItem = index;
 				item.iSubItem = 0;
@@ -107,13 +107,13 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 				str2 = GetTypeName(handle);
 				ListView_SetItemText(hHandleListCtrl, index, 3, str2);
 
-				wsprintf(strText, L"%#08x", (UINT)pEntry->ProcessId);
+				wsprintf(strText, L"%#08x", (UINT_PTR)pEntry->ProcessId);
 				ListView_SetItemText(hHandleListCtrl, index, 4, strText);
 
-				wsprintf(strText, L"%#08x", (UINT)pEntry->KernelData);
+				wsprintf(strText, L"%#08x", (UINT_PTR)pEntry->KernelData);
 				ListView_SetItemText(hHandleListCtrl, index, 5, strText);
 
-				wsprintf(strText, L"%#08x", (UINT)pEntry->UserData);
+				wsprintf(strText, L"%#08x", (UINT_PTR)pEntry->UserData);
 				ListView_SetItemText(hHandleListCtrl, index, 6, strText);
 
 				wsprintf(strText, L"%#08x", (UINT)pEntry->Type);

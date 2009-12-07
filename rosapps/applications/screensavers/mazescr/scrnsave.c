@@ -167,7 +167,7 @@ void ParseCommandLine(PSTR szCmdLine, int *chOption, HWND *hwndParent)
 	if(isdigit(ch))
 	{
 		unsigned int i = atoi(szCmdLine - 1);
-		*hwndParent = (HWND)i;
+		*hwndParent = (HWND)(ULONG_PTR)i;
 	}
 	else
 		*hwndParent = 0;
