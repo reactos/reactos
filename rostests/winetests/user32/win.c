@@ -5860,7 +5860,7 @@ START_TEST(win)
     test_layered_window();
 
     test_SetForegroundWindow(hwndMain);
-    test_shell_window();
+//    test_shell_window();
     test_handles( hwndMain );
     test_winregion();
 
