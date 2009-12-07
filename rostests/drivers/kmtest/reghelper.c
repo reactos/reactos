@@ -75,7 +75,7 @@ PWCHAR CreateLowerDeviceRegistryKey(PUNICODE_STRING RegistryPath, PWCHAR NewDriv
     /* Remove the current driver name from the string */
     /* FIXME: Dont use hard coded driver name, determine it from the string returned from the above Query */
     Length = (wcslen((PWCHAR)ValuePartialInfo->Data) * 2) - (wcslen(L"kmtest.sys") * 2);
-    RtlZeroMemory((PVOID)((ULONG)ValuePartialInfo->Data + Length),
+    RtlZeroMemory((PVOID)((ULONG_PTR)ValuePartialInfo->Data + Length),
     wcslen(L"drvtests.sys") * 2);
     ZwClose(ServiceKey);
 

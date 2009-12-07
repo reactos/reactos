@@ -324,7 +324,7 @@ ObtCreateObjects()
         "Object insertion should have failed, but got 0x%lX", Status);
     ok(ObBody[0] == ObBody1[1],
         "Object bodies doesn't match, 0x%p != 0x%p", ObBody[0], ObBody1[1]);
-    ok(ObHandle2[0] != NULL, "Bad handle returned 0x%lX", (ULONG)ObHandle2[0]);
+    ok(ObHandle2[0] != NULL, "Bad handle returned 0x%lX", (ULONG_PTR)ObHandle2[0]);
 
     DPRINT1("%d %d %d %d %d %d %d\n", DumpCount, OpenCount, // deletecount+1
         CloseCount, DeleteCount, ParseCount, OkayToCloseCount, QueryNameCount);

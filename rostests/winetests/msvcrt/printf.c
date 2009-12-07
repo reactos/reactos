@@ -23,8 +23,10 @@
 /* With Visual Studio >= 2005,  swprintf() takes an extra parameter unless
  * the following macro is defined.
  */
+#ifdef _MSC_VER
 #define _CRT_NON_CONFORMING_SWPRINTFS
- 
+#endif
+
 #include <stdio.h>
 
 #include "windef.h"
