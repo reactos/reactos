@@ -1,6 +1,6 @@
 #include "ddrawtest.h"
 
-LONG WINAPI BasicWindowProc (HWND hwnd, UINT message, UINT wParam, LONG lParam)
+LRESULT WINAPI BasicWindowProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{

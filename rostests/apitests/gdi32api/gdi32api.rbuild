@@ -1,4 +1,4 @@
-<module name="gdi32api" type="win32cui">
+<module name="gdi32api" type="win32cui" allowwarnings="true">
 	<include base="gdi32api">.</include>
 	<library>apitest</library>
 	<library>user32</library>
