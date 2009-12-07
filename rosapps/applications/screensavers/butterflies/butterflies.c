@@ -238,7 +238,7 @@ BOOL AboutProc(HWND hdlg, UINT msg, WPARAM wpm, LPARAM lpm){
 		{
 			SetTextColor((HDC)wpm, RGB(0,0,255));
 			SetBkColor((HDC)wpm, (COLORREF)GetSysColor(COLOR_3DFACE));
-			return((int)GetSysColorBrush(COLOR_3DFACE));
+			return(HandleToLong(GetSysColorBrush(COLOR_3DFACE)));
 		}
 		break;
     case WM_COMMAND:

@@ -213,7 +213,8 @@ static int
 outputPatch(const char *outputFileName)
 {
    char *patchExe, *patchBuffer = NULL;
-   int i, size, patchExeSize, patchSize, stringSize, stringOffset, patchOffset;
+   int i, size, patchExeSize, patchSize, stringSize;
+   size_t stringOffset, patchOffset;
    Patch *patch;
    PatchedFile *files;
 
@@ -316,14 +317,14 @@ loadPatch()
       return -1;
    }
 
-   m_patch.name = p + (int)patch->name;
+   m_patch.name = p + (ULONG_PTR)patch->name;
    m_patch.fileCount = patch->fileCount;
-   m_patch.files = (PatchedFile *)(p + (int)patch->files);
+   m_patch.files = (PatchedFile *)(p + (ULONG_PTR)patch->files);
 
    for (i = 0; i < m_patch.fileCount; i++)
    {
-      m_patch.files[i].name = p + (int)m_patch.files[i].name;
-      m_patch.files[i].patches = (PatchedByte *)(p + (int)m_patch.files[i].patches);
+      m_patch.files[i].name = p + (ULONG_PTR)m_patch.files[i].name;
+      m_patch.files[i].patches = (PatchedByte *)(p + (ULONG_PTR)m_patch.files[i].patches);
    }
 
    printf("Patch %s loaded...\n", m_patch.name);
