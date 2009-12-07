@@ -28,13 +28,38 @@
 
 #define MAGIC_DEAD 0xdeadbeef
 
+static BOOL (WINAPI *pHeapQueryInformation)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T, PSIZE_T);
+
 static SIZE_T resize_9x(SIZE_T size)
 {
     DWORD dwSizeAligned = (size + 3) & ~3;
     return max(dwSizeAligned, 12); /* at least 12 bytes */
 }
 
-START_TEST(heap)
+static void test_sized_HeapAlloc(int nbytes)
+{
+    int success;
+    char *buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbytes);
+    ok(buf != NULL, "allocate failed\n");
+    ok(buf[0] == 0, "buffer not zeroed\n");
+    success = HeapFree(GetProcessHeap(), 0, buf);
+    ok(success, "free failed\n");
+}
+
+static void test_sized_HeapReAlloc(int nbytes1, int nbytes2)
+{
+    int success;
+    char *buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbytes1);
+    ok(buf != NULL, "allocate failed\n");
+    ok(buf[0] == 0, "buffer not zeroed\n");
+    buf = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buf, nbytes2);
+    ok(buf != NULL, "reallocate failed\n");
+    ok(buf[nbytes2-1] == 0, "buffer not zeroed\n");
+    success = HeapFree(GetProcessHeap(), 0, buf);
+    ok(success, "free failed\n");
+}
+
+static void test_heap(void)
 {
     LPVOID  mem;
     LPVOID  msecond;
@@ -47,6 +72,7 @@ START_TEST(heap)
     /* Heap*() functions */
     mem = HeapAlloc(GetProcessHeap(), 0, 0);
     ok(mem != NULL, "memory not allocated for size 0\n");
+    HeapFree(GetProcessHeap(), 0, mem);
 
     mem = HeapReAlloc(GetProcessHeap(), 0, NULL, 10);
     ok(mem == NULL, "memory allocated by HeapReAlloc\n");
@@ -64,13 +90,20 @@ START_TEST(heap)
     /* test some border cases of HeapAlloc and HeapReAlloc */
     mem = HeapAlloc(GetProcessHeap(), 0, 0);
     ok(mem != NULL, "memory not allocated for size 0\n");
-    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~0UL - 7);
-    ok(msecond == NULL, "HeapReAlloc(0xfffffff8) should have failed\n");
-    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~0UL);
-    ok(msecond == NULL, "HeapReAlloc(0xffffffff) should have failed\n");
+    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~(SIZE_T)0 - 7);
+    ok(msecond == NULL, "HeapReAlloc(~0 - 7) should have failed\n");
+    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~(SIZE_T)0);
+    ok(msecond == NULL, "HeapReAlloc(~0) should have failed\n");
     HeapFree(GetProcessHeap(), 0, mem);
-    mem = HeapAlloc(GetProcessHeap(), 0, ~0UL);
-    ok(mem == NULL, "memory allocated for size ~0UL\n");
+    mem = HeapAlloc(GetProcessHeap(), 0, ~(SIZE_T)0);
+    ok(mem == NULL, "memory allocated for size ~0\n");
+
+    /* large blocks must be 16-byte aligned */
+    mem = HeapAlloc(GetProcessHeap(), 0, 512 * 1024);
+    ok( mem != NULL, "failed for size 512K\n" );
+    ok( (ULONG_PTR)mem % 16 == 0 || broken((ULONG_PTR)mem % 16) /* win9x */,
+        "512K block not 16-byte aligned\n" );
+    HeapFree(GetProcessHeap(), 0, mem);
 
     /* Global*() functions */
     gbl = GlobalAlloc(GMEM_MOVEABLE, 0);
@@ -183,26 +216,41 @@ START_TEST(heap)
     ok(mem == NULL, "Expected NULL, got %p\n", mem);
 
     /* invalid free */
+    if (sizeof(void *) != 8)  /* crashes on 64-bit Vista */
+    {
     SetLastError(MAGIC_DEAD);
     mem = GlobalFree(gbl);
-    ok(mem == gbl, "Expected gbl, got %p\n", mem);
-    ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+        ok(mem == gbl || broken(mem == NULL) /* nt4 */, "Expected gbl, got %p\n", mem);
+        if (mem == gbl)
+            ok(GetLastError() == ERROR_INVALID_HANDLE ||
+               GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
+               "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    }
 
     gbl = GlobalAlloc(GMEM_DDESHARE, 100);
 
     res = GlobalUnlock(gbl);
-    ok(res == 1, "Expected 1, got %d\n", res);
+    ok(res == 1 ||
+       res == 0, /* win9x */
+       "Expected 1 or 0, got %d\n", res);
 
     res = GlobalUnlock(gbl);
-    ok(res == 1, "Expected 1, got %d\n", res);
+    ok(res == 1 ||
+       res == 0, /* win9x */
+       "Expected 1 or 0, got %d\n", res);
 
     /* GlobalSize on an invalid handle */
+    if (sizeof(void *) != 8)  /* crashes on 64-bit Vista */
+    {
     SetLastError(MAGIC_DEAD);
     size = GlobalSize((HGLOBAL)0xc042);
     ok(size == 0, "Expected 0, got %ld\n", size);
-    ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+        ok(GetLastError() == ERROR_INVALID_HANDLE ||
+           GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
+           "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    }
+
+    GlobalFree(gbl);
 
     /* ####################################### */
     /* Local*() functions */
@@ -317,4 +365,119 @@ START_TEST(heap)
         "MAGIC_DEAD)\n", mem, GetLastError(), GetLastError());
 
     GlobalFree(gbl);
+}
+
+static void test_obsolete_flags(void)
+{
+    static struct {
+        UINT flags;
+        UINT globalflags;
+    } test_global_flags[] = {
+        {GMEM_FIXED | GMEM_NOTIFY, 0},
+        {GMEM_FIXED | GMEM_DISCARDABLE, 0},
+        {GMEM_MOVEABLE | GMEM_NOTIFY, 0},
+        {GMEM_MOVEABLE | GMEM_DDESHARE, GMEM_DDESHARE},
+        {GMEM_MOVEABLE | GMEM_NOT_BANKED, 0},
+        {GMEM_MOVEABLE | GMEM_NODISCARD, 0},
+        {GMEM_MOVEABLE | GMEM_DISCARDABLE, GMEM_DISCARDABLE},
+        {GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_DISCARDABLE | GMEM_LOWER | GMEM_NOCOMPACT | GMEM_NODISCARD |
+         GMEM_NOT_BANKED | GMEM_NOTIFY, GMEM_DDESHARE | GMEM_DISCARDABLE},
+    };
+
+    unsigned int i;
+    HGLOBAL gbl;
+    UINT resultflags;
+
+    UINT (WINAPI *pGlobalFlags)(HGLOBAL);
+
+    pGlobalFlags = (void *) GetProcAddress(GetModuleHandleA("kernel32"), "GlobalFlags");
+
+    if (!pGlobalFlags)
+    {
+        win_skip("GlobalFlags is not available\n");
+        return;
+    }
+
+    for (i = 0; i < sizeof(test_global_flags)/sizeof(test_global_flags[0]); i++)
+    {
+        gbl = GlobalAlloc(test_global_flags[i].flags, 4);
+        ok(gbl != NULL, "GlobalAlloc failed\n");
+
+        SetLastError(MAGIC_DEAD);
+        resultflags = pGlobalFlags(gbl);
+
+        ok( resultflags == test_global_flags[i].globalflags ||
+            broken(resultflags == (test_global_flags[i].globalflags & ~GMEM_DDESHARE)), /* win9x */
+            "%u: expected 0x%08x, but returned 0x%08x with %d\n",
+            i, test_global_flags[i].globalflags, resultflags, GetLastError() );
+
+        GlobalFree(gbl);
+    }
+}
+
+static void test_HeapQueryInformation(void)
+{
+    ULONG info;
+    SIZE_T size;
+    BOOL ret;
+
+    pHeapQueryInformation = (void *)GetProcAddress(GetModuleHandle("kernel32.dll"), "HeapQueryInformation");
+    if (!pHeapQueryInformation)
+    {
+        win_skip("HeapQueryInformation is not available\n");
+        return;
+    }
+
+    if (0) /* crashes under XP */
+    {
+        size = 0;
+        ret = pHeapQueryInformation(0,
+                                HeapCompatibilityInformation,
+                                &info, sizeof(info), &size);
+        size = 0;
+        ret = pHeapQueryInformation(GetProcessHeap(),
+                                HeapCompatibilityInformation,
+                                NULL, sizeof(info), &size);
+    }
+
+    size = 0;
+    SetLastError(0xdeadbeef);
+    ret = pHeapQueryInformation(GetProcessHeap(),
+                                HeapCompatibilityInformation,
+                                NULL, 0, &size);
+    ok(!ret, "HeapQueryInformation should fail\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "expected ERROR_INSUFFICIENT_BUFFER got %u\n", GetLastError());
+    ok(size == sizeof(ULONG), "expected 4, got %lu\n", size);
+
+    SetLastError(0xdeadbeef);
+    ret = pHeapQueryInformation(GetProcessHeap(),
+                                HeapCompatibilityInformation,
+                                NULL, 0, NULL);
+    ok(!ret, "HeapQueryInformation should fail\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "expected ERROR_INSUFFICIENT_BUFFER got %u\n", GetLastError());
+
+    info = 0xdeadbeaf;
+    SetLastError(0xdeadbeef);
+    ret = pHeapQueryInformation(GetProcessHeap(),
+                                HeapCompatibilityInformation,
+                                &info, sizeof(info) + 1, NULL);
+    ok(ret, "HeapQueryInformation error %u\n", GetLastError());
+    ok(info == 0 || info == 1 || info == 2, "expected 0, 1 or 2, got %u\n", info);
+}
+
+START_TEST(heap)
+{
+    test_heap();
+    test_obsolete_flags();
+
+    /* Test both short and very long blocks */
+    test_sized_HeapAlloc(1);
+    test_sized_HeapAlloc(1 << 20);
+    test_sized_HeapReAlloc(1, 100);
+    test_sized_HeapReAlloc(1, (1 << 20));
+    test_sized_HeapReAlloc((1 << 20), (2 << 20));
+    test_sized_HeapReAlloc((1 << 20), 1);
+    test_HeapQueryInformation();
 }

@@ -512,7 +512,7 @@ static void dump_client(HWND hRebar)
     RECT r;
     BOOL notify;
     GetWindowRect(hRebar, &r);
-    MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
+    MapWindowPoints(HWND_DESKTOP, hMainWnd, &r, 2);
     if (height_change_notify_rect.top != -1)
     {
         RECT rcClient;

@@ -40,6 +40,7 @@ static ATOM atomMenuCheckClass;
 static BOOL (WINAPI *pGetMenuInfo)(HMENU,LPCMENUINFO);
 static UINT (WINAPI *pSendInput)(UINT, INPUT*, size_t);
 static BOOL (WINAPI *pSetMenuInfo)(HMENU,LPCMENUINFO);
+static BOOL (WINAPI *pEndMenu) (void);
 
 static void init_function_pointers(void)
 {
@@ -53,8 +54,36 @@ static void init_function_pointers(void)
     GET_PROC(GetMenuInfo)
     GET_PROC(SendInput)
     GET_PROC(SetMenuInfo)
+    GET_PROC(EndMenu)
 
 #undef GET_PROC
+}
+
+static BOOL correct_behavior(void)
+{
+    HMENU hmenu;
+    MENUITEMINFO info;
+    BOOL rc;
+
+    hmenu = CreateMenu();
+
+    memset(&info, 0, sizeof(MENUITEMINFO));
+    info.cbSize= sizeof(MENUITEMINFO);
+    SetLastError(0xdeadbeef);
+    rc = GetMenuItemInfo(hmenu, 0, TRUE, &info);
+    /* Win9x  : 0xdeadbeef
+     * NT4    : ERROR_INVALID_PARAMETER
+     * >= W2K : ERROR_MENU_ITEM_NOT_FOUND
+     */
+    if (!rc && GetLastError() != ERROR_MENU_ITEM_NOT_FOUND)
+    {
+        win_skip("NT4 and below can't handle a bigger MENUITEMINFO struct\n");
+        DestroyMenu(hmenu);
+        return FALSE;
+    }
+
+    DestroyMenu(hmenu);
+    return TRUE;
 }
 
 static LRESULT WINAPI menu_check_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -87,6 +116,7 @@ typedef struct
 /* globals to communicate between test and wndproc */
 
 static BOOL bMenuVisible;
+static BOOL got_input;
 static HMENU hMenus[4];
 
 #define MOD_SIZE 10
@@ -112,12 +142,27 @@ static int MOD_odheight;
 static SIZE MODsizes[MOD_NRMENUS]= { {MOD_SIZE, MOD_SIZE},{MOD_SIZE, MOD_SIZE},
     {MOD_SIZE, MOD_SIZE},{MOD_SIZE, MOD_SIZE}};
 static int MOD_GotDrawItemMsg = FALSE;
+static int  gflag_initmenupopup,
+            gflag_entermenuloop,
+            gflag_initmenu;
+
 /* wndproc used by test_menu_ownerdraw() */
 static LRESULT WINAPI menu_ownerdraw_wnd_proc(HWND hwnd, UINT msg,
         WPARAM wparam, LPARAM lparam)
 {
+    static HMENU hmenupopup;
     switch (msg)
     {
+        case WM_INITMENUPOPUP:
+            gflag_initmenupopup++;
+            hmenupopup = (HMENU) wparam;
+            break;
+        case WM_ENTERMENULOOP:
+            gflag_entermenuloop++;
+            break;
+        case WM_INITMENU:
+            gflag_initmenu++;
+            break;
         case WM_MEASUREITEM:
             {
                 MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lparam;
@@ -142,8 +187,8 @@ static LRESULT WINAPI menu_ownerdraw_wnd_proc(HWND hwnd, UINT msg,
                     RECT rc;
                     GetMenuItemRect( hwnd, (HMENU)pdis->hwndItem, pdis->itemData ,&rc);
                     trace("WM_DRAWITEM received hwnd %p hmenu %p itemdata %ld item %d rc %d,%d-%d,%d itemrc:  %d,%d-%d,%d\n",
-                            hwnd, (HMENU)pdis->hwndItem, pdis->itemData,
-                            pdis->itemID, pdis->rcItem.left, pdis->rcItem.top,
+                            hwnd, pdis->hwndItem, pdis->itemData, pdis->itemID,
+                            pdis->rcItem.left, pdis->rcItem.top,
                             pdis->rcItem.right,pdis->rcItem.bottom,
                             rc.left,rc.top,rc.right,rc.bottom);
                     oldpen=SelectObject( pdis->hDC, GetStockObject(
@@ -184,6 +229,13 @@ static LRESULT WINAPI menu_ownerdraw_wnd_proc(HWND hwnd, UINT msg,
             }
         case WM_ENTERIDLE:
             {
+                ok( lparam || broken(!lparam), /* win9x, nt4 */
+                    "Menu window handle is NULL!\n");
+                if( lparam) {
+                    HMENU hmenu = (HMENU)SendMessageA( (HWND)lparam, MN_GETHMENU, 0, 0);
+                    ok( hmenupopup == hmenu, "MN_GETHMENU returns %p expected %p\n",
+                        hmenu, hmenupopup);
+                }
                 PostMessage(hwnd, WM_CANCELMODE, 0, 0);
                 return TRUE;
             }
@@ -235,7 +287,7 @@ static void test_menu_locked_by_window(void)
     ok(ret, "DrawMenuBar failed with error %d\n", GetLastError());
     }
     ret = IsMenu(GetMenu(hwnd));
-    ok(!ret, "Menu handle should have been destroyed\n");
+    ok(!ret || broken(ret) /* nt4 */, "Menu handle should have been destroyed\n");
 
     SendMessage(hwnd, WM_SYSCOMMAND, SC_KEYMENU, 0);
     /* did we process the WM_INITMENU message? */
@@ -244,6 +296,105 @@ static void test_menu_locked_by_window(void)
     ok(ret, "WM_INITMENU should have been sent\n");
     }
 
+    DestroyWindow(hwnd);
+}
+
+/* demonstrates that subpopup's are locked
+ * even after a client calls DestroyMenu on it */
+static LRESULT WINAPI subpopuplocked_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    HWND hwndmenu;
+    switch (msg)
+    {
+    case WM_ENTERIDLE:
+        hwndmenu = GetCapture();
+        if( hwndmenu) {
+            PostMessage( hwndmenu, WM_KEYDOWN, VK_DOWN, 0);
+            PostMessage( hwndmenu, WM_KEYDOWN, VK_RIGHT, 0);
+            PostMessage( hwndmenu, WM_KEYDOWN, VK_RETURN, 0);
+        }
+    }
+    return DefWindowProc(hwnd, msg, wparam, lparam);
+}
+
+static void test_subpopup_locked_by_menu(void)
+{
+    DWORD gle;
+    BOOL ret;
+    HMENU hmenu, hsubmenu;
+    MENUINFO mi = { sizeof( MENUINFO)};
+    MENUITEMINFO mii = { sizeof( MENUITEMINFO)};
+    HWND hwnd;
+    const int itemid = 0x1234567;
+    if( !pGetMenuInfo)
+    {
+        win_skip("GetMenuInfo is not available\n");
+        return;
+    }
+    /* create window, popupmenu with one subpopup */
+    hwnd = CreateWindowEx(0, MAKEINTATOM(atomMenuCheckClass), NULL,
+            WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 200, 200,
+            NULL, NULL, NULL, NULL);
+    ok(hwnd != NULL, "CreateWindowEx failed with error %d\n", GetLastError());
+    SetWindowLongPtr( hwnd, GWLP_WNDPROC, (LONG_PTR) subpopuplocked_wnd_proc);
+    hmenu = CreatePopupMenu();
+    ok(hmenu != NULL, "CreateMenu failed with error %d\n", GetLastError());
+    hsubmenu = CreatePopupMenu();
+    ok(hsubmenu != NULL, "CreateMenu failed with error %d\n", GetLastError());
+    ret = InsertMenu(hmenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT_PTR)hsubmenu,
+            TEXT("PopUpLockTest"));
+    ok(ret, "InsertMenu failed with error %d\n", GetLastError());
+    ret = InsertMenu(hsubmenu, 0, MF_BYPOSITION | MF_STRING, itemid, TEXT("PopUpMenu"));
+    ok(ret, "InsertMenu failed with error %d\n", GetLastError());
+    /* first some tests that all this functions properly */
+    mii.fMask = MIIM_SUBMENU;
+    ret = GetMenuItemInfo( hmenu, 0, TRUE, &mii);
+    ok( ret, "GetMenuItemInfo failed error %d\n", GetLastError());
+    ok( mii.hSubMenu == hsubmenu, "submenu is %p\n", mii.hSubMenu);
+    mi.fMask |= MIM_STYLE;
+    ret = pGetMenuInfo( hsubmenu, &mi);
+    ok( ret , "GetMenuInfo returned 0 with error %d\n", GetLastError());
+    ret = IsMenu( hsubmenu);
+    ok( ret , "Menu handle is not valid\n");
+    SetLastError( 0xdeadbeef);
+    ret = TrackPopupMenu( hmenu, 0x100, 100,100, 0, hwnd, NULL);
+    if( ret == (itemid & 0xffff)) {
+        win_skip("not on 16 bit menu subsystem\n");
+        DestroyMenu( hsubmenu);
+    } else {
+        gle = GetLastError();
+        ok( ret == itemid , "TrackPopupMenu returned %d error is %d\n", ret, gle);
+        ok( gle == 0 ||
+                broken( gle == 0xdeadbeef), /* win2k0 */
+                "Last error is %d\n", gle);
+        /* then destroy the sub-popup */
+        ret = DestroyMenu( hsubmenu);
+        ok(ret, "DestroyMenu failed with error %d\n", GetLastError());
+        /* and repeat the tests */
+        mii.fMask = MIIM_SUBMENU;
+        ret = GetMenuItemInfo( hmenu, 0, TRUE, &mii);
+        ok( ret, "GetMenuItemInfo failed error %d\n", GetLastError());
+        /* GetMenuInfo fails now */
+        ok( mii.hSubMenu == hsubmenu, "submenu is %p\n", mii.hSubMenu);
+        mi.fMask |= MIM_STYLE;
+        ret = pGetMenuInfo( hsubmenu, &mi);
+        ok( !ret , "GetMenuInfo should have failed\n");
+        /* IsMenu says it is not */
+        ret = IsMenu( hsubmenu);
+        ok( !ret , "Menu handle should be invalid\n");
+        /* but TrackPopupMenu still works! */
+        SetLastError( 0xdeadbeef);
+        ret = TrackPopupMenu( hmenu, 0x100, 100,100, 0, hwnd, NULL);
+        gle = GetLastError();
+        todo_wine {
+            ok( ret == itemid , "TrackPopupMenu returned %d error is %d\n", ret, gle);
+        }
+        ok( gle == 0 ||
+                broken( gle ==  ERROR_INVALID_PARAMETER), /* win2k0 */
+                "Last error is %d\n", gle);
+    }
+    /* clean up */
+    DestroyMenu( hmenu);
     DestroyWindow(hwnd);
 }
 
@@ -258,7 +409,7 @@ static void test_menu_ownerdraw(void)
                                NULL, NULL, NULL, NULL);
     ok(hwnd != NULL, "CreateWindowEx failed with error %d\n", GetLastError());
     if( !hwnd) return;
-    SetWindowLongPtr( hwnd, GWLP_WNDPROC, (LONG)menu_ownerdraw_wnd_proc);
+    SetWindowLongPtr( hwnd, GWLP_WNDPROC, (LONG_PTR)menu_ownerdraw_wnd_proc);
     hmenu = CreatePopupMenu();
     ok(hmenu != NULL, "CreateMenu failed with error %d\n", GetLastError());
     if( !hmenu) { DestroyWindow(hwnd);return;}
@@ -266,7 +417,7 @@ static void test_menu_ownerdraw(void)
     for( j=0;j<2;j++) /* create columns */
         for(i=0;i<2;i++) { /* create rows */
             ret = AppendMenu( hmenu, MF_OWNERDRAW | 
-                    (i==0 ? MF_MENUBREAK : 0), k, (LPCTSTR) k);
+                              (i==0 ? MF_MENUBREAK : 0), k, MAKEINTRESOURCE(k));
             k++;
             ok( ret, "AppendMenu failed for %d\n", k-1);
         }
@@ -357,7 +508,8 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
     MOD_GotDrawItemMsg = FALSE;
     mii.fMask = MIIM_FTYPE | MIIM_DATA | MIIM_STATE;
     mii.fType = 0;
-    mii.fState = MF_CHECKED;
+    /* check the menu item unless MNS_CHECKORBMP is set */
+    mii.fState = (mnuopt != 2 ? MFS_CHECKED : MFS_UNCHECKED);
     mii.dwItemData =0;
     MODsizes[0] = bmpsize;
     hastab = 0;
@@ -391,7 +543,7 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
         mi.cbSize = sizeof(mi);
         mi.fMask = MIM_STYLE;
         pGetMenuInfo( hmenu, &mi);
-        mi.dwStyle |= mnuopt == 1 ? MNS_NOCHECK : MNS_CHECKORBMP;
+        if( mnuopt) mi.dwStyle |= mnuopt == 1 ? MNS_NOCHECK : MNS_CHECKORBMP;
         ret = pSetMenuInfo( hmenu, &mi);
         ok( ret, "SetMenuInfo failed with error %d\n", GetLastError());
     }
@@ -405,7 +557,7 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
 
         sprintf( buf,"%d text \"%s\" mnuopt %d", count, text ? text: "(nil)", mnuopt);
         FillRect( hdc, &rc, (HBRUSH) COLOR_WINDOW);
-        TextOut( hdc, 100, 50, buf, strlen( buf));
+        TextOut( hdc, 10, 50, buf, strlen( buf));
         ReleaseDC( hwnd, hdc);
     }
     if(ispop)
@@ -416,12 +568,18 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
         DrawMenuBar( hwnd);
     }
     ret = GetMenuItemRect( hwnd, hmenu, 0, &rc);
+    if (0)  /* comment out menu size checks, behavior is different in almost every Windows version */
+            /* the tests should however succeed on win2000, XP and Wine (at least up to 1.1.15) */
+            /* with a variety of dpis and desktop font sizes */
+    {
     /* check menu width */
     if( ispop)
         expect = ( text || hbmp ?
                 4 + (mnuopt != 1 ? GetSystemMetrics(SM_CXMENUCHECK) : 0)
                 : 0) +
-            arrowwidth  + MOD_avec + (hbmp ? bmpsize.cx + 2 : 0) +
+                       arrowwidth  + MOD_avec + (hbmp ?
+                                    ((INT_PTR)hbmp<0||(INT_PTR)hbmp>12 ? bmpsize.cx + 2 : GetSystemMetrics( SM_CXMENUSIZE) + 2)
+                                    : 0) +
             (text && hastab ? /* TAB space */
              MOD_avec + ( hastab==2 ? sc_size.cx : 0) : 0) +
             (text ?  2 + (text[0] ? size.cx :0): 0) ;
@@ -436,7 +594,11 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
     if( ispop)
         expect = max( ( !(text || hbmp) ? GetSystemMetrics( SM_CYMENUSIZE)/2 : 0),
                 max( (text ? max( 2 + size.cy, MOD_hic + 4) : 0),
-                    (hbmp ? bmpsize.cy + 2 : 0)));
+                               (hbmp ?
+                                   ((INT_PTR)hbmp<0||(INT_PTR)hbmp>12 ?
+                                       bmpsize.cy + 2
+                                     : GetSystemMetrics( SM_CYMENUSIZE) + 2)
+                                 : 0)));
     else
         expect = ( !(text || hbmp) ? GetSystemMetrics( SM_CYMENUSIZE)/2 :
                 max( GetSystemMetrics( SM_CYMENU) - 1, (hbmp ? bmpsize.cy : 0)));
@@ -447,8 +609,14 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
     if( hbmp == HBMMENU_CALLBACK && MOD_GotDrawItemMsg) {
         /* check the position of the bitmap */
         /* horizontal */
-        expect = ispop ? (4 + ( mnuopt  ? 0 : GetSystemMetrics(SM_CXMENUCHECK)))
-            : 3;
+            if (!ispop)
+                expect = 3;
+            else if (mnuopt == 0)
+                expect = 4 + GetSystemMetrics(SM_CXMENUCHECK);
+            else if (mnuopt == 1)
+                expect = 4;
+            else /* mnuopt == 2 */
+                expect = 2;
         ok( expect == MOD_rc[0].left,
                 "bitmap left is %d expected %d\n", MOD_rc[0].left, expect);
         failed = failed || !(expect == MOD_rc[0].left);
@@ -458,10 +626,11 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
                 "bitmap top is %d expected %d\n", MOD_rc[0].top, expect);
         failed = failed || !(expect == MOD_rc[0].top);
     }
+    }
     /* if there was a failure, report details */
     if( failed) {
-        trace("*** count %d text \"%s\" bitmap %p bmsize %d,%d textsize %d+%d,%d mnuopt %d hastab %d\n",
-                count, text ? text: "(nil)", hbmp, bmpsize.cx, bmpsize.cy,
+        trace("*** count %d %s text \"%s\" bitmap %p bmsize %d,%d textsize %d+%d,%d mnuopt %d hastab %d\n",
+                count, (ispop? "POPUP": "MENUBAR"),text ? text: "(nil)", hbmp, bmpsize.cx, bmpsize.cy,
                 size.cx, size.cy, sc_size.cx, mnuopt, hastab);
         trace("    check %d,%d arrow %d avechar %d\n",
                 GetSystemMetrics(SM_CXMENUCHECK ),
@@ -486,25 +655,41 @@ static void test_menu_bmp_and_string(void)
     BITMAP bm;
     INT arrowwidth;
     HWND hwnd;
+    HMENU hsysmenu;
+    MENUINFO mi= {sizeof(MENUINFO)};
+    MENUITEMINFOA mii= {sizeof(MENUITEMINFOA)};
     int count, szidx, txtidx, bmpidx, hassub, mnuopt, ispop;
 
     if( !pGetMenuInfo)
     {
-        skip("GetMenuInfo is not available\n");
+        win_skip("GetMenuInfo is not available\n");
         return;
     }
 
     memset( bmfill, 0xcc, sizeof( bmfill));
-    hwnd = CreateWindowEx(0, MAKEINTATOM(atomMenuCheckClass), NULL,
+    hwnd = CreateWindowEx(0, MAKEINTATOM(atomMenuCheckClass), NULL, WS_SYSMENU |
                           WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 200, 200,
                           NULL, NULL, NULL, NULL);
     hbm_arrow=LoadBitmap( 0, (CHAR*)OBM_MNARROW);
     GetObject( hbm_arrow, sizeof(bm), &bm);
     arrowwidth = bm.bmWidth;
-
     ok(hwnd != NULL, "CreateWindowEx failed with error %d\n", GetLastError());
     if( !hwnd) return;
-    SetWindowLongPtr( hwnd, GWLP_WNDPROC, (LONG)menu_ownerdraw_wnd_proc);
+    /* test system menu */
+    hsysmenu = GetSystemMenu( hwnd, FALSE);
+    ok( hsysmenu != NULL, "GetSystemMenu failed with error %d\n", GetLastError());
+    mi.fMask = MIM_STYLE;
+    mi.dwStyle = 0;
+    ok( pGetMenuInfo( hsysmenu, &mi), "GetMenuInfo failed gle=%d\n", GetLastError());
+    ok( MNS_CHECKORBMP == mi.dwStyle, "System Menu Style is %08x, without the bit %08x\n",
+        mi.dwStyle, MNS_CHECKORBMP);
+    mii.fMask = MIIM_BITMAP;
+    mii.hbmpItem = NULL;
+    ok( GetMenuItemInfoA( hsysmenu, SC_CLOSE, FALSE, &mii), "GetMenuItemInfoA failed gle=%d\n", GetLastError());
+    ok( HBMMENU_POPUP_CLOSE == mii.hbmpItem, "Item info did not get the right hbitmap: got %p  expected %p\n",
+        mii.hbmpItem, HBMMENU_POPUP_CLOSE);
+
+    SetWindowLongPtr( hwnd, GWLP_WNDPROC, (LONG_PTR)menu_ownerdraw_wnd_proc);
 
     if( winetest_debug)
         trace("    check %d,%d arrow %d avechar %d\n",
@@ -517,14 +702,18 @@ static void test_menu_bmp_and_string(void)
             {10,10},{38,38},{1,30},{55,5}};
         for( szidx=0; szidx < sizeof( bmsizes) / sizeof( SIZE); szidx++) {
             HBITMAP hbm = CreateBitmap( bmsizes[szidx].cx, bmsizes[szidx].cy,1,1,bmfill);
-            HBITMAP bitmaps[] = { HBMMENU_CALLBACK, hbm, NULL  };
-            ok( (int)hbm, "CreateBitmap failed err %d\n", GetLastError());
+            HBITMAP bitmaps[] = { HBMMENU_CALLBACK, hbm, HBMMENU_POPUP_CLOSE, NULL  };
+            ok( hbm != 0, "CreateBitmap failed err %d\n", GetLastError());
             for( txtidx = 0; txtidx < sizeof(MOD_txtsizes)/sizeof(MOD_txtsizes[0]); txtidx++) {
                 for( hassub = 0; hassub < 2 ; hassub++) { /* add submenu item */
                     for( mnuopt = 0; mnuopt < 3 ; mnuopt++){ /* test MNS_NOCHECK/MNS_CHECKORBMP */
                         for( bmpidx = 0; bmpidx <sizeof(bitmaps)/sizeof(HBITMAP); bmpidx++) {
                             /* no need to test NULL bitmaps of several sizes */
                             if( !bitmaps[bmpidx] && szidx > 0) continue;
+                            /* the HBMMENU_POPUP not to test for menu bars */
+                            if( !ispop &&
+                                bitmaps[bmpidx] >= HBMMENU_POPUP_CLOSE &&
+                                bitmaps[bmpidx] <= HBMMENU_POPUP_MINIMIZE) continue;
                             if( !ispop && hassub) continue;
                             test_mbs_help( ispop, hassub, mnuopt,
                                     hwnd, arrowwidth, ++count,
@@ -596,9 +785,9 @@ static void test_menu_add_string( void )
     ok (!strcmp( strback, "Dummy string" ), "Menu text from Ansi version incorrect\n");
 
     SetLastError(0xdeadbeef);
-    ret = GetMenuStringW( hmenu, 0, (WCHAR *)strbackW, 99, MF_BYPOSITION);
+    ret = GetMenuStringW( hmenu, 0, strbackW, 99, MF_BYPOSITION );
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-        skip("GetMenuStringW is not implemented\n");
+        win_skip("GetMenuStringW is not implemented\n");
     else
     {
         ok (ret, "GetMenuStringW on ownerdraw entry failed\n");
@@ -661,7 +850,7 @@ static void test_menu_add_string( void )
     SetLastError(0xdeadbeef);
     ret = GetMenuStringW( hmenu, 0, NULL, 0, MF_BYPOSITION);
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-        skip("GetMenuStringW is not implemented\n");
+        win_skip("GetMenuStringW is not implemented\n");
     else
         ok (!ret, "GetMenuStringW on ownerdraw entry succeeded.\n");
 
@@ -683,130 +872,173 @@ static  WCHAR *strcpyW( WCHAR *dst, const WCHAR *src )
     return dst;
 }
 
+static void insert_menu_item( int line, HMENU hmenu, BOOL ansi, UINT mask, UINT type, UINT state, UINT id,
+                              HMENU submenu, HBITMAP checked, HBITMAP unchecked, ULONG_PTR data,
+                              void *type_data, UINT len, HBITMAP item, BOOL expect )
+{
+    MENUITEMINFOA info;
+    BOOL ret;
 
-#define DMIINFF( i, e, field)\
-    ok((int)((i)->field)==(int)((e)->field) || (int)((i)->field)==(0xffff & (int)((e)->field)), \
-    "%s got 0x%x expected 0x%x\n", #field, (int)((i)->field), (int)((e)->field));
+    /* magic bitmap handle to test smaller cbSize */
+    if (item == (HBITMAP)(ULONG_PTR)0xdeadbeef)
+        info.cbSize = FIELD_OFFSET(MENUITEMINFOA,hbmpItem);
+    else
+        info.cbSize = sizeof(info);
+    info.fMask = mask;
+    info.fType = type;
+    info.fState = state;
+    info.wID = id;
+    info.hSubMenu = submenu;
+    info.hbmpChecked = checked;
+    info.hbmpUnchecked = unchecked;
+    info.dwItemData = data;
+    info.dwTypeData = type_data;
+    info.cch = len;
+    info.hbmpItem = item;
+    SetLastError( 0xdeadbeef );
+    if (ansi) ret = InsertMenuItemA( hmenu, 0, TRUE, &info );
+    else ret = InsertMenuItemW( hmenu, 0, TRUE, (MENUITEMINFOW*)&info );
+    if (!expect) ok_(__FILE__, line)( !ret, "InsertMenuItem should have failed.\n" );
+    else ok_(__FILE__, line)( ret, "InsertMenuItem failed, err %u\n", GetLastError());
+}
 
-#define DUMPMIINF(s,i,e)\
-{\
-    DMIINFF( i, e, fMask)\
-    DMIINFF( i, e, fType)\
-    DMIINFF( i, e, fState)\
-    DMIINFF( i, e, wID)\
-    DMIINFF( i, e, hSubMenu)\
-    DMIINFF( i, e, hbmpChecked)\
-    DMIINFF( i, e, hbmpUnchecked)\
-    DMIINFF( i, e, dwItemData)\
-    DMIINFF( i, e, dwTypeData)\
-    DMIINFF( i, e, cch)\
-    if( s==sizeof(MENUITEMINFOA)) DMIINFF( i, e, hbmpItem)\
+static void check_menu_item_info( int line, HMENU hmenu, BOOL ansi, UINT mask, UINT type, UINT state,
+                                  UINT id, HMENU submenu, HBITMAP checked, HBITMAP unchecked,
+                                  ULONG_PTR data, void *type_data, UINT in_len, UINT out_len,
+                                  HBITMAP item, LPCSTR expname, BOOL expect, BOOL expstring )
+{
+    MENUITEMINFOA info;
+    BOOL ret;
+    WCHAR buffer[80];
+
+    SetLastError( 0xdeadbeef );
+    memset( &info, 0xcc, sizeof(info) );
+    info.cbSize = sizeof(info);
+    info.fMask = mask;
+    info.dwTypeData = type_data;
+    info.cch = in_len;
+
+    ret = ansi ? GetMenuItemInfoA( hmenu, 0, TRUE, &info ) :
+                 GetMenuItemInfoW( hmenu, 0, TRUE, (MENUITEMINFOW *)&info );
+    if (!expect)
+    {
+        ok_(__FILE__, line)( !ret, "GetMenuItemInfo should have failed.\n" );
+        return;
 }    
+    ok_(__FILE__, line)( ret, "GetMenuItemInfo failed, err %u\n", GetLastError());
+    if (mask & MIIM_TYPE)
+        ok_(__FILE__, line)( info.fType == type || info.fType == LOWORD(type),
+                             "wrong type %x/%x\n", info.fType, type );
+    if (mask & MIIM_STATE)
+        ok_(__FILE__, line)( info.fState == state || info.fState == LOWORD(state),
+                             "wrong state %x/%x\n", info.fState, state );
+    if (mask & MIIM_ID)
+        ok_(__FILE__, line)( info.wID == id || info.wID == LOWORD(id),
+                             "wrong id %x/%x\n", info.wID, id );
+    if (mask & MIIM_SUBMENU)
+        ok_(__FILE__, line)( info.hSubMenu == submenu || (ULONG_PTR)info.hSubMenu == LOWORD(submenu),
+                             "wrong submenu %p/%p\n", info.hSubMenu, submenu );
+    if (mask & MIIM_CHECKMARKS)
+    {
+        ok_(__FILE__, line)( info.hbmpChecked == checked || (ULONG_PTR)info.hbmpChecked == LOWORD(checked),
+                             "wrong bmpchecked %p/%p\n", info.hbmpChecked, checked );
+        ok_(__FILE__, line)( info.hbmpUnchecked == unchecked || (ULONG_PTR)info.hbmpUnchecked == LOWORD(unchecked),
+                             "wrong bmpunchecked %p/%p\n", info.hbmpUnchecked, unchecked );
+    }
+    if (mask & MIIM_DATA)
+        ok_(__FILE__, line)( info.dwItemData == data || info.dwItemData == LOWORD(data),
+                             "wrong item data %lx/%lx\n", info.dwItemData, data );
+    if (mask & MIIM_BITMAP)
+        ok_(__FILE__, line)( info.hbmpItem == item || (ULONG_PTR)info.hbmpItem == LOWORD(item),
+                             "wrong bmpitem %p/%p\n", info.hbmpItem, item );
+    ok_(__FILE__, line)( info.dwTypeData == type_data || (ULONG_PTR)info.dwTypeData == LOWORD(type_data),
+                         "wrong type data %p/%p\n", info.dwTypeData, type_data );
+    ok_(__FILE__, line)( info.cch == out_len, "wrong len %x/%x\n", info.cch, out_len );
+    if (expname)
+    {
+        if(ansi)
+            ok_(__FILE__, line)( !strncmp( expname, info.dwTypeData, out_len ),
+                                 "menu item name differed from '%s' '%s'\n", expname, info.dwTypeData );
+        else
+            ok_(__FILE__, line)( !strncmpW( (WCHAR *)expname, (WCHAR *)info.dwTypeData, out_len ),
+                                 "menu item name wrong\n" );
 
-/* insert menu item */
-#define TMII_INSMI( a1,b1,c1,d1,e1,f1,g1,h1,i1,j1,k1,l1,m1,n1,\
-    eret1)\
-{\
-    MENUITEMINFOA info1=a1 b1,c1,d1,e1,f1,(void*)g1,(void*)h1,(void*)i1,j1,(void*)k1,l1,(void*)m1 n1;\
-    HMENU hmenu = CreateMenu();\
-    BOOL ret, stop = FALSE;\
-    SetLastError( 0xdeadbeef);\
+        SetLastError( 0xdeadbeef );
+        ret = ansi ? GetMenuStringA( hmenu, 0, (char *)buffer, 80, MF_BYPOSITION ) :
+            GetMenuStringW( hmenu, 0, buffer, 80, MF_BYPOSITION );
+        if (expstring)
+            ok_(__FILE__, line)( ret, "GetMenuString failed, err %u\n", GetLastError());
+        else
+            ok_(__FILE__, line)( !ret, "GetMenuString should have failed\n" );
+    }
+}
+
+static void modify_menu( int line, HMENU hmenu, BOOL ansi, UINT flags, UINT_PTR id, void *data )
+{
+    BOOL ret;
+
+    SetLastError( 0xdeadbeef );
+    if (ansi) ret = ModifyMenuA( hmenu, 0, flags, id, data );
+    else ret = ModifyMenuW( hmenu, 0, flags, id, data );
+    ok_(__FILE__,line)( ret, "ModifyMenuA failed, err %u\n", GetLastError());
+}
+
+static void set_menu_item_info( int line, HMENU hmenu, BOOL ansi, UINT mask, UINT type, UINT state,
+                                UINT id, HMENU submenu, HBITMAP checked, HBITMAP unchecked, ULONG_PTR data,
+                                void *type_data, UINT len, HBITMAP item )
+
+{
+    MENUITEMINFOA info;
+    BOOL ret;
+
+    /* magic bitmap handle to test smaller cbSize */
+    if (item == (HBITMAP)(ULONG_PTR)0xdeadbeef)
+        info.cbSize = FIELD_OFFSET(MENUITEMINFOA,hbmpItem);
+    else
+        info.cbSize = sizeof(info);
+    info.fMask = mask;
+    info.fType = type;
+    info.fState = state;
+    info.wID = id;
+    info.hSubMenu = submenu;
+    info.hbmpChecked = checked;
+    info.hbmpUnchecked = unchecked;
+    info.dwItemData = data;
+    info.dwTypeData = type_data;
+    info.cch = len;
+    info.hbmpItem = item;
+    SetLastError( 0xdeadbeef );
+    if (ansi) ret = SetMenuItemInfoA( hmenu, 0, TRUE, &info );
+    else ret = SetMenuItemInfoW( hmenu, 0, TRUE, (MENUITEMINFOW*)&info );
+    ok_(__FILE__, line)( ret, "SetMenuItemInfo failed, err %u\n", GetLastError());
+}
+
+#define TMII_INSMI( c1,d1,e1,f1,g1,h1,i1,j1,k1,l1,m1,eret1 )\
+    hmenu = CreateMenu();\
+    submenu = CreateMenu();\
     if(ansi)strcpy( string, init);\
-    else strcpyW( (WCHAR*)string, (WCHAR*)init);\
-    if( ansi) ret = InsertMenuItemA(hmenu, 0, TRUE, &info1 );\
-    else ret = InsertMenuItemW(hmenu, 0, TRUE, (MENUITEMINFOW*)&info1 );\
-    if( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)\
-    {\
-        skip("InsertMenuItem%s not implemented\n", ansi ? "A" : "W");\
-        break;\
-    }\
-    if( !(eret1)) { ok( (eret1)==ret,"InsertMenuItem should have failed.\n");\
-        stop = TRUE;\
-    } else ok( (eret1)==ret,"InsertMenuItem failed, err %d\n",GetLastError());\
-
+    else strcpyW( string, init );\
+    insert_menu_item( __LINE__, hmenu, ansi, c1, d1, e1, f1, g1, h1, i1, j1, k1, l1, m1, eret1 )
 
 /* GetMenuItemInfo + GetMenuString  */
-#define TMII_GMII( a2,b2,c2,d2,e2,f2,g2,h2,i2,j2,k2,l2,m2,n2,\
-    a3,b3,c3,d3,e3,f3,g3,h3,i3,j3,k3,l3,m3,n3,\
+#define TMII_GMII( c2,l2,\
+    d3,e3,f3,g3,h3,i3,j3,k3,l3,m3,\
     expname, eret2, eret3)\
-{\
-  MENUITEMINFOA info2A=a2 b2,c2,d2,e2,f2,(void*)g2,(void*)h2,(void*)i2,j2,(void*)k2,l2,(void*)m2 n2;\
-  MENUITEMINFOA einfoA=a3 b3,c3,d3,e3,f3,(void*)g3,(void*)h3,(void*)i3,j3,(void*)k3,l3,(void*)m3 n3;\
-  MENUITEMINFOA *info2 = &info2A;\
-  MENUITEMINFOA *einfo = &einfoA;\
-  MENUITEMINFOW *info2W = (MENUITEMINFOW *)&info2A;\
-  if( !stop) {\
-    SetLastError( 0xdeadbeef);\
-    ret = ansi ? GetMenuItemInfoA( hmenu, 0, TRUE, info2 ) :\
-        GetMenuItemInfoW( hmenu, 0, TRUE, info2W );\
-    if( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)\
-    {\
-        skip("GetMenuItemInfo%s not implemented\n", ansi ? "A" : "W");\
-        break;\
-    }\
-    if( !(eret2)) ok( (eret2)==ret,"GetMenuItemInfo should have failed.\n");\
-    else { \
-      ok( (eret2)==ret,"GetMenuItemInfo failed, err %d\n",GetLastError());\
-      ret = memcmp( info2, einfo, sizeof einfoA);\
-    /*  ok( ret==0, "Got wrong menu item info data\n");*/\
-      if( ret) DUMPMIINF(info2A.cbSize, &info2A, &einfoA)\
-      if( einfo->dwTypeData == string) {\
-        if(ansi) ok( !strncmp( expname, info2->dwTypeData, einfo->cch ), "menu item name differed \"%s\"\n",\
-            einfo->dwTypeData ? einfo->dwTypeData: "");\
-        else ok( !strncmpW( (WCHAR*)expname, (WCHAR*)info2->dwTypeData, einfo->cch ), "menu item name differed \"%s\"\n",\
-            einfo->dwTypeData ? einfo->dwTypeData: "");\
-        ret = ansi ? GetMenuStringA( hmenu, 0, string, 80, MF_BYPOSITION) :\
-            GetMenuStringW( hmenu, 0, string, 80, MF_BYPOSITION);\
-        if( (eret3)){\
-            ok( ret, "GetMenuString failed, err %d\n",GetLastError());\
-        }else\
-            ok( !ret, "GetMenuString should have failed\n");\
-      }\
-    }\
-  }\
-}
+    check_menu_item_info( __LINE__, hmenu, ansi, c2, d3, e3, f3, g3, h3, i3, j3, k3, l2, l3, m3, \
+                          expname, eret2, eret3 )
 
 #define TMII_DONE \
     RemoveMenu(hmenu, 0, TRUE );\
     DestroyMenu( hmenu );\
-    DestroyMenu( submenu );\
-submenu = CreateMenu();\
-}
+    DestroyMenu( submenu );
+
 /* modify menu */
-#define TMII_MODM( flags, id, data, eret  )\
-if( !stop) {\
-    SetLastError( 0xdeadbeef);\
-    if(ansi)ret = ModifyMenuA( hmenu, 0, flags, (UINT_PTR)id, (char*)data);\
-    else ret = ModifyMenuW( hmenu, 0, flags, (UINT_PTR)id, (WCHAR*)data);\
-    if( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)\
-    {\
-        skip("ModifyMenu%s not implemented\n", ansi ? "A" : "W");\
-        break;\
-    }\
-    if( !(eret)) ok( (eret)==ret,"ModifyMenuA should have failed.\n");\
-    else  ok( (eret)==ret,"ModifyMenuA failed, err %d\n",GetLastError());\
-}
+#define TMII_MODM( flags, id, data ) \
+    modify_menu( __LINE__, hmenu, ansi, flags, id, data )
 
 /* SetMenuItemInfo */
-#define TMII_SMII( a1,b1,c1,d1,e1,f1,g1,h1,i1,j1,k1,l1,m1,n1,\
-    eret1)\
-if( !stop) {\
-    MENUITEMINFOA info1=a1 b1,c1,d1,e1,f1,(void*)g1,(void*)h1,(void*)i1,j1,(void*)k1,l1,(void*)m1 n1;\
-    SetLastError( 0xdeadbeef);\
-    if(ansi)strcpy( string, init);\
-    else strcpyW( (WCHAR*)string, (WCHAR*)init);\
-    if( ansi) ret = SetMenuItemInfoA(hmenu, 0, TRUE, &info1 );\
-    else ret = SetMenuItemInfoW(hmenu, 0, TRUE, (MENUITEMINFOW*)&info1 );\
-    if( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)\
-    {\
-        skip("SetMenuItemInfo%s not implemented\n", ansi ? "A" : "W");\
-        break;\
-    }\
-    if( !(eret1)) { ok( (eret1)==ret,"InsertMenuItem should have failed.\n");\
-        stop = TRUE;\
-    } else ok( (eret1)==ret,"InsertMenuItem failed, err %d\n",GetLastError());\
-}
-
+#define TMII_SMII( c1,d1,e1,f1,g1,h1,i1,j1,k1,l1,m1 ) \
+    set_menu_item_info( __LINE__, hmenu, ansi, c1, d1, e1, f1, g1, h1, i1, j1, k1, l1, m1 )
 
 
 #define OK 1
@@ -815,7 +1047,6 @@ if( !stop) {\
 
 static void test_menu_iteminfo( void )
 {
-  int S=sizeof( MENUITEMINFOA);
   int ansi = TRUE;
   char txtA[]="wine";
   char initA[]="XYZ";
@@ -826,7 +1057,8 @@ static void test_menu_iteminfo( void )
   void *txt, *init, *empty, *string;
   HBITMAP hbm = CreateBitmap(1,1,1,1,NULL);
   char stringA[0x80];
-  HMENU submenu=CreateMenu();
+  HMENU hmenu, submenu=CreateMenu();
+  HBITMAP dummy_hbm = (HBITMAP)(ULONG_PTR)0xdeadbeef;
 
   do {
     if( ansi) {txt=txtA;init=initA;empty=emptyA;string=stringA;}
@@ -834,481 +1066,465 @@ static void test_menu_iteminfo( void )
     trace( "%s string %p hbm %p txt %p\n", ansi ?  "ANSI tests:   " : "Unicode tests:", string, hbm, txt);
     /* test all combinations of MFT_STRING, MFT_OWNERDRAW and MFT_BITMAP */
     /* (since MFT_STRING is zero, there are four of them) */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, 0, 0, 0, 0, 0, 0, txt, 0, 0, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 4, 0, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, 0, 0, 0, 0, 0, 0, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, 0, 0, 0, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_STRING|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        NULL, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, hbm, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, hbm, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP, 0, 0, 0, 0, 0, 0, hbm, 0, hbm,
+        NULL, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, hbm, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, hbm, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, hbm, 0, hbm,
+        NULL, OK, ER );
     TMII_DONE
     /* not enough space for name*/
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, NULL, 0, -9, },
-        {, S, MIIM_TYPE, MFT_STRING, -9, -9, 0, -9, -9, -9, NULL, 4, 0, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 0,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, NULL, 4, 0,
+        NULL, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 5, -9, },
-        {, S, MIIM_TYPE, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 4, 0, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 5,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 4, -9, },
-        {, S, MIIM_TYPE, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 3, 0, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 4,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 3, 0,
+        txt, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_FTYPE|MIIM_STRING, MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, NULL, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, NULL, 0, -9, },
-        {, S, MIIM_TYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 0, 0, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING, MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, NULL, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 0,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, NULL, 0, 0,
+        NULL, OK, ER );
     TMII_DONE
     /* cannot combine MIIM_TYPE with some other flags */
-    TMII_INSMI( {, S, MIIM_TYPE|MIIM_STRING, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, ER)
-    TMII_GMII ( {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE|MIIM_STRING, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE|MIIM_STRING, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        empty, ER, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE|MIIM_STRING, 80,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        NULL, ER, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE|MIIM_FTYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, ER)
-    TMII_GMII ( {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE|MIIM_FTYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        empty, ER, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE|MIIM_FTYPE, 80,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        NULL, ER, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE|MIIM_BITMAP, MFT_BITMAP, -1, -1, -1, -1, -1, -1, hbm, 6, hbm, }, ER)
-    TMII_GMII ( {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE|MIIM_BITMAP, MFT_BITMAP, -1, -1, 0, 0, 0, -1, hbm, 6, hbm, ER );
     TMII_DONE
         /* but succeeds with some others */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE|MIIM_SUBMENU, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE|MIIM_SUBMENU, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 4, 0, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE|MIIM_SUBMENU, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE|MIIM_STATE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE|MIIM_STATE, MFT_STRING, 0, -9, 0, -9, -9, -9, string, 4, 0, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE|MIIM_STATE, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE|MIIM_ID, MFT_STRING, -1, 888, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE|MIIM_ID, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE|MIIM_ID, MFT_STRING, -9, 888, 0, -9, -9, -9, string, 4, 0, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE|MIIM_ID, MFT_STRING, -1, 888, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE|MIIM_ID, 80,
+        MFT_STRING, 0, 888, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE|MIIM_DATA, MFT_STRING, -1, -1, -1, -1, -1, 999, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE|MIIM_DATA, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE|MIIM_DATA, MFT_STRING, -9, -9, 0, -9, -9, 999, string, 4, 0, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE|MIIM_DATA, MFT_STRING, -1, -1, 0, 0, 0, 999, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE|MIIM_DATA, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 999, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
     /* to be continued */
     /* set text with MIIM_TYPE and retrieve with MIIM_STRING */ 
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 4, -9, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
     /* set text with MIIM_TYPE and retrieve with MIIM_STRING; MFT_OWNERDRAW causes an empty string */ 
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 0, -9, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_STRING|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, string, 0, 0,
+        empty, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, NULL, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 0, -9, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, NULL, 0, 0, OK );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, string, 0, 0,
+        empty, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, NULL, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 80, -9, },
-        init, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, NULL, 0, 0, OK );
+    TMII_GMII ( MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, string, 80, 0,
+        init, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, 0, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, 0, -9, -9, -9, 0, -9, -9, -9, string, 80, -9, },
-        init, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 0, 0, OK );
+    TMII_GMII ( 0, 80,
+        0, 0, 0, 0, 0, 0, 0, string, 80, 0,
+        init, OK, OK );
     TMII_DONE
     /* contrary to MIIM_TYPE,you can set the text for an owner draw menu */ 
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 4, -9, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
     /* same but retrieve with MIIM_TYPE */ 
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 4, NULL, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, NULL, 4, NULL,
+        NULL, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, NULL, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 0, -9, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, NULL, 0, 0, OK );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, string, 0, 0,
+        empty, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, NULL, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, string, 0, -9, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_STRING|MIIM_FTYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, NULL, 0, 0, OK );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, string, 0, 0,
+        empty, OK, ER );
     TMII_DONE
 
     /* How is that with bitmaps? */ 
-    TMII_INSMI( {, S, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, 0, -1, hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP, 0, 0, 0, 0, 0, 0, hbm, 0, hbm,
+        NULL, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_BITMAP|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_BITMAP|MIIM_FTYPE, 0, -9, -9, 0, -9, -9, -9, string, 80, hbm, },
-        init, OK, ER )
+    TMII_INSMI( MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, 0, -1, hbm, OK );
+    TMII_GMII ( MIIM_BITMAP|MIIM_FTYPE, 80,
+        0, 0, 0, 0, 0, 0, 0, string, 80, hbm,
+        init, OK, ER );
     TMII_DONE
         /* MIIM_BITMAP does not like MFT_BITMAP */
-    TMII_INSMI( {, S, MIIM_BITMAP|MIIM_FTYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, ER)
-    TMII_GMII ( {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        init, OK, OK )
+    TMII_INSMI( MIIM_BITMAP|MIIM_FTYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, 0, -1, hbm, ER );
     TMII_DONE
         /* no problem with OWNERDRAWN */
-    TMII_INSMI( {, S, MIIM_BITMAP|MIIM_FTYPE, MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_BITMAP|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_BITMAP|MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 80, hbm, },
-        init, OK, ER )
+    TMII_INSMI( MIIM_BITMAP|MIIM_FTYPE, MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, 0, -1, hbm, OK );
+    TMII_GMII ( MIIM_BITMAP|MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, string, 80, hbm,
+        init, OK, ER );
     TMII_DONE
         /* setting MFT_BITMAP with MFT_FTYPE fails anyway */
-    TMII_INSMI( {, S, MIIM_FTYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, ER)
-    TMII_GMII ( {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_FTYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, 0, -1, 0, ER );
     TMII_DONE
 
     /* menu with submenu */
-    TMII_INSMI( {, S, MIIM_SUBMENU|MIIM_FTYPE, MFT_STRING, -1, -1, submenu, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_SUBMENU, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_SUBMENU, -9, -9, -9, submenu, -9, -9, -9, string, 80, -9, },
-        init, OK, ER )
+    TMII_INSMI( MIIM_SUBMENU|MIIM_FTYPE, MFT_STRING, -1, -1, submenu, 0, 0, -1, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_SUBMENU, 80,
+        0, 0, 0, submenu, 0, 0, 0, string, 80, 0,
+        init, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_SUBMENU|MIIM_FTYPE, MFT_STRING, -1, -1, submenu, -1, -1, -1, empty, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_SUBMENU, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_SUBMENU, -9, -9, -9, submenu, -9, -9, -9, string, 80, -9, },
-        init, OK, ER )
+    TMII_INSMI( MIIM_SUBMENU|MIIM_FTYPE, MFT_STRING, -1, -1, submenu, 0, 0, -1, empty, 0, 0, OK );
+    TMII_GMII ( MIIM_SUBMENU, 80,
+        0, 0, 0, submenu, 0, 0, 0, string, 80, 0,
+        init, OK, ER );
     TMII_DONE
     /* menu with submenu, without MIIM_SUBMENU the submenufield is cleared */
-    TMII_INSMI( {, S, MIIM_SUBMENU|MIIM_FTYPE, MFT_STRING, -1, -1, submenu, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, string, 0, -9, },
-        empty, OK, ER )
-    TMII_GMII ( {, S, MIIM_SUBMENU|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_SUBMENU|MIIM_FTYPE, MFT_SEPARATOR, -9, -9, submenu, -9, -9, -9, string, 80, -9, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_SUBMENU|MIIM_FTYPE, MFT_STRING, -1, -1, submenu, 0, 0, -1, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_STRING|MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, string, 0, 0,
+        empty, OK, ER );
+    TMII_GMII ( MIIM_SUBMENU|MIIM_FTYPE, 80,
+        MFT_SEPARATOR, 0, 0, submenu, 0, 0, 0, string, 80, 0,
+        empty, OK, ER );
     TMII_DONE
     /* menu with invalid submenu */
-    TMII_INSMI( {, S, MIIM_SUBMENU|MIIM_FTYPE, MFT_STRING, -1, -1, 999, -1, -1, -1, txt, 0, -1, }, ER)
-    TMII_GMII ( {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
-        init, OK, ER )
+    TMII_INSMI( MIIM_SUBMENU|MIIM_FTYPE, MFT_STRING, -1, -1, (HMENU)999, 0, 0, -1, txt, 0, 0, ER );
     TMII_DONE
     /* Separator */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, txt, 0, 0, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, 0, 0, 0, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        NULL, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP|MFT_SEPARATOR, -1, -1, -1, -1, -1, -1, hbm, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP|MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP|MFT_SEPARATOR, -1, -1, 0, 0, 0, -1, hbm, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP|MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, hbm, 0, hbm,
+        NULL, OK, ER );
     TMII_DONE
      /* SEPARATOR and STRING go well together */
     /* BITMAP and STRING go well together */
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 4, hbm, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_STRING|MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, txt, 6, hbm, OK );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 4, hbm,
+        txt, OK, OK );
     TMII_DONE
      /* BITMAP, SEPARATOR and STRING go well together */
-    TMII_INSMI( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, string, 4, hbm, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -1, -1, 0, 0, 0, -1, txt, 6, hbm, OK );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, string, 4, hbm,
+        txt, OK, OK );
     TMII_DONE
      /* last two tests, but use MIIM_TYPE to retrieve info */
-    TMII_INSMI( {, S, MIIM_FTYPE|MIIM_STRING, MFT_SEPARATOR, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, NULL, 4, NULL, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING, MFT_SEPARATOR, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, NULL, 4, NULL,
+        NULL, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP, -9, -9, 0, -9, -9, -9, hbm, 4, hbm, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_STRING|MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, txt, 6, hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP, 0, 0, 0, 0, 0, 0, hbm, 4, hbm,
+        NULL, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_SEPARATOR|MFT_BITMAP, -9, -9, 0, -9, -9, -9, hbm, 4, hbm, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -1, -1, 0, 0, 0, -1, txt, 6, hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_SEPARATOR|MFT_BITMAP, 0, 0, 0, 0, 0, 0, hbm, 4, hbm,
+        NULL, OK, OK );
     TMII_DONE
      /* same three with MFT_OWNERDRAW */
-    TMII_INSMI( {, S, MIIM_FTYPE|MIIM_STRING, MFT_SEPARATOR|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_SEPARATOR|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 4, NULL, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING, MFT_SEPARATOR|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 6, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_SEPARATOR|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, NULL, 4, NULL,
+        NULL, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, hbm, 4, hbm, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 6, hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, hbm, 4, hbm,
+        NULL, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_SEPARATOR|MFT_BITMAP|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, hbm, 4, hbm, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 6, hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_SEPARATOR|MFT_BITMAP|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, hbm, 4, hbm,
+        NULL, OK, OK );
     TMII_DONE
 
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE|MIIM_ID, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 4, NULL, },
-        txt,  OK, OK )
+    TMII_INSMI( MIIM_STRING|MIIM_FTYPE|MIIM_ID, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, NULL, 4, NULL,
+        NULL,  OK, OK );
     TMII_DONE
     /* test with modifymenu: string is preserved after setting OWNERDRAW */
-    TMII_INSMI( {, S, MIIM_STRING, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_MODM( MFT_OWNERDRAW, -1, 787, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_DATA, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_DATA, MFT_OWNERDRAW, -9, -9, 0, -9, -9, 787, string, 4, -9, },
-        txt,  OK, OK )
+    TMII_INSMI( MIIM_STRING, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 0, 0, OK );
+    TMII_MODM( MFT_OWNERDRAW, -1, (void*)787 );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_DATA, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 787, string, 4, 0,
+        txt,  OK, OK );
     TMII_DONE
     /* same with bitmap: now the text is cleared */
-    TMII_INSMI( {, S, MIIM_STRING, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_MODM( MFT_BITMAP, 545, hbm, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, MFT_BITMAP, -9, 545, 0, -9, -9, -9, string, 0, hbm, },
-        empty,  OK, ER )
+    TMII_INSMI( MIIM_STRING, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 0, 0, OK );
+    TMII_MODM( MFT_BITMAP, 545, hbm );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, 80,
+        MFT_BITMAP, 0, 545, 0, 0, 0, 0, string, 0, hbm,
+        empty,  OK, ER );
     TMII_DONE
     /* start with bitmap: now setting text clears it (though he flag is raised) */
-    TMII_INSMI( {, S, MIIM_BITMAP, MFT_STRING, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, MFT_STRING, -9, 0, 0, -9, -9, -9, string, 0, hbm, },
-        empty,  OK, ER )
-    TMII_MODM( MFT_STRING, 545, txt, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, MFT_STRING, -9, 545, 0, -9, -9, -9, string, 4, 0, },
-        txt,  OK, OK )
+    TMII_INSMI( MIIM_BITMAP, MFT_STRING, -1, -1, 0, 0, 0, -1, 0, -1, hbm, OK );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 0, hbm,
+        empty,  OK, ER );
+    TMII_MODM( MFT_STRING, 545, txt );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, 80,
+        MFT_STRING, 0, 545, 0, 0, 0, 0, string, 4, 0,
+        txt,  OK, OK );
     TMII_DONE
     /*repeat with text NULL */
-    TMII_INSMI( {, S, MIIM_BITMAP, MFT_STRING, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_MODM( MFT_STRING, 545, NULL, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, MFT_SEPARATOR, -9, 545, 0, -9, -9, -9, string, 0, 0, },
-        empty,  OK, ER )
+    TMII_INSMI( MIIM_BITMAP, MFT_STRING, -1, -1, 0, 0, 0, -1, 0, -1, hbm, OK );
+    TMII_MODM( MFT_STRING, 545, NULL );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, 80,
+        MFT_SEPARATOR, 0, 545, 0, 0, 0, 0, string, 0, 0,
+        empty,  OK, ER );
     TMII_DONE
     /* repeat with text "" */
-    TMII_INSMI( {, S, MIIM_BITMAP, -1 , -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_MODM( MFT_STRING, 545, empty, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, MFT_STRING, -9, 545, 0, -9, -9, -9, string, 0, 0, },
-        empty,  OK, ER )
+    TMII_INSMI( MIIM_BITMAP, -1 , -1, -1, 0, 0, 0, -1, 0, -1, hbm, OK );
+    TMII_MODM( MFT_STRING, 545, empty );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_ID, 80,
+        MFT_STRING, 0, 545, 0, 0, 0, 0, string, 0, 0,
+        empty,  OK, ER );
     TMII_DONE
     /* start with bitmap: set ownerdraw */
-    TMII_INSMI( {, S, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_MODM( MFT_OWNERDRAW, -1, 232, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_DATA, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_DATA, MFT_OWNERDRAW, -9, -9, 0, -9, -9, 232, string, 0, hbm, },
-        empty,  OK, ER )
+    TMII_INSMI( MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, 0, -1, hbm, OK );
+    TMII_MODM( MFT_OWNERDRAW, -1, (void *)232 );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP|MIIM_DATA, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 232, string, 0, hbm,
+        empty,  OK, ER );
     TMII_DONE
     /* ask nothing */
-    TMII_INSMI( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, 0, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-                {, S, 0, -9, -9, -9,  0, -9, -9, -9, string, 80, -9, },
-        init, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -1, -1, 0, 0, 0, -1, txt, 6, hbm, OK );
+    TMII_GMII ( 0, 80,
+                0, 0, 0,  0, 0, 0, 0, string, 80, 0,
+        init, OK, OK );
     TMII_DONE
     /* some tests with small cbSize: the hbmpItem is to be ignored */ 
-    TMII_INSMI( {, S - 4, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, NULL, 0, NULL, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, 0, -1, dummy_hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, NULL, 0, NULL,
+        NULL, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S - 4, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_BITMAP|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_BITMAP|MIIM_FTYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, string, 80, NULL, },
-        init, OK, ER )
+    TMII_INSMI( MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, 0, -1, dummy_hbm, OK );
+    TMII_GMII ( MIIM_BITMAP|MIIM_FTYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, string, 80, NULL,
+        init, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S - 4, MIIM_STRING|MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 4, NULL, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_STRING|MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, txt, 6, dummy_hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 4, NULL,
+        txt, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S - 4, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, NULL, 4, NULL, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR, -1, -1, 0, 0, 0, -1, txt, 6, dummy_hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, NULL, 4, NULL,
+        NULL, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S - 4, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 4, NULL, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 6, dummy_hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, NULL, 4, NULL,
+        NULL, OK, OK );
     TMII_DONE
-    TMII_INSMI( {, S - 4, MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 6, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_SEPARATOR|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 4, NULL, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_FTYPE|MIIM_STRING|MIIM_BITMAP, MFT_SEPARATOR|MFT_OWNERDRAW, -1, -1, 0, 0, 0, -1, txt, 6, dummy_hbm, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_SEPARATOR|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, NULL, 4, NULL,
+        NULL, OK, OK );
     TMII_DONE
     /* MIIM_TYPE by itself does not get/set the dwItemData for OwnerDrawn menus  */
-    TMII_INSMI( {, S, MIIM_TYPE|MIIM_DATA, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, 343, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE|MIIM_DATA, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE|MIIM_DATA, MFT_STRING|MFT_OWNERDRAW, -9, -9, 0, -9, -9, 343, 0, 0, 0, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE|MIIM_DATA, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, 343, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE|MIIM_DATA, 80,
+        MFT_STRING|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 343, 0, 0, 0,
+        NULL, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE|MIIM_DATA, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, 343, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, 0, 0, 0, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE|MIIM_DATA, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, 343, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_STRING|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        NULL, OK, ER );
     TMII_DONE
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, 343, txt, 0, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE|MIIM_DATA, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE|MIIM_DATA, MFT_STRING|MFT_OWNERDRAW, -9, -9, 0, -9, -9, 0, 0, 0, 0, },
-        empty, OK, ER )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, 0, 0, 0, 343, txt, 0, 0, OK );
+    TMII_GMII ( MIIM_TYPE|MIIM_DATA, 80,
+        MFT_STRING|MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        NULL, OK, ER );
     TMII_DONE
     /* set a string menu to ownerdraw with MIIM_TYPE */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -2, -2, -2, -2, -2, -2, txt, -2, -2, }, OK)
-    TMII_SMII( {, S, MIIM_TYPE, MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 4, -9, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_STRING, -2, -2, 0, 0, 0, -2, txt, -2, 0, OK );
+    TMII_SMII ( MIIM_TYPE, MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
     /* test with modifymenu add submenu */
-    TMII_INSMI( {, S, MIIM_STRING, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
-    TMII_MODM( MF_POPUP, submenu, txt, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE|MIIM_STRING|MIIM_SUBMENU, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_FTYPE|MIIM_STRING|MIIM_SUBMENU, MFT_STRING, -9, -9, submenu, -9, -9, -9, string, 4, -9, },
-        txt,  OK, OK )
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_TYPE, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 4, 0, },
-        txt,  OK, OK )
+    TMII_INSMI( MIIM_STRING, MFT_STRING, -1, -1, 0, 0, 0, -1, txt, 0, 0, OK );
+    TMII_MODM( MF_POPUP, (UINT_PTR)submenu, txt );
+    TMII_GMII ( MIIM_FTYPE|MIIM_STRING|MIIM_SUBMENU, 80,
+        MFT_STRING, 0, 0, submenu, 0, 0, 0, string, 4, 0,
+        txt,  OK, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_STRING, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt,  OK, OK );
     TMII_DONE
     /* MFT_SEPARATOR bit is kept when the text is added */
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, NULL, 0, -1, }, OK)
-    TMII_SMII( {, S, MIIM_STRING, -1, -1, -1, -1, -1, -1, -1, txt, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_STRING|MIIM_FTYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, string, 4, -9, },
-        txt, OK, OK )
+    TMII_INSMI( MIIM_STRING|MIIM_FTYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, NULL, 0, 0, OK );
+    TMII_SMII( MIIM_STRING, 0, 0, 0, 0, 0, 0, 0, txt, 0, 0 );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, string, 4, 0,
+        txt, OK, OK );
     TMII_DONE
     /* MFT_SEPARATOR bit is kept when bitmap is added */
-    TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, NULL, 0, -1, }, OK)
-    TMII_SMII( {, S, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
-    TMII_GMII ( {, S, MIIM_BITMAP|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
-        {, S, MIIM_BITMAP|MIIM_FTYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, string, 80, hbm, },
-        init, OK, ER )
+    TMII_INSMI( MIIM_STRING|MIIM_FTYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, NULL, 0, 0, OK );
+    TMII_SMII( MIIM_BITMAP, 0, 0, 0, 0, 0, 0, 0, 0, 0, hbm );
+    TMII_GMII ( MIIM_BITMAP|MIIM_FTYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, string, 80, hbm,
+        init, OK, ER );
     TMII_DONE
     /* Bitmaps inserted with MIIM_TYPE and MFT_BITMAP:
        Only the low word of the dwTypeData is used.
        Use a magic bitmap here (Word 95 uses this to create its MDI menu buttons) */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP | MFT_RIGHTJUSTIFY, -1, -1, -1, -1, -1, -1, MAKELONG(HBMMENU_MBAR_CLOSE, 0x1234), -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP | MFT_RIGHTJUSTIFY, -9, -9, 0, -9, -9, -9, HBMMENU_MBAR_CLOSE, 0, HBMMENU_MBAR_CLOSE, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP | MFT_RIGHTJUSTIFY, -1, -1, 0, 0, 0, -1,
+                (HMENU)MAKELONG(HBMMENU_MBAR_CLOSE, 0x1234), -1, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP | MFT_RIGHTJUSTIFY, 0, 0, 0, 0, 0, 0, HBMMENU_MBAR_CLOSE, 0, HBMMENU_MBAR_CLOSE,
+        NULL, OK, OK );
     TMII_DONE
     /* Type flags */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP | MFT_MENUBARBREAK | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_RIGHTORDER, -1, -1, -1, -1, -1, -1, hbm, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP | MFT_MENUBARBREAK | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_RIGHTORDER, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP | MFT_MENUBARBREAK | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_RIGHTORDER, -1, -1, 0, 0, 0, -1, hbm, -1, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP | MFT_MENUBARBREAK | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_RIGHTORDER, 0, 0, 0, 0, 0, 0, hbm, 0, hbm,
+        NULL, OK, OK );
     TMII_DONE
     /* State flags */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, hbm, -1, -1, }, OK)
-    TMII_SMII( {, S, MIIM_STATE, -1, MFS_CHECKED | MFS_DEFAULT | MFS_GRAYED | MFS_HILITE, -1, -1, -1, -1, -1, -1, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STATE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_STATE, -9, MFS_CHECKED | MFS_DEFAULT | MFS_GRAYED | MFS_HILITE, -9, 0, -9, -9, -9, -9, -9, -9, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, hbm, -1, 0, OK );
+    TMII_SMII( MIIM_STATE, -1, MFS_CHECKED | MFS_DEFAULT | MFS_GRAYED | MFS_HILITE, 0, 0, 0, 0, 0, 0, 0, 0 );
+    TMII_GMII ( MIIM_STATE, 80,
+        0, MFS_CHECKED | MFS_DEFAULT | MFS_GRAYED | MFS_HILITE, 0, 0, 0, 0, 0, 0, 80, 0,
+        NULL, OK, OK );
     TMII_DONE
     /* The style MFT_RADIOCHECK cannot be set with MIIM_CHECKMARKS only */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, hbm, -1, -1, }, OK)
-    TMII_SMII( {, S, MIIM_CHECKMARKS, MFT_RADIOCHECK, -1, -1, -1, hbm, hbm, -1, -1, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_CHECKMARKS | MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_CHECKMARKS | MIIM_TYPE, MFT_BITMAP, -9, -9, 0, hbm, hbm, -9, hbm, 0, hbm, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, hbm, -1, 0, OK );
+    TMII_SMII( MIIM_CHECKMARKS, MFT_RADIOCHECK, 0, 0, 0, hbm, hbm, 0, 0, 0, 0 );
+    TMII_GMII ( MIIM_CHECKMARKS | MIIM_TYPE, 80,
+        MFT_BITMAP, 0, 0, 0, hbm, hbm, 0, hbm, 0, hbm,
+        NULL, OK, OK );
     TMII_DONE
     /* MFT_BITMAP is added automatically by GetMenuItemInfo() for MIIM_TYPE */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, hbm, -1, -1, }, OK)
-    TMII_SMII( {, S, MIIM_FTYPE, MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, 0x1234, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, -9, -9, -9, },
-        empty, OK, OK )
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP | MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
-        empty, OK, OK )
-    TMII_GMII ( {, S, MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, -9, -9, -9, },
-        empty, OK, OK )
-    TMII_SMII( {, S, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, NULL, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_TYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 0, NULL, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, hbm, -1, 0, OK );
+    TMII_SMII( MIIM_FTYPE, MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, (HBITMAP)0x1234, 0, 0 );
+    TMII_GMII ( MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, 0, 80, 0,
+        NULL, OK, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP | MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, hbm, 0, hbm,
+        NULL, OK, OK );
+    TMII_GMII ( MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, 0, 80, 0,
+        NULL, OK, OK );
+    TMII_SMII( MIIM_BITMAP, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, NULL, 0, NULL,
+        NULL, OK, OK );
     TMII_DONE
     /* Bitmaps inserted with MIIM_TYPE and MFT_BITMAP:
        Only the low word of the dwTypeData is used.
        Use a magic bitmap here (Word 95 uses this to create its MDI menu buttons) */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP | MFT_RIGHTJUSTIFY, -1, -1, -1, -1, -1, -1, MAKELONG(HBMMENU_MBAR_CLOSE, 0x1234), -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP | MFT_RIGHTJUSTIFY, -9, -9, 0, -9, -9, -9, HBMMENU_MBAR_CLOSE, 0, HBMMENU_MBAR_CLOSE, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP | MFT_RIGHTJUSTIFY, -1, -1, 0, 0, 0, -1,
+                (HMENU)MAKELONG(HBMMENU_MBAR_CLOSE, 0x1234), -1, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP | MFT_RIGHTJUSTIFY, 0, 0, 0, 0, 0, 0, HBMMENU_MBAR_CLOSE, 0, HBMMENU_MBAR_CLOSE,
+        NULL, OK, OK );
     TMII_DONE
     /* Type flags */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP | MFT_MENUBARBREAK | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_RIGHTORDER, -1, -1, -1, -1, -1, -1, hbm, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP | MFT_MENUBARBREAK | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_RIGHTORDER, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP | MFT_MENUBARBREAK | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_RIGHTORDER, -1, -1, 0, 0, 0, -1, hbm, -1, 0, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP | MFT_MENUBARBREAK | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_RIGHTORDER, 0, 0, 0, 0, 0, 0, hbm, 0, hbm,
+        NULL, OK, OK );
     TMII_DONE
     /* State flags */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, hbm, -1, -1, }, OK)
-    TMII_SMII( {, S, MIIM_STATE, -1, MFS_CHECKED | MFS_DEFAULT | MFS_GRAYED | MFS_HILITE, -1, -1, -1, -1, -1, -1, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_STATE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_STATE, -9, MFS_CHECKED | MFS_DEFAULT | MFS_GRAYED | MFS_HILITE, -9, 0, -9, -9, -9, -9, -9, -9, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, hbm, -1, 0, OK );
+    TMII_SMII( MIIM_STATE, -1, MFS_CHECKED | MFS_DEFAULT | MFS_GRAYED | MFS_HILITE, 0, 0, 0, 0, 0, 0, 0, 0 );
+    TMII_GMII ( MIIM_STATE, 80,
+        0, MFS_CHECKED | MFS_DEFAULT | MFS_GRAYED | MFS_HILITE, 0, 0, 0, 0, 0, 0, 80, 0,
+        NULL, OK, OK );
     TMII_DONE
     /* The style MFT_RADIOCHECK cannot be set with MIIM_CHECKMARKS only */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, hbm, -1, -1, }, OK)
-    TMII_SMII( {, S, MIIM_CHECKMARKS, MFT_RADIOCHECK, -1, -1, -1, hbm, hbm, -1, -1, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_CHECKMARKS | MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_CHECKMARKS | MIIM_TYPE, MFT_BITMAP, -9, -9, 0, hbm, hbm, -9, hbm, 0, hbm, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, hbm, -1, 0, OK );
+    TMII_SMII( MIIM_CHECKMARKS, MFT_RADIOCHECK, 0, 0, 0, hbm, hbm, 0, 0, 0, 0 );
+    TMII_GMII ( MIIM_CHECKMARKS | MIIM_TYPE, 80,
+        MFT_BITMAP, 0, 0, 0, hbm, hbm, 0, hbm, 0, hbm,
+        NULL, OK, OK );
     TMII_DONE
     /* MFT_BITMAP is added automatically by GetMenuItemInfo() for MIIM_TYPE */
-    TMII_INSMI( {, S, MIIM_TYPE, MFT_BITMAP, -1, -1, -1, -1, -1, -1, hbm, -1, -1, }, OK)
-    TMII_SMII( {, S, MIIM_FTYPE, MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, 0x1234, -1, -1, }, OK)
-    TMII_GMII ( {, S, MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, -9, -9, -9, },
-        empty, OK, OK )
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_TYPE, MFT_BITMAP | MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
-        empty, OK, OK )
-    TMII_GMII ( {, S, MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, -9, -9, -9, },
-        empty, OK, OK )
-    TMII_SMII( {, S, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, NULL, }, OK)
-    TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, -9, -9, -9, },
-        {, S, MIIM_TYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 0, NULL, },
-        empty, OK, OK )
+    TMII_INSMI( MIIM_TYPE, MFT_BITMAP, -1, -1, 0, 0, 0, -1, hbm, -1, 0, OK );
+    TMII_SMII( MIIM_FTYPE, MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, (HBITMAP)0x1234, 0, 0 );
+    TMII_GMII ( MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, 0, 80, 0,
+        NULL, OK, OK );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_BITMAP | MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, hbm, 0, hbm,
+        NULL, OK, OK );
+    TMII_GMII ( MIIM_FTYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, 0, 80, 0,
+        NULL, OK, OK );
+    TMII_SMII( MIIM_BITMAP, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL );
+    TMII_GMII ( MIIM_TYPE, 80,
+        MFT_OWNERDRAW, 0, 0, 0, 0, 0, 0, NULL, 0, NULL,
+        NULL, OK, OK );
     TMII_DONE
   } while( !(ansi = !ansi) );
   DeleteObject( hbm);
@@ -1573,7 +1789,7 @@ static void test_menu_search_bycommand( void )
 
     rc = GetMenuItemInfo(hmenu, (UINT_PTR)hmenuSub2, FALSE, &info);
     ok (rc, "Getting the menus info failed\n");
-    ok (info.wID == (UINT)hmenuSub2, "IDs differ for popup menu\n");
+    ok (info.wID == (UINT_PTR)hmenuSub2, "IDs differ for popup menu\n");
     ok (!strcmp(info.dwTypeData, "Submenu2"), "Returned item has wrong label (%s)\n", info.dwTypeData);
 
     DestroyMenu( hmenu );
@@ -1655,23 +1871,23 @@ static struct menu_mouse_tests_s {
     BOOL _todo_wine;
 } menu_tests[] = {
     /* for each test, send keys or clicks and check for menu visibility */
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 0}, TRUE, FALSE }, /* test 0 */
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 0}, TRUE, FALSE }, /* test 0 */
     { INPUT_KEYBOARD, {{0}}, {VK_ESCAPE, 0}, FALSE, FALSE },
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {'D', 0}, FALSE, FALSE },
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {'E', 0}, FALSE, FALSE },
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 'M', 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 'M', 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {VK_ESCAPE, VK_ESCAPE, 0}, FALSE, FALSE },
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 'M', VK_ESCAPE, 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 'M', VK_ESCAPE, 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {VK_ESCAPE, 0}, FALSE, FALSE },
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 'M', 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 'M', 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {'D', 0}, FALSE, FALSE },
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 'M', 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 'M', 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {'E', 0}, FALSE, FALSE },
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 'M', 'P', 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 'M', 'P', 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {'D', 0}, FALSE, FALSE },
-    { INPUT_KEYBOARD, {{0}}, {VK_LMENU, 'M', 'P', 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_MENU, 'M', 'P', 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {'E', 0}, FALSE, FALSE },
 
     { INPUT_MOUSE, {{1, 2}, {0}}, {0}, TRUE, TRUE }, /* test 18 */
@@ -1691,14 +1907,14 @@ static struct menu_mouse_tests_s {
 static void send_key(WORD wVk)
 {
     TEST_INPUT i[2];
-    memset(&i, 0, 2*sizeof(INPUT));
+    memset(i, 0, sizeof(i));
     i[0].type = i[1].type = INPUT_KEYBOARD;
     i[0].u.ki.wVk = i[1].u.ki.wVk = wVk;
     i[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
     pSendInput(2, (INPUT *) i, sizeof(INPUT));
 }
 
-static void click_menu(HANDLE hWnd, struct menu_item_pair_s *mi)
+static BOOL click_menu(HANDLE hWnd, struct menu_item_pair_s *mi)
 {
     HMENU hMenu = hMenus[mi->uMenu];
     TEST_INPUT i[3];
@@ -1706,10 +1922,10 @@ static void click_menu(HANDLE hWnd, struct menu_item_pair_s *mi)
     RECT r;
     int screen_w = GetSystemMetrics(SM_CXSCREEN);
     int screen_h = GetSystemMetrics(SM_CYSCREEN);
+    BOOL ret = GetMenuItemRect(mi->uMenu > 2 ? NULL : hWnd, hMenu, mi->uItem, &r);
+    if(!ret) return FALSE;
 
-    GetMenuItemRect(mi->uMenu > 2 ? NULL : hWnd, hMenu, mi->uItem, &r);
-
-    memset(&i, 0, 3*sizeof(INPUT));
+    memset(i, 0, sizeof(i));
     i[0].type = i[1].type = i[2].type = INPUT_MOUSE;
     i[0].u.mi.dx = i[1].u.mi.dx = i[2].u.mi.dx
             = ((r.left + 5) * 65535) / screen_w;
@@ -1720,10 +1936,11 @@ static void click_menu(HANDLE hWnd, struct menu_item_pair_s *mi)
     i[0].u.mi.dwFlags |= MOUSEEVENTF_MOVE;
     i[1].u.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
     i[2].u.mi.dwFlags |= MOUSEEVENTF_LEFTUP;
-    pSendInput(3, (INPUT *) i, sizeof(INPUT));
+    ret = pSendInput(3, (INPUT *) i, sizeof(INPUT));
 
     /* hack to prevent mouse message buildup in Wine */
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
+    return ret;
 }
 
 static DWORD WINAPI test_menu_input_thread(LPVOID lpParameter)
@@ -1735,21 +1952,36 @@ static DWORD WINAPI test_menu_input_thread(LPVOID lpParameter)
     /* mixed keyboard/mouse test */
     for (i = 0; menu_tests[i].type != -1; i++)
     {
-        int elapsed = 0;
+        int ret = TRUE, elapsed = 0;
+
+        got_input = i && menu_tests[i-1].bMenuVisible;
 
         if (menu_tests[i].type == INPUT_KEYBOARD)
             for (j = 0; menu_tests[i].wVk[j] != 0; j++)
                 send_key(menu_tests[i].wVk[j]);
         else
             for (j = 0; menu_tests[i].menu_item_pairs[j].uMenu != 0; j++)
-                click_menu(hWnd, &menu_tests[i].menu_item_pairs[j]);
+                if (!(ret = click_menu(hWnd, &menu_tests[i].menu_item_pairs[j]))) break;
 
+        if (!ret)
+        {
+            skip( "test %u: failed to send input\n", i );
+            PostMessage( hWnd, WM_CANCELMODE, 0, 0 );
+            return 0;
+        }
         while (menu_tests[i].bMenuVisible != bMenuVisible)
         {
             if (elapsed > 200)
                 break;
             elapsed += 20;
             Sleep(20);
+        }
+
+        if (!got_input)
+        {
+            skip( "test %u: didn't receive input\n", i );
+            PostMessage( hWnd, WM_CANCELMODE, 0, 0 );
+            return 0;
         }
 
         if (menu_tests[i]._todo_wine)
@@ -1774,6 +2006,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         case WM_EXITMENULOOP:
             bMenuVisible = FALSE;
             break;
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_MOUSEMOVE:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_NCMOUSEMOVE:
+        case WM_NCLBUTTONDOWN:
+        case WM_NCLBUTTONUP:
+            got_input = TRUE;
+            /* fall through */
         default:
             return( DefWindowProcA( hWnd, msg, wParam, lParam ) );
     }
@@ -1785,13 +2027,14 @@ static void test_menu_input(void) {
     WNDCLASSA  wclass;
     HINSTANCE hInstance = GetModuleHandleA( NULL );
     HANDLE hThread, hWnd;
+    DWORD tid;
 
     wclass.lpszClassName = "MenuTestClass";
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
     wclass.lpfnWndProc   = WndProc;
     wclass.hInstance     = hInstance;
-    wclass.hIcon         = LoadIconA( 0, (LPSTR)IDI_APPLICATION );
-    wclass.hCursor       = LoadCursorA( NULL, (LPSTR)IDC_ARROW);
+    wclass.hIcon         = LoadIconA( 0, IDI_APPLICATION );
+    wclass.hCursor       = LoadCursorA( NULL, IDC_ARROW );
     wclass.hbrBackground = (HBRUSH)( COLOR_WINDOW + 1);
     wclass.lpszMenuName  = 0;
     wclass.cbClsExtra    = 0;
@@ -1820,7 +2063,7 @@ static void test_menu_input(void) {
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
-    hThread = CreateThread(NULL, 0, test_menu_input_thread, hWnd, 0, NULL);
+    hThread = CreateThread(NULL, 0, test_menu_input_thread, hWnd, 0, &tid);
     while(1)
     {
         if (WAIT_TIMEOUT != WaitForSingleObject(hThread, 50))
@@ -1837,7 +2080,7 @@ static void test_menu_flags( void )
     hMenu = CreateMenu();
     hPopupMenu = CreatePopupMenu();
 
-    AppendMenu(hMenu, MF_POPUP | MF_STRING, (UINT)hPopupMenu, "Popup");
+    AppendMenu(hMenu, MF_POPUP | MF_STRING, (UINT_PTR)hPopupMenu, "Popup");
 
     AppendMenu(hPopupMenu, MF_STRING | MF_HILITE | MF_DEFAULT, 101, "Item 1");
     InsertMenu(hPopupMenu, 1, MF_BYPOSITION | MF_STRING | MF_HILITE | MF_DEFAULT, 102, "Item 2");
@@ -1871,8 +2114,8 @@ static void test_menu_hilitemenuitem( void )
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
     wclass.lpfnWndProc   = WndProc;
     wclass.hInstance     = GetModuleHandleA( NULL );
-    wclass.hIcon         = LoadIconA( 0, (LPSTR)IDI_APPLICATION );
-    wclass.hCursor       = LoadCursorA( NULL, (LPSTR)IDC_ARROW);
+    wclass.hIcon         = LoadIconA( 0, IDI_APPLICATION );
+    wclass.hCursor       = LoadCursorA( NULL, IDC_ARROW );
     wclass.hbrBackground = (HBRUSH)( COLOR_WINDOW + 1);
     wclass.lpszMenuName  = 0;
     wclass.cbClsExtra    = 0;
@@ -1885,7 +2128,7 @@ static void test_menu_hilitemenuitem( void )
     hMenu = CreateMenu();
     hPopupMenu = CreatePopupMenu();
 
-    AppendMenu(hMenu, MF_POPUP | MF_STRING, (UINT)hPopupMenu, "Popup");
+    AppendMenu(hMenu, MF_POPUP | MF_STRING, (UINT_PTR)hPopupMenu, "Popup");
 
     AppendMenu(hPopupMenu, MF_STRING, 101, "Item 1");
     AppendMenu(hPopupMenu, MF_STRING, 102, "Item 2");
@@ -1997,9 +2240,10 @@ static void test_menu_hilitemenuitem( void )
 static void check_menu_items(HMENU hmenu, UINT checked_cmd, UINT checked_type,
                              UINT checked_state)
 {
-    UINT i, count;
+    INT i, count;
 
     count = GetMenuItemCount(hmenu);
+    ok (count != -1, "GetMenuItemCount returned -1\n");
 
     for (i = 0; i < count; i++)
     {
@@ -2017,7 +2261,7 @@ static void check_menu_items(HMENU hmenu, UINT checked_cmd, UINT checked_type,
 #endif
         if (mii.hSubMenu)
         {
-            ok((HMENU)mii.wID == mii.hSubMenu, "id %u: wID should be equal to hSubMenu\n", checked_cmd);
+            ok(mii.wID == (UINT_PTR)mii.hSubMenu, "id %u: wID should be equal to hSubMenu\n", checked_cmd);
             check_menu_items(mii.hSubMenu, checked_cmd, checked_type, checked_state);
         }
         else
@@ -2140,7 +2384,7 @@ static void test_menu_resource_layout(void)
         { MF_SEPARATOR, MF_GRAYED|MF_DISABLED, 8, "" }
     };
     HMENU hmenu;
-    UINT count, i;
+    INT count, i;
     BOOL ret;
 
     hmenu = LoadMenuIndirect(&menu_template);
@@ -2182,7 +2426,7 @@ static void test_menu_resource_layout(void)
            "%u: expected wID %04x, got %04x\n", i, menu_data[i].id, mii.wID);
         ok(mii.cch == strlen(menu_data[i].str),
            "%u: expected cch %u, got %u\n", i, (UINT)strlen(menu_data[i].str), mii.cch);
-        ok(!strcmp((LPCSTR)mii.dwTypeData, menu_data[i].str),
+        ok(!strcmp(mii.dwTypeData, menu_data[i].str),
            "%u: expected dwTypeData %s, got %s\n", i, menu_data[i].str, (LPCSTR)mii.dwTypeData);
     }
 
@@ -2209,6 +2453,48 @@ static HMENU create_menu_from_data(const struct menu_data *item, INT item_count)
         SetLastError(0xdeadbeef);
         ret = AppendMenu(hmenu, item[i].type, item[i].id, item[i].str);
         ok(ret, "%d: AppendMenu(%04x, %04x, %p) error %u\n",
+           i, item[i].type, item[i].id, item[i].str, GetLastError());
+    }
+    return hmenu;
+}
+
+/* use InsertMenuItem: does not set the MFT_BITMAP flag,
+ * and does not accept non-magic bitmaps with invalid
+ * bitmap handles */
+static HMENU create_menuitem_from_data(const struct menu_data *item, INT item_count)
+{
+    HMENU hmenu;
+    INT i;
+    BOOL ret;
+    MENUITEMINFO mii = { sizeof( MENUITEMINFO)};
+
+    hmenu = CreateMenu();
+    assert(hmenu != 0);
+
+    for (i = 0; i < item_count; i++)
+    {
+        SetLastError(0xdeadbeef);
+
+        mii.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STATE;
+        mii.fType = 0;
+        if(  item[i].type & MFT_BITMAP)
+        {
+            mii.fMask |= MIIM_BITMAP;
+            mii.hbmpItem =  (HBITMAP)item[i].str;
+        }
+        else if(  item[i].type & MFT_SEPARATOR)
+            mii.fType = MFT_SEPARATOR;
+        else
+        {
+            mii.fMask |= MIIM_STRING;
+            mii.dwTypeData =  (LPSTR)item[i].str;
+            mii.cch = strlen(  item[i].str);
+        }
+        mii.fState = 0;
+        if(  item[i].type & MF_HELP) mii.fType |= MF_HELP;
+        mii.wID = item[i].id;
+        ret = InsertMenuItem( hmenu, -1, TRUE, &mii);
+        ok(ret, "%d: InsertMenuItem(%04x, %04x, %p) error %u\n",
            i, item[i].type, item[i].id, item[i].str, GetLastError());
     }
     return hmenu;
@@ -2242,19 +2528,17 @@ static void compare_menu_data(HMENU hmenu, const struct menu_data *item, INT ite
            "%u: expected fType %04x, got %04x\n", i, item[i].type, mii.fType);
         ok(mii.wID == item[i].id,
            "%u: expected wID %04x, got %04x\n", i, item[i].id, mii.wID);
-        if (item[i].type & (MF_BITMAP | MF_SEPARATOR))
-        {
+        if (mii.hbmpItem || !item[i].str)
             /* For some reason Windows sets high word to not 0 for
              * not "magic" ids.
              */
             ok(LOWORD(mii.hbmpItem) == LOWORD(item[i].str),
                "%u: expected hbmpItem %p, got %p\n", i, item[i].str, mii.hbmpItem);
-        }
         else
         {
             ok(mii.cch == strlen(item[i].str),
                "%u: expected cch %u, got %u\n", i, (UINT)strlen(item[i].str), mii.cch);
-            ok(!strcmp((LPCSTR)mii.dwTypeData, item[i].str),
+            ok(!strcmp(mii.dwTypeData, item[i].str),
                "%u: expected dwTypeData %s, got %s\n", i, item[i].str, (LPCSTR)mii.dwTypeData);
         }
     }
@@ -2262,6 +2546,7 @@ static void compare_menu_data(HMENU hmenu, const struct menu_data *item, INT ite
 
 static void test_InsertMenu(void)
 {
+    HBITMAP hbm = CreateBitmap(1,1,1,1,NULL);
     /* Note: XP treats only bitmap handles 1 - 6 as "magic" ones
      * regardless of their id.
      */
@@ -2277,16 +2562,28 @@ static void test_InsertMenu(void)
         { MF_STRING|MF_HELP, 2, "Help" },
         { MF_BITMAP|MF_HELP, SC_CLOSE, MAKEINTRESOURCE(1) }
     };
-    static const struct menu_data in2[] =
+    static const struct menu_data out1a[] =
     {
         { MF_STRING, 1, "File" },
-        { MF_BITMAP|MF_HELP, SC_CLOSE, MAKEINTRESOURCE(100) },
+        { MF_STRING|MF_HELP, 2, "Help" },
+        { MF_HELP, SC_CLOSE, MAKEINTRESOURCE(1) }
+    };
+    const struct menu_data in2[] =
+    {
+        { MF_STRING, 1, "File" },
+        { MF_BITMAP|MF_HELP, SC_CLOSE, (char*)hbm },
         { MF_STRING|MF_HELP, 2, "Help" }
     };
-    static const struct menu_data out2[] =
+    const struct menu_data out2[] =
     {
         { MF_STRING, 1, "File" },
-        { MF_BITMAP|MF_HELP, SC_CLOSE, MAKEINTRESOURCE(100) },
+        { MF_BITMAP|MF_HELP, SC_CLOSE, (char*)hbm },
+        { MF_STRING|MF_HELP, 2, "Help" }
+    };
+    const struct menu_data out2a[] =
+    {
+        { MF_STRING, 1, "File" },
+        { MF_HELP, SC_CLOSE, (char*)hbm },
         { MF_STRING|MF_HELP, 2, "Help" }
     };
     static const struct menu_data in3[] =
@@ -2313,9 +2610,16 @@ static void test_InsertMenu(void)
         { MF_STRING|MF_HELP, 2, "Help" },
         { MF_BITMAP|MF_HELP, 1, MAKEINTRESOURCE(1) }
     };
+    static const struct menu_data out4a[] =
+    {
+        { MF_STRING, 1, "File" },
+        { MF_STRING|MF_HELP, 2, "Help" },
+        { MF_HELP, 1, MAKEINTRESOURCE(1) }
+    };
     HMENU hmenu;
 
 #define create_menu(a) create_menu_from_data((a), sizeof(a)/sizeof((a)[0]))
+#define create_menuitem(a) create_menuitem_from_data((a), sizeof(a)/sizeof((a)[0]))
 #define compare_menu(h, a) compare_menu_data((h), (a), sizeof(a)/sizeof((a)[0]))
 
     hmenu = create_menu(in1);
@@ -2334,31 +2638,584 @@ static void test_InsertMenu(void)
     compare_menu(hmenu, out4);
     DestroyMenu(hmenu);
 
+    /* now using InsertMenuItemInfo */
+    hmenu = create_menuitem(in1);
+    compare_menu(hmenu, out1a);
+    DestroyMenu(hmenu);
+
+    hmenu = create_menuitem(in2);
+    compare_menu(hmenu, out2a);
+    DestroyMenu(hmenu);
+
+    hmenu = create_menuitem(in3);
+    compare_menu(hmenu, out3);
+    DestroyMenu(hmenu);
+
+    hmenu = create_menuitem(in4);
+    compare_menu(hmenu, out4a);
+    DestroyMenu(hmenu);
+
 #undef create_menu
+#undef create_menuitem
 #undef compare_menu
+}
+
+static void test_menu_getmenuinfo(void)
+{
+    HMENU hmenu;
+    MENUINFO mi = {0};
+    BOOL ret;
+    DWORD gle;
+
+    /* create a menu */
+    hmenu = CreateMenu();
+    assert( hmenu);
+    /* test some parameter errors */
+    SetLastError(0xdeadbeef);
+    ret = pGetMenuInfo( hmenu, NULL);
+    gle= GetLastError();
+    ok( !ret, "GetMenuInfo() should have failed\n");
+    ok( gle == ERROR_INVALID_PARAMETER ||
+        broken(gle == 0xdeadbeef), /* Win98, WinME */
+        "GetMenuInfo() error got %u expected %u\n", gle, ERROR_INVALID_PARAMETER);
+    SetLastError(0xdeadbeef);
+    mi.cbSize = 0;
+    ret = pGetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( !ret, "GetMenuInfo() should have failed\n");
+    ok( gle == ERROR_INVALID_PARAMETER ||
+        broken(gle == 0xdeadbeef), /* Win98, WinME */
+        "GetMenuInfo() error got %u expected %u\n", gle, ERROR_INVALID_PARAMETER);
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    ret = pGetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "GetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "GetMenuInfo() error got %u\n", gle);
+    SetLastError(0xdeadbeef);
+    mi.cbSize = 0;
+    ret = pGetMenuInfo( NULL, &mi);
+    gle= GetLastError();
+    ok( !ret, "GetMenuInfo() should have failed\n");
+    ok( gle == ERROR_INVALID_PARAMETER ||
+        broken(gle == 0xdeadbeef), /* Win98, WinME */
+        "GetMenuInfo() error got %u expected %u\n", gle, ERROR_INVALID_PARAMETER);
+    /* clean up */
+    DestroyMenu( hmenu);
+    return;
+}
+
+static void test_menu_setmenuinfo(void)
+{
+    HMENU hmenu, hsubmenu;
+    MENUINFO mi = {0};
+    MENUITEMINFOA mii = {sizeof( MENUITEMINFOA)};
+    BOOL ret;
+    DWORD gle;
+
+    /* create a menu with a submenu */
+    hmenu = CreateMenu();
+    hsubmenu = CreateMenu();
+    assert( hmenu && hsubmenu);
+    mii.fMask = MIIM_SUBMENU;
+    mii.hSubMenu = hsubmenu;
+    ret = InsertMenuItem( hmenu, 0, FALSE, &mii);
+    ok( ret, "InsertMenuItem failed with error %d\n", GetLastError());
+    /* test some parameter errors */
+    SetLastError(0xdeadbeef);
+    ret = pSetMenuInfo( hmenu, NULL);
+    gle= GetLastError();
+    ok( !ret, "SetMenuInfo() should have failed\n");
+    ok( gle == ERROR_INVALID_PARAMETER ||
+        broken(gle == 0xdeadbeef), /* Win98, WinME */
+        "SetMenuInfo() error got %u expected %u\n", gle, ERROR_INVALID_PARAMETER);
+    SetLastError(0xdeadbeef);
+    mi.cbSize = 0;
+    ret = pSetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( !ret, "SetMenuInfo() should have failed\n");
+    ok( gle == ERROR_INVALID_PARAMETER ||
+        broken(gle == 0xdeadbeef), /* Win98, WinME */
+        "SetMenuInfo() error got %u expected %u\n", gle, ERROR_INVALID_PARAMETER);
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    ret = pSetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "SetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "SetMenuInfo() error got %u\n", gle);
+    SetLastError(0xdeadbeef);
+    mi.cbSize = 0;
+    ret = pSetMenuInfo( NULL, &mi);
+    gle= GetLastError();
+    ok( !ret, "SetMenuInfo() should have failed\n");
+    ok( gle == ERROR_INVALID_PARAMETER ||
+        broken(gle == 0xdeadbeef), /* Win98, WinME */
+        "SetMenuInfo() error got %u expected %u\n", gle, ERROR_INVALID_PARAMETER);
+    /* functional tests */
+    /* menu and submenu should have the CHECKORBMP style bit cleared */
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    mi.fMask = MIM_STYLE;
+    ret = pGetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "GetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "GetMenuInfo() error got %u\n", gle);
+    ok( !(mi.dwStyle & MNS_CHECKORBMP), "menustyle was not expected to have the MNS_CHECKORBMP flag\n");
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    mi.fMask = MIM_STYLE;
+    ret = pGetMenuInfo( hsubmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "GetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "GetMenuInfo() error got %u\n", gle);
+    ok( !(mi.dwStyle & MNS_CHECKORBMP), "menustyle was not expected to have the MNS_CHECKORBMP flag\n");
+    /* SetMenuInfo() */
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    mi.fMask = MIM_STYLE | MIM_APPLYTOSUBMENUS;
+    mi.dwStyle = MNS_CHECKORBMP;
+    ret = pSetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "SetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "SetMenuInfo() error got %u\n", gle);
+    /* Now both menus should have the MNS_CHECKORBMP style bit set */
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    mi.fMask = MIM_STYLE;
+    ret = pGetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "GetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "GetMenuInfo() error got %u\n", gle);
+    ok( mi.dwStyle & MNS_CHECKORBMP, "menustyle was expected to have the MNS_CHECKORBMP flag\n");
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    mi.fMask = MIM_STYLE;
+    ret = pGetMenuInfo( hsubmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "GetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "GetMenuInfo() error got %u\n", gle);
+    ok( mi.dwStyle & MNS_CHECKORBMP, "menustyle was expected to have the MNS_CHECKORBMP flag\n");
+    /* now repeat that without the APPLYTOSUBMENUS flag and another style bit */
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    mi.fMask = MIM_STYLE ;
+    mi.dwStyle = MNS_NOCHECK;
+    ret = pSetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "SetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "SetMenuInfo() error got %u\n", gle);
+    /* Now only the top menu should have the MNS_NOCHECK style bit set */
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    mi.fMask = MIM_STYLE;
+    ret = pGetMenuInfo( hmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "GetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "GetMenuInfo() error got %u\n", gle);
+    ok( mi.dwStyle & MNS_NOCHECK, "menustyle was expected to have the MNS_NOCHECK flag\n");
+    SetLastError(0xdeadbeef);
+    mi.cbSize = sizeof( MENUINFO);
+    mi.fMask = MIM_STYLE;
+    ret = pGetMenuInfo( hsubmenu, &mi);
+    gle= GetLastError();
+    ok( ret, "GetMenuInfo() should have succeeded\n");
+    ok( gle == 0xdeadbeef, "GetMenuInfo() error got %u\n", gle);
+    ok( !(mi.dwStyle & MNS_NOCHECK), "menustyle was not expected to have the MNS_NOCHECK flag\n");
+    /* clean up */
+    DestroyMenu( hsubmenu);
+    DestroyMenu( hmenu);
+    return;
+}
+
+/* little func to easy switch either TrackPopupMenu() or TrackPopupMenuEx() */
+static DWORD MyTrackPopupMenu( int ex, HMENU hmenu, UINT flags, INT x, INT y, HWND hwnd, LPTPMPARAMS ptpm)
+{
+    return ex
+        ? TrackPopupMenuEx( hmenu, flags, x, y, hwnd, ptpm)
+        : TrackPopupMenu( hmenu, flags, x, y, 0, hwnd, NULL);
+}
+
+/* some TrackPopupMenu and TrackPopupMenuEx tests */
+/* the LastError values differ between NO_ERROR and invalid handle */
+/* between all windows versions tested. The first value is that valid on XP  */
+/* Vista was the only that made returned different error values */
+/* between the TrackPopupMenu and TrackPopupMenuEx functions */
+static void test_menu_trackpopupmenu(void)
+{
+    BOOL ret;
+    HMENU hmenu;
+    DWORD gle;
+    int Ex;
+    HWND hwnd = CreateWindowEx(0, MAKEINTATOM(atomMenuCheckClass), NULL,
+            WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 200, 200,
+            NULL, NULL, NULL, NULL);
+    ok(hwnd != NULL, "CreateWindowEx failed with error %d\n", GetLastError());
+    if (!hwnd) return;
+    SetWindowLongPtr( hwnd, GWLP_WNDPROC, (LONG_PTR)menu_ownerdraw_wnd_proc);
+    for( Ex = 0; Ex < 2; Ex++)
+    {
+        hmenu = CreatePopupMenu();
+        ok(hmenu != NULL, "CreateMenu failed with error %d\n", GetLastError());
+        if (!hmenu)
+        {
+            DestroyWindow(hwnd);
+            return;
+        }
+        /* display the menu */
+        /* start with an invalid menu handle */
+        gle = 0xdeadbeef;
+        gflag_initmenupopup = gflag_entermenuloop = gflag_initmenu = 0;
+        ret = MyTrackPopupMenu( Ex, NULL, 0x100, 100,100, hwnd, NULL);
+        gle = GetLastError();
+        ok( !ret, "TrackPopupMenu%s should have failed\n", Ex ? "Ex" : "");
+        ok( gle == ERROR_INVALID_MENU_HANDLE
+            || broken (gle == 0xdeadbeef) /* win95 */
+            || broken (gle == NO_ERROR) /* win98/ME */
+            ,"TrackPopupMenu%s error got %u expected %u\n",
+            Ex ? "Ex" : "", gle, ERROR_INVALID_MENU_HANDLE);
+        ok( !(gflag_initmenupopup || gflag_entermenuloop || gflag_initmenu),
+                "got unexpected message(s)%s%s%s\n",
+                gflag_initmenupopup ? " WM_INITMENUPOPUP ": " ",
+                gflag_entermenuloop ? "WM_INITMENULOOP ": "",
+                gflag_initmenu ? "WM_INITMENU": "");
+        /* another one but not NULL */
+        gle = 0xdeadbeef;
+        gflag_initmenupopup = gflag_entermenuloop = gflag_initmenu = 0;
+        ret = MyTrackPopupMenu( Ex, (HMENU)hwnd, 0x100, 100,100, hwnd, NULL);
+        gle = GetLastError();
+        ok( !ret, "TrackPopupMenu%s should have failed\n", Ex ? "Ex" : "");
+        ok( gle == ERROR_INVALID_MENU_HANDLE
+            || broken (gle == 0xdeadbeef) /* win95 */
+            || broken (gle == NO_ERROR) /* win98/ME */
+            ,"TrackPopupMenu%s error got %u expected %u\n",
+            Ex ? "Ex" : "", gle, ERROR_INVALID_MENU_HANDLE);
+        ok( !(gflag_initmenupopup || gflag_entermenuloop || gflag_initmenu),
+                "got unexpected message(s)%s%s%s\n",
+                gflag_initmenupopup ? " WM_INITMENUPOPUP ": " ",
+                gflag_entermenuloop ? "WM_INITMENULOOP ": "",
+                gflag_initmenu ? "WM_INITMENU": "");
+        /* now a somewhat successful call */
+        gle = 0xdeadbeef;
+        gflag_initmenupopup = gflag_entermenuloop = gflag_initmenu = 0;
+        ret = MyTrackPopupMenu( Ex, hmenu, 0x100, 100,100, hwnd, NULL);
+        gle = GetLastError();
+        ok( ret == 0, "TrackPopupMenu%s returned %d expected zero\n", Ex ? "Ex" : "", ret);
+        ok( gle == NO_ERROR
+            || gle == ERROR_INVALID_MENU_HANDLE /* NT4, win2k */
+            || broken (gle == 0xdeadbeef) /* win95 */
+            ,"TrackPopupMenu%s error got %u expected %u or %u\n",
+            Ex ? "Ex" : "", gle, NO_ERROR, ERROR_INVALID_MENU_HANDLE);
+        ok( gflag_initmenupopup && gflag_entermenuloop && gflag_initmenu,
+                "missed expected message(s)%s%s%s\n",
+                !gflag_initmenupopup ? " WM_INITMENUPOPUP ": " ",
+                !gflag_entermenuloop ? "WM_INITMENULOOP ": "",
+                !gflag_initmenu ? "WM_INITMENU": "");
+        /* and another */
+        ret = AppendMenuA( hmenu, MF_STRING, 1, "winetest");
+        ok( ret, "AppendMenA has failed!\n");
+        gle = 0xdeadbeef;
+        gflag_initmenupopup = gflag_entermenuloop = gflag_initmenu = 0;
+        ret = MyTrackPopupMenu( Ex, hmenu, 0x100, 100,100, hwnd, NULL);
+        gle = GetLastError();
+        ok( ret == 0, "TrackPopupMenu%s returned %d expected zero\n", Ex ? "Ex" : "", ret);
+        ok( gle == NO_ERROR
+            || gle == ERROR_INVALID_MENU_HANDLE /* NT4, win2k and Vista in the TrackPopupMenuEx case */
+            || broken (gle == 0xdeadbeef) /* win95 */
+            ,"TrackPopupMenu%s error got %u expected %u or %u\n",
+            Ex ? "Ex" : "", gle, NO_ERROR, ERROR_INVALID_MENU_HANDLE);
+        ok( gflag_initmenupopup && gflag_entermenuloop && gflag_initmenu,
+                "missed expected message(s)%s%s%s\n",
+                !gflag_initmenupopup ? " WM_INITMENUPOPUP ": " ",
+                !gflag_entermenuloop ? "WM_INITMENULOOP ": "",
+                !gflag_initmenu ? "WM_INITMENU": "");
+        DestroyMenu(hmenu);
+    }
+    /* clean up */
+    DestroyWindow(hwnd);
+}
+
+/* test handling of WM_CANCELMODE messages */
+static int g_got_enteridle;
+static HWND g_hwndtosend;
+static LRESULT WINAPI menu_cancelmode_wnd_proc(HWND hwnd, UINT msg,
+        WPARAM wparam, LPARAM lparam)
+{
+    switch (msg)
+    {
+        case WM_ENTERMENULOOP:
+            g_got_enteridle = 0;
+            return SendMessage( g_hwndtosend, WM_CANCELMODE, 0, 0);
+        case WM_ENTERIDLE:
+            {
+                if( g_got_enteridle++ == 0) {
+                    /* little hack to get another WM_ENTERIDLE message */
+                    PostMessage( hwnd, WM_MOUSEMOVE, 0, 0);
+                    return SendMessage( g_hwndtosend, WM_CANCELMODE, 0, 0);
+                }
+                pEndMenu();
+                return TRUE;
+            }
+    }
+    return DefWindowProc( hwnd, msg, wparam, lparam);
+}
+
+static void test_menu_cancelmode(void)
+{
+    DWORD ret;
+    HWND hwnd, hwndchild;
+    HMENU menu;
+    if( !pEndMenu) { /* win95 */
+        win_skip( "EndMenu is not available\n");
+        return;
+    }
+    hwnd = CreateWindowEx( 0, MAKEINTATOM(atomMenuCheckClass), NULL,
+            WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 200, 200,
+            NULL, NULL, NULL, NULL);
+    hwndchild = CreateWindowEx( 0, MAKEINTATOM(atomMenuCheckClass), NULL,
+            WS_VISIBLE | WS_CHILD, 10, 10, 20, 20,
+            hwnd, NULL, NULL, NULL);
+    ok( hwnd != NULL && hwndchild != NULL,
+            "CreateWindowEx failed with error %d\n", GetLastError());
+    g_hwndtosend = hwnd;
+    SetWindowLongPtr( hwnd, GWLP_WNDPROC, (LONG_PTR)menu_cancelmode_wnd_proc);
+    SetWindowLongPtr( hwndchild, GWLP_WNDPROC, (LONG_PTR)menu_cancelmode_wnd_proc);
+    menu = CreatePopupMenu();
+    ok( menu != NULL, "CreatePopupMenu failed with error %d\n", GetLastError());
+    ret = AppendMenuA( menu, MF_STRING, 1, "winetest");
+    ok( ret, "Functie failed lasterror is %u\n", GetLastError());
+    /* seems to be needed only on wine :( */
+    {MSG msg;   while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);}
+    /* test the effect of sending a WM_CANCELMODE message in the WM_INITMENULOOP
+     * handler of the menu owner */
+    /* test results is exctracted from variable g_got_enteridle. Possible values:
+     * 0 : complete conformance. Sending WM_CANCELMODE cancels a menu initializing tracking
+     * 1 : Sending WM_CANCELMODE cancels a menu that is in tracking state
+     * 2 : Sending WM_CANCELMODE does not work
+     */
+    /* menu owner is top level window */
+    g_hwndtosend = hwnd;
+    ret = TrackPopupMenu( menu, 0x100, 100,100, 0, hwnd, NULL);
+    todo_wine {
+        ok( g_got_enteridle == 0, "received %d WM_ENTERIDLE messages, none expected\n", g_got_enteridle);
+    }
+    ok( g_got_enteridle < 2, "received %d WM_ENTERIDLE messages, should be less than 2\n", g_got_enteridle);
+    /* menu owner is child window */
+    g_hwndtosend = hwndchild;
+    ret = TrackPopupMenu( menu, 0x100, 100,100, 0, hwndchild, NULL);
+    todo_wine {
+        ok(g_got_enteridle == 0, "received %d WM_ENTERIDLE messages, none expected\n", g_got_enteridle);
+    }
+    ok(g_got_enteridle < 2, "received %d WM_ENTERIDLE messages, should be less than 2\n", g_got_enteridle);
+    /* now send the WM_CANCELMODE messages to the WRONG window */
+    /* those should fail ( to have any effect) */
+    g_hwndtosend = hwnd;
+    ret = TrackPopupMenu( menu, 0x100, 100,100, 0, hwndchild, NULL);
+    ok( g_got_enteridle == 2, "received %d WM_ENTERIDLE messages, should be 2\n", g_got_enteridle);
+    /* cleanup */
+    DestroyMenu( menu);
+    DestroyWindow( hwndchild);
+    DestroyWindow( hwnd);
+}
+
+/* show menu trees have a maximum depth */
+static void test_menu_maxdepth(void)
+{
+#define NR_MENUS 100
+    HMENU hmenus[ NR_MENUS];
+    int i;
+    DWORD ret;
+
+    SetLastError(12345678);
+    for( i = 0; i < NR_MENUS; i++) {
+        hmenus[i] = CreatePopupMenu();
+        if( !hmenus[i]) break;
+    }
+    ok( i == NR_MENUS, "could not create more than %d menu's\n", i);
+    for( i = 1; i < NR_MENUS; i++) {
+        ret = AppendMenuA( hmenus[i], MF_POPUP, (UINT_PTR)hmenus[i-1],"test");
+        if( !ret) break;
+    }
+    trace("Maximum depth is %d\n", i);
+    ok( GetLastError() == 12345678, "unexpected error %d\n",  GetLastError());
+    ok( i < NR_MENUS ||
+           broken( i == NR_MENUS), /* win98, NT */
+           "no ( or very large) limit on menu depth!\n");
+
+    for( i = 0; i < NR_MENUS; i++)
+        DestroyMenu( hmenus[i]);
+}
+
+/* bug #12171 */
+static void test_menu_circref(void)
+{
+    HMENU menu1, menu2;
+    DWORD ret;
+
+    menu1 = CreatePopupMenu();
+    menu2 = CreatePopupMenu();
+    ok( menu1 && menu2, "error creating menus.\n");
+    ret = AppendMenuA( menu1, MF_POPUP, (UINT_PTR)menu2, "winetest");
+    ok( ret, "AppendMenu failed, error is %d\n", GetLastError());
+    ret = AppendMenuA( menu1, MF_STRING | MF_HILITE, 123, "winetest");
+    ok( ret, "AppendMenu failed, error is %d\n", GetLastError());
+    /* app chooses an id that happens to clash with its own hmenu */
+    ret = AppendMenuA( menu2, MF_STRING, (UINT_PTR)menu2, "winetest");
+    ok( ret, "AppendMenu failed, error is %d\n", GetLastError());
+    /* now attempt to change the string of the first item of menu1 */
+    ret = ModifyMenuA( menu1, (UINT_PTR)menu2, MF_POPUP, (UINT_PTR)menu2, "menu 2");
+    ok( !ret ||
+            broken( ret), /* win98, NT */
+            "ModifyMenu should have failed.\n");
+    if( !ret) { /* will probably stack fault if the ModifyMenu succeeded */
+        ret = GetMenuState( menu1, 123, 0);
+        ok( ret == MF_HILITE, "GetMenuState returned %x\n",ret);
+    }
+    DestroyMenu( menu2);
+    DestroyMenu( menu1);
+}
+
+/* test how the menu texts are aligned when the menu items have
+ * different combinations of text and bitmaps (bug #13350) */
+static void test_menualign(void)
+{
+    BYTE bmfill[300];
+    HMENU menu;
+    HBITMAP hbm1, hbm2, hbm3;
+    MENUITEMINFO mii = { sizeof(MENUITEMINFO)};
+    DWORD ret;
+    HWND hwnd;
+    MENUINFO mi = { sizeof( MENUINFO)};
+
+    if( !winetest_interactive) {
+        skip( "interactive alignment tests.\n");
+        return;
+    }
+    hwnd = CreateWindowEx(0,
+            "STATIC",
+            "Menu text alignment Test\nPlease make a selection.",
+            WS_OVERLAPPEDWINDOW,
+            100, 100,
+            300, 300,
+            NULL, NULL, 0, NULL);
+    ShowWindow( hwnd, SW_SHOW);
+    /* create bitmaps */
+    memset( bmfill, 0xcc, sizeof( bmfill));
+    hbm1 = CreateBitmap( 10,10,1,1,bmfill);
+    hbm2 = CreateBitmap( 20,20,1,1,bmfill);
+    hbm3 = CreateBitmap( 50,6,1,1,bmfill);
+    ok( hbm1 && hbm2 && hbm3, "Creating bitmaps failed\n");
+    menu = CreatePopupMenu();
+    ok( menu != NULL, "CreatePopupMenu() failed\n");
+    if( pGetMenuInfo) {
+        mi.fMask = MIM_STYLE;
+        ret = pGetMenuInfo( menu, &mi);
+        ok( menu != NULL, "GetMenuInfo() failed\n");
+        ok( 0 == mi.dwStyle, "menuinfo style is %x\n", mi.dwStyle);
+    }
+    /* test 1 */
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID;
+    mii.wID = 1;
+    mii.hbmpItem = hbm1;
+    mii.dwTypeData = (LPSTR) " OK: menu texts are correctly left-aligned.";
+    ret = InsertMenuItem( menu, -1, TRUE, &mii);
+    ok( ret, "InsertMenuItem() failed\n");
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID ;
+    mii.wID = 2;
+    mii.hbmpItem = hbm2;
+    mii.dwTypeData = (LPSTR) " FAIL: menu texts are NOT left-aligned.";
+    ret = InsertMenuItem( menu, -1, TRUE, &mii);
+    ok( ret, "InsertMenuItem() failed\n");
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 110, 200, 0, hwnd, NULL);
+    ok( ret != 2, "User indicated that menu text alignment test 1 failed %d\n", ret);
+    /* test 2*/
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID;
+    mii.wID = 3;
+    mii.hbmpItem = hbm3;
+    mii.dwTypeData = NULL;
+    ret = InsertMenuItem( menu, 0, TRUE, &mii);
+    ok( ret, "InsertMenuItem() failed\n");
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID;
+    mii.wID = 1;
+    mii.hbmpItem = hbm1;
+    /* make the text a bit longer, to keep it readable */
+    /* this bug is on winXP and reproduced on wine */
+    mii.dwTypeData = (LPSTR) " OK: menu texts are to the right of the bitmaps........";
+    ret = SetMenuItemInfo( menu, 1, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    mii.wID = 2;
+    mii.hbmpItem = hbm2;
+    mii.dwTypeData = (LPSTR) " FAIL: menu texts are below the first bitmap.  ";
+    ret = SetMenuItemInfo( menu, 2, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 110, 200, 0, hwnd, NULL);
+    ok( ret != 2, "User indicated that menu text alignment test 2 failed %d\n", ret);
+    /* test 3 */
+    mii.fMask = MIIM_TYPE | MIIM_ID;
+    mii.wID = 3;
+    mii.fType = MFT_BITMAP;
+    mii.dwTypeData = (LPSTR) hbm3;
+    ret = SetMenuItemInfo( menu, 0, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID;
+    mii.wID = 1;
+    mii.hbmpItem = NULL;
+    mii.dwTypeData = (LPSTR) " OK: menu texts are below the bitmap.";
+    ret = SetMenuItemInfo( menu, 1, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    mii.wID = 2;
+    mii.hbmpItem = NULL;
+    mii.dwTypeData = (LPSTR) " FAIL: menu texts are NOT below the bitmap.";
+    ret = SetMenuItemInfo( menu, 2, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 110, 200, 0, hwnd, NULL);
+    ok( ret != 2, "User indicated that menu text alignment test 3 failed %d\n", ret);
+    /* cleanup */
+    DeleteObject( hbm1);
+    DeleteObject( hbm2);
+    DeleteObject( hbm3);
+    DestroyMenu( menu);
+    DestroyWindow( hwnd);
 }
 
 START_TEST(menu)
 {
     init_function_pointers();
 
+    /* Wine defines MENUITEMINFO for W2K and above. NT4 and below can't
+     * handle that.
+     */
+    if (correct_behavior())
+    {
+        test_menu_add_string();
+        test_menu_iteminfo();
+        test_menu_search_bycommand();
+        test_CheckMenuRadioItem();
+        test_menu_resource_layout();
+        test_InsertMenu();
+        test_menualign();
+    }
+
     register_menu_check_class();
 
     test_menu_locked_by_window();
+    test_subpopup_locked_by_menu();
     test_menu_ownerdraw();
-    test_menu_add_string();
-    test_menu_iteminfo();
-    test_menu_search_bycommand();
     test_menu_bmp_and_string();
-
+    /* test Get/SetMenuInfo if available */
+    if( pGetMenuInfo && pSetMenuInfo) {
+        test_menu_getmenuinfo();
+        test_menu_setmenuinfo();
+    } else
+        win_skip("Get/SetMenuInfo are not available\n");
     if( !pSendInput)
-        skip("SendInput is not available\n");
+        win_skip("SendInput is not available\n");
     else
         test_menu_input();
     test_menu_flags();
 
     test_menu_hilitemenuitem();
-    test_CheckMenuRadioItem();
-    test_menu_resource_layout();
-    test_InsertMenu();
+    test_menu_trackpopupmenu();
+    test_menu_cancelmode();
+    test_menu_maxdepth();
+    test_menu_circref();
 }

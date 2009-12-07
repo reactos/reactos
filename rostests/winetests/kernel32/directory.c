@@ -62,7 +62,10 @@ static void test_GetWindowsDirectoryW(void)
 
     len_with_null = GetWindowsDirectoryW(NULL, 0);
     if (len_with_null==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("GetWindowsDirectoryW is not implemented\n");
         return;
+    }
     ok(len_with_null <= MAX_PATH, "should fit into MAX_PATH\n");
 
     lstrcpyW(buf, fooW);
@@ -125,7 +128,10 @@ static void test_GetSystemDirectoryW(void)
 
     len_with_null = GetSystemDirectoryW(NULL, 0);
     if (len_with_null==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("GetSystemDirectoryW is not available\n");
         return;
+    }
     ok(len_with_null <= MAX_PATH, "should fit into MAX_PATH\n");
 
     lstrcpyW(buf, fooW);
@@ -338,28 +344,36 @@ static void test_CreateDirectoryW(void)
 
     ret = CreateDirectoryW(NULL, NULL);
     if (!ret && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("CreateDirectoryW is not available\n");
         return;
-    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND, "should not create NULL path\n");
+    }
+    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND,
+       "should not create NULL path ret %u err %u\n", ret, GetLastError());
 
     ret = CreateDirectoryW(empty_strW, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND, "should not create empty path\n");
+    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND,
+       "should not create empty path ret %u err %u\n", ret, GetLastError());
 
     ret = GetSystemDirectoryW(tmpdir, MAX_PATH);
     ok(ret < MAX_PATH, "System directory should fit into MAX_PATH\n");
 
     ret = SetCurrentDirectoryW(tmpdir);
-    ok(ret == TRUE, "could not chdir to the System directory\n");
+    ok(ret == TRUE, "could not chdir to the System directory ret %u err %u\n", ret, GetLastError());
 
     ret = CreateDirectoryW(dotW, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS, "should not create existing path\n");
+    ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS,
+       "should not create existing path ret %u err %u\n", ret, GetLastError());
 
     ret = CreateDirectoryW(dotdotW, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS, "should not create existing path\n");
+    ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS,
+       "should not create existing path ret %u err %u\n", ret, GetLastError());
 
     GetTempPathW(MAX_PATH, tmpdir);
     tmpdir[3] = 0; /* truncate the path */
     ret = CreateDirectoryW(tmpdir, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_ACCESS_DENIED, "should deny access to the drive root\n");
+    ok(ret == FALSE && (GetLastError() == ERROR_ACCESS_DENIED || GetLastError() == ERROR_ALREADY_EXISTS),
+       "should deny access to the drive root ret %u err %u\n", ret, GetLastError());
 
     GetTempPathW(MAX_PATH, tmpdir);
     lstrcatW(tmpdir, tmp_dir_name);
@@ -367,7 +381,8 @@ static void test_CreateDirectoryW(void)
     ok(ret == TRUE, "CreateDirectoryW should always succeed\n");
 
     ret = CreateDirectoryW(tmpdir, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS, "should not create existing path\n");
+    ok(ret == FALSE && GetLastError() == ERROR_ALREADY_EXISTS,
+       "should not create existing path ret %u err %u\n", ret, GetLastError());
 
     ret = RemoveDirectoryW(tmpdir);
     ok(ret == TRUE, "RemoveDirectoryW should always succeed\n");
@@ -392,7 +407,8 @@ static void test_CreateDirectoryW(void)
     lstrcatW(tmpdir, tmp_dir_name);
     ret = CreateDirectoryW(tmpdir, NULL);
     ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND, 
-      "CreateDirectoryW with multiple nonexistent directories in path should fail\n");
+      "CreateDirectoryW with multiple nonexistent directories in path should fail ret %u err %u\n",
+       ret, GetLastError());
     ret = RemoveDirectoryW(tmpdir);
 }
 
@@ -435,7 +451,10 @@ static void test_RemoveDirectoryW(void)
     lstrcatW(tmpdir, tmp_dir_name);
     ret = CreateDirectoryW(tmpdir, NULL);
     if (!ret && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("CreateDirectoryW is not available\n");
       return;
+    }
 
     ok(ret == TRUE, "CreateDirectoryW should always succeed\n");
 

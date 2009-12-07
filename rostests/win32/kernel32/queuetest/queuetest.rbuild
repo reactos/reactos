@@ -1,5 +1,3 @@
-<module name="queuetest" type="win32cui" installbase="system32" installname="queuetest.exe" allowwarnings="true">
-        <define name="__USE_W32API" />
-	<library>kernel32</library>
+<module name="queuetest" type="win32cui" installbase="system32" installname="queuetest.exe">
 	<file>queuetest.c</file>
 </module>

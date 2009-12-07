@@ -11,7 +11,7 @@
 static volatile DWORD z;
 static volatile DWORD x=0;
 
-static NTSTATUS STDCALL
+static NTSTATUS WINAPI
 thread_1(PVOID Param)
 {
   DWORD y=0;

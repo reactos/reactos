@@ -47,7 +47,7 @@ MonitorThread(PVOID Ignored)
         if (ZwQuerySystemInformation(SystemPerformanceInformation,
             (PVOID) &PerformanceInfo,
             sizeof(SYSTEM_PERFORMANCE_INFORMATION),
-            &Length) != NO_ERROR)
+            &Length) != STATUS_SUCCESS)
         {
             break;
         }

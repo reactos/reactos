@@ -2,6 +2,7 @@
  * Unit tests for mapping functions
  *
  * Copyright (c) 2005 Huw Davies
+ * Copyright (c) 2008 Dmitry  Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,6 +29,193 @@
 #include "winuser.h"
 #include "winerror.h"
 
+#define rough_match(got, expected) (abs((got) - (expected)) <= 5)
+
+#define expect_LPtoDP(_hdc, _x, _y) \
+{ \
+    POINT _pt = { 1000, 1000 }; \
+    LPtoDP(_hdc, &_pt, 1); \
+    ok(rough_match(_pt.x, _x), "expected x %d, got %d\n", (_x), _pt.x); \
+    ok(rough_match(_pt.y, _y), "expected y %d, got %d\n", (_y), _pt.y); \
+}
+
+#define expect_world_trasform(_hdc, _em11, _em22) \
+{ \
+    BOOL _ret; \
+    XFORM _xform; \
+    SetLastError(0xdeadbeef); \
+    _ret = GetWorldTransform(_hdc, &_xform); \
+    if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED) \
+    { \
+        ok(_ret, "GetWorldTransform error %u\n", GetLastError()); \
+        ok(_xform.eM11 == (_em11), "expected %f, got %f\n", (_em11), _xform.eM11); \
+        ok(_xform.eM12 == 0.0, "expected 0.0, got %f\n", _xform.eM12); \
+        ok(_xform.eM21 == 0.0, "expected 0.0, got %f\n", _xform.eM21); \
+        ok(_xform.eM22 == (_em22), "expected %f, got %f\n", (_em22), _xform.eM22); \
+        ok(_xform.eDx == 0.0, "expected 0.0, got %f\n", _xform.eDx); \
+        ok(_xform.eDy == 0.0, "expected 0.0, got %f\n", _xform.eDy); \
+    } \
+}
+
+#define expect_dc_ext(_func, _hdc, _cx, _cy) \
+{ \
+    BOOL _ret; \
+    SIZE _size; \
+    SetLastError(0xdeadbeef); \
+    _ret = _func(_hdc, &_size); \
+    ok(_ret, #_func " error %u\n", GetLastError()); \
+    ok(_size.cx == (_cx), "expected cx %d, got %d\n", (_cx), _size.cx); \
+    ok(_size.cy == (_cy), "expected cy %d, got %d\n", (_cy), _size.cy); \
+}
+
+#define expect_viewport_ext(_hdc, _cx, _cy) expect_dc_ext(GetViewportExtEx, _hdc, _cx, _cy)
+#define expect_window_ext(_hdc, _cx, _cy)  expect_dc_ext(GetWindowExtEx, _hdc, _cx, _cy)
+
+static void test_world_transform(void)
+{
+    BOOL is_win9x;
+    HDC hdc;
+    INT ret, size_cx, size_cy, res_x, res_y, dpi_x, dpi_y;
+    XFORM xform;
+    SIZE size;
+
+    SetLastError(0xdeadbeef);
+    GetWorldTransform(0, NULL);
+    is_win9x = GetLastError() == ERROR_CALL_NOT_IMPLEMENTED;
+
+    hdc = CreateCompatibleDC(0);
+
+    xform.eM11 = 1.0f;
+    xform.eM12 = 0.0f;
+    xform.eM21 = 0.0f;
+    xform.eM22 = 1.0f;
+    xform.eDx = 0.0f;
+    xform.eDy = 0.0f;
+    ret = SetWorldTransform(hdc, &xform);
+    ok(!ret, "SetWorldTransform should fail in GM_COMPATIBLE mode\n");
+
+    size_cx = GetDeviceCaps(hdc, HORZSIZE);
+    size_cy = GetDeviceCaps(hdc, VERTSIZE);
+    res_x = GetDeviceCaps(hdc, HORZRES);
+    res_y = GetDeviceCaps(hdc, VERTRES);
+    dpi_x = GetDeviceCaps(hdc, LOGPIXELSX);
+    dpi_y = GetDeviceCaps(hdc, LOGPIXELSY);
+    trace("dc size %d x %d, resolution %d x %d dpi %d x %d\n",
+          size_cx, size_cy, res_x, res_y, dpi_x, dpi_y );
+
+    expect_viewport_ext(hdc, 1, 1);
+    expect_window_ext(hdc, 1, 1);
+    expect_world_trasform(hdc, 1.0, 1.0);
+    expect_LPtoDP(hdc, 1000, 1000);
+
+    SetLastError(0xdeadbeef);
+    ret = SetMapMode(hdc, MM_LOMETRIC);
+    ok(ret == MM_TEXT, "expected MM_TEXT, got %d\n", ret);
+
+    if (is_win9x)
+    {
+        expect_viewport_ext(hdc, dpi_x, dpi_y);
+        expect_window_ext(hdc, 254, -254);
+    }
+    else
+    {
+        expect_viewport_ext(hdc, res_x, -res_y);
+        ok( GetWindowExtEx( hdc, &size ), "GetWindowExtEx failed\n" );
+        ok( size.cx == size_cx * 10 ||
+            size.cx == MulDiv( res_x, 254, dpi_x ),  /* Vista uses a more precise method */
+            "expected cx %d or %d, got %d\n", size_cx * 10, MulDiv( res_x, 254, dpi_x ), size.cx );
+        ok( size.cy == size_cy * 10 ||
+            size.cy == MulDiv( res_y, 254, dpi_y ),  /* Vista uses a more precise method */
+            "expected cy %d or %d, got %d\n", size_cy * 10, MulDiv( res_y, 254, dpi_y ), size.cy );
+    }
+    expect_world_trasform(hdc, 1.0, 1.0);
+    expect_LPtoDP(hdc, MulDiv(1000 / 10, res_x, size_cx), -MulDiv(1000 / 10, res_y, size_cy));
+
+    SetLastError(0xdeadbeef);
+    ret = SetMapMode(hdc, MM_TEXT);
+    ok(ret == MM_LOMETRIC, "expected MM_LOMETRIC, got %d\n", ret);
+
+    expect_viewport_ext(hdc, 1, 1);
+    expect_window_ext(hdc, 1, 1);
+    expect_world_trasform(hdc, 1.0, 1.0);
+    expect_LPtoDP(hdc, 1000, 1000);
+
+    ret = SetGraphicsMode(hdc, GM_ADVANCED);
+    if (!ret)
+    {
+        DeleteDC(hdc);
+        skip("GM_ADVANCED is not supported on this platform\n");
+        return;
+    }
+
+    expect_viewport_ext(hdc, 1, 1);
+    expect_window_ext(hdc, 1, 1);
+    expect_world_trasform(hdc, 1.0, 1.0);
+    expect_LPtoDP(hdc, 1000, 1000);
+
+    /* The transform must conform to (eM11 * eM22 != eM12 * eM21) requirement */
+    xform.eM11 = 1.0f;
+    xform.eM12 = 2.0f;
+    xform.eM21 = 1.0f;
+    xform.eM22 = 2.0f;
+    xform.eDx = 0.0f;
+    xform.eDy = 0.0f;
+    ret = SetWorldTransform(hdc, &xform);
+    ok(!ret ||
+       broken(ret), /* NT4 */
+       "SetWorldTransform should fail with an invalid xform\n");
+
+    xform.eM11 = 20.0f;
+    xform.eM12 = 0.0f;
+    xform.eM21 = 0.0f;
+    xform.eM22 = 20.0f;
+    xform.eDx = 0.0f;
+    xform.eDy = 0.0f;
+    SetLastError(0xdeadbeef);
+    ret = SetWorldTransform(hdc, &xform);
+    ok(ret, "SetWorldTransform error %u\n", GetLastError());
+
+    expect_viewport_ext(hdc, 1, 1);
+    expect_window_ext(hdc, 1, 1);
+    expect_world_trasform(hdc, 20.0, 20.0);
+    expect_LPtoDP(hdc, 20000, 20000);
+
+    SetLastError(0xdeadbeef);
+    ret = SetMapMode(hdc, MM_LOMETRIC);
+    ok(ret == MM_TEXT, "expected MM_TEXT, got %d\n", ret);
+
+    expect_viewport_ext(hdc, res_x, -res_y);
+    ok( GetWindowExtEx( hdc, &size ), "GetWindowExtEx failed\n" );
+    ok( size.cx == size_cx * 10 ||
+        size.cx == MulDiv( res_x, 254, dpi_x ),  /* Vista uses a more precise method */
+        "expected cx %d or %d, got %d\n", size_cx * 10, MulDiv( res_x, 254, dpi_x ), size.cx );
+    ok( size.cy == size_cy * 10 ||
+        size.cy == MulDiv( res_y, 254, dpi_y ),  /* Vista uses a more precise method */
+        "expected cy %d or %d, got %d\n", size_cy * 10, MulDiv( res_y, 254, dpi_y ), size.cy );
+    expect_world_trasform(hdc, 20.0, 20.0);
+    expect_LPtoDP(hdc, MulDiv(20000, res_x, size.cx), -MulDiv(20000, res_y, size.cy));
+
+    SetLastError(0xdeadbeef);
+    ret = SetMapMode(hdc, MM_TEXT);
+    ok(ret == MM_LOMETRIC, "expected MM_LOMETRIC, got %d\n", ret);
+
+    expect_viewport_ext(hdc, 1, 1);
+    expect_window_ext(hdc, 1, 1);
+    expect_world_trasform(hdc, 20.0, 20.0);
+    expect_LPtoDP(hdc, 20000, 20000);
+
+    ret = SetGraphicsMode(hdc, GM_COMPATIBLE);
+    ok(ret, "SetGraphicsMode(GM_COMPATIBLE) should not fail if DC has't an identity transform\n");
+    ret = GetGraphicsMode(hdc);
+    ok(ret == GM_COMPATIBLE, "expected GM_COMPATIBLE, got %d\n", ret);
+
+    expect_viewport_ext(hdc, 1, 1);
+    expect_window_ext(hdc, 1, 1);
+    expect_world_trasform(hdc, 20.0, 20.0);
+    expect_LPtoDP(hdc, 20000, 20000);
+
+    DeleteDC(hdc);
+}
 
 static void test_modify_world_transform(void)
 {
@@ -38,6 +226,7 @@ static void test_modify_world_transform(void)
     if(!ret) /* running in win9x so quit */
     {
         ReleaseDC(0, hdc);
+        skip("GM_ADVANCED is not supported on this platform\n");
         return;
     }
 
@@ -52,8 +241,6 @@ static void test_modify_world_transform(void)
 
     ReleaseDC(0, hdc);
 }
-
-#define rough_match(got, expected) ((got >= expected - 2) && (got <= expected + 2))
 
 static void test_SetWindowExt(HDC hdc, LONG cx, LONG cy, LONG expected_vp_cx, LONG expected_vp_cy)
 {
@@ -155,8 +342,227 @@ static void test_isotropic_mapping(void)
     ReleaseDC(0, hdc);
 }
 
+static void test_setvirtualresolution(void)
+{
+    HDC hdc = CreateICA("DISPLAY", NULL, NULL, NULL);
+    DWORD r;
+    DWORD (WINAPI *pSetVirtualResolution)(HDC, DWORD, DWORD, DWORD, DWORD);
+    INT horz_res = GetDeviceCaps(hdc, HORZRES);
+    INT horz_size = GetDeviceCaps(hdc, HORZSIZE);
+    INT log_pixels_x = GetDeviceCaps(hdc, LOGPIXELSX);
+    SIZE orig_lometric_vp, orig_lometric_wnd;
+
+    pSetVirtualResolution = (void *)GetProcAddress(GetModuleHandleA("gdi32.dll"), "SetVirtualResolution");
+
+    if(!pSetVirtualResolution)
+    {
+        win_skip("Don't have SetVirtualResolution\n");
+        return;
+    }
+
+    /* Get the true resolution limits */
+    SetMapMode(hdc, MM_LOMETRIC);
+    GetViewportExtEx(hdc, &orig_lometric_vp);
+    GetWindowExtEx(hdc, &orig_lometric_wnd);
+    SetMapMode(hdc, MM_TEXT);
+
+    r = pSetVirtualResolution(hdc, 4000, 1000, 400, 200); /* 10 pix/mm x 5 pix/mm */
+    ok(r == TRUE, "got %d\n", r);
+    expect_LPtoDP(hdc, 1000, 1000);
+    expect_viewport_ext(hdc, 1, 1);
+    expect_window_ext(hdc, 1, 1);
+
+    SetMapMode(hdc, MM_LOMETRIC);
+    expect_LPtoDP(hdc, 1000, -500);
+    expect_viewport_ext(hdc, 4000, -1000);
+    expect_window_ext(hdc, 4000, 2000);
+
+    /* Doesn't change the device caps */
+    ok(horz_res == GetDeviceCaps(hdc, HORZRES), "horz_res changed\n");
+    ok(horz_size == GetDeviceCaps(hdc, HORZSIZE), "horz_size changed\n");
+    ok(log_pixels_x == GetDeviceCaps(hdc, LOGPIXELSX), "log_pixels_x changed\n");
+
+    r = pSetVirtualResolution(hdc, 8000, 1000, 400, 200); /* 20 pix/mm x 5 pix/mm */
+    ok(r == TRUE, "got %d\n", r);
+    expect_LPtoDP(hdc, 1000, -500); /* No change, need to re-set the mapping mode */
+    SetMapMode(hdc, MM_TEXT);
+    SetMapMode(hdc, MM_LOMETRIC);
+    expect_LPtoDP(hdc, 2000, -500);
+    expect_viewport_ext(hdc, 8000, -1000);
+    expect_window_ext(hdc, 4000, 2000);
+
+    r = pSetVirtualResolution(hdc, 8000, 1000, 200, 200); /* 40 pix/mm x 5 pix/mm */
+    ok(r == TRUE, "got %d\n", r);
+    SetMapMode(hdc, MM_TEXT);
+    SetMapMode(hdc, MM_LOMETRIC);
+    expect_LPtoDP(hdc, 4000, -500);
+    expect_viewport_ext(hdc, 8000, -1000);
+    expect_window_ext(hdc, 2000, 2000);
+
+    r = pSetVirtualResolution(hdc, 8000, 1000, 200, 200); /* 40 pix/mm x 5 pix/mm */
+    ok(r == TRUE, "got %d\n", r);
+    SetMapMode(hdc, MM_TEXT);
+    SetMapMode(hdc, MM_LOMETRIC);
+    expect_LPtoDP(hdc, 4000, -500);
+    expect_viewport_ext(hdc, 8000, -1000);
+    expect_window_ext(hdc, 2000, 2000);
+
+    r = pSetVirtualResolution(hdc, 8000, 2000, 200, 200); /* 40 pix/mm x 10 pix/mm */
+    ok(r == TRUE, "got %d\n", r);
+    SetMapMode(hdc, MM_TEXT);
+    SetMapMode(hdc, MM_LOMETRIC);
+    expect_LPtoDP(hdc, 4000, -1000);
+    expect_viewport_ext(hdc, 8000, -2000);
+    expect_window_ext(hdc, 2000, 2000);
+
+    r = pSetVirtualResolution(hdc, 0, 0, 10, 0); /* Error */
+    ok(r == FALSE, "got %d\n", r);
+    SetMapMode(hdc, MM_TEXT);
+    SetMapMode(hdc, MM_LOMETRIC);
+    expect_LPtoDP(hdc, 4000, -1000);
+    expect_viewport_ext(hdc, 8000, -2000);
+    expect_window_ext(hdc, 2000, 2000);
+
+    r = pSetVirtualResolution(hdc, 0, 0, 0, 0); /* Reset to true resolution */
+    ok(r == TRUE, "got %d\n", r);
+    SetMapMode(hdc, MM_TEXT);
+    SetMapMode(hdc, MM_LOMETRIC);
+    expect_viewport_ext(hdc, orig_lometric_vp.cx, orig_lometric_vp.cy);
+    expect_window_ext(hdc, orig_lometric_wnd.cx, orig_lometric_wnd.cy);
+
+    DeleteDC(hdc);
+}
+
+
+static inline void expect_identity(int line, XFORM *xf)
+{
+    ok(xf->eM11 == 1.0, "%d: got %f\n", line, xf->eM11);
+    ok(xf->eM12 == 0.0, "%d: got %f\n", line, xf->eM12);
+    ok(xf->eM21 == 0.0, "%d: got %f\n", line, xf->eM21);
+    ok(xf->eM22 == 1.0, "%d: got %f\n", line, xf->eM22);
+    ok(xf->eDx == 0.0, "%d: got %f\n", line, xf->eDx);
+    ok(xf->eDy == 0.0, "%d: got %f\n", line, xf->eDy);
+}
+
+static inline void xform_near_match(int line, XFORM *got, XFORM *expect)
+{
+    ok(fabs(got->eM11 - expect->eM11) < 0.001, "%d: got %f expect %f\n", line, got->eM11, expect->eM11);
+    ok(fabs(got->eM12 - expect->eM12) < 0.001, "%d: got %f expect %f\n", line, got->eM12, expect->eM12);
+    ok(fabs(got->eM21 - expect->eM21) < 0.001, "%d: got %f expect %f\n", line, got->eM21, expect->eM21);
+    ok(fabs(got->eM22 - expect->eM22) < 0.001, "%d: got %f expect %f\n", line, got->eM22, expect->eM22);
+    ok(fabs(got->eDx - expect->eDx) < 0.001, "%d: got %f expect %f\n", line, got->eDx, expect->eDx);
+    ok(fabs(got->eDy - expect->eDy) < 0.001, "%d: got %f expect %f\n", line, got->eDy, expect->eDy);
+}
+
+
+static void test_gettransform(void)
+{
+    HDC hdc = CreateICA("DISPLAY", NULL, NULL, NULL);
+    BOOL (WINAPI *pGetTransform)(HDC, DWORD, XFORM *);
+    XFORM xform, expect;
+    BOOL r;
+    SIZE lometric_vp, lometric_wnd;
+
+    pGetTransform = (void *)GetProcAddress(GetModuleHandleA("gdi32.dll"), "GetTransform");
+
+    if(!pGetTransform)
+    {
+        win_skip("Don't have GetTransform\n");
+        return;
+    }
+
+    r = pGetTransform(hdc, 0x203, &xform); /* World -> Page */
+    ok(r == TRUE, "got %d\n", r);
+    expect_identity(__LINE__, &xform);
+    r = pGetTransform(hdc, 0x304, &xform); /* Page -> Device */
+    ok(r == TRUE, "got %d\n", r);
+    expect_identity(__LINE__, &xform);
+    r = pGetTransform(hdc, 0x204, &xform); /* World -> Device */
+    ok(r == TRUE, "got %d\n", r);
+    expect_identity(__LINE__, &xform);
+    r = pGetTransform(hdc, 0x402, &xform); /* Device -> World */
+    ok(r == TRUE, "got %d\n", r);
+    expect_identity(__LINE__, &xform);
+
+    SetMapMode(hdc, MM_LOMETRIC);
+    GetViewportExtEx(hdc, &lometric_vp);
+    GetWindowExtEx(hdc, &lometric_wnd);
+
+    r = pGetTransform(hdc, 0x203, &xform); /* World -> Page */
+    ok(r == TRUE, "got %d\n", r);
+    expect_identity(__LINE__, &xform);
+
+    r = pGetTransform(hdc, 0x304, &xform); /* Page -> Device */
+    ok(r == TRUE, "got %d\n", r);
+    expect.eM11 = (FLOAT) lometric_vp.cx / lometric_wnd.cx;
+    expect.eM12 = expect.eM21 = 0.0;
+    expect.eM22 = (FLOAT) lometric_vp.cy / lometric_wnd.cy;
+    expect.eDx = expect.eDy = 0.0;
+    xform_near_match(__LINE__, &xform, &expect);
+
+    r = pGetTransform(hdc, 0x204, &xform);  /* World -> Device */
+    ok(r == TRUE, "got %d\n", r);
+    xform_near_match(__LINE__, &xform, &expect);
+
+    r = pGetTransform(hdc, 0x402, &xform); /* Device -> World */
+    ok(r == TRUE, "got %d\n", r);
+    expect.eM11 = (FLOAT) lometric_wnd.cx / lometric_vp.cx;
+    expect.eM22 = (FLOAT) lometric_wnd.cy / lometric_vp.cy;
+    xform_near_match(__LINE__, &xform, &expect);
+
+
+    SetGraphicsMode(hdc, GM_ADVANCED);
+
+    expect.eM11 = 10.0;
+    expect.eM22 = 20.0;
+    SetWorldTransform(hdc, &expect);
+    r = pGetTransform(hdc, 0x203, &xform);  /* World -> Page */
+    ok(r == TRUE, "got %d\n", r);
+    xform_near_match(__LINE__, &xform, &expect);
+
+    r = pGetTransform(hdc, 0x304, &xform); /* Page -> Device */
+    ok(r == TRUE, "got %d\n", r);
+    expect.eM11 = (FLOAT) lometric_vp.cx / lometric_wnd.cx;
+    expect.eM22 = (FLOAT) lometric_vp.cy / lometric_wnd.cy;
+    xform_near_match(__LINE__, &xform, &expect);
+
+    r = pGetTransform(hdc, 0x204, &xform); /* World -> Device */
+    ok(r == TRUE, "got %d\n", r);
+    expect.eM11 *= 10.0;
+    expect.eM22 *= 20.0;
+    xform_near_match(__LINE__, &xform, &expect);
+
+    r = pGetTransform(hdc, 0x402, &xform); /* Device -> World */
+    ok(r == TRUE, "got %d\n", r);
+    expect.eM11 = 1 / expect.eM11;
+    expect.eM22 = 1 / expect.eM22;
+    xform_near_match(__LINE__, &xform, &expect);
+
+    r = pGetTransform(hdc, 0x102, &xform);
+    ok(r == FALSE, "got %d\n", r);
+    r = pGetTransform(hdc, 0x103, &xform);
+    ok(r == FALSE, "got %d\n", r);
+    r = pGetTransform(hdc, 0x104, &xform);
+    ok(r == FALSE, "got %d\n", r);
+    r = pGetTransform(hdc, 0x202, &xform);
+    ok(r == FALSE, "got %d\n", r);
+    r = pGetTransform(hdc, 0x302, &xform);
+    ok(r == FALSE, "got %d\n", r);
+    r = pGetTransform(hdc, 0x303, &xform);
+    ok(r == FALSE, "got %d\n", r);
+    r = pGetTransform(hdc, 0x403, &xform);
+    ok(r == FALSE, "got %d\n", r);
+    r = pGetTransform(hdc, 0x404, &xform);
+    ok(r == FALSE, "got %d\n", r);
+    r = pGetTransform(hdc, 0xffff, &xform);
+    ok(r == FALSE, "got %d\n", r);
+}
+
 START_TEST(mapping)
 {
     test_modify_world_transform();
+    test_world_transform();
     test_isotropic_mapping();
+    test_setvirtualresolution();
+    test_gettransform();
 }

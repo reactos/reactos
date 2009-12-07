@@ -39,7 +39,7 @@ static void test_GetICMProfileA( HDC dc )
     ret = GetICMProfileA( NULL, NULL, NULL );
     if ( !ret && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
     {
-        skip( "GetICMProfileA is not implemented\n" );
+        win_skip( "GetICMProfileA is not implemented\n" );
         return;
     }
     ok( !ret, "GetICMProfileA succeeded\n" );
@@ -51,20 +51,28 @@ static void test_GetICMProfileA( HDC dc )
     ret = GetICMProfileA( dc, &size, NULL );
     ok( !ret, "GetICMProfileA succeeded\n" );
 
-    ret = GetICMProfileA( dc, NULL, filename );
-    ok( !ret, "GetICMProfileA succeeded\n" );
-
     size = MAX_PATH;
     ret = GetICMProfileA( NULL, &size, filename );
     ok( !ret, "GetICMProfileA succeeded\n" );
 
     size = 0;
+    filename[0] = 0;
     SetLastError(0xdeadbeef);
     ret = GetICMProfileA( dc, &size, filename );
     error = GetLastError();
     ok( !ret, "GetICMProfileA succeeded\n" );
     ok( size, "expected size > 0\n" );
-    ok( error == ERROR_INSUFFICIENT_BUFFER, "got %d, expected ERROR_INSUFFICIENT_BUFFER\n", error );
+    ok( filename[0] == 0, "Expected filename to be empty\n" );
+    ok( error == ERROR_INSUFFICIENT_BUFFER ||
+        error == ERROR_SUCCESS, /* Win95 */
+        "got %d, expected ERROR_INSUFFICIENT_BUFFER or ERROR_SUCCESS(Win95)\n", error );
+
+    /* Next test will crash on Win95 */
+    if ( error == ERROR_INSUFFICIENT_BUFFER )
+    {
+        ret = GetICMProfileA( dc, NULL, filename );
+        ok( !ret, "GetICMProfileA succeeded\n" );
+    }
 
     size = MAX_PATH;
     ret = GetICMProfileA( dc, &size, filename );
@@ -83,7 +91,7 @@ static void test_GetICMProfileW( HDC dc )
     ret = GetICMProfileW( NULL, NULL, NULL );
     if ( !ret && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
     {
-        skip( "GetICMProfileW is not implemented\n" );
+        win_skip( "GetICMProfileW is not implemented\n" );
         return;
     }
     ok( !ret, "GetICMProfileW succeeded\n" );
@@ -122,6 +130,15 @@ static void test_GetICMProfileW( HDC dc )
 static void test_SetICMMode( HDC dc )
 {
     INT ret, knob, save;
+    BOOL impl;
+
+    SetLastError( 0xdeadbeef );
+    impl = GetICMProfileA( NULL, NULL, NULL );
+    if ( !impl && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
+    {
+        win_skip( "On NT4 where SetICMMode is not implemented but this is not advertised\n" );
+        return;
+    }
 
     SetLastError( 0xdeadbeef );
     ret = SetICMMode( NULL, 0 );
@@ -148,7 +165,7 @@ static void test_SetICMMode( HDC dc )
     dc = CreateDCW( displayW, NULL, NULL, NULL );
     if ( !dc && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
     {
-        skip( "CreateDCW is not implemented\n" );
+        win_skip( "CreateDCW is not implemented\n" );
         return;
     }
     ok( dc != NULL, "CreateDCW failed (%d)\n", GetLastError() );

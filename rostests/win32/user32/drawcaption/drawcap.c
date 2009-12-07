@@ -25,7 +25,7 @@ WCHAR CaptWndClass[] = L"captwnd_class";
 HINSTANCE hInst;
 INT testnum = 0;
 
-//BOOL STDCALL (*DrawCaptionTemp) (
+//BOOL WINAPI (*DrawCaptionTemp) (
 //		 HWND        hwnd,
 //		 HDC         hdc,
 //		 const RECT *rect,
@@ -180,7 +180,7 @@ LRESULT CALLBACK CaptWndProc(HWND hWnd,
 }
 
 
-INT main(INT argc, CHAR **argv)
+int wmain(int argc, wchar_t**argv)
 {
 	HWND hWnd;
 	MSG msg;
@@ -205,7 +205,7 @@ INT main(INT argc, CHAR **argv)
 		return 0;
 	}
 
-	testnum = atoi(argv[1]);
+	testnum = _wtoi(argv[1]);
 	if(testnum < 1 || testnum > 8)
 	{
 		printf("Unknown test %d\n", testnum);

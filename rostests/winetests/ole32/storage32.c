@@ -262,7 +262,8 @@ static void test_storage_stream(void)
     r = IStorage_CreateStream(stg, NULL, STGM_SHARE_EXCLUSIVE | STGM_READWRITE, 0, 0, &stm );
     ok(r==STG_E_INVALIDNAME, "IStorage->CreateStream wrong error\n");
     r = IStorage_CreateStream(stg, longname, STGM_SHARE_EXCLUSIVE | STGM_READWRITE, 0, 0, &stm );
-    ok(r==STG_E_INVALIDNAME, "IStorage->CreateStream wrong error, got %d GetLastError()=%d\n", r, GetLastError());
+    ok(r==STG_E_INVALIDNAME || broken(r==S_OK) /* nt4 */,
+       "IStorage->CreateStream wrong error, got %d GetLastError()=%d\n", r, GetLastError());
     r = IStorage_CreateStream(stg, stmname, STGM_READWRITE, 0, 0, &stm );
     ok(r==STG_E_INVALIDFLAG, "IStorage->CreateStream wrong error\n");
     r = IStorage_CreateStream(stg, stmname, STGM_READ, 0, 0, &stm );
@@ -802,6 +803,56 @@ static void test_storage_refcount(void)
     DeleteFileW(filename);
 }
 
+static void test_writeclassstg(void)
+{
+    static const WCHAR szPrefix[] = { 's','t','g',0 };
+    static const WCHAR szDot[] = { '.',0 };
+    WCHAR filename[MAX_PATH];
+    IStorage *stg = NULL;
+    HRESULT r;
+    CLSID temp_cls;
+
+    if(!GetTempFileNameW(szDot, szPrefix, 0, filename))
+        return;
+
+    DeleteFileW(filename);
+
+    /* create the file */
+    r = StgCreateDocfile( filename, STGM_CREATE | STGM_SHARE_EXCLUSIVE |
+                            STGM_READWRITE, 0, &stg);
+    ok(r==S_OK, "StgCreateDocfile failed\n");
+
+    r = ReadClassStg( NULL, NULL );
+    ok(r == E_INVALIDARG, "ReadClassStg should return E_INVALIDARG instead of 0x%08X\n", r);
+
+    r = ReadClassStg( stg, NULL );
+    ok(r == E_INVALIDARG, "ReadClassStg should return E_INVALIDARG instead of 0x%08X\n", r);
+
+    temp_cls.Data1 = 0xdeadbeef;
+    r = ReadClassStg( stg, &temp_cls );
+    ok(r == S_OK, "ReadClassStg failed with 0x%08X\n", r);
+
+    ok(IsEqualCLSID(&temp_cls, &CLSID_NULL), "ReadClassStg returned wrong clsid\n");
+
+    r = WriteClassStg( NULL, NULL );
+    ok(r == E_INVALIDARG, "WriteClassStg should return E_INVALIDARG instead of 0x%08X\n", r);
+
+    r = WriteClassStg( stg, NULL );
+    ok(r == STG_E_INVALIDPOINTER, "WriteClassStg should return STG_E_INVALIDPOINTER instead of 0x%08X\n", r);
+
+    r = WriteClassStg( stg, &test_stg_cls );
+    ok( r == S_OK, "WriteClassStg failed with 0x%08X\n", r);
+
+    r = ReadClassStg( stg, &temp_cls );
+    ok( r == S_OK, "ReadClassStg failed with 0x%08X\n", r);
+    ok(IsEqualCLSID(&temp_cls, &test_stg_cls), "ReadClassStg returned wrong clsid\n");
+
+    r = IStorage_Release( stg );
+    ok (r == 0, "storage not released\n");
+
+    DeleteFileW(filename);
+}
+
 static void test_streamenum(void)
 {
     static const WCHAR szPrefix[] = { 's','t','g',0 };
@@ -999,6 +1050,223 @@ static void test_ReadClassStm(void)
     ok(IsEqualCLSID(&clsid, &test_stg_cls), "clsid should have been set to CLSID_WineTest\n");
 }
 
+struct access_res
+{
+    BOOL gothandle;
+    DWORD lasterr;
+    BOOL ignore;
+};
+
+static const struct access_res create[16] =
+{
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, TRUE }
+};
+
+static const struct access_res create_commit[16] =
+{
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, TRUE }
+};
+
+static const struct access_res create_close[16] =
+{
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS }
+};
+
+static void _test_file_access(LPCSTR file, const struct access_res *ares, DWORD line)
+{
+    DWORD access = 0, share = 0;
+    DWORD lasterr;
+    HANDLE hfile;
+    int i, j, idx = 0;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (i == 0) access = 0;
+        if (i == 1) access = GENERIC_READ;
+        if (i == 2) access = GENERIC_WRITE;
+        if (i == 3) access = GENERIC_READ | GENERIC_WRITE;
+
+        for (j = 0; j < 4; j++)
+        {
+            if (ares[idx].ignore)
+                continue;
+
+            if (j == 0) share = 0;
+            if (j == 1) share = FILE_SHARE_READ;
+            if (j == 2) share = FILE_SHARE_WRITE;
+            if (j == 3) share = FILE_SHARE_READ | FILE_SHARE_WRITE;
+
+            SetLastError(0xdeadbeef);
+            hfile = CreateFileA(file, access, share, NULL, OPEN_EXISTING,
+                                FILE_ATTRIBUTE_NORMAL, 0);
+            lasterr = GetLastError();
+
+            ok((hfile != INVALID_HANDLE_VALUE) == ares[idx].gothandle,
+               "(%d, handle, %d): Expected %d, got %d\n",
+               line, idx, ares[idx].gothandle,
+               (hfile != INVALID_HANDLE_VALUE));
+
+            ok(lasterr == ares[idx].lasterr ||
+               broken(lasterr == 0xdeadbeef) /* win9x */,
+               "(%d, lasterr, %d): Expected %d, got %d\n",
+               line, idx, ares[idx].lasterr, lasterr);
+
+            CloseHandle(hfile);
+            idx++;
+        }
+    }
+}
+
+#define test_file_access(file, ares) _test_file_access(file, ares, __LINE__)
+
+static void test_access(void)
+{
+    IStorage *stg;
+    HRESULT hr;
+
+    static const WCHAR fileW[] = {'w','i','n','e','t','e','s','t',0};
+
+    /* STGM_TRANSACTED */
+
+    hr = StgCreateDocfile(fileW, STGM_CREATE | STGM_READWRITE |
+                          STGM_SHARE_EXCLUSIVE | STGM_TRANSACTED, 0, &stg);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create);
+
+    hr = IStorage_Commit(stg, STGC_DEFAULT);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create_commit);
+
+    IStorage_Release(stg);
+
+    test_file_access("winetest", create_close);
+
+    DeleteFileA("winetest");
+
+    /* STGM_DIRECT */
+
+    hr = StgCreateDocfile(fileW, STGM_CREATE | STGM_READWRITE |
+                          STGM_SHARE_EXCLUSIVE | STGM_DIRECT, 0, &stg);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create);
+
+    hr = IStorage_Commit(stg, STGC_DEFAULT);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create_commit);
+
+    IStorage_Release(stg);
+
+    test_file_access("winetest", create_close);
+
+    DeleteFileA("winetest");
+
+    /* STGM_SHARE_DENY_NONE */
+
+    hr = StgCreateDocfile(fileW, STGM_CREATE | STGM_READWRITE |
+                          STGM_SHARE_DENY_NONE | STGM_TRANSACTED, 0, &stg);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create);
+
+    hr = IStorage_Commit(stg, STGC_DEFAULT);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create_commit);
+
+    IStorage_Release(stg);
+
+    test_file_access("winetest", create_close);
+
+    DeleteFileA("winetest");
+
+    /* STGM_SHARE_DENY_READ */
+
+    hr = StgCreateDocfile(fileW, STGM_CREATE | STGM_READWRITE |
+                          STGM_SHARE_DENY_READ | STGM_TRANSACTED, 0, &stg);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create);
+
+    hr = IStorage_Commit(stg, STGC_DEFAULT);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create_commit);
+
+    IStorage_Release(stg);
+
+    test_file_access("winetest", create_close);
+
+    DeleteFileA("winetest");
+
+    /* STGM_SHARE_DENY_WRITE */
+
+    hr = StgCreateDocfile(fileW, STGM_CREATE | STGM_READWRITE |
+                          STGM_SHARE_DENY_WRITE | STGM_TRANSACTED, 0, &stg);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create);
+
+    hr = IStorage_Commit(stg, STGC_DEFAULT);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    test_file_access("winetest", create_commit);
+
+    IStorage_Release(stg);
+
+    test_file_access("winetest", create_close);
+
+    DeleteFileA("winetest");
+}
+
 START_TEST(storage32)
 {
     test_hglobal_storage_stat();
@@ -1010,4 +1278,6 @@ START_TEST(storage32)
     test_streamenum();
     test_transact();
     test_ReadClassStm();
+    test_access();
+    test_writeclassstg();
 }

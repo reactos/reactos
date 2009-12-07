@@ -286,6 +286,14 @@ static void one_RtlInt64ToUnicodeString_test(int test_num, const largeint2str_t 
     STRING ansi_str;
     NTSTATUS result;
 
+#ifdef _WIN64
+    if (largeint2str->value >> 32 == 0xffffffff)  /* this crashes on 64-bit Vista */
+    {
+        skip( "Value ffffffff%08x broken on 64-bit windows\n", (DWORD)largeint2str->value );
+        return;
+    }
+#endif
+
     for (pos = 0; pos < LARGE_STRI_BUFFER_LENGTH; pos++) {
 	expected_str_Buffer[pos] = largeint2str->Buffer[pos];
     } /* for */
@@ -366,6 +374,14 @@ static void one_RtlLargeIntegerToChar_test(int test_num, const largeint2str_t *l
     NTSTATUS result;
     char dest_str[LARGE_STRI_BUFFER_LENGTH + 1];
     ULONGLONG value;
+
+#ifdef _WIN64
+    if (largeint2str->value >> 32 == 0xffffffff)  /* this crashes on 64-bit Vista */
+    {
+        skip( "Value ffffffff%08x broken on 64-bit windows\n", (DWORD)largeint2str->value );
+        return;
+    }
+#endif
 
     memset(dest_str, '-', LARGE_STRI_BUFFER_LENGTH);
     dest_str[LARGE_STRI_BUFFER_LENGTH] = '\0';

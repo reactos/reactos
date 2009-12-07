@@ -29,12 +29,12 @@
 #include "winnls.h"
 #include "mmsystem.h"
 #define NOBITMAP
-#include "wine/mmreg.h"
-#include "wine/msacm.h"
+#include "mmreg.h"
+#include "msacm.h"
 
 static BOOL CALLBACK FormatTagEnumProc(HACMDRIVERID hadid,
                                        PACMFORMATTAGDETAILS paftd,
-                                       DWORD dwInstance,
+                                       DWORD_PTR dwInstance,
                                        DWORD fdwSupport)
 {
     if (winetest_interactive)
@@ -45,7 +45,7 @@ static BOOL CALLBACK FormatTagEnumProc(HACMDRIVERID hadid,
 
 static BOOL CALLBACK FormatEnumProc(HACMDRIVERID hadid,
                                     LPACMFORMATDETAILS pafd,
-                                    DWORD dwInstance,
+                                    DWORD_PTR dwInstance,
                                     DWORD fd)
 {
     if (winetest_interactive)
@@ -55,11 +55,11 @@ static BOOL CALLBACK FormatEnumProc(HACMDRIVERID hadid,
 }
 
 static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
-                                    DWORD dwInstance,
+                                    DWORD_PTR dwInstance,
                                     DWORD fdwSupport)
 {
     MMRESULT rc;
-    ACMDRIVERDETAILSA dd;
+    ACMDRIVERDETAILS dd;
     HACMDRIVER had;
 
     DWORD dwDriverPriority;
@@ -275,9 +275,9 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
            "acmMetrics(): rc = %08x, should be %08x\n",
            rc, MMSYSERR_NOERROR);
         if (rc == MMSYSERR_NOERROR) {
-            ACMFORMATDETAILSA fd;
+            ACMFORMATDETAILS fd;
             WAVEFORMATEX * pwfx;
-            ACMFORMATTAGDETAILSA aftd;
+            ACMFORMATTAGDETAILS aftd;
 
             /* try bad pointer */
             rc = acmFormatEnum(had, 0, FormatEnumProc, 0, 0);

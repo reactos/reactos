@@ -38,11 +38,17 @@ static void test_timer(void)
 
     pCreateWaitableTimerA = (fnCreateWaitableTimerA) GetProcAddress( hker, "CreateWaitableTimerA");
     if( !pCreateWaitableTimerA )
+    {
+        win_skip("CreateWaitableTimerA is not available\n");
         return;
+    }
 
     pSetWaitableTimer = (fnSetWaitableTimer) GetProcAddress( hker, "SetWaitableTimer");
     if( !pSetWaitableTimer )
+    {
+        win_skip("SetWaitableTimer is not available\n");
         return;
+    }
        
     /* try once with a positive number */
     handle = pCreateWaitableTimerA( NULL, 0, NULL );

@@ -115,7 +115,7 @@ static
 VOID
 HandlePrintRect(HWND handle,DWORD Msg,WPARAM wParam,LPARAM lParam)
     {
-    RECT rect;
+    RECT rect = *(RECT*)lParam;
     TextBuffer[8] = (char)(BUFFERLEN - 8); /* Setting the max size to put chars in first byte */
     SendMessage(handle,Msg,wParam,lParam);
 

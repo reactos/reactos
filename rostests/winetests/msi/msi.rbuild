@@ -3,8 +3,7 @@
 <group>
 <module name="msi_winetest" type="win32cui" installbase="bin" installname="msi_winetest.exe" allowwarnings="true">
 	<include base="msi_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
+    <define name="__ROS_LONG64__" />
 	<file>automation.c</file>
 	<file>db.c</file>
 	<file>format.c</file>
@@ -24,7 +23,6 @@
 	<library>oleaut32</library>
 	<library>user32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>version</library>
 	<library>ntdll</library>
 </module>

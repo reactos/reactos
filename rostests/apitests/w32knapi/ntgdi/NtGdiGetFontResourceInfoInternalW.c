@@ -2,18 +2,12 @@
 INT
 Test_NtGdiGetFontResourceInfoInternalW(PTESTINFO pti)
 {
-	WCHAR szFullFileName[MAX_PATH+1];
 	BOOL bRet;
 	DWORD dwBufSize;
 	LOGFONTW logfont;
 	UNICODE_STRING NtFileName;
 
-	GetCurrentDirectoryW(MAX_PATH, szFullFileName);
-	wcscat(szFullFileName, L"\\test.otf");
-
-	ASSERT(AddFontResourceW(szFullFileName) != 0);
-
-	ASSERT(RtlDosPathNameToNtPathName_U(szFullFileName,
+	ASSERT(RtlDosPathNameToNtPathName_U(L".\\test.otf",
 	                                    &NtFileName,
 	                                    NULL,
 	                                    NULL));
@@ -36,7 +30,7 @@ Test_NtGdiGetFontResourceInfoInternalW(PTESTINFO pti)
 	printf("lfWidth = %ld\n", logfont.lfWidth);
 	printf("lfFaceName = %ls\n", logfont.lfFaceName);
 
-	RemoveFontResourceW(szFullFileName);
+//	RemoveFontResourceW(szFullFileName);
 
 	return APISTATUS_NORMAL;
 }

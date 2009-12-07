@@ -15,7 +15,7 @@ static BOOL CALLBACK DialogFunc(HWND,UINT,WPARAM,LPARAM);
 static VOID CALLBACK TimerProc(HWND,UINT,UINT,DWORD);
 
 
-INT STDCALL WinMain (HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR lpCmdLine, INT nCmdShow)
+INT WINAPI WinMain (HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR lpCmdLine, INT nCmdShow)
 {
 	WNDCLASS wc;
 

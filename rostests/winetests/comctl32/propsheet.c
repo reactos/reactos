@@ -22,6 +22,8 @@
 
 #include "wine/test.h"
 
+static HWND parent;
+
 static int CALLBACK sheet_callback(HWND hwnd, UINT msg, LPARAM lparam)
 {
     switch(msg)
@@ -132,8 +134,74 @@ static void test_nopage(void)
     DestroyWindow(hdlg);
 }
 
+static int CALLBACK disableowner_callback(HWND hwnd, UINT msg, LPARAM lparam)
+{
+    switch(msg)
+    {
+    case PSCB_INITIALIZED:
+      {
+        ok(IsWindowEnabled(parent) == 0, "parent window should be disabled\n");
+        PostQuitMessage(0);
+        return FALSE;
+      }
+    }
+    return FALSE;
+}
+
+static void register_parent_wnd_class(void)
+{
+    WNDCLASSA cls;
+
+    cls.style = 0;
+    cls.lpfnWndProc = DefWindowProcA;
+    cls.cbClsExtra = 0;
+    cls.cbWndExtra = 0;
+    cls.hInstance = GetModuleHandleA(NULL);
+    cls.hIcon = 0;
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hbrBackground = GetStockObject(WHITE_BRUSH);
+    cls.lpszMenuName = NULL;
+    cls.lpszClassName = "parent class";
+    RegisterClassA(&cls);
+}
+
+static void test_disableowner(void)
+{
+    HPROPSHEETPAGE hpsp[1];
+    PROPSHEETPAGEA psp;
+    PROPSHEETHEADERA psh;
+
+    register_parent_wnd_class();
+    parent = CreateWindowA("parent class", "", WS_CAPTION | WS_SYSMENU | WS_VISIBLE, 100, 100, 100, 100, GetDesktopWindow(), NULL, GetModuleHandleA(NULL), 0);
+
+    memset(&psp, 0, sizeof(psp));
+    psp.dwSize = sizeof(psp);
+    psp.dwFlags = 0;
+    psp.hInstance = GetModuleHandleW(NULL);
+    U(psp).pszTemplate = "prop_page1";
+    U2(psp).pszIcon = NULL;
+    psp.pfnDlgProc = NULL;
+    psp.lParam = 0;
+
+    hpsp[0] = CreatePropertySheetPageA(&psp);
+
+    memset(&psh, 0, sizeof(psh));
+    psh.dwSize = sizeof(psh);
+    psh.dwFlags = PSH_USECALLBACK;
+    psh.pszCaption = "test caption";
+    psh.nPages = 1;
+    psh.hwndParent = parent;
+    U3(psh).phpage = hpsp;
+    psh.pfnCallback = disableowner_callback;
+
+    PropertySheetA(&psh);
+    ok(IsWindowEnabled(parent) != 0, "parent window should be enabled\n");
+    DestroyWindow(parent);
+}
+
 START_TEST(propsheet)
 {
     test_title();
     test_nopage();
+    test_disableowner();
 }

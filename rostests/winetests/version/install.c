@@ -165,7 +165,48 @@ static void test_find_file(void)
     }
 }
 
+static void test_install_file(void)
+{
+    CHAR tmpname[MAX_PATH];
+    UINT size = MAX_PATH;
+    DWORD rc;
+    static const CHAR szSrcFileName[] = "nofile.txt";
+    static const CHAR szDestFileName[] = "nofile2.txt";
+    static const CHAR szSrcDir[] = "D:\\oes\\not\\exist";
+    static const CHAR szDestDir[] = "D:\\oes\\not\\exist\\either";
+    static const CHAR szCurDir[] = "C:\\";
+
+    /* testing Invalid Parameters */
+    memset(tmpname,0,sizeof(tmpname));
+    rc = VerInstallFileA(0x0, NULL, NULL, NULL, NULL, NULL, tmpname, &size);
+    ok (rc == 0x10000 && tmpname[0]==0," expected return 0x10000 and no tempname, got %08x/\'%s\'\n",rc,tmpname);
+    memset(tmpname,0,sizeof(tmpname));
+    size = MAX_PATH;
+    rc = VerInstallFileA(0x0, szSrcFileName, NULL, NULL, NULL, NULL, tmpname, &size);
+    ok (rc == 0x10000 && tmpname[0]==0," expected return 0x10000 and no tempname, got %08x/\'%s\'\n",rc,tmpname);
+    memset(tmpname,0,sizeof(tmpname));
+    size = MAX_PATH;
+    rc = VerInstallFileA(0x0, szSrcFileName, szDestFileName, NULL, NULL, NULL, tmpname, &size);
+    ok (rc == 0x10000 && tmpname[0]==0," expected return 0x10000 and no tempname, got %08x/\'%s\'\n",rc,tmpname);
+    memset(tmpname,0,sizeof(tmpname));
+    size = MAX_PATH;
+    rc = VerInstallFileA(0x0, szSrcFileName, szDestFileName, szSrcDir, NULL, NULL, tmpname, &size);
+    ok (rc == 0x10000 && tmpname[0]==0," expected return 0x10000 and no tempname, got %08x/\'%s\'\n",rc,tmpname);
+
+    /* Source file does not exist*/
+
+    memset(tmpname,0,sizeof(tmpname));
+    size = MAX_PATH;
+    rc = VerInstallFileA(0x0, szSrcFileName, szDestFileName, szSrcDir, szDestDir, NULL, tmpname, &size);
+    ok (rc == 0x10000 && tmpname[0]==0," expected return 0x10000 and no tempname, got %08x/\'%s\'\n",rc,tmpname);
+    memset(tmpname,0,sizeof(tmpname));
+    size = MAX_PATH;
+    rc = VerInstallFileA(0x0, szSrcFileName, szDestFileName,  szSrcDir, szDestDir, szCurDir, tmpname, &size);
+    ok (rc == 0x10000 && tmpname[0]==0," expected return 0x10000 and no tempname, got %08x/\'%s\'\n",rc,tmpname);
+}
+
 START_TEST(install)
 {
     test_find_file();
+    test_install_file();
 }

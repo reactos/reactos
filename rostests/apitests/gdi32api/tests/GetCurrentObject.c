@@ -4,6 +4,7 @@ Test_GetCurrentObject(PTESTINFO pti)
 {
 	HWND hWnd;
 	HDC hDC;
+	HBITMAP hBmp;
 
 	/* Create a window */
 	hWnd = CreateWindowW(L"BUTTON", L"TestWindow", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
@@ -70,7 +71,6 @@ Test_GetCurrentObject(PTESTINFO pti)
 
 	/* Default bitmap */
 	SetLastError(ERROR_SUCCESS);
-	HBITMAP hBmp;
 	hBmp = GetCurrentObject(hDC, OBJ_BITMAP);
 	RTEST(GDI_HANDLE_GET_TYPE(hBmp) == GDI_OBJECT_TYPE_BITMAP);
 	RTEST(GetLastError() == ERROR_SUCCESS);

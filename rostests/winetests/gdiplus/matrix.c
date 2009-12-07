@@ -21,6 +21,7 @@
 #include <math.h>
 
 #include "windows.h"
+#include <stdio.h>
 #include "gdiplus.h"
 #include "wine/test.h"
 
@@ -89,6 +90,136 @@ static void test_transform(void)
     GdipDeleteMatrix(matrix);
 }
 
+static void test_isinvertible(void)
+{
+    GpStatus status;
+    GpMatrix *matrix = NULL;
+    BOOL result;
+
+    /* NULL arguments */
+    status = GdipIsMatrixInvertible(NULL, &result);
+    expect(InvalidParameter, status);
+    status = GdipIsMatrixInvertible((GpMatrix*)0xdeadbeef, NULL);
+    expect(InvalidParameter, status);
+    status = GdipIsMatrixInvertible(NULL, NULL);
+    expect(InvalidParameter, status);
+
+    /* invertible */
+    GdipCreateMatrix2(1.0, 1.2, 2.3, -1.0, 2.0, 3.0, &matrix);
+    status = GdipIsMatrixInvertible(matrix, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    GdipDeleteMatrix(matrix);
+
+    /* noninvertible */
+    GdipCreateMatrix2(2.0, -1.0, 6.0, -3.0, 2.2, 3.0, &matrix);
+    status = GdipIsMatrixInvertible(matrix, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    GdipDeleteMatrix(matrix);
+}
+
+static void test_invert(void)
+{
+    GpStatus status;
+    GpMatrix *matrix = NULL;
+    GpMatrix *inverted = NULL;
+    BOOL equal = FALSE;
+
+    /* NULL */
+    status = GdipInvertMatrix(NULL);
+    expect(InvalidParameter, status);
+
+    /* noninvertible */
+    GdipCreateMatrix2(2.0, -1.0, 6.0, -3.0, 2.2, 3.0, &matrix);
+    status = GdipInvertMatrix(matrix);
+    expect(InvalidParameter, status);
+    GdipDeleteMatrix(matrix);
+
+    /* invertible */
+    GdipCreateMatrix2(3.0, -2.0, 5.0, 2.0, 6.0, 3.0, &matrix);
+    status = GdipInvertMatrix(matrix);
+    expect(Ok, status);
+    GdipCreateMatrix2(2.0/16.0, 2.0/16.0, -5.0/16.0, 3.0/16.0, 3.0/16.0, -21.0/16.0, &inverted);
+    GdipIsMatrixEqual(matrix, inverted, &equal);
+    expect(TRUE, equal);
+
+    GdipDeleteMatrix(inverted);
+    GdipDeleteMatrix(matrix);
+}
+
+static void test_shear(void)
+{
+    GpStatus status;
+    GpMatrix *matrix  = NULL;
+    GpMatrix *sheared = NULL;
+    BOOL equal;
+
+    /* NULL */
+    status = GdipShearMatrix(NULL, 0.0, 0.0, MatrixOrderPrepend);
+    expect(InvalidParameter, status);
+
+    /* X only shearing, MatrixOrderPrepend */
+    GdipCreateMatrix2(1.0, 2.0, 4.0, -1.0, 6.0, 3.0, &matrix);
+    status = GdipShearMatrix(matrix, 1.5, 0.0, MatrixOrderPrepend);
+    expect(Ok, status);
+    GdipCreateMatrix2(1.0, 2.0, 5.5, 2.0, 6.0, 3.0, &sheared);
+    GdipIsMatrixEqual(matrix, sheared, &equal);
+    expect(TRUE, equal);
+    GdipDeleteMatrix(sheared);
+    GdipDeleteMatrix(matrix);
+
+    /* X only shearing, MatrixOrderAppend */
+    GdipCreateMatrix2(1.0, 2.0, 4.0, -1.0, 6.0, 3.0, &matrix);
+    status = GdipShearMatrix(matrix, 1.5, 0.0, MatrixOrderAppend);
+    expect(Ok, status);
+    GdipCreateMatrix2(4.0, 2.0, 2.5, -1.0, 10.5, 3.0, &sheared);
+    GdipIsMatrixEqual(matrix, sheared, &equal);
+    expect(TRUE, equal);
+    GdipDeleteMatrix(sheared);
+    GdipDeleteMatrix(matrix);
+
+    /* Y only shearing, MatrixOrderPrepend */
+    GdipCreateMatrix2(1.0, 2.0, 4.0, -1.0, 6.0, 3.0, &matrix);
+    status = GdipShearMatrix(matrix, 0.0, 1.5, MatrixOrderPrepend);
+    expect(Ok, status);
+    GdipCreateMatrix2(7.0, 0.5, 4.0, -1.0, 6.0, 3.0, &sheared);
+    GdipIsMatrixEqual(matrix, sheared, &equal);
+    expect(TRUE, equal);
+    GdipDeleteMatrix(sheared);
+    GdipDeleteMatrix(matrix);
+
+    /* Y only shearing, MatrixOrderAppend */
+    GdipCreateMatrix2(1.0, 2.0, 4.0, -1.0, 6.0, 3.0, &matrix);
+    status = GdipShearMatrix(matrix, 0.0, 1.5, MatrixOrderAppend);
+    expect(Ok, status);
+    GdipCreateMatrix2(1.0, 3.5, 4.0, 5.0, 6.0, 12.0, &sheared);
+    GdipIsMatrixEqual(matrix, sheared, &equal);
+    expect(TRUE, equal);
+    GdipDeleteMatrix(sheared);
+    GdipDeleteMatrix(matrix);
+
+    /* X,Y shearing, MatrixOrderPrepend */
+    GdipCreateMatrix2(1.0, 2.0, 4.0, -1.0, 6.0, 3.0, &matrix);
+    status = GdipShearMatrix(matrix, 4.0, 1.5, MatrixOrderPrepend);
+    expect(Ok, status);
+    GdipCreateMatrix2(7.0, 0.5, 8.0, 7.0, 6.0, 3.0, &sheared);
+    GdipIsMatrixEqual(matrix, sheared, &equal);
+    expect(TRUE, equal);
+    GdipDeleteMatrix(sheared);
+    GdipDeleteMatrix(matrix);
+
+    /* X,Y shearing, MatrixOrderAppend */
+    GdipCreateMatrix2(1.0, 2.0, 4.0, -1.0, 6.0, 3.0, &matrix);
+    status = GdipShearMatrix(matrix, 4.0, 1.5, MatrixOrderAppend);
+    expect(Ok, status);
+    GdipCreateMatrix2(9.0, 3.5, 0.0, 5.0, 18.0, 12.0, &sheared);
+    GdipIsMatrixEqual(matrix, sheared, &equal);
+    expect(TRUE, equal);
+    GdipDeleteMatrix(sheared);
+    GdipDeleteMatrix(matrix);
+}
+
 START_TEST(matrix)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -103,6 +234,9 @@ START_TEST(matrix)
 
     test_constructor_destructor();
     test_transform();
+    test_isinvertible();
+    test_invert();
+    test_shear();
 
     GdiplusShutdown(gdiplusToken);
 }

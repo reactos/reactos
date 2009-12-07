@@ -3,10 +3,10 @@
 <group>
 <module name="ole32_winetest" type="win32cui" installbase="bin" installname="ole32_winetest.exe" allowwarnings="true">
 	<include base="ole32_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
+    <define name="__ROS_LONG64__" />
 	<file>clipboard.c</file>
 	<file>compobj.c</file>
+	<file>defaulthandler.c</file>
 	<file>dragdrop.c</file>
 	<file>errorinfo.c</file>
 	<file>hglobalstream.c</file>
@@ -24,7 +24,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
 </module>

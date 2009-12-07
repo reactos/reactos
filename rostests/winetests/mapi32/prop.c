@@ -27,6 +27,7 @@
 #include "initguid.h"
 #include "mapiutil.h"
 #include "mapitags.h"
+#include "mapi32_test.h"
 
 static HMODULE hMapi32 = 0;
 
@@ -93,11 +94,11 @@ static void test_PropCopyMore(void)
     if (!pPropCopyMore)
         return;
 
-    scode = pMAPIAllocateBuffer(sizeof(LPSPropValue), (LPVOID *)lpDest);
+    scode = pMAPIAllocateBuffer(sizeof(LPSPropValue), lpDest);
     if (FAILED(scode))
         return;
 
-    scode = pMAPIAllocateMore(sizeof(LPSPropValue), lpDest, (LPVOID *)lpSrc);
+    scode = pMAPIAllocateMore(sizeof(LPSPropValue), lpDest, lpSrc);
     if (FAILED(scode))
         return;
 
@@ -239,7 +240,8 @@ static void test_UlPropSize(void)
         }
 
         res = pUlPropSize(&pv);
-        ok(res == exp, "pt= %d: Expected %d, got %d\n", pt, exp, res);
+        ok(res == exp,
+           "pt= %d: Expected %d, got %d\n", pt, exp, res);
     }
 }
 
@@ -502,7 +504,8 @@ static void test_FPropCompareProp(void)
             }
 
             bRet = pFPropCompareProp(&pvLeft, FPCProp_Results[j].relOp, &pvRight);
-            ok(bRet == bExp, "pt %d (%d,%d,%s): expected %d, got %d\n", ptTypes[i],
+            ok(bRet == bExp,
+               "pt %d (%d,%d,%s): expected %d, got %d\n", ptTypes[i],
                FPCProp_Results[j].lVal, FPCProp_Results[j].rVal,
                relops[FPCProp_Results[j].relOp], bExp, bRet);
         }
@@ -625,7 +628,8 @@ static void test_LPropCompareProp(void)
             }
 
             iRet = pLPropCompareProp(&pvLeft, &pvRight);
-            ok(iRet == iExp, "pt %d (%d,%d): expected %d, got %d\n", ptTypes[i],
+            ok(iRet == iExp,
+               "pt %d (%d,%d): expected %d, got %d\n", ptTypes[i],
                LPCProp_Results[j].lVal, LPCProp_Results[j].rVal, iExp, iRet);
         }
     }
@@ -646,7 +650,8 @@ static void test_PpropFindProp(void)
         pvProp.ulPropTag = ptTypes[i];
 
         pRet = pPpropFindProp(&pvProp, 1u, ptTypes[i]);
-        ok(pRet == &pvProp, "PpropFindProp[%d]: Didn't find existing propery\n",
+        ok(pRet == &pvProp,
+           "PpropFindProp[%d]: Didn't find existing propery\n",
            ptTypes[i]);
 
         pRet = pPpropFindProp(&pvProp, 1u, i ? ptTypes[i-1] : ptTypes[i+1]);
@@ -882,7 +887,8 @@ static void test_LpValFindProp(void)
         pvProp.ulPropTag = PROP_TAG(ptTypes[i], 1u);
 
         pRet = pLpValFindProp(PROP_TAG(ptTypes[i], 1u), 1u, &pvProp);
-        ok(pRet == &pvProp, "LpValFindProp[%d]: Didn't find existing propery id/type\n",
+        ok(pRet == &pvProp,
+           "LpValFindProp[%d]: Didn't find existing propery id/type\n",
            ptTypes[i]);
 
         pRet = pLpValFindProp(PROP_TAG(ptTypes[i], 0u), 1u, &pvProp);
@@ -894,7 +900,8 @@ static void test_LpValFindProp(void)
            ptTypes[i]);
 
         pRet = pLpValFindProp(PROP_TAG(PT_NULL, 1u), 1u, &pvProp);
-        ok(pRet == &pvProp, "LpValFindProp[%d]: Didn't find existing propery id\n",
+        ok(pRet == &pvProp,
+           "LpValFindProp[%d]: Didn't find existing propery id\n",
            ptTypes[i]);
     }
 }
@@ -990,7 +997,8 @@ static void test_FBadPropTag(void)
         if (bBad)
             ok(res != 0, "pt= %d: Expected non-zero, got 0\n", pt);
         else
-            ok(res == 0, "pt= %d: Expected zero, got %d\n", pt, res);
+            ok(res == 0,
+               "pt= %d: Expected zero, got %d\n", pt, res);
     }
 }
 
@@ -1079,7 +1087,8 @@ static void test_FBadProp(void)
         if (bBad)
             ok(res != 0, "pt= %d: Expected non-zero, got 0\n", pt);
         else
-            ok(res == 0, "pt= %d: Expected zero, got %d\n", pt, res);
+            ok(res == 0,
+               "pt= %d: Expected zero, got %d\n", pt, res);
     }
 }
 
@@ -1130,7 +1139,8 @@ static void test_FBadColumnSet(void)
         if (bBad)
             ok(res != 0, "pt= %d: Expected non-zero, got 0\n", pt);
         else
-            ok(res == 0, "pt= %d: Expected zero, got %d\n", pt, res);
+            ok(res == 0,
+               "pt= %d: Expected zero, got %d\n", pt, res);
     }
 }
 
@@ -1351,9 +1361,15 @@ START_TEST(prop)
 {
     SCODE ret;
 
+    if (!HaveDefaultMailClient())
+    {
+        win_skip("No default mail client installed\n");
+        return;
+    }
+
     if(!InitFuncPtrs())
     {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         return;
     }
 
@@ -1361,7 +1377,13 @@ START_TEST(prop)
     ret = pScInitMapiUtil(0);
     if ((ret != S_OK) && (GetLastError() == ERROR_PROC_NOT_FOUND))
     {
-        skip("ScInitMapiUtil is not implemented\n");
+        win_skip("ScInitMapiUtil is not implemented\n");
+        FreeLibrary(hMapi32);
+        return;
+    }
+    else if ((ret == E_FAIL) && (GetLastError() == ERROR_INVALID_HANDLE))
+    {
+        win_skip("ScInitMapiUtil doesn't work on some Win98 and WinME systems\n");
         FreeLibrary(hMapi32);
         return;
     }

@@ -108,97 +108,46 @@ static UINT create_custom_action_table( MSIHANDLE hdb )
             "PRIMARY KEY `Action`)" );
 }
 
-static UINT add_feature_entry( MSIHANDLE hdb, const char *values )
-{
-    char insert[] = "INSERT INTO `Feature` (`Feature`, `Feature_Parent`, "
-                    "`Title`, `Description`, `Display`, `Level`, `Directory_`, `Attributes`) VALUES( %s )";
-    char *query;
-    UINT sz, r;
-
-    sz = strlen(values) + sizeof insert;
-    query = HeapAlloc(GetProcessHeap(),0,sz);
-    sprintf(query,insert,values);
-    r = run_query( hdb, query );
-    HeapFree(GetProcessHeap(), 0, query);
-    return r;
+#define make_add_entry(type, qtext) \
+    static UINT add##_##type##_##entry( MSIHANDLE hdb, const char *values ) \
+    { \
+        char insert[] = qtext; \
+        char *query; \
+        UINT sz, r; \
+        sz = strlen(values) + sizeof insert; \
+        query = HeapAlloc(GetProcessHeap(),0,sz); \
+        sprintf(query,insert,values); \
+        r = run_query( hdb, query ); \
+        HeapFree(GetProcessHeap(), 0, query); \
+        return r; \
 }
 
-static UINT add_component_entry( MSIHANDLE hdb, const char *values )
-{
-    char insert[] = "INSERT INTO `Component`  "
-            "(`Component`, `ComponentId`, `Directory_`, `Attributes`, `Condition`, `KeyPath`) "
-            "VALUES( %s )";
-    char *query;
-    UINT sz, r;
+make_add_entry(feature,
+               "INSERT INTO `Feature` "
+               "(`Feature`, `Feature_Parent`, `Title`, `Description`, "
+               "`Display`, `Level`, `Directory_`, `Attributes`) VALUES( %s )")
 
-    sz = strlen(values) + sizeof insert;
-    query = HeapAlloc(GetProcessHeap(),0,sz);
-    sprintf(query,insert,values);
-    r = run_query( hdb, query );
-    HeapFree(GetProcessHeap(), 0, query);
-    return r;
-}
+make_add_entry(component,
+               "INSERT INTO `Component`  "
+               "(`Component`, `ComponentId`, `Directory_`, "
+               "`Attributes`, `Condition`, `KeyPath`) VALUES( %s )")
 
-static UINT add_feature_components_entry( MSIHANDLE hdb, const char *values )
-{
-    char insert[] = "INSERT INTO `FeatureComponents` "
-            "(`Feature_`, `Component_`) "
-            "VALUES( %s )";
-    char *query;
-    UINT sz, r;
+make_add_entry(feature_components,
+               "INSERT INTO `FeatureComponents` "
+               "(`Feature_`, `Component_`) VALUES( %s )")
 
-    sz = strlen(values) + sizeof insert;
-    query = HeapAlloc(GetProcessHeap(),0,sz);
-    sprintf(query,insert,values);
-    r = run_query( hdb, query );
-    HeapFree(GetProcessHeap(), 0, query);
-    return r;
-}
+make_add_entry(file,
+               "INSERT INTO `File` "
+               "(`File`, `Component_`, `FileName`, `FileSize`, "
+               "`Version`, `Language`, `Attributes`, `Sequence`) VALUES( %s )")
 
-static UINT add_file_entry( MSIHANDLE hdb, const char *values )
-{
-    char insert[] = "INSERT INTO `File` "
-            "(`File`, `Component_`, `FileName`, `FileSize`, `Version`, `Language`, `Attributes`, `Sequence`) "
-            "VALUES( %s )";
-    char *query;
-    UINT sz, r;
+make_add_entry(directory,
+               "INSERT INTO `Directory` "
+               "(`Directory`,`Directory_Parent`,`DefaultDir`) VALUES( %s )")
 
-    sz = strlen(values) + sizeof insert;
-    query = HeapAlloc(GetProcessHeap(),0,sz);
-    sprintf(query,insert,values);
-    r = run_query( hdb, query );
-    HeapFree(GetProcessHeap(), 0, query);
-    return r;
-}
-
-static UINT add_directory_entry( MSIHANDLE hdb, const char *values )
-{
-    char insert[] = "INSERT INTO `Directory` (`Directory`,`Directory_Parent`,`DefaultDir`) VALUES( %s )";
-    char *query;
-    UINT sz, r;
-
-    sz = strlen(values) + sizeof insert;
-    query = HeapAlloc(GetProcessHeap(),0,sz);
-    sprintf(query,insert,values);
-    r = run_query( hdb, query );
-    HeapFree(GetProcessHeap(), 0, query);
-    return r;
-}
-
-static UINT add_custom_action_entry( MSIHANDLE hdb, const char *values )
-{
-    char insert[] = "INSERT INTO `CustomAction` (`Action`, `Type`, `Source`, "
-                    "`Target`) VALUES( %s )";
-    char *query;
-    UINT sz, r;
-
-    sz = strlen(values) + sizeof insert;
-    query = HeapAlloc(GetProcessHeap(),0,sz);
-    sprintf(query,insert,values);
-    r = run_query( hdb, query );
-    HeapFree(GetProcessHeap(), 0, query);
-    return r;
-}
+make_add_entry(custom_action,
+               "INSERT INTO `CustomAction`  "
+               "(`Action`, `Type`, `Source`, `Target`) VALUES( %s )")
 
 static UINT set_summary_info(MSIHANDLE hdb)
 {
@@ -279,7 +228,7 @@ static MSIHANDLE package_from_db(MSIHANDLE hdb)
     CHAR szPackage[10];
     MSIHANDLE hPackage;
 
-    sprintf(szPackage,"#%li",hdb);
+    sprintf(szPackage,"#%i",hdb);
     res = MsiOpenPackage(szPackage,&hPackage);
     ok( res == ERROR_SUCCESS , "Failed to open package\n" );
 
@@ -354,7 +303,7 @@ static MSIHANDLE helper_createpackage( const char *szName )
     res = MsiCloseHandle( suminfo);
     ok( res == ERROR_SUCCESS , "Failed to close suminfo\n" );
 
-    sprintf(szPackage,"#%li",hdb);
+    sprintf(szPackage,"#%i",hdb);
     res = MsiOpenPackage(szPackage,&hPackage);
     ok( res == ERROR_SUCCESS , "Failed to open package\n" );
 
@@ -2412,12 +2361,14 @@ static void test_formatrecord_tables(void)
     /* component with INSTALLSTATE_SOURCE */
     lstrcpy( expected, "1: " );
     lstrcat( expected, curr_dir );
+    if (strlen(curr_dir) > 3)
     lstrcat( expected, "\\ " );
+    lstrcat( expected, " " );
     size = MAX_PATH;
     MsiRecordSetString( hrec, 1, "[$parietal]" );
     r = MsiFormatRecord( hpkg, hrec, buf, &size );
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
-    ok( !lstrcmp( buf, expected ), "Expected '%s', got %s\n", expected, buf);
+    ok( !lstrcmp( buf, expected ), "Expected '%s', got '%s'\n", expected, buf);
 
     sprintf( buf, "%sI am a really long directory\\temporal.txt", root );
     DeleteFile( buf );

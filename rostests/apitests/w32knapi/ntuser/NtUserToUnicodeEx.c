@@ -139,7 +139,7 @@ Test_NtUserToUnicodeEx(PTESTINFO pti)
 	TEST(NtUserToUnicodeEx(52, 5, KeyState, Buffer, 10, 0, hkl) == 1);
 	TEST(Buffer[0] == '$');
 	TEST(NtUserToUnicodeEx(53, 6, KeyState, Buffer, 10, 0, hkl) == 1);
-	TEST(Buffer[0] == '\%');
+	TEST(Buffer[0] == '%');
 	TEST(NtUserToUnicodeEx(54, 7, KeyState, Buffer, 10, 0, hkl) == 1);	
 	TEST(Buffer[0] == '^');
 	TEST(NtUserToUnicodeEx(55, 8, KeyState, Buffer, 10, 0, hkl) == 1);

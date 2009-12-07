@@ -102,59 +102,168 @@ static void InitFunctionPointers(void)
 #define BUFFER_SIZE    128
 #define COUNTOF(x) (sizeof(x)/sizeof(x)[0])
 
-#define EXPECT_LEN(len) ok(ret == (len), "Expected Len %d, got %d\n", (int)(len), ret)
-#define EXPECT_INVALID  ok(GetLastError() == ERROR_INVALID_PARAMETER, \
- "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError())
-#define EXPECT_BUFFER  ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, \
- "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError())
-#define EXPECT_FLAGS  ok(GetLastError() == ERROR_INVALID_FLAGS, \
- "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError())
-#define EXPECT_INVALIDFLAGS ok(GetLastError() == ERROR_INVALID_FLAGS || \
-  GetLastError() == ERROR_INVALID_PARAMETER, \
- "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError())
-#define EXPECT_LASTERROR_0 ok(GetLastError() == 0, \
- "Expected GetLastError() == 0, got %d\n", GetLastError())
-#define EXPECT_VALID ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError())
-
-#define STRINGSA(x,y) strcpy(input, x); strcpy(Expected, y); SetLastError(0); buffer[0] = '\0'
-#define EXPECT_LENA EXPECT_LEN((int)strlen(Expected)+1)
+#define STRINGSA(x,y) strcpy(input, x); strcpy(Expected, y); SetLastError(0xdeadbeef); buffer[0] = '\0'
+#define EXPECT_LENA ok(ret == lstrlen(Expected)+1, "Expected Len %d, got %d\n", lstrlen(Expected)+1, ret)
 #define EXPECT_EQA ok(strncmp(buffer, Expected, strlen(Expected)) == 0, \
   "Expected '%s', got '%s'\n", Expected, buffer)
 
 #define STRINGSW(x,y) MultiByteToWideChar(CP_ACP,0,x,-1,input,COUNTOF(input)); \
    MultiByteToWideChar(CP_ACP,0,y,-1,Expected,COUNTOF(Expected)); \
-   SetLastError(0); buffer[0] = '\0'
-#define EXPECT_LENW EXPECT_LEN((int)strlenW(Expected)+1)
+   SetLastError(0xdeadbeef); buffer[0] = '\0'
+#define EXPECT_LENW ok(ret == lstrlenW(Expected)+1, "Expected Len %d, got %d\n", lstrlenW(Expected)+1, ret)
 #define EXPECT_EQW  ok(strncmpW(buffer, Expected, strlenW(Expected)) == 0, "Bad conversion\n")
-#define EXPECT_FALSE ok(FALSE == ret, "Expected return value FALSE, got TRUE\n")
-#define EXPECT_TRUE  ok(FALSE != ret, "Expected return value TRUE, got FALSE\n")
 
 #define NUO LOCALE_NOUSEROVERRIDE
 
 static void test_GetLocaleInfoA(void)
 {
   int ret;
+  int len;
   LCID lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
   char buffer[BUFFER_SIZE];
+  char expected[BUFFER_SIZE];
 
   ok(lcid == 0x409, "wrong LCID calculated - %d\n", lcid);
+
+  /* en and ar use SUBLANG_NEUTRAL, but GetLocaleInfo assume SUBLANG_DEFAULT
+     Same is true for zh on pre-Vista, but on Vista and higher GetLocaleInfo
+     assumes SUBLANG_NEUTRAL for zh */
+  memset(expected, 0, COUNTOF(expected));
+  len = GetLocaleInfoA(MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), LOCALE_SLANGUAGE, expected, COUNTOF(expected));
+  SetLastError(0xdeadbeef);
+  memset(buffer, 0, COUNTOF(buffer));
+  ret = GetLocaleInfoA(LANG_ENGLISH, LOCALE_SLANGUAGE, buffer, COUNTOF(buffer));
+  ok((ret == len) && !lstrcmpA(buffer, expected),
+      "got %d with '%s' (expected %d with '%s')\n",
+      ret, buffer, len, expected);
+
+  memset(expected, 0, COUNTOF(expected));
+  len = GetLocaleInfoA(MAKELANGID(LANG_ARABIC, SUBLANG_DEFAULT), LOCALE_SLANGUAGE, expected, COUNTOF(expected));
+  if (len) {
+      SetLastError(0xdeadbeef);
+      memset(buffer, 0, COUNTOF(buffer));
+      ret = GetLocaleInfoA(LANG_ARABIC, LOCALE_SLANGUAGE, buffer, COUNTOF(buffer));
+      ok((ret == len) && !lstrcmpA(buffer, expected),
+          "got %d with '%s' (expected %d with '%s')\n",
+          ret, buffer, len, expected);
+  }
+  else
+      win_skip("LANG_ARABIC not installed\n");
+
+  /* SUBLANG_DEFAULT is required for mlang.dll, but optional for GetLocaleInfo */
+  memset(expected, 0, COUNTOF(expected));
+  len = GetLocaleInfoA(MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT), LOCALE_SLANGUAGE, expected, COUNTOF(expected));
+  SetLastError(0xdeadbeef);
+  memset(buffer, 0, COUNTOF(buffer));
+  ret = GetLocaleInfoA(LANG_GERMAN, LOCALE_SLANGUAGE, buffer, COUNTOF(buffer));
+  ok((ret == len) && !lstrcmpA(buffer, expected),
+      "got %d with '%s' (expected %d with '%s')\n",
+      ret, buffer, len, expected);
+
 
   /* HTMLKit and "Font xplorer lite" expect GetLocaleInfoA to
    * partially fill the buffer even if it is too short. See bug 637.
    */
-  SetLastError(0); memset(buffer, 0, COUNTOF(buffer));
+  SetLastError(0xdeadbeef);
+  memset(buffer, 0, COUNTOF(buffer));
   ret = GetLocaleInfoA(lcid, NUO|LOCALE_SDAYNAME1, buffer, 0);
   ok(ret == 7 && !buffer[0], "Expected len=7, got %d\n", ret);
 
-  SetLastError(0); memset(buffer, 0, COUNTOF(buffer));
+  SetLastError(0xdeadbeef);
+  memset(buffer, 0, COUNTOF(buffer));
   ret = GetLocaleInfoA(lcid, NUO|LOCALE_SDAYNAME1, buffer, 3);
-  EXPECT_BUFFER; EXPECT_LEN(0);
+  ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+      "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
   ok(!strcmp(buffer, "Mon"), "Expected 'Mon', got '%s'\n", buffer);
 
-  SetLastError(0); memset(buffer, 0, COUNTOF(buffer));
+  SetLastError(0xdeadbeef);
+  memset(buffer, 0, COUNTOF(buffer));
   ret = GetLocaleInfoA(lcid, NUO|LOCALE_SDAYNAME1, buffer, 10);
-  EXPECT_VALID; EXPECT_LEN(7);
+  ok(ret == 7, "Expected ret == 7, got %d, error %d\n", ret, GetLastError());
   ok(!strcmp(buffer, "Monday"), "Expected 'Monday', got '%s'\n", buffer);
+}
+
+static void test_GetLocaleInfoW(void)
+{
+  LCID lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
+  LCID lcid_ru = MAKELCID(MAKELANGID(LANG_RUSSIAN, SUBLANG_NEUTRAL), SORT_DEFAULT);
+  WCHAR bufferW[80], buffer2W[80];
+  CHAR bufferA[80];
+  DWORD ret;
+  INT i;
+
+  ret = GetLocaleInfoW(lcid_en, LOCALE_SMONTHNAME1, bufferW, COUNTOF(bufferW));
+  if (!ret) {
+      win_skip("GetLocaleInfoW() isn't implemented\n");
+      return;
+  }
+  ret = GetLocaleInfoW(lcid_ru, LOCALE_SMONTHNAME1, bufferW, COUNTOF(bufferW));
+  if (!ret) {
+      win_skip("LANG_RUSSIAN locale data unavailable\n");
+      return;
+  }
+  ret = GetLocaleInfoW(lcid_ru, LOCALE_SMONTHNAME1|LOCALE_RETURN_GENITIVE_NAMES,
+                       bufferW, COUNTOF(bufferW));
+  if (!ret) {
+      win_skip("LOCALE_RETURN_GENITIVE_NAMES isn't supported\n");
+      return;
+  }
+
+  /* LOCALE_RETURN_GENITIVE_NAMES isn't supported for GetLocaleInfoA */
+  bufferA[0] = 'a';
+  SetLastError(0xdeadbeef);
+  ret = GetLocaleInfoA(lcid_ru, LOCALE_SMONTHNAME1|LOCALE_RETURN_GENITIVE_NAMES,
+                       bufferA, COUNTOF(bufferA));
+  ok(ret == 0, "LOCALE_RETURN_GENITIVE_NAMES should fail with GetLocaleInfoA\n");
+  ok(bufferA[0] == 'a', "Expected buffer to be untouched\n");
+  ok(GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %x\n", GetLastError());
+
+  bufferW[0] = 'a';
+  SetLastError(0xdeadbeef);
+  ret = GetLocaleInfoW(lcid_ru, LOCALE_RETURN_GENITIVE_NAMES,
+                       bufferW, COUNTOF(bufferW));
+  ok(ret == 0,
+     "LOCALE_RETURN_GENITIVE_NAMES itself doesn't return anything, got %d\n", ret);
+  ok(bufferW[0] == 'a', "Expected buffer to be untouched\n");
+  ok(GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %x\n", GetLastError());
+
+  /* yes, test empty 13 month entry too */
+  for (i = 0; i < 12; i++) {
+      bufferW[0] = 0;
+      ret = GetLocaleInfoW(lcid_ru, (LOCALE_SMONTHNAME1+i)|LOCALE_RETURN_GENITIVE_NAMES,
+                           bufferW, COUNTOF(bufferW));
+      ok(ret, "Expected non zero result\n");
+      ok(ret == lstrlenW(bufferW)+1, "Expected actual length, got %d, length %d\n",
+                                    ret, lstrlenW(bufferW));
+      buffer2W[0] = 0;
+      ret = GetLocaleInfoW(lcid_ru, LOCALE_SMONTHNAME1+i,
+                           buffer2W, COUNTOF(buffer2W));
+      ok(ret, "Expected non zero result\n");
+      ok(ret == lstrlenW(buffer2W)+1, "Expected actual length, got %d, length %d\n",
+                                    ret, lstrlenW(buffer2W));
+
+      ok(lstrcmpW(bufferW, buffer2W) != 0,
+           "Expected genitive name to differ, got the same for month %d\n", i+1);
+
+      /* for locale without genitive names nominative returned in both cases */
+      bufferW[0] = 0;
+      ret = GetLocaleInfoW(lcid_en, (LOCALE_SMONTHNAME1+i)|LOCALE_RETURN_GENITIVE_NAMES,
+                           bufferW, COUNTOF(bufferW));
+      ok(ret, "Expected non zero result\n");
+      ok(ret == lstrlenW(bufferW)+1, "Expected actual length, got %d, length %d\n",
+                                    ret, lstrlenW(bufferW));
+      buffer2W[0] = 0;
+      ret = GetLocaleInfoW(lcid_en, LOCALE_SMONTHNAME1+i,
+                           buffer2W, COUNTOF(buffer2W));
+      ok(ret, "Expected non zero result\n");
+      ok(ret == lstrlenW(buffer2W)+1, "Expected actual length, got %d, length %d\n",
+                                    ret, lstrlenW(buffer2W));
+
+      ok(lstrcmpW(bufferW, buffer2W) == 0,
+         "Expected same names, got different for month %d\n", i+1);
+  }
 }
 
 static void test_GetTimeFormatA(void)
@@ -168,7 +277,8 @@ static void test_GetTimeFormatA(void)
   STRINGSA("tt HH':'mm'@'ss", ""); /* Invalid time */
   SetLastError(0xdeadbeef);
   ret = GetTimeFormatA(lcid, TIME_FORCE24HOURFORMAT, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   curtime.wHour = 8;
   curtime.wMinute = 56;
@@ -177,83 +287,104 @@ static void test_GetTimeFormatA(void)
   STRINGSA("tt HH':'mm'@'ss", "AM 08:56@13"); /* Valid time */
   SetLastError(0xdeadbeef);
   ret = GetTimeFormatA(lcid, TIME_FORCE24HOURFORMAT, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   /* MSDN: LOCALE_NOUSEROVERRIDE can't be specified with a format string */
   SetLastError(0xdeadbeef);
   ret = GetTimeFormatA(lcid, NUO|TIME_FORCE24HOURFORMAT, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_FLAGS; EXPECT_LEN(0); EXPECT_EQA;
+  ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 
   STRINGSA("tt HH':'mm'@'ss", "A"); /* Insufficient buffer */
   SetLastError(0xdeadbeef);
   ret = GetTimeFormatA(lcid, TIME_FORCE24HOURFORMAT, &curtime, input, buffer, 2);
-  EXPECT_BUFFER; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+      "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
   STRINGSA("tt HH':'mm'@'ss", "AM 08:56@13"); /* Calculate length only */
   ret = GetTimeFormatA(lcid, TIME_FORCE24HOURFORMAT, &curtime, input, NULL, 0);
-  EXPECT_VALID; EXPECT_LENA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA;
 
   STRINGSA("", "8 AM"); /* TIME_NOMINUTESORSECONDS, default format */
   ret = GetTimeFormatA(lcid, NUO|TIME_NOMINUTESORSECONDS, &curtime, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("m1s2m3s4", ""); /* TIME_NOMINUTESORSECONDS/complex format */
   ret = GetTimeFormatA(lcid, TIME_NOMINUTESORSECONDS, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret == strlen(buffer)+1, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  ok( !strcmp( buffer, "" ) || broken( !strcmp( buffer, "4" )), /* win9x */
+      "Expected '', got '%s'\n", buffer );
 
   STRINGSA("", "8:56 AM"); /* TIME_NOSECONDS/Default format */
   ret = GetTimeFormatA(lcid, NUO|TIME_NOSECONDS, &curtime, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("h:m:s tt", "8:56 AM"); /* TIME_NOSECONDS */
   strcpy(Expected, "8:56 AM");
   ret = GetTimeFormatA(lcid, TIME_NOSECONDS, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("h.@:m.@:s.@:tt", "8.@:56AM"); /* Multiple delimiters */
   ret = GetTimeFormatA(lcid, TIME_NOSECONDS, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  ok( !strcmp( buffer, "8.@:56AM" ) || broken( !strcmp( buffer, "8.@:56.@:AM" )) /* win9x */,
+      "Expected '8.@:56AM', got '%s'\n", buffer );
 
   STRINGSA("s1s2s3", ""); /* Duplicate tokens */
   ret = GetTimeFormatA(lcid, TIME_NOSECONDS, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret == strlen(buffer)+1, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  ok( !strcmp( buffer, "" ) || broken( !strcmp( buffer, "3" )), /* win9x */
+      "Expected '', got '%s'\n", buffer );
 
   STRINGSA("t/tt", "A/AM"); /* AM time marker */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   curtime.wHour = 13;
   STRINGSA("t/tt", "P/PM"); /* PM time marker */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("h1t2tt3m", "156"); /* TIME_NOTIMEMARKER: removes text around time marker token */
   ret = GetTimeFormatA(lcid, TIME_NOTIMEMARKER, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("h:m:s tt", "13:56:13 PM"); /* TIME_FORCE24HOURFORMAT */
   ret = GetTimeFormatA(lcid, TIME_FORCE24HOURFORMAT, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("h:m:s", "13:56:13"); /* TIME_FORCE24HOURFORMAT doesn't add time marker */
   ret = GetTimeFormatA(lcid, TIME_FORCE24HOURFORMAT, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   curtime.wHour = 14; /* change this to 14 or 2pm */
   curtime.wMinute = 5;
   curtime.wSecond = 3;
   STRINGSA("h hh H HH m mm s ss t tt", "2 02 14 14 5 05 3 03 P PM"); /* 24 hrs, leading 0 */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   curtime.wHour = 0;
   STRINGSA("h/H/hh/HH", "12/0/12/00"); /* "hh" and "HH" */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("h:m:s tt", "12:5:3 AM"); /* non-zero flags should fail with format, doesn't */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   /* try to convert formatting strings with more than two letters
    * "h:hh:hhh:H:HH:HHH:m:mm:mmm:M:MM:MMM:s:ss:sss:S:SS:SSS"
@@ -268,55 +399,66 @@ static void test_GetTimeFormatA(void)
   STRINGSA("h:hh:hhh H:HH:HHH m:mm:mmm M:MM:MMM s:ss:sss S:SS:SSS",
            "8:08:08 8:08:08 56:56:56 M:MM:MMM 13:13:13 S:SS:SSS");
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("h", "text"); /* Don't write to buffer if len is 0 */
   strcpy(buffer, "text");
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, 0);
-  EXPECT_VALID; EXPECT_LEN(2); EXPECT_EQA;
+  ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
+  EXPECT_EQA;
 
   STRINGSA("h 'h' H 'H' HH 'HH' m 'm' s 's' t 't' tt 'tt'",
            "8 h 8 H 08 HH 56 m 13 s A t AM tt"); /* "'" preserves tokens */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("'''", "'"); /* invalid quoted string */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   /* test that msdn suggested single quotation usage works as expected */
   STRINGSA("''''", "'"); /* single quote mark */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("''HHHHHH", "08"); /* Normal use */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   /* and test for normal use of the single quotation mark */
   STRINGSA("'''HHHHHH'", "'HHHHHH"); /* Normal use */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("'''HHHHHH", "'HHHHHH"); /* Odd use */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("'123'tt", ""); /* TIME_NOTIMEMARKER drops literals too */
   ret = GetTimeFormatA(lcid, TIME_NOTIMEMARKER, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   curtime.wHour = 25;
   STRINGSA("'123'tt", ""); /* Invalid time */
   SetLastError(0xdeadbeef);
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   curtime.wHour = 12;
   curtime.wMonth = 60; /* Invalid */
   STRINGSA("h:m:s", "12:56:13"); /* Invalid date */
   ret = GetTimeFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 }
 
 static void test_GetDateFormatA(void)
@@ -330,7 +472,8 @@ static void test_GetDateFormatA(void)
   STRINGSA("ddd',' MMM dd yy","");
   SetLastError(0xdeadbeef);
   ret = GetDateFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   curtime.wYear = 2002;
   curtime.wMonth = 5;
@@ -338,48 +481,58 @@ static void test_GetDateFormatA(void)
   curtime.wDayOfWeek = 3;
   STRINGSA("ddd',' MMM dd yy","Sat, May 04 02"); /* Simple case */
   ret = GetDateFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   /* Same as above but with LOCALE_NOUSEROVERRIDE */
   STRINGSA("ddd',' MMM dd yy",""); /* Simple case */
   SetLastError(0xdeadbeef);
   ret = GetDateFormatA(lcid, NUO, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_FLAGS; EXPECT_LEN(0); EXPECT_EQA;
+  ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
+  EXPECT_EQA;
 
   STRINGSA("ddd',' MMM dd yy","Sat, May 04 02"); /* Format containing "'" */
   ret = GetDateFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   curtime.wHour = 36; /* Invalid */
   STRINGSA("ddd',' MMM dd ''''yy","Sat, May 04 '02"); /* Invalid time */
   ret = GetDateFormatA(lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("ddd',' MMM dd ''''yy",""); /* Get size only */
   ret = GetDateFormatA(lcid, 0, &curtime, input, NULL, 0);
-  EXPECT_VALID; EXPECT_LEN(16); EXPECT_EQA;
+  ok(ret == 16, "Expected ret == 16, got %d, error %d\n", ret, GetLastError());
+  EXPECT_EQA;
 
   STRINGSA("ddd',' MMM dd ''''yy",""); /* Buffer too small */
   SetLastError(0xdeadbeef);
   ret = GetDateFormatA(lcid, 0, &curtime, input, buffer, 2);
-  EXPECT_BUFFER; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+      "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
   STRINGSA("ddd',' MMM dd ''''yy","5/4/2002"); /* Default to DATE_SHORTDATE */
   ret = GetDateFormat(lcid, NUO, &curtime, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   if (strncmp(buffer, Expected, strlen(Expected)) && strncmp(buffer, "5/4/02", strlen(Expected)) != 0)
 	  ok (0, "Expected '%s' or '5/4/02', got '%s'\n", Expected, buffer);
 
   STRINGSA("ddd',' MMM dd ''''yy", "Saturday, May 04, 2002"); /* DATE_LONGDATE */
   ret = GetDateFormat(lcid, NUO|DATE_LONGDATE, &curtime, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   /* test for expected DATE_YEARMONTH behavior with null format */
   /* NT4 returns ERROR_INVALID_FLAGS for DATE_YEARMONTH */
   STRINGSA("ddd',' MMM dd ''''yy", ""); /* DATE_YEARMONTH */
   SetLastError(0xdeadbeef);
   ret = GetDateFormat(lcid, NUO|DATE_YEARMONTH, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_FLAGS; EXPECT_LEN(0); EXPECT_EQA;
+  ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
+  EXPECT_EQA;
 
   /* Test that using invalid DATE_* flags results in the correct error */
   /* and return values */
@@ -387,7 +540,9 @@ static void test_GetDateFormatA(void)
   SetLastError(0xdeadbeef);
   ret = GetDateFormat(lcid, DATE_YEARMONTH|DATE_SHORTDATE|DATE_LONGDATE,
                       &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_FLAGS; EXPECT_LEN(0); EXPECT_EQA;
+  ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
+  EXPECT_EQA;
 }
 
 static void test_GetDateFormatW(void)
@@ -401,17 +556,24 @@ static void test_GetDateFormatW(void)
   ret = GetDateFormatW(LOCALE_SYSTEM_DEFAULT, DATE_LONGDATE, NULL,
                        input, buffer, COUNTOF(buffer));
   if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+  {
+    win_skip("GetDateFormatW is not implemented\n");
       return;
-  EXPECT_FLAGS; EXPECT_LEN(0); EXPECT_EQW;
+  }
+  ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
+  EXPECT_EQW;
 
   STRINGSW("",""); /* NULL buffer, len > 0 */
   SetLastError(0xdeadbeef);
   ret = GetDateFormatW (lcid, 0, NULL, input, NULL, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQW;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSW("",""); /* NULL buffer, len == 0 */
   ret = GetDateFormatW (lcid, 0, NULL, input, NULL, 0);
-  EXPECT_VALID; EXPECT_LENW; EXPECT_EQW;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENW; EXPECT_EQW;
 
   curtime.wYear = 2002;
   curtime.wMonth = 10;
@@ -423,7 +585,8 @@ static void test_GetDateFormatW(void)
   curtime.wMilliseconds = 12345;
   STRINGSW("dddd d MMMM yyyy","Wednesday 23 October 2002"); /* Incorrect DOW and time */
   ret = GetDateFormatW (lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENW; EXPECT_EQW;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENW; EXPECT_EQW;
 
   /* Limit tests */
 
@@ -438,7 +601,8 @@ static void test_GetDateFormatW(void)
   STRINGSW("dddd d MMMM yyyy","Monday 1 January 1601");
   SetLastError(0xdeadbeef);
   ret = GetDateFormatW (lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENW; EXPECT_EQW;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENW; EXPECT_EQW;
 
   curtime.wYear = 1600;
   curtime.wMonth = 12;
@@ -451,7 +615,8 @@ static void test_GetDateFormatW(void)
   STRINGSW("dddd d MMMM yyyy","Friday 31 December 1600");
   SetLastError(0xdeadbeef);
   ret = GetDateFormatW (lcid, 0, &curtime, input, buffer, COUNTOF(buffer));
-  EXPECT_INVALID;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 }
 
 
@@ -475,67 +640,82 @@ static void test_GetCurrencyFormatA(void)
   STRINGSA("23",""); /* NULL output, length > 0 --> Error */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, 0, input, NULL, NULL, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("23,53",""); /* Invalid character --> Error */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("--",""); /* Double '-' --> Error */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("0-",""); /* Trailing '-' --> Error */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("0..",""); /* Double '.' --> Error */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA(" 0.1",""); /* Leading space --> Error */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("1234","$"); /* Length too small --> Write up to length chars */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, NUO, input, NULL, buffer, 2);
-  EXPECT_BUFFER; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+      "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
   STRINGSA("2353",""); /* Format and flags given --> Error */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, NUO, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_INVALIDFLAGS; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret, "Expected ret == 0, got %d\n", ret);
+  ok( GetLastError() == ERROR_INVALID_FLAGS || GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 
   STRINGSA("2353",""); /* Invalid format --> Error */
   SetLastError(0xdeadbeef);
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("2353","$2,353.00"); /* Valid number */
   ret = GetCurrencyFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("-2353","($2,353.00)"); /* Valid negative number */
   ret = GetCurrencyFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("2353.1","$2,353.10"); /* Valid real number */
   ret = GetCurrencyFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("2353.111","$2,353.11"); /* Too many DP --> Truncated */
   ret = GetCurrencyFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("2353.119","$2,353.12");  /* Too many DP --> Rounded */
   ret = GetCurrencyFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NumDigits = 0; /* No decimal separator */
   format.LeadingZero = 0;
@@ -548,117 +728,152 @@ static void test_GetCurrencyFormatA(void)
 
   STRINGSA("2353","$2353"); /* No decimal or grouping chars expected */
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NumDigits = 1; /* 1 DP --> Expect decimal separator */
   STRINGSA("2353","$2353.0");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.Grouping = 2; /* Group by 100's */
   STRINGSA("2353","$23,53.0");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
+
+  STRINGSA("235","$235.0"); /* Grouping of a positive number */
+  format.Grouping = 3;
+  ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
+
+  STRINGSA("-235","$-235.0"); /* Grouping of a negative number */
+  format.NegativeOrder = 2;
+  ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.LeadingZero = 1; /* Always provide leading zero */
   STRINGSA(".5","$0.5");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.PositiveOrder = CY_POS_RIGHT;
   STRINGSA("1","1.0$");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.PositiveOrder = CY_POS_LEFT_SPACE;
   STRINGSA("1","$ 1.0");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.PositiveOrder = CY_POS_RIGHT_SPACE;
   STRINGSA("1","1.0 $");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 0;
   STRINGSA("-1","($1.0)");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 1;
   STRINGSA("-1","-$1.0");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 2;
   STRINGSA("-1","$-1.0");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 3;
   STRINGSA("-1","$1.0-");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 4;
   STRINGSA("-1","(1.0$)");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 5;
   STRINGSA("-1","-1.0$");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 6;
   STRINGSA("-1","1.0-$");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 7;
   STRINGSA("-1","1.0$-");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 8;
   STRINGSA("-1","-1.0 $");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 9;
   STRINGSA("-1","-$ 1.0");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 10;
   STRINGSA("-1","1.0 $-");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 11;
   STRINGSA("-1","$ 1.0-");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 12;
   STRINGSA("-1","$ -1.0");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 13;
   STRINGSA("-1","1.0- $");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 14;
   STRINGSA("-1","($ 1.0)");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = 15;
   STRINGSA("-1","(1.0 $)");
   ret = GetCurrencyFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 }
 
 #define NEG_PARENS      0 /* "(1.1)" */
@@ -681,71 +896,87 @@ static void test_GetNumberFormatA(void)
   STRINGSA("23",""); /* NULL output, length > 0 --> Error */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, 0, input, NULL, NULL, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("23,53",""); /* Invalid character --> Error */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("--",""); /* Double '-' --> Error */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("0-",""); /* Trailing '-' --> Error */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("0..",""); /* Double '.' --> Error */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA(" 0.1",""); /* Leading space --> Error */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, 0, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("1234","1"); /* Length too small --> Write up to length chars */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, NUO, input, NULL, buffer, 2);
-  EXPECT_BUFFER; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+      "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
   STRINGSA("2353",""); /* Format and flags given --> Error */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, NUO, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_INVALIDFLAGS; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret, "Expected ret == 0, got %d\n", ret);
+  ok( GetLastError() == ERROR_INVALID_FLAGS || GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 
   STRINGSA("2353",""); /* Invalid format --> Error */
   SetLastError(0xdeadbeef);
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_INVALID; EXPECT_LEN(0); EXPECT_EQA;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   STRINGSA("2353","2,353.00"); /* Valid number */
   ret = GetNumberFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("-2353","-2,353.00"); /* Valid negative number */
   ret = GetNumberFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("-353","-353.00"); /* test for off by one error in grouping */
   ret = GetNumberFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("2353.1","2,353.10"); /* Valid real number */
   ret = GetNumberFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("2353.111","2,353.11"); /* Too many DP --> Truncated */
   ret = GetNumberFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   STRINGSA("2353.119","2,353.12");  /* Too many DP --> Rounded */
   ret = GetNumberFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NumDigits = 0; /* No decimal separator */
   format.LeadingZero = 0;
@@ -756,47 +987,68 @@ static void test_GetNumberFormatA(void)
 
   STRINGSA("2353","2353"); /* No decimal or grouping chars expected */
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NumDigits = 1; /* 1 DP --> Expect decimal separator */
   STRINGSA("2353","2353.0");
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.Grouping = 2; /* Group by 100's */
   STRINGSA("2353","23,53.0");
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
+
+  STRINGSA("235","235.0"); /* Grouping of a positive number */
+  format.Grouping = 3;
+  ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
+
+  STRINGSA("-235","-235.0"); /* Grouping of a negative number */
+  format.NegativeOrder = NEG_LEFT;
+  ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.LeadingZero = 1; /* Always provide leading zero */
   STRINGSA(".5","0.5");
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = NEG_PARENS;
   STRINGSA("-1","(1.0)");
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = NEG_LEFT;
   STRINGSA("-1","-1.0");
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = NEG_LEFT_SPACE;
   STRINGSA("-1","- 1.0");
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = NEG_RIGHT;
   STRINGSA("-1","1.0-");
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   format.NegativeOrder = NEG_RIGHT_SPACE;
   STRINGSA("-1","1.0 -");
   ret = GetNumberFormatA(lcid, 0, input, &format, buffer, COUNTOF(buffer));
-  EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  EXPECT_LENA; EXPECT_EQA;
 
   lcid = MAKELCID(MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT), SORT_DEFAULT);
 
@@ -805,7 +1057,8 @@ static void test_GetNumberFormatA(void)
     STRINGSA("-12345","-12 345,00"); /* Try French formatting */
     Expected[3] = 160; /* Non breaking space */
     ret = GetNumberFormatA(lcid, NUO, input, NULL, buffer, COUNTOF(buffer));
-    EXPECT_VALID; EXPECT_LENA; EXPECT_EQA;
+    ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+    EXPECT_LENA; EXPECT_EQA;
   }
 }
 
@@ -840,7 +1093,7 @@ static void test_CompareStringA(void)
 
     /* test for CompareStringA flags */
     SetLastError(0xdeadbeef);
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0x10, "NULL", -1, "NULL", -1);
+    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0x8, "NULL", -1, "NULL", -1);
     ok(GetLastError() == ERROR_INVALID_FLAGS,
         "unexpected error code %d\n", GetLastError());
     ok(!ret, "CompareStringA must fail with invalid flag\n");
@@ -855,13 +1108,13 @@ static void test_CompareStringA(void)
     ok (ret == 0, "lstrcmpA(\"\", \"\") should return 0, got %d\n", ret);
 
     ret = lstrcmpA(NULL, NULL);
-    ok (ret == 0, "lstrcmpA(NULL, NULL) should return 0, got %d\n", ret);
+    ok (ret == 0 || broken(ret == -2) /* win9x */, "lstrcmpA(NULL, NULL) should return 0, got %d\n", ret);
 
     ret = lstrcmpA("", NULL);
-    ok (ret == 1, "lstrcmpA(\"\", NULL) should return 1, got %d\n", ret);
+    ok (ret == 1 || broken(ret == -2) /* win9x */, "lstrcmpA(\"\", NULL) should return 1, got %d\n", ret);
 
     ret = lstrcmpA(NULL, "");
-    ok (ret == -1, "lstrcmpA(NULL, \"\") should return -1, got %d\n", ret);
+    ok (ret == -1 || broken(ret == -2) /* win9x */, "lstrcmpA(NULL, \"\") should return -1, got %d\n", ret);
   
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"EndDialog",-1,"_Property",-1);
     ok( ret == 3, "EndDialog vs _Property ... expected 3, got %d\n", ret);
@@ -1008,6 +1261,12 @@ static void test_CompareStringA(void)
 
     ret = CompareStringA(lcid, 0, "\2", 2, "\1", 2);
     todo_wine ok(ret != 2, "\\2 vs \\1 expected unequal\n");
+
+    ret = CompareStringA(lcid, NORM_IGNORECASE | LOCALE_USE_CP_ACP, "#", -1, ".", -1);
+    todo_wine ok(ret == CSTR_LESS_THAN, "\"#\" vs \".\" expected CSTR_LESS_THAN, got %d\n", ret);
+
+    ret = lstrcmpi("#", ".");
+    todo_wine ok(ret == -1, "\"#\" vs \".\" expected -1, got %d\n", ret);
 }
 
 static void test_LCMapStringA(void)
@@ -1119,9 +1378,11 @@ static void test_LCMapStringA(void)
     ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
                        upper_case, -1, buf, sizeof(buf));
     ok(ret, "LCMapStringA must succeed\n");
+    ok(buf[ret-1] == 0, "LCMapStringA not null-terminated\n");
     ret2 = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
                        upper_case, lstrlenA(upper_case), buf2, sizeof(buf2));
-    ok(ret, "LCMapStringA must succeed\n");
+    ok(ret2, "LCMapStringA must succeed\n");
+    ok(buf2[ret2-1] == 0, "LCMapStringA not null-terminated\n" );
     ok(ret == ret2, "lengths of sort keys must be equal\n");
     ok(!lstrcmpA(buf, buf2), "sort keys must be equal\n");
 
@@ -1135,15 +1396,8 @@ static void test_LCMapStringA(void)
     ok(ret == ret2, "lengths of sort keys must be equal\n");
     ok(!lstrcmpA(buf, buf2), "sort keys must be equal\n");
 
-    /* test LCMAP_SORTKEY | NORM_IGNORENONSPACE */
-    ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORENONSPACE,
-                       lower_case, -1, buf, sizeof(buf));
-    ok(ret, "LCMapStringA must succeed\n");
-    ret2 = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
-                       lower_case, -1, buf2, sizeof(buf2));
-    ok(ret2, "LCMapStringA must succeed\n");
-    ok(ret == ret2, "lengths of sort keys must be equal\n");
-    ok(!lstrcmpA(buf, buf2), "sort keys must be equal\n");
+    /* Don't test LCMAP_SORTKEY | NORM_IGNORENONSPACE, produces different
+       results from plain LCMAP_SORTKEY on Vista */
 
     /* test LCMAP_SORTKEY | NORM_IGNORESYMBOLS */
     ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORESYMBOLS,
@@ -1193,12 +1447,17 @@ static void test_LCMapStringW(void)
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        trace("Skipping LCMapStringW tests on Win9x\n");
+        win_skip("LCMapStringW is not implemented\n");
         return;
     }
+    if (broken(ret))
+        ok(lstrcmpW(buf, upper_case) == 0, "Expected upper case string\n");
+    else
+    {
     ok(!ret, "LCMAP_LOWERCASE and LCMAP_UPPERCASE are mutually exclusive\n");
     ok(GetLastError() == ERROR_INVALID_FLAGS,
        "unexpected error code %d\n", GetLastError());
+    }
 
     ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_HIRAGANA | LCMAP_KATAKANA,
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
@@ -1294,15 +1553,8 @@ static void test_LCMapStringW(void)
     ok(ret == ret2, "lengths of sort keys must be equal\n");
     ok(!lstrcmpA(p_buf, p_buf2), "sort keys must be equal\n");
 
-    /* test LCMAP_SORTKEY | NORM_IGNORENONSPACE */
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORENONSPACE,
-                       lower_case, -1, buf, sizeof(buf));
-    ok(ret, "LCMapStringW must succeed\n");
-    ret2 = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
-                       lower_case, -1, buf2, sizeof(buf2));
-    ok(ret2, "LCMapStringW must succeed\n");
-    ok(ret == ret2, "lengths of sort keys must be equal\n");
-    ok(!lstrcmpA(p_buf, p_buf2), "sort keys must be equal\n");
+    /* Don't test LCMAP_SORTKEY | NORM_IGNORENONSPACE, produces different
+       results from plain LCMAP_SORTKEY on Vista */
 
     /* test LCMAP_SORTKEY | NORM_IGNORESYMBOLS */
     ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORESYMBOLS,
@@ -1332,14 +1584,14 @@ static void test_LCMapStringW(void)
 
     /* test srclen = 0 */
     SetLastError(0xdeadbeef);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, 0, upper_case, 0, buf, sizeof(buf));
+    ret = LCMapStringW(LOCALE_USER_DEFAULT, 0, upper_case, 0, buf, sizeof(buf)/sizeof(WCHAR));
     ok(!ret, "LCMapStringW should fail with srclen = 0\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
        "unexpected error code %d\n", GetLastError());
 }
 
 /* this requires collation table patch to make it MS compatible */
-const char *strings_sorted[] =
+static const char * const strings_sorted[] =
 {
 "'",
 "-",
@@ -1371,7 +1623,7 @@ const char *strings_sorted[] =
 "C"
 };
 
-const char *strings[] =
+static const char * const strings[] =
 {
 "C",
 "\"",
@@ -1466,7 +1718,8 @@ static void test_sorting(void)
 
 static void test_FoldStringA(void)
 {
-  int ret, i;
+  int ret, i, j;
+  BOOL is_special;
   char src[256], dst[256];
   static const char digits_src[] = { 0xB9,0xB2,0xB3,'\0'  };
   static const char digits_dst[] = { '1','2','3','\0'  };
@@ -1499,6 +1752,24 @@ static void test_FoldStringA(void)
     0x6f,0xa8,0x6f,0x3f,0x75,0x60,0x75,0xb4,
     0x75,0x5e,0x75,0xa8,0x79,0xb4,0x79,0xa8,'\0'
   };
+  static const char composite_dst_alt[] =
+  {
+    0x53,0x3f,0x5a,0x3f,0x73,0x3f,0x7a,0x3f,
+    0x59,0xa8,0x41,0x60,0x41,0xb4,0x41,0x5e,
+    0x41,0x7e,0x41,0xa8,0x41,0xb0,0x43,0xb8,
+    0x45,0x60,0x45,0xb4,0x45,0x5e,0x45,0xa8,
+    0x49,0x60,0x49,0xb4,0x49,0x5e,0x49,0xa8,
+    0x4e,0x7e,0x4f,0x60,0x4f,0xb4,0x4f,0x5e,
+    0x4f,0x7e,0x4f,0xa8,0xd8,0x55,0x60,0x55,
+    0xb4,0x55,0x5e,0x55,0xa8,0x59,0xb4,0x61,
+    0x60,0x61,0xb4,0x61,0x5e,0x61,0x7e,0x61,
+    0xa8,0x61,0xb0,0x63,0xb8,0x65,0x60,0x65,
+    0xb4,0x65,0x5e,0x65,0xa8,0x69,0x60,0x69,
+    0xb4,0x69,0x5e,0x69,0xa8,0x6e,0x7e,0x6f,
+    0x60,0x6f,0xb4,0x6f,0x5e,0x6f,0x7e,0x6f,
+    0xa8,0xf8,0x75,0x60,0x75,0xb4,0x75,0x5e,
+    0x75,0xa8,0x79,0xb4,0x79,0xa8,'\0'
+  };
   static const char ligatures_src[] =
   {
     0x8C,0x9C,0xC6,0xDE,0xDF,0xE6,0xFE,'\0'
@@ -1506,6 +1777,31 @@ static void test_FoldStringA(void)
   static const char ligatures_dst[] =
   {
     'O','E','o','e','A','E','T','H','s','s','a','e','t','h','\0'
+  };
+  static const struct special
+  {
+    char src;
+    char dst[4];
+  }  foldczone_special[] =
+  {
+    /* src   dst                   */
+    { 0x85, { 0x2e, 0x2e, 0x2e, 0x00 } },
+    { 0x98, { 0x20, 0x7e, 0x00 } },
+    { 0x99, { 0x54, 0x4d, 0x00 } },
+    { 0xa0, { 0x20, 0x00 } },
+    { 0xa8, { 0x20, 0xa8, 0x00 } },
+    { 0xaa, { 0x61, 0x00 } },
+    { 0xaf, { 0x20, 0xaf, 0x00 } },
+    { 0xb2, { 0x32, 0x00 } },
+    { 0xb3, { 0x33, 0x00 } },
+    { 0xb4, { 0x20, 0xb4, 0x00 } },
+    { 0xb8, { 0x20, 0xb8, 0x00 } },
+    { 0xb9, { 0x31, 0x00 } },
+    { 0xba, { 0x6f, 0x00 } },
+    { 0xbc, { 0x31, 0x2f, 0x34, 0x00 } },
+    { 0xbd, { 0x31, 0x2f, 0x32, 0x00 } },
+    { 0xbe, { 0x33, 0x2f, 0x34, 0x00 } },
+    { 0x00 }
   };
 
   if (!pFoldStringA)
@@ -1522,8 +1818,11 @@ static void test_FoldStringA(void)
   SetLastError(0);
   ret = pFoldStringA(MAP_FOLDDIGITS, digits_src, -1, dst, 256);
   if (GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+  {
+    win_skip("FoldStringA is not implemented\n");
     return;
-  EXPECT_LEN(4); EXPECT_VALID;
+  }
+  ok(ret == 4, "Expected ret == 4, got %d, error %d\n", ret, GetLastError());
   ok(strcmp(dst, digits_dst) == 0,
      "MAP_FOLDDIGITS: Expected '%s', got '%s'\n", digits_dst, dst);
   for (i = 1; i < 256; i++)
@@ -1534,7 +1833,7 @@ static void test_FoldStringA(void)
       src[1] = '\0';
       SetLastError(0);
       ret = pFoldStringA(MAP_FOLDDIGITS, src, -1, dst, 256);
-      EXPECT_LEN(2); EXPECT_VALID;
+      ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
       ok(dst[0] == src[0],
          "MAP_FOLDDIGITS: Expected '%s', got '%s'\n", src, dst);
     }
@@ -1545,7 +1844,7 @@ static void test_FoldStringA(void)
   ret = pFoldStringA(MAP_EXPAND_LIGATURES, ligatures_src, -1, dst, 256);
   /* NT 4.0 doesn't support MAP_EXPAND_LIGATURES */
   if (!(ret == 0 && GetLastError() == ERROR_INVALID_FLAGS)) {
-    EXPECT_LEN(sizeof(ligatures_dst)); EXPECT_VALID;
+    ok(ret == sizeof(ligatures_dst), "Got %d, error %d\n", ret, GetLastError());
     ok(strcmp(dst, ligatures_dst) == 0,
        "MAP_EXPAND_LIGATURES: Expected '%s', got '%s'\n", ligatures_dst, dst);
     for (i = 1; i < 256; i++)
@@ -1556,24 +1855,30 @@ static void test_FoldStringA(void)
         src[1] = '\0';
         SetLastError(0);
         ret = pFoldStringA(MAP_EXPAND_LIGATURES, src, -1, dst, 256);
-        EXPECT_LEN(2); EXPECT_VALID;
+        if (ret == 3)
+        {
+          /* Vista */
+          ok((i == 0xDC && lstrcmpA(dst, "UE") == 0) ||
+             (i == 0xFC && lstrcmpA(dst, "ue") == 0),
+             "Got %s for %d\n", dst, i);
+        }
+        else
+        {
+          ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
         ok(dst[0] == src[0],
            "MAP_EXPAND_LIGATURES: Expected '%s', got '%s'\n", src, dst);
       }
     }
   }
+  }
 
   /* MAP_COMPOSITE */
   SetLastError(0);
   ret = pFoldStringA(MAP_COMPOSITE, composite_src, -1, dst, 256);
-  EXPECT_VALID;
-  todo_wine
-  {
-    /* Wine gets close, but doesn't produce quite the same result as native */
-    EXPECT_LEN(121);
-    ok(strcmp(dst, composite_dst) == 0,
-       "MAP_COMPOSITE: Expected '%s', got '%s'\n", composite_dst, dst);
-  }
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
+  ok(ret == 121 || ret == 119, "Expected 121 or 119, got %d\n", ret);
+  ok(strcmp(dst, composite_dst) == 0 || strcmp(dst, composite_dst_alt) == 0,
+     "MAP_COMPOSITE: Mismatch, got '%s'\n", dst);
 
   for (i = 1; i < 256; i++)
   {
@@ -1583,7 +1888,7 @@ static void test_FoldStringA(void)
       src[1] = '\0';
       SetLastError(0);
       ret = pFoldStringA(MAP_COMPOSITE, src, -1, dst, 256);
-      EXPECT_LEN(2); EXPECT_VALID;
+      ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
       ok(dst[0] == src[0],
          "0x%02x, 0x%02x,0x%02x,0x%02x,\n", (unsigned char)src[0],
          (unsigned char)dst[0],(unsigned char)dst[1],(unsigned char)dst[2]);
@@ -1597,10 +1902,27 @@ static void test_FoldStringA(void)
     src[1] = '\0';
     SetLastError(0);
     ret = pFoldStringA(MAP_FOLDCZONE, src, -1, dst, 256);
-    EXPECT_LEN(2); EXPECT_VALID;
+    is_special = FALSE;
+    for (j = 0; foldczone_special[j].src != 0 && ! is_special; j++)
+    {
+      if (foldczone_special[j].src == src[0])
+      {
+        ok(ret == 2 || ret == lstrlenA(foldczone_special[j].dst) + 1,
+           "Expected ret == 2 or %d, got %d, error %d\n",
+           lstrlenA(foldczone_special[j].dst) + 1, ret, GetLastError());
+        ok(src[0] == dst[0] || lstrcmpA(foldczone_special[j].dst, dst) == 0,
+           "MAP_FOLDCZONE: string mismatch for 0x%02x\n",
+           (unsigned char)src[0]);
+        is_special = TRUE;
+      }
+    }
+    if (! is_special)
+    {
+      ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
     ok(src[0] == dst[0],
        "MAP_FOLDCZONE: Expected 0x%02x, got 0x%02x\n",
        (unsigned char)src[0], (unsigned char)dst[0]);
+  }
   }
 
   /* MAP_PRECOMPOSED */
@@ -1610,7 +1932,7 @@ static void test_FoldStringA(void)
     src[1] = '\0';
     SetLastError(0);
     ret = pFoldStringA(MAP_PRECOMPOSED, src, -1, dst, 256);
-    EXPECT_LEN(2); EXPECT_VALID;
+    ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
     ok(src[0] == dst[0],
        "MAP_PRECOMPOSED: Expected 0x%02x, got 0x%02x\n",
        (unsigned char)src[0], (unsigned char)dst[0]);
@@ -1646,6 +1968,7 @@ static void test_FoldStringW(void)
     0x0D66, /* Maylayalam */
     0x0E50, /* Thai */
     0x0ED0, /* Laos */
+    0x0F29, /* Tibet - 0 is out of sequence */
     0x2070, /* Superscript - 1, 2, 3 are out of sequence */
     0x2080, /* Subscript */
     0x245F, /* Circled - 0 is out of sequence */
@@ -1654,6 +1977,7 @@ static void test_FoldStringW(void)
     0x2775, /* Inverted circled - No 0 */
     0x277F, /* Patterned circled - No 0 */
     0x2789, /* Inverted Patterned circled - No 0 */
+    0x3020, /* Hangzhou */
     0xff10, /* Pliene chasse (?) */
     0xffff  /* Terminator */
   };
@@ -1663,125 +1987,36 @@ static void test_FoldStringW(void)
       0xB9,   /* Superscript 1 */
       0xB2,   /* Superscript 2 */
       0xB3,   /* Superscript 3 */
+      0x0F33, /* Tibetan half zero */
       0x24EA, /* Circled 0 */
+      0x3007, /* Ideographic number zero */
       '\0'    /* Terminator */
   };
   /* Digits in digitRanges for which no representation is available */
   static const WCHAR noDigitAvailable[] =
   {
       0x0BE6, /* No Tamil 0 */
+      0x0F29, /* No Tibetan half zero (out of sequence) */
       0x2473, /* No Bracketed 0 */
       0x2487, /* No 0 Full stop */
       0x2775, /* No inverted circled 0 */
       0x277F, /* No patterned circled */
       0x2789, /* No inverted Patterned circled */
+      0x3020, /* No Hangzhou 0 */
       '\0'    /* Terminator */
   };
-  /* Compatibility conversion results */
-  static const WCHAR compat_F900_FA2F[256+48] =
+  static const WCHAR foldczone_src[] =
   {
-      0x8c48, 0x66f4, 0x8eca, 0x8cc8, 0x6ed1, 0x4e32, 0x53e5, 0x9f9c,
-      0x9f9c, 0x5951, 0x91d1, 0x5587, 0x5948, 0x61f6, 0x7669, 0x7f85,
-      0x863f, 0x87ba, 0x88f8, 0x908f, 0x6a02, 0x6d1b, 0x70d9, 0x73de,
-      0x843d, 0x916a, 0x99f1, 0x4e82, 0x5375, 0x6b04, 0x721b, 0x862d,
-      0x9e1e, 0x5d50, 0x6feb, 0x85cd, 0x8964, 0x62c9, 0x81d8, 0x881f,
-      0x5eca, 0x6717, 0x6d6a, 0x72fc, 0x0000, 0x4f86, 0x51b7, 0x52de,
-      0x64c4, 0x6ad3, 0x7210, 0x76e7, 0x8001, 0x8606, 0x865c, 0x8def,
-      0x9732, 0x9b6f, 0x9dfa, 0x788c, 0x797f, 0x7da0, 0x83c9, 0x9304,
-      0x9e7f, 0x8ad6, 0x58df, 0x5f04, 0x7c60, 0x807e, 0x7262, 0x78ca,
-      0x8cc2, 0x96f7, 0x58d8, 0x5c62, 0x6a13, 0x6dda, 0x6f0f, 0x7d2f,
-      0x7e37, 0x964b, 0x52d2, 0x808b, 0x51dc, 0x51cc, 0x7a1c, 0x7dbe,
-      0x83f1, 0x9675, 0x8b80, 0x62cf, 0x6a02, 0x8afe, 0x4e39, 0x5be7,
-      0x6012, 0x7387, 0x7570, 0x5317, 0x78fb, 0x4fbf, 0x5fa9, 0x4e0d,
-      0x6ccc, 0x6578, 0x7d22, 0x53c3, 0x585e, 0x7701, 0x8449, 0x8aaa,
-      0x6bba, 0x8fb0, 0x6c88, 0x62fe, 0x82e5, 0x63a0, 0x7565, 0x4eae,
-      0x5169, 0x0000, 0x6881, 0x7ce7, 0x826f, 0x8ad2, 0x91cf, 0x52f5,
-      0x5442, 0x5973, 0x5eec, 0x65c5, 0x6ffe, 0x792a, 0x95ad, 0x9a6a,
-      0x9e97, 0x9ece, 0x529b, 0x66c6, 0x6b77, 0x8f62, 0x5e74, 0x6190,
-      0x6200, 0x649a, 0x6f23, 0x7149, 0x7489, 0x0000, 0x7df4, 0x806f,
-      0x8f26, 0x84ee, 0x9023, 0x934a, 0x5217, 0x52a3, 0x54bd, 0x70c8,
-      0x88c2, 0x8aaa, 0x5ec9, 0x5ff5, 0x637b, 0x6bae, 0x7c3e, 0x7375,
-      0x4ee4, 0x56f9, 0x5be7, 0x5dba, 0x601c, 0x73b2, 0x7469, 0x7f9a,
-      0x8046, 0x9234, 0x96f6, 0x9748, 0x9818, 0x4f8b, 0x79ae, 0x91b4,
-      0x96b8, 0x60e1, 0x4e86, 0x50da, 0x5bee, 0x5c3f, 0x6599, 0x6a02,
-      0x71ce, 0x7642, 0x84fc, 0x907c, 0x9f8d, 0x6688, 0x962e, 0x5289,
-      0x677b, 0x67f3, 0x6d41, 0x6e9c, 0x7409, 0x7559, 0x786b, 0x7d10,
-      0x985e, 0x516d, 0x622e, 0x9678, 0x502b, 0x5d19, 0x6dea, 0x8f2a,
-      0x5f8b, 0x6144, 0x6817, 0x7387, 0x9686, 0x5229, 0x540f, 0x5c65,
-      0x6613, 0x674e, 0x68a8, 0x6ce5, 0x7406, 0x75e2, 0x7f79, 0x0000,
-      0x88e1, 0x91cc, 0x96e2, 0x533f, 0x6eba, 0x541d, 0x71d0, 0x7498,
-      0x85fa, 0x0000, 0x9c57, 0x9e9f, 0x6797, 0x6dcb, 0x81e8, 0x7acb,
-      0x7b20, 0x7c92, 0x72c0, 0x7099, 0x8b58, 0x4ec0, 0x8336, 0x523a,
-      0x5207, 0x5ea6, 0x62d3, 0x7cd6, 0x5b85, 0x6d1e, 0x66b4, 0x8f3b,
-      0x884c, 0x964d, 0x898b, 0x5ed3, 0x0000, 0x0000, 0x0000, 0x0000,
-      0x585a, 0x0000, 0x6674, 0x0000, 0x0000, 0x51de, 0x8c6c, 0x76ca,
-      0x0000, 0x795e, 0x7965, 0x798f, 0x9756, 0x7cbe, 0x7fbd, 0x0000,
-      0x0000, 0x0000, 0x8af8, 0x0000, 0x0000, 0x9038, 0x90fd, 0x0000,
-      0x0000, 0x0000, 0x98ef, 0x98fc, 0x9928, 0x9db4, 0x0000, 0x0000
+    'W',    'i',    'n',    'e',    0x0348, 0x0551, 0x1323, 0x280d,
+    0xff37, 0xff49, 0xff4e, 0xff45, '\0'
   };
-  static const WCHAR compat_FE30_FEF7[200] =
+  static const WCHAR foldczone_dst[] =
   {
-      0x2025, 0x2014, 0x2013, 0x005f, 0x005f, 0x0028, 0x0029, 0x007b,
-      0x007d, 0x3014, 0x3015, 0x3010, 0x3011, 0x300a, 0x300b, 0x3008,
-      0x3009, 0x300c, 0x300d, 0x300e, 0x300f, 0x0000, 0x0000, 0x0000,
-      0x0000, 0x203e, 0x203e, 0x203e, 0x203e, 0x005f, 0x005f, 0x005f,
-      0x002c, 0x3001, 0x002e, 0x0000, 0x003b, 0x003a, 0x003f, 0x0021,
-      0x2014, 0x0028, 0x0029, 0x007b, 0x007d, 0x3014, 0x3015, 0x0023,
-      0x0026, 0x002a, 0x002b, 0x002d, 0x003c, 0x003e, 0x003d, 0x0000,
-      0x0000, 0x0024, 0x0025, 0x0040, 0x0000, 0x0000, 0x0000, 0x0000,
-      0x064b, 0x064b, 0x064c, 0x0000, 0x064d, 0x0000, 0x064e, 0x064e,
-      0x064f, 0x064f, 0x0650, 0x0650, 0x0651, 0x0651, 0x0652, 0x0652,
-      0x0621, 0x0622, 0x0622, 0x0623, 0x0623, 0x0624, 0x0624, 0x0625,
-      0x0625, 0x0626, 0x0626, 0x0626, 0x0626, 0x0627, 0x0627, 0x0628,
-      0x0628, 0x0628, 0x0628, 0x0629, 0x0629, 0x062a, 0x062a, 0x062a,
-      0x062a, 0x062b, 0x062b, 0x062b, 0x062b, 0x062c, 0x062c, 0x062c,
-      0x062c, 0x062d, 0x062d, 0x062d, 0x062d, 0x062e, 0x062e, 0x062e,
-      0x062e, 0x062f, 0x062f, 0x0630, 0x0630, 0x0631, 0x0631, 0x0632,
-      0x0632, 0x0633, 0x0633, 0x0633, 0x0633, 0x0634, 0x0634, 0x0634,
-      0x0634, 0x0635, 0x0635, 0x0635, 0x0635, 0x0636, 0x0636, 0x0636,
-      0x0636, 0x0637, 0x0637, 0x0637, 0x0637, 0x0638, 0x0638, 0x0638,
-      0x0638, 0x0639, 0x0639, 0x0639, 0x0639, 0x063a, 0x063a, 0x063a,
-      0x063a, 0x0641, 0x0641, 0x0641, 0x0641, 0x0642, 0x0642, 0x0642,
-      0x0642, 0x0643, 0x0643, 0x0643, 0x0643, 0x0644, 0x0644, 0x0644,
-      0x0644, 0x0645, 0x0645, 0x0645, 0x0645, 0x0646, 0x0646, 0x0646,
-      0x0646, 0x0647, 0x0647, 0x0647, 0x0647, 0x0648, 0x0648, 0x0649,
-      0x0649, 0x064a, 0x064a, 0x064a, 0x064a, 0x0000, 0x0000, 0x0000
-  };
-  static const WCHAR compat_FF00_FFEF[240] =
-  {
-      0x0000, 0x0021, 0x0022, 0x0023, 0x0024, 0x0025, 0x0026, 0x0027,
-      0x0028, 0x0029, 0x002a, 0x002b, 0x002c, 0x002d, 0x002e, 0x002f,
-      0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037,
-      0x0038, 0x0039, 0x003a, 0x003b, 0x003c, 0x003d, 0x003e, 0x003f,
-      0x0040, 0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047,
-      0x0048, 0x0049, 0x004a, 0x004b, 0x004c, 0x004d, 0x004e, 0x004f,
-      0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057,
-      0x0058, 0x0059, 0x005a, 0x005b, 0x0000, 0x005d, 0x005e, 0x005f,
-      0x0060, 0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067,
-      0x0068, 0x0069, 0x006a, 0x006b, 0x006c, 0x006d, 0x006e, 0x006f,
-      0x0070, 0x0071, 0x0072, 0x0073, 0x0074, 0x0075, 0x0076, 0x0077,
-      0x0078, 0x0079, 0x007a, 0x007b, 0x007c, 0x007d, 0x007e, 0x0000,
-      0x0000, 0x3002, 0x300c, 0x300d, 0x3001, 0x30fb, 0x30f2, 0x30a1,
-      0x30a3, 0x30a5, 0x30a7, 0x30a9, 0x30e3, 0x30e5, 0x30e7, 0x30c3,
-      0x30fc, 0x30a2, 0x30a4, 0x30a6, 0x30a8, 0x30aa, 0x30ab, 0x30ad,
-      0x30af, 0x30b1, 0x30b3, 0x30b5, 0x30b7, 0x30b9, 0x30bb, 0x30bd,
-      0x30bf, 0x30c1, 0x30c4, 0x30c6, 0x30c8, 0x30ca, 0x30cb, 0x30cc,
-      0x30cd, 0x30ce, 0x30cf, 0x30d2, 0x30d5, 0x30d8, 0x30db, 0x30de,
-      0x30df, 0x30e0, 0x30e1, 0x30e2, 0x30e4, 0x30e6, 0x30e8, 0x30e9,
-      0x30ea, 0x30eb, 0x30ec, 0x30ed, 0x30ef, 0x30f3, 0x309b, 0x309c,
-      0x3164, 0x3131, 0x3132, 0x3133, 0x3134, 0x3135, 0x3136, 0x3137,
-      0x3138, 0x3139, 0x313a, 0x313b, 0x313c, 0x313d, 0x313e, 0x313f,
-      0x3140, 0x3141, 0x3142, 0x3143, 0x3144, 0x3145, 0x3146, 0x3147,
-      0x3148, 0x3149, 0x314a, 0x314b, 0x314c, 0x314d, 0x314e, 0x0000,
-      0x0000, 0x0000, 0x314f, 0x3150, 0x3151, 0x3152, 0x3153, 0x3154,
-      0x0000, 0x0000, 0x3155, 0x3156, 0x3157, 0x3158, 0x3159, 0x315a,
-      0x0000, 0x0000, 0x315b, 0x315c, 0x315d, 0x315e, 0x315f, 0x3160,
-      0x0000, 0x0000, 0x3161, 0x3162, 0x3163, 0x0000, 0x0000, 0x0000,
-      0x00a2, 0x00a3, 0x00ac, 0x00af, 0x00a6, 0x00a5, 0x20a9, 0x0000,
-      0x2502, 0x2190, 0x2191, 0x2192, 0x2193, 0x25a0, 0x25cb, 0x0000
+    'W','i','n','e',0x0348,0x0551,0x1323,0x280d,'W','i','n','e','\0'
   };
   static const WCHAR ligatures_src[] =
   {
+    'W',    'i',    'n',    'e',    0x03a6, 0x03b9, 0x03bd, 0x03b5,
     0x00c6, 0x00de, 0x00df, 0x00e6, 0x00fe, 0x0132, 0x0133, 0x0152,
     0x0153, 0x01c4, 0x01c5, 0x01c6, 0x01c7, 0x01c8, 0x01c9, 0x01ca,
     0x01cb, 0x01cc, 0x01e2, 0x01e3, 0x01f1, 0x01f2, 0x01f3, 0x01fc,
@@ -1790,6 +2025,7 @@ static void test_FoldStringW(void)
   };
   static const WCHAR ligatures_dst[] =
   {
+    'W','i','n','e',0x03a6,0x03b9,0x03bd,0x03b5,
     'A','E','T','H','s','s','a','e','t','h','I','J','i','j','O','E','o','e',
     'D',0x017d,'D',0x017e,'d',0x017e,'L','J','L','j','l','j','N','J','N','j',
     'n','j',0x0100,0x0112,0x0101,0x0113,'D','Z','D','z','d','z',0x00c1,0x00c9,
@@ -1799,7 +2035,7 @@ static void test_FoldStringW(void)
 
   if (!pFoldStringW)
   {
-    skip("FoldStringW is not available\n");
+    win_skip("FoldStringW is not available\n");
     return; /* FoldString is present in NT v3.1+, but not 95/98/Me */
   }
 
@@ -1811,31 +2047,36 @@ static void test_FoldStringW(void)
     ret = pFoldStringW(badFlags[i], src, 256, dst, 256);
     if (GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
-      skip("FoldStringW is not implemented\n");
+      win_skip("FoldStringW is not implemented\n");
       return;
     }
-    EXPECT_LEN(0); EXPECT_FLAGS;
+    ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
+       "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
   }
 
   /* src & dst cannot be the same */
   SetLastError(0);
   ret = pFoldStringW(MAP_FOLDCZONE, src, -1, src, 256);
-  EXPECT_LEN(0); EXPECT_INVALID;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* src can't be NULL */
   SetLastError(0);
   ret = pFoldStringW(MAP_FOLDCZONE, NULL, -1, dst, 256);
-  EXPECT_LEN(0); EXPECT_INVALID;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* srclen can't be 0 */
   SetLastError(0);
   ret = pFoldStringW(MAP_FOLDCZONE, src, 0, dst, 256);
-  EXPECT_LEN(0); EXPECT_INVALID;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* dstlen can't be < 0 */
   SetLastError(0);
   ret = pFoldStringW(MAP_FOLDCZONE, src, -1, dst, -1);
-  EXPECT_LEN(0); EXPECT_INVALID;
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* Ret includes terminating NUL which is appended if srclen = -1 */
   SetLastError(0);
@@ -1843,7 +2084,7 @@ static void test_FoldStringW(void)
   src[1] = '\0';
   dst[0] = '\0';
   ret = pFoldStringW(MAP_FOLDCZONE, src, -1, dst, 256);
-  EXPECT_LEN(2); EXPECT_VALID;
+  ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
   ok(dst[0] == 'A' && dst[1] == '\0',
      "srclen=-1: Expected ret=2 [%d,%d], got ret=%d [%d,%d], err=%d\n",
      'A', '\0', ret, dst[0], dst[1], GetLastError());
@@ -1855,7 +2096,7 @@ static void test_FoldStringW(void)
   dst[0] = 'X';
   dst[1] = 'X';
   ret = pFoldStringW(MAP_FOLDCZONE, src, 1, dst, 256);
-  EXPECT_LEN(1); EXPECT_VALID;
+  ok(ret == 1, "Expected ret == 1, got %d, error %d\n", ret, GetLastError());
   ok(dst[0] == 'A' && dst[1] == 'X',
      "srclen=1: Expected ret=1, [%d,%d], got ret=%d,[%d,%d], err=%d\n",
      'A','X', ret, dst[0], dst[1], GetLastError());
@@ -1870,7 +2111,7 @@ static void test_FoldStringW(void)
       src[0] = ch;
       src[1] = dst[0] = '\0';
       ret = pFoldStringW(MAP_FOLDDIGITS, src, -1, dst, 256);
-      EXPECT_LEN(2); EXPECT_VALID;
+      ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
 
       ok(dst[0] == ch || strchrW(outOfSequenceDigits, ch) ||
          /* Wine (correctly) maps all Unicode 4.0+ digits */
@@ -1896,9 +2137,12 @@ static void test_FoldStringW(void)
       src[0] = c;
       src[1] = dst[0] = '\0';
       ret = pFoldStringW(MAP_FOLDDIGITS, src, -1, dst, 256);
-      EXPECT_LEN(2); EXPECT_VALID;
+      ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
 
       ok((dst[0] == '0' + ch - digitRanges[j] && dst[1] == '\0') ||
+         broken( dst[0] == ch ) ||  /* old Windows versions don't have all mappings */
+         (digitRanges[j] == 0x3020 && dst[0] == ch) || /* Hangzhou not present in all Windows versions */
+         (digitRanges[j] == 0x0F29 && dst[0] == ch) || /* Tibetan not present in all Windows versions */
          strchrW(noDigitAvailable, c),
          "MAP_FOLDDIGITS: ch %d Expected %d got %d\n",
          ch, '0' + digitRanges[j] - ch, dst[0]);
@@ -1907,63 +2151,23 @@ static void test_FoldStringW(void)
   }
 
   /* MAP_FOLDCZONE */
-  for (ch = 1; ch <0xffff; ch++)
-  {
-    WCHAR expected = 0;
-
-    if (ch >= 0xF900 && ch <= 0xFA2F)
-      expected = compat_F900_FA2F[ch - 0xF900];
-    else if (ch >= 0xFE30 && ch <= 0xFEF7)
-      expected = compat_FE30_FEF7[ch - 0xFE30];
-    else if (ch >= 0xFF00 && ch <= 0xFFEF)
-      expected = compat_FF00_FFEF[ch - 0xFF00];
-
-    if (!expected)
-      expected = ch;
-
     SetLastError(0);
-    src[0] = ch;
-    src[1] = dst[0] = '\0';
-    ret = pFoldStringW(MAP_FOLDCZONE, src, -1, dst, 256);
-    EXPECT_LEN(2); EXPECT_VALID;
-    ok(dst[0] == expected ||
-       /* Wine (correctly) uses updated mappings for some Unicode 4.0 chars */
-       /* FIXME: But they should be re-checked */
-       ch == 0xf92c || ch == 0xf979 || ch == 0xf995 || ch == 0xf9e7 ||
-       ch == 0xf9f1 ||
-       (0xfa0c <= ch && ch <= 0xfa6a) ||
-       (0xfa70 <= ch && ch <= 0xfad9) ||
-       ch == 0xfe47 || ch == 0xfe48 || ch == 0xfe68 ||
-       (0xfe70 <= ch && ch <= 0xfe7f) ||
-       ch == 0xff3c || ch == 0xff5f || ch == 0xff60 ||
-       ch == 0xff9e || ch == 0xff9f,
-       "MAP_FOLDCZONE: ch %d 0x%04x Expected 0x%04x got 0x%04x\n",
-       ch, ch, expected, dst[0]);
-  }
+  ret = pFoldStringW(MAP_FOLDCZONE, foldczone_src, -1, dst, 256);
+  ok(ret == sizeof(foldczone_dst)/sizeof(foldczone_dst[0]),
+     "Got %d, error %d\n", ret, GetLastError());
+  ok(!memcmp(dst, foldczone_dst, sizeof(foldczone_dst)),
+     "MAP_FOLDCZONE: Expanded incorrectly\n");
 
   /* MAP_EXPAND_LIGATURES */
   SetLastError(0);
   ret = pFoldStringW(MAP_EXPAND_LIGATURES, ligatures_src, -1, dst, 256);
   /* NT 4.0 doesn't support MAP_EXPAND_LIGATURES */
   if (!(ret == 0 && GetLastError() == ERROR_INVALID_FLAGS)) {
-    EXPECT_LEN(sizeof(ligatures_dst)/sizeof(ligatures_dst[0])); EXPECT_VALID;
+    ok(ret == sizeof(ligatures_dst)/sizeof(ligatures_dst[0]),
+       "Got %d, error %d\n", ret, GetLastError());
     ok(!memcmp(dst, ligatures_dst, sizeof(ligatures_dst)),
        "MAP_EXPAND_LIGATURES: Expanded incorrectly\n");
-    for (i = 1; i <= 0xffff; i++)
-    {
-      if (!strchrW(ligatures_src, i))
-      {
-        src[0] = i;
-        src[1] = '\0';
-        SetLastError(0);
-        ret = pFoldStringW(MAP_EXPAND_LIGATURES, src, -1, dst, 256);
-        EXPECT_LEN(2); EXPECT_VALID;
-        ok(dst[0] == src[0],
-           "MAP_EXPAND_LIGATURES: 0x%02x : Expected 0x%02x, got 0x%02x\n",
-           i, src[0], dst[0]);
       }
-    }
-  }
 
   /* FIXME: MAP_PRECOMPOSED : MAP_COMPOSITE */
 }
@@ -1992,13 +2196,9 @@ static void test_ConvertDefaultLocale(void)
            MKLCID(LANG_ENGLISH,  SUBLANG_DEFAULT, SORT_DEFAULT));
   LCID_RES(MKLCID(LANG_JAPANESE, SUBLANG_NEUTRAL, SORT_DEFAULT),
            MKLCID(LANG_JAPANESE, SUBLANG_DEFAULT, SORT_DEFAULT));
-  LCID_RES(MKLCID(LANG_JAPANESE, SUBLANG_NEUTRAL, SORT_JAPANESE_UNICODE),
-           MKLCID(LANG_JAPANESE, SUBLANG_DEFAULT, SORT_JAPANESE_UNICODE));
 
   /* Invariant language is not treated specially */
   TEST_LCID(LANG_INVARIANT, SUBLANG_DEFAULT, SORT_DEFAULT);
-  LCID_RES(MKLCID(LANG_INVARIANT, SUBLANG_NEUTRAL, SORT_DEFAULT),
-           MKLCID(LANG_INVARIANT, SUBLANG_DEFAULT, SORT_DEFAULT));
 
   /* User/system default languages alone are not mapped */
   TEST_LCIDLANG(LANG_SYSTEM_DEFAULT, SORT_JAPANESE_UNICODE);
@@ -2028,23 +2228,34 @@ static BOOL CALLBACK langgrp_procA(LGRPID lgrpid, LPSTR lpszNum, LPSTR lpszName,
 
 static void test_EnumSystemLanguageGroupsA(void)
 {
+  BOOL ret;
+
   if (!pEnumSystemLanguageGroupsA || !pIsValidLanguageGroup)
+  {
+    win_skip("EnumSystemLanguageGroupsA and/or IsValidLanguageGroup are not available\n");
     return;
+  }
 
   /* No enumeration proc */
   SetLastError(0);
-  pEnumSystemLanguageGroupsA(0, LGRPID_INSTALLED, 0);
-  EXPECT_INVALID;
+  ret = pEnumSystemLanguageGroupsA(0, LGRPID_INSTALLED, 0);
+  if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+  {
+    win_skip("EnumSystemLanguageGroupsA is not implemented\n");
+    return;
+  }
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* Invalid flags */
   SetLastError(0);
   pEnumSystemLanguageGroupsA(langgrp_procA, LGRPID_INSTALLED|LGRPID_SUPPORTED, 0);
-  EXPECT_FLAGS;
+  ok(GetLastError() == ERROR_INVALID_FLAGS, "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 
   /* No flags - defaults to LGRPID_INSTALLED */
-  SetLastError(0);
+  SetLastError(0xdeadbeef);
   pEnumSystemLanguageGroupsA(langgrp_procA, 0, 1);
-  EXPECT_LASTERROR_0;
+  ok(GetLastError() == 0xdeadbeef, "got error %d\n", GetLastError());
 
   pEnumSystemLanguageGroupsA(langgrp_procA, LGRPID_INSTALLED, 0);
   pEnumSystemLanguageGroupsA(langgrp_procA, LGRPID_SUPPORTED, 0);
@@ -2056,6 +2267,10 @@ static BOOL CALLBACK lgrplocale_procA(LGRPID lgrpid, LCID lcid, LPSTR lpszNum,
 {
   trace("%08x, %08x, %s, %08lx\n", lgrpid, lcid, lpszNum, lParam);
 
+  /* invalid locale enumerated on some platforms */
+  if (lcid == 0)
+      return TRUE;
+
   ok(pIsValidLanguageGroup(lgrpid, LGRPID_SUPPORTED) == TRUE,
      "Enumerated grp %d not valid\n", lgrpid);
   ok(IsValidLocale(lcid, LCID_SUPPORTED) == TRUE,
@@ -2065,28 +2280,42 @@ static BOOL CALLBACK lgrplocale_procA(LGRPID lgrpid, LCID lcid, LPSTR lpszNum,
 
 static void test_EnumLanguageGroupLocalesA(void)
 {
+  BOOL ret;
+
   if (!pEnumLanguageGroupLocalesA || !pIsValidLanguageGroup)
+  {
+    win_skip("EnumLanguageGroupLocalesA and/or IsValidLanguageGroup are not available\n");
     return;
+  }
 
   /* No enumeration proc */
   SetLastError(0);
-  pEnumLanguageGroupLocalesA(0, LGRPID_WESTERN_EUROPE, 0, 0);
-  EXPECT_INVALID;
+  ret = pEnumLanguageGroupLocalesA(0, LGRPID_WESTERN_EUROPE, 0, 0);
+  if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+  {
+    win_skip("EnumLanguageGroupLocalesA is not implemented\n");
+    return;
+  }
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* lgrpid too small */
   SetLastError(0);
-  pEnumLanguageGroupLocalesA(lgrplocale_procA, 0, 0, 0);
-  EXPECT_INVALID;
+  ret = pEnumLanguageGroupLocalesA(lgrplocale_procA, 0, 0, 0);
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* lgrpid too big */
   SetLastError(0);
-  pEnumLanguageGroupLocalesA(lgrplocale_procA, LGRPID_ARMENIAN + 1, 0, 0);
-  EXPECT_INVALID;
+  ret = pEnumLanguageGroupLocalesA(lgrplocale_procA, LGRPID_ARMENIAN + 1, 0, 0);
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* dwFlags is reserved */
   SetLastError(0);
-  pEnumLanguageGroupLocalesA(0, LGRPID_WESTERN_EUROPE, 0x1, 0);
-  EXPECT_INVALID;
+  ret = pEnumLanguageGroupLocalesA(0, LGRPID_WESTERN_EUROPE, 0x1, 0);
+  ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   pEnumLanguageGroupLocalesA(lgrplocale_procA, LGRPID_WESTERN_EUROPE, 0, 0);
 }
@@ -2099,17 +2328,20 @@ static void test_SetLocaleInfoA(void)
   /* Null data */
   SetLastError(0);
   bRet = SetLocaleInfoA(lcid, LOCALE_SDATE, 0);
-  EXPECT_INVALID;
+  ok( !bRet && GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   /* IDATE */
   SetLastError(0);
   bRet = SetLocaleInfoA(lcid, LOCALE_IDATE, (LPSTR)test_SetLocaleInfoA);
-  EXPECT_FLAGS;
+  ok(!bRet && GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 
   /* ILDATE */
   SetLastError(0);
   bRet = SetLocaleInfoA(lcid, LOCALE_ILDATE, (LPSTR)test_SetLocaleInfoA);
-  EXPECT_FLAGS;
+  ok(!bRet && GetLastError() == ERROR_INVALID_FLAGS,
+     "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 }
 
 static BOOL CALLBACK luilocale_proc1A(LPSTR value, LONG_PTR lParam)
@@ -2135,30 +2367,40 @@ static void test_EnumUILanguageA(void)
 {
   BOOL ret;
   if (!pEnumUILanguagesA) {
-    trace("EnumUILanguagesA is not available on Win9x\n");
+    win_skip("EnumUILanguagesA is not available on Win9x or NT4\n");
     return;
   }
 
   SetLastError(ERROR_SUCCESS);
   ret = pEnumUILanguagesA(luilocale_proc1A, 0, 0);
-  EXPECT_TRUE; EXPECT_VALID;
+  if (ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+  {
+    win_skip("EnumUILanguagesA is not implemented\n");
+    return;
+  }
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
 
   enumCount = 0;
   SetLastError(ERROR_SUCCESS);
   ret = pEnumUILanguagesA(luilocale_proc2A, 0, 0);
-  EXPECT_TRUE; EXPECT_VALID;
+  ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
 
   SetLastError(ERROR_SUCCESS);
   ret = pEnumUILanguagesA(NULL, 0, 0);
-  EXPECT_FALSE; EXPECT_INVALID;
+  ok(!ret, "Expected return value FALSE, got %u\n", ret);
+  ok(GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
   SetLastError(ERROR_SUCCESS);
   ret = pEnumUILanguagesA(luilocale_proc3A, 0x5a5a5a5a, 0);
-  EXPECT_FALSE; EXPECT_FLAGS;
+  ok(!ret, "Expected return value FALSE, got %u\n", ret);
+  ok(GetLastError() == ERROR_INVALID_FLAGS, "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 
   SetLastError(ERROR_SUCCESS);
   ret = pEnumUILanguagesA(NULL, 0x5a5a5a5a, 0);
-  EXPECT_FALSE; EXPECT_INVALID;
+  ok(!ret, "Expected return value FALSE, got %u\n", ret);
+  ok(GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 }
 
 static char date_fmt_buf[1024];
@@ -2178,7 +2420,14 @@ static void test_EnumDateFormatsA(void)
 
     trace("EnumDateFormatsA 0\n");
     date_fmt_buf[0] = 0;
+    SetLastError(0xdeadbeef);
     ret = EnumDateFormatsA(enum_datetime_procA, lcid, 0);
+    if (!ret && (GetLastError() == ERROR_INVALID_FLAGS))
+    {
+        win_skip("0 for dwFlags is not supported\n");
+    }
+    else
+    {
     ok(ret, "EnumDateFormatsA(0) error %d\n", GetLastError());
     trace("%s\n", date_fmt_buf);
     /* test the 1st enumerated format */
@@ -2186,10 +2435,18 @@ static void test_EnumDateFormatsA(void)
     ret = GetLocaleInfoA(lcid, LOCALE_SSHORTDATE, buf, sizeof(buf));
     ok(ret, "GetLocaleInfoA(LOCALE_SSHORTDATE) error %d\n", GetLastError());
     ok(!lstrcmpA(date_fmt_buf, buf), "expected \"%s\" got \"%s\"\n", date_fmt_buf, buf);
+    }
 
     trace("EnumDateFormatsA LOCALE_USE_CP_ACP\n");
     date_fmt_buf[0] = 0;
+    SetLastError(0xdeadbeef);
     ret = EnumDateFormatsA(enum_datetime_procA, lcid, LOCALE_USE_CP_ACP);
+    if (!ret && (GetLastError() == ERROR_INVALID_FLAGS))
+    {
+        win_skip("LOCALE_USE_CP_ACP is not supported\n");
+    }
+    else
+    {
     ok(ret, "EnumDateFormatsA(LOCALE_USE_CP_ACP) error %d\n", GetLastError());
     trace("%s\n", date_fmt_buf);
     /* test the 1st enumerated format */
@@ -2197,6 +2454,7 @@ static void test_EnumDateFormatsA(void)
     ret = GetLocaleInfoA(lcid, LOCALE_SSHORTDATE, buf, sizeof(buf));
     ok(ret, "GetLocaleInfoA(LOCALE_SSHORTDATE) error %d\n", GetLastError());
     ok(!lstrcmpA(date_fmt_buf, buf), "expected \"%s\" got \"%s\"\n", date_fmt_buf, buf);
+    }
 
     trace("EnumDateFormatsA DATE_SHORTDATE\n");
     date_fmt_buf[0] = 0;
@@ -2235,7 +2493,8 @@ static void test_EnumDateFormatsA(void)
     if ((p = strchr(date_fmt_buf, '\n'))) *p = 0;
     ret = GetLocaleInfoA(lcid, LOCALE_SYEARMONTH, buf, sizeof(buf));
     ok(ret, "GetLocaleInfoA(LOCALE_SYEARMONTH) error %d\n", GetLastError());
-    ok(!lstrcmpA(date_fmt_buf, buf), "expected \"%s\" got \"%s\"\n", date_fmt_buf, buf);
+    ok(!lstrcmpA(date_fmt_buf, buf) || broken(!buf[0]) /* win9x */,
+       "expected \"%s\" got \"%s\"\n", date_fmt_buf, buf);
 }
 
 static void test_EnumTimeFormatsA(void)
@@ -2280,21 +2539,36 @@ static void test_GetCPInfo(void)
 
     SetLastError(0xdeadbeef);
     ret = GetCPInfo(CP_UTF7, &cpinfo);
+    if (!ret && GetLastError() == ERROR_INVALID_PARAMETER)
+    {
+        skip("Codepage CP_UTF7 is not installed/available\n");
+    }
+    else
+    {
     ok(ret, "GetCPInfo(CP_UTF7) error %u\n", GetLastError());
     ok(cpinfo.DefaultChar[0] == 0x3f, "expected 0x3f, got 0x%x\n", cpinfo.DefaultChar[0]);
     ok(cpinfo.DefaultChar[1] == 0, "expected 0, got 0x%x\n", cpinfo.DefaultChar[1]);
     ok(cpinfo.LeadByte[0] == 0, "expected 0, got 0x%x\n", cpinfo.LeadByte[0]);
     ok(cpinfo.LeadByte[1] == 0, "expected 0, got 0x%x\n", cpinfo.LeadByte[1]);
     ok(cpinfo.MaxCharSize == 5, "expected 5, got 0x%x\n", cpinfo.MaxCharSize);
+    }
 
     SetLastError(0xdeadbeef);
     ret = GetCPInfo(CP_UTF8, &cpinfo);
+    if (!ret && GetLastError() == ERROR_INVALID_PARAMETER)
+    {
+        skip("Codepage CP_UTF8 is not installed/available\n");
+    }
+    else
+    {
     ok(ret, "GetCPInfo(CP_UTF8) error %u\n", GetLastError());
     ok(cpinfo.DefaultChar[0] == 0x3f, "expected 0x3f, got 0x%x\n", cpinfo.DefaultChar[0]);
     ok(cpinfo.DefaultChar[1] == 0, "expected 0, got 0x%x\n", cpinfo.DefaultChar[1]);
     ok(cpinfo.LeadByte[0] == 0, "expected 0, got 0x%x\n", cpinfo.LeadByte[0]);
     ok(cpinfo.LeadByte[1] == 0, "expected 0, got 0x%x\n", cpinfo.LeadByte[1]);
-    ok(cpinfo.MaxCharSize == 4, "expected 5, got 0x%x\n", cpinfo.MaxCharSize);
+        ok(cpinfo.MaxCharSize == 4 || broken(cpinfo.MaxCharSize == 3) /* win9x */,
+           "expected 4, got %u\n", cpinfo.MaxCharSize);
+}
 }
 
 START_TEST(locale)
@@ -2304,6 +2578,7 @@ START_TEST(locale)
   test_EnumTimeFormatsA();
   test_EnumDateFormatsA();
   test_GetLocaleInfoA();
+  test_GetLocaleInfoW();
   test_GetTimeFormatA();
   test_GetDateFormatA();
   test_GetDateFormatW();

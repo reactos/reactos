@@ -54,10 +54,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
     DD_D3DBUFCALLBACKS D3dBufferCallbacks;
     DDSURFACEDESC2 D3dTextureFormats[100];
-    DWORD NumHeaps = 0;
     VIDEOMEMORY vmList;
-    DWORD NumFourCC = 0;
-    DWORD FourCC = 0;
 
     /* clear data */
     memset(&vmList,0,sizeof(VIDEOMEMORY));

@@ -24,16 +24,41 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "wine/test.h"
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
 #include "wincon.h"
 #include "winnls.h"
+#include "winternl.h"
+
+#include "wine/test.h"
+
+#define expect_eq_d(expected, actual) \
+    do { \
+      int value = (actual); \
+      ok((expected) == value, "Expected " #actual " to be %d (" #expected ") is %d\n", \
+          (expected), value); \
+    } while (0)
+#define expect_eq_s(expected, actual) \
+    do { \
+      LPCSTR value = (actual); \
+      ok(lstrcmpA((expected), value) == 0, "Expected " #actual " to be L\"%s\" (" #expected ") is L\"%s\"\n", \
+          expected, value); \
+    } while (0)
+#define expect_eq_ws_i(expected, actual) \
+    do { \
+      LPCWSTR value = (actual); \
+      ok(lstrcmpiW((expected), value) == 0, "Expected " #actual " to be L\"%s\" (" #expected ") is L\"%s\"\n", \
+          wine_dbgstr_w(expected), wine_dbgstr_w(value)); \
+    } while (0)
 
 static HINSTANCE hkernel32;
 static LPVOID (WINAPI *pVirtualAllocEx)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
 static BOOL   (WINAPI *pVirtualFreeEx)(HANDLE, LPVOID, SIZE_T, DWORD);
+static BOOL   (WINAPI *pQueryFullProcessImageNameA)(HANDLE hProcess, DWORD dwFlags, LPSTR lpExeName, PDWORD lpdwSize);
+static BOOL   (WINAPI *pQueryFullProcessImageNameW)(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 
 /* ############################### */
 static char     base[MAX_PATH];
@@ -124,7 +149,6 @@ static char*    decodeA(const char* str)
     return ptr;
 }
 
-#if 0
 /* This will be needed to decode Unicode strings saved by the child process
  * when we test Unicode functions.
  */
@@ -145,7 +169,6 @@ static WCHAR*   decodeW(const char* str)
     ptr[len] = '\0';
     return ptr;
 }
-#endif
 
 /******************************************************************
  *		init
@@ -173,6 +196,8 @@ static int     init(void)
     hkernel32 = GetModuleHandleA("kernel32");
     pVirtualAllocEx = (void *) GetProcAddress(hkernel32, "VirtualAllocEx");
     pVirtualFreeEx = (void *) GetProcAddress(hkernel32, "VirtualFreeEx");
+    pQueryFullProcessImageNameA = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameA");
+    pQueryFullProcessImageNameW = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameW");
     return 1;
 }
 
@@ -239,7 +264,7 @@ static void     doChild(const char* file, const char* option)
                 siA.dwX, siA.dwY, siA.dwXSize, siA.dwYSize,
                 siA.dwXCountChars, siA.dwYCountChars, siA.dwFillAttribute,
                 siA.dwFlags, siA.wShowWindow,
-                (DWORD)siA.hStdInput, (DWORD)siA.hStdOutput, (DWORD)siA.hStdError);
+                (DWORD_PTR)siA.hStdInput, (DWORD_PTR)siA.hStdOutput, (DWORD_PTR)siA.hStdError);
 
     /* since GetStartupInfoW is only implemented in win2k,
      * zero out before calling so we can notice the difference
@@ -256,7 +281,7 @@ static void     doChild(const char* file, const char* option)
                 siW.dwX, siW.dwY, siW.dwXSize, siW.dwYSize,
                 siW.dwXCountChars, siW.dwYCountChars, siW.dwFillAttribute,
                 siW.dwFlags, siW.wShowWindow,
-                (DWORD)siW.hStdInput, (DWORD)siW.hStdOutput, (DWORD)siW.hStdError);
+                (DWORD_PTR)siW.hStdInput, (DWORD_PTR)siW.hStdOutput, (DWORD_PTR)siW.hStdError);
 
     /* Arguments */
     childPrintf(hFile, "[Arguments]\nargcA=%d\n", myARGC);
@@ -348,8 +373,18 @@ static void     doChild(const char* file, const char* option)
             childPrintf(hFile, "OutputMode=%ld\n", modeOut);
 
         /* now that we have written all relevant information, let's change it */
-        ok(SetConsoleCP(1252), "Setting CP\n");
+        SetLastError(0xdeadbeef);
+        ret = SetConsoleCP(1252);
+        if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+        {
+            win_skip("Setting the codepage is not implemented\n");
+        }
+        else
+        {
+            ok(ret, "Setting CP\n");
         ok(SetConsoleOutputCP(1252), "Setting SB CP\n");
+        }
+
         ret = SetConsoleMode(hConIn, modeIn ^ 1);
         ok( ret, "Setting mode (%d)\n", GetLastError());
         ret = SetConsoleMode(hConOut, modeOut ^ 1);
@@ -397,6 +432,18 @@ static char* getChildString(const char* sect, const char* key)
     return ret;
 }
 
+static WCHAR* getChildStringW(const char* sect, const char* key)
+{
+    char        buf[1024+4*MAX_LISTED_ENV_VAR];
+    WCHAR*       ret;
+
+    GetPrivateProfileStringA(sect, key, "-", buf, sizeof(buf), resfile);
+    if (buf[0] == '\0' || (buf[0] == '-' && buf[1] == '\0')) return NULL;
+    assert(!(strlen(buf) & 1));
+    ret = decodeW(buf);
+    return ret;
+}
+
 /* FIXME: this may be moved to the wtmain.c file, because it may be needed by
  * others... (windows uses stricmp while Un*x uses strcasecmp...)
  */
@@ -432,8 +479,35 @@ static void ok_child_string( int line, const char *sect, const char *key,
                          sect, key, expect ? expect : "(null)", result );
 }
 
+static void ok_child_stringWA( int line, const char *sect, const char *key,
+                             const char *expect, int sensitive )
+{
+    WCHAR* expectW;
+    CHAR* resultA;
+    DWORD len;
+    WCHAR* result = getChildStringW( sect, key );
+
+    len = MultiByteToWideChar( CP_ACP, 0, expect, -1, NULL, 0);
+    expectW = HeapAlloc(GetProcessHeap(),0,len*sizeof(WCHAR));
+    MultiByteToWideChar( CP_ACP, 0, expect, -1, expectW, len);
+
+    len = WideCharToMultiByte( CP_ACP, 0, result, -1, NULL, 0, NULL, NULL);
+    resultA = HeapAlloc(GetProcessHeap(),0,len*sizeof(CHAR));
+    WideCharToMultiByte( CP_ACP, 0, result, -1, resultA, len, NULL, NULL);
+
+    if (sensitive)
+        ok_(__FILE__, line)( lstrcmpW(result, expectW) == 0, "%s:%s expected '%s', got '%s'\n",
+                         sect, key, expect ? expect : "(null)", resultA );
+    else
+        ok_(__FILE__, line)( lstrcmpiW(result, expectW) == 0, "%s:%s expected '%s', got '%s'\n",
+                         sect, key, expect ? expect : "(null)", resultA );
+    HeapFree(GetProcessHeap(),0,expectW);
+    HeapFree(GetProcessHeap(),0,resultA);
+}
+
 #define okChildString(sect, key, expect) ok_child_string(__LINE__, (sect), (key), (expect), 1 )
 #define okChildIString(sect, key, expect) ok_child_string(__LINE__, (sect), (key), (expect), 0 )
+#define okChildStringWA(sect, key, expect) ok_child_stringWA(__LINE__, (sect), (key), (expect), 1 )
 
 /* using !expect ensures that the test will fail if the sect/key isn't present
  * in result file
@@ -441,7 +515,7 @@ static void ok_child_string( int line, const char *sect, const char *key,
 #define okChildInt(sect, key, expect) \
     do { \
         UINT result = GetPrivateProfileIntA((sect), (key), !(expect), resfile); \
-        ok(result == expect, "%s:%s expected %d, but got %d\n", (sect), (key), (int)(expect), result); \
+        ok(result == expect, "%s:%s expected %u, but got %u\n", (sect), (key), (UINT)(expect), result); \
    } while (0)
 
 static void test_Startup(void)
@@ -450,7 +524,7 @@ static void test_Startup(void)
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup,si;
     static CHAR title[]   = "I'm the title string",
-                desktop[] = "I'm the desktop string",
+                desktop[] = "winsta0\\default",
                 empty[]   = "";
 
     /* let's start simplistic */
@@ -470,8 +544,6 @@ static void test_Startup(void)
     GetStartupInfoA(&si);
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", si.lpDesktop);
-    ok (si.lpTitle == NULL || !strncmp(si.lpTitle, selfname, strlen(selfname)),
-        "StartupInfoA:lpTitle expected something starting with '%s' or null, got '%s'\n", selfname, si.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -719,6 +791,7 @@ static void test_Startup(void)
 static void test_CommandLine(void)
 {
     char                buffer[MAX_PATH], fullpath[MAX_PATH], *lpFilePart, *p;
+    char                buffer2[MAX_PATH];
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup;
     DWORD               len;
@@ -804,9 +877,9 @@ static void test_CommandLine(void)
     assert ( lpFilePart != 0);
     *(lpFilePart -1 ) = 0;
     p = strrchr(fullpath, '\\');
-    assert (p);
     /* Use exename to avoid buffer containing things like 'C:' */
-    sprintf(buffer, "..%s/%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", p, exename, resfile);
+    if (p) sprintf(buffer, "..%s/%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", p, exename, resfile);
+    else sprintf(buffer, "./%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", exename, resfile);
     SetLastError(0xdeadbeef);
     ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
     ok(ret, "CreateProcess (%s) failed : %d\n", buffer, GetLastError());
@@ -814,11 +887,102 @@ static void test_CommandLine(void)
     ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
     /* child process has changed result file, so let profile functions know about it */
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
-    sprintf(buffer, "..%s/%s", p, exename);
+    if (p) sprintf(buffer, "..%s/%s", p, exename);
+    else sprintf(buffer, "./%s", exename);
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
     
+    /* Using AppName */
+    get_file_name(resfile);
+    len = GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
+    assert ( lpFilePart != 0);
+    *(lpFilePart -1 ) = 0;
+    p = strrchr(fullpath, '\\');
+    /* Use exename to avoid buffer containing things like 'C:' */
+    if (p) sprintf(buffer, "..%s/%s", p, exename);
+    else sprintf(buffer, "./%s", exename);
+    sprintf(buffer2, "dummy tests/process.c %s \"a\\\"b\\\\\" c\\\" d", resfile);
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer, buffer2, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(ret, "CreateProcess (%s) failed : %d\n", buffer, GetLastError());
+    /* wait for child to terminate */
+    ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    /* child process has changed result file, so let profile functions know about it */
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+    sprintf(buffer, "tests/process.c %s", resfile);
+    okChildString("Arguments", "argvA0", "dummy");
+    okChildString("Arguments", "CommandLineA", buffer2);
+    okChildStringWA("Arguments", "CommandLineW", buffer2);
+    release_memory();
+    assert(DeleteFileA(resfile) != 0);
+
+    if (0) /* Test crashes on NT-based Windows. */
+    {
+        /* Test NULL application name and command line parameters. */
+        SetLastError(0xdeadbeef);
+        ret = CreateProcessA(NULL, NULL, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+        ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+        ok(GetLastError() == ERROR_INVALID_PARAMETER,
+           "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+}
+
+    buffer[0] = '\0';
+
+    /* Test empty application name parameter. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer, NULL, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_PATH_NOT_FOUND ||
+       broken(GetLastError() == ERROR_FILE_NOT_FOUND) /* Win9x/WinME */ ||
+       broken(GetLastError() == ERROR_ACCESS_DENIED) /* Win98 */,
+       "Expected ERROR_PATH_NOT_FOUND, got %d\n", GetLastError());
+
+    buffer2[0] = '\0';
+
+    /* Test empty application name and command line parameters. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer, buffer2, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_PATH_NOT_FOUND ||
+       broken(GetLastError() == ERROR_FILE_NOT_FOUND) /* Win9x/WinME */ ||
+       broken(GetLastError() == ERROR_ACCESS_DENIED) /* Win98 */,
+       "Expected ERROR_PATH_NOT_FOUND, got %d\n", GetLastError());
+
+    /* Test empty command line parameter. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer2, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
+       GetLastError() == ERROR_PATH_NOT_FOUND /* NT4 */ ||
+       GetLastError() == ERROR_BAD_PATHNAME /* Win98 */ ||
+       GetLastError() == ERROR_INVALID_PARAMETER /* Win7 */,
+       "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    strcpy(buffer, "doesnotexist.exe");
+    strcpy(buffer2, "does not exist.exe");
+
+    /* Test nonexistent application name. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer, NULL, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer2, NULL, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    /* Test nonexistent command line parameter. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer2, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
 }
 
 static void test_Directory(void)
@@ -1061,6 +1225,7 @@ static  void    test_SuspendFlag(void)
 static  void    test_DebuggingFlag(void)
 {
     char                buffer[MAX_PATH];
+    void               *processbase = NULL;
     PROCESS_INFORMATION	info;
     STARTUPINFOA       startup, us;
     DEBUG_EVENT         de;
@@ -1081,7 +1246,15 @@ static  void    test_DebuggingFlag(void)
     {
         ok(WaitForDebugEvent(&de, INFINITE), "reading debug event\n");
         ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
+        if (!dbg)
+        {
+            ok(de.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT,
+               "first event: %d\n", de.dwDebugEventCode);
+            processbase = de.u.CreateProcessInfo.lpBaseOfImage;
+        }
         if (de.dwDebugEventCode != EXCEPTION_DEBUG_EVENT) dbg++;
+        ok(de.dwDebugEventCode != LOAD_DLL_DEBUG_EVENT ||
+           de.u.LoadDll.lpBaseOfDll != processbase, "got LOAD_DLL for main module\n");
     } while (de.dwDebugEventCode != EXIT_PROCESS_DEBUG_EVENT);
 
     ok(dbg, "I have seen a debug event\n");
@@ -1127,6 +1300,7 @@ static void test_Console(void)
     HANDLE              hChildIn, hChildInInh, hChildOut, hChildOutInh, hParentIn, hParentOut;
     const char*         msg = "This is a std-handle inheritance test.";
     unsigned            msg_len;
+    BOOL                run_tests = TRUE;
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
@@ -1182,13 +1356,18 @@ static void test_Console(void)
     /* Try to set invalid CP */
     SetLastError(0xdeadbeef);
     ok(!SetConsoleCP(0), "Shouldn't succeed\n");
-    ok(GetLastError()==ERROR_INVALID_PARAMETER,
+    ok(GetLastError()==ERROR_INVALID_PARAMETER ||
+       broken(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), /* win9x */
        "GetLastError: expecting %u got %u\n",
        ERROR_INVALID_PARAMETER, GetLastError());
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+        run_tests = FALSE;
+
 
     SetLastError(0xdeadbeef);
     ok(!SetConsoleOutputCP(0), "Shouldn't succeed\n");
-    ok(GetLastError()==ERROR_INVALID_PARAMETER,
+    ok(GetLastError()==ERROR_INVALID_PARAMETER ||
+       broken(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), /* win9x */
        "GetLastError: expecting %u got %u\n",
        ERROR_INVALID_PARAMETER, GetLastError());
 
@@ -1212,9 +1391,9 @@ static void test_Console(void)
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
 
     /* check child correctly inherited the console */
-    okChildInt("StartupInfoA", "hStdInput", (DWORD)startup.hStdInput);
-    okChildInt("StartupInfoA", "hStdOutput", (DWORD)startup.hStdOutput);
-    okChildInt("StartupInfoA", "hStdError", (DWORD)startup.hStdError);
+    okChildInt("StartupInfoA", "hStdInput", (DWORD_PTR)startup.hStdInput);
+    okChildInt("StartupInfoA", "hStdOutput", (DWORD_PTR)startup.hStdOutput);
+    okChildInt("StartupInfoA", "hStdError", (DWORD_PTR)startup.hStdError);
     okChildInt("Console", "SizeX", (DWORD)sbi.dwSize.X);
     okChildInt("Console", "SizeY", (DWORD)sbi.dwSize.Y);
     okChildInt("Console", "CursorX", (DWORD)sbi.dwCursorPosition.X);
@@ -1231,8 +1410,14 @@ static void test_Console(void)
     okChildInt("Console", "InputMode", modeIn);
     okChildInt("Console", "OutputMode", modeOut);
 
+    if (run_tests)
+    {
     ok(cpInC == 1252, "Wrong console CP (expected 1252 got %d/%d)\n", cpInC, cpIn);
     ok(cpOutC == 1252, "Wrong console-SB CP (expected 1252 got %d/%d)\n", cpOutC, cpOut);
+    }
+    else
+        win_skip("Setting the codepage is not implemented\n");
+
     ok(modeInC == (modeIn ^ 1), "Wrong console mode\n");
     ok(modeOutC == (modeOut ^ 1), "Wrong console-SB mode\n");
     trace("cursor position(X): %d/%d\n",sbi.dwCursorPosition.X, sbiC.dwCursorPosition.X);
@@ -1323,7 +1508,7 @@ static void test_OpenProcess(void)
 
     /* not exported in all windows versions */
     if ((!pVirtualAllocEx) || (!pVirtualFreeEx)) {
-        skip("VirtualAllocEx not found\n");
+        win_skip("VirtualAllocEx not found\n");
         return;
     }
 
@@ -1337,7 +1522,7 @@ static void test_OpenProcess(void)
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {   /* Win9x */
         CloseHandle(hproc);
-        skip("VirtualAllocEx not implemented\n");
+        win_skip("VirtualAllocEx not implemented\n");
         return;
     }
     ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %d\n", GetLastError());
@@ -1399,6 +1584,190 @@ static void test_OpenProcess(void)
     ok(VirtualFree(addr1, 0, MEM_RELEASE), "VirtualFree failed\n");
 }
 
+static void test_GetProcessVersion(void)
+{
+    static char cmdline[] = "winver.exe";
+    PROCESS_INFORMATION pi;
+    STARTUPINFOA si;
+    DWORD ret;
+
+    SetLastError(0xdeadbeef);
+    ret = GetProcessVersion(0);
+    ok(ret, "GetProcessVersion error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = GetProcessVersion(GetCurrentProcessId());
+    ok(ret, "GetProcessVersion error %u\n", GetLastError());
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    SetLastError(0xdeadbeef);
+    ok(ret, "CreateProcess error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = GetProcessVersion(pi.dwProcessId);
+    ok(ret, "GetProcessVersion error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = TerminateProcess(pi.hProcess, 0);
+    ok(ret, "TerminateProcess error %u\n", GetLastError());
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+}
+
+static void test_ProcessNameA(void)
+{
+#define INIT_STR "Just some words"
+    DWORD length, size;
+    CHAR buf[1024];
+
+    if (!pQueryFullProcessImageNameA)
+    {
+        win_skip("QueryFullProcessImageNameA unavailable (added in Windows Vista)\n");
+        return;
+    }
+    /* get the buffer length without \0 terminator */
+    length = 1024;
+    expect_eq_d(TRUE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, buf, &length));
+    expect_eq_d(length, lstrlenA(buf));
+
+    /*  when the buffer is too small
+     *  - function fail with error ERROR_INSUFFICIENT_BUFFER
+     *  - the size variable is not modified
+     * tested with the biggest too small size
+     */
+    size = length;
+    sprintf(buf,INIT_STR);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, buf, &size));
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+    expect_eq_d(length, size);
+    expect_eq_s(INIT_STR, buf);
+
+    /* retest with smaller buffer size
+     */
+    size = 4;
+    sprintf(buf,INIT_STR);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, buf, &size));
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+    expect_eq_d(4, size);
+    expect_eq_s(INIT_STR, buf);
+
+    /* this is a difference between the ascii and the unicode version
+     * the unicode version crashes when the size is big enough to hold the result
+     * ascii version throughs an error
+     */
+    size = 1024;
+    expect_eq_d(FALSE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, NULL, &size));
+    expect_eq_d(1024, size);
+    expect_eq_d(ERROR_INVALID_PARAMETER, GetLastError());
+}
+
+static void test_ProcessName(void)
+{
+    HANDLE hSelf;
+    WCHAR module_name[1024];
+    WCHAR deviceW[] = {'\\','D', 'e','v','i','c','e',0};
+    WCHAR buf[1024];
+    DWORD size;
+
+    if (!pQueryFullProcessImageNameW)
+    {
+        win_skip("QueryFullProcessImageNameW unavailable (added in Windows Vista)\n");
+        return;
+    }
+
+    ok(GetModuleFileNameW(NULL, module_name, 1024), "GetModuleFileNameW(NULL, ...) failed\n");
+
+    /* GetCurrentProcess pseudo-handle */
+    size = sizeof(buf) / sizeof(buf[0]);
+    expect_eq_d(TRUE, pQueryFullProcessImageNameW(GetCurrentProcess(), 0, buf, &size));
+    expect_eq_d(lstrlenW(buf), size);
+    expect_eq_ws_i(buf, module_name);
+
+    hSelf = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
+    /* Real handle */
+    size = sizeof(buf) / sizeof(buf[0]);
+    expect_eq_d(TRUE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
+    expect_eq_d(lstrlenW(buf), size);
+    expect_eq_ws_i(buf, module_name);
+
+    /* Buffer too small */
+    size = lstrlenW(module_name)/2;
+    lstrcpyW(buf, deviceW);
+    SetLastError(0xdeadbeef);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
+    expect_eq_d(lstrlenW(module_name)/2, size);  /* size not changed(!) */
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+    expect_eq_ws_i(deviceW, buf);  /* buffer not changed */
+
+    /* Too small - not space for NUL terminator */
+    size = lstrlenW(module_name);
+    SetLastError(0xdeadbeef);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
+    expect_eq_d(lstrlenW(module_name), size);  /* size not changed(!) */
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+
+    /* NULL buffer */
+    size = 0;
+    expect_eq_d(FALSE, pQueryFullProcessImageNameW(hSelf, 0, NULL, &size));
+    expect_eq_d(0, size);
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+
+    /* native path */
+    size = sizeof(buf) / sizeof(buf[0]);
+    expect_eq_d(TRUE, pQueryFullProcessImageNameW(hSelf, PROCESS_NAME_NATIVE, buf, &size));
+    expect_eq_d(lstrlenW(buf), size);
+    ok(buf[0] == '\\', "NT path should begin with '\\'\n");
+    todo_wine ok(memcmp(buf, deviceW, sizeof(WCHAR)*lstrlenW(deviceW)) == 0, "NT path should begin with \\Device\n");
+
+    /* Buffer too small */
+    size = lstrlenW(module_name)/2;
+    SetLastError(0xdeadbeef);
+    lstrcpyW(buf, module_name);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
+    expect_eq_d(lstrlenW(module_name)/2, size);  /* size not changed(!) */
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+    expect_eq_ws_i(module_name, buf);  /* buffer not changed */
+
+    CloseHandle(hSelf);
+}
+
+static void test_Handles(void)
+{
+    HANDLE handle = GetCurrentProcess();
+    BOOL ret;
+    DWORD code;
+
+    ok( handle == (HANDLE)~(ULONG_PTR)0 ||
+        handle == (HANDLE)(ULONG_PTR)0x7fffffff /* win9x */,
+        "invalid current process handle %p\n", handle );
+    ret = GetExitCodeProcess( handle, &code );
+    ok( ret, "GetExitCodeProcess failed err %u\n", GetLastError() );
+#ifdef _WIN64
+    /* truncated handle */
+    SetLastError( 0xdeadbeef );
+    handle = (HANDLE)((ULONG_PTR)handle & ~0u);
+    ret = GetExitCodeProcess( handle, &code );
+    ok( !ret, "GetExitCodeProcess succeeded for %p\n", handle );
+    ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+    /* sign-extended handle */
+    SetLastError( 0xdeadbeef );
+    handle = (HANDLE)((LONG_PTR)(int)(ULONG_PTR)handle);
+    ret = GetExitCodeProcess( handle, &code );
+    ok( ret, "GetExitCodeProcess failed err %u\n", GetLastError() );
+    /* invalid high-word */
+    SetLastError( 0xdeadbeef );
+    handle = (HANDLE)(((ULONG_PTR)handle & ~0u) + ((ULONG_PTR)1 << 32));
+    ret = GetExitCodeProcess( handle, &code );
+    ok( !ret, "GetExitCodeProcess succeeded for %p\n", handle );
+    ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+#endif
+}
+
 START_TEST(process)
 {
     int b = init();
@@ -1419,6 +1788,10 @@ START_TEST(process)
     test_Console();
     test_ExitCode();
     test_OpenProcess();
+    test_GetProcessVersion();
+    test_ProcessNameA();
+    test_ProcessName();
+    test_Handles();
     /* things that can be tested:
      *  lookup:         check the way program to be executed is searched
      *  handles:        check the handle inheritance stuff (+sec options)

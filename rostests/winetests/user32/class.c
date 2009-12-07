@@ -39,15 +39,17 @@ static const WCHAR WC_EDITW[] = {'E','d','i','t',0};
 
 #define NUMCLASSWORDS 4
 
-#define IS_WNDPROC_HANDLE(x) (((ULONG_PTR)(x) >> 16) == (~((ULONG_PTR)0) >> 16))
+#define IS_WNDPROC_HANDLE(x) (((ULONG_PTR)(x) >> 16) == (~0u >> 16))
 
 static LRESULT WINAPI ClassTest_WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    if (msg == WM_NCCREATE) return 1;
     return DefWindowProcW (hWnd, msg, wParam, lParam);
 }
 
 static LRESULT WINAPI ClassTest_WndProc2 (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    if (msg == WM_NCCREATE) return 1;
     return DefWindowProcA (hWnd, msg, wParam, lParam);
 }
 
@@ -234,42 +236,48 @@ static void test_styles(void)
     check_style( "#32772",     1, 0, 0 );  /* icon title */
 }
 
-static void check_class(HINSTANCE inst, const char *name, const char *menu_name)
+static void check_class_(int line, HINSTANCE inst, const char *name, const char *menu_name)
 {
     WNDCLASS wc;
     UINT atom = GetClassInfo(inst,name,&wc);
-    ok( atom, "Class %s %p not found\n", name, inst );
+    ok_(__FILE__,line)( atom, "Class %s %p not found\n", name, inst );
     if (atom)
     {
         if (wc.lpszMenuName && menu_name)
-            ok( !strcmp( menu_name, wc.lpszMenuName ), "Wrong name %s/%s for class %s %p\n",
+            ok_(__FILE__,line)( !strcmp( menu_name, wc.lpszMenuName ),
+                                "Wrong name %s/%s for class %s %p\n",
                 wc.lpszMenuName, menu_name, name, inst );
         else
-            ok( !menu_name == !wc.lpszMenuName, "Wrong name %p/%p for class %s %p\n",
+            ok_(__FILE__,line)( !menu_name == !wc.lpszMenuName, "Wrong name %p/%p for class %s %p\n",
                 wc.lpszMenuName, menu_name, name, inst );
     }
 }
+#define check_class(inst,name,menu) check_class_(__LINE__,inst,name,menu)
 
-static void check_instance( const char *name, HINSTANCE inst, HINSTANCE info_inst, HINSTANCE gcl_inst )
+static void check_instance_( int line, const char *name, HINSTANCE inst,
+                             HINSTANCE info_inst, HINSTANCE gcl_inst )
 {
     WNDCLASSA wc;
     HWND hwnd;
 
-    ok( GetClassInfo( inst, name, &wc ), "Couldn't find class %s inst %p\n", name, inst );
-    ok( wc.hInstance == info_inst, "Wrong info instance %p/%p for class %s\n",
+    ok_(__FILE__,line)( GetClassInfo( inst, name, &wc ), "Couldn't find class %s inst %p\n", name, inst );
+    ok_(__FILE__,line)( wc.hInstance == info_inst, "Wrong info instance %p/%p for class %s\n",
         wc.hInstance, info_inst, name );
     hwnd = CreateWindowExA( 0, name, "test_window", 0, 0, 0, 0, 0, 0, 0, inst, 0 );
-    ok( hwnd != NULL, "Couldn't create window for class %s inst %p\n", name, inst );
-    ok( (HINSTANCE)GetClassLongPtrA( hwnd, GCLP_HMODULE ) == gcl_inst,
+    ok_(__FILE__,line)( hwnd != NULL, "Couldn't create window for class %s inst %p\n", name, inst );
+    ok_(__FILE__,line)( (HINSTANCE)GetClassLongPtrA( hwnd, GCLP_HMODULE ) == gcl_inst,
         "Wrong GCL instance %p/%p for class %s\n",
         (HINSTANCE)GetClassLongPtrA( hwnd, GCLP_HMODULE ), gcl_inst, name );
-    ok( (HINSTANCE)GetWindowLongPtrA( hwnd, GWLP_HINSTANCE ) == inst,
+    ok_(__FILE__,line)( (HINSTANCE)GetWindowLongPtrA( hwnd, GWLP_HINSTANCE ) == inst,
         "Wrong GWL instance %p/%p for window %s\n",
         (HINSTANCE)GetWindowLongPtrA( hwnd, GWLP_HINSTANCE ), inst, name );
-    ok(!UnregisterClassA(name, inst), "UnregisterClassA should fail while exists a class window\n");
-    ok(GetLastError() == ERROR_CLASS_HAS_WINDOWS, "GetLastError() should be set to ERROR_CLASS_HAS_WINDOWS not %d\n", GetLastError());
+    ok_(__FILE__,line)(!UnregisterClassA(name, inst),
+                       "UnregisterClassA should fail while exists a class window\n");
+    ok_(__FILE__,line)(GetLastError() == ERROR_CLASS_HAS_WINDOWS,
+                       "GetLastError() should be set to ERROR_CLASS_HAS_WINDOWS not %d\n", GetLastError());
     DestroyWindow(hwnd);
 }
+#define check_instance(name,inst,info_inst,gcl_inst) check_instance_(__LINE__,name,inst,info_inst,gcl_inst)
 
 struct class_info
 {
@@ -279,7 +287,7 @@ struct class_info
 
 static DWORD WINAPI thread_proc(void *param)
 {
-    struct class_info *class_info = (struct class_info *)param;
+    struct class_info *class_info = param;
 
     check_instance(class_info->name, class_info->inst, class_info->info_inst, class_info->gcl_inst);
 
@@ -364,6 +372,7 @@ static void test_instances(void)
 
     /* setting global flag doesn't change status of class */
     hwnd = CreateWindowExA( 0, name, "test", 0, 0, 0, 0, 0, 0, 0, main_module, 0 );
+    ok( hwnd != 0, "CreateWindow failed error %u\n", GetLastError());
     SetClassLongA( hwnd, GCL_STYLE, CS_GLOBALCLASS );
     cls.lpszMenuName  = "kernel32";
     cls.hInstance = kernel32;
@@ -415,7 +424,7 @@ static void test_instances(void)
     cls.style = 3;
     ok( RegisterClassA( &cls ), "Failed to register local class for deadbeef\n" );
     hwnd2 = CreateWindowExA( 0, name, "test_window", 0, 0, 0, 0, 0, 0, 0, NULL, 0 );
-    ok( (HINSTANCE)GetClassLongPtrA( hwnd2, GCLP_HMODULE ) == (HINSTANCE)0xdeadbeef,
+    ok( GetClassLongPtrA( hwnd2, GCLP_HMODULE ) == 0xdeadbeef,
         "Didn't get deadbeef class for null instance\n" );
     DestroyWindow( hwnd2 );
     ok( UnregisterClassA( name, (HINSTANCE)0xdeadbeef ), "Unregister failed for deadbeef\n" );
@@ -554,10 +563,7 @@ static void test_instances(void)
     ok( !UnregisterClass( "BUTTON", (HINSTANCE)0x87654321 ), "Unregistered button a second time\n" );
     ok( GetLastError() == ERROR_CLASS_DOES_NOT_EXIST, "Wrong error code %d\n", GetLastError() );
     ok( !GetClassInfo( 0, "BUTTON", &wc ), "Button still exists\n" );
-    ok( GetLastError() == ERROR_CLASS_DOES_NOT_EXIST ||
-        GetLastError() == ERROR_INVALID_PARAMETER || /* W2K3 */
-        GetLastError() == ERROR_SUCCESS /* Vista */,
-        "Wrong error code %d\n", GetLastError() );
+    /* last error not set reliably */
 
     /* we can change the instance of a system class */
     check_instance( "EDIT", (HINSTANCE)0xdeadbeef, (HINSTANCE)0xdeadbeef, user32 );
@@ -566,17 +572,19 @@ static void test_instances(void)
     SetClassLongPtrA( hwnd, GCLP_HMODULE, 0xdeadbeef );
     check_instance( "EDIT", (HINSTANCE)0x12345678, (HINSTANCE)0x12345678, (HINSTANCE)0xdeadbeef );
     check_thread_instance( "EDIT", (HINSTANCE)0x12345678, (HINSTANCE)0x12345678, (HINSTANCE)0xdeadbeef );
+    DestroyWindow(hwnd);
 }
 
 static void test_builtinproc(void)
 {
-    /* Edit behaves differently. ScrollBar have currently only a Unicode winproc */
+    /* Edit behaves differently */
     static const CHAR NORMAL_CLASSES[][10] = {
         "Button",
         "Static",
         "ComboBox",
         "ComboLBox",
         "ListBox",
+        "ScrollBar",
         "#32770",  /* dialog */
     };
     static const int NUM_NORMAL_CLASSES = (sizeof(NORMAL_CLASSES)/sizeof(NORMAL_CLASSES[0]));
@@ -700,6 +708,7 @@ static void test_builtinproc(void)
 
         oldproc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ClassTest_WndProc);
         ok(IS_WNDPROC_HANDLE(oldproc) == FALSE, "Class %s shouldn't return a handle\n", NORMAL_CLASSES[i]);
+        SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)oldproc);
         DestroyWindow(hwnd);
     }
 
@@ -740,6 +749,8 @@ static void test_builtinproc(void)
     CallWindowProcW((WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC), hwnd, WM_GETTEXT, 120, (LPARAM)buf);
     ok(memcmp(buf, classW, sizeof(classW)) == 0, "WM_GETTEXT invalid return\n");
 
+    SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)oldproc);
+
     DestroyWindow(hwnd);
 
     hwnd = CreateWindowA(WC_EDITA, classA, WS_OVERLAPPEDWINDOW,
@@ -761,7 +772,7 @@ static void test_builtinproc(void)
     CallWindowProcW((WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC), hwnd, WM_GETTEXT, 120, (LPARAM)buf);
     ok(memcmp(buf, classW, sizeof(classW)) == 0, "WM_GETTEXT invalid return\n");
 
-    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ClassTest_WndProc);
+    oldproc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ClassTest_WndProc);
     SetWindowTextW(hwnd, unistring);
     CallWindowProcW((WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC), hwnd, WM_GETTEXT, 120, (LPARAM)buf);
     ok(memcmp(buf, unistring, sizeof(unistring)) == 0, "WM_GETTEXT invalid return\n");
@@ -773,6 +784,8 @@ static void test_builtinproc(void)
     SetWindowTextW(hwnd, classW);
     CallWindowProcA((WNDPROC)GetWindowLongPtrA(hwnd, GWLP_WNDPROC), hwnd, WM_GETTEXT, 120, (LPARAM)buf);
     ok(memcmp(buf, classA, sizeof(classA)) == 0, "WM_GETTEXT invalid return\n");
+
+    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)oldproc);
 
     DestroyWindow(hwnd);
 }
@@ -796,13 +809,11 @@ static BOOL RegisterTestDialog(HINSTANCE hInstance)
     wcx.hInstance = hInstance;
     wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wcx.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wcx.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    wcx.hbrBackground = GetStockObject(WHITE_BRUSH);
     wcx.lpszClassName = "TestDialog";
     wcx.lpszMenuName =  "TestDialog";
-    wcx.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(5),
-        IMAGE_ICON,
-        GetSystemMetrics(SM_CXSMICON),
-        GetSystemMetrics(SM_CYSMICON),
+    wcx.hIconSm = LoadImage(hInstance, MAKEINTRESOURCE(5), IMAGE_ICON,
+        GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
         LR_DEFAULTCOLOR);
 
     atom = RegisterClassEx(&wcx);
@@ -813,7 +824,7 @@ static BOOL RegisterTestDialog(HINSTANCE hInstance)
 
 /* test registering a dialog box created by using the CLASS directive in a
    resource file, then test creating the dialog using CreateDialogParam. */
-static void WINAPI CreateDialogParamTest(HINSTANCE hInstance)
+static void CreateDialogParamTest(HINSTANCE hInstance)
 {
     HWND hWndMain;
 
@@ -826,9 +837,41 @@ static void WINAPI CreateDialogParamTest(HINSTANCE hInstance)
     }
 }
 
+static const struct
+{
+    const char name[9];
+    int value;
+    int badvalue;
+} extra_values[] =
+{
+    {"#32770",30,30}, /* Dialog */
+#ifdef _WIN64
+    {"Edit",8,8},
+#else
+    {"Edit",6,8},     /* Windows XP 64-bit returns 8 also to 32-bit applications */
+#endif
+};
+
+static void test_extra_values(void)
+{
+    int i;
+    for(i=0; i< sizeof(extra_values)/sizeof(extra_values[0]); i++)
+    {
+        WNDCLASSEX wcx;
+        BOOL ret = GetClassInfoEx(NULL,extra_values[i].name,&wcx);
+
+        ok( ret, "GetClassInfo (0) failed for global class %s\n", extra_values[i].name);
+        if (!ret) continue;
+        ok(extra_values[i].value == wcx.cbWndExtra || broken(extra_values[i].badvalue == wcx.cbWndExtra),
+           "expected %d, got %d\n", extra_values[i].value, wcx.cbWndExtra);
+    }
+}
+
 START_TEST(class)
 {
     HANDLE hInstance = GetModuleHandleA( NULL );
+
+    test_extra_values();
 
     if (!GetModuleHandleW(0))
     {

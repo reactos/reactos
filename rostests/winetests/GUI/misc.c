@@ -238,7 +238,7 @@ InitImageList(UINT StartResource,
     /* Add all icons to the image list */
     for (i = StartResource; i <= EndResource; i++)
     {
-        hIcon = (HBITMAP)LoadImageW(hInstance,
+        hIcon = (HICON)LoadImageW(hInstance,
                                     MAKEINTRESOURCEW(i),
                                     IMAGE_ICON,
                                     Width,
@@ -294,7 +294,7 @@ UnicodeToAnsi(LPCWSTR lpSrcStr,
 
     length = wcslen(lpSrcStr) + 1;
 
-    *lpDstStr = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, length);
+    *lpDstStr = (LPSTR)HeapAlloc(GetProcessHeap(), 0, length);
     if (*lpDstStr)
     {
         ret = WideCharToMultiByte(CP_ACP,

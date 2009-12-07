@@ -27,7 +27,7 @@ int Count_myLpkTabbedTextOut = 0;
 int Count_myLpkPSMTextOut = 0;
 int Count_myLpkDrawTextEx = 0;
 
-DWORD STDCALL myLpkTabbedTextOut (LPVOID x1,LPVOID x2,LPVOID x3, LPVOID x4, LPVOID x5, LPVOID x6, LPVOID x7, LPVOID x8, 
+DWORD WINAPI myLpkTabbedTextOut (LPVOID x1,LPVOID x2,LPVOID x3, LPVOID x4, LPVOID x5, LPVOID x6, LPVOID x7, LPVOID x8, 
                                    LPVOID x9, LPVOID x10, LPVOID x11, LPVOID x12)
 {
     Count_myLpkTabbedTextOut++;
@@ -55,7 +55,7 @@ typedef struct _USER32_INTERN_INITALIZEHOOKS
     PLPK_LPEDITCONTROL_LIST fpListLpkEditControl;
 } USER32_INTERN_INITALIZEHOOKS, *PUSER32_INTERN_INITALIZEHOOKS;
 
-VOID STDCALL InitializeLpkHooks (PUSER32_INTERN_INITALIZEHOOKS);
+VOID WINAPI InitializeLpkHooks (PUSER32_INTERN_INITALIZEHOOKS);
 
 INT
 Test_InitializeLpkHooks(PTESTINFO pti)

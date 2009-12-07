@@ -27,11 +27,15 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "initguid.h"
 #include "objbase.h"
+#include "olectl.h"
 #include "shlguid.h"
 #include "shobjidl.h"
 
 #include "wine/test.h"
+
+DEFINE_GUID(CLSID_StdGlobalInterfaceTable,0x00000323,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
 /* functions that are not present on all versions of Windows */
 HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
@@ -110,7 +114,7 @@ static HRESULT WINAPI Test_IUnknown_QueryInterface(
 
     if (IsEqualGUID(riid, &IID_IUnknown))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IUnknown_AddRef(iface);
         return S_OK;
     }
@@ -153,7 +157,7 @@ static HRESULT WINAPI Test_IClassFactory_QueryInterface(
         /* the only other interface Wine is currently able to marshal (for testing two proxies) */
         IsEqualGUID(riid, &IID_IRemUnknown))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IClassFactory_AddRef(iface);
         return S_OK;
     }
@@ -216,7 +220,7 @@ struct host_object_data
 
 static DWORD CALLBACK host_object_proc(LPVOID p)
 {
-    struct host_object_data *data = (struct host_object_data *)p;
+    struct host_object_data *data = p;
     HRESULT hr;
     MSG msg;
 
@@ -829,7 +833,7 @@ struct ncu_params
 /* helper for test_no_couninitialize_server */
 static DWORD CALLBACK no_couninitialize_server_proc(LPVOID p)
 {
-    struct ncu_params *ncu_params = (struct ncu_params *)p;
+    struct ncu_params *ncu_params = p;
     HRESULT hr;
 
     pCoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -895,7 +899,7 @@ static void test_no_couninitialize_server(void)
 /* STA -> STA call during DLL_THREAD_DETACH */
 static DWORD CALLBACK no_couninitialize_client_proc(LPVOID p)
 {
-    struct ncu_params *ncu_params = (struct ncu_params *)p;
+    struct ncu_params *ncu_params = p;
     HRESULT hr;
     IUnknown *pProxy = NULL;
 
@@ -1366,7 +1370,7 @@ static void test_hresult_marshaling(void)
 /* helper for test_proxy_used_in_wrong_thread */
 static DWORD CALLBACK bad_thread_proc(LPVOID p)
 {
-    IClassFactory * cf = (IClassFactory *)p;
+    IClassFactory * cf = p;
     HRESULT hr;
     IUnknown * proxy = NULL;
 
@@ -1443,7 +1447,7 @@ static void test_proxy_used_in_wrong_thread(void)
     IClassFactory_QueryInterface(pProxy, &IID_IStream, (LPVOID *)&pStream);
 
     /* create a thread that we can misbehave in */
-    thread = CreateThread(NULL, 0, bad_thread_proc, (LPVOID)pProxy, 0, &tid2);
+    thread = CreateThread(NULL, 0, bad_thread_proc, pProxy, 0, &tid2);
 
     WaitForSingleObject(thread, INFINITE);
     CloseHandle(thread);
@@ -1464,7 +1468,7 @@ static HRESULT WINAPI MessageFilter_QueryInterface(IMessageFilter *iface, REFIID
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IClassFactory))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IClassFactory_AddRef(iface);
         return S_OK;
     }
@@ -1675,7 +1679,7 @@ static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, v
     if (IsEqualIID(riid, &IID_IUnknown))
     {
         IUnknown_AddRef(iface);
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         return S_OK;
     }
     *ppv = NULL;
@@ -2036,6 +2040,19 @@ static void test_WM_QUIT_handling(void)
     }
 }
 
+static SIZE_T round_global_size(SIZE_T size)
+{
+    static SIZE_T global_size_alignment = -1;
+    if (global_size_alignment == -1)
+    {
+        void *p = GlobalAlloc(GMEM_FIXED, 1);
+        global_size_alignment = GlobalSize(p);
+        GlobalFree(p);
+    }
+
+    return ((size + global_size_alignment - 1) & ~(global_size_alignment - 1));
+}
+
 static void test_freethreadedmarshaldata(IStream *pStream, MSHCTX mshctx, void *ptr, DWORD mshlflags)
 {
     HGLOBAL hglobal;
@@ -2048,23 +2065,31 @@ static void test_freethreadedmarshaldata(IStream *pStream, MSHCTX mshctx, void *
 
     size = GlobalSize(hglobal);
 
-    marshal_data = (char *)GlobalLock(hglobal);
+    marshal_data = GlobalLock(hglobal);
 
     if (mshctx == MSHCTX_INPROC)
     {
-        DWORD expected_size = sizeof(DWORD) + sizeof(void *) + sizeof(DWORD) + sizeof(GUID);
-        ok(size == expected_size, "size should have been %d instead of %d\n", expected_size, size);
+        DWORD expected_size = round_global_size(3*sizeof(DWORD) + sizeof(GUID));
+        ok(size == expected_size ||
+           broken(size == round_global_size(2*sizeof(DWORD))) /* Win9x & NT4 */,
+           "size should have been %d instead of %d\n", expected_size, size);
 
         ok(*(DWORD *)marshal_data == mshlflags, "expected 0x%x, but got 0x%x for mshctx\n", mshlflags, *(DWORD *)marshal_data);
         marshal_data += sizeof(DWORD);
         ok(*(void **)marshal_data == ptr, "expected %p, but got %p for mshctx\n", ptr, *(void **)marshal_data);
         marshal_data += sizeof(void *);
+        if (sizeof(void*) == 4 && size >= 3*sizeof(DWORD))
+        {
         ok(*(DWORD *)marshal_data == 0, "expected 0x0, but got 0x%x\n", *(DWORD *)marshal_data);
         marshal_data += sizeof(DWORD);
+        }
+        if (size >= 3*sizeof(DWORD) + sizeof(GUID))
+        {
         trace("got guid data: {%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
             ((GUID *)marshal_data)->Data1, ((GUID *)marshal_data)->Data2, ((GUID *)marshal_data)->Data3,
             ((GUID *)marshal_data)->Data4[0], ((GUID *)marshal_data)->Data4[1], ((GUID *)marshal_data)->Data4[2], ((GUID *)marshal_data)->Data4[3],
             ((GUID *)marshal_data)->Data4[4], ((GUID *)marshal_data)->Data4[5], ((GUID *)marshal_data)->Data4[6], ((GUID *)marshal_data)->Data4[7]);
+    }
     }
     else
     {
@@ -2098,7 +2123,7 @@ static void test_freethreadedmarshaler(void)
     /* inproc normal marshaling */
 
     hr = IMarshal_MarshalInterface(pFTMarshal, pStream, &IID_IClassFactory,
-        (IUnknown*)&Test_ClassFactory, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+        &Test_ClassFactory, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
     ok_ole_success(hr, IMarshal_MarshalInterface);
 
     ok_more_than_one_lock();
@@ -2120,7 +2145,7 @@ static void test_freethreadedmarshaler(void)
     /* local normal marshaling */
 
     IStream_Seek(pStream, llZero, STREAM_SEEK_SET, NULL);
-    hr = IMarshal_MarshalInterface(pFTMarshal, pStream, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory, MSHCTX_LOCAL, NULL, MSHLFLAGS_NORMAL);
+    hr = IMarshal_MarshalInterface(pFTMarshal, pStream, &IID_IClassFactory, &Test_ClassFactory, MSHCTX_LOCAL, NULL, MSHLFLAGS_NORMAL);
     ok_ole_success(hr, IMarshal_MarshalInterface);
 
     ok_more_than_one_lock();
@@ -2186,7 +2211,7 @@ static void test_freethreadedmarshaler(void)
 
     IStream_Seek(pStream, llZero, STREAM_SEEK_SET, NULL);
     hr = IMarshal_MarshalInterface(pFTMarshal, pStream, &IID_IClassFactory,
-        (IUnknown*)&Test_ClassFactory, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+        &Test_ClassFactory, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
     ok_ole_success(hr, IMarshal_MarshalInterface);
 
     ok_more_than_one_lock();
@@ -2215,11 +2240,9 @@ static void test_freethreadedmarshaler(void)
     IMarshal_Release(pFTMarshal);
 }
 
-static void test_inproc_handler(void)
+static void reg_unreg_wine_test_class(BOOL Register)
 {
     HRESULT hr;
-    IUnknown *pObject;
-    IUnknown *pObject2;
     char buffer[256];
     LPOLESTR pszClsid;
     HKEY hkey;
@@ -2232,11 +2255,29 @@ static void test_inproc_handler(void)
     WideCharToMultiByte(CP_ACP, 0, pszClsid, -1, buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), NULL, NULL);
     CoTaskMemFree(pszClsid);
     strcat(buffer, "\\InprocHandler32");
+    if (Register)
+    {
     error = RegCreateKeyEx(HKEY_CLASSES_ROOT, buffer, 0, NULL, 0, KEY_SET_VALUE, NULL, &hkey, &dwDisposition);
     ok(error == ERROR_SUCCESS, "RegCreateKeyEx failed with error %d\n", error);
     error = RegSetValueEx(hkey, NULL, 0, REG_SZ, (const unsigned char *)"ole32.dll", strlen("ole32.dll") + 1);
     ok(error == ERROR_SUCCESS, "RegSetValueEx failed with error %d\n", error);
     RegCloseKey(hkey);
+    }
+    else
+    {
+        RegDeleteKey(HKEY_CLASSES_ROOT, buffer);
+        *strrchr(buffer, '\\') = '\0';
+        RegDeleteKey(HKEY_CLASSES_ROOT, buffer);
+    }
+}
+
+static void test_inproc_handler(void)
+{
+    HRESULT hr;
+    IUnknown *pObject;
+    IUnknown *pObject2;
+
+    reg_unreg_wine_test_class(TRUE);
 
     hr = CoCreateInstance(&CLSID_WineTest, NULL, CLSCTX_INPROC_HANDLER, &IID_IUnknown, (void **)&pObject);
     todo_wine
@@ -2255,9 +2296,7 @@ static void test_inproc_handler(void)
         IUnknown_Release(pObject);
     }
 
-    RegDeleteKey(HKEY_CLASSES_ROOT, buffer);
-    *strrchr(buffer, '\\') = '\0';
-    RegDeleteKey(HKEY_CLASSES_ROOT, buffer);
+    reg_unreg_wine_test_class(FALSE);
 }
 
 static HRESULT WINAPI Test_SMI_QueryInterface(
@@ -2270,7 +2309,7 @@ static HRESULT WINAPI Test_SMI_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IStdMarshalInfo))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IClassFactory_AddRef(iface);
         return S_OK;
     }
@@ -2320,6 +2359,7 @@ static void test_handler_marshaling(void)
     HANDLE thread;
     static const LARGE_INTEGER ullZero;
 
+    reg_unreg_wine_test_class(TRUE);
     cLocks = 0;
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &pStream);
@@ -2333,6 +2373,8 @@ static void test_handler_marshaling(void)
     ok_ole_success(hr, "CoUnmarshalInterface");
     IStream_Release(pStream);
 
+    if(hr == S_OK)
+    {
     ok_more_than_one_lock();
 
     hr = IUnknown_QueryInterface(pProxy, &IID_IWineTest, (void **)&pObject);
@@ -2347,8 +2389,10 @@ static void test_handler_marshaling(void)
     IUnknown_Release(pProxy);
 
     ok_no_locks();
+    }
 
     end_host_object(tid, thread);
+    reg_unreg_wine_test_class(FALSE);
 
     /* FIXME: test IPersist interface has the same effect as IStdMarshalInfo */
 }
@@ -2427,7 +2471,7 @@ static void test_client_security(void)
 
     CoTaskMemFree(pServerPrincName);
 
-    hr = IClientSecurity_QueryBlanket(pCliSec, (IUnknown *)pUnknown1, &dwAuthnSvc, &dwAuthzSvc, &pServerPrincName, &dwAuthnLevel, &dwImpLevel, &pAuthInfo, &dwCapabilities);
+    hr = IClientSecurity_QueryBlanket(pCliSec, pUnknown1, &dwAuthnSvc, &dwAuthzSvc, &pServerPrincName, &dwAuthnLevel, &dwImpLevel, &pAuthInfo, &dwCapabilities);
     todo_wine ok_ole_success(hr, "IClientSecurity_QueryBlanket(IUnknown)");
 
     CoTaskMemFree(pServerPrincName);
@@ -2469,7 +2513,7 @@ static HRESULT WINAPI TestOOP_IClassFactory_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IClassFactory))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IClassFactory_AddRef(iface);
         return S_OK;
     }
@@ -2544,7 +2588,7 @@ static void test_register_local_server(void)
 
     do
     {
-        wait = MsgWaitForMultipleObjects(1, &quit_event, FALSE, INFINITE, QS_ALLINPUT);
+        wait = MsgWaitForMultipleObjects(1, &quit_event, FALSE, 30000, QS_ALLINPUT);
         if (wait == WAIT_OBJECT_0+1)
         {
             MSG msg;
@@ -2559,6 +2603,7 @@ static void test_register_local_server(void)
     }
     while (wait == WAIT_OBJECT_0+1);
 
+    ok( wait == WAIT_OBJECT_0, "quit event wait timed out\n" );
     hr = CoRevokeClassObject(cookie);
     ok_ole_success(hr, CoRevokeClassObject);
 }
@@ -2684,14 +2729,17 @@ struct git_params
 static DWORD CALLBACK get_global_interface_proc(LPVOID pv)
 {
 	HRESULT hr;
-	struct git_params *params = (struct git_params *)pv;
+	struct git_params *params = pv;
 	IClassFactory *cf;
 
 	hr = IGlobalInterfaceTable_GetInterfaceFromGlobal(params->git, params->cookie, &IID_IClassFactory, (void **)&cf);
 	ok(hr == CO_E_NOTINITIALIZED ||
-		hr == E_UNEXPECTED, /* win2k */
+		broken(hr == E_UNEXPECTED) /* win2k */ ||
+		broken(hr == S_OK) /* NT 4 */,
 		"IGlobalInterfaceTable_GetInterfaceFromGlobal should have failed with error CO_E_NOTINITIALIZED or E_UNEXPECTED instead of 0x%08x\n",
 		hr);
+	if (hr == S_OK)
+		IClassFactory_Release(cf);
 
 	CoInitialize(NULL);
 

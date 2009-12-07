@@ -21,6 +21,7 @@
 #define COBJMACROS
 
 #include <stdio.h>
+#include <initguid.h>
 #include <windows.h>
 
 #include "objbase.h"
@@ -30,19 +31,19 @@
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x \n", hr)
 
-static void register_testentry(void)
+static BOOL register_testentry(void)
 {
-	HKEY hkey,hkey2;
+	HKEY hkey = 0, hkey2 = 0;
+        DWORD ret;
 
-	RegCreateKeyA(HKEY_CLASSES_ROOT,"CLSID\\{deadcafe-beed-bead-dead-cafebeaddead}",
-			&hkey);
-	RegSetValueA(hkey,NULL,REG_SZ,"ComCat Test key",16);
-	RegCreateKeyA(hkey,
+        ret = RegCreateKeyA(HKEY_CLASSES_ROOT,"CLSID\\{deadcafe-beed-bead-dead-cafebeaddead}", &hkey);
+        if (!ret) ret =	RegSetValueA(hkey,NULL,REG_SZ,"ComCat Test key",16);
+	if (!ret) ret = RegCreateKeyA(hkey,
 			"Implemented Categories\\{deadcafe-0000-0000-0000-000000000000}",
 			&hkey2);
-
 	RegCloseKey(hkey);
 	RegCloseKey(hkey2);
+        return !ret;
 }
 
 static void unregister_testentry(void)
@@ -83,8 +84,8 @@ static void do_enum(void)
 
 	IEnumCLSID *pIEnum =(IEnumCLSID*)0xdeadcafe;
 
-	CLSIDFromString((LPOLESTR)szCatID,the_cat);
-	CLSIDFromString((LPOLESTR)szGuid,&wanted_guid);
+	CLSIDFromString(szCatID,the_cat);
+	CLSIDFromString(szGuid,&wanted_guid);
 	
 	OleInitialize(NULL);
 
@@ -106,9 +107,9 @@ static void do_enum(void)
 	ok (fetched == 0,"Fetched wrong number of guids %u\n",fetched);
 	IEnumGUID_Release(pIEnum);
 	
-	register_testentry();
-	hr = ICatInformation_EnumClassesOfCategories(pICat, 1, the_cat, -1, NULL, 
-			&pIEnum);
+	if (register_testentry())
+        {
+            hr = ICatInformation_EnumClassesOfCategories(pICat, 1, the_cat, -1, NULL, &pIEnum);
 	ok_ole_success(hr,"ICatInformation_EnumClassesOfCategories");
 
 	hr = IEnumGUID_Next(pIEnum,1,the_guid, &fetched);
@@ -116,8 +117,11 @@ static void do_enum(void)
 	ok (IsEqualGUID(the_guid,&wanted_guid),"Guids do not match\n");
 
 	IEnumGUID_Release(pIEnum);
-	ICatInformation_Release(pICat);
 	unregister_testentry();
+        }
+        else skip( "Could not register the test category\n" );
+
+	ICatInformation_Release(pICat);
 
 	OleUninitialize();
 }

@@ -274,11 +274,11 @@ static void test_incorrect_api_usage(void)
     ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
 
     dwLen = 1;
-    result = pCryptDecrypt(hKey, (HCRYPTHASH)NULL, TRUE, 0, &temp, &dwLen);
+    result = pCryptDecrypt(hKey, 0, TRUE, 0, &temp, &dwLen);
     ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
 
     dwLen = 1;
-    result = pCryptEncrypt(hKey, (HCRYPTHASH)NULL, TRUE, 0, &temp, &dwLen, 1);
+    result = pCryptEncrypt(hKey, 0, TRUE, 0, &temp, &dwLen, 1);
     ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
 
     result = pCryptDeriveKey(hProv, CALG_RC4, hHash, 0, &hKey2);
@@ -293,7 +293,7 @@ static void test_incorrect_api_usage(void)
 #endif
 
     dwLen = 1;
-    result = pCryptExportKey(hKey, (HCRYPTPROV)NULL, 0, 0, &temp, &dwLen);
+    result = pCryptExportKey(hKey, 0, 0, 0, &temp, &dwLen);
     ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
 
     result = pCryptGenKey(hProv, CALG_RC4, 0, &hKey2);
@@ -320,7 +320,7 @@ static void test_incorrect_api_usage(void)
     result = pCryptHashSessionKey(hHash, hKey, 0);
     ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
 
-    result = pCryptImportKey(hProv, &temp, 1, (HCRYPTKEY)NULL, 0, &hKey2);
+    result = pCryptImportKey(hProv, &temp, 1, 0, 0, &hKey2);
     ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
 
     if (pCryptSignHashW)
@@ -331,7 +331,7 @@ static void test_incorrect_api_usage(void)
             GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), "%d\n", GetLastError());
     }
     else
-        skip("CryptSignHashW is not available\n");
+        win_skip("CryptSignHashW is not available\n");
 
     result = pCryptSetKeyParam(hKey, 0, &temp, 1);
     ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
@@ -349,7 +349,7 @@ static void test_incorrect_api_usage(void)
             GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), "%d\n", GetLastError());
     }
     else
-        skip("CryptVerifySignatureW is not available\n");
+        win_skip("CryptVerifySignatureW is not available\n");
 
     result = pCryptDestroyHash(hHash);
     ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
@@ -394,7 +394,7 @@ static void test_verify_sig(void)
 
 	if (!pCryptVerifySignatureW)
 	{
-		skip("CryptVerifySignatureW is not available\n");
+		win_skip("CryptVerifySignatureW is not available\n");
 		return;
 	}
 
@@ -402,7 +402,7 @@ static void test_verify_sig(void)
 	ret = pCryptVerifySignatureW(0, NULL, 0, 0, NULL, 0);
 	if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
 	{
-		skip("CryptVerifySignatureW is not implemented\n");
+		win_skip("CryptVerifySignatureW is not implemented\n");
 		return;
 	}
 	ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
@@ -462,7 +462,7 @@ static BOOL FindProvRegVals(DWORD dwIndex, DWORD *pdwProvType, LPSTR *pszProvNam
 				 NULL, NULL, NULL, NULL, NULL, NULL);
 	(*pcbProvName)++;
 	
-	if (!(*pszProvName = ((LPSTR)LocalAlloc(LMEM_ZEROINIT, *pcbProvName))))
+	if (!(*pszProvName = LocalAlloc(LMEM_ZEROINIT, *pcbProvName)))
 		return FALSE;
 	
 	RegEnumKeyEx(hKey, dwIndex, *pszProvName, pcbProvName, NULL, NULL, NULL, NULL);
@@ -497,13 +497,13 @@ static void test_enum_providers(void)
 	
 	if(!pCryptEnumProvidersA)
 	{
-	    skip("CryptEnumProvidersA is not available\n");
+	    win_skip("CryptEnumProvidersA is not available\n");
 	    return;
 	}
 	
 	if (!FindProvRegVals(dwIndex, &dwType, &pszProvName, &cbName, &provCount))
 	{
-	    skip("Could not find providers in registry\n");
+	    win_skip("Could not find providers in registry\n");
 	    return;
 	}
 	
@@ -518,7 +518,7 @@ static void test_enum_providers(void)
 	/* alloc provider to half the size required
 	 * cbName holds the size required */
 	providerLen = cbName / 2;
-	if (!(provider = ((LPSTR)LocalAlloc(LMEM_ZEROINIT, providerLen))))
+	if (!(provider = LocalAlloc(LMEM_ZEROINIT, providerLen)))
 		return;
 
 	result = pCryptEnumProvidersA(dwIndex, NULL, 0, &type, provider, &providerLen);
@@ -546,7 +546,7 @@ static void test_enum_providers(void)
 	/* check expected versus actual values returned */
 	result = pCryptEnumProvidersA(dwIndex, NULL, 0, &type, NULL, &providerLen);
 	ok(result && providerLen==cbName, "expected %i, got %i\n", (int)cbName, (int)providerLen);
-	if (!(provider = ((LPSTR)LocalAlloc(LMEM_ZEROINIT, providerLen))))
+	if (!(provider = LocalAlloc(LMEM_ZEROINIT, providerLen)))
 		return;
 		
 	providerLen = 0xdeadbeef;
@@ -560,55 +560,73 @@ static void test_enum_providers(void)
 	LocalFree(provider);
 }
 
-static BOOL FindProvTypesRegVals(DWORD dwIndex, DWORD *pdwProvType, LPSTR *pszTypeName, 
+static BOOL FindProvTypesRegVals(DWORD *pdwIndex, DWORD *pdwProvType, LPSTR *pszTypeName,
 				 DWORD *pcbTypeName, DWORD *pdwTypeCount)
 {
 	HKEY hKey;
 	HKEY hSubKey;
 	PSTR ch;
+	LPSTR szName;
+	DWORD cbName;
+	BOOL ret = FALSE;
 	
 	if (RegOpenKey(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\Defaults\\Provider Types", &hKey))
 		return FALSE;
 	
-	if (RegQueryInfoKey(hKey, NULL, NULL, NULL, pdwTypeCount, pcbTypeName, NULL,
+	if (RegQueryInfoKey(hKey, NULL, NULL, NULL, pdwTypeCount, &cbName, NULL,
 			NULL, NULL, NULL, NULL, NULL))
-	    return FALSE;
-	(*pcbTypeName)++;
+		goto cleanup;
+	cbName++;
 	
-	if (!(*pszTypeName = ((LPSTR)LocalAlloc(LMEM_ZEROINIT, *pcbTypeName))))
-		return FALSE;
+	if (!(szName = LocalAlloc(LMEM_ZEROINIT, cbName)))
+		goto cleanup;
 	
-	if (RegEnumKeyEx(hKey, dwIndex, *pszTypeName, pcbTypeName, NULL, NULL, NULL, NULL))
-	    return FALSE;
-	(*pcbTypeName)++;
-	ch = *pszTypeName + strlen(*pszTypeName);
+	while (!RegEnumKeyEx(hKey, *pdwIndex, szName, &cbName, NULL, NULL, NULL, NULL))
+	{
+		cbName++;
+		ch = szName + strlen(szName);
 	/* Convert "Type 000" to 0, etc/ */
 	*pdwProvType = *(--ch) - '0';
 	*pdwProvType += (*(--ch) - '0') * 10;
 	*pdwProvType += (*(--ch) - '0') * 100;
 	
-	if (RegOpenKey(hKey, *pszTypeName, &hSubKey))
-	    return FALSE;
+		if (RegOpenKey(hKey, szName, &hSubKey))
+			break;
 	
-	if (RegQueryValueEx(hSubKey, "TypeName", NULL, NULL, NULL, pcbTypeName))
-            return FALSE;
+		if (!RegQueryValueEx(hSubKey, "TypeName", NULL, NULL, NULL, pcbTypeName))
+		{
+			if (!(*pszTypeName = LocalAlloc(LMEM_ZEROINIT, *pcbTypeName)))
+				break;
 
-	if (!(*pszTypeName = ((LPSTR)LocalAlloc(LMEM_ZEROINIT, *pcbTypeName))))
-		return FALSE;
+			if (!RegQueryValueEx(hSubKey, "TypeName", NULL, NULL, (LPBYTE)*pszTypeName, pcbTypeName))
+			{
+				ret = TRUE;
+				break;
+			}
 	
-	if (RegQueryValueEx(hSubKey, "TypeName", NULL, NULL, (LPBYTE)*pszTypeName, pcbTypeName))
-	    return FALSE;
+			LocalFree(*pszTypeName);
+		}
 	
 	RegCloseKey(hSubKey);
+
+		(*pdwIndex)++;
+	}
+
+	if (!ret)
+		LocalFree(*pszTypeName);
+	RegCloseKey(hSubKey);
+	LocalFree(szName);
+
+cleanup:
 	RegCloseKey(hKey);
 	
-	return TRUE;
+	return ret;
 }
 
 static void test_enum_provider_types(void)
 {
 	/* expected values */
-	DWORD dwProvType;
+	DWORD dwProvType = 0;
 	LPSTR pszTypeName = NULL;
 	DWORD cbTypeName;
 	DWORD dwTypeCount;
@@ -625,11 +643,11 @@ static void test_enum_provider_types(void)
 	
 	if(!pCryptEnumProviderTypesA)
 	{
-	    skip("CryptEnumProviderTypesA is not available\n");
+		win_skip("CryptEnumProviderTypesA is not available\n");
 	    return;
 	}
 	
-	if (!FindProvTypesRegVals(index, &dwProvType, &pszTypeName, &cbTypeName, &dwTypeCount))
+	if (!FindProvTypesRegVals(&index, &dwProvType, &pszTypeName, &cbTypeName, &dwTypeCount))
 	{
 	    skip("Could not find provider types in registry\n");
 	    return;
@@ -637,29 +655,31 @@ static void test_enum_provider_types(void)
 	
 	/* check pdwReserved for NULL */
 	result = pCryptEnumProviderTypesA(index, &notNull, 0, &provType, typeName, &typeNameSize);
-	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "expected %i, got %d\n", 
-		ERROR_INVALID_PARAMETER, GetLastError());
+	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n",
+		GetLastError());
 	
 	/* check dwFlags == zero */
 	result = pCryptEnumProviderTypesA(index, NULL, notZeroFlags, &provType, typeName, &typeNameSize);
-	ok(!result && GetLastError()==NTE_BAD_FLAGS, "expected %i, got %d\n",
-		ERROR_INVALID_PARAMETER, GetLastError());
+	ok(!result && GetLastError()==NTE_BAD_FLAGS, "expected ERROR_INVALID_PARAMETER, got %d\n",
+		GetLastError());
 	
+	/* This test fails under Win2k SP4:
+	 * result = TRUE, GetLastError() == 0xdeadbeef */
+	if (0)
+	{
 	/* alloc provider type to half the size required
 	 * cbTypeName holds the size required */
 	typeNameSize = cbTypeName / 2;
-	if (!(typeName = ((LPSTR)LocalAlloc(LMEM_ZEROINIT, typeNameSize))))
-		return;
+		if (!(typeName = LocalAlloc(LMEM_ZEROINIT, typeNameSize)))
+			goto cleanup;
 
-	/* This test fails under Win2k SP4:
-	   result = TRUE, GetLastError() == 0xdeadbeef
 	SetLastError(0xdeadbeef);
 	result = pCryptEnumProviderTypesA(index, NULL, 0, &provType, typeName, &typeNameSize);
-	ok(!result && GetLastError()==ERROR_MORE_DATA, "expected 0/ERROR_MORE_DATA, got %d/%08lx\n",
+		ok(!result && GetLastError()==ERROR_MORE_DATA, "expected 0/ERROR_MORE_DATA, got %d/%d\n",
 		result, GetLastError());
-	*/
 	
 	LocalFree(typeName);
+	}
 	
 	/* loop through the provider types to get the number of provider types 
 	 * after loop ends, count should be dwTypeCount + 1 so subtract 1
@@ -674,15 +694,14 @@ static void test_enum_provider_types(void)
 	 * ERROR_NO_MORE_ITEMS */
 	for (typeCount = 0; typeCount < dwTypeCount + 1; typeCount++)
 		result = pCryptEnumProviderTypesA(typeCount, NULL, 0, &provType, NULL, &typeNameSize);
-	ok(!result && GetLastError()==ERROR_NO_MORE_ITEMS, "expected %i, got %d\n", 
-			ERROR_NO_MORE_ITEMS, GetLastError());
+	ok(!result && GetLastError()==ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %d\n",
+		GetLastError());
 	
-
 	/* check expected versus actual values returned */
 	result = pCryptEnumProviderTypesA(index, NULL, 0, &provType, NULL, &typeNameSize);
 	ok(result && typeNameSize==cbTypeName, "expected %d, got %d\n", cbTypeName, typeNameSize);
-	if (!(typeName = ((LPSTR)LocalAlloc(LMEM_ZEROINIT, typeNameSize))))
-		return;
+	if (!(typeName = LocalAlloc(LMEM_ZEROINIT, typeNameSize)))
+		goto cleanup;
 		
 	typeNameSize = 0xdeadbeef;
 	result = pCryptEnumProviderTypesA(index, NULL, 0, &provType, typeName, &typeNameSize);
@@ -693,6 +712,8 @@ static void test_enum_provider_types(void)
 	ok(typeNameSize==cbTypeName, "expected %d, got %d\n", cbTypeName, typeNameSize);
 	
 	LocalFree(typeName);
+cleanup:
+	LocalFree(pszTypeName);
 }
 
 static BOOL FindDfltProvRegVals(DWORD dwProvType, DWORD dwFlags, LPSTR *pszProvName, DWORD *pcbProvName)
@@ -763,7 +784,7 @@ static void test_get_default_provider(void)
 	
 	if(!pCryptGetDefaultProviderA)
 	{
-	    skip("CryptGetDefaultProviderA is not available\n");
+	    win_skip("CryptGetDefaultProviderA is not available\n");
 	    return;
 	}
 	
@@ -837,7 +858,7 @@ static void test_set_provider_ex(void)
 	
 	if(!pCryptGetDefaultProviderA || !pCryptSetProviderExA)
 	{
-	    skip("CryptGetDefaultProviderA and/or CryptSetProviderExA are not available\n");
+	    win_skip("CryptGetDefaultProviderA and/or CryptSetProviderExA are not available\n");
 	    return;
 	}
 
@@ -849,12 +870,13 @@ static void test_set_provider_ex(void)
 	/* remove the default provider and then set it to MS_DEF_PROV/PROV_RSA_FULL */
         SetLastError(0xdeadbeef);
 	result = pCryptSetProviderExA(MS_DEF_PROV, PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT | CRYPT_DELETE_DEFAULT);
-	if (!result && (GetLastError() == ERROR_ACCESS_DENIED))
+	if (!result)
 	{
+                ok( GetLastError() == ERROR_ACCESS_DENIED || broken(GetLastError() == ERROR_INVALID_PARAMETER),
+                    "wrong error %u\n", GetLastError() );
 		skip("Not enough rights to remove the default provider\n");
 		return;
 	}
-	ok(result, "%d\n", GetLastError());
 
 	result = pCryptSetProviderExA(MS_DEF_PROV, PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT);
 	ok(result, "%d\n", GetLastError());
@@ -903,7 +925,7 @@ static void test_machine_guid(void)
    /* Create and release a provider */
    ret = pCryptAcquireContextA(&hCryptProv, szKeySet, NULL, PROV_RSA_FULL, 0);
    ok(ret, "CryptAcquireContextA failed: %08x\n", GetLastError());
-   CryptReleaseContext(hCryptProv, 0);
+   pCryptReleaseContext(hCryptProv, 0);
 
    if (restoreGuid)
        RegSetValueExA(key, "MachineGuid", 0, REG_SZ, (const BYTE *)originalGuid,

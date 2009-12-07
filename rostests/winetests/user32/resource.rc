@@ -98,6 +98,13 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
 END
 
+TEST_EMPTY_DIALOG DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
 MULTI_EDIT_DIALOG DIALOG DISCARDABLE 0, 0, 160, 75
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | DS_CENTER
 CAPTION "Multiple Edit Test"
@@ -165,13 +172,16 @@ FONT 8, "MS Shell Dlg"
 {
     POPUP "&File"
     {
-        MENUITEM "&New", 100
+        POPUP "&New..."
+        {
+            MENUITEM "&New file", 100
+        }
         MENUITEM "&Open", 101
         MENUITEM "&Save", 102
         MENUITEM SEPARATOR
         MENUITEM "E&xit", 103
     }
-    POPUP "Edit"
+    POPUP "&Edit"
     {
         MENUITEM "&Undo", 200
         MENUITEM SEPARATOR

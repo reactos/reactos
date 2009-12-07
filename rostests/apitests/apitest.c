@@ -80,6 +80,36 @@ WriteRow(HANDLE hFile, LPDWORD lpdwBytesWritten, LPWSTR pszFunction, PTESTINFO p
 	return TRUE;
 }
 
+static CHAR
+GetDisplayChar(CHAR c)
+{
+    if (c < 32) return '.';
+    return c;
+}
+
+VOID
+DumpMem(PVOID pData, ULONG cbSize, ULONG nWidth)
+{
+	ULONG cLines = (cbSize + nWidth - 1) / nWidth;
+	ULONG cbLastLine = cbSize % nWidth;
+	INT i,j;
+
+	for (i = 0; i <= cLines; i++)
+	{
+		printf("%08lx: ", i*nWidth);
+		for (j = 0; j < (i == cLines? cbLastLine : nWidth); j++)
+		{
+			printf("%02x ", ((BYTE*)pData)[i*nWidth + j]);
+		}
+		printf("   ");
+		for (j = 0; j < (i == cLines? cbLastLine : nWidth); j++)
+		{
+			printf("%c", GetDisplayChar(((CHAR*)pData)[i*nWidth + j]));
+		}
+		printf("\n");
+	}
+}
+
 int
 TestMain(LPWSTR pszName, LPWSTR pszModule)
 {

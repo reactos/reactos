@@ -3,9 +3,9 @@
 <group>
 <module name="mshtml_winetest" type="win32cui" installbase="bin" installname="mshtml_winetest.exe" allowwarnings="true">
 	<include base="mshtml_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
+    <define name="__ROS_LONG64__" />
 	<file>dom.c</file>
+	<file>events.c</file>
 	<file>htmldoc.c</file>
 	<file>misc.c</file>
 	<file>protocol.c</file>
@@ -19,7 +19,6 @@
 	<library>user32</library>
 	<library>urlmon</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

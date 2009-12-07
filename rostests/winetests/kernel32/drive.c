@@ -39,7 +39,8 @@ static void test_GetDriveTypeA(void)
     for (drive[0] = 'A'; drive[0] <= 'Z'; drive[0]++)
     {
         type = GetDriveTypeA(drive);
-        ok(type > 0 && type <= 6, "not a valid drive %c: type %u\n", drive[0], type);
+        ok(type > DRIVE_UNKNOWN && type <= DRIVE_RAMDISK,
+           "not a valid drive %c: type %u\n", drive[0], type);
 
         if (!(logical_drives & 1))
             ok(type == DRIVE_NO_ROOT_DIR,
@@ -64,10 +65,11 @@ static void test_GetDriveTypeW(void)
         type = GetDriveTypeW(drive);
         if (type == DRIVE_UNKNOWN && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
         {
-            /* Must be Win9x which doesn't support the Unicode functions */
+            win_skip("GetDriveTypeW is not available on Win9x\n");
             return;
         }
-        ok(type > 0 && type <= 6, "not a valid drive %c: type %u\n", drive[0], type);
+        ok(type > DRIVE_UNKNOWN && type <= DRIVE_RAMDISK,
+           "not a valid drive %c: type %u\n", drive[0], type);
 
         if (!(logical_drives & 1))
             ok(type == DRIVE_NO_ROOT_DIR,
@@ -118,7 +120,13 @@ static void test_GetDiskFreeSpaceA(void)
             else
             {
                 ok(ret ||
-                   (!ret && (GetLastError() == ERROR_NOT_READY || GetLastError() == ERROR_INVALID_DRIVE)),
+                   GetLastError() == ERROR_NOT_READY ||
+                   GetLastError() == ERROR_INVALID_FUNCTION ||
+                   GetLastError() == ERROR_INVALID_DRIVE ||
+                   GetLastError() == ERROR_PATH_NOT_FOUND ||
+                   GetLastError() == ERROR_REQUEST_ABORTED ||
+                   GetLastError() == ERROR_NETNAME_DELETED ||
+                   GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
                    "GetDiskFreeSpaceA(%s): ret=%d GetLastError=%d\n",
                    drive, ret, GetLastError());
                 if( GetVersion() & 0x80000000)
@@ -132,7 +140,13 @@ static void test_GetDiskFreeSpaceA(void)
                     tot.QuadPart = sectors_per_cluster;
                     tot.QuadPart = (tot.QuadPart * bytes_per_sector) * total_clusters;
                     ret = pGetDiskFreeSpaceExA( drive, &d, &totEx, NULL);
-                    ok( ret || (!ret && ERROR_NOT_READY == GetLastError()),
+                    ok( ret ||
+                        GetLastError() == ERROR_NOT_READY ||
+                        GetLastError() == ERROR_INVALID_FUNCTION ||
+                        GetLastError() == ERROR_PATH_NOT_FOUND ||
+                        GetLastError() == ERROR_REQUEST_ABORTED ||
+                        GetLastError() == ERROR_NETNAME_DELETED ||
+                        GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
                         "GetDiskFreeSpaceExA( %s ) failed. GetLastError=%d\n", drive, GetLastError());
                     ok( bytes_per_sector == 0 || /* empty cd rom drive */
                         totEx.QuadPart <= tot.QuadPart,
@@ -157,7 +171,7 @@ static void test_GetDiskFreeSpaceW(void)
     ret = GetDiskFreeSpaceW(NULL, &sectors_per_cluster, &bytes_per_sector, &free_clusters, &total_clusters);
     if (ret == 0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
-        /* Must be Win9x which doesn't support the Unicode functions */
+        win_skip("GetDiskFreeSpaceW is not available\n");
         return;
     }
     ok(ret, "GetDiskFreeSpaceW error %d\n", GetLastError());
@@ -188,7 +202,12 @@ static void test_GetDiskFreeSpaceW(void)
                    "GetDiskFreeSpaceW(%c): ret=%d GetLastError=%d\n",
                    drive[0], ret, GetLastError());
             else
-                ok(ret || GetLastError() == ERROR_NOT_READY,
+                ok( ret ||
+                    GetLastError() == ERROR_NOT_READY ||
+                    GetLastError() == ERROR_INVALID_FUNCTION ||
+                    GetLastError() == ERROR_PATH_NOT_FOUND ||
+                    GetLastError() == ERROR_REQUEST_ABORTED ||
+                    GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
                    "GetDiskFreeSpaceW(%c): ret=%d GetLastError=%d\n",
                    drive[0], ret, GetLastError());
         }

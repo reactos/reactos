@@ -24,12 +24,12 @@
 #include "winerror.h"
 #include "winnls.h"
 #include "winuser.h"
+#include "initguid.h"
 #include "shlguid.h"
 #include "shobjidl.h"
 #include "olectl.h"
 
-#define INITGUID
-#include "initguid.h"
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 /* This GUID has been removed from the PSDK */
 DEFINE_OLEGUID(WINE_IID_IDelayedRelease,     0x000214EDL, 0, 0);
@@ -107,6 +107,7 @@ static void test_ClassIDs(void)
   DWORD dwLen;
   BOOL bRet;
   int i = 0;
+  int is_vista = 0;
 
   if (!pSHLWAPI_269 || !pSHLWAPI_23)
     return;
@@ -114,7 +115,8 @@ static void test_ClassIDs(void)
   while (*guids)
   {
     dwLen = pSHLWAPI_23(*guids, szBuff, 256);
-    ok(dwLen == 39, "wrong size for id %d\n", i);
+    if (!i && dwLen == S_OK) is_vista = 1;  /* seems to return an HRESULT on vista */
+    ok(dwLen == (is_vista ? S_OK : 39), "wrong size %u for id %d\n", dwLen, i);
 
     bRet = pSHLWAPI_269(szBuff, &guid);
     ok(bRet != FALSE, "created invalid string '%s'\n", szBuff);
@@ -128,7 +130,7 @@ static void test_ClassIDs(void)
 
   /* Test endianess */
   dwLen = pSHLWAPI_23(&IID_Endianess, szBuff, 256);
-  ok(dwLen == 39, "wrong size for IID_Endianess\n");
+  ok(dwLen == (is_vista ? S_OK : 39), "wrong size %u for IID_Endianess\n", dwLen);
 
   ok(!strcmp(szBuff, "{01020304-0506-0708-090A-0B0C0D0E0F0A}"),
      "Endianess Broken, got '%s'\n", szBuff);
@@ -136,17 +138,17 @@ static void test_ClassIDs(void)
   /* test lengths */
   szBuff[0] = ':';
   dwLen = pSHLWAPI_23(&IID_Endianess, szBuff, 0);
-  ok(dwLen == 0, "accepted bad length\n");
+  ok(dwLen == (is_vista ? E_FAIL : 0), "accepted bad length\n");
   ok(szBuff[0] == ':', "wrote to buffer with no length\n");
 
   szBuff[0] = ':';
   dwLen = pSHLWAPI_23(&IID_Endianess, szBuff, 38);
-  ok(dwLen == 0, "accepted bad length\n");
+  ok(dwLen == (is_vista ? E_FAIL : 0), "accepted bad length\n");
   ok(szBuff[0] == ':', "wrote to buffer with no length\n");
 
   szBuff[0] = ':';
   dwLen = pSHLWAPI_23(&IID_Endianess, szBuff, 39);
-  ok(dwLen == 39, "rejected ok length\n");
+  ok(dwLen == (is_vista ? S_OK : 39), "rejected ok length\n");
   ok(szBuff[0] == '{', "Didn't write to buffer with ok length\n");
 
   /* Test string */
@@ -155,7 +157,7 @@ static void test_ClassIDs(void)
   ok(bRet == FALSE, "accepted invalid string\n");
 
   dwLen = pSHLWAPI_23(&IID_Endianess, szBuff, 39);
-  ok(dwLen == 39, "rejected ok length\n");
+  ok(dwLen == (is_vista ? S_OK : 39), "rejected ok length\n");
   ok(szBuff[0] == '{', "Didn't write to buffer with ok length\n");
 }
 

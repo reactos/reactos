@@ -111,7 +111,9 @@ static void test_GetRandomRgn(void)
     GetRgnBox(hrgn, &ret_rc);
     if(GetVersion() & 0x80000000)
         OffsetRect(&window_rc, -window_rc.left, -window_rc.top);
-    ok(EqualRect(&window_rc, &ret_rc), "GetRandomRgn %d,%d - %d,%d\n",
+    ok(EqualRect(&window_rc, &ret_rc) ||
+       broken(IsRectEmpty(&ret_rc)), /* win95 */
+       "GetRandomRgn %d,%d - %d,%d\n",
        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom);
 
     DeleteObject(hrgn);
@@ -160,12 +162,16 @@ static void verify_region(HRGN hrgn, const RECT *rc)
     if (IsRectEmpty(rc))
     {
         ok(rgn.data.rdh.nCount == 0, "expected 0, got %u\n", rgn.data.rdh.nCount);
-        ok(rgn.data.rdh.nRgnSize == 0,  "expected 0, got %u\n", rgn.data.rdh.nRgnSize);
+        ok(rgn.data.rdh.nRgnSize == 0 ||
+           broken(rgn.data.rdh.nRgnSize == 168), /* NT4 */
+           "expected 0, got %u\n", rgn.data.rdh.nRgnSize);
     }
     else
     {
         ok(rgn.data.rdh.nCount == 1, "expected 1, got %u\n", rgn.data.rdh.nCount);
-        ok(rgn.data.rdh.nRgnSize == sizeof(RECT),  "expected sizeof(RECT), got %u\n", rgn.data.rdh.nRgnSize);
+        ok(rgn.data.rdh.nRgnSize == sizeof(RECT) ||
+           broken(rgn.data.rdh.nRgnSize == 168), /* NT4 */
+           "expected sizeof(RECT), got %u\n", rgn.data.rdh.nRgnSize);
     }
     ok(EqualRect(&rgn.data.rdh.rcBound, rc), "rects don't match\n");
 }
@@ -234,9 +240,14 @@ if (0) /* crashes under Win9x */
 
     SetLastError(0xdeadbeef);
     hrgn = ExtCreateRegion(NULL, 1, &rgn.data);
-    ok(hrgn != 0, "ExtCreateRegion error %u\n", GetLastError());
+    ok(hrgn != 0 ||
+       broken(GetLastError() == 0xdeadbeef), /* NT4 */
+       "ExtCreateRegion error %u\n", GetLastError());
+    if(hrgn)
+    {
     verify_region(hrgn, &rc);
     DeleteObject(hrgn);
+    }
 
     xform.eM11 = 0.5; /* 50% width */
     xform.eM12 = 0.0;

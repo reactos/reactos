@@ -8,17 +8,143 @@
  */
 
 #include <precomp.h>
+#include <io.h>
+
+#define BUFSIZE 4096
 
 HINSTANCE hInstance;
 
+WCHAR szPipeName[] = L"\\\\.\\pipe\\winetest_pipe";
+
 typedef int (_cdecl *RUNTEST)(char **);
+
+DWORD WINAPI
+PipeReadThread(LPVOID lpParam)
+{
+    PMAIN_WND_INFO pInfo;
+    HWND hList, hEdit;
+    DWORD dwRead;
+    CHAR chBuf[BUFSIZE];
+    BOOL bSuccess = FALSE;
+    LVITEMA item;
+    INT count;
+
+    pInfo = (PMAIN_WND_INFO)lpParam;
+
+    hList = GetDlgItem(pInfo->hMainWnd, IDC_LIST);
+    hEdit = GetDlgItem(pInfo->hMainWnd, IDC_OUTPUT);
+
+    ZeroMemory(&item, sizeof(LVITEMA));
+    item.mask = LVIF_TEXT;
+
+    while (TRUE)
+    {
+        dwRead = 0;
+        bSuccess = ReadFile(pInfo->hStdOutRd,
+                            chBuf,
+                            BUFSIZE,
+                            &dwRead,
+                            NULL);
+        if(!bSuccess || dwRead == 0)
+            break;
+
+        chBuf[dwRead] = 0;
+
+        count = GetWindowTextLengthA(hEdit);
+        SendMessageA(hEdit, EM_SETSEL, (WPARAM)count, (LPARAM)count);
+        SendMessageA(hEdit, EM_REPLACESEL, 0, (LPARAM)chBuf);
+
+        //item.iItem = ListView_GetItemCount(hList);
+        //item.pszText = chBuf;
+        //SendMessage(hEdit, LVM_INSERTITEMA, 0, (LPARAM)&item);
+    }
+
+    return 0;
+}
+
+
+DWORD WINAPI
+CreateClientProcess(PMAIN_WND_INFO pInfo)
+{
+    SECURITY_ATTRIBUTES sa;
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    BOOL bSuccess = FALSE;
+
+    //
+    // Set up the security attributes
+    //
+    sa.nLength= sizeof(SECURITY_ATTRIBUTES);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+
+    //
+    // Create a pipe for the child process's STDOUT
+    //
+    if (!CreatePipe(&pInfo->hStdOutRd,
+                    &pInfo->hStdOutWr,
+                    &sa,
+                    0))
+    {
+        return FALSE;
+    }
+
+    //
+    // Ensure the read handle to the pipe for STDOUT is not inherited
+    //
+    if (!SetHandleInformation(pInfo->hStdOutRd,
+                              HANDLE_FLAG_INHERIT,
+                              0))
+    {
+        return FALSE;
+    }
+
+    ZeroMemory(&si, sizeof(STARTUPINFO));
+    si.cb = sizeof(STARTUPINFO);
+    si.hStdError = pInfo->hStdOutWr;
+    si.hStdOutput = pInfo->hStdOutWr;
+    si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    si.dwFlags |= STARTF_USESTDHANDLES;
+
+    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+
+    bSuccess = CreateProcessW(pInfo->lpCmdLine,
+                              NULL,
+                              NULL,
+                              NULL,
+                              TRUE,
+                              0,//CREATE_SUSPENDED,
+                              NULL,
+                              NULL,
+                              &si,
+                              &pi);
+    if (bSuccess)
+    {
+        //
+        // Create thread to handle pipe input from child processes
+        //
+        pInfo->hPipeThread = CreateThread(NULL,
+                                          0,
+                                          PipeReadThread,
+                                          pInfo,
+                                          0,
+                                          NULL);
+
+        WaitForSingleObject(pi.hProcess, INFINITE);
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+
+    return bSuccess;
+}
+
 
 static BOOL
 OnInitMainDialog(HWND hDlg,
                  LPARAM lParam)
 {
     PMAIN_WND_INFO pInfo;
-    LPWSTR lpAboutText;
 
     pInfo = (PMAIN_WND_INFO)lParam;
 
@@ -65,8 +191,7 @@ RunSelectedTest(PMAIN_WND_INFO pInfo)
 {
     HWND hRunCmd;
     WCHAR szTextCmd[MAX_RUN_CMD];
-    LPWSTR lpDllPath;
-    INT sel, len;
+    INT sel;
 
     hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
 
@@ -79,54 +204,34 @@ RunSelectedTest(PMAIN_WND_INFO pInfo)
         if (SendMessageW(hRunCmd,
                          CB_GETLBTEXT,
                          sel,
-                         szTextCmd) != CB_ERR)
+                         (LPARAM)szTextCmd) != CB_ERR)
         {
-            lpDllPath = SendMessage(hRunCmd,
+            pInfo->lpCmdLine = (LPWSTR)SendMessage(hRunCmd,
                                     CB_GETITEMDATA,
                                     0,
                                     0);
-            if (lpDllPath)
+            if (pInfo->lpCmdLine)
             {
-                LPWSTR module = szTextCmd;
-                LPSTR lpTest;
-
-                while (*(module++) != L':' && *module != L'\0')
-                    ;
-
-                if (*module)
-                {
-                    if (UnicodeToAnsi(module, &lpTest))
-                    {
-                        HMODULE hDll;
-                        RUNTEST RunTest;
-
-                        hDll = LoadLibraryW(lpDllPath);
-                        if (hDll)
-                        {
-                            RunTest = (RUNTEST)GetProcAddress(hDll, "RunTest");
-                            if (RunTest)
-                            {
-                                RunTest(lpTest);
+                //
+                // Create a new thread to create the client process
+                // and recieve any ouput via stdout
+                //
+                CreateThread(NULL,
+                             0,
+                             CreateClientProcess,
+                             pInfo,
+                             0,
+                             NULL);
                             }
-
-                            FreeLibrary(hDll);
                         }
-                        DisplayError(GetLastError());
-
-                        HeapFree(GetProcessHeap(), 0, lpTest);
                     }
                 }
-
-            }
-        }
-    }
-}
 
 static VOID
 AddTestToCombo(PMAIN_WND_INFO pInfo)
 {
     HWND hRunCmd;
-    LPWSTR lpDllPath;
+    LPWSTR lpExePath;
     INT len;
 
     hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
@@ -135,21 +240,21 @@ AddTestToCombo(PMAIN_WND_INFO pInfo)
         SendMessageW(hRunCmd,
                      CB_INSERTSTRING,
                      0,
-                     pInfo->SelectedTest.szRunString);
+                     (LPARAM)pInfo->SelectedTest.szName);
 
-        len = (wcslen(pInfo->SelectedTest.szSelectedDll) + 1) * sizeof(WCHAR);
-        lpDllPath = HeapAlloc(GetProcessHeap(), 0, len);
-        if (lpDllPath)
+        len = (wcslen(pInfo->SelectedTest.szRunCmd) + 1) * sizeof(WCHAR);
+        lpExePath = HeapAlloc(GetProcessHeap(), 0, len);
+        if (lpExePath)
         {
-            wcsncpy(lpDllPath,
-                    pInfo->SelectedTest.szSelectedDll,
+            wcsncpy(lpExePath,
+                    pInfo->SelectedTest.szRunCmd,
                     len / sizeof(WCHAR));
         }
 
         SendMessageW(hRunCmd,
                      CB_SETITEMDATA,
                      0,
-                     lpDllPath);
+                     (LPARAM)lpExePath);
         SendMessageW(hRunCmd,
                      CB_SETCURSEL,
                      0,
@@ -161,8 +266,7 @@ static VOID
 FreeTestCmdStrings(PMAIN_WND_INFO pInfo)
 {
     HWND hRunCmd;
-    WCHAR szTextCmd[MAX_RUN_CMD];
-    LPWSTR lpDllPath;
+    LPWSTR lpExePath;
     INT cnt, i;
 
     hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
@@ -175,13 +279,13 @@ FreeTestCmdStrings(PMAIN_WND_INFO pInfo)
     {
         for (i = 0; i < cnt; i++)
         {
-            lpDllPath = SendMessage(hRunCmd,
+            lpExePath = (LPWSTR)SendMessage(hRunCmd,
                                     CB_GETITEMDATA,
                                     i,
                                     0);
-            if (lpDllPath)
+            if (lpExePath)
             {
-                HeapFree(GetProcessHeap(), 0, lpDllPath);
+                HeapFree(GetProcessHeap(), 0, lpExePath);
             }
         }
     }
@@ -228,6 +332,13 @@ MainDlgProc(HWND hDlg,
 
                     break;
                 }
+                case IDC_OPTIONS:
+                    DialogBoxParamW(hInstance,
+                                    MAKEINTRESOURCEW(IDD_OPTIONS),
+                                    hDlg,
+                                    (DLGPROC)OptionsDlgProc,
+                                    (LPARAM)pInfo);
+                    break;
 
                 case IDC_RUN:
                     RunSelectedTest(pInfo);
@@ -271,7 +382,11 @@ wWinMain(HINSTANCE hInst,
 {
     INITCOMMONCONTROLSEX iccx;
     PMAIN_WND_INFO pInfo;
-    INT Ret = 1;
+    INT Ret = -1;
+
+    UNREFERENCED_PARAMETER(hPrev);
+    UNREFERENCED_PARAMETER(Cmd);
+    UNREFERENCED_PARAMETER(iCmd); 
 
     hInstance = hInst;
 
@@ -280,7 +395,9 @@ wWinMain(HINSTANCE hInst,
     iccx.dwICC = ICC_TAB_CLASSES;
     InitCommonControlsEx(&iccx);
 
-    pInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(MAIN_WND_INFO));
+    pInfo = HeapAlloc(GetProcessHeap(),
+                      0,
+                      sizeof(MAIN_WND_INFO));
     if (pInfo)
     {
         Ret = (DialogBoxParamW(hInstance,
@@ -289,8 +406,9 @@ wWinMain(HINSTANCE hInst,
                                (DLGPROC)MainDlgProc,
                                (LPARAM)pInfo) == IDOK);
 
-        HeapFree(GetProcessHeap(), 0, pInfo);
-
+        HeapFree(GetProcessHeap(),
+                 0,
+                 pInfo);
     }
 
     return Ret;

@@ -39,6 +39,12 @@ Test_CreateCompatibleDC(PTESTINFO pti)
 	RTEST(hDC2 == NULL);
 	if (hDC2 != NULL) DeleteDC(hDC2);
 
+    /* Check map mode */
+	hDC = CreateCompatibleDC(hDCScreen);
+	SetMapMode(hDC, MM_ISOTROPIC);
+	hDC2 = CreateCompatibleDC(hDC);
+    TEST(GetMapMode(hDC2) == MM_TEXT);
+
 	// cleanup
 	DeleteDC(hDC);
 

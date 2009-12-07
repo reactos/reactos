@@ -1,8 +1,25 @@
+
+void
+ReadBits(HDC hDC, PDWORD OutBits)
+{
+	int x,y;
+
+	for (y = 0; y < 8; y++)
+	{
+		DWORD Row = 0;
+		for (x = 0; x < 8; x++)
+			Row |= (0x80 & GetPixel(hDC, 2 + x, 3 + y)) >> x;
+		OutBits[y] = Row;
+	}
+}
+
+
 INT
 Test_NtGdiSetDIBitsToDeviceInternal(PTESTINFO pti)
 {
 	static const DWORD InBits[8] = { 0x81, 0x7E, 0x5A, 0x7E, 0x7E, 0x42, 0x7E, 0x81 };
 	DWORD OutBits[8];
+	XFORM xform;
 
 	HWND hWnd = CreateWindowW(L"Static", NULL, WS_VISIBLE,
 	                          100, 100, 200, 200,
@@ -36,6 +53,27 @@ Test_NtGdiSetDIBitsToDeviceInternal(PTESTINFO pti)
 	                                    sizeof(InBits), sizeof(bmi), TRUE, NULL));
 
 	/* Now get the data from the screen, and see if it matches */
+	ReadBits(hDC, OutBits);
+
+	TEST(memcmp(InBits, OutBits, sizeof(InBits)) == 0);
+
+	/* Change transformation */
+	GetWorldTransform(hDC, &xform);
+	xform.eM11 = 2;
+	xform.eM22 = 2;
+	xform.eDx = 10;
+	SetWorldTransform(hDC, &xform);
+
+	TEST(NtGdiSetDIBitsToDeviceInternal(hDC, 2, 3, 8, 8, 0, 0, 0, 8,
+	                                    (PVOID)InBits, (BITMAPINFO *)&bmi, DIB_RGB_COLORS,
+	                                    sizeof(InBits), sizeof(bmi), TRUE, NULL));
+
+	xform.eM11 = 1;
+	xform.eM22 = 1;
+	xform.eDx = 0;
+	SetWorldTransform(hDC, &xform);
+
+	/* Now get the data from the screen, and see if it matches */
 	for (y = 0; y < 8; y++)
 	{
 		DWORD Row = 0;
@@ -43,7 +81,9 @@ Test_NtGdiSetDIBitsToDeviceInternal(PTESTINFO pti)
 			Row |= (0x80 & GetPixel(hDC, 2 + x, 3 + y)) >> x;
 		OutBits[y] = Row;
 	}
+
 	TEST(memcmp(InBits, OutBits, sizeof(InBits)) == 0);
+
 
 	ReleaseDC(hWnd, hDC);
 	DestroyWindow(hWnd);

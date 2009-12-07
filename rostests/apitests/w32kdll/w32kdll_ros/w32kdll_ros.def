@@ -241,7 +241,7 @@ NtGdiMonoBitmap@4
 NtGdiMoveTo@16
 NtGdiOffsetClipRgn@12
 NtGdiOffsetRgn@12
-NtGdiOpenDCW@28
+NtGdiOpenDCW@32
 NtGdiPatBlt@24
 NtGdiPolyPatBlt@20
 NtGdiPathToRegion@4
@@ -497,7 +497,7 @@ NtUserRealInternalGetMessage@24
 NtUserRealWaitMessageEx@8
 NtUserRedrawWindow@16
 NtUserRegisterClassExWOW@28
-NtUserRegisterUserApiHook@8
+NtUserRegisterUserApiHook@16
 NtUserRegisterHotKey@16
 NtUserRegisterRawInputDevices@12
 NtUserRegisterTasklist@4
@@ -587,7 +587,7 @@ NtUserUnregisterUserApiHook@0
 NtUserUnregisterHotKey@8
 NtUserUpdateInputContext@12
 NtUserUpdateInstance@12
-NtUserUpdateLayeredWindow@36
+NtUserUpdateLayeredWindow@40
 NtUserGetLayeredWindowAttributes@16
 NtUserSetLayeredWindowAttributes@16
 NtUserUpdatePerUserSystemParameters@8

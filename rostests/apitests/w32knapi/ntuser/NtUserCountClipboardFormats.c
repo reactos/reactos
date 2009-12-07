@@ -1,5 +1,5 @@
 /* First the call stub */
-DWORD STDCALL
+DWORD WINAPI
 NtUserCountClipboardFormats(VOID)
 {
 	DWORD p;

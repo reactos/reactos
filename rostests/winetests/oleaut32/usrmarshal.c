@@ -35,10 +35,8 @@
 # define V_U2(A)  (*(A))
 #endif
 
-/* doesn't work on Windows due to needing more of the
- * MIDL_STUB_MESSAGE structure to be filled out */
-#define LPSAFEARRAY_UNMARSHAL_WORKS 0
-#define BSTR_UNMARSHAL_WORKS 0
+#define LPSAFEARRAY_UNMARSHAL_WORKS 1
+#define BSTR_UNMARSHAL_WORKS 1
 #define VARIANT_UNMARSHAL_WORKS 1
 
 static inline SF_TYPE get_union_type(SAFEARRAY *psa)
@@ -120,7 +118,7 @@ static void check_safearray(void *buffer, LPSAFEARRAY lpsa)
 
     if(!lpsa)
     {
-        ok(*(void **)wiresa == NULL, "wiresa + 0x0 should be NULL instead of 0x%08x\n", *(DWORD *)wiresa);
+        ok(*(DWORD *)wiresa == 0, "wiresa + 0x0 should be NULL instead of 0x%08x\n", *(DWORD *)wiresa);
         return;
     }
 
@@ -136,50 +134,79 @@ static void check_safearray(void *buffer, LPSAFEARRAY lpsa)
     wiresa += sizeof(DWORD);
     ok(*(WORD *)wiresa == lpsa->cDims, "wiresa + 0x8 should be lpsa->cDims instead of 0x%04x\n", *(WORD *)wiresa);
     wiresa += sizeof(WORD);
-    ok(*(WORD *)wiresa == lpsa->fFeatures, "wiresa + 0xc should be lpsa->fFeatures instead of 0x%08x\n", *(WORD *)wiresa);
+    ok(*(WORD *)wiresa == lpsa->fFeatures, "wiresa + 0xa should be lpsa->fFeatures instead of 0x%08x\n", *(WORD *)wiresa);
     wiresa += sizeof(WORD);
-    ok(*(DWORD *)wiresa == lpsa->cbElements, "wiresa + 0x10 should be lpsa->cbElements instead of 0x%08x\n", *(DWORD *)wiresa);
+    ok(*(DWORD *)wiresa == lpsa->cbElements, "wiresa + 0xc should be lpsa->cbElements instead of 0x%08x\n", *(DWORD *)wiresa);
     wiresa += sizeof(DWORD);
-    ok(*(WORD *)wiresa == lpsa->cLocks, "wiresa + 0x16 should be lpsa->cLocks instead of 0x%04x\n", *(WORD *)wiresa);
+    ok(*(WORD *)wiresa == lpsa->cLocks, "wiresa + 0x10 should be lpsa->cLocks instead of 0x%04x\n", *(WORD *)wiresa);
     wiresa += sizeof(WORD);
-    ok(*(WORD *)wiresa == vt, "wiresa + 0x14 should be %04x instead of 0x%04x\n", vt, *(WORD *)wiresa);
+    ok(*(WORD *)wiresa == vt, "wiresa + 0x12 should be %04x instead of 0x%04x\n", vt, *(WORD *)wiresa);
     wiresa += sizeof(WORD);
-    ok(*(DWORD *)wiresa == sftype, "wiresa + 0x18 should be %08x instead of 0x%08x\n", (DWORD)sftype, *(DWORD *)wiresa);
+    ok(*(DWORD *)wiresa == sftype, "wiresa + 0x14 should be %08x instead of 0x%08x\n", (DWORD)sftype, *(DWORD *)wiresa);
     wiresa += sizeof(DWORD);
-    ok(*(DWORD *)wiresa == cell_count, "wiresa + 0x1c should be %u instead of %u\n", cell_count, *(DWORD *)wiresa);
+    ok(*(DWORD *)wiresa == cell_count, "wiresa + 0x18 should be %u instead of %u\n", cell_count, *(DWORD *)wiresa);
     wiresa += sizeof(DWORD);
-    ok(*(DWORD_PTR *)wiresa == (DWORD_PTR)lpsa->pvData, "wiresa + 0x20 should be lpsa->pvData instead of 0x%08lx\n", *(DWORD_PTR *)wiresa);
-    wiresa += sizeof(DWORD_PTR);
+    ok(*(DWORD *)wiresa, "wiresa + 0x1c should be non-zero instead of 0x%08x\n", *(DWORD *)wiresa);
+    wiresa += sizeof(DWORD);
     if(sftype == SF_HAVEIID)
     {
         GUID guid;
         SafeArrayGetIID(lpsa, &guid);
-        ok(IsEqualGUID(&guid, (GUID*)wiresa), "guid mismatch\n");
+        ok(IsEqualGUID(&guid, wiresa), "guid mismatch\n");
         wiresa += sizeof(GUID);
     }
     ok(!memcmp(wiresa, lpsa->rgsabound, sizeof(lpsa->rgsabound[0]) * lpsa->cDims), "bounds mismatch\n");
     wiresa += sizeof(lpsa->rgsabound[0]) * lpsa->cDims;
 
-    ok(*(DWORD *)wiresa == cell_count, "wiresa + 0x2c should be %u instead of %u\n", cell_count, *(DWORD*)wiresa);
+    ok(*(DWORD *)wiresa == cell_count, "wiresa + 0x28 should be %u instead of %u\n", cell_count, *(DWORD*)wiresa);
     wiresa += sizeof(DWORD);
     /* elements are now pointed to by wiresa */
+}
+
+static void * WINAPI user_allocate(SIZE_T size)
+{
+    return CoTaskMemAlloc(size);
+}
+
+static void WINAPI user_free(void *p)
+{
+    CoTaskMemFree(p);
+}
+
+static void init_user_marshal_cb(USER_MARSHAL_CB *umcb,
+                                 PMIDL_STUB_MESSAGE stub_msg,
+                                 PRPC_MESSAGE rpc_msg, unsigned char *buffer,
+                                 unsigned int size, MSHCTX context)
+{
+    memset(rpc_msg, 0, sizeof(*rpc_msg));
+    rpc_msg->Buffer = buffer;
+    rpc_msg->BufferLength = size;
+
+    memset(stub_msg, 0, sizeof(*stub_msg));
+    stub_msg->RpcMsg = rpc_msg;
+    stub_msg->Buffer = buffer;
+    stub_msg->pfnAllocate = user_allocate;
+    stub_msg->pfnFree = user_free;
+
+    memset(umcb, 0, sizeof(*umcb));
+    umcb->Flags = MAKELONG(context, NDR_LOCAL_DATA_REPRESENTATION);
+    umcb->pStubMsg = stub_msg;
+    umcb->Signature = USER_MARSHAL_CB_SIGNATURE;
+    umcb->CBType = buffer ? USER_MARSHAL_CB_UNMARSHALL : USER_MARSHAL_CB_BUFFER_SIZE;
 }
 
 static void test_marshal_LPSAFEARRAY(void)
 {
     unsigned char *buffer;
-    unsigned long size;
+    ULONG size, expected;
     LPSAFEARRAY lpsa;
     LPSAFEARRAY lpsa2 = NULL;
     SAFEARRAYBOUND sab;
-    MIDL_STUB_MESSAGE stubMsg = { 0 };
-    USER_MARSHAL_CB umcb = { 0 };
+    RPC_MESSAGE rpc_msg;
+    MIDL_STUB_MESSAGE stub_msg;
+    USER_MARSHAL_CB umcb;
     HRESULT hr;
     VARTYPE vt;
-
-    umcb.Flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
-    umcb.pReserve = NULL;
-    umcb.pStubMsg = &stubMsg;
 
     sab.lLbound = 5;
     sab.cElements = 10;
@@ -188,11 +215,19 @@ static void test_marshal_LPSAFEARRAY(void)
     *(DWORD *)lpsa->pvData = 0xcafebabe;
 
     lpsa->cLocks = 7;
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = LPSAFEARRAY_UserSize(&umcb.Flags, 1, &lpsa);
-    ok(size == 68, "size should be 68 bytes, not %ld\n", size);
+    expected = (44 + 1 + sizeof(ULONG) - 1) & ~(sizeof(ULONG) - 1);
+    expected += sab.cElements * sizeof(USHORT);
+    ok(size == expected || size == expected + 12, /* win64 */
+       "size should be %u bytes, not %u\n", expected, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = LPSAFEARRAY_UserSize(&umcb.Flags, 0, &lpsa);
-    ok(size == 64, "size should be 64 bytes, not %ld\n", size);
+    expected = 44 + sab.cElements * sizeof(USHORT);
+    ok(size == expected || size == expected + 12, /* win64 */
+       "size should be %u bytes, not %u\n", expected, size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     LPSAFEARRAY_UserMarshal(&umcb.Flags, buffer, &lpsa);
 
     check_safearray(buffer, lpsa);
@@ -200,29 +235,36 @@ static void test_marshal_LPSAFEARRAY(void)
     if (LPSAFEARRAY_UNMARSHAL_WORKS)
     {
         VARTYPE vt, vt2;
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
         LPSAFEARRAY_UserUnmarshal(&umcb.Flags, buffer, &lpsa2);
         ok(lpsa2 != NULL, "LPSAFEARRAY didn't unmarshal\n");
         SafeArrayGetVartype(lpsa, &vt);
         SafeArrayGetVartype(lpsa2, &vt2);
         ok(vt == vt2, "vts differ %x %x\n", vt, vt2);
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
         LPSAFEARRAY_UserFree(&umcb.Flags, &lpsa2);
     }
     HeapFree(GetProcessHeap(), 0, buffer);
+    lpsa->cLocks = 0;
     SafeArrayDestroy(lpsa);
 
     /* test NULL safe array */
     lpsa = NULL;
 
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = LPSAFEARRAY_UserSize(&umcb.Flags, 0, &lpsa);
-    ok(size == 4, "size should be 4 bytes, not %ld\n", size);
+    ok(size == 4, "size should be 4 bytes, not %d\n", size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     LPSAFEARRAY_UserMarshal(&umcb.Flags, buffer, &lpsa);
     check_safearray(buffer, lpsa);
 
     if (LPSAFEARRAY_UNMARSHAL_WORKS)
     {
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
         LPSAFEARRAY_UserUnmarshal(&umcb.Flags, buffer, &lpsa2);
         ok(lpsa2 == NULL, "NULL LPSAFEARRAY didn't unmarshal\n");
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
         LPSAFEARRAY_UserFree(&umcb.Flags, &lpsa2);
     }
     HeapFree(GetProcessHeap(), 0, buffer);
@@ -234,16 +276,26 @@ static void test_marshal_LPSAFEARRAY(void)
     *(double *)lpsa->pvData = 3.1415;
 
     lpsa->cLocks = 7;
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = LPSAFEARRAY_UserSize(&umcb.Flags, 1, &lpsa);
-    ok(size == 128, "size should be 128 bytes, not %ld\n", size);
+    expected = (44 + 1 + (sizeof(double) - 1)) & ~(sizeof(double) - 1);
+    expected += sab.cElements * sizeof(double);
+    ok(size == expected || size == expected + 16, /* win64 */
+       "size should be %u bytes, not %u\n", expected, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    expected = (44 + (sizeof(double) - 1)) & ~(sizeof(double) - 1);
+    expected += sab.cElements * sizeof(double);
     size = LPSAFEARRAY_UserSize(&umcb.Flags, 0, &lpsa);
-    ok(size == 128, "size should be 128 bytes, not %ld\n", size);
+    ok(size == expected || size == expected + 8, /* win64 */
+       "size should be %u bytes, not %u\n", expected, size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     LPSAFEARRAY_UserMarshal(&umcb.Flags, buffer, &lpsa);
 
     check_safearray(buffer, lpsa);
 
     HeapFree(GetProcessHeap(), 0, buffer);
+    lpsa->cLocks = 0;
     SafeArrayDestroy(lpsa);
 
     /* VARTYPE-less arrays can be marshaled if cbElements is 1,2,4 or 8 as type SF_In */
@@ -258,9 +310,14 @@ static void test_marshal_LPSAFEARRAY(void)
     hr = SafeArrayGetVartype(lpsa, &vt);
     ok(hr == E_INVALIDARG, "ret %08x\n", hr);
 
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = LPSAFEARRAY_UserSize(&umcb.Flags, 0, &lpsa);
-    ok(size == 432, "size %ld\n", size);
+    expected = (44 + lpsa->cbElements - 1) & ~(lpsa->cbElements - 1);
+    expected += lpsa->cbElements * lpsa->rgsabound[0].cElements;
+    ok(size == expected || size == expected + 8,  /* win64 */
+       "size should be %u bytes, not %u\n", expected, size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     LPSAFEARRAY_UserMarshal(&umcb.Flags, buffer, &lpsa);
     check_safearray(buffer, lpsa);
     HeapFree(GetProcessHeap(), 0, buffer);
@@ -270,7 +327,7 @@ static void test_marshal_LPSAFEARRAY(void)
     /* VARTYPE-less arrays with FADF_VARIANT */
     hr = SafeArrayAllocDescriptor(1, &lpsa);
     ok(hr == S_OK, "saad failed %08x\n", hr);
-    lpsa->cbElements = 16;
+    lpsa->cbElements = sizeof(VARIANT);
     lpsa->fFeatures = FADF_VARIANT;
     lpsa->rgsabound[0].lLbound = 2;
     lpsa->rgsabound[0].cElements = 48;
@@ -280,11 +337,16 @@ static void test_marshal_LPSAFEARRAY(void)
     hr = SafeArrayGetVartype(lpsa, &vt);
     ok(hr == E_INVALIDARG, "ret %08x\n", hr);
 
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = LPSAFEARRAY_UserSize(&umcb.Flags, 0, &lpsa);
+    expected = 44 + 28 * lpsa->rgsabound[0].cElements;
     todo_wine
-    ok(size == 1388, "size %ld\n", size);
+    ok(size == expected || size == expected + 8,  /* win64 */
+       "size should be %u bytes, not %u\n", expected, size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     LPSAFEARRAY_UserMarshal(&umcb.Flags, buffer, &lpsa);
+    lpsa->cbElements = 16;  /* VARIANT wire size */
     check_safearray(buffer, lpsa);
     HeapFree(GetProcessHeap(), 0, buffer);
     SafeArrayDestroyData(lpsa);
@@ -314,30 +376,31 @@ static void check_bstr(void *buffer, BSTR b)
 
 static void test_marshal_BSTR(void)
 {
-    unsigned long size;
-    MIDL_STUB_MESSAGE stubMsg = { 0 };
-    USER_MARSHAL_CB umcb = { 0 };
+    ULONG size;
+    RPC_MESSAGE rpc_msg;
+    MIDL_STUB_MESSAGE stub_msg;
+    USER_MARSHAL_CB umcb;
     unsigned char *buffer, *next;
     BSTR b, b2;
     WCHAR str[] = {'m','a','r','s','h','a','l',' ','t','e','s','t','1',0};
     DWORD len;
-
-    umcb.Flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
-    umcb.pReserve = NULL;
-    umcb.pStubMsg = &stubMsg;
 
     b = SysAllocString(str);
     len = SysStringLen(b);
     ok(len == 13, "get %d\n", len);
 
     /* BSTRs are DWORD aligned */
-    size = BSTR_UserSize(&umcb.Flags, 1, &b);
-    ok(size == 42, "size %ld\n", size);
 
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    size = BSTR_UserSize(&umcb.Flags, 1, &b);
+    ok(size == 42, "size %d\n", size);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = BSTR_UserSize(&umcb.Flags, 0, &b);
-    ok(size == 38, "size %ld\n", size);
+    ok(size == 38, "size %d\n", size);
 
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     next = BSTR_UserMarshal(&umcb.Flags, buffer, &b);
     ok(next == buffer + size, "got %p expect %p\n", next, buffer + size);
     check_bstr(buffer, b);
@@ -345,10 +408,12 @@ static void test_marshal_BSTR(void)
     if (BSTR_UNMARSHAL_WORKS)
     {
         b2 = NULL;
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
         next = BSTR_UserUnmarshal(&umcb.Flags, buffer, &b2);
         ok(next == buffer + size, "got %p expect %p\n", next, buffer + size);
         ok(b2 != NULL, "BSTR didn't unmarshal\n");
         ok(!memcmp(b, b2, (len + 1) * 2), "strings differ\n");
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
         BSTR_UserFree(&umcb.Flags, &b2);
     }
 
@@ -356,10 +421,12 @@ static void test_marshal_BSTR(void)
     SysFreeString(b);
 
     b = NULL;
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = BSTR_UserSize(&umcb.Flags, 0, &b);
-    ok(size == 12, "size %ld\n", size);
+    ok(size == 12, "size %d\n", size);
 
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     next = BSTR_UserMarshal(&umcb.Flags, buffer, &b);
     ok(next == buffer + size, "got %p expect %p\n", next, buffer + size);
 
@@ -367,9 +434,11 @@ static void test_marshal_BSTR(void)
     if (BSTR_UNMARSHAL_WORKS)
     {
         b2 = NULL;
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
         next = BSTR_UserUnmarshal(&umcb.Flags, buffer, &b2);
         ok(next == buffer + size, "got %p expect %p\n", next, buffer + size);
         ok(b2 == NULL, "NULL BSTR didn't unmarshal\n");
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
         BSTR_UserFree(&umcb.Flags, &b2);
     }
     HeapFree(GetProcessHeap(), 0, buffer);
@@ -381,11 +450,13 @@ static void test_marshal_BSTR(void)
     len = SysStringByteLen(b);
     ok(len == 3, "get %d\n", len);
 
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = BSTR_UserSize(&umcb.Flags, 0, &b);
-    ok(size == 16, "size %ld\n", size);
+    ok(size == 16, "size %d\n", size);
 
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
     memset(buffer, 0xcc, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     next = BSTR_UserMarshal(&umcb.Flags, buffer, &b);
     ok(next == buffer + size, "got %p expect %p\n", next, buffer + size);
     check_bstr(buffer, b);
@@ -394,10 +465,12 @@ static void test_marshal_BSTR(void)
     if (BSTR_UNMARSHAL_WORKS)
     {
         b2 = NULL;
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
         next = BSTR_UserUnmarshal(&umcb.Flags, buffer, &b2);
         ok(next == buffer + size, "got %p expect %p\n", next, buffer + size);
         ok(b2 != NULL, "BSTR didn't unmarshal\n");
         ok(!memcmp(b, b2, len), "strings differ\n");
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
         BSTR_UserFree(&umcb.Flags, &b2);
     }
     HeapFree(GetProcessHeap(), 0, buffer);
@@ -409,10 +482,12 @@ static void test_marshal_BSTR(void)
     len = SysStringByteLen(b);
     ok(len == 0, "get %d\n", len);
 
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = BSTR_UserSize(&umcb.Flags, 0, &b);
-    ok(size == 12, "size %ld\n", size);
+    ok(size == 12, "size %d\n", size);
 
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     next = BSTR_UserMarshal(&umcb.Flags, buffer, &b);
     ok(next == buffer + size, "got %p expect %p\n", next, buffer + size);
     check_bstr(buffer, b);
@@ -420,11 +495,13 @@ static void test_marshal_BSTR(void)
     if (BSTR_UNMARSHAL_WORKS)
     {
         b2 = NULL;
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
         next = BSTR_UserUnmarshal(&umcb.Flags, buffer, &b2);
         ok(next == buffer + size, "got %p expect %p\n", next, buffer + size);
         ok(b2 != NULL, "NULL LPSAFEARRAY didn't unmarshal\n");
         len = SysStringByteLen(b2);
         ok(len == 0, "byte len %d\n", len);
+        init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
         BSTR_UserFree(&umcb.Flags, &b2);
     }
     HeapFree(GetProcessHeap(), 0, buffer);
@@ -442,7 +519,7 @@ static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, v
     if (IsEqualIID(riid, &IID_IUnknown))
     {
         IUnknown_AddRef(iface);
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         return S_OK;
     }
     *ppv = NULL;
@@ -470,12 +547,12 @@ static const IUnknownVtbl HeapUnknown_Vtbl =
     HeapUnknown_Release
 };
 
-static void check_variant_header(DWORD *wirev, VARIANT *v, unsigned long size)
+static void check_variant_header(DWORD *wirev, VARIANT *v, ULONG size)
 {
     WORD *wp;
     DWORD switch_is;
 
-    ok(*wirev == (size + 7) >> 3, "wv[0] %08x, expected %08lx\n", *wirev, (size + 7) >> 3);
+    ok(*wirev == (size + 7) >> 3, "wv[0] %08x, expected %08x\n", *wirev, (size + 7) >> 3);
     wirev++;
     ok(*wirev == 0, "wv[1] %08x\n", *wirev);
     wirev++;
@@ -495,6 +572,15 @@ static void check_variant_header(DWORD *wirev, VARIANT *v, unsigned long size)
     ok(*wirev == switch_is, "switch_is %08x expected %08x\n", *wirev, switch_is);
 }
 
+/* Win9x and WinME don't always align as needed. Variants have
+ * an alignment of 8.
+ */
+static void *alloc_aligned(SIZE_T size, void **buf)
+{
+    *buf = HeapAlloc(GetProcessHeap(), 0, size + 7);
+    return (void *)(((UINT_PTR)*buf + 7) & ~7);
+}
+
 static void test_marshal_VARIANT(void)
 {
     VARIANT v, v2;
@@ -502,6 +588,7 @@ static void test_marshal_VARIANT(void)
     RPC_MESSAGE rpcMsg = { 0 };
     USER_MARSHAL_CB umcb = { 0 };
     unsigned char *buffer, *next;
+    void *oldbuffer;
     ULONG ul;
     short s;
     double d;
@@ -512,6 +599,7 @@ static void test_marshal_VARIANT(void)
     LPSAFEARRAY lpsa;
     DECIMAL dec, dec2;
     HeapUnknown *heap_unknown;
+    DWORD expected;
 
     stubMsg.RpcMsg = &rpcMsg;
 
@@ -526,6 +614,13 @@ static void test_marshal_VARIANT(void)
     V_VT(&v) = VT_I1;
     V_I1(&v) = 0x12;
 
+    /* check_variant_header tests wReserved[123], so initialize to unique values.
+     * (Could probably also do this by setting the variant to a known DECIMAL.)
+     */
+    V_U2(&v).wReserved1 = 0x1234;
+    V_U2(&v).wReserved2 = 0x5678;
+    V_U2(&v).wReserved3 = 0x9abc;
+
     /* Variants have an alignment of 8 */
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 1, &v);
     ok(stubMsg.BufferLength == 29, "size %d\n", stubMsg.BufferLength);
@@ -533,7 +628,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 21, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -553,7 +648,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** I2 ***/
     VariantInit(&v);
@@ -563,7 +658,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 22, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -583,7 +678,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** I2 BYREF ***/
     VariantInit(&v);
@@ -594,7 +689,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 26, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -607,16 +702,20 @@ static void test_marshal_VARIANT(void)
     ok(*(short*)wirev == s, "wv[6] %08x\n", *wirev);
     if (VARIANT_UNMARSHAL_WORKS)
     {
+        void *mem;
         VariantInit(&v2);
+        V_VT(&v2) = VT_I2 | VT_BYREF;
+        V_BYREF(&v2) = mem = CoTaskMemAlloc(sizeof(V_I2(&v2)));
         stubMsg.Buffer = buffer;
         next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v2);
         ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
         ok(V_VT(&v) == V_VT(&v2), "got vt %d expect %d\n", V_VT(&v), V_VT(&v2));
+        ok(V_BYREF(&v2) == mem, "didn't reuse existing memory\n");
         ok(*V_I2REF(&v) == *V_I2REF(&v2), "got i2 ref %x expect ui4 ref %x\n", *V_I2REF(&v), *V_I2REF(&v2));
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** I4 ***/
     VariantInit(&v);
@@ -626,7 +725,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 24, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -647,8 +746,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** UI4 ***/
     VariantInit(&v);
@@ -658,7 +756,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 24, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -678,8 +776,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** UI4 BYREF ***/
     VariantInit(&v);
@@ -690,7 +787,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 28, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -713,7 +810,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** R4 ***/
     VariantInit(&v);
@@ -723,7 +820,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 24, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -743,7 +840,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** R8 ***/
     VariantInit(&v);
@@ -753,7 +850,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 32, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     memset(buffer, 0xcc, stubMsg.BufferLength);
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
@@ -776,7 +873,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** R8 BYREF ***/
     VariantInit(&v);
@@ -787,7 +884,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 32, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -809,7 +906,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** VARIANT_BOOL ***/
     VariantInit(&v);
@@ -819,7 +916,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 22, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -839,10 +936,11 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** DECIMAL ***/
     VarDecFromI4(0x12345678, &dec);
+    dec.wReserved = 0xfedc;          /* Also initialize reserved field, as we check it later */
     VariantInit(&v);
     V_DECIMAL(&v) = dec;
     V_VT(&v) = VT_DECIMAL;
@@ -850,7 +948,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 40, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     memset(buffer, 0xcc, stubMsg.BufferLength);
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
@@ -876,7 +974,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** DECIMAL BYREF ***/
     VariantInit(&v);
@@ -886,7 +984,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 40, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -900,6 +998,13 @@ static void test_marshal_VARIANT(void)
     if (VARIANT_UNMARSHAL_WORKS)
     {
         VariantInit(&v2);
+        /* check_variant_header tests wReserved[123], so initialize to unique values.
+         * (Could probably also do this by setting the variant to a known DECIMAL.)
+         */
+        V_U2(&v2).wReserved1 = 0x0123;
+        V_U2(&v2).wReserved2 = 0x4567;
+        V_U2(&v2).wReserved3 = 0x89ab;
+
         stubMsg.Buffer = buffer;
         next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v2);
         ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -908,7 +1013,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** EMPTY ***/
     VariantInit(&v);
@@ -917,7 +1022,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 20, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -934,7 +1039,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** NULL ***/
     VariantInit(&v);
@@ -943,7 +1048,7 @@ static void test_marshal_VARIANT(void)
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 20, "size %d\n", stubMsg.BufferLength);
 
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -960,7 +1065,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** BSTR ***/
     b = SysAllocString(str);
@@ -970,7 +1075,7 @@ static void test_marshal_VARIANT(void)
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 60, "size %d\n", stubMsg.BufferLength);
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -993,7 +1098,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** BSTR BYREF ***/
     VariantInit(&v);
@@ -1002,7 +1107,7 @@ static void test_marshal_VARIANT(void)
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 64, "size %d\n", stubMsg.BufferLength);
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -1027,7 +1132,7 @@ static void test_marshal_VARIANT(void)
 
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
     SysFreeString(b);
 
     /*** ARRAY ***/
@@ -1037,21 +1142,22 @@ static void test_marshal_VARIANT(void)
     lpsa = SafeArrayCreate(VT_R8, 1, &sab);
     *(DWORD *)lpsa->pvData = 0xcafebabe;
     *((DWORD *)lpsa->pvData + 1) = 0xdeadbeef;
-    lpsa->cLocks = 7;
 
     VariantInit(&v);
     V_VT(&v) = VT_UI4 | VT_ARRAY;
     V_ARRAY(&v) = lpsa;
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
-    ok(stubMsg.BufferLength == 152, "size %d\n", stubMsg.BufferLength);
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    expected = 152;
+    ok(stubMsg.BufferLength == expected || stubMsg.BufferLength == expected + 8, /* win64 */
+       "size %u instead of %u\n", stubMsg.BufferLength, expected);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
-    ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
+    ok(next == buffer + expected, "got %p expect %p\n", next, buffer + expected);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
+    check_variant_header(wirev, &v, expected);
     wirev += 5;
     ok(*wirev, "wv[5] %08x\n", *wirev); /* win2k: this is lpsa. winxp: this is (char*)lpsa + 1 */
     wirev++;
@@ -1063,7 +1169,7 @@ static void test_marshal_VARIANT(void)
         VariantInit(&v2);
         stubMsg.Buffer = buffer;
         next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v2);
-        ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
+        ok(next == buffer + expected, "got %p expect %p\n", next, buffer + expected);
         ok(V_VT(&v) == V_VT(&v2), "got vt %d expect %d\n", V_VT(&v), V_VT(&v2));
         ok(SafeArrayGetDim(V_ARRAY(&v)) == SafeArrayGetDim(V_ARRAY(&v)), "array dims differ\n");  
         SafeArrayGetLBound(V_ARRAY(&v), 1, &bound);
@@ -1077,7 +1183,7 @@ static void test_marshal_VARIANT(void)
         ok(vt == vt2, "array vts differ %x %x\n", vt, vt2);
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** ARRAY BYREF ***/
     VariantInit(&v);
@@ -1085,14 +1191,16 @@ static void test_marshal_VARIANT(void)
     V_ARRAYREF(&v) = &lpsa;
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
-    ok(stubMsg.BufferLength == 152, "size %d\n", stubMsg.BufferLength);
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    expected = 152;
+    ok(stubMsg.BufferLength == expected || stubMsg.BufferLength == expected + 16, /* win64 */
+       "size %u instead of %u\n", stubMsg.BufferLength, expected);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
-    ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
+    ok(next == buffer + expected, "got %p expect %p\n", next, buffer + expected);
     wirev = (DWORD*)buffer;
     
-    check_variant_header(wirev, &v, stubMsg.BufferLength);
+    check_variant_header(wirev, &v, expected);
     wirev += 5;
     ok(*wirev == 4, "wv[5] %08x\n", *wirev);
     wirev++;
@@ -1106,7 +1214,7 @@ static void test_marshal_VARIANT(void)
         VariantInit(&v2);
         stubMsg.Buffer = buffer;
         next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v2);
-        ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
+        ok(next == buffer + expected, "got %p expect %p\n", next, buffer + expected);
         ok(V_VT(&v) == V_VT(&v2), "got vt %d expect %d\n", V_VT(&v), V_VT(&v2));
         ok(SafeArrayGetDim(*V_ARRAYREF(&v)) == SafeArrayGetDim(*V_ARRAYREF(&v)), "array dims differ\n");  
         SafeArrayGetLBound(*V_ARRAYREF(&v), 1, &bound);
@@ -1120,7 +1228,7 @@ static void test_marshal_VARIANT(void)
         ok(vt == vt2, "array vts differ %x %x\n", vt, vt2);
         VARIANT_UserFree(&umcb.Flags, &v2);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
     SafeArrayDestroy(lpsa);
 
     /*** VARIANT BYREF ***/
@@ -1133,7 +1241,7 @@ static void test_marshal_VARIANT(void)
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength == 64, "size %d\n", stubMsg.BufferLength);
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     memset(buffer, 0xcc, stubMsg.BufferLength);
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
@@ -1142,7 +1250,7 @@ static void test_marshal_VARIANT(void)
     check_variant_header(wirev, &v, stubMsg.BufferLength);
     wirev += 5;
 
-    ok(*wirev == 16, "wv[5] %08x\n", *wirev);
+    ok(*wirev == sizeof(VARIANT), "wv[5] %08x\n", *wirev);
     wirev++;
     ok(*wirev == ('U' | 's' << 8 | 'e' << 16 | 'r' << 24), "wv[6] %08x\n", *wirev); /* 'User' */
     wirev++;
@@ -1166,7 +1274,7 @@ static void test_marshal_VARIANT(void)
         ok(V_R8(V_VARIANTREF(&v)) == V_R8(V_VARIANTREF(&v3)), "r8s differ\n"); 
         VARIANT_UserFree(&umcb.Flags, &v3);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** UNKNOWN ***/
     heap_unknown = HeapAlloc(GetProcessHeap(), 0, sizeof(*heap_unknown));
@@ -1179,7 +1287,7 @@ static void test_marshal_VARIANT(void)
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength > 32, "size %d\n", stubMsg.BufferLength);
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     memset(buffer, 0xcc, stubMsg.BufferLength);
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
@@ -1209,14 +1317,12 @@ static void test_marshal_VARIANT(void)
         stubMsg.Buffer = buffer;
         next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v3);
         ok(V_VT(&v) == V_VT(&v3), "got vt %d expect %d\n", V_VT(&v), V_VT(&v3));
-        ok(V_VT(V_VARIANTREF(&v)) == V_VT(V_VARIANTREF(&v3)), "vts differ %x %x\n",
-           V_VT(V_VARIANTREF(&v)), V_VT(V_VARIANTREF(&v3)));
-        ok(V_R8(V_VARIANTREF(&v)) == V_R8(V_VARIANTREF(&v3)), "r8s differ\n");
+        ok(V_UNKNOWN(&v) == V_UNKNOWN(&v3), "got %p expect %p\n", V_UNKNOWN(&v), V_UNKNOWN(&v3));
         VARIANT_UserFree(&umcb.Flags, &v3);
         ok(heap_unknown->refs == 1, "%d refcounts of IUnknown leaked\n", heap_unknown->refs - 1);
         IUnknown_Release((IUnknown *)heap_unknown);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 
     /*** UNKNOWN BYREF ***/
     heap_unknown = HeapAlloc(GetProcessHeap(), 0, sizeof(*heap_unknown));
@@ -1229,7 +1335,7 @@ static void test_marshal_VARIANT(void)
 
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
     ok(stubMsg.BufferLength > 36, "size %d\n", stubMsg.BufferLength);
-    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = HeapAlloc(GetProcessHeap(), 0, stubMsg.BufferLength);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
     stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
     memset(buffer, 0xcc, stubMsg.BufferLength);
     next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
@@ -1266,7 +1372,7 @@ static void test_marshal_VARIANT(void)
         ok(heap_unknown->refs == 1, "%d refcounts of IUnknown leaked\n", heap_unknown->refs - 1);
         IUnknown_Release((IUnknown *)heap_unknown);
     }
-    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
 }
 
 

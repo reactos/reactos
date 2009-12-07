@@ -28,6 +28,7 @@
 #define ES_COMBO 0x200
 #endif
 
+#define ID_EDITTESTDBUTTON 0x123
 #define ID_EDITTEST2 99
 #define MAXLEN 200
 
@@ -646,8 +647,8 @@ static void set_client_height(HWND Wnd, unsigned Height)
 
     GetClientRect(Wnd, &ClientRect);
     ok(ClientRect.bottom - ClientRect.top == Height,
-        "The client height should be %ld, but is %ld\n",
-        (long)Height, (long)(ClientRect.bottom - ClientRect.top));
+        "The client height should be %d, but is %d\n",
+        Height, ClientRect.bottom - ClientRect.top);
 }
 
 static void test_edit_control_1(void)
@@ -1177,9 +1178,13 @@ static void test_edit_control_4(void)
 static void test_edit_control_5(void)
 {
     static const char *str = "test\r\ntest";
+    HWND parentWnd;
     HWND hWnd;
     int len;
+    RECT rc1 = { 10, 10, 11, 11};
+    RECT rc;
 
+    /* first show that a non-child won't do for this test */
     hWnd = CreateWindowEx(0,
               "EDIT",
               str,
@@ -1187,21 +1192,89 @@ static void test_edit_control_5(void)
               10, 10, 1, 1,
               NULL, NULL, NULL, NULL);
     assert(hWnd);
-
+    /* size of non-child edit control is (much) bigger than requested */
+    GetWindowRect( hWnd, &rc);
+    ok( rc.right - rc.left > 20, "size of the window (%d) is smaller than expected\n",
+            rc.right - rc.left);
+    DestroyWindow(hWnd);
+    /* so create a parent, and give it edit controls children to test with */
+    parentWnd = CreateWindowEx(0,
+                            szEditTextPositionClass,
+                            "Edit Test", WS_VISIBLE |
+                            WS_OVERLAPPEDWINDOW,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            250, 250,
+                            NULL, NULL, hinst, NULL);
+    assert(parentWnd);
+    ShowWindow( parentWnd, SW_SHOW);
+    /* single line */
+    hWnd = CreateWindowEx(0,
+              "EDIT",
+              str, WS_VISIBLE | WS_BORDER |
+              WS_CHILD,
+              rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
+              parentWnd, NULL, NULL, NULL);
+    assert(hWnd);
+    GetClientRect( hWnd, &rc);
+    ok( rc.right == rc1.right - rc1.left && rc.bottom == rc1.bottom - rc1.top,
+            "Client rectangle not the expected size (%d,%d,%d,%d)\n",
+            rc.left, rc.top, rc.right, rc.bottom);
     len = SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
     ok(lstrlenA(str) == len, "text shouldn't have been truncated\n");
     DestroyWindow(hWnd);
-
+    /* multi line */
     hWnd = CreateWindowEx(0,
               "EDIT",
               str,
-              ES_MULTILINE,
-              10, 10, 1, 1,
-              NULL, NULL, NULL, NULL);
+              WS_CHILD | ES_MULTILINE,
+              rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
+              parentWnd, NULL, NULL, NULL);
     assert(hWnd);
-
+    GetClientRect( hWnd, &rc);
+    ok( rc.right == rc1.right - rc1.left && rc.bottom == rc1.bottom - rc1.top,
+            "Client rectangle not the expected size (%d,%d,%d,%d)\n",
+            rc.left, rc.top, rc.right, rc.bottom);
     len = SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
     ok(lstrlenA(str) == len, "text shouldn't have been truncated\n");
+    DestroyWindow(hWnd);
+}
+
+/* Test WM_GETTEXT processing
+ * after destroy messages
+ */
+static void test_edit_control_6(void)
+{
+    static const char *str = "test\r\ntest";
+    char buf[MAXLEN];
+    LONG ret;
+    HWND hWnd;
+
+    hWnd = CreateWindowEx(0,
+              "EDIT",
+              "Test",
+              0,
+              10, 10, 1, 1,
+              NULL, NULL, hinst, NULL);
+    assert(hWnd);
+
+    ret = SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)str);
+    ok(ret == TRUE, "Expected %d, got %d\n", TRUE, ret);
+    ret = SendMessageA(hWnd, WM_GETTEXT, MAXLEN, (LPARAM)buf);
+    ok(ret == lstrlen(str), "Expected %s, got len %d\n", str, ret);
+    ok(!lstrcmp(buf, str), "Expected %s, got %s\n", str, buf);
+    buf[0] = 0;
+    ret = SendMessageA(hWnd, WM_DESTROY, 0, 0);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ret = SendMessageA(hWnd, WM_GETTEXT, MAXLEN, (LPARAM)buf);
+    ok(ret == lstrlen(str), "Expected %s, got len %d\n", str, ret);
+    ok(!lstrcmp(buf, str), "Expected %s, got %s\n", str, buf);
+    buf[0] = 0;
+    ret = SendMessageA(hWnd, WM_NCDESTROY, 0, 0);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ret = SendMessageA(hWnd, WM_GETTEXT, MAXLEN, (LPARAM)buf);
+    ok(ret == 0, "Expected 0, got len %d\n", ret);
+    ok(!lstrcmp(buf, ""), "Expected empty string, got %s\n", buf);
+
     DestroyWindow(hWnd);
 }
 
@@ -1336,29 +1409,40 @@ static void test_margins_font_change(void)
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0,0));
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 0, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 0, "got %d\n", HIWORD(margins));
+    ok(LOWORD(margins) == 0 || broken(LOWORD(margins) == LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 0 || broken(HIWORD(margins) == HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
  
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,0));
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 0, "got %d\n", HIWORD(margins));  
+    ok(LOWORD(margins) == 1 || broken(LOWORD(margins) == LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 0 || broken(HIWORD(margins) == HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
 
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,1));
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins));  
+    ok(LOWORD(margins) == 1 || broken(LOWORD(margins) == LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 1 || broken(HIWORD(margins) == HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
 
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO,EC_USEFONTINFO));
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins)); 
+    ok(LOWORD(margins) == 1 || broken(LOWORD(margins) == LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 1 || broken(HIWORD(margins) == HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
+
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont2, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins)); 
+    ok(LOWORD(margins) == 1 || broken(LOWORD(margins) != 1 && LOWORD(margins) != LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 1 || broken(HIWORD(margins) != 1 && HIWORD(margins) != HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
  
     /* Above a certain size threshold then the margin is updated */
     SetWindowPos(hwEdit, NULL, 10, 10, 1000, 100, SWP_NOZORDER | SWP_NOACTIVATE);
@@ -1380,7 +1464,8 @@ static void test_margins_font_change(void)
     ok(HIWORD(margins) == HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont2, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) != LOWORD(font_margins), "got %d\n", LOWORD(margins));
+    ok(LOWORD(margins) != LOWORD(font_margins) || broken(LOWORD(margins) == LOWORD(font_margins)), /* win98 */
+       "got %d\n", LOWORD(margins));
     ok(HIWORD(margins) != HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
 
     SendMessageA(hwEdit, WM_SETFONT, 0, 0);
@@ -1772,9 +1857,9 @@ static void test_edit_dialog(void)
 
     /* more tests for WM_KEYDOWN + WM_CHAR */
     r = DialogBoxParam(hinst, "EDIT_READONLY_DIALOG", NULL, (DLGPROC)edit_dialog_proc, 6);
-    todo_wine ok(444 == r, "Expected %d, got %d\n", 444, r);
+    ok(444 == r, "Expected %d, got %d\n", 444, r);
     r = DialogBoxParam(hinst, "EDIT_READONLY_DIALOG", NULL, (DLGPROC)edit_dialog_proc, 7);
-    todo_wine ok(444 == r, "Expected %d, got %d\n", 444, r);
+    ok(444 == r, "Expected %d, got %d\n", 444, r);
     r = DialogBoxParam(hinst, "EDIT_READONLY_DIALOG", NULL, (DLGPROC)edit_dialog_proc, 8);
     ok(444 == r, "Expected %d, got %d\n", 444, r);
 
@@ -1796,9 +1881,9 @@ static void test_edit_dialog(void)
 
     /* tests for WM_KEYDOWN + WM_CHAR */
     r = DialogBoxParam(hinst, "EDIT_DIALOG", NULL, (DLGPROC)edit_dialog_proc, 6);
-    todo_wine ok(444 == r, "Expected %d, got %d\n", 444, r);
+    ok(444 == r, "Expected %d, got %d\n", 444, r);
     r = DialogBoxParam(hinst, "EDIT_DIALOG", NULL, (DLGPROC)edit_dialog_proc, 7);
-    todo_wine ok(444 == r, "Expected %d, got %d\n", 444, r);
+    ok(444 == r, "Expected %d, got %d\n", 444, r);
     r = DialogBoxParam(hinst, "EDIT_DIALOG", NULL, (DLGPROC)edit_dialog_proc, 8);
     ok(444 == r, "Expected %d, got %d\n", 444, r);
 
@@ -1846,7 +1931,7 @@ static void test_wantreturn_edit_dialog(void)
 
     /* tests for WM_KEYDOWN + WM_CHAR */
     r = DialogBoxParam(hinst, "EDIT_WANTRETURN_DIALOG", NULL, (DLGPROC)edit_wantreturn_dialog_proc, 6);
-    todo_wine ok(444 == r, "Expected %d, got %d\n", 444, r);
+    ok(444 == r, "Expected %d, got %d\n", 444, r);
     r = DialogBoxParam(hinst, "EDIT_WANTRETURN_DIALOG", NULL, (DLGPROC)edit_wantreturn_dialog_proc, 7);
     ok(444 == r, "Expected %d, got %d\n", 444, r);
     r = DialogBoxParam(hinst, "EDIT_WANTRETURN_DIALOG", NULL, (DLGPROC)edit_wantreturn_dialog_proc, 8);
@@ -1961,7 +2046,7 @@ static BOOL RegisterWindowClasses (void)
     test3.cbWndExtra = 0;
     test3.hInstance = hinst;
     test3.hIcon = 0;
-    test3.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    test3.hCursor = LoadCursorA(0, IDC_ARROW);
     test3.hbrBackground = GetStockObject(WHITE_BRUSH);
     test3.lpszMenuName = NULL;
     test3.lpszClassName = szEditTest3Class;
@@ -1989,6 +2074,231 @@ static void UnregisterWindowClasses (void)
     UnregisterClassA(szEditTextPositionClass, hinst);
 }
 
+static void test_fontsize(void)
+{
+    HWND hwEdit;
+    HFONT hfont;
+    LOGFONT lf;
+    LONG r;
+    char szLocalString[MAXLEN];
+
+    memset(&lf,0,sizeof(LOGFONTA));
+    strcpy(lf.lfFaceName,"Arial");
+    lf.lfHeight = -300; /* taller than the edit box */
+    lf.lfWeight = 500;
+    hfont = CreateFontIndirect(&lf);
+
+    trace("EDIT: Oversized font (Multi line)\n");
+    hwEdit= CreateWindow("EDIT", NULL, ES_MULTILINE|ES_AUTOHSCROLL,
+                           0, 0, 150, 50, NULL, NULL, hinst, NULL);
+
+    SendMessage(hwEdit,WM_SETFONT,(WPARAM)hfont,0);
+
+    if (winetest_interactive)
+        ShowWindow (hwEdit, SW_SHOW);
+
+    r = SendMessage(hwEdit, WM_CHAR, 'A', 1);
+    ok(1 == r, "Expected: %d, got: %d\n", 1, r);
+    r = SendMessage(hwEdit, WM_CHAR, 'B', 1);
+    ok(1 == r, "Expected: %d, got: %d\n", 1, r);
+    r = SendMessage(hwEdit, WM_CHAR, 'C', 1);
+    ok(1 == r, "Expected: %d, got: %d\n", 1, r);
+
+    GetWindowText(hwEdit, szLocalString, MAXLEN);
+    ok(lstrcmp(szLocalString, "ABC")==0,
+       "Wrong contents of edit: %s\n", szLocalString);
+
+    r = SendMessage(hwEdit, EM_POSFROMCHAR,0,0);
+    ok(r != -1,"EM_POSFROMCHAR failed index 0\n");
+    r = SendMessage(hwEdit, EM_POSFROMCHAR,1,0);
+    ok(r != -1,"EM_POSFROMCHAR failed index 1\n");
+    r = SendMessage(hwEdit, EM_POSFROMCHAR,2,0);
+    ok(r != -1,"EM_POSFROMCHAR failed index 2\n");
+    r = SendMessage(hwEdit, EM_POSFROMCHAR,3,0);
+    ok(r == -1,"EM_POSFROMCHAR succeeded index 3\n");
+
+    DestroyWindow (hwEdit);
+    DeleteObject(hfont);
+}
+
+struct dialog_mode_messages
+{
+    int wm_getdefid, wm_close, wm_command, wm_nextdlgctl;
+};
+
+static struct dialog_mode_messages dm_messages;
+
+static void zero_dm_messages(void)
+{
+    dm_messages.wm_command      = 0;
+    dm_messages.wm_close        = 0;
+    dm_messages.wm_getdefid     = 0;
+    dm_messages.wm_nextdlgctl   = 0;
+}
+
+#define test_dm_messages(wmcommand, wmclose, wmgetdefid, wmnextdlgctl) \
+    ok(dm_messages.wm_command == wmcommand, "expected %d WM_COMMAND messages, " \
+    "got %d\n", wmcommand, dm_messages.wm_command); \
+    ok(dm_messages.wm_close == wmclose, "expected %d WM_CLOSE messages, " \
+    "got %d\n", wmclose, dm_messages.wm_close); \
+    ok(dm_messages.wm_getdefid == wmgetdefid, "expected %d WM_GETDIFID messages, " \
+    "got %d\n", wmgetdefid, dm_messages.wm_getdefid);\
+    ok(dm_messages.wm_nextdlgctl == wmnextdlgctl, "expected %d WM_NEXTDLGCTL messages, " \
+    "got %d\n", wmnextdlgctl, dm_messages.wm_nextdlgctl)
+
+static LRESULT CALLBACK dialog_mode_wnd_proc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (iMsg)
+    {
+        case WM_COMMAND:
+            dm_messages.wm_command++;
+            break;
+        case DM_GETDEFID:
+            dm_messages.wm_getdefid++;
+            return MAKELONG(ID_EDITTESTDBUTTON, DC_HASDEFID);
+        case WM_NEXTDLGCTL:
+            dm_messages.wm_nextdlgctl++;
+            break;
+        case WM_CLOSE:
+            dm_messages.wm_close++;
+            break;
+    }
+
+    return DefWindowProc(hwnd, iMsg, wParam, lParam);
+}
+
+static void test_dialogmode(void)
+{
+    HWND hwEdit, hwParent, hwButton;
+    MSG msg= {0};
+    int len, r;
+    hwEdit = create_child_editcontrol(ES_MULTILINE, 0);
+
+    r = SendMessage(hwEdit, WM_CHAR, VK_RETURN, 0x1c0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    len = SendMessage(hwEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(11 == len, "expected 11, got %d\n", len);
+
+    r = SendMessage(hwEdit, WM_GETDLGCODE, (WPARAM)NULL, (LPARAM)NULL);
+    ok(0x8d == r, "expected 0x8d, got 0x%x\n", r);
+
+    r = SendMessage(hwEdit, WM_CHAR, VK_RETURN, 0x1c0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    len = SendMessage(hwEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(13 == len, "expected 13, got %d\n", len);
+
+    r = SendMessage(hwEdit, WM_GETDLGCODE, (WPARAM)NULL, (LPARAM)&msg);
+    ok(0x8d == r, "expected 0x8d, got 0x%x\n", r);
+    r = SendMessage(hwEdit, WM_CHAR, VK_RETURN, 0x1c0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    len = SendMessage(hwEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(13 == len, "expected 13, got %d\n", len);
+
+    r = SendMessage(hwEdit, WM_CHAR, VK_RETURN, 0x1c0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    len = SendMessage(hwEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(13 == len, "expected 13, got %d\n", len);
+
+    destroy_child_editcontrol(hwEdit);
+
+    hwEdit = create_editcontrol(ES_MULTILINE, 0);
+
+    r = SendMessage(hwEdit, WM_CHAR, VK_RETURN, 0x1c0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    len = SendMessage(hwEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(11 == len, "expected 11, got %d\n", len);
+
+    msg.hwnd = hwEdit;
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_BACK;
+    msg.lParam = 0xe0001;
+    r = SendMessage(hwEdit, WM_GETDLGCODE, VK_BACK, (LPARAM)&msg);
+    ok(0x8d == r, "expected 0x8d, got 0x%x\n", r);
+
+    r = SendMessage(hwEdit, WM_CHAR, VK_RETURN, 0x1c0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    len = SendMessage(hwEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(11 == len, "expected 11, got %d\n", len);
+
+    DestroyWindow(hwEdit);
+
+    hwEdit = create_child_editcontrol(0, 0);
+    hwParent = GetParent(hwEdit);
+    SetWindowLongPtr(hwParent, GWLP_WNDPROC, (LONG_PTR)dialog_mode_wnd_proc);
+
+    zero_dm_messages();
+    r = SendMessage(hwEdit, WM_KEYDOWN, VK_ESCAPE, 0x10001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    test_dm_messages(0, 0, 0, 0);
+    zero_dm_messages();
+
+    r = SendMessage(hwEdit, WM_KEYDOWN, VK_TAB, 0xf0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    test_dm_messages(0, 0, 0, 0);
+    zero_dm_messages();
+
+    msg.hwnd = hwEdit;
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_TAB;
+    msg.lParam = 0xf0001;
+    r = SendMessage(hwEdit, WM_GETDLGCODE, VK_TAB, (LPARAM)&msg);
+    ok(0x89 == r, "expected 0x89, got 0x%x\n", r);
+    test_dm_messages(0, 0, 0, 0);
+    zero_dm_messages();
+
+    r = SendMessage(hwEdit, WM_KEYDOWN, VK_TAB, 0xf0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    test_dm_messages(0, 0, 0, 0);
+    zero_dm_messages();
+
+    destroy_child_editcontrol(hwEdit);
+
+    hwEdit = create_child_editcontrol(ES_MULTILINE, 0);
+    hwParent = GetParent(hwEdit);
+    SetWindowLongPtr(hwParent, GWLP_WNDPROC, (LONG_PTR)dialog_mode_wnd_proc);
+
+    r = SendMessage(hwEdit, WM_KEYDOWN, VK_TAB, 0xf0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    test_dm_messages(0, 0, 0, 0);
+    zero_dm_messages();
+
+    msg.hwnd = hwEdit;
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_ESCAPE;
+    msg.lParam = 0x10001;
+    r = SendMessage(hwEdit, WM_GETDLGCODE, VK_ESCAPE, (LPARAM)&msg);
+    ok(0x8d == r, "expected 0x8d, got 0x%x\n", r);
+    test_dm_messages(0, 0, 0, 0);
+    zero_dm_messages();
+
+    r = SendMessage(hwEdit, WM_KEYDOWN, VK_ESCAPE, 0x10001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    test_dm_messages(0, 0, 0, 0);
+    zero_dm_messages();
+
+    r = SendMessage(hwEdit, WM_KEYDOWN, VK_TAB, 0xf0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    test_dm_messages(0, 0, 0, 1);
+    zero_dm_messages();
+
+    r = SendMessage(hwEdit, WM_KEYDOWN, VK_RETURN, 0x1c0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    test_dm_messages(0, 0, 1, 0);
+    zero_dm_messages();
+
+    hwButton = CreateWindow("BUTTON", "OK", WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON,
+        100, 100, 50, 20, hwParent, (HMENU)ID_EDITTESTDBUTTON, hinst, NULL);
+    ok(hwButton!=NULL, "CreateWindow failed with error code %d\n", GetLastError());
+
+    r = SendMessage(hwEdit, WM_KEYDOWN, VK_RETURN, 0x1c0001);
+    ok(1 == r, "expected 1, got %d\n", r);
+    test_dm_messages(0, 0, 1, 1);
+    zero_dm_messages();
+
+    DestroyWindow(hwButton);
+    destroy_child_editcontrol(hwEdit);
+}
+
 START_TEST(edit)
 {
     hinst = GetModuleHandleA(NULL);
@@ -1999,6 +2309,7 @@ START_TEST(edit)
     test_edit_control_3();
     test_edit_control_4();
     test_edit_control_5();
+    test_edit_control_6();
     test_edit_control_limittext();
     test_margins();
     test_margins_font_change();
@@ -2012,6 +2323,8 @@ START_TEST(edit)
     test_wantreturn_edit_dialog();
     test_singleline_wantreturn_edit_dialog();
     test_child_edit_wmkeydown();
+    test_fontsize();
+    test_dialogmode();
 
     UnregisterWindowClasses();
 }

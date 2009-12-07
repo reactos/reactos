@@ -240,9 +240,9 @@ int main(int argc, char **argv)
       return 0;
    }
 
-   if (!stricmp(argv[1], "socket"))
+   if (!_stricmp(argv[1], "socket"))
       return SocketTest();
-   if (!stricmp(argv[1], "virtual"))
+   if (!_stricmp(argv[1], "virtual"))
       return VirtualTest();
 
    printf("Test '%s' doesn't exist\n", argv[1]);

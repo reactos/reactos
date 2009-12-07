@@ -45,7 +45,7 @@ static void wsprintfWTest(void)
     rc=wsprintfW(buf, fmt, -1);
     if (rc==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("wsprintfW is not implemented\n");
+        win_skip("wsprintfW is not implemented\n");
         return;
     }
     ok(rc == 10, "wsPrintfW length failure: rc=%d error=%d\n",rc,GetLastError());
@@ -59,12 +59,12 @@ static void wsprintfWTest(void)
 
 static void CharUpperTest(void)
 {
-    int i,out,failed;
+    INT_PTR i,out,failed;
 
     failed = 0;
     for (i=0;i<256;i++)
     	{
-	out = (int) CharUpper((LPTSTR)i);
+	out = (INT_PTR)CharUpper((LPTSTR)i);
 	/* printf("%0x ",out); */
 	if ((out >> 16) != 0)
 	   {
@@ -72,17 +72,17 @@ static void CharUpperTest(void)
 	   break;
 	   }
 	}
-    ok(!failed,"CharUpper failed - 16bit input (0x%0x) returned 32bit result (0x%0x)\n",i,out);
+    ok(!failed,"CharUpper failed - 16bit input (0x%0lx) returned 32bit result (0x%0lx)\n",i,out);
 }
 
 static void CharLowerTest(void)
 {
-    int i,out,failed;
+    INT_PTR i,out,failed;
 
     failed = 0;
     for (i=0;i<256;i++)
     	{
-	out = (int) CharLower((LPTSTR)i);
+	out = (INT_PTR)CharLower((LPTSTR)i);
 	/* printf("%0x ",out); */
 	if ((out >> 16) != 0)
 	   {
@@ -90,7 +90,7 @@ static void CharLowerTest(void)
 	   break;
 	   }
 	}
-    ok(!failed,"CharLower failed - 16bit input (0x%0x) returned 32bit result (0x%0x)\n",i,out);
+    ok(!failed,"CharLower failed - 16bit input (0x%0lx) returned 32bit result (0x%0lx)\n",i,out);
 }
 
 

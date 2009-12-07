@@ -125,6 +125,8 @@ static void update_empty_exe( void )
     CloseHandle( file );
 
     res = BeginUpdateResource( filename, TRUE );
+    if ( res != NULL || GetLastError() != ERROR_FILE_INVALID )
+    {
     ok( res != NULL, "BeginUpdateResource failed\n");
 
     /* check if it's possible to open the file now */
@@ -135,6 +137,9 @@ static void update_empty_exe( void )
 
     r = EndUpdateResource( res, FALSE );
     ok( r == FALSE, "EndUpdateResource failed\n");
+    }
+    else
+        skip( "Can't update resource in empty file\n" );
 
     res = BeginUpdateResource( filename, FALSE );
     ok( res == NULL, "BeginUpdateResource failed\n");
@@ -173,22 +178,25 @@ static void update_resources_version(void)
     res = BeginUpdateResource( filename, TRUE );
     ok( res != NULL, "BeginUpdateResource failed\n");
 
+    if (0)  /* this causes subsequent tests to fail on Vista */
+    {
     r = UpdateResource( res,
                         MAKEINTRESOURCE(0x1230),
                         MAKEINTRESOURCE(0x4567),
                         0xabcd,
                         NULL, 0 );
     ok( r == FALSE, "UpdateResource failed\n");
+    }
 
     r = UpdateResource( res,
                         MAKEINTRESOURCE(0x1230),
                         MAKEINTRESOURCE(0x4567),
                         0xabcd,
                         foo, sizeof foo );
-    ok( r == TRUE, "UpdateResource failed\n");
+    ok( r == TRUE, "UpdateResource failed: %d\n", GetLastError());
 
     r = EndUpdateResource( res, FALSE );
-    ok( r, "EndUpdateResource failed\n");
+    ok( r, "EndUpdateResource failed: %d\n", GetLastError());
 }
 
 
@@ -249,7 +257,8 @@ static void check_exe( res_check_func fn )
     dir = (void*) ((BYTE*) dos + sec[1].VirtualAddress);
 
     ok( dir->Characteristics == 0, "Characteristics wrong\n");
-    ok( dir->TimeDateStamp == 0, "TimeDateStamp wrong\n");
+    ok( dir->TimeDateStamp == 0 || abs( dir->TimeDateStamp - GetTickCount() ) < 1000 /* nt4 */,
+        "TimeDateStamp wrong %u\n", dir->TimeDateStamp);
     ok( dir->MajorVersion == 4, "MajorVersion wrong\n");
     ok( dir->MinorVersion == 0, "MinorVersion wrong\n");
 
@@ -306,7 +315,7 @@ START_TEST(resource)
 
     if (GLE == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("Resource calls are not implemented\n");
+        win_skip("Resource calls are not implemented\n");
         return;
     }
 

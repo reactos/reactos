@@ -17,7 +17,6 @@
 #include <assert.h>
 
 #define FASTCALL
-#define STDCALL
 #define INT int
 #define CLIPOBJ int
 #define SURFOBJ int
@@ -501,7 +500,6 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 */
 static
 void
-STDCALL
 POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** ActiveHead )
 {
   int i;
@@ -526,7 +524,6 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
 */
 static
 void
-STDCALL
 POLYGONFILL_FillScanLineAlternate(
   PDC dc,
   int ScanLine,
@@ -574,7 +571,6 @@ POLYGONFILL_FillScanLineAlternate(
 
 static
 void
-STDCALL
 POLYGONFILL_FillScanLineWinding(
   PDC dc,
   int ScanLine,
@@ -674,7 +670,6 @@ POLYGONFILL_FillScanLineWinding(
 //The direction of each edge of the polygon is important.
 
 BOOL
-STDCALL
 FillPolygon(
   PDC dc,
   SURFOBJ *SurfObj,
@@ -689,7 +684,6 @@ FillPolygon(
   int ScanLine;
 
   void
-  STDCALL
   (*FillScanLine)(
     PDC dc,
     int ScanLine,
@@ -800,7 +794,7 @@ Polygon ( CONST PPOINT UnsafePoints, int Count, int polyFillMode )
 	  To = Points[CurrentPoint + 1];
 	}
 
-      DPRINT1("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
+      DPRINT1("Polygon Making line from (%ld,%ld) to (%ld,%ld)\n", From.x, From.y, To.x, To.y );
       IntEngLineTo(SurfObj,
 	           dc.CombinedClip,
 	           OutBrushObj,
@@ -869,6 +863,6 @@ int main()
     printf("\n");
   }
   DPRINT1("Done!\n");
-  (void)getch();
+  (void)_getch();
 }
 /* EOF */

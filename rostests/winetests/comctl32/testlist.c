@@ -27,6 +27,7 @@ extern void func_tooltips(void);
 extern void func_trackbar(void);
 extern void func_treeview(void);
 extern void func_updown(void);
+extern void func_ipaddress(void);
 
 const struct test winetest_testlist[] =
 {
@@ -51,5 +52,6 @@ const struct test winetest_testlist[] =
     { "trackbar", func_trackbar },
     { "treeview", func_treeview },
     { "updown", func_updown },
+    { "ipaddress", func_ipaddress },
     { 0, 0 }
 };

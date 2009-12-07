@@ -33,11 +33,14 @@
 #define INT_CODE 4198
 
 static const char *progname;
+static BOOL old_windows_version;
 
 static HANDLE stop_event;
 
 static void (WINAPI *pNDRSContextMarshall2)(RPC_BINDING_HANDLE, NDR_SCONTEXT, void*, NDR_RUNDOWN, void*, ULONG);
 static NDR_SCONTEXT (WINAPI *pNDRSContextUnmarshall2)(RPC_BINDING_HANDLE, void*, ULONG, void*, ULONG);
+static RPC_STATUS (WINAPI *pRpcServerRegisterIfEx)(RPC_IF_HANDLE,UUID*, RPC_MGR_EPV*, unsigned int,
+                   unsigned int,RPC_IF_CALLBACK_FN*);
 
 static void InitFunctionPointers(void)
 {
@@ -45,18 +48,21 @@ static void InitFunctionPointers(void)
 
     pNDRSContextMarshall2 = (void *)GetProcAddress(hrpcrt4, "NDRSContextMarshall2");
     pNDRSContextUnmarshall2 = (void *)GetProcAddress(hrpcrt4, "NDRSContextUnmarshall2");
+    pRpcServerRegisterIfEx = (void *)GetProcAddress(hrpcrt4, "RpcServerRegisterIfEx");
+
+    if (!pNDRSContextMarshall2) old_windows_version = TRUE;
 }
 
 void __RPC_FAR *__RPC_USER
-midl_user_allocate(size_t n)
+midl_user_allocate(SIZE_T n)
 {
-  return malloc(n);
+  return HeapAlloc(GetProcessHeap(), 0, n);
 }
 
 void __RPC_USER
 midl_user_free(void __RPC_FAR *p)
 {
-  free(p);
+  HeapFree(GetProcessHeap(), 0, p);
 }
 
 static char *
@@ -138,8 +144,8 @@ s_square_half_float(float x, float *y)
   return x * x;
 }
 
-long
-s_square_half_long(long x, long *y)
+LONG
+s_square_half_long(LONG x, LONG *y)
 {
   *y = x / 2;
   return x * x;
@@ -219,6 +225,23 @@ s_sum_conf_array(int x[], int n)
 
   while (p < end)
     sum += *p++;
+
+  return sum;
+}
+
+int
+s_sum_conf_ptr_by_conf_ptr(int n1, int *n2_then_x1, int *x2)
+{
+  int i;
+  int sum = 0;
+  if(n1 == 0)
+    return 0;
+
+  for(i = 1; i < n1; ++i)
+    sum += n2_then_x1[i];
+
+  for(i = 0; i < *n2_then_x1; ++i)
+    sum += x2[i];
 
   return sum;
 }
@@ -333,10 +356,28 @@ s_square_encu(encu_t *eu)
   }
 }
 
+double
+s_square_unencu(int t, unencu_t *eu)
+{
+  switch (t)
+  {
+  case ENCU_I: return eu->i * eu->i;
+  case ENCU_F: return eu->f * eu->f;
+  default:
+    return 0.0;
+  }
+}
+
 void
 s_check_se2(se_t *s)
 {
   ok(s->f == E2, "check_se2\n");
+}
+
+int
+s_sum_parr(int *a[3])
+{
+  return s_sum_pcarr(a, 3);
 }
 
 int
@@ -346,12 +387,6 @@ s_sum_pcarr(int *a[], int n)
   for (i = 0; i < n; ++i)
     s += *a[i];
   return s;
-}
-
-int
-s_sum_parr(int *a[3])
-{
-  return s_sum_pcarr(a, 3);
 }
 
 int
@@ -559,6 +594,12 @@ s_context_handle_test(void)
     binding = I_RpcGetCurrentCallHandle();
     ok(binding != NULL, "I_RpcGetCurrentCallHandle returned NULL\n");
 
+    if (!pNDRSContextMarshall2 || !pNDRSContextUnmarshall2)
+    {
+        win_skip("NDRSContextMarshall2 or NDRSContextUnmarshall2 not exported from rpcrt4.dll\n");
+        return;
+    }
+
     h = pNDRSContextUnmarshall2(binding, NULL, NDR_LOCAL_DATA_REPRESENTATION, NULL, 0);
     ok(h != NULL, "NDRSContextUnmarshall2 returned NULL\n");
 
@@ -578,6 +619,9 @@ s_context_handle_test(void)
     ok(*(ULONG *)buf == 0, "attributes should have been set to 0 instead of 0x%x\n", *(ULONG *)buf);
     ok(!UuidIsNil((UUID *)&buf[4], &status), "uuid should not have been nil\n");
 
+    /* raises ERROR_INVALID_HANDLE exception on Vista upwards */
+    if (0)
+    {
     h = pNDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, NULL, 0);
     ok(h != NULL, "NDRSContextUnmarshall2 returned NULL\n");
     ok(h->userContext == (void *)0xdeadbeef, "userContext of interface didn't unmarshal properly: %p\n", h->userContext);
@@ -595,6 +639,7 @@ s_context_handle_test(void)
     h = pNDRSContextUnmarshall2(binding, buf, NDR_LOCAL_DATA_REPRESENTATION, &server_if.InterfaceId, 0);
     ok(h != NULL, "NDRSContextUnmarshall2 returned NULL\n");
     ok(h->userContext == (void *)0xcafebabe, "userContext of interface didn't unmarshal properly: %p\n", h->userContext);
+    }
 
     /* test same interface data, but different pointer */
     /* raises ERROR_INVALID_HANDLE exception */
@@ -628,19 +673,6 @@ s_context_handle_test(void)
 }
 
 void
-s_get_5numbers(int count, pints_t n[5])
-{
-    int i;
-    for (i = 0; i < count; i++)
-    {
-        n[i].pi = midl_user_allocate(sizeof(*n[i].pi));
-        *n[i].pi = i;
-        n[i].ppi = NULL;
-        n[i].pppi = NULL;
-    }
-}
-
-void
 s_get_numbers(int length, int size, pints_t n[])
 {
     int i;
@@ -651,6 +683,24 @@ s_get_numbers(int length, int size, pints_t n[])
         n[i].ppi = NULL;
         n[i].pppi = NULL;
     }
+}
+
+void
+s_get_numbers_struct(numbers_struct_t **ns)
+{
+    int i;
+    *ns = midl_user_allocate(FIELD_OFFSET(numbers_struct_t, numbers[5]));
+    if (!*ns) return;
+    (*ns)->length = 5;
+    (*ns)->size = 5;
+    for (i = 0; i < (*ns)->length; i++)
+    {
+        (*ns)->numbers[i].pi = NULL;
+        (*ns)->numbers[i].ppi = NULL;
+        (*ns)->numbers[i].pppi = NULL;
+    }
+    (*ns)->numbers[0].pi = midl_user_allocate(sizeof(*(*ns)->numbers[i].pi));
+    *(*ns)->numbers[0].pi = 5;
 }
 
 void
@@ -704,7 +754,7 @@ basic_tests(void)
   int i1, i2, i3, *pi2, *pi3, **ppi3;
   double u, v;
   float s, t;
-  long q, r;
+  LONG q, r;
   short h;
   char c;
   int x;
@@ -826,6 +876,7 @@ union_tests(void)
 {
   encue_t eue;
   encu_t eu;
+  unencu_t uneu;
   sun_t su;
   int i;
 
@@ -853,6 +904,12 @@ union_tests(void)
   eu.t = ENCU_F;
   eu.tagged_union.f = 3.0;
   ok(square_encu(&eu) == 9.0, "RPC square_encu\n");
+
+  uneu.i = 4;
+  ok(square_unencu(ENCU_I, &uneu) == 16.0, "RPC square_unencu\n");
+
+  uneu.f = 5.0;
+  ok(square_unencu(ENCU_F, &uneu) == 25.0, "RPC square_unencu\n");
 
   eue.t = E1;
   eue.tagged_union.i1 = 8;
@@ -953,27 +1010,27 @@ us_t_UserFree(ULONG *flags, us_t *pus)
 ULONG __RPC_USER
 bstr_t_UserSize(ULONG *flags, ULONG start, bstr_t *b)
 {
-  return start + FIELD_OFFSET(wire_bstr_t, data[(*b)[-1]]);
+  return start + FIELD_OFFSET(user_bstr_t, data[(*b)[-1]]);
 }
 
 unsigned char * __RPC_USER
 bstr_t_UserMarshal(ULONG *flags, unsigned char *buffer, bstr_t *b)
 {
-  wire_bstr_t *wb = (wire_bstr_t *) buffer;
+  wire_bstr_t wb = (wire_bstr_t) buffer;
   wb->n = (*b)[-1];
   memcpy(&wb->data, *b, wb->n * sizeof wb->data[0]);
-  return buffer + FIELD_OFFSET(wire_bstr_t, data[wb->n]);
+  return buffer + FIELD_OFFSET(user_bstr_t, data[wb->n]);
 }
 
 unsigned char * __RPC_USER
 bstr_t_UserUnmarshal(ULONG *flags, unsigned char *buffer, bstr_t *b)
 {
-  wire_bstr_t *wb = (wire_bstr_t *) buffer;
+  wire_bstr_t wb = (wire_bstr_t) buffer;
   short *data = HeapAlloc(GetProcessHeap(), 0, (wb->n + 1) * sizeof *data);
   data[0] = wb->n;
   memcpy(&data[1], wb->data, wb->n * sizeof data[1]);
   *b = &data[1];
-  return buffer + FIELD_OFFSET(wire_bstr_t, data[wb->n]);
+  return buffer + FIELD_OFFSET(user_bstr_t, data[wb->n]);
 }
 
 void __RPC_USER
@@ -1042,12 +1099,15 @@ pointer_tests(void)
 
   free_list(list);
 
+  if (!old_windows_version)
+  {
   name.size = 10;
   name.name = buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, name.size);
   get_name(&name);
   ok(name.name == buffer, "[in,out] pointer should have stayed as %p but instead changed to %p\n", name.name, buffer);
   ok(!strcmp(name.name, "Jeremy Wh"), "name didn't unmarshall properly, expected \"Jeremy Wh\", but got \"%s\"\n", name.name);
   HeapFree(GetProcessHeap(), 0, name.name);
+  }
 
   pa2 = a;
   ok(sum_pcarr2(4, &pa2) == 10, "RPC sum_pcarr2\n");
@@ -1080,13 +1140,13 @@ free_pyramid_doub_carr(doub_carr_t *dc)
 static void
 array_tests(void)
 {
-  const char str1[25] = "Hello";
   int m[2][3][4] =
   {
     {{1, 2, 3, 4}, {-1, -3, -5, -7}, {0, 2, 4, 6}},
     {{1, -2, 3, -4}, {2, 3, 5, 7}, {-4, -1, -14, 4114}}
   };
   int c[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  int c2[] = {10, 100, 200};
   vector_t vs[2] = {{1, -2, 3}, {4, -5, -6}};
   cps_t cps;
   cpsc_t cpsc;
@@ -1096,8 +1156,13 @@ array_tests(void)
   doub_carr_t *dc;
   int *pi;
   pints_t api[5];
+  numbers_struct_t *ns;
 
+  if (!old_windows_version)
+  {
+      const char str1[25] = "Hello";
   ok(cstr_length(str1, sizeof str1) == strlen(str1), "RPC cstr_length\n");
+  }
 
   ok(sum_fixed_int_3d(m) == 4116, "RPC sum_fixed_int_3d\n");
 
@@ -1105,6 +1170,11 @@ array_tests(void)
   ok(sum_conf_array(&c[5], 2) == 11, "RPC sum_conf_array\n");
   ok(sum_conf_array(&c[7], 1) == 7, "RPC sum_conf_array\n");
   ok(sum_conf_array(&c[2], 0) == 0, "RPC sum_conf_array\n");
+
+  ok(sum_conf_ptr_by_conf_ptr(1, c2, c) == 45, "RPC sum_conf_ptr_by_conf_ptr\n");
+  ok(sum_conf_ptr_by_conf_ptr(3, c2, c) == 345, "RPC sum_conf_ptr_by_conf_ptr\n");
+  c2[0] = 0;
+  ok(sum_conf_ptr_by_conf_ptr(3, c2, c) == 300, "RPC sum_conf_ptr_by_conf_ptr\n");
 
   ok(sum_unique_conf_array(ca, 4) == -2, "RPC sum_unique_conf_array\n");
   ok(sum_unique_conf_ptr(ca, 5) == 3, "RPC sum_unique_conf_array\n");
@@ -1148,21 +1218,21 @@ array_tests(void)
   ok(sum_toplev_conf_cond(c, 5, 6, 1) == 10, "RPC sum_toplev_conf_cond\n");
   ok(sum_toplev_conf_cond(c, 5, 6, 0) == 15, "RPC sum_toplev_conf_cond\n");
 
-  dc = malloc(FIELD_OFFSET(doub_carr_t, a[2]));
+  dc = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(doub_carr_t, a[2]));
   dc->n = 2;
-  dc->a[0] = malloc(FIELD_OFFSET(doub_carr_1_t, a[3]));
+  dc->a[0] = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(doub_carr_1_t, a[3]));
   dc->a[0]->n = 3;
   dc->a[0]->a[0] = 5;
   dc->a[0]->a[1] = 1;
   dc->a[0]->a[2] = 8;
-  dc->a[1] = malloc(FIELD_OFFSET(doub_carr_1_t, a[2]));
+  dc->a[1] = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(doub_carr_1_t, a[2]));
   dc->a[1]->n = 2;
   dc->a[1]->a[0] = 2;
   dc->a[1]->a[1] = 3;
   ok(sum_doub_carr(dc) == 19, "RPC sum_doub_carr\n");
-  free(dc->a[0]);
-  free(dc->a[1]);
-  free(dc);
+  HeapFree(GetProcessHeap(), 0, dc->a[0]);
+  HeapFree(GetProcessHeap(), 0, dc->a[1]);
+  HeapFree(GetProcessHeap(), 0, dc);
 
   dc = NULL;
   make_pyramid_doub_carr(4, &dc);
@@ -1175,14 +1245,21 @@ array_tests(void)
   pi = HeapAlloc(GetProcessHeap(), 0, sizeof(*pi));
   *pi = -1;
   api[0].pi = pi;
-  get_5numbers(1, api);
-  ok(api[0].pi == pi, "RPC varying array [out] pointer changed from %p to %p\n", pi, api[0].pi);
-  ok(*api[0].pi == 0, "pi unmarshalled incorrectly %d\n", *pi);
-
-  api[0].pi = pi;
   get_numbers(1, 1, api);
   ok(api[0].pi == pi, "RPC conformant varying array [out] pointer changed from %p to %p\n", pi, api[0].pi);
-  ok(*api[0].pi == 0, "pi unmarshalled incorrectly %d\n", *pi);
+  ok(*api[0].pi == 0, "pi unmarshalled incorrectly %d\n", *api[0].pi);
+
+  if (!old_windows_version)
+  {
+      ns = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(numbers_struct_t, numbers[5]));
+      ns->length = 5;
+      ns->size = 5;
+      ns->numbers[0].pi = pi;
+      get_numbers_struct(&ns);
+      ok(ns->numbers[0].pi == pi, "RPC conformant varying struct embedded pointer changed from %p to %p\n", pi, ns->numbers[0].pi);
+      ok(*ns->numbers[0].pi == 5, "pi unmarshalled incorrectly %d\n", *ns->numbers[0].pi);
+      HeapFree(GetProcessHeap(), 0, ns);
+  }
   HeapFree(GetProcessHeap(), 0, pi);
 }
 
@@ -1240,16 +1317,28 @@ server(void)
   static unsigned char np[] = "ncacn_np";
   static unsigned char pipe[] = PIPE;
   RPC_STATUS status, iptcp_status, np_status;
+  DWORD ret;
 
   iptcp_status = RpcServerUseProtseqEp(iptcp, 20, port, NULL);
-  ok(iptcp_status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_ip_tcp) failed with status %ld\n", iptcp_status);
+  ok(iptcp_status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_ip_tcp) failed with status %d\n", iptcp_status);
   np_status = RpcServerUseProtseqEp(np, 0, pipe, NULL);
-  ok(np_status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_np) failed with status %ld\n", np_status);
+  if (np_status == RPC_S_PROTSEQ_NOT_SUPPORTED)
+    skip("Protocol sequence ncacn_np is not supported\n");
+  else
+    ok(np_status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_np) failed with status %d\n", np_status);
 
-  //status = RpcServerRegisterIf(s_IServer_v0_0_s_ifspec, NULL, NULL);
-  //ok(status == RPC_S_OK, "RpcServerRegisterIf failed with status %ld\n", status);
+  if (pRpcServerRegisterIfEx)
+  {
+    trace("Using RpcServerRegisterIfEx\n");
+    status = pRpcServerRegisterIfEx(IServer_v0_0_s_ifspec, NULL, NULL,
+                                    RPC_IF_ALLOW_CALLBACKS_WITH_NO_AUTH,
+                                    RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL);
+  }
+  else
+    status = RpcServerRegisterIf(IServer_v0_0_s_ifspec, NULL, NULL);
+  ok(status == RPC_S_OK, "RpcServerRegisterIf failed with status %d\n", status);
   status = RpcServerListen(1, 20, TRUE);
-  ok(status == RPC_S_OK, "RpcServerListen failed with status %ld\n", status);
+  ok(status == RPC_S_OK, "RpcServerListen failed with status %d\n", status);
   stop_event = CreateEvent(NULL, FALSE, FALSE, NULL);
   ok(stop_event != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
@@ -1267,11 +1356,17 @@ server(void)
     return;
   }
 
-  ok(WAIT_OBJECT_0 == WaitForSingleObject(stop_event, 60000), "WaitForSingleObject\n");
+  ret = WaitForSingleObject(stop_event, 1000);
+  ok(WAIT_OBJECT_0 == ret, "WaitForSingleObject\n");
+  /* if the stop event didn't fire then RpcMgmtWaitServerListen will wait
+   * forever, so don't bother calling it in this case */
+  if (ret == WAIT_OBJECT_0)
+  {
   status = RpcMgmtWaitServerListen();
   todo_wine {
-    ok(status == RPC_S_OK, "RpcMgmtWaitServerListening failed with status %ld\n", status);
+      ok(status == RPC_S_OK, "RpcMgmtWaitServerListening failed with status %d\n", status);
   }
+}
 }
 
 START_TEST(server)

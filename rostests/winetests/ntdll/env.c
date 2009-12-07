@@ -57,6 +57,7 @@ static void testQuery(void)
         int len;
         NTSTATUS status;
         const char *val;
+        NTSTATUS alt;
     };
 
     static const struct test tests[] =
@@ -67,12 +68,13 @@ static void testQuery(void)
         {"foo ", 256, STATUS_VARIABLE_NOT_FOUND, NULL},
         {"foo", 1, STATUS_BUFFER_TOO_SMALL, "toto"},
         {"foo", 3, STATUS_BUFFER_TOO_SMALL, "toto"},
-        {"foo", 4, STATUS_SUCCESS, "toto"},
+        {"foo", 4, STATUS_SUCCESS, "toto", STATUS_BUFFER_TOO_SMALL},
+        {"foo", 5, STATUS_SUCCESS, "toto"},
         {"fooo", 256, STATUS_SUCCESS, "tutu"},
         {"f", 256, STATUS_VARIABLE_NOT_FOUND, NULL},
         {"g", 256, STATUS_SUCCESS, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
-        {"sr=an", 256, STATUS_VARIABLE_NOT_FOUND, NULL},
+        {"sr=an", 256, STATUS_SUCCESS, "ouo", STATUS_VARIABLE_NOT_FOUND},
         {"sr", 256, STATUS_SUCCESS, "an=ouo"},
 	{"=oOH", 256, STATUS_SUCCESS, "III"},
         {"", 256, STATUS_VARIABLE_NOT_FOUND, NULL},
@@ -84,11 +86,12 @@ static void testQuery(void)
     WCHAR               bv[257];
     UNICODE_STRING      name;
     UNICODE_STRING      value;
-    const struct test*  test;
     NTSTATUS            nts;
+    unsigned int i;
 
-    for (test = tests; test->var; test++)
+    for (i = 0; tests[i].var; i++)
     {
+        const struct test *test = &tests[i];
         name.Length = strlen(test->var) * 2;
         name.MaximumLength = name.Length + 2;
         name.Buffer = bn;
@@ -99,8 +102,9 @@ static void testQuery(void)
 
         pRtlMultiByteToUnicodeN( bn, sizeof(bn), NULL, test->var, strlen(test->var)+1 );
         nts = pRtlQueryEnvironmentVariable_U(small_env, &name, &value);
-        ok( nts == test->status, "[%d]: Wrong status for '%s', expecting %x got %x\n",
-            test - tests, test->var, test->status, nts );
+        ok( nts == test->status || (test->alt && nts == test->alt),
+            "[%d]: Wrong status for '%s', expecting %x got %x\n",
+            i, test->var, test->status, nts );
         if (nts == test->status) switch (nts)
         {
         case STATUS_SUCCESS:
@@ -120,7 +124,7 @@ static void testQuery(void)
     }
 }
 
-static void testSetHelper(LPWSTR* env, const char* var, const char* val, NTSTATUS ret)
+static void testSetHelper(LPWSTR* env, const char* var, const char* val, NTSTATUS ret, NTSTATUS alt)
 {
     WCHAR               bvar[256], bval1[256], bval2[256];
     UNICODE_STRING      uvar;
@@ -139,7 +143,7 @@ static void testSetHelper(LPWSTR* env, const char* var, const char* val, NTSTATU
         pRtlMultiByteToUnicodeN( bval1, sizeof(bval1), NULL, val, strlen(val)+1 );
     }
     nts = pRtlSetEnvironmentVariable(env, &uvar, val ? &uval : NULL);
-    ok(nts == ret, "Setting var %s=%s (%x/%x)\n", var, val, nts, ret);
+    ok(nts == ret || (alt && nts == alt), "Setting var %s=%s (%x/%x)\n", var, val, nts, ret);
     if (nts == STATUS_SUCCESS)
     {
         uval.Length = 0;
@@ -152,7 +156,9 @@ static void testSetHelper(LPWSTR* env, const char* var, const char* val, NTSTATU
             ok(lstrcmpW(bval1, bval2) == 0, "Cannot get value written to environment\n");
             break;
         case STATUS_VARIABLE_NOT_FOUND:
-            ok(val == NULL, "Couldn't find variable, but didn't delete it. val = %s\n", val);
+            ok(val == NULL ||
+               broken(strchr(var,'=') != NULL), /* variable containing '=' may be set but not found again on NT4 */
+               "Couldn't find variable, but didn't delete it. val = %s\n", val);
             break;
         default:
             ok(0, "Wrong ret %u for %s\n", nts, var);
@@ -168,31 +174,30 @@ static void testSet(void)
     int                 i;
 
     ok(pRtlCreateEnvironment(FALSE, &env) == STATUS_SUCCESS, "Creating environment\n");
-    memmove(env, small_env, sizeof(small_env));
 
-    testSetHelper(&env, "cat", "dog", STATUS_SUCCESS);
-    testSetHelper(&env, "cat", "horse", STATUS_SUCCESS);
-    testSetHelper(&env, "cat", "zz", STATUS_SUCCESS);
-    testSetHelper(&env, "cat", NULL, STATUS_SUCCESS);
-    testSetHelper(&env, "cat", NULL, STATUS_VARIABLE_NOT_FOUND);
-    testSetHelper(&env, "foo", "meouw", STATUS_SUCCESS);
-    testSetHelper(&env, "me=too", "also", STATUS_INVALID_PARAMETER);
-    testSetHelper(&env, "me", "too=also", STATUS_SUCCESS);
-    testSetHelper(&env, "=too", "also", STATUS_SUCCESS);
-    testSetHelper(&env, "=", "also", STATUS_SUCCESS);
+    testSetHelper(&env, "cat", "dog", STATUS_SUCCESS, 0);
+    testSetHelper(&env, "cat", "horse", STATUS_SUCCESS, 0);
+    testSetHelper(&env, "cat", "zz", STATUS_SUCCESS, 0);
+    testSetHelper(&env, "cat", NULL, STATUS_SUCCESS, 0);
+    testSetHelper(&env, "cat", NULL, STATUS_SUCCESS, STATUS_VARIABLE_NOT_FOUND);
+    testSetHelper(&env, "foo", "meouw", STATUS_SUCCESS, 0);
+    testSetHelper(&env, "me=too", "also", STATUS_SUCCESS, STATUS_INVALID_PARAMETER);
+    testSetHelper(&env, "me", "too=also", STATUS_SUCCESS, 0);
+    testSetHelper(&env, "=too", "also", STATUS_SUCCESS, 0);
+    testSetHelper(&env, "=", "also", STATUS_SUCCESS, 0);
 
     for (i = 0; i < 128; i++)
     {
         sprintf(tmp, "zork%03d", i);
-        testSetHelper(&env, tmp, "is alive", STATUS_SUCCESS);
+        testSetHelper(&env, tmp, "is alive", STATUS_SUCCESS, 0);
     }
 
     for (i = 0; i < 128; i++)
     {
         sprintf(tmp, "zork%03d", i);
-        testSetHelper(&env, tmp, NULL, STATUS_SUCCESS);
+        testSetHelper(&env, tmp, NULL, STATUS_SUCCESS, 0);
     }
-    testSetHelper(&env, "fOo", NULL, STATUS_SUCCESS);
+    testSetHelper(&env, "fOo", NULL, STATUS_SUCCESS, 0);
 
     ok(pRtlDestroyEnvironment(env) == STATUS_SUCCESS, "Destroying environment\n");
 }
@@ -263,9 +268,6 @@ static void testExpand(void)
         ok(nts == STATUS_BUFFER_TOO_SMALL, "Call failed (%u)\n", nts);
         ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
            "Wrong  returned length for %s (with buffer too small): %u\n", test->src, ul);
-        ok(memcmp(dst, rst, 8*sizeof(WCHAR)) == 0,
-           "Wrong result for %s (with buffer too small): expecting %s\n",
-           test->src, test->dst);
         ok(dst[8] == '-', "Writing too far in buffer (got %c/%d)\n", dst[8], dst[8]);
     }
 
@@ -274,6 +276,11 @@ static void testExpand(void)
 START_TEST(env)
 {
     HMODULE mod = GetModuleHandleA("ntdll.dll");
+    if (!mod)
+    {
+        win_skip("Not running on NT, skipping tests\n");
+        return;
+    }
 
     pRtlMultiByteToUnicodeN = (void *)GetProcAddress(mod,"RtlMultiByteToUnicodeN");
     pRtlCreateEnvironment = (void*)GetProcAddress(mod, "RtlCreateEnvironment");

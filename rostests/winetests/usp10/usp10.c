@@ -40,10 +40,12 @@ static void test_ScriptShape(HDC hdc)
     BOOL ret;
     HRESULT hr;
     SCRIPT_CACHE sc = NULL;
-    WORD glyphs[4];
+    WORD glyphs[4], logclust[4];
     SCRIPT_VISATTR attrs[4];
     SCRIPT_ITEM items[2];
     int nb, widths[4];
+    GOFFSET offset[4];
+    ABC abc[4];
 
     hr = ScriptItemize(NULL, 4, 2, NULL, NULL, items, NULL);
     ok(hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG not %08x\n", hr);
@@ -61,14 +63,39 @@ static void test_ScriptShape(HDC hdc)
     hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, NULL, attrs, NULL);
     ok(hr == E_INVALIDARG, "ScriptShape should return E_INVALIDARG not %08x\n", hr);
 
+    hr = ScriptShape(NULL, &sc, test1, 4, 4, &items[0].a, glyphs, NULL, attrs, &nb);
+    ok(hr == E_PENDING, "ScriptShape should return E_PENDING not %08x\n", hr);
+
     hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, NULL, attrs, &nb);
+    ok(!hr ||
+       hr == E_INVALIDARG, /* Vista, W2K8 */
+       "ScriptShape should return S_OK or E_INVALIDARG, not %08x\n", hr);
+    ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
+
+    hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, logclust, attrs, &nb);
     ok(!hr, "ScriptShape should return S_OK not %08x\n", hr);
     ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
+
+    hr = ScriptShape(NULL, &sc, test1, 4, 4, &items[0].a, glyphs, logclust, attrs, &nb);
+    ok(!hr, "ScriptShape should return S_OK not %08x\n", hr);
 
     hr = ScriptPlace(hdc, &sc, glyphs, 4, NULL, &items[0].a, widths, NULL, NULL);
     ok(hr == E_INVALIDARG, "ScriptPlace should return E_INVALIDARG not %08x\n", hr);
 
-    hr = ScriptPlace(hdc, &sc, glyphs, 4, attrs, &items[0].a, widths, NULL, NULL);
+    hr = ScriptPlace(NULL, &sc, glyphs, 4, attrs, &items[0].a, widths, NULL, NULL);
+    ok(hr == E_PENDING ||
+       hr == E_INVALIDARG, /* Vista, W2K8 */
+       "ScriptPlace should return E_PENDING or E_INVALIDARG, not %08x\n", hr);
+
+    hr = ScriptPlace(NULL, &sc, glyphs, 4, attrs, &items[0].a, widths, offset, NULL);
+    ok(hr == E_PENDING, "ScriptPlace should return E_PENDING not %08x\n", hr);
+
+    hr = ScriptPlace(NULL, &sc, glyphs, 4, attrs, &items[0].a, widths, NULL, abc);
+    ok(hr == E_PENDING ||
+       hr == E_INVALIDARG, /* Vista, W2K8 */
+       "ScriptPlace should return E_PENDING or E_INVALIDARG, not %08x\n", hr);
+
+    hr = ScriptPlace(hdc, &sc, glyphs, 4, attrs, &items[0].a, widths, offset, NULL);
     ok(!hr, "ScriptPlace should return S_OK not %08x\n", hr);
     ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
 
@@ -615,22 +642,26 @@ static void test_ScriptXtoX(void)
  *  This routine tests the ScriptXtoCP and ScriptCPtoX functions using static variables *
  ****************************************************************************************/
 {
+    static const WCHAR test[] = {'t', 'e', 's', 't',0};
+    SCRIPT_ITEM items[2];
     int iX, iCP;
     int cChars;
     int cGlyphs;
     WORD pwLogClust[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     SCRIPT_VISATTR psva[10];
     int piAdvance[10] = {200, 190, 210, 180, 170, 204, 189, 195, 212, 203};
-    SCRIPT_ANALYSIS psa;
     int piCP, piX;
     int piTrailing;
     BOOL fTrailing;
     HRESULT hr;
 
+    hr = ScriptItemize(test, lstrlenW(test), sizeof(items)/sizeof(items[0]), NULL, NULL, items, NULL);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+
     iX = -1;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piCP, &piTrailing);
+    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piCP, &piTrailing);
     ok(hr == S_OK, "ScriptXtoCP should return S_OK not %08x\n", hr);
     if (piTrailing)
         ok(piCP == -1, "Negative iX should return piCP=-1 not %d\n", piCP);
@@ -640,7 +671,7 @@ static void test_ScriptXtoX(void)
     iX = 1954;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piCP, &piTrailing);
+    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piCP, &piTrailing);
     ok(hr == S_OK, "ScriptXtoCP should return S_OK not %08x\n", hr);
     if (piTrailing) /* win2k3 */
         ok(piCP == -1, "Negative iX should return piCP=-1 not %d\n", piCP);
@@ -650,7 +681,7 @@ static void test_ScriptXtoX(void)
     iX = 779;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piCP, &piTrailing);
+    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piCP, &piTrailing);
     ok(hr == S_OK, "ScriptXtoCP should return S_OK not %08x\n", hr);
     ok(piCP == 3 ||
        piCP == -1, /* win2k3 */
@@ -660,7 +691,7 @@ static void test_ScriptXtoX(void)
     iX = 780;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piCP, &piTrailing);
+    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piCP, &piTrailing);
     ok(hr == S_OK, "ScriptXtoCP should return S_OK not %08x\n", hr);
     ok(piCP == 3 ||
        piCP == -1, /* win2k3 */
@@ -670,7 +701,7 @@ static void test_ScriptXtoX(void)
     iX = 868;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piCP, &piTrailing);
+    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piCP, &piTrailing);
     ok(hr == S_OK, "ScriptXtoCP should return S_OK not %08x\n", hr);
     ok(piCP == 4 ||
        piCP == -1, /* win2k3 */
@@ -679,7 +710,7 @@ static void test_ScriptXtoX(void)
     iX = 0;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piCP, &piTrailing);
+    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piCP, &piTrailing);
     ok(hr == S_OK, "ScriptXtoCP should return S_OK not %08x\n", hr);
     ok(piCP == 0 ||
        piCP == 10, /* win2k3 */
@@ -688,14 +719,14 @@ static void test_ScriptXtoX(void)
     iX = 195;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piCP, &piTrailing);
+    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piCP, &piTrailing);
     ok(hr == S_OK, "ScriptXtoCP should return S_OK not %08x\n", hr);
     ok(piCP == 0, "iX=%d should return piCP=0 not %d\n", iX, piCP);
 
     iX = 196;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piCP, &piTrailing);
+    hr = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piCP, &piTrailing);
     ok(hr == S_OK, "ScriptXtoCP should return S_OK not %08x\n", hr);
     ok(piCP == 1 ||
        piCP == 0, /* win2k3 */
@@ -705,7 +736,7 @@ static void test_ScriptXtoX(void)
     fTrailing = FALSE;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
+    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
     ok(piX == 976 ||
        piX == 100, /* win2k3 */
@@ -715,7 +746,7 @@ static void test_ScriptXtoX(void)
     fTrailing = TRUE;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
+    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
     ok(piX == 1171 ||
        piX == 80, /* win2k3 */
@@ -725,7 +756,7 @@ static void test_ScriptXtoX(void)
     fTrailing = FALSE;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
+    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
     ok(piX == 1171 ||
        piX == 80, /* win2k3 */
@@ -735,7 +766,7 @@ static void test_ScriptXtoX(void)
     fTrailing = FALSE;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
+    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
     ok(piX == 1953 ||
        piX == 0, /* win2k3 */
@@ -745,7 +776,7 @@ static void test_ScriptXtoX(void)
     fTrailing = TRUE;
     cChars = 10;
     cGlyphs = 10;
-    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
+    hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &items[0].a, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
     ok(piX == 1953 ||
        piX == 0, /* win2k3 */
@@ -1086,184 +1117,6 @@ static void test_ScriptLayout(void)
     }
 }
 
-static const struct
-{
-    LGRPID group;
-    LCID lcid;
-    SCRIPT_DIGITSUBSTITUTE sds;
-    DWORD uDefaultLanguage;
-    DWORD fContextDigits;
-    WORD fDigitSubstitute;
-}
-subst_data[] =
-{
-    { 0x01, 0x00403, { 9, 3, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00406, { 9, 6, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00407, { 9, 7, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00409, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0040a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0040b, { 9, 11, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0040c, { 9, 12, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0040f, { 9, 15, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00410, { 9, 16, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00413, { 9, 19, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00414, { 9, 20, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00416, { 9, 22, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0041d, { 9, 29, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00421, { 9, 33, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0042d, { 9, 45, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00432, { 9, 50, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00434, { 9, 52, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00435, { 9, 53, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00436, { 9, 54, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00438, { 9, 56, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0043a, { 9, 58, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0043b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0043e, { 9, 62, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00441, { 9, 65, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00452, { 9, 82, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00456, { 9, 86, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0046b, { 9, 107, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0046c, { 9, 108, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00481, { 9, 129, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00807, { 9, 7, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00809, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0080a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0080c, { 9, 12, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00810, { 9, 16, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00813, { 9, 19, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00814, { 9, 20, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00816, { 9, 22, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0081d, { 9, 29, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0083b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0083e, { 9, 62, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0086b, { 9, 107, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00c07, { 9, 7, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00c09, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00c0a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00c0c, { 9, 12, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00c3b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x00c6b, { 9, 107, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x01007, { 9, 7, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x01009, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0100a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0100c, { 9, 12, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0103b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x01407, { 9, 7, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x01409, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0140a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0140c, { 9, 12, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0143b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x01809, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0180a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0180c, { 9, 12, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0183b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x01c09, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x01c0a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x01c3b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x02009, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0200a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0203b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x02409, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0240a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0243b, { 9, 59, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x02809, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0280a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x02c09, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x02c0a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x03009, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0300a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x03409, { 9, 9, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0340a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0380a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x03c0a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0400a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0440a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0480a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x04c0a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x0500a, { 9, 10, 1, 0 }, 9, 0, 0 },
-    { 0x01, 0x10407, { 9, 7, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x00405, { 9, 5, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x0040e, { 9, 14, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x00415, { 9, 21, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x00418, { 9, 24, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x0041a, { 9, 26, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x0041b, { 9, 27, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x0041c, { 9, 28, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x00424, { 9, 36, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x0081a, { 9, 26, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x0101a, { 9, 26, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x0141a, { 9, 26, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x0181a, { 9, 26, 1, 0 }, 9, 0, 0 },
-    { 0x02, 0x1040e, { 9, 14, 1, 0 }, 9, 0, 0 },
-    { 0x03, 0x00425, { 9, 37, 1, 0 }, 9, 0, 0 },
-    { 0x03, 0x00426, { 9, 38, 1, 0 }, 9, 0, 0 },
-    { 0x03, 0x00427, { 9, 39, 1, 0 }, 9, 0, 0 },
-    { 0x04, 0x00408, { 9, 8, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00402, { 9, 2, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00419, { 9, 25, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00422, { 9, 34, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00423, { 9, 35, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x0042f, { 9, 47, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x0043f, { 9, 63, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00440, { 9, 64, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00444, { 9, 68, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00450, { 9, 80, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x0082c, { 9, 44, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00843, { 9, 67, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x00c1a, { 9, 26, 1, 0 }, 9, 0, 0 },
-    { 0x05, 0x01c1a, { 9, 26, 1, 0 }, 9, 0, 0 },
-    { 0x06, 0x0041f, { 9, 31, 1, 0 }, 9, 0, 0 },
-    { 0x06, 0x0042c, { 9, 44, 1, 0 }, 9, 0, 0 },
-    { 0x06, 0x00443, { 9, 67, 1, 0 }, 9, 0, 0 },
-    { 0x07, 0x00411, { 9, 17, 1, 0 }, 9, 0, 0 },
-    { 0x08, 0x00412, { 9, 18, 1, 0 }, 9, 0, 0 },
-    { 0x09, 0x00404, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x09, 0x00c04, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x09, 0x01404, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x09, 0x21404, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x09, 0x30404, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x0a, 0x00804, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x0a, 0x01004, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x0a, 0x20804, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x0a, 0x21004, { 9, 4, 1, 0 }, 9, 0, 0 },
-    { 0x0b, 0x0041e, { 9, 30, 1, 0 }, 9, 0, 0 },
-    { 0x0c, 0x0040d, { 9, 13, 1, 0 }, 9, 0, 0 },
-    { 0x0d, 0x00401, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x00420, { 9, 32, 1, 0 }, 9, 0, 0 },
-    { 0x0d, 0x00429, { 41, 41, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x0045a, { 9, 90, 1, 0 }, 9, 0, 0 },
-    { 0x0d, 0x00465, { 9, 101, 1, 0 }, 9, 0, 0 },
-    { 0x0d, 0x00801, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x00c01, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x01001, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x01401, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x01801, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x01c01, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x02001, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x02401, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x02801, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x02c01, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x03001, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x03401, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x03801, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x03c01, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0d, 0x04001, { 1, 1, 0, 0 }, 9, 0, 0 },
-    { 0x0e, 0x0042a, { 9, 42, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x00439, { 9, 57, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x00446, { 9, 70, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x00447, { 9, 71, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x00449, { 9, 73, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x0044a, { 9, 74, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x0044b, { 9, 75, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x0044e, { 9, 78, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x0044f, { 9, 79, 1, 0 }, 9, 0, 0 },
-    { 0x0f, 0x00457, { 9, 87, 1, 0 }, 9, 0, 0 },
-    { 0x10, 0x00437, { 9, 55, 1, 0 }, 9, 0, 0 },
-    { 0x10, 0x10437, { 9, 55, 1, 0 }, 9, 0, 0 },
-    { 0x11, 0x0042b, { 9, 43, 1, 0 }, 9, 0, 0 }
-};
-
 static BOOL CALLBACK enum_proc(LGRPID group, LCID lcid, LPSTR locale, LONG_PTR lparam)
 {
     HRESULT hr;
@@ -1271,7 +1124,6 @@ static BOOL CALLBACK enum_proc(LGRPID group, LCID lcid, LPSTR locale, LONG_PTR l
     SCRIPT_CONTROL sc;
     SCRIPT_STATE ss;
     LCID lcid_old;
-    unsigned int i;
 
     if (!IsValidLocale(lcid, LCID_INSTALLED)) return TRUE;
 
@@ -1288,21 +1140,6 @@ static BOOL CALLBACK enum_proc(LGRPID group, LCID lcid, LPSTR locale, LONG_PTR l
     hr = ScriptApplyDigitSubstitution(&sds, &sc, &ss);
     ok(hr == S_OK, "ScriptApplyDigitSubstitution failed: 0x%08x\n", hr);
 
-    for (i = 0; i < sizeof(subst_data)/sizeof(subst_data[0]); i++)
-    {
-        if (group == subst_data[i].group && lcid == subst_data[i].lcid)
-        {
-            ok(!memcmp(&sds, &subst_data[i].sds, sizeof(sds)),
-               "substitution data does not match\n");
-
-            ok(sc.uDefaultLanguage == subst_data[i].uDefaultLanguage,
-               "sc.uDefaultLanguage does not match\n");
-            ok(sc.fContextDigits == subst_data[i].fContextDigits,
-               "sc.fContextDigits does not match\n");
-            ok(ss.fDigitSubstitute == subst_data[i].fDigitSubstitute,
-               "ss.fDigitSubstitute does not match\n");
-        }
-    }
     SetThreadLocale(lcid_old);
     return TRUE;
 }
@@ -1339,13 +1176,19 @@ static void test_digit_substitution(void)
 
     if (!pEnumLanguageGroupLocalesA)
     {
-        trace("EnumLanguageGroupLocalesA not available on this platform\n");
+        win_skip("EnumLanguageGroupLocalesA not available on this platform\n");
         return;
     }
 
     for (i = 0; i < sizeof(groups)/sizeof(groups[0]); i++)
     {
         ret = pEnumLanguageGroupLocalesA(enum_proc, groups[i], 0, 0);
+        if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+        {
+            win_skip("EnumLanguageGroupLocalesA not implemented on this platform\n");
+            break;
+        }
+        
         ok(ret, "EnumLanguageGroupLocalesA failed unexpectedly: %u\n", GetLastError());
     }
 }
@@ -1369,6 +1212,87 @@ static void test_ScriptGetProperties(void)
     ok(hr == S_OK, "ScriptGetProperties failed: 0x%08x\n", hr);
 }
 
+static void test_ScriptBreak(void)
+{
+    static const WCHAR test[] = {' ','\r','\n',0};
+    SCRIPT_ITEM items[4];
+    SCRIPT_LOGATTR la;
+    HRESULT hr;
+
+    hr = ScriptItemize(test, 3, 4, NULL, NULL, items, NULL);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+
+    memset(&la, 0, sizeof(la));
+    hr = ScriptBreak(test, 1, &items[0].a, &la);
+    ok(!hr, "ScriptBreak should return S_OK not %08x\n", hr);
+
+    ok(!la.fSoftBreak, "fSoftBreak set\n");
+    ok(la.fWhiteSpace, "fWhiteSpace not set\n");
+    ok(la.fCharStop, "fCharStop not set\n");
+    ok(!la.fWordStop, "fWordStop set\n");
+    ok(!la.fInvalid, "fInvalid set\n");
+    ok(!la.fReserved, "fReserved set\n");
+
+    memset(&la, 0, sizeof(la));
+    hr = ScriptBreak(test + 1, 1, &items[1].a, &la);
+    ok(!hr, "ScriptBreak should return S_OK not %08x\n", hr);
+
+    ok(!la.fSoftBreak, "fSoftBreak set\n");
+    ok(!la.fWhiteSpace, "fWhiteSpace set\n");
+    ok(la.fCharStop, "fCharStop not set\n");
+    ok(!la.fWordStop, "fWordStop set\n");
+    ok(!la.fInvalid, "fInvalid set\n");
+    ok(!la.fReserved, "fReserved set\n");
+
+    memset(&la, 0, sizeof(la));
+    hr = ScriptBreak(test + 2, 1, &items[2].a, &la);
+    ok(!hr, "ScriptBreak should return S_OK not %08x\n", hr);
+
+    ok(!la.fSoftBreak, "fSoftBreak set\n");
+    ok(!la.fWhiteSpace, "fWhiteSpace set\n");
+    ok(la.fCharStop, "fCharStop not set\n");
+    ok(!la.fWordStop, "fWordStop set\n");
+    ok(!la.fInvalid, "fInvalid set\n");
+    ok(!la.fReserved, "fReserved set\n");
+}
+
+static void test_newlines(void)
+{
+    static const WCHAR test1[] = {'t','e','x','t','\r','t','e','x','t',0};
+    static const WCHAR test2[] = {'t','e','x','t','\n','t','e','x','t',0};
+    static const WCHAR test3[] = {'t','e','x','t','\r','\n','t','e','x','t',0};
+    static const WCHAR test4[] = {'t','e','x','t','\n','\r','t','e','x','t',0};
+    static const WCHAR test5[] = {'1','2','3','4','\n','\r','1','2','3','4',0};
+    SCRIPT_ITEM items[5];
+    HRESULT hr;
+    int count;
+
+    count = 0;
+    hr = ScriptItemize(test1, lstrlenW(test1), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 3, "got %d expected 3\n", count);
+
+    count = 0;
+    hr = ScriptItemize(test2, lstrlenW(test2), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 3, "got %d expected 3\n", count);
+
+    count = 0;
+    hr = ScriptItemize(test3, lstrlenW(test3), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 4, "got %d expected 4\n", count);
+
+    count = 0;
+    hr = ScriptItemize(test4, lstrlenW(test4), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 4, "got %d expected 4\n", count);
+
+    count = 0;
+    hr = ScriptItemize(test5, lstrlenW(test5), 5, NULL, NULL, items, &count);
+    ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
+    ok(count == 4, "got %d expected 4\n", count);
+}
+
 START_TEST(usp10)
 {
     HWND            hwnd;
@@ -1390,7 +1314,7 @@ START_TEST(usp10)
     ok( hdc != NULL, "HDC failed to be created %p\n", hdc);
 
     memset(&lf, 0, sizeof(LOGFONTA));
-    lstrcpyA(lf.lfFaceName, "Symbol");
+    lstrcpyA(lf.lfFaceName, "Tahoma");
     lf.lfHeight = 10;
     lf.lfWeight = 3;
     lf.lfWidth = 10;
@@ -1413,6 +1337,8 @@ START_TEST(usp10)
     test_ScriptLayout();
     test_digit_substitution();
     test_ScriptGetProperties();
+    test_ScriptBreak();
+    test_newlines();
 
     ReleaseDC(hwnd, hdc);
     DestroyWindow(hwnd);

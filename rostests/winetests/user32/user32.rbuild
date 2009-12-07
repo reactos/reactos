@@ -1,16 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<group>
 <module name="user32_winetest" type="win32cui" installbase="bin" installname="user32_winetest.exe" allowwarnings="true">
     <include base="user32_winetest">.</include>
-    <define name="__USE_W32API" />
-    <define name="_WIN32_WINNT">0x0600</define>
-    <define name="WINVER">0x609</define>
+	<include base="ReactOS">include/reactos/wine</include>
+	<define name="__ROS_LONG64__" />
     <library>ntdll</library>
     <library>user32</library>
     <library>gdi32</library>
     <library>advapi32</library>
-    <library>kernel32</library>
     <file>broadcast.c</file>
     <file>class.c</file>
     <file>clipboard.c</file>
@@ -37,4 +34,3 @@
     <file>testlist.c</file>
     <file>resource.rc</file>
 </module>
-</group>

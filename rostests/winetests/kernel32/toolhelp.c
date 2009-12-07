@@ -44,7 +44,7 @@ static BOOL (WINAPI *pThread32Next)(HANDLE, LPTHREADENTRY32);
 
 static DWORD WINAPI sub_thread(void* pmt)
 {
-    DWORD w = WaitForSingleObject((HANDLE)pmt, WAIT_TIME);
+    DWORD w = WaitForSingleObject(pmt, WAIT_TIME);
     return w;
 }
 
@@ -73,8 +73,8 @@ static int     init(void)
     case 2: /* the test program */
         return 0;
     case 4: /* the sub-process */
-        ev1 = (HANDLE)atoi(argv[2]);
-        ev2 = (HANDLE)atoi(argv[3]);
+        ev1 = (HANDLE)(INT_PTR)atoi(argv[2]);
+        ev2 = (HANDLE)(INT_PTR)atoi(argv[3]);
         ev3 = CreateEvent(NULL, FALSE, FALSE, NULL);
 
         if (ev3 == NULL) ExitProcess(WAIT_ABANDONED);
@@ -102,7 +102,6 @@ static void test_process(DWORD curr_pid, DWORD sub_pcs_pid)
 {
     HANDLE              hSnapshot;
     PROCESSENTRY32      pe;
-    THREADENTRY32       te;
     MODULEENTRY32       me;
     unsigned            found = 0;
     int                 num = 0;
@@ -144,9 +143,6 @@ static void test_process(DWORD curr_pid, DWORD sub_pcs_pid)
      * interesting to be there, especially not the just forked off child */
     ok (childpos !=0, "child is not expected to be at position 0.\n");
 
-    te.dwSize = sizeof(te);
-    ok(!pThread32First( hSnapshot, &te ), "shouldn't return a thread\n");
-
     me.dwSize = sizeof(me);
     ok(!pModule32First( hSnapshot, &me ), "shouldn't return a module\n");
 
@@ -157,7 +153,6 @@ static void test_process(DWORD curr_pid, DWORD sub_pcs_pid)
 static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
 {
     HANDLE              hSnapshot;
-    PROCESSENTRY32      pe;
     THREADENTRY32       te;
     MODULEENTRY32       me;
     int                 num = 0;
@@ -175,6 +170,7 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
         {
             if (te.th32OwnerProcessID == curr_pid) curr_found++;
             if (te.th32OwnerProcessID == sub_pcs_pid) sub_found++;
+            if (winetest_debug > 1)
             trace("PID=%x TID=%x %d\n", te.th32OwnerProcessID, te.th32ThreadID, te.tpBasePri);
             num++;
         } while (pThread32Next( hSnapshot, &te ));
@@ -191,15 +187,13 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
         {
             if (te.th32OwnerProcessID == curr_pid) curr_found++;
             if (te.th32OwnerProcessID == sub_pcs_pid) sub_found++;
+            if (winetest_debug > 1)
             trace("PID=%x TID=%x %d\n", te.th32OwnerProcessID, te.th32ThreadID, te.tpBasePri);
             num--;
         } while (pThread32Next( hSnapshot, &te ));
     }
     ok(curr_found == 1, "couldn't find self in thread list\n");
     ok(sub_found == 2, "couldn't find sub-process thread's in thread list\n");
-
-    pe.dwSize = sizeof(pe);
-    ok(!pProcess32First( hSnapshot, &pe ), "shouldn't return a process\n");
 
     me.dwSize = sizeof(me);
     ok(!pModule32First( hSnapshot, &me ), "shouldn't return a module\n");
@@ -210,14 +204,14 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
 
 static const char* curr_expected_modules[] =
 {
-    "kernel32.dll",
     "kernel32_test.exe"
+    "kernel32.dll",
     /* FIXME: could test for ntdll on NT and Wine */
 };
 static const char* sub_expected_modules[] =
 {
-    "kernel32.dll",
     "kernel32_test.exe",
+    "kernel32.dll",
     "shell32.dll"
     /* FIXME: could test for ntdll on NT and Wine */
 };
@@ -278,7 +272,7 @@ static void test_module(DWORD pid, const char* expected[], unsigned num_expected
     pe.dwSize = sizeof(pe);
     ok(!pProcess32First( hSnapshot, &pe ), "shouldn't return a process\n");
 
-    me.dwSize = sizeof(me);
+    te.dwSize = sizeof(te);
     ok(!pThread32First( hSnapshot, &te ), "shouldn't return a thread\n");
 
     CloseHandle(hSnapshot);
@@ -289,6 +283,7 @@ START_TEST(toolhelp)
 {
     DWORD               pid = GetCurrentProcessId();
     int                 r;
+    char                *p, module[MAX_PATH];
     char                buffer[MAX_PATH];
     SECURITY_ATTRIBUTES sa;
     PROCESS_INFORMATION	info;
@@ -310,7 +305,7 @@ START_TEST(toolhelp)
         !pProcess32First || !pProcess32Next ||
         !pThread32First || !pThread32Next)
     {
-        skip("Needed functions are not available, most likely running on Windows NT\n");
+        win_skip("Needed functions are not available, most likely running on Windows NT\n");
         return;
     }
 
@@ -330,11 +325,17 @@ START_TEST(toolhelp)
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
 
-    sprintf(buffer, "%s tests/toolhelp.c %u %u", selfname, (DWORD)ev1, (DWORD)ev2);
+    sprintf(buffer, "%s tests/toolhelp.c %lu %lu", selfname, (DWORD_PTR)ev1, (DWORD_PTR)ev2);
     ok(CreateProcessA(NULL, buffer, NULL, NULL, TRUE, 0, NULL, NULL, &startup, &info), "CreateProcess\n");
     /* wait for child to be initialized */
     w = WaitForSingleObject(ev1, WAIT_TIME);
     ok(w == WAIT_OBJECT_0, "Failed to wait on sub-process startup\n");
+
+    GetModuleFileNameA( 0, module, sizeof(module) );
+    if (!(p = strrchr( module, '\\' ))) p = module;
+    else p++;
+    curr_expected_modules[0] = p;
+    sub_expected_modules[0] = p;
 
     test_process(pid, info.dwProcessId);
     test_thread(pid, info.dwProcessId);

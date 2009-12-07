@@ -3,8 +3,6 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<module name="apitest" type="staticlibrary">
 		<include base="apitest">.</include>
-		<define name="__USE_W32API" />
-		<define name="_WIN32_WINNT">0x0501</define>
 		<file>apitest.c</file>
 	</module>
 

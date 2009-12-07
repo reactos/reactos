@@ -3,6 +3,7 @@ Test_NtGdiSelectBrush(PTESTINFO pti)
 {
 	HDC hDC;
 	HBRUSH hBrush, hOldBrush;
+	DC_ATTR *pdcattr;
 
 	hDC = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
 
@@ -38,6 +39,25 @@ Test_NtGdiSelectBrush(PTESTINFO pti)
 	hOldBrush = NtGdiSelectBrush(hDC, hOldBrush);
 	TEST(hOldBrush == hBrush);
 	TEST(GetLastError() == ERROR_SUCCESS);
+
+	/* Begin with a white brush */
+	NtGdiSelectBrush(hDC, GetStockObject(WHITE_BRUSH));
+	/* Select a brush in user mode */
+	SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+	/* See what we get returned */
+	hOldBrush = NtGdiSelectBrush(hDC, GetStockObject(WHITE_BRUSH));
+	TEST(hOldBrush == GetStockObject(BLACK_BRUSH));
+
+
+	/* Begin with a white brush */
+	NtGdiSelectBrush(hDC, GetStockObject(WHITE_BRUSH));
+
+	pdcattr = GetHandleUserData(hDC);
+	/* Change the brush in user mode, without setting flags */
+	pdcattr->hbrush = (HBRUSH)12345;
+
+	hOldBrush = NtGdiSelectBrush(hDC, GetStockObject(BLACK_BRUSH));
+	TEST(hOldBrush == (HBRUSH)12345);
 
 
 	DeleteDC(hDC);

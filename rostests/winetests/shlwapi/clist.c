@@ -116,7 +116,7 @@ static HRESULT WINAPI Read(_IDummyStream* This, LPVOID lpMem, ULONG ulSize,
   else
   {
     unsigned int i;
-    char* buff = (char*)lpMem;
+    char* buff = lpMem;
 
     /* Read item data */
     if (!This->item->ulSize)

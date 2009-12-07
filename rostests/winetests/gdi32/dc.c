@@ -185,7 +185,7 @@ static void test_GdiConvertToDevmodeW(void)
     pGdiConvertToDevmodeW = (void *)GetProcAddress(GetModuleHandleA("gdi32.dll"), "GdiConvertToDevmodeW");
     if (!pGdiConvertToDevmodeW)
     {
-        skip("GdiConvertToDevmodeW is not available on this platform\n");
+        win_skip("GdiConvertToDevmodeW is not available on this platform\n");
         return;
     }
 
@@ -253,10 +253,86 @@ static void test_CreateCompatibleDC(void)
     ok(hNewDC == NULL, "CreateCompatibleDC returned %p\n", hNewDC);
 }
 
+static void test_DC_bitmap(void)
+{
+    HDC hdc, hdcmem;
+    DWORD bits[64];
+    HBITMAP hbmp, oldhbmp;
+    COLORREF col;
+    int i, bitspixel;
+
+    /* fill bitmap data with b&w pattern */
+    for( i = 0; i < 64; i++) bits[i] = i & 1 ? 0 : 0xffffff;
+
+    hdc = GetDC(0);
+    ok( hdc != NULL, "CreateDC rets %p\n", hdc);
+    bitspixel = GetDeviceCaps( hdc, BITSPIXEL);
+    /* create a memory dc */
+    hdcmem = CreateCompatibleDC( hdc);
+    ok( hdcmem != NULL, "CreateCompatibleDC rets %p\n", hdcmem);
+    /* tests */
+    /* test monochrome bitmap: should always work */
+    hbmp = CreateBitmap(32, 32, 1, 1, bits);
+    ok( hbmp != NULL, "CreateBitmap returns %p\n", hbmp);
+    oldhbmp = SelectObject( hdcmem, hbmp);
+    ok( oldhbmp != NULL, "SelectObject returned NULL\n" ); /* a memdc always has a bitmap selected */
+    col = GetPixel( hdcmem, 0, 0);
+    ok( col == 0xffffff, "GetPixel returned %08x, expected 00ffffff\n", col);
+    col = GetPixel( hdcmem, 1, 1);
+    ok( col == 0x000000, "GetPixel returned %08x, expected 00000000\n", col);
+    col = GetPixel( hdcmem, 100, 1);
+    ok( col == CLR_INVALID, "GetPixel returned %08x, expected ffffffff\n", col);
+    SelectObject( hdcmem, oldhbmp);
+    DeleteObject( hbmp);
+
+    /* test with 2 bits color depth, not likely to succeed */
+    hbmp = CreateBitmap(16, 16, 1, 2, bits);
+    ok( hbmp != NULL, "CreateBitmap returns %p\n", hbmp);
+    oldhbmp = SelectObject( hdcmem, hbmp);
+    if( bitspixel != 2)
+        ok( !oldhbmp, "SelectObject of a bitmap with 2 bits/pixel should return  NULL\n");
+    if( oldhbmp) SelectObject( hdcmem, oldhbmp);
+    DeleteObject( hbmp);
+
+    /* test with 16 bits color depth, might succeed */
+    hbmp = CreateBitmap(6, 6, 1, 16, bits);
+    ok( hbmp != NULL, "CreateBitmap returns %p\n", hbmp);
+    oldhbmp = SelectObject( hdcmem, hbmp);
+    if( bitspixel == 16) {
+        ok( oldhbmp != NULL, "SelectObject returned NULL\n" );
+        col = GetPixel( hdcmem, 0, 0);
+        ok( col == 0xffffff,
+            "GetPixel of a bitmap with 16 bits/pixel returned %08x, expected 00ffffff\n", col);
+        col = GetPixel( hdcmem, 1, 1);
+        ok( col == 0x000000,
+            "GetPixel of a bitmap with 16 bits/pixel returned returned %08x, expected 00000000\n", col);
+    }
+    if( oldhbmp) SelectObject( hdcmem, oldhbmp);
+    DeleteObject( hbmp);
+
+    /* test with 32 bits color depth, probably succeed */
+    hbmp = CreateBitmap(4, 4, 1, 32, bits);
+    ok( hbmp != NULL, "CreateBitmap returns %p\n", hbmp);
+    oldhbmp = SelectObject( hdcmem, hbmp);
+    if( bitspixel == 32) {
+        ok( oldhbmp != NULL, "SelectObject returned NULL\n" );
+        col = GetPixel( hdcmem, 0, 0);
+        ok( col == 0xffffff,
+            "GetPixel of a bitmap with 32 bits/pixel returned %08x, expected 00ffffff\n", col);
+        col = GetPixel( hdcmem, 1, 1);
+        ok( col == 0x000000,
+            "GetPixel of a bitmap with 32 bits/pixel returned returned %08x, expected 00000000\n", col);
+    }
+    if( oldhbmp) SelectObject( hdcmem, oldhbmp);
+    DeleteObject( hbmp);
+    ReleaseDC( 0, hdc );
+}
+
 START_TEST(dc)
 {
     test_savedc();
     test_savedc_2();
     test_GdiConvertToDevmodeW();
     test_CreateCompatibleDC();
+    test_DC_bitmap();
 }

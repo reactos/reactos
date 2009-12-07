@@ -39,6 +39,7 @@ Test_OneParamRoutine_MapDesktopObject(PTESTINFO pti) /* 0x30 */
 
 	hMenu = CreateMenu();
 	pObject = NtUserCallOneParam((DWORD)hMenu, _ONEPARAM_ROUTINE_MAPDEKTOPOBJECT);
+	DestroyMenu(hMenu); 
 	TEST(pObject > 0);
 	TEST(pObject < 0x80000000);
 

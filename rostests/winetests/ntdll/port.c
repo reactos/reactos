@@ -62,8 +62,8 @@ typedef struct _LPC_MESSAGE
   USHORT MessageType;
   USHORT VirtualRangesOffset;
   CLIENT_ID ClientId;
-  ULONG MessageId;
-  ULONG SectionSize;
+  ULONG_PTR MessageId;
+  ULONG_PTR SectionSize;
   UCHAR Data[ANYSIZE_ARRAY];
 } LPC_MESSAGE, *PLPC_MESSAGE;
 
@@ -90,10 +90,7 @@ static const WCHAR PORTNAME[] = {'\\','M','y','P','o','r','t',0};
 
 #define MAX_MESSAGE_LEN    30
 
-UNICODE_STRING  port;
-static char     selfname[MAX_PATH];
-static int      myARGC;
-static char**   myARGV;
+static UNICODE_STRING port;
 
 /* Function pointers for ntdll calls */
 static HMODULE hntdll = 0;
@@ -118,8 +115,9 @@ static BOOL init_function_ptrs(void)
 {
     hntdll = LoadLibraryA("ntdll.dll");
 
-    if (hntdll)
-    {
+    if (!hntdll)
+        return FALSE;
+
         pNtCompleteConnectPort = (void *)GetProcAddress(hntdll, "NtCompleteConnectPort");
         pNtAcceptConnectPort = (void *)GetProcAddress(hntdll, "NtAcceptConnectPort");
         pNtReplyPort = (void *)GetProcAddress(hntdll, "NtReplyPort");
@@ -131,13 +129,14 @@ static BOOL init_function_ptrs(void)
         pNtConnectPort = (void *)GetProcAddress(hntdll, "NtConnectPort");
         pRtlInitUnicodeString = (void *)GetProcAddress(hntdll, "RtlInitUnicodeString");
         pNtWaitForSingleObject = (void *)GetProcAddress(hntdll, "NtWaitForSingleObject");
-    }
 
     if (!pNtCompleteConnectPort || !pNtAcceptConnectPort ||
         !pNtReplyWaitReceivePort || !pNtCreatePort || !pNtRequestWaitReplyPort ||
         !pNtRequestPort || !pNtRegisterThreadTerminatePort ||
         !pNtConnectPort || !pRtlInitUnicodeString)
     {
+        win_skip("Needed port functions are not available\n");
+        FreeLibrary(hntdll);
         return FALSE;
     }
 
@@ -153,10 +152,10 @@ static void ProcessConnectionRequest(PLPC_MESSAGE LpcMessage, PHANDLE pAcceptPor
     ok(!*LpcMessage->Data, "Expected empty string!\n");
 
     status = pNtAcceptConnectPort(pAcceptPortHandle, 0, LpcMessage, 1, 0, NULL);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
     
     status = pNtCompleteConnectPort(*pAcceptPortHandle);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
 }
 
 static void ProcessLpcRequest(HANDLE PortHandle, PLPC_MESSAGE LpcMessage)
@@ -171,7 +170,7 @@ static void ProcessLpcRequest(HANDLE PortHandle, PLPC_MESSAGE LpcMessage)
     lstrcpy((LPSTR)LpcMessage->Data, REPLY);
 
     status = pNtReplyPort(PortHandle, LpcMessage);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
     ok(LpcMessage->MessageType == LPC_REQUEST,
        "Expected LPC_REQUEST, got %d\n", LpcMessage->MessageType);
     ok(!lstrcmp((LPSTR)LpcMessage->Data, REPLY),
@@ -192,11 +191,11 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
     sqos.EffectiveOnly = TRUE;
 
     status = pNtConnectPort(&PortHandle, &port, &sqos, 0, 0, &len, NULL, NULL);
-    todo_wine ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    todo_wine ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
     if (status != STATUS_SUCCESS) return 1;
 
     status = pNtRegisterThreadTerminatePort(PortHandle);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
 
     size = FIELD_OFFSET(LPC_MESSAGE, Data) + MAX_MESSAGE_LEN;
     LpcMessage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
@@ -207,7 +206,7 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
     lstrcpy((LPSTR)LpcMessage->Data, REQUEST1);
 
     status = pNtRequestPort(PortHandle, LpcMessage);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
     ok(LpcMessage->MessageType == 0, "Expected 0, got %d\n", LpcMessage->MessageType);
     ok(!lstrcmp((LPSTR)LpcMessage->Data, REQUEST1),
        "Expected %s, got %s\n", REQUEST1, LpcMessage->Data);
@@ -220,35 +219,23 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
 
     /* Send the message and wait for the reply */
     status = pNtRequestWaitReplyPort(PortHandle, LpcMessage, out);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
     ok(!lstrcmp((LPSTR)out->Data, REPLY), "Expected %s, got %s\n", REPLY, out->Data);
     ok(out->MessageType == LPC_REPLY, "Expected LPC_REPLY, got %d\n", out->MessageType);
+
+    HeapFree(GetProcessHeap(), 0, out);
+    HeapFree(GetProcessHeap(), 0, LpcMessage);
 
     return 0;
 }
 
-static void test_ports_server(void)
+static void test_ports_server( HANDLE PortHandle )
 {
-    OBJECT_ATTRIBUTES obj;
-    HANDLE PortHandle;
     HANDLE AcceptPortHandle;
     PLPC_MESSAGE LpcMessage;
     ULONG size;
     NTSTATUS status;
     BOOL done = FALSE;
-
-    pRtlInitUnicodeString(&port, PORTNAME);
-
-    memset(&obj, 0, sizeof(OBJECT_ATTRIBUTES));
-    obj.Length = sizeof(OBJECT_ATTRIBUTES);
-    obj.ObjectName = &port;
-
-    status = pNtCreatePort(&PortHandle, &obj, 100, 100, 0);
-    todo_wine
-    {
-        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
-    }
-    if (status != STATUS_SUCCESS) return;
 
     size = FIELD_OFFSET(LPC_MESSAGE, Data) + MAX_MESSAGE_LEN;
     LpcMessage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
@@ -284,6 +271,7 @@ static void test_ports_server(void)
 
             case LPC_CLIENT_DIED:
                 ok(done, "Expected LPC request to be completed!\n");
+                HeapFree(GetProcessHeap(), 0, LpcMessage);
                 return;
 
             default:
@@ -291,22 +279,38 @@ static void test_ports_server(void)
                 break;
         }
     }
+
+    HeapFree(GetProcessHeap(), 0, LpcMessage);
 }
 
 START_TEST(port)
 {
-    HANDLE thread;
-    DWORD id;
+    OBJECT_ATTRIBUTES obj;
+    HANDLE port_handle;
+    NTSTATUS status;
 
     if (!init_function_ptrs())
         return;
 
-    myARGC = winetest_get_mainargs(&myARGV);
-    strcpy(selfname, myARGV[0]);
+    pRtlInitUnicodeString(&port, PORTNAME);
 
-    thread = CreateThread(NULL, 0, test_ports_client, NULL, 0, &id);
+    memset(&obj, 0, sizeof(OBJECT_ATTRIBUTES));
+    obj.Length = sizeof(OBJECT_ATTRIBUTES);
+    obj.ObjectName = &port;
+
+    status = pNtCreatePort(&port_handle, &obj, 100, 100, 0);
+    if (status == STATUS_ACCESS_DENIED) skip("Not enough rights\n");
+    else todo_wine ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+
+    if (status == STATUS_SUCCESS)
+    {
+        DWORD id;
+        HANDLE thread = CreateThread(NULL, 0, test_ports_client, NULL, 0, &id);
     ok(thread != NULL, "Expected non-NULL thread handle!\n");
 
-    test_ports_server();
+        test_ports_server( port_handle );
+        ok( WaitForSingleObject( thread, 10000 ) == 0, "thread didn't exit\n" );
     CloseHandle(thread);
+}
+    FreeLibrary(hntdll);
 }

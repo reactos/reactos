@@ -3,9 +3,9 @@
 <group>
 <module name="gdiplus_winetest" type="win32cui" installbase="bin" installname="gdiplus_winetest.exe" allowwarnings="true">
 	<include base="gdiplus_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
+    <define name="__ROS_LONG64__" />
 	<file>brush.c</file>
+	<file>customlinecap.c</file>
 	<file>font.c</file>
 	<file>graphics.c</file>
 	<file>graphicspath.c</file>
@@ -20,7 +20,7 @@
 	<library>gdiplus</library>
 	<library>user32</library>
 	<library>gdi32</library>
-	<library>kernel32</library>
+	<library>ole32</library>
 	<library>ntdll</library>
 </module>
 </group>

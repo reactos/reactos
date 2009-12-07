@@ -51,7 +51,7 @@ static int init_wksta_tests(void)
     dwSize = sizeof(user_name)/sizeof(user_name[0]);
     rc=GetUserNameW(user_name, &dwSize);
     if (rc==FALSE && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED) {
-        skip("GetUserNameW is not implemented\n");
+        win_skip("GetUserNameW is not implemented\n");
         return 0;
     }
     ok(rc, "User Name Retrieved\n");
@@ -173,7 +173,8 @@ static void run_wkstatransportenum_tests(void)
 
         ok(bufPtr != NULL, "got data back\n");
         ok(entriesRead > 0, "read at least one transport\n");
-        ok(totalEntries > 0, "at least one transport\n");
+        ok(totalEntries > 0 || broken(totalEntries == 0) /* Win7 */,
+           "at least one transport\n");
         pNetApiBufferFree(bufPtr);
     }
 }
@@ -192,13 +193,16 @@ START_TEST(wksta)
      * if one is not available, none are.
      */
     if (!pNetApiBufferFree) {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         FreeLibrary(hnetapi32);
         return;
     }
 
     if (init_wksta_tests()) {
+        if (pNetpGetComputerName)
         run_get_comp_name_tests();
+        else
+            win_skip("Function NetpGetComputerName not available\n");
         run_wkstausergetinfo_tests();
         run_wkstatransportenum_tests();
     }

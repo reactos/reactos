@@ -1,4 +1,3 @@
-#define _DISABLE_TIDENTS
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,7 +9,7 @@ int main( int argc, char **argv ) {
   PWCHAR WcharResult;
   WCHAR ValueNameWC[100];
   PCHAR CharResult;
-  HANDLE RegKey;
+  HKEY RegKey;
   int i;
 
   if( argc < 2 ) {
@@ -56,14 +55,13 @@ int main( int argc, char **argv ) {
     return 7;
   }
 
-  RegQueryValueExA( RegKey, argv[2], NULL, NULL, CharResult, &ResultSize );
+  RegQueryValueExA( RegKey, argv[2], NULL, NULL, (PBYTE)CharResult, &ResultSize );
 
   printf( " char Value: %s\n", CharResult );
   fflush( stdout );
 
   free( WcharResult );
   free( CharResult );
-  free( ValueNameWC );
 
   return 0;
 }

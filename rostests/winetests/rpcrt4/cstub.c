@@ -30,6 +30,7 @@
 #include <winerror.h>
 
 
+#include "initguid.h"
 #include "rpc.h"
 #include "rpcdce.h"
 #include "rpcproxy.h"
@@ -47,7 +48,7 @@ static GUID IID_if4 = {0x1234567b, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 static int my_alloc_called;
 static int my_free_called;
 
-static void * CALLBACK my_alloc(size_t size)
+static void * CALLBACK my_alloc(SIZE_T size)
 {
     my_alloc_called++;
     return NdrOleAllocate(size);
@@ -258,13 +259,14 @@ static CInterfaceStubVtbl if2_stub_vtbl =
     { CStdStubBuffer_DELEGATING_METHODS }
 };
 
-static CINTERFACE_PROXY_VTABLE(4) if3_proxy_vtbl =
+static CINTERFACE_PROXY_VTABLE(5) if3_proxy_vtbl =
 {
     { &IID_if3 },
     {   IUnknown_QueryInterface_Proxy,
         IUnknown_AddRef_Proxy,
         IUnknown_Release_Proxy ,
-        if1_fn1_Proxy
+        if1_fn1_Proxy,
+        0
     }
 };
 
@@ -297,7 +299,7 @@ static CInterfaceStubVtbl if3_stub_vtbl =
     {
         &IID_if3,
         &if3_server_info,
-        4,
+        5,
         &if1_table[-3]
     },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -367,10 +369,10 @@ static const CInterfaceProxyVtbl *cstub_ProxyVtblList[] =
 
 static const CInterfaceStubVtbl *cstub_StubVtblList[] =
 {
-    (const CInterfaceStubVtbl *) &if1_stub_vtbl,
-    (const CInterfaceStubVtbl *) &if2_stub_vtbl,
-    (const CInterfaceStubVtbl *) &if3_stub_vtbl,
-    (const CInterfaceStubVtbl *) &if4_stub_vtbl,
+    &if1_stub_vtbl,
+    &if2_stub_vtbl,
+    &if3_stub_vtbl,
+    &if4_stub_vtbl,
     NULL
 };
 
@@ -429,10 +431,16 @@ static const ProxyFileInfo *proxy_file_list[] = {
 
 static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
 {
+    HMODULE rpcrt4 = GetModuleHandleA("rpcrt4.dll");
     IPSFactoryBuffer *ppsf = NULL;
+    const PCInterfaceProxyVtblList* proxy_vtbl;
+    const PCInterfaceStubVtblList* stub_vtbl;
     const CLSID PSDispatch = {0x20420, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46}};
+    const CLSID CLSID_Unknown = {0x45678, 0x1234, 0x6666, {0xff, 0x67, 0x45, 0x98, 0x76, 0x12, 0x34, 0x56}};
+    static const GUID * const interfaces[] = { &IID_if1, &IID_if2, &IID_if3, &IID_if4 };
+    UINT i;
     HRESULT r;
-    HMODULE hmod = LoadLibraryA("rpcrt4.dll");
+    HMODULE hmod = GetModuleHandleA("rpcrt4.dll");
     void *CStd_QueryInterface = GetProcAddress(hmod, "CStdStubBuffer_QueryInterface");
     void *CStd_AddRef = GetProcAddress(hmod, "CStdStubBuffer_AddRef");
     void *CStd_Release = GetProcAddress(hmod, "NdrCStdStubBuffer_Release");
@@ -445,27 +453,36 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     void *CStd_DebugServerRelease = GetProcAddress(hmod, "CStdStubBuffer_DebugServerRelease");
 
     r = NdrDllGetClassObject(&PSDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_Unknown, &PSFactoryBuffer);
+    ok(r == CLASS_E_CLASSNOTAVAILABLE, "NdrDllGetClassObject with unknown clsid should have returned CLASS_E_CLASSNOTAVAILABLE instead of 0x%x\n", r);
+    ok(ppsf == NULL, "NdrDllGetClassObject should have set ppsf to NULL on failure\n");
+
+    r = NdrDllGetClassObject(&PSDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
                          &PSDispatch, &PSFactoryBuffer);
 
     ok(r == S_OK, "ret %08x\n", r);
     ok(ppsf != NULL, "ppsf == NULL\n");
 
+    proxy_vtbl = PSFactoryBuffer.pProxyFileList[0]->pProxyVtblList;
+    stub_vtbl = PSFactoryBuffer.pProxyFileList[0]->pStubVtblList;
     ok(PSFactoryBuffer.pProxyFileList == proxy_file_list, "pfl not the same\n");
-    ok(PSFactoryBuffer.pProxyFileList[0]->pStubVtblList == (PCInterfaceStubVtblList *) &cstub_StubVtblList, "stub vtbllist not the same\n");
+    ok(proxy_vtbl == (PCInterfaceProxyVtblList *) &cstub_ProxyVtblList, "proxy vtbllist not the same\n");
+    ok(stub_vtbl == (PCInterfaceStubVtblList *) &cstub_StubVtblList, "stub vtbllist not the same\n");
 
     /* if1 is non-delegating, if2 is delegating, if3 is non-delegating
        but I've zero'ed the vtbl entries, similarly if4 is delegating
        with zero'ed vtbl entries */
 
 #define VTBL_TEST_NOT_CHANGE_TO(name, i)                                  \
-    ok(PSFactoryBuffer.pProxyFileList[0]->pStubVtblList[i]->Vtbl.name != CStd_##name, #name "vtbl %d updated %p %p\n", \
-       i, PSFactoryBuffer.pProxyFileList[0]->pStubVtblList[i]->Vtbl.name, CStd_##name );
+    ok(stub_vtbl[i]->Vtbl.name != CStd_##name, #name "vtbl %d updated %p %p\n", \
+       i, stub_vtbl[i]->Vtbl.name, CStd_##name )
 #define VTBL_TEST_CHANGE_TO(name, i)                                  \
-    ok(PSFactoryBuffer.pProxyFileList[0]->pStubVtblList[i]->Vtbl.name == CStd_##name, #name "vtbl %d not updated %p %p\n", \
-       i, PSFactoryBuffer.pProxyFileList[0]->pStubVtblList[i]->Vtbl.name, CStd_##name );
+    ok(stub_vtbl[i]->Vtbl.name == CStd_##name, #name "vtbl %d not updated %p %p\n", \
+       i, stub_vtbl[i]->Vtbl.name, CStd_##name )
 #define VTBL_TEST_ZERO(name, i)                                  \
-    ok(PSFactoryBuffer.pProxyFileList[0]->pStubVtblList[i]->Vtbl.name == NULL, #name "vtbl %d not null %p\n", \
-       i, PSFactoryBuffer.pProxyFileList[0]->pStubVtblList[i]->Vtbl.name );
+    ok(stub_vtbl[i]->Vtbl.name == NULL, #name "vtbl %d not null %p\n", \
+       i, stub_vtbl[i]->Vtbl.name )
+
     VTBL_TEST_NOT_CHANGE_TO(QueryInterface, 0);
     VTBL_TEST_NOT_CHANGE_TO(AddRef, 0);
     VTBL_TEST_NOT_CHANGE_TO(Release, 0);
@@ -510,13 +527,64 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     VTBL_TEST_CHANGE_TO(DebugServerQueryInterface, 3);
     VTBL_TEST_CHANGE_TO(DebugServerRelease, 3);
 
+#define VTBL_PROXY_TEST(i,num,ptr) \
+    ok( proxy_vtbl[i]->Vtbl[num] == (ptr), "wrong proxy %u func %u %p/%p\n", \
+        (i), (num), proxy_vtbl[i]->Vtbl[num], (ptr) )
+#define VTBL_PROXY_TEST_NOT_ZERO(i,num) \
+    ok( proxy_vtbl[i]->Vtbl[num] != NULL, "wrong proxy %u func %u is NULL\n", (i), (num))
 
+    VTBL_PROXY_TEST(0, 0, IUnknown_QueryInterface_Proxy);
+    VTBL_PROXY_TEST(0, 1, IUnknown_AddRef_Proxy);
+    VTBL_PROXY_TEST(0, 2, IUnknown_Release_Proxy);
+    VTBL_PROXY_TEST(0, 3, if1_fn1_Proxy);
+    VTBL_PROXY_TEST(0, 4, if1_fn2_Proxy);
+
+    VTBL_PROXY_TEST(1, 0, GetProcAddress(rpcrt4,"IUnknown_QueryInterface_Proxy"));
+    VTBL_PROXY_TEST(1, 1, GetProcAddress(rpcrt4,"IUnknown_AddRef_Proxy"));
+    VTBL_PROXY_TEST(1, 2, GetProcAddress(rpcrt4,"IUnknown_Release_Proxy"));
+    VTBL_PROXY_TEST_NOT_ZERO(1, 3);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 4);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 5);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 6);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 7);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 8);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 9);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 10);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 11);
+    VTBL_PROXY_TEST_NOT_ZERO(1, 12);
+
+    VTBL_PROXY_TEST(2, 0, IUnknown_QueryInterface_Proxy);
+    VTBL_PROXY_TEST(2, 1, IUnknown_AddRef_Proxy);
+    VTBL_PROXY_TEST(2, 2, IUnknown_Release_Proxy);
+    VTBL_PROXY_TEST(2, 3, if1_fn1_Proxy);
+    todo_wine VTBL_PROXY_TEST_NOT_ZERO(2, 4);
+
+    VTBL_PROXY_TEST(3, 0, GetProcAddress(rpcrt4,"IUnknown_QueryInterface_Proxy"));
+    VTBL_PROXY_TEST(3, 1, GetProcAddress(rpcrt4,"IUnknown_AddRef_Proxy"));
+    VTBL_PROXY_TEST(3, 2, GetProcAddress(rpcrt4,"IUnknown_Release_Proxy"));
+    VTBL_PROXY_TEST_NOT_ZERO(3, 3);
+    VTBL_PROXY_TEST_NOT_ZERO(3, 4);
+    VTBL_PROXY_TEST_NOT_ZERO(3, 5);
+    VTBL_PROXY_TEST_NOT_ZERO(3, 6);
 
 #undef VTBL_TEST_NOT_CHANGE_TO
 #undef VTBL_TEST_CHANGE_TO
 #undef VTBL_TEST_ZERO
+#undef VTBL_PROXY_TEST
+#undef VTBL_PROXY_TEST_NOT_ZERO
+
+    for (i = 0; i < sizeof(interfaces)/sizeof(interfaces[0]); i++)
+        ok( proxy_vtbl[i]->header.piid == interfaces[i],
+            "wrong proxy %u iid %p/%p\n", i, proxy_vtbl[i]->header.piid, interfaces[i] );
 
     ok(PSFactoryBuffer.RefCount == 1, "ref count %d\n", PSFactoryBuffer.RefCount);
+    IPSFactoryBuffer_Release(ppsf);
+
+    r = NdrDllGetClassObject(&IID_if3, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             NULL, &PSFactoryBuffer);
+    ok(r == S_OK, "ret %08x\n", r);
+    ok(ppsf != NULL, "ppsf == NULL\n");
+
     return ppsf;
 }
 
@@ -599,19 +667,87 @@ static IUnknownVtbl create_stub_test_fail_vtbl =
     NULL
 };
 
+struct dummy_unknown
+{
+    const IUnknownVtbl *vtbl;
+    LONG ref;
+};
+
+static HRESULT WINAPI dummy_QueryInterface(IUnknown *This, REFIID iid, void **ppv)
+{
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI dummy_AddRef(LPUNKNOWN iface)
+{
+    struct dummy_unknown *this = (struct dummy_unknown *)iface;
+    return InterlockedIncrement( &this->ref );
+}
+
+static ULONG WINAPI dummy_Release(LPUNKNOWN iface)
+{
+    struct dummy_unknown *this = (struct dummy_unknown *)iface;
+    return InterlockedDecrement( &this->ref );
+}
+
+static IUnknownVtbl dummy_unknown_vtbl =
+{
+    dummy_QueryInterface,
+    dummy_AddRef,
+    dummy_Release
+};
+static struct dummy_unknown dummy_unknown = { &dummy_unknown_vtbl, 0 };
+
+static void create_proxy_test( IPSFactoryBuffer *ppsf, REFIID iid, const void *expected_vtbl )
+{
+    IRpcProxyBuffer *proxy = NULL;
+    IUnknown *iface = NULL;
+    HRESULT r;
+    ULONG count;
+
+    r = IPSFactoryBuffer_CreateProxy(ppsf, NULL, iid, &proxy, (void **)&iface);
+    ok( r == S_OK, "IPSFactoryBuffer_CreateProxy failed %x\n", r );
+    ok( *(void **)iface == expected_vtbl, "wrong iface pointer %p/%p\n", *(void **)iface, expected_vtbl );
+    count = IUnknown_Release( iface );
+    ok( count == 1, "wrong refcount %u\n", count );
+    count = IRpcProxyBuffer_Release( proxy );
+    ok( count == 0, "wrong refcount %u\n", count );
+
+    dummy_unknown.ref = 4;
+    r = IPSFactoryBuffer_CreateProxy(ppsf, (IUnknown *)&dummy_unknown, iid, &proxy, (void **)&iface);
+    ok( r == S_OK, "IPSFactoryBuffer_CreateProxy failed %x\n", r );
+    ok( dummy_unknown.ref == 5, "wrong refcount %u\n", dummy_unknown.ref );
+    ok( *(void **)iface == expected_vtbl, "wrong iface pointer %p/%p\n", *(void **)iface, expected_vtbl );
+    count = IUnknown_Release( iface );
+    ok( count == 4, "wrong refcount %u\n", count );
+    ok( dummy_unknown.ref == 4, "wrong refcount %u\n", dummy_unknown.ref );
+    count = IRpcProxyBuffer_Release( proxy );
+    ok( count == 0, "wrong refcount %u\n", count );
+    ok( dummy_unknown.ref == 4, "wrong refcount %u\n", dummy_unknown.ref );
+}
+
+static void test_CreateProxy( IPSFactoryBuffer *ppsf )
+{
+    create_proxy_test( ppsf, &IID_if1, if1_proxy_vtbl.Vtbl );
+    create_proxy_test( ppsf, &IID_if2, if2_proxy_vtbl.Vtbl );
+    create_proxy_test( ppsf, &IID_if3, if3_proxy_vtbl.Vtbl );
+    create_proxy_test( ppsf, &IID_if4, if4_proxy_vtbl.Vtbl );
+}
+
 static void test_CreateStub(IPSFactoryBuffer *ppsf)
 {
     IUnknownVtbl *vtbl = &create_stub_test_vtbl;
     IUnknown *obj = (IUnknown*)&vtbl;
     IRpcStubBuffer *pstub = create_stub(ppsf, &IID_if1, obj, S_OK);
     CStdStubBuffer *cstd_stub = (CStdStubBuffer*)pstub;
-    const CInterfaceStubHeader *header = ((const CInterfaceStubHeader *)cstd_stub->lpVtbl) - 1;
+    const CInterfaceStubHeader *header = &CONTAINING_RECORD(cstd_stub->lpVtbl, const CInterfaceStubVtbl, Vtbl)->header;
 
     ok(IsEqualIID(header->piid, &IID_if1), "header iid differs\n");
     ok(cstd_stub->RefCount == 1, "ref count %d\n", cstd_stub->RefCount);
     /* 0xdeadbeef returned from create_stub_test_QI */
     ok(cstd_stub->pvServerObject == (void*)0xdeadbeef, "pvServerObject %p\n", cstd_stub->pvServerObject);
-    ok(cstd_stub->pPSFactory == ppsf, "pPSFactory %p\n", cstd_stub->pPSFactory);
+    ok(cstd_stub->pPSFactory != NULL, "pPSFactory was NULL\n");
 
     vtbl = &create_stub_test_fail_vtbl;
     pstub = create_stub(ppsf, &IID_if1, obj, E_NOINTERFACE);
@@ -937,6 +1073,7 @@ START_TEST( cstub )
 
     ppsf = test_NdrDllGetClassObject();
     test_NdrStubForwardingFunction();
+    test_CreateProxy(ppsf);
     test_CreateStub(ppsf);
     test_Connect(ppsf);
     test_Disconnect(ppsf);

@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define _WIN32_WINNT 0x0501
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
-
-#define _WIN32_WINNT 0x0501
 
 #include "windef.h"
 #include "winbase.h"
@@ -66,7 +66,10 @@ static BOOL init_procs(void)
         pBroadcastA = (PBROADCAST)GetProcAddress(user32, "BroadcastSystemMessage");
     ok(pBroadcastA != NULL, "No BroadcastSystemMessage found\n");
     if (!pBroadcastA)
+    {
+        win_skip("BroadcastA is not available\n");
         return FALSE;
+    }
 
     pBroadcastW = (PBROADCAST)GetProcAddress(user32, "BroadcastSystemMessageW");
     pBroadcastExA = (PBROADCASTEX)GetProcAddress(user32, "BroadcastSystemMessageExA");
@@ -80,13 +83,13 @@ static BOOL init_procs(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "MainWindowClass";
 
     if (!RegisterClassA(&cls))
-        return 0;
+        return FALSE;
 
     if (!CreateWindowExA(0, "MainWindowClass", "Main window", WS_CAPTION | WS_SYSMENU |
                                WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP, 100, 100, 200,
@@ -105,17 +108,17 @@ static void test_parameters(PBROADCAST broadcast, const char *functionname)
     ret = broadcast( 0x80000000, &recips, WM_NULL, 0, 0 );
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("%s is not implemented\n", functionname);
+        win_skip("%s is not implemented\n", functionname);
         return;
     }
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
-    ok(!ret, "Returned: %d\n", ret);
+    ok(!ret || broken(ret), "Returned: %d\n", ret);
+    if (!ret) ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcast( 0x80000000, &recips, WM_NULL, 0, 0 );
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
-    ok(!ret, "Returned: %d\n", ret);
+    ok(!ret || broken(ret), "Returned: %d\n", ret);
+    if (!ret) ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
 
 #if 0 /* TODO: Check the hang flags */
     SetLastError(0xcafebabe);
@@ -150,8 +153,11 @@ static void test_parameters(PBROADCAST broadcast, const char *functionname)
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     PulseEvent(hevent);
 
+    SetLastError( 0xdeadbeef );
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_POSTMESSAGE|BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, 0 );
+    if (ret)
+    {
     ok(ret==1, "Returned: %d\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_OBJECT_0, "Synchronous message sent instead\n");
     PulseEvent(hevent);
@@ -167,6 +173,9 @@ static void test_parameters(PBROADCAST broadcast, const char *functionname)
     ok(!ret, "Returned: %d\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     PulseEvent(hevent);
+    }
+    else  /* BSF_SENDNOTIFYMESSAGE not supported on NT4 */
+        ok( GetLastError() == ERROR_INVALID_PARAMETER, "failed with err %u\n", GetLastError() );
 
     recips = BSM_APPLICATIONS;
     ret = broadcast( 0, &recips, WM_NULL, 100, 0 );
@@ -264,6 +273,9 @@ static void test_noprivileges(void)
     DWORD recips;
     BOOL ret;
 
+    static const DWORD BSM_ALL_RECIPS = BSM_VXDS | BSM_NETDRIVER |
+                                        BSM_INSTALLABLEDRIVERS | BSM_APPLICATIONS;
+
     pOpenProcessToken = (void *)GetProcAddress(advapi32, "OpenProcessToken");
     pAdjustTokenPrivileges = (void *)GetProcAddress(advapi32, "AdjustTokenPrivileges");
     if (!pOpenProcessToken || !pAdjustTokenPrivileges || !pOpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
@@ -282,41 +294,44 @@ static void test_noprivileges(void)
     recips = BSM_ALLDESKTOPS;
     ResetEvent(hevent);
     ret = pBroadcastExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
-    todo_wine ok(GetLastError() == ERROR_PRIVILEGE_NOT_HELD, "Last error: %08x\n", GetLastError());
-    ok(ret==1, "Returned: %d\n", ret);
+    ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    ok(recips == BSM_ALLDESKTOPS, "Received by: %08x\n", recips);
+    ok(recips == BSM_ALLDESKTOPS ||
+       recips == BSM_ALL_RECIPS, /* win2k3 */
+       "Received by: %08x\n", recips);
     PulseEvent(hevent);
 
-    /* Wine sets last error to 0, so just use that one as token here so it doesn't fail */
-    SetLastError(0);
+    SetLastError(0xcafebabe);
     recips = BSM_ALLCOMPONENTS;
     ResetEvent(hevent);
     ret = pBroadcastExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
-    ok(!GetLastError(), "Last error: %08x\n", GetLastError());
-    ok(ret==1, "Returned: %d\n", ret);
+    ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    ok(recips == BSM_ALLCOMPONENTS, "Received by: %08x\n", recips);
+    ok(recips == BSM_ALLCOMPONENTS ||
+       recips == BSM_ALL_RECIPS, /* win2k3 */
+       "Received by: %08x\n", recips);
     PulseEvent(hevent);
 
     SetLastError(0xcafebabe);
     recips = BSM_ALLDESKTOPS|BSM_APPLICATIONS;
     ResetEvent(hevent);
     ret = pBroadcastExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
-    todo_wine ok(GetLastError() == ERROR_PRIVILEGE_NOT_HELD, "Last error: %08x\n", GetLastError());
-    ok(ret==1, "Returned: %d\n", ret);
+    ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    ok(recips == (BSM_ALLDESKTOPS|BSM_APPLICATIONS), "Received by: %08x\n", recips);
+    ok(recips == (BSM_ALLDESKTOPS|BSM_APPLICATIONS) ||
+       recips == BSM_APPLICATIONS, /* win2k3 */
+       "Received by: %08x\n", recips);
     PulseEvent(hevent);
 
     SetLastError(0xcafebabe);
     recips = BSM_ALLDESKTOPS|BSM_APPLICATIONS;
     ResetEvent(hevent);
     ret = pBroadcastExW( BSF_QUERY, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY, NULL );
-    todo_wine ok(GetLastError() == ERROR_PRIVILEGE_NOT_HELD, "Last error: %08x\n", GetLastError());
     ok(!ret, "Returned: %d\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    ok(recips == (BSM_ALLDESKTOPS|BSM_APPLICATIONS), "Received by: %08x\n", recips);
+    ok(recips == (BSM_ALLDESKTOPS|BSM_APPLICATIONS) ||
+       recips == BSM_APPLICATIONS, /* win2k3 */
+       "Received by: %08x\n", recips);
     PulseEvent(hevent);
 }
 
@@ -333,14 +348,14 @@ START_TEST(broadcast)
         test_parameters(pBroadcastW, "BroadcastSystemMessageW");
     }
     else
-        skip("No BroadcastSystemMessageW, skipping\n");
+        win_skip("No BroadcastSystemMessageW, skipping\n");
     if (pBroadcastExA)
     {
         trace("Running BroadcastSystemMessageExA tests\n");
         test_parametersEx(pBroadcastExA);
     }
     else
-        skip("No BroadcastSystemMessageExA, skipping\n");
+        win_skip("No BroadcastSystemMessageExA, skipping\n");
     if (pBroadcastExW)
     {
         trace("Running BroadcastSystemMessageExW tests\n");
@@ -349,5 +364,5 @@ START_TEST(broadcast)
         test_noprivileges();
     }
     else
-        skip("No BroadcastSystemMessageExW, skipping\n");
+        win_skip("No BroadcastSystemMessageExW, skipping\n");
 }

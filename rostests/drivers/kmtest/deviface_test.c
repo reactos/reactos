@@ -31,8 +31,8 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-NTSTATUS NTAPI
-(*IoGetDeviceInterfaces_Func)(
+NTSTATUS
+(NTAPI *IoGetDeviceInterfaces_Func)(
    IN CONST GUID *InterfaceClassGuid,
    IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
    IN ULONG Flags,

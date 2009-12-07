@@ -82,6 +82,19 @@ static void UnlockModule(void)
     InterlockedDecrement(&cLocks);
 }
 
+static SIZE_T round_global_size(SIZE_T size)
+{
+    static SIZE_T global_size_alignment = -1;
+    if (global_size_alignment == -1)
+    {
+        void *p = GlobalAlloc(GMEM_FIXED, 1);
+        global_size_alignment = GlobalSize(p);
+        GlobalFree(p);
+    }
+
+    return ((size + global_size_alignment - 1) & ~(global_size_alignment - 1));
+}
+
 static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     LPCLASSFACTORY iface,
     REFIID riid,
@@ -92,7 +105,7 @@ static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IClassFactory))
     {
-        *ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
         IClassFactory_AddRef(iface);
         return S_OK;
     }
@@ -151,7 +164,7 @@ static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, v
     if (IsEqualIID(riid, &IID_IUnknown))
     {
         IUnknown_AddRef(iface);
-        *ppv = (LPVOID)iface;
+        *ppv = iface;
         return S_OK;
     }
     *ppv = NULL;
@@ -364,7 +377,7 @@ Moniker_GetDisplayName(IMoniker* iface, IBindCtx* pbc,
 {
     static const WCHAR wszDisplayName[] = {'*','*','G','e','m','m','a',0};
     CHECK_EXPECTED_METHOD("Moniker_GetDisplayName");
-    *ppszDisplayName = (LPOLESTR)CoTaskMemAlloc(sizeof(wszDisplayName));
+    *ppszDisplayName = CoTaskMemAlloc(sizeof(wszDisplayName));
     memcpy(*ppszDisplayName, wszDisplayName, sizeof(wszDisplayName));
     return S_OK;
 }
@@ -571,26 +584,18 @@ static void test_ROT(void)
     /* try with our own moniker that doesn't support IROTData */
     hr = IRunningObjectTable_Register(pROT, ROTFLAGS_REGISTRATIONKEEPSALIVE,
         (IUnknown*)&Test_ClassFactory, &MonikerNoROTData, &dwCookie);
-    todo_wine { /* only fails because of lack of IMoniker marshaling */
     ok_ole_success(hr, IRunningObjectTable_Register);
-    }
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
 
-    todo_wine { /* only fails because of lack of IMoniker marshaling */
     ok_more_than_one_lock();
-    }
 
     expected_method_list = methods_isrunning_no_ROTData;
     hr = IRunningObjectTable_IsRunning(pROT, &MonikerNoROTData);
-    todo_wine { /* only fails because of lack of IMoniker marshaling */
     ok_ole_success(hr, IRunningObjectTable_IsRunning);
-    }
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
 
     hr = IRunningObjectTable_Revoke(pROT, dwCookie);
-    todo_wine { /* only fails because of lack of IMoniker marshaling */
     ok_ole_success(hr, IRunningObjectTable_Revoke);
-    }
 
     ok_no_locks();
 
@@ -598,26 +603,18 @@ static void test_ROT(void)
     /* try with our own moniker */
     hr = IRunningObjectTable_Register(pROT, ROTFLAGS_REGISTRATIONKEEPSALIVE,
         (IUnknown*)&Test_ClassFactory, &Moniker, &dwCookie);
-    todo_wine { /* only fails because of lack of IMoniker marshaling */
     ok_ole_success(hr, IRunningObjectTable_Register);
-    }
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
 
-    todo_wine { /* only fails because of lack of IMoniker marshaling */
     ok_more_than_one_lock();
-    }
 
     expected_method_list = methods_isrunning;
     hr = IRunningObjectTable_IsRunning(pROT, &Moniker);
-    todo_wine { /* only fails because of lack of IMoniker marshaling */
     ok_ole_success(hr, IRunningObjectTable_IsRunning);
-    }
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
 
     hr = IRunningObjectTable_Revoke(pROT, dwCookie);
-    todo_wine { /* only fails because of lack of IMoniker marshaling */
     ok_ole_success(hr, IRunningObjectTable_Revoke);
-    }
 
     ok_no_locks();
 
@@ -655,7 +652,9 @@ static void test_ROT(void)
         ROTFLAGS_REGISTRATIONKEEPSALIVE|ROTFLAGS_ALLOWANYCLIENT,
         (IUnknown*)&Test_ClassFactory, pMoniker, &dwCookie);
     todo_wine {
-    ok(hr == CO_E_WRONG_SERVER_IDENTITY, "IRunningObjectTable_Register should have returned CO_E_WRONG_SERVER_IDENTITY instead of 0x%08x\n", hr);
+    ok(hr == CO_E_WRONG_SERVER_IDENTITY ||
+       broken(hr == S_OK) /* Win9x */,
+       "IRunningObjectTable_Register should have returned CO_E_WRONG_SERVER_IDENTITY instead of 0x%08x\n", hr);
     }
     if (hr == S_OK) IRunningObjectTable_Revoke(pROT, dwCookie);
 
@@ -921,6 +920,7 @@ static void test_MkParseDisplayName(void)
         hr = IMoniker_BindToObject(pmk, pbc, NULL, &IID_IUnknown, (LPVOID*)&object);
         ok_ole_success(hr, IMoniker_BindToObject);
 
+        if (SUCCEEDED(hr))
         IUnknown_Release(object);
         IMoniker_Release(pmk);
     }
@@ -1220,12 +1220,12 @@ static void test_moniker(
     moniker_data = GlobalLock(hglobal);
 
     /* first check we have the right amount of data */
-    ok(moniker_size == sizeof_expected_moniker_saved_data,
+    ok(moniker_size == round_global_size(sizeof_expected_moniker_saved_data),
         "%s: Size of saved data differs (expected %d, actual %d)\n",
-        testname, sizeof_expected_moniker_saved_data, moniker_size);
+        testname, (DWORD)round_global_size(sizeof_expected_moniker_saved_data), moniker_size);
 
     /* then do a byte-by-byte comparison */
-    for (i = 0; i < min(moniker_size, sizeof_expected_moniker_saved_data); i++)
+    for (i = 0; i < min(moniker_size, round_global_size(sizeof_expected_moniker_saved_data)); i++)
     {
         if (expected_moniker_saved_data[i] != moniker_data[i])
         {
@@ -1266,14 +1266,14 @@ static void test_moniker(
     moniker_data = GlobalLock(hglobal);
 
     /* first check we have the right amount of data */
-    ok(moniker_size == sizeof_expected_moniker_marshal_data,
+    ok(moniker_size == round_global_size(sizeof_expected_moniker_marshal_data),
         "%s: Size of marshaled data differs (expected %d, actual %d)\n",
-        testname, sizeof_expected_moniker_marshal_data, moniker_size);
+        testname, (DWORD)round_global_size(sizeof_expected_moniker_marshal_data), moniker_size);
 
     /* then do a byte-by-byte comparison */
     if (expected_moniker_marshal_data)
     {
-        for (i = 0; i < min(moniker_size, sizeof_expected_moniker_marshal_data); i++)
+        for (i = 0; i < min(moniker_size, round_global_size(sizeof_expected_moniker_marshal_data)); i++)
         {
             if (expected_moniker_marshal_data[i] != moniker_data[i])
             {
@@ -1348,6 +1348,9 @@ static void test_class_moniker(void)
     ok_ole_success(hr, CreateBindCtx);
 
     /* IsRunning test */
+    hr = IMoniker_IsRunning(moniker, NULL, NULL, NULL);
+    ok(hr == E_NOTIMPL, "IMoniker_IsRunning should return E_NOTIMPL, not 0x%08x\n", hr);
+
     hr = IMoniker_IsRunning(moniker, bindctx, NULL, NULL);
     ok(hr == E_NOTIMPL, "IMoniker_IsRunning should return E_NOTIMPL, not 0x%08x\n", hr);
 
@@ -1477,6 +1480,10 @@ static void test_item_moniker(void)
     ok_ole_success(hr, CreateBindCtx);
 
     /* IsRunning test */
+    hr = IMoniker_IsRunning(moniker, NULL, NULL, NULL);
+    todo_wine
+    ok(hr == E_INVALIDARG, "IMoniker_IsRunning should return E_INVALIDARG, not 0x%08x\n", hr);
+
     hr = IMoniker_IsRunning(moniker, bindctx, NULL, NULL);
     ok(hr == S_FALSE, "IMoniker_IsRunning should return S_FALSE, not 0x%08x\n", hr);
 
@@ -1609,6 +1616,10 @@ static void test_generic_composite_moniker(void)
     ok_ole_success(hr, CreateBindCtx);
 
     /* IsRunning test */
+    hr = IMoniker_IsRunning(moniker, NULL, NULL, NULL);
+    todo_wine
+    ok(hr == E_INVALIDARG, "IMoniker_IsRunning should return E_INVALIDARG, not 0x%08x\n", hr);
+
     hr = IMoniker_IsRunning(moniker, bindctx, NULL, NULL);
     todo_wine
     ok(hr == S_FALSE, "IMoniker_IsRunning should return S_FALSE, not 0x%08x\n", hr);
@@ -1765,7 +1776,9 @@ static void test_bind_context(void)
     bind_opts.cbStruct = -1;
     hr = IBindCtx_GetBindOptions(pBindCtx, (BIND_OPTS *)&bind_opts);
     ok_ole_success(hr, "IBindCtx_GetBindOptions");
-    ok(bind_opts.cbStruct == sizeof(bind_opts), "bind_opts.cbStruct was %d\n", bind_opts.cbStruct);
+    ok(bind_opts.cbStruct == sizeof(bind_opts) ||
+       bind_opts.cbStruct == sizeof(bind_opts) + sizeof(void*), /* Vista */
+       "bind_opts.cbStruct was %d\n", bind_opts.cbStruct);
 
     bind_opts.cbStruct = sizeof(BIND_OPTS);
     hr = IBindCtx_GetBindOptions(pBindCtx, (BIND_OPTS *)&bind_opts);

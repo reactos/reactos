@@ -35,6 +35,12 @@ library TestTypelib
         STATE_WIDGETIFIED
     } STATE;
 
+    typedef struct tagMYSTRUCT
+    {
+        INT field1;
+        ULONGLONG field2;
+    } MYSTRUCT;
+
     coclass ApplicationObject2;
 
     [
@@ -44,6 +50,17 @@ library TestTypelib
     interface ISomethingFromDispatch : IDispatch
     {
         HRESULT anotherfn(void);
+    }
+
+    [
+        odl,
+        oleautomation,
+        dual,
+        uuid(3f7e06fe-0bce-46f0-8b7d-3a68393c7967)
+    ]
+    interface ItestDual : IDispatch
+    {
+        HRESULT test();
     }
 
     [
@@ -95,10 +112,13 @@ library TestTypelib
         HRESULT VariantArrayPtr([in] SAFEARRAY(VARIANT) *values);
 
         [id(DISPID_TM_VARIANT)]
-        void Variant([in] VARIANT var);
+        HRESULT Variant([in] VARIANT var);
 
         [vararg, id(DISPID_TM_VARARG)]
-        void VarArg([in] int numexpect, [in] SAFEARRAY(VARIANT) values);
+        HRESULT VarArg([in] int numexpect, [in] SAFEARRAY(VARIANT) values);
+
+        [id(DISPID_TM_STRUCTARGS)]
+        HRESULT StructArgs([in] MYSTRUCT byval, [in] MYSTRUCT *byptr, [in] MYSTRUCT arr[5]);
 
         [id(DISPID_TM_ERROR)]
         HRESULT Error();
@@ -106,6 +126,29 @@ library TestTypelib
         [propget, id(DISPID_TM_CLONEINTERFACE)]
         HRESULT CloneInterface([out, retval] ISomethingFromDispatch **ppVal);
 
+        [id(DISPID_TM_PROP_WITH_LCID), propput]
+        HRESULT prop_with_lcid([in,lcid] long lcid, [in] INT i);
+
+        [id(DISPID_TM_PROP_WITH_LCID), propget]
+        HRESULT prop_with_lcid([in,lcid] long lcid, [out,retval] INT *i);
+
+        [id(DISPID_TM_PROP_INT), propget]
+        HRESULT prop_int([out,retval] INT *i);
+
+        [id(DISPID_TM_PROP_UINT), propget]
+        HRESULT prop_uint([out,retval] UINT *i);
+    }
+
+    [
+        odl,
+        uuid(a1f8cae3-c947-3c5f-a57c-c88b9b6f3586),
+        oleautomation,
+        dual
+    ]
+    interface IStaticWidget : IDispatch
+    {
+        [id(DISPID_TM_TESTDUAL)]
+        HRESULT TestDual([in] ItestDual *p);
     }
 
     [

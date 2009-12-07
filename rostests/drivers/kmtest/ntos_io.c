@@ -3,6 +3,7 @@
  * ReactOS Kernel Mode Regression Testing framework
  *
  * Copyright 2006 Aleksey Bragin <aleksey@reactos.org>
+ * Copyright 2008 Etersoft (Alexander Morozov)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,6 +29,9 @@
 #define NDEBUG
 #include "debug.h"
 
+VOID NtoskrnlIoDeviceInterface();
+
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID NtoskrnlIoMdlTest()
@@ -44,7 +48,7 @@ VOID NtoskrnlIoMdlTest()
 
     ok(Mdl == NULL,
       "IoAllocateMdl should fail allocation of 2Gb or more, but got Mdl=0x%X",
-      (UINT)Mdl);
+      (UINT32)Mdl);
 
     if (Mdl)
         IoFreeMdl(Mdl);
@@ -55,10 +59,10 @@ VOID NtoskrnlIoMdlTest()
     ok(Mdl != NULL, "Mdl allocation failed");
     // Check fields of the allocated struct
     ok(Mdl->Next == NULL, "Mdl->Next should be NULL, but is 0x%X",
-        (UINT)Mdl->Next);
+        (UINT32)Mdl->Next);
     ok(Mdl->ByteCount == MdlSize,
         "Mdl->ByteCount should be equal to MdlSize, but is 0x%X",
-        (UINT)Mdl->ByteCount);
+        (UINT32)Mdl->ByteCount);
     // TODO: Check other fields of MDL struct
 
     IoFreeMdl(Mdl);
@@ -68,7 +72,7 @@ VOID NtoskrnlIoMdlTest()
     Mdl = IoAllocateMdl(VirtualAddress, MdlSize, FALSE, FALSE, Irp);
     ok(Mdl != NULL, "Mdl allocation failed");
     ok(Irp->MdlAddress == Mdl, "Irp->MdlAddress should be 0x%X, but is 0x%X",
-        (UINT)Mdl, (UINT)Irp->MdlAddress);
+        (UINT32)Mdl, (UINT32)Irp->MdlAddress);
 
     IoFreeMdl(Mdl);
 
@@ -78,4 +82,96 @@ VOID NtoskrnlIoMdlTest()
     ExFreePool(VirtualAddress);
 
     FinishTest("NTOSKRNL Io Mdl");
+}
+
+VOID NtoskrnlIoIrpTest()
+{
+    USHORT size;
+    IRP *iorp;
+
+    StartTest();
+
+    // 1st test
+    size = sizeof(IRP) + 5 * sizeof(IO_STACK_LOCATION);
+    iorp = ExAllocatePool(NonPagedPool, size);
+
+    if (NULL != iorp)
+    {
+        IoInitializeIrp(iorp, size, 5);
+
+        ok(6 == iorp->Type, "Irp type should be 6, but got %d\n", iorp->Type);
+        ok(iorp->Size == size, "Irp size should be %d, but got %d\n",
+            iorp->Size, size);
+        ok(5 == iorp->StackCount, "Irp StackCount should be 5, but got %d\n",
+            iorp->StackCount);
+        ok(6 == iorp->CurrentLocation, "Irp CurrentLocation should be 6, but got %d\n",
+            iorp->CurrentLocation);
+        ok(IsListEmpty(&iorp->ThreadListEntry), "IRP thread list is not empty\n");
+        ok ((PIO_STACK_LOCATION)(iorp + 1) + 5 ==
+            iorp->Tail.Overlay.CurrentStackLocation,
+            "CurrentStackLocation mismatch\n");
+
+        ExFreePool(iorp);
+    }
+
+    // 2nd test
+    size = sizeof(IRP) + 2 * sizeof(IO_STACK_LOCATION);
+    iorp = IoAllocateIrp(2, FALSE);
+
+    if (NULL != iorp)
+    {
+        ok(6 == iorp->Type, "Irp type should be 6, but got %d\n", iorp->Type);
+        ok(iorp->Size >= size,
+            "Irp size should be more or equal to %d, but got %d\n",
+            iorp->Size, size);
+        ok(2 == iorp->StackCount, "Irp StackCount should be 2, but got %d\n",
+            iorp->StackCount);
+        ok(3 == iorp->CurrentLocation, "Irp CurrentLocation should be 3, but got %d\n",
+            iorp->CurrentLocation);
+        ok(IsListEmpty(&iorp->ThreadListEntry), "IRP thread list is not empty\n");
+        ok ((PIO_STACK_LOCATION)(iorp + 1) + 2 ==
+            iorp->Tail.Overlay.CurrentStackLocation,
+            "CurrentStackLocation mismatch\n");
+        ok((IRP_ALLOCATED_FIXED_SIZE & iorp->AllocationFlags),
+            "IRP Allocation flags lack fixed size attribute\n");
+        ok(!(IRP_LOOKASIDE_ALLOCATION & iorp->AllocationFlags),
+            "IRP Allocation flags should not have lookaside allocation\n");
+
+        IoFreeIrp(iorp);
+    }
+
+    // 3rd test
+    size = sizeof(IRP) + 2 * sizeof(IO_STACK_LOCATION);
+    iorp = IoAllocateIrp(2, TRUE);
+
+    if (NULL != iorp)
+    {
+        ok(6 == iorp->Type, "Irp type should be 6, but got %d\n", iorp->Type);
+        ok(iorp->Size >= size,
+            "Irp size should be more or equal to %d, but got %d\n",
+            iorp->Size, size);
+        ok(2 == iorp->StackCount, "Irp StackCount should be 2, but got %d\n",
+            iorp->StackCount);
+        ok(3 == iorp->CurrentLocation, "Irp CurrentLocation should be 3, but got %d\n",
+            iorp->CurrentLocation);
+        ok(IsListEmpty(&iorp->ThreadListEntry), "IRP thread list is not empty\n");
+        ok ((PIO_STACK_LOCATION)(iorp + 1) + 2 ==
+            iorp->Tail.Overlay.CurrentStackLocation,
+            "CurrentStackLocation mismatch\n");
+        ok((IRP_ALLOCATED_FIXED_SIZE & iorp->AllocationFlags),
+            "IRP Allocation flags lack fixed size attribute\n");
+        ok((IRP_LOOKASIDE_ALLOCATION & iorp->AllocationFlags),
+            "IRP Allocation flags lack lookaside allocation\n");
+
+        IoFreeIrp(iorp);
+    }
+
+    FinishTest("NTOSKRNL Io Irp");
+}
+
+VOID NtoskrnlIoTests()
+{
+    NtoskrnlIoMdlTest();
+    NtoskrnlIoDeviceInterface();
+    NtoskrnlIoIrpTest();
 }

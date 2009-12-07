@@ -226,6 +226,132 @@ static void test_dasharray(void)
     GdipDeletePen(pen);
 }
 
+static void test_customcap(void)
+{
+    GpPen *pen;
+    GpStatus status;
+    GpCustomLineCap *custom;
+
+    status = GdipCreatePen1((ARGB)0xffff00ff, 10.0f, UnitPixel, &pen);
+    expect(Ok, status);
+
+    /* NULL args */
+    status = GdipGetPenCustomStartCap(NULL, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetPenCustomStartCap(pen, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetPenCustomStartCap(NULL, &custom);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPenCustomEndCap(NULL, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetPenCustomEndCap(pen, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetPenCustomEndCap(NULL, &custom);
+    expect(InvalidParameter, status);
+
+    /* native crashes on pen == NULL, custom != NULL */
+    status = GdipSetPenCustomStartCap(NULL, NULL);
+    expect(InvalidParameter, status);
+    status = GdipSetPenCustomStartCap(pen, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPenCustomEndCap(NULL, NULL);
+    expect(InvalidParameter, status);
+    status = GdipSetPenCustomEndCap(pen, NULL);
+    expect(InvalidParameter, status);
+
+    /* get without setting previously */
+    custom = (GpCustomLineCap*)0xdeadbeef;
+    status = GdipGetPenCustomEndCap(pen, &custom);
+    expect(Ok, status);
+    ok(custom == NULL,"Expect CustomCap == NULL\n");
+
+    custom = (GpCustomLineCap*)0xdeadbeef;
+    status = GdipGetPenCustomStartCap(pen, &custom);
+    expect(Ok, status);
+    ok(custom == NULL,"Expect CustomCap == NULL\n");
+
+    GdipDeletePen(pen);
+}
+
+static void test_penfilltype(void)
+{
+    GpPen *pen;
+    GpSolidFill *solid;
+    GpLineGradient *line;
+    GpPointF a, b;
+    GpStatus status;
+    GpPenType type;
+
+    /* NULL */
+    status = GdipGetPenFillType(NULL, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipCreatePen1((ARGB)0xffff00ff, 10.0f, UnitPixel, &pen);
+    expect(Ok, status);
+    status = GdipGetPenFillType(pen, NULL);
+    expect(InvalidParameter, status);
+
+    /* created with GdipCreatePen1() */
+    status = GdipGetPenFillType(pen, &type);
+    expect(Ok, status);
+    expect(PenTypeSolidColor, type);
+    GdipDeletePen(pen);
+
+    /* based on SolidBrush */
+    status = GdipCreateSolidFill((ARGB)0xffff00ff, &solid);
+    expect(Ok, status);
+    status = GdipCreatePen2((GpBrush*)solid, 10.0f, UnitPixel, &pen);
+    expect(Ok, status);
+    status = GdipGetPenFillType(pen, &type);
+    expect(Ok, status);
+    expect(PenTypeSolidColor, type);
+    GdipDeletePen(pen);
+    GdipDeleteBrush((GpBrush*)solid);
+
+    /* based on LinearGradientBrush */
+    a.X = a.Y = 0.0;
+    b.X = b.Y = 10.0;
+    status = GdipCreateLineBrush(&a, &b, (ARGB)0xffff00ff, (ARGB)0xffff0000,
+                                 WrapModeTile, &line);
+    expect(Ok, status);
+    status = GdipCreatePen2((GpBrush*)line, 10.0f, UnitPixel, &pen);
+    expect(Ok, status);
+    status = GdipGetPenFillType(pen, &type);
+    expect(Ok, status);
+    expect(PenTypeLinearGradient, type);
+    GdipDeletePen(pen);
+    GdipDeleteBrush((GpBrush*)line);
+}
+
+static void test_compoundarray(void)
+{
+    GpStatus status;
+    GpPen *pen;
+    static const REAL testvalues[] = {0.2, 0.4, 0.6, 0.8};
+
+    status = GdipSetPenCompoundArray(NULL, testvalues, 4);
+    expect(InvalidParameter, status);
+
+    status = GdipCreatePen1((ARGB)0xffff00ff, 10.0f, UnitPixel, &pen);
+    expect(Ok, status);
+
+    status = GdipSetPenCompoundArray(pen, NULL, 4);
+    expect(InvalidParameter, status);
+    status = GdipSetPenCompoundArray(pen, testvalues, 3);
+    expect(InvalidParameter, status);
+    status = GdipSetPenCompoundArray(pen, testvalues, 0);
+    expect(InvalidParameter, status);
+    status = GdipSetPenCompoundArray(pen, testvalues, -2);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPenCompoundArray(pen, testvalues, 4);
+    todo_wine expect(Ok, status);
+
+    GdipDeletePen(pen);
+}
+
 START_TEST(pen)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -244,6 +370,9 @@ START_TEST(pen)
     test_constructor_destructor2();
     test_brushfill();
     test_dasharray();
+    test_customcap();
+    test_penfilltype();
+    test_compoundarray();
 
     GdiplusShutdown(gdiplusToken);
 }

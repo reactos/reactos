@@ -83,7 +83,7 @@ static BOOL init_function_pointers(void)
     if (!pCloseINFEngine || !pDelNode || !pGetVersionFromFile ||
         !pOpenINFEngine || !pSetPerUserSecValues || !pTranslateInfString)
     {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         FreeLibrary(hAdvPack);
         return FALSE;
     }
@@ -264,7 +264,7 @@ static void translateinfstring_test(void)
 
     if(hr == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND))
     {
-        trace("WinNT 3.51 detected. Skipping tests for TranslateInfString()\n");
+        win_skip("WinNT 3.51 detected. Skipping tests for TranslateInfString()\n");
         return;
     }
 
@@ -272,6 +272,11 @@ static void translateinfstring_test(void)
     buffer[0] = 0;
     hr = pTranslateInfString(inf_file, "idontexist", "Options.NTx86",
                              "InstallDir", buffer, MAX_PATH, &dwSize, NULL);
+    if (hr == E_ACCESSDENIED)
+    {
+        skip("TranslateInfString is broken\n");
+        return;
+    }
     ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", (UINT)hr);
     ok(!strcmp(buffer, TEST_STRING2), "Expected %s, got %s\n", TEST_STRING2, buffer);
     ok(dwSize == 25, "Expected size 25, got %d\n", dwSize);
@@ -324,6 +329,13 @@ static void translateinfstringex_test(void)
     HRESULT hr;
     char buffer[MAX_PATH];
     DWORD size = MAX_PATH;
+
+    hr = pOpenINFEngine(inf_file, NULL, 0, &hinf, NULL);
+    if (hr == E_UNEXPECTED)
+    {
+        win_skip("Skipping tests on win9x because of brokenness\n");
+        return;
+    }
 
     create_inf_file();
     
@@ -584,6 +596,11 @@ static void setperusersecvalues_test(void)
     /* set initial values */
     lstrcpy(peruser.szGUID, "guid");
     hr = pSetPerUserSecValues(&peruser);
+    if (hr == E_FAIL)
+    {
+        skip("SetPerUserSecValues is broken\n");
+        return;
+    }
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(OPEN_GUID_KEY(), "Expected guid key to exist\n");
     ok(check_reg_str(guid, NULL, "displayname"), "Expected displayname\n");

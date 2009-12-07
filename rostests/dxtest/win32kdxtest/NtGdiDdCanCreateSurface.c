@@ -34,7 +34,7 @@ test_NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal)
     retValue = OsThunkDdCanCreateSurface(hDirectDrawLocal,(PDD_CANCREATESURFACEDATA)&pCanCreateSurface);
     testing_eq(retValue, DDHAL_DRIVER_HANDLED,fails,"3. NtGdiDdCanCreateSurface(hDirectDrawLocal,pCanCreateSurface);\0");
 
-    pCanCreateSurface.lpDDSurfaceDesc = &desc;
+    pCanCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&desc;
     desc.dwSize = sizeof(DDSURFACEDESC2);
 
     retValue = OsThunkDdCanCreateSurface(hDirectDrawLocal,(PDD_CANCREATESURFACEDATA)&pCanCreateSurface);

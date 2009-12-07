@@ -1,11 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<group>
 <module name="setupapi_winetest" type="win32cui" installbase="bin" installname="setupapi_winetest.exe" allowwarnings="true">
     <include base="setupapi_winetest">.</include>
-    <define name="__USE_W32API" />
+	<define name="__ROS_LONG64__" />
     <library>ntdll</library>
-    <library>kernel32</library>
     <library>advapi32</library>
     <library>setupapi</library>
     <library>user32</library>
@@ -18,4 +16,3 @@
     <file>stringtable.c</file>
     <file>testlist.c</file>
 </module>
-</group>

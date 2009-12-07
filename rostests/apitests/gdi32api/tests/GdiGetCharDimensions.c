@@ -1,4 +1,4 @@
-LONG STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
+LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 
 INT
 Test_GdiGetCharDimensions(PTESTINFO pti)

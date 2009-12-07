@@ -110,7 +110,9 @@ static void test_DIB_PAL_COLORS(void) {
     SetPixel( memhdc, 0, 0, setColor );
     chkColor = RGB( logpalettedata[3].peRed, logpalettedata[3].peGreen, logpalettedata[3].peBlue );
     getColor = GetPixel( memhdc, 0, 0 );
-    ok( getColor == chkColor, "getColor=%08X\n", (UINT)getColor );
+    ok( getColor == chkColor ||
+        broken(getColor == 0), /* win9x */
+        "getColor=%08X\n", (UINT)getColor );
 
     SelectPalette( memhdc, hpalOld, FALSE );
     DeleteObject( hpal );

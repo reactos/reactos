@@ -43,7 +43,7 @@ static void test_gdi_objects(void)
      */
     SetLastError(0);
     hp = SelectObject(NULL, GetStockObject(BLACK_PEN));
-    ok(!hp && GetLastError() == ERROR_INVALID_HANDLE,
+    ok(!hp && (GetLastError() == ERROR_INVALID_HANDLE || broken(!GetLastError())),
        "SelectObject(NULL DC) expected 0, ERROR_INVALID_HANDLE, got %p, %u\n",
        hp, GetLastError());
 
@@ -77,7 +77,7 @@ static void test_gdi_objects(void)
     /* GetObject does not SetLastError() on a null object */
     SetLastError(0);
     i = GetObjectA(NULL, sizeof(buff), buff);
-    ok (!i && !GetLastError(),
+    ok (!i && (GetLastError() == 0 || GetLastError() == ERROR_INVALID_PARAMETER),
         "GetObject(NULL obj), expected 0, NO_ERROR, got %d, %u\n",
 	i, GetLastError());
 
@@ -110,7 +110,7 @@ struct hgdiobj_event
 static DWORD WINAPI thread_proc(void *param)
 {
     LOGPEN lp;
-    struct hgdiobj_event *hgdiobj_event = (struct hgdiobj_event *)param;
+    struct hgdiobj_event *hgdiobj_event = param;
 
     hgdiobj_event->hdc = CreateDC("display", NULL, NULL, NULL);
     ok(hgdiobj_event->hdc != NULL, "CreateDC error %u\n", GetLastError());
@@ -207,7 +207,7 @@ static void test_GetCurrentObject(void)
     hobj = GetCurrentObject(hdc, OBJ_PEN);
     ok(hobj == hpen, "OBJ_PEN is wrong: %p\n", hobj);
     hobj = GetCurrentObject(hdc, OBJ_EXTPEN);
-    ok(hobj == hpen, "OBJ_EXTPEN is wrong: %p\n", hobj);
+    ok(hobj == hpen || broken(hobj == 0) /* win9x */, "OBJ_EXTPEN is wrong: %p\n", hobj);
 
     hbrush = CreateSolidBrush(RGB(10, 20, 30));
     assert(hbrush != 0);
@@ -243,7 +243,7 @@ static void test_GetCurrentObject(void)
     hobj = GetCurrentObject(hdc, OBJ_PEN);
     ok(hobj == hpen, "OBJ_PEN is wrong: %p\n", hobj);
     hobj = GetCurrentObject(hdc, OBJ_EXTPEN);
-    ok(hobj == hpen, "OBJ_EXTPEN is wrong: %p\n", hobj);
+    ok(hobj == hpen || broken(hobj == 0) /* win9x */, "OBJ_EXTPEN is wrong: %p\n", hobj);
 
     hcs = GetColorSpace(hdc);
     if (hcs)
@@ -254,7 +254,7 @@ static void test_GetCurrentObject(void)
         ok(hcs != 0, "CreateColorSpace failed\n");
         SelectObject(hdc, hcs);
         hobj = GetCurrentObject(hdc, OBJ_COLORSPACE);
-        ok(hobj == hcs, "OBJ_COLORSPACE is wrong: %p\n", hobj);
+        ok(hobj == hcs || broken(hobj == 0) /* win9x */, "OBJ_COLORSPACE is wrong: %p\n", hobj);
     }
 
     hrgn = CreateRectRgn(1, 1, 100, 100);
@@ -266,9 +266,49 @@ static void test_GetCurrentObject(void)
     DeleteDC(hdc);
 }
 
+static void test_region(void)
+{
+    HRGN hrgn = CreateRectRgn(10, 10, 20, 20);
+    RECT rc = { 5, 5, 15, 15 };
+    BOOL ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap left and right */
+    SetRect( &rc, 15, 5, 5, 15 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap top and bottom */
+    SetRect( &rc, 5, 15, 15, 5 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap both */
+    SetRect( &rc, 15, 15, 5, 5 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    DeleteObject(hrgn);
+    /* swap left and right in the region */
+    hrgn = CreateRectRgn(20, 10, 10, 20);
+    SetRect( &rc, 5, 5, 15, 15 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap left and right */
+    SetRect( &rc, 15, 5, 5, 15 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap top and bottom */
+    SetRect( &rc, 5, 15, 15, 5 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    /* swap both */
+    SetRect( &rc, 15, 15, 5, 5 );
+    ret = RectInRegion( hrgn, &rc);
+    ok( ret, "RectInRegion should return TRUE\n");
+    DeleteObject(hrgn);
+}
+
 START_TEST(gdiobj)
 {
     test_gdi_objects();
     test_thread_objects();
     test_GetCurrentObject();
+    test_region();
 }

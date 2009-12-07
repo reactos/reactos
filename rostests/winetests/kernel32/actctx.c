@@ -17,7 +17,7 @@
  */
 
 #include "wine/test.h"
-#include <psdk/winbase.h>
+#include <winbase.h>
 #include <windef.h>
 #include <winnt.h>
 #include <winternl.h>
@@ -43,6 +43,14 @@ static const char* strw(LPCWSTR x)
     return buffer;
 }
 
+#ifdef __i386__
+#define ARCH "x86"
+#elif defined __x86_64__
+#define ARCH "amd64"
+#else
+#define ARCH "none"
+#endif
+
 static const char manifest1[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
 "<assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
@@ -54,7 +62,7 @@ static const char manifest2[] =
 "</assemblyIdentity>"
 "<dependency>"
 "<dependentAssembly>"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\">"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\">"
 "</assemblyIdentity>"
 "</dependentAssembly>"
 "</dependency>"
@@ -76,7 +84,7 @@ static const char manifest4[] =
 "<dependency>"
 "<dependentAssembly>"
 "<assemblyIdentity type=\"win32\" name=\"Microsoft.Windows.Common-Controls\" "
-    "version=\"6.0.1.0\" processorArchitecture=\"x86\" publicKeyToken=\"6595b64144ccf1df\">"
+    "version=\"6.0.1.0\" processorArchitecture=\"" ARCH "\" publicKeyToken=\"6595b64144ccf1df\">"
 "</assemblyIdentity>"
 "</dependentAssembly>"
 "</dependency>"
@@ -84,19 +92,19 @@ static const char manifest4[] =
 
 static const char testdep_manifest1[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\"/>"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\"/>"
 "</assembly>";
 
 static const char testdep_manifest2[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\" />"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\" />"
 "<file name=\"testlib.dll\"></file>"
 "<file name=\"testlib2.dll\" hash=\"63c978c2b53d6cf72b42fb7308f9af12ab19ec53\" hashalg=\"SHA1\" />"
 "</assembly>";
 
 static const char testdep_manifest3[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\"> "
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\"/>"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\"/>"
 "<file name=\"testlib.dll\"/>"
 "<file name=\"testlib2.dll\" hash=\"63c978c2b53d6cf72b42fb7308f9af12ab19ec53\" hashalg=\"SHA1\">"
 "<windowClass>wndClass</windowClass>"
@@ -138,7 +146,7 @@ static const char wrong_manifest6[] =
 
 static const char wrong_manifest7[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"x86\" />"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\" />"
 "<file name=\"testlib.dll\" hash=\"63c978c2b53d6cf72b42fb7308f9af12ab19ec5\" hashalg=\"SHA1\" />"
 "</assembly>";
 
@@ -150,7 +158,7 @@ static const char wrong_manifest8[] =
 
 static const char wrong_depmanifest1[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
-"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.4\" processorArchitecture=\"x86\" />"
+"<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.4\" processorArchitecture=\"" ARCH "\" />"
 "</assembly>";
 
 static const WCHAR testlib_dll[] =
@@ -223,7 +231,7 @@ static BOOL create_wide_manifest(const char *filename, const char *manifest, BOO
     BOOL ret;
     int offset = (fBOM ? 0 : 1);
 
-    MultiByteToWideChar(CP_ACP, 0, manifest, -1, &wmanifest[1], (strlen(manifest)+1) * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, manifest, -1, &wmanifest[1], (strlen(manifest)+1));
     wmanifest[0] = 0xfeff;
     if (fReverse)
     {
@@ -238,7 +246,8 @@ static BOOL create_wide_manifest(const char *filename, const char *manifest, BOO
 
 typedef struct {
     ULONG format_version;
-    ULONG assembly_cnt;
+    ULONG assembly_cnt_min;
+    ULONG assembly_cnt_max;
     ULONG root_manifest_type;
     LPWSTR root_manifest_path;
     ULONG root_config_type;
@@ -247,23 +256,24 @@ typedef struct {
 } detailed_info_t;
 
 static const detailed_info_t detailed_info0 = {
-    0, 0, 0, NULL, 0, 0, NULL
+    0, 0, 0, 0, NULL, 0, 0, NULL
 };
 
 static const detailed_info_t detailed_info1 = {
-    1, 1, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, manifest_path,
+    1, 1, 1, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, manifest_path,
     ACTIVATION_CONTEXT_PATH_TYPE_NONE, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE,
     work_dir,
 };
 
 static const detailed_info_t detailed_info1_child = {
-    1, 1, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, app_manifest_path,
+    1, 1, 1, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, app_manifest_path,
     ACTIVATION_CONTEXT_PATH_TYPE_NONE, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE,
     app_dir,
 };
 
+/* On Vista+, there's an extra assembly for Microsoft.Windows.Common-Controls.Resources */
 static const detailed_info_t detailed_info2 = {
-    1, 2, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, manifest_path,
+    1, 2, 3, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE, manifest_path,
     ACTIVATION_CONTEXT_PATH_TYPE_NONE, ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE,
     work_dir,
 };
@@ -302,9 +312,10 @@ static void test_detailed_info(HANDLE handle, const detailed_info_t *exinfo)
     ok(detailed_info->ulFormatVersion == exinfo->format_version,
        "detailed_info->ulFormatVersion=%u, expected %u\n", detailed_info->ulFormatVersion,
        exinfo->format_version);
-    ok(detailed_info->ulAssemblyCount == exinfo->assembly_cnt,
-       "detailed_info->ulAssemblyCount=%u, expected %u\n", detailed_info->ulAssemblyCount,
-       exinfo->assembly_cnt);
+    ok(exinfo->assembly_cnt_min <= detailed_info->ulAssemblyCount &&
+       detailed_info->ulAssemblyCount <= exinfo->assembly_cnt_max,
+       "detailed_info->ulAssemblyCount=%u, expected between %u and %u\n", detailed_info->ulAssemblyCount,
+       exinfo->assembly_cnt_min, exinfo->assembly_cnt_max);
     ok(detailed_info->ulRootManifestPathType == exinfo->root_manifest_type,
        "detailed_info->ulRootManifestPathType=%u, expected %u\n",
        detailed_info->ulRootManifestPathType, exinfo->root_manifest_type);
@@ -386,21 +397,21 @@ static const info_in_assembly manifest4_info = {
 
 static const info_in_assembly depmanifest1_info = {
     0x10, depmanifest_path,
-    "testdep,processorArchitecture=\"x86\","
+    "testdep,processorArchitecture=\"" ARCH "\","
     "type=\"win32\",version=\"6.5.4.3\"",
     TRUE
 };
 
 static const info_in_assembly depmanifest2_info = {
     0x10, depmanifest_path,
-    "testdep,processorArchitecture=\"x86\","
+    "testdep,processorArchitecture=\"" ARCH "\","
     "type=\"win32\",version=\"6.5.4.3\"",
     TRUE
 };
 
 static const info_in_assembly depmanifest3_info = {
     0x10, depmanifest_path,
-    "testdep,processorArchitecture=\"x86\",type=\"win32\",version=\"6.5.4.3\"",
+    "testdep,processorArchitecture=\"" ARCH "\",type=\"win32\",version=\"6.5.4.3\"",
     TRUE
 };
 
@@ -851,6 +862,42 @@ static void test_find_string_fail(void)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError()=%u\n", GetLastError());
 }
 
+
+static void test_basic_info(HANDLE handle)
+{
+    ACTIVATION_CONTEXT_BASIC_INFORMATION basic;
+    SIZE_T size;
+    BOOL b;
+
+    b = pQueryActCtxW(0, handle, NULL,
+                          ActivationContextBasicInformation, &basic,
+                          sizeof(basic), &size);
+
+    ok (b,"ActivationContextBasicInformation failed\n");
+    ok (size == sizeof(ACTIVATION_CONTEXT_BASIC_INFORMATION),"size mismatch\n");
+    ok (basic.dwFlags == 0, "unexpected flags %x\n",basic.dwFlags);
+    ok (basic.hActCtx == handle, "unexpected handle\n");
+
+    b = pQueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, handle, NULL,
+                          ActivationContextBasicInformation, &basic,
+                          sizeof(basic), &size);
+    if (handle)
+    {
+        ok (!b,"ActivationContextBasicInformation succeeded\n");
+        ok (size == 0,"size mismatch\n");
+        ok (GetLastError() == ERROR_INVALID_PARAMETER, "Wrong last error\n");
+        ok (basic.dwFlags == 0, "unexpected flags %x\n",basic.dwFlags);
+        ok (basic.hActCtx == handle, "unexpected handle\n");
+    }
+    else
+    {
+        ok (b,"ActivationContextBasicInformation failed\n");
+        ok (size == sizeof(ACTIVATION_CONTEXT_BASIC_INFORMATION),"size mismatch\n");
+        ok (basic.dwFlags == 0, "unexpected flags %x\n",basic.dwFlags);
+        ok (basic.hActCtx == handle, "unexpected handle\n");
+    }
+}
+
 static void test_actctx(void)
 {
     ULONG_PTR cookie;
@@ -865,6 +912,7 @@ static void test_actctx(void)
     ok(handle == NULL, "handle = %p, expected NULL\n", handle);
     ok(b, "GetCurrentActCtx failed: %u\n", GetLastError());
     if(b) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info0);
         pReleaseActCtx(handle);
     }
@@ -879,6 +927,7 @@ static void test_actctx(void)
     handle = test_create("test1.manifest", manifest1);
     DeleteFileA("test1.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1);
         test_info_in_assembly(handle, 1, &manifest1_info);
 
@@ -904,6 +953,7 @@ static void test_actctx(void)
     DeleteFileA("test2.manifest");
     DeleteFileA("testdep.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info2);
         test_info_in_assembly(handle, 1, &manifest2_info);
         test_info_in_assembly(handle, 2, &depmanifest1_info);
@@ -921,6 +971,7 @@ static void test_actctx(void)
     DeleteFileA("test3.manifest");
     DeleteFileA("testdep.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info2);
         test_info_in_assembly(handle, 1, &manifest2_info);
         test_info_in_assembly(handle, 2, &depmanifest2_info);
@@ -948,6 +999,7 @@ static void test_actctx(void)
     DeleteFileA("test2-3.manifest");
     DeleteFileA("testdep.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info2);
         test_info_in_assembly(handle, 1, &manifest2_info);
         test_info_in_assembly(handle, 2, &depmanifest3_info);
@@ -976,6 +1028,7 @@ static void test_actctx(void)
     handle = test_create("test3.manifest", manifest3);
     DeleteFileA("test3.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1);
         test_info_in_assembly(handle, 1, &manifest3_info);
         test_file_info(handle, 0, 0, testlib_dll);
@@ -1002,6 +1055,7 @@ static void test_actctx(void)
     DeleteFileA("test4.manifest");
     DeleteFileA("testdep.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info2);
         test_info_in_assembly(handle, 1, &manifest4_info);
         test_info_in_assembly(handle, 2, &manifest_comctrl_info);
@@ -1020,6 +1074,7 @@ static void test_actctx(void)
         handle = test_create("..\\test1.manifest", manifest1);
         DeleteFileA("..\\test1.manifest");
         if(handle != INVALID_HANDLE_VALUE) {
+            test_basic_info(handle);
             test_detailed_info(handle, &detailed_info1);
             test_info_in_assembly(handle, 1, &manifest1_info);
             pReleaseActCtx(handle);
@@ -1039,6 +1094,7 @@ static void test_actctx(void)
     handle = test_create("test1.manifest", manifest1);
     DeleteFileA("test1.manifest");
     if (handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1);
         test_info_in_assembly(handle, 1, &manifest1_info);
         pReleaseActCtx(handle);
@@ -1053,6 +1109,7 @@ static void test_actctx(void)
     handle = test_create("test1.manifest", manifest1);
     DeleteFileA("test1.manifest");
     if (handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1);
         test_info_in_assembly(handle, 1, &manifest1_info);
         pReleaseActCtx(handle);
@@ -1071,6 +1128,7 @@ static void test_app_manifest(void)
     ok(handle == NULL, "handle != NULL\n");
     ok(b, "GetCurrentActCtx failed: %u\n", GetLastError());
     if(b) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1_child);
         test_info_in_assembly(handle, 1, &manifest1_child_info);
         pReleaseActCtx(handle);
@@ -1084,6 +1142,8 @@ static void run_child_process(void)
     char **argv;
     PROCESS_INFORMATION pi;
     STARTUPINFO si = { 0 };
+    HANDLE file;
+    FILETIME now;
 
     GetModuleFileNameA(NULL, path, MAX_PATH);
     strcat(path, ".manifest");
@@ -1094,6 +1154,15 @@ static void run_child_process(void)
 
     si.cb = sizeof(si);
     winetest_get_mainargs( &argv );
+    /* Vista+ seems to cache presence of .manifest files. Change last modified
+       date to defeat the cache */
+    file = CreateFileA(argv[0], FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                       NULL, OPEN_EXISTING, 0, NULL);
+    if (file != INVALID_HANDLE_VALUE) {
+        GetSystemTimeAsFileTime(&now);
+        SetFileTime(file, NULL, NULL, &now);
+        CloseHandle(file);
+    }
     sprintf(cmdline, "\"%s\" %s manifest1", argv[0], argv[1]);
     ok(CreateProcess(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL,
                      &si, &pi) != 0, "Could not create process: %u\n", GetLastError());
@@ -1155,7 +1224,7 @@ START_TEST(actctx)
 
     if (!init_funcs())
     {
-        skip("Needed functions are not available\n");
+        win_skip("Needed functions are not available\n");
         return;
     }
     init_paths();

@@ -20,9 +20,11 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include <ntdef.h>
+
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <winreg.h>
+#include <ntndk.h>
 #include "wine/test.h"
 
 #ifndef STATUS_DEBUGGER_INACTIVE
@@ -32,6 +34,7 @@
 static int    myARGC;
 static char** myARGV;
 
+static BOOL (WINAPI *pCheckRemoteDebuggerPresent)(HANDLE,PBOOL);
 static BOOL (WINAPI *pDebugActiveProcessStop)(DWORD);
 static BOOL (WINAPI *pDebugSetProcessKillOnExit)(BOOL);
 
@@ -43,6 +46,40 @@ static void get_file_name(char* buf)
     buf[0] = '\0';
     GetTempPathA(sizeof(path), path);
     GetTempFileNameA(path, "wt", 0, buf);
+}
+
+typedef struct tag_reg_save_value
+{
+    const char *name;
+    DWORD type;
+    BYTE *data;
+    DWORD size;
+} reg_save_value;
+
+static DWORD save_value(HKEY hkey, const char *value, reg_save_value *saved)
+{
+    DWORD ret;
+    saved->name=value;
+    saved->data=0;
+    saved->size=0;
+    ret=RegQueryValueExA(hkey, value, NULL, &saved->type, NULL, &saved->size);
+    if (ret == ERROR_SUCCESS)
+    {
+        saved->data=HeapAlloc(GetProcessHeap(), 0, saved->size);
+        RegQueryValueExA(hkey, value, NULL, &saved->type, saved->data, &saved->size);
+    }
+    return ret;
+}
+
+static void restore_value(HKEY hkey, reg_save_value *saved)
+{
+    if (saved->data)
+    {
+        RegSetValueExA(hkey, saved->name, 0, saved->type, saved->data, saved->size);
+        HeapFree(GetProcessHeap(), 0, saved->data);
+    }
+    else
+        RegDeleteValueA(hkey, saved->name);
 }
 
 static void get_events(const char* name, HANDLE *start_event, HANDLE *done_event)
@@ -131,12 +168,13 @@ static void doDebugger(int argc, char** argv)
 {
     const char* logfile;
     debugger_blackbox_t blackbox;
-    HANDLE start_event, done_event, debug_event;
+    HANDLE start_event = 0, done_event = 0, debug_event;
 
     blackbox.argc=argc;
     logfile=(argc >= 4 ? argv[3] : NULL);
     blackbox.pid=(argc >= 5 ? atol(argv[4]) : 0);
 
+    blackbox.attach_err=0;
     if (strstr(myARGV[2], "attach"))
     {
         blackbox.attach_rc=DebugActiveProcess(blackbox.pid);
@@ -146,7 +184,8 @@ static void doDebugger(int argc, char** argv)
     else
         blackbox.attach_rc=TRUE;
 
-    debug_event=(argc >= 6 ? (HANDLE)atol(argv[5]) : NULL);
+    debug_event=(argc >= 6 ? (HANDLE)(INT_PTR)atol(argv[5]) : NULL);
+    blackbox.debug_err=0;
     if (debug_event && strstr(myARGV[2], "event"))
     {
         blackbox.debug_rc=SetEvent(debug_event);
@@ -156,13 +195,18 @@ static void doDebugger(int argc, char** argv)
     else
         blackbox.debug_rc=TRUE;
 
+    if (logfile)
+    {
     get_events(logfile, &start_event, &done_event);
+    }
+
     if (strstr(myARGV[2], "order"))
     {
         trace("debugger: waiting for the start signal...\n");
         WaitForSingleObject(start_event, INFINITE);
     }
 
+    blackbox.nokill_err=0;
     if (strstr(myARGV[2], "nokill"))
     {
         blackbox.nokill_rc=pDebugSetProcessKillOnExit(FALSE);
@@ -172,6 +216,7 @@ static void doDebugger(int argc, char** argv)
     else
         blackbox.nokill_rc=TRUE;
 
+    blackbox.detach_err=0;
     if (strstr(myARGV[2], "detach"))
     {
         blackbox.detach_rc=pDebugActiveProcessStop(blackbox.pid);
@@ -181,7 +226,10 @@ static void doDebugger(int argc, char** argv)
     else
         blackbox.detach_rc=TRUE;
 
+    if (logfile)
+    {
     save_blackbox(logfile, &blackbox, sizeof(blackbox));
+    }
     trace("debugger: done debugging...\n");
     SetEvent(done_event);
 
@@ -235,13 +283,17 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
         /* If, after attaching to the debuggee, the debugger exits without
          * detaching, then the debuggee gets a special exit code.
          */
-        ok(exit_code == 0xffffffff || /* Win 9x */
-           exit_code == 0x80 || /* NT4 */
-           exit_code == STATUS_DEBUGGER_INACTIVE, /* Win >= XP */
+        ok(exit_code == STATUS_DEBUGGER_INACTIVE ||
+           broken(exit_code == STATUS_ACCESS_VIOLATION) || /* Intermittent Vista+ */
+           broken(exit_code == 0xffffffff) || /* Win9x */
+           broken(exit_code == WAIT_ABANDONED), /* NT4, W2K */
            "wrong exit code : %08x\n", exit_code);
     }
     else
-        ok(exit_code == STATUS_ACCESS_VIOLATION, "exit code = %08x instead of STATUS_ACCESS_VIOLATION\n", exit_code);
+        ok(exit_code == STATUS_ACCESS_VIOLATION ||
+           broken(exit_code == WAIT_ABANDONED) || /* NT4, W2K, W2K3 */
+           broken(exit_code == 0xffffffff), /* Win9x, WinME */
+           "wrong exit code : %08x\n", exit_code);
     CloseHandle(info.hProcess);
 
     /* ...before the debugger */
@@ -298,14 +350,13 @@ static void crash_and_winedbg(HKEY hkey, const char* argv0)
 static void test_ExitCode(void)
 {
     static const char* AeDebug="Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug";
+    static const char* WineDbg="Software\\Wine\\WineDbg";
     char test_exe[MAX_PATH];
     DWORD ret;
     HKEY hkey;
     DWORD disposition;
-    LPBYTE auto_val=NULL;
-    DWORD auto_size, auto_type;
-    LPBYTE debugger_val=NULL;
-    DWORD debugger_size, debugger_type;
+    reg_save_value auto_value;
+    reg_save_value debugger_value;
 
     GetModuleFileNameA(GetModuleHandle(NULL), test_exe, sizeof(test_exe));
     if (GetFileAttributes(test_exe) == INVALID_FILE_ATTRIBUTES)
@@ -319,22 +370,10 @@ static void test_ExitCode(void)
     ret=RegCreateKeyExA(HKEY_LOCAL_MACHINE, AeDebug, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey, &disposition);
     if (ret == ERROR_SUCCESS)
     {
-        auto_size=0;
-        ret=RegQueryValueExA(hkey, "auto", NULL, &auto_type, NULL, &auto_size);
-        if (ret == ERROR_SUCCESS)
-        {
-            auto_val=HeapAlloc(GetProcessHeap(), 0, auto_size);
-            RegQueryValueExA(hkey, "auto", NULL, &auto_type, auto_val, &auto_size);
+        save_value(hkey, "auto", &auto_value);
+        save_value(hkey, "debugger", &debugger_value);
+        trace("HKLM\\%s\\debugger is set to '%s'\n", AeDebug, debugger_value.data);
         }
-
-        debugger_size=0;
-        ret=RegQueryValueExA(hkey, "debugger", NULL, &debugger_type, NULL, &debugger_size);
-        if (ret == ERROR_SUCCESS)
-        {
-            debugger_val=HeapAlloc(GetProcessHeap(), 0, debugger_size);
-            RegQueryValueExA(hkey, "debugger", NULL, &debugger_type, debugger_val, &debugger_size);
-        }
-    }
     else if (ret == ERROR_ACCESS_DENIED)
     {
         skip("not enough privileges to change the debugger\n");
@@ -346,17 +385,42 @@ static void test_ExitCode(void)
         return;
     }
 
-    if (debugger_val && debugger_type == REG_SZ &&
-        strstr((char*)debugger_val, "winedbg --auto"))
+    if (debugger_value.data && debugger_value.type == REG_SZ &&
+        strstr((char*)debugger_value.data, "winedbg --auto"))
+    {
+        HKEY hkeyWinedbg;
+        ret=RegCreateKeyA(HKEY_CURRENT_USER, WineDbg, &hkeyWinedbg);
+        if (ret == ERROR_SUCCESS)
+        {
+            static DWORD zero;
+            reg_save_value crash_dlg_value;
+            save_value(hkeyWinedbg, "ShowCrashDialog", &crash_dlg_value);
+            RegSetValueExA(hkeyWinedbg, "ShowCrashDialog", 0, REG_DWORD, (BYTE *)&zero, sizeof(DWORD));
         crash_and_winedbg(hkey, test_exe);
+            restore_value(hkeyWinedbg, &crash_dlg_value);
+            RegCloseKey(hkeyWinedbg);
+        }
+        else
+            ok(0, "Couldn't access WineDbg Key - error %u\n", ret);
+    }
 
+    if (winetest_interactive)
+        /* Since the debugging process never sets the debug event, it isn't recognized
+           as a valid debugger and, after the debugger exits, Windows will show a dialog box
+           asking the user what to do */
     crash_and_debug(hkey, test_exe, "dbg,none");
+    else
+        skip("\"none\" debugger test needs user interaction\n");
     crash_and_debug(hkey, test_exe, "dbg,event,order");
     crash_and_debug(hkey, test_exe, "dbg,attach,event,code2");
     if (pDebugSetProcessKillOnExit)
         crash_and_debug(hkey, test_exe, "dbg,attach,event,nokill");
+    else
+        win_skip("DebugSetProcessKillOnExit is not available\n");
     if (pDebugActiveProcessStop)
         crash_and_debug(hkey, test_exe, "dbg,attach,event,detach");
+    else
+        win_skip("DebugActiveProcessStop is not available\n");
 
     if (disposition == REG_CREATED_NEW_KEY)
     {
@@ -365,29 +429,48 @@ static void test_ExitCode(void)
     }
     else
     {
-        if (auto_val)
-        {
-            RegSetValueExA(hkey, "auto", 0, auto_type, auto_val, auto_size);
-            HeapFree(GetProcessHeap(), 0, auto_val);
-        }
-        else
-            RegDeleteValueA(hkey, "auto");
-        if (debugger_val)
-        {
-            RegSetValueExA(hkey, "debugger", 0, debugger_type, debugger_val, debugger_size);
-            HeapFree(GetProcessHeap(), 0, debugger_val);
-        }
-        else
-            RegDeleteValueA(hkey, "debugger");
+        restore_value(hkey, &auto_value);
+        restore_value(hkey, &debugger_value);
         RegCloseKey(hkey);
-    }
+        }
 }
+
+static void test_RemoteDebugger(void)
+        {
+    BOOL bret, present;
+    if(!pCheckRemoteDebuggerPresent)
+    {
+        win_skip("CheckRemoteDebuggerPresent is not available\n");
+        return;
+        }
+    present = TRUE;
+    SetLastError(0xdeadbeef);
+    bret = pCheckRemoteDebuggerPresent(GetCurrentProcess(),&present);
+    ok(bret , "expected CheckRemoteDebuggerPresent to succeed\n");
+    ok(0xdeadbeef == GetLastError(),
+       "expected error to be unchanged, got %d/%x\n",GetLastError(), GetLastError());
+
+    present = TRUE;
+    SetLastError(0xdeadbeef);
+    bret = pCheckRemoteDebuggerPresent(NULL,&present);
+    ok(!bret , "expected CheckRemoteDebuggerPresent to fail\n");
+    ok(present, "expected parameter to be unchanged\n");
+    ok(ERROR_INVALID_PARAMETER == GetLastError(),
+       "expected error ERROR_INVALID_PARAMETER, got %d/%x\n",GetLastError(), GetLastError());
+
+    SetLastError(0xdeadbeef);
+    bret = pCheckRemoteDebuggerPresent(GetCurrentProcess(),NULL);
+    ok(!bret , "expected CheckRemoteDebuggerPresent to fail\n");
+    ok(ERROR_INVALID_PARAMETER == GetLastError(),
+       "expected error ERROR_INVALID_PARAMETER, got %d/%x\n",GetLastError(), GetLastError());
+    }
 
 START_TEST(debugger)
 {
     HMODULE hdll;
 
     hdll=GetModuleHandle("kernel32.dll");
+    pCheckRemoteDebuggerPresent=(void*)GetProcAddress(hdll, "CheckRemoteDebuggerPresent");
     pDebugActiveProcessStop=(void*)GetProcAddress(hdll, "DebugActiveProcessStop");
     pDebugSetProcessKillOnExit=(void*)GetProcAddress(hdll, "DebugSetProcessKillOnExit");
 
@@ -403,5 +486,6 @@ START_TEST(debugger)
     else
     {
         test_ExitCode();
+        test_RemoteDebugger();
     }
 }

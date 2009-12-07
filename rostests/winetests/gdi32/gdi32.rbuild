@@ -1,13 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<group>
 <module name="gdi32_winetest" type="win32cui" installbase="bin" installname="gdi32_winetest.exe" allowwarnings="true">
     <include base="gdi32_winetest">.</include>
-    <define name="WINVER">0x0600</define>
-    <define name="__USE_W32API" />
+	<define name="__ROS_LONG64__" />
     <library>ntdll</library>
     <library>gdi32</library>
-    <library>kernel32</library>
     <library>user32</library>
     <library>advapi32</library>
     <file>bitmap.c</file>
@@ -25,4 +22,3 @@
     <file>pen.c</file>
     <file>testlist.c</file>
 </module>
-</group>

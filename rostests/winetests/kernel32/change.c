@@ -38,7 +38,7 @@
 
 static DWORD CALLBACK NotificationThread(LPVOID arg)
 {
-    HANDLE change = (HANDLE) arg;
+    HANDLE change = arg;
     BOOL notified = FALSE;
     BOOL ret = FALSE;
     DWORD status;
@@ -65,8 +65,7 @@ static HANDLE StartNotificationThread(LPCSTR path, BOOL subtree, DWORD flags)
     change = FindFirstChangeNotificationA(path, subtree, flags);
     ok(change != INVALID_HANDLE_VALUE, "FindFirstChangeNotification error: %d\n", GetLastError());
 
-    thread = CreateThread(NULL, 0, NotificationThread, (LPVOID)change,
-                          0, &threadId);
+    thread = CreateThread(NULL, 0, NotificationThread, change, 0, &threadId);
     ok(thread != NULL, "CreateThread error: %d\n", GetLastError());
 
     return thread;
@@ -223,6 +222,7 @@ static void test_FindFirstChangeNotification(void)
     file = CreateFileA(filename2, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 
                        FILE_ATTRIBUTE_NORMAL, 0);
     ok(file != INVALID_HANDLE_VALUE, "CreateFileA error: %d\n", GetLastError());
+    memset(buffer, 0, sizeof(buffer));
     ret = WriteFile(file, buffer, sizeof(buffer), &count, NULL);
     ok(ret && count == sizeof(buffer), "WriteFile error: %d\n", GetLastError());
     ret = CloseHandle(file);
@@ -263,7 +263,7 @@ static void test_ffcn(void)
     r = GetTempPathW( MAX_PATH, path );
     if (!r && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
-        skip("GetTempPathW is not implemented\n");
+        win_skip("GetTempPathW is not implemented\n");
         return;
     }
     ok( r != 0, "temp path failed\n");
@@ -355,8 +355,8 @@ static void test_ffcnMultipleThreads(void)
      * directory object with an empty wine user APC queue for this thread (bug #7286) */
 
     /* Create our notification thread */
-    handles[1] = CreateThread(NULL, 0, NotificationThread, (LPVOID)handles[0],
-                              0, &threadId);
+    handles[1] = CreateThread(NULL, 0, NotificationThread, handles[0], 0,
+                              &threadId);
     ok(handles[1] != NULL, "CreateThread error: %d\n", GetLastError());
 
     status = WaitForMultipleObjects(2, handles, FALSE, 5000);
@@ -386,7 +386,7 @@ static void test_readdirectorychanges(void)
 
     if (!pReadDirectoryChangesW)
     {
-        skip("ReadDirectoryChangesW is not available\n");
+        win_skip("ReadDirectoryChangesW is not available\n");
         return;
     }
 
@@ -394,7 +394,7 @@ static void test_readdirectorychanges(void)
     r = GetTempPathW( MAX_PATH, path );
     if (!r && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
-        skip("GetTempPathW is not implemented\n");
+        win_skip("GetTempPathW is not implemented\n");
         return;
     }
     ok( r != 0, "temp path failed\n");
@@ -559,8 +559,8 @@ static void test_readdirectorychanges(void)
     pfni = (PFILE_NOTIFY_INFORMATION) buffer;
     ok( pfni->NextEntryOffset == 0, "offset wrong\n" );
     ok( pfni->Action == FILE_ACTION_ADDED, "action wrong\n" );
-    ok( pfni->FileNameLength == 0x0c, "len wrong\n" );
-    ok( !memcmp(pfni->FileName,&szGa[1],6), "name wrong\n" );
+    ok( pfni->FileNameLength == 6*sizeof(WCHAR), "len wrong\n" );
+    ok( !memcmp(pfni->FileName,&szGa[1],6*sizeof(WCHAR)), "name wrong\n" );
 
     r = RemoveDirectoryW( subsubdir );
     ok( r == TRUE, "failed to remove directory\n");
@@ -577,13 +577,21 @@ static void test_readdirectorychanges(void)
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
     pfni = (PFILE_NOTIFY_INFORMATION) buffer;
-    ok( pfni->NextEntryOffset == 0, "offset wrong\n" );
-    ok( pfni->Action == FILE_ACTION_REMOVED, "action wrong\n" );
-    ok( pfni->FileNameLength == 0x0c, "len wrong\n" );
-    ok( !memcmp(pfni->FileName,&szGa[1],6), "name wrong\n" );
+    /* we may get a notification for the parent dir too */
+    if (pfni->Action == FILE_ACTION_MODIFIED && pfni->NextEntryOffset)
+    {
+        ok( pfni->FileNameLength == 3*sizeof(WCHAR), "len wrong %u\n", pfni->FileNameLength );
+        ok( !memcmp(pfni->FileName,&szGa[1],3*sizeof(WCHAR)), "name wrong\n" );
+        pfni = (PFILE_NOTIFY_INFORMATION)((char *)pfni + pfni->NextEntryOffset);
+    }
+    ok( pfni->NextEntryOffset == 0, "offset wrong %u\n", pfni->NextEntryOffset );
+    ok( pfni->Action == FILE_ACTION_REMOVED, "action wrong %u\n", pfni->Action );
+    ok( pfni->FileNameLength == 6*sizeof(WCHAR), "len wrong %u\n", pfni->FileNameLength );
+    ok( !memcmp(pfni->FileName,&szGa[1],6*sizeof(WCHAR)), "name wrong\n" );
 
     ok( ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
-    ok( ov.InternalHigh == 0x18, "ov.InternalHigh wrong\n");
+    dwCount = (char *)&pfni->FileName[pfni->FileNameLength/sizeof(WCHAR)] - buffer;
+    ok( ov.InternalHigh == dwCount, "ov.InternalHigh wrong %lu/%u\n",ov.InternalHigh, dwCount );
 
     CloseHandle(hdir);
 
@@ -606,14 +614,14 @@ static void test_readdirectorychanges_null(void)
 
     if (!pReadDirectoryChangesW)
     {
-        skip("ReadDirectoryChangesW is not available\n");
+        win_skip("ReadDirectoryChangesW is not available\n");
         return;
     }
     SetLastError(0xdeadbeef);
     r = GetTempPathW( MAX_PATH, path );
     if (!r && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
-        skip("GetTempPathW is not implemented\n");
+        win_skip("GetTempPathW is not implemented\n");
         return;
     }
     ok( r != 0, "temp path failed\n");
@@ -708,7 +716,7 @@ static void test_readdirectorychanges_filedir(void)
     r = GetTempPathW( MAX_PATH, path );
     if (!r && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
-        skip("GetTempPathW is not implemented\n");
+        win_skip("GetTempPathW is not implemented\n");
         return;
     }
     ok( r != 0, "temp path failed\n");
@@ -839,8 +847,8 @@ static void test_ffcn_directory_overlap(void)
     ret = FindCloseChangeNotification(parent_watch);
     ok(ret, "FindCloseChangeNotification error: %d\n", GetLastError());
 
-    child_thread = CreateThread(NULL, 0, NotificationThread,
-                                (LPVOID)child_watch, 0, &threadId);
+    child_thread = CreateThread(NULL, 0, NotificationThread, child_watch, 0,
+                                &threadId);
     ok(child_thread != NULL, "CreateThread error: %d\n", GetLastError());
 
     /* Create a file in child */

@@ -328,7 +328,7 @@ static void test_InitPathA(CHAR *newdir, CHAR *curDrive, CHAR *otherDrive)
      "GetTempPathA returned a path that did not end in '\\'\n");
   lstrcpyA(tmpstr,"aaaaaaaa");
   len1=GetTempPathA(len,tmpstr);
-  ok(len1==len+1,
+  ok(len1==len+1 || broken(len1 == len), /* WinME */
      "GetTempPathA should return string length %d instead of %d\n",len+1,len1);
 
 /* Test GetTmpFileNameA
@@ -384,14 +384,16 @@ static void test_InitPathA(CHAR *newdir, CHAR *curDrive, CHAR *otherDrive)
   ok(CreateDirectoryA(tmpstr,NULL),"CreateDirectoryA failed\n");
   sprintf(tmpstr,"%s\\%s",newdir,LONGDIR);
   ok(CreateDirectoryA(tmpstr,NULL),"CreateDirectoryA failed\n");
-  bRes = CreateDirectoryA("c:",NULL);
+  sprintf(tmpstr,"%c:", *curDrive);
+  bRes = CreateDirectoryA(tmpstr,NULL);
   ok(!bRes && (GetLastError() == ERROR_ACCESS_DENIED  || 
                GetLastError() == ERROR_ALREADY_EXISTS),
-     "CreateDirectoryA(\"c:\" should have failed (%d)\n", GetLastError());
-  bRes = CreateDirectoryA("c:\\",NULL);
+     "CreateDirectoryA(\"%s\" should have failed (%d)\n", tmpstr, GetLastError());
+  sprintf(tmpstr,"%c:\\", *curDrive);
+  bRes = CreateDirectoryA(tmpstr,NULL);
   ok(!bRes && (GetLastError() == ERROR_ACCESS_DENIED  ||
                GetLastError() == ERROR_ALREADY_EXISTS),
-     "CreateDirectoryA(\"c:\\\" should have failed (%d)\n", GetLastError());
+     "CreateDirectoryA(\"%s\" should have failed (%d)\n", tmpstr, GetLastError());
   sprintf(tmpstr,"%s\\%s\\%s",newdir,SHORTDIR,SHORTFILE);
   hndl=CreateFileA(tmpstr,GENERIC_WRITE,0,NULL,
                    CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
@@ -465,6 +467,14 @@ static void test_CurrentDirectoryA(CHAR *origdir, CHAR *newdir)
 /* starting with a '.' */
   sprintf(tmpstr,".\\%s",LONGDIR);
   test_setdir(newdir,tmpstr,tmpstr1,1,"check 9");
+/* change to root without a trailing backslash. The function call succeeds
+   but the directory is not changed.
+*/
+  sprintf(tmpstr, "%c:", newdir[0]);
+  test_setdir(newdir,tmpstr,newdir,1,"check 10");
+/* works however with a trailing backslash */
+  sprintf(tmpstr, "%c:\\", newdir[0]);
+  test_setdir(newdir,tmpstr,NULL,1,"check 11");
 }
 
 /* Cleanup the mess we made while executing these tests */
@@ -869,7 +879,10 @@ static void test_GetTempPathW(char* tmp_dir)
     lstrcpyW(buf, fooW);
     len = GetTempPathW(MAX_PATH, buf);
     if (len==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("GetTempPathW is not available\n");
         return;
+    }
     ok(lstrcmpiW(buf, tmp_dirW) == 0, "GetTempPathW returned an incorrect temporary path\n");
     ok(len == lstrlenW(buf), "returned length should be equal to the length of string\n");
 
@@ -893,15 +906,18 @@ static void test_GetTempPath(void)
     char windir[MAX_PATH];
     char buf[MAX_PATH];
 
-    GetEnvironmentVariableA("TMP", save_TMP, sizeof(save_TMP));
+    if (!GetEnvironmentVariableA("TMP", save_TMP, sizeof(save_TMP))) save_TMP[0] = 0;
 
     /* test default configuration */
     trace("TMP=%s\n", save_TMP);
+    if (save_TMP[0])
+    {
     strcpy(buf,save_TMP);
     if (buf[strlen(buf)-1]!='\\')
         strcat(buf,"\\");
     test_GetTempPathA(buf);
     test_GetTempPathW(buf);
+    }
 
     /* TMP=C:\WINDOWS */
     GetWindowsDirectoryA(windir, sizeof(windir));
@@ -948,7 +964,7 @@ static void test_GetLongPathNameW(void)
     length = pGetLongPathNameW(NULL,NULL,0);
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("GetLongPathNameW is not implemented\n");
+        win_skip("GetLongPathNameW is not implemented\n");
         return;
     }
     ok(0==length,"GetLongPathNameW returned %d but expected 0\n",length);
@@ -977,7 +993,7 @@ static void test_GetShortPathNameW(void)
     GetTempPathW( MAX_PATH, path );
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("GetTempPathW is not implemented\n");
+        win_skip("GetTempPathW is not implemented\n");
         return;
     }
 
@@ -1208,8 +1224,11 @@ static void test_drive_letter_case(void)
     ret = GetTempPath(sizeof(buf), buf);
     ok(ret, "GetTempPath error %u\n", GetLastError());
     ok(ret < sizeof(buf), "buffer should be %u bytes\n", ret);
+    if (buf[0])
+    {
     ok(buf[1] == ':', "expected buf[1] == ':' got %c\n", buf[1]);
     ok(buf[strlen(buf)-1] == '\\', "Temporary path (%s) doesn't end in a slash\n", buf);
+    }
 
     memset(buf, 0, sizeof(buf));
     SetLastError(0xdeadbeef);

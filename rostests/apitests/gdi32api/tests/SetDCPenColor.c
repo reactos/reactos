@@ -2,6 +2,7 @@ INT
 Test_SetDCPenColor(PTESTINFO pti)
 {
 	HDC hScreenDC, hDC;
+	HBITMAP hbmp;
 
 	// Test an incorrect DC
 	SetLastError(ERROR_SUCCESS);
@@ -32,6 +33,16 @@ Test_SetDCPenColor(PTESTINFO pti)
 	// Test CLR_INVALID, it sets CLR_INVALID!
 	SetDCPenColor(hDC, CLR_INVALID);
 	RTEST(SetDCPenColor(hDC, RGB(0,0,0)) == CLR_INVALID);
+
+	hbmp = CreateBitmap(10, 10, 1, 32, NULL);
+	ASSERT(hbmp);
+
+	SelectObject(hDC, hbmp);
+	SelectObject(hDC, GetStockObject(DC_PEN));
+	SetDCPenColor(hDC, 0x123456);
+	MoveToEx(hDC, 0, 0, NULL);
+	LineTo(hDC, 10, 0);
+	TEST(GetPixel(hDC, 5, 0) == 0x123456);
 
 	// Delete the DC
 	DeleteDC(hDC);

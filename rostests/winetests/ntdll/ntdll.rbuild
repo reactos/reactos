@@ -1,12 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<group>
 <module name="ntdll_winetest" type="win32cui" installbase="bin" installname="ntdll_winetest.exe" allowwarnings="true">
     <include base="ntdll_winetest">.</include>
-    <define name="__USE_W32API" />
-    <define name="_WIN32_WINNT">0x0600</define>
-    <define name="WINVER">0x609</define>
-    <library>kernel32</library>
+	<define name="__ROS_LONG64__" />
     <library>ntdll</library>
     <file>atom.c</file>
     <file>change.c</file>
@@ -27,4 +23,3 @@
     <file>time.c</file>
     <file>testlist.c</file>
 </module>
-</group>
