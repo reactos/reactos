@@ -83,11 +83,12 @@ RtlpGetLengthOfRunClear(
     /* Calculate length up to where we read */
     Length = (Buffer - BitMapHeader->Buffer) * 32 - StartingIndex;
     Length += BitPos - 32;
-    
+
+    /* Make sure we don't go past the last bit */
     if (Length > BitMapHeader->SizeOfBitMap - StartingIndex)
         Length = BitMapHeader->SizeOfBitMap - StartingIndex;
 
-    /* The result is guaranteed to be < BitMapHeader->SizeOfBitMap */
+    /* Return the result */
     return Length;
 }
 
@@ -132,10 +133,11 @@ RtlpGetLengthOfRunSet(
     Length = (Buffer - BitMapHeader->Buffer) * 32 - StartingIndex;
     Length += BitPos - 32;
 
+    /* Make sure we don't go past the last bit */
     if (Length > BitMapHeader->SizeOfBitMap - StartingIndex)
         Length = BitMapHeader->SizeOfBitMap - StartingIndex;
 
-    /* The result is guaranteed to be < BitMapHeader->SizeOfBitMap */
+    /* Return the result */
     return Length;
 }
 
@@ -436,12 +438,10 @@ RtlFindClearBits(
     /* Loop until something is found or the end is reached */
     while (CurrentBit + NumberToFind < BitMapHeader->SizeOfBitMap)
     {
-        ULONG test;
         /* Search for the next clear run, by skipping a set run */
-        test = RtlpGetLengthOfRunSet(BitMapHeader,
+        CurrentBit += RtlpGetLengthOfRunSet(BitMapHeader,
                                             CurrentBit,
                                             MAXULONG);
-        CurrentBit += test;
 
         /* Get length of the clear bit run */
         CurrentLength = RtlpGetLengthOfRunClear(BitMapHeader,
