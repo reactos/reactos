@@ -10,15 +10,19 @@
 
 #include "rsym.h"
 
-#define LOG2LINES_VERSION   "1.5"
+#define LOG2LINES_VERSION   "1.7"
 
 #define INVALID_BASE    0xFFFFFFFFL
 
 #define DEF_OPT_DIR     "output-i386"
 #define SOURCES_ENV     "_ROSBE_ROSSOURCEDIR"
+#define CACHEFILE       "log2lines.cache"
+#define TRKBUILDPREFIX  "bootcd-"
 
 #if defined (__DJGPP__) || defined (__WIN32__)
 
+#define POPEN           _popen
+#define PCLOSE          _pclose
 #define DEV_NULL        "NUL"
 #define DOS_PATHS
 #define PATH_CHAR       '\\'
@@ -33,6 +37,8 @@
 #include <limits.h>
 
 #define MAX_PATH        PATH_MAX
+#define POPEN           popen
+#define PCLOSE          pclose
 #define DEV_NULL        "/dev/null"
 #define UNIX_PATHS
 #define PATH_CHAR       '/'
@@ -46,11 +52,11 @@
 #define CP_FMT          CP_CMD "%s %s > " DEV_NULL
 
 #define CMD_7Z          "7z"
-//#define UNZIP_FMT_7Z    "%s e -y %s -o%s > " DEV_NULL
-#define UNZIP_FMT_7Z    "%s e -y %s -o%s"
+#define UNZIP_FMT_7Z    "%s e -y %s -o%s > " DEV_NULL
 #define UNZIP_FMT       "%s x -y -r %s -o%s > " DEV_NULL
 #define UNZIP_FMT_CAB \
-"%s x -y -r %s" PATH_STR "reactos" PATH_STR "reactos.cab -o%s" PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
+"%s x -y -r %s" PATH_STR "reactos" PATH_STR "reactos.cab -o%s" \
+PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
 
 #define LINESIZE        1024
 #define NAMESIZE        80
@@ -60,6 +66,12 @@
         fprintf(outFile, fmt, ##__VA_ARGS__);           \
         if (logFile)                                    \
             fprintf(logFile, fmt, ##__VA_ARGS__);       \
+    }
+
+#define l2l_dbg(level, ...)                     \
+    {                                           \
+        if (opt_verbose >= level)               \
+            fprintf(stderr, ##__VA_ARGS__);     \
     }
 
 struct entry_struct
@@ -88,6 +100,7 @@ struct summ_struct
     int skipped;
     int diff;
     int majordiff;
+    int revconflicts;
     int offset_errors;
     int total;
 };
@@ -103,40 +116,63 @@ struct lineinfo_struct
     int     nr2;
 };
 
+struct revinfo_struct
+{
+    int     rev; 
+    int     buildrev;
+    int     opt_verbose;
+};
+
 typedef struct cache_struct CACHE;
 typedef struct summ_struct SUMM;
 typedef struct lineinfo_struct LINEINFO;
+typedef struct revinfo_struct REVINFO;
 
 static CACHE cache;
 static SUMM summ;
 static LINEINFO lastLine;
+static REVINFO revinfo;
 
-static char *optchars  = "bcd:fFhl:mMrsS:tTuUvz:";
-static int opt_buffered= 0;         // -b
-static int opt_help    = 0;         // -h
-static int opt_force   = 0;         // -f
-static int opt_exit    = 0;         // -e
-static int opt_verbose = 0;         // -v
-static int opt_console = 0;         // -c
-static int opt_mark    = 0;         // -m
-static int opt_Mark    = 0;         // -M
-static int opt_raw     = 0;         // -r
-static int opt_stats   = 0;         // -s
-static int opt_Source  = 0;         // -S
-static int opt_twice   = 0;         // -t
-static int opt_Twice   = 0;         // -T
-static int opt_undo    = 0;         // -u
-static int opt_redo    = 0;         // -U
-static char opt_dir[MAX_PATH];      // -d
-static char opt_logFile[MAX_PATH];  // -l
-static char opt_7z[MAX_PATH];       // -z
-static char opt_scanned[LINESIZE];  // all scanned options
-static FILE *logFile   = NULL;
+static char *optchars       = "bcd:fFhl:mMrR:sS:tTuUvz:";
+static int   opt_buffered   = 0;        // -b
+static int   opt_help       = 0;        // -h
+static int   opt_force      = 0;        // -f
+static int   opt_exit       = 0;        // -e
+static int   opt_verbose    = 0;        // -v
+static int   opt_console    = 0;        // -c
+static int   opt_mark       = 0;        // -m
+static int   opt_Mark       = 0;        // -M
+static int   opt_raw        = 0;        // -r
+static int   opt_stats      = 0;        // -s
+static int   opt_Source     = 0;        // -S <opt_Source>[+<opt_SrcPlus>][,<sources_path>]
+static int   opt_SrcPlus    = 0;        // -S <opt_Source>[+<opt_SrcPlus>][,<sources_path>]
+static int   opt_twice      = 0;        // -t
+static int   opt_Twice      = 0;        // -T
+static int   opt_undo       = 0;        // -u
+static int   opt_redo       = 0;        // -U
+static char *opt_Revision   = NULL;     // -R
+static char  opt_dir[MAX_PATH];         // -d <opt_dir>
+static char  opt_logFile[MAX_PATH];     // -l <opt_logFile>
+static char  opt_7z[MAX_PATH];          // -z <opt_7z>
+static char  opt_scanned[LINESIZE];     // all scanned options
+static FILE *logFile        = NULL;
 
 static char *cache_name;
 static char *tmp_name;
 
 static char sources_path[LINESIZE];
+
+static int
+file_exists(char *name)
+{
+    FILE *f;
+
+    f = fopen(name, "r");
+    if (!f)
+        return 0;
+    fclose(f);
+    return 1;
+}
 
 static void
 clearLastLine(void)
@@ -144,30 +180,102 @@ clearLastLine(void)
     memset(&lastLine, 0, sizeof(LINEINFO));
 }
 
-static void
-log_file(FILE *outFile, char *fileName, int max )
+static int
+getRevision(char *fileName, int lastChanged)
 {
-    int i = 0, min = 0;
     char s[LINESIZE];
-    char p[LINESIZE];
+    FILE *psvn;
+    int rev = 0;
+
+    if (!fileName)
+        fileName = sources_path;
+    sprintf(s, "svn info %s", fileName);
+    if ((psvn = POPEN(s, "r")))
+    {
+        while (fgets(s, LINESIZE, psvn))
+        {
+            if (lastChanged)
+            {
+                if(sscanf(s,"Last Changed Rev: %d",&rev))
+                    break;
+            }
+            else
+            {
+                if(sscanf(s,"Revision: %d",&rev))
+                    break;
+            }
+        }
+    }
+    else
+        l2l_dbg(1,"Can't popen: \"%s\"\n", s);
+
+    if (psvn)
+        PCLOSE(psvn);
+
+    return rev;
+}
+
+static int
+getTBRevision(char *fileName)
+{
+    char *s;
+    int rev = 0;
+
+    s = strrchr(fileName, PATH_CHAR);
+    if (s)
+        s += 1;
+    else
+        s = fileName;
+
+    sscanf(s, TRKBUILDPREFIX "%d", &rev);
+    if (!rev)
+    {
+        s = strrchr(fileName, PATH_CHAR);
+        if (s)
+            *s = '\0'; // clear, so we have the parent dir
+        else
+        {
+            // where else to look?
+            fileName = sources_path;
+        }
+        rev = getRevision(fileName, 1);
+        if (s)
+            *s = PATH_CHAR; // restore
+    }
+
+    l2l_dbg(1,"TBRevision: %d\n", rev);
+    return rev;
+}
+
+static void
+log_file(FILE *outFile, char *fileName, int line)
+{
+    int i = 0, min = 0, max = 0;
+    char s[LINESIZE];
     FILE *src;
 
-    strcpy(p, sources_path);
-    strcat(p, fileName);
-    if ((src = fopen(p, "r")))
+    strcpy(s, sources_path);
+    strcat(s, fileName);
+
+    max = line + opt_SrcPlus;
+    if ((src = fopen(s, "r")))
     {
-        min = max - opt_Source;
+        min = line - opt_Source;
         min = (min < 0) ? 0 : min;
         while (i < max && fgets(s, LINESIZE, src))
         {
             if (i >= min)
-                log(outFile, "| %4.4d  %s", i + 1, s);
+            {
+                if (i == line)
+                    log(outFile, "| ----\n");
+                log(outFile, "| %4.4d  %s", i+1, s);
+            }
             i++;
         }
         fclose(src);
     }
-    else if (opt_verbose)
-        fprintf(stderr, "Can't open: %s (check " SOURCES_ENV ")\n", p);
+    else
+        l2l_dbg(1,"Can't open: %s (check " SOURCES_ENV ")\n", s);
 }
 
 static void
@@ -187,10 +295,61 @@ reportSource(FILE *outFile)
     if (!opt_Source)
         return;
     if (lastLine.valid)
-    {
         logSource(outFile);
+}
+
+static void
+log_rev_check(FILE *outFile, char *fileName, int showfile)
+{
+    int rev = 0;
+    char s[LINESIZE];
+
+    strcpy(s, sources_path);
+    strcat(s, fileName);
+    rev = getRevision(s, 1);
+    if (!showfile)
+        s[0] = '\0';
+    if (revinfo.opt_verbose)
+        log(outFile, "| R--- %s Last Changed Rev: %d\n", s, rev);
+
+    if (rev && opt_Revision)
+    {
+        if (revinfo.rev < revinfo.buildrev)
+        {
+            summ.revconflicts++;
+            log(outFile, "| R--- Conflict %s: source tree(%d) < build(%d)\n", s, rev, revinfo.buildrev);
+        }
+        else if (rev > revinfo.buildrev)
+        {
+            summ.revconflicts++;
+            log(outFile, "| R--- Conflict %s: file(%d) > build(%d)\n", s, rev, revinfo.buildrev);
+        }
     }
-    clearLastLine();
+}
+
+static void
+logRevCheck(FILE *outFile)
+{
+    int twice = 0;
+
+    twice = (lastLine.nr2 && (strcmp(lastLine.file1,lastLine.file2) != 0));
+    log_rev_check(outFile, lastLine.file1, twice);
+    if (twice)
+    {
+        log_rev_check(outFile, lastLine.file2, twice);
+    }
+}
+
+static void
+reportRevision(FILE *outFile)
+{
+    if (!opt_Revision)
+        return;
+    if (strcmp(opt_Revision, "check") == 0)
+    {
+        if (lastLine.valid)
+            logRevCheck(outFile);
+    }
 }
 
 static char *
@@ -200,9 +359,7 @@ basename(char *path)
 
     base = strrchr(path, PATH_CHAR);
     if (base)
-    {
         return ++base;
-    }
     return path;
 }
 
@@ -241,9 +398,7 @@ find_offset(void *data, size_t offset)
             if (!i--)
                 return NULL;
             else
-            {
                 return &Entries[i];
-            }
         }
     }
     return NULL;
@@ -374,7 +529,7 @@ process_data(const void *FileData, size_t offset, char *toString)
     PEDosHeader = (PIMAGE_DOS_HEADER)FileData;
     if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || PEDosHeader->e_lfanew == 0L)
     {
-        fprintf(stderr, "Input file is not a PE image.\n");
+        l2l_dbg(0, "Input file is not a PE image.\n");
         summ.offset_errors++;
         return 1;
     }
@@ -397,7 +552,7 @@ process_data(const void *FileData, size_t offset, char *toString)
     PERosSymSectionHeader = find_rossym_section(PEFileHeader, PESectionHeaders);
     if (!PERosSymSectionHeader)
     {
-        fprintf(stderr, "Couldn't find rossym section in executable\n");
+        l2l_dbg(0, "Couldn't find rossym section in executable\n");
         summ.offset_errors++;
         return 1;
     }
@@ -405,14 +560,10 @@ process_data(const void *FileData, size_t offset, char *toString)
     if (res)
     {
         if (toString)
-        {
-            sprintf(toString, "??:0\n");
-        }
+            sprintf(toString, "??:0");
         else
-        {
-            printf("??:0\n");
-        }
-        fprintf(stderr, "Offset not found.\n");
+            printf("??:0");
+        l2l_dbg(1, "Offset not found: %x\n", offset);
         summ.offset_errors++;
     }
 
@@ -462,37 +613,22 @@ isOffset(const char *a)
 }
 
 static int
-file_exists(char *name)
-{
-    FILE *f;
-
-    f = fopen(name, "r");
-    if (!f)
-    {
-        return 0;
-    }
-    fclose(f);
-    return 1;
-}
-
-static int
 copy_file(char *src, char *dst)
 {
     char Line[LINESIZE];
 
     sprintf(Line, CP_FMT, src, dst);
-    if (opt_verbose > 1)
-        fprintf(stderr, "Executing: %s\n", Line);
+    l2l_dbg(2, "Executing: %s\n", Line);
     remove(dst);
     if (file_exists(dst))
     {
-        fprintf(stderr, "Cannot remove dst %s before copy\n", dst);
+        l2l_dbg(0, "Cannot remove dst %s before copy\n", dst);
         return 1;
     }
     system(Line);
     if (!file_exists(dst))
     {
-        fprintf(stderr, "Dst %s does not exist after copy \n", dst);
+        l2l_dbg(0, "Dst %s does not exist after copy \n", dst);
         return 2;
     }
     return 0;
@@ -508,7 +644,7 @@ process_file(const char *file_name, size_t offset, char *toString)
     FileData = load_file(file_name, &FileSize);
     if (!FileData)
     {
-        fprintf(stderr, "An error occured loading '%s'\n", file_name);
+        l2l_dbg(0, "An error occured loading '%s'\n", file_name);
     }
     else
     {
@@ -533,16 +669,14 @@ get_ImageBase(char *fname, size_t *ImageBase)
     fr = fopen(fname, "rb");
     if (!fr)
     {
-        if (opt_verbose > 2)
-            fprintf(stderr, "get_ImageBase, cannot open '%s' (%s)\n", fname, strerror(errno));
+        l2l_dbg(3, "get_ImageBase, cannot open '%s' (%s)\n", fname, strerror(errno));
         return 1;
     }
 
     readLen = fread(&PEDosHeader, sizeof(IMAGE_DOS_HEADER), 1, fr);
     if (1 != readLen)
     {
-        if (opt_verbose)
-            fprintf(stderr, "get_ImageBase %s, read error IMAGE_DOS_HEADER (%s)\n", fname, strerror(errno));
+        l2l_dbg(1, "get_ImageBase %s, read error IMAGE_DOS_HEADER (%s)\n", fname, strerror(errno));
         fclose(fr);
         return 2;
     }
@@ -550,8 +684,7 @@ get_ImageBase(char *fname, size_t *ImageBase)
     /* Check if MZ header exists */
     if (PEDosHeader.e_magic != IMAGE_DOS_MAGIC || PEDosHeader.e_lfanew == 0L)
     {
-        if (opt_verbose > 1)
-            fprintf(stderr, "get_ImageBase %s, MZ header missing\n", fname);
+        l2l_dbg(2, "get_ImageBase %s, MZ header missing\n", fname);
         fclose(fr);
         return 3;
     }
@@ -561,8 +694,7 @@ get_ImageBase(char *fname, size_t *ImageBase)
     readLen = fread(&PEFileHeader, sizeof(IMAGE_FILE_HEADER), 1, fr);
     if (1 != readLen)
     {
-        if (opt_verbose)
-            fprintf(stderr, "get_ImageBase %s, read error IMAGE_FILE_HEADER (%s)\n", fname, strerror(errno));
+        l2l_dbg(1, "get_ImageBase %s, read error IMAGE_FILE_HEADER (%s)\n", fname, strerror(errno));
         fclose(fr);
         return 4;
     }
@@ -571,8 +703,7 @@ get_ImageBase(char *fname, size_t *ImageBase)
     readLen = fread(&PEOptHeader, sizeof(IMAGE_OPTIONAL_HEADER), 1, fr);
     if (1 != readLen)
     {
-        if (opt_verbose)
-            fprintf(stderr, "get_ImageBase %s, read error IMAGE_OPTIONAL_HEADER (%s)\n", fname, strerror(errno));
+        l2l_dbg(1, "get_ImageBase %s, read error IMAGE_OPTIONAL_HEADER (%s)\n", fname, strerror(errno));
         fclose(fr);
         return 5;
     }
@@ -581,8 +712,7 @@ get_ImageBase(char *fname, size_t *ImageBase)
     if (PEOptHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
         PEOptHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
     {
-        if (opt_verbose > 1)
-            fprintf(stderr, "get_ImageBase %s, not an IMAGE_NT_OPTIONAL_HDR<32|64>\n", fname);
+        l2l_dbg(2, "get_ImageBase %s, not an IMAGE_NT_OPTIONAL_HDR<32|64>\n", fname);
         fclose(fr);
         return 6;
     }
@@ -633,8 +763,7 @@ entry_create(char *Line)
     pentry->buf = s = malloc(l + 1);
     if (!s)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Alloc entry failed\n");
+        l2l_dbg(1, "Alloc entry failed\n");
         return entry_delete(pentry);
     }
 
@@ -646,8 +775,7 @@ entry_create(char *Line)
     s = strchr(s, '|');
     if (!s)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Name field missing\n");
+        l2l_dbg(1, "Name field missing\n");
         return entry_delete(pentry);
     }
     *s++ = '\0';
@@ -656,15 +784,13 @@ entry_create(char *Line)
     s = strchr(s, '|');
     if (!s)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Path field missing\n");
+        l2l_dbg(1, "Path field missing\n");
         return entry_delete(pentry);
     }
     *s++ = '\0';
     if (1 != sscanf(s, "%x", &pentry->ImageBase))
     {
-        if (opt_verbose)
-            fprintf(stderr, "ImageBase field missing\n");
+        l2l_dbg(1, "ImageBase field missing\n");
         return entry_delete(pentry);
     }
     return pentry;
@@ -706,8 +832,7 @@ read_cache(void)
     Line = malloc(LINESIZE + 1);
     if (!Line)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Alloc Line failed\n");
+        l2l_dbg(1, "Alloc Line failed\n");
         return 1;
     }
     Line[LINESIZE] = '\0';
@@ -715,8 +840,7 @@ read_cache(void)
     fr = fopen(cache_name, "r");
     if (!fr)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Open %s failed\n", cache_name);
+        l2l_dbg(1, "Open %s failed\n", cache_name);
         free(Line);
         return 2;
     }
@@ -727,13 +851,10 @@ read_cache(void)
         pentry = entry_create(Line);
         if (!pentry)
         {
-            if (opt_verbose > 1)
-                fprintf(stderr, "** FAILED: %s\n", Line);
+            l2l_dbg(2, "** Create entry failed of: %s\n", Line);
         }
         else
-        {
             entry_insert(pentry);
-        }
     }
 
     fclose(fr);
@@ -751,31 +872,27 @@ create_cache(int force, int skipImageBase)
 
     if ((fw = fopen(tmp_name, "w")) == NULL)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Apparently %s is not writable (mounted ISO?), using current dir\n", tmp_name);
+        l2l_dbg(1, "Apparently %s is not writable (mounted ISO?), using current dir\n", tmp_name);
         cache_name = basename(cache_name);
         tmp_name = basename(tmp_name);
     }
     else
     {
-        if (opt_verbose > 2)
-            fprintf(stderr, "%s is writable\n", tmp_name);
+        l2l_dbg(3, "%s is writable\n", tmp_name);
         fclose(fw);
         remove(tmp_name);
     }
 
     if (force)
     {
-        if (opt_verbose > 2)
-            fprintf(stderr, "Removing %s ...\n", cache_name);
+        l2l_dbg(3, "Removing %s ...\n", cache_name);
         remove(cache_name);
     }
     else
     {
         if (file_exists(cache_name))
         {
-            if (opt_verbose > 2)
-                fprintf(stderr, "Cache %s already exists\n", cache_name);
+            l2l_dbg(3, "Cache %s already exists\n", cache_name);
             return 0;
         }
     }
@@ -786,10 +903,11 @@ create_cache(int force, int skipImageBase)
     Line[LINESIZE] = '\0';
 
     remove(tmp_name);
-    fprintf(stderr, "Scanning %s ...\n", opt_dir);
+    l2l_dbg(0, "Scanning %s ...\n", opt_dir);
     snprintf(Line, LINESIZE, DIR_FMT, opt_dir, tmp_name);
+    l2l_dbg(1, "Executing: %s\n", Line);
     system(Line);
-    fprintf(stderr, "Creating cache ...");
+    l2l_dbg(0, "Creating cache ...");
 
     if ((fr = fopen(tmp_name, "r")) != NULL)
     {
@@ -811,20 +929,15 @@ create_cache(int force, int skipImageBase)
                     Fname++;
                 if (*Fname && !skipImageBase)
                 {
-                    if ((err = get_ImageBase(Line, &ImageBase)) != 0)
-                    {
-                        if (opt_verbose > 2)
-                            fprintf(stderr, "%s|%s|%0x, ERR=%d\n", Fname, Line, ImageBase, err);
-                    }
-                    else
-                    {
+                    if ((err = get_ImageBase(Line, &ImageBase)) == 0)
                         fprintf(fw, "%s|%s|%0x\n", Fname, Line, ImageBase);
-                    }
+                    else
+                        l2l_dbg(3, "%s|%s|%0x, ERR=%d\n", Fname, Line, ImageBase, err);
                 }
             }
             fclose(fw);
         }
-        fprintf(stderr, "... done\n");
+        l2l_dbg(0, "... done\n");
         fclose(fr);
     }
     remove(tmp_name);
@@ -847,9 +960,7 @@ translate_file(const char *cpath, size_t offset, char *toString)
      */
     dpath = path = convert_path(cpath);
     if (!path)
-    {
         return 1;
-    }
 
     // The path could be absolute:
     if (get_ImageBase(path, &base))
@@ -861,15 +972,13 @@ translate_file(const char *cpath, size_t offset, char *toString)
             base = pentry->ImageBase;
             if (base == INVALID_BASE)
             {
-                if (opt_verbose)
-                    fprintf(stderr, "No, or invalid base address: %s\n", path);
+                l2l_dbg(1, "No, or invalid base address: %s\n", path);
                 res = 2;
             }
         }
         else
         {
-            if (opt_verbose)
-                fprintf(stderr, "Not found in cache: %s\n", path);
+            l2l_dbg(1, "Not found in cache: %s\n", path);
             res = 3;
         }
     }
@@ -920,7 +1029,7 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
         /* Strip all lines added by this tool: */
         char buf[NAMESIZE];
         if (sscanf(s, "| %s", buf) == 1)
-            if (buf[0] == '0' || strcmp(buf, "----") == 0 || atoi(buf))
+            if (buf[0] == '0' || strcmp(buf, "----") == 0 || strcmp(buf, "R---") == 0 || atoi(buf))
                 res = 0;
     }
 
@@ -1001,6 +1110,7 @@ print_summary(FILE *outFile)
         fprintf(outFile, "Skipped:                  %d\n", summ.skipped);
         fprintf(outFile, "Differ:                   %d\n", summ.diff);
         fprintf(outFile, "Differ (function/source): %d\n", summ.majordiff);
+        fprintf(outFile, "Revision conflicts:       %d\n", summ.revconflicts);
         fprintf(outFile, "Offset error:             %d\n", summ.offset_errors);
         fprintf(outFile, "Total:                    %d\n", summ.total);
         fprintf(outFile, "-------------------------------\n");
@@ -1037,7 +1147,9 @@ translate_files(FILE *inFile, FILE *outFile)
                         translate_line(outFile, Line, path, LineOut);
                         i = 0;
                         translate_char(c, outFile);
+                        reportRevision(outFile);
                         reportSource(outFile);
+                        clearLastLine();
                         break;
                     case '<':
                         i = 0;
@@ -1058,9 +1170,7 @@ translate_files(FILE *inFile, FILE *outFile)
                             }
                         }
                         else
-                        {
                             translate_char(c, outFile);
-                        }
                         i = 0;
                         break;
                     default:
@@ -1078,15 +1188,11 @@ translate_files(FILE *inFile, FILE *outFile)
                             }
                         }
                         else
-                        {
                             translate_char(c, outFile);
-                        }
                     }
                 }
                 else
-                {
                     translate_char(c, outFile);
-                }
             }
         }
         else
@@ -1096,12 +1202,12 @@ translate_files(FILE *inFile, FILE *outFile)
                 if (!opt_raw)
                 {
                     translate_line(outFile, Line, path, LineOut);
+                    reportRevision(outFile);
                     reportSource(outFile);
+                    clearLastLine();
                 }
                 else
-                {
                     log(outFile, "%s", Line);
-                }
             }
         }
     }
@@ -1123,7 +1229,7 @@ static char *verboseUsage =
 "  When <exefile> <offset> are given, log2lines works like raddr2line:\n"
 "      - The <exefile> <offset> combination can be repeated\n"
 "      - Also, <offset> can be repeated for each <exefile>\n"
-"      - NOTE: some of the options below will have no effect in this form.\n"
+"      - NOTE: Some of the options below will have no effect in this form.\n"
 "  Otherwise it reads stdin and tries to translate lines of the form:\n"
 "      <IMAGENAME:ADDRESS>\n\n"
 "  The result is written to stdout.\n"
@@ -1132,15 +1238,15 @@ static char *verboseUsage =
 "  base address are cached.\n\n"
 "Options:\n"
 "  -b   Use this combined with '-l'. Enable buffering on logFile.\n"
-"       This may solve loosing output on real hardware.\n\n"
+"       This may solve loosing output on real hardware (ymmv).\n\n"
 "  -c   Console mode. Outputs text per character instead of per line.\n"
 "       This is slightly slower but enables to see what you type.\n\n"
 "  -d <directory>|<ISO image>\n"
-"       Directory to scan for images. (Do not append a '" PATH_STR "')\n"
-"       This option also takes an ISO image as argument:\n"
+"       <directory>: Directory to scan for images. (Do not append a '" PATH_STR "')\n"
+"       <ISO image>: This option also takes an ISO image as argument:\n"
 "       - The image is recognized by the '.iso' or '.7z' extension.\n"
 "       - NOTE: The '.7z' and extracted '.iso' basenames must be identical,\n"
-"         which is normally true for Reactos trunk builds.\n"
+"         which is normally true for ReactOS trunk builds.\n"
 "       - The image will be unpacked to a directory with the same name.\n"
 "       - The embedded reactos.cab file will also be unpacked.\n"
 "       - Combined with -f the file will be re-unpacked.\n"
@@ -1150,12 +1256,21 @@ static char *verboseUsage =
 "  -F   As -f but exits immediately after creating cache.\n\n"
 "  -h   This text.\n\n"
 "  -l <logFile>\n"
-"       Append copy to specified logFile.\n"
+"       <logFile>: Append copy to specified logFile.\n"
 "       Default: no logFile\n\n"
 "  -m   Prefix (mark) each translated line with '* '.\n\n"
 "  -M   Prefix (mark) each NOT translated line with '? '.\n"
 "       ( Only for lines of the form: <IMAGENAME:ADDRESS> )\n\n"
 "  -r   Raw output without translation.\n\n"
+"  -R <cmd>\n"
+"       Revision commands interfacing with SVN. <cmd> is one of:\n"
+"       - check:\n"
+"         To be combined with -S. Check each source file in the log and issue\n"
+"         a warning if its revision is higher than that of the tested build.\n"
+"         Also when the revison of the source tree is lower than that of the\n"
+"         tested build (for every source file).\n"
+"         In both cases the source file's -S output would be unreliable.\n"
+"       Can be combined with -tTS.\n\n"
 "  -s   Statistics. A summary with the following info is printed after EOF:\n"
 "       *** LOG2LINES SUMMARY ***\n"
 "       - Translated:      Translated lines.\n"
@@ -1164,24 +1279,29 @@ static char *verboseUsage =
 "       - Skipped:         Lines not translated.\n"
 "       - Differ:          Lines where (addr-1) info differs. See -tT options\n"
 "       - Differ(func/src):Lines where also function or source info differ.\n"
+"       - Rev conflicts:   Source files conflicting with build. See '-R check'\n"
 "       - Offset error:    Image exists, but error retrieving offset info.\n"
 "       - Total:           Total number of lines attempted to translate.\n"
 "       Also some version info is displayed.\n\n"
-"  -S <context>\n"
-"       Source lines. Display up to <context> lines until linenumber.\n"
-"       The environment variable _ROSBE_ROSSOURCEDIR should be correctly set.\n"
+"  -S <context>[+<add>][,<sources>]\n"
+"       Source line options:\n"
+"       <context>: Source lines. Display up to <context> lines until linenumber.\n"
+"       <add>    : Optional. Display additional <add> lines after linenumber.\n"
+"       <sources>: Optional. Specify alternate source tree.\n"
+"       The environment variable " SOURCES_ENV " should be correctly set\n"
+"       or specify <sources>. Use double quotes if the path contains spaces.\n"
 "       For a reliable result, these sources should be up to date with\n"
-"       the revision you test.\n"
-"       Can be combined with -tT.\n"
-"       Implies -U. Retranslation needed for retrieving source info.\n\n"
-"  -t   Translate twice. The address itself and for (address - 1).\n"
+"       the tested revision (or try '-R check').\n"
+"       Can be combined with -tTR.\n"
+"       Implies -U (For retrieving source info).\n\n"
+"  -t   Translate twice. The address itself and for (address-1).\n"
 "       Show extra filename, func and linenumber between [..] if they differ\n"
 "       So if only the linenumbers differ, then only show the extra\n"
 "       linenumber.\n\n"
-"  -T   As -t, but show only filename+func+linenumber for (address - 1.)\n\n"
+"  -T   As -t, but show only filename+func+linenumber for (address-1)\n\n"
 "  -u   Undo translations.\n"
 "       Lines are translated back (reverted) to the form <IMAGENAME:ADDRESS>\n"
-"       Also removes all lines previously added by this tool (see -S)\n\n"
+"       Also removes all lines previously added by this tool (e.g. see -S)\n\n"
 "  -U   Undo and reprocess.\n"
 "       Reverted to the form <IMAGENAME:ADDRESS>, and then retranslated\n"
 "       Implies -u.\n\n"
@@ -1189,11 +1309,11 @@ static char *verboseUsage =
 "       Repeating this option adds more verbosity.\n"
 "       Default: only (major) errors\n\n"
 "  -z <path to 7z>\n"
-"       Specify path to 7z. See also option -d.\n"
+"       <path to 7z>: Specify path to 7z. See also option -d.\n"
 "       Default: '7z'\n"
 "\n"
 "Examples:\n"
-"  Setup is a VMware machine with its serial port set to: '\\\\.\\pipe\\kdbg'.\n\n"
+"  Setup: A VMware machine with its serial port set to: '\\\\.\\pipe\\kdbg'.\n\n"
 "  Just recreate cache after a svn update or a new module has been added:\n"
 "       log2lines -F\n\n"
 "  Use kdbg debugger via console (interactive):\n"
@@ -1205,21 +1325,41 @@ static char *verboseUsage =
 "  Re-translate a debug log:\n"
 "       log2lines -U -d bootcd-38701-dbg.iso < bugxxxx.log\n\n"
 "  Re-translate a debug log. Specify a 7z file, which wil be decompressed.\n"
-"  Also check for (address) - (address - 1) differences:\n"
+"  Also check for (address) - (address-1) differences:\n"
 "       log2lines -U -t -d bootcd-38701-dbg.7z < bugxxxx.log\n"
-"  This would generate loglines like:\n"
-"       '<ntdll.dll:60f1 (dll/ntdll/ldr/utils.c:337[331] (LdrPEStartup))>'\n\n"
-"  The following command line invocations are equivalent:\n"
+"  Output:\n"
+"       <ntdll.dll:60f1 (dll/ntdll/ldr/utils.c:337[331] (LdrPEStartup))>\n\n"
+"  The following commands are equivalent:\n"
 "       log2lines msi.dll 2e35d msi.dll 2235 msiexec.exe 30a8 msiexec.exe 2e89\n"
 "       log2lines msi.dll 2e35d 2235 msiexec.exe 30a8 2e89\n\n"
 "  Generate source lines from backtrace ('bt') output. Show 2 lines of context:\n"
 "       log2lines -S 2 -d bootcd-38701-dbg.7z < bugxxxx.log\n"
+"  Output:\n"
 "       <msiexec.exe:2e89 (lib/3rdparty/mingw/crtexe.c:259 (__tmainCRTStartup))>\n"
 "       | 0258  #else\n"
 "       | 0259      mainret = main (\n"
 "       <msiexec.exe:2fad (lib/3rdparty/mingw/crtexe.c:160 (WinMainCRTStartup))>\n"
 "       | 0159    return __tmainCRTStartup ();\n"
-"       | 0160  }\n"
+"       | 0160  }\n\n"
+"  Generate source lines. Show 2 lines of context plus 1 additional line and\n"
+"  specify an alternate source tree:\n"
+"       log2lines -S 2+1,\"c:\\ros trees\\r44000\" -d bootcd-44000-dbg < dbg.log\n"
+"  Output:\n"
+"       <msi.dll:2e35d (dll/win32/msi/msiquery.c:189 (MSI_IterateRecords))>\n"
+"       | 0188      {\n"
+"       | 0189          r = MSI_ViewFetch( view, &rec );\n"
+"       | ----\n"
+"       | 0190          if( r != ERROR_SUCCESS )\n\n"
+"  Use '-R check' to show that action.c has been changed after the build:\n"
+"       log2lines -s -d bootcd-43850-dbg.iso -R check -S 2  < dbg.log\n"
+"  Output:\n"
+"       <msi.dll:35821 (dll/win32/msi/registry.c:781 (MSIREG_OpenUserDataKey))>\n"
+"       | 0780      if (create)\n"
+"       | 0781          rc = RegCreateKeyW(HKEY_LOCAL_MACHINE, keypath, key);\n"
+"       <msi.dll:5262 (dll/win32/msi/action.c:2665 (ACTION_ProcessComponents))>\n"
+"       | R--- Conflict : source(44191) > build(43850)\n"
+"       | 2664              else\n"
+"       | 2665                  rc = MSIREG_OpenUserDataKey(comp->ComponentId,\n"
 "\n";
 
 static void
@@ -1228,13 +1368,9 @@ usage(int verbose)
     fprintf(stderr, "log2lines " LOG2LINES_VERSION "\n\n");
     fprintf(stderr, "Usage: log2lines -%s {<exefile> <offset> {<offset>}}\n", optchars);
     if (verbose)
-    {
         fprintf(stderr, "%s", verboseUsage);
-    }
     else
-    {
         fprintf(stderr, "Try log2lines -h\n");
-    }
 }
 
 static int
@@ -1249,8 +1385,7 @@ unpack_iso(char *dir, char *iso)
     strcpy(iso_tmp, iso);
     if ((fiso = fopen(iso, "a")) == NULL)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Open of %s failed (locked for writing?), trying to copy first\n", iso);
+        l2l_dbg(1, "Open of %s failed (locked for writing?), trying to copy first\n", iso);
 
         strcat(iso_tmp, "~");
         if (copy_file(iso, iso_tmp))
@@ -1258,35 +1393,28 @@ unpack_iso(char *dir, char *iso)
         iso_copied = 1;
     }
     else
-    {
         fclose(fiso);
-    }
 
     sprintf(Line, UNZIP_FMT, opt_7z, iso_tmp, dir);
     if (system(Line) < 0)
     {
-        fprintf(stderr, "\nCannot unpack %s (check 7z path!)\n", iso_tmp);
-        if (opt_verbose)
-            fprintf(stderr, "Failed to execute: '%s'\n", Line);
+        l2l_dbg(0, "\nCannot unpack %s (check 7z path!)\n", iso_tmp);
+        l2l_dbg(1, "Failed to execute: '%s'\n", Line);
         res = 1;
     }
     else
     {
-        if (opt_verbose > 1)
-            fprintf(stderr, "\nUnpacking reactos.cab in %s\n", dir);
+        l2l_dbg(2, "\nUnpacking reactos.cab in %s\n", dir);
         sprintf(Line, UNZIP_FMT_CAB, opt_7z, dir, dir);
         if (system(Line) < 0)
         {
-            fprintf(stderr, "\nCannot unpack reactos.cab in %s\n", dir);
-            if (opt_verbose)
-                fprintf(stderr, "Failed to execute: '%s'\n", Line);
+            l2l_dbg(0, "\nCannot unpack reactos.cab in %s\n", dir);
+            l2l_dbg(1, "Failed to execute: '%s'\n", Line);
             res = 2;
         }
     }
     if (iso_copied)
-    {
         remove(iso_tmp);
-    }
     return res;
 }
 
@@ -1300,78 +1428,74 @@ check_directory(int force)
     char *check_iso;
     char *check_dir;
 
+    if (opt_Revision)
+        revinfo.rev = getRevision(NULL, 1);
     check_iso = strrchr(opt_dir, '.');
+    l2l_dbg(1, "Checking directory: %s\n", opt_dir);
     if (check_iso && PATHCMP(check_iso, ".7z") == 0)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Uncompressing 7z image: %s\n", opt_dir);
+        l2l_dbg(1, "Checking 7z image: %s\n", opt_dir);
 
-        // First attempt to decompress to a .iso image
+        // First attempt to decompress to an .iso image
         strcpy(compressed_7z_path, opt_dir);
         if ((check_dir = strrchr(compressed_7z_path, PATH_CHAR)))
-        {
             *check_dir = '\0';
-        }
         else
             strcpy(compressed_7z_path, "."); // default to current dir
 
         sprintf(Line, UNZIP_FMT_7Z, opt_7z, opt_dir, compressed_7z_path);
 
         /* This of course only works if the .7z and .iso basenames are identical
-         * which is normally true for our trunk builds:
+         * which is normally true for ReactOS trunk builds:
          */
         strcpy(check_iso, ".iso");
         if (!file_exists(opt_dir) || force)
         {
+            l2l_dbg(1, "Decompressing 7z image: %s\n", opt_dir);
             if (system(Line) < 0)
             {
-                fprintf(stderr, "\nCannot decompress to iso image %s\n", opt_dir);
-                if (opt_verbose)
-                    fprintf(stderr, "Failed to execute: '%s'\n", Line);
+                l2l_dbg(0, "\nCannot decompress to iso image %s\n", opt_dir);
+                l2l_dbg(1, "Failed to execute: '%s'\n", Line);
                 return 2;
             }
         }
         else
-        {
-            if (opt_verbose > 1)
-                fprintf(stderr, "%s already decompressed\n", opt_dir);
-        }
+            l2l_dbg(2, "%s already decompressed\n", opt_dir);
     }
 
     if (check_iso && PATHCMP(check_iso, ".iso") == 0)
     {
-        if (opt_verbose)
-            fprintf(stderr, "Using ISO image: %s\n", opt_dir);
+        l2l_dbg(1, "Checking ISO image: %s\n", opt_dir);
         if (file_exists(opt_dir))
         {
-            if (opt_verbose > 1)
-                fprintf(stderr, "ISO image exists: %s\n", opt_dir);
-
+            l2l_dbg(2, "ISO image exists: %s\n", opt_dir);
             strcpy(iso_path, opt_dir);
             *check_iso = '\0';
             sprintf(freeldr_path, "%s" PATH_STR "freeldr.ini", opt_dir);
             if (!file_exists(freeldr_path) || force)
             {
-                fprintf(stderr, "Unpacking %s to: %s ...", iso_path, opt_dir);
+                l2l_dbg(0, "Unpacking %s to: %s ...", iso_path, opt_dir);
                 unpack_iso(opt_dir, iso_path);
-                fprintf(stderr, "... done\n");
+                l2l_dbg(0, "... done\n");
             }
             else
-            {
-                if (opt_verbose > 1)
-                    fprintf(stderr, "%s already unpacked in: %s\n", iso_path, opt_dir);
-            }
+                l2l_dbg(2, "%s already unpacked in: %s\n", iso_path, opt_dir);
         }
         else
         {
-            fprintf(stderr, "ISO image not found: %s\n", opt_dir);
+            l2l_dbg(0, "ISO image not found: %s\n", opt_dir);
             return 1;
         }
+    }
+    if (opt_Revision)
+    {
+        revinfo.buildrev = getTBRevision(opt_dir);
+        l2l_dbg(1,"Trunk build revision: %d\n", revinfo.buildrev);
     }
     cache_name = malloc(MAX_PATH);
     tmp_name = malloc(MAX_PATH);
     strcpy(cache_name, opt_dir);
-    strcat(cache_name, PATH_STR "log2lines.cache");
+    strcat(cache_name, PATH_STR CACHEFILE);
     strcpy(tmp_name, cache_name);
     strcat(tmp_name, "~");
     return 0;
@@ -1386,12 +1510,10 @@ main(int argc, const char **argv)
     int i;
     char *s;
 
+    strcpy(opt_dir, "");
     strcpy(sources_path, "");
     if ((s = getenv(SOURCES_ENV)))
-    {
-        strcpy(sources_path, s);
-        strcat(sources_path, PATH_STR);
-    }
+        strcpy(sources_path,s);
 
     strcpy(opt_scanned, "");
     for (i = 1; i < argc; i++)
@@ -1399,11 +1521,11 @@ main(int argc, const char **argv)
         strcat(opt_scanned, argv[i]);
         strcat(opt_scanned, " ");
     }
-    strcpy(opt_dir, DEF_OPT_DIR);
     strcpy(opt_logFile, "");
     strcpy(opt_7z, CMD_7Z);
 
     memset(&summ, 0, sizeof(SUMM));
+    memset(&revinfo, 0, sizeof(REVINFO));
     clearLastLine();
 
     while (-1 != (opt = getopt(argc, (char **const)argv, optchars)))
@@ -1445,12 +1567,20 @@ main(int argc, const char **argv)
         case 'r':
             opt_raw++;
             break;
+        case 'R':
+            optCount++;
+            opt_Revision = malloc(LINESIZE);
+            i = sscanf(optarg, "%s", opt_Revision);
+            break;
         case 's':
             opt_stats++;
             break;
         case 'S':
             optCount++;
-            opt_Source = atoi(optarg);
+            i = sscanf(optarg, "%d+%d,%s", &opt_Source,&opt_SrcPlus,sources_path);
+            if (i == 1)
+                sscanf(optarg, "%*d,%s", sources_path);
+            l2l_dbg(3, "Sources option parse result: %d+%d,\"%s\"\n", opt_Source,opt_SrcPlus,sources_path);
             break;
         case 't':
             opt_twice++;
@@ -1480,12 +1610,22 @@ main(int argc, const char **argv)
         }
         optCount++;
     }
+    if (sources_path[0])
+    {
+        strcat(sources_path, PATH_STR);
+    }
     if (opt_Source)
     {
         /* need to retranslate for source info: */
         opt_undo++;
         opt_redo++;
     }
+    if (!opt_dir[0])
+    {
+        strcpy(opt_dir, sources_path);
+        strcat(opt_dir, DEF_OPT_DIR);
+    }
+
     argc -= optCount;
     if (check_directory(opt_force))
         return 3;
@@ -1496,6 +1636,8 @@ main(int argc, const char **argv)
 
     read_cache();
 
+    l2l_dbg(3, "Cache read complete\n");
+
     if (*opt_logFile)
     {
         logFile = fopen(opt_logFile, "a");
@@ -1504,19 +1646,15 @@ main(int argc, const char **argv)
             // disable buffering so fflush is not needed
             if (!opt_buffered)
             {
-                if (opt_verbose)
-                    fprintf(stderr, "Disabling log buffering on %s\n", opt_logFile);
+                l2l_dbg(1, "Disabling log buffering on %s\n", opt_logFile);
                 setbuf(logFile, NULL);
             }
             else
-            {
-                if (opt_verbose)
-                    fprintf(stderr, "Enabling log buffering on %s\n", opt_logFile);
-            }
+                l2l_dbg(1, "Enabling log buffering on %s\n", opt_logFile);
         }
         else
         {
-            fprintf(stderr, "Could not open logfile %s (%s)\n", opt_logFile, strerror(errno));
+            l2l_dbg(0, "Could not open logfile %s (%s)\n", opt_logFile, strerror(errno));
             return 2;
         }
     }
@@ -1526,28 +1664,33 @@ main(int argc, const char **argv)
         int i = 1;
         const char *base = NULL;
         const char *offset = NULL;
+        char Line[LINESIZE + 1];
+
         while (i < argc)
         {
+            Line[0] = '\0';
             offset = argv[optCount + i++];
             if (isOffset(offset))
             {
                 if (base)
                 {
-                    if (opt_verbose > 1)
-                        fprintf(stderr, "translating %s %s\n", base, offset);
-                    translate_file(base, my_atoi(offset), NULL);
+                    l2l_dbg(2, "translating %s %s\n", base, offset);
+                    translate_file(base, my_atoi(offset), Line);
+                    printf("%s\n", Line); 
+                    reportRevision(stdout);
                     reportSource(stdout);
+                    clearLastLine();
                 }
                 else
                 {
-                    fprintf(stderr, "<exefile> expected\n");
+                    l2l_dbg(0, "<exefile> expected\n");
                     res = 3;
                     break;
                 }
             }
             else
             {
-                // Must be exefile
+                // Not an offset so must be an exefile:
                 base = offset;
             }
         }
