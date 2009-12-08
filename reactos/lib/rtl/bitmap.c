@@ -417,7 +417,7 @@ RtlFindClearBits(
     IN ULONG NumberToFind,
     IN ULONG HintIndex)
 {
-    ULONG CurrentBit, CurrentLength;
+    ULONG CurrentBit, Margin, CurrentLength;
 
     /* Check for valid parameters */
     if (!BitMapHeader || NumberToFind > BitMapHeader->SizeOfBitMap)
@@ -431,12 +431,15 @@ RtlFindClearBits(
         return HintIndex;
     }
 
+    /* First margin is end of bitmap */
+    Margin = BitMapHeader->SizeOfBitMap;
+
+retry:
     /* Start with hint index, length is 0 */
     CurrentBit = HintIndex;
-    CurrentLength = 0;
 
     /* Loop until something is found or the end is reached */
-    while (CurrentBit + NumberToFind < BitMapHeader->SizeOfBitMap)
+    while (CurrentBit + NumberToFind < Margin)
     {
         /* Search for the next clear run, by skipping a set run */
         CurrentBit += RtlpGetLengthOfRunSet(BitMapHeader,
@@ -456,6 +459,15 @@ RtlFindClearBits(
         }
 
         CurrentBit += CurrentLength;
+    }
+
+    /* Did we start at a hint? */
+    if (HintIndex)
+    {
+        /* Retry at the start */
+        Margin = min(HintIndex + NumberToFind, BitMapHeader->SizeOfBitMap);
+        HintIndex = 0;
+        goto retry;
     }
 
     /* Nothing found */
@@ -571,10 +583,10 @@ RtlFindNextForwardRunClear(
 
     /* Assume a set run first, count it's length */
     Length = RtlpGetLengthOfRunSet(BitMapHeader, FromIndex, MAXULONG);
-    *StartingRunIndex = FromIndex;
+    *StartingRunIndex = FromIndex + Length;
 
     /* Now return the length of the run */
-    return RtlpGetLengthOfRunClear(BitMapHeader, FromIndex, MAXULONG);
+    return RtlpGetLengthOfRunClear(BitMapHeader, FromIndex + Length, MAXULONG);
 }
 
 ULONG
@@ -647,7 +659,7 @@ RtlFindClearRuns(
         }
 
         /* Advance bits */
-        FromIndex += NumberOfBits;
+        FromIndex = StartingIndex + NumberOfBits;
     }
 
     /* Check if we are finished */
