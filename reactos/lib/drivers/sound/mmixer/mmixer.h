@@ -37,7 +37,12 @@ typedef MIXER_STATUS(*PMIXER_DEVICE_CONTROL)(
     ULONG nOutBufferSize,
     PULONG lpBytesReturned);
 
+typedef MIXER_STATUS(*PMIXER_OPEN)(
+    IN LPCWSTR DevicePath,
+    OUT PHANDLE hDevice);
 
+typedef MIXER_STATUS(*PMIXER_CLOSE)(
+    IN HANDLE hDevice);
 
 typedef VOID (*PMIXER_EVENT)(
     IN PVOID MixerEvent);
@@ -51,6 +56,8 @@ typedef struct
      PMIXER_ALLOC Alloc;
      PMIXER_DEVICE_CONTROL Control;
      PMIXER_FREE  Free;
+     PMIXER_OPEN Open;
+     PMIXER_CLOSE Close;
 }MIXER_CONTEXT, *PMIXER_CONTEXT;
 
 

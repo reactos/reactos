@@ -3,5 +3,8 @@
 <module name="mmixer" type="staticlibrary" allowwarnings="false" unicode="yes">
 	<include base="ReactOS">include/reactos/libs/sound</include>
 	<define name="NDEBUG">1</define>
+	<file>controls.c</file>
+	<file>filter.c</file>
 	<file>mixer.c</file>
+	<file>sup.c</file>
 </module>
