@@ -1,4 +1,4 @@
-LIBRARY crtdll.dll
+LIBRARY msvcrt.dll
 
 EXPORTS
 access
@@ -22,11 +22,11 @@ execve
 execvp
 execvpe
 fcvt
-fdopen
+fdopen==_fdopen
 fgetchar
 fgetwchar
 filelength
-fileno
+fileno==_fileno
 ; fpreset
 fputchar
 fputwchar
@@ -56,7 +56,7 @@ popen
 putch
 putenv
 putw
-read
+read==_read
 rmdir
 rmtmp
 searchenv
@@ -101,7 +101,7 @@ wcsrev
 wcsset
 wcsupr
 wpopen
-write
+write==_write
 ; non-ANSI functions declared in math.h
 j0
 j1
