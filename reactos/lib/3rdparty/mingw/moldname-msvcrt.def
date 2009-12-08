@@ -1,4 +1,4 @@
-LIBRARY msvcrt.dll
+LIBRARY crtdll.dll
 
 EXPORTS
 access
