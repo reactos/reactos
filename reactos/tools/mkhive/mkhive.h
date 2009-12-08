@@ -47,6 +47,10 @@
 #define STATUS_INVALID_PARAMETER_2       ((NTSTATUS)0xC00000F0)
 #define STATUS_BUFFER_OVERFLOW           ((NTSTATUS)0x80000005)
 
+unsigned char BitScanForward(ULONG * Index, const unsigned long Mask);
+unsigned char BitScanReverse(ULONG * const Index, const unsigned long Mask);
+#define RtlFillMemoryUlong(dst, len, val) memset(dst, val, len)
+
 NTSTATUS NTAPI
 RtlAnsiStringToUnicodeString(
     IN OUT PUNICODE_STRING UniDest,
