@@ -1,3 +1,5 @@
+LIBRARY msvcrt.dll
+
 EXPORTS
 access
 chdir
