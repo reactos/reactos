@@ -1289,14 +1289,13 @@ CmpSplitLeaf(IN PHHIVE Hive,
                       LastHalf * EntrySize);
     }
 
-    /* If RootSelect is not the last index */
+    /* Shift the data inside the root key */
     if (RootSelect < (IndexKey->Count - 1))
     {
-        /* Shift indexes to the right */
-        ULONG IndexCount;
-        /* IndexKey->Count will be incremented below */
-        for (IndexCount = IndexKey->Count; IndexCount > RootSelect + 1; IndexCount --)
-             IndexKey->List[IndexCount] = IndexKey->List[IndexCount -1];
+        RtlMoveMemory(&IndexKey->List[RootSelect + 2],
+                      &IndexKey->List[RootSelect + 1],
+                      (IndexKey->Count -
+                      (RootSelect + 1)) * sizeof(HCELL_INDEX));
     }
 
     /* Make sure both old and new computed counts are valid */
