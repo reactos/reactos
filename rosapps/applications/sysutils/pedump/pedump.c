@@ -1011,7 +1011,7 @@ GetModuleEntryPoint (
   PIMAGE_OPTIONAL_HEADER poh = (PIMAGE_OPTIONAL_HEADER) OPTHDROFFSET (lpFile);
 
   if (poh != NULL)
-    return (LPVOID)(ULONG_PTR)(poh->AddressOfEntryPoint);
+    return (LPVOID)(poh->AddressOfEntryPoint);
   else
     return NULL;
 }

@@ -75,14 +75,14 @@ AddExtension(LPTSTR ExtName,
   PEXTENSION_INFO ExtInfo;
   PEXTENSION_INFO Info;
   TCHAR *t;
-  DWORD ln;
+  size_t ln;
 
   ExtInfo = (PEXTENSION_INFO) HeapAlloc (GetProcessHeap(), 0, sizeof (EXTENSION_INFO));
   if (!ExtInfo)
     return NULL;
 
   for(t = ExtName; *t != _T('\0'); t += _tcslen(t) + 1);
-  ln = (DWORD)t - (DWORD)ExtName;
+  ln = t - ExtName;
 
   ZeroMemory (ExtInfo, sizeof (EXTENSION_INFO));
   memcpy (ExtInfo->ExtName, ExtName, ln);

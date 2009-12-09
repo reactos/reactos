@@ -54,7 +54,7 @@ BOOL CALLBACK EnumSymbolsProc(
 	ULONG SymbolSize,
 	PVOID UserContext)
 {
-	if ((UINT)UserContext == -1)
+	if ((UINT_PTR)UserContext == -1)
 	{
 		printf("%s ", pSymInfo->Name);
 	}
@@ -62,11 +62,11 @@ BOOL CALLBACK EnumSymbolsProc(
 	{
 		if (!bX64)
 		{
-			printf("%s@%d ", pSymInfo->Name, (UINT)UserContext);
+			printf("%s@%p ", pSymInfo->Name, UserContext);
 		}
 		else
 		{
-			printf("%s <+ %d> ", pSymInfo->Name, (UINT)UserContext);
+			printf("%s <+ %p> ", pSymInfo->Name, UserContext);
 		}
 	}
 	return TRUE;
@@ -153,9 +153,9 @@ cont:
 	pW32pServiceTable = ImageSymToVa(hProcess, &Sym.Symbol, pModule, "W32pServiceTable");
 	pW32pServiceLimit = ImageSymToVa(hProcess, &Sym.Symbol, pModule, "W32pServiceLimit");
 	pW32pArgumentTable = ImageSymToVa(hProcess, &Sym.Symbol, pModule, "W32pArgumentTable");
-//	printf("pW32pServiceTable = %p\n", pW32pServiceTable);
-//	printf("pW32pServiceLimit = %p\n", pW32pServiceLimit);
-//	printf("pW32pArgumentTable = %p\n", pW32pArgumentTable);
+	printf("pW32pServiceTable = %p\n", pW32pServiceTable);
+	printf("pW32pServiceLimit = %p\n", pW32pServiceLimit);
+	printf("pW32pArgumentTable = %p\n", pW32pArgumentTable);
 
 	if (!pW32pServiceTable || !pW32pServiceLimit || !pW32pArgumentTable)
 	{
@@ -172,7 +172,7 @@ cont:
 		for (i = 0; i < dwServiceLimit; i++)
 		{
 			printf("0x%x:", i+0x1000);
-			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries32[i], EnumSymbolsProc, (PVOID)(DWORD)pW32pArgumentTable[i]);
+			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries32[i], EnumSymbolsProc, (PVOID)(DWORD_PTR)pW32pArgumentTable[i]);
 			printf("\n");
 		}
 	}
@@ -183,7 +183,7 @@ cont:
 		for (i = 0; i < dwServiceLimit; i++)
 		{
 			printf("0x%x:", i+0x1000);
-			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries64[i], EnumSymbolsProc, (PVOID)(DWORD)pW32pArgumentTable[i]);
+			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries64[i], EnumSymbolsProc, (PVOID)(DWORD_PTR)pW32pArgumentTable[i]);
 			printf("\n");
 		}
 	}

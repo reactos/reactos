@@ -121,7 +121,7 @@ EditGlyphDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PEDIT_GLYPH_INFO Info;
 
-    Info = (PEDIT_GLYPH_INFO) GetWindowLongW(hwnd, GWLP_USERDATA);
+    Info = (PEDIT_GLYPH_INFO) GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
     if(Info || uMsg == WM_INITDIALOG)
     {
@@ -136,9 +136,9 @@ EditGlyphDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 Info->hEdit = GetDlgItem(hwnd, IDC_EDIT_GLYPH_EDIT);
                 Info->hPreview = GetDlgItem(hwnd, IDC_EDIT_GLYPH_PREVIEW);
 
-                SetWindowLongW(hwnd, GWLP_USERDATA, (LONG)Info);
-                SetWindowLongW(Info->hEdit, GWLP_USERDATA, (LONG)Info);
-                SetWindowLongW(Info->hPreview, GWLP_USERDATA, (LONG)Info);
+                SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)Info);
+                SetWindowLongPtrW(Info->hEdit, GWLP_USERDATA, (LONG_PTR)Info);
+                SetWindowLongPtrW(Info->hPreview, GWLP_USERDATA, (LONG_PTR)Info);
 
                 InitToolbox(Info);
 
@@ -154,7 +154,7 @@ EditGlyphEditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PEDIT_GLYPH_INFO Info;
 
-    Info = (PEDIT_GLYPH_INFO) GetWindowLongW(hwnd, GWLP_USERDATA);
+    Info = (PEDIT_GLYPH_INFO) GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
     if(Info)
     {
@@ -232,7 +232,7 @@ EditGlyphPreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PEDIT_GLYPH_INFO Info;
 
-    Info = (PEDIT_GLYPH_INFO) GetWindowLongW(hwnd, GWLP_USERDATA);
+    Info = (PEDIT_GLYPH_INFO) GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
     if(Info)
     {

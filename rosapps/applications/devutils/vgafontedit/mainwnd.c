@@ -443,7 +443,7 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     PMAIN_WND_INFO Info;
 
-    Info = (PMAIN_WND_INFO) GetWindowLongW(hwnd, GWLP_USERDATA);
+    Info = (PMAIN_WND_INFO) GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
     if(Info || uMsg == WM_CREATE)
     {
@@ -490,7 +490,7 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 Info = (PMAIN_WND_INFO)( ( (LPCREATESTRUCT)lParam )->lpCreateParams );
                 Info->hMainWnd = hwnd;
                 Info->hMenu = GetMenu(hwnd);
-                SetWindowLongW(hwnd, GWLP_USERDATA, (LONG)Info);
+                SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)Info);
 
                 hNextClipboardViewer = SetClipboardViewer(hwnd);
 

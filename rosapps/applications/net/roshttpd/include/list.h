@@ -14,7 +14,7 @@ public:
 	CListNode();
 	CListNode(VOID *element, CListNode *next, CListNode *prev);
 	~CListNode() {};
-    void* operator new(/*size_t s*/ UINT s);
+    void* operator new(size_t s);
     VOID  operator delete(void* p);
 
 	VOID SetElement(PVOID element);

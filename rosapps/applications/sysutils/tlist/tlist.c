@@ -47,7 +47,7 @@ void *PsaiMalloc(SIZE_T size)
   NtCurrentProcess(),
   &pBuf,
   0,
-  (PULONG)&size,
+  &size,
   MEM_COMMIT,
   PAGE_READWRITE
  );
@@ -58,7 +58,7 @@ void *PsaiMalloc(SIZE_T size)
 
 void PsaiFree(void *ptr)
 {
- ULONG nSize = 0;
+ size_t nSize = 0;
 
  NtFreeVirtualMemory(NtCurrentProcess(), &ptr, &nSize, MEM_RELEASE);
 }
@@ -117,7 +117,7 @@ ProcessHasDescendants (
   if (NULL == pInfo) return 0;
   do {
 
-      if (ALREADY_PROCESSED != (DWORD)pInfo->InheritedFromUniqueProcessId)
+      if (ALREADY_PROCESSED != (DWORD_PTR)pInfo->InheritedFromUniqueProcessId)
       {
         if ((Pid != (HANDLE)pInfo->UniqueProcessId) && (Pid == (HANDLE)pInfo->InheritedFromUniqueProcessId))
         {
@@ -183,7 +183,7 @@ PrintProcessAndDescendants (
   /* Scan and print possible children */
   do {
 
-    if (ALREADY_PROCESSED != (DWORD)pInfo->InheritedFromUniqueProcessId)
+    if (ALREADY_PROCESSED != (DWORD_PTR)pInfo->InheritedFromUniqueProcessId)
     {
       if (Pid == pInfo->InheritedFromUniqueProcessId)
       {
@@ -236,7 +236,7 @@ int WINAPI PrintProcessList (BOOL DisplayTree)
       }
       else
       {
-	if (ALREADY_PROCESSED != (DWORD)pInfo->InheritedFromUniqueProcessId)
+	if (ALREADY_PROCESSED != (DWORD_PTR)pInfo->InheritedFromUniqueProcessId)
 	{
 	  PrintProcessAndDescendants (pInfo, pInfoBase, 0);
 	}
@@ -357,7 +357,7 @@ int WINAPI PrintProcess (char * PidStr)
   CLIENT_ID                   ClientId = {0, 0};
 
 
-  ClientId.UniqueProcess = (PVOID) atol (PidStr);
+  ClientId.UniqueProcess = LongToPtr(atol (PidStr));
 
   if (FALSE == AcquirePrivileges ())
   {
