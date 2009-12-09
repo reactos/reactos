@@ -18,7 +18,7 @@
 	<file>dllentry.c</file>
 	<file>dummy_mingwthrd.c</file>
 	<file>gccmain.c</file>
-	<!-- file>getopt.c</file -->
+	<file>getopt.c</file>
 	<file>gs_support.c</file>
 	<file>merr.c</file>
 	<!-- file>mingw_custom.c</file -->
