@@ -45,7 +45,7 @@ SetRosSpecificInfo(LPOSVERSIONINFOW lpVersionInformation)
         dwSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD);
         kvpInfo = (PKEY_VALUE_PARTIAL_INFORMATION)HeapAlloc(GetProcessHeap(), 0, dwSize);
         if (!kvpInfo)
-			return;
+            return;
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
