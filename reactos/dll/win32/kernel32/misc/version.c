@@ -4,6 +4,7 @@
  * FILE:            dll/win32/kernel32/misc/version.c
  * PURPOSE:         Version functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
+                    Ged Murphy (gedmurphy@reactos.org)
  */
 
 #include <k32.h>
@@ -15,7 +16,97 @@
 #define UNICODIZE1(x) L##x
 #define UNICODIZE(x) UNICODIZE1(x)
 
+static UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
+static UNICODE_STRING ValName = RTL_CONSTANT_STRING(L"ReportAsWorkstation");
+
 /* FUNCTIONS ******************************************************************/
+
+
+static VOID
+SetRosSpecificInfo(LPOSVERSIONINFOW lpVersionInformation)
+{
+    PKEY_VALUE_PARTIAL_INFORMATION kvpInfo = NULL;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    DWORD ReportAsWorkstation = 0;
+    HANDLE hKey;
+    DWORD dwSize;
+    INT ln, maxlen;
+    NTSTATUS Status;
+
+    TRACE("Setting Ros Specific version info\n");
+
+    if (!lpVersionInformation)
+        return;
+
+    /* Only the EX version has a product type */
+    if (lpVersionInformation->dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))
+    {
+        /* Allocate memory for our reg query */
+        dwSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD);
+        kvpInfo = (PKEY_VALUE_PARTIAL_INFORMATION)HeapAlloc(GetProcessHeap(), 0, dwSize);
+        if (!kvpInfo)
+			return;
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+
+        /* Don't change anything if the key doesn't exist */
+        Status = NtOpenKey(&hKey,
+                           KEY_READ,
+                           &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the value from the registry */
+            Status = NtQueryValueKey(hKey,
+                                     &ValName,
+                                     KeyValuePartialInformation,
+                                     kvpInfo,
+                                     dwSize,
+                                     &dwSize);
+            if (NT_SUCCESS(Status))
+            {
+                /* It should be a DWORD */
+                if (kvpInfo->Type == REG_DWORD)
+                {
+                    /* Copy the value for ease of use */
+                    RtlMoveMemory(&ReportAsWorkstation,
+                                  kvpInfo->Data,
+                                  kvpInfo->DataLength);
+
+                    /* Is the value set? */
+                    if (((LPOSVERSIONINFOEXW)lpVersionInformation)->wProductType == VER_NT_SERVER  &&
+                        ReportAsWorkstation)
+                    {
+                        /* It is, modify the product type to report a workstation */
+                        ((LPOSVERSIONINFOEXW)lpVersionInformation)->wProductType = VER_NT_WORKSTATION;
+                        TRACE("We modified the reported OS from NtProductServer to NtProductWinNt\n");
+                    }
+                }
+            }
+
+            NtClose(hKey);
+         }
+
+        HeapFree(GetProcessHeap(), 0, kvpInfo);
+    }
+
+
+    /* Append a reactos specific string to the szCSDVersion string ... very hackish ... */
+    /* FIXME: Does anything even use this??? I think not.... - Ged */
+    ln = wcslen(lpVersionInformation->szCSDVersion) + 1;
+    maxlen = (sizeof(lpVersionInformation->szCSDVersion) / sizeof(lpVersionInformation->szCSDVersion[0]) - 1);
+    if(maxlen > ln)
+    {
+        PWCHAR szVer = lpVersionInformation->szCSDVersion + ln;
+        RtlZeroMemory(szVer, (maxlen - ln + 1) * sizeof(WCHAR));
+        wcsncpy(szVer,
+                L"ReactOS " UNICODIZE(KERNEL_VERSION_STR) L" (Build " UNICODIZE(KERNEL_VERSION_BUILD_STR) L")",
+                maxlen - ln);
+    }
+}
 
 
 /*
@@ -30,8 +121,7 @@ GetVersion(VOID)
 
     nVersion = MAKEWORD(pPeb->OSMajorVersion, pPeb->OSMinorVersion);
 
-     /* behave consistently when posing as another operating system */
-    /* build number */
+     /* behave consistently when posing as another operating system build number */
     if(pPeb->OSPlatformId != VER_PLATFORM_WIN32_WINDOWS)
         nVersion |= ((DWORD)(pPeb->OSBuildNumber)) << 16;
 
@@ -64,24 +154,8 @@ GetVersionExW(LPOSVERSIONINFOW lpVersionInformation)
     Status = RtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation);
     if(NT_SUCCESS(Status))
     {
-        int ln, maxlen;
-
-        /* append a reactos specific string to the szCSDVersion string */
-
-        /* FIXME - we shouldn't do this when there is a (ros-specific) compatibility
-                   flag set so we don't screw applications that might depend on a
-                   certain string */
-
-        ln = wcslen(lpVersionInformation->szCSDVersion) + 1;
-        maxlen = (sizeof(lpVersionInformation->szCSDVersion) / sizeof(lpVersionInformation->szCSDVersion[0]) - 1);
-        if(maxlen > ln)
-        {
-            PWCHAR szVer = lpVersionInformation->szCSDVersion + ln;
-            RtlZeroMemory(szVer, (maxlen - ln + 1) * sizeof(WCHAR));
-            wcsncpy(szVer,
-                    L"ReactOS " UNICODIZE(KERNEL_VERSION_STR) L" (Build " UNICODIZE(KERNEL_VERSION_BUILD_STR) L")",
-                    maxlen - ln);
-        }
+        /* ReactOS specific changes */
+        SetRosSpecificInfo(lpVersionInformation);
 
         return TRUE;
     }
@@ -193,6 +267,10 @@ VerifyVersionInfoW(LPOSVERSIONINFOEXW lpVersionInformation,
         default:
             /* RtlVerifyVersionInfo shouldn't report any other failure code! */
             ASSERT(NT_SUCCESS(Status));
+
+            /* ReactOS specific changes */
+            SetRosSpecificInfo((LPOSVERSIONINFOW)lpVersionInformation);
+
             return TRUE;
     }
 }
