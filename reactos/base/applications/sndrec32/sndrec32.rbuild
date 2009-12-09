@@ -15,5 +15,5 @@
 	<file>audio_wavein.cpp</file>
 	<file>audio_waveout.cpp</file>
 	<file>sndrec32.cpp</file>
-	<file>sndrec32.rc</file>
+	<file>rsrc.rc</file>
 </module>
