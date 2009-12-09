@@ -18,6 +18,7 @@
 
 typedef struct
 {
+    LIST_ENTRY    Entry;
     MIXERCAPSW    MixCaps;
     HANDLE        hMixer;
     LIST_ENTRY    LineList;
@@ -52,6 +53,11 @@ typedef struct
     PLONG Values;
 }MIXERVOLUME_DATA, *LPMIXERVOLUME_DATA;
 
+typedef struct
+{
+    ULONG MixerListCount;
+    LIST_ENTRY MixerList;
+}MIXER_LIST, *PMIXER_LIST;
 
 #define DESTINATION_LINE 0xFFFF0000
 
@@ -125,7 +131,8 @@ MMixerGetIndexOfGuid(
 
 MIXER_STATUS
 MMixerSetupFilter(
-    IN PMIXER_CONTEXT MixerContext, 
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
     IN HANDLE hMixer,
     IN PULONG DeviceCount,
     IN LPWSTR DeviceName);
@@ -147,5 +154,15 @@ MMixerGetControlsFromPin(
     IN ULONG PinId,
     IN ULONG bUpDirection,
     OUT PULONG Nodes);
+
+MIXER_STATUS
+MMixerVerifyContext(
+    IN PMIXER_CONTEXT MixerContext);
+
+LPMIXER_INFO
+MMixerGetMixerInfoByIndex(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG MixerIndex);
+
 
 #endif

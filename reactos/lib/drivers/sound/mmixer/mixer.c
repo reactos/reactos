@@ -10,6 +10,169 @@
 
 #include "priv.h"
 
+ULONG
+MMixerGetCount(
+    IN PMIXER_CONTEXT MixerContext)
+{
+    PMIXER_LIST MixerList;
+    MIXER_STATUS Status;
+
+    // verify mixer context
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // invalid context passed
+        return Status;
+    }
+
+    // grab mixer list
+    MixerList = (PMIXER_LIST)MixerContext->MixerContext;
+
+    // return number of mixers
+    return MixerList->MixerListCount;
+}
+
+MIXER_STATUS
+MMixerGetCapabilities(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG MixerIndex,
+    OUT LPMIXERCAPSW MixerCaps)
+{
+    MIXER_STATUS Status;
+    LPMIXER_INFO MixerInfo;
+
+    // verify mixer context
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // invalid context passed
+        return Status;
+    }
+
+    // get mixer info
+    MixerInfo = MMixerGetMixerInfoByIndex(MixerContext, MixerIndex);
+
+    if (!MixerInfo)
+    {
+        // invalid device index
+        return MM_STATUS_INVALID_PARAMETER;
+    }
+
+    MixerCaps->wMid = MixerInfo->MixCaps.wMid;
+    MixerCaps->wPid = MixerInfo->MixCaps.wPid;
+    MixerCaps->vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
+    MixerCaps->fdwSupport = MixerInfo->MixCaps.fdwSupport;
+    MixerCaps->cDestinations = MixerInfo->MixCaps.cDestinations;
+    wcscpy(MixerCaps->szPname, MixerInfo->MixCaps.szPname);
+
+    return MM_STATUS_SUCCESS;
+}
+
+MIXER_STATUS
+MMixerOpen(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PVOID MixerEvent,
+    IN PMIXER_EVENT MixerEventRoutine,
+    OUT PHANDLE MixerHandle)
+{
+    MIXER_STATUS Status;
+
+    // verify mixer context
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // invalid context passed
+        return Status;
+    }
+
+    return MM_STATUS_NOT_IMPLEMENTED;
+}
+
+MIXER_STATUS
+MMixerGetLineInfo(
+    IN PMIXER_CONTEXT MixerContext,
+    IN  HANDLE MixerHandle,
+    IN  ULONG Flags,
+    OUT LPMIXERLINEW MixerLine)
+{
+    MIXER_STATUS Status;
+
+    // verify mixer context
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // invalid context passed
+        return Status;
+    }
+    return MM_STATUS_NOT_IMPLEMENTED;
+}
+
+MIXER_STATUS
+MMixerGetLineControls(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE MixerHandle,
+    IN ULONG Flags,
+    OUT LPMIXERLINECONTROLS MixerLineControls)
+{
+    MIXER_STATUS Status;
+
+    // verify mixer context
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // invalid context passed
+        return Status;
+    }
+
+    return MM_STATUS_NOT_IMPLEMENTED;
+}
+
+MIXER_STATUS
+MMixerSetControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE MixerHandle,
+    IN ULONG Flags,
+    OUT LPMIXERCONTROLDETAILS MixerControlDetails)
+{
+    MIXER_STATUS Status;
+
+    // verify mixer context
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // invalid context passed
+        return Status;
+    }
+    return MM_STATUS_NOT_IMPLEMENTED;
+}
+
+MIXER_STATUS
+MMixerGetControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE MixerHandle,
+    IN ULONG Flags,
+    OUT LPMIXERCONTROLDETAILS MixerControlDetails)
+{
+    MIXER_STATUS Status;
+
+    // verify mixer context
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // invalid context passed
+        return Status;
+    }
+
+    return MM_STATUS_NOT_IMPLEMENTED;
+}
+
 MIXER_STATUS
 MMixerInitialize(
     IN PMIXER_CONTEXT MixerContext,
@@ -20,6 +183,7 @@ MMixerInitialize(
     HANDLE hMixer;
     ULONG DeviceIndex, Count;
     LPWSTR DeviceName;
+    PMIXER_LIST MixerList;
 
     if (!MixerContext || !EnumFunction || !EnumContext)
     {
@@ -27,12 +191,23 @@ MMixerInitialize(
         return MM_STATUS_INVALID_PARAMETER;
     }
 
-    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free)
+    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open || !MixerContext->Close)
     {
         // invalid parameter
         return MM_STATUS_INVALID_PARAMETER;
     }
 
+    // allocate a mixer list
+    MixerList = (PMIXER_LIST)MixerContext->Alloc(sizeof(MIXER_LIST));
+    if (!MixerList)
+    {
+        // no memory
+        return MM_STATUS_NO_MEMORY;
+    }
+
+     //initialize mixer list
+     MixerList->MixerListCount = 0;
+     InitializeListHead(&MixerList->MixerList);
 
     // start enumerating all available devices
     Count = 0;
@@ -59,7 +234,7 @@ MMixerInitialize(
         // increment device index
         DeviceIndex++;
 
-        Status = MMixerSetupFilter(MixerContext, hMixer, &Count, DeviceName);
+        Status = MMixerSetupFilter(MixerContext, MixerList, hMixer, &Count, DeviceName);
 
         if (Status != MM_STATUS_SUCCESS)
             break;
@@ -69,5 +244,3 @@ MMixerInitialize(
     // done
     return Status;
 }
-
-

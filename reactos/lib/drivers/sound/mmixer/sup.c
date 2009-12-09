@@ -17,7 +17,7 @@ MMixerVerifyContext(
     if (MixerContext->SizeOfStruct != sizeof(MIXER_CONTEXT))
         return MM_STATUS_INVALID_PARAMETER;
 
-    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free)
+    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open || !MixerContext->Close)
         return MM_STATUS_INVALID_PARAMETER;
 
     if (!MixerContext->MixerContext)
@@ -37,6 +37,40 @@ MMixerFreeMixerInfo(
 
     MixerContext->Free((PVOID)MixerInfo);
 }
+
+LPMIXER_INFO
+MMixerGetMixerInfoByIndex(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG MixerIndex)
+{
+    LPMIXER_INFO MixerInfo;
+    PLIST_ENTRY Entry;
+    PMIXER_LIST MixerList;
+    ULONG Index = 0;
+
+    // get mixer list
+    MixerList = (PMIXER_LIST)MixerContext->MixerContext;
+
+    if (!MixerList->MixerListCount)
+        return NULL;
+
+    Entry = MixerList->MixerList.Flink;
+
+    while(Entry != &MixerList->MixerList)
+    {
+        MixerInfo = (LPMIXER_INFO)CONTAINING_RECORD(Entry, MIXER_INFO, Entry);
+
+        if (Index == MixerIndex)
+            return MixerInfo;
+
+        // move to next mixer entry
+        Index++;
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
 
 LPMIXERLINE_EXT
 MMixerGetSourceMixerLineByLineId(

@@ -781,6 +781,7 @@ MMixerHandlePhysicalConnection(
 MIXER_STATUS
 MMixerInitializeFilter(
     IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
     IN HANDLE hMixer,
     IN LPWSTR DeviceName,
     IN PKSMULTIPLE_ITEM NodeTypes,
@@ -866,9 +867,9 @@ MMixerInitializeFilter(
     }
     MixerContext->Free(Pins);
 
-    //FIXME
-    // store MixerInfo in context
-
+    // store mixer info in list
+    InsertTailList(&MixerList->MixerList, &MixerInfo->Entry);
+    MixerList->MixerListCount++;
 
     // done
     return Status;
@@ -876,7 +877,8 @@ MMixerInitializeFilter(
 
 MIXER_STATUS
 MMixerSetupFilter(
-    IN PMIXER_CONTEXT MixerContext, 
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
     IN HANDLE hMixer,
     IN PULONG DeviceCount,
     IN LPWSTR DeviceName)
@@ -913,7 +915,7 @@ MMixerSetupFilter(
     if (NodeIndex != MAXULONG)
     {
         // it has
-        Status = MMixerInitializeFilter(MixerContext, hMixer, DeviceName, NodeTypes, NodeConnections, PinCount, NodeIndex, FALSE);
+        Status = MMixerInitializeFilter(MixerContext, MixerList, hMixer, DeviceName, NodeTypes, NodeConnections, PinCount, NodeIndex, FALSE);
 
         // check for success
         if (Status == MM_STATUS_SUCCESS)
@@ -929,7 +931,7 @@ MMixerSetupFilter(
     if (NodeIndex != MAXULONG)
     {
         // it has
-        Status = MMixerInitializeFilter(MixerContext, hMixer, DeviceName, NodeTypes, NodeConnections, PinCount, NodeIndex, TRUE);
+        Status = MMixerInitializeFilter(MixerContext, MixerList, hMixer, DeviceName, NodeTypes, NodeConnections, PinCount, NodeIndex, TRUE);
 
         // check for success
         if (Status == MM_STATUS_SUCCESS)

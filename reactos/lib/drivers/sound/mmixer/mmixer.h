@@ -60,16 +60,11 @@ typedef struct
      PMIXER_CLOSE Close;
 }MIXER_CONTEXT, *PMIXER_CONTEXT;
 
-
-
-
-
 MIXER_STATUS
 MMixerInitialize(
-    IN PMIXER_CONTEXT MixerContext, 
+    IN PMIXER_CONTEXT MixerContext,
     IN PMIXER_ENUM EnumFunction,
     IN PVOID EnumContext);
-
 
 ULONG
 MMixerGetCount(
@@ -79,7 +74,7 @@ MIXER_STATUS
 MMixerGetCapabilities(
     IN PMIXER_CONTEXT MixerContext,
     IN ULONG MixerIndex,
-    OUT MIXERCAPSW MixerCaps);
+    OUT LPMIXERCAPSW MixerCaps);
 
 MIXER_STATUS
 MMixerOpen(
@@ -90,24 +85,28 @@ MMixerOpen(
 
 MIXER_STATUS
 MMixerGetLineInfo(
+    IN PMIXER_CONTEXT MixerContext,
     IN  HANDLE MixerHandle,
     IN  ULONG Flags,
     OUT LPMIXERLINEW MixerLine);
 
 MIXER_STATUS
 MMixerGetLineControls(
+    IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
     IN ULONG Flags,
     OUT LPMIXERLINECONTROLS MixerLineControls);
 
 MIXER_STATUS
 MMixerSetControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails);
 
 MIXER_STATUS
 MMixerGetControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails);
