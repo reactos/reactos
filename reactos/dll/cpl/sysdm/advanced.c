@@ -42,6 +42,8 @@ OnOK(HWND hwndDlg)
                       REG_DWORD,
                       (LPBYTE)&ReportAsWorkstation,
                       sizeof(DWORD));
+
+        RegCloseKey(hKey);
     }
 }
 
@@ -76,9 +78,9 @@ OnInitSysSettingsDialog(HWND hwndDlg)
                                     0);
             }
         }
+
+        RegCloseKey(hKey);
     }
-
-
 }
 
 INT_PTR CALLBACK
