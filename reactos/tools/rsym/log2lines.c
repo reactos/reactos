@@ -10,8 +10,10 @@
 
 #include "rsym.h"
 
-#define LOG2LINES_VERSION   "1.7"
+#define LOG2LINES_VERSION   "1.8"
 
+/* Assume if an offset > ABS_TRESHOLD, then it must be absolute */
+#define ABS_TRESHOLD    0x00400000L
 #define INVALID_BASE    0xFFFFFFFFL
 
 #define DEF_OPT_DIR     "output-i386"
@@ -366,7 +368,7 @@ basename(char *path)
 static size_t
 fixup_offset(size_t ImageBase, size_t offset)
 {
-    if (offset >= ImageBase)
+    if (offset > ABS_TRESHOLD)
         offset -= ImageBase;
     return offset;
 }
@@ -953,11 +955,6 @@ translate_file(const char *cpath, size_t offset, char *toString)
     int res = 0;
     char *path, *dpath;
 
-    /* First get the ImageBase of the File. If its smaller than the given
-     * Parameter, everything is ok, because it was already added onto the
-     * adress and can be given directly to process_file. If not, add it and
-     * give the result to process_file.
-     */
     dpath = path = convert_path(cpath);
     if (!path)
         return 1;
@@ -985,7 +982,6 @@ translate_file(const char *cpath, size_t offset, char *toString)
 
     if (!res)
     {
-        offset = (base < offset) ? offset : base + offset;
         res = process_file(path, offset, toString);
     }
 
