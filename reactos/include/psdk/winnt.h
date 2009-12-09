@@ -229,12 +229,8 @@ typedef BYTE FCHAR;
 typedef WORD FSHORT;
 typedef DWORD FLONG;
 
-#define __C_ASSERT_JOIN(X, Y) __C_ASSERT_DO_JOIN(X, Y)
-#define __C_ASSERT_DO_JOIN(X, Y) __C_ASSERT_DO_JOIN2(X, Y)
-#define __C_ASSERT_DO_JOIN2(X, Y) X##Y
-
-#define C_ASSERT(e) typedef char __C_ASSERT_JOIN(__C_ASSERT__, __LINE__)[(e) ? 1 : -1]
-
+#define C_ASSERT(exp) \
+    extern char __c_assert__[exp ? 1 : -1];
 
 #include "intrin.h"
 
@@ -3238,6 +3234,15 @@ typedef struct _LIST_ENTRY {
 	struct _LIST_ENTRY *Flink;
 	struct _LIST_ENTRY *Blink;
 } LIST_ENTRY,*PLIST_ENTRY;
+typedef struct _LIST_ENTRY32 {
+	DWORD Flink;
+	DWORD Blink;
+} LIST_ENTRY32,*PLIST_ENTRY32;
+typedef struct _LIST_ENTRY64 {
+	ULONGLONG Flink;
+	ULONGLONG Blink;
+} LIST_ENTRY64,*PLIST_ENTRY64;
+
 typedef struct _SINGLE_LIST_ENTRY {
 	struct _SINGLE_LIST_ENTRY *Next;
 } SINGLE_LIST_ENTRY,*PSINGLE_LIST_ENTRY;

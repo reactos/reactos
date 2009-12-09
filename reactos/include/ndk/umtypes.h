@@ -151,6 +151,22 @@ typedef struct _CSTRING
     CONST CHAR *Buffer;
 } CSTRING, *PCSTRING;
 
+typedef struct _STRING32 {
+    USHORT   Length;
+    USHORT   MaximumLength;
+    ULONG  Buffer;
+} STRING32, *PSTRING32, 
+  UNICODE_STRING32, *PUNICODE_STRING32, 
+  ANSI_STRING32, *PANSI_STRING32;
+
+typedef struct _STRING64 {
+    USHORT   Length;
+    USHORT   MaximumLength;
+    ULONGLONG  Buffer;
+} STRING64, *PSTRING64,
+  UNICODE_STRING64, *PUNICODE_STRING64, 
+  ANSI_STRING64, *PANSI_STRING64;
+
 #endif
 
 typedef struct _OBJECT_ATTRIBUTES
