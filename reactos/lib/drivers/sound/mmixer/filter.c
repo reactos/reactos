@@ -205,3 +205,48 @@ MMixerGetControlTypeFromTopologyNode(
     UNIMPLEMENTED
     return 0;
 }
+
+MIXER_STATUS
+MMixerSetGetControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hMixer,
+    IN ULONG NodeId,
+    IN ULONG bSet,
+    IN ULONG PropertyId,
+    IN ULONG Channel,
+    IN PLONG InputValue)
+{
+    KSNODEPROPERTY_AUDIO_CHANNEL Property;
+    MIXER_STATUS Status;
+    LONG Value;
+    ULONG BytesReturned;
+
+    if (bSet)
+        Value = *InputValue;
+
+    /* setup the request */
+    RtlZeroMemory(&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL));
+
+    Property.NodeProperty.NodeId = NodeId;
+    Property.NodeProperty.Property.Id = PropertyId;
+    Property.NodeProperty.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY;
+    Property.NodeProperty.Property.Set = KSPROPSETID_Audio;
+    Property.Channel = Channel;
+    Property.Reserved = 0;
+
+    if (bSet)
+        Property.NodeProperty.Property.Flags |= KSPROPERTY_TYPE_SET;
+    else
+        Property.NodeProperty.Property.Flags |= KSPROPERTY_TYPE_GET;
+
+    /* send the request */
+    Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL), (PVOID)&Value, sizeof(LONG), &BytesReturned);
+
+    if (!bSet && Status == MM_STATUS_SUCCESS)
+    {
+        *InputValue = Value;
+    }
+
+    DPRINT("Status %x bSet %u NodeId %u Value %d PropertyId %u\n", Status, bSet, NodeId, Value, PropertyId);
+    return Status;
+}

@@ -203,10 +203,10 @@ MMixerAddMixerControl(
         Status = MixerContext->Control(hDevice, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), (LPVOID)Name, BytesReturned, &BytesReturned);
         if (Status != MM_STATUS_SUCCESS)
         {
-            RtlMoveMemory(MixerControl->szShortName, Name, (min(MIXER_SHORT_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
+            MixerContext->Copy(MixerControl->szShortName, Name, (min(MIXER_SHORT_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
             MixerControl->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
 
-            RtlMoveMemory(MixerControl->szName, Name, (min(MIXER_LONG_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
+            MixerContext->Copy(MixerControl->szName, Name, (min(MIXER_LONG_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
             MixerControl->szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
         }
 
@@ -512,10 +512,10 @@ MMixerAddMixerSourceLine(
 
             if (Status != MM_STATUS_SUCCESS)
             {
-                RtlMoveMemory(SrcLine->Line.szShortName, PinName, (min(MIXER_SHORT_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
+                MixerContext->Copy(SrcLine->Line.szShortName, PinName, (min(MIXER_SHORT_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
                 SrcLine->Line.szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
 
-                RtlMoveMemory(SrcLine->Line.szName, PinName, (min(MIXER_LONG_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
+                MixerContext->Copy(SrcLine->Line.szName, PinName, (min(MIXER_LONG_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
                 SrcLine->Line.szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
             }
             MixerContext->Free(PinName);

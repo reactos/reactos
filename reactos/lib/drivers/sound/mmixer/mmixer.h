@@ -47,6 +47,11 @@ typedef MIXER_STATUS(*PMIXER_CLOSE)(
 typedef VOID (*PMIXER_EVENT)(
     IN PVOID MixerEvent);
 
+typedef VOID (*PMIXER_COPY)(
+    IN PVOID Dst,
+    IN PVOID Src,
+    IN ULONG Length);
+
 
 typedef struct
 {
@@ -58,6 +63,7 @@ typedef struct
      PMIXER_FREE  Free;
      PMIXER_OPEN Open;
      PMIXER_CLOSE Close;
+     PMIXER_COPY Copy;
 }MIXER_CONTEXT, *PMIXER_CONTEXT;
 
 MIXER_STATUS
@@ -79,6 +85,7 @@ MMixerGetCapabilities(
 MIXER_STATUS
 MMixerOpen(
     IN PMIXER_CONTEXT MixerContext,
+    IN ULONG MixerId,
     IN PVOID MixerEvent,
     IN PMIXER_EVENT MixerEventRoutine,
     OUT PHANDLE MixerHandle);

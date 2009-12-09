@@ -164,5 +164,46 @@ MMixerGetMixerInfoByIndex(
     IN PMIXER_CONTEXT MixerContext,
     IN ULONG MixerIndex);
 
+LPMIXERLINE_EXT
+MMixerGetSourceMixerLineByComponentType(
+    LPMIXER_INFO MixerInfo,
+    DWORD dwComponentType);
+
+MIXER_STATUS
+MMixerGetMixerControlById(
+    LPMIXER_INFO MixerInfo,
+    DWORD dwControlID,
+    LPMIXERLINE_EXT *MixerLine,
+    LPMIXERCONTROLW *MixerControl,
+    PULONG NodeId);
+
+MIXER_STATUS
+MMixerSetGetMuteControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hMixer,
+    IN ULONG NodeId,
+    IN ULONG dwLineID,
+    IN LPMIXERCONTROLDETAILS MixerControlDetails,
+    IN ULONG bSet);
+
+MIXER_STATUS
+MMixerSetGetVolumeControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hMixer,
+    IN ULONG NodeId,
+    IN ULONG bSet,
+    LPMIXERCONTROLW MixerControl,
+    IN LPMIXERCONTROLDETAILS MixerControlDetails,
+    LPMIXERLINE_EXT MixerLine);
+
+MIXER_STATUS
+MMixerSetGetControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hMixer,
+    IN ULONG NodeId,
+    IN ULONG bSet,
+    IN ULONG PropertyId,
+    IN ULONG Channel,
+    IN PLONG InputValue);
 
 #endif

@@ -73,11 +73,13 @@ MMixerGetCapabilities(
 MIXER_STATUS
 MMixerOpen(
     IN PMIXER_CONTEXT MixerContext,
+    IN ULONG MixerId,
     IN PVOID MixerEvent,
     IN PMIXER_EVENT MixerEventRoutine,
     OUT PHANDLE MixerHandle)
 {
     MIXER_STATUS Status;
+    LPMIXER_INFO MixerInfo;
 
     // verify mixer context
     Status = MMixerVerifyContext(MixerContext);
@@ -88,7 +90,20 @@ MMixerOpen(
         return Status;
     }
 
-    return MM_STATUS_NOT_IMPLEMENTED;
+    MixerInfo = (LPMIXER_INFO)MMixerGetMixerInfoByIndex(MixerContext, MixerId);
+    if (!MixerInfo)
+    {
+        // invalid mixer id
+        return MM_STATUS_INVALID_PARAMETER;
+    }
+
+    // FIXME
+    // handle event notification
+
+    // store result
+    *MixerHandle = (HANDLE)MixerInfo;
+
+    return MM_STATUS_SUCCESS;
 }
 
 MIXER_STATUS
@@ -99,6 +114,8 @@ MMixerGetLineInfo(
     OUT LPMIXERLINEW MixerLine)
 {
     MIXER_STATUS Status;
+    LPMIXER_INFO MixerInfo;
+    LPMIXERLINE_EXT MixerLineSrc;
 
     // verify mixer context
     Status = MMixerVerifyContext(MixerContext);
@@ -108,6 +125,88 @@ MMixerGetLineInfo(
         // invalid context passed
         return Status;
     }
+
+    // clear hmixer from flags
+    Flags &=~MIXER_OBJECTF_HMIXER;
+
+    if (Flags == MIXER_GETLINEINFOF_DESTINATION)
+    {
+        // cast to mixer info
+        MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+        if (MixerLine->dwDestination != 0)
+        {
+            // destination line member must be zero
+            return MM_STATUS_INVALID_PARAMETER;
+        }
+
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, DESTINATION_LINE);
+        ASSERT(MixerLineSrc);
+        MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+
+        return MM_STATUS_SUCCESS;
+    }
+    else if (Flags == MIXER_GETLINEINFOF_SOURCE)
+    {
+        // cast to mixer info
+        MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, DESTINATION_LINE);
+        ASSERT(MixerLineSrc);
+
+        if (MixerLine->dwSource >= MixerLineSrc->Line.cConnections)
+        {
+            DPRINT1("dwSource %u > Destinations %u\n", MixerLine->dwSource, MixerLineSrc->Line.cConnections);
+
+            // invalid parameter
+            return MM_STATUS_INVALID_PARAMETER;
+        }
+
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLine->dwSource);
+        if (MixerLineSrc)
+        {
+            DPRINT("Line %u Name %S\n", MixerLineSrc->Line.dwSource, MixerLineSrc->Line.szName);
+            MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+            return MM_STATUS_SUCCESS;
+        }
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+    else if (Flags == MIXER_GETLINEINFOF_LINEID)
+    {
+        // cast to mixer info
+        MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLine->dwLineID);
+        if (!MixerLineSrc)
+        {
+            // invalid parameter
+            return MM_STATUS_INVALID_PARAMETER;
+        }
+
+        /* copy cached data */
+        MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+        return MM_STATUS_SUCCESS;
+    }
+    else if (Flags == MIXER_GETLINEINFOF_COMPONENTTYPE)
+    {
+        // cast to mixer info
+        MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+        MixerLineSrc = MMixerGetSourceMixerLineByComponentType(MixerInfo, MixerLine->dwComponentType);
+        if (!MixerLineSrc)
+        {
+            DPRINT1("Failed to find component type %x\n", MixerLine->dwComponentType);
+            return MM_STATUS_UNSUCCESSFUL;
+        }
+
+        ASSERT(MixerLineSrc);
+
+        /* copy cached data */
+        MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+        return MM_STATUS_SUCCESS;
+    }
+
     return MM_STATUS_NOT_IMPLEMENTED;
 }
 
@@ -118,7 +217,11 @@ MMixerGetLineControls(
     IN ULONG Flags,
     OUT LPMIXERLINECONTROLS MixerLineControls)
 {
+    LPMIXER_INFO MixerInfo;
+    LPMIXERLINE_EXT MixerLineSrc;
+    LPMIXERCONTROLW MixerControl;
     MIXER_STATUS Status;
+    ULONG Index;
 
     // verify mixer context
     Status = MMixerVerifyContext(MixerContext);
@@ -128,6 +231,73 @@ MMixerGetLineControls(
         // invalid context passed
         return Status;
     }
+
+    Flags &= ~MIXER_OBJECTF_HMIXER;
+
+    if (Flags == MIXER_GETLINECONTROLSF_ALL)
+    {
+        // cast to mixer info
+        MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLineControls->dwLineID);
+
+        if (!MixerLineSrc)
+        {
+            // invalid line id
+            return MM_STATUS_INVALID_PARAMETER;
+        }
+        // copy line control(s)
+        MixerContext->Copy(MixerLineControls->pamxctrl, MixerLineSrc->LineControls, min(MixerLineSrc->Line.cControls, MixerLineControls->cControls) * sizeof(MIXERCONTROLW));
+
+        return MM_STATUS_SUCCESS;
+    }
+    else if (Flags == MIXER_GETLINECONTROLSF_ONEBYTYPE)
+    {
+        // cast to mixer info
+        MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLineControls->dwLineID);
+
+        if (!MixerLineSrc)
+        {
+            // invalid line id
+            return MM_STATUS_INVALID_PARAMETER;
+        }
+
+        ASSERT(MixerLineSrc);
+
+        Index = 0;
+        for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
+        {
+            DPRINT("dwControlType %x\n", MixerLineSrc->LineControls[Index].dwControlType);
+            if (MixerLineControls->dwControlType == MixerLineSrc->LineControls[Index].dwControlType)
+            {
+                // found a control with that type
+                MixerContext->Copy(MixerLineControls->pamxctrl, &MixerLineSrc->LineControls[Index], sizeof(MIXERCONTROLW));
+                return MM_STATUS_SUCCESS;
+            }
+        }
+        DPRINT("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x cControls %u \n", MixerLineControls->dwControlType, MixerLineControls->dwLineID, MixerLineSrc->Line.cControls);
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+    else if (Flags == MIXER_GETLINECONTROLSF_ONEBYID)
+    {
+        // cast to mixer info
+        MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+        Status = MMixerGetMixerControlById(MixerInfo, MixerLineControls->dwControlID, NULL, &MixerControl, NULL);
+
+        if (Status != MM_STATUS_SUCCESS)
+        {
+            // invalid parameter
+            return MM_STATUS_INVALID_PARAMETER;
+        }
+
+        // copy the controls
+        MixerContext->Copy(MixerLineControls->pamxctrl, MixerControl, sizeof(MIXERCONTROLW));
+        return MM_STATUS_SUCCESS;
+    }
+
 
     return MM_STATUS_NOT_IMPLEMENTED;
 }
@@ -140,6 +310,10 @@ MMixerSetControlDetails(
     OUT LPMIXERCONTROLDETAILS MixerControlDetails)
 {
     MIXER_STATUS Status;
+    ULONG NodeId;
+    LPMIXER_INFO MixerInfo;
+    LPMIXERLINE_EXT MixerLine;
+    LPMIXERCONTROLW MixerControl;
 
     // verify mixer context
     Status = MMixerVerifyContext(MixerContext);
@@ -149,7 +323,33 @@ MMixerSetControlDetails(
         // invalid context passed
         return Status;
     }
-    return MM_STATUS_NOT_IMPLEMENTED;
+
+    // get mixer info
+    MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+    // get mixer control
+     Status = MMixerGetMixerControlById(MixerInfo, MixerControlDetails->dwControlID, &MixerLine, &MixerControl, &NodeId);
+
+    // check for success
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // failed to find control id
+        return MM_STATUS_INVALID_PARAMETER;
+    }
+
+    switch(MixerControl->dwControlType)
+    {
+        case MIXERCONTROL_CONTROLTYPE_MUTE:
+            Status = MMixerSetGetMuteControlDetails(MixerContext, MixerInfo->hMixer, NodeId, MixerLine->Line.dwLineID, MixerControlDetails, TRUE);
+            break;
+        case MIXERCONTROL_CONTROLTYPE_VOLUME:
+            Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo->hMixer, NodeId, TRUE, MixerControl, MixerControlDetails, MixerLine);
+            break;
+        default:
+            Status = MM_STATUS_NOT_IMPLEMENTED;
+    }
+
+    return Status;
 }
 
 MIXER_STATUS
@@ -160,6 +360,10 @@ MMixerGetControlDetails(
     OUT LPMIXERCONTROLDETAILS MixerControlDetails)
 {
     MIXER_STATUS Status;
+    ULONG NodeId;
+    LPMIXER_INFO MixerInfo;
+    LPMIXERLINE_EXT MixerLine;
+    LPMIXERCONTROLW MixerControl;
 
     // verify mixer context
     Status = MMixerVerifyContext(MixerContext);
@@ -170,7 +374,32 @@ MMixerGetControlDetails(
         return Status;
     }
 
-    return MM_STATUS_NOT_IMPLEMENTED;
+    // get mixer info
+    MixerInfo = (LPMIXER_INFO)MixerHandle;
+
+    // get mixer control
+     Status = MMixerGetMixerControlById(MixerInfo, MixerControlDetails->dwControlID, &MixerLine, &MixerControl, &NodeId);
+
+    // check for success
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // failed to find control id
+        return MM_STATUS_INVALID_PARAMETER;
+    }
+
+    switch(MixerControl->dwControlType)
+    {
+        case MIXERCONTROL_CONTROLTYPE_MUTE:
+            Status = MMixerSetGetMuteControlDetails(MixerContext, MixerInfo->hMixer, NodeId, MixerLine->Line.dwLineID, MixerControlDetails, FALSE);
+            break;
+        case MIXERCONTROL_CONTROLTYPE_VOLUME:
+            Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo->hMixer, NodeId, FALSE, MixerControl, MixerControlDetails, MixerLine);
+            break;
+        default:
+            Status = MM_STATUS_NOT_IMPLEMENTED;
+    }
+
+    return Status;
 }
 
 MIXER_STATUS

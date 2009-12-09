@@ -71,6 +71,28 @@ MMixerGetMixerInfoByIndex(
     return NULL;
 }
 
+LPMIXERCONTROL_DATA
+MMixerGetMixerControlDataById(
+    PLIST_ENTRY ListHead,
+    DWORD dwControlId)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERCONTROL_DATA Control;
+
+    /* get first entry */
+    Entry = ListHead->Flink;
+
+    while(Entry != ListHead)
+    {
+        Control = (LPMIXERCONTROL_DATA)CONTAINING_RECORD(Entry, MIXERCONTROL_DATA, Entry);
+        DPRINT("dwSource %x dwSource %x\n", Control->dwControlID, dwControlId);
+        if (Control->dwControlID == dwControlId)
+            return Control;
+
+        Entry = Entry->Flink;
+    }
+    return NULL;
+}
 
 LPMIXERLINE_EXT
 MMixerGetSourceMixerLineByLineId(
@@ -312,5 +334,192 @@ MMixerGetTargetPins(
         MixerContext->Free((PVOID)NodeConnection);
     }
 
+    return Status;
+}
+
+LPMIXERLINE_EXT
+MMixerGetSourceMixerLineByComponentType(
+    LPMIXER_INFO MixerInfo,
+    DWORD dwComponentType)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERLINE_EXT MixerLineSrc;
+
+    /* get first entry */
+    Entry = MixerInfo->LineList.Flink;
+
+    while(Entry != &MixerInfo->LineList)
+    {
+        MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
+        if (MixerLineSrc->Line.dwComponentType == dwComponentType)
+            return MixerLineSrc;
+
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
+MIXER_STATUS
+MMixerGetMixerControlById(
+    LPMIXER_INFO MixerInfo,
+    DWORD dwControlID,
+    LPMIXERLINE_EXT *MixerLine,
+    LPMIXERCONTROLW *MixerControl,
+    PULONG NodeId)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERLINE_EXT MixerLineSrc;
+    ULONG Index;
+
+    /* get first entry */
+    Entry = MixerInfo->LineList.Flink;
+
+    while(Entry != &MixerInfo->LineList)
+    {
+        MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
+
+        for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
+        {
+            if (MixerLineSrc->LineControls[Index].dwControlID == dwControlID)
+            {
+                if (MixerLine)
+                    *MixerLine = MixerLineSrc;
+                if (MixerControl)
+                    *MixerControl = &MixerLineSrc->LineControls[Index];
+                if (NodeId)
+                    *NodeId = MixerLineSrc->NodeIds[Index];
+                return MM_STATUS_SUCCESS;
+            }
+        }
+        Entry = Entry->Flink;
+    }
+
+    return MM_STATUS_UNSUCCESSFUL;
+}
+
+ULONG
+MMixerGetVolumeControlIndex(
+    LPMIXERVOLUME_DATA VolumeData,
+    LONG Value)
+{
+    ULONG Index;
+
+    for(Index = 0; Index < VolumeData->ValuesCount; Index++)
+    {
+        if (VolumeData->Values[Index] > Value)
+        {
+            return VolumeData->InputSteppingDelta * Index;
+        }
+    }
+    return VolumeData->InputSteppingDelta * (VolumeData->ValuesCount-1);
+}
+
+MIXER_STATUS
+MMixerSetGetMuteControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hMixer,
+    IN ULONG NodeId,
+    IN ULONG dwLineID,
+    IN LPMIXERCONTROLDETAILS MixerControlDetails,
+    IN ULONG bSet)
+{
+    LPMIXERCONTROLDETAILS_BOOLEAN Input;
+    LONG Value;
+    MIXER_STATUS Status;
+
+    if (MixerControlDetails->cbDetails != sizeof(MIXERCONTROLDETAILS_BOOLEAN))
+        return MM_STATUS_INVALID_PARAMETER;
+
+    /* get input */
+    Input = (LPMIXERCONTROLDETAILS_BOOLEAN)MixerControlDetails->paDetails;
+
+    /* FIXME SEH */
+    if (bSet)
+        Value = Input->fValue;
+
+    /* set control details */
+    Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_MUTE, 0, &Value);
+
+    if (Status != MM_STATUS_SUCCESS)
+        return Status;
+
+    /* FIXME SEH */
+    if (!bSet)
+    {
+        Input->fValue = Value;
+        return Status;
+    }
+    else
+    {
+        // FIXME notify wdmaud clients MM_MIXM_LINE_CHANGE dwLineID
+    }
+
+    return Status;
+}
+
+MIXER_STATUS
+MMixerSetGetVolumeControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hMixer,
+    IN ULONG NodeId,
+    IN ULONG bSet,
+    LPMIXERCONTROLW MixerControl,
+    IN LPMIXERCONTROLDETAILS MixerControlDetails,
+    LPMIXERLINE_EXT MixerLine)
+{
+    LPMIXERCONTROLDETAILS_UNSIGNED Input;
+    LONG Value, Index, Channel = 0;
+    ULONG dwValue;
+    MIXER_STATUS Status;
+    LPMIXERVOLUME_DATA VolumeData;
+
+    if (MixerControlDetails->cbDetails != sizeof(MIXERCONTROLDETAILS_SIGNED))
+        return MM_STATUS_INVALID_PARAMETER;
+
+    VolumeData = (LPMIXERVOLUME_DATA)MMixerGetMixerControlDataById(&MixerLine->LineControlsExtraData, MixerControl->dwControlID);
+    if (!VolumeData)
+        return MM_STATUS_UNSUCCESSFUL;
+
+    /* get input */
+    Input = (LPMIXERCONTROLDETAILS_UNSIGNED)MixerControlDetails->paDetails;
+
+    if (bSet)
+    {
+        /* FIXME SEH */
+        Value = Input->dwValue;
+        Index = Value / VolumeData->InputSteppingDelta;
+
+        if (Index >= VolumeData->ValuesCount)
+        {
+            DPRINT1("Index %u out of bounds %u \n", Index, VolumeData->ValuesCount);
+            DbgBreakPoint();
+            return MM_STATUS_INVALID_PARAMETER;
+        }
+
+        Value = VolumeData->Values[Index];
+    }
+
+    /* set control details */
+    if (bSet)
+    {
+        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
+    }
+    else
+    {
+        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
+    }
+
+    if (!bSet)
+    {
+        dwValue = MMixerGetVolumeControlIndex(VolumeData, (LONG)Value);
+        /* FIXME SEH */
+        Input->dwValue = dwValue;
+    }
+    else
+    {
+        /* notify clients of a line change  MM_MIXM_CONTROL_CHANGE with MixerControl->dwControlID */
+    }
     return Status;
 }
