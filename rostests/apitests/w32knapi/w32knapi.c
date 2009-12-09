@@ -49,8 +49,9 @@ GetHandleUserData(HGDIOBJ hobj)
 static DWORD WINAPI
 IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 {
-	DWORD retval;
+	DWORD retval = 0;
 
+#ifdef _M_I386
 #ifdef __GNUC__
 	asm volatile
 	(
@@ -81,6 +82,7 @@ IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 		mov retval, eax
 		popf
     };
+#endif
 #endif
 
 	return retval;

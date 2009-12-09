@@ -1,4 +1,4 @@
-<module name="w32knapi" type="win32cui">
+<module name="w32knapi" type="win32cui" allowwarnings="true">
 	<include base="w32knapi">.</include>
 	<library>apitest</library>
 	<library>ntdll</library>

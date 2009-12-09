@@ -17,12 +17,12 @@ DWORD WINAPI thread_main1(LPVOID param)
 {
    ULONG s;
 
-   printf("Thread %ld running\n", (DWORD)param);
+   printf("Thread %x running\n", param);
    s = nr = ((nr * 1103515245) + 12345) & 0x7fffffff;
    s = s % 10;
    printf("s %ld\n", s);
    Sleep(s);
-   printf("Thread %ld finished\n", (DWORD)param);
+   printf("Thread %x finished\n", param);
    return 0;
 }
 
@@ -62,7 +62,7 @@ int main (int argc, char* argv[])
        ThreadHandle[i] = CreateThread(NULL,
 				      0,
 				      thread_main1,
-				      (LPVOID)i,
+				      (LPVOID)(ULONG_PTR)i,
 				      CREATE_SUSPENDED,
 				      &id);
 

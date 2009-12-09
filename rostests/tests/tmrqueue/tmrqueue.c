@@ -120,7 +120,7 @@ VOID CALLBACK TimerCallback1(PVOID Param, BOOLEAN Fired)
 {
   PTESTINFO Info = (PTESTINFO)Param;
 
-  _tprintf(_T("[%d]TimerCallback(0x%x, %d) called (%d)\n"), (int)Info->Test->id, (int)Info->hTimer, (int)Fired, --Info->secsleft);
+  _tprintf(_T("[%d]TimerCallback(0x%x, %d) called (%d)\n"), (int)Info->Test->id, Info->hTimer, (int)Fired, --Info->secsleft);
 
   if(Info->secsleft == 0)
   {
@@ -168,7 +168,7 @@ VOID Test1(PTEST Test, HANDLE hEvent)
     return;
   }
 
-  _tprintf(_T("[%d]CreateTimerQueueTimer() created timer 0x%x, countdown (%d sec)...\n"), (int)Info.Test->id, (int)Info.hTimer, (int)Info.secsleft);
+  _tprintf(_T("[%d]CreateTimerQueueTimer() created timer 0x%x, countdown (%d sec)...\n"), (int)Info.Test->id, Info.hTimer, (int)Info.secsleft);
 }
 
 /*******************************************************************************/
@@ -177,7 +177,7 @@ VOID CALLBACK TimerCallback2(PVOID Param, BOOLEAN Fired)
 {
   PTESTINFO Info = (PTESTINFO)Param;
 
-  _tprintf(_T("[%d]TimerCallback(0x%x, %d) called (%d)\n"), (int)Info->Test->id, (int)Info->hTimer, (int)Fired, --Info->secsleft);
+  _tprintf(_T("[%d]TimerCallback(0x%x, %d) called (%d)\n"), (int)Info->Test->id, Info->hTimer, (int)Fired, --Info->secsleft);
 
   if(Info->secsleft == 0)
   {
@@ -215,7 +215,7 @@ VOID Test2(PTEST Test, HANDLE hEvent)
     return;
   }
 
-  _tprintf(_T("[%d]CreateTimerQueueTimer() created timer 0x%x, countdown (%d sec)...\n"), (int)Test->id, (int)Info.hTimer, (int)Info.secsleft);
+  _tprintf(_T("[%d]CreateTimerQueueTimer() created timer 0x%x, countdown (%d sec)...\n"), (int)Test->id, Info.hTimer, (int)Info.secsleft);
 
   WaitForSingleObject(Info.Test2.hWaitEvent, INFINITE);
 
@@ -251,7 +251,7 @@ VOID CALLBACK TimerCallback3(PVOID Param, BOOLEAN Fired)
 {
   PTESTINFO Info = (PTESTINFO)Param;
 
-  _tprintf(_T("[%d]TimerCallback(0x%x, %d) called (%d)\n"), (int)Info->Test->id, (int)Info->hTimer, (int)Fired, --Info->secsleft);
+  _tprintf(_T("[%d]TimerCallback(0x%x, %d) called (%d)\n"), (int)Info->Test->id, Info->hTimer, (int)Fired, --Info->secsleft);
 
   if(Info->secsleft == 0)
   {
@@ -297,7 +297,7 @@ VOID Test3(PTEST Test, HANDLE hEvent)
     return;
   }
 
-  _tprintf(_T("[%d]CreateTimerQueueTimer() created timer 0x%x, countdown (%d sec)...\n"), (int)Test->id, (int)Info.hTimer, (int)Info.secsleft);
+  _tprintf(_T("[%d]CreateTimerQueueTimer() created timer 0x%x, countdown (%d sec)...\n"), (int)Test->id, Info.hTimer, (int)Info.secsleft);
 
   WaitForSingleObject(Info.Test3.hWaitEvent, INFINITE);
 

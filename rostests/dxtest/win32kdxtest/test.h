@@ -25,7 +25,7 @@ void dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char 
         if (input == value) \
         { \
             counter++; \
-            printf("FAIL ret=%s, %d != %d )\n",text,(int)input,(int)value); \
+            printf("FAIL ret=%s, %x != %x )\n",text,input,value); \
         }
 
 
@@ -33,7 +33,7 @@ void dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char 
         if (input != value) \
         { \
             counter++; \
-            printf("FAIL ret=%s, %d == %d )\n",text,(int)input,(int)value); \
+            printf("FAIL ret=%s, %x == %x )\n",text,input,value); \
         }
 
 

@@ -120,7 +120,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         printf(" pHalInfo4->vmiData->dwTextureAlign                 : 0x%08lx\n",(long)pHalInfo4->vmiData.dwTextureAlign);
         printf(" pHalInfo4->vmiData->dwZBufferAlign                 : 0x%08lx\n",(long)pHalInfo4->vmiData.dwZBufferAlign);
         printf(" pHalInfo4->vmiData->dwAlphaAlign                   : 0x%08lx\n",(long)pHalInfo4->vmiData.dwAlphaAlign);
-        printf(" pHalInfo4->vmiData->pvPrimary                      : 0x%08lx\n",(long)pHalInfo4->vmiData.pvPrimary);
+        printf(" pHalInfo4->vmiData->pvPrimary                      : 0x%08lx\n",(LONG_PTR)pHalInfo4->vmiData.pvPrimary);
 
         printf(" pHalInfo4->ddCaps.dwSize                           : 0x%08lx\n",pHalInfo4->ddCaps.dwSize);
         printf(" pHalInfo4->ddCaps.dwCaps                           : 0x%08lx\n",pHalInfo4->ddCaps.dwCaps);
@@ -188,7 +188,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         printf(" pHalInfo4->ddCaps.dwSVBCaps2                       : 0x%08lx\n",pHalInfo4->ddCaps.dwSVBCaps2);
 
 
-        printf(" pHalInfo4->GetDriverInfo                           : 0x%08lx\n",(long)pHalInfo4->GetDriverInfo);
+        printf(" pHalInfo4->GetDriverInfo                           : 0x%08lx\n",(LONG_PTR)pHalInfo4->GetDriverInfo);
         printf(" pHalInfo4->dwFlags                                 : 0x%08lx\n",(long)pHalInfo4->dwFlags);
 
     }
@@ -222,7 +222,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         printf(" pHalInfo->vmiData->dwTextureAlign                 : 0x%08lx\n",(long)pHalInfo->vmiData.dwTextureAlign);
         printf(" pHalInfo->vmiData->dwZBufferAlign                 : 0x%08lx\n",(long)pHalInfo->vmiData.dwZBufferAlign);
         printf(" pHalInfo->vmiData->dwAlphaAlign                   : 0x%08lx\n",(long)pHalInfo->vmiData.dwAlphaAlign);
-        printf(" pHalInfo->vmiData->pvPrimary                      : 0x%08lx\n",(long)pHalInfo->vmiData.pvPrimary);
+        printf(" pHalInfo->vmiData->pvPrimary                      : 0x%08lx\n",(LONG_PTR)pHalInfo->vmiData.pvPrimary);
 
         printf(" pHalInfo->ddCaps.dwSize                           : 0x%08lx\n",pHalInfo->ddCaps.dwSize);
         printf(" pHalInfo->ddCaps.dwCaps                           : ");
@@ -519,7 +519,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         printf(" pHalInfo->ddCaps.dwSSBRops[0x%04x]                : 0x%08lx\n",t,pHalInfo->ddCaps.dwSSBRops[t]);
         }
 
-        printf(" pHalInfo->GetDriverInfo                           : 0x%08lx\n",(long)pHalInfo->GetDriverInfo);
+        printf(" pHalInfo->GetDriverInfo                           : 0x%08lx\n",(LONG_PTR)pHalInfo->GetDriverInfo);
         printf(" pHalInfo->dwFlags                                 : ");
 
         flag = pHalInfo->dwFlags;
@@ -530,9 +530,9 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         checkflag(flag,DDHALINFO_GETDRIVERINFO2,"DDHALINFO_GETDRIVERINFO2");
         endcheckflag(flag,"pHalInfo->dwFlags");
 
-        printf(" pHalInfo->lpD3DGlobalDriverData                   : 0x%08lx\n",(long)pHalInfo->lpD3DGlobalDriverData);
-        printf(" pHalInfo->lpD3DHALCallbacks                       : 0x%08lx\n",(long)pHalInfo->lpD3DHALCallbacks);
-        printf(" pHalInfo->lpD3DBufCallbacks                       : 0x%08lx\n",(long)pHalInfo->lpD3DBufCallbacks);
+        printf(" pHalInfo->lpD3DGlobalDriverData                   : 0x%08lx\n",(LONG_PTR)pHalInfo->lpD3DGlobalDriverData);
+        printf(" pHalInfo->lpD3DHALCallbacks                       : 0x%08lx\n",(LONG_PTR)pHalInfo->lpD3DHALCallbacks);
+        printf(" pHalInfo->lpD3DBufCallbacks                       : 0x%08lx\n",(LONG_PTR)pHalInfo->lpD3DBufCallbacks);
     }
     else
     {
@@ -554,31 +554,31 @@ dump_D3dCallbacks(D3DNTHAL_CALLBACKS *puD3dCallbacks, char *text)
     printf("dumping the D3DNTHAL_CALLBACKS from %s\n",text);
     if (puD3dCallbacks->dwSize ==  sizeof(D3DNTHAL_CALLBACKS))
     {
-        printf(" puD3dCallbacks->dwSize                                         : 0x%08lx\n",(long)puD3dCallbacks->dwSize);
-        printf(" puD3dCallbacks->ContextCreate                                  : 0x%08lx\n",(long)puD3dCallbacks->ContextCreate);
-        printf(" puD3dCallbacks->ContextDestroy                                 : 0x%08lx\n",(long)puD3dCallbacks->ContextDestroy);
-        printf(" puD3dCallbacks->ContextDestroyAll                              : 0x%08lx\n",(long)puD3dCallbacks->ContextDestroyAll);
-        printf(" puD3dCallbacks->SceneCapture                                   : 0x%08lx\n",(long)puD3dCallbacks->SceneCapture);
-        printf(" puD3dCallbacks->dwReserved10                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved10);
-        printf(" puD3dCallbacks->dwReserved11                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved11);
-        printf(" puD3dCallbacks->dwReserved22                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved22);
-        printf(" puD3dCallbacks->dwReserved23                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved23);
-        printf(" puD3dCallbacks->dwReserved                                     : 0x%08lx\n",(long)puD3dCallbacks->dwReserved);
-        printf(" puD3dCallbacks->TextureCreate                                  : 0x%08lx\n",(long)puD3dCallbacks->TextureCreate);
-        printf(" puD3dCallbacks->TextureDestroy                                 : 0x%08lx\n",(long)puD3dCallbacks->TextureDestroy);
-        printf(" puD3dCallbacks->TextureSwap                                    : 0x%08lx\n",(long)puD3dCallbacks->TextureSwap);
-        printf(" puD3dCallbacks->TextureGetSurf                                 : 0x%08lx\n",(long)puD3dCallbacks->TextureGetSurf);
-        printf(" puD3dCallbacks->dwReserved12                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved12);
-        printf(" puD3dCallbacks->dwReserved13                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved13);
-        printf(" puD3dCallbacks->dwReserved14                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved14);
-        printf(" puD3dCallbacks->dwReserved15                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved15);
-        printf(" puD3dCallbacks->dwReserved16                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved16);
-        printf(" puD3dCallbacks->dwReserved17                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved17);
-        printf(" puD3dCallbacks->dwReserved18                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved18);
-        printf(" puD3dCallbacks->dwReserved19                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved19);
-        printf(" puD3dCallbacks->dwReserved20                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved20);
-        printf(" puD3dCallbacks->dwReserved21                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved21);
-        printf(" puD3dCallbacks->dwReserved24                                   : 0x%08lx\n",(long)puD3dCallbacks->dwReserved24);
+        printf(" puD3dCallbacks->dwSize                                         : 0x%08lx\n",puD3dCallbacks->dwSize);
+        printf(" puD3dCallbacks->ContextCreate                                  : 0x%08lx\n",puD3dCallbacks->ContextCreate);
+        printf(" puD3dCallbacks->ContextDestroy                                 : 0x%08lx\n",puD3dCallbacks->ContextDestroy);
+        printf(" puD3dCallbacks->ContextDestroyAll                              : 0x%08lx\n",puD3dCallbacks->ContextDestroyAll);
+        printf(" puD3dCallbacks->SceneCapture                                   : 0x%08lx\n",puD3dCallbacks->SceneCapture);
+        printf(" puD3dCallbacks->dwReserved10                                   : 0x%08lx\n",puD3dCallbacks->dwReserved10);
+        printf(" puD3dCallbacks->dwReserved11                                   : 0x%08lx\n",puD3dCallbacks->dwReserved11);
+        printf(" puD3dCallbacks->dwReserved22                                   : 0x%08lx\n",puD3dCallbacks->dwReserved22);
+        printf(" puD3dCallbacks->dwReserved23                                   : 0x%08lx\n",puD3dCallbacks->dwReserved23);
+        printf(" puD3dCallbacks->dwReserved                                     : 0x%08lx\n",puD3dCallbacks->dwReserved);
+        printf(" puD3dCallbacks->TextureCreate                                  : 0x%08lx\n",puD3dCallbacks->TextureCreate);
+        printf(" puD3dCallbacks->TextureDestroy                                 : 0x%08lx\n",puD3dCallbacks->TextureDestroy);
+        printf(" puD3dCallbacks->TextureSwap                                    : 0x%08lx\n",puD3dCallbacks->TextureSwap);
+        printf(" puD3dCallbacks->TextureGetSurf                                 : 0x%08lx\n",puD3dCallbacks->TextureGetSurf);
+        printf(" puD3dCallbacks->dwReserved12                                   : 0x%08lx\n",puD3dCallbacks->dwReserved12);
+        printf(" puD3dCallbacks->dwReserved13                                   : 0x%08lx\n",puD3dCallbacks->dwReserved13);
+        printf(" puD3dCallbacks->dwReserved14                                   : 0x%08lx\n",puD3dCallbacks->dwReserved14);
+        printf(" puD3dCallbacks->dwReserved15                                   : 0x%08lx\n",puD3dCallbacks->dwReserved15);
+        printf(" puD3dCallbacks->dwReserved16                                   : 0x%08lx\n",puD3dCallbacks->dwReserved16);
+        printf(" puD3dCallbacks->dwReserved17                                   : 0x%08lx\n",puD3dCallbacks->dwReserved17);
+        printf(" puD3dCallbacks->dwReserved18                                   : 0x%08lx\n",puD3dCallbacks->dwReserved18);
+        printf(" puD3dCallbacks->dwReserved19                                   : 0x%08lx\n",puD3dCallbacks->dwReserved19);
+        printf(" puD3dCallbacks->dwReserved20                                   : 0x%08lx\n",puD3dCallbacks->dwReserved20);
+        printf(" puD3dCallbacks->dwReserved21                                   : 0x%08lx\n",puD3dCallbacks->dwReserved21);
+        printf(" puD3dCallbacks->dwReserved24                                   : 0x%08lx\n",puD3dCallbacks->dwReserved24);
         printf(" puD3dCallbacks->dwReserved0                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved0);
         printf(" puD3dCallbacks->dwReserved1                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved1);
         printf(" puD3dCallbacks->dwReserved2                                    : 0x%08lx\n",(long)puD3dCallbacks->dwReserved2);
@@ -1112,8 +1112,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
         printf(" puD3dDriverData->dwNumVertices                                 : 0x%08lx\n",(long)puD3dDriverData->dwNumVertices);
         printf(" puD3dDriverData->dwNumClipVertices                             : 0x%08lx\n",(long)puD3dDriverData->dwNumClipVertices);
         printf(" puD3dDriverData->dwNumTextureFormats                           : 0x%08lx\n",(long)puD3dDriverData->dwNumTextureFormats);
-        printf(" puD3dDriverData->lpTextureFormats                              : 0x%08lx\n",(long)puD3dDriverData->lpTextureFormats);
-        printf(" puD3dDriverData->lpTextureFormats                              : 0x%08lx\n",(long)puD3dDriverData->lpTextureFormats);
+        printf(" puD3dDriverData->lpTextureFormats                              : 0x%08lx\n",puD3dDriverData->lpTextureFormats);
+        printf(" puD3dDriverData->lpTextureFormats                              : 0x%08lx\n",puD3dDriverData->lpTextureFormats);
     }
     else
     {
@@ -1147,11 +1147,11 @@ dump_D3dBufferCallbacks(DD_D3DBUFCALLBACKS *puD3dBufferCallbacks, char *text)
         checkflag(flag,DDHAL_D3DBUFCB32_UNLOCKD3DBUF,"DDHAL_D3DBUFCB32_UNLOCKD3DBUF");                                
         endcheckflag(flag,"puD3dBufferCallbacks->dwFlags"); 
 
-        printf(" puD3dBufferCallbacks->CanCreateD3DBuffer                       : 0x%08lx\n",(long)puD3dBufferCallbacks->CanCreateD3DBuffer);
-        printf(" puD3dBufferCallbacks->CreateD3DBuffer                          : 0x%08lx\n",(long)puD3dBufferCallbacks->CreateD3DBuffer);
-        printf(" puD3dBufferCallbacks->DestroyD3DBuffer                         : 0x%08lx\n",(long)puD3dBufferCallbacks->DestroyD3DBuffer);
-        printf(" puD3dBufferCallbacks->LockD3DBuffer                            : 0x%08lx\n",(long)puD3dBufferCallbacks->LockD3DBuffer);
-        printf(" puD3dBufferCallbacks->UnlockD3DBuffer                          : 0x%08lx\n",(long)puD3dBufferCallbacks->UnlockD3DBuffer);        
+        printf(" puD3dBufferCallbacks->CanCreateD3DBuffer                       : 0x%08lx\n",puD3dBufferCallbacks->CanCreateD3DBuffer);
+        printf(" puD3dBufferCallbacks->CreateD3DBuffer                          : 0x%08lx\n",puD3dBufferCallbacks->CreateD3DBuffer);
+        printf(" puD3dBufferCallbacks->DestroyD3DBuffer                         : 0x%08lx\n",puD3dBufferCallbacks->DestroyD3DBuffer);
+        printf(" puD3dBufferCallbacks->LockD3DBuffer                            : 0x%08lx\n",puD3dBufferCallbacks->LockD3DBuffer);
+        printf(" puD3dBufferCallbacks->UnlockD3DBuffer                          : 0x%08lx\n",puD3dBufferCallbacks->UnlockD3DBuffer);        
     }
     else
     {
@@ -1205,7 +1205,7 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
             printf(" puD3dTextureFormats->dwZBufferBitDepth                         : 0x%08lx\n",(long)myTextureFormats->dwZBufferBitDepth);
             printf(" puD3dTextureFormats->dwAlphaBitDepth                           : 0x%08lx\n",(long)myTextureFormats->dwAlphaBitDepth);
             printf(" puD3dTextureFormats->dwReserved                                : 0x%08lx\n",(long)myTextureFormats->dwReserved);
-            printf(" puD3dTextureFormats->lpSurface                                 : 0x%08lx\n",(long)myTextureFormats->lpSurface);
+            printf(" puD3dTextureFormats->lpSurface                                 : 0x%08lx\n",myTextureFormats->lpSurface);
             printf(" puD3dTextureFormats->ddckCKDestOverlay.dwColorSpaceLowValue    : 0x%08lx\n",(long)myTextureFormats->ddckCKDestOverlay.dwColorSpaceLowValue);
             printf(" puD3dTextureFormats->ddckCKDestOverlay.dwColorSpaceHighValue   : 0x%08lx\n",(long)myTextureFormats->ddckCKDestOverlay.dwColorSpaceHighValue);
             printf(" puD3dTextureFormats->ddckCKDestBlt.dwColorSpaceLowValue        : 0x%08lx\n",(long)myTextureFormats->ddckCKDestBlt.dwColorSpaceLowValue);
@@ -1414,7 +1414,7 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
             endcheckflag(flag,"puD3dTextureFormats->ddsCaps.dwCaps"); 
 
 
-           myTextureFormats = (DDSURFACEDESC *) (((DWORD) myTextureFormats) + sizeof(DDSURFACEDESC));
+           myTextureFormats = (DDSURFACEDESC *) (((DWORD_PTR) myTextureFormats) + sizeof(DDSURFACEDESC));
         }
         else
         {

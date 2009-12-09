@@ -62,7 +62,11 @@ main(int argc, char *argv[])
     Sleep(100);x++;
     if(x>100 && GetThreadContext(thread, &context))
     {
+#ifdef _M_AMD64
+      printf("EIP: %lx\n", context.Rip);
+#else
       printf("EIP: %lx\n", context.Eip);
+#endif
       printf("Calling resumethread ... \n");
       ResumeThread(thread);
     }
