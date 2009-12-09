@@ -205,7 +205,7 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 LONG WINAPI
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
@@ -274,10 +274,12 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       {
          DbgPrint("Faulting Address: %8x\n", ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
       }
-      DbgPrint("Address:          %8x   %s\n",
-         ExceptionInfo->ExceptionRecord->ExceptionAddress,
-         _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod)));
       _dump_context ( ExceptionInfo->ContextRecord );
+      _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
+      DbgPrint("Address:\n   %8x+%-8x   %s\n", 
+               (PVOID)StartAddr, (ULONG_PTR)ExceptionInfo->ExceptionRecord->ExceptionAddress - 
+               (ULONG_PTR)StartAddr, szMod);
+
 #ifdef _X86_
       DbgPrint("Frames:\n");
       _SEH2_TRY
