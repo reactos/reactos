@@ -36,7 +36,6 @@
 # include <getopt.h>
 #endif
 
-#include "winglue.h"
 #include "build.h"
 
 int UsePIC = 0;
@@ -53,7 +52,13 @@ int force_pointer_size = 0;
 enum target_cpu target_cpu = CPU_x86;
 #elif defined(TARGET_amd64)
 enum target_cpu target_cpu = CPU_x86_64;
-#elif defined (TARGET_arm)
+#elif defined(__sparc__)
+enum target_cpu target_cpu = CPU_SPARC;
+#elif defined(__ALPHA__)
+enum target_cpu target_cpu = CPU_ALPHA;
+#elif defined(__powerpc__)
+enum target_cpu target_cpu = CPU_POWERPC;
+#elif defined(TARGET_arm)
 enum target_cpu target_cpu = CPU_ARM;
 #else
 #error Unsupported CPU
@@ -61,14 +66,17 @@ enum target_cpu target_cpu = CPU_ARM;
 
 #ifdef __APPLE__
 enum target_platform target_platform = PLATFORM_APPLE;
+#elif defined(__FreeBSD__)
+enum target_platform target_platform = PLATFORM_FREEBSD;
 #elif defined(__sun)
 enum target_platform target_platform = PLATFORM_SOLARIS;
-#elif defined(_WINDOWS)
+#elif defined(_WIN32)
 enum target_platform target_platform = PLATFORM_WINDOWS;
 #else
 enum target_platform target_platform = PLATFORM_UNSPECIFIED;
 #endif
 
+char *target_alias = NULL;
 char **lib_path = NULL;
 
 char *input_file_name = NULL;
@@ -76,6 +84,7 @@ char *spec_file_name = NULL;
 FILE *output_file = NULL;
 const char *output_file_name = NULL;
 static const char *output_file_source_name;
+static int fake_module;
 
 char *as_command = NULL;
 char *ld_command = NULL;
@@ -93,6 +102,7 @@ enum exec_mode_values
     MODE_DEF,
     MODE_RELAY16,
     MODE_RELAY32,
+    MODE_RESOURCES,
     MODE_PEDLL
 };
 
@@ -106,6 +116,7 @@ static const struct
 {
     { "macos",   PLATFORM_APPLE },
     { "darwin",  PLATFORM_APPLE },
+    { "freebsd", PLATFORM_FREEBSD },
     { "solaris", PLATFORM_SOLARIS },
     { "windows", PLATFORM_WINDOWS },
     { "winnt",   PLATFORM_WINDOWS }
@@ -137,6 +148,7 @@ static void set_subsystem( const char *subsystem, DLLSPEC *spec )
     if (!strcmp( str, "native" )) spec->subsystem = IMAGE_SUBSYSTEM_NATIVE;
     else if (!strcmp( str, "windows" )) spec->subsystem = IMAGE_SUBSYSTEM_WINDOWS_GUI;
     else if (!strcmp( str, "console" )) spec->subsystem = IMAGE_SUBSYSTEM_WINDOWS_CUI;
+    else if (!strcmp( str, "win16" )) spec->type = SPEC_WIN16;
     else fatal_error( "Invalid subsystem name '%s'\n", subsystem );
     if (major)
     {
@@ -157,6 +169,8 @@ static void set_target( const char *target )
     char *p, *platform, *spec = xstrdup( target );
 
     /* target specification is in the form CPU-MANUFACTURER-OS or CPU-MANUFACTURER-KERNEL-OS */
+
+    target_alias = xstrdup( target );
 
     /* get the CPU part */
 
@@ -180,25 +194,6 @@ static void set_target( const char *target )
     }
 
     free( spec );
-
-    if (!as_command)
-    {
-        as_command = xmalloc( strlen(target) + sizeof("-as") );
-        strcpy( as_command, target );
-        strcat( as_command, "-as" );
-    }
-    if (!ld_command)
-    {
-        ld_command = xmalloc( strlen(target) + sizeof("-ld") );
-        strcpy( ld_command, target );
-        strcat( ld_command, "-ld" );
-    }
-    if (!nm_command)
-    {
-        nm_command = xmalloc( strlen(target) + sizeof("-nm") );
-        strcpy( nm_command, target );
-        strcat( nm_command, "-nm" );
-    }
 }
 
 /* cleanup on program exit */
@@ -219,43 +214,46 @@ static void exit_on_signal( int sig )
 static const char usage_str[] =
 "Usage: winebuild [OPTIONS] [FILES]\n\n"
 "Options:\n"
-"       --as-cmd=AS          Command to use for assembling (default: as)\n"
-"   -b, --target=TARGET      Specify target CPU and platform for cross-compiling\n"
-"   -d, --delay-lib=LIB      Import the specified library in delayed mode\n"
-"   -D SYM                   Ignored for C flags compatibility\n"
-"   -e, --entry=FUNC         Set the DLL entry point function (default: DllMain)\n"
-"   -E, --export=FILE        Export the symbols defined in the .spec or .def file\n"
-"       --external-symbols   Allow linking to external symbols\n"
-"   -f FLAGS                 Compiler flags (only -fPIC is supported)\n"
-"   -F, --filename=DLLFILE   Set the DLL filename (default: from input file name)\n"
-"   -h, --help               Display this help message\n"
-"   -H, --heap=SIZE          Set the heap size for a Win16 dll\n"
-"   -i, --ignore=SYM[,SYM]   Ignore specified symbols when resolving imports\n"
-"   -I DIR                   Ignored for C flags compatibility\n"
-"   -k, --kill-at            Kill stdcall decorations in generated .def files\n"
-"   -K, FLAGS                Compiler flags (only -KPIC is supported)\n"
-"       --ld-cmd=LD          Command to use for linking (default: ld)\n"
-"   -l, --library=LIB        Import the specified library\n"
-"   -L, --library-path=DIR   Look for imports libraries in DIR\n"
-"   -m32, -m64               Force building 32-bit resp. 64-bit code\n"
-"   -M, --main-module=MODULE Set the name of the main module for a Win16 dll\n"
-"       --nm-cmd=NM          Command to use to get undefined symbols (default: nm)\n"
-"       --nxcompat=y|n       Set the NX compatibility flag (default: yes)\n"
-"   -N, --dll-name=DLLNAME   Set the DLL name (default: from input file name)\n"
-"   -o, --output=NAME        Set the output file name (default: stdout)\n"
-"   -r, --res=RSRC.RES       Load resources from RSRC.RES\n"
-"       --save-temps         Do not delete the generated intermediate files\n"
-"       --subsystem=SUBSYS   Set the subsystem (one of native, windows, console)\n"
-"   -u, --undefined=SYMBOL   Add an undefined reference to SYMBOL when linking\n"
-"   -v, --verbose            Display the programs invoked\n"
-"       --version            Print the version and exit\n"
-"   -w, --warnings           Turn on warnings\n"
+"       --as-cmd=AS           Command to use for assembling (default: as)\n"
+"   -b, --target=TARGET       Specify target CPU and platform for cross-compiling\n"
+"   -d, --delay-lib=LIB       Import the specified library in delayed mode\n"
+"   -D SYM                    Ignored for C flags compatibility\n"
+"   -e, --entry=FUNC          Set the DLL entry point function (default: DllMain)\n"
+"   -E, --export=FILE         Export the symbols defined in the .spec or .def file\n"
+"       --external-symbols    Allow linking to external symbols\n"
+"   -f FLAGS                  Compiler flags (only -fPIC is supported)\n"
+"   -F, --filename=DLLFILE    Set the DLL filename (default: from input file name)\n"
+"       --fake-module         Create a fake binary module\n"
+"   -h, --help                Display this help message\n"
+"   -H, --heap=SIZE           Set the heap size for a Win16 dll\n"
+"   -i, --ignore=SYM[,SYM]    Ignore specified symbols when resolving imports\n"
+"   -I DIR                    Ignored for C flags compatibility\n"
+"   -k, --kill-at             Kill stdcall decorations in generated .def files\n"
+"   -K, FLAGS                 Compiler flags (only -KPIC is supported)\n"
+"       --large-address-aware Support an address space larger than 2Gb\n"
+"       --ld-cmd=LD           Command to use for linking (default: ld)\n"
+"   -l, --library=LIB         Import the specified library\n"
+"   -L, --library-path=DIR    Look for imports libraries in DIR\n"
+"   -m32, -m64                Force building 32-bit resp. 64-bit code\n"
+"   -M, --main-module=MODULE  Set the name of the main module for a Win16 dll\n"
+"       --nm-cmd=NM           Command to use to get undefined symbols (default: nm)\n"
+"       --nxcompat=y|n        Set the NX compatibility flag (default: yes)\n"
+"   -N, --dll-name=DLLNAME    Set the DLL name (default: from input file name)\n"
+"   -o, --output=NAME         Set the output file name (default: stdout)\n"
+"   -r, --res=RSRC.RES        Load resources from RSRC.RES\n"
+"       --save-temps          Do not delete the generated intermediate files\n"
+"       --subsystem=SUBSYS    Set the subsystem (one of native, windows, console)\n"
+"   -u, --undefined=SYMBOL    Add an undefined reference to SYMBOL when linking\n"
+"   -v, --verbose             Display the programs invoked\n"
+"       --version             Print the version and exit\n"
+"   -w, --warnings            Turn on warnings\n"
 "\nMode options:\n"
-"       --dll                Build a .c file from a .spec or .def file\n"
-"       --def                Build a .def file from a .spec file\n"
-"       --exe                Build a .c file for an executable\n"
-"       --relay16            Build the 16-bit relay assembly routines\n"
-"       --relay32            Build the 32-bit relay assembly routines\n\n"
+"       --dll                 Build a .c file from a .spec or .def file\n"
+"       --def                 Build a .def file from a .spec file\n"
+"       --exe                 Build a .c file for an executable\n"
+"       --relay16             Build the 16-bit relay assembly routines\n"
+"       --relay32             Build the 32-bit relay assembly routines\n"
+"       --resources           Build a .o file for the resource files\n\n"
 "       --pedll              Build a .c file for PE dll\n\n"
 "The mode options are mutually exclusive; you must specify one and only one.\n\n";
 
@@ -266,11 +264,14 @@ enum long_options_values
     LONG_OPT_EXE,
     LONG_OPT_ASCMD,
     LONG_OPT_EXTERNAL_SYMS,
+    LONG_OPT_FAKE_MODULE,
+    LONG_OPT_LARGE_ADDRESS_AWARE,
     LONG_OPT_LDCMD,
     LONG_OPT_NMCMD,
     LONG_OPT_NXCOMPAT,
     LONG_OPT_RELAY16,
     LONG_OPT_RELAY32,
+    LONG_OPT_RESOURCES,
     LONG_OPT_SAVE_TEMPS,
     LONG_OPT_SUBSYSTEM,
     LONG_OPT_VERSION,
@@ -286,11 +287,14 @@ static const struct option long_options[] =
     { "exe",           0, 0, LONG_OPT_EXE },
     { "as-cmd",        1, 0, LONG_OPT_ASCMD },
     { "external-symbols", 0, 0, LONG_OPT_EXTERNAL_SYMS },
+    { "fake-module",   0, 0, LONG_OPT_FAKE_MODULE },
+    { "large-address-aware", 0, 0, LONG_OPT_LARGE_ADDRESS_AWARE },
     { "ld-cmd",        1, 0, LONG_OPT_LDCMD },
     { "nm-cmd",        1, 0, LONG_OPT_NMCMD },
     { "nxcompat",      1, 0, LONG_OPT_NXCOMPAT },
     { "relay16",       0, 0, LONG_OPT_RELAY16 },
     { "relay32",       0, 0, LONG_OPT_RELAY32 },
+    { "resources",     0, 0, LONG_OPT_RESOURCES },
     { "save-temps",    0, 0, LONG_OPT_SAVE_TEMPS },
     { "subsystem",     1, 0, LONG_OPT_SUBSYSTEM },
     { "version",       0, 0, LONG_OPT_VERSION },
@@ -373,7 +377,7 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             else force_pointer_size = 8;
             break;
         case 'M':
-            spec->type = SPEC_WIN16;
+            spec->main_module = xstrdup( optarg );
             break;
         case 'N':
             spec->dll_name = xstrdup( optarg );
@@ -460,8 +464,14 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
         case LONG_OPT_ASCMD:
             as_command = xstrdup( optarg );
             break;
+        case LONG_OPT_FAKE_MODULE:
+            fake_module = 1;
+            break;
         case LONG_OPT_EXTERNAL_SYMS:
             link_ext_symbols = 1;
+            break;
+        case LONG_OPT_LARGE_ADDRESS_AWARE:
+            spec->characteristics |= IMAGE_FILE_LARGE_ADDRESS_AWARE;
             break;
         case LONG_OPT_LDCMD:
             ld_command = xstrdup( optarg );
@@ -478,6 +488,9 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             break;
         case LONG_OPT_RELAY32:
             set_exec_mode( MODE_RELAY32 );
+            break;
+        case LONG_OPT_RESOURCES:
+            set_exec_mode( MODE_RESOURCES );
             break;
         case LONG_OPT_SAVE_TEMPS:
             save_temps = 1;
@@ -603,18 +616,31 @@ int main(int argc, char **argv)
         if (spec->subsystem != IMAGE_SUBSYSTEM_NATIVE)
             spec->characteristics |= IMAGE_FILE_DLL;
         if (!spec_file_name) fatal_error( "missing .spec file\n" );
+        if (spec->type == SPEC_WIN32 && spec->main_module)  /* embedded 16-bit module */
+        {
+            spec->type = SPEC_WIN16;
+            load_resources( argv, spec );
+            if (parse_input_file( spec )) BuildSpec16File( spec );
+            break;
+        }
         /* fall through */
     case MODE_EXE:
         load_resources( argv, spec );
         load_import_libs( argv );
         if (spec_file_name && !parse_input_file( spec )) break;
+        if (fake_module)
+        {
+            if (spec->type == SPEC_WIN16) output_fake_module16( spec );
+            else output_fake_module( spec );
+            break;
+        }
+        read_undef_symbols( spec, argv );
         switch (spec->type)
         {
             case SPEC_WIN16:
-                fatal_error( "Win16 specs are not supported in ReactOS version of winebuild\n" );
+                output_spec16_file( spec );
                 break;
             case SPEC_WIN32:
-                read_undef_symbols( spec, argv );
                 BuildSpec32File( spec );
                 break;
             default: assert(0);
@@ -628,15 +654,21 @@ int main(int argc, char **argv)
         BuildDef32File( spec );
         break;
     case MODE_RELAY16:
-        fatal_error( "Win16 relays are not supported in ReactOS version of winebuild\n" );
+        if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
+        BuildRelays16();
         break;
     case MODE_RELAY32:
-        fatal_error( "Win32 relays are not supported in ReactOS version of winebuild\n" );
+        if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
+        BuildRelays32();
         break;
     case MODE_PEDLL:
         if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
         if (!parse_input_file( spec )) break;
         BuildPedllFile( spec );
+        break;
+    case MODE_RESOURCES:
+        load_resources( argv, spec );
+        output_res_o_file( spec );
         break;
     default:
         usage(1);

@@ -35,7 +35,6 @@
 # include <unistd.h>
 #endif
 
-#include "winglue.h"
 #include "build.h"
 
 struct import
@@ -378,6 +377,7 @@ static const char *get_default_entry_point( const DLLSPEC *spec )
 {
     if (spec->characteristics & IMAGE_FILE_DLL) return "__wine_spec_dll_entry";
     if (spec->subsystem == IMAGE_SUBSYSTEM_NATIVE) return "__wine_spec_drv_entry";
+    if (spec->type == SPEC_WIN16) return "__wine_spec_exe16_entry";
     return "__wine_spec_exe_entry";
 }
 
@@ -466,7 +466,7 @@ static void check_undefined_exports( DLLSPEC *spec )
     for (i = 0; i < spec->nb_entry_points; i++)
     {
         ORDDEF *odp = &spec->entry_points[i];
-        if (odp->type == TYPE_STUB) continue;
+        if (odp->type == TYPE_STUB || odp->type == TYPE_ABS) continue;
         if (odp->flags & FLAG_FORWARD) continue;
         if (find_name( odp->link_name, &undef_symbols ))
         {
@@ -508,7 +508,7 @@ static char *create_undef_symbols_file( DLLSPEC *spec )
     for (i = 0; i < spec->nb_entry_points; i++)
     {
         ORDDEF *odp = &spec->entry_points[i];
-        if (odp->type == TYPE_STUB) continue;
+        if (odp->type == TYPE_STUB || odp->type == TYPE_ABS) continue;
         if (odp->flags & FLAG_FORWARD) continue;
         fprintf( f, "\t%s %s\n", get_asm_ptr_keyword(), asm_name(odp->link_name) );
     }
@@ -526,21 +526,21 @@ static char *create_undef_symbols_file( DLLSPEC *spec )
 static const char *ldcombine_files( DLLSPEC *spec, char **argv )
 {
     unsigned int i, len = 0;
+    const char *prog = get_ld_command();
     char *cmd, *p, *ld_tmp_file, *undef_file;
     int err;
 
     undef_file = create_undef_symbols_file( spec );
     len += strlen(undef_file) + 1;
     ld_tmp_file = get_temp_file_name( output_file_name, ".o" );
-    if (!ld_command) ld_command = xstrdup("ld");
     for (i = 0; argv[i]; i++) len += strlen(argv[i]) + 1;
-    cmd = p = xmalloc( len + strlen(ld_tmp_file) + 8 + strlen(ld_command)  );
-    p += sprintf( cmd, "%s -r -o %s %s", ld_command, ld_tmp_file, undef_file );
+    cmd = p = xmalloc( len + strlen(ld_tmp_file) + 8 + strlen(prog)  );
+    p += sprintf( cmd, "%s -r -o %s %s", prog, ld_tmp_file, undef_file );
     for (i = 0; argv[i]; i++)
         p += sprintf( p, " %s", argv[i] );
     if (verbose) fprintf( stderr, "%s\n", cmd );
     err = system( cmd );
-    if (err) fatal_error( "%s -r failed with status %d\n", ld_command, err );
+    if (err) fatal_error( "%s -r failed with status %d\n", prog, err );
     free( cmd );
     return ld_tmp_file;
 }
@@ -550,6 +550,7 @@ void read_undef_symbols( DLLSPEC *spec, char **argv )
 {
     size_t prefix_len;
     FILE *f;
+    const char *prog = get_nm_command();
     char *cmd, buffer[1024], name_prefix[16];
     int err;
     const char *name;
@@ -563,9 +564,8 @@ void read_undef_symbols( DLLSPEC *spec, char **argv )
 
     name = ldcombine_files( spec, argv );
 
-    if (!nm_command) nm_command = xstrdup("nm");
-    cmd = xmalloc( strlen(nm_command) + strlen(name) + 5 );
-    sprintf( cmd, "%s -u %s", nm_command, name );
+    cmd = xmalloc( strlen(prog) + strlen(name) + 5 );
+    sprintf( cmd, "%s -u %s", prog, name );
     if (!(f = popen( cmd, "r" )))
         fatal_error( "Cannot execute '%s'\n", cmd );
 
@@ -668,7 +668,9 @@ static void output_import_thunk( const char *name, const char *table, int pos )
         }
         break;
     case CPU_x86_64:
+        output( "\t.cfi_startproc\n" );
         output( "\tjmpq *%s+%d(%%rip)\n", table, pos );
+        output( "\t.cfi_endproc\n" );
         break;
     case CPU_SPARC:
         if ( !UsePIC )
@@ -696,6 +698,10 @@ static void output_import_thunk( const char *name, const char *table, int pos )
         output( "\tlda $0,%s\n", table );
         output( "\tlda $0,%d($0)\n", pos );
         output( "\tjmp $31,($0)\n" );
+        break;
+    case CPU_ARM:
+        output( "\tmov r4, #%s\n", table );
+        output( "\tldr r15, [r4, #%d]\n", pos );
         break;
     case CPU_POWERPC:
         output( "\tmr %s, %s\n", ppc_reg(0), ppc_reg(31) );
@@ -970,23 +976,27 @@ static void output_delayed_import_thunks( const DLLSPEC *spec )
         output( "\tjmp *%%eax\n" );
         break;
     case CPU_x86_64:
-        output( "\tpushq %%rdx\n" );
-        output( "\tpushq %%rcx\n" );
-        output( "\tpushq %%r8\n" );
-        output( "\tpushq %%r9\n" );
-        output( "\tpushq %%r10\n" );
-        output( "\tpushq %%r11\n" );
-        output( "\tsubq $40,%%rsp\n" );
+        output( "\t.cfi_startproc\n" );
+        output( "\tsubq $88,%%rsp\n" );
+        output( "\t.cfi_adjust_cfa_offset 88\n" );
+        output( "\tmovq %%rdx,80(%%rsp)\n" );
+        output( "\tmovq %%rcx,72(%%rsp)\n" );
+        output( "\tmovq %%r8,64(%%rsp)\n" );
+        output( "\tmovq %%r9,56(%%rsp)\n" );
+        output( "\tmovq %%r10,48(%%rsp)\n" );
+        output( "\tmovq %%r11,40(%%rsp)\n" );
         output( "\tmovq %%rax,%%rcx\n" );
         output( "\tcall %s\n", asm_name("__wine_spec_delay_load") );
-        output( "\taddq $40,%%rsp\n" );
-        output( "\tpopq %%r11\n" );
-        output( "\tpopq %%r10\n" );
-        output( "\tpopq %%r9\n" );
-        output( "\tpopq %%r8\n" );
-        output( "\tpopq %%rcx\n" );
-        output( "\tpopq %%rdx\n" );
+        output( "\tmovq 40(%%rsp),%%r11\n" );
+        output( "\tmovq 48(%%rsp),%%r10\n" );
+        output( "\tmovq 56(%%rsp),%%r9\n" );
+        output( "\tmovq 64(%%rsp),%%r8\n" );
+        output( "\tmovq 72(%%rsp),%%rcx\n" );
+        output( "\tmovq 80(%%rsp),%%rdx\n" );
+        output( "\taddq $88,%%rsp\n" );
+        output( "\t.cfi_adjust_cfa_offset -88\n" );
         output( "\tjmp *%%rax\n" );
+        output( "\t.cfi_endproc\n" );
         break;
     case CPU_SPARC:
         output( "\tsave %%sp, -96, %%sp\n" );
@@ -998,6 +1008,11 @@ static void output_delayed_import_thunks( const DLLSPEC *spec )
     case CPU_ALPHA:
         output( "\tjsr $26,%s\n", asm_name("__wine_spec_delay_load") );
         output( "\tjmp $31,($0)\n" );
+        break;
+    case CPU_ARM:
+        output( "\tstmfd  sp!, {r4, r5, r6, r7, r8, r9, r10, lr}\n" );
+        output( "\tblx %s\n", asm_name("__wine_spec_delay_load") );
+        output( "\tldmfd  sp!, {r4, r5, r6, r7, r8, r9, r10, pc}\n" );
         break;
     case CPU_POWERPC:
         if (target_platform == PLATFORM_APPLE) extra_stack_storage = 56;
@@ -1068,8 +1083,10 @@ static void output_delayed_import_thunks( const DLLSPEC *spec )
                 output( "\tjmp %s\n", asm_name("__wine_delay_load_asm") );
                 break;
             case CPU_x86_64:
+                output( "\t.cfi_startproc\n" );
                 output( "\tmovq $%d,%%rax\n", (idx << 16) | j );
                 output( "\tjmp %s\n", asm_name("__wine_delay_load_asm") );
+                output( "\t.cfi_endproc\n" );
                 break;
             case CPU_SPARC:
                 output( "\tset %d, %%g1\n", (idx << 16) | j );
@@ -1079,6 +1096,9 @@ static void output_delayed_import_thunks( const DLLSPEC *spec )
                 output( "\tlda $0,%d($31)\n", j);
                 output( "\tldah $0,%d($0)\n", idx);
                 output( "\tjmp $31,%s\n", asm_name("__wine_delay_load_asm") );
+                break;
+            case CPU_ARM:
+                output( "\tb %s\n", asm_name("__wine_delay_load_asm") );
                 break;
             case CPU_POWERPC:
                 switch(target_platform)
@@ -1235,6 +1255,9 @@ void output_stubs( DLLSPEC *spec )
             output( "\tcall %s\n", asm_name("__wine_spec_unimplemented_stub") );
             break;
         case CPU_x86_64:
+            output( "\t.cfi_startproc\n" );
+            output( "\tsubq $8,%%rsp\n" );
+            output( "\t.cfi_adjust_cfa_offset 8\n" );
             output( "\tleaq .L__wine_spec_file_name(%%rip),%%rdi\n" );
             if (exp_name)
             {
@@ -1243,8 +1266,8 @@ void output_stubs( DLLSPEC *spec )
             }
             else
                 output( "\tmovq $%d,%%rsi\n", odp->ordinal );
-            output( "\tsubq $8,%%rsp\n" );
             output( "\tcall %s\n", asm_name("__wine_spec_unimplemented_stub") );
+            output( "\t.cfi_endproc\n" );
             break;
         default:
             assert(0);

@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 EXEEXT    = @EXEEXT@
+DEFS      = -D__WINESRC__ $(EXTRADEFS)
 
 PROGRAMS = winebuild$(EXEEXT)
 MANPAGES = winebuild.man
@@ -28,7 +29,7 @@ all: $(PROGRAMS) $(MANPAGES)
 winebuild$(EXEEXT): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBPORT) $(LDFLAGS)
 
-install:: $(PROGRAMS) $(MANPAGES) $(INSTALLDIRS)
+install install-dev:: $(PROGRAMS) $(MANPAGES) $(INSTALLDIRS)
 	$(INSTALL_PROGRAM) winebuild$(EXEEXT) $(DESTDIR)$(bindir)/winebuild$(EXEEXT)
 	$(INSTALL_DATA) winebuild.man $(DESTDIR)$(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
 
