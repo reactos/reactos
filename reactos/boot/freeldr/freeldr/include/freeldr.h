@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <rosldr.h>
+#include <arcemul.h>
 #include <arch.h>
 #include <rtl.h>
 #include <disk.h>
@@ -97,7 +98,6 @@
 #include <bget.h>
 #include <winerror.h>
 /* Needed by boot manager */
-#include <bootmgr.h>
 #include <oslist.h>
 #include <options.h>
 #include <linux.h>

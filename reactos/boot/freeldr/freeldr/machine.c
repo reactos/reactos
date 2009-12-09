@@ -41,7 +41,6 @@
 #undef MachDiskReadLogicalSectors
 #undef MachDiskGetDriveGeometry
 #undef MachDiskGetCacheableBlockCount
-#undef MachHwDetect
 
 MACHVTBL MachVtbl;
 
@@ -175,12 +174,6 @@ ULONG
 MachDiskGetCacheableBlockCount(ULONG DriveNumber)
 {
   return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
-}
-
-VOID
-MachHwDetect(VOID)
-{
-  MachVtbl.HwDetect();
 }
 
 /* EOF */
