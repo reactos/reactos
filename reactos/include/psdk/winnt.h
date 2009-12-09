@@ -4165,6 +4165,32 @@ typedef struct _NT_TIB {
 	struct _NT_TIB *Self;
 } NT_TIB,*PNT_TIB;
 
+typedef struct _NT_TIB32 {
+	DWORD ExceptionList;
+	DWORD StackBase;
+	DWORD StackLimit;
+	DWORD SubSystemTib;
+	union {
+		DWORD FiberData;
+		DWORD Version;
+	};
+	DWORD ArbitraryUserPointer;
+	DWORD Self;
+} NT_TIB32,*PNT_TIB32;
+
+typedef struct _NT_TIB64 {
+	DWORD64 ExceptionList;
+	DWORD64 StackBase;
+	DWORD64 StackLimit;
+	DWORD64 SubSystemTib;
+	union {
+		DWORD64 FiberData;
+		DWORD Version;
+	};
+	DWORD64 ArbitraryUserPointer;
+	DWORD64 Self;
+} NT_TIB64,*PNT_TIB64;
+
 typedef struct _REPARSE_GUID_DATA_BUFFER {
 	DWORD  ReparseTag;
 	WORD   ReparseDataLength;
