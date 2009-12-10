@@ -258,7 +258,7 @@ typedef struct STRUCT(_TEB)
     ULONG                  HardErrorsAreDisabled;
 #endif
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PTR(PVOID)             Instrumentation[9];
+    PTR(PVOID)             Instrumentation[13 - sizeof(GUID)/sizeof(PTR(PVOID))];
     GUID                   ActivityId;
     PTR(PVOID)             SubProcessTag;
     PTR(PVOID)             EtwLocalData;
@@ -365,7 +365,6 @@ C_ASSERT(FIELD_OFFSET(STRUCT(TEB), GdiTebBatch) == 0x2F0);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), LastStatusValue) == 0x1250);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), Vdm) == 0x1690);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), HardErrorMode) == 0x16B0);
-C_ASSERT(FIELD_OFFSET(STRUCT(TEB), SubProcessTag) == 0x1728);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), GdiBatchCount) == 0x1740);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), IdealProcessor) == 0x1747);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), WaitingOnLoaderLock) == 0x1760);
