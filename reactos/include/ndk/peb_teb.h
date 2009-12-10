@@ -215,7 +215,7 @@ typedef struct STRUCT(_TEB)
     LONG                   ExceptionCode;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PTR(struct _ACTIVATION_CONTEXT_STACK*) ActivationContextStackPointer;
-    UCHAR                  SpareBytes1[0x30 - 3 * sizeof(PTR(PVOID)];
+    UCHAR                  SpareBytes1[0x30 - 3 * sizeof(PTR(PVOID))];
     ULONG                  TxFsContext;
 #elif (NTDDI_VERSION >= NTDDI_WS03)
     PTR(struct _ACTIVATION_CONTEXT_STACK*) ActivationContextStackPointer;
