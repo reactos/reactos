@@ -79,8 +79,8 @@ KiUserCallbackDispatcher(ULONG Index,
                          ULONG ArgumentLength)
 {
     /* Return with the result of the callback function */
+    USER_CALL *KernelCallbackTable = NtCurrentPeb()->KernelCallbackTable;
     ZwCallbackReturn(NULL,
                      0,
-                     ((USER_CALL)(NtCurrentPeb()->KernelCallbackTable[Index]))
-                     (Argument, ArgumentLength));
+                     KernelCallbackTable[Index](Argument, ArgumentLength));
 }
