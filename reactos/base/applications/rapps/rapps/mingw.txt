@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = MinGW
@@ -18,4 +18,5 @@ Description = Eine Portierung der GNU Werkzeugkette mit GCC, GDB, GNU make usw.
 Description = Es una cadena de herramientas GNU con GCC, GDB, GNU make, etc.
 
 [Section.0415]
-Description = Kompilator GCC dla platformy Windows wraz z dodatkowymi narz�dziami (GDB, make, itd.).
+Description = Kompilator GCC dla platformy Windows wraz z dodatkowymi narzędziami (GDB, make, itd.).
+

@@ -1,4 +1,4 @@
-; UTF-8
+Ôªø; UTF-8
 
 [Section]
 Name = OpenOffice 3.0
@@ -19,7 +19,7 @@ Version = 3.1.1
 URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/de/3.1.1/OOo_3.1.1_Win32Intel_install_wJRE_de.exe
 
 [Section.040a]
-Description = La suite de ofim·tica de cÛdigo abierto.
+Description = La suite de ofim√°tica de c√≥digo abierto.
 URLSite = http://es.openoffice.org/
 Size = 130.0MB
 Version = 3.1.0
@@ -30,3 +30,4 @@ Description = Otwarty pakiet biurowy.
 URLSite = http://pl.openoffice.org
 Size = 147.1MB
 URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/pl/3.1.1/OOo_3.1.1_Win32Intel_install_pl.exe
+

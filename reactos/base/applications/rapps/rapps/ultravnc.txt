@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = UltraVNC
@@ -12,4 +12,5 @@ URLDownload = http://support1.uvnc.com/download/1080/UltraVNC_1.0.8.0_Setup.exe
 CDPath = none
 
 [Section.040a]
-Description = Cliente/Servidor VNC de c�digo abierto.
+Description = Cliente/Servidor VNC de código abierto.
+

@@ -14,8 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Open source Multiprotocol Instant Messaging Anwendung - funktioniert möglicherweise nicht vollständig.
 
+[Section.040a]
+Description = Aplicación de mensajería instantánea multiprotocolo de código abierto - Puede no funcionar en su totalidad.
+
 [Section.0415]
 Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
 
-[Section.040a]
-Description = AplicaciÃ³n de mensajerÃ­a instantÃ¡nea multiprotocolo de cÃ³digo abierto - Puede no funcionar en su totalidad.

@@ -1,4 +1,4 @@
-; UTF-8
+Ôªø; UTF-8
 
 [Section]
 Name = SMPlayer
@@ -16,8 +16,9 @@ URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=de
 
 [Section.040a]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=es
-Description = Interfaz gr·fico para Mplayer (reproductor multimedia).
+Description = Interfaz gr√°fico para Mplayer (reproductor multimedia).
 
 [Section.0415]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=pl
-Description = Graficzna nak≥adka na MPlayer, otwarty odtwarzacz filmÛw.
+Description = Graficzna nak≈Çadka na MPlayer, otwarty odtwarzacz film√≥w.
+

@@ -1,4 +1,4 @@
-; UTF-8
+Ôªø; UTF-8
 
 [Section]
 Name = PuTTY
@@ -18,4 +18,5 @@ Description = Ein freier SSH-, Telnet-, rlogin- und TCP-Client.
 Description = Un ciente SSH, Telnet, rlogin y TCP gratuito.
 
 [Section.0415]
-Description = Darmowy klient obs≥ugujπcy protoko≥y SSH, Telnet, rlogin oraz bezpoúrednie TCP.
+Description = Darmowy klient obs≈ÇugujƒÖcy protoko≈Çy SSH, Telnet, rlogin oraz bezpo≈õrednie TCP.
+

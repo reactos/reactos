@@ -22,3 +22,4 @@ Description = Complementos adicionales para soportar más formatos.
 [Section.0415]
 Licence = Freeware (dla użytku domowego)
 Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.
+

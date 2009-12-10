@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = Visual Studio 6 Runtime
@@ -22,3 +22,4 @@ Description = Librerias Visual Studio 2006.
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Studio 6.
+

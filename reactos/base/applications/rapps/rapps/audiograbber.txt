@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = Audio Grabber
@@ -18,4 +18,5 @@ Description = Ein sehr guter CD-Ripper/Audio-Datei-Konverter.
 Description = Un buen CD Ripper/ conversor de archivos de audio.
 
 [Section.0415]
-Description = Bardzo dobry CD Ripper/konwerter plik�w audio.
+Description = Bardzo dobry CD Ripper/konwerter plików audio.
+

@@ -1,4 +1,4 @@
-; UTF-8
+ï»¿; UTF-8
 
 [Section]
 Name = ScummVM
@@ -18,4 +18,5 @@ Description = Sam and Max, Day of the Tentacle usw in ReactOS.
 Description = Sam and Max, Day of the Tentacle en ReactOS.
 
 [Section.0415]
-Description = Program pozwalaj¹cy uruchomiæ stare gry przygodowe (Sam and Max, Day of the Tentacle, Monkey Island) w ReactOS.
+Description = Program pozwalajÄ…cy uruchomiÄ‡ stare gry przygodowe (Sam and Max, Day of the Tentacle, Monkey Island) w ReactOS.
+

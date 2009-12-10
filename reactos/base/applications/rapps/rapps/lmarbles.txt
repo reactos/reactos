@@ -1,4 +1,4 @@
-; UTF-8
+ï»¿; UTF-8
 
 [Section]
 Name = LMarbles
@@ -18,4 +18,5 @@ Description = Atomix-Klon verwendet SDL Bibliotheken.
 Description = Clon de Atomix usando las librerias SDL.
 
 [Section.0415]
-Description = Klon gry Atomix, u¿ywaj¹cy biblioteki SDL.
+Description = Klon gry Atomix, uÅ¼ywajÄ…cy biblioteki SDL.
+

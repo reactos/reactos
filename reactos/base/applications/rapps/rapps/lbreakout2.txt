@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = LBreakout2
@@ -18,4 +18,5 @@ Description = Breakout-Klon verwendet SDL Bibliothek.
 Description = Clon de Breakout usando las librerias SDL.
 
 [Section.0415]
-Description = Klon Breakouta/Arkanoida napisany przy u�yciu biblioteki SDL.
+Description = Klon Breakouta/Arkanoida napisany przy użyciu biblioteki SDL.
+

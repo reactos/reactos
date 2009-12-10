@@ -1,4 +1,4 @@
-; UTF-8
+ï»¿; UTF-8
 
 [Section]
 Name = Samba TNG
@@ -18,4 +18,5 @@ Description = Dieses Werkzeug erlaubt den Zugriff auf Windows' gemeinsame Verzei
 Description = Esta utilidad le permite acceder a sus carpetas e impresoras compartidas en Windows con ReactOS.
 
 [Section.0415]
-Description = Narzêdzie pozwalaj¹ce na dostêp z poziomu ReactOSa do wspó³dzielonych folderów/drukarek Windows.
+Description = NarzÄ™dzie pozwalajÄ…ce na dostÄ™p z poziomu ReactOSa do wspÃ³Å‚dzielonych folderÃ³w/drukarek Windows.
+
