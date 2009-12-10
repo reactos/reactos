@@ -88,7 +88,7 @@ VOID NTAPI
 RtlAcquirePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebLockRoutine (Peb->FastPebLock);
+   RtlEnterCriticalSection(Peb->FastPebLock);
 }
 
 /*
@@ -98,7 +98,7 @@ VOID NTAPI
 RtlReleasePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebUnlockRoutine (Peb->FastPebLock);
+   RtlLeaveCriticalSection(Peb->FastPebLock);
 }
 
 /*

@@ -343,8 +343,6 @@ LdrpInit2(PCONTEXT Context,
     /* initalize peb lock support */
     RtlInitializeCriticalSection(&PebLock);
     Peb->FastPebLock = &PebLock;
-    Peb->FastPebLockRoutine = (PPEBLOCKROUTINE)RtlEnterCriticalSection;
-    Peb->FastPebUnlockRoutine = (PPEBLOCKROUTINE)RtlLeaveCriticalSection;
 
     /* initialize tls bitmaps */
     RtlInitializeBitMap(&TlsBitMap, Peb->TlsBitmapBits, TLS_MINIMUM_AVAILABLE);
