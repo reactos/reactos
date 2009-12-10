@@ -902,10 +902,11 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   ULONG_PTR cookie;
   PPEB Peb = NtCurrentPeb();
 
-  TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n",
+  TRACE_LDR("LdrLoadDll loading %wZ%S%S with flags %d\n",
             Name,
             SearchPath ? L" from " : L"",
-            SearchPath ? SearchPath : L"");
+            SearchPath ? SearchPath : L"",
+            LoadFlags ? *LoadFlags : 0);
 
   Status = LdrpLoadModule(SearchPath, LoadFlags ? *LoadFlags : 0, Name, &Module, BaseAddress);
 
@@ -1493,7 +1494,7 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
    UNICODE_STRING DllName;
    NTSTATUS Status;
 
-   DPRINT("LdrpGetOrLoadModule() called for %s\n", Name);
+   DPRINT1("LdrpGetOrLoadModule() called for %s\n", Name);
 
    RtlInitAnsiString(&AnsiDllName, Name);
    Status = RtlAnsiStringToUnicodeString(&DllName, &AnsiDllName, TRUE);
