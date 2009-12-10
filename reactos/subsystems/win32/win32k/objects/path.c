@@ -1491,7 +1491,7 @@ end:
         POINT pt;
         IntGetCurrentPositionEx(dc, &pt);
         IntDPtoLP(dc, &pt, 1);
-        IntGdiMoveToEx(dc, pt.x, pt.y, NULL);
+        IntGdiMoveToEx(dc, pt.x, pt.y, NULL, FALSE);
     }
     DPRINT("Leave %s, ret=%d\n", __FUNCTION__, ret);
     return ret;
