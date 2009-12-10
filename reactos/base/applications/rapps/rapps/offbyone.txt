@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = Off By One Browser
@@ -14,6 +14,9 @@ CDPath = none
 
 [Section.0407]
 Description = Der Off-By-One-Browser ist ein sehr kleiner und schneller Webbrowser mit voller HTML 3.2 Unterstützung.
+
+[Section.040a]
+Description = Es un pequeño y rápido navegador web con completo soporte HTML 3.2.
 
 [Section.0415]
 Description = Bardzo mała i szybka przeglądarka internetowa z pełną obsługą HTML 3.2.

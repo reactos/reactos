@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = mIRC
@@ -11,9 +11,11 @@ URLSite = http://www.mirc.com
 URLDownload = http://mirc.bigchief.dk/mirc635.exe
 CDPath = none
 
-
 [Section.0407]
 Description = Der populärste Client für Internet Relay Chat (IRC).
+
+[Section.040a]
+Description = El más popular cliente para Internet Relay Chat (IRC).
 
 [Section.0415]
 Description = Najpopularniejszy klient IRC (Internet Relay Chat).

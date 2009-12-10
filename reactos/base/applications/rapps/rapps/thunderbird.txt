@@ -28,3 +28,9 @@ Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty
 Size = 7.2M
 URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.23/win32/pl/Thunderbird%20Setup%202.0.0.23.exe
+
+[Section.040a]
+Description = El mÃ¡s popular y uno de los mejores clientes mail que hay.
+Size = 6.3M
+URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.23/win32/es-ES/Thunderbird%20Setup%202.0.0.23.exe

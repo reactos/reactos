@@ -19,3 +19,6 @@ Description = Der populäre Opera Browser mit vielen fortschrittlichen Eigenscha
 
 [Section.0415]
 Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkcjami, zawierająca klientów: poczty oraz BitTorrent.
+
+[Section.040a]
+Description = Popular navegador web con muchas caracterÃ­sticas avanzadas e incluye un cliente de correo y BitTorrent.

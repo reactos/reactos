@@ -10,3 +10,9 @@ Category = 1
 URLSite = http://www.videolan.org/vlc/
 URLDownload = http://mirror.services.wisc.edu/mirrors/videolan/vlc/1.0.3/win32/vlc-1.0.3-win32.exe
 CDPath = none
+
+[Section.0407]
+Description = Ein Medienplayer.
+
+[Section.040a]
+Description = Reproductor multimedia.

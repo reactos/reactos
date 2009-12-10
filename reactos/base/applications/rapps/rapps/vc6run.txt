@@ -13,8 +13,12 @@ CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = Visual Studio 6 Laufzeitsystem
+Description = Visual Studio 6 Laufzeitsystem.
+
+[Section.040a]
+Licence = Desconocida
+Description = Librerias Visual Studio 2006.
 
 [Section.0415]
 Licence = Nieznana
-Description = Biblioteki uruchomieniowe Visual Studio 6
+Description = Biblioteki uruchomieniowe Visual Studio 6.

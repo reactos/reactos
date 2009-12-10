@@ -11,15 +11,18 @@ URLSite = http://www.openoffice.org
 URLDownload = http://ftp.plusline.de/OpenOffice/stable/2.4.3/OOo_2.4.3_Win32Intel_install_en-US.exe
 CDPath = none
 
-
 [Section.0407]
-Description = DIE Open Source Office Suite
+Description = DIE Open Source Office Suite.
 URLSite = http://de.openoffice.org
 Size = 114.2MB
 URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/de/2.4.3/OOo_2.4.3_Win32Intel_install_de.exe
 
+[Section.040a]
+Description = La suite de ofimática de código abierto.
+URLSite = http://es.openoffice.org/
+
 [Section.0415]
 URLSite = http://pl.openoffice.org/
-Description = Otwarty pakiet biurowy
+Description = Otwarty pakiet biurowy.
 URLDownload = http://www.mirrorservice.org/sites/download.openoffice.org/localized/pl/2.4.2/OOo_2.4.2_Win32Intel_install_wJRE_pl.exe
 Size = 128.0M

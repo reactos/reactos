@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = Tile World
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Schöner Klon von Chip's Challenge ursprünglich etnwickelt für Atari Lynx. Enthält CCLP2 Graphics Pack, deshalb wird das urheberrechtlich geschützte Original nicht benötigt.
+
+[Section.040a]
+Description = Clon de Chip's Challenge originalmente creado para Atari Lynx. Incluye el paquete gráfico gratuito CCLP2, así que no es necesario el original con copyright.
 
 [Section.0415]
 Description = Udany klon gry Chip's Challenge z Atari Lynx. Zawiera darmowy zestaw grafik CCLP2.

@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = TuxPaint
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Ein Open Source Bitmap Zeichenprogramm für kleine Kinder.
+
+[Section.040a]
+Description = Editor gráfico de imágenes pensado para niños de código abierto.
 
 [Section.0415]
 Description = Otwarty program graficzny przeznaczony głównie dla dzieci.

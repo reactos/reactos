@@ -13,8 +13,12 @@ CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = Visual Basic 6 Laufzeitsystem
+Description = Visual Basic 6 Laufzeitsystem.
+
+[Section.040a]
+Licence = Desconocida
+Description = Librerias Visual Basic 6.
 
 [Section.0415]
 Licence = Nieznana
-Description = Biblioteki uruchomieniowe Visual Basic 6
+Description = Biblioteki uruchomieniowe Visual Basic 6.

@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = OpenTTD
@@ -11,9 +11,11 @@ URLSite = http://www.openttd.org
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.7.3-windows-win32.exe
 CDPath = none
 
-
 [Section.0407]
 Description = Open Source Klon der "Transport Tycoon Deluxe" Spiel-Engine. Sie benötigen eine Kopie von Transport Tycoon.
+
+[Section.040a]
+Description = Clon del motor de juegos "Transport Tycoon Deluxe" de código abierto. Es necesaria una copia de Transport Tycoon.
 
 [Section.0415]
 Description = Otwarty klon silnika gry "Transport Tycoon Deluxe". Do poprawnego działania potrzebna jest kopia gry Transport Tycoon.

@@ -25,3 +25,8 @@ URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0/win32/de/SeaMo
 Description = Pakiet Mozilla żyje. W zestawie: przeglądarka, klient poczty, IRC oraz Edytor HTML - wszystko, czego potrzebujesz.
 Size = 10.8MB
 URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0/win32/pl/SeaMonkey%20Setup%202.0.exe
+
+[Section.040a]
+Description = La suite de Mozilla estÃ¡ viva. Es el primero y Ãºnico navegador web, gestor de correo, lector de noticias, Chat y editor HTML que necesitarÃ¡s.
+Size = 9.9MB
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0/win32/es-ES/SeaMonkey%20Setup%202.0.exe

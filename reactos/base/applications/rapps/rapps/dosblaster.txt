@@ -11,6 +11,8 @@ URLSite = http://dosblaster.sourceforge.net/
 URLDownload = http://surfnet.dl.sourceforge.net/project/dosblaster/DosBlaster%202.5%20%28x86%29/Downloads/DosbasterSetup_2_5.exe
 CDPath = none
 
-
 [Section.0407]
 Description = DosBlaster ist eine Shell Extension, die es ermöglicht jede DOS Anwendung via Rechtsklick in DOSBox zu öffnen. Diese Version beinhaltet DOSBox 0.70, kann aber sehr einfach aktualisiert werden, indem man ein neueres DOSBox in die DosBlaster Ordner installiert.
+
+[Section.040a]
+Description = DosBlaster en una extensiÃ³n Shell que permite abrir cualquier ejecutable DOS en DOSBox desde el botÃ³n derecho del ratÃ³n. Esta versiÃ³n contiene DOSBox 0.70, pero puede ser actualizado facilmente instalando una nueva versiÃ³n de DOSBox en la carpeta de DosBlaster.

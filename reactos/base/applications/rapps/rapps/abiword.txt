@@ -12,10 +12,10 @@ URLDownload = http://www.abisource.com/downloads/abiword/2.6.8/Windows/abiword-s
 CDPath = none
 
 [Section.0407]
-Description = Textverarbeitung
-
-[Section.0415]
-Description = Edytor tekstu
+Description = Textverarbeitung.
 
 [Section.040a]
-Description = Procesador de texto
+Description = Procesador de textos.
+
+[Section.0415]
+Description = Edytor tekstu.
