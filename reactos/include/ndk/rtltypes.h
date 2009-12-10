@@ -23,6 +23,8 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
+#include <mmtypes.h>
+#include <ldrtypes.h>
 
 //
 // Maximum Atom Length
