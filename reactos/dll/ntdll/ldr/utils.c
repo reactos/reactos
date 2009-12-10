@@ -1494,7 +1494,7 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
    UNICODE_STRING DllName;
    NTSTATUS Status;
 
-   DPRINT1("LdrpGetOrLoadModule() called for %s\n", Name);
+   DPRINT("LdrpGetOrLoadModule() called for %s\n", Name);
 
    RtlInitAnsiString(&AnsiDllName, Name);
    Status = RtlAnsiStringToUnicodeString(&DllName, &AnsiDllName, TRUE);
