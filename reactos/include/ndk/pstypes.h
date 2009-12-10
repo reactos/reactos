@@ -26,6 +26,7 @@ Author:
 #include <ldrtypes.h>
 #include <mmtypes.h>
 #include <obtypes.h>
+#include <rtltypes.h>
 #ifndef NTOS_MODE_USER
 #include <extypes.h>
 #include <setypes.h>
@@ -655,6 +656,17 @@ typedef struct _CLIENT_ID64
     ULONG64 UniqueProcess;
     ULONG64 UniqueThread;
 } CLIENT_ID64, *PCLIENT_ID64;
+
+#if (NTDDI_VERSION < NTDDI_WS03)
+typedef struct _Wx86ThreadState
+{
+    PULONG  CallBx86Eip;
+    PVOID   DeallocationCpu;
+    BOOLEAN UseKnownWx86Dll;
+    CHAR    OleStubInvoked;
+} Wx86ThreadState, *PWx86ThreadState;
+#endif
+
 
 //
 // Process Environment Block (PEB)
