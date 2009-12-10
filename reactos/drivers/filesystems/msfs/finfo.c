@@ -1,8 +1,7 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       drivers/filesystems/ms/finfo.c
+ * FILE:       drivers/filesystems/msfs/finfo.c
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Eric Kohl
  */
@@ -43,8 +42,10 @@ MsfsQueryMailslotInformation(PMSFS_FCB Fcb,
     }
     else
     {
-        /* FIXME: read size of first message (head) */
-        Buffer->NextMessageSize = 0;
+        PMSFS_MESSAGE Message = CONTAINING_RECORD(Fcb->MessageListHead.Flink,
+                                                  MSFS_MESSAGE,
+                                                  MessageListEntry);
+        Buffer->NextMessageSize = Message->Size;
     }
     KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
@@ -93,19 +94,6 @@ MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
     Ccb = (PMSFS_CCB)FileObject->FsContext2;
 
     DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
-
-    /* querying information is not permitted on client side */
-    if (Fcb->ServerCcb != Ccb)
-    {
-        Status = STATUS_ACCESS_DENIED;
-
-        Irp->IoStatus.Status = Status;
-        Irp->IoStatus.Information = 0;
-
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-        return Status;
-    }
 
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
     BufferLength = IoStack->Parameters.QueryFile.Length;
