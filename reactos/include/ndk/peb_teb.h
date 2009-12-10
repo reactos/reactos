@@ -262,6 +262,7 @@ typedef struct STRUCT(_TEB)
     GUID                   ActivityId;
     PTR(PVOID)             SubProcessTag;
     PTR(PVOID)             EtwLocalData;
+    PTR(PVOID)             EtwTraceData;
 #elif (NTDDI_VERSION >= NTDDI_WS03)
     PTR(PVOID)             Instrumentation[14];
     PTR(PVOID)             SubProcessTag;
