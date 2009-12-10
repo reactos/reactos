@@ -925,6 +925,12 @@ static BOOL NLS_EnumSystemLocales(ENUMSYSTEMLOCALES_CALLBACKS *lpProcs)
         return FALSE;
     }
 
+    /* Passing 0 flags behaves like LCID_SUPPORTED */
+    if (lpProcs->dwFlags == 0)
+    {
+        lpProcs->dwFlags = LCID_SUPPORTED;
+    }
+
     switch (lpProcs->dwFlags)
     {
         case LCID_ALTERNATE_SORTS:
