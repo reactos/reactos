@@ -514,9 +514,9 @@ MmCreatePeb(IN PEPROCESS Process,
             //
             // Write subsystem data
             //
-            Peb->ImageSubSystem = NtHeaders->OptionalHeader.Subsystem;
-            Peb->ImageSubSystemMajorVersion = NtHeaders->OptionalHeader.MajorSubsystemVersion;
-            Peb->ImageSubSystemMinorVersion = NtHeaders->OptionalHeader.MinorSubsystemVersion;
+            Peb->ImageSubsystem = NtHeaders->OptionalHeader.Subsystem;
+            Peb->ImageSubsystemMajorVersion = NtHeaders->OptionalHeader.MajorSubsystemVersion;
+            Peb->ImageSubsystemMinorVersion = NtHeaders->OptionalHeader.MinorSubsystemVersion;
 
             //
             // Check for version data
@@ -632,13 +632,13 @@ MmCreateTeb(IN PEPROCESS Process,
         //
         // Set TIB Data
         //
-        Teb->Tib.ExceptionList = EXCEPTION_CHAIN_END;
-        Teb->Tib.Self = (PNT_TIB)Teb;
+        Teb->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
+        Teb->NtTib.Self = (PNT_TIB)Teb;
         
         //
         // Identify this as an OS/2 V3.0 ("Cruiser") TIB
         //
-        Teb->Tib.Version = 30 << 8;
+        Teb->NtTib.Version = 30 << 8;
         
         //
         // Set TEB Data
@@ -657,8 +657,8 @@ MmCreateTeb(IN PEPROCESS Process,
             //
             // Use initial TEB values
             //
-            Teb->Tib.StackBase = InitialTeb->StackBase;
-            Teb->Tib.StackLimit = InitialTeb->StackLimit;
+            Teb->NtTib.StackBase = InitialTeb->StackBase;
+            Teb->NtTib.StackLimit = InitialTeb->StackLimit;
             Teb->DeallocationStack = InitialTeb->AllocatedStackBase;
         }
         else
@@ -666,8 +666,8 @@ MmCreateTeb(IN PEPROCESS Process,
             //
             // Use grandparent TEB values
             //
-            Teb->Tib.StackBase = InitialTeb->PreviousStackBase;
-            Teb->Tib.StackLimit = InitialTeb->PreviousStackLimit;
+            Teb->NtTib.StackBase = InitialTeb->PreviousStackBase;
+            Teb->NtTib.StackLimit = InitialTeb->PreviousStackLimit;
         }
 
         //

@@ -2210,8 +2210,8 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
         /* Map the dll into the process */
         ViewSize = 0;
         ImageBase = 0;
-        ArbitraryUserPointer = NtCurrentTeb()->Tib.ArbitraryUserPointer;
-        NtCurrentTeb()->Tib.ArbitraryUserPointer = FullDosName.Buffer;
+        ArbitraryUserPointer = NtCurrentTeb()->NtTib.ArbitraryUserPointer;
+        NtCurrentTeb()->NtTib.ArbitraryUserPointer = FullDosName.Buffer;
         Status = NtMapViewOfSection(SectionHandle,
                                     NtCurrentProcess(),
                                     &ImageBase,
@@ -2222,7 +2222,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                     ViewShare,
                                     0,
                                     PAGE_READONLY);
-        NtCurrentTeb()->Tib.ArbitraryUserPointer = ArbitraryUserPointer;
+        NtCurrentTeb()->NtTib.ArbitraryUserPointer = ArbitraryUserPointer;
         if (!NT_SUCCESS(Status))
           {
             DPRINT1("map view of section failed (Status 0x%08lx)\n", Status);
