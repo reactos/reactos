@@ -109,7 +109,7 @@ MMixerGetPhysicalConnection(
         // pin does not have a physical connection
         return Status;
     }
-
+    DPRINT("Status %u BytesReturned %lu\n", Status, BytesReturned);
     Connection = (PKSPIN_PHYSICALCONNECTION)MixerContext->Alloc(BytesReturned);
     if (!Connection)
     {
@@ -123,6 +123,7 @@ MMixerGetPhysicalConnection(
     {
         // failed to query the physical connection
         MixerContext->Free(Connection);
+        DPRINT("Status %u\n", Status);
         return Status;
     }
 

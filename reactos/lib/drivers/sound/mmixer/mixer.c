@@ -438,9 +438,14 @@ MMixerInitialize(
      MixerList->MixerListCount = 0;
      InitializeListHead(&MixerList->MixerList);
 
+     // store mixer list
+     MixerContext->MixerContext = (PVOID)MixerList;
+
     // start enumerating all available devices
     Count = 0;
     DeviceIndex = 0;
+
+
 
     do
     {
@@ -450,26 +455,21 @@ MMixerInitialize(
         if (Status != MM_STATUS_SUCCESS)
         {
             //check error code
-            if (Status != MM_STATUS_NO_MORE_DEVICES)
+            if (Status == MM_STATUS_NO_MORE_DEVICES)
             {
-                // enumeration has failed
-                return Status;
+                // enumeration has finished
+                break;
             }
-            // last device
-            break;
         }
-
+        else
+        {
+            MMixerSetupFilter(MixerContext, MixerList, hMixer, &Count, DeviceName);
+        }
 
         // increment device index
         DeviceIndex++;
-
-        Status = MMixerSetupFilter(MixerContext, MixerList, hMixer, &Count, DeviceName);
-
-        if (Status != MM_STATUS_SUCCESS)
-            break;
-
     }while(TRUE);
 
     // done
-    return Status;
+    return MM_STATUS_SUCCESS;
 }

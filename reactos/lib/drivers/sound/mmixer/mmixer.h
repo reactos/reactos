@@ -38,7 +38,7 @@ typedef MIXER_STATUS(*PMIXER_DEVICE_CONTROL)(
     PULONG lpBytesReturned);
 
 typedef MIXER_STATUS(*PMIXER_OPEN)(
-    IN LPCWSTR DevicePath,
+    IN LPWSTR DevicePath,
     OUT PHANDLE hDevice);
 
 typedef MIXER_STATUS(*PMIXER_CLOSE)(
