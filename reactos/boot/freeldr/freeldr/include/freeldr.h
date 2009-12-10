@@ -79,7 +79,6 @@
 #include <arch/i386/machxbox.h>
 #include <arch/i386/miscboot.h>
 #include <internal/i386/intrin_i.h>
-#include <internal/i386/ke.h>
 #elif defined(_M_PPC)
 #include <arch/powerpc/hardware.h>
 #elif defined(_M_ARM)
