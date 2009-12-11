@@ -303,7 +303,7 @@ MsfsClose(PDEVICE_OBJECT DeviceObject,
 
     if (Fcb->ReferenceCount == 0)
     {
-        DPRINT1("ReferenceCount == 0: Deleting mailslot data\n");
+        DPRINT("ReferenceCount == 0: Deleting mailslot data\n");
         RemoveEntryList(&Fcb->FcbListEntry);
         ExFreePool(Fcb->Name.Buffer);
         ExFreePool(Fcb);
