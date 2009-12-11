@@ -534,7 +534,8 @@ MIXER_STATUS
 MMixerCreateDestinationLine(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo,
-    IN ULONG bInputMixer)
+    IN ULONG bInputMixer,
+    IN LPWSTR LineName)
 {
     LPMIXERLINE_EXT DestinationLine;
 
@@ -554,8 +555,19 @@ MMixerCreateDestinationLine(
     DestinationLine->Line.dwUser = 0;
     DestinationLine->Line.dwComponentType = (bInputMixer == 0 ? MIXERLINE_COMPONENTTYPE_DST_SPEAKERS : MIXERLINE_COMPONENTTYPE_DST_WAVEIN);
     DestinationLine->Line.cChannels = 2; //FIXME
-    wcscpy(DestinationLine->Line.szShortName, L"Summe"); //FIXME
-    wcscpy(DestinationLine->Line.szName, L"Summe"); //FIXME
+
+    if (LineName)
+    {
+        wcscpy(DestinationLine->Line.szShortName, LineName);
+        wcscpy(DestinationLine->Line.szName, LineName);
+    }
+    else
+    {
+        /* FIXME no name was found for pin */
+        wcscpy(DestinationLine->Line.szShortName, L"Summe");
+        wcscpy(DestinationLine->Line.szName, L"Summe");
+    }
+
     DestinationLine->Line.Target.dwType = (bInputMixer == 0 ? MIXERLINE_TARGETTYPE_WAVEOUT : MIXERLINE_TARGETTYPE_WAVEIN);
     DestinationLine->Line.Target.dwDeviceID = !bInputMixer;
     DestinationLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
@@ -798,6 +810,9 @@ MMixerInitializeFilter(
     ULONG Index;
     ULONG * Pins;
     ULONG bUsed;
+    ULONG BytesReturned;
+    KSP_PIN Pin;
+    LPWSTR Buffer = NULL;
 
     // allocate a mixer info struct
     MixerInfo = (LPMIXER_INFO) MixerContext->Alloc(sizeof(MIXER_INFO));
@@ -820,15 +835,6 @@ MMixerInitializeFilter(
 
     /* FIXME find mixer name */
 
-    Status = MMixerCreateDestinationLine(MixerContext, MixerInfo, bInputMixer);
-    if (Status != MM_STATUS_SUCCESS)
-    {
-        // failed to create destination line
-        MixerContext->Free(MixerInfo);
-        return Status;
-    }
-
-
     // now allocate an array which will receive the indices of the pin 
     // which has a ADC / DAC nodetype in its path
     Pins = (PULONG)MixerContext->Alloc(PinCount * sizeof(ULONG));
@@ -840,6 +846,65 @@ MMixerInitializeFilter(
         return MM_STATUS_NO_MEMORY;
     }
 
+    // now get the target pins of the ADC / DAC node
+    Status = MMixerGetTargetPins(MixerContext, NodeTypes, NodeConnections, NodeIndex, !bInputMixer, Pins, PinCount);
+
+    for(Index = 0; Index < PinCount; Index++)
+    {
+        if (Pins[Index])
+        {
+            /* retrieve pin name */
+            Pin.PinId = Index;
+            Pin.Reserved = 0;
+            Pin.Property.Flags = KSPROPERTY_TYPE_GET;
+            Pin.Property.Set = KSPROPSETID_Pin;
+            Pin.Property.Id = KSPROPERTY_PIN_NAME;
+
+            /* try get pin name size */
+            Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
+
+            if (Status == MM_STATUS_MORE_ENTRIES)
+            {
+                Buffer = (LPWSTR)MixerContext->Alloc(BytesReturned);
+                if (Buffer)
+                {
+                    /* try get pin name */
+                    Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)Buffer, BytesReturned, &BytesReturned);
+                    if (Status != MM_STATUS_SUCCESS)
+                    {
+                        MixerContext->Free((PVOID)Buffer);
+                        Buffer = NULL;
+                    }
+                    else
+                    {
+                        // found name, done
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    Status = MMixerCreateDestinationLine(MixerContext, MixerInfo, bInputMixer, Buffer);
+
+    if (Buffer)
+    {
+        // free name
+        MixerContext->Free(Buffer);
+    }
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // failed to create destination line
+        MixerContext->Free(MixerInfo);
+        MixerContext->Free(Pins);
+
+        return Status;
+    }
+
+
+
+    RtlZeroMemory(Pins, sizeof(ULONG) * PinCount);
     // now get the target pins of the ADC / DAC node
     Status = MMixerGetTargetPins(MixerContext, NodeTypes, NodeConnections, NodeIndex, bInputMixer, Pins, PinCount);
 
@@ -872,6 +937,12 @@ MMixerInitializeFilter(
                 MixerContext->Free(OutConnection);
                 bUsed = TRUE;
             }
+            else
+            {
+                // filter exposes the topology on the same filter
+                MMixerAddMixerSourceLine(MixerContext, MixerInfo, hMixer, NodeConnections, NodeTypes, Index, FALSE, FALSE);
+                bUsed = TRUE;
+            }
         }
     }
     MixerContext->Free(Pins);
@@ -879,14 +950,22 @@ MMixerInitializeFilter(
     if (bUsed)
     {
         // store mixer info in list
-        InsertTailList(&MixerList->MixerList, &MixerInfo->Entry);
+        if (!bInputMixer && MixerList->MixerListCount == 1)
+        {
+            //FIXME preferred device should be inserted at front
+            //windows always inserts output mixer in front
+            InsertHeadList(&MixerList->MixerList, &MixerInfo->Entry);
+        }
+        else
+        {
+            InsertTailList(&MixerList->MixerList, &MixerInfo->Entry);
+        }
         MixerList->MixerListCount++;
         DPRINT("New MixerCount %lu\n", MixerList->MixerListCount);
     }
     else
     {
-        // TODO:
-        // filter exposes its topology on the same filter
+        // failed to create a mixer topology
         MMixerFreeMixerInfo(MixerContext, MixerInfo);
     }
 
@@ -934,7 +1013,6 @@ MMixerSetupFilter(
     if (NodeIndex != MAXULONG)
     {
         // it has
-
         Status = MMixerInitializeFilter(MixerContext, MixerList, hMixer, DeviceName, NodeTypes, NodeConnections, PinCount, NodeIndex, FALSE);
         DPRINT("MMixerInitializeFilter Status %u\n", Status);
         // check for success
