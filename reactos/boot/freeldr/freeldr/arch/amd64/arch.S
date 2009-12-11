@@ -20,6 +20,10 @@ RealEntryPoint:
 	mov	gs, ax
 	mov ss, ax
 
+	/* checkPoint Charlie - where it all began... */
+	mov si, offset _CheckPoint0
+	call writestr	
+	
 	/* Setup a real mode stack */
 	mov	sp, stack16
 
@@ -41,14 +45,74 @@ RealEntryPoint:
 
 	call x86_16_EnableA20
 
+	/* checkPoint Charlie - where it all began... */
+	mov si, offset _CheckPoint1
+	call writestr	
+	
 	call x86_16_BuildPageTables
+	
+	/* checkPoint Charlie - where it all began... */
+	mov si, offset _CheckPoint2
+	call writestr	
 
-	/* Switch to long mode */
+	/* Check if CPU supports CPUID */
+	
+	pushfd
+	pop eax
+	mov ebx, eax
+	xor eax, 0x00200000
+	push eax
+	popfd
+	pushfd
+	pop eax
+	cmp eax,ebx
+	jz NO_CPUID_SUPPORT_DETECTED
+	
+	/* CPUID support detected - getting the PAE/PGE */	
+
+	mov eax,1 // Fn0000_0001 - PAE in EDX[6]
+	cpuid
+	xor eax,eax
+	and edx,0x00a0
+	test edx,edx // are PAE and PGE bits set?
+	jz NO_X64_SUPPORT_DETECTED
+	
+	/* PAE and PGE are here */
+	
+	xor edx, edx
+	mov eax, 0x80000001
+	cpuid
+	and edx, 0x20000000
+	test edx,edx
+	jz NO_X64_SUPPORT_DETECTED
+	
+	/* X64 Processor */
+	
+	/* checkPoint Charlie - where it all began... */
+	mov si, offset _CheckPoint3
+	call writestr	
+
+	jmp _switch64
+	
+NO_X64_SUPPORT_DETECTED:
+	mov  si, offset _NotAnX64Processor	// Loading message
+	call writestr
+	jmp _fail
+
+NO_CPUID_SUPPORT_DETECTED:
+	mov  si, offset _NoCPUIDSupport	// Loading message
+    	call writestr
+
+_fail:
+	jmp _fail
+	nop
+	nop
+
+_switch64:
 	call x86_16_SwitchToLong
 
 	.code64
 
-	/* Checkpoint */
 //	mov ax, LMODE_DS
 //	mov ds, ax
 //	mov word ptr ds:[0xb8000], 0x0e00 + '1'
@@ -60,16 +124,12 @@ RealEntryPoint:
 	/* Checkpoint */
 //	mov ax, LMODE_DS
 //	mov ds, ax
-//	mov word ptr ds:[0xb8002], 0x0e00 + '2'
+//	mov word ptr ds:[0xb8002], 0x0e02 + '2'
 
+	
 	/* Return into real mode */
 	call x86_64_SwitchToReal
 	.code16
-
-	/* Checkpoint */
-//	mov ax, 0xb800
-//	mov fs, ax
-//	mov word ptr fs:[0xA0], 0x0e00 + '0'
 
 //	int	0x19
 
@@ -104,7 +164,6 @@ x86_16_EnableA20:
 	call x86_16_Empty8042
 	popa
 	ret
-
 
 /*
  * We define 512 2MB pages at the start of memory, so we can access the first 
@@ -158,9 +217,39 @@ Bpt2:
 	popa
 	ret
 
+/*
+ * writechr,writestr
+ *
+ *
+ */
+writestr:
+	pushfd
+	pushad
+.top:
+	lodsb
+	and	al, al
+	jz	.end
+	call	writechr
+	jmp	short .top
+.end:
+	popad
+	popfd
+	ret
+	
+
+writechr:
+	pushf
+	pusha
+	mov	ah, 0x0E
+	xor	bx, bx
+	int	0x10
+	popa
+	popf
+	ret
 
 //.global x86_16_SwitchToLong
 x86_16_SwitchToLong:
+	
 	cli
 
 	xor	ax,ax
@@ -205,8 +294,7 @@ LongCat:
 	/* Now return in long mode! */
 	ret
 
-
-/** 64 But functions **********************************************************/
+/** 64 Bit functions **********************************************************/
 .code64
 
 .global x86_64_SwitchToReal
@@ -325,6 +413,36 @@ _BootDrive:
 _BootPartition:
     .long 0
 
+.global _NotAnX64Processor
+_NotAnX64Processor:
+	.ascii "FreeLoader: No x64-compatible CPU detected! Exiting..."
+	.byte 0x0d, 0x0a, 0
+
+.global _NoCPUIDSupport
+_NoCPUIDSupport:
+	.ascii "FreeLoader: No CPUID instruction support detected! Exiting..."
+	.byte 0x0d, 0x0a, 0
+
+/////////////////////////// Checkpoint messages ///////////////////////////////
+.global _CheckPoint0
+_CheckPoint0:
+	.ascii "Starting FreeLoader..."
+	.byte 0x0d, 0x0a, 0
+	
+.global _CheckPoint1
+_CheckPoint1:
+	.ascii "FreeLoader[16-bit]: building page tables..."
+	.byte 0x0d, 0x0a, 0
+	
+.global _CheckPoint2
+_CheckPoint2:
+	.ascii "FreeLoader[16-bit]: checking CPU for x64 long mode..."
+	.byte 0x0d, 0x0a, 0
+
+.global _CheckPoint3
+_CheckPoint3:
+	.ascii "FreeLoader: Switching to x64 long mode..."
+	.byte 0x0d, 0x0a, 0
 
 ///////////////////////////////////////////////////////////////////////////////
 
