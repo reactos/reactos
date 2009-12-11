@@ -95,6 +95,19 @@ MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
 
+    /* querying information is not permitted on client side */
+    if (Fcb->ServerCcb != Ccb)
+    {
+        Status = STATUS_ACCESS_DENIED;
+
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        return Status;
+    }
+
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
     BufferLength = IoStack->Parameters.QueryFile.Length;
 
