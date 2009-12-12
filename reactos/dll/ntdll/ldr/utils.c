@@ -2063,24 +2063,25 @@ Success:
              }
            ImportModuleDirectoryCurrent++;
          }
-         if(!NT_SUCCESS(Status))
+
+         if (!NT_SUCCESS(Status))
            {
             NTSTATUS errorStatus = Status;
 
-            while(ImportModuleDirectoryCurrent-- >= ImportModuleDirectory)
+            while (ImportModuleDirectoryCurrent >= ImportModuleDirectory)
               {
                 ImportedName = (PCHAR)Module->DllBase + ImportModuleDirectoryCurrent->Name;
 
                 Status = LdrpGetOrLoadModule(NULL, ImportedName, &ImportedModule, FALSE);
-                if(NT_SUCCESS(Status) && Module != ImportedModule)
+                if (NT_SUCCESS(Status) && Module != ImportedModule)
                   {
                     Status = LdrpUnloadModule(ImportedModule, FALSE);
                     if (!NT_SUCCESS(Status)) DPRINT1("unable to unload %s\n", ImportedName);
                   }
+                ImportModuleDirectoryCurrent--;
               }
             return errorStatus;
            }
-
      }
 
    if (TlsDirectory && TlsSize > 0)
