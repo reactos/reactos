@@ -139,6 +139,10 @@
 	<directory name="mktime">
 		<xi:include href="mktime/mktime.rbuild" />
 	</directory>
+	<directory name="mmixer_test">
+		<xi:include href="mmixer_test/mmixer_test.rbuild" />
+	</directory>
+
 	<directory name="moztest">
 		<xi:include href="moztest/moztest.rbuild" />
 	</directory>
