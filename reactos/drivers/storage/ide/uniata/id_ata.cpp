@@ -689,11 +689,17 @@ AtapiSoftReset(
     SelectDrive(chan, DeviceNumber);
     AtapiStallExecution(10000);
     AtapiWritePort1(chan, IDX_IO1_o_Command, IDE_COMMAND_ATAPI_RESET);
+
+    // ReactOS modification: Already stop looping when we know that the drive has finished resetting.
+    // Not all controllers clear the IDE_STATUS_BUSY flag (e.g. not the VMware one), so ensure that
+    // the maximum waiting time (30 * i = 0.9 seconds) does not exceed the one of the original
+    // implementation. (which is around 1 second)
     while ((AtapiReadPort1(chan, IDX_IO1_i_Status) & IDE_STATUS_BUSY) &&
            i--)
     {
         AtapiStallExecution(30);
     }
+
     SelectDrive(chan, DeviceNumber);
     WaitOnBusy(chan);
     GetBaseStatus(chan, statusByte2);
