@@ -52,6 +52,7 @@ public:
 
     PINTERRUPTSYNCROUTINE m_SyncRoutine;
     PVOID m_DynamicContext;
+    NTSTATUS m_Status;
 
     LONG m_Ref;
 
@@ -97,10 +98,10 @@ CInterruptSynchronizedRoutine(
     IN PVOID  ServiceContext)
 {
     CInterruptSync * This = (CInterruptSync*)ServiceContext;
-    NTSTATUS Status = This->m_SyncRoutine(This, This->m_DynamicContext);
+    This->m_Status = This->m_SyncRoutine(This, This->m_DynamicContext);
 
-    DPRINT("CInterruptSynchronizedRoutine this %p SyncRoutine %p Context %p Status %x\n", This, This->m_SyncRoutine, This->m_DynamicContext, Status);
-    return NT_SUCCESS(Status);
+    DPRINT("CInterruptSynchronizedRoutine this %p SyncRoutine %p Context %p Status %x\n", This, This->m_SyncRoutine, This->m_DynamicContext, This->m_Status);
+    return TRUE;
 }
 
 NTSTATUS
@@ -112,7 +113,7 @@ CInterruptSync::CallSynchronizedRoutine(
     KIRQL OldIrql;
 
     DPRINT("CInterruptSync::CallSynchronizedRoutine this %p Routine %p DynamicContext %p Irql %x Interrupt %p\n", this, Routine, DynamicContext, KeGetCurrentIrql(), m_Interrupt);
-
+    
     if (!m_Interrupt)
     {
         DPRINT("CInterruptSync_CallSynchronizedRoutine %p no interrupt connected\n", this);
@@ -125,14 +126,14 @@ CInterruptSync::CallSynchronizedRoutine(
         CInterruptSynchronizedRoutine((PVOID)this);
         KeReleaseSpinLock(&m_Lock, OldIrql);
 
-        return STATUS_SUCCESS;
+        return m_Status;
     }
 
     m_SyncRoutine = Routine;
     m_DynamicContext = DynamicContext;
 
     if (KeSynchronizeExecution(m_Interrupt, CInterruptSynchronizedRoutine, (PVOID)this))
-        return STATUS_SUCCESS;
+        return m_Status;
     else
         return STATUS_UNSUCCESSFUL;
 }
