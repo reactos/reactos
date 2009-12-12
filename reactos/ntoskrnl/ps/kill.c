@@ -596,7 +596,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (TerminationPort)
     {
         /* Setup the message header */
-        TerminationMsg.h.u2.s2.Type = LPC_CLIENT_DIED;
+        TerminationMsg.h.u2.ZeroInit = LPC_CLIENT_DIED;
         TerminationMsg.h.u1.s1.TotalLength = sizeof(TerminationMsg);
         TerminationMsg.h.u1.s1.DataLength = sizeof(TerminationMsg) -
                                             sizeof(PORT_MESSAGE);
