@@ -13,7 +13,68 @@
 #define NDEBUG
 #include <debug.h>
 
+DWORD FASTCALL GreGetGlyphIndicesW(HDC,LPWSTR,INT,LPWORD,DWORD,DWORD);
+
 /** Internal ******************************************************************/
+
+DWORD
+FASTCALL
+GreGetKerningPairs(
+    HDC hDC,
+    ULONG NumPairs,
+    LPKERNINGPAIR krnpair)
+{
+  PDC dc;
+  PDC_ATTR pdcattr;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGDI;
+  DWORD Count;
+  KERNINGPAIR *pKP;
+
+  dc = DC_LockDc(hDC);
+  if (!dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  pdcattr = dc->pdcattr;
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
+  DC_UnlockDc(dc);
+
+  if (!TextObj)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  FontGDI = ObjToGDI(TextObj->Font, FONT);
+  TEXTOBJ_UnlockText(TextObj);
+
+  Count = ftGdiGetKerningPairs(FontGDI,0,NULL);
+
+  if ( Count && krnpair )
+  {
+     if (Count > NumPairs)
+     {
+        SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+     }
+     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
+     if (!pKP)
+     {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+     }
+     ftGdiGetKerningPairs(FontGDI,Count,pKP);
+
+     RtlCopyMemory(krnpair, pKP, Count * sizeof(KERNINGPAIR));
+
+     ExFreePoolWithTag(pKP,TAG_GDITEXT);
+  }
+  return Count;
+}
+
 
 DWORD
 FASTCALL
@@ -31,6 +92,7 @@ GreGetCharacterPlacementW(
   {
      if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 1))
         return MAKELONG(Size.cx, Size.cy);
+     return 0;
   }
   UNIMPLEMENTED;
   return 0;
