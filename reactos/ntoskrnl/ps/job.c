@@ -164,7 +164,7 @@ NtAssignProcessToJobObject (
                 ExAcquireRundownProtection(&Process->RundownProtect);
                 if(NT_SUCCESS(Status))
                 {
-                    if(Process->Job == NULL && Process->Session == Job->SessionId)
+                    if(Process->Job == NULL && (ULONG_PTR)Process->Session == Job->SessionId)
                     {
                         /* Just store the pointer to the job object in the process, we'll
                         assign it later. The reason we can't do this here is that locking
@@ -268,7 +268,7 @@ NtCreateJobObject (
 
         /* setup the job object */
         InitializeListHead(&Job->ProcessListHead);
-        Job->SessionId = CurrentProcess->Session; /* inherit the session id from the caller */
+        Job->SessionId = (ULONG_PTR)CurrentProcess->Session; /* inherit the session id from the caller */
 
         Status = ExInitializeResource(&Job->JobLock);
         if(!NT_SUCCESS(Status))

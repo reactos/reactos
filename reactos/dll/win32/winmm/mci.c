@@ -1459,7 +1459,7 @@ DWORD WINAPI mciSendStringA(LPCSTR lpstrCommand, LPSTR lpstrRet,
 BOOL WINAPI mciExecute(LPCSTR lpstrCommand)
 {
     char	strRet[256];
-    DWORD	ret;
+    int	ret;
 
     TRACE("(%s)!\n", lpstrCommand);
 

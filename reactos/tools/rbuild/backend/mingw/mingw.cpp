@@ -480,14 +480,8 @@ MingwBackend::GenerateGlobalVariables () const
 		fputs ( "BUILTIN_CXXINCLUDES+= $(TARGET_CPPFLAGS)\n", fMakefile );
 
 		fprintf ( fMakefile, "PROJECT_CCLIBS := \"$(shell ${TARGET_CC} -print-libgcc-file-name)\"\n" );
-		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libgcc.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" " );
+        fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)\"\n" );
 
-		/* hack to get libgcc_eh.a, should check mingw version or something */
-		if (Environment::GetArch() == "amd64")
-		{
-			fprintf ( fMakefile, " \"$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)\"" );
-		}
-		fprintf ( fMakefile,"\n");
 	}
 	MingwModuleHandler::GenerateParameters ( "PROJECT", "+=", ProjectNode.non_if_data );
 	MingwModuleHandler::GenerateParameters ( "PROJECT_HOST", "+=", ProjectNode.host_non_if_data );
@@ -844,7 +838,7 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 	buffer[i] = '\0';
 	pclose ( fp );
 
-	char separators[] = " ()";
+	char separators[] = " ()\n";
 	char *token;
 	char *prevtoken = NULL;
 
@@ -888,7 +882,7 @@ MingwBackend::GetNetwideAssemblerVersion ( const string& nasmCommand )
 string
 MingwBackend::GetCompilerVersion ( const string& compilerCommand )
 {
-	string versionCommand = ssprintf ( "%s --version gcc",
+	string versionCommand = ssprintf ( "%s --version",
 	                                   compilerCommand.c_str (),
 	                                   NUL,
 	                                   NUL );
@@ -908,7 +902,7 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 bool
 MingwBackend::IsSupportedCompilerVersion ( const string& compilerVersion )
 {
-	if ( strcmp ( compilerVersion.c_str (), "3.4.2") < 0 )
+	if ( strcmp ( compilerVersion.c_str (), "4.4.2") < 0 )
 		return false;
 	else
 		return true;
@@ -970,27 +964,32 @@ MingwBackend::GetBinutilsVersionDate ( const string& binutilsCommand )
 bool
 MingwBackend::IsSupportedBinutilsVersion ( const string& binutilsVersion )
 {
-	if ( manualBinutilsSetting ) return true;
-
-	/* linux */
-	if ( binutilsVersion.find('.') != std::string::npos )
-	{
-		/* TODO: blacklist versions on version number instead of date */
-		return true;
-	}
-
-	/*
-	 * - Binutils older than 2003/10/01 have broken windres which can't handle
-	 *   icons with alpha channel.
-	 * - Binutils between 2004/09/02 and 2004/10/08 have broken handling of
-	 *   forward exports in dlltool.
-	 */
-	if ( ( ( strcmp ( binutilsVersion.c_str (), "20040902") >= 0 ) &&
-	       ( strcmp ( binutilsVersion.c_str (), "20041008") <= 0 ) ) ||
-	       ( strcmp ( binutilsVersion.c_str (), "20031001") < 0 ) )
+	int digit = binutilsVersion.find_last_of(".");
+	if(digit == -1)
+ 	{
+		printf("Unable to detect binutils version!\n");
 		return false;
+ 	}
+
+	string date = string(binutilsVersion, digit + 1);
+	if(date.length() == 8)
+	{
+		/* This is a real date in the format YYYYMMDD.
+		   Check whether we have at least Binutils 20091017 (older versions
+		   don't support the -exclude-all-symbols option we use). */
+		if(strcmp(date.c_str(), "20091119") < 0)
+			return false;
+	}
 	else
-		return true;
+	{
+		/* This is no date, so binutilsVersion should just contain the version
+		   number.
+		   Binutils 2.20 will hopefully contain the required features. */
+		if(strcmp(binutilsVersion.c_str(), "2.20") < 0)
+			return false;
+	}
+	
+	return true;
 }
 
 void

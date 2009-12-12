@@ -5,6 +5,8 @@ LDFLAG_CONSOLE:=--subsystem=console
 LDFLAG_WINDOWS:=--subsystem=windows
 LDFLAG_NATIVE:=--subsystem=native
 
+LDFLAG_EXCLUDE_ALL_SYMBOLS=-exclude-all-symbols
+
 #~ #(module, objs, deps, ldflags, output, def, libs, entry, base)
 #(module, objs, deps, ldflags, output, def, libs, entry, base, extralibs)
 define RBUILD_LINK
@@ -40,7 +42,7 @@ $(1)_CLEANFILES+=${call RBUILD_intermediate_dir,$(5)}$$(SEP)$(1)_objs.rsp
 $(5): ${call RBUILD_intermediate_dir,$(5)}$$(SEP)$(1)_objs.rsp $(7) $(3) $$(RSYM_TARGET) $$(PEFIXUP_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_LD)
 #~	$${ld} --entry=$(8) --image-base=$(9) @${call RBUILD_intermediate_dir,$(5)}$$(SEP)$(1)_objs.rsp $(7) ${call RBUILD_ldflags,$(1),$(4)} -o $$@
-	$${ld} --entry=$(8) --image-base=$(9) @${call RBUILD_intermediate_dir,$(5)}$$(SEP)$(1)_objs.rsp $(10) $(7) $(10) ${call RBUILD_ldflags,$(1),$(4)} -o $$@
+	$${ld} --entry=$(8) --image-base=$(9) @${call RBUILD_intermediate_dir,$(5)}$$(SEP)$(1)_objs.rsp --start-group $(10) $(7) --end-group ${call RBUILD_ldflags,$(1),$(4)} -o $$@
 ifneq ($(or $(6),$$(MODULETYPE$$($(1)_TYPE)_KMODE)),)
 	$$(ECHO_PEFIXUP)
 	$$(Q)$$(PEFIXUP_TARGET) $$@ $(if $(6),-exports) $$(if $$(MODULETYPE$($(1)_TYPE)_KMODE),-sections)

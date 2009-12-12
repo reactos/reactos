@@ -781,6 +781,8 @@ VBEMapVideoMemory(
       MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
       MapInformation->VideoRamLength = 0x10000;
    }
+#else
+   FrameBuffer.QuadPart = 0;
 #endif
 
    VideoPortMapMemory(DeviceExtension, FrameBuffer,

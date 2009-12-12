@@ -246,7 +246,6 @@ VOID
 NTAPI
 MiFreeContiguousMemory(IN PVOID BaseAddress)
 {
-    KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex, LastPage, PageCount;
     PMMPFN Pfn1, StartPfn;
     PAGED_CODE();

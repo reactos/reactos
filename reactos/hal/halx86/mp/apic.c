@@ -798,6 +798,8 @@ APICCalibrateTimer(ULONG CPU)
    LONG tt1, tt2;
    BOOLEAN TSCPresent;
 
+   t1.QuadPart = 0;
+
    DPRINT("Calibrating APIC timer for CPU %d\n", CPU);
 
    APICSetupLVTT(1000000000);

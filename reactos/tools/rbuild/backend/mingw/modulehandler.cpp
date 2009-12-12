@@ -1782,6 +1782,12 @@ MingwModuleHandler::GenerateOtherMacros ()
 		&module.linkerFlags,
 		used_defs );
 
+	/* LD automatically exports all symbols by default if -shared is specified. Prevent it from doing
+	   this by adding the option -exclude-all-symbols (available since Binutils 20091017). */
+	// FIXME: Should only be applied for -shared modules, when there's a smart way to check for them.
+	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse && !module.importLibrary )
+		fprintf ( fMakefile, "%s_LDFLAGS+=$(LDFLAG_EXCLUDE_ALL_SYMBOLS)\n", module.name.c_str() );
+	
 	fprintf ( fMakefile, "\n\n" );
 }
 

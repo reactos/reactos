@@ -38,6 +38,8 @@
 
 #include <unicode/usprep.h>
 
+C_ASSERT(IDN_ALLOW_UNASSIGNED == USPREP_ALLOW_UNASSIGNED);
+
 static
 int32_t
 NAMEPREP_FlagsToICU
@@ -45,7 +47,6 @@ NAMEPREP_FlagsToICU
 	DWORD dwFlags
 )
 {
-	C_ASSERT(IDN_ALLOW_UNASSIGNED == USPREP_ALLOW_UNASSIGNED);
 	return dwFlags;
 }
 

@@ -59,5 +59,4 @@
 			<file>token.c</file>
 	</directory>
 	<file>advapi32.rc</file>
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
