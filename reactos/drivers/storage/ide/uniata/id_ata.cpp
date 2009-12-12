@@ -679,7 +679,7 @@ AtapiSoftReset(
     )
 {
     //ULONG c = chan->lChannel;
-    ULONG i = 1000 * 1000;
+    ULONG i = 30 * 1000;
     UCHAR dma_status = 0;
     KdPrint2((PRINT_PREFIX "AtapiSoftReset:\n"));
     UCHAR statusByte2;
