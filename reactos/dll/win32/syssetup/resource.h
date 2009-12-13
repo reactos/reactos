@@ -122,6 +122,7 @@
 #define IDS_CMT_DXDIAG                  3230
 #define IDS_CMT_PAINT                   3231
 #define IDS_CMT_SPIDER                  3232
+#define IDS_CMT_SNDREC32                3233
 
 #define IDS_REACTOS_SETUP               3300
 #define IDS_UNKNOWN_ERROR               3301
@@ -156,6 +157,7 @@
 #define IDS_SHORT_DXDIAG        3420
 #define IDS_SHORT_PAINT         3421
 #define IDS_SHORT_SPIDER        3422
+#define IDS_SHORT_SNDREC32      3423
 
 #define IDS_WZD_NAME            3450
 #define IDS_WZD_SETCOMPUTERNAME 3451
