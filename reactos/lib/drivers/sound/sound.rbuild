@@ -13,6 +13,9 @@
     <directory name="uartmidi">
         <xi:include href="uartmidi/uartmidi.rbuild" />
     </directory>
+    <directory name="mmixer">
+        <xi:include href="mmixer/mmixer.rbuild" />
+    </directory>
     <directory name="mmebuddy">
         <xi:include href="mmebuddy/mmebuddy.rbuild" />
     </directory>
