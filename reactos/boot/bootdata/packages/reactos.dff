@@ -81,6 +81,7 @@ base\applications\screensavers\3dtext\3dtext.scr        1
 base\applications\screensavers\logon\logon.scr          1
 base\applications\mscutils\servman\servman.exe          1
 base\applications\shutdown\shutdown.exe                 1
+base\applications\sndrec32\sndrec32.exe                 1
 base\applications\sndvol32\sndvol32.exe                 1
 base\applications\taskmgr\taskmgr.exe                   1
 base\applications\winhlp32\winhlp32.exe                 4
