@@ -1024,8 +1024,36 @@ GetWindow(HWND hWnd,
                     FoundWnd = DesktopPtrToUser(Wnd->spwndOwner);
                 break;
 
+            case GW_HWNDFIRST:
+                if(Wnd->spwndParent != NULL)
+                {
+                    FoundWnd = DesktopPtrToUser(Wnd->spwndParent);
+                    if (FoundWnd->spwndChild != NULL)
+                        FoundWnd = DesktopPtrToUser(FoundWnd->spwndChild);
+                }
+                break;
+            case GW_HWNDNEXT:
+                if (Wnd->spwndNext != NULL)
+                    FoundWnd = DesktopPtrToUser(Wnd->spwndNext);
+                break;
+
+            case GW_HWNDPREV:
+                if (Wnd->spwndPrev != NULL)
+                    FoundWnd = DesktopPtrToUser(Wnd->spwndPrev);
+                break;
+   
+            case GW_CHILD:
+                if (Wnd->spwndChild != NULL)
+                    FoundWnd = DesktopPtrToUser(Wnd->spwndChild);
+                break;
+
+            case GW_HWNDLAST:
+                FoundWnd = Wnd;
+                while ( FoundWnd->spwndNext != NULL)
+                    FoundWnd = DesktopPtrToUser(FoundWnd->spwndNext);
+                break;
+
             default:
-                /* FIXME: Optimize! Fall back to NtUserGetWindow for now... */
                 Wnd = NULL;
                 break;
         }
@@ -1038,9 +1066,6 @@ GetWindow(HWND hWnd,
         /* Do nothing */
     }
     _SEH2_END;
-
-    if (!Wnd) /* Fall back to win32k... */
-        Ret = NtUserGetWindow(hWnd, uCmd);
 
     return Ret;
 }

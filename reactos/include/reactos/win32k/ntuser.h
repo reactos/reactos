@@ -3136,10 +3136,6 @@ NtUserGetScrollInfo(
   int fnBar,
   LPSCROLLINFO lpsi);
 
-HWND
-NTAPI
-NtUserGetWindow(HWND hWnd, UINT Relationship);
-
 /* Should be done in usermode and use NtUserGetCPD. */
 LONG
 NTAPI

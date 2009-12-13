@@ -690,7 +690,6 @@ NtUserGetLastInputInfo                  1
 NtUserGetMinMaxInfo                     3
 NtUserGetMonitorInfo                    2
 NtUserGetScrollInfo                     3
-NtUserGetWindow                         2
 NtUserGetWindowLong                     3
 NtUserMenuInfo                          3
 NtUserMenuItemInfo                      5

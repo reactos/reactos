@@ -1014,6 +1014,31 @@ IntIsWindowVisible(PWINDOW_OBJECT BaseWindow)
    return FALSE;
 }
 
+VOID FASTCALL
+IntLinkWnd(
+   PWND Wnd,
+   PWND WndParent,
+   PWND WndPrevSibling) /* set to NULL if top sibling */
+{
+   Wnd->spwndParent = WndParent;
+   if ((Wnd->spwndPrev = WndPrevSibling))
+   {
+      /* link after WndPrevSibling */
+      if ((Wnd->spwndNext = WndPrevSibling->spwndNext))
+         Wnd->spwndNext->spwndPrev = Wnd;
+
+      Wnd->spwndPrev->spwndNext = Wnd;
+   }
+   else
+   {
+      /* link at top */
+      if ((Wnd->spwndNext = WndParent->spwndChild))
+         Wnd->spwndNext->spwndPrev = Wnd;
+      
+      WndParent->spwndChild = Wnd;
+   }
+
+}
 
 /* link the window into siblings and parent. children are kept in place. */
 VOID FASTCALL
@@ -1025,8 +1050,11 @@ IntLinkWindow(
 {
    PWINDOW_OBJECT Parent;
 
+   IntLinkWnd(Wnd->Wnd, 
+              WndParent->Wnd, 
+              WndPrevSibling ? WndPrevSibling->Wnd : NULL);
+
    Wnd->Parent = WndParent;
-   Wnd->Wnd->spwndParent = WndParent ? WndParent->Wnd : NULL;
    if ((Wnd->PrevSibling = WndPrevSibling))
    {
       /* link after WndPrevSibling */
@@ -1221,12 +1249,30 @@ IntSetSystemMenu(PWINDOW_OBJECT Window, PMENU_OBJECT Menu)
    return TRUE;
 }
 
+/* unlink the window from siblings and parent. children are kept in place. */
+VOID FASTCALL
+IntUnlinkWnd(PWND Wnd)
+{
+   if (Wnd->spwndNext)
+      Wnd->spwndNext->spwndPrev = Wnd->spwndPrev;
+
+   if (Wnd->spwndPrev)
+      Wnd->spwndPrev->spwndNext = Wnd->spwndNext;
+  
+   if (Wnd->spwndParent && Wnd->spwndParent->spwndChild == Wnd)
+      Wnd->spwndParent->spwndChild = Wnd->spwndNext;
+
+   Wnd->spwndParent = Wnd->spwndPrev = Wnd->spwndNext = Wnd->spwndParent = NULL;
+}
+
 
 /* unlink the window from siblings and parent. children are kept in place. */
 VOID FASTCALL
 IntUnlinkWindow(PWINDOW_OBJECT Wnd)
 {
    PWINDOW_OBJECT WndParent = Wnd->Parent;
+
+   IntUnlinkWnd(Wnd->Wnd);
 
    if (Wnd->NextSibling)
       Wnd->NextSibling->PrevSibling = Wnd->PrevSibling;
@@ -1239,8 +1285,6 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
       WndParent->FirstChild = Wnd->NextSibling;
 
    Wnd->PrevSibling = Wnd->NextSibling = Wnd->Parent = NULL;
-   if (Wnd->Wnd)
-       Wnd->Wnd->spwndParent = NULL;
 }
 
 BOOL FASTCALL
@@ -1915,6 +1959,11 @@ AllocErr:
    Window->LastChild = NULL;
    Window->PrevSibling = NULL;
    Window->NextSibling = NULL;
+
+   Wnd->spwndNext = NULL;
+   Wnd->spwndPrev = NULL;
+   Wnd->spwndChild = NULL;
+
    Wnd->cbwndExtra = Wnd->pcls->cbwndExtra;
 
    InitializeListHead(&Wnd->PropListHead);
@@ -3675,32 +3724,6 @@ UserGetWindow(HWND hWnd, UINT Relationship)
    }
 
    return hWndResult;
-}
-
-/*
- * NtUserGetWindow
- *
- * The NtUserGetWindow function retrieves a handle to a window that has the
- * specified relationship (Z order or owner) to the specified window.
- *
- * Status
- *    @implemented
- */
-
-HWND APIENTRY
-NtUserGetWindow(HWND hWnd, UINT Relationship)
-{
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserGetWindow\n");
-   UserEnterShared();
-
-   RETURN(UserGetWindow(hWnd, Relationship));
-
-CLEANUP:
-   DPRINT("Leave NtUserGetWindow, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
 }
 
 /*
