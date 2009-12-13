@@ -4,6 +4,7 @@
  * FILE:        base/applications/paint/lang/sk-SK.rc
  * PURPOSE:     Slovak Language resource file
  * TRANSLATORS: Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * LastChanged: 21-10-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -201,6 +202,6 @@ BEGIN
     IDS_TOOLTIP16, "Zaoblený obdåžnik"
     IDS_OPENFILTER, "Súbory bitových máp (*.bmp;*.dib)\1*.bmp;*.dib\1Všetky súbory (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24-bitová mapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixels per meter"
+    IDS_FILESIZE, "%d bajtov"
+    IDS_PRINTRES, "%d x %d pixelov na meter"
 END
