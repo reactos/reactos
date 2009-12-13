@@ -74,7 +74,7 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
                   OSK_UINT FindType,
                   OSK_SOCKADDR *ReqAddr,
                   OSK_IFADDR *Interface ) {
-    PIP_INTERFACE IF;
+    PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS Destination;
     struct sockaddr_in *addr_in = (struct sockaddr_in *)ReqAddr;
     POSK_IFADDR InterfaceData;
@@ -91,10 +91,10 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
 
     TI_DbgPrint(DEBUG_TCPIF,("Address is %x\n", addr_in->sin_addr.s_addr));
 
-    IF = FindOnLinkInterface(&Destination);
-    if (!IF) return NULL;
+    NCE = RouteGetRouteToDestination(&Destination);
+    if (!NCE) return NULL;
 
-    InterfaceData = TCPGetInterfaceData(IF);
+    InterfaceData = TCPGetInterfaceData(NCE->Interface);
 
     addr_in = (struct sockaddr_in *)
     InterfaceData->ifa_addr;
