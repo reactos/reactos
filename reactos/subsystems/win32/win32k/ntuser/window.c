@@ -3822,35 +3822,6 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
    return Result;
 }
 
-/*
- * NtUserGetWindowLong
- *
- * The NtUserGetWindowLong function retrieves information about the specified
- * window. The function also retrieves the 32-bit (long) value at the
- * specified offset into the extra window memory.
- *
- * Status
- *    @implemented
- */
-
-LONG APIENTRY
-NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
-{
-   DECLARE_RETURN(LONG);
-
-   DPRINT("Enter NtUserGetWindowLong(%x,%d,%d)\n", hWnd, (INT)Index, Ansi);
-   UserEnterExclusive();
-
-   RETURN(UserGetWindowLong(hWnd, Index, Ansi));
-
-CLEANUP:
-   DPRINT("Leave NtUserGetWindowLong, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
-
 LONG FASTCALL
 co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {

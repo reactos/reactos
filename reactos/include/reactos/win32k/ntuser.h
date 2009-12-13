@@ -3136,12 +3136,6 @@ NtUserGetScrollInfo(
   int fnBar,
   LPSCROLLINFO lpsi);
 
-/* Should be done in usermode and use NtUserGetCPD. */
-LONG
-NTAPI
-NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
-
-
 /* (other FocusedItem values give the position of the focused item) */
 #define NO_SELECTED_ITEM  0xffff
 
