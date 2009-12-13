@@ -96,6 +96,12 @@ MMixerGetControlsFromPinByConnectionIndex(
     else
         NodeIndex = CurConnection->ToNode;
 
+    if (NodeIndex > NodeTypes->Count)
+    {
+        // reached end of pin connection
+        return MM_STATUS_SUCCESS;
+    }
+
     /* get target node type of current connection */
     NodeType = MMixerGetNodeType(NodeTypes, NodeIndex);
 
@@ -124,7 +130,7 @@ MMixerGetControlsFromPinByConnectionIndex(
         Status = MMixerGetNodeIndexes(MixerContext, NodeConnections, NodeIndex, TRUE, TRUE, &NodeConnectionCount, &NodeConnection);
     }
 
-    if (Status != MM_STATUS_SUCCESS)
+    if (Status == MM_STATUS_SUCCESS)
     {
         for(Index = 0; Index < NodeConnectionCount; Index++)
         {
@@ -332,6 +338,7 @@ MMixerAddMixerSourceLine(
     LPWSTR PinName;
     GUID NodeType;
     ULONG BytesReturned, ControlCount, Index;
+    LPGUID Node;
     PULONG Nodes;
 
     if (!bTargetPin)
@@ -414,8 +421,14 @@ MMixerAddMixerSourceLine(
     {
         if (Nodes[Index])
         {
-            // found a node
-            ControlCount++;
+            // get node type
+            Node = MMixerGetNodeType(NodeTypes, Index);
+
+            if (MMixerGetControlTypeFromTopologyNode(Node))
+            {
+                // found a node which can be resolved to a type
+                ControlCount++;
+            }
         }
     }
 
@@ -457,14 +470,20 @@ MMixerAddMixerSourceLine(
         {
             if (Nodes[Index])
             {
-                /* store the node index for retrieving / setting details */
-                SrcLine->NodeIds[ControlCount] = Index;
+                // get node type
+                Node = MMixerGetNodeType(NodeTypes, Index);
 
-                Status = MMixerAddMixerControl(MixerContext, MixerInfo, hDevice, NodeTypes, Index, SrcLine, &SrcLine->LineControls[ControlCount]);
-                if (Status == MM_STATUS_SUCCESS)
+                if (MMixerGetControlTypeFromTopologyNode(Node))
                 {
-                    /* increment control count on success */
-                    ControlCount++;
+                    /* store the node index for retrieving / setting details */
+                    SrcLine->NodeIds[ControlCount] = Index;
+
+                    Status = MMixerAddMixerControl(MixerContext, MixerInfo, hDevice, NodeTypes, Index, SrcLine, &SrcLine->LineControls[ControlCount]);
+                    if (Status == MM_STATUS_SUCCESS)
+                    {
+                        /* increment control count on success */
+                        ControlCount++;
+                    }
                 }
             }
         }
@@ -901,8 +920,6 @@ MMixerInitializeFilter(
 
         return Status;
     }
-
-
 
     RtlZeroMemory(Pins, sizeof(ULONG) * PinCount);
     // now get the target pins of the ADC / DAC node

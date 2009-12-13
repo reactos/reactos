@@ -251,6 +251,13 @@ MMixerGetNodeIndexes(
         Connection++;
     }
 
+    if (!Count)
+    {
+        *NodeReferenceCount = 0;
+        *NodeReference = NULL;
+        return MM_STATUS_SUCCESS;
+    }
+
     ASSERT(Count != 0);
 
     /* now allocate node index array */
