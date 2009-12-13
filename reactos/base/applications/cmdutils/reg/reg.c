@@ -255,7 +255,8 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
         /* FIXME:  Prompt for delete */
     }
 
-    if (!value_name)
+    /* Delete subtree only if no /v* option is given */
+    if (!value_name && !value_empty && !value_all)
     {
         if (RegDeleteTreeW(root,p)!=ERROR_SUCCESS)
         {
