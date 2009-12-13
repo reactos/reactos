@@ -295,20 +295,24 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
             return 1;
         }
         maxValue++;
+        
         szValue = HeapAlloc(GetProcessHeap(),0,maxValue*sizeof(WCHAR));
+        if (!szValue) return 1;
 
         while (1)
         {
             count = maxValue;
-            rc = RegEnumValueW(subkey, 0, value_name, &count, NULL, NULL, NULL, NULL);
+            rc = RegEnumValueW(subkey, 0, szValue, &count, NULL, NULL, NULL, NULL);
             if (rc == ERROR_SUCCESS)
             {
-                rc = RegDeleteValueW(subkey,value_name);
+                rc = RegDeleteValueW(subkey,szValue);
                 if (rc != ERROR_SUCCESS)
                     break;
             }
             else break;
         }
+        
+        HeapFree(GetProcessHeap(), 0, szValue); 
         if (rc != ERROR_SUCCESS)
         {
             /* FIXME  delete failed */
