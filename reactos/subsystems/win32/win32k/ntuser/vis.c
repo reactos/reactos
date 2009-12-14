@@ -65,11 +65,18 @@ VIS_ComputeVisibleRegion(
 
    PreviousWindow = Window;
    PreviousWnd = PreviousWindow->Wnd;
-   CurrentWindow = Window->Parent;
+   CurrentWindow = Window->spwndParent;
    while (CurrentWindow)
    {
+      if ( CurrentWindow->Status & WINDOWSTATUS_DESTROYING ||
+           CurrentWindow->Status & WINDOWSTATUS_DESTROYED )
+      {
+         DPRINT1("ATM the Current Window or Parent is dead!\n");
+         return NULL;
+      }
+
       CurrentWnd = CurrentWindow->Wnd;
-      if (!(CurrentWnd) || !(CurrentWnd->style & WS_VISIBLE))
+      if (!CurrentWnd || !(CurrentWnd->style & WS_VISIBLE))
       {
          GreDeleteObject(VisRgn);
          return NULL;
@@ -82,7 +89,7 @@ VIS_ComputeVisibleRegion(
       if ((PreviousWnd->style & WS_CLIPSIBLINGS) ||
           (PreviousWnd == Wnd && ClipSiblings))
       {
-         CurrentSibling = CurrentWindow->FirstChild;
+         CurrentSibling = CurrentWindow->spwndChild;
          while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
          {
             CurrentSiblingWnd = CurrentSibling->Wnd;
@@ -100,18 +107,18 @@ VIS_ComputeVisibleRegion(
                NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
                GreDeleteObject(ClipRgn);
             }
-            CurrentSibling = CurrentSibling->NextSibling;
+            CurrentSibling = CurrentSibling->spwndNext;
          }
       }
 
       PreviousWindow = CurrentWindow;
       PreviousWnd = PreviousWindow->Wnd;
-      CurrentWindow = CurrentWindow->Parent;
+      CurrentWindow = CurrentWindow->spwndParent;
    }
 
    if (ClipChildren)
    {
-      CurrentWindow = Window->FirstChild;
+      CurrentWindow = Window->spwndChild;
       while (CurrentWindow)
       {
          CurrentWnd = CurrentWindow->Wnd;
@@ -129,7 +136,7 @@ VIS_ComputeVisibleRegion(
             NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
             GreDeleteObject(ClipRgn);
          }
-         CurrentWindow = CurrentWindow->NextSibling;
+         CurrentWindow = CurrentWindow->spwndNext;
       }
    }
 
@@ -160,7 +167,7 @@ co_VIS_WindowLayoutChanged(
    Temp = NtGdiCreateRectRgn(0, 0, 0, 0);
    NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
 
-   Parent = Window->Parent;
+   Parent = Window->spwndParent;
    if(Parent)
    {
       ParentWnd = Parent->Wnd;

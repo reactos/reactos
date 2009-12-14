@@ -41,7 +41,7 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, RECTL *WindowRect)
    PWINDOW_OBJECT ParentWindow;
    PWND ParentWnd;
 
-   ParentWindow = Child->Parent;
+   ParentWindow = Child->spwndParent;
    while (ParentWindow != NULL)
    {
       ParentWnd = ParentWindow->Wnd;
@@ -58,7 +58,7 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, RECTL *WindowRect)
 
       /* FIXME: Layered windows. */
 
-      ParentWindow = ParentWindow->Parent;
+      ParentWindow = ParentWindow->spwndParent;
    }
 
    return TRUE;
@@ -67,7 +67,7 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, RECTL *WindowRect)
 BOOL FASTCALL
 IntValidateParent(PWINDOW_OBJECT Child, HRGN hValidateRgn, BOOL Recurse)
 {
-   PWINDOW_OBJECT ParentWindow = Child->Parent;
+   PWINDOW_OBJECT ParentWindow = Child->spwndParent;
    PWND ParentWnd;
 
    while (ParentWindow)
@@ -85,7 +85,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN hValidateRgn, BOOL Recurse)
                               RDW_VALIDATE | RDW_NOCHILDREN);
       }
 
-      ParentWindow = ParentWindow->Parent;
+      ParentWindow = ParentWindow->spwndParent;
    }
 
    return TRUE;
@@ -438,7 +438,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    {
       PWINDOW_OBJECT Child;
 
-      for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+      for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
       {
          if (Child->Wnd->style & WS_VISIBLE)
          {
@@ -494,7 +494,7 @@ IntIsWindowDrawable(PWINDOW_OBJECT Window)
    PWINDOW_OBJECT WndObject;
    PWND Wnd;
 
-   for (WndObject = Window; WndObject != NULL; WndObject = WndObject->Parent)
+   for (WndObject = Window; WndObject != NULL; WndObject = WndObject->spwndParent)
    {
       Wnd = WndObject->Wnd;
       if (!(Wnd->style & WS_VISIBLE) ||
@@ -623,7 +623,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
    PWINDOW_OBJECT TempWindow;
    PWND Wnd, TempWnd;
 
-   for (; Window != NULL; Window = Window->NextSibling)
+   for (; Window != NULL; Window = Window->spwndNext)
    {
       Wnd = Window->Wnd;
       if (IntWndBelongsToThread(Window, Thread) &&
@@ -632,8 +632,8 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
          /* Make sure all non-transparent siblings are already drawn. */
          if (Wnd->ExStyle & WS_EX_TRANSPARENT)
          {
-            for (TempWindow = Window->NextSibling; TempWindow != NULL;
-                 TempWindow = TempWindow->NextSibling)
+            for (TempWindow = Window->spwndNext; TempWindow != NULL;
+                 TempWindow = TempWindow->spwndNext)
             {
                TempWnd = TempWindow->Wnd;
                if (!(TempWnd->ExStyle & WS_EX_TRANSPARENT) &&
@@ -648,9 +648,9 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
          return Window->hSelf;
       }
 
-      if (Window->FirstChild)
+      if (Window->spwndChild)
       {
-         hChild = IntFindWindowToRepaint(Window->FirstChild, Thread);
+         hChild = IntFindWindowToRepaint(Window->spwndChild, Thread);
          if (hChild != NULL)
             return hChild;
       }
@@ -825,7 +825,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       if (!(Wnd->style & WS_CLIPCHILDREN))
       {
          PWINDOW_OBJECT Child;
-         for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+         for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
          {
             IntInvalidateWindows(Child, Window->UpdateRegion, RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
          }
@@ -1406,7 +1406,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
       RECTL rcDummy;
 
       IntGetClientOrigin(Window, &ClientOrigin);
-      for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+      for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
       {
          rcChild = Child->Wnd->rcWindow;
          rcChild.left -= ClientOrigin.x;

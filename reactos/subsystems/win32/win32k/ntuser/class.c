@@ -2195,7 +2195,7 @@ NtUserSetClassLong(HWND hWnd,
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
     {
-        if (Window->ti->ppi != pi)
+        if (Window->pti->ppi != pi)
         {
             SetLastWin32Error(ERROR_ACCESS_DENIED);
             goto Cleanup;

@@ -26,7 +26,7 @@ typedef struct _WINDOW_OBJECT
   PWND Wnd;
 
   /* Pointer to the thread information */
-  PTHREADINFO ti;
+  PTHREADINFO pti; // Use Wnd->head.pti
   /* Pointer to the desktop */
   PDESKTOPINFO Desktop;
   /* system menu handle. */
@@ -43,21 +43,21 @@ typedef struct _WINDOW_OBJECT
   HANDLE WindowRegion;
   /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
-  struct _WINDOW_OBJECT* FirstChild;
+  struct _WINDOW_OBJECT* spwndChild;
   struct _WINDOW_OBJECT* LastChild;
-  struct _WINDOW_OBJECT* NextSibling;
-  struct _WINDOW_OBJECT* PrevSibling;
+  struct _WINDOW_OBJECT* spwndNext;
+  struct _WINDOW_OBJECT* spwndPrev;
   /* Entry in the list of thread windows. */
   LIST_ENTRY ThreadListEntry;
   /* Handle to the parent window. */
-  struct _WINDOW_OBJECT* Parent;
+  struct _WINDOW_OBJECT* spwndParent;
   /* Handle to the owner window. */
-  HWND hOwner;
+  HWND hOwner; // Use spwndOwner
   /* DC Entries (DCE) */
   PDCE Dce;
   /* Scrollbar info */
   PWINDOW_SCROLLINFO Scroll;
-  PETHREAD OwnerThread;
+  PETHREAD OwnerThread; // Use Wnd->head.pti
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
   ULONG Status;
   /* counter for tiled child windows */
@@ -71,7 +71,7 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_ERASEBKGND      (0x00000002) // WNDS_ERASEBACKGROUND
 #define WINDOWOBJECT_NEED_NCPAINT         (0x00000004) // WNDS_SENDNCPAINT
 #define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000008) // WNDS_INTERNALPAINT
-#define WINDOWOBJECT_RESTOREMAX           (0x00000020)
+#define WINDOWOBJECT_RESTOREMAX           (0x00000020) // Set/Clr WS_MAXIMIZE && Clr/Set WS_EX2_VERTICALLYMAXIMIZEDLEFT/RIGHT
 
 #define WINDOWSTATUS_DESTROYING         (0x1) // WNDS2_INDESTROY
 #define WINDOWSTATUS_DESTROYED          (0x2) // WNDS_DESTROYED
@@ -88,7 +88,7 @@ typedef struct _WINDOW_OBJECT
             (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
 #define IntIsDesktopWindow(WndObj) \
-  (WndObj->Parent == NULL)
+  (WndObj->spwndParent == NULL)
 
 #define IntIsBroadcastHwnd(hWnd) \
   (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)
