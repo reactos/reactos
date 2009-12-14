@@ -20,6 +20,7 @@ RBUILD_output_dir=${call RBUILD_fullpath,$(value OUTPUT)$(SEP)$(dir ${call RBUIL
 
 #(source)
 RBUILD_name=$(basename $(notdir $(1)))
+RBUILD_noext=$(dir $(1))$(basename $(notdir $(1)))
 
 #(source)
 RBUILD_dir=${call RBUILD_fullpath,$(dir ${call RBUILD_compress_prefixes,$(1)})}
@@ -255,9 +256,12 @@ define RBUILD_WIDL_CLIENT_RULE
 
 $(2): $${$(1)_precondition}
 
-${call RBUILD_intermediate_path_noext,$(2)}_c.c ${call RBUILD_intermediate_path_noext,$(2)}_c.h: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
+${call RBUILD_intermediate_path_noext,$(2)}_c.c ${call RBUILD_intermediate_path_noext,$(2)}_c.h: ${call RBUILD_intermediate_path_noext,$(2)}_c
+
+${call RBUILD_intermediate_path_noext,$(2)}_c: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_WIDL)
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_c.h -c -C ${call RBUILD_intermediate_path_noext,$(2)}_c.c $(2)
+	$${checkpoint} $$@>$(NUL)
 
 ${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_c.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_c.o}
 
@@ -268,9 +272,12 @@ define RBUILD_WIDL_SERVER_RULE
 
 $(2): $${$(1)_precondition}
 
-${call RBUILD_intermediate_path_noext,$(2)}_s.c ${call RBUILD_intermediate_path_noext,$(2)}_s.h: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
+${call RBUILD_intermediate_path_noext,$(2)}_s.c ${call RBUILD_intermediate_path_noext,$(2)}_s.h: ${call RBUILD_intermediate_path_noext,$(2)}_s
+
+${call RBUILD_intermediate_path_noext,$(2)}_s: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_WIDL)
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_s.h -s -S ${call RBUILD_intermediate_path_noext,$(2)}_s.c $(2)
+	$${checkpoint} $$@>$(NUL)
 
 ${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_s.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_s.o}
 
@@ -281,9 +288,12 @@ define RBUILD_WIDL_PROXY_RULE
 
 $(2): $${$(1)_precondition}
 
-${call RBUILD_intermediate_path_noext,$(2)}_p.c ${call RBUILD_intermediate_path_noext,$(2)}_p.h: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
+${call RBUILD_intermediate_path_noext,$(2)}_p.c ${call RBUILD_intermediate_path_noext,$(2)}_p.h: ${call RBUILD_intermediate_path_noext,$(2)}_p
+
+${call RBUILD_intermediate_path_noext,$(2)}_p: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_WIDL)
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_p.h -p -P ${call RBUILD_intermediate_path_noext,$(2)}_p.c $(2)
+	$${checkpoint} $$@>$(NUL)
 
 ${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_p.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_p.o}
 
