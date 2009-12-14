@@ -4,7 +4,7 @@
 	<include base="iexplore">.</include>
 	<library>user32</library>
 	<library>gdi32</library>
-        <library>shdocvw</library>
+	<library>shdocvw</library>
 	<file>main.c</file>
 	<file>version.rc</file>
 </module>
