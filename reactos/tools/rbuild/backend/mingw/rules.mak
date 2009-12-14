@@ -259,7 +259,7 @@ $(2): $${$(1)_precondition}
 ${call RBUILD_intermediate_path_noext,$(2)}_c.c ${call RBUILD_intermediate_path_noext,$(2)}_c.h: ${call RBUILD_intermediate_path_noext,$(2)}_c
 
 ${call RBUILD_intermediate_path_noext,$(2)}_c: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
- 	$$(ECHO_WIDL)
+	$$(ECHO_WIDL)
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_c.h -c -C ${call RBUILD_intermediate_path_noext,$(2)}_c.c $(2)
 	$${touch} $$@>$(NUL)
 ${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_c.c,,,${call RBUILD_intermediate_path_noext,$(2)}_c.o}
