@@ -93,7 +93,7 @@ DoDSoundCallback(
         DriverNameA[0] = 0;
         if (ProductName)
         {
-        WideCharToMultiByte(CP_ACP, 0, ProductName, -1, DriverNameA, sizeof(DriverNameA) / sizeof(char), NULL, NULL);
+            WideCharToMultiByte(CP_ACP, 0, ProductName, -1, DriverNameA, sizeof(DriverNameA) / sizeof(char), NULL, NULL);
             DriverNameA[(sizeof(DriverNameA) / sizeof(char))-1] = 0;
         }
 
