@@ -1462,7 +1462,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
          Msg.hwnd = FocusMessageQueue->FocusWindow;
          DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
 
-         FocusMessageQueue->Desktop->DesktopInfo->LastInputWasKbd = TRUE;
+         FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
          IntGetCursorLocation(FocusMessageQueue->Desktop->WindowStation,
                               &Msg.pt);

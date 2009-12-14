@@ -571,7 +571,7 @@ co_IntTranslateMouseMessage(
                {
                   /* post the message to the other window */
                   Msg->hwnd = Wnd->hSelf;
-                  if(!(Wnd->Status & WINDOWSTATUS_DESTROYING))
+                  if(!(Wnd->state & WINDOWSTATUS_DESTROYING))
                   {
                      MsqPostMessage(Wnd->MessageQueue, Msg, FALSE,
                                     Msg->message == WM_MOUSEMOVE ? QS_MOUSEMOVE :
@@ -1163,7 +1163,7 @@ UserPostMessage( HWND Wnd,
          return FALSE;
       }
 
-      if ( Window->Status & WINDOWSTATUS_DESTROYING )
+      if ( Window->state & WINDOWSTATUS_DESTROYING )
       {
          DPRINT1("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
          /* FIXME - last error code? */
@@ -1290,7 +1290,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
       RETURN( FALSE);
    }
 
-   if (Window->Status & WINDOWSTATUS_DESTROYING)
+   if (Window->state & WINDOWSTATUS_DESTROYING)
    {
       /* FIXME - last error? */
       DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
@@ -1457,7 +1457,7 @@ co_IntDoSendMessage( HWND hWnd,
    }
 
    /* Check for an exiting window. */
-   if (Window && Window->Status & WINDOWSTATUS_DESTROYING)
+   if (Window && Window->state & WINDOWSTATUS_DESTROYING)
    {
       DPRINT1("co_IntDoSendMessage Window Exiting!\n");
    }

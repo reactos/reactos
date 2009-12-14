@@ -1032,23 +1032,23 @@ NtUserCreateDesktop(
    DesktopInfoSize = FIELD_OFFSET(DESKTOPINFO,
                                   szDesktopName[(lpszDesktopName->Length / sizeof(WCHAR)) + 1]);
 
-   DesktopObject->DesktopInfo = RtlAllocateHeap(DesktopObject->pheapDesktop,
+   DesktopObject->pDeskInfo = RtlAllocateHeap(DesktopObject->pheapDesktop,
                                                 HEAP_NO_SERIALIZE,
                                                 DesktopInfoSize);
 
-   if (DesktopObject->DesktopInfo == NULL)
+   if (DesktopObject->pDeskInfo == NULL)
    {
        ObDereferenceObject(DesktopObject);
        DPRINT1("Failed to create the DESKTOP structure!\n");
        RETURN(NULL);
    }
 
-   RtlZeroMemory(DesktopObject->DesktopInfo,
+   RtlZeroMemory(DesktopObject->pDeskInfo,
                  DesktopInfoSize);
 
-   DesktopObject->DesktopInfo->pvDesktopBase = DesktopHeapSystemBase;
-   DesktopObject->DesktopInfo->pvDesktopLimit = (PVOID)((ULONG_PTR)DesktopHeapSystemBase + HeapSize);
-   RtlCopyMemory(DesktopObject->DesktopInfo->szDesktopName,
+   DesktopObject->pDeskInfo->pvDesktopBase = DesktopHeapSystemBase;
+   DesktopObject->pDeskInfo->pvDesktopLimit = (PVOID)((ULONG_PTR)DesktopHeapSystemBase + HeapSize);
+   RtlCopyMemory(DesktopObject->pDeskInfo->szDesktopName,
                  lpszDesktopName->Buffer,
                  lpszDesktopName->Length);
 
@@ -1928,7 +1928,7 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
         if (GetWin32ClientInfo()->pDeskInfo == NULL)
         {
            GetWin32ClientInfo()->pDeskInfo = 
-                (PVOID)((ULONG_PTR)DesktopObject->DesktopInfo - 
+                (PVOID)((ULONG_PTR)DesktopObject->pDeskInfo - 
                                           GetWin32ClientInfo()->ulClientDelta);
         }
     }
@@ -1979,7 +1979,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             pci->ulClientDelta = DesktopHeapGetUserDelta();
             if (DesktopObject)
             {
-                pci->pDeskInfo = (PVOID)((ULONG_PTR)DesktopObject->DesktopInfo - pci->ulClientDelta);
+                pci->pDeskInfo = (PVOID)((ULONG_PTR)DesktopObject->pDeskInfo - pci->ulClientDelta);
             }
         }
 

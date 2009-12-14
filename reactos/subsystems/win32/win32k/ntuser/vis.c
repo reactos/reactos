@@ -68,8 +68,8 @@ VIS_ComputeVisibleRegion(
    CurrentWindow = Window->spwndParent;
    while (CurrentWindow)
    {
-      if ( CurrentWindow->Status & WINDOWSTATUS_DESTROYING ||
-           CurrentWindow->Status & WINDOWSTATUS_DESTROYED )
+      if ( CurrentWindow->state & WINDOWSTATUS_DESTROYING || // state2
+           CurrentWindow->state & WINDOWSTATUS_DESTROYED )
       {
          DPRINT1("ATM the Current Window or Parent is dead!\n");
          return NULL;

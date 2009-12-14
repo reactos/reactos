@@ -27,8 +27,6 @@ typedef struct _WINDOW_OBJECT
 
   /* Pointer to the thread information */
   PTHREADINFO pti; // Use Wnd->head.pti
-  /* Pointer to the desktop */
-  PDESKTOPINFO Desktop;
   /* system menu handle. */
   HMENU SystemMenu;
   /* Entry in the thread's list of windows. */
@@ -36,7 +34,7 @@ typedef struct _WINDOW_OBJECT
   /* Handle for the window. */
   HWND hSelf;
   /* Window flags. */
-  ULONG Flags;
+  ULONG state;
   /* Handle of region of the window to be updated. */
   HANDLE UpdateRegion;
   /* Handle of the window region. */
@@ -59,7 +57,6 @@ typedef struct _WINDOW_OBJECT
   PWINDOW_SCROLLINFO Scroll;
   PETHREAD OwnerThread; // Use Wnd->head.pti
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
-  ULONG Status;
   /* counter for tiled child windows */
   ULONG TiledCounter;
   /* WNDOBJ list */
@@ -67,14 +64,14 @@ typedef struct _WINDOW_OBJECT
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */
-#define WINDOWOBJECT_NEED_SIZE            (0x00000001) // WNDS_SENDSIZEMOVEMSGS?
-#define WINDOWOBJECT_NEED_ERASEBKGND      (0x00000002) // WNDS_ERASEBACKGROUND
-#define WINDOWOBJECT_NEED_NCPAINT         (0x00000004) // WNDS_SENDNCPAINT
-#define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000008) // WNDS_INTERNALPAINT
+#define WINDOWOBJECT_NEED_SIZE            WNDS_SENDSIZEMOVEMSGS
+#define WINDOWOBJECT_NEED_ERASEBKGND      WNDS_ERASEBACKGROUND
+#define WINDOWOBJECT_NEED_NCPAINT         WNDS_SENDNCPAINT
+#define WINDOWOBJECT_NEED_INTERNALPAINT   WNDS_INTERNALPAINT
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020) // Set/Clr WS_MAXIMIZE && Clr/Set WS_EX2_VERTICALLYMAXIMIZEDLEFT/RIGHT
 
-#define WINDOWSTATUS_DESTROYING         (0x1) // WNDS2_INDESTROY
-#define WINDOWSTATUS_DESTROYED          (0x2) // WNDS_DESTROYED
+#define WINDOWSTATUS_DESTROYING         WNDS2_INDESTROY
+#define WINDOWSTATUS_DESTROYED          WNDS_DESTROYED
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \

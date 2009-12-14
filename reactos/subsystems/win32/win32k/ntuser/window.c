@@ -123,7 +123,7 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
    }
 
    Window = (PWINDOW_OBJECT)UserGetObject(gHandleTable, hWnd, otWindow);
-   if (!Window || 0 != (Window->Status & WINDOWSTATUS_DESTROYED))
+   if (!Window || 0 != (Window->state & WINDOWSTATUS_DESTROYED))
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
@@ -365,12 +365,12 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    Wnd = Window->Wnd;
 
-   if(Window->Status & WINDOWSTATUS_DESTROYING)
+   if(Window->state & WINDOWSTATUS_DESTROYING)
    {
       DPRINT("Tried to call IntDestroyWindow() twice\n");
       return 0;
    }
-   Window->Status |= WINDOWSTATUS_DESTROYING;
+   Window->state |= WINDOWSTATUS_DESTROYING;
    Wnd->style &= ~WS_VISIBLE;
 
    IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Wnd, OBJID_WINDOW, 0);
@@ -431,7 +431,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    MsqRemoveWindowMessagesFromQueue(Window);
 
    /* from now on no messages can be sent to this window anymore */
-   Window->Status |= WINDOWSTATUS_DESTROYED;
+   Window->state |= WINDOWSTATUS_DESTROYED;
    Wnd->state |= WNDS_DESTROYED;
    Wnd->fnid |= FNID_FREED;
 
@@ -1315,7 +1315,7 @@ IntAnyPopup(VOID)
 BOOL FASTCALL
 IntIsWindowInDestroy(PWINDOW_OBJECT Window)
 {
-   return ((Window->Status & WINDOWSTATUS_DESTROYING) == WINDOWSTATUS_DESTROYING);
+   return ((Window->state & WINDOWSTATUS_DESTROYING) == WINDOWSTATUS_DESTROYING);
 }
 
 
@@ -1339,7 +1339,7 @@ IntGetWindowPlacement(PWINDOW_OBJECT Window, WINDOWPLACEMENT *lpwndpl)
    {
       lpwndpl->showCmd = SW_HIDE;
    }
-   else if (0 != (Window->Flags & WINDOWOBJECT_RESTOREMAX) ||
+   else if (0 != (Window->state & WINDOWOBJECT_RESTOREMAX) ||
             0 != (Wnd->style & WS_MAXIMIZE))
    {
       lpwndpl->showCmd = SW_MAXIMIZE;
@@ -1850,7 +1850,7 @@ AllocErr:
    {
       /* If there is no desktop window yet, we must be creating it */
       pti->Desktop->DesktopWindow = hWnd;
-      pti->Desktop->DesktopInfo->Wnd = Wnd;
+      pti->Desktop->pDeskInfo->Wnd = Wnd;
    }
 
    /*
@@ -2014,7 +2014,7 @@ AllocErr:
       if (!(dwStyle & WS_POPUP))
       {
          dwStyle |= WS_CAPTION;
-         Window->Flags |= WINDOWOBJECT_NEED_SIZE;
+         Window->state |= WINDOWOBJECT_NEED_SIZE;
          DPRINT("4: Style is now %lx\n", dwStyle);
       }
    }
@@ -2334,7 +2334,7 @@ AllocErr:
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window->Wnd, OBJID_WINDOW, 0);
 
    /* Send move and size messages. */
-   if (!(Window->Flags & WINDOWOBJECT_NEED_SIZE))
+   if (!(Window->state & WINDOWOBJECT_NEED_SIZE))
    {
       LONG lParam;
 
@@ -4070,7 +4070,7 @@ NtUserGetWindowPlacement(HWND hWnd,
    {
       Safepl.showCmd = SW_HIDE;
    }
-   else if ((0 != (Window->Flags & WINDOWOBJECT_RESTOREMAX) ||
+   else if ((0 != (Window->state & WINDOWOBJECT_RESTOREMAX) ||
             0 != (Wnd->style & WS_MAXIMIZE)) &&
             0 == (Wnd->style & WS_MINIMIZE))
    {

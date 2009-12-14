@@ -325,12 +325,12 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
             {
                if (Wnd->style & WS_MAXIMIZE)
                {
-                  Window->Flags |= WINDOWOBJECT_RESTOREMAX;
+                  Window->state |= WINDOWOBJECT_RESTOREMAX;
                   Wnd->style &= ~WS_MAXIMIZE;
                }
                else
                {
-                  Window->Flags &= ~WINDOWOBJECT_RESTOREMAX;
+                  Window->state &= ~WINDOWOBJECT_RESTOREMAX;
                }
                co_UserRedrawWindow(Window, NULL, 0, RDW_VALIDATE | RDW_NOERASE |
                                    RDW_NOINTERNALPAINT);
@@ -364,7 +364,7 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                if (Wnd->style & WS_MINIMIZE)
                {
                   Wnd->style &= ~WS_MINIMIZE;
-                  if (Window->Flags & WINDOWOBJECT_RESTOREMAX)
+                  if (Window->state & WINDOWOBJECT_RESTOREMAX)
                   {
                      co_WinPosGetMinMaxInfo(Window, &Size,
                                             &Wnd->InternalPos.MaxPos, NULL, NULL);
@@ -1478,12 +1478,12 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 
    /* FIXME: Check for window destruction. */
 
-   if ((Window->Flags & WINDOWOBJECT_NEED_SIZE) &&
-       !(Window->Status & WINDOWSTATUS_DESTROYING))
+   if ((Window->state & WINDOWOBJECT_NEED_SIZE) &&
+       !(Window->state & WINDOWSTATUS_DESTROYING))
    {
       WPARAM wParam = SIZE_RESTORED;
 
-      Window->Flags &= ~WINDOWOBJECT_NEED_SIZE;
+      Window->state &= ~WINDOWOBJECT_NEED_SIZE;
       if (Wnd->style & WS_MAXIMIZE)
       {
          wParam = SIZE_MAXIMIZED;

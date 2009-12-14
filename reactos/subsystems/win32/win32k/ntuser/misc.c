@@ -471,7 +471,7 @@ GetW32ThreadInfo(VOID)
 
     if (pti->Desktop != NULL)
     {
-       pti->pDeskInfo = pti->Desktop->DesktopInfo;
+       pti->pDeskInfo = pti->Desktop->pDeskInfo;
     }
     else
     {
