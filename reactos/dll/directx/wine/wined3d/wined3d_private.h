@@ -2551,7 +2551,7 @@ BOOL is_invalid_op(IWineD3DDeviceImpl *This, int stage, WINED3DTEXTUREOP op,
 void set_tex_op_nvrc(IWineD3DDevice *iface, BOOL is_alpha, int stage, WINED3DTEXTUREOP op,
         DWORD arg1, DWORD arg2, DWORD arg3, INT texture_idx, DWORD dst) DECLSPEC_HIDDEN;
 void set_texture_matrix(const float *smat, DWORD flags, BOOL calculatedCoords,
-        BOOL transformed, WINED3DFORMAT coordtype, BOOL ffp_can_disable_proj) DECLSPEC_HIDDEN;
+        BOOL transformed, DWORD coordtype, BOOL ffp_can_disable_proj) DECLSPEC_HIDDEN;
 void texture_activate_dimensions(DWORD stage, IWineD3DStateBlockImpl *stateblock,
         struct wined3d_context *context) DECLSPEC_HIDDEN;
 void sampler_texdim(DWORD state, IWineD3DStateBlockImpl *stateblock,
