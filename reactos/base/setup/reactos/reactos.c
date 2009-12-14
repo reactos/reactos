@@ -1021,7 +1021,7 @@ void LoadSetupData()
                                             &LineLength);
                         ++Count;
                     }
-                while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.LangCount);
+                    while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.LangCount);
                 }
             }
         }
@@ -1094,52 +1094,52 @@ void LoadSetupData()
 
         // get install directory
         if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
-                {
-                        SetupGetStringField(&InfContext,
-                                            1,
+        {
+            SetupGetStringField(&InfContext,
+                                1,
                                 SetupData.InstallDir,
                                 sizeof(SetupData.InstallDir) / sizeof(TCHAR),
-                                            &LineLength);
-                    }
+                                &LineLength);
+        }
         SetupCloseInfFile(hTxtsetupSif);
-                }
-            }
+    }
+}
 
 LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY gen,PINFCONTEXT context)
-        {
+{
     LONG TotalCount;
 
     TotalCount = SetupGetLineCount(hinf, name);
     if (TotalCount > 0)
-                {
+    {
         gen = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GENENTRY) * TotalCount);
         if (gen != NULL)
         {
             if (SetupFindFirstLine(hinf, name, NULL, context))
             {
                 LONG Count = 0;
-                    do
-                    {
+                do
+                {
                     SetupGetStringField(context,
-                                            0,
+                                        0,
                                         gen[Count].Id,
                                         sizeof(gen[Count].Id) / sizeof(TCHAR),
                                         NULL);
 
                     SetupGetStringField(context,
-                                            1,
+                                        1,
                                         gen[Count].Value,
                                         sizeof(gen[Count].Value) / sizeof(TCHAR),
                                         NULL);
                     Count++;
-                    }
-                while (SetupFindNextLine(context, context) && Count < TotalCount);
                 }
+                while (SetupFindNextLine(context, context) && Count < TotalCount);
             }
         }
+    }
 
     return TotalCount;
-        }
+}
 
 BOOL isUnattendSetup()
 {
