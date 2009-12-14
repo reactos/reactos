@@ -9,7 +9,11 @@ CPPFLAG_UNICODE:=-DUNICODE -D_UNICODE
 
 # FIXME: disabled until RosBE stops sucking
 # BUILTIN_CPPFLAGS+= -nostdinc
+ifeq ($(ROS_ARCH),i386)
+BUILTIN_CFLAGS+= -fno-optimize-sibling-calls -fno-set-stack-executable
+else
 BUILTIN_CFLAGS+= -fno-optimize-sibling-calls
+endif
 BUILTIN_CXXFLAGS+= -fno-optimize-sibling-calls
 
 #(module, source, dependencies, cflags, output)
