@@ -1002,10 +1002,17 @@ co_WinPosSetWindowPos(
          }
          else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
          {
-            if(ParentWindow->LastChild)
+            if(ParentWindow->spwndChild)
             {
-               UserReferenceObject(ParentWindow->LastChild);
-               InsertAfterWindow = ParentWindow->LastChild;
+               InsertAfterWindow = ParentWindow->spwndChild;
+
+               if(InsertAfterWindow)
+               {
+                  while (InsertAfterWindow->spwndNext)
+                     InsertAfterWindow = InsertAfterWindow->spwndNext;
+               }
+
+               UserReferenceObject(InsertAfterWindow);
             }
             else
                InsertAfterWindow = NULL;

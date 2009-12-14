@@ -1060,11 +1060,6 @@ IntLinkWindow(
       /* link after WndPrevSibling */
       if ((Wnd->spwndNext = WndPrevSibling->spwndNext))
          Wnd->spwndNext->spwndPrev = Wnd;
-      else if ((Parent = Wnd->spwndParent))
-      {
-         if(Parent->LastChild == WndPrevSibling)
-            Parent->LastChild = Wnd;
-      }
       Wnd->spwndPrev->spwndNext = Wnd;
    }
    else
@@ -1075,7 +1070,6 @@ IntLinkWindow(
          Wnd->spwndNext->spwndPrev = Wnd;
       else if (Parent)
       {
-         Parent->LastChild = Wnd;
          Parent->spwndChild = Wnd;
          return;
       }
@@ -1276,8 +1270,6 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
 
    if (Wnd->spwndNext)
       Wnd->spwndNext->spwndPrev = Wnd->spwndPrev;
-   else if (WndParent && WndParent->LastChild == Wnd)
-      WndParent->LastChild = Wnd->spwndPrev;
 
    if (Wnd->spwndPrev)
       Wnd->spwndPrev->spwndNext = Wnd->spwndNext;
@@ -1956,7 +1948,6 @@ AllocErr:
 
    Window->OwnerThread = PsGetCurrentThread();
    Window->spwndChild = NULL;
-   Window->LastChild = NULL;
    Window->spwndPrev = NULL;
    Window->spwndNext = NULL;
 
@@ -2290,7 +2281,13 @@ AllocErr:
       {
          PWINDOW_OBJECT PrevSibling;
 
-         PrevSibling = ParentWindow->LastChild;
+         PrevSibling = ParentWindow->spwndChild;
+
+         if(PrevSibling)
+         {
+            while (PrevSibling->spwndNext)
+               PrevSibling = PrevSibling->spwndNext;
+         }
 
          /* link window as bottom sibling */
          IntLinkWindow(Window, ParentWindow, PrevSibling /*prev sibling*/);
@@ -3698,8 +3695,16 @@ UserGetWindow(HWND hWnd, UINT Relationship)
       case GW_HWNDLAST:
          if((Parent = Window->spwndParent))
          {
-            if (Parent->LastChild)
-               hWndResult = Parent->LastChild->hSelf;
+            if (Parent->spwndChild)
+            {
+               Window = Parent->spwndChild;
+               if(Window)
+               {
+                  while(Window->spwndNext)
+                     Window = Window->spwndNext;
+               }
+               hWndResult = Window->hSelf;
+            }
          }
          break;
 
