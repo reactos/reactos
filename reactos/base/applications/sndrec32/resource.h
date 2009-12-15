@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by reactOS_sndrec32.rc
+// Used by rsrc.rc
 //
 #define IDC_MYICON                      2
 #define IDB_BITMAP2_STOP_DIS            8
@@ -28,6 +28,14 @@
 #define IDB_BITMAP2_PLAY_DIS            142
 #define IDB_BITMAP2_REC_DIS             143
 #define IDB_BITMAP2_START_DIS           144
+#define IDS_STRPOS                      400
+#define IDS_STRDUR                      401
+#define IDS_STRBUF                      402
+#define IDS_STRFMT                      403
+#define IDS_STRMONO                     404
+#define IDS_STRSTEREO                   405
+#define IDS_STRING406                   406
+#define IDS_STRCHAN                     406
 #define ID_FILE_NEW                     32771
 #define ID_FILE_OPEN                    32772
 #define ID_FILE_SAVE                    32773
@@ -39,7 +47,7 @@
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1

@@ -7,6 +7,7 @@
 	<library>msacm32</library>
 	<library>comctl32</library>
 	<library>comdlg32</library>
+	<library>gdi32</library>
 	<file>audio_format.cpp</file>
 	<file>audio_membuffer.cpp</file>
 	<file>audio_producer.cpp</file>
