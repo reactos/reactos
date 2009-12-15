@@ -100,7 +100,7 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
     TRACE("bytes is %d, pad bytes is %d\n", bytes, pad_bytes);
     needed = bytes + pad_bytes + 1;
     if (sep)
-    needed += (needed / 64 + 1) * strlen(sep);
+        needed += (needed / 64 + 1) * strlen(sep);
 
     if (needed > *out_len)
     {
@@ -164,7 +164,7 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
             break;
     }
     if (sep)
-    strcpy(ptr, sep);
+        strcpy(ptr, sep);
 
     return ERROR_SUCCESS;
 }
@@ -205,7 +205,7 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
     charsNeeded = 0;
     encodeBase64A(pbBinary, cbBinary, sep, NULL, &charsNeeded);
     if (sep)
-    charsNeeded += strlen(sep);
+        charsNeeded += strlen(sep);
     if (header)
         charsNeeded += strlen(header) + strlen(sep);
     if (trailer)
@@ -221,9 +221,9 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
             ptr += strlen(ptr);
             if (sep)
             {
-            strcpy(ptr, sep);
-            ptr += strlen(sep);
-        }
+                strcpy(ptr, sep);
+                ptr += strlen(sep);
+            }
         }
         encodeBase64A(pbBinary, cbBinary, sep, ptr, &size);
         ptr += size - 1;
@@ -233,9 +233,9 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
             ptr += strlen(ptr);
             if (sep)
             {
-            strcpy(ptr, sep);
-            ptr += strlen(sep);
-        }
+                strcpy(ptr, sep);
+                ptr += strlen(sep);
+            }
         }
         *pcchString = charsNeeded - 1;
     }

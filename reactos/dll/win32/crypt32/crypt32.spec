@@ -66,7 +66,7 @@
 @ stdcall CertGetStoreProperty(ptr long ptr ptr)
 @ stdcall CertGetSubjectCertificateFromStore(ptr long ptr)
 @ stdcall CertGetValidUsages(long ptr ptr ptr ptr)
-@ stub CertIsRDNAttrsInCertificateName
+@ stdcall CertIsRDNAttrsInCertificateName(long long ptr ptr)
 @ stdcall CertIsValidCRLForCertificate(ptr ptr long ptr)
 @ stdcall CertNameToStrA(long ptr long ptr long)
 @ stdcall CertNameToStrW(long ptr long ptr long)

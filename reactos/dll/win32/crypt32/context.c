@@ -125,7 +125,7 @@ void Context_AddRef(void *context, size_t contextSize)
                  contextSize);
             else
                 linkedBase = NULL;
-}
+        }
         if (linkedContext)
         {
             /* It's not a link context, so it wasn't add-ref'ed in the while
@@ -178,14 +178,14 @@ BOOL Context_Release(void *context, size_t contextSize,
         return FALSE;
     }
     if (base->type == ContextTypeLink)
-        {
-            /* The linked context is of the same type as this, so release
-             * it as well, using the same offset and data free function.
-             */
+    {
+        /* The linked context is of the same type as this, so release
+         * it as well, using the same offset and data free function.
+         */
         ret = Context_Release(CONTEXT_FROM_BASE_CONTEXT(
-             ((PLINK_CONTEXT)base)->linked, contextSize), contextSize,
-             dataContextFree);
-        }
+         ((PLINK_CONTEXT)base)->linked, contextSize), contextSize,
+         dataContextFree);
+    }
     if (InterlockedDecrement(&base->ref) == 0)
     {
         TRACE("freeing %p\n", context);
@@ -321,7 +321,7 @@ BOOL ContextList_Remove(struct ContextList *list, void *context)
     EnterCriticalSection(&list->cs);
     if (!list_empty(entry))
     {
-    list_remove(entry);
+        list_remove(entry);
         inList = TRUE;
     }
     LeaveCriticalSection(&list->cs);
