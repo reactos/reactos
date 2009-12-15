@@ -7,7 +7,7 @@
 
 
 
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "audio_membuffer.hpp"
 
 
