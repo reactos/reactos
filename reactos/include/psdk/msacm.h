@@ -21,9 +21,6 @@
 #ifndef __WINE_MSACM_H
 #define __WINE_MSACM_H
 
-/* HACK! This shouldn't be here, but wine code needs it. */
-#include <mmreg.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */
