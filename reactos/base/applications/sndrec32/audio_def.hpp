@@ -51,7 +51,7 @@
 #include <windows.h>
 #include <mmsystem.h> //Windows MultiMedia (WINMM) audio apis
 #include <mmreg.h> //codecs stuff
-#include <Msacm.h> //codecs stuff
+#include <msacm.h> //codecs stuff
 
 
 
