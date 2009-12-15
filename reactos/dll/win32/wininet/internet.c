@@ -460,7 +460,7 @@ static void dump_INTERNET_FLAGS(DWORD dwFlags)
     };
 #undef FE
     int i;
-
+    
     for (i = 0; i < (sizeof(flag) / sizeof(flag[0])); i++) {
 	if (flag[i].val & dwFlags) {
 	    TRACE(" %s", flag[i].name);
@@ -520,13 +520,13 @@ static DWORD APPINFO_QueryOption(WININETHANDLEHEADER *hdr, DWORD option, void *b
             if(!buffer || bufsize < *size)
                 return ERROR_INSUFFICIENT_BUFFER;
 
-                strcpyW(buffer, ai->lpszAgent);
+            strcpyW(buffer, ai->lpszAgent);
         }else {
-                *size = WideCharToMultiByte(CP_ACP, 0, ai->lpszAgent, -1, NULL, 0, NULL, NULL);
+            *size = WideCharToMultiByte(CP_ACP, 0, ai->lpszAgent, -1, NULL, 0, NULL, NULL);
             if(!buffer || bufsize < *size)
                 return ERROR_INSUFFICIENT_BUFFER;
 
-                WideCharToMultiByte(CP_ACP, 0, ai->lpszAgent, -1, buffer, *size, NULL, NULL);
+            WideCharToMultiByte(CP_ACP, 0, ai->lpszAgent, -1, buffer, *size, NULL, NULL);
         }
 
         return ERROR_SUCCESS;
@@ -543,7 +543,7 @@ static DWORD APPINFO_QueryOption(WININETHANDLEHEADER *hdr, DWORD option, void *b
             if (ai->lpszProxyBypass)
                 proxyBypassBytesRequired = (lstrlenW(ai->lpszProxyBypass) + 1) * sizeof(WCHAR);
             if (*size < sizeof(INTERNET_PROXY_INFOW) + proxyBytesRequired + proxyBypassBytesRequired)
-                return ERROR_INSUFFICIENT_BUFFER;
+                    return ERROR_INSUFFICIENT_BUFFER;
 
             proxy = (LPWSTR)((LPBYTE)buffer + sizeof(INTERNET_PROXY_INFOW));
             proxy_bypass = (LPWSTR)((LPBYTE)buffer + sizeof(INTERNET_PROXY_INFOW) + proxyBytesRequired);
@@ -1814,7 +1814,7 @@ INTERNET_STATUS_CALLBACK WINAPI InternetSetStatusCallbackA(
     LPWININETHANDLEHEADER lpwh;
 
     TRACE("0x%08x\n", (ULONG)hInternet);
-
+    
     if (!(lpwh = WININET_GetObject(hInternet)))
         return INTERNET_INVALID_STATUS_CALLBACK;
 
@@ -2016,8 +2016,8 @@ BOOL WINAPI InternetReadFileExW(HINTERNET hFile, LPINTERNET_BUFFERSW lpBuffer,
   ERR("(%p, %p, 0x%x, 0x%lx): not implemented in native\n", hFile, lpBuffer, dwFlags, dwContext);
 
   INTERNET_SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return FALSE;
-    }
+  return FALSE;
+}
 
 DWORD INET_QueryOption(DWORD option, void *buffer, DWORD *size, BOOL unicode)
 {
@@ -2047,7 +2047,7 @@ DWORD INET_QueryOption(DWORD option, void *buffer, DWORD *size, BOOL unicode)
         return ERROR_SUCCESS;
 
     case INTERNET_OPTION_CONNECTED_STATE:
-            FIXME("INTERNET_OPTION_CONNECTED_STATE: semi-stub\n");
+        FIXME("INTERNET_OPTION_CONNECTED_STATE: semi-stub\n");
 
         if (*size < sizeof(ULONG))
             return ERROR_INSUFFICIENT_BUFFER;
@@ -2259,7 +2259,7 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         INTERNET_STATUS_CALLBACK callback = *(INTERNET_STATUS_CALLBACK *)lpBuffer;
         ret = (set_status_callback(lpwhh, callback, TRUE) != INTERNET_INVALID_STATUS_CALLBACK);
         break;
-        }
+      }
     case INTERNET_OPTION_HTTP_VERSION:
       {
         HTTP_VERSION_INFO* pVersion=(HTTP_VERSION_INFO*)lpBuffer;
@@ -2737,11 +2737,11 @@ BOOL WINAPI InternetCheckConnectionA(LPCSTR lpszUrl, DWORD dwFlags, DWORD dwRese
 
     len = MultiByteToWideChar(CP_ACP, 0, lpszUrl, -1, NULL, 0);
     if (!(szUrl = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR))))
-            return FALSE;
+        return FALSE;
     MultiByteToWideChar(CP_ACP, 0, lpszUrl, -1, szUrl, len);
     rc = InternetCheckConnectionW(szUrl, dwFlags, dwReserved);
     HeapFree(GetProcessHeap(), 0, szUrl);
-
+    
     return rc;
 }
 
@@ -2905,7 +2905,7 @@ HINTERNET WINAPI InternetOpenUrlW(HINTERNET hInternet, LPCWSTR lpszUrl,
 
 	workRequest.asyncproc = AsyncInternetOpenUrlProc;
 	workRequest.hdr = WININET_AddRef( &hIC->hdr );
-        req = &workRequest.u.InternetOpenUrlW;
+	req = &workRequest.u.InternetOpenUrlW;
 	req->lpszUrl = WININET_strdupW(lpszUrl);
 	if (lpszHeaders)
 	    req->lpszHeaders = WININET_strdupW(lpszHeaders);

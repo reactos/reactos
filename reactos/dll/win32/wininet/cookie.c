@@ -192,7 +192,7 @@ static BOOL COOKIE_crackUrlSimple(LPCWSTR lpszUrl, LPWSTR hostName, int hostName
     UrlComponents.dwUrlPathLength = pathLen;
 
     return InternetCrackUrlW(lpszUrl, 0, 0, &UrlComponents);
-        }
+}
 
 /* match a domain. domain must match if the domain is not NULL. path must match if the path is not NULL */
 static BOOL COOKIE_matchDomain(LPCWSTR lpszCookieDomain, LPCWSTR lpszCookiePath,
@@ -219,8 +219,8 @@ static BOOL COOKIE_matchDomain(LPCWSTR lpszCookieDomain, LPCWSTR lpszCookiePath,
         if (!searchDomain->lpCookiePath)
             return FALSE;
         if (strcmpW(lpszCookiePath, searchDomain->lpCookiePath))
-                return FALSE;
-        }
+            return FALSE;
+	}
 	return TRUE;
 }
 
@@ -415,7 +415,7 @@ static BOOL set_cookie(LPCWSTR domain, LPCWSTR path, LPCWSTR cookie_name, LPCWST
     }
 
     if (!thisCookieDomain)
-            thisCookieDomain = COOKIE_addDomain(domain, path);
+        thisCookieDomain = COOKIE_addDomain(domain, path);
 
     if ((thisCookie = COOKIE_findCookie(thisCookieDomain, cookie_name)))
         COOKIE_deleteCookie(thisCookie, FALSE);

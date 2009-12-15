@@ -156,7 +156,7 @@ static BOOL before_async_open(nsChannel *channel, NSContainer *container)
 
     hres = hlink_frame_navigate(&doc->basedoc, uri, channel->post_data_stream, hlnf);
     return hres != S_OK;
-        }
+}
 
 #define NSCHANNEL_THIS(iface) DEFINE_THIS(nsChannel, HttpChannel, iface)
 
@@ -705,14 +705,14 @@ static HTMLWindow *get_channel_window(nsChannel *This)
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIWebProgress iface: %08x\n", nsres);
         return NULL;
-        }
+    }
 
     nsres = nsIWebProgress_GetDOMWindow(web_progress, &nswindow);
     nsIWebProgress_Release(web_progress);
     if(NS_FAILED(nsres) || !nswindow) {
         ERR("GetDOMWindow failed: %08x\n", nsres);
         return NULL;
-        }
+    }
 
     window = nswindow_to_window(nswindow);
     nsIDOMWindow_Release(nswindow);
@@ -722,7 +722,7 @@ static HTMLWindow *get_channel_window(nsChannel *This)
     else
         FIXME("NULL window for %p\n", nswindow);
     return window;
-        }
+}
 
 typedef struct {
     task_t header;
@@ -735,7 +735,7 @@ static void start_binding_proc(task_t *_task)
     start_binding_task_t *task = (start_binding_task_t*)_task;
 
     start_binding(NULL, task->doc, (BSCallback*)task->bscallback, NULL);
-        }
+}
 
 typedef struct {
     task_t header;
@@ -777,7 +777,7 @@ static nsresult async_open(nsChannel *This, HTMLWindow *window, BOOL is_doc_chan
 
         task = heap_alloc(sizeof(start_doc_binding_task_t));
         task->window = window;
-    task->bscallback = bscallback;
+        task->bscallback = bscallback;
         push_task(&task->header, start_doc_binding_proc, window->task_magic);
     }else {
         start_binding_task_t *task = heap_alloc(sizeof(start_binding_task_t));

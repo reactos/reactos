@@ -813,7 +813,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
             if(This->data->vtbl && This->data->vtbl->value) {
                 return This->data->vtbl->value(This->outer, lcid, wFlags, pdp,
                         pvarRes, pei, pspCaller);
-    }
+            }
             FIXME("DISPATCH_CONSTRUCT flag but missing value function\n");
             return E_FAIL;
         }

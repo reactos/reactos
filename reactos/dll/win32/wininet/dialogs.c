@@ -65,7 +65,7 @@ static BOOL WININET_GetProxyServer( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
 
     lpwhr = (LPWININETHTTPREQW) WININET_GetObject( hRequest );
     if (NULL == lpwhr)
-        return FALSE;
+	return FALSE;
 
     lpwhs = lpwhr->lpHttpSession;
     if (NULL == lpwhs)
@@ -206,8 +206,8 @@ static BOOL WININET_SetProxyAuthorization( HINTERNET hRequest,
 
     lpwhr = (LPWININETHTTPREQW) WININET_GetObject( hRequest );
     if( !lpwhr )
-        return FALSE;
-
+	return FALSE;
+        
     lpwhs = lpwhr->lpHttpSession;
     if (NULL == lpwhs ||  lpwhs->hdr.htype != WH_HHTTPSESSION)
     {
@@ -220,14 +220,14 @@ static BOOL WININET_SetProxyAuthorization( HINTERNET hRequest,
     p = HeapAlloc( GetProcessHeap(), 0, (strlenW( username ) + 1)*sizeof(WCHAR) );
     if( !p )
         return FALSE;
-
+    
     lstrcpyW( p, username );
-        hIC->lpszProxyUsername = p;
+    hIC->lpszProxyUsername = p;
 
     p = HeapAlloc( GetProcessHeap(), 0, (strlenW( password ) + 1)*sizeof(WCHAR) );
     if( !p )
         return FALSE;
-
+    
     lstrcpyW( p, password );
     hIC->lpszProxyPassword = p;
 
@@ -367,8 +367,8 @@ DWORD WINAPI InternetErrorDlg(HWND hWnd, HINTERNET hRequest,
         dwStatus = WININET_GetConnectionStatus( hRequest );
         if( HTTP_STATUS_PROXY_AUTH_REQ != dwStatus )
             return ERROR_SUCCESS;
-            return DialogBoxParamW( hwininet, MAKEINTRESOURCEW( IDD_PROXYDLG ),
-                                    hWnd, WININET_ProxyPasswordDialog, (LPARAM) &params );
+        return DialogBoxParamW( hwininet, MAKEINTRESOURCEW( IDD_PROXYDLG ),
+                    hWnd, WININET_ProxyPasswordDialog, (LPARAM) &params );
 
     case ERROR_INTERNET_INCORRECT_PASSWORD:
         return DialogBoxParamW( hwininet, MAKEINTRESOURCEW( IDD_PROXYDLG ),

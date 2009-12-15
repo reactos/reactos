@@ -4921,20 +4921,20 @@ static LONG env_set_flags( LPCWSTR *name, LPCWSTR *value, DWORD *flags )
     if (*value)
     {
         LPCWSTR ptr = *value;
-    if (!strncmpW(ptr, prefix, prefix_len))
-    {
-        *flags |= ENV_MOD_APPEND;
-        *value += lstrlenW(prefix);
-    }
-    else if (lstrlenW(*value) >= prefix_len)
-    {
-        ptr += lstrlenW(ptr) - prefix_len;
-        if (!lstrcmpW(ptr, prefix))
+        if (!strncmpW(ptr, prefix, prefix_len))
         {
-            *flags |= ENV_MOD_PREFIX;
-            /* the "[~]" will be removed by deformat_string */;
+            *flags |= ENV_MOD_APPEND;
+            *value += lstrlenW(prefix);
         }
-    }
+        else if (lstrlenW(*value) >= prefix_len)
+        {
+            ptr += lstrlenW(ptr) - prefix_len;
+            if (!lstrcmpW(ptr, prefix))
+            {
+                *flags |= ENV_MOD_PREFIX;
+                /* the "[~]" will be removed by deformat_string */;
+            }
+        }
     }
 
     if (check_flag_combo(*flags, ENV_ACT_SETALWAYS | ENV_ACT_SETABSENT) ||
@@ -5083,8 +5083,8 @@ static UINT ITERATE_WriteEnvironmentString( MSIRECORD *rec, LPVOID param )
 
     if (newval)
     {
-    TRACE("setting %s to %s\n", debugstr_w(name), debugstr_w(newval));
-    res = RegSetValueExW(env, name, 0, type, (LPVOID)newval, size);
+        TRACE("setting %s to %s\n", debugstr_w(name), debugstr_w(newval));
+        res = RegSetValueExW(env, name, 0, type, (LPVOID)newval, size);
     }
     else
         res = ERROR_SUCCESS;

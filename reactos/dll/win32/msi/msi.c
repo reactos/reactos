@@ -1906,8 +1906,8 @@ INSTALLUI_HANDLERA WINAPI MsiSetExternalUIA(INSTALLUI_HANDLERA puiHandler,
 
     gUIHandlerA = puiHandler;
     gUIHandlerW = NULL;
-    gUIFilter = dwMessageFilter;
-    gUIContext = pvContext;
+    gUIFilter   = dwMessageFilter;
+    gUIContext  = pvContext;
 
     return prev;
 }
@@ -1921,8 +1921,8 @@ INSTALLUI_HANDLERW WINAPI MsiSetExternalUIW(INSTALLUI_HANDLERW puiHandler,
 
     gUIHandlerA = NULL;
     gUIHandlerW = puiHandler;
-    gUIFilter = dwMessageFilter;
-    gUIContext = pvContext;
+    gUIFilter   = dwMessageFilter;
+    gUIContext  = pvContext;
 
     return prev;
 }

@@ -710,7 +710,7 @@ HINTERNET WINAPI FtpFindFirstFileA(HINTERNET hConnect,
     
     if (ret && lpFindFileData)
         WININET_find_data_WtoA(lpFindFileDataW, lpFindFileData);
-
+    
     return ret;
 }
 
@@ -1087,7 +1087,7 @@ HINTERNET WINAPI FtpOpenFileA(HINTERNET hFtpSession,
 {
     LPWSTR lpwzFileName;
     HINTERNET ret;
-
+    
     lpwzFileName = lpszFileName?WININET_strdup_AtoW(lpszFileName):NULL;
     ret = FtpOpenFileW(hFtpSession, lpwzFileName, fdwAccess, dwFlags, dwContext);
     HeapFree(GetProcessHeap(), 0, lpwzFileName);
@@ -1347,9 +1347,9 @@ HINTERNET FTP_FtpOpenFileW(LPWININETFTPSESSIONW lpwfs,
 
         iar.dwResult = (DWORD)bSuccess;
         iar.dwError = bSuccess ? ERROR_SUCCESS : INTERNET_GetLastError();
-            SendAsyncCallback(&lpwfs->hdr, lpwfs->hdr.dwContext, INTERNET_STATUS_REQUEST_COMPLETE,
-                    &iar, sizeof(INTERNET_ASYNC_RESULT));
-        }
+        SendAsyncCallback(&lpwfs->hdr, lpwfs->hdr.dwContext, INTERNET_STATUS_REQUEST_COMPLETE,
+            &iar, sizeof(INTERNET_ASYNC_RESULT));
+    }
 
 lend:
     if( lpwh )
@@ -3515,7 +3515,7 @@ static BOOL FTP_ParseNextFile(INT nSocket, LPCWSTR lpszSearchFile, LPFILEPROPERT
             /* Hacky and bad Y2K protection :-) */
             if (lpfp->tmLastModified.tm_year < 70)
                 lpfp->tmLastModified.tm_year += 100;
-
+            
             pszToken = strtok(NULL, szSpace);
             if(!pszToken) continue;
             sscanf(pszToken, "%d:%d",
@@ -3530,7 +3530,7 @@ static BOOL FTP_ParseNextFile(INT nSocket, LPCWSTR lpszSearchFile, LPFILEPROPERT
                 lpfp->tmLastModified.tm_hour, lpfp->tmLastModified.tm_min, lpfp->tmLastModified.tm_sec,
                 (lpfp->tmLastModified.tm_year >= 100) ? lpfp->tmLastModified.tm_year - 100 : lpfp->tmLastModified.tm_year,
                 lpfp->tmLastModified.tm_mon, lpfp->tmLastModified.tm_mday);
-
+            
             pszToken = strtok(NULL, szSpace);
             if(!pszToken) continue;
             if(!strcasecmp(pszToken, "<DIR>")) {

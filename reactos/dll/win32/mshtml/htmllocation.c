@@ -157,7 +157,7 @@ static HRESULT WINAPI HTMLLocation_put_href(IHTMLLocation *iface, BSTR v)
     if(!This->window || !This->window->doc) {
         FIXME("No document available\n");
         return E_FAIL;
-}
+    }
 
     return navigate_url(This->window->doc, v);
 }
@@ -195,7 +195,7 @@ static HRESULT WINAPI HTMLLocation_get_href(IHTMLLocation *iface, BSTR *p)
             memcpy(url_path + 1, url.lpszUrlPath, url.dwUrlPathLength * sizeof(WCHAR));
             url.lpszUrlPath = url_path;
             url.dwUrlPathLength = url.dwUrlPathLength + 1;
-}
+        }
         break;
 
     case INTERNET_SCHEME_HTTP:
@@ -287,13 +287,13 @@ static HRESULT WINAPI HTMLLocation_get_protocol(IHTMLLocation *iface, BSTR *p)
 
     if(!url.dwSchemeLength) {
         FIXME("Unexpected blank protocol\n");
-    return E_NOTIMPL;
+        return E_NOTIMPL;
     }else {
         WCHAR buf[url.dwSchemeLength + 1];
         memcpy(buf, url.lpszScheme, url.dwSchemeLength * sizeof(WCHAR));
         buf[url.dwSchemeLength] = ':';
         *p = SysAllocStringLen(buf, url.dwSchemeLength + 1);
-}
+    }
     if(!*p)
         return E_OUTOFMEMORY;
     return S_OK;
@@ -325,7 +325,7 @@ static HRESULT WINAPI HTMLLocation_get_host(IHTMLLocation *iface, BSTR *p)
     if(!url.dwHostNameLength){
         *p = NULL;
         return S_OK;
-}
+    }
 
     if(url.nPort) {
         /* <hostname>:<port> */
@@ -371,7 +371,7 @@ static HRESULT WINAPI HTMLLocation_get_hostname(IHTMLLocation *iface, BSTR *p)
     if(!url.dwHostNameLength){
         *p = NULL;
         return S_OK;
-}
+    }
 
     *p = SysAllocStringLen(url.lpszHostName, url.dwHostNameLength);
     if(!*p)
@@ -409,7 +409,7 @@ static HRESULT WINAPI HTMLLocation_get_port(IHTMLLocation *iface, BSTR *p)
     }else {
         const WCHAR empty[] = {0};
         *p = SysAllocString(empty);
-}
+    }
 
     if(!*p)
         return E_OUTOFMEMORY;
@@ -477,7 +477,7 @@ static HRESULT WINAPI HTMLLocation_get_search(IHTMLLocation *iface, BSTR *p)
     if(!url.dwExtraInfoLength){
         *p = NULL;
         return S_OK;
-}
+    }
 
     url.dwExtraInfoLength = strcspnW(url.lpszExtraInfo, hash);
 
@@ -516,7 +516,7 @@ static HRESULT WINAPI HTMLLocation_get_hash(IHTMLLocation *iface, BSTR *p)
     if(!url.dwExtraInfoLength){
         *p = NULL;
         return S_OK;
-}
+    }
 
     hash_pos = strcspnW(url.lpszExtraInfo, hash);
     url.dwExtraInfoLength -= hash_pos;

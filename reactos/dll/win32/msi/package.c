@@ -1217,7 +1217,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     }
     else if (gUIHandlerA && (gUIFilter & log_type))
     {
-        rc = gUIHandlerA(gUIContext,eMessageType,msg);
+        rc = gUIHandlerA( gUIContext, eMessageType, msg );
     }
     else if (gUIHandlerRecord && (gUIFilter & log_type))
     {
@@ -1243,7 +1243,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
         }
     }
     msi_free( msg );
-    msi_free( message);
+    msi_free( message );
 
     switch (eMessageType & 0xff000000)
     {

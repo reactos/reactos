@@ -203,7 +203,7 @@ void parse_complete(HTMLDocumentObj *doc)
 {
     TRACE("(%p)\n", doc);
 
-    }
+}
 
 static void call_timer_disp(IDispatch *disp)
 {

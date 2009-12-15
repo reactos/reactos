@@ -109,7 +109,7 @@ static HRESULT WINAPI HTMLIFrameBase2_get_contentWindow(IHTMLFrameBase2 *iface, 
     }else {
         WARN("NULL content window\n");
         *p = NULL;
-        }
+    }
     return S_OK;
 }
 

@@ -267,7 +267,7 @@ static void pop_mutation_queue(HTMLDocumentNode *doc)
         doc->mutation_queue_tail = NULL;
 
     if(tmp->nsiface)
-    nsISupports_Release(tmp->nsiface);
+        nsISupports_Release(tmp->nsiface);
     heap_free(tmp);
 }
 
@@ -691,7 +691,7 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
 
         push_mutation_queue(This, MUTATION_IFRAME, (nsISupports*)nsiframe);
         nsIDOMHTMLIFrameElement_Release(nsiframe);
-}
+    }
 
     nsres = nsISupports_QueryInterface(aContent, &IID_nsIDOMHTMLFrameElement, (void**)&nsframe);
     if(NS_SUCCEEDED(nsres)) {
@@ -762,7 +762,7 @@ void init_mutation(HTMLDocumentNode *doc)
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMNSDocument: %08x\n", nsres);
         return;
-}
+    }
 
     nsIDOMNSDocument_WineAddObserver(nsdoc, NSDOCOBS(doc));
     nsIDOMNSDocument_Release(nsdoc);

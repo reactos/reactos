@@ -104,7 +104,7 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
             MsiRecordSetStringW(rec, 0, error);
             gUIHandlerRecord(gUIContext, MB_RETRYCANCEL | INSTALLMESSAGE_ERROR, rec);
             MsiCloseHandle(rec);
-    }
+        }
     }
 
     msi_free(error);

@@ -617,8 +617,8 @@ static DWORD URLCacheContainers_FindContainerA(LPCSTR lpszUrl, URLCACHECONTAINER
         MultiByteToWideChar(CP_ACP, 0, lpszUrl, -1, lpwszUrl, url_len);
         ret = URLCacheContainers_FindContainerW(lpwszUrl, ppContainer);
         HeapFree(GetProcessHeap(), 0, lpwszUrl);
-    return ret;
-}
+        return ret;
+    }
     return GetLastError();
 }
 
@@ -2462,9 +2462,9 @@ static BOOL CommitUrlCacheEntryInternal(
         lpszFileExtensionA = HeapAlloc(GetProcessHeap(), 0, len * sizeof(char));
         if (!lpszFileExtensionA)
         {
-        error = GetLastError();
-        goto cleanup;
-    }
+            error = GetLastError();
+            goto cleanup;
+        }
         WideCharToMultiByte(CP_ACP, 0, lpszFileExtension, -1, lpszFileExtensionA, len, NULL, NULL);
     }
 
@@ -3626,8 +3626,8 @@ BOOL WINAPI IsUrlCacheEntryExpiredW( LPCWSTR url, DWORD dwFlags, FILETIME* pftLa
 BOOL WINAPI GetDiskInfoA(PCSTR p0, PDWORD p1, PDWORDLONG p2, PDWORDLONG p3)
 {
     FIXME("(%p, %p, %p, %p)\n", p0, p1, p2, p3);
-        return FALSE;
-    }
+    return FALSE;
+}
 
 /***********************************************************************
  *           RegisterUrlCacheNotification (WININET.@)

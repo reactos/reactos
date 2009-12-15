@@ -621,7 +621,7 @@ BOOL NETCON_query_data_available(WININET_NETCONNECTION *connection, DWORD *avail
     }
 #endif
     return TRUE;
-    }
+}
 
 /******************************************************************************
  * NETCON_getNextLine
@@ -663,8 +663,8 @@ BOOL NETCON_getNextLine(WININET_NETCONNECTION *connection, LPSTR lpszBuffer, LPD
 		if (lpszBuffer[nRecv] != '\r')
 		    nRecv++;
 	    }
-    else
-    {
+	    else
+	    {
 		INTERNET_SetLastError(ERROR_INTERNET_TIMEOUT);
 		goto lend;
 	    }
@@ -700,7 +700,7 @@ BOOL NETCON_getNextLine(WININET_NETCONNECTION *connection, LPSTR lpszBuffer, LPD
 	    {
                 INTERNET_SetLastError(ERROR_CONNECTION_ABORTED);
 		success = FALSE;
-    }
+	    }
 
 	    if (lpszBuffer[nRecv] == '\n')
 	    {
@@ -717,8 +717,8 @@ BOOL NETCON_getNextLine(WININET_NETCONNECTION *connection, LPSTR lpszBuffer, LPD
 	    lpszBuffer[nRecv++] = '\0';
 	    *dwBuffer = nRecv;
 	    TRACE("_SSL:%u %s\n", nRecv, lpszBuffer);
-    return TRUE;
-}
+            return TRUE;
+	}
         return FALSE;
 #else
 	return FALSE;

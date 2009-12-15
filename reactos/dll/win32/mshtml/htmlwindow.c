@@ -53,7 +53,7 @@ static void window_set_docnode(HTMLWindow *window, HTMLDocumentNode *doc_node)
         window->doc_obj->basedoc.doc_node = doc_node;
         if(doc_node)
             htmldoc_addref(&doc_node->basedoc);
-}
+    }
 }
 
 nsIDOMWindow *get_nsdoc_window(nsIDOMDocument *nsdoc)
@@ -252,7 +252,7 @@ static HRESULT WINAPI HTMLWindow2_get_length(IHTMLWindow2 *iface, LONG *p)
     if(NS_FAILED(nsres)) {
         ERR("GetFrames failed: %08x\n", nsres);
         return E_FAIL;
-}
+    }
 
     nsres = nsIDOMWindowCollection_GetLength(nscollection, &length);
     nsIDOMWindowCollection_Release(nscollection);
@@ -565,7 +565,7 @@ static HRESULT WINAPI HTMLWindow2_get_name(IHTMLWindow2 *iface, BSTR *p)
         }else {
             *p = NULL;
             hres = S_OK;
-}
+        }
     }else {
         ERR("GetName failed: %08x\n", nsres);
         hres = E_FAIL;
@@ -1021,21 +1021,21 @@ static HRESULT HTMLWindow_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD fla
         IDispatch *disp;
 
         disp = get_script_disp(prop->script_host);
-    if(!disp)
-        return E_UNEXPECTED;
+        if(!disp)
+            return E_UNEXPECTED;
 
-    hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
-    if(SUCCEEDED(hres)) {
+        hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
+        if(SUCCEEDED(hres)) {
             TRACE("%s >>>\n", debugstr_w(prop->name));
             hres = IDispatchEx_InvokeEx(dispex, prop->id, lcid, flags, params, res, ei, caller);
-        if(hres == S_OK)
+            if(hres == S_OK)
                 TRACE("%s <<<\n", debugstr_w(prop->name));
-        else
+            else
                 WARN("%s <<< %08x\n", debugstr_w(prop->name), hres);
-        IDispatchEx_Release(dispex);
-    }else {
-        FIXME("No IDispatchEx\n");
-    }
+            IDispatchEx_Release(dispex);
+        }else {
+            FIXME("No IDispatchEx\n");
+        }
         IDispatch_Release(disp);
         break;
     }
@@ -1044,7 +1044,7 @@ static HRESULT HTMLWindow_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD fla
 
         hres = IHTMLDocument3_getElementById(HTMLDOC3(&This->doc->basedoc), prop->name, &elem);
         if(FAILED(hres))
-    return hres;
+            return hres;
 
         if(!elem)
             return DISP_E_MEMBERNOTFOUND;
@@ -1052,7 +1052,7 @@ static HRESULT HTMLWindow_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD fla
         V_VT(res) = VT_DISPATCH;
         V_DISPATCH(res) = (IDispatch*)elem;
         break;
-}
+    }
     default:
         ERR("invalid type %d\n", prop->type);
         hres = DISP_E_MEMBERNOTFOUND;
@@ -1480,14 +1480,14 @@ static HRESULT WINAPI WindowDispEx_GetDispID(IDispatchEx *iface, BSTR bstrName, 
 
         prop = alloc_global_prop(This, GLOBAL_SCRIPTVAR, bstrName);
         if(!prop)
-                return E_OUTOFMEMORY;
+            return E_OUTOFMEMORY;
 
         prop->script_host = script_host;
         prop->id = id;
 
         *pid = prop_to_dispid(This, prop);
         return S_OK;
-        }
+    }
 
     hres = IDispatchEx_GetDispID(DISPATCHEX(&This->dispex), bstrName, grfdex, pid);
     if(hres != DISP_E_UNKNOWNNAME)
@@ -1503,11 +1503,11 @@ static HRESULT WINAPI WindowDispEx_GetDispID(IDispatchEx *iface, BSTR bstrName, 
 
             prop = alloc_global_prop(This, GLOBAL_ELEMENTVAR, bstrName);
             if(!prop)
-            return E_OUTOFMEMORY;
+                return E_OUTOFMEMORY;
 
             *pid = prop_to_dispid(This, prop);
-        return S_OK;
-    }
+            return S_OK;
+        }
     }
 
     return DISP_E_UNKNOWNNAME;

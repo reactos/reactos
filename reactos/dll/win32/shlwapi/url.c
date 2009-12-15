@@ -167,7 +167,7 @@ HRESULT WINAPI ParseURLA(LPCSTR x, PARSEDURLA *y)
     y->cchSuffix = strlen(y->pszSuffix);
 
     len = MultiByteToWideChar(CP_ACP, 0, x, ptr-x,
-                              scheme, sizeof(scheme)/sizeof(WCHAR));
+            scheme, sizeof(scheme)/sizeof(WCHAR));
     y->nScheme = get_scheme_code(scheme, len);
 
     return S_OK;

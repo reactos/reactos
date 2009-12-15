@@ -739,7 +739,7 @@ static HRESULT WINAPI HTMLDOMNode_get_nextSibling(IHTMLDOMNode *iface, IHTMLDOMN
         IHTMLDOMNode_AddRef(*p);
     }else {
         *p = NULL;
-}
+    }
 
     return S_OK;
 }
@@ -840,8 +840,8 @@ static HRESULT WINAPI HTMLDOMNode2_get_ownerDocument(IHTMLDOMNode2 *iface, IDisp
     if(This == &This->doc->node) {
         *p = NULL;
     }else {
-    *p = (IDispatch*)HTMLDOC(&This->doc->basedoc);
-    IDispatch_AddRef(*p);
+        *p = (IDispatch*)HTMLDOC(&This->doc->basedoc);
+        IDispatch_AddRef(*p);
     }
     return S_OK;
 }
@@ -917,7 +917,7 @@ void HTMLDOMNode_Init(HTMLDocumentNode *doc, HTMLDOMNode *node, nsIDOMNode *nsno
     node->doc = doc;
 
     if(nsnode)
-    nsIDOMNode_AddRef(nsnode);
+        nsIDOMNode_AddRef(nsnode);
     node->nsnode = nsnode;
 
     node->next = doc->nodes;

@@ -78,8 +78,8 @@ static inline LPWSTR WININET_strdup_AtoW( LPCSTR str )
 {
     int len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0);
     LPWSTR ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-        if(ret)
-            MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+    if (ret)
+        MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len);
     return ret;
 }
 
@@ -87,7 +87,7 @@ static inline LPSTR WININET_strdup_WtoA( LPCWSTR str )
 {
     int len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
     LPSTR ret = HeapAlloc( GetProcessHeap(), 0, len );
-        if(ret)
+    if (ret)
         WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL);
     return ret;
 }
@@ -339,7 +339,7 @@ typedef struct WORKREQ
         struct WORKREQ_FTPFINDNEXTW             FtpFindNextW;
         struct WORKREQ_HTTPSENDREQUESTW         HttpSendRequestW;
         struct WORKREQ_SENDCALLBACK             SendCallback;
-        struct WORKREQ_INTERNETOPENURLW         InternetOpenUrlW;
+	struct WORKREQ_INTERNETOPENURLW         InternetOpenUrlW;
         struct WORKREQ_INTERNETREADFILEEXA      InternetReadFileExA;
     } u;
 

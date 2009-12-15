@@ -955,7 +955,7 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
 
             if(This->window)
                 update_window_doc(This->window);
-            }
+        }
 
         This->bsc.readed += This->nsstream->buf_size;
 

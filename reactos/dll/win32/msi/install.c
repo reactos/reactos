@@ -1001,8 +1001,8 @@ UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
             return ERROR_FUNCTION_FAILED;
         }
 
-    return ERROR_SUCCESS;
-}
+        return ERROR_SUCCESS;
+    }
 
     feature = get_loaded_feature(package, szFeature);
 
