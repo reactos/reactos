@@ -81,7 +81,7 @@ typedef struct {
 
 #define MRUF_STRING_LIST 0
 
-typedef int (WINAPI *CREATEMRULISTPROCW)(
+typedef HANDLE (WINAPI *CREATEMRULISTPROCW)(
     LPMRUINFO lpmi
 );
 
