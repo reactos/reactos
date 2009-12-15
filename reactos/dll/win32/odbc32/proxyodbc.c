@@ -37,13 +37,16 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
-#include "wine/debug.h"
-#include "wine/library.h"
-#include "wine/unicode.h"
 
 #include "sql.h"
 #include "sqltypes.h"
 #include "sqlext.h"
+
+#undef TRACE_ON
+
+#include "wine/debug.h"
+#include "wine/library.h"
+#include "wine/unicode.h"
 
 #include "proxyodbc.h"
 
