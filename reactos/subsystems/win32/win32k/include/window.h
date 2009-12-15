@@ -42,7 +42,6 @@ typedef struct _WINDOW_OBJECT
   /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
   struct _WINDOW_OBJECT* spwndChild;
-  struct _WINDOW_OBJECT* LastChild;
   struct _WINDOW_OBJECT* spwndNext;
   struct _WINDOW_OBJECT* spwndPrev;
   /* Entry in the list of thread windows. */
