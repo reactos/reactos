@@ -870,7 +870,7 @@ struct _EXT2_MCB {
 static 
 __inline ULONG DEC_OBJ_CNT(PULONG _C) {
     if (*_C > 0) {
-        return InterlockedDecrement(_C);
+        return InterlockedDecrement((PLONG)_C);
     } else {
         DbgBreak(); 
     }
@@ -1030,12 +1030,12 @@ VOID
 Ext2TraceMemory(BOOLEAN _n, int _i, PVOID _p, LONG _s)
 {
     if (_n) {
-        InterlockedIncrement(&Ext2Global->PerfStat.Current.Slot[_i]);
-        InterlockedIncrement(&Ext2Global->PerfStat.Total.Slot[_i]);
-        InterlockedExchangeAdd(&Ext2Global->PerfStat.Size.Slot[_i], _s);
+        InterlockedIncrement((PLONG)&Ext2Global->PerfStat.Current.Slot[_i]);
+        InterlockedIncrement((PLONG)&Ext2Global->PerfStat.Total.Slot[_i]);
+        InterlockedExchangeAdd((PLONG)&Ext2Global->PerfStat.Size.Slot[_i], _s);
     } else {
-        InterlockedDecrement(&Ext2Global->PerfStat.Current.Slot[_i]);
-        InterlockedExchangeAdd(&Ext2Global->PerfStat.Size.Slot[_i], -1 * _s);
+        InterlockedDecrement((PLONG)&Ext2Global->PerfStat.Current.Slot[_i]);
+        InterlockedExchangeAdd((PLONG)&Ext2Global->PerfStat.Size.Slot[_i], -1 * _s);
     }
 }
 
@@ -1046,11 +1046,11 @@ Ext2TraceIrpContext(BOOLEAN _n, PEXT2_IRP_CONTEXT IrpContext)
 {
     if (_n) {
         INC_MEM_COUNT(PS_IRP_CONTEXT, IrpContext, sizeof(EXT2_IRP_CONTEXT));
-        InterlockedIncrement(&(Ext2Global->PerfStat.Irps[IrpContext->MajorFunction].Current));
+        InterlockedIncrement((PLONG)&(Ext2Global->PerfStat.Irps[IrpContext->MajorFunction].Current));
     } else {
         DEC_MEM_COUNT(PS_IRP_CONTEXT, IrpContext, sizeof(EXT2_IRP_CONTEXT));
-        InterlockedIncrement(&Ext2Global->PerfStat.Irps[IrpContext->MajorFunction].Processed);
-        InterlockedDecrement(&Ext2Global->PerfStat.Irps[IrpContext->MajorFunction].Current);
+        InterlockedIncrement((PLONG)&Ext2Global->PerfStat.Irps[IrpContext->MajorFunction].Processed);
+        InterlockedDecrement((PLONG)&Ext2Global->PerfStat.Irps[IrpContext->MajorFunction].Current);
     }
 }
 
@@ -1160,12 +1160,12 @@ Ext2AcquireForReadAhead (
 VOID
 Ext2ReleaseFromReadAhead (IN PVOID Context);
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2NoOpAcquire (
         IN PVOID Fcb,
         IN BOOLEAN Wait );
 
-VOID
+VOID NTAPI
 Ext2NoOpRelease (IN PVOID Fcb);
 
 VOID
@@ -1178,7 +1178,7 @@ Ext2ReleaseForCreateSection (
     IN PFILE_OBJECT FileObject
     );
 
-NTSTATUS
+NTSTATUS NTAPI
 Ext2AcquireFileForModWrite (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER EndingOffset,
@@ -1186,20 +1186,20 @@ Ext2AcquireFileForModWrite (
     IN PDEVICE_OBJECT DeviceObject
     );
 
-NTSTATUS
+NTSTATUS NTAPI
 Ext2ReleaseFileForModWrite (
     IN PFILE_OBJECT FileObject,
     IN PERESOURCE ResourceToRelease,
     IN PDEVICE_OBJECT DeviceObject
     );
 
-NTSTATUS
+NTSTATUS NTAPI
 Ext2AcquireFileForCcFlush (
     IN PFILE_OBJECT FileObject,
     IN PDEVICE_OBJECT DeviceObject
     );
 
-NTSTATUS
+NTSTATUS NTAPI
 Ext2ReleaseFileForCcFlush (
     IN PFILE_OBJECT FileObject,
     IN PDEVICE_OBJECT DeviceObject
@@ -1745,7 +1745,7 @@ Ext2IsFastIoPossible(
     IN PEXT2_FCB Fcb
     );
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoCheckIfPossible (
     IN PFILE_OBJECT         FileObject,
     IN PLARGE_INTEGER       FileOffset,
@@ -1759,6 +1759,7 @@ Ext2FastIoCheckIfPossible (
 
 
 BOOLEAN
+NTAPI
 Ext2FastIoRead (IN PFILE_OBJECT FileObject,
         IN PLARGE_INTEGER       FileOffset,
         IN ULONG                Length,
@@ -1769,6 +1770,7 @@ Ext2FastIoRead (IN PFILE_OBJECT FileObject,
         IN PDEVICE_OBJECT       DeviceObject);
 
 BOOLEAN
+NTAPI
 Ext2FastIoWrite (
         IN PFILE_OBJECT         FileObject,
         IN PLARGE_INTEGER       FileOffset,
@@ -1779,7 +1781,7 @@ Ext2FastIoWrite (
         OUT PIO_STATUS_BLOCK    IoStatus,
         IN PDEVICE_OBJECT       DeviceObject);
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoQueryBasicInfo (
               IN PFILE_OBJECT             FileObject,
               IN BOOLEAN                  Wait,
@@ -1787,7 +1789,7 @@ Ext2FastIoQueryBasicInfo (
               OUT PIO_STATUS_BLOCK        IoStatus,
               IN PDEVICE_OBJECT           DeviceObject);
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoQueryStandardInfo (
                  IN PFILE_OBJECT                 FileObject,
                  IN BOOLEAN                      Wait,
@@ -1795,7 +1797,7 @@ Ext2FastIoQueryStandardInfo (
                  OUT PIO_STATUS_BLOCK            IoStatus,
                  IN PDEVICE_OBJECT               DeviceObject);
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoLock (
            IN PFILE_OBJECT         FileObject,
            IN PLARGE_INTEGER       FileOffset,
@@ -1808,7 +1810,7 @@ Ext2FastIoLock (
            IN PDEVICE_OBJECT       DeviceObject
            );
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoUnlockSingle (
                IN PFILE_OBJECT         FileObject,
                IN PLARGE_INTEGER       FileOffset,
@@ -1819,7 +1821,7 @@ Ext2FastIoUnlockSingle (
                IN PDEVICE_OBJECT       DeviceObject
                );
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoUnlockAll (
             IN PFILE_OBJECT         FileObject,
             IN PEPROCESS            Process,
@@ -1827,7 +1829,7 @@ Ext2FastIoUnlockAll (
             IN PDEVICE_OBJECT       DeviceObject
             );
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoUnlockAllByKey (
              IN PFILE_OBJECT         FileObject,
              IN PEPROCESS            Process,
@@ -1836,23 +1838,13 @@ Ext2FastIoUnlockAllByKey (
              IN PDEVICE_OBJECT       DeviceObject
              );
 
-
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoQueryNetworkOpenInfo (
      IN PFILE_OBJECT                     FileObject,
      IN BOOLEAN                          Wait,
      OUT PFILE_NETWORK_OPEN_INFORMATION  Buffer,
      OUT PIO_STATUS_BLOCK                IoStatus,
      IN PDEVICE_OBJECT                   DeviceObject );
-
-BOOLEAN
-Ext2FastIoQueryNetworkOpenInfo (
-    IN PFILE_OBJECT                     FileObject,
-    IN BOOLEAN                          Wait,
-    OUT PFILE_NETWORK_OPEN_INFORMATION  Buffer,
-    OUT PIO_STATUS_BLOCK                IoStatus,
-    IN PDEVICE_OBJECT                   DeviceObject);
-
 
 //
 // FileInfo.c

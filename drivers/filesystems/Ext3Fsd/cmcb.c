@@ -142,7 +142,7 @@ Ext2ReleaseFromReadAhead (IN PVOID Context)
     ExReleaseResourceLite(&Fcb->MainResource);
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2NoOpAcquire (
     IN PVOID Fcb,
     IN BOOLEAN Wait
@@ -153,7 +153,7 @@ Ext2NoOpAcquire (
     return TRUE;
 }
 
-VOID
+VOID NTAPI
 Ext2NoOpRelease (
     IN PVOID Fcb
     )
@@ -196,7 +196,7 @@ Ext2ReleaseForCreateSection (
 }
 
 
-NTSTATUS
+NTSTATUS NTAPI
 Ext2AcquireFileForModWrite (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER EndingOffset,
@@ -226,7 +226,7 @@ Ext2AcquireFileForModWrite (
     return (ResourceAcquired ? STATUS_SUCCESS : STATUS_CANT_WAIT);
 }
 
-NTSTATUS
+NTSTATUS NTAPI
 Ext2ReleaseFileForModWrite (
     IN PFILE_OBJECT FileObject,
     IN PERESOURCE ResourceToRelease,
@@ -248,7 +248,7 @@ Ext2ReleaseFileForModWrite (
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
+NTSTATUS NTAPI
 Ext2AcquireFileForCcFlush (
     IN PFILE_OBJECT FileObject,
     IN PDEVICE_OBJECT DeviceObject
@@ -265,7 +265,7 @@ Ext2AcquireFileForCcFlush (
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
+NTSTATUS NTAPI
 Ext2ReleaseFileForCcFlush (
     IN PFILE_OBJECT FileObject,
     IN PDEVICE_OBJECT DeviceObject

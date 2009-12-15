@@ -54,7 +54,7 @@ Ext2IsFastIoPossible(
 }
 
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoCheckIfPossible (
               IN PFILE_OBJECT         FileObject,
               IN PLARGE_INTEGER       FileOffset,
@@ -156,6 +156,7 @@ Ext2FastIoCheckIfPossible (
 
 #if EXT2_DEBUG
 BOOLEAN
+NTAPI
 Ext2FastIoRead (IN PFILE_OBJECT         FileObject,
            IN PLARGE_INTEGER       FileOffset,
            IN ULONG                Length,
@@ -195,6 +196,7 @@ Ext2FastIoRead (IN PFILE_OBJECT         FileObject,
 }
 
 BOOLEAN
+NTAPI
 Ext2FastIoWrite (
            IN PFILE_OBJECT         FileObject,
            IN PLARGE_INTEGER       FileOffset,
@@ -243,7 +245,7 @@ Ext2FastIoWrite (
 #endif /* EXT2_DEBUG */
 
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoQueryBasicInfo (
               IN PFILE_OBJECT             FileObject,
               IN BOOLEAN                  Wait,
@@ -358,7 +360,7 @@ Ext2FastIoQueryBasicInfo (
     return Status;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoQueryStandardInfo (
                 IN PFILE_OBJECT                 FileObject,
                 IN BOOLEAN                      Wait,
@@ -480,7 +482,7 @@ Ext2FastIoQueryStandardInfo (
     return Status;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoLock (
            IN PFILE_OBJECT         FileObject,
            IN PLARGE_INTEGER       FileOffset,
@@ -588,7 +590,7 @@ Ext2FastIoLock (
     return Status;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoUnlockSingle (
                IN PFILE_OBJECT         FileObject,
                IN PLARGE_INTEGER       FileOffset,
@@ -691,7 +693,7 @@ Ext2FastIoUnlockSingle (
     return Status;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoUnlockAll (
             IN PFILE_OBJECT         FileObject,
             IN PEPROCESS            Process,
@@ -782,7 +784,7 @@ Ext2FastIoUnlockAll (
     return Status;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoUnlockAllByKey (
              IN PFILE_OBJECT         FileObject,
              IN PEPROCESS            Process,
@@ -885,7 +887,7 @@ Ext2FastIoUnlockAllByKey (
 }
 
 
-BOOLEAN
+BOOLEAN NTAPI
 Ext2FastIoQueryNetworkOpenInfo (
     IN PFILE_OBJECT         FileObject,
     IN BOOLEAN              Wait,
