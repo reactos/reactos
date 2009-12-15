@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wineacm.h"
+
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
@@ -94,5 +96,3 @@ BEGIN
     PUSHBUTTON      "幫助(&H)", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
 
 END
-
-#pragma code_page(default)
