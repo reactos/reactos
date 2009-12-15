@@ -1655,7 +1655,7 @@ typedef struct tagEMRBITBLT {
 typedef struct tagLOGBRUSH {
 	UINT lbStyle;
 	COLORREF lbColor;
-	LONG lbHatch;
+	ULONG_PTR lbHatch;
 } LOGBRUSH,*PLOGBRUSH,*LPLOGBRUSH;
 typedef LOGBRUSH PATTERN,*PPATTERN,*LPPATTERN;
 typedef struct tagLOGBRUSH32 {
