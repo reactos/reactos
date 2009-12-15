@@ -968,7 +968,7 @@ GetVolumeNameForVolumeMountPointW(
 
    RtlInitUnicodeString(&NtFileName, L"\\??\\MountPointManager");
    InitializeObjectAttributes(&ObjectAttributes, &NtFileName, 0, NULL, NULL);
-   Status = NtOpenFile(&FileHandle, FILE_GENERIC_READ, &ObjectAttributes,
+   Status = NtOpenFile(&FileHandle, FILE_GENERIC_READ | SYNCHRONIZE, &ObjectAttributes,
                        &Iosb, FILE_SHARE_READ | FILE_SHARE_WRITE,
                        FILE_SYNCHRONOUS_IO_NONALERT);
    if (!NT_SUCCESS(Status))
