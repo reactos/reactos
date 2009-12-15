@@ -688,13 +688,13 @@ SetActivePwrScheme(UINT uiID,
 
     if (ReadPwrScheme(uiID,&tmp))
     {
-        if (RegOpenKeyEx(HKEY_CURRENT_USER,szUserPowerConfigSubKey,(DWORD)NULL,KEY_ALL_ACCESS,&hKey) != ERROR_SUCCESS)
+        if (RegOpenKeyEx(HKEY_CURRENT_USER,szUserPowerConfigSubKey,0,KEY_ALL_ACCESS,&hKey) != ERROR_SUCCESS)
         {
             return FALSE;
         }
         swprintf(Buf,L"%i",uiID);
 
-        if (RegSetValueExW(hKey,szCurrentPowerPolicies,(DWORD)NULL,REG_SZ,(CONST BYTE *)Buf,strlenW(Buf)*sizeof(WCHAR)) == ERROR_SUCCESS)
+        if (RegSetValueExW(hKey,szCurrentPowerPolicies,0,REG_SZ,(CONST BYTE *)Buf,strlenW(Buf)*sizeof(WCHAR)) == ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             if ((lpGlobalPowerPolicy != NULL) || (lpPowerPolicy != NULL))
@@ -759,7 +759,7 @@ WriteGlobalPwrPolicy(PGLOBAL_POWER_POLICY pGlobalPowerPolicy)
                     &hKey))
         return FALSE;
 
-    if (RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&gupp,sizeof(GLOBAL_USER_POWER_POLICY)) == ERROR_SUCCESS)
+    if (RegSetValueExW(hKey,szPolicies,0,REG_BINARY,(const unsigned char *)&gupp,sizeof(GLOBAL_USER_POWER_POLICY)) == ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
 
@@ -770,7 +770,7 @@ WriteGlobalPwrPolicy(PGLOBAL_POWER_POLICY pGlobalPowerPolicy)
                        &hKey))
             return FALSE;
 
-        if (RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&gmpp,sizeof(GLOBAL_MACHINE_POWER_POLICY)) == ERROR_SUCCESS)
+        if (RegSetValueExW(hKey,szPolicies,0,REG_BINARY,(const unsigned char *)&gmpp,sizeof(GLOBAL_MACHINE_POWER_POLICY)) == ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return TRUE;
@@ -799,7 +799,7 @@ WriteProcessorPwrScheme(UINT ID,
 
     if (RegCreateKey(HKEY_LOCAL_MACHINE,Buf, &hKey) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)pMachineProcessorPowerPolicy,sizeof(MACHINE_PROCESSOR_POWER_POLICY));
+        RegSetValueExW(hKey,szPolicies,0,REG_BINARY,(const unsigned char *)pMachineProcessorPowerPolicy,sizeof(MACHINE_PROCESSOR_POWER_POLICY));
         RegCloseKey(hKey);
         return TRUE;
     }
@@ -821,7 +821,7 @@ void SetLastID()
                     &hKey) != ERROR_SUCCESS)
         return;
     swprintf(Buf,L"%i",g_LastID);
-    RegSetValueExW(hKey,szLastID,(DWORD)NULL,REG_SZ,(CONST BYTE *)Buf,strlenW(Buf)*sizeof(WCHAR));
+    RegSetValueExW(hKey,szLastID,0,REG_SZ,(CONST BYTE *)Buf,strlenW(Buf)*sizeof(WCHAR));
     RegCloseKey(hKey);
 }
 
@@ -845,8 +845,8 @@ WritePwrScheme(PUINT puiID,
 
     if (RegCreateKey(HKEY_CURRENT_USER,Buf,&hKey) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey,szName,(DWORD)NULL,REG_SZ,(const unsigned char *)lpszName,strlenW((const char *)lpszName)*sizeof(WCHAR));
-        RegSetValueExW(hKey,szDescription,(DWORD)NULL,REG_SZ,(const unsigned char *)lpszDescription,strlenW((const char *)lpszDescription)*sizeof(WCHAR));
+        RegSetValueExW(hKey,szName,0,REG_SZ,(const unsigned char *)lpszName,strlenW((const char *)lpszName)*sizeof(WCHAR));
+        RegSetValueExW(hKey,szDescription,0,REG_SZ,(const unsigned char *)lpszDescription,strlenW((const char *)lpszDescription)*sizeof(WCHAR));
         RegCloseKey(hKey);
         return WritePwrPolicy(puiID,pPowerPolicy);
     }
@@ -1143,13 +1143,13 @@ BOOLEAN WINAPI WritePwrPolicy(PUINT puiID, PPOWER_POLICY pPowerPolicy)
 
     if (RegCreateKey(HKEY_CURRENT_USER,Buf,&hKey) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&pPowerPolicy->user,sizeof(USER_POWER_POLICY));
+        RegSetValueExW(hKey,szPolicies,0,REG_BINARY,(const unsigned char *)&pPowerPolicy->user,sizeof(USER_POWER_POLICY));
         RegCloseKey(hKey);
         swprintf(Buf,L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg\\PowerPolicies\\%i",*puiID);
 
         if (RegCreateKey(HKEY_LOCAL_MACHINE,Buf,&hKey) == ERROR_SUCCESS)
         {
-            RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&pPowerPolicy->mach,sizeof(MACHINE_POWER_POLICY));
+            RegSetValueExW(hKey,szPolicies,0,REG_BINARY,(const unsigned char *)&pPowerPolicy->mach,sizeof(MACHINE_POWER_POLICY));
             RegCloseKey(hKey);
             return TRUE;
         }

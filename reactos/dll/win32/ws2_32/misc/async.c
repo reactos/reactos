@@ -111,8 +111,6 @@ typedef struct protoent WS_protoent;
 #endif
 #endif
 
-#define CALLBACK __stdcall
-
 #include "wine/winbase16.h"
 #include "windef.h"
 #include "winbase.h"

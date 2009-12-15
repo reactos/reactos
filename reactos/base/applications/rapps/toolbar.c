@@ -20,9 +20,9 @@ static WCHAR szModifyBtn[MAX_STR_LEN];
 /* Toolbar buttons */
 static const TBBUTTON Buttons[] =
 {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-    { 0, ID_INSTALL,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (int) szInstallBtn},
-    { 1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (int) szUninstallBtn},
-    { 2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (int) szModifyBtn},
+    { 0, ID_INSTALL,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szInstallBtn},
+    { 1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szUninstallBtn},
+    { 2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szModifyBtn},
     { 5, 0,            TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
     { 3, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, 0},
     { 5, 0,            TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
