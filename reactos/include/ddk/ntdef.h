@@ -693,8 +693,7 @@ typedef struct _SINGLE_LIST_ENTRY {
 //
 // C_ASSERT Definition
 //
-#define C_ASSERT(exp) \
-    char __c_assert_p(char c_assert[(exp)?1:-1])
+#define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 
 
 
