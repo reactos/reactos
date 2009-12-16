@@ -37,7 +37,7 @@
 
 __INTRIN_INLINE unsigned short _byteswap_ushort(unsigned short value)
 {
-	return __builtin_bswap32(value) >> 16;
+	return (value >> 8) || (value & 0xff);
 }
 
 __INTRIN_INLINE unsigned _CountLeadingZeros(long Mask)
