@@ -226,12 +226,7 @@ typedef BYTE FCHAR;
 typedef WORD FSHORT;
 typedef DWORD FLONG;
 
-#define __C_ASSERT_JOIN(X, Y) __C_ASSERT_DO_JOIN(X, Y)
-#define __C_ASSERT_DO_JOIN(X, Y) __C_ASSERT_DO_JOIN2(X, Y)
-#define __C_ASSERT_DO_JOIN2(X, Y) X##Y
-
-#define C_ASSERT(e) typedef char __C_ASSERT_JOIN(__C_ASSERT__, __LINE__)[(e) ? 1 : -1]
-
+#define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 
 #include "intrin.h"
 
@@ -3235,6 +3230,15 @@ typedef struct _LIST_ENTRY {
 	struct _LIST_ENTRY *Flink;
 	struct _LIST_ENTRY *Blink;
 } LIST_ENTRY,*PLIST_ENTRY;
+typedef struct _LIST_ENTRY32 {
+	DWORD Flink;
+	DWORD Blink;
+} LIST_ENTRY32,*PLIST_ENTRY32;
+typedef struct _LIST_ENTRY64 {
+	ULONGLONG Flink;
+	ULONGLONG Blink;
+} LIST_ENTRY64,*PLIST_ENTRY64;
+
 typedef struct _SINGLE_LIST_ENTRY {
 	struct _SINGLE_LIST_ENTRY *Next;
 } SINGLE_LIST_ENTRY,*PSINGLE_LIST_ENTRY;
@@ -4156,6 +4160,32 @@ typedef struct _NT_TIB {
 	PVOID ArbitraryUserPointer;
 	struct _NT_TIB *Self;
 } NT_TIB,*PNT_TIB;
+
+typedef struct _NT_TIB32 {
+	DWORD ExceptionList;
+	DWORD StackBase;
+	DWORD StackLimit;
+	DWORD SubSystemTib;
+	union {
+		DWORD FiberData;
+		DWORD Version;
+	};
+	DWORD ArbitraryUserPointer;
+	DWORD Self;
+} NT_TIB32,*PNT_TIB32;
+
+typedef struct _NT_TIB64 {
+	DWORD64 ExceptionList;
+	DWORD64 StackBase;
+	DWORD64 StackLimit;
+	DWORD64 SubSystemTib;
+	union {
+		DWORD64 FiberData;
+		DWORD Version;
+	};
+	DWORD64 ArbitraryUserPointer;
+	DWORD64 Self;
+} NT_TIB64,*PNT_TIB64;
 
 typedef struct _REPARSE_GUID_DATA_BUFFER {
 	DWORD  ReparseTag;
