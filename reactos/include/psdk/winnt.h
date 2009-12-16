@@ -230,7 +230,7 @@ typedef WORD FSHORT;
 typedef DWORD FLONG;
 
 #define C_ASSERT(exp) \
-    extern char __c_assert__[exp ? 1 : -1];
+    char __c_assert_p(char c_assert[(exp)?1:-1])
 
 #include "intrin.h"
 
