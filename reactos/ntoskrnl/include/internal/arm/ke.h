@@ -1,6 +1,8 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARM_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_ARM_KE_H
 
+#include "intrin_i.h"
+
 //
 //Lockdown TLB entries
 //
@@ -38,7 +40,7 @@
 // Returns the Interrupt State from a Trap Frame.
 // ON = TRUE, OFF = FALSE
 //
-//#define KeGetTrapFrameInterruptState(TrapFrame) \
+//#define KeGetTrapFrameInterruptState(TrapFrame)
 
 //
 // Invalidates the TLB entry for a specified address

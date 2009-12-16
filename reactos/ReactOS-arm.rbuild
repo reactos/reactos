@@ -29,6 +29,8 @@
 			<compilerflag>-ftracer</compilerflag>
 		</if>
         <compilerflag>-Wno-attributes</compilerflag>
+        <compilerflag>-U_UNICODE</compilerflag>
+        <compilerflag>-UUNICODE</compilerflag>
 	</group>
 
 

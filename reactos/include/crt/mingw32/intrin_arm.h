@@ -35,6 +35,22 @@
 #define _ReturnAddress() (__builtin_return_address(0))
 #define _ReadWriteBarrier() __sync_synchronize()
 
+__INTRIN_INLINE unsigned _CountLeadingZeros(long Mask)
+{
+    return Mask ? __builtin_clz(Mask) : 32;
+}
+
+__INTRIN_INLINE unsigned _CountTrailingZeros(long Mask)
+{
+    return Mask ? __builtin_ctz(Mask) : 32;
+}
+
+__INTRIN_INLINE unsigned char _BitScanForward(unsigned long * const Index, const unsigned long Mask)
+{
+	*Index = __builtin_ctz(Mask);
+	return Mask ? 1 : 0;
+}
+
 __INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
