@@ -4513,7 +4513,7 @@ BOOLEAN
 NTAPI
 MmSetAddressRangeModified (
     IN PVOID    Address,
-    IN ULONG    Length
+    IN SIZE_T    Length
 );
 
 NTKERNELAPI
