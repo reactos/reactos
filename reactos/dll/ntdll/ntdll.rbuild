@@ -6,7 +6,12 @@
 	</module>
 	<module name="ntdll" type="nativedll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll" iscrt="yes">
 		<bootstrap installbase="$(CDOUTPUT)/system32" />
-		<importlibrary definition="def/ntdll_$(ARCH).def" />
+		<if property="ARCH" value="arm">
+			<importlibrary definition="def/ntdll-arm.def" />
+		</if>
+		<ifnot property="ARCH" value="arm">
+			<importlibrary definition="def/ntdll.pspec" />
+		</ifnot>
 		<include base="ntdll">include</include>
 		<include base="ntdll" root="intermediate"></include>
 		<include base="ReactOS">include/reactos/subsys</include>
