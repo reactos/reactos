@@ -35,6 +35,11 @@
 #define _ReturnAddress() (__builtin_return_address(0))
 #define _ReadWriteBarrier() __sync_synchronize()
 
+__INTRIN_INLINE unsigned short _byteswap_ushort(unsigned short value)
+{
+	return __builtin_bswap32(value) >> 16;
+}
+
 __INTRIN_INLINE unsigned _CountLeadingZeros(long Mask)
 {
     return Mask ? __builtin_clz(Mask) : 32;
