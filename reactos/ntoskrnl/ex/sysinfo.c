@@ -1238,7 +1238,6 @@ QSI_DEF(SystemPoolTagInformation)
 QSI_DEF(SystemInterruptInformation)
 {
     PKPRCB Prcb;
-    PKPCR Pcr;
     LONG i;
     ULONG ti;
     PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
@@ -1253,12 +1252,7 @@ QSI_DEF(SystemInterruptInformation)
     for (i = 0; i < KeNumberProcessors; i++)
     {
         Prcb = KiProcessorBlock[i];
-        Pcr = (PKPCR)CONTAINING_RECORD(Prcb, KIPCR, PrcbData);
-#ifdef _M_ARM // This code should probably be done differently
-        sii->ContextSwitches = Pcr->ContextSwitches;
-#else
-        sii->ContextSwitches = ((PKIPCR)Pcr)->ContextSwitches;
-#endif
+        sii->ContextSwitches = KeGetContextSwitches(Prcb);
         sii->DpcCount = Prcb->DpcData[0].DpcCount;
         sii->DpcRate = Prcb->DpcRequestRate;
         sii->TimeIncrement = ti;

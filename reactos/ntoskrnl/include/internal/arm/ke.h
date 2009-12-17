@@ -37,6 +37,24 @@
     ((Context)->R0 = (ReturnValue))
 
 //
+// Macro to get trap and exception frame from a thread stack
+//
+#define KeGetTrapFrame(Thread) \
+    (PKTRAP_FRAME)((ULONG_PTR)((Thread)->InitialStack) - \
+                   sizeof(KTRAP_FRAME))
+
+#define KeGetExceptionFrame(Thread) \
+    (PKEXCEPTION_FRAME)((ULONG_PTR)KeGetTrapFrame(Thread) - \
+                        sizeof(KEXCEPTION_FRAME))
+
+//
+// Macro to get context switches from the PRCB
+// All architectures but x86 have it in the PRCB's KeContextSwitches
+//
+#define KeGetContextSwitches(Prcb)  \
+    Prcb->KeContextSwitches
+
+//
 // Returns the Interrupt State from a Trap Frame.
 // ON = TRUE, OFF = FALSE
 //

@@ -42,6 +42,24 @@ extern ULONG Ke386CacheAlignment;
     ((Context)->Eax = (ReturnValue))
 
 //
+// Macro to get trap and exception frame from a thread stack
+//
+#define KeGetTrapFrame(Thread) \
+    (PKTRAP_FRAME)((ULONG_PTR)((Thread)->InitialStack) - \
+                   sizeof(KTRAP_FRAME) - \
+                   sizeof(FX_SAVE_AREA))
+
+#define KeGetExceptionFrame(Thread) \
+    NULL
+
+//
+// Macro to get context switches from the PRCB
+// All architectures but x86 have it in the PRCB's KeContextSwitches
+//
+#define KeGetContextSwitches(Prcb)  \
+    CONTAINING_RECORD(Prcb, KIPCR, PrcbData)->ContextSwitches
+
+//
 // Returns the Interrupt State from a Trap Frame.
 // ON = TRUE, OFF = FALSE
 //
