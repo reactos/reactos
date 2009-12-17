@@ -13,7 +13,7 @@ Signature = "$ReactOS$"
 
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
-;uniata.sys=,,,,,,x,,,,,,4
+uniata.sys=,,,,,,x,,,,,,4
 buslogic.sys=,,,,,,x,,,,,,4
 blue.sys=,,,,,,x,,,,,,4
 bootvid.dll=,,,,,,,,,,,,2
@@ -32,8 +32,8 @@ ntfs.sys=,,,,,,,,,,,,4
 pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
-;ramdisk.sys=,,,,,,x,,,,,,4
-;ext2.sys=,,,,,,x,,,,,,4
+ramdisk.sys=,,,,,,x,,,,,,4
+ext2.sys=,,,,,,x,,,,,,4
 
 [HardwareIdsDatabase]
 *PNP0C08 = acpi
@@ -50,7 +50,7 @@ Cabinet=reactos.cab
 [SetupData]
 DefaultPath = \ReactOS
 OsLoadOptions = "/NOGUIBOOT /NODEBUG"
-DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM2 /BAUDRATE=115200"
+DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=SCREEN"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 
