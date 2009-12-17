@@ -98,7 +98,7 @@ AtapiGetIoRange(
     IN ULONG length
     )
 {
-    ULONG io_start = 0;
+    ULONG_PTR io_start = 0;
     KdPrint2((PRINT_PREFIX "  AtapiGetIoRange:\n"));
 
     if(ConfigInfo->NumberOfAccessRanges <= rid)
@@ -115,7 +115,7 @@ AtapiGetIoRange(
     if((*ConfigInfo->AccessRanges)[rid].RangeInMemory) {
         io_start =
             // Get the system physical address for this IO range.
-            ((ULONG)ScsiPortGetDeviceBase(HwDeviceExtension,
+            ((ULONG_PTR)ScsiPortGetDeviceBase(HwDeviceExtension,
                         PCIBus /*ConfigInfo->AdapterInterfaceType*/,
                         SystemIoBusNumber /*ConfigInfo->SystemIoBusNumber*/,
                         ScsiPortConvertUlongToPhysicalAddress(
@@ -873,7 +873,7 @@ UniataFindBusMasterController(
     ULONG   dev_id;
     PCI_SLOT_NUMBER       slotData;
 
-    ULONG   i;
+    ULONG_PTR   i;
     ULONG   channel;
     ULONG   c = 0;
     PUCHAR  ioSpace;
@@ -926,7 +926,7 @@ UniataFindBusMasterController(
         KdPrint2((PRINT_PREFIX "AdapterInterfaceType: Isa\n"));
     }
     if(InDriverEntry) {
-        i = (ULONG)Context;
+        i = (ULONG_PTR)Context;
         if(i & 0x80000000) {
             AltInit = TRUE;
         }
@@ -942,7 +942,7 @@ UniataFindBusMasterController(
         }
         if(i >= BMListLen) {
             KdPrint2((PRINT_PREFIX "unexpected device arrival\n"));
-            i = (ULONG)Context;
+            i = (ULONG_PTR)Context;
             if(FirstMasterOk) {
                 channel = 1;
             }
@@ -1179,7 +1179,7 @@ UniataFindBusMasterController(
                                 BaseIoAddressBM_0,
                                 (*ConfigInfo->AccessRanges)[4].RangeInMemory ? TRUE : FALSE);
                 deviceExtension->BusMaster = TRUE;
-                deviceExtension->BaseIoAddressBM_0.Addr  = (ULONG)BaseIoAddressBM_0;
+                deviceExtension->BaseIoAddressBM_0.Addr  = (ULONG_PTR)BaseIoAddressBM_0;
                 if((*ConfigInfo->AccessRanges)[4].RangeInMemory) {
                     deviceExtension->BaseIoAddressBM_0.MemIo = TRUE;
                 }
@@ -1749,7 +1749,7 @@ UniataFindFakeBusMasterController(
     ULONG   dev_id;
     PCI_SLOT_NUMBER       slotData;
 
-    ULONG   i;
+    ULONG_PTR   i;
 //    PUCHAR  ioSpace;
 //    UCHAR   statusByte;
 
@@ -1771,7 +1771,7 @@ UniataFindFakeBusMasterController(
     *Again = FALSE;
 
     if(InDriverEntry) {
-        i = (ULONG)Context;
+        i = (ULONG_PTR)Context;
     } else {
         for(i=0; i<BMListLen; i++) {
             if(BMList[i].slotNumber == ConfigInfo->SlotNumber &&
@@ -1957,7 +1957,7 @@ UniataFindFakeBusMasterController(
                         BaseIoAddressBM_0,
                         (*ConfigInfo->AccessRanges)[4].RangeInMemory ? TRUE : FALSE);
         deviceExtension->BusMaster = TRUE;
-        deviceExtension->BaseIoAddressBM_0.Addr  = (ULONG)BaseIoAddressBM_0;
+        deviceExtension->BaseIoAddressBM_0.Addr  = (ULONG_PTR)BaseIoAddressBM_0;
         if((*ConfigInfo->AccessRanges)[4].RangeInMemory) {
             deviceExtension->BaseIoAddressBM_0.MemIo = TRUE;
         }
@@ -2379,14 +2379,14 @@ AtapiFindController(
                 ioSpace = (PUCHAR)ScsiPortGetDeviceBase(HwDeviceExtension,
                                                 ConfigInfo->AdapterInterfaceType,
                                                 ConfigInfo->SystemIoBusNumber,
-                                                ScsiPortConvertUlongToPhysicalAddress((ULONG)BaseIoAddress1 + 0x0E),
+                                                ScsiPortConvertUlongToPhysicalAddress((ULONG_PTR)BaseIoAddress1 + 0x0E),
                                                 ATA_ALTIOSIZE,
                                                 TRUE);
             } else {
                 ioSpace = (PUCHAR)ScsiPortGetDeviceBase(HwDeviceExtension,
                                                 ConfigInfo->AdapterInterfaceType,
                                                 ConfigInfo->SystemIoBusNumber,
-                                                ScsiPortConvertUlongToPhysicalAddress((ULONG)BaseIoAddress1 + ATA_ALTOFFSET),
+                                                ScsiPortConvertUlongToPhysicalAddress((ULONG_PTR)BaseIoAddress1 + ATA_ALTOFFSET),
                                                 ATA_ALTIOSIZE,
                                                 TRUE);
             }

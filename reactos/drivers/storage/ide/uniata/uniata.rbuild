@@ -23,6 +23,8 @@
 
 	<directory name="ros_glue">
 		<file>ros_glue.cpp</file>
-		<file>ros_glue_asm.s</file>
+		<if property="ARCH" value="i386">
+			<file>ros_glue_asm.s</file>
+		</if>
 	</directory>
 </module>

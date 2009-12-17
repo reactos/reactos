@@ -1,6 +1,7 @@
 #ifndef __CROSSNT_MISC__H__
 #define __CROSSNT_MISC__H__
 
+#if defined(_M_X86_) 
 extern "C"
 void
 __fastcall
@@ -126,5 +127,6 @@ _XCHG_DD(
     void* b  // EDX
     );
 #define XCHG_DD(a,b) _XCHG_DD(&(a),&(b))
+#endif
 
 #endif // __CROSSNT_MISC__H__
