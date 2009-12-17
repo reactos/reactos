@@ -1345,7 +1345,7 @@ VOID
 DDKFASTAPI
 AtapiWritePort4(
     IN PHW_CHANNEL chan,
-    IN ULONG port,
+    IN ULONG_PTR port,
     IN ULONG data
     );
 
@@ -1353,7 +1353,7 @@ VOID
 DDKFASTAPI
 AtapiWritePort2(
     IN PHW_CHANNEL chan,
-    IN ULONG port,
+    IN ULONG_PTR port,
     IN USHORT data
     );
 
@@ -1361,7 +1361,7 @@ VOID
 DDKFASTAPI
 AtapiWritePort1(
     IN PHW_CHANNEL chan,
-    IN ULONG port,
+    IN ULONG_PTR port,
     IN UCHAR data
     );
 
@@ -1369,7 +1369,7 @@ VOID
 DDKFASTAPI
 AtapiWritePortEx4(
     IN PHW_CHANNEL chan,
-    IN ULONG port,
+    IN ULONG_PTR port,
     IN ULONG offs,
     IN ULONG data
     );
@@ -1378,7 +1378,7 @@ VOID
 DDKFASTAPI
 AtapiWritePortEx1(
     IN PHW_CHANNEL chan,
-    IN ULONG port,
+    IN ULONG_PTR port,
     IN ULONG offs,
     IN UCHAR data
     );
@@ -1387,28 +1387,28 @@ ULONG
 DDKFASTAPI
 AtapiReadPort4(
     IN PHW_CHANNEL chan,
-    IN ULONG port
+    IN ULONG_PTR port
     );
 
 USHORT
 DDKFASTAPI
 AtapiReadPort2(
     IN PHW_CHANNEL chan,
-    IN ULONG port
+    IN ULONG_PTR port
     );
 
 UCHAR
 DDKFASTAPI
 AtapiReadPort1(
     IN PHW_CHANNEL chan,
-    IN ULONG port
+    IN ULONG_PTR port
     );
 
 ULONG
 DDKFASTAPI
 AtapiReadPortEx4(
     IN PHW_CHANNEL chan,
-    IN ULONG port,
+    IN ULONG_PTR port,
     IN ULONG offs
     );
 
@@ -1416,7 +1416,7 @@ UCHAR
 DDKFASTAPI
 AtapiReadPortEx1(
     IN PHW_CHANNEL chan,
-    IN ULONG port,
+    IN ULONG_PTR port,
     IN ULONG offs
     );
 
@@ -1424,7 +1424,7 @@ VOID
 DDKFASTAPI
 AtapiWriteBuffer4(
     IN PHW_CHANNEL chan,
-    IN ULONG _port,
+    IN ULONG_PTR _port,
     IN PVOID Buffer,
     IN ULONG Count,
     IN ULONG Timing
@@ -1434,7 +1434,7 @@ VOID
 DDKFASTAPI
 AtapiWriteBuffer2(
     IN PHW_CHANNEL chan,
-    IN ULONG _port,
+    IN ULONG_PTR _port,
     IN PVOID Buffer,
     IN ULONG Count,
     IN ULONG Timing
@@ -1444,7 +1444,7 @@ VOID
 DDKFASTAPI
 AtapiReadBuffer4(
     IN PHW_CHANNEL chan,
-    IN ULONG _port,
+    IN ULONG_PTR _port,
     IN PVOID Buffer,
     IN ULONG Count,
     IN ULONG Timing
@@ -1454,7 +1454,7 @@ VOID
 DDKFASTAPI
 AtapiReadBuffer2(
     IN PHW_CHANNEL chan,
-    IN ULONG _port,
+    IN ULONG_PTR _port,
     IN PVOID Buffer,
     IN ULONG Count,
     IN ULONG Timing
