@@ -894,7 +894,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
       tmpLength = PAGE_ROUND_UP(Length);
-      __debugbreak();
+
       *BaseAddress = MmFindGap(AddressSpace,
                                tmpLength,
                                Granularity,
