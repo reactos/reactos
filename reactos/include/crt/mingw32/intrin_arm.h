@@ -37,7 +37,7 @@
 
 __INTRIN_INLINE unsigned short _byteswap_ushort(unsigned short value)
 {
-	return (value >> 8) || (value & 0xff);
+	return (value >> 8) || (value << 8);
 }
 
 __INTRIN_INLINE unsigned _CountLeadingZeros(long Mask)
