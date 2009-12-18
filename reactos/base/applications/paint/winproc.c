@@ -711,8 +711,21 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     CloseClipboard();
                     break;
                 case IDM_EDITDELETESELECTION:
+                {
+                    /* FIXME: deleting freeform selections unsupported */
+                    RECT selectionRect, areaRect;
+                    long x1, x2, y1, y2;
+
+                    GetWindowRect(hSelection, &selectionRect);
+                    GetWindowRect(hImageArea, &areaRect);
+                    x1 = ((selectionRect.left - areaRect.left) / (zoom / 1000)) + 1;
+                    y1 = ((selectionRect.top - areaRect.top) / (zoom / 1000)) + 1;
+                    x2 = (selectionRect.right - areaRect.left) / (zoom / 1000);
+                    y2 = (selectionRect.bottom - areaRect.top) / (zoom / 1000);
+                    Rect(hDrawingDC, x1, y1, x2, y2, bgColor, bgColor, 0, TRUE);
                     ShowWindow(hSelection, SW_HIDE);
                     break;
+                }
                 case IDM_EDITSELECTALL:
                     if (activeTool == 2)
                     {
