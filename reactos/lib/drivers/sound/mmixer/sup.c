@@ -37,7 +37,8 @@ MMixerVerifyContext(
     if (MixerContext->SizeOfStruct != sizeof(MIXER_CONTEXT))
         return MM_STATUS_INVALID_PARAMETER;
 
-    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open || !MixerContext->Close)
+    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open || 
+        !MixerContext->Close || !MixerContext->OpenKey || !MixerContext->QueryKeyValue || !MixerContext->CloseKey)
         return MM_STATUS_INVALID_PARAMETER;
 
     if (!MixerContext->MixerContext)
@@ -530,6 +531,7 @@ MMixerSetGetVolumeControlDetails(
     /* set control details */
     if (bSet)
     {
+        /* TODO */
         Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
         Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
     }
@@ -548,5 +550,108 @@ MMixerSetGetVolumeControlDetails(
     {
         /* notify clients of a line change  MM_MIXM_CONTROL_CHANGE with MixerControl->dwControlID */
     }
+    return Status;
+}
+
+LPMIXER_DATA
+MMixerGetDataByDeviceId(
+    IN PMIXER_LIST MixerList,
+    IN ULONG DeviceId)
+{
+    PLIST_ENTRY Entry;
+    LPMIXER_DATA MixerData;
+
+    Entry = MixerList->MixerData.Flink;
+    while(Entry != &MixerList->MixerData)
+    {
+        MixerData = (LPMIXER_DATA)CONTAINING_RECORD(Entry, MIXER_DATA, Entry);
+        if (MixerData->DeviceId == DeviceId)
+        {
+            return MixerData;
+        }
+        Entry = Entry->Flink;
+    }
+    return NULL;
+}
+
+LPMIXER_DATA
+MMixerGetDataByDeviceName(
+    IN PMIXER_LIST MixerList,
+    IN LPWSTR DeviceName)
+{
+    PLIST_ENTRY Entry;
+    LPMIXER_DATA MixerData;
+
+    Entry = MixerList->MixerData.Flink;
+    while(Entry != &MixerList->MixerData)
+    {
+        MixerData = (LPMIXER_DATA)CONTAINING_RECORD(Entry, MIXER_DATA, Entry);
+        if (wcsicmp(DeviceName, MixerData->DeviceName) == 0)
+        {
+            // found entry
+            return MixerData;
+        }
+        Entry = Entry->Flink;
+    }
+    return NULL;
+}
+
+MIXER_STATUS
+MMixerCreateMixerData(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
+    IN ULONG DeviceId,
+    IN LPWSTR DeviceName,
+    IN HANDLE hDevice,
+    IN HANDLE hKey)
+{
+    LPMIXER_DATA MixerData;
+
+    MixerData = (LPMIXER_DATA)MixerContext->Alloc(sizeof(MIXER_DATA));
+    if (!MixerData)
+        return MM_STATUS_NO_MEMORY;
+
+    MixerData->DeviceId = DeviceId;
+    MixerData->DeviceName = DeviceName;
+    MixerData->hDevice = hDevice;
+    MixerData->hDeviceInterfaceKey = hKey;
+
+    InsertTailList(&MixerList->MixerData, &MixerData->Entry);
+    MixerList->MixerDataCount++;
+    return MM_STATUS_SUCCESS;
+}
+
+MIXER_STATUS
+MMixerGetDeviceName(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN HANDLE hKey)
+{
+    LPWSTR Name;
+    HANDLE hTemp;
+    ULONG Length;
+    ULONG Type;
+    MIXER_STATUS Status;
+
+    Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
+    if (Status == MM_STATUS_SUCCESS)
+    {
+        wcscpy(MixerInfo->MixCaps.szPname, Name);
+        MixerContext->Free(Name);
+        return Status;
+    }
+
+    Status = MixerContext->OpenKey(hKey, L"Device Parameters", KEY_READ, &hTemp);
+    if (Status != MM_STATUS_SUCCESS)
+        return Status;
+
+    Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
+    if (Status == MM_STATUS_SUCCESS)
+    {
+        wcscpy(MixerInfo->MixCaps.szPname, Name);
+        MixerContext->Free(Name);
+    }
+
+    MixerContext->CloseKey(hTemp);
     return Status;
 }

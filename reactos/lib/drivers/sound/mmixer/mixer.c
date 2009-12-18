@@ -409,10 +409,12 @@ MMixerInitialize(
     IN PVOID EnumContext)
 {
     MIXER_STATUS Status;
-    HANDLE hMixer;
+    HANDLE hMixer, hKey;
     ULONG DeviceIndex, Count;
     LPWSTR DeviceName;
+    LPMIXER_DATA MixerData;
     PMIXER_LIST MixerList;
+    PLIST_ENTRY Entry;
 
     if (!MixerContext || !EnumFunction || !EnumContext)
     {
@@ -420,7 +422,8 @@ MMixerInitialize(
         return MM_STATUS_INVALID_PARAMETER;
     }
 
-    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open || !MixerContext->Close)
+    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open || 
+        !MixerContext->Close || !MixerContext->OpenKey || !MixerContext->QueryKeyValue || !MixerContext->CloseKey)
     {
         // invalid parameter
         return MM_STATUS_INVALID_PARAMETER;
@@ -436,7 +439,9 @@ MMixerInitialize(
 
      //initialize mixer list
      MixerList->MixerListCount = 0;
+     MixerList->MixerDataCount = 0;
      InitializeListHead(&MixerList->MixerList);
+     InitializeListHead(&MixerList->MixerData);
 
      // store mixer list
      MixerContext->MixerContext = (PVOID)MixerList;
@@ -445,12 +450,10 @@ MMixerInitialize(
     Count = 0;
     DeviceIndex = 0;
 
-
-
     do
     {
         // enumerate a device
-        Status = EnumFunction(EnumContext, DeviceIndex, &DeviceName, &hMixer);
+        Status = EnumFunction(EnumContext, DeviceIndex, &DeviceName, &hMixer, &hKey);
 
         if (Status != MM_STATUS_SUCCESS)
         {
@@ -463,12 +466,25 @@ MMixerInitialize(
         }
         else
         {
-            MMixerSetupFilter(MixerContext, MixerList, hMixer, &Count, DeviceName);
+            // create a mixer data entry
+            Status = MMixerCreateMixerData(MixerContext, MixerList, DeviceIndex, DeviceName, hMixer, hKey);
+            if (Status != MM_STATUS_SUCCESS)
+                break;
         }
 
         // increment device index
         DeviceIndex++;
     }while(TRUE);
+
+    //now all filters have been pre-opened
+    // lets enumerate the filters
+    Entry = MixerList->MixerData.Flink;
+    while(Entry != &MixerList->MixerData)
+    {
+        MixerData = (LPMIXER_DATA)CONTAINING_RECORD(Entry, MIXER_DATA, Entry);
+        MMixerSetupFilter(MixerContext, MixerList, MixerData, &Count);
+        Entry = Entry->Flink;
+    }
 
     // done
     return MM_STATUS_SUCCESS;

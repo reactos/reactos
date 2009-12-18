@@ -14,6 +14,8 @@
 
 #include "mmixer.h"
 
+#include <stdio.h>
+
 #include <debug.h>
 
 typedef struct
@@ -55,8 +57,19 @@ typedef struct
 
 typedef struct
 {
+    LIST_ENTRY Entry;
+    ULONG DeviceId;
+    HANDLE hDevice;
+    HANDLE hDeviceInterfaceKey;
+    LPWSTR DeviceName;
+}MIXER_DATA, *LPMIXER_DATA;
+
+typedef struct
+{
     ULONG MixerListCount;
     LIST_ENTRY MixerList;
+    ULONG MixerDataCount;
+    LIST_ENTRY MixerData;
 }MIXER_LIST, *PMIXER_LIST;
 
 #define DESTINATION_LINE 0xFFFF0000
@@ -133,9 +146,8 @@ MIXER_STATUS
 MMixerSetupFilter(
     IN PMIXER_CONTEXT MixerContext,
     IN PMIXER_LIST MixerList,
-    IN HANDLE hMixer,
-    IN PULONG DeviceCount,
-    IN LPWSTR DeviceName);
+    IN LPMIXER_DATA MixerData,
+    IN PULONG DeviceCount);
 
 MIXER_STATUS
 MMixerGetTargetPinsByNodeConnectionIndex(
@@ -205,5 +217,30 @@ MMixerSetGetControlDetails(
     IN ULONG PropertyId,
     IN ULONG Channel,
     IN PLONG InputValue);
+
+LPMIXER_DATA
+MMixerGetDataByDeviceId(
+    IN PMIXER_LIST MixerList,
+    IN ULONG DeviceId);
+
+LPMIXER_DATA
+MMixerGetDataByDeviceName(
+    IN PMIXER_LIST MixerList,
+    IN LPWSTR DeviceName);
+
+MIXER_STATUS
+MMixerCreateMixerData(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
+    IN ULONG DeviceId,
+    IN LPWSTR DeviceName,
+    IN HANDLE hDevice,
+    IN HANDLE hKey);
+
+MIXER_STATUS
+MMixerGetDeviceName(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN HANDLE hKey);
 
 #endif

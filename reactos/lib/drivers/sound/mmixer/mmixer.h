@@ -26,7 +26,8 @@ typedef MIXER_STATUS (*PMIXER_ENUM)(
     IN  PVOID EnumContext,
     IN  ULONG DeviceIndex,
     OUT LPWSTR * DeviceName,
-    OUT PHANDLE OutHandle);
+    OUT PHANDLE OutHandle,
+    OUT PHANDLE OutDevInterfaceKey);
 
 typedef MIXER_STATUS(*PMIXER_DEVICE_CONTROL)(
     IN HANDLE hMixer,
@@ -44,6 +45,9 @@ typedef MIXER_STATUS(*PMIXER_OPEN)(
 typedef MIXER_STATUS(*PMIXER_CLOSE)(
     IN HANDLE hDevice);
 
+typedef MIXER_STATUS(*PMIXER_CLOSEKEY)(
+    IN HANDLE hKey);
+
 typedef VOID (*PMIXER_EVENT)(
     IN PVOID MixerEvent);
 
@@ -52,6 +56,18 @@ typedef VOID (*PMIXER_COPY)(
     IN PVOID Src,
     IN ULONG Length);
 
+typedef MIXER_STATUS(*PMIXER_QUERY_KEY_VALUE)(
+    IN HANDLE hKey,
+    IN LPWSTR KeyName,
+    OUT PVOID * ResultBuffer,
+    OUT PULONG ResultLength,
+    OUT PULONG KeyType);
+
+typedef MIXER_STATUS(*PMIXER_OPEN_KEY)(
+    IN HANDLE hKey,
+    IN LPWSTR SubKey,
+    IN ULONG DesiredAccess,
+    OUT PHANDLE OutKey);
 
 typedef struct
 {
@@ -64,6 +80,9 @@ typedef struct
      PMIXER_OPEN Open;
      PMIXER_CLOSE Close;
      PMIXER_COPY Copy;
+     PMIXER_OPEN_KEY OpenKey;
+     PMIXER_QUERY_KEY_VALUE QueryKeyValue;
+     PMIXER_CLOSEKEY CloseKey;
 }MIXER_CONTEXT, *PMIXER_CONTEXT;
 
 MIXER_STATUS

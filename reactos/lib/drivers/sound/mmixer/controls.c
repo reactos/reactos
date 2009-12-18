@@ -667,6 +667,7 @@ MMixerAddMixerSourceLines(
 MIXER_STATUS
 MMixerHandlePhysicalConnection(
     IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
     IN OUT LPMIXER_INFO MixerInfo,
     IN ULONG bInput,
     IN PKSPIN_PHYSICALCONNECTION OutConnection)
@@ -674,47 +675,41 @@ MMixerHandlePhysicalConnection(
     PULONG PinsRef = NULL, PinConnectionIndex = NULL, PinsSrcRef;
     ULONG PinsRefCount, Index, PinConnectionIndexCount;
     MIXER_STATUS Status;
-    HANDLE hDevice = NULL;
     PKSMULTIPLE_ITEM NodeTypes = NULL;
     PKSMULTIPLE_ITEM NodeConnections = NULL;
     PULONG MixerControls;
     ULONG MixerControlsCount;
+    LPMIXER_DATA MixerData;
 
 
     // open the connected filter
-    Status = MixerContext->Open(OutConnection->SymbolicLinkName, &hDevice);
-    if (Status != MM_STATUS_SUCCESS)
-    {
-        DPRINT("OpenDevice failed with %x\n", Status);
-        return Status;
-    }
+    OutConnection->SymbolicLinkName[1] = L'\\';
+    MixerData = MMixerGetDataByDeviceName(MixerList, OutConnection->SymbolicLinkName);
+    ASSERT(MixerData);
 
     // get connected filter pin count
-    PinsRefCount = MMixerGetFilterPinCount(MixerContext, hDevice);
+    PinsRefCount = MMixerGetFilterPinCount(MixerContext, MixerData->hDevice);
     ASSERT(PinsRefCount);
 
     PinsRef = (PULONG)MixerContext->Alloc(sizeof(ULONG) * PinsRefCount);
     if (!PinsRef)
     {
         // no memory
-        MixerContext->Close(hDevice);
         return MM_STATUS_UNSUCCESSFUL;
     }
 
     // get topology node types
-    Status = MMixerGetFilterTopologyProperty(MixerContext, hDevice, KSPROPERTY_TOPOLOGY_NODES, &NodeTypes);
+    Status = MMixerGetFilterTopologyProperty(MixerContext, MixerData->hDevice, KSPROPERTY_TOPOLOGY_NODES, &NodeTypes);
     if (Status != MM_STATUS_SUCCESS)
     {
-        MixerContext->Close(hDevice);
         MixerContext->Free(PinsRef);
         return Status;
     }
 
     // get topology connections
-    Status = MMixerGetFilterTopologyProperty(MixerContext, hDevice, KSPROPERTY_TOPOLOGY_CONNECTIONS, &NodeConnections);
+    Status = MMixerGetFilterTopologyProperty(MixerContext, MixerData->hDevice, KSPROPERTY_TOPOLOGY_CONNECTIONS, &NodeConnections);
     if (Status != MM_STATUS_SUCCESS)
     {
-        MixerContext->Close(hDevice);
         MixerContext->Free(PinsRef);
         MixerContext->Free(NodeTypes);
         return Status;
@@ -725,7 +720,6 @@ MMixerHandlePhysicalConnection(
     Status = MMixerGetNodeIndexes(MixerContext, NodeConnections, OutConnection->Pin, FALSE, !bInput, &PinConnectionIndexCount, &PinConnectionIndex);
     if (Status != MM_STATUS_SUCCESS)
     {
-        MixerContext->Close(hDevice);
         MixerContext->Free(PinsRef);
         MixerContext->Free(NodeTypes);
         MixerContext->Free(NodeConnections);
@@ -739,7 +733,6 @@ MMixerHandlePhysicalConnection(
     Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, FALSE, PinConnectionIndex[0], PinsRef);
     if (Status != MM_STATUS_SUCCESS)
     {
-        MixerContext->Close(hDevice);
         MixerContext->Free(PinsRef);
         MixerContext->Free(NodeTypes);
         MixerContext->Free(NodeConnections);
@@ -767,7 +760,6 @@ MMixerHandlePhysicalConnection(
             if (!PinsSrcRef)
             {
                 /* no memory */
-                MixerContext->Close(hDevice);
                 MixerContext->Free(PinsRef);
                 MixerContext->Free(NodeTypes);
                 MixerContext->Free(NodeConnections);
@@ -781,7 +773,6 @@ MMixerHandlePhysicalConnection(
             if (Status != MM_STATUS_SUCCESS)
             {
                 // failed */
-                MixerContext->Close(hDevice);
                 MixerContext->Free(PinsRef);
                 MixerContext->Free(NodeTypes);
                 MixerContext->Free(NodeConnections);
@@ -800,7 +791,7 @@ MMixerHandlePhysicalConnection(
             }
             PinsSrcRef[OutConnection->Pin] = TRUE;
 
-            Status = MMixerAddMixerSourceLines(MixerContext, MixerInfo, hDevice, NodeConnections, NodeTypes, PinsRefCount, OutConnection->Pin, Index, PinsSrcRef);
+            Status = MMixerAddMixerSourceLines(MixerContext, MixerInfo, MixerData->hDevice, NodeConnections, NodeTypes, PinsRefCount, OutConnection->Pin, Index, PinsSrcRef);
 
             MixerContext->Free(MixerControls);
             MixerContext->Free(PinsSrcRef);
@@ -815,8 +806,7 @@ MIXER_STATUS
 MMixerInitializeFilter(
     IN PMIXER_CONTEXT MixerContext,
     IN PMIXER_LIST MixerList,
-    IN HANDLE hMixer,
-    IN LPWSTR DeviceName,
+    IN LPMIXER_DATA MixerData,
     IN PKSMULTIPLE_ITEM NodeTypes,
     IN PKSMULTIPLE_ITEM NodeConnections,
     IN ULONG PinCount,
@@ -847,12 +837,13 @@ MMixerInitializeFilter(
     MixerInfo->MixCaps.vDriverVersion = 1; //FIXME
     MixerInfo->MixCaps.fdwSupport = 0;
     MixerInfo->MixCaps.cDestinations = 1;
-    MixerInfo->hMixer = hMixer;
+    MixerInfo->hMixer = MixerData->hDevice;
+
+    // get mixer name
+    MMixerGetDeviceName(MixerContext, MixerInfo, MixerData->hDeviceInterfaceKey);
 
     // initialize line list
     InitializeListHead(&MixerInfo->LineList);
-
-    /* FIXME find mixer name */
 
     // now allocate an array which will receive the indices of the pin 
     // which has a ADC / DAC nodetype in its path
@@ -880,7 +871,7 @@ MMixerInitializeFilter(
             Pin.Property.Id = KSPROPERTY_PIN_NAME;
 
             /* try get pin name size */
-            Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
+            Status = MixerContext->Control(MixerData->hDevice, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
 
             if (Status == MM_STATUS_MORE_ENTRIES)
             {
@@ -888,7 +879,7 @@ MMixerInitializeFilter(
                 if (Buffer)
                 {
                     /* try get pin name */
-                    Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)Buffer, BytesReturned, &BytesReturned);
+                    Status = MixerContext->Control(MixerData->hDevice, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)Buffer, BytesReturned, &BytesReturned);
                     if (Status != MM_STATUS_SUCCESS)
                     {
                         MixerContext->Free((PVOID)Buffer);
@@ -945,11 +936,11 @@ MMixerInitializeFilter(
         if (Pins[Index])
         {
             // check if the pin has a physical connection
-            Status = MMixerGetPhysicalConnection(MixerContext, hMixer, Index, &OutConnection);
+            Status = MMixerGetPhysicalConnection(MixerContext, MixerData->hDevice, Index, &OutConnection);
             if (Status == MM_STATUS_SUCCESS)
             {
                 // the pin has a physical connection
-                Status = MMixerHandlePhysicalConnection(MixerContext, MixerInfo, bInputMixer, OutConnection);
+                Status = MMixerHandlePhysicalConnection(MixerContext, MixerList, MixerInfo, bInputMixer, OutConnection);
                 DPRINT("MMixerHandlePhysicalConnection status %u\n", Status);
                 MixerContext->Free(OutConnection);
                 bUsed = TRUE;
@@ -957,7 +948,7 @@ MMixerInitializeFilter(
             else
             {
                 // filter exposes the topology on the same filter
-                MMixerAddMixerSourceLine(MixerContext, MixerInfo, hMixer, NodeConnections, NodeTypes, Index, FALSE, FALSE);
+                MMixerAddMixerSourceLine(MixerContext, MixerInfo, MixerData->hDevice, NodeConnections, NodeTypes, Index, FALSE, FALSE);
                 bUsed = TRUE;
             }
         }
@@ -994,9 +985,8 @@ MIXER_STATUS
 MMixerSetupFilter(
     IN PMIXER_CONTEXT MixerContext,
     IN PMIXER_LIST MixerList,
-    IN HANDLE hMixer,
-    IN PULONG DeviceCount,
-    IN LPWSTR DeviceName)
+    IN LPMIXER_DATA MixerData,
+    IN PULONG DeviceCount)
 {
     PKSMULTIPLE_ITEM NodeTypes, NodeConnections;
     MIXER_STATUS Status;
@@ -1004,12 +994,12 @@ MMixerSetupFilter(
     ULONG NodeIndex;
 
     // get number of pins
-    PinCount = MMixerGetFilterPinCount(MixerContext, hMixer);
+    PinCount = MMixerGetFilterPinCount(MixerContext, MixerData->hDevice);
     ASSERT(PinCount);
     DPRINT("NumOfPins: %lu\n", PinCount);
 
     // get filter node types
-    Status = MMixerGetFilterTopologyProperty(MixerContext, hMixer, KSPROPERTY_TOPOLOGY_NODES, &NodeTypes);
+    Status = MMixerGetFilterTopologyProperty(MixerContext, MixerData->hDevice, KSPROPERTY_TOPOLOGY_NODES, &NodeTypes);
     if (Status != MM_STATUS_SUCCESS)
     {
         // failed
@@ -1017,7 +1007,7 @@ MMixerSetupFilter(
     }
 
     // get filter node connections
-    Status = MMixerGetFilterTopologyProperty(MixerContext, hMixer, KSPROPERTY_TOPOLOGY_CONNECTIONS, &NodeConnections);
+    Status = MMixerGetFilterTopologyProperty(MixerContext, MixerData->hDevice, KSPROPERTY_TOPOLOGY_CONNECTIONS, &NodeConnections);
     if (Status != MM_STATUS_SUCCESS)
     {
         // failed
@@ -1030,7 +1020,7 @@ MMixerSetupFilter(
     if (NodeIndex != MAXULONG)
     {
         // it has
-        Status = MMixerInitializeFilter(MixerContext, MixerList, hMixer, DeviceName, NodeTypes, NodeConnections, PinCount, NodeIndex, FALSE);
+        Status = MMixerInitializeFilter(MixerContext, MixerList, MixerData, NodeTypes, NodeConnections, PinCount, NodeIndex, FALSE);
         DPRINT("MMixerInitializeFilter Status %u\n", Status);
         // check for success
         if (Status == MM_STATUS_SUCCESS)
@@ -1046,7 +1036,7 @@ MMixerSetupFilter(
     if (NodeIndex != MAXULONG)
     {
         // it has
-        Status = MMixerInitializeFilter(MixerContext, MixerList, hMixer, DeviceName, NodeTypes, NodeConnections, PinCount, NodeIndex, TRUE);
+        Status = MMixerInitializeFilter(MixerContext, MixerList, MixerData, NodeTypes, NodeConnections, PinCount, NodeIndex, TRUE);
         DPRINT("MMixerInitializeFilter Status %u\n", Status);
         // check for success
         if (Status == MM_STATUS_SUCCESS)
