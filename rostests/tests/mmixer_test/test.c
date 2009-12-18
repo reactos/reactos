@@ -142,13 +142,15 @@ Enum(
     IN  PVOID EnumContext,
     IN  ULONG DeviceIndex,
     OUT LPWSTR * DeviceName,
-    OUT PHANDLE OutHandle)
+    OUT PHANDLE OutHandle,
+    OUT PHANDLE OutKey)
 {
     SP_DEVICE_INTERFACE_DATA InterfaceData;
     SP_DEVINFO_DATA DeviceData;
     PSP_DEVICE_INTERFACE_DETAIL_DATA_W DetailData;
     BOOL Result;
     DWORD Length;
+    MIXER_STATUS Status;
 
     //printf("Enum EnumContext %p DeviceIndex %lu OutHandle %p\n", EnumContext, DeviceIndex, OutHandle);
 
@@ -193,9 +195,80 @@ Enum(
         return MM_STATUS_UNSUCCESSFUL;
     }
 
-    // copy path
-    *DeviceName = (LPWSTR)&DetailData->DevicePath[0];
-    return Open(DetailData->DevicePath, OutHandle);
+
+    *OutKey = SetupDiOpenDeviceInterfaceRegKey(EnumContext, &InterfaceData, 0, KEY_READ);
+     if ((HKEY)*OutKey == INVALID_HANDLE_VALUE)
+     {
+        HeapFree(GetProcessHeap(), 0, DetailData);
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+
+    Status = Open(DetailData->DevicePath, OutHandle);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        RegCloseKey((HKEY)*OutKey);
+        HeapFree(GetProcessHeap(), 0, DetailData);
+        return Status;
+    }
+
+    *DeviceName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(DetailData->DevicePath)+1) * sizeof(WCHAR));
+    if (*DeviceName == NULL)
+    {
+        CloseHandle(*OutHandle);
+        RegCloseKey((HKEY)*OutKey);
+        HeapFree(GetProcessHeap(), 0, DetailData);
+        return MM_STATUS_NO_MEMORY;
+    }
+
+    wcscpy(*DeviceName, DetailData->DevicePath);
+    HeapFree(GetProcessHeap(), 0, DetailData);
+
+    return Status;
+}
+
+MIXER_STATUS
+QueryKeyValue(
+    IN HANDLE hKey,
+    IN LPWSTR KeyName,
+    OUT PVOID * ResultBuffer,
+    OUT PULONG ResultLength,
+    OUT PULONG KeyType)
+{
+    if (RegQueryValueExW((HKEY)hKey, KeyName, NULL, KeyType, NULL, ResultLength) == ERROR_FILE_NOT_FOUND)
+        return MM_STATUS_UNSUCCESSFUL;
+
+    *ResultBuffer = HeapAlloc(GetProcessHeap(), 0, *ResultLength);
+    if (*ResultBuffer == NULL)
+        return MM_STATUS_NO_MEMORY;
+
+    if (RegQueryValueExW((HKEY)hKey, KeyName, NULL, KeyType, *ResultBuffer, ResultLength) != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, *ResultBuffer);
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+    return MM_STATUS_SUCCESS;
+}
+
+MIXER_STATUS
+OpenKey(
+    IN HANDLE hKey,
+    IN LPWSTR SubKey,
+    IN ULONG DesiredAccess,
+    OUT PHANDLE OutKey)
+{
+    if (RegOpenKeyExW((HKEY)hKey, SubKey, 0, DesiredAccess, (PHKEY)OutKey) == ERROR_SUCCESS)
+        return MM_STATUS_SUCCESS;
+
+    return MM_STATUS_UNSUCCESSFUL;
+}
+
+MIXER_STATUS
+CloseKey(
+    IN HANDLE hKey)
+{
+    RegCloseKey((HKEY)hKey);
+    return MM_STATUS_SUCCESS;
 }
 
 
@@ -231,6 +304,9 @@ int main(int argc, char**argv)
     MixerContext.Copy = Copy;
     MixerContext.Free = Free;
     MixerContext.Open = Open;
+    MixerContext.OpenKey = OpenKey;
+    MixerContext.CloseKey = CloseKey;
+    MixerContext.QueryKeyValue = QueryKeyValue;
 
     Status = MMixerInitialize(&MixerContext, Enum, (PVOID)DeviceHandle);
 
