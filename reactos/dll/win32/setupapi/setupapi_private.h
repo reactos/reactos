@@ -334,6 +334,10 @@ FreeFunctionPointer(
     IN HMODULE ModulePointer,
     IN PVOID FunctionPointer);
 
+DWORD
+WINAPI
+pSetupStringFromGuid(LPGUID lpGUID, PWSTR pString, DWORD dwStringLen);
+
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
 
 VOID WINAPI MyFree(LPVOID lpMem);

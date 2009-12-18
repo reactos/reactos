@@ -292,22 +292,118 @@ cleanup:
     return rc;
 }
 
+static LPWSTR
+CreateSymbolicLink(
+    IN LPGUID InterfaceGuid,
+    IN LPCWSTR ReferenceString,
+    IN struct DeviceInfo *devInfo)
+{
+    DWORD Length, Index, Offset;
+    LPWSTR Key;
+
+    Length = wcslen(devInfo->instanceId) + 4 /* prepend ##?# */ + 41 /* #{GUID} + */ + 1 /* zero byte */;
+
+    Key = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Length * sizeof(WCHAR));
+    if (!Key)
+        return NULL;
+
+    wcscpy(Key, L"##?#");
+    wcscat(Key, devInfo->instanceId);
+
+    for(Index = 4; Index < Length; Index++)
+    {
+        if (Key[Index] == L'\\')
+        {
+            Key[Index] = L'#';
+        }
+    }
+
+    wcscat(Key, L"#");
+
+    Offset = wcslen(Key);
+    pSetupStringFromGuid(InterfaceGuid, Key + Offset, Length - Offset);
+
+    return Key;
+}
+
+
 static BOOL
 InstallOneInterface(
     IN LPGUID InterfaceGuid,
     IN LPCWSTR ReferenceString,
     IN LPCWSTR InterfaceSection,
-    IN UINT InterfaceFlags)
+    IN UINT InterfaceFlags,
+    IN HINF hInf,
+    IN HDEVINFO DeviceInfoSet,
+    IN struct DeviceInfo *devInfo)
 {
+    BOOL ret;
+    HKEY hKey, hRefKey;
+    LPWSTR Path;
+    SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
+    PLIST_ENTRY InterfaceListEntry;
+    struct DeviceInterface *DevItf = NULL;
+
     if (InterfaceFlags != 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    FIXME("Need to InstallOneInterface(%s %s %s %u)\n", debugstr_guid(InterfaceGuid),
-        debugstr_w(ReferenceString), debugstr_w(InterfaceSection), InterfaceFlags);
-    return TRUE;
+    TRACE("Need to InstallOneInterface(%s %s %s %u) hInf %p DeviceInfoSet %p devInfo %p instanceId %s\n", debugstr_guid(InterfaceGuid),
+        debugstr_w(ReferenceString), debugstr_w(InterfaceSection), InterfaceFlags, hInf, DeviceInfoSet, devInfo, debugstr_w(devInfo->instanceId));
+
+
+    Path = CreateSymbolicLink(InterfaceGuid, ReferenceString, devInfo);
+    if (!Path)
+        return FALSE;
+
+    CreateDeviceInterface(devInfo, Path, InterfaceGuid, &DevItf);
+    HeapFree(GetProcessHeap(), 0, Path);
+    if (!DevItf)
+    {
+        return FALSE;
+    }
+
+    InsertTailList(&devInfo->InterfaceListHead, &DevItf->ListEntry);
+
+    memcpy(&DeviceInterfaceData.InterfaceClassGuid, &DevItf->InterfaceClassGuid, sizeof(GUID));
+    DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+    DeviceInterfaceData.Flags = DevItf->Flags;
+    DeviceInterfaceData.Reserved = (ULONG_PTR)DevItf;
+
+    hKey = SetupDiCreateDeviceInterfaceRegKeyW(DeviceInfoSet, &DeviceInterfaceData, 0, KEY_ALL_ACCESS, NULL, 0);
+    HeapFree(GetProcessHeap(), 0, DevItf);
+    if (hKey == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    if (ReferenceString)
+    {
+        Path = HeapAlloc(GetProcessHeap(), 0, (wcslen(ReferenceString) + 2) * sizeof(WCHAR));
+        if (!Path)
+        {
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+
+        wcscpy(Path, L"#");
+        wcscat(Path, ReferenceString);
+
+        if (RegCreateKeyExW(hKey, Path, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hRefKey, NULL) != ERROR_SUCCESS)
+        {
+            ERR("failed to create key %s %lx\n", debugstr_w(Path), GetLastError());
+            HeapFree(GetProcessHeap(), 0, Path);
+            return FALSE;
+        }
+
+        RegCloseKey(hKey);
+        hKey = hRefKey;
+        HeapFree(GetProcessHeap(), 0, Path);
+    }
+
+    return SetupInstallFromInfSectionW(NULL, /* FIXME */ hInf, InterfaceSection, SPINST_REGISTRY, hKey, NULL, 0, NULL, NULL, NULL, NULL);
 }
 
 /***********************************************************************
@@ -335,7 +431,8 @@ SetupDiInstallDeviceInterfaces(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
-        struct DriverInfoElement *SelectedDriver;
+        struct DeviceInfo *devInfo;
+        struct DriverInfoElement *SelectedDriver = NULL;
         SP_DEVINSTALL_PARAMS_W InstallParams;
         WCHAR SectionName[MAX_PATH];
         DWORD SectionNameLength = 0;
@@ -346,6 +443,8 @@ SetupDiInstallDeviceInterfaces(
         INT InterfaceFlags;
         GUID InterfaceGuid;
         BOOL Result;
+
+        devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
 
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
         Result = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
@@ -402,11 +501,15 @@ SetupDiInstallDeviceInterfaces(
 
             ret = GetStringField(&ContextInterface, 3, &InterfaceSection);
             if (!ret)
-                goto cleanup;
+            {
+                /* ReferenceString is optional */
+                InterfaceSection = ReferenceString;
+                ReferenceString = NULL;
+            }
 
             ret = SetupGetIntField(
                 &ContextInterface,
-                4, /* Field index */
+                (ReferenceString ? 4 : 3), /* Field index */
                 &InterfaceFlags);
             if (!ret)
             {
@@ -421,11 +524,12 @@ SetupDiInstallDeviceInterfaces(
             }
 
             /* Install Interface */
-            ret = InstallOneInterface(&InterfaceGuid, ReferenceString, InterfaceSection, InterfaceFlags);
+            ret = InstallOneInterface(&InterfaceGuid, ReferenceString, InterfaceSection, InterfaceFlags, SelectedDriver->InfFileDetails->hInf, DeviceInfoSet, devInfo);
 
 cleanup:
             MyFree(InterfaceGuidString);
-            MyFree(ReferenceString);
+            if (ReferenceString)
+                MyFree(ReferenceString);
             MyFree(InterfaceSection);
             InterfaceGuidString = ReferenceString = InterfaceSection = NULL;
             Result = SetupFindNextMatchLineW(&ContextInterface, AddInterface, &ContextInterface);
