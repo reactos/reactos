@@ -365,8 +365,6 @@ InstallOneInterface(
         return FALSE;
     }
 
-    InsertTailList(&devInfo->InterfaceListHead, &DevItf->ListEntry);
-
     memcpy(&DeviceInterfaceData.InterfaceClassGuid, &DevItf->InterfaceClassGuid, sizeof(GUID));
     DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
     DeviceInterfaceData.Flags = DevItf->Flags;
