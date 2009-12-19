@@ -18,6 +18,14 @@
 #pragma alloc_text(INIT, MiInitPageDirectoryMap)
 #endif
 
+#undef InterlockedExchangePte
+#define InterlockedExchangePte(pte1, pte2) \
+    InterlockedExchange64(&pte1->u.Long, pte2.u.Long)
+
+#define PAGE_EXECUTE_ANY (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)
+#define PAGE_WRITE_ANY (PAGE_EXECUTE_READWRITE|PAGE_READWRITE|PAGE_EXECUTE_WRITECOPY|PAGE_WRITECOPY)
+#define PAGE_WRITECOPY_ANY (PAGE_EXECUTE_WRITECOPY|PAGE_WRITECOPY)
+
 extern MMPTE HyperTemplatePte;
 
 /* GLOBALS *****************************************************************/
@@ -53,7 +61,7 @@ MiGetPteForProcess(
     PVOID Address,
     BOOLEAN Create)
 {
-    PMMPTE Pte;
+    MMPTE TmplPte, *Pte;
 
     /* Check if we need hypersapce mapping */
     if (Address < MmSystemRangeStart && 
@@ -64,25 +72,33 @@ MiGetPteForProcess(
     }
     else if (Create)
     {
+        TmplPte.u.Long = 0;
+        TmplPte.u.Flush.Valid = 1;
+        TmplPte.u.Flush.Write = 1;
+
         /* Get the PXE */
         Pte = MiAddressToPxe(Address);
         if (!Pte->u.Hard.Valid)
-            InterlockedBitTestAndSet64(&Pte->u.Long, 0);
+        {
+            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
+            InterlockedExchangePte(Pte, TmplPte);
+        }
 
         /* Get the PPE */
         Pte = MiAddressToPpe(Address);
         if (!Pte->u.Hard.Valid)
-            InterlockedBitTestAndSet64(&Pte->u.Long, 0);
+        {
+            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
+            InterlockedExchangePte(Pte, TmplPte);
+        }
 
         /* Get the PDE */
         Pte = MiAddressToPde(Address);
         if (!Pte->u.Hard.Valid)
-            InterlockedBitTestAndSet64(&Pte->u.Long, 0);
-
-        /* Get the PTE */
-        Pte = MiAddressToPte(Address);
-
-        return Pte;
+        {
+            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
+            InterlockedExchangePte(Pte, TmplPte);
+        }
     }
     else
     {
@@ -100,14 +116,9 @@ MiGetPteForProcess(
         Pte = MiAddressToPde(Address);
         if (!Pte->u.Hard.Valid)
             return NULL;
-
-        /* Get the PTE */
-        Pte = MiAddressToPte(Address);
-
-        return Pte;
     }
 
-    return 0;
+    return MiAddressToPte(Address);
 }
 
 static
@@ -128,6 +139,57 @@ MiGetPteValueForProcess(
     return PteValue;
 }
 
+ULONG
+NTAPI
+MiGetPteProtection(MMPTE Pte)
+{
+    ULONG Protect;
+
+    if (!Pte.u.Flush.Valid)
+    {
+        Protect = PAGE_NOACCESS;
+    }
+    else if (Pte.u.Flush.NoExecute)
+    {
+        if (Pte.u.Flush.CopyOnWrite)
+            Protect = PAGE_WRITECOPY;
+        else if (Pte.u.Flush.Write)
+            Protect = PAGE_READWRITE;
+        else
+            Protect = PAGE_READONLY;
+    }
+    else
+    {
+        if (Pte.u.Flush.CopyOnWrite)
+            Protect = PAGE_EXECUTE_WRITECOPY;
+        else if (Pte.u.Flush.Write)
+            Protect = PAGE_EXECUTE_READWRITE;
+        else
+            Protect = PAGE_EXECUTE_READ;
+    }
+
+    if (Pte.u.Flush.CacheDisable)
+        Protect |= PAGE_NOCACHE;
+
+    if (Pte.u.Flush.WriteThrough)
+        Protect |= PAGE_WRITETHROUGH;
+
+    // PAGE_GUARD ?
+    return Protect;
+}
+
+VOID
+NTAPI
+MiSetPteProtection(PMMPTE Pte, ULONG Protection)
+{
+    Pte->u.Flush.CopyOnWrite = (Protection & PAGE_WRITECOPY_ANY) ? 1 : 0;
+    Pte->u.Flush.Write = (Protection & PAGE_WRITE_ANY) ? 1 : 0;
+    Pte->u.Flush.CacheDisable = (Protection & PAGE_NOCACHE) ? 1 : 0;
+    Pte->u.Flush.WriteThrough = (Protection & PAGE_WRITETHROUGH) ? 1 : 0;
+
+    // FIXME: This doesn't work. Why?
+//    Pte->u.Flush.NoExecute = (Protection & PAGE_EXECUTE_ANY) ? 0 : 1;
+}
 
 /* FUNCTIONS ***************************************************************/
 
@@ -198,41 +260,8 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
 
     Pte.u.Long = MiGetPteValueForProcess(Process, Address);
 
-    if (!Pte.u.Flush.Valid)
-    {
-        Protect = PAGE_NOACCESS;
-    }
-    else if (Pte.u.Flush.NoExecute)
-    {
-        if (Pte.u.Flush.CopyOnWrite)
-            Protect = PAGE_WRITECOPY;
-        else if (Pte.u.Flush.Write)
-            Protect = PAGE_READWRITE;
-        else
-            Protect = PAGE_READONLY;
-    }
-    else
-    {
-        if (Pte.u.Flush.CopyOnWrite)
-            Protect = PAGE_EXECUTE_WRITECOPY;
-        else if (Pte.u.Flush.Write)
-            Protect = PAGE_EXECUTE_READWRITE;
-        else
-            Protect = PAGE_EXECUTE_READ;
-    }
-
-    if (Pte.u.Flush.CacheDisable)
-        Protect |= PAGE_NOCACHE;
-
-    if (Pte.u.Flush.WriteThrough)
-        Protect |= PAGE_WRITETHROUGH;
-
-    // PAGE_GUARD ?
-
-    return Protect;
+    return MiGetPteProtection(Pte);
 }
-
-#define PAGE_EXECUTE_ANY (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)
 
 VOID
 NTAPI
@@ -241,27 +270,14 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     PMMPTE Pte;
     MMPTE NewPte;
 
-    if (!(flProtect & PAGE_EXECUTE_ANY))
-        NewPte.u.Flush.NoExecute = 1;
-
-    if (flProtect & (PAGE_EXECUTE_WRITECOPY|PAGE_WRITECOPY))
-    {
-        NewPte.u.Flush.Write = 1;
-        NewPte.u.Flush.CopyOnWrite = 1;
-    }
-
-    if (flProtect & (PAGE_EXECUTE_READWRITE|PAGE_READWRITE))
-        NewPte.u.Flush.Write = 1;
-
-    if (flProtect & PAGE_NOCACHE)
-        NewPte.u.Flush.CacheDisable = 1;
-
-    if (flProtect & PAGE_WRITETHROUGH)
-        NewPte.u.Flush.WriteThrough = 1;
-
     Pte = MiGetPteForProcess(Process, Address, FALSE);
+    ASSERT(Pte != NULL);
 
-    InterlockedExchange64(&Pte->u.Long, NewPte.u.Long);
+    NewPte = *Pte;
+
+    MiSetPteProtection(&NewPte, flProtect);
+
+    InterlockedExchangePte(Pte, NewPte);
 
     MiFlushTlb(Pte, Address);
 }
@@ -409,26 +425,74 @@ MmCreatePageFileMapping(PEPROCESS Process,
 
 NTSTATUS
 NTAPI
-MmCreateVirtualMappingUnsafe(PEPROCESS Process,
-                             PVOID Address,
-                             ULONG flProtect,
-                             PPFN_NUMBER Pages,
-                             ULONG PageCount)
+MmCreateVirtualMappingUnsafe(
+    PEPROCESS Process,
+    PVOID Address,
+    ULONG PageProtection,
+    PPFN_NUMBER Pages,
+    ULONG PageCount)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    ULONG i;
+    MMPTE TmplPte, *Pte;
+
+    /* Check if the range is valid */
+    if ((Process == NULL && Address < MmSystemRangeStart) ||
+        (Process != NULL && Address > MmHighestUserAddress))
+    {
+        DPRINT1("Address 0x%p is invalid for process %p\n", Address, Process);
+        ASSERT(FALSE);
+    }
+
+    TmplPte.u.Long = 0;
+    TmplPte.u.Hard.Valid = 1;
+    MiSetPteProtection(&TmplPte, PageProtection);
+
+//__debugbreak();
+
+    for (i = 0; i < PageCount; i++)
+    {
+        TmplPte.u.Hard.PageFrameNumber = Pages[i];
+
+        Pte = MiGetPteForProcess(Process, Address, TRUE);
+
+DPRINT1("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n", 
+        Address, TmplPte.u.Long, Pte);
+
+        if (InterlockedExchangePte(Pte, TmplPte))
+        {
+            KeInvalidateTlbEntry(Address);
+        }
+
+        if (MiIsHyperspaceAddress(Pte))
+            MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pte));
+
+        Address = (PVOID)((ULONG64)Address + PAGE_SIZE);
+    }
+
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 MmCreateVirtualMapping(PEPROCESS Process,
                        PVOID Address,
-                       ULONG flProtect,
+                       ULONG Protect,
                        PPFN_NUMBER Pages,
                        ULONG PageCount)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    ULONG i;
+
+    for (i = 0; i < PageCount; i++)
+    {
+        if (!MmIsPageInUse(Pages[i]))
+        {
+            DPRINT1("Page %x not in use\n", Pages[i]);
+            KeBugCheck(MEMORY_MANAGEMENT);
+        }
+    }
+
+    return MmCreateVirtualMappingUnsafe(Process, Address, Protect, Pages, PageCount);
 }
 
 NTSTATUS
