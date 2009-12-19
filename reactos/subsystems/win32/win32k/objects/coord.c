@@ -1024,7 +1024,20 @@ NtGdiSetVirtualResolution(
     PDC dc;
     PDC_ATTR pdcattr;
 
-    // Need test types for zeros and non zeros
+    /* Check parameters (all zeroes resets to real resolution) */
+    if (cxVirtualDevicePixel == 0 && cyVirtualDevicePixel == 0 &&
+        cxVirtualDeviceMm == 0 && cyVirtualDeviceMm == 0)
+    {
+        cxVirtualDevicePixel = NtGdiGetDeviceCaps(hdc, HORZRES);
+        cyVirtualDevicePixel = NtGdiGetDeviceCaps(hdc, VERTRES);
+        cxVirtualDeviceMm = NtGdiGetDeviceCaps(hdc, HORZSIZE);
+        cyVirtualDeviceMm = NtGdiGetDeviceCaps(hdc, VERTSIZE);
+    }
+    else if (cxVirtualDevicePixel == 0 || cyVirtualDevicePixel == 0 || 
+             cxVirtualDeviceMm == 0 || cyVirtualDeviceMm == 0)
+    {
+        return FALSE;
+    }
 
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
