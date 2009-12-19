@@ -576,8 +576,12 @@ MMixerCreateDestinationLine(
 
     if (LineName)
     {
-        wcscpy(DestinationLine->Line.szShortName, LineName);
-        wcscpy(DestinationLine->Line.szName, LineName);
+        MixerContext->Copy(DestinationLine->Line.szShortName, LineName, (min(MIXER_SHORT_NAME_CHARS, wcslen(LineName)+1)) * sizeof(WCHAR));
+        DestinationLine->Line.szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
+
+        MixerContext->Copy(DestinationLine->Line.szName, LineName, (min(MIXER_LONG_NAME_CHARS, wcslen(LineName)+1)) * sizeof(WCHAR));
+        DestinationLine->Line.szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
+
     }
     else
     {
