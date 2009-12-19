@@ -1,6 +1,5 @@
-/* $Id$
- *
- * reactos/lib/gdi32/misc/stubs.c
+/*
+ * dll/win32/gdi32/misc/stubs.c
  *
  * GDI32.DLL Stubs
  *
@@ -10,6 +9,7 @@
  */
 
 #include "precomp.h"
+#include <debug.h>
 
 #define SIZEOF_DEVMODEA_300 124
 #define SIZEOF_DEVMODEA_400 148
@@ -17,8 +17,6 @@
 #define SIZEOF_DEVMODEW_300 188
 #define SIZEOF_DEVMODEW_400 212
 #define SIZEOF_DEVMODEW_500 220
-
-#define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 
 /*
