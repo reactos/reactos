@@ -1684,18 +1684,23 @@ NtUserSwitchDesktop(HDESK hDesktop)
       RETURN(FALSE);
    }
 
-   /* FIXME: Fail if the desktop belong to an invisible window station */
+   if(DesktopObject->WindowStation != InputWindowStation)
+   {
+      ObDereferenceObject(DesktopObject);
+      DPRINT1("Switching desktop 0x%x denied because desktop doesn't belong to the interactive winsta!\n", hDesktop);
+      RETURN(FALSE);
+   }
+
    /* FIXME: Fail if the process is associated with a secured
              desktop such as Winlogon or Screen-Saver */
    /* FIXME: Connect to input device */
 
    /* Set the active desktop in the desktop's window station. */
-   DesktopObject->WindowStation->ActiveDesktop = DesktopObject;
+   InputWindowStation->ActiveDesktop = DesktopObject;
 
    /* Set the global state. */
    InputDesktop = DesktopObject;
    InputDesktopHandle = hDesktop;
-   InputWindowStation = DesktopObject->WindowStation;
 
    ObDereferenceObject(DesktopObject);
 

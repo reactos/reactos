@@ -454,14 +454,9 @@ co_IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
          {
             WPARAM wParam;
             PSYSTEM_CURSORINFO CurInfo;
+			CurInfo = IntGetSysCursorInfo();
 
-            if(!IntGetWindowStationObject(InputWindowStation))
-            {
-               break;
-            }
-            CurInfo = IntGetSysCursorInfo(InputWindowStation);
             wParam = (WPARAM)(CurInfo->ButtonsDown);
-            ObDereferenceObject(InputWindowStation);
 
             co_IntSendMessage(Msg->hwnd, WM_MOUSEMOVE, wParam, Msg->lParam);
             co_IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(HTCLIENT, Msg->message));
@@ -1094,7 +1089,8 @@ UserPostThreadMessage( DWORD idThread,
       Message.message = Msg;
       Message.wParam = wParam;
       Message.lParam = lParam;
-      IntGetCursorLocation(pThread->Desktop->WindowStation, &Message.pt);
+      Message.pt = gpsi->ptCursor;
+
       KeQueryTickCount(&LargeTickCount);
       pThread->timeLast = Message.time = MsqCalculateMessageTime(&LargeTickCount);
       MsqPostMessage(pThread->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
@@ -1180,7 +1176,7 @@ UserPostMessage( HWND Wnd,
          Message.message = Msg;
          Message.wParam = wParam;
          Message.lParam = lParam;
-         IntGetCursorLocation(pti->Desktop->WindowStation, &Message.pt);
+         Message.pt = gpsi->ptCursor;
          KeQueryTickCount(&LargeTickCount);
          pti->timeLast = Message.time = MsqCalculateMessageTime(&LargeTickCount);
          MsqPostMessage(Window->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);

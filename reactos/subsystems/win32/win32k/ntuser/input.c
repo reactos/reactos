@@ -1095,7 +1095,7 @@ IntMouseInput(MOUSEINPUT *mi)
 
    ASSERT(WinSta);
 
-   CurInfo = IntGetSysCursorInfo(WinSta);
+   CurInfo = IntGetSysCursorInfo();
 
    if(!mi->time)
    {
@@ -1107,9 +1107,7 @@ IntMouseInput(MOUSEINPUT *mi)
    SwapButtons = gspv.bMouseBtnSwap;
    DoMove = FALSE;
 
-   IntGetCursorLocation(WinSta, &MousePos);
-   OrgPos.x = MousePos.x;
-   OrgPos.y = MousePos.y;
+   OrgPos = MousePos = gpsi->ptCursor;
 
    if(mi->dwFlags & MOUSEEVENTF_MOVE)
    {
@@ -1410,8 +1408,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
 
    /* All messages have to contain the cursor point. */
    pti = PsGetCurrentThreadWin32Thread();
-   IntGetCursorLocation(pti->Desktop->WindowStation,
-                        &Msg.pt);
+   Msg.pt = gpsi->ptCursor;
 
     DPRINT1("Kbd Hook msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
              Msg.message, vk_hook, Msg.lParam);
@@ -1464,8 +1461,8 @@ IntKeyboardInput(KEYBDINPUT *ki)
 
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
-         IntGetCursorLocation(FocusMessageQueue->Desktop->WindowStation,
-                              &Msg.pt);
+         Msg.pt = gpsi->ptCursor;
+
          MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
    }
    else

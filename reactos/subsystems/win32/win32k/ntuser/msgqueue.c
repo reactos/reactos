@@ -236,7 +236,6 @@ BOOL FASTCALL
 MsqIsClkLck(LPMSG Msg, BOOL Remove)
 {
    PTHREADINFO pti;
-   PWINSTATION_OBJECT WinStaObject;
    PSYSTEM_CURSORINFO CurInfo;
    BOOL Res = FALSE;
 
@@ -246,9 +245,7 @@ MsqIsClkLck(LPMSG Msg, BOOL Remove)
       return FALSE;
    }
 
-   WinStaObject = pti->Desktop->WindowStation;
-
-   CurInfo = IntGetSysCursorInfo(WinStaObject);
+   CurInfo = IntGetSysCursorInfo();
 
    switch (Msg->message)
    {
@@ -279,7 +276,6 @@ BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove)
 {
    PTHREADINFO pti;
-   PWINSTATION_OBJECT WinStaObject;
    PSYSTEM_CURSORINFO CurInfo;
    LONG dX, dY;
    BOOL Res;
@@ -290,9 +286,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
       return FALSE;
    }
 
-   WinStaObject = pti->Desktop->WindowStation;
-
-   CurInfo = IntGetSysCursorInfo(WinStaObject);
+   CurInfo = IntGetSysCursorInfo();
    Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) &&
          ((Msg->time - CurInfo->LastBtnDown) < gspv.iDblClickTime);
    if(Res)
@@ -841,8 +835,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
-         IntGetCursorLocation(FocusMessageQueue->Desktop->WindowStation,
-                              &Msg.pt);
+         Msg.pt = gpsi->ptCursor;
          MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
    }
    else
@@ -859,7 +852,6 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
    PWINDOW_OBJECT Window;
    PTHREADINFO Win32Thread;
-   PWINSTATION_OBJECT WinSta;
    MSG Mesg;
    LARGE_INTEGER LargeTickCount;
    NTSTATUS Status;
@@ -878,7 +870,6 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
       return;
    }
 
-   WinSta = Win32Thread->Desktop->WindowStation;
    Window = IntGetWindowObject(hWnd);
    if (!Window)
    {
@@ -892,7 +883,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    Mesg.lParam = lParam;
    KeQueryTickCount(&LargeTickCount);
    Mesg.time = MsqCalculateMessageTime(&LargeTickCount);
-   IntGetCursorLocation(WinSta, &Mesg.pt);
+   Mesg.pt = gpsi->ptCursor;
    MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
    UserDereferenceObject(Window);
    ObDereferenceObject (Thread);
@@ -1876,7 +1867,6 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    LARGE_INTEGER LargeTickCount;
    PLIST_ENTRY EnumEntry;
    BOOLEAN GotMessage;
-   PTHREADINFO pti;
 
    DPRINT("MsqGetTimerMessage queue %p msg %p restart %s\n",
           MessageQueue, Msg, Restart ? "TRUE" : "FALSE");
@@ -1928,9 +1918,7 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Msg->lParam = (LPARAM) Timer->TimerFunc;
    KeQueryTickCount(&LargeTickCount);
    Msg->time = MsqCalculateMessageTime(&LargeTickCount);
-   pti = PsGetCurrentThreadWin32Thread();
-   IntGetCursorLocation(pti->Desktop->WindowStation,
-                        &Msg->pt);
+   Msg->pt = gpsi->ptCursor;
 
    if (Restart)
    {
