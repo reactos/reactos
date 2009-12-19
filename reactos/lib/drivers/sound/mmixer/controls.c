@@ -207,7 +207,8 @@ MMixerAddMixerControl(
 
         /* get node name */
         Status = MixerContext->Control(hDevice, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), (LPVOID)Name, BytesReturned, &BytesReturned);
-        if (Status != MM_STATUS_SUCCESS)
+
+        if (Status == MM_STATUS_SUCCESS)
         {
             MixerContext->Copy(MixerControl->szShortName, Name, (min(MIXER_SHORT_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
             MixerControl->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
@@ -300,7 +301,6 @@ MMixerAddMixerControl(
                 {
                     MixerContext->Free(Desc);
                     MixerContext->Free(VolumeData);
-
                     return MM_STATUS_NO_MEMORY;
                 }
 
@@ -315,7 +315,6 @@ MMixerAddMixerControl(
        }
        MixerContext->Free(Desc);
     }
-
 
     DPRINT("Status %x Name %S\n", Status, MixerControl->szName);
     return MM_STATUS_SUCCESS;
@@ -594,6 +593,8 @@ MMixerCreateDestinationLine(
     DestinationLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
     wcscpy(DestinationLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
 
+    // initialize extra line
+    InitializeListHead(&DestinationLine->LineControlsExtraData);
 
     // insert into mixer info
     InsertHeadList(&MixerInfo->LineList, &DestinationLine->Entry);
@@ -988,7 +989,7 @@ MMixerSetupFilter(
     IN LPMIXER_DATA MixerData,
     IN PULONG DeviceCount)
 {
-    PKSMULTIPLE_ITEM NodeTypes, NodeConnections;
+    PKSMULTIPLE_ITEM NodeTypes = NULL, NodeConnections = NULL;
     MIXER_STATUS Status;
     ULONG PinCount;
     ULONG NodeIndex;
@@ -1016,6 +1017,7 @@ MMixerSetupFilter(
     }
 
     // check if the filter has an wave out node
+
     NodeIndex = MMixerGetIndexOfGuid(NodeTypes, &KSNODETYPE_DAC);
     if (NodeIndex != MAXULONG)
     {
