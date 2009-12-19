@@ -308,7 +308,7 @@ KsTopologyPropertyHandler(
             if (KeyInfo->DataLength + sizeof(WCHAR) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
             {
                 Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
-                Status = STATUS_BUFFER_TOO_SMALL;
+                Status = STATUS_MORE_ENTRIES;
                 ExFreePool(KeyInfo);
                 break;
             }
