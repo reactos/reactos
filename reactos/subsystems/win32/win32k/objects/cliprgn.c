@@ -96,10 +96,9 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
 
 int FASTCALL GdiExtSelectClipRgn(PDC dc,
-                              HRGN hrgn,
-                             int fnMode)
+                                 HRGN hrgn,
+                                 int fnMode)
 {
-  int retval;
   //  dc->fs &= ~DC_FLAG_DIRTY_RAO;
 
   if (!hrgn)
@@ -110,7 +109,6 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
       {
         GreDeleteObject(dc->rosdc.hClipRgn);
         dc->rosdc.hClipRgn = NULL;
-        retval = NULLREGION;
       }
     }
     else
@@ -144,8 +142,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
       NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hClipRgn, hrgn, fnMode);
   }
 
-  retval = CLIPPING_UpdateGCRegion(dc);
-  return retval;
+  return CLIPPING_UpdateGCRegion(dc);
 }
 
 
