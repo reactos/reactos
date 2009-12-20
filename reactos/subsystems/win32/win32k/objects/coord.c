@@ -688,38 +688,38 @@ IntGdiSetMapMode(
             /* Fall through */
 
         case MM_LOMETRIC:
-            pdcattr->szlWindowExt.cx = dc->ppdev->gdiinfo.ulHorzSize * 10;
-            pdcattr->szlWindowExt.cy = dc->ppdev->gdiinfo.ulVertSize * 10;
-            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = pdcattr->szlVirtualDeviceMm.cx * 10;
+            pdcattr->szlWindowExt.cy = pdcattr->szlVirtualDeviceMm.cy * 10;
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_HIMETRIC:
-            pdcattr->szlWindowExt.cx = dc->ppdev->gdiinfo.ulHorzSize * 100;
-            pdcattr->szlWindowExt.cy = dc->ppdev->gdiinfo.ulVertSize * 100;
-            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = pdcattr->szlVirtualDeviceMm.cx * 100;
+            pdcattr->szlWindowExt.cy = pdcattr->szlVirtualDeviceMm.cy * 100;
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_LOENGLISH:
-            pdcattr->szlWindowExt.cx = MulDiv(1000, dc->ppdev->gdiinfo.ulHorzSize, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(1000, dc->ppdev->gdiinfo.ulVertSize, 254);
-            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(1000, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(1000, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_HIENGLISH:
-            pdcattr->szlWindowExt.cx = MulDiv(10000, dc->ppdev->gdiinfo.ulHorzSize, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(10000, dc->ppdev->gdiinfo.ulVertSize, 254);
-            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(10000, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(10000, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_TWIPS:
-            pdcattr->szlWindowExt.cx = MulDiv(14400, dc->ppdev->gdiinfo.ulHorzSize, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(14400, dc->ppdev->gdiinfo.ulVertSize, 254);
-            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(14400, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(14400, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_ANISOTROPIC:

@@ -568,6 +568,9 @@ DC_InitDC(HDC  DCHandle)
         ASSERT ( res != ERROR );
       }
     */
+
+    /* Set virtual resolution */
+    NtGdiSetVirtualResolution(DCHandle, 0, 0, 0, 0);
 }
 
 /*
