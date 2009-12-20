@@ -331,7 +331,6 @@ IntGdiCreateDC(
         DC_UnlockDc(pdc);
 
         /*  Initialize the DC state  */
-        DC_InitDC(hdc);
         IntGdiSetTextColor(hdc, RGB(0, 0, 0));
         IntGdiSetBkColor(hdc, RGB(255, 255, 255));
     }
@@ -350,6 +349,7 @@ IntGdiCreateDC(
         pdcattr->crForegroundClr = RGB(0, 0, 0);
         DC_UnlockDc(pdc);
     }
+    DC_InitDC(hdc);
 
     if (hVisRgn)
     {
