@@ -80,7 +80,6 @@
 #include <arch/i386/machxbox.h>
 #include <arch/i386/miscboot.h>
 #include <internal/i386/intrin_i.h>
-#include <internal/i386/ke.h>
 #elif defined(_M_PPC)
 #include <arch/powerpc/hardware.h>
 #elif defined(_M_ARM)
@@ -90,6 +89,7 @@
 #elif defined(_M_AMD64)
 #include <arch/amd64/hardware.h>
 #include <arch/amd64/machpc.h>
+#include <internal/amd64/intrin_i.h>
 #endif
 /* misc files */
 #include <keycodes.h>

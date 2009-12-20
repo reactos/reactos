@@ -8,19 +8,6 @@
 
 #ifndef _M_ARM
 FORCEINLINE
-PRKTHREAD
-KeGetCurrentThread(VOID)
-{
-#ifdef _M_IX86
-    /* Return the current thread */
-    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
-#else
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    return Prcb->CurrentThread;
-#endif
-}
-
-FORCEINLINE
 UCHAR
 KeGetPreviousMode(VOID)
 {
@@ -28,23 +15,6 @@ KeGetPreviousMode(VOID)
     return KeGetCurrentThread()->PreviousMode;
 }
 #endif
-
-FORCEINLINE
-VOID
-KeFlushProcessTb(VOID)
-{
-    /* Flush the TLB by resetting CR3 */
-#ifdef _M_PPC
-    __asm__("sync\n\tisync\n\t");
-#elif _M_ARM
-    //
-    // We need to implement this!
-    //
-    ASSERTMSG("Need ARM flush routine\n", FALSE);
-#else
-    __writecr3(__readcr3());
-#endif
-}
 
 //
 // Enters a Guarded Region
@@ -298,21 +268,6 @@ KiCheckDeferredReadyList(IN PKPRCB Prcb)
 {
     /* There are no deferred ready lists on UP systems */
     UNREFERENCED_PARAMETER(Prcb);
-}
-
-FORCEINLINE
-VOID
-KiRundownThread(IN PKTHREAD Thread)
-{
-#if defined(_M_IX86) || defined(_M_AMD64)
-    /* Check if this is the NPX Thread */
-    if (KeGetCurrentPrcb()->NpxThread == Thread)
-    {
-        /* Clear it */
-        KeGetCurrentPrcb()->NpxThread = NULL;
-        Ke386FnInit();
-    }
-#endif
 }
 
 FORCEINLINE
@@ -655,14 +610,6 @@ KiCheckDeferredReadyList(IN PKPRCB Prcb)
 {
     /* Scan the deferred ready lists if required */
     if (Prcb->DeferredReadyListHead.Next) KiProcessDeferredReadyList(Prcb);
-}
-
-FORCEINLINE
-VOID
-KiRundownThread(IN PKTHREAD Thread)
-{
-    /* Nothing to do */
-    return;
 }
 
 FORCEINLINE

@@ -233,7 +233,7 @@ VOID RunLoader(VOID)
 			// to have different install methods, etc.
 			LoadReactOSSetup();
 		}
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
 		else if (_stricmp(BootType, "ReactOSSetup2") == 0)
 		{
 			// WinLdr-style boot

@@ -71,6 +71,23 @@ KeInvalidateTlbEntry(IN PVOID Address)
     KeArmInvalidateTlbEntry(Address);
 }
 
+FORCEINLINE
+VOID
+KeFlushProcessTb(VOID)
+{
+    //
+    // We need to implement this!
+    //
+    ASSERTMSG("Need ARM flush routine\n", FALSE);
+}
+
+FORCEINLINE
+VOID
+KiRundownThread(IN PKTHREAD Thread)
+{
+    /* FIXME */
+}
+
 VOID
 KiPassiveRelease(
     VOID
