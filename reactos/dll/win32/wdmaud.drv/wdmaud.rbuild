@@ -16,6 +16,7 @@
 	<library>msvcrt</library>
 	<library>mmixer</library>
 	<library>setupapi</library>
+	<library>ksuser</library>
 	<file>wdmaud.c</file>
 	<file>mixer.c</file>
 	<file>mmixer.c</file>

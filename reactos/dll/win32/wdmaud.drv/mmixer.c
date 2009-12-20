@@ -295,7 +295,7 @@ WdmAudInitUserModeMixer()
     DeviceHandle = SetupDiGetClassDevs(&CategoryGuid,
                                        NULL,
                                        NULL,
-                                       DIGCF_DEVICEINTERFACE|DIGCF_PRESENT);
+                                       DIGCF_DEVICEINTERFACE/* FIXME |DIGCF_PRESENT*/);
 
     if (DeviceHandle == INVALID_HANDLE_VALUE)
     {
@@ -406,5 +406,56 @@ WdmAudGetControlDetails(
     if (MMixerGetControlDetails(&MixerContext, hMixer, Flags, MixDetails) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
+    return MMSYSERR_ERROR;
+}
+
+ULONG
+WdmAudGetWaveOutCount()
+{
+    return MMixerGetWaveOutCount(&MixerContext);
+}
+
+ULONG
+WdmAudGetWaveInCount()
+{
+    return MMixerGetWaveInCount(&MixerContext);
+}
+
+MMRESULT
+WdmAudGetWaveOutCapabilities(
+    IN ULONG DeviceId, 
+    LPWAVEOUTCAPSW Capabilities)
+{
+    if (MMixerWaveOutCapabilities(&MixerContext, DeviceId, Capabilities) == MM_STATUS_SUCCESS)
+        return MMSYSERR_NOERROR;
+
+    return MMSYSERR_ERROR;
+
+}
+
+MMRESULT
+WdmAudGetWaveInCapabilities(
+    IN ULONG DeviceId, 
+    LPWAVEINCAPSW Capabilities)
+{
+    if (MMixerWaveInCapabilities(&MixerContext, DeviceId, Capabilities) == MM_STATUS_SUCCESS)
+        return MMSYSERR_NOERROR;
+
+    return MMSYSERR_ERROR;
+}
+
+MMRESULT
+WdmAudOpenWave(
+    OUT PHANDLE hPin,
+    IN DWORD DeviceId,
+    IN PWAVEFORMATEX WaveFormat,
+    IN DWORD bWaveIn)
+{
+    if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, hPin) == MM_STATUS_SUCCESS)
+    {
+        //fixme
+        // start stream if waveout
+        return MMSYSERR_NOERROR;
+    }
     return MMSYSERR_ERROR;
 }

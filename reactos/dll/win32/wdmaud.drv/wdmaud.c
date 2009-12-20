@@ -44,7 +44,20 @@ GetNumWdmDevs(
 {
 #ifdef USE_MMIXER_LIB
 
-    *DeviceCount = WdmAudGetMixerCount();
+    switch(DeviceType)
+    {
+        case MIXER_DEVICE_TYPE:
+            *DeviceCount = WdmAudGetMixerCount();
+            break;
+        case WAVE_OUT_DEVICE_TYPE:
+            *DeviceCount = WdmAudGetWaveOutCount();
+            break;
+        case WAVE_IN_DEVICE_TYPE:
+            *DeviceCount = WdmAudGetWaveInCount();
+            break;
+        default:
+            *DeviceCount = 0;
+    }
     return MMSYSERR_NOERROR;
 #else
 
@@ -106,8 +119,17 @@ GetWdmDeviceCapabilities(
 #ifdef USE_MMIXER_LIB
     if (DeviceType == MIXER_DEVICE_TYPE)
     {
-        return WdmAudGetMixerCapabilties(DeviceId, (LPMIXERCAPSW)Capabilities);
+        return WdmAudGetMixerCapabilities(DeviceId, (LPMIXERCAPSW)Capabilities);
     }
+    else if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        return WdmAudGetWaveOutCapabilities(DeviceId, (LPWAVEOUTCAPSW)Capabilities);
+    }
+    else if (DeviceType == WAVE_IN_DEVICE_TYPE)
+    {
+        return WdmAudGetWaveInCapabilities(DeviceId, (LPWAVEINCAPSW)Capabilities);
+    }
+
 #endif
 
 
@@ -459,8 +481,13 @@ SetWdmWaveDeviceFormat(
         return MMSYSERR_NOERROR;
     }
 
-
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+
+#ifdef USE_MMIXER_LIB
+    return WdmAudOpenWavePin(Instance, DeviceId, WaveFormat, DeviceType);
+#endif
+
+
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));

@@ -18,12 +18,28 @@ BOOL
 WdmAudInitUserModeMixer();
 
 ULONG
+WdmAudGetWaveOutCount();
+
+ULONG
+WdmAudGetWaveInCount();
+
+ULONG
 WdmAudGetMixerCount();
 
 MMRESULT
 WdmAudGetMixerCapabilties(
     IN ULONG DeviceId, 
     LPMIXERCAPSW Capabilities);
+
+MMRESULT
+WdmAudGetWaveOutCapabilities(
+    IN ULONG DeviceId, 
+    LPWAVEOUTCAPSW Capabilities);
+
+MMRESULT
+WdmAudGetWaveInCapabilities(
+    IN ULONG DeviceId, 
+    LPWAVEINCAPSW Capabilities);
 
 MMRESULT
 WdmAudCloseMixer(
@@ -35,6 +51,14 @@ WdmAudOpenMixer(
     IN PHANDLE hMixer,
     IN ULONG DeviceId, 
     IN HANDLE hNotifyEvent);
+
+MMRESULT
+WdmAudOpenWave(
+    OUT PHANDLE hPin,
+    IN DWORD DeviceId,
+    IN PWAVEFORMATEX WaveFormat,
+    IN DWORD bWaveIn);
+
 
 MMRESULT
 WdmAudGetLineInfo(
