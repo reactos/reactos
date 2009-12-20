@@ -1119,8 +1119,9 @@ DC_UpdateXforms(PDC dc)
         pdcattr->flXform |= DEVICE_TO_WORLD_INVALID;
     }
 
+    /* Update transformation matrices */
     XForm2MatrixS(&dc->dclevel.mxWorldToDevice, &xformWorld2Vport);
-
+    XForm2MatrixS(&dc->dclevel.mxDeviceToWorld, &xformVport2World);
 }
 
 LONG FASTCALL
