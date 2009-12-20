@@ -251,3 +251,27 @@ MMixerSetGetControlDetails(
     DPRINT("Status %x bSet %u NodeId %u Value %d PropertyId %u\n", Status, bSet, NodeId, Value, PropertyId);
     return Status;
 }
+
+ULONG
+MMixerGetPinInstanceCount(
+    PMIXER_CONTEXT MixerContext,
+    HANDLE hFilter,
+    ULONG PinId)
+{
+    KSP_PIN PinRequest;
+    KSPIN_CINSTANCES PinInstances;
+    ULONG BytesReturned;
+    MIXER_STATUS Status;
+
+    /* query the instance count */
+    PinRequest.Reserved = 0;
+    PinRequest.PinId = PinId;
+    PinRequest.Property.Set = KSPROPSETID_Pin;
+    PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
+    PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
+
+    Status = MixerContext->Control(hFilter, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
+    ASSERT(Status == MM_STATUS_SUCCESS);
+    return PinInstances.CurrentCount;
+}
+

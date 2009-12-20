@@ -7,4 +7,5 @@
 	<file>filter.c</file>
 	<file>mixer.c</file>
 	<file>sup.c</file>
+	<file>wave.c</file>
 </module>

@@ -827,6 +827,7 @@ MMixerInitializeFilter(
     ULONG BytesReturned;
     KSP_PIN Pin;
     LPWSTR Buffer = NULL;
+    ULONG PinId;
 
     // allocate a mixer info struct
     MixerInfo = (LPMIXER_INFO) MixerContext->Alloc(sizeof(MIXER_INFO));
@@ -864,10 +865,15 @@ MMixerInitializeFilter(
     // now get the target pins of the ADC / DAC node
     Status = MMixerGetTargetPins(MixerContext, NodeTypes, NodeConnections, NodeIndex, !bInputMixer, Pins, PinCount);
 
+    // find a target pin with a name
+    PinId = PinCount +1;
     for(Index = 0; Index < PinCount; Index++)
     {
         if (Pins[Index])
         {
+            // store index of pin
+            PinId = Index;
+
             /* retrieve pin name */
             Pin.PinId = Index;
             Pin.Reserved = 0;
@@ -898,6 +904,12 @@ MMixerInitializeFilter(
                 }
             }
         }
+    }
+
+    if (PinId < PinCount)
+    {
+        // create an wave info struct
+        MMixerInitializeWaveInfo(MixerContext, MixerList, MixerData, MixerInfo->MixCaps.szPname, bInputMixer, PinId);
     }
 
     Status = MMixerCreateDestinationLine(MixerContext, MixerInfo, bInputMixer, Buffer);

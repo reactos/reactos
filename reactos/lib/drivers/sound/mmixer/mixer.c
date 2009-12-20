@@ -215,7 +215,7 @@ MMixerGetLineControls(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
     IN ULONG Flags,
-    OUT LPMIXERLINECONTROLS MixerLineControls)
+    OUT LPMIXERLINECONTROLSW MixerLineControls)
 {
     LPMIXER_INFO MixerInfo;
     LPMIXERLINE_EXT MixerLineSrc;
@@ -440,8 +440,13 @@ MMixerInitialize(
      //initialize mixer list
      MixerList->MixerListCount = 0;
      MixerList->MixerDataCount = 0;
+     MixerList->WaveInListCount = 0;
+     MixerList->WaveOutListCount = 0;
      InitializeListHead(&MixerList->MixerList);
      InitializeListHead(&MixerList->MixerData);
+     InitializeListHead(&MixerList->WaveInList);
+     InitializeListHead(&MixerList->WaveOutList);
+
 
      // store mixer list
      MixerContext->MixerContext = (PVOID)MixerList;

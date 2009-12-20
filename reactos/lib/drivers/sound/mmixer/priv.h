@@ -66,10 +66,26 @@ typedef struct
 
 typedef struct
 {
+    LIST_ENTRY Entry;
+    ULONG DeviceId;
+    ULONG PinId;
+    union
+    {
+        WAVEOUTCAPSW OutCaps;
+        WAVEINCAPSW  InCaps;
+    }u;
+}WAVE_INFO, *LPWAVE_INFO;
+
+typedef struct
+{
     ULONG MixerListCount;
     LIST_ENTRY MixerList;
     ULONG MixerDataCount;
     LIST_ENTRY MixerData;
+    ULONG WaveInListCount;
+    LIST_ENTRY WaveInList;
+    ULONG WaveOutListCount;
+    LIST_ENTRY WaveOutList;
 }MIXER_LIST, *PMIXER_LIST;
 
 #define DESTINATION_LINE 0xFFFF0000
@@ -242,5 +258,14 @@ MMixerGetDeviceName(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo,
     IN HANDLE hKey);
+
+MIXER_STATUS
+MMixerInitializeWaveInfo(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
+    IN LPMIXER_DATA MixerData,
+    IN LPWSTR DeviceName,
+    IN ULONG bWaveIn,
+    IN ULONG PinId);
 
 #endif

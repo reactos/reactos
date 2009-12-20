@@ -95,6 +95,15 @@ ULONG
 MMixerGetCount(
     IN PMIXER_CONTEXT MixerContext);
 
+ULONG
+MMixerGetWaveInCount(
+    IN PMIXER_CONTEXT MixerContext);
+
+ULONG
+MMixerGetWaveOutCount(
+    IN PMIXER_CONTEXT MixerContext);
+
+
 MIXER_STATUS
 MMixerGetCapabilities(
     IN PMIXER_CONTEXT MixerContext,
@@ -121,7 +130,7 @@ MMixerGetLineControls(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
     IN ULONG Flags,
-    OUT LPMIXERLINECONTROLS MixerLineControls);
+    OUT LPMIXERLINECONTROLSW MixerLineControls);
 
 MIXER_STATUS
 MMixerSetControlDetails(
@@ -136,5 +145,25 @@ MMixerGetControlDetails(
     IN HANDLE MixerHandle,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails);
+
+MIXER_STATUS
+MMixerWaveOutCapabilities(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG DeviceIndex,
+    OUT LPWAVEOUTCAPSW Caps);
+
+MIXER_STATUS
+MMixerWaveInCapabilities(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG DeviceIndex,
+    OUT LPWAVEINCAPSW Caps);
+
+MIXER_STATUS
+MMixerOpenWave(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG DeviceIndex,
+    IN ULONG bWaveIn,
+    IN LPWAVEFORMATEX WaveFormat,
+    OUT PHANDLE PinHandle);
 
 #endif
