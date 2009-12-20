@@ -199,6 +199,7 @@ Enum(
     *OutKey = SetupDiOpenDeviceInterfaceRegKey(EnumContext, &InterfaceData, 0, KEY_READ);
      if ((HKEY)*OutKey == INVALID_HANDLE_VALUE)
      {
+        printf("SetupDiOpenDeviceInterfaceRegKey failed with %lx\n", GetLastError());
         HeapFree(GetProcessHeap(), 0, DetailData);
         return MM_STATUS_UNSUCCESSFUL;
     }
@@ -281,14 +282,14 @@ int main(int argc, char**argv)
     HANDLE hMixer2;
     HMIXER hMixer1;
     MIXERLINEW MixerLine1, MixerLine2;
-    MIXERLINECONTROLS Controls1, Controls2;
+    MIXERLINECONTROLSW Controls1, Controls2;
 
     ZeroMemory(&MixerContext, sizeof(MIXER_CONTEXT));
 
     DeviceHandle = SetupDiGetClassDevs(&CategoryGuid,
                                        NULL,
                                        NULL,
-                                       DIGCF_DEVICEINTERFACE|DIGCF_PRESENT);
+                                       DIGCF_DEVICEINTERFACE/*|DIGCF_PRESENT */);
     if (DeviceHandle == INVALID_HANDLE_VALUE)
     {
         printf("SetupDiGetClassDevs failed with %lx\n", GetLastError());
@@ -336,8 +337,8 @@ int main(int argc, char**argv)
         wprintf(L"MMIX: dwDestination %lx dwSource %lx dwLineID %lx dwUser %lx dwComponentType %lx cChannels %lx cConnections %lx cControls %lx szShortName %s szName %s\n\n",
                 MixerLine2.dwDestination, MixerLine2.dwSource, MixerLine2.dwLineID, MixerLine2.dwUser, MixerLine2.dwComponentType, MixerLine2.cChannels, MixerLine2.cConnections, MixerLine2.cControls, MixerLine2.szShortName, MixerLine2.szName);
 
-        Controls1.cbStruct = sizeof(MIXERLINECONTROLS);
-        Controls2.cbStruct = sizeof(MIXERLINECONTROLS);
+        Controls1.cbStruct = sizeof(MIXERLINECONTROLSW);
+        Controls2.cbStruct = sizeof(MIXERLINECONTROLSW);
 
         Controls1.cbmxctrl = sizeof(MIXERCONTROL);
         Controls2.cbmxctrl = sizeof(MIXERCONTROL);
@@ -350,21 +351,31 @@ int main(int argc, char**argv)
 
 
 
-        Controls1.pamxctrl = (LPMIXERCONTROL)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MIXERCONTROL) * Controls1.cControls);
-        Controls2.pamxctrl = (LPMIXERCONTROL)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MIXERCONTROL) * Controls2.cControls);
+        Controls1.pamxctrl = (LPMIXERCONTROLW)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MIXERCONTROLW) * Controls1.cControls);
+        Controls2.pamxctrl = (LPMIXERCONTROLW)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MIXERCONTROLW) * Controls2.cControls);
 
         for(SubIndex = 0; SubIndex < Controls1.cControls; SubIndex++)
-            Controls1.pamxctrl[SubIndex].cbStruct = sizeof(MIXERCONTROL);
+            Controls1.pamxctrl[SubIndex].cbStruct = sizeof(MIXERCONTROLW);
 
         for(SubIndex = 0; SubIndex < Controls2.cControls; SubIndex++)
-            Controls2.pamxctrl[SubIndex].cbStruct = sizeof(MIXERCONTROL);
+            Controls2.pamxctrl[SubIndex].cbStruct = sizeof(MIXERCONTROLW);
 
-        mixerGetLineControls((HMIXEROBJ)hMixer1, &Controls1, MIXER_GETLINECONTROLSF_ALL);
+        mixerGetLineControlsW((HMIXEROBJ)hMixer1, &Controls1, MIXER_GETLINECONTROLSF_ALL);
+        MMixerGetLineControls(&MixerContext, hMixer2, MIXER_GETLINECONTROLSF_ALL, &Controls2);
 
         wprintf(L"----------------------------------------\n");
-        for(SubIndex = 0; SubIndex < Controls1.cControls; SubIndex++)
+        for(SubIndex = 0; SubIndex < Controls1.cControls || SubIndex  < Controls2.cControls; SubIndex++)
         {
-            wprintf(L"WINM: Index %d dwControlID %lx dwControlType %lx fdwControl %lx cMultipleItems %lx szName %s szShortName %s \n", SubIndex, Controls1.pamxctrl[SubIndex].dwControlID, Controls1.pamxctrl[SubIndex].dwControlType, Controls1.pamxctrl[SubIndex].fdwControl, Controls1.pamxctrl[SubIndex].cMultipleItems, Controls1.pamxctrl[SubIndex].szName, Controls1.pamxctrl[SubIndex].szShortName);
+            if (SubIndex < Controls1.cControls)
+            {
+                wprintf(L"WINM: Index %d dwControlID %lx dwControlType %lx fdwControl %lx cMultipleItems %lx szName %s szShortName %s \n", SubIndex, Controls1.pamxctrl[SubIndex].dwControlID, Controls1.pamxctrl[SubIndex].dwControlType, Controls1.pamxctrl[SubIndex].fdwControl, Controls1.pamxctrl[SubIndex].cMultipleItems, Controls1.pamxctrl[SubIndex].szName, Controls1.pamxctrl[SubIndex].szShortName);
+            }
+
+            if (SubIndex < Controls2.cControls)
+            {
+                wprintf(L"MMIX: Index %d dwControlID %lx dwControlType %lx fdwControl %lx cMultipleItems %lx szName %s szShortName %s \n", SubIndex, Controls2.pamxctrl[SubIndex].dwControlID, Controls2.pamxctrl[SubIndex].dwControlType, Controls2.pamxctrl[SubIndex].fdwControl, Controls2.pamxctrl[SubIndex].cMultipleItems, Controls2.pamxctrl[SubIndex].szName, Controls2.pamxctrl[SubIndex].szShortName);
+            }
+
         }
         wprintf(L"----------------------------------------\n");
 
