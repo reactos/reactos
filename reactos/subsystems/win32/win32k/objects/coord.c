@@ -166,7 +166,7 @@ IntGdiModifyWorldTransform(
 }
 
 // FIXME: Don't use floating point in the kernel!
-void windowToViewPort(PDC_ATTR pdcattr, LPXFORM xformWnd2Vport)
+void IntWindowToViewPort(PDC_ATTR pdcattr, LPXFORM xformWnd2Vport)
 {
     FLOAT scaleX, scaleY;
 
@@ -218,7 +218,7 @@ NtGdiGetTransform(
                 break;
 
             case GdiPageSpaceToDeviceSpace:
-                windowToViewPort(dc->pdcattr, XForm);
+                IntWindowToViewPort(dc->pdcattr, XForm);
                 break;
 
             case GdiDeviceSpaceToWorldSpace:
@@ -1101,7 +1101,7 @@ DC_UpdateXforms(PDC dc)
     XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
 
     /* Construct a transformation to do the window-to-viewport conversion */
-    windowToViewPort(pdcattr, &xformWnd2Vport);
+    IntWindowToViewPort(pdcattr, &xformWnd2Vport);
 
     /* Combine with the world transformation */
     MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
