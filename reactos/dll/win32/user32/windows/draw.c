@@ -701,10 +701,9 @@ static BOOL UITOOLS95_DFC_ButtonPush(HDC dc, LPRECT r, UINT uFlags)
 
 static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL Radio)
 {
-    RECT rc;
     LOGFONTW lf;
     HFONT hFont, hOldFont;
-    int SmallDiam, i;
+    int i;
     TCHAR OutRight, OutLeft, InRight, InLeft, Center;
 
     if (Radio)
@@ -723,10 +722,8 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
         Center   = 'g'; // center
     }
 
-    SmallDiam = UITOOLS_MakeSquareRect(r, &rc);
-
     ZeroMemory(&lf, sizeof(LOGFONTW));
-    lf.lfHeight = SmallDiam;
+    lf.lfHeight = r->top - r->bottom;
     lf.lfWidth = 0;
     lf.lfWeight = FW_NORMAL;
     lf.lfCharSet = DEFAULT_CHARSET;
@@ -738,12 +735,12 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
     {
         SetBkMode(dc, OPAQUE);
         SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-        TextOut(dc, rc.left, rc.top, &Center, 1);
+        TextOut(dc, r->left, r->top, &Center, 1);
         SetBkMode(dc, TRANSPARENT);
         SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-        TextOut(dc, rc.left, rc.top, &OutRight, 1);
+        TextOut(dc, r->left, r->top, &OutRight, 1);
         SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-        TextOut(dc, rc.left, rc.top, &OutLeft, 1);
+        TextOut(dc, r->left, r->top, &OutLeft, 1);
     }
     else
     {
@@ -752,26 +749,26 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
         /* Center section, white for active, grey for inactive */
         i= !(uFlags & (DFCS_INACTIVE|DFCS_PUSHED)) ? COLOR_WINDOW : COLOR_BTNFACE;
         SetTextColor(dc, GetSysColor(i));
-        TextOut(dc, rc.left, rc.top, &Center, 1);
+        TextOut(dc, r->left, r->top, &Center, 1);
 
         if(uFlags & (DFCS_FLAT | DFCS_MONO))
         {
             SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-            TextOut(dc, rc.left, rc.top, &OutRight, 1);
-            TextOut(dc, rc.left, rc.top, &OutLeft, 1);
-            TextOut(dc, rc.left, rc.top, &InRight, 1);
-            TextOut(dc, rc.left, rc.top, &InLeft, 1);
+            TextOut(dc, r->left, r->top, &OutRight, 1);
+            TextOut(dc, r->left, r->top, &OutLeft, 1);
+            TextOut(dc, r->left, r->top, &InRight, 1);
+            TextOut(dc, r->left, r->top, &InLeft, 1);
         }
         else
         {
             SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
-            TextOut(dc, rc.left, rc.top, &OutRight, 1);
+            TextOut(dc, r->left, r->top, &OutRight, 1);
             SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-            TextOut(dc, rc.left, rc.top, &OutLeft, 1);
+            TextOut(dc, r->left, r->top, &OutLeft, 1);
             SetTextColor(dc, GetSysColor(COLOR_3DDKSHADOW));
-            TextOut(dc, rc.left, rc.top, &InRight, 1);
+            TextOut(dc, r->left, r->top, &InRight, 1);
             SetTextColor(dc, GetSysColor(COLOR_3DLIGHT));
-            TextOut(dc, rc.left, rc.top, &InLeft, 1);
+            TextOut(dc, r->left, r->top, &InLeft, 1);
         }
     }
 
@@ -780,7 +777,7 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
         TCHAR Check = (Radio) ? 'i' : 'b';
 
         SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-        TextOut(dc, rc.left, rc.top, &Check, 1);
+        TextOut(dc, r->left, r->top, &Check, 1);
     }
 
     SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
