@@ -241,8 +241,4 @@ WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceAlias(IN HDEVINFO  DeviceInfoSe
     return FALSE;
 }
 
-HKEY WINAPI SetupDiOpenDeviceInterfaceRegKey(IN HDEVINFO  DeviceInfoSet, IN PSP_DEVICE_INTERFACE_DATA  DeviceInterfaceData, IN DWORD  Reserved, IN REGSAM  samDesired)
-{
-    FIXME("%p %p %p 0x%08x 0x%08x: stub\n", DeviceInfoSet, DeviceInterfaceData, Reserved, samDesired);
-    return INVALID_HANDLE_VALUE;
-}
+

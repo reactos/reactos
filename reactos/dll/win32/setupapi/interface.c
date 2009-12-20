@@ -337,11 +337,9 @@ InstallOneInterface(
     IN HDEVINFO DeviceInfoSet,
     IN struct DeviceInfo *devInfo)
 {
-    BOOL ret;
     HKEY hKey, hRefKey;
     LPWSTR Path;
     SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
-    PLIST_ENTRY InterfaceListEntry;
     struct DeviceInterface *DevItf = NULL;
 
     if (InterfaceFlags != 0)
@@ -425,6 +423,8 @@ SetupDiInstallDeviceInterfaces(
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoData && DeviceInfoData->Reserved == 0)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
@@ -536,4 +536,88 @@ cleanup:
 
     TRACE("Returning %d\n", ret);
     return ret;
+}
+
+HKEY WINAPI
+SetupDiOpenDeviceInterfaceRegKey(
+    IN HDEVINFO  DeviceInfoSet, IN PSP_DEVICE_INTERFACE_DATA  DeviceInterfaceData, IN DWORD  Reserved, IN REGSAM  samDesired)
+{
+    HKEY hKey = INVALID_HANDLE_VALUE, hDevKey;
+    struct DeviceInfoSet * list;
+
+    TRACE("%p %p %p 0x%08x 0x%08x)\n", DeviceInfoSet, DeviceInterfaceData, Reserved, samDesired);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (!DeviceInterfaceData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInterfaceData && DeviceInterfaceData->Reserved == 0)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (DeviceInterfaceData && DeviceInterfaceData->cbSize != sizeof(SP_DEVICE_INTERFACE_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        struct DeviceInterface *DevItf;
+        LPWSTR Path, Guid, Slash;
+        DWORD Length;
+        DevItf = (struct DeviceInterface *)DeviceInterfaceData->Reserved;
+
+        Length = wcslen(DevItf->SymbolicLink);
+
+        Path = HeapAlloc(GetProcessHeap(), 0, (Length+2) * sizeof(WCHAR));
+        if (!Path)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        wcscpy(Path, DevItf->SymbolicLink);
+
+        Guid = wcsrchr(Path, '}');
+        Slash = wcsrchr(Path, '\\');
+        if (!Guid || !Slash)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        if ((ULONG_PTR)Slash > (ULONG_PTR)Guid)
+        {
+            /* Create an extra slash */
+            memmove(Slash+1, Slash, (wcslen(Slash) + 1) * sizeof(WCHAR));
+            Slash[1] = L'#';
+        }
+
+        Guid = Path;
+        while((ULONG_PTR)Guid < (ULONG_PTR)Slash)
+        {
+            if (*Guid == L'\\')
+                *Guid = L'#';
+
+            Guid++;
+        }
+
+        hKey = SetupDiOpenClassRegKeyExW(&DeviceInterfaceData->InterfaceClassGuid, samDesired, DIOCR_INTERFACE, NULL, NULL);
+        if (hKey != INVALID_HANDLE_VALUE)
+        {
+            if (RegOpenKeyExW(hKey, Path, 0, samDesired, &hDevKey) == ERROR_SUCCESS)
+            {
+                RegCloseKey(hKey);
+                hKey = hDevKey;
+            }
+            else
+            {
+                RegCloseKey(hKey);
+                hKey = INVALID_HANDLE_VALUE;
+            }
+        }
+
+        HeapFree(GetProcessHeap(), 0, Path);
+    }
+
+    return hKey;
 }
