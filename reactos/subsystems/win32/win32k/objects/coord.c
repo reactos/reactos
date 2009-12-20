@@ -165,6 +165,21 @@ IntGdiModifyWorldTransform(
     return TRUE;
 }
 
+// FIXME: Don't use floating point in the kernel!
+void windowToViewPort(PDC_ATTR pdcattr, LPXFORM xformWnd2Vport)
+{
+    FLOAT scaleX, scaleY;
+
+    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
+    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
+    xformWnd2Vport->eM11 = scaleX;
+    xformWnd2Vport->eM12 = 0.0;
+    xformWnd2Vport->eM21 = 0.0;
+    xformWnd2Vport->eM22 = scaleY;
+    xformWnd2Vport->eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
+    xformWnd2Vport->eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
+}
+
 // FIXME: Should be XFORML and use XFORMOBJ functions directly
 BOOL
 APIENTRY
@@ -203,7 +218,7 @@ NtGdiGetTransform(
                 break;
 
             case GdiPageSpaceToDeviceSpace:
-                DPRINT1("Page space -> device space is unsupported!\n");
+                windowToViewPort(dc->pdcattr, XForm);
                 break;
 
             case GdiDeviceSpaceToWorldSpace:
@@ -1078,25 +1093,15 @@ DC_InvertXform(const XFORM *xformSrc,
     return  TRUE;
 }
 
-
-// FIXME: Don't use floating point in the kernel!
 VOID FASTCALL
 DC_UpdateXforms(PDC dc)
 {
     XFORM  xformWnd2Vport;
-    FLOAT  scaleX, scaleY;
     PDC_ATTR pdcattr = dc->pdcattr;
     XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
 
     /* Construct a transformation to do the window-to-viewport conversion */
-    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
-    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
-    xformWnd2Vport.eM11 = scaleX;
-    xformWnd2Vport.eM12 = 0.0;
-    xformWnd2Vport.eM21 = 0.0;
-    xformWnd2Vport.eM22 = scaleY;
-    xformWnd2Vport.eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
-    xformWnd2Vport.eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
+    windowToViewPort(pdcattr, &xformWnd2Vport);
 
     /* Combine with the world transformation */
     MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
