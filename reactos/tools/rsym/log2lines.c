@@ -3,6 +3,7 @@
  * Written by Jan Roeloffzen
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,21 +11,30 @@
 
 #include "rsym.h"
 
-#define LOG2LINES_VERSION   "1.8"
+#define LOG2LINES_VERSION   "1.9"
 
 /* Assume if an offset > ABS_TRESHOLD, then it must be absolute */
 #define ABS_TRESHOLD    0x00400000L
 #define INVALID_BASE    0xFFFFFFFFL
 
+#define LOGBOTTOM       "--------"
+#define SVNDB           "svndb.log"
+#define SVNDB_INX       "svndb.inx"
+#define DEF_RANGE       500
+#define MAGIC_INX       0x494E585F //'INX_'
 #define DEF_OPT_DIR     "output-i386"
 #define SOURCES_ENV     "_ROSBE_ROSSOURCEDIR"
 #define CACHEFILE       "log2lines.cache"
 #define TRKBUILDPREFIX  "bootcd-"
+#define SVN_PREFIX      "/trunk/reactos/"
 
 #if defined (__DJGPP__) || defined (__WIN32__)
 
+#include <direct.h>
+
 #define POPEN           _popen
 #define PCLOSE          _pclose
+#define MKDIR(d)        _mkdir(d)
 #define DEV_NULL        "NUL"
 #define DOS_PATHS
 #define PATH_CHAR       '\\'
@@ -35,12 +45,13 @@
 
 #else /* not defined (__DJGPP__) || defined (__WIN32__) */
 
-#include <errno.h>
 #include <limits.h>
+#include <sys/stat.h>
 
 #define MAX_PATH        PATH_MAX
 #define POPEN           popen
 #define PCLOSE          pclose
+#define MKDIR(d)        mkdir(d, S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH)
 #define DEV_NULL        "/dev/null"
 #define UNIX_PATHS
 #define PATH_CHAR       '/'
@@ -85,13 +96,13 @@ struct entry_struct
     struct entry_struct *pnext;
 };
 
-typedef struct entry_struct CACHE_ENTRY;
+typedef struct entry_struct LIST_ENTRY;
 
-struct cache_struct
+struct list_struct
 {
     off_t st_size;
-    CACHE_ENTRY *phead;
-    CACHE_ENTRY *ptail;
+    LIST_ENTRY *phead;
+    LIST_ENTRY *ptail;
 };
 
 struct summ_struct
@@ -103,6 +114,7 @@ struct summ_struct
     int diff;
     int majordiff;
     int revconflicts;
+    int regfound;
     int offset_errors;
     int total;
 };
@@ -122,15 +134,17 @@ struct revinfo_struct
 {
     int     rev; 
     int     buildrev;
+    int     range;
     int     opt_verbose;
 };
 
-typedef struct cache_struct CACHE;
+typedef struct list_struct LIST;
 typedef struct summ_struct SUMM;
 typedef struct lineinfo_struct LINEINFO;
 typedef struct revinfo_struct REVINFO;
 
-static CACHE cache;
+static LIST cache;
+static LIST sources;
 static SUMM summ;
 static LINEINFO lastLine;
 static REVINFO revinfo;
@@ -176,6 +190,235 @@ file_exists(char *name)
     return 1;
 }
 
+/* Do this in reverse (recursively)
+   This saves many system calls if the path is likely
+   to already exist (creating large trees).
+*/
+static int
+mkPath(char *path, int isDir)
+{
+    char *s;
+    int res = 0;
+
+    if (isDir)
+    {
+        res = MKDIR(path);
+        if (!res || (res == -1 && errno == EEXIST))
+            return 0;
+    }
+    // create parent dir
+    if ((s = strrchr(path, PATH_CHAR)))
+    {
+        *s = '\0';
+        res = mkPath(path, 1);
+        *s = PATH_CHAR;
+    }
+
+    if (!res && isDir)
+        res = MKDIR(path);
+
+    return res;
+}
+
+static FILE *
+rfopen(char *path, char *mode)
+{
+    FILE *f = NULL;
+    char tmppath[MAX_PATH]; // Don't modify const strings
+
+    strcpy(tmppath, path);
+    f = fopen(tmppath, mode);
+    if (!f && !mkPath(tmppath, 0))
+        f = fopen(tmppath, mode);
+    return f;
+}
+
+static LIST_ENTRY *
+entry_lookup(LIST *list, char *name)
+{
+    LIST_ENTRY *pprev = NULL;
+    LIST_ENTRY *pnext;
+
+    if (!name || !name[0])
+        return NULL;
+
+    pnext = list->phead;
+    while (pnext != NULL)
+    {
+        if (PATHCMP(name, pnext->name) == 0)
+        {
+            if (pprev)
+            {   // move to head for faster lookup next time
+                pprev->pnext = pnext->pnext;
+                pnext->pnext = list->phead;
+                list->phead = pnext;
+            }
+            return pnext;
+        }
+        pprev = pnext;
+        pnext = pnext->pnext;
+    }
+    return NULL;
+}
+
+static LIST_ENTRY *
+entry_delete(LIST_ENTRY *pentry)
+{
+    if (!pentry)
+        return NULL;
+    if (pentry->buf)
+        free(pentry->buf);
+    free(pentry);
+    return NULL;
+}
+
+static LIST_ENTRY *
+entry_insert(LIST *list, LIST_ENTRY *pentry)
+{
+    if (!pentry)
+        return NULL;
+
+    pentry->pnext = list->phead;
+    list->phead = pentry;
+    if (!list->ptail)
+        list->ptail = pentry;
+    return pentry;
+}
+
+#if 0
+static LIST_ENTRY *
+entry_remove(LIST *list, LIST_ENTRY *pentry)
+{
+    LIST_ENTRY *pprev = NULL, *p = NULL;
+
+    if (!pentry)
+        return NULL;
+
+    if (pentry == list->phead)
+    {
+        list->phead = pentry->pnext;
+        p = pentry;
+    }
+    else
+    {
+        pprev = list->phead;
+        while (pprev->pnext)
+        {
+            if (pprev->pnext == pentry)
+            {
+                pprev->pnext = pentry->pnext;
+                p = pentry;
+                break;
+            }
+            pprev = pprev->pnext;
+        }
+    }
+    if (pentry == list->ptail)
+        list->ptail = pprev;
+
+    return p;
+}
+#endif
+
+static LIST_ENTRY *
+cache_entry_create(char *Line)
+{
+    LIST_ENTRY *pentry;
+    char *s = NULL;
+    int l;
+
+    if (!Line)
+        return NULL;
+
+    pentry = malloc(sizeof(LIST_ENTRY));
+    if (!pentry)
+        return NULL;
+
+    l = strlen(Line);
+    pentry->buf = s = malloc(l + 1);
+    if (!s)
+    {
+        l2l_dbg(1, "Alloc entry failed\n");
+        return entry_delete(pentry);
+    }
+
+    strcpy(s, Line);
+    if (s[l] == '\n')
+        s[l] = '\0';
+
+    pentry->name = s;
+    s = strchr(s, '|');
+    if (!s)
+    {
+        l2l_dbg(1, "Name field missing\n");
+        return entry_delete(pentry);
+    }
+    *s++ = '\0';
+
+    pentry->path = s;
+    s = strchr(s, '|');
+    if (!s)
+    {
+        l2l_dbg(1, "Path field missing\n");
+        return entry_delete(pentry);
+    }
+    *s++ = '\0';
+    if (1 != sscanf(s, "%x", (unsigned int *)(&pentry->ImageBase)))
+    {
+        l2l_dbg(1, "ImageBase field missing\n");
+        return entry_delete(pentry);
+    }
+    return pentry;
+}
+
+
+static LIST_ENTRY *
+sources_entry_create(LIST *list, char *path, char *prefix)
+{
+    LIST_ENTRY *pentry;
+    char *s = NULL;
+    int l;
+
+    if (!path)
+        return NULL;
+    if (!prefix)
+        prefix = "";
+
+    pentry = malloc(sizeof(LIST_ENTRY));
+    if (!pentry)
+        return NULL;
+
+    l = strlen(path) + strlen(prefix);
+    pentry->buf = s = malloc(l + 1);
+    if (!s)
+    {
+        l2l_dbg(1, "Alloc entry failed\n");
+        return entry_delete(pentry);
+    }
+
+    strcpy(s, prefix);
+    strcat(s, path);
+    if (s[l] == '\n')
+        s[l] = '\0';
+
+    pentry->name = s;
+    if (list)
+    {
+        if (entry_lookup(list, pentry->name))
+        {
+            l2l_dbg(1, "Entry %s exists\n", pentry->name);
+            pentry = entry_delete(pentry);
+        }
+        else
+        {
+            l2l_dbg(1, "Inserting entry %s\n", pentry->name);
+            entry_insert(list, pentry);
+        }
+    }
+
+    return pentry;
+}
+
 static void
 clearLastLine(void)
 {
@@ -198,18 +441,18 @@ getRevision(char *fileName, int lastChanged)
         {
             if (lastChanged)
             {
-                if(sscanf(s,"Last Changed Rev: %d",&rev))
+                if (sscanf(s, "Last Changed Rev: %d", &rev))
                     break;
             }
             else
             {
-                if(sscanf(s,"Revision: %d",&rev))
+                if (sscanf(s, "Revision: %d", &rev))
                     break;
             }
         }
     }
     else
-        l2l_dbg(1,"Can't popen: \"%s\"\n", s);
+        l2l_dbg(1, "Can't popen: \"%s\"\n", s);
 
     if (psvn)
         PCLOSE(psvn);
@@ -245,7 +488,7 @@ getTBRevision(char *fileName)
             *s = PATH_CHAR; // restore
     }
 
-    l2l_dbg(1,"TBRevision: %d\n", rev);
+    l2l_dbg(1, "TBRevision: %d\n", rev);
     return rev;
 }
 
@@ -270,14 +513,14 @@ log_file(FILE *outFile, char *fileName, int line)
             {
                 if (i == line)
                     log(outFile, "| ----\n");
-                log(outFile, "| %4.4d  %s", i+1, s);
+                log(outFile, "| %4.4d  %s", i + 1, s);
             }
             i++;
         }
         fclose(src);
     }
     else
-        l2l_dbg(1,"Can't open: %s (check " SOURCES_ENV ")\n", s);
+        l2l_dbg(1, "Can't open: %s (check " SOURCES_ENV ")\n", s);
 }
 
 static void
@@ -334,7 +577,7 @@ logRevCheck(FILE *outFile)
 {
     int twice = 0;
 
-    twice = (lastLine.nr2 && (strcmp(lastLine.file1,lastLine.file2) != 0));
+    twice = (lastLine.nr2 && strcmp(lastLine.file1, lastLine.file2) != 0);
     log_rev_check(outFile, lastLine.file1, twice);
     if (twice)
     {
@@ -364,6 +607,15 @@ basename(char *path)
         return ++base;
     return path;
 }
+
+static void
+report(FILE *outFile)
+{
+    reportRevision(outFile);
+    reportSource(outFile);
+    clearLastLine();
+}
+
 
 static size_t
 fixup_offset(size_t ImageBase, size_t offset)
@@ -439,21 +691,23 @@ print_offset(void *data, size_t offset, char *toString)
         strcpy(lastLine.file1, &Strings[e->FileOffset]);
         strcpy(lastLine.func1, &Strings[e->FunctionOffset]);
         lastLine.nr1 = e->SourceLine;
+        sources_entry_create(&sources, lastLine.file1, SVN_PREFIX);
         lastLine.valid = 1;
         if (e2)
         {
             strcpy(lastLine.file2, &Strings[e2->FileOffset]);
             strcpy(lastLine.func2, &Strings[e2->FunctionOffset]);
             lastLine.nr2 = e2->SourceLine;
+            sources_entry_create(&sources, lastLine.file2, SVN_PREFIX);
             bFileOffsetChanged = e->FileOffset != e2->FileOffset;
             if (e->FileOffset != e2->FileOffset || e->FunctionOffset != e2->FunctionOffset)
                 summ.majordiff++;
 
             /*
-            * - "%.0s" displays nothing, but processes argument
-            * - bFileOffsetChanged implies always display 2nd SourceLine even if the same
-            * - also for FunctionOffset
-            */
+             * - "%.0s" displays nothing, but processes argument
+             * - bFileOffsetChanged implies always display 2nd SourceLine even if the same
+             * - also for FunctionOffset
+             */
             strcat(fmt, "%s");
             if (bFileOffsetChanged)
                 strcat(fmt, "[%s]");
@@ -565,7 +819,7 @@ process_data(const void *FileData, size_t offset, char *toString)
             sprintf(toString, "??:0");
         else
             printf("??:0");
-        l2l_dbg(1, "Offset not found: %x\n", offset);
+        l2l_dbg(1, "Offset not found: %x\n", (unsigned int)offset);
         summ.offset_errors++;
     }
 
@@ -627,10 +881,16 @@ copy_file(char *src, char *dst)
         l2l_dbg(0, "Cannot remove dst %s before copy\n", dst);
         return 1;
     }
-    system(Line);
+    if (system(Line) < 0)
+    {
+        l2l_dbg(0, "Cannot copy %s to %s\n", src, dst);
+        l2l_dbg(1, "Failed to execute: '%s'\n", Line);
+        return 2;
+    }
+
     if (!file_exists(dst))
     {
-        l2l_dbg(0, "Dst %s does not exist after copy \n", dst);
+        l2l_dbg(0, "Dst %s does not exist after copy\n", dst);
         return 2;
     }
     return 0;
@@ -714,7 +974,7 @@ get_ImageBase(char *fname, size_t *ImageBase)
     if (PEOptHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
         PEOptHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
     {
-        l2l_dbg(2, "get_ImageBase %s, not an IMAGE_NT_OPTIONAL_HDR<32|64>\n", fname);
+        l2l_dbg(2, "get_ImageBase %s, not an IMAGE_NT_OPTIONAL_HDR 32/64 bit\n", fname);
         fclose(fr);
         return 6;
     }
@@ -724,110 +984,11 @@ get_ImageBase(char *fname, size_t *ImageBase)
     return 0;
 }
 
-static CACHE_ENTRY *
-entry_delete(CACHE_ENTRY *pentry)
-{
-    if (!pentry)
-        return NULL;
-    if (pentry->buf)
-        free(pentry->buf);
-    free(pentry);
-    return NULL;
-}
-
-static CACHE_ENTRY *
-entry_insert(CACHE_ENTRY *pentry)
-{
-    if (!pentry)
-        return NULL;
-    pentry->pnext = cache.phead;
-    cache.phead = pentry;
-    if (!cache.ptail)
-        cache.ptail = pentry;
-    return pentry;
-}
-
-static CACHE_ENTRY *
-entry_create(char *Line)
-{
-    CACHE_ENTRY *pentry;
-    char *s = NULL;
-    int l;
-
-    if (!Line)
-        return NULL;
-
-    pentry = malloc(sizeof(CACHE_ENTRY));
-    if (!pentry)
-        return NULL;
-
-    l = strlen(Line);
-    pentry->buf = s = malloc(l + 1);
-    if (!s)
-    {
-        l2l_dbg(1, "Alloc entry failed\n");
-        return entry_delete(pentry);
-    }
-
-    strcpy(s, Line);
-    if (s[l] == '\n')
-        s[l] = '\0';
-
-    pentry->name = s;
-    s = strchr(s, '|');
-    if (!s)
-    {
-        l2l_dbg(1, "Name field missing\n");
-        return entry_delete(pentry);
-    }
-    *s++ = '\0';
-
-    pentry->path = s;
-    s = strchr(s, '|');
-    if (!s)
-    {
-        l2l_dbg(1, "Path field missing\n");
-        return entry_delete(pentry);
-    }
-    *s++ = '\0';
-    if (1 != sscanf(s, "%x", &pentry->ImageBase))
-    {
-        l2l_dbg(1, "ImageBase field missing\n");
-        return entry_delete(pentry);
-    }
-    return pentry;
-}
-
-static CACHE_ENTRY *
-entry_lookup(char *name)
-{
-    CACHE_ENTRY *pprev = NULL;
-    CACHE_ENTRY *pnext;
-
-    pnext = cache.phead;
-    while (pnext != NULL)
-    {
-        if (PATHCMP(name, pnext->name) == 0)
-        {
-            if (pprev)
-            {   // move to head for faster lookup next time
-                pprev->pnext = pnext->pnext;
-                pnext->pnext = cache.phead;
-                cache.phead = pnext;
-            }
-            return pnext;
-        }
-        pprev = pnext;
-        pnext = pnext->pnext;
-    }
-    return NULL;
-}
-
 static int
 read_cache(void)
 {
     FILE *fr;
-    CACHE_ENTRY *pentry;
+    LIST_ENTRY *pentry;
     char *Line = NULL;
     int result = 0;
 
@@ -850,13 +1011,13 @@ read_cache(void)
 
     while (fgets(Line, LINESIZE, fr) != NULL)
     {
-        pentry = entry_create(Line);
+        pentry = cache_entry_create(Line);
         if (!pentry)
         {
             l2l_dbg(2, "** Create entry failed of: %s\n", Line);
         }
         else
-            entry_insert(pentry);
+            entry_insert(&cache, pentry);
     }
 
     fclose(fr);
@@ -908,7 +1069,12 @@ create_cache(int force, int skipImageBase)
     l2l_dbg(0, "Scanning %s ...\n", opt_dir);
     snprintf(Line, LINESIZE, DIR_FMT, opt_dir, tmp_name);
     l2l_dbg(1, "Executing: %s\n", Line);
-    system(Line);
+    if (system(Line) < 0)
+    {
+        l2l_dbg(0, "Cannot list directory %s\n", opt_dir);
+        l2l_dbg(1, "Failed to execute: '%s'\n", Line);
+        return 2;
+    }
     l2l_dbg(0, "Creating cache ...");
 
     if ((fr = fopen(tmp_name, "r")) != NULL)
@@ -932,9 +1098,9 @@ create_cache(int force, int skipImageBase)
                 if (*Fname && !skipImageBase)
                 {
                     if ((err = get_ImageBase(Line, &ImageBase)) == 0)
-                        fprintf(fw, "%s|%s|%0x\n", Fname, Line, ImageBase);
+                        fprintf(fw, "%s|%s|%0x\n", Fname, Line, (unsigned int)ImageBase);
                     else
-                        l2l_dbg(3, "%s|%s|%0x, ERR=%d\n", Fname, Line, ImageBase, err);
+                        l2l_dbg(3, "%s|%s|%0x, ERR=%d\n", Fname, Line, (unsigned int)ImageBase, err);
                 }
             }
             fclose(fw);
@@ -951,7 +1117,7 @@ static int
 translate_file(const char *cpath, size_t offset, char *toString)
 {
     size_t base = 0;
-    CACHE_ENTRY *pentry = NULL;
+    LIST_ENTRY *pentry = NULL;
     int res = 0;
     char *path, *dpath;
 
@@ -962,7 +1128,7 @@ translate_file(const char *cpath, size_t offset, char *toString)
     // The path could be absolute:
     if (get_ImageBase(path, &base))
     {
-        pentry = entry_lookup(path);
+        pentry = entry_lookup(&cache, path);
         if (pentry)
         {
             path = pentry->path;
@@ -1033,7 +1199,7 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
     if (sep)
     {
         *sep = ' ';
-        cnt = sscanf(s, "<%s %x%c", path, &offset, &ch);
+        cnt = sscanf(s, "<%s %x%c", path, (unsigned int *)(&offset), &ch);
         if (opt_undo)
         {
             if (cnt == 3 && ch == ' ')
@@ -1047,12 +1213,12 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
                     mark = opt_mark ? "* " : "";
                     if (opt_redo && !(res = translate_file(path, offset, LineOut)))
                     {
-                        log(outFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
+                        log(outFile, "%s<%s:%x (%s)>%s", mark, path, (unsigned int)offset, LineOut, tail);
                         summ.redo++;
                     }
                     else
                     {
-                        log(outFile, "%s<%s:%x>%s", mark, path, offset, tail);
+                        log(outFile, "%s<%s:%x>%s", mark, path, (unsigned int)offset, tail);
                         summ.undo++;
                     }
                 }
@@ -1073,7 +1239,7 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
                 if (!(res = translate_file(path, offset, LineOut)))
                 {
                     mark = opt_mark ? "* " : "";
-                    log(outFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
+                    log(outFile, "%s<%s:%x (%s)>%s", mark, path, (unsigned int)offset, LineOut, tail);
                     summ.translated++;
                 }
                 else
@@ -1094,6 +1260,123 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
     memset(Line, '\0', LINESIZE);  // flushed
 }
 
+static unsigned long
+findRev(FILE *finx, int *rev)
+{
+    unsigned long pos = 0L;
+
+    while (!fseek(finx, (*rev) * sizeof(unsigned long), SEEK_SET))
+    {
+        fread(&pos, sizeof(long), 1, finx);
+        (*rev)--;
+        if (pos)
+            break;
+    }
+    return pos;
+}
+
+static int
+regscan(FILE *outFile)
+{
+    int res = 0;
+    char logname[MAX_PATH];
+    char inxname[MAX_PATH];
+    char line[LINESIZE + 1];
+    char line2[LINESIZE + 1];
+    FILE *flog = NULL;
+    FILE *finx = NULL;
+    unsigned long pos = 0L;
+    int r;
+
+    sprintf(logname, "%s" PATH_STR "%s", sources_path, SVNDB);
+    sprintf(inxname, "%s" PATH_STR "%s", sources_path, SVNDB_INX);
+    flog = fopen(logname, "rb");
+    finx = fopen(inxname, "rb");
+
+    if (flog && finx)
+    {
+        r = revinfo.buildrev;
+        if (!fread(&pos, sizeof(long), 1, finx))
+        {
+            res = 2;
+            l2l_dbg(0, "Cannot read magic number\n");
+        }
+
+        if (!res)
+        {
+            if (pos != MAGIC_INX)
+            {
+                res = 3;
+                l2l_dbg(0, "Incorrect magic number (%lx)\n", pos);
+            }
+        }
+
+        if (!res)
+        {
+            char flag[2];
+            char path[MAX_PATH];
+            char path2[MAX_PATH];
+            int wflag = 0;
+            log(outFile, "\nRegression candidates:\n");
+            while (( pos = findRev(finx, &r) ))
+            {
+                if (r < (revinfo.buildrev - revinfo.range))
+                {
+                    l2l_dbg(1, "r%d is outside range of %d revisions\n", r, revinfo.range);
+                    break;
+                }
+                fseek(flog, pos, SEEK_SET);
+                wflag = 1;
+                fgets(line, LINESIZE, flog);
+                fgets(line2, LINESIZE, flog);
+                while (fgets(line2, LINESIZE, flog))
+                {
+                    path2[0] = '\0';
+                    if (sscanf(line2, "%1s %s %s", flag, path, path2) >= 2)
+                    {
+                        if (entry_lookup(&sources, path) || entry_lookup(&sources, path2))
+                        {
+                            if (wflag == 1)
+                            {
+                                log(outFile, "%sChanged paths:\n", line);
+                                summ.regfound++;
+                                wflag = 2;
+                            }
+                            log(outFile, "%s", line2);
+                        }
+                    }
+                    else
+                        break;
+                }
+                if (wflag == 2)
+                {
+                    int i = 0;
+                    log(outFile, "\n");
+                    while (fgets(line2, LINESIZE, flog))
+                    {
+                        i++;
+                        log(outFile, "%s", line2);
+                        if (strncmp(LOGBOTTOM, line2, sizeof(LOGBOTTOM) - 1) == 0)
+                            break;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        res = 1;
+        l2l_dbg(0, "Cannot open %s or %s\n", logname, inxname);
+    }
+
+    if (flog)
+        fclose(flog);
+    if (finx)
+        fclose(finx);
+
+    return res;
+}
+
 static void
 print_summary(FILE *outFile)
 {
@@ -1107,6 +1390,7 @@ print_summary(FILE *outFile)
         fprintf(outFile, "Differ:                   %d\n", summ.diff);
         fprintf(outFile, "Differ (function/source): %d\n", summ.majordiff);
         fprintf(outFile, "Revision conflicts:       %d\n", summ.revconflicts);
+        fprintf(outFile, "Regression candidates:    %d\n", summ.regfound);
         fprintf(outFile, "Offset error:             %d\n", summ.offset_errors);
         fprintf(outFile, "Total:                    %d\n", summ.total);
         fprintf(outFile, "-------------------------------\n");
@@ -1143,9 +1427,7 @@ translate_files(FILE *inFile, FILE *outFile)
                         translate_line(outFile, Line, path, LineOut);
                         i = 0;
                         translate_char(c, outFile);
-                        reportRevision(outFile);
-                        reportSource(outFile);
-                        clearLastLine();
+                        report(outFile);
                         break;
                     case '<':
                         i = 0;
@@ -1198,15 +1480,25 @@ translate_files(FILE *inFile, FILE *outFile)
                 if (!opt_raw)
                 {
                     translate_line(outFile, Line, path, LineOut);
-                    reportRevision(outFile);
-                    reportSource(outFile);
-                    clearLastLine();
+                    report(outFile);
                 }
                 else
                     log(outFile, "%s", Line);
             }
         }
     }
+
+    if (opt_Revision && (strstr(opt_Revision, "regscan") == opt_Revision))
+    {
+        char *s = strchr(opt_Revision, ',');
+        if (s)
+        {
+            *s++ = '\0';
+            revinfo.range = atoi(s);
+        }
+        regscan(outFile);
+    }
+
     if (opt_stats)
     {
         print_summary(outFile);
@@ -1227,8 +1519,11 @@ static char *verboseUsage =
 "      - Also, <offset> can be repeated for each <exefile>\n"
 "      - NOTE: Some of the options below will have no effect in this form.\n"
 "  Otherwise it reads stdin and tries to translate lines of the form:\n"
-"      <IMAGENAME:ADDRESS>\n\n"
-"  The result is written to stdout.\n"
+"      <IMAGENAME:ADDRESS>\n"
+"  The result is written to stdout.\n\n"
+"  <offset> or <ADDRESS> can be absolute or relative with the restrictions:\n"
+"  - An image with base < 0x400000 MUST be relocated to a > 0x400000 address.\n"
+"  - The offset of a relocated image MUST be relative.\n\n"
 "  log2lines uses a cache in order to avoid a directory scan at each\n"
 "  image lookup, greatly increasing performance. Only image path and its\n"
 "  base address are cached.\n\n"
@@ -1266,6 +1561,26 @@ static char *verboseUsage =
 "         Also when the revison of the source tree is lower than that of the\n"
 "         tested build (for every source file).\n"
 "         In both cases the source file's -S output would be unreliable.\n"
+"       - update:\n"
+"         Updates the SVN log file. Currently only generates the index file\n"
+"         The SVN log file itself must be generated by hand in the sources\n"
+"         directory like this (-v is mandatory here):\n"
+"             svn log -v > svndb.log ('svn log' accepts also a range)\n"
+"         'svndb.log' and its index are needed for '-R regscan'\n"
+"       - regscan[,<range>]:\n"
+"         Scan for regression candidates. Essentially it tries to find\n"
+"         matches between the SVN log entries and the sources hit by\n"
+"         the backtrace.\n"
+"         <range> is the amount of revisions to look back from the build\n"
+"         revision (default 500)\n"
+"         The output of '-R regscan' is printed after EOF. The 'Changed path'\n"
+"         lists will contain only matched files.\n"
+"         Limitations:\n"
+"         - The bug should really be a regression.\n"
+"         - Expect a number of false positives.\n"
+"         - The offending change must be in the sources hit by the backtrace.\n"
+"           This mostly excludes changes in headerfiles for example.\n"
+"         - Must be combined with -S.\n"
 "       Can be combined with -tTS.\n\n"
 "  -s   Statistics. A summary with the following info is printed after EOF:\n"
 "       *** LOG2LINES SUMMARY ***\n"
@@ -1276,6 +1591,7 @@ static char *verboseUsage =
 "       - Differ:          Lines where (addr-1) info differs. See -tT options\n"
 "       - Differ(func/src):Lines where also function or source info differ.\n"
 "       - Rev conflicts:   Source files conflicting with build. See '-R check'\n"
+"       - Reg candidates:  Regression candidates. See '-R regscan'\n"
 "       - Offset error:    Image exists, but error retrieving offset info.\n"
 "       - Total:           Total number of lines attempted to translate.\n"
 "       Also some version info is displayed.\n\n"
@@ -1425,7 +1741,10 @@ check_directory(int force)
     char *check_dir;
 
     if (opt_Revision)
+    {
         revinfo.rev = getRevision(NULL, 1);
+        revinfo.range = DEF_RANGE;
+    }
     check_iso = strrchr(opt_dir, '.');
     l2l_dbg(1, "Checking directory: %s\n", opt_dir);
     if (check_iso && PATHCMP(check_iso, ".7z") == 0)
@@ -1486,7 +1805,7 @@ check_directory(int force)
     if (opt_Revision)
     {
         revinfo.buildrev = getTBRevision(opt_dir);
-        l2l_dbg(1,"Trunk build revision: %d\n", revinfo.buildrev);
+        l2l_dbg(1, "Trunk build revision: %d\n", revinfo.buildrev);
     }
     cache_name = malloc(MAX_PATH);
     tmp_name = malloc(MAX_PATH);
@@ -1495,6 +1814,49 @@ check_directory(int force)
     strcpy(tmp_name, cache_name);
     strcat(tmp_name, "~");
     return 0;
+}
+
+static int
+updateSvnlog(void)
+{
+    int res = 0;
+    char logname[MAX_PATH];
+    char inxname[MAX_PATH];
+    char line[LINESIZE + 1];
+    FILE *flog = NULL;
+    FILE *finx = NULL;
+    unsigned long pos;
+    int r, y, m, d;
+    char name[NAMESIZE];
+
+    sprintf(logname, "%s" PATH_STR "%s", sources_path, SVNDB);
+    sprintf(inxname, "%s" PATH_STR "%s", sources_path, SVNDB_INX);
+    flog = fopen(logname, "rb");
+    finx = fopen(inxname, "wb");
+
+    if (flog && finx)
+    {
+        pos = MAGIC_INX;
+        fwrite(&pos, sizeof(long), 1, finx);
+        pos = ftell(flog);
+        while (fgets(line, LINESIZE, flog))
+        {
+            if (sscanf(line, "r%d | %s | %d-%d-%d", &r, name, &y, &m, &d) == 5)
+            {
+                l2l_dbg(1, "%ld r%d | %s | %d-%d-%d\n", pos, r, name, y, m, d);
+                fseek(finx, r * sizeof(unsigned long), SEEK_SET);
+                fwrite(&pos, sizeof(unsigned long), 1, finx);
+            }
+            pos = ftell(flog);
+        }
+    }
+
+    if (flog)
+        fclose(flog);
+    if (finx)
+        fclose(finx);
+
+    return res;
 }
 
 int
@@ -1509,7 +1871,7 @@ main(int argc, const char **argv)
     strcpy(opt_dir, "");
     strcpy(sources_path, "");
     if ((s = getenv(SOURCES_ENV)))
-        strcpy(sources_path,s);
+        strcpy(sources_path, s);
 
     strcpy(opt_scanned, "");
     for (i = 1; i < argc; i++)
@@ -1520,6 +1882,8 @@ main(int argc, const char **argv)
     strcpy(opt_logFile, "");
     strcpy(opt_7z, CMD_7Z);
 
+    memset(&cache, 0, sizeof(LIST));
+    memset(&sources, 0, sizeof(LIST));
     memset(&summ, 0, sizeof(SUMM));
     memset(&revinfo, 0, sizeof(REVINFO));
     clearLastLine();
@@ -1566,17 +1930,17 @@ main(int argc, const char **argv)
         case 'R':
             optCount++;
             opt_Revision = malloc(LINESIZE);
-            i = sscanf(optarg, "%s", opt_Revision);
+            sscanf(optarg, "%s", opt_Revision);
             break;
         case 's':
             opt_stats++;
             break;
         case 'S':
             optCount++;
-            i = sscanf(optarg, "%d+%d,%s", &opt_Source,&opt_SrcPlus,sources_path);
+            i = sscanf(optarg, "%d+%d,%s", &opt_Source, &opt_SrcPlus, sources_path);
             if (i == 1)
                 sscanf(optarg, "%*d,%s", sources_path);
-            l2l_dbg(3, "Sources option parse result: %d+%d,\"%s\"\n", opt_Source,opt_SrcPlus,sources_path);
+            l2l_dbg(3, "Sources option parse result: %d+%d,\"%s\"\n", opt_Source, opt_SrcPlus, sources_path);
             break;
         case 't':
             opt_twice++;
@@ -1621,8 +1985,14 @@ main(int argc, const char **argv)
         strcpy(opt_dir, sources_path);
         strcat(opt_dir, DEF_OPT_DIR);
     }
-
     argc -= optCount;
+
+    if (opt_Revision && (strcmp(opt_Revision, "update") == 0))
+    {
+        res = updateSvnlog();
+        return res;
+    }
+
     if (check_directory(opt_force))
         return 3;
 
@@ -1658,7 +2028,7 @@ main(int argc, const char **argv)
     if (argc > 1)
     {   // translate {<exefile> <offset>}
         int i = 1;
-        const char *base = NULL;
+        const char *exefile = NULL;
         const char *offset = NULL;
         char Line[LINESIZE + 1];
 
@@ -1668,14 +2038,12 @@ main(int argc, const char **argv)
             offset = argv[optCount + i++];
             if (isOffset(offset))
             {
-                if (base)
+                if (exefile)
                 {
-                    l2l_dbg(2, "translating %s %s\n", base, offset);
-                    translate_file(base, my_atoi(offset), Line);
-                    printf("%s\n", Line); 
-                    reportRevision(stdout);
-                    reportSource(stdout);
-                    clearLastLine();
+                    l2l_dbg(2, "translating %s %s\n", exefile, offset);
+                    translate_file(exefile, my_atoi(offset), Line);
+                    printf("%s\n", Line);
+                    report(stdout);
                 }
                 else
                 {
@@ -1687,7 +2055,7 @@ main(int argc, const char **argv)
             else
             {
                 // Not an offset so must be an exefile:
-                base = offset;
+                exefile = offset;
             }
         }
     }
