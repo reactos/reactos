@@ -29,7 +29,6 @@ BOOL				InitInstance( HINSTANCE, int );
 BOOL				InitInstance_wave( HWND, HINSTANCE, int );
 LRESULT CALLBACK	WndProc( HWND, UINT, WPARAM, LPARAM );
 LRESULT CALLBACK	WndProc_wave( HWND, UINT, WPARAM, LPARAM );
-INT_PTR CALLBACK	About( HWND, UINT, WPARAM, LPARAM );
 
 BOOL win_first, wout_first;
 
@@ -82,6 +81,24 @@ RECT text2_rect;
 RECT cli;
 
 
+INT_PTR CALLBACK AboutDlgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+	switch (msg)
+	{
+		case WM_COMMAND:
+			switch (LOWORD(wp))
+			{
+				case IDOK:
+					EndDialog(hWnd, 0);
+					return TRUE;
+			}
+			break;
+		case WM_CLOSE:
+			EndDialog(hWnd, 0);
+			return TRUE;
+	}
+	return FALSE;
+}
 
 
 
@@ -292,7 +309,7 @@ MyRegisterClass( HINSTANCE hInstance )
     wcex.hInstance		= hInstance;
     wcex.hIcon			= LoadIcon( hInstance, MAKEINTRESOURCE( IDI_SNDREC32 ));
     wcex.hCursor		= LoadCursor( NULL, IDC_ARROW );
-    wcex.hbrBackground	= (HBRUSH)( 16 );
+    wcex.hbrBackground	= GetSysColorBrush(COLOR_BTNFACE);
     wcex.lpszMenuName	= MAKEINTRESOURCE( IDR_MENU1 );
     wcex.lpszClassName	= szWindowClass;
     wcex.hIconSm		= LoadIcon( wcex.hInstance, MAKEINTRESOURCE( IDI_SNDREC32 ));
@@ -797,8 +814,8 @@ WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         case ID__ABOUT:
             
-
-            
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutDlgProc);
+            return TRUE;
             break;
 
 
