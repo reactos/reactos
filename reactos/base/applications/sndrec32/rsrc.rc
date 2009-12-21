@@ -3,7 +3,7 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_SNDREC32            ICON                    "resources/reactOS_sndrec32.ico"
+IDI_SNDREC32            ICON                    "resources/record-app.ico"
 
 IDB_BITMAP2_START       BITMAP                  "resources/but_start.bmp"
 IDB_BITMAP2_END         BITMAP                  "resources/but_end.bmp"
