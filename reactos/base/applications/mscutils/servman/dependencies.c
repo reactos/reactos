@@ -9,158 +9,13 @@
 
 #include "precomp.h"
 
-
-/*
- * Services which depend on the given service.
- * The return components depend on this service
- */
-LPTSTR
-GetDependentServices(SC_HANDLE hService)
-{
-    LPQUERY_SERVICE_CONFIG lpServiceConfig;
-    LPTSTR lpStr = NULL;
-    DWORD bytesNeeded;
-    DWORD bytes;
-
-    if (!QueryServiceConfig(hService,
-                            NULL,
-                            0,
-                            &bytesNeeded) &&
-        GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-    {
-        lpServiceConfig = HeapAlloc(ProcessHeap,
-                                    0,
-                                    bytesNeeded);
-        if (lpServiceConfig)
-        {
-            if (QueryServiceConfig(hService,
-                                   lpServiceConfig,
-                                   bytesNeeded,
-                                   &bytesNeeded))
-            {
-                if (lpServiceConfig)
-                {
-                    lpStr = lpServiceConfig->lpDependencies;
-                    bytes = 0;
-
-                    while (TRUE)
-                    {
-                        bytes++;
-
-                        if (!*lpStr && !*(lpStr + 1))
-                        {
-                            bytes++;
-                            break;
-                        }
-
-                        lpStr++;
-                    }
-
-                    bytes *= sizeof(TCHAR);
-                    lpStr = HeapAlloc(ProcessHeap,
-                                      0,
-                                      bytes);
-                    if (lpStr)
-                    {
-                        CopyMemory(lpStr,
-                                   lpServiceConfig->lpDependencies,
-                                   bytes);
-                    }
-                }
-            }
-        }
-    }
-
-    return lpStr;
-}
-
-
-/*
- * Services which the given service depends on (1st treeview)
- * The service depends on the return components 
- */
-LPENUM_SERVICE_STATUS
-GetServiceDependents(SC_HANDLE hService,
-                     LPDWORD lpdwCount)
-{
-    LPENUM_SERVICE_STATUS lpDependencies;
-    DWORD dwBytesNeeded;
-    DWORD dwCount;
-
-    if (EnumDependentServices(hService,
-                              SERVICE_STATE_ALL,
-                              NULL,
-                              0,
-                              &dwBytesNeeded,
-                              &dwCount))
-    {
-        /* There are no dependent services */
-         return NULL;
-    }
-    else
-    {
-        if (GetLastError() != ERROR_MORE_DATA)
-            return NULL; /* Unexpected error */
-
-        lpDependencies = (LPENUM_SERVICE_STATUS)HeapAlloc(GetProcessHeap(),
-                                                          0,
-                                                          dwBytesNeeded);
-        if (lpDependencies)
-        {
-            if (EnumDependentServices(hService,
-                                       SERVICE_STATE_ALL,
-                                       lpDependencies,
-                                       dwBytesNeeded,
-                                       &dwBytesNeeded,
-                                       &dwCount))
-            {
-                *lpdwCount = dwCount;
-            }
-            else
-            {
-                HeapFree(ProcessHeap,
-                         0,
-                         lpDependencies);
-
-                lpDependencies = NULL;
-            }
-        }
-    }
-
-    return lpDependencies;
-
-}
-
-
-BOOL
-HasDependentServices(SC_HANDLE hService)
-{
-    DWORD dwBytesNeeded, dwCount;
-    BOOL bRet = FALSE;
-
-    if (hService)
-    {
-        if (!EnumDependentServices(hService,
-                                   SERVICE_STATE_ALL,
-                                   NULL,
-                                   0,
-                                   &dwBytesNeeded,
-                                   &dwCount))
-        {
-             if (GetLastError() == ERROR_MORE_DATA)
-                 bRet = TRUE;
-        }
-    }
-
-    return bRet;
-}
-
+//FIXME: reimplement this
 static BOOL
 DoInitDependsDialog(PSTOP_INFO pStopInfo,
                     HWND hDlg)
 {
-    LPENUM_SERVICE_STATUS lpDependencies;
-    DWORD dwCount;
+    //LPENUM_SERVICE_STATUS lpDependencies;
+    //DWORD dwCount;
     LPTSTR lpPartialStr, lpStr;
     DWORD fullLen;
     HICON hIcon = NULL;
@@ -219,8 +74,8 @@ DoInitDependsDialog(PSTOP_INFO pStopInfo,
                      lpPartialStr);
         }
 
-        /* Get the list of dependencies */
-        lpDependencies = GetServiceDependents(pStopInfo->hMainService, &dwCount);
+        /* Get the list of dependencies 
+        GetServiceDependents(pStopInfo->hMainService, &dwCount);
         if (lpDependencies)
         {
             LPENUM_SERVICE_STATUS lpEnumServiceStatus;
@@ -230,7 +85,7 @@ DoInitDependsDialog(PSTOP_INFO pStopInfo,
             {
                 lpEnumServiceStatus = &lpDependencies[i];
 
-                /* Add the service to the listbox */
+                 Add the service to the listbox 
                 SendDlgItemMessage(hDlg,
                                    IDC_STOP_DEPENDS_LB,
                                    LB_ADDSTRING,
@@ -241,7 +96,7 @@ DoInitDependsDialog(PSTOP_INFO pStopInfo,
             HeapFree(ProcessHeap,
                      0,
                      lpDependencies);
-        }
+        }*/
     }
 
     return bRet;
