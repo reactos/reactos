@@ -106,62 +106,81 @@ TV2_GetDependants(SC_HANDLE hService,
 }
 
 
-static VOID
+VOID
 TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                         HTREEITEM hParent,
-                        SC_HANDLE hService)
+                        LPTSTR lpServiceName)
 {
+    SC_HANDLE hSCManager;
+    SC_HANDLE hService;
     LPENUM_SERVICE_STATUS lpServiceStatus;
     LPTSTR lpNoDepends;
     DWORD count, i;
     BOOL bHasChildren;
 
-    /* Get a list of service dependents */
-    lpServiceStatus = TV2_GetDependants(hService, &count);
-    if (lpServiceStatus)
+    /* Set the first items in each tree view */
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_ALL_ACCESS);
+    if (hSCManager)
     {
-        for (i = 0; i < count; i++)
+        hService = OpenService(hSCManager,
+                               lpServiceName,
+                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
+        if (hService)
         {
-            /* Does this item need a +/- box? */
-            bHasChildren = HasDependantServices(lpServiceStatus[i].lpServiceName);
+            /* Get a list of service dependents */
+            lpServiceStatus = TV2_GetDependants(hService, &count);
+            if (lpServiceStatus)
+            {
+                for (i = 0; i < count; i++)
+                {
+                    /* Does this item need a +/- box? */
+                    bHasChildren = HasDependantServices(lpServiceStatus[i].lpServiceName);
 
-            /* Add it */
-            AddItemToTreeView(pDlgInfo->hDependsTreeView2,
-                              hParent,
-                              lpServiceStatus[i].lpDisplayName,
-                              lpServiceStatus[i].lpServiceName,
-                              lpServiceStatus[i].ServiceStatus.dwServiceType,
-                              bHasChildren);
+                    /* Add it */
+                    AddItemToTreeView(pDlgInfo->hDependsTreeView2,
+                                      hParent,
+                                      lpServiceStatus[i].lpDisplayName,
+                                      lpServiceStatus[i].lpServiceName,
+                                      lpServiceStatus[i].ServiceStatus.dwServiceType,
+                                      bHasChildren);
+                }
+            }
+            else
+            {
+                /* If there is no parent, set the tree to 'no dependencies' */
+                if (!hParent)
+                {
+                    /* Load the 'No dependencies' string */
+                    AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
+
+                    AddItemToTreeView(pDlgInfo->hDependsTreeView2,
+                                      NULL,
+                                      lpNoDepends,
+                                      NULL,
+                                      0,
+                                      FALSE);
+
+                    HeapFree(ProcessHeap,
+                             0,
+                             lpNoDepends);
+
+                    /* Disable the window */
+                    EnableWindow(pDlgInfo->hDependsTreeView2, FALSE);
+                }
+            }
+
+            CloseServiceHandle(hService);
         }
-    }
-    else
-    {
-        /* If there is no parent, set the tree to 'no dependencies' */
-        if (!hParent)
-        {
-            /* Load the 'No dependencies' string */
-            AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
 
-            AddItemToTreeView(pDlgInfo->hDependsTreeView2,
-                              NULL,
-                              lpNoDepends,
-                              NULL,
-                              0,
-                              FALSE);
-
-            HeapFree(ProcessHeap,
-                     0,
-                     lpNoDepends);
-
-            /* Disable the window */
-            EnableWindow(pDlgInfo->hDependsTreeView2, FALSE);
-        }
+        CloseServiceHandle(hSCManager);
     }
 }
 
 BOOL
 TV2_Initialize(PSERVICEPROPSHEET pDlgInfo,
-               SC_HANDLE hService)
+               LPTSTR lpServiceName)
 {
     BOOL bRet = FALSE;
 
@@ -178,7 +197,7 @@ TV2_Initialize(PSERVICEPROPSHEET pDlgInfo,
                                 TVSIL_NORMAL);
 
     /* Set the first items in the control */
-    TV2_AddDependantsToTree(pDlgInfo, NULL, hService);
+    TV2_AddDependantsToTree(pDlgInfo, NULL, lpServiceName);
 
     return bRet;
 }

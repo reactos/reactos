@@ -80,84 +80,110 @@ TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
     return lpStr;
 }
 
-static VOID
+VOID
 TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                         HTREEITEM hParent,
-                        SC_HANDLE hService)
+                        LPTSTR lpServiceName)
 {
+    SC_HANDLE hSCManager;
+    SC_HANDLE hService;
     LPQUERY_SERVICE_CONFIG lpServiceConfig;
     LPTSTR lpDependants;
     LPTSTR lpStr;
     LPTSTR lpNoDepends;
     BOOL bHasChildren;
 
-    /* Get a list of service dependents */
-    lpDependants = TV1_GetDependants(pDlgInfo, hService);
-    if (lpDependants)
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_ALL_ACCESS);
+    if (hSCManager)
     {
-        lpStr = lpDependants;
-
-        /* Make sure this isn't the end of the list */
-        while (*lpStr)
+        hService = OpenService(hSCManager,
+                               lpServiceName,
+                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
+        if (hService)
         {
-            /* Get the info for this service */
-            lpServiceConfig = GetServiceConfig(lpStr);
-            if (lpServiceConfig)
+            /* Get a list of service dependents */
+            lpDependants = TV1_GetDependants(pDlgInfo, hService);
+            if (lpDependants)
             {
-                /* Does this item need a +/- box? */
-                bHasChildren = lpServiceConfig->lpDependencies ? TRUE : FALSE;
+                lpStr = lpDependants;
 
-                /* Add it */
-                AddItemToTreeView(pDlgInfo->hDependsTreeView1,
-                                  hParent,
-                                  lpServiceConfig->lpDisplayName,
-                                  lpStr,
-                                  lpServiceConfig->dwServiceType,
-                                  bHasChildren);
+                /* Make sure this isn't the end of the list */
+                while (*lpStr)
+                {
+                    /* Get the info for this service */
+                    lpServiceConfig = GetServiceConfig(lpStr);
+                    if (lpServiceConfig)
+                    {
+                        /* Does this item need a +/- box? */
+                        if (lpServiceConfig->lpDependencies &&
+                            *lpServiceConfig->lpDependencies != '\0')
+                        {
+                            bHasChildren = TRUE;
+                        }
+                        else
+                        {
+                            bHasChildren = FALSE;
+                        }
+
+                        /* Add it */
+                        AddItemToTreeView(pDlgInfo->hDependsTreeView1,
+                                          hParent,
+                                          lpServiceConfig->lpDisplayName,
+                                          lpStr,
+                                          lpServiceConfig->dwServiceType,
+                                          bHasChildren);
+
+                        HeapFree(GetProcessHeap(),
+                                 0,
+                                 lpServiceConfig);
+                    }
+
+                    /* Move to the end of the string */
+                    while (*lpStr++)
+                        ;
+                }
 
                 HeapFree(GetProcessHeap(),
                          0,
-                         lpServiceConfig);
+                         lpDependants);
+            }
+            else
+            {
+                /* If there is no parent, set the tree to 'no dependencies' */
+                if (!hParent)
+                {
+                    /* Load the 'No dependencies' string */
+                    AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
+
+                    AddItemToTreeView(pDlgInfo->hDependsTreeView1,
+                                      NULL,
+                                      lpNoDepends,
+                                      NULL,
+                                      0,
+                                      FALSE);
+
+                    HeapFree(ProcessHeap,
+                             0,
+                             lpNoDepends);
+
+                    /* Disable the window */
+                    EnableWindow(pDlgInfo->hDependsTreeView1, FALSE);
+                }
             }
 
-            /* Move to the end of the string */
-            while (*lpStr++)
-                ;
+            CloseServiceHandle(hService);
         }
 
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpDependants);
-    }
-    else
-    {
-        /* If there is no parent, set the tree to 'no dependencies' */
-        if (!hParent)
-        {
-            /* Load the 'No dependencies' string */
-            AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
-
-            AddItemToTreeView(pDlgInfo->hDependsTreeView1,
-                              NULL,
-                              lpNoDepends,
-                              NULL,
-                              0,
-                              FALSE);
-
-            HeapFree(ProcessHeap,
-                     0,
-                     lpNoDepends);
-
-            /* Disable the window */
-            EnableWindow(pDlgInfo->hDependsTreeView1, FALSE);
-        }
+        CloseServiceHandle(hSCManager);
     }
 }
 
 
 BOOL
 TV1_Initialize(PSERVICEPROPSHEET pDlgInfo,
-               SC_HANDLE hService)
+               LPTSTR lpServiceName)
 {
     BOOL bRet = FALSE;
 
@@ -174,7 +200,7 @@ TV1_Initialize(PSERVICEPROPSHEET pDlgInfo,
                                 TVSIL_NORMAL);
 
     /* Set the first items in the control */
-    TV1_AddDependantsToTree(pDlgInfo, NULL, hService);
+    TV1_AddDependantsToTree(pDlgInfo, NULL, lpServiceName);
 
     return bRet;
 }

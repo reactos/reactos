@@ -12,10 +12,10 @@
 
 HTREEITEM
 AddItemToTreeView(HWND hTreeView,
-                  HTREEITEM hRoot,
+                  HTREEITEM hParent,
                   LPTSTR lpDisplayName,
                   LPTSTR lpServiceName,
-                  ULONG serviceType,
+                  ULONG ServiceType,
                   BOOL bHasChildren)
 {
     TV_ITEM tvi;
@@ -24,33 +24,50 @@ AddItemToTreeView(HWND hTreeView,
     ZeroMemory(&tvi, sizeof(tvi));
     ZeroMemory(&tvins, sizeof(tvins));
 
-    tvi.mask = TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_CHILDREN;
+    tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_CHILDREN;
     tvi.pszText = lpDisplayName;
     tvi.cchTextMax = _tcslen(lpDisplayName);
     tvi.cChildren = bHasChildren; //I_CHILDRENCALLBACK;
 
-    if (serviceType == SERVICE_WIN32_OWN_PROCESS ||
-        serviceType == SERVICE_WIN32_SHARE_PROCESS)
+    switch (ServiceType)
     {
-        tvi.iImage = 1;
-        tvi.iSelectedImage = 1;
+        case SERVICE_WIN32_OWN_PROCESS:
+        case SERVICE_WIN32_SHARE_PROCESS:
+            tvi.iImage = 1;
+            tvi.iSelectedImage = 1;
+            break;
+
+        case SERVICE_KERNEL_DRIVER:
+        case SERVICE_FILE_SYSTEM_DRIVER:
+            tvi.iImage = 2;
+            tvi.iSelectedImage = 2;
+            break;
+
+        default:
+            tvi.iImage = 0;
+            tvi.iSelectedImage = 0;
+            break;
     }
-    else if (serviceType == SERVICE_KERNEL_DRIVER ||
-             serviceType == SERVICE_FILE_SYSTEM_DRIVER)
+
+    /* Attach the service name */
+    tvi.lParam = (LPARAM)(LPTSTR)HeapAlloc(GetProcessHeap(),
+                                           0,
+                                           (_tcslen(lpServiceName) + 1) * sizeof(TCHAR));
+    if (tvi.lParam)
     {
-        tvi.iImage = 2;
-        tvi.iSelectedImage = 2;
-    }
-    else
-    {
-        tvi.iImage = 0;
-        tvi.iSelectedImage = 0;
+        _tcscpy((LPTSTR)tvi.lParam, lpServiceName);
     }
 
     tvins.item = tvi;
-    tvins.hParent = hRoot;
+    tvins.hParent = hParent;
 
     return TreeView_InsertItem(hTreeView, &tvins);
+}
+
+static VOID
+DestroyTreeView(HWND hTreeView)
+{
+    //FIXME: traverse the nodes and free the strings
 }
 
 /*
@@ -69,15 +86,30 @@ TreeView_GetItemText(HWND hTreeView,
 
     return TreeView_GetItem(hTreeView, &tv);
 }
+
+
+static LPARAM
+TreeView_GetItemParam(HWND hTreeView,
+                      HTREEITEM hItem)
+{
+    LPARAM lParam = 0;
+    TVITEM tv = {0};
+
+    tv.mask = TVIF_PARAM | TVIF_HANDLE;
+    tv.hItem = hItem;
+
+    if (TreeView_GetItem(hTreeView, &tv))
+    {
+        lParam = tv.lParam;
+    }
+
+    return lParam;
+}
 */
 
-static BOOL
+static VOID
 InitDependPage(PSERVICEPROPSHEET pDlgInfo)
 {
-    SC_HANDLE hSCManager;
-    SC_HANDLE hService;
-    BOOL bRet = FALSE;
-
     /* Initialize the image list */
     pDlgInfo->hDependsImageList = InitImageList(IDI_NODEPENDS,
                                                 IDI_DRIVER,
@@ -85,32 +117,11 @@ InitDependPage(PSERVICEPROPSHEET pDlgInfo)
                                                 GetSystemMetrics(SM_CXSMICON),
                                                 IMAGE_ICON);
 
-    /* Set the first items in each tree view */
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ALL_ACCESS);
-    if (hSCManager)
-    {
-        hService = OpenService(hSCManager,
-                               pDlgInfo->pService->lpServiceName,
-                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
-        if (hService)
-        {
-            /* Set the first tree view */
-            TV1_Initialize(pDlgInfo, hService);
+    /* Set the first tree view */
+    TV1_Initialize(pDlgInfo, pDlgInfo->pService->lpServiceName);
 
-            /* Set the second tree view */
-            TV2_Initialize(pDlgInfo, hService);
-
-            bRet = TRUE;
-
-            CloseServiceHandle(hService);
-        }
-
-        CloseServiceHandle(hSCManager);
-    }
-
-    return bRet;
+    /* Set the second tree view */
+    TV2_Initialize(pDlgInfo, pDlgInfo->pService->lpServiceName);
 }
 
 
@@ -162,7 +173,14 @@ DependenciesPageProc(HWND hwndDlg,
 
                     if (lpnmtv->action == TVE_EXPAND)
                     {
-                     
+                        if (lpnmtv->hdr.idFrom == IDC_DEPEND_TREE1)
+                        {
+                            TV1_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPTSTR)lpnmtv->itemNew.lParam);
+                        }
+                        else if (lpnmtv->hdr.idFrom == IDC_DEPEND_TREE2)
+                        {
+                            TV2_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPTSTR)lpnmtv->itemNew.lParam);
+                        }
                     }
                     break;
                 }
@@ -178,6 +196,9 @@ DependenciesPageProc(HWND hwndDlg,
             break;
 
         case WM_DESTROY:
+            DestroyTreeView(pDlgInfo->hDependsTreeView1);
+            DestroyTreeView(pDlgInfo->hDependsTreeView2);
+
             if (pDlgInfo->hDependsImageList)
                 ImageList_Destroy(pDlgInfo->hDependsImageList);
     }

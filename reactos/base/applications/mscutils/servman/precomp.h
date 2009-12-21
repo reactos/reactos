@@ -121,15 +121,15 @@ typedef struct _SERVICEPROPSHEET
 HTREEITEM AddItemToTreeView(HWND hTreeView, HTREEITEM hRoot, LPTSTR lpDisplayName, LPTSTR lpServiceName, ULONG serviceType, BOOL bHasChildren);
 
 /* dependencies */
-//LPENUM_SERVICE_STATUS GetServiceDependents(SC_HANDLE hService, LPDWORD lpdwCount);
 INT_PTR CALLBACK StopDependsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-//LPTSTR GetDependentServices(SC_HANDLE hService);
 
 /* tv1_dependencies */
-BOOL TV1_Initialize(PSERVICEPROPSHEET pDlgInfo, SC_HANDLE hService);
+BOOL TV1_Initialize(PSERVICEPROPSHEET pDlgInfo, LPTSTR lpServiceName);
+VOID TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPTSTR lpServiceName);
 
 /* tv2_dependencies */
-BOOL TV2_Initialize(PSERVICEPROPSHEET pDlgInfo, SC_HANDLE hService);
+BOOL TV2_Initialize(PSERVICEPROPSHEET pDlgInfo, LPTSTR lpServiceName);
+VOID TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPTSTR lpServiceName);
 
 LONG APIENTRY OpenPropSheet(PMAIN_WND_INFO Info);
 
