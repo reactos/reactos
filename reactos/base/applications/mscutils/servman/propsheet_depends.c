@@ -27,8 +27,9 @@ AddItemToTreeView(HWND hTreeView,
     tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_CHILDREN;
     tvi.pszText = lpDisplayName;
     tvi.cchTextMax = _tcslen(lpDisplayName);
-    tvi.cChildren = bHasChildren; //I_CHILDRENCALLBACK;
+    tvi.cChildren = bHasChildren;
 
+    /* Select the image for this service */
     switch (ServiceType)
     {
         case SERVICE_WIN32_OWN_PROCESS:
@@ -49,13 +50,16 @@ AddItemToTreeView(HWND hTreeView,
             break;
     }
 
-    /* Attach the service name */
-    tvi.lParam = (LPARAM)(LPTSTR)HeapAlloc(GetProcessHeap(),
-                                           0,
-                                           (_tcslen(lpServiceName) + 1) * sizeof(TCHAR));
-    if (tvi.lParam)
+    if (lpServiceName)
     {
-        _tcscpy((LPTSTR)tvi.lParam, lpServiceName);
+        /* Attach the service name */
+        tvi.lParam = (LPARAM)(LPTSTR)HeapAlloc(GetProcessHeap(),
+                                               0,
+                                               (_tcslen(lpServiceName) + 1) * sizeof(TCHAR));
+        if (tvi.lParam)
+        {
+            _tcscpy((LPTSTR)tvi.lParam, lpServiceName);
+        }
     }
 
     tvins.item = tvi;
@@ -63,30 +67,6 @@ AddItemToTreeView(HWND hTreeView,
 
     return TreeView_InsertItem(hTreeView, &tvins);
 }
-
-static VOID
-DestroyTreeView(HWND hTreeView)
-{
-    //FIXME: traverse the nodes and free the strings
-}
-
-/*
-static BOOL
-TreeView_GetItemText(HWND hTreeView,
-                     HTREEITEM hItem,
-                     LPTSTR lpBuffer,
-                     DWORD cbBuffer)
-{
-    TVITEM tv = {0};
-
-    tv.mask = TVIF_TEXT | TVIF_HANDLE;
-    tv.hItem = hItem;
-    tv.pszText = lpBuffer;
-    tv.cchTextMax = (int)cbBuffer;
-
-    return TreeView_GetItem(hTreeView, &tv);
-}
-
 
 static LPARAM
 TreeView_GetItemParam(HWND hTreeView,
@@ -104,6 +84,74 @@ TreeView_GetItemParam(HWND hTreeView,
     }
 
     return lParam;
+}
+
+static VOID
+DestroyItem(HWND hTreeView,
+            HTREEITEM hItem)
+{
+    HTREEITEM hChildItem;
+    LPTSTR lpServiceName;
+
+    /* Does this item have any children */
+    hChildItem = TreeView_GetChild(hTreeView, hItem);
+    if (hChildItem)
+    {
+        /* It does, recurse to that one */
+        DestroyItem(hTreeView, hChildItem);
+    }
+
+    /* Get the string and free it */
+    lpServiceName = (LPTSTR)TreeView_GetItemParam(hTreeView, hItem);
+    if (lpServiceName)
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpServiceName);
+    }
+}
+
+static VOID
+DestroyTreeView(HWND hTreeView)
+{
+    HTREEITEM hItem;
+
+    /* Get the first item in the top level */
+    hItem = TreeView_GetFirstVisible(hTreeView);
+    if (hItem)
+    {
+        /* Kill it and all children */
+        DestroyItem(hTreeView, hItem);
+
+        /* Kill all remaining top level items */
+        while (hItem)
+        {
+            /* Are there any more items at the top level */
+            hItem = TreeView_GetNextSibling(hTreeView, hItem);
+            if (hItem)
+            {
+                /*  Kill it and all children */
+                DestroyItem(hTreeView, hItem);
+            }
+        }
+    }
+}
+
+/*
+static BOOL
+TreeView_GetItemText(HWND hTreeView,
+                     HTREEITEM hItem,
+                     LPTSTR lpBuffer,
+                     DWORD cbBuffer)
+{
+    TVITEM tv = {0};
+
+    tv.mask = TVIF_TEXT | TVIF_HANDLE;
+    tv.hItem = hItem;
+    tv.pszText = lpBuffer;
+    tv.cchTextMax = (int)cbBuffer;
+
+    return TreeView_GetItem(hTreeView, &tv);
 }
 */
 
