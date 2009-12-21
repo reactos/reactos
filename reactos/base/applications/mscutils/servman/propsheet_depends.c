@@ -223,11 +223,21 @@ DependenciesPageProc(HWND hwndDlg,
                     {
                         if (lpnmtv->hdr.idFrom == IDC_DEPEND_TREE1)
                         {
-                            TV1_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPTSTR)lpnmtv->itemNew.lParam);
+                            /* Has this node been expanded before */
+                            if (!TreeView_GetChild(pDlgInfo->hDependsTreeView1, lpnmtv->itemNew.hItem))
+                            {
+                                /* It's not, add the children */
+                                TV1_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPTSTR)lpnmtv->itemNew.lParam);
+                            }
                         }
                         else if (lpnmtv->hdr.idFrom == IDC_DEPEND_TREE2)
                         {
-                            TV2_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPTSTR)lpnmtv->itemNew.lParam);
+                            /* Has this node been expanded before */
+                            if (!TreeView_GetChild(pDlgInfo->hDependsTreeView1, lpnmtv->itemNew.hItem))
+                            {
+                                /* It's not, add the children */
+                                TV2_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPTSTR)lpnmtv->itemNew.lParam);
+                            }
                         }
                     }
                     break;
