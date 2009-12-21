@@ -80,7 +80,7 @@ MiGetPteForProcess(
         Pte = MiAddressToPxe(Address);
         if (!Pte->u.Hard.Valid)
         {
-            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
+//            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
             InterlockedExchangePte(Pte, TmplPte);
         }
 
@@ -88,7 +88,7 @@ MiGetPteForProcess(
         Pte = MiAddressToPpe(Address);
         if (!Pte->u.Hard.Valid)
         {
-            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
+//            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
             InterlockedExchangePte(Pte, TmplPte);
         }
 
@@ -96,7 +96,7 @@ MiGetPteForProcess(
         Pte = MiAddressToPde(Address);
         if (!Pte->u.Hard.Valid)
         {
-            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
+//            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
             InterlockedExchangePte(Pte, TmplPte);
         }
     }
