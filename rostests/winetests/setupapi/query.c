@@ -167,14 +167,15 @@ static void test_SetupGetInfInformation(void)
        broken(GetLastError() == ERROR_FILE_NOT_FOUND) || /* win98 */
        broken(GetLastError() == ERROR_PATH_NOT_FOUND) || /* NT4 */
        broken(GetLastError() == ERROR_INVALID_NAME) || /* win2k */
-       broken(GetLastError() == ERROR_GENERAL_SYNTAX), /* another win2k */
+       broken(GetLastError() == ERROR_GENERAL_SYNTAX), /* another win2k / winMe */
        "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
     ok(size == 0xdeadbeef, "Expected size to remain unchanged\n");
 
     /* try an invalid inf filename */
-    /* do not use NULL as absolute inf filename on win9x (crash) */
+    /* do not use NULL as absolute inf filename on win9x/winMe (crash) */
     if ((GetLastError() != ERROR_BAD_PATHNAME) &&   /* win95 */
-        (GetLastError() != ERROR_FILE_NOT_FOUND))  /* win98 */
+        (GetLastError() != ERROR_FILE_NOT_FOUND) &&  /* win98 */
+        (GetLastError() != ERROR_GENERAL_SYNTAX))  /* winMe */
     {
         size = 0xdeadbeef;
         SetLastError(0xbeefcafe);

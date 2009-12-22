@@ -32,14 +32,18 @@
 
 /* function pointers */
 static HMODULE hSetupAPI;
-static LPCWSTR (WINAPI *pSetupGetField)(PINFCONTEXT,DWORD);
+static LPCSTR (WINAPI *pSetupGetFieldA)(PINFCONTEXT,DWORD);
+static LPCWSTR (WINAPI *pSetupGetFieldW)(PINFCONTEXT,DWORD);
 static BOOL (WINAPI *pSetupEnumInfSectionsA)( HINF hinf, UINT index, PSTR buffer, DWORD size, UINT *need );
 
 static void init_function_pointers(void)
 {
     hSetupAPI = GetModuleHandleA("setupapi.dll");
 
-    pSetupGetField = (void *)GetProcAddress(hSetupAPI, "pSetupGetField");
+    /* Nice, pSetupGetField is either A or W depending on the Windows version! The actual test
+     * takes care of this difference */
+    pSetupGetFieldA = (void *)GetProcAddress(hSetupAPI, "pSetupGetField");
+    pSetupGetFieldW = (void *)GetProcAddress(hSetupAPI, "pSetupGetField");
     pSetupEnumInfSectionsA = (void *)GetProcAddress(hSetupAPI, "SetupEnumInfSectionsA" );
 }
 
@@ -497,7 +501,14 @@ static const char *contents = "[Version]\n"
                               "[Strings]\n"
                               "RTMQFE_NAME = \"RTMQFE\"\n";
 
-static const WCHAR getfield_res[][20] =
+static const CHAR getfield_resA[][20] =
+{
+    "RTMQFE",
+    "%RTMGFE_NAME%",
+    "SP1RTM",
+};
+
+static const WCHAR getfield_resW[][20] =
 {
     {'R','T','M','Q','F','E',0},
     {'%','R','T','M','G','F','E','_','N','A','M','E','%',0},
@@ -509,10 +520,20 @@ static void test_pSetupGetField(void)
     UINT err;
     BOOL ret;
     HINF hinf;
-    LPCWSTR field;
+    LPCSTR fieldA;
+    LPCWSTR fieldW;
     INFCONTEXT context;
     int i;
     int len;
+    BOOL unicode = TRUE;
+
+    SetLastError(0xdeadbeef);
+    lstrcmpW(NULL, NULL);
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("Using A-functions instead of W\n");
+        unicode = FALSE;
+    }
 
     hinf = test_file_contents( contents, &err );
     ok( hinf != NULL, "Expected valid INF file\n" );
@@ -524,23 +545,47 @@ static void test_pSetupGetField(void)
 
     for ( i = 0; i < 3; i++ )
     {
-        field = pSetupGetField( &context, i );
-        ok( field != NULL, "Failed to get field %i\n", i );
-        ok( !lstrcmpW( getfield_res[i], field ), "Wrong string returned\n" );
+        if (unicode)
+        {
+            fieldW = pSetupGetFieldW( &context, i );
+            ok( fieldW != NULL, "Failed to get field %i\n", i );
+            ok( !lstrcmpW( getfield_resW[i], fieldW ), "Wrong string returned\n" );
+        }
+        else
+        {
+            fieldA = pSetupGetFieldA( &context, i );
+            ok( fieldA != NULL, "Failed to get field %i\n", i );
+            ok( !lstrcmpA( getfield_resA[i], fieldA ), "Wrong string returned\n" );
+        }
     }
 
-    field = pSetupGetField( &context, 3 );
-    ok( field != NULL, "Failed to get field 3\n" );
-    len = lstrlenW( field );
-    ok( len == 511 /* NT4, W2K, XP and W2K3 */ ||
-        len == 4096 /* Vista */ ||
-        len == 256 /* Win9x and WinME */,
-        "Unexpected length, got %d\n", len );
+    if (unicode)
+    {
+        fieldW = pSetupGetFieldW( &context, 3 );
+        ok( fieldW != NULL, "Failed to get field 3\n" );
+        len = lstrlenW( fieldW );
+        ok( len == 511 || /* NT4, W2K, XP and W2K3 */
+            len == 4096,  /* Vista */
+            "Unexpected length, got %d\n", len );
 
-    field = pSetupGetField( &context, 4 );
-    ok( field == NULL, "Expected NULL, got %p\n", field );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER,
-        "Expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError() );
+        fieldW = pSetupGetFieldW( &context, 4 );
+        ok( fieldW == NULL, "Expected NULL, got %p\n", fieldW );
+        ok( GetLastError() == ERROR_INVALID_PARAMETER,
+            "Expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError() );
+    }
+    else
+    {
+        fieldA = pSetupGetFieldA( &context, 3 );
+        ok( fieldA != NULL, "Failed to get field 3\n" );
+        len = lstrlenA( fieldA );
+        ok( len == 511, /* Win9x, WinME */
+            "Unexpected length, got %d\n", len );
+
+        fieldA = pSetupGetFieldA( &context, 4 );
+        ok( fieldA == NULL, "Expected NULL, got %p\n", fieldA );
+        ok( GetLastError() == ERROR_INVALID_PARAMETER,
+            "Expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError() );
+    }
 
     SetupCloseInfFile( hinf );
 }
@@ -557,14 +602,14 @@ static void test_SetupGetIntField(void)
     } keys[] =
     {
     /* key     fields            index   expected int  errorcode */
-    {  "Key=", "48",             1,      48,           ERROR_SUCCESS },
-    {  "Key=", "48",             0,      -1,           ERROR_INVALID_DATA },
-    {  "123=", "48",             0,      123,          ERROR_SUCCESS },
-    {  "Key=", "0x4",            1,      4,            ERROR_SUCCESS },
-    {  "Key=", "Field1",         1,      -1,           ERROR_INVALID_DATA },
-    {  "Key=", "Field1,34",      2,      34,           ERROR_SUCCESS },
-    {  "Key=", "Field1,,Field3", 2,      0,            ERROR_SUCCESS },
-    {  "Key=", "Field1,",        2,      0,            ERROR_SUCCESS }
+    {  "Key", "48",             1,      48,           ERROR_SUCCESS },
+    {  "Key", "48",             0,      -1,           ERROR_INVALID_DATA },
+    {  "123", "48",             0,      123,          ERROR_SUCCESS },
+    {  "Key", "0x4",            1,      4,            ERROR_SUCCESS },
+    {  "Key", "Field1",         1,      -1,           ERROR_INVALID_DATA },
+    {  "Key", "Field1,34",      2,      34,           ERROR_SUCCESS },
+    {  "Key", "Field1,,Field3", 2,      0,            ERROR_SUCCESS },
+    {  "Key", "Field1,",        2,      0,            ERROR_SUCCESS }
     };
     unsigned int i;
 
@@ -579,11 +624,12 @@ static void test_SetupGetIntField(void)
 
         strcpy( buffer, STD_HEADER "[TestSection]\n" );
         strcat( buffer, keys[i].key );
+        strcat( buffer, "=" );
         strcat( buffer, keys[i].fields );
         hinf = test_file_contents( buffer, &err);
         ok( hinf != NULL, "Expected valid INF file\n" );
 
-        SetupFindFirstLineA( hinf, "TestSection", "Key", &context );
+        SetupFindFirstLineA( hinf, "TestSection", keys[i].key, &context );
         SetLastError( 0xdeadbeef );
         intfield = -1;
         retb = SetupGetIntField( &context, keys[i].index, &intfield );
