@@ -334,7 +334,12 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
     data->curfile = strdupAtoW(pfdin->psz1);
     if (!data->cb(data->package, data->curfile, MSICABEXTRACT_BEGINEXTRACT, &path,
                   &attrs, data->user))
+    {
+        /* We're not extracting this file, so free the filename. */
+        msi_free(data->curfile);
+        data->curfile = NULL;
         goto done;
+    }
 
     TRACE("extracting %s\n", debugstr_w(path));
 
@@ -362,7 +367,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
             if (handle != INVALID_HANDLE_VALUE) goto done;
             err = GetLastError();
         }
-        if ((err == ERROR_SHARING_VIOLATION) || (err == ERROR_USER_MAPPED_FILE))
+        if (err == ERROR_SHARING_VIOLATION || err == ERROR_USER_MAPPED_FILE)
         {
             WCHAR tmpfileW[MAX_PATH], *tmppathW, *p;
             DWORD len;

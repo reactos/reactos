@@ -125,7 +125,10 @@ static UINT alter_add_column(MSIALTERVIEW *av)
         return r;
 
     if (check_column_exists(av->db, av->colinfo->table, av->colinfo->column))
+    {
+        columns->ops->delete(columns);
         return ERROR_BAD_QUERY_SYNTAX;
+    }
 
     r = MSI_OpenQuery(av->db, &view, query, av->colinfo->table, av->colinfo->column);
     if (r == ERROR_SUCCESS)

@@ -437,11 +437,13 @@ static UINT STORAGES_delete(struct tagMSIVIEW *view)
         if (sv->storages[i]->storage)
             IStorage_Release(sv->storages[i]->storage);
 
+        msi_free(sv->storages[i]->name);
         msi_free(sv->storages[i]);
     }
 
     msi_free(sv->storages);
     sv->storages = NULL;
+    msi_free(sv);
 
     return ERROR_SUCCESS;
 }
