@@ -1841,3 +1841,9 @@ HRESULT WINAPI ScriptJustify(const SCRIPT_VISATTR *sva, const int *advance,
     for (i = 0; i < num_glyphs; i++) justify[i] = advance[i];
     return S_OK;
 }
+
+BOOL gbLpkPresent = FALSE;
+VOID WINAPI LpkPresent()
+{
+    gbLpkPresent = TRUE; /* Turn it on this way! Wine is out of control! */
+}
