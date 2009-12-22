@@ -2228,7 +2228,8 @@ DWORD REnumServicesStatusW(
         return ERROR_ACCESS_DENIED;
     }
 
-    if (lpResumeHandle) dwLastResumeCount = *lpResumeHandle;
+    if (lpResumeHandle)
+        dwLastResumeCount = *lpResumeHandle;
 
     /* FIXME: Lock the service list shared */
 
@@ -2306,7 +2307,9 @@ DWORD REnumServicesStatusW(
 
     DPRINT("*pcbBytesNeeded: %lu\n", dwRequiredSize);
 
-    if (lpResumeHandle) *lpResumeHandle = dwLastResumeCount;
+    if (lpResumeHandle)
+        *lpResumeHandle = dwLastResumeCount;
+
     *lpServicesReturned = dwServiceCount;
     *pcbBytesNeeded = dwRequiredSize;
 
@@ -3244,7 +3247,8 @@ DWORD REnumDependentServicesA(
                             KEY_READ,
                             &hServicesKey);
 
-    if (dwError != ERROR_SUCCESS) return dwError;
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
 
     /* NOTE: Windows calculates the pcbBytesNeeded based on WCHAR strings for
              both EnumDependentServicesA and EnumDependentServicesW. So returned pcbBytesNeeded
@@ -3376,8 +3380,7 @@ DWORD REnumServicesStatusA(
         }
     }
 
-    dwError = REnumServicesStatusW(//BindingHandle,
-                                   hSCManager,
+    dwError = REnumServicesStatusW(hSCManager,
                                    dwServiceType,
                                    dwServiceState,
                                    (LPBYTE)lpStatusPtrW,
@@ -3387,7 +3390,8 @@ DWORD REnumServicesStatusA(
                                    lpResumeHandle);
 
     /* if no services were returned then we are Done */
-    if (*lpServicesReturned == 0) goto Done;
+    if (*lpServicesReturned == 0)
+        goto Done;
 
     lpStatusPtrA = (LPENUM_SERVICE_STATUSA)lpBuffer;
     lpStringPtrA = (LPSTR)((ULONG_PTR)lpBuffer +
@@ -3434,7 +3438,8 @@ DWORD REnumServicesStatusA(
     }
 
 Done:;
-    if (lpStatusPtrW) HeapFree(GetProcessHeap(), 0, lpStatusPtrW);
+    if (lpStatusPtrW)
+        HeapFree(GetProcessHeap(), 0, lpStatusPtrW);
 
     DPRINT("REnumServicesStatusA() done (Error %lu)\n", dwError);
 
