@@ -16,7 +16,6 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$ */
 
 #include <w32k.h>
 
@@ -656,6 +655,53 @@ NtGdiSetBitmapDimension(
     return Ret;
 }
 
+VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
+{
+    PDC pdc = NULL;
+    RGBQUAD quad;
+    PALETTEENTRY palEntry;
+    UINT index;
+
+    switch (*Color >> 24)
+    {
+        case 0x10: /* DIBINDEX */
+            if (IntGetDIBColorTable(hDC, LOWORD(*Color), 1, &quad) == 1) 
+            {
+                *Color = RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);                
+            }
+            else
+            {
+                /* Out of color table bounds - use black */
+                *Color = RGB(0, 0, 0);
+            }
+            break;
+        case 0x02: /* PALETTERGB */
+            pdc = DC_LockDc(hDC);
+            index = NtGdiGetNearestPaletteIndex(pdc->dclevel.hpal, *Color);
+            if (IntGetPaletteEntries(pdc->dclevel.hpal, index, 1, &palEntry) == 1)
+            {
+                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);            
+            }
+            else
+            {
+                DPRINT1("no wai!\n");
+            }
+            DC_UnlockDc(pdc);
+            break;
+        case 0x01: /* PALETTEINDEX */
+            pdc = DC_LockDc(hDC);
+            if (IntGetPaletteEntries(pdc->dclevel.hpal, LOWORD(*Color), 1, &palEntry) == 1)
+            {
+                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);            
+            }
+            DC_UnlockDc(pdc);
+            break;
+        default:
+            DPRINT("Unsupported color type %d passed\n", *Color >> 24);
+            break;
+    }   
+}
+
 BOOL APIENTRY
 GdiSetPixelV(
     HDC hDC,
@@ -663,22 +709,28 @@ GdiSetPixelV(
     INT Y,
     COLORREF Color)
 {
-    HBRUSH hbrush = NtGdiCreateSolidBrush(Color, NULL);
+    HBRUSH hBrush;
     HGDIOBJ OldBrush;
 
-    if (hbrush == NULL)
-        return(FALSE);
+    if ((Color & 0xFF000000) != 0)
+    {
+        IntHandleSpecialColorType(hDC, &Color);
+    }
 
-    OldBrush = NtGdiSelectBrush(hDC, hbrush);
+    hBrush = NtGdiCreateSolidBrush(Color, NULL);
+    if (hBrush == NULL)
+        return FALSE;
+
+    OldBrush = NtGdiSelectBrush(hDC, hBrush);
     if (OldBrush == NULL)
     {
-        GreDeleteObject(hbrush);
-        return(FALSE);
+        GreDeleteObject(hBrush);
+        return FALSE;
     }
 
     NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
     NtGdiSelectBrush(hDC, OldBrush);
-    GreDeleteObject(hbrush);
+    GreDeleteObject(hBrush);
 
     return TRUE;
 }
