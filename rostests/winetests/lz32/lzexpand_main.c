@@ -881,10 +881,10 @@ static void test_LZOpenFileW(void)
 
 START_TEST(lzexpand_main)
 {
-  buf = malloc(uncompressed_data_size * 2);
+  buf = HeapAlloc(GetProcessHeap(), 0, uncompressed_data_size * 2);
   test_LZOpenFileA();
   test_LZOpenFileW();
   test_LZRead();
   test_LZCopy();
-  free(buf);
+  HeapFree(GetProcessHeap(), 0, buf);
 }
