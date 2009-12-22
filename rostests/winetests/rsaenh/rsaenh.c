@@ -2093,6 +2093,7 @@ static void test_rsa_round_trip(void)
         ok(dataLen == sizeof(test_string), "unexpected size %d\n", dataLen);
         ok(!memcmp(data, test_string, sizeof(test_string)), "unexpected value\n");
     }
+    CryptDestroyKey(keyExchangeKey);
     CryptReleaseContext(prov, 0);
 
     CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
@@ -2334,6 +2335,7 @@ static void test_null_provider(void)
     ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
     result = CryptGenKey(prov, CALG_RSA_SIGN, 0, &key);
     ok(result, "CryptGenKey with CALG_RSA_SIGN failed with error %08x\n", GetLastError());
+    CryptDestroyKey(key);
     result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &key);
     ok(!result, "expected CryptGetUserKey to fail\n");
     result = CryptGetUserKey(prov, AT_SIGNATURE, &key);
@@ -2350,11 +2352,12 @@ static void test_null_provider(void)
     ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
     result = CryptGenKey(prov, CALG_RSA_KEYX, 0, &key);
     ok(result, "CryptGenKey with CALG_RSA_KEYX failed with error %08x\n", GetLastError());
+    CryptDestroyKey(key);
     result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &key);
     ok(result, "CryptGetUserKey with AT_KEYEXCHANGE failed: %08x\n", GetLastError());
+    CryptDestroyKey(key);
     result = CryptGetUserKey(prov, AT_SIGNATURE, &key);
     ok(!result, "expected CryptGetUserKey to fail\n");
-    CryptDestroyKey(key);
     CryptReleaseContext(prov, 0);
 
     CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
