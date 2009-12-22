@@ -847,13 +847,6 @@ IntGetPaletteEntries(
             return 0;
         }
         memcpy(pe, palGDI->IndexedColors + StartIndex, Entries * sizeof(PALETTEENTRY));
-        for (numEntries = 0; numEntries < Entries; numEntries++)
-        {
-            if (pe[numEntries].peFlags & 0xF0)
-            {
-                pe[numEntries].peFlags = 0;
-            }
-        }
     }
     else
     {
@@ -959,7 +952,6 @@ IntSetPaletteEntries(
         Entries = numEntries - Start;
     }
     memcpy(palGDI->IndexedColors + Start, pe, Entries * sizeof(PALETTEENTRY));
-    PALETTE_ValidateFlags(palGDI->IndexedColors, palGDI->NumColors);
     PALETTE_UnlockPalette(palGDI);
 
     return Entries;
