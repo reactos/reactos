@@ -34,8 +34,8 @@
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
-static const char *msifile = "winetest.msi";
-static const WCHAR szMsifile[] = {'w','i','n','e','t','e','s','t','.','m','s','i',0};
+static const char *msifile = "winetest-automation.msi";
+static const WCHAR szMsifile[] = {'w','i','n','e','t','e','s','t','-','a','u','t','o','m','a','t','i','o','n','.','m','s','i',0};
 static const WCHAR szMSITEST[] = { 'M','S','I','T','E','S','T',0 };
 static const WCHAR szProductCode[] = { '{','F','1','C','3','A','F','5','0','-','8','B','5','6','-','4','A','6','9','-','A','0','0','C','-','0','0','7','7','3','F','E','4','2','F','3','0','}',0 };
 static const WCHAR szUpgradeCode[] = { '{','C','E','0','6','7','E','8','D','-','2','E','1','A','-','4','3','6','7','-','B','7','3','4','-','4','E','B','2','B','D','A','D','6','5','6','5','}',0 };
@@ -271,6 +271,27 @@ static void create_database(const CHAR *name, const msi_table *tables, int num_t
     MsiCloseHandle(db);
 }
 
+static BOOL create_package(LPWSTR path)
+{
+    DWORD len;
+
+    /* Prepare package */
+    create_database(msifile, tables,
+                    sizeof(tables) / sizeof(msi_table), summary_info,
+                    sizeof(summary_info) / sizeof(msi_summary_info));
+
+    len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+                              CURR_DIR, -1, path, MAX_PATH);
+    ok(len, "MultiByteToWideChar returned error %d\n", GetLastError());
+    if (!len)
+        return FALSE;
+
+    /* lstrcatW does not work on win95 */
+    path[len - 1] = '\\';
+    memcpy(&path[len], szMsifile, sizeof(szMsifile));
+    return TRUE;
+}
+
 /*
  * Installation helpers
  */
@@ -456,35 +477,32 @@ static void test_dispid(void)
     ok(dispid  == 1, "Expected 1, got %d\n", dispid);
     dispid = get_dispid(pInstaller, "OpenPackage");
     ok(dispid  == 2, "Expected 2, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "OpenProduct");
+    ok(dispid  == 3, "Expected 3, got %d\n", dispid);
     dispid = get_dispid(pInstaller, "OpenDatabase");
     ok(dispid == 4, "Expected 4, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "SummaryInformation");
+    ok(dispid == 5, "Expected 5, got %d\n", dispid);
     dispid = get_dispid( pInstaller, "UILevel" );
     ok(dispid == 6, "Expected 6, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "EnableLog");
+    ok(dispid == 7, "Expected 7, got %d\n", dispid);
     dispid = get_dispid(pInstaller, "InstallProduct");
     ok(dispid == 8, "Expected 8, got %d\n", dispid);
     dispid = get_dispid(pInstaller, "Version");
     ok(dispid == 9, "Expected 9, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "LastErrorRecord");
+    ok(dispid == 10, "Expected 10, got %d\n", dispid);
     dispid = get_dispid(pInstaller, "RegistryValue");
     ok(dispid == 11, "Expected 11, got %d\n", dispid);
-    todo_wine
-    {
-        dispid = get_dispid(pInstaller, "OpenProduct");
-        ok(dispid  == 3, "Expected 3, got %d\n", dispid);
-        dispid = get_dispid(pInstaller, "SummaryInformation");
-        ok(dispid == 5, "Expected 5, got %d\n", dispid);
-        dispid = get_dispid(pInstaller, "EnableLog");
-        ok(dispid == 7, "Expected 7, got %d\n", dispid);
-        dispid = get_dispid(pInstaller, "LastErrorRecord");
-        ok(dispid == 10, "Expected 10, got %d\n", dispid);
-        dispid = get_dispid(pInstaller, "Environment");
-        ok(dispid == 12, "Expected 12, got %d\n", dispid);
-        dispid = get_dispid(pInstaller, "FileAttributes");
-        ok(dispid == 13, "Expected 13, got %d\n", dispid);
-        dispid = get_dispid(pInstaller, "FileSize");
-        ok(dispid == 15, "Expected 15, got %d\n", dispid);
-        dispid = get_dispid(pInstaller, "FileVersion");
-        ok(dispid == 16, "Expected 16, got %d\n", dispid);
-    }
+    dispid = get_dispid(pInstaller, "Environment");
+    ok(dispid == 12, "Expected 12, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "FileAttributes");
+    ok(dispid == 13, "Expected 13, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "FileSize");
+    ok(dispid == 15, "Expected 15, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "FileVersion");
+    ok(dispid == 16, "Expected 16, got %d\n", dispid);
     dispid = get_dispid(pInstaller, "ProductState");
     ok(dispid == 17, "Expected 17, got %d\n", dispid);
     dispid = get_dispid(pInstaller, "ProductInfo");
@@ -592,7 +610,8 @@ static void test_dispatch(void)
     DISPID dispid;
     OLECHAR *name;
     VARIANT varresult;
-    VARIANTARG vararg[2];
+    VARIANTARG vararg[3];
+    WCHAR path[MAX_PATH];
     DISPPARAMS dispparams = {NULL, NULL, 0, 0};
 
     /* Test getting ID of a function name that does not exist */
@@ -620,24 +639,159 @@ static void test_dispatch(void)
 
     /* Try with NULL params */
     hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
-    todo_wine ok(hr == DISP_E_TYPEMISMATCH, "IDispatch::Invoke returned 0x%08x\n", hr);
+    ok(hr == DISP_E_TYPEMISMATCH, "IDispatch::Invoke returned 0x%08x\n", hr);
 
     /* Try one empty parameter */
     dispparams.rgvarg = vararg;
     dispparams.cArgs = 1;
     VariantInit(&vararg[0]);
     hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
-    todo_wine ok(hr == DISP_E_TYPEMISMATCH, "IDispatch::Invoke returned 0x%08x\n", hr);
+    ok(hr == DISP_E_TYPEMISMATCH, "IDispatch::Invoke returned 0x%08x\n", hr);
 
-    /* Try one parameter, function requires two */
+    /* Try two empty parameters */
+    dispparams.cArgs = 2;
+    VariantInit(&vararg[0]);
+    VariantInit(&vararg[1]);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == DISP_E_TYPEMISMATCH, "IDispatch::Invoke returned 0x%08x\n", hr);
+
+    /* Try one parameter, the required BSTR.  Second parameter is optional.
+     * NOTE: The specified package does not exist, which is why the call fails.
+     */
+    dispparams.cArgs = 1;
     VariantInit(&vararg[0]);
     V_VT(&vararg[0]) = VT_BSTR;
     V_BSTR(&vararg[0]) = SysAllocString(szMsifile);
     hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
-    VariantClear(&vararg[0]);
-
     ok(hr == DISP_E_EXCEPTION, "IDispatch::Invoke returned 0x%08x\n", hr);
     ok_exception(hr, szOpenPackageException);
+    VariantClear(&vararg[0]);
+
+    /* Provide the required BSTR and an empty second parameter.
+     * NOTE: The specified package does not exist, which is why the call fails.
+     */
+    dispparams.cArgs = 2;
+    VariantInit(&vararg[1]);
+    V_VT(&vararg[1]) = VT_BSTR;
+    V_BSTR(&vararg[1]) = SysAllocString(szMsifile);
+    VariantInit(&vararg[0]);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == DISP_E_EXCEPTION, "IDispatch::Invoke returned 0x%08x\n", hr);
+    ok_exception(hr, szOpenPackageException);
+    VariantClear(&vararg[1]);
+
+    /* Provide the required BSTR and two empty parameters.
+     * NOTE: The specified package does not exist, which is why the call fails.
+     */
+    dispparams.cArgs = 3;
+    VariantInit(&vararg[2]);
+    V_VT(&vararg[2]) = VT_BSTR;
+    V_BSTR(&vararg[2]) = SysAllocString(szMsifile);
+    VariantInit(&vararg[1]);
+    VariantInit(&vararg[0]);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == DISP_E_EXCEPTION, "IDispatch::Invoke returned 0x%08x\n", hr);
+    ok_exception(hr, szOpenPackageException);
+    VariantClear(&vararg[2]);
+
+    /* Provide the required BSTR and a second parameter with the wrong type. */
+    dispparams.cArgs = 2;
+    VariantInit(&vararg[1]);
+    V_VT(&vararg[1]) = VT_BSTR;
+    V_BSTR(&vararg[1]) = SysAllocString(szMsifile);
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_BSTR;
+    V_BSTR(&vararg[0]) = SysAllocString(szMsifile);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == DISP_E_TYPEMISMATCH, "IDispatch::Invoke returned 0x%08x\n", hr);
+    VariantClear(&vararg[0]);
+    VariantClear(&vararg[1]);
+
+    /* Create a proper installer package. */
+    create_package(path);
+
+    /* Try one parameter, the required BSTR.  Second parameter is optional.
+     * Proper installer package exists.  Path to the package is relative.
+     */
+    dispparams.cArgs = 1;
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_BSTR;
+    V_BSTR(&vararg[0]) = SysAllocString(szMsifile);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    todo_wine ok(hr == DISP_E_EXCEPTION, "IDispatch::Invoke returned 0x%08x\n", hr);
+    ok_exception(hr, szOpenPackageException);
+    VariantClear(&vararg[0]);
+    if (hr != DISP_E_EXCEPTION)
+        VariantClear(&varresult);
+
+    /* Try one parameter, the required BSTR.  Second parameter is optional.
+     * Proper installer package exists.  Path to the package is absolute.
+     */
+    dispparams.cArgs = 1;
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_BSTR;
+    V_BSTR(&vararg[0]) = SysAllocString(path);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == S_OK, "IDispatch::Invoke returned 0x%08x\n", hr);
+    VariantClear(&vararg[0]);
+    VariantClear(&varresult);
+
+    /* Provide the required BSTR and an empty second parameter.  Proper
+     * installation package exists.
+     */
+    dispparams.cArgs = 2;
+    VariantInit(&vararg[1]);
+    V_VT(&vararg[1]) = VT_BSTR;
+    V_BSTR(&vararg[1]) = SysAllocString(path);
+    VariantInit(&vararg[0]);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == S_OK, "IDispatch::Invoke returned 0x%08x\n", hr);
+    VariantClear(&vararg[1]);
+    VariantClear(&varresult);
+
+    /* Provide the required BSTR and two empty parameters.  Proper
+     * installation package exists.
+     */
+    dispparams.cArgs = 3;
+    VariantInit(&vararg[2]);
+    V_VT(&vararg[2]) = VT_BSTR;
+    V_BSTR(&vararg[2]) = SysAllocString(path);
+    VariantInit(&vararg[1]);
+    VariantInit(&vararg[0]);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == S_OK, "IDispatch::Invoke returned 0x%08x\n", hr);
+    VariantClear(&vararg[2]);
+    VariantClear(&varresult);
+
+    /* Provide the required BSTR and a second parameter with the wrong type. */
+    dispparams.cArgs = 2;
+    VariantInit(&vararg[1]);
+    V_VT(&vararg[1]) = VT_BSTR;
+    V_BSTR(&vararg[1]) = SysAllocString(path);
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_BSTR;
+    V_BSTR(&vararg[0]) = SysAllocString(path);
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == DISP_E_TYPEMISMATCH, "IDispatch::Invoke returned 0x%08x\n", hr);
+    VariantClear(&vararg[0]);
+    VariantClear(&vararg[1]);
+
+    /* Provide the required BSTR and a second parameter that can be coerced to
+     * VT_I4.
+     */
+    dispparams.cArgs = 2;
+    VariantInit(&vararg[1]);
+    V_VT(&vararg[1]) = VT_BSTR;
+    V_BSTR(&vararg[1]) = SysAllocString(path);
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_I2;
+    V_BSTR(&vararg[0]) = 0;
+    hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == S_OK, "IDispatch::Invoke returned 0x%08x\n", hr);
+    VariantClear(&vararg[1]);
+    VariantClear(&varresult);
+
+    DeleteFileW(path);
 
     /* Test invoking a method as a DISPATCH_PROPERTYGET or DISPATCH_PROPERTYPUT */
     VariantInit(&vararg[0]);
@@ -2353,7 +2507,6 @@ static void test_Installer(void)
     static WCHAR szIntegerDataException[] = { 'I','n','t','e','g','e','r','D','a','t','a',',','F','i','e','l','d',0 };
     WCHAR szPath[MAX_PATH];
     HRESULT hr;
-    UINT len;
     IDispatch *pSession = NULL, *pDatabase = NULL, *pRecord = NULL, *pStringList = NULL;
     int iValue, iCount;
 
@@ -2404,17 +2557,7 @@ static void test_Installer(void)
         IDispatch_Release(pRecord);
     }
 
-    /* Prepare package */
-    create_database(msifile, tables, sizeof(tables) / sizeof(msi_table),
-                    summary_info, sizeof(summary_info) / sizeof(msi_summary_info));
-
-    len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, CURR_DIR, -1, szPath, MAX_PATH);
-    ok(len, "MultiByteToWideChar returned error %d\n", GetLastError());
-    if (!len) return;
-
-    /* lstrcatW does not work on win95 */
-    szPath[len - 1] = '\\';
-    memcpy(&szPath[len], szMsifile, sizeof(szMsifile));
+    create_package(szPath);
 
     /* Installer::OpenPackage */
     hr = Installer_OpenPackage(szPath, 0, &pSession);

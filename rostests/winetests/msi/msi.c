@@ -2517,8 +2517,7 @@ static void test_MsiGetFileVersion(void)
     r = MsiGetFileVersionA(path, version, &versz, lang, &langsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
-    ok(!lstrcmpA(lang, langcheck), "Expected %s, got %s\n", langcheck, lang);
-    ok(langsz == langchecksz, "Expected %d, got %d\n", langchecksz, langsz);
+    ok(strstr(lang, langcheck) != NULL, "Expected %s in %s\n", langcheck, lang);
     ok(!lstrcmpA(version, vercheck),
         "Expected %s, got %s\n", vercheck, version);
 
@@ -2536,8 +2535,7 @@ static void test_MsiGetFileVersion(void)
     lstrcpyA(lang, "lang");
     r = MsiGetFileVersionA(path, NULL, NULL, lang, &langsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(lang, langcheck), "Expected %s, got %s\n", langcheck, lang);
-    ok(langsz == langchecksz, "Expected %d, got %d\n", langchecksz, langsz);
+    ok(strstr(lang, langcheck) != NULL, "Expected %s in %s\n", langcheck, lang);
 
     /* check neither version nor language */
     r = MsiGetFileVersionA(path, NULL, NULL, NULL, NULL);
@@ -2553,7 +2551,7 @@ static void test_MsiGetFileVersion(void)
     langsz = MAX_PATH;
     r = MsiGetFileVersionA(path, NULL, NULL, NULL, &langsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(langsz == langchecksz, "Expected %d, got %d\n", langchecksz, langsz);
+    ok(langsz >= langchecksz, "Expected %d >= %d\n", langsz, langchecksz);
 
     /* pcchVersionBuf not big enough */
     versz = 5;
@@ -2571,7 +2569,7 @@ static void test_MsiGetFileVersion(void)
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!strncmp(lang, langcheck, 2),
        "Expected first character of %s, got %s\n", langcheck, lang);
-    ok(langsz == langchecksz, "Expected %d, got %d\n", langchecksz, langsz);
+    ok(langsz >= langchecksz, "Expected %d >= %d\n", langsz, langchecksz);
 
     HeapFree(GetProcessHeap(), 0, vercheck);
     HeapFree(GetProcessHeap(), 0, langcheck);
@@ -2781,7 +2779,7 @@ static void test_MsiGetProductInfo(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(sz == 4, "Expected 4, got %d\n", sz);
 
-    /* lpValueBuf is NULL, pcchValueBuf is too small */
+    /* lpValueBuf is non-NULL, pcchValueBuf is too small */
     sz = 2;
     lstrcpyA(buf, "apple");
     r = MsiGetProductInfoA(prodcode, INSTALLPROPERTY_HELPLINK, buf, &sz);
@@ -2789,7 +2787,7 @@ static void test_MsiGetProductInfo(void)
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(sz == 4, "Expected 4, got %d\n", sz);
 
-    /* lpValueBuf is NULL, pcchValueBuf is exactly 4 */
+    /* lpValueBuf is non-NULL, pcchValueBuf is exactly 4 */
     sz = 4;
     lstrcpyA(buf, "apple");
     r = MsiGetProductInfoA(prodcode, INSTALLPROPERTY_HELPLINK, buf, &sz);

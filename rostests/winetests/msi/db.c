@@ -31,9 +31,10 @@
 
 #include "wine/test.h"
 
-static const char *msifile = "winetest.msi";
-static const char *msifile2 = "winetst2.msi";
-static const char *mstfile = "winetst.mst";
+static const char *msifile = "winetest-db.msi";
+static const char *msifile2 = "winetst2-db.msi";
+static const char *mstfile = "winetst-db.mst";
+static const WCHAR msifileW[] = {'w','i','n','e','t','e','s','t','-','d','b','.','m','s','i',0};
 
 static void test_msidatabase(void)
 {
@@ -921,6 +922,8 @@ static void test_viewmodify(void)
     r = MsiViewModify(hview, MSIMODIFY_INSERT_TEMPORARY, hrec );
     ok(r == ERROR_SUCCESS, "MsiViewModify failed\n");
 
+    r = MsiCloseHandle(hrec);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
     r = MsiViewClose(hview);
     ok(r == ERROR_SUCCESS, "MsiViewClose failed\n");
     r = MsiCloseHandle(hview);
@@ -1758,6 +1761,30 @@ static void test_where(void)
     query = "SELECT * FROM `Media` WHERE `DiskPrompt` IS NULL";
     r = do_query(hdb, query, &rec);
     ok( r == ERROR_SUCCESS, "query failed: %d\n", r );
+    MsiCloseHandle( rec );
+
+    rec = 0;
+    query = "SELECT * FROM `Media` WHERE `DiskPrompt` < 'Cabinet'";
+    r = do_query(hdb, query, &rec);
+    ok( r == ERROR_BAD_QUERY_SYNTAX, "query failed: %d\n", r );
+    MsiCloseHandle( rec );
+
+    rec = 0;
+    query = "SELECT * FROM `Media` WHERE `DiskPrompt` > 'Cabinet'";
+    r = do_query(hdb, query, &rec);
+    ok( r == ERROR_BAD_QUERY_SYNTAX, "query failed: %d\n", r );
+    MsiCloseHandle( rec );
+
+    rec = 0;
+    query = "SELECT * FROM `Media` WHERE `DiskPrompt` <> 'Cabinet'";
+    r = do_query(hdb, query, &rec);
+    todo_wine ok( r == ERROR_SUCCESS, "query failed: %d\n", r );
+    MsiCloseHandle( rec );
+
+    rec = 0;
+    query = "SELECT * FROM `Media` WHERE `DiskPrompt` = 'Cabinet'";
+    r = do_query(hdb, query, &rec);
+    ok( r == ERROR_NO_MORE_ITEMS, "query failed: %d\n", r );
     MsiCloseHandle( rec );
 
     rec = MsiCreateRecord(1);
@@ -5539,6 +5566,8 @@ static void enum_stream_names(IStorage *stg)
         ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
         ok(stm != NULL, "Expected non-NULL stream\n");
 
+        CoTaskMemFree(stat.pwcsName);
+
         sz = MAX_PATH;
         memset(data, 'a', MAX_PATH);
         hr = IStream_Read(stm, data, sz, &count);
@@ -5568,8 +5597,6 @@ static void test_defaultdatabase(void)
     HRESULT hr;
     MSIHANDLE hdb;
     IStorage *stg = NULL;
-
-    static const WCHAR msifileW[] = {'w','i','n','e','t','e','s','t','.','m','s','i',0};
 
     DeleteFile(msifile);
 
