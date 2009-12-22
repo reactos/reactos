@@ -1852,7 +1852,7 @@ static BOOL PATH_WidenPath(DC *dc)
 {
     INT i, j, numStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
     BOOL ret = FALSE;
-    GdiPath *pPath, *pNewPath, **pStrokes, *pUpPath, *pDownPath;
+    GdiPath *pPath, *pNewPath, **pStrokes = NULL, *pUpPath, *pDownPath;
     EXTLOGPEN *elp;
     DWORD obj_type, joint, endcap, penType;
 
@@ -1907,13 +1907,6 @@ static BOOL PATH_WidenPath(DC *dc)
 
     numStrokes = 0;
 
-    pStrokes = HeapAlloc(GetProcessHeap(), 0, numStrokes * sizeof(GdiPath*));
-    pStrokes[0] = HeapAlloc(GetProcessHeap(), 0, sizeof(GdiPath));
-    PATH_InitGdiPath(pStrokes[0]);
-    pStrokes[0]->pFlags = HeapAlloc(GetProcessHeap(), 0, pPath->numEntriesUsed * sizeof(INT));
-    pStrokes[0]->pPoints = HeapAlloc(GetProcessHeap(), 0, pPath->numEntriesUsed * sizeof(POINT));
-    pStrokes[0]->numEntriesUsed = 0;
-
     for(i = 0, j = 0; i < pPath->numEntriesUsed; i++, j++) {
         POINT point;
         if((i == 0 || (pPath->pFlags[i-1] & PT_CLOSEFIGURE)) &&
@@ -1930,7 +1923,11 @@ static BOOL PATH_WidenPath(DC *dc)
                 }
                 numStrokes++;
                 j = 0;
-                pStrokes = HeapReAlloc(GetProcessHeap(), 0, pStrokes, numStrokes * sizeof(GdiPath*));
+                if(numStrokes == 1)
+                    pStrokes = HeapAlloc(GetProcessHeap(), 0, sizeof(GdiPath*));
+                else
+                    pStrokes = HeapReAlloc(GetProcessHeap(), 0, pStrokes, numStrokes * sizeof(GdiPath*));
+                if(!pStrokes) return FALSE;
                 pStrokes[numStrokes - 1] = HeapAlloc(GetProcessHeap(), 0, sizeof(GdiPath));
                 PATH_InitGdiPath(pStrokes[numStrokes - 1]);
                 pStrokes[numStrokes - 1]->state = PATH_Open;

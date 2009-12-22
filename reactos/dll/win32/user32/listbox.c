@@ -39,7 +39,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
-#include "wine/winuser16.h"
 #include "wine/unicode.h"
 #include "user_private.h"
 #include "controls.h"
@@ -129,9 +128,6 @@ typedef enum
 
 static TIMER_DIRECTION LISTBOX_Timer = LB_TIMER_NONE;
 
-static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
-
 static LRESULT LISTBOX_GetItemRect( const LB_DESCR *descr, INT index, RECT *rect );
 
 /*********************************************************************
@@ -142,8 +138,7 @@ const struct builtin_class_descr LISTBOX_builtin_class =
 {
     listboxW,             /* name */
     CS_DBLCLKS /*| CS_PARENTDC*/,  /* style */
-    ListBoxWndProcA,      /* procA */
-    ListBoxWndProcW,      /* procW */
+    WINPROC_LISTBOX,      /* proc */
     sizeof(LB_DESCR *),   /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */
@@ -158,8 +153,7 @@ const struct builtin_class_descr COMBOLBOX_builtin_class =
 {
     combolboxW,           /* name */
     CS_DBLCLKS | CS_SAVEBITS,  /* style */
-    ListBoxWndProcA,      /* procA */
-    ListBoxWndProcW,      /* procW */
+    WINPROC_LISTBOX,      /* proc */
     sizeof(LB_DESCR *),   /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */
@@ -754,7 +748,7 @@ static LRESULT LISTBOX_InitStorage( LB_DESCR *descr, INT nb_items )
 /***********************************************************************
  *           LISTBOX_SetTabStops
  */
-static BOOL LISTBOX_SetTabStops( LB_DESCR *descr, INT count, LPINT tabs, BOOL short_ints )
+static BOOL LISTBOX_SetTabStops( LB_DESCR *descr, INT count, LPINT tabs )
 {
     INT i;
 
@@ -773,19 +767,7 @@ static BOOL LISTBOX_SetTabStops( LB_DESCR *descr, INT count, LPINT tabs, BOOL sh
     if (!(descr->tabs = HeapAlloc( GetProcessHeap(), 0,
                                             descr->nb_tabs * sizeof(INT) )))
         return FALSE;
-    if (short_ints)
-    {
-        INT i;
-        LPINT16 p = (LPINT16)tabs;
-
-        TRACE("[%p]: settabstops ", descr->self );
-        for (i = 0; i < descr->nb_tabs; i++) {
-	    descr->tabs[i] = *p++<<1; /* FIXME */
-            TRACE("%hd ", descr->tabs[i]);
-	}
-        TRACE("\n");
-    }
-    else memcpy( descr->tabs, tabs, descr->nb_tabs * sizeof(INT) );
+    memcpy( descr->tabs, tabs, descr->nb_tabs * sizeof(INT) );
 
     /* convert into "dialog units"*/
     for (i = 0; i < descr->nb_tabs; i++)
@@ -1027,21 +1009,6 @@ static LRESULT LISTBOX_GetSelCount( const LB_DESCR *descr )
     return count;
 }
 
-#if 0
-/***********************************************************************
- *           LISTBOX_GetSelItems16
- */
-static LRESULT LISTBOX_GetSelItems16( const LB_DESCR *descr, INT16 max, LPINT16 array )
-{
-    INT i, count;
-    const LB_ITEMDATA *item = descr->items;
-
-    if (!(descr->style & LBS_MULTIPLESEL)) return LB_ERR;
-    for (i = count = 0; (i < descr->nb_items) && (count < max); i++, item++)
-        if (item->selected) array[count++] = (INT16)i;
-    return count;
-}
-#endif
 
 /***********************************************************************
  *           LISTBOX_GetSelItems
@@ -2615,8 +2582,7 @@ static BOOL LISTBOX_Destroy( LB_DESCR *descr )
 /***********************************************************************
  *           ListBoxWndProc_common
  */
-static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
-                                      WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
     LB_DESCR *descr = (LB_DESCR *)GetWindowLongPtrW( hwnd, 0 );
     LPHEADCOMBO lphc = 0;
@@ -2996,7 +2962,7 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return LISTBOX_SetCount( descr, (INT)wParam );
 
     case LB_SETTABSTOPS:
-        return LISTBOX_SetTabStops( descr, wParam, (LPINT)lParam, FALSE );
+        return LISTBOX_SetTabStops( descr, wParam, (LPINT)lParam );
 
     case LB_CARETON:
         if (descr->caret_on)
@@ -3207,20 +3173,4 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
 
     return unicode ? DefWindowProcW( hwnd, msg, wParam, lParam ) :
                      DefWindowProcA( hwnd, msg, wParam, lParam );
-}
-
-/***********************************************************************
- *           ListBoxWndProcA
- */
-static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
-{
-    return ListBoxWndProc_common( hwnd, msg, wParam, lParam, FALSE );
-}
-
-/***********************************************************************
- *           ListBoxWndProcW
- */
-static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
-{
-    return ListBoxWndProc_common( hwnd, msg, wParam, lParam, TRUE );
 }

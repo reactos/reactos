@@ -2216,7 +2216,8 @@ static BOOL REGION_SubtractO (WINEREGION *pReg, RECT *r1, RECT *r1End,
                 if (!add_rect( pReg, left, top, r1->right, bottom )) return FALSE;
 	    }
 	    r1++;
-	    left = r1->left;
+	    if (r1 != r1End)
+	        left = r1->left;
 	}
     }
 

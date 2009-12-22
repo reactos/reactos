@@ -29,12 +29,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifdef HAVE_SYS_UN_H
+#include <sys/un.h>
+#endif
+
 #include "x11drv.h"
 #include "winternl.h"
 #include "wine/library.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wgl);
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
 #ifdef SONAME_LIBGL
 
@@ -103,8 +111,13 @@ typedef struct wine_glpixelformat {
 typedef struct wine_glcontext {
     HDC hdc;
     BOOL do_escape;
+    BOOL has_been_current;
+    BOOL sharing;
+    BOOL gl3_context;
     XVisualInfo *vis;
     WineGLPixelFormat *fmt;
+    int numAttribs; /* This is needed for delaying wglCreateContextAttribsARB */
+    int attribList[16]; /* This is needed for delaying wglCreateContextAttribsARB */
     GLXContext ctx;
     HDC read_hdc;
     Drawable drawables[2];
@@ -238,6 +251,7 @@ MAKE_FUNCPTR(glXQueryDrawable)
 MAKE_FUNCPTR(glXGetCurrentReadDrawable)
 
 /* GLX Extensions */
+static GLXContext (*pglXCreateContextAttribsARB)(Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list);
 static void* (*pglXGetProcAddressARB)(const GLubyte *);
 static int   (*pglXSwapIntervalSGI)(int);
 
@@ -271,6 +285,12 @@ MAKE_FUNCPTR(glTexImage2D)
 MAKE_FUNCPTR(glFinish)
 MAKE_FUNCPTR(glFlush)
 #undef MAKE_FUNCPTR
+
+static int GLXErrorHandler(Display *dpy, XErrorEvent *event, void *arg)
+{
+    /* In the future we might want to find the exact X or GLX error to report back to the app */
+    return 1;
+}
 
 static BOOL infoInitialized = FALSE;
 static BOOL X11DRV_WineGL_InitOpenglInfo(void)
@@ -338,6 +358,19 @@ static BOOL X11DRV_WineGL_InitOpenglInfo(void)
     TRACE("Client GLX version     : %s.\n", WineGLInfo.glxClientVersion);
     TRACE("Client GLX vendor:     : %s.\n", WineGLInfo.glxClientVendor);
     TRACE("Direct rendering enabled: %s\n", WineGLInfo.glxDirect ? "True" : "False");
+
+    if(!WineGLInfo.glxDirect)
+    {
+        int fd = ConnectionNumber(gdi_display);
+        struct sockaddr_un uaddr;
+        unsigned int uaddrlen = sizeof(struct sockaddr_un);
+
+        /* In general indirect rendering on a local X11 server indicates a driver problem.
+         * Detect a local X11 server by checking whether the X11 socket is a Unix socket.
+         */
+        if(!getsockname(fd, (struct sockaddr *)&uaddr, &uaddrlen) && uaddr.sun_family == AF_UNIX)
+            ERR_(winediag)("Direct rendering is disabled, most likely your OpenGL drivers haven't been installed correctly\n");
+    }
 
     if(vis) XFree(vis);
     if(ctx) {
@@ -440,6 +473,8 @@ static BOOL has_opengl(void)
    the associated extension is available (and if a driver reports the extension
    is available but fails to provide the functions, it's quite broken) */
 #define LOAD_FUNCPTR(f) p##f = (void*)pglXGetProcAddressARB((const unsigned char*)#f)
+    /* ARB GLX Extension */
+    LOAD_FUNCPTR(glXCreateContextAttribsARB);
     /* NV GLX Extension */
     LOAD_FUNCPTR(glXAllocateMemoryNV);
     LOAD_FUNCPTR(glXFreeMemoryNV);
@@ -1064,7 +1099,14 @@ static GLXContext create_glxcontext(Display *display, Wine_GLContext *context, G
     /* We use indirect rendering for rendering to bitmaps. See get_formats for a comment about this. */
     BOOL indirect = (context->fmt->dwFlags & PFD_DRAW_TO_BITMAP) ? FALSE : TRUE;
 
-    if(context->vis)
+    if(context->gl3_context)
+    {
+        if(context->numAttribs)
+            ctx = pglXCreateContextAttribsARB(gdi_display, context->fmt->fbconfig, shareList, indirect, context->attribList);
+        else
+            ctx = pglXCreateContextAttribsARB(gdi_display, context->fmt->fbconfig, shareList, indirect, NULL);
+    }
+    else if(context->vis)
         ctx = pglXCreateContext(gdi_display, context->vis, shareList, indirect);
     else /* Create a GLX Context for a pbuffer */
         ctx = pglXCreateNewContext(gdi_display, context->fmt->fbconfig, context->fmt->render_type, shareList, TRUE);
@@ -1628,41 +1670,7 @@ BOOL CDECL X11DRV_wglCopyContext(HGLRC hglrcSrc, HGLRC hglrcDst, UINT mask) {
 
     TRACE("hglrcSrc: (%p), hglrcDst: (%p), mask: %#x\n", hglrcSrc, hglrcDst, mask);
 
-    /* There is a slight difference in the way GL contexts share display lists in WGL and GLX.
-     * In case of GLX you need to specify this at context creation time but in case of WGL you
-     * do this using wglShareLists which you can call after creating the context.
-     * To emulate WGL we try to delay the creation of the context until wglShareLists or wglMakeCurrent.
-     * Up to now that works fine.
-     *
-     * The delayed GLX context creation could cause issues for wglCopyContext as it might get called
-     * when there is no GLX context yet. The chance this will cause problems is small as at the time of
-     * writing Wine has had OpenGL support for more than 7 years and this function has remained a stub
-     * ever since then.
-     */
-    if(!src->ctx || !dst->ctx) {
-        /* NOTE: As a special case, if both GLX contexts are NULL, that means
-         * neither WGL context was made current. In that case, both contexts
-         * are in a default state, so any copy would no-op.
-         */
-        if(!src->ctx && !dst->ctx) {
-            TRACE("No source or destination contexts set. No-op.\n");
-            return TRUE;
-        }
-
-        if (!src->ctx) {
-            wine_tsx11_lock();
-            src->ctx = create_glxcontext(gdi_display, src, NULL);
-            TRACE(" created a delayed OpenGL context (%p)\n", src->ctx);
-        }
-        else if (!dst->ctx) {
-            wine_tsx11_lock();
-            dst->ctx = create_glxcontext(gdi_display, dst, NULL);
-            TRACE(" created a delayed OpenGL context (%p)\n", dst->ctx);
-        }
-    }
-    else
-        wine_tsx11_lock();
-
+    wine_tsx11_lock();
     pglXCopyContext(gdi_display, src->ctx, dst->ctx, mask);
     wine_tsx11_unlock();
 
@@ -1698,15 +1706,16 @@ HGLRC CDECL X11DRV_wglCreateContext(X11DRV_PDEVICE *physDev)
         return NULL;
     }
 
-    /* The context will be allocated in the wglMakeCurrent call */
     wine_tsx11_lock();
     ret = alloc_context();
-    wine_tsx11_unlock();
     ret->hdc = hdc;
     ret->fmt = fmt;
+    ret->has_been_current = FALSE;
+    ret->sharing = FALSE;
 
-    /*ret->vis = vis;*/
     ret->vis = pglXGetVisualFromFBConfig(gdi_display, fmt->fbconfig);
+    ret->ctx = create_glxcontext(gdi_display, ret, NULL);
+    wine_tsx11_unlock();
 
     TRACE(" creating context %p (GL context creation delayed)\n", ret);
     return (HGLRC) ret;
@@ -1824,25 +1833,20 @@ BOOL CDECL X11DRV_wglMakeCurrent(X11DRV_PDEVICE *physDev, HGLRC hglrc) {
         ret = FALSE;
     } else {
         Drawable drawable = get_glxdrawable(physDev);
-        if (ctx->ctx == NULL) {
-            /* The describe lines below are for debugging purposes only */
-            if (TRACE_ON(wgl)) {
-                describeDrawable(physDev);
-                describeContext(ctx);
-            }
 
-            /* Create a GLX context using the same visual as chosen earlier in wglCreateContext.
-             * We are certain that the drawable and context are compatible as we only allow compatible formats.
-             */
-            TRACE(" Creating GLX Context\n");
-            ctx->ctx = create_glxcontext(gdi_display, ctx, NULL);
-            TRACE(" created a delayed OpenGL context (%p)\n", ctx->ctx);
+        /* The describe lines below are for debugging purposes only */
+        if (TRACE_ON(wgl)) {
+            describeDrawable(physDev);
+            describeContext(ctx);
         }
+
         TRACE(" make current for dis %p, drawable %p, ctx %p\n", gdi_display, (void*) drawable, ctx->ctx);
         ret = pglXMakeCurrent(gdi_display, drawable, ctx->ctx);
         NtCurrentTeb()->glContext = ctx;
+
         if(ret)
         {
+            ctx->has_been_current = TRUE;
             ctx->hdc = hdc;
             ctx->read_hdc = hdc;
             ctx->drawables[0] = drawable;
@@ -1886,10 +1890,7 @@ BOOL CDECL X11DRV_wglMakeContextCurrentARB(X11DRV_PDEVICE* pDrawDev, X11DRV_PDEV
             Drawable d_draw = get_glxdrawable(pDrawDev);
             Drawable d_read = get_glxdrawable(pReadDev);
 
-            if (ctx->ctx == NULL) {
-                ctx->ctx = create_glxcontext(gdi_display, ctx, NULL);
-                TRACE(" created a delayed OpenGL context (%p)\n", ctx->ctx);
-            }
+            ctx->has_been_current = TRUE;
             ctx->hdc = pDrawDev->hdc;
             ctx->read_hdc = pReadDev->hdc;
             ctx->drawables[0] = d_draw;
@@ -1918,30 +1919,48 @@ BOOL CDECL X11DRV_wglShareLists(HGLRC hglrc1, HGLRC hglrc2) {
 
     if (!has_opengl()) return FALSE;
 
-    if (NULL != dest && dest->ctx != NULL) {
-        ERR("Could not share display lists, context already created !\n");
+    /* Sharing of display lists works differently in GLX and WGL. In case of GLX it is done
+     * at context creation time but in case of WGL it is done using wglShareLists.
+     * In the past we tried to emulate wglShareLists by delaying GLX context creation until
+     * either a wglMakeCurrent or wglShareLists. This worked fine for most apps but it causes
+     * issues for OpenGL 3 because there wglCreateContextAttribsARB can fail in a lot of cases,
+     * so there delaying context creation doesn't work.
+     *
+     * The new approach is to create a GLX context in wglCreateContext / wglCreateContextAttribsARB
+     * and when a program requests sharing we recreate the destination context if it hasn't been made
+     * current or when it hasn't shared display lists before.
+     */
+
+    if((org->has_been_current && dest->has_been_current) || dest->has_been_current)
+    {
+        ERR("Could not share display lists, one of the contexts has been current already !\n");
         return FALSE;
-    } else {
-        if(org && dest && (GetObjectType(org->hdc) == OBJ_MEMDC) ^ (GetObjectType(dest->hdc) == OBJ_MEMDC)) {
+    }
+    else if(dest->sharing)
+    {
+        ERR("Could not share display lists because hglrc2 has already shared lists before\n");
+        return FALSE;
+    }
+    else
+    {
+        if((GetObjectType(org->hdc) == OBJ_MEMDC) ^ (GetObjectType(dest->hdc) == OBJ_MEMDC))
+        {
             WARN("Attempting to share a context between a direct and indirect rendering context, expect issues!\n");
         }
 
-        if (org->ctx == NULL) {
-            wine_tsx11_lock();
-            describeContext(org);
+        wine_tsx11_lock();
+        describeContext(org);
+        describeContext(dest);
 
-            org->ctx = create_glxcontext(gdi_display, org, NULL);
-            wine_tsx11_unlock();
-            TRACE(" created a delayed OpenGL context (%p) for Wine context %p\n", org->ctx, org);
-        }
-        if (NULL != dest) {
-            wine_tsx11_lock();
-            describeContext(dest);
-            dest->ctx = create_glxcontext(gdi_display, dest, org->ctx);
-            wine_tsx11_unlock();
-            TRACE(" created a delayed OpenGL context (%p) for Wine context %p sharing lists with OpenGL ctx %p\n", dest->ctx, dest, org->ctx);
-            return TRUE;
-        }
+        /* Re-create the GLX context and share display lists */
+        pglXDestroyContext(gdi_display, dest->ctx);
+        dest->ctx = create_glxcontext(gdi_display, dest, org->ctx);
+        wine_tsx11_unlock();
+        TRACE(" re-created an OpenGL context (%p) for Wine context %p sharing lists with OpenGL ctx %p\n", dest->ctx, dest, org->ctx);
+
+        org->sharing = TRUE;
+        dest->sharing = TRUE;
+        return TRUE;
     }
     return FALSE;
 }
@@ -2190,6 +2209,98 @@ static void WINAPI X11DRV_wglFlush(void)
     pglFlush();
     wine_tsx11_unlock();
     if (ctx) ExtEscape(ctx->hdc, X11DRV_ESCAPE, sizeof(code), (LPSTR)&code, 0, NULL );
+}
+
+/**
+ * X11DRV_wglCreateContextAttribsARB
+ *
+ * WGL_ARB_create_context: wglCreateContextAttribsARB
+ */
+HGLRC X11DRV_wglCreateContextAttribsARB(X11DRV_PDEVICE *physDev, HGLRC hShareContext, const int* attribList)
+{
+    Wine_GLContext *ret;
+    WineGLPixelFormat *fmt;
+    int hdcPF = physDev->current_pf;
+    int fmt_count = 0;
+
+    TRACE("(%p %p %p)\n", physDev, hShareContext, attribList);
+
+    if (!has_opengl()) return 0;
+
+    fmt = ConvertPixelFormatWGLtoGLX(gdi_display, hdcPF, TRUE /* Offscreen */, &fmt_count);
+    /* wglCreateContextAttribsARB supports ALL pixel formats, so also offscreen ones.
+     * If this fails something is very wrong on the system. */
+    if(!fmt)
+    {
+        ERR("Cannot get FB Config for iPixelFormat %d, expect problems!\n", hdcPF);
+        SetLastError(ERROR_INVALID_PIXEL_FORMAT);
+        return NULL;
+    }
+
+    wine_tsx11_lock();
+    ret = alloc_context();
+    wine_tsx11_unlock();
+    ret->hdc = physDev->hdc;
+    ret->fmt = fmt;
+    ret->vis = NULL; /* glXCreateContextAttribsARB requires a fbconfig instead of a visual */
+    ret->gl3_context = TRUE;
+
+    ret->numAttribs = 0;
+    if(attribList)
+    {
+        int *pAttribList = (int*)attribList;
+        int *pContextAttribList = &ret->attribList[0];
+        /* attribList consists of pairs {token, value] terminated with 0 */
+        while(pAttribList[0] != 0)
+        {
+            TRACE("%#x %#x\n", pAttribList[0], pAttribList[1]);
+            switch(pAttribList[0])
+            {
+                case WGL_CONTEXT_MAJOR_VERSION_ARB:
+                    pContextAttribList[0] = GLX_CONTEXT_MAJOR_VERSION_ARB;
+                    pContextAttribList[1] = pAttribList[1];
+                    break;
+                case WGL_CONTEXT_MINOR_VERSION_ARB:
+                    pContextAttribList[0] = GLX_CONTEXT_MINOR_VERSION_ARB;
+                    pContextAttribList[1] = pAttribList[1];
+                    break;
+                case WGL_CONTEXT_LAYER_PLANE_ARB:
+                    break;
+                case WGL_CONTEXT_FLAGS_ARB:
+                    pContextAttribList[0] = GLX_CONTEXT_FLAGS_ARB;
+                    pContextAttribList[1] = pAttribList[1];
+                    break;
+                case WGL_CONTEXT_PROFILE_MASK_ARB:
+                    pContextAttribList[0] = GLX_CONTEXT_PROFILE_MASK_ARB;
+                    pContextAttribList[1] = pAttribList[1];
+                    break;
+                default:
+                    ERR("Unhandled attribList pair: %#x %#x\n", pAttribList[0], pAttribList[1]);
+            }
+
+            ret->numAttribs++;
+            pAttribList += 2;
+            pContextAttribList += 2;
+        }
+    }
+
+    wine_tsx11_lock();
+    X11DRV_expect_error(gdi_display, GLXErrorHandler, NULL);
+    ret->ctx = create_glxcontext(gdi_display, ret, NULL);
+
+    XSync(gdi_display, False);
+    if(X11DRV_check_error() || !ret->ctx)
+    {
+        /* In the future we should convert the GLX error to a win32 one here if needed */
+        ERR("Context creation failed\n");
+        free_context(ret);
+        wine_tsx11_unlock();
+        return NULL;
+    }
+
+    wine_tsx11_unlock();
+    TRACE(" creating context %p\n", ret);
+    return (HGLRC) ret;
 }
 
 /**
@@ -3343,6 +3454,14 @@ static const WineGLExtension WGL_internal_functions =
 };
 
 
+static const WineGLExtension WGL_ARB_create_context =
+{
+  "WGL_ARB_create_context",
+  {
+    { "wglCreateContextAttribsARB", X11DRV_wglCreateContextAttribsARB },
+  }
+};
+
 static const WineGLExtension WGL_ARB_extensions_string =
 {
   "WGL_ARB_extensions_string",
@@ -3442,6 +3561,14 @@ static void X11DRV_WineGL_LoadExtensions(void)
     register_extension(&WGL_internal_functions);
 
     /* ARB Extensions */
+
+    if(glxRequireExtension("GLX_ARB_create_context"))
+    {
+        register_extension(&WGL_ARB_create_context);
+
+        if(glxRequireExtension("GLX_ARB_create_context_profile"))
+            register_extension_string("WGL_ARB_create_context_profile");
+    }
 
     if(glxRequireExtension("GLX_ARB_fbconfig_float"))
     {
@@ -3710,6 +3837,17 @@ BOOL CDECL X11DRV_wglCopyContext(HGLRC hglrcSrc, HGLRC hglrcDst, UINT mask) {
  * For OpenGL32 wglCreateContext.
  */
 HGLRC CDECL X11DRV_wglCreateContext(X11DRV_PDEVICE *physDev) {
+    opengl_error();
+    return NULL;
+}
+
+/**
+ * X11DRV_wglCreateContextAttribsARB
+ *
+ * WGL_ARB_create_context: wglCreateContextAttribsARB
+ */
+HGLRC X11DRV_wglCreateContextAttribsARB(X11DRV_PDEVICE *physDev, HGLRC hShareContext, const int* attribList)
+{
     opengl_error();
     return NULL;
 }

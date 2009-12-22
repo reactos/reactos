@@ -280,8 +280,6 @@ static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_inp
         for (i = 0; i < NB_MSG_KINDS; i++) list_init( &queue->msg_list[i] );
 
         thread->queue = queue;
-        if (!thread->process->queue)
-            thread->process->queue = (struct msg_queue *)grab_object( queue );
     }
     release_object( input );
     return queue;
@@ -290,21 +288,8 @@ static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_inp
 /* free the message queue of a thread at thread exit */
 void free_msg_queue( PTHREADINFO thread )
 {
-    PPROCESSINFO process = thread->process;
-
     remove_thread_hooks( thread );
     if (!thread->queue) return;
-    if (process->queue == thread->queue)  /* is it the process main queue? */
-    {
-        release_object( process->queue );
-        process->queue = NULL;
-        if (process->idle_event)
-        {
-            set_event( process->idle_event );
-            release_object( process->idle_event );
-            process->idle_event = NULL;
-        }
-    }
     release_object( thread->queue );
     thread->queue = NULL;
 }
@@ -816,11 +801,8 @@ static int msg_queue_add_queue( struct object *obj, struct wait_queue_entry *ent
         set_error( STATUS_ACCESS_DENIED );
         return 0;
     }
-    /* if waiting on the main process queue, set the idle event */
-    if (process->queue == queue)
-    {
-        if (process->idle_event) set_event( process->idle_event );
-    }
+    if (process->idle_event && !(queue->wake_mask & QS_SMRESULT)) set_event( process->idle_event );
+
     if (queue->fd && list_empty( &obj->wait_queue ))  /* first on the queue */
         set_fd_events( queue->fd, POLLIN );
     add_queue( obj, entry );
@@ -830,19 +812,9 @@ static int msg_queue_add_queue( struct object *obj, struct wait_queue_entry *ent
 static void msg_queue_remove_queue(struct object *obj, struct wait_queue_entry *entry )
 {
     struct msg_queue *queue = (struct msg_queue *)obj;
-    PPROCESSINFO process = entry->thread->process;
-
     remove_queue( obj, entry );
     if (queue->fd && list_empty( &obj->wait_queue ))  /* last on the queue is gone */
         set_fd_events( queue->fd, 0 );
-
-    assert( entry->thread->queue == queue );
-
-    /* if waiting on the main process queue, reset the idle event */
-    if (process->queue == queue)
-    {
-        if (process->idle_event) reset_event( process->idle_event );
-    }
 }
 
 static void msg_queue_dump( struct object *obj, int verbose )
@@ -1865,6 +1837,7 @@ DECL_HANDLER(get_message)
     LARGE_INTEGER current_time;
     struct timer *timer;
     struct list *ptr;
+    PPROCESSINFO process = PsGetCurrentProcessWin32Process();
     struct msg_queue *queue = get_current_queue();
     user_handle_t get_win = get_user_full_handle( req->get_win );
     unsigned int filter = req->flags >> 16;
@@ -1934,6 +1907,8 @@ DECL_HANDLER(get_message)
         reply->wparam = timer->id;
         reply->lparam = timer->lparam;
         reply->time   = EngGetTickCount();
+        if (!(req->flags & PM_NOYIELD) && process->idle_event)
+            set_event( process->idle_event );
         return;
     }
 

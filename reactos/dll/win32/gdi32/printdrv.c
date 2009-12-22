@@ -26,6 +26,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
+#include "winnls.h"
 #include "winspool.h"
 #include "winerror.h"
 #include "wine/debug.h"

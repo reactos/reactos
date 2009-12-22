@@ -87,6 +87,7 @@ extern ULONG WIN_SetStyle( HWND hwnd, ULONG set_bits, ULONG clear_bits ) DECLSPE
 extern BOOL WIN_GetRectangles( HWND hwnd, RECT *rectWindow, RECT *rectClient ) DECLSPEC_HIDDEN;
 extern LRESULT WIN_DestroyWindow( HWND hwnd ) DECLSPEC_HIDDEN;
 extern void WIN_DestroyThreadWindows( HWND hwnd ) DECLSPEC_HIDDEN;
+extern HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module, UINT flags ) DECLSPEC_HIDDEN;
 extern BOOL WIN_IsWindowDrawable( HWND hwnd, BOOL ) DECLSPEC_HIDDEN;
 extern HWND *WIN_ListChildren( HWND hwnd ) DECLSPEC_HIDDEN;
 extern LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, BOOL unicode ) DECLSPEC_HIDDEN;

@@ -23,6 +23,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winnls.h"
 #include "gdi_private.h"
 #include "mfdrv/metafiledrv.h"
 #include "wine/debug.h"
@@ -119,7 +120,6 @@ static const DC_FUNCTIONS MFDRV_Funcs =
     MFDRV_SetBkColor,                /* pSetBkColor */
     MFDRV_SetBkMode,                 /* pSetBkMode */
     NULL,                            /* pSetDCBrushColor*/
-    NULL,                            /* pSetDCOrg */
     NULL,                            /* pSetDCPenColor*/
     NULL,                            /* pSetDIBColorTable */
     NULL,                            /* pSetDIBits */

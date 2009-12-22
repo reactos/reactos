@@ -144,7 +144,6 @@ DC *alloc_dc_ptr( const DC_FUNCTIONS *funcs, WORD magic )
     dc->BoundsRect.top      = 0;
     dc->BoundsRect.right    = 0;
     dc->BoundsRect.bottom   = 0;
-    dc->saved_visrgn        = NULL;
     PATH_InitGdiPath(&dc->path);
 
     if (!(dc->hSelf = alloc_gdi_handle( &dc->header, magic, &dc_funcs )))
@@ -403,7 +402,6 @@ INT save_dc_state( HDC hdc )
 
     newdc->pAbortProc = NULL;
     newdc->hookProc   = NULL;
-    newdc->saved_visrgn = NULL;
 
     if (!(newdc->hSelf = alloc_gdi_handle( &newdc->header, dc->header.type, &dc_funcs )))
     {
@@ -752,8 +750,9 @@ HDC WINAPI CreateCompatibleDC( HDC hdc )
 
     GDI_CheckNotLock();
 
-    if ((origDC = get_dc_ptr( hdc )))
+    if (hdc)
     {
+        if (!(origDC = get_dc_ptr( hdc ))) return 0;
         if (GetObjectType( hdc ) == OBJ_DC)
         {
             funcs = origDC->funcs;
@@ -762,7 +761,6 @@ HDC WINAPI CreateCompatibleDC( HDC hdc )
         release_dc_ptr( origDC );
         if (funcs) funcs = DRIVER_get_driver( funcs );
     }
-    else if (hdc) return 0;
 
     if (!funcs && !(funcs = DRIVER_load_driver( displayW ))) return 0;
 
@@ -845,14 +843,6 @@ BOOL WINAPI DeleteDC( HDC hdc )
         dc->physDev = NULL;
     }
 
-    while (dc->saved_visrgn)
-    {
-        struct saved_visrgn *next = dc->saved_visrgn->next;
-        DeleteObject( dc->saved_visrgn->hrgn );
-        HeapFree( GetProcessHeap(), 0, dc->saved_visrgn );
-        dc->saved_visrgn = next;
-    }
-
     free_dc_ptr( dc );
     if (funcs) DRIVER_release_driver( funcs );  /* do that after releasing the GDI lock */
     return TRUE;
@@ -869,7 +859,17 @@ HDC WINAPI ResetDCW( HDC hdc, const DEVMODEW *devmode )
 
     if ((dc = get_dc_ptr( hdc )))
     {
-        if (dc->funcs->pResetDC) ret = dc->funcs->pResetDC( dc->physDev, devmode );
+        if (dc->funcs->pResetDC)
+        {
+            ret = dc->funcs->pResetDC( dc->physDev, devmode );
+            if (ret)  /* reset the visible region */
+            {
+                dc->dirty = 0;
+                SetRectRgn( dc->hVisRgn, 0, 0, GetDeviceCaps( hdc, DESKTOPHORZRES ),
+                            GetDeviceCaps( hdc, DESKTOPVERTRES ) );
+                CLIPPING_UpdateGCRegion( dc );
+            }
+        }
         release_dc_ptr( dc );
     }
     return ret;

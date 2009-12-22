@@ -661,6 +661,7 @@ enum x11drv_atoms
     XATOM_XdndSelection,
     XATOM_XdndTarget,
     XATOM_XdndTypeList,
+    XATOM_HTML_Format,
     XATOM_WCF_DIB,
     XATOM_image_gif,
     XATOM_image_jpeg,

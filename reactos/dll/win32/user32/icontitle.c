@@ -38,8 +38,6 @@
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
 
-static LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
-
 /*********************************************************************
  * icon title class descriptor
  */
@@ -47,8 +45,7 @@ const struct builtin_class_descr ICONTITLE_builtin_class =
 {
     (LPCWSTR)ICONTITLE_CLASS_ATOM, /* name */
     0,                    /* style */
-    NULL,                 /* procA (winproc is Unicode only) */
-    IconTitleWndProc,     /* procW */
+    WINPROC_ICONTITLE,    /* proc */
     0,                    /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */

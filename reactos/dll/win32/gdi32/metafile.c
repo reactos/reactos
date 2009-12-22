@@ -55,6 +55,7 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winreg.h"
+#include "winnls.h"
 #include "winternl.h"
 #include "gdi_private.h"
 #include "wine/debug.h"
@@ -137,10 +138,10 @@ static METAHEADER *MF_GetMetaHeader( HMETAFILE hmf )
 /******************************************************************
  *         convert_points
  *
- * Convert an array of POINT16 to an array of POINT.
+ * Convert an array of POINTS to an array of POINT.
  * Result must be freed by caller.
  */
-static POINT *convert_points( UINT count, POINT16 *pt16 )
+static POINT *convert_points( UINT count, const POINTS *pts )
 {
     UINT i;
     POINT *ret = HeapAlloc( GetProcessHeap(), 0, count * sizeof(*ret) );
@@ -148,8 +149,8 @@ static POINT *convert_points( UINT count, POINT16 *pt16 )
     {
         for (i = 0; i < count; i++)
         {
-            ret[i].x = pt16[i].x;
-            ret[i].y = pt16[i].y;
+            ret[i].x = pts[i].x;
+            ret[i].y = pts[i].y;
         }
     }
     return ret;
@@ -175,7 +176,7 @@ BOOL WINAPI DeleteMetaFile( HMETAFILE hmf )
  * Returns a pointer to a memory based METAHEADER read in from file HFILE
  *
  */
-METAHEADER *MF_ReadMetaFile(HANDLE hfile)
+static METAHEADER *MF_ReadMetaFile(HANDLE hfile)
 {
     METAHEADER *mh;
     DWORD BytesRead, size;
@@ -266,7 +267,7 @@ HMETAFILE WINAPI GetMetaFileW( LPCWSTR lpFilename )
  *
  * Creates a new memory-based metafile from a disk-based one.
  */
-METAHEADER *MF_LoadDiskBasedMetaFile(METAHEADER *mh)
+static METAHEADER *MF_LoadDiskBasedMetaFile(METAHEADER *mh)
 {
     METAHEADERDISK *mhd;
     HANDLE hfile;
@@ -384,7 +385,7 @@ HMETAFILE WINAPI CopyMetaFileA( HMETAFILE hSrcMetaFile, LPCSTR lpFilename )
  *
  * Helper for PlayMetaFile
  */
-BOOL MF_PlayMetaFile( HDC hdc, METAHEADER *mh)
+static BOOL MF_PlayMetaFile( HDC hdc, METAHEADER *mh)
 {
 
     METARECORD *mr;
@@ -741,7 +742,7 @@ BOOL WINAPI PlayMetaFileRecord( HDC hdc,  HANDLETABLE *ht, METARECORD *mr, UINT 
         break;
 
     case META_POLYGON:
-        if ((pt = convert_points( mr->rdParm[0], (LPPOINT16)(mr->rdParm + 1))))
+        if ((pt = convert_points( mr->rdParm[0], (POINTS *)(mr->rdParm + 1))))
         {
             Polygon(hdc, pt, mr->rdParm[0]);
             HeapFree( GetProcessHeap(), 0, pt );
@@ -754,7 +755,7 @@ BOOL WINAPI PlayMetaFileRecord( HDC hdc,  HANDLETABLE *ht, METARECORD *mr, UINT 
             SHORT *counts = (SHORT *)(mr->rdParm + 1);
 
             for (i = total = 0; i < mr->rdParm[0]; i++) total += counts[i];
-            pt = convert_points( total, (LPPOINT16)(counts + mr->rdParm[0]) );
+            pt = convert_points( total, (POINTS *)(counts + mr->rdParm[0]) );
             if (pt)
             {
                 INT *cnt32 = HeapAlloc( GetProcessHeap(), 0, mr->rdParm[0] * sizeof(*cnt32) );
@@ -770,7 +771,7 @@ BOOL WINAPI PlayMetaFileRecord( HDC hdc,  HANDLETABLE *ht, METARECORD *mr, UINT 
         break;
 
     case META_POLYLINE:
-        if ((pt = convert_points( mr->rdParm[0], (LPPOINT16)(mr->rdParm + 1))))
+        if ((pt = convert_points( mr->rdParm[0], (POINTS *)(mr->rdParm + 1))))
         {
             Polyline( hdc, pt, mr->rdParm[0] );
             HeapFree( GetProcessHeap(), 0, pt );
@@ -1430,7 +1431,7 @@ static BOOL MF_Play_MetaExtTextOut(HDC hdc, METARECORD *mr)
 {
     INT *dx = NULL;
     int i;
-    LPINT16 dxx;
+    SHORT *dxx;
     LPSTR sot;
     DWORD len;
     WORD s1;
@@ -1439,7 +1440,7 @@ static BOOL MF_Play_MetaExtTextOut(HDC hdc, METARECORD *mr)
 
     s1 = mr->rdParm[2];                              /* String length */
     len = sizeof(METARECORD) + (((s1 + 1) >> 1) * 2) + 2 * sizeof(short)
-      + sizeof(UINT16) + (isrect ? sizeof(RECT16) : 0);
+        + sizeof(UINT16) + (isrect ? 4 * sizeof(SHORT) : 0);
                                            /* rec len without dx array */
 
     sot = (LPSTR)&mr->rdParm[4];		      /* start_of_text */
@@ -1449,7 +1450,7 @@ static BOOL MF_Play_MetaExtTextOut(HDC hdc, METARECORD *mr)
         rect.top    = (SHORT)mr->rdParm[5];
         rect.right  = (SHORT)mr->rdParm[6];
         rect.bottom = (SHORT)mr->rdParm[7];
-        sot += sizeof(RECT16);  /* there is a rectangle, so add offset */
+        sot += 4 * sizeof(SHORT);  /* there is a rectangle, so add offset */
     }
 
     if (mr->rdSize == len / 2)
@@ -1457,7 +1458,7 @@ static BOOL MF_Play_MetaExtTextOut(HDC hdc, METARECORD *mr)
     else
         if (mr->rdSize == (len + s1 * sizeof(INT16)) / 2)
         {
-            dxx = (LPINT16)(sot+(((s1+1)>>1)*2));
+            dxx = (SHORT *)(sot+(((s1+1)>>1)*2));
             dx = HeapAlloc( GetProcessHeap(), 0, s1*sizeof(INT));
             if (dx) for (i = 0; i < s1; i++) dx[i] = dxx[i];
         }

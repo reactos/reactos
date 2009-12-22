@@ -67,7 +67,7 @@ UINT (WINAPI *pfnRealizePalette)(HDC hdc) = GDIRealizePalette;
 
 static UINT SystemPaletteUse = SYSPAL_STATIC;  /* currently not considered */
 
-HPALETTE hPrimaryPalette = 0; /* used for WM_PALETTECHANGED */
+static HPALETTE hPrimaryPalette = 0; /* used for WM_PALETTECHANGED */
 static HPALETTE hLastRealizedPalette = 0; /* UnrealizeObject() needs it */
 
 #define NB_RESERVED_COLORS  20   /* number of fixed colors in system palette */

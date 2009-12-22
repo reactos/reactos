@@ -18,9 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
 #include "mfdrv/metafiledrv.h"
 #include "wine/debug.h"
 
@@ -123,7 +127,7 @@ MFDRV_SetPixel( PHYSDEV dev, INT x, INT y, COLORREF color )
 /******************************************************************
  *         MFDRV_MetaPoly - implements Polygon and Polyline
  */
-static BOOL MFDRV_MetaPoly(PHYSDEV dev, short func, LPPOINT16 pt, short count)
+static BOOL MFDRV_MetaPoly(PHYSDEV dev, short func, POINTS *pt, short count)
 {
     BOOL ret;
     DWORD len;
@@ -149,20 +153,20 @@ static BOOL MFDRV_MetaPoly(PHYSDEV dev, short func, LPPOINT16 pt, short count)
 BOOL CDECL
 MFDRV_Polyline( PHYSDEV dev, const POINT* pt, INT count )
 {
-    register int i;
-    LPPOINT16	pt16;
-    BOOL16	ret;
+    int i;
+    POINTS *pts;
+    BOOL ret;
 
-    pt16 = HeapAlloc( GetProcessHeap(), 0, sizeof(POINT16)*count );
-    if(!pt16) return FALSE;
+    pts = HeapAlloc( GetProcessHeap(), 0, sizeof(POINTS)*count );
+    if(!pts) return FALSE;
     for (i=count;i--;)
     {
-        pt16[i].x = pt[i].x;
-        pt16[i].y = pt[i].y;
+        pts[i].x = pt[i].x;
+        pts[i].y = pt[i].y;
     }
-    ret = MFDRV_MetaPoly(dev, META_POLYLINE, pt16, count);
+    ret = MFDRV_MetaPoly(dev, META_POLYLINE, pts, count);
 
-    HeapFree( GetProcessHeap(), 0, pt16 );
+    HeapFree( GetProcessHeap(), 0, pts );
     return ret;
 }
 
@@ -173,20 +177,20 @@ MFDRV_Polyline( PHYSDEV dev, const POINT* pt, INT count )
 BOOL CDECL
 MFDRV_Polygon( PHYSDEV dev, const POINT* pt, INT count )
 {
-    register int i;
-    LPPOINT16	pt16;
-    BOOL16	ret;
+    int i;
+    POINTS *pts;
+    BOOL ret;
 
-    pt16 = HeapAlloc( GetProcessHeap(), 0, sizeof(POINT16)*count );
-    if(!pt16) return FALSE;
+    pts = HeapAlloc( GetProcessHeap(), 0, sizeof(POINTS)*count );
+    if(!pts) return FALSE;
     for (i=count;i--;)
     {
-        pt16[i].x = pt[i].x;
-        pt16[i].y = pt[i].y;
+        pts[i].x = pt[i].x;
+        pts[i].y = pt[i].y;
     }
-    ret = MFDRV_MetaPoly(dev, META_POLYGON, pt16, count);
+    ret = MFDRV_MetaPoly(dev, META_POLYGON, pts, count);
 
-    HeapFree( GetProcessHeap(), 0, pt16 );
+    HeapFree( GetProcessHeap(), 0, pts );
     return ret;
 }
 
@@ -201,7 +205,7 @@ MFDRV_PolyPolygon( PHYSDEV dev, const POINT* pt, const INT* counts, UINT polygon
     DWORD len;
     METARECORD *mr;
     unsigned int i,j;
-    LPPOINT16 pt16;
+    POINTS *pts;
     INT16 totalpoint16 = 0;
     INT16 * pointcounts;
 
@@ -210,7 +214,7 @@ MFDRV_PolyPolygon( PHYSDEV dev, const POINT* pt, const INT* counts, UINT polygon
     }
 
     /* allocate space for all points */
-    pt16=HeapAlloc( GetProcessHeap(), 0, sizeof(POINT16) * totalpoint16 );
+    pts=HeapAlloc( GetProcessHeap(), 0, sizeof(POINTS) * totalpoint16 );
     pointcounts = HeapAlloc( GetProcessHeap(), 0, sizeof(INT16) * totalpoint16 );
 
     /* copy point counts */
@@ -220,14 +224,14 @@ MFDRV_PolyPolygon( PHYSDEV dev, const POINT* pt, const INT* counts, UINT polygon
 
     /* convert all points */
     for (j = totalpoint16; j--;){
-        pt16[j].x = pt[j].x;
-        pt16[j].y = pt[j].y;
+        pts[j].x = pt[j].x;
+        pts[j].y = pt[j].y;
     }
 
-    len = sizeof(METARECORD) + sizeof(WORD) + polygons*sizeof(INT16) + totalpoint16*sizeof(POINT16);
+    len = sizeof(METARECORD) + sizeof(WORD) + polygons*sizeof(INT16) + totalpoint16*sizeof(*pts);
 
     if (!(mr = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, len ))) {
-         HeapFree( GetProcessHeap(), 0, pt16 );
+         HeapFree( GetProcessHeap(), 0, pts );
          HeapFree( GetProcessHeap(), 0, pointcounts );
          return FALSE;
     }
@@ -236,10 +240,10 @@ MFDRV_PolyPolygon( PHYSDEV dev, const POINT* pt, const INT* counts, UINT polygon
     mr->rdFunction = META_POLYPOLYGON;
     *(mr->rdParm) = polygons;
     memcpy(mr->rdParm + 1, pointcounts, polygons*sizeof(INT16));
-    memcpy(mr->rdParm + 1+polygons, pt16 , totalpoint16*sizeof(POINT16));
+    memcpy(mr->rdParm + 1+polygons, pts , totalpoint16*sizeof(*pts));
     ret = MFDRV_WriteRecord( dev, mr, mr->rdSize * 2);
 
-    HeapFree( GetProcessHeap(), 0, pt16 );
+    HeapFree( GetProcessHeap(), 0, pts );
     HeapFree( GetProcessHeap(), 0, pointcounts );
     HeapFree( GetProcessHeap(), 0, mr);
     return ret;

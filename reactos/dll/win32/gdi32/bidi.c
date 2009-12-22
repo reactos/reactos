@@ -46,6 +46,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
+#include "winnls.h"
 #include "wine/debug.h"
 #include "gdi_private.h"
 

@@ -466,8 +466,12 @@ UINT WINAPI GetEnhMetaFileDescriptionW(
 HENHMETAFILE WINAPI SetEnhMetaFileBits(UINT bufsize, const BYTE *buf)
 {
     ENHMETAHEADER *emh = HeapAlloc( GetProcessHeap(), 0, bufsize );
+    HENHMETAFILE hmf;
     memmove(emh, buf, bufsize);
-    return EMF_Create_HENHMETAFILE( emh, FALSE );
+    hmf = EMF_Create_HENHMETAFILE( emh, FALSE );
+    if (!hmf)
+        HeapFree( GetProcessHeap(), 0, emh );
+    return hmf;
 }
 
 /*****************************************************************************
@@ -1073,16 +1077,16 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	/* NB POINTS array doesn't start at pPolyPoly->apts it's actually
 	   pPolyPoly->aPolyCounts + pPolyPoly->nPolys */
 
-        POINT16 *pts16 = (POINT16 *)(pPolyPoly->aPolyCounts + pPolyPoly->nPolys);
-        POINT *pts = HeapAlloc( GetProcessHeap(), 0, pPolyPoly->cpts * sizeof(POINT) );
+        POINTS *pts = (POINTS *)(pPolyPoly->aPolyCounts + pPolyPoly->nPolys);
+        POINT *pt = HeapAlloc( GetProcessHeap(), 0, pPolyPoly->cpts * sizeof(POINT) );
 	DWORD i;
 	for(i = 0; i < pPolyPoly->cpts; i++)
         {
-            pts[i].x = pts16[i].x;
-            pts[i].y = pts16[i].y;
+            pt[i].x = pts[i].x;
+            pt[i].y = pts[i].y;
         }
-	PolyPolygon(hdc, pts, (INT*)pPolyPoly->aPolyCounts, pPolyPoly->nPolys);
-	HeapFree( GetProcessHeap(), 0, pts );
+	PolyPolygon(hdc, pt, (INT*)pPolyPoly->aPolyCounts, pPolyPoly->nPolys);
+	HeapFree( GetProcessHeap(), 0, pt );
 	break;
       }
     case EMR_POLYPOLYLINE16:
@@ -1091,16 +1095,16 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	/* NB POINTS array doesn't start at pPolyPoly->apts it's actually
 	   pPolyPoly->aPolyCounts + pPolyPoly->nPolys */
 
-        POINT16 *pts16 = (POINT16 *)(pPolyPoly->aPolyCounts + pPolyPoly->nPolys);
-        POINT *pts = HeapAlloc( GetProcessHeap(), 0, pPolyPoly->cpts * sizeof(POINT) );
+        POINTS *pts = (POINTS *)(pPolyPoly->aPolyCounts + pPolyPoly->nPolys);
+        POINT *pt = HeapAlloc( GetProcessHeap(), 0, pPolyPoly->cpts * sizeof(POINT) );
 	DWORD i;
 	for(i = 0; i < pPolyPoly->cpts; i++)
         {
-            pts[i].x = pts16[i].x;
-            pts[i].y = pts16[i].y;
+            pt[i].x = pts[i].x;
+            pt[i].y = pts[i].y;
         }
-	PolyPolyline(hdc, pts, pPolyPoly->aPolyCounts, pPolyPoly->nPolys);
-	HeapFree( GetProcessHeap(), 0, pts );
+	PolyPolyline(hdc, pt, pPolyPoly->aPolyCounts, pPolyPoly->nPolys);
+	HeapFree( GetProcessHeap(), 0, pt );
 	break;
       }
 
@@ -2509,6 +2513,8 @@ HENHMETAFILE WINAPI CopyEnhMetaFileA(
         emrDst = HeapAlloc( GetProcessHeap(), 0, emrSrc->nBytes );
 	memcpy( emrDst, emrSrc, emrSrc->nBytes );
 	hmfDst = EMF_Create_HENHMETAFILE( emrDst, FALSE );
+	if (!hmfDst)
+		HeapFree( GetProcessHeap(), 0, emrDst );
     } else {
         HANDLE hFile;
         DWORD w;
@@ -2549,6 +2555,8 @@ HENHMETAFILE WINAPI CopyEnhMetaFileW(
         emrDst = HeapAlloc( GetProcessHeap(), 0, emrSrc->nBytes );
 	memcpy( emrDst, emrSrc, emrSrc->nBytes );
 	hmfDst = EMF_Create_HENHMETAFILE( emrDst, FALSE );
+	if (!hmfDst)
+		HeapFree( GetProcessHeap(), 0, emrDst );
     } else {
         HANDLE hFile;
         DWORD w;

@@ -87,6 +87,7 @@
 #include "winreg.h"
 #include "wingdi.h"
 #include "gdi_private.h"
+#include "wine/library.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/list.h"
@@ -5994,6 +5995,38 @@ BOOL WineEngGetCharABCWidths(GdiFont *font, UINT firstChar, UINT lastChar,
 }
 
 /*************************************************************
+ * WineEngGetCharABCWidthsFloat
+ *
+ */
+BOOL WineEngGetCharABCWidthsFloat(GdiFont *font, UINT first, UINT last, LPABCFLOAT buffer)
+{
+    static const MAT2 identity = {{0,1}, {0,0}, {0,0}, {0,1}};
+    UINT c;
+    GLYPHMETRICS gm;
+    FT_UInt glyph_index;
+    GdiFont *linked_font;
+
+    TRACE("%p, %d, %d, %p\n", font, first, last, buffer);
+
+    GDI_CheckNotLock();
+    EnterCriticalSection( &freetype_cs );
+
+    for (c = first; c <= last; c++)
+    {
+        get_glyph_index_linked(font, c, &linked_font, &glyph_index);
+        WineEngGetGlyphOutline(linked_font, glyph_index, GGO_METRICS | GGO_GLYPH_INDEX,
+                               &gm, 0, NULL, &identity);
+        buffer[c - first].abcfA = FONT_GM(linked_font, glyph_index)->lsb;
+        buffer[c - first].abcfB = FONT_GM(linked_font, glyph_index)->bbx;
+        buffer[c - first].abcfC = FONT_GM(linked_font, glyph_index)->adv -
+                                  FONT_GM(linked_font, glyph_index)->lsb -
+                                  FONT_GM(linked_font, glyph_index)->bbx;
+    }
+    LeaveCriticalSection( &freetype_cs );
+    return TRUE;
+}
+
+/*************************************************************
  * WineEngGetCharABCWidthsI
  *
  */
@@ -6681,6 +6714,12 @@ BOOL WineEngGetCharWidth(GdiFont *font, UINT firstChar, UINT lastChar,
 
 BOOL WineEngGetCharABCWidths(GdiFont *font, UINT firstChar, UINT lastChar,
 			     LPABC buffer)
+{
+    ERR("called but we don't have FreeType\n");
+    return FALSE;
+}
+
+BOOL WineEngGetCharABCWidthsFloat(GdiFont *font, UINT first, UINT last, LPABCFLOAT buffer)
 {
     ERR("called but we don't have FreeType\n");
     return FALSE;

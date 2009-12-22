@@ -1550,3 +1550,18 @@ BOOL WINAPI ScrollDC( HDC hdc, INT dx, INT dy, const RECT *lprcScroll,
 {
     return USER_Driver->pScrollDC( hdc, dx, dy, lprcScroll, lprcClip, hrgnUpdate, lprcUpdate );
 }
+
+/************************************************************************
+ *		PrintWindow (USER32.@)
+ *
+ */
+BOOL WINAPI PrintWindow(HWND hwnd, HDC hdcBlt, UINT nFlags)
+{
+    UINT flags = PRF_CHILDREN | PRF_ERASEBKGND | PRF_OWNED | PRF_CLIENT;
+    if(!(nFlags & PW_CLIENTONLY))
+    {
+        flags |= PRF_NONCLIENT;
+    }
+    SendMessageW(hwnd, WM_PRINT, (WPARAM)hdcBlt, flags);
+    return TRUE;
+}

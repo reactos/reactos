@@ -509,7 +509,6 @@ void close_thread_desktop( PTHREADINFO thread )
 
     thread->desktop = 0;
     if (handle) close_handle( thread->process, handle );
-    clear_error();  /* ignore errors */
 }
 
 /* set the reply data from the object name */
@@ -564,7 +563,7 @@ DECL_HANDLER(close_winstation)
     if ((winstation = (struct winstation *)get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle,
                                                            0, &winstation_ops )))
     {
-        if (!close_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle )) set_error( STATUS_ACCESS_DENIED );
+        if (close_handle( PsGetCurrentProcessWin32Process(), req->handle )) set_error( STATUS_ACCESS_DENIED );
         release_object( winstation );
     }
 }
@@ -651,7 +650,7 @@ DECL_HANDLER(close_desktop)
     if ((desktop = (struct desktop *)get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle,
                                                      0, &desktop_ops )))
     {
-        if (!close_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle )) set_error( STATUS_DEVICE_BUSY );
+        if (close_handle( PsGetCurrentProcessWin32Process(), req->handle )) set_error( STATUS_DEVICE_BUSY );
         release_object( desktop );
     }
 }

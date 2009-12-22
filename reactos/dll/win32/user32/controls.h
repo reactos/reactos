@@ -31,13 +31,36 @@
 #define WINSWITCH_CLASS_ATOM MAKEINTATOM(32771)  /* WinSwitch */
 #define ICONTITLE_CLASS_ATOM MAKEINTATOM(32772)  /* IconTitle */
 
+enum builtin_winprocs
+{
+    /* dual A/W procs */
+    WINPROC_BUTTON = 0,
+    WINPROC_COMBO,
+    WINPROC_DEFWND,
+    WINPROC_DIALOG,
+    WINPROC_EDIT,
+    WINPROC_LISTBOX,
+    WINPROC_MDICLIENT,
+    WINPROC_SCROLLBAR,
+    WINPROC_STATIC,
+    /* unicode-only procs */
+    WINPROC_DESKTOP,
+    WINPROC_ICONTITLE,
+    WINPROC_MENU,
+    WINPROC_MESSAGE,
+    NB_BUILTIN_WINPROCS,
+    NB_BUILTIN_AW_WINPROCS = WINPROC_DESKTOP
+};
+
+#define WINPROC_HANDLE (~0u >> 16)
+#define BUILTIN_WINPROC(index) ((WNDPROC)(ULONG_PTR)((index) | (WINPROC_HANDLE << 16)))
+
 /* Built-in class descriptor */
 struct builtin_class_descr
 {
     LPCWSTR   name;    /* class name */
     UINT      style;   /* class style */
-    WNDPROC   procA;   /* ASCII window procedure */
-    WNDPROC   procW;   /* Unicode window procedure */
+    enum builtin_winprocs proc;
     INT       extra;   /* window extra bytes */
     ULONG_PTR cursor;  /* cursor id */
     HBRUSH    brush;   /* brush or system color */
@@ -57,7 +80,52 @@ extern const struct builtin_class_descr MESSAGE_builtin_class DECLSPEC_HIDDEN;
 extern const struct builtin_class_descr SCROLL_builtin_class DECLSPEC_HIDDEN;
 extern const struct builtin_class_descr STATIC_builtin_class DECLSPEC_HIDDEN;
 
-extern WNDPROC EDIT_winproc_handle DECLSPEC_HIDDEN;
+extern LRESULT WINAPI DesktopWndProc(HWND,UINT,WPARAM,LPARAM) DECLSPEC_HIDDEN;
+extern LRESULT WINAPI IconTitleWndProc(HWND,UINT,WPARAM,LPARAM) DECLSPEC_HIDDEN;
+extern LRESULT WINAPI PopupMenuWndProc(HWND,UINT,WPARAM,LPARAM) DECLSPEC_HIDDEN;
+extern LRESULT WINAPI MessageWndProc(HWND,UINT,WPARAM,LPARAM) DECLSPEC_HIDDEN;
+
+/* Wow handlers */
+
+struct wow_handlers16
+{
+    LRESULT (*button_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*combo_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*edit_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*listbox_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*mdiclient_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*scrollbar_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*static_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*call_window_proc)(HWND,UINT,WPARAM,LPARAM,LRESULT*,void*);
+    LRESULT (*call_dialog_proc)(HWND,UINT,WPARAM,LPARAM,LRESULT*,void*);
+};
+
+struct wow_handlers32
+{
+    LRESULT (*button_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*combo_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*edit_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*listbox_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*mdiclient_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*scrollbar_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    LRESULT (*static_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    HWND    (*create_window)(CREATESTRUCTW*,LPCWSTR,HINSTANCE,UINT);
+    WNDPROC (*alloc_winproc)(WNDPROC,BOOL);
+};
+
+extern struct wow_handlers16 wow_handlers DECLSPEC_HIDDEN;
+
+extern LRESULT ButtonWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
+extern LRESULT ComboWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
+extern LRESULT EditWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
+extern LRESULT ListBoxWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
+extern LRESULT MDIClientWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
+extern LRESULT ScrollBarWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
+extern LRESULT StaticWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
+
+extern void register_wow_handlers(void) DECLSPEC_HIDDEN;
+extern void WINAPI UserRegisterWowHandlers( const struct wow_handlers16 *new,
+                                            struct wow_handlers32 *orig );
 
 /* Class functions */
 struct tagCLASS;  /* opaque structure */

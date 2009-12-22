@@ -279,17 +279,13 @@ static struct handle_entry *get_handle( PPROCESSINFO process, obj_handle_t handl
         handle = handle_global_to_local(handle);
         table = global_table;
     }
-    if (!table) goto error;
+    if (!table) return NULL;
     index = handle_to_index( handle );
-    if (index < 0) goto error;
-    if (index > table->last) goto error;
+    if (index < 0) return NULL;
+    if (index > table->last) return NULL;
     entry = table->entries + index;
-    if (!entry->ptr) goto error;
+    if (!entry->ptr) return NULL;
     return entry;
-
- error:
-    set_error( STATUS_INVALID_HANDLE );
-    return NULL;
 }
 
 /* attempt to shrink a table */
@@ -346,31 +342,22 @@ struct handle_table *copy_handle_table( PPROCESSINFO process, PPROCESSINFO paren
 }
 
 /* close a handle and decrement the refcount of the associated object */
-/* return 1 if OK, 0 on error */
-int close_handle( PPROCESSINFO process, obj_handle_t handle )
+unsigned int close_handle( PPROCESSINFO process, obj_handle_t handle )
 {
     struct handle_table *table;
     struct handle_entry *entry;
     struct object *obj;
 
-    if (!(entry = get_handle( process, handle ))) return 0;
-    if (entry->access & RESERVED_CLOSE_PROTECT)
-    {
-        set_error( STATUS_HANDLE_NOT_CLOSABLE );
-        return 0;
-    }
+    if (!(entry = get_handle( process, handle ))) return STATUS_INVALID_HANDLE;
+    if (entry->access & RESERVED_CLOSE_PROTECT) return STATUS_HANDLE_NOT_CLOSABLE;
     obj = entry->ptr;
-    if (!obj->ops->close_handle( obj, process, handle ))
-    {
-        set_error( STATUS_HANDLE_NOT_CLOSABLE );
-        return 0;
-    }
+    if (!obj->ops->close_handle( obj, process, handle )) return STATUS_HANDLE_NOT_CLOSABLE;
     entry->ptr = NULL;
     table = handle_is_global(handle) ? global_table : process->handles;
     if (entry < table->entries + table->free) table->free = entry - table->entries;
     if (entry == table->entries + table->last) shrink_handle_table( table );
     release_object( obj );
-    return 1;
+    return STATUS_SUCCESS;
 }
 
 /* retrieve the object corresponding to one of the magic pseudo-handles */
@@ -401,7 +388,11 @@ struct object *get_handle_obj( PPROCESSINFO process, obj_handle_t handle,
 
     if (!(obj = get_magic_handle( handle )))
     {
-        if (!(entry = get_handle( process, handle ))) return NULL;
+        if (!(entry = get_handle( process, handle )))
+        {
+            set_error( STATUS_INVALID_HANDLE );
+            return NULL;
+        }
         if ((entry->access & access) != access)
         {
             DPRINT1("get_handle_obj should deny access!\n");
@@ -481,7 +472,11 @@ static int set_handle_flags( PPROCESSINFO process, obj_handle_t handle, int mask
         if (mask) set_error( STATUS_ACCESS_DENIED );
         return 0;
     }
-    if (!(entry = get_handle( process, handle ))) return -1;
+    if (!(entry = get_handle( process, handle )))
+    {
+        set_error( STATUS_INVALID_HANDLE );
+        return -1;
+    }
     old_access = entry->access;
     mask  = (mask << RESERVED_SHIFT) & RESERVED_ALL;
     flags = (flags << RESERVED_SHIFT) & mask;
@@ -502,10 +497,7 @@ obj_handle_t duplicate_handle( PPROCESSINFO src, obj_handle_t src_handle, PPROCE
     if ((entry = get_handle( src, src_handle )))
         src_access = entry->access;
     else  /* pseudo-handle, give it full access */
-    {
         src_access = obj->ops->map_access( obj, GENERIC_ALL );
-        clear_error();
-    }
     src_access &= ~RESERVED_ALL;
 
     if (options & DUP_HANDLE_SAME_ACCESS)
@@ -562,7 +554,8 @@ unsigned int get_handle_table_count( PPROCESSINFO process )
 /* close a handle */
 DECL_HANDLER(close_handle)
 {
-    close_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle );
+    unsigned int err = close_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle );
+    set_error( err );
 }
 
 /* set a handle information */
@@ -592,12 +585,7 @@ DECL_HANDLER(dup_handle)
             release_object( dst );
         }
         /* close the handle no matter what happened */
-        if (req->options & DUP_HANDLE_CLOSE_SOURCE)
-        {
-            unsigned int err = get_error();  /* don't overwrite error from the above calls */
-            reply->closed = close_handle( src, req->src_handle );
-            set_error( err );
-        }
+        if (req->options & DUP_HANDLE_CLOSE_SOURCE) reply->closed = !close_handle( src, req->src_handle );
         reply->self = (src == current->process);
         release_object( src );
     }

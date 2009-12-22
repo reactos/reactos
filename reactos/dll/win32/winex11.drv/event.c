@@ -508,6 +508,14 @@ static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
 
     if (protocol == x11drv_atom(WM_DELETE_WINDOW))
     {
+        if (hwnd == GetDesktopWindow())
+        {
+            /* The desktop window does not have a close button that we can
+             * pretend to click. Therefore, we simply send it a close command. */
+            SendMessageW(hwnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+            return;
+        }
+
         /* Ignore the delete window request if the window has been disabled
          * and we are in managed mode. This is to disallow applications from
          * being closed by the window manager while in a modal state.

@@ -26,9 +26,8 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wownt32.h"
+#include "winuser.h"
 #include "wine/unicode.h"
-#include "wine/winuser16.h"
 #include "winternl.h"
 #include "wine/server.h"
 
@@ -253,47 +252,3 @@ INT WINAPI EnumPropsExW(HWND hwnd, PROPENUMPROCEXW func, LPARAM lParam)
     }
     return ret;
 }
-
-
-/***********************************************************************
- *              EnumProps   (USER.27)
- */
-#ifndef __REACTOS__
-INT16 WINAPI EnumProps16( HWND16 hwnd, PROPENUMPROC16 func )
-{
-    int ret = -1, i, count;
-    property_data_t *list = get_properties( HWND_32(hwnd), &count );
-
-    if (list)
-    {
-        char string[ATOM_BUFFER_SIZE];
-        SEGPTR segptr = MapLS( string );
-        WORD args[4];
-        DWORD result;
-
-        for (i = 0; i < count; i++)
-        {
-            if (list[i].string)  /* it was a string originally */
-            {
-                if (!GlobalGetAtomNameA( list[i].atom, string, ATOM_BUFFER_SIZE )) continue;
-                args[3] = hwnd;
-                args[2] = SELECTOROF(segptr);
-                args[1] = OFFSETOF(segptr);
-                args[0] = LOWORD(list[i].data);
-            }
-            else
-            {
-                args[3] = hwnd;
-                args[2] = 0;
-                args[1] = list[i].atom;
-                args[0] = LOWORD(list[i].data);
-            }
-            WOWCallback16Ex( (DWORD)func, WCB16_PASCAL, sizeof(args), args, &result );
-            if (!(ret = LOWORD(result))) break;
-        }
-        UnMapLS( segptr );
-        HeapFree( GetProcessHeap(), 0, list );
-    }
-    return ret;
-}
-#endif

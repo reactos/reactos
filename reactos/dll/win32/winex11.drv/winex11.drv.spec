@@ -46,7 +46,6 @@
 @ cdecl SetBitmapBits(long ptr long) X11DRV_SetBitmapBits
 @ cdecl SetBkColor(ptr long) X11DRV_SetBkColor
 @ cdecl SetDCBrushColor(ptr long) X11DRV_SetDCBrushColor
-@ cdecl SetDCOrg(ptr long long) X11DRV_SetDCOrg
 @ cdecl SetDCPenColor(ptr long) X11DRV_SetDCPenColor
 @ cdecl SetDIBColorTable(ptr long long ptr) X11DRV_SetDIBColorTable
 @ cdecl SetDIBits(ptr long long long ptr ptr long) X11DRV_SetDIBits
@@ -134,6 +133,7 @@
 # OpenGL
 @ cdecl wglCopyContext(long long long) X11DRV_wglCopyContext
 @ cdecl wglCreateContext(ptr) X11DRV_wglCreateContext
+@ cdecl wglCreateContextAttribsARB(ptr long ptr) X11DRV_wglCreateContextAttribsARB
 @ cdecl wglDeleteContext(long) X11DRV_wglDeleteContext
 @ cdecl wglGetProcAddress(str) X11DRV_wglGetProcAddress
 @ cdecl wglGetPbufferDCARB(ptr ptr) X11DRV_wglGetPbufferDCARB

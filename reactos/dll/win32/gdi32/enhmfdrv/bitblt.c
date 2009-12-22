@@ -79,10 +79,14 @@ static BOOL EMFDRV_BitBlockTransfer(
     UINT bitsSize;
     UINT size;
     BITMAP  BM;
-    WORD nBPP;
+    WORD nBPP = 0;
     LPBITMAPINFOHEADER lpBmiH;
+    BOOL useSrc;
     EMFDRV_PDEVICE* physDevSrc = (EMFDRV_PDEVICE*)devSrc;
-    HBITMAP hBitmap = GetCurrentObject(physDevSrc->hdc, OBJ_BITMAP);
+    HBITMAP hBitmap = NULL;
+
+    useSrc = (((rop >> 2) & 0x330000) != (rop & 0x330000));
+    if (!physDevSrc && useSrc) return FALSE;
 
     if (emrType == EMR_BITBLT)
         emrSize = sizeof(EMRBITBLT);
@@ -91,16 +95,25 @@ static BOOL EMFDRV_BitBlockTransfer(
     else
         return FALSE;
 
-    if(sizeof(BITMAP) != GetObjectW(hBitmap, sizeof(BITMAP), &BM))
-        return FALSE;
+    if(useSrc)
+    {
+        hBitmap = GetCurrentObject(physDevSrc->hdc, OBJ_BITMAP);
 
-    nBPP = BM.bmPlanes * BM.bmBitsPixel;
-    if(nBPP > 8) nBPP = 24; /* FIXME Can't get 16bpp to work for some reason */
+        if(sizeof(BITMAP) != GetObjectW(hBitmap, sizeof(BITMAP), &BM))
+            return FALSE;
 
-    bitsSize = DIB_GetDIBWidthBytes(BM.bmWidth, nBPP) * BM.bmHeight;
-    bmiSize = sizeof(BITMAPINFOHEADER) + 
-        (nBPP <= 8 ? 1 << nBPP : 0) * sizeof(RGBQUAD);
-    size = emrSize + bmiSize + bitsSize;
+        nBPP = BM.bmPlanes * BM.bmBitsPixel;
+        if(nBPP > 8) nBPP = 24; /* FIXME Can't get 16bpp to work for some reason */
+        bitsSize = DIB_GetDIBWidthBytes(BM.bmWidth, nBPP) * BM.bmHeight;
+        bmiSize = sizeof(BITMAPINFOHEADER) +
+            (nBPP <= 8 ? 1 << nBPP : 0) * sizeof(RGBQUAD);
+    }
+    else
+    {
+        bitsSize = bmiSize = 0;
+    }
+
+   size = emrSize + bmiSize + bitsSize;
 
     pEMR = HeapAlloc(GetProcessHeap(), 0, size);
     if (!pEMR) return FALSE;
@@ -119,17 +132,28 @@ static BOOL EMFDRV_BitBlockTransfer(
     pEMR->dwRop = rop;
     pEMR->xSrc = xSrc;
     pEMR->ySrc = ySrc;
-    pEMR->xformSrc.eM11 = 1.0;  /** FIXME:           */
-    pEMR->xformSrc.eM12 = 0.0;  /** Setting default  */
-    pEMR->xformSrc.eM21 = 0.0;  /** value.           */
-    pEMR->xformSrc.eM22 = 1.0;  /** Where should we  */
-    pEMR->xformSrc.eDx = 0.0;   /** get that info    */
-    pEMR->xformSrc.eDy = 0.0;   /** ????             */
-    pEMR->crBkColorSrc = GetBkColor(physDevSrc->hdc);
-    pEMR->iUsageSrc = DIB_RGB_COLORS;
-    pEMR->offBmiSrc = emrSize;
+    if (useSrc)
+    {
+        GetWorldTransform(physDevSrc->hdc, &pEMR->xformSrc);
+        pEMR->crBkColorSrc = GetBkColor(physDevSrc->hdc);
+        pEMR->iUsageSrc = DIB_RGB_COLORS;
+        pEMR->offBmiSrc = emrSize;
+        pEMR->offBitsSrc = emrSize + bmiSize;
+    }
+    else
+    {
+        pEMR->xformSrc.eM11 = 1.0;  /** FIXME:           */
+        pEMR->xformSrc.eM12 = 0.0;  /** Setting default  */
+        pEMR->xformSrc.eM21 = 0.0;  /** value.           */
+        pEMR->xformSrc.eM22 = 1.0;  /** Where should we  */
+        pEMR->xformSrc.eDx = 0.0;   /** get that info    */
+        pEMR->xformSrc.eDy = 0.0;   /** ????             */
+        pEMR->crBkColorSrc = 0;
+        pEMR->iUsageSrc = 0;
+        pEMR->offBmiSrc = 0;
+        pEMR->offBitsSrc = 0;
+    }
     pEMR->cbBmiSrc = bmiSize;
-    pEMR->offBitsSrc = emrSize + bmiSize;
     pEMR->cbBitsSrc = bitsSize;
     if (emrType == EMR_STRETCHBLT) 
     {
@@ -138,36 +162,42 @@ static BOOL EMFDRV_BitBlockTransfer(
         pEMRStretch->cySrc = heightSrc;
     }
 
-    /* Initialize BITMAPINFO structure */
-    lpBmiH = (LPBITMAPINFOHEADER)((BYTE*)pEMR + pEMR->offBmiSrc);
+    if (useSrc)
+    {
+        /* Initialize BITMAPINFO structure */
+        lpBmiH = (LPBITMAPINFOHEADER)((BYTE*)pEMR + pEMR->offBmiSrc);
 
-    lpBmiH->biSize = sizeof(BITMAPINFOHEADER); 
-    lpBmiH->biWidth =  BM.bmWidth;
-    lpBmiH->biHeight = BM.bmHeight;
-    lpBmiH->biPlanes = BM.bmPlanes;
-    lpBmiH->biBitCount = nBPP;
-    /* Assume the bitmap isn't compressed and set the BI_RGB flag. */
-    lpBmiH->biCompression = BI_RGB;
-    lpBmiH->biSizeImage = bitsSize;
-    lpBmiH->biYPelsPerMeter = /* 1 meter  = 39.37 inch */
-        MulDiv(GetDeviceCaps(physDevSrc->hdc,LOGPIXELSX),3937,100);
-    lpBmiH->biXPelsPerMeter = 
-        MulDiv(GetDeviceCaps(physDevSrc->hdc,LOGPIXELSY),3937,100);
-    lpBmiH->biClrUsed   = nBPP <= 8 ? 1 << nBPP : 0;
-    /* Set biClrImportant to 0, indicating that all of the 
-       device colors are important. */
-    lpBmiH->biClrImportant = 0; 
+        lpBmiH->biSize = sizeof(BITMAPINFOHEADER);
+        lpBmiH->biWidth =  BM.bmWidth;
+        lpBmiH->biHeight = BM.bmHeight;
+        lpBmiH->biPlanes = BM.bmPlanes;
+        lpBmiH->biBitCount = nBPP;
+        /* Assume the bitmap isn't compressed and set the BI_RGB flag. */
+        lpBmiH->biCompression = BI_RGB;
+        lpBmiH->biSizeImage = bitsSize;
+        lpBmiH->biYPelsPerMeter = 0;
+        lpBmiH->biXPelsPerMeter = 0;
+        lpBmiH->biClrUsed   = nBPP <= 8 ? 1 << nBPP : 0;
+        /* Set biClrImportant to 0, indicating that all of the
+           device colors are important. */
+        lpBmiH->biClrImportant = 0;
 
-    /* Initialize bitmap bits */
-    if (GetDIBits(physDevSrc->hdc, hBitmap, 0, (UINT)lpBmiH->biHeight,
-                  (BYTE*)pEMR + pEMR->offBitsSrc,
-                  (LPBITMAPINFO)lpBmiH, DIB_RGB_COLORS))
+        /* Initialize bitmap bits */
+        if (GetDIBits(physDevSrc->hdc, hBitmap, 0, (UINT)lpBmiH->biHeight,
+                      (BYTE*)pEMR + pEMR->offBitsSrc,
+                      (LPBITMAPINFO)lpBmiH, DIB_RGB_COLORS))
+        {
+            ret = EMFDRV_WriteRecord(devDst, (EMR*)pEMR);
+            if (ret) EMFDRV_UpdateBBox(devDst, &(pEMR->rclBounds));
+        }
+        else
+            ret = FALSE;
+    }
+    else
     {
         ret = EMFDRV_WriteRecord(devDst, (EMR*)pEMR);
         if (ret) EMFDRV_UpdateBBox(devDst, &(pEMR->rclBounds));
-    } 
-    else
-        ret = FALSE;
+    }
 
     HeapFree( GetProcessHeap(), 0, pEMR);
     return ret;

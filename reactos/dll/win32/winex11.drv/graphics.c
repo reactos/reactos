@@ -1476,18 +1476,6 @@ BOOL CDECL X11DRV_GetDCOrgEx( X11DRV_PDEVICE *physDev, LPPOINT lpp )
 }
 
 
-/***********************************************************************
- *           SetDCOrg   (X11DRV.@)
- */
-DWORD CDECL X11DRV_SetDCOrg( X11DRV_PDEVICE *physDev, INT x, INT y )
-{
-    DWORD ret = MAKELONG( physDev->dc_rect.left + physDev->drawable_rect.left,
-                          physDev->dc_rect.top + physDev->drawable_rect.top );
-    physDev->dc_rect.left = x - physDev->drawable_rect.left;
-    physDev->dc_rect.top = y - physDev->drawable_rect.top;
-    return ret;
-}
-
 static unsigned char *get_icm_profile( unsigned long *size )
 {
     Atom type;

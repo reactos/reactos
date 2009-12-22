@@ -92,13 +92,12 @@ struct send_message_info
 
 /* Message class descriptor */
 static const WCHAR messageW[] = {'M','e','s','s','a','g','e',0};
-static LRESULT WINAPI message_winproc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+
 const struct builtin_class_descr MESSAGE_builtin_class =
 {
     messageW,             /* name */
     0,                    /* style */
-    NULL,                 /* procA (winproc is Unicode only) */
-    message_winproc,      /* procW */
+    WINPROC_MESSAGE,      /* proc */
     0,                    /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */
@@ -334,11 +333,11 @@ static inline BOOL get_pending_wmchar( MSG *msg, UINT first, UINT last, BOOL rem
 
 
 /***********************************************************************
- *           message_winproc
+ *           MessageWndProc
  *
  * Window procedure for "Message" windows (HWND_MESSAGE parent).
  */
-static LRESULT WINAPI message_winproc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI MessageWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     if (message == WM_NCCREATE) return TRUE;
     return 0;  /* all other messages are ignored */
@@ -3324,12 +3323,11 @@ DWORD WINAPI WaitForInputIdle( HANDLE hProcess, DWORD dwTimeOut )
     SERVER_START_REQ( get_process_idle_event )
     {
         req->handle = wine_server_obj_handle( hProcess );
-        if (!(ret = wine_server_call_err( req )))
-            handles[1] = wine_server_ptr_handle( reply->event );
+        wine_server_call_err( req );
+        handles[1] = wine_server_ptr_handle( reply->event );
     }
     SERVER_END_REQ;
-    if (ret) return WAIT_FAILED;  /* error */
-    if (!handles[1]) return 0;  /* no event to wait on */
+    if (!handles[1]) return WAIT_FAILED;  /* no event to wait on */
 
     start_time = GetTickCount();
     elapsed = 0;
@@ -3341,7 +3339,7 @@ DWORD WINAPI WaitForInputIdle( HANDLE hProcess, DWORD dwTimeOut )
         switch (ret)
         {
         case WAIT_OBJECT_0:
-            return WAIT_FAILED;
+            return 0;
         case WAIT_OBJECT_0+2:
             process_sent_messages();
             break;
@@ -3593,7 +3591,7 @@ UINT_PTR WINAPI SetTimer( HWND hwnd, UINT_PTR id, UINT timeout, TIMERPROC proc )
     UINT_PTR ret;
     WNDPROC winproc = 0;
 
-    if (proc) winproc = WINPROC_AllocProc( (WNDPROC)proc, NULL );
+    if (proc) winproc = WINPROC_AllocProc( (WNDPROC)proc, FALSE );
 
     SERVER_START_REQ( set_win_timer )
     {
@@ -3624,7 +3622,7 @@ UINT_PTR WINAPI SetSystemTimer( HWND hwnd, UINT_PTR id, UINT timeout, TIMERPROC 
     UINT_PTR ret;
     WNDPROC winproc = 0;
 
-    if (proc) winproc = WINPROC_AllocProc( (WNDPROC)proc, NULL );
+    if (proc) winproc = WINPROC_AllocProc( (WNDPROC)proc, FALSE );
 
     SERVER_START_REQ( set_win_timer )
     {

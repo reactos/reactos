@@ -27,9 +27,6 @@
 #include <string.h>
 #include "windef.h"
 #include "winbase.h"
-#include "wine/winbase16.h"
-#include "wine/winuser16.h"
-#include "wownt32.h"
 #include "winternl.h"
 #include "wine/server.h"
 #include "wine/unicode.h"
@@ -766,7 +763,9 @@ LRESULT WIN_DestroyWindow( HWND hwnd )
     free_dce( wndPtr->dce, hwnd );
     wndPtr->dce = NULL;
     icon_title = wndPtr->icon_title;
-    HeapFree(GetProcessHeap(), 0, wndPtr->pScroll);
+    HeapFree( GetProcessHeap(), 0, wndPtr->text );
+    wndPtr->text = NULL;
+    HeapFree( GetProcessHeap(), 0, wndPtr->pScroll );
     wndPtr->pScroll = NULL;
     WIN_ReleasePtr( wndPtr );
 
@@ -881,9 +880,9 @@ void WIN_DestroyThreadWindows( HWND hwnd )
  * Fix the coordinates - Helper for WIN_CreateWindowEx.
  * returns default show mode in sw.
  */
-static void WIN_FixCoordinates( CREATESTRUCTA *cs, INT *sw)
+static void WIN_FixCoordinates( CREATESTRUCTW *cs, INT *sw)
 {
-#define IS_DEFAULT(x)  ((x) == CW_USEDEFAULT || (x) == CW_USEDEFAULT16)
+#define IS_DEFAULT(x)  ((x) == CW_USEDEFAULT || (x) == (SHORT)0x8000)
     POINT pos[2];
 
     if (cs->dwExStyle & WS_EX_MDICHILD)
@@ -1071,7 +1070,7 @@ static void dump_window_styles( DWORD style, DWORD exstyle )
  *
  * Implementation of CreateWindowEx().
  */
-static HWND WIN_CreateWindowEx( CREATESTRUCTA *cs, LPCWSTR className, UINT flags )
+HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module, UINT flags )
 {
     INT cx, cy, style, sw = SW_SHOW;
     LRESULT result;
@@ -1079,12 +1078,12 @@ static HWND WIN_CreateWindowEx( CREATESTRUCTA *cs, LPCWSTR className, UINT flags
     WND *wndPtr;
     HWND hwnd, parent, owner, top_child = 0;
     BOOL unicode = (flags & WIN_ISUNICODE) != 0;
-    MDICREATESTRUCTA mdi_cs;
-    CBT_CREATEWNDA cbtc;
-    CREATESTRUCTA cbcs;
+    MDICREATESTRUCTW mdi_cs;
+    CBT_CREATEWNDW cbtc;
+    CREATESTRUCTW cbcs;
 
     TRACE("%s %s ex=%08x style=%08x %d,%d %dx%d parent=%p menu=%p inst=%p params=%p\n",
-          unicode ? debugstr_w((LPCWSTR)cs->lpszName) : debugstr_a(cs->lpszName),
+          unicode ? debugstr_w(cs->lpszName) : debugstr_a((LPCSTR)cs->lpszName),
           debugstr_w(className),
           cs->dwExStyle, cs->style, cs->x, cs->y, cs->cx, cs->cy,
           cs->hwndParent, cs->hMenu, cs->hInstance, cs->lpCreateParams );
@@ -1201,7 +1200,7 @@ static HWND WIN_CreateWindowEx( CREATESTRUCTA *cs, LPCWSTR className, UINT flags
 
     /* Create the window structure */
 
-    if (!(wndPtr = create_window_handle( parent, owner, className, cs->hInstance, unicode )))
+    if (!(wndPtr = create_window_handle( parent, owner, className, module, unicode )))
         return 0;
     hwnd = wndPtr->obj.handle;
 
@@ -1281,11 +1280,10 @@ static HWND WIN_CreateWindowEx( CREATESTRUCTA *cs, LPCWSTR className, UINT flags
         }
         else
         {
-            LPCSTR menuName = (LPCSTR)GetClassLongPtrA( hwnd, GCLP_MENUNAME );
+            LPCWSTR menuName = (LPCWSTR)GetClassLongPtrW( hwnd, GCLP_MENUNAME );
             if (menuName)
             {
-                cs->hMenu = LoadMenuA(cs->hInstance,menuName);
-
+                cs->hMenu = LoadMenuW( cs->hInstance, menuName );
                 if (cs->hMenu) MENU_SetMenu( hwnd, cs->hMenu );
             }
         }
@@ -1438,71 +1436,6 @@ failed:
     return 0;
 }
 
-#ifndef __REACTOS__
-/***********************************************************************
- *		CreateWindow (USER.41)
- */
-HWND16 WINAPI CreateWindow16( LPCSTR className, LPCSTR windowName,
-                              DWORD style, INT16 x, INT16 y, INT16 width,
-                              INT16 height, HWND16 parent, HMENU16 menu,
-                              HINSTANCE16 instance, LPVOID data )
-{
-    return CreateWindowEx16( 0, className, windowName, style,
-                             x, y, width, height, parent, menu, instance, data );
-}
-
-
-/***********************************************************************
- *		CreateWindowEx (USER.452)
- */
-HWND16 WINAPI CreateWindowEx16( DWORD exStyle, LPCSTR className,
-                                LPCSTR windowName, DWORD style, INT16 x,
-                                INT16 y, INT16 width, INT16 height,
-                                HWND16 parent, HMENU16 menu,
-                                HINSTANCE16 instance, LPVOID data )
-{
-    CREATESTRUCTA cs;
-    char buffer[256];
-
-    /* Fix the coordinates */
-
-    cs.x  = (x == CW_USEDEFAULT16) ? CW_USEDEFAULT : (INT)x;
-    cs.y  = (y == CW_USEDEFAULT16) ? CW_USEDEFAULT : (INT)y;
-    cs.cx = (width == CW_USEDEFAULT16) ? CW_USEDEFAULT : (INT)width;
-    cs.cy = (height == CW_USEDEFAULT16) ? CW_USEDEFAULT : (INT)height;
-
-    /* Create the window */
-
-    cs.lpCreateParams = data;
-    cs.hInstance      = HINSTANCE_32(instance);
-    cs.hMenu          = HMENU_32(menu);
-    cs.hwndParent     = WIN_Handle32( parent );
-    cs.style          = style;
-    cs.lpszName       = windowName;
-    cs.lpszClass      = className;
-    cs.dwExStyle      = exStyle;
-
-    if (!IS_INTRESOURCE(className))
-    {
-        WCHAR bufferW[256];
-
-        if (!MultiByteToWideChar( CP_ACP, 0, className, -1, bufferW, sizeof(bufferW)/sizeof(WCHAR) ))
-            return 0;
-        return HWND_16( WIN_CreateWindowEx( &cs, bufferW, 0 ));
-    }
-    else
-    {
-        if (!GlobalGetAtomNameA( LOWORD(className), buffer, sizeof(buffer) ))
-        {
-            ERR( "bad atom %x\n", LOWORD(className));
-            return 0;
-        }
-        cs.lpszClass = buffer;
-        return HWND_16( WIN_CreateWindowEx( &cs, (LPCWSTR)className, 0 ));
-    }
-}
-#endif
-
 
 /***********************************************************************
  *		CreateWindowExA (USER32.@)
@@ -1533,9 +1466,11 @@ HWND WINAPI CreateWindowExA( DWORD exStyle, LPCSTR className,
         WCHAR bufferW[256];
         if (!MultiByteToWideChar( CP_ACP, 0, className, -1, bufferW, sizeof(bufferW)/sizeof(WCHAR) ))
             return 0;
-        return WIN_CreateWindowEx( &cs, bufferW, WIN_ISWIN32 );
+        return WIN_CreateWindowEx( (CREATESTRUCTW *)&cs, bufferW, instance, WIN_ISWIN32 );
     }
-    return WIN_CreateWindowEx( &cs, (LPCWSTR)className, WIN_ISWIN32 );
+    /* Note: we rely on the fact that CREATESTRUCTA and */
+    /* CREATESTRUCTW have the same layout. */
+    return WIN_CreateWindowEx( (CREATESTRUCTW *)&cs, (LPCWSTR)className, instance, WIN_ISWIN32 );
 }
 
 
@@ -1563,9 +1498,7 @@ HWND WINAPI CreateWindowExW( DWORD exStyle, LPCWSTR className,
     cs.lpszClass      = className;
     cs.dwExStyle      = exStyle;
 
-    /* Note: we rely on the fact that CREATESTRUCTA and */
-    /* CREATESTRUCTW have the same layout. */
-    return WIN_CreateWindowEx( (CREATESTRUCTA *)&cs, className, WIN_ISWIN32 | WIN_ISUNICODE );
+    return WIN_CreateWindowEx( &cs, className, instance, WIN_ISWIN32 | WIN_ISUNICODE );
 }
 
 
@@ -2074,7 +2007,7 @@ static LONG_PTR WIN_GetWindowLong( HWND hwnd, INT offset, UINT size, BOOL unicod
          * more tolerant to A/W mismatches. The lack of W->A->W conversion for such a mismatch suggests
          * that the hack is in GetWindowLongPtr[AW], not in winprocs.
          */
-        if (wndPtr->winproc == EDIT_winproc_handle && (!unicode != !(wndPtr->flags & WIN_ISUNICODE)))
+        if (wndPtr->winproc == BUILTIN_WINPROC(WINPROC_EDIT) && (!unicode != !(wndPtr->flags & WIN_ISUNICODE)))
             retvalue = (ULONG_PTR)wndPtr->winproc;
         else
             retvalue = (ULONG_PTR)WINPROC_GetProc( wndPtr->winproc, unicode );
@@ -2167,8 +2100,7 @@ LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, B
         WNDPROC proc;
         UINT old_flags = wndPtr->flags;
         retval = WIN_GetWindowLong( hwnd, offset, size, unicode );
-        if (unicode) proc = WINPROC_AllocProc( NULL, (WNDPROC)newval );
-        else proc = WINPROC_AllocProc( (WNDPROC)newval, NULL );
+        proc = WINPROC_AllocProc( (WNDPROC)newval, unicode );
         if (proc) wndPtr->winproc = proc;
         if (WINPROC_IsUnicode( proc, unicode )) wndPtr->flags |= WIN_ISUNICODE;
         else wndPtr->flags &= ~WIN_ISUNICODE;
@@ -2190,8 +2122,7 @@ LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, B
         {
             WNDPROC *ptr = (WNDPROC *)((char *)wndPtr->wExtra + DWLP_DLGPROC);
             retval = (ULONG_PTR)WINPROC_GetProc( *ptr, unicode );
-            if (unicode) *ptr = WINPROC_AllocProc( NULL, (WNDPROC)newval );
-            else *ptr = WINPROC_AllocProc( (WNDPROC)newval, NULL );
+            *ptr = WINPROC_AllocProc( (WNDPROC)newval, unicode );
             WIN_ReleasePtr( wndPtr );
             return retval;
         }
@@ -2300,57 +2231,6 @@ LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, B
 
 
 /**********************************************************************
- *		GetWindowLong (USER.135)
- */
-#ifndef __REACTOS__
-LONG WINAPI GetWindowLong16( HWND16 hwnd, INT16 offset )
-{
-    WND *wndPtr;
-    LONG_PTR retvalue;
-    BOOL is_winproc = (offset == GWLP_WNDPROC);
-
-    if (offset >= 0)
-    {
-        if (!(wndPtr = WIN_GetPtr( WIN_Handle32(hwnd) )))
-        {
-            SetLastError( ERROR_INVALID_WINDOW_HANDLE );
-            return 0;
-        }
-        if (wndPtr != WND_OTHER_PROCESS && wndPtr != WND_DESKTOP)
-        {
-            if (offset > (int)(wndPtr->cbWndExtra - sizeof(LONG)))
-            {
-                /*
-                 * Some programs try to access last element from 16 bit
-                 * code using illegal offset value. Hopefully this is
-                 * what those programs really expect.
-                 */
-                if (wndPtr->cbWndExtra >= 4 && offset == wndPtr->cbWndExtra - sizeof(WORD))
-                {
-                    INT offset2 = wndPtr->cbWndExtra - sizeof(LONG);
-                    ERR( "- replaced invalid offset %d with %d\n", offset, offset2 );
-                    offset = offset2;
-                }
-                else
-                {
-                    WARN("Invalid offset %d\n", offset );
-                    WIN_ReleasePtr( wndPtr );
-                    SetLastError( ERROR_INVALID_INDEX );
-                    return 0;
-                }
-            }
-            is_winproc = ((offset == DWLP_DLGPROC) && (wndPtr->flags & WIN_ISDIALOG));
-            WIN_ReleasePtr( wndPtr );
-        }
-    }
-    retvalue = GetWindowLongA( WIN_Handle32(hwnd), offset );
-    if (is_winproc) retvalue = (LONG_PTR)WINPROC_GetProc16( (WNDPROC)retvalue, FALSE );
-    return retvalue;
-}
-#endif
-
-
-/**********************************************************************
  *		GetWindowWord (USER32.@)
  */
 WORD WINAPI GetWindowWord( HWND hwnd, INT offset )
@@ -2390,41 +2270,6 @@ LONG WINAPI GetWindowLongW( HWND hwnd, INT offset )
 {
     return WIN_GetWindowLong( hwnd, offset, sizeof(LONG), TRUE );
 }
-
-
-/**********************************************************************
- *		SetWindowLong (USER.136)
- */
-#ifndef __REACTOS__
-LONG WINAPI SetWindowLong16( HWND16 hwnd, INT16 offset, LONG newval )
-{
-    WND *wndPtr;
-    BOOL is_winproc = (offset == GWLP_WNDPROC);
-
-    if (offset == DWLP_DLGPROC)
-    {
-        if (!(wndPtr = WIN_GetPtr( WIN_Handle32(hwnd) )))
-        {
-            SetLastError( ERROR_INVALID_WINDOW_HANDLE );
-            return 0;
-        }
-        if (wndPtr != WND_OTHER_PROCESS && wndPtr != WND_DESKTOP)
-        {
-            is_winproc = ((wndPtr->cbWndExtra - sizeof(LONG_PTR) >= DWLP_DLGPROC) &&
-                          (wndPtr->flags & WIN_ISDIALOG));
-            WIN_ReleasePtr( wndPtr );
-        }
-    }
-
-    if (is_winproc)
-    {
-        WNDPROC new_proc = WINPROC_AllocProc16( (WNDPROC16)newval );
-        WNDPROC old_proc = (WNDPROC)SetWindowLongPtrA( WIN_Handle32(hwnd), offset, (LONG_PTR)new_proc );
-        return (LONG)WINPROC_GetProc16( old_proc, FALSE );
-    }
-    else return SetWindowLongA( WIN_Handle32(hwnd), offset, newval );
-}
-#endif
 
 
 /**********************************************************************
@@ -3232,15 +3077,6 @@ BOOL WINAPI EnumChildWindows( HWND parent, WNDENUMPROC func, LPARAM lParam )
     ret = WIN_EnumChildWindows( list, func, lParam );
     HeapFree( GetProcessHeap(), 0, list );
     return ret;
-}
-
-
-/*******************************************************************
- *		AnyPopup (USER.52)
- */
-BOOL16 WINAPI AnyPopup16(void)
-{
-    return AnyPopup();
 }
 
 

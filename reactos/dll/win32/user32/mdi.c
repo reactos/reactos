@@ -93,7 +93,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "wownt32.h"
-#include "wine/winuser16.h"
 #include "wine/unicode.h"
 #include "win.h"
 #include "controls.h"
@@ -151,8 +150,6 @@ static LONG MDI_ChildActivate( HWND, HWND );
 static LRESULT MDI_RefreshMenu(MDICLIENTINFO *);
 
 static HWND MDI_MoreWindowsDialog(HWND);
-static LRESULT WINAPI MDIClientWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI MDIClientWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 /* -------- Miscellaneous service functions ----------
  *
@@ -189,8 +186,7 @@ const struct builtin_class_descr MDICLIENT_builtin_class =
 {
     mdiclientW,             /* name */
     0,                      /* style */
-    MDIClientWndProcA,      /* procA */
-    MDIClientWndProcW,      /* procW */
+    WINPROC_MDICLIENT,      /* proc */
     sizeof(MDICLIENTINFO),  /* extra */
     IDC_ARROW,              /* cursor */
     (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */
@@ -1045,8 +1041,7 @@ static void MDI_UpdateFrameText( HWND frame, HWND hClient, BOOL repaint, LPCWSTR
 /**********************************************************************
  *		MDIClientWndProc_common
  */
-static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
-                                        WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
     MDICLIENTINFO *ci;
 
@@ -1070,28 +1065,11 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
       {
           /* Since we are using only cs->lpCreateParams, we can safely
            * cast to LPCREATESTRUCTA here */
-          LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
-          WND *wndPtr = WIN_GetPtr( hwnd );
+        LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
+        LPCLIENTCREATESTRUCT ccs = cs->lpCreateParams;
 
-	/* Translation layer doesn't know what's in the cs->lpCreateParams
-	 * so we have to keep track of what environment we're in. */
-
-	if( wndPtr->flags & WIN_ISWIN32 )
-	{
-	    LPCLIENTCREATESTRUCT ccs = cs->lpCreateParams;
-	    ci->hWindowMenu	= ccs->hWindowMenu;
-	    ci->idFirstChild	= ccs->idFirstChild;
-	}
-#ifndef __REACTOS__
-        else
-	{
-	    LPCLIENTCREATESTRUCT16 ccs = MapSL(PtrToUlong(cs->lpCreateParams));
-	    ci->hWindowMenu	= HMENU_32(ccs->hWindowMenu);
-	    ci->idFirstChild	= ccs->idFirstChild;
-	}
-#endif
-        WIN_ReleasePtr( wndPtr );
-
+        ci->hWindowMenu		= ccs->hWindowMenu;
+        ci->idFirstChild	= ccs->idFirstChild;
         ci->hwndChildMaximized  = 0;
         ci->child = NULL;
 	ci->nActiveChildren	= 0;
@@ -1288,24 +1266,6 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
     }
     return unicode ? DefWindowProcW( hwnd, message, wParam, lParam ) :
                      DefWindowProcA( hwnd, message, wParam, lParam );
-}
-
-/***********************************************************************
- *		MDIClientWndProcA
- */
-static LRESULT WINAPI MDIClientWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    if (!IsWindow(hwnd)) return 0;
-    return MDIClientWndProc_common( hwnd, message, wParam, lParam, FALSE );
-}
-
-/***********************************************************************
- *		MDIClientWndProcW
- */
-static LRESULT WINAPI MDIClientWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    if (!IsWindow(hwnd)) return 0;
-    return MDIClientWndProc_common( hwnd, message, wParam, lParam, TRUE );
 }
 
 /***********************************************************************

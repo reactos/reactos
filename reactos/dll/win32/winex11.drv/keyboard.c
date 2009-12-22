@@ -1636,16 +1636,11 @@ static HKL get_locale_kbd_layout(void)
  */
 BOOL CDECL X11DRV_GetKeyboardLayoutName(LPWSTR name)
 {
-    static const WCHAR formatW[] = {'%','0','8','l','x',0};
+    static const WCHAR formatW[] = {'%','0','8','x',0};
     DWORD layout;
-    LANGID langid;
 
-    layout = main_key_tab[kbd_layout].lcid;
-    /* see comment for get_locale_kbd_layout */
-    langid = PRIMARYLANGID(LANGIDFROMLCID(layout));
-    if (langid == LANG_CHINESE || langid == LANG_JAPANESE || langid == LANG_KOREAN)
-        layout |= 0xe001 << 16; /* FIXME */
-
+    layout = HandleToUlong( get_locale_kbd_layout() );
+    if (HIWORD(layout) == LOWORD(layout)) layout = LOWORD(layout);
     sprintfW(name, formatW, layout);
     TRACE("returning %s\n", debugstr_w(name));
     return TRUE;

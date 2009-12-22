@@ -51,9 +51,6 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winnls.h"
-#include "wine/winbase16.h"
-#include "wine/winuser16.h"
-#include "wownt32.h"
 #include "winternl.h"
 #include "wine/server.h"
 #include "wine/unicode.h"
@@ -187,8 +184,6 @@ static HMENU top_popup_hmenu;
   /* Flag set by EndMenu() to force an exit from menu tracking */
 static BOOL fEndMenu = FALSE;
 
-static LRESULT WINAPI PopupMenuWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-
 DWORD WINAPI DrawMenuBarTemp(HWND hwnd, HDC hDC, LPRECT lprect, HMENU hMenu, HFONT hFont);
 
 static BOOL SetMenuItemInfo_common( MENUITEM *, const MENUITEMINFOW *, BOOL);
@@ -200,8 +195,7 @@ const struct builtin_class_descr MENU_builtin_class =
 {
     (LPCWSTR)POPUPMENU_CLASS_ATOM,  /* name */
     CS_DROPSHADOW | CS_SAVEBITS | CS_DBLCLKS,  /* style */
-    NULL,                          /* procA (winproc is Unicode only) */
-    PopupMenuWndProc,              /* procW */
+    WINPROC_MENU,                  /* proc */
     sizeof(HMENU),                 /* extra */
     IDC_ARROW,                     /* cursor */
     (HBRUSH)(COLOR_MENU+1)         /* brush */
@@ -2133,10 +2127,10 @@ static MENUITEM *MENU_InsertItem( HMENU hMenu, UINT pos, UINT flags )
  *
  * NOTE: flags is equivalent to the mtOption field
  */
-static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
+static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu )
 {
     WORD flags, id = 0;
-    LPCSTR str;
+    LPCWSTR str;
     BOOL end_flag;
 
     do
@@ -2151,23 +2145,18 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
             id = GET_WORD(res);
             res += sizeof(WORD);
         }
-        str = res;
-        if (!unicode) res += strlen(str) + 1;
-        else res += (strlenW((LPCWSTR)str) + 1) * sizeof(WCHAR);
+        str = (LPCWSTR)res;
+        res += (strlenW(str) + 1) * sizeof(WCHAR);
         if (flags & MF_POPUP)
         {
             HMENU hSubMenu = CreatePopupMenu();
             if (!hSubMenu) return NULL;
-            if (!(res = MENU_ParseResource( res, hSubMenu, unicode )))
-                return NULL;
-            if (!unicode) AppendMenuA( hMenu, flags, (UINT_PTR)hSubMenu, str );
-            else AppendMenuW( hMenu, flags, (UINT_PTR)hSubMenu, (LPCWSTR)str );
+            if (!(res = MENU_ParseResource( res, hSubMenu ))) return NULL;
+            AppendMenuW( hMenu, flags, (UINT_PTR)hSubMenu, str );
         }
         else  /* Not a popup */
         {
-            if (!unicode) AppendMenuA( hMenu, flags, id, *str ? str : NULL );
-            else AppendMenuW( hMenu, flags, id,
-                                *(LPCWSTR)str ? (LPCWSTR)str : NULL );
+            AppendMenuW( hMenu, flags, id, *str ? str : NULL );
         }
     } while (!end_flag);
     return res;
@@ -3451,7 +3440,7 @@ BOOL WINAPI TrackPopupMenu( HMENU hMenu, UINT wFlags, INT x, INT y,
  *
  * NOTE: Windows has totally different (and undocumented) popup wndproc.
  */
-static LRESULT WINAPI PopupMenuWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI PopupMenuWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     TRACE("hwnd=%p msg=0x%04x wp=0x%04lx lp=0x%08lx\n", hwnd, message, wParam, lParam);
 
@@ -3792,7 +3781,7 @@ static void MENU_mnu2mnuii( UINT flags, UINT_PTR id, LPCWSTR str,
         pmii->dwTypeData = (LPWSTR)str;
     } else if( flags & MFT_BITMAP){
         pmii->fMask |= MIIM_BITMAP | MIIM_STRING;
-        pmii->hbmpItem = (HBITMAP)(ULONG_PTR)(LOWORD(str));
+        pmii->hbmpItem = ULongToHandle(LOWORD(str));
     }
     if( flags & MF_OWNERDRAW){
         pmii->fMask |= MIIM_DATA;
@@ -4327,41 +4316,6 @@ BOOL WINAPI EndMenu(void)
 }
 
 
-/***********************************************************************
- *           LookupMenuHandle   (USER.217)
- */
-#ifndef __REACTOS__
-HMENU16 WINAPI LookupMenuHandle16( HMENU16 hmenu, INT16 id )
-{
-    HMENU hmenu32 = HMENU_32(hmenu);
-    UINT id32 = id;
-    if (!MENU_FindItem( &hmenu32, &id32, MF_BYCOMMAND )) return 0;
-    else return HMENU_16(hmenu32);
-}
-
-
-/**********************************************************************
- *	    LoadMenu    (USER.150)
- */
-HMENU16 WINAPI LoadMenu16( HINSTANCE16 instance, LPCSTR name )
-{
-    HRSRC16 hRsrc;
-    HGLOBAL16 handle;
-    HMENU16 hMenu;
-
-    if (HIWORD(name) && name[0] == '#') name = ULongToPtr(atoi( name + 1 ));
-    if (!name) return 0;
-
-    instance = GetExePtr( instance );
-    if (!(hRsrc = FindResource16( instance, name, (LPSTR)RT_MENU ))) return 0;
-    if (!(handle = LoadResource16( instance, hRsrc ))) return 0;
-    hMenu = LoadMenuIndirect16(LockResource16(handle));
-    FreeResource16( handle );
-    return hMenu;
-}
-#endif
-
-
 /*****************************************************************
  *        LoadMenuA   (USER32.@)
  */
@@ -4385,37 +4339,6 @@ HMENU WINAPI LoadMenuW( HINSTANCE instance, LPCWSTR name )
 
 
 /**********************************************************************
- *	    LoadMenuIndirect    (USER.220)
- */
-#ifndef __REACTOS__
-HMENU16 WINAPI LoadMenuIndirect16( LPCVOID template )
-{
-    HMENU hMenu;
-    WORD version, offset;
-    LPCSTR p = template;
-
-    TRACE("(%p)\n", template );
-    version = GET_WORD(p);
-    p += sizeof(WORD);
-    if (version)
-    {
-        WARN("version must be 0 for Win16\n" );
-        return 0;
-    }
-    offset = GET_WORD(p);
-    p += sizeof(WORD) + offset;
-    if (!(hMenu = CreateMenu())) return 0;
-    if (!MENU_ParseResource( p, hMenu, FALSE ))
-    {
-        DestroyMenu( hMenu );
-        return 0;
-    }
-    return HMENU_16(hMenu);
-}
-#endif
-
-
-/**********************************************************************
  *	    LoadMenuIndirectW    (USER32.@)
  */
 HMENU WINAPI LoadMenuIndirectW( LPCVOID template )
@@ -4433,7 +4356,7 @@ HMENU WINAPI LoadMenuIndirectW( LPCVOID template )
 	offset = GET_WORD(p);
 	p += sizeof(WORD) + offset;
 	if (!(hMenu = CreateMenu())) return 0;
-	if (!MENU_ParseResource( p, hMenu, TRUE ))
+	if (!MENU_ParseResource( p, hMenu ))
 	  {
 	    DestroyMenu( hMenu );
 	    return 0;
@@ -4789,7 +4712,7 @@ static BOOL MENU_NormalizeMenuItemInfoStruct( const MENUITEMINFOW *pmii_in,
             pmii_out->fMask |= MIIM_STRING;
         } else if( (pmii_out->fType) & MFT_BITMAP){
             pmii_out->fMask |= MIIM_BITMAP;
-            pmii_out->hbmpItem = (HBITMAP)(ULONG_PTR)(LOWORD(pmii_out->dwTypeData));
+            pmii_out->hbmpItem = UlongToHandle(LOWORD(pmii_out->dwTypeData));
         }
     }
     return TRUE;

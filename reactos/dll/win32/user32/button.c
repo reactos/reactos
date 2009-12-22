@@ -73,7 +73,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
-#include "wine/winuser16.h"
 #include "controls.h"
 #include "win.h"
 #include "user_private.h"
@@ -114,8 +113,6 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void UB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void OB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void BUTTON_CheckAutoRadioButton( HWND hwnd );
-static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 #define MAX_BTN_TYPE  12
 
@@ -165,8 +162,7 @@ const struct builtin_class_descr BUTTON_builtin_class =
 {
     buttonW,             /* name */
     CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
-    ButtonWndProcA,      /* procA */
-    ButtonWndProcW,      /* procW */
+    WINPROC_BUTTON,      /* proc */
     NB_EXTRA_BYTES,      /* extra */
     IDC_ARROW,           /* cursor */
     0                    /* brush */
@@ -230,8 +226,7 @@ static void setup_clipping( HWND hwnd, HDC hdc )
 /***********************************************************************
  *           ButtonWndProc_common
  */
-static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
-                                    WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
     RECT rect;
     POINT pt;
@@ -239,6 +234,8 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
     UINT btn_type = get_button_type( style );
     LONG state;
     HANDLE oldHbitmap;
+
+    if (!IsWindow( hWnd )) return 0;
 
     pt.x = (short)LOWORD(lParam);
     pt.y = (short)HIWORD(lParam);
@@ -461,9 +458,6 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
         InvalidateRect( hWnd, NULL, FALSE );
         break;
 
-#ifndef __REACTOS__
-    case BM_SETSTYLE16:
-#endif
     case BM_SETSTYLE:
         if ((wParam & 0x0f) >= MAX_BTN_TYPE) break;
         btn_type = wParam & 0x0f;
@@ -501,15 +495,9 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case BM_GETIMAGE:
         return GetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET );
 
-#ifndef __REACTOS__
-    case BM_GETCHECK16:
-#endif
     case BM_GETCHECK:
         return get_button_state( hWnd ) & 3;
 
-#ifndef __REACTOS__
-    case BM_SETCHECK16:
-#endif
     case BM_SETCHECK:
         if (wParam > maxCheckState[btn_type]) wParam = maxCheckState[btn_type];
         state = get_button_state( hWnd );
@@ -528,15 +516,9 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
             BUTTON_CheckAutoRadioButton( hWnd );
         break;
 
-#ifndef __REACTOS__
-    case BM_GETSTATE16:
-#endif
     case BM_GETSTATE:
         return get_button_state( hWnd );
 
-#ifndef __REACTOS__
-    case BM_SETSTATE16:
-#endif
     case BM_SETSTATE:
         state = get_button_state( hWnd );
         if (wParam)
@@ -561,29 +543,6 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
     }
     return 0;
 }
-
-/***********************************************************************
- *           ButtonWndProcW
- * The button window procedure. This is just a wrapper which locks
- * the passed HWND and calls the real window procedure (with a WND*
- * pointer pointing to the locked windowstructure).
- */
-static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-    if (!IsWindow( hWnd )) return 0;
-    return ButtonWndProc_common( hWnd, uMsg, wParam, lParam, TRUE );
-}
-
-
-/***********************************************************************
- *           ButtonWndProcA
- */
-static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-    if (!IsWindow( hWnd )) return 0;
-    return ButtonWndProc_common( hWnd, uMsg, wParam, lParam, FALSE );
-}
-
 
 /**********************************************************************
  * Convert button styles to flags used by DrawText.

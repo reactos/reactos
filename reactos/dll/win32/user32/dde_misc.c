@@ -1983,7 +1983,13 @@ WDML_CONV*	WDML_GetConv(HCONV hConv, BOOL checkConnected)
     /* FIXME: should do better checking */
     if (pConv == NULL || pConv->magic != WDML_CONV_MAGIC) return NULL;
 
-    if (!pConv->instance || pConv->instance->threadID != GetCurrentThreadId())
+    if (!pConv->instance)
+    {
+        WARN("wrong thread ID, no instance\n");
+	return NULL;
+    }
+
+    if (pConv->instance->threadID != GetCurrentThreadId())
     {
         WARN("wrong thread ID\n");
         pConv->instance->lastError = DMLERR_INVALIDPARAMETER; /* FIXME: check */

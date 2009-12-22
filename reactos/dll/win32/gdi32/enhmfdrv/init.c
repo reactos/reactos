@@ -25,6 +25,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
+#include "winnls.h"
 #include "gdi_private.h"
 #include "enhmfdrv/enhmetafiledrv.h"
 #include "wine/debug.h"
@@ -121,7 +122,6 @@ static const DC_FUNCTIONS EMFDRV_Funcs =
     EMFDRV_SetBkColor,               /* pSetBkColor */
     EMFDRV_SetBkMode,                /* pSetBkMode */
     NULL,                            /* pSetDCBrushColor */
-    NULL,                            /* pSetDCOrg */
     NULL,                            /* pSetDCPenColor */
     NULL,                            /* pSetDIBColorTable */
     NULL,                            /* pSetDIBits */

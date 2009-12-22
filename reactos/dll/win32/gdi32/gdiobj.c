@@ -29,6 +29,7 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winreg.h"
+#include "winnls.h"
 #include "winerror.h"
 #include "winternl.h"
 

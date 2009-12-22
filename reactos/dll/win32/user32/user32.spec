@@ -534,7 +534,7 @@
 @ stdcall PostQuitMessage(long)
 @ stdcall PostThreadMessageA(long long long long)
 @ stdcall PostThreadMessageW(long long long long)
-@ stub PrintWindow
+@ stdcall PrintWindow(long long long)
 @ stdcall PrivateExtractIconExA(str long ptr ptr long)
 @ stdcall PrivateExtractIconExW(wstr long ptr ptr long)
 @ stdcall PrivateExtractIconsA (str long long long ptr ptr long long)
@@ -739,7 +739,7 @@
 @ stub UserLpkPSMTextOut
 @ stub UserLpkTabbedTextOut
 @ stdcall UserRealizePalette(long)
-@ stub UserRegisterWowHandlers
+@ stdcall UserRegisterWowHandlers(ptr ptr)
 # @ stub UserSetDeviceHoldState
 @ stdcall UserSignalProc(long long long long)
 # @ stub VRipOutput

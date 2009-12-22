@@ -34,7 +34,7 @@
 #include "winnls.h"
 #include "wingdi.h"
 #include "winreg.h"
-#include "wine/winuser16.h"
+#include "wine/wingdi16.h"
 #include "winerror.h"
 
 #include "controls.h"
@@ -387,25 +387,6 @@ HBRUSH SYSCOLOR_55AABrush = 0;
 extern void CDECL __wine_make_gdi_object_system( HGDIOBJ handle, BOOL set );
 
 
-/* This function is a copy of the one in objects/font.c */
-static void SYSPARAMS_LogFont32ATo16( const LOGFONTA* font32, LPLOGFONT16 font16 )
-{
-    font16->lfHeight = font32->lfHeight;
-    font16->lfWidth = font32->lfWidth;
-    font16->lfEscapement = font32->lfEscapement;
-    font16->lfOrientation = font32->lfOrientation;
-    font16->lfWeight = font32->lfWeight;
-    font16->lfItalic = font32->lfItalic;
-    font16->lfUnderline = font32->lfUnderline;
-    font16->lfStrikeOut = font32->lfStrikeOut;
-    font16->lfCharSet = font32->lfCharSet;
-    font16->lfOutPrecision = font32->lfOutPrecision;
-    font16->lfClipPrecision = font32->lfClipPrecision;
-    font16->lfQuality = font32->lfQuality;
-    font16->lfPitchAndFamily = font32->lfPitchAndFamily;
-    lstrcpynA( font16->lfFaceName, font32->lfFaceName, LF_FACESIZE );
-}
-
 static void SYSPARAMS_LogFont16To32W( const LOGFONT16 *font16, LPLOGFONTW font32 )
 {
     font32->lfHeight = font16->lfHeight;
@@ -461,24 +442,6 @@ static void SYSPARAMS_LogFont32ATo32W( const LOGFONTA* font32A, LPLOGFONTW font3
     font32W->lfPitchAndFamily = font32A->lfPitchAndFamily;
     MultiByteToWideChar( CP_ACP, 0, font32A->lfFaceName, -1, font32W->lfFaceName, LF_FACESIZE );
     font32W->lfFaceName[LF_FACESIZE-1] = 0;
-}
-
-static void SYSPARAMS_NonClientMetrics32ATo16( const NONCLIENTMETRICSA* lpnm32, LPNONCLIENTMETRICS16 lpnm16 )
-{
-    lpnm16->iBorderWidth	= lpnm32->iBorderWidth;
-    lpnm16->iScrollWidth	= lpnm32->iScrollWidth;
-    lpnm16->iScrollHeight	= lpnm32->iScrollHeight;
-    lpnm16->iCaptionWidth	= lpnm32->iCaptionWidth;
-    lpnm16->iCaptionHeight	= lpnm32->iCaptionHeight;
-    SYSPARAMS_LogFont32ATo16( &lpnm32->lfCaptionFont,	&lpnm16->lfCaptionFont );
-    lpnm16->iSmCaptionWidth	= lpnm32->iSmCaptionWidth;
-    lpnm16->iSmCaptionHeight	= lpnm32->iSmCaptionHeight;
-    SYSPARAMS_LogFont32ATo16( &lpnm32->lfSmCaptionFont,	&lpnm16->lfSmCaptionFont );
-    lpnm16->iMenuWidth		= lpnm32->iMenuWidth;
-    lpnm16->iMenuHeight		= lpnm32->iMenuHeight;
-    SYSPARAMS_LogFont32ATo16( &lpnm32->lfMenuFont,	&lpnm16->lfMenuFont );
-    SYSPARAMS_LogFont32ATo16( &lpnm32->lfStatusFont,	&lpnm16->lfStatusFont );
-    SYSPARAMS_LogFont32ATo16( &lpnm32->lfMessageFont,	&lpnm16->lfMessageFont );
 }
 
 static void SYSPARAMS_NonClientMetrics32WTo32A( const NONCLIENTMETRICSW* lpnm32W, LPNONCLIENTMETRICSA lpnm32A )
@@ -703,10 +666,20 @@ static BOOL SYSPARAMS_Save( LPCWSTR lpRegKey, LPCWSTR lpValName, LPCWSTR lpValue
 
 /* Convenience function to save logical fonts */
 static BOOL SYSPARAMS_SaveLogFont( LPCWSTR lpRegKey, LPCWSTR lpValName,
-                                    LPLOGFONTW plf, UINT fWinIni )
+                                   const LOGFONTW *plf, UINT fWinIni )
 {
-    return SYSPARAMS_SaveRaw( lpRegKey, lpValName, (const BYTE*)plf, 
-        sizeof( LOGFONTW), REG_BINARY, fWinIni );
+    LOGFONTW lf = *plf;
+    int len;
+
+    /* Zero pad the end of lfFaceName so we don't write uninitialised
+       data to the registry */
+    lf.lfFaceName[LF_FACESIZE-1] = 0;
+    len = strlenW(lf.lfFaceName);
+    if(len < LF_FACESIZE-1)
+        memset(lf.lfFaceName + len, 0, (LF_FACESIZE - 1 - len) * sizeof(WCHAR));
+
+    return SYSPARAMS_SaveRaw( lpRegKey, lpValName, (const BYTE*)&lf,
+                              sizeof(LOGFONTW), REG_BINARY, fWinIni );
 }
 
 
@@ -2357,6 +2330,16 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
         ret = set_user_pref_param( 3, 0x80, PtrToUlong(pvParam), fWinIni );
         break;
 
+    /* _WIN32_WINNT >= 0x600 */
+    WINE_SPI_FIXME(SPI_GETDISABLEOVERLAPPEDCONTENT);
+    WINE_SPI_FIXME(SPI_SETDISABLEOVERLAPPEDCONTENT);
+    WINE_SPI_FIXME(SPI_GETCLIENTAREAANIMATION);
+    WINE_SPI_FIXME(SPI_SETCLIENTAREAANIMATION);
+    WINE_SPI_FIXME(SPI_GETCLEARTYPE);
+    WINE_SPI_FIXME(SPI_SETCLEARTYPE);
+    WINE_SPI_FIXME(SPI_GETSPEECHRECOGNITION);
+    WINE_SPI_FIXME(SPI_SETSPEECHRECOGNITION);
+
     case SPI_GETFOREGROUNDLOCKTIMEOUT:          /* 0x2000  _WIN32_WINNT >= 0x500 || _WIN32_WINDOW > 0x400 */
         ret = get_uint_param( SPI_SETFOREGROUNDLOCKTIMEOUT_IDX,
                               SPI_SETFOREGROUNDLOCKTIMEOUT_REGKEY,
@@ -2510,113 +2493,6 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
 #undef WINE_SPI_WARN
 }
 
-
-/***********************************************************************
- *		SystemParametersInfo (USER.483)
- */
-BOOL16 WINAPI SystemParametersInfo16( UINT16 uAction, UINT16 uParam,
-                                      LPVOID lpvParam, UINT16 fuWinIni )
-{
-    BOOL16 ret;
-
-    TRACE("(%u, %u, %p, %u)\n", uAction, uParam, lpvParam, fuWinIni);
-
-    switch (uAction)
-    {
-    case SPI_GETBEEP:				/*      1 */
-    case SPI_GETSCREENSAVEACTIVE:		/*     16 */
-    case SPI_GETICONTITLEWRAP:			/*     25 */
-    case SPI_GETMENUDROPALIGNMENT:		/*     27 */
-    case SPI_GETFASTTASKSWITCH:			/*     35 */
-    case SPI_GETDRAGFULLWINDOWS:		/*     38  WINVER >= 0x0400 */
-    {
-	BOOL tmp;
-	ret = SystemParametersInfoA( uAction, uParam, lpvParam ? &tmp : NULL, fuWinIni );
-	if (ret && lpvParam)
-	    *(BOOL16 *)lpvParam = tmp;
-	break;
-    }
-
-    case SPI_GETBORDER:				/*      5 */
-    case SPI_ICONHORIZONTALSPACING:		/*     13 */
-    case SPI_GETSCREENSAVETIMEOUT:		/*     14 */
-    case SPI_GETGRIDGRANULARITY:		/*     18 */
-    case SPI_GETKEYBOARDDELAY:			/*     22 */
-    case SPI_ICONVERTICALSPACING:		/*     24 */
-    {
-	INT tmp;
-	ret = SystemParametersInfoA( uAction, uParam, lpvParam ? &tmp : NULL, fuWinIni );
-	if (ret && lpvParam)
-	    *(INT16 *)lpvParam = tmp;
-	break;
-    }
-
-    case SPI_GETKEYBOARDSPEED:			/*     10 */
-    {
-	DWORD tmp;
-	ret = SystemParametersInfoA( uAction, uParam, lpvParam ? &tmp : NULL, fuWinIni );
-	if (ret && lpvParam)
-	    *(WORD *)lpvParam = tmp;
-	break;
-    }
-
-    case SPI_GETICONTITLELOGFONT:		/*     31 */
-    {
-	LOGFONTA tmp;
-	ret = SystemParametersInfoA( uAction, uParam, lpvParam ? &tmp : NULL, fuWinIni );
-	if (ret && lpvParam)
-	    SYSPARAMS_LogFont32ATo16( &tmp, (LPLOGFONT16)lpvParam );
-	break;
-    }
-
-    case SPI_GETNONCLIENTMETRICS: 		/*     41  WINVER >= 0x400 */
-    {
-	NONCLIENTMETRICSA tmp;
-	LPNONCLIENTMETRICS16 lpnm16 = (LPNONCLIENTMETRICS16)lpvParam;
-	if (lpnm16 && lpnm16->cbSize == sizeof(NONCLIENTMETRICS16))
-	{
-	    tmp.cbSize = sizeof(NONCLIENTMETRICSA);
-	    ret = SystemParametersInfoA( uAction, uParam, &tmp, fuWinIni );
-	    if (ret)
-		SYSPARAMS_NonClientMetrics32ATo16( &tmp, lpnm16 );
-	}
-	else /* winfile 95 sets cbSize to 340 */
-	    ret = SystemParametersInfoA( uAction, uParam, lpvParam, fuWinIni );
-	break;
-    }
-
-    case SPI_GETWORKAREA:			/*     48  WINVER >= 0x400 */
-    {
-	RECT tmp;
-	ret = SystemParametersInfoA( uAction, uParam, lpvParam ? &tmp : NULL, fuWinIni );
-	if (ret && lpvParam)
-        {
-            RECT16 *r16 = lpvParam;
-            r16->left   = tmp.left;
-            r16->top    = tmp.top;
-            r16->right  = tmp.right;
-            r16->bottom = tmp.bottom;
-        }
-	break;
-    }
-
-    case SPI_GETMOUSEHOVERWIDTH:		/*     98  _WIN32_WINNT >= 0x400 || _WIN32_WINDOW > 0x400 */
-    case SPI_GETMOUSEHOVERHEIGHT:		/*    100  _WIN32_WINNT >= 0x400 || _WIN32_WINDOW > 0x400 */
-    case SPI_GETMOUSEHOVERTIME:			/*    102  _WIN32_WINNT >= 0x400 || _WIN32_WINDOW > 0x400 */
-    {
-	UINT tmp;
-	ret = SystemParametersInfoA( uAction, uParam, lpvParam ? &tmp : NULL, fuWinIni );
-	if (ret && lpvParam)
-	    *(UINT16 *)lpvParam = tmp;
-	break;
-    }
-
-    default:
-	ret = SystemParametersInfoA( uAction, uParam, lpvParam, fuWinIni );
-    }
-
-    return ret;
-}
 
 /***********************************************************************
  *		SystemParametersInfoA (USER32.@)

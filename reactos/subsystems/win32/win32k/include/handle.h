@@ -37,7 +37,7 @@ extern obj_handle_t alloc_handle( PPROCESSINFO process, void *obj,
                                   unsigned int access, unsigned int attr );
 extern obj_handle_t alloc_handle_no_access_check( PPROCESSINFO process, void *ptr,
                                                   unsigned int access, unsigned int attr );
-extern int close_handle( PPROCESSINFO process, obj_handle_t handle );
+extern unsigned int close_handle( PPROCESSINFO process, obj_handle_t handle );
 extern struct object *get_handle_obj( PPROCESSINFO process, obj_handle_t handle,
                                       unsigned int access, const struct object_ops *ops );
 extern unsigned int get_handle_access( PPROCESSINFO process, obj_handle_t handle );

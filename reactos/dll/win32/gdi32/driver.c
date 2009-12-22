@@ -29,6 +29,7 @@
 #include "winbase.h"
 #include "winreg.h"
 //#include "ddrawgdi.h"
+#include "wine/winbase16.h"
 
 #include "gdi_private.h"
 #include "wine/unicode.h"
@@ -163,7 +164,6 @@ static struct graphics_driver *create_driver( HMODULE module )
         GET_FUNC(SetBkColor);
         GET_FUNC(SetBkMode);
         GET_FUNC(SetDCBrushColor);
-        GET_FUNC(SetDCOrg);
         GET_FUNC(SetDCPenColor);
         GET_FUNC(SetDIBColorTable);
         GET_FUNC(SetDIBits);
@@ -199,6 +199,7 @@ static struct graphics_driver *create_driver( HMODULE module )
 
         /* OpenGL32 */
         GET_FUNC(wglCreateContext);
+        GET_FUNC(wglCreateContextAttribsARB);
         GET_FUNC(wglDeleteContext);
         GET_FUNC(wglGetProcAddress);
         GET_FUNC(wglGetPbufferDCARB);

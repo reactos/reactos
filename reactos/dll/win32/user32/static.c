@@ -47,7 +47,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
-#include "wine/winuser16.h"
 #include "controls.h"
 #include "user_private.h"
 #include "wine/debug.h"
@@ -61,8 +60,6 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintBitmapfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintEnhMetafn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style );
-static LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 static COLORREF color_3dshadow, color_3ddkshadow, color_3dhighlight;
 
@@ -105,8 +102,7 @@ const struct builtin_class_descr STATIC_builtin_class =
 {
     staticW,             /* name */
     CS_DBLCLKS | CS_PARENTDC, /* style  */
-    StaticWndProcA,      /* procA */
-    StaticWndProcW,      /* procW */
+    WINPROC_STATIC,      /* proc */
     STATIC_EXTRA_BYTES,  /* extra */
     IDC_ARROW,           /* cursor */
     0                    /* brush */
@@ -400,12 +396,13 @@ static BOOL hasTextStyle( DWORD style )
 /***********************************************************************
  *           StaticWndProc_common
  */
-static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
-                                     LPARAM lParam, BOOL unicode )
+LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
     LRESULT lResult = 0;
     LONG full_style = GetWindowLongW( hwnd, GWL_STYLE );
     LONG style = full_style & SS_TYPEMASK;
+
+    if (!IsWindow( hwnd )) return 0;
 
     switch (uMsg)
     {
@@ -572,8 +569,6 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
     case STM_GETIMAGE:
         return (LRESULT)STATIC_GetImage( hwnd, wParam, full_style );
 
-        return HICON_16(STATIC_GetImage( hwnd, IMAGE_ICON, full_style ));
-
     case STM_GETICON:
         return (LRESULT)STATIC_GetImage( hwnd, IMAGE_ICON, full_style );
 
@@ -596,8 +591,6 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         STATIC_TryPaintFcn( hwnd, full_style );
 	break;
 
-        wParam = (WPARAM)HICON_32( (HICON16)wParam );
-        /* fall through */
     case STM_SETICON:
         lResult = (LRESULT)STATIC_SetIcon( hwnd, (HICON)wParam, full_style );
         STATIC_TryPaintFcn( hwnd, full_style );
@@ -608,24 +601,6 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
                          DefWindowProcA(hwnd, uMsg, wParam, lParam);
     }
     return lResult;
-}
-
-/***********************************************************************
- *           StaticWndProcA
- */
-static LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-    if (!IsWindow( hWnd )) return 0;
-    return StaticWndProc_common(hWnd, uMsg, wParam, lParam, FALSE);
-}
-
-/***********************************************************************
- *           StaticWndProcW
- */
-static LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-    if (!IsWindow( hWnd )) return 0;
-    return StaticWndProc_common(hWnd, uMsg, wParam, lParam, TRUE);
 }
 
 static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )

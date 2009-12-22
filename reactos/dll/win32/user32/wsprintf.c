@@ -31,8 +31,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 
-#include "wine/winbase16.h"
-
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(string);
@@ -513,7 +511,6 @@ INT WINAPI wvsprintfW( LPWSTR buffer, LPCWSTR spec, __ms_va_list args )
     INT res = wvsnprintfW( buffer, 1024, spec, args );
     return ( res == -1 ) ? 1024 : res;
 }
-
 
 
 /***********************************************************************

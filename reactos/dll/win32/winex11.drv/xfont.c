@@ -1674,7 +1674,6 @@ static void XFONT_LoadAliases( HKEY hkey )
     /* then user specified aliases */
     do
     {
-        BOOL bSubst;
 	char subsection[32];
         snprintf( subsection, sizeof(subsection), "%s%i", INIAliasSection, i++ );
 
@@ -1690,9 +1689,9 @@ static void XFONT_LoadAliases( HKEY hkey )
 
 	XFONT_InitialCapitals(buffer);
 	lpResource = XFONT_GetStringItem( buffer );
-	bSubst = (XFONT_GetStringItem( lpResource )) ? TRUE : FALSE;
 	if( lpResource && *lpResource )
 	{
+            BOOL bSubst = (XFONT_GetStringItem( lpResource )) ? TRUE : FALSE;
             if (LFD_Parse(lpResource, &lfd)) XFONT_LoadAlias(&lfd, buffer, bSubst);
 	}
 	else

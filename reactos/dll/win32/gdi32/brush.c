@@ -447,24 +447,3 @@ static INT BRUSH_GetObject( HGDIOBJ handle, INT count, LPVOID buffer )
     GDI_ReleaseObj( handle );
     return count;
 }
-
-/***********************************************************************
- *           BRUSH_SetSolid
- */
-BOOL BRUSH_SetSolid( HGDIOBJ handle, COLORREF new_color )
-{
-    BRUSHOBJ * brushPtr;
-    BOOL res = FALSE;
-
-    if (!(brushPtr = GDI_GetObjPtr( handle, OBJ_BRUSH )))
-	return FALSE;
-
-    if (brushPtr->logbrush.lbStyle == BS_SOLID)
-    {
-        brushPtr->logbrush.lbColor = new_color;
-	res = TRUE;
-    }
-
-    GDI_ReleaseObj( handle );
-    return res;
-}

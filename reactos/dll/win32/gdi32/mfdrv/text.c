@@ -23,6 +23,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "wine/wingdi16.h"
 #include "mfdrv/metafiledrv.h"
 #include "wine/debug.h"
 

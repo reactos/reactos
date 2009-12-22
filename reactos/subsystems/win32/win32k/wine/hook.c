@@ -104,9 +104,10 @@ static struct hook_table *alloc_hook_table(void)
 static struct hook_table *get_global_hooks( PTHREADINFO thread )
 {
     struct hook_table *table;
-    struct desktop *desktop = get_thread_desktop( thread, 0 );
+    struct desktop *desktop;
 
-    if (!desktop) return NULL;
+    if (!thread->desktop) return NULL;
+    if (!(desktop = get_thread_desktop( thread, 0 ))) return NULL;
     table = desktop->global_hooks;
     release_object( desktop );
     return table;

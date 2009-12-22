@@ -2030,16 +2030,18 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
     dst_pict = get_xrender_picture(devDst);
 
     wine_tsx11_lock();
-    image = XCreateImage(gdi_display, visual, 32, ZPixmap, 0,
-                         (char*) data, widthSrc, heightSrc, 32, widthSrc * 4);
-
     src_format = get_xrender_format(WXR_FORMAT_A8R8G8B8);
     TRACE("src_format %p\n", src_format);
     if(!src_format)
     {
         WARN("Unable to find a picture format supporting alpha, make sure X is running at 24-bit\n");
+        wine_tsx11_unlock();
+        HeapFree(GetProcessHeap(), 0, data);
         return FALSE;
     }
+
+    image = XCreateImage(gdi_display, visual, 32, ZPixmap, 0,
+                         (char*) data, widthSrc, heightSrc, 32, widthSrc * 4);
 
     TRACE("src_drawable = %08lx\n", devSrc->drawable);
     xpm = XCreatePixmap(gdi_display,

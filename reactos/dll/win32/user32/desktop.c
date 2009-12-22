@@ -38,8 +38,6 @@ static HBITMAP hbitmapWallPaper;
 static SIZE bitmapSize;
 static BOOL fTileWallPaper;
 
-static LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-
 
 /*********************************************************************
  * desktop class descriptor
@@ -48,8 +46,7 @@ const struct builtin_class_descr DESKTOP_builtin_class =
 {
     (LPCWSTR)DESKTOP_CLASS_ATOM, /* name */
     CS_DBLCLKS,           /* style */
-    NULL,                 /* procA (winproc is Unicode only) */
-    DesktopWndProc,       /* procW */
+    WINPROC_DESKTOP,      /* proc */
     0,                    /* extra */
     IDC_ARROW,            /* cursor */
     (HBRUSH)(COLOR_BACKGROUND+1)    /* brush */
@@ -115,7 +112,7 @@ static HBITMAP DESKTOP_LoadBitmap( HDC hdc, const char *filename )
 /***********************************************************************
  *           DesktopWndProc
  */
-static LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     if (message == WM_NCCREATE) return TRUE;
     return 0;  /* all other messages are ignored */
