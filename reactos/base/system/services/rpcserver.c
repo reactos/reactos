@@ -1969,8 +1969,9 @@ DWORD RCreateServiceW(
             goto done;
     }
 
-    /* If a non driver and NULL for lpServiceName, write ObjectName as LocalSystem */
-    if ((dwServiceType & SERVICE_WIN32) && (!lpServiceName))
+    /* FIXME: Handle lpServiceStartName propertly! */
+    /* If a non driver and NULL for lpServiceStartName, write ObjectName as LocalSystem */
+    if ((dwServiceType & SERVICE_WIN32) && (!lpServiceStartName))
     {
         dwError = RegSetValueExW(hServiceKey,
                                  L"ObjectName",
