@@ -15,6 +15,7 @@ extern void func_headers(void);
 extern void func_heap(void);
 extern void func_printf(void);
 extern void func_scanf(void);
+extern void func_signal(void);
 extern void func_string(void);
 extern void func_time(void);
 
@@ -29,6 +30,7 @@ const struct test winetest_testlist[] =
     { "heap", func_heap },
     { "printf", func_printf },
     { "scanf", func_scanf },
+	{ "signal", func_signal },
     { "string", func_string },
     { "time", func_time },
     { 0, 0 }

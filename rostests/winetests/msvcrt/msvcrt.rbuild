@@ -29,6 +29,7 @@
 	<file>heap.c</file>
 	<file>printf.c</file>
 	<file>scanf.c</file>
+	<file>signal.c</file>
 	<file>string.c</file>
 	<file>testlist.c</file>
 	<file>time.c</file>
