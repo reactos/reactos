@@ -109,6 +109,7 @@ DECL_HANDLER(open_semaphore);
 DECL_HANDLER(create_file);
 DECL_HANDLER(open_file_object);
 DECL_HANDLER(alloc_file_handle);
+DECL_HANDLER(get_handle_unix_name);
 DECL_HANDLER(get_handle_fd);
 DECL_HANDLER(flush_file);
 DECL_HANDLER(lock_file);
@@ -277,7 +278,7 @@ DECL_HANDLER(get_token_privileges);
 DECL_HANDLER(check_token_privileges);
 DECL_HANDLER(duplicate_token);
 DECL_HANDLER(access_check);
-DECL_HANDLER(get_token_user);
+DECL_HANDLER(get_token_sid);
 DECL_HANDLER(get_token_groups);
 DECL_HANDLER(get_token_default_dacl);
 DECL_HANDLER(set_token_default_dacl);
@@ -355,6 +356,7 @@ static const req_handler req_handlers[REQ_NB_REQUESTS] =
     (req_handler)req_create_file,
     (req_handler)req_open_file_object,
     (req_handler)req_alloc_file_handle,
+    (req_handler)req_get_handle_unix_name,
     (req_handler)req_get_handle_fd,
     (req_handler)req_flush_file,
     (req_handler)req_lock_file,
@@ -523,7 +525,7 @@ static const req_handler req_handlers[REQ_NB_REQUESTS] =
     (req_handler)req_check_token_privileges,
     (req_handler)req_duplicate_token,
     (req_handler)req_access_check,
-    (req_handler)req_get_token_user,
+    (req_handler)req_get_token_sid,
     (req_handler)req_get_token_groups,
     (req_handler)req_get_token_default_dacl,
     (req_handler)req_set_token_default_dacl,
@@ -808,6 +810,9 @@ C_ASSERT( FIELD_OFFSET(struct alloc_file_handle_request, attributes) == 16 );
 C_ASSERT( FIELD_OFFSET(struct alloc_file_handle_request, fd) == 20 );
 C_ASSERT( FIELD_OFFSET(struct alloc_file_handle_reply, handle) == 8 );
 C_ASSERT( sizeof(struct alloc_file_handle_reply) == 16 );
+C_ASSERT( FIELD_OFFSET(struct get_handle_unix_name_request, handle) == 12 );
+C_ASSERT( FIELD_OFFSET(struct get_handle_unix_name_reply, name_len) == 8 );
+C_ASSERT( sizeof(struct get_handle_unix_name_reply) == 16 );
 C_ASSERT( FIELD_OFFSET(struct get_handle_fd_request, handle) == 12 );
 C_ASSERT( FIELD_OFFSET(struct get_handle_fd_reply, type) == 8 );
 C_ASSERT( FIELD_OFFSET(struct get_handle_fd_reply, removable) == 12 );
@@ -1712,9 +1717,10 @@ C_ASSERT( FIELD_OFFSET(struct access_check_reply, access_granted) == 8 );
 C_ASSERT( FIELD_OFFSET(struct access_check_reply, access_status) == 12 );
 C_ASSERT( FIELD_OFFSET(struct access_check_reply, privileges_len) == 16 );
 C_ASSERT( sizeof(struct access_check_reply) == 24 );
-C_ASSERT( FIELD_OFFSET(struct get_token_user_request, handle) == 12 );
-C_ASSERT( FIELD_OFFSET(struct get_token_user_reply, user_len) == 8 );
-C_ASSERT( sizeof(struct get_token_user_reply) == 16 );
+C_ASSERT( FIELD_OFFSET(struct get_token_sid_request, handle) == 12 );
+C_ASSERT( FIELD_OFFSET(struct get_token_sid_request, which_sid) == 16 );
+C_ASSERT( FIELD_OFFSET(struct get_token_sid_reply, sid_len) == 8 );
+C_ASSERT( sizeof(struct get_token_sid_reply) == 16 );
 C_ASSERT( FIELD_OFFSET(struct get_token_groups_request, handle) == 12 );
 C_ASSERT( FIELD_OFFSET(struct get_token_groups_reply, user_len) == 8 );
 C_ASSERT( sizeof(struct get_token_groups_reply) == 16 );

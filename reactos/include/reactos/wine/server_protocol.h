@@ -1204,6 +1204,21 @@ struct alloc_file_handle_reply
 
 
 
+struct get_handle_unix_name_request
+{
+    struct request_header __header;
+    obj_handle_t   handle;
+};
+struct get_handle_unix_name_reply
+{
+    struct reply_header __header;
+    data_size_t    name_len;
+    /* VARARG(name,string); */
+    char __pad_12[4];
+};
+
+
+
 struct get_handle_fd_request
 {
     struct request_header __header;
@@ -4105,16 +4120,17 @@ struct access_check_reply
     char __pad_20[4];
 };
 
-struct get_token_user_request
+struct get_token_sid_request
 {
     struct request_header __header;
     obj_handle_t    handle;
+    unsigned int    which_sid;
 };
-struct get_token_user_reply
+struct get_token_sid_reply
 {
     struct reply_header __header;
-    data_size_t     user_len;
-    /* VARARG(user,SID); */
+    data_size_t     sid_len;
+    /* VARARG(sid,SID); */
     char __pad_12[4];
 };
 
@@ -4675,6 +4691,7 @@ enum request
     REQ_create_file,
     REQ_open_file_object,
     REQ_alloc_file_handle,
+    REQ_get_handle_unix_name,
     REQ_get_handle_fd,
     REQ_flush_file,
     REQ_lock_file,
@@ -4843,7 +4860,7 @@ enum request
     REQ_check_token_privileges,
     REQ_duplicate_token,
     REQ_access_check,
-    REQ_get_token_user,
+    REQ_get_token_sid,
     REQ_get_token_groups,
     REQ_get_token_default_dacl,
     REQ_set_token_default_dacl,
@@ -4922,6 +4939,7 @@ union generic_request
     struct create_file_request create_file_request;
     struct open_file_object_request open_file_object_request;
     struct alloc_file_handle_request alloc_file_handle_request;
+    struct get_handle_unix_name_request get_handle_unix_name_request;
     struct get_handle_fd_request get_handle_fd_request;
     struct flush_file_request flush_file_request;
     struct lock_file_request lock_file_request;
@@ -5090,7 +5108,7 @@ union generic_request
     struct check_token_privileges_request check_token_privileges_request;
     struct duplicate_token_request duplicate_token_request;
     struct access_check_request access_check_request;
-    struct get_token_user_request get_token_user_request;
+    struct get_token_sid_request get_token_sid_request;
     struct get_token_groups_request get_token_groups_request;
     struct get_token_default_dacl_request get_token_default_dacl_request;
     struct set_token_default_dacl_request set_token_default_dacl_request;
@@ -5167,6 +5185,7 @@ union generic_reply
     struct create_file_reply create_file_reply;
     struct open_file_object_reply open_file_object_reply;
     struct alloc_file_handle_reply alloc_file_handle_reply;
+    struct get_handle_unix_name_reply get_handle_unix_name_reply;
     struct get_handle_fd_reply get_handle_fd_reply;
     struct flush_file_reply flush_file_reply;
     struct lock_file_reply lock_file_reply;
@@ -5335,7 +5354,7 @@ union generic_reply
     struct check_token_privileges_reply check_token_privileges_reply;
     struct duplicate_token_reply duplicate_token_reply;
     struct access_check_reply access_check_reply;
-    struct get_token_user_reply get_token_user_reply;
+    struct get_token_sid_reply get_token_sid_reply;
     struct get_token_groups_reply get_token_groups_reply;
     struct get_token_default_dacl_reply get_token_default_dacl_reply;
     struct set_token_default_dacl_reply set_token_default_dacl_reply;
@@ -5372,6 +5391,6 @@ union generic_reply
     struct free_user_handle_reply free_user_handle_reply;
 };
 
-#define SERVER_PROTOCOL_VERSION 392
+#define SERVER_PROTOCOL_VERSION 394
 
 #endif /* __WINE_WINE_SERVER_PROTOCOL_H */

@@ -198,6 +198,11 @@ DECL_HANDLER(get_handle_fd)
     UNIMPLEMENTED;
 }
 
+DECL_HANDLER(get_handle_unix_name)
+{
+    UNIMPLEMENTED;
+}
+
 DECL_HANDLER(flush_file)
 {
     UNIMPLEMENTED;
@@ -633,7 +638,7 @@ DECL_HANDLER(access_check)
     UNIMPLEMENTED;
 }
 
-DECL_HANDLER(get_token_user)
+DECL_HANDLER(get_token_sid)
 {
     UNIMPLEMENTED;
 }
