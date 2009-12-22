@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            lib/drivers/sound/mmixer/mmixer.c
- * PURPOSE:         Mixer Handling Functions
+ * FILE:            lib/drivers/sound/mmixer/wave.c
+ * PURPOSE:         Wave Handling Functions
  * PROGRAMMER:      Johannes Anderwald
  */
 
