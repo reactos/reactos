@@ -30,7 +30,7 @@
 
 /**********************************************************************/
 
-static void * (*pMSVCRTD_operator_new_dbg)(unsigned long, int, const char *, int) = NULL;
+static void * (__cdecl *pMSVCRTD_operator_new_dbg)(size_t, int, const char *, int) = NULL;
 
 /* Some exports are only available in later versions */
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hModule,y)
