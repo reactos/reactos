@@ -9,6 +9,7 @@
 extern void func_appbar(void);
 extern void func_autocomplete(void);
 extern void func_generated(void);
+extern void func_progman_dde(void);
 extern void func_shelllink(void);
 extern void func_shellpath(void);
 extern void func_shfldr_netplaces(void);
@@ -24,6 +25,7 @@ const struct test winetest_testlist[] =
     { "appbar", func_appbar },  
 	{ "autocomplete", func_autocomplete },
 	{ "generated", func_generated },
+	{ "progman_dde", func_progman_dde },
     { "shelllink", func_shelllink },
     { "shellpath", func_shellpath },
     { "shfldr_netplaces", func_shfldr_netplaces },
