@@ -46,6 +46,7 @@ static NTSTATUS (WINAPI *pRtlDuplicateUnicodeString)(long, UNICODE_STRING *, UNI
 static BOOLEAN  (WINAPI *pRtlEqualUnicodeString)(const UNICODE_STRING *, const UNICODE_STRING *, BOOLEAN);
 static NTSTATUS (WINAPI *pRtlFindCharInUnicodeString)(int, const UNICODE_STRING *, const UNICODE_STRING *, USHORT *);
 static VOID     (WINAPI *pRtlFreeAnsiString)(PSTRING);
+static VOID     (WINAPI *pRtlFreeUnicodeString)(PUNICODE_STRING);
 static VOID     (WINAPI *pRtlInitAnsiString)(PSTRING, LPCSTR);
 static VOID     (WINAPI *pRtlInitString)(PSTRING, LPCSTR);
 static VOID     (WINAPI *pRtlInitUnicodeString)(PUNICODE_STRING, LPCWSTR);
@@ -65,7 +66,6 @@ static NTSTATUS (WINAPI *pRtlStringFromGUID)(const GUID*, UNICODE_STRING*);
 static BOOLEAN (WINAPI *pRtlIsTextUnicode)(LPVOID, INT, INT *);
 
 /*static VOID (WINAPI *pRtlFreeOemString)(PSTRING);*/
-/*static VOID (WINAPI *pRtlFreeUnicodeString)(PUNICODE_STRING);*/
 /*static VOID (WINAPI *pRtlCopyUnicodeString)(UNICODE_STRING *, const UNICODE_STRING *);*/
 /*static VOID (WINAPI *pRtlEraseUnicodeString)(UNICODE_STRING *);*/
 /*static LONG (WINAPI *pRtlCompareString)(const STRING *,const STRING *,BOOLEAN);*/
@@ -114,6 +114,7 @@ static void InitFunctionPtrs(void)
 	pRtlEqualUnicodeString = (void *)GetProcAddress(hntdll, "RtlEqualUnicodeString");
 	pRtlFindCharInUnicodeString = (void *)GetProcAddress(hntdll, "RtlFindCharInUnicodeString");
 	pRtlFreeAnsiString = (void *)GetProcAddress(hntdll, "RtlFreeAnsiString");
+	pRtlFreeUnicodeString = (void *)GetProcAddress(hntdll, "RtlFreeUnicodeString");
 	pRtlInitAnsiString = (void *)GetProcAddress(hntdll, "RtlInitAnsiString");
 	pRtlInitString = (void *)GetProcAddress(hntdll, "RtlInitString");
 	pRtlInitUnicodeString = (void *)GetProcAddress(hntdll, "RtlInitUnicodeString");
@@ -467,6 +468,7 @@ static void test_RtlDuplicateUnicodeString(void)
 	    ok(memcmp(dest_str.Buffer, res_str.Buffer, dupl_ustr[test_num].res_buf_size) == 0,
 	       "(test %d): RtlDuplicateUnicodeString(%d, source, dest) has destination \"%s\" expected \"%s\"\n",
 	       test_num, dupl_ustr[test_num].add_nul, dest_ansi_str.Buffer, dupl_ustr[test_num].res_buf);
+            if(result == STATUS_SUCCESS) pRtlFreeUnicodeString(&dest_str);
         } else {
 	    ok(dest_str.Buffer == NULL && dupl_ustr[test_num].res_buf == NULL,
 	       "(test %d): RtlDuplicateUnicodeString(%d, source, dest) has destination %p expected %p\n",
@@ -794,6 +796,8 @@ static void test_RtlUnicodeStringToAnsiString(void)
 	ok(memcmp(ansi_str.Buffer, ustr2astr[test_num].res_buf, ustr2astr[test_num].res_buf_size) == 0,
 	   "(test %d): RtlUnicodeStringToAnsiString(ansi, uni, %d) has ansi \"%s\" expected \"%s\"\n",
 	   test_num, ustr2astr[test_num].doalloc, ansi_str.Buffer, ustr2astr[test_num].res_buf);
+        if(result == STATUS_SUCCESS && ustr2astr[test_num].doalloc)
+            pRtlFreeAnsiString(&ansi_str);
     }
 }
 
@@ -1850,6 +1854,7 @@ static void test_RtlStringFromGUID(void)
   ret = pRtlStringFromGUID(&IID_Endianess, &str);
   ok(ret == 0, "expected ret=0, got 0x%0x\n", ret);
   ok(str.Buffer && !lstrcmpiW(str.Buffer, szGuid), "Endianess broken\n");
+  pRtlFreeUnicodeString(&str);
 }
 
 START_TEST(rtlstr)

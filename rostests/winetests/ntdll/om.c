@@ -63,8 +63,8 @@ static void test_case_sensitive (void)
     ok(status == STATUS_SUCCESS, "Failed to create Mutant(%08x)\n", status);
 
     status = pNtCreateEvent(&Event, GENERIC_ALL, &attr, FALSE, FALSE);
-    ok(status == STATUS_OBJECT_NAME_COLLISION,
-        "NtCreateEvent should have failed with STATUS_OBJECT_NAME_COLLISION got(%08x)\n", status);
+    ok(status == STATUS_OBJECT_NAME_COLLISION || status == STATUS_OBJECT_TYPE_MISMATCH,
+        "NtCreateEvent should have failed with STATUS_OBJECT_NAME_COLLISION or STATUS_OBJECT_TYPE_MISMATCH got (%08x)\n", status);
 
     pRtlInitUnicodeString(&str, buffer2);
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
@@ -82,8 +82,8 @@ static void test_case_sensitive (void)
     pRtlInitUnicodeString(&str, buffer4);
     InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, 0, NULL);
     status = pNtCreateMutant(&Mutant, GENERIC_ALL, &attr, FALSE);
-    ok(status == STATUS_OBJECT_NAME_COLLISION,
-        "NtCreateMutant should have failed with STATUS_OBJECT_NAME_COLLISION got(%08x)\n", status);
+    ok(status == STATUS_OBJECT_NAME_COLLISION || status == STATUS_OBJECT_TYPE_MISMATCH,
+        "NtCreateMutant should have failed with STATUS_OBJECT_NAME_COLLISION or STATUS_OBJECT_TYPE_MISMATCH got (%08x)\n", status);
 
     status = pNtCreateEvent(&h, GENERIC_ALL, &attr, FALSE, FALSE);
     ok(status == STATUS_OBJECT_NAME_COLLISION,

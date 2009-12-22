@@ -413,7 +413,7 @@ static void test_RtlFindClearBitsAndSet(void)
 static void test_RtlFindMostSignificantBit(void)
 {
   int i;
-  CCHAR cPos;
+  signed char cPos;
   ULONGLONG ulLong;
 
   if (!pRtlFindMostSignificantBit)
@@ -442,7 +442,7 @@ static void test_RtlFindMostSignificantBit(void)
 static void test_RtlFindLeastSignificantBit(void)
 {
   int i;
-  CCHAR cPos;
+  signed char cPos;
   ULONGLONG ulLong;
 
   if (!pRtlFindLeastSignificantBit)
