@@ -1095,7 +1095,7 @@ static void test_find_executable(void)
          * like '.mpeg', etc.
          * Also it means we cannot do any other test.
          */
-        trace("FindExecutable() is broken -> skipping 4+ character extension tests\n");
+        win_skip("FindExecutable() is broken -> not running 4+ character extension tests\n");
         return;
     }
 

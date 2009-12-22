@@ -275,6 +275,20 @@ static void test_get_set(void)
     ok(SUCCEEDED(r), "GetArguments failed (0x%08x)\n", r);
     ok(lstrcmp(buffer,str)==0, "GetArguments returned '%s'\n", buffer);
 
+    strcpy(buffer,"garbage");
+    r = IShellLinkA_SetArguments(sl, NULL);
+    ok(SUCCEEDED(r), "SetArguments failed (0x%08x)\n", r);
+    r = IShellLinkA_GetArguments(sl, buffer, sizeof(buffer));
+    ok(SUCCEEDED(r), "GetArguments failed (0x%08x)\n", r);
+    ok(!buffer[0] || lstrcmp(buffer,str)==0, "GetArguments returned '%s'\n", buffer);
+
+    strcpy(buffer,"garbage");
+    r = IShellLinkA_SetArguments(sl, "");
+    ok(SUCCEEDED(r), "SetArguments failed (0x%08x)\n", r);
+    r = IShellLinkA_GetArguments(sl, buffer, sizeof(buffer));
+    ok(SUCCEEDED(r), "GetArguments failed (0x%08x)\n", r);
+    ok(!buffer[0], "GetArguments returned '%s'\n", buffer);
+
     /* Test Getting / Setting showcmd */
     i=0xdeadbeef;
     r = IShellLinkA_GetShowCmd(sl, &i);

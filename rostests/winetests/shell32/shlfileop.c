@@ -965,9 +965,10 @@ static void test_copy(void)
     set_curr_dir_path(from, "test1.txt\0test2.txt\0");
     set_curr_dir_path(to, "test3.txt\0");
     retval = SHFileOperation(&shfo);
-    if (retval == DE_FLDDESTISFILE)
+    if (retval == DE_FLDDESTISFILE || /* Vista and W2K8 */
+        retval == DE_INVALIDFILES)    /* Win7 */
     {
-        /* Vista and W2K8 (broken or new behavior ?) */
+        /* Most likely new behavior */
         ok(!shfo.fAnyOperationsAborted, "Didn't expect aborted operations\n");
     }
     else

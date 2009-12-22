@@ -18,6 +18,7 @@
 	<file>appbar.c</file>
 	<file>autocomplete.c</file>
 	<file>generated.c</file>
+	<file>progman_dde.c</file>
 	<file>shelllink.c</file>
 	<file>shellpath.c</file>
 	<file>shlexec.c</file>
