@@ -923,7 +923,9 @@ HRESULT WINAPI ScriptStringFree(SCRIPT_STRING_ANALYSIS *pssa)
     TRACE("(%p)\n", pssa);
 
     if (!pssa || !(analysis = *pssa)) return E_INVALIDARG;
+
     invalid = analysis->invalid;
+    ScriptFreeCache((SCRIPT_CACHE *)&analysis->sc);
 
     for (i = 0; i < analysis->numItems; i++)
     {
@@ -1298,6 +1300,7 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
 
     *pcGlyphs = cChars;
     if ((hr = init_script_cache(hdc, psc)) != S_OK) return hr;
+    if (!pwLogClust) return E_FAIL;
 
     if ((get_cache_pitch_family(psc) & TMPF_TRUETYPE) && !psa->fNoGlyphIndex)
     {
@@ -1318,21 +1321,18 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
         for (i = 0; i < cChars; i++) pwOutGlyphs[i] = pwcChars[i];
     }
 
-    if (psva)
+    /* set up a valid SCRIPT_VISATTR and LogClust for each char in this run */
+    for (i = 0; i < cChars; i++)
     {
-        /* set up a valid SCRIPT_VISATTR and LogClust for each char in this run */
-        for (i = 0; i < cChars; i++)
-        {
-            /* FIXME: set to better values */
-            psva[i].uJustification = (pwcChars[i] == ' ') ? SCRIPT_JUSTIFY_BLANK : SCRIPT_JUSTIFY_CHARACTER;
-            psva[i].fClusterStart  = 1;
-            psva[i].fDiacritic     = 0;
-            psva[i].fZeroWidth     = 0;
-            psva[i].fReserved      = 0;
-            psva[i].fShapeReserved = 0;
+        /* FIXME: set to better values */
+        psva[i].uJustification = (pwcChars[i] == ' ') ? SCRIPT_JUSTIFY_BLANK : SCRIPT_JUSTIFY_CHARACTER;
+        psva[i].fClusterStart  = 1;
+        psva[i].fDiacritic     = 0;
+        psva[i].fZeroWidth     = 0;
+        psva[i].fReserved      = 0;
+        psva[i].fShapeReserved = 0;
 
-            if (pwLogClust) pwLogClust[i] = i;
-        }
+        pwLogClust[i] = i;
     }
     return S_OK;
 }
@@ -1369,6 +1369,7 @@ HRESULT WINAPI ScriptPlace(HDC hdc, SCRIPT_CACHE *psc, const WORD *pwGlyphs,
 
     if (!psva) return E_INVALIDARG;
     if ((hr = init_script_cache(hdc, psc)) != S_OK) return hr;
+    if (!pGoffset) return E_FAIL;
 
     if (pABC) memset(pABC, 0, sizeof(ABC));
     for (i = 0; i < cGlyphs; i++)
@@ -1397,7 +1398,7 @@ HRESULT WINAPI ScriptPlace(HDC hdc, SCRIPT_CACHE *psc, const WORD *pwGlyphs,
             pABC->abcC += abc.abcC;
         }
         /* FIXME: set to more reasonable values */
-        if (pGoffset)  pGoffset[i].du = pGoffset[i].dv = 0;
+        pGoffset[i].du = pGoffset[i].dv = 0;
         if (piAdvance) piAdvance[i] = abc.abcA + abc.abcB + abc.abcC;
     }
 
@@ -1530,6 +1531,7 @@ HRESULT WINAPI ScriptGetGlyphABCWidth(HDC hdc, SCRIPT_CACHE *psc, WORD glyph, AB
 
     TRACE("(%p, %p, 0x%04x, %p)\n", hdc, psc, glyph, abc);
 
+    if (!abc) return E_INVALIDARG;
     if ((hr = init_script_cache(hdc, psc)) != S_OK) return hr;
 
     if (!get_cache_glyph_widths(psc, glyph, abc))
@@ -1795,8 +1797,47 @@ HRESULT WINAPI ScriptGetLogicalWidths(const SCRIPT_ANALYSIS *sa, int nbchars, in
     return S_OK;
 }
 
-VOID WINAPI LpkPresent()   
-{   
-    /* FIXME */   
-    ERR("LPK: %s is unimplemented, please try again later.\n", __FUNCTION__);   
-} 
+/***********************************************************************
+ *      ScriptApplyLogicalWidth (USP10.@)
+ *
+ * Generate glyph advance widths.
+ *
+ * PARAMS
+ *  dx          [I]   Array of logical advance widths.
+ *  num_chars   [I]   Number of characters.
+ *  num_glyphs  [I]   Number of glyphs.
+ *  log_clust   [I]   Array of logical clusters.
+ *  sva         [I]   Visual attributes.
+ *  advance     [I]   Array of glyph advance widths.
+ *  sa          [I]   Script analysis.
+ *  abc         [I/O] Summed ABC widths.
+ *  justify     [O]   Array of glyph advance widths.
+ *
+ * RETURNS
+ *  Success: S_OK
+ *  Failure: a non-zero HRESULT.
+ */
+HRESULT WINAPI ScriptApplyLogicalWidth(const int *dx, int num_chars, int num_glyphs,
+                                       const WORD *log_clust, const SCRIPT_VISATTR *sva,
+                                       const int *advance, const SCRIPT_ANALYSIS *sa,
+                                       ABC *abc, int *justify)
+{
+    int i;
+
+    FIXME("(%p, %d, %d, %p, %p, %p, %p, %p, %p)\n",
+          dx, num_chars, num_glyphs, log_clust, sva, advance, sa, abc, justify);
+
+    for (i = 0; i < num_chars; i++) justify[i] = advance[i];
+    return S_OK;
+}
+
+HRESULT WINAPI ScriptJustify(const SCRIPT_VISATTR *sva, const int *advance,
+                             int num_glyphs, int dx, int min_kashida, int *justify)
+{
+    int i;
+
+    FIXME("(%p, %p, %d, %d, %d, %p)\n", sva, advance, num_glyphs, dx, min_kashida, justify);
+
+    for (i = 0; i < num_glyphs; i++) justify[i] = advance[i];
+    return S_OK;
+}
