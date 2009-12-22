@@ -27,11 +27,7 @@
 #include <stdio.h>
 
 #include <wine/test.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <winerror.h>
-#include <winnls.h>
+#include <windows.h>
 #include <usp10.h>
 
 static void test_ScriptShape(HDC hdc)
@@ -67,9 +63,10 @@ static void test_ScriptShape(HDC hdc)
     ok(hr == E_PENDING, "ScriptShape should return E_PENDING not %08x\n", hr);
 
     hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, NULL, attrs, &nb);
-    ok(!hr ||
-       hr == E_INVALIDARG, /* Vista, W2K8 */
-       "ScriptShape should return S_OK or E_INVALIDARG, not %08x\n", hr);
+    ok(broken(hr == S_OK) ||
+       hr == E_INVALIDARG || /* Vista, W2K8 */
+       hr == E_FAIL, /* WIN7 */
+       "ScriptShape should return E_FAIL or E_INVALIDARG, not %08x\n", hr);
     ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
 
     hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, logclust, attrs, &nb);
@@ -83,17 +80,19 @@ static void test_ScriptShape(HDC hdc)
     ok(hr == E_INVALIDARG, "ScriptPlace should return E_INVALIDARG not %08x\n", hr);
 
     hr = ScriptPlace(NULL, &sc, glyphs, 4, attrs, &items[0].a, widths, NULL, NULL);
-    ok(hr == E_PENDING ||
-       hr == E_INVALIDARG, /* Vista, W2K8 */
-       "ScriptPlace should return E_PENDING or E_INVALIDARG, not %08x\n", hr);
+    ok(broken(hr == E_PENDING) ||
+       hr == E_INVALIDARG || /* Vista, W2K8 */
+       hr == E_FAIL, /* WIN7 */
+       "ScriptPlace should return E_FAIL or E_INVALIDARG, not %08x\n", hr);
 
     hr = ScriptPlace(NULL, &sc, glyphs, 4, attrs, &items[0].a, widths, offset, NULL);
     ok(hr == E_PENDING, "ScriptPlace should return E_PENDING not %08x\n", hr);
 
     hr = ScriptPlace(NULL, &sc, glyphs, 4, attrs, &items[0].a, widths, NULL, abc);
-    ok(hr == E_PENDING ||
-       hr == E_INVALIDARG, /* Vista, W2K8 */
-       "ScriptPlace should return E_PENDING or E_INVALIDARG, not %08x\n", hr);
+    ok(broken(hr == E_PENDING) ||
+       hr == E_INVALIDARG || /* Vista, W2K8 */
+       hr == E_FAIL, /* WIN7 */
+       "ScriptPlace should return E_FAIL or E_INVALIDARG, not %08x\n", hr);
 
     hr = ScriptPlace(hdc, &sc, glyphs, 4, attrs, &items[0].a, widths, offset, NULL);
     ok(!hr, "ScriptPlace should return S_OK not %08x\n", hr);
@@ -339,14 +338,14 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
 
     /* Set psc to NULL, to be able to check if a pointer is returned in psc */
     psc = NULL;
-    hr = ScriptGetCMap(NULL, &psc, NULL, 0, 0, NULL);
-    ok( hr == E_PENDING, "(NULL,&psc,NULL,0,0NULL), expected E_PENDING, "
+    hr = ScriptGetCMap(NULL, &psc, TestItem1, cInChars, 0, pwOutGlyphs3);
+    ok( hr == E_PENDING, "(NULL,&psc,NULL,0,0,NULL), expected E_PENDING, "
                          "got %08x\n", hr);
     ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
 
     /* Set psc to NULL but add hdc, to be able to check if a pointer is returned in psc */
     psc = NULL;
-    hr = ScriptGetCMap(hdc, &psc, NULL, 0, 0, NULL);
+    hr = ScriptGetCMap(hdc, &psc, TestItem1, cInChars, 0, pwOutGlyphs3);
     ok( hr == S_OK, "ScriptGetCMap(NULL,&psc,NULL,0,0,NULL), expected S_OK, "
                     "got %08x\n", hr);
     ok( psc != NULL, "ScritpGetCMap expected psc to be not NULL\n");
@@ -1058,6 +1057,11 @@ static void test_ScriptGetGlyphABCWidth(HDC hdc)
     ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got 0x%08x\n", hr);
 
     hr = ScriptGetGlyphABCWidth(NULL, &sc, 'a', NULL);
+    ok(broken(hr == E_PENDING) ||
+       hr == E_INVALIDARG, /* WIN7 */
+       "expected E_INVALIDARG, got 0x%08x\n", hr);
+
+    hr = ScriptGetGlyphABCWidth(NULL, &sc, 'a', &abc);
     ok(hr == E_PENDING, "expected E_PENDING, got 0x%08x\n", hr);
 
     if (0) {    /* crashes on WinXP */
@@ -1169,7 +1173,7 @@ static void test_digit_substitution(void)
         LGRPID_ARMENIAN
     };
     HMODULE hKernel32;
-    static BOOL (WINAPI * pEnumLanguageGroupLocalesA)(LANGGROUPLOCALE_ENUMPROC,LGRPID,DWORD,LONG_PTR);
+    static BOOL (WINAPI * pEnumLanguageGroupLocalesA)(LANGGROUPLOCALE_ENUMPROCA,LGRPID,DWORD,LONG_PTR);
 
     hKernel32 = GetModuleHandleA("kernel32.dll");
     pEnumLanguageGroupLocalesA = (void*)GetProcAddress(hKernel32, "EnumLanguageGroupLocalesA");
