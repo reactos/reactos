@@ -1,4 +1,3 @@
-
 #include <ndk/amd64/asm.h>
 #include <ndk/amd64/asmmacro.S>
 
@@ -7,10 +6,11 @@ _KdbEnter:
 
     /* save flags */
     pushfq
+//  .pushreg ?
 
     /* Make room for a KTRAP_FRAME */
     sub rsp, SIZE_KTRAP_FRAME
-    .allocstack SIZE_KTRAP_FRAME
+//    .allocstack SIZE_KTRAP_FRAME
 
     /* Save rbp */
     mov [rsp + KTRAP_FRAME_Rbp], rbp
@@ -30,12 +30,12 @@ _KdbEnter:
     mov [rsp + KTRAP_FRAME_R11], r11
 
     /* Save xmm registers */
-//    movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
-//    movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
-//    movdqa [rbp + KTRAP_FRAME_Xmm2], xmm2
-//    movdqa [rbp + KTRAP_FRAME_Xmm3], xmm3
-//    movdqa [rbp + KTRAP_FRAME_Xmm4], xmm4
-//    movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
+//    movdqa [rsp + KTRAP_FRAME_Xmm0], xmm0
+//    movdqa [rsp + KTRAP_FRAME_Xmm1], xmm1
+//    movdqa [rsp + KTRAP_FRAME_Xmm2], xmm2
+//    movdqa [rsp + KTRAP_FRAME_Xmm3], xmm3
+//    movdqa [rsp + KTRAP_FRAME_Xmm4], xmm4
+//    movdqa [rsp + KTRAP_FRAME_Xmm5], xmm5
 
     /* Save cs and previous mode */
     mov ax, cs
@@ -45,13 +45,13 @@ _KdbEnter:
 
     /* Save segment selectors */
     mov ax, ds
-    mov [rbp + KTRAP_FRAME_SegDs], ax
+    mov [rsp + KTRAP_FRAME_SegDs], ax
     mov ax, es
-    mov [rbp + KTRAP_FRAME_SegEs], ax
+    mov [rsp + KTRAP_FRAME_SegEs], ax
     mov ax, fs
-    mov [rbp + KTRAP_FRAME_SegFs], ax
+    mov [rsp + KTRAP_FRAME_SegFs], ax
     mov ax, gs
-    mov [rbp + KTRAP_FRAME_SegGs], ax
+    mov [rsp + KTRAP_FRAME_SegGs], ax
 
     /* Save previous irql */
     mov rax, cr8
@@ -71,16 +71,16 @@ _KdbEnter:
     mov rax, dr7
     mov [rsp + KTRAP_FRAME_Dr7], rax
 
-    /* Point rbp, where rsp was initially */
-    lea rbp, [rsp + SIZE_KTRAP_FRAME + 8]
+    /* Point rbp, where rsp was before */
+    lea rbp, [rsp + SIZE_KTRAP_FRAME]
     mov [rsp + KTRAP_FRAME_Rsp], rbp
 
     /* Store the EFLAGS we previously pushed on the stack */
-    mov rax, [rbp]
+    mov rax, [rbp + 8]
     mov [rsp + KTRAP_FRAME_EFlags], rax
 
     /* Get RIP from the stack */
-    mov rax, [rbp + 8]
+    mov rax, [rbp + 16]
     mov [rsp + KTRAP_FRAME_Rip], rax
 
     /* Make sure the direction flag is cleared */
@@ -124,4 +124,29 @@ _KdbEnter:
     /* Restore RSP */
     mov rsp, [rsp + KTRAP_FRAME_Rsp]
 
-    iret
+    /* Restore EFLAGS */
+    popfq
+
+    ret
+
+.globl _KdbpStackSwitchAndCall
+_KdbpStackSwitchAndCall:
+
+    /* Save old stack */
+    mov rax, rsp
+
+    /* Set new stack */
+    mov rsp, rcx
+
+    /* Save old stack on new stack */
+    push rax
+
+    /* Call function */
+    call rdx
+
+    /* Restire old stack */
+    pop rax
+    mov rsp, rax
+
+    /* Return */
+    ret

@@ -7,17 +7,25 @@
 # define RTL_NUMBER_OF(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
+//hack to avoid a hundred ifdefs
+#ifdef _M_IX86
+#define Eip Eip
+#elif defined(_M_AMD64)
+#define Eip Rip
+#endif
+
 /* TYPES *********************************************************************/
 
 /* from kdb.c */
+
 typedef struct _KDB_KTRAP_FRAME
 {
    KTRAP_FRAME  Tf;
-   ULONG        Cr0;
-   ULONG        Cr1; /* reserved/unused */
-   ULONG        Cr2;
-   ULONG        Cr3;
-   ULONG        Cr4;
+   ULONG_PTR        Cr0;
+   ULONG_PTR        Cr1; /* reserved/unused */
+   ULONG_PTR        Cr2;
+   ULONG_PTR        Cr3;
+   ULONG_PTR        Cr4;
 } KDB_KTRAP_FRAME, *PKDB_KTRAP_FRAME;
 
 typedef enum _KDB_BREAKPOINT_TYPE
@@ -78,12 +86,12 @@ typedef enum _KDB_OUTPUT_SETTINGS
 
 LONG
 KdbpDisassemble(
-   IN ULONG Address,
+   IN ULONG_PTR Address,
    IN ULONG IntelSyntax);
 
 LONG
 KdbpGetInstLength(
-   IN ULONG Address);
+   IN ULONG_PTR Address);
 
 /* from i386/kdb_help.S */
 
@@ -266,4 +274,3 @@ VOID
 KbdEnableMouse();
 
 #endif /* NTOSKRNL_KDB_H */
-

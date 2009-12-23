@@ -125,7 +125,7 @@ VOID
 NTAPI
 KiEspToTrapFrame(
     IN PKTRAP_FRAME TrapFrame,
-    IN ULONG Esp);
+    IN ULONG_PTR Esp);
 
 /* ROS Internal. Please deprecate */
 NTHALAPI
@@ -140,14 +140,18 @@ KdbpTrapFrameToKdbTrapFrame(
     PKTRAP_FRAME TrapFrame,
     PKDB_KTRAP_FRAME KdbTrapFrame)
 {
-    ULONG TrapCr0, TrapCr2, TrapCr3, TrapCr4;
+    ULONG_PTR TrapCr0, TrapCr2, TrapCr3, TrapCr4;
 
+#if defined(_M_IX86)
     /* Copy the TrapFrame only up to Eflags and zero the rest*/
     RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
     RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, HardwareEsp)),
                   sizeof(KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
+#elif defined(_M_AMD64)
+    RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, sizeof(KTRAP_FRAME));
+#endif
 
-#ifndef _MSC_VER
+#if defined(__GNUC__) && defined(_M_IX86)
    asm volatile(
       "movl %%cr0, %0"    "\n\t"
       "movl %%cr2, %1"    "\n\t"
@@ -155,7 +159,7 @@ KdbpTrapFrameToKdbTrapFrame(
       "movl %%cr4, %3"    "\n\t"
       : "=r"(TrapCr0), "=r"(TrapCr2),
         "=r"(TrapCr3), "=r"(TrapCr4));
-#else
+#elif defined(_MSC_VER) && defined(_M_IX86)
    __asm
    {
        mov eax, cr0;
@@ -170,6 +174,16 @@ KdbpTrapFrameToKdbTrapFrame(
        //mov eax, cr4;
        //mov TrapCr4, eax;
    }
+#elif defined(__GNUC__) && defined(_M_AMD64)
+   asm volatile(
+      "movq %%cr0, %0"    "\n\t"
+      "movq %%cr2, %1"    "\n\t"
+      "movq %%cr3, %2"    "\n\t"
+      "movq %%cr4, %3"    "\n\t"
+      : "=r"(TrapCr0), "=r"(TrapCr2),
+        "=r"(TrapCr3), "=r"(TrapCr4));
+#else
+#error UNSUPPORTED ARCHITECTURE
 #endif
 
     KdbTrapFrame->Cr0 = TrapCr0;
@@ -177,9 +191,13 @@ KdbpTrapFrameToKdbTrapFrame(
     KdbTrapFrame->Cr3 = TrapCr3;
     KdbTrapFrame->Cr4 = TrapCr4;
 
+#ifdef _M_IX86
     KdbTrapFrame->Tf.HardwareEsp = KiEspFromTrapFrame(TrapFrame);
     KdbTrapFrame->Tf.HardwareSegSs = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
-
+#elif defined(_M_AMD64)
+    //KdbTrapFrame->Tf.Rsp = KiEspFromTrapFrame(TrapFrame);
+    //KdbTrapFrame->Tf.SegGs = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
+#endif
 
     /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
@@ -190,6 +208,7 @@ KdbpKdbTrapFrameToTrapFrame(
     PKTRAP_FRAME TrapFrame)
 {
     /* Copy the TrapFrame only up to Eflags and zero the rest*/
+#ifdef _M_IX86
     RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
 
     /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
@@ -198,6 +217,13 @@ KdbpKdbTrapFrameToTrapFrame(
     KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareEsp);
 
     /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+
+#elif defined(_M_AMD64)
+    RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, sizeof(KTRAP_FRAME));
+    //KiSsToTrapFrame(TrapFrame, KdbTrapFrame->Tf.SegSs);
+    //KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.Rsp);
+
+#endif
 }
 
 static VOID
@@ -209,7 +235,7 @@ KdbpKdbTrapFrameFromKernelStack(
 
     RtlZeroMemory(KdbTrapFrame, sizeof(KDB_KTRAP_FRAME));
     StackPtr = (ULONG_PTR *) KernelStack;
-#if _M_X86_
+#ifdef _M_IX86
     KdbTrapFrame->Tf.Ebp = StackPtr[3];
     KdbTrapFrame->Tf.Edi = StackPtr[4];
     KdbTrapFrame->Tf.Esi = StackPtr[5];
@@ -221,6 +247,18 @@ KdbpKdbTrapFrameFromKernelStack(
     KdbTrapFrame->Tf.SegDs = KGDT_R0_DATA;
     KdbTrapFrame->Tf.SegEs = KGDT_R0_DATA;
     KdbTrapFrame->Tf.SegGs = KGDT_R0_DATA;
+#elif defined(_M_AMD64)
+    KdbTrapFrame->Tf.Rbp = StackPtr[3];
+    KdbTrapFrame->Tf.Rdi = StackPtr[4];
+    KdbTrapFrame->Tf.Rsi = StackPtr[5];
+    KdbTrapFrame->Tf.Rbx = StackPtr[6];
+    KdbTrapFrame->Tf.Rip = StackPtr[7];
+    KdbTrapFrame->Tf.Rsp = (ULONG_PTR) (StackPtr + 16);
+    KdbTrapFrame->Tf.SegSs = KGDT_64_R0_SS;
+    KdbTrapFrame->Tf.SegCs = KGDT_64_R0_CODE;
+    KdbTrapFrame->Tf.SegDs = KGDT_64_DATA;
+    KdbTrapFrame->Tf.SegEs = KGDT_64_DATA;
+    KdbTrapFrame->Tf.SegGs = KGDT_64_DATA;
 #endif
 
     /* FIXME: what about the other registers??? */
@@ -423,7 +461,7 @@ KdbpStepIntoInstruction(
     }
 
     /* Get the interrupt descriptor */
-    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(ULONG_PTR)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
+    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(ULONG_PTR)((ULONG_PTR)Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
     {
         /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
         return FALSE;
@@ -1244,7 +1282,7 @@ KdbpInternalEnter()
 {
     PETHREAD Thread;
     PVOID SavedInitialStack, SavedStackBase, SavedKernelStack;
-    ULONG SavedStackLimit;
+    ULONG_PTR SavedStackLimit;
 
     KbdDisableMouse();
     if (KdpDebugMode.Screen)
@@ -1262,7 +1300,7 @@ KdbpInternalEnter()
     Thread->Tcb.StackLimit = (ULONG_PTR)KdbStack;
     Thread->Tcb.KernelStack = (char*)KdbStack + KDB_STACK_SIZE;
 
-    /*KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);*/
+    //KdbpPrint("Switching to KDB stack 0x%p-0x%p\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase);
 
     KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - sizeof(ULONG), KdbpCallMainLoop);
 
@@ -1351,7 +1389,7 @@ KdbEnterDebuggerException(
     ULONGLONG ull;
     BOOLEAN Resume = FALSE;
     BOOLEAN EnterConditionMet = TRUE;
-    ULONG OldEflags;
+    ULONG_PTR OldEflags;
     NTSTATUS ExceptionCode;
 
     ExceptionCode = (ExceptionRecord ? ExceptionRecord->ExceptionCode : STATUS_BREAKPOINT);
@@ -1463,12 +1501,12 @@ KdbEnterDebuggerException(
 
         if (BreakPoint->Type == KdbBreakPointSoftware)
         {
-            KdbpPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
+            KdbpPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%p\n",
                       KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Eip);
         }
         else if (BreakPoint->Type == KdbBreakPointHardware)
         {
-            KdbpPrint("Entered debugger on breakpoint #%d: %s 0x%08x\n",
+            KdbpPrint("Entered debugger on breakpoint #%d: %s 0x%p\n",
                       KdbLastBreakPointNr,
                      (BreakPoint->Data.Hw.AccessType == KdbAccessRead) ? "READ" :
                      ((BreakPoint->Data.Hw.AccessType == KdbAccessWrite) ? "WRITE" :
@@ -1551,7 +1589,7 @@ KdbEnterDebuggerException(
             return kdHandleException;
         }
 
-        KdbpPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
+        KdbpPrint("Entered debugger on embedded INT3 at 0x%04x:0x%p.\n",
                   TrapFrame->SegCs & 0xffff, TrapFrame->Eip - 1);
     }
     else
@@ -1576,8 +1614,12 @@ KdbEnterDebuggerException(
             ULONG Err;
 
             TrapCr2 = __readcr2();
-
+#ifdef _M_IX86
             Err = TrapFrame->ErrCode;
+#elif defined(_M_AMD64)
+            Err = TrapFrame->ErrorCode;
+#endif
+
             KdbpPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
 
             if ((Err & (1 << 0)) == 0)

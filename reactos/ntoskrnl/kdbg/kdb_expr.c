@@ -72,7 +72,7 @@ RPN_OP, *PRPN_OP;
 typedef struct _RPN_STACK
 {
     ULONG   Size;     /* Number of RPN_OPs on Ops */
-    ULONG   Sp;       /* Stack pointer */
+    ULONG_PTR   Sp;       /* Stack pointer */
     RPN_OP  Ops[1];   /* Array of RPN_OPs */
 }
 RPN_STACK, *PRPN_STACK;
@@ -94,7 +94,7 @@ RPN_STACK, *PRPN_STACK;
 static struct
 {
     ULONG Size;
-    ULONG Sp;
+    ULONG_PTR Sp;
     RPN_OP Ops[RPN_OP_STACK_SIZE];
 }
 RpnStack =
@@ -106,11 +106,12 @@ RpnStack =
 static const struct
 {
     PCHAR Name;
-    UCHAR Offset;
-    UCHAR Size;
+    USHORT Offset;
+    USHORT Size;
 }
 RegisterToTrapFrame[] =
 {
+#ifdef _M_IX86
     {"eip",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Eip),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Eip)},
     {"eflags",  FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.EFlags),  RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.EFlags)},
     {"eax",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Eax),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Eax)},
@@ -137,6 +138,36 @@ RegisterToTrapFrame[] =
     {"cr2",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr2),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr2)},
     {"cr3",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr3),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr3)},
     {"cr4",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr4),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr4)}
+#elif defined(_M_AMD64)
+    {"rip",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Rip),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Rip)},
+    {"rflags",  FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.EFlags),  RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.EFlags)},
+    {"rax",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Rax),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Rax)},
+    {"rbx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Rbx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Rbx)},
+    {"rcx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Rcx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Rcx)},
+    {"rdx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Rdx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Rdx)},
+    {"rsi",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Rsi),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Rsi)},
+    {"rdi",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Rdi),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Rdi)},
+    {"r8",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.R8),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.R8)},
+    {"r9",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.R9),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.R9)},
+    {"r10",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.R10),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.R10)},
+    {"r11",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.R11),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.R11)},
+    {"cs",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegCs),      2 }, /* Use only the lower 2 bytes */
+    {"ds",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegDs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegDs)},
+    {"es",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegEs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegEs)},
+    {"fs",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegFs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegFs)},
+    {"gs",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegGs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegGs)},
+    {"ss",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegSs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegSs)},
+    {"dr0",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr0),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr0)},
+    {"dr1",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr1),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr1)},
+    {"dr2",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr2),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr2)},
+    {"dr3",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr3),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr3)},
+    {"dr6",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr6),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr6)},
+    {"dr7",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr7),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr7)},
+    {"cr0",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr0),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr0)},
+    {"cr2",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr2),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr2)},
+    {"cr3",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr3),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr3)},
+    {"cr4",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr4),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr4)}
+#endif
 };
 static const INT RegisterToTrapFrameCount = sizeof (RegisterToTrapFrame) / sizeof (RegisterToTrapFrame[0]);
 
@@ -1013,7 +1044,7 @@ RpnpEvaluateStack(
 
                 if (!Ok)
                 {
-                    _snprintf(ErrMsg, 128, "Couldn't access memory at 0x%lx", (ULONG)p);
+                    _snprintf(ErrMsg, 128, "Couldn't access memory at 0x%p", p);
 
                     if (ErrOffset)
                         *ErrOffset = Op->CharacterOffset;
@@ -1199,4 +1230,3 @@ KdbpRpnEvaluateParsedExpression(
     /* Evaluate the stack */
     return RpnpEvaluateStack(Stack, TrapFrame, Result, ErrOffset, ErrMsg);
 }
-

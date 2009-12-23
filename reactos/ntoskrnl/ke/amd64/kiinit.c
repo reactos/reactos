@@ -714,22 +714,12 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
         /* Hack! Wait for the debugger! */
-        while (!KdPollBreakIn());
+        //while (!KdPollBreakIn());
 
-        /* Display separator + ReactOS version at start of the debug log */
-        DPRINT1("-----------------------------------------------------\n");
-        DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
-        DPRINT1("Command Line: %s\n", LoaderBlock->LoadOptions);
-        DPRINT1("ARC Paths: %s %s %s %s\n", LoaderBlock->ArcBootDeviceName,
-                                            LoaderBlock->NtHalPathName,
-                                            LoaderBlock->ArcHalDeviceName,
-                                            LoaderBlock->NtBootPathName);
     }
 
     DPRINT("Pcr = %p, Gdt = %p, Idt = %p, Tss = %p\n",
            Pcr, Pcr->GdtBase, Pcr->IdtBase, Pcr->TssBase);
-
-    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);

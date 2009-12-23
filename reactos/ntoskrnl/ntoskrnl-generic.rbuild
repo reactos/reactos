@@ -321,19 +321,24 @@
 					</if>
 				</directory>
 			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<if property="KDBG" value="1">
+						<group>
+							<file>i386-dis.c</file>
+							<file>kdb_help.S</file>
+							<file>kdb.c</file>
+							<file>setjmp.S</file>
+						</group>
+					</if>
+				</directory>
+			</if>
 			<if property="KDBG" value="1">
-				<ifnot property="ARCH" value="amd64">
-					<file>kdb.c</file>
-					<file>kdb_cli.c</file>
-					<file>kdb_expr.c</file>
-				</ifnot>
+				<file>kdb.c</file>
+				<file>kdb_cli.c</file>
+				<file>kdb_expr.c</file>
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
-				<if property="ARCH" value="amd64">
-					<directory name="amd64">
-						<file>kdb.c</file>
-					</directory>
-				</if>
 			</if>
 			<if property="DBG_OR_KDBG" value="true">
 				<file>kdb_symbols.c</file>
@@ -353,6 +358,7 @@
 			<if property="ARCH" value="amd64">
 				<directory name="amd64">
 					<file>kd.c</file>
+					<file>kdmemsup.c</file>
 				</directory>
 			</if>
 			<file>kdinit.c</file>

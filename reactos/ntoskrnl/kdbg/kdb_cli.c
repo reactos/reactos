@@ -34,6 +34,9 @@
 #include <debug.h>
 
 /* DEFINES *******************************************************************/
+//hack for amd64
+#define NPX_STATE_NOT_LOADED                    0xA
+#define NPX_STATE_LOADED                        0x0
 
 #define KEY_BS          8
 #define KEY_ESC         27
@@ -557,7 +560,7 @@ KdbpCmdDisassembleX(
                 if (!NT_SUCCESS(KdbpSafeReadMemory(&ul, (PVOID)Address, sizeof(ul))))
                     KdbpPrint(" ????????");
                 else
-                    KdbpPrint(" %08x", ul);
+                    KdbpPrint(" %x", ul);
 
                 Address += sizeof(ul);
             }
@@ -571,7 +574,7 @@ KdbpCmdDisassembleX(
         while (Count-- > 0)
         {
             if (!KdbSymPrintAddress((PVOID)Address))
-                KdbpPrint("<%08x>: ", Address);
+                KdbpPrint("<%x>: ", Address);
             else
                 KdbpPrint(": ");
 
@@ -599,16 +602,26 @@ KdbpCmdRegs(
 {
     PKTRAP_FRAME Tf = &KdbCurrentTrapFrame->Tf;
     INT i;
-    static const PCHAR EflagsBits[32] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
+    const PCHAR EflagsBits[64] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
                                           " ZF", " SF", " TF", " IF", " DF", " OF",
                                           NULL, NULL, " NT", " BIT15", " RF", " VF",
                                           " AC", " VIF", " VIP", " ID", " BIT22",
                                           " BIT23", " BIT24", " BIT25", " BIT26",
                                           " BIT27", " BIT28", " BIT29", " BIT30",
-                                          " BIT31" };
+                                          " BIT31", " BIT32", " BIT33", " BIT34",
+										  " BIT35", " BIT36", " BIT37", " BIT38",
+										  " BIT39", " BIT40", " BIT41", " BIT42",
+										  " BIT43", " BIT44", " BIT45", " BIT46",
+										  " BIT47", " BIT48", " BIT49", " BIT50",
+										  " BIT51", " BIT52", " BIT53", " BIT54",
+										  " BIT55", " BIT56", " BIT57", " BIT58",
+										  " BIT59", " BIT60", " BIT61", " BIT62",
+										  " BIT63",
+		};
 
     if (Argv[0][0] == 'r') /* regs */
     {
+ #ifdef _M_IX86
         KdbpPrint("CS:EIP  0x%04x:0x%08x\n"
                   "SS:ESP  0x%04x:0x%08x\n"
                   "   EAX  0x%08x   EBX  0x%08x\n"
@@ -621,9 +634,31 @@ KdbpCmdRegs(
                   Tf->Ecx, Tf->Edx,
                   Tf->Esi, Tf->Edi,
                   Tf->Ebp);
+#elif defined(_M_AMD64)
+        KdbpPrint("CS:RIP  0x%04x:0x%p\n"
+                  "SS:RSP  0x%04x:0x%p\n"
+                  "   RAX  0x%p   RBX  0x%p\n"
+                  "   RCX  0x%p   RDX  0x%p\n"
+                  "   RSI  0x%p   RDI  0x%p\n"
+                  "   RBP  0x%p   R8   0x%p\n"
+                  "   R9   0x%p   R10  0x%p\n"
+                  "   R11  0x%p\n",
+                  Tf->SegCs & 0xFFFF, Tf->Rip,
+                  Tf->SegSs, Tf->Rsp,
+                  Tf->Rax, Tf->Rbx,
+                  Tf->Rcx, Tf->Rdx,
+                  Tf->Rsi, Tf->Rdi,
+                  Tf->Rbp, Tf->R8,
+                  Tf->R9,  Tf->R10,
+                  Tf->R11);
+#endif
         KdbpPrint("EFLAGS  0x%08x ", Tf->EFlags);
 
+#ifdef _M_IX86
         for (i = 0; i < 32; i++)
+#elif defined(_M_AMD64)
+        for (i = 0; i < 64; i++)
+#endif
         {
             if (i == 1)
             {
@@ -647,9 +682,15 @@ KdbpCmdRegs(
     }
     else if (Argv[0][0] == 'c') /* cregs */
     {
-        ULONG Cr0, Cr2, Cr3, Cr4;
+        ULONG_PTR Cr0, Cr2, Cr3, Cr4;
         KDESCRIPTOR Gdtr, Idtr;
+#if defined(_M_IX86)
         USHORT Ldtr;
+        Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
+        Ldtr = Ke386GetLocalDescriptorTable();
+#elif defined(_M_AMD64)
+        __sgdt(&Gdtr.Limit);
+#endif
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                            " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
@@ -664,13 +705,11 @@ KdbpCmdRegs(
         Cr3 = KdbCurrentTrapFrame->Cr3;
         Cr4 = KdbCurrentTrapFrame->Cr4;
 
-        /* Get descriptor table regs */
-        Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
-        Ldtr = Ke386GetLocalDescriptorTable();
+        /* Get interrupt descriptor table regs */
         __sidt(&Idtr.Limit);
 
         /* Display the control registers */
-        KdbpPrint("CR0  0x%08x ", Cr0);
+        KdbpPrint("CR0  0x%p ", Cr0);
 
         for (i = 0; i < 32; i++)
         {
@@ -681,10 +720,10 @@ KdbpCmdRegs(
                 KdbpPrint(Cr0Bits[i]);
         }
 
-        KdbpPrint("\nCR2  0x%08x\n", Cr2);
-        KdbpPrint("CR3  0x%08x  Pagedir-Base 0x%08x %s%s\n", Cr3, (Cr3 & 0xfffff000),
+        KdbpPrint("\nCR2  0x%p\n", Cr2);
+        KdbpPrint("CR3  0x%p  Pagedir-Base 0x%p %s%s\n", Cr3, (Cr3 & 0xfffff000),
                   (Cr3 & (1 << 3)) ? " PWT" : "", (Cr3 & (1 << 4)) ? " PCD" : "" );
-        KdbpPrint("CR4  0x%08x ", Cr4);
+        KdbpPrint("CR4  0x%p ", Cr4);
 
         for (i = 0; i < 32; i++)
         {
@@ -696,9 +735,11 @@ KdbpCmdRegs(
         }
 
         /* Display the descriptor table regs */
-        KdbpPrint("\nGDTR  Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
-        KdbpPrint("LDTR  0x%04x\n", Ldtr);
-        KdbpPrint("IDTR  Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
+        KdbpPrint("\nGDTR  Base 0x%p  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
+#ifdef _M_IX86
+        KdbpPrint("LDTR  0x%p\n", Ldtr);
+#endif
+        KdbpPrint("IDTR  Base 0x%p  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
     }
     else if (Argv[0][0] == 's') /* sregs */
     {
@@ -713,18 +754,24 @@ KdbpCmdRegs(
                   Tf->SegFs, Tf->SegFs >> 3, (Tf->SegFs & (1 << 2)) ? 'L' : 'G', Tf->SegFs & 3);
         KdbpPrint("GS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
                   Tf->SegGs, Tf->SegGs >> 3, (Tf->SegGs & (1 << 2)) ? 'L' : 'G', Tf->SegGs & 3);
+#ifdef _M_IX86
         KdbpPrint("SS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
                   Tf->HardwareSegSs, Tf->HardwareSegSs >> 3, (Tf->HardwareSegSs & (1 << 2)) ? 'L' : 'G', Tf->HardwareSegSs & 3);
+#else
+        KdbpPrint("SS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
+                  Tf->SegSs, Tf->SegSs >> 3, (Tf->SegSs & (1 << 2)) ? 'L' : 'G', Tf->SegSs & 3);
+#endif
+
     }
     else /* dregs */
     {
         ASSERT(Argv[0][0] == 'd');
-        KdbpPrint("DR0  0x%08x\n"
-                  "DR1  0x%08x\n"
-                  "DR2  0x%08x\n"
-                  "DR3  0x%08x\n"
-                  "DR6  0x%08x\n"
-                  "DR7  0x%08x\n",
+        KdbpPrint("DR0  0x%p\n"
+                  "DR1  0x%p\n"
+                  "DR2  0x%p\n"
+                  "DR3  0x%p\n"
+                  "DR6  0x%p\n"
+                  "DR7  0x%p\n",
                   Tf->Dr0, Tf->Dr1, Tf->Dr2, Tf->Dr3,
                   Tf->Dr6, Tf->Dr7);
     }
@@ -742,7 +789,11 @@ KdbpCmdBackTrace(
     ULONG Count;
     ULONG ul;
     ULONGLONG Result = 0;
+#ifdef _M_IX86
     ULONG_PTR Frame = KdbCurrentTrapFrame->Tf.Ebp;
+#elif defined(_M_AMD64)
+    ULONG_PTR Frame = KdbCurrentTrapFrame->Tf.Rbp;
+#endif
     ULONG_PTR Address;
 
     if (Argc >= 2)
@@ -806,7 +857,7 @@ KdbpCmdBackTrace(
 
         /* Try printing the function at EIP */
         if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip))
-            KdbpPrint("<%08x>\n", KdbCurrentTrapFrame->Tf.Eip);
+            KdbpPrint("<%x>\n", KdbCurrentTrapFrame->Tf.Eip);
         else
             KdbpPrint("\n");
     }
@@ -824,7 +875,7 @@ KdbpCmdBackTrace(
         }
 
         if (!KdbSymPrintAddress((PVOID)Address))
-            KdbpPrint("<%08x>\n", Address);
+            KdbpPrint("<%x>\n", Address);
         else
             KdbpPrint("\n");
 
@@ -936,7 +987,7 @@ KdbpCmdBreakPointList(
         {
             GlobalOrLocal = Buffer;
             sprintf(Buffer, "  PID 0x%08lx",
-                    (ULONG)(Process ? Process->UniqueProcessId : INVALID_HANDLE_VALUE));
+                    (ULONG_PTR)(Process ? Process->UniqueProcessId : INVALID_HANDLE_VALUE));
         }
 
         if (Type == KdbBreakPointSoftware || Type == KdbBreakPointTemporary)
@@ -1082,6 +1133,8 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
             Size = 2;
         else if (_stricmp(Argv[2], "dword") == 0)
             Size = 4;
+        else if (_stricmp(Argv[2], "qword") == 0)
+            Size = 8;
         else if (AccessType == KdbAccessExec)
         {
             Size = 1;
@@ -1155,10 +1208,10 @@ KdbpCmdThread(
     PETHREAD Thread = NULL;
     PEPROCESS Process = NULL;
     BOOLEAN ReferencedThread = FALSE, ReferencedProcess = FALSE;
-    PULONG Esp;
-    PULONG Ebp;
-    ULONG Eip;
-    ULONG ul = 0;
+    PULONG_PTR Esp;
+    PULONG_PTR Ebp;
+    ULONG_PTR Eip;
+    ULONG_PTR ul = 0;
     PCHAR State, pend, str1, str2;
     static const PCHAR ThreadStateToString[DeferredReady+1] =
     {
@@ -1224,6 +1277,7 @@ KdbpCmdThread(
 
             if (Thread->Tcb.TrapFrame)
             {
+#ifdef _M_IX86
                 if (Thread->Tcb.TrapFrame->PreviousPreviousMode == KernelMode)
                     Esp = (PULONG)Thread->Tcb.TrapFrame->TempEsp;
                 else
@@ -1231,11 +1285,18 @@ KdbpCmdThread(
 
                 Ebp = (PULONG)Thread->Tcb.TrapFrame->Ebp;
                 Eip = Thread->Tcb.TrapFrame->Eip;
+
+#elif defined(_M_AMD64)
+                Esp = (PULONG_PTR)Thread->Tcb.TrapFrame->Rsp;
+
+                Ebp = (PULONG_PTR)Thread->Tcb.TrapFrame->Rbp;
+                Eip = Thread->Tcb.TrapFrame->Eip;
+#endif
             }
             else
             {
-                Esp = (PULONG)Thread->Tcb.KernelStack;
-                Ebp = (PULONG)Esp[4];
+                Esp = (PULONG_PTR)Thread->Tcb.KernelStack;
+                Ebp = (PULONG_PTR)Esp[4];
                 Eip = 0;
 
                 if (Ebp) /* FIXME: Should we attach to the process to read Ebp[1]? */
@@ -1247,7 +1308,7 @@ KdbpCmdThread(
             else
                 State = "Unknown";
 
-            KdbpPrint(" %s0x%08x  %-11s  %3d     0x%08x  0x%08x  0x%08x%s\n",
+            KdbpPrint(" %s0x%p  %-11s  %3d     0x%p  0x%p  0x%p%s\n",
                       str1,
                       Thread->Cid.UniqueThread,
                       State,
@@ -1320,11 +1381,11 @@ KdbpCmdThread(
                   "  State:          %s (0x%x)\n"
                   "  Priority:       %d\n"
                   "  Affinity:       0x%08x\n"
-                  "  Initial Stack:  0x%08x\n"
-                  "  Stack Limit:    0x%08x\n"
-                  "  Stack Base:     0x%08x\n"
-                  "  Kernel Stack:   0x%08x\n"
-                  "  Trap Frame:     0x%08x\n"
+                  "  Initial Stack:  0x%p\n"
+                  "  Stack Limit:    0x%p\n"
+                  "  Stack Base:     0x%p\n"
+                  "  Kernel Stack:   0x%p\n"
+                  "  Trap Frame:     0x%p\n"
                   "  NPX State:      %s (0x%x)\n",
                   (Argc < 2) ? "Current Thread:\n" : "",
                   Thread->Cid.UniqueThread,
@@ -1357,7 +1418,7 @@ KdbpCmdProc(
     PEPROCESS Process;
     BOOLEAN ReferencedProcess = FALSE;
     PCHAR State, pend, str1, str2;
-    ULONG ul;
+    ULONG_PTR ul;
     extern LIST_ENTRY PsActiveProcessHead;
 
     if (Argc >= 2 && _stricmp(Argv[1], "list") == 0)
@@ -1419,8 +1480,8 @@ KdbpCmdProc(
             return TRUE;
         }
 
-        KdbpPrint("Attached to process 0x%08x, thread 0x%08x.\n", (ULONG)ul,
-                  (ULONG)KdbCurrentThread->Cid.UniqueThread);
+        KdbpPrint("Attached to process 0x%x, thread 0x%x.\n", ul,
+                  (ULONG_PTR)KdbCurrentThread->Cid.UniqueThread);
     }
     else
     {
@@ -1509,7 +1570,7 @@ KdbpCmdMod(
         {
             ULONG_PTR ntoskrnlBase = ((ULONG_PTR)KdbpCmdMod) & 0xfff00000;
             KdbpPrint("  Base      Size      Name\n");
-            KdbpPrint("  %08x  %08x  %s\n", ntoskrnlBase, 0, "ntoskrnl.exe");
+            KdbpPrint("  %p  %x  %s\n", ntoskrnlBase, 0, "ntoskrnl.exe");
             return TRUE;
         }
 
@@ -1519,7 +1580,7 @@ KdbpCmdMod(
     KdbpPrint("  Base      Size      Name\n");
     for (;;)
     {
-        KdbpPrint("  %08x  %08x  %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->BaseDllName);
+        KdbpPrint("  %p  %x  %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->BaseDllName);
 
         if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, NULL, i++, &LdrEntry))
             break;
@@ -1561,9 +1622,9 @@ KdbpCmdGdtLdtIdt(
 
         for (i = 0; (i + sizeof(SegDesc) - 1) <= Reg.Limit; i += 8)
         {
-            if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)(Reg.Base + i), sizeof(SegDesc))))
+            if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)((ULONG_PTR)Reg.Base + i), sizeof(SegDesc))))
             {
-                KdbpPrint("Couldn't access memory at 0x%08x!\n", Reg.Base + i);
+                KdbpPrint("Couldn't access memory at 0x%08x!\n", (ULONG_PTR)Reg.Base + i);
                 return TRUE;
             }
 
@@ -1608,7 +1669,11 @@ KdbpCmdGdtLdtIdt(
         if (Argv[0][0] == 'g')
         {
             /* Read GDTR */
+#ifdef _M_IX86
             Ke386GetGlobalDescriptorTable(&Reg.Limit);
+#elif defined(_M_AMD64)
+			__sgdt(&Reg.Limit);
+#endif
             i = 8;
         }
         else
@@ -1616,7 +1681,11 @@ KdbpCmdGdtLdtIdt(
             ASSERT(Argv[0][0] == 'l');
 
             /* Read LDTR */
+#ifdef _M_IX86
             Reg.Limit = Ke386GetLocalDescriptorTable();
+#elif defined(_M_AMD64)
+			__sldt(&Reg.Limit);
+#endif
             Reg.Base = 0;
             i = 0;
             ul = 1 << 2;
@@ -1635,9 +1704,9 @@ KdbpCmdGdtLdtIdt(
 
         for (; (i + sizeof(SegDesc) - 1) <= Reg.Limit; i += 8)
         {
-            if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)(Reg.Base + i), sizeof(SegDesc))))
+            if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)((ULONG_PTR)Reg.Base + i), sizeof(SegDesc))))
             {
-                KdbpPrint("Couldn't access memory at 0x%08x!\n", Reg.Base + i);
+                KdbpPrint("Couldn't access memory at 0x%08x!\n", (ULONG_PTR)Reg.Base + i);
                 return TRUE;
             }
 
@@ -1756,6 +1825,7 @@ KdbpCmdPcr(
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
 
+#ifdef _M_IX86
     KdbpPrint("Current PCR is at 0x%08x.\n", (INT)Pcr);
     KdbpPrint("  Tib.ExceptionList:         0x%08x\n"
               "  Tib.StackBase:             0x%08x\n"
@@ -1790,7 +1860,35 @@ KdbpCmdPcr(
               Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
               Pcr->Number, Pcr->L2CacheAssociativity,
               Pcr->VdmAlert, Pcr->SecondLevelCacheSize, Pcr->InterruptMode);
-
+#elif defined(_M_AMD64)
+    KdbpPrint("Current PCR is at 0x%x.\n", (INT_PTR)Pcr);
+    KdbpPrint("  Tib.ExceptionList:         0x%x\n"
+              "  Tib.StackBase:             0x%x\n"
+              "  Tib.StackLimit:            0x%x\n"
+              "  Tib.SubSystemTib:          0x%x\n"
+              "  Tib.FiberData/Version:     0x%x\n"
+              "  Tib.ArbitraryUserPointer:  0x%x\n"
+              "  Tib.Self:                  0x%x\n"
+              "  Self:                      0x%x\n"
+              "  PCRCB:                     0x%x\n"
+              "  Irql:                      0x%x\n"
+              "  KdVersionBlock:            0x%08x\n"
+              "  IDT:                       0x%08x\n"
+              "  GDT:                       0x%08x\n"
+              "  TSS:                       0x%08x\n"
+              "  UserRsp:                   0x%08x\n"
+              "  MajorVersion:              0x%04x\n"
+              "  MinorVersion:              0x%04x\n"
+              "  StallScaleFactor:          0x%08x\n"
+              "  L2CacheAssociativity:      0x%02x\n"
+              "  L2CacheSize:               0x%08x\n",
+              Pcr->NtTib.ExceptionList, Pcr->NtTib.StackBase, Pcr->NtTib.StackLimit,
+              Pcr->NtTib.SubSystemTib, Pcr->NtTib.FiberData, Pcr->NtTib.ArbitraryUserPointer,
+              Pcr->NtTib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql,
+              Pcr->KdVersionBlock, Pcr->IdtBase, Pcr->GdtBase, Pcr->TssBase,Pcr->UserRsp,
+              Pcr->MajorVersion, Pcr->MinorVersion,  Pcr->StallScaleFactor,
+              Pcr->SecondLevelCacheAssociativity, Pcr->SecondLevelCacheSize);
+#endif
     return TRUE;
 }
 
@@ -1801,6 +1899,7 @@ KdbpCmdTss(
     ULONG Argc,
     PCHAR Argv[])
 {
+#ifdef _M_IX86
     KTSS *Tss = KeGetPcr()->TSS;
 
     KdbpPrint("Current TSS is at 0x%08x.\n", (INT)Tss);
@@ -1815,6 +1914,8 @@ KdbpCmdTss(
               Tss->Eip, Tss->Es, Tss->Cs, Tss->Ds, Tss->Fs, Tss->Gs, Tss->IoMapBase);
 
     return TRUE;
+#endif
+    return FALSE;
 }
 
 /*!\brief Bugchecks the system.
@@ -2902,7 +3003,7 @@ KdpPrompt(IN LPSTR InString,
                 KdbpTryGetCharKeyboard(&DummyScanCode, 5);
             }
 
-            /* 
+            /*
              * Null terminate the output string -- documentation states that
              * DbgPrompt does not null terminate, but it does
              */
@@ -2910,7 +3011,7 @@ KdpPrompt(IN LPSTR InString,
 
             /* Print a new line */
             KdPortPutByteEx(&SerialPortInfo, '\r');
-            KdPortPutByteEx(&SerialPortInfo, '\n');         
+            KdPortPutByteEx(&SerialPortInfo, '\n');
 
             /* Release spinlock */
             KiReleaseSpinLock(&KdpSerialSpinLock);
