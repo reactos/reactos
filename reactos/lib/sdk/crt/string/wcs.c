@@ -1132,9 +1132,6 @@ INT CDECL wcscpy_s( wchar_t* wcDest, size_t numElement, const  wchar_t *wcSrc)
         return ERANGE;
     }
 
-    if(size > numElement)
-        size = numElement;
-
     memcpy( wcDest, wcSrc, size*sizeof(WCHAR) );
 
     return 0;
