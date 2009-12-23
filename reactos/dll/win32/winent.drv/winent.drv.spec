@@ -48,7 +48,6 @@
 @ cdecl SetBitmapBits(long ptr long) RosDrv_SetBitmapBits
 @ cdecl SetBkColor(ptr long) RosDrv_SetBkColor
 @ cdecl SetDCBrushColor(ptr long) RosDrv_SetDCBrushColor
-@ cdecl SetDCOrg(ptr long long) RosDrv_SetDCOrg
 @ cdecl SetDCPenColor(ptr long) RosDrv_SetDCPenColor
 @ cdecl SetDIBColorTable(ptr long long ptr) RosDrv_SetDIBColorTable
 @ cdecl SetDIBits(ptr long long long ptr ptr long) RosDrv_SetDIBits
@@ -136,6 +135,7 @@
 # OpenGL
 #@ cdecl wglCopyContext(long long long) RosDrv_wglCopyContext
 #@ cdecl wglCreateContext(ptr) RosDrv_wglCreateContext
+#@ cdecl wglCreateContextAttribsARB(ptr long ptr) RosDrv_wglCreateContextAttribsARB
 #@ cdecl wglDeleteContext(long) RosDrv_wglDeleteContext
 #@ cdecl wglGetProcAddress(str) RosDrv_wglGetProcAddress
 #@ cdecl wglGetPbufferDCARB(ptr ptr) RosDrv_wglGetPbufferDCARB

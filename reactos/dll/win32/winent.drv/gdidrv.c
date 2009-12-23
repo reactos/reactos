@@ -656,12 +656,6 @@ COLORREF CDECL RosDrv_SetDCBrushColor( NTDRV_PDEVICE *physDev, COLORREF crColor 
     return 0;
 }
 
-DWORD CDECL RosDrv_SetDCOrg( NTDRV_PDEVICE *physDev, INT x, INT y )
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 COLORREF CDECL RosDrv_SetDCPenColor( NTDRV_PDEVICE *physDev, COLORREF crColor )
 {
     UNIMPLEMENTED;
