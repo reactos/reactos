@@ -197,7 +197,7 @@ BOOL WINAPI ZombifyActCtx(HANDLE hActCtx)
 /***********************************************************************
  * FindActCtxSectionStringA (KERNEL32.@)
  *
- * Find information about a GUID in an activation context.
+ * Find information about a string in an activation context.
  */
 BOOL WINAPI FindActCtxSectionStringA(DWORD dwFlags, const GUID* lpExtGuid,
                                     ULONG ulId, LPCSTR lpSearchStr,
@@ -229,7 +229,7 @@ BOOL WINAPI FindActCtxSectionStringA(DWORD dwFlags, const GUID* lpExtGuid,
 /***********************************************************************
  * FindActCtxSectionStringW (KERNEL32.@)
  *
- * Find information about a GUID in an activation context.
+ * Find information about a string in an activation context.
  */
 BOOL WINAPI FindActCtxSectionStringW(DWORD dwFlags, const GUID* lpExtGuid,
                                     ULONG ulId, LPCWSTR lpSearchStr,
