@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define __WINE_DEBUG_CHANNEL__
@@ -70,13 +70,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
  *              
  */
 
-#define MAX_ARRAY_ELTS  32
 struct array
 {
     unsigned            start;          /* first valid reference in array */
     unsigned            num;            /* total number of used elts */
     unsigned            max;
-    char*               elts[MAX_ARRAY_ELTS];
+    unsigned            alloc;
+    char**              elts;
 };
 
 /* Structure holding a parsed symbol */
@@ -110,7 +110,7 @@ struct datatype_t
  * where we use a poor-man allocator. It's fast, and since all
  * allocation is pool, memory management is easy (esp. freeing).
  */
-static void*    und_alloc(struct parsed_symbol* sym, size_t len)
+static void*    und_alloc(struct parsed_symbol* sym, unsigned int len)
 {
     void*       ptr;
 
@@ -171,19 +171,36 @@ static void und_free_all(struct parsed_symbol* sym)
  */
 static void str_array_init(struct array* a)
 {
-    a->start = a->num = a->max = 0;
+    a->start = a->num = a->max = a->alloc = 0;
+    a->elts = NULL;
 }
 
 /******************************************************************
  *		str_array_push
  * Adding a new string to an array
  */
-static void str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
+static BOOL str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
                            struct array* a)
 {
+    char**      new;
+
     assert(ptr);
     assert(a);
-    assert(a->num < MAX_ARRAY_ELTS);
+
+    if (!a->alloc)
+    {
+        new = und_alloc(sym, (a->alloc = 32) * sizeof(a->elts[0]));
+        if (!new) return FALSE;
+        a->elts = new;
+    }
+    else if (a->max >= a->alloc)
+    {
+        new = und_alloc(sym, (a->alloc * 2) * sizeof(a->elts[0]));
+        if (!new) return FALSE;
+        memcpy(new, a->elts, a->alloc * sizeof(a->elts[0]));
+        a->alloc *= 2;
+        a->elts = new;
+    }
     if (len == -1) len = strlen(ptr);
     a->elts[a->num] = und_alloc(sym, len + 1);
     assert(a->elts[a->num]);
@@ -202,6 +219,8 @@ static void str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
             TRACE("%p\t%d%c %s\n", a, i, c, a->elts[i]);
         }
     }
+
+    return TRUE;
 }
 
 /******************************************************************
@@ -230,11 +249,11 @@ static char* str_array_get_ref(struct array* cref, unsigned idx)
  */
 static char* str_printf(struct parsed_symbol* sym, const char* format, ...)
 {
-    va_list     args;
-    size_t      len = 1, i, sz;
-    char*       tmp;
-    char*       p;
-    char*       t;
+    va_list      args;
+    unsigned int len = 1, i, sz;
+    char*        tmp;
+    char*        p;
+    char*        t;
 
     va_start(args, format);
     for (i = 0; format[i]; i++)
@@ -316,7 +335,7 @@ static const char* get_number(struct parsed_symbol* sym)
     }
     else if (*sym->current >= 'A' && *sym->current <= 'P')
     {
-        long    ret = 0;
+        int ret = 0;
 
         while (*sym->current >= 'A' && *sym->current <= 'P')
         {
@@ -326,7 +345,7 @@ static const char* get_number(struct parsed_symbol* sym)
         if (*sym->current != '@') return NULL;
 
         ptr = und_alloc(sym, 17);
-        sprintf(ptr, "%s%ld", sgn ? "-" : "", ret);
+        sprintf(ptr, "%s%d", sgn ? "-" : "", ret);
         sym->current++;
     }
     else return NULL;
@@ -345,6 +364,7 @@ static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_t
     struct datatype_t   ct;
     struct array        arg_collect;
     char*               args_str = NULL;
+    char*               last;
     unsigned int        i;
 
     str_array_init(&arg_collect);
@@ -362,8 +382,9 @@ static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_t
             return NULL;
         /* 'void' terminates an argument list in a function */
         if (z_term && !strcmp(ct.left, "void")) break;
-        str_array_push(sym, str_printf(sym, "%s%s", ct.left, ct.right), -1, 
-                       &arg_collect);
+        if (!str_array_push(sym, str_printf(sym, "%s%s", ct.left, ct.right), -1,
+                            &arg_collect))
+            return NULL;
         if (!strcmp(ct.left, "...")) break;
     }
     /* Functions are always terminated by 'Z'. If we made it this far and
@@ -379,7 +400,8 @@ static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_t
         args_str = str_printf(sym, "%s,%s", args_str, arg_collect.elts[i]);
     }
 
-    if (close_char == '>' && args_str && args_str[strlen(args_str) - 1] == '>')
+    last = args_str ? args_str : arg_collect.elts[0];
+    if (close_char == '>' && last[strlen(last) - 1] == '>')
         args_str = str_printf(sym, "%c%s%s %c", 
                               open_char, arg_collect.elts[0], args_str, close_char);
     else
@@ -493,7 +515,8 @@ static char* get_literal_string(struct parsed_symbol* sym)
         }
     } while (*++sym->current != '@');
     sym->current++;
-    str_array_push(sym, ptr, sym->current - 1 - ptr, &sym->names);
+    if (!str_array_push(sym, ptr, sym->current - 1 - ptr, &sym->names))
+        return NULL;
 
     return str_array_get_ref(&sym->names, sym->names.num - sym->names.start - 1);
 }
@@ -561,17 +584,17 @@ static BOOL get_class(struct parsed_symbol* sym)
             if (*++sym->current == '$') 
             {
                 sym->current++;
-                if ((name = get_template_name(sym)))
-                    str_array_push(sym, name, -1, &sym->names);
+                if ((name = get_template_name(sym)) &&
+                    !str_array_push(sym, name, -1, &sym->names))
+                    return FALSE;
             }
             break;
         default:
             name = get_literal_string(sym);
             break;
         }
-        if (!name)
+        if (!name || !str_array_push(sym, name, -1, &sym->stack))
             return FALSE;
-        str_array_push(sym, name, -1, &sym->stack);
     }
     sym->current++;
     return TRUE;
@@ -584,9 +607,9 @@ static BOOL get_class(struct parsed_symbol* sym)
  */
 static char* get_class_string(struct parsed_symbol* sym, int start)
 {
-    int         i;
-    size_t      len, sz;
-    char*       ret;
+    int          i;
+    unsigned int len, sz;
+    char*        ret;
     struct array *a = &sym->stack;
 
     for (len = 0, i = start; i < a->num; i++)
@@ -915,8 +938,9 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
     if (add_pmt && pmt_ref && in_args)
     {
         /* left and right are pushed as two separate strings */
-        str_array_push(sym, ct->left ? ct->left : "", -1, pmt_ref);
-        str_array_push(sym, ct->right ? ct->right : "", -1, pmt_ref);
+        if (!str_array_push(sym, ct->left ? ct->left : "", -1, pmt_ref) ||
+            !str_array_push(sym, ct->right ? ct->right : "", -1, pmt_ref))
+            return FALSE;
     }
 done:
     
@@ -1323,15 +1347,16 @@ static BOOL symbol_demangle(struct parsed_symbol* sym)
         switch (do_after)
         {
         case 1: case 2:
-            sym->stack.num = sym->stack.max = 1;
-            sym->stack.elts[0] = dashed_null;
+            if (!str_array_push(sym, dashed_null, -1, &sym->stack))
+                return FALSE;
             break;
         case 4:
             sym->result = (char*)function_name;
             ret = TRUE;
             goto done;
         default:
-            str_array_push(sym, function_name, -1, &sym->stack);
+            if (!str_array_push(sym, function_name, -1, &sym->stack))
+                return FALSE;
             break;
         }
     }
