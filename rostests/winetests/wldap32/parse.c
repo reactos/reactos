@@ -57,8 +57,13 @@ static void test_ldap_parse_sort_control( LDAP *ld )
     ok( !ret, "ldap_search_ext_sA failed 0x%x\n", ret );
     ok( res != NULL, "expected res != NULL\n" );
 
-    ret = ldap_parse_resultA( NULL, res, &result, NULL, NULL, NULL, &server_ctrls, 1 );
-    ok( ret == LDAP_PARAM_ERROR, "ldap_parse_resultA failed 0x%x\n", ret );
+    if (GetProcAddress(GetModuleHandle("wldap32.dll"), "ber_init"))
+    {
+        ret = ldap_parse_resultA( NULL, res, &result, NULL, NULL, NULL, &server_ctrls, 1 );
+        ok( ret == LDAP_PARAM_ERROR, "ldap_parse_resultA failed 0x%x\n", ret );
+    }
+    else
+        win_skip("Test would crash on older wldap32 versions\n");
 
     result = ~0u;
     ret = ldap_parse_resultA( ld, res, &result, NULL, NULL, NULL, &server_ctrls, 1 );
