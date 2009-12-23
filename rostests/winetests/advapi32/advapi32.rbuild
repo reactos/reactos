@@ -13,6 +13,7 @@
 	<file>crypt_md4.c</file>
 	<file>crypt_md5.c</file>
 	<file>crypt_sha.c</file>
+	<file>eventlog.c</file>
 	<file>lsa.c</file>
 	<file>registry.c</file>
 	<file>security.c</file>
