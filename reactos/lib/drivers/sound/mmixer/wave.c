@@ -8,6 +8,7 @@
 
 #include "priv.h"
 
+const GUID KSPROPSETID_Connection               = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
 const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
@@ -575,4 +576,21 @@ MMixerGetWaveOutCount(
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     return MixerList->WaveOutListCount;
+}
+
+MIXER_STATUS
+MMixerSetWaveStatus(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE PinHandle,
+    IN KSSTATE State)
+{
+    KSPROPERTY Property;
+    ULONG Length;
+
+    /* setup property request */
+    Property.Set = KSPROPSETID_Connection;
+    Property.Id = KSPROPERTY_CONNECTION_STATE;
+    Property.Flags = KSPROPERTY_TYPE_SET;
+
+    return MixerContext->Control(PinHandle, IOCTL_KS_PROPERTY, &Property, sizeof(KSPROPERTY), &State, sizeof(KSSTATE), &Length);
 }

@@ -166,4 +166,10 @@ MMixerOpenWave(
     IN LPWAVEFORMATEX WaveFormat,
     OUT PHANDLE PinHandle);
 
+MIXER_STATUS
+MMixerSetWaveStatus(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE PinHandle,
+    IN KSSTATE State);
+
 #endif
