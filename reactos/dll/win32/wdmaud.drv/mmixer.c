@@ -321,11 +321,10 @@ WdmAudInitUserModeMixer()
     return TRUE;
 }
 
-ULONG
-WdmAudGetMixerCount()
+VOID
+WdmAudCleanupMMixer()
 {
-    /* return number of mixers available */
-    return MMixerGetCount(&MixerContext);
+    /* TODO */
 }
 
 MMRESULT
@@ -340,30 +339,9 @@ WdmAudGetMixerCapabilties(
 }
 
 MMRESULT
-WdmAudCloseMixer(
-    IN HMIXER Handle,
-    IN HANDLE hNotifyEvent)
-{
-    /* FIXME */
-    return MMSYSERR_NOERROR;
-}
-
-MMRESULT
-WdmAudOpenMixer(
-    IN PHANDLE hMixer,
-    IN ULONG DeviceId, 
-    IN HANDLE hNotifyEvent)
-{
-    if (MMixerOpen(&MixerContext, DeviceId, hNotifyEvent, NULL /* FIXME */, hMixer) == MM_STATUS_SUCCESS)
-        return MMSYSERR_NOERROR;
-
-    return MMSYSERR_BADDEVICEID;
-}
-
-MMRESULT
 WdmAudGetLineInfo(
     IN HANDLE hMixer,
-    IN LPMIXERLINE MixLine,
+    IN LPMIXERLINEW MixLine,
     IN ULONG Flags)
 {
     if (MMixerGetLineInfo(&MixerContext, hMixer, Flags, MixLine)  == MM_STATUS_SUCCESS)
@@ -409,18 +387,6 @@ WdmAudGetControlDetails(
     return MMSYSERR_ERROR;
 }
 
-ULONG
-WdmAudGetWaveOutCount()
-{
-    return MMixerGetWaveOutCount(&MixerContext);
-}
-
-ULONG
-WdmAudGetWaveInCount()
-{
-    return MMixerGetWaveInCount(&MixerContext);
-}
-
 MMRESULT
 WdmAudGetWaveOutCapabilities(
     IN ULONG DeviceId, 
@@ -445,17 +411,297 @@ WdmAudGetWaveInCapabilities(
 }
 
 MMRESULT
-WdmAudOpenWave(
-    OUT PHANDLE hPin,
-    IN DWORD DeviceId,
-    IN PWAVEFORMATEX WaveFormat,
-    IN DWORD bWaveIn)
+WdmAudSetWdmWaveDeviceFormatByMMixer(
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  DWORD DeviceId,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize)
 {
-    if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, hPin) == MM_STATUS_SUCCESS)
+    MMDEVICE_TYPE DeviceType;
+    PSOUND_DEVICE SoundDevice;
+    MMRESULT Result;
+    BOOL bWaveIn;
+
+    Result = GetSoundDeviceFromInstance(Instance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
     {
-        //fixme
-        // start stream if waveout
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    bWaveIn = (DeviceType == WAVE_IN_DEVICE_TYPE ? TRUE : FALSE);
+
+    if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, &Instance->Handle) == MM_STATUS_SUCCESS)
+    {
+        if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+        {
+            MMixerSetWaveStatus(&MixerContext, Instance->Handle, KSSTATE_ACQUIRE);
+            MMixerSetWaveStatus(&MixerContext, Instance->Handle, KSSTATE_PAUSE);
+            MMixerSetWaveStatus(&MixerContext, Instance->Handle, KSSTATE_RUN);
+        }
         return MMSYSERR_NOERROR;
     }
     return MMSYSERR_ERROR;
+}
+
+
+MMRESULT
+WdmAudGetCapabilitiesByMMixer(
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD DeviceId,
+    OUT PVOID Capabilities,
+    IN  DWORD CapabilitiesSize)
+{
+    MMDEVICE_TYPE DeviceType;
+    MMRESULT Result;
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    if (DeviceType == MIXER_DEVICE_TYPE)
+    {
+        return WdmAudGetMixerCapabilties(DeviceId, (LPMIXERCAPSW)Capabilities);
+    }
+    else if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        return WdmAudGetWaveOutCapabilities(DeviceId, (LPWAVEOUTCAPSW)Capabilities);
+    }
+    else if (DeviceType == WAVE_IN_DEVICE_TYPE)
+    {
+        return WdmAudGetWaveInCapabilities(DeviceId, (LPWAVEINCAPSW)Capabilities);
+    }
+    else
+    {
+        // not supported
+        return MMSYSERR_ERROR;
+    }
+}
+
+MMRESULT
+WdmAudOpenSoundDeviceByMMixer(
+    IN  struct _SOUND_DEVICE* SoundDevice,
+    OUT PVOID* Handle)
+{
+    /* no-op */
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+WdmAudCloseSoundDeviceByMMixer(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  PVOID Handle)
+{
+    MMDEVICE_TYPE DeviceType;
+    PSOUND_DEVICE SoundDevice;
+    MMRESULT Result;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    if (DeviceType == MIXER_DEVICE_TYPE)
+    {
+        /* no op */
+        return MMSYSERR_NOERROR;
+    }
+    else if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        /* make sure the pin is stopped */
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_STOP);
+
+        CloseHandle(Handle);
+        return MMSYSERR_NOERROR;
+    }
+
+    /* midi is not supported */
+    return MMSYSERR_ERROR;
+}
+
+MMRESULT
+WdmAudGetNumDevsByMMixer(
+    IN  MMDEVICE_TYPE DeviceType,
+    OUT DWORD* DeviceCount)
+{
+    switch(DeviceType)
+    {
+        case MIXER_DEVICE_TYPE:
+            *DeviceCount = MMixerGetCount(&MixerContext);
+            break;
+        case WAVE_OUT_DEVICE_TYPE:
+            *DeviceCount = MMixerGetWaveOutCount(&MixerContext);
+            break;
+        case WAVE_IN_DEVICE_TYPE:
+            *DeviceCount = MMixerGetWaveInCount(&MixerContext);
+            break;
+        default:
+            *DeviceCount = 0;
+    }
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+WdmAudQueryMixerInfoByMMixer(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN UINT uMsg,
+    IN LPVOID Parameter,
+    IN DWORD Flags)
+{
+    LPMIXERLINEW MixLine;
+    LPMIXERLINECONTROLSW MixControls;
+    LPMIXERCONTROLDETAILS MixDetails;
+
+    MixLine = (LPMIXERLINEW)Parameter;
+    MixControls = (LPMIXERLINECONTROLSW)Parameter;
+    MixDetails = (LPMIXERCONTROLDETAILS)Parameter;
+
+    /* FIXME param checks */
+
+    switch(uMsg)
+    {
+        case MXDM_GETLINEINFO:
+            return WdmAudGetLineInfo(SoundDeviceInstance->Handle, MixLine, Flags);
+        case MXDM_GETLINECONTROLS:
+            return WdmAudGetLineControls(SoundDeviceInstance->Handle, MixControls, Flags);
+       case MXDM_SETCONTROLDETAILS:
+            return WdmAudSetControlDetails(SoundDeviceInstance->Handle, MixDetails, Flags);
+            break;
+       case MXDM_GETCONTROLDETAILS:
+            return WdmAudGetControlDetails(SoundDeviceInstance->Handle, MixDetails, Flags);
+            break;
+       default:
+           SND_ASSERT(0);
+           return MMSYSERR_NOTSUPPORTED;
+    }
+}
+
+MMRESULT
+WdmAudGetDeviceInterfaceStringByMMixer(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize)
+{
+    /* FIXME */
+    return MMSYSERR_NOTSUPPORTED;
+}
+
+MMRESULT
+WdmAudSetMixerDeviceFormatByMMixer(
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  DWORD DeviceId,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize)
+{
+    Instance->hNotifyEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if ( ! Instance->hNotifyEvent )
+        return MMSYSERR_NOMEM;
+
+    if (MMixerOpen(&MixerContext, DeviceId, Instance->hNotifyEvent, NULL /* FIXME */, &Instance->Handle) == MM_STATUS_SUCCESS)
+        return MMSYSERR_NOERROR;
+
+    return MMSYSERR_BADDEVICEID;
+}
+
+MMRESULT
+WdmAudSetWdmWaveStateByMMixer(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN BOOL bStart)
+{
+    if (bStart)
+    {
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_RUN);
+    }
+    else
+    {
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
+        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_STOP);
+    }
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+WdmAudResetStreamByMMixer(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  BOOLEAN bStartReset)
+{
+    /* FIXME */
+    return MMSYSERR_NOTSUPPORTED;
+}
+
+MMRESULT
+WdmAudGetWdmPositionByMMixer(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  MMTIME* Time)
+{
+    /* FIXME */
+    return MMSYSERR_NOTSUPPORTED;
+}
+
+MMRESULT
+WdmAudCommitWaveBufferByMMixer(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID OffsetPtr,
+    IN  DWORD Length,
+    IN  PSOUND_OVERLAPPED Overlap,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
+{
+    KSSTREAM_HEADER Packet;
+    PSOUND_DEVICE SoundDevice;
+    MMDEVICE_TYPE DeviceType;
+    MMRESULT Result;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    /* setup stream packet */
+    ZeroMemory(&Packet, sizeof(KSSTREAM_HEADER));
+    Packet.Size = sizeof(KSSTREAM_HEADER);
+    Packet.PresentationTime.Numerator = 1;
+    Packet.PresentationTime.Denominator = 1;
+    Packet.Data = OffsetPtr;
+    Packet.FrameExtent = Length;
+
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        Packet.DataUsed = Length;
+    }
+
+    Result =  SyncOverlappedDeviceIoControl(SoundDeviceInstance->Handle,
+                    IOCTL_KS_WRITE_STREAM,
+                    NULL,
+                    0,
+                    &Packet,
+                    sizeof(KSSTREAM_HEADER),
+                    &Length);
+
+    /* FIXXXXXME
+     * don't call completion routine directly
+     */
+    CompletionRoutine(ERROR_SUCCESS, Length, (LPOVERLAPPED)Overlap);
+
+    return MMSYSERR_NOERROR;
 }
