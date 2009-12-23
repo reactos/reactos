@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
  *
@@ -489,6 +487,8 @@ NtGdiSetDIBitsToDeviceInternal(
 
     pDestSurf = pSurf ? &pSurf->SurfObj : NULL;
 
+    ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+
     rcDest.left = XDest;
     rcDest.top = YDest;
     if (bTransformCoordinates)
@@ -499,11 +499,14 @@ NtGdiSetDIBitsToDeviceInternal(
     rcDest.top += pDC->ptlDCOrig.y;
     rcDest.right = rcDest.left + Width;
     rcDest.bottom = rcDest.top + Height;
+    rcDest.top += StartScan;
+
     ptSource.x = XSrc;
     ptSource.y = YSrc;
 
     SourceSize.cx = bmi->bmiHeader.biWidth;
-    SourceSize.cy = ScanLines; // this one --> abs(bmi->bmiHeader.biHeight) - StartScan
+    SourceSize.cy = ScanLines;
+
     DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
     hSourceBitmap = EngCreateBitmap(SourceSize,
@@ -556,6 +559,9 @@ NtGdiSetDIBitsToDeviceInternal(
     EXLATEOBJ_vInitialize(&exlo, ppalDIB, ppalDDB, 0, 0, 0);
 
     /* Copy the bits */
+    DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n", 
+        rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
+        ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
     Status = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
                           NULL,
@@ -574,8 +580,7 @@ NtGdiSetDIBitsToDeviceInternal(
 Exit:
     if (NT_SUCCESS(Status))
     {
-        /* FIXME: Should probably be only the number of lines actually copied */
-        ret = ScanLines; // this one --> abs(Info->bmiHeader.biHeight) - StartScan;
+        ret = ScanLines;
     }
 
     if (ppalDIB) PALETTE_UnlockPalette(ppalDIB);
