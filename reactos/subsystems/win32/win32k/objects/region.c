@@ -2186,6 +2186,7 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
            else if (src2Rgn == NULL)
            {
                DPRINT1("IntGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
+               SetLastWin32Error(ERROR_INVALID_HANDLE);
            }
         }
      }
@@ -2193,6 +2194,7 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
   else
   {
      DPRINT("IntGdiCombineRgn: hDest unavailable\n");
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
      result = ERROR;
   }
   return result;
@@ -2248,6 +2250,7 @@ NtGdiCombineRgn(HRGN  hDest,
                 else if (hSrc2 == NULL)
                 {
                     DPRINT1("NtGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
+                    SetLastWin32Error(ERROR_INVALID_HANDLE);
                 }
             }
 
@@ -2259,6 +2262,7 @@ NtGdiCombineRgn(HRGN  hDest,
     else
     {
         DPRINT("NtGdiCombineRgn: hDest unavailable\n");
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         result = ERROR;
     }
 
