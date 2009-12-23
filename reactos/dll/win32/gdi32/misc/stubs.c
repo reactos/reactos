@@ -1704,25 +1704,6 @@ GetFontData(HDC hdc,
     return NtGdiGetFontData(hdc, dwTable, dwOffset, lpvBuffer, cbData);
 }
 
-
-/*
- * @implemented
- *
- */
-DWORD
-WINAPI
-GetRegionData(HRGN hrgn,
-              DWORD nCount,
-              LPRGNDATA lpRgnData)
-{
-    if (!lpRgnData)
-    {
-        nCount = 0;
-    }
-
-    return NtGdiGetRegionData(hrgn,nCount,lpRgnData);
-}
-
 INT
 WINAPI
 NamedEscape(HDC hdc,

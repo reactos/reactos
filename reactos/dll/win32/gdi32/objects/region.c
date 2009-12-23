@@ -190,7 +190,7 @@ CreateEllipticRgnIndirect(
  */
 HRGN
 WINAPI
-CreateRectRgn(int x1, int y1, int x2,int y2)
+CreateRectRgn(int x1, int y1, int x2, int y2)
 {
     /* FIXME Some part need be done in user mode */
     return NtGdiCreateRectRgn(x1,y1,x2,y2);
@@ -289,15 +289,34 @@ GetMetaRgn(HDC hdc,
  * @implemented
  *
  */
+DWORD
+WINAPI
+GetRegionData(HRGN hrgn,
+              DWORD nCount,
+              LPRGNDATA lpRgnData)
+{
+    if (!lpRgnData)
+    {
+        nCount = 0;
+    }
+
+    return NtGdiGetRegionData(hrgn,nCount,lpRgnData);
+}
+
+/*
+ * @implemented
+ *
+ */
 INT
 WINAPI
 GetRgnBox(HRGN hrgn,
           LPRECT prcOut)
 {
-#if 0
   PRGN_ATTR Rgn_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
      return NtGdiGetRgnBox(hrgn, prcOut);
+
   if (Rgn_Attr->Flags == NULLREGION)
   {
      prcOut->left   = 0;
@@ -307,12 +326,12 @@ GetRgnBox(HRGN hrgn,
   }
   else
   {
-     if (Rgn_Attr->Flags != SIMPLEREGION) return NtGdiGetRgnBox(hrgn, prcOut);
-     *prcOut = Rgn_Attr->Rect;
+     if (Rgn_Attr->Flags != SIMPLEREGION)
+        return NtGdiGetRgnBox(hrgn, prcOut);
+     /* WARNING! prcOut is never checked newbies! */
+     RtlCopyMemory( prcOut, &Rgn_Attr->Rect, sizeof(RECT));
   }
   return Rgn_Attr->Flags;
-#endif
-  return NtGdiGetRgnBox(hrgn, prcOut);
 }
 
 /*
