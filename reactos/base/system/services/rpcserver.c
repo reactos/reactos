@@ -1282,7 +1282,11 @@ DWORD RChangeServiceConfigW(
                                  (wcslen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
         if (dwError != ERROR_SUCCESS)
             goto done;
-        /* FIXME: Update lpService->lpServiceGroup */
+
+        dwError = ScmSetServiceGroup(lpService,
+                                     lpLoadOrderGroup);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     if (lpdwTagId != NULL)
@@ -3058,7 +3062,7 @@ DWORD RChangeServiceConfigA(
         if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
         {
             lpBinaryPathNameW=HeapAlloc(GetProcessHeap(),0, (strlen(lpBinaryPathName)+1) * sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, wcslen(lpBinaryPathNameW)+1);
+            MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, strlen(lpBinaryPathName)+1);
             dwError = RegSetValueExW(hServiceKey,
                                      L"ImagePath",
                                      0,
@@ -3090,7 +3094,7 @@ DWORD RChangeServiceConfigA(
     {
         lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(),
                                       0,
-                                      (strlen(lpLoadOrderGroup)+1) * sizeof(WCHAR));
+                                      (strlen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
         if (lpLoadOrderGroupW == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -3102,7 +3106,7 @@ DWORD RChangeServiceConfigA(
                             lpLoadOrderGroup,
                             -1,
                             lpLoadOrderGroupW,
-                            wcslen(lpLoadOrderGroupW) + 1);
+                            strlen(lpLoadOrderGroup) + 1);
 
         dwError = RegSetValueExW(hServiceKey,
                                  L"Group",
@@ -3111,11 +3115,18 @@ DWORD RChangeServiceConfigA(
                                  (LPBYTE)lpLoadOrderGroupW,
                                  (wcslen(lpLoadOrderGroupW) + 1) * sizeof(WCHAR));
         if (dwError != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
             goto done;
+        }
 
-        /* FIXME: Update lpService->lpServiceGroup */
+        dwError = ScmSetServiceGroup(lpService,
+                                     lpLoadOrderGroupW);
 
         HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
+
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     if (lpdwTagId != NULL)
@@ -3141,7 +3152,7 @@ DWORD RChangeServiceConfigA(
     {
         lpDependenciesW = HeapAlloc(GetProcessHeap(),
                                     0,
-                                    (strlen(lpDependencies)+1) * sizeof(WCHAR));
+                                    (strlen(lpDependencies) + 1) * sizeof(WCHAR));
         if (lpDependenciesW == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -3153,7 +3164,7 @@ DWORD RChangeServiceConfigA(
                             lpDependencies,
                             dwDependSize,
                             lpDependenciesW,
-                            wcslen(lpDependenciesW)+1);
+                            strlen(lpDependencies) + 1);
 
         dwError = ScmWriteDependencies(hServiceKey,
                                        (LPWSTR)lpDependenciesW,
@@ -3469,8 +3480,7 @@ DWORD ROpenSCManagerA(
         RtlCreateUnicodeStringFromAsciiz(&DatabaseName,
                                          lpDatabaseName);
 
-    dwError = ROpenSCManagerW(//BindingHandle,
-                              lpMachineName ? MachineName.Buffer : NULL,
+    dwError = ROpenSCManagerW(lpMachineName ? MachineName.Buffer : NULL,
                               lpDatabaseName ? DatabaseName.Buffer : NULL,
                               dwDesiredAccess,
                               lpScHandle);
@@ -3501,8 +3511,7 @@ DWORD ROpenServiceA(
         RtlCreateUnicodeStringFromAsciiz(&ServiceName,
                                          lpServiceName);
 
-    dwError = ROpenServiceW(//BindingHandle,
-                            hSCManager,
+    dwError = ROpenServiceW(hSCManager,
                             lpServiceName ? ServiceName.Buffer : NULL,
                             dwDesiredAccess,
                             lpServiceHandle);
