@@ -38,6 +38,9 @@ static BOOL (WINAPI *pChangeServiceConfig2A)(SC_HANDLE,DWORD,LPVOID);
 static BOOL (WINAPI *pEnumServicesStatusExA)(SC_HANDLE, SC_ENUM_TYPE, DWORD,
                                              DWORD, LPBYTE, DWORD, LPDWORD,
                                              LPDWORD, LPDWORD, LPCSTR);
+static BOOL (WINAPI *pEnumServicesStatusExW)(SC_HANDLE, SC_ENUM_TYPE, DWORD,
+                                             DWORD, LPBYTE, DWORD, LPDWORD,
+                                             LPDWORD, LPDWORD, LPCWSTR);
 static DWORD (WINAPI *pGetSecurityInfo)(HANDLE, SE_OBJECT_TYPE, SECURITY_INFORMATION,
                                         PSID*, PSID*, PACL*, PACL*, PSECURITY_DESCRIPTOR*);
 static BOOL (WINAPI *pQueryServiceConfig2A)(SC_HANDLE,DWORD,LPBYTE,DWORD,LPDWORD);
@@ -51,6 +54,7 @@ static void init_function_pointers(void)
 
     pChangeServiceConfig2A = (void*)GetProcAddress(hadvapi32, "ChangeServiceConfig2A");
     pEnumServicesStatusExA= (void*)GetProcAddress(hadvapi32, "EnumServicesStatusExA");
+    pEnumServicesStatusExW= (void*)GetProcAddress(hadvapi32, "EnumServicesStatusExW");
     pGetSecurityInfo = (void *)GetProcAddress(hadvapi32, "GetSecurityInfo");
     pQueryServiceConfig2A= (void*)GetProcAddress(hadvapi32, "QueryServiceConfig2A");
     pQueryServiceConfig2W= (void*)GetProcAddress(hadvapi32, "QueryServiceConfig2W");
@@ -1030,6 +1034,7 @@ static void test_enum_svc(void)
     SC_HANDLE scm_handle;
     BOOL ret;
     DWORD bufsize, needed, returned, resume;
+    DWORD neededW, returnedW;
     DWORD tempneeded, tempreturned, missing;
     DWORD servicecountactive, servicecountinactive;
     ENUM_SERVICE_STATUS *services;
@@ -1159,6 +1164,12 @@ static void test_enum_svc(void)
     ok(GetLastError() == ERROR_MORE_DATA,
        "Expected ERROR_MORE_DATA, got %d\n", GetLastError());
     }
+
+    /* Test to show we get the same needed buffer size for the W-call */
+    neededW = 0xdeadbeef;
+    ret = EnumServicesStatusW(scm_handle, SERVICE_WIN32, SERVICE_STATE_ALL, NULL, 0,
+                              &neededW, &returnedW, NULL);
+    ok(neededW == needed, "Expected needed buffersize to be the same for A- and W-calls\n");
 
     /* Store the needed bytes */
     tempneeded = needed;
@@ -1505,6 +1516,12 @@ static void test_enum_svc(void)
     ok(GetLastError() == ERROR_MORE_DATA,
        "Expected ERROR_MORE_DATA, got %d\n", GetLastError());
     }
+
+    /* Test to show we get the same needed buffer size for the W-call */
+    neededW = 0xdeadbeef;
+    ret = pEnumServicesStatusExW(scm_handle, 0, SERVICE_WIN32, SERVICE_STATE_ALL,
+                                 NULL, 0, &neededW, &returnedW, NULL, NULL);
+    ok(neededW == needed, "Expected needed buffersize to be the same for A- and W-calls\n");
 
     /* Store the needed bytes */
     tempneeded = needed;

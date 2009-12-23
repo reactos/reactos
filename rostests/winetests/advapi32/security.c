@@ -79,6 +79,7 @@ typedef LPSTR (WINAPI *fnGetTrusteeNameA)( PTRUSTEEA pTrustee );
 typedef BOOL (WINAPI *fnMakeSelfRelativeSD)( PSECURITY_DESCRIPTOR, PSECURITY_DESCRIPTOR, LPDWORD );
 typedef BOOL (WINAPI *fnConvertSidToStringSidA)( PSID pSid, LPSTR *str );
 typedef BOOL (WINAPI *fnConvertStringSidToSidA)( LPCSTR str, PSID pSid );
+static BOOL (WINAPI *pCheckTokenMembership)(HANDLE, PSID, PBOOL);
 static BOOL (WINAPI *pConvertStringSecurityDescriptorToSecurityDescriptorA)(LPCSTR, DWORD,
                                                                             PSECURITY_DESCRIPTOR*, PULONG );
 static BOOL (WINAPI *pConvertStringSecurityDescriptorToSecurityDescriptorW)(LPCWSTR, DWORD,
@@ -153,6 +154,7 @@ static void init(void)
     pAddAccessAllowedAceEx = (void *)GetProcAddress(hmod, "AddAccessAllowedAceEx");
     pAddAccessDeniedAceEx = (void *)GetProcAddress(hmod, "AddAccessDeniedAceEx");
     pAddAuditAccessAceEx = (void *)GetProcAddress(hmod, "AddAuditAccessAceEx");
+    pCheckTokenMembership = (void *)GetProcAddress(hmod, "CheckTokenMembership");
     pConvertStringSecurityDescriptorToSecurityDescriptorA =
         (void *)GetProcAddress(hmod, "ConvertStringSecurityDescriptorToSecurityDescriptorA" );
     pConvertStringSecurityDescriptorToSecurityDescriptorW =
@@ -254,6 +256,7 @@ static void test_sid(void)
     ok(pisid->SubAuthority[0] == 21, "Invalid subauthority 0 - expceted 21, got %d\n", pisid->SubAuthority[0]);
     ok(pisid->SubAuthority[3] == 4576, "Invalid subauthority 0 - expceted 4576, got %d\n", pisid->SubAuthority[3]);
     LocalFree(str);
+    LocalFree(psid);
 
     for( i = 0; i < sizeof(refs) / sizeof(refs[0]); i++ )
     {
@@ -1226,10 +1229,18 @@ static void test_token_attr(void)
     ok(ret, "OpenProcessToken failed with error %d\n", GetLastError());
 
     /* groups */
+    SetLastError(0xdeadbeef);
     ret = GetTokenInformation(Token, TokenGroups, NULL, 0, &Size);
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+        "GetTokenInformation(TokenGroups) %s with error %d\n",
+        ret ? "succeeded" : "failed", GetLastError());
     Groups = HeapAlloc(GetProcessHeap(), 0, Size);
+    SetLastError(0xdeadbeef);
     ret = GetTokenInformation(Token, TokenGroups, Groups, Size, &Size);
     ok(ret, "GetTokenInformation(TokenGroups) failed with error %d\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef,
+       "GetTokenInformation shouldn't have set last error to %d\n",
+       GetLastError());
     trace("TokenGroups:\n");
     for (i = 0; i < Groups->GroupCount; i++)
     {
@@ -1238,12 +1249,12 @@ static void test_token_attr(void)
         DWORD DomainLength = 255;
         TCHAR Domain[255];
         SID_NAME_USE SidNameUse;
-        pConvertSidToStringSidA(Groups->Groups[i].Sid, &SidString);
         Name[0] = '\0';
         Domain[0] = '\0';
         ret = LookupAccountSid(NULL, Groups->Groups[i].Sid, Name, &NameLength, Domain, &DomainLength, &SidNameUse);
         if (ret)
         {
+            pConvertSidToStringSidA(Groups->Groups[i].Sid, &SidString);
             trace("%s, %s\\%s use: %d attr: 0x%08x\n", SidString, Domain, Name, SidNameUse, Groups->Groups[i].Attributes);
             LocalFree(SidString);
         }
@@ -1478,6 +1489,8 @@ static void test_CreateWellKnownSid(void)
             ok(memcmp(buf2, sid_buffer, cb) == 0, "SID create with domain is different than without (%d)\n", i);
         }
     }
+
+    LocalFree(domainsid);
 }
 
 static void test_LookupAccountSid(void)
@@ -2047,7 +2060,8 @@ static void test_LookupAccountName(void)
         domain = HeapAlloc(GetProcessHeap(), 0, domain_size);
         ret = LookupAccountNameA(NULL, computer_name, psid, &sid_size, domain, &domain_size, &sid_use);
         ok(ret, "LookupAccountNameA failed: %d\n", GetLastError());
-        ok(sid_use == SidTypeDomain, "expected SidTypeDomain, got %d\n", sid_use);
+        ok(sid_use == SidTypeDomain ||
+           (sid_use == SidTypeUser && ! strcmp(computer_name, user_name)), "expected SidTypeDomain for %s, got %d\n", computer_name, sid_use);
         HeapFree(GetProcessHeap(), 0, domain);
         HeapFree(GetProcessHeap(), 0, psid);
     }
@@ -2528,11 +2542,19 @@ static void test_SetEntriesInAcl(void)
     ExplicitAccess.grfAccessPermissions = KEY_WRITE;
     ExplicitAccess.grfAccessMode = GRANT_ACCESS;
     ExplicitAccess.grfInheritance = NO_INHERITANCE;
+    ExplicitAccess.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+    ExplicitAccess.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ExplicitAccess.Trustee.ptstrName = EveryoneSid;
+    ExplicitAccess.Trustee.MultipleTrusteeOperation = 0xDEADBEEF;
+    ExplicitAccess.Trustee.pMultipleTrustee = (PVOID)0xDEADBEEF;
+    res = pSetEntriesInAclW(1, &ExplicitAccess, OldAcl, &NewAcl);
+    ok(res == ERROR_SUCCESS, "SetEntriesInAclW failed: %u\n", res);
+    ok(NewAcl != NULL, "returned acl was NULL\n");
+    LocalFree(NewAcl);
+
+    ExplicitAccess.Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
     ExplicitAccess.Trustee.pMultipleTrustee = NULL;
     ExplicitAccess.Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
-    ExplicitAccess.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-    ExplicitAccess.Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
-    ExplicitAccess.Trustee.ptstrName = EveryoneSid;
     res = pSetEntriesInAclW(1, &ExplicitAccess, OldAcl, &NewAcl);
     ok(res == ERROR_SUCCESS, "SetEntriesInAclW failed: %u\n", res);
     ok(NewAcl != NULL, "returned acl was NULL\n");
@@ -2651,6 +2673,50 @@ static void test_ConvertStringSecurityDescriptor(void)
     BOOL ret;
     PSECURITY_DESCRIPTOR pSD;
     static const WCHAR Blank[] = { 0 };
+    int i;
+    static const struct
+    {
+        const char *sidstring;
+        DWORD      revision;
+        BOOL       ret;
+        DWORD      GLE;
+        DWORD      altGLE;
+    } cssd[] =
+    {
+        { "D:(A;;GA;;;WD)",                  0xdeadbeef,      FALSE, ERROR_UNKNOWN_REVISION },
+        /* test ACE string type */
+        { "D:(A;;GA;;;WD)",                  SDDL_REVISION_1, TRUE },
+        { "D:(D;;GA;;;WD)",                  SDDL_REVISION_1, TRUE },
+        { "ERROR:(D;;GA;;;WD)",              SDDL_REVISION_1, FALSE, ERROR_INVALID_PARAMETER },
+        /* test ACE string with spaces */
+        { " D:(D;;GA;;;WD)",                SDDL_REVISION_1, TRUE },
+        { "D: (D;;GA;;;WD)",                SDDL_REVISION_1, TRUE },
+        { "D:( D;;GA;;;WD)",                SDDL_REVISION_1, TRUE },
+        { "D:(D ;;GA;;;WD)",                SDDL_REVISION_1, FALSE, RPC_S_INVALID_STRING_UUID, ERROR_INVALID_ACL }, /* Vista+ */
+        { "D:(D; ;GA;;;WD)",                SDDL_REVISION_1, TRUE },
+        { "D:(D;; GA;;;WD)",                SDDL_REVISION_1, TRUE },
+        { "D:(D;;GA ;;;WD)",                SDDL_REVISION_1, FALSE, ERROR_INVALID_ACL },
+        { "D:(D;;GA; ;;WD)",                SDDL_REVISION_1, TRUE },
+        { "D:(D;;GA;; ;WD)",                SDDL_REVISION_1, TRUE },
+        { "D:(D;;GA;;; WD)",                SDDL_REVISION_1, TRUE },
+        { "D:(D;;GA;;;WD )",                SDDL_REVISION_1, TRUE },
+        /* test ACE string access rights */
+        { "D:(A;;GA;;;WD)",                  SDDL_REVISION_1, TRUE },
+        { "D:(A;;GRGWGX;;;WD)",              SDDL_REVISION_1, TRUE },
+        { "D:(A;;RCSDWDWO;;;WD)",            SDDL_REVISION_1, TRUE },
+        { "D:(A;;RPWPCCDCLCSWLODTCR;;;WD)",  SDDL_REVISION_1, TRUE },
+        { "D:(A;;FAFRFWFX;;;WD)",            SDDL_REVISION_1, TRUE },
+        { "D:(A;;KAKRKWKX;;;WD)",            SDDL_REVISION_1, TRUE },
+        { "D:(A;;0xFFFFFFFF;;;WD)",          SDDL_REVISION_1, TRUE },
+        { "S:(AU;;0xFFFFFFFF;;;WD)",         SDDL_REVISION_1, TRUE },
+        /* test ACE string access right error case */
+        { "D:(A;;ROB;;;WD)",                 SDDL_REVISION_1, FALSE, ERROR_INVALID_ACL },
+        /* test behaviour with empty strings */
+        { "",                                SDDL_REVISION_1, TRUE },
+        /* test ACE string SID */
+        { "D:(D;;GA;;;S-1-0-0)",             SDDL_REVISION_1, TRUE },
+        { "D:(D;;GA;;;Nonexistent account)", SDDL_REVISION_1, FALSE, ERROR_INVALID_ACL, ERROR_INVALID_SID } /* W2K */
+    };
 
     if (!pConvertStringSecurityDescriptorToSecurityDescriptorA)
     {
@@ -2658,82 +2724,22 @@ static void test_ConvertStringSecurityDescriptor(void)
         return;
     }
 
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;GA;;;WD)", 0xdeadbeef, &pSD, NULL);
-    ok(!ret && GetLastError() == ERROR_UNKNOWN_REVISION,
-        "ConvertStringSecurityDescriptorToSecurityDescriptor should have failed with ERROR_UNKNOWN_REVISION instead of %d\n",
-        GetLastError());
+    for (i = 0; i < sizeof(cssd)/sizeof(cssd[0]); i++)
+    {
+        DWORD GLE;
 
-    /* test ACE string type */
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;GA;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(D;;GA;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "ERROR:(D;;GA;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-        "ConvertStringSecurityDescriptorToSecurityDescriptor should have failed with ERROR_INVALID_PARAMETER instead of %d\n",
-        GetLastError());
-
-    /* test ACE string access rights */
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;GA;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;GRGWGX;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;RCSDWDWO;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;RPWPCCDCLCSWLODTCR;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;FAFRFWFX;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;KAKRKWKX;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;0xFFFFFFFF;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "S:(AU;;0xFFFFFFFF;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-    LocalFree(pSD);
-
-    /* test ACE string access right error case */
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(A;;ROB;;;WD)", SDDL_REVISION_1, &pSD, NULL);
-    ok(!ret && GetLastError() == ERROR_INVALID_ACL,
-        "ConvertStringSecurityDescriptorToSecurityDescriptor should have failed with ERROR_INVALID_ACL instead of %d\n",
-        GetLastError());
+        SetLastError(0xdeadbeef);
+        ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
+            cssd[i].sidstring, cssd[i].revision, &pSD, NULL);
+        GLE = GetLastError();
+        ok(ret == cssd[i].ret, "(%02d) Expected %s (%d)\n", i, cssd[i].ret ? "success" : "failure", GLE);
+        if (!cssd[i].ret)
+            ok(GLE == cssd[i].GLE ||
+               (cssd[i].altGLE && GLE == cssd[i].altGLE),
+               "(%02d) Unexpected last error %d\n", i, GLE);
+        if (ret)
+            LocalFree(pSD);
+    }
 
     /* test behaviour with NULL parameters */
     SetLastError(0xdeadbeef);
@@ -2767,28 +2773,10 @@ static void test_ConvertStringSecurityDescriptor(void)
 
     /* test behaviour with empty strings */
     SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-
-    SetLastError(0xdeadbeef);
     ret = pConvertStringSecurityDescriptorToSecurityDescriptorW(
         Blank, SDDL_REVISION_1, &pSD, NULL);
     ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
-
-    /* test ACE string SID */
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(D;;GA;;;S-1-0-0)", SDDL_REVISION_1, &pSD, NULL);
-    ok(ret, "ConvertStringSecurityDescriptorToSecurityDescriptor failed with error %d\n", GetLastError());
     LocalFree(pSD);
-
-    SetLastError(0xdeadbeef);
-    ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
-        "D:(D;;GA;;;Nonexistent account)", SDDL_REVISION_1, &pSD, NULL);
-    ok(!ret, "Expected failure, got %d\n", ret);
-    ok(GetLastError() == ERROR_INVALID_ACL || GetLastError() == ERROR_INVALID_SID,
-       "Expected ERROR_INVALID_ACL or ERROR_INVALID_SID, got %d\n", GetLastError());
 }
 
 static void test_ConvertSecurityDescriptorToString(void)
@@ -2900,6 +2888,9 @@ static void test_ConvertSecurityDescriptorToString(void)
         CHECK_ONE_OF_AND_FREE("O:SYG:S-1-5-21-93476-23408-4576D:S:(AU;OICINPIOIDSAFA;CCDCLCSWRPRC;;;SU)(AU;NPSA;0x12019f;;;SU)", /* XP */
             "O:SYG:S-1-5-21-93476-23408-4576D:NO_ACCESS_CONTROLS:(AU;OICINPIOIDSAFA;CCDCLCSWRPRC;;;SU)(AU;NPSA;0x12019f;;;SU)" /* Vista */);
     }
+
+    LocalFree(psid2);
+    LocalFree(psid);
 }
 
 static void test_SetSecurityDescriptorControl (PSECURITY_DESCRIPTOR sec)
@@ -3171,8 +3162,10 @@ static void test_GetSecurityInfo(void)
     ok(sd != NULL, "GetSecurityInfo\n");
     ok(owner != NULL, "GetSecurityInfo\n");
     ok(group != NULL, "GetSecurityInfo\n");
-    ok(dacl != NULL, "GetSecurityInfo\n");
-    ok(IsValidAcl(dacl), "GetSecurityInfo\n");
+    if (dacl != NULL)
+        ok(IsValidAcl(dacl), "GetSecurityInfo\n");
+    else
+        win_skip("No ACL information returned\n");
 
     LocalFree(sd);
 
@@ -3191,8 +3184,10 @@ static void test_GetSecurityInfo(void)
     ok(ret == ERROR_SUCCESS, "GetSecurityInfo returned %d\n", ret);
     ok(owner != NULL, "GetSecurityInfo\n");
     ok(group != NULL, "GetSecurityInfo\n");
-    ok(dacl != NULL, "GetSecurityInfo\n");
-    ok(IsValidAcl(dacl), "GetSecurityInfo\n");
+    if (dacl != NULL)
+        ok(IsValidAcl(dacl), "GetSecurityInfo\n");
+    else
+        win_skip("No ACL information returned\n");
 
     CloseHandle(obj);
 }
@@ -3220,9 +3215,138 @@ static void test_GetSidSubAuthority(void)
     ok(*pGetSidSubAuthority(psid,1) == 93476,"GetSidSubAuthority gave %d expected 93476\n",*pGetSidSubAuthority(psid,1));
     ok(GetLastError() == 0,"GetLastError returned %d instead of 0\n",GetLastError());
     SetLastError(0xbebecaca);
-    todo_wine ok(*pGetSidSubAuthority(psid,4) == 0,"GetSidSubAuthority gave %d,expected 0\n",*pGetSidSubAuthority(psid,4));
+    ok(pGetSidSubAuthority(psid,4) != NULL,"Expected out of bounds GetSidSubAuthority to return a non-NULL pointer\n");
     ok(GetLastError() == 0,"GetLastError returned %d instead of 0\n",GetLastError());
     LocalFree(psid);
+}
+
+static void test_CheckTokenMembership(void)
+{
+    PTOKEN_GROUPS token_groups;
+    DWORD size;
+    HANDLE process_token, token;
+    BOOL is_member;
+    BOOL ret;
+    DWORD i;
+
+    if (!pCheckTokenMembership)
+    {
+        win_skip("CheckTokenMembership is not available\n");
+        return;
+    }
+    ret = OpenProcessToken(GetCurrentProcess(), TOKEN_DUPLICATE|TOKEN_QUERY, &process_token);
+    ok(ret, "OpenProcessToken failed with error %d\n", GetLastError());
+
+    ret = DuplicateToken(process_token, SecurityImpersonation, &token);
+    ok(ret, "DuplicateToken failed with error %d\n", GetLastError());
+
+    /* groups */
+    ret = GetTokenInformation(token, TokenGroups, NULL, 0, &size);
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+        "GetTokenInformation(TokenGroups) %s with error %d\n",
+        ret ? "succeeded" : "failed", GetLastError());
+    token_groups = HeapAlloc(GetProcessHeap(), 0, size);
+    ret = GetTokenInformation(token, TokenGroups, token_groups, size, &size);
+    ok(ret, "GetTokenInformation(TokenGroups) failed with error %d\n", GetLastError());
+
+    for (i = 0; i < token_groups->GroupCount; i++)
+    {
+        if (token_groups->Groups[i].Attributes & SE_GROUP_ENABLED)
+            break;
+    }
+
+    if (i == token_groups->GroupCount)
+    {
+        HeapFree(GetProcessHeap(), 0, token_groups);
+        CloseHandle(token);
+        skip("user not a member of any group\n");
+        return;
+    }
+
+    ret = pCheckTokenMembership(token, token_groups->Groups[i].Sid, &is_member);
+    ok(ret, "CheckTokenMembership failed with error %d\n", GetLastError());
+    ok(is_member, "CheckTokenMembership should have detected sid as member\n");
+
+    ret = pCheckTokenMembership(NULL, token_groups->Groups[i].Sid, &is_member);
+    ok(ret, "CheckTokenMembership failed with error %d\n", GetLastError());
+    ok(is_member, "CheckTokenMembership should have detected sid as member\n");
+
+    ret = pCheckTokenMembership(process_token, token_groups->Groups[i].Sid, &is_member);
+todo_wine {
+    ok(!ret && GetLastError() == ERROR_NO_IMPERSONATION_TOKEN,
+        "CheckTokenMembership with process token %s with error %d\n",
+        ret ? "succeeded" : "failed", GetLastError());
+    ok(!is_member, "CheckTokenMembership should have cleared is_member\n");
+}
+
+    HeapFree(GetProcessHeap(), 0, token_groups);
+    CloseHandle(token);
+    CloseHandle(process_token);
+}
+
+static void test_EqualSid(void)
+{
+    PSID sid1, sid2;
+    BOOL ret;
+    SID_IDENTIFIER_AUTHORITY SIDAuthWorld = { SECURITY_WORLD_SID_AUTHORITY };
+    SID_IDENTIFIER_AUTHORITY SIDAuthNT = { SECURITY_NT_AUTHORITY };
+
+    SetLastError(0xdeadbeef);
+    ret = AllocateAndInitializeSid(&SIDAuthNT, 2, SECURITY_BUILTIN_DOMAIN_RID,
+        DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &sid1);
+    if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("AllocateAndInitializeSid is not implemented\n");
+        return;
+    }
+    ok(ret, "AllocateAndInitializeSid failed with error %d\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef,
+       "AllocateAndInitializeSid shouldn't have set last error to %d\n",
+       GetLastError());
+
+    ret = AllocateAndInitializeSid(&SIDAuthWorld, 1, SECURITY_WORLD_RID,
+        0, 0, 0, 0, 0, 0, 0, &sid2);
+    ok(ret, "AllocateAndInitializeSid failed with error %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = EqualSid(sid1, sid2);
+    ok(!ret, "World and domain admins sids shouldn't have been equal\n");
+    ok(GetLastError() == ERROR_SUCCESS ||
+       broken(GetLastError() == 0xdeadbeef), /* NT4 */
+       "EqualSid should have set last error to ERROR_SUCCESS instead of %d\n",
+       GetLastError());
+
+    SetLastError(0xdeadbeef);
+    sid2 = FreeSid(sid2);
+    ok(!sid2, "FreeSid should have returned NULL instead of %p\n", sid2);
+    ok(GetLastError() == 0xdeadbeef,
+       "FreeSid shouldn't have set last error to %d\n",
+       GetLastError());
+
+    ret = AllocateAndInitializeSid(&SIDAuthNT, 2, SECURITY_BUILTIN_DOMAIN_RID,
+        DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &sid2);
+    ok(ret, "AllocateAndInitializeSid failed with error %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = EqualSid(sid1, sid2);
+    ok(ret, "Same sids should have been equal\n");
+    ok(GetLastError() == ERROR_SUCCESS ||
+       broken(GetLastError() == 0xdeadbeef), /* NT4 */
+       "EqualSid should have set last error to ERROR_SUCCESS instead of %d\n",
+       GetLastError());
+
+    ((SID *)sid2)->Revision = 2;
+    SetLastError(0xdeadbeef);
+    ret = EqualSid(sid1, sid2);
+    ok(!ret, "EqualSid with invalid sid should have returned FALSE\n");
+    ok(GetLastError() == ERROR_SUCCESS ||
+       broken(GetLastError() == 0xdeadbeef), /* NT4 */
+       "EqualSid should have set last error to ERROR_SUCCESS instead of %d\n",
+       GetLastError());
+    ((SID *)sid2)->Revision = SID_REVISION;
+
+    FreeSid(sid1);
+    FreeSid(sid2);
 }
 
 START_TEST(security)
@@ -3255,4 +3379,6 @@ START_TEST(security)
     test_acls();
     test_GetSecurityInfo();
     test_GetSidSubAuthority();
+    test_CheckTokenMembership();
+    test_EqualSid();
 }
