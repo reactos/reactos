@@ -1,6 +1,5 @@
 #include "precomp.h"
 
-
 static
 VOID
 FASTCALL
@@ -136,6 +135,20 @@ MirrorRgnDC(HDC hdc, HRGN hRgn, HRGN *phRgn)
 /* FUNCTIONS *****************************************************************/
 
 /*
+ * @unimplemented
+ */
+INT
+WINAPI
+CombineRgn(HRGN  hDest,
+           HRGN  hSrc1,
+           HRGN  hSrc2,
+           INT  CombineMode)
+{
+    /* FIXME some part should be done in user mode */
+    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+}
+
+/*
  * @implemented
  */
 HRGN
@@ -144,7 +157,6 @@ CreatePolygonRgn( const POINT * lppt, int cPoints, int fnPolyFillMode)
 {
     return (HRGN) NtGdiPolyPolyDraw( (HDC) fnPolyFillMode, (PPOINT) lppt, (PULONG) &cPoints, 1, GdiPolyPolyRgn);
 }
-
 
 /*
  * @implemented
@@ -158,7 +170,6 @@ CreatePolyPolygonRgn( const POINT* lppt,
 {
     return (HRGN) NtGdiPolyPolyDraw(  (HDC) fnPolyFillMode, (PPOINT) lppt, (PULONG) lpPolyCounts, (ULONG) nCount, GdiPolyPolyRgn );
 }
-
 
 /*
  * @implemented
@@ -202,6 +213,17 @@ CreateRectRgnIndirect(
 /*
  * @implemented
  */
+INT
+WINAPI
+ExcludeClipRect(IN HDC hdc, IN INT xLeft, IN INT yTop, IN INT xRight, IN INT yBottom)
+{
+    /* FIXME some part need be done on user mode size */
+    return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
+}
+
+/*
+ * @implemented
+ */
 HRGN
 WINAPI
 ExtCreateRegion(
@@ -221,6 +243,17 @@ ExtCreateRegion(
    }
    SetLastError(ERROR_INVALID_PARAMETER);
    return NULL;
+}
+
+/*
+ * @implemented
+ */
+INT
+WINAPI
+ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
+{
+    /* FIXME some part need be done on user mode size */
+    return NtGdiExtSelectClipRgn(hdc,hrgn, iMode);
 }
 
 /*
@@ -254,6 +287,70 @@ GetMetaRgn(HDC hdc,
 
 /*
  * @implemented
+ *
+ */
+INT
+WINAPI
+GetRgnBox(HRGN hrgn,
+          LPRECT prcOut)
+{
+#if 0
+  PRGN_ATTR Rgn_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
+     return NtGdiGetRgnBox(hrgn, prcOut);
+  if (Rgn_Attr->Flags == NULLREGION)
+  {
+     prcOut->left   = 0;
+     prcOut->top    = 0;
+     prcOut->right  = 0;
+     prcOut->bottom = 0;
+  }
+  else
+  {
+     if (Rgn_Attr->Flags != SIMPLEREGION) return NtGdiGetRgnBox(hrgn, prcOut);
+     *prcOut = Rgn_Attr->Rect;
+  }
+  return Rgn_Attr->Flags;
+#endif
+  return NtGdiGetRgnBox(hrgn, prcOut);
+}
+
+/*
+ * @implemented
+ */
+INT
+WINAPI
+IntersectClipRect(HDC hdc,
+                  int nLeftRect,
+                  int nTopRect,
+                  int nRightRect,
+                  int nBottomRect)
+{
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( pLDC )
+      {
+         if (pLDC->iType != LDC_EMFLDC || EMFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect))
+             return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+      }
+      else
+        SetLastError(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+  }
+#endif
+    return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+}
+
+/*
+ * @implemented
  */
 BOOL
 WINAPI
@@ -262,6 +359,77 @@ MirrorRgn(HWND hwnd, HRGN hrgn)
   RECT Rect;
   GetWindowRect(hwnd, &Rect);
   return MirrorRgnByWidth(hrgn, Rect.right - Rect.left, NULL);
+}
+
+/*
+ * @implemented
+ */
+INT
+WINAPI
+OffsetClipRgn(HDC hdc,
+              int nXOffset,
+              int nYOffset)
+{
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset );
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return 0;
+      }
+      if (pLDC->iType == LDC_EMFLDC && !EMFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset ))
+         return 0;
+      return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+    }
+  }
+#endif
+  return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+}
+
+/*
+ * @implemented
+ *
+ */
+INT
+WINAPI
+OffsetRgn( HRGN hrgn,
+          int nXOffset,
+          int nYOffset)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PtInRegion(IN HRGN hrgn,
+           int x,
+           int y)
+{
+    /* FIXME some stuff at user mode need be fixed */
+    return NtGdiPtInRegion(hrgn,x,y);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+RectInRegion(HRGN hrgn,
+             LPCRECT prcl)
+{
+    /* FIXME some stuff at user mode need be fixed */
+    return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
 }
 
 /*
@@ -287,42 +455,39 @@ SetRectRgn(HRGN hrgn,
            int nRightRect,
            int nBottomRect)
 {
-#if 0
   PRGN_ATTR Rgn_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) 
-#endif
      return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
-#if 0
+
   if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
   {
-     Rgn_Attr->flFlags |= DIRTY_RGNATTR;
-     Rgn_Attr->dwType = RGNATTR_INIT;
-     Rgn_Attr->rcBound.left = Rgn_Attr->rcBound.top =
-     Rgn_Attr->rcBound.right = Rgn_Attr->rcBound.bottom = 0;
+     Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
+     Rgn_Attr->Flags = NULLREGION;
+     Rgn_Attr->Rect.left = Rgn_Attr->Rect.top =
+     Rgn_Attr->Rect.right = Rgn_Attr->Rect.bottom = 0;
      return TRUE;
   }
 
-  Rgn_Attr->rcBound.left   = nLeftRect;
-  Rgn_Attr->rcBound.top    = nTopRect;
-  Rgn_Attr->rcBound.right  = nRightRect;
-  Rgn_Attr->rcBound.bottom = nBottomRect;
+  Rgn_Attr->Rect.left   = nLeftRect;
+  Rgn_Attr->Rect.top    = nTopRect;
+  Rgn_Attr->Rect.right  = nRightRect;
+  Rgn_Attr->Rect.bottom = nBottomRect;
 
   if(nLeftRect > nRightRect)
   {
-     Rgn_Attr->rcBound.left   = nRightRect;
-     Rgn_Attr->rcBound.right  = nLeftRect;
+     Rgn_Attr->Rect.left   = nRightRect;
+     Rgn_Attr->Rect.right  = nLeftRect;
   }
   if(nTopRect > nBottomRect)
   {
-     Rgn_Attr->rcBound.top    = nBottomRect;
-     Rgn_Attr->rcBound.bottom = nTopRect;
+     Rgn_Attr->Rect.top    = nBottomRect;
+     Rgn_Attr->Rect.bottom = nTopRect;
   }
 
-  Rgn_Attr->flFlags |= DIRTY_RGNATTR;
-  Rgn_Attr->dwType = RGNATTR_SET;
+  Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY ;
+  Rgn_Attr->Flags = SIMPLEREGION;
   return TRUE;
-#endif
 }
 
 /*
