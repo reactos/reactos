@@ -134,10 +134,6 @@ DriverProc(
     {
         case DRV_LOAD :
         {
-#ifndef USE_MMIXER_LIB
-            HANDLE Handle;
-#endif
-
             SND_TRACE(L"DRV_LOAD\n");
 
             Result = InitEntrypointMutexes();
@@ -154,7 +150,7 @@ DriverProc(
 #else
             if (WdmAudOpenSoundDeviceByLegacy() != MMSYSERR_NOERROR)
             {
-                SND_ERR(L"Failed to open %s\n", KERNEL_DEVICE_NAME);
+                SND_ERR(L"Failed to open \\\\.\\wdmaud\n");
                 CleanupEntrypointMutexes();
 
                 //UnlistAllSoundDevices();
