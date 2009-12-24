@@ -1,5 +1,51 @@
 #include "precomp.h"
 
+#define INRECT(r, x, y) \
+      ( ( ((r).right >  x)) && \
+      ( ((r).left <= x)) && \
+      ( ((r).bottom >  y)) && \
+      ( ((r).top <= y)) )
+
+static
+INT
+FASTCALL
+ComplexityFromRects( PRECT prc1, PRECT prc2)
+{
+  if ( prc2->left >= prc1->left )
+  {
+     if ( ( prc1->right >= prc2->right) &&
+          ( prc1->top <= prc2->top ) &&
+          ( prc1->bottom <= prc2->bottom ) )      
+        return SIMPLEREGION;
+
+     if ( prc2->left > prc1->left )
+     {
+        if ( ( prc1->left >= prc2->right ) ||
+             ( prc1->right <= prc2->left ) ||
+             ( prc1->top >= prc2->bottom ) ||
+             ( prc1->bottom <= prc2->top ) )
+           return COMPLEXREGION;
+     }
+  }
+
+  if ( ( prc2->right < prc1->right ) ||
+       ( prc2->top > prc1->top ) ||
+       ( prc2->bottom < prc1->bottom ) )
+  {
+     if ( ( prc1->left >= prc2->right ) ||
+          ( prc1->right <= prc2->left ) ||
+          ( prc1->top >= prc2->bottom ) ||
+          ( prc1->bottom <= prc2->top ) )
+        return COMPLEXREGION;
+  }
+  else
+  {
+    return NULLREGION;
+  }
+
+  return ERROR;
+}
+
 static
 VOID
 FASTCALL
@@ -192,8 +238,68 @@ HRGN
 WINAPI
 CreateRectRgn(int x1, int y1, int x2, int y2)
 {
-    /* FIXME Some part need be done in user mode */
-    return NtGdiCreateRectRgn(x1,y1,x2,y2);
+  PRGN_ATTR pRgn_Attr;
+  HRGN hrgn;
+  int x, y;
+
+ /* Normalize points */
+  x = x1;
+  if ( x1 > x2 )
+  {
+    x1 = x2;
+    x2 = x;
+  }
+
+  y = y1;
+  if ( y1 > y2 )
+  {
+    y1 = y2;
+    y2 = y;
+  }
+
+  if ( (UINT)x1 < 0x80000000 ||
+       (UINT)y1 < 0x80000000 ||
+       (UINT)x2 > 0x7FFFFFFF ||
+       (UINT)y2 > 0x7FFFFFFF )
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return NULL;
+  }
+//// Remove when Bush/Pen/Rgn Attr is ready!
+  return NtGdiCreateRectRgn(x1,y1,x2,y2);
+////
+  hrgn = hGetPEBHandle(hctRegionHandle, 0);
+
+  if (!hrgn)
+     hrgn = NtGdiCreateRectRgn(0, 0, 1, 1);
+
+  if (!hrgn)
+     return hrgn;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+  {
+     DeleteRegion(hrgn);
+     return NULL;
+  }
+
+  if (( x1 == x2) || (y1 == y2))
+  {
+     pRgn_Attr->Flags = NULLREGION;
+     pRgn_Attr->Rect.left = pRgn_Attr->Rect.top =
+     pRgn_Attr->Rect.right = pRgn_Attr->Rect.bottom = 0;
+  }
+  else
+  {
+     pRgn_Attr->Flags = SIMPLEREGION;
+     pRgn_Attr->Rect.left   = x1;
+     pRgn_Attr->Rect.top    = y1;
+     pRgn_Attr->Rect.right  = x2;
+     pRgn_Attr->Rect.bottom = y2;
+  }
+
+  pRgn_Attr->AttrFlags = (ATTR_RGN_DIRTY|ATTR_RGN_VALID);
+
+  return hrgn;
 }
 
 /*
@@ -217,7 +323,26 @@ INT
 WINAPI
 ExcludeClipRect(IN HDC hdc, IN INT xLeft, IN INT yTop, IN INT xRight, IN INT yBottom)
 {
-    /* FIXME some part need be done on user mode size */
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_ExcludeClipRect( hdc, xLeft, yTop, xRight, yBottom);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( pLDC )
+      {
+         if (pLDC->iType != LDC_EMFLDC || EMFDRV_ExcludeClipRect( hdc, xLeft, yTop, xRight, yBottom))
+             return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
+      }
+      else
+        SetLastError(ERROR_INVALID_HANDLE);
+      return ERROR;
+    }
+  }
+#endif
     return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
 }
 
@@ -361,7 +486,7 @@ IntersectClipRect(HDC hdc,
       }
       else
         SetLastError(ERROR_INVALID_HANDLE);
-      return 0;
+      return ERROR;
     }
   }
 #endif
@@ -401,10 +526,10 @@ OffsetClipRgn(HDC hdc,
       if ( !pLDC )
       {
          SetLastError(ERROR_INVALID_HANDLE);
-         return 0;
+         return ERROR;
       }
       if (pLDC->iType == LDC_EMFLDC && !EMFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset ))
-         return 0;
+         return ERROR;
       return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
     }
   }
@@ -422,12 +547,59 @@ OffsetRgn( HRGN hrgn,
           int nXOffset,
           int nYOffset)
 {
-    /* FIXME some part are done in user mode */
-    return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
+  PRGN_ATTR pRgn_Attr;
+  int nLeftRect, nTopRect, nRightRect, nBottomRect;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+     return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
+
+  if ( pRgn_Attr->Flags == NULLREGION)
+     return pRgn_Attr->Flags;
+
+  if ( pRgn_Attr->Flags != SIMPLEREGION)
+     return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
+
+  nLeftRect   = pRgn_Attr->Rect.left;
+  nTopRect    = pRgn_Attr->Rect.top;
+  nRightRect  = pRgn_Attr->Rect.right;
+  nBottomRect = pRgn_Attr->Rect.bottom;
+
+  if (nLeftRect < nRightRect)
+  {
+     if (nTopRect < nBottomRect)
+     {
+        nLeftRect   = nXOffset + nLeftRect;
+        nTopRect    = nYOffset + nTopRect;
+        nRightRect  = nXOffset + nRightRect;
+        nBottomRect = nYOffset + nBottomRect;
+
+        /* Mask and bit test. */
+        if ( ( nLeftRect   & 0xF8000000 &&
+              (nLeftRect   & 0xF8000000) != 0x80000000 ) ||
+             ( nTopRect    & 0xF8000000 &&
+              (nTopRect    & 0xF8000000) != 0x80000000 ) ||
+             ( nRightRect  & 0xF8000000 &&
+              (nRightRect  & 0xF8000000) != 0x80000000 ) ||
+             ( nBottomRect & 0xF8000000 &&
+              (nBottomRect & 0xF8000000) != 0x80000000 ) )
+        {
+           return ERROR;
+        }
+        else
+        {
+           pRgn_Attr->Rect.top    = nTopRect;
+           pRgn_Attr->Rect.left   = nLeftRect;
+           pRgn_Attr->Rect.right  = nRightRect;
+           pRgn_Attr->Rect.bottom = nBottomRect;
+           pRgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
+        }
+     }
+  }
+  return pRgn_Attr->Flags;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -435,20 +607,67 @@ PtInRegion(IN HRGN hrgn,
            int x,
            int y)
 {
-    /* FIXME some stuff at user mode need be fixed */
-    return NtGdiPtInRegion(hrgn,x,y);
+  PRGN_ATTR pRgn_Attr;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+     return NtGdiPtInRegion(hrgn,x,y);
+
+  if ( pRgn_Attr->Flags == NULLREGION)
+     return FALSE;
+
+  if ( pRgn_Attr->Flags != SIMPLEREGION)
+     return NtGdiPtInRegion(hrgn,x,y);
+
+  return INRECT( pRgn_Attr->Rect, x, y);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 RectInRegion(HRGN hrgn,
              LPCRECT prcl)
 {
-    /* FIXME some stuff at user mode need be fixed */
-    return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
+  PRGN_ATTR pRgn_Attr;
+  RECT rc;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+     return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
+
+  if ( pRgn_Attr->Flags == NULLREGION)
+     return FALSE;
+
+  if ( pRgn_Attr->Flags != SIMPLEREGION)
+     return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
+
+ /* swap the coordinates to make right >= left and bottom >= top */
+ /* (region building rectangles are normalized the same way) */
+   if ( prcl->top > prcl->bottom)
+   {
+      rc.top = prcl->bottom;
+      rc.bottom = prcl->top;
+   }
+   else
+   {
+     rc.top = prcl->top;
+     rc.bottom = prcl->bottom;
+   }
+   if ( prcl->right < prcl->left)
+   {
+      rc.right = prcl->left;
+      rc.left = prcl->right;
+   }
+   else
+   {
+      rc.right = prcl->right;
+      rc.left = prcl->left;
+   }
+
+   if ( ComplexityFromRects( (PRECT)&pRgn_Attr->Rect, &rc) != COMPLEXREGION )
+      return TRUE;
+
+   return FALSE;
 }
 
 /*
@@ -476,7 +695,7 @@ SetRectRgn(HRGN hrgn,
 {
   PRGN_ATTR Rgn_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) 
+  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
      return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
 
   if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
@@ -530,7 +749,7 @@ SetMetaRgn( HDC hDC )
        SetLastError(ERROR_INVALID_HANDLE);
  }
 #endif
- return 0;
+ return ERROR;
 }
 
 
