@@ -714,7 +714,10 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
         /* Hack! Wait for the debugger! */
-        //while (!KdPollBreakIn());
+#ifdef _WINKD_
+        while (!KdPollBreakIn());
+        DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+#endif
 
     }
 

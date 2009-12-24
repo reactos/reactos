@@ -249,7 +249,7 @@ KdInitSystem(ULONG BootPhase,
     }
     else /* BootPhase > 0 */
     {
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
         KdpEnableSafeMem();
 #endif
     }

@@ -602,21 +602,13 @@ KdbpCmdRegs(
 {
     PKTRAP_FRAME Tf = &KdbCurrentTrapFrame->Tf;
     INT i;
-    const PCHAR EflagsBits[64] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
+    const PCHAR EflagsBits[32] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
                                           " ZF", " SF", " TF", " IF", " DF", " OF",
                                           NULL, NULL, " NT", " BIT15", " RF", " VF",
                                           " AC", " VIF", " VIP", " ID", " BIT22",
                                           " BIT23", " BIT24", " BIT25", " BIT26",
-                                          " BIT27", " BIT28", " BIT29", " BIT30",
-                                          " BIT31", " BIT32", " BIT33", " BIT34",
-										  " BIT35", " BIT36", " BIT37", " BIT38",
-										  " BIT39", " BIT40", " BIT41", " BIT42",
-										  " BIT43", " BIT44", " BIT45", " BIT46",
-										  " BIT47", " BIT48", " BIT49", " BIT50",
-										  " BIT51", " BIT52", " BIT53", " BIT54",
-										  " BIT55", " BIT56", " BIT57", " BIT58",
-										  " BIT59", " BIT60", " BIT61", " BIT62",
-										  " BIT63",
+                                          " BIT27", " BIT28", " BIT29", " BIT30"
+                                          
 		};
 
     if (Argv[0][0] == 'r') /* regs */
@@ -654,11 +646,7 @@ KdbpCmdRegs(
 #endif
         KdbpPrint("EFLAGS  0x%08x ", Tf->EFlags);
 
-#ifdef _M_IX86
         for (i = 0; i < 32; i++)
-#elif defined(_M_AMD64)
-        for (i = 0; i < 64; i++)
-#endif
         {
             if (i == 1)
             {
@@ -1591,6 +1579,235 @@ KdbpCmdMod(
 
 /*!\brief Displays GDT, LDT or IDTd.
  */
+#ifdef _M_AMD64
+static BOOLEAN
+KdbpCmdGdtLdtIdt(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    KDESCRIPTOR Reg;
+    KIDTENTRY IdtEntry;
+    KGDTENTRY GdtEntry;
+    ULONG_PTR SegBase;
+    ULONG SegLimit;
+    PCHAR SegType;
+    USHORT SegSel;
+    UCHAR Type, Dpl;
+    INT i = 0;
+    ULONG ul;
+
+    if (Argv[0][0] == 'i')
+    {
+        /* Read IDTR */
+        __sidt(&Reg.Limit);
+
+        if (Reg.Limit < 7)
+        {
+            KdbpPrint("Interrupt descriptor table is empty.\n");
+            return TRUE;
+        }
+
+        KdbpPrint("IDT Base: 0x%p  Limit: 0x%04x\n", Reg.Base, Reg.Limit);
+        KdbpPrint("  Idx  Type        Seg. Sel.  Offset      DPL\n");
+
+        while (i < (Reg.Limit)/sizeof(IdtEntry))
+        {
+            if (!NT_SUCCESS(KdbpSafeReadMemory(&IdtEntry, (PVOID)((ULONG_PTR)Reg.Base +(i *sizeof(IdtEntry))), sizeof(IdtEntry))))
+            {
+                KdbpPrint("Couldn't access memory at 0x%x!\n", (ULONG_PTR)Reg.Base + sizeof(IdtEntry));
+                return TRUE;
+            }
+
+            Dpl = IdtEntry.Dpl;
+            if (IdtEntry.Type == 0x5)        /* Task gate */
+                SegType = "TASKGATE";
+            else if (IdtEntry.Type == 0xE)   /* 32 bit Interrupt gate */
+                SegType = "INTGATE32";
+            else if (IdtEntry.Type == 0x6)   /* 16 bit Interrupt gate */
+                SegType = "INTGATE16";
+            else if (IdtEntry.Type == 0xF)   /* 32 bit Trap gate */
+                SegType = "TRAPGATE32";
+            else if (IdtEntry.Type == 0x7)   /* 16 bit Trap gate */
+                SegType = "TRAPGATE16";
+            else
+                SegType = "UNKNOWN";
+
+            if (IdtEntry.Present == 0) /* not present */
+            {
+                KdbpPrint("  %03d  %-10s  [NP]       [NP]        %02d\n",
+                          i, SegType, Dpl);
+            }
+            else if (IdtEntry.Type == 0x5) /* Task gate */
+            {
+                SegSel = IdtEntry.Selector;
+                KdbpPrint("  %03d  %-10s  0x%04x                 %02d\n",
+                          i, SegType, SegSel, Dpl);
+            }
+            else
+            {
+                SegSel = IdtEntry.Selector;
+                SegBase = (ULONG64)IdtEntry.OffsetLow |
+                   (ULONG64)IdtEntry.OffsetMiddle << 16 |
+                   (ULONG64)IdtEntry.OffsetHigh << 32;
+
+                KdbpPrint("  %03d  %-10s       0x%04x        0x%p     %02d\n",
+                          i , SegType, SegSel, SegBase, Dpl);
+            }
+            i++;
+        }
+    }
+    else
+    {
+        ul = 0;
+
+        if (Argv[0][0] == 'g')
+        {
+            /* Read GDTR */
+			__sgdt(&Reg.Limit);
+
+        }
+        else
+        {
+            ASSERT(Argv[0][0] == 'l');
+
+            /* Read LDTR */
+            __sldt(&Reg.Limit);
+
+            Reg.Base = 0;
+            ul = 1 << 2;
+        }
+
+        if (Reg.Limit < 7)
+        {
+            KdbpPrint("%s descriptor table is empty.\n",
+                      Argv[0][0] == 'g' ? "Global" : "Local");
+            return TRUE;
+        }
+
+        KdbpPrint("%cDT Base: 0x%p  Limit: 0x%04x\n",
+                  Argv[0][0] == 'g' ? 'G' : 'L', Reg.Base, Reg.Limit);
+        KdbpPrint("  Idx  Sel.    Type         Base        Limit       DPL  Attribs\n");
+
+        while (i < (Reg.Limit)/sizeof(GdtEntry))
+        {
+            if (!NT_SUCCESS(KdbpSafeReadMemory(&GdtEntry, (PVOID)((ULONG_PTR)Reg.Base +(i * 8)), sizeof(GdtEntry))))
+            {
+                KdbpPrint("Couldn't access memory at 0x%p!\n", (ULONG_PTR)Reg.Base + i);
+                return TRUE;
+            }
+
+            Dpl = GdtEntry.Bits.Dpl;
+            Type = GdtEntry.Bits.Type;
+
+            SegBase = (ULONG_PTR)KiGetGdtDescriptorBase(&GdtEntry);
+
+            SegLimit = GdtEntry.LimitLow;
+            SegLimit |= (ULONG64)GdtEntry.Bits.LimitHigh << 32;
+
+            if (GdtEntry.Bits.DefaultBig != 0)
+            {
+                SegLimit *= 4096;
+                SegLimit += 4095;
+            }
+            else
+            {
+                SegLimit++;
+            }
+
+            if (GdtEntry.Bits.System == 1) /* System segment */
+            {
+                switch (Type)
+                {
+                    case 1: SegType = "TSS16(Avl)"; break;
+                    case 2: SegType = "LDT"; break;
+                    case 3: SegType = "TSS16(Busy)"; break;
+                    case 4: SegType = "CALLGATE16"; break;
+                    case 5: SegType = "TASKGATE"; break;
+                    case 6: SegType = "INTGATE16"; break;
+                    case 7: SegType = "TRAPGATE16"; break;
+                    case 9: SegType = "TSS32(Avl)"; break;
+                    case 11: SegType = "TSS32(Busy)"; break;
+                    case 12: SegType = "CALLGATE32"; break;
+                    case 14: SegType = "INTGATE32"; break;
+                    case 15: SegType = "INTGATE32"; break;
+                    default: SegType = "UNKNOWN"; break;
+                }
+
+                if (!(Type >= 1 && Type <= 3) &&
+                    Type != 9 && Type != 11)
+                {
+                    SegBase = 0;
+                    SegLimit = 0;
+                }
+            }
+            else if ((Type & (1 << 3)) == 0) /* Data segment */
+            {
+                if (GdtEntry.Bits.LongMode != 0)
+                    SegType = "DATA32";
+                else
+                    SegType = "DATA16";
+            }
+            else /* Code segment */
+            {
+                if (GdtEntry.Bits.LongMode != 0)
+                    SegType = "CODE32";
+                else
+                    SegType = "CODE16";
+            }
+
+            if (GdtEntry.Bits.Present == 0) /* not present */
+            {
+                KdbpPrint("  %03d  0x%04x  %-11s  [NP]        [NP]        %02d   NP\n",
+                          i, i | Dpl | ul, SegType, Dpl);
+            }
+            else
+            {
+                KdbpPrint("  %03d  0x%04x  %-11s  0x%p  0x%08x  %02d  ",
+                          i, i | Dpl | ul, SegType, SegBase, SegLimit, Dpl);
+
+                if (GdtEntry.Bits.System == 1) /* System segment */
+                {
+                    /* FIXME: Display system segment */
+                    /* they are twice as big as regular segments */
+                    i++;
+                }
+                else if ((Type & (1 << 3)) == 0) /* Data segment */
+                {
+                    if ((Type & (1 << 2)) != 0) /* Expand-down */
+                        KdbpPrint(" E");
+
+                    KdbpPrint((Type & (1 << 1)) ? " R/W" : " R");
+
+                    if ((Type & (1 >> 1)) != 0)
+                        KdbpPrint(" A");
+                }
+                else /* Code segment */
+                {
+                    if ((Type & (1 << 2)) != 0) /* Conforming */
+                        KdbpPrint(" C");
+
+                    KdbpPrint((Type & (1 << 1)) ? " R/X" : " X");
+
+                    if ((Type & (1 << 1)) != 0)
+                        KdbpPrint(" A");
+                }
+
+                if ((GdtEntry.Bits.LimitHigh & (1 << 3)) != 0)
+                    KdbpPrint(" AVL");
+
+                KdbpPrint("\n");
+            }
+            i++;
+        }
+    }
+
+    return TRUE;
+}
+#endif
+
+/*!\brief Displays GDT, LDT or IDTd.
+ */
+#ifdef _M_IX86
 static BOOLEAN
 KdbpCmdGdtLdtIdt(
     ULONG Argc,
@@ -1669,11 +1886,7 @@ KdbpCmdGdtLdtIdt(
         if (Argv[0][0] == 'g')
         {
             /* Read GDTR */
-#ifdef _M_IX86
             Ke386GetGlobalDescriptorTable(&Reg.Limit);
-#elif defined(_M_AMD64)
-			__sgdt(&Reg.Limit);
-#endif
             i = 8;
         }
         else
@@ -1681,11 +1894,7 @@ KdbpCmdGdtLdtIdt(
             ASSERT(Argv[0][0] == 'l');
 
             /* Read LDTR */
-#ifdef _M_IX86
             Reg.Limit = Ke386GetLocalDescriptorTable();
-#elif defined(_M_AMD64)
-			__sldt(&Reg.Limit);
-#endif
             Reg.Base = 0;
             i = 0;
             ul = 1 << 2;
@@ -1815,6 +2024,7 @@ KdbpCmdGdtLdtIdt(
 
     return TRUE;
 }
+#endif
 
 /*!\brief Displays the KPCR
  */
@@ -1862,21 +2072,21 @@ KdbpCmdPcr(
               Pcr->VdmAlert, Pcr->SecondLevelCacheSize, Pcr->InterruptMode);
 #elif defined(_M_AMD64)
     KdbpPrint("Current PCR is at 0x%x.\n", (INT_PTR)Pcr);
-    KdbpPrint("  Tib.ExceptionList:         0x%x\n"
-              "  Tib.StackBase:             0x%x\n"
+    KdbpPrint("  Tib.ExceptionList:         0x%p\n"
+              "  Tib.StackBase:             0x%p\n"
               "  Tib.StackLimit:            0x%x\n"
-              "  Tib.SubSystemTib:          0x%x\n"
+              "  Tib.SubSystemTib:          0x%p\n"
               "  Tib.FiberData/Version:     0x%x\n"
-              "  Tib.ArbitraryUserPointer:  0x%x\n"
-              "  Tib.Self:                  0x%x\n"
-              "  Self:                      0x%x\n"
-              "  PCRCB:                     0x%x\n"
+              "  Tib.ArbitraryUserPointer:  0x%p\n"
+              "  Tib.Self:                  0x%p\n"
+              "  Self:                      0x%p\n"
+              "  PCRCB:                     0x%p\n"
               "  Irql:                      0x%x\n"
               "  KdVersionBlock:            0x%08x\n"
-              "  IDT:                       0x%08x\n"
-              "  GDT:                       0x%08x\n"
-              "  TSS:                       0x%08x\n"
-              "  UserRsp:                   0x%08x\n"
+              "  IDT:                       0x%p\n"
+              "  GDT:                       0x%p\n"
+              "  TSS:                       0x%p\n"
+              "  UserRsp:                   0x%p\n"
               "  MajorVersion:              0x%04x\n"
               "  MinorVersion:              0x%04x\n"
               "  StallScaleFactor:          0x%08x\n"
@@ -1902,8 +2112,8 @@ KdbpCmdTss(
 #ifdef _M_IX86
     KTSS *Tss = KeGetPcr()->TSS;
 
-    KdbpPrint("Current TSS is at 0x%08x.\n", (INT)Tss);
-    KdbpPrint("  Eip:           0x%08x\n"
+    KdbpPrint("Current TSS is at 0x%p.\n", (INT_PTR)Tss);
+    KdbpPrint("  Eip:           0x%p\n"
               "  Es:            0x%04x\n"
               "  Cs:            0x%04x\n"
               "  Ss:            0x%04x\n"
@@ -1912,10 +2122,18 @@ KdbpCmdTss(
               "  Gs:            0x%04x\n"
               "  IoMapBase:     0x%04x\n",
               Tss->Eip, Tss->Es, Tss->Cs, Tss->Ds, Tss->Fs, Tss->Gs, Tss->IoMapBase);
+#elif defined(_M_AMD64)
+    KTSS *Tss = KeGetPcr()->TssBase;
 
-    return TRUE;
+    KdbpPrint("Current TSS is at 0x%p.\n", (INT_PTR)Tss);
+    KdbpPrint("  Rsp0:           0x%p\n"
+              "  Rsp1:           0x%p\n"
+              "  Rsp2:           0x%p\n"
+              "  Ist:            0x%p\n"
+              "  IoMapBase:      0x%04x\n",
+              Tss->Rsp0, Tss->Rsp1, Tss->Rsp2, Tss->Ist, Tss->IoMapBase);
 #endif
-    return FALSE;
+    return TRUE;
 }
 
 /*!\brief Bugchecks the system.

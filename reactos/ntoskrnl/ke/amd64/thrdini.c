@@ -11,7 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#if 0
+
 typedef struct _KSWITCHFRAME
 {
     PVOID ExceptionList;
@@ -32,16 +32,16 @@ typedef struct _KUINIT_FRAME
     KSWITCHFRAME CtxSwitchFrame;
     KSTART_FRAME StartFrame;
     KTRAP_FRAME TrapFrame;
-    FX_SAVE_AREA FxSaveArea;
+    //FX_SAVE_AREA FxSaveArea;
 } KUINIT_FRAME, *PKUINIT_FRAME;
 
 typedef struct _KKINIT_FRAME
 {
     KSWITCHFRAME CtxSwitchFrame;
     KSTART_FRAME StartFrame;
-    FX_SAVE_AREA FxSaveArea;
+    //FX_SAVE_AREA FxSaveArea;
 } KKINIT_FRAME, *PKKINIT_FRAME;
-#endif
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -52,10 +52,8 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                            IN PVOID StartContext,
                            IN PCONTEXT ContextPointer)
 {
-	FrLdrDbgPrint("KiInitializeContextThread stub\n");
-#if 0
-    PFX_SAVE_AREA FxSaveArea;
-    PFXSAVE_FORMAT FxSaveFormat;
+    //PFX_SAVE_AREA FxSaveArea;
+    //PFXSAVE_FORMAT FxSaveFormat;
     PKSTART_FRAME StartFrame;
     PKSWITCHFRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame;
@@ -78,60 +76,60 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
         /* Zero out the trap frame and save area */
         RtlZeroMemory(&InitFrame->TrapFrame,
-                      KTRAP_FRAME_LENGTH + sizeof(FX_SAVE_AREA));
+                      KTRAP_FRAME_LENGTH);
 
         /* Setup the Fx Area */
-        FxSaveArea = &InitFrame->FxSaveArea;
+        //FxSaveArea = &InitFrame->FxSaveArea;
 
         /* Check if we support FXsr */
-        if (KeI386FxsrPresent)
-        {
-            /* Get the FX Save Format Area */
-            FxSaveFormat = (PFXSAVE_FORMAT)Context->ExtendedRegisters;
-
-            /* Set an initial state */
-            FxSaveFormat->ControlWord = 0x27F;
-            FxSaveFormat->StatusWord = 0;
-            FxSaveFormat->TagWord = 0;
-            FxSaveFormat->ErrorOffset = 0;
-            FxSaveFormat->ErrorSelector = 0;
-            FxSaveFormat->DataOffset = 0;
-            FxSaveFormat->DataSelector = 0;
-            FxSaveFormat->MXCsr = 0x1F80;
-        }
-        else
-        {
-            /* Setup the regular save area */
-            Context->FloatSave.ControlWord = 0x27F;
-            Context->FloatSave.StatusWord = 0;
-            Context->FloatSave.TagWord = -1;
-            Context->FloatSave.ErrorOffset = 0;
-            Context->FloatSave.ErrorSelector = 0;
-            Context->FloatSave.DataOffset =0;
-            Context->FloatSave.DataSelector = 0;
-        }
+//        if (KeI386FxsrPresent)
+//        {
+//            /* Get the FX Save Format Area */
+//            FxSaveFormat = (PFXSAVE_FORMAT)Context->ExtendedRegisters;
+//
+//            /* Set an initial state */
+//            FxSaveFormat->ControlWord = 0x27F;
+//            FxSaveFormat->StatusWord = 0;
+//            FxSaveFormat->TagWord = 0;
+//            FxSaveFormat->ErrorOffset = 0;
+//            FxSaveFormat->ErrorSelector = 0;
+//            FxSaveFormat->DataOffset = 0;
+//            FxSaveFormat->DataSelector = 0;
+//            FxSaveFormat->MXCsr = 0x1F80;
+//        }
+//        else
+//        {
+//            /* Setup the regular save area */
+//            Context->FloatSave.ControlWord = 0x27F;
+//            Context->FloatSave.StatusWord = 0;
+//            Context->FloatSave.TagWord = -1;
+//            Context->FloatSave.ErrorOffset = 0;
+//            Context->FloatSave.ErrorSelector = 0;
+//            Context->FloatSave.DataOffset =0;
+//            Context->FloatSave.DataSelector = 0;
+//        }
 
         /* Check if the CPU has NPX */
         if (KeI386NpxPresent)
         {
             /* Set an intial NPX State */
-            Context->FloatSave.Cr0NpxState = 0;
-            FxSaveArea->Cr0NpxState = 0;
-            FxSaveArea->NpxSavedCpu = 0;
+            //Context->FloatSave.Cr0NpxState = 0;
+            //FxSaveArea->Cr0NpxState = 0;
+            //FxSaveArea->NpxSavedCpu = 0;
 
             /* Now set the context flags depending on XMM support */
-            ContextFlags |= (KeI386FxsrPresent) ? CONTEXT_EXTENDED_REGISTERS :
-                                                  CONTEXT_FLOATING_POINT;
+            //ContextFlags |= (KeI386FxsrPresent) ? CONTEXT_EXTENDED_REGISTERS :
+            //                                      CONTEXT_FLOATING_POINT;
 
             /* Set the Thread's NPX State */
-            Thread->NpxState = NPX_STATE_NOT_LOADED;
+            Thread->NpxState = 0xA;
             Thread->DispatcherHeader.NpxIrql = PASSIVE_LEVEL;
         }
         else
         {
             /* We'll use emulation */
-            FxSaveArea->Cr0NpxState = CR0_EM;
-            Thread->NpxState = NPX_STATE_NOT_LOADED &~ CR0_MP;
+            //FxSaveArea->Cr0NpxState = CR0_EM;
+            Thread->NpxState = 0xA &~ CR0_MP;
         }
 
         /* Disable any debug regiseters */
@@ -148,19 +146,16 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                              UserMode);
 
         /* Set SS, DS, ES's RPL Mask properly */
-        TrapFrame->HardwareSegSs |= RPL_MASK;
+        TrapFrame->SegSs |= RPL_MASK;
         TrapFrame->SegDs |= RPL_MASK;
         TrapFrame->SegEs |= RPL_MASK;
         TrapFrame->Dr7 = 0;
 
-        /* Set the debug mark */
-        TrapFrame->DbgArgMark = 0xBADB0D00;
-
         /* Set the previous mode as user */
-        TrapFrame->PreviousPreviousMode = UserMode;
+        TrapFrame->PreviousMode = UserMode;
 
         /* Terminate the Exception Handler List */
-        TrapFrame->ExceptionList = EXCEPTION_CHAIN_END;
+        TrapFrame->ExceptionFrame = 0;
 
         /* Setup the Stack for KiThreadStartup and Context Switching */
         StartFrame = &InitFrame->StartFrame;
@@ -180,25 +175,26 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                                     sizeof(KKINIT_FRAME));
 
         /* Setup the Fx Area */
-        FxSaveArea = &InitFrame->FxSaveArea;
-        RtlZeroMemory(FxSaveArea, sizeof(FX_SAVE_AREA));
+        //FxSaveArea = &InitFrame->FxSaveArea;
+        //RtlZeroMemory(FxSaveArea, sizeof(FX_SAVE_AREA));
 
         /* Check if we have Fxsr support */
         if (KeI386FxsrPresent)
         {
-            /* Set the stub FX area */
-            FxSaveArea->U.FxArea.ControlWord = 0x27F;
-            FxSaveArea->U.FxArea.MXCsr = 0x1F80;
-        }
-        else
-        {
-            /* Set the stub FN area */
-            FxSaveArea->U.FnArea.ControlWord = 0x27F;
-            FxSaveArea->U.FnArea.TagWord = -1;
+              DPRINT1("FxsrPresent but did nothing\n");
+//            /* Set the stub FX area */
+//            FxSaveArea->U.FxArea.ControlWord = 0x27F;
+//            FxSaveArea->U.FxArea.MXCsr = 0x1F80;
+//        }
+//        else
+//        {
+//            /* Set the stub FN area */
+//            FxSaveArea->U.FnArea.ControlWord = 0x27F;
+//            FxSaveArea->U.FnArea.TagWord = -1;
         }
 
         /* No NPX State */
-        Thread->NpxState = NPX_STATE_NOT_LOADED;
+        Thread->NpxState = 0xA;
 
         /* Setup the Stack for KiThreadStartup and Context Switching */
         StartFrame = &InitFrame->StartFrame;
@@ -223,7 +219,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
     /* Save back the new value of the kernel stack. */
     Thread->KernelStack = (PVOID)CtxSwitchFrame;
-#endif
+
 }
 
 /* EOF */
