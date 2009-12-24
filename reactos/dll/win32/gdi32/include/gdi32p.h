@@ -157,6 +157,7 @@ typedef DWORD (WINAPI *QUERYSPOOLMODE) (HANDLE,DWORD,DWORD);
 typedef DWORD (WINAPI *QUERYREMOTEFONTS) (DWORD,DWORD,DWORD);
 
 extern CLOSEPRINTER fpClosePrinter;
+extern OPENPRINTERW fpOpenPrinterW;
 
 /* FUNCTIONS *****************************************************************/
 
