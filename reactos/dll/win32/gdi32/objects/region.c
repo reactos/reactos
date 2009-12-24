@@ -265,7 +265,7 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
      SetLastError(ERROR_INVALID_PARAMETER);
      return NULL;
   }
-//// Remove when Bush/Pen/Rgn Attr is ready!
+//// Remove when Brush/Pen/Rgn Attr is ready!
   return NtGdiCreateRectRgn(x1,y1,x2,y2);
 ////
   hrgn = hGetPEBHandle(hctRegionHandle, 0);
