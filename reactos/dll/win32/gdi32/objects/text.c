@@ -173,7 +173,7 @@ GetTextExtentPointW(
 	LPSIZE		lpSize
 	)
 {
-  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
+  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 1);
 }
 
 
