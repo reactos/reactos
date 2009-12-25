@@ -692,6 +692,9 @@ MMixerHandlePhysicalConnection(
     MixerData = MMixerGetDataByDeviceName(MixerList, OutConnection->SymbolicLinkName);
     ASSERT(MixerData);
 
+    // store connected mixer handle
+    MixerInfo->hMixer = MixerData->hDevice;
+
     // get connected filter pin count
     PinsRefCount = MMixerGetFilterPinCount(MixerContext, MixerData->hDevice);
     ASSERT(PinsRefCount);
