@@ -395,7 +395,8 @@ ScServiceDispatcher(HANDLE hPipe,
                 break;
 
             default:
-                TRACE("Unknown command %lu", ControlPacket->dwControl);
+                TRACE("Command %lu received", ControlPacket->dwControl);
+                ScControlService(ControlPacket);
                 continue;
         }
 
@@ -519,7 +520,7 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
     Service->HandlerFunctionEx = lpHandlerProc;
     Service->HandlerContext = lpContext;
 
-    TRACE("RegisterServiceCtrlHandlerEx returning %lu", Service->hService);
+    TRACE("RegisterServiceCtrlHandlerEx returning %lu\n", Service->hService);
 
     return (SERVICE_STATUS_HANDLE)Service->hService;
 }
