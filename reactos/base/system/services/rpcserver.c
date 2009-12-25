@@ -2521,6 +2521,8 @@ DWORD RQueryServiceConfigW(
     HKEY hServiceKey = NULL;
     LPWSTR lpImagePath = NULL;
     LPWSTR lpServiceStartName = NULL;
+    LPWSTR lpDependencies = NULL;
+    DWORD dwDependenciesLength = 0;
     DWORD dwRequiredSize;
     LPQUERY_SERVICE_CONFIGW lpConfig = NULL;
     WCHAR lpEmptyString[] = {0,0};
@@ -2560,15 +2562,22 @@ DWORD RQueryServiceConfigW(
     if (dwError != ERROR_SUCCESS)
         goto Done;
 
+    /* Read the image path */
     dwError = ScmReadString(hServiceKey,
                             L"ImagePath",
                             &lpImagePath);
     if (dwError != ERROR_SUCCESS)
         goto Done;
 
+    /* Read the service start name */
     ScmReadString(hServiceKey,
                   L"ObjectName",
                   &lpServiceStartName);
+
+    /* Read the dependencies */
+    ScmReadDependencies(hServiceKey,
+                        &lpDependencies,
+                        &dwDependenciesLength);
 
     dwRequiredSize = sizeof(QUERY_SERVICE_CONFIGW);
 
@@ -2582,7 +2591,10 @@ DWORD RQueryServiceConfigW(
     else
         dwRequiredSize += 2 * sizeof(WCHAR);
 
-    /* FIXME: Add Dependencies length*/
+    if (lpDependencies != NULL)
+        dwRequiredSize += dwDependenciesLength * sizeof(WCHAR);
+    else
+        dwRequiredSize += 2 * sizeof(WCHAR);
 
     if (lpServiceStartName != NULL)
         dwRequiredSize += ((wcslen(lpServiceStartName) + 1) * sizeof(WCHAR));
@@ -2608,6 +2620,7 @@ DWORD RQueryServiceConfigW(
 
         lpStr = (LPWSTR)(lpConfig + 1);
 
+        /* Append the image path */
         if (lpImagePath != NULL)
         {
             wcscpy(lpStr, lpImagePath);
@@ -2620,6 +2633,7 @@ DWORD RQueryServiceConfigW(
         lpConfig->lpBinaryPathName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
         lpStr += (wcslen(lpStr) + 1);
 
+        /* Append the group name */
         if (lpService->lpGroup != NULL)
         {
             wcscpy(lpStr, lpService->lpGroup->lpGroupName);
@@ -2632,12 +2646,25 @@ DWORD RQueryServiceConfigW(
         lpConfig->lpLoadOrderGroup = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
         lpStr += (wcslen(lpStr) + 1);
 
-        /* FIXME: Append Dependencies */
-        wcscpy(lpStr, lpEmptyString);
+        /* Append Dependencies */
+        if (lpDependencies != NULL)
+        {
+            memcpy(lpStr,
+                   lpDependencies,
+                   dwDependenciesLength * sizeof(WCHAR));
+        }
+        else
+        {
+            wcscpy(lpStr, lpEmptyString);
+        }
 
-        lpStr += (wcslen(lpStr) + 1);
         lpConfig->lpDependencies = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        if (lpDependencies != NULL)
+            lpStr += dwDependenciesLength * sizeof(WCHAR);
+        else
+            lpStr += (wcslen(lpStr) + 1);
 
+        /* Append the service start name */
         if (lpServiceStartName != NULL)
         {
             wcscpy(lpStr, lpServiceStartName);
@@ -2650,6 +2677,7 @@ DWORD RQueryServiceConfigW(
         lpConfig->lpServiceStartName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
         lpStr += (wcslen(lpStr) + 1);
 
+        /* Append the display name */
         if (lpService->lpDisplayName != NULL)
         {
             wcscpy(lpStr, lpService->lpDisplayName);
@@ -2671,6 +2699,9 @@ Done:;
 
     if (lpServiceStartName != NULL)
         HeapFree(GetProcessHeap(), 0, lpServiceStartName);
+
+    if (lpDependencies != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDependencies);
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
@@ -3537,6 +3568,8 @@ DWORD RQueryServiceConfigA(
     HKEY hServiceKey = NULL;
     LPWSTR lpImagePath = NULL;
     LPWSTR lpServiceStartName = NULL;
+    LPWSTR lpDependencies = NULL;
+    DWORD dwDependenciesLength = 0;
     DWORD dwRequiredSize;
     LPQUERY_SERVICE_CONFIGA lpConfig = NULL;
     CHAR lpEmptyString[]={0,0};
@@ -3576,15 +3609,22 @@ DWORD RQueryServiceConfigA(
     if (dwError != ERROR_SUCCESS)
         goto Done;
 
+    /* Read the image path */
     dwError = ScmReadString(hServiceKey,
                             L"ImagePath",
                             &lpImagePath);
     if (dwError != ERROR_SUCCESS)
         goto Done;
 
+    /* Read the service start name */
     ScmReadString(hServiceKey,
                   L"ObjectName",
                   &lpServiceStartName);
+
+    /* Read the dependencies */
+    ScmReadDependencies(hServiceKey,
+                        &lpDependencies,
+                        &dwDependenciesLength);
 
     dwRequiredSize = sizeof(QUERY_SERVICE_CONFIGW);
 
@@ -3598,8 +3638,11 @@ DWORD RQueryServiceConfigA(
     else
         dwRequiredSize += 2;
 
-    /* FIXME: Add Dependencies length*/
-    dwRequiredSize += 2;
+    /* Add Dependencies length */
+    if (lpDependencies != NULL)
+        dwRequiredSize += dwDependenciesLength;
+    else
+        dwRequiredSize += 2;
 
     if (lpServiceStartName != NULL)
         dwRequiredSize += wcslen(lpServiceStartName) + 1;
@@ -3635,7 +3678,7 @@ DWORD RQueryServiceConfigA(
                                 lpImagePath,
                                 -1,
                                 lpStr,
-                                wcslen(lpImagePath)+1,
+                                wcslen(lpImagePath) + 1,
                                 0,
                                 0);
         }
@@ -3654,7 +3697,7 @@ DWORD RQueryServiceConfigA(
                                 lpService->lpGroup->lpGroupName,
                                 -1,
                                 lpStr,
-                                wcslen(lpService->lpGroup->lpGroupName)+1,
+                                wcslen(lpService->lpGroup->lpGroupName) + 1,
                                 0,
                                 0);
         }
@@ -3666,11 +3709,28 @@ DWORD RQueryServiceConfigA(
         lpConfig->lpLoadOrderGroup = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
         lpStr += (strlen(lpStr) + 1);
 
-        /* FIXME: Append Dependencies */
-        strcpy(lpStr, lpEmptyString);
+        /* Append Dependencies */
+        if (lpDependencies)
+        {
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpDependencies,
+                                dwDependenciesLength,
+                                lpStr,
+                                dwDependenciesLength,
+                                0,
+                                0);
+        }
+        else
+        {
+            strcpy(lpStr, lpEmptyString);
+        }
 
         lpConfig->lpDependencies = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
-        lpStr += (strlen(lpStr) + 1);
+        if (lpDependencies)
+            lpStr += dwDependenciesLength;
+        else
+            lpStr += (strlen(lpStr) + 1);
 
         if (lpServiceStartName)
         {
@@ -3679,7 +3739,7 @@ DWORD RQueryServiceConfigA(
                                 lpServiceStartName,
                                 -1,
                                 lpStr,
-                                wcslen(lpServiceStartName)+1,
+                                wcslen(lpServiceStartName) + 1,
                                 0,
                                 0);
         }
@@ -3698,7 +3758,7 @@ DWORD RQueryServiceConfigA(
                                 lpService->lpDisplayName,
                                 -1,
                                 lpStr,
-                                wcslen(lpService->lpDisplayName)+1,
+                                wcslen(lpService->lpDisplayName) + 1,
                                 0,
                                 0);
         }
@@ -3719,6 +3779,9 @@ Done:;
 
     if (lpServiceStartName != NULL)
         HeapFree(GetProcessHeap(), 0, lpServiceStartName);
+
+    if (lpDependencies != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDependencies);
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
@@ -4231,7 +4294,8 @@ DWORD RQueryServiceConfig2A(
     LPWSTR lpDescriptionW = NULL;
     LPSTR lpDescription = NULL;
 
-    DPRINT1("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
+    DPRINT1("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",
+            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     if (!lpBuffer)
         return ERROR_INVALID_ADDRESS;
@@ -4268,7 +4332,7 @@ DWORD RQueryServiceConfig2A(
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    if (dwInfoLevel & SERVICE_CONFIG_DESCRIPTION)
+    if (dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
         LPSERVICE_DESCRIPTIONA lpServiceDescription = (LPSERVICE_DESCRIPTIONA)lpBuffer;
         LPSTR lpStr;
@@ -4388,7 +4452,7 @@ DWORD RQueryServiceConfig2W(
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    if (dwInfoLevel & SERVICE_CONFIG_DESCRIPTION)
+    if (dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
         LPSERVICE_DESCRIPTIONW lpServiceDescription = (LPSERVICE_DESCRIPTIONW)lpBuffer;
         LPWSTR lpStr;
@@ -4412,7 +4476,7 @@ DWORD RQueryServiceConfig2W(
         wcscpy(lpStr, lpDescription);
         lpServiceDescription->lpDescription = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
     }
-    else if (dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
+    else if (dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
         LPWSTR lpStr;
         LPSERVICE_FAILURE_ACTIONSW lpFailureActions = (LPSERVICE_FAILURE_ACTIONSW)lpBuffer;
@@ -4578,6 +4642,7 @@ DWORD REnumServicesStatusExA(
              DPRINT1("Failed to allocate buffer!\n");
              return ERROR_NOT_ENOUGH_MEMORY;
         }
+
         MultiByteToWideChar(CP_ACP,
                             0,
                             pszGroupName,
@@ -4608,7 +4673,8 @@ DWORD REnumServicesStatusExA(
                                      pszGroupNameW);
 
     /* if no services were returned then we are Done */
-    if (*lpServicesReturned == 0) goto Done;
+    if (*lpServicesReturned == 0)
+        goto Done;
 
     lpStatusPtrA = (LPENUM_SERVICE_STATUS_PROCESSA)lpBuffer;
     lpStringPtrA = (LPSTR)((ULONG_PTR)lpBuffer +
@@ -4657,9 +4723,11 @@ DWORD REnumServicesStatusExA(
     }
 
 Done:;
-    if (pszGroupNameW) HeapFree(GetProcessHeap(), 0, pszGroupNameW);
+    if (pszGroupNameW)
+        HeapFree(GetProcessHeap(), 0, pszGroupNameW);
 
-    if (lpStatusPtrW) HeapFree(GetProcessHeap(), 0, lpStatusPtrW);
+    if (lpStatusPtrW)
+        HeapFree(GetProcessHeap(), 0, lpStatusPtrW);
 
     DPRINT("REnumServicesStatusExA() done (Error %lu)\n", dwError);
 
@@ -4843,7 +4911,9 @@ DWORD REnumServicesStatusExW(
 
     DPRINT("*pcbBytesNeeded: %lu\n", dwRequiredSize);
 
-    if (lpResumeIndex) *lpResumeIndex = dwLastResumeCount;
+    if (lpResumeIndex)
+        *lpResumeIndex = dwLastResumeCount;
+
     *lpServicesReturned = dwServiceCount;
     *pcbBytesNeeded = dwRequiredSize;
 
@@ -4929,7 +4999,8 @@ DWORD REnumServicesStatusExW(
     if (dwError == 0) 
     {
         *pcbBytesNeeded = 0;
-        if (lpResumeIndex) *lpResumeIndex = 0;
+        if (lpResumeIndex)
+            *lpResumeIndex = 0;
     }
 
 Done:;
