@@ -682,10 +682,6 @@ VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
             {
                 *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);            
             }
-            else
-            {
-                DPRINT1("no wai!\n");
-            }
             DC_UnlockDc(pdc);
             break;
         case 0x01: /* PALETTEINDEX */

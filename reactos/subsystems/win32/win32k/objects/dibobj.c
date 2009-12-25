@@ -149,7 +149,7 @@ IntGetDIBColorTable(
     PDC dc;
     PSURFACE psurf;
     PPALETTE PalGDI;
-    UINT Index;
+    UINT Index, Count = 0;
     ULONG biBitCount;
 
     if (!(dc = DC_LockDc(hDC))) return 0;
@@ -197,15 +197,14 @@ IntGetDIBColorTable(
             Colors[Index - StartIndex].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
             Colors[Index - StartIndex].rgbBlue = PalGDI->IndexedColors[Index].peBlue;
             Colors[Index - StartIndex].rgbReserved = 0;
+            Count++;
         }
         PALETTE_UnlockPalette(PalGDI);
     }
-    else
-        Entries = 0;
 
     DC_UnlockDc(dc);
 
-    return Entries;
+    return Count;
 }
 
 // Converts a DIB to a device-dependent bitmap
@@ -1509,17 +1508,14 @@ DIB_CreateDIBSection(
                   table between the DIB and the X physical device. Obviously,
                   this is left out of the ReactOS implementation. Instead,
                   we call NtGdiSetDIBColorTable. */
-    bi->biClrUsed = 0;
-    /* set number of entries in bmi.bmiColors table */
-    if (bi->biBitCount == 1) {
-        bi->biClrUsed = 2;
-    } else
-        if (bi->biBitCount == 4) {
-            bi->biClrUsed = 16;
-        } else
-            if (bi->biBitCount == 8) {
-                bi->biClrUsed = 256;
-            }
+    if (bi->biBitCount <= 8)
+    {
+        bi->biClrUsed = 1 << bi->biBitCount;
+    }
+    else
+    {
+        bi->biClrUsed = 0;
+    }
 
     bmp->hDIBSection = section;
     bmp->hSecure = hSecure;
