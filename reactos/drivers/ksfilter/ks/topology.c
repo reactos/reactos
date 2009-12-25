@@ -159,7 +159,9 @@ KsTopologyPropertyHandler(
     HANDLE hKey;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
 
-    DPRINT("KsTopologyPropertyHandler Irp %p Property %p Data %p Topology %p\n", Irp, Property, Data, Topology);
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT("KsTopologyPropertyHandler Irp %p Property %p Data %p Topology %p OutputLength %lu PropertyId %lu\n", Irp, Property, Data, Topology, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
 
     if (Property->Flags != KSPROPERTY_TYPE_GET)
     {
@@ -167,8 +169,6 @@ KsTopologyPropertyHandler(
         Irp->IoStatus.Information = 0;
         return STATUS_NOT_IMPLEMENTED;
     }
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     switch(Property->Id)
     {

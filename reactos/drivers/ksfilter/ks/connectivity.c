@@ -741,6 +741,7 @@ KsHandleSizedListQuery(
     if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(KSMULTIPLE_ITEM))
     {
         /* buffer can only hold the length descriptor */
+        Irp->IoStatus.Information = sizeof(KSMULTIPLE_ITEM);
         return STATUS_SUCCESS;
     }
 
