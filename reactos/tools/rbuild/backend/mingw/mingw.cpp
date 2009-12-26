@@ -1304,7 +1304,7 @@ MingwBackend::OutputRegistryInstallTarget ()
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(mkhive_TARGET) boot%cbootdata %s boot%cbootdata%chiveinst_$(ARCH).inf\n",
+	          "\t$(mkhive_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%chiveinst_$(ARCH).inf\n",
 	          cSep, GetFullPath ( system32 ).c_str (),
 	          cSep, cSep );
 	fprintf ( fMakefile,
