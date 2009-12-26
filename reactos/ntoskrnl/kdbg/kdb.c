@@ -1350,6 +1350,7 @@ KdbEnterDebuggerException(
     BOOLEAN Resume = FALSE;
     BOOLEAN EnterConditionMet = TRUE;
     ULONG OldEflags;
+    KIRQL OldIrql;
     NTSTATUS ExceptionCode;
 
     ExceptionCode = (ExceptionRecord ? ExceptionRecord->ExceptionCode : STATUS_BREAKPOINT);
@@ -1607,6 +1608,11 @@ KdbEnterDebuggerException(
     OldEflags = __readeflags();
     _disable();
 
+    /* HACK: Save the current IRQL and pretend we are at passive level,
+     * although interrupts are off. Needed because KDBG calls pageable code. */
+    OldIrql = KeGetCurrentIrql();
+    KeLowerIrql(PASSIVE_LEVEL);
+
     /* Exception inside the debugger? Game over. */
     if (InterlockedIncrement(&KdbEntryCount) > 1)
     {
@@ -1645,6 +1651,9 @@ KdbEnterDebuggerException(
 
     /* Decrement the entry count */
     InterlockedDecrement(&KdbEntryCount);
+
+    /* HACK: Raise back to old IRWL */
+    KeRaiseIrql(OldIrql, &OldIrql);
 
     /* Leave critical section */
     __writeeflags(OldEflags);
