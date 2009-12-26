@@ -2068,6 +2068,85 @@ REGION_AllocRgnWithHandle(INT nReg)
     return pReg;
 }
 
+PROSRGNDATA
+FASTCALL
+RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
+{
+  INT Index;
+  PGDI_TABLE_ENTRY Entry;
+  PROSRGNDATA pRgn;
+  PRGN_ATTR pRgn_Attr;
+
+  pRgn = REGION_LockRgn(hRgn);
+
+  if (pRgn)
+  {
+     Index = GDI_HANDLE_GET_INDEX(hRgn);
+     Entry = &GdiHandleTable->Entries[Index];
+
+     pRgn_Attr = Entry->UserData;
+     if (pRgn_Attr)
+     {
+        if ( pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
+        {
+           switch (pRgn_Attr->Flags)
+           {
+               case NULLREGION:
+                  EMPTY_REGION( pRgn );
+                  pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY; // Clear flag in these cases,
+                  break;
+
+               case SIMPLEREGION:
+                  REGION_SetRectRgn( pRgn,
+                                     pRgn_Attr->Rect.left,
+                                     pRgn_Attr->Rect.top,
+                                     pRgn_Attr->Rect.right,
+                                     pRgn_Attr->Rect.bottom );
+                  pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY; // just incase, force a redraw.
+                  break;
+           }
+        }
+        if (ppRgn_Attr)
+           *ppRgn_Attr = pRgn_Attr;
+     }
+     else
+     {
+        if (ppRgn_Attr)
+           *ppRgn_Attr = NULL;
+     }
+  }
+  return pRgn;
+}
+
+VOID
+FASTCALL
+RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
+{
+  INT Index;
+  PGDI_TABLE_ENTRY Entry;
+  PRGN_ATTR pRgn_Attr;
+
+  if (pRgn)
+  {
+     Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
+     Entry = &GdiHandleTable->Entries[Index];
+
+     pRgn_Attr = Entry->UserData;
+     if ( pRgn_Attr )
+     {
+        if ( pRgn_Attr->AttrFlags & ATTR_RGN_VALID )
+        {
+           pRgn_Attr->Flags = REGION_Complexity( pRgn );
+           pRgn_Attr->Rect.left   = pRgn->rdh.rcBound.left;
+           pRgn_Attr->Rect.top    = pRgn->rdh.rcBound.top;
+           pRgn_Attr->Rect.right  = pRgn->rdh.rcBound.right;
+           pRgn_Attr->Rect.bottom = pRgn->rdh.rcBound.bottom;
+        }
+     }
+  }
+  REGION_UnlockRgn(pRgn);
+}
+
 BOOL INTERNAL_CALL
 REGION_Cleanup(PVOID ObjectBody)
 {
@@ -2209,64 +2288,41 @@ NtGdiCombineRgn(HRGN  hDest,
                 HRGN  hSrc2,
                 INT  CombineMode)
 {
-    INT result = ERROR;
-    PROSRGNDATA destRgn, src1Rgn, src2Rgn;
+  INT result = ERROR;
+  PROSRGNDATA destRgn, src1Rgn, src2Rgn = NULL;
 
-    destRgn = REGION_LockRgn(hDest);
-    if (destRgn)
-    {
-        src1Rgn = REGION_LockRgn(hSrc1);
-        if (src1Rgn)
-        {
-            if (CombineMode == RGN_COPY)
-            {
-                if ( !REGION_CopyRegion(destRgn, src1Rgn) )
-                    return ERROR;
-                result = REGION_Complexity(destRgn);
-            }
-            else
-            {
-                src2Rgn = REGION_LockRgn(hSrc2);
-                if (src2Rgn)
-                {
-                    switch (CombineMode)
-                    {
-                    case RGN_AND:
-                        REGION_IntersectRegion(destRgn, src1Rgn, src2Rgn);
-                        break;
-                    case RGN_OR:
-                        REGION_UnionRegion(destRgn, src1Rgn, src2Rgn);
-                        break;
-                    case RGN_XOR:
-                        REGION_XorRegion(destRgn, src1Rgn, src2Rgn);
-                        break;
-                    case RGN_DIFF:
-                        REGION_SubtractRegion(destRgn, src1Rgn, src2Rgn);
-                        break;
-                    }
-                    REGION_UnlockRgn(src2Rgn);
-                    result = REGION_Complexity(destRgn);
-                }
-                else if (hSrc2 == NULL)
-                {
-                    DPRINT1("NtGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
-                    SetLastWin32Error(ERROR_INVALID_HANDLE);
-                }
-            }
+  if ( CombineMode > RGN_COPY && CombineMode < RGN_AND)
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return ERROR;
+  }
 
-            REGION_UnlockRgn(src1Rgn);
-        }
+  destRgn = REGION_LockRgn(hDest);
+  if (!destRgn)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return ERROR;
+  }
 
-        REGION_UnlockRgn(destRgn);
-    }
-    else
-    {
-        DPRINT("NtGdiCombineRgn: hDest unavailable\n");
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        result = ERROR;
-    }
+  src1Rgn = REGION_LockRgn(hSrc1);
+  if (!src1Rgn)
+  {
+     REGION_UnlockRgn(destRgn);
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return ERROR;
+  }
 
-    return result;
+  if (hSrc2)
+     src2Rgn = REGION_LockRgn(hSrc2);
+
+  result = IntGdiCombineRgn( destRgn, src1Rgn, src2Rgn, CombineMode);
+
+  if (src2Rgn)
+     REGION_UnlockRgn(src2Rgn);
+  REGION_UnlockRgn(src1Rgn);
+  REGION_UnlockRgn(destRgn);
+
+  return result;
 }
 
 HRGN
