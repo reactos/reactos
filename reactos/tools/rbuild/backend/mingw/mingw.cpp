@@ -365,9 +365,16 @@ MingwBackend::ProcessNormal ()
 	GenerateTestSupportCode ();
 	GenerateCompilationUnitSupportCode ();
 	GenerateSysSetup ();
+	GenerateInstallerFileList();
 	GenerateProxyMakefiles ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
+}
+
+void
+MingwBackend::GenerateInstallerFileList()
+{
+	this->ProjectNode.GenerateInstallerFileList();
 }
 
 void
@@ -1297,7 +1304,7 @@ MingwBackend::OutputRegistryInstallTarget ()
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(MKHIVE_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%chiveinst_$(ARCH).inf\n",
+	          "\t$(MKHIVE_TARGET) boot%cbootdata %s boot%cbootdata%chiveinst_$(ARCH).inf\n",
 	          cSep, GetFullPath ( system32 ).c_str (),
 	          cSep, cSep );
 	fprintf ( fMakefile,
