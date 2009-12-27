@@ -1442,14 +1442,15 @@ DIB_CreateDIBSection(
     if (usage == DIB_PAL_COLORS)
     {
         lpRGB = DIB_MapPaletteColors(dc, bmi);
+        ColorCount = bi->biClrUsed;
+        if (ColorCount == 0)
+        {
+            ColorCount = 1 << bi->biBitCount;
+        }
     }
     else
     {
         lpRGB = bmi->bmiColors;
-    }
-    ColorCount = bi->biClrUsed;
-    if (ColorCount == 0)
-    {
         ColorCount = 1 << bi->biBitCount;
     }
 

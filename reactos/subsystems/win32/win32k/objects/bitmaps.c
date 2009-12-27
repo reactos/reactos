@@ -667,7 +667,7 @@ VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
         case 0x10: /* DIBINDEX */
             if (IntGetDIBColorTable(hDC, LOWORD(*Color), 1, &quad) == 1) 
             {
-                *Color = RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);                
+                *Color = RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
             }
             else
             {
@@ -677,10 +677,16 @@ VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
             break;
         case 0x02: /* PALETTERGB */
             pdc = DC_LockDc(hDC);
-            index = NtGdiGetNearestPaletteIndex(pdc->dclevel.hpal, *Color);
-            if (IntGetPaletteEntries(pdc->dclevel.hpal, index, 1, &palEntry) == 1)
+            if (pdc->dclevel.hpal != NtGdiGetStockObject(DEFAULT_PALETTE))
             {
-                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);            
+                index = NtGdiGetNearestPaletteIndex(pdc->dclevel.hpal, *Color);
+                IntGetPaletteEntries(pdc->dclevel.hpal, index, 1, &palEntry);
+                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
+            }
+            else
+            {
+                /* Use the pure color */
+                *Color = *Color & 0x00FFFFFF;
             }
             DC_UnlockDc(pdc);
             break;
@@ -688,7 +694,7 @@ VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
             pdc = DC_LockDc(hDC);
             if (IntGetPaletteEntries(pdc->dclevel.hpal, LOWORD(*Color), 1, &palEntry) == 1)
             {
-                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);            
+                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
             }
             DC_UnlockDc(pdc);
             break;
