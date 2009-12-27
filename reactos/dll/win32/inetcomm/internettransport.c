@@ -167,14 +167,12 @@ HRESULT InternetTransport_HandsOffCallback(InternetTransport *This)
 
 HRESULT InternetTransport_DropConnection(InternetTransport *This)
 {
-    int ret;
-
     if (This->Status == IXP_DISCONNECTED)
         return IXP_E_NOT_CONNECTED;
 
-    ret = shutdown(This->Socket, SD_BOTH);
+    shutdown(This->Socket, SD_BOTH);
 
-    ret = closesocket(This->Socket);
+    closesocket(This->Socket);
 
     DestroyWindow(This->hwnd);
     This->hwnd = NULL;

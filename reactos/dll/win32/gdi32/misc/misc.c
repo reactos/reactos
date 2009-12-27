@@ -284,3 +284,10 @@ GdiAddGlsBounds(HDC hdc,LPRECT prc)
     return NtGdiSetBoundsRect(hdc, prc, 0x8000 |  DCB_ACCUMULATE ) ? TRUE : FALSE;
 }
 
+HGDIOBJ
+FASTCALL
+hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
+{
+   return NULL;
+}
+

@@ -943,6 +943,14 @@ typedef struct tagHW_PROFILE_INFOW {
 	WCHAR szHwProfileName[MAX_PROFILE_LEN];
 } HW_PROFILE_INFOW,*LPHW_PROFILE_INFOW;
 
+/* Event Logging */
+
+#define EVENTLOG_FULL_INFO          0
+
+typedef struct _EVENTLOG_FULL_INFORMATION {
+    DWORD dwFull;
+} EVENTLOG_FULL_INFORMATION, *LPEVENTLOG_FULL_INFORMATION;
+
 typedef enum _GET_FILEEX_INFO_LEVELS {
 	GetFileExInfoStandard,
 	GetFileExMaxInfoLevel

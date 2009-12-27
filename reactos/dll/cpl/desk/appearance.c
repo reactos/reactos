@@ -143,7 +143,7 @@ LoadCurrentTheme(GLOBALS* g)
     SystemParametersInfoW(SPI_GETDRAGFULLWINDOWS, 0, &g->Theme.Effects.bDragFullWindows, 0);
 
     /* "Hide underlined letters for keyboard navigation until I press the Alt key" */
-    //SystemParametersInfo(SPI_GETKEYBOARDCUES, sizeof(BOOL), &g->Theme.Effects.bKeyboardCues, 0);
+    SystemParametersInfo(SPI_GETKEYBOARDCUES, 0, &g->Theme.Effects.bKeyboardCues, 0);
 }
 
 

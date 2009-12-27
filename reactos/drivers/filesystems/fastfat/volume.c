@@ -129,8 +129,12 @@ FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 
 
 static NTSTATUS
-FsdGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
-			  PULONG BufferLength)
+FsdGetFsDeviceInformation
+(
+  PDEVICE_OBJECT DeviceObject,
+  PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
+  PULONG BufferLength
+)
 {
   DPRINT("FsdGetFsDeviceInformation()\n");
   DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
@@ -141,7 +145,7 @@ FsdGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
     return(STATUS_BUFFER_OVERFLOW);
 
   FsDeviceInfo->DeviceType = FILE_DEVICE_DISK;
-  FsDeviceInfo->Characteristics = 0; /* FIXME: fix this !! */
+  FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
 
   DPRINT("FsdGetFsDeviceInformation() finished.\n");
 
@@ -343,7 +347,8 @@ NTSTATUS VfatQueryVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
       break;
 
     case FileFsDeviceInformation:
-      RC = FsdGetFsDeviceInformation(SystemBuffer,
+      RC = FsdGetFsDeviceInformation(IrpContext->DeviceObject,
+				     SystemBuffer,
 				     &BufferLength);
       break;
 

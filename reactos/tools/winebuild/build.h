@@ -31,6 +31,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef max
+#define max(a,b)   (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a,b)   (((a) < (b)) ? (a) : (b))
+#endif
+
+#define EXEEXT ".exe"
+
 typedef enum
 {
     TYPE_VARIABLE,     /* variable */
@@ -90,6 +99,7 @@ typedef struct
     char            *file_name;          /* file name of the dll */
     char            *dll_name;           /* internal name of the dll */
     char            *init_func;          /* initialization routine */
+    char            *main_module;        /* main Win32 module for Win16 specs */
     SPEC_TYPE        type;               /* type of dll (Win16/Win32) */
     int              base;               /* ordinal base */
     int              limit;              /* ordinal limit */
@@ -112,14 +122,19 @@ typedef struct
 
 enum target_cpu
 {
-    CPU_x86, CPU_x86_64, CPU_SPARC, CPU_ALPHA, CPU_POWERPC, CPU_ARM
+    CPU_x86, CPU_x86_64, CPU_SPARC, CPU_ALPHA, CPU_POWERPC, CPU_ARM, CPU_LAST = CPU_ARM
 };
 
 enum target_platform
 {
-    PLATFORM_UNSPECIFIED, PLATFORM_APPLE, PLATFORM_SOLARIS, PLATFORM_WINDOWS
+    PLATFORM_UNSPECIFIED,
+    PLATFORM_APPLE,
+    PLATFORM_FREEBSD,
+    PLATFORM_SOLARIS,
+    PLATFORM_WINDOWS
 };
 
+extern char *target_alias;
 extern enum target_cpu target_cpu;
 extern enum target_platform target_platform;
 
@@ -136,9 +151,36 @@ extern enum target_platform target_platform;
 #define FLAG_EXT_LINK  0x200  /* function links to an external symbol */
 
 #define FLAG_CPU(cpu)  (0x01000 << (cpu))
-#define FLAG_CPU_MASK  0x1f000
+#define FLAG_CPU_MASK  (FLAG_CPU(CPU_LAST + 1) - FLAG_CPU(0))
+#define FLAG_CPU_WIN64 (FLAG_CPU(CPU_x86_64))
+#define FLAG_CPU_WIN32 (FLAG_CPU_MASK & ~FLAG_CPU_WIN64)
 
 #define MAX_ORDINALS  65535
+
+/* some Windows constants */
+
+#define IMAGE_FILE_RELOCS_STRIPPED	   0x0001 /* No relocation info */
+#define IMAGE_FILE_EXECUTABLE_IMAGE	   0x0002
+#define IMAGE_FILE_LINE_NUMS_STRIPPED      0x0004
+#define IMAGE_FILE_LOCAL_SYMS_STRIPPED     0x0008
+#define IMAGE_FILE_AGGRESIVE_WS_TRIM	   0x0010
+#define IMAGE_FILE_LARGE_ADDRESS_AWARE	   0x0020
+#define IMAGE_FILE_16BIT_MACHINE	   0x0040
+#define IMAGE_FILE_BYTES_REVERSED_LO	   0x0080
+#define IMAGE_FILE_32BIT_MACHINE	   0x0100
+#define IMAGE_FILE_DEBUG_STRIPPED	   0x0200
+#define IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP 0x0400
+#define IMAGE_FILE_NET_RUN_FROM_SWAP	   0x0800
+#define IMAGE_FILE_SYSTEM		   0x1000
+#define IMAGE_FILE_DLL			   0x2000
+#define IMAGE_FILE_UP_SYSTEM_ONLY	   0x4000
+#define IMAGE_FILE_BYTES_REVERSED_HI	   0x8000
+
+#define IMAGE_DLLCHARACTERISTICS_NX_COMPAT 0x0100
+
+#define	IMAGE_SUBSYSTEM_NATIVE      1
+#define	IMAGE_SUBSYSTEM_WINDOWS_GUI 2
+#define	IMAGE_SUBSYSTEM_WINDOWS_CUI 3
 
 /* global functions */
 
@@ -169,6 +211,10 @@ extern void warning( const char *msg, ... )
    __attribute__ ((__format__ (__printf__, 1, 2)));
 extern int output( const char *format, ... )
    __attribute__ ((__format__ (__printf__, 1, 2)));
+extern const char *get_as_command(void);
+extern const char *get_ld_command(void);
+extern const char *get_nm_command(void);
+extern const char *get_windres_command(void);
 extern char *get_temp_file_name( const char *prefix, const char *suffix );
 extern void output_standard_file_header(void);
 extern FILE *open_input_file( const char *srcdir, const char *name );
@@ -204,13 +250,22 @@ extern int resolve_imports( DLLSPEC *spec );
 extern int has_imports(void);
 extern int has_relays( DLLSPEC *spec );
 extern void output_get_pc_thunk(void);
+extern void output_module( DLLSPEC *spec );
 extern void output_stubs( DLLSPEC *spec );
 extern void output_imports( DLLSPEC *spec );
+extern void output_exports( DLLSPEC *spec );
 extern int load_res32_file( const char *name, DLLSPEC *spec );
 extern void output_resources( DLLSPEC *spec );
+extern void output_bin_resources( DLLSPEC *spec, unsigned int start_rva );
+extern void output_fake_module( DLLSPEC *spec );
 extern void load_res16_file( const char *name, DLLSPEC *spec );
 extern void output_res16_data( DLLSPEC *spec );
-extern void output_res16_directory( DLLSPEC *spec, const char *header_name );
+extern void output_bin_res16_data( DLLSPEC *spec );
+extern void output_res16_directory( DLLSPEC *spec );
+extern void output_bin_res16_directory( DLLSPEC *spec, unsigned int data_offset );
+extern void output_spec16_file( DLLSPEC *spec );
+extern void output_fake_module16( DLLSPEC *spec16 );
+extern void output_res_o_file( DLLSPEC *spec );
 
 extern void BuildRelays16(void);
 extern void BuildRelays32(void);
@@ -219,8 +274,34 @@ extern void BuildSpec32File( DLLSPEC *spec );
 extern void BuildDef32File( DLLSPEC *spec );
 extern void BuildPedllFile( DLLSPEC *spec );
 
+extern void add_16bit_exports( DLLSPEC *spec32, DLLSPEC *spec16 );
 extern int parse_spec_file( FILE *file, DLLSPEC *spec );
 extern int parse_def_file( FILE *file, DLLSPEC *spec );
+
+/* buffer management */
+
+extern int byte_swapped;
+extern const char *input_buffer_filename;
+extern const unsigned char *input_buffer;
+extern size_t input_buffer_pos;
+extern size_t input_buffer_size;
+extern unsigned char *output_buffer;
+extern size_t output_buffer_pos;
+extern size_t output_buffer_size;
+
+extern void init_input_buffer( const char *file );
+extern void init_output_buffer(void);
+extern void flush_output_buffer(void);
+extern unsigned char get_byte(void);
+extern unsigned short get_word(void);
+extern unsigned int get_dword(void);
+extern void put_data( const void *data, size_t size );
+extern void put_byte( unsigned char val );
+extern void put_word( unsigned short val );
+extern void put_dword( unsigned int val );
+extern void put_qword( unsigned int val );
+extern void put_pword( unsigned int val );
+extern void align_output( unsigned int align );
 
 /* global variables */
 

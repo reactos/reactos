@@ -105,70 +105,70 @@ PcHandleGuidNullRequest(
     // access property
     Property = (PKSP_NODE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-            if (Property->NodeId >= SubDeviceDescriptor->DeviceDescriptor->NodeCount)
-            {
-                // request is out of bounds
-                Irp->IoStatus.Information = 0;
-                return STATUS_INVALID_PARAMETER;
-            }
+    if (Property->NodeId >= SubDeviceDescriptor->DeviceDescriptor->NodeCount)
+    {
+        // request is out of bounds
+        Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
 
-            Node = (PPCNODE_DESCRIPTOR)((ULONG_PTR)SubDeviceDescriptor->DeviceDescriptor->Nodes + (Property->NodeId * SubDeviceDescriptor->DeviceDescriptor->NodeSize));
+    Node = (PPCNODE_DESCRIPTOR)((ULONG_PTR)SubDeviceDescriptor->DeviceDescriptor->Nodes + (Property->NodeId * SubDeviceDescriptor->DeviceDescriptor->NodeSize));
 
-            if (!Node->AutomationTable)
-            {
-                // request is out of bounds
-                Irp->IoStatus.Information = 0;
-                return STATUS_INVALID_PARAMETER;
-            }
+    if (!Node->AutomationTable)
+    {
+        // request is out of bounds
+        Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
 
-            PC_ASSERT(Node->AutomationTable);
-            PC_ASSERT(Node->AutomationTable->PropertyCount);
-            PC_ASSERT(Node->AutomationTable->PropertyItemSize);
+    PC_ASSERT(Node->AutomationTable);
+    PC_ASSERT(Node->AutomationTable->PropertyCount);
+    PC_ASSERT(Node->AutomationTable->PropertyItemSize);
 
-            Buffer = (LPGUID)AllocateItem(NonPagedPool,  sizeof (GUID) * Node->AutomationTable->PropertyCount, TAG_PORTCLASS);
-             if  (!Buffer)
-                 return  STATUS_INSUFFICIENT_RESOURCES;
+    Buffer = (LPGUID)AllocateItem(NonPagedPool,  sizeof (GUID) * Node->AutomationTable->PropertyCount, TAG_PORTCLASS);
+    if  (!Buffer)
+        return  STATUS_INSUFFICIENT_RESOURCES;
 
-            PropertyItem = (PCPROPERTY_ITEM*)Node->AutomationTable->Properties;
-            for (Index = 0; Index < Node->AutomationTable->PropertyCount; Index++)
-            {
-                BOOL Found = FALSE;
-                for (SubIndex = 0; SubIndex < Count; Index++)
-                {
-                    if  (IsEqualGUIDAligned(Buffer[SubIndex], *PropertyItem->Set))
-                    {
-                        Found = TRUE;
-                        break;
-                    }
-                }
-                if (!Found)
-                {
-                    RtlMoveMemory(&Buffer[Count], PropertyItem->Set, sizeof (GUID));
-                    Count++;
-                }
-                PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + Node->AutomationTable->PropertyItemSize);
-            }
+     PropertyItem = (PCPROPERTY_ITEM*)Node->AutomationTable->Properties;
+     for (Index = 0; Index < Node->AutomationTable->PropertyCount; Index++)
+     {
+         BOOL Found = FALSE;
+         for (SubIndex = 0; SubIndex < Count; Index++)
+         {
+             if  (IsEqualGUIDAligned(Buffer[SubIndex], *PropertyItem->Set))
+             {
+                 Found = TRUE;
+                 break;
+             }
+         }
+         if (!Found)
+         {
+             RtlMoveMemory(&Buffer[Count], PropertyItem->Set, sizeof (GUID));
+             Count++;
+         }
+         PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + Node->AutomationTable->PropertyItemSize);
+     }
 
      // store result length
-            Irp->IoStatus.Information =  sizeof (GUID) * Count;
-            if  (IoStack->Parameters.DeviceIoControl.OutputBufferLength <  sizeof (GUID) * Count)
-            {
-                 // buffer too small
-                 FreeItem(Buffer, TAG_PORTCLASS);
-                 return  STATUS_MORE_ENTRIES;
-            }
+     Irp->IoStatus.Information =  sizeof (GUID) * Count;
+     if  (IoStack->Parameters.DeviceIoControl.OutputBufferLength <  sizeof (GUID) * Count)
+     {
+         // buffer too small
+         FreeItem(Buffer, TAG_PORTCLASS);
+         return  STATUS_MORE_ENTRIES;
+     }
 
-            RtlMoveMemory(Irp->UserBuffer, Buffer,  sizeof (GUID) * Count);
-            FreeItem(Buffer, TAG_PORTCLASS);
-            return STATUS_SUCCESS;
-        }
+     RtlMoveMemory(Irp->UserBuffer, Buffer,  sizeof (GUID) * Count);
+     FreeItem(Buffer, TAG_PORTCLASS);
+     return STATUS_SUCCESS;
+}
 
 NTSTATUS
 PcFindNodePropertyHandler(
     PIRP Irp,
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor,
     OUT PPCPROPERTY_ITEM * OutPropertyItem)
-        {
+{
     PPCNODE_DESCRIPTOR Node;
     PPCPROPERTY_ITEM PropertyItem;
     PIO_STACK_LOCATION IoStack;
@@ -181,34 +181,34 @@ PcFindNodePropertyHandler(
     // access property
     Property = (PKSP_NODE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-            if (Property->NodeId >= SubDeviceDescriptor->DeviceDescriptor->NodeCount)
-            {
-                // request is out of bounds
+    if (Property->NodeId >= SubDeviceDescriptor->DeviceDescriptor->NodeCount)
+    {
+        // request is out of bounds
         DPRINT("InvalidIndex %u %u\n", Property->NodeId, SubDeviceDescriptor->DeviceDescriptor->NodeCount);
-                return STATUS_INVALID_PARAMETER;
-            }
+        return STATUS_INVALID_PARAMETER;
+    }
 
-            Node = (PPCNODE_DESCRIPTOR)((ULONG_PTR)SubDeviceDescriptor->DeviceDescriptor->Nodes + (Property->NodeId * SubDeviceDescriptor->DeviceDescriptor->NodeSize));
+    Node = (PPCNODE_DESCRIPTOR)((ULONG_PTR)SubDeviceDescriptor->DeviceDescriptor->Nodes + (Property->NodeId * SubDeviceDescriptor->DeviceDescriptor->NodeSize));
 
-            if (!Node->AutomationTable)
-            {
-                // request is out of bounds
-                Irp->IoStatus.Information = 0;
-                return STATUS_NOT_FOUND;
-            }
+    if (!Node->AutomationTable)
+    {
+        // request is out of bounds
+        Irp->IoStatus.Information = 0;
+        return STATUS_NOT_FOUND;
+    }
 
     // sanity checks
-            PC_ASSERT(Node->AutomationTable);
-            PC_ASSERT(Node->AutomationTable->PropertyCount);
-            PC_ASSERT(Node->AutomationTable->PropertyItemSize);
+    PC_ASSERT(Node->AutomationTable);
+    PC_ASSERT(Node->AutomationTable->PropertyCount);
+    PC_ASSERT(Node->AutomationTable->PropertyItemSize);
 
-            PropertyItem = (PCPROPERTY_ITEM*)Node->AutomationTable->Properties;
+    PropertyItem = (PCPROPERTY_ITEM*)Node->AutomationTable->Properties;
 
     DPRINT("NodeId %u PropertyCount %u\n", Property->NodeId, Node->AutomationTable->PropertyCount);
-            for(Index = 0; Index < Node->AutomationTable->PropertyCount; Index++)
-            {
-                if (IsEqualGUIDAligned(*PropertyItem->Set, Property->Property.Set) && PropertyItem->Id == Property->Property.Id)
-                {
+    for(Index = 0; Index < Node->AutomationTable->PropertyCount; Index++)
+    {
+        if (IsEqualGUIDAligned(*PropertyItem->Set, Property->Property.Set) && PropertyItem->Id == Property->Property.Id)
+        {
             //found property handler
             *OutPropertyItem = PropertyItem;
             return STATUS_SUCCESS;
@@ -225,7 +225,7 @@ NTSTATUS
 PcNodeBasicSupportHandler(
     PIRP Irp,
     PPCPROPERTY_ITEM PropertyItem)
-                    {
+{
     PULONG Flags;
     PIO_STACK_LOCATION IoStack;
     PKSPROPERTY_DESCRIPTION Description;
@@ -237,38 +237,38 @@ PcNodeBasicSupportHandler(
     // access property
     Property = (PKSP_NODE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-                            PC_ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(ULONG));
+    PC_ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(ULONG));
     Flags= (PULONG)Irp->UserBuffer;
 
     // reset flags
-                            *Flags = 0;
+    *Flags = 0;
 
-                            if (PropertyItem->Flags & KSPROPERTY_TYPE_SET)
-                                *Flags |= KSPROPERTY_TYPE_SET;
+    if (PropertyItem->Flags & KSPROPERTY_TYPE_SET)
+        *Flags |= KSPROPERTY_TYPE_SET;
 
-                            if (PropertyItem->Flags & KSPROPERTY_TYPE_GET)
-                                *Flags |= KSPROPERTY_TYPE_GET;
+    if (PropertyItem->Flags & KSPROPERTY_TYPE_GET)
+        *Flags |= KSPROPERTY_TYPE_GET;
 
     // store result length
-                            Irp->IoStatus.Information = sizeof(ULONG);
+    Irp->IoStatus.Information = sizeof(ULONG);
 
-                            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(KSPROPERTY_DESCRIPTION))
-                            {
+    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(KSPROPERTY_DESCRIPTION))
+    {
         // get output buffer
         Description = (PKSPROPERTY_DESCRIPTION)Irp->UserBuffer;
 
         // store result
-                                Description->DescriptionSize = sizeof(KSPROPERTY_DESCRIPTION);
-                                Description->PropTypeSet.Set = KSPROPTYPESETID_General;
-                                Description->PropTypeSet.Id = 0;
-                                Description->PropTypeSet.Flags = 0;
-                                Description->MembersListCount = 0;
-                                Description->Reserved = 0;
+        Description->DescriptionSize = sizeof(KSPROPERTY_DESCRIPTION);
+        Description->PropTypeSet.Set = KSPROPTYPESETID_General;
+        Description->PropTypeSet.Id = 0;
+        Description->PropTypeSet.Flags = 0;
+        Description->MembersListCount = 0;
+        Description->Reserved = 0;
 
-                                Irp->IoStatus.Information = sizeof(KSPROPERTY_DESCRIPTION);
-                            }
-                            return STATUS_SUCCESS;
-                        }
+        Irp->IoStatus.Information = sizeof(KSPROPERTY_DESCRIPTION);
+    }
+    return STATUS_SUCCESS;
+}
 
 
 NTSTATUS
@@ -289,7 +289,7 @@ PcHandleNodePropertyRequest(
     {
         // certainly not a node property request
         return STATUS_NOT_FOUND;
-                    }
+    }
 
     // access property
     Property = (PKSP_NODE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
@@ -321,34 +321,34 @@ PcHandleNodePropertyRequest(
     }
 
     // allocate a property request
-                    PropertyRequest = (PPCPROPERTY_REQUEST)AllocateItem(NonPagedPool, sizeof(PCPROPERTY_REQUEST), TAG_PORTCLASS);
-                    if (!PropertyRequest)
-                        return STATUS_INSUFFICIENT_RESOURCES;
+    PropertyRequest = (PPCPROPERTY_REQUEST)AllocateItem(NonPagedPool, sizeof(PCPROPERTY_REQUEST), TAG_PORTCLASS);
+    if (!PropertyRequest)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-                    PropertyRequest->MajorTarget = SubDeviceDescriptor->UnknownMiniport;
-                    PropertyRequest->MinorTarget = SubDeviceDescriptor->UnknownStream;
-                    PropertyRequest->Irp = Irp;
-                    PropertyRequest->Node = Property->NodeId;
-                    PropertyRequest->PropertyItem = PropertyItem;
-                    PropertyRequest->Verb = Property->Property.Flags;
-                    PropertyRequest->InstanceSize = IoStack->Parameters.DeviceIoControl.InputBufferLength - sizeof(KSNODEPROPERTY);
-                    PropertyRequest->Instance = (PVOID)((ULONG_PTR)IoStack->Parameters.DeviceIoControl.Type3InputBuffer + sizeof(KSNODEPROPERTY));
-                    PropertyRequest->ValueSize = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-                    PropertyRequest->Value = Irp->UserBuffer;
+     PropertyRequest->MajorTarget = SubDeviceDescriptor->UnknownMiniport;
+     PropertyRequest->MinorTarget = SubDeviceDescriptor->UnknownStream;
+     PropertyRequest->Irp = Irp;
+     PropertyRequest->Node = Property->NodeId;
+     PropertyRequest->PropertyItem = PropertyItem;
+     PropertyRequest->Verb = Property->Property.Flags;
+     PropertyRequest->InstanceSize = IoStack->Parameters.DeviceIoControl.InputBufferLength - sizeof(KSNODEPROPERTY);
+     PropertyRequest->Instance = (PVOID)((ULONG_PTR)IoStack->Parameters.DeviceIoControl.Type3InputBuffer + sizeof(KSNODEPROPERTY));
+     PropertyRequest->ValueSize = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+     PropertyRequest->Value = Irp->UserBuffer;
 
-                    Status = PropertyItem->Handler(PropertyRequest);
+     Status = PropertyItem->Handler(PropertyRequest);
 
-                    if (Status != STATUS_PENDING)
-                    {
+     if (Status != STATUS_PENDING)
+     {
          //request completed
-                        Irp->IoStatus.Information = PropertyRequest->ValueSize;
-                        ExFreePool(PropertyRequest);
-                    }
+         Irp->IoStatus.Information = PropertyRequest->ValueSize;
+         ExFreePool(PropertyRequest);
+     }
 
      // done
      DPRINT("Status %x\n", Status);
-                    return Status;
-                }
+     return Status;
+}
 
 NTSTATUS
 NTAPI
@@ -370,7 +370,7 @@ PcHandlePropertyWithTable(
 
         /* then try KsPropertyHandler */
         Status = KsPropertyHandler(Irp, PropertySetCount, PropertySet);
-            }
+    }
 
     return Status;
 }
@@ -462,9 +462,9 @@ DumpFilterDescriptor(
                 DPRINT1("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
 
                 EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + FilterDescription->AutomationTable->EventItemSize);
-        }
+            }
 
-    }
+        }
     }
 
     if (FilterDescription->Nodes)
@@ -484,8 +484,8 @@ DumpFilterDescriptor(
                     RtlStringFromGUID(*EventItem->Set, &GuidString);
                     DPRINT1("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
 
-                    EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + FilterDescription->AutomationTable->EventItemSize);
-}
+                    EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + NodeDescriptor->AutomationTable->EventItemSize);
+                }
 
             }
 

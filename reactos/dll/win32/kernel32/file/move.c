@@ -273,7 +273,7 @@ MoveFileWithProgressW (
                                NULL);
 
     errCode = NtOpenFile( &hNewFile,
-                          GENERIC_READ | GENERIC_WRITE,
+                          GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           0,

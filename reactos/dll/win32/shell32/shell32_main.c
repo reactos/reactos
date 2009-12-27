@@ -538,7 +538,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     /* get icon index (or load icon)*/
     if (SUCCEEDED(hr) && (flags & (SHGFI_ICON | SHGFI_SYSICONINDEX)))
     {
-        if (flags & SHGFI_USEFILEATTRIBUTES)
+        if (flags & SHGFI_USEFILEATTRIBUTES && !(flags & SHGFI_PIDL))
         {
             WCHAR sTemp [MAX_PATH];
             WCHAR * szExt;

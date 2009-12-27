@@ -395,7 +395,6 @@ NtUserCreateWindowStation(
    DWORD Unknown5,
    DWORD Unknown6)
 {
-   PSYSTEM_CURSORINFO CurInfo;
    UNICODE_STRING WindowStationName;
    UNICODE_STRING FullWindowStationName;
    PWINSTATION_OBJECT WindowStationObject;
@@ -522,61 +521,16 @@ NtUserCreateWindowStation(
 
    WindowStationObject->FlatMenu = FALSE;
 
-   if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
-   {
-      ExFreePool(FullWindowStationName.Buffer);
-      /* FIXME - Delete window station object */
-      ObDereferenceObject(WindowStationObject);
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      return 0;
-   }
-
-   CurInfo->Enabled = FALSE;
-   CurInfo->ButtonsDown = 0;
-   CurInfo->CursorClipInfo.IsClipped = FALSE;
-   CurInfo->LastBtnDown = 0;
-   CurInfo->CurrentCursorObject = NULL;
-   CurInfo->ShowingCursor = 0;
-   CurInfo->ClickLockActive = FALSE;
-   CurInfo->ClickLockTime = 0;
-
-/*
-   // not used anymore
-   CurInfo->WheelScroLines = gspv.iWheelScrollLines;
-#if (_WIN32_WINNT >= 0x0600)
-   CurInfo->WheelScroChars = gspv.iWheelScrollChars;
-#endif
-   CurInfo->SwapButtons = gspv.bMouseBtnSwap;
-   CurInfo->DblClickSpeed = gspv.iDblClickTime;
-   CurInfo->DblClickWidth = gspv.iDblClickWidth;
-   CurInfo->DblClickHeight = gspv.iDblClickHeight;
-
-   CurInfo->MouseSpeed = gspv.iMouseSpeed;
-   CurInfo->CursorAccelerationInfo.FirstThreshold  = gspv.caiMouse.FirstThreshold;
-   CurInfo->CursorAccelerationInfo.SecondThreshold = gspv.caiMouse.SecondThreshold;
-   CurInfo->CursorAccelerationInfo.Acceleration = gspv.caiMouse.Acceleration;
-
-   CurInfo->MouseHoverTime = gspv.iMouseHoverTime;
-   CurInfo->MouseHoverWidth = gspv.iMouseHoverWidth;
-   CurInfo->MouseHoverHeight = gspv.iMouseHoverHeight;
-*/
-
-//   WindowStationObject->ScreenSaverActive = FALSE;
-//   WindowStationObject->ScreenSaverTimeOut = 10;
-   WindowStationObject->SystemCursor = CurInfo;
-
-   /* END FIXME loading from register */
-
    if (!IntSetupClipboard(WindowStationObject))
    {
        DPRINT1("WindowStation: Error Setting up the clipboard!!!\n");
    }
 
-   if (!IntSetupCurIconHandles(WindowStationObject))
+   if (InputWindowStation == NULL)
    {
-      DPRINT1("Setting up the Cursor/Icon Handle table failed!\n");
-      /* FIXME: Complain more loudly? */
-      ExFreePool(FullWindowStationName.Buffer);
+      InputWindowStation = WindowStationObject;
+
+      InitCursorImpl();
    }
 
    DPRINT("Window station successfully created (%wZ)\n", &FullWindowStationName);
@@ -708,12 +662,6 @@ NtUserCloseWindowStation(
       DPRINT("Validation of window station handle (0x%X) failed\n", hWinSta);
       return FALSE;
    }
-
-#if 0
-   /* FIXME - free the cursor information when actually deleting the object!! */
-   ASSERT(Object->SystemCursor);
-   ExFreePool(Object->SystemCursor);
-#endif
 
    ObDereferenceObject(Object);
 

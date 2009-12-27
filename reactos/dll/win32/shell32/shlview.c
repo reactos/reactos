@@ -3,7 +3,7 @@
  *
  *	Copyright 1998,1999	<juergen.schmied@debitel.net>
  *
- * This is the view visualizing the data provied by the shellfolder.
+ * This is the view visualizing the data provided by the shellfolder.
  * No direct access to data from pidls should be done from here.
  *
  * This library is free software; you can redistribute it and/or
@@ -21,9 +21,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * FIXME: The order by part of the background context menu should be
- * buily according to the columns shown.
+ * built according to the columns shown.
  *
- * FIXME: Load/Save the view state from/into the stream provied by
+ * FIXME: Load/Save the view state from/into the stream provided by
  * the ShellBrowser
  *
  * FIXME: CheckToolbar: handle the "new folder" and "folder up" button
@@ -362,7 +362,7 @@ static BOOL ShellView_InitList(IShellViewImpl * This)
 	{
 	  for (i=0; 1; i++)
 	  {
-	    if (!SUCCEEDED(IShellFolder2_GetDetailsOf(This->pSF2Parent, NULL, i, &sd)))
+            if (FAILED(IShellFolder2_GetDetailsOf(This->pSF2Parent, NULL, i, &sd)))
 	      break;
 	    lvColumn.fmt = sd.fmt;
 	    lvColumn.cx = sd.cxChar*8; /* chars->pixel */
@@ -428,8 +428,8 @@ static INT CALLBACK ShellView_ListViewCompareItems(LPVOID lParam1, LPVOID lParam
     FILETIME fd1, fd2;
     char strName1[MAX_PATH], strName2[MAX_PATH];
     BOOL bIsFolder1, bIsFolder2,bIsBothFolder;
-    LPITEMIDLIST pItemIdList1 = (LPITEMIDLIST) lParam1;
-    LPITEMIDLIST pItemIdList2 = (LPITEMIDLIST) lParam2;
+    LPITEMIDLIST pItemIdList1 = lParam1;
+    LPITEMIDLIST pItemIdList2 = lParam2;
     LISTVIEW_SORT_INFO *pSortInfo = (LPLISTVIEW_SORT_INFO) lpData;
 
 
@@ -1343,7 +1343,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
             break;
 
           case NM_RETURN:
-            TRACE("-- NM_DBLCLK %p\n",This);
+            TRACE("-- NM_RETURN %p\n",This);
             if (OnDefaultCommand(This) != S_OK) ShellView_OpenSelectedItems(This);
             break;
 
@@ -1463,7 +1463,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	      DWORD dwAttr = SFGAO_CANRENAME;
 	      pidl = (LPITEMIDLIST)lpdi->item.lParam;
 
-	      TRACE("-- LVN_BEGINLABELEDITA %p\n",This);
+	      TRACE("-- LVN_BEGINLABELEDITW %p\n",This);
 
 	      IShellFolder_GetAttributesOf(This->pSFParent, 1, (LPCITEMIDLIST*)&pidl, &dwAttr);
 	      if (SFGAO_CANRENAME & dwAttr)

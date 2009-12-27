@@ -11,5 +11,5 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>imm32</library>
-	<library>ntdll</library>
 </module>
+</group>

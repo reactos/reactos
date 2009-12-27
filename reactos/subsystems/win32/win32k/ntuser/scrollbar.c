@@ -729,7 +729,7 @@ NtUserSetScrollBarInfo(
    if(!SBID_IS_VALID(Obj))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d", Obj);
+      DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d\n", Obj);
       RETURN( FALSE);
    }
 

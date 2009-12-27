@@ -26,9 +26,7 @@ typedef struct _WINDOW_OBJECT
   PWND Wnd;
 
   /* Pointer to the thread information */
-  PTHREADINFO ti;
-  /* Pointer to the desktop */
-  PDESKTOPINFO Desktop;
+  PTHREADINFO pti; // Use Wnd->head.pti
   /* system menu handle. */
   HMENU SystemMenu;
   /* Entry in the thread's list of windows. */
@@ -36,30 +34,28 @@ typedef struct _WINDOW_OBJECT
   /* Handle for the window. */
   HWND hSelf;
   /* Window flags. */
-  ULONG Flags;
+  ULONG state;
   /* Handle of region of the window to be updated. */
   HANDLE UpdateRegion;
   /* Handle of the window region. */
   HANDLE WindowRegion;
   /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
-  struct _WINDOW_OBJECT* FirstChild;
-  struct _WINDOW_OBJECT* LastChild;
-  struct _WINDOW_OBJECT* NextSibling;
-  struct _WINDOW_OBJECT* PrevSibling;
+  struct _WINDOW_OBJECT* spwndChild;
+  struct _WINDOW_OBJECT* spwndNext;
+  struct _WINDOW_OBJECT* spwndPrev;
   /* Entry in the list of thread windows. */
   LIST_ENTRY ThreadListEntry;
   /* Handle to the parent window. */
-  struct _WINDOW_OBJECT* Parent;
+  struct _WINDOW_OBJECT* spwndParent;
   /* Handle to the owner window. */
-  HWND hOwner;
+  HWND hOwner; // Use spwndOwner
   /* DC Entries (DCE) */
   PDCE Dce;
   /* Scrollbar info */
   PWINDOW_SCROLLINFO Scroll;
-  PETHREAD OwnerThread;
+  PETHREAD OwnerThread; // Use Wnd->head.pti
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
-  ULONG Status;
   /* counter for tiled child windows */
   ULONG TiledCounter;
   /* WNDOBJ list */
@@ -67,14 +63,14 @@ typedef struct _WINDOW_OBJECT
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */
-#define WINDOWOBJECT_NEED_SIZE            (0x00000001) // WNDS_SENDSIZEMOVEMSGS?
-#define WINDOWOBJECT_NEED_ERASEBKGND      (0x00000002) // WNDS_ERASEBACKGROUND
-#define WINDOWOBJECT_NEED_NCPAINT         (0x00000004) // WNDS_SENDNCPAINT
-#define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000008) // WNDS_INTERNALPAINT
-#define WINDOWOBJECT_RESTOREMAX           (0x00000020)
+#define WINDOWOBJECT_NEED_SIZE            WNDS_SENDSIZEMOVEMSGS
+#define WINDOWOBJECT_NEED_ERASEBKGND      WNDS_ERASEBACKGROUND
+#define WINDOWOBJECT_NEED_NCPAINT         WNDS_SENDNCPAINT
+#define WINDOWOBJECT_NEED_INTERNALPAINT   WNDS_INTERNALPAINT
+#define WINDOWOBJECT_RESTOREMAX           (0x00000020) // Set/Clr WS_MAXIMIZE && Clr/Set WS_EX2_VERTICALLYMAXIMIZEDLEFT/RIGHT
 
-#define WINDOWSTATUS_DESTROYING         (0x1) // WNDS2_INDESTROY
-#define WINDOWSTATUS_DESTROYED          (0x2) // WNDS_DESTROYED
+#define WINDOWSTATUS_DESTROYING         WNDS2_INDESTROY
+#define WINDOWSTATUS_DESTROYED          WNDS_DESTROYED
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \
@@ -88,7 +84,7 @@ typedef struct _WINDOW_OBJECT
             (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
 #define IntIsDesktopWindow(WndObj) \
-  (WndObj->Parent == NULL)
+  (WndObj->spwndParent == NULL)
 
 #define IntIsBroadcastHwnd(hWnd) \
   (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)

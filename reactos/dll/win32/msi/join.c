@@ -229,14 +229,18 @@ static UINT JOIN_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
 static UINT JOIN_delete( struct tagMSIVIEW *view )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
-    JOINTABLE *table;
+    struct list *item, *cursor;
 
     TRACE("%p\n", jv );
 
-    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
+    LIST_FOR_EACH_SAFE(item, cursor, &jv->tables)
     {
+        JOINTABLE* table = LIST_ENTRY(item, JOINTABLE, entry);
+
+        list_remove(&table->entry);
         table->view->ops->delete(table->view);
         table->view = NULL;
+        msi_free(table);
     }
 
     msi_free(jv);
@@ -349,11 +353,13 @@ UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables )
         if( r != ERROR_SUCCESS )
         {
             WARN("can't create table: %s\n", debugstr_w(tables));
+            msi_free(table);
             r = ERROR_BAD_QUERY_SYNTAX;
             goto end;
         }
 
-        r = table->view->ops->get_dimensions( table->view, NULL, &table->columns );
+        r = table->view->ops->get_dimensions( table->view, NULL,
+                                              &table->columns );
         if( r != ERROR_SUCCESS )
         {
             ERR("can't get table dimensions\n");

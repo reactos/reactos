@@ -67,7 +67,8 @@ BOOL FASTCALL
 IntGdiMoveToEx(DC      *dc,
                int     X,
                int     Y,
-               LPPOINT Point);
+               LPPOINT Point,
+               BOOL    BypassPath);
 
 BOOL FASTCALL
 IntGdiPolyBezier(DC      *dc,

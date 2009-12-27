@@ -16,10 +16,14 @@
 
 #include "rsym.h"
 
+/* Assume if an offset > ABS_TRESHOLD, then it must be absolute */
+#define ABS_TRESHOLD    0x00400000L
+
 size_t fixup_offset ( size_t ImageBase, size_t offset )
 {
-//	if ( offset >= ImageBase )
-//		offset -= ImageBase;
+	if (offset > ABS_TRESHOLD)
+		offset -= ImageBase;
+
 	return offset;
 }
 
@@ -97,7 +101,7 @@ find_and_print_offset (
 }
 
 int
-process_data ( const void* FileData, size_t FileSize, size_t offset )
+process_data ( const void* FileData, size_t offset )
 {
 	PIMAGE_DOS_HEADER PEDosHeader;
 	PIMAGE_FILE_HEADER PEFileHeader;
@@ -158,7 +162,7 @@ process_file ( const char* file_name, size_t offset )
 	}
 	else
 	{
-		res = process_data ( FileData, FileSize, offset );
+		res = process_data ( FileData, offset );
 		free ( FileData );
 	}
 

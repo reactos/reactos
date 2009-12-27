@@ -1,10 +1,10 @@
-/*
- * PROJECT:         ReactOS Sound Record Application
+/* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/sndrec32/audio_waveout.cpp
- * PURPOSE:         Audio WaveOut
- * PROGRAMMERS:     Marco Pagliaricci <ms_blue (at) hotmail (dot) it>
+ * PURPOSE:         Sound recording
+ * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */
+
 
 
 #include "stdafx.h"
@@ -531,7 +531,7 @@ audio_waveout::play( void )
     // Reads the audio from the start.
     //
 
-    audio_buf.set_position_start();
+    //audio_buf.set_position_start();
 
     
 
@@ -633,8 +633,35 @@ audio_waveout::stop( void )
     MMRESULT err;
 
 
+    //
+    // Checks the current status
+    //
+
+    if (( status != WAVEOUT_PLAYING ) 
+            && ( status != WAVEOUT_FLUSHING )
+            && ( status != WAVEOUT_PAUSED ))
+    {
+        //
+        // Do nothing.
+        //
+
+        return;
+
+    }
+
+
+
+    //
+    // Sets a new status
+    //
+
     status = WAVEOUT_STOP;
 
+
+
+    //
+    // Flushes pending audio datas
+    //
 
     err = waveOutReset( waveout_handle );
 
@@ -643,7 +670,7 @@ audio_waveout::stop( void )
     if ( err != MMSYSERR_NOERROR )
     {
 
-        MessageBox(0, _T("err waveout reset.\n"),_T("ERROR"), 0);
+        MessageBox(0, _T("err WaveOutReset.\n"),_T("ERROR"), 0);
         //TODO: throw error
 
     }
@@ -658,11 +685,18 @@ audio_waveout::stop( void )
     audio_buf.set_position_start();
 
 
+    //
+    // Cleans little buffers.
+    //
+
     unprep_headers_();
-
-
     init_headers_();
 
+
+    
+    //
+    // Refreshes the status.
+    //
 
     status = WAVEOUT_READY;
 
@@ -768,8 +802,9 @@ audio_waveout::playing_procedure( LPVOID arg )
                 // can go to sleep.
                 //
 
-                if (( _this->status != WAVEOUT_PLAYING ) 
-                                && ( _this->wakeup_playthread ))
+                if (( _this->status != WAVEOUT_PLAYING ) && 
+                        ( _this->status != WAVEOUT_FLUSHING ) &&
+                                    ( _this->wakeup_playthread ))
                 {
                 
                     wait = WaitForSingleObject( 
@@ -777,33 +812,80 @@ audio_waveout::playing_procedure( LPVOID arg )
                                     INFINITE 
                                 );
                 }
-                
-                //TODO: quando il thread si risveglia, deve
-                //entrare nel prossimo if o no? o metter un else { ?
 
 
+
+                //
+                // The playing thread doesn't have to sleep,
+                // so let's checking first if the little buffer
+                // has been sent to the audio driver (it has the 
+                // WHDR_DONE flag). If it is, we can read new
+                // audio datas from the `audio_producer' object,
+                // refill the little buffer, and resend it to the
+                // driver with waveOutWrite( ) API.
+                //
                 
                 if ( phdr->dwFlags & WHDR_DONE )
                 {
-                        
-                    read_size = 
-                        _this->audio_buf.read(
-                                        ( BYTE * ) phdr->lpData, 
-                                        phdr->dwBufferLength 
-                                    );
 
+                    if ( _this->status == WAVEOUT_PLAYING )
+                    {
+
+                        //
+                        // Here the thread is still playing a sound,
+                        // so it can read new audio data from the
+                        // `audio_producer' object.
+                        //
+                    
+                        read_size = 
+                            _this->audio_buf.read(
+                                            ( BYTE * ) phdr->lpData, 
+                                            phdr->dwBufferLength 
+                                        );
+
+                    } else
+                       read_size = 0;
+
+                    
+
+                    //
+                    // If the `audio_producer' object, has produced some
+                    // audio data, so `read_size' will be > 0.
+                    //
                         
                     if ( read_size )
                     {
+
+                        //
+                        // Adjusts the correct effectively read size.
+                        //
+
                         phdr->dwBufferLength = read_size;
 
+                        //
+                        // Before sending the little buffer to the
+                        // driver, we have to remove the `WHDR_DONE'
+                        // flag, because the little buffer now contain
+                        // new audio data that have to be played.
+                        //
+
                         phdr->dwFlags &= ~WHDR_DONE;
+
+
+                        //
+                        // Plays the sound of the little buffer.
+                        //
 
                         err = waveOutWrite( 
                                     _this->waveout_handle, 
                                     phdr, 
                                     sizeof( WAVEHDR )
                                 );
+
+
+                        //
+                        // Checking if any error has occured.
+                        //
 
                         if ( err != MMSYSERR_NOERROR )
                         {
@@ -812,15 +894,45 @@ audio_waveout::playing_procedure( LPVOID arg )
                         }
 
 
-                    } else {
+
+
+                    } else { // if ( read_size )
+
+
 
                         //
-                        // Here `read_sizep' is 0
+                        // Here `read_size' is 0, so the
+                        // `audio_producer' object, doesn't have any
+                        // sound data to produce anymore.
+                        // So, now we have to see the little buffer
+                        // #ID to establishing what to do.
                         //
 
-                        if ( phdr->dwUser == ( _this->buffers - 1 ))
+                        if ( phdr->dwUser == 0 )
                         {
 
+                           
+                            
+                            //
+                            // Here `read_size' is 0, and the buffer
+                            // user data contain 0, so this is the
+                            // first of N little buffers that came
+                            // back with `WHDR_DONE' flag; this means
+                            // that this is the last little buffer in
+                            // which we have to read data to; so we
+                            // can _STOP_ reading data from the 
+                            // `audio_producer' object: doing this is
+                            // accomplished just setting the current
+                            // status as "WAVEOUT_FLUSHING".
+                            //
+
+                            _this->status = WAVEOUT_FLUSHING;
+
+
+                        } else if ( phdr->dwUser == ( _this->buffers - 1 )) {
+
+
+                           
                             //
                             // Here `read_size' and the buffer user
                             // data, that contain a buffer ID#,
@@ -849,7 +961,7 @@ audio_waveout::playing_procedure( LPVOID arg )
                                                     INFINITE 
                                                 );
 
-                        }
+                        }  //if ( phdr->dwUser == ( _this->buffers - 1 ))
 
                     }  //if read_size != 0
 
@@ -861,6 +973,7 @@ audio_waveout::playing_procedure( LPVOID arg )
 
 
             case MM_WOM_CLOSE:
+
                 //
                 // The thread can exit now.
                 //
@@ -885,5 +998,6 @@ audio_waveout::playing_procedure( LPVOID arg )
 
     return 0;				
 }
+
 
 _AUDIO_NAMESPACE_END_

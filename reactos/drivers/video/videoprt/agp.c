@@ -507,10 +507,16 @@ IntAgpGetInterface(
    AgpBusInterface = &DeviceExtension->AgpInterface;
    AgpInterface = (PVIDEO_PORT_AGP_INTERFACE_2)Interface;
 
-   ASSERT((Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2 &&
-           Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE_2)) ||
-          (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1 &&
-           Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE)));
+   ASSERT(Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2 ||
+          Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1);
+   if (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2)
+   {
+       ASSERT(Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE_2));
+   }
+   else if (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1)
+   {
+       ASSERT(Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE));
+   }
 
    if (DeviceExtension->NextDeviceObject == NULL)
    {

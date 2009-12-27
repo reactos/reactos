@@ -42,5 +42,6 @@
 	<file>shdocvw.rc</file>
 </module>
 <module name="shdocvw_v1" type="embeddedtypelib" allowwarnings="true">
+	<dependency>stdole2</dependency>
 	<file>shdocvw_v1.idl</file>
 </module>

@@ -380,6 +380,20 @@ typedef enum _FILE_INFORMATION_CLASS {
     FileNetworkOpenInformation,
     FileAttributeTagInformation,
     FileTrackingInformation,
+    FileIdBothDirectoryInformation,
+    FileIdFullDirectoryInformation,
+    FileValidDataLengthInformation,
+    FileShortNameInformation = 40,
+    /* 41, 42, 43 undocumented */
+    FileSfioReserveInformation = 44,
+    FileSfioVolumeInformation = 45,
+    FileHardLinkInformation = 46,
+    /* 47 undocumented */
+    FileNormalizedNameInformation = 48,
+    /* 49 undocumented */
+    FileIdGlobalTxDirectoryInformation = 50,
+    /* 51, 52, 53 undocumented */
+    FileStandardLinkInformation = 54,
     FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
@@ -413,6 +427,22 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION,
   FILE_FULL_DIR_INFORMATION, *PFILE_FULL_DIR_INFORMATION;
 
+typedef struct _FILE_ID_FULL_DIRECTORY_INFORMATION {
+    ULONG               NextEntryOffset;
+    ULONG               FileIndex;
+    LARGE_INTEGER       CreationTime;
+    LARGE_INTEGER       LastAccessTime;
+    LARGE_INTEGER       LastWriteTime;
+    LARGE_INTEGER       ChangeTime;
+    LARGE_INTEGER       EndOfFile;
+    LARGE_INTEGER       AllocationSize;
+    ULONG               FileAttributes;
+    ULONG               FileNameLength;
+    ULONG               EaSize;
+    LARGE_INTEGER       FileId;
+    WCHAR               FileName[ANYSIZE_ARRAY];
+} FILE_ID_FULL_DIRECTORY_INFORMATION, *PFILE_ID_FULL_DIRECTORY_INFORMATION;
+
 typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
     ULONG               NextEntryOffset;
     ULONG               FileIndex;
@@ -430,6 +460,24 @@ typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
     WCHAR               FileName[ANYSIZE_ARRAY];
 } FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION,
   FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;
+
+typedef struct _FILE_ID_BOTH_DIRECTORY_INFORMATION {
+    ULONG               NextEntryOffset;
+    ULONG               FileIndex;
+    LARGE_INTEGER       CreationTime;
+    LARGE_INTEGER       LastAccessTime;
+    LARGE_INTEGER       LastWriteTime;
+    LARGE_INTEGER       ChangeTime;
+    LARGE_INTEGER       EndOfFile;
+    LARGE_INTEGER       AllocationSize;
+    ULONG               FileAttributes;
+    ULONG               FileNameLength;
+    ULONG               EaSize;
+    CHAR                ShortNameLength;
+    WCHAR               ShortName[12];
+    LARGE_INTEGER       FileId;
+    WCHAR               FileName[ANYSIZE_ARRAY];
+} FILE_ID_BOTH_DIRECTORY_INFORMATION, *PFILE_ID_BOTH_DIRECTORY_INFORMATION;
 
 typedef struct _FILE_BASIC_INFORMATION {
     LARGE_INTEGER CreationTime;

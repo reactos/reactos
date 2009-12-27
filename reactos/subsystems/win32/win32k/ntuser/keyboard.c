@@ -441,8 +441,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       return FALSE;
 
    /* All messages have to contain the cursor point. */
-   IntGetCursorLocation(pti->Desktop->WindowStation,
-                        &NewMsg.pt);
+   NewMsg.pt = gpsi->ptCursor;
 
     switch (lpMsg->wParam)
     {

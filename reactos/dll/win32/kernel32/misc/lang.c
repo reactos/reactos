@@ -219,8 +219,7 @@ EnumDateFormatsExA(
             break;
 
         default:
-            // FIXME: Unknown date format
-            SetLastError(ERROR_INVALID_PARAMETER);
+            SetLastError(ERROR_INVALID_FLAGS);
             return FALSE;
     }
     return TRUE;
@@ -288,8 +287,7 @@ EnumDateFormatsExW(
             break;
 
         default:
-            // FIXME: Unknown date format
-            SetLastError(ERROR_INVALID_PARAMETER);
+            SetLastError(ERROR_INVALID_FLAGS);
             return FALSE;
     }
     return TRUE;
@@ -334,7 +332,10 @@ static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
     InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, hRootKey, NULL);
 
     if (NtOpenKey( &hkey, KEY_ALL_ACCESS, &attr ) != STATUS_SUCCESS)
+    {
+        SetLastError( ERROR_BADDB );
         hkey = 0;
+    }
 
     return hkey;
 }
@@ -923,6 +924,12 @@ static BOOL NLS_EnumSystemLocales(ENUMSYSTEMLOCALES_CALLBACKS *lpProcs)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
+    }
+
+    /* Passing 0 flags behaves like LCID_SUPPORTED */
+    if (lpProcs->dwFlags == 0)
+    {
+        lpProcs->dwFlags = LCID_SUPPORTED;
     }
 
     switch (lpProcs->dwFlags)
@@ -2391,6 +2398,8 @@ IsValidLanguageGroup(
     case LGRPID_SUPPORTED:
 
         hKey = NLS_RegOpenKey( 0, szLangGroupsKeyName );
+        if (!hKey)
+            break;
 
         swprintf( szValueName, szFormat, LanguageGroup );
 
@@ -2402,10 +2411,13 @@ IsValidLanguageGroup(
                 bInstalled = TRUE;
         }
 
-        if (hKey)
-            NtClose( hKey );
+        NtClose( hKey );
 
         break;
+
+    default:
+        DPRINT("Invalid flags: %lx\n", dwFlags);
+        return FALSE;
     }
 
     if ((dwFlags == LGRPID_SUPPORTED && bSupported) ||
@@ -2434,7 +2446,7 @@ IsValidLanguageGroup(
  */
 BOOL WINAPI
 IsValidLocale(LCID Locale,
-	      DWORD dwFlags)
+              DWORD dwFlags)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
@@ -2446,6 +2458,7 @@ IsValidLocale(LCID Locale,
     HANDLE KeyHandle;
     PWSTR ValueData;
     NTSTATUS Status;
+    BOOL Installed = FALSE;
 
     DPRINT("IsValidLocale() called\n");
 
@@ -2479,6 +2492,7 @@ IsValidLocale(LCID Locale,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+        SetLastError(ERROR_BADDB);
         return FALSE;
     }
 
@@ -2520,19 +2534,30 @@ IsValidLocale(LCID Locale,
 
     ValueData = (PWSTR)&KeyInfo->Data[0];
     if ((KeyInfo->Type == REG_SZ) &&
-        (KeyInfo->DataLength == 2 * sizeof(WCHAR)) &&
-        (ValueData[0] == L'1'))
+        (KeyInfo->DataLength == 2 * sizeof(WCHAR)))
     {
-        DPRINT("Locale is supported and installed\n");
-        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-        return TRUE;
+        /* Find out if there is support for the language group
+         * installed, to which this language belongs */
+        KeyHandle = NLS_RegOpenKey(0, szLangGroupsKeyName);
+        if (KeyHandle)
+        {
+            WCHAR Value[2];
+            if (NLS_RegGetDword(KeyHandle, ValueData, (LPDWORD) Value) &&
+                Value[0] == L'1')
+            {
+                Installed = TRUE;
+                DPRINT("Locale is supported and installed\n");
+            }
+
+            NtClose(KeyHandle);
+        }
     }
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
 
     DPRINT("IsValidLocale() called\n");
 
-    return FALSE;
+    return Installed;
 }
 
 /*

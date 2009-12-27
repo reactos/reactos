@@ -139,8 +139,12 @@ CdfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 
 
 static NTSTATUS
-CdfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
-                           PULONG BufferLength)
+CdfsGetFsDeviceInformation
+(
+    PDEVICE_OBJECT DeviceObject,
+    PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
+    PULONG BufferLength
+)
 {
     DPRINT("CdfsGetFsDeviceInformation()\n");
     DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
@@ -151,7 +155,7 @@ CdfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
         return(STATUS_BUFFER_OVERFLOW);
 
     FsDeviceInfo->DeviceType = FILE_DEVICE_CD_ROM;
-    FsDeviceInfo->Characteristics = 0; /* FIXME: fix this !! */
+    FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
 
     DPRINT("FsdGetFsDeviceInformation() finished.\n");
 
@@ -203,7 +207,8 @@ CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
         break;
 
     case FileFsDeviceInformation:
-        Status = CdfsGetFsDeviceInformation(SystemBuffer,
+        Status = CdfsGetFsDeviceInformation(DeviceObject,
+            SystemBuffer,
             &BufferLength);
         break;
 

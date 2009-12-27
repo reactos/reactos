@@ -4065,6 +4065,98 @@ NtGdiGetCharWidthW(
     return TRUE;
 }
 
+DWORD
+FASTCALL
+GreGetGlyphIndicesW(
+    HDC hdc,
+    LPWSTR pwc,
+    INT cwc,
+    LPWORD pgi,
+    DWORD iMode,
+    DWORD Unknown)
+{
+    PDC dc;
+    PDC_ATTR pdcattr;
+    PTEXTOBJ TextObj;
+    PFONTGDI FontGDI;
+    HFONT hFont = 0;
+    OUTLINETEXTMETRICW *potm;
+    INT i;
+    FT_Face face;
+    WCHAR DefChar = 0xffff;
+    PWSTR Buffer = NULL;
+    ULONG Size;
+
+    if ((!pwc) && (!pgi)) return cwc;
+
+    dc = DC_LockDc(hdc);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return GDI_ERROR;
+    }
+    pdcattr = dc->pdcattr;
+    hFont = pdcattr->hlfntNew;
+    TextObj = RealizeFontInit(hFont);
+    DC_UnlockDc(dc);
+    if (!TextObj)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return GDI_ERROR;
+    }
+
+    FontGDI = ObjToGDI(TextObj->Font, FONT);
+    TEXTOBJ_UnlockText(TextObj);
+
+    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
+    if (!Buffer)
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return GDI_ERROR;
+    }
+
+    if (iMode & GGI_MARK_NONEXISTING_GLYPHS) DefChar = 0x001f;  /* Indicate non existence */
+    else
+    {
+        Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+        potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+        if (!potm)
+        {
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            cwc = GDI_ERROR;
+            goto ErrorRet;
+        }
+        IntGetOutlineTextMetrics(FontGDI, Size, potm);
+        DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.
+        ExFreePool(potm);
+    }
+
+    IntLockFreeType;
+    face = FontGDI->face;
+
+    for (i = 0; i < cwc; i++)
+    {
+        Buffer[i] = FT_Get_Char_Index(face, pwc[i]);
+        if (Buffer[i] == 0)
+        {
+            if (DefChar == 0xffff && FT_IS_SFNT(face))
+            {
+                TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+                DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
+            }
+            Buffer[i] = DefChar;
+        }
+    }
+
+    IntUnLockFreeType;
+
+    RtlCopyMemory( pgi, Buffer, cwc*sizeof(WORD));
+
+ErrorRet:
+    if (Buffer) ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+    return cwc;
+}
+
 
 /*
 * @implemented

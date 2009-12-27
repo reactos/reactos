@@ -147,7 +147,7 @@ CIrpQueue::AddMapping(
     // get first stream header
 
    if (Irp->RequestorMode == UserMode)
-    Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+       Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
    else
        Header = (PKSSTREAM_HEADER)Irp->UserBuffer;
 
@@ -184,7 +184,7 @@ CIrpQueue::AddMapping(
 
         if (Irp->RequestorMode == UserMode)
         {
-        Header->Data = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
+            Header->Data = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
         }
 
         if (!Header->Data)
@@ -354,13 +354,13 @@ CIrpQueue::UpdateMapping(
             return;
         }
 
-        // irp has been processed completly
+       // irp has been processed completly
 
         NumData = 0;
         if (m_Irp->RequestorMode == KernelMode)
             StreamHeader = (PKSSTREAM_HEADER)m_Irp->UserBuffer;
         else
-        StreamHeader = (PKSSTREAM_HEADER)m_Irp->AssociatedIrp.SystemBuffer;
+            StreamHeader = (PKSSTREAM_HEADER)m_Irp->AssociatedIrp.SystemBuffer;
 
         // loop all stream headers
         for(Index = 0; Index < STREAMHEADER_COUNT(m_Irp); Index++)

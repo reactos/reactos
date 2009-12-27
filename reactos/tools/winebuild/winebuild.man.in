@@ -53,11 +53,23 @@ Wine internal usage only, you should never need to use this option.
 .B \--relay32
 Generate the assembly code for the 32-bit relay routines. This is for
 Wine internal usage only, you should never need to use this option.
+.TP
+.B \--resources
+Generate a .o file containing all the input resources. This is useful
+when building with a PE compiler, since the PE binutils cannot handle
+multiple resource files as input. For a standard Unix build, the
+resource files are automatically included when building the spec file,
+so there's no need for an intermediate .o file.
 .SH OPTIONS
 .TP
 .BI \--as-cmd= as-command
 Specify the command to use to compile assembly files; the default is
 \fBas\fR.
+.TP
+.BI \-b,\ --target= cpu-manufacturer[-kernel]-os
+Specify the target CPU and platform on which the generated code will
+be built. The target specification is in the standard autoconf format
+as returned by config.sub.
 .TP
 .BI \-d,\ --delay-lib= name
 Set the delayed import mode for the specified library, which must be
@@ -96,6 +108,11 @@ specification must be used instead).
 .BI \-f\  flags
 Ignored for compatibility with the C compiler.
 .TP
+.B \--fake-module
+Create a fake PE module for a dll or exe, instead of the normal
+assembly or object file. The PE module contains the resources for the
+module, but no executable code.
+.TP
 .BI \-F,\ --filename= filename
 Set the file name of the module. The default is to use the base name
 of the spec file (without any extension).
@@ -125,6 +142,10 @@ generated .def file. Only meaningful in \fB--def\fR mode.
 .BI \-K\  flags
 Ignored for compatibility with the C compiler.
 .TP
+.BI \--large-address-aware
+Set a flag in the executable to notify the loader that this
+application supports address spaces larger than 2 gigabytes.
+.TP
 .BI \--ld-cmd= ld-command
 Specify the command to use to link the object files; the default is
 \fBld\fR.
@@ -137,6 +158,9 @@ searched for import libraries.
 Import the specified library, looking for a corresponding
 \fIlibname.def\fR file in the directories specified with the \fB-L\fR
 option.
+.TP
+.B \-m32, -m64
+Generate 32-bit, respectively 64-bit code.
 .TP
 .BI \-M,\ --main-module= module
 Specify that we are building a 16-bit dll, that will ultimately be
@@ -189,7 +213,10 @@ for a command line executable,
 for a graphical executable,
 .br
 .B native
-for a native-mode dll.
+for a native-mode dll,
+.br
+.B win16
+for a 16-bit module.
 .br
 The entry point of a command line executable is a normal C \fBmain\fR
 function. A \fBwmain\fR function can be used instead if you need the
@@ -198,11 +225,6 @@ argument array to use Unicode strings. A graphical executable has a
 .br
 Optionally a major and minor subsystem version can also be specified;
 the default subsystem version is 4.0.
-.TP
-.BI --target= cpu-manufacturer[-kernel]-os
-Specify the target CPU and platform on which the generated code will
-be built. The target specification is in the standard autoconf format
-as returned by config.sub.
 .TP
 .BI \-u,\ --undefined= symbol
 Add \fIsymbol\fR to the list of undefined symbols when invoking the
@@ -269,9 +291,6 @@ The function returns a 16-bit value (Win16 only).
 .B -ret64
 The function returns a 64-bit value (Win32 only).
 .TP
-.B -i386
-The entry point is only available on i386 platforms.
-.TP
 .B -register
 The function uses CPU register to pass arguments.
 .TP
@@ -282,6 +301,9 @@ accessed through GetProcAddress.
 .B -ordinal
 The entry point will be imported by ordinal instead of by name. The
 name is still exported.
+.TP
+.BI -arch= cpu[,cpu]
+The entry point is only available on the specified CPU architecture(s).
 .SS "Function ordinals"
 Syntax:
 .br

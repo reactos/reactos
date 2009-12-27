@@ -5484,7 +5484,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		break;
 	}
 
-	if (es) EDIT_UnlockBuffer(es, FALSE);
+	if (IsWindow(hwnd) && es) EDIT_UnlockBuffer(es, FALSE);
 
         TRACE("hwnd=%p msg=%x (%s) -- 0x%08lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), result);
 

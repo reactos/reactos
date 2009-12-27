@@ -5,6 +5,7 @@
  * PURPOSE:         Process startup for PE executables
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
+ *                  Michael Martin
  */
 
 /*
@@ -60,6 +61,7 @@ static NTSTATUS LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                OUT PVOID *BaseAddress OPTIONAL);
 static NTSTATUS LdrpAttachProcess(VOID);
 static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
+static NTSTATUS LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Unload);
 
 NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fulldosname );
 NTSTATUS create_module_activation_context( LDR_DATA_TABLE_ENTRY *module );
@@ -659,9 +661,12 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                     IN BOOLEAN MapAsDataFile,
                     OUT PHANDLE SectionHandle)
 {
-  WCHAR                 SearchPathBuffer[MAX_PATH];
+  WCHAR                 *SearchPathBuffer = NULL;
+  WCHAR                 *ImagePathNameBufferPtr = NULL;
   WCHAR                 DosName[MAX_PATH];
   UNICODE_STRING        FullNtFileName;
+  UNICODE_STRING        PathEnvironmentVar_U;
+  UNICODE_STRING        PathName_U;
   OBJECT_ATTRIBUTES     FileObjectAttributes;
   HANDLE                FileHandle;
   char                  BlockBuffer [1024];
@@ -670,28 +675,84 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
   IO_STATUS_BLOCK       IoStatusBlock;
   NTSTATUS              Status;
   ULONG                 len;
+  ULONG                 ImagePathLen;
 
   DPRINT("LdrpMapDllImageFile() called\n");
 
   if (SearchPath == NULL)
     {
       /* get application running path */
+      ImagePathNameBufferPtr = NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer;
 
-      wcscpy (SearchPathBuffer, NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer);
+      /* Length of ImagePathName */
+      ImagePathLen = wcslen(ImagePathNameBufferPtr);
 
-      len = wcslen (SearchPathBuffer);
+      /* Subtract application name leaveing only the directory length */
+      while (ImagePathLen && ImagePathNameBufferPtr[ImagePathLen - 1] != L'\\')
+          ImagePathLen--;
 
-      while (len && SearchPathBuffer[len - 1] != L'\\')
-           len--;
+      /* Length of directory + semicolon */
+      len = ImagePathLen + 1;
 
-      if (len) SearchPathBuffer[len-1] = L'\0';
+      /* Length of SystemRoot + "//system32"  + semicolon*/
+      len += wcslen(SharedUserData->NtSystemRoot) + 10;
+      /* Length of SystemRoot + semicolon */
+      len += wcslen(SharedUserData->NtSystemRoot) + 1;
 
+      RtlInitUnicodeString (&PathName_U, L"PATH");
+      PathEnvironmentVar_U.Length = 0;
+      PathEnvironmentVar_U.MaximumLength = 0;
+      PathEnvironmentVar_U.Buffer = NULL;
+
+      /* Get the path environment variable */
+      Status = RtlQueryEnvironmentVariable_U(NULL, &PathName_U, &PathEnvironmentVar_U);
+
+      /* Check that valid information was returned */
+      if ((Status == STATUS_BUFFER_TOO_SMALL) && (PathEnvironmentVar_U.Length > 0))
+        {
+          /* Allocate memory for the path env var */
+          PathEnvironmentVar_U.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, PathEnvironmentVar_U.Length + sizeof(WCHAR));
+          if (!PathEnvironmentVar_U.Buffer)
+            {
+              DPRINT1("Fatal! Out of Memory!!\n");
+              return STATUS_NO_MEMORY;
+            }
+          PathEnvironmentVar_U.MaximumLength = PathEnvironmentVar_U.Length + sizeof(WCHAR);
+
+          /* Retry */
+          Status = RtlQueryEnvironmentVariable_U(NULL, &PathName_U, &PathEnvironmentVar_U);
+
+          if (!NT_SUCCESS(Status))
+            {
+              DPRINT1("Unable to get path environment string!\n");
+              ASSERT(FALSE);
+            }
+          /* Length of path evn var + semicolon */
+          len += (PathEnvironmentVar_U.Length / sizeof(WCHAR)) + 1;
+        }
+
+      /* Allocate the size needed to hold all the above paths + period */
+      SearchPathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, (len + 2) * sizeof(WCHAR));
+      if (!SearchPathBuffer)
+        {
+          DPRINT1("Fatal! Out of Memory!!\n");
+          return STATUS_NO_MEMORY;
+        }
+
+      wcsncpy(SearchPathBuffer, ImagePathNameBufferPtr, ImagePathLen);
       wcscat (SearchPathBuffer, L";");
-
       wcscat (SearchPathBuffer, SharedUserData->NtSystemRoot);
       wcscat (SearchPathBuffer, L"\\system32;");
       wcscat (SearchPathBuffer, SharedUserData->NtSystemRoot);
-      wcscat (SearchPathBuffer, L";.");
+      wcscat (SearchPathBuffer, L";");
+
+      if (PathEnvironmentVar_U.Buffer)
+        {
+          wcscat (SearchPathBuffer, PathEnvironmentVar_U.Buffer);
+          wcscat (SearchPathBuffer, L";");
+          RtlFreeHeap(RtlGetProcessHeap(), 0, PathEnvironmentVar_U.Buffer);
+        }
+      wcscat (SearchPathBuffer, L".");
 
       SearchPath = SearchPathBuffer;
     }
@@ -708,7 +769,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
     if(Status == STATUS_SUCCESS)
         DPRINT("found %S for %S\n", DosName,DllName->Buffer);
     else
-    return STATUS_DLL_NOT_FOUND;
+        return STATUS_DLL_NOT_FOUND;
   }
 
   if (!RtlDosPathNameToNtPathName_U (DosName,
@@ -838,25 +899,32 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 {
   NTSTATUS              Status;
   PLDR_DATA_TABLE_ENTRY Module;
-
+  ULONG_PTR cookie;
   PPEB Peb = NtCurrentPeb();
 
-  TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n",
+  TRACE_LDR("LdrLoadDll loading %wZ%S%S with flags %d\n",
             Name,
             SearchPath ? L" from " : L"",
-            SearchPath ? SearchPath : L"");
+            SearchPath ? SearchPath : L"",
+            LoadFlags ? *LoadFlags : 0);
 
   Status = LdrpLoadModule(SearchPath, LoadFlags ? *LoadFlags : 0, Name, &Module, BaseAddress);
 
   if (NT_SUCCESS(Status) &&
       (!LoadFlags || 0 == (*LoadFlags & LOAD_LIBRARY_AS_DATAFILE)))
     {
+      if (!create_module_activation_context( Module ))
+	  {
+        RtlActivateActivationContext(0, Module->EntryPointActivationContext, &cookie);
+      }
+
       if (!(Module->Flags & LDRP_PROCESS_ATTACH_CALLED))
         {
           RtlEnterCriticalSection(Peb->LoaderLock);
           Status = LdrpAttachProcess();
           RtlLeaveCriticalSection(Peb->LoaderLock);
         }
+       if (Module->EntryPointActivationContext) RtlDeactivateActivationContext(0, cookie);
     }
 
  if ((!Module) && (NT_SUCCESS(Status)))
@@ -1440,10 +1508,10 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
    if (Load && !NT_SUCCESS(Status))
      {
        Status = LdrpLoadModule(SearchPath,
-							   0,
+                               0,
                                &DllName,
                                Module,
-							   NULL);
+                               NULL);
        if (NT_SUCCESS(Status))
          {
            Status = LdrFindEntryForName (&DllName, Module, FALSE);
@@ -1771,7 +1839,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptorCurrent;
    PIMAGE_TLS_DIRECTORY TlsDirectory;
    ULONG TlsSize = 0;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    PLDR_DATA_TABLE_ENTRY ImportedModule;
    PCHAR ImportedName;
    PWSTR ModulePath;
@@ -1978,7 +2046,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
            if (!NT_SUCCESS(Status))
              {
                DPRINT1("failed to load %s\n", ImportedName);
-               return Status;
+               break;
              }
 Success:
            if (Module == ImportedModule)
@@ -1992,10 +2060,29 @@ Success:
            if (!NT_SUCCESS(Status))
              {
                DPRINT1("failed to import %s\n", ImportedName);
-               return Status;
+               break;
              }
            ImportModuleDirectoryCurrent++;
          }
+
+         if (!NT_SUCCESS(Status))
+           {
+            NTSTATUS errorStatus = Status;
+
+            while (ImportModuleDirectoryCurrent >= ImportModuleDirectory)
+              {
+                ImportedName = (PCHAR)Module->DllBase + ImportModuleDirectoryCurrent->Name;
+
+                Status = LdrpGetOrLoadModule(NULL, ImportedName, &ImportedModule, FALSE);
+                if (NT_SUCCESS(Status) && Module != ImportedModule)
+                  {
+                    Status = LdrpUnloadModule(ImportedModule, FALSE);
+                    if (!NT_SUCCESS(Status)) DPRINT1("unable to unload %s\n", ImportedName);
+                  }
+                ImportModuleDirectoryCurrent--;
+              }
+            return errorStatus;
+           }
      }
 
    if (TlsDirectory && TlsSize > 0)
@@ -2292,6 +2379,13 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
         if (!NT_SUCCESS(Status))
           {
             DPRINT1("LdrFixupImports failed for %wZ, status=%x\n", &(*Module)->BaseDllName, Status);
+            NtUnmapViewOfSection (NtCurrentProcess (), ImageBase);
+            NtClose (SectionHandle);
+            RtlFreeUnicodeString (&FullDosName);
+            RtlFreeUnicodeString (&(*Module)->FullDllName);
+            RtlFreeUnicodeString (&(*Module)->BaseDllName);
+            RemoveEntryList (&(*Module)->InLoadOrderLinks);
+            RtlFreeHeap (RtlGetProcessHeap (), 0, Module);
             return Status;
           }
 
@@ -2312,7 +2406,7 @@ LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module,
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptorCurrent;
    PCHAR ImportedName;
    PLDR_DATA_TABLE_ENTRY ImportedModule;
-   NTSTATUS Status;
+   NTSTATUS Status = 0;
    LONG LoadCount;
    ULONG Size;
 
@@ -3445,7 +3539,7 @@ LdrLockLoaderLock(IN ULONG Flags,
         *Cookie = 0;
         CookieSet = TRUE;
         if (Disposition) *Disposition = 0;
-}
+    }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         if (CookieSet)

@@ -110,7 +110,7 @@ Dispatch_fnClose(
     {
        KsFreeObjectHeader(DispatchContext->ObjectHeader);
        FreeItem(DispatchContext, TAG_PORTCLASS);
-}
+    }
     // done
     return Status;
 }
@@ -260,8 +260,8 @@ NewDispatchObject(
         // free dispatch context
         FreeItem(DispatchContext, TAG_PORTCLASS);
         // done
-    return Status;
-}
+        return Status;
+    }
 
     // initialize dispatch context
     DispatchContext->ObjectHeader = ObjectHeader;

@@ -1,6 +1,5 @@
 #include <windows.h>
-#include <stdlib.h>
-#include <memory.h>
+#include <stdio.h>
 
 #include "tnmisc.h"
 
@@ -139,10 +138,9 @@ bool SetIcon(HWND hConsoleWindow, HANDLE hIcon, LPARAM *pOldBIcon, LPARAM *pOldS
 // (Paul Brannan 12/17/98)
 #ifndef __BORLANDC__ // Ioannou Dec. 8, 1998
 	if(!hIcon) {
-		char filename[128];					// load from telnet.ico
-		strncpy(filename, icondir, sizeof(filename));
-		strncat(filename, "telnet.ico", sizeof(filename));
-		filename[sizeof(filename) - 1] = 0;
+		char filename[MAX_PATH];					// load from telnet.ico
+		_snprintf(filename, MAX_PATH - 1, "%s%s", icondir, "telnet.ico");
+		filename[MAX_PATH - 1] = '\0';
 
 		// Note: loading the icon from a file doesn't work on NT
 		// There is no LoadImage in Borland headers - only LoadIcon

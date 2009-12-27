@@ -15,7 +15,6 @@
 
 /* GLOBALS *******************************************************************/
 
-static IO_WORKITEM_ROUTINE i8042DebugWorkItem;
 static IO_WORKITEM_ROUTINE i8042PowerWorkItem;
 
 /* This structure starts with the same layout as KEYBOARD_INDICATOR_TRANSLATION */
@@ -30,23 +29,6 @@ static LOCAL_KEYBOARD_INDICATOR_TRANSLATION IndicatorTranslation = { 3, {
 	{0x46, KEYBOARD_SCROLL_LOCK_ON}}};
 
 /* FUNCTIONS *****************************************************************/
-
-static VOID NTAPI
-i8042DebugWorkItem(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PVOID Key)
-{
-	UNREFERENCED_PARAMETER(DeviceObject);
-	INFO_(I8042PRT, "Debug key: p\n", Key);
-
-	if (!Key)
-		return;
-
-	/* We hope kernel would understand this. If
-	 * that's not the case, nothing would happen.
-	 */
-	KdSystemDebugControl(' soR', Key, 0, NULL, 0, NULL, KernelMode);
-}
 
 /*
  * These functions are callbacks for filter driver custom interrupt
@@ -366,26 +348,6 @@ i8042KbdDpcRoutine(
 	KeysInBufferCopy = DeviceExtension->KeysInBuffer;
 
 	KeReleaseInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt, Irql);
-
-	if (PortDeviceExtension->Settings.CrashOnCtrlScroll)
-	{
-		PKEYBOARD_INPUT_DATA InputData;
-		InputData = DeviceExtension->KeyboardBuffer + KeysInBufferCopy - 1;
-
-		/* Test for TAB + key combination */
-		if (InputData->MakeCode == 0x0F)
-			DeviceExtension->TabPressed = !(InputData->Flags & KEY_BREAK);
-		else if (DeviceExtension->TabPressed)
-		{
-			DeviceExtension->TabPressed = FALSE;
-
-			IoQueueWorkItem(
-				DeviceExtension->DebugWorkItem,
-				&i8042DebugWorkItem,
-				DelayedWorkQueue,
-				(PVOID)(ULONG_PTR)InputData->MakeCode);
-		}
-	}
 
 	TRACE_(I8042PRT, "Send a key\n");
 
@@ -827,7 +789,7 @@ i8042KbdInterruptService(
 	if (PortDeviceExtension->Settings.CrashOnCtrlScroll)
 	{
 		/* Test for CTRL + SCROLL LOCK twice */
-		static const UCHAR ScanCodes[] = { 0xe0, 0x1d, 0x46, 0xc6, 0x46, 0 };
+		static const UCHAR ScanCodes[] = { 0x1d, 0x46, 0xc6, 0x46, 0 };
 
 		if (Output == ScanCodes[DeviceExtension->ComboPosition])
 		{
@@ -835,10 +797,32 @@ i8042KbdInterruptService(
 			if (ScanCodes[DeviceExtension->ComboPosition] == 0)
 				KeBugCheck(MANUALLY_INITIATED_CRASH);
 		}
+		else if (Output == 0xfa)
+		{
+		    /* Ignore ACK */
+		}
 		else if (Output == ScanCodes[0])
 			DeviceExtension->ComboPosition = 1;
 		else
 			DeviceExtension->ComboPosition = 0;
+
+		/* Test for TAB + key combination */
+		if (InputData->MakeCode == 0x0F)
+			DeviceExtension->TabPressed = !(InputData->Flags & KEY_BREAK);
+		else if (DeviceExtension->TabPressed)
+		{
+			DeviceExtension->TabPressed = FALSE;
+
+			/* Send request to the kernel debugger. 
+			 * Unknown requests will be ignored. */
+			KdSystemDebugControl(' soR',
+			                     (PVOID)(ULONG_PTR)InputData->MakeCode,
+			                     0,
+			                     NULL,
+			                     0,
+			                     NULL,
+			                     KernelMode);
+		}
 	}
 
 	if (i8042KbdCallIsrHook(DeviceExtension, PortStatus, Output, &ToReturn))

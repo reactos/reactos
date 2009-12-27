@@ -19,15 +19,95 @@
 
 #include <freeldr.h>
 
+ULONG	 GetDefaultOperatingSystem(OperatingSystemItem* OperatingSystemList, ULONG	 OperatingSystemCount)
+{
+	CHAR	DefaultOSText[80];
+	PCSTR	DefaultOSName;
+	ULONG_PTR	SectionId;
+	ULONG	DefaultOS = 0;
+	ULONG	Idx;
+
+	if (!IniOpenSection("FreeLoader", &SectionId))
+	{
+		return 0;
+	}
+
+	DefaultOSName = CmdLineGetDefaultOS();
+	if (NULL == DefaultOSName)
+	{
+		if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
+		{
+			DefaultOSName = DefaultOSText;
+		}
+	}
+
+	if (NULL != DefaultOSName)
+	{
+		for (Idx=0; Idx<OperatingSystemCount; Idx++)
+		{
+			if (_stricmp(DefaultOSName, OperatingSystemList[Idx].SystemPartition) == 0)
+			{
+				DefaultOS = Idx;
+				break;
+			}
+		}
+	}
+
+	return DefaultOS;
+}
+
+LONG GetTimeOut(VOID)
+{
+	CHAR	TimeOutText[20];
+	LONG		TimeOut;
+	ULONG_PTR	SectionId;
+
+	TimeOut = CmdLineGetTimeOut();
+	if (0 <= TimeOut)
+	{
+		return TimeOut;
+	}
+
+	if (!IniOpenSection("FreeLoader", &SectionId))
+	{
+		return -1;
+	}
+
+	if (IniReadSettingByName(SectionId, "TimeOut", TimeOutText, sizeof(TimeOutText)))
+	{
+		TimeOut = atoi(TimeOutText);
+	}
+	else
+	{
+		TimeOut = -1;
+	}
+
+	return TimeOut;
+}
+
+BOOLEAN MainBootMenuKeyPressFilter(ULONG KeyPress)
+{
+	if (KeyPress == KEY_F8)
+	{
+		DoOptionsMenu();
+
+		return TRUE;
+	}
+
+	// We didn't handle the key
+	return FALSE;
+}
+
 VOID RunLoader(VOID)
 {
 	CHAR	SettingValue[80];
 	CHAR BootType[80];
 	ULONG_PTR	SectionId;
 	ULONG		OperatingSystemCount;
-	PCSTR	*OperatingSystemSectionNames;
+	OperatingSystemItem*	OperatingSystemList;
 	PCSTR	*OperatingSystemDisplayNames;
 	PCSTR SectionName;
+	ULONG	i;
 	ULONG		DefaultOperatingSystem;
 	LONG		TimeOut;
 	ULONG		SelectedOperatingSystem;
@@ -58,10 +138,10 @@ VOID RunLoader(VOID)
 		return;
 	}
 
-
-	if (!InitOperatingSystemList(&OperatingSystemSectionNames, &OperatingSystemDisplayNames, &OperatingSystemCount))
+	OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount);
+	if (!OperatingSystemList)
 	{
-		UiMessageBox("Press ENTER to reboot.");
+		UiMessageBox("Unable to read operating systems section in freeldr.ini.\nPress ENTER to reboot.");
 		goto reboot;
 	}
 
@@ -71,7 +151,20 @@ VOID RunLoader(VOID)
 		goto reboot;
 	}
 
-	DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemSectionNames, OperatingSystemCount);
+	DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemList, OperatingSystemCount);
+
+	//
+	// Create list of display names
+	//
+	OperatingSystemDisplayNames = MmHeapAlloc(sizeof(PCSTR) * OperatingSystemCount);
+	if (!OperatingSystemDisplayNames)
+	{
+		goto reboot;
+	}
+	for (i = 0; i < OperatingSystemCount; i++)
+	{
+		OperatingSystemDisplayNames[i] = OperatingSystemList[i].LoadIdentifier;
+	}
 
 	//
 	// Find all the message box settings and run them
@@ -95,7 +188,7 @@ VOID RunLoader(VOID)
 
 		// Try to open the operating system section in the .ini file
 		SettingValue[0] = ANSI_NULL;
-		SectionName = OperatingSystemSectionNames[SelectedOperatingSystem];
+		SectionName = OperatingSystemList[SelectedOperatingSystem].SystemPartition;
 		if (IniOpenSection(SectionName, &SectionId))
 		{
 			// Try to read the boot type
@@ -184,83 +277,4 @@ VOID RunLoader(VOID)
 reboot:
 	UiUnInitialize("Rebooting...");
 	return;
-}
-
-ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSystemCount)
-{
-	CHAR	DefaultOSText[80];
-	PCSTR	DefaultOSName;
-	ULONG_PTR	SectionId;
-	ULONG	DefaultOS = 0;
-	ULONG	Idx;
-
-	if (!IniOpenSection("FreeLoader", &SectionId))
-	{
-		return 0;
-	}
-
-	DefaultOSName = CmdLineGetDefaultOS();
-	if (NULL == DefaultOSName)
-	{
-		if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
-		{
-			DefaultOSName = DefaultOSText;
-		}
-	}
-
-	if (NULL != DefaultOSName)
-	{
-		for (Idx=0; Idx<OperatingSystemCount; Idx++)
-		{
-			if (_stricmp(DefaultOSName, OperatingSystemList[Idx]) == 0)
-			{
-				DefaultOS = Idx;
-				break;
-			}
-		}
-	}
-
-	return DefaultOS;
-}
-
-LONG GetTimeOut(VOID)
-{
-	CHAR	TimeOutText[20];
-	LONG		TimeOut;
-	ULONG_PTR	SectionId;
-
-	TimeOut = CmdLineGetTimeOut();
-	if (0 <= TimeOut)
-	{
-		return TimeOut;
-	}
-
-	if (!IniOpenSection("FreeLoader", &SectionId))
-	{
-		return -1;
-	}
-
-	if (IniReadSettingByName(SectionId, "TimeOut", TimeOutText, sizeof(TimeOutText)))
-	{
-		TimeOut = atoi(TimeOutText);
-	}
-	else
-	{
-		TimeOut = -1;
-	}
-
-	return TimeOut;
-}
-
-BOOLEAN MainBootMenuKeyPressFilter(ULONG KeyPress)
-{
-	if (KeyPress == KEY_F8)
-	{
-		DoOptionsMenu();
-
-		return TRUE;
-	}
-
-	// We didn't handle the key
-	return FALSE;
 }

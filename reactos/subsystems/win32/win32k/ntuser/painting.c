@@ -41,7 +41,7 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, RECTL *WindowRect)
    PWINDOW_OBJECT ParentWindow;
    PWND ParentWnd;
 
-   ParentWindow = Child->Parent;
+   ParentWindow = Child->spwndParent;
    while (ParentWindow != NULL)
    {
       ParentWnd = ParentWindow->Wnd;
@@ -58,7 +58,7 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, RECTL *WindowRect)
 
       /* FIXME: Layered windows. */
 
-      ParentWindow = ParentWindow->Parent;
+      ParentWindow = ParentWindow->spwndParent;
    }
 
    return TRUE;
@@ -67,7 +67,7 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, RECTL *WindowRect)
 BOOL FASTCALL
 IntValidateParent(PWINDOW_OBJECT Child, HRGN hValidateRgn, BOOL Recurse)
 {
-   PWINDOW_OBJECT ParentWindow = Child->Parent;
+   PWINDOW_OBJECT ParentWindow = Child->spwndParent;
    PWND ParentWnd;
 
    while (ParentWindow)
@@ -85,7 +85,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN hValidateRgn, BOOL Recurse)
                               RDW_VALIDATE | RDW_NOCHILDREN);
       }
 
-      ParentWindow = ParentWindow->Parent;
+      ParentWindow = ParentWindow->spwndParent;
    }
 
    return TRUE;
@@ -195,7 +195,7 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
             GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
             GreDeleteObject(Window->UpdateRegion);
             Window->UpdateRegion = NULL;
-            if (!(Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
+            if (!(Window->state & WINDOWOBJECT_NEED_INTERNALPAINT))
                MsqDecPaintCountQueue(Window->MessageQueue);
          }
       }
@@ -237,17 +237,17 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
       if (Flags & RDW_UPDATENOW)
       {
          if (Window->UpdateRegion != NULL ||
-             Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+             Window->state & WINDOWOBJECT_NEED_INTERNALPAINT)
          {
             co_IntSendMessage(hWnd, WM_PAINT, 0, 0);
          }
       }
       else
       {
-         if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+         if (Window->state & WINDOWOBJECT_NEED_NCPAINT)
          {
             TempRegion = IntGetNCUpdateRgn(Window, TRUE);
-            Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+            Window->state &= ~WINDOWOBJECT_NEED_NCPAINT;
             MsqDecPaintCountQueue(Window->MessageQueue);
             co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
             if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
@@ -257,7 +257,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
             }
          }
 
-         if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
+         if (Window->state & WINDOWOBJECT_NEED_ERASEBKGND)
          {
             if (Window->UpdateRegion)
             {
@@ -266,7 +266,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
                                  DCX_INTERSECTRGN | DCX_KEEPCLIPRGN);
                if (co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
                {
-                  Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
+                  Window->state &= ~WINDOWOBJECT_NEED_ERASEBKGND;
                }
                UserReleaseDC(Window, hDC, FALSE);
             }
@@ -367,8 +367,8 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     */
 
    HadPaintMessage = Window->UpdateRegion != NULL ||
-                     Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
-   HadNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
+                     Window->state & WINDOWOBJECT_NEED_INTERNALPAINT;
+   HadNCPaintMessage = Window->state & WINDOWOBJECT_NEED_NCPAINT;
 
    /*
     * Update the region and flags
@@ -391,9 +391,9 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       }
 
       if (Flags & RDW_FRAME)
-         Window->Flags |= WINDOWOBJECT_NEED_NCPAINT;
+         Window->state |= WINDOWOBJECT_NEED_NCPAINT;
       if (Flags & RDW_ERASE)
-         Window->Flags |= WINDOWOBJECT_NEED_ERASEBKGND;
+         Window->state |= WINDOWOBJECT_NEED_ERASEBKGND;
 
       Flags |= RDW_FRAME;
    }
@@ -412,21 +412,21 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       }
 
       if (Window->UpdateRegion == NULL)
-         Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
+         Window->state &= ~WINDOWOBJECT_NEED_ERASEBKGND;
       if (Flags & RDW_NOFRAME)
-         Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+         Window->state &= ~WINDOWOBJECT_NEED_NCPAINT;
       if (Flags & RDW_NOERASE)
-         Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
+         Window->state &= ~WINDOWOBJECT_NEED_ERASEBKGND;
    }
 
    if (Flags & RDW_INTERNALPAINT)
    {
-      Window->Flags |= WINDOWOBJECT_NEED_INTERNALPAINT;
+      Window->state |= WINDOWOBJECT_NEED_INTERNALPAINT;
    }
 
    if (Flags & RDW_NOINTERNALPAINT)
    {
-      Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+      Window->state &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
    }
 
    /*
@@ -438,7 +438,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    {
       PWINDOW_OBJECT Child;
 
-      for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+      for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
       {
          if (Child->Wnd->style & WS_VISIBLE)
          {
@@ -459,8 +459,8 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     */
 
    HasPaintMessage = Window->UpdateRegion != NULL ||
-                     Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
-   HasNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
+                     Window->state & WINDOWOBJECT_NEED_INTERNALPAINT;
+   HasNCPaintMessage = Window->state & WINDOWOBJECT_NEED_NCPAINT;
 
    if (HasPaintMessage != HadPaintMessage)
    {
@@ -494,7 +494,7 @@ IntIsWindowDrawable(PWINDOW_OBJECT Window)
    PWINDOW_OBJECT WndObject;
    PWND Wnd;
 
-   for (WndObject = Window; WndObject != NULL; WndObject = WndObject->Parent)
+   for (WndObject = Window; WndObject != NULL; WndObject = WndObject->spwndParent)
    {
       Wnd = WndObject->Wnd;
       if (!(Wnd->style & WS_VISIBLE) ||
@@ -612,8 +612,8 @@ IntIsWindowDirty(PWINDOW_OBJECT Window)
    PWND Wnd = Window->Wnd;
    return (Wnd->style & WS_VISIBLE) &&
           ((Window->UpdateRegion != NULL) ||
-           (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT) ||
-           (Window->Flags & WINDOWOBJECT_NEED_NCPAINT));
+           (Window->state & WINDOWOBJECT_NEED_INTERNALPAINT) ||
+           (Window->state & WINDOWOBJECT_NEED_NCPAINT));
 }
 
 HWND FASTCALL
@@ -623,7 +623,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
    PWINDOW_OBJECT TempWindow;
    PWND Wnd, TempWnd;
 
-   for (; Window != NULL; Window = Window->NextSibling)
+   for (; Window != NULL; Window = Window->spwndNext)
    {
       Wnd = Window->Wnd;
       if (IntWndBelongsToThread(Window, Thread) &&
@@ -632,8 +632,8 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
          /* Make sure all non-transparent siblings are already drawn. */
          if (Wnd->ExStyle & WS_EX_TRANSPARENT)
          {
-            for (TempWindow = Window->NextSibling; TempWindow != NULL;
-                 TempWindow = TempWindow->NextSibling)
+            for (TempWindow = Window->spwndNext; TempWindow != NULL;
+                 TempWindow = TempWindow->spwndNext)
             {
                TempWnd = TempWindow->Wnd;
                if (!(TempWnd->ExStyle & WS_EX_TRANSPARENT) &&
@@ -648,9 +648,9 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
          return Window->hSelf;
       }
 
-      if (Window->FirstChild)
+      if (Window->spwndChild)
       {
-         hChild = IntFindWindowToRepaint(Window->FirstChild, Thread);
+         hChild = IntFindWindowToRepaint(Window->spwndChild, Thread);
          if (hChild != NULL)
             return hChild;
       }
@@ -770,12 +770,12 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
    co_UserHideCaret(Window);
 
-   if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+   if (Window->state & WINDOWOBJECT_NEED_NCPAINT)
    {
       HRGN hRgn;
 
       hRgn = IntGetNCUpdateRgn(Window, FALSE);
-      Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+      Window->state &= ~WINDOWOBJECT_NEED_NCPAINT;
       MsqDecPaintCountQueue(Window->MessageQueue);
       co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
       if (hRgn != (HANDLE)1 && hRgn != NULL)
@@ -803,17 +803,17 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    }
    else
    {
-      if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+      if (Window->state & WINDOWOBJECT_NEED_INTERNALPAINT)
          MsqDecPaintCountQueue(Window->MessageQueue);
 
       IntGetClientRect(Window, &Ps.rcPaint);
    }
 
-   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+   Window->state &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
 
-   if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
+   if (Window->state & WINDOWOBJECT_NEED_ERASEBKGND)
    {
-      Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
+      Window->state &= ~WINDOWOBJECT_NEED_ERASEBKGND;
       Ps.fErase = !co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)Ps.hdc, 0);
    }
    else
@@ -825,7 +825,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       if (!(Wnd->style & WS_CLIPCHILDREN))
       {
          PWINDOW_OBJECT Child;
-         for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+         for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
          {
             IntInvalidateWindows(Child, Window->UpdateRegion, RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
          }
@@ -1406,7 +1406,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
       RECTL rcDummy;
 
       IntGetClientOrigin(Window, &ClientOrigin);
-      for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+      for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
       {
          rcChild = Child->Wnd->rcWindow;
          rcChild.left -= ClientOrigin.x;

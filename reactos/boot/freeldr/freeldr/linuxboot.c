@@ -41,6 +41,36 @@ PVOID			LinuxInitrdLoadAddress = NULL;
 CHAR			LinuxBootDescription[80];
 CHAR			LinuxBootPath[260] = "";
 
+BOOLEAN RemoveQuotes(PCHAR QuotedString)
+{
+	CHAR	TempString[200];
+	PCHAR p;
+	PSTR Start;
+
+	//
+	// Skip spaces up to "
+	//
+	p = QuotedString;
+	while (*p == ' ' || *p == '"')
+		p++;
+	Start = p;
+
+	//
+	// Go up to next "
+	//
+	while (*p != '"' && *p != ANSI_NULL)
+		p++;
+	*p = ANSI_NULL;
+
+	//
+	// Copy result
+	//
+	strcpy(TempString, Start);
+	strcpy(QuotedString, TempString);
+
+	return TRUE;
+}
+
 VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 {
 	PFILE	LinuxKernel = 0;

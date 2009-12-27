@@ -451,9 +451,14 @@ PinWaveCyclicState(
                 // complete with successful state
                 Pin->m_IrpQueue->CancelBuffers();
             }
-        // store result
-        Irp->IoStatus.Information = sizeof(KSSTATE);
-    }
+            else if (Pin->m_State == KSSTATE_STOP)
+            {
+                Pin->m_IrpQueue->CancelBuffers();
+            }
+            // store result
+            Irp->IoStatus.Information = sizeof(KSSTATE);
+        }
+        return Status;
     }
     else if (Request->Flags & KSPROPERTY_TYPE_GET)
     {
@@ -690,8 +695,8 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
         {
             // normalize position
             m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+        }
     }
-}
 }
 
 VOID
@@ -739,7 +744,7 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
         {
             // normalize position
             m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
-    }
+        }
 
     }
 
@@ -827,16 +832,16 @@ CPortPinWaveCyclic::DeviceIoControl(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
         /* handle property with subdevice descriptor */
-    Status = PcHandlePropertyWithTable(Irp,  m_Descriptor.FilterPropertySetCount, m_Descriptor.FilterPropertySet, &m_Descriptor);
+        Status = PcHandlePropertyWithTable(Irp,  m_Descriptor.FilterPropertySetCount, m_Descriptor.FilterPropertySet, &m_Descriptor);
 
-    if (Status == STATUS_NOT_FOUND)
-    {
-        Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        if (Status == STATUS_NOT_FOUND)
+        {
+            Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-        RtlStringFromGUID(Property->Set, &GuidString);
-        DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-        RtlFreeUnicodeString(&GuidString);
-    }
+            RtlStringFromGUID(Property->Set, &GuidString);
+            DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+            RtlFreeUnicodeString(&GuidString);
+        }
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
     {
@@ -845,28 +850,27 @@ CPortPinWaveCyclic::DeviceIoControl(
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_DISABLE_EVENT)
     {
         Status = PcHandleDisableEventWithTable(Irp, &m_Descriptor);
-}
+    }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_RESET_STATE)
-{
-        /// FIXME
+    {
         Status = KsAcquireResetValue(Irp, &ResetValue);
         DPRINT("Status %x Value %u\n", Status, ResetValue);
         /* check for success */
-    if (NT_SUCCESS(Status))
-    {
+        if (NT_SUCCESS(Status))
+        {
             if (ResetValue == KSRESET_BEGIN)
             {
                 m_IrpQueue->CancelBuffers();
                 m_ResetState = KSRESET_BEGIN;
-    }
+            }
             else if (ResetValue == KSRESET_END)
             {
                 m_ResetState = KSRESET_END;
-}
+            }
         }
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM || IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
-{
+    {
         /* increment total number of packets */
         InterlockedIncrement((PLONG)&m_TotalPackets);
 
@@ -880,17 +884,17 @@ CPortPinWaveCyclic::DeviceIoControl(
 
              /* check for success */
              if (NT_SUCCESS(Status))
-    {
+             {
                 m_Position.WriteOffset += Data;
                 Status = STATUS_PENDING;
-    }
-    }
+             }
+         }
          else
-    {
+         {
              /* reset request is currently in progress */
              Status = STATUS_DEVICE_NOT_READY;
              DPRINT1("NotReady\n");
-    }
+         }
     }
     else
     {
@@ -900,7 +904,7 @@ CPortPinWaveCyclic::DeviceIoControl(
     if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     return Status;

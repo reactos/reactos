@@ -10,14 +10,6 @@
 
 #include <ks.h>
 
-LPVOID
-__stdcall
-HeapAlloc(
-  HANDLE hHeap,
-  DWORD dwFlags,
-  SIZE_T dwBytes
-);
-
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
 

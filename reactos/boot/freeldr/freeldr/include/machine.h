@@ -100,9 +100,6 @@ BOOLEAN MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size);
 BOOLEAN MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOLEAN MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG MachDiskGetCacheableBlockCount(ULONG DriveNumber);
-TIMEINFO* ArcGetTime(VOID);
-ULONG ArcGetRelativeTime(VOID);
-VOID MachHwDetect(VOID);
 VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 
 #define MachConsPutChar(Ch)			MachVtbl.ConsPutChar(Ch)

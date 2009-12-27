@@ -66,13 +66,13 @@ HANDLE WINAPI CreateActCtxA(PCACTCTXA pActCtx)
     if (actw.dwFlags & ACTCTX_FLAG_RESOURCE_NAME_VALID)
     {
         if ((ULONG_PTR)pActCtx->lpResourceName >> 16)
-    {
+        {
             len = MultiByteToWideChar(CP_ACP, 0, pActCtx->lpResourceName, -1, NULL, 0);
             resname = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
             if (!resname) goto done;
             MultiByteToWideChar(CP_ACP, 0, pActCtx->lpResourceName, -1, resname, len);
             actw.lpResourceName = resname;
-    }
+        }
         else actw.lpResourceName = (LPCWSTR)pActCtx->lpResourceName;
     }
     if (actw.dwFlags & ACTCTX_FLAG_APPLICATION_NAME_VALID)
@@ -197,7 +197,7 @@ BOOL WINAPI ZombifyActCtx(HANDLE hActCtx)
 /***********************************************************************
  * FindActCtxSectionStringA (KERNEL32.@)
  *
- * Find information about a GUID in an activation context.
+ * Find information about a string in an activation context.
  */
 BOOL WINAPI FindActCtxSectionStringA(DWORD dwFlags, const GUID* lpExtGuid,
                                     ULONG ulId, LPCSTR lpSearchStr,
@@ -229,7 +229,7 @@ BOOL WINAPI FindActCtxSectionStringA(DWORD dwFlags, const GUID* lpExtGuid,
 /***********************************************************************
  * FindActCtxSectionStringW (KERNEL32.@)
  *
- * Find information about a GUID in an activation context.
+ * Find information about a string in an activation context.
  */
 BOOL WINAPI FindActCtxSectionStringW(DWORD dwFlags, const GUID* lpExtGuid,
                                     ULONG ulId, LPCWSTR lpSearchStr,
@@ -258,8 +258,8 @@ BOOL WINAPI FindActCtxSectionGuid(DWORD dwFlags, const GUID* lpExtGuid,
 {
   FIXME("%08x %s %u %s %p\n", dwFlags, debugstr_guid(lpExtGuid),
        ulId, debugstr_guid(lpSearchGuid), pInfo);
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+  SetLastError( ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 /***********************************************************************
@@ -275,7 +275,7 @@ BOOL WINAPI QueryActCtxW(DWORD dwFlags, HANDLE hActCtx, PVOID pvSubInst,
 
     if ((status = RtlQueryInformationActivationContext( dwFlags, hActCtx, pvSubInst, ulClass,
                                                         pvBuff, cbBuff, pcbLen )))
-{
+    {
         SetLastError(RtlNtStatusToDosError(status));
         return FALSE;
     }

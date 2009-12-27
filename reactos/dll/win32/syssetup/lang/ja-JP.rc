@@ -244,6 +244,8 @@ BEGIN
     IDS_SYS_ENTERTAINMENT   "エンターテイメント"
     IDS_CMT_MPLAY32         "マルチメディア プレーヤーを起動します"
     IDS_CMT_SNDVOL32        "ボリューム コントロールを起動します"
+    IDS_CMT_SNDREC32            "Launch Sound Recorder"
+
 END
 
 STRINGTABLE
@@ -279,6 +281,7 @@ BEGIN
     IDS_SHORT_SERVICE    "サービス マネージャ.lnk"
     IDS_SHORT_SNAP       "スナップショット.lnk"
     IDS_SHORT_SNDVOL32   "ボリューム コントロール.lnk"
+    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
     IDS_SHORT_SOLITAIRE  "ソ\リティア.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "ワードパッド.lnk"

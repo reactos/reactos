@@ -345,7 +345,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     WCHAR *ptr;
     OSVERSIONINFOEXW OSVersion;
     MEMORYSTATUSEX msex;
-    DWORD verval;
+    DWORD verval, len;
     WCHAR verstr[10], bufstr[20];
     HDC dc;
     HKEY hkey;
@@ -445,11 +445,12 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szUserLangID[] = {'U','s','e','r','L','a','n','g','u','a','g','e','I','D',0};
     static const WCHAR szSystemLangID[] = {'S','y','s','t','e','m','L','a','n','g','u','a','g','e','I','D',0};
     static const WCHAR szProductState[] = {'P','r','o','d','u','c','t','S','t','a','t','e',0};
+    static const WCHAR szLogonUser[] = {'L','o','g','o','n','U','s','e','r',0};
 
     /*
      * Other things that probably should be set:
      *
-     * ComputerName LogonUser VirtualMemory
+     * ComputerName VirtualMemory
      * ShellAdvSupport DefaultUIFont PackagecodeChanging
      * CaptionHeight BorderTop BorderSide TextHeight
      * RedirectedDllSupport
@@ -653,6 +654,18 @@ static VOID set_installer_properties(MSIPACKAGE *package)
 
     sprintfW(bufstr, szIntFormat, MsiQueryProductStateW(package->ProductCode));
     MSI_SetPropertyW( package, szProductState, bufstr );
+
+    len = 0;
+    if (!GetUserNameW( NULL, &len ) && GetLastError() == ERROR_MORE_DATA)
+    {
+        WCHAR *username;
+        if ((username = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+        {
+            if (GetUserNameW( username, &len ))
+                MSI_SetPropertyW( package, szLogonUser, username );
+            HeapFree( GetProcessHeap(), 0, username );
+        }
+    }
 }
 
 static UINT msi_load_summary_properties( MSIPACKAGE *package )
@@ -766,6 +779,16 @@ static UINT msi_load_admin_properties(MSIPACKAGE *package)
     return r;
 }
 
+static void adjust_allusers_property( MSIPACKAGE *package )
+{
+    /* FIXME: this should depend on the user's privileges */
+    if (msi_get_property_int( package, szAllUsers, 0 ) == 2)
+    {
+        TRACE("resetting ALLUSERS property from 2 to 1\n");
+        MSI_SetPropertyW( package, szAllUsers, szOne );
+    }
+}
+
 MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 {
     static const WCHAR szLevel[] = { 'U','I','L','e','v','e','l',0 };
@@ -805,6 +828,8 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 
         if (package->WordCount & msidbSumInfoSourceTypeAdminImage)
             msi_load_admin_properties( package );
+
+        adjust_allusers_property( package );
     }
 
     return package;
@@ -820,7 +845,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
  *        we should read all the tables to memory, then open the
  *        database to read binary streams on demand.
  */ 
-static LPCWSTR copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
+static UINT copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
 {
     WCHAR path[MAX_PATH];
 
@@ -829,16 +854,16 @@ static LPCWSTR copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
 
     if( !CopyFileW( szPackage, filename, FALSE ) )
     {
+        UINT error = GetLastError();
+        ERR("failed to copy package %s to %s (%u)\n", debugstr_w(szPackage), debugstr_w(filename), error);
         DeleteFileW( filename );
-        ERR("failed to copy package %s\n", debugstr_w(szPackage) );
-        return szPackage;
+        return error;
     }
 
-    TRACE("Opening relocated package %s\n", debugstr_w( filename ));
-    return filename;
+    return ERROR_SUCCESS;
 }
 
-LPCWSTR msi_download_file( LPCWSTR szUrl, LPWSTR filename )
+UINT msi_download_file( LPCWSTR szUrl, LPWSTR filename )
 {
     LPINTERNET_CACHE_ENTRY_INFOW cache_entry;
     DWORD size = 0;
@@ -854,20 +879,24 @@ LPCWSTR msi_download_file( LPCWSTR szUrl, LPWSTR filename )
         cache_entry = HeapAlloc( GetProcessHeap(), 0, size );
         if ( !GetUrlCacheEntryInfoW( szUrl, cache_entry, &size ) )
         {
+            UINT error = GetLastError();
             HeapFree( GetProcessHeap(), 0, cache_entry );
-            return szUrl;
+            return error;
         }
 
         lstrcpyW( filename, cache_entry->lpszLocalFileName );
         HeapFree( GetProcessHeap(), 0, cache_entry );
-        return filename;
+        return ERROR_SUCCESS;
     }
 
     hr = URLDownloadToCacheFileW( NULL, szUrl, filename, MAX_PATH, 0, NULL );
     if ( FAILED(hr) )
-        return szUrl;
+    {
+        WARN("failed to download %s to cache file\n", debugstr_w(szUrl));
+        return ERROR_FUNCTION_FAILED;
+    }
 
-    return filename;
+    return ERROR_SUCCESS;
 }
 
 static UINT msi_get_local_package_name( LPWSTR path )
@@ -912,7 +941,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     MSIHANDLE handle;
     LPWSTR ptr, base_url = NULL;
     UINT r;
-    WCHAR temppath[MAX_PATH], localfile[MAX_PATH];
+    WCHAR temppath[MAX_PATH], localfile[MAX_PATH], cachefile[MAX_PATH];
     LPCWSTR file = szPackage;
 
     TRACE("%s %p\n", debugstr_w(szPackage), pPackage);
@@ -939,9 +968,15 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     {
         if ( UrlIsW( szPackage, URLIS_URL ) )
         {
-            file = msi_download_file( szPackage, temppath );
-            if ( file != szPackage )
-                file = copy_package_to_temp( file, temppath );
+            r = msi_download_file( szPackage, cachefile );
+            if ( r != ERROR_SUCCESS )
+                return r;
+
+            r = copy_package_to_temp( cachefile, temppath );
+            if ( r != ERROR_SUCCESS )
+                return r;
+
+            file = temppath;
 
             base_url = strdupW( szPackage );
             if ( !base_url )
@@ -951,7 +986,13 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
             if (ptr) *(ptr + 1) = '\0';
         }
         else
-            file = copy_package_to_temp( szPackage, temppath );
+        {
+            r = copy_package_to_temp( szPackage, temppath );
+            if ( r != ERROR_SUCCESS )
+                return r;
+
+            file = temppath;
+        }
 
         r = msi_get_local_package_name( localfile );
         if (r != ERROR_SUCCESS)
@@ -965,6 +1006,8 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
                 debugstr_w(file), debugstr_w(localfile), GetLastError());
             return GetLastError();
         }
+
+        TRACE("Opening relocated package %s\n", debugstr_w( file ));
 
         /* transforms that add binary streams require that we open the database
          * read/write, which is safe because we always create a copy that is thrown

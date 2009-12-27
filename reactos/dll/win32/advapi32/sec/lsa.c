@@ -1,12 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/sec/lsa.c
+ * FILE:            dll/win32/advapi32/sec/lsa.c
  * PURPOSE:         Local security authority functions
  * PROGRAMMER:      Emanuele Aliberti
  * UPDATE HISTORY:
- *	19990322 EA created
- *	19990515 EA stubs
+ *      19990322 EA created
+ *      19990515 EA stubs
  *      20030202 KJK compressed stubs
  *
  */
@@ -360,6 +360,12 @@ LsaLookupNames2(
 {
     FIXME("(%p,0x%08x,0x%08x,%p,%p,%p) stub\n", PolicyHandle, Flags,
         Count, Names, ReferencedDomains, Sids);
+    if (Names != NULL && Count > 0)
+    {
+        *ReferencedDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_REFERENCED_DOMAIN_LIST));
+        *Sids = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count * sizeof(LSA_TRANSLATED_SID2));
+        return STATUS_SOME_NOT_MAPPED;
+    }
     return STATUS_NONE_MAPPED;
 }
 

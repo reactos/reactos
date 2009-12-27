@@ -27,7 +27,7 @@ typedef struct _DESKTOP
 
     PWIN32HEAP pheapDesktop;
     PSECTION_OBJECT DesktopHeapSection;
-    PDESKTOPINFO DesktopInfo;
+    PDESKTOPINFO pDeskInfo;
     PWND spwndMessage;
 } DESKTOP, *PDESKTOP;
 

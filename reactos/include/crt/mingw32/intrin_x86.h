@@ -974,14 +974,14 @@ __INTRIN_INLINE unsigned long long __emulu(const unsigned int a, const unsigned 
 
 #ifdef _M_AMD64
 
-static __inline__ __attribute__((always_inline)) __int64 __mulh(__int64 a, __int64 b)
+__INTRIN_INLINE __int64 __mulh(__int64 a, __int64 b)
 {
 	__int64 retval;
 	__asm__("imulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned __int64 __umulh(unsigned __int64 a, unsigned __int64 b)
+__INTRIN_INLINE unsigned __int64 __umulh(unsigned __int64 a, unsigned __int64 b)
 {
 	unsigned __int64 retval;
 	__asm__("mulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));

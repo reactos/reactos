@@ -270,6 +270,12 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     {
         size = GlobalSize(hMem);
         ret = NtUserSetClipboardData(uFormat, pMem, size);
+
+        //On success NtUserSetClipboardData returns pMem
+        //however caller expects us to return hMem
+        if (ret == pMem)
+            ret = hMem;
+
         //should i unlock hMem?
         GlobalUnlock(hMem);
     }

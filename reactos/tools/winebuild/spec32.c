@@ -30,10 +30,21 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "winglue.h"
-//#include "wine/exception.h"
 #include "build.h"
 
+#define IMAGE_FILE_MACHINE_UNKNOWN 0
+#define IMAGE_FILE_MACHINE_I386    0x014c
+#define IMAGE_FILE_MACHINE_ALPHA   0x0184
+#define IMAGE_FILE_MACHINE_POWERPC 0x01f0
+#define IMAGE_FILE_MACHINE_AMD64   0x8664
+#define IMAGE_FILE_MACHINE_ARM     0x01C0
+
+#define IMAGE_SIZEOF_NT_OPTIONAL32_HEADER 224
+#define IMAGE_SIZEOF_NT_OPTIONAL64_HEADER 240
+
+#define IMAGE_NT_OPTIONAL_HDR32_MAGIC 0x10b
+#define IMAGE_NT_OPTIONAL_HDR64_MAGIC 0x20b
+#define IMAGE_ROM_OPTIONAL_HDR_MAGIC  0x107
 
 /* check if entry point needs a relay thunk */
 static inline int needs_relay( const ORDDEF *odp )
@@ -183,17 +194,21 @@ static void output_relay_debug( DLLSPEC *spec )
             break;
 
         case CPU_x86_64:
-            output( "\tmovq %%rcx,8(%%rsp)\n" );
-            output( "\tmovq %%rdx,16(%%rsp)\n" );
-            output( "\tmovq %%r8,24(%%rsp)\n" );
-            output( "\tmovq %%r9,32(%%rsp)\n" );
-            output( "\tmovq %%rsp,%%r8\n" );
+            output( "\t.cfi_startproc\n" );
+            output( "\tsubq $40,%%rsp\n" );
+            output( "\t.cfi_adjust_cfa_offset 40\n" );
+            output( "\tmovq %%rcx,48(%%rsp)\n" );
+            output( "\tmovq %%rdx,56(%%rsp)\n" );
+            output( "\tmovq %%r8,64(%%rsp)\n" );
+            output( "\tmovq %%r9,72(%%rsp)\n" );
+            output( "\tleaq 40(%%rsp),%%r8\n" );
             output( "\tmovq $%u,%%rdx\n", (flags << 24) | (args << 16) | (i - spec->base) );
             output( "\tleaq .L__wine_spec_relay_descr(%%rip),%%rcx\n" );
-            output( "\tsubq $40,%%rsp\n" );
             output( "\tcallq *%u(%%rcx)\n", (odp->flags & FLAG_REGISTER) ? 16 : 8 );
             output( "\taddq $40,%%rsp\n" );
+            output( "\t.cfi_adjust_cfa_offset -40\n" );
             output( "\tret\n" );
+            output( "\t.cfi_endproc\n" );
             break;
 
         default:
@@ -207,7 +222,7 @@ static void output_relay_debug( DLLSPEC *spec )
  *
  * Output the export table for a Win32 module.
  */
-static void output_exports( DLLSPEC *spec )
+void output_exports( DLLSPEC *spec )
 {
     int i, fwd_size = 0;
     int nr_exports = spec->base <= spec->limit ? spec->limit - spec->base + 1 : 0;
@@ -329,8 +344,7 @@ static void output_exports( DLLSPEC *spec )
 
     /* output relays */
 
-    /* we only support relay debugging on i386 and x86_64 */
-    if (target_cpu != CPU_x86 && target_cpu != CPU_x86_64)
+    if (!has_relays( spec ))
     {
         output( "\t%s 0\n", get_asm_ptr_keyword() );
         return;
@@ -416,6 +430,9 @@ static void output_asm_constructor( const char *constructor )
         case CPU_ALPHA:
             output( "\tjsr $26,%s\n", asm_name(constructor) );
             break;
+        case CPU_ARM:
+            output( "\tblx %s\n", asm_name(constructor) );
+            break;
         case CPU_POWERPC:
             output( "\tbl %s\n", asm_name(constructor) );
             break;
@@ -425,17 +442,14 @@ static void output_asm_constructor( const char *constructor )
 
 
 /*******************************************************************
- *         BuildSpec32File
+ *         output_module
  *
- * Build a Win32 C file from a spec file.
+ * Output the module data.
  */
-void BuildSpec32File( DLLSPEC *spec )
+void output_module( DLLSPEC *spec )
 {
     int machine = 0;
     unsigned int page_size = get_page_size();
-
-    resolve_imports( spec );
-    output_standard_file_header();
 
     /* Reserve some space for the PE header */
 
@@ -462,6 +476,7 @@ void BuildSpec32File( DLLSPEC *spec )
         case CPU_SPARC:
             output( "\tjmp 1f\n" );
             break;
+        case CPU_ARM:
         case CPU_POWERPC:
             output( "\tb 1f\n" );
             break;
@@ -479,11 +494,12 @@ void BuildSpec32File( DLLSPEC *spec )
     output( "%s\n", asm_globl("__wine_spec_nt_header") );
     output( ".L__wine_spec_rva_base:\n" );
 
-    output( "\t.long 0x%04x\n", IMAGE_NT_SIGNATURE );    /* Signature */
+    output( "\t.long 0x4550\n" );         /* Signature */
     switch(target_cpu)
     {
     case CPU_x86:     machine = IMAGE_FILE_MACHINE_I386; break;
     case CPU_x86_64:  machine = IMAGE_FILE_MACHINE_AMD64; break;
+    case CPU_ARM:     machine = IMAGE_FILE_MACHINE_ARM; break;
     case CPU_POWERPC: machine = IMAGE_FILE_MACHINE_POWERPC; break;
     case CPU_ALPHA:   machine = IMAGE_FILE_MACHINE_ALPHA; break;
     case CPU_SPARC:   machine = IMAGE_FILE_MACHINE_UNKNOWN; break;
@@ -510,7 +526,7 @@ void BuildSpec32File( DLLSPEC *spec )
     output( "\t.long 0\n" );              /* SizeOfUninitializedData */
     /* note: we expand the AddressOfEntryPoint field on 64-bit by overwriting the BaseOfCode field */
     output( "\t%s %s\n",                  /* AddressOfEntryPoint */
-             get_asm_ptr_keyword(), asm_name(spec->init_func) );
+            get_asm_ptr_keyword(), spec->init_func ? asm_name(spec->init_func) : "0" );
     if (get_ptr_size() == 4)
     {
         output( "\t.long 0\n" );          /* BaseOfCode */
@@ -581,12 +597,227 @@ void BuildSpec32File( DLLSPEC *spec )
     if (target_platform == PLATFORM_APPLE)
         output( "\t.lcomm %s,4\n", asm_name("_end") );
 
+    output_asm_constructor( "__wine_spec_init_ctor" );
+}
+
+
+/*******************************************************************
+ *         BuildSpec32File
+ *
+ * Build a Win32 C file from a spec file.
+ */
+void BuildSpec32File( DLLSPEC *spec )
+{
+    resolve_imports( spec );
+    output_standard_file_header();
+    output_module( spec );
     output_stubs( spec );
     output_exports( spec );
     output_imports( spec );
     output_resources( spec );
-    output_asm_constructor( "__wine_spec_init_ctor" );
     output_gnu_stack_note();
+}
+
+
+/*******************************************************************
+ *         output_fake_module
+ *
+ * Build a fake binary module from a spec file.
+ */
+void output_fake_module( DLLSPEC *spec )
+{
+    static const unsigned char dll_code_section[] = { 0x31, 0xc0,          /* xor %eax,%eax */
+                                                      0xc2, 0x0c, 0x00 };  /* ret $12 */
+
+    static const unsigned char exe_code_section[] = { 0xb8, 0x01, 0x00, 0x00, 0x00,  /* movl $1,%eax */
+                                                      0xc2, 0x04, 0x00 };            /* ret $4 */
+
+    static const char fakedll_signature[] = "Wine placeholder DLL";
+    const unsigned int page_size = get_page_size();
+    const unsigned int section_align = page_size;
+    const unsigned int file_align = 0x200;
+    const unsigned int reloc_size = 8;
+    const unsigned int lfanew = (0x40 + sizeof(fakedll_signature) + 15) & ~15;
+    const unsigned int nb_sections = 2 + (spec->nb_resources != 0);
+    const unsigned int text_size = (spec->characteristics & IMAGE_FILE_DLL) ?
+                                    sizeof(dll_code_section) : sizeof(exe_code_section);
+    unsigned char *resources;
+    unsigned int resources_size;
+    unsigned int image_size = 3 * section_align;
+
+    resolve_imports( spec );
+    output_bin_resources( spec, 3 * section_align );
+    resources = output_buffer;
+    resources_size = output_buffer_pos;
+    if (resources_size) image_size += (resources_size + section_align - 1) & ~(section_align - 1);
+
+    init_output_buffer();
+
+    put_word( 0x5a4d );       /* e_magic */
+    put_word( 0x40 );         /* e_cblp */
+    put_word( 0x01 );         /* e_cp */
+    put_word( 0 );            /* e_crlc */
+    put_word( lfanew / 16 );  /* e_cparhdr */
+    put_word( 0x0000 );       /* e_minalloc */
+    put_word( 0xffff );       /* e_maxalloc */
+    put_word( 0x0000 );       /* e_ss */
+    put_word( 0x00b8 );       /* e_sp */
+    put_word( 0 );            /* e_csum */
+    put_word( 0 );            /* e_ip */
+    put_word( 0 );            /* e_cs */
+    put_word( lfanew );       /* e_lfarlc */
+    put_word( 0 );            /* e_ovno */
+    put_dword( 0 );           /* e_res */
+    put_dword( 0 );
+    put_word( 0 );            /* e_oemid */
+    put_word( 0 );            /* e_oeminfo */
+    put_dword( 0 );           /* e_res2 */
+    put_dword( 0 );
+    put_dword( 0 );
+    put_dword( 0 );
+    put_dword( 0 );
+    put_dword( lfanew );
+
+    put_data( fakedll_signature, sizeof(fakedll_signature) );
+    align_output( 16 );
+
+    put_dword( 0x4550 );                             /* Signature */
+    switch(target_cpu)
+    {
+    case CPU_x86:     put_word( IMAGE_FILE_MACHINE_I386 ); break;
+    case CPU_x86_64:  put_word( IMAGE_FILE_MACHINE_AMD64 ); break;
+    case CPU_POWERPC: put_word( IMAGE_FILE_MACHINE_POWERPC ); break;
+    case CPU_ALPHA:   put_word( IMAGE_FILE_MACHINE_ALPHA ); break;
+    case CPU_SPARC:   put_word( IMAGE_FILE_MACHINE_UNKNOWN ); break;
+    case CPU_ARM:     put_word( IMAGE_FILE_MACHINE_ARM ); break;
+    }
+    put_word( nb_sections );                         /* NumberOfSections */
+    put_dword( 0 );                                  /* TimeDateStamp */
+    put_dword( 0 );                                  /* PointerToSymbolTable */
+    put_dword( 0 );                                  /* NumberOfSymbols */
+    put_word( get_ptr_size() == 8 ?
+              IMAGE_SIZEOF_NT_OPTIONAL64_HEADER :
+              IMAGE_SIZEOF_NT_OPTIONAL32_HEADER );   /* SizeOfOptionalHeader */
+    put_word( spec->characteristics );               /* Characteristics */
+    put_word( get_ptr_size() == 8 ?
+              IMAGE_NT_OPTIONAL_HDR64_MAGIC :
+              IMAGE_NT_OPTIONAL_HDR32_MAGIC );       /* Magic */
+    put_byte(  0 );                                  /* MajorLinkerVersion */
+    put_byte(  0 );                                  /* MinorLinkerVersion */
+    put_dword( text_size );                          /* SizeOfCode */
+    put_dword( 0 );                                  /* SizeOfInitializedData */
+    put_dword( 0 );                                  /* SizeOfUninitializedData */
+    put_dword( section_align );                      /* AddressOfEntryPoint */
+    put_dword( section_align );                      /* BaseOfCode */
+    if (get_ptr_size() == 4) put_dword( 0 );         /* BaseOfData */
+    put_pword( 0x10000000 );                         /* ImageBase */
+    put_dword( section_align );                      /* SectionAlignment */
+    put_dword( file_align );                         /* FileAlignment */
+    put_word( 1 );                                   /* MajorOperatingSystemVersion */
+    put_word( 0 );                                   /* MinorOperatingSystemVersion */
+    put_word( 0 );                                   /* MajorImageVersion */
+    put_word( 0 );                                   /* MinorImageVersion */
+    put_word( spec->subsystem_major );               /* MajorSubsystemVersion */
+    put_word( spec->subsystem_minor );               /* MinorSubsystemVersion */
+    put_dword( 0 );                                  /* Win32VersionValue */
+    put_dword( image_size );                         /* SizeOfImage */
+    put_dword( file_align );                         /* SizeOfHeaders */
+    put_dword( 0 );                                  /* CheckSum */
+    put_word( spec->subsystem );                     /* Subsystem */
+    put_word( spec->dll_characteristics );           /* DllCharacteristics */
+    put_pword( (spec->stack_size ? spec->stack_size : 1024) * 1024 ); /* SizeOfStackReserve */
+    put_pword( page_size );                          /* SizeOfStackCommit */
+    put_pword( (spec->heap_size ? spec->heap_size : 1024) * 1024 );   /* SizeOfHeapReserve */
+    put_pword( page_size );                          /* SizeOfHeapCommit */
+    put_dword( 0 );                                  /* LoaderFlags */
+    put_dword( 16 );                                 /* NumberOfRvaAndSizes */
+
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT] */
+    if (resources_size)   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE] */
+    {
+        put_dword( 3 * section_align );
+        put_dword( resources_size );
+    }
+    else
+    {
+        put_dword( 0 );
+        put_dword( 0 );
+    }
+
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY] */
+    put_dword( 2 * section_align );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC] */
+    put_dword( reloc_size );
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_COPYRIGHT] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_GLOBALPTR] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_IAT] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR] */
+    put_dword( 0 ); put_dword( 0 );   /* DataDirectory[15] */
+
+    /* .text section */
+    put_data( ".text\0\0", 8 );    /* Name */
+    put_dword( section_align );    /* VirtualSize */
+    put_dword( section_align );    /* VirtualAddress */
+    put_dword( text_size );        /* SizeOfRawData */
+    put_dword( file_align );       /* PointerToRawData */
+    put_dword( 0 );                /* PointerToRelocations */
+    put_dword( 0 );                /* PointerToLinenumbers */
+    put_word( 0 );                 /* NumberOfRelocations */
+    put_word( 0 );                 /* NumberOfLinenumbers */
+    put_dword( 0x60000020 /* CNT_CODE|MEM_EXECUTE|MEM_READ */ ); /* Characteristics  */
+
+    /* .reloc section */
+    put_data( ".reloc\0", 8 );     /* Name */
+    put_dword( section_align );    /* VirtualSize */
+    put_dword( 2 * section_align );/* VirtualAddress */
+    put_dword( reloc_size );       /* SizeOfRawData */
+    put_dword( 2 * file_align );   /* PointerToRawData */
+    put_dword( 0 );                /* PointerToRelocations */
+    put_dword( 0 );                /* PointerToLinenumbers */
+    put_word( 0 );                 /* NumberOfRelocations */
+    put_word( 0 );                 /* NumberOfLinenumbers */
+    put_dword( 0x42000040 /* CNT_INITIALIZED_DATA|MEM_DISCARDABLE|MEM_READ */ ); /* Characteristics */
+
+    /* .rsrc section */
+    if (resources_size)
+    {
+        put_data( ".rsrc\0\0", 8 );    /* Name */
+        put_dword( (resources_size + section_align - 1) & ~(section_align - 1) ); /* VirtualSize */
+        put_dword( 3 * section_align );/* VirtualAddress */
+        put_dword( resources_size );   /* SizeOfRawData */
+        put_dword( 3 * file_align );   /* PointerToRawData */
+        put_dword( 0 );                /* PointerToRelocations */
+        put_dword( 0 );                /* PointerToLinenumbers */
+        put_word( 0 );                 /* NumberOfRelocations */
+        put_word( 0 );                 /* NumberOfLinenumbers */
+        put_dword( 0x40000040 /* CNT_INITIALIZED_DATA|MEM_READ */ ); /* Characteristics */
+    }
+
+    /* .text contents */
+    align_output( file_align );
+    if (spec->characteristics & IMAGE_FILE_DLL)
+        put_data( dll_code_section, sizeof(dll_code_section) );
+    else
+        put_data( exe_code_section, sizeof(exe_code_section) );
+
+    /* .reloc contents */
+    align_output( file_align );
+    put_dword( 0 );   /* VirtualAddress */
+    put_dword( 0 );   /* SizeOfBlock */
+
+    /* .rsrc contents */
+    if (resources_size)
+    {
+        align_output( file_align );
+        put_data( resources, resources_size );
+    }
+    flush_output_buffer();
 }
 
 

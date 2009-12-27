@@ -541,6 +541,7 @@ static void WINHELP_DeleteWindow(WINHELP_WINDOW* win)
 {
     WINHELP_WINDOW**    w;
     BOOL bExit;
+    HWND hTextWnd;
 
     for (w = &Globals.win_list; *w; w = &(*w)->next)
     {
@@ -561,6 +562,10 @@ static void WINHELP_DeleteWindow(WINHELP_WINDOW* win)
 
     if (win == Globals.active_popup)
         Globals.active_popup = NULL;
+
+    hTextWnd = GetDlgItem(win->hMainWnd, CTL_ID_TEXT);
+    SetWindowLongPtr(hTextWnd, GWLP_WNDPROC,
+                     (LONG_PTR)win->origRicheditWndProc);
 
     WINHELP_DeleteButtons(win);
 

@@ -425,7 +425,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
                            ROUND_UP(sizeof (DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize,
                            NULL,
                            FILE_DEVICE_DISK_FILE_SYSTEM,
-                           0,
+                           DeviceToMount->Characteristics,
                            FALSE,
                            &DeviceObject);
    if (!NT_SUCCESS(Status))

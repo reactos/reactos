@@ -178,7 +178,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
    HWND Ret;
    PWINDOW_OBJECT Child, OwnerWnd;
 
-   for(Child = Root->FirstChild; Child; Child = Child->NextSibling)
+   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
    {
       OwnerWnd = UserGetWindowObject(Child->hOwner);
       if(!OwnerWnd)

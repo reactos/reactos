@@ -15,6 +15,8 @@
 		<file>create.c</file>
 		<file>delete.c</file>
 		<file>dependencies.c</file>
+		<file>dependencies_tv1.c</file>
+		<file>dependencies_tv2.c</file>
 		<file>export.c</file>
 		<file>listview.c</file>
 		<file>mainwnd.c</file>

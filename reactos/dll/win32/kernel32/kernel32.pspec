@@ -9,8 +9,6 @@
 @ stdcall AddLocalAlternateComputerNameA(str ptr)
 @ stdcall AddLocalAlternateComputerNameW(wstr ptr)
 @ stdcall AddRefActCtx(ptr)
-;@ stdcall AddSIDToBoundaryDescriptor ; Win 7
-;@ stdcall AddSecureMemoryCacheCallback ; Win 7
 @ stdcall AddVectoredContinueHandler(long ptr) ntdll.RtlAddVectoredContinueHandler
 @ stdcall AddVectoredExceptionHandler(long ptr) ntdll.RtlAddVectoredExceptionHandler
 ;@ stdcall AdjustCalendarDate ; Win 7
@@ -126,8 +124,6 @@
 @ stdcall CopyLZFile(long long) LZCopy
 @ stdcall CreateActCtxA(ptr)
 @ stdcall CreateActCtxW(ptr)
-;@ stdcall CreateBoundaryDescriptorA ; Win 7
-;@ stdcall CreateBoundaryDescriptorW ; Win 7
 @ stdcall CreateConsoleScreenBuffer(long long ptr long ptr)
 @ stdcall CreateDirectoryA(str ptr)
 @ stdcall CreateDirectoryExA(str str ptr)
@@ -206,7 +202,6 @@
 @ stdcall CreateWaitableTimerExA (ptr str long long)
 @ stdcall CreateWaitableTimerExW (ptr wstr long long)
 @ stdcall DeactivateActCtx(long ptr)
-;@ stdcall CtrlRoutine ; Win 7
 @ stdcall DebugActiveProcess(long)
 @ stdcall DebugActiveProcessStop(long)
 @ stdcall DebugBreak() ntdll.DbgBreakPoint
@@ -969,7 +964,6 @@
 @ stdcall ProcessIdToSessionId(long ptr)
 @ stdcall PulseEvent(long)
 @ stdcall PurgeComm(long long)
-;@ stdcall QueryActCtxSettingsW ; Win 7
 @ stdcall QueryActCtxW(long ptr ptr long ptr long ptr)
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
@@ -1405,13 +1399,10 @@
 @ stdcall WriteProfileStringA(str str str)
 @ stdcall WriteProfileStringW(wstr wstr wstr)
 @ stdcall WriteTapemark(ptr long long long)
-@ stdcall WTSGetActiveConsoleSessionId() ; missing in win 7
+@ stdcall WTSGetActiveConsoleSessionId()
 @ stdcall ZombifyActCtx(ptr)
-;@ stdcall -arch=x86_64 __C_specific_handler ntdll.__C_specific_handler
-;@ stdcall -arch=x86_64 __chkstk ntdll.__chkstk
-;@ stdcall -arch=x86_64 __misaligned_access ntdll.__misaligned_access
-@ stub _DebugOut ; missing in XP SP3 and Win 7
-@ stub _DebugPrintf ; missing in XP SP3 and Win 7
+@ stub _DebugOut ; missing in XP SP3
+@ stub _DebugPrintf ; missing in XP SP3
 @ stdcall _hread(long ptr long)
 @ stdcall _hwrite(long ptr long)
 @ stdcall _lclose(long)

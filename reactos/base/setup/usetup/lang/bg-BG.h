@@ -996,7 +996,7 @@ static MUI_ENTRY bgBGBootLoaderEntries[] =
     {
         8,
         12,
-        "Слагане на зареждач на твърдия диск (MBR).",
+        "Слагане на зареждач на твърдия диск (в MBR).",
         TEXT_STYLE_NORMAL
     },
     {

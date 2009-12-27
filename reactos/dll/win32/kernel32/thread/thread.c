@@ -17,6 +17,7 @@
 
 /* FIXME: NDK */
 #define HIGH_PRIORITY 31
+#define SXS_SUPPORT_FIXME
 
 /* FUNCTIONS *****************************************************************/
 static
@@ -158,15 +159,16 @@ CreateRemoteThread(HANDLE hProcess,
         return NULL;
     }
 
-    #ifdef SXS_SUPPORT_ENABLED
     /* Are we in the same process? */
     if (hProcess == NtCurrentProcess())
     {
         PTEB Teb;
         PVOID ActivationContextStack;
         THREAD_BASIC_INFORMATION ThreadBasicInfo;
+#ifndef SXS_SUPPORT_FIXME
         ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
         ULONG_PTR Cookie;
+#endif
         ULONG retLen;
 
         /* Get the TEB */
@@ -187,7 +189,7 @@ CreateRemoteThread(HANDLE hProcess,
 
         /* Save it */
         Teb->ActivationContextStackPointer = ActivationContextStack;
-
+#ifndef SXS_SUPPORT_FIXME
         /* Query the Context */
         Status = RtlQueryInformationActivationContext(1,
                                                       0,
@@ -211,11 +213,11 @@ CreateRemoteThread(HANDLE hProcess,
     }
             else
                 DPRINT1("RtlQueryInformationActivationContext failed %x\n", Status);
+#endif
         }
         else
             DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
     }
-    #endif
 
     /* FIXME: Notify CSR */
 

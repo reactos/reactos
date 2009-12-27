@@ -92,6 +92,11 @@ DWORD ScmReadString(HKEY hServiceKey,
                     LPWSTR lpValueName,
                     LPWSTR *lpValue);
 
+DWORD
+ScmReadDependencies(HKEY hServiceKey,
+                    LPWSTR *lpDependencies,
+                    DWORD *lpdwDependenciesLength);
+
 
 /* database.c */
 

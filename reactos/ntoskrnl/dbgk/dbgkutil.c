@@ -209,7 +209,8 @@ DbgkCreateThread(IN PETHREAD Thread,
         /* Setup the API Message */
         ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
                                  (8 + sizeof(DBGKM_CREATE_PROCESS));
-        ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+        ApiMessage.h.u2.ZeroInit = 0;
+        ApiMessage.h.u2.s2.Type = LPC_DEBUG_EVENT;
         ApiMessage.ApiNumber = DbgKmCreateProcessApi;
 
         /* Send the message */
@@ -269,7 +270,8 @@ DbgkCreateThread(IN PETHREAD Thread,
             /* Setup the API Message */
             ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
                                      (8 + sizeof(DBGKM_LOAD_DLL));
-            ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+            ApiMessage.h.u2.ZeroInit = 0;
+            ApiMessage.h.u2.s2.Type = LPC_DEBUG_EVENT;
             ApiMessage.ApiNumber = DbgKmLoadDllApi;
 
             /* Send the message */
@@ -288,7 +290,8 @@ DbgkCreateThread(IN PETHREAD Thread,
         /* Setup the API Message */
         ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
                                  (8 + sizeof(DBGKM_CREATE_THREAD));
-        ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+        ApiMessage.h.u2.ZeroInit = 0;
+        ApiMessage.h.u2.s2.Type = LPC_DEBUG_EVENT;
         ApiMessage.ApiNumber = DbgKmCreateThreadApi;
 
         /* Send the message */
@@ -321,7 +324,8 @@ DbgkExitProcess(IN NTSTATUS ExitStatus)
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
                              (8 + sizeof(DBGKM_EXIT_PROCESS));
-    ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+    ApiMessage.h.u2.ZeroInit = 0;
+    ApiMessage.h.u2.s2.Type = LPC_DEBUG_EVENT;
     ApiMessage.ApiNumber = DbgKmExitProcessApi;
 
     /* Set the current exit time */
@@ -357,7 +361,8 @@ DbgkExitThread(IN NTSTATUS ExitStatus)
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
                              (8 + sizeof(DBGKM_EXIT_THREAD));
-    ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+    ApiMessage.h.u2.ZeroInit = 0;
+    ApiMessage.h.u2.s2.Type = LPC_DEBUG_EVENT;
     ApiMessage.ApiNumber = DbgKmExitThreadApi;
 
     /* Suspend the process */
@@ -414,7 +419,8 @@ DbgkMapViewOfSection(IN PVOID Section,
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
                              (8 + sizeof(DBGKM_LOAD_DLL));
-    ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+    ApiMessage.h.u2.ZeroInit = 0;
+    ApiMessage.h.u2.s2.Type = LPC_DEBUG_EVENT;
     ApiMessage.ApiNumber = DbgKmLoadDllApi;
 
     /* Send the message */
@@ -449,7 +455,8 @@ DbgkUnMapViewOfSection(IN PVOID BaseAddress)
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
                              (8 + sizeof(DBGKM_UNLOAD_DLL));
-    ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+    ApiMessage.h.u2.ZeroInit = 0;
+    ApiMessage.h.u2.s2.Type = LPC_DEBUG_EVENT;
     ApiMessage.ApiNumber = DbgKmUnloadDllApi;
 
     /* Send the message */

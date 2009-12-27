@@ -71,6 +71,17 @@ BEGIN
     PUSHBUTTON  "&Raportowanie b³êdów", IDC_ERRORREPORT, 170, 192, 80, 14
 END
 
+IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Ustawienia systemowe"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Informowanie o wersji",IDC_STATIC,6,3,210,73
+    CONTROL         "Zg³aszaj jako stacjê robocz¹",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,110,10
+    LTEXT           "ReactOS jest zbudowany w oparciu o wersjê serwerow¹. Zaznacz pole, aby ReactOS zg³asza³ siê aplikacjom jako stacja robocza.",IDC_STATIC,15,15,183,41
+    PUSHBUTTON      "OK",IDOK,166,83,50,14
+END
+
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU

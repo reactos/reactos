@@ -20,9 +20,13 @@
 #ifndef __OSLIST_H
 #define __OSLIST_H
 
-BOOLEAN	InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer);
-ULONG		CountOperatingSystems(ULONG SectionId);
-BOOLEAN	AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount);
-BOOLEAN	RemoveQuotes(PCHAR QuotedString);
+typedef struct tagOperatingSystemItem
+{
+	PCSTR SystemPartition;
+	PCSTR LoadIdentifier;
+	PCSTR OsLoadOptions;
+} OperatingSystemItem;
+
+OperatingSystemItem* InitOperatingSystemList(ULONG* OperatingSystemCountPointer);
 
 #endif // #defined __OSLIST_H
