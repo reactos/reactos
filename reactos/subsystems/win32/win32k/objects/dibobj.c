@@ -1358,6 +1358,7 @@ DIB_CreateDIBSection(
     RGBQUAD *lpRGB;
     HANDLE hSecure;
     DWORD dsBitfields[3] = {0};
+    ULONG ColorCount;
 
     DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
            bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
@@ -1439,9 +1440,18 @@ DIB_CreateDIBSection(
     hSecure = (HANDLE)0x1; // HACK OF UNIMPLEMENTED KERNEL STUFF !!!!
 
     if (usage == DIB_PAL_COLORS)
+    {
         lpRGB = DIB_MapPaletteColors(dc, bmi);
+    }
     else
+    {
         lpRGB = bmi->bmiColors;
+    }
+    ColorCount = bi->biClrUsed;
+    if (ColorCount == 0)
+    {
+        ColorCount = 1 << bi->biBitCount;
+    }
 
     /* Set dsBitfields values */
     if (usage == DIB_PAL_COLORS || bi->biBitCount <= 8)
@@ -1528,12 +1538,16 @@ DIB_CreateDIBSection(
     bmp->biClrImportant = bi->biClrImportant;
 
     if (bi->biClrUsed != 0)
-        bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(bi->biClrUsed, lpRGB);
+    {
+        bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(ColorCount, lpRGB);
+    }
     else
+    {
         bmp->hDIBPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
                                                 dsBitfields[0],
                                                 dsBitfields[1],
                                                 dsBitfields[2]);
+    }
 
     // Clean up in case of errors
     if (!res || !bmp || !bm.bmBits)
@@ -1671,9 +1685,18 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 
     for (i = 0; i < nNumColors; i++)
     {
-        lpRGB[i].rgbRed = palGDI->IndexedColors[*lpIndex].peRed;
-        lpRGB[i].rgbGreen = palGDI->IndexedColors[*lpIndex].peGreen;
-        lpRGB[i].rgbBlue = palGDI->IndexedColors[*lpIndex].peBlue;
+        if (*lpIndex < palGDI->NumColors)
+        {
+            lpRGB[i].rgbRed = palGDI->IndexedColors[*lpIndex].peRed;
+            lpRGB[i].rgbGreen = palGDI->IndexedColors[*lpIndex].peGreen;
+            lpRGB[i].rgbBlue = palGDI->IndexedColors[*lpIndex].peBlue;
+        }
+        else
+        {
+            lpRGB[i].rgbRed = 0;
+            lpRGB[i].rgbGreen = 0;
+            lpRGB[i].rgbBlue = 0;
+        }
         lpRGB[i].rgbReserved = 0;
         lpIndex++;
     }
