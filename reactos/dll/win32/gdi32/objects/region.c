@@ -1,22 +1,38 @@
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 #define INRECT(r, x, y) \
       ( ( ((r).right >  x)) && \
       ( ((r).left <= x)) && \
       ( ((r).bottom >  y)) && \
       ( ((r).top <= y)) )
 
+#define OVERLAPPING_RGN 0
+#define INVERTED_RGN 1
+#define SAME_RGN 2
+#define DIFF_RGN 3
+/*
+ From tests, there are four results based on normalized coordinates.
+ If the rects are overlapping and normalized, it's OVERLAPPING_RGN.
+ If the rects are overlapping in anyway or same in dimension and one is inverted,
+ it's INVERTED_RGN.
+ If the rects are same in dimension or NULL, it's SAME_RGN.
+ If the rects are overlapping and not normalized or displace in different areas,
+ it's DIFF_RGN.
+ */
 static
 INT
 FASTCALL
-ComplexityFromRects( PRECT prc1, PRECT prc2)
+ComplexityFromRects( PRECTL prc1, PRECTL prc2)
 {
   if ( prc2->left >= prc1->left )
   {
      if ( ( prc1->right >= prc2->right) &&
           ( prc1->top <= prc2->top ) &&
-          ( prc1->bottom <= prc2->bottom ) )      
-        return SIMPLEREGION;
+          ( prc1->bottom >= prc2->bottom ) )      
+        return SAME_RGN;
 
      if ( prc2->left > prc1->left )
      {
@@ -24,7 +40,7 @@ ComplexityFromRects( PRECT prc1, PRECT prc2)
              ( prc1->right <= prc2->left ) ||
              ( prc1->top >= prc2->bottom ) ||
              ( prc1->bottom <= prc2->top ) )
-           return COMPLEXREGION;
+           return DIFF_RGN;
      }
   }
 
@@ -36,14 +52,13 @@ ComplexityFromRects( PRECT prc1, PRECT prc2)
           ( prc1->right <= prc2->left ) ||
           ( prc1->top >= prc2->bottom ) ||
           ( prc1->bottom <= prc2->top ) )
-        return COMPLEXREGION;
+        return DIFF_RGN;
   }
   else
   {
-    return NULLREGION;
+     return INVERTED_RGN;
   }
-
-  return ERROR;
+  return OVERLAPPING_RGN;
 }
 
 static
@@ -181,7 +196,7 @@ MirrorRgnDC(HDC hdc, HRGN hRgn, HRGN *phRgn)
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 INT
 WINAPI
@@ -190,8 +205,203 @@ CombineRgn(HRGN  hDest,
            HRGN  hSrc2,
            INT  CombineMode)
 {
-    /* FIXME some part should be done in user mode */
-    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+  PRGN_ATTR pRgn_Attr_Dest = NULL;
+  PRGN_ATTR pRgn_Attr_Src1 = NULL;
+  PRGN_ATTR pRgn_Attr_Src2 = NULL;
+  INT Complexity;
+  BOOL Ret;
+
+  Ret = GdiGetHandleUserData((HGDIOBJ) hDest, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Dest);
+  Ret = GdiGetHandleUserData((HGDIOBJ) hSrc1, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Src1);
+
+  if ( !Ret ||
+       !pRgn_Attr_Dest ||
+       !pRgn_Attr_Src1 ||
+        pRgn_Attr_Src1->Flags > SIMPLEREGION )
+     return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+
+  /* Handle COPY and use only src1. */
+  if ( CombineMode == RGN_COPY )
+  {
+     switch (pRgn_Attr_Src1->Flags)
+     {
+        case NULLREGION:
+             Ret = SetRectRgn( hDest, 0, 0, 0, 0);
+             if (Ret)
+                return NULLREGION;
+             goto ERROR_Exit;
+
+        case SIMPLEREGION:
+             Ret = SetRectRgn( hDest,
+                               pRgn_Attr_Src1->Rect.left,
+                               pRgn_Attr_Src1->Rect.top,
+                               pRgn_Attr_Src1->Rect.right,
+                               pRgn_Attr_Src1->Rect.bottom );
+             if (Ret)
+                return SIMPLEREGION;
+             goto ERROR_Exit;
+
+        case COMPLEXREGION:
+        default:
+            return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+     }
+  }
+
+  Ret = GdiGetHandleUserData((HGDIOBJ) hSrc2, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Src2);
+  if ( !Ret ||
+       !pRgn_Attr_Src2 ||
+        pRgn_Attr_Src2->Flags > SIMPLEREGION )
+     return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+
+  /* All but AND. */
+  if ( CombineMode != RGN_AND)
+  {
+     if ( CombineMode <= RGN_AND)
+     {
+        /*
+           There might be some type of junk in the call, so go K.
+           If this becomes a problem, need to setup parameter check at the top.
+         */
+        DPRINT1("Might be junk! CombineMode %d\n",CombineMode);
+        return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+     }
+
+     if ( CombineMode > RGN_XOR) /* Handle DIFF. */
+     {
+        if ( CombineMode != RGN_DIFF)
+        {  /* Filter check! Well, must be junk?, so go K. */
+           DPRINT1("RGN_COPY was handled! CombineMode %d\n",CombineMode);
+           return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+        }
+
+        if ( pRgn_Attr_Src1->Flags != NULLREGION &&
+             pRgn_Attr_Src2->Flags != NULLREGION )
+        {
+           Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
+           /* If same or overlapping and norm just go K. */
+           if (Complexity == SAME_RGN || Complexity == OVERLAPPING_RGN)
+              return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+        }
+        /* Just NULL rgn. */
+        if (SetRectRgn( hDest, 0, 0, 0, 0))
+           return NULLREGION;
+        goto ERROR_Exit;
+     }
+     else /* Handle OR or XOR. */
+     {
+        if ( pRgn_Attr_Src1->Flags == NULLREGION )
+        {
+           if ( pRgn_Attr_Src2->Flags != NULLREGION )
+           { /* Src1 null and not NULL, set from src2. */
+              Ret = SetRectRgn( hDest,
+                                pRgn_Attr_Src2->Rect.left,
+                                pRgn_Attr_Src2->Rect.top,
+                                pRgn_Attr_Src2->Rect.right,
+                                pRgn_Attr_Src2->Rect.bottom );
+              if (Ret)
+                 return SIMPLEREGION;
+              goto ERROR_Exit;
+           }
+           /* Both are NULL. */
+           if (SetRectRgn( hDest, 0, 0, 0, 0))
+              return NULLREGION;
+           goto ERROR_Exit;          
+        }
+        /* Src1 is not NULL. */
+        if ( pRgn_Attr_Src2->Flags != NULLREGION )
+        {
+           if ( CombineMode != RGN_OR ) /* Filter XOR, so go K. */
+              return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+
+           Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
+           /* If inverted use Src2. */
+           if ( Complexity == INVERTED_RGN)
+           {
+              Ret = SetRectRgn( hDest,
+                                pRgn_Attr_Src2->Rect.left,
+                                pRgn_Attr_Src2->Rect.top,
+                                pRgn_Attr_Src2->Rect.right,
+                                pRgn_Attr_Src2->Rect.bottom );
+              if (Ret)
+                 return SIMPLEREGION;
+              goto ERROR_Exit;
+           }
+           /* Not NULL or overlapping or differentiated, go to K. */
+           if ( Complexity != SAME_RGN)
+              return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+           /* If same, just fall through. */
+        }
+     }
+     Ret = SetRectRgn( hDest,
+                       pRgn_Attr_Src1->Rect.left,
+                       pRgn_Attr_Src1->Rect.top,
+                       pRgn_Attr_Src1->Rect.right,
+                       pRgn_Attr_Src1->Rect.bottom );
+     if (Ret)
+        return SIMPLEREGION;
+     goto ERROR_Exit;
+  }
+
+  /* Handle AND.  */
+  if ( pRgn_Attr_Src1->Flags != NULLREGION &&
+       pRgn_Attr_Src2->Flags != NULLREGION )
+  {
+     Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
+
+     if ( Complexity == DIFF_RGN ) /* Differentiated in anyway just NULL rgn. */
+     {
+        if (SetRectRgn( hDest, 0, 0, 0, 0))
+           return NULLREGION;
+        goto ERROR_Exit;
+     }
+
+     if ( Complexity != INVERTED_RGN) /* Not inverted and overlapping. */
+     {
+        if ( Complexity != SAME_RGN) /* Must be norm and overlapping. */
+           return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+        /* Merge from src2.  */
+        Ret = SetRectRgn( hDest,
+                          pRgn_Attr_Src2->Rect.left,
+                          pRgn_Attr_Src2->Rect.top,
+                          pRgn_Attr_Src2->Rect.right,
+                          pRgn_Attr_Src2->Rect.bottom );
+        if (Ret)
+           return SIMPLEREGION;
+        goto ERROR_Exit;
+     }
+     /* Inverted so merge from src1. */
+     Ret = SetRectRgn( hDest,
+                       pRgn_Attr_Src1->Rect.left,
+                       pRgn_Attr_Src1->Rect.top,
+                       pRgn_Attr_Src1->Rect.right,
+                       pRgn_Attr_Src1->Rect.bottom );
+     if (Ret)
+        return SIMPLEREGION;
+     goto ERROR_Exit;
+  }
+
+  /* It's all NULL! */
+  if (SetRectRgn( hDest, 0, 0, 0, 0))
+     return NULLREGION;
+
+ERROR_Exit:
+  /* Even on error the flag is set dirty and force server side to redraw. */
+  pRgn_Attr_Dest->AttrFlags |= ATTR_RGN_DIRTY;
+  return ERROR;
+}
+
+/*
+ * @implemented
+ */
+HRGN
+WINAPI
+CreateEllipticRgnIndirect(
+   const RECT *prc
+)
+{
+    /* Notes if prc is NULL it will crash on All Windows NT I checked 2000/XP/VISTA */
+    return NtGdiCreateEllipticRgn(prc->left, prc->top, prc->right, prc->bottom);
+
 }
 
 /*
@@ -215,20 +425,6 @@ CreatePolyPolygonRgn( const POINT* lppt,
                       int fnPolyFillMode)
 {
     return (HRGN) NtGdiPolyPolyDraw(  (HDC) fnPolyFillMode, (PPOINT) lppt, (PULONG) lpPolyCounts, (ULONG) nCount, GdiPolyPolyRgn );
-}
-
-/*
- * @implemented
- */
-HRGN
-WINAPI
-CreateEllipticRgnIndirect(
-   const RECT *prc
-)
-{
-    /* Notes if prc is NULL it will crash on All Windows NT I checked 2000/XP/VISTA */
-    return NtGdiCreateEllipticRgn(prc->left, prc->top, prc->right, prc->bottom);
-
 }
 
 /*
@@ -585,14 +781,12 @@ OffsetRgn( HRGN hrgn,
         {
            return ERROR;
         }
-        else
-        {
-           pRgn_Attr->Rect.top    = nTopRect;
-           pRgn_Attr->Rect.left   = nLeftRect;
-           pRgn_Attr->Rect.right  = nRightRect;
-           pRgn_Attr->Rect.bottom = nBottomRect;
-           pRgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
-        }
+
+        pRgn_Attr->Rect.top    = nTopRect;
+        pRgn_Attr->Rect.left   = nLeftRect;
+        pRgn_Attr->Rect.right  = nRightRect;
+        pRgn_Attr->Rect.bottom = nBottomRect;
+        pRgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
      }
   }
   return pRgn_Attr->Flags;
@@ -630,7 +824,7 @@ RectInRegion(HRGN hrgn,
              LPCRECT prcl)
 {
   PRGN_ATTR pRgn_Attr;
-  RECT rc;
+  RECTL rc;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
      return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
@@ -643,31 +837,31 @@ RectInRegion(HRGN hrgn,
 
  /* swap the coordinates to make right >= left and bottom >= top */
  /* (region building rectangles are normalized the same way) */
-   if ( prcl->top > prcl->bottom)
-   {
-      rc.top = prcl->bottom;
-      rc.bottom = prcl->top;
-   }
-   else
-   {
-     rc.top = prcl->top;
-     rc.bottom = prcl->bottom;
-   }
-   if ( prcl->right < prcl->left)
-   {
-      rc.right = prcl->left;
-      rc.left = prcl->right;
-   }
-   else
-   {
-      rc.right = prcl->right;
-      rc.left = prcl->left;
-   }
+  if ( prcl->top > prcl->bottom)
+  {
+     rc.top = prcl->bottom;
+     rc.bottom = prcl->top;
+  }
+  else
+  {
+    rc.top = prcl->top;
+    rc.bottom = prcl->bottom;
+  }
+  if ( prcl->right < prcl->left)
+  {
+     rc.right = prcl->left;
+     rc.left = prcl->right;
+  }
+  else
+  {
+     rc.right = prcl->right;
+     rc.left = prcl->left;
+  }
 
-   if ( ComplexityFromRects( (PRECT)&pRgn_Attr->Rect, &rc) != COMPLEXREGION )
-      return TRUE;
+  if ( ComplexityFromRects( &pRgn_Attr->Rect, &rc) != DIFF_RGN )
+     return TRUE;
 
-   return FALSE;
+  return FALSE;
 }
 
 /*
@@ -751,5 +945,4 @@ SetMetaRgn( HDC hDC )
 #endif
  return ERROR;
 }
-
 
