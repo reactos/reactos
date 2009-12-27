@@ -696,6 +696,12 @@ VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
             {
                 *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
             }
+            else
+            {
+                /* Index does not exist, use zero index */
+                IntGetPaletteEntries(pdc->dclevel.hpal, 0, 1, &palEntry);
+                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
+            }
             DC_UnlockDc(pdc);
             break;
         default:
