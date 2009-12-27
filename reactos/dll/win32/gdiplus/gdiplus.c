@@ -235,7 +235,7 @@ INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
         }
 
         if (points)
-        add_arc_part(&points[i], x1, y1, x2, y2, start_angle, end_angle, i == 0);
+            add_arc_part(&points[i], x1, y1, x2, y2, start_angle, end_angle, i == 0);
 
         start_angle += M_PI_2 * (sweepAngle < 0.0 ? -1.0 : 1.0);
     }

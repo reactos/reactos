@@ -222,7 +222,7 @@ static ARGB blend_line_gradient(GpLineGradient* brush, REAL position)
     }
 
     if (brush->pblendcount == 0)
-    return blend_colors(brush->startcolor, brush->endcolor, blendfac);
+        return blend_colors(brush->startcolor, brush->endcolor, blendfac);
     else
     {
         int i=1;
@@ -240,7 +240,7 @@ static ARGB blend_line_gradient(GpLineGradient* brush, REAL position)
         right_blendcolor = brush->pblendcolor[i];
         blendfac = (blendfac - left_blendpos) / (right_blendpos - left_blendpos);
         return blend_colors(left_blendcolor, right_blendcolor, blendfac);
-}
+    }
 }
 
 static void brush_fill_path(GpGraphics *graphics, GpBrush* brush)

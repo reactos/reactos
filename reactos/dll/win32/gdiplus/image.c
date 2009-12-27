@@ -257,8 +257,8 @@ GpStatus WINGDIPAPI GdipBitmapGetPixel(GpBitmap* bitmap, INT x, INT y,
             break;
         default:
             FIXME("not implemented for format 0x%x\n", bitmap->format);
-    return NotImplemented;
-}
+            return NotImplemented;
+    }
 
     *color = a<<24|r<<16|g<<8|b;
 
@@ -405,8 +405,8 @@ GpStatus WINGDIPAPI GdipBitmapSetPixel(GpBitmap* bitmap, INT x, INT y,
             break;
         default:
             FIXME("not implemented for format 0x%x\n", bitmap->format);
-    return NotImplemented;
-}
+            return NotImplemented;
+    }
 
     return Ok;
 }
@@ -1789,23 +1789,23 @@ static GpStatus decode_image_bmp(IStream* stream, REFCLSID clsid, GpImage **imag
     bitmap = (GpBitmap*)*image;
 
     if (status == Ok && bitmap->format == PixelFormat32bppARGB)
-{
+    {
         /* WIC supports bmp files with alpha, but gdiplus does not */
         bitmap->format = PixelFormat32bppRGB;
     }
 
     return status;
-    }
+}
 
 static GpStatus decode_image_jpeg(IStream* stream, REFCLSID clsid, GpImage **image)
 {
     return decode_image_wic(stream, &CLSID_WICJpegDecoder, image);
-    }
+}
 
 static GpStatus decode_image_png(IStream* stream, REFCLSID clsid, GpImage **image)
-    {
+{
     return decode_image_wic(stream, &CLSID_WICPngDecoder, image);
-    }
+}
 
 static GpStatus decode_image_gif(IStream* stream, REFCLSID clsid, GpImage **image)
 {
@@ -1925,7 +1925,7 @@ GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream* stream, GpImage **image)
     if (stat == Ok)
     {
         memcpy(&(*image)->format, &codec->info.FormatID, sizeof(GUID));
-}
+    }
 
     return stat;
 }

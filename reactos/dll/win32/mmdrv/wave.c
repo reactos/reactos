@@ -112,7 +112,7 @@ ReturnCompletedBuffers(SessionInfo* session_info)
             message = (session_info->device_type == WaveOutDevice) ? WOM_DONE :
                                                                      WIM_DATA;
 
-            DPRINT("Notifying client that buffer 0x%x is done\n", header);
+            DPRINT("Notifying client that buffer 0x%p is done\n", header);
 
             /* Notify the client */
             NotifyClient(session_info, message, (DWORD_PTR) header, 0);

@@ -1906,13 +1906,13 @@ BOOL WINAPI SetupGetIntField( PINFCONTEXT context, DWORD index, PINT result )
     if (!*buffer) *result = 0;
     else
     {
-    res = strtol( buffer, &end, 0 );
+        res = strtol( buffer, &end, 0 );
         if (end != buffer && !*end) *result = res;
         else
-    {
+        {
             SetLastError( ERROR_INVALID_DATA );
             ret = FALSE;
-    }
+        }
     }
 
  done:

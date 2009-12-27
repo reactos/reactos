@@ -749,7 +749,7 @@ ProcessLongMidiMessage(
     header->dwFlags |= MHDR_DONE;
     header->dwFlags &= ~ MHDR_INQUEUE;
 
-    DPRINT("Success? %d\n", CallClient(the_device, MOM_DONE, (DWORD_PTR)header, 0));
+    DPRINT("Success? %d\n", CallClient(the_device, MOM_DONE, (DWORD_PTR) header, 0));
 
     return MMSYSERR_NOERROR;
 }

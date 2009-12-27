@@ -303,20 +303,20 @@ GpStatus WINGDIPAPI GdipCreateHatchBrush(HatchStyle hatchstyle, ARGB forecol, AR
     }
     else
     {
-            FIXME("Unimplemented hatch style %d\n", hatchstyle);
+        FIXME("Unimplemented hatch style %d\n", hatchstyle);
 
-            (*brush)->brush.lb.lbStyle = BS_SOLID;
-            (*brush)->brush.lb.lbColor = fgcol;
-            (*brush)->brush.lb.lbHatch = 0;
+        (*brush)->brush.lb.lbStyle = BS_SOLID;
+        (*brush)->brush.lb.lbColor = fgcol;
+        (*brush)->brush.lb.lbHatch = 0;
         (*brush)->brush.gdibrush = CreateBrushIndirect(&(*brush)->brush.lb);
     }
 
     if (stat == Ok)
     {
-    (*brush)->brush.bt = BrushTypeHatchFill;
-    (*brush)->forecol = forecol;
-    (*brush)->backcol = backcol;
-    (*brush)->hatchstyle = hatchstyle;
+        (*brush)->brush.bt = BrushTypeHatchFill;
+        (*brush)->forecol = forecol;
+        (*brush)->backcol = backcol;
+        (*brush)->hatchstyle = hatchstyle;
     }
     else
     {
