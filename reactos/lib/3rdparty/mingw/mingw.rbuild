@@ -5,7 +5,9 @@
 	<define name="_CRTBLD" />
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
-	<library>kernel32</library>
+	<if property="USERMODE" value="1">
+		<library>kernel32</library>
+	</if>
 	<file>_newmode.c</file>
 	<file>atonexit.c</file>
 	<file>binmode.c</file>
