@@ -53,6 +53,7 @@ extern HWND hStatusBar;
 extern HWND hScrollbox;
 extern HWND hMainWnd;
 extern HWND hPalWin;
+extern HWND hToolBoxContainer;
 extern HWND hToolSettings;
 extern HWND hTrackbarZoom;
 extern CHOOSECOLOR choosecolor;
