@@ -103,6 +103,17 @@ extern ULONG KeI386CpuStep;
     ((Context)->Rax = (ReturnValue))
 
 //
+// Macro to get trap and exception frame from a thread stack
+//
+#define KeGetTrapFrame(Thread) \
+    (PKTRAP_FRAME)((ULONG_PTR)((Thread)->InitialStack) - \
+                   sizeof(KTRAP_FRAME))
+
+#define KeGetExceptionFrame(Thread) \
+    (PKEXCEPTION_FRAME)((ULONG_PTR)KeGetTrapFrame(Thread) - \
+                        sizeof(KEXCEPTION_FRAME))
+
+//
 // Returns the Interrupt State from a Trap Frame.
 // ON = TRUE, OFF = FALSE
 //
