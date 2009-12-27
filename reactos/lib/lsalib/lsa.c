@@ -1,8 +1,7 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/secur32/lsa.c
+ * FILE:            lib/lsalib/lsa.c
  * PURPOSE:         Client-side LSA functions
  * UPDATE HISTORY:
  *                  Created 05/08/00
@@ -10,7 +9,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <precomp.h>
+#include <ndk/ntndk.h>
+#include <psdk/ntsecapi.h>
+#include <lsass/lsass.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -317,14 +318,14 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
    if (!NT_SUCCESS(Status))
      {
 	NtClose(*Handle);
-	*Handle = INVALID_HANDLE_VALUE;
+	*Handle = NULL;
 	return(Status);
      }
 
    if (!NT_SUCCESS(Reply.Status))
      {
 	NtClose(*Handle);
-	*Handle = INVALID_HANDLE_VALUE;
+	*Handle = NULL;
 	return(Status);
      }
 
