@@ -97,6 +97,12 @@
 <!--
 	Whether to compile the multi processor versions for ntoskrnl and hal.
 -->
-<property name="BUILD_MP" value="1" />
+<property name="BUILD_MP" value="0" />
+
+<!--
+	Whether to compile any usermode parts. This is while kernel mode is under
+	heavy development and usermode part not relevant for bootcd.
+-->
+<property name="USERMODE" value="1" />
 
 </group>
