@@ -46,6 +46,7 @@ static CHAR CURR_DIR[MAX_PATH];
 static BOOL (WINAPI *pSetupGetFileCompressionInfoExA)(PCSTR, PSTR, DWORD, PDWORD, PDWORD, PDWORD, PUINT);
 static BOOL (WINAPI *pSetupCopyOEMInfA)(PCSTR, PCSTR, DWORD, DWORD, PSTR, DWORD, PDWORD, PSTR *);
 static BOOL (WINAPI *pSetupQueryInfOriginalFileInformationA)(PSP_INF_INFORMATION, UINT, PSP_ALTPLATFORM_INFO, PSP_ORIGINAL_FILE_INFO_A);
+static BOOL (WINAPI *pSetupUninstallOEMInfA)(PCSTR, DWORD, PVOID);
 
 static void create_inf_file(LPCSTR filename)
 {
@@ -196,21 +197,23 @@ static void test_SetupCopyOEMInf(void)
     /* try a relative SourceInfFileName */
     SetLastError(0xdeadbeef);
     res = pSetupCopyOEMInfA(tmpfile, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
-    ok(res == FALSE, "Expected FALSE, got %d\n", res);
-    if (GetLastError() == ERROR_WRONG_INF_TYPE)
+    ok(res == FALSE ||
+       broken(res == TRUE), /* Win98 */
+       "Expected FALSE, got %d\n", res);
+    if (GetLastError() == ERROR_WRONG_INF_TYPE || GetLastError() == ERROR_UNSUPPORTED_TYPE /* Win7 */)
     {
        /* FIXME:
         * Vista needs a [Manufacturer] entry in the inf file. Doing this will give some
         * popups during the installation though as it also needs a catalog file (signed?).
         */
-       win_skip("Needs a different inf file on Vista/W2K8\n");
+       win_skip("Needs a different inf file on Vista+\n");
        DeleteFile(tmpfile);
        return;
     }
 
     ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
-       GetLastError() == ERROR_FILE_EXISTS, /* Win98 */
-       "Expected ERROR_FILE_NOT_FOUND or ERROR_FILE_EXISTS, got %d\n", GetLastError());
+       broken(GetLastError() == ERROR_SUCCESS), /* Win98 */
+       "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
     ok(file_exists(tmpfile), "Expected tmpfile to exist\n");
 
     /* try SP_COPY_REPLACEONLY, dest does not exist */
@@ -306,6 +309,24 @@ static void test_SetupCopyOEMInf(void)
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(!file_exists(path), "Expected source inf to not exist\n");
+
+    if (pSetupUninstallOEMInfA)
+    {
+        char *destfile = strrchr(dest, '\\') + 1;
+
+        SetLastError(0xdeadbeef);
+        ok(pSetupUninstallOEMInfA(destfile, 0, NULL), "Failed to uninstall '%s' : %d\n", destfile, GetLastError());
+    }
+    else
+    {
+        /* Win9x/WinMe */
+        SetLastError(0xdeadbeef);
+        ok(DeleteFileA(dest), "Failed to delete file '%s' : %d\n", dest, GetLastError());
+
+        /* On WinMe we also need to remove the .pnf file */
+        *(strrchr(dest, '.') + 1) = 'p';
+        DeleteFileA(dest);
+    }
 }
 
 static void create_source_file(LPSTR filename, const BYTE *data, DWORD size)
@@ -581,6 +602,32 @@ static void test_SetupDecompressOrCopyFile(void)
     DeleteFileA(source);
 }
 
+static void test_SetupUninstallOEMInf(void)
+{
+    BOOL ret;
+
+    SetLastError(0xdeadbeef);
+    ret = pSetupUninstallOEMInfA(NULL, 0, NULL);
+    ok(!ret, "Expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pSetupUninstallOEMInfA("", 0, NULL);
+    todo_wine
+    {
+    ok(!ret, "Expected failure\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %08x\n", GetLastError());
+    }
+
+    SetLastError(0xdeadbeef);
+    ret = pSetupUninstallOEMInfA("nonexistent.inf", 0, NULL);
+    todo_wine
+    {
+    ok(!ret, "Expected failure\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %08x\n", GetLastError());
+    }
+}
+
 START_TEST(misc)
 {
     HMODULE hsetupapi = GetModuleHandle("setupapi.dll");
@@ -588,6 +635,7 @@ START_TEST(misc)
     pSetupGetFileCompressionInfoExA = (void*)GetProcAddress(hsetupapi, "SetupGetFileCompressionInfoExA");
     pSetupCopyOEMInfA = (void*)GetProcAddress(hsetupapi, "SetupCopyOEMInfA");
     pSetupQueryInfOriginalFileInformationA = (void*)GetProcAddress(hsetupapi, "SetupQueryInfOriginalFileInformationA");
+    pSetupUninstallOEMInfA = (void*)GetProcAddress(hsetupapi, "SetupUninstallOEMInfA");
 
     GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
 
@@ -604,4 +652,9 @@ START_TEST(misc)
         win_skip("SetupGetFileCompressionInfoExA is not available\n");
 
     test_SetupDecompressOrCopyFile();
+
+    if (pSetupUninstallOEMInfA)
+        test_SetupUninstallOEMInf();
+    else
+        win_skip("SetupUninstallOEMInfA is not available\n");
 }

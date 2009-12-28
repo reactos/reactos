@@ -35,6 +35,7 @@
 #include "wine/test.h"
 
 static const char inffile[] = "test.inf";
+static const WCHAR inffileW[] = {'t','e','s','t','.','i','n','f',0};
 static char CURR_DIR[MAX_PATH];
 
 /* Notes on InstallHinfSectionA/W:
@@ -52,6 +53,7 @@ static char CURR_DIR[MAX_PATH];
 
 static void (WINAPI *pInstallHinfSectionA)(HWND, HINSTANCE, LPCSTR, INT);
 static void (WINAPI *pInstallHinfSectionW)(HWND, HINSTANCE, LPCWSTR, INT);
+static BOOL (WINAPI *pSetupGetInfFileListW)(PCWSTR, DWORD, PWSTR, DWORD, PDWORD);
 
 /*
  * Helpers
@@ -466,6 +468,177 @@ cleanup:
     DeleteFile(inffile);
 }
 
+static void test_inffilelist(void)
+{
+    static const char inffile2[] = "test2.inf";
+    static const WCHAR inffile2W[] = {'t','e','s','t','2','.','i','n','f',0};
+    static const char invalid_inf[] = "invalid.inf";
+    static const WCHAR invalid_infW[] = {'i','n','v','a','l','i','d','.','i','n','f',0};
+    static const char *inf =
+        "[Version]\n"
+        "Signature=\"$Chicago$\"";
+    static const char *inf2 =
+        "[Version]\n"
+        "Signature=\"$CHICAGO$\"";
+    static const char *infNT =
+        "[Version]\n"
+        "Signature=\"$WINDOWS NT$\"";
+
+    WCHAR *p, *ptr;
+    char dirA[MAX_PATH];
+    WCHAR dir[MAX_PATH] = { 0 };
+    WCHAR buffer[MAX_PATH] = { 0 };
+    DWORD expected, outsize;
+    BOOL ret;
+
+    if(!pSetupGetInfFileListW)
+    {
+        win_skip("SetupGetInfFileListW not present\n");
+        return;
+    }
+
+    /* NULL means %windir%\\inf
+     * get the value as reference
+     */
+    expected = 0;
+    SetLastError(0xdeadbeef);
+    ret = pSetupGetInfFileListW(NULL, INF_STYLE_WIN4, NULL, 0, &expected);
+    if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("SetupGetInfFileListW not implemented\n");
+        return;
+    }
+    ok(ret, "expected SetupGetInfFileListW to succeed! Error: %d\n", GetLastError());
+    ok(expected > 0, "expected required buffersize to be at least 1\n");
+
+    /* check if an empty string doesn't behaves like NULL */
+    outsize = 0;
+    SetLastError(0xdeadbeef);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
+    ok(!ret, "expected SetupGetInfFileListW to fail!\n");
+
+    /* create a private directory, the temp directory may contain some
+     * inf files left over from old installations
+     */
+    if (!GetTempFileNameA(CURR_DIR, "inftest", 1, dirA))
+    {
+        win_skip("GetTempFileNameA failed with error %d\n", GetLastError());
+        return;
+    }
+    if (!CreateDirectoryA(dirA, NULL ))
+    {
+        win_skip("CreateDirectoryA(%s) failed with error %d\n", dirA, GetLastError());
+        return;
+    }
+    if (!SetCurrentDirectoryA(dirA))
+    {
+        win_skip("SetCurrentDirectoryA failed with error %d\n", GetLastError());
+        RemoveDirectoryA(dirA);
+        return;
+    }
+
+    MultiByteToWideChar(CP_ACP, 0, dirA, -1, dir, MAX_PATH);
+    /* check a not existing directory
+     */
+    ptr = dir + lstrlenW(dir);
+    MultiByteToWideChar(CP_ACP, 0, "\\not_existent", -1, ptr, MAX_PATH - lstrlenW(dir));
+    outsize = 0xffffffff;
+    SetLastError(0xdeadbeef);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
+    ok(ret, "expected SetupGetInfFileListW to succeed!\n");
+    ok(outsize == 1, "expected required buffersize to be 1, got %d\n", outsize);
+    ok(ERROR_PATH_NOT_FOUND == GetLastError(),
+       "expected error ERROR_PATH_NOT_FOUND, got %d\n", GetLastError());
+    
+    create_inf_file(inffile, inf);
+    create_inf_file(inffile2, inf);
+    create_inf_file(invalid_inf, "This content does not match the inf file format");
+
+    /* pass a filename instead of a directory
+     */
+    *ptr = '\\';
+    MultiByteToWideChar(CP_ACP, 0, invalid_inf, -1, ptr+1, MAX_PATH - lstrlenW(dir));
+    outsize = 0xffffffff;
+    SetLastError(0xdeadbeef);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
+    ok(!ret, "expected SetupGetInfFileListW to fail!\n");
+    ok(ERROR_DIRECTORY == GetLastError(),
+       "expected error ERROR_DIRECTORY, got %d\n", GetLastError());
+
+    /* make the filename look like directory
+     */
+    dir[1 + lstrlenW(dir)] = 0;
+    dir[lstrlenW(dir)] = '\\';
+    SetLastError(0xdeadbeef);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
+    ok(!ret, "expected SetupGetInfFileListW to fail!\n");
+    ok(ERROR_DIRECTORY == GetLastError(),
+       "expected error ERROR_DIRECTORY, got %d\n", GetLastError());
+
+    /* now check the buffer content of a vaild call
+     */
+    *ptr = 0;
+    expected = 3 + strlen(inffile) + strlen(inffile2);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
+    ok(ret, "expected SetupGetInfFileListW to succeed!\n");
+    ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
+         expected, outsize);
+    for(p = buffer; lstrlenW(p) && (outsize > (p - buffer)); p+=lstrlenW(p) + 1)
+        ok(!lstrcmpW(p,inffile2W) || !lstrcmpW(p,inffileW),
+            "unexpected filename %s\n",wine_dbgstr_w(p));
+
+    /* upper case value
+     */
+    create_inf_file(inffile2, inf2);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
+    ok(ret, "expected SetupGetInfFileListW to succeed!\n");
+    ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
+         expected, outsize);
+    for(p = buffer; lstrlenW(p) && (outsize > (p - buffer)); p+=lstrlenW(p) + 1)
+        ok(!lstrcmpW(p,inffile2W) || !lstrcmpW(p,inffileW),
+            "unexpected filename %s\n",wine_dbgstr_w(p));
+
+    /* signature Windows NT is also inf style win4
+     */
+    create_inf_file(inffile2, infNT);
+    expected = 3 + strlen(inffile) + strlen(inffile2);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
+    ok(ret, "expected SetupGetInfFileListW to succeed!\n");
+    ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
+         expected, outsize);
+    for(p = buffer; lstrlenW(p) && (outsize > (p - buffer)); p+=lstrlenW(p) + 1)
+        ok(!lstrcmpW(p,inffile2W) || !lstrcmpW(p,inffileW),
+            "unexpected filename %s\n",wine_dbgstr_w(p));
+
+    /* old style
+     */
+    expected = 2 + strlen(invalid_inf);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_OLDNT, buffer, MAX_PATH, &outsize);
+    ok(ret, "expected SetupGetInfFileListW to succeed!\n");
+    ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
+         expected, outsize);
+    for(p = buffer; lstrlenW(p) && (outsize > (p - buffer)); p+=lstrlenW(p) + 1)
+        ok(!lstrcmpW(p,invalid_infW), "unexpected filename %s\n",wine_dbgstr_w(p));
+
+    /* mixed style
+     */
+    expected = 4 + strlen(inffile) + strlen(inffile2) + strlen(invalid_inf);
+    ret = pSetupGetInfFileListW(dir, INF_STYLE_OLDNT | INF_STYLE_WIN4, buffer,
+                                MAX_PATH, &outsize);
+    ok(ret, "expected SetupGetInfFileListW to succeed!\n");
+    ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
+         expected, outsize);
+    for(p = buffer; lstrlenW(p) && (outsize > (p - buffer)); p+=lstrlenW(p) + 1)
+        ok(!lstrcmpW(p,inffile2W) || !lstrcmpW(p,inffileW) || !lstrcmpW(p,invalid_infW),
+            "unexpected filename %s\n",wine_dbgstr_w(p));
+
+    DeleteFile(inffile);
+    DeleteFile(inffile2);
+    DeleteFile(invalid_inf);
+    SetCurrentDirectoryA(CURR_DIR);
+    RemoveDirectoryA(dirA);
+}
+
 START_TEST(install)
 {
     HMODULE hsetupapi = GetModuleHandle("setupapi.dll");
@@ -483,6 +656,8 @@ START_TEST(install)
 
     pInstallHinfSectionA = (void *)GetProcAddress(hsetupapi, "InstallHinfSectionA");
     pInstallHinfSectionW = (void *)GetProcAddress(hsetupapi, "InstallHinfSectionW");
+    pSetupGetInfFileListW = (void *)GetProcAddress(hsetupapi, "SetupGetInfFileListW");
+
     if (pInstallHinfSectionA)
     {
         /* Check if pInstallHinfSectionA sets last error or is a stub (as on WinXP) */
@@ -518,6 +693,8 @@ START_TEST(install)
             ProfileItems needs to create a window on Windows XP. */
         test_profile_items();
     }
+
+    test_inffilelist();
 
     SetCurrentDirectory(prev_path);
 }

@@ -24,7 +24,7 @@
 
 #include "wine/test.h"
 
-static const char *msifile = "winetest.msi";
+static const char *msifile = "winetest-record.msi";
 
 static BOOL create_temp_file(char *name)
 {
@@ -604,6 +604,9 @@ static void test_fieldzero(void)
     r = MsiRecordIsNull(rec, 0);
     ok(r == FALSE, "Expected FALSE, got %d\n", r);
 
+    r = MsiCloseHandle(hview);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+    MsiCloseHandle(rec);
     MsiCloseHandle(hdb);
     DeleteFileA(msifile);
 }

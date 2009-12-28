@@ -27,7 +27,7 @@
 
 #include "wine/test.h"
 
-static const char msifile[] = "winetest.msi";
+static const char msifile[] = "winetest-format.msi";
 
 static UINT run_query( MSIHANDLE hdb, const char *query )
 {
@@ -315,17 +315,16 @@ static MSIHANDLE helper_createpackage( const char *szName )
 
 static void test_createpackage(void)
 {
-    static const CHAR filename[] = "winetest.msi";
     MSIHANDLE hPackage = 0;
     UINT res;
 
-    hPackage = helper_createpackage( filename );
+    hPackage = helper_createpackage( msifile );
     ok ( hPackage != 0, " Failed to create package\n");
 
     res = MsiCloseHandle( hPackage);
     ok( res == ERROR_SUCCESS , "Failed to close package\n" );
 
-    DeleteFile( filename );
+    DeleteFile( msifile );
 }
 
 static void test_formatrecord(void)
@@ -1620,14 +1619,13 @@ static void test_formatrecord(void)
 
 static void test_formatrecord_package(void)
 {
-    static const CHAR filename[] = "winetest.msi";
     char buffer[100];
     MSIHANDLE hrec;
     MSIHANDLE package;
     UINT r;
     DWORD sz=100;
 
-    package = helper_createpackage( filename );
+    package = helper_createpackage( msifile );
     ok(package!=0, "Unable to create package\n");
 
     hrec = MsiCreateRecord(12);
@@ -2117,7 +2115,7 @@ static void test_formatrecord_package(void)
     r = MsiCloseHandle(package);
     ok(r==ERROR_SUCCESS, "Unable to close package\n");
 
-    DeleteFile( filename );
+    DeleteFile( msifile );
 }
 
 static void test_formatrecord_tables(void)
@@ -2383,12 +2381,11 @@ static void test_formatrecord_tables(void)
 
 static void test_processmessage(void)
 {
-    static const CHAR filename[] = "winetest.msi";
     MSIHANDLE hrec;
     MSIHANDLE package;
     int r;
 
-    package = helper_createpackage( filename );
+    package = helper_createpackage( msifile );
     ok(package!=0, "Unable to create package\n");
 
     hrec = MsiCreateRecord(3);
@@ -2403,7 +2400,7 @@ static void test_processmessage(void)
     MsiCloseHandle(hrec);
     MsiCloseHandle(package);
 
-    DeleteFile(filename);
+    DeleteFile(msifile);
 }
 
 START_TEST(format)

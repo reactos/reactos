@@ -439,6 +439,7 @@ static void test_fgetc( void )
   ok(ich == ret, "Second fgetc expected %x got %x\n", ich, ret);
   fclose(tempfh);
   unlink(tempf);
+  free(tempf);
 }
 
 static void test_fputc( void )
@@ -463,6 +464,7 @@ static void test_fputc( void )
   fclose(tempfh);
 
   unlink(tempf);
+  free(tempf);
 }
 
 static void test_flsbuf( void )
@@ -517,6 +519,7 @@ static void test_flsbuf( void )
   fclose(tempfh);
 
   unlink(tempf);
+  free(tempf);
 }
 
 static void test_fgetwc( void )
@@ -634,6 +637,7 @@ static void test_fgetwc( void )
   free(mytextW);
   fclose(tempfh);
   unlink(tempf);
+  free(tempf);
 }
 
 static void test_ctrlz( void )
@@ -681,6 +685,7 @@ static void test_ctrlz( void )
   ok(feof(tempfh), "did not get EOF\n");
   fclose(tempfh);
   unlink(tempf);
+  free(tempf);
 }
 
 static void test_file_put_get( void )
@@ -730,6 +735,7 @@ static void test_file_put_get( void )
   free(mytextW);
   fclose(tempfh);
   unlink(tempf);
+  free(tempf);
 }
 
 static void test_file_write_read( void )
@@ -806,6 +812,7 @@ static void test_file_write_read( void )
 
   ret = unlink(tempf);
   ok( ret == 0 ,"Can't unlink '%s': %d\n", tempf, errno);
+  free(tempf);
 
   tempf=_tempnam(".","wne");
   tempfd = _open(tempf,_O_CREAT|_O_TRUNC|_O_BINARY|_O_RDWR,0);
@@ -833,6 +840,7 @@ static void test_file_write_read( void )
      "Can't chmod '%s' to read-write: %d\n", tempf, errno);
   ret = unlink(tempf);
   ok( ret == 0 ,"Can't unlink '%s': %d\n", tempf, errno);
+  free(tempf);
 }
 
 static void test_file_inherit_child(const char* fd_s)
@@ -1080,6 +1088,7 @@ static void test_chsize( void )
 
     _close( fd );
     _unlink( tempfile );
+    free( tempfile );
 }
 
 static void test_fopen_fclose_fcloseall( void )

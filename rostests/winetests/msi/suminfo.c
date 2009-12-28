@@ -63,9 +63,12 @@
 #define PID_MSISOURCE PID_WORDCOUNT
 #define PID_MSIRESTRICT PID_CHARCOUNT
 
+const char *msifile = "winetest-suminfo.msi";
+static const WCHAR msifileW[] = {
+    'w','i','n','e','t','e','s','t','-','s','u','m','i','n','f','o','.','m','s','i',0 };
+
 static void test_suminfo(void)
 {
-    const char *msifile = "winetest.msi";
     MSIHANDLE hdb = 0, hsuminfo;
     UINT r, count, type;
     DWORD sz;
@@ -284,8 +287,6 @@ static void test_create_database_binary(void)
     static const CLSID FMTID_SummaryInformation =
         { 0xf29f85e0, 0x4ff9, 0x1068, {0xab, 0x91, 0x08, 0x00, 0x2b, 0x27, 0xb3, 0xd9}};
     DWORD mode = STGM_CREATE | STGM_READWRITE | STGM_DIRECT | STGM_SHARE_EXCLUSIVE;
-    static const WCHAR msifile[] = {
-        'w','i','n','e','t','e','s','t','.','m','s','i',0 };
     IPropertySetStorage *pss = NULL;
     IPropertyStorage *ps = NULL;
     IStorage *stg = NULL;
@@ -295,7 +296,7 @@ static void test_create_database_binary(void)
     PROPVARIANT propvar[10];
     USHORT data[2] = { 0, 0 };
 
-    r = StgCreateDocfile( msifile, mode, 0, &stg );
+    r = StgCreateDocfile( msifileW, mode, 0, &stg );
     ok( r == S_OK, "failed to create database\n");
 
     r = IStorage_SetClass( stg, &CLSID_MsiDatabase );
@@ -386,7 +387,6 @@ static void test_create_database_binary(void)
 
 static void test_summary_binary(void)
 {
-    const char *msifile = "winetest.msi";
     MSIHANDLE hdb = 0, hsuminfo = 0;
     UINT r, type, count;
     INT ival;

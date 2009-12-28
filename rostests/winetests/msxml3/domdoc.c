@@ -3085,6 +3085,8 @@ static void test_xmlTypes(void)
                 IXMLDOMNode *pNextChild = (IXMLDOMNode *)0x1;
                 VARIANT var;
 
+                VariantInit(&var);
+
                 hr = IXMLDOMCDATASection_QueryInterface(pCDataSec, &IID_IXMLDOMElement, (LPVOID*)&pElement);
                 ok(hr == E_NOINTERFACE, "ret %08x\n", hr);
 
@@ -3155,7 +3157,8 @@ static void test_xmlTypes(void)
                 /* test get nodeValue */
                 hr = IXMLDOMCDATASection_get_nodeValue(pCDataSec, &var);
                 ok(hr == S_OK, "ret %08x\n", hr );
-                ok( !lstrcmpW( str, _bstr_("This &is a ; test <>\\") ), "incorrect text string\n");
+                ok(V_VT(&var) == VT_BSTR, "got vt %04x\n", V_VT(&var));
+                ok( !lstrcmpW( V_BSTR(&var), _bstr_("This &is a ; test <>\\") ), "incorrect text string\n");
                 VariantClear(&var);
 
                 /* test get data */

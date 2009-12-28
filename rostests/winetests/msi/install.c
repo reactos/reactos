@@ -163,6 +163,52 @@ static const CHAR property_dat[] = "Property\tValue\n"
                                    "SERVNAME\tTestService\n"
                                    "SERVDISP\tTestServiceDisp\n";
 
+static const CHAR aup_property_dat[] = "Property\tValue\n"
+                                       "s72\tl0\n"
+                                       "Property\tProperty\n"
+                                       "DefaultUIFont\tDlgFont8\n"
+                                       "HASUIRUN\t0\n"
+                                       "ALLUSERS\t1\n"
+                                       "INSTALLLEVEL\t3\n"
+                                       "InstallMode\tTypical\n"
+                                       "Manufacturer\tWine\n"
+                                       "PIDTemplate\t12345<###-%%%%%%%>@@@@@\n"
+                                       "ProductCode\t{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}\n"
+                                       "ProductID\tnone\n"
+                                       "ProductLanguage\t1033\n"
+                                       "ProductName\tMSITEST\n"
+                                       "ProductVersion\t1.1.1\n"
+                                       "PROMPTROLLBACKCOST\tP\n"
+                                       "Setup\tSetup\n"
+                                       "UpgradeCode\t{4C0EAA15-0264-4E5A-8758-609EF142B92D}\n"
+                                       "AdminProperties\tPOSTADMIN\n"
+                                       "ROOTDRIVE\tC:\\\n"
+                                       "SERVNAME\tTestService\n"
+                                       "SERVDISP\tTestServiceDisp\n";
+
+static const CHAR aup2_property_dat[] = "Property\tValue\n"
+                                        "s72\tl0\n"
+                                        "Property\tProperty\n"
+                                        "DefaultUIFont\tDlgFont8\n"
+                                        "HASUIRUN\t0\n"
+                                        "ALLUSERS\t2\n"
+                                        "INSTALLLEVEL\t3\n"
+                                        "InstallMode\tTypical\n"
+                                        "Manufacturer\tWine\n"
+                                        "PIDTemplate\t12345<###-%%%%%%%>@@@@@\n"
+                                        "ProductCode\t{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}\n"
+                                        "ProductID\tnone\n"
+                                        "ProductLanguage\t1033\n"
+                                        "ProductName\tMSITEST\n"
+                                        "ProductVersion\t1.1.1\n"
+                                        "PROMPTROLLBACKCOST\tP\n"
+                                        "Setup\tSetup\n"
+                                        "UpgradeCode\t{4C0EAA15-0264-4E5A-8758-609EF142B92D}\n"
+                                        "AdminProperties\tPOSTADMIN\n"
+                                        "ROOTDRIVE\tC:\\\n"
+                                        "SERVNAME\tTestService\n"
+                                        "SERVDISP\tTestServiceDisp\n";
+
 static const CHAR shortcut_dat[] = "Shortcut\tDirectory_\tName\tComponent_\tTarget\tArguments\tDescription\tHotkey\tIcon_\tIconIndex\tShowCmd\tWkDir\n"
                                    "s72\ts72\tl128\ts72\ts72\tS255\tL255\tI2\tS72\tI2\tI2\tS72\n"
                                    "Shortcut\tShortcut\n"
@@ -941,6 +987,48 @@ static const CHAR aup_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                                "LaunchConditions\t\t100\n"
                                                "TestAllUsersProp\tALLUSERS AND NOT REMOVE\t50\n";
 
+static const CHAR aup2_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
+                                                "s72\tS255\tI2\n"
+                                                "InstallExecuteSequence\tAction\n"
+                                                "CostFinalize\t\t1000\n"
+                                                "ValidateProductID\t\t700\n"
+                                                "CostInitialize\t\t800\n"
+                                                "FileCost\t\t900\n"
+                                                "RemoveFiles\t\t3500\n"
+                                                "InstallFiles\t\t4000\n"
+                                                "RegisterUser\t\t6000\n"
+                                                "RegisterProduct\t\t6100\n"
+                                                "PublishFeatures\t\t6300\n"
+                                                "PublishProduct\t\t6400\n"
+                                                "InstallFinalize\t\t6600\n"
+                                                "InstallInitialize\t\t1500\n"
+                                                "ProcessComponents\t\t1600\n"
+                                                "UnpublishFeatures\t\t1800\n"
+                                                "InstallValidate\t\t1400\n"
+                                                "LaunchConditions\t\t100\n"
+                                                "TestAllUsersProp\tALLUSERS=2 AND NOT REMOVE\t50\n";
+
+static const CHAR aup3_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
+                                                "s72\tS255\tI2\n"
+                                                "InstallExecuteSequence\tAction\n"
+                                                "CostFinalize\t\t1000\n"
+                                                "ValidateProductID\t\t700\n"
+                                                "CostInitialize\t\t800\n"
+                                                "FileCost\t\t900\n"
+                                                "RemoveFiles\t\t3500\n"
+                                                "InstallFiles\t\t4000\n"
+                                                "RegisterUser\t\t6000\n"
+                                                "RegisterProduct\t\t6100\n"
+                                                "PublishFeatures\t\t6300\n"
+                                                "PublishProduct\t\t6400\n"
+                                                "InstallFinalize\t\t6600\n"
+                                                "InstallInitialize\t\t1500\n"
+                                                "ProcessComponents\t\t1600\n"
+                                                "UnpublishFeatures\t\t1800\n"
+                                                "InstallValidate\t\t1400\n"
+                                                "LaunchConditions\t\t100\n"
+                                                "TestAllUsersProp\tALLUSERS=1 AND NOT REMOVE\t50\n";
+
 static const CHAR aup_custom_action_dat[] = "Action\tType\tSource\tTarget\tISComments\n"
                                             "s72\ti2\tS64\tS0\tS255\n"
                                             "CustomAction\tAction\n"
@@ -1584,6 +1672,45 @@ static const msi_table aup_tables[] =
     ADD_TABLE(aup_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
+};
+
+static const msi_table aup2_tables[] =
+{
+    ADD_TABLE(component),
+    ADD_TABLE(directory),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(file),
+    ADD_TABLE(aup2_install_exec_seq),
+    ADD_TABLE(aup_custom_action),
+    ADD_TABLE(media),
+    ADD_TABLE(aup_property)
+};
+
+static const msi_table aup3_tables[] =
+{
+    ADD_TABLE(component),
+    ADD_TABLE(directory),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(file),
+    ADD_TABLE(aup2_install_exec_seq),
+    ADD_TABLE(aup_custom_action),
+    ADD_TABLE(media),
+    ADD_TABLE(aup2_property)
+};
+
+static const msi_table aup4_tables[] =
+{
+    ADD_TABLE(component),
+    ADD_TABLE(directory),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(file),
+    ADD_TABLE(aup3_install_exec_seq),
+    ADD_TABLE(aup_custom_action),
+    ADD_TABLE(media),
+    ADD_TABLE(aup2_property)
 };
 
 static const msi_table fiu_tables[] =
@@ -6778,6 +6905,7 @@ static void test_allusers_prop(void)
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
+    /* ALLUSERS property unset */
     r = MsiInstallProductA(msifile, "FULL=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
@@ -6798,6 +6926,69 @@ static void test_allusers_prop(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     delete_test_files();
+
+    create_test_files();
+    create_database(msifile, aup2_tables, sizeof(aup2_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    /* ALLUSERS property set to 1 */
+    r = MsiInstallProductA(msifile, "FULL=1");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout\\new", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\changed", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\first", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\one.txt", TRUE), "File installed\n");
+    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf("msitest", FALSE), "File not installed\n");
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    delete_test_files();
+
+    create_test_files();
+    create_database(msifile, aup3_tables, sizeof(aup3_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    /* ALLUSERS property set to 2 */
+    r = MsiInstallProductA(msifile, "FULL=1");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout\\new", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\changed", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\first", FALSE), "File not installed\n");
+    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\one.txt", TRUE), "File installed\n");
+    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf("msitest", FALSE), "File not installed\n");
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    delete_test_files();
+
+    create_test_files();
+    create_database(msifile, aup4_tables, sizeof(aup4_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    /* ALLUSERS property set to 2, conditioned on ALLUSERS = 1 */
+    r = MsiInstallProductA(msifile, "FULL=1");
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
 }
 
 static char session_manager[] = "System\\CurrentControlSet\\Control\\Session Manager";

@@ -94,7 +94,7 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
     /* MSDN says this should fail but it doesn't in practice */
     dd.cbStruct = 4;
     rc = acmDriverDetails(hadid, &dd, 0);
-    ok(rc == MMSYSERR_NOERROR,
+    ok(rc == MMSYSERR_NOERROR || rc == MMSYSERR_NOTSUPPORTED,
        "acmDriverDetails(): rc = %08x, should be %08x\n",
        rc, MMSYSERR_NOERROR);
 
@@ -119,17 +119,16 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
 
     /* try valid parameters */
     rc = acmDriverDetails(hadid, &dd, 0);
-    ok(rc == MMSYSERR_NOERROR,
+    ok(rc == MMSYSERR_NOERROR || rc == MMSYSERR_NOTSUPPORTED,
        "acmDriverDetails(): rc = %08x, should be %08x\n",
        rc, MMSYSERR_NOERROR);
 
     /* cbStruct should contain size of returned data (at most sizeof(dd)) 
        TODO: should it be *exactly* sizeof(dd), as tested here?
      */
-    if (rc == MMSYSERR_NOERROR) {    
+    if (rc == MMSYSERR_NOERROR) {
         ok(dd.cbStruct == sizeof(dd),
-            "acmDriverDetails(): cbStruct = %08x, should be %08lx\n",
-            dd.cbStruct, (unsigned long)sizeof(dd));
+            "acmDriverDetails(): cbStruct = %08x\n", dd.cbStruct);
     }
 
     if (rc == MMSYSERR_NOERROR && winetest_interactive) {
@@ -210,7 +209,7 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
 
     /* try valid parameters */
     rc = acmDriverOpen(&had, hadid, 0);
-    ok(rc == MMSYSERR_NOERROR,
+    ok(rc == MMSYSERR_NOERROR || rc == MMSYSERR_NODRIVER,
        "acmDriverOpen(): rc = %08x, should be %08x\n",
        rc, MMSYSERR_NOERROR);
 

@@ -395,7 +395,11 @@ static void test_GetComputerNameExA(void)
     ok(error == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", error);
 
     /* size is not set in win2k */
-    size = MAX_COMP_NAME;
+    if (size == 0)
+    {
+        win_skip("Win2k doesn't set the size\n");
+        size = MAX_COMP_NAME;
+    }
     name = HeapAlloc(GetProcessHeap(), 0, size * sizeof(name[0]));
     ok(name != NULL, "HeapAlloc failed with error %d\n", GetLastError());
     ret = pGetComputerNameExA(ComputerNameDnsDomain, name, &size);
@@ -410,7 +414,8 @@ static void test_GetComputerNameExA(void)
     ok(error == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", error);
 
     /* size is not set in win2k */
-    size = MAX_COMP_NAME;
+    if (size == 0)
+        size = MAX_COMP_NAME;
     name = HeapAlloc(GetProcessHeap(), 0, size * sizeof(name[0]));
     ok(name != NULL, "HeapAlloc failed with error %d\n", GetLastError());
     ret = pGetComputerNameExA(ComputerNameDnsFullyQualified, name, &size);
@@ -425,7 +430,8 @@ static void test_GetComputerNameExA(void)
     ok(error == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", error);
 
     /* size is not set in win2k */
-    size = MAX_COMP_NAME;
+    if (size == 0)
+        size = MAX_COMP_NAME;
     name = HeapAlloc(GetProcessHeap(), 0, size * sizeof(name[0]));
     ok(name != NULL, "HeapAlloc failed with error %d\n", GetLastError());
     ret = pGetComputerNameExA(ComputerNameDnsHostname, name, &size);
@@ -440,7 +446,8 @@ static void test_GetComputerNameExA(void)
     ok(error == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", error);
 
     /* size is not set in win2k */
-    size = MAX_COMP_NAME;
+    if (size == 0)
+        size = MAX_COMP_NAME;
     name = HeapAlloc(GetProcessHeap(), 0, size * sizeof(name[0]));
     ok(name != NULL, "HeapAlloc failed with error %d\n", GetLastError());
     ret = pGetComputerNameExA(ComputerNameNetBIOS, name, &size);

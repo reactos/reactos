@@ -59,6 +59,8 @@ static void run_apibuf_tests(void)
     /* border reallocate cases */
     ok(pNetApiBufferReallocate(0, 1500, &p) == NERR_Success, "Reallocate with OldBuffer = NULL failed\n");
     ok(p != NULL, "No memory got allocated\n");
+    ok(pNetApiBufferFree(p) == NERR_Success, "NetApiBufferFree failed\n");
+
     ok(pNetApiBufferAllocate(1024, &p) == NERR_Success, "Memory not reserved\n");
     ok(pNetApiBufferReallocate(p, 0, &p) == NERR_Success, "Not freed\n");
     ok(p == NULL, "Pointer not cleared\n");

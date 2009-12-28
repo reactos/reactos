@@ -956,6 +956,28 @@ static void test_reg_create_key(void)
     /* clean up */
     RegDeleteKey(hkey2, "");
     RegDeleteKey(hkey1, "");
+    RegCloseKey(hkey2);
+    RegCloseKey(hkey1);
+
+    /* test creation of volatile keys */
+    ret = RegCreateKeyExA(hkey_main, "Volatile", 0, NULL, REG_OPTION_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey1, NULL);
+    ok(!ret, "RegCreateKeyExA failed with error %d\n", ret);
+    ret = RegCreateKeyExA(hkey1, "Subkey2", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hkey2, NULL);
+    ok(ret == ERROR_CHILD_MUST_BE_VOLATILE || broken(!ret), /* win9x */
+       "RegCreateKeyExA failed with error %d\n", ret);
+    if (!ret) RegCloseKey( hkey2 );
+    ret = RegCreateKeyExA(hkey1, "Subkey2", 0, NULL, REG_OPTION_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey2, NULL);
+    ok(!ret, "RegCreateKeyExA failed with error %d\n", ret);
+    RegCloseKey(hkey2);
+    /* should succeed if the key already exists */
+    ret = RegCreateKeyExA(hkey1, "Subkey2", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hkey2, NULL);
+    ok(!ret, "RegCreateKeyExA failed with error %d\n", ret);
+
+    /* clean up */
+    RegDeleteKey(hkey2, "");
+    RegDeleteKey(hkey1, "");
+    RegCloseKey(hkey2);
+    RegCloseKey(hkey1);
 
     /*  beginning backslash character */
     ret = RegCreateKeyExA(hkey_main, "\\Subkey3", 0, NULL, 0, KEY_NOTIFY, NULL, &hkey1, NULL);
@@ -964,6 +986,7 @@ static void test_reg_create_key(void)
     else {
         ok(!ret, "RegCreateKeyExA failed with error %d\n", ret);
         RegDeleteKey(hkey1, NULL);
+        RegCloseKey(hkey1);
     }
 
     /* WOW64 flags - open an existing key */
