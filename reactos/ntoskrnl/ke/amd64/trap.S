@@ -77,7 +77,7 @@ _MsgTrapInfo:
 /*
  * ENTER_TRAP_FRAME - Allocate SIZE_KTRAP_FRAME and save registers to it
  */
-.macro ENTER_TRAP_FRAME AllocSize Flags
+.macro ENTER_TRAP_FRAME Flags
 .set SIZE_INITIAL_FRAME, 7 * 8
 //.set SIZE_LOCAL_DATA, SIZE_EXCEPTION_RECORD + 0x28
 .set SIZE_TRAP_FRAME_ALLOC, SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME
@@ -299,7 +299,7 @@ _InternalDispatchException:
     push 0
     .allocstack 0x8
 
-    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiDebugTrapOrFault
 
@@ -342,7 +342,7 @@ KiDebugTrapOrFaultKMode:
     push 0
     .allocstack 0x8
 
-    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiBreakpointTrap
 
@@ -396,7 +396,7 @@ KiDebugTrapOrFaultKMode:
     push 0
     .allocstack 0x8
 
-    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiInvalidOpcodeFault
 
@@ -491,7 +491,7 @@ KiDebugTrapOrFaultKMode:
     .pushframe 1
     /* We have an error code */
 
-    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiGeneralProtectionFault
 
@@ -512,7 +512,7 @@ KiDebugTrapOrFaultKMode:
     .pushframe 1
     /* We have an error code */
 
-    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiPageFault
 
@@ -642,7 +642,7 @@ PageFaultReturn:
     push 0
     .allocstack 0x08
 
-    ENTER_TRAP_FRAME (0x28), TRAPFLAG_ALL
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiDebugServiceTrap
 
