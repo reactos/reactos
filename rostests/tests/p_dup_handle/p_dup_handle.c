@@ -38,7 +38,7 @@ int main( int argc, char **argv ) {
     memset( &si, 0, sizeof( si ) );
     memset( &pi, 0, sizeof( pi ) );
 
-    sprintf( cmdline, "%s %x", argv[0], h_process );
+    sprintf( cmdline, "%s %p", argv[0], h_process );
     if( !CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL,
 		       &si, &pi ) ) {
       fprintf( stderr, "%lu: Could not create child process.\n",

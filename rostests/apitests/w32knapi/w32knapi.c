@@ -10,6 +10,7 @@ MyGdiQueryTable()
 {
 	PTEB pTeb = NtCurrentTeb();
 	PPEB pPeb = pTeb->ProcessEnvironmentBlock;
+	printf("TEB::PEB=0x%lx PEB::GdiHT=0x%lx, Peb=%p, Teb=%p\n", FIELD_OFFSET(TEB, ProcessEnvironmentBlock), FIELD_OFFSET(PEB, GdiSharedHandleTable), pTeb, pPeb);
 	return pPeb->GdiSharedHandleTable;
 }
 
