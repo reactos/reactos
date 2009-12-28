@@ -263,7 +263,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_c: $(2) $(3) $$(widl_TARGET) | ${cal
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_c.h -c -C ${call RBUILD_intermediate_path_noext,$(2)}_c.c $(2)
 	$${checkpoint} $$@>$(NUL)
 
-endef
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_c.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_c.o}endef
 
 #(module, source, dependencies, cflags)
 define RBUILD_WIDL_SERVER_RULE
@@ -277,7 +277,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_s: $(2) $(3) $$(widl_TARGET) | ${cal
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_s.h -s -S ${call RBUILD_intermediate_path_noext,$(2)}_s.c $(2)
 	$${checkpoint} $$@>$(NUL)
 
-endef
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_s.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_s.o}endef
 
 #(module, source, dependencies, cflags)
 define RBUILD_WIDL_PROXY_RULE
@@ -291,7 +291,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_p: $(2) $(3) $$(widl_TARGET) | ${cal
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_p.h -p -P ${call RBUILD_intermediate_path_noext,$(2)}_p.c $(2)
 	$${checkpoint} $$@>$(NUL)
 
-endef
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_p.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_p.o}endef
 
 #(module, source, dependencies, cflags)
 define RBUILD_WIDL_INTERFACE_RULE
