@@ -11,7 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 #define GDIDCATTRFREE 8
 
 typedef struct _GDI_DC_ATTR_FREELIST
@@ -159,35 +158,31 @@ DC_AllocateDcAttr(HDC hDC)
 {
   PVOID NewMem = NULL;
   PDC pDC;
-  HANDLE Pid = NtCurrentProcess();
-  ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE it will allocate that size
 
-  NTSTATUS Status = ZwAllocateVirtualMemory(Pid,
-                                        &NewMem,
-                                              0,
-                                       &MemSize,
-                         MEM_COMMIT|MEM_RESERVE,
-                                 PAGE_READWRITE);
   KeEnterCriticalRegion();
   {
     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hDC);
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+
+    NewMem = AllocateDcAttr();
+
     // FIXME: dc could have been deleted!!! use GDIOBJ_InsertUserData
-    if (NT_SUCCESS(Status))
+
+    if (NewMem)
     {
-      RtlZeroMemory(NewMem, MemSize);
-      Entry->UserData  = NewMem;
-      DPRINT("DC_ATTR allocated! 0x%x\n",NewMem);
+       RtlZeroMemory(NewMem, sizeof(DC_ATTR));
+       Entry->UserData = NewMem;
+       DPRINT("DC_ATTR allocated! 0x%x\n",NewMem);
     }
     else
     {
-       DPRINT("DC_ATTR not allocated!\n");
+       DPRINT1("DC_ATTR not allocated!\n");
     }
   }
   KeLeaveCriticalRegion();
   pDC = DC_LockDc(hDC);
   ASSERT(pDC->pdcattr == &pDC->dcattr);
-  if(NewMem)
+  if (NewMem)
   {
      pDC->pdcattr = NewMem; // Store pointer
   }
@@ -198,7 +193,6 @@ VOID
 FASTCALL
 DC_FreeDcAttr(HDC  DCToFree )
 {
-  HANDLE Pid = NtCurrentProcess();
   PDC pDC = DC_LockDc(DCToFree);
   if (pDC->pdcattr == &pDC->dcattr) return; // Internal DC object!
   pDC->pdcattr = &pDC->dcattr;
@@ -208,18 +202,10 @@ DC_FreeDcAttr(HDC  DCToFree )
   {
     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)DCToFree);
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-    if(Entry->UserData)
+    if (Entry->UserData)
     {
-      ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE;
-      NTSTATUS Status = ZwFreeVirtualMemory(Pid,
-                               &Entry->UserData,
-                                       &MemSize,
-                                   MEM_RELEASE);
-      if (NT_SUCCESS(Status))
-      {
-        DPRINT("DC_FreeDC DC_ATTR 0x%x\n", Entry->UserData);
-        Entry->UserData = NULL;
-      }
+       FreeDcAttr(Entry->UserData);
+       Entry->UserData = NULL;
     }
   }
   KeLeaveCriticalRegion();
@@ -264,7 +250,7 @@ DCU_SyncDcAttrtoUser(PDC dc)
   CopytoUserDcAttr( dc, pdcattr);
   return TRUE;
 }
-
+// LOL! DCU_ Sync hDc Attr to User,,, need it speeled out for you?
 BOOL
 FASTCALL
 DCU_SynchDcAttrtoUser(HDC hDC)
