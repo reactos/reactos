@@ -299,13 +299,13 @@ MapUnicodeProtocolInfoToAnsi(IN LPWSAPROTOCOL_INFOW UnicodeInfo,
 INT
 WSAAPI
 MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
-                         IN OUT PSIZE_T SetSize,
+                         IN OUT PDWORD SetSize,
                          OUT LPWSAQUERYSETW UnicodeSet);
 
 INT
 WSAAPI
 MapUnicodeQuerySetToAnsi(OUT LPWSAQUERYSETW UnicodeSet,
-                         IN OUT PSIZE_T SetSize,
+                         IN OUT PDWORD SetSize,
                          IN LPWSAQUERYSETA AnsiSet);
 
 INT

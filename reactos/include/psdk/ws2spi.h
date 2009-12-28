@@ -39,7 +39,7 @@ typedef struct _WSATHREADID {
 	DWORD Reserved;
 } WSATHREADID, FAR *LPWSATHREADID;
 
-typedef BOOL (CALLBACK FAR *LPBLOCKINGCALLBACK)(DWORD);
+typedef BOOL (CALLBACK FAR *LPBLOCKINGCALLBACK)(DWORD_PTR);
 typedef VOID (CALLBACK FAR *LPWSAUSERAPC)(DWORD);
 
 /* Prototypes for service provider procedure table */

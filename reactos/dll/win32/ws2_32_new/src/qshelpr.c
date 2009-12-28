@@ -807,11 +807,11 @@ WSABuildQuerySetBufferW(IN LPWSAQUERYSETW UnicodeSet,
 INT
 WSAAPI
 MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
-                         IN OUT PSIZE_T SetSize,
+                         IN OUT PDWORD SetSize,
                          OUT LPWSAQUERYSETW UnicodeSet)
 {
     INT ErrorCode = ERROR_SUCCESS;
-    SIZE_T AnsiSize, UnicodeSize;
+    DWORD AnsiSize, UnicodeSize;
     LPWSAQUERYSETA AnsiCopy = NULL;
     LPWSAQUERYSETW UnicodeCopy;
     LPWSTR ServiceCopy = NULL, CommentCopy = NULL;
@@ -928,11 +928,11 @@ error:
 INT
 WSAAPI
 MapUnicodeQuerySetToAnsi(OUT LPWSAQUERYSETW UnicodeSet,
-                         IN OUT PSIZE_T SetSize,
+                         IN OUT PDWORD SetSize,
                          IN LPWSAQUERYSETA AnsiSet)
 {
     INT ErrorCode = ERROR_SUCCESS;
-    SIZE_T UnicodeSize, AnsiSize;
+    DWORD UnicodeSize, AnsiSize;
     LPWSAQUERYSETW UnicodeCopy = NULL;
     LPWSAQUERYSETA AnsiCopy;
     LPSTR ServiceCopy = NULL, CommentCopy = NULL;
