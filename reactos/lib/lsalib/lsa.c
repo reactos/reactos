@@ -35,7 +35,7 @@ LsaDeregisterLogonProcess(HANDLE LsaHandle)
     Request.Header.u1.s1.DataLength = 0;
     Request.Header.u1.s1.TotalLength = sizeof(LSASS_REQUEST);
     Request.Type = LSASS_REQUEST_DEREGISTER_LOGON_PROCESS;
-    Status = NtRequestWaitReplyPort(LsaHandle,
+    Status = ZwRequestWaitReplyPort(LsaHandle,
                                     &Request.Header,
                                     &Reply.Header);
     if (!NT_SUCCESS(Status))
@@ -59,7 +59,7 @@ NTSTATUS WINAPI
 LsaConnectUntrusted(PHANDLE LsaHandle)
 {
     UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -98,7 +98,7 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
            ProtocolSubmitBuffer,
            SubmitBufferLength);
 
-    Status = NtRequestWaitReplyPort(LsaHandle,
+    Status = ZwRequestWaitReplyPort(LsaHandle,
                                     &Request->Header,
                                     &Reply->Header);
     if (!NT_SUCCESS(Status))
@@ -154,7 +154,7 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
         sizeof(PORT_MESSAGE);
     Request->Type = LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE;
 
-    Status = NtRequestWaitReplyPort(LsaHandle,
+    Status = ZwRequestWaitReplyPort(LsaHandle,
                                     &Request->Header,
                                     &Reply.Header);
     if (!NT_SUCCESS(Status))
@@ -245,7 +245,7 @@ LsaLogonUser(HANDLE LsaHandle,
 
     Reply = (PLSASS_REPLY)&RawReply;
 
-    Status = NtRequestWaitReplyPort(LsaHandle,
+    Status = ZwRequestWaitReplyPort(LsaHandle,
                                    &Request->Header,
                                    &Reply->Header);
     if (!NT_SUCCESS(Status))
@@ -285,26 +285,49 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
                         PHANDLE Handle,
                         PLSA_OPERATIONAL_MODE OperationalMode)
 {
-    UNICODE_STRING Portname = RTL_CONSTANT_STRING(L"\\SeLsaCommandPort");
+    UNICODE_STRING PortName; // = RTL_CONSTANT_STRING(L"\\LsaAuthenticationPort");
+    SECURITY_QUALITY_OF_SERVICE SecurityQos;
     ULONG ConnectInfoLength;
     NTSTATUS Status;
-    LSASS_REQUEST Request;
-    LSASS_REPLY Reply;
+    LSASS_CONNECT_DATA ConnectInfo;
+//    LSASS_REQUEST Request;
+//    LSASS_REPLY Reply;
 
-    ConnectInfoLength = 0;
-    Status = NtConnectPort(Handle,
-                           &Portname,
+    /* Check the logon process name length */
+    if (LsaLogonProcessName->Length > LSASS_MAX_LOGON_PROCESS_NAME_LENGTH)
+        return STATUS_NAME_TOO_LONG;
+
+    RtlInitUnicodeString(&PortName,
+                         L"\\LsaAuthenticationPort");
+
+    SecurityQos.Length              = sizeof (SecurityQos);
+    SecurityQos.ImpersonationLevel  = SecurityIdentification;
+    SecurityQos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+    SecurityQos.EffectiveOnly       = TRUE;
+
+    ConnectInfoLength = sizeof(LSASS_CONNECT_DATA);
+
+    strncpy(ConnectInfo.LogonProcessNameBuffer,
+            LsaLogonProcessName->Buffer,
+            LsaLogonProcessName->Length);
+    ConnectInfo.Length = LsaLogonProcessName->Length;
+    ConnectInfo.LogonProcessNameBuffer[ConnectInfo.Length] = '\0';
+
+    Status = ZwConnectPort(Handle,
+                           &PortName,
+                           &SecurityQos,
                            NULL,
                            NULL,
                            NULL,
-                           NULL,
-                           NULL,
+                           &ConnectInfo,
                            &ConnectInfoLength);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
+    return Status;
+#if 0
     Request.Type = LSASS_REQUEST_REGISTER_LOGON_PROCESS;
     Request.Header.u1.s1.DataLength = sizeof(LSASS_REQUEST) -
         sizeof(PORT_MESSAGE);
@@ -315,26 +338,27 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
            LsaLogonProcessName->Buffer,
            Request.d.RegisterLogonProcessRequest.Length);
 
-    Status = NtRequestWaitReplyPort(*Handle,
+    Status = ZwRequestWaitReplyPort(*Handle,
                                     &Request.Header,
                                     &Reply.Header);
     if (!NT_SUCCESS(Status))
     {
-        NtClose(*Handle);
-        *Handle = NULL;
+//        NtClose(*Handle);
+//        *Handle = NULL;
         return Status;
     }
 
     if (!NT_SUCCESS(Reply.Status))
     {
-        NtClose(*Handle);
-        *Handle = NULL;
+//        NtClose(*Handle);
+//        *Handle = NULL;
         return Status;
     }
 
     *OperationalMode = Reply.d.RegisterLogonProcessReply.OperationalMode;
 
     return Reply.Status;
+#endif
 }
 
 
@@ -347,7 +371,7 @@ LsaEnumerateLogonSessions(PULONG LogonSessionCount,
                           PLUID *LogonSessionList)
 {
     UNIMPLEMENTED;
-    return FALSE;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -360,7 +384,7 @@ LsaGetLogonSessionData(PLUID LogonId,
                        PSECURITY_LOGON_SESSION_DATA *ppLogonSessionData)
 {
     UNIMPLEMENTED;
-    return FALSE;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -373,7 +397,7 @@ LsaRegisterPolicyChangeNotification(POLICY_NOTIFICATION_INFORMATION_CLASS Inform
                                     HANDLE NotificationEventHandle)
 {
     UNIMPLEMENTED;
-    return FALSE;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -386,5 +410,5 @@ LsaUnregisterPolicyChangeNotification(POLICY_NOTIFICATION_INFORMATION_CLASS Info
                                       HANDLE NotificationEventHandle)
 {
     UNIMPLEMENTED;
-    return FALSE;
+    return STATUS_NOT_IMPLEMENTED;
 }
