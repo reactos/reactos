@@ -27,13 +27,13 @@
 		<file>rtlswap.s</file>
 		<file>thread.c</file>
 	</directory>
-   	</if>
+	</if>
 	<if property="ARCH" value="arm">
 		<directory name="arm">
 			<file>debug_asm.S</file>
 		</directory>
-        <file>mem.c</file>
-        <file>memgen.c</file>
+		<file>mem.c</file>
+		<file>memgen.c</file>
 	</if>
 	<directory name="austin">
 		<file>avl.c</file>
