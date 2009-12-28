@@ -235,14 +235,13 @@ _MsgTrapInfo:
 
 
 
-// rbp = TrapFrame, ecx = ExceptionCode, edx = NumParams, r9,r10,r11 = params
+// rbp = TrapFrame, eax = ExceptionCode, edx = NumParams, r9,r10,r11 = params
 _InternalDispatchException:
 
     /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
     sub rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
 
     /* Set up EXCEPTION_RECORD */
-    mov eax, ecx
     lea rcx, [rsp + SIZE_KEXCEPTION_FRAME]
     mov [rcx + EXCEPTION_RECORD_ExceptionCode], eax
     xor rax, rax
@@ -313,7 +312,7 @@ _InternalDispatchException:
 KiDebugTrapOrFaultKMode:
 
     /* Dispatch the exception */
-    mov ecx, STATUS_SINGLE_STEP
+    mov eax, STATUS_SINGLE_STEP
     mov edx, 0
     mov r9, 0
     mov r10, 0
@@ -351,7 +350,7 @@ KiDebugTrapOrFaultKMode:
 //    call _FrLdrDbgPrint[rip]
 
     /* Dispatch the exception */
-    mov ecx, STATUS_BREAKPOINT
+    mov eax, STATUS_BREAKPOINT
     mov edx, 3
     mov r9, 0
     mov r10, 0
@@ -491,20 +490,111 @@ KiDebugTrapOrFaultKMode:
     .pushframe 1
     /* We have an error code */
 
+    cli
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiGeneralProtectionFault
 
-//    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
-
     mov rdx, [rbp + KTRAP_FRAME_Rip]
     lea rcx, _MsgGeneralProtFault[rip]
     call _FrLdrDbgPrint[rip]
-    jmp $
+
+    /* Check if this was from user-mode */
+    cmp byte ptr [rbp + KTRAP_FRAME_PreviousMode], KernelMode
+    jnz KiGpfUserMode
+
+    /* Get instruction */
+    mov rax, [rbp + KTRAP_FRAME_Rip]
+    mov rax, [rax]
+
+    /* Check for MSR failure */
+    cmp al, 0xF
+    jz KiGpfMsr
+
+    /* Check for IRET */
+    cmp ax, 0xCF48
+    je KiGpfIret
+
+    /* Check for pop ds/es/fs/gs */
+    xor edx, edx
+    cmp al, 0x1F
+    jz KiGpfPopSegDs
+    cmp al, 0x07
+    jz KiGpfPopSegEs
+    cmp ax, 0xA10F
+    jz KiGpfPopSegFs
+    cmp ax, 0xA90F
+    jz KiGpfPopSegGs
+
+
+    mov dx, 0x002B // KGDT64_R3_DATA | RPL_MASK
+    cmp [rbp + KTRAP_FRAME_SegDs], dx
+    jne KiGpfPopSegDs
+    cmp [rbp + KTRAP_FRAME_SegEs], dx
+    jne KiGpfPopSegEs
+    cmp [rbp + KTRAP_FRAME_SegFs], dx
+    jne KiGpfPopSegFs
+    cmp [rbp + KTRAP_FRAME_SegGs], dx
+    jne KiGpfPopSegGs
+
+KiGpfFatal:
+
+    /* Bugcheck */
+    mov ecx, UNEXPECTED_KERNEL_MODE_TRAP
+    mov rdx, 0x0000D // EXCEPTION_GP_FAULT
+    xor rdx, rdx
+    xor r8, r8
+    xor r9, r9 // Reserved
+    mov [rbp + KTRAP_FRAME_P5], rbp // trap frame
+    call _KeBugCheckWithTf
+
+
+
+KiGpfPopSegDs:
+    mov [rbp + KTRAP_FRAME_SegDs], dx
+    jmp KiGpfPopSeg
+
+KiGpfPopSegEs:
+    mov [rbp + KTRAP_FRAME_SegEs], dx
+    jmp KiGpfPopSeg
+
+KiGpfPopSegFs:
+    mov [rbp + KTRAP_FRAME_SegFs], dx
+    jmp KiGpfPopSeg
+
+KiGpfPopSegGs:
+    mov [rbp + KTRAP_FRAME_SegGs], dx
+    jmp KiGpfPopSeg
+
+KiGpfPopSeg:
+    jmp KiGpfExit
+
+KiGpfIret:
+    /* Get error code */
+    mov ax, [rbp + KTRAP_FRAME_ErrorCode]
+//    and ax, ~RPL_MASK
+
+KiGpfMsr:
+
+    jmp KiGpfFatal
+    
+
+KiGpfUserMode:
+
+    /* Dispatch the exception */
+    mov eax, STATUS_ACCESS_VIOLATION
+    mov edx, 2
+    mov r9, [rbp + KTRAP_FRAME_ErrorCode]
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
+
+KiGpfExit:
 
     /* Return */
     LEAVE_TRAP_FRAME
     iretq
+
 .endproc
 
 
@@ -556,8 +646,8 @@ KiDebugTrapOrFaultKMode:
 
 InPageException:
     /* Dispatch in-page exception */
-    mov ecx, STATUS_IN_PAGE_ERROR // ExceptionCode
     mov r11d, eax // Param3 = Status
+    mov eax, STATUS_IN_PAGE_ERROR // ExceptionCode
     mov edx, 3    // ParamCount
     call _InternalDispatchException
     jmp PageFaultReturn
@@ -568,7 +658,6 @@ AccessViolation:
 
 SpecialCode:
     /* Setup a normal page fault exception */
-    mov ecx, eax // ExceptionCode
     mov edx, 2   // ParamCount
     call _InternalDispatchException
 
@@ -650,7 +739,7 @@ PageFaultReturn:
     inc qword ptr [rbp + KTRAP_FRAME_Rip]
 
     /* Dispatch the exception */
-    mov ecx, STATUS_BREAKPOINT
+    mov eax, STATUS_BREAKPOINT
     mov edx, 3
     mov r9, [rbp+KTRAP_FRAME_Rax] // Service
     mov r10, [rbp+KTRAP_FRAME_Rcx] // Buffer
@@ -688,8 +777,18 @@ PageFaultReturn:
     lea rcx, _MsgUnexpectedInterrupt[rip]
     call _FrLdrDbgPrint[rip]
 
-    jmp $
+    mov ecx, TRAP_CAUSE_UNKNOWN
+//    mov rdx, // The unexpected interrupt 
+//    mov rdx, // The unknown floating-point exception
+//    mov r8, // The enabled and asserted status bits
+    xor r9, r9 // Reserved
+    mov [rbp + KTRAP_FRAME_P5], rbp // trap frame
+    call _KeBugCheckWithTf
+
 .endproc
 
 
+.proc KiSystemFatalException
+
+.endproc
 
