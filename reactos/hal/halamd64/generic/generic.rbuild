@@ -12,6 +12,7 @@
 		<file>mps.S</file>
 		<file>systimer.S</file>
 		<file>usage.c</file>
+		<file>pic.c</file>
 		<pch>../include/hal.h</pch>
 	</module>
 </group>

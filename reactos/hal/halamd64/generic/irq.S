@@ -31,12 +31,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-.globl _HalpInitPICs
-.func _HalpInitPICs
-_HalpInitPICs:
-    UNIMPLEMENTED "HalpInitPICs"
-.endfunc
-
 .global _HalEnableInterrupt
 .func _HalEnableInterrupt
 _HalEnableInterrupt:
