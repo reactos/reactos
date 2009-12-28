@@ -67,13 +67,9 @@ _MsgTrapInfo:
  * |-------------------|
  * | KTRAP_FRAME       |
  * |-------------------| <- rbp
- * | 0x20 bytes params |
- * |-------------------|
- * | KEXCEPTION_FRAME  |
- * |-------------------|
  * | EXCEPTION_RECORD  |
  * |-------------------|
- * | 0x28 bytes params |
+ * | KEXCEPTION_FRAME  |
  * |-------------------| <- rsp
  *
  */
@@ -84,7 +80,7 @@ _MsgTrapInfo:
 .macro ENTER_TRAP_FRAME AllocSize Flags
 .set SIZE_INITIAL_FRAME, 7 * 8
 //.set SIZE_LOCAL_DATA, SIZE_EXCEPTION_RECORD + 0x28
-.set SIZE_TRAP_FRAME_ALLOC, SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME + \AllocSize
+.set SIZE_TRAP_FRAME_ALLOC, SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME
 .set TRAPFLAGS, \Flags
 
     /* Save rbp */
@@ -96,13 +92,7 @@ _MsgTrapInfo:
     .allocstack SIZE_TRAP_FRAME_ALLOC
 
     /* Point rbp to the KTRAP_FRAME */
-    lea rbp, [rsp + \AllocSize]
-
-// KTRAP_FRAME_P1Home
-// KTRAP_FRAME_P2Home
-// KTRAP_FRAME_P3Home
-// KTRAP_FRAME_P4Home
-// KTRAP_FRAME_P5
+    lea rbp, [rsp]
 
 .if (TRAPFLAGS & TRAPFLAG_NONVOLATILES)
     /* Save non-volatile registers */
@@ -249,42 +239,43 @@ _MsgTrapInfo:
 _InternalDispatchException:
 
     /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
-    sub rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME + 0x28
+    sub rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
 
     /* Set up EXCEPTION_RECORD */
-    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionCode], ecx
+    mov eax, ecx
+    lea rcx, [rsp + SIZE_KEXCEPTION_FRAME]
+    mov [rcx + EXCEPTION_RECORD_ExceptionCode], eax
     xor rax, rax
-    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionFlags], eax
-    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionRecord], rax
+    mov [rcx + EXCEPTION_RECORD_ExceptionFlags], eax
+    mov [rcx + EXCEPTION_RECORD_ExceptionRecord], rax
     mov rax, [rbp + KTRAP_FRAME_Rip]
-    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionAddress], rax
-    mov [rsp + 0x28 + EXCEPTION_RECORD_NumberParameters], edx
-    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x00], r9
-    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x08], r10
-    mov [rsp + 0x28 + EXCEPTION_RECORD_ExceptionInformation + 0x10], r11
+    mov [rcx + EXCEPTION_RECORD_ExceptionAddress], rax
+    mov [rcx + EXCEPTION_RECORD_NumberParameters], edx
+    mov [rcx + EXCEPTION_RECORD_ExceptionInformation + 0x00], r9
+    mov [rcx + EXCEPTION_RECORD_ExceptionInformation + 0x08], r10
+    mov [rcx + EXCEPTION_RECORD_ExceptionInformation + 0x10], r11
 
     /* Set up KEXCEPTION_FRAME */
-    lea rdx, [rsp + 0x28 + SIZE_EXCEPTION_RECORD]
     mov rax, [rbp + KTRAP_FRAME_Rbp]
-    mov [rdx + KEXCEPTION_FRAME_Rbp], rax
-    mov [rdx + KEXCEPTION_FRAME_Rbx], rbx
-    mov [rdx + KEXCEPTION_FRAME_Rdi], rdi
-    mov [rdx + KEXCEPTION_FRAME_Rsi], rsi
-    mov [rdx + KEXCEPTION_FRAME_R12], r12
-    mov [rdx + KEXCEPTION_FRAME_R13], r13
-    mov [rdx + KEXCEPTION_FRAME_R14], r14
-    mov [rdx + KEXCEPTION_FRAME_R15], r15
-    mov qword ptr [rdx + KEXCEPTION_FRAME_Return], 0
+    mov [rsp + KEXCEPTION_FRAME_Rbp], rax
+    mov [rsp + KEXCEPTION_FRAME_Rbx], rbx
+    mov [rsp + KEXCEPTION_FRAME_Rdi], rdi
+    mov [rsp + KEXCEPTION_FRAME_Rsi], rsi
+    mov [rsp + KEXCEPTION_FRAME_R12], r12
+    mov [rsp + KEXCEPTION_FRAME_R13], r13
+    mov [rsp + KEXCEPTION_FRAME_R14], r14
+    mov [rsp + KEXCEPTION_FRAME_R15], r15
+    mov qword ptr [rsp + KEXCEPTION_FRAME_Return], 0
 
     /* Call KiDispatchException */
-    lea rcx, [rsp + 0x28] // ExceptionRecord
-    // rdx already points to ExceptionFrame
-    mov r8, rbp // TrapFrame
-    mov r9b, [r8 + KTRAP_FRAME_PreviousMode] // PreviousMode
-    mov byte ptr [rsp + 0x20], 1  // FirstChance
+    // rcx already points to ExceptionRecord
+    mov rdx, rsp                                // ExceptionFrame
+    mov r8, rbp                                 // TrapFrame
+    mov r9b, [r8 + KTRAP_FRAME_PreviousMode]    // PreviousMode
+    mov byte ptr [rsp + KEXCEPTION_FRAME_P5], 1 // FirstChance
     call _KiDispatchException
 
-    add rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME + 0x28
+    add rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
     ret
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
