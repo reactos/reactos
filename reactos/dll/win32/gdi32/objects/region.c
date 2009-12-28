@@ -22,7 +22,6 @@
  If the rects are overlapping and not normalized or displace in different areas,
  it's DIFF_RGN.
  */
-static
 INT
 FASTCALL
 ComplexityFromRects( PRECTL prc1, PRECTL prc2)
@@ -205,6 +204,7 @@ CombineRgn(HRGN  hDest,
            HRGN  hSrc2,
            INT  CombineMode)
 {
+#if 0
   PRGN_ATTR pRgn_Attr_Dest = NULL;
   PRGN_ATTR pRgn_Attr_Src1 = NULL;
   PRGN_ATTR pRgn_Attr_Src2 = NULL;
@@ -218,8 +218,9 @@ CombineRgn(HRGN  hDest,
        !pRgn_Attr_Dest ||
        !pRgn_Attr_Src1 ||
         pRgn_Attr_Src1->Flags > SIMPLEREGION )
+#endif
      return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-
+#if 0
   /* Handle COPY and use only src1. */
   if ( CombineMode == RGN_COPY )
   {
@@ -388,6 +389,7 @@ ERROR_Exit:
   /* Even on error the flag is set dirty and force server side to redraw. */
   pRgn_Attr_Dest->AttrFlags |= ATTR_RGN_DIRTY;
   return ERROR;
+#endif
 }
 
 /*
@@ -438,6 +440,10 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
   HRGN hrgn;
   int x, y;
 
+//// Remove when Brush/Pen/Rgn Attr is ready!
+  return NtGdiCreateRectRgn(x1,y1,x2,y2);
+////
+
  /* Normalize points */
   x = x1;
   if ( x1 > x2 )
@@ -461,12 +467,10 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
      SetLastError(ERROR_INVALID_PARAMETER);
      return NULL;
   }
-//// Remove when Brush/Pen/Rgn Attr is ready!
-  return NtGdiCreateRectRgn(x1,y1,x2,y2);
-////
-  hrgn = hGetPEBHandle(hctRegionHandle, 0);
 
-  if (!hrgn)
+//  hrgn = hGetPEBHandle(hctRegionHandle, 0);
+
+//  if (!hrgn)
      hrgn = NtGdiCreateRectRgn(0, 0, 1, 1);
 
   if (!hrgn)
@@ -633,11 +637,13 @@ WINAPI
 GetRgnBox(HRGN hrgn,
           LPRECT prcOut)
 {
+#if 0
   PRGN_ATTR Rgn_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
+#endif
      return NtGdiGetRgnBox(hrgn, prcOut);
-
+#if 0
   if (Rgn_Attr->Flags == NULLREGION)
   {
      prcOut->left   = 0;
@@ -653,6 +659,7 @@ GetRgnBox(HRGN hrgn,
      RtlCopyMemory( prcOut, &Rgn_Attr->Rect, sizeof(RECT));
   }
   return Rgn_Attr->Flags;
+#endif
 }
 
 /*
@@ -743,12 +750,14 @@ OffsetRgn( HRGN hrgn,
           int nXOffset,
           int nYOffset)
 {
+#if 0
   PRGN_ATTR pRgn_Attr;
   int nLeftRect, nTopRect, nRightRect, nBottomRect;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+#endif
      return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
-
+#if 0
   if ( pRgn_Attr->Flags == NULLREGION)
      return pRgn_Attr->Flags;
 
@@ -790,6 +799,7 @@ OffsetRgn( HRGN hrgn,
      }
   }
   return pRgn_Attr->Flags;
+#endif
 }
 
 /*
@@ -801,11 +811,13 @@ PtInRegion(IN HRGN hrgn,
            int x,
            int y)
 {
+#if 0
   PRGN_ATTR pRgn_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+#endif
      return NtGdiPtInRegion(hrgn,x,y);
-
+#if 0
   if ( pRgn_Attr->Flags == NULLREGION)
      return FALSE;
 
@@ -813,6 +825,7 @@ PtInRegion(IN HRGN hrgn,
      return NtGdiPtInRegion(hrgn,x,y);
 
   return INRECT( pRgn_Attr->Rect, x, y);
+#endif
 }
 
 /*
@@ -823,12 +836,14 @@ WINAPI
 RectInRegion(HRGN hrgn,
              LPCRECT prcl)
 {
+#if 0
   PRGN_ATTR pRgn_Attr;
   RECTL rc;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+#endif
      return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
-
+#if 0
   if ( pRgn_Attr->Flags == NULLREGION)
      return FALSE;
 
@@ -862,6 +877,7 @@ RectInRegion(HRGN hrgn,
      return TRUE;
 
   return FALSE;
+#endif
 }
 
 /*
@@ -887,11 +903,13 @@ SetRectRgn(HRGN hrgn,
            int nRightRect,
            int nBottomRect)
 {
+#if 0
   PRGN_ATTR Rgn_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
+#endif
      return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
-
+#if 0
   if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
   {
      Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
@@ -920,6 +938,7 @@ SetRectRgn(HRGN hrgn,
   Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY ;
   Rgn_Attr->Flags = SIMPLEREGION;
   return TRUE;
+#endif
 }
 
 /*
