@@ -5,6 +5,7 @@
  * PURPOSE:         Miscellanous Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -12,6 +13,8 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+
+LARGE_INTEGER HalpPerformanceFrequency;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -102,4 +105,24 @@ KeFlushWriteBuffer(VOID)
 {
     /* Not implemented on x86 */
     return;
+}
+
+LARGE_INTEGER
+NTAPI
+KeQueryPerformanceCounter(
+    OUT PLARGE_INTEGER PerformanceFrequency OPTIONAL)
+{
+    LARGE_INTEGER Result;
+
+    ASSERT(HalpPerformanceFrequency.QuadPart != 0);
+
+    /* Does the caller want the frequency? */
+    if (PerformanceFrequency)
+    {
+        /* Return value */
+        *PerformanceFrequency = HalpPerformanceFrequency;
+    }
+
+    Result.QuadPart = __rdtsc();
+    return Result;
 }
