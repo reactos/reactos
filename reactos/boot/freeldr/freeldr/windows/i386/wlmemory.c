@@ -208,6 +208,10 @@ MempUnmapPage(ULONG Page)
     PHARDWARE_PTE KernelPT;
     ULONG Entry = (Page >> 10) + (KSEG0_BASE >> 22);
 
+    /* Don't unmap hyperspace or HAL entries */
+    if (Entry == HYPER_SPACE_ENTRY || Entry == 1023)
+        return;
+
     if (PDE[Entry].Valid)
     {
         KernelPT = (PHARDWARE_PTE)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
