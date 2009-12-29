@@ -899,8 +899,8 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
 
     if (!data) return;
 
-    //TRACE( "win %x pos changed. new vis rect %s, old whole rect %s, swp_flags %x insert_after %x\n",
-    //       hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect), swp_flags, insert_after );
+    TRACE( "win %x pos changed. new vis rect %s, old whole rect %s, swp_flags %x insert_after %x\n",
+           hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect), swp_flags, insert_after );
 
     old_whole_rect  = data->whole_rect;
     old_client_rect = data->client_rect;
@@ -926,19 +926,20 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
             /* if we have an SWM window the bits will be moved by the SWM */
             if (!data->whole_window)
                 ;//move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
-            else
-                SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
             //FIXME("change1\n");
         }
         else
         {
             //move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
-            //FIXME("change2\n");
-            SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
+            //FIXME("change2, vrects[0] %s, vrects[1] %s\n", wine_dbgstr_rect(&valid_rects[0]), wine_dbgstr_rect(&valid_rects[1]));
         }
     }
 
     if (!data->whole_window) return;
+
+    /* Sync position change */
+    if (!(swp_flags & SWP_NOREDRAW)) // HACK: When removing this explorer's start menu start to appear partially. Investigate!
+        SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
 
     /* Pass show/hide information to the window manager */
     if (swp_flags & SWP_SHOWWINDOW)
