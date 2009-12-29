@@ -703,7 +703,9 @@ GreStretchBltMask(
     INT HeightSrc,
     DWORD ROP,
     IN DWORD dwBackColor,
-    HDC hDCMask)
+    HDC hDCMask,
+    INT XOriginMask,
+    INT YOriginMask)
 {
     PDC DCDest;
     PDC DCSrc  = NULL;
@@ -713,6 +715,7 @@ GreStretchBltMask(
     SURFACE *BitmapMask = NULL;
     RECTL DestRect;
     RECTL SourceRect;
+    POINTL MaskPoint;
     BOOL Status = FALSE;
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
@@ -827,12 +830,20 @@ GreStretchBltMask(
         {
             BitmapMask = DCMask->dclevel.pSurface;
             if (BitmapMask &&
-                (BitmapMask->SurfObj.sizlBitmap.cx != WidthSrc ||
-                 BitmapMask->SurfObj.sizlBitmap.cy != HeightSrc))
+                (BitmapMask->SurfObj.sizlBitmap.cx < WidthSrc ||
+                 BitmapMask->SurfObj.sizlBitmap.cy < HeightSrc))
             {
-                DPRINT1("Mask and bitmap sizes don't match!\n");
+                DPRINT1("%dx%d mask is smaller than %dx%d bitmap\n", 
+                        BitmapMask->SurfObj.sizlBitmap.cx, BitmapMask->SurfObj.sizlBitmap.cy, 
+                        WidthSrc, HeightSrc);
                 goto failed;
             }
+            /* Create mask offset point */
+            MaskPoint.x = XOriginMask;
+            MaskPoint.y = YOriginMask;
+            IntLPtoDP(DCMask, &MaskPoint, 1);
+            MaskPoint.x += DCMask->ptlDCOrig.x;
+            MaskPoint.y += DCMask->ptlDCOrig.x;
         }
     }
 
@@ -844,7 +855,7 @@ GreStretchBltMask(
                               XlateObj,
                               &DestRect,
                               &SourceRect,
-                              NULL,
+                              BitmapMask ? &MaskPoint : NULL,
                               &DCDest->eboFill.BrushObject,
                               &BrushOrigin,
                               ROP3_TO_ROP4(ROP));
@@ -896,7 +907,9 @@ NtGdiStretchBlt(
                 HeightSrc,
                 ROP,
                 dwBackColor,
-                NULL);
+                NULL,
+                0,
+                0);
 }
 
 

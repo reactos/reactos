@@ -258,7 +258,9 @@ GreStretchBltMask(IN HDC hdcDst,
                   IN INT cySrc,
                   IN DWORD dwRop,
                   IN DWORD dwBackColor,
-                  IN HDC hdcMask);
+                  IN HDC hdcMask,
+                  IN INT xMask,
+                  IN INT yMask);
 
 #endif /* _WIN32K_INTGDI_H */
 
