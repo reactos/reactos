@@ -37,120 +37,71 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 
 HICON
-ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot)
+CreateCursorIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot, BOOL fIcon)
 {
    BYTE BitmapInfoBuffer[sizeof(BITMAPINFOHEADER) + 2 * sizeof(RGBQUAD)];
    BITMAPINFO *bwBIH = (BITMAPINFO *)BitmapInfoBuffer;
    ICONINFO IconInfo;
 
-   IconInfo.fIcon = TRUE;
+   IconInfo.fIcon = fIcon;
    IconInfo.xHotspot = xHotspot;
    IconInfo.yHotspot = yHotspot;
 
-   /* Load the XOR bitmap */
-   IconInfo.hbmColor = CreateDIBitmap(hDC, &IconImage->icHeader, CBM_INIT,
-                                      ImageData, (BITMAPINFO*)IconImage,
-                                      DIB_RGB_COLORS);
-
-   /* Make ImageData point to the start of the AND image data. */
-   ImageData = ((PBYTE)ImageData) + (((IconImage->icHeader.biWidth *
-                                      IconImage->icHeader.biBitCount + 31) & ~31) >> 3) *
-                                      (IconImage->icHeader.biHeight );
-
-   /* Create a BITMAPINFO header for the monocrome part of the icon. */
-   bwBIH->bmiHeader.biBitCount = 1;
-   bwBIH->bmiHeader.biWidth = IconImage->icHeader.biWidth;
-   bwBIH->bmiHeader.biHeight = IconImage->icHeader.biHeight;
-   bwBIH->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-   bwBIH->bmiHeader.biPlanes = 1;
-   bwBIH->bmiHeader.biSizeImage = 0;
-   bwBIH->bmiHeader.biCompression = BI_RGB;
-   bwBIH->bmiHeader.biClrImportant = 0;
-   bwBIH->bmiHeader.biClrUsed = 0;
-   bwBIH->bmiHeader.biXPelsPerMeter = 0;
-   bwBIH->bmiHeader.biYPelsPerMeter = 0;
-
-   bwBIH->bmiColors[0].rgbBlue = 0;
-   bwBIH->bmiColors[0].rgbGreen = 0;
-   bwBIH->bmiColors[0].rgbRed = 0;
-   bwBIH->bmiColors[0].rgbReserved = 0;
-
-   bwBIH->bmiColors[1].rgbBlue = 0xff;
-   bwBIH->bmiColors[1].rgbGreen = 0xff;
-   bwBIH->bmiColors[1].rgbRed = 0xff;
-   bwBIH->bmiColors[1].rgbReserved = 0;
-
-   /* Load the AND bitmap. */
-   IconInfo.hbmMask = CreateDIBitmap(hDC, &bwBIH->bmiHeader, 0,
-                                     ImageData, bwBIH, DIB_RGB_COLORS);
-
-   SetDIBits(hDC, IconInfo.hbmMask, 0, IconImage->icHeader.biHeight,
-             ImageData, bwBIH, DIB_RGB_COLORS);
-
-   /* Create the icon based on everything we have so far */
-   return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
-}
-
-HICON
-ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot)
-{
-   BYTE BitmapInfoBuffer[sizeof(BITMAPINFOHEADER) + 2 * sizeof(RGBQUAD)];
-   BITMAPINFO *bwBIH = (BITMAPINFO *)BitmapInfoBuffer;
-   BITMAPINFO *orgBIH = (BITMAPINFO *)IconImage;
-   ICONINFO IconInfo;
-
-   IconInfo.fIcon = FALSE;
-   IconInfo.xHotspot = xHotspot;
-   IconInfo.yHotspot = yHotspot;
-
-   /* Handle the color part of the cursor */
    if (IconImage->icHeader.biBitCount == 1)
    {
-      IconInfo.hbmColor = (HBITMAP)0;
+       IconInfo.hbmColor = (HBITMAP)0;
+       IconImage->icHeader.biHeight *= 2;
+       IconInfo.hbmMask = CreateDIBitmap(hDC, &IconImage->icHeader, CBM_INIT,
+                                  ImageData, (BITMAPINFO*)IconImage,
+                                  DIB_RGB_COLORS);
    }
    else
    {
+       /* Create the XOR bitmap */
        IconInfo.hbmColor = CreateDIBitmap(hDC, &IconImage->icHeader, CBM_INIT,
                                           ImageData, (BITMAPINFO*)IconImage,
                                           DIB_RGB_COLORS);
+
+       /* Make ImageData point to the start of the AND image data. */
+       ImageData = ((PBYTE)ImageData) + (((IconImage->icHeader.biWidth *
+                                          IconImage->icHeader.biBitCount + 31) & ~31) >> 3) *
+                                          (IconImage->icHeader.biHeight );
+
+       /* Create a BITMAPINFO header for the monochrome part of the icon. */
+       bwBIH->bmiHeader.biBitCount = 1;
+       bwBIH->bmiHeader.biWidth = IconImage->icHeader.biWidth;
+       bwBIH->bmiHeader.biHeight = IconImage->icHeader.biHeight;
+       bwBIH->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+       bwBIH->bmiHeader.biPlanes = 1;
+       bwBIH->bmiHeader.biSizeImage = 0;
+       bwBIH->bmiHeader.biCompression = BI_RGB;
+       bwBIH->bmiHeader.biClrImportant = 0;
+       bwBIH->bmiHeader.biClrUsed = 0;
+       bwBIH->bmiHeader.biXPelsPerMeter = 0;
+       bwBIH->bmiHeader.biYPelsPerMeter = 0;
+
+       bwBIH->bmiColors[0].rgbBlue = 0;
+       bwBIH->bmiColors[0].rgbGreen = 0;
+       bwBIH->bmiColors[0].rgbRed = 0;
+       bwBIH->bmiColors[0].rgbReserved = 0;
+
+       bwBIH->bmiColors[1].rgbBlue = 0xff;
+       bwBIH->bmiColors[1].rgbGreen = 0xff;
+       bwBIH->bmiColors[1].rgbRed = 0xff;
+       bwBIH->bmiColors[1].rgbReserved = 0;
+
+       /* Create the AND bitmap. */
+       IconInfo.hbmMask = CreateDIBitmap(hDC, &bwBIH->bmiHeader, 0,
+                                         ImageData, bwBIH, DIB_RGB_COLORS);
+
+       SetDIBits(hDC, IconInfo.hbmMask, 0, IconImage->icHeader.biHeight,
+                 ImageData, bwBIH, DIB_RGB_COLORS);
    }
 
-   /* Create a BITMAPINFO header for the monochrome part of the cursor */
-   bwBIH->bmiHeader.biBitCount = 1;
-   bwBIH->bmiHeader.biWidth = IconImage->icHeader.biWidth;
-   bwBIH->bmiHeader.biHeight = IconImage->icHeader.biHeight;
-   bwBIH->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-   bwBIH->bmiHeader.biPlanes = 1;
-   bwBIH->bmiHeader.biSizeImage = 0;
-   bwBIH->bmiHeader.biCompression = BI_RGB;
-   bwBIH->bmiHeader.biClrImportant = 0;
-   bwBIH->bmiHeader.biClrUsed = 0;
-   bwBIH->bmiHeader.biXPelsPerMeter = 0;
-   bwBIH->bmiHeader.biYPelsPerMeter = 0;
-
-   bwBIH->bmiColors[0].rgbBlue = 0;
-   bwBIH->bmiColors[0].rgbGreen = 0;
-   bwBIH->bmiColors[0].rgbRed = 0;
-   bwBIH->bmiColors[0].rgbReserved = 0;
-
-   bwBIH->bmiColors[1].rgbBlue = 0xff;
-   bwBIH->bmiColors[1].rgbGreen = 0xff;
-   bwBIH->bmiColors[1].rgbRed = 0xff;
-   bwBIH->bmiColors[1].rgbReserved = 0;
-
-   /* Load the monochrome bitmap */
-   IconInfo.hbmMask = CreateDIBitmap(hDC, &bwBIH->bmiHeader, 0,
-                                     ImageData, bwBIH, DIB_RGB_COLORS);
-   if (IconInfo.hbmMask)
-   {
-      SetDIBits(hDC, IconInfo.hbmMask, 0, IconImage->icHeader.biHeight,
-                ImageData, orgBIH, DIB_RGB_COLORS);
-   }
 
    /* Create the icon based on everything we have so far */
    return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
 }
-
 
 /*
  * @implemented
@@ -290,8 +241,7 @@ CreateIconFromResourceEx(
     }
   memcpy(SafeIconImage, pbIconBits, cbIconBits);
 
-  /* take into acount the original height was for both the AND and XOR images */
-  if(fIcon)
+  /* Take into acount the original height was for both the AND and XOR images */
     SafeIconImage->icHeader.biHeight /= 2;
 
   if (SafeIconImage->icHeader.biSize == sizeof(BITMAPCOREHEADER))
@@ -320,10 +270,7 @@ CreateIconFromResourceEx(
       return(NULL);
     }
 
-  if(fIcon)
-    hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, cxDesired, cyDesired, wXHotspot, wYHotspot);
-  else
-    hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, cxDesired, cyDesired, wXHotspot, wYHotspot);
+  hIcon = CreateCursorIconFromData(hScreenDc, Data, SafeIconImage, cxDesired, cyDesired, wXHotspot, wYHotspot, fIcon);
   RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
   DeleteDC(hScreenDc);
 
