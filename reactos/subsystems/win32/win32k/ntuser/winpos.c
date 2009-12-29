@@ -953,16 +953,16 @@ co_WinPosSetWindowPos(
          VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
          VisRgn = NULL;
 
-         if (VisBefore != NULL && (VisRgn = (PROSRGNDATA)REGION_LockRgn(VisBefore)) &&
+         if (VisBefore != NULL && (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(VisBefore, NULL)) &&
                REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION)
          {
-            REGION_UnlockRgn(VisRgn);
+            RGNOBJAPI_Unlock(VisRgn);
             GreDeleteObject(VisBefore);
             VisBefore = NULL;
          }
          else if(VisRgn)
          {
-            REGION_UnlockRgn(VisRgn);
+            RGNOBJAPI_Unlock(VisRgn);
             NtGdiOffsetRgn(VisBefore, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
          }
       }
@@ -1112,16 +1112,16 @@ co_WinPosSetWindowPos(
       VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
       VisRgn = NULL;
 
-      if (VisAfter != NULL && (VisRgn = (PROSRGNDATA)REGION_LockRgn(VisAfter)) &&
+      if (VisAfter != NULL && (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(VisAfter, NULL)) &&
             REGION_GetRgnBox(VisRgn, &TempRect) == NULLREGION)
       {
-         REGION_UnlockRgn(VisRgn);
+         RGNOBJAPI_Unlock(VisRgn);
          GreDeleteObject(VisAfter);
          VisAfter = NULL;
       }
       else if(VisRgn)
       {
-         REGION_UnlockRgn(VisRgn);
+         RGNOBJAPI_Unlock(VisRgn);
          NtGdiOffsetRgn(VisAfter, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
       }
 
@@ -1156,9 +1156,9 @@ co_WinPosSetWindowPos(
             RECTL_vOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
             RECTL_vOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
             RECTL_bIntersectRect(&CopyRect, &ORect, &NRect);
-            pCopyRgn = REGION_LockRgn(CopyRgn);
+            pCopyRgn = RGNOBJAPI_Lock(CopyRgn, NULL);
             REGION_CropAndOffsetRegion(pCopyRgn, pCopyRgn, &CopyRect, NULL);
-            REGION_UnlockRgn(pCopyRgn);
+            RGNOBJAPI_Unlock(pCopyRgn);
          }
 
          /* No use in copying bits which are in the update region. */
@@ -1174,11 +1174,11 @@ co_WinPosSetWindowPos(
           * there's nothing to copy. Also, it's no use copying bits onto
           * themselves.
           */
-         if ((VisRgn = (PROSRGNDATA)REGION_LockRgn(CopyRgn)) &&
+         if ((VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(CopyRgn, NULL)) &&
                REGION_GetRgnBox(VisRgn, &CopyRect) == NULLREGION)
          {
             /* Nothing to copy, clean up */
-            REGION_UnlockRgn(VisRgn);
+            RGNOBJAPI_Unlock(VisRgn);
             GreDeleteObject(CopyRgn);
             CopyRgn = NULL;
          }
@@ -1187,7 +1187,7 @@ co_WinPosSetWindowPos(
          {
             if(VisRgn)
             {
-               REGION_UnlockRgn(VisRgn);
+               RGNOBJAPI_Unlock(VisRgn);
             }
 
             /*
@@ -1214,7 +1214,7 @@ co_WinPosSetWindowPos(
          }
          else if(VisRgn)
          {
-            REGION_UnlockRgn(VisRgn);
+            RGNOBJAPI_Unlock(VisRgn);
          }
       }
       else

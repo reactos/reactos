@@ -663,11 +663,34 @@ BOOL
 FASTCALL
 GreDeleteObject(HGDIOBJ hObject)
 {
+    INT Index;
+    PGDI_TABLE_ENTRY Entry;
+    DWORD dwObjectType;
+    PVOID pAttr = NULL;
+
     DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
     if (!IsObjectDead(hObject))
     {
-        return NULL != hObject
-               ? GDIOBJ_FreeObjByHandle(hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;
+       dwObjectType = GDIOBJ_GetObjectType(hObject);
+
+       Index = GDI_HANDLE_GET_INDEX(hObject);
+       Entry = &GdiHandleTable->Entries[Index];
+       pAttr = Entry->UserData;
+             
+       switch (dwObjectType)
+       {
+//          case GDI_OBJECT_TYPE_BRUSH:
+          case GDI_OBJECT_TYPE_REGION:
+             if (pAttr) FreeObjectAttr(pAttr);
+             break;
+
+          case GDI_OBJECT_TYPE_DC:
+             DC_FreeDcAttr(hObject);
+             break;
+       }
+
+       return NULL != hObject
+               ? GDIOBJ_FreeObjByHandle(hObject, dwObjectType) : FALSE;
     }
     else
     {

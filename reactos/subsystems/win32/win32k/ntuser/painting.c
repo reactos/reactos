@@ -1006,10 +1006,10 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       }
       else
       {
-         RgnData = REGION_LockRgn(Window->UpdateRegion);
+         RgnData = RGNOBJAPI_Lock(Window->UpdateRegion, NULL);
          ASSERT(RgnData != NULL);
          RegionType = REGION_GetRgnBox(RgnData, &Rect);
-         REGION_UnlockRgn(RgnData);
+         RGNOBJAPI_Unlock(RgnData);
 
          if (RegionType != ERROR && RegionType != NULLREGION)
             RECTL_bIntersectRect(&Rect, &Rect, &Window->Wnd->rcClient);

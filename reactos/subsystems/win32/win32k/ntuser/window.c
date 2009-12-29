@@ -4557,10 +4557,10 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    /* Copy the region into hRgn */
    NtGdiCombineRgn(hRgn, VisRgn, NULL, RGN_COPY);
 
-   if((pRgn = REGION_LockRgn(hRgn)))
+   if((pRgn = RGNOBJAPI_Lock(hRgn, NULL)))
    {
       Ret = pRgn->rdh.iType;
-      REGION_UnlockRgn(pRgn);
+      RGNOBJAPI_Unlock(pRgn);
    }
    else
       Ret = ERROR;
@@ -4596,11 +4596,11 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
    if(Window->WindowRegion && !(Wnd->style & WS_MINIMIZE))
       NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
 
-   if((pRgn = REGION_LockRgn(VisRgn)))
+   if((pRgn = RGNOBJAPI_Lock(VisRgn, NULL)))
    {
       Ret = pRgn->rdh.iType;
       *Rect = pRgn->rdh.rcBound;
-      REGION_UnlockRgn(pRgn);
+      RGNOBJAPI_Unlock(pRgn);
    }
    else
       Ret = ERROR;
