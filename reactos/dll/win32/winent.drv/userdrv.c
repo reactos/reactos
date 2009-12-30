@@ -815,7 +815,7 @@ void CDECL RosDrv_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
             !(data = NTDRV_create_win_data( hwnd ))) return;
 
         /* Do some magic... */
-        FIXME("Window %x is being made visible1\n", hwnd);
+        TRACE("Window %x is being made visible1\n", hwnd);
     }
 
     if (offset == GWL_STYLE && (changed & WS_DISABLED))
@@ -922,20 +922,18 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
         {
             /* if we have an SWM window the bits will be moved by the SWM */
             if (!data->whole_window)
-                ;//move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
-            //FIXME("change1\n");
+                move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
         }
         else
         {
-            //move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
-            //FIXME("change2, vrects[0] %s, vrects[1] %s\n", wine_dbgstr_rect(&valid_rects[0]), wine_dbgstr_rect(&valid_rects[1]));
+            move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
         }
     }
 
     if (!data->whole_window) return;
 
     /* Sync position change */
-    if (!(swp_flags & SWP_NOREDRAW)) // HACK: When removing this explorer's start menu start to appear partially. Investigate!
+    if (!(swp_flags & SWP_NOREDRAW)) // HACK: When removing this, explorer's start menu starts to appear partially. Investigate!
         SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect, insert_after, swp_flags);
 
     /* Pass show/hide information to the window manager */
