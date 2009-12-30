@@ -2034,6 +2034,8 @@ REGION_AllocRgnWithHandle(INT nReg)
 {
     HRGN hReg;
     PROSRGNDATA pReg;
+    INT Index;
+    PGDI_TABLE_ENTRY Entry;
     
     pReg = (PROSRGNDATA)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION);
     if(!pReg)
@@ -2060,6 +2062,10 @@ REGION_AllocRgnWithHandle(INT nReg)
         }
     }
 
+    Index = GDI_HANDLE_GET_INDEX(hReg);
+    Entry = &GdiHandleTable->Entries[Index];
+    Entry->UserData = AllocateObjectAttr();
+
     EMPTY_REGION(pReg);
     pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
     pReg->rdh.nCount = nReg;
@@ -2085,27 +2091,35 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
      Entry = &GdiHandleTable->Entries[Index];
 
      pRgn_Attr = Entry->UserData;
+
      if (pRgn_Attr)
      {
-        if ( pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
+        _SEH2_TRY
         {
-           switch (pRgn_Attr->Flags)
+           if ( pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
            {
-               case NULLREGION:
-                  EMPTY_REGION( pRgn );
-                  pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY; // Clear flag in these cases,
-                  break;
+              switch (pRgn_Attr->Flags)
+              {
+                  case NULLREGION:
+                     EMPTY_REGION( pRgn );
+                     break;
 
-               case SIMPLEREGION:
-                  REGION_SetRectRgn( pRgn,
-                                     pRgn_Attr->Rect.left,
-                                     pRgn_Attr->Rect.top,
-                                     pRgn_Attr->Rect.right,
-                                     pRgn_Attr->Rect.bottom );
-                  pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY; // just incase, force a redraw.
-                  break;
+                  case SIMPLEREGION:
+                     REGION_SetRectRgn( pRgn,
+                                        pRgn_Attr->Rect.left,
+                                        pRgn_Attr->Rect.top,
+                                        pRgn_Attr->Rect.right,
+                                        pRgn_Attr->Rect.bottom );
+                     break;
+              }
+              pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY;
            }
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+        }
+        _SEH2_END;
+
         if (ppRgn_Attr)
            *ppRgn_Attr = pRgn_Attr;
      }
@@ -2132,17 +2146,25 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
      Entry = &GdiHandleTable->Entries[Index];
 
      pRgn_Attr = Entry->UserData;
-     if ( pRgn_Attr )
+
+     _SEH2_TRY
      {
-        if ( pRgn_Attr->AttrFlags & ATTR_RGN_VALID )
+        if ( pRgn_Attr )
         {
-           pRgn_Attr->Flags = REGION_Complexity( pRgn );
-           pRgn_Attr->Rect.left   = pRgn->rdh.rcBound.left;
-           pRgn_Attr->Rect.top    = pRgn->rdh.rcBound.top;
-           pRgn_Attr->Rect.right  = pRgn->rdh.rcBound.right;
-           pRgn_Attr->Rect.bottom = pRgn->rdh.rcBound.bottom;
+           if ( pRgn_Attr->AttrFlags & ATTR_RGN_VALID )
+           {
+              pRgn_Attr->Flags = REGION_Complexity( pRgn );
+              pRgn_Attr->Rect.left   = pRgn->rdh.rcBound.left;
+              pRgn_Attr->Rect.top    = pRgn->rdh.rcBound.top;
+              pRgn_Attr->Rect.right  = pRgn->rdh.rcBound.right;
+              pRgn_Attr->Rect.bottom = pRgn->rdh.rcBound.bottom;
+           }
         }
      }
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+     {
+     }
+     _SEH2_END;
   }
   REGION_UnlockRgn(pRgn);
 }

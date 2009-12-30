@@ -438,39 +438,35 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
 {
   PRGN_ATTR pRgn_Attr;
   HRGN hrgn;
-  int x, y;
-
-//// Remove when Brush/Pen/Rgn Attr is ready!
-  return NtGdiCreateRectRgn(x1,y1,x2,y2);
-////
+  int tmp;
 
  /* Normalize points */
-  x = x1;
+  tmp = x1;
   if ( x1 > x2 )
   {
     x1 = x2;
-    x2 = x;
+    x2 = tmp;
   }
 
-  y = y1;
+  tmp = y1;
   if ( y1 > y2 )
   {
     y1 = y2;
-    y2 = y;
+    y2 = tmp;
   }
-
-  if ( (UINT)x1 < 0x80000000 ||
-       (UINT)y1 < 0x80000000 ||
-       (UINT)x2 > 0x7FFFFFFF ||
-       (UINT)y2 > 0x7FFFFFFF )
+  /* Check outside 24 bit limit for universal set. Chp 9 Areas, pg 560.*/
+  if ( x1 < -(1<<27)  ||
+       y1 < -(1<<27)  ||
+       x2 > (1<<27)-1 ||
+       y2 > (1<<27)-1 )
   {
      SetLastError(ERROR_INVALID_PARAMETER);
      return NULL;
   }
 
-//  hrgn = hGetPEBHandle(hctRegionHandle, 0);
+  hrgn = hGetPEBHandle(hctRegionHandle, 0);
 
-//  if (!hrgn)
+  if (!hrgn)
      hrgn = NtGdiCreateRectRgn(0, 0, 1, 1);
 
   if (!hrgn)
@@ -478,6 +474,7 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
   {
+     DPRINT1("No Attr for Region handle!!!\n");
      DeleteRegion(hrgn);
      return NULL;
   }
@@ -778,15 +775,11 @@ OffsetRgn( HRGN hrgn,
         nRightRect  = nXOffset + nRightRect;
         nBottomRect = nYOffset + nBottomRect;
 
-        /* Mask and bit test. */
-        if ( ( nLeftRect   & 0xF8000000 &&
-              (nLeftRect   & 0xF8000000) != 0x80000000 ) ||
-             ( nTopRect    & 0xF8000000 &&
-              (nTopRect    & 0xF8000000) != 0x80000000 ) ||
-             ( nRightRect  & 0xF8000000 &&
-              (nRightRect  & 0xF8000000) != 0x80000000 ) ||
-             ( nBottomRect & 0xF8000000 &&
-              (nBottomRect & 0xF8000000) != 0x80000000 ) )
+        /* Check 28 bit limit. Chp 9 Areas, pg 560. */
+        if ( nLeftRect   < -(1<<27)  ||
+             nTopRect    < -(1<<27)  ||
+             nRightRect  > (1<<27)-1 ||
+             nBottomRect > (1<<27)-1  )
         {
            return ERROR;
         }

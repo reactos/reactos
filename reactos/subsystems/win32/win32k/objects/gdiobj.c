@@ -654,6 +654,69 @@ IsObjectDead(HGDIOBJ hObject)
 }
 
 
+BOOL
+FASTCALL
+bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
+{
+  PGDIHANDLECACHE GdiHandleCache;
+  HGDIOBJ *hPtr;
+  BOOL Ret = FALSE;
+  int Offset = 0, Number;
+  HANDLE Lock;
+
+  GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
+
+  switch (oType)
+  {
+     case hctBrushHandle:
+        Offset = 0;
+        break;
+
+     case hctPenHandle:
+        Offset = CACHE_BRUSH_ENTRIES;
+        break;
+
+     case hctRegionHandle:
+        Offset = CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
+        break;
+
+     default:
+        return FALSE;
+  }
+
+  Lock = InterlockedCompareExchangePointer( (PVOID*)&GdiHandleCache->ulLock,
+                                             NtCurrentTeb(),
+                                             NULL );
+  if (Lock) return FALSE;
+
+  _SEH2_TRY
+  {
+     Number = GdiHandleCache->ulNumHandles[oType];
+
+     hPtr = GdiHandleCache->Handle + Offset;
+
+     if ( oType == hctRegionHandle)
+     {
+        if ( Number < CACHE_REGION_ENTRIES )
+        {
+           ((PRGN_ATTR)pAttr)->AttrFlags |= ATTR_CACHED;
+           hPtr[Number] = Handle;
+           GdiHandleCache->ulNumHandles[oType]++;
+           DPRINT("Put Handle Count %d\n", GdiHandleCache->ulNumHandles[oType]);
+           Ret = TRUE;
+        }
+     }
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+     Ret = FALSE;
+  }
+  _SEH2_END;
+
+  (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
+  return Ret;
+}
+
 /*!
  * Delete GDI object
  * \param	hObject object handle
@@ -676,11 +739,17 @@ GreDeleteObject(HGDIOBJ hObject)
        Index = GDI_HANDLE_GET_INDEX(hObject);
        Entry = &GdiHandleTable->Entries[Index];
        pAttr = Entry->UserData;
-             
+
        switch (dwObjectType)
        {
-//          case GDI_OBJECT_TYPE_BRUSH:
+          case GDI_OBJECT_TYPE_BRUSH:
+             break;
+
           case GDI_OBJECT_TYPE_REGION:
+             if (bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
+             {
+                return TRUE;
+             }
              if (pAttr) FreeObjectAttr(pAttr);
              break;
 
@@ -1484,58 +1553,6 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 }
 
 /** PUBLIC FUNCTIONS **********************************************************/
-
-/*
-  Since Brush/Pen and Region objects are sharable,,, we can just use
-  UserHeapAlloc to allocate the small attribute objects.
-
-   Example Allocating:
-
-    // Save Kernel Space Pointer
-    (PBRUSH)->pBrushAttr = IntGdiAllocObjAttr(GDIObjType_BRUSH_TYPE);
-
-    // Kernel Space to User Space Pointer
-    (PGDI_TABLE_ENTRY)->UserData = pBrushAttr;
-    // Gdi will adjust for heap delta.
-
-   Example Freeing:
-
-    (PGDI_TABLE_ENTRY)->UserData = NULL;      // Zero the user ptr.
-    UserHeapFree((PBRUSH)->pBrushAttr); // Free from kernel ptr.
-    (PBRUSH)->pBrushAttr = NULL;
-
-   Notes:
-    Testing with DC_ATTR works but has drawing difficulties.
-    Base on observation, (Over looking the obvious) we need to supply heap delta
-    to user space gdi. Now, with testing, looks all normal.
-
- */
-PVOID
-FASTCALL
-IntGdiAllocObjAttr(GDIOBJTYPE Type)
-{
-  PVOID pMemAttr = NULL;
-
-  switch( Type )
-  {
-     case GDIObjType_DC_TYPE:
-        pMemAttr = UserHeapAlloc(sizeof(DC_ATTR));
-        if (pMemAttr) RtlZeroMemory(pMemAttr, sizeof(DC_ATTR));
-        break;
-     case GDIObjType_RGN_TYPE:
-        pMemAttr = UserHeapAlloc(sizeof(RGN_ATTR));
-        if (pMemAttr) RtlZeroMemory(pMemAttr, sizeof(RGN_ATTR));
-        break;
-     case GDIObjType_BRUSH_TYPE:
-        pMemAttr = UserHeapAlloc(sizeof(BRUSH_ATTR));
-        if (pMemAttr) RtlZeroMemory(pMemAttr, sizeof(BRUSH_ATTR));
-        break;
-     default:
-        break;
-  }
-  return pMemAttr;
-}
-
 
 BOOL
 FASTCALL
