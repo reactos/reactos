@@ -218,12 +218,6 @@ NTSTATUS RawIPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
 
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
-    {
-	KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-	return STATUS_NETWORK_UNREACHABLE;
-    }
-
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
     {
@@ -231,7 +225,19 @@ NTSTATUS RawIPSendDatagram(
          * then use the unicast address of the
          * interface we're sending over
          */
+        if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
+	     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	     return STATUS_NETWORK_UNREACHABLE;
+        }
+
         LocalAddress = NCE->Interface->Unicast;
+    }
+    else
+    {
+        if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
+	     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	     return STATUS_INVALID_PARAMETER;
+        }
     }
 
     Status = BuildRawIpPacket( AddrFile,

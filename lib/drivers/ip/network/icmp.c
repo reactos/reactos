@@ -178,9 +178,6 @@ NTSTATUS ICMPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
 
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
-	return STATUS_NETWORK_UNREACHABLE;
-
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
     {
@@ -188,7 +185,15 @@ NTSTATUS ICMPSendDatagram(
          * then use the unicast address of the
          * interface we're sending over
          */
+        if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+	     return STATUS_NETWORK_UNREACHABLE;
+
         LocalAddress = NCE->Interface->Unicast;
+    }
+    else
+    {
+        if(!(NCE = NBLocateNeighbor( &LocalAddress )))
+	     return STATUS_INVALID_PARAMETER;
     }
 
     Status = PrepareICMPPacket( NCE->Interface,

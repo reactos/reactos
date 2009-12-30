@@ -631,11 +631,6 @@ NTSTATUS TCPConnect
         return Status;
     }
 
-    if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
-    {
-        return STATUS_NETWORK_UNREACHABLE;
-    }
-
     /* Freed in TCPSocketState */
     TI_DbgPrint(DEBUG_TCP,
                 ("Connecting to address %x:%x\n",
@@ -644,9 +639,29 @@ NTSTATUS TCPConnect
 
     AddressToConnect.sin_family = AF_INET;
     AddressToBind = AddressToConnect;
-    AddressToBind.sin_addr.s_addr = NCE->Interface->Unicast.Address.IPv4Address;
 
     KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
+    if (!Connection->AddressFile)
+    {
+        KeReleaseSpinLock(&Connection->Lock, OldIrql);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (AddrIsUnspecified(&Connection->AddressFile->Address))
+    {
+        if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
+        {
+            KeReleaseSpinLock(&Connection->Lock, OldIrql);
+            return STATUS_NETWORK_UNREACHABLE;
+        }
+
+        AddressToBind.sin_addr.s_addr = NCE->Interface->Unicast.Address.IPv4Address;
+    }
+    else
+    {
+        AddressToBind.sin_addr.s_addr = Connection->AddressFile->Address.Address.IPv4Address;
+    }
 
     Status = TCPTranslateError
         ( OskitTCPBind( Connection->SocketContext,
