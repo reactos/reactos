@@ -1086,9 +1086,6 @@ DWORD PNP_CreateDevInst(
 
 
 /* Function 29 */
-#define PNP_DEVINST_SETUP       0x3
-#define PNP_DEVINST_ENABLE      0x4
-#define PNP_DEVINST_REENUMERATE 0x7
 DWORD PNP_DeviceInstanceAction(
     handle_t hBinding,
     DWORD ulMajorAction,
