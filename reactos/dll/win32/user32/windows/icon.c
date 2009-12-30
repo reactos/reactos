@@ -75,8 +75,8 @@ CreateCursorIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxD
        bwBIH->bmiHeader.biPlanes = 1;
        bwBIH->bmiHeader.biSizeImage = 0;
        bwBIH->bmiHeader.biCompression = BI_RGB;
-       bwBIH->bmiHeader.biClrImportant = 0;
-       bwBIH->bmiHeader.biClrUsed = 0;
+       bwBIH->bmiHeader.biClrImportant = 2;
+       bwBIH->bmiHeader.biClrUsed = 2;
        bwBIH->bmiHeader.biXPelsPerMeter = 0;
        bwBIH->bmiHeader.biYPelsPerMeter = 0;
 
