@@ -95,7 +95,7 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
         req.window = (UINT_PTR)Window->hwnd;
         req_update_window_zorder(&req, &reply);
     }
-    DbgPrint("\n");
+    //DbgPrint("\n");
 
     /* Convert region to client coordinates */
     offset_region(ClientRegion, -Window->Window.left, -Window->Window.top);
@@ -300,8 +300,8 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect)
 {
     PSWM_WINDOW Win;
 
-    DPRINT1("SwmAddWindow %x\n", hWnd);
-    DPRINT1("rect (%d,%d)-(%d,%d)\n", WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
+    DPRINT("SwmAddWindow %x\n", hWnd);
+    DPRINT("rect (%d,%d)-(%d,%d)\n", WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
 
     /* Acquire the lock */
     SwmAcquire();
@@ -416,7 +416,7 @@ SwmRemoveWindow(HWND hWnd)
     /* Acquire the lock */
     SwmAcquire();
 
-    DPRINT1("SwmRemoveWindow %x\n", hWnd);
+    DPRINT("SwmRemoveWindow %x\n", hWnd);
 
     /* Allocate entry */
     Win = SwmFindByHwnd(hWnd);
@@ -536,9 +536,9 @@ SwmPosChanging(HWND hWnd, const RECT *WindowRect)
 
 VOID
 NTAPI
-SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
+SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags)
 {
-    PSWM_WINDOW SwmWin;
+    PSWM_WINDOW SwmWin, SwmPrev;
 
     /* Acquire the lock */
     SwmAcquire();
@@ -552,8 +552,9 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
         return;
     }
 
-    /* Check if window really moved anywhere */
-    if (WindowRect->left - OldRect->left == 0 &&
+    /* Check if window really moved anywhere (origin, size or z order) */
+    if (hWndAfter == 0 &&
+        WindowRect->left - OldRect->left == 0 &&
         WindowRect->top - OldRect->top == 0 &&
         WindowRect->right - OldRect->right == 0 &&
         WindowRect->bottom - OldRect->bottom == 0)
@@ -562,13 +563,27 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
         SwmRelease();
         return;
     }
-//DPRINT1("rect (%d,%d)-(%d,%d)\n", TmpRect.left, TmpRect.top, TmpRect.right, TmpRect.bottom);
-    DPRINT1("SwmPosChanged hwnd %x, new rect (%d,%d)-(%d,%d)\n", hWnd, WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
+
+    DPRINT("SwmPosChanged hwnd %x, new rect (%d,%d)-(%d,%d)\n", hWnd,
+        WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
 
     SwmWin->Window.left = WindowRect->left;
     SwmWin->Window.top = WindowRect->top;
     SwmWin->Window.right = WindowRect->right;
     SwmWin->Window.bottom = WindowRect->bottom;
+
+    /* Check if we need to change zorder */
+    if (hWndAfter && !(SwpFlags & SWP_NOZORDER))
+    {
+        /* Get the previous window */
+        SwmPrev = CONTAINING_RECORD(SwmWin->Entry.Blink, SWM_WINDOW, Entry);
+
+        /* Check if they are different */
+        if (SwmPrev->hwnd != hWndAfter)
+        {
+            DPRINT1("WARNING: Change in zorder is requested but ignored! Previous hwnd %x, but should be %x\n", SwmPrev->hwnd, hWndAfter);
+        }
+    }
 
     /* Recalculate all clipping */
     SwmClipAllWindows();
@@ -579,7 +594,7 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect)
 
 VOID
 NTAPI
-SwmShowWindow(HWND hWnd, BOOLEAN Show)
+SwmShowWindow(HWND hWnd, BOOLEAN Show, UINT SwpFlags)
 {
     PSWM_WINDOW Win;
     struct region *OldRegion;
@@ -601,13 +616,28 @@ SwmShowWindow(HWND hWnd, BOOLEAN Show)
     if (Show && Win->Hidden)
     {
         /* Change state from hidden to visible */
-        DPRINT1("Unhiding %x, rect (%d,%d)-(%d,%d)\n", Win->hwnd, Win->Window.left, Win->Window.top, Win->Window.right, Win->Window.bottom);
+        DPRINT("Unhiding %x, rect (%d,%d)-(%d,%d)\n", Win->hwnd, Win->Window.left, Win->Window.top, Win->Window.right, Win->Window.bottom);
         Win->Hidden = FALSE;
-        SwmBringToFront(Win);
+
+        /* Make it topmost window if needed */
+        if (!(SwpFlags & SWP_NOZORDER))
+        {
+            /* Remove it from the list */
+            RemoveEntryList(&Win->Entry);
+
+            /* Add it to the head of the list */
+            InsertHeadList(&SwmWindows, &Win->Entry);
+        }
+
+        /* Calculate visible regions for all windows */
+        SwmClipAllWindows();
+
+        /* Draw the newly appeared window */
+        SwmInvalidateRegion(Win, Win->Visible, NULL);
     }
     else if (!Show && !Win->Hidden)
     {
-        DPRINT1("Hiding %x\n", Win->hwnd);
+        DPRINT("Hiding %x\n", Win->hwnd);
         /* Change state from visible to hidden */
         Win->Hidden = TRUE;
 

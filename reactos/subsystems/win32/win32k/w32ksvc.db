@@ -91,6 +91,6 @@ SwmAddDesktopWindow                3
 SwmRemoveWindow                    1
 SwmSetForeground                   1
 SwmPosChanging                     2
-SwmPosChanged                      3
+SwmPosChanged                      5
 SwmGetWindowFromPoint              2
-SwmShowWindow                      2
+SwmShowWindow                      3

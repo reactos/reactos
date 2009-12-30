@@ -892,9 +892,6 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
                                     const RECT *visible_rect, const RECT *valid_rects )
 {
     RECT old_whole_rect, old_client_rect;
-    //RECT whole_rect = *visible_rect;
-    //RECT client_rect = *rectClient;
-
     struct ntdrv_win_data *data = NTDRV_get_win_data(hwnd);
 
     if (!data) return;
@@ -939,22 +936,13 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
 
     /* Sync position change */
     if (!(swp_flags & SWP_NOREDRAW)) // HACK: When removing this explorer's start menu start to appear partially. Investigate!
-        SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect);
+        SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect, insert_after, swp_flags);
 
     /* Pass show/hide information to the window manager */
     if (swp_flags & SWP_SHOWWINDOW)
-    {
-        if (swp_flags & SWP_NOZORDER) FIXME("no zorder change for hwnd %x, ignoring!\n", hwnd);
-        //if (swp_flags & SWP_NOACTIVATE) FIXME("no activate change, ignoring!\n");
-
-        //SwmSetForeground(hwnd);
-        SwmShowWindow(hwnd, TRUE);
-    }
+        SwmShowWindow(hwnd, TRUE, swp_flags);
     else if (swp_flags & SWP_HIDEWINDOW)
-        SwmShowWindow(hwnd, FALSE);
-
-// visible: 0x1843, hide: 0x1883. 1843 = 1 + 2 + 64 + 2048 + 4096
-    //RosDrv_UpdateZOrder(hwnd, (RECT*)visible_rect);
+        SwmShowWindow(hwnd, FALSE, swp_flags);
 }
 
 /* EOF */

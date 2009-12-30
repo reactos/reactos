@@ -169,12 +169,12 @@ VOID NTAPI
 SwmPosChanging(HWND hWnd, const RECT *WindowRect);
 
 VOID NTAPI
-SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect);
+SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags);
 
 HWND NTAPI
 SwmGetWindowFromPoint(LONG x, LONG y);
 
 VOID NTAPI
-SwmShowWindow(HWND hWnd, BOOLEAN Show);
+SwmShowWindow(HWND hWnd, BOOLEAN Show, UINT SwpFlags);
 
 #endif /* __WIN32K_NTUSER_H */
