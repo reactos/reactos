@@ -36,6 +36,7 @@
 		<include base="ntoskrnl">include</include>
 		<library>ntoskrnl</library>
 		<define name="_NTHAL_" />
+		<define name="_X86BIOS_" />
 		<file>hal.c</file>
 		<file>hal.rc</file>
 	</module>

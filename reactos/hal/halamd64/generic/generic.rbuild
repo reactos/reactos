@@ -6,6 +6,7 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
+		<define name="_X86BIOS_" />
 		<file>halinit.c</file>
 		<file>irq.S</file>
 		<file>misc.c</file>
@@ -13,6 +14,7 @@
 		<file>systimer.S</file>
 		<file>usage.c</file>
 		<file>pic.c</file>
+		<file>x86bios.c</file>
 		<pch>../include/hal.h</pch>
 	</module>
 </group>

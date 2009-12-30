@@ -172,6 +172,13 @@ HalAllocateCrashDumpRegisters(
   return NULL;
 }
 
+VOID
+NTAPI
+HalBugCheckSystem (PVOID ErrorRecord)
+{
+  UNIMPLEMENTED;
+}
+
 
 NTSTATUS
 NTAPI
@@ -248,7 +255,7 @@ VOID
 NTAPI
 HalEndSystemInterrupt(
   KIRQL Irql,
-  ULONG Unknown2)
+  ULONG Vector)
 {
   UNIMPLEMENTED;
 }
@@ -1105,5 +1112,62 @@ HalGetInterruptSource(VOID)
     UNIMPLEMENTED;
     return 0;
 }
+
+#ifdef _X86BIOS_
+NTSTATUS
+NTAPI
+x86BiosAllocateBuffer (
+    ULONG *Size,
+    USHORT *Segment,
+    USHORT *Offset)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;;
+
+}
+
+BOOLEAN
+NTAPI
+x86BiosCall (
+    ULONG InterruptNumber,
+    X86_BIOS_REGISTERS *Registers)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+NTSTATUS
+NTAPI
+x86BiosFreeBuffer (
+    USHORT Segment,
+    USHORT Offset)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;;
+}
+
+NTSTATUS
+x86BiosReadMemory (
+    USHORT Segment,
+    USHORT Offset,
+    PVOID Buffer,
+    ULONG Size)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;;
+}
+
+NTSTATUS
+NTAPI
+x86BiosWriteMemory (
+    USHORT Segment,
+    USHORT Offset,
+    PVOID Buffer,
+    ULONG Size)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;;
+}
+#endif
 
 /* EOF */

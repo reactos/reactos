@@ -246,6 +246,19 @@ typedef struct _BUS_HANDLER
     PVOID Spare8;
 } BUS_HANDLER;
 
+#ifdef _X86BIOS_
+typedef struct _X86_BIOS_REGISTERS {
+    ULONG Eax;
+    ULONG Ecx;
+    ULONG Edx;
+    ULONG Ebx;
+    ULONG Ebp;
+    ULONG Esi;
+    ULONG Edi;
+    USHORT SegDs;
+    USHORT SegEs;
+} X86_BIOS_REGISTERS, *PX86_BIOS_REGISTERS;
+#endif 
 //
 // HAL Chip Hacks
 //

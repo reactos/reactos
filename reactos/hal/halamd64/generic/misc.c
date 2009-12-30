@@ -96,6 +96,14 @@ HalSystemVectorDispatchEntry(IN ULONG Vector,
     return FALSE;
 }
 
+VOID
+NTAPI
+HalBugCheckSystem (PVOID ErrorRecord)
+{
+  UNIMPLEMENTED;
+}
+
+
 /*
  * @implemented
  */
@@ -126,3 +134,4 @@ KeQueryPerformanceCounter(
     Result.QuadPart = __rdtsc();
     return Result;
 }
+

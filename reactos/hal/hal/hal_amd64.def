@@ -9,8 +9,9 @@ HalAllProcessorsStarted
 HalAllocateAdapterChannel
 HalAllocateCommonBuffer
 HalAllocateCrashDumpRegisters
+;HalAllocateHardwareCounters
 HalAssignSlotResources
-;HalBugCheckSystem
+HalBugCheckSystem
 HalCalibratePerformanceCounter
 HalClearSoftwareInterrupt
 ;HalConvertDeviceIdtToIrql
@@ -21,6 +22,7 @@ HalDisplayString
 ;HalEnumerateProcessors
 HalFlushCommonBuffer
 HalFreeCommonBuffer
+;HalFreeHardwareCounters
 HalGetAdapter
 HalGetBusData
 HalGetBusDataByOffset
@@ -28,6 +30,7 @@ HalGetEnvironmentVariable
 ;HalGetEnvironmentVariableEx
 ;HalGetInterruptTargetInformation
 HalGetInterruptVector
+;HalGetMemoryCachingRequirements
 ;HalGetMessageRoutingInfo
 ;HalGetProcessorIdByNtNumber
 ;HalGetVectorInput
@@ -39,6 +42,8 @@ HalInitSystem
 HalInitializeProcessor
 ;HalIsHyperThreadingEnabled
 HalMakeBeep
+;HalMcUpdateReadPCIConfig
+;HalPerformEndOfInterrupt
 HalProcessorIdle
 HalQueryDisplayParameters
 ;HalQueryEnvironmentVariableInfoEx
@@ -48,6 +53,8 @@ HalReadDmaCounter
 ;HalRegisterDynamicProcessor
 ;HalRegisterErrataCallbacks
 HalReportResourceUsage
+;HalRequestClockInterrupt
+;HalRequestDeferredRecoveryServiceInterrupt
 HalRequestIpi
 HalRequestSoftwareInterrupt
 HalReturnToFirmware
@@ -67,7 +74,7 @@ HalStartProfileInterrupt
 HalStopProfileInterrupt
 HalSystemVectorDispatchEntry
 HalTranslateBusAddress
-IoAssignDriveLetters
+IoAssignDriveLetters ;not present in win7
 IoFlushAdapterBuffers
 IoFreeAdapterChannel
 IoFreeMapRegisters
@@ -79,8 +86,8 @@ KdComPortInUse DATA
 KeFlushWriteBuffer
 KeQueryPerformanceCounter
 KeStallExecutionProcessor
-;x86BiosAllocateBuffer
-;x86BiosCall
-;x86BiosFreeBuffer
-;x86BiosReadMemory
-;x86BiosWriteMemory
+x86BiosAllocateBuffer
+x86BiosCall
+x86BiosFreeBuffer
+x86BiosReadMemory
+x86BiosWriteMemory
