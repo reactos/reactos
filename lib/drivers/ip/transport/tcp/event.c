@@ -76,8 +76,8 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     return OSK_EINVAL;
     }
 
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-    TI_DbgPrint(MIN_TRACE,("No route to %s\n", A2S(&RemoteAddress)));
+    if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
+    TI_DbgPrint(MIN_TRACE,("Interface doesn't exist! %s\n", A2S(&LocalAddress)));
     return OSK_EADDRNOTAVAIL;
     }
 
