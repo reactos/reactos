@@ -37,7 +37,9 @@ HalInitializeProcessor(IN ULONG ProcessorNumber,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Set default IDR and stall count */
+#ifdef _M_IX86
     KeGetPcr()->IDR = 0xFFFFFFFB;
+#endif
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 
     /* Update the interrupt affinity and processor mask */

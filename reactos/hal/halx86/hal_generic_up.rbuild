@@ -6,9 +6,11 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHAL_" />
 		<directory name="up">
-			<file>irq.S</file>
 			<file>processor.c</file>
-			<file>spinlock.c</file>
+			<if property="ARCH" value="i386">
+				<file>irq.S</file>
+				<file>spinlock.c</file>
+			</if>
 		</directory>
 	</module>
 </group>
