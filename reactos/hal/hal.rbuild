@@ -25,7 +25,7 @@
 	</if>
 	<if property="ARCH" value="amd64">
 		<directory name="halx86">
-			<xi:include href="halx86/hal_generic_amd64.rbuild" />
+			<xi:include href="halx86/hal_generic.rbuild" />
 		</directory>
 		<directory name="halamd64">
 			<xi:include href="halamd64/directory.rbuild" />
