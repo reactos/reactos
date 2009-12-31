@@ -45,7 +45,7 @@ HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
 
 VOID
 NTAPI
-HalpSetInterruptGate(ULONG Index, PVOID address)
+HalpSetInterruptGate(ULONG index, PVOID address)
 {
   KIDTENTRY *idt;
   KIDT_ACCESS Access;
