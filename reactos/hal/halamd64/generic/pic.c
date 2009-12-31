@@ -41,71 +41,101 @@ VOID
 NTAPI
 HalpInitPICs(VOID)
 {
-     ULONG OldEflags;
-     INT x;
+    ULONG OldEflags;
+    INT x;
 
-     OldEflags = __readeflags();
-     _disable();
-     /*
-      *  Set up the first 8259 interrupt processor.
-      *  Make 8259 interrupts start at CPU vector VectorPIC.
-      *  Set the 8259 as master with edge triggered
-      *  input with fully nested interrupts.
-      */
-     __outbyte(Int0ctl, 0x20);                    /* ICW1 - master, edge triggered */
-     __outbyte(Int0aux, 0x11);                    /* Edge, cascade, CAI 8, ICW4 */
-     __outbyte(Int0aux, PRIMARY_VECTOR_BASE);     /* ICW2 - interrupt vector offset */
-     __outbyte(Int0aux, 0x04);                    /* ICW3 - have slave on level 2 */
-     __outbyte(Int0aux, 0x01);                    /* ICW4 - 8086 mode, not buffered */
-     __outbyte(Int0aux, 0xFF);                    /* Mask Interrupts */
+    OldEflags = __readeflags();
+    _disable();
+
+    /*
+     *  Set up the first 8259 interrupt processor.
+     *  Make 8259 interrupts start at CPU vector VectorPIC.
+     *  Set the 8259 as master with edge triggered
+     *  input with fully nested interrupts.
+     */
+    __outbyte(Int0ctl, 0x20);                    /* ICW1 - master, edge triggered */
+    __outbyte(Int0aux, 0x11);                    /* Edge, cascade, CAI 8, ICW4 */
+    __outbyte(Int0aux, PRIMARY_VECTOR_BASE);     /* ICW2 - interrupt vector offset */
+    __outbyte(Int0aux, 0x04);                    /* ICW3 - have slave on level 2 */
+    __outbyte(Int0aux, 0x01);                    /* ICW4 - 8086 mode, not buffered */
+    __outbyte(Int0aux, 0xFF);                    /* Mask Interrupts */
     /*
      *  Set up the second 8259 interrupt processor.
      *  Make 8259 interrupts start at CPU vector VectorPIC+8.
      *  Set the 8259 as slave with edge triggered
      *  input with fully nested interrupts.
      */
-     __outbyte(Int1ctl, 0xA0);                    /* ICW1 - master, edge triggered, */
-     __outbyte(Int1aux, 0x11);                    /* Edge, cascade, CAI 8, ICW4 */
-     __outbyte(Int1aux, PRIMARY_VECTOR_BASE+8);   /* ICW2 - interrupt vector offset */
-     __outbyte(Int1aux, 0x02);                    /* ICW3 - I am a slave on level 2 */
-     __outbyte(Int1aux, 0x01);                    /* ICW4 - 8086 mode, not buffered */
-     __outbyte(Int1aux, 0xFF);                    /* Mask Interrupts */
+    __outbyte(Int1ctl, 0xA0);                    /* ICW1 - master, edge triggered, */
+    __outbyte(Int1aux, 0x11);                    /* Edge, cascade, CAI 8, ICW4 */
+    __outbyte(Int1aux, PRIMARY_VECTOR_BASE+8);   /* ICW2 - interrupt vector offset */
+    __outbyte(Int1aux, 0x02);                    /* ICW3 - I am a slave on level 2 */
+    __outbyte(Int1aux, 0x01);                    /* ICW4 - 8086 mode, not buffered */
+    __outbyte(Int1aux, 0xFF);                    /* Mask Interrupts */
 
 
-     /*
-      *  pass #2 8259 interrupts to #1
-      */
-     i8259mask &= ~0x04;
-     __outbyte(Int0aux, i8259mask & 0xFF);
+    /*
+     *  pass #2 8259 interrupts to #1
+     */
+    i8259mask &= ~0x04;
+    __outbyte(Int0aux, i8259mask & 0xFF);
 
-     /*
-      * Set Ocw3 to return the ISR when ctl read.
-      * After initialisation status read is set to IRR.
-      * Read IRR first to possibly deassert an outstanding
-      * interrupt.
-      */
-     __inbyte (Int0ctl);
-     __outbyte(Int0ctl, Ocw3|0x03);
-     __inbyte (Int1ctl);
-     __outbyte(Int1ctl, Ocw3|0x03);
+    /*
+     * Set Ocw3 to return the ISR when ctl read.
+     * After initialisation status read is set to IRR.
+     * Read IRR first to possibly deassert an outstanding
+     * interrupt.
+     */
+    __inbyte (Int0ctl);
+    __outbyte(Int0ctl, Ocw3|0x03);
+    __inbyte (Int1ctl);
+    __outbyte(Int1ctl, Ocw3|0x03);
 
-     /*
-      * Check for Edge/Level register.
-      * This check may not work for all chipsets.
-      * First try a non-intrusive test - the bits for
-      * IRQs 13, 8, 2, 1 and 0 must be edge (0). If
-      * that's OK try a R/W test.
-      */
-     x = (__inbyte (Elcr2)<<8)|__inbyte(Elcr1);
-     if(!(x & 0x2107)){
-             __outbyte(Elcr1, 0);
-             if(__inbyte (Elcr1) == 0){
-                     __outbyte(Elcr1, 0x20);
-                     if(__inbyte (Elcr1) == 0x20)
-                             i8259elcr = x;
-                     __outbyte(Elcr1, x & 0xFF);
-                     DPRINT("ELCR: %4.4uX\n", i8259elcr);
-             }
-     }
-     __writeeflags(OldEflags);
- }
+    /*
+     * Check for Edge/Level register.
+     * This check may not work for all chipsets.
+     * First try a non-intrusive test - the bits for
+     * IRQs 13, 8, 2, 1 and 0 must be edge (0). If
+     * that's OK try a R/W test.
+     */
+    x = (__inbyte(Elcr2) << 8) | __inbyte(Elcr1);
+
+    if (!(x & 0x2107))
+    {
+        __outbyte(Elcr1, 0);
+
+        if (__inbyte (Elcr1) == 0)
+        {
+            __outbyte(Elcr1, 0x20);
+
+            if (__inbyte (Elcr1) == 0x20)
+            {
+                i8259elcr = x;
+            }
+            __outbyte(Elcr1, x & 0xFF);
+            DPRINT("ELCR: %4.4uX\n", i8259elcr);
+        }
+    }
+
+    __writeeflags(OldEflags);
+}
+
+VOID
+NTAPI
+HalDisableSystemInterrupt(
+    ULONG Vector,
+    KIRQL Irql)
+{
+    UNIMPLEMENTED;
+}
+
+BOOLEAN
+NTAPI
+HalEnableSystemInterrupt(
+    ULONG Vector,
+    KIRQL Irql,
+    KINTERRUPT_MODE InterruptMode)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
