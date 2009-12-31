@@ -25,8 +25,7 @@ NTAPI
 HalInitializeProcessor(IN ULONG ProcessorNumber,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* Set default IDR and stall count */
-//    KeGetPcr()->IDR = 0xFFFFFFFB;
+    /* Set default stall count */
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 
     /* Update the interrupt affinity and processor mask */
@@ -36,6 +35,9 @@ HalInitializeProcessor(IN ULONG ProcessorNumber,
 
     /* Register routines for KDCOM */
     HalpRegisterKdSupportFunctions();
+
+    /* Do per CPU interrupt handling initialization */
+//    HalpInitCpuInterruptHandling(ProcessorNumber);
 }
 
 /*

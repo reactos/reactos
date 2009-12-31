@@ -62,7 +62,7 @@ HalInitSystem(IN ULONG BootPhase,
     PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* Check the boot phase */
-    if (!BootPhase)
+    if (BootPhase == 0)
     {
         /* Phase 0... save bus type */
         HalpBusType = LoaderBlock->u.I386.MachineType & 0xFF;
@@ -70,8 +70,8 @@ HalInitSystem(IN ULONG BootPhase,
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
 
-        /* Checked HAL requires checked kernel */
 #if DBG
+        /* Checked HAL requires checked kernel */
         if (!(Prcb->BuildType & PRCB_BUILD_DEBUG))
         {
             /* No match, bugcheck */
@@ -101,18 +101,21 @@ HalInitSystem(IN ULONG BootPhase,
             /* Validation failed, bugcheck */
             KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
         }
-DPRINT1("HalInitSystem 2\n");
+
+        DPRINT1("HalInitSystem 1\n");
+
         /* Initialize the PICs */
         HalpInitPICs();
-DPRINT1("HalInitSystem 3\n");
-        /* Force initial PIC state */
-        KfRaiseIrql(KeGetCurrentIrql());
-DPRINT1("HalInitSystem 4\n");
+
+        DPRINT1("HalInitSystem 2\n");
+
         /* Initialize the clock */
         HalpInitializeClock();
-DPRINT1("HalInitSystem 5\n");
-        /* Setup busy waiting */
-        //HalpCalibrateStallExecution();
+
+        DPRINT1("HalInitSystem 3\n");
+
+        /* Calibrate counters */
+//        HalpCalibrateCounters();
 
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
@@ -121,7 +124,9 @@ DPRINT1("HalInitSystem 5\n");
 //        HalGetDmaAdapter = HalpGetDmaAdapter;
         HalGetInterruptTranslator = NULL;  // FIXME: TODO
 //        HalResetDisplay = HalpBiosDisplayReset;
-DPRINT1("HalInitSystem 6\n");
+
+        DPRINT1("HalInitSystem 4\n");
+
         /* Initialize the hardware lock (CMOS) */
         KeInitializeSpinLock(&HalpSystemHardwareLock);
 
@@ -134,11 +139,8 @@ DPRINT1("HalInitSystem 6\n");
         //HalpInitBusHandler();
 
         /* Enable the clock interrupt */
-        PKIDTENTRY64 IdtEntry = &((PKIPCR)KeGetPcr())->IdtBase[0x30];
-        IdtEntry->OffsetLow = (((ULONG_PTR)HalpClockInterrupt) & 0xFFFF);
-        IdtEntry->OffsetMiddle = (((ULONG_PTR)HalpClockInterrupt >> 16) & 0xFFFF);
-        IdtEntry->OffsetHigh = ((ULONG_PTR)HalpClockInterrupt >> 32);
-//        HalEnableSystemInterrupt(0x30, CLOCK_LEVEL, Latched);
+        HalpSetInterruptGate(0x30, HalpClockInterrupt);
+        HalEnableSystemInterrupt(0x30, CLOCK_LEVEL, Latched);
 
         /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();

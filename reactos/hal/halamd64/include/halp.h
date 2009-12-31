@@ -164,6 +164,10 @@ HalpGetDmaAdapter(
 VOID HaliInitBSP(VOID);
 VOID HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack);
 
+VOID NTAPI HalpInitIdtEntry(PKIDTENTRY64 Idt, PVOID Address);
+VOID NTAPI HalpSetInterruptGate(ULONG Index, PVOID Address);
+VOID NTAPI HalpInitCpuInterruptHandling(ULONG Cpu);
+
 extern PVOID HalpRealModeStart;
 extern PVOID HalpRealModeEnd;
 
