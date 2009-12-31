@@ -16,12 +16,14 @@
 			<file>ioapic.c</file>
 			<file>ipi_mp.c</file>
 			<file>mpconfig.c</file>
-			<file>mps.S</file>
-			<file>mpsboot.asm</file>
 			<file>mpsirql.c</file>
 			<file>processor_mp.c</file>
-			<file>spinlock.c</file>
 			<file>halmp.rc</file>
+			<directory name="i386">
+				<file>mps.S</file>
+				<file>mpsboot.asm</file>
+				<file>spinlock.c</file>
+			</directory>
 		</directory>
 	</module>
 </group>

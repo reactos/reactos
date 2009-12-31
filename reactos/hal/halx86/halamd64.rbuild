@@ -7,7 +7,6 @@
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_NTHAL_" />
-	<library>hal_generic_amd64</library>
 	<library>hal_generic</library>
 	<library>hal_generic_up</library>
 	<library>ntoskrnl</library>
@@ -17,7 +16,9 @@
 		<file>halup.rc</file>
 	</directory>
 
-	<!--directory name="mp">
-		<file>apic.c</file>
-	</directory -->
+	<directory name="mp">
+		<directory name="amd64">
+			<file>mps.S</file>
+		</directory>
+	</directory>
 </module>

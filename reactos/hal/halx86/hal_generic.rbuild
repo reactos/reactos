@@ -38,8 +38,12 @@
 			</if>
 			<if property="ARCH" value="amd64">
 				<directory name="amd64">
+					<file>halinit.c</file>
 					<file>irq.s</file>
+					<file>misc.c</file>
+					<file>pic.c</file>
 					<file>systimer.S</file>
+					<file>usage.c</file>
 				</directory>
 			</if>
 		</directory>

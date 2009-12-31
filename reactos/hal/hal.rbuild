@@ -15,9 +15,4 @@
 			<xi:include href="halarm/directory.rbuild" />
 		</directory>
 	</if>
-	<if property="ARCH" value="amd64">
-		<directory name="halamd64">
-			<xi:include href="halamd64/directory.rbuild" />
-		</directory>
-	</if>
 </group>
