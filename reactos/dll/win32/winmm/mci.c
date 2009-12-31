@@ -2249,12 +2249,12 @@ YIELDPROC WINAPI mciGetYieldProc(MCIDEVICEID uDeviceID, DWORD* lpdwYieldData)
 /**************************************************************************
  * 				mciGetCreatorTask		[WINMM.@]
  */
-HANDLE WINAPI mciGetCreatorTask(MCIDEVICEID uDeviceID)
+HTASK WINAPI mciGetCreatorTask(MCIDEVICEID uDeviceID)
 {
     LPWINE_MCIDRIVER	wmd;
-    HANDLE ret = 0;
+    HTASK ret = 0;
 
-    if ((wmd = MCI_GetDriver(uDeviceID))) ret = wmd->CreatorThread;
+    if ((wmd = MCI_GetDriver(uDeviceID))) ret = (HTASK)wmd->CreatorThread;
 
     TRACE("(%u) => %p\n", uDeviceID, ret);
     return ret;
