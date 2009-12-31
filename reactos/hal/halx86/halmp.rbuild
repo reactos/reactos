@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<module name="halmp" type="kernelmodedll" entrypoint="0">
+	<module name="halmp" type="kernelmodedll" entrypoint="HalInitSystem@8">
 		<importlibrary base="hal" definition="../hal.pspec" />
 		<bootstrap installbase="$(CDOUTPUT)" />
 		<include>include</include>

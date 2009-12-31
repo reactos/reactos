@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="hal" type="kernelmodedll">
+<module name="hal" type="kernelmodedll" entrypoint="HalInitSystem">
 	<importlibrary definition="../../hal/hal.pspec" />
 	<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
 	<include base="halppc_generic">../include</include>
