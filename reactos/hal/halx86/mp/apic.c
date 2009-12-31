@@ -848,44 +848,6 @@ APICCalibrateTimer(ULONG CPU)
 	  CPUMap[CPU].BusSpeed%1000000);
 }
 
-VOID 
-SetInterruptGate(ULONG index, ULONG_PTR address)
-{
-#ifdef _M_AMD64
-  KIDTENTRY64 *idt;
-
-  idt = &KeGetPcr()->IdtBase[index];
-
-  idt->OffsetLow = address & 0xffff;
-  idt->Selector = KGDT_64_R0_CODE;
-  idt->IstIndex = 0;
-  idt->Reserved0 = 0;
-  idt->Type = 0x0e;
-  idt->Dpl = 0;
-  idt->Present = 1;
-  idt->OffsetMiddle = (address >> 16) & 0xffff;
-  idt->OffsetHigh = address >> 32;
-  idt->Reserved1 = 0;
-  idt->Alignment = 0;
-#else
-  KIDTENTRY *idt;
-  KIDT_ACCESS Access;
-
-  /* Set the IDT Access Bits */
-  Access.Reserved = 0;
-  Access.Present = 1;
-  Access.Dpl = 0; /* Kernel-Mode */
-  Access.SystemSegmentFlag = 0;
-  Access.SegmentType = I386_INTERRUPT_GATE;
-  
-  idt = (KIDTENTRY*)((ULONG)KeGetPcr()->IDT + index * sizeof(KIDTENTRY));
-  idt->Offset = (USHORT)(address & 0xffff);
-  idt->Selector = KGDT_R0_CODE;
-  idt->Access = Access.Value;
-  idt->ExtendedOffset = (USHORT)(address >> 16);
-#endif
-}
-
 VOID HaliInitBSP(VOID)
 {
 #ifdef CONFIG_SMP
@@ -904,11 +866,11 @@ VOID HaliInitBSP(VOID)
    BSPInitialized = TRUE;
 
    /* Setup interrupt handlers */
-   SetInterruptGate(LOCAL_TIMER_VECTOR, (ULONG_PTR)MpsTimerInterrupt);
-   SetInterruptGate(ERROR_VECTOR, (ULONG_PTR)MpsErrorInterrupt);
-   SetInterruptGate(SPURIOUS_VECTOR, (ULONG_PTR)MpsSpuriousInterrupt);
+   HalpSetInterruptGate(LOCAL_TIMER_VECTOR, MpsTimerInterrupt);
+   HalpSetInterruptGate(ERROR_VECTOR, MpsErrorInterrupt);
+   HalpSetInterruptGate(SPURIOUS_VECTOR, MpsSpuriousInterrupt);
 #ifdef CONFIG_SMP
-   SetInterruptGate(IPI_VECTOR, (ULONG_PTR)MpsIpiInterrupt);
+   HalpSetInterruptGate(IPI_VECTOR, MpsIpiInterrupt);
 #endif
    DPRINT1("APIC is mapped at 0x%p\n", (PVOID)APICBase);
 

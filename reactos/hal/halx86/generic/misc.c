@@ -43,6 +43,27 @@ HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
     MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
 }
 
+VOID
+NTAPI
+HalpSetInterruptGate(ULONG Index, PVOID address)
+{
+  KIDTENTRY *idt;
+  KIDT_ACCESS Access;
+
+  /* Set the IDT Access Bits */
+  Access.Reserved = 0;
+  Access.Present = 1;
+  Access.Dpl = 0; /* Kernel-Mode */
+  Access.SystemSegmentFlag = 0;
+  Access.SegmentType = I386_INTERRUPT_GATE;
+  
+  idt = (KIDTENTRY*)((ULONG)KeGetPcr()->IDT + index * sizeof(KIDTENTRY));
+  idt->Offset = (USHORT)((ULONG_PTR)address & 0xffff);
+  idt->Selector = KGDT_R0_CODE;
+  idt->Access = Access.Value;
+  idt->ExtendedOffset = (USHORT)((ULONG_PTR)address >> 16);
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -103,3 +124,4 @@ KeFlushWriteBuffer(VOID)
     /* Not implemented on x86 */
     return;
 }
+

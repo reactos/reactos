@@ -235,6 +235,10 @@ HalpReleaseCmosSpinLock(
     VOID
 );
 
+VOID
+NTAPI
+HalpSetInterruptGate(ULONG Index, PVOID Address);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #ifndef CONFIG_SMP
