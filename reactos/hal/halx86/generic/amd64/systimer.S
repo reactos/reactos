@@ -14,9 +14,6 @@
 
 .data
 
-_UnhandledMsg:
-    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
-
 .global _MsgUnimplemented
 _MsgUnimplemented:
 .asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
@@ -26,18 +23,6 @@ _MsgUnimplemented:
 
 .text
 .code64
-
-.global _HalpReleaseCmosSpinLock
-.func HalpReleaseCmosSpinLock
-_HalpReleaseCmosSpinLock:
-
-.endfunc
-
-.global _HalpAcquireSystemHardwareSpinLock
-.func HalpAcquireSystemHardwareSpinLock
-_HalpAcquireSystemHardwareSpinLock:
-
-.endfunc
 
 .global _HalpCalibrateStallExecution@0
 .func HalpCalibrateStallExecution@0

@@ -5,6 +5,7 @@
  * PURPOSE:         CMOS Access Routines (Real Time Clock and LastKnownGood)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -17,8 +18,50 @@
 
 KSPIN_LOCK HalpSystemHardwareLock;
 UCHAR HalpCmosCenturyOffset;
+ULONG HalpSystemHardwareFlags;
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+HalpAcquireSystemHardwareSpinLock(VOID)
+{
+    ULONG Flags;
+
+    /* Get flags and disable interrupts */
+    Flags = __readeflags();
+    _disable();
+
+    /* Try to acquire the lock */
+    while (InterlockedBitTestAndSet((PLONG)&HalpSystemHardwareLock, 0))
+    {
+        /* Lock is held, short wait and try again */
+        YieldProcessor();
+    }
+
+    /* We have the lock, save the flags now */
+    HalpSystemHardwareFlags = Flags;
+}
+
+VOID
+NTAPI
+HalpReleaseCmosSpinLock(VOID)
+{
+    ULONG Flags;
+
+    /* Get the flags */
+    Flags = HalpSystemHardwareFlags;
+
+    /* Release lock and check if we owned it */
+    if (!InterlockedBitTestAndReset((PLONG)&HalpSystemHardwareLock, 0))
+    {
+        /* The spin lock was not owned! */
+        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, 0, 0, 0, 0);
+    }
+
+    /* Restore the flags */
+    __writeeflags(Flags);
+}
 
 FORCEINLINE
 UCHAR
