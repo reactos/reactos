@@ -1,4 +1,5 @@
 #include "include/reactos/msvctarget.h"
+#undef i386
 
 #ifdef _M_ARM
 @ fastcall ExAcquireFastMutex(ptr)
