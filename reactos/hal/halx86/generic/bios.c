@@ -254,18 +254,8 @@ HalpBiosDisplayReset(VOID)
      * the cmpxchg8b lock errata. Unprotect them here so we can set our custom
      * invalid op-code handler.
      */
-    if (KeGetCurrentPrcb()->CpuType == 5)
-    {
-        /* Get the PTE and check if it is has been write protected yet  */
-        IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
-        if (IdtPte->Write == 0)
-        {
-            /* Remove the protection and flush the TLB */
-            IdtPte->Write = 1;
-            __writecr3(__readcr3());
-            RestoreWriteProtection = TRUE;
-        }
-    }
+    IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
+    RestoreWriteProtection = IdtPte->Write;
 
     /* Use special invalid opcode and GPF trap handlers */
     HalpSwitchToRealModeTrapHandlers();
@@ -279,15 +269,9 @@ HalpBiosDisplayReset(VOID)
     /* Restore kernel trap handlers */
     HalpRestoreTrapHandlers();
 
-    /* Check if we removed the write protection before */
-    if (RestoreWriteProtection)
-    {
-        /* Get the PTE, restore the write protection and flush the TLB */
-        IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
-        IdtPte->Write = 0;
-        __writecr3(__readcr3());
-    }
-    
+    /* Restore write permission */
+    IdtPte->Write = RestoreWriteProtection;
+
     /* Restore TSS and IOPM */
     HalpRestoreIoPermissionsAndTask();
     
