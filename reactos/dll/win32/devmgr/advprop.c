@@ -440,6 +440,338 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
 
 
 static VOID
+SetListViewText(HWND hwnd,
+                INT iItem,
+                LPWSTR lpText)
+{
+    LVITEM li;
+
+    li.mask = LVIF_TEXT | LVIF_STATE;
+    li.iItem = iItem;
+    li.iSubItem = 0;
+    li.state = 0; //(li.iItem == 0 ? LVIS_SELECTED : 0);
+    li.stateMask = LVIS_SELECTED;
+    li.pszText = lpText;
+    (void)ListView_InsertItem(hwnd,
+                              &li);
+}
+
+
+static VOID
+UpdateDetailsDlg(IN HWND hwndDlg,
+                 IN PDEVADVPROP_INFO dap)
+{
+    HWND hwndComboBox;
+    HWND hwndListView;
+    LV_COLUMN lvc;
+    RECT rcClient;
+
+    UINT i;
+    UINT Properties[] =
+    {
+        IDS_PROP_DEVICEID,
+        IDS_PROP_HARDWAREID,
+        IDS_PROP_COMPATIBLEIDS,
+        IDS_PROP_MATCHINGDEVICEID,
+        IDS_PROP_SERVICE,
+        IDS_PROP_ENUMERATOR,
+        IDS_PROP_DEVNODEFLAGS,
+        IDS_PROP_CONFIGFLAGS,
+        IDS_PROP_CSCONFIGFLAGS,
+        IDS_PROP_EJECTRELATIONS,
+        IDS_PROP_REMOVALRELATIONS,
+        IDS_PROP_BUSRELATIONS,
+        IDS_PROP_DEVUPPERFILTERS,
+        IDS_PROP_DEVLOWERFILTERS,
+        IDS_PROP_CLASSUPPERFILTERS,
+        IDS_PROP_CLASSLOWERFILTERS,
+        IDS_PROP_CLASSINSTALLER,
+        IDS_PROP_CLASSCOINSTALLER,
+        IDS_PROP_DEVICECOINSTALLER
+    };
+
+
+    /* set the device image */
+    SendDlgItemMessage(hwndDlg,
+                       IDC_DEVICON,
+                       STM_SETICON,
+                       (WPARAM)dap->hDevIcon,
+                       0);
+
+    /* set the device name edit control text */
+    SetDlgItemText(hwndDlg,
+                   IDC_DEVNAME,
+                   dap->szDevName);
+
+
+    hwndComboBox = GetDlgItem(hwndDlg,
+                              IDC_DETAILSPROPNAME);
+
+    hwndListView = GetDlgItem(hwndDlg,
+                              IDC_DETAILSPROPVALUE);
+
+    for (i = 0; i != sizeof(Properties) / sizeof(Properties[0]); i++)
+    {
+        /* fill in the device usage combo box */
+        if (LoadString(hDllInstance,
+                       Properties[i],
+                       dap->szTemp,
+                       sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+        {
+            SendMessage(hwndComboBox,
+                        CB_ADDSTRING,
+                        0,
+                        (LPARAM)dap->szTemp);
+        }
+    }
+
+
+    GetClientRect(hwndListView,
+                  &rcClient);
+
+    /* add a column to the list view control */
+    lvc.mask = LVCF_FMT | LVCF_WIDTH;
+    lvc.fmt = LVCFMT_LEFT;
+    lvc.cx = rcClient.right;
+    (void)ListView_InsertColumn(hwndListView,
+                                0,
+                                &lvc);
+
+    SendMessage(hwndComboBox,
+                CB_SETCURSEL,
+                0,
+                0);
+
+    SetListViewText(hwndListView, 0, dap->szDeviceID);
+}
+
+
+static VOID
+SetDevicePropertyText(IN PDEVADVPROP_INFO dap,
+                      IN HWND hwndListView,
+                      IN DWORD dwProperty)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    DWORD dwType;
+    DWORD dwSize;
+    LPBYTE lpBuffer;
+    LPWSTR lpStr;
+    INT len;
+    INT index;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    dwSize = 0;
+    SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          dwProperty,
+                                          &dwType,
+                                          NULL,
+                                          0,
+                                          &dwSize);
+    if (dwSize == 0)
+    {
+        swprintf(dap->szTemp, L"Error: Getting the size failed! (Error: %ld)", GetLastError());
+        SetListViewText(hwndListView, 0, dap->szTemp);
+        return;
+    }
+
+    lpBuffer = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         dwSize);
+    if (lpBuffer == NULL)
+    {
+        SetListViewText(hwndListView, 0, L"Error: Allocating the buffer failed!");
+        return;
+    }
+
+    if (SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                         DeviceInfoData,
+                                         dwProperty,
+                                         &dwType,
+                                         lpBuffer,
+                                         dwSize,
+                                         &dwSize))
+    {
+        if (dwType == REG_SZ)
+        {
+            SetListViewText(hwndListView, 0, (LPWSTR)lpBuffer);
+        }
+        else if (dwType == REG_MULTI_SZ)
+        {
+            lpStr = (LPWSTR)lpBuffer;
+            index = 0;
+            while (*lpStr != 0)
+            {
+                len = wcslen(lpStr) + 1;
+
+                SetListViewText(hwndListView, index, lpStr);
+
+                lpStr += len;
+                index++;
+            }
+        }
+        else
+        {
+            SetListViewText(hwndListView, 0, L"Error: Unsupported value type!");
+
+        }
+    }
+    else
+    {
+        SetListViewText(hwndListView, 0, L"Error: Retrieving the value failed!");
+    }
+
+    HeapFree(GetProcessHeap(),
+             0,
+             lpBuffer);
+}
+
+
+
+static VOID
+DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
+                        IN HWND hwndComboBox,
+                        IN HWND hwndListView)
+{
+    INT Index;
+
+    Index = (INT)SendMessage(hwndComboBox,
+                             CB_GETCURSEL,
+                             0,
+                             0);
+    if (Index == CB_ERR)
+        return;
+
+    (void)ListView_DeleteAllItems(hwndListView);
+
+    switch (Index)
+    {
+        case 0:
+            SetListViewText(hwndListView, 0, dap->szDeviceID);
+            break;
+
+
+        case 1: /* Hardware ID */
+            SetDevicePropertyText(dap,
+                                  hwndListView,
+                                  SPDRP_HARDWAREID);
+            break;
+
+        case 2: /* Compatible IDs */
+            SetDevicePropertyText(dap,
+                                  hwndListView,
+                                  SPDRP_COMPATIBLEIDS);
+            break;
+
+        case 4: /* Service */
+            SetDevicePropertyText(dap,
+                                  hwndListView,
+                                  SPDRP_SERVICE);
+            break;
+
+        case 5: /* Enumerator */
+            SetDevicePropertyText(dap,
+                                  hwndListView,
+                                  SPDRP_ENUMERATOR_NAME);
+            break;
+
+        case 12: /* Upper Filters */
+            SetDevicePropertyText(dap,
+                                  hwndListView,
+                                  SPDRP_UPPERFILTERS);
+            break;
+
+        case 13: /* Lower Filters */
+            SetDevicePropertyText(dap,
+                                  hwndListView,
+                                  SPDRP_LOWERFILTERS);
+            break;
+
+        default:
+            SetListViewText(hwndListView, 0, L"<Not implemented yet>");
+            break;
+    }
+}
+
+
+static INT_PTR
+CALLBACK
+AdvProcDetailsDlgProc(IN HWND hwndDlg,
+                      IN UINT uMsg,
+                      IN WPARAM wParam,
+                      IN LPARAM lParam)
+{
+    PDEVADVPROP_INFO dap;
+    INT_PTR Ret = FALSE;
+
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
+                                             DWL_USER);
+
+    if (dap != NULL || uMsg == WM_INITDIALOG)
+    {
+        switch (uMsg)
+        {
+            case WM_COMMAND:
+            {
+                switch (LOWORD(wParam))
+                {
+                    case IDC_DETAILSPROPNAME:
+                        if (HIWORD(wParam) == CBN_SELCHANGE)
+                        {
+                            DisplayDeviceProperties(dap,
+                                                    GetDlgItem(hwndDlg, IDC_DETAILSPROPNAME),
+                                                    GetDlgItem(hwndDlg, IDC_DETAILSPROPVALUE));
+                        }
+                        break;
+                }
+                break;
+            }
+
+            case WM_NOTIFY:
+            {
+                NMHDR *hdr = (NMHDR*)lParam;
+                switch (hdr->code)
+                {
+                    case PSN_APPLY:
+                        break;
+                }
+                break;
+            }
+
+            case WM_INITDIALOG:
+            {
+                dap = (PDEVADVPROP_INFO)((LPPROPSHEETPAGE)lParam)->lParam;
+                if (dap != NULL)
+                {
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_USER,
+                                     (DWORD_PTR)dap);
+
+                    UpdateDetailsDlg(hwndDlg,
+                                     dap);
+                }
+                Ret = TRUE;
+                break;
+            }
+        }
+    }
+
+    return Ret;
+}
+
+
+static VOID
 InitDevUsageActions(IN HWND hwndDlg,
                     IN HWND hComboBox,
                     IN PDEVADVPROP_INFO dap)
@@ -1021,6 +1353,9 @@ GetParentNode:
     if (dap->HasDriverPage)
         dap->nDevPropSheets++;
 
+    /* include the details page */
+    dap->nDevPropSheets++;
+
     /* add the device property sheets */
     if (dap->nDevPropSheets != 0)
     {
@@ -1092,6 +1427,36 @@ GetParentNode:
                     }
                 }
             }
+
+            if (1)
+            {
+                PROPSHEETPAGE pspDetails = {0};
+                pspDetails.dwSize = sizeof(PROPSHEETPAGE);
+                pspDetails.dwFlags = PSP_DEFAULT;
+                pspDetails.hInstance = hDllInstance;
+                pspDetails.pszTemplate = (LPCWSTR)MAKEINTRESOURCE(IDD_DEVICEDETAILS);
+                pspDetails.pfnDlgProc = AdvProcDetailsDlgProc;
+                pspDetails.lParam = (LPARAM)dap;
+                dap->DevPropSheets[iPage] = dap->pCreatePropertySheetPageW(&pspDetails);
+                if (dap->DevPropSheets[iPage] != NULL)
+                {
+                    if (PropSheet_AddPage(hPropSheetDlg,
+                                          dap->DevPropSheets[iPage]))
+                    {
+                        iPage++;
+                        RecalcPages = TRUE;
+                    }
+                    else
+                    {
+                        dap->pDestroyPropertySheetPage(dap->DevPropSheets[iPage]);
+                        dap->DevPropSheets[iPage] = NULL;
+                    }
+                }
+            }
+
+            /* FIXME: Add the resources page */
+
+            /* FIXME: Add the power page */
         }
         else
             dap->nDevPropSheets = 0;
