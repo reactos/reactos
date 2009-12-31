@@ -72,10 +72,9 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     KIRQL OldIrql;
 
     ASSERT(Connection);
-    ASSERT_KM_POINTER(Connection->SocketContext);
     ASSERT_KM_POINTER(Connection->AddressFile);
 
-    KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+    LockObject(Connection, &OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
 
@@ -97,7 +96,7 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     if (NT_SUCCESS(Status))
         Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext, Backlog ) );
 
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("TCPListen finished %x\n", Status));
 
@@ -111,7 +110,7 @@ BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     KIRQL OldIrql;
     BOOLEAN Found = FALSE;
 
-    KeAcquireSpinLock(&Listener->Lock, &OldIrql);
+    LockObject(Listener, &OldIrql);
 
     ListEntry = Listener->ListenRequest.Flink;
     while ( ListEntry != &Listener->ListenRequest ) {
@@ -127,7 +126,7 @@ BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     ListEntry = ListEntry->Flink;
     }
 
-    KeReleaseSpinLock(&Listener->Lock, OldIrql);
+    UnlockObject(Listener, OldIrql);
 
     return Found;
 }
@@ -144,26 +143,26 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
 
     TI_DbgPrint(DEBUG_TCP,("TCPAccept started\n"));
 
-    KeAcquireSpinLock(&Listener->Lock, &OldIrql);
+    LockObject(Listener, &OldIrql);
 
     Status = TCPServiceListeningSocket( Listener, Connection,
                        (PTDI_REQUEST_KERNEL)Request );
-
-    KeReleaseSpinLock(&Listener->Lock, OldIrql);
 
     if( Status == STATUS_PENDING ) {
         Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket),
                                         TDI_BUCKET_TAG );
 
         if( Bucket ) {
+            ReferenceObject(Connection);
             Bucket->AssociatedEndpoint = Connection;
             Bucket->Request.RequestNotifyObject = Complete;
             Bucket->Request.RequestContext = Context;
-            ExInterlockedInsertTailList( &Listener->ListenRequest, &Bucket->Entry,
-                                         &Listener->Lock );
+            InsertTailList( &Listener->ListenRequest, &Bucket->Entry );
         } else
             Status = STATUS_NO_MEMORY;
     }
+
+    UnlockObject(Listener, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("TCPAccept finished %x\n", Status));
     return Status;

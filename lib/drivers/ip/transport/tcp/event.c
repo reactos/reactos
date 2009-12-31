@@ -24,25 +24,16 @@ int TCPSocketState(void *ClientData,
                NewState & SEL_ACCEPT  ? 'A' : 'a',
                NewState & SEL_WRITE   ? 'W' : 'w'));
 
-    if (!Connection)
-    {
-        return 0;
-    }
-
-    if (ClientInfo.Unlocked)
-        KeAcquireSpinLockAtDpcLevel(&Connection->Lock);
+    ASSERT(Connection);
 
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
                NewState, Connection,
                Connection->SignalState ^ NewState,
                NewState));
 
-    Connection->SignalState |= NewState;
+    Connection->SignalState = NewState;
 
     HandleSignalledConnection(Connection);
-
-    if (ClientInfo.Unlocked)
-        KeReleaseSpinLockFromDpcLevel(&Connection->Lock);
 
     return 0;
 }
@@ -76,8 +67,8 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     return OSK_EINVAL;
     }
 
-    if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
-    TI_DbgPrint(MIN_TRACE,("Interface doesn't exist! %s\n", A2S(&LocalAddress)));
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
+    TI_DbgPrint(MIN_TRACE,("Unable to get route to %s\n", A2S(&RemoteAddress)));
     return OSK_EADDRNOTAVAIL;
     }
 

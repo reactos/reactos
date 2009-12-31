@@ -285,16 +285,11 @@ int OskitTCPShutdown( void *socket, int disconn_type ) {
 
 int OskitTCPClose( void *socket ) {
     int error;
-    struct socket *so = socket;
 
     if (!socket)
         return OSK_ESHUTDOWN;
 
     OSKLock();
-    /* We have to remove the socket context here otherwise we end up
-     * back in HandleSignalledConnection with a freed connection context
-     */
-    so->so_connection = NULL;
     error = soclose( socket );
     OSKUnlock();
 

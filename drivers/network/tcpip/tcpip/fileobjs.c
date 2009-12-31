@@ -153,7 +153,55 @@ VOID AddrFileFree(
  *     Object = Pointer to address file object to free
  */
 {
-    ExFreePoolWithTag(Object, ADDR_FILE_TAG);
+  PADDRESS_FILE AddrFile = Object;
+  KIRQL OldIrql;
+  PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
+  PDATAGRAM_SEND_REQUEST SendRequest;
+  PLIST_ENTRY CurrentEntry;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
+  /* Remove address file from the global list */
+  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
+  RemoveEntryList(&AddrFile->ListEntry);
+  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
+
+  /* FIXME: Kill TCP connections on this address file object */
+
+  /* Return pending requests with error */
+
+  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
+
+  /* Go through pending receive request list and cancel them all */
+  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
+    ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
+    (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
+    /* ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG); FIXME: WTF? */
+  }
+
+  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
+
+  /* Go through pending send request list and cancel them all */
+  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
+    SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
+    (*SendRequest->Complete)(SendRequest->Context, STATUS_CANCELLED, 0);
+    ExFreePoolWithTag(SendRequest, DATAGRAM_SEND_TAG);
+  }
+
+  /* Protocol specific handling */
+  switch (AddrFile->Protocol) {
+  case IPPROTO_TCP:
+    TCPFreePort( AddrFile->Port );
+    break;
+
+  case IPPROTO_UDP:
+    UDPFreePort( AddrFile->Port );
+    break;
+  }
+
+  RemoveEntityByContext(AddrFile);
+
+  ExFreePoolWithTag(Object, ADDR_FILE_TAG);
 }
 
 
@@ -200,6 +248,7 @@ NTSTATUS FileOpenAddress(
 
   RtlZeroMemory(AddrFile, sizeof(ADDRESS_FILE));
 
+  AddrFile->RefCount = 1;
   AddrFile->Free = AddrFileFree;
 
   /* Set our default TTL */
@@ -321,64 +370,24 @@ NTSTATUS FileOpenAddress(
 NTSTATUS FileCloseAddress(
   PTDI_REQUEST Request)
 {
-  PADDRESS_FILE AddrFile;
-  NTSTATUS Status = STATUS_SUCCESS;
+  PADDRESS_FILE AddrFile = Request->Handle.AddressHandle;
   KIRQL OldIrql;
-  PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-  PDATAGRAM_SEND_REQUEST SendRequest;
-  PLIST_ENTRY CurrentEntry;
 
-  AddrFile = Request->Handle.AddressHandle;
+  if (!Request->Handle.AddressHandle) return STATUS_INVALID_PARAMETER;
 
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+  LockObject(AddrFile, &OldIrql);
+  /* We have to close this connection because we started it */
+  if( AddrFile->Listener )
+      TCPClose( AddrFile->Listener );
+  if( AddrFile->Connection )
+      DereferenceObject( AddrFile->Connection );
+  UnlockObject(AddrFile, OldIrql);
 
-  /* Remove address file from the global list */
-  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
-  RemoveEntryList(&AddrFile->ListEntry);
-  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
-
-  /* FIXME: Kill TCP connections on this address file object */
-
-  /* Return pending requests with error */
-
-  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
-
-  /* Go through pending receive request list and cancel them all */
-  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
-    ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-    (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
-    /* ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG); FIXME: WTF? */
-  }
-
-  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
-
-  /* Go through pending send request list and cancel them all */
-  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
-    SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
-    (*SendRequest->Complete)(SendRequest->Context, STATUS_CANCELLED, 0);
-    ExFreePoolWithTag(SendRequest, DATAGRAM_SEND_TAG);
-  }
-
-  /* Protocol specific handling */
-  switch (AddrFile->Protocol) {
-  case IPPROTO_TCP:
-    TCPFreePort( AddrFile->Port );
-    if( AddrFile->Listener )
-	TCPClose( AddrFile->Listener );
-    break;
-
-  case IPPROTO_UDP:
-    UDPFreePort( AddrFile->Port );
-    break;
-  }
-
-  RemoveEntityByContext(AddrFile);
-
-  (*AddrFile->Free)(AddrFile);
+  DereferenceObject(AddrFile);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -406,7 +415,7 @@ NTSTATUS FileOpenConnection(
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
   if( !NT_SUCCESS(Status) ) {
-      TCPFreeConnectionEndpoint( Connection );
+      DereferenceObject( Connection );
       return Status;
   }
 
@@ -434,13 +443,16 @@ NTSTATUS FileCloseConnection(
 
   Connection = Request->Handle.ConnectionContext;
 
+  if (!Connection) return STATUS_INVALID_PARAMETER;
+
   TCPClose( Connection );
+
+  Request->Handle.ConnectionContext = NULL;
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return STATUS_SUCCESS;
 }
-
 
 /*
  * FUNCTION: Opens a control channel file object
@@ -475,6 +487,9 @@ NTSTATUS FileOpenControlChannel(
   /* Initialize spin lock that protects the address file object */
   KeInitializeSpinLock(&ControlChannel->Lock);
 
+  ControlChannel->RefCount = 1;
+  ControlChannel->Free = ControlChannelFree;
+
   /* Return address file object */
   Request->Handle.ControlChannel = ControlChannel;
 
@@ -493,13 +508,13 @@ NTSTATUS FileOpenControlChannel(
 NTSTATUS FileCloseControlChannel(
   PTDI_REQUEST Request)
 {
-  PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;
-  NTSTATUS Status = STATUS_SUCCESS;
+  if (!Request->Handle.ControlChannel) return STATUS_INVALID_PARAMETER;
 
-  ExFreePoolWithTag(ControlChannel, CONTROL_CHANNEL_TAG);
+  DereferenceObject((PCONTROL_CHANNEL)Request->Handle.ControlChannel);
+
   Request->Handle.ControlChannel = NULL;
 
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 /* EOF */

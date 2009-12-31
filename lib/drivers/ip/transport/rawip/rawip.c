@@ -197,7 +197,7 @@ NTSTATUS RawIPSendDatagram(
     PNEIGHBOR_CACHE_ENTRY NCE;
     KIRQL OldIrql;
 
-    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    LockObject(AddrFile, &OldIrql);
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -212,7 +212,7 @@ NTSTATUS RawIPSendDatagram(
 	break;
 
     default:
-	KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	UnlockObject(AddrFile, OldIrql);
 	return STATUS_UNSUCCESSFUL;
     }
 
@@ -226,7 +226,7 @@ NTSTATUS RawIPSendDatagram(
          * interface we're sending over
          */
         if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-	     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	     UnlockObject(AddrFile, OldIrql);
 	     return STATUS_NETWORK_UNREACHABLE;
         }
 
@@ -235,7 +235,7 @@ NTSTATUS RawIPSendDatagram(
     else
     {
         if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
-	     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	     UnlockObject(AddrFile, OldIrql);
 	     return STATUS_INVALID_PARAMETER;
         }
     }
@@ -251,7 +251,7 @@ NTSTATUS RawIPSendDatagram(
 
     if( !NT_SUCCESS(Status) )
     {
-	KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	UnlockObject(AddrFile, OldIrql);
 	return Status;
     }
 
@@ -259,14 +259,14 @@ NTSTATUS RawIPSendDatagram(
 
     if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, RawIpSendPacketComplete, NULL )))
     {
-	KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	UnlockObject(AddrFile, OldIrql);
         FreeNdisPacket(Packet.NdisPacket);
         return Status;
     }
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
 
-    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+    UnlockObject(AddrFile, OldIrql);
 
     return STATUS_SUCCESS;
 }

@@ -174,7 +174,7 @@ NTSTATUS UDPSendDatagram(
     PNEIGHBOR_CACHE_ENTRY NCE;
     KIRQL OldIrql;
 
-    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    LockObject(AddrFile, &OldIrql);
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 						   AddrFile, ConnInfo, BufferData, DataSize));
@@ -189,7 +189,7 @@ NTSTATUS UDPSendDatagram(
 		break;
 
     default:
-		KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+		UnlockObject(AddrFile, OldIrql);
 		return STATUS_UNSUCCESSFUL;
     }
 
@@ -201,7 +201,7 @@ NTSTATUS UDPSendDatagram(
          * interface we're sending over
          */
         if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-	     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	     UnlockObject(AddrFile, OldIrql);
 	     return STATUS_NETWORK_UNREACHABLE;
         }
 
@@ -210,7 +210,7 @@ NTSTATUS UDPSendDatagram(
     else
     {
         if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
-	     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	     UnlockObject(AddrFile, OldIrql);
 	     return STATUS_INVALID_PARAMETER;
         }
     }
@@ -226,18 +226,18 @@ NTSTATUS UDPSendDatagram(
 
     if( !NT_SUCCESS(Status) )
     {
-		KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+		UnlockObject(AddrFile, OldIrql);
 		return Status;
     }
 
     if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL )))
     {
-	KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	UnlockObject(AddrFile, OldIrql);
         FreeNdisPacket(Packet.NdisPacket);
         return Status;
     }
 
-    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+    UnlockObject(AddrFile, OldIrql);
 
     return STATUS_SUCCESS;
 }

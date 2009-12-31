@@ -22,7 +22,7 @@ BOOLEAN DGRemoveIRP(
     TI_DbgPrint(MAX_TRACE, ("Called (Cancel IRP %08x for file %08x).\n",
                             Irp, AddrFile));
 
-    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    LockObject(AddrFile, &OldIrql);
 
     for( ListEntry = AddrFile->ReceiveQueue.Flink; 
          ListEntry != &AddrFile->ReceiveQueue;
@@ -42,7 +42,7 @@ BOOLEAN DGRemoveIRP(
         }
     }
 
-    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+    UnlockObject(AddrFile, OldIrql);
 
     TI_DbgPrint(MAX_TRACE, ("Done.\n"));
 
@@ -83,7 +83,7 @@ VOID DGDeliverData(
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+  LockObject(AddrFile, &OldIrql);
 
   if (AddrFile->Protocol == IPPROTO_UDP)
     {
@@ -140,7 +140,8 @@ VOID DGDeliverData(
 			     &SrcAddress->Address.IPv4Address,
 			     sizeof(SrcAddress->Address.IPv4Address) );
 
-              KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+              ReferenceObject(AddrFile);
+              UnlockObject(AddrFile, OldIrql);
 
               /* Complete the receive request */
               if (Current->BufferSize < DataSize)
@@ -148,11 +149,12 @@ VOID DGDeliverData(
               else
                   Current->Complete(Current->Context, STATUS_SUCCESS, DataSize);
 
-              KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+              LockObject(AddrFile, &OldIrql);
+              DereferenceObject(AddrFile);
 	  }
       }
 
-      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+      UnlockObject(AddrFile, OldIrql);
     }
   else if (AddrFile->RegisteredReceiveDatagramHandler)
     {
@@ -172,7 +174,8 @@ VOID DGDeliverData(
           SourceAddress = SrcAddress->Address.IPv6Address;
         }
 
-      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+      ReferenceObject(AddrFile);
+      UnlockObject(AddrFile, OldIrql);
 
       Status = (*ReceiveHandler)(HandlerContext,
         AddressLength,
@@ -185,10 +188,12 @@ VOID DGDeliverData(
         &BytesTaken,
         DataBuffer,
         NULL);
+
+      DereferenceObject(AddrFile);
     }
   else
     {
-      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+      UnlockObject(AddrFile, OldIrql);
       TI_DbgPrint(MAX_TRACE, ("Discarding datagram.\n"));
     }
 
@@ -238,7 +243,7 @@ NTSTATUS DGReceiveDatagram(
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    LockObject(AddrFile, &OldIrql);
 
     ReceiveRequest = ExAllocatePoolWithTag(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST),
                                            DATAGRAM_RECV_TAG);
@@ -256,7 +261,7 @@ NTSTATUS DGReceiveDatagram(
 	    if (!NT_SUCCESS(Status))
             {
 		ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG);
-	        KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	        UnlockObject(AddrFile, OldIrql);
 		return Status;
             }
 	}
@@ -284,13 +289,13 @@ NTSTATUS DGReceiveDatagram(
 
 	TI_DbgPrint(MAX_TRACE, ("Leaving (pending %08x).\n", ReceiveRequest));
 
-	KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	UnlockObject(AddrFile, OldIrql);
 
 	return STATUS_PENDING;
     }
     else
     {
-	KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	UnlockObject(AddrFile, OldIrql);
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 

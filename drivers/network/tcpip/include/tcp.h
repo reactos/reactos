@@ -62,6 +62,7 @@ typedef struct _SLEEPING_THREAD {
 typedef struct _CLIENT_DATA {
     BOOLEAN Unlocked;
     KSPIN_LOCK Lock;
+    KIRQL OldIrql;
 } CLIENT_DATA, *PCLIENT_DATA;
 
 /* Retransmission timeout constants */

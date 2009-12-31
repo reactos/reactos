@@ -89,21 +89,10 @@ VOID DispDataRequestComplete(
  *     Count   = Number of bytes sent or received
  */
 {
-    PIRP Irp;
-    PIO_STACK_LOCATION IrpSp;
-    KIRQL OldIrql;
+    PIRP Irp = Context;
 
     TI_DbgPrint(DEBUG_IRP, ("Called for irp %x (%x, %d).\n",
-			    Context, Status, Count));
-
-    Irp         = Context;
-    IrpSp       = IoGetCurrentIrpStackLocation(Irp);
-
-    IoAcquireCancelSpinLock(&OldIrql);
-
-    (void)IoSetCancelRoutine(Irp, NULL);
-
-    IoReleaseCancelSpinLock(OldIrql);
+			    Irp, Status, Count));
 
     Irp->IoStatus.Status      = Status;
     Irp->IoStatus.Information = Count;
@@ -309,18 +298,18 @@ NTSTATUS DispTdiAssociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
-  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+  LockObject(Connection, &OldIrql);
 
   if (Connection->AddressFile) {
     ObDereferenceObject(FileObject);
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    UnlockObject(Connection, OldIrql);
     TI_DbgPrint(MID_TRACE, ("An address file is already asscociated.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 
   if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
     ObDereferenceObject(FileObject);
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    UnlockObject(Connection, OldIrql);
     TI_DbgPrint(MID_TRACE, ("Bad address file object. Magic (0x%X).\n",
       FileObject->FsContext2));
     return STATUS_INVALID_PARAMETER;
@@ -331,31 +320,33 @@ NTSTATUS DispTdiAssociateAddress(
   TranContext = FileObject->FsContext;
   if (!TranContext) {
     ObDereferenceObject(FileObject);
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    UnlockObject(Connection, OldIrql);
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 
   AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
   if (!AddrFile) {
-      KeReleaseSpinLock(&Connection->Lock, OldIrql);
+      UnlockObject(Connection, OldIrql);
       ObDereferenceObject(FileObject);
       TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
       return STATUS_INVALID_PARAMETER;
   }
 
-  KeAcquireSpinLockAtDpcLevel(&AddrFile->Lock);
+  LockObjectAtDpcLevel(AddrFile);
 
+  ReferenceObject(AddrFile);
   Connection->AddressFile = AddrFile;
 
   /* Add connection endpoint to the address file */
+  ReferenceObject(Connection);
   AddrFile->Connection = Connection;
 
   /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
   ObDereferenceObject(FileObject);
 
-  KeReleaseSpinLockFromDpcLevel(&AddrFile->Lock);
-  KeReleaseSpinLock(&Connection->Lock, OldIrql);
+  UnlockObjectFromDpcLevel(AddrFile);
+  UnlockObject(Connection, OldIrql);
 
   return Status;
 }
@@ -457,25 +448,27 @@ NTSTATUS DispTdiDisassociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
-  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+  LockObject(Connection, &OldIrql);
 
   if (!Connection->AddressFile) {
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    UnlockObject(Connection, OldIrql);
     TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 
-  KeAcquireSpinLockAtDpcLevel(&Connection->AddressFile->Lock);
+  LockObjectAtDpcLevel(Connection->AddressFile);
 
   /* Remove this connection from the address file */
+  DereferenceObject(Connection->AddressFile->Connection);
   Connection->AddressFile->Connection = NULL;
 
-  KeReleaseSpinLockFromDpcLevel(&Connection->AddressFile->Lock);
+  UnlockObjectFromDpcLevel(Connection->AddressFile);
 
   /* Remove the address file from this connection */
+  DereferenceObject(Connection->AddressFile);
   Connection->AddressFile = NULL;
 
-  KeReleaseSpinLock(&Connection->Lock, OldIrql);
+  UnlockObject(Connection, OldIrql);
 
   return STATUS_SUCCESS;
 }
@@ -584,17 +577,17 @@ NTSTATUS DispTdiListen(
        Irp,
        (PDRIVER_CANCEL)DispCancelListenRequest);
 
-  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+  LockObject(Connection, &OldIrql);
 
   if (Connection->AddressFile == NULL)
   {
      TI_DbgPrint(MID_TRACE, ("No associated address file\n"));
-     KeReleaseSpinLock(&Connection->Lock, OldIrql);
+     UnlockObject(Connection, OldIrql);
      Status = STATUS_INVALID_PARAMETER;
      goto done;
   }
 
-  KeAcquireSpinLockAtDpcLevel(&Connection->AddressFile->Lock);
+  LockObjectAtDpcLevel(Connection->AddressFile);
 
   /* Listening will require us to create a listening socket and store it in
    * the address file.  It will be signalled, and attempt to complete an irp
@@ -609,6 +602,7 @@ NTSTATUS DispTdiListen(
 	  Status = STATUS_NO_MEMORY;
 
       if( NT_SUCCESS(Status) ) {
+          ReferenceObject(Connection->AddressFile);
 	  Connection->AddressFile->Listener->AddressFile =
 	      Connection->AddressFile;
 
@@ -632,8 +626,8 @@ NTSTATUS DispTdiListen(
 	    Irp );
   }
 
-  KeReleaseSpinLockFromDpcLevel(&Connection->AddressFile->Lock);
-  KeReleaseSpinLock(&Connection->Lock, OldIrql);
+  UnlockObjectFromDpcLevel(Connection->AddressFile);
+  UnlockObject(Connection, OldIrql);
 
 done:
   if (Status != STATUS_PENDING) {
@@ -1106,7 +1100,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
   Parameters = (PTDI_REQUEST_KERNEL_SET_EVENT)&IrpSp->Parameters;
   Status     = STATUS_SUCCESS;
 
-  KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+  LockObject(AddrFile, &OldIrql);
 
   /* Set the event handler. if an event handler is associated with
      a specific event, it's flag (RegisteredXxxHandler) is TRUE.
@@ -1227,7 +1221,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
     Status = STATUS_INVALID_PARAMETER;
   }
 
-  KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  UnlockObject(AddrFile, OldIrql);
 
   return Status;
 }
