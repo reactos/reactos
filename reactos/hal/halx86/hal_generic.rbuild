@@ -21,14 +21,18 @@
 			<file>display.c</file>
 			<file>halinit.c</file>
 			<file>misc.c</file>
-			<file>portio.c</file>
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>sysinfo.c</file>
-			<file>systimer.S</file>
 			<file>timer.c</file>
 			<file>usage.c</file>
-			<file>v86.s</file>
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>portio.c</file>
+					<file>systimer.S</file>
+					<file>v86.s</file>
+				</directory>
+			</if>
 		</directory>
 		<directory name="include">
 			<pch>hal.h</pch>
