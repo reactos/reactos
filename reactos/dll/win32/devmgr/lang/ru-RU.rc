@@ -92,15 +92,16 @@ END
 STRINGTABLE
 BEGIN
     IDS_PROP_DEVICEID "Код экземпляра устройства"
-    IDS_PROP_HARDWAREID "Коды (ID) оборудования"
+    IDS_PROP_HARDWAREIDS "Коды (ID) оборудования"
     IDS_PROP_COMPATIBLEIDS "Совместимые коды (ID)"
     IDS_PROP_MATCHINGDEVICEID "Соответствующий код (ID) устройства"
     IDS_PROP_SERVICE "Служба"
     IDS_PROP_ENUMERATOR "Перечислитель"
+    IDS_PROP_CAPABILITIES "Capabilities"
     IDS_PROP_DEVNODEFLAGS "Флаги Devnode"
     IDS_PROP_CONFIGFLAGS "Флаги Config"
     IDS_PROP_CSCONFIGFLAGS "Флаги CSConfig"
-    IDS_PROP_EJECTRELATIONS "Зависимости извлечения"
+    IDS_PROP_EJECTIONRELATIONS "Зависимости извлечения"
     IDS_PROP_REMOVALRELATIONS "Зависимости удаления"
     IDS_PROP_BUSRELATIONS "Зависимости шины"
     IDS_PROP_DEVUPPERFILTERS "Верхние фильтры устройства"
@@ -110,6 +111,10 @@ BEGIN
     IDS_PROP_CLASSINSTALLER "Установщик классов"
     IDS_PROP_CLASSCOINSTALLER "Соустановщики классов"
     IDS_PROP_DEVICECOINSTALLER "Соустановщики устройств"
+    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
+    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
+    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
+    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
 END
 
 IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400

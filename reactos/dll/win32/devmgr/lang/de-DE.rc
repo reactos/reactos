@@ -95,24 +95,29 @@ END
 STRINGTABLE
 BEGIN
     IDS_PROP_DEVICEID "Geräteinstanz-ID"
-    IDS_PROP_HARDWAREID "Hardware-ID"
+    IDS_PROP_HARDWAREIDS "Hardware-IDs"
     IDS_PROP_COMPATIBLEIDS "Kompatible IDs"
     IDS_PROP_MATCHINGDEVICEID "Passende Geräte-ID"
     IDS_PROP_SERVICE "Dienst"
     IDS_PROP_ENUMERATOR "Enumerator"
+    IDS_PROP_CAPABILITIES "Eigenschaften"
     IDS_PROP_DEVNODEFLAGS "DevNode Flags"
     IDS_PROP_CONFIGFLAGS "Config Flags"
     IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTRELATIONS "Auswurfsrichtlinien"
+    IDS_PROP_EJECTIONRELATIONS "Auswurfsrichtlinien"
     IDS_PROP_REMOVALRELATIONS "Entfernungsrichtlinen"
     IDS_PROP_BUSRELATIONS "Bus Richtlinien"
-    IDS_PROP_DEVUPPERFILTERS "Obere Filter"
-    IDS_PROP_DEVLOWERFILTERS "Untere Filter"
+    IDS_PROP_DEVUPPERFILTERS "Obere Gerätefilter"
+    IDS_PROP_DEVLOWERFILTERS "Untere Gerätefilter"
     IDS_PROP_CLASSUPPERFILTERS "Obere Klassenfilter"
     IDS_PROP_CLASSLOWERFILTERS "Untere Klassenfilter"
     IDS_PROP_CLASSINSTALLER "Klassen Installationsprogramm"
     IDS_PROP_CLASSCOINSTALLER "Klassen Co-Installationsprogramm"
     IDS_PROP_DEVICECOINSTALLER "Geräte Co-Installationsprogramm"
+    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
+    IDS_PROP_CURRENTPOWERSTATE "Aktueller Energiezustand"
+    IDS_PROP_POWERCAPABILITIES "Energie-Eigenschaften"
+    IDS_PROP_POWERSTATEMAPPINGS "Energiezustandszuordnungen"
 END
 
 IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
