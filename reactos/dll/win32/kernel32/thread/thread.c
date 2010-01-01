@@ -242,7 +242,7 @@ WINAPI
 ExitThread(DWORD uExitCode)
 {
     NTSTATUS Status;
-    BOOLEAN LastThread;
+    ULONG LastThread;
 
     /*
      * Terminate process if this is the last thread
@@ -251,7 +251,7 @@ ExitThread(DWORD uExitCode)
     Status = NtQueryInformationThread(NtCurrentThread(),
                                       ThreadAmILastThread,
                                       &LastThread,
-                                      sizeof(BOOLEAN),
+                                      sizeof(LastThread),
                                       NULL);
     if (NT_SUCCESS(Status) && LastThread)
     {
@@ -266,8 +266,9 @@ ExitThread(DWORD uExitCode)
     NtCurrentTeb()->FreeStackOnTermination = TRUE;
     NtTerminateThread(NULL, uExitCode);
 
-    /* We will never reach this place. This silences the compiler */
-    ExitThread(uExitCode);
+    /* We should never reach this place */
+    DPRINT1("It should not happen\n");
+    while (TRUE) ;
 }
 
 /*
