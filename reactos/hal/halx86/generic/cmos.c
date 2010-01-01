@@ -35,8 +35,9 @@ HalpAcquireSystemHardwareSpinLock(VOID)
     /* Try to acquire the lock */
     while (InterlockedBitTestAndSet((PLONG)&HalpSystemHardwareLock, 0))
     {
-        /* Lock is held, short wait and try again */
-        YieldProcessor();
+        /* Lock is held, spin until it's free */
+        while (*(volatile ULONG*)HalpSystemHardwareLock & 1)
+            YieldProcessor();
     }
 
     /* We have the lock, save the flags now */
