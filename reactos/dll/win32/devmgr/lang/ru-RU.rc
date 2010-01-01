@@ -91,25 +91,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Device instance ID"
-    IDS_PROP_HARDWAREID "Hardware ID"
-    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
-    IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
-    IDS_PROP_CONFIGFLAGS "Config Flags"
-    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTRELATIONS "Eject Relations"
-    IDS_PROP_REMOVALRELATIONS "Removal Relations"
-    IDS_PROP_BUSRELATIONS "Bus Relations"
-    IDS_PROP_DEVUPPERFILTERS "Upper Filters"
-    IDS_PROP_DEVLOWERFILTERS "Lower Filters"
-    IDS_PROP_CLASSUPPERFILTERS "Upper Class Filters"
-    IDS_PROP_CLASSLOWERFILTERS "Lower Class Filters"
-    IDS_PROP_CLASSINSTALLER "Class Installer"
-    IDS_PROP_CLASSCOINSTALLER "Class Co-Installer"
-    IDS_PROP_DEVICECOINSTALLER "Device Co-Installer"
+    IDS_PROP_DEVICEID "Код экземпляра устройства"
+    IDS_PROP_HARDWAREID "Коды (ID) оборудования"
+    IDS_PROP_COMPATIBLEIDS "Совместимые коды (ID)"
+    IDS_PROP_MATCHINGDEVICEID "Соответствующий код (ID) устройства"
+    IDS_PROP_SERVICE "Служба"
+    IDS_PROP_ENUMERATOR "Перечислитель"
+    IDS_PROP_DEVNODEFLAGS "Флаги Devnode"
+    IDS_PROP_CONFIGFLAGS "Флаги Config"
+    IDS_PROP_CSCONFIGFLAGS "Флаги CSConfig"
+    IDS_PROP_EJECTRELATIONS "Зависимости извлечения"
+    IDS_PROP_REMOVALRELATIONS "Зависимости удаления"
+    IDS_PROP_BUSRELATIONS "Зависимости шины"
+    IDS_PROP_DEVUPPERFILTERS "Верхние фильтры устройства"
+    IDS_PROP_DEVLOWERFILTERS "Нижние фильтры устройства"
+    IDS_PROP_CLASSUPPERFILTERS "Верхние фильтры класса"
+    IDS_PROP_CLASSLOWERFILTERS "Нижние фильтры класса"
+    IDS_PROP_CLASSINSTALLER "Установщик классов"
+    IDS_PROP_CLASSCOINSTALLER "Соустановщики классов"
+    IDS_PROP_DEVICECOINSTALLER "Соустановщики устройств"
 END
 
 IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
@@ -192,7 +192,7 @@ END
 
 IDD_DEVICEDETAILS DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Сведения"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -205,7 +205,7 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Ресурсы"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -214,7 +214,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "Питание"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
