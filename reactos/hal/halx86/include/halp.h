@@ -106,6 +106,10 @@ VOID HalpInitPhase1(VOID);
 VOID NTAPI HalpClockInterrupt(VOID);
 VOID NTAPI HalpProfileInterrupt(VOID);
 
+VOID
+NTAPI
+HalpFlushTLB(VOID);
+
 //
 // KD Support
 //

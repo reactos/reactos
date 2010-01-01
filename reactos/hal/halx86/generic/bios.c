@@ -14,12 +14,27 @@
 
 /* GLOBALS ********************************************************************/
 
+//
+// PTE Data
+//
 ULONG HalpSavedPfn;
 HARDWARE_PTE HalpSavedPte;
+
+//
+// IDT Data
+//
 PVOID HalpGpfHandler;
 PVOID HalpBopHandler;
+
+//
+// TSS Data
+//
 ULONG HalpSavedEsp0;
 USHORT HalpSavedTss;
+
+//
+// IOPM Data
+//
 USHORT HalpSavedIopmBase;
 PUSHORT HalpSavedIoMap;
 USHORT HalpSavedIoMapData[32][2];
@@ -184,47 +199,65 @@ HalpMapRealModeMemory(VOID)
 {
     PHARDWARE_PTE Pte, V86Pte;
     ULONG i;
-    
-    /* Get the page table directory for the lowest meg of memory */
+
+    //
+    // Get the page table directory for the lowest meg of memory
+    //
     Pte = HalAddressToPde(0);
     HalpSavedPfn = Pte->PageFrameNumber;
     HalpSavedPte = *Pte;
-    
-    /* Map it to the HAL reserved region and make it valid */ 
+
+    //
+    // Map it to the HAL reserved region and make it valid
+    //
     Pte->Valid = 1;
     Pte->Write = 1;
     Pte->Owner = 1;
     Pte->PageFrameNumber = (HalAddressToPde(0xFFC00000))->PageFrameNumber;
-    
-    /* Flush the TLB by resetting CR3 */
-    __writecr3(__readcr3());
-    
-    /* Now loop the first meg of memory */
+
+    //
+    // Flush the TLB
+    //
+    HalpFlushTLB();
+
+    //
+    // Now loop the first meg of memory
+    //
     for (i = 0; i < 0x100000; i += PAGE_SIZE)
     {
-        /* Identity map it */
+        //
+        // Identity map it
+        //
         Pte = HalAddressToPte(i);
         Pte->PageFrameNumber = i >> PAGE_SHIFT;
         Pte->Valid = 1;
         Pte->Write = 1;
         Pte->Owner = 1;
     }
-    
-    /* Now get the entry for our real mode V86 code and the target */
+
+    //
+    // Now get the entry for our real mode V86 code and the target
+    //
     Pte = HalAddressToPte(0x20000);
     V86Pte = HalAddressToPte(&HalpRealModeStart);
     do
     {
-        /* Map the physical address into our real-mode region */
+        //
+        // Map the physical address into our real-mode region
+        //
         Pte->PageFrameNumber = V86Pte->PageFrameNumber;
         
-        /* Keep going until we've reached the end of our region */
+        //
+        // Keep going until we've reached the end of our region
+        //
         Pte++;
         V86Pte++;
     } while (V86Pte <= HalAddressToPte(&HalpRealModeEnd));
-    
-    /* Flush the TLB by resetting CR3 */
-    __writecr3(__readcr3());
+
+    //
+    // Flush the TLB
+    //
+    HalpFlushTLB();
 }
 
 VOID
@@ -252,18 +285,26 @@ VOID
 NTAPI
 HalpSetupRealModeIoPermissionsAndTask(VOID)
 {
-    /* Switch to valid TSS */
+    //
+    // Switch to valid TSS
+    //
     HalpBorrowTss();
 
-    /* Save a copy of the I/O Map and delete it */
+    //
+    // Save a copy of the I/O Map and delete it
+    //
     HalpSavedIoMap = (PUSHORT)&(KeGetPcr()->TSS->IoMaps[0]);
     HalpStoreAndClearIopm();
-    
-    /* Save the IOPM and switch to the real-mode one */
+
+    //
+    // Save the IOPM and switch to the real-mode one
+    //
     HalpSavedIopmBase = KeGetPcr()->TSS->IoMapBase;
     KeGetPcr()->TSS->IoMapBase = KiComputeIopmOffset(1);
-    
-    /* Save our stack pointer */
+
+    //
+    // Save our stack pointer
+    //
     HalpSavedEsp0 = KeGetPcr()->TSS->Esp0; 
 }
 
@@ -282,16 +323,24 @@ VOID
 NTAPI
 HalpRestoreIoPermissionsAndTask(VOID)
 {
-    /* Restore the stack pointer */
+    //
+    // Restore the stack pointer
+    //
     KeGetPcr()->TSS->Esp0 = HalpSavedEsp0;
-    
-    /* Restore the I/O Map */
+
+    //
+    // Restore the I/O Map
+    //
     HalpRestoreIopm();
-    
-    /* Restore the IOPM */
+
+    //
+    // Restore the IOPM
+    //
     KeGetPcr()->TSS->IoMapBase = HalpSavedIopmBase;
 
-    /* Restore the TSS */
+    //
+    // Restore the TSS
+    //
     if (HalpSavedTss) HalpReturnTss();
 }
 
@@ -302,24 +351,32 @@ HalpUnmapRealModeMemory(VOID)
     ULONG i;
     PHARDWARE_PTE Pte;
 
-    /* Loop the first meg of memory */
+    //
+    // Loop the first meg of memory
+    //
     for (i = 0; i < 0x100000; i += PAGE_SIZE)
     {
-        /* Invalidate each PTE */
+        //
+        // Invalidate each PTE
+        //
         Pte = HalAddressToPte(i);
         Pte->Valid = 0;
         Pte->Write = 0;
         Pte->Owner = 0;
         Pte->PageFrameNumber = 0;
     }
-    
-    /* Restore the PDE for the lowest megabyte of memory */
+
+    //
+    // Restore the PDE for the lowest megabyte of memory
+    //
     Pte = HalAddressToPde(0);
     *Pte = HalpSavedPte;
     Pte->PageFrameNumber = HalpSavedPfn;
-    
-    /* Flush the TLB by resetting CR3 */
-    __writecr3(__readcr3());
+
+    //
+    // Flush the TLB
+    //
+    HalpFlushTLB();
 }
 
 BOOLEAN
@@ -330,43 +387,63 @@ HalpBiosDisplayReset(VOID)
     PHARDWARE_PTE IdtPte;
     BOOLEAN RestoreWriteProtection = FALSE;
 
-    /* Disable interrupts */
+    //
+    // Disable interrupts
+    //
     Flags = __readeflags();
     _disable();
 
-    /* Map memory available to the V8086 real-mode code */
+    //
+    // Map memory available to the V8086 real-mode code
+    //
     HalpMapRealModeMemory();
 
-    /* 
-     * On P5, the first 7 entries of the IDT are write protected to work around
-     * the cmpxchg8b lock errata. Unprotect them here so we can set our custom
-     * invalid op-code handler.
-     */
+    // 
+    // On P5, the first 7 entries of the IDT are write protected to work around
+    // the cmpxchg8b lock errata. Unprotect them here so we can set our custom
+    // invalid op-code handler.
+    //
     IdtPte = HalAddressToPte(((PKIPCR)KeGetPcr())->IDT);
     RestoreWriteProtection = IdtPte->Write;
 
-    /* Use special invalid opcode and GPF trap handlers */
+    //
+    // Use special invalid opcode and GPF trap handlers
+    //
     HalpSwitchToRealModeTrapHandlers();
 
-    /* Configure the IOPM and TSS */
+    //
+    // Configure the IOPM and TSS
+    //
     HalpSetupRealModeIoPermissionsAndTask();
 
-    /* Now jump to real mode */
+    //
+    // Now jump to real mode
+    //
     HalpBiosCall();
 
-    /* Restore kernel trap handlers */
+    //
+    // Restore kernel trap handlers
+    //
     HalpRestoreTrapHandlers();
 
-    /* Restore write permission */
+    //
+    // Restore write permission
+    //
     IdtPte->Write = RestoreWriteProtection;
 
-    /* Restore TSS and IOPM */
+    //
+    // Restore TSS and IOPM
+    //
     HalpRestoreIoPermissionsAndTask();
     
-    /* Restore low memory mapping */
+    //
+    // Restore low memory mapping
+    //
     HalpUnmapRealModeMemory();
 
-    /* Restore interrupts if they were previously enabled */
+    //
+    // Restore interrupts if they were previously enabled
+    //
     __writeeflags(Flags);
     return TRUE;
 }
