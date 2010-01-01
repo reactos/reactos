@@ -633,8 +633,61 @@ SetDevicePropertyText(IN PDEVADVPROP_INFO dap,
         }
         else if (dwType == REG_DWORD)
         {
-            swprintf(dap->szTemp, L"0x%08x", *lpBuffer);
-            SetListViewText(hwndListView, 0, dap->szTemp);
+            switch (dwProperty)
+            {
+                case SPDRP_CAPABILITIES:
+                    index = 0;
+                    if (*lpBuffer & CM_DEVCAP_LOCKSUPPORTED)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_LOCKSUPPORTED");
+                    if (*lpBuffer & CM_DEVCAP_EJECTSUPPORTED)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_EJECTSUPPORTED");
+                    if (*lpBuffer & CM_DEVCAP_REMOVABLE)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_REMOVABLE");
+                    if (*lpBuffer & CM_DEVCAP_DOCKDEVICE)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_DOCKDEVICE");
+                    if (*lpBuffer & CM_DEVCAP_UNIQUEID)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_UNIQUEID");
+                    if (*lpBuffer & CM_DEVCAP_SILENTINSTALL)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_SILENTINSTALL");
+                    if (*lpBuffer & CM_DEVCAP_RAWDEVICEOK)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_RAWDEVICEOK");
+                    if (*lpBuffer & CM_DEVCAP_SURPRISEREMOVALOK)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_SURPRISEREMOVALOK");
+                    if (*lpBuffer & CM_DEVCAP_HARDWAREDISABLED)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_HARDWAREDISABLED");
+                    if (*lpBuffer & CM_DEVCAP_NONDYNAMIC)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_NONDYNAMIC");
+                    break;
+
+                case SPDRP_CONFIGFLAGS:
+                    index = 0;
+                    if (*lpBuffer & CONFIGFLAG_DISABLED)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_DISABLED");
+                    if (*lpBuffer & CONFIGFLAG_REMOVED)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_REMOVED");
+                    if (*lpBuffer & CONFIGFLAG_MANUAL_INSTALL)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_MANUAL_INSTALL");
+                    if (*lpBuffer & CONFIGFLAG_IGNORE_BOOT_LC)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_IGNORE_BOOT_LC");
+                    if (*lpBuffer & CONFIGFLAG_NET_BOOT)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_NET_BOOT");
+                    if (*lpBuffer & CONFIGFLAG_REINSTALL)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_REINSTALL");
+                    if (*lpBuffer & CONFIGFLAG_FAILEDINSTALL)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_FAILEDINSTALL");
+                    if (*lpBuffer & CONFIGFLAG_CANTSTOPACHILD)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_CANTSTOPACHILD");
+                    if (*lpBuffer & CONFIGFLAG_OKREMOVEROM)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_OKREMOVEROM");
+                    if (*lpBuffer & CONFIGFLAG_NOREMOVEEXIT)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_NOREMOVEEXIT");
+                    break;
+
+                default:
+                    swprintf(dap->szTemp, L"0x%08x", *lpBuffer);
+                    SetListViewText(hwndListView, 0, dap->szTemp);
+                    break;
+            }
         }
         else
         {
