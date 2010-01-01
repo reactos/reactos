@@ -361,6 +361,29 @@ DeregisterEventSource(IN HANDLE hEventLog)
 
 
 /******************************************************************************
+ * GetEventLogInformation [ADVAPI32.@]
+ *
+ * PARAMS
+ *   hEventLog      [I] Handle to event log
+ *   dwInfoLevel    [I] Level of event log information to return
+ *   lpBuffer       [O] Buffer that receives the event log information
+ *   cbBufSize      [I] Size of the lpBuffer buffer
+ *   pcbBytesNeeded [O] Required buffer size
+ */
+BOOL WINAPI
+GetEventLogInformation(IN HANDLE hEventLog,
+                       IN DWORD dwInfoLevel,
+                       OUT LPVOID lpBuffer,
+                       IN DWORD cbBufSize,
+                       OUT LPDWORD pcbBytesNeeded)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/******************************************************************************
  * GetNumberOfEventLogRecords [ADVAPI32.@]
  *
  * PARAMS
@@ -376,6 +399,12 @@ GetNumberOfEventLogRecords(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, NumberOfRecords);
 
+    if(!NumberOfRecords)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    
     RpcTryExcept
     {
         Status = ElfrNumberOfRecords(hEventLog,
@@ -415,6 +444,12 @@ GetOldestEventLogRecord(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, OldestRecord);
 
+    if(!OldestRecord)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    
     RpcTryExcept
     {
         Status = ElfrOldestRecord(hEventLog,
