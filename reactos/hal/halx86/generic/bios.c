@@ -313,9 +313,19 @@ NTAPI
 HalpRestoreTrapHandlers(VOID)
 {
     //
-    // We're back, restore the handlers we over-wrote
+    // Keep dummy GPF handler in case we get an NMI during V8086
     //
-    KeRegisterInterruptHandler(13, HalpGpfHandler);
+    if (!HalpNMIInProgress)
+    {
+        //
+        // Not an NMI -- put back the original handler
+        //
+        KeRegisterInterruptHandler(13, HalpGpfHandler);
+    }
+
+    //
+    // Restore invalid opcode handler
+    //
     KeRegisterInterruptHandler(6, HalpBopHandler);
 }
 
