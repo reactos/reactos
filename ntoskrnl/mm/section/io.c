@@ -315,8 +315,8 @@ MiSimpleWrite
     ASSERT(Buffer);
     ASSERT(ReadStatus);
     
-    DeviceObject = MmGetDeviceObjectForFile(FileObject);
-    
+    ObReferenceObject(FileObject);
+	DeviceObject = MmGetDeviceObjectForFile(FileObject);
     ASSERT(DeviceObject);
     
     DPRINT
@@ -337,12 +337,11 @@ MiSimpleWrite
     
     if (!Irp)
     {
+		ObDereferenceObject(FileObject);
 		return STATUS_NO_MEMORY;
     }
     
     Irp->Flags = IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
-    
-    ObReferenceObject(FileObject);
     
     Irp->UserEvent = &ReadWait;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -352,7 +351,12 @@ MiSimpleWrite
     IrpSp->FileObject = FileObject;
     IrpSp->CompletionRoutine = MiSimpleReadComplete;
     
+	DPRINT("Call Driver\n");
     Status = IoCallDriver(DeviceObject, Irp);
+	DPRINT("Status %x\n", Status);
+
+	ObDereferenceObject(FileObject);
+
     if (Status == STATUS_PENDING)
     {
 		if (!NT_SUCCESS
@@ -365,13 +369,9 @@ MiSimpleWrite
 		{
 			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
 			ASSERT(FALSE);
-			ObDereferenceObject(FileObject);
 			return Status;
 		}
     }
-    
-
-    ObDereferenceObject(FileObject);
     
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
     return ReadStatus->Status;
@@ -479,7 +479,7 @@ MiWriteThread()
 		KeSetEvent(&CcpLazyWriteEvent, IO_NO_INCREMENT, FALSE);
 	}
 	
-	DPRINT1("Lazy write items are available\n");
+	DPRINT("Lazy write items are available\n");
 	KeResetEvent(&CcpLazyWriteEvent);
 	
 	ExAcquireFastMutex(&MiWriteMutex);

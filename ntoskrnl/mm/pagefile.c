@@ -271,6 +271,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    {
       MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
    }
+
    return(Status);
 }
 
@@ -286,7 +287,7 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
    PMDL Mdl = (PMDL)MdlBase;
 
-   DPRINT("MmReadFromSwapPage\n");
+   DPRINT("MmReadFromSwapPage(%x,%x)\n", SwapEntry, Page);
 
    if (SwapEntry == 0)
    {
@@ -542,11 +543,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    UNICODE_STRING CapturedFileName;
    LARGE_INTEGER SafeInitialSize, SafeMaximumSize;
 
-   DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
+   DPRINT1("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
           FileName, InitialSize->QuadPart);
 
    if (MiPagingFileCount >= MAX_PAGING_FILES)
    {
+	   DPRINT1("STATUS_TOO_MANY_PAGING_FILES\n");
       return(STATUS_TOO_MANY_PAGING_FILES);
    }
 
@@ -576,14 +578,17 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       smaller than the maximum */
    if (0 != SafeInitialSize.u.HighPart)
    {
+	   DPRINT1("STATUS_INVALID_PARAMETER_2\n");
       return STATUS_INVALID_PARAMETER_2;
    }
    if (0 != SafeMaximumSize.u.HighPart)
    {
+	   DPRINT1("STATUS_INVALID_PARAMETER_3\n");
       return STATUS_INVALID_PARAMETER_3;
    }
    if (SafeMaximumSize.u.LowPart < SafeInitialSize.u.LowPart)
    {
+	   DPRINT1("STATUS_INVALID_PARAMETER_MIX\n");
       return STATUS_INVALID_PARAMETER_MIX;
    }
 
@@ -620,6 +625,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                                 PreviousMode);
    if (!NT_SUCCESS(Status))
    {
+	   DPRINT1("STATUS %x\n", Status);
       return(Status);
    }
 
@@ -631,6 +637,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    if (!NT_SUCCESS(Status))
    {
       ZwClose(FileHandle);
+	  DPRINT1("STATUS %x\n", Status);
       return Status;
    }
 
@@ -657,6 +664,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    if (!NT_SUCCESS(Status))
    {
       ZwClose(FileHandle);
+	  DPRINT1("ZwSetInformationFile %x\n", Status);
       return(Status);
    }
 
@@ -669,6 +677,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    if (!NT_SUCCESS(Status))
    {
       ZwClose(FileHandle);
+	  DPRINT1("ObReferenceObjectByHandle %x\n", Status);
       return(Status);
    }
 
@@ -678,6 +687,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    {
       ObDereferenceObject(FileObject);
       ZwClose(FileHandle);
+	  DPRINT1("Could not MmAllocRetrievelDescriptorList(PAIRS_PER_RUN), whatever that means\n");
       return(STATUS_NO_MEMORY);
    }
 
@@ -712,6 +722,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
          }
          ObDereferenceObject(FileObject);
          ZwClose(FileHandle);
+		 DPRINT1("Could not ZwFsControlFile to get retrieval pointers: %x\n", Status);
          return(Status);
       }
       ExtentCount += CurrentRetDescList->RetrievalPointers.ExtentCount;
@@ -728,6 +739,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             }
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
+			DPRINT1("Could not get retrieval descriptor list\n");
             return(STATUS_NO_MEMORY);
          }
          Vcn = CurrentRetDescList->RetrievalPointers.Extents[CurrentRetDescList->RetrievalPointers.ExtentCount-1].NextVcn;
@@ -750,6 +762,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       }
       ObDereferenceObject(FileObject);
       ZwClose(FileHandle);
+	  DPRINT1("STATUS_NO_MEMORY\n");
       return(STATUS_NO_MEMORY);
    }
 
@@ -795,6 +808,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       ExFreePool(PagingFile);
       ObDereferenceObject(FileObject);
       ZwClose(FileHandle);
+	  DPRINT1("STATUS_NO_MEMORY\n");
       return(STATUS_NO_MEMORY);
    }
 
@@ -824,6 +838,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       ExFreePool(PagingFile);
       ObDereferenceObject(FileObject);
       ZwClose(FileHandle);
+	  DPRINT1("PagingFile->RetrievalPointers->ExtentCount %x ExtentCount %x\n",
+			  PagingFile->RetrievalPointers->ExtentCount,
+			  ExtentCount);
+	  DPRINT1("nextvcn %x maxvcn %x\n",
+			  PagingFile->RetrievalPointers->Extents[ExtentCount - 1].NextVcn.LowPart,
+			  MaxVcn.LowPart);
       return(STATUS_UNSUCCESSFUL);
    }
 

@@ -34,6 +34,7 @@ MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
 
 static FAST_MUTEX RmapListLock;
 static NPAGED_LOOKASIDE_LIST RmapLookasideList;
+extern KEVENT MmWaitPageEvent;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -56,14 +57,13 @@ NTSTATUS
 NTAPI
 MmWritePagePhysicalAddress(PFN_TYPE Page)
 {
+   BOOLEAN ProcRef = FALSE;
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
    PMMSUPPORT AddressSpace;
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
-   PMM_PAGEOP PageOp;
-   ULONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
 
    /*
@@ -85,19 +85,20 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    }
    if (Address < MmSystemRangeStart)
    {
+	  DPRINT("Reference %x\n", Process);
       Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
-      ExReleaseFastMutex(&RmapListLock);
       if (!NT_SUCCESS(Status))
       {
          return Status;
       }
+	  ProcRef = TRUE;
       AddressSpace = &Process->Vm;
    }
    else
    {
-      ExReleaseFastMutex(&RmapListLock);
       AddressSpace = MmGetKernelAddressSpace();
    }
+   ExReleaseFastMutex(&RmapListLock);
 
    /*
     * Lock the address space; then check that the address we are using
@@ -109,35 +110,17 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
       MmUnlockAddressSpace(AddressSpace);
-      if (Address < MmSystemRangeStart)
-      {
-         ObDereferenceObject(Process);
-      }
+	  if (ProcRef)
+	  {
+		  DPRINT("Dereference %x\n", Process);
+		  ObDereferenceObject(Process);
+	  }
       return(STATUS_UNSUCCESSFUL);
    }
 
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
-
-      /*
-       * Get or create a pageop
-       */
-      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
-                           MemoryArea->Data.SectionData.Segment,
-                           Offset, MM_PAGEOP_PAGEOUT, TRUE);
-
-      if (PageOp == NULL)
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         if (Address < MmSystemRangeStart)
-         {
-            ObDereferenceObject(Process);
-         }
-         return(STATUS_UNSUCCESSFUL);
-      }
-
       /*
        * Release locks now we have a page op.
        */
@@ -146,8 +129,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       /*
        * Do the actual page out work.
        */
-      Status = MmWritePageSectionView(AddressSpace, MemoryArea,
-                                      Address, PageOp);
+      Status = MmWritePageSectionView(AddressSpace, MemoryArea, Address);
    }
 #ifdef _NEWCC_
    else if ((Type == MEMORY_AREA_PHYSICAL_MEMORY_SECTION) ||
@@ -160,19 +142,6 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
 #endif
    else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
-                           Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
-
-      if (PageOp == NULL)
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         if (Address < MmSystemRangeStart)
-         {
-            ObDereferenceObject(Process);
-         }
-         return(STATUS_UNSUCCESSFUL);
-      }
-
       /*
        * Release locks now we have a page op.
        */
@@ -181,14 +150,13 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       /*
        * Do the actual page out work.
        */
-      Status = MmWritePageVirtualMemory(AddressSpace, MemoryArea,
-                                        Address, PageOp);
+      Status = MmWritePageVirtualMemory(AddressSpace, MemoryArea, Address);
    }
    else
    {
       KeBugCheck(MEMORY_MANAGEMENT);
    }
-   if (Address < MmSystemRangeStart)
+   if (ProcRef)
    {
       ObDereferenceObject(Process);
    }
@@ -199,187 +167,205 @@ NTSTATUS
 NTAPI
 MmPageOutPhysicalAddress(PFN_TYPE Page)
 {
+   BOOLEAN ProcRef = FALSE;
+   PFN_TYPE SectionPage = 0;
    PMM_RMAP_ENTRY entry;
+   PMM_SECTION_SEGMENT Segment = NULL;
+   LARGE_INTEGER FileOffset;
    PMEMORY_AREA MemoryArea;
-   PMMSUPPORT AddressSpace;
-   ULONG Type;
+   PMMSUPPORT AddressSpace = MmGetKernelAddressSpace();
+   BOOLEAN Dirty = FALSE;
    PVOID Address;
-   PEPROCESS Process;
-   PMM_PAGEOP PageOp;
-   ULONG Offset;
+   PEPROCESS Process = NULL;
+   ULONG Evicted = FALSE;
    NTSTATUS Status = STATUS_SUCCESS;
+   MM_REQUIRED_RESOURCES Resources = { 0 };
 
+   ASSERT(Page);
+
+   DPRINT("Page out %x\n", Page);
+
+   if ((Segment = MmGetSectionAssociation(Page, &FileOffset)))
+   {
+	   DPRINT("Withdrawing page (%x) %x:%x\n", Page, Segment, FileOffset.LowPart);
+	   SectionPage = MmWithdrawSectionPage(Segment, &FileOffset, &Dirty);
+	   DPRINT("SectionPage %x\n", SectionPage);
+	   if (SectionPage == MM_WAIT_ENTRY)
+	   {
+		   DPRINT("In progress page out %x\n", SectionPage);
+		   return STATUS_UNSUCCESSFUL;
+	   }
+   }
+   else
+   {
+	   DPRINT("No segment association for %x\n", Page);
+   }
+   
    ExAcquireFastMutex(&RmapListLock);
    entry = MmGetRmapListHeadPage(Page);
-   if (entry == NULL || MmGetLockCountPage(Page) != 0)
+   if (MmGetLockCountPage(Page) != 0)
    {
       ExReleaseFastMutex(&RmapListLock);
-      return(STATUS_UNSUCCESSFUL);
+	  Status = STATUS_UNSUCCESSFUL;
+	  DPRINT("Page was locked %x\n", Page);
+	  goto bail;
    }
-   Process = entry->Process;
-   Address = entry->Address;
-   if ((((ULONG_PTR)Address) & 0xFFF) != 0)
+
+   DPRINT("Entry %x\n", entry);
+   while (entry != NULL && NT_SUCCESS(Status))
    {
-      KeBugCheck(MEMORY_MANAGEMENT);
+	   Process = entry->Process;
+	   Address = entry->Address;
+
+	   DPRINT("Process %x Address %x Page %x\n", Process, Address, Page);
+
+	   if (Process && Address < MmSystemRangeStart)
+	   {
+		   Status = ObReferenceObject(Process);
+		   if (!NT_SUCCESS(Status))
+		   {
+			   DPRINT("bail\n");
+			   ExReleaseFastMutex(&RmapListLock);
+			   goto bail;
+		   }
+		   ProcRef = TRUE;
+		   AddressSpace = &Process->Vm;
+	   }
+	   else
+	   {
+		   AddressSpace = MmGetKernelAddressSpace();
+	   }
+	   ExReleaseFastMutex(&RmapListLock);
+
+	   RtlZeroMemory(&Resources, sizeof(Resources));
+
+	   if ((((ULONG_PTR)Address) & 0xFFF) != 0)
+	   {
+		   KeBugCheck(MEMORY_MANAGEMENT);
+	   }
+
+	   if (!MmTryToLockAddressSpace(AddressSpace))
+	   {
+		   Status = STATUS_UNSUCCESSFUL;
+		   goto bail;
+	   }
+
+	   do 
+	   {
+		   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
+		   if (MemoryArea == NULL || 
+			   MemoryArea->DeleteInProgress ||
+			   !MemoryArea->PageOut)
+		   {
+			   MmUnlockAddressSpace(AddressSpace);
+			   DPRINT("bail\n");
+			   goto bail;
+		   }
+		   
+		   DPRINT
+			   ("Type %x (%x -> %x)\n", 
+				MemoryArea->Type, 
+				MemoryArea->StartingAddress, 
+				MemoryArea->EndingAddress);
+		   
+		   Resources.DoAcquisition = NULL;
+		   
+		   DPRINT("Page out page %x consumer %d\n", Page, MmGetPageConsumer(Page));
+		   Resources.Page[0] = Page;
+		   
+		   if (KeGetCurrentIrql() > APC_LEVEL)
+		   {
+			   DPRINT("BAD IRQL from %x\n", MemoryArea->PageOut);
+		   }
+		   ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+		   
+		   Status = MemoryArea->PageOut
+			   (AddressSpace, MemoryArea, Address, &Resources);
+		   
+		   if (KeGetCurrentIrql() > APC_LEVEL)
+		   {
+			   DPRINT("BAD IRQL from %x\n", MemoryArea->PageOut);
+		   }
+		   ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+		   
+		   MmUnlockAddressSpace(AddressSpace);
+		   
+		   if (Status == STATUS_SUCCESS + 1)
+		   {
+			   // Wait page ... the other guy has it, so we'll just fail for now
+			   Status = STATUS_UNSUCCESSFUL;
+			   goto bail;
+		   }
+		   else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
+		   {
+			   DPRINT("DoAcquisition %x\n", Resources.DoAcquisition);
+			   Status = Resources.DoAcquisition(AddressSpace, MemoryArea, &Resources);
+			   DPRINT("Status %x\n", Status);
+			   if (!NT_SUCCESS(Status)) 
+			   {
+				   DPRINT("bail\n");
+				   goto bail;
+			   }
+			   else Status = STATUS_MM_RESTART_OPERATION;
+		   }
+		   
+		   MmLockAddressSpace(AddressSpace);
+
+	   } 
+	   while (Status == STATUS_MM_RESTART_OPERATION);
+	   Dirty |= Resources.State & 1; // Accumulate dirty
+
+	   MmUnlockAddressSpace(AddressSpace);
+
+	   if (ProcRef)
+	   {
+		   ObDereferenceObject(Process);
+		   ProcRef = FALSE;
+	   }
+	   
+	   ExAcquireFastMutex(&RmapListLock);
+	   ASSERT(!MM_IS_WAIT_PTE(MmGetPfnForProcess(Process, Address)));
+	   entry = MmGetRmapListHeadPage(Page);
+
+	   // When we're not in a section and all rmaps evicted, we win
+	   if (!entry && !Segment) 
+		   Evicted = TRUE;
+
+	   DPRINT("Entry %x\n", entry);
    }
 
-   if (Address < MmSystemRangeStart)
+   ExReleaseFastMutex(&RmapListLock);
+
+bail:
+   DPRINT("BAIL\n");
+   if (Segment)
    {
-      Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
-      ExReleaseFastMutex(&RmapListLock);
-      if (!NT_SUCCESS(Status))
-      {
-         return Status;
-      }
-      AddressSpace = &Process->Vm;
+	   DPRINT("About to finalize section page %x %s\n", Page, Dirty ? "dirty" : "clean");
+
+	   Evicted = 
+		   NT_SUCCESS(Status) &&
+		   NT_SUCCESS(MmFinalizeSectionPageOut(Segment, &FileOffset, Page, Dirty));
+
+	   if (!Evicted && SectionPage)
+	   {
+		   DPRINT
+			   ("Failed to page out, replacing %x at %x in segment %x\n",
+				SectionPage, FileOffset.LowPart, Segment);
+		   MmLockSectionSegment(Segment);
+		   MiSetPageEntrySectionSegment(Segment, &FileOffset, Dirty ? DIRTY_SSE(MAKE_PFN_SSE(SectionPage)) : MAKE_PFN_SSE(SectionPage));
+		   MmUnlockSectionSegment(Segment);
+		   KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
+	   }
    }
-   else
+
+   if (ProcRef)
    {
-      ExReleaseFastMutex(&RmapListLock);
-      AddressSpace = MmGetKernelAddressSpace();
+	   DPRINT("Dereferencing process...\n");
+	   ObDereferenceObject(Process);
    }
 
-   MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
-   if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-   {
-      MmUnlockAddressSpace(AddressSpace);
-      if (Address < MmSystemRangeStart)
-      {
-         ObDereferenceObject(Process);
-      }
-      return(STATUS_UNSUCCESSFUL);
-   }
-   Type = MemoryArea->Type;
-   if (Type == MEMORY_AREA_SECTION_VIEW)
-   {
-	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
-
-      /*
-       * Get or create a pageop
-       */
-      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
-                           MemoryArea->Data.SectionData.Segment,
-                           Offset, MM_PAGEOP_PAGEOUT, TRUE);
-      if (PageOp == NULL)
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         if (Address < MmSystemRangeStart)
-         {
-            ObDereferenceObject(Process);
-         }
-         return(STATUS_UNSUCCESSFUL);
-      }
-
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(AddressSpace);
-
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmPageOutSectionView(AddressSpace, MemoryArea,
-                                    Address, PageOp);
-   }
-#ifdef _NEWCC_
-   else if (Type == MEMORY_AREA_PAGE_FILE_SECTION)
-   {
-	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
-
-      /*
-       * Get or create a pageop
-       */
-      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
-                           MemoryArea->Data.SectionData.Segment,
-                           Offset, MM_PAGEOP_PAGEOUT, TRUE);
-      if (PageOp == NULL)
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         if (Address < MmSystemRangeStart)
-         {
-            ObDereferenceObject(Process);
-         }
-         return(STATUS_UNSUCCESSFUL);
-      }
-
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(AddressSpace);
-
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmPageOutPageFileView
-		  (AddressSpace, MemoryArea, Address, PageOp);
-   }
-   else if (Type == MEMORY_AREA_IMAGE_SECTION)
-   {
-	  Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
-
-      /*
-       * Get or create a pageop
-       */
-      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
-                           MemoryArea->Data.SectionData.Segment,
-                           Offset, MM_PAGEOP_PAGEOUT, TRUE);
-      if (PageOp == NULL)
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         if (Address < MmSystemRangeStart)
-         {
-            ObDereferenceObject(Process);
-         }
-         return(STATUS_UNSUCCESSFUL);
-      }
-
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(AddressSpace);
-
-      /*
-       * Do the actual page out work.
-      */
-      Status = MmPageOutImageFile
-		  (AddressSpace, MemoryArea, Address, PageOp);
-   }
-#endif
-   else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
-   {
-      PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
-                           Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
-      if (PageOp == NULL)
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         if (Address < MmSystemRangeStart)
-         {
-            ObDereferenceObject(Process);
-         }
-         return(STATUS_UNSUCCESSFUL);
-      }
-
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(AddressSpace);
-
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmPageOutVirtualMemory(AddressSpace, MemoryArea,
-                                      Address, PageOp);
-   }
-   else
-   {
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-   if (Address < MmSystemRangeStart)
-   {
-      ObDereferenceObject(Process);
-   }
-   return(Status);
+   DPRINT("Evicted %d\n", Evicted);
+   return Evicted ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 VOID
@@ -458,6 +444,8 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    PMM_RMAP_ENTRY current_entry;
    PMM_RMAP_ENTRY new_entry;
    ULONG PrevSize;
+
+   DPRINT("Insert Rmap: %x %x:%x\n", Page, Process, Address);
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -567,6 +555,10 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;
+
+   DPRINT("Delete Rmap: %x %x:%x\n", Page, Process, Address);
+
+   Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
    ExAcquireFastMutex(&RmapListLock);
    previous_entry = NULL;

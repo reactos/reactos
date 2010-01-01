@@ -52,11 +52,18 @@ INIT_FUNCTION
 NTAPI
 MmInitializePagedPool(VOID)
 {   
+	MM_REQUIRED_RESOURCES Required;
+	
+	if (!NT_SUCCESS(MmRequestPageMemoryConsumer(MC_PPOOL, TRUE, &Required.Page[0])))
+	{
+		KeBugCheck(MEMORY_MANAGEMENT);
+	}
+
 	/*
 	 * We are still at a high IRQL level at this point so explicitly commit
 	 * the first page of the paged pool before writing the first block header.
 	 */
-	MmCommitPagedPoolAddress ( (PVOID)MmPagedPoolBase, FALSE );
+	MmCommitPagedPoolAddress ( NULL, NULL, (PVOID)MmPagedPoolBase, FALSE, &Required );
 
 	MmPagedPool = RPoolInit ( MmPagedPoolBase,
 		MmPagedPoolSize,

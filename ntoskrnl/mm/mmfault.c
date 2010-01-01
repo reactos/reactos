@@ -15,7 +15,37 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "ARM3/miarm.h"
 
+/* GLOBALS ********************************************************************/
+
+KEVENT MmWaitPageEvent;
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+typedef struct _WORK_QUEUE_WITH_CONTEXT
+{
+	WORK_QUEUE_ITEM WorkItem;
+	PMMSUPPORT AddressSpace;
+	PMEMORY_AREA MemoryArea;
+	PMM_REQUIRED_RESOURCES Required;
+	NTSTATUS Status;
+	KEVENT Wait;
+	AcquireResource DoAcquisition;
+} WORK_QUEUE_WITH_CONTEXT, *PWORK_QUEUE_WITH_CONTEXT;
+
+VOID
+NTAPI
+MmpFaultWorker
+(PWORK_QUEUE_WITH_CONTEXT WorkItem)
+{
+	DPRINT("Calling work\n");
+	WorkItem->Status = 
+		WorkItem->Required->DoAcquisition
+		(WorkItem->AddressSpace,
+		 WorkItem->MemoryArea,
+		 WorkItem->Required);
+	DPRINT("Status %x\n", WorkItem->Status);
+	KeSetEvent(&WorkItem->Wait, IO_NO_INCREMENT, FALSE);
+}
 
 VOID
 FASTCALL
@@ -50,14 +80,17 @@ MiSyncForContextSwitch(IN PKTHREAD Thread)
 
 NTSTATUS
 NTAPI
-MmpAccessFault(KPROCESSOR_MODE Mode,
-                  ULONG_PTR Address,
-                  BOOLEAN FromMdl)
+MmpAccessFaultInner
+(KPROCESSOR_MODE Mode,
+ PMMSUPPORT AddressSpace,
+ ULONG_PTR Address,
+ BOOLEAN FromMdl,
+ PETHREAD Thread)
 {
-   PMMSUPPORT AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
+   MM_REQUIRED_RESOURCES Resources = { 0 };
 
    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -77,7 +110,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
        */
       if (Mode != KernelMode)
       {
-         DPRINT1("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
+         DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
          return(STATUS_ACCESS_VIOLATION);
       }
       AddressSpace = MmGetKernelAddressSpace();
@@ -91,68 +124,99 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
    {
       MmLockAddressSpace(AddressSpace);
    }
+
    do
    {
       MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)Address);
-      if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+      if (MemoryArea == NULL || 
+		  MemoryArea->DeleteInProgress ||
+		  !MemoryArea->AccessFault)
       {
          if (!FromMdl)
          {
             MmUnlockAddressSpace(AddressSpace);
          }
+		 DPRINT1("Address: %x\n", Address);
          return (STATUS_ACCESS_VIOLATION);
       }
 
-      switch (MemoryArea->Type)
-      {
-         case MEMORY_AREA_SYSTEM:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
+	  DPRINT
+		  ("Type %x (%x -> %x)\n", 
+		   MemoryArea->Type, 
+		   MemoryArea->StartingAddress, 
+		   MemoryArea->EndingAddress);
 
-         case MEMORY_AREA_PAGED_POOL:
-            Status = STATUS_SUCCESS;
-            break;
+	  Resources.DoAcquisition = NULL;
 
-         case MEMORY_AREA_SECTION_VIEW:
-            Status = MmAccessFaultSectionView(AddressSpace,
-                                              MemoryArea,
-                                              (PVOID)Address,
-                                              Locked);
-            break;
+	  // Note: fault handlers are called with address space locked
+	  // We return STATUS_MORE_PROCESSING_REQUIRED if anything is needed
+	  Status = MemoryArea->AccessFault
+		  (AddressSpace, MemoryArea, (PVOID)Address, Locked, &Resources);
 
-#ifdef _NEWCC_
-	     case MEMORY_AREA_IMAGE_SECTION:
-			 Status = MmAccessFaultImageFile
-				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
-			 break;
-			
-	     case MEMORY_AREA_PAGE_FILE_SECTION:
-			 Status = MmAccessFaultPageFile
-				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
-			 break;
+	  if (!FromMdl)
+	  {
+		  MmUnlockAddressSpace(AddressSpace);
+	  }
 
-	     case MEMORY_AREA_PHYSICAL_MEMORY_SECTION:
-			 Status = MmAccessFaultPhysicalMemory
-				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
-			 break;
-#endif
-
-         case MEMORY_AREA_VIRTUAL_MEMORY:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
-
-         case MEMORY_AREA_SHARED_DATA:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
-
-         default:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
-      }
+	  if (Status == STATUS_SUCCESS + 1)
+	  {
+		  // Wait page ...
+		  if (!NT_SUCCESS
+			  (KeWaitForSingleObject
+			   (&MmWaitPageEvent,
+				0,
+				KernelMode,
+				FALSE,
+				NULL)))
+			  ASSERT(FALSE);
+		  Status = STATUS_MM_RESTART_OPERATION;
+	  }
+	  else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
+	  {
+		  if (Thread->ActiveFaultCount > 1)
+		  {
+			  WORK_QUEUE_WITH_CONTEXT Context = { };
+			  DPRINT("Already fault handling ... going to work item (%x)\n", Address);
+			  Context.AddressSpace = AddressSpace;
+			  Context.MemoryArea = MemoryArea;
+			  Context.Required = &Resources;
+			  KeInitializeEvent(&Context.Wait, NotificationEvent, FALSE);
+			  ExInitializeWorkItem(&Context.WorkItem, (PWORKER_THREAD_ROUTINE)MmpFaultWorker, &Context);
+			  DPRINT("Queue work item\n");
+			  ExQueueWorkItem(&Context.WorkItem, DelayedWorkQueue);
+			  DPRINT("Wait\n");
+			  KeWaitForSingleObject(&Context.Wait, 0, KernelMode, FALSE, NULL);
+			  Status = Context.Status;
+			  DPRINT("Status %x\n", Status);
+		  }
+		  else
+		  {
+			  Status = Resources.DoAcquisition(AddressSpace, MemoryArea, &Resources);
+		  }
+		  
+		  if (NT_SUCCESS(Status))
+		  {
+			  Status = STATUS_MM_RESTART_OPERATION;
+		  }
+	  }
+	  
+	  if (!FromMdl)
+	  {
+		  MmLockAddressSpace(AddressSpace);
+	  }
    }
    while (Status == STATUS_MM_RESTART_OPERATION);
 
-   DPRINT("Completed page fault handling\n");
+   if (!NT_SUCCESS(Status))
+   {
+	   DPRINT1("Completed page fault handling %x %x\n", Address, Status);
+	   DPRINT1
+		   ("Type %x (%x -> %x)\n", 
+			MemoryArea->Type, 
+			MemoryArea->StartingAddress, 
+			MemoryArea->EndingAddress);
+   }
+
    if (!FromMdl)
    {
       MmUnlockAddressSpace(AddressSpace);
@@ -162,132 +226,225 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
 
 NTSTATUS
 NTAPI
-MmNotPresentFault(KPROCESSOR_MODE Mode,
-                           ULONG_PTR Address,
-                           BOOLEAN FromMdl)
+MmpAccessFault
+(KPROCESSOR_MODE Mode,
+ ULONG_PTR Address,
+ BOOLEAN FromMdl)
 {
-   PMMSUPPORT AddressSpace;
-   MEMORY_AREA* MemoryArea;
-   NTSTATUS Status;
-   BOOLEAN Locked = FromMdl;
-   extern PMMPTE MmSharedUserDataPte;
+	PETHREAD Thread;
+	PMMSUPPORT AddressSpace;
+	NTSTATUS Status;
+	
+	DPRINT("MmpAccessFault(Mode %d, Address %x)\n", Mode, Address);
+	
+	Thread = PsGetCurrentThread();
 
-   DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
+	if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
+	{
+		DPRINT1("Page fault at high IRQL %d, address %x\n", KeGetCurrentIrql(), Address);
+		return(STATUS_UNSUCCESSFUL);
+	}
+	
+	/*
+	 * Find the memory area for the faulting address
+	 */
+	if (Address >= (ULONG_PTR)MmSystemRangeStart)
+	{
+		/*
+		 * Check permissions
+		 */
+		if (Mode != KernelMode)
+		{
+			DPRINT1("Address: %x\n", Address);
+			return(STATUS_ACCESS_VIOLATION);
+		}
+		AddressSpace = MmGetKernelAddressSpace();
+	}
+	else
+	{
+		AddressSpace = &PsGetCurrentProcess()->Vm;
+	}
+	
+	Thread->ActiveFaultCount++;	
+	Status = MmpAccessFaultInner(Mode, AddressSpace, Address, FromMdl, Thread);
+	Thread->ActiveFaultCount--;
 
-   if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
-   {
-      DPRINT1("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
-      return(STATUS_UNSUCCESSFUL);
-   }
+	return(Status);
+}
 
-   /*
-    * Find the memory area for the faulting address
-    */
-   if (Address >= (ULONG_PTR)MmSystemRangeStart)
-   {
-      /*
-       * Check permissions
-       */
-      if (Mode != KernelMode)
-      {
-	 DPRINT1("Address: %x\n", Address);
-         return(STATUS_ACCESS_VIOLATION);
-      }
-      AddressSpace = MmGetKernelAddressSpace();
-   }
-   else
-   {
-      AddressSpace = &PsGetCurrentProcess()->Vm;
-   }
+NTSTATUS
+NTAPI
+MmFaultAcquirePage(PMM_REQUIRED_RESOURCES Resources)
+{
+	return MmRequestPageMemoryConsumer
+		(Resources->Consumer,
+		 TRUE,
+		 &Resources->Page[Resources->Offset]);
+}
 
-   if (!FromMdl)
-   {
-      MmLockAddressSpace(AddressSpace);
-   }
+NTSTATUS
+NTAPI
+MmNotPresentFaultInner
+(KPROCESSOR_MODE Mode,
+ PMMSUPPORT AddressSpace,
+ ULONG_PTR Address,
+ BOOLEAN FromMdl,
+ PETHREAD Thread)
+{
+	BOOLEAN Locked = FromMdl;
+	PMEMORY_AREA MemoryArea;
+	MM_REQUIRED_RESOURCES Resources = { 0 };
+	NTSTATUS Status = STATUS_SUCCESS;
 
-   /*
-    * Call the memory area specific fault handler
-    */
-   do
-   {
-      MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)Address);
-      if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-      {
-         if (!FromMdl)
-         {
-            MmUnlockAddressSpace(AddressSpace);
-         }
-         return (STATUS_ACCESS_VIOLATION);
-      }
+	if (!FromMdl)
+	{
+		MmLockAddressSpace(AddressSpace);
+	}
+	
+	/*
+	 * Call the memory area specific fault handler
+	 */
+	do
+	{
+		MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)Address);
+		if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+		{
+			Status = STATUS_ACCESS_VIOLATION;
+			DPRINT("Address %x\n", Address);
+			break;
+		}
+		
+		DPRINT1
+			("Type %x (%x -> %x)\n", 
+			 MemoryArea->Type, 
+			 MemoryArea->StartingAddress, 
+			 MemoryArea->EndingAddress);
+		
+		Resources.DoAcquisition = NULL;
+		
+		// Note: fault handlers are called with address space locked
+		// We return STATUS_MORE_PROCESSING_REQUIRED if anything is needed
+		if (MemoryArea->NotPresent)
+			Status = MemoryArea->NotPresent
+				(AddressSpace, MemoryArea, (PVOID)Address, Locked, &Resources);
+		else
+		{
+			DPRINT("Address %x\n", Address);
+			Status = STATUS_ACCESS_VIOLATION;
+		}
+		
+		if (!FromMdl)
+		{
+			MmUnlockAddressSpace(AddressSpace);
+		}
+		
+		if (Status == STATUS_SUCCESS + 1)
+		{
+			// Wait page ...
+			if (!NT_SUCCESS
+				(KeWaitForSingleObject
+				 (&MmWaitPageEvent,
+				  0,
+				  KernelMode,
+				  FALSE,
+				  NULL)))
+				ASSERT(FALSE);
+			Status = STATUS_MM_RESTART_OPERATION;
+		}
+		else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
+		{
+			if (Thread->ActiveFaultCount > 1)
+			{
+				WORK_QUEUE_WITH_CONTEXT Context = { };
+				DPRINT("Already fault handling ... going to work item (%x)\n", Address);
+				Context.AddressSpace = AddressSpace;
+				Context.MemoryArea = MemoryArea;
+				Context.Required = &Resources;
+				KeInitializeEvent(&Context.Wait, NotificationEvent, FALSE);
+				ExInitializeWorkItem(&Context.WorkItem, (PWORKER_THREAD_ROUTINE)MmpFaultWorker, &Context);
+				DPRINT("Queue work item\n");
+				ExQueueWorkItem(&Context.WorkItem, DelayedWorkQueue);
+				DPRINT("Wait\n");
+				KeWaitForSingleObject(&Context.Wait, 0, KernelMode, FALSE, NULL);
+				Status = Context.Status;
+				DPRINT("Status %x\n", Status);
+			}
+			else
+			{
+				Status = Resources.DoAcquisition
+					(AddressSpace, MemoryArea, &Resources);
+			}
 
-	  DPRINT
-		  ("Type %x (%x -> %x)\n", 
-		   MemoryArea->Type, 
-		   MemoryArea->StartingAddress, 
-		   MemoryArea->EndingAddress);
-	  
-      switch (MemoryArea->Type)
-      {
-         case MEMORY_AREA_PAGED_POOL:
-            {
-               Status = MmCommitPagedPoolAddress((PVOID)Address, Locked);
-               break;
-            }
+			if (NT_SUCCESS(Status))
+			{
+				Status = STATUS_MM_RESTART_OPERATION;
+			}
+		}
+		
+		if (!FromMdl)
+		{
+			MmLockAddressSpace(AddressSpace);
+		}
+	}
+	while (Status == STATUS_MM_RESTART_OPERATION);
 
-         case MEMORY_AREA_SYSTEM:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
+	DPRINT("Completed page fault handling: %x\n", Status);
+	if (!FromMdl)
+	{
+		MmUnlockAddressSpace(AddressSpace);
+	}
 
-         case MEMORY_AREA_SECTION_VIEW:
-            Status = MmNotPresentFaultSectionView(AddressSpace,
-                                                  MemoryArea,
-                                                  (PVOID)Address,
-                                                  Locked);
-            break;
+	DPRINT("Done %x\n", Status);
 
-#ifdef _NEWCC_
-	     case MEMORY_AREA_IMAGE_SECTION:
-			 Status = MmNotPresentFaultImageFile
-				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
-			 break;
+	return Status;
+}
 
-	     case MEMORY_AREA_PAGE_FILE_SECTION:
-			 Status = MmNotPresentFaultPageFile
-				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
-			 break;
+NTSTATUS
+NTAPI
+MmNotPresentFault
+(KPROCESSOR_MODE Mode,
+ ULONG_PTR Address,
+ BOOLEAN FromMdl)
+{
+	PETHREAD Thread;
+	PMMSUPPORT AddressSpace;
+	NTSTATUS Status;
+	
+	DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
+	
+	Thread = PsGetCurrentThread();
 
-	     case MEMORY_AREA_PHYSICAL_MEMORY_SECTION:
-			 Status = MmNotPresentFaultPhysicalMemory
-				 (AddressSpace, MemoryArea, (PVOID)Address, Locked);
-			 break;
-#endif
+	if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
+	{
+		DPRINT1("Page fault at high IRQL %d, address %x\n", KeGetCurrentIrql(), Address);
+		return(STATUS_UNSUCCESSFUL);
+	}
+	
+	/*
+	 * Find the memory area for the faulting address
+	 */
+	if (Address >= (ULONG_PTR)MmSystemRangeStart)
+	{
+		/*
+		 * Check permissions
+		 */
+		if (Mode != KernelMode)
+		{
+			DPRINT1("Address: %x\n", Address);
+			return(STATUS_ACCESS_VIOLATION);
+		}
+		AddressSpace = MmGetKernelAddressSpace();
+	}
+	else
+	{
+		AddressSpace = &PsGetCurrentProcess()->Vm;
+	}
+	
+	Thread->ActiveFaultCount++;	
+	Status = MmNotPresentFaultInner(Mode, AddressSpace, Address, FromMdl, Thread);
+	Thread->ActiveFaultCount--;
 
-         case MEMORY_AREA_VIRTUAL_MEMORY:
-         case MEMORY_AREA_PEB_OR_TEB:
-            Status = MmNotPresentFaultVirtualMemory(AddressSpace,
-                                                    MemoryArea,
-                                                    (PVOID)Address,
-                                                    Locked);
-            break;
-
-         case MEMORY_AREA_SHARED_DATA:
-              *MiAddressToPte(USER_SHARED_DATA) = *MmSharedUserDataPte;
-              Status = STATUS_SUCCESS;
-            break;
-
-         default:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
-      }
-   }
-   while (Status == STATUS_MM_RESTART_OPERATION);
-
-   DPRINT("Completed page fault handling\n");
-   if (!FromMdl)
-   {
-      MmUnlockAddressSpace(AddressSpace);
-   }
-   return(Status);
+	return(Status);
 }
 
 extern BOOLEAN Mmi386MakeKernelPageTableGlobal(PVOID Address);
@@ -341,29 +498,37 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
 
 NTSTATUS
 NTAPI
-MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
+MmCommitPagedPoolAddress
+(PMMSUPPORT AddressSpace,
+ PMEMORY_AREA MemoryArea,
+ PVOID Address,
+ BOOLEAN Locked,
+ PMM_REQUIRED_RESOURCES Required)
 {
    NTSTATUS Status;
-   PFN_TYPE AllocatedPage;
    KIRQL OldIrql;
 
-   Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
-   if (!NT_SUCCESS(Status))
+   if (MmIsPagePresent(NULL, Address))
+	   return STATUS_SUCCESS;
+
+   if (!Required->Page[0])
    {
-      MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      Status = MmRequestPageMemoryConsumer(MC_PPOOL, TRUE, &AllocatedPage);
-      MmLockAddressSpace(MmGetKernelAddressSpace());
+	   Required->Consumer = MC_PPOOL;
+	   Required->Amount = 1;
+	   Required->DoAcquisition = MiGetOnePage;
+	   return STATUS_MORE_PROCESSING_REQUIRED;
    }
+
    Status =
       MmCreateVirtualMapping(NULL,
                              (PVOID)PAGE_ROUND_DOWN(Address),
                              PAGE_READWRITE,
-                             &AllocatedPage,
+                             &Required->Page[0],
                              1);
    if (Locked)
    {
       OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      MmLockPage(AllocatedPage);
+      MmLockPage(Required->Page[0]);
       KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
    return(Status);

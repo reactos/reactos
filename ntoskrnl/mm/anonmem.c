@@ -49,8 +49,7 @@ NTSTATUS
 NTAPI
 MmWritePageVirtualMemory(PMMSUPPORT AddressSpace,
                          PMEMORY_AREA MemoryArea,
-                         PVOID Address,
-                         PMM_PAGEOP PageOp)
+                         PVOID Address)
 {
    SWAPENTRY SwapEntry;
    PFN_TYPE Page;
@@ -62,9 +61,6 @@ MmWritePageVirtualMemory(PMMSUPPORT AddressSpace,
     */
    if (MemoryArea->DeleteInProgress)
    {
-      PageOp->Status = STATUS_UNSUCCESSFUL;
-      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      MmReleasePageOp(PageOp);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -75,9 +71,6 @@ MmWritePageVirtualMemory(PMMSUPPORT AddressSpace,
     */
    if (!MmIsDirtyPage(Process, Address))
    {
-      PageOp->Status = STATUS_SUCCESS;
-      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      MmReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
    }
 
@@ -96,9 +89,6 @@ MmWritePageVirtualMemory(PMMSUPPORT AddressSpace,
       if (SwapEntry == 0)
       {
          MmSetDirtyPage(Process, Address);
-         PageOp->Status = STATUS_PAGEFILE_QUOTA_EXCEEDED;
-         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-         MmReleasePageOp(PageOp);
          return(STATUS_PAGEFILE_QUOTA_EXCEEDED);
       }
    }
@@ -112,9 +102,6 @@ MmWritePageVirtualMemory(PMMSUPPORT AddressSpace,
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
               Status);
       MmSetDirtyPage(Process, Address);
-      PageOp->Status = STATUS_UNSUCCESSFUL;
-      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      MmReleasePageOp(PageOp);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -122,9 +109,6 @@ MmWritePageVirtualMemory(PMMSUPPORT AddressSpace,
     * Otherwise we have succeeded.
     */
    MmSetSavedSwapEntryPage(Page, SwapEntry);
-   PageOp->Status = STATUS_SUCCESS;
-   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-   MmReleasePageOp(PageOp);
    return(STATUS_SUCCESS);
 }
 
@@ -133,7 +117,7 @@ NTAPI
 MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
                        PMEMORY_AREA MemoryArea,
                        PVOID Address,
-                       PMM_PAGEOP PageOp)
+					   PMM_REQUIRED_RESOURCES Required)
 {
    PFN_TYPE Page;
    BOOLEAN WasDirty;
@@ -149,9 +133,6 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
     */
    if (MemoryArea->DeleteInProgress)
    {
-      PageOp->Status = STATUS_UNSUCCESSFUL;
-      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      MmReleasePageOp(PageOp);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -171,7 +152,6 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
     */
    if (!WasDirty)
    {
-      MmLockAddressSpace(AddressSpace);
       MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
       MmDeleteAllRmaps(Page, NULL, NULL);
       if ((SwapEntry = MmGetSavedSwapEntryPage(Page)) != 0)
@@ -179,11 +159,7 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
          MmCreatePageFileMapping(Process, Address, SwapEntry);
          MmSetSavedSwapEntryPage(Page, 0);
       }
-      MmUnlockAddressSpace(AddressSpace);
       MmReleasePageMemoryConsumer(MC_USER, Page);
-      PageOp->Status = STATUS_SUCCESS;
-      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      MmReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
    }
 
@@ -198,9 +174,6 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
       {
          MmShowOutOfSpaceMessagePagingFile();
          MmEnableVirtualMapping(Process, Address);
-         PageOp->Status = STATUS_UNSUCCESSFUL;
-         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-         MmReleasePageOp(PageOp);
          return(STATUS_PAGEFILE_QUOTA);
       }
    }
@@ -214,9 +187,6 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
               Status);
       MmEnableVirtualMapping(Process, Address);
-      PageOp->Status = STATUS_UNSUCCESSFUL;
-      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      MmReleasePageOp(PageOp);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -224,25 +194,22 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
     * Otherwise we have succeeded, free the page
     */
    DPRINT("MM: Swapped out virtual memory page 0x%.8X!\n", Page << PAGE_SHIFT);
-   MmLockAddressSpace(AddressSpace);
    MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
    MmCreatePageFileMapping(Process, Address, SwapEntry);
-   MmUnlockAddressSpace(AddressSpace);
    MmDeleteAllRmaps(Page, NULL, NULL);
    MmSetSavedSwapEntryPage(Page, 0);
    MmReleasePageMemoryConsumer(MC_USER, Page);
-   PageOp->Status = STATUS_SUCCESS;
-   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-   MmReleasePageOp(PageOp);
    return(STATUS_SUCCESS);
 }
 
 NTSTATUS
 NTAPI
-MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
-                               MEMORY_AREA* MemoryArea,
-                               PVOID Address,
-                               BOOLEAN Locked)
+MmNotPresentFaultVirtualMemory
+(PMMSUPPORT AddressSpace,
+ MEMORY_AREA* MemoryArea,
+ PVOID Address,
+ BOOLEAN Locked,
+ PMM_REQUIRED_RESOURCES Required)
 /*
  * FUNCTION: Move data into memory to satisfy a page not present fault
  * ARGUMENTS:
@@ -253,26 +220,27 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
  * NOTES: This function is called with the address space lock held.
  */
 {
-   PFN_TYPE Page;
    NTSTATUS Status;
    PMM_REGION Region;
-   PMM_PAGEOP PageOp;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
    KIRQL OldIrql;
+
+   DPRINT1("Not Present %x in (%x-%x)\n", Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
     
    /*
     * There is a window between taking the page fault and locking the
     * address space when another thread could load the page so we check
     * that.
     */
-   if (MmIsPagePresent(NULL, Address))
+   if (MmIsPagePresent(Process, Address))
    {
       if (Locked)
       {
          OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(MmGetPfnForProcess(NULL, Address));
+         MmLockPage(MmGetPfnForProcess(Process, Address));
          KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
+	  DPRINT1("Page was present\n");
       return(STATUS_SUCCESS);
    }
 
@@ -281,6 +249,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
     */
    if (MemoryArea->DeleteInProgress)
    {
+	  DPRINT1("Area being deleted\n");
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -293,118 +262,40 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
 
    if (Region->Type == MEM_RESERVE || Region->Protect == PAGE_NOACCESS)
    {
+	  DPRINT1("No access region\n");
       return(STATUS_ACCESS_VIOLATION);
    }
 
    /*
     * FIXME
     */
-    if (Region->Protect & PAGE_GUARD)
-    {
-        return(STATUS_GUARD_PAGE_VIOLATION);
-    }
-
-   /*
-    * Get or create a page operation
-    */
-   PageOp = MmGetPageOp(MemoryArea, Process->UniqueProcessId,
-                        (PVOID)PAGE_ROUND_DOWN(Address), NULL, 0,
-                        MM_PAGEOP_PAGEIN, FALSE);
-   if (PageOp == NULL)
+   if (Region->Protect & PAGE_GUARD)
    {
-      DPRINT1("MmGetPageOp failed");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-
-   /*
-    * Check if someone else is already handling this fault, if so wait
-    * for them
-    */
-   if (PageOp->Thread != PsGetCurrentThread())
-   {
-      MmUnlockAddressSpace(AddressSpace);
-      Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
-                                     0,
-                                     KernelMode,
-                                     FALSE,
-                                     NULL);
-      /*
-      * Check for various strange conditions
-      */
-      if (Status != STATUS_SUCCESS)
-      {
-         DPRINT1("Failed to wait for page op\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      if (PageOp->Status == STATUS_PENDING)
-      {
-         DPRINT1("Woke for page op before completion\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      /*
-      * If this wasn't a pagein then we need to restart the handling
-      */
-      if (PageOp->OpType != MM_PAGEOP_PAGEIN)
-      {
-         MmLockAddressSpace(AddressSpace);
-         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-         MmReleasePageOp(PageOp);
-         return(STATUS_MM_RESTART_OPERATION);
-      }
-      /*
-      * If the thread handling this fault has failed then we don't retry
-      */
-      if (!NT_SUCCESS(PageOp->Status))
-      {
-         MmLockAddressSpace(AddressSpace);
-         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-         Status = PageOp->Status;
-         MmReleasePageOp(PageOp);
-         return(Status);
-      }
-      MmLockAddressSpace(AddressSpace);
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(MmGetPfnForProcess(NULL, Address));
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
-      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      MmReleasePageOp(PageOp);
-      return(STATUS_SUCCESS);
-   }
-
-   /*
-    * Try to allocate a page
-    */
-   Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
-   if (Status == STATUS_NO_MEMORY)
-   {
-      MmUnlockAddressSpace(AddressSpace);
-      Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-      MmLockAddressSpace(AddressSpace);
-   }
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("MmRequestPageMemoryConsumer failed, status = %x\n", Status);
-      KeBugCheck(MEMORY_MANAGEMENT);
+	   DPRINT1("Guard page\n");
+	   return(STATUS_GUARD_PAGE_VIOLATION);
    }
 
    /*
     * Handle swapped out pages.
     */
-   if (MmIsPageSwapEntry(NULL, Address))
+   if (MmIsPageSwapEntry(Process, Address) && !Required->Page[0])
    {
-      SWAPENTRY SwapEntry;
-
-      MmDeletePageFileMapping(Process, Address, &SwapEntry);
-      Status = MmReadFromSwapPage(SwapEntry, Page);
-      if (!NT_SUCCESS(Status))
-      {
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      MmSetSavedSwapEntryPage(Page, SwapEntry);
+      MmGetPageFileMapping(Process, Address, &Required->SwapEntry);
+	  Required->DoAcquisition = MiSwapInPage;
+	  DPRINT1("Swap in\n");
+	  return STATUS_MORE_PROCESSING_REQUIRED;
    }
+
+   if (!Required->Page[0])
+   {
+	   Required->Consumer = MC_USER;
+	   Required->Amount = 1;
+	   Required->DoAcquisition = MiGetOnePage;
+	   DPRINT1("Allocate\n");
+	   return STATUS_MORE_PROCESSING_REQUIRED;
+   }
+
+   DPRINT1("Using page %x\n", Required->Page[0]);
 
    /*
     * Set the page. If we fail because we are out of memory then
@@ -413,29 +304,21 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
    Status = MmCreateVirtualMapping(Process,
                                    (PVOID)PAGE_ROUND_DOWN(Address),
                                    Region->Protect,
-                                   &Page,
+                                   &Required->Page[0],
                                    1);
-   while (Status == STATUS_NO_MEMORY)
-   {
-      MmUnlockAddressSpace(AddressSpace);
-      Status = MmCreateVirtualMapping(Process,
-                                      Address,
-                                      Region->Protect,
-                                      &Page,
-                                      1);
-      MmLockAddressSpace(AddressSpace);
-   }
+
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
       KeBugCheck(MEMORY_MANAGEMENT);
+	  DPRINT1("Status %x\n", Status);
       return(Status);
    }
 
    /*
     * Add the page to the process's working set
     */
-   MmInsertRmap(Page, Process, (PVOID)PAGE_ROUND_DOWN(Address));
+   MmInsertRmap(Required->Page[0], Process, (PVOID)PAGE_ROUND_DOWN(Address));
 
    /*
     * Finish the operation
@@ -443,12 +326,11 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
    if (Locked)
    {
       OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      MmLockPage(Page);
+      MmLockPage(Required->Page[0]);
       KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
-   PageOp->Status = STATUS_SUCCESS;
-   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-   MmReleasePageOp(PageOp);
+
+   DPRINT1("Success!\n");
    return(STATUS_SUCCESS);
 }
 
@@ -838,6 +720,11 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
                                PBaseAddress != 0,
                                AllocationType & MEM_TOP_DOWN,
                                BoundaryAddressMultiple);
+
+   MemoryArea->NotPresent = MmNotPresentFaultVirtualMemory;
+   MemoryArea->AccessFault = NULL;
+   MemoryArea->PageOut = MmPageOutVirtualMemory;
+
    if (!NT_SUCCESS(Status))
    {
       MmUnlockAddressSpace(AddressSpace);

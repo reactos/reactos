@@ -62,6 +62,7 @@ TRUE;
 #else
 FALSE;
 #endif
+extern KEVENT MmWaitPageEvent;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -211,6 +212,11 @@ MiInitSystemMemoryAreas()
                                 TRUE,
                                 0,
                                 BoundaryAddressMultiple);
+
+	MArea->NotPresent = MmCommitPagedPoolAddress;
+	MArea->AccessFault = NULL;
+	MArea->PageOut = NULL;
+
     ASSERT(Status == STATUS_SUCCESS);
     
     //
@@ -365,6 +371,8 @@ MmInitSystem(IN ULONG Phase,
         KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
         MmKernelAddressSpace = MmGetCurrentAddressSpace();
         MmInitGlobalKernelPageDirectory();
+
+		KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
         
         /* Dump memory descriptors */
         if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();

@@ -83,6 +83,13 @@ static ULONG UnzeroedPageCount = 0;
 
 /* FUNCTIONS *************************************************************/
 
+ULONG
+NTAPI
+MmGetPageConsumer(PFN_TYPE Page)
+{
+	return MiGetPfnEntry(Page)->Flags.Consumer;
+}
+
 PFN_TYPE
 NTAPI
 MmGetLRUFirstUserPage(VOID)
@@ -115,7 +122,7 @@ MmInsertLRULastUserPage(PFN_TYPE Pfn)
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
    ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
-   ASSERT(Page->Flags.Consumer == MC_USER);
+   ASSERT(BALANCER_CAN_EVICT(Page->Flags.Consumer));
    InsertTailList(&UserPageListHead, &Page->ListEntry);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
@@ -133,7 +140,7 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
    Page = MiGetPfnEntry(PreviousPfn);
    ASSERT(Page);
    ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
-   ASSERT(Page->Flags.Consumer == MC_USER);
+   ASSERT(BALANCER_CAN_EVICT(Page->Flags.Consumer));
    NextListEntry = (PLIST_ENTRY)Page->ListEntry.Flink;
    if (NextListEntry == &UserPageListHead)
    {
@@ -594,7 +601,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         //
         // Check if we've reached the end
         //
-        Page = *MdlPage;
+        Page = *MdlPage++;
         if (Page == (PFN_NUMBER)-1) break;
         
         //
@@ -809,10 +816,13 @@ NTAPI
 MmGetRmapListHeadPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
-   struct _MM_RMAP_ENTRY* ListHead;
+   struct _MMPFN* PfnEntry;
+   struct _MM_RMAP_ENTRY* ListHead = NULL;
     
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   ListHead = (struct _MM_RMAP_ENTRY*)MiGetPfnEntry(Pfn)->RmapListHead;
+   PfnEntry = MiGetPfnEntry(Pfn);
+   if (PfnEntry) 
+	   ListHead = (struct _MM_RMAP_ENTRY *)PfnEntry->RmapListHead;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
     
    return(ListHead);
@@ -845,11 +855,9 @@ MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmReferencePage(PFN_TYPE Pfn)
+_MmReferencePage(PFN_TYPE Pfn, const char *file, int line)
 {
    PPHYSICAL_PAGE Page;
-
-   DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
    if (Pfn == 0 || Pfn > MmHighestPhysicalPage)
    {
@@ -858,9 +866,12 @@ MmReferencePage(PFN_TYPE Pfn)
 
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
+
+   DPRINT1("MmReferencePage(PysicalAddress %x,%s:%d,%d)\n", Pfn << PAGE_SHIFT, file, line, Page->ReferenceCount);
+
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
-      DPRINT1("Referencing non-used page\n");
+	  DPRINT1("Referencing non-used page %x\n", Pfn);
       KeBugCheck(MEMORY_MANAGEMENT);
    }
 
@@ -904,14 +915,14 @@ MmIsPageInUse(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmDereferencePage(PFN_TYPE Pfn)
+_MmDereferencePage(PFN_TYPE Pfn, const char *file, int line)
 {
    PPHYSICAL_PAGE Page;
 
-   DPRINT("MmDereferencePage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
+
+   DPRINT("MmDereferencePage(PhysicalAddress %x,%s:%d,%d)\n", Pfn << PAGE_SHIFT, file, line, Page->ReferenceCount);
 
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
@@ -928,7 +939,11 @@ MmDereferencePage(PFN_TYPE Pfn)
    if (Page->ReferenceCount == 0)
    {
       MmAvailablePages++;
-      if (Page->Flags.Consumer == MC_USER) RemoveEntryList(&Page->ListEntry);
+      if (BALANCER_CAN_EVICT(Page->Flags.Consumer))
+		  RemoveEntryList(&Page->ListEntry);
+
+      (void)InterlockedDecrementUL(&MiMemoryConsumers[Page->Flags.Consumer].PagesUsed);
+
       if (Page->RmapListHead != (LONG)NULL)
       {
          DPRINT1("Freeing page with rmap entries.\n");
@@ -952,6 +967,7 @@ MmDereferencePage(PFN_TYPE Pfn)
       }
       Page->Flags.Type = MM_PHYSICAL_PAGE_FREE;
       Page->Flags.Consumer = MC_MAXIMUM;
+	  Page->u2.SegmentPart = NULL;
       InsertTailList(&FreeUnzeroedPageListHead,
                      &Page->ListEntry);
       UnzeroedPageCount++;
@@ -1026,6 +1042,8 @@ MmUnlockPage(PFN_TYPE Pfn)
    Page->LockCount--;
 }
 
+extern ULONG MmAvailablePages, MiMinimumAvailablePages;
+
 PFN_TYPE
 NTAPI
 MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
@@ -1039,6 +1057,8 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
 
    if (IsListEmpty(&FreeZeroedPageListHead))
    {
+	  DPRINT("MmAvailablePages %x MiMinimumAvailablePages %x\n", MmAvailablePages, MiMinimumAvailablePages);
+
       if (IsListEmpty(&FreeUnzeroedPageListHead))
       {
          /* Check if this allocation is for the PFN DB itself */
@@ -1048,6 +1068,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
          }
 
          DPRINT1("MmAllocPage(): Out of memory\n");
+		 ASSERT(FALSE);
          return 0;
       }
       ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
@@ -1079,6 +1100,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
    PageDescriptor->ReferenceCount = 1;
    PageDescriptor->LockCount = 0;
    PageDescriptor->SavedSwapEntry = SwapEntry;
+   PageDescriptor->u2.SegmentPart = 0;
 
    MmAvailablePages--;
 

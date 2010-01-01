@@ -31,16 +31,16 @@
 
 /* TYPES *********************************************************************/
 
-#define ENTRIES_PER_ELEMENT 244
-
+/* We store 8 bits of location with a page association */
+#define ENTRIES_PER_ELEMENT 256
+								   
 typedef struct _SECTION_PAGE_TABLE 
 {
     LARGE_INTEGER FileOffset;
+	PMM_SECTION_SEGMENT Segment;
     ULONG Refcount;
     ULONG PageEntries[ENTRIES_PER_ELEMENT];
 } SECTION_PAGE_TABLE, *PSECTION_PAGE_TABLE;
-
-SECTION_PAGE_TABLE MiSectionZeroPageTable = { };
 
 static
 PVOID
@@ -90,8 +90,15 @@ MiSectionPageTableGet
  PLARGE_INTEGER FileOffset)
 {
     LARGE_INTEGER SearchFileOffset;
+	PSECTION_PAGE_TABLE PageTable;
     SearchFileOffset.QuadPart = ROUND_DOWN(FileOffset->QuadPart, ENTRIES_PER_ELEMENT * PAGE_SIZE);
-    return RtlLookupElementGenericTable(Table, &SearchFileOffset);
+    PageTable = RtlLookupElementGenericTable(Table, &SearchFileOffset);
+	DPRINT
+		("MiSectionPageTableGet(%08x,%08x%08x)\n",
+		 Table,
+		 FileOffset->HighPart,
+		 FileOffset->LowPart);
+	return PageTable;
 }
 
 static
@@ -106,11 +113,12 @@ MiSectionPageTableGetOrAllocate
         MiSectionPageTableGet(Table, FileOffset);
     if (!PageTableSlice)
     {
+		SECTION_PAGE_TABLE SectionZeroPageTable = { };
         SearchFileOffset.QuadPart = ROUND_DOWN(FileOffset->QuadPart, ENTRIES_PER_ELEMENT * PAGE_SIZE);
-        MiSectionZeroPageTable.FileOffset = SearchFileOffset;
-        MiSectionZeroPageTable.Refcount = 1;
+        SectionZeroPageTable.FileOffset = SearchFileOffset;
+        SectionZeroPageTable.Refcount = 1;
         PageTableSlice = RtlInsertElementGenericTable
-            (Table, &MiSectionZeroPageTable, sizeof(MiSectionZeroPageTable), NULL);
+            (Table, &SectionZeroPageTable, sizeof(SectionZeroPageTable), NULL);
         DPRINT
             ("Allocate page table %x (%08x%08x)\n", 
              PageTableSlice,
@@ -146,9 +154,12 @@ MiSetPageEntrySectionSegment
     PageTable = 
         MiSectionPageTableGetOrAllocate(&Segment->PageTable, Offset);
     if (!PageTable) return STATUS_NO_MEMORY;
+	PageTable->Segment = Segment;
     PageIndex = 
         (Offset->QuadPart - PageTable->FileOffset.QuadPart) / PAGE_SIZE;
     PageTable->PageEntries[PageIndex] = Entry;
+	if (Entry && !IS_SWAP_FROM_SSE(Entry))
+		MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
     DPRINT
         ("MiSetPageEntrySectionSegment(%p,%08x%08x,%x)\n",
          &Segment->PageTable, Offset->u.HighPart, Offset->u.LowPart, Entry);
@@ -183,7 +194,8 @@ MiGetPageEntrySectionSegment
 
 VOID
 NTAPI
-MiFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment)
+MiFreePageTablesSectionSegment
+(PMM_SECTION_SEGMENT Segment, FREE_SECTION_PAGE_FUN FreePage)
 {
     PSECTION_PAGE_TABLE Element;
     DPRINT("MiFreePageTablesSectionSegment(%p)\n", &Segment->PageTable);
@@ -191,9 +203,103 @@ MiFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment)
            (Element = RtlGetElementGenericTable(&Segment->PageTable, 0)))
     {
         DPRINT
-            ("Delete table for %08x%08x\n", 
+            ("Delete table for %x -> %08x%08x\n", 
+			 Segment,
              Element->FileOffset.u.HighPart, 
              Element->FileOffset.u.LowPart);
+		if (FreePage)
+		{
+			int i;
+			for (i = 0; i < ENTRIES_PER_ELEMENT; i++)
+			{
+				LARGE_INTEGER Offset;
+				Offset.QuadPart = Element->FileOffset.QuadPart + i * PAGE_SIZE;
+				if (Element->PageEntries[i])
+				{
+					DPRINT("Freeing page %x @ %x\n", Element->PageEntries[i], Offset.LowPart);
+					FreePage(Segment, &Offset);
+				}
+			}
+		}
+		DPRINT("Remove memory\n");
         RtlDeleteElementGenericTable(&Segment->PageTable, Element);
     }
+	DPRINT("Done\n");
+}
+
+PMM_SECTION_SEGMENT
+NTAPI
+MmGetSectionAssociation(PFN_TYPE Page, PLARGE_INTEGER Offset)
+{
+    KIRQL oldIrql;
+    PMMPFN Pfn;
+    PMM_SECTION_SEGMENT Segment = NULL;
+    PSECTION_PAGE_TABLE PageTable;
+
+    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Pfn = MiGetPfnEntry(Page);
+    if (Pfn)
+    {
+		DPRINT("Pfn %x\n", Pfn);
+		DPRINT("Page Location %x\n", Pfn->u3.e1.PageLocation);
+		PageTable = (PVOID)((ULONG_PTR)Pfn->u2.SegmentPart & ~3);
+		DPRINT("PageTable %x\n", PageTable);
+		if (PageTable)
+		{
+			Segment = PageTable->Segment;
+			DPRINT("ShortFlags %x Raw Seg %x\n", Pfn->u3.e2.ShortFlags, Pfn->u2.SegmentPart);
+			Offset->QuadPart = PageTable->FileOffset.QuadPart +
+				(((((ULONG_PTR)Pfn->u2.SegmentPart & 3) << 6) |
+				  ((Pfn->u3.e2.ShortFlags >> 10) & 0x30) | 
+				  (Pfn->u3.e2.ShortFlags & 0xf)) << PAGE_SHIFT);
+			DPRINT("Final offset %x\n", Offset->LowPart);
+		}
+    }
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+
+    return(Segment);
+}
+
+NTSTATUS
+NTAPI
+MmSetSectionAssociation(PFN_TYPE Page, PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER Offset)
+{
+    PMMPFN Pfn;
+    KIRQL oldIrql;
+    USHORT SmallSize;
+    PSECTION_PAGE_TABLE PageTable;
+
+	DPRINT("MmSetSectionAssociation %x %x %x\n", Page, Segment, Offset->LowPart);
+    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Pfn = MiGetPfnEntry(Page);
+	DPRINT("Pfn %x\n", Pfn);
+    PageTable = 
+        MiSectionPageTableGetOrAllocate(&Segment->PageTable, Offset);
+    if (!PageTable) return STATUS_NO_MEMORY;
+	PageTable->Segment = Segment;
+	DPRINT("Page Table %x\n", PageTable);
+    SmallSize = (Offset->QuadPart >> PAGE_SHIFT) & 0xff;
+	DPRINT("SmallSize %x\n", SmallSize);
+    Pfn->u2.SegmentPart = 
+		(PVOID)((ULONG_PTR)PageTable + ((SmallSize >> 6) & 3));
+    Pfn->u3.e2.ShortFlags = (Pfn->u3.e2.ShortFlags & 0x3ff0) |
+        ((SmallSize & 0x30) << 10) |
+        (SmallSize & 0xf);
+	DPRINT("Pfn->u2.SegmentPart %x\n", Pfn->u2.SegmentPart);
+	DPRINT("Short Flags %x\n", Pfn->u3.e2.ShortFlags);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+	DPRINT("MmSetSectionAssociation done\n");
+	return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+MmDeleteSectionAssociation(PFN_TYPE Page)
+{
+    PMMPFN Pfn;
+    KIRQL oldIrql;
+    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Pfn = MiGetPfnEntry(Page);
+	Pfn->u2.SegmentPart = NULL;
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }

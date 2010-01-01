@@ -60,7 +60,8 @@ MmNotPresentFaultPhysicalMemory
 (PMMSUPPORT AddressSpace,
  MEMORY_AREA* MemoryArea,
  PVOID Address,
- BOOLEAN Locked)
+ BOOLEAN Locked,
+ PMM_REQUIRED_RESOURCES Required)
 {
 	ULONG Offset;
 	PFN_TYPE Page;
@@ -105,7 +106,8 @@ MmAccessFaultPhysicalMemory
 (PMMSUPPORT AddressSpace,
  MEMORY_AREA* MemoryArea,
  PVOID Address,
- BOOLEAN Locked)
+ BOOLEAN Locked,
+ PMM_REQUIRED_RESOURCES Required)
 {
 	return(STATUS_ACCESS_VIOLATION);
 }
@@ -159,19 +161,4 @@ MmCreatePhysicalMemorySection()
    PhysSection->Segment->Flags = MM_PHYSIMEM_SEGMENT;
 
    return(STATUS_SUCCESS);
-}
-
-VOID
-NTAPI
-MmUnmapPhysicalMemorySegment
-(PMMSUPPORT AddressSpace, 
- PMEMORY_AREA MemoryArea,
- PROS_SECTION_OBJECT Section,
- PMM_SECTION_SEGMENT Segment)
-{
-	MmFreeMemoryArea
-		(AddressSpace,
-		 MemoryArea,
-		 NULL,
-		 NULL);
 }

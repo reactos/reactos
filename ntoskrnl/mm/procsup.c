@@ -52,6 +52,8 @@ MiCreatePebOrTeb(PEPROCESS Process,
         AllocatedBase = RVA(AllocatedBase, -PAGE_SIZE);
     } while (Status != STATUS_SUCCESS);
 
+	MemoryArea->NotPresent = MmNotPresentFaultVirtualMemory;
+
     /* Initialize the Region */
     MmInitializeRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
                        PAGE_SIZE,
@@ -91,6 +93,20 @@ MmDeleteTeb(PEPROCESS Process,
 
 NTSTATUS
 NTAPI
+MmImportSharedDataPte
+(PMMSUPPORT AddressSpace,
+ PMEMORY_AREA MemoryArea,
+ PVOID Address,
+ BOOLEAN Locked,
+ PMM_REQUIRED_RESOURCES Required)
+{
+	extern PMMPTE MmSharedUserDataPte;
+	*MiAddressToPte(USER_SHARED_DATA) = *MmSharedUserDataPte;
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
 {
     PVOID BaseAddress;
@@ -111,6 +127,8 @@ MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
                                 FALSE,
                                 0,
                                 BoundaryAddressMultiple);
+	if (NT_SUCCESS(Status))
+		MemoryArea->NotPresent = MmImportSharedDataPte;
     return Status;
 }
 
@@ -193,6 +211,8 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
         DPRINT1("Failed to create Shared User Data\n");
         goto exit;
      }
+
+	MemoryArea->NotPresent = MmImportSharedDataPte;
 
     /* The process now has an address space */
     Process->HasAddressSpace = TRUE;
@@ -296,7 +316,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    PVOID Address;
    PMEMORY_AREA MemoryArea;
 
-   DPRINT("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
+   DPRINT1("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
           Process->ImageFileName);
 
    MmLockAddressSpace(&Process->Vm);
@@ -313,7 +333,12 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
          case MEMORY_AREA_SECTION_VIEW:
              Address = (PVOID)MemoryArea->StartingAddress;
              MmUnlockAddressSpace(&Process->Vm);
+			 DPRINT1
+				 ("MmUnmapViewOfSection(%x:%x) from type %x (%x-%x)\n", 
+				  &Process->Vm, Address, MemoryArea->Type, 
+				  MemoryArea->StartingAddress, MemoryArea->EndingAddress);
              MmUnmapViewOfSection(Process, Address);
+			 DPRINT1("MmUnmapViewOfSection(%x:%x) Done\n", &Process->Vm, Address);
              MmLockAddressSpace(&Process->Vm);
              break;
 

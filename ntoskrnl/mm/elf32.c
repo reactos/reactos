@@ -10,6 +10,8 @@
 #define __ELF_WORD_SIZE 32
 #include "elf.inc.h"
 
+#define IMAGE_FILE_MACHINE_UNKNOWN 0
+
 extern NTSTATUS NTAPI Elf64FmtCreateSection
 (
  IN CONST VOID * FileHeader,

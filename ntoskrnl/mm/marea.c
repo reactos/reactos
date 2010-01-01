@@ -764,7 +764,7 @@ MmFreeMemoryArea(
          {
             MmDeleteVirtualMapping(Process, (PVOID)Address, FALSE, &Dirty, &Page);
          }
-         if (FreePage != NULL)
+         if ((Page || SwapEntry) && (FreePage != NULL))
          {
             FreePage(FreePageContext, MemoryArea, (PVOID)Address,
                      Page, SwapEntry, (BOOLEAN)Dirty);
