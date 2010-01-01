@@ -16,17 +16,14 @@
 
 ULONG HalpSavedPfn;
 HARDWARE_PTE HalpSavedPte;
-ULONG HalpGpfHandler;
-ULONG HalpBopHandler;
+PVOID HalpGpfHandler;
+PVOID HalpBopHandler;
 ULONG HalpSavedEsp0;
 USHORT HalpSavedTss;
 USHORT HalpSavedIopmBase;
 PUSHORT HalpSavedIoMap;
 USHORT HalpSavedIoMapData[32][2];
 ULONG HalpSavedIoMapEntries;
-
-#define GetPdeAddress(x) (PHARDWARE_PTE)(((((ULONG_PTR)(x)) >> 22) << 2) + 0xC0300000)
-#define GetPteAddress(x) (PHARDWARE_PTE)(((((ULONG_PTR)(x)) >> 12) << 2) + 0xC0000000)
 
 /* FUNCTIONS ******************************************************************/
 
@@ -189,7 +186,7 @@ HalpMapRealModeMemory(VOID)
     ULONG i;
     
     /* Get the page table directory for the lowest meg of memory */
-    Pte = GetPdeAddress(0);
+    Pte = HalAddressToPde(0);
     HalpSavedPfn = Pte->PageFrameNumber;
     HalpSavedPte = *Pte;
     
@@ -197,7 +194,7 @@ HalpMapRealModeMemory(VOID)
     Pte->Valid = 1;
     Pte->Write = 1;
     Pte->Owner = 1;
-    Pte->PageFrameNumber = (GetPdeAddress(0xFFC00000))->PageFrameNumber;
+    Pte->PageFrameNumber = (HalAddressToPde(0xFFC00000))->PageFrameNumber;
     
     /* Flush the TLB by resetting CR3 */
     __writecr3(__readcr3());
@@ -206,7 +203,7 @@ HalpMapRealModeMemory(VOID)
     for (i = 0; i < 0x100000; i += PAGE_SIZE)
     {
         /* Identity map it */
-        Pte = GetPteAddress((PVOID)i);
+        Pte = HalAddressToPte(i);
         Pte->PageFrameNumber = i >> PAGE_SHIFT;
         Pte->Valid = 1;
         Pte->Write = 1;
@@ -214,8 +211,8 @@ HalpMapRealModeMemory(VOID)
     }
     
     /* Now get the entry for our real mode V86 code and the target */
-    Pte = GetPteAddress(0x20000);
-    V86Pte = GetPteAddress(&HalpRealModeStart);
+    Pte = HalAddressToPte(0x20000);
+    V86Pte = HalAddressToPte(&HalpRealModeStart);
     do
     {
         /* Map the physical address into our real-mode region */
@@ -224,7 +221,7 @@ HalpMapRealModeMemory(VOID)
         /* Keep going until we've reached the end of our region */
         Pte++;
         V86Pte++;
-    } while (V86Pte <= GetPteAddress(&HalpRealModeEnd));
+    } while (V86Pte <= HalAddressToPte(&HalpRealModeEnd));
     
     /* Flush the TLB by resetting CR3 */
     __writecr3(__readcr3());
@@ -234,27 +231,21 @@ VOID
 NTAPI
 HalpSwitchToRealModeTrapHandlers(VOID)
 {
-    ULONG Handler;
+    //
+    // Save the current Invalid Opcode and General Protection Fault Handlers
+    //
+    HalpGpfHandler = KeQueryInterruptHandler(13);
+    HalpBopHandler = KeQueryInterruptHandler(6);
 
-    /* Save the current Invalid Opcode and General Protection Fault Handlers */
-    HalpGpfHandler = ((((PKIPCR)KeGetPcr())->IDT[13].ExtendedOffset << 16) &
-                       0xFFFF0000) |
-        (((PKIPCR)KeGetPcr())->IDT[13].Offset & 0xFFFF);
-    HalpBopHandler = ((((PKIPCR)KeGetPcr())->IDT[6].ExtendedOffset << 16) &
-                       0xFFFF0000) |
-        (((PKIPCR)KeGetPcr())->IDT[6].Offset & 0xFFFF);
-    
-    /* Now set our own GPF handler to handle exceptions while in real mode */
-    Handler = (ULONG_PTR)HalpTrap0D;
-    ((PKIPCR)KeGetPcr())->IDT[13].ExtendedOffset =
-        (USHORT)((Handler >> 16) & 0xFFFF);
-    ((PKIPCR)KeGetPcr())->IDT[13].Offset = (USHORT)Handler;
-    
-    /* And our own invalid opcode handler to detect the BOP to get us out */
-    Handler = (ULONG_PTR)HalpTrap06;
-    ((PKIPCR)KeGetPcr())->IDT[6].ExtendedOffset =
-        (USHORT)((Handler >> 16) & 0xFFFF);
-    ((PKIPCR)KeGetPcr())->IDT[6].Offset = (USHORT)Handler;
+    //
+    // Now set our own GPF handler to handle exceptions while in real mode
+    //
+    KeRegisterInterruptHandler(13, HalpTrap0D);
+
+    //
+    // And our own invalid opcode handler to detect the BOP to get us out
+    //
+    KeRegisterInterruptHandler(6, HalpTrap06);
 }
 
 VOID
@@ -280,13 +271,11 @@ VOID
 NTAPI
 HalpRestoreTrapHandlers(VOID)
 {
-    /* We're back, restore the handlers we over-wrote */
-    ((PKIPCR)KeGetPcr())->IDT[13].ExtendedOffset =
-    (USHORT)((HalpGpfHandler >> 16) & 0xFFFF);
-    ((PKIPCR)KeGetPcr())->IDT[13].Offset = (USHORT)HalpGpfHandler;    
-    ((PKIPCR)KeGetPcr())->IDT[6].ExtendedOffset =
-        (USHORT)((HalpBopHandler >> 16) & 0xFFFF);
-    ((PKIPCR)KeGetPcr())->IDT[6].Offset = (USHORT)HalpBopHandler;
+    //
+    // We're back, restore the handlers we over-wrote
+    //
+    KeRegisterInterruptHandler(13, HalpGpfHandler);
+    KeRegisterInterruptHandler(6, HalpBopHandler);
 }
 
 VOID
@@ -317,7 +306,7 @@ HalpUnmapRealModeMemory(VOID)
     for (i = 0; i < 0x100000; i += PAGE_SIZE)
     {
         /* Invalidate each PTE */
-        Pte = GetPteAddress((PVOID)i);
+        Pte = HalAddressToPte(i);
         Pte->Valid = 0;
         Pte->Write = 0;
         Pte->Owner = 0;
@@ -325,7 +314,7 @@ HalpUnmapRealModeMemory(VOID)
     }
     
     /* Restore the PDE for the lowest megabyte of memory */
-    Pte = GetPdeAddress(0);
+    Pte = HalAddressToPde(0);
     *Pte = HalpSavedPte;
     Pte->PageFrameNumber = HalpSavedPfn;
     
@@ -353,7 +342,7 @@ HalpBiosDisplayReset(VOID)
      * the cmpxchg8b lock errata. Unprotect them here so we can set our custom
      * invalid op-code handler.
      */
-    IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
+    IdtPte = HalAddressToPte(((PKIPCR)KeGetPcr())->IDT);
     RestoreWriteProtection = IdtPte->Write;
 
     /* Use special invalid opcode and GPF trap handlers */

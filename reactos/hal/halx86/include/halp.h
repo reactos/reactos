@@ -34,7 +34,13 @@
     (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))
 #define INT_BCD(int)            \
     (UCHAR)(((int / 10) << 4) + (int % 10))
-
+    
+//
+// Mm PTE/PDE to Hal PTE/PDE
+//
+#define HalAddressToPde(x) (PHARDWARE_PTE)MiAddressToPde(x)
+#define HalAddressToPte(x) (PHARDWARE_PTE)MiAddressToPte(x)
+    
 typedef struct _IDTUsageFlags
 {
     UCHAR Flags;
