@@ -716,7 +716,6 @@ static UINT msi_set_context(MSIPACKAGE *package)
             package->Context = MSIINSTALLCONTEXT_MACHINE;
     }
 
-    MSI_SetPropertyW(package, szAllUsers, szOne);
     return ERROR_SUCCESS;
 }
 

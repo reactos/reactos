@@ -79,6 +79,9 @@
 	<directory name="shutdown">
 		<xi:include href="shutdown/shutdown.rbuild" />
 	</directory>
+	<directory name="sndrec32">
+		<xi:include href="sndrec32/sndrec32.rbuild" />
+	</directory>
 	<directory name="sndvol32">
 		<xi:include href="sndvol32/sndvol32.rbuild" />
 	</directory>

@@ -8,7 +8,6 @@
 	<library>normalize</library>
 	<library>idna</library>
 	<library>normaliz_redist_data</library>
-	<library>kernel32</library>
 	<group compilerset="gcc">
 		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
 		<compilerflag compiler="cxx">-fno-rtti</compilerflag>

@@ -125,7 +125,7 @@ RPC_STATUS RPCRT4_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr,
 
 RPC_STATUS RpcServerAssoc_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr,
                                          LPCSTR Endpoint, LPCWSTR NetworkOptions,
-                                         ULONG assoc_gid,
+                                         unsigned long assoc_gid,
                                          RpcAssoc **assoc_out)
 {
     RpcAssoc *assoc;
@@ -223,7 +223,7 @@ static RPC_STATUS RpcAssoc_BindConnection(const RpcAssoc *assoc, RpcConnection *
     RPC_MESSAGE msg;
     RPC_STATUS status;
     unsigned char *auth_data = NULL;
-    ULONG auth_length;
+    unsigned long auth_length;
 
     TRACE("sending bind request to server\n");
 
@@ -394,7 +394,6 @@ RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
     if (status != RPC_S_OK)
         return status;
 
-    NewConnection->assoc = assoc;
     status = RPCRT4_OpenClientConnection(NewConnection);
     if (status != RPC_S_OK)
     {
@@ -417,7 +416,6 @@ RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
 void RpcAssoc_ReleaseIdleConnection(RpcAssoc *assoc, RpcConnection *Connection)
 {
     assert(!Connection->server);
-    Connection->async_state = NULL;
     EnterCriticalSection(&assoc->cs);
     if (!assoc->assoc_group_id) assoc->assoc_group_id = Connection->assoc_group_id;
     list_add_head(&assoc->free_connection_pool, &Connection->conn_pool_entry);

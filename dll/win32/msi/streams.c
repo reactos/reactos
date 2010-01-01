@@ -262,6 +262,7 @@ static UINT STREAMS_get_column_info(struct tagMSIVIEW *view, UINT n,
 
     static const WCHAR Name[] = {'N','a','m','e',0};
     static const WCHAR Data[] = {'D','a','t','a',0};
+    static const WCHAR _Streams[] = {'_','S','t','r','e','a','m','s',0};
 
     TRACE("(%p, %d, %p, %p, %p, %p)\n", view, n, name, type, temporary,
           table_name);
@@ -286,6 +287,16 @@ static UINT STREAMS_get_column_info(struct tagMSIVIEW *view, UINT n,
     {
         *name = strdupW(name_ptr);
         if (!*name) return ERROR_FUNCTION_FAILED;
+    }
+
+    if (table_name)
+    {
+        *table_name = strdupW(_Streams);
+        if (!*table_name)
+        {
+            msi_free(name);
+            return ERROR_FUNCTION_FAILED;
+        }
     }
 
     if (temporary)

@@ -205,7 +205,7 @@
 @ stdcall NetUserChangePassword(wstr wstr wstr wstr)
 @ stdcall NetUserDel(wstr wstr)
 @ stdcall NetUserEnum(wstr long long ptr long ptr ptr ptr)
-@ stub NetUserGetGroups
+@ stdcall NetUserGetGroups(wstr wstr long ptr long ptr ptr)
 @ stdcall NetUserGetInfo(wstr wstr long ptr)
 @ stdcall NetUserGetLocalGroups(wstr wstr long long ptr long ptr ptr)
 @ stdcall NetUserModalsGet(wstr long ptr)

@@ -5,7 +5,6 @@
 	<metadata description = "Access Control List Editor" />
 
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<file>acledit.c</file>

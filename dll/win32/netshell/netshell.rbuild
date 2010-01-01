@@ -7,7 +7,6 @@
 	<library>shell32</library>
 	<library>version</library>
 	<library>iphlpapi</library>
-	<library>kernel32</library>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>user32</library>

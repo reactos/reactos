@@ -46,6 +46,7 @@
 		<directory name="ldr">
 			<file>startup.c</file>
 			<file>utils.c</file>
+			<file>actctx.c</file>
 		</directory>
 		<directory name="rtl">
 			<file>libsupp.c</file>

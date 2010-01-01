@@ -421,6 +421,10 @@ MmRawDeleteVirtualMapping(PVOID Address)
         InterlockedExchangePte(Pt, 0);
         MiFlushTlb(Pt, Address);
     }
+	else
+	{
+		MmUnmapPageTable(Pt);
+	}
 }
 
 VOID
@@ -438,7 +442,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     
     DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
            Process, Address, FreePage, WasDirty, Page);
-    
+
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     
     if (Pt == NULL)
@@ -473,7 +477,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     
     if (FreePage && WasValid)
     {
-        MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+		MmDereferencePage(Pfn);
     }
     
     /*
@@ -487,6 +491,18 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     {
         *Page = Pfn;
     }
+}
+
+VOID
+NTAPI
+MmGetPageFileMapping(PEPROCESS Process, PVOID Address,
+					 SWAPENTRY* SwapEntry)
+/*
+ * FUNCTION: Get a page file mapping
+ */
+{
+	ULONG Entry = MmGetPageEntryForProcess(Process, Address);
+	*SwapEntry = Entry >> 1;
 }
 
 VOID
@@ -796,11 +812,13 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         oldPdeOffset = PdeOffset;
         
         Pte = *Pt;
+#if 0
         if (PAGE_MASK(Pte) != 0 && !(Pte & PA_PRESENT) && (Pte & 0x800))
         {
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
+#endif
         InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
         if (Pte != 0)
         {
@@ -956,6 +974,7 @@ VOID
 NTAPI
 MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
+	KIRQL OldIrql;
     ULONG StartOffset, EndOffset, Offset;
     PULONG Pde;
     
@@ -981,7 +1000,10 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 
     if (Process != NULL && Process != PsGetCurrentProcess())
     {
-        Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+		Pde = MiMapPageInHyperSpace
+			(PsGetCurrentProcess(),
+			 PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]),
+			 &OldIrql);
     }
     else
     {
@@ -996,7 +1018,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     }
     if (Pde != (PULONG)PAGEDIRECTORY_MAP)
     {
-        MmDeleteHyperspaceMapping(Pde);
+		MiUnmapPageInHyperSpace(PsGetCurrentProcess(), Pde, OldIrql);
     }
 }
 

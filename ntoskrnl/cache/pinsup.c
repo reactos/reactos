@@ -350,7 +350,8 @@ CcpMapData
 	DPRINT("Allocating a cache stripe at %x:%d\n",
 		   Target.LowPart, SectionSize);
 	//ASSERT(SectionSize <= CACHE_STRIPE);
-	
+
+	CcpUnlock();
 	Status = CcpAllocateSection
 		(FileObject,
 		 SectionSize,
@@ -360,7 +361,8 @@ CcpMapData
 		 PAGE_READWRITE,
 #endif
 		 &SectionObject);
-	
+	CcpLock();
+
 	if (!NT_SUCCESS(Status))
 	{
 		*BcbResult = NULL;
@@ -368,7 +370,7 @@ CcpMapData
 		DPRINT1("End %08x\n", Status);
 		goto cleanup;
 	}
-
+	
 retry:
     /* Returns a reference */
 	DPRINT("Allocating cache sections: %wZ\n", &FileObject->FileName);	

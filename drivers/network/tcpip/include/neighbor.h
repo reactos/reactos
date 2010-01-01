@@ -27,6 +27,7 @@ typedef struct NEIGHBOR_CACHE_TABLE {
 
 /* Information about a neighbor */
 typedef struct NEIGHBOR_CACHE_ENTRY {
+    DEFINE_TAG
     struct NEIGHBOR_CACHE_ENTRY *Next;  /* Pointer to next entry */
     UCHAR State;                        /* State of NCE */
     UINT EventTimer;                    /* Ticks since last event */

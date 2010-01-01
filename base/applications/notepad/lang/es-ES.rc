@@ -26,13 +26,13 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
 BEGIN
-    "^A", CMD_SELECT_ALL
+    "^E", CMD_SELECT_ALL
     "^C", CMD_COPY
-    "^F", CMD_SEARCH
-    "^G", CMD_GOTO
-    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^B", CMD_SEARCH
+    "^T", CMD_GOTO
+    "R", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
-    "^O", CMD_OPEN
+    "^A", CMD_OPEN
     "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
@@ -47,7 +47,7 @@ BEGIN
     POPUP "&Archivo"
     BEGIN
         MENUITEM "&Nuevo\tCtrl+N",              CMD_NEW
-        MENUITEM "&Abrir\tCtrl+O",              CMD_OPEN
+        MENUITEM "&Abrir\tCtrl+A",              CMD_OPEN
         MENUITEM "&Guardar\tCtrl+S",            CMD_SAVE
         MENUITEM "Guardar &como...",            CMD_SAVE_AS
         MENUITEM SEPARATOR
@@ -66,12 +66,12 @@ BEGIN
         MENUITEM "&Pegar\tCtrl+V",            CMD_PASTE
         MENUITEM "&Eliminar\tDel",            CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Buscar\tCtrl+F",           CMD_SEARCH
+        MENUITEM "&Buscar\tCtrl+B",           CMD_SEARCH
         MENUITEM "Buscar &siguiente\tF3",     CMD_SEARCH_NEXT
-        MENUITEM "Reemplazar\tCtrl+H",        CMD_REPLACE
-        MENUITEM "Ir a...\tCtrl+G",           CMD_GOTO
+        MENUITEM "Reemplazar...\tCtrl+R",        CMD_REPLACE
+        MENUITEM "Ir a...\tCtrl+T",           CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Seleccionar t&odo\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Seleccionar t&odo\tCtrl+E", CMD_SELECT_ALL
         MENUITEM "&Hora y fecha\tF5",         CMD_TIME_DATE
     END
     POPUP "F&ormato"
@@ -101,16 +101,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Ajuste de página"
 BEGIN
-LTEXT    "&Cabecera:",  0x140,   10, 07, 40, 15
-EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Pie:",  0x142,   10, 24, 40, 15
-EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Encabezado:",  0x140,   10, 07, 40, 15
+EDITTEXT                         0x141,       62, 05,108, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Pie de página:",  0x142,   10, 24, 60, 15
+EDITTEXT                         0x143,       62, 22,108, 12, WS_BORDER | WS_TABSTOP
 
 GROUPBOX "&Márgenes:",      0x144,     10, 43,160, 45
-LTEXT    "&Izquierda:",        0x145,   20, 55, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "A&rriba:",         0x148,    20, 73, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Izquierda:",        0x145,   19, 55, 32, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       53, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "A&rriba:",         0x148,    19, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        53, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "&Derecha:",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "Aba&jo:",      0x14E,100, 73, 30, 10, WS_CHILD
@@ -135,13 +135,13 @@ LTEXT           "Fin de línea:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
-DIALOG_GOTO DIALOGEX 0,0,165,50
+DIALOG_GOTO DIALOGEX 0,0,180,50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Ir a la línea"
 BEGIN
-EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Número de línea:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+EDITTEXT        ID_LINENUMBER,89,10,86,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Número de línea:",0x155,5,12,56,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "Aceptar", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Cancelar", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END

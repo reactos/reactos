@@ -17,6 +17,7 @@
 
 /* FIXME: NDK */
 #define HIGH_PRIORITY 31
+#define SXS_SUPPORT_FIXME
 
 /* FUNCTIONS *****************************************************************/
 static
@@ -158,50 +159,65 @@ CreateRemoteThread(HANDLE hProcess,
         return NULL;
     }
 
-    #ifdef SXS_SUPPORT_ENABLED
     /* Are we in the same process? */
-    if (Process = NtCurrentProcess())
+    if (hProcess == NtCurrentProcess())
     {
         PTEB Teb;
         PVOID ActivationContextStack;
-        PTHREAD_BASIC_INFORMATION ThreadBasicInfo;
-        PACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
+        THREAD_BASIC_INFORMATION ThreadBasicInfo;
+#ifndef SXS_SUPPORT_FIXME
+        ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
         ULONG_PTR Cookie;
+#endif
+        ULONG retLen;
 
         /* Get the TEB */
         Status = NtQueryInformationThread(hThread,
-                                          ThreadBasicIformation,
+                                          ThreadBasicInformation,
                                           &ThreadBasicInfo,
                                           sizeof(ThreadBasicInfo),
-                                          NULL);
-
-        /* Allocate the Activation Context Stack */
-        Status = RtlAllocateActivationContextStack(&ActivationContextStack);
-        Teb = ThreadBasicInfo.TebBaseAddress;
-
-        /* Save it */
-        Teb->ActivationContextStackPointer = ActivationContextStack;
-
-        /* Query the Context */
-        Status = RtlQueryInformationActivationContext(1,
-                                                      0,
-                                                      NULL,
-                                                      ActivationContextBasicInformation,
-                                                      &ActivationCtxInfo,
-                                                      sizeof(ActivationCtxInfo),
-                                                      NULL);
-
-        /* Does it need to be activated? */
-        if (!ActivationCtxInfo.hActCtx)
+                                          &retLen);
+        if (NT_SUCCESS(Status))
         {
-            /* Activate it */
-            Status = RtlActivateActivationContextEx(1,
-                                                    Teb,
-                                                    ActivationCtxInfo.hActCtx,
-                                                    &Cookie);
+            /* Allocate the Activation Context Stack */
+            Status = RtlAllocateActivationContextStack(&ActivationContextStack);
         }
+
+        if (NT_SUCCESS(Status))
+        {
+            Teb = ThreadBasicInfo.TebBaseAddress;
+
+            /* Save it */
+            Teb->ActivationContextStackPointer = ActivationContextStack;
+#ifndef SXS_SUPPORT_FIXME
+            /* Query the Context */
+            Status = RtlQueryInformationActivationContext(1,
+                                                          0,
+                                                          NULL,
+                                                          ActivationContextBasicInformation,
+                                                          &ActivationCtxInfo,
+                                                          sizeof(ActivationCtxInfo),
+                                                          &retLen);
+            if (NT_SUCCESS(Status))
+            {
+                /* Does it need to be activated? */
+                if (!ActivationCtxInfo.hActCtx)
+                {
+                    /* Activate it */
+                    Status = RtlActivateActivationContext(1,
+                                                          ActivationCtxInfo.hActCtx,
+                                                          &Cookie);
+                    if (!NT_SUCCESS(Status))
+                        DPRINT1("RtlActivateActivationContext failed %x\n", Status);
+                }
+            }
+            else
+                DPRINT1("RtlQueryInformationActivationContext failed %x\n", Status);
+#endif
+        }
+        else
+            DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
     }
-    #endif
 
     /* FIXME: Notify CSR */
 

@@ -9,7 +9,6 @@
 	<file>usp10.c</file>
 	<library>wine</library>
 	<library>gdi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

@@ -16,16 +16,16 @@ Dispatch_fnDeviceIoControl(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext;
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     // let IrpTarget handle request
-    return IrpTarget->DeviceIoControl(DeviceObject, Irp);
+    return DispatchContext->Target->DeviceIoControl(DeviceObject, Irp);
 }
 
 NTSTATUS
@@ -35,17 +35,17 @@ Dispatch_fnRead(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext;
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
 
     // let IrpTarget handle request
-    return IrpTarget->Read(DeviceObject, Irp);
+    return DispatchContext->Target->Read(DeviceObject, Irp);
 }
 
 NTSTATUS
@@ -55,17 +55,17 @@ Dispatch_fnWrite(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext;
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
 
     // let IrpTarget handle request
-    return IrpTarget->Write(DeviceObject, Irp);
+    return DispatchContext->Target->Write(DeviceObject, Irp);
 }
 
 NTSTATUS
@@ -75,17 +75,17 @@ Dispatch_fnFlush(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext;
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
 
     // let IrpTarget handle request
-    return IrpTarget->Flush(DeviceObject, Irp);
+    return DispatchContext->Target->Flush(DeviceObject, Irp);
 }
 
 NTSTATUS
@@ -95,17 +95,24 @@ Dispatch_fnClose(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
+    NTSTATUS Status;
 
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext;
-
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     // let IrpTarget handle request
-    return IrpTarget->Close(DeviceObject, Irp);
+    Status = DispatchContext->Target->Close(DeviceObject, Irp);
+
+    if (NT_SUCCESS(Status))
+    {
+       KsFreeObjectHeader(DispatchContext->ObjectHeader);
+       FreeItem(DispatchContext, TAG_PORTCLASS);
+    }
+    // done
+    return Status;
 }
 
 NTSTATUS
@@ -115,17 +122,17 @@ Dispatch_fnQuerySecurity(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext;
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
 
     // let IrpTarget handle request
-    return IrpTarget->QuerySecurity(DeviceObject, Irp);
+    return DispatchContext->Target->QuerySecurity(DeviceObject, Irp);
 }
 
 NTSTATUS
@@ -135,17 +142,16 @@ Dispatch_fnSetSecurity(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext;
-
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     // let IrpTarget handle request
-    return IrpTarget->SetSecurity(DeviceObject, Irp);
+    return DispatchContext->Target->SetSecurity(DeviceObject, Irp);
 }
 
 BOOLEAN
@@ -161,13 +167,13 @@ Dispatch_fnFastDeviceIoControl(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)FileObject->FsContext;
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)FileObject->FsContext;
 
     // let IrpTarget handle request
-    return IrpTarget->FastDeviceIoControl(FileObject, Wait, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, IoControlCode, IoStatus, DeviceObject);
+    return DispatchContext->Target->FastDeviceIoControl(FileObject, Wait, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, IoControlCode, IoStatus, DeviceObject);
 }
 
 
@@ -183,13 +189,13 @@ Dispatch_fnFastRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)FileObject->FsContext;
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)FileObject->FsContext;
 
     // let IrpTarget handle request
-    return IrpTarget->FastRead(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+    return DispatchContext->Target->FastRead(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 BOOLEAN
@@ -204,12 +210,12 @@ Dispatch_fnFastWrite(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    IIrpTarget * IrpTarget;
+    PDISPATCH_CONTEXT DispatchContext;
 
-    // access IrpTarget
-    IrpTarget = (IIrpTarget *)FileObject->FsContext;
+    // get dispatch context
+    DispatchContext = (PDISPATCH_CONTEXT)FileObject->FsContext;
     // let IrpTarget handle request
-    return IrpTarget->FastWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+    return DispatchContext->Target->FastWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 static KSDISPATCH_TABLE DispatchTable =
@@ -226,7 +232,6 @@ static KSDISPATCH_TABLE DispatchTable =
     Dispatch_fnFastWrite,
 };
 
-
 NTSTATUS
 NTAPI
 NewDispatchObject(
@@ -238,14 +243,35 @@ NewDispatchObject(
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
     PIO_STACK_LOCATION IoStack;
+    PDISPATCH_CONTEXT DispatchContext;
 
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    IoStack->FileObject->FsContext = (PVOID)Target;
+    DispatchContext = (PDISPATCH_CONTEXT)AllocateItem(NonPagedPool, sizeof(DISPATCH_CONTEXT), TAG_PORTCLASS);
+    if (!DispatchContext)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
+    // allocate object header
     Status = KsAllocateObjectHeader(&ObjectHeader, CreateItemCount, CreateItem, Irp, &DispatchTable);
-    DPRINT("KsAllocateObjectHeader result %x\n", Status);
+
+    if (!NT_SUCCESS(Status))
+    {
+        // free dispatch context
+        FreeItem(DispatchContext, TAG_PORTCLASS);
+        // done
+        return Status;
+    }
+
+    // initialize dispatch context
+    DispatchContext->ObjectHeader = ObjectHeader;
+    DispatchContext->Target = Target;
+    DispatchContext->CreateItem = CreateItem;
+
+    // store dispatch context
+    IoStack->FileObject->FsContext = DispatchContext;
+
+    DPRINT("KsAllocateObjectHeader result %x Target %p Context %p\n", Status, Target, DispatchContext);
     return Status;
 }
 

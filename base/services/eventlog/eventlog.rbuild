@@ -4,7 +4,6 @@
 	<include base="eventlog">.</include>
 	<include base="eventlog_server">.</include>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>eventlog_server</library>
 	<library>rpcrt4</library>

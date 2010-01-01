@@ -11,7 +11,6 @@
 	<file>main.c</file>
 	<file>cryptui.rc</file>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>ole32</library>
 	<library>crypt32</library>

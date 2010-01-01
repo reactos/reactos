@@ -830,7 +830,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
         /* Check if this is a kernel-mode exception */
         case KERNEL_MODE_EXCEPTION_NOT_HANDLED:
-        //case SYSTEM_THREAD_EXCEPTION_NOT_HANDLED:
+        case SYSTEM_THREAD_EXCEPTION_NOT_HANDLED:
         case KMODE_EXCEPTION_NOT_HANDLED:
 
             /* Use the generic text message */

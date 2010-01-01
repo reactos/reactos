@@ -108,7 +108,7 @@ VOID FreeAdapter(
  *     Adapter = Pointer to LAN_ADAPTER structure to free
  */
 {
-    ExFreePoolWithTag(Adapter, LAN_ADAPTER_TAG);
+    exFreePool(Adapter);
 }
 
 
@@ -249,7 +249,7 @@ VOID LanReceiveWorker( PVOID Context ) {
     Adapter = WorkItem->Adapter;
     BytesTransferred = WorkItem->BytesTransferred;
 
-    ExFreePoolWithTag(WorkItem, WQ_CONTEXT_TAG);
+    exFreePool(WorkItem);
 
     IPInitializePacket(&IPPacket, 0);
 
@@ -300,8 +300,7 @@ VOID LanSubmitReceiveWork(
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
     UINT BytesTransferred) {
-    PLAN_WQ_ITEM WQItem = ExAllocatePoolWithTag(NonPagedPool, sizeof(LAN_WQ_ITEM),
-                                                WQ_CONTEXT_TAG);
+    PLAN_WQ_ITEM WQItem = exAllocatePool(NonPagedPool, sizeof(LAN_WQ_ITEM));
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
 
     TI_DbgPrint(DEBUG_DATALINK,("called\n"));
@@ -313,7 +312,7 @@ VOID LanSubmitReceiveWork(
     WQItem->BytesTransferred = BytesTransferred;
 
     if (!ChewCreate( LanReceiveWorker, WQItem ))
-        ExFreePoolWithTag(WQItem, WQ_CONTEXT_TAG);
+        exFreePool(WQItem);
 }
 
 VOID NTAPI ProtocolTransferDataComplete(
@@ -769,9 +768,9 @@ NTSTATUS NTAPI AppendUnicodeString(PUNICODE_STRING ResultFirst,
 				   BOOLEAN Deallocate) {
     NTSTATUS Status;
     UNICODE_STRING Ustr = *ResultFirst;
-    PWSTR new_string = ExAllocatePool
+    PWSTR new_string = ExAllocatePoolWithTag
         (PagedPool,
-         (ResultFirst->Length + Second->Length + sizeof(WCHAR)));
+         (ResultFirst->Length + Second->Length + sizeof(WCHAR)), TAG_STRING);
     if( !new_string ) {
 	return STATUS_NO_MEMORY;
     }
@@ -992,11 +991,6 @@ BOOLEAN BindAdapter(
     GetName( RegistryPath, &IF->Name );
 
     Status = FindDeviceDescForAdapter( &IF->Name, &IF->Description );
-    if (!NT_SUCCESS(Status)) {
-        TI_DbgPrint(MIN_TRACE, ("Failed to get device description.\n"));
-        IPDestroyInterface(IF);
-        return FALSE;
-    }
 
     TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
                 &IF->Description));
@@ -1088,7 +1082,7 @@ NDIS_STATUS LANRegisterAdapter(
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
-    IF = ExAllocatePoolWithTag(NonPagedPool, sizeof(LAN_ADAPTER), LAN_ADAPTER_TAG);
+    IF = exAllocatePool(NonPagedPool, sizeof(LAN_ADAPTER));
     if (!IF) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NDIS_STATUS_RESOURCES;
@@ -1126,7 +1120,7 @@ NDIS_STATUS LANRegisterAdapter(
         KeWaitForSingleObject(&IF->Event, UserRequest, KernelMode, FALSE, NULL);
     else if (NdisStatus != NDIS_STATUS_SUCCESS) {
 	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ\n", AdapterName));
-	ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
+	exFreePool(IF);
         return NdisStatus;
     }
 
@@ -1151,7 +1145,7 @@ NDIS_STATUS LANRegisterAdapter(
     default:
         /* Unsupported media */
         TI_DbgPrint(MIN_TRACE, ("Unsupported media.\n"));
-        ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
+        exFreePool(IF);
         return NDIS_STATUS_NOT_SUPPORTED;
     }
 
@@ -1163,7 +1157,7 @@ NDIS_STATUS LANRegisterAdapter(
                           sizeof(UINT));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
 	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ (NDISCall)\n", AdapterName));
-        ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
+        exFreePool(IF);
         return NdisStatus;
     }
 
@@ -1175,7 +1169,7 @@ NDIS_STATUS LANRegisterAdapter(
                           sizeof(UINT));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(MIN_TRACE, ("Query for maximum packet size failed.\n"));
-        ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
+        exFreePool(IF);
         return NdisStatus;
     }
 
@@ -1198,7 +1192,7 @@ NDIS_STATUS LANRegisterAdapter(
                           IF->HWAddressLength);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(MIN_TRACE, ("Query for current hardware address failed.\n"));
-        ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
+        exFreePool(IF);
         return NdisStatus;
     }
 
@@ -1210,7 +1204,7 @@ NDIS_STATUS LANRegisterAdapter(
                           sizeof(UINT));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(MIN_TRACE, ("Query for maximum link speed failed.\n"));
-        ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
+        exFreePool(IF);
         return NdisStatus;
     }
 
@@ -1220,7 +1214,7 @@ NDIS_STATUS LANRegisterAdapter(
     /* Bind adapter to IP layer */
     if( !BindAdapter(IF, RegistryPath) ) {
 	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ (BindAdapter)\n", AdapterName));
-	ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
+	exFreePool(IF);
 	return NDIS_STATUS_NOT_ACCEPTED;
     }
 

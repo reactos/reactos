@@ -2162,7 +2162,7 @@ SetGetMuteControlDetails(
         Value = Input->fValue;
 
     /* set control details */
-    Status = SetGetControlDetails(DeviceObject, DeviceId, NodeId, DeviceInfo, bSet, KSPROPERTY_AUDIO_MUTE, MAXULONG, &Value);
+    Status = SetGetControlDetails(DeviceObject, DeviceId, NodeId, DeviceInfo, bSet, KSPROPERTY_AUDIO_MUTE, 0, &Value);
 
     if (!NT_SUCCESS(Status))
         return Status;

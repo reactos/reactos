@@ -8,7 +8,6 @@
 	<library>wine</library>
 	<library>ole32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<file>apps.c</file>
 	<file>hnetcfg.c</file>
 	<file>manager.c</file>

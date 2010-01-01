@@ -16,7 +16,6 @@
 
 	<library>crt</library>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>pseh</library>
 	<pch>precomp.h</pch>

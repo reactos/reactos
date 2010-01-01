@@ -5,7 +5,6 @@
 	<linkerflag linkerset="ld">-enable-stdcall-fixup</linkerflag>
 	<compilerflag compilerset="gcc">-w</compilerflag>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<define name="USE_EXTERNAL_DXTN_LIB" />
 	<library>gdi32</library>

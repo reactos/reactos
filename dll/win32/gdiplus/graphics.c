@@ -220,7 +220,27 @@ static ARGB blend_line_gradient(GpLineGradient* brush, REAL position)
         blendfac = (left_blendfac * (right_blendpos - position) +
                     right_blendfac * (position - left_blendpos)) / range;
     }
-    return blend_colors(brush->startcolor, brush->endcolor, blendfac);
+
+    if (brush->pblendcount == 0)
+        return blend_colors(brush->startcolor, brush->endcolor, blendfac);
+    else
+    {
+        int i=1;
+        ARGB left_blendcolor, right_blendcolor;
+        REAL left_blendpos, right_blendpos;
+
+        /* locate the blend colors surrounding this position */
+        while (blendfac > brush->pblendpos[i])
+            i++;
+
+        /* interpolate between the blend colors */
+        left_blendpos = brush->pblendpos[i-1];
+        left_blendcolor = brush->pblendcolor[i-1];
+        right_blendpos = brush->pblendpos[i];
+        right_blendcolor = brush->pblendcolor[i];
+        blendfac = (blendfac - left_blendpos) / (right_blendpos - left_blendpos);
+        return blend_colors(left_blendcolor, right_blendcolor, blendfac);
+    }
 }
 
 static void brush_fill_path(GpGraphics *graphics, GpBrush* brush)
@@ -1235,6 +1255,7 @@ GpStatus WINGDIPAPI GdipCreateMetafileFromWmf(HMETAFILE hwmf, BOOL delete,
 
 
     (*metafile)->image.type = ImageTypeMetafile;
+    memcpy(&(*metafile)->image.format, &ImageFormatWMF, sizeof(GUID));
     (*metafile)->bounds.X = ((REAL) placeable->BoundingBox.Left) / ((REAL) placeable->Inch);
     (*metafile)->bounds.Y = ((REAL) placeable->BoundingBox.Right) / ((REAL) placeable->Inch);
     (*metafile)->bounds.Width = ((REAL) (placeable->BoundingBox.Right
@@ -1795,16 +1816,25 @@ GpStatus WINGDIPAPI GdipDrawImagePointRect(GpGraphics *graphics, GpImage *image,
     REAL x, REAL y, REAL srcx, REAL srcy, REAL srcwidth, REAL srcheight,
     GpUnit srcUnit)
 {
-    FIXME("(%p, %p, %f, %f, %f, %f, %f, %f, %d): stub\n", graphics, image, x, y, srcx, srcy, srcwidth, srcheight, srcUnit);
-    return NotImplemented;
+    GpPointF points[3];
+    TRACE("(%p, %p, %f, %f, %f, %f, %f, %f, %d)\n", graphics, image, x, y, srcx, srcy, srcwidth, srcheight, srcUnit);
+
+    points[0].X = points[2].X = x;
+    points[0].Y = points[1].Y = y;
+
+    /* FIXME: convert image coordinates to Graphics coordinates? */
+    points[1].X = x + srcwidth;
+    points[2].Y = y + srcheight;
+
+    return GdipDrawImagePointsRect(graphics, image, points, 3, srcx, srcy,
+        srcwidth, srcheight, srcUnit, NULL, NULL, NULL);
 }
 
 GpStatus WINGDIPAPI GdipDrawImagePointRectI(GpGraphics *graphics, GpImage *image,
     INT x, INT y, INT srcx, INT srcy, INT srcwidth, INT srcheight,
     GpUnit srcUnit)
 {
-    FIXME("(%p, %p, %d, %d, %d, %d, %d, %d, %d): stub\n", graphics, image, x, y, srcx, srcy, srcwidth, srcheight, srcUnit);
-    return NotImplemented;
+    return GdipDrawImagePointRect(graphics, image, x, y, srcx, srcy, srcwidth, srcheight, srcUnit);
 }
 
 GpStatus WINGDIPAPI GdipDrawImagePoints(GpGraphics *graphics, GpImage *image,
@@ -1853,15 +1883,6 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
         }
         else
             return NotImplemented;
-
-        /* IPicture renders bitmaps with the y-axis reversed
-         * FIXME: flipping for unknown image type might not be correct. */
-        if(image->type != ImageTypeMetafile){
-            INT temp;
-            temp = pti[0].y;
-            pti[0].y = pti[2].y;
-            pti[2].y = temp;
-        }
 
         if(IPicture_Render(image->picture, graphics->hdc,
             pti[0].x, pti[0].y, pti[1].x - pti[0].x, pti[2].y - pti[0].y,
@@ -2362,7 +2383,7 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     HFONT gdifont;
     LOGFONTW lfw;
     TEXTMETRICW textmet;
-    GpPointF pt[2], rectcpy[4];
+    GpPointF pt[3], rectcpy[4];
     POINT corners[4];
     WCHAR* stringdup;
     REAL angle, ang_cos, ang_sin, rel_width, rel_height;
@@ -2409,6 +2430,21 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     SetBkMode(graphics->hdc, TRANSPARENT);
     SetTextColor(graphics->hdc, brush->lb.lbColor);
 
+    pt[0].X = 0.0;
+    pt[0].Y = 0.0;
+    pt[1].X = 1.0;
+    pt[1].Y = 0.0;
+    pt[2].X = 0.0;
+    pt[2].Y = 1.0;
+    GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, pt, 3);
+    angle = -gdiplus_atan2((pt[1].Y - pt[0].Y), (pt[1].X - pt[0].X));
+    ang_cos = cos(angle);
+    ang_sin = sin(angle);
+    rel_width = sqrt((pt[1].Y-pt[0].Y)*(pt[1].Y-pt[0].Y)+
+                     (pt[1].X-pt[0].X)*(pt[1].X-pt[0].X));
+    rel_height = sqrt((pt[2].Y-pt[0].Y)*(pt[2].Y-pt[0].Y)+
+                      (pt[2].X-pt[0].X)*(pt[2].X-pt[0].X));
+
     rectcpy[3].X = rectcpy[0].X = rect->X;
     rectcpy[1].Y = rectcpy[0].Y = rect->Y + offsety;
     rectcpy[2].X = rectcpy[1].X = rect->X + rect->Width;
@@ -2416,30 +2452,14 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     transform_and_round_points(graphics, corners, rectcpy, 4);
 
     if (roundr(rect->Width) == 0)
-    {
-        rel_width = 1.0;
         nwidth = INT_MAX;
-    }
     else
-    {
-        rel_width = sqrt((corners[1].x - corners[0].x) * (corners[1].x - corners[0].x) +
-                         (corners[1].y - corners[0].y) * (corners[1].y - corners[0].y))
-                         / rect->Width;
         nwidth = roundr(rel_width * rect->Width);
-    }
 
     if (roundr(rect->Height) == 0)
-    {
-        rel_height = 1.0;
         nheight = INT_MAX;
-    }
     else
-    {
-        rel_height = sqrt((corners[2].x - corners[1].x) * (corners[2].x - corners[1].x) +
-                          (corners[2].y - corners[1].y) * (corners[2].y - corners[1].y))
-                          / rect->Height;
         nheight = roundr(rel_height * rect->Height);
-    }
 
     if (roundr(rect->Width) != 0 && roundr(rect->Height) != 0)
     {
@@ -2457,14 +2477,6 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     lfw.lfHeight = roundr(((REAL)lfw.lfHeight) * rel_height);
     lfw.lfWidth = roundr(textmet.tmAveCharWidth * rel_width);
 
-    pt[0].X = 0.0;
-    pt[0].Y = 0.0;
-    pt[1].X = 1.0;
-    pt[1].Y = 0.0;
-    GdipTransformMatrixPoints(graphics->worldtrans, pt, 2);
-    angle = -gdiplus_atan2((pt[1].Y - pt[0].Y), (pt[1].X - pt[0].X));
-    ang_cos = cos(angle);
-    ang_sin = sin(angle);
     lfw.lfEscapement = lfw.lfOrientation = roundr((angle / M_PI) * 1800.0);
 
     gdifont = CreateFontIndirectW(&lfw);

@@ -1391,13 +1391,16 @@ MmAllocPagesSpecifyRange(
     PPFN_TYPE Pages
 );
 
-VOID
-NTAPI
-MmDereferencePage(PFN_TYPE Page);
+#define MmDereferencePage(Page) _MmDereferencePage(Page,__FILE__,__LINE__)
+#define MmReferencePage(Page) _MmReferencePage(Page,__FILE__,__LINE__)
 
 VOID
 NTAPI
-MmReferencePage(PFN_TYPE Page);
+_MmDereferencePage(PFN_TYPE Page, const char *file, int line);
+
+VOID
+NTAPI
+_MmReferencePage(PFN_TYPE Page, const char *file, int line);
 
 ULONG
 NTAPI

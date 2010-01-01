@@ -7,7 +7,6 @@
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>gdi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>msimg32_main.c</file>
 </module>

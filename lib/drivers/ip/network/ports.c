@@ -17,8 +17,7 @@ NTSTATUS PortsStartup( PPORT_SET PortSet,
     PortSet->PortsToOversee = PortsToManage;
 
     PortSet->ProtoBitBuffer =
-	ExAllocatePoolWithTag( NonPagedPool, (PortSet->PortsToOversee + 7) / 8,
-                               PORT_SET_TAG );
+	exAllocatePool( NonPagedPool, (PortSet->PortsToOversee + 7) / 8 );
     if(!PortSet->ProtoBitBuffer) return STATUS_INSUFFICIENT_RESOURCES;
     RtlInitializeBitMap( &PortSet->ProtoBitmap,
 			 PortSet->ProtoBitBuffer,
@@ -29,7 +28,7 @@ NTSTATUS PortsStartup( PPORT_SET PortSet,
 }
 
 VOID PortsShutdown( PPORT_SET PortSet ) {
-    ExFreePoolWithTag( PortSet->ProtoBitBuffer, PORT_SET_TAG );
+    exFreePool( PortSet->ProtoBitBuffer );
 }
 
 VOID DeallocatePort( PPORT_SET PortSet, ULONG Port ) {

@@ -4,12 +4,10 @@
 	<library>ntdll</library>
 	<library>rpcrt4</library>
 	<library>setupapi</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>uuid</library>
 	<library>iphlpapi</library>
 	<library>iphlpapi</library>
-	<library>kernel32</library>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>user32</library>

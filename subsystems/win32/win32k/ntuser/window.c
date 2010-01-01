@@ -663,6 +663,8 @@ IntSetWindowProc(PWND pWnd,
       if (pWnd->state & WNDS_SERVERSIDEWINDOWPROC)
          pWnd->state &= ~WNDS_SERVERSIDEWINDOWPROC;
 
+      if (!NewWndProc) NewWndProc = pWnd->lpfnWndProc;
+
       if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_BUTTON)
       {
          if (Ansi)
@@ -3854,7 +3856,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
    {
       if ((Index + sizeof(LONG)) > Wnd->cbwndExtra)
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         SetLastWin32Error(ERROR_INVALID_INDEX);
          return( 0);
       }
 
@@ -3942,7 +3944,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
          default:
             DPRINT1("NtUserSetWindowLong(): Unsupported index %d\n", Index);
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            SetLastWin32Error(ERROR_INVALID_INDEX);
             OldValue = 0;
             break;
       }

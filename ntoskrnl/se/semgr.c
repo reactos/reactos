@@ -608,10 +608,12 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
     else
     {
-        DPRINT1("Denying access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p)\n",
+        DPRINT1("HACK: Should deny access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p).\n",
                 *GrantedAccess, DesiredAccess, GenericMapping);
-        *AccessStatus = STATUS_ACCESS_DENIED;
-        return FALSE;
+        //*AccessStatus = STATUS_ACCESS_DENIED;
+        //return FALSE;
+        *AccessStatus = STATUS_SUCCESS;
+        return TRUE;
     }
 }
 

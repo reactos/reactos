@@ -11,7 +11,6 @@
 	<file>fdi.c</file>
 	<file>cabinet.rc</file>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

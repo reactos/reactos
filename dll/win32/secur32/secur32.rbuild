@@ -4,7 +4,6 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="__SECUR32__" />
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<file>dllmain.c</file>
 	<file>lsa.c</file>

@@ -6,7 +6,6 @@
 	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<library>pnp_server</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>rpcrt4</library>
 	<library>pseh</library>

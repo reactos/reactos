@@ -143,7 +143,7 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
         }
         case BrushTypeLinearGradient:{
             GpLineGradient *dest, *src;
-            INT count;
+            INT count, pcount;
 
             dest = GdipAlloc(sizeof(GpLineGradient));
             if(!dest)    return OutOfMemory;
@@ -157,11 +157,20 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             count = dest->blendcount;
             dest->blendfac = GdipAlloc(count * sizeof(REAL));
             dest->blendpos = GdipAlloc(count * sizeof(REAL));
+            pcount = dest->pblendcount;
+            if (pcount)
+            {
+                dest->pblendcolor = GdipAlloc(pcount * sizeof(ARGB));
+                dest->pblendpos = GdipAlloc(pcount * sizeof(REAL));
+            }
 
-            if (!dest->blendfac || !dest->blendpos)
+            if (!dest->blendfac || !dest->blendpos ||
+                (pcount && (!dest->pblendcolor || !dest->pblendpos)))
             {
                 GdipFree(dest->blendfac);
                 GdipFree(dest->blendpos);
+                GdipFree(dest->pblendcolor);
+                GdipFree(dest->pblendpos);
                 DeleteObject(dest->brush.gdibrush);
                 GdipFree(dest);
                 return OutOfMemory;
@@ -169,6 +178,12 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
 
             memcpy(dest->blendfac, src->blendfac, count * sizeof(REAL));
             memcpy(dest->blendpos, src->blendpos, count * sizeof(REAL));
+
+            if (pcount)
+            {
+                memcpy(dest->pblendcolor, src->pblendcolor, pcount * sizeof(ARGB));
+                memcpy(dest->pblendpos, src->pblendpos, pcount * sizeof(REAL));
+            }
 
             *clone = &dest->brush;
             break;
@@ -189,19 +204,38 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
     return Ok;
 }
 
-static LONG HatchStyleToHatch(HatchStyle hatchstyle)
-{
-    switch (hatchstyle)
-    {
-        case HatchStyleHorizontal:        return HS_HORIZONTAL;
-        case HatchStyleVertical:          return HS_VERTICAL;
-        case HatchStyleForwardDiagonal:   return HS_FDIAGONAL;
-        case HatchStyleBackwardDiagonal:  return HS_BDIAGONAL;
-        case HatchStyleCross:             return HS_CROSS;
-        case HatchStyleDiagonalCross:     return HS_DIAGCROSS;
-        default:                          return 0;
-    }
-}
+static const char HatchBrushes[][8] = {
+    { 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00 }, /* HatchStyleHorizontal */
+    { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 }, /* HatchStyleVertical */
+    { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 }, /* HatchStyleForwardDiagonal */
+    { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 }, /* HatchStyleBackwardDiagonal */
+    { 0x08, 0x08, 0x08, 0xff, 0x08, 0x08, 0x08, 0x08 }, /* HatchStyleCross */
+    { 0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81 }, /* HatchStyleDiagonalCross */
+    { 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x80 }, /* HatchStyle05Percent */
+    { 0x00, 0x02, 0x00, 0x88, 0x00, 0x20, 0x00, 0x88 }, /* HatchStyle10Percent */
+    { 0x00, 0x22, 0x00, 0xcc, 0x00, 0x22, 0x00, 0xcc }, /* HatchStyle20Percent */
+    { 0x00, 0xcc, 0x00, 0xcc, 0x00, 0xcc, 0x00, 0xcc }, /* HatchStyle25Percent */
+    { 0x00, 0xcc, 0x04, 0xcc, 0x00, 0xcc, 0x40, 0xcc }, /* HatchStyle30Percent */
+    { 0x44, 0xcc, 0x22, 0xcc, 0x44, 0xcc, 0x22, 0xcc }, /* HatchStyle40Percent */
+    { 0x55, 0xcc, 0x55, 0xcc, 0x55, 0xcc, 0x55, 0xcc }, /* HatchStyle50Percent */
+    { 0x55, 0xcd, 0x55, 0xee, 0x55, 0xdc, 0x55, 0xee }, /* HatchStyle60Percent */
+    { 0x55, 0xdd, 0x55, 0xff, 0x55, 0xdd, 0x55, 0xff }, /* HatchStyle70Percent */
+    { 0x55, 0xff, 0x55, 0xff, 0x55, 0xff, 0x55, 0xff }, /* HatchStyle75Percent */
+    { 0x55, 0xff, 0x59, 0xff, 0x55, 0xff, 0x99, 0xff }, /* HatchStyle80Percent */
+    { 0x77, 0xff, 0xdd, 0xff, 0x77, 0xff, 0xfd, 0xff }, /* HatchStyle90Percent */
+    { 0x11, 0x22, 0x44, 0x88, 0x11, 0x22, 0x44, 0x88 }, /* HatchStyleLightDownwardDiagonal */
+    { 0x88, 0x44, 0x22, 0x11, 0x88, 0x44, 0x22, 0x11 }, /* HatchStyleLightUpwardDiagonal */
+    { 0x99, 0x33, 0x66, 0xcc, 0x99, 0x33, 0x66, 0xcc }, /* HatchStyleDarkDownwardDiagonal */
+    { 0xcc, 0x66, 0x33, 0x99, 0xcc, 0x66, 0x33, 0x99 }, /* HatchStyleDarkUpwardDiagonal */
+    { 0xc1, 0x83, 0x07, 0x0e, 0x1c, 0x38, 0x70, 0xe0 }, /* HatchStyleWideDownwardDiagonal */
+    { 0xe0, 0x70, 0x38, 0x1c, 0x0e, 0x07, 0x83, 0xc1 }, /* HatchStyleWideUpwardDiagonal */
+    { 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88 }, /* HatchStyleLightVertical */
+    { 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff }, /* HatchStyleLightHorizontal */
+    { 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa }, /* HatchStyleNarrowVertical */
+    { 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff }, /* HatchStyleNarrowHorizontal */
+    { 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc }, /* HatchStyleDarkVertical */
+    { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff, 0xff }, /* HatchStyleDarkHorizontal */
+};
 
 /******************************************************************************
  * GdipCreateHatchBrush [GDIPLUS.@]
@@ -209,6 +243,7 @@ static LONG HatchStyleToHatch(HatchStyle hatchstyle)
 GpStatus WINGDIPAPI GdipCreateHatchBrush(HatchStyle hatchstyle, ARGB forecol, ARGB backcol, GpHatch **brush)
 {
     COLORREF fgcol = ARGB2COLORREF(forecol);
+    GpStatus stat = Ok;
 
     TRACE("(%d, %d, %d, %p)\n", hatchstyle, forecol, backcol, brush);
 
@@ -217,37 +252,79 @@ GpStatus WINGDIPAPI GdipCreateHatchBrush(HatchStyle hatchstyle, ARGB forecol, AR
     *brush = GdipAlloc(sizeof(GpHatch));
     if (!*brush) return OutOfMemory;
 
-    switch (hatchstyle)
+    if (hatchstyle < sizeof(HatchBrushes) / sizeof(HatchBrushes[0]))
     {
-        case HatchStyleHorizontal:
-        case HatchStyleVertical:
-        case HatchStyleForwardDiagonal:
-        case HatchStyleBackwardDiagonal:
-        case HatchStyleCross:
-        case HatchStyleDiagonalCross:
-            /* Brushes that map to BS_HATCHED */
-            (*brush)->brush.lb.lbStyle = BS_HATCHED;
-            (*brush)->brush.lb.lbColor = fgcol;
-            (*brush)->brush.lb.lbHatch = HatchStyleToHatch(hatchstyle);
-            break;
+        HBITMAP hbmp;
+        HDC hdc;
+        BITMAPINFOHEADER bmih;
+        DWORD* bits;
+        int x, y;
 
-        default:
-            FIXME("Unimplemented hatch style %d\n", hatchstyle);
+        hdc = CreateCompatibleDC(0);
 
-            (*brush)->brush.lb.lbStyle = BS_SOLID;
-            (*brush)->brush.lb.lbColor = fgcol;
-            (*brush)->brush.lb.lbHatch = 0;
-            break;
+        if (hdc)
+        {
+            bmih.biSize = sizeof(bmih);
+            bmih.biWidth = 8;
+            bmih.biHeight = 8;
+            bmih.biPlanes = 1;
+            bmih.biBitCount = 32;
+            bmih.biCompression = BI_RGB;
+            bmih.biSizeImage = 0;
+
+            hbmp = CreateDIBSection(hdc, (BITMAPINFO*)&bmih, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+
+            if (hbmp)
+            {
+                for (y=0; y<8; y++)
+                    for (x=0; x<8; x++)
+                        if ((HatchBrushes[hatchstyle][y] & (0x80 >> x)) != 0)
+                            bits[y*8+x] = forecol;
+                        else
+                            bits[y*8+x] = backcol;
+            }
+            else
+                stat = GenericError;
+
+            DeleteDC(hdc);
+        }
+        else
+            stat = GenericError;
+
+        if (stat == Ok)
+        {
+            (*brush)->brush.lb.lbStyle = BS_PATTERN;
+            (*brush)->brush.lb.lbColor = 0;
+            (*brush)->brush.lb.lbHatch = (ULONG_PTR)hbmp;
+            (*brush)->brush.gdibrush = CreateBrushIndirect(&(*brush)->brush.lb);
+
+            DeleteObject(hbmp);
+        }
+    }
+    else
+    {
+        FIXME("Unimplemented hatch style %d\n", hatchstyle);
+
+        (*brush)->brush.lb.lbStyle = BS_SOLID;
+        (*brush)->brush.lb.lbColor = fgcol;
+        (*brush)->brush.lb.lbHatch = 0;
+        (*brush)->brush.gdibrush = CreateBrushIndirect(&(*brush)->brush.lb);
     }
 
+    if (stat == Ok)
+    {
+        (*brush)->brush.bt = BrushTypeHatchFill;
+        (*brush)->forecol = forecol;
+        (*brush)->backcol = backcol;
+        (*brush)->hatchstyle = hatchstyle;
+    }
+    else
+    {
+        GdipFree(*brush);
+        *brush = NULL;
+    }
 
-    (*brush)->brush.gdibrush = CreateBrushIndirect(&(*brush)->brush.lb);
-    (*brush)->brush.bt = BrushTypeHatchFill;
-    (*brush)->forecol = forecol;
-    (*brush)->backcol = backcol;
-    (*brush)->hatchstyle = hatchstyle;
-
-    return Ok;
+    return stat;
 }
 
 /******************************************************************************
@@ -315,6 +392,10 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
 
     (*line)->blendfac[0] = 1.0f;
     (*line)->blendpos[0] = 1.0f;
+
+    (*line)->pblendcolor = NULL;
+    (*line)->pblendpos = NULL;
+    (*line)->pblendcount = 0;
 
     return Ok;
 }
@@ -762,7 +843,7 @@ GpStatus WINGDIPAPI GdipCreateTextureIA(GpImage *image,
 
     /* image is flipped */
     if(pbmi->bmiHeader.biHeight > 0){
-        dibits += pbmi->bmiHeader.biSizeImage;
+        dibits += image_stride * (pbmi->bmiHeader.biHeight - 1);
         image_stride *= -1;
         textbits += stride * (n_height - 1);
         stride *= -1;
@@ -893,6 +974,8 @@ GpStatus WINGDIPAPI GdipDeleteBrush(GpBrush *brush)
         case BrushTypeLinearGradient:
             GdipFree(((GpLineGradient*)brush)->blendfac);
             GdipFree(((GpLineGradient*)brush)->blendpos);
+            GdipFree(((GpLineGradient*)brush)->pblendcolor);
+            GdipFree(((GpLineGradient*)brush)->pblendpos);
             break;
         case BrushTypeTextureFill:
             GdipDeleteMatrix(((GpTexture*)brush)->transform);
@@ -1601,6 +1684,69 @@ GpStatus WINGDIPAPI GdipSetLineLinearBlend(GpLineGradient *brush, REAL focus,
 GpStatus WINGDIPAPI GdipSetLinePresetBlend(GpLineGradient *brush,
     GDIPCONST ARGB *blend, GDIPCONST REAL* positions, INT count)
 {
+    ARGB *new_color;
+    REAL *new_pos;
+    TRACE("(%p,%p,%p,%i)\n", brush, blend, positions, count);
+
+    if (!brush || !blend || !positions || count < 2 ||
+        positions[0] != 0.0f || positions[count-1] != 1.0f)
+    {
+        return InvalidParameter;
+    }
+
+    new_color = GdipAlloc(count * sizeof(ARGB));
+    new_pos = GdipAlloc(count * sizeof(REAL));
+    if (!new_color || !new_pos)
+    {
+        GdipFree(new_color);
+        GdipFree(new_pos);
+        return OutOfMemory;
+    }
+
+    memcpy(new_color, blend, sizeof(ARGB) * count);
+    memcpy(new_pos, positions, sizeof(REAL) * count);
+
+    GdipFree(brush->pblendcolor);
+    GdipFree(brush->pblendpos);
+
+    brush->pblendcolor = new_color;
+    brush->pblendpos = new_pos;
+    brush->pblendcount = count;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetLinePresetBlend(GpLineGradient *brush,
+    ARGB *blend, REAL* positions, INT count)
+{
+    if (!brush || !blend || !positions || count < 2)
+        return InvalidParameter;
+
+    if (brush->pblendcount == 0)
+        return GenericError;
+
+    if (count < brush->pblendcount)
+        return InsufficientBuffer;
+
+    memcpy(blend, brush->pblendcolor, sizeof(ARGB) * brush->pblendcount);
+    memcpy(positions, brush->pblendpos, sizeof(REAL) * brush->pblendcount);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetLinePresetBlendCount(GpLineGradient *brush,
+    INT *count)
+{
+    if (!brush || !count)
+        return InvalidParameter;
+
+    *count = brush->pblendcount;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipResetLineTransform(GpLineGradient *brush)
+{
     static int calls;
 
     if(!(calls++))
@@ -1611,6 +1757,17 @@ GpStatus WINGDIPAPI GdipSetLinePresetBlend(GpLineGradient *brush,
 
 GpStatus WINGDIPAPI GdipSetLineTransform(GpLineGradient *brush,
     GDIPCONST GpMatrix *matrix)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipScaleLineTransform(GpLineGradient *brush, REAL sx, REAL sy,
+    GpMatrixOrder order)
 {
     static int calls;
 

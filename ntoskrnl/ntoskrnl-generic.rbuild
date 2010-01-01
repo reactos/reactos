@@ -439,6 +439,7 @@
 		<file>procsup.c</file>
 		<file>region.c</file>
 		<file>rmap.c</file>
+		<file>reqtools.c</file>
 		<file>sysldr.c</file>
 		<file>virtual.c</file>
 		<if property="_NEWCC_" value="0">
@@ -456,6 +457,7 @@
 					<file>elf32.c</file>
 					<file>elf64.c</file>
 				</if>
+				<file>fault.c</file>
 				<file>image.c</file>
 				<file>io.c</file>
 				<file>pagefile.c</file>

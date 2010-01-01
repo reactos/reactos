@@ -506,6 +506,41 @@ static BOOL CRYPT_CheckBasicConstraintsForCA(PCertificateChainEngine engine,
     return validBasicConstraints;
 }
 
+static BOOL domain_name_matches(LPCWSTR constraint, LPCWSTR name)
+{
+    BOOL match;
+
+    /* RFC 5280, section 4.2.1.10:
+     * "For URIs, the constraint applies to the host part of the name...
+     *  When the constraint begins with a period, it MAY be expanded with one
+     *  or more labels.  That is, the constraint ".example.com" is satisfied by
+     *  both host.example.com and my.host.example.com.  However, the constraint
+     *  ".example.com" is not satisfied by "example.com".  When the constraint
+     *  does not begin with a period, it specifies a host."
+     * and for email addresses,
+     * "To indicate all Internet mail addresses on a particular host, the
+     *  constraint is specified as the host name.  For example, the constraint
+     *  "example.com" is satisfied by any mail address at the host
+     *  "example.com".  To specify any address within a domain, the constraint
+     *  is specified with a leading period (as with URIs)."
+     */
+    if (constraint[0] == '.')
+    {
+        /* Must be strictly greater than, a name can't begin with '.' */
+        if (lstrlenW(name) > lstrlenW(constraint))
+            match = !lstrcmpiW(name + lstrlenW(name) - lstrlenW(constraint),
+             constraint);
+        else
+        {
+            /* name is too short, no match */
+            match = FALSE;
+        }
+    }
+    else
+        match = !lstrcmpiW(name, constraint);
+     return match;
+}
+
 static BOOL url_matches(LPCWSTR constraint, LPCWSTR name,
  DWORD *trustErrorStatus)
 {
@@ -517,14 +552,58 @@ static BOOL url_matches(LPCWSTR constraint, LPCWSTR name,
         *trustErrorStatus |= CERT_TRUST_INVALID_NAME_CONSTRAINTS;
     else if (!name)
         ; /* no match */
-    else if (constraint[0] == '.')
-    {
-        if (lstrlenW(name) > lstrlenW(constraint))
-            match = !lstrcmpiW(name + lstrlenW(name) - lstrlenW(constraint),
-             constraint);
-    }
     else
-        match = !lstrcmpiW(constraint, name);
+    {
+        LPCWSTR colon, authority_end, at, hostname = NULL;
+        /* The maximum length for a hostname is 254 in the DNS, see RFC 1034 */
+        WCHAR hostname_buf[255];
+
+        /* RFC 5280: only the hostname portion of the URL is compared.  From
+         * section 4.2.1.10:
+         * "For URIs, the constraint applies to the host part of the name.
+         *  The constraint MUST be specified as a fully qualified domain name
+         *  and MAY specify a host or a domain."
+         * The format for URIs is in RFC 2396.
+         *
+         * First, remove any scheme that's present. */
+        colon = strchrW(name, ':');
+        if (colon && *(colon + 1) == '/' && *(colon + 2) == '/')
+            name = colon + 3;
+        /* Next, find the end of the authority component.  (The authority is
+         * generally just the hostname, but it may contain a username or a port.
+         * Those are removed next.)
+         */
+        authority_end = strchrW(name, '/');
+        if (!authority_end)
+            authority_end = strchrW(name, '?');
+        if (!authority_end)
+            authority_end = name + strlenW(name);
+        /* Remove any port number from the authority */
+        for (colon = authority_end; colon >= name && *colon != ':'; colon--)
+            ;
+        if (*colon == ':')
+            authority_end = colon;
+        /* Remove any username from the authority */
+        if ((at = strchrW(name, '@')))
+            name = at;
+        /* Ignore any path or query portion of the URL. */
+        if (*authority_end)
+        {
+            if (authority_end - name < sizeof(hostname_buf) /
+             sizeof(hostname_buf[0]))
+            {
+                memcpy(hostname_buf, name,
+                 (authority_end - name) * sizeof(WCHAR));
+                hostname_buf[authority_end - name] = 0;
+                hostname = hostname_buf;
+            }
+            /* else: Hostname is too long, not a match */
+        }
+        else
+            hostname = name;
+        if (hostname)
+            match = domain_name_matches(constraint, hostname);
+    }
     return match;
 }
 
@@ -545,7 +624,7 @@ static BOOL rfc822_name_matches(LPCWSTR constraint, LPCWSTR name,
     else
     {
         if ((at = strchrW(name, '@')))
-            match = url_matches(constraint, at + 1, trustErrorStatus);
+            match = domain_name_matches(constraint, at + 1);
         else
             match = !lstrcmpiW(constraint, name);
     }
@@ -563,9 +642,35 @@ static BOOL dns_name_matches(LPCWSTR constraint, LPCWSTR name,
         *trustErrorStatus |= CERT_TRUST_INVALID_NAME_CONSTRAINTS;
     else if (!name)
         ; /* no match */
-    else if (lstrlenW(name) >= lstrlenW(constraint))
+    /* RFC 5280, section 4.2.1.10:
+     * "DNS name restrictions are expressed as host.example.com.  Any DNS name
+     *  that can be constructed by simply adding zero or more labels to the
+     *  left-hand side of the name satisfies the name constraint.  For example,
+     *  www.host.example.com would satisfy the constraint but host1.example.com
+     *  would not."
+     */
+    else if (lstrlenW(name) == lstrlenW(constraint))
+        match = !lstrcmpiW(name, constraint);
+    else if (lstrlenW(name) > lstrlenW(constraint))
+    {
         match = !lstrcmpiW(name + lstrlenW(name) - lstrlenW(constraint),
          constraint);
+        if (match)
+        {
+            BOOL dot = FALSE;
+            LPCWSTR ptr;
+
+            /* This only matches if name is a subdomain of constraint, i.e.
+             * there's a '.' between the beginning of the name and the
+             * matching portion of the name.
+             */
+            for (ptr = name + lstrlenW(name) - lstrlenW(constraint);
+             !dot && ptr >= name; ptr--)
+                if (*ptr == '.')
+                    dot = TRUE;
+            match = dot;
+        }
+    }
     /* else:  name is too short, no match */
 
     return match;
@@ -615,46 +720,95 @@ static BOOL ip_address_matches(const CRYPT_DATA_BLOB *constraint,
     return match;
 }
 
-static void CRYPT_FindMatchingNameEntry(const CERT_ALT_NAME_ENTRY *constraint,
- const CERT_ALT_NAME_INFO *subjectName, DWORD *trustErrorStatus,
- DWORD errorIfFound, DWORD errorIfNotFound)
+static BOOL directory_name_matches(const CERT_NAME_BLOB *constraint,
+ const CERT_NAME_BLOB *name)
+{
+    CERT_NAME_INFO *constraintName;
+    DWORD size;
+    BOOL match = FALSE;
+
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_NAME, constraint->pbData,
+     constraint->cbData, CRYPT_DECODE_ALLOC_FLAG, NULL, &constraintName, &size))
+    {
+        DWORD i;
+
+        match = TRUE;
+        for (i = 0; match && i < constraintName->cRDN; i++)
+            match = CertIsRDNAttrsInCertificateName(X509_ASN_ENCODING,
+             CERT_CASE_INSENSITIVE_IS_RDN_ATTRS_FLAG,
+             (CERT_NAME_BLOB *)name, &constraintName->rgRDN[i]);
+        LocalFree(constraintName);
+    }
+    return match;
+}
+
+static BOOL alt_name_matches(const CERT_ALT_NAME_ENTRY *name,
+ const CERT_ALT_NAME_ENTRY *constraint, DWORD *trustErrorStatus, BOOL *present)
+{
+    BOOL match = FALSE;
+
+    if (name->dwAltNameChoice == constraint->dwAltNameChoice)
+    {
+        if (present)
+            *present = TRUE;
+        switch (constraint->dwAltNameChoice)
+        {
+        case CERT_ALT_NAME_RFC822_NAME:
+            match = rfc822_name_matches(constraint->u.pwszURL,
+             name->u.pwszURL, trustErrorStatus);
+            break;
+        case CERT_ALT_NAME_DNS_NAME:
+            match = dns_name_matches(constraint->u.pwszURL,
+             name->u.pwszURL, trustErrorStatus);
+            break;
+        case CERT_ALT_NAME_URL:
+            match = url_matches(constraint->u.pwszURL,
+             name->u.pwszURL, trustErrorStatus);
+            break;
+        case CERT_ALT_NAME_IP_ADDRESS:
+            match = ip_address_matches(&constraint->u.IPAddress,
+             &name->u.IPAddress, trustErrorStatus);
+            break;
+        case CERT_ALT_NAME_DIRECTORY_NAME:
+            match = directory_name_matches(&constraint->u.DirectoryName,
+             &name->u.DirectoryName);
+            break;
+        default:
+            ERR("name choice %d unsupported in this context\n",
+             constraint->dwAltNameChoice);
+            *trustErrorStatus |=
+             CERT_TRUST_HAS_NOT_SUPPORTED_NAME_CONSTRAINT;
+        }
+    }
+    else if (present)
+        *present = FALSE;
+    return match;
+}
+
+static BOOL alt_name_matches_excluded_name(const CERT_ALT_NAME_ENTRY *name,
+ const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, DWORD *trustErrorStatus)
 {
     DWORD i;
     BOOL match = FALSE;
 
-    for (i = 0; i < subjectName->cAltEntry; i++)
-    {
-        if (subjectName->rgAltEntry[i].dwAltNameChoice ==
-         constraint->dwAltNameChoice)
-        {
-            switch (constraint->dwAltNameChoice)
-            {
-            case CERT_ALT_NAME_RFC822_NAME:
-                match = rfc822_name_matches(constraint->u.pwszURL,
-                 subjectName->rgAltEntry[i].u.pwszURL, trustErrorStatus);
-                break;
-            case CERT_ALT_NAME_DNS_NAME:
-                match = dns_name_matches(constraint->u.pwszURL,
-                 subjectName->rgAltEntry[i].u.pwszURL, trustErrorStatus);
-                break;
-            case CERT_ALT_NAME_URL:
-                match = url_matches(constraint->u.pwszURL,
-                 subjectName->rgAltEntry[i].u.pwszURL, trustErrorStatus);
-                break;
-            case CERT_ALT_NAME_IP_ADDRESS:
-                match = ip_address_matches(&constraint->u.IPAddress,
-                 &subjectName->rgAltEntry[i].u.IPAddress, trustErrorStatus);
-                break;
-            case CERT_ALT_NAME_DIRECTORY_NAME:
-            default:
-                ERR("name choice %d unsupported in this context\n",
-                 constraint->dwAltNameChoice);
-                *trustErrorStatus |=
-                 CERT_TRUST_HAS_NOT_SUPPORTED_NAME_CONSTRAINT;
-            }
-        }
-    }
-    *trustErrorStatus |= match ? errorIfFound : errorIfNotFound;
+    for (i = 0; !match && i < nameConstraints->cExcludedSubtree; i++)
+        match = alt_name_matches(name,
+         &nameConstraints->rgExcludedSubtree[i].Base, trustErrorStatus, NULL);
+    return match;
+}
+
+static BOOL alt_name_matches_permitted_name(const CERT_ALT_NAME_ENTRY *name,
+ const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, DWORD *trustErrorStatus,
+ BOOL *present)
+{
+    DWORD i;
+    BOOL match = FALSE;
+
+    for (i = 0; !match && i < nameConstraints->cPermittedSubtree; i++)
+        match = alt_name_matches(name,
+         &nameConstraints->rgPermittedSubtree[i].Base, trustErrorStatus,
+         present);
+    return match;
 }
 
 static inline PCERT_EXTENSION get_subject_alt_name_ext(const CERT_INFO *cert)
@@ -669,55 +823,251 @@ static inline PCERT_EXTENSION get_subject_alt_name_ext(const CERT_INFO *cert)
     return ext;
 }
 
+static void compare_alt_name_with_constraints(const CERT_EXTENSION *altNameExt,
+ const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, DWORD *trustErrorStatus)
+{
+    CERT_ALT_NAME_INFO *subjectAltName;
+    DWORD size;
+
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_ALTERNATE_NAME,
+     altNameExt->Value.pbData, altNameExt->Value.cbData,
+     CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL,
+     &subjectAltName, &size))
+    {
+        DWORD i;
+
+        for (i = 0; i < subjectAltName->cAltEntry; i++)
+        {
+             BOOL nameFormPresent;
+
+             /* A name constraint only applies if the name form is present.
+              * From RFC 5280, section 4.2.1.10:
+              * "Restrictions apply only when the specified name form is
+              *  present.  If no name of the type is in the certificate,
+              *  the certificate is acceptable."
+              */
+            if (alt_name_matches_excluded_name(
+             &subjectAltName->rgAltEntry[i], nameConstraints,
+             trustErrorStatus))
+            {
+                TRACE_(chain)("subject alternate name form %d excluded\n",
+                 subjectAltName->rgAltEntry[i].dwAltNameChoice);
+                *trustErrorStatus |=
+                 CERT_TRUST_HAS_EXCLUDED_NAME_CONSTRAINT;
+            }
+            nameFormPresent = FALSE;
+            if (!alt_name_matches_permitted_name(
+             &subjectAltName->rgAltEntry[i], nameConstraints,
+             trustErrorStatus, &nameFormPresent) && nameFormPresent)
+            {
+                TRACE_(chain)("subject alternate name form %d not permitted\n",
+                 subjectAltName->rgAltEntry[i].dwAltNameChoice);
+                *trustErrorStatus |=
+                 CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT;
+            }
+        }
+        LocalFree(subjectAltName);
+    }
+    else
+        *trustErrorStatus |=
+         CERT_TRUST_INVALID_EXTENSION | CERT_TRUST_INVALID_NAME_CONSTRAINTS;
+}
+
+static BOOL rfc822_attr_matches_excluded_name(const CERT_RDN_ATTR *attr,
+ const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, DWORD *trustErrorStatus)
+{
+    DWORD i;
+    BOOL match = FALSE;
+
+    for (i = 0; !match && i < nameConstraints->cExcludedSubtree; i++)
+    {
+        const CERT_ALT_NAME_ENTRY *constraint =
+         &nameConstraints->rgExcludedSubtree[i].Base;
+
+        if (constraint->dwAltNameChoice == CERT_ALT_NAME_RFC822_NAME)
+            match = rfc822_name_matches(constraint->u.pwszRfc822Name,
+             (LPCWSTR)attr->Value.pbData, trustErrorStatus);
+    }
+    return match;
+}
+
+static BOOL rfc822_attr_matches_permitted_name(const CERT_RDN_ATTR *attr,
+ const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, DWORD *trustErrorStatus,
+ BOOL *present)
+{
+    DWORD i;
+    BOOL match = FALSE;
+
+    for (i = 0; !match && i < nameConstraints->cPermittedSubtree; i++)
+    {
+        const CERT_ALT_NAME_ENTRY *constraint =
+         &nameConstraints->rgPermittedSubtree[i].Base;
+
+        if (constraint->dwAltNameChoice == CERT_ALT_NAME_RFC822_NAME)
+        {
+            *present = TRUE;
+            match = rfc822_name_matches(constraint->u.pwszRfc822Name,
+             (LPCWSTR)attr->Value.pbData, trustErrorStatus);
+        }
+    }
+    return match;
+}
+
+static void compare_subject_with_email_constraints(
+ const CERT_NAME_BLOB *subjectName,
+ const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, DWORD *trustErrorStatus)
+{
+    CERT_NAME_INFO *name;
+    DWORD size;
+
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_UNICODE_NAME,
+     subjectName->pbData, subjectName->cbData,
+     CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL, &name, &size))
+    {
+        DWORD i, j;
+
+        for (i = 0; i < name->cRDN; i++)
+            for (j = 0; j < name->rgRDN[i].cRDNAttr; j++)
+                if (!strcmp(name->rgRDN[i].rgRDNAttr[j].pszObjId,
+                 szOID_RSA_emailAddr))
+                {
+                    BOOL nameFormPresent;
+
+                    /* A name constraint only applies if the name form is
+                     * present.  From RFC 5280, section 4.2.1.10:
+                     * "Restrictions apply only when the specified name form is
+                     *  present.  If no name of the type is in the certificate,
+                     *  the certificate is acceptable."
+                     */
+                    if (rfc822_attr_matches_excluded_name(
+                     &name->rgRDN[i].rgRDNAttr[j], nameConstraints,
+                     trustErrorStatus))
+                    {
+                        TRACE_(chain)(
+                         "email address in subject name is excluded\n");
+                        *trustErrorStatus |=
+                         CERT_TRUST_HAS_EXCLUDED_NAME_CONSTRAINT;
+                    }
+                    nameFormPresent = FALSE;
+                    if (!rfc822_attr_matches_permitted_name(
+                     &name->rgRDN[i].rgRDNAttr[j], nameConstraints,
+                     trustErrorStatus, &nameFormPresent) && nameFormPresent)
+                    {
+                        TRACE_(chain)(
+                         "email address in subject name is not permitted\n");
+                        *trustErrorStatus |=
+                         CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT;
+                    }
+                }
+        LocalFree(name);
+    }
+    else
+        *trustErrorStatus |=
+         CERT_TRUST_INVALID_EXTENSION | CERT_TRUST_INVALID_NAME_CONSTRAINTS;
+}
+
+static BOOL CRYPT_IsEmptyName(const CERT_NAME_BLOB *name)
+{
+    BOOL empty;
+
+    if (!name->cbData)
+        empty = TRUE;
+    else if (name->cbData == 2 && name->pbData[1] == 0)
+    {
+        /* An empty sequence is also empty */
+        empty = TRUE;
+    }
+    else
+        empty = FALSE;
+    return empty;
+}
+
+static void compare_subject_with_constraints(const CERT_NAME_BLOB *subjectName,
+ const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, DWORD *trustErrorStatus)
+{
+    BOOL hasEmailConstraint = FALSE;
+    DWORD i;
+
+    /* In general, a subject distinguished name only matches a directory name
+     * constraint.  However, an exception exists for email addresses.
+     * From RFC 5280, section 4.2.1.6:
+     * "Legacy implementations exist where an electronic mail address is
+     *  embedded in the subject distinguished name as an emailAddress
+     *  attribute [RFC2985]."
+     * If an email address constraint exists, check that constraint separately.
+     */
+    for (i = 0; !hasEmailConstraint && i < nameConstraints->cExcludedSubtree;
+     i++)
+        if (nameConstraints->rgExcludedSubtree[i].Base.dwAltNameChoice ==
+         CERT_ALT_NAME_RFC822_NAME)
+            hasEmailConstraint = TRUE;
+    for (i = 0; !hasEmailConstraint && i < nameConstraints->cPermittedSubtree;
+     i++)
+        if (nameConstraints->rgPermittedSubtree[i].Base.dwAltNameChoice ==
+         CERT_ALT_NAME_RFC822_NAME)
+            hasEmailConstraint = TRUE;
+    if (hasEmailConstraint)
+        compare_subject_with_email_constraints(subjectName, nameConstraints,
+         trustErrorStatus);
+    for (i = 0; i < nameConstraints->cExcludedSubtree; i++)
+    {
+        CERT_ALT_NAME_ENTRY *constraint =
+         &nameConstraints->rgExcludedSubtree[i].Base;
+
+        if (constraint->dwAltNameChoice == CERT_ALT_NAME_DIRECTORY_NAME &&
+         directory_name_matches(&constraint->u.DirectoryName, subjectName))
+        {
+            TRACE_(chain)("subject name is excluded\n");
+            *trustErrorStatus |=
+             CERT_TRUST_HAS_EXCLUDED_NAME_CONSTRAINT;
+        }
+    }
+    /* RFC 5280, section 4.2.1.10:
+     * "Restrictions apply only when the specified name form is present.
+     *  If no name of the type is in the certificate, the certificate is
+     *  acceptable."
+     * An empty name can't have the name form present, so don't check it.
+     */
+    if (nameConstraints->cPermittedSubtree && !CRYPT_IsEmptyName(subjectName))
+    {
+        BOOL match = FALSE, hasDirectoryConstraint = FALSE;
+
+        for (i = 0; !match && i < nameConstraints->cPermittedSubtree; i++)
+        {
+            CERT_ALT_NAME_ENTRY *constraint =
+             &nameConstraints->rgPermittedSubtree[i].Base;
+
+            if (constraint->dwAltNameChoice == CERT_ALT_NAME_DIRECTORY_NAME)
+            {
+                hasDirectoryConstraint = TRUE;
+                match = directory_name_matches(&constraint->u.DirectoryName,
+                 subjectName);
+            }
+        }
+        if (hasDirectoryConstraint && !match)
+        {
+            TRACE_(chain)("subject name is not permitted\n");
+            *trustErrorStatus |= CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT;
+        }
+    }
+}
+
 static void CRYPT_CheckNameConstraints(
  const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, const CERT_INFO *cert,
  DWORD *trustErrorStatus)
 {
-    /* If there aren't any existing constraints, don't bother checking */
-    if (nameConstraints->cPermittedSubtree || nameConstraints->cExcludedSubtree)
-    {
-        CERT_EXTENSION *ext = get_subject_alt_name_ext(cert);
+    CERT_EXTENSION *ext = get_subject_alt_name_ext(cert);
 
-        if (ext)
-        {
-            CERT_ALT_NAME_INFO *subjectName;
-            DWORD size;
-
-            if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_ALTERNATE_NAME,
-             ext->Value.pbData, ext->Value.cbData,
-             CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL,
-             &subjectName, &size))
-            {
-                DWORD i;
-
-                for (i = 0; i < nameConstraints->cExcludedSubtree; i++)
-                    CRYPT_FindMatchingNameEntry(
-                     &nameConstraints->rgExcludedSubtree[i].Base, subjectName,
-                     trustErrorStatus,
-                     CERT_TRUST_HAS_EXCLUDED_NAME_CONSTRAINT, 0);
-                for (i = 0; i < nameConstraints->cPermittedSubtree; i++)
-                    CRYPT_FindMatchingNameEntry(
-                     &nameConstraints->rgPermittedSubtree[i].Base, subjectName,
-                     trustErrorStatus, 0,
-                     CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT);
-                LocalFree(subjectName);
-            }
-            else
-                *trustErrorStatus |=
-                 CERT_TRUST_INVALID_EXTENSION |
-                 CERT_TRUST_INVALID_NAME_CONSTRAINTS;
-        }
-        else
-        {
-            if (nameConstraints->cPermittedSubtree)
-                *trustErrorStatus |=
-                 CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
-                 CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT;
-            if (nameConstraints->cExcludedSubtree)
-                *trustErrorStatus |=
-                 CERT_TRUST_HAS_EXCLUDED_NAME_CONSTRAINT;
-        }
-    }
+    if (ext)
+        compare_alt_name_with_constraints(ext, nameConstraints,
+         trustErrorStatus);
+    /* Name constraints apply to the subject alternative name as well as the
+     * subject name.  From RFC 5280, section 4.2.1.10:
+     * "Restrictions apply to the subject distinguished name and apply to
+     *  subject alternative names."
+     */
+    compare_subject_with_constraints(&cert->Subject, nameConstraints,
+     trustErrorStatus);
 }
 
 /* Gets cert's name constraints, if any.  Free with LocalFree. */
@@ -745,6 +1095,17 @@ static BOOL CRYPT_IsValidNameConstraint(const CERT_NAME_CONSTRAINTS_INFO *info)
     DWORD i;
     BOOL ret = TRUE;
 
+    /* Make sure at least one permitted or excluded subtree is present.  From
+     * RFC 5280, section 4.2.1.10:
+     * "Conforming CAs MUST NOT issue certificates where name constraints is an
+     *  empty sequence.  That is, either the permittedSubtrees field or the
+     *  excludedSubtrees MUST be present."
+     */
+    if (!info->cPermittedSubtree && !info->cExcludedSubtree)
+    {
+        WARN_(chain)("constraints contain no permitted nor excluded subtree\n");
+        ret = FALSE;
+    }
     /* Check that none of the constraints specifies a minimum or a maximum.
      * See RFC 5280, section 4.2.1.10:
      * "Within this profile, the minimum and maximum fields are not used with
@@ -815,8 +1176,16 @@ static void CRYPT_CheckChainNameConstraints(PCERT_SIMPLE_CHAIN chain)
                         CRYPT_CheckNameConstraints(nameConstraints,
                          chain->rgpElement[j]->pCertContext->pCertInfo,
                          &errorStatus);
-                        chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
-                         errorStatus;
+                        if (errorStatus)
+                        {
+                            chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+                             errorStatus;
+                            CRYPT_CombineTrustStatus(&chain->TrustStatus,
+                             &chain->rgpElement[i]->TrustStatus);
+                        }
+                        else
+                            chain->rgpElement[i]->TrustStatus.dwInfoStatus |=
+                             CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS;
                     }
                 }
             }
@@ -1235,58 +1604,6 @@ static BOOL CRYPT_KeyUsageValid(PCertificateChainEngine engine,
     return ret;
 }
 
-static BOOL CRYPT_ExtendedKeyUsageValidForCA(PCCERT_CONTEXT cert)
-{
-    PCERT_EXTENSION ext;
-    BOOL ret;
-
-    /* RFC 5280, section 4.2.1.12:  "In general, this extension will only
-     * appear in end entity certificates."  And, "If a certificate contains
-     * both a key usage extension and an extended key usage extension, then
-     * both extensions MUST be processed independently and the certificate MUST
-     * only be used for a purpose consistent with both extensions."  This seems
-     * to imply that it should be checked if present, and ignored if not.
-     * Unfortunately some CAs, e.g. the Thawte SGC CA, don't include the code
-     * signing extended key usage, whereas they do include the keyCertSign
-     * key usage.  Thus, when checking for a CA, we only require the
-     * code signing extended key usage if the extended key usage is critical.
-     */
-    ext = CertFindExtension(szOID_ENHANCED_KEY_USAGE,
-     cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension);
-    if (ext && ext->fCritical)
-    {
-        CERT_ENHKEY_USAGE *usage;
-        DWORD size;
-
-        ret = CryptDecodeObjectEx(cert->dwCertEncodingType,
-         X509_ENHANCED_KEY_USAGE, ext->Value.pbData, ext->Value.cbData,
-         CRYPT_DECODE_ALLOC_FLAG, NULL, &usage, &size);
-        if (ret)
-        {
-            DWORD i;
-
-            /* Explicitly require the code signing extended key usage for a CA
-             * with an extended key usage extension.  That is, don't assume
-             * a cert is allowed to be a CA if it specifies the
-             * anyExtendedKeyUsage usage oid.  See again RFC 5280, section
-             * 4.2.1.12: "Applications that require the presence of a
-             * particular purpose MAY reject certificates that include the
-             * anyExtendedKeyUsage OID but not the particular OID expected for
-             * the application."
-             */
-            ret = FALSE;
-            for (i = 0; !ret && i < usage->cUsageIdentifier; i++)
-                if (!strcmp(usage->rgpszUsageIdentifier[i],
-                 szOID_PKIX_KP_CODE_SIGNING))
-                    ret = TRUE;
-            LocalFree(usage);
-        }
-    }
-    else
-        ret = TRUE;
-    return ret;
-}
-
 static BOOL CRYPT_CriticalExtensionsSupported(PCCERT_CONTEXT cert)
 {
     BOOL ret = TRUE;
@@ -1435,11 +1752,6 @@ static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
          isRoot, constraints.fCA, i))
             chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
              CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
-        if (i != 0)
-            if (!CRYPT_ExtendedKeyUsageValidForCA(
-             chain->rgpElement[i]->pCertContext))
-                chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
-                 CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
         if (CRYPT_IsSimpleChainCyclic(chain))
         {
             /* If the chain is cyclic, then the path length constraints
@@ -1501,7 +1813,10 @@ static PCCERT_CONTEXT CRYPT_GetIssuer(HCERTSTORE store, PCCERT_CONTEXT subject,
                  subject->dwCertEncodingType, 0, CERT_FIND_CERT_ID, &id,
                  prevIssuer);
                 if (issuer)
+                {
+                    TRACE_(chain)("issuer found by issuer/serial number\n");
                     *infoStatus = CERT_TRUST_HAS_EXACT_MATCH_ISSUER;
+                }
             }
             else if (info->KeyId.cbData)
             {
@@ -1511,7 +1826,10 @@ static PCCERT_CONTEXT CRYPT_GetIssuer(HCERTSTORE store, PCCERT_CONTEXT subject,
                  subject->dwCertEncodingType, 0, CERT_FIND_CERT_ID, &id,
                  prevIssuer);
                 if (issuer)
+                {
+                    TRACE_(chain)("issuer found by key id\n");
                     *infoStatus = CERT_TRUST_HAS_KEY_MATCH_ISSUER;
+                }
             }
             LocalFree(info);
         }
@@ -1554,7 +1872,10 @@ static PCCERT_CONTEXT CRYPT_GetIssuer(HCERTSTORE store, PCCERT_CONTEXT subject,
                      subject->dwCertEncodingType, 0, CERT_FIND_CERT_ID, &id,
                      prevIssuer);
                     if (issuer)
+                    {
+                        TRACE_(chain)("issuer found by directory name\n");
                         *infoStatus = CERT_TRUST_HAS_EXACT_MATCH_ISSUER;
+                    }
                 }
                 else
                     FIXME("no supported name type in authority key id2\n");
@@ -1567,7 +1888,10 @@ static PCCERT_CONTEXT CRYPT_GetIssuer(HCERTSTORE store, PCCERT_CONTEXT subject,
                  subject->dwCertEncodingType, 0, CERT_FIND_CERT_ID, &id,
                  prevIssuer);
                 if (issuer)
+                {
+                    TRACE_(chain)("issuer found by key id\n");
                     *infoStatus = CERT_TRUST_HAS_KEY_MATCH_ISSUER;
+                }
             }
             LocalFree(info);
         }
@@ -1577,6 +1901,7 @@ static PCCERT_CONTEXT CRYPT_GetIssuer(HCERTSTORE store, PCCERT_CONTEXT subject,
         issuer = CertFindCertificateInStore(store,
          subject->dwCertEncodingType, 0, CERT_FIND_SUBJECT_NAME,
          &subject->pCertInfo->Issuer, prevIssuer);
+        TRACE_(chain)("issuer found by name\n");
         *infoStatus = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
     }
     return issuer;
@@ -2054,7 +2379,7 @@ static void CRYPT_VerifyChainRevocation(PCERT_CHAIN_CONTEXT chain,
     if (cContext)
     {
         PCCERT_CONTEXT *contexts =
-         CryptMemAlloc(cContext * sizeof(PCCERT_CONTEXT *));
+         CryptMemAlloc(cContext * sizeof(PCCERT_CONTEXT));
 
         if (contexts)
         {
@@ -2101,7 +2426,11 @@ static void CRYPT_VerifyChainRevocation(PCERT_CHAIN_CONTEXT chain,
                 case CRYPT_E_NO_REVOCATION_CHECK:
                 case CRYPT_E_NO_REVOCATION_DLL:
                 case CRYPT_E_NOT_IN_REVOCATION_DATABASE:
-                    error = CERT_TRUST_REVOCATION_STATUS_UNKNOWN;
+                    /* If the revocation status is unknown, it's assumed to be
+                     * offline too.
+                     */
+                    error = CERT_TRUST_REVOCATION_STATUS_UNKNOWN |
+                     CERT_TRUST_IS_OFFLINE_REVOCATION;
                     break;
                 case CRYPT_E_REVOCATION_OFFLINE:
                     error = CERT_TRUST_IS_OFFLINE_REVOCATION;
@@ -2125,14 +2454,122 @@ static void CRYPT_VerifyChainRevocation(PCERT_CHAIN_CONTEXT chain,
     }
 }
 
+static void CRYPT_CheckUsages(PCERT_CHAIN_CONTEXT chain,
+ const CERT_CHAIN_PARA *pChainPara)
+{
+    if (pChainPara->cbSize >= sizeof(CERT_CHAIN_PARA_NO_EXTRA_FIELDS) &&
+     pChainPara->RequestedUsage.Usage.cUsageIdentifier)
+    {
+        PCCERT_CONTEXT endCert;
+        PCERT_EXTENSION ext;
+        BOOL validForUsage;
+
+        /* A chain, if created, always includes the end certificate */
+        endCert = chain->rgpChain[0]->rgpElement[0]->pCertContext;
+        /* The extended key usage extension specifies how a certificate's
+         * public key may be used.  From RFC 5280, section 4.2.1.12:
+         * "This extension indicates one or more purposes for which the
+         *  certified public key may be used, in addition to or in place of the
+         *  basic purposes indicated in the key usage extension."
+         * If the extension is present, it only satisfies the requested usage
+         * if that usage is included in the extension:
+         * "If the extension is present, then the certificate MUST only be used
+         *  for one of the purposes indicated."
+         * There is also the special anyExtendedKeyUsage OID, but it doesn't
+         * have to be respected:
+         * "Applications that require the presence of a particular purpose
+         *  MAY reject certificates that include the anyExtendedKeyUsage OID
+         *  but not the particular OID expected for the application."
+         * For now, I'm being more conservative and ignoring the presence of
+         * the anyExtendedKeyUsage OID.
+         */
+        if ((ext = CertFindExtension(szOID_ENHANCED_KEY_USAGE,
+         endCert->pCertInfo->cExtension, endCert->pCertInfo->rgExtension)))
+        {
+            const CERT_ENHKEY_USAGE *requestedUsage =
+             &pChainPara->RequestedUsage.Usage;
+            CERT_ENHKEY_USAGE *usage;
+            DWORD size;
+
+            if (CryptDecodeObjectEx(X509_ASN_ENCODING,
+             X509_ENHANCED_KEY_USAGE, ext->Value.pbData, ext->Value.cbData,
+             CRYPT_DECODE_ALLOC_FLAG, NULL, &usage, &size))
+            {
+                if (pChainPara->RequestedUsage.dwType == USAGE_MATCH_TYPE_AND)
+                {
+                    DWORD i, j;
+
+                    /* For AND matches, all usages must be present */
+                    validForUsage = TRUE;
+                    for (i = 0; validForUsage &&
+                     i < requestedUsage->cUsageIdentifier; i++)
+                    {
+                        BOOL match = FALSE;
+
+                        for (j = 0; !match && j < usage->cUsageIdentifier; j++)
+                            match = !strcmp(usage->rgpszUsageIdentifier[j],
+                             requestedUsage->rgpszUsageIdentifier[i]);
+                        if (!match)
+                            validForUsage = FALSE;
+                    }
+                }
+                else
+                {
+                    DWORD i, j;
+
+                    /* For OR matches, any matching usage suffices */
+                    validForUsage = FALSE;
+                    for (i = 0; !validForUsage &&
+                     i < requestedUsage->cUsageIdentifier; i++)
+                    {
+                        for (j = 0; !validForUsage &&
+                         j < usage->cUsageIdentifier; j++)
+                            validForUsage =
+                             !strcmp(usage->rgpszUsageIdentifier[j],
+                             requestedUsage->rgpszUsageIdentifier[i]);
+                    }
+                }
+                LocalFree(usage);
+            }
+            else
+                validForUsage = FALSE;
+        }
+        else
+        {
+            /* If the extension isn't present, any interpretation is valid:
+             * "Certificate using applications MAY require that the extended
+             *  key usage extension be present and that a particular purpose
+             *  be indicated in order for the certificate to be acceptable to
+             *  that application."
+             * For now I'm being more conservative and disallowing it.
+             */
+            WARN_(chain)("requested usage from a certificate with no usages\n");
+            validForUsage = FALSE;
+        }
+        if (!validForUsage)
+        {
+            chain->TrustStatus.dwErrorStatus |=
+             CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
+            chain->rgpChain[0]->rgpElement[0]->TrustStatus.dwErrorStatus |=
+             CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
+        }
+    }
+    if (pChainPara->cbSize >= sizeof(CERT_CHAIN_PARA) &&
+     pChainPara->RequestedIssuancePolicy.Usage.cUsageIdentifier)
+        FIXME("unimplemented for RequestedIssuancePolicy\n");
+}
+
 static void dump_usage_match(LPCSTR name, const CERT_USAGE_MATCH *usageMatch)
 {
-    DWORD i;
+    if (usageMatch->Usage.cUsageIdentifier)
+    {
+        DWORD i;
 
-    TRACE_(chain)("%s: %s\n", name,
-     usageMatch->dwType == USAGE_MATCH_TYPE_AND ? "AND" : "OR");
-    for (i = 0; i < usageMatch->Usage.cUsageIdentifier; i++)
-        TRACE_(chain)("%s\n", usageMatch->Usage.rgpszUsageIdentifier[i]);
+        TRACE_(chain)("%s: %s\n", name,
+         usageMatch->dwType == USAGE_MATCH_TYPE_AND ? "AND" : "OR");
+        for (i = 0; i < usageMatch->Usage.cUsageIdentifier; i++)
+            TRACE_(chain)("%s\n", usageMatch->Usage.rgpszUsageIdentifier[i]);
+    }
 }
 
 static void dump_chain_para(const CERT_CHAIN_PARA *pChainPara)
@@ -2201,7 +2638,9 @@ BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
         if (!(dwFlags & CERT_CHAIN_RETURN_LOWER_QUALITY_CONTEXTS))
             CRYPT_FreeLowerQualityChains(chain);
         pChain = (PCERT_CHAIN_CONTEXT)chain;
-        CRYPT_VerifyChainRevocation(pChain, pTime, pChainPara, dwFlags);
+        if (!pChain->TrustStatus.dwErrorStatus)
+            CRYPT_VerifyChainRevocation(pChain, pTime, pChainPara, dwFlags);
+        CRYPT_CheckUsages(pChain, pChainPara);
         if (ppChainContext)
             *ppChainContext = pChain;
         else
@@ -2378,8 +2817,8 @@ static BOOL match_dns_to_subject_alt_name(PCERT_EXTENSION ext,
          * in section 4.2.1.6:
          * "Multiple name forms, and multiple instances of each name form,
          *  MAY be included."
-         * It doesn't specify the behavior in such cases, but common usage is
-         * to accept a certificate if any name matches.
+         * It doesn't specify the behavior in such cases, but both RFC 2818
+         * and RFC 2595 explicitly accept a certificate if any name matches.
          */
         for (i = 0; !matches && i < subjectName->cAltEntry; i++)
         {

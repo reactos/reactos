@@ -106,7 +106,7 @@ VOID IPAddressFree(
  *     Nothing
  */
 {
-    ExFreePoolWithTag(Object, IP_ADDRESS_TAG);
+    exFreePool(Object);
 }
 
 

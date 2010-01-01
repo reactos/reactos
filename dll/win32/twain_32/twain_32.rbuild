@@ -3,7 +3,6 @@
 	<include base="twain_32">.</include>
 	<library>wine</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<file>capability.c</file>
 	<file>ds_audio.c</file>
 	<file>ds_ctrl.c</file>

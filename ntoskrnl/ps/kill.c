@@ -215,6 +215,11 @@ PspDeleteProcess(IN PVOID ObjectBody)
     PSTRACE(PS_KILL_DEBUG, "ObjectBody: %p\n", ObjectBody);
     PSREFTRACE(Process);
 
+	DPRINT1
+		("Delete Process %08x, Address Space %08x\n",
+		 Process,
+		 &Process->Vm);
+
     /* Check if it has an Active Process Link */
     if (Process->ActiveProcessLinks.Flink)
     {
@@ -296,13 +301,17 @@ PspDeleteProcess(IN PVOID ObjectBody)
         KeStackAttachProcess(&Process->Pcb, &ApcState);
 
         /* Clean the Address Space */
+		DPRINT1("PspExitProcess %x\n", &Process->Vm);
         PspExitProcess(FALSE, Process);
+		DPRINT1("PspExitProcess %x Done\n", &Process->Vm);
 
         /* Detach */
         KeUnstackDetachProcess(&ApcState);
 
         /* Completely delete the Address Space */
+		DPRINT1("MmDeleteProcessAddressSpace %x\n", &Process->Vm);
         MmDeleteProcessAddressSpace(Process);
+		DPRINT1("MmDeleteProcessAddressSpace %x Done\n", &Process->Vm);
     }
 
     /* See if we have a PID */

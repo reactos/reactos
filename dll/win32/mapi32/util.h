@@ -44,7 +44,20 @@ typedef struct MAPI_FUNCTIONS {
     LPMAPISENDDOCUMENTS  MAPISendDocuments;
     LPMAPIUNINITIALIZE   MAPIUninitialize;
 
-    HRESULT (WINAPI *DllGetClassObject)(REFCLSID, REFIID, LPVOID *);
+    VOID     (WINAPI *DeinitMapiUtil)             (void);
+    HRESULT  (WINAPI *DllCanUnloadNow)            (void);
+    HRESULT  (WINAPI *DllGetClassObject)          (REFCLSID, REFIID, LPVOID *);
+    BOOL     (WINAPI *FGetComponentPath)          (LPCSTR, LPCSTR, LPSTR, DWORD, BOOL);
+    HRESULT  (WINAPI *MAPIAdminProfiles)          (ULONG, LPPROFADMIN *);
+    SCODE    (WINAPI *MAPIAllocateBuffer)         (ULONG, LPVOID *);
+    SCODE    (WINAPI *MAPIAllocateMore)           (ULONG, LPVOID, LPVOID *);
+    ULONG    (WINAPI *MAPIFreeBuffer)             (LPVOID);
+    LPMALLOC (WINAPI *MAPIGetDefaultMalloc)       (void);
+    HRESULT  (WINAPI *MAPIOpenLocalFormContainer) (LPVOID *);
+    HRESULT  (WINAPI *HrThisThreadAdviseSink)     (LPMAPIADVISESINK, LPMAPIADVISESINK*);
+    HRESULT  (WINAPI *HrQueryAllRows)             (LPMAPITABLE, LPSPropTagArray, LPSRestriction, LPSSortOrderSet, LONG, LPSRowSet *);
+    HRESULT  (WINAPI *OpenStreamOnFile)           (LPALLOCATEBUFFER, LPFREEBUFFER, ULONG, LPWSTR, LPWSTR, LPSTREAM *);
+    SCODE    (WINAPI *ScInitMapiUtil)             (ULONG ulReserved);
 } MAPI_FUNCTIONS;
 
 extern MAPI_FUNCTIONS mapiFunctions;

@@ -5,7 +5,6 @@
 	<library>wine</library>
 	<library>shell32</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<file>xcopy.c</file>
 	<file>rsrc.rc</file>
 	<metadata description="xcopy command-line tool" />

@@ -703,7 +703,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_WEIGHT_BAHT                 "Baht"
-    IDS_WEIGHT_CARATS               "Carats"
+    IDS_WEIGHT_CARATS               "Karaat"
     IDS_WEIGHT_CHUNG                "Chung"
     IDS_WEIGHT_DON                  "Don"
     IDS_WEIGHT_GEUN                 "Geun"

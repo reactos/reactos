@@ -1498,7 +1498,7 @@ static void variant_from_registry_value(VARIANT *pVarResult, DWORD dwType, LPBYT
         case REG_EXPAND_SZ:
             if (!(dwNewSize = ExpandEnvironmentStringsW(szString, szNewString, dwNewSize)))
                 ERR("ExpandEnvironmentStrings returned error %d\n", GetLastError());
-            else if (!(szNewString = msi_alloc(dwNewSize)))
+            else if (!(szNewString = msi_alloc(dwNewSize * sizeof(WCHAR))))
                 ERR("Out of memory\n");
             else if (!(dwNewSize = ExpandEnvironmentStringsW(szString, szNewString, dwNewSize)))
                 ERR("ExpandEnvironmentStrings returned error %d\n", GetLastError());

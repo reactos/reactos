@@ -247,9 +247,9 @@ IntGdiArcInternal(
   if (arctype == GdiTypeArcTo)
   {
      if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
-       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL);
+       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL, TRUE);
      else
-       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL);
+       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL, TRUE);
   }
   return Ret;
 }
@@ -294,7 +294,7 @@ IntGdiAngleArc( PDC pDC,
 
   if (result)
   {
-     IntGdiMoveToEx(pDC, x2, y2, NULL); // Dont forget Path.
+     IntGdiMoveToEx(pDC, x2, y2, NULL, TRUE);
   }
   return result;
 }

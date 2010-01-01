@@ -1832,6 +1832,92 @@ PCERT_RDN_ATTR WINAPI CertFindRDNAttr(LPCSTR pszObjId, PCERT_NAME_INFO pName)
     return ret;
 }
 
+static BOOL find_matching_rdn_attr(DWORD dwFlags, const CERT_NAME_INFO *name,
+ const CERT_RDN_ATTR *attr)
+{
+    DWORD i, j;
+    BOOL match = FALSE;
+
+    for (i = 0; !match && i < name->cRDN; i++)
+    {
+        for (j = 0; j < name->rgRDN[i].cRDNAttr; j++)
+        {
+            if (!strcmp(name->rgRDN[i].rgRDNAttr[j].pszObjId,
+             attr->pszObjId) &&
+             name->rgRDN[i].rgRDNAttr[j].dwValueType ==
+             attr->dwValueType)
+            {
+                if (dwFlags & CERT_UNICODE_IS_RDN_ATTRS_FLAG)
+                {
+                    LPCWSTR nameStr =
+                     (LPCWSTR)name->rgRDN[i].rgRDNAttr[j].Value.pbData;
+                    LPCWSTR attrStr = (LPCWSTR)attr->Value.pbData;
+
+                    if (attr->Value.cbData !=
+                     name->rgRDN[i].rgRDNAttr[j].Value.cbData)
+                        match = FALSE;
+                    else if (dwFlags & CERT_CASE_INSENSITIVE_IS_RDN_ATTRS_FLAG)
+                        match = !strncmpiW(nameStr, attrStr,
+                         attr->Value.cbData / sizeof(WCHAR));
+                    else
+                        match = !strncmpW(nameStr, attrStr,
+                         attr->Value.cbData / sizeof(WCHAR));
+                    TRACE("%s : %s => %d\n",
+                     debugstr_wn(nameStr, attr->Value.cbData / sizeof(WCHAR)),
+                     debugstr_wn(attrStr, attr->Value.cbData / sizeof(WCHAR)),
+                     match);
+                }
+                else
+                {
+                    LPCSTR nameStr =
+                     (LPCSTR)name->rgRDN[i].rgRDNAttr[j].Value.pbData;
+                    LPCSTR attrStr = (LPCSTR)attr->Value.pbData;
+
+                    if (attr->Value.cbData !=
+                     name->rgRDN[i].rgRDNAttr[j].Value.cbData)
+                        match = FALSE;
+                    else if (dwFlags & CERT_CASE_INSENSITIVE_IS_RDN_ATTRS_FLAG)
+                        match = !strncasecmp(nameStr, attrStr,
+                         attr->Value.cbData);
+                    else
+                        match = !strncmp(nameStr, attrStr, attr->Value.cbData);
+                    TRACE("%s : %s => %d\n",
+                     debugstr_an(nameStr, attr->Value.cbData),
+                     debugstr_an(attrStr, attr->Value.cbData), match);
+                }
+            }
+        }
+    }
+    return match;
+}
+
+BOOL WINAPI CertIsRDNAttrsInCertificateName(DWORD dwCertEncodingType,
+ DWORD dwFlags, PCERT_NAME_BLOB pCertName, PCERT_RDN pRDN)
+{
+    CERT_NAME_INFO *name;
+    LPCSTR type;
+    DWORD size;
+    BOOL ret;
+
+    TRACE("(%08x, %08x, %p, %p)\n", dwCertEncodingType, dwFlags, pCertName,
+     pRDN);
+
+    type = dwFlags & CERT_UNICODE_IS_RDN_ATTRS_FLAG ? X509_UNICODE_NAME :
+     X509_NAME;
+    if ((ret = CryptDecodeObjectEx(dwCertEncodingType, type, pCertName->pbData,
+     pCertName->cbData, CRYPT_DECODE_ALLOC_FLAG, NULL, &name, &size)))
+    {
+        DWORD i;
+
+        for (i = 0; ret && i < pRDN->cRDNAttr; i++)
+            ret = find_matching_rdn_attr(dwFlags, name, &pRDN->rgRDNAttr[i]);
+        if (!ret)
+            SetLastError(CRYPT_E_NO_MATCH);
+        LocalFree(name);
+    }
+    return ret;
+}
+
 LONG WINAPI CertVerifyTimeValidity(LPFILETIME pTimeToVerify,
  PCERT_INFO pCertInfo)
 {

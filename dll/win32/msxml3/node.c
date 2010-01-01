@@ -944,36 +944,219 @@ static HRESULT WINAPI xmlnode_get_definition(
     return E_NOTIMPL;
 }
 
+static HRESULT WINAPI xmlnode_get_dataType(IXMLDOMNode*, VARIANT*);
+
+static inline BYTE hex_to_byte(xmlChar c)
+{
+    if(c <= '9') return c-'0';
+    if(c <= 'F') return c-'A'+10;
+    return c-'a'+10;
+}
+
+static inline BYTE base64_to_byte(xmlChar c)
+{
+    if(c == '+') return 62;
+    if(c == '/') return 63;
+    if(c <= '9') return c-'0'+52;
+    if(c <= 'Z') return c-'A';
+    return c-'a'+26;
+}
+
+static inline HRESULT VARIANT_from_xmlChar(xmlChar *str, VARIANT *v, BSTR type)
+{
+    if(!type || !lstrcmpiW(type, szString) ||
+            !lstrcmpiW(type, szNumber) || !lstrcmpiW(type, szUUID))
+    {
+        V_VT(v) = VT_BSTR;
+        V_BSTR(v) = bstr_from_xmlChar(str);
+
+        if(!V_BSTR(v))
+            return E_OUTOFMEMORY;
+    }
+    else if(!lstrcmpiW(type, szDateTime) || !lstrcmpiW(type, szDateTimeTZ) ||
+            !lstrcmpiW(type, szDate) || !lstrcmpiW(type, szTime) ||
+            !lstrcmpiW(type, szTimeTZ))
+    {
+        VARIANT src;
+        WCHAR *p, *e;
+        SYSTEMTIME st;
+        DOUBLE date = 0.0;
+
+        st.wYear = 1899;
+        st.wMonth = 12;
+        st.wDay = 30;
+        st.wDayOfWeek = st.wHour = st.wMinute = st.wSecond = st.wMilliseconds = 0;
+
+        V_VT(&src) = VT_BSTR;
+        V_BSTR(&src) = bstr_from_xmlChar(str);
+
+        if(!V_BSTR(&src))
+            return E_OUTOFMEMORY;
+
+        p = V_BSTR(&src);
+        e = p + SysStringLen(V_BSTR(&src));
+
+        if(p+4<e && *(p+4)=='-') /* parse date (yyyy-mm-dd) */
+        {
+            st.wYear = atoiW(p);
+            st.wMonth = atoiW(p+5);
+            st.wDay = atoiW(p+8);
+            p += 10;
+
+            if(*p == 'T') p++;
+        }
+
+        if(p+2<e && *(p+2)==':') /* parse time (hh:mm:ss.?) */
+        {
+            st.wHour = atoiW(p);
+            st.wMinute = atoiW(p+3);
+            st.wSecond = atoiW(p+6);
+            p += 8;
+
+            if(*p == '.')
+            {
+                p++;
+                while(isdigitW(*p)) p++;
+            }
+        }
+
+        SystemTimeToVariantTime(&st, &date);
+        V_VT(v) = VT_DATE;
+        V_DATE(v) = date;
+
+        if(*p == '+') /* parse timezone offset (+hh:mm) */
+            V_DATE(v) += (DOUBLE)atoiW(p+1)/24 + (DOUBLE)atoiW(p+4)/1440;
+        else if(*p == '-') /* parse timezone offset (-hh:mm) */
+            V_DATE(v) -= (DOUBLE)atoiW(p+1)/24 + (DOUBLE)atoiW(p+4)/1440;
+
+        VariantClear(&src);
+    }
+    else if(!lstrcmpiW(type, szBinHex))
+    {
+        SAFEARRAYBOUND sab;
+        int i, len;
+
+        len = xmlStrlen(str)/2;
+        sab.lLbound = 0;
+        sab.cElements = len;
+
+        V_VT(v) = (VT_ARRAY|VT_UI1);
+        V_ARRAY(v) = SafeArrayCreate(VT_UI1, 1, &sab);
+
+        if(!V_ARRAY(v))
+            return E_OUTOFMEMORY;
+
+        for(i=0; i<len; i++)
+            ((BYTE*)V_ARRAY(v)->pvData)[i] = (hex_to_byte(str[2*i])<<4)
+                + hex_to_byte(str[2*i+1]);
+    }
+    else if(!lstrcmpiW(type, szBinBase64))
+    {
+        SAFEARRAYBOUND sab;
+        int i, len;
+
+        len  = xmlStrlen(str);
+        if(str[len-2] == '=') i = 2;
+        else if(str[len-1] == '=') i = 1;
+        else i = 0;
+
+        sab.lLbound = 0;
+        sab.cElements = len/4*3-i;
+
+        V_VT(v) = (VT_ARRAY|VT_UI1);
+        V_ARRAY(v) = SafeArrayCreate(VT_UI1, 1, &sab);
+
+        if(!V_ARRAY(v))
+            return E_OUTOFMEMORY;
+
+        for(i=0; i<len/4; i++)
+        {
+            ((BYTE*)V_ARRAY(v)->pvData)[3*i] = (base64_to_byte(str[4*i])<<2)
+                + (base64_to_byte(str[4*i+1])>>4);
+            if(3*i+1 < sab.cElements)
+                ((BYTE*)V_ARRAY(v)->pvData)[3*i+1] = (base64_to_byte(str[4*i+1])<<4)
+                    + (base64_to_byte(str[4*i+2])>>2);
+            if(3*i+2 < sab.cElements)
+                ((BYTE*)V_ARRAY(v)->pvData)[3*i+2] = (base64_to_byte(str[4*i+2])<<6)
+                    + base64_to_byte(str[4*i+3]);
+        }
+    }
+    else
+    {
+        VARIANT src;
+        HRESULT hres;
+
+        if(!lstrcmpiW(type, szInt) || !lstrcmpiW(type, szI4))
+            V_VT(v) = VT_I4;
+        else if(!lstrcmpiW(type, szFixed))
+            V_VT(v) = VT_CY;
+        else if(!lstrcmpiW(type, szBoolean))
+            V_VT(v) = VT_BOOL;
+        else if(!lstrcmpiW(type, szI1))
+            V_VT(v) = VT_I1;
+        else if(!lstrcmpiW(type, szI2))
+            V_VT(v) = VT_I2;
+        else if(!lstrcmpiW(type, szIU1))
+            V_VT(v) = VT_UI1;
+        else if(!lstrcmpiW(type, szIU2))
+            V_VT(v) = VT_UI2;
+        else if(!lstrcmpiW(type, szIU4))
+            V_VT(v) = VT_UI4;
+        else if(!lstrcmpiW(type, szR4))
+            V_VT(v) = VT_R4;
+        else if(!lstrcmpiW(type, szR8) || !lstrcmpiW(type, szFloat))
+            V_VT(v) = VT_R8;
+        else
+        {
+            FIXME("Type handling not yet implemented\n");
+            V_VT(v) = VT_BSTR;
+        }
+
+        V_VT(&src) = VT_BSTR;
+        V_BSTR(&src) = bstr_from_xmlChar(str);
+
+        if(!V_BSTR(&src))
+            return E_OUTOFMEMORY;
+
+        hres = VariantChangeType(v, &src, 0, V_VT(v));
+        VariantClear(&src);
+        return hres;
+    }
+
+    return S_OK;
+}
+
 static HRESULT WINAPI xmlnode_get_nodeTypedValue(
     IXMLDOMNode *iface,
     VARIANT* typedValue)
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
-    HRESULT r = S_FALSE;
+    VARIANT type;
+    xmlChar *content;
+    HRESULT hres = S_FALSE;
 
-    FIXME("ignoring data type %p %p\n", This, typedValue);
+    TRACE("iface %p\n", iface);
 
     if(!typedValue)
         return E_INVALIDARG;
 
     V_VT(typedValue) = VT_NULL;
 
-    switch ( This->node->type )
-    {
-    case XML_ELEMENT_NODE:
-    {
-        xmlChar *content = xmlNodeGetContent(This->node);
-        V_VT(typedValue) = VT_BSTR;
-        V_BSTR(typedValue) = bstr_from_xmlChar( content );
-        xmlFree(content);
-        r = S_OK;
-        break;
-    }
-    default:
-        r = xmlnode_get_nodeValue(iface, typedValue);
-    }
+    if(This->node->type == XML_ELEMENT_NODE ||
+            This->node->type == XML_TEXT_NODE ||
+            This->node->type == XML_ENTITY_REF_NODE)
+        hres = xmlnode_get_dataType(iface, &type);
 
-    return r;
+    if(hres != S_OK && This->node->type != XML_ELEMENT_NODE)
+        return xmlnode_get_nodeValue(iface, typedValue);
+
+    content = xmlNodeGetContent(This->node);
+    hres = VARIANT_from_xmlChar(content, typedValue,
+            hres==S_OK ? V_BSTR(&type) : NULL);
+    xmlFree(content);
+    VariantClear(&type);
+
+    return hres;
 }
 
 static HRESULT WINAPI xmlnode_put_nodeTypedValue(

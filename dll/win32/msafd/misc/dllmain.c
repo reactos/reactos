@@ -560,9 +560,15 @@ WSPBind(SOCKET Handle,
     PAFD_BIND_DATA          BindData;
     PSOCKET_INFORMATION     Socket = NULL;
     NTSTATUS                Status;
-    UCHAR                   BindBuffer[0x1A];
     SOCKADDR_INFO           SocketInfo;
     HANDLE                  SockEvent;
+
+    /* See below */
+    BindData = HeapAlloc(GlobalHeap, 0, 0xA + SocketAddressLength);
+    if (!BindData)
+    {
+        return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
+    }
 
     Status = NtCreateEvent(&SockEvent,
                            GENERIC_READ | GENERIC_WRITE,
@@ -570,14 +576,14 @@ WSPBind(SOCKET Handle,
                            1,
                            FALSE);
 
-    if( !NT_SUCCESS(Status) )
-        return -1;
+    if (!NT_SUCCESS(Status))
+    {
+        HeapFree(GlobalHeap, 0, BindData);
+        return SOCKET_ERROR;
+    }
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
-
-    /* Dynamic Structure...ugh */
-    BindData = (PAFD_BIND_DATA)BindBuffer;
 
     /* Set up Address in TDI Format */
     BindData->Address.TAAddressCount = 1;
@@ -633,9 +639,9 @@ WSPBind(SOCKET Handle,
     Socket->SharedData.State = SocketBound;
     Socket->TdiAddressHandle = (HANDLE)IOSB.Information;
 
-    NtClose( SockEvent );
-
-    return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
+    NtClose(SockEvent);
+    HeapFree(GlobalHeap, 0, BindData);
+    return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 }
 
 int 
