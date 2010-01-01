@@ -19,6 +19,7 @@ HARDWARE_PTE HalpSavedPte;
 ULONG HalpGpfHandler;
 ULONG HalpBopHandler;
 ULONG HalpSavedEsp0;
+USHORT HalpSavedTss;
 USHORT HalpSavedIopmBase;
 PUSHORT HalpSavedIoMap;
 USHORT HalpSavedIoMapData[32][2];
@@ -28,6 +29,98 @@ ULONG HalpSavedIoMapEntries;
 #define GetPteAddress(x) (PHARDWARE_PTE)(((((ULONG_PTR)(x)) >> 12) << 2) + 0xC0000000)
 
 /* FUNCTIONS ******************************************************************/
+
+VOID
+NTAPI
+HalpBorrowTss(VOID)
+{
+    USHORT Tss;
+    PKGDTENTRY TssGdt;
+    ULONG_PTR TssLimit;
+    PKTSS TssBase;
+
+    //
+    // Get the current TSS and its GDT entry
+    //
+    Tss = Ke386GetTr();
+    TssGdt = &((PKIPCR)KeGetPcr())->GDT[Tss / sizeof(KGDTENTRY)];
+
+    //
+    // Get the KTSS limit and check if it has IOPM space
+    //
+    TssLimit = TssGdt->LimitLow | TssGdt->HighWord.Bits.LimitHi << 16;
+
+    //
+    // If the KTSS doesn't have enough space this is probably an NMI or DF
+    //
+    if (TssLimit > IOPM_SIZE)
+    {
+        //
+        // We are good to go
+        //
+        HalpSavedTss = 0;
+        return;
+    }
+
+    //
+    // Get the "real" TSS
+    //
+    TssGdt = &((PKIPCR)KeGetPcr())->GDT[KGDT_TSS / sizeof(KGDTENTRY)];
+    TssBase = (PKTSS)(ULONG_PTR)(TssGdt->BaseLow |
+                                 TssGdt->HighWord.Bytes.BaseMid << 16 |
+                                 TssGdt->HighWord.Bytes.BaseHi << 24);
+
+    //
+    // Switch to it
+    //
+    KeGetPcr()->TSS = TssBase;
+
+    //
+    // Set it up
+    //
+    TssGdt->HighWord.Bits.Type = I386_TSS;
+    TssGdt->HighWord.Bits.Pres = 1;
+    TssGdt->HighWord.Bits.Dpl = 0;
+    
+    //
+    // Load new TSS and return old one
+    //
+    Ke386SetTr(KGDT_TSS);
+    HalpSavedTss = Tss;
+}
+
+VOID
+NTAPI
+HalpReturnTss(VOID)
+{
+    PKGDTENTRY TssGdt;
+    PKTSS TssBase;
+    
+    //
+    // Get the original TSS
+    //
+    TssGdt = &((PKIPCR)KeGetPcr())->GDT[HalpSavedTss / sizeof(KGDTENTRY)];
+    TssBase = (PKTSS)(ULONG_PTR)(TssGdt->BaseLow |
+                                 TssGdt->HighWord.Bytes.BaseMid << 16 |
+                                 TssGdt->HighWord.Bytes.BaseHi << 24);
+
+    //
+    // Switch to it
+    //
+    KeGetPcr()->TSS = TssBase;
+
+    //
+    // Set it up
+    //
+    TssGdt->HighWord.Bits.Type = I386_TSS;
+    TssGdt->HighWord.Bits.Pres = 1;
+    TssGdt->HighWord.Bits.Dpl = 0;
+
+    //
+    // Load old TSS
+    //
+    Ke386SetTr(HalpSavedTss);
+}
 
 VOID
 NTAPI
@@ -168,6 +261,9 @@ VOID
 NTAPI
 HalpSetupRealModeIoPermissionsAndTask(VOID)
 {
+    /* Switch to valid TSS */
+    HalpBorrowTss();
+
     /* Save a copy of the I/O Map and delete it */
     HalpSavedIoMap = (PUSHORT)&(KeGetPcr()->TSS->IoMaps[0]);
     HalpStoreAndClearIopm();
@@ -204,7 +300,10 @@ HalpRestoreIoPermissionsAndTask(VOID)
     HalpRestoreIopm();
     
     /* Restore the IOPM */
-    KeGetPcr()->TSS->IoMapBase = HalpSavedIopmBase;    
+    KeGetPcr()->TSS->IoMapBase = HalpSavedIopmBase;
+
+    /* Restore the TSS */
+    if (HalpSavedTss) HalpReturnTss();
 }
 
 VOID

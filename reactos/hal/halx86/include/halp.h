@@ -172,18 +172,6 @@ HalpBiosDisplayReset(
     VOID
 );
 
-ULONG
-NTAPI
-HalpBorrowTss(
-    VOID
-);
-
-ULONG
-NTAPI
-HalpReturnTss(
-    ULONG SavedTss
-);
-
 VOID
 NTAPI
 HalpBiosCall(
