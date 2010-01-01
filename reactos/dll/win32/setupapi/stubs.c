@@ -42,33 +42,6 @@ DWORD WINAPI suErrorToIds16( WORD w1, WORD w2 )
 }
 
 /***********************************************************************
- *		SetupInitializeFileLogW(SETUPAPI.@)
- */
-HSPFILELOG WINAPI SetupInitializeFileLogW(LPCWSTR LogFileName, DWORD Flags)
-{
-    FIXME("Stub %s, 0x%x\n",debugstr_w(LogFileName),Flags);
-    return INVALID_HANDLE_VALUE;
-}
-
-/***********************************************************************
- *		SetupInitializeFileLogA(SETUPAPI.@)
- */
-HSPFILELOG WINAPI SetupInitializeFileLogA(LPCSTR LogFileName, DWORD Flags)
-{
-    FIXME("Stub %s, 0x%x\n",debugstr_a(LogFileName),Flags);
-    return INVALID_HANDLE_VALUE;
-}
-
-/***********************************************************************
- *		SetupTerminateFileLog(SETUPAPI.@)
- */
-BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
-{
-    FIXME ("Stub %p\n",FileLogHandle);
-    return TRUE;
-}
-
-/***********************************************************************
  *		RegistryDelnode(SETUPAPI.@)
  */
 BOOL WINAPI RegistryDelnode(DWORD x, DWORD y)
