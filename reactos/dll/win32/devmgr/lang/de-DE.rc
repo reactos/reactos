@@ -26,7 +26,7 @@ BEGIN
     IDS_UPDATEDRV "Treiber &aktualisieren..."
     IDS_REBOOT "Computer neusta&rten..."
     IDS_NOTAVAILABLE "Nicht verfügbar"
-    IDS_NOTDIGITALLYSIGNED "Nicht digital signierte"
+    IDS_NOTDIGITALLYSIGNED "Nicht digital signiert"
     IDS_NODRIVERS "Es werden keine Treiber für dieses Gerät benötigt oder es wurden keine Treiber geladen."
 END
 
@@ -43,12 +43,12 @@ BEGIN
     IDS_DEV_BOOT_CONFIG_CONFLICT "Ein anderes Gerät benutzt bereits die Ressourcen, die dieses Gerät benötigt."
     IDS_DEV_FAILED_FILTER "Die Treiber für dieses Gerät müssen neuinstalliert werden."
     IDS_DEV_DEVLOADER_NOT_FOUND "Dieses Gerät arbeitet nicht korrekt, weil ReactOS die Datei $1 nicht laden kann, die die Treiber für dieses Gerät lädt."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Dieses Gerät arbeitet nicht korrekt, weil die Datei $1, die die Treiber für dieses Gerät lädt, kaputt ist."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Gerätefehler: Versuchen Sie, den Treiber für dieses Gerät auszutauschen. Wenn das nicht hilft, schauen Sie in die Gerätedokumentation."
-    IDS_DEV_INVALID_DATA "Dieses Gerät arbeitet nicht korrekt, weil das BIOS ihres Computer die Ressourcen für dieses Gerät falsch angibt."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Dieses Gerät arbeitet nicht korrekt, weil die Datei $1, die die Treiber für dieses Gerät lädt, defekt ist."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Gerätefehler: Versuchen Sie, den Treiber für dieses Gerät auszutauschen. Wenn das nicht hilft, sehen Sie in die Gerätedokumentation."
+    IDS_DEV_INVALID_DATA "Dieses Gerät arbeitet nicht korrekt, weil das BIOS ihres Computers die Ressourcen für dieses Gerät falsch angibt."
     IDS_DEV_INVALID_DATA2 "Dieses Gerät arbeitet nicht korrekt, weil das BIOS dieses Gerätes die Ressourcen für dieses Gerät falsch angibt. "
     IDS_DEV_FAILED_START "Dieses Gerät ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
-    IDS_DEV_LIAR "ReactOS hörte während des Versuchs dieses Gerät zu starten auf zu reagieren und wird deshalb nie wieder versuchen, dieses Gerät zu starten.."
+    IDS_DEV_LIAR "ReactOS hörte während des Versuchs dieses Gerät zu starten auf zu reagieren und wird deshalb nicht wieder versuchen, dieses Gerät zu starten.."
     IDS_DEV_NORMAL_CONFLICT "Dieses Gerät kann keine freien $1 Ressourcen zur Benutzung finden."
     IDS_DEV_NOT_VERIFIED "Dieses Gerät ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
     IDS_DEV_NEED_RESTART "Dieses Gerät wird erst korrekt funktionieren, wenn Sie den Computer neugestartet haben."
@@ -61,14 +61,14 @@ BEGIN
     IDS_DEV_DISABLED "Dieses Gerät ist nicht gestartet."
     IDS_DEV_DISABLED2 "Dieses Gerät ist deaktiviert."
     IDS_DEV_DEVLOADER_NOT_READY "Der Lader für dieses Gerät kann die benötigten Treiber nicht laden."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Dieses Grafikkarte funktioniert einwandfrei."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Diese Grafikkarte funktioniert einwandfrei."
     IDS_DEV_DEVLOADER_NOT_READY3 "Die Lader für dieses Gerät können die benötigten Treiber nicht laden."
     IDS_DEV_DEVICE_NOT_THERE "Dieses Gerät ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
     IDS_DEV_MOVED "ReactOS ist dabei dieses Gerät zu aktivieren."
     IDS_DEV_TOO_EARLY "ReactOS ist dabei dieses Gerät zu aktivieren."
     IDS_DEV_NO_VALID_LOG_CONF "ReactOS kann die Ressourcen für dieses Gerät nicht feststellen."
     IDS_DEV_FAILED_INSTALL "Die Treiber für dieses Gerät sind nicht installiert."
-    IDS_DEV_HARDWARE_DISABLED "Dieses Gerät ist deaktiviert, weil das BIOS für dieses Gerät ihm keine Ressourcen zugeteilt hat."
+    IDS_DEV_HARDWARE_DISABLED "Dieses Gerät ist deaktiviert, weil das BIOS für dieses Gerät keine Ressourcen zugeteilt hat."
     IDS_DEV_CANT_SHARE_IRQ "Dieses Gerät benutzt einen Interrupt (IRQ), der bereits von einem anderen Gerät benutzt wird und nicht geteilt werden kann. Sie müssen die kollidierenden Einstellungen ändern, oder den real-mode Treiber entfernen, der den Konflikt verursacht."
     IDS_DEV_FAILED_ADD "Dieses Gerät arbeitet nicht korrekt, weil $1 nicht korrekt funktioniert."
     IDS_DEV_DISABLED_SERVICE "ReactOS kann die Treiber für dieses Gerät nicht installieren, weil auf das (Netz-)Laufwerk, auf dem die Installationsdateien abgelegt sind, nicht zugegriffen werden kann."
@@ -86,7 +86,7 @@ BEGIN
     IDS_DEV_HALTED "Eine Anwendung oder ein Dienst hat dieses Gerät heruntergefahren."
     IDS_DEV_PHANTOM "Dieses Gerät ist momentan nicht mit dem Computer verbunden."
     IDS_DEV_SYSTEM_SHUTDOWN "ReactOS kann auf dieses Gerät nicht zugreifen, weil das Betriebssystem heruntergefahren wird."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS kann dieses Gerät nicht benutzen, weil es für ""Sicheres Entfernen"" vorbereitet wurde, aber es wurde bisher nicht vom Computer entfernt."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS kann dieses Gerät nicht benutzen, weil es für ""Sicheres Entfernen"" vorbereitet, aber bisher nicht vom Computer entfernt wurde."
     IDS_DEV_DRIVER_BLOCKED "Die Ausführung der Software für dieses Gerät wurde blockiert, weil bekannt ist, dass sie Probleme mit ReactOS hat. Kontaktieren Sie den Hersteller für einen neuen Treiber."
     IDS_DEV_REGISTRY_TOO_LARGE "Die neuen Hardwaregeräte können nicht gestartet werden, da die Systemstruktur zu groß ist (die Struktur überschreitet die Registrierungsgrößenbeschränkung)."
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS konnte die Einstellungen für dieses Gerät nicht verändern."
@@ -94,25 +94,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Device instance ID"
-    IDS_PROP_HARDWAREID "Hardware ID"
-    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
+    IDS_PROP_DEVICEID "Geräteinstanz-ID"
+    IDS_PROP_HARDWAREID "Hardware-ID"
+    IDS_PROP_COMPATIBLEIDS "Kompatible IDs"
+    IDS_PROP_MATCHINGDEVICEID "Passende Geräte-ID"
+    IDS_PROP_SERVICE "Dienst"
     IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
+    IDS_PROP_DEVNODEFLAGS "DevNode Flags"
     IDS_PROP_CONFIGFLAGS "Config Flags"
     IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTRELATIONS "Eject Relations"
-    IDS_PROP_REMOVALRELATIONS "Removal Relations"
-    IDS_PROP_BUSRELATIONS "Bus Relations"
-    IDS_PROP_DEVUPPERFILTERS "Upper Filters"
-    IDS_PROP_DEVLOWERFILTERS "Lower Filters"
-    IDS_PROP_CLASSUPPERFILTERS "Upper Class Filters"
-    IDS_PROP_CLASSLOWERFILTERS "Lower Class Filters"
-    IDS_PROP_CLASSINSTALLER "Class Installer"
-    IDS_PROP_CLASSCOINSTALLER "Class Co-Installer"
-    IDS_PROP_DEVICECOINSTALLER "Device Co-Installer"
+    IDS_PROP_EJECTRELATIONS "Auswurfsrichtlinien"
+    IDS_PROP_REMOVALRELATIONS "Entfernungsrichtlinen"
+    IDS_PROP_BUSRELATIONS "Bus Richtlinien"
+    IDS_PROP_DEVUPPERFILTERS "Obere Filter"
+    IDS_PROP_DEVLOWERFILTERS "Untere Filter"
+    IDS_PROP_CLASSUPPERFILTERS "Obere Klassenfilter"
+    IDS_PROP_CLASSLOWERFILTERS "Untere Klassenfilter"
+    IDS_PROP_CLASSINSTALLER "Klassen Installationsprogramm"
+    IDS_PROP_CLASSCOINSTALLER "Klassen Co-Installationsprogramm"
+    IDS_PROP_DEVICECOINSTALLER "Geräte Co-Installationsprogramm"
 END
 
 IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
@@ -208,7 +208,7 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Resourcen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -217,7 +217,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "Energie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
