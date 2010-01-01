@@ -470,15 +470,16 @@ UpdateDetailsDlg(IN HWND hwndDlg,
     UINT Properties[] =
     {
         IDS_PROP_DEVICEID,
-        IDS_PROP_HARDWAREID,
+        IDS_PROP_HARDWAREIDS,
         IDS_PROP_COMPATIBLEIDS,
         IDS_PROP_MATCHINGDEVICEID,
         IDS_PROP_SERVICE,
         IDS_PROP_ENUMERATOR,
+        IDS_PROP_CAPABILITIES,
         IDS_PROP_DEVNODEFLAGS,
         IDS_PROP_CONFIGFLAGS,
         IDS_PROP_CSCONFIGFLAGS,
-        IDS_PROP_EJECTRELATIONS,
+        IDS_PROP_EJECTIONRELATIONS,
         IDS_PROP_REMOVALRELATIONS,
         IDS_PROP_BUSRELATIONS,
         IDS_PROP_DEVUPPERFILTERS,
@@ -487,7 +488,11 @@ UpdateDetailsDlg(IN HWND hwndDlg,
         IDS_PROP_CLASSLOWERFILTERS,
         IDS_PROP_CLASSINSTALLER,
         IDS_PROP_CLASSCOINSTALLER,
-        IDS_PROP_DEVICECOINSTALLER
+        IDS_PROP_DEVICECOINSTALLER,
+        IDS_PROP_FIRMWAREREVISION,
+        IDS_PROP_CURRENTPOWERSTATE,
+        IDS_PROP_POWERCAPABILITIES,
+        IDS_PROP_POWERSTATEMAPPINGS
     };
 
 
@@ -543,6 +548,8 @@ UpdateDetailsDlg(IN HWND hwndDlg,
                 0);
 
     SetListViewText(hwndListView, 0, dap->szDeviceID);
+
+    SetFocus(hwndComboBox);
 }
 
 
@@ -573,16 +580,19 @@ SetDevicePropertyText(IN PDEVADVPROP_INFO dap,
 
     dwSize = 0;
     SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
-                                          DeviceInfoData,
-                                          dwProperty,
-                                          &dwType,
-                                          NULL,
-                                          0,
-                                          &dwSize);
+                                     DeviceInfoData,
+                                     dwProperty,
+                                     &dwType,
+                                     NULL,
+                                     0,
+                                     &dwSize);
     if (dwSize == 0)
     {
-        swprintf(dap->szTemp, L"Error: Getting the size failed! (Error: %ld)", GetLastError());
-        SetListViewText(hwndListView, 0, dap->szTemp);
+        if (GetLastError() != ERROR_FILE_NOT_FOUND)
+        {
+            swprintf(dap->szTemp, L"Error: Getting the size failed! (Error: %ld)", GetLastError());
+            SetListViewText(hwndListView, 0, dap->szTemp);
+        }
         return;
     }
 
@@ -620,6 +630,11 @@ SetDevicePropertyText(IN PDEVADVPROP_INFO dap,
                 lpStr += len;
                 index++;
             }
+        }
+        else if (dwType == REG_DWORD)
+        {
+            swprintf(dap->szTemp, L"0x%08x", *lpBuffer);
+            SetListViewText(hwndListView, 0, dap->szTemp);
         }
         else
         {
@@ -674,6 +689,11 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                                   SPDRP_COMPATIBLEIDS);
             break;
 
+#if 0
+        case 3: /* Matching ID */
+            break;
+#endif
+
         case 4: /* Service */
             SetDevicePropertyText(dap,
                                   hwndListView,
@@ -686,13 +706,35 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                                   SPDRP_ENUMERATOR_NAME);
             break;
 
-        case 12: /* Upper Filters */
+        case 6: /* Capabilities */
+            SetDevicePropertyText(dap,
+                                  hwndListView,
+                                  SPDRP_CAPABILITIES);
+            break;
+
+#if 0
+        case 7: /* Devnode Flags */
+            break;
+#endif
+
+        case 8: /* Config Flags */
+            SetDevicePropertyText(dap,
+                                  hwndListView,
+                                  SPDRP_CONFIGFLAGS);
+            break;
+
+#if 0
+        case 9: /* CSConfig Flags */
+            break;
+#endif
+
+        case 13: /* Upper Filters */
             SetDevicePropertyText(dap,
                                   hwndListView,
                                   SPDRP_UPPERFILTERS);
             break;
 
-        case 13: /* Lower Filters */
+        case 14: /* Lower Filters */
             SetDevicePropertyText(dap,
                                   hwndListView,
                                   SPDRP_LOWERFILTERS);
