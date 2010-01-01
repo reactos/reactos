@@ -34,8 +34,14 @@
 _HalpSavedEsp:
     .long 0
 
+_InvalidMsg:
+    .asciz "HAL: An invalid V86 opcode was encountered at address %x:%x\n"
+    
+_InvalidGpfMsg:
+    .asciz "HAL: Trap0D while not in V86 mode\n"
+    
 _UnhandledMsg:
-    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
+    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx [%s]!!!\n"
 
 /* FUNCTIONS *****************************************************************/
 
@@ -143,8 +149,15 @@ _HalpRealModeEnd:
 .func HalpOpcodeInvalid@0
 _HalpOpcodeInvalid@0:
 
-    /* Unhandled */
-    UNHANDLED_PATH
+    /* This should never happen -- is the IOPM damaged? */
+    push [esi+HALP_BIOS_FRAME_EIP]
+    push [esi+HALP_BIOS_FRAME_CS]
+    push offset _InvalidMsg
+    call _DbgPrint
+    add esp, 12
+    
+    /* Break */
+    int 3
 
     /* Nothing to return */
     xor eax, eax
@@ -376,7 +389,7 @@ _Ki16BitStackException:
     add esp, [eax+KTHREAD_INITIAL_STACK]
 
     /* Switch to good stack segment */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "16-Bit Stack"
 .endfunc
 
 .globl _HalpTrap0D@0
@@ -391,8 +404,13 @@ _HalpTrap0D@0:
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz DoDispatch
 
-    /* Unhandled */
-    UNHANDLED_PATH
+    /* This is weird -- but might happen during an NMI */
+    push offset _InvalidGpfMsg
+    call _DbgPrint
+    add esp, 4
+    
+    /* Loop forever */
+    jmp $
 
 DoDispatch:
     /* Handle the opcode */

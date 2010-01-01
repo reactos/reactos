@@ -91,8 +91,11 @@ _KiUnexpectedEntrySize:
 _UnexpectedMsg:
     .asciz "\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n"
 
+_V86UnhandledMsg:
+    .asciz "\n\x7\x7!!! Unhandled V8086 (VDM) support at line: %lx!!!\n"
+
 _UnhandledMsg:
-    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
+    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx [%s]!!!\n"
 
 _IsrTimeoutMsg:
     .asciz "\n*** ISR at %lx took over .5 second\n"
@@ -133,7 +136,7 @@ _KiTrapIoTable:
 _KiGetTickCount:
 _KiCallbackReturn:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "TickCount/Callback Interrupts\n"
 
 .func KiSystemService
 TRAP_FIXUPS kss_a, kss_t, DoNotFixupV86, DoNotFixupAbios
@@ -458,7 +461,7 @@ V86_Exit:
 
 AbiosExit:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "ABIOS Exit"
 
 .func KiRaiseAssertion
 TRAP_FIXUPS kira_a, kira_t, DoFixupV86, DoFixupAbios
@@ -697,7 +700,7 @@ _DispatchTwoParam:
 _KiFixupFrame:
 
     /* TODO: Routine to fixup a KTRAP_FRAME when faulting from a syscall. */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "Trap Frame Fixup"
 .endfunc
 
 .func KiTrap0
@@ -738,7 +741,7 @@ VdmCheck:
     /* We don't support this yet! */
 V86Int0:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap1
@@ -781,7 +784,7 @@ V86Int1:
     jz EnableInterrupts
 
     /* We don't support VDM! */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .globl _KiTrap2
@@ -847,7 +850,7 @@ V86Int3:
     jz EnableInterrupts3
 
     /* We don't support VDM! */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap4
@@ -888,7 +891,7 @@ VdmCheck4:
 
     /* We don't support this yet! */
 V86Int4:
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap5
@@ -933,7 +936,7 @@ VdmCheck5:
 
     /* We don't support this yet! */
 V86Int5:
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap6
@@ -949,7 +952,7 @@ _KiTrap6:
 
 VdmOpCodeFault:
     /* Not yet supported (Invalid OPCODE from V86) */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 NotV86UD:
     /* Push error code */
@@ -1025,7 +1028,7 @@ LockCrash:
 IsVdmOpcode:
 
     /* Unhandled yet */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
     /* Return to caller */
     jmp _Kei386EoiHelper@0
@@ -1332,7 +1335,7 @@ V86Npx:
     jz HandleUserNpx
 
     /* V86 NPX not handled */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 EmulationEnabled:
     /* Did this come from kernel-mode? */
@@ -1499,7 +1502,7 @@ RaiseIrql:
     jnz NoReflect
 
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 NoReflect:
 
@@ -1540,7 +1543,7 @@ NotV86:
     jae KmodeGpf
 
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "Double GPF"
 
     /* Get the opcode and trap frame */
 KmodeGpf:
@@ -1629,7 +1632,7 @@ TrapCopy:
 MsrCheck:
 
     /* FIXME: Handle RDMSR/WRMSR */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "RDMSR/WRMSR"
 
 NotIretGpf:
 
@@ -1913,7 +1916,7 @@ SetException:
 
 DispatchV86Gpf:
     /* FIXME */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap14
@@ -2003,12 +2006,12 @@ AccessFail:
     jnz CheckVdmPf
 
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "SYSENTER Fault"
     jmp _Kei386EoiHelper@0
 
 SysCallCopyFault:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "SYSENTER Fault"
     jmp _Kei386EoiHelper@0
 
     /* Check if the fault occured in a V86 mode */
@@ -2033,7 +2036,7 @@ CheckVdmPf:
 
 VdmPF:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
     /* Save EIP and check what kind of status failure we got */
 CheckStatus:
@@ -2067,7 +2070,7 @@ SpecialCode:
 
 SlistFault:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "SLIST Fault"
 
 IllegalState:
 
@@ -2083,7 +2086,7 @@ IllegalState:
 VdmAlertGpf:
 
     /* FIXME: NOT SUPPORTED */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 HandleLockErrata:
 
@@ -2328,7 +2331,7 @@ VdmXmmi:
 
 V86Xmmi:
     /* V86 XMMI not handled */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 KernelXmmi:
     /* Another weird situation */
@@ -2394,7 +2397,7 @@ _Ki16BitStackException:
     add esp, [eax+KTHREAD_INITIAL_STACK]
 
     /* Switch to good stack segment */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "16-Bit Stack"
 .endfunc
 
 /* UNEXPECTED INTERRUPT HANDLERS **********************************************/
