@@ -244,6 +244,8 @@ HalpReleaseCmosSpinLock(
 #endif // !CONFIG_SMP
 #endif // _M_AMD64
 
+extern BOOLEAN HalpNMIInProgress;
+
 extern PVOID HalpRealModeStart;
 extern PVOID HalpRealModeEnd;
 
