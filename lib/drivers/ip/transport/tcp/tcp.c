@@ -731,24 +731,26 @@ NTSTATUS TCPClose
      * closure anymore but we still need it to determine
      * if we caused the closure
      */
+    LockObject(Connection, &OldIrql);
     Socket = Connection->SocketContext;
     Connection->SocketContext = NULL;
 
     /* We need to close here otherwise oskit will never indicate
      * SEL_FIN and we will never fully close the connection
      */
-    LockObject(Connection, &OldIrql);
     Status = TCPTranslateError( OskitTCPClose( Socket ) );
-    UnlockObject(Connection, OldIrql);
 
     if (!NT_SUCCESS(Status))
     {
         Connection->SocketContext = Socket;
+        UnlockObject(Connection, OldIrql);
         return Status;
     }
 
     if (Connection->AddressFile)
         DereferenceObject(Connection->AddressFile);
+
+    UnlockObject(Connection, OldIrql);
 
     DereferenceObject(Connection);
 
