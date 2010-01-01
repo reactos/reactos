@@ -30,3 +30,4 @@
 	<file>Pattern.cpp</file>
 	<file>Settings.cpp</file>
 	<file>Prompt.cpp</file>
+</module>

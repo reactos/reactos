@@ -2,3 +2,4 @@
 	<include base="gdb2">.</include>
 	<library>user32</library>
 	<file>gdb2.cpp</file>
+</module>
