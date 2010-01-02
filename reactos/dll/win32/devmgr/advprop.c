@@ -554,9 +554,9 @@ UpdateDetailsDlg(IN HWND hwndDlg,
 
 
 static VOID
-SetDevicePropertyText(IN PDEVADVPROP_INFO dap,
-                      IN HWND hwndListView,
-                      IN DWORD dwProperty)
+DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
+                          IN HWND hwndListView,
+                          IN DWORD dwProperty)
 {
     HDEVINFO DeviceInfoSet;
     PSP_DEVINFO_DATA DeviceInfoData;
@@ -705,6 +705,92 @@ SetDevicePropertyText(IN PDEVADVPROP_INFO dap,
              lpBuffer);
 }
 
+static VOID
+DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
+                    IN HWND hwndListView)
+{
+    DWORD dwStatus = 0;
+    DWORD dwProblem = 0;
+    INT index;
+
+    CM_Get_DevNode_Status_Ex(&dwStatus,
+                             &dwProblem,
+                             dap->DeviceInfoData.DevInst,
+                             0,
+                             dap->hMachine);
+
+    index = 0;
+    if (dwStatus & DN_ROOT_ENUMERATED)
+        SetListViewText(hwndListView, index++, L"DN_ROOT_ENUMERATED");
+    if (dwStatus & DN_DRIVER_LOADED)
+        SetListViewText(hwndListView, index++, L"DN_DRIVER_LOADED");
+    if (dwStatus & DN_ENUM_LOADED)
+        SetListViewText(hwndListView, index++, L"DN_ENUM_LOADED");
+    if (dwStatus & DN_STARTED)
+        SetListViewText(hwndListView, index++, L"DN_STARTED");
+    if (dwStatus & DN_MANUAL)
+        SetListViewText(hwndListView, index++, L"DN_MANUAL");
+    if (dwStatus & DN_NEED_TO_ENUM)
+        SetListViewText(hwndListView, index++, L"DN_NEED_TO_ENUM");
+    if (dwStatus & DN_DRIVER_BLOCKED)
+        SetListViewText(hwndListView, index++, L"DN_DRIVER_BLOCKED");
+    if (dwStatus & DN_HARDWARE_ENUM)
+        SetListViewText(hwndListView, index++, L"DN_HARDWARE_ENUM");
+    if (dwStatus & DN_NEED_RESTART)
+        SetListViewText(hwndListView, index++, L"DN_NEED_RESTART");
+    if (dwStatus & DN_CHILD_WITH_INVALID_ID)
+        SetListViewText(hwndListView, index++, L"DN_CHILD_WITH_INVALID_ID");
+    if (dwStatus & DN_HAS_PROBLEM)
+        SetListViewText(hwndListView, index++, L"DN_HAS_PROBLEM");
+    if (dwStatus & DN_FILTERED)
+        SetListViewText(hwndListView, index++, L"DN_FILTERED");
+    if (dwStatus & DN_LEGACY_DRIVER)
+        SetListViewText(hwndListView, index++, L"DN_LEGACY_DRIVER");
+    if (dwStatus & DN_DISABLEABLE)
+        SetListViewText(hwndListView, index++, L"DN_DISABLEABLE");
+    if (dwStatus & DN_REMOVABLE)
+        SetListViewText(hwndListView, index++, L"DN_REMOVABLE");
+    if (dwStatus & DN_PRIVATE_PROBLEM)
+        SetListViewText(hwndListView, index++, L"DN_PRIVATE_PROBLEM");
+    if (dwStatus & DN_MF_PARENT)
+        SetListViewText(hwndListView, index++, L"DN_MF_PARENT");
+    if (dwStatus & DN_MF_CHILD)
+        SetListViewText(hwndListView, index++, L"DN_MF_CHILD");
+    if (dwStatus & DN_WILL_BE_REMOVED)
+        SetListViewText(hwndListView, index++, L"DN_WILL_BE_REMOVED");
+
+    if (dwStatus & DN_NOT_FIRST_TIMEE)
+        SetListViewText(hwndListView, index++, L"DN_NOT_FIRST_TIMEE");
+    if (dwStatus & DN_STOP_FREE_RES)
+        SetListViewText(hwndListView, index++, L"DN_STOP_FREE_RES");
+    if (dwStatus & DN_REBAL_CANDIDATE)
+        SetListViewText(hwndListView, index++, L"DN_REBAL_CANDIDATE");
+    if (dwStatus & DN_BAD_PARTIAL)
+        SetListViewText(hwndListView, index++, L"DN_BAD_PARTIAL");
+    if (dwStatus & DN_NT_ENUMERATOR)
+        SetListViewText(hwndListView, index++, L"DN_NT_ENUMERATOR");
+    if (dwStatus & DN_NT_DRIVER)
+        SetListViewText(hwndListView, index++, L"DN_NT_DRIVER");
+
+    if (dwStatus & DN_NEEDS_LOCKING)
+        SetListViewText(hwndListView, index++, L"DN_NEEDS_LOCKING");
+    if (dwStatus & DN_ARM_WAKEUP)
+        SetListViewText(hwndListView, index++, L"DN_ARM_WAKEUP");
+    if (dwStatus & DN_APM_ENUMERATOR)
+        SetListViewText(hwndListView, index++, L"DN_APM_ENUMERATOR");
+    if (dwStatus & DN_APM_DRIVER)
+        SetListViewText(hwndListView, index++, L"DN_APM_DRIVER");
+    if (dwStatus & DN_SILENT_INSTALL)
+        SetListViewText(hwndListView, index++, L"DN_SILENT_INSTALL");
+    if (dwStatus & DN_NO_SHOW_IN_DM)
+        SetListViewText(hwndListView, index++, L"DN_NO_SHOW_IN_DM");
+    if (dwStatus & DN_BOOT_LOG_PROB)
+        SetListViewText(hwndListView, index++, L"DN_BOOT_LOG_PROB");
+
+//    swprintf(dap->szTemp, L"0x%08x", dwStatus);
+//    SetListViewText(hwndListView, 0, dap->szTemp);
+}
+
 
 
 static VOID
@@ -731,15 +817,15 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
 
 
         case 1: /* Hardware ID */
-            SetDevicePropertyText(dap,
-                                  hwndListView,
-                                  SPDRP_HARDWAREID);
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_HARDWAREID);
             break;
 
         case 2: /* Compatible IDs */
-            SetDevicePropertyText(dap,
-                                  hwndListView,
-                                  SPDRP_COMPATIBLEIDS);
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_COMPATIBLEIDS);
             break;
 
 #if 0
@@ -748,32 +834,32 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
 #endif
 
         case 4: /* Service */
-            SetDevicePropertyText(dap,
-                                  hwndListView,
-                                  SPDRP_SERVICE);
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_SERVICE);
             break;
 
         case 5: /* Enumerator */
-            SetDevicePropertyText(dap,
-                                  hwndListView,
-                                  SPDRP_ENUMERATOR_NAME);
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_ENUMERATOR_NAME);
             break;
 
         case 6: /* Capabilities */
-            SetDevicePropertyText(dap,
-                                  hwndListView,
-                                  SPDRP_CAPABILITIES);
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_CAPABILITIES);
             break;
 
-#if 0
         case 7: /* Devnode Flags */
+            DisplayDevNodeFlags(dap,
+                                hwndListView);
             break;
-#endif
 
         case 8: /* Config Flags */
-            SetDevicePropertyText(dap,
-                                  hwndListView,
-                                  SPDRP_CONFIGFLAGS);
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_CONFIGFLAGS);
             break;
 
 #if 0
@@ -782,15 +868,15 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
 #endif
 
         case 13: /* Upper Filters */
-            SetDevicePropertyText(dap,
-                                  hwndListView,
-                                  SPDRP_UPPERFILTERS);
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_UPPERFILTERS);
             break;
 
         case 14: /* Lower Filters */
-            SetDevicePropertyText(dap,
-                                  hwndListView,
-                                  SPDRP_LOWERFILTERS);
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_LOWERFILTERS);
             break;
 
         default:
