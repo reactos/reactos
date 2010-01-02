@@ -516,21 +516,13 @@ WSPSendTo(SOCKET Handle,
     PVOID                   APCFunction;
     HANDLE                  Event = NULL;
     PTRANSPORT_ADDRESS      RemoteAddress;
-    UCHAR                   TdiBuffer[0x16];
     PSOCKADDR               BindAddress;
     INT                     BindAddressLength;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
 
-
-    /* Get the Socket Structure associate to this Socket*/
+    /* Get the Socket Structure associate to this Socket */
     Socket = GetSocketStructure(Handle);
-
-    Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
-        NULL, 1, FALSE );
-
-    if( !NT_SUCCESS(Status) )
-        return -1;
 
     /* Bind us First */
     if (Socket->SharedData.State == SocketOpen)
@@ -540,19 +532,36 @@ WSPSendTo(SOCKET Handle,
         BindAddress = HeapAlloc(GlobalHeap, 0, BindAddressLength);
         if (!BindAddress)
         {
-            MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
+            MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
             return INVALID_SOCKET;
         }
-        Socket->HelperData->WSHGetWildcardSockaddr (Socket->HelperContext,
-                                                    BindAddress,
-                                                    &BindAddressLength);
 
+        Socket->HelperData->WSHGetWildcardSockaddr(Socket->HelperContext,
+                                                   BindAddress,
+                                                   &BindAddressLength);
         /* Bind it */
         WSPBind(Handle, BindAddress, BindAddressLength, NULL);
     }
 
+    RemoteAddress = HeapAlloc(GlobalHeap, 0, 0x6 + SocketAddressLength);
+    if (!RemoteAddress)
+    {
+        HeapFree(GlobalHeap, 0, BindAddress);
+        return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
+    }
+
+    Status = NtCreateEvent(&SockEvent,
+                           GENERIC_READ | GENERIC_WRITE,
+                           NULL, 1, FALSE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        HeapFree(GlobalHeap, 0, RemoteAddress);
+        HeapFree(GlobalHeap, 0, BindAddress);
+        return SOCKET_ERROR;
+    }
+
     /* Set up Address in TDI Format */
-    RemoteAddress = (PTRANSPORT_ADDRESS)TdiBuffer;
     RemoteAddress->TAAddressCount = 1;
     RemoteAddress->Address[0].AddressLength = SocketAddressLength - sizeof(SocketAddress->sa_family);
     RtlCopyMemory(&RemoteAddress->Address[0].AddressType, SocketAddress, SocketAddressLength);
@@ -585,7 +594,8 @@ WSPSendTo(SOCKET Handle,
         else
         {
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
-            APCFunction = NULL; // should be a private io completition function inside us
+            /* Should be a private io completition function inside us */
+            APCFunction = NULL;
             APCContext = lpCompletionRoutine;
             SendInfo.AfdFlags |= AFD_SKIP_FIO;
         }
@@ -596,34 +606,37 @@ WSPSendTo(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-             Event ? Event : SockEvent,
-             APCFunction,
-             APCContext,
-             IOSB,
-             IOCTL_AFD_SEND_DATAGRAM,
-             &SendInfo,
-             sizeof(SendInfo),
-             NULL,
-             0);
+                                   Event ? Event : SockEvent,
+                                   APCFunction,
+                                   APCContext,
+                                   IOSB,
+                                   IOCTL_AFD_SEND_DATAGRAM,
+                                   &SendInfo,
+                                   sizeof(SendInfo),
+                                   NULL,
+                                   0);
 
     /* Wait for completition of not overlapped */
     if (Status == STATUS_PENDING && lpOverlapped == NULL)
     {
-        WaitForSingleObject(SockEvent, INFINITE); // BUGBUG, shouldn wait infintely for send...
+        /* BUGBUG, shouldn't wait infintely for send... */
+        WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
-    NtClose( SockEvent );
+    NtClose(SockEvent);
+    HeapFree(GlobalHeap, 0, RemoteAddress);
+    HeapFree(GlobalHeap, 0, BindAddress);
 
     if (Status == STATUS_PENDING)
         return WSA_IO_PENDING;
 
-
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
-    return MsafdReturnWithErrno ( Status, lpErrno, IOSB->Information, lpNumberOfBytesSent );
+    return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
 }
+
 INT
 WSPAPI
 WSPRecvDisconnect(IN  SOCKET s,
