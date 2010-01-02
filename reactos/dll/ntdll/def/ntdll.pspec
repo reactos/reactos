@@ -412,6 +412,8 @@
 @ stdcall RtlAcquirePebLock()
 @ stdcall RtlAcquireResourceExclusive(ptr long)
 @ stdcall RtlAcquireResourceShared(ptr long)
+@ stdcall RtlAcquireSRWLockExclusive(ptr)
+@ stdcall RtlAcquireSRWLockShared(ptr)
 @ stdcall RtlActivateActivationContext(long ptr ptr)
 //@ stdcall RtlActivateActivationContextEx
 @ stdcall RtlActivateActivationContextUnsafeFast(ptr ptr)
@@ -713,6 +715,7 @@
 @ stdcall RtlInitializeResource(ptr)
 @ stdcall RtlInitializeSListHead(ptr)
 @ stdcall RtlInitializeSid(ptr ptr long)
+@ stdcall RtlInitializeSRWLock(ptr)
 //@ stdcall RtlInitializeStackTraceDataBase // 5.1 SP2 and SP3, and 5.2 only
 @ stdcall RtlInsertElementGenericTable(ptr ptr long ptr)
 @ stdcall RtlInsertElementGenericTableAvl(ptr ptr long ptr)
@@ -842,6 +845,8 @@
 //@ stdcall RtlReleaseMemoryStream
 @ stdcall RtlReleasePebLock()
 @ stdcall RtlReleaseResource(ptr)
+@ stdcall RtlReleaseSRWLockExclusive(ptr)
+@ stdcall RtlReleaseSRWLockShared(ptr)
 @ stdcall RtlRemoteCall(ptr ptr ptr long ptr long long)
 //@ stdcall RtlRemoveVectoredContinueHandler
 @ stdcall RtlRemoveVectoredExceptionHandler(ptr)
@@ -892,6 +897,8 @@
 @ stdcall RtlSetUserFlagsHeap(ptr long ptr long)
 @ stdcall RtlSetUserValueHeap(ptr long ptr ptr)
 @ stdcall RtlSizeHeap(long long ptr)
+@ stdcall RtlSleepConditionVariableCS(ptr ptr ptr)
+@ stdcall RtlSleepConditionVariableSRW(ptr ptr ptr long)
 @ stdcall RtlSplay(ptr)
 //@ stdcall RtlStartRXact
 //@ stdcall RtlStatMemoryStream
