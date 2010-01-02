@@ -480,6 +480,7 @@ dll\shellext\deskmon\deskmon.dll                    1
 drivers\base\bootvid\bootvid.dll                    1
 drivers\base\beep\beep.sys                          2
 drivers\base\null\null.sys                          2
+drivers\base\nmidebug\nmidebug.sys                  2
 
 drivers\bus\isapnp\isapnp.sys                       2
 
