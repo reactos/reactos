@@ -20,6 +20,8 @@ MIXER_STATUS Enum(IN  PVOID EnumContext, IN  ULONG DeviceIndex, OUT LPWSTR * Dev
 MIXER_STATUS OpenKey(IN HANDLE hKey, IN LPWSTR SubKey, IN ULONG DesiredAccess, OUT PHANDLE OutKey);
 MIXER_STATUS CloseKey(IN HANDLE hKey);
 MIXER_STATUS QueryKeyValue(IN HANDLE hKey, IN LPWSTR KeyName, OUT PVOID * ResultBuffer, OUT PULONG ResultLength, OUT PULONG KeyType);
+PVOID AllocEventData(IN ULONG ExtraSize);
+VOID FreeEventData(IN PVOID EventData);
 
 MIXER_CONTEXT MixerContext =
 {
@@ -33,7 +35,9 @@ MIXER_CONTEXT MixerContext =
     Copy,
     OpenKey,
     QueryKeyValue,
-    CloseKey
+    CloseKey,
+    AllocEventData,
+    FreeEventData
 };
 
 GUID CategoryGuid = {STATIC_KSCATEGORY_AUDIO};
@@ -284,6 +288,35 @@ Enum(
 
     return Status;
 }
+
+PVOID
+AllocEventData(
+    IN ULONG ExtraSize)
+{
+    PKSEVENTDATA Data = (PKSEVENTDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSEVENTDATA) + ExtraSize);
+    if (!Data)
+        return NULL;
+
+    Data->EventHandle.Event = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (!Data->EventHandle.Event)
+    {
+        HeapFree(GetProcessHeap(), 0, Data);
+        return NULL;
+    }
+
+    Data->NotificationType = KSEVENTF_EVENT_HANDLE;
+    return Data;
+}
+
+VOID
+FreeEventData(IN PVOID EventData)
+{
+    PKSEVENTDATA Data = (PKSEVENTDATA)EventData;
+
+    CloseHandle(Data->EventHandle.Event);
+    HeapFree(GetProcessHeap(), 0, Data);
+}
+
 
 BOOL
 WdmAudInitUserModeMixer()

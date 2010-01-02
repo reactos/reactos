@@ -5,7 +5,7 @@
 	<include base="wdmaud_kernel">.</include>
 	<include base="mmixer">.</include>
 	<include base="libsamplerate">.</include>
-	<!-- <define name="USE_MMIXER_LIB">1</define> Enable this line to bypass wdmaud + sysaudio -->
+	<define name="USE_MMIXER_LIB">1</define>
 	<!-- <define name="USERMODE_MIXER">1</define> Enable this line to for usermode mixing support -->
 	<library>mmebuddy</library>
 	<library>ntdll</library>
