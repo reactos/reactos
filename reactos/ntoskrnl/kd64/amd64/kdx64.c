@@ -220,7 +220,6 @@ KdpSysWriteControlSpace(IN ULONG Processor,
 {
     PVOID ControlStart;
     PKPRCB Prcb = KiProcessorBlock[Processor];
-    PKIPCR Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
 
     switch (BaseAddress)
     {
