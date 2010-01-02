@@ -853,6 +853,7 @@ MMixerInitializeFilter(
 
     // initialize line list
     InitializeListHead(&MixerInfo->LineList);
+    InitializeListHead(&MixerInfo->EventList);
 
     // now allocate an array which will receive the indices of the pin 
     // which has a ADC / DAC nodetype in its path
@@ -1074,4 +1075,80 @@ MMixerSetupFilter(
 
     // done
     return Status;
+}
+
+
+MIXER_STATUS
+MMixerAddEvent(
+    IN PMIXER_CONTEXT MixerContext,
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN ULONG NodeId)
+{
+    KSE_NODE Property;
+    LPEVENT_ITEM EventData;
+    ULONG BytesReturned;
+    MIXER_STATUS Status;
+
+    EventData = (LPEVENT_ITEM)MixerContext->AllocEventData(sizeof(LIST_ENTRY));
+    if (!EventData)
+    {
+        // not enough memory
+        return MM_STATUS_NO_MEMORY;
+    }
+
+    /* setup request */
+    Property.Event.Set = KSEVENTSETID_AudioControlChange;
+    Property.Event.Flags = KSEVENT_TYPE_TOPOLOGY|KSEVENT_TYPE_ENABLE;
+    Property.Event.Id = KSEVENT_CONTROL_CHANGE;
+
+    Property.NodeId = NodeId;
+    Property.Reserved = 0;
+
+    Status = MixerContext->Control(MixerInfo->hMixer, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSP_NODE), (PVOID)EventData, sizeof(KSEVENTDATA), &BytesReturned);
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // failed to add event
+        MixerContext->FreeEventData(EventData);
+        return Status;
+    }
+
+    //store event
+    InsertTailList(&MixerInfo->EventList, &EventData->Entry);
+    return Status;
+}
+
+MIXER_STATUS
+MMixerAddEvents(
+    IN PMIXER_CONTEXT MixerContext,
+    IN OUT LPMIXER_INFO MixerInfo)
+{
+    PKSMULTIPLE_ITEM NodeTypes;
+    ULONG Index;
+    MIXER_STATUS Status;
+    LPGUID Guid;
+
+    // get filter node types
+    Status = MMixerGetFilterTopologyProperty(MixerContext, MixerInfo->hMixer, KSPROPERTY_TOPOLOGY_NODES, &NodeTypes);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // failed
+        return Status;
+    }
+
+    for(Index = 0; Index < NodeTypes->Count; Index++)
+    {
+        Guid = MMixerGetNodeType(NodeTypes, Index);
+        if (IsEqualGUID(&KSNODETYPE_VOLUME, Guid) || IsEqualGUID(&KSNODETYPE_MUTE, Guid))
+        {
+            //add an event for volume / mute controls
+            //TODO: extra control types
+            MMixerAddEvent(MixerContext, MixerInfo, Index);
+        }
+    }
+
+    // free node types
+    MixerContext->Free(NodeTypes);
+
+    return MM_STATUS_SUCCESS;
 }
