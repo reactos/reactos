@@ -101,6 +101,10 @@ KeGetPreviousMode(VOID)
     }                                                                       \
 }
 
+VOID
+NTAPI
+Kii386SpinOnSpinLock(PKSPIN_LOCK SpinLock, ULONG Flags);
+
 #ifndef CONFIG_SMP
 //
 // Spinlock Acquire at IRQL >= DISPATCH_LEVEL
@@ -310,44 +314,34 @@ FORCEINLINE
 VOID
 KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 {
+#ifdef DBG
     /* Make sure that we don't own the lock already */
     if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
     {
         /* We do, bugcheck! */
         KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
     }
+#endif
 
-    /* Start acquire loop */
-    for (;;)
+    /* Try to acquire the lock */
+    while (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
     {
-        /* Try to acquire it */
-        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
-        {
-            /* Value changed... wait until it's unlocked */
-            while (*(volatile KSPIN_LOCK *)SpinLock == 1)
-            {
-#if DBG
-                /* On debug builds, we use a much slower but useful routine */
-                //Kii386SpinOnSpinLock(SpinLock, 5);
-
-                /* FIXME: Do normal yield for now */
-                YieldProcessor();
+#if defined(_M_IX86) && defined(DBG)
+        /* On x86 debug builds, we use a much slower but useful routine */
+        Kii386SpinOnSpinLock(SpinLock, 5);
 #else
-                /* Otherwise, just yield and keep looping */
-                YieldProcessor();
-#endif
-            }
-        }
-        else
+        /* It's locked... spin until it's unlocked */
+        while (*(volatile KSPIN_LOCK *)SpinLock & 1)
         {
-#if DBG
-            /* On debug builds, we OR in the KTHREAD */
-            *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
-#endif
-            /* All is well, break out */
-            break;
+                /* Yield and keep looping */
+                YieldProcessor();
         }
+#endif
     }
+#ifdef DBG
+    /* On debug builds, we OR in the KTHREAD */
+    *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
+#endif
 }
 
 //

@@ -2828,31 +2828,3 @@ _KeSynchronizeExecution@12:
     ret 12
 .endfunc
 
-/*++
- * Kii386SpinOnSpinLock 
- *
- *     FILLMEIN
- *
- * Params:
- *     SpinLock - FILLMEIN
- *
- *     Flags - FILLMEIN
- *
- * Returns:
- *     None.
- *
- * Remarks:
- *     FILLMEIN
- *
- *--*/
-.globl _Kii386SpinOnSpinLock@8
-.func Kii386SpinOnSpinLock@8
-_Kii386SpinOnSpinLock@8:
-
-#ifdef CONFIG_SMP
-    /* FIXME: TODO */
-    int 3
-#endif
-
-    ret 8
-.endfunc
