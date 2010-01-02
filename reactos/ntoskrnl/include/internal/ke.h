@@ -79,6 +79,8 @@ typedef PCHAR
     IN ULONG Length
 );
 
+extern PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
+extern KSPIN_LOCK KiNmiCallbackListLock;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
