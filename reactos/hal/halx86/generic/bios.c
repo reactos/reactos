@@ -415,6 +415,7 @@ HalpBiosDisplayReset(VOID)
     //
     IdtPte = HalAddressToPte(((PKIPCR)KeGetPcr())->IDT);
     RestoreWriteProtection = IdtPte->Write;
+    IdtPte->Write = 1;
 
     //
     // Use special invalid opcode and GPF trap handlers
