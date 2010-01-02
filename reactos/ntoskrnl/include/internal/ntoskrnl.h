@@ -83,6 +83,7 @@
 #include "../kdbg/kdb.h"
 #endif
 #include "dbgk.h"
+#include "spinlock.h"
 #include "tag.h"
 #include "test.h"
 #include "inbv.h"
