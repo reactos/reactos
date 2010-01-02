@@ -924,6 +924,26 @@ KeZeroPages(IN PVOID Address,
     RtlZeroMemory(Address, Size);
 }
 
+VOID
+NTAPI
+KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
+                     IN PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    //
+    // Save full context
+    //
+    Prcb->ProcessorState.ContextFrame.ContextFlags = CONTEXT_FULL |
+                                                     CONTEXT_DEBUG_REGISTERS;
+    KeTrapFrameToContext(TrapFrame, NULL, &Prcb->ProcessorState.ContextFrame);
+
+    //
+    // Save control registers
+    //
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
