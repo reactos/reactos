@@ -516,7 +516,7 @@ WSPSendTo(SOCKET Handle,
     PVOID                   APCFunction;
     HANDLE                  Event = NULL;
     PTRANSPORT_ADDRESS      RemoteAddress;
-    PSOCKADDR               BindAddress;
+    PSOCKADDR               BindAddress = NULL;
     INT                     BindAddressLength;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
@@ -546,7 +546,10 @@ WSPSendTo(SOCKET Handle,
     RemoteAddress = HeapAlloc(GlobalHeap, 0, 0x6 + SocketAddressLength);
     if (!RemoteAddress)
     {
-        HeapFree(GlobalHeap, 0, BindAddress);
+        if (BindAddress != NULL)
+        {
+            HeapFree(GlobalHeap, 0, BindAddress);
+        }
         return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
     }
 
@@ -557,7 +560,10 @@ WSPSendTo(SOCKET Handle,
     if (!NT_SUCCESS(Status))
     {
         HeapFree(GlobalHeap, 0, RemoteAddress);
-        HeapFree(GlobalHeap, 0, BindAddress);
+        if (BindAddress != NULL)
+        {
+            HeapFree(GlobalHeap, 0, BindAddress);
+        }
         return SOCKET_ERROR;
     }
 
@@ -626,7 +632,10 @@ WSPSendTo(SOCKET Handle,
 
     NtClose(SockEvent);
     HeapFree(GlobalHeap, 0, RemoteAddress);
-    HeapFree(GlobalHeap, 0, BindAddress);
+    if (BindAddress != NULL)
+    {
+        HeapFree(GlobalHeap, 0, BindAddress);
+    }
 
     if (Status == STATUS_PENDING)
         return WSA_IO_PENDING;
