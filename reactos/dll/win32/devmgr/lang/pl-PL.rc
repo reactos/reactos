@@ -4,7 +4,7 @@
 * xxrogers@users.sourceforge.net
 * https://sourceforge.net/projects/reactospl
 *
-* updates by Caemyr - Olaf Siejka (Jan, 2008)
+* updates by Caemyr - Olaf Siejka (Jan 2008, Jan 2010)
 */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -100,30 +100,30 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Device Instance ID"
-    IDS_PROP_HARDWAREIDS "Hardware IDs"
-    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
-    IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_CAPABILITIES "Capabilities"
-    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
-    IDS_PROP_CONFIGFLAGS "Config Flags"
-    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
-    IDS_PROP_REMOVALRELATIONS "Removal Relations"
-    IDS_PROP_BUSRELATIONS "Bus Relations"
-    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
-    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
-    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
-    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
-    IDS_PROP_CLASSINSTALLER "Class Installers"
-    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
-    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
-    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
-    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
-    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
-    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+    IDS_PROP_DEVICEID "Œcie¿ka urz¹dzenia"
+    IDS_PROP_HARDWAREIDS "Identyfikator urz¹dzenia"
+    IDS_PROP_COMPATIBLEIDS "Zgodne identyfikatory"
+    IDS_PROP_MATCHINGDEVICEID "U¿yty identyfikator"
+    IDS_PROP_SERVICE "Us³uga"
+    IDS_PROP_ENUMERATOR "Modu³ lokalizuj¹cy"
+    IDS_PROP_CAPABILITIES "Mo¿liwoœci"
+    IDS_PROP_DEVNODEFLAGS "Konfiguracja wêz³a Devnode"
+    IDS_PROP_CONFIGFLAGS "Stan wêz³a Config"
+    IDS_PROP_CSCONFIGFLAGS "Stan wêz³a CSCONFIG"
+    IDS_PROP_EJECTIONRELATIONS "Relacje wysuwania"
+    IDS_PROP_REMOVALRELATIONS "Relacje usuwania"
+    IDS_PROP_BUSRELATIONS "Relacje magistrali"
+    IDS_PROP_DEVUPPERFILTERS "Wy¿sze filtry urz¹dzenia"
+    IDS_PROP_DEVLOWERFILTERS "Ni¿sze filtry urz¹dzenia"
+    IDS_PROP_CLASSUPPERFILTERS "Wy¿sze filtry klasy"
+    IDS_PROP_CLASSLOWERFILTERS "Ni¿sze filtry klasy"
+    IDS_PROP_CLASSINSTALLER "Instalator klasy"
+    IDS_PROP_CLASSCOINSTALLER "Dodatkowy instalator klasy"
+    IDS_PROP_DEVICECOINSTALLER "Dodatkowy instalator urz¹dzenia"
+    IDS_PROP_FIRMWAREREVISION "Wersja Firmware"
+    IDS_PROP_CURRENTPOWERSTATE "Bie¿¹cy stan zasilania"
+    IDS_PROP_POWERCAPABILITIES "Zdolnoœci trybu zasilania"
+    IDS_PROP_POWERSTATEMAPPINGS "Mapowania stanu zasilania"
 END
 
 IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
@@ -184,7 +184,7 @@ END
 
 IDD_DEVICEDETAILS DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Szczegó³y"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -197,7 +197,7 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Zasoby"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -206,7 +206,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "Zasilanie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
