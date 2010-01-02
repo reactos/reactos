@@ -166,7 +166,10 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         *PointerPte = TempPte;
     }
-    
+
+    // Bug #4835
+    InterlockedExchangeAddUL(&MiMemoryConsumers[MC_NPPOOL].PagesUsed, StackPages);
+
     //
     // Release the PFN lock
     //
