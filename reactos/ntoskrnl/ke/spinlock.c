@@ -467,6 +467,8 @@ Kii386SpinOnSpinLock(PKSPIN_LOCK SpinLock, ULONG Flags)
     while (*(volatile KSPIN_LOCK *)SpinLock & 1)
     {
         // FIXME: Check for timeout
+        // Warning: this function might be called from HAL with interrupts
+        // disabled.
 
         /* Yield and keep looping */
         YieldProcessor();
