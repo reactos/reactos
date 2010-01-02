@@ -234,6 +234,10 @@ _MsgTrapInfo:
 .endm
 
 
+/* FUNCTIONS *****************************************************************/
+
+.text
+.code64
 
 // rbp = TrapFrame, eax = ExceptionCode, edx = NumParams, r9,r10,r11 = params
 _InternalDispatchException:
@@ -278,8 +282,6 @@ _InternalDispatchException:
     ret
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
-.text
-.code64
 
 .proc KiDivideErrorFault
     .pushframe 0
