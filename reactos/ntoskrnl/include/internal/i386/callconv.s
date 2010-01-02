@@ -23,10 +23,11 @@
 
 	cCount = 0
 
-    .irp arg, \ArgList
-		cCount = cCount+1
-	.endr
-
+	.ifnb \ArgList
+    	.irp arg, \ArgList
+			cCount = cCount+1
+		.endr
+	.endif
 .endm
 
 //
