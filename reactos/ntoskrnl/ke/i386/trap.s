@@ -881,8 +881,11 @@ _KiTrap2:
 	stdCall _KiSaveProcessorState, ebp, 0			// Save to KPRCB CONTEXT
 
 	//
-	// BUGBUG: Call Registered NMI handlers
+	// Call Registered NMI handlers
 	//
+	stdCall _KiHandleNmi							// Call NMI handlers
+	or al, al										// Check if any handled it
+	jne 1f											// Resume from NMI
 
 	//
 	// Call the platform driver for NMI handling (panic, etc)
@@ -897,6 +900,7 @@ _KiTrap2:
 	// In certain situations, nested NMIs can corrupt the TSS, making us lose
 	// the original context. If this happens, we have no choice but to panic.
 	//
+1:
     mov eax, PCR[KPCR_TSS]							// Get current TSS
     cmp word ptr [eax], KGDT_NMI_TSS				// Check who its points to
     je 2f											// Back to the NMI TSS crash
