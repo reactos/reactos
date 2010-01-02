@@ -16,53 +16,9 @@
 
 /* GLOBALS *******************************************************************/
 
-KSPIN_LOCK HalpSystemHardwareLock;
 UCHAR HalpCmosCenturyOffset;
-ULONG HalpSystemHardwareFlags;
 
 /* PRIVATE FUNCTIONS *********************************************************/
-
-VOID
-NTAPI
-HalpAcquireSystemHardwareSpinLock(VOID)
-{
-    ULONG Flags;
-
-    /* Get flags and disable interrupts */
-    Flags = __readeflags();
-    _disable();
-
-    /* Try to acquire the lock */
-    while (InterlockedBitTestAndSet((PLONG)&HalpSystemHardwareLock, 0))
-    {
-        /* Lock is held, spin until it's free */
-        while (*(volatile ULONG*)HalpSystemHardwareLock & 1)
-            YieldProcessor();
-    }
-
-    /* We have the lock, save the flags now */
-    HalpSystemHardwareFlags = Flags;
-}
-
-VOID
-NTAPI
-HalpReleaseCmosSpinLock(VOID)
-{
-    ULONG Flags;
-
-    /* Get the flags */
-    Flags = HalpSystemHardwareFlags;
-
-    /* Release lock and check if we owned it */
-    if (!InterlockedBitTestAndReset((PLONG)&HalpSystemHardwareLock, 0))
-    {
-        /* The spin lock was not owned! */
-        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, 0, 0, 0, 0);
-    }
-
-    /* Restore the flags */
-    __writeeflags(Flags);
-}
 
 FORCEINLINE
 UCHAR

@@ -9,6 +9,7 @@
 		<define name="CONFIG_SMP" />
 		<define name="_NTHAL_" />
 		<library>hal_generic</library>
+		<library>hal_generic_mp</library>
 		<library>ntoskrnl</library>
 		<directory name="mp">
 			<file>apic.c</file>
@@ -22,7 +23,6 @@
 			<directory name="i386">
 				<file>mps.S</file>
 				<file>mpsboot.asm</file>
-				<file>spinlock.c</file>
 			</directory>
 		</directory>
 	</module>
