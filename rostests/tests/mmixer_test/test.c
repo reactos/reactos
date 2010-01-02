@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <setupapi.h>
+#include <ks.h>
 #include <ksmedia.h>
 #include <mmsystem.h>
 #include <mmreg.h>
@@ -104,7 +105,7 @@ Control(
         {
             CloseHandle(Overlapped.hEvent);
 
-            //printf("Control: Failed with %lu Transferred %lu\n", GetLastError(), Transferred);
+            printf("Control: Failed with %lu Transferred %lu\n", GetLastError(), Transferred);
 
             if (GetLastError() == ERROR_MORE_DATA || GetLastError() == ERROR_INSUFFICIENT_BUFFER)
             {
@@ -272,6 +273,33 @@ CloseKey(
     return MM_STATUS_SUCCESS;
 }
 
+PVOID
+AllocEventData(
+    IN ULONG ExtraSize)
+{
+    PKSEVENTDATA Data = (PKSEVENTDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSEVENTDATA) + ExtraSize);
+    if (!Data)
+        return NULL;
+
+    Data->EventHandle.Event = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (!Data->EventHandle.Event)
+    {
+        HeapFree(GetProcessHeap(), 0, Data);
+        return NULL;
+    }
+
+    Data->NotificationType = KSEVENTF_EVENT_HANDLE;
+    return Data;
+}
+
+VOID
+FreeEventData(IN PVOID EventData)
+{
+    PKSEVENTDATA Data = (PKSEVENTDATA)EventData;
+
+    CloseHandle(Data->EventHandle.Event);
+    HeapFree(GetProcessHeap(), 0, Data);
+}
 
 int main(int argc, char**argv)
 {
@@ -308,6 +336,8 @@ int main(int argc, char**argv)
     MixerContext.OpenKey = OpenKey;
     MixerContext.CloseKey = CloseKey;
     MixerContext.QueryKeyValue = QueryKeyValue;
+    MixerContext.AllocEventData = AllocEventData;
+    MixerContext.FreeEventData = FreeEventData;
 
     Status = MMixerInitialize(&MixerContext, Enum, (PVOID)DeviceHandle);
 
@@ -382,5 +412,9 @@ int main(int argc, char**argv)
 
         wprintf(L"=======================\n");
     }
+
+	wprintf(L"//////////////////////\n");
+	wprintf(L"NumWaveOut %lu NumWaveIn %lu\n", MMixerGetWaveOutCount(&MixerContext), MMixerGetWaveInCount(&MixerContext));
+	wprintf(L"waveOut    %lu waveIn    %lu\n", waveOutGetNumDevs(), waveInGetNumDevs());
     return 0;
 }
