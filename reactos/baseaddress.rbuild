@@ -7,7 +7,7 @@
 	<property name="BASEADDRESS_CRYPTDLG"		value="0x209c0000" />
 	<property name="BASEADDRESS_COMCAT"		value="0x20a50000" />
 	<property name="BASEADDRESS_WINDOWSCODECS"	value="0x26c40000" />
-	<property name="BASEADDRESS_DEVENUM"		value="0x35680000" />
+	<property name="BASEADDRESS_DEVENUM"		value="0x35670000" />
 	<property name="BASEADDRESS_RSABASE"		value="0x35700000" />
 	<property name="BASEADDRESS_RSAENH"		value="0x35780000" />
 	<property name="BASEADDRESS_URL"		value="0x42ea0000" />
@@ -181,7 +181,7 @@
 	<property name="BASEADDRESS_CRYPTNET"		value="0x75e60000" />
 	<property name="BASEADDRESS_RPCRT4"		value="0x76000000" />
 	<property name="BASEADDRESS_SHLWAPI"		value="0x76100000" />
-	<property name="BASEADDRESS_INETCOMM"		value="0x76150000" />
+	<property name="BASEADDRESS_INETCOMM"		value="0x76140000" />
 	<property name="BASEADDRESS_COMCTL32"		value="0x76160000" />
 	<property name="BASEADDRESS_COMDLG32"		value="0x76210000" />
 	<property name="BASEADDRESS_WINSTA"		value="0x762f0000" />
@@ -196,7 +196,7 @@
 	<property name="BASEADDRESS_MIDIMAP"		value="0x76600000" />
 	<property name="BASEADDRESS_WAVEMAP"		value="0x76610000" />
 	<property name="BASEADDRESS_MPR"		value="0x76620000" />
-	<property name="BASEADDRESS_MSHTML"		value="0x76660000" />
+	<property name="BASEADDRESS_MSHTML"		value="0x76650000" />
 	<property name="BASEADDRESS_ODBC32"		value="0x76660000" />
 	<property name="BASEADDRESS_SETUPAPI"		value="0x76660000" />
 	<property name="BASEADDRESS_CRYPTDLL"		value="0x76740000" />
