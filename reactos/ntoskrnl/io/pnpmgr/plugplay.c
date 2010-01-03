@@ -268,7 +268,7 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     {
         _SEH2_TRY
         {
-            memcpy(Buffer, PropertyData->Buffer, BufferSize);
+            memcpy(PropertyData->Buffer, Buffer, BufferSize);
             PropertyData->BufferSize = BufferSize;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

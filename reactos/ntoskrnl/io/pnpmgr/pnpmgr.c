@@ -3236,7 +3236,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         * always contains the enumerator name followed by \\ */
         Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
         ASSERT(Ptr);
-        Length = (Ptr - DeviceNode->InstancePath.Buffer + 1) * sizeof(WCHAR);
+        Length = (Ptr - DeviceNode->InstancePath.Buffer) * sizeof(WCHAR);
         Data = DeviceNode->InstancePath.Buffer;
         break;
 
