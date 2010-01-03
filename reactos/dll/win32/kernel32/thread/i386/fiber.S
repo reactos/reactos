@@ -9,9 +9,6 @@
 
 #include <ndk/asm.h>
 
-#define CONTEXT_FULL                    0x10007
-#define CONTEXT_FLOATING_POINT          0xF
-
 .globl _SwitchToFiber@4
 .intel_syntax noprefix
 
@@ -29,7 +26,7 @@ _SwitchToFiber@4:
     mov [eax+FIBER_CONTEXT_EBP], ebp
     
     /* Check if we're to save FPU State */
-    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL + CONTEXT_FLOATING_POINT
+    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL | CONTEXT_FLOATING_POINT
     jnz NoFpuStateSave
     
     /* Save the FPU State (Status and Control)*/
@@ -79,7 +76,7 @@ NoFpuStateSave:
     mov [edx+TEB_ACTIVATION_CONTEXT_STACK_POINTER], esi
     
     /* Restore FPU State */
-    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL + CONTEXT_FLOATING_POINT
+    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL | CONTEXT_FLOATING_POINT
     jnz NoFpuStateRestore
     
     /* Check if the Status Word Changed */
