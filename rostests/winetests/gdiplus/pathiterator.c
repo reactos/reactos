@@ -36,8 +36,11 @@ static void test_constructor_destructor(void)
     /* NULL args */
     stat = GdipCreatePathIter(NULL, NULL);
     expect(InvalidParameter, stat);
+    iter = NULL;
     stat = GdipCreatePathIter(&iter, NULL);
     expect(Ok, stat);
+    ok(iter != NULL, "Expected iterator to be created\n");
+    GdipDeletePathIter(iter);
     stat = GdipCreatePathIter(NULL, path);
     expect(InvalidParameter, stat);
     stat = GdipDeletePathIter(NULL);

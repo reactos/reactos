@@ -31,14 +31,6 @@ static const WCHAR MicrosoftSansSerif[] = {'M','i','c','r','o','s','o','f','t','
 static const WCHAR TimesNewRoman[] = {'T','i','m','e','s',' ','N','e','w',' ','R','o','m','a','n','\0'};
 static const WCHAR CourierNew[] = {'C','o','u','r','i','e','r',' ','N','e','w','\0'};
 
-static const char *debugstr_w(LPCWSTR str)
-{
-   static char buf[1024];
-   WideCharToMultiByte(CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL);
-   return buf;
-}
-
-
 static void test_createfont(void)
 {
     GpFontFamily* fontfamily = NULL, *fontfamily2;
@@ -71,7 +63,7 @@ static void test_createfont(void)
     stat = GdipGetFamilyName(fontfamily2, familyname, 0);
     expect(Ok, stat);
     ok (lstrcmpiW(arial, familyname) == 0, "Expected arial, got %s\n",
-            debugstr_w(familyname));
+            wine_dbgstr_w(familyname));
     stat = GdipDeleteFontFamily(fontfamily2);
     expect(Ok, stat);
 
@@ -201,6 +193,7 @@ todo_wine
 {
     stat = GdipCreateFontFamilyFromName (MSSansSerif, NULL, &family);
     expect (FontFamilyNotFound, stat);
+    if(stat == Ok) GdipDeleteFontFamily(family);
 }
 
     stat = GdipCreateFontFamilyFromName (arial, NULL, &family);
@@ -302,10 +295,9 @@ static void test_getgenerics (void)
     expect (Ok, stat);
     stat = GdipGetFamilyName (family, familyName, LANG_NEUTRAL);
     expect (Ok, stat);
-    ok ((lstrcmpiW(familyName, MicrosoftSansSerif) == 0) ||
-        (lstrcmpiW(familyName,MSSansSerif) == 0),
-        "Expected Microsoft Sans Serif or MS Sans Serif, got %s\n",
-        debugstr_w(familyName));
+    todo_wine ok ((lstrcmpiW(familyName, MicrosoftSansSerif) == 0),
+        "Expected Microsoft Sans Serif, got %s\n",
+        wine_dbgstr_w(familyName));
     stat = GdipDeleteFontFamily (family);
     expect (Ok, stat);
 
@@ -320,7 +312,7 @@ serif:
     stat = GdipGetFamilyName (family, familyName, LANG_NEUTRAL);
     expect (Ok, stat);
     ok (lstrcmpiW(familyName, TimesNewRoman) == 0,
-        "Expected Times New Roman, got %s\n", debugstr_w(familyName));
+        "Expected Times New Roman, got %s\n", wine_dbgstr_w(familyName));
     stat = GdipDeleteFontFamily (family);
     expect (Ok, stat);
 
@@ -335,7 +327,7 @@ monospace:
     stat = GdipGetFamilyName (family, familyName, LANG_NEUTRAL);
     expect (Ok, stat);
     ok (lstrcmpiW(familyName, CourierNew) == 0,
-        "Expected Courier New, got %s\n", debugstr_w(familyName));
+        "Expected Courier New, got %s\n", wine_dbgstr_w(familyName));
     stat = GdipDeleteFontFamily (family);
     expect (Ok, stat);
 }

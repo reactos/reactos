@@ -310,9 +310,9 @@ static void test_gradientgetrect(void)
     memset(&rectf, 0, sizeof(GpRectF));
     status = GdipGetLineRect(brush, &rectf);
     expect(Ok, status);
-    todo_wine expectf(-5.0, rectf.X);
+    expectf(-5.0, rectf.X);
     expectf(0.0, rectf.Y);
-    todo_wine expectf(10.0, rectf.Width);
+    expectf(10.0, rectf.Width);
     expectf(10.0, rectf.Height);
     status = GdipDeleteBrush((GpBrush*)brush);
     /* horizontal gradient */
@@ -324,9 +324,9 @@ static void test_gradientgetrect(void)
     status = GdipGetLineRect(brush, &rectf);
     expect(Ok, status);
     expectf(0.0, rectf.X);
-    todo_wine expectf(-5.0, rectf.Y);
+    expectf(-5.0, rectf.Y);
     expectf(10.0, rectf.Width);
-    todo_wine expectf(10.0, rectf.Height);
+    expectf(10.0, rectf.Height);
     status = GdipDeleteBrush((GpBrush*)brush);
     /* slope = -1 */
     pt1.X = pt1.Y = 0.0;
@@ -395,8 +395,11 @@ static void test_lineblend(void)
     int i;
     const REAL factors[5] = {0.0f, 0.1f, 0.5f, 0.9f, 1.0f};
     const REAL positions[5] = {0.0f, 0.2f, 0.5f, 0.8f, 1.0f};
+    const REAL two_positions[2] = {0.0f, 1.0f};
+    const ARGB colors[5] = {0xff0000ff, 0xff00ff00, 0xff00ffff, 0xffff0000, 0xffffffff};
     REAL res_factors[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
     REAL res_positions[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
+    ARGB res_colors[6] = {0xdeadbeef, 0, 0, 0, 0};
 
     pt1.X = pt1.Y = 1.0;
     pt2.X = pt2.Y = 100.0;
@@ -489,6 +492,156 @@ static void test_lineblend(void)
     status = GdipGetLineBlend(brush, res_factors, res_positions, 1);
     expect(Ok, status);
 
+    status = GdipGetLinePresetBlendCount(NULL, &count);
+    expect(InvalidParameter, status);
+
+    status = GdipGetLinePresetBlendCount(brush, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipGetLinePresetBlendCount(brush, &count);
+    expect(Ok, status);
+    expect(0, count);
+
+    status = GdipGetLinePresetBlend(NULL, res_colors, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetLinePresetBlend(brush, NULL, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetLinePresetBlend(brush, res_colors, NULL, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetLinePresetBlend(brush, res_colors, res_positions, 0);
+    expect(InvalidParameter, status);
+
+    status = GdipGetLinePresetBlend(brush, res_colors, res_positions, -1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetLinePresetBlend(brush, res_colors, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetLinePresetBlend(brush, res_colors, res_positions, 2);
+    expect(GenericError, status);
+
+    status = GdipSetLinePresetBlend(NULL, colors, positions, 5);
+    expect(InvalidParameter, status);
+
+    status = GdipSetLinePresetBlend(brush, NULL, positions, 5);
+    expect(InvalidParameter, status);
+
+    status = GdipSetLinePresetBlend(brush, colors, NULL, 5);
+    expect(InvalidParameter, status);
+
+    status = GdipSetLinePresetBlend(brush, colors, positions, 0);
+    expect(InvalidParameter, status);
+
+    status = GdipSetLinePresetBlend(brush, colors, positions, -1);
+    expect(InvalidParameter, status);
+
+    status = GdipSetLinePresetBlend(brush, colors, positions, 1);
+    expect(InvalidParameter, status);
+
+    /* leave off the 0.0 position */
+    status = GdipSetLinePresetBlend(brush, &colors[1], &positions[1], 4);
+    expect(InvalidParameter, status);
+
+    /* leave off the 1.0 position */
+    status = GdipSetLinePresetBlend(brush, colors, positions, 4);
+    expect(InvalidParameter, status);
+
+    status = GdipSetLinePresetBlend(brush, colors, positions, 5);
+    expect(Ok, status);
+
+    status = GdipGetLinePresetBlendCount(brush, &count);
+    expect(Ok, status);
+    expect(5, count);
+
+    status = GdipGetLinePresetBlend(brush, res_colors, res_positions, 4);
+    expect(InsufficientBuffer, status);
+
+    status = GdipGetLinePresetBlend(brush, res_colors, res_positions, 5);
+    expect(Ok, status);
+
+    for (i=0; i<5; i++)
+    {
+        expect(colors[i], res_colors[i]);
+        expectf(positions[i], res_positions[i]);
+    }
+
+    status = GdipGetLinePresetBlend(brush, res_colors, res_positions, 6);
+    expect(Ok, status);
+
+    status = GdipSetLinePresetBlend(brush, colors, two_positions, 2);
+    expect(Ok, status);
+
+    status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
+}
+
+static void test_linelinearblend(void)
+{
+    GpLineGradient *brush;
+    GpStatus status;
+    GpPointF pt1, pt2;
+    INT count=10;
+    REAL res_factors[3] = {0.3f};
+    REAL res_positions[3] = {0.3f};
+
+    status = GdipSetLineLinearBlend(NULL, 0.6, 0.8);
+    expect(InvalidParameter, status);
+
+    pt1.X = pt1.Y = 1.0;
+    pt2.X = pt2.Y = 100.0;
+    status = GdipCreateLineBrush(&pt1, &pt2, 0, 0, WrapModeTile, &brush);
+    expect(Ok, status);
+
+
+    status = GdipSetLineLinearBlend(brush, 0.6, 0.8);
+    expect(Ok, status);
+
+    status = GdipGetLineBlendCount(brush, &count);
+    expect(Ok, status);
+    expect(3, count);
+
+    status = GdipGetLineBlend(brush, res_factors, res_positions, 3);
+    expect(Ok, status);
+    expectf(0.0, res_factors[0]);
+    expectf(0.0, res_positions[0]);
+    expectf(0.8, res_factors[1]);
+    expectf(0.6, res_positions[1]);
+    expectf(0.0, res_factors[2]);
+    expectf(1.0, res_positions[2]);
+
+
+    status = GdipSetLineLinearBlend(brush, 0.0, 0.8);
+    expect(Ok, status);
+
+    status = GdipGetLineBlendCount(brush, &count);
+    expect(Ok, status);
+    expect(2, count);
+
+    status = GdipGetLineBlend(brush, res_factors, res_positions, 3);
+    expect(Ok, status);
+    expectf(0.8, res_factors[0]);
+    expectf(0.0, res_positions[0]);
+    expectf(0.0, res_factors[1]);
+    expectf(1.0, res_positions[1]);
+
+
+    status = GdipSetLineLinearBlend(brush, 1.0, 0.8);
+    expect(Ok, status);
+
+    status = GdipGetLineBlendCount(brush, &count);
+    expect(Ok, status);
+    expect(2, count);
+
+    status = GdipGetLineBlend(brush, res_factors, res_positions, 3);
+    expect(Ok, status);
+    expectf(0.0, res_factors[0]);
+    expectf(0.0, res_positions[0]);
+    expectf(0.8, res_factors[1]);
+    expectf(1.0, res_positions[1]);
+
     status = GdipDeleteBrush((GpBrush*)brush);
     expect(Ok, status);
 }
@@ -515,6 +668,7 @@ START_TEST(brush)
     test_texturewrap();
     test_gradientgetrect();
     test_lineblend();
+    test_linelinearblend();
 
     GdiplusShutdown(gdiplusToken);
 }
