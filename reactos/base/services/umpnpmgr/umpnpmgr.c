@@ -667,11 +667,11 @@ DWORD PNP_GetDeviceRegProp(
             case CM_DRP_BUSNUMBER:
                 PlugPlayData.Property = DevicePropertyBusNumber;
                 break;
+#endif
 
             case CM_DRP_ENUMERATOR_NAME:
-                PlugPlayData.Property = DevicePropertyEnumeratorName;
+                PlugPlayData.Property = 15; //DevicePropertyEnumeratorName;
                 break;
-#endif
 
             default:
                 return CR_INVALID_PROPERTY;

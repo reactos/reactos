@@ -791,6 +791,39 @@ DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
 //    SetListViewText(hwndListView, 0, dap->szTemp);
 }
 
+static VOID
+DisplayDevNodeEnumerator(IN PDEVADVPROP_INFO dap,
+                         IN HWND hwndListView)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+
+    DWORD dwType = 0;
+    WCHAR szBuffer[256];
+    DWORD dwSize = 256 * sizeof(WCHAR);
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    CM_Get_DevNode_Registry_Property_ExW(DeviceInfoData->DevInst,
+                                         CM_DRP_ENUMERATOR_NAME,
+                                         &dwType,
+                                         &szBuffer,
+                                         &dwSize,
+                                         0,
+                                         dap->hMachine);
+
+    SetListViewText(hwndListView, 0, szBuffer);
+}
+
 
 
 static VOID
@@ -840,9 +873,11 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
             break;
 
         case 5: /* Enumerator */
-            DisplayDevicePropertyText(dap,
-                                      hwndListView,
-                                      SPDRP_ENUMERATOR_NAME);
+            DisplayDevNodeEnumerator(dap,
+                                     hwndListView);
+//            DisplayDevicePropertyText(dap,
+//                                      hwndListView,
+//                                      SPDRP_ENUMERATOR_NAME);
             break;
 
         case 6: /* Capabilities */
