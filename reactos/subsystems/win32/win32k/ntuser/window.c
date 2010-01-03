@@ -1256,7 +1256,7 @@ IntUnlinkWnd(PWND Wnd)
    if (Wnd->spwndParent && Wnd->spwndParent->spwndChild == Wnd)
       Wnd->spwndParent->spwndChild = Wnd->spwndNext;
 
-   Wnd->spwndParent = Wnd->spwndPrev = Wnd->spwndNext = Wnd->spwndParent = NULL;
+   Wnd->spwndPrev = Wnd->spwndNext = Wnd->spwndParent = NULL;
 }
 
 
