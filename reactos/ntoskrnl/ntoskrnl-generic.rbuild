@@ -414,6 +414,7 @@
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
 		<file>pe.c</file>
+		<file>ppool.c</file>
 		<file>procsup.c</file>
 		<file>region.c</file>
 		<file>rmap.c</file>

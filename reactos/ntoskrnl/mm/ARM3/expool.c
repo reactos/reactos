@@ -194,6 +194,11 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     ULONG BlockSize, i;
     
     //
+    // Check for paged pool
+    //
+    if (PoolType == PagedPool) return ExAllocatePagedPoolWithTag(PagedPool, NumberOfBytes, Tag);
+    
+    //
     // Some sanity checks
     //
     ASSERT(Tag != 0);
@@ -480,6 +485,19 @@ ExFreePoolWithTag(IN PVOID P,
     POOL_TYPE PoolType;
     PPOOL_DESCRIPTOR PoolDesc;
     BOOLEAN Combined = FALSE;
+    
+    //
+    // Check for paged pool
+    //
+    if ((P >= MmPagedPoolBase) &&
+        (P <= (PVOID)((ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize)))
+    {
+        //
+        // Use old allocator
+        //
+        ExFreePagedPool(P);
+        return;
+    }
    
     //
     // Quickly deal with big page allocations
