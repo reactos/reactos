@@ -98,7 +98,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "バージョン情報"
 FONT 9, "MS UI Gothic"
 BEGIN
-	LTEXT "ReactOS アプリケーション マネージャー\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+	LTEXT "ReactOS アプリケーション マネージャ\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
 	PUSHBUTTON "閉じる", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -171,13 +171,13 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_APPTITLE            "ReactOS アプリケーション マネージャー"
+	IDS_APPTITLE            "ReactOS アプリケーション マネージャ"
 	IDS_SEARCH_TEXT         "検索..."
 	IDS_INSTALL             "インストール"
 	IDS_UNINSTALL           "アンインストール"
 	IDS_MODIFY              "変更"
 	IDS_APPS_COUNT          "アプリケーション数: %d"
-	IDS_WELCOME_TITLE       "ReactOS アプリケーション マネージャーへようこそ!\n\n"
+	IDS_WELCOME_TITLE       "ReactOS アプリケーション マネージャへようこそ!\n\n"
 	IDS_WELCOME_TEXT        "左側からカテゴリを選択し、インストール又はアンインストールするアプリケーションを選んでください。\nReactOS ウェブ サイト: "
 	IDS_WELCOME_URL         "http://www.reactos.org"
 	IDS_INSTALLED           "インストール済み"
@@ -186,7 +186,7 @@ BEGIN
 	IDS_APPLICATIONS        "アプリケーション"
 	IDS_CHOOSE_FOLDER_TEXT  "プログラムのダウンロードに使用するフォルダを選択してください:"
 	IDS_CHOOSE_FOLDER_ERROR "指定されたフォルダは存在しません!"
-	IDS_USER_NOT_ADMIN      """ReactOS アプリケーション マネージャー"" を起動するには管理者権限である必要があります!"
+	IDS_USER_NOT_ADMIN      """ReactOS アプリケーション マネージャ"" を起動するには管理者権限である必要があります!"
 	IDS_APP_REG_REMOVE "レジストリからインストールされたプログラムに関するデータを削除してもよろしいですか?"
 	IDS_INFORMATION "情報"
 	IDS_UNABLE_TO_REMOVE "レジストリからこのプログラムに関するデータを削除できません!"
