@@ -1650,7 +1650,8 @@ REGION_SubtractO(
                 pNextRect++;
             }
             r1++;
-            left = r1->left;
+            if (r1 != r1End)
+                left = r1->left;
         }
     }
 
@@ -2062,9 +2063,11 @@ REGION_AllocRgnWithHandle(INT nReg)
         }
     }
 
+    KeEnterCriticalRegion();
     Index = GDI_HANDLE_GET_INDEX(hReg);
     Entry = &GdiHandleTable->Entries[Index];
     Entry->UserData = AllocateObjectAttr();
+    KeLeaveCriticalRegion();
 
     EMPTY_REGION(pReg);
     pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
@@ -2081,22 +2084,26 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
   INT Index;
   PGDI_TABLE_ENTRY Entry;
   PROSRGNDATA pRgn;
-  PRGN_ATTR pRgn_Attr;
+  PRGN_ATTR pRgn_Attr;  
 
   pRgn = REGION_LockRgn(hRgn);
 
   if (pRgn)
   {
+     KeEnterCriticalRegion();
      Index = GDI_HANDLE_GET_INDEX(hRgn);
      Entry = &GdiHandleTable->Entries[Index];
-
      pRgn_Attr = Entry->UserData;
+     KeLeaveCriticalRegion();
 
      if (pRgn_Attr)
      {
         _SEH2_TRY
         {
-           if ( pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
+           ProbeForWrite(pRgn_Attr, sizeof(RGN_ATTR), 1);
+
+           if ( !(pRgn_Attr->AttrFlags & ATTR_CACHED) &&
+                 pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
            {
               switch (pRgn_Attr->Flags)
               {
@@ -2142,15 +2149,18 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
 
   if (pRgn)
   {
+     KeEnterCriticalRegion();
      Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
      Entry = &GdiHandleTable->Entries[Index];
-
      pRgn_Attr = Entry->UserData;
+     KeLeaveCriticalRegion();
 
-     _SEH2_TRY
+     if ( pRgn_Attr )
      {
-        if ( pRgn_Attr )
+        _SEH2_TRY
         {
+           ProbeForWrite(pRgn_Attr, sizeof(RGN_ATTR), 1);
+
            if ( pRgn_Attr->AttrFlags & ATTR_RGN_VALID )
            {
               pRgn_Attr->Flags = REGION_Complexity( pRgn );
@@ -2160,11 +2170,11 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
               pRgn_Attr->Rect.bottom = pRgn->rdh.rcBound.bottom;
            }
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+        }
+        _SEH2_END;
      }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-     }
-     _SEH2_END;
   }
   REGION_UnlockRgn(pRgn);
 }

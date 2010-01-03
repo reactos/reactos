@@ -750,7 +750,12 @@ GreDeleteObject(HGDIOBJ hObject)
              {
                 return TRUE;
              }
-             if (pAttr) FreeObjectAttr(pAttr);
+             if (pAttr)
+             {
+                KeEnterCriticalRegion();
+                FreeObjectAttr(pAttr);
+                KeLeaveCriticalRegion();
+             }
              break;
 
           case GDI_OBJECT_TYPE_DC:
