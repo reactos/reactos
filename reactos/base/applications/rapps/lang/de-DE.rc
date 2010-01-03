@@ -14,7 +14,7 @@ BEGIN
 		MENUITEM "&Deinstallieren",ID_UNINSTALL
 		MENUITEM "&Ändern",   ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Aktualisieren",  ID_REFRESH
 	END
@@ -50,23 +50,23 @@ END
 
 IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Settings"
+CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "General", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Save window position", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Update the list of accessible programs at start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
-	AUTOCHECKBOX "&Log of installation and removal of programs", IDC_LOG_ENABLED, 15, 46, 219, 12
+	GROUPBOX "Allgemein", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "Fensterposition &speichern", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "Beim Start Liste der verfügbaren Programme &aktualisieren", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "Hinzufügen und Entfernen von Programmen mit&loggen", IDC_LOG_ENABLED, 15, 46, 219, 12
 
-	GROUPBOX "Downloading", -1, 4, 65, 240, 51
-	LTEXT "Folder for downloadings:", -1, 16, 75, 100, 9
+	GROUPBOX "Download", -1, 4, 65, 240, 51
+	LTEXT "Ordner für Downloads:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&Choose", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Delete installers of programs after installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "&Wählen", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&Installer nach Programminstallation löschen", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "Default", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "Vorgabe", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 181, 124, 60, 14
+	PUSHBUTTON "Abbrechen", IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
