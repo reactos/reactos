@@ -1639,16 +1639,16 @@ static void verifySig(HCRYPTPROV csp, const BYTE *toSign, size_t toSignLen,
 
 /* Tests signing the certificate described by toBeSigned with the CSP passed in,
  * using the algorithm with OID sigOID.  The CSP is assumed to be empty, and a
- * keyset named AT_SIGNATURE will be added to it.  The signing key will be
- * stored in *key, and the signature will be stored in sig.  sigLen should be
- * at least 64 bytes.
+ * keyset named AT_SIGNATURE will be added to it.  The signature will be stored
+ * in sig.  sigLen should be at least 64 bytes.
  */
 static void testSignCert(HCRYPTPROV csp, const CRYPT_DATA_BLOB *toBeSigned,
- LPCSTR sigOID, HCRYPTKEY *key, BYTE *sig, DWORD *sigLen)
+ LPCSTR sigOID, BYTE *sig, DWORD *sigLen)
 {
     BOOL ret;
     DWORD size = 0;
     CRYPT_ALGORITHM_IDENTIFIER algoID = { NULL, { 0, NULL } };
+    HCRYPTKEY key;
 
     /* These all crash
     ret = CryptSignCertificate(0, 0, 0, NULL, 0, NULL, NULL, NULL, NULL);
@@ -1680,7 +1680,7 @@ static void testSignCert(HCRYPTPROV csp, const CRYPT_DATA_BLOB *toBeSigned,
     ok(!ret && (GetLastError() == NTE_BAD_KEYSET || GetLastError() ==
      NTE_NO_KEY), "Expected NTE_BAD_KEYSET or NTE_NO_KEY, got %08x\n",
      GetLastError());
-    ret = CryptGenKey(csp, AT_SIGNATURE, 0, key);
+    ret = CryptGenKey(csp, AT_SIGNATURE, 0, &key);
     ok(ret, "CryptGenKey failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -1700,6 +1700,7 @@ static void testSignCert(HCRYPTPROV csp, const CRYPT_DATA_BLOB *toBeSigned,
                  size);
             }
         }
+        CryptDestroyKey(key);
     }
 }
 
@@ -1809,7 +1810,6 @@ static void testCertSigs(void)
     HCRYPTPROV csp;
     CRYPT_DATA_BLOB toBeSigned = { sizeof(emptyCert), emptyCert };
     BOOL ret;
-    HCRYPTKEY key;
     BYTE sig[64];
     DWORD sigSize = sizeof(sig);
 
@@ -1820,10 +1820,9 @@ static void testCertSigs(void)
      CRYPT_NEWKEYSET);
     ok(ret, "CryptAcquireContext failed: %08x\n", GetLastError());
 
-    testSignCert(csp, &toBeSigned, szOID_RSA_SHA1RSA, &key, sig, &sigSize);
+    testSignCert(csp, &toBeSigned, szOID_RSA_SHA1RSA, sig, &sigSize);
     testVerifyCertSig(csp, &toBeSigned, szOID_RSA_SHA1RSA, sig, sigSize);
 
-    CryptDestroyKey(key);
     CryptReleaseContext(csp, 0);
     ret = pCryptAcquireContextA(&csp, cspNameA, MS_DEF_PROV_A, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
