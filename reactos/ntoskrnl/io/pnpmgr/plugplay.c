@@ -18,8 +18,8 @@
 
 typedef struct _PNP_EVENT_ENTRY
 {
-  LIST_ENTRY ListEntry;
-  PLUGPLAY_EVENT_BLOCK Event;
+    LIST_ENTRY ListEntry;
+    PLUGPLAY_EVENT_BLOCK Event;
 } PNP_EVENT_ENTRY, *PPNP_EVENT_ENTRY;
 
 
@@ -95,21 +95,21 @@ IopQueueTargetDeviceEvent(const GUID *Guid,
 static NTSTATUS
 IopRemovePlugPlayEvent(VOID)
 {
-  /* Remove a pnp event entry from the tail of the queue */
-  if (!IsListEmpty(&IopPnpEventQueueHead))
-  {
-    ExFreePool(RemoveTailList(&IopPnpEventQueueHead));
-  }
+    /* Remove a pnp event entry from the tail of the queue */
+    if (!IsListEmpty(&IopPnpEventQueueHead))
+    {
+        ExFreePool(RemoveTailList(&IopPnpEventQueueHead));
+    }
 
-  /* Signal the next pnp event in the queue */
-  if (!IsListEmpty(&IopPnpEventQueueHead))
-  {
-    KeSetEvent(&IopPnpNotifyEvent,
-               0,
-               FALSE);
-  }
+    /* Signal the next pnp event in the queue */
+    if (!IsListEmpty(&IopPnpEventQueueHead))
+    {
+        KeSetEvent(&IopPnpNotifyEvent,
+                   0,
+                   FALSE);
+    }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 static PDEVICE_OBJECT
@@ -148,8 +148,7 @@ IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance)
         return NULL;
 
     if (DeviceInstance == NULL ||
-        DeviceInstance->Length == 0
-        )
+        DeviceInstance->Length == 0)
     {
         if (IopRootDeviceNode->PhysicalDeviceObject)
         {
@@ -173,35 +172,39 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
     Name.Buffer = NULL;
     _SEH2_TRY
     {
-	Name.Length = SrcName->Length;
-	Name.MaximumLength = SrcName->MaximumLength;
-	if (Name.Length > Name.MaximumLength)
-	{
-	    Status = STATUS_INVALID_PARAMETER;
-	    _SEH2_LEAVE;
-	}
-	if (Name.MaximumLength)
-	{
-	    ProbeForRead(SrcName->Buffer,
-		         Name.MaximumLength,
-			 sizeof(WCHAR));
-	    Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
-	    if (Name.Buffer == NULL)
-	    {
-		Status = STATUS_INSUFFICIENT_RESOURCES;
-		_SEH2_LEAVE;
-	    }
-	    memcpy(Name.Buffer, SrcName->Buffer, Name.MaximumLength);
-	}
-	*DstName = Name;
+        Name.Length = SrcName->Length;
+        Name.MaximumLength = SrcName->MaximumLength;
+        if (Name.Length > Name.MaximumLength)
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            _SEH2_LEAVE;
+        }
+
+        if (Name.MaximumLength)
+        {
+            ProbeForRead(SrcName->Buffer,
+                         Name.MaximumLength,
+                         sizeof(WCHAR));
+            Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
+            if (Name.Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                _SEH2_LEAVE;
+            }
+
+            memcpy(Name.Buffer, SrcName->Buffer, Name.MaximumLength);
+        }
+
+        *DstName = Name;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if (Name.Buffer) ExFreePool(Name.Buffer);
+        if (Name.Buffer)
+            ExFreePool(Name.Buffer);
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
-    
+
     return Status;
 }
 
@@ -221,12 +224,12 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     Status = IopCaptureUnicodeString(&DeviceInstance, &PropertyData->DeviceInstance);
     if (!NT_SUCCESS(Status))
     {
-	return Status;
+        return Status;
     }
 
     _SEH2_TRY
     {
-	Property = PropertyData->Property;
+        Property = PropertyData->Property;
         BufferSize = PropertyData->BufferSize;
         ProbeForWrite(PropertyData->Buffer,
                       BufferSize,
@@ -238,7 +241,7 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    
+
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     ExFreePool(DeviceInstance.Buffer);
@@ -250,9 +253,8 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     Buffer = ExAllocatePool(NonPagedPool, BufferSize);
     if (Buffer == NULL)
     {
-	return STATUS_INSUFFICIENT_RESOURCES;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-
 
     Status = IoGetDeviceProperty(DeviceObject,
                                  Property,
@@ -264,17 +266,18 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
 
     if (NT_SUCCESS(Status))
     {
-	_SEH2_TRY
-	{
-	    memcpy(Buffer, PropertyData->Buffer, BufferSize);
-	    PropertyData->BufferSize = BufferSize;
-	}
-	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-	{
-	    Status = _SEH2_GetExceptionCode();
-	}
-	_SEH2_END;
+        _SEH2_TRY
+        {
+            memcpy(Buffer, PropertyData->Buffer, BufferSize);
+            PropertyData->BufferSize = BufferSize;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
+
     ExFreePool(Buffer);
     return Status;
 }
@@ -298,16 +301,16 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     Status = IopCaptureUnicodeString(&TargetDeviceInstance, &RelatedDeviceData->TargetDeviceInstance);
     if (!NT_SUCCESS(Status))
     {
-	return Status;
+        return Status;
     }
 
     _SEH2_TRY
     {
-	Relation = RelatedDeviceData->Relation;
-	MaximumLength = RelatedDeviceData->RelatedDeviceInstanceLength;
-	ProbeForWrite(RelatedDeviceData->RelatedDeviceInstance,
-	              MaximumLength,
-		      sizeof(WCHAR));
+        Relation = RelatedDeviceData->Relation;
+        MaximumLength = RelatedDeviceData->RelatedDeviceInstanceLength;
+        ProbeForWrite(RelatedDeviceData->RelatedDeviceInstance,
+                      MaximumLength,
+                      sizeof(WCHAR));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -323,13 +326,13 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
                               TRUE))
     {
         DeviceNode = IopRootDeviceNode;
-	ExFreePool(TargetDeviceInstance.Buffer);
+        ExFreePool(TargetDeviceInstance.Buffer);
     }
     else
     {
         /* Get the device object */
         DeviceObject = IopGetDeviceObjectFromDeviceInstance(&TargetDeviceInstance);
-	ExFreePool(TargetDeviceInstance.Buffer);
+        ExFreePool(TargetDeviceInstance.Buffer);
         if (DeviceObject == NULL)
             return STATUS_NO_SUCH_DEVICE;
 
@@ -424,12 +427,12 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 
     _SEH2_TRY
     {
-	Operation = StatusData->Operation;
-	if (Operation == PNP_SET_DEVICE_STATUS)
-	{
-	    DeviceStatus = StatusData->DeviceStatus;
-	    DeviceProblem = StatusData->DeviceProblem;
-	}
+        Operation = StatusData->Operation;
+        if (Operation == PNP_SET_DEVICE_STATUS)
+        {
+            DeviceStatus = StatusData->DeviceStatus;
+            DeviceProblem = StatusData->DeviceProblem;
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -469,16 +472,16 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 
     if (Operation == PNP_GET_DEVICE_STATUS)
     {
-	_SEH2_TRY
-	{
-	    StatusData->DeviceStatus = DeviceStatus;
-	    StatusData->DeviceProblem = DeviceProblem;
-	}
-	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-	{
-	    Status = _SEH2_GetExceptionCode();
-	}
-	_SEH2_END;
+        _SEH2_TRY
+        {
+            StatusData->DeviceStatus = DeviceStatus;
+            StatusData->DeviceProblem = DeviceProblem;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
 
     return Status;
@@ -499,7 +502,7 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
     Status = IopCaptureUnicodeString(&DeviceInstance, &DepthData->DeviceInstance);
     if (!NT_SUCCESS(Status))
     {
-	return Status;
+        return Status;
     }
 
     /* Get the device object */
@@ -512,7 +515,7 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
 
     _SEH2_TRY
     {
-	DepthData->Depth = DeviceNode->Level;
+        DepthData->Depth = DeviceNode->Level;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -630,59 +633,59 @@ NtGetPlugPlayEvent(IN ULONG Reserved1,
                    OUT PPLUGPLAY_EVENT_BLOCK Buffer,
                    IN ULONG BufferSize)
 {
-  PPNP_EVENT_ENTRY Entry;
-  NTSTATUS Status;
+    PPNP_EVENT_ENTRY Entry;
+    NTSTATUS Status;
 
-  DPRINT("NtGetPlugPlayEvent() called\n");
+    DPRINT("NtGetPlugPlayEvent() called\n");
 
-  /* Function can only be called from user-mode */
-  if (KeGetPreviousMode() == KernelMode)
-  {
-    DPRINT1("NtGetPlugPlayEvent cannot be called from kernel mode!\n");
-    return STATUS_ACCESS_DENIED;
-  }
+    /* Function can only be called from user-mode */
+    if (KeGetPreviousMode() == KernelMode)
+    {
+        DPRINT1("NtGetPlugPlayEvent cannot be called from kernel mode!\n");
+        return STATUS_ACCESS_DENIED;
+    }
 
-  /* Check for Tcb privilege */
-  if (!SeSinglePrivilegeCheck(SeTcbPrivilege,
-                              UserMode))
-  {
-    DPRINT1("NtGetPlugPlayEvent: Caller does not hold the SeTcbPrivilege privilege!\n");
-    return STATUS_PRIVILEGE_NOT_HELD;
-  }
+    /* Check for Tcb privilege */
+    if (!SeSinglePrivilegeCheck(SeTcbPrivilege,
+                                UserMode))
+    {
+        DPRINT1("NtGetPlugPlayEvent: Caller does not hold the SeTcbPrivilege privilege!\n");
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
 
-  /* Wait for a PnP event */
-  DPRINT("Waiting for pnp notification event\n");
-  Status = KeWaitForSingleObject(&IopPnpNotifyEvent,
-                                 UserRequest,
-                                 KernelMode,
-                                 FALSE,
-                                 NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("KeWaitForSingleObject() failed (Status %lx)\n", Status);
-    return Status;
-  }
+    /* Wait for a PnP event */
+    DPRINT("Waiting for pnp notification event\n");
+    Status = KeWaitForSingleObject(&IopPnpNotifyEvent,
+                                   UserRequest,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("KeWaitForSingleObject() failed (Status %lx)\n", Status);
+        return Status;
+    }
 
-  /* Get entry from the tail of the queue */
-  Entry = CONTAINING_RECORD(IopPnpEventQueueHead.Blink,
-                            PNP_EVENT_ENTRY,
-                            ListEntry);
+    /* Get entry from the tail of the queue */
+    Entry = CONTAINING_RECORD(IopPnpEventQueueHead.Blink,
+                              PNP_EVENT_ENTRY,
+                              ListEntry);
 
-  /* Check the buffer size */
-  if (BufferSize < Entry->Event.TotalSize)
-  {
-    DPRINT1("Buffer is too small for the pnp-event\n");
-    return STATUS_BUFFER_TOO_SMALL;
-  }
+    /* Check the buffer size */
+    if (BufferSize < Entry->Event.TotalSize)
+    {
+        DPRINT1("Buffer is too small for the pnp-event\n");
+        return STATUS_BUFFER_TOO_SMALL;
+    }
 
-  /* Copy event data to the user buffer */
-  memcpy(Buffer,
-         &Entry->Event,
-         Entry->Event.TotalSize);
+    /* Copy event data to the user buffer */
+    memcpy(Buffer,
+           &Entry->Event,
+           Entry->Event.TotalSize);
 
-  DPRINT("NtGetPlugPlayEvent() done\n");
+    DPRINT("NtGetPlugPlayEvent() done\n");
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /*
