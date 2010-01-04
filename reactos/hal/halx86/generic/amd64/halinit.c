@@ -121,9 +121,9 @@ HalInitSystem(IN ULONG BootPhase,
         HalQuerySystemInformation = HaliQuerySystemInformation;
         HalSetSystemInformation = HaliSetSystemInformation;
         HalInitPnpDriver = NULL; // FIXME: TODO
-//        HalGetDmaAdapter = HalpGetDmaAdapter;
+        HalGetDmaAdapter = HalpGetDmaAdapter;
         HalGetInterruptTranslator = NULL;  // FIXME: TODO
-//        HalResetDisplay = HalpBiosDisplayReset;
+        HalResetDisplay = HalpBiosDisplayReset;
 
         DPRINT1("HalInitSystem 4\n");
 
