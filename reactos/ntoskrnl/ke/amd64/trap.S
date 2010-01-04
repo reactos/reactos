@@ -33,6 +33,9 @@ _MsgUnexpectedInterrupt:
 _MsgInvalidOpcodeFault:
 .ascii "General protection fault at %p!\n\0"
 
+_MsgDoubleFault:
+.ascii "Double fault at %p, rbp=%p!\n\0"
+
 _MsgTrapInfo:
 .ascii "Trap: %s at %p\n\0"
 
@@ -430,20 +433,23 @@ KiDebugTrapOrFaultKMode:
     push 0
     .allocstack 0x8
 
-    /* Reserve stack space for parameters */
-    sub rsp, 0x28
-    .allocstack 0x28
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
+
+    lea rcx, _MsgDoubleFault[rip]
+    mov rdx, [rbp + KTRAP_FRAME_FaultAddress]
+    mov r8, rbp
+    call _FrLdrDbgPrint[rip]
 
     /* Bugcheck code UNEXPECTED_KERNEL_MODE_TRAP */
     mov rcx, 0x0000007F
     
     /* Set double fault parameters */
-    mov rdx, 0x00000008
+    mov rdx, 0x00000008 // EXCEPTION_DOUBLE_FAULT
     mov r8, 0
     mov r9, 0
-    mov qword ptr [rsp + 0x20], 0
-
-    call _KeBugCheckEx
+    mov [rbp + KTRAP_FRAME_P5], rbp // trap frame (HACKY)
+    push 0
+    call _KeBugCheckWithTf
 
     jmp $
 .endproc
@@ -773,8 +779,13 @@ PageFaultReturn:
 
 .proc KiUnexpectedInterrupt
     .pushframe 0
+    /* Push pseudo error code */
     push 0
     .allocstack 0x8
+
+    cli
+
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     lea rcx, _MsgUnexpectedInterrupt[rip]
     call _FrLdrDbgPrint[rip]
