@@ -17,7 +17,7 @@
 
 #define KERNEL_DEVICE_NAME      L"\\\\.\\wdmaud"
 extern HANDLE KernelHandle;
-DWORD OpenCount = 0;
+extern DWORD OpenCount;
 
 DWORD
 WINAPI
@@ -559,6 +559,7 @@ WriteFileEx_Committer2(
 
     return MMSYSERR_NOERROR;
 }
+
 
 
 MMRESULT
