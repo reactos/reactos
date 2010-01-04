@@ -2525,7 +2525,7 @@ REGION_SetRectRgn(
     }
     else
     {
-        DPRINT1("SetRectRgn NULL Count: %d \n", rgn->rdh.nCount);
+        DPRINT("SetRectRgn NULL Count: %d \n", rgn->rdh.nCount);
         EMPTY_REGION(rgn);
     }
 }
