@@ -24,7 +24,6 @@
 			<file>reboot.c</file>
 			<file>sysinfo.c</file>
 			<file>timer.c</file>
-			<file>x86bios.c</file>
 			<if property="ARCH" value="i386">
 				<file>bios.c</file>
 				<file>halinit.c</file>
@@ -37,6 +36,7 @@
 				</directory>
 			</if>
 			<if property="ARCH" value="amd64">
+				<file>x86bios.c</file>
 				<directory name="amd64">
 					<file>halinit.c</file>
 					<file>irq.s</file>
