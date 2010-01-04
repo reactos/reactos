@@ -112,6 +112,7 @@ extern "C" {
   _CRTIMP errno_t __cdecl wcscpy_s(wchar_t * Dest, size_t SizeInWords, const wchar_t * _Source);
 #endif
   _CRTIMP size_t __cdecl wcscspn(const wchar_t *_Str,const wchar_t *_Control);
+  _CRTIMP wchar_t *wcsncat(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
   _CRTIMP size_t __cdecl wcslen(const wchar_t *_Str);
   _CRTIMP _CRT_INSECURE_DEPRECATE(wcsnlen_s) size_t __cdecl wcsnlen(const wchar_t *_Src,size_t _MaxCount);
 #if __STDC_WANT_SECURE_LIB__
