@@ -2084,7 +2084,8 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
   INT Index;
   PGDI_TABLE_ENTRY Entry;
   PROSRGNDATA pRgn;
-  PRGN_ATTR pRgn_Attr;  
+  PRGN_ATTR pRgn_Attr;
+  BOOL Hit = FALSE;
 
   pRgn = REGION_LockRgn(hRgn);
 
@@ -2124,6 +2125,7 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+           Hit = TRUE;
         }
         _SEH2_END;
 
@@ -2146,6 +2148,7 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
   INT Index;
   PGDI_TABLE_ENTRY Entry;
   PRGN_ATTR pRgn_Attr;
+  BOOL Hit = FALSE;
 
   if (pRgn)
   {
@@ -2172,6 +2175,7 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+           Hit = TRUE;
         }
         _SEH2_END;
      }
@@ -2315,65 +2319,6 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
   return result;
 }
 
-
-// NtGdi Exported Functions
-INT
-APIENTRY
-NtGdiCombineRgn(HRGN  hDest,
-                HRGN  hSrc1,
-                HRGN  hSrc2,
-                INT  CombineMode)
-{
-  INT result = ERROR;
-  PROSRGNDATA destRgn, src1Rgn, src2Rgn = NULL;
-
-  if ( CombineMode > RGN_COPY && CombineMode < RGN_AND)
-  {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-     return ERROR;
-  }
-
-  destRgn = RGNOBJAPI_Lock(hDest, NULL);
-  if (!destRgn)
-  {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return ERROR;
-  }
-
-  src1Rgn = RGNOBJAPI_Lock(hSrc1, NULL);
-  if (!src1Rgn)
-  {
-     RGNOBJAPI_Unlock(destRgn);
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return ERROR;
-  }
-
-  if (hSrc2)
-     src2Rgn = RGNOBJAPI_Lock(hSrc2, NULL);
-
-  result = IntGdiCombineRgn( destRgn, src1Rgn, src2Rgn, CombineMode);
-
-  if (src2Rgn)
-     RGNOBJAPI_Unlock(src2Rgn);
-  RGNOBJAPI_Unlock(src1Rgn);
-  RGNOBJAPI_Unlock(destRgn);
-
-  return result;
-}
-
-HRGN
-APIENTRY
-NtGdiCreateEllipticRgn(
-    INT Left,
-    INT Top,
-    INT Right,
-    INT Bottom
-)
-{
-    return NtGdiCreateRoundRectRgn(Left, Top, Right, Bottom,
-                                   Right - Left, Bottom - Top);
-}
-
 PROSRGNDATA
 FASTCALL
 IntGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
@@ -2388,362 +2333,6 @@ IntGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
   pRgn = GDIOBJ_ShareLockObj(pRgn->BaseObject.hHmgr, GDI_OBJECT_TYPE_REGION);
 
   return pRgn;
-}
-
-
-HRGN APIENTRY
-NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
-{
-    PROSRGNDATA pRgn;
-    HRGN hRgn;
-
-    /* Allocate region data structure with space for 1 RECTL */
-    if (!(pRgn = REGION_AllocRgnWithHandle(1)))
-    {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return NULL;
-    }
-    hRgn = pRgn->BaseObject.hHmgr;
-
-    REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
-    RGNOBJAPI_Unlock(pRgn);
-
-    return hRgn;
-}
-
-
-HRGN
-APIENTRY
-NtGdiCreateRoundRectRgn(
-    INT left,
-    INT top,
-    INT right,
-    INT bottom,
-    INT ellipse_width,
-    INT ellipse_height
-)
-{
-    PROSRGNDATA obj;
-    HRGN hrgn;
-    int asq, bsq, d, xd, yd;
-    RECTL rect;
-
-    /* Make the dimensions sensible */
-
-    if (left > right)
-    {
-        INT tmp = left;
-        left = right;
-        right = tmp;
-    }
-    if (top > bottom)
-    {
-        INT tmp = top;
-        top = bottom;
-        bottom = tmp;
-    }
-
-    ellipse_width = abs(ellipse_width);
-    ellipse_height = abs(ellipse_height);
-
-    /* Check parameters */
-
-    if (ellipse_width > right-left) ellipse_width = right-left;
-    if (ellipse_height > bottom-top) ellipse_height = bottom-top;
-
-    /* Check if we can do a normal rectangle instead */
-
-    if ((ellipse_width < 2) || (ellipse_height < 2))
-        return NtGdiCreateRectRgn(left, top, right, bottom);
-
-    /* Create region */
-
-    d = (ellipse_height < 128) ? ((3 * ellipse_height) >> 2) : 64;
-    if (!(obj = REGION_AllocRgnWithHandle(d))) return 0;
-    hrgn = obj->BaseObject.hHmgr;
-
-    /* Ellipse algorithm, based on an article by K. Porter */
-    /* in DDJ Graphics Programming Column, 8/89 */
-
-    asq = ellipse_width * ellipse_width / 4;        /* a^2 */
-    bsq = ellipse_height * ellipse_height / 4;      /* b^2 */
-    d = bsq - asq * ellipse_height / 2 + asq / 4;   /* b^2 - a^2b + a^2/4 */
-    xd = 0;
-    yd = asq * ellipse_height;                      /* 2a^2b */
-
-    rect.left   = left + ellipse_width / 2;
-    rect.right  = right - ellipse_width / 2;
-
-    /* Loop to draw first half of quadrant */
-
-    while (xd < yd)
-    {
-        if (d > 0)  /* if nearest pixel is toward the center */
-        {
-            /* move toward center */
-            rect.top = top++;
-            rect.bottom = rect.top + 1;
-            REGION_UnionRectWithRgn(obj, &rect);
-            rect.top = --bottom;
-            rect.bottom = rect.top + 1;
-            REGION_UnionRectWithRgn(obj, &rect);
-            yd -= 2*asq;
-            d  -= yd;
-        }
-        rect.left--;        /* next horiz point */
-        rect.right++;
-        xd += 2*bsq;
-        d  += bsq + xd;
-    }
-    /* Loop to draw second half of quadrant */
-
-    d += (3 * (asq-bsq) / 2 - (xd+yd)) / 2;
-    while (yd >= 0)
-    {
-        /* next vertical point */
-        rect.top = top++;
-        rect.bottom = rect.top + 1;
-        REGION_UnionRectWithRgn(obj, &rect);
-        rect.top = --bottom;
-        rect.bottom = rect.top + 1;
-        REGION_UnionRectWithRgn(obj, &rect);
-        if (d < 0)   /* if nearest pixel is outside ellipse */
-        {
-            rect.left--;     /* move away from center */
-            rect.right++;
-            xd += 2*bsq;
-            d  += xd;
-        }
-        yd -= 2*asq;
-        d  += asq - yd;
-    }
-    /* Add the inside rectangle */
-
-    if (top <= bottom)
-    {
-        rect.top = top;
-        rect.bottom = bottom;
-        REGION_UnionRectWithRgn(obj, &rect);
-    }
-
-    RGNOBJAPI_Unlock(obj);
-    return hrgn;
-}
-
-BOOL
-APIENTRY
-NtGdiEqualRgn(
-    HRGN  hSrcRgn1,
-    HRGN  hSrcRgn2
-)
-{
-    PROSRGNDATA rgn1, rgn2;
-    PRECTL tRect1, tRect2;
-    ULONG i;
-    BOOL bRet = FALSE;
-
-    if ( !(rgn1 = RGNOBJAPI_Lock(hSrcRgn1, NULL)) )
-        return ERROR;
-
-    if ( !(rgn2 = RGNOBJAPI_Lock(hSrcRgn2, NULL)) )
-    {
-        RGNOBJAPI_Unlock(rgn1);
-        return ERROR;
-    }
-
-    if (rgn1->rdh.nCount != rgn2->rdh.nCount ||
-            rgn1->rdh.nCount == 0 ||
-            rgn1->rdh.rcBound.left   != rgn2->rdh.rcBound.left ||
-            rgn1->rdh.rcBound.right  != rgn2->rdh.rcBound.right ||
-            rgn1->rdh.rcBound.top    != rgn2->rdh.rcBound.top ||
-            rgn1->rdh.rcBound.bottom != rgn2->rdh.rcBound.bottom)
-        goto exit;
-
-    tRect1 = rgn1->Buffer;
-    tRect2 = rgn2->Buffer;
-
-    if (!tRect1 || !tRect2)
-        goto exit;
-
-    for (i=0; i < rgn1->rdh.nCount; i++)
-    {
-        if (tRect1[i].left   != tRect2[i].left ||
-                tRect1[i].right  != tRect2[i].right ||
-                tRect1[i].top    != tRect2[i].top ||
-                tRect1[i].bottom != tRect2[i].bottom)
-            goto exit;
-    }
-    bRet = TRUE;
-
-exit:
-    RGNOBJAPI_Unlock(rgn1);
-    RGNOBJAPI_Unlock(rgn2);
-    return bRet;
-}
-
-HRGN
-APIENTRY
-NtGdiExtCreateRegion(
-    OPTIONAL LPXFORM Xform,
-    DWORD Count,
-    LPRGNDATA RgnData
-)
-{
-    HRGN hRgn;
-    PROSRGNDATA Region;
-    DWORD nCount = 0;
-    DWORD iType = 0;
-    DWORD dwSize = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
-    MATRIX matrix;
-
-    DPRINT("NtGdiExtCreateRegion\n");
-    _SEH2_TRY
-    {
-        ProbeForRead(RgnData, Count, 1);
-        nCount = RgnData->rdh.nCount;
-        iType = RgnData->rdh.iType;
-        dwSize = RgnData->rdh.dwSize;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        return NULL;
-    }
-
-    /* Check parameters, but don't set last error here */
-    if (Count < sizeof(RGNDATAHEADER) + nCount * sizeof(RECT) ||
-        iType != RDH_RECTANGLES ||
-        dwSize != sizeof(RGNDATAHEADER))
-    {
-        return NULL;
-    }
-
-    Region = REGION_AllocRgnWithHandle(nCount);
-
-    if (Region == NULL)
-    {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-    hRgn = Region->BaseObject.hHmgr;
-
-    _SEH2_TRY
-    {
-        if (Xform)
-        {
-            ULONG ret;
-
-            /* Init the XFORMOBJ from the Xform struct */
-            Status = STATUS_INVALID_PARAMETER;
-            ret = XFORMOBJ_iSetXform((XFORMOBJ*)&matrix, (XFORML*)Xform);
-
-            /* Check for error, also no scale and shear allowed */
-            if (ret != DDI_ERROR && ret != GX_GENERAL)
-            {
-                /* Apply the coordinate transformation on the rects */
-                if (XFORMOBJ_bApplyXform((XFORMOBJ*)&matrix,
-                                         XF_LTOL,
-                                         nCount * 2,
-                                         RgnData->Buffer,
-                                         Region->Buffer))
-                {
-                    Status = STATUS_SUCCESS;
-                }
-            }
-        }
-        else
-        {
-            /* Copy rect coordinates */
-            RtlCopyMemory(Region->Buffer,
-                          RgnData->Buffer,
-                          nCount * sizeof(RECT));
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        RGNOBJAPI_Unlock(Region);
-        GreDeleteObject(hRgn);
-        return NULL;
-    }
-
-    RGNOBJAPI_Unlock(Region);
-
-    return hRgn;
-}
-
-BOOL
-APIENTRY
-NtGdiFillRgn(
-    HDC hDC,
-    HRGN hRgn,
-    HBRUSH hBrush
-)
-{
-    HBRUSH oldhBrush;
-    PROSRGNDATA rgn;
-    PRECTL r;
-
-    if (NULL == (rgn = RGNOBJAPI_Lock(hRgn, NULL)))
-    {
-        return FALSE;
-    }
-
-    if (NULL == (oldhBrush = NtGdiSelectBrush(hDC, hBrush)))
-    {
-        RGNOBJAPI_Unlock(rgn);
-        return FALSE;
-    }
-
-    for (r = rgn->Buffer; r < rgn->Buffer + rgn->rdh.nCount; r++)
-    {
-        NtGdiPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
-    }
-
-    RGNOBJAPI_Unlock(rgn);
-    NtGdiSelectBrush(hDC, oldhBrush);
-
-    return TRUE;
-}
-
-BOOL
-APIENTRY
-NtGdiFrameRgn(
-    HDC hDC,
-    HRGN hRgn,
-    HBRUSH hBrush,
-    INT Width,
-    INT Height
-)
-{
-    HRGN FrameRgn;
-    BOOL Ret;
-
-    if (!(FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
-    {
-        return FALSE;
-    }
-    if (!REGION_CreateFrameRgn(FrameRgn, hRgn, Width, Height))
-    {
-        GreDeleteObject(FrameRgn);
-        return FALSE;
-    }
-
-    Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
-
-    GreDeleteObject(FrameRgn);
-    return Ret;
 }
 
 INT FASTCALL
@@ -2764,85 +2353,6 @@ REGION_GetRgnBox(
     return 0; //if invalid region return zero
 }
 
-
-/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
-
-   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
-
-   The intersection of the clip with the meta region is not Rao it's API!
-   Go back and read 7.2 Clipping pages 418-19:
-   Rao = API & Vis:
-   1) The Rao region is the intersection of the API region and the system region,
-      named after the Microsoft engineer who initially proposed it.
-   2) The Rao region can be calculated from the API region and the system region.
-
-   API:
-      API region is the intersection of the meta region and the clipping region,
-      clearly named after the fact that it is controlled by GDI API calls.
-*/
-INT APIENTRY
-NtGdiGetRandomRgn(
-    HDC hDC,
-    HRGN hDest,
-    INT iCode
-)
-{
-    INT ret = 0;
-    PDC pDC;
-    HRGN hSrc = NULL;
-    POINT org;
-
-    pDC = DC_LockDc(hDC);
-    if (pDC == NULL)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return -1;
-    }
-
-    switch (iCode)
-    {
-    case CLIPRGN:
-        hSrc = pDC->rosdc.hClipRgn;
-//        if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
-        break;
-    case METARGN:
-        if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
-        break;
-    case APIRGN:
-        hSrc = pDC->rosdc.hClipRgn;
-//        if (pDC->prgnAPI) hSrc = ((PROSRGNDATA)pDC->prgnAPI)->BaseObject.hHmgr;
-//        else if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
-//        else if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
-        break;
-    case SYSRGN:
-        hSrc = pDC->rosdc.hVisRgn;
-//        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
-        break;
-    default:
-        hSrc = 0;
-    }
-    if (hSrc)
-    {
-        if (NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
-        {
-            ret = -1;
-        }
-        else
-        {
-            ret = 1;
-        }
-    }
-    if (iCode == SYSRGN)
-    {
-        IntGdiGetDCOrg(pDC, &org);
-        NtGdiOffsetRgn(hDest, org.x, org.y );
-    }
-
-    DC_UnlockDc(pDC);
-
-    return ret;
-}
-
 INT APIENTRY
 IntGdiGetRgnBox(
     HRGN hRgn,
@@ -2860,129 +2370,6 @@ IntGdiGetRgnBox(
     ret = REGION_GetRgnBox(Rgn, pRect);
     RGNOBJAPI_Unlock(Rgn);
 
-    return ret;
-}
-
-
-INT APIENTRY
-NtGdiGetRgnBox(
-    HRGN hRgn,
-    PRECTL pRect
-)
-{
-    PROSRGNDATA  Rgn;
-    RECTL SafeRect;
-    DWORD ret;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (!(Rgn = RGNOBJAPI_Lock(hRgn, NULL)))
-    {
-        return ERROR;
-    }
-
-    ret = REGION_GetRgnBox(Rgn, &SafeRect);
-    RGNOBJAPI_Unlock(Rgn);
-    if (ERROR == ret)
-    {
-        return ret;
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForWrite(pRect, sizeof(RECT), 1);
-        *pRect = SafeRect;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-    if (!NT_SUCCESS(Status))
-    {
-        return ERROR;
-    }
-
-    return ret;
-}
-
-BOOL
-APIENTRY
-NtGdiInvertRgn(
-    HDC hDC,
-    HRGN hRgn
-)
-{
-    PROSRGNDATA RgnData;
-    ULONG i;
-    PRECTL rc;
-
-    if (!(RgnData = RGNOBJAPI_Lock(hRgn, NULL)))
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    rc = RgnData->Buffer;
-    for (i = 0; i < RgnData->rdh.nCount; i++)
-    {
-
-        if (!NtGdiPatBlt(hDC, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, DSTINVERT))
-        {
-            RGNOBJAPI_Unlock(RgnData);
-            return FALSE;
-        }
-        rc++;
-    }
-
-    RGNOBJAPI_Unlock(RgnData);
-    return TRUE;
-}
-
-INT
-APIENTRY
-NtGdiOffsetRgn(
-    HRGN hRgn,
-    INT XOffset,
-    INT YOffset
-)
-{
-    PROSRGNDATA rgn = RGNOBJAPI_Lock(hRgn, NULL);
-    INT ret;
-
-    DPRINT("NtGdiOffsetRgn: hRgn %d Xoffs %d Yoffs %d rgn %x\n", hRgn, XOffset, YOffset, rgn );
-
-    if (!rgn)
-    {
-        DPRINT("NtGdiOffsetRgn: hRgn error\n");
-        return ERROR;
-    }
-
-    if (XOffset || YOffset)
-    {
-        int nbox = rgn->rdh.nCount;
-        PRECTL pbox = rgn->Buffer;
-
-        if (nbox && pbox)
-        {
-            while (nbox--)
-            {
-                pbox->left += XOffset;
-                pbox->right += XOffset;
-                pbox->top += YOffset;
-                pbox->bottom += YOffset;
-                pbox++;
-            }
-            if (rgn->Buffer != &rgn->rdh.rcBound)
-            {
-                rgn->rdh.rcBound.left += XOffset;
-                rgn->rdh.rcBound.right += XOffset;
-                rgn->rdh.rcBound.top += YOffset;
-                rgn->rdh.rcBound.bottom += YOffset;
-            }
-        }
-    }
-    ret = REGION_Complexity(rgn);
-    RGNOBJAPI_Unlock(rgn);
     return ret;
 }
 
@@ -3049,38 +2436,6 @@ IntGdiPaintRgn(
 }
 
 BOOL
-APIENTRY
-NtGdiPtInRegion(
-    HRGN hRgn,
-    INT X,
-    INT Y
-)
-{
-    PROSRGNDATA rgn;
-    ULONG i;
-    PRECTL r;
-
-    if (!(rgn = RGNOBJAPI_Lock(hRgn, NULL) ) )
-        return FALSE;
-
-    if (rgn->rdh.nCount > 0 && INRECT(rgn->rdh.rcBound, X, Y))
-    {
-        r =  rgn->Buffer;
-        for (i = 0; i < rgn->rdh.nCount; i++)
-        {
-            if (INRECT(*r, X, Y))
-            {
-                RGNOBJAPI_Unlock(rgn);
-                return TRUE;
-            }
-            r++;
-        }
-    }
-    RGNOBJAPI_Unlock(rgn);
-    return FALSE;
-}
-
-BOOL
 FASTCALL
 REGION_RectInRegion(
     PROSRGNDATA Rgn,
@@ -3132,47 +2487,6 @@ REGION_RectInRegion(
     return FALSE;
 }
 
-BOOL
-APIENTRY
-NtGdiRectInRegion(
-    HRGN  hRgn,
-    LPRECTL unsaferc
-)
-{
-    PROSRGNDATA Rgn;
-    RECTL rc = {0};
-    BOOL Ret;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (!(Rgn = RGNOBJAPI_Lock(hRgn, NULL)))
-    {
-        return ERROR;
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForRead(unsaferc, sizeof(RECT), 1);
-        rc = *unsaferc;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        RGNOBJAPI_Unlock(Rgn);
-        SetLastNtError(Status);
-        DPRINT1("NtGdiRectInRegion: bogus rc\n");
-        return ERROR;
-    }
-
-    Ret = REGION_RectInRegion(Rgn, &rc);
-    RGNOBJAPI_Unlock(Rgn);
-    return Ret;
-}
-
 VOID
 FASTCALL
 REGION_SetRectRgn(
@@ -3210,128 +2524,11 @@ REGION_SetRectRgn(
         rgn->rdh.iType = RDH_RECTANGLES;
     }
     else
+    {
+        DPRINT1("SetRectRgn NULL Count: %d \n", rgn->rdh.nCount);
         EMPTY_REGION(rgn);
+    }
 }
-
-BOOL
-APIENTRY
-NtGdiSetRectRgn(
-    HRGN hRgn,
-    INT LeftRect,
-    INT TopRect,
-    INT RightRect,
-    INT BottomRect
-)
-{
-    PROSRGNDATA rgn;
-
-    if ( !(rgn = RGNOBJAPI_Lock(hRgn, NULL)) )
-    {
-        return 0; //per documentation
-    }
-
-    REGION_SetRectRgn(rgn, LeftRect, TopRect, RightRect, BottomRect);
-
-    RGNOBJAPI_Unlock(rgn);
-    return TRUE;
-}
-
-HRGN APIENTRY
-NtGdiUnionRectWithRgn(
-    HRGN hDest,
-    const RECTL *UnsafeRect
-)
-{
-    RECTL SafeRect = {0};
-    PROSRGNDATA Rgn;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (!(Rgn = RGNOBJAPI_Lock(hDest, NULL)))
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return NULL;
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForRead(UnsafeRect, sizeof(RECT), 1);
-        SafeRect = *UnsafeRect;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (! NT_SUCCESS(Status))
-    {
-        RGNOBJAPI_Unlock(Rgn);
-        SetLastNtError(Status);
-        return NULL;
-    }
-
-    REGION_UnionRectWithRgn(Rgn, &SafeRect);
-    RGNOBJAPI_Unlock(Rgn);
-    return hDest;
-}
-
-/*!
- * MSDN: GetRegionData, Return Values:
- *
- * "If the function succeeds and dwCount specifies an adequate number of bytes,
- * the return value is always dwCount. If dwCount is too small or the function
- * fails, the return value is 0. If lpRgnData is NULL, the return value is the
- * required number of bytes.
- *
- * If the function fails, the return value is zero."
- */
-DWORD APIENTRY
-NtGdiGetRegionData(
-    HRGN hrgn,
-    DWORD count,
-    LPRGNDATA rgndata
-)
-{
-    DWORD size;
-    PROSRGNDATA obj = RGNOBJAPI_Lock(hrgn, NULL);
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (!obj)
-        return 0;
-
-    size = obj->rdh.nCount * sizeof(RECT);
-    if (count < (size + sizeof(RGNDATAHEADER)) || rgndata == NULL)
-    {
-        RGNOBJAPI_Unlock(obj);
-        if (rgndata) /* buffer is too small, signal it by return 0 */
-            return 0;
-        else         /* user requested buffer size with rgndata NULL */
-            return size + sizeof(RGNDATAHEADER);
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForWrite(rgndata, count, 1);
-        RtlCopyMemory(rgndata, &obj->rdh, sizeof(RGNDATAHEADER));
-        RtlCopyMemory(rgndata->Buffer, obj->Buffer, size);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        RGNOBJAPI_Unlock(obj);
-        return 0;
-    }
-
-    RGNOBJAPI_Unlock(obj);
-    return size + sizeof(RGNDATAHEADER);
-}
-
 
 /***********************************************************************
  *     REGION_InsertEdgeInET
@@ -3965,6 +3162,813 @@ IntCreatePolyPolygonRgn(
     ExFreePoolWithTag(pETEs, TAG_REGION);
     RGNOBJAPI_Unlock(region);
     return hrgn;
+}
+
+//
+// NtGdi Exported Functions
+//
+INT
+APIENTRY
+NtGdiCombineRgn(HRGN  hDest,
+                HRGN  hSrc1,
+                HRGN  hSrc2,
+                INT  CombineMode)
+{
+  INT result = ERROR;
+  PROSRGNDATA destRgn, src1Rgn, src2Rgn = NULL;
+
+  if ( CombineMode > RGN_COPY && CombineMode < RGN_AND)
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return ERROR;
+  }
+
+  destRgn = RGNOBJAPI_Lock(hDest, NULL);
+  if (!destRgn)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return ERROR;
+  }
+
+  src1Rgn = RGNOBJAPI_Lock(hSrc1, NULL);
+  if (!src1Rgn)
+  {
+     RGNOBJAPI_Unlock(destRgn);
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return ERROR;
+  }
+
+  if (hSrc2)
+     src2Rgn = RGNOBJAPI_Lock(hSrc2, NULL);
+
+  result = IntGdiCombineRgn( destRgn, src1Rgn, src2Rgn, CombineMode);
+
+  if (src2Rgn)
+     RGNOBJAPI_Unlock(src2Rgn);
+  RGNOBJAPI_Unlock(src1Rgn);
+  RGNOBJAPI_Unlock(destRgn);
+
+  return result;
+}
+
+HRGN
+APIENTRY
+NtGdiCreateEllipticRgn(
+    INT Left,
+    INT Top,
+    INT Right,
+    INT Bottom
+)
+{
+    return NtGdiCreateRoundRectRgn(Left, Top, Right, Bottom,
+                                   Right - Left, Bottom - Top);
+}
+
+HRGN APIENTRY
+NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
+{
+    PROSRGNDATA pRgn;
+    HRGN hRgn;
+
+    /* Allocate region data structure with space for 1 RECTL */
+    if (!(pRgn = REGION_AllocRgnWithHandle(1)))
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+    hRgn = pRgn->BaseObject.hHmgr;
+
+    REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
+    RGNOBJAPI_Unlock(pRgn);
+
+    return hRgn;
+}
+
+HRGN
+APIENTRY
+NtGdiCreateRoundRectRgn(
+    INT left,
+    INT top,
+    INT right,
+    INT bottom,
+    INT ellipse_width,
+    INT ellipse_height
+)
+{
+    PROSRGNDATA obj;
+    HRGN hrgn;
+    int asq, bsq, d, xd, yd;
+    RECTL rect;
+
+    /* Make the dimensions sensible */
+
+    if (left > right)
+    {
+        INT tmp = left;
+        left = right;
+        right = tmp;
+    }
+    if (top > bottom)
+    {
+        INT tmp = top;
+        top = bottom;
+        bottom = tmp;
+    }
+
+    ellipse_width = abs(ellipse_width);
+    ellipse_height = abs(ellipse_height);
+
+    /* Check parameters */
+
+    if (ellipse_width > right-left) ellipse_width = right-left;
+    if (ellipse_height > bottom-top) ellipse_height = bottom-top;
+
+    /* Check if we can do a normal rectangle instead */
+
+    if ((ellipse_width < 2) || (ellipse_height < 2))
+        return NtGdiCreateRectRgn(left, top, right, bottom);
+
+    /* Create region */
+
+    d = (ellipse_height < 128) ? ((3 * ellipse_height) >> 2) : 64;
+    if (!(obj = REGION_AllocRgnWithHandle(d))) return 0;
+    hrgn = obj->BaseObject.hHmgr;
+
+    /* Ellipse algorithm, based on an article by K. Porter */
+    /* in DDJ Graphics Programming Column, 8/89 */
+
+    asq = ellipse_width * ellipse_width / 4;        /* a^2 */
+    bsq = ellipse_height * ellipse_height / 4;      /* b^2 */
+    d = bsq - asq * ellipse_height / 2 + asq / 4;   /* b^2 - a^2b + a^2/4 */
+    xd = 0;
+    yd = asq * ellipse_height;                      /* 2a^2b */
+
+    rect.left   = left + ellipse_width / 2;
+    rect.right  = right - ellipse_width / 2;
+
+    /* Loop to draw first half of quadrant */
+
+    while (xd < yd)
+    {
+        if (d > 0)  /* if nearest pixel is toward the center */
+        {
+            /* move toward center */
+            rect.top = top++;
+            rect.bottom = rect.top + 1;
+            REGION_UnionRectWithRgn(obj, &rect);
+            rect.top = --bottom;
+            rect.bottom = rect.top + 1;
+            REGION_UnionRectWithRgn(obj, &rect);
+            yd -= 2*asq;
+            d  -= yd;
+        }
+        rect.left--;        /* next horiz point */
+        rect.right++;
+        xd += 2*bsq;
+        d  += bsq + xd;
+    }
+    /* Loop to draw second half of quadrant */
+
+    d += (3 * (asq-bsq) / 2 - (xd+yd)) / 2;
+    while (yd >= 0)
+    {
+        /* next vertical point */
+        rect.top = top++;
+        rect.bottom = rect.top + 1;
+        REGION_UnionRectWithRgn(obj, &rect);
+        rect.top = --bottom;
+        rect.bottom = rect.top + 1;
+        REGION_UnionRectWithRgn(obj, &rect);
+        if (d < 0)   /* if nearest pixel is outside ellipse */
+        {
+            rect.left--;     /* move away from center */
+            rect.right++;
+            xd += 2*bsq;
+            d  += xd;
+        }
+        yd -= 2*asq;
+        d  += asq - yd;
+    }
+    /* Add the inside rectangle */
+
+    if (top <= bottom)
+    {
+        rect.top = top;
+        rect.bottom = bottom;
+        REGION_UnionRectWithRgn(obj, &rect);
+    }
+
+    RGNOBJAPI_Unlock(obj);
+    return hrgn;
+}
+
+BOOL
+APIENTRY
+NtGdiEqualRgn(
+    HRGN  hSrcRgn1,
+    HRGN  hSrcRgn2
+)
+{
+    PROSRGNDATA rgn1, rgn2;
+    PRECTL tRect1, tRect2;
+    ULONG i;
+    BOOL bRet = FALSE;
+
+    if ( !(rgn1 = RGNOBJAPI_Lock(hSrcRgn1, NULL)) )
+        return ERROR;
+
+    if ( !(rgn2 = RGNOBJAPI_Lock(hSrcRgn2, NULL)) )
+    {
+        RGNOBJAPI_Unlock(rgn1);
+        return ERROR;
+    }
+
+    if (rgn1->rdh.nCount != rgn2->rdh.nCount ||
+            rgn1->rdh.nCount == 0 ||
+            rgn1->rdh.rcBound.left   != rgn2->rdh.rcBound.left ||
+            rgn1->rdh.rcBound.right  != rgn2->rdh.rcBound.right ||
+            rgn1->rdh.rcBound.top    != rgn2->rdh.rcBound.top ||
+            rgn1->rdh.rcBound.bottom != rgn2->rdh.rcBound.bottom)
+        goto exit;
+
+    tRect1 = rgn1->Buffer;
+    tRect2 = rgn2->Buffer;
+
+    if (!tRect1 || !tRect2)
+        goto exit;
+
+    for (i=0; i < rgn1->rdh.nCount; i++)
+    {
+        if (tRect1[i].left   != tRect2[i].left ||
+                tRect1[i].right  != tRect2[i].right ||
+                tRect1[i].top    != tRect2[i].top ||
+                tRect1[i].bottom != tRect2[i].bottom)
+            goto exit;
+    }
+    bRet = TRUE;
+
+exit:
+    RGNOBJAPI_Unlock(rgn1);
+    RGNOBJAPI_Unlock(rgn2);
+    return bRet;
+}
+
+HRGN
+APIENTRY
+NtGdiExtCreateRegion(
+    OPTIONAL LPXFORM Xform,
+    DWORD Count,
+    LPRGNDATA RgnData
+)
+{
+    HRGN hRgn;
+    PROSRGNDATA Region;
+    DWORD nCount = 0;
+    DWORD iType = 0;
+    DWORD dwSize = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+    MATRIX matrix;
+
+    DPRINT("NtGdiExtCreateRegion\n");
+    _SEH2_TRY
+    {
+        ProbeForRead(RgnData, Count, 1);
+        nCount = RgnData->rdh.nCount;
+        iType = RgnData->rdh.iType;
+        dwSize = RgnData->rdh.dwSize;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return NULL;
+    }
+
+    /* Check parameters, but don't set last error here */
+    if (Count < sizeof(RGNDATAHEADER) + nCount * sizeof(RECT) ||
+        iType != RDH_RECTANGLES ||
+        dwSize != sizeof(RGNDATAHEADER))
+    {
+        return NULL;
+    }
+
+    Region = REGION_AllocRgnWithHandle(nCount);
+
+    if (Region == NULL)
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    hRgn = Region->BaseObject.hHmgr;
+
+    _SEH2_TRY
+    {
+        if (Xform)
+        {
+            ULONG ret;
+
+            /* Init the XFORMOBJ from the Xform struct */
+            Status = STATUS_INVALID_PARAMETER;
+            ret = XFORMOBJ_iSetXform((XFORMOBJ*)&matrix, (XFORML*)Xform);
+
+            /* Check for error, also no scale and shear allowed */
+            if (ret != DDI_ERROR && ret != GX_GENERAL)
+            {
+                /* Apply the coordinate transformation on the rects */
+                if (XFORMOBJ_bApplyXform((XFORMOBJ*)&matrix,
+                                         XF_LTOL,
+                                         nCount * 2,
+                                         RgnData->Buffer,
+                                         Region->Buffer))
+                {
+                    Status = STATUS_SUCCESS;
+                }
+            }
+        }
+        else
+        {
+            /* Copy rect coordinates */
+            RtlCopyMemory(Region->Buffer,
+                          RgnData->Buffer,
+                          nCount * sizeof(RECT));
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        RGNOBJAPI_Unlock(Region);
+        GreDeleteObject(hRgn);
+        return NULL;
+    }
+
+    RGNOBJAPI_Unlock(Region);
+
+    return hRgn;
+}
+
+BOOL
+APIENTRY
+NtGdiFillRgn(
+    HDC hDC,
+    HRGN hRgn,
+    HBRUSH hBrush
+)
+{
+    HBRUSH oldhBrush;
+    PROSRGNDATA rgn;
+    PRECTL r;
+
+    if (NULL == (rgn = RGNOBJAPI_Lock(hRgn, NULL)))
+    {
+        return FALSE;
+    }
+
+    if (NULL == (oldhBrush = NtGdiSelectBrush(hDC, hBrush)))
+    {
+        RGNOBJAPI_Unlock(rgn);
+        return FALSE;
+    }
+
+    for (r = rgn->Buffer; r < rgn->Buffer + rgn->rdh.nCount; r++)
+    {
+        NtGdiPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
+    }
+
+    RGNOBJAPI_Unlock(rgn);
+    NtGdiSelectBrush(hDC, oldhBrush);
+
+    return TRUE;
+}
+
+BOOL
+APIENTRY
+NtGdiFrameRgn(
+    HDC hDC,
+    HRGN hRgn,
+    HBRUSH hBrush,
+    INT Width,
+    INT Height
+)
+{
+    HRGN FrameRgn;
+    BOOL Ret;
+
+    if (!(FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
+    {
+        return FALSE;
+    }
+    if (!REGION_CreateFrameRgn(FrameRgn, hRgn, Width, Height))
+    {
+        GreDeleteObject(FrameRgn);
+        return FALSE;
+    }
+
+    Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
+
+    GreDeleteObject(FrameRgn);
+    return Ret;
+}
+
+
+/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
+
+   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
+
+   The intersection of the clip with the meta region is not Rao it's API!
+   Go back and read 7.2 Clipping pages 418-19:
+   Rao = API & Vis:
+   1) The Rao region is the intersection of the API region and the system region,
+      named after the Microsoft engineer who initially proposed it.
+   2) The Rao region can be calculated from the API region and the system region.
+
+   API:
+      API region is the intersection of the meta region and the clipping region,
+      clearly named after the fact that it is controlled by GDI API calls.
+*/
+INT APIENTRY
+NtGdiGetRandomRgn(
+    HDC hDC,
+    HRGN hDest,
+    INT iCode
+)
+{
+    INT ret = 0;
+    PDC pDC;
+    HRGN hSrc = NULL;
+    POINT org;
+
+    pDC = DC_LockDc(hDC);
+    if (pDC == NULL)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return -1;
+    }
+
+    switch (iCode)
+    {
+    case CLIPRGN:
+        hSrc = pDC->rosdc.hClipRgn;
+//        if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
+        break;
+    case METARGN:
+        if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
+        break;
+    case APIRGN:
+        hSrc = pDC->rosdc.hClipRgn;
+//        if (pDC->prgnAPI) hSrc = ((PROSRGNDATA)pDC->prgnAPI)->BaseObject.hHmgr;
+//        else if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
+//        else if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
+        break;
+    case SYSRGN:
+        hSrc = pDC->rosdc.hVisRgn;
+//        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
+        break;
+    default:
+        hSrc = 0;
+    }
+    if (hSrc)
+    {
+        if (NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
+        {
+            ret = -1;
+        }
+        else
+        {
+            ret = 1;
+        }
+    }
+    if (iCode == SYSRGN)
+    {
+        IntGdiGetDCOrg(pDC, &org);
+        NtGdiOffsetRgn(hDest, org.x, org.y );
+    }
+
+    DC_UnlockDc(pDC);
+
+    return ret;
+}
+
+INT APIENTRY
+NtGdiGetRgnBox(
+    HRGN hRgn,
+    PRECTL pRect
+)
+{
+    PROSRGNDATA  Rgn;
+    RECTL SafeRect;
+    DWORD ret;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!(Rgn = RGNOBJAPI_Lock(hRgn, NULL)))
+    {
+        return ERROR;
+    }
+
+    ret = REGION_GetRgnBox(Rgn, &SafeRect);
+    RGNOBJAPI_Unlock(Rgn);
+    if (ERROR == ret)
+    {
+        return ret;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(pRect, sizeof(RECT), 1);
+        *pRect = SafeRect;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    if (!NT_SUCCESS(Status))
+    {
+        return ERROR;
+    }
+
+    return ret;
+}
+
+BOOL
+APIENTRY
+NtGdiInvertRgn(
+    HDC hDC,
+    HRGN hRgn
+)
+{
+    PROSRGNDATA RgnData;
+    ULONG i;
+    PRECTL rc;
+
+    if (!(RgnData = RGNOBJAPI_Lock(hRgn, NULL)))
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    rc = RgnData->Buffer;
+    for (i = 0; i < RgnData->rdh.nCount; i++)
+    {
+
+        if (!NtGdiPatBlt(hDC, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, DSTINVERT))
+        {
+            RGNOBJAPI_Unlock(RgnData);
+            return FALSE;
+        }
+        rc++;
+    }
+
+    RGNOBJAPI_Unlock(RgnData);
+    return TRUE;
+}
+
+INT
+APIENTRY
+NtGdiOffsetRgn(
+    HRGN hRgn,
+    INT XOffset,
+    INT YOffset
+)
+{
+    PROSRGNDATA rgn = RGNOBJAPI_Lock(hRgn, NULL);
+    INT ret;
+
+    DPRINT("NtGdiOffsetRgn: hRgn %d Xoffs %d Yoffs %d rgn %x\n", hRgn, XOffset, YOffset, rgn );
+
+    if (!rgn)
+    {
+        DPRINT("NtGdiOffsetRgn: hRgn error\n");
+        return ERROR;
+    }
+
+    if (XOffset || YOffset)
+    {
+        int nbox = rgn->rdh.nCount;
+        PRECTL pbox = rgn->Buffer;
+
+        if (nbox && pbox)
+        {
+            while (nbox--)
+            {
+                pbox->left += XOffset;
+                pbox->right += XOffset;
+                pbox->top += YOffset;
+                pbox->bottom += YOffset;
+                pbox++;
+            }
+            if (rgn->Buffer != &rgn->rdh.rcBound)
+            {
+                rgn->rdh.rcBound.left += XOffset;
+                rgn->rdh.rcBound.right += XOffset;
+                rgn->rdh.rcBound.top += YOffset;
+                rgn->rdh.rcBound.bottom += YOffset;
+            }
+        }
+    }
+    ret = REGION_Complexity(rgn);
+    RGNOBJAPI_Unlock(rgn);
+    return ret;
+}
+
+BOOL
+APIENTRY
+NtGdiPtInRegion(
+    HRGN hRgn,
+    INT X,
+    INT Y
+)
+{
+    PROSRGNDATA rgn;
+    ULONG i;
+    PRECTL r;
+
+    if (!(rgn = RGNOBJAPI_Lock(hRgn, NULL) ) )
+        return FALSE;
+
+    if (rgn->rdh.nCount > 0 && INRECT(rgn->rdh.rcBound, X, Y))
+    {
+        r =  rgn->Buffer;
+        for (i = 0; i < rgn->rdh.nCount; i++)
+        {
+            if (INRECT(*r, X, Y))
+            {
+                RGNOBJAPI_Unlock(rgn);
+                return TRUE;
+            }
+            r++;
+        }
+    }
+    RGNOBJAPI_Unlock(rgn);
+    return FALSE;
+}
+
+BOOL
+APIENTRY
+NtGdiRectInRegion(
+    HRGN  hRgn,
+    LPRECTL unsaferc
+)
+{
+    PROSRGNDATA Rgn;
+    RECTL rc = {0};
+    BOOL Ret;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!(Rgn = RGNOBJAPI_Lock(hRgn, NULL)))
+    {
+        return ERROR;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForRead(unsaferc, sizeof(RECT), 1);
+        rc = *unsaferc;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        RGNOBJAPI_Unlock(Rgn);
+        SetLastNtError(Status);
+        DPRINT1("NtGdiRectInRegion: bogus rc\n");
+        return ERROR;
+    }
+
+    Ret = REGION_RectInRegion(Rgn, &rc);
+    RGNOBJAPI_Unlock(Rgn);
+    return Ret;
+}
+
+BOOL
+APIENTRY
+NtGdiSetRectRgn(
+    HRGN hRgn,
+    INT LeftRect,
+    INT TopRect,
+    INT RightRect,
+    INT BottomRect
+)
+{
+    PROSRGNDATA rgn;
+
+    if ( !(rgn = RGNOBJAPI_Lock(hRgn, NULL)) )
+    {
+        return 0; //per documentation
+    }
+
+    REGION_SetRectRgn(rgn, LeftRect, TopRect, RightRect, BottomRect);
+
+    RGNOBJAPI_Unlock(rgn);
+    return TRUE;
+}
+
+HRGN APIENTRY
+NtGdiUnionRectWithRgn(
+    HRGN hDest,
+    const RECTL *UnsafeRect
+)
+{
+    RECTL SafeRect = {0};
+    PROSRGNDATA Rgn;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!(Rgn = RGNOBJAPI_Lock(hDest, NULL)))
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForRead(UnsafeRect, sizeof(RECT), 1);
+        SafeRect = *UnsafeRect;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (! NT_SUCCESS(Status))
+    {
+        RGNOBJAPI_Unlock(Rgn);
+        SetLastNtError(Status);
+        return NULL;
+    }
+
+    REGION_UnionRectWithRgn(Rgn, &SafeRect);
+    RGNOBJAPI_Unlock(Rgn);
+    return hDest;
+}
+
+/*!
+ * MSDN: GetRegionData, Return Values:
+ *
+ * "If the function succeeds and dwCount specifies an adequate number of bytes,
+ * the return value is always dwCount. If dwCount is too small or the function
+ * fails, the return value is 0. If lpRgnData is NULL, the return value is the
+ * required number of bytes.
+ *
+ * If the function fails, the return value is zero."
+ */
+DWORD APIENTRY
+NtGdiGetRegionData(
+    HRGN hrgn,
+    DWORD count,
+    LPRGNDATA rgndata
+)
+{
+    DWORD size;
+    PROSRGNDATA obj = RGNOBJAPI_Lock(hrgn, NULL);
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!obj)
+        return 0;
+
+    size = obj->rdh.nCount * sizeof(RECT);
+    if (count < (size + sizeof(RGNDATAHEADER)) || rgndata == NULL)
+    {
+        RGNOBJAPI_Unlock(obj);
+        if (rgndata) /* buffer is too small, signal it by return 0 */
+            return 0;
+        else         /* user requested buffer size with rgndata NULL */
+            return size + sizeof(RGNDATAHEADER);
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(rgndata, count, 1);
+        RtlCopyMemory(rgndata, &obj->rdh, sizeof(RGNDATAHEADER));
+        RtlCopyMemory(rgndata->Buffer, obj->Buffer, size);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        RGNOBJAPI_Unlock(obj);
+        return 0;
+    }
+
+    RGNOBJAPI_Unlock(obj);
+    return size + sizeof(RGNDATAHEADER);
 }
 
 /* EOF */
