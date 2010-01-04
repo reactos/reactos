@@ -163,7 +163,17 @@
 
 /** Deprecated ***************************************************************/
 
-#define _CRT_DEPRECATE_TEXT(_Text) __declspec(deprecated)
+#ifdef __GNUC__
+#define _CRT_DEPRECATE_TEXT(_Text) __attribute__ ((deprecated))
+#elif defined(_MSC_VER)
+#define _CRT_DEPRECATE_TEXT(_Text) __declspec(deprecated(_Text))
+#else
+#define _CRT_DEPRECATE_TEXT(_Text)
+#endif
+
+#ifndef __STDC_WANT_SECURE_LIB__
+#define __STDC_WANT_SECURE_LIB__ 1
+#endif
 
 #ifndef _CRT_INSECURE_DEPRECATE
 # ifdef _CRT_SECURE_NO_DEPRECATE

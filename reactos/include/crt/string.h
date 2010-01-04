@@ -101,16 +101,27 @@ extern "C" {
 #define _WSTRING_DEFINED
 
   _CRTIMP wchar_t *__cdecl _wcsdup(const wchar_t *_Str);
-  _CRTIMP wchar_t *__cdecl wcscat(wchar_t *_Dest,const wchar_t *_Source);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(wcsat_s) wchar_t *__cdecl wcscat(wchar_t *_Dest,const wchar_t *_Source);
+#if __STDC_WANT_SECURE_LIB__
+  _CRTIMP errno_t __cdecl wcsat_s(wchar_t * Dest, size_t SizeInWords, const wchar_t * _Source);
+#endif
   _CRTIMP _CONST_RETURN wchar_t *__cdecl wcschr(const wchar_t *_Str,wchar_t _Ch);
   _CRTIMP int __cdecl wcscmp(const wchar_t *_Str1,const wchar_t *_Str2);
-  _CRTIMP wchar_t *__cdecl wcscpy(wchar_t *_Dest,const wchar_t *_Source);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(wcscpy_s) wchar_t *__cdecl wcscpy(wchar_t *_Dest,const wchar_t *_Source);
+#if __STDC_WANT_SECURE_LIB__
+  _CRTIMP errno_t __cdecl wcscpy_s(wchar_t * Dest, size_t SizeInWords, const wchar_t * _Source);
+#endif
   _CRTIMP size_t __cdecl wcscspn(const wchar_t *_Str,const wchar_t *_Control);
   _CRTIMP size_t __cdecl wcslen(const wchar_t *_Str);
-  _CRTIMP size_t __cdecl wcsnlen(const wchar_t *_Src,size_t _MaxCount);
-  _CRTIMP wchar_t *wcsncat(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(wcsnlen_s) size_t __cdecl wcsnlen(const wchar_t *_Src,size_t _MaxCount);
+#if __STDC_WANT_SECURE_LIB__
+  _CRTIMP errno_t __cdecl wcsnlen_s(wchar_t **_Src, size_t _MaxCount);
+#endif
   _CRTIMP int __cdecl wcsncmp(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
-  _CRTIMP wchar_t *wcsncpy(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(wcsncpy_s) wchar_t *wcsncpy(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
+#if __STDC_WANT_SECURE_LIB__
+  _CRTIMP errno_t __cdecl wcsncpy_s(wchar_t *_Dest, size_t SizeInWords, const wchar_t *_Source ,size_t _Count);
+#endif
   _CRTIMP _CONST_RETURN wchar_t *__cdecl wcspbrk(const wchar_t *_Str,const wchar_t *_Control);
   _CRTIMP _CONST_RETURN wchar_t *__cdecl wcsrchr(const wchar_t *_Str,wchar_t _Ch);
   _CRTIMP size_t __cdecl wcsspn(const wchar_t *_Str,const wchar_t *_Control);
