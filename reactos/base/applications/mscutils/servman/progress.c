@@ -18,41 +18,51 @@ CompleteProgressBar(HWND hProgDlg)
 
     hProgBar = GetDlgItem(hProgDlg,
                           IDC_SERVCON_PROGRESS);
-
     if (hProgBar)
     {
         INT pos = 0;
 
-        pos = SendMessage(hProgBar,
-                          PBM_GETPOS,
-                          0,
-                          0);
+        pos = SendMessageW(hProgBar,
+                           PBM_GETPOS,
+                           0,
+                           0);
 
-        for (; pos <= PROGRESSRANGE; pos++)
+        while (pos <= PROGRESSRANGE)
         {
-            SendMessage(hProgBar,
-                        PBM_DELTAPOS,
-                        pos,
-                        0);
+            SendMessageW(hProgBar,
+                         PBM_DELTAPOS,
+                         pos,
+                         0);
             Sleep(15);
+            pos++;
         }
     }
 }
 
 VOID
-IncrementProgressBar(HWND hProgDlg)
+IncrementProgressBar(HWND hProgDlg,
+                     UINT NewPos)
 {
     HWND hProgBar;
 
     hProgBar = GetDlgItem(hProgDlg,
                           IDC_SERVCON_PROGRESS);
-
     if (hProgBar)
     {
-        SendMessage(hProgBar,
-                    PBM_STEPIT,
-                    0,
-                    0);
+        if (NewPos == DEFAULT_STEP)
+        {
+            SendMessageW(hProgBar,
+                         PBM_STEPIT,
+                         0,
+                         0);
+        }
+        else
+        {
+            SendMessageW(hProgBar,
+                         PBM_SETPOS,
+                         NewPos,
+                         0);
+        }
     }
 }
 
@@ -68,18 +78,21 @@ ProgressDialogProc(HWND hDlg,
         {
             HWND hProgBar;
 
-            /* set the progress bar range and step */
+            /* Get a handle to the progress bar */
             hProgBar = GetDlgItem(hDlg,
                                   IDC_SERVCON_PROGRESS);
-            SendMessage(hProgBar,
-                        PBM_SETRANGE,
-                        0,
-                        MAKELPARAM(0, PROGRESSRANGE));
 
-            SendMessage(hProgBar,
-                        PBM_SETSTEP,
-                        (WPARAM)1,
-                        0);
+            /* Set the progress bar range */
+            SendMessageW(hProgBar,
+                         PBM_SETRANGE,
+                         0,
+                         MAKELPARAM(0, PROGRESSRANGE));
+
+            /* Set the progress bar step */
+            SendMessageW(hProgBar,
+                         PBM_SETSTEP,
+                         (WPARAM)1,
+                         0);
         }
         break;
 
@@ -98,43 +111,70 @@ ProgressDialogProc(HWND hDlg,
     }
 
     return TRUE;
-
 }
 
 HWND
 CreateProgressDialog(HWND hParent,
                      LPTSTR lpServiceName,
-                     UINT Event)
+                     UINT LabelId)
 {
     HWND hProgDlg;
-    TCHAR ProgDlgBuf[100];
+    LPWSTR lpProgStr;
 
     /* open the progress dialog */
-    hProgDlg = CreateDialog(hInstance,
-                            MAKEINTRESOURCE(IDD_DLG_PROGRESS),
-                            hParent,
-                            ProgressDialogProc);
+    hProgDlg = CreateDialogW(hInstance,
+                             MAKEINTRESOURCEW(IDD_DLG_PROGRESS),
+                             hParent,
+                             ProgressDialogProc);
     if (hProgDlg != NULL)
     {
-        /* write the  info to the progress dialog */
-        LoadString(hInstance,
-                   Event,
-                   ProgDlgBuf,
-                   sizeof(ProgDlgBuf) / sizeof(TCHAR));
+        /* Load the label Id */
+        if (AllocAndLoadString(&lpProgStr,
+                               hInstance,
+                               LabelId))
+        {
+            /* Write it to the dialog */
+            SendDlgItemMessageW(hProgDlg,
+                                IDC_SERVCON_INFO,
+                                WM_SETTEXT,
+                                0,
+                                (LPARAM)lpProgStr);
 
-        SendDlgItemMessage(hProgDlg,
-                           IDC_SERVCON_INFO,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)ProgDlgBuf);
+            HeapFree(GetProcessHeap(),
+                     0,
+                     lpProgStr);
+        }
 
-        /* write the service name to the progress dialog */
-        SendDlgItemMessage(hProgDlg,
-                           IDC_SERVCON_NAME,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)lpServiceName);
+        /* Write the service name to the dialog */
+        SendDlgItemMessageW(hProgDlg,
+                            IDC_SERVCON_NAME,
+                            WM_SETTEXT,
+                            0,
+                            (LPARAM)lpServiceName);
     }
 
     return hProgDlg;
+}
+
+BOOL
+DestroyProgressDialog(HWND hwnd,
+                      BOOL bComplete)
+{
+    BOOL bRet = FALSE;
+
+    if (hwnd)
+    {
+        if (bComplete)
+        {
+            /* Complete the progress bar */
+            CompleteProgressBar(hwnd);
+
+            /* Wait for asthetics */
+            Sleep(500);
+        }
+
+        bRet = DestroyWindow(hwnd);
+    }
+
+    return bRet;
 }

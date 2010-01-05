@@ -121,7 +121,7 @@ DoStart(PMAIN_WND_INFO Info)
 
     if (hProgDlg)
     {
-        IncrementProgressBar(hProgDlg);
+        IncrementProgressBar(hProgDlg, DEFAULT_STEP);
 
         bRet = DoStartService(Info,
                               hProgDlg);

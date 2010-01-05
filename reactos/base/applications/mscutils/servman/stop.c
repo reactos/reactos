@@ -12,60 +12,97 @@
 
 static BOOL
 StopService(PMAIN_WND_INFO pInfo,
-            LPWSTR lpServiceName)
+            LPWSTR lpServiceName,
+            HWND hProgress OPTIONAL)
 {
-    //SERVICE_STATUS_PROCESS ServiceStatus;
-    //DWORD dwBytesNeeded;
-    //DWORD dwStartTime;
-   // DWORD dwTimeout;
-    //HWND hProgDlg;
+    SC_HANDLE hSCManager;
+    SC_HANDLE hService;
+    SERVICE_STATUS_PROCESS ServiceStatus;
+    DWORD dwBytesNeeded;
+    DWORD dwStartTime;
+    DWORD dwTimeout;
     BOOL bRet = FALSE;
-/*
-    dwStartTime = GetTickCount();
-    dwTimeout = 30000; // 30 secs
 
-    hProgDlg = CreateProgressDialog(pStopInfo->pInfo->hMainWnd,
-                                    pStopInfo->pInfo->pCurrentService->lpServiceName,
-                                    IDS_PROGRESS_INFO_STOP);
-    if (hProgDlg)
+    if (hProgress)
     {
-        IncrementProgressBar(hProgDlg);
+        /* Increment the progress bar */
+        IncrementProgressBar(hProgress, DEFAULT_STEP);
+    }
 
-        if (ControlService(hService,
-                           SERVICE_CONTROL_STOP,
-                           (LPSERVICE_STATUS)&ServiceStatus))
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_CONNECT);
+    if (hSCManager)
+    {
+        hService = OpenService(hSCManager,
+                               lpServiceName,
+                               SERVICE_STOP | SERVICE_QUERY_STATUS);
+        if (hService)
         {
-            while (ServiceStatus.dwCurrentState != SERVICE_STOPPED)
+            if (hProgress)
             {
-                Sleep(ServiceStatus.dwWaitHint);
+                /* Increment the progress bar */
+                IncrementProgressBar(hProgress, DEFAULT_STEP);
+            }
 
-                if (QueryServiceStatusEx(hService,
-                                         SC_STATUS_PROCESS_INFO,
-                                         (LPBYTE)&ServiceStatus,
-                                         sizeof(SERVICE_STATUS_PROCESS),
-                                         &dwBytesNeeded))
+            /* Set the wait time to 30 secs */
+            dwStartTime = GetTickCount();
+            dwTimeout = 30000;
+
+            /* Send the service the stop code */
+            if (ControlService(hService,
+                               SERVICE_CONTROL_STOP,
+                               (LPSERVICE_STATUS)&ServiceStatus))
+            {
+                if (hProgress)
                 {
-                    if (GetTickCount() - dwStartTime > dwTimeout)
+                    /* Increment the progress bar */
+                    IncrementProgressBar(hProgress, DEFAULT_STEP);
+                }
+
+                while (ServiceStatus.dwCurrentState != SERVICE_STOPPED)
+                {
+                    Sleep(ServiceStatus.dwWaitHint);
+
+                    if (hProgress)
                     {
-                        We exceeded our max wait time, give up
-                        break;
+                        /* Increment the progress bar */
+                        IncrementProgressBar(hProgress, DEFAULT_STEP);
                     }
+
+                    if (QueryServiceStatusEx(hService,
+                                             SC_STATUS_PROCESS_INFO,
+                                             (LPBYTE)&ServiceStatus,
+                                             sizeof(SERVICE_STATUS_PROCESS),
+                                             &dwBytesNeeded))
+                    {
+                        /* Have we exceeded our wait time? */
+                        if (GetTickCount() - dwStartTime > dwTimeout)
+                        {
+                            /* Yep, give up */
+                            break;
+                        }
+                    }
+                }
+
+                /* If the service is stopped, return TRUE */
+                if (ServiceStatus.dwCurrentState == SERVICE_STOPPED)
+                {
+                    bRet = TRUE;
                 }
             }
 
-            if (ServiceStatus.dwCurrentState == SERVICE_STOPPED)
-            {
-                bRet = TRUE;
-            }
+            CloseServiceHandle(hService);
         }
 
-        CompleteProgressBar(hProgDlg);
-        Sleep(500);
-        DestroyWindow(hProgDlg);
+        CloseServiceHandle(hSCManager);
     }
-*/
+
     return bRet;
 }
+
+
+
 
 static BOOL
 StopDependantServices(PMAIN_WND_INFO pInfo,
@@ -118,6 +155,7 @@ StopDependantServices(PMAIN_WND_INFO pInfo,
 BOOL
 DoStop(PMAIN_WND_INFO pInfo)
 {
+    HWND hProgress;
     LPWSTR lpServiceList;
     BOOL bRet = FALSE;
 
@@ -138,18 +176,24 @@ DoStop(PMAIN_WND_INFO pInfo)
                                     (LPARAM)lpServiceList) == IDOK)
                 {
                     /* Stop all the dependant services */
-                    if (StopDependantServices(pInfo, pInfo->pCurrentService->lpServiceName))
-                    {
-                        /* Finally stop the requested service */
-                        bRet = StopService(pInfo, pInfo->pCurrentService->lpServiceName);
-                    }
+                    StopDependantServices(pInfo, pInfo->pCurrentService->lpServiceName);
                 }
             }
         }
-        else
+
+        /* Create a progress window to track the progress of the stopping service */
+        hProgress = CreateProgressDialog(pInfo->hMainWnd,
+                                         pInfo->pCurrentService->lpServiceName,
+                                         IDS_PROGRESS_INFO_STOP);
+
+        /* Finally, stop the requested service */
+        bRet = StopService(pInfo,
+                           pInfo->pCurrentService->lpServiceName,
+                           hProgress);
+
+        if (hProgress)
         {
-            /* No dependants, just stop the service */
-            bRet = StopService(pInfo, pInfo->pCurrentService->lpServiceName);
+            DestroyProgressDialog(hProgress, TRUE);
         }
     }
 

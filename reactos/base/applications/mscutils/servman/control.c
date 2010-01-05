@@ -48,7 +48,7 @@ Control(PMAIN_WND_INFO Info,
                     DWORD dwOldCheckPoint = ServiceStatus.dwCheckPoint;
                     DWORD dwMaxWait = 2000 * 60; // wait for 2 mins
 
-                    IncrementProgressBar(hProgDlg);
+                    IncrementProgressBar(hProgDlg, DEFAULT_STEP);
 
                     while (ServiceStatus.dwCurrentState != Control)
                     {
@@ -66,7 +66,7 @@ Control(PMAIN_WND_INFO Info,
                         if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
                         {
                             /* The service is making progress, increment the progress bar */
-                            IncrementProgressBar(hProgDlg);
+                            IncrementProgressBar(hProgDlg, DEFAULT_STEP);
                             dwStartTickCount = GetTickCount();
                             dwOldCheckPoint = ServiceStatus.dwCheckPoint;
                         }
