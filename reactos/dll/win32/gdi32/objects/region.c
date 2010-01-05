@@ -104,7 +104,6 @@ BOOL
 FASTCALL
 DeleteRegion( HRGN hRgn )
 {
-#if 0
   PRGN_ATTR Rgn_Attr;
 
   if ((GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
@@ -128,7 +127,6 @@ DeleteRegion( HRGN hRgn )
         }
      }
   }
-#endif
   return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
 }
 
@@ -204,7 +202,6 @@ CombineRgn(HRGN  hDest,
            HRGN  hSrc2,
            INT  CombineMode)
 {
-#if 0
   PRGN_ATTR pRgn_Attr_Dest = NULL;
   PRGN_ATTR pRgn_Attr_Src1 = NULL;
   PRGN_ATTR pRgn_Attr_Src2 = NULL;
@@ -218,9 +215,8 @@ CombineRgn(HRGN  hDest,
        !pRgn_Attr_Dest ||
        !pRgn_Attr_Src1 ||
         pRgn_Attr_Src1->Flags > SIMPLEREGION )
-#endif
      return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-#if 0
+
   /* Handle COPY and use only src1. */
   if ( CombineMode == RGN_COPY )
   {
@@ -274,19 +270,29 @@ CombineRgn(HRGN  hDest,
            DPRINT1("RGN_COPY was handled! CombineMode %d\n",CombineMode);
            return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
         }
+        /* Now handle DIFF. */
+        if ( pRgn_Attr_Src1->Flags == NULLREGION )
+        {
+           if (SetRectRgn( hDest, 0, 0, 0, 0))
+              return NULLREGION;
+           goto ERROR_Exit;
+        }
 
-        if ( pRgn_Attr_Src1->Flags != NULLREGION &&
-             pRgn_Attr_Src2->Flags != NULLREGION )
+        if ( pRgn_Attr_Src2->Flags != NULLREGION )
         {
            Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
-           /* If same or overlapping and norm just go K. */
-           if (Complexity == SAME_RGN || Complexity == OVERLAPPING_RGN)
-              return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+
+           if ( Complexity != DIFF_RGN )
+           {
+              if ( Complexity != INVERTED_RGN)
+                 /* If same or overlapping and norm just go K. */
+                 return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+
+              if (SetRectRgn( hDest, 0, 0, 0, 0))
+                 return NULLREGION;
+              goto ERROR_Exit;
+           }
         }
-        /* Just NULL rgn. */
-        if (SetRectRgn( hDest, 0, 0, 0, 0))
-           return NULLREGION;
-        goto ERROR_Exit;
      }
      else /* Handle OR or XOR. */
      {
@@ -389,7 +395,6 @@ ERROR_Exit:
   /* Even on error the flag is set dirty and force server side to redraw. */
   pRgn_Attr_Dest->AttrFlags |= ATTR_RGN_DIRTY;
   return ERROR;
-#endif
 }
 
 /*
@@ -634,13 +639,11 @@ WINAPI
 GetRgnBox(HRGN hrgn,
           LPRECT prcOut)
 {
-#if 0
   PRGN_ATTR Rgn_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
-#endif
      return NtGdiGetRgnBox(hrgn, prcOut);
-#if 0
+
   if (Rgn_Attr->Flags == NULLREGION)
   {
      prcOut->left   = 0;
@@ -656,7 +659,6 @@ GetRgnBox(HRGN hrgn,
      RtlCopyMemory( prcOut, &Rgn_Attr->Rect, sizeof(RECT));
   }
   return Rgn_Attr->Flags;
-#endif
 }
 
 /*
@@ -747,14 +749,12 @@ OffsetRgn( HRGN hrgn,
           int nXOffset,
           int nYOffset)
 {
-#if 0
   PRGN_ATTR pRgn_Attr;
   int nLeftRect, nTopRect, nRightRect, nBottomRect;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-#endif
      return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
-#if 0
+
   if ( pRgn_Attr->Flags == NULLREGION)
      return pRgn_Attr->Flags;
 
@@ -792,7 +792,6 @@ OffsetRgn( HRGN hrgn,
      }
   }
   return pRgn_Attr->Flags;
-#endif
 }
 
 /*
@@ -804,13 +803,11 @@ PtInRegion(IN HRGN hrgn,
            int x,
            int y)
 {
-#if 0
   PRGN_ATTR pRgn_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-#endif
      return NtGdiPtInRegion(hrgn,x,y);
-#if 0
+
   if ( pRgn_Attr->Flags == NULLREGION)
      return FALSE;
 
@@ -818,7 +815,6 @@ PtInRegion(IN HRGN hrgn,
      return NtGdiPtInRegion(hrgn,x,y);
 
   return INRECT( pRgn_Attr->Rect, x, y);
-#endif
 }
 
 /*
@@ -829,14 +825,12 @@ WINAPI
 RectInRegion(HRGN hrgn,
              LPCRECT prcl)
 {
-#if 0
   PRGN_ATTR pRgn_Attr;
   RECTL rc;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-#endif
      return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
-#if 0
+
   if ( pRgn_Attr->Flags == NULLREGION)
      return FALSE;
 
@@ -870,7 +864,6 @@ RectInRegion(HRGN hrgn,
      return TRUE;
 
   return FALSE;
-#endif
 }
 
 /*
@@ -896,13 +889,11 @@ SetRectRgn(HRGN hrgn,
            int nRightRect,
            int nBottomRect)
 {
-#if 0
   PRGN_ATTR Rgn_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
-#endif
      return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
-#if 0
+
   if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
   {
      Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
@@ -931,7 +922,6 @@ SetRectRgn(HRGN hrgn,
   Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY ;
   Rgn_Attr->Flags = SIMPLEREGION;
   return TRUE;
-#endif
 }
 
 /*
