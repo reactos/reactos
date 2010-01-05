@@ -1085,50 +1085,102 @@ DWORD PNP_CreateDevInst(
 }
 
 
+static CONFIGRET
+MoveDeviceInstance(LPWSTR pszDeviceInstanceDestination,
+                   LPWSTR pszDeviceInstanceSource)
+{
+    DPRINT("MoveDeviceInstance: not implemented\n");
+    /* FIXME */
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+static CONFIGRET
+SetupDeviceInstance(LPWSTR pszDeviceInstance,
+                    DWORD ulFlags)
+{
+    DPRINT("SetupDeviceInstance: not implemented\n");
+    /* FIXME */
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+static CONFIGRET
+EnableDeviceInstance(LPWSTR pszDeviceInstance)
+{
+    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT("Enable device instance\n");
+
+    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance);
+    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
+}
+
+
+static CONFIGRET
+DisableDeviceInstance(LPWSTR pszDeviceInstance)
+{
+    DPRINT("DisableDeviceInstance: not implemented\n");
+    /* FIXME */
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+static CONFIGRET
+ReenumerateDeviceInstance(LPWSTR pszDeviceInstance)
+{
+    DPRINT("ReenumerateDeviceInstance: not implemented\n");
+    /* FIXME */
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
 /* Function 29 */
 DWORD PNP_DeviceInstanceAction(
     handle_t hBinding,
-    DWORD ulMajorAction,
-    DWORD ulMinorAction,
+    DWORD ulAction,
+    DWORD ulFlags,
     LPWSTR pszDeviceInstance1,
     LPWSTR pszDeviceInstance2)
 {
     CONFIGRET ret = CR_SUCCESS;
-    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(hBinding);
-    UNREFERENCED_PARAMETER(ulMinorAction);
-    UNREFERENCED_PARAMETER(pszDeviceInstance2);
 
     DPRINT("PNP_DeviceInstanceAction() called\n");
 
-    switch (ulMajorAction)
+    switch (ulAction)
     {
+        case PNP_DEVINST_MOVE:
+            ret = MoveDeviceInstance(pszDeviceInstance1,
+                                     pszDeviceInstance2);
+            break;
+
         case PNP_DEVINST_SETUP:
-            DPRINT("Setup device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            ret = SetupDeviceInstance(pszDeviceInstance1,
+                                      ulFlags);
             break;
 
         case PNP_DEVINST_ENABLE:
-        {
-            PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
-            DPRINT("Enable device instance\n");
-            RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance1);
-            Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
-            if (!NT_SUCCESS(Status))
-                ret = NtStatusToCrError(Status);
+            ret = EnableDeviceInstance(pszDeviceInstance1);
             break;
-        }
+
+        case PNP_DEVINST_DISABLE:
+            ret = DisableDeviceInstance(pszDeviceInstance1);
+            break;
 
         case PNP_DEVINST_REENUMERATE:
-            DPRINT("Reenumerate device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            ret = ReenumerateDeviceInstance(pszDeviceInstance1);
             break;
 
         default:
-            DPRINT1("Unknown function %lu\n", ulMajorAction);
+            DPRINT1("Unknown device action %lu: not implemented\n", ulAction);
             ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
