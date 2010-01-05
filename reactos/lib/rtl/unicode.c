@@ -2436,3 +2436,74 @@ RtlFindCharInUnicodeString(IN ULONG Flags,
 
     return STATUS_NOT_FOUND;
 }
+
+/*
+ * @implemented
+ *
+ * NOTES
+ *  Get the maximum of MAX_COMPUTERNAME_LENGTH characters from the dns.host name until the dot is found.
+ *  Convert is to an uppercase oem string and check for unmapped characters.
+ *  Then convert the oem string back to an unicode string.
+ */
+NTSTATUS
+NTAPI
+RtlDnsHostNameToComputerName(PUNICODE_STRING ComputerName,PUNICODE_STRING DnsHostName,BOOLEAN AllocateComputerNameString)
+{
+   NTSTATUS Status;
+   ULONG Length;
+   ULONG ComputerNameLength;
+   ULONG ComputerNameOemNLength;
+   OEM_STRING ComputerNameOem;
+   CHAR ComputerNameOemN[MAX_COMPUTERNAME_LENGTH + 1];
+
+   Status = STATUS_INVALID_COMPUTER_NAME;
+   ComputerNameLength = DnsHostName->Length;
+
+   /* find the first dot in the dns host name */
+   for (Length = 0;Length < DnsHostName->Length/sizeof(WCHAR);Length++)
+   {
+      if (DnsHostName->Buffer[Length] == L'.')
+      {
+         /* dot found, so set the length for the oem translation */
+         ComputerNameLength = Length*sizeof(WCHAR);
+         break;
+      }
+   }
+
+   /* the computername must have one character */
+   if (ComputerNameLength > 0)
+   {
+      ComputerNameOemNLength = 0;
+      /* convert to oem string and use uppercase letters */
+      Status = RtlUpcaseUnicodeToOemN(ComputerNameOemN,
+                                      MAX_COMPUTERNAME_LENGTH,
+                                      &ComputerNameOemNLength,
+                                      DnsHostName->Buffer,
+                                      ComputerNameLength);
+      /* status STATUS_BUFFER_OVERFLOW is not a problem since the computername shoud only 
+         have MAX_COMPUTERNAME_LENGTH characters */
+      if ((Status == STATUS_SUCCESS) ||
+          (Status == STATUS_BUFFER_OVERFLOW))
+      {
+         /* set the termination for the oem string */
+         ComputerNameOemN[MAX_COMPUTERNAME_LENGTH] = 0;
+         /* set status for the case the next function failed */
+         Status = STATUS_INVALID_COMPUTER_NAME;
+         /* fillup the oem string structure with the converted computername
+            and check it for unmapped characters */
+         ComputerNameOem.Buffer = ComputerNameOemN;
+         ComputerNameOem.Length = (USHORT)ComputerNameOemNLength;
+         ComputerNameOem.MaximumLength = (USHORT)(MAX_COMPUTERNAME_LENGTH + 1);
+         if (RtlpDidUnicodeToOemWork(DnsHostName, &ComputerNameOem) == TRUE)
+         {
+            /* no unmapped character so convert it back to an unicode string */
+            Status = RtlOemStringToUnicodeString(ComputerName,
+                                                 &ComputerNameOem,
+                                                 AllocateComputerNameString);
+         }
+      }
+   }
+
+   return Status;
+}
+
