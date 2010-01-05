@@ -36,7 +36,6 @@
 				</directory>
 			</if>
 			<if property="ARCH" value="amd64">
-				<file>x86bios.c</file>
 				<directory name="amd64">
 					<file>halinit.c</file>
 					<file>irq.s</file>
@@ -44,6 +43,7 @@
 					<file>pic.c</file>
 					<file>systimer.S</file>
 					<file>usage.c</file>
+					<file>x86bios.c</file>
 				</directory>
 			</if>
 		</directory>
