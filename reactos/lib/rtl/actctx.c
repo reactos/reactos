@@ -25,14 +25,14 @@
 #define QUERY_ACTCTX_FLAG_ACTIVE (0x00000001)
 
 #define ACTCTX_FLAGS_ALL (\
- ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID |\
- ACTCTX_FLAG_LANGID_VALID |\
- ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID |\
- ACTCTX_FLAG_RESOURCE_NAME_VALID |\
- ACTCTX_FLAG_SET_PROCESS_DEFAULT |\
- ACTCTX_FLAG_APPLICATION_NAME_VALID |\
- ACTCTX_FLAG_SOURCE_IS_ASSEMBLYREF |\
- ACTCTX_FLAG_HMODULE_VALID )
+    ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID |\
+    ACTCTX_FLAG_LANGID_VALID |\
+    ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID |\
+    ACTCTX_FLAG_RESOURCE_NAME_VALID |\
+    ACTCTX_FLAG_SET_PROCESS_DEFAULT |\
+    ACTCTX_FLAG_APPLICATION_NAME_VALID |\
+    ACTCTX_FLAG_SOURCE_IS_ASSEMBLYREF |\
+    ACTCTX_FLAG_HMODULE_VALID )
 
 #define ACTCTX_MAGIC       0xC07E3E11
 
@@ -1602,7 +1602,7 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
             DPRINT( "looking for res %s in module %p %s\n", debugstr_w(resname),
                    hModule, debugstr_w(nameW.Buffer) );
             RtlFreeUnicodeString( &nameW );
-}
+        }
         else DPRINT( "looking for res %s in module %p %s\n", debugstr_w(resname),
                     hModule, debugstr_w(filename) );
     }
@@ -1613,10 +1613,10 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
     info.Type = (ULONG_PTR)RT_MANIFEST;
     info.Language = lang;
     if (!((ULONG_PTR)resname >> 16))
-{
+    {
         info.Name = (ULONG_PTR)resname;
         status = LdrFindResource_U(hModule, &info, 3, &entry);
-}
+    }
     else if (resname[0] == '#')
     {
         ULONG value;
@@ -1680,7 +1680,7 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
     {
         HANDLE module = (HMODULE)((ULONG_PTR)base | 1);  /* make it a LOAD_LIBRARY_AS_DATAFILE handle */
         status = get_manifest_in_module( acl, ai, filename, directory, shared, module, resname, lang );
-}
+    }
     else status = STATUS_INVALID_IMAGE_FORMAT;
 
     NtUnmapViewOfSection( NtCurrentProcess(), base );
@@ -1737,7 +1737,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
 /* try to load the .manifest file associated to the file */
 static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, struct assembly_identity* ai,
                                                      LPCWSTR filename, LPCWSTR directory, HMODULE module, LPCWSTR resname )
-    {
+{
     static const WCHAR fmtW[] = { '.','%','l','u',0 };
     WCHAR *buffer;
     NTSTATUS status;
@@ -1760,7 +1760,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
             if (!RtlDosPathNameToNtPathName_U( name.Buffer, &nameW, NULL, NULL ))
                 status = STATUS_RESOURCE_DATA_NOT_FOUND;
             RtlFreeUnicodeString( &name );
-    }
+        }
         if (status) return status;
     }
     else
@@ -1960,7 +1960,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
      *           appdir\name.manifest
      *           appdir\name\name.dll
      *           appdir\name\name.manifest
-    */
+     */
     strcpyW( buffer, acl->actctx->appdir.info );
     p = buffer + strlenW(buffer);
     for (i = 0; i < 2; i++)
@@ -2085,7 +2085,7 @@ static NTSTATUS find_dll_redirection(ACTIVATION_CONTEXT* actctx, const UNICODE_S
             struct dll_redirect *dll = &assembly->dlls[j];
             if (!strncmpiW(section_name->Buffer, dll->name, snlen) && !dll->name[snlen])
                 return fill_keyed_data(data, dll, assembly, i);
-}
+        }
     }
     return STATUS_SXS_KEY_NOT_FOUND;
 }
@@ -2118,7 +2118,7 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
 static NTSTATUS find_string(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
                             const UNICODE_STRING *section_name,
                             DWORD flags, PACTCTX_SECTION_KEYED_DATA data)
-    {
+{
     NTSTATUS status;
 
     switch (section_kind)
@@ -2209,7 +2209,7 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
 
         if ((p = strrchrW( dir.Buffer, '\\' ))) p[1] = 0;
         actctx->appdir.info = dir.Buffer;
-}
+    }
 
     nameW.Buffer = NULL;
     if (pActCtx->lpSource)
@@ -2314,7 +2314,7 @@ NTAPI RtlActivateActivationContext( ULONG unknown, HANDLE handle, PULONG_PTR coo
 
     *cookie = (ULONG_PTR)frame;
     DPRINT( "%p cookie=%lx\n", handle, *cookie );
-        return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -2348,7 +2348,7 @@ RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
         top = frame;
     }
 
-        return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -2363,7 +2363,7 @@ NTAPI RtlFreeThreadActivationContextStack(void)
         RtlReleaseActivationContext( frame->ActivationContext );
         RtlFreeHeap( RtlGetProcessHeap(), 0, frame );
         frame = prev;
-}
+    }
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NULL;
 }
 
@@ -2375,7 +2375,7 @@ NTAPI RtlGetActiveActivationContext( HANDLE *handle )
     {
         *handle = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext;
         RtlAddRefActivationContext( *handle );
-}
+    }
     else
         *handle = 0;
 
@@ -2420,11 +2420,11 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             info->hActCtx = handle;
             info->dwFlags = 0;  /* FIXME */
             if (!(flags & QUERY_ACTCTX_FLAG_NO_ADDREF)) RtlAddRefActivationContext( handle );
-}
+        }
         break;
 
     case ActivationContextDetailedInformation:
-{
+        {
             ACTIVATION_CONTEXT_DETAILED_INFORMATION *acdi = buffer;
             struct assembly *assembly = NULL;
             SIZE_T len, manifest_len = 0, config_len = 0, appdir_len = 0;
@@ -2433,7 +2433,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             if (!(actctx = check_actctx(handle))) return STATUS_INVALID_PARAMETER;
 
             if (actctx->num_assemblies) assembly = actctx->assemblies;
-  
+
             if (assembly && assembly->manifest.info)
                 manifest_len = strlenW(assembly->manifest.info) + 1;
             if (actctx->config.info) config_len = strlenW(actctx->config.info) + 1;
@@ -2454,30 +2454,30 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             acdi->ulAppDirPathChars = actctx->appdir.info ? appdir_len - 1 : 0;
             ptr = (LPWSTR)(acdi + 1);
             if (manifest_len)
-    {
+            {
                 acdi->lpRootManifestPath = ptr;
                 memcpy(ptr, assembly->manifest.info, manifest_len * sizeof(WCHAR));
                 ptr += manifest_len;
             }
             else acdi->lpRootManifestPath = NULL;
             if (config_len)
-        {
+            {
                 acdi->lpRootConfigurationPath = ptr;
                 memcpy(ptr, actctx->config.info, config_len * sizeof(WCHAR));
                 ptr += config_len;
-        }
+            }
             else acdi->lpRootConfigurationPath = NULL;
             if (appdir_len)
-        {
+            {
                 acdi->lpAppDirPath = ptr;
                 memcpy(ptr, actctx->appdir.info, appdir_len * sizeof(WCHAR));
-        }
+            }
             else acdi->lpAppDirPath = NULL;
-    }
+        }
         break;
 
     case AssemblyDetailedInformationInActivationContext:
-    {
+        {
             ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *afdi = buffer;
             struct assembly *assembly;
             WCHAR *assembly_id;
@@ -2505,10 +2505,10 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
 
             if (retlen) *retlen = len;
             if (!buffer || bufsize < len)
-        {
+            {
                 RtlFreeHeap( RtlGetProcessHeap(), 0, assembly_id );
                 return STATUS_BUFFER_TOO_SMALL;
-        }
+            }
 
             afdi->ulFlags = 0;  /* FIXME */
             afdi->ulEncodedAssemblyIdentityLength = (id_len - 1) * sizeof(WCHAR);
@@ -2529,7 +2529,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             memcpy( ptr, assembly_id, id_len * sizeof(WCHAR) );
             ptr += id_len;
             if (path_len)
-        {
+            {
                 afdi->lpAssemblyManifestPath = ptr;
                 memcpy(ptr, assembly->manifest.info, path_len * sizeof(WCHAR));
                 ptr += path_len;
@@ -2540,7 +2540,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
                 afdi->lpAssemblyDirectoryName = ptr;
                 memcpy(ptr, assembly->directory, ad_len * sizeof(WCHAR));
                 ptr += ad_len;
-        }
+            }
             else afdi->lpAssemblyDirectoryName = NULL;
             RtlFreeHeap( RtlGetProcessHeap(), 0, assembly_id );
         }
@@ -2573,7 +2573,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             {
                 if (retlen) *retlen = len;
                 return STATUS_BUFFER_TOO_SMALL;
-        }
+            }
             if (retlen) *retlen = 0; /* yes that's what native does !! */
             afdi->ulFlags = ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION;
             afdi->ulFilenameLength = dll_len ? (dll_len - 1) * sizeof(WCHAR) : 0;
@@ -2585,7 +2585,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
                 memcpy( ptr, dll->name, dll_len * sizeof(WCHAR) );
             } else afdi->lpFileName = NULL;
             afdi->lpFilePath = NULL; /* FIXME */
-	}
+        }
         break;
 
     default:
@@ -2599,7 +2599,7 @@ NTSTATUS
 NTAPI
 RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
                                        UNICODE_STRING *section_name, PVOID ptr )
-	{
+{
     PACTCTX_SECTION_KEYED_DATA data = ptr;
     NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
 
