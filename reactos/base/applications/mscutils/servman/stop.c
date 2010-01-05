@@ -101,52 +101,13 @@ StopService(PMAIN_WND_INFO pInfo,
     return bRet;
 }
 
-
-
-
 static BOOL
 StopDependantServices(PMAIN_WND_INFO pInfo,
                       LPWSTR lpServiceName)
 {
-    //LPENUM_SERVICE_STATUS lpDependencies;
-    //SC_HANDLE hDepService;
-    //DWORD dwCount;
     BOOL bRet = FALSE;
 
     MessageBox(NULL, L"Rewrite StopDependentServices", NULL, 0);
-    /*
-
-    lpDependencies = GetServiceDependents(hService, &dwCount);
-    if (lpDependencies)
-    {
-        LPENUM_SERVICE_STATUS lpEnumServiceStatus;
-        DWORD i;
-
-        for (i = 0; i < dwCount; i++)
-        {
-            lpEnumServiceStatus = &lpDependencies[i];
-
-            hDepService = OpenService(pStopInfo->hSCManager,
-                                      lpEnumServiceStatus->lpServiceName,
-                                      SERVICE_STOP | SERVICE_QUERY_STATUS);
-            if (hDepService)
-            {
-                bRet = StopService(pStopInfo, hDepService);
-
-                CloseServiceHandle(hDepService);
-
-                if (!bRet)
-                {
-                    GetError();
-                    break;
-                }
-            }
-        }
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpDependencies);
-    }*/
 
     return bRet;
 }
@@ -186,13 +147,14 @@ DoStop(PMAIN_WND_INFO pInfo)
                                          pInfo->pCurrentService->lpServiceName,
                                          IDS_PROGRESS_INFO_STOP);
 
-        /* Finally, stop the requested service */
+        /* Stop the requested service */
         bRet = StopService(pInfo,
                            pInfo->pCurrentService->lpServiceName,
                            hProgress);
 
         if (hProgress)
         {
+            /* Complete and destroy the progress bar */
             DestroyProgressDialog(hProgress, TRUE);
         }
     }
