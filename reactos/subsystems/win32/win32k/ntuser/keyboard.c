@@ -419,7 +419,7 @@ CLEANUP:
 
 BOOL FASTCALL
 IntTranslateKbdMessage(LPMSG lpMsg,
-                       UINT Flags)
+                       HKL dwhkl)
 {
    PTHREADINFO pti;
    static INT dead_char = 0;

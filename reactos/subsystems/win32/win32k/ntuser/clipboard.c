@@ -581,10 +581,10 @@ NtUserEmptyClipboard(VOID)
     return ret;
 }
 
-DWORD_PTR APIENTRY
+HANDLE APIENTRY
 NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
 {
-    DWORD_PTR ret = 0;
+    HANDLE ret = NULL;
 
     UserEnterShared();
 
@@ -607,7 +607,7 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                         co_IntSendMessage(ClipboardOwnerWindow->hSelf, WM_RENDERFORMAT, (WPARAM)uFormat, 0);
                         data = intIsFormatAvailable(uFormat);
                         ASSERT(data->size);
-                        ret = data->size;
+                        ret = (HANDLE)(ULONG_PTR)data->size;
                     }
                 }
                 else
@@ -618,12 +618,12 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                     }
 
                 }
-                ret = data->size;
+                ret = (HANDLE)(ULONG_PTR)data->size;
             }
             else
             {
                 /* there is no data in this format */
-                //ret = FALSE;
+                //ret = (HANDLE)FALSE;
             }
         }
         else
@@ -646,12 +646,12 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                             PCLIPBOARDELEMENT data = intIsFormatAvailable(CF_DIB);
                             if (data)
                             {
-                                ret = (DWORD_PTR)renderBITMAPfromDIB(data->hData);
+                                ret = renderBITMAPfromDIB(data->hData);
                             }
                         }
                         else
                         {
-                            ret = (DWORD_PTR)pBuffer;
+                            ret = (HANDLE)pBuffer;
 
                             _SEH2_TRY
                             {
@@ -660,7 +660,7 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                             }
                             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                             {
-                                ret = 0;
+                                ret = NULL;
                             }
                             _SEH2_END
 
@@ -669,7 +669,7 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                     }
                     else
                     {
-                        ret = (DWORD_PTR)pBuffer;
+                        ret = (HANDLE)pBuffer;
 
                         _SEH2_TRY
                         {
@@ -678,7 +678,7 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                         }
                         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                         {
-                            ret = 0;
+                            ret = NULL;
                         }
                         _SEH2_END
                     }

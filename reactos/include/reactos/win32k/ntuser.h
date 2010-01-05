@@ -1709,7 +1709,7 @@ NtUserGetClassName(HWND hWnd,
                    PUNICODE_STRING ClassName);
 #endif
 
-DWORD_PTR
+HANDLE
 NTAPI
 NtUserGetClipboardData(
   UINT uFormat,
@@ -2881,7 +2881,7 @@ BOOL
 NTAPI
 NtUserTranslateMessage(
   LPMSG lpMsg,
-  UINT Flags );
+  HKL dwhkl );
 
 BOOL
 NTAPI

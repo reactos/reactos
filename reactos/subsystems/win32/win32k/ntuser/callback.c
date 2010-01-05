@@ -640,7 +640,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    UserEnterCo();
 
    IntCbFreeMemory(Argument);
-
+  
    if (!NT_SUCCESS(Status))
    {
       return 0;
@@ -700,7 +700,7 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    Result = *(LRESULT*)ResultPointer;
 
    IntCbFreeMemory(Argument);
-  
+
    if (!NT_SUCCESS(Status))
    {
       return 0;

@@ -258,7 +258,7 @@ EngUnloadImage ( IN HANDLE hModule )
     ExFreePool(DriverInfo->DriverName.Buffer);
     RemoveEntryList(&DriverInfo->ListEntry);
     ExFreePool(DriverInfo);
-				  }
-			  }
+  }
+}
 
 /* EOF */
