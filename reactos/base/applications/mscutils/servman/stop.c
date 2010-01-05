@@ -197,6 +197,10 @@ DoStop(PMAIN_WND_INFO pInfo)
                 /* Don't stop the main service if the user selected not to */
                 bStopMainService = FALSE;
             }
+
+            HeapFree(GetProcessHeap(),
+                     0,
+                     lpServiceList);
         }
 
         /* If the service has no running dependents, then we stop it here */

@@ -39,6 +39,7 @@ DoStartService(PMAIN_WND_INFO Info,
                 IncrementProgressBar(hProgress, DEFAULT_STEP);
             }
 
+            /* Start the service */
             bRet = StartService(hService,
                                 0,
                                 NULL);
@@ -85,6 +86,7 @@ DoStartService(PMAIN_WND_INFO Info,
                             /* It is, get the latest tickcount to reset the max wait time */
                             dwStartTickCount = GetTickCount();
                             dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+                            IncrementProgressBar(hProgress, DEFAULT_STEP);
                         }
                         else
                         {

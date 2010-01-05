@@ -90,7 +90,7 @@ typedef struct _STOP_INFO
 } STOP_INFO, *PSTOP_INFO;
 
 /* control */
-BOOL Control(PMAIN_WND_INFO Info, HWND hProgDlg, DWORD Control);
+BOOL Control(PMAIN_WND_INFO Info, HWND hProgress, DWORD Control);
 BOOL DoStop(PMAIN_WND_INFO Info);
 BOOL DoPause(PMAIN_WND_INFO Info);
 BOOL DoResume(PMAIN_WND_INFO Info);
@@ -98,10 +98,10 @@ BOOL DoResume(PMAIN_WND_INFO Info);
 /* progress.c */
 #define DEFAULT_STEP 0
 HWND CreateProgressDialog(HWND hParent, UINT LabelId);
-BOOL DestroyProgressDialog(HWND hProgDlg, BOOL bComplete);
-VOID InitializeProgressDialog(HWND hProgDlg, LPWSTR lpServiceName);
-VOID IncrementProgressBar(HWND hProgDlg, UINT NewPos);
-VOID CompleteProgressBar(HWND hProgDlg);
+BOOL DestroyProgressDialog(HWND hProgress, BOOL bComplete);
+VOID InitializeProgressDialog(HWND hProgress, LPWSTR lpServiceName);
+VOID IncrementProgressBar(HWND hProgress, UINT NewPos);
+VOID CompleteProgressBar(HWND hProgress);
 
 /* query.c */
 ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
