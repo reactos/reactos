@@ -124,8 +124,9 @@ typedef struct _SERVICEPROPSHEET
 
 HTREEITEM AddItemToTreeView(HWND hTreeView, HTREEITEM hRoot, LPTSTR lpDisplayName, LPTSTR lpServiceName, ULONG serviceType, BOOL bHasChildren);
 
-/* dependencies */
+/* stop_dependencies */
 INT_PTR CALLBACK StopDependsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+LPWSTR GetListOfServicesToStop(LPWSTR lpServiceName);
 
 /* tv1_dependencies */
 BOOL TV1_Initialize(PSERVICEPROPSHEET pDlgInfo, LPTSTR lpServiceName);
@@ -135,6 +136,7 @@ VOID TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPTS
 BOOL TV2_Initialize(PSERVICEPROPSHEET pDlgInfo, LPTSTR lpServiceName);
 VOID TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPTSTR lpServiceName);
 BOOL TV2_HasDependantServices(LPWSTR lpServiceName);
+LPENUM_SERVICE_STATUS TV2_GetDependants(LPWSTR lpServiceName, LPDWORD lpdwCount);
 
 LONG APIENTRY OpenPropSheet(PMAIN_WND_INFO Info);
 

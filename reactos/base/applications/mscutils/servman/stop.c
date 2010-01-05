@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/stop.c
  * PURPOSE:     Stops running a service
- * COPYRIGHT:   Copyright 2006-2009 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-2010 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -118,6 +118,7 @@ StopDependantServices(PMAIN_WND_INFO pInfo,
 BOOL
 DoStop(PMAIN_WND_INFO pInfo)
 {
+    LPWSTR lpServiceList;
     BOOL bRet = FALSE;
 
     if (pInfo)
@@ -125,18 +126,23 @@ DoStop(PMAIN_WND_INFO pInfo)
         /* Does this service have anything which depends on it? */
         if (TV2_HasDependantServices(pInfo->pCurrentService->lpServiceName))
         {
-            /* It does, list them and ask the user if they want to stop them as well */
-            if (DialogBoxParam(hInstance,
-                               MAKEINTRESOURCE(IDD_DLG_DEPEND_STOP),
-                               pInfo->hMainWnd,
-                               StopDependsDialogProc,
-                               (LPARAM)&pInfo) == IDOK)
+            /* It does, get a list of all the services which need stopping */
+            lpServiceList = GetListOfServicesToStop(pInfo->pCurrentService->lpServiceName);
+            if (lpServiceList)
             {
-                /* Stop all the dependany services */
-                if (StopDependantServices(pInfo, pInfo->pCurrentService->lpServiceName))
+                /* List them and ask the user if they want to stop them */
+                if (DialogBoxParamW(hInstance,
+                                    MAKEINTRESOURCEW(IDD_DLG_DEPEND_STOP),
+                                    pInfo->hMainWnd,
+                                    StopDependsDialogProc,
+                                    (LPARAM)lpServiceList) == IDOK)
                 {
-                    /* Finally stop the requested service */
-                    bRet = StopService(pInfo, pInfo->pCurrentService->lpServiceName);
+                    /* Stop all the dependant services */
+                    if (StopDependantServices(pInfo, pInfo->pCurrentService->lpServiceName))
+                    {
+                        /* Finally stop the requested service */
+                        bRet = StopService(pInfo, pInfo->pCurrentService->lpServiceName);
+                    }
                 }
             }
         }
