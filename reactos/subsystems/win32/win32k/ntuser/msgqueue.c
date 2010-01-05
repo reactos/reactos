@@ -456,7 +456,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT Win
 
    *ScreenPoint = Message->Msg.pt;
 
-   if((Window != NULL && (int)Window != 1 && CaptureWindow->hSelf != Window->hSelf) ||
+   if((Window != NULL && PtrToInt(Window) != 1 && CaptureWindow->hSelf != Window->hSelf) ||
          ((FilterLow != 0 || FilterHigh != 0) && (Msg < FilterLow || Msg > FilterHigh)))
    {
       /* Reject the message because it doesn't match the filter */
@@ -1374,7 +1374,7 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
    {
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                          ListEntry);
-      if ((!Window || (int)Window == 1 || Window->hSelf == CurrentMessage->Msg.hwnd) &&
+      if ((!Window || PtrToInt(Window) == 1 || Window->hSelf == CurrentMessage->Msg.hwnd) &&
             ((MsgFilterLow == 0 && MsgFilterHigh == 0) ||
              (MsgFilterLow <= CurrentMessage->Msg.message &&
               MsgFilterHigh >= CurrentMessage->Msg.message)))
@@ -1985,7 +1985,7 @@ MsqGetFirstTimerExpiry(PUSER_MESSAGE_QUEUE MessageQueue,
       Timer = CONTAINING_RECORD(MessageQueue->TimerListHead.Flink,
                                 TIMER_ENTRY, ListEntry);
       EnumEntry = EnumEntry->Flink;
-      if ((NULL == WndFilter || (int)WndFilter == 1 || Timer->Wnd == WndFilter->hSelf) &&
+      if ((NULL == WndFilter || PtrToInt(WndFilter) == 1 || Timer->Wnd == WndFilter->hSelf) &&
             ((MsgFilterMin == 0 && MsgFilterMax == 0) ||
              (MsgFilterMin <= Timer->Msg &&
               Timer->Msg <= MsgFilterMax)))

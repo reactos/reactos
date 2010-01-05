@@ -165,7 +165,7 @@ co_EVENT_CallEvents( DWORD event,
                                         hwnd,
                                pEP->idObject,
                                 pEP->idChild,
- (DWORD)(NtCurrentTeb()->ClientId).UniqueThread,
+ (DWORD_PTR)(NtCurrentTeb()->ClientId).UniqueThread,
                     (DWORD)EngGetTickCount(),
                                    pEH->Proc);
    return Result;
@@ -202,7 +202,7 @@ IntNotifyWinEvent(
         if (pEH->head.pti->pEThread != PsGetCurrentThread())
         { // if all process || all thread || other thread same process
            if (!(pEH->idProcess) || !(pEH->idThread) || 
-               (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess))
+               (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)(DWORD_PTR)pEH->idProcess))
            {
               Result = IntCallLowLevelEvent( pEH,
                                              Event,
@@ -213,7 +213,7 @@ IntNotifyWinEvent(
         }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
                    ( ((pEH->idProcess &&
-                     NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess) &&
+                     NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)(DWORD_PTR)pEH->idProcess) &&
                      !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
                      !pEH->idProcess ) )
         {
