@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/progress.c
  * PURPOSE:     Progress dialog box message handler
- * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-2010 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -15,26 +15,31 @@ VOID
 CompleteProgressBar(HWND hProgDlg)
 {
     HWND hProgBar;
+    UINT Pos = 0;
 
+    /* Get a handle to the progress bar */
     hProgBar = GetDlgItem(hProgDlg,
                           IDC_SERVCON_PROGRESS);
     if (hProgBar)
     {
-        INT pos = 0;
-
-        pos = SendMessageW(hProgBar,
+        /* Get the current position */
+        Pos = SendMessageW(hProgBar,
                            PBM_GETPOS,
                            0,
                            0);
 
-        while (pos <= PROGRESSRANGE)
+        /* Loop until we hit the max */
+        while (Pos <= PROGRESSRANGE)
         {
+            /* Increment the progress bar */
             SendMessageW(hProgBar,
                          PBM_DELTAPOS,
-                         pos,
+                         Pos,
                          0);
+
+            /* Wait for 15ms, it gives it a smooth feel */
             Sleep(15);
-            pos++;
+            Pos++;
         }
     }
 }
@@ -45,12 +50,15 @@ IncrementProgressBar(HWND hProgDlg,
 {
     HWND hProgBar;
 
+    /* Get a handle to the progress bar */
     hProgBar = GetDlgItem(hProgDlg,
                           IDC_SERVCON_PROGRESS);
     if (hProgBar)
     {
+        /* Do we want to increment the default amount? */
         if (NewPos == DEFAULT_STEP)
         {
+            /* Yes, use the step value we set on create */
             SendMessageW(hProgBar,
                          PBM_STEPIT,
                          0,
@@ -58,6 +66,7 @@ IncrementProgressBar(HWND hProgDlg,
         }
         else
         {
+            /* No, use the value passed */
             SendMessageW(hProgBar,
                          PBM_SETPOS,
                          NewPos,
@@ -169,7 +178,7 @@ DestroyProgressDialog(HWND hwnd,
             /* Complete the progress bar */
             CompleteProgressBar(hwnd);
 
-            /* Wait for asthetics */
+            /* Wait, for asthetics */
             Sleep(500);
         }
 
