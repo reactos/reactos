@@ -60,6 +60,7 @@ PVOID MmNonPagedSystemStart;                    // FFFFFAA000000000
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
 PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END; // 0xFFFFFAE000000000
+PVOID MmHyperSpaceEnd = (PVOID)HYPER_SPACE_END;
 
 PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1; // FIXME: ULONG64
@@ -367,7 +368,6 @@ MiInitializePageTable()
 {
     ULONG64 PageFrameOffset;
     MMPTE TmplPte, *Pte;
-    PFN_NUMBER PageCount;
 
     /* HACK: don't use freeldr debug print anymore */
     FrLdrDbgPrint = NoDbgPrint;
@@ -592,13 +592,13 @@ VOID
 NTAPI
 MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PPHYSICAL_MEMORY_DESCRIPTOR Buffer, NewBuffer;
+    PPHYSICAL_MEMORY_DESCRIPTOR Buffer;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     PLIST_ENTRY ListEntry;
     PFN_NUMBER NextPage = -1;
     PULONG Bitmap;
     ULONG Runs = 0;
-    ULONG Size, i;
+    ULONG Size;
 
     /* Calculate size for the PFN bitmap */
     Size = ROUND_UP(MmHighestPhysicalPage + 1, sizeof(ULONG));
@@ -676,8 +676,6 @@ MiBuildPagedPool(VOID)
 {
     PMMPTE Pte;
     MMPTE TmplPte;
-    PFN_NUMBER PageFrameIndex;
-    KIRQL OldIrql;
     ULONG Size, BitMapSize;
     
     /* Default size for paged pool is 4 times non paged pool */
@@ -823,10 +821,6 @@ MmArmInitSystem(IN ULONG Phase,
     }
     else if (Phase == 1)
     {
-        PMMPTE Pte;
-        ULONG OldCount;
-        PPHYSICAL_MEMORY_RUN Run;
-
         /* The PFN database was created, restore the free descriptor */
         *MxFreeDescriptor = MxOldFreeDescriptor;
 
