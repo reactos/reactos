@@ -180,7 +180,7 @@ NtGdiRestoreDC(
         }
 
         /* Delete the saved dc */
-        DC_FreeDC(hdcSave);
+        GreDeleteObject(hdcSave);
     }
 
     DC_UnlockDc(pdc);

@@ -158,7 +158,7 @@ String Context::getStackTrace() const
 
 BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 {
-#ifdef __STDC_WANT_SECURE_LIB__
+#if defined(__STDC_WANT_SECURE_LIB__) && defined(_MS_VER)
 	SYSTEMTIME stime;
 	struct tm tm_;
 	struct tm* tm = &tm_;

@@ -1733,6 +1733,7 @@ DWORD RCreateServiceW(
     SC_HANDLE hServiceHandle = NULL;
     LPWSTR lpImagePath = NULL;
     HKEY hServiceKey = NULL;
+    LPWSTR lpObjectName;
 
     DPRINT("RCreateServiceW() called\n");
     DPRINT("lpServiceName = %S\n", lpServiceName);
@@ -1973,16 +1974,16 @@ DWORD RCreateServiceW(
             goto done;
     }
 
-    /* FIXME: Handle lpServiceStartName propertly! */
-    /* If a non driver and NULL for lpServiceStartName, write ObjectName as LocalSystem */
-    if ((dwServiceType & SERVICE_WIN32) && (!lpServiceStartName))
+    /* Write service start name */
+    if (dwServiceType & SERVICE_WIN32)
     {
+        lpObjectName = (lpServiceStartName != NULL) ? (LPWSTR)lpServiceStartName : L"LocalSystem";
         dwError = RegSetValueExW(hServiceKey,
                                  L"ObjectName",
                                  0,
                                  REG_SZ,
-                                 (LPBYTE)L"LocalSystem",
-                                 24);
+                                 (LPBYTE)lpObjectName,
+                                 (wcslen(lpObjectName) + 1) * sizeof(WCHAR));
         if (dwError != ERROR_SUCCESS)
             goto done;
     }

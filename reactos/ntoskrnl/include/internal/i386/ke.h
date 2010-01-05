@@ -65,6 +65,53 @@ extern ULONG Ke386CacheAlignment;
 //
 #define KeGetTrapFrameInterruptState(TrapFrame) \
         BooleanFlagOn((TrapFrame)->EFlags, EFLAGS_INTERRUPT_MASK)
+        
+//
+// Registers an interrupt handler with an IDT vector
+//
+FORCEINLINE
+VOID
+KeRegisterInterruptHandler(IN ULONG Vector,
+                           IN PVOID Handler)
+{                           
+    UCHAR Entry;
+    ULONG_PTR Address;
+    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+
+    //
+    // Get the entry from the HAL
+    //
+    Entry = HalVectorToIDTEntry(Vector);
+    Address = PtrToUlong(Handler);
+
+    //
+    // Now set the data
+    //
+    Pcr->IDT[Entry].ExtendedOffset = (USHORT)(Address >> 16);
+    Pcr->IDT[Entry].Offset = (USHORT)Address;
+}
+
+//
+// Returns the registered interrupt handler for a given IDT vector
+//
+FORCEINLINE
+PVOID
+KeQueryInterruptHandler(IN ULONG Vector)
+{
+    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    UCHAR Entry;
+
+    //
+    // Get the entry from the HAL
+    //
+    Entry = HalVectorToIDTEntry(Vector);
+
+    //
+    // Read the entry from the IDT
+    //
+    return (PVOID)(((Pcr->IDT[Entry].ExtendedOffset << 16) & 0xFFFF0000) |
+                    (Pcr->IDT[Entry].Offset & 0xFFFF));
+}
 
 //
 // Invalidates the TLB entry for a specified address

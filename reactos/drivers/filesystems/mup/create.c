@@ -39,33 +39,33 @@
 
 NTSTATUS NTAPI
 MupCreate(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp)
+          PIRP Irp)
 {
-  PDEVICE_EXTENSION DeviceExt;
-  PIO_STACK_LOCATION Stack;
-  PFILE_OBJECT FileObject;
-  NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExt;
+    PIO_STACK_LOCATION Stack;
+    PFILE_OBJECT FileObject;
+    NTSTATUS Status;
 
-  DPRINT("MupCreate() called\n");
+    DPRINT("MupCreate() called\n");
 
-  DeviceExt = DeviceObject->DeviceExtension;
-  ASSERT(DeviceExt);
-  Stack = IoGetCurrentIrpStackLocation (Irp);
-  ASSERT(Stack);
+    DeviceExt = DeviceObject->DeviceExtension;
+    ASSERT(DeviceExt);
+    Stack = IoGetCurrentIrpStackLocation (Irp);
+    ASSERT(Stack);
 
-  FileObject = Stack->FileObject;
+    FileObject = Stack->FileObject;
 
-  DPRINT("FileName: '%wZ'\n", &FileObject->FileName);
+    DPRINT("FileName: '%wZ'\n", &FileObject->FileName);
 
-  Status = STATUS_ACCESS_DENIED;
+    Status = STATUS_ACCESS_DENIED;
 
-  Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
-  Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
+    Irp->IoStatus.Status = Status;
 
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
+    IoCompleteRequest(Irp,
+                      IO_NO_INCREMENT);
 
-  return(Status);
+    return Status;
 }
 
 /* EOF */

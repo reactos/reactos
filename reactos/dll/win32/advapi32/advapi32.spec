@@ -236,7 +236,7 @@
 @ stdcall GetCurrentHwProfileW(ptr)
 @ stdcall GetEffectiveRightsFromAclA(ptr ptr ptr)
 @ stdcall GetEffectiveRightsFromAclW(ptr ptr ptr)
-@ stub GetEventLogInformation
+@ stdcall GetEventLogInformation(long long ptr long ptr)
 @ stdcall GetExplicitEntriesFromAclA(ptr ptr ptr) advapi32.GetExplicitEntriesFromAclW
 @ stdcall GetExplicitEntriesFromAclW(ptr ptr ptr)
 @ stdcall GetFileSecurityA(str long ptr long ptr)

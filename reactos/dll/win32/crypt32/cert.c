@@ -2854,7 +2854,7 @@ static void CertContext_SetKeyProvInfo(PCCERT_CONTEXT context,
                     {
                         info.pwszContainerName = CryptMemAlloc(len *
                          sizeof(WCHAR));
-                        len = MultiByteToWideChar(CP_ACP, 0, szContainer, -1,
+                        MultiByteToWideChar(CP_ACP, 0, szContainer, -1,
                          info.pwszContainerName, len);
                     }
                 }
@@ -2878,7 +2878,7 @@ static void CertContext_SetKeyProvInfo(PCCERT_CONTEXT context,
                     {
                         info.pwszProvName = CryptMemAlloc(len *
                          sizeof(WCHAR));
-                        len = MultiByteToWideChar(CP_ACP, 0, szProvider, -1,
+                        MultiByteToWideChar(CP_ACP, 0, szProvider, -1,
                          info.pwszProvName, len);
                     }
                 }
@@ -2898,7 +2898,7 @@ static void CertContext_SetKeyProvInfo(PCCERT_CONTEXT context,
         pInfo = &info;
     }
 
-    ret = CertSetCertificateContextProperty(context, CERT_KEY_PROV_INFO_PROP_ID,
+    CertSetCertificateContextProperty(context, CERT_KEY_PROV_INFO_PROP_ID,
      0, pInfo);
 
     if (pInfo == &info)

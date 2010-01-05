@@ -167,14 +167,21 @@ static BOOL compare_crl_issued_by(PCCRL_CONTEXT pCrlContext, DWORD dwType,
                     }
                     else if (info->KeyId.cbData)
                     {
-                        if ((ext = CertFindExtension(
-                         szOID_SUBJECT_KEY_IDENTIFIER,
-                         issuer->pCertInfo->cExtension,
-                         issuer->pCertInfo->rgExtension)))
+                        DWORD size;
+
+                        ret = CertGetCertificateContextProperty(issuer,
+                         CERT_KEY_IDENTIFIER_PROP_ID, NULL, &size);
+                        if (ret && size == info->KeyId.cbData)
                         {
-                            if (info->KeyId.cbData == ext->Value.cbData)
-                                ret = !memcmp(info->KeyId.pbData,
-                                 ext->Value.pbData, info->KeyId.cbData);
+                            LPBYTE buf = CryptMemAlloc(size);
+
+                            if (buf)
+                            {
+                                CertGetCertificateContextProperty(issuer,
+                                 CERT_KEY_IDENTIFIER_PROP_ID, buf, &size);
+                                ret = !memcmp(buf, info->KeyId.pbData, size);
+                                CryptMemFree(buf);
+                            }
                             else
                                 ret = FALSE;
                         }

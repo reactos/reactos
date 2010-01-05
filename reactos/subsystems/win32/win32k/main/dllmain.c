@@ -114,6 +114,9 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
       InitializeListHead(&Win32Process->MenuListHead);
 
+      InitializeListHead(&Win32Process->GDIBrushAttrFreeList);
+      InitializeListHead(&Win32Process->GDIDcAttrFreeList);
+
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
 

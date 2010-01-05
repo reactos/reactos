@@ -512,7 +512,7 @@ struct FileHolder
 {
 	FileHolder(LPCTSTR path, LPCTSTR mode)
 	{
-#ifdef __STDC_WANT_SECURE_LIB__	// secure CRT functions using VS 2005
+#if defined(__STDC_WANT_SECURE_LIB__) && defined(_MS_VER) // secure CRT functions using VS 2005
 		if (_tfopen_s(&_pfile, path, mode) != 0)
 			_pfile = NULL;
 #else

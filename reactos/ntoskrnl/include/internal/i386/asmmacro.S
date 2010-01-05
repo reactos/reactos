@@ -87,18 +87,47 @@
 //
 // @name UNHANDLED_PATH
 //
-// This macro TODO
+// This macro prints out that the current code path is not expected yet
 //
 // @param None
 //
 // @remark None.
 //
-.macro UNHANDLED_PATH
+.macro UNHANDLED_PATH Reason
+
+    /* Push reason */
+    push offset 1f
+
     /* Get EIP */
     call $+5
 
     /* Print debug message */
     push offset _UnhandledMsg
+    call _DbgPrint
+    add esp, 12
+
+    /* Loop indefinitely */
+    jmp $
+
+1:
+    .asciz \Reason
+.endm
+
+//
+// @name UNHANDLED_V86_PATH
+//
+// This macro prints out that the current code path is for unhandled VDM support
+//
+// @param None
+//
+// @remark None.
+//
+.macro UNHANDLED_V86_PATH
+    /* Get EIP */
+    call $+5
+
+    /* Print debug message */
+    push offset _V86UnhandledMsg
     call _DbgPrint
     add esp, 8
 

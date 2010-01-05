@@ -1671,3 +1671,18 @@ _KeTryToAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     GuardedMutex->SpecialApcDisable = Thread->SpecialApcDisable;
     return TRUE;
 }
+
+
+FORCEINLINE
+VOID
+KiAcquireNmiListLock(OUT PKIRQL OldIrql)
+{
+    KeAcquireSpinLock(&KiNmiCallbackListLock, OldIrql);
+}
+
+FORCEINLINE
+VOID
+KiReleaseNmiListLock(IN KIRQL OldIrql)
+{
+    KeReleaseSpinLock(&KiNmiCallbackListLock, OldIrql);
+}

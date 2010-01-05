@@ -482,6 +482,11 @@ interface pnp
         [in] DWORD ulFlags);
 
     /* Function 29 */
+    cpp_quote("#define PNP_DEVINST_MOVE        0x2")
+    cpp_quote("#define PNP_DEVINST_SETUP       0x3")
+    cpp_quote("#define PNP_DEVINST_ENABLE      0x4")
+    cpp_quote("#define PNP_DEVINST_DISABLE     0x5")
+    cpp_quote("#define PNP_DEVINST_REENUMERATE 0x7")
     DWORD PNP_DeviceInstanceAction(
         [in] handle_t hBinding,
         [in] DWORD ulMajorAction,

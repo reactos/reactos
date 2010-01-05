@@ -34,7 +34,13 @@
     (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))
 #define INT_BCD(int)            \
     (UCHAR)(((int / 10) << 4) + (int % 10))
-
+    
+//
+// Mm PTE/PDE to Hal PTE/PDE
+//
+#define HalAddressToPde(x) (PHARDWARE_PTE)MiAddressToPde(x)
+#define HalAddressToPte(x) (PHARDWARE_PTE)MiAddressToPte(x)
+    
 typedef struct _IDTUsageFlags
 {
     UCHAR Flags;
@@ -99,6 +105,10 @@ VOID HalpInitPhase0 (PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID HalpInitPhase1(VOID);
 VOID NTAPI HalpClockInterrupt(VOID);
 VOID NTAPI HalpProfileInterrupt(VOID);
+
+VOID
+NTAPI
+HalpFlushTLB(VOID);
 
 //
 // KD Support
@@ -172,18 +182,6 @@ HalpBiosDisplayReset(
     VOID
 );
 
-ULONG
-NTAPI
-HalpBorrowTss(
-    VOID
-);
-
-ULONG
-NTAPI
-HalpReturnTss(
-    ULONG SavedTss
-);
-
 VOID
 NTAPI
 HalpBiosCall(
@@ -249,6 +247,8 @@ HalpSetInterruptGate(ULONG Index, PVOID Address);
 #define KfReleaseSpinLock(SpinLock, OldIrql) KeLowerIrql(OldIrql);
 #endif // !CONFIG_SMP
 #endif // _M_AMD64
+
+extern BOOLEAN HalpNMIInProgress;
 
 extern PVOID HalpRealModeStart;
 extern PVOID HalpRealModeEnd;

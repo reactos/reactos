@@ -11,16 +11,16 @@
 
 
 static BOOL
-StopService(PSTOP_INFO pStopInfo,
-            SC_HANDLE hService)
+StopService(PMAIN_WND_INFO pInfo,
+            LPWSTR lpServiceName)
 {
-    SERVICE_STATUS_PROCESS ServiceStatus;
-    DWORD dwBytesNeeded;
-    DWORD dwStartTime;
-    DWORD dwTimeout;
-    HWND hProgDlg;
+    //SERVICE_STATUS_PROCESS ServiceStatus;
+    //DWORD dwBytesNeeded;
+    //DWORD dwStartTime;
+   // DWORD dwTimeout;
+    //HWND hProgDlg;
     BOOL bRet = FALSE;
-
+/*
     dwStartTime = GetTickCount();
     dwTimeout = 30000; // 30 secs
 
@@ -47,7 +47,7 @@ StopService(PSTOP_INFO pStopInfo,
                 {
                     if (GetTickCount() - dwStartTime > dwTimeout)
                     {
-                        /* We exceeded our max wait time, give up */
+                        We exceeded our max wait time, give up
                         break;
                     }
                 }
@@ -63,13 +63,13 @@ StopService(PSTOP_INFO pStopInfo,
         Sleep(500);
         DestroyWindow(hProgDlg);
     }
-
+*/
     return bRet;
 }
 
 static BOOL
-StopDependentServices(PSTOP_INFO pStopInfo,
-                      SC_HANDLE hService)
+StopDependantServices(PMAIN_WND_INFO pInfo,
+                      LPWSTR lpServiceName)
 {
     //LPENUM_SERVICE_STATUS lpDependencies;
     //SC_HANDLE hDepService;
@@ -118,53 +118,33 @@ StopDependentServices(PSTOP_INFO pStopInfo,
 BOOL
 DoStop(PMAIN_WND_INFO pInfo)
 {
-    STOP_INFO stopInfo;
-    //SC_HANDLE hSCManager;
-    SC_HANDLE hService = NULL;
     BOOL bRet = FALSE;
 
     if (pInfo)
     {
-        //stopInfo.pInfo = pInfo;
-
-        if (TRUE /*HasDependentServices(pInfo->pCurrentService->lpServiceName)*/)
+        /* Does this service have anything which depends on it? */
+        if (TV2_HasDependantServices(pInfo->pCurrentService->lpServiceName))
         {
-            INT ret = DialogBoxParam(hInstance,
-                                     MAKEINTRESOURCE(IDD_DLG_DEPEND_STOP),
-                                     pInfo->hMainWnd,
-                                     StopDependsDialogProc,
-                                     (LPARAM)&stopInfo);
-            if (ret == IDOK)
+            /* It does, list them and ask the user if they want to stop them as well */
+            if (DialogBoxParam(hInstance,
+                               MAKEINTRESOURCE(IDD_DLG_DEPEND_STOP),
+                               pInfo->hMainWnd,
+                               StopDependsDialogProc,
+                               (LPARAM)&pInfo) == IDOK)
             {
-                if (StopDependentServices(&stopInfo, hService))
+                /* Stop all the dependany services */
+                if (StopDependantServices(pInfo, pInfo->pCurrentService->lpServiceName))
                 {
-                    bRet = StopService(&stopInfo, hService);
+                    /* Finally stop the requested service */
+                    bRet = StopService(pInfo, pInfo->pCurrentService->lpServiceName);
                 }
             }
         }
         else
         {
-            bRet = StopService(&stopInfo, hService);
+            /* No dependants, just stop the service */
+            bRet = StopService(pInfo, pInfo->pCurrentService->lpServiceName);
         }
-/*
-        hSCManager = OpenSCManager(NULL,
-                                   NULL,
-                                   SC_MANAGER_ALL_ACCESS);
-        if (hSCManager)
-        {
-            hService = OpenService(hSCManager,
-                                   pInfo->pCurrentService->lpServiceName,
-                                   SERVICE_STOP | SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
-            if (hService)
-            {
-                stopInfo.hSCManager = hSCManager;
-                stopInfo.hMainService = hService;
-
-                CloseServiceHandle(hService);
-            }
-
-            CloseServiceHandle(hSCManager);
-        }*/
     }
 
     return bRet;

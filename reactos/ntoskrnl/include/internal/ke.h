@@ -64,6 +64,14 @@ typedef struct _DPC_QUEUE_ENTRY
     PVOID Context;
 } DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
 
+typedef struct _KNMI_HANDLER_CALLBACK
+{
+    struct _KNMI_HANDLER_CALLBACK* Next;
+    PNMI_CALLBACK Callback;
+    PVOID Context;
+    PVOID Handle;
+} KNMI_HANDLER_CALLBACK, *PKNMI_HANDLER_CALLBACK;
+
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
     IN PUNICODE_STRING Unicode,
@@ -71,6 +79,8 @@ typedef PCHAR
     IN ULONG Length
 );
 
+extern PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
+extern KSPIN_LOCK KiNmiCallbackListLock;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;

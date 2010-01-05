@@ -29,6 +29,7 @@ const GUID KSPROPSETID_Audio = {0x45FFAAA0L, 0x6E1B, 0x11D0, {0xBC, 0xF2, 0x44, 
 const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_General                  = {0x1464EDA5L, 0x6A8F, 0x11D1, {0x9A, 0xA7, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+const GUID KSEVENTSETID_AudioControlChange      = {0xE85E9698L, 0xFA2F, 0x11D1, {0x95, 0xBD, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3}};
 
 MIXER_STATUS
 MMixerVerifyContext(
@@ -37,7 +38,8 @@ MMixerVerifyContext(
     if (MixerContext->SizeOfStruct != sizeof(MIXER_CONTEXT))
         return MM_STATUS_INVALID_PARAMETER;
 
-    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open || 
+    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open ||
+        !MixerContext->AllocEventData || !MixerContext->FreeEventData ||
         !MixerContext->Close || !MixerContext->OpenKey || !MixerContext->QueryKeyValue || !MixerContext->CloseKey)
         return MM_STATUS_INVALID_PARAMETER;
 
@@ -129,7 +131,7 @@ MMixerGetSourceMixerLineByLineId(
     while(Entry != &MixerInfo->LineList)
     {
         MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
-        DPRINT("dwLineID %x dwLineID %x\n", MixerLineSrc->Line.dwLineID, dwLineID);
+        DPRINT("dwLineID %x dwLineID %x MixerLineSrc %p\n", MixerLineSrc->Line.dwLineID, dwLineID, MixerLineSrc);
         if (MixerLineSrc->Line.dwLineID == dwLineID)
             return MixerLineSrc;
 

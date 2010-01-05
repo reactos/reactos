@@ -594,7 +594,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->Spare3Count = 0; /* FIXME */
 
     Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
-    Spi->ResidentPagedPoolPage = MmPagedPoolSize; /* FIXME */
+    Spi->ResidentPagedPoolPage = MiMemoryConsumers[MC_PPOOL].PagesUsed; /* FIXME */
 
     Spi->ResidentSystemDriverPage = 0; /* FIXME */
     Spi->CcFastReadNoWait = 0; /* FIXME */

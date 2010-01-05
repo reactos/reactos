@@ -453,7 +453,6 @@
 		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
-		<file>dbgpool.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
 		<if property="_WINKD_" value ="1">
@@ -465,7 +464,6 @@
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
 		<file>pe.c</file>
-		<file>pool.c</file>
 		<file>ppool.c</file>
 		<file>procsup.c</file>
 		<file>region.c</file>

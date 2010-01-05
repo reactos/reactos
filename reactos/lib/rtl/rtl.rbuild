@@ -27,7 +27,7 @@
 		<file>rtlswap.s</file>
 		<file>thread.c</file>
 	</directory>
-   	</if>
+	</if>
 	<if property="ARCH" value="arm">
 		<directory name="arm">
 			<file>debug_asm.S</file>

@@ -48,6 +48,8 @@ HRGN FASTCALL IntCreatePolyPolygonRgn(PPOINT, PULONG, INT, INT);
 INT FASTCALL IntGdiCombineRgn(PROSRGNDATA, PROSRGNDATA, PROSRGNDATA, INT);
 INT FASTCALL REGION_Complexity(PROSRGNDATA);
 PROSRGNDATA FASTCALL IntGdiCreateRectRgn(INT, INT, INT, INT);
+PROSRGNDATA FASTCALL RGNOBJAPI_Lock(HRGN,PRGN_ATTR *);
+VOID FASTCALL RGNOBJAPI_Unlock(PROSRGNDATA);
 
 #define UnsafeIntCreateRectRgnIndirect(prc) \
   NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)

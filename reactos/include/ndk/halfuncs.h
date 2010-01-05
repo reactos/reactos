@@ -274,6 +274,13 @@ HalSetRealTimeClock(
     IN PTIME_FIELDS RtcTime
 );
 
+NTHALAPI
+ULONG
+NTAPI
+HalSetTimeIncrement(
+    IN ULONG Increment
+);
+
 // x86 BIOS emulator
 #ifdef _X86BIOS_
 NTSTATUS

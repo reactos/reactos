@@ -34,19 +34,19 @@ AddItemToTreeView(HWND hTreeView,
     {
         case SERVICE_WIN32_OWN_PROCESS:
         case SERVICE_WIN32_SHARE_PROCESS:
-            tvi.iImage = 1;
-            tvi.iSelectedImage = 1;
+            tvi.iImage = IMAGE_SERVICE;
+            tvi.iSelectedImage = IMAGE_SERVICE;
             break;
 
         case SERVICE_KERNEL_DRIVER:
         case SERVICE_FILE_SYSTEM_DRIVER:
-            tvi.iImage = 2;
-            tvi.iSelectedImage = 2;
+            tvi.iImage = IMAGE_DRIVER;
+            tvi.iSelectedImage = IMAGE_DRIVER;
             break;
 
         default:
-            tvi.iImage = 0;
-            tvi.iSelectedImage = 0;
+            tvi.iImage = IMAGE_UNKNOWN;
+            tvi.iSelectedImage = IMAGE_UNKNOWN;
             break;
     }
 

@@ -1362,13 +1362,14 @@ UserDrawIconEx(
                           cyHeight,
                           hdcImage ? hdcImage : hdcMask,
                           0,
-                          ((diFlags & DI_MASK && !(diFlags & DI_IMAGE)) ||
-                           (diFlags & DI_IMAGE && hbmColor) ? 0 : IconSize.cy),
+                          0,
                           IconSize.cx,
                           IconSize.cy,
                           SRCCOPY,
                           0,
-                          hdcImage ? hdcMask : NULL);
+                          hdcMask,
+                          0,
+                          hdcImage ? 0 : IconSize.cy);
     }
 
     if (hOldMask) NtGdiSelectBitmap(hdcMask, hOldMask);

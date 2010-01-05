@@ -113,7 +113,13 @@ BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
         break;
     case CERT_STORE_ADD_USE_EXISTING:
         if (existing)
+        {
             CtlContext_CopyProperties(existing, pCtlContext);
+            if (ppStoreContext)
+                *ppStoreContext = CertDuplicateCTLContext(existing);
+        }
+        else
+            toAdd = CertDuplicateCTLContext(pCtlContext);
         break;
     default:
         FIXME("Unimplemented add disposition %d\n", dwAddDisposition);

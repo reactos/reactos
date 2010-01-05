@@ -10,8 +10,8 @@
 #include "precomp.h"
 
 
-static BOOL
-HasDependantServices(LPWSTR lpServiceName)
+BOOL
+TV2_HasDependantServices(LPWSTR lpServiceName)
 {
     HANDLE hSCManager;
     HANDLE hService;
@@ -136,7 +136,7 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                 for (i = 0; i < count; i++)
                 {
                     /* Does this item need a +/- box? */
-                    bHasChildren = HasDependantServices(lpServiceStatus[i].lpServiceName);
+                    bHasChildren = TV2_HasDependantServices(lpServiceStatus[i].lpServiceName);
 
                     /* Add it */
                     AddItemToTreeView(pDlgInfo->hDependsTreeView2,

@@ -1758,3 +1758,177 @@ IsUserAdmin(VOID)
 
     return bResult;
 }
+
+/***********************************************************************
+ *		SetupInitializeFileLogW(SETUPAPI.@)
+ */
+HSPFILELOG WINAPI SetupInitializeFileLogW(LPCWSTR LogFileName, DWORD Flags)
+{
+    struct FileLog * Log;
+    HANDLE hLog;
+    WCHAR Windir[MAX_PATH];
+    DWORD ret;
+
+    TRACE("%s, 0x%x\n",debugstr_w(LogFileName),Flags);
+
+    if (Flags & SPFILELOG_SYSTEMLOG)
+    {
+        if (!IsUserAdmin() && !(Flags & SPFILELOG_QUERYONLY))
+        {
+            /* insufficient privileges */
+            SetLastError(ERROR_ACCESS_DENIED);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        if (LogFileName || (Flags & SPFILELOG_FORCENEW))
+        {
+            /* invalid parameter */
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        ret = GetSystemWindowsDirectoryW(Windir, MAX_PATH);
+        if (!ret || ret >= MAX_PATH)
+        {
+            /* generic failure */
+            return INVALID_HANDLE_VALUE;
+        }
+
+        /* append path */
+        wcscat(Windir, L"repair\\setup.log");
+    }
+    else
+    {
+        if (!LogFileName)
+        {
+            /* invalid parameter */
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return INVALID_HANDLE_VALUE;
+        }
+        /* copy filename */
+        wcsncpy(Windir, LogFileName, MAX_PATH);
+    }
+
+    if (FileExists(Windir, NULL))
+    {
+        /* take ownership */
+        ret = TakeOwnershipOfFile(Windir);
+
+        if (ret != ERROR_SUCCESS)
+        {
+            /* failed */
+            SetLastError(ret);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        if (!SetFileAttributesW(Windir, FILE_ATTRIBUTE_NORMAL))
+        {
+            /* failed */
+            return INVALID_HANDLE_VALUE;
+        }
+
+        if ((Flags & SPFILELOG_FORCENEW))
+        {
+            if (!DeleteFileW(Windir))
+            {
+                /* failed */
+                return INVALID_HANDLE_VALUE;
+            }
+        }
+    }
+
+    /* open log file */
+    hLog = CreateFileW(Windir,
+                       (Flags & SPFILELOG_QUERYONLY) ? GENERIC_READ : GENERIC_WRITE,
+                       FILE_SHARE_READ | FILE_SHARE_WRITE,
+                       NULL,
+                       OPEN_ALWAYS,
+                       FILE_ATTRIBUTE_NORMAL,
+                       NULL);
+
+    if (hLog == INVALID_HANDLE_VALUE)
+    {
+        /* failed */
+        return INVALID_HANDLE_VALUE;
+    }
+
+    /* close log handle */
+    CloseHandle(hLog);
+
+    /* allocate file log struct */
+    Log = HeapAlloc(GetProcessHeap(), 0, sizeof(struct FileLog));
+    if (!Log)
+    {
+        /* not enough memory */
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    /* initialize log */
+    Log->LogName = HeapAlloc(GetProcessHeap(), 0, (wcslen(Windir)+1) * sizeof(WCHAR));
+    if (!Log->LogName)
+    {
+        /* not enough memory */
+        HeapFree(GetProcessHeap(), 0, Log);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    wcscpy(Log->LogName, Windir);
+    Log->ReadOnly = (Flags & SPFILELOG_QUERYONLY);
+    Log->SystemLog = (Flags & SPFILELOG_SYSTEMLOG);
+
+    return (HSPFILELOG)Log;
+}
+
+/***********************************************************************
+ *		SetupInitializeFileLogA(SETUPAPI.@)
+ */
+HSPFILELOG WINAPI SetupInitializeFileLogA(LPCSTR LogFileName, DWORD Flags)
+{
+    HSPFILELOG hLog;
+    LPWSTR LogFileNameW = NULL;
+
+    TRACE("%s, 0x%x\n",debugstr_a(LogFileName),Flags);
+
+    if (LogFileName)
+    {
+        LogFileNameW = strdupAtoW(LogFileName);
+
+        if (!LogFileNameW)
+        {
+            /* not enough memory */
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        hLog = SetupInitializeFileLogW(LogFileNameW, Flags);
+        HeapFree(GetProcessHeap(), 0, LogFileNameW);
+    }
+    else
+    {
+        hLog = SetupInitializeFileLogW(NULL, Flags);
+    }
+
+    return hLog;
+}
+
+/***********************************************************************
+ *		SetupTerminateFileLog(SETUPAPI.@)
+ */
+BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
+{
+    struct FileLog * Log;
+
+    TRACE ("%p\n",FileLogHandle);
+
+    Log = (struct FileLog *)FileLogHandle;
+
+    /* free file log handle */
+    HeapFree(GetProcessHeap(), 0, Log->LogName);
+    HeapFree(GetProcessHeap(), 0, Log);
+
+    SetLastError(ERROR_SUCCESS);
+
+    return TRUE;
+}

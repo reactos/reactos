@@ -10,6 +10,7 @@
 
 #include <asm.h>
 #include <internal/i386/asmmacro.S>
+#include <internal/i386/callconv.s>
 .intel_syntax noprefix
 
 #define Running 2
@@ -91,8 +92,11 @@ _KiUnexpectedEntrySize:
 _UnexpectedMsg:
     .asciz "\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n"
 
+_V86UnhandledMsg:
+    .asciz "\n\x7\x7!!! Unhandled V8086 (VDM) support at line: %lx!!!\n"
+
 _UnhandledMsg:
-    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
+    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx [%s]!!!\n"
 
 _IsrTimeoutMsg:
     .asciz "\n*** ISR at %lx took over .5 second\n"
@@ -133,7 +137,7 @@ _KiTrapIoTable:
 _KiGetTickCount:
 _KiCallbackReturn:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "TickCount/Callback Interrupts\n"
 
 .func KiSystemService
 TRAP_FIXUPS kss_a, kss_t, DoNotFixupV86, DoNotFixupAbios
@@ -458,7 +462,7 @@ V86_Exit:
 
 AbiosExit:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "ABIOS Exit"
 
 .func KiRaiseAssertion
 TRAP_FIXUPS kira_a, kira_t, DoFixupV86, DoFixupAbios
@@ -697,7 +701,7 @@ _DispatchTwoParam:
 _KiFixupFrame:
 
     /* TODO: Routine to fixup a KTRAP_FRAME when faulting from a syscall. */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "Trap Frame Fixup"
 .endfunc
 
 .func KiTrap0
@@ -738,7 +742,7 @@ VdmCheck:
     /* We don't support this yet! */
 V86Int0:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap1
@@ -781,15 +785,148 @@ V86Int1:
     jz EnableInterrupts
 
     /* We don't support VDM! */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .globl _KiTrap2
 .func KiTrap2
 _KiTrap2:
+	//
+	// Don't allow any other NMIs to come in for now
+	//
+    cli												// Disable interrupts
 
-    /* FIXME: This is an NMI, nothing like a normal exception */
-    mov eax, 2
+	//
+	// Save current state data in registers
+	//
+    mov eax, PCR[KPCR_TSS]							// Save KTSS
+    mov ecx, PCR[KPCR_CURRENT_THREAD]				// Save ETHREAD
+    mov edi, [ecx+KTHREAD_APCSTATE_PROCESS]			// Save EPROCESS
+
+	//
+	// Migrate state data to TSS
+	//
+    mov ecx, [edi+KPROCESS_DIRECTORY_TABLE_BASE]	// Page Directory Table
+    mov [eax+KTSS_CR3], ecx							// Saved in CR3
+    mov cx, [edi+KPROCESS_IOPM_OFFSET]				// IOPM Offset
+    mov [eax+KTSS_IOMAPBASE], cx					// Saved in IOPM Base
+    mov ecx, [edi+KPROCESS_LDT_DESCRIPTOR0]			// Get LDT descriptor
+    test ecx, ecx									// Check if ne
+    jz 1f											// Doesn't exist
+    mov cx, KGDT_LDT								// Load LDT descriptor
+1:
+    mov [eax+KTSS_LDT], cx							// Saved in LDT
+   
+	//
+	// Migrate to NMI TSS
+	//
+    push PCR[KPCR_TSS]								// Save current TSS
+    mov eax, PCR[KPCR_GDT]							// Get GDT
+    mov ch, [eax+KGDT_NMI_TSS+KGDT_BASE_HI]			// Get High KTSS Base
+    mov cl, [eax+KGDT_NMI_TSS+KGDT_BASE_MID]		// Get Mid KTSS Base
+    shl ecx, 16										// Build Top KTSS Base
+    mov cx, [eax+KGDT_NMI_TSS+KGDT_BASE_LOW]		// Add Low KTSS Base
+    mov PCR[KPCR_TSS], ecx
+
+	//
+	// Clear nested flag and activate the NMI TSS
+	//
+    pushf											// Get EFLAGS
+    and dword ptr [esp], ~EFLAGS_NESTED_TASK		// Clear nested task
+    popf											// Set EFLAGS
+    mov ecx, PCR[KPCR_GDT]							// Get GDT
+    lea eax, [ecx+KGDT_NMI_TSS]						// Get NMI TSS
+    mov byte ptr [eax+5], 0x89						// DPL 0, Present, NonBusy
+
+	//
+	// Build the trap frame and save it into the KPRCB
+	//
+    mov eax, [esp]									// KGDT_TSS from earlier
+    push 0											// V86 segments
+    push 0											// V86 segments
+    push 0											// V86 segments
+    push 0											// V86 segments
+    push [eax+KTSS_SS]								// TSS fields -> Trap Frame
+    push [eax+KTSS_ESP]								// TSS fields -> Trap Frame
+    push [eax+KTSS_EFLAGS]							// TSS fields -> Trap Frame
+    push [eax+KTSS_CS]								// TSS fields -> Trap Frame
+    push [eax+KTSS_EIP]								// TSS fields -> Trap Frame
+    push 0											// Error Code
+    push [eax+KTSS_EBP]								// TSS fields -> Trap Frame
+    push [eax+KTSS_EBX]								// TSS fields -> Trap Frame
+    push [eax+KTSS_ESI]								// TSS fields -> Trap Frame
+    push [eax+KTSS_EDI]								// TSS fields -> Trap Frame
+    push [eax+KTSS_FS]								// TSS fields -> Trap Frame
+    push PCR[KPCR_EXCEPTION_LIST]					// SEH Handler from KPCR
+    push -1											// Bogus previous mode
+    push [eax+KTSS_EAX]								// TSS fields -> Trap Frame
+    push [eax+KTSS_ECX]								// TSS fields -> Trap Frame
+    push [eax+KTSS_EDX]								// TSS fields -> Trap Frame
+    push [eax+KTSS_DS]								// TSS fields -> Trap Frame
+    push [eax+KTSS_ES]								// TSS fields -> Trap Frame
+    push [eax+KTSS_GS]								// TSS fields -> Trap Frame
+    push 0											// Debug registers
+    push 0											// Debug registers
+    push 0											// Debug registers
+    push 0											// Debug registers
+    push 0											// Debug registers
+    push 0											// Debug registers
+    push 0											// Temp
+    push 0											// Temp
+    push 0											// Debug Pointer
+    push 0											// Debug Marker
+    push [eax+KTSS_EIP]								// Debug EIP
+    push [eax+KTSS_EBP]								// Debug EBP
+	mov ebp, esp									// Set trap frame address
+	stdCall _KiSaveProcessorState, ebp, 0			// Save to KPRCB CONTEXT
+
+	//
+	// Call Registered NMI handlers
+	//
+	stdCall _KiHandleNmi							// Call NMI handlers
+	or al, al										// Check if any handled it
+	jne 1f											// Resume from NMI
+
+	//
+	// Call the platform driver for NMI handling (panic, etc)
+	// Do this with IRQL at HIGH
+	//
+	push PCR[KPCR_IRQL]								// Save real IRQL
+	mov dword ptr PCR[KPCR_IRQL], HIGH_LEVEL		// Force HIGH
+	stdCall _HalHandleNMI, 0						// Call the HAL
+	pop PCR[KPCR_IRQL]								// Restore real IRQL
+
+	//
+	// In certain situations, nested NMIs can corrupt the TSS, making us lose
+	// the original context. If this happens, we have no choice but to panic.
+	//
+1:
+    mov eax, PCR[KPCR_TSS]							// Get current TSS
+    cmp word ptr [eax], KGDT_NMI_TSS				// Check who its points to
+    je 2f											// Back to the NMI TSS crash
+
+	//
+	// Otherwise, recover the original state
+	//
+    add esp, KTRAP_FRAME_LENGTH						// Clear the trap frame
+    pop PCR[KPCR_TSS]								// Restore original TSS
+    mov ecx, PCR[KPCR_GDT]							// Get GDT
+    lea eax, [ecx+KGDT_TSS]							// Get KTSS
+    mov byte ptr [eax+5], 0x8B						// DPL 0, Present, Busy
+    pushf											// Get EFLAGS
+    or dword ptr [esp], EFLAGS_NESTED_TASK			// Set nested flags
+    popf											// Set EFLAGS
+
+	//
+	// Return from NMI
+	//
+    iretd											// Interrupt return
+	jmp _KiTrap2									// Handle recursion
+2:
+	//
+	// Crash the system
+	//
+    mov eax, EXCEPTION_NMI
     jmp _KiSystemFatalException
 .endfunc
 
@@ -847,7 +984,7 @@ V86Int3:
     jz EnableInterrupts3
 
     /* We don't support VDM! */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap4
@@ -888,7 +1025,7 @@ VdmCheck4:
 
     /* We don't support this yet! */
 V86Int4:
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap5
@@ -933,7 +1070,7 @@ VdmCheck5:
 
     /* We don't support this yet! */
 V86Int5:
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap6
@@ -949,7 +1086,7 @@ _KiTrap6:
 
 VdmOpCodeFault:
     /* Not yet supported (Invalid OPCODE from V86) */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 NotV86UD:
     /* Push error code */
@@ -1025,7 +1162,7 @@ LockCrash:
 IsVdmOpcode:
 
     /* Unhandled yet */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
     /* Return to caller */
     jmp _Kei386EoiHelper@0
@@ -1332,7 +1469,7 @@ V86Npx:
     jz HandleUserNpx
 
     /* V86 NPX not handled */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 EmulationEnabled:
     /* Did this come from kernel-mode? */
@@ -1499,7 +1636,7 @@ RaiseIrql:
     jnz NoReflect
 
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 NoReflect:
 
@@ -1540,7 +1677,7 @@ NotV86:
     jae KmodeGpf
 
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "Double GPF"
 
     /* Get the opcode and trap frame */
 KmodeGpf:
@@ -1629,7 +1766,7 @@ TrapCopy:
 MsrCheck:
 
     /* FIXME: Handle RDMSR/WRMSR */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "RDMSR/WRMSR"
 
 NotIretGpf:
 
@@ -1913,7 +2050,7 @@ SetException:
 
 DispatchV86Gpf:
     /* FIXME */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 .endfunc
 
 .func KiTrap14
@@ -2003,12 +2140,12 @@ AccessFail:
     jnz CheckVdmPf
 
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "SYSENTER Fault"
     jmp _Kei386EoiHelper@0
 
 SysCallCopyFault:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "SYSENTER Fault"
     jmp _Kei386EoiHelper@0
 
     /* Check if the fault occured in a V86 mode */
@@ -2033,7 +2170,7 @@ CheckVdmPf:
 
 VdmPF:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
     /* Save EIP and check what kind of status failure we got */
 CheckStatus:
@@ -2067,7 +2204,7 @@ SpecialCode:
 
 SlistFault:
     /* FIXME: TODO */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "SLIST Fault"
 
 IllegalState:
 
@@ -2083,7 +2220,7 @@ IllegalState:
 VdmAlertGpf:
 
     /* FIXME: NOT SUPPORTED */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 HandleLockErrata:
 
@@ -2328,7 +2465,7 @@ VdmXmmi:
 
 V86Xmmi:
     /* V86 XMMI not handled */
-    UNHANDLED_PATH
+    UNHANDLED_V86_PATH
 
 KernelXmmi:
     /* Another weird situation */
@@ -2394,7 +2531,7 @@ _Ki16BitStackException:
     add esp, [eax+KTHREAD_INITIAL_STACK]
 
     /* Switch to good stack segment */
-    UNHANDLED_PATH
+    UNHANDLED_PATH "16-Bit Stack"
 .endfunc
 
 /* UNEXPECTED INTERRUPT HANDLERS **********************************************/

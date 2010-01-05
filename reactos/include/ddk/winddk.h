@@ -8579,6 +8579,21 @@ KeRegisterBugCheckCallback(
   IN PUCHAR  Component);
 
 NTKERNELAPI
+PVOID
+NTAPI
+KeRegisterNmiCallback(
+  IN PNMI_CALLBACK CallbackRoutine,
+  IN PVOID Context
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeDeregisterNmiCallback(
+  IN PVOID Handle
+);
+
+NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseInStackQueuedSpinLockFromDpcLevel(

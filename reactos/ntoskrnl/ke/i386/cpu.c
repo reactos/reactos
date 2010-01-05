@@ -582,11 +582,12 @@ KiInitializeTSS2(IN PKTSS Tss,
     }
 
     /* Now clear the I/O Map */
-    RtlFillMemory(Tss->IoMaps[0].IoMap, 8096, -1);
+    ASSERT(IOPM_COUNT == 1);
+    RtlFillMemory(Tss->IoMaps[0].IoMap, IOPM_FULL_SIZE, 0xFF);
 
     /* Initialize Interrupt Direction Maps */
     p = (PUCHAR)(Tss->IoMaps[0].DirectionMap);
-    RtlZeroMemory(p, 32);
+    RtlZeroMemory(p, IOPM_DIRECTION_MAP_SIZE);
 
     /* Add DPMI support for interrupts */
     p[0] = 4;
@@ -595,7 +596,7 @@ KiInitializeTSS2(IN PKTSS Tss,
 
     /* Initialize the default Interrupt Direction Map */
     p = Tss->IntDirectionMap;
-    RtlZeroMemory(Tss->IntDirectionMap, 32);
+    RtlZeroMemory(Tss->IntDirectionMap, IOPM_DIRECTION_MAP_SIZE);
 
     /* Add DPMI support */
     p[0] = 4;
@@ -921,6 +922,26 @@ KeZeroPages(IN PVOID Address,
 {
     /* Not using XMMI in this routine */
     RtlZeroMemory(Address, Size);
+}
+
+VOID
+NTAPI
+KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
+                     IN PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    //
+    // Save full context
+    //
+    Prcb->ProcessorState.ContextFrame.ContextFlags = CONTEXT_FULL |
+                                                     CONTEXT_DEBUG_REGISTERS;
+    KeTrapFrameToContext(TrapFrame, NULL, &Prcb->ProcessorState.ContextFrame);
+
+    //
+    // Save control registers
+    //
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
