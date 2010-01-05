@@ -161,6 +161,7 @@ MmpAccessFaultInner
 	  if (Status == STATUS_SUCCESS + 1)
 	  {
 		  // Wait page ...
+		  DPRINT1("Waiting for %x\n", Address);
 		  if (!NT_SUCCESS
 			  (KeWaitForSingleObject
 			   (&MmWaitPageEvent,
@@ -169,6 +170,7 @@ MmpAccessFaultInner
 				FALSE,
 				NULL)))
 			  ASSERT(FALSE);
+		  DPRINT1("Restarting fault %x\n", Address);
 		  Status = STATUS_MM_RESTART_OPERATION;
 	  }
 	  else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
@@ -341,6 +343,7 @@ MmNotPresentFaultInner
 		if (Status == STATUS_SUCCESS + 1)
 		{
 			// Wait page ...
+			DPRINT1("Waiting for %x\n", Address);
 			if (!NT_SUCCESS
 				(KeWaitForSingleObject
 				 (&MmWaitPageEvent,
@@ -349,6 +352,7 @@ MmNotPresentFaultInner
 				  FALSE,
 				  NULL)))
 				ASSERT(FALSE);
+			DPRINT1("Done waiting for %x\n", Address);
 			Status = STATUS_MM_RESTART_OPERATION;
 		}
 		else if (Status == STATUS_MORE_PROCESSING_REQUIRED)

@@ -71,7 +71,7 @@ MmNotPresentFaultPageFile
 	PMM_REGION Region;
 	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
-	DPRINT1("Not Present: %p %p (%p-%p)\n", AddressSpace, Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
+	DPRINT("Not Present: %p %p (%p-%p)\n", AddressSpace, Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
     
 	/*
 	 * There is a window between taking the page fault and locking the
@@ -115,6 +115,7 @@ MmNotPresentFaultPageFile
 	{
 		DPRINT("FileName %wZ\n", &Segment->FileObject->FileName);
 	}
+
 	DPRINT("Total Offset %08x%08x\n", TotalOffset.HighPart, TotalOffset.LowPart);
 
 	/*
@@ -151,8 +152,73 @@ MmNotPresentFaultPageFile
 		DPRINT("Normal %x\n", Attributes);
 	}
 
-grab_page:
-	if (Entry && !IS_SWAP_FROM_SSE(Entry))
+	if (Required->State && Required->Page[0])
+	{
+		DPRINT("Have file and page, set page in section @ %x\n", TotalOffset.LowPart);
+		Status = MiSetPageEntrySectionSegment
+			(Segment, &TotalOffset, Entry = MAKE_PFN_SSE(Required->Page[0]));
+		if (NT_SUCCESS(Status))
+		{
+			MmReferencePage(Required->Page[0]);
+			Status = MmCreateVirtualMapping(Process, Address, Attributes, Required->Page, 1);
+			if (NT_SUCCESS(Status))
+			{
+				MmInsertRmap(Required->Page[0], Process, Address);
+			}
+			else
+			{
+				MmDereferencePage(Required->Page[0]);
+			}
+		}
+		MmUnlockSectionSegment(Segment);
+		DPRINT("XXX Set Event %x\n", Status);
+		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
+		DPRINT1("Status %x\n", Status);
+		return Status;
+	}
+	else if (MmIsPageSwapEntry(Process, Address))
+	{
+		SWAPENTRY SwapEntry;
+		MmGetPageFileMapping(Process, Address, &SwapEntry);
+		if (SwapEntry == MM_WAIT_ENTRY)
+		{
+			DPRINT1("Wait for page entry in section\n");
+			return STATUS_SUCCESS + 1;
+		}
+		else
+		{
+			DPRINT("Swap in\n");
+			MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
+			Required->State = 7;
+			Required->Consumer = Consumer;
+			Required->SwapEntry = SwapEntry;
+			Required->DoAcquisition = MiSwapInPage;
+			MmUnlockSectionSegment(Segment);
+			return STATUS_MORE_PROCESSING_REQUIRED;
+		}
+	}
+	else if (IS_SWAP_FROM_SSE(Entry))
+	{
+		SWAPENTRY SwapEntry = SWAPENTRY_FROM_SSE(Entry);
+		if (SwapEntry == MM_WAIT_ENTRY)
+		{
+			DPRINT1("Wait for page entry in section\n");
+			return STATUS_SUCCESS + 1;
+		}
+		else
+		{
+			DPRINT("Swap in\n");
+			MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
+			MiSetPageEntrySectionSegment(Segment, &TotalOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+			Required->State = 7;
+			Required->Consumer = Consumer;
+			Required->SwapEntry = SwapEntry;
+			Required->DoAcquisition = MiSwapInPage;
+			MmUnlockSectionSegment(Segment);
+			return STATUS_MORE_PROCESSING_REQUIRED;
+		}
+	}
+	else if (Entry && !IS_SWAP_FROM_SSE(Entry))
 	{
 		PFN_TYPE Page = PFN_FROM_SSE(Entry);
 		DPRINT("Page %x\n", Page);
@@ -166,23 +232,10 @@ grab_page:
 		DPRINT("XXX Set Event %x\n", Status);
 		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 		MmUnlockSectionSegment(Segment);
+		DPRINT1("Status %x\n", Status);
 		return Status;
 	}
-
-	if (Required->State && Required->Page[0])
-	{
-		DPRINT("Have file and page, set page in section @ %x\n", TotalOffset.LowPart);
-		Status = MiSetPageEntrySectionSegment
-			(Segment, &TotalOffset, Entry = MAKE_PFN_SSE(Required->Page[0]));
-		if (NT_SUCCESS(Status))
-		{
-			goto grab_page;
-		}
-		MmUnlockSectionSegment(Segment);
-		return Status;
-	}
-
-	if (Entry == 0)
+	else
 	{
 		DPRINT("Get page into section\n");
 		/*
@@ -213,17 +266,6 @@ grab_page:
 			MmUnlockSectionSegment(Segment);
 			return STATUS_MORE_PROCESSING_REQUIRED;
 		}
-	}
-	else
-	{
-		DPRINT("Swap in\n");
-		Required->State = 7;
-		Required->Consumer = Consumer;
-		Required->SwapEntry = SWAPENTRY_FROM_SSE(Entry);
-		MiSetPageEntrySectionSegment(Segment, &TotalOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
-		Required->DoAcquisition = MiSwapInPage;
-		MmUnlockSectionSegment(Segment);
-		return STATUS_MORE_PROCESSING_REQUIRED;
 	}
 }
 
@@ -311,6 +353,7 @@ MmNotPresentFaultImageFile
 			DPRINT("Set in section @ %x\n", Offset.LowPart);
 			Status = MiSetPageEntrySectionSegment
 				(Segment, &Offset, MAKE_PFN_SSE(Page));
+			KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 		}
 
 		if (Required->State & 2)
@@ -330,6 +373,7 @@ MmNotPresentFaultImageFile
 		if (Required->State & 4)
 		{
 			DPRINT("Take a reference\n");
+			Status = STATUS_SUCCESS;
 			MmReferencePage(Page);
 		}
 
@@ -349,8 +393,7 @@ MmNotPresentFaultImageFile
 		MmUnlockSectionSegment(Segment);
 		return STATUS_MORE_PROCESSING_REQUIRED;
 	}
-
-	if (HasSwapEntry)
+	else if (HasSwapEntry)
 	{
 		MmGetPageFileMapping(Process, (PVOID)PAddress, &Required->SwapEntry);
 		if (Required->SwapEntry == MM_WAIT_ENTRY)
@@ -363,28 +406,18 @@ MmNotPresentFaultImageFile
 		 * Must be private page we have swapped out.
 		 */
 		DPRINT("Private swapped out page\n");
+		MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
 		Required->State = 2;
 		Required->Consumer = MC_USER;
-		MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
 		Required->DoAcquisition = MiSwapInPage;
 		MmUnlockSectionSegment(Segment);
 		return STATUS_MORE_PROCESSING_REQUIRED;
 	}
-
-	/*
-	 * Map anonymous memory for BSS sections
-	 */
-	if (Entry == 0 || 
-		(Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA) ||
-		Offset.QuadPart >= PAGE_ROUND_UP(Segment->RawLength.QuadPart)) 
+	else if (IS_SWAP_FROM_SSE(Entry) && SWAPENTRY_FROM_SSE(Entry) == MM_WAIT_ENTRY)
 	{
-		DPRINT("BSS Page\n");
-		Required->State = 2;
-		Required->Amount = 1;
-		Required->Consumer = MC_USER;
-		Required->DoAcquisition = MiGetOnePage;
+		DPRINT("Waiting\n");
 		MmUnlockSectionSegment(Segment);
-		return STATUS_MORE_PROCESSING_REQUIRED;
+		return STATUS_SUCCESS + 1;
 	}
 	else if (IS_SWAP_FROM_SSE(Entry))
 	{
@@ -394,6 +427,21 @@ MmNotPresentFaultImageFile
 		MmGetPageFileMapping(Process, (PVOID)PAddress, &Required->SwapEntry);
 		MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
 		Required->DoAcquisition = MiSwapInPage;
+		MmUnlockSectionSegment(Segment);
+		return STATUS_MORE_PROCESSING_REQUIRED;
+	}
+	/*
+	 * Map anonymous memory for BSS sections
+	 */
+	else if (Entry == 0 &&
+			 ((Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA) ||
+			  Offset.QuadPart >= PAGE_ROUND_UP(Segment->RawLength.QuadPart))) 
+	{
+		DPRINT("BSS Page\n");
+		Required->State = 2;
+		Required->Amount = 1;
+		Required->Consumer = MC_USER;
+		Required->DoAcquisition = MiGetOnePage;
 		MmUnlockSectionSegment(Segment);
 		return STATUS_MORE_PROCESSING_REQUIRED;
 	}
@@ -690,6 +738,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    /*
     * Write the page to the pagefile
     */
+   DPRINT1("Writing swap entry: %x %x\n", SwapEntry, Page);
    Status = MmWriteToSwapPage(SwapEntry, Page);
    if (!NT_SUCCESS(Status))
    {
@@ -749,15 +798,22 @@ MmPageOutPageFileView
 		ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 		if (SwapEntry == MM_WAIT_ENTRY)
 		{
+			DPRINT1
+				("SwapEntry is a WAIT, our swap to is %x, State is %x for (%x:%x) on page %x\n",
+				 Required->SwapEntry,
+				 Required->State,
+				 Process,
+				 Address,
+				 OurPage);				 
 			if (Required->SwapEntry || (Required->State & 2))
 			{
-				MmDeleteRmap(OurPage, Process, Address);
 				Status = MmCreatePageFileMapping(Process, Address, Required->SwapEntry);
 				MmSetSavedSwapEntryPage(OurPage, 0);
 				ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+				MmDeleteRmap(OurPage, Process, Address);
 				MmDereferencePage(OurPage);
-				KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 				MmUnlockSectionSegment(Segment);
+				KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 				ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 				DPRINT("XXX Set Event %x\n", Status);
 				return Status;
@@ -780,37 +836,34 @@ MmPageOutPageFileView
 		{
 			Required->State |= 2;
 			Required->SwapEntry = MmAllocSwapPage();
-			if (!Required->SwapEntry) return STATUS_PAGEFILE_QUOTA;
+			if (!Required->SwapEntry)
+			{
+				MmUnlockSectionSegment(Segment);
+				return STATUS_PAGEFILE_QUOTA;
+			}
+			DPRINT1("MiWriteSwapPage (%x -> %x)\n", OurPage, Required->SwapEntry);
 			Required->DoAcquisition = MiWriteSwapPage;
 			MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
 			MmUnlockSectionSegment(Segment);
 			return STATUS_MORE_PROCESSING_REQUIRED;
 		}
-		else if (!Required->SwapEntry)
+		else
 		{
+			DPRINT1("Out of swap space for page %x\n", OurPage);
 			MmUnlockSectionSegment(Segment);
 			return STATUS_PAGEFILE_QUOTA;
 		}
-		MmDeleteRmap(OurPage, Process, Address);
-		MmCreatePageFileMapping(Process, Address, Required->SwapEntry);
-		MmDereferencePage(OurPage);
-		MmUnlockSectionSegment(Segment);
-		return STATUS_SUCCESS;
 	}
 	else
 	{
 		BOOLEAN Dirty = !!MmIsDirtyPageRmap(OurPage);
 		Required->State |= Dirty;
 		DPRINT("Public page evicting %x (dirty %d)\n", OurPage, Required->State & 1);
-		if (Dirty)
-		{
-			DPRINT("Setting segment page dirty\n");
-			MiSetPageEntrySectionSegment(Segment, &TotalOffset, DIRTY_SSE(Entry));
-		}
-		MmDeleteRmap(OurPage, Process, Address);
 		MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
+		MmDeleteRmap(OurPage, Process, Address);
 		MmDereferencePage(OurPage);
 		MmUnlockSectionSegment(Segment);
+		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 		return STATUS_SUCCESS;
 	}
 }

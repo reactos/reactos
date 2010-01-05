@@ -790,49 +790,12 @@ MmFreeVirtualMemory(PEPROCESS Process,
 {
    PLIST_ENTRY current_entry;
    PMM_REGION current;
-   ULONG i;
 
    DPRINT("MmFreeVirtualMemory(Process %p  MemoryArea %p)\n", Process,
           MemoryArea);
 
    /* Mark this memory area as about to be deleted. */
    MemoryArea->DeleteInProgress = TRUE;
-
-   /*
-    * Wait for any ongoing paging operations. Notice that since we have
-    * flagged this memory area as deleted no more page ops will be added.
-    */
-   if (MemoryArea->PageOpCount > 0)
-   {
-      ULONG_PTR MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
-                                   (ULONG_PTR)MemoryArea->StartingAddress;
-      const ULONG nPages = PAGE_ROUND_UP(MemoryAreaLength) >> PAGE_SHIFT;
-
-      for (i = 0; i < nPages && MemoryArea->PageOpCount != 0; ++i)
-      {
-         PMM_PAGEOP PageOp;
-         PageOp = MmCheckForPageOp(MemoryArea, Process->UniqueProcessId,
-                                   (PVOID)((ULONG_PTR)MemoryArea->StartingAddress + (i * PAGE_SIZE)),
-                                   NULL, 0);
-         if (PageOp != NULL)
-         {
-            NTSTATUS Status;
-            MmUnlockAddressSpace(&Process->Vm);
-            Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
-                                           0,
-                                           KernelMode,
-                                           FALSE,
-                                           NULL);
-            if (Status != STATUS_SUCCESS)
-            {
-               DPRINT1("Failed to wait for page op\n");
-               KeBugCheck(MEMORY_MANAGEMENT);
-            }
-            MmLockAddressSpace(&Process->Vm);
-            MmReleasePageOp(PageOp);
-         }
-      }
-   }
 
    /* Free all the individual segments. */
    current_entry = MemoryArea->Data.VirtualMemoryData.RegionListHead.Flink;

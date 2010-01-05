@@ -342,19 +342,30 @@ bail:
    {
 	   DPRINT("About to finalize section page %x %s\n", Page, Dirty ? "dirty" : "clean");
 
-	   Evicted = 
-		   NT_SUCCESS(Status) &&
-		   NT_SUCCESS(MmFinalizeSectionPageOut(Segment, &FileOffset, Page, Dirty));
-
-	   if (!Evicted && SectionPage)
+	   if (MmGetRmapListHeadPage(Page))
 	   {
-		   DPRINT
-			   ("Failed to page out, replacing %x at %x in segment %x\n",
-				SectionPage, FileOffset.LowPart, Segment);
+		   DPRINT1("Page %x was re-acquired while we were evicting it\n", Page);
 		   MmLockSectionSegment(Segment);
 		   MiSetPageEntrySectionSegment(Segment, &FileOffset, Dirty ? DIRTY_SSE(MAKE_PFN_SSE(SectionPage)) : MAKE_PFN_SSE(SectionPage));
 		   MmUnlockSectionSegment(Segment);
 		   KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
+	   }
+	   else
+	   {
+		   Evicted = 
+			   NT_SUCCESS(Status) &&
+			   NT_SUCCESS(MmFinalizeSectionPageOut(Segment, &FileOffset, Page, Dirty));
+		   
+		   if (!Evicted && SectionPage)
+		   {
+			   DPRINT1
+				   ("Failed to page out, replacing %x at %x in segment %x\n",
+					SectionPage, FileOffset.LowPart, Segment);
+			   MmLockSectionSegment(Segment);
+			   MiSetPageEntrySectionSegment(Segment, &FileOffset, Dirty ? DIRTY_SSE(MAKE_PFN_SSE(SectionPage)) : MAKE_PFN_SSE(SectionPage));
+			   MmUnlockSectionSegment(Segment);
+			   KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
+		   }
 	   }
    }
 

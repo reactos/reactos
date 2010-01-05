@@ -467,7 +467,10 @@ MmInitSystem(IN ULONG Phase,
         
         /* Dump the address space */
         MiDbgDumpAddressSpace();
-        
+
+		/* Initialize rmap implementation */
+        MmInitializeRmapList();
+
         /* Initialize paged pool */
         MmInitializePagedPool();
         
@@ -496,8 +499,6 @@ MmInitSystem(IN ULONG Phase,
     }
     else if (Phase == 1)
     {
-        MmInitializeRmapList();
-        MmInitializePageOp();
         MmInitSectionImplementation();
         MmInitPagingFile();
         

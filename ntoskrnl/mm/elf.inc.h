@@ -9,8 +9,6 @@
 
 #include <elf/elf.h>
 
-#define IMAGE_SUBSYSTEM_WINDOWS_CUI 3
-
 /* TODO: Intsafe should be made into a library, as it's generally useful */
 static __inline BOOLEAN Intsafe_CanAddULongPtr
 (

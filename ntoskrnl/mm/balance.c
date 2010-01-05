@@ -31,6 +31,7 @@ MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 /* GLOBALS ******************************************************************/
 
+BOOLEAN MiBalancerInitialized = FALSE;
 MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 /*static*/ ULONG MiMinimumAvailablePages = 128;
 static ULONG MiNrTotalPages;
@@ -170,8 +171,9 @@ static BOOLEAN
 MiIsBalancerThread(VOID)
 {
    return 
-	   PsGetCurrentThread()->Cid.UniqueThread == 
-	   MiBalancerThreadId.UniqueThread;
+	   !MiBalancerInitialized ||
+	   (PsGetCurrentThread()->Cid.UniqueThread == 
+		MiBalancerThreadId.UniqueThread);
 }
 
 /*
@@ -285,6 +287,8 @@ MiBalancerThread(PVOID Unused)
    WaitObjects[0] = &MiBalancerEvent;
    WaitObjects[1] = &MiBalancerTimer;
 
+   MiBalancerInitialized = TRUE;
+
    while (1)
    {
 	  DPRINT1
@@ -335,23 +339,14 @@ MiInitBalancerThread(VOID)
 {
    KPRIORITY Priority;
    NTSTATUS Status;
-#if !defined(__GNUC__)
-
-   LARGE_INTEGER dummyJunkNeeded;
-   dummyJunkNeeded.QuadPart = -20000000; /* 2 sec */
-   ;
-#endif
-
+   LARGE_INTEGER BalancerInterval;
+   BalancerInterval.QuadPart = -20000000; /* 2 sec */
 
    KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
    KeInitializeEvent(&MiBalancerContinue, SynchronizationEvent, FALSE);
    KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
    KeSetTimerEx(&MiBalancerTimer,
-#if defined(__GNUC__)
-                (LARGE_INTEGER)(LONGLONG)-20000000LL,     /* 2 sec */
-#else
-                dummyJunkNeeded,
-#endif
+                BalancerInterval,
                 2000,         /* 2 sec */
                 NULL);
 

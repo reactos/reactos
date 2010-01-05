@@ -153,24 +153,20 @@ MmFinalizeSectionPageOut
  BOOLEAN Dirty)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	SWAPENTRY Swap;
+	BOOLEAN WriteZero = FALSE;
+	SWAPENTRY Swap = MmGetSavedSwapEntryPage(Page);
 
+	MmLockSectionSegment(Segment);
 	if (Dirty)
 	{
-		DPRINT("Finalize (dirty) Segment %x\n", Segment);
+		DPRINT1("Finalize (dirty) Segment %x Page %x\n", Segment, Page);
 		DPRINT("Segment->FileObject %x\n", Segment->FileObject);
 		DPRINT("Segment->Flags %x\n", Segment->Flags);
 		if (Segment->FileObject && !(Segment->Flags & MM_IMAGE_SEGMENT))
 		{
-			DPRINT("Segment %x FileObject %x\n", Segment, Segment->FileObject, &Segment);
+			DPRINT1("Segment %x FileObject %x Offset %x\n", Segment, Segment->FileObject, FileOffset->LowPart);
 			Status = MiWriteBackPage(Segment->FileObject, FileOffset, PAGE_SIZE, Page);
-			if (NT_SUCCESS(Status))
-			{
-				DPRINT("Write zero to %x:%x %x\n", Segment, FileOffset->LowPart, Page);
-				MmLockSectionSegment(Segment);
-				MiSetPageEntrySectionSegment(Segment, FileOffset, 0);
-				MmUnlockSectionSegment(Segment);
-			}
+			WriteZero = NT_SUCCESS(Status);
 		}
 		else
 		{
@@ -185,29 +181,36 @@ MmFinalizeSectionPageOut
 			}
 
 			DPRINT("Status %x\n", Status);
-			if (NT_SUCCESS(Status)) 
-			{
-				DPRINT("Set Swap entry\n");
-				MmLockSectionSegment(Segment);
-				MiSetPageEntrySectionSegment(Segment, FileOffset, MAKE_SWAP_SSE(Swap));
-				MmUnlockSectionSegment(Segment);
-			}
+			WriteZero = NT_SUCCESS(Status);
 		}
 	}
 	else
 	{
-		DPRINT("Write zero to %x:%x (%x)\n", Segment, FileOffset->LowPart, Page);
-		MmLockSectionSegment(Segment);
-		MiSetPageEntrySectionSegment(Segment, FileOffset, 0);
-		MmUnlockSectionSegment(Segment);
+		WriteZero = TRUE;
 	}
 
 	DPRINT("Status %x\n", Status);
+
+	if (WriteZero)
+	{
+		DPRINT1("Setting page entry in segment %x:%x to swap %x\n", Segment, FileOffset->LowPart, Swap);
+		MiSetPageEntrySectionSegment(Segment, FileOffset, Swap ? MAKE_SWAP_SSE(Swap) : 0);
+	}
+	else
+	{
+		DPRINT1("Setting page entry in segment %x:%x to page %x\n", Segment, FileOffset->LowPart, Page);
+		MiSetPageEntrySectionSegment
+			(Segment, FileOffset, Page ? (Dirty ? DIRTY_SSE(MAKE_PFN_SSE(Page)) : MAKE_PFN_SSE(Page)) : 0);
+	}
+
 	if (NT_SUCCESS(Status))
 	{
+		DPRINT1("Removing page %x for real\n", Page);
 		MmSetSavedSwapEntryPage(Page, 0);
 		MmDereferencePage(Page);
 	}
+
+	MmUnlockSectionSegment(Segment);
 
 	KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 
