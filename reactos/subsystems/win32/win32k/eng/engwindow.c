@@ -137,7 +137,7 @@ IntEngWndUpdateClipObj(
 
   RtlCopyMemory(&WndObjInt->WndObj.coClient, ClipObj, sizeof (CLIPOBJ));
   RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->Wnd->rcClient, sizeof (RECT));
-  OldClipObj = InterlockedExchangePointer(&WndObjInt->ClientClipObj, ClipObj);
+  OldClipObj = InterlockedExchangePointer((PVOID*)&WndObjInt->ClientClipObj, ClipObj);
   if (OldClipObj != NULL)
     IntEngDeleteClipRegion(OldClipObj);
 

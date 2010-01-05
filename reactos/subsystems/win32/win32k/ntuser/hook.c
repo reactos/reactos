@@ -298,7 +298,7 @@ IntCallLowLevelHook(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
     /* FIXME should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
     Status = co_MsqSendMessage(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
-                                (HWND)Code,
+                                IntToPtr(Code),
                                 Hook->HookId,
                                 wParam,
                                 lParam,
@@ -1342,5 +1342,5 @@ CLEANUP:
     UserLeave();
     END_CLEANUP;
 }
- 
+
 /* EOF */

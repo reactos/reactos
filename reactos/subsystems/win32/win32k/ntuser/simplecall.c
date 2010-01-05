@@ -74,12 +74,12 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 /*
  * @unimplemented
  */
-DWORD
+DWORD_PTR
 APIENTRY
 NtUserCallNoParam(DWORD Routine)
 {
-   DWORD Result = 0;
-   DECLARE_RETURN(DWORD);
+   DWORD_PTR Result = 0;
+   DECLARE_RETURN(DWORD_PTR);
 
    DPRINT("Enter NtUserCallNoParam\n");
    UserEnterExclusive();
@@ -87,39 +87,39 @@ NtUserCallNoParam(DWORD Routine)
    switch(Routine)
    {
       case NOPARAM_ROUTINE_CREATEMENU:
-         Result = (DWORD)UserCreateMenu(FALSE);
+         Result = (DWORD_PTR)UserCreateMenu(FALSE);
          break;
 
       case NOPARAM_ROUTINE_CREATEMENUPOPUP:
-         Result = (DWORD)UserCreateMenu(TRUE);
+         Result = (DWORD_PTR)UserCreateMenu(TRUE);
          break;
 
       case NOPARAM_ROUTINE_DESTROY_CARET:
-         Result = (DWORD)co_IntDestroyCaret(PsGetCurrentThread()->Tcb.Win32Thread);
+         Result = (DWORD_PTR)co_IntDestroyCaret(PsGetCurrentThread()->Tcb.Win32Thread);
          break;
 
       case NOPARAM_ROUTINE_INIT_MESSAGE_PUMP:
-         Result = (DWORD)IntInitMessagePumpHook();
+         Result = (DWORD_PTR)IntInitMessagePumpHook();
          break;
 
       case NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP:
-         Result = (DWORD)IntUninitMessagePumpHook();
+         Result = (DWORD_PTR)IntUninitMessagePumpHook();
          break;
 
       case NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO:
-         Result = (DWORD)MsqGetMessageExtraInfo();
+         Result = (DWORD_PTR)MsqGetMessageExtraInfo();
          break;
 
       case NOPARAM_ROUTINE_ANYPOPUP:
-         Result = (DWORD)IntAnyPopup();
+         Result = (DWORD_PTR)IntAnyPopup();
          break;
 
       case NOPARAM_ROUTINE_CSRSS_INITIALIZED:
-         Result = (DWORD)CsrInit();
+         Result = (DWORD_PTR)CsrInit();
          break;
 
       case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
-         RETURN( (DWORD)IntMsqClearWakeMask());
+         RETURN( (DWORD_PTR)IntMsqClearWakeMask());
 
       default:
          DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
@@ -138,13 +138,13 @@ CLEANUP:
 /*
  * @implemented
  */
-DWORD
+DWORD_PTR
 APIENTRY
 NtUserCallOneParam(
-   DWORD Param,
+   DWORD_PTR Param,
    DWORD Routine)
 {
-   DECLARE_RETURN(DWORD);
+   DECLARE_RETURN(DWORD_PTR);
 
    DPRINT("Enter NtUserCallOneParam\n");
 
@@ -160,7 +160,7 @@ NtUserCallOneParam(
                 RETURN(TRUE);
           }
       case ONEPARAM_ROUTINE_SHOWCURSOR:
-         RETURN( (DWORD)UserShowCursor((BOOL)Param) );
+         RETURN( (DWORD_PTR)UserShowCursor((BOOL)Param) );
 
       case ONEPARAM_ROUTINE_GETDESKTOPMAPPING:
          {
@@ -170,7 +170,7 @@ NtUserCallOneParam(
              {
                 /* Try convert the pointer to a user mode pointer if the desktop is
                    mapped into the process */
-                RETURN((DWORD)DesktopHeapAddressToUser((PVOID)Param));
+                RETURN((DWORD_PTR)DesktopHeapAddressToUser((PVOID)Param));
              }
              else
              {
@@ -179,11 +179,11 @@ NtUserCallOneParam(
          }
 
       case ONEPARAM_ROUTINE_WINDOWFROMDC:
-         RETURN( (DWORD)IntWindowFromDC((HDC)Param));
+         RETURN( (DWORD_PTR)IntWindowFromDC((HDC)Param));
 
       case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
          {
-            DWORD Result;
+            DWORD_PTR Result;
 
             Result = gspv.bMouseBtnSwap;
             gspv.bMouseBtnSwap = Param ? TRUE : FALSE;
@@ -192,13 +192,13 @@ NtUserCallOneParam(
          }
 
       case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
-         RETURN( (DWORD)IntSwitchCaretShowing((PVOID)Param));
+         RETURN( (DWORD_PTR)IntSwitchCaretShowing((PVOID)Param));
 
       case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
-         RETURN( (DWORD)IntSetCaretBlinkTime((UINT)Param));
+         RETURN( (DWORD_PTR)IntSetCaretBlinkTime((UINT)Param));
 
       case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
-         RETURN( (DWORD)MsqSetMessageExtraInfo((LPARAM)Param));
+         RETURN( (DWORD_PTR)MsqSetMessageExtraInfo((LPARAM)Param));
 
       case ONEPARAM_ROUTINE_CREATECURICONHANDLE:
          {
@@ -210,7 +210,7 @@ NtUserCallOneParam(
                RETURN(0);
             }
 
-            RETURN((DWORD)CurIcon->Self);
+            RETURN((DWORD_PTR)CurIcon->Self);
          }
 
       case ONEPARAM_ROUTINE_GETCURSORPOSITION:
@@ -236,14 +236,14 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_ISWINDOWINDESTROY:
          {
             PWINDOW_OBJECT Window;
-            DWORD Result;
+            DWORD_PTR Result;
 
             if(!(Window = UserGetWindowObject((HWND)Param)))
             {
                RETURN( FALSE);
             }
 
-            Result = (DWORD)IntIsWindowInDestroy(Window);
+            Result = (DWORD_PTR)IntIsWindowInDestroy(Window);
 
             RETURN( Result);
          }
@@ -273,13 +273,13 @@ NtUserCallOneParam(
          }
 
       case ONEPARAM_ROUTINE_MSQSETWAKEMASK:
-         RETURN( (DWORD)IntMsqSetWakeMask(Param));
+         RETURN( (DWORD_PTR)IntMsqSetWakeMask(Param));
 
       case ONEPARAM_ROUTINE_GETKEYBOARDTYPE:
          RETURN( UserGetKeyboardType(Param));
 
       case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
-         RETURN( (DWORD)UserGetKeyboardLayout(Param));
+         RETURN( (DWORD_PTR)UserGetKeyboardLayout(Param));
 
       case ONEPARAM_ROUTINE_RELEASEDC:
          RETURN (UserReleaseDC(NULL, (HDC) Param, FALSE));
@@ -338,16 +338,16 @@ CLEANUP:
 /*
  * @implemented
  */
-DWORD
+DWORD_PTR
 APIENTRY
 NtUserCallTwoParam(
-   DWORD Param1,
-   DWORD Param2,
+   DWORD_PTR Param1,
+   DWORD_PTR Param2,
    DWORD Routine)
 {
    NTSTATUS Status;
    PWINDOW_OBJECT Window;
-   DECLARE_RETURN(DWORD);
+   DECLARE_RETURN(DWORD_PTR);
 
    DPRINT("Enter NtUserCallTwoParam\n");
    UserEnterExclusive();
@@ -356,12 +356,12 @@ NtUserCallTwoParam(
    {
       case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
          {
-            DWORD Ret;
+            DWORD_PTR Ret;
             RECTL rcRect;
             Window = UserGetWindowObject((HWND)Param1);
             if (!Window) RETURN(ERROR);
 
-            Ret = (DWORD)IntGetWindowRgnBox(Window, &rcRect);
+            Ret = (DWORD_PTR)IntGetWindowRgnBox(Window, &rcRect);
             Status = MmCopyToCaller((PVOID)Param2, &rcRect, sizeof(RECT));
             if(!NT_SUCCESS(Status))
             {
@@ -375,11 +375,11 @@ NtUserCallTwoParam(
             Window = UserGetWindowObject((HWND)Param1);
             if (!Window) RETURN(ERROR);
 
-            RETURN( (DWORD)IntGetWindowRgn(Window, (HRGN)Param2));
+            RETURN( (DWORD_PTR)IntGetWindowRgn(Window, (HRGN)Param2));
          }
       case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
          {
-            DWORD Ret;
+            DWORD_PTR Ret;
             PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
             if(!MenuObject)
                RETURN( 0);
@@ -390,7 +390,7 @@ NtUserCallTwoParam(
                MenuObject->MenuInfo.Height = (int)Param2;
             }
             else
-               Ret = (DWORD)MenuObject->MenuInfo.Height;
+               Ret = (DWORD_PTR)MenuObject->MenuInfo.Height;
             IntReleaseMenuObject(MenuObject);
             RETURN( Ret);
          }
@@ -400,7 +400,7 @@ NtUserCallTwoParam(
             PUSER_MESSAGE_QUEUE MsgQueue = ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->MessageQueue;
 
             ASSERT(MsgQueue);
-            RETURN( (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));
+            RETURN( (DWORD_PTR)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));
          }
 
       case TWOPARAM_ROUTINE_ENABLEWINDOW:
@@ -412,7 +412,7 @@ NtUserCallTwoParam(
          Window = UserGetWindowObject((HWND)Param1);
          if (!Window) RETURN(0);
 
-         RETURN( (DWORD)IntShowOwnedPopups(Window, (BOOL) Param2));
+         RETURN( (DWORD_PTR)IntShowOwnedPopups(Window, (BOOL) Param2));
       }
 
       case TWOPARAM_ROUTINE_ROS_UPDATEUISTATE:
@@ -434,10 +434,10 @@ NtUserCallTwoParam(
 
 
       case TWOPARAM_ROUTINE_SETCARETPOS:
-         RETURN( (DWORD)co_IntSetCaretPos((int)Param1, (int)Param2));
+         RETURN( (DWORD_PTR)co_IntSetCaretPos((int)Param1, (int)Param2));
 
       case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
-         RETURN( (DWORD)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
+         RETURN( (DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
