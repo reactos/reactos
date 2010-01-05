@@ -693,7 +693,7 @@ int main(int argc, char *argv[])
     ProcessHeap = GetProcessHeap();
 
     /* Parse command line for options we have been given. */
-    if ( (argc > 1)&&(argv[1][0]=='/') )
+    if ( (argc > 1)&&(argv[1][0]=='/' || argv[1][0]=='-') )
     {
         if( !_tcsicmp( &argv[1][1], _T("?") ))
         {
