@@ -47,8 +47,12 @@ AddServiceToList(LPWSTR *lpServiceList,
         dwCurSize = 0;
 
         /* Get the list size */
-        while (*ptr != L'\0' || *(ptr + 1) != L'\0')
+        while (TRUE)
         {
+            /* Break when we hit the double null */
+            if (*ptr == L'\0' && *(ptr + 1) == L'\0')
+                break;
+
             ptr++;
             dwCurSize++;
         }
