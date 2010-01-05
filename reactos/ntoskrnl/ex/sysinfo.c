@@ -1467,9 +1467,35 @@ QSI_DEF(SystemCrashDumpInformation)
 /* Class 33 - Exception Information */
 QSI_DEF(SystemExceptionInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemExceptionInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PSYSTEM_EXCEPTION_INFORMATION ExceptionInformation =
+        (PSYSTEM_EXCEPTION_INFORMATION)Buffer;
+    PKPRCB Prcb;
+    ULONG i, AlignmentFixupCount = 0, ExceptionDispatchCount = 0;
+    ULONG FloatingEmulationCount = 0, ByteWordEmulationCount = 0;
+
+    /* Check size of a buffer, it must match our expectations */
+    if (sizeof(SYSTEM_EXCEPTION_INFORMATION) != Size)
+        return STATUS_INFO_LENGTH_MISMATCH;
+
+    /* Sum up exception count information from all processors */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        Prcb = KiProcessorBlock[i];
+        if (Prcb)
+        {
+            AlignmentFixupCount += Prcb->KeAlignmentFixupCount;
+            ExceptionDispatchCount += Prcb->KeExceptionDispatchCount;
+            FloatingEmulationCount += Prcb->KeFloatingEmulationCount;
+        }
+    }
+
+    /* Save information in user's buffer */
+    ExceptionInformation->AlignmentFixupCount = AlignmentFixupCount;
+    ExceptionInformation->ExceptionDispatchCount = ExceptionDispatchCount;
+    ExceptionInformation->FloatingEmulationCount = FloatingEmulationCount;
+    ExceptionInformation->ByteWordEmulationCount = ByteWordEmulationCount;
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 34 - Crash Dump State Information */
@@ -1500,9 +1526,42 @@ QSI_DEF(SystemKernelDebuggerInformation)
 /* Class 36 - Context Switch Information */
 QSI_DEF(SystemContextSwitchInformation)
 {
+    PSYSTEM_CONTEXT_SWITCH_INFORMATION ContextSwitchInformation =
+        (PSYSTEM_CONTEXT_SWITCH_INFORMATION)Buffer;
+    ULONG ContextSwitches, i;
+    PKPRCB Prcb;
+
+    /* Check size of a buffer, it must match our expectations */
+    if (sizeof(SYSTEM_CONTEXT_SWITCH_INFORMATION) != Size)
+        return STATUS_INFO_LENGTH_MISMATCH;
+
+    /* Calculate total value of context switches across all processors */
+    ContextSwitches = 0;
+    for (i = 0; i < KeNumberProcessors; i ++)
+    {
+        Prcb = KiProcessorBlock[i];
+        if (Prcb)
+        {
+            ContextSwitches += KeGetContextSwitches(Prcb);
+        }
+    }
+
+    ContextSwitchInformation->ContextSwitches = ContextSwitches;
+
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemContextSwitchInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    ContextSwitchInformation->FindAny = 0;
+    ContextSwitchInformation->FindLast = 0;
+    ContextSwitchInformation->FindIdeal = 0;
+    ContextSwitchInformation->IdleAny = 0;
+    ContextSwitchInformation->IdleCurrent = 0;
+    ContextSwitchInformation->IdleLast = 0;
+    ContextSwitchInformation->IdleIdeal = 0;
+    ContextSwitchInformation->PreemptAny = 0;
+    ContextSwitchInformation->PreemptCurrent = 0;
+    ContextSwitchInformation->PreemptLast = 0;
+    ContextSwitchInformation->SwitchToIdle = 0;
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 37 - Registry Quota Information */
