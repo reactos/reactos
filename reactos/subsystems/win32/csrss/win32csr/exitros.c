@@ -57,7 +57,7 @@ CSR_API(CsrSetLogonNotifyWindow)
       DPRINT1("Can't get window creator\n");
       return STATUS_INVALID_HANDLE;
     }
-  if (WindowCreator != (DWORD)LogonProcess)
+  if (WindowCreator != (DWORD_PTR)LogonProcess)
     {
       DPRINT1("Trying to register window not created by winlogon as notify window\n");
       return STATUS_ACCESS_DENIED;
@@ -481,7 +481,7 @@ NotifyAndTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
         }
       else
         {
-          Context.ProcessId = (DWORD) ProcessData->ProcessId;
+          Context.ProcessId = (DWORD_PTR) ProcessData->ProcessId;
           Context.wParam = 0;
           Context.lParam = (0 != (Flags & EWX_INTERNAL_FLAG_LOGOFF) ?
                             ENDSESSION_LOGOFF : 0);
@@ -527,7 +527,7 @@ NotifyAndTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
 
   /* Terminate this process */
   Process = OpenProcess(PROCESS_TERMINATE, FALSE,
-                        (DWORD) ProcessData->ProcessId);
+                        (DWORD_PTR) ProcessData->ProcessId);
   if (NULL == Process)
     {
       DPRINT1("Unable to open process %d, error %d\n", ProcessData->ProcessId,
@@ -560,7 +560,7 @@ ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
   PCSRSS_PROCESS_DATA *NewData;
 
   /* Do not kill winlogon or csrss */
-  if ((DWORD) ProcessData->ProcessId == Context->CsrssProcess ||
+  if ((DWORD_PTR) ProcessData->ProcessId == Context->CsrssProcess ||
       ProcessData->ProcessId == LogonProcess)
     {
       return STATUS_SUCCESS;
@@ -568,7 +568,7 @@ ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
 
   /* Get the login session of this process */
   Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE,
-                        (DWORD) ProcessData->ProcessId);
+                        (DWORD_PTR) ProcessData->ProcessId);
   if (NULL == Process)
     {
       DPRINT1("Unable to open process %d, error %d\n", ProcessData->ProcessId,
@@ -600,7 +600,7 @@ ExitReactosProcessEnum(PCSRSS_PROCESS_DATA ProcessData, PVOID Data)
                    &(Origin.OriginatingLogonSession)))
     {
       /* Kill the shell process last */
-      if ((DWORD) ProcessData->ProcessId == Context->ShellProcess)
+      if ((DWORD_PTR) ProcessData->ProcessId == Context->ShellProcess)
         {
           ProcessData->ShutdownLevel = 0;
         }
@@ -767,7 +767,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
   TOKEN_USER *UserInfo;
   SHUTDOWN_SETTINGS ShutdownSettings;
 
-  if (ProcessId != (DWORD) LogonProcess)
+  if (ProcessId != (DWORD_PTR) LogonProcess)
     {
       DPRINT1("Internal ExitWindowsEx call not from winlogon\n");
       return STATUS_ACCESS_DENIED;
@@ -928,13 +928,13 @@ CSR_API(CsrExitReactos)
 
   if (0 == (Request->Data.ExitReactosRequest.Flags & EWX_INTERNAL_FLAG))
     {
-      return UserExitReactos((DWORD) Request->Header.ClientId.UniqueProcess,
+      return UserExitReactos((DWORD_PTR) Request->Header.ClientId.UniqueProcess,
                              Request->Data.ExitReactosRequest.Flags);
     }
   else
     {
-      return InternalExitReactos((DWORD) Request->Header.ClientId.UniqueProcess,
-                                 (DWORD) Request->Header.ClientId.UniqueThread,
+      return InternalExitReactos((DWORD_PTR) Request->Header.ClientId.UniqueProcess,
+                                 (DWORD_PTR) Request->Header.ClientId.UniqueThread,
                                  Request->Data.ExitReactosRequest.Flags);
     }
 }
