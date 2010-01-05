@@ -44,6 +44,8 @@ typedef struct _MAIN_WND_INFO
     BOOL bInMenuLoop;
     BOOL bIsUserAnAdmin;
 
+    PVOID pTag;
+
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
 

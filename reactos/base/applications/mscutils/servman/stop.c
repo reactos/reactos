@@ -119,6 +119,7 @@ DoStop(PMAIN_WND_INFO pInfo)
     HWND hProgress;
     LPWSTR lpServiceList;
     BOOL bRet = FALSE;
+    BOOL bStop = TRUE;
 
     if (pInfo)
     {
@@ -129,33 +130,44 @@ DoStop(PMAIN_WND_INFO pInfo)
             lpServiceList = GetListOfServicesToStop(pInfo->pCurrentService->lpServiceName);
             if (lpServiceList)
             {
+                /* Tag the service list to the main wnd info */
+                pInfo->pTag = (PVOID)lpServiceList;
+
                 /* List them and ask the user if they want to stop them */
                 if (DialogBoxParamW(hInstance,
-                                    MAKEINTRESOURCEW(IDD_DLG_DEPEND_STOP),
-                                    pInfo->hMainWnd,
-                                    StopDependsDialogProc,
-                                    (LPARAM)lpServiceList) == IDOK)
+                                         MAKEINTRESOURCEW(IDD_DLG_DEPEND_STOP),
+                                         pInfo->hMainWnd,
+                                         StopDependsDialogProc,
+                                         (LPARAM)pInfo) == IDOK)
                 {
                     /* Stop all the dependant services */
                     StopDependantServices(pInfo, pInfo->pCurrentService->lpServiceName);
                 }
+                else
+                {
+                    /* Don't stop the main service if the user selected not to */
+                    bStop = FALSE;
+                }
             }
         }
 
-        /* Create a progress window to track the progress of the stopping service */
-        hProgress = CreateProgressDialog(pInfo->hMainWnd,
-                                         pInfo->pCurrentService->lpServiceName,
-                                         IDS_PROGRESS_INFO_STOP);
-
-        /* Stop the requested service */
-        bRet = StopService(pInfo,
-                           pInfo->pCurrentService->lpServiceName,
-                           hProgress);
-
-        if (hProgress)
+        if (bStop)
         {
-            /* Complete and destroy the progress bar */
-            DestroyProgressDialog(hProgress, TRUE);
+            /* Create a progress window to track the progress of the stopping service */
+            hProgress = CreateProgressDialog(pInfo->hMainWnd,
+                                             pInfo->pCurrentService->lpServiceName,
+                                             IDS_PROGRESS_INFO_STOP);
+
+            /* Stop the requested service */
+            bRet = StopService(pInfo,
+                               pInfo->pCurrentService->lpServiceName,
+                               hProgress);
+
+            if (hProgress)
+            {
+                /* Complete and destroy the progress bar */
+                DestroyProgressDialog(hProgress, TRUE);
+            }
         }
     }
 

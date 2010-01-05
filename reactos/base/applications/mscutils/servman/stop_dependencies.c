@@ -125,10 +125,49 @@ GetListOfServicesToStop(LPWSTR lpServiceName)
 }
 
 
+static VOID
+AddServiceNamesToStop(HWND hServiceListBox,
+                      LPWSTR lpServiceList)
+{
+    LPQUERY_SERVICE_CONFIG lpServiceConfig;
+    LPWSTR lpStr;
+
+    lpStr = lpServiceList;
+
+    /* Loop through all the services in the list */
+    while (TRUE)
+    {
+        /* Break when we hit the double null */
+        if (*lpStr == L'\0' && *(lpStr + 1) == L'\0')
+            break;
+
+        /* If this isn't our first time in the loop we'll
+           have been left on a null char */
+        if (*lpStr == L'\0')
+            lpStr++;
+
+        /* Get the service's display name */
+        lpServiceConfig = GetServiceConfig(lpStr);
+        if (lpServiceConfig)
+        {
+            /* Add the service to the listbox */
+            SendMessageW(hServiceListBox,
+                         LB_ADDSTRING,
+                         0,
+                         (LPARAM)lpServiceConfig->lpDisplayName);
+        }
+
+        /* Move onto the next string */
+        while (*lpStr != L'\0')
+            lpStr++;
+    }
+}
+
 static BOOL
 DoInitDependsDialog(PMAIN_WND_INFO pInfo,
                     HWND hDlg)
 {
+    HWND hServiceListBox;
     LPWSTR lpPartialStr, lpStr;
     DWORD fullLen;
     HICON hIcon = NULL;
@@ -196,8 +235,14 @@ DoInitDependsDialog(PMAIN_WND_INFO pInfo,
                      lpPartialStr);
         }
 
-        /* FIXME: Load the list of services which need stopping */
-
+        /* Display the list of services which need stopping */
+        hServiceListBox = GetDlgItem(hDlg,
+                                     IDC_STOP_DEPENDS_LB);
+        if (hServiceListBox)
+        {
+            AddServiceNamesToStop(hServiceListBox,
+                                  (LPWSTR)pInfo->pTag);
+        }
     }
 
     return bRet;
