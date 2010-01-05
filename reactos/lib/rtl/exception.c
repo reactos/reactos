@@ -17,7 +17,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-#if !defined(_M_IX86)
+#if !defined(_M_IX86) && !defined(_M_AMD64)
 
 /*
  * @implemented
@@ -62,6 +62,10 @@ RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
     /* If we returned, raise a status */
     RtlRaiseStatus(Status);
 }
+
+#endif
+
+#if !defined(_M_IX86)
 
 #ifdef _MSC_VER
 #pragma warning(push)
