@@ -433,7 +433,6 @@
 		<file>mminit.c</file>
 		<file>mpw.c</file>
 		<file>pagefile.c</file>
-		<file>pageop.c</file>
 		<file>pool.c</file>
 		<file>ppool.c</file>
 		<file>procsup.c</file>
