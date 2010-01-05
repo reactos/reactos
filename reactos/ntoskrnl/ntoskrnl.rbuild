@@ -7,7 +7,7 @@
 	<if property="ARCH" value="amd64">
 		<property name="BASEADDRESS_NTOSKRNL" value="0xfffff80000800000" />
 	</if>
-	<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe" baseaddress="${BASEADDRESS_NTOSKRNL}" entrypoint="KiSystemStartup" allowwarnings="true">
+	<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe" baseaddress="${BASEADDRESS_NTOSKRNL}" entrypoint="KiSystemStartup">
 		<xi:include href="ntoskrnl-generic.rbuild" />
 	</module>
 </group>

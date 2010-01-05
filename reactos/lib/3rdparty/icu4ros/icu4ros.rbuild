@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
-<module name="icu4ros" type="staticlibrary" allowwarnings="true">
+<module name="icu4ros" type="staticlibrary">
 	<define name="U_STATIC_IMPLEMENTATION" />
 	<define name="U_HAVE_INTTYPES_H" />
 	<define name="UCONFIG_NO_FILE_IO">1</define>

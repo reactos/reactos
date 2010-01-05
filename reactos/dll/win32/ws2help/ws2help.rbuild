@@ -1,4 +1,4 @@
-<module name="ws2help" type="win32dll" baseaddress="${BASEADDRESS_WS2HELP}" installbase="system32" installname="ws2help.dll" allowwarnings="true">
+<module name="ws2help" type="win32dll" baseaddress="${BASEADDRESS_WS2HELP}" installbase="system32" installname="ws2help.dll">
 	<importlibrary definition="ws2help.spec" />
 	<include base="ws2help">.</include>
 	<include base="ReactOS">include/reactos/winsock</include>

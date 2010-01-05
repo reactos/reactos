@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr" allowwarnings="true">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
 	<importlibrary definition="win32k.pspec" />
 	<library>pseh</library>
 	<library>ntoskrnl</library>
