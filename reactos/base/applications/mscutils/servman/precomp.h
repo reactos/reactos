@@ -97,8 +97,9 @@ BOOL DoResume(PMAIN_WND_INFO Info);
 
 /* progress.c */
 #define DEFAULT_STEP 0
-HWND CreateProgressDialog(HWND hParent, LPTSTR lpServiceName, UINT LabelId);
+HWND CreateProgressDialog(HWND hParent, UINT LabelId);
 BOOL DestroyProgressDialog(HWND hProgDlg, BOOL bComplete);
+VOID InitializeProgressDialog(HWND hProgDlg, LPWSTR lpServiceName);
 VOID IncrementProgressBar(HWND hProgDlg, UINT NewPos);
 VOID CompleteProgressBar(HWND hProgDlg);
 

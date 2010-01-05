@@ -75,6 +75,25 @@ IncrementProgressBar(HWND hProgDlg,
     }
 }
 
+VOID
+InitializeProgressDialog(HWND hProgDlg,
+                         LPWSTR lpServiceName)
+{
+    /* Write the service name to the dialog */
+    SendDlgItemMessageW(hProgDlg,
+                        IDC_SERVCON_NAME,
+                        WM_SETTEXT,
+                        0,
+                        (LPARAM)lpServiceName);
+
+    /* Set the progress bar to the start */
+    SendDlgItemMessageW(hProgDlg,
+                        IDC_SERVCON_PROGRESS,
+                        PBM_SETPOS,
+                        0,
+                        0);
+}
+
 INT_PTR CALLBACK
 ProgressDialogProc(HWND hDlg,
                    UINT Message,
@@ -124,7 +143,6 @@ ProgressDialogProc(HWND hDlg,
 
 HWND
 CreateProgressDialog(HWND hParent,
-                     LPTSTR lpServiceName,
                      UINT LabelId)
 {
     HWND hProgDlg;
@@ -153,13 +171,6 @@ CreateProgressDialog(HWND hParent,
                      0,
                      lpProgStr);
         }
-
-        /* Write the service name to the dialog */
-        SendDlgItemMessageW(hProgDlg,
-                            IDC_SERVCON_NAME,
-                            WM_SETTEXT,
-                            0,
-                            (LPARAM)lpServiceName);
     }
 
     return hProgDlg;

@@ -25,8 +25,8 @@ StopService(PMAIN_WND_INFO pInfo,
 
     if (hProgress)
     {
-        /* Increment the progress bar */
-        IncrementProgressBar(hProgress, DEFAULT_STEP);
+        /* Set the service name and reset the progress bag */
+        InitializeProgressDialog(hProgress, lpServiceName);
     }
 
     hSCManager = OpenSCManager(NULL,
@@ -62,6 +62,10 @@ StopService(PMAIN_WND_INFO pInfo,
 
                 while (ServiceStatus.dwCurrentState != SERVICE_STOPPED)
                 {
+                    /* Don't sleep for more than 3 seconds */
+                    if (ServiceStatus.dwWaitHint > 3000)
+                        ServiceStatus.dwWaitHint = 3000;
+
                     Sleep(ServiceStatus.dwWaitHint);
 
                     if (hProgress)
@@ -103,11 +107,41 @@ StopService(PMAIN_WND_INFO pInfo,
 
 static BOOL
 StopDependantServices(PMAIN_WND_INFO pInfo,
-                      LPWSTR lpServiceName)
+                      LPWSTR lpServiceList,
+                      HWND hProgress OPTIONAL)
 {
+    LPWSTR lpStr;
     BOOL bRet = FALSE;
 
-    MessageBox(NULL, L"Rewrite StopDependentServices", NULL, 0);
+    lpStr = lpServiceList;
+
+    /* Loop through all the services in the list */
+    while (TRUE)
+    {
+        /* Break when we hit the double null */
+        if (*lpStr == L'\0' && *(lpStr + 1) == L'\0')
+            break;
+
+        /* If this isn't our first time in the loop we'll
+           have been left on a null char */
+        if (*lpStr == L'\0')
+            lpStr++;
+
+        /* Stop the requested service */
+        bRet = StopService(pInfo,
+                           lpStr,
+                           hProgress);
+
+        /* Complete the progress bar if we succeeded */
+        if (bRet)
+        {
+            CompleteProgressBar(hProgress);
+        }
+
+        /* Move onto the next string */
+        while (*lpStr != L'\0')
+            lpStr++;
+    }
 
     return bRet;
 }
@@ -119,43 +153,57 @@ DoStop(PMAIN_WND_INFO pInfo)
     HWND hProgress;
     LPWSTR lpServiceList;
     BOOL bRet = FALSE;
-    BOOL bStop = TRUE;
+    BOOL bStopMainService = TRUE;
 
     if (pInfo)
     {
-        /* Does this service have anything which depends on it? */
-        if (TV2_HasDependantServices(pInfo->pCurrentService->lpServiceName))
+        /* Does the service have any dependent services which need stopping first */
+        lpServiceList = GetListOfServicesToStop(pInfo->pCurrentService->lpServiceName);
+        if (lpServiceList)
         {
-            /* It does, get a list of all the services which need stopping */
-            lpServiceList = GetListOfServicesToStop(pInfo->pCurrentService->lpServiceName);
-            if (lpServiceList)
-            {
-                /* Tag the service list to the main wnd info */
-                pInfo->pTag = (PVOID)lpServiceList;
+            /* Tag the service list to the main wnd info */
+            pInfo->pTag = (PVOID)lpServiceList;
 
-                /* List them and ask the user if they want to stop them */
-                if (DialogBoxParamW(hInstance,
-                                         MAKEINTRESOURCEW(IDD_DLG_DEPEND_STOP),
-                                         pInfo->hMainWnd,
-                                         StopDependsDialogProc,
-                                         (LPARAM)pInfo) == IDOK)
+            /* List them and ask the user if they want to stop them */
+            if (DialogBoxParamW(hInstance,
+                                     MAKEINTRESOURCEW(IDD_DLG_DEPEND_STOP),
+                                     pInfo->hMainWnd,
+                                     StopDependsDialogProc,
+                                     (LPARAM)pInfo) == IDOK)
+            {
+                /* Create a progress window to track the progress of the stopping services */
+                hProgress = CreateProgressDialog(pInfo->hMainWnd,
+                                                 IDS_PROGRESS_INFO_STOP);
+
+                /* Stop all the dependant services */
+                StopDependantServices(pInfo, lpServiceList, hProgress);
+
+                /* Now stop the requested one */
+                bRet = StopService(pInfo,
+                                   pInfo->pCurrentService->lpServiceName,
+                                   hProgress);
+
+                /* We've already stopped the main service, don't try to stop it again */
+                bStopMainService = FALSE;
+
+                if (hProgress)
                 {
-                    /* Stop all the dependant services */
-                    StopDependantServices(pInfo, pInfo->pCurrentService->lpServiceName);
+                    /* Complete and destroy the progress bar */
+                    DestroyProgressDialog(hProgress, TRUE);
                 }
-                else
-                {
-                    /* Don't stop the main service if the user selected not to */
-                    bStop = FALSE;
-                }
+            }
+            else
+            {
+                /* Don't stop the main service if the user selected not to */
+                bStopMainService = FALSE;
             }
         }
 
-        if (bStop)
+        /* If the service has no running dependents, then we stop it here */
+        if (bStopMainService)
         {
             /* Create a progress window to track the progress of the stopping service */
             hProgress = CreateProgressDialog(pInfo->hMainWnd,
-                                             pInfo->pCurrentService->lpServiceName,
                                              IDS_PROGRESS_INFO_STOP);
 
             /* Stop the requested service */

@@ -95,18 +95,24 @@ BuildListOfServicesToStop(LPWSTR *lpServiceList,
     {
         for (i = 0; i < dwCount; i++)
         {
-            /* Does this service have any dependents? */
-            if (TV2_HasDependantServices(lpServiceStatus[i].lpServiceName))
+            /* Does this service need stopping? */
+            if (lpServiceStatus[i].ServiceStatus.dwCurrentState != SERVICE_STOPPED &&
+                lpServiceStatus[i].ServiceStatus.dwCurrentState != SERVICE_STOP_PENDING)
             {
-                /* recall this function with the dependent */
-                BuildListOfServicesToStop(lpServiceList, lpServiceStatus[i].lpServiceName);
+                /* Does this service have any dependents? */
+                if (TV2_HasDependantServices(lpServiceStatus[i].lpServiceName))
+                {
+                    /* recall this function with the dependent */
+                    BuildListOfServicesToStop(lpServiceList, lpServiceStatus[i].lpServiceName);
+                }
+
+                /* Add the service to the list */
+                *lpServiceList = AddServiceToList(lpServiceList, lpServiceStatus[i].lpServiceName);
+
+                /* We've got one */
+                bRet = TRUE;
             }
-
-            /* Add the service to the list */
-            *lpServiceList = AddServiceToList(lpServiceList, lpServiceStatus[i].lpServiceName);
         }
-
-        bRet = TRUE;
 
         HeapFree(GetProcessHeap(),
                  0,

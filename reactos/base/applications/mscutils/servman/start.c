@@ -116,12 +116,11 @@ DoStart(PMAIN_WND_INFO Info)
     BOOL bRet = FALSE;
 
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                    Info->pCurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_START);
 
     if (hProgDlg)
     {
-        IncrementProgressBar(hProgDlg, DEFAULT_STEP);
+        InitializeProgressDialog(hProgDlg, Info->pCurrentService->lpServiceName);
 
         bRet = DoStartService(Info,
                               hProgDlg);
