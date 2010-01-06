@@ -40,17 +40,6 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-NTAPI
-DriverEntry(
-  PDRIVER_OBJECT DriverObject,
-  PUNICODE_STRING RegistryPath)
-{
-  UNIMPLEMENTED;
-
-  return STATUS_SUCCESS;
-}
-
 /*
  * @implemented
  */

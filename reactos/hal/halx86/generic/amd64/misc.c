@@ -156,7 +156,7 @@ KeQueryPerformanceCounter(
 {
     LARGE_INTEGER Result;
 
-    ASSERT(HalpPerformanceFrequency.QuadPart != 0);
+//    ASSERT(HalpPerformanceFrequency.QuadPart != 0);
 
     /* Does the caller want the frequency? */
     if (PerformanceFrequency)

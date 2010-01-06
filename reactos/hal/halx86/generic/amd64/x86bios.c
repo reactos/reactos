@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
- * LICENSE:         See COPYING in the top level directory
- * FILE:            hal/halamd64/generic/x86bios.c
+ * LICENSE:         GPL, See COPYING in the top level directory
+ * FILE:            hal/halx86/generic/amd64/x86bios.c
  * PURPOSE:         
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -74,6 +74,8 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock)
             }
         }
     }
+
+    Mdl->MdlFlags = MDL_PAGES_LOCKED;
 
     /* Map the MDL to system space */
     x86BiosMemoryMapping = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
