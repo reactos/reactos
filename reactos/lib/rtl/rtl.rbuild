@@ -35,6 +35,17 @@
 		<file>mem.c</file>
 		<file>memgen.c</file>
 	</if>
+	<if property="ARCH" value="amd64">
+		<directory name="amd64">
+			<file>debug_asm.S</file>
+			<file>except_asm.S</file>
+			<file>slist.S</file>
+			<file>unwind.c</file>
+			<file>stubs.c</file>
+		</directory>
+		<file>mem.c</file>
+		<file>memgen.c</file>
+	</if>
 	<directory name="austin">
 		<file>avl.c</file>
 		<file>tree.c</file>
