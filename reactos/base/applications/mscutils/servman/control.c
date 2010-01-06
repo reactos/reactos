@@ -23,7 +23,22 @@ DoControl(PMAIN_WND_INFO Info,
     DWORD dwOldCheckPoint;
     DWORD dwWaitTime;
     DWORD dwMaxWait;
+    DWORD dwReqState;
     BOOL bRet = FALSE;
+
+    /* Set the state we're interested in */
+    switch (Control)
+    {
+        case SERVICE_CONTROL_PAUSE:
+            dwReqState = SERVICE_PAUSED;
+            break;
+        case SERVICE_CONTROL_CONTINUE:
+            dwReqState = SERVICE_RUNNING;
+            break;
+        default:
+            /* Unhandled control code */
+            return FALSE;
+    }
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
@@ -32,7 +47,7 @@ DoControl(PMAIN_WND_INFO Info,
     {
         hService = OpenService(hSCManager,
                                Info->pCurrentService->lpServiceName,
-                               SERVICE_PAUSE_CONTINUE | SERVICE_INTERROGATE | SERVICE_QUERY_CONFIG);
+                               SERVICE_PAUSE_CONTINUE | SERVICE_INTERROGATE | SERVICE_QUERY_STATUS);
         if (hService)
         {
             if (hProgress)
@@ -58,7 +73,7 @@ DoControl(PMAIN_WND_INFO Info,
                     dwStartTickCount = GetTickCount();
 
                     /* Loop until it's at the correct state */
-                    while (ServiceStatus.dwCurrentState != Control)
+                    while (ServiceStatus.dwCurrentState != dwReqState)
                     {
                         dwOldCheckPoint = ServiceStatus.dwCheckPoint;
                         dwWaitTime = ServiceStatus.dwWaitHint / 10;
@@ -103,7 +118,7 @@ DoControl(PMAIN_WND_INFO Info,
                     }
                 }
 
-                if (ServiceStatus.dwCurrentState == Control)
+                if (ServiceStatus.dwCurrentState == dwReqState)
                 {
                     bRet = TRUE;
                 }
