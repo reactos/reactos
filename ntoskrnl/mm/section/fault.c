@@ -46,7 +46,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 extern KEVENT MmWaitPageEvent;
@@ -164,7 +164,7 @@ MmNotPresentFaultPageFile
 		MmUnlockSectionSegment(Segment);
 		DPRINT("XXX Set Event %x\n", Status);
 		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
-		DPRINT1("Status %x\n", Status);
+		DPRINT("Status %x\n", Status);
 		return Status;
 	}
 	else if (MmIsPageSwapEntry(Process, Address))
@@ -173,7 +173,7 @@ MmNotPresentFaultPageFile
 		MmGetPageFileMapping(Process, Address, &SwapEntry);
 		if (SwapEntry == MM_WAIT_ENTRY)
 		{
-			DPRINT1("Wait for page entry in section\n");
+			DPRINT("Wait for page entry in section\n");
 			MmUnlockSectionSegment(Segment);
 			return STATUS_SUCCESS + 1;
 		}
@@ -194,7 +194,7 @@ MmNotPresentFaultPageFile
 		SWAPENTRY SwapEntry = SWAPENTRY_FROM_SSE(Entry);
 		if (SwapEntry == MM_WAIT_ENTRY)
 		{
-			DPRINT1("Wait for page entry in section\n");
+			DPRINT("Wait for page entry in section\n");
 			MmUnlockSectionSegment(Segment);
 			return STATUS_SUCCESS + 1;
 		}
@@ -225,7 +225,7 @@ MmNotPresentFaultPageFile
 		DPRINT("XXX Set Event %x\n", Status);
 		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 		MmUnlockSectionSegment(Segment);
-		DPRINT1("Status %x\n", Status);
+		DPRINT("Status %x\n", Status);
 		return Status;
 	}
 	else
@@ -286,7 +286,7 @@ MmNotPresentFaultImageFile
 
 	BoundaryAddressMultiple.QuadPart = 0;
 
-	DPRINT1("Not Present: %p %p (%p-%p)\n", AddressSpace, Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
+	DPRINT("Not Present: %p %p (%p-%p)\n", AddressSpace, Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
     
 	/*
 	 * There is a window between taking the page fault and locking the
@@ -706,7 +706,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    if (!Private)
    {
       ASSERT(SwapEntry == 0);
-	  DPRINT1("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, Offset.u.HighPart, Offset.u.LowPart);
+	  DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, Offset.u.HighPart, Offset.u.LowPart);
       Status = MiWriteBackPage(FileObject, &Offset, PAGE_SIZE, Page);
 	  MmSetCleanAllRmaps(Page);
 	  MmUnlockSectionSegment(Segment);
@@ -730,7 +730,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    /*
     * Write the page to the pagefile
     */
-   DPRINT1("Writing swap entry: %x %x\n", SwapEntry, Page);
+   DPRINT("Writing swap entry: %x %x\n", SwapEntry, Page);
    Status = MmWriteToSwapPage(SwapEntry, Page);
    if (!NT_SUCCESS(Status))
    {
@@ -790,7 +790,7 @@ MmPageOutPageFileView
 		ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 		if (SwapEntry == MM_WAIT_ENTRY)
 		{
-			DPRINT1
+			DPRINT
 				("SwapEntry is a WAIT, our swap to is %x, State is %x for (%x:%x) on page %x\n",
 				 Required->SwapEntry,
 				 Required->State,
@@ -833,7 +833,7 @@ MmPageOutPageFileView
 				MmUnlockSectionSegment(Segment);
 				return STATUS_PAGEFILE_QUOTA;
 			}
-			DPRINT1("MiWriteSwapPage (%x -> %x)\n", OurPage, Required->SwapEntry);
+			DPRINT("MiWriteSwapPage (%x -> %x)\n", OurPage, Required->SwapEntry);
 			Required->DoAcquisition = MiWriteSwapPage;
 			MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
 			MmUnlockSectionSegment(Segment);
@@ -841,7 +841,7 @@ MmPageOutPageFileView
 		}
 		else
 		{
-			DPRINT1("Out of swap space for page %x\n", OurPage);
+			DPRINT("Out of swap space for page %x\n", OurPage);
 			MmUnlockSectionSegment(Segment);
 			return STATUS_PAGEFILE_QUOTA;
 		}

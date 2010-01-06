@@ -33,7 +33,7 @@ MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 BOOLEAN MiBalancerInitialized = FALSE;
 MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
-/*static*/ ULONG MiMinimumAvailablePages = 128;
+/*static*/ ULONG MiMinimumAvailablePages = 0x3000;
 static ULONG MiNrTotalPages;
 static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
@@ -270,7 +270,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    if(BALANCER_CAN_EVICT(Consumer))
 	   MmInsertLRULastUserPage(Page);
 
-   DPRINT1("Successful alloc %x after balancer (consumer %d)\n", Page, Consumer);
+   DPRINT("Successful alloc %x after balancer (consumer %d)\n", Page, Consumer);
    *AllocatedPage = Page;
    
    return(STATUS_SUCCESS);

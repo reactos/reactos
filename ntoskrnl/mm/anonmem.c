@@ -225,7 +225,7 @@ MmNotPresentFaultVirtualMemory
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
    KIRQL OldIrql;
 
-   DPRINT1("Not Present %x in (%x-%x)\n", Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
+   DPRINT("Not Present %x in (%x-%x)\n", Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
     
    /*
     * There is a window between taking the page fault and locking the
@@ -291,11 +291,11 @@ MmNotPresentFaultVirtualMemory
 	   Required->Consumer = MC_USER;
 	   Required->Amount = 1;
 	   Required->DoAcquisition = MiGetOnePage;
-	   DPRINT1("Allocate\n");
+	   DPRINT("Allocate\n");
 	   return STATUS_MORE_PROCESSING_REQUIRED;
    }
 
-   DPRINT1("Using page %x\n", Required->Page[0]);
+   DPRINT("Using page %x\n", Required->Page[0]);
 
    /*
     * Set the page. If we fail because we are out of memory then
@@ -330,7 +330,7 @@ MmNotPresentFaultVirtualMemory
       KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
 
-   DPRINT1("Success!\n");
+   DPRINT("Success!\n");
    return(STATUS_SUCCESS);
 }
 

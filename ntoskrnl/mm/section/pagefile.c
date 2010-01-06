@@ -153,20 +153,20 @@ MmFinalizeSectionPageOut
  BOOLEAN Dirty)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	BOOLEAN WriteZero = FALSE;
+	BOOLEAN WriteZero = FALSE, WritePage = FALSE;
 	SWAPENTRY Swap = MmGetSavedSwapEntryPage(Page);
 
 	MmLockSectionSegment(Segment);
+
 	if (Dirty)
 	{
-		DPRINT1("Finalize (dirty) Segment %x Page %x\n", Segment, Page);
+		DPRINT("Finalize (dirty) Segment %x Page %x\n", Segment, Page);
 		DPRINT("Segment->FileObject %x\n", Segment->FileObject);
 		DPRINT("Segment->Flags %x\n", Segment->Flags);
 		if (Segment->FileObject && !(Segment->Flags & MM_IMAGE_SEGMENT))
 		{
-			DPRINT1("Segment %x FileObject %x Offset %x\n", Segment, Segment->FileObject, FileOffset->LowPart);
-			Status = MiWriteBackPage(Segment->FileObject, FileOffset, PAGE_SIZE, Page);
-			WriteZero = NT_SUCCESS(Status);
+			WriteZero = TRUE;
+			WritePage = TRUE;
 		}
 		else
 		{
@@ -193,24 +193,32 @@ MmFinalizeSectionPageOut
 
 	if (WriteZero)
 	{
-		DPRINT1("Setting page entry in segment %x:%x to swap %x\n", Segment, FileOffset->LowPart, Swap);
+		DPRINT("Setting page entry in segment %x:%x to swap %x\n", Segment, FileOffset->LowPart, Swap);
 		MiSetPageEntrySectionSegment(Segment, FileOffset, Swap ? MAKE_SWAP_SSE(Swap) : 0);
 	}
 	else
 	{
-		DPRINT1("Setting page entry in segment %x:%x to page %x\n", Segment, FileOffset->LowPart, Page);
+		DPRINT("Setting page entry in segment %x:%x to page %x\n", Segment, FileOffset->LowPart, Page);
 		MiSetPageEntrySectionSegment
 			(Segment, FileOffset, Page ? (Dirty ? DIRTY_SSE(MAKE_PFN_SSE(Page)) : MAKE_PFN_SSE(Page)) : 0);
 	}
 
+	MmUnlockSectionSegment(Segment);
+
+	if (WritePage)
+	{
+		DPRINT("Segment %x FileObject %x Offset %x\n", Segment, Segment->FileObject, FileOffset->LowPart);
+		Status = MiWriteBackPage(Segment->FileObject, FileOffset, PAGE_SIZE, Page);
+	}
+
 	if (NT_SUCCESS(Status))
 	{
-		DPRINT1("Removing page %x for real\n", Page);
+		DPRINT("Removing page %x for real\n", Page);
 		MmSetSavedSwapEntryPage(Page, 0);
 		MmDereferencePage(Page);
 	}
 
-	MmUnlockSectionSegment(Segment);
+	/* Note: Writing may evict the segment...  Nothing is guaranteed from here down */
 
 	KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 

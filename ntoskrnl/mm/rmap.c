@@ -221,7 +221,14 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 
 	   if (Process && Address < MmSystemRangeStart)
 	   {
+		   // Make sure we don't try to page out part of an exiting process
 		   Status = ObReferenceObject(Process);
+		   if (PsIsProcessExiting(Process))
+		   {
+			   ObDereferenceObject(Process);
+			   ExReleaseFastMutex(&RmapListLock);
+			   goto bail;
+		   }
 		   if (!NT_SUCCESS(Status))
 		   {
 			   DPRINT("bail\n");
@@ -355,7 +362,10 @@ bail:
 		   Evicted = 
 			   NT_SUCCESS(Status) &&
 			   NT_SUCCESS(MmFinalizeSectionPageOut(Segment, &FileOffset, Page, Dirty));
-		   
+
+		   /* Note: on success, segment might not exist anymore, due to cache segment
+			* replacement in cc */
+
 		   if (!Evicted && SectionPage)
 		   {
 			   DPRINT1

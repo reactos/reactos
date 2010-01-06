@@ -867,7 +867,7 @@ _MmReferencePage(PFN_TYPE Pfn, const char *file, int line)
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
 
-   DPRINT1("MmReferencePage(PysicalAddress %x,%s:%d,%d)\n", Pfn << PAGE_SHIFT, file, line, Page->ReferenceCount);
+   DPRINT("MmReferencePage(PysicalAddress %x,%s:%d,%d)\n", Pfn << PAGE_SHIFT, file, line, Page->ReferenceCount);
 
    if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
    {

@@ -112,6 +112,12 @@ PsGetNextProcess(
     IN PEPROCESS OldProcess OPTIONAL
 );
 
+BOOLEAN
+NTAPI
+PsIsProcessExiting(
+	IN PEPROCESS Process
+);
+
 NTSTATUS
 NTAPI
 PspMapSystemDll(

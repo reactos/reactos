@@ -90,7 +90,7 @@ VOID
 NTAPI
 _MmLockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
 {
-	DPRINT1("MmLockSectionSegment(%p,%s:%d)\n", Segment, file, line);
+	DPRINT("MmLockSectionSegment(%p,%s:%d)\n", Segment, file, line);
 	ExAcquireFastMutex(&Segment->Lock);
 }
 
@@ -99,7 +99,7 @@ NTAPI
 _MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
 {
 	ExReleaseFastMutex(&Segment->Lock);
-	DPRINT1("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
+	DPRINT("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
 }
 
 VOID
@@ -260,7 +260,7 @@ MiFlushMappedSection
 
 			if (!NT_SUCCESS(Status))
 			{
-				DPRINT1
+				DPRINT
 					("Writeback from section flush %08x%08x (%x) %x@%x (%08x%08x:%wZ) failed %x\n",
 					 FileOffset.u.HighPart, FileOffset.u.LowPart,
 					 (ULONG)(FileSize->QuadPart - FileOffset.QuadPart),
@@ -894,7 +894,7 @@ MiMapViewOfSegment(PMMSUPPORT AddressSpace,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Mapping between 0x%.8X and 0x%.8X failed (%X).\n",
+      DPRINT("Mapping between 0x%.8X and 0x%.8X failed (%X).\n",
 			  (*BaseAddress), (char*)(*BaseAddress) + ViewSize, Status);
       return(Status);
    }
@@ -1170,7 +1170,7 @@ MiFreeSegmentPage
 
 		if (IS_DIRTY_SSE(Entry) && FileObject)
 		{
-			DPRINT1("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart);
+			DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart);
 			MiWriteBackPage(FileObject, FileOffset, PAGE_SIZE, OldPage);
 			DPRINT("Dereference page %x\n", OldPage);
 		}

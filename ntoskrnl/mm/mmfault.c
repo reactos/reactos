@@ -136,7 +136,7 @@ MmpAccessFaultInner
          {
             MmUnlockAddressSpace(AddressSpace);
          }
-		 DPRINT1("Address: %x\n", Address);
+		 DPRINT("Address: %x\n", Address);
          return (STATUS_ACCESS_VIOLATION);
       }
 
@@ -161,7 +161,7 @@ MmpAccessFaultInner
 	  if (Status == STATUS_SUCCESS + 1)
 	  {
 		  // Wait page ...
-		  DPRINT1("Waiting for %x\n", Address);
+		  DPRINT("Waiting for %x\n", Address);
 		  if (!NT_SUCCESS
 			  (KeWaitForSingleObject
 			   (&MmWaitPageEvent,
@@ -170,7 +170,7 @@ MmpAccessFaultInner
 				FALSE,
 				NULL)))
 			  ASSERT(FALSE);
-		  DPRINT1("Restarting fault %x\n", Address);
+		  DPRINT("Restarting fault %x\n", Address);
 		  Status = STATUS_MM_RESTART_OPERATION;
 	  }
 	  else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
@@ -211,8 +211,8 @@ MmpAccessFaultInner
 
    if (!NT_SUCCESS(Status))
    {
-	   DPRINT1("Completed page fault handling %x %x\n", Address, Status);
-	   DPRINT1
+	   DPRINT("Completed page fault handling %x %x\n", Address, Status);
+	   DPRINT
 		   ("Type %x (%x -> %x)\n", 
 			MemoryArea->Type, 
 			MemoryArea->StartingAddress, 
@@ -316,7 +316,7 @@ MmNotPresentFaultInner
 			break;
 		}
 		
-		DPRINT1
+		DPRINT
 			("Type %x (%x -> %x)\n", 
 			 MemoryArea->Type, 
 			 MemoryArea->StartingAddress, 
@@ -343,7 +343,7 @@ MmNotPresentFaultInner
 		if (Status == STATUS_SUCCESS + 1)
 		{
 			// Wait page ...
-			DPRINT1("Waiting for %x\n", Address);
+			DPRINT("Waiting for %x\n", Address);
 			if (!NT_SUCCESS
 				(KeWaitForSingleObject
 				 (&MmWaitPageEvent,
@@ -352,7 +352,7 @@ MmNotPresentFaultInner
 				  FALSE,
 				  NULL)))
 				ASSERT(FALSE);
-			DPRINT1("Done waiting for %x\n", Address);
+			DPRINT("Done waiting for %x\n", Address);
 			Status = STATUS_MM_RESTART_OPERATION;
 		}
 		else if (Status == STATUS_MORE_PROCESSING_REQUIRED)

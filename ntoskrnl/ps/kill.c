@@ -605,6 +605,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (TerminationPort)
     {
         /* Setup the message header */
+        TerminationMsg.h.u2.ZeroInit = 0;
         TerminationMsg.h.u2.s2.Type = LPC_CLIENT_DIED;
         TerminationMsg.h.u1.s1.TotalLength = sizeof(TerminationMsg);
         TerminationMsg.h.u1.s1.DataLength = sizeof(TerminationMsg) -
@@ -1018,6 +1019,13 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
 
     /* Return Status */
     return Status;
+}
+
+BOOLEAN
+NTAPI
+PsIsProcessExiting(IN PEPROCESS Process)
+{
+	return Process->Flags & PSF_PROCESS_EXITING_BIT;
 }
 
 VOID
