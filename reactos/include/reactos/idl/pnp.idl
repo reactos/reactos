@@ -489,8 +489,8 @@ interface pnp
     cpp_quote("#define PNP_DEVINST_REENUMERATE 0x7")
     DWORD PNP_DeviceInstanceAction(
         [in] handle_t hBinding,
-        [in] DWORD ulMajorAction,
-        [in] DWORD ulMinorAction,
+        [in] DWORD ulAction,
+        [in] DWORD ulFlags,
         [in, string, unique] LPWSTR pszDeviceInstance1,
         [in, string, unique] LPWSTR pszDeviceInstance2);
 
