@@ -46,7 +46,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 extern KEVENT MmWaitPageEvent;
@@ -97,17 +97,8 @@ MmNotPresentFaultPageFile
 						  &MemoryArea->Data.SectionData.RegionListHead,
 						  Address, NULL);
 
-	if (Segment->Flags & MM_IMAGE_SEGMENT)
-	{
-		FileOffset.QuadPart = TotalOffset.QuadPart + Segment->Image.FileOffset;
-		DPRINT("SEG Flags %x File Offset %x\n", 
-			   Segment->Image.Characteristics, FileOffset.LowPart);
-	}
-	else
-	{
-		TotalOffset.QuadPart += MemoryArea->Data.SectionData.ViewOffset.QuadPart;
-		FileOffset = TotalOffset;
-	}
+	TotalOffset.QuadPart += MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+	FileOffset = TotalOffset;
 
 	Consumer = (Segment->Flags & MM_DATAFILE_SEGMENT) ? MC_CACHE : MC_USER;
 
@@ -183,6 +174,7 @@ MmNotPresentFaultPageFile
 		if (SwapEntry == MM_WAIT_ENTRY)
 		{
 			DPRINT1("Wait for page entry in section\n");
+			MmUnlockSectionSegment(Segment);
 			return STATUS_SUCCESS + 1;
 		}
 		else
@@ -203,6 +195,7 @@ MmNotPresentFaultPageFile
 		if (SwapEntry == MM_WAIT_ENTRY)
 		{
 			DPRINT1("Wait for page entry in section\n");
+			MmUnlockSectionSegment(Segment);
 			return STATUS_SUCCESS + 1;
 		}
 		else
@@ -353,7 +346,6 @@ MmNotPresentFaultImageFile
 			DPRINT("Set in section @ %x\n", Offset.LowPart);
 			Status = MiSetPageEntrySectionSegment
 				(Segment, &Offset, MAKE_PFN_SSE(Page));
-			KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 		}
 
 		if (Required->State & 2)
@@ -366,8 +358,6 @@ MmNotPresentFaultImageFile
 				MmInsertRmap(Page, Process, Address);
 				if (Locked) MmLockPage(Page);
 			}
-			DPRINT("Set clean %x\n", Page);
-			MmSetCleanAllRmaps(Page);
 		}
 
 		if (Required->State & 4)
@@ -378,6 +368,8 @@ MmNotPresentFaultImageFile
 		}
 
 		MmUnlockSectionSegment(Segment);
+		DPRINT("XXX Set Event %x\n", Status);
+		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
 		DPRINT("Done: %x\n", Status);
 		return Status;
 	}
