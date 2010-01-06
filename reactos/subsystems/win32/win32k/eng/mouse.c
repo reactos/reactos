@@ -157,12 +157,6 @@ IntHideMousePointer(
 
     pgp->Enabled = FALSE;
 
-    /* The mouse is hide from ShowCours and it is frist ?? */
-    if (pgp->ShowPointer < 0)
-    {
-        return;
-    }
-
     if (!pgp->psurfSave)
     {
         DPRINT1("No SaveSurface!\n");
@@ -214,12 +208,6 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
     }
 
     pgp->Enabled = TRUE;
-
-    /* Do not blt the pointer, if it is hidden */
-    if (pgp->ShowPointer < 0)
-    {
-        return ;
-    }
 
     /* Calculate pointer coordinates */
     pt.x = ppdev->ptlPointer.x - pgp->HotSpot.x;
@@ -538,8 +526,11 @@ EngMovePointer(
             prcl->right = prcl->left + pgp->Size.cx;
             prcl->bottom = prcl->top + pgp->Size.cy;
         }
-    } else if (prcl != NULL)
+    } 
+    else if (prcl != NULL)
+    {
         prcl->left = prcl->top = prcl->right = prcl->bottom = -1;
+    }
 }
 
 VOID APIENTRY

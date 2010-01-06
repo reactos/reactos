@@ -120,10 +120,8 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       /* Check if the mouse move is absolute */
       if (mid->Flags == MOUSE_MOVE_ABSOLUTE)
       {
-         /* Set flag and convert to screen location */
+         /* Set flag to convert to screen location */
          mi.dwFlags |= MOUSEEVENTF_ABSOLUTE;
-         mi.dx = mi.dx / (65535 / (UserGetSystemMetrics(SM_CXVIRTUALSCREEN) - 1));
-         mi.dy = mi.dy / (65535 / (UserGetSystemMetrics(SM_CYVIRTUALSCREEN) - 1));
       }
 
       if(mid->ButtonFlags)
@@ -1052,48 +1050,19 @@ IntMouseInput(MOUSEINPUT *mi)
 {
    const UINT SwapBtnMsg[2][2] =
       {
-         {
-            WM_LBUTTONDOWN, WM_RBUTTONDOWN
-         },
+         {WM_LBUTTONDOWN, WM_RBUTTONDOWN},
          {WM_LBUTTONUP, WM_RBUTTONUP}
       };
    const WPARAM SwapBtn[2] =
       {
          MK_LBUTTON, MK_RBUTTON
       };
-   POINT MousePos = {0}, OrgPos;
+   POINT MousePos;
    PSYSTEM_CURSORINFO CurInfo;
-   PWINSTATION_OBJECT WinSta;
-   BOOL DoMove, SwapButtons;
+   BOOL SwapButtons;
    MSG Msg;
-   SURFACE *psurf;
-   SURFOBJ *pso;
-   PDC dc;
-   PWINDOW_OBJECT DesktopWindow;
-
-#if 1
-
-   HDC hDC;
-
-   /* FIXME - get the screen dc from the window station or desktop */
-   if(!(hDC = IntGetScreenDC()))
-   {
-      return FALSE;
-   }
-#endif
 
    ASSERT(mi);
-#if 0
-
-   WinSta = PsGetCurrentProcessWin32Process()->WindowStation;
-#else
-   /* FIXME - ugly hack but as long as we're using this dumb callback from the
-   mouse class driver, we can't access the window station from the calling
-   process */
-   WinSta = InputWindowStation;
-#endif
-
-   ASSERT(WinSta);
 
    CurInfo = IntGetSysCursorInfo();
 
@@ -1105,84 +1074,26 @@ IntMouseInput(MOUSEINPUT *mi)
    }
 
    SwapButtons = gspv.bMouseBtnSwap;
-   DoMove = FALSE;
 
-   OrgPos = MousePos = gpsi->ptCursor;
+   MousePos = gpsi->ptCursor;
 
    if(mi->dwFlags & MOUSEEVENTF_MOVE)
    {
       if(mi->dwFlags & MOUSEEVENTF_ABSOLUTE)
       {
-         MousePos.x = mi->dx;
-         MousePos.y = mi->dy;
+         MousePos.x = mi->dx * UserGetSystemMetrics(SM_CXVIRTUALSCREEN) >> 16;
+         MousePos.y = mi->dy * UserGetSystemMetrics(SM_CYVIRTUALSCREEN) >> 16;
       }
       else
       {
          MousePos.x += mi->dx;
          MousePos.y += mi->dy;
       }
-
-      DesktopWindow = IntGetWindowObject(WinSta->ActiveDesktop->DesktopWindow);
-
-      if (DesktopWindow)
-      {
-         if(MousePos.x >= DesktopWindow->Wnd->rcClient.right)
-            MousePos.x = DesktopWindow->Wnd->rcClient.right - 1;
-         if(MousePos.y >= DesktopWindow->Wnd->rcClient.bottom)
-            MousePos.y = DesktopWindow->Wnd->rcClient.bottom - 1;
-         UserDereferenceObject(DesktopWindow);
-      }
-
-      if(MousePos.x < 0)
-         MousePos.x = 0;
-      if(MousePos.y < 0)
-         MousePos.y = 0;
-
-      if(CurInfo->CursorClipInfo.IsClipped)
-      {
-         /* The mouse cursor needs to be clipped */
-
-         if(MousePos.x >= (LONG)CurInfo->CursorClipInfo.Right)
-            MousePos.x = (LONG)CurInfo->CursorClipInfo.Right;
-         if(MousePos.x < (LONG)CurInfo->CursorClipInfo.Left)
-            MousePos.x = (LONG)CurInfo->CursorClipInfo.Left;
-         if(MousePos.y >= (LONG)CurInfo->CursorClipInfo.Bottom)
-            MousePos.y = (LONG)CurInfo->CursorClipInfo.Bottom;
-         if(MousePos.y < (LONG)CurInfo->CursorClipInfo.Top)
-            MousePos.y = (LONG)CurInfo->CursorClipInfo.Top;
-      }
-
-      DoMove = (MousePos.x != OrgPos.x || MousePos.y != OrgPos.y);
-   }
-
-   if (DoMove)
-   {
-      dc = DC_LockDc(hDC);
-      if (dc)
-      {
-         psurf = dc->dclevel.pSurface;
-         if (psurf)
-         {
-            pso = &psurf->SurfObj;
-
-            if (CurInfo->ShowingCursor)
-            {
-               IntEngMovePointer(pso, MousePos.x, MousePos.y, &(GDIDEV(pso)->Pointer.Exclude));
-            }
-            /* Only now, update the info in the PDEVOBJ, so EngMovePointer can
-            * use the old values to move the pointer image */
-            gpsi->ptCursor.x = MousePos.x;
-            gpsi->ptCursor.y = MousePos.y;
-         }
-
-         DC_UnlockDc(dc);
-      }
    }
 
    /*
     * Insert the messages into the system queue
     */
-
    Msg.wParam = CurInfo->ButtonsDown;
    Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
    Msg.pt = MousePos;
@@ -1197,13 +1108,10 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.wParam |= MK_CONTROL;
    }
 
-   if(DoMove)
+   if(mi->dwFlags & MOUSEEVENTF_MOVE)
    {
-      Msg.message = WM_MOUSEMOVE;
-      MsqInsertSystemMessage(&Msg);
+      UserSetCursorPos(MousePos.x, MousePos.y);
    }
-
-   Msg.message = 0;
    if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
    {
       gQueueKeyStateTable[VK_LBUTTON] |= 0xc0;

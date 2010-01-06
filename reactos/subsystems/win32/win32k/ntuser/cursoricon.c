@@ -137,7 +137,7 @@ UserSetCursor(
     {
         UserReferenceObject(NewCursor);
 
-        CurInfo->ShowingCursor = CURSOR_SHOWING;
+        CurInfo->ShowingCursor = 1;
         CurInfo->CurrentCursorObject = NewCursor;
 
         /* Call GDI to set the new screen cursor */
@@ -173,6 +173,101 @@ UserSetCursor(
 
     /* Return handle of the old cursor */
     return hOldCursor;
+}
+
+BOOL UserSetCursorPos( INT x, INT y)
+{
+    PWINDOW_OBJECT DesktopWindow;
+    PSYSTEM_CURSORINFO CurInfo;
+    HDC hDC;
+    MSG Msg;
+
+    if(!(hDC = IntGetScreenDC()))
+    {
+        return FALSE;
+    }
+
+    CurInfo = IntGetSysCursorInfo();
+
+    DesktopWindow = UserGetDesktopWindow();
+
+    if (DesktopWindow)
+    {
+        if(x >= DesktopWindow->Wnd->rcClient.right)
+            x = DesktopWindow->Wnd->rcClient.right - 1;
+        if(y >= DesktopWindow->Wnd->rcClient.bottom)
+            y = DesktopWindow->Wnd->rcClient.bottom - 1;
+    }
+
+    if(x < 0)
+        x = 0;
+    if(y < 0)
+        y = 0;
+
+    //Clip cursor position
+    if(CurInfo->CursorClipInfo.IsClipped)
+    {
+       if(x >= (LONG)CurInfo->CursorClipInfo.Right)
+           x = (LONG)CurInfo->CursorClipInfo.Right - 1;
+       if(x < (LONG)CurInfo->CursorClipInfo.Left)
+           x = (LONG)CurInfo->CursorClipInfo.Left;
+       if(y >= (LONG)CurInfo->CursorClipInfo.Bottom)
+           y = (LONG)CurInfo->CursorClipInfo.Bottom - 1;
+       if(y < (LONG)CurInfo->CursorClipInfo.Top)
+           y = (LONG)CurInfo->CursorClipInfo.Top;
+    }
+
+    //Store the new cursor position
+    gpsi->ptCursor.x = x;
+    gpsi->ptCursor.y = y;
+
+    //Move the mouse pointer
+    GreMovePointer(hDC, x, y);
+
+    //Generate a mouse move message
+    Msg.message = WM_MOUSEMOVE;
+    Msg.wParam = CurInfo->ButtonsDown;
+    Msg.lParam = MAKELPARAM(x, y);
+    Msg.pt = gpsi->ptCursor;
+    MsqInsertSystemMessage(&Msg);
+
+    return TRUE;
+}
+
+/* Called from NtUserCallOneParam with Routine ONEPARAM_ROUTINE_SHOWCURSOR
+ * User32 macro NtUserShowCursor */
+int UserShowCursor(BOOL bShow)
+{
+    PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo();;
+    HDC hdcScreen;
+
+    if (!(hdcScreen = IntGetScreenDC()))
+    {
+        return 0; /* No mouse */
+    }
+
+    if (bShow == FALSE)
+    {
+        /* Check if were diplaying a cursor */
+        if (CurInfo->ShowingCursor == 1)
+        {
+            /* Remove the pointer */
+            GreMovePointer(hdcScreen, -1, -1);
+            DPRINT("Removing pointer!\n");
+        }
+        CurInfo->ShowingCursor--;
+    }
+    else
+    {
+        if (CurInfo->ShowingCursor == 0)
+        {
+            /*Show the pointer*/
+            GreMovePointer(hdcScreen, gpsi->ptCursor.x, gpsi->ptCursor.y);
+        }
+        CurInfo->ShowingCursor++;
+    }
+
+    return CurInfo->ShowingCursor;
 }
 
 /*
@@ -712,21 +807,14 @@ NtUserClipCursor(
     if ((Rect.right > Rect.left) && (Rect.bottom > Rect.top)
             && DesktopWindow && UnsafeRect != NULL)
     {
-        MOUSEINPUT mi;
 
         CurInfo->CursorClipInfo.IsClipped = TRUE;
         CurInfo->CursorClipInfo.Left = max(Rect.left, DesktopWindow->Wnd->rcWindow.left);
         CurInfo->CursorClipInfo.Top = max(Rect.top, DesktopWindow->Wnd->rcWindow.top);
-        CurInfo->CursorClipInfo.Right = min(Rect.right - 1, DesktopWindow->Wnd->rcWindow.right - 1);
-        CurInfo->CursorClipInfo.Bottom = min(Rect.bottom - 1, DesktopWindow->Wnd->rcWindow.bottom - 1);
+        CurInfo->CursorClipInfo.Right = min(Rect.right, DesktopWindow->Wnd->rcWindow.right);
+        CurInfo->CursorClipInfo.Bottom = min(Rect.bottom, DesktopWindow->Wnd->rcWindow.bottom);
 
-        mi.dx = gpsi->ptCursor.x;
-        mi.dy = gpsi->ptCursor.y;
-        mi.mouseData = 0;
-        mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
-        mi.time = 0;
-        mi.dwExtraInfo = 0;
-        IntMouseInput(&mi);
+        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y);
 
         RETURN(TRUE);
     }
@@ -1507,89 +1595,3 @@ NtUserDrawIconEx(
     return Ret;
 }
 
-/* Called from NtUserCallOneParam with Routine ONEPARAM_ROUTINE_SHOWCURSOR
- * User32 macro NtUserShowCursor */
-int
-APIENTRY
-UserShowCursor(BOOL bShow)
-{
-    PSYSTEM_CURSORINFO CurInfo;
-    HDC Screen;
-    PDC dc;
-    SURFOBJ *SurfObj;
-    SURFACE *psurfDc;
-    PDEVOBJ *ppdev;
-    GDIPOINTER *pgp;
-    int showpointer=0;
-	
-    CurInfo = IntGetSysCursorInfo();
-
-    if (!(Screen = IntGetScreenDC()))
-    {
-        return showpointer; /* No mouse */
-    }
-
-    dc = DC_LockDc(Screen);
-
-    if (!dc)
-    {
-        return showpointer; /* No mouse */
-    }
-
-    psurfDc = dc->dclevel.pSurface;
-
-    if (!psurfDc)
-    {
-        DC_UnlockDc(dc);
-        return showpointer; /* No Mouse */
-    }
-
-    SurfObj = &psurfDc->SurfObj;
-    if (SurfObj == NULL)
-    {
-        DC_UnlockDc(dc);
-        return showpointer; /* No mouse */
-    }
-
-    ppdev = GDIDEV(SurfObj);
-
-    if (ppdev == NULL)
-    {
-        DC_UnlockDc(dc);
-        return showpointer; /* No mouse */
-    }
-
-    pgp = &ppdev->Pointer;
-
-    if (bShow == FALSE)
-    {
-        pgp->ShowPointer--;
-        showpointer = pgp->ShowPointer;
-
-        if (showpointer >= 0)
-        {
-            //ppdev->SafetyRemoveCount = 1;
-            //ppdev->SafetyRemoveLevel = 1;
-            IntEngMovePointer(SurfObj,-1,-1,NULL);
-            CurInfo->ShowingCursor = 0;
-        }
-
-    }
-    else
-    {
-        pgp->ShowPointer++;
-        showpointer = pgp->ShowPointer;
-
-        /* Show Cursor */
-        if (showpointer < 0)
-        {
-            //ppdev->SafetyRemoveCount = 0;
-            //ppdev->SafetyRemoveLevel = 0;
-            IntEngMovePointer(SurfObj,-1,-1,NULL);
-            CurInfo->ShowingCursor = CURSOR_SHOWING;
-        }
-    }
-
-    DC_UnlockDc(dc);
-    return showpointer;
-}
