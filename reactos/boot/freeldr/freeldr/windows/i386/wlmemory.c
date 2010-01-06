@@ -53,13 +53,13 @@ MempAllocatePageTables()
 	// Max number of entries = MaxPageNum >> 10
 	// FIXME: This is a number to describe ALL physical memory
 	// and windows doesn't expect ALL memory mapped...
-	NumPageTables = (GetSystemMemorySize() >> MM_PAGE_SHIFT) >> 10;
+	NumPageTables = TotalPagesInLookupTable >> 10;
 
 	DPRINTM(DPRINT_WINDOWS, "NumPageTables = %d\n", NumPageTables);
 
 	// Allocate memory block for all these things:
 	// PDE, HAL mapping page table, physical mapping, kernel mapping
-	TotalSize = (1+1+NumPageTables*2)*MM_PAGE_SIZE;
+	TotalSize = (1 + 1 + NumPageTables * 2) * MM_PAGE_SIZE;
 
 	// PDE+HAL+KernelPTEs == MemoryData
 	Buffer = MmAllocateMemoryWithType(TotalSize, LoaderMemoryData);
@@ -141,7 +141,7 @@ MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
 
 BOOLEAN
 MempSetupPaging(IN ULONG StartPage,
-				IN ULONG NumberOfPages)
+		IN ULONG NumberOfPages)
 {
 	PHARDWARE_PTE PhysicalPT;
 	PHARDWARE_PTE KernelPT;
@@ -163,7 +163,7 @@ MempSetupPaging(IN ULONG StartPage,
 	//
 	// Now actually set up the page tables for identity mapping
 	//
-	for (Page=StartPage; Page < StartPage+NumberOfPages; Page++)
+	for (Page = StartPage; Page < StartPage + NumberOfPages; Page++)
 	{
 		Entry = Page >> 10;
 
@@ -177,26 +177,13 @@ MempSetupPaging(IN ULONG StartPage,
 			KernelPT = (PHARDWARE_PTE)(PDE[Entry+(KSEG0_BASE >> 22)].PageFrameNumber << MM_PAGE_SHIFT);
 		}
 
-		if (Page == 0)
-		{
-			PhysicalPT[Page & 0x3ff].PageFrameNumber = Page;
-			PhysicalPT[Page & 0x3ff].Valid = 0;
-			PhysicalPT[Page & 0x3ff].Write = 0;
+		PhysicalPT[Page & 0x3ff].PageFrameNumber = Page;
+		PhysicalPT[Page & 0x3ff].Valid = (Page != 0);
+		PhysicalPT[Page & 0x3ff].Write = (Page != 0);
 
-			KernelPT[Page & 0x3ff].PageFrameNumber = Page;
-			KernelPT[Page & 0x3ff].Valid = 0;
-			KernelPT[Page & 0x3ff].Write = 0;
-		}
-		else
-		{
-			PhysicalPT[Page & 0x3ff].PageFrameNumber = Page;
-			PhysicalPT[Page & 0x3ff].Valid = 1;
-			PhysicalPT[Page & 0x3ff].Write = 1;
-
-			KernelPT[Page & 0x3ff].PageFrameNumber = Page;
-			KernelPT[Page & 0x3ff].Valid = 1;
-			KernelPT[Page & 0x3ff].Write = 1;
-		}
+		KernelPT[Page & 0x3ff].PageFrameNumber = Page;
+		KernelPT[Page & 0x3ff].Valid = (Page != 0);
+		KernelPT[Page & 0x3ff].Write = (Page != 0);
 	}
 
 	return TRUE;
