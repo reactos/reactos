@@ -1,5 +1,5 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
+ * COPYRIGHT:       GPL, See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/amd64/init.c
  * PURPOSE:         Memory Manager Initialization for amd64
@@ -19,6 +19,10 @@
 #ifndef KDBG
 extern PMMPTE MmDebugPte;
 #endif
+
+VOID
+NTAPI
+HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 /* GLOBALS *****************************************************************/
 
@@ -76,15 +80,16 @@ ULONG64 MxPfnSizeInBytes;
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 ULONG MiNumberDescriptors = 0;
+PFN_NUMBER MiSystemPages = 0;
 BOOLEAN MiIncludeType[LoaderMaximum];
 
 PFN_NUMBER MxFreePageBase;
 ULONG64 MxFreePageCount = 0;
-ULONG MxPhase = 0;
 
 PFN_NUMBER MmSystemPageDirectory;
 PFN_NUMBER MmSizeOfPagedPoolInPages = MI_MIN_INIT_PAGED_POOLSIZE / PAGE_SIZE;
 
+BOOLEAN MiPfnsInitialized = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -98,7 +103,7 @@ VOID
 NTAPI
 MiEvaluateMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
     PLIST_ENTRY ListEntry;
     PFN_NUMBER LastPage;
     ULONG i;
@@ -120,31 +125,31 @@ MiEvaluateMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
          ListEntry = ListEntry->Flink)
     {
         /* Get the memory descriptor */
-        MdBlock = CONTAINING_RECORD(ListEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
+        Descriptor = CONTAINING_RECORD(ListEntry,
+                                       MEMORY_ALLOCATION_DESCRIPTOR,
+                                       ListEntry);
 
         /* Count it */
         MiNumberDescriptors++;
 
         /* Skip pages that are not part of the PFN database */
-        if (!MiIncludeType[MdBlock->MemoryType])
+        if (!MiIncludeType[Descriptor->MemoryType])
         {
             continue;
         }
 
         /* Add this to the total of pages */
-        MmNumberOfPhysicalPages += MdBlock->PageCount;
+        MmNumberOfPhysicalPages += Descriptor->PageCount;
 
         /* Check if this is the new lowest page */
-        if (MdBlock->BasePage < MmLowestPhysicalPage)
+        if (Descriptor->BasePage < MmLowestPhysicalPage)
         {
             /* Update the lowest page */
-            MmLowestPhysicalPage = MdBlock->BasePage;
+            MmLowestPhysicalPage = Descriptor->BasePage;
         }
 
         /* Check if this is the new highest page */
-        LastPage = MdBlock->BasePage + MdBlock->PageCount - 1;
+        LastPage = Descriptor->BasePage + Descriptor->PageCount - 1;
         if (LastPage > MmHighestPhysicalPage)
         {
             /* Update the highest page */
@@ -152,28 +157,38 @@ MiEvaluateMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Check if this is currently free memory */
-        if ((MdBlock->MemoryType == LoaderFree) ||
-            (MdBlock->MemoryType == LoaderLoadedProgram) ||
-            (MdBlock->MemoryType == LoaderFirmwareTemporary) ||
-            (MdBlock->MemoryType == LoaderOsloaderStack))
+        if ((Descriptor->MemoryType == LoaderFree) ||
+            (Descriptor->MemoryType == LoaderLoadedProgram) ||
+            (Descriptor->MemoryType == LoaderFirmwareTemporary) ||
+            (Descriptor->MemoryType == LoaderOsloaderStack))
         {
             /* Check if this is the largest memory descriptor */
-            if (MdBlock->PageCount > MxFreePageCount)
+            if (Descriptor->PageCount > MxFreePageCount)
             {
                 /* For now, it is */
-                MxFreeDescriptor = MdBlock;
-                MxFreePageBase = MdBlock->BasePage;
-                MxFreePageCount = MdBlock->PageCount;
+                MxFreeDescriptor = Descriptor;
+                MxFreePageBase = Descriptor->BasePage;
+                MxFreePageCount = Descriptor->PageCount;
             }
+        }
+        else
+        {
+            /* Add it to the amount of system used pages */
+            MiSystemPages += Descriptor->PageCount;
         }
     }
 }
 
 PFN_NUMBER
 NTAPI
-MxAllocEarlyPage()
+MiEarlyAllocPage()
 {
     PFN_NUMBER Pfn;
+
+    if (MiPfnsInitialized)
+    {
+        return MmAllocPage(MC_SYSTEM, 0);
+    }
 
     /* Make sure we have enough pages */
     if (!MxFreePageCount)
@@ -193,13 +208,6 @@ MxAllocEarlyPage()
     return Pfn;
 }
 
-PFN_NUMBER
-NTAPI
-MxAllocPage()
-{
-    return (MxPhase == 0) ? MxAllocEarlyPage() : MmAllocPage(MC_SYSTEM, 0);
-}
-
 PMMPTE
 NTAPI
 MxGetPte(PVOID Address)
@@ -217,8 +225,11 @@ MxGetPte(PVOID Address)
     if (!Pte->u.Hard.Valid)
     {
         /* It's not valid, map it! */
-        TmplPte.u.Hard.PageFrameNumber = MxAllocPage();
+        TmplPte.u.Hard.PageFrameNumber = MiEarlyAllocPage();
         *Pte = TmplPte;
+
+        /* Zero the page */
+        RtlZeroMemory(MiPteToAddress(Pte), PAGE_SIZE);
     }
 
     /* Get a pointer to the PPE */
@@ -226,8 +237,11 @@ MxGetPte(PVOID Address)
     if (!Pte->u.Hard.Valid)
     {
         /* It's not valid, map it! */
-        TmplPte.u.Hard.PageFrameNumber = MxAllocPage();
+        TmplPte.u.Hard.PageFrameNumber = MiEarlyAllocPage();
         *Pte = TmplPte;
+
+        /* Zero the page */
+        RtlZeroMemory(MiPteToAddress(Pte), PAGE_SIZE);
     }
 
     /* Get a pointer to the PDE */
@@ -235,8 +249,11 @@ MxGetPte(PVOID Address)
     if (!Pte->u.Hard.Valid)
     {
         /* It's not valid, map it! */
-        TmplPte.u.Hard.PageFrameNumber = MxAllocPage();
+        TmplPte.u.Hard.PageFrameNumber = MiEarlyAllocPage();
         *Pte = TmplPte;
+
+        /* Zero the page */
+        RtlZeroMemory(MiPteToAddress(Pte), PAGE_SIZE);
     }
 
     /* Get a pointer to the PTE */
@@ -254,7 +271,7 @@ MxMapPage(PVOID Address)
     TmplPte.u.Long = 0;
     TmplPte.u.Flush.Valid = 1;
     TmplPte.u.Flush.Write = 1;
-    TmplPte.u.Hard.PageFrameNumber = MxAllocPage();
+    TmplPte.u.Hard.PageFrameNumber = MiEarlyAllocPage();
 
     /* Get the PTE for that page */
     Pte = MxGetPte(Address);
@@ -281,7 +298,7 @@ VOID
 NTAPI
 MiPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
     PLIST_ENTRY ListEntry;
     PUCHAR Page, FirstPage;
     SIZE_T Size;
@@ -299,16 +316,16 @@ MiPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
          ListEntry = ListEntry->Flink)
     {
         /* Get the memory descriptor */
-        MdBlock = CONTAINING_RECORD(ListEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
+        Descriptor = CONTAINING_RECORD(ListEntry,
+                                       MEMORY_ALLOCATION_DESCRIPTOR,
+                                       ListEntry);
 
         /* Skip pages that are not part of the PFN database */
-        if (MiIncludeType[MdBlock->MemoryType])
+        if (MiIncludeType[Descriptor->MemoryType])
         {
             /* Get the base and size of this pfn database entry */
-            FirstPage = PAGE_ALIGN(&MmPfnDatabase[MdBlock->BasePage]);
-            Size = ROUND_TO_PAGES(MdBlock->PageCount * sizeof(MMPFN));
+            FirstPage = PAGE_ALIGN(&MmPfnDatabase[Descriptor->BasePage]);
+            Size = ROUND_TO_PAGES(Descriptor->PageCount * sizeof(MMPFN));
 
             /* Loop the pages of this Pfn database entry */
             for (Page = FirstPage; Page < FirstPage + Size; Page += PAGE_SIZE)
@@ -318,6 +335,7 @@ MiPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 {
                     /* It's not, map it now */
                     MxMapPage(Page);
+                    RtlZeroMemory(Page, PAGE_SIZE);
                 }
             }
 
@@ -384,6 +402,9 @@ MiInitializePageTable()
     __writecr4(__readcr4() | CR4_PGE);
     ASSERT(__readcr4() & CR4_PGE);
 
+    /* Enable no execute */
+    __writemsr(X86_MSR_EFER, __readmsr(X86_MSR_EFER) | EFER_NXE);
+
     /* Loop the user mode PXEs */
     for (Pte = MiAddressToPxe(0);
          Pte <= MiAddressToPxe(MmHighestUserAddress);
@@ -414,7 +435,7 @@ MiInitializePageTable()
         if (!Pte->u.Hard.Valid)
         {
             /* It's not Initialize it */
-            TmplPte.u.Flush.PageFrameNumber = MxAllocPage();
+            TmplPte.u.Flush.PageFrameNumber = MiEarlyAllocPage(0);
             *Pte = TmplPte;
 
             /* Zero the page. The PXE is the PTE for the PDPT. */
@@ -593,7 +614,7 @@ NTAPI
 MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PPHYSICAL_MEMORY_DESCRIPTOR Buffer;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
     PLIST_ENTRY ListEntry;
     PFN_NUMBER NextPage = -1;
     PULONG Bitmap;
@@ -632,35 +653,35 @@ MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
          ListEntry = ListEntry->Flink)
     {
         /* Get the memory descriptor */
-        MdBlock = CONTAINING_RECORD(ListEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
+        Descriptor = CONTAINING_RECORD(ListEntry,
+                                       MEMORY_ALLOCATION_DESCRIPTOR,
+                                       ListEntry);
 
         /* Skip pages that are not part of the PFN database */
-        if (!MiIncludeType[MdBlock->MemoryType])
+        if (!MiIncludeType[Descriptor->MemoryType])
         {
             continue;
         }
 
         /* Does the memory block begin where the last ended? */
-        if (MdBlock->BasePage == NextPage)
+        if (Descriptor->BasePage == NextPage)
         {
             /* Add it to the current run */
-            Buffer->Run[Runs - 1].PageCount += MdBlock->PageCount;
+            Buffer->Run[Runs - 1].PageCount += Descriptor->PageCount;
         }
         else
         {
             /* Create a new run */
             Runs++;
-            Buffer->Run[Runs - 1].BasePage = MdBlock->BasePage;
-            Buffer->Run[Runs - 1].PageCount = MdBlock->PageCount;
+            Buffer->Run[Runs - 1].BasePage = Descriptor->BasePage;
+            Buffer->Run[Runs - 1].PageCount = Descriptor->PageCount;
         }
 
         /* Set the bits in the PFN bitmap */
-        RtlSetBits(&MiPfnBitMap, MdBlock->BasePage, MdBlock->PageCount);
+        RtlSetBits(&MiPfnBitMap, Descriptor->BasePage, Descriptor->PageCount);
 
         /* Set the next page */
-        NextPage = MdBlock->BasePage + MdBlock->PageCount;
+        NextPage = Descriptor->BasePage + Descriptor->PageCount;
     }
 
     // FIXME: allocate a buffer of better size
@@ -728,14 +749,14 @@ MiBuildPagedPool(VOID)
         if (!Pte->u.Flush.Valid)
         {
             /* Map it! */
-            TmplPte.u.Flush.PageFrameNumber = MxAllocPage();
+            TmplPte.u.Flush.PageFrameNumber = MiEarlyAllocPage();
             *Pte = TmplPte;
         }
     }
 
     /* Create and map the first PTE for paged pool */
     Pte = MxGetPte(MmPagedPoolStart);
-    TmplPte.u.Flush.PageFrameNumber = MxAllocPage();
+    TmplPte.u.Flush.PageFrameNumber = MiEarlyAllocPage();
     *Pte = TmplPte;
 
     /* Save the first and last paged pool PTE */
@@ -801,8 +822,14 @@ MmArmInitSystem(IN ULONG Phase,
 {
     if (Phase == 0)
     {
-        /* Parse memory descriptors */
+        MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned * PAGE_SIZE;
+        MmBootImageSize = ROUND_UP(MmBootImageSize, PAGE_SIZE);
+
+        /* Parse memory descriptors, find free pages */
         MiEvaluateMemoryDescriptors(LoaderBlock);
+
+        /* Start PFN database at hardcoded address */
+        MmPfnDatabase = MI_PFN_DATABASE;
 
         /* Prepare PFN database mappings */
         MiPreparePfnDatabse(LoaderBlock);
@@ -824,8 +851,8 @@ MmArmInitSystem(IN ULONG Phase,
         /* The PFN database was created, restore the free descriptor */
         *MxFreeDescriptor = MxOldFreeDescriptor;
 
-        /* Switch to phase 1 */
-        MxPhase = 1;
+        /* The pfn database is ready now */
+        MiPfnsInitialized = TRUE;
 
         /* Initialize the nonpaged pool */
         MiBuildNonPagedPool();
@@ -838,6 +865,14 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Size up paged pool and build the shadow system page directory */
         MiBuildPagedPool();
+
+        // This is the old stuff:
+        MmPagedPoolBase = (PVOID)((PCHAR)MmPagedPoolEnd + 1);
+        MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+        ASSERT((PCHAR)MmPagedPoolBase + MmPagedPoolSize < (PCHAR)MmNonPagedSystemStart);
+
+        
+        HalInitializeBios(0, LoaderBlock);
     }
 
     return STATUS_SUCCESS;
