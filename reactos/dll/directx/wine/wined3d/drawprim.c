@@ -37,11 +37,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_draw);
 static void drawStridedFast(IWineD3DDevice *iface, GLenum primitive_type,
         UINT count, UINT idx_size, const void *idx_data, UINT start_idx)
 {
-    IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-
     if (idx_size)
     {
-        TRACE("(%p) : glElements(%x, %d, ...)\n", This, primitive_type, count);
+        TRACE("(%p) : glElements(%x, %d, ...)\n", iface, primitive_type, count);
 
         glDrawElements(primitive_type, count,
                 idx_size == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
@@ -50,7 +48,7 @@ static void drawStridedFast(IWineD3DDevice *iface, GLenum primitive_type,
     }
     else
     {
-        TRACE("(%p) : glDrawArrays(%#x, %d, %d)\n", This, primitive_type, start_idx, count);
+        TRACE("(%p) : glDrawArrays(%#x, %d, %d)\n", iface, primitive_type, start_idx, count);
 
         glDrawArrays(primitive_type, start_idx, count);
         checkGLcall("glDrawArrays");
@@ -76,9 +74,10 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
     long                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
     BOOL                      pixelShader = use_ps(This->stateBlock);
     BOOL specular_fog = FALSE;
-    UINT texture_stages = GL_LIMITS(texture_stages);
     const BYTE *texCoords[WINED3DDP_MAXTEXCOORD];
     const BYTE *diffuse = NULL, *specular = NULL, *normal = NULL, *position = NULL;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    UINT texture_stages = gl_info->limits.texture_stages;
     const struct wined3d_stream_info_element *element;
     UINT num_untracked_materials;
     DWORD tex_mask = 0;
@@ -147,7 +146,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
                     || si->elements[WINED3D_FFP_POSITION].format_desc->format == WINED3DFMT_R32G32B32A32_FLOAT)
                 && This->stateBlock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE)
         {
-            if (GL_SUPPORT(EXT_FOG_COORD))
+            if (gl_info->supported[EXT_FOG_COORD])
             {
                 if (element->format_desc->format == WINED3DFMT_B8G8R8A8_UNORM) specular_fog = TRUE;
                 else FIXME("Implement fog coordinates from %s\n", debug_d3dformat(element->format_desc->format));
@@ -165,7 +164,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
             }
         }
     }
-    else if (GL_SUPPORT(EXT_SECONDARY_COLOR))
+    else if (gl_info->supported[EXT_SECONDARY_COLOR])
     {
         GL_EXTCALL(glSecondaryColor3fEXT)(0, 0, 0);
     }
@@ -175,7 +174,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
         int coordIdx = This->stateBlock->textureState[textureNo][WINED3DTSS_TEXCOORDINDEX];
         DWORD texture_idx = This->texUnitMap[textureNo];
 
-        if (!GL_SUPPORT(ARB_MULTITEXTURE) && textureNo > 0)
+        if (!gl_info->supported[ARB_MULTITEXTURE] && textureNo > 0)
         {
             FIXME("Program using multiple concurrent textures which this opengl implementation doesn't support\n");
             continue;
@@ -205,7 +204,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
         else
         {
             TRACE("tex: %d - Skipping tex coords, as no data supplied\n", textureNo);
-            if (GL_SUPPORT(ARB_MULTITEXTURE))
+            if (gl_info->supported[ARB_MULTITEXTURE])
                 GL_EXTCALL(glMultiTexCoord4fARB(GL_TEXTURE0_ARB + texture_idx, 0, 0, 0, 1));
             else
                 glTexCoord4f(0, 0, 0, 1);
@@ -314,6 +313,8 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
 /* GL locking is done by the caller */
 static inline void send_attribute(IWineD3DDeviceImpl *This, WINED3DFORMAT format, const UINT index, const void *ptr)
 {
+    const struct wined3d_gl_info *gl_info = &This->adapter->gl_info;
+
     switch(format)
     {
         case WINED3DFMT_R32_FLOAT:
@@ -333,7 +334,7 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, WINED3DFORMAT format
             GL_EXTCALL(glVertexAttrib4ubvARB(index, ptr));
             break;
         case WINED3DFMT_B8G8R8A8_UNORM:
-            if (GL_SUPPORT(EXT_VERTEX_ARRAY_BGRA))
+            if (gl_info->supported[EXT_VERTEX_ARRAY_BGRA])
             {
                 const DWORD *src = ptr;
                 DWORD c = *src & 0xff00ff00;
@@ -386,20 +387,26 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, WINED3DFORMAT format
             /* Are those 16 bit floats. C doesn't have a 16 bit float type. I could read the single bits and calculate a 4
              * byte float according to the IEEE standard
              */
-            if (GL_SUPPORT(NV_HALF_FLOAT)) {
+            if (gl_info->supported[NV_HALF_FLOAT])
+            {
                 /* Not supported by GL_ARB_half_float_vertex */
                 GL_EXTCALL(glVertexAttrib2hvNV(index, ptr));
-            } else {
+            }
+            else
+            {
                 float x = float_16_to_32(((const unsigned short *)ptr) + 0);
                 float y = float_16_to_32(((const unsigned short *)ptr) + 1);
                 GL_EXTCALL(glVertexAttrib2fARB(index, x, y));
             }
             break;
         case WINED3DFMT_R16G16B16A16_FLOAT:
-            if (GL_SUPPORT(NV_HALF_FLOAT)) {
+            if (gl_info->supported[NV_HALF_FLOAT])
+            {
                 /* Not supported by GL_ARB_half_float_vertex */
                 GL_EXTCALL(glVertexAttrib4hvNV(index, ptr));
-            } else {
+            }
+            else
+            {
                 float x = float_16_to_32(((const unsigned short *)ptr) + 0);
                 float y = float_16_to_32(((const unsigned short *)ptr) + 1);
                 float z = float_16_to_32(((const unsigned short *)ptr) + 2);
@@ -582,7 +589,7 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
     if (This->stateBlock->renderState[WINED3DRS_COLORWRITEENABLE])
     {
         /* Invalidate the back buffer memory so LockRect will read it the next time */
-        for (i = 0; i < GL_LIMITS(buffers); ++i)
+        for (i = 0; i < This->adapter->gl_info.limits.buffers; ++i)
         {
             target = (IWineD3DSurfaceImpl *)This->render_targets[i];
             if (target)
@@ -596,10 +603,10 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
     /* Signals other modules that a drawing is in progress and the stateblock finalized */
     This->isInDraw = TRUE;
 
-    context = ActivateContext(This, This->render_targets[0], CTXUSAGE_DRAWPRIM);
+    context = context_acquire(This, This->render_targets[0], CTXUSAGE_DRAWPRIM);
 
     if (This->stencilBufferTarget) {
-        /* Note that this depends on the ActivateContext call above to set
+        /* Note that this depends on the context_acquire() call above to set
          * This->render_offscreen properly. We don't currently take the
          * Z-compare function into account, but we could skip loading the
          * depthstencil for D3DCMP_NEVER and D3DCMP_ALWAYS as well. Also note
@@ -683,6 +690,8 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
 
     /* Finished updating the screen, restore lock */
     LEAVE_GL();
+    context_release(context);
+
     TRACE("Done all gl drawing\n");
 
     /* Diagnostics */
@@ -766,6 +775,7 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     float max_x = 0.0f, max_y = 0.0f, max_z = 0.0f, neg_z = 0.0f;
     struct wined3d_stream_info stream_info;
     struct wined3d_stream_info_element *e;
+    struct wined3d_context *context;
     const BYTE *data;
     const WINED3DRECTPATCH_INFO *info = &patch->RectPatchInfo;
     DWORD vtxStride;
@@ -775,7 +785,7 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     /* Simply activate the context for blitting. This disables all the things we don't want and
      * takes care of dirtifying. Dirtifying is preferred over pushing / popping, since drawing the
      * patch (as opposed to normal draws) will most likely need different changes anyway. */
-    ActivateContext(This, NULL, CTXUSAGE_BLIT);
+    context = context_acquire(This, NULL, CTXUSAGE_BLIT);
 
     /* First, locate the position data. This is provided in a vertex buffer in the stateblock.
      * Beware of vbos
@@ -857,7 +867,8 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
         checkGLcall("glLightModel for MODEL_AMBIENT");
         IWineD3DDeviceImpl_MarkStateDirty(This, STATE_RENDER(WINED3DRS_AMBIENT));
 
-        for(i = 3; i < GL_LIMITS(lights); i++) {
+        for (i = 3; i < context->gl_info->limits.lights; ++i)
+        {
             glDisable(GL_LIGHT0 + i);
             checkGLcall("glDisable(GL_LIGHT0 + i)");
             IWineD3DDeviceImpl_MarkStateDirty(This, STATE_ACTIVELIGHT(i));
@@ -957,11 +968,13 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
         LEAVE_GL();
         ERR("Feedback failed. Expected %d elements back\n", buffer_size);
         HeapFree(GetProcessHeap(), 0, feedbuffer);
+        context_release(context);
         return WINED3DERR_DRIVERINTERNALERROR;
     } else if(i != buffer_size) {
         LEAVE_GL();
         ERR("Unexpected amount of elements returned. Expected %d, got %d\n", buffer_size, i);
         HeapFree(GetProcessHeap(), 0, feedbuffer);
+        context_release(context);
         return WINED3DERR_DRIVERINTERNALERROR;
     } else {
         TRACE("Got %d elements as expected\n", i);
@@ -1075,6 +1088,8 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     glDisable(GL_MAP2_TEXTURE_COORD_4);
     checkGLcall("glDisable vertex attrib generation");
     LEAVE_GL();
+
+    context_release(context);
 
     HeapFree(GetProcessHeap(), 0, feedbuffer);
 

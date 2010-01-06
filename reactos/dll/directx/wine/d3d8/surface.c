@@ -27,6 +27,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 static HRESULT WINAPI IDirect3DSurface8Impl_QueryInterface(LPDIRECT3DSURFACE8 iface, REFIID riid, LPVOID *ppobj) {
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
 
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppobj);
+
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DResource8)
         || IsEqualGUID(riid, &IID_IDirect3DSurface8)) {
@@ -43,7 +45,7 @@ static HRESULT WINAPI IDirect3DSurface8Impl_QueryInterface(LPDIRECT3DSURFACE8 if
 static ULONG WINAPI IDirect3DSurface8Impl_AddRef(LPDIRECT3DSURFACE8 iface) {
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
 
-    TRACE("(%p)\n", This);
+    TRACE("iface %p.\n", iface);
 
     if (This->forwardReference) {
         /* Forward refcounting */
@@ -52,6 +54,9 @@ static ULONG WINAPI IDirect3DSurface8Impl_AddRef(LPDIRECT3DSURFACE8 iface) {
     } else {
         /* No container, handle our own refcounting */
         ULONG ref = InterlockedIncrement(&This->ref);
+
+        TRACE("%p increasing refcount to %u.\n", iface, ref);
+
         if (ref == 1)
         {
             if (This->parentDevice) IUnknown_AddRef(This->parentDevice);
@@ -59,7 +64,7 @@ static ULONG WINAPI IDirect3DSurface8Impl_AddRef(LPDIRECT3DSURFACE8 iface) {
             IUnknown_AddRef(This->wineD3DSurface);
             wined3d_mutex_unlock();
         }
-        TRACE("(%p) : AddRef from %d\n", This, ref - 1);
+
         return ref;
     }
 }
@@ -67,7 +72,7 @@ static ULONG WINAPI IDirect3DSurface8Impl_AddRef(LPDIRECT3DSURFACE8 iface) {
 static ULONG WINAPI IDirect3DSurface8Impl_Release(LPDIRECT3DSURFACE8 iface) {
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
 
-    TRACE("(%p)\n", This);
+    TRACE("iface %p.\n", iface);
 
     if (This->forwardReference) {
         /* Forward refcounting */
@@ -76,14 +81,18 @@ static ULONG WINAPI IDirect3DSurface8Impl_Release(LPDIRECT3DSURFACE8 iface) {
     } else {
         /* No container, handle our own refcounting */
         ULONG ref = InterlockedDecrement(&This->ref);
-        TRACE("(%p) : ReleaseRef to %d\n", This, ref);
+
+        TRACE("%p decreasing refcount to %u.\n", iface, ref);
 
         if (ref == 0) {
-            if (This->parentDevice) IUnknown_Release(This->parentDevice);
+            IDirect3DDevice8 *parentDevice = This->parentDevice;
+
             /* Implicit surfaces are destroyed with the device, not if refcount reaches 0. */
             wined3d_mutex_lock();
             IWineD3DSurface_Release(This->wineD3DSurface);
             wined3d_mutex_unlock();
+
+            if (parentDevice) IDirect3DDevice8_Release(parentDevice);
         }
 
         return ref;
@@ -91,28 +100,43 @@ static ULONG WINAPI IDirect3DSurface8Impl_Release(LPDIRECT3DSURFACE8 iface) {
 }
 
 /* IDirect3DSurface8 IDirect3DResource8 Interface follow: */
-static HRESULT WINAPI IDirect3DSurface8Impl_GetDevice(LPDIRECT3DSURFACE8 iface, IDirect3DDevice8 **ppDevice) {
+static HRESULT WINAPI IDirect3DSurface8Impl_GetDevice(IDirect3DSurface8 *iface, IDirect3DDevice8 **device)
+{
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
-    IWineD3DDevice *wined3d_device;
-    HRESULT hr;
-    TRACE("(%p)->(%p)\n", This, ppDevice);
 
-    wined3d_mutex_lock();
-    hr = IWineD3DSurface_GetDevice(This->wineD3DSurface, &wined3d_device);
-    if (SUCCEEDED(hr))
+    TRACE("iface %p, device %p.\n", iface, device);
+
+    if (This->forwardReference)
     {
-        IWineD3DDevice_GetParent(wined3d_device, (IUnknown **)ppDevice);
-        IWineD3DDevice_Release(wined3d_device);
-    }
-    wined3d_mutex_unlock();
+        IDirect3DResource8 *resource;
+        HRESULT hr;
 
-    return hr;
+        hr = IUnknown_QueryInterface(This->forwardReference, &IID_IDirect3DResource8, (void **)&resource);
+        if (SUCCEEDED(hr))
+        {
+            hr = IDirect3DResource8_GetDevice(resource, device);
+            IDirect3DResource8_Release(resource);
+
+            TRACE("Returning device %p.\n", *device);
+        }
+
+        return hr;
+    }
+
+    *device = (IDirect3DDevice8 *)This->parentDevice;
+    IDirect3DDevice8_AddRef(*device);
+
+    TRACE("Returning device %p.\n", *device);
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI IDirect3DSurface8Impl_SetPrivateData(LPDIRECT3DSURFACE8 iface, REFGUID refguid, CONST void *pData, DWORD SizeOfData, DWORD Flags) {
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
     HRESULT hr;
-    TRACE("(%p) Relay\n", This);
+
+    TRACE("iface %p, guid %s, data %p, data_size %u, flags %#x.\n",
+            iface, debugstr_guid(refguid), pData, SizeOfData, Flags);
 
     wined3d_mutex_lock();
     hr = IWineD3DSurface_SetPrivateData(This->wineD3DSurface, refguid, pData, SizeOfData, Flags);
@@ -124,7 +148,9 @@ static HRESULT WINAPI IDirect3DSurface8Impl_SetPrivateData(LPDIRECT3DSURFACE8 if
 static HRESULT WINAPI IDirect3DSurface8Impl_GetPrivateData(LPDIRECT3DSURFACE8 iface, REFGUID refguid, void *pData, DWORD *pSizeOfData) {
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
     HRESULT hr;
-    TRACE("(%p) Relay\n", This);
+
+    TRACE("iface %p, guid %s, data %p, data_size %p.\n",
+            iface, debugstr_guid(refguid), pData, pSizeOfData);
 
     wined3d_mutex_lock();
     hr = IWineD3DSurface_GetPrivateData(This->wineD3DSurface, refguid, pData, pSizeOfData);
@@ -136,7 +162,8 @@ static HRESULT WINAPI IDirect3DSurface8Impl_GetPrivateData(LPDIRECT3DSURFACE8 if
 static HRESULT WINAPI IDirect3DSurface8Impl_FreePrivateData(LPDIRECT3DSURFACE8 iface, REFGUID refguid) {
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
     HRESULT hr;
-    TRACE("(%p) Relay\n", This);
+
+    TRACE("iface %p, guid %s.\n", iface, debugstr_guid(refguid));
 
     wined3d_mutex_lock();
     hr = IWineD3DSurface_FreePrivateData(This->wineD3DSurface, refguid);
@@ -150,7 +177,7 @@ static HRESULT WINAPI IDirect3DSurface8Impl_GetContainer(LPDIRECT3DSURFACE8 ifac
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
     HRESULT res;
 
-    TRACE("(%p) Relay\n", This);
+    TRACE("iface %p, riid %s, container %p.\n", iface, debugstr_guid(riid), ppContainer);
 
     if (!This->container) return E_NOINTERFACE;
 
@@ -164,7 +191,8 @@ static HRESULT WINAPI IDirect3DSurface8Impl_GetDesc(LPDIRECT3DSURFACE8 iface, D3
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
     WINED3DSURFACE_DESC    wined3ddesc;
     HRESULT hr;
-    TRACE("(%p) Relay\n", This);
+
+    TRACE("iface %p, desc %p.\n", iface, pDesc);
 
     wined3d_mutex_lock();
     hr = IWineD3DSurface_GetDesc(This->wineD3DSurface, &wined3ddesc);
@@ -188,8 +216,8 @@ static HRESULT WINAPI IDirect3DSurface8Impl_GetDesc(LPDIRECT3DSURFACE8 iface, D3
 static HRESULT WINAPI IDirect3DSurface8Impl_LockRect(LPDIRECT3DSURFACE8 iface, D3DLOCKED_RECT *pLockedRect, CONST RECT *pRect, DWORD Flags) {
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
     HRESULT hr;
-    TRACE("(%p) Relay\n", This);
-    TRACE("(%p) calling IWineD3DSurface_LockRect %p %p %p %d\n", This, This->wineD3DSurface, pLockedRect, pRect, Flags);
+
+    TRACE("iface %p, locked_rect %p, rect %p, flags %#x.\n", iface, pLockedRect, pRect, Flags);
 
     wined3d_mutex_lock();
     if (pRect) {
@@ -218,7 +246,8 @@ static HRESULT WINAPI IDirect3DSurface8Impl_LockRect(LPDIRECT3DSURFACE8 iface, D
 static HRESULT WINAPI IDirect3DSurface8Impl_UnlockRect(LPDIRECT3DSURFACE8 iface) {
     IDirect3DSurface8Impl *This = (IDirect3DSurface8Impl *)iface;
     HRESULT hr;
-    TRACE("(%p) Relay\n", This);
+
+    TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
     hr = IWineD3DSurface_UnlockRect(This->wineD3DSurface);

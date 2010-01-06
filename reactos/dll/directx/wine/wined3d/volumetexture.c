@@ -26,25 +26,21 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
 
-#define GLINFO_LOCATION (*gl_info)
-
 static void volumetexture_internal_preload(IWineD3DBaseTexture *iface, enum WINED3DSRGB srgb)
 {
     /* Override the IWineD3DResource Preload method. */
     IWineD3DVolumeTextureImpl *This = (IWineD3DVolumeTextureImpl *)iface;
-    IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+    IWineD3DDeviceImpl *device = This->resource.device;
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    struct wined3d_context *context = NULL;
     BOOL srgb_mode = This->baseTexture.is_srgb;
     BOOL srgb_was_toggled = FALSE;
     unsigned int i;
 
     TRACE("(%p) : About to load texture.\n", This);
 
-    if (!device->isInDraw)
-    {
-        ActivateContext(device, NULL, CTXUSAGE_RESOURCELOAD);
-    }
-    else if (GL_SUPPORT(EXT_TEXTURE_SRGB) && This->baseTexture.bindCount > 0)
+    if (!device->isInDraw) context = context_acquire(device, NULL, CTXUSAGE_RESOURCELOAD);
+    else if (gl_info->supported[EXT_TEXTURE_SRGB] && This->baseTexture.bindCount > 0)
     {
         srgb_mode = device->stateBlock->samplerState[This->baseTexture.sampler][WINED3DSAMP_SRGBTEXTURE];
         srgb_was_toggled = This->baseTexture.is_srgb != srgb_mode;
@@ -73,6 +69,8 @@ static void volumetexture_internal_preload(IWineD3DBaseTexture *iface, enum WINE
         TRACE("(%p) Texture not dirty, nothing to do.\n", iface);
     }
 
+    if (context) context_release(context);
+
     /* No longer dirty */
     This->baseTexture.texture_rgb.dirty = FALSE;
 }
@@ -97,13 +95,9 @@ static void volumetexture_cleanup(IWineD3DVolumeTextureImpl *This)
     basetexture_cleanup((IWineD3DBaseTexture *)This);
 }
 
-#undef GLINFO_LOCATION
-
 /* *******************************************
    IWineD3DTexture IUnknown parts follow
    ******************************************* */
-
-#define GLINFO_LOCATION This->resource.wineD3DDevice->adapter->gl_info
 
 static HRESULT WINAPI IWineD3DVolumeTextureImpl_QueryInterface(IWineD3DVolumeTexture *iface, REFIID riid, LPVOID *ppobj)
 {
@@ -145,10 +139,6 @@ static ULONG WINAPI IWineD3DVolumeTextureImpl_Release(IWineD3DVolumeTexture *ifa
 /* ****************************************************
    IWineD3DVolumeTexture IWineD3DResource parts follow
    **************************************************** */
-static HRESULT WINAPI IWineD3DVolumeTextureImpl_GetDevice(IWineD3DVolumeTexture *iface, IWineD3DDevice** ppDevice) {
-    return resource_get_device((IWineD3DResource *)iface, ppDevice);
-}
-
 static HRESULT WINAPI IWineD3DVolumeTextureImpl_SetPrivateData(IWineD3DVolumeTexture *iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
     return resource_set_private_data((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
 }
@@ -234,22 +224,25 @@ static BOOL WINAPI IWineD3DVolumeTextureImpl_GetDirty(IWineD3DVolumeTexture *ifa
 }
 
 /* Context activation is done by the caller. */
-static HRESULT WINAPI IWineD3DVolumeTextureImpl_BindTexture(IWineD3DVolumeTexture *iface, BOOL srgb) {
-    IWineD3DVolumeTextureImpl *This = (IWineD3DVolumeTextureImpl *)iface;
+static HRESULT WINAPI IWineD3DVolumeTextureImpl_BindTexture(IWineD3DVolumeTexture *iface, BOOL srgb)
+{
     BOOL dummy;
-    TRACE("(%p) : relay to BaseTexture\n", This);
+
+    TRACE("iface %p, srgb %#x.\n", iface, srgb);
+
     return basetexture_bind((IWineD3DBaseTexture *)iface, srgb, &dummy);
 }
 
-static UINT WINAPI IWineD3DVolumeTextureImpl_GetTextureDimensions(IWineD3DVolumeTexture *iface) {
-    IWineD3DVolumeTextureImpl *This = (IWineD3DVolumeTextureImpl *)iface;
-    TRACE("(%p)\n", This);
+static UINT WINAPI IWineD3DVolumeTextureImpl_GetTextureDimensions(IWineD3DVolumeTexture *iface)
+{
+    TRACE("iface %p.\n", iface);
+
     return GL_TEXTURE_3D;
 }
 
-static BOOL WINAPI IWineD3DVolumeTextureImpl_IsCondNP2(IWineD3DVolumeTexture *iface) {
-    IWineD3DVolumeTextureImpl *This = (IWineD3DVolumeTextureImpl *)iface;
-    TRACE("(%p)\n", This);
+static BOOL WINAPI IWineD3DVolumeTextureImpl_IsCondNP2(IWineD3DVolumeTexture *iface)
+{
+    TRACE("iface %p.\n", iface);
 
     return FALSE;
 }
@@ -328,7 +321,6 @@ static const IWineD3DVolumeTextureVtbl IWineD3DVolumeTexture_Vtbl =
     IWineD3DVolumeTextureImpl_Release,
     /* resource */
     IWineD3DVolumeTextureImpl_GetParent,
-    IWineD3DVolumeTextureImpl_GetDevice,
     IWineD3DVolumeTextureImpl_SetPrivateData,
     IWineD3DVolumeTextureImpl_GetPrivateData,
     IWineD3DVolumeTextureImpl_FreePrivateData,

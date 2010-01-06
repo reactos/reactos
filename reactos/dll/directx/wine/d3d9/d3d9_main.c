@@ -78,7 +78,9 @@ HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex **direct3d9ex) {
  */
 void* WINAPI Direct3DShaderValidatorCreate9(void)
 {
-    FIXME("stub\n");
+    static int once;
+
+    if (!once++) FIXME("stub\n");
     return NULL;
 }
 
@@ -99,7 +101,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
  *              D3DPERF_BeginEvent (D3D9.@)
  */
 int WINAPI D3DPERF_BeginEvent(D3DCOLOR color, LPCWSTR name) {
-    FIXME("(color %#x, name %s) : stub\n", color, debugstr_w(name));
+    TRACE("(color %#x, name %s) : stub\n", color, debugstr_w(name));
 
     return D3DPERF_event_level++;
 }
@@ -108,7 +110,7 @@ int WINAPI D3DPERF_BeginEvent(D3DCOLOR color, LPCWSTR name) {
  *              D3DPERF_EndEvent (D3D9.@)
  */
 int WINAPI D3DPERF_EndEvent(void) {
-    FIXME("(void) : stub\n");
+    TRACE("(void) : stub\n");
 
     return --D3DPERF_event_level;
 }

@@ -865,7 +865,6 @@ IDirect3DImpl_7_CreateDevice(IDirect3D7 *iface,
     if(!(target->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE) &&
        (This->d3d_target != target))
     {
-        WINED3DVIEWPORT vp;
         TRACE("(%p) Using %p as front buffer, %p as back buffer\n", This, This->d3d_target, target);
         hr = IWineD3DDevice_SetFrontBackBuffers(This->wineD3DDevice,
                                                 This->d3d_target->WineD3DSurface,
@@ -875,17 +874,8 @@ IDirect3DImpl_7_CreateDevice(IDirect3D7 *iface,
 
         /* Render to the back buffer */
         IWineD3DDevice_SetRenderTarget(This->wineD3DDevice, 0,
-                                       target->WineD3DSurface);
-
-        vp.X = 0;
-        vp.Y = 0;
-        vp.Width = target->surface_desc.dwWidth;
-        vp.Height = target->surface_desc.dwHeight;
-        vp.MinZ = 0.0;
-        vp.MaxZ = 1.0;
-        IWineD3DDevice_SetViewport(This->wineD3DDevice,
-                                   &vp);
-
+                                       target->WineD3DSurface,
+                                       TRUE);
         object->OffScreenTarget = TRUE;
     }
     else
@@ -980,6 +970,7 @@ IDirect3DImpl_7_CreateVertexBuffer(IDirect3D7 *iface,
     IDirectDrawImpl *This = ddraw_from_d3d7(iface);
     IDirect3DVertexBufferImpl *object;
     HRESULT hr;
+    DWORD usage;
     TRACE("(%p)->(%p,%p,%08x)\n", This, Desc, VertexBuffer, Flags);
 
     TRACE("(%p) Vertex buffer description:\n", This);
@@ -1019,11 +1010,13 @@ IDirect3DImpl_7_CreateVertexBuffer(IDirect3D7 *iface,
     object->ddraw = This;
     object->fvf = Desc->dwFVF;
 
+    usage = Desc->dwCaps & D3DVBCAPS_WRITEONLY ? WINED3DUSAGE_WRITEONLY : 0;
+    usage |= WINED3DUSAGE_STATICDECL;
+
     EnterCriticalSection(&ddraw_cs);
     hr = IWineD3DDevice_CreateVertexBuffer(This->wineD3DDevice,
             get_flexible_vertex_size(Desc->dwFVF) * Desc->dwNumVertices,
-            Desc->dwCaps & D3DVBCAPS_WRITEONLY ? WINED3DUSAGE_WRITEONLY : 0, Desc->dwFVF,
-            Desc->dwCaps & D3DVBCAPS_SYSTEMMEMORY ? WINED3DPOOL_SYSTEMMEM : WINED3DPOOL_DEFAULT,
+            usage, Desc->dwCaps & D3DVBCAPS_SYSTEMMEMORY ? WINED3DPOOL_SYSTEMMEM : WINED3DPOOL_DEFAULT,
             &object->wineD3DVertexBuffer, (IUnknown *)object, &ddraw_null_wined3d_parent_ops);
     if(hr != D3D_OK)
     {
@@ -1116,7 +1109,7 @@ IDirect3DImpl_7_EnumZBufferFormats(IDirect3D7 *iface,
         WINED3DFMT_D16_UNORM,
         WINED3DFMT_X8D24_UNORM,
         WINED3DFMT_S4X4_UINT_D24_UNORM,
-        WINED3DFMT_S8_UINT_D24_UNORM,
+        WINED3DFMT_D24_UNORM_S8_UINT,
         WINED3DFMT_D32_UNORM,
     };
 

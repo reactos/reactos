@@ -250,7 +250,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 		    TRACE("(%08x,%08x)\n", ci->u1.dlstLightStateType, ci->u2.dwArg[0]);
 
 		    if (!ci->u1.dlstLightStateType || (ci->u1.dlstLightStateType > D3DLIGHTSTATE_COLORVERTEX))
-			ERR("Unexpected Light State Type\n");
+			ERR("Unexpected Light State Type %d\n", ci->u1.dlstLightStateType);
 		    else if (ci->u1.dlstLightStateType == D3DLIGHTSTATE_MATERIAL /* 1 */) {
 			DWORD matHandle = ci->u2.dwArg[0];
 

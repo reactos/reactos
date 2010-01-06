@@ -197,6 +197,8 @@ HRESULT vdecl_convert_fvf(
 static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_QueryInterface(LPDIRECT3DVERTEXDECLARATION9 iface, REFIID riid, LPVOID* ppobj) {
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
 
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppobj);
+
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DVertexDeclaration9)) {
         IDirect3DVertexDeclaration9_AddRef(iface);
@@ -213,7 +215,7 @@ static ULONG WINAPI IDirect3DVertexDeclaration9Impl_AddRef(LPDIRECT3DVERTEXDECLA
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) : AddRef from %d\n", This, ref - 1);
+    TRACE("%p increasing refcount to %u.\n", iface, ref);
 
     if(ref == 1) {
         IDirect3DDevice9Ex_AddRef(This->parentDevice);
@@ -245,40 +247,41 @@ static ULONG WINAPI IDirect3DVertexDeclaration9Impl_Release(LPDIRECT3DVERTEXDECL
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) : ReleaseRef to %d\n", This, ref);
+    TRACE("%p decreasing refcount to %u.\n", iface, ref);
 
     if (ref == 0) {
-        IDirect3DDevice9Ex_Release(This->parentDevice);
+        IDirect3DDevice9Ex *parentDevice = This->parentDevice;
+
         if(!This->convFVF) {
             IDirect3DVertexDeclaration9Impl_Destroy(iface);
         }
+
+        /* Release the device last, as it may cause the device to be destroyed. */
+        IDirect3DDevice9Ex_Release(parentDevice);
     }
     return ref;
 }
 
 /* IDirect3DVertexDeclaration9 Interface follow: */
-static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_GetDevice(LPDIRECT3DVERTEXDECLARATION9 iface, IDirect3DDevice9** ppDevice) {
+static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_GetDevice(IDirect3DVertexDeclaration9 *iface,
+        IDirect3DDevice9 **device)
+{
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
-    IWineD3DDevice *myDevice = NULL;
-    HRESULT hr = D3D_OK;
 
-    TRACE("(%p) : Relay\n", iface);
+    TRACE("iface %p, device %p.\n", iface, device);
 
-    wined3d_mutex_lock();
-    hr = IWineD3DVertexDeclaration_GetDevice(This->wineD3DVertexDeclaration, &myDevice);
-    if (hr == D3D_OK && myDevice != NULL) {
-        hr = IWineD3DDevice_GetParent(myDevice, (IUnknown **)ppDevice);
-        IWineD3DDevice_Release(myDevice);
-    }
-    wined3d_mutex_unlock();
+    *device = (IDirect3DDevice9 *)This->parentDevice;
+    IDirect3DDevice9_AddRef(*device);
 
-    return hr;
+    TRACE("Returning device %p.\n", *device);
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_GetDeclaration(LPDIRECT3DVERTEXDECLARATION9 iface, D3DVERTEXELEMENT9* pDecl, UINT* pNumElements) {
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
 
-    TRACE("(%p) : pDecl %p, pNumElements %p)\n", This, pDecl, pNumElements);
+    TRACE("iface %p, elements %p, element_count %p.\n", iface, pDecl, pNumElements);
 
     *pNumElements = This->element_count;
 
@@ -399,6 +402,7 @@ HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration9Impl *declaration,
     HeapFree(GetProcessHeap(), 0, wined3d_elements);
     if (FAILED(hr))
     {
+        HeapFree(GetProcessHeap(), 0, declaration->elements);
         WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);
         return hr;
     }
@@ -414,7 +418,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_SetVertexDeclaration(LPDIRECT3DDEVICE9EX i
     IDirect3DVertexDeclaration9Impl *pDeclImpl = (IDirect3DVertexDeclaration9Impl *)pDecl;
     HRESULT hr = D3D_OK;
 
-    TRACE("(%p) : Relay\n", iface);
+    TRACE("iface %p, vertex declaration %p.\n", iface, pDecl);
 
     wined3d_mutex_lock();
     hr = IWineD3DDevice_SetVertexDeclaration(This->WineD3DDevice, pDeclImpl == NULL ? NULL : pDeclImpl->wineD3DVertexDeclaration);
@@ -428,7 +432,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_GetVertexDeclaration(LPDIRECT3DDEVICE9EX i
     IWineD3DVertexDeclaration* pTest = NULL;
     HRESULT hr = D3D_OK;
 
-    TRACE("(%p) : Relay+\n", iface);
+    TRACE("iface %p, declaration %p.\n", iface, ppDecl);
 
     if (NULL == ppDecl) {
       return D3DERR_INVALIDCALL;

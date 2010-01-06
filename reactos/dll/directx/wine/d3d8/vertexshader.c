@@ -28,6 +28,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 static HRESULT WINAPI IDirect3DVertexShader8Impl_QueryInterface(IDirect3DVertexShader8 *iface, REFIID riid, LPVOID* ppobj) {
     IDirect3DVertexShader8Impl *This = (IDirect3DVertexShader8Impl *)iface;
 
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppobj);
+
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DVertexShader8)) {
         IUnknown_AddRef(iface);
@@ -44,7 +46,7 @@ static ULONG WINAPI IDirect3DVertexShader8Impl_AddRef(IDirect3DVertexShader8 *if
     IDirect3DVertexShader8Impl *This = (IDirect3DVertexShader8Impl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) : AddRef from %d\n", This, ref - 1);
+    TRACE("%p increasing refcount to %u.\n", iface, ref);
 
     if (ref == 1 && This->wineD3DVertexShader)
     {
@@ -67,7 +69,7 @@ static ULONG WINAPI IDirect3DVertexShader8Impl_Release(IDirect3DVertexShader8 *i
     IDirect3DVertexShader8Impl *This = (IDirect3DVertexShader8Impl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) : ReleaseRef to %d\n", This, ref);
+    TRACE("%p decreasing refcount to %u.\n", iface, ref);
 
     if (ref == 0) {
         if (This->wineD3DVertexShader)
