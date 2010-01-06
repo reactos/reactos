@@ -2322,7 +2322,7 @@ PnpEventThread(LPVOID lpParameter)
             DWORD len;
             DWORD DeviceIdLength;
 
-            DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
@@ -2341,6 +2341,11 @@ PnpEventThread(LPVOID lpParameter)
                     SetEvent(hDeviceInstallListNotEmpty);
                 }
             }
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
+        {
+            DPRINT("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            /* FIXME: ? */
         }
         else
         {
