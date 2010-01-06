@@ -863,6 +863,10 @@ KeBugCheckWithTf(
     PKTRAP_FRAME Tf
 );
 
+BOOLEAN
+NTAPI
+KiHandleNmi(VOID);
+
 VOID
 NTAPI
 KeFlushCurrentTb(VOID);
