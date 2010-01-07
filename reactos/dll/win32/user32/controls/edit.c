@@ -5004,8 +5004,8 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		{
 		    LPSTR textA = (LPSTR)lParam;
 		    INT countW = MultiByteToWideChar(CP_ACP, 0, textA, -1, NULL, 0);
-		    if((textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR))))
-			MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
+		    if(!(textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR)))) break;
+		    MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
 		}
 
 		EDIT_EM_ReplaceSel(es, (BOOL)wParam, textW, TRUE, TRUE);
