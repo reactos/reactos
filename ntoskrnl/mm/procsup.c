@@ -325,11 +325,9 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    {
       switch (MemoryArea->Type)
       {
-#ifdef _NEWCC_
 	     case MEMORY_AREA_PHYSICAL_MEMORY_SECTION:
 	     case MEMORY_AREA_PAGE_FILE_SECTION:
 	     case MEMORY_AREA_IMAGE_SECTION:
-#endif
          case MEMORY_AREA_SECTION_VIEW:
              Address = (PVOID)MemoryArea->StartingAddress;
              MmUnlockAddressSpace(&Process->Vm);

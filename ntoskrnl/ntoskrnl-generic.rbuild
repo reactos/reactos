@@ -10,9 +10,6 @@
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
 	</if>
-	<if property="_NEWCC_" value="1">
-		<define name="_NEWCC_" />
-	</if>
 	<if property="_ELF_" value="1">
 		<define name="_ELF_" />
 	</if>
@@ -118,27 +115,15 @@
 		<file>timerobj.c</file>
 		<file>wait.c</file>
 	</directory>
-	<if property="_NEWCC_" value="0">
-		<directory name="cc">
-			<file>cacheman.c</file>
-			<file>copy.c</file>
-			<file>fs.c</file>
-			<file>mdl.c</file>
-			<file>pin.c</file>
-			<file>view.c</file>
-		</directory>
-	</if>
-	<if property="_NEWCC_" value="1">
-		<directory name="cache">
-			<file>cachesub.c</file>
-			<file>copysup.c</file>
-			<file>fssup.c</file>
-			<file>lazyrite.c</file>
-			<file>logsup.c</file>
-			<file>mdlsup.c</file>
-			<file>pinsup.c</file>
-		</directory>
-	</if>
+	<directory name="cache">
+		<file>cachesub.c</file>
+		<file>copysup.c</file>
+		<file>fssup.c</file>
+		<file>lazyrite.c</file>
+		<file>logsup.c</file>
+		<file>mdlsup.c</file>
+		<file>pinsup.c</file>
+	</directory>
 	<directory name="config">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -441,30 +426,20 @@
 		<file>reqtools.c</file>
 		<file>sysldr.c</file>
 		<file>virtual.c</file>
-		<if property="_NEWCC_" value="0">
-			<file>pe.c</file>
-			<file>section.c</file>
+		<directory name="section">
+			<file>data.c</file>
 			<if property="_ELF_" value="1">
 				<file>elf32.c</file>
 				<file>elf64.c</file>
 			</if>
-		</if>
-		<if property="_NEWCC_" value="1">
-			<directory name="section">
-				<file>data.c</file>
-				<if property="_ELF_" value="1">
-					<file>elf32.c</file>
-					<file>elf64.c</file>
-				</if>
-				<file>fault.c</file>
-				<file>image.c</file>
-				<file>io.c</file>
-				<file>pagefile.c</file>
-				<file>pe.c</file>
-				<file>physical.c</file>
-				<file>sptab.c</file>
-			</directory>
-		</if>
+			<file>fault.c</file>
+			<file>image.c</file>
+			<file>io.c</file>
+			<file>pagefile.c</file>
+			<file>pe.c</file>
+			<file>physical.c</file>
+			<file>sptab.c</file>
+		</directory>
 	</directory>
 	<directory name="ob">
 		<file>obdir.c</file>

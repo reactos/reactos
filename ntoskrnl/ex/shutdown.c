@@ -162,9 +162,7 @@ ShutdownThreadMain(PVOID Context)
    PspShutdownProcessManager();
 
    CmShutdownSystem();
-#ifdef _NEWCC_
    CcShutdownSystem();
-#endif
    IoShutdownRegisteredFileSystems();
    IoShutdownRegisteredDevices();
 

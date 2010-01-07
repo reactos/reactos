@@ -131,7 +131,6 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
        */
       Status = MmWritePageSectionView(AddressSpace, MemoryArea, Address);
    }
-#ifdef _NEWCC_
    else if ((Type == MEMORY_AREA_PHYSICAL_MEMORY_SECTION) ||
 			(Type == MEMORY_AREA_PAGE_FILE_SECTION) ||
 			(Type == MEMORY_AREA_IMAGE_SECTION))
@@ -139,7 +138,6 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
 	   MmUnlockAddressSpace(AddressSpace);
 	   Status = STATUS_SUCCESS;
    }
-#endif
    else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
    {
       /*

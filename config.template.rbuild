@@ -95,11 +95,6 @@
 <property name="_ELF_" value="0" />
 
 <!--
-	Compile with new cache manager and section refactor.
--->
-<property name="_NEWCC_" value="0" />
-
-<!--
 	Whether to compile the multi processor versions for ntoskrnl and hal.
 -->
 <property name="BUILD_MP" value="1" />
