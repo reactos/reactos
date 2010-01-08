@@ -325,6 +325,7 @@ ProRequest(
   PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter;
   PNDIS_REQUEST_MAC_BLOCK MacBlock = (PNDIS_REQUEST_MAC_BLOCK)NdisRequest->MacReserved;
+  NDIS_STATUS Status;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -336,17 +337,15 @@ ProRequest(
 
   MacBlock->Binding = &AdapterBinding->NdisOpenBlock;
 
-#if WORKER_TEST
-  MiniQueueWorkItem(Adapter, NdisWorkItemRequest, NdisRequest, FALSE);
-  return NDIS_STATUS_PENDING;
-#else
-  if (MiniIsBusy(Adapter, NdisWorkItemRequest)) {
-      MiniQueueWorkItem(Adapter, NdisWorkItemRequest, NdisRequest, FALSE);
-      return NDIS_STATUS_PENDING;
-  }
+  Status = MiniBeginRequest(Adapter, NdisWorkItemRequest, NdisRequest);
+  if (!NT_SUCCESS(Status))
+      return Status;
 
-  return MiniDoRequest(Adapter, NdisRequest);
-#endif
+  Status = MiniDoRequest(Adapter, NdisRequest);
+  if (Status != NDIS_STATUS_PENDING)
+      MiniEndRequest(Adapter, NdisWorkItemRequest);
+
+  return Status;
 }
 
 
@@ -393,17 +392,12 @@ ScatterGatherSendPacket(
 NDIS_STATUS
 proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
 {
-#if WORKER_TEST
-   MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet, FALSE);
-   return NDIS_STATUS_PENDING;
-#else
    KIRQL RaiseOldIrql;
    NDIS_STATUS NdisStatus;
 
-   if(MiniIsBusy(Adapter, NdisWorkItemSend)) {
-      MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet, FALSE);
-      return NDIS_STATUS_PENDING;
-   }
+   NdisStatus = MiniBeginRequest(Adapter, NdisWorkItemSend, Packet);
+   if (!NT_SUCCESS(NdisStatus))
+       return NdisStatus;
 
    if(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)
    {
@@ -425,10 +419,14 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
 
             NdisStatus = NDIS_GET_PACKET_STATUS(Packet);
             if (NdisStatus == NDIS_STATUS_RESOURCES) {
-                MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet, TRUE);
+                /* We don't need to add to head here because it's already guaranteed to the
+                   the first packet in the queue */
                 NdisStatus = NDIS_STATUS_PENDING;
             }
         }
+
+        if (NdisStatus != NDIS_STATUS_PENDING)
+            MiniEndRequest(Adapter, NdisWorkItemSend);
 
         return NdisStatus;
    } else {
@@ -448,14 +446,16 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
             KeLowerIrql(RaiseOldIrql);
 
             if (NdisStatus == NDIS_STATUS_RESOURCES) {
-                MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet, TRUE);
+                /* See comment above */
                 NdisStatus = NDIS_STATUS_PENDING;
             }
         }
 
+        if (NdisStatus != NDIS_STATUS_PENDING)
+            MiniEndRequest(Adapter, NdisWorkItemSend);
+
         return NdisStatus;
    }
-#endif
 }
 
 
@@ -508,12 +508,7 @@ ProSend(
   if ((Adapter->NdisMiniportBlock.MacOptions & NDIS_MAC_OPTION_NO_LOOPBACK) &&
       MiniAdapterHasAddress(Adapter, Packet))
     {
-#if WORKER_TEST
-        MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, Packet, FALSE);
-        return NDIS_STATUS_PENDING;
-#else
         return ProIndicatePacket(Adapter, Packet);
-#endif
     } else {
         if (Adapter->NdisMiniportBlock.ScatterGatherListSize != 0)
         {
@@ -570,11 +565,14 @@ ProSendPackets(
     IN  PPNDIS_PACKET   PacketArray,
     IN  UINT            NumberOfPackets)
 {
+    UNIMPLEMENTED
+#if 0
     PADAPTER_BINDING AdapterBinding = NdisBindingHandle;
     PLOGICAL_ADAPTER Adapter = AdapterBinding->Adapter;
     KIRQL RaiseOldIrql;
     NDIS_STATUS NdisStatus;
     UINT i;
+    BOOLEAN QueuePackets;
 
     if(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)
     {
@@ -590,10 +588,15 @@ ProSendPackets(
           (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
            Adapter->NdisMiniportBlock.MiniportAdapterContext, PacketArray, NumberOfPackets);
           KeLowerIrql(RaiseOldIrql);
-          for (i = 0; i < NumberOfPackets; i++)
+          for (i = 0, QueuePackets = FALSE; i < NumberOfPackets; i++)
           {
              NdisStatus = NDIS_GET_PACKET_STATUS(PacketArray[i]);
-             if (NdisStatus != NDIS_STATUS_PENDING)
+             if (NdisStatus == NDIS_STATUS_RESOURCES)
+                 QueuePackets = TRUE;
+
+             if (QueuePackets)
+                 NdisQueueWorkItemHead(Adapter, NdisWorkItemSend, PacketArray[i]);
+             else
                  MiniSendComplete(Adapter, PacketArray[i], NdisStatus);
           }
        }
@@ -624,6 +627,7 @@ ProSendPackets(
          KeLowerIrql(RaiseOldIrql);
        }
      }
+#endif
 }
 
 

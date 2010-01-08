@@ -90,8 +90,6 @@ typedef struct _NDIS_WRAPPER_CONTEXT {
 typedef struct _LOGICAL_ADAPTER
 {
     NDIS_MINIPORT_BLOCK         NdisMiniportBlock;      /* NDIS defined fields */
-    PNDIS_MINIPORT_WORK_ITEM    WorkQueueHead;          /* Head of work queue */
-    PNDIS_MINIPORT_WORK_ITEM    WorkQueueTail;          /* Tail of work queue */
     LIST_ENTRY                  ListEntry;              /* Entry on global list */
     LIST_ENTRY                  MiniportListEntry;      /* Entry on miniport driver list */
     LIST_ENTRY                  ProtocolListHead;       /* List of bound protocols */
@@ -142,20 +140,22 @@ MiniQueryInformation(
     PVOID               Buffer,
     PULONG              BytesWritten);
 
-VOID
-FASTCALL
-MiniQueueWorkItem(
+NDIS_STATUS
+MiniBeginRequest(
     PLOGICAL_ADAPTER    Adapter,
     NDIS_WORK_ITEM_TYPE WorkItemType,
-    PVOID               WorkItemContext,
-    BOOLEAN             Top);
+    PVOID               WorkItemContext);
 
 NDIS_STATUS
-FASTCALL
-MiniDequeueWorkItem(
+MiniQueueWorkItemHead(
     PLOGICAL_ADAPTER    Adapter,
-    NDIS_WORK_ITEM_TYPE *WorkItemType,
-    PVOID               *WorkItemContext);
+    NDIS_WORK_ITEM_TYPE WorkItemType,
+    PVOID               WorkItemContext);
+
+VOID
+MiniEndRequest(
+    PLOGICAL_ADAPTER    Adapter,
+    NDIS_WORK_ITEM_TYPE WorkItemType);
 
 NDIS_STATUS
 MiniDoRequest(
