@@ -118,11 +118,9 @@ MiniportQueryInformation(
 
   DPRINT("Called. OID 0x%x\n", Oid);
 
-  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
-
   ASSERT(Adapter);
 
-  NdisDprAcquireSpinLock(&Adapter->Lock);
+  NdisAcquireSpinLock(&Adapter->Lock);
 
   Status   = NDIS_STATUS_SUCCESS;
   CopyFrom = (PVOID)&GenericULONG;
@@ -369,7 +367,7 @@ MiniportQueryInformation(
        *BytesNeeded = 0;
     }
 
-  NdisDprReleaseSpinLock(&Adapter->Lock);
+  NdisReleaseSpinLock(&Adapter->Lock);
 
   DPRINT("Leaving. Status is 0x%x\n", Status);
 
@@ -408,11 +406,9 @@ MiniportSetInformation(
 
   ASSERT(Adapter);
 
-  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
-
   DPRINT("Called, OID 0x%x\n", Oid);
 
-  NdisDprAcquireSpinLock(&Adapter->Lock);
+  NdisAcquireSpinLock(&Adapter->Lock);
 
   switch (Oid)
     {
@@ -511,7 +507,7 @@ MiniportSetInformation(
       *BytesNeeded = 0;
     }
 
-  NdisDprReleaseSpinLock(&Adapter->Lock);
+  NdisReleaseSpinLock(&Adapter->Lock);
 
   DPRINT("Leaving. Status (0x%X).\n", Status);
 
