@@ -233,8 +233,7 @@ MmNotPresentFaultPageFile
 		if (NT_SUCCESS(Status))
 		{
 			MmInsertRmap(Page, Process, Address);
-			if (Locked) MmLockPage(Required->Page[0]);
-			Required->Page[0] = 0;
+			if (Locked) MmLockPage(Page);
 		}
 		DPRINT("XXX Set Event %x\n", Status);
 		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
