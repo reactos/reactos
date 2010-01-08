@@ -15,6 +15,22 @@
     : "memory");
 
 FORCEINLINE
+VOID
+Ke386SaveFpuState(IN PFX_SAVE_AREA SaveArea)
+{
+    extern ULONG KeI386FxsrPresent;
+    if (KeI386FxsrPresent)
+    {
+        __asm__ __volatile__ ("fxsave %0\n" : : "m"(SaveArea));
+    }
+    else
+    {
+        __asm__ __volatile__ ("fnsave %0\n wait\n" : : "m"(SaveArea));
+    }
+
+}
+
+FORCEINLINE
 USHORT
 Ke386GetLocalDescriptorTable()
 {

@@ -222,6 +222,17 @@ KiDispatchException0Args(IN NTSTATUS Code,
 
 VOID
 FORCEINLINE
+KiDispatchException1Args(IN NTSTATUS Code,
+                         IN ULONG_PTR Address,
+                         IN ULONG P1,
+                         IN PKTRAP_FRAME TrapFrame)
+{
+    /* Helper for exceptions with no arguments */
+    KiDispatchExceptionFromTrapFrame(Code, Address, 1, P1, 0, 0, TrapFrame);
+}
+
+VOID
+FORCEINLINE
 KiDispatchException2Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN ULONG P1,

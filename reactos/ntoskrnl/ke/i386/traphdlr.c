@@ -595,6 +595,89 @@ KiTrap17Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
+KiTrap19Handler(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    PFX_SAVE_AREA SaveArea;
+    ULONG Cr0, MxCsrMask, Error;
+    
+    /* Save trap frame */
+    KiEnterTrap(TrapFrame);
+
+    /* Check if this is the NPX thrad */
+    Thread = KeGetCurrentThread();
+    if (Thread != KeGetCurrentPrcb()->NpxThread)
+    {
+        /* It isn't, kill the system */
+        KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, (ULONG_PTR)Thread, 0, 0, TrapFrame);
+    }
+
+    /* Get the NPX frame */
+    SaveArea = (PFX_SAVE_AREA)((ULONG_PTR)Thread->InitialStack - sizeof(FX_SAVE_AREA));
+
+    /* Check for VDM trap */
+    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+
+    /* Check for user trap */
+    if (!KiUserTrap(TrapFrame))
+    {
+        /* Kernel should not fault on XMMI */
+        KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 2, TrapFrame);
+    }
+    
+    /* Update CR0 */
+    Cr0 = __readcr0();
+    Cr0 &= ~(CR0_MP | CR0_EM | CR0_TS);
+    __writecr0(Cr0);
+    
+    /* Save FPU state */
+    Ke386SaveFpuState(SaveArea);
+    
+    /* Mark CR0 state dirty */
+    Cr0 |= NPX_STATE_NOT_LOADED;
+    Cr0 |= SaveArea->Cr0NpxState;
+    
+    /* Update NPX state */
+    Thread->NpxState = NPX_STATE_NOT_LOADED;
+    KeGetCurrentPrcb()->NpxThread = NULL;
+    
+    /* Clear the TS bit and re-enable interrupts */
+    SaveArea->Cr0NpxState &= ~CR0_TS;
+    _enable();
+
+    /* Now look at MxCsr to get the mask of errors we should care about */
+    MxCsrMask = ~((USHORT)SaveArea->U.FxArea.MXCsr >> 7);
+    
+    /* Get legal exceptions that software should handle */
+    Error = (USHORT)SaveArea->U.FxArea.MXCsr & (FSW_INVALID_OPERATION |
+                                                FSW_DENORMAL |
+                                                FSW_ZERO_DIVIDE |
+                                                FSW_OVERFLOW |
+                                                FSW_UNDERFLOW |
+                                                FSW_PRECISION);
+    Error &= MxCsrMask;
+    
+    /* Now handle any of those legal errors */
+    if (Error & (FSW_INVALID_OPERATION |
+                 FSW_DENORMAL |
+                 FSW_ZERO_DIVIDE |
+                 FSW_OVERFLOW |
+                 FSW_UNDERFLOW |
+                 FSW_PRECISION))
+    {
+        /* By issuing an exception */
+        KiDispatchException1Args(STATUS_FLOAT_MULTIPLE_TRAPS,
+                                 TrapFrame->Eip,
+                                 0,
+                                 TrapFrame);
+    }
+    
+    /* Unknown XMMI fault */
+    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
+}
+
+VOID
+FASTCALL
 KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
