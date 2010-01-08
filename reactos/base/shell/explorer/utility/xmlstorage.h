@@ -2,7 +2,7 @@
  //
  // XML storage C++ classes version 1.3
  //
- // Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xmlstorage.h
@@ -205,7 +205,7 @@ typedef const CHAR* LPCTSTR;
 #define _tcsicmp strcasecmp
 #define strnicmp strncasecmp
 #define _tcsnicmp strncasecmp
-#endif
+#endif // UNICODE
 
 #endif // _WIN32
 
@@ -309,14 +309,14 @@ struct XS_String
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	XS_String(LPCSTR s) {assign(s);}
 	XS_String(LPCSTR s, size_t l) {assign(s, l);}
-	XS_String(const std::string& other) {assign(other.c_str());}
+	XS_String(const std::string& s) {assign(s.c_str());}
 	XS_String& operator=(LPCSTR s) {assign(s); return *this;}
 	void assign(LPCSTR s) {if (s) {size_t bl=strlen(s); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, bl, b, bl));} else erase();}
 	void assign(LPCSTR s, size_t l) {if (s) {size_t bl=l; LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, bl));} else erase();}
 #else
 	XS_String(LPCWSTR s) {assign(s);}
 	XS_String(LPCWSTR s, size_t l) {assign(s, l);}
-	XS_String(const std::wstring& other) {assign(other.c_str());}
+	XS_String(const std::wstring& ws) {assign(ws.c_str());}
 	XS_String& operator=(LPCWSTR s) {assign(s); return *this;}
 #ifdef XS_STRING_UTF8
 	void assign(LPCWSTR s) {if (s) {size_t bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, (int)bl, b, (int)bl, 0, 0));} else erase();}
@@ -327,6 +327,12 @@ struct XS_String
 #endif
 #endif
 #endif // _WIN32
+
+#ifdef __ISSD_H
+//	XS_String(const _ISSD RString& s) {assign(s.c_str());}
+//	void assign(const _ISSD RString& s) {assign(s.c_str());}
+	XS_String& operator=(const _ISSD RString& s) {assign(s); return *this;}
+#endif
 
 #ifdef XS_STRING_UTF8
 	void assign(const XS_String& s) {assign(s.c_str());}
@@ -512,7 +518,7 @@ struct FileHolder
 {
 	FileHolder(LPCTSTR path, LPCTSTR mode)
 	{
-#if defined(__STDC_WANT_SECURE_LIB__) && defined(_MS_VER) // secure CRT functions using VS 2005
+#ifdef __STDC_WANT_SECURE_LIB__
 		if (_tfopen_s(&_pfile, path, mode) != 0)
 			_pfile = NULL;
 #else
@@ -544,6 +550,8 @@ struct tifstream : public std::istream, FileHolder
 		_buf(_pfile)
 #endif
 	{
+		if (!_pfile)
+			setstate(badbit);
 	}
 
 protected:
@@ -564,6 +572,8 @@ struct tofstream : public std::ostream, FileHolder
 		_buf(_pfile)
 #endif
 	{
+		if (!_pfile)
+			setstate(badbit);
 	}
 
 	~tofstream()
@@ -1065,7 +1075,7 @@ struct XMLNode : public XS_String
 	{
 		Children::iterator it, next=_children.begin();
 
-		while((it=next++)!=_children.end())
+		while((it=next++) != _children.end())
 			if (**it == name)
 				_children.erase(it);
 	}
@@ -1559,6 +1569,7 @@ struct XMLPos
 	 /// index operator attribute access
 	template<typename T> XS_String get(const T& attr_name) const {return (*_cur)[attr_name];}
 	XS_String& operator[](const XS_String& attr_name) {return (*_cur)[attr_name];}
+	const XS_String& operator[](const XS_String& attr_name) const {return (*_cur)[attr_name];}
 
 	 /// insert children when building tree
 	void add_down(XMLNode* child)
@@ -1633,6 +1644,14 @@ struct XMLPos
 	void create(const XS_String& name)
 	{
 		add_down(new XMLNode(name));
+	}
+
+	 /// create node with string content
+	void create_node_content(const XS_String& node_name, const XS_String& content)
+	{
+		XMLNode* pNode = new XMLNode(node_name);
+			pNode->set_content(content);
+		_cur->add_child(pNode);
 	}
 
 	 /// create node if not already existing and move to it
@@ -1815,6 +1834,7 @@ struct const_XMLPos
 
 	 /// index operator attribute access
 	template<typename T> XS_String get(const T& attr_name) const {return _cur->get(attr_name);}
+	XS_String operator[](const XS_String& attr_name) const {return _cur->get(attr_name);}
 
 	 /// go back to previous position
 	bool back()
@@ -2722,6 +2742,9 @@ struct XMLDoc : public XMLNode
 	bool read_file(LPCTSTR path)
 	{
 		tifstream in(path);
+		if (!in.good())
+			return false;
+
 		XMLReader reader(this, in);
 
 #if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
@@ -2926,6 +2949,14 @@ struct XMLWriter
 	{
 		if (!_stack.empty())
 			_stack.top()._content = EncodeXMLString(s.c_str(), cdata);
+	}
+
+	 /// create node with string content
+	void create_node_content(const XS_String& node_name, const XS_String& content)
+	{
+		create(node_name);
+			set_content(content);
+		back();
 	}
 
 	 // public for access in StackEntry
