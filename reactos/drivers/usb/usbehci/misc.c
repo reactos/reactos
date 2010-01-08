@@ -58,13 +58,12 @@ CompletePendingRequest(PFDO_DEVICE_EXTENSION DeviceExtension)
         DPRINT("DescriptorType %x\n",     Urb->UrbControlDescriptorRequest.DescriptorType);    
         DPRINT("LanguageId %x\n", Urb->UrbControlDescriptorRequest.LanguageId);
 
-        KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
-
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
 
+        KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return;
+        KeAcquireSpinLock(&DeviceExtension->IrpQueueLock, &oldIrql);
     }
 
     KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
