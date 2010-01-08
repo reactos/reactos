@@ -107,6 +107,7 @@ MmGetLRUFirstUserPage(VOID)
    }
    PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
    ASSERT_PFN(PageDescriptor);
+   MmReferencePage(PageDescriptor - MmPfnDatabase);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
    return PageDescriptor - MmPfnDatabase;
 }
@@ -148,7 +149,9 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
       return 0;
    }
    PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
+   MmReferencePage(PageDescriptor - MmPfnDatabase);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+   MmDereferencePage(PreviousPfn);
    return PageDescriptor - MmPfnDatabase;
 }
 
@@ -156,7 +159,10 @@ VOID
 NTAPI
 MmRemoveLRUUserPage(PFN_TYPE Page)
 {
+   KIRQL oldIrql;
+   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
    RemoveEntryList(&MiGetPfnEntry(Page)->ListEntry);
+   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
 PFN_NUMBER

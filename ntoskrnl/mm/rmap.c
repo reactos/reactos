@@ -349,7 +349,7 @@ bail:
 
 	   if (MmGetRmapListHeadPage(Page))
 	   {
-		   DPRINT1("Page %x was re-acquired while we were evicting it\n", Page);
+		   DPRINT("Page %x was re-acquired while we were evicting it\n", Page);
 		   MmLockSectionSegment(Segment);
 		   MiSetPageEntrySectionSegment(Segment, &FileOffset, Dirty ? DIRTY_SSE(MAKE_PFN_SSE(SectionPage)) : MAKE_PFN_SSE(SectionPage));
 		   MmUnlockSectionSegment(Segment);
@@ -366,7 +366,7 @@ bail:
 
 		   if (!Evicted && SectionPage)
 		   {
-			   DPRINT1
+			   DPRINT
 				   ("Failed to page out, replacing %x at %x in segment %x\n",
 					SectionPage, FileOffset.LowPart, Segment);
 			   MmLockSectionSegment(Segment);

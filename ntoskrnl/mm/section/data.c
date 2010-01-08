@@ -1174,7 +1174,7 @@ MiFreeSegmentPage
 			MiWriteBackPage(FileObject, FileOffset, PAGE_SIZE, OldPage);
 			DPRINT("Dereference page %x\n", OldPage);
 		}
-		ASSERT(MmGetReferenceCountPage(OldPage) == 1);
+		MmDeleteSectionAssociation(OldPage);
 		MmDereferencePage(OldPage);
 		DPRINT("Done\n");
 	}

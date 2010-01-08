@@ -176,7 +176,7 @@ MmFinalizeSectionPageOut
 				Status = STATUS_PAGEFILE_QUOTA;
 			else
 			{
-				DPRINT("Writing to swap page\n");
+				DPRINT1("Writing to swap %x page %x\n", Swap, Page);
 				Status = MmWriteToSwapPage(Swap, Page);
 			}
 
@@ -207,7 +207,7 @@ MmFinalizeSectionPageOut
 
 	if (WritePage)
 	{
-		DPRINT("Segment %x FileObject %x Offset %x\n", Segment, Segment->FileObject, FileOffset->LowPart);
+		DPRINT1("MiWriteBackPage(Segment %x FileObject %x Offset %x)\n", Segment, Segment->FileObject, FileOffset->LowPart);
 		Status = MiWriteBackPage(Segment->FileObject, FileOffset, PAGE_SIZE, Page);
 	}
 
@@ -215,6 +215,7 @@ MmFinalizeSectionPageOut
 	{
 		DPRINT("Removing page %x for real\n", Page);
 		MmSetSavedSwapEntryPage(Page, 0);
+		MmDeleteSectionAssociation(Page);
 		MmDereferencePage(Page);
 	}
 

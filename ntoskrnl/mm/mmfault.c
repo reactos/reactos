@@ -173,6 +173,11 @@ MmpAccessFaultInner
 		  DPRINT("Restarting fault %x\n", Address);
 		  Status = STATUS_MM_RESTART_OPERATION;
 	  }
+	  else if (Status == STATUS_MM_RESTART_OPERATION)
+	  {
+		  // Clean slate
+		  RtlZeroMemory(&Resources, sizeof(Resources));
+	  }
 	  else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
 	  {
 		  if (Thread->ActiveFaultCount > 1)
@@ -355,6 +360,11 @@ MmNotPresentFaultInner
 			DPRINT("Done waiting for %x\n", Address);
 			Status = STATUS_MM_RESTART_OPERATION;
 		}
+		else if (Status == STATUS_MM_RESTART_OPERATION)
+		{
+			// Clean slate
+			RtlZeroMemory(&Resources, sizeof(Resources));
+		}
 		else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
 		{
 			if (Thread->ActiveFaultCount > 1)
@@ -413,7 +423,8 @@ MmNotPresentFault
 	PETHREAD Thread;
 	PMMSUPPORT AddressSpace;
 	NTSTATUS Status;
-	
+
+	Address &= ~(PAGE_SIZE - 1);
 	DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
 	
 	Thread = PsGetCurrentThread();
@@ -461,6 +472,8 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
               IN PVOID TrapInformation)
 {
     PMEMORY_AREA MemoryArea;
+
+	Address = (PVOID)(((ULONG_PTR)Address) & ~(PAGE_SIZE - 1));
 
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)

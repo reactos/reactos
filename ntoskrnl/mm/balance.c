@@ -33,7 +33,7 @@ MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 BOOLEAN MiBalancerInitialized = FALSE;
 MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
-/*static*/ ULONG MiMinimumAvailablePages = 0x3000;
+/*static*/ ULONG MiMinimumAvailablePages = 128; 
 static ULONG MiNrTotalPages;
 static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
@@ -137,21 +137,19 @@ NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 {
     PFN_TYPE CurrentPage;
-    PFN_TYPE NextPage;
     NTSTATUS Status;
     
     (*NrFreedPages) = 0;
 	DPRINT("Trimming user memory (want %d)\n", Target);
-    
+
+	// Current page is referenced
     CurrentPage = MmGetLRUFirstUserPage();
     while (CurrentPage != 0 && Target > 0)
     {
-		//DPRINT("Trying page %x\n", CurrentPage);
-        NextPage = MmGetLRUNextUserPage(CurrentPage);
         Status = MmPageOutPhysicalAddress(CurrentPage);
-		//DPRINT("Status: %x\n", Status);
         if (NT_SUCCESS(Status))
         {
+			MmRemoveLRUUserPage(CurrentPage);
             Target--;
             (*NrFreedPages)++;
         }
@@ -160,9 +158,12 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 			MmRemoveLRUUserPage(CurrentPage);
 			MmInsertLRULastUserPage(CurrentPage);
 		}
-        
-        CurrentPage = NextPage;
+
+		// Reference is updated
+		CurrentPage = MmGetLRUNextUserPage(CurrentPage);
     }
+	if (CurrentPage)
+		MmDereferencePage(CurrentPage); // Dereference matches MmGetLRUFirst/Next
 	DPRINT("Done\n");
     return(STATUS_SUCCESS);
 }
