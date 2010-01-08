@@ -51,6 +51,7 @@
 				<file>systimer.S</file>
 				<file>thrdini.c</file>
 				<file>trap.s</file>
+				<file>traphdlr.c</file>
 				<file>usercall_asm.S</file>
 				<file>usercall.c</file>
 				<file>v86vdm.c</file>

@@ -221,6 +221,28 @@ _KiUnexpectedInterrupt&Number:
 .endm
 
 //
+// @name GENERATE_TRAP_HANDLER
+//
+// This macro creates a kernel trap handler.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro GENERATE_TRAP_HANDLER Name, ErrorCode
+.func Name
+_&Name:
+    .if \ErrorCode
+        push 0
+    .endif
+    pushad
+    sub esp, KTRAP_FRAME_LENGTH - KTRAP_FRAME_PREVIOUS_MODE
+    mov ecx, esp
+    call @&Name&Handler@4
+.endfunc
+.endm
+
+//
 // @name GENERATE_HAL_INT_HANDLER
 //
 // This macro creates a HAL hardware interrupt handler.

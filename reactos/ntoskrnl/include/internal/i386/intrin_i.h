@@ -52,6 +52,7 @@ Ke386GetTr(VOID)
 #define _Ke386SetSeg(N,X)         __asm__ __volatile__("movl %0,%%" #N : :"r" (X));
 
 #define Ke386FnInit()               __asm__("fninit\n\t");
+#define Ke386ClearDirectionFlag()   __asm__ __volatile__ ("cld")
 
 
 //
@@ -64,6 +65,9 @@ Ke386GetTr(VOID)
 //
 #define Ke386GetSs()                _Ke386GetSeg(ss)
 #define Ke386GetFs()                _Ke386GetSeg(fs)
+#define Ke386GetDs()                _Ke386GetSeg(ds)
+#define Ke386GetEs()                _Ke386GetSeg(es)
+#define Ke386GetGs()                _Ke386GetSeg(gs)
 #define Ke386SetFs(X)               _Ke386SetSeg(fs, X)
 #define Ke386SetDs(X)               _Ke386SetSeg(ds, X)
 #define Ke386SetEs(X)               _Ke386SetSeg(es, X)

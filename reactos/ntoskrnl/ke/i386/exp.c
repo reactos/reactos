@@ -772,6 +772,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
             /* Otherwise clear DR registers */
             Context->Dr0 =
             Context->Dr1 =
+            Context->Dr2 =
             Context->Dr3 =
             Context->Dr6 =
             Context->Dr7 = 0;
@@ -838,8 +839,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
 
-    /* Check if User Mode or if the debugger is enabled */
-    if ((PreviousMode == UserMode) || (KdDebuggerEnabled))
+    /* Check if User Mode or if the kernel debugger is enabled */
+    if ((PreviousMode == UserMode) || (KeGetPcr()->KdVersionBlock))
     {
         /* Add the FPU Flag */
         Context.ContextFlags |= CONTEXT_FLOATING_POINT;

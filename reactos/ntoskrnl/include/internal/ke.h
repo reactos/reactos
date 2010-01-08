@@ -72,6 +72,20 @@ typedef struct _KNMI_HANDLER_CALLBACK
     PVOID Handle;
 } KNMI_HANDLER_CALLBACK, *PKNMI_HANDLER_CALLBACK;
 
+typedef union _KTRAP_STATE_BITS
+{
+    struct
+    {
+        UCHAR SystemCall:1;
+        UCHAR PreviousMode:1;
+        UCHAR Segments:1;
+        UCHAR Volatiles:1;
+        UCHAR Full:1;
+        UCHAR Reserved:3;
+    };
+    UCHAR Bits;
+} KTRAP_STATE_BITS, *PKTRAP_STATE_BITS;
+
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
     IN PUNICODE_STRING Unicode,
@@ -224,6 +238,12 @@ extern ULONG KiDPCTimeout;
 #define SERVICE_TABLE_TEST  (WIN32K_SERVICE_INDEX << BITS_PER_ENTRY)
 
 #endif
+
+#define KTS_SYSCALL_BIT (((KTRAP_STATE_BITS) { { .SystemCall   = TRUE } }).Bits)
+#define KTS_PM_BIT      (((KTRAP_STATE_BITS) { { .PreviousMode   = TRUE } }).Bits)
+#define KTS_SEG_BIT     (((KTRAP_STATE_BITS) { { .Segments  = TRUE } }).Bits)
+#define KTS_VOL_BIT     (((KTRAP_STATE_BITS) { { .Volatiles = TRUE } }).Bits)
+#define KTS_FULL_BIT    (((KTRAP_STATE_BITS) { { .Full = TRUE } }).Bits)
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
@@ -863,6 +883,18 @@ KeBugCheckWithTf(
     PKTRAP_FRAME Tf
 );
 
+VOID
+NTAPI
+KiDispatchExceptionFromTrapFrame(
+    IN NTSTATUS Code,
+    IN ULONG_PTR Address,
+    IN ULONG ParameterCount,
+    IN ULONG_PTR Parameter1,
+    IN ULONG_PTR Parameter2,
+    IN ULONG_PTR Parameter3,
+    IN PKTRAP_FRAME TrapFrame
+);
+                                  
 BOOLEAN
 NTAPI
 KiHandleNmi(VOID);
