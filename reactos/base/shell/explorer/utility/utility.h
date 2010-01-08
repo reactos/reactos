@@ -194,10 +194,20 @@ BOOL exists_path(LPCTSTR path);
 #define strcpy_s(d, l, s) strcpy(d, s)
 #define wcscpy_s(d, l, s) wcscpy(d, s)
 #define wcsncpy_s(d, l, s, n) wcsncpy(d, s, n)
-#define _stprintf_s1(b, l, f, p1) _stprintf(b, f, p1)
-#define _stprintf_s2(b, l, f, p1,p2) _stprintf(b, f, p1,p2)
+
+#if defined(_tcscpy) && !defined(_tcscpy_s)
+#define _tcscpy_s(d, l, s) _tcscpy(d, s)
+#endif
+
+#if defined(_tsplitpath) && !defined(_tsplitpath_s)
+#define _tsplitpath_s(f, d,dl, p,pl, n,nl, e,el) _tsplitpath(f, d, p, n, e)
+#else
 #define _wsplitpath_s(f, d,dl, p,pl, n,nl, e,el) _wsplitpath(f, d, p, n, e)
 #define _splitpath_s(f, d,dl, p,pl, n,nl, e,el) _splitpath(f, d, p, n, e)
+#endif
+
+#define _stprintf_s1(b, l, f, p1) _stprintf(b, f, p1)
+#define _stprintf_s2(b, l, f, p1,p2) _stprintf(b, f, p1,p2)
 
 #endif	// __STDC_WANT_SECURE_LIB__
 
