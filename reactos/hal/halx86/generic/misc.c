@@ -88,7 +88,7 @@ HalpFlushTLB(VOID)
             Cr4 = __readcr4();
 
             //
-            // Disable global pit
+            // Disable global bit
             //
             __writecr4(Cr4 & ~CR4_PGE);
 
@@ -121,7 +121,7 @@ VOID
 NTAPI
 HalHandleNMI(IN PVOID NmiInfo)
 {
-    UCHAR NmiStatus;
+    SYSTEM_CONTROL_PORT_B_REGISTER SystemControl;
 
     //
     // Don't recurse
@@ -129,9 +129,9 @@ HalHandleNMI(IN PVOID NmiInfo)
     if (HalpNMIInProgress++) while (TRUE);
 
     //
-    // Get the NMI Flag
+    // Read the system control register B
     //
-    NmiStatus = READ_PORT_UCHAR((PUCHAR)0x61);
+    SystemControl.Bits = __inbyte(SYSTEM_CONTROL_PORT_B);
 
     //
     // Switch to boot vieo
@@ -161,29 +161,29 @@ HalHandleNMI(IN PVOID NmiInfo)
     //
     // Display NMI failure string
     //
-    HalDisplayString("\n*** Hardware Malfunction\n\n");
-    HalDisplayString("Call your hardware vendor for support\n\n");
+    InbvDisplayString("\n*** Hardware Malfunction\n\n");
+    InbvDisplayString("Call your hardware vendor for support\n\n");
 
     //
     // Check for parity error
     //
-    if (NmiStatus & 0x80)
+    if (SystemControl.ParityCheck)
     {
         //
         // Display message
         //
-        HalDisplayString("NMI: Parity Check / Memory Parity Error\n");
+        InbvDisplayString("NMI: Parity Check / Memory Parity Error\n");
     }
 
     //
     // Check for I/O failure
     //
-    if (NmiStatus & 0x40)
+    if (SystemControl.ChannelCheck)
     {
         //
         // Display message
         //
-        HalDisplayString("NMI: Channel Check / IOCHK\n");
+        InbvDisplayString("NMI: Channel Check / IOCHK\n");
     }
 
     //
@@ -200,12 +200,12 @@ HalHandleNMI(IN PVOID NmiInfo)
     //
     // Halt the system
     //
-    HalDisplayString("\n*** The system has halted ***\n");
+    InbvDisplayString("\n*** The system has halted ***\n");
 
     //
     // Enter the debugger if possible
     //
-    //if (!KdDebuggerNotPresent && KdDebuggerEnabled) KeEnterKernelDebugger();
+    //if (!(KdDebuggerNotPresent) && (KdDebuggerEnabled)) KeEnterKernelDebugger();
 
     //
     // Freeze the system
