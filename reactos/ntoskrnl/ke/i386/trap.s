@@ -58,6 +58,10 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 .globl _KiTrap8
 .globl _KiTrap19
 
+/* System call code referenced from C code                                  */
+.globl _CopyParams
+.globl _ReadBatch
+
 /* System call entrypoints:                                                 */
 .globl _KiFastCallEntry
 .globl _KiSystemService
@@ -193,7 +197,7 @@ SharedCode:
 
     /* Check if we should flush the User Batch */
     xor ebx, ebx
-ReadBatch:
+_ReadBatch:
     or ebx, [ecx+TEB_GDI_BATCH_COUNT]
     jz NotWin32K
 
@@ -239,7 +243,7 @@ NoCountTable:
     cmp esi, _MmUserProbeAddress
     jnb AccessViolation
 
-CopyParams:
+_CopyParams:
     /* Copy the parameters */
     rep movsd
 
@@ -359,7 +363,7 @@ AccessViolation:
     test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
 
     /* It's fine, go ahead with it */
-    jz CopyParams
+    jz _CopyParams
 
     /* Caller sent invalid parameters, fail here */
     mov eax, STATUS_ACCESS_VIOLATION
@@ -1219,9 +1223,9 @@ NotV86:
     test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
     jnz UserModeGpf
 
-    /* Check if we have a VDM alert */
-    cmp dword ptr PCR[KPCR_VDM_ALERT], 0
-    jnz VdmAlertGpf
+    ///* Check if we have a VDM alert */
+    //cmp dword ptr PCR[KPCR_VDM_ALERT], 0 // BUGBUG: Add this back later
+    //jnz VdmAlertGpf
 
     /* Check for GPF during GPF */
     mov eax, [ebp+KTRAP_FRAME_EIP]
@@ -1607,203 +1611,7 @@ DispatchV86Gpf:
     UNHANDLED_V86_PATH
 .endfunc
 
-.func KiTrap14
-TRAP_FIXUPS kite_a, kite_t, DoFixupV86, DoNotFixupAbios
-_KiTrap14:
-
-    /* Enter trap */
-    TRAP_PROLOG kite_a, kite_t
-
-    /* Check if we have a VDM alert */
-    cmp dword ptr PCR[KPCR_VDM_ALERT], 0
-    jnz VdmAlertGpf
-
-    /* Get the current thread */
-    mov edi, PCR[KPCR_CURRENT_THREAD]
-
-    /* Get the stack address of the frame */
-    lea eax, [esp+KTRAP_FRAME_LENGTH+NPX_FRAME_LENGTH]
-    sub eax, [edi+KTHREAD_INITIAL_STACK]
-    jz NoFixUp
-
-    /* This isn't the base frame, check if it's the second */
-    cmp eax, -KTRAP_FRAME_EFLAGS
-    jb NoFixUp
-
-    /* Check if we have a TEB */
-    mov eax, PCR[KPCR_TEB]
-    or eax, eax
-    jle NoFixUp
-
-    /* Fixup the frame */
-    call _KiFixupFrame
-
-    /* Save CR2 */
-NoFixUp:
-    mov edi, cr2
-
-    /* Check if this processor has the cmpxchg8b lock errata */
-    cmp byte ptr _KiI386PentiumLockErrataPresent, 0
-    jnz HandleLockErrata
-
-NotLockErrata:
-    /* HACK: Handle page faults with interrupts disabled */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
-    je HandlePf
-
-    /* Enable interrupts and check if we got here with interrupts disabled */
-    sti
-#ifdef HACK_ABOVE_FIXED
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
-    jz IllegalState
-#endif
-
-HandlePf:
-    /* Send trap frame and check if this is kernel-mode or usermode */
-    push ebp
-    mov eax, [ebp+KTRAP_FRAME_CS]
-    and eax, MODE_MASK
-    push eax
-
-    /* Send faulting address and check if this is read or write */
-    push edi
-    mov eax, [ebp+KTRAP_FRAME_ERROR_CODE]
-    and eax, 1
-    push eax
-
-    /* Call the access fault handler */
-    call _MmAccessFault@16
-    test eax, eax
-    jl AccessFail
-
-    /* Access fault handled, return to caller */
-    jmp _Kei386EoiHelper@0
-
-AccessFail:
-    /* First check if this is a fault in the S-LIST functions */
-    mov ecx, offset _ExpInterlockedPopEntrySListFault@0
-    cmp [ebp+KTRAP_FRAME_EIP], ecx
-    jz SlistFault
-
-    /* Check if this is a fault in the syscall handler */
-    mov ecx, offset CopyParams
-    cmp [ebp+KTRAP_FRAME_EIP], ecx
-    jz SysCallCopyFault
-    mov ecx, offset ReadBatch
-    cmp [ebp+KTRAP_FRAME_EIP], ecx
-    jnz CheckVdmPf
-
-    /* FIXME: TODO */
-    UNHANDLED_PATH "SYSENTER Fault"
-    jmp _Kei386EoiHelper@0
-
-SysCallCopyFault:
-    /* FIXME: TODO */
-    UNHANDLED_PATH "SYSENTER Fault"
-    jmp _Kei386EoiHelper@0
-
-    /* Check if the fault occured in a V86 mode */
-CheckVdmPf:
-    mov ecx, [ebp+KTRAP_FRAME_ERROR_CODE]
-    shr ecx, 1
-    and ecx, 1
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz VdmPF
-
-    /* Check if the fault occured in a VDM */
-    mov esi, PCR[KPCR_CURRENT_THREAD]
-    mov esi, [esi+KTHREAD_APCSTATE_PROCESS]
-    cmp dword ptr [esi+EPROCESS_VDM_OBJECTS], 0
-    jz CheckStatus
-
-    /* Check if we this was in kernel-mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz CheckStatus
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jz CheckStatus
-
-VdmPF:
-    /* FIXME: TODO */
-    UNHANDLED_V86_PATH
-
-    /* Save EIP and check what kind of status failure we got */
-CheckStatus:
-    mov esi, [ebp+KTRAP_FRAME_EIP]
-    cmp eax, STATUS_ACCESS_VIOLATION
-    je AccessViol
-    cmp eax, STATUS_GUARD_PAGE_VIOLATION
-    je SpecialCode
-    cmp eax, STATUS_STACK_OVERFLOW
-    je SpecialCode
-
-    /* Setup an in-page exception to dispatch */
-    mov edx, ecx
-    mov ebx, esi
-    mov esi, edi
-    mov ecx, 3
-    mov edi, eax
-    mov eax, STATUS_IN_PAGE_ERROR
-    call _CommonDispatchException
-
-AccessViol:
-    /* Use more proper status code */
-    mov eax, KI_EXCEPTION_ACCESS_VIOLATION
-
-SpecialCode:
-    /* Setup a normal page fault exception */
-    mov ebx, esi
-    mov edx, ecx
-    mov esi, edi
-    jmp _DispatchTwoParam
-
-SlistFault:
-    /* FIXME: TODO */
-    UNHANDLED_PATH "SLIST Fault"
-
-IllegalState:
-
-    /* This is completely illegal, bugcheck the system */
-    push ebp
-    push esi
-    push ecx
-    push eax
-    push edi
-    push IRQL_NOT_LESS_OR_EQUAL
-    call _KeBugCheckWithTf@24
-
-VdmAlertGpf:
-
-    /* FIXME: NOT SUPPORTED */
-    UNHANDLED_V86_PATH
-
-HandleLockErrata:
-
-    /* Fail if this isn't a write fault */
-    test word ptr [ebp+KTRAP_FRAME_ERROR_CODE], 0x4
-    jnz NotLockErrata
-
-    /* Also make sure the page fault is for IDT entry 6 */
-    mov eax, PCR[KPCR_IDT]
-    add eax, 0x30
-    cmp eax, edi
-    jne NotLockErrata
-
-    /*
-     * This is a write fault to the Invalid Opcode handler entry.
-     * We assume this is the lock errata and not a real write fault.
-     */
-
-    /* Clear the error code */
-    and dword ptr [ebp+KTRAP_FRAME_ERROR_CODE], 0
-
-    /* Check if this happened in V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz VdmOpCodeFault
-
-    /* Dispatch this to the invalid opcode handler */
-    jmp DispatchLockErrata
-.endfunc
-
+GENERATE_TRAP_HANDLER KiTrap14, 0
 GENERATE_TRAP_HANDLER KiTrap0F, 1
 
 .func KiTrap16

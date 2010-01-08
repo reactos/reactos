@@ -9,7 +9,6 @@
 //
 // Debug Macros
 //
-#if YDEBUG
 VOID
 NTAPI
 KiDumpTrapFrame(IN PKTRAP_FRAME TrapFrame)
@@ -52,6 +51,7 @@ KiDumpTrapFrame(IN PKTRAP_FRAME TrapFrame)
     DPRINT1("V86Gs: %x\n", TrapFrame->V86Gs);
 }
 
+#if YDEBUG
 FORCEINLINE
 VOID
 KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
@@ -218,6 +218,18 @@ KiDispatchException0Args(IN NTSTATUS Code,
 {
     /* Helper for exceptions with no arguments */
     KiDispatchExceptionFromTrapFrame(Code, Address, 0, 0, 0, 0, TrapFrame);
+}
+
+VOID
+FORCEINLINE
+KiDispatchException2Args(IN NTSTATUS Code,
+                         IN ULONG_PTR Address,
+                         IN ULONG P1,
+                         IN ULONG P2,
+                         IN PKTRAP_FRAME TrapFrame)
+{
+    /* Helper for exceptions with no arguments */
+    KiDispatchExceptionFromTrapFrame(Code, Address, 2, P1, P2, 0, TrapFrame);
 }
 
 FORCEINLINE
