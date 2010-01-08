@@ -182,12 +182,9 @@ BOOL exists_path(LPCTSTR path);
 #endif
 
 
-#ifndef _MS_VER // modified gedmurphy's "secure CRT usage rehack"
-#undef __STDC_WANT_SECURE_LIB__
-#endif
-
  // secure CRT functions
-#ifdef __STDC_WANT_SECURE_LIB__	// for VS 2005: _MSC_VER>=1400
+//@@ _MS_VER: temporarily needed for the ReactOS build environment
+#if defined(__STDC_WANT_SECURE_LIB__) && defined(_MS_VER)	// for VS 2005: _MSC_VER>=1400
 
 #define _stprintf_s1 _stprintf_s
 #define _stprintf_s2 _stprintf_s
