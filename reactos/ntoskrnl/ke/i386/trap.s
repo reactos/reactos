@@ -664,13 +664,6 @@ _DispatchTwoParam:
 
 /* HARDWARE TRAP HANDLERS ****************************************************/
 
-.func KiFixupFrame
-_KiFixupFrame:
-
-    /* TODO: Routine to fixup a KTRAP_FRAME when faulting from a syscall. */
-    UNHANDLED_PATH "Trap Frame Fixup"
-.endfunc
-
 GENERATE_TRAP_HANDLER KiTrap0, 1
 GENERATE_TRAP_HANDLER KiTrap1, 1
 
@@ -699,122 +692,7 @@ _KiTrap2:
 GENERATE_TRAP_HANDLER KiTrap3, 1
 GENERATE_TRAP_HANDLER KiTrap4, 1
 GENERATE_TRAP_HANDLER KiTrap5, 1
-
-.func KiTrap6
-TRAP_FIXUPS kit6_a, kit6_t, DoFixupV86, DoNotFixupAbios
-_KiTrap6:
-
-    /* It this a V86 GPF? */
-    test dword ptr [esp+8], EFLAGS_V86_MASK
-    jz NotV86UD
-
-    /* Enter V86 Trap */
-    V86_TRAP_PROLOG kit6_a, kit6_v
-
-VdmOpCodeFault:
-    /* Not yet supported (Invalid OPCODE from V86) */
-    UNHANDLED_V86_PATH
-
-NotV86UD:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kit6_a, kit6_t
-
-DispatchLockErrata:
-    /* Check if this happened in kernel mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz KmodeOpcode
-
-    /* Check for VDM */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jz UmodeOpcode
-
-    /* Check if the process is vDM */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
-    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
-    jnz IsVdmOpcode
-
-UmodeOpcode:
-    /* Get EIP and enable interrupts at this point */
-    mov esi, [ebp+KTRAP_FRAME_EIP]
-    sti
-
-    /* Set intruction prefix length */
-    mov ecx, 4
-
-    /* Setup a SEH frame */
-    push ebp
-    push OpcodeSEH
-    push PCR[KPCR_EXCEPTION_LIST]
-    mov PCR[KPCR_EXCEPTION_LIST], esp
-
-OpcodeLoop:
-    /* Get the instruction and check if it's LOCK */
-    mov al, [esi]
-    cmp al, 0xF0
-    jz LockCrash
-
-    /* Keep moving */
-    add esi, 1
-    loop OpcodeLoop
-
-    /* Undo SEH frame */
-    pop PCR[KPCR_EXCEPTION_LIST]
-    add esp, 8
-
-KmodeOpcode:
-
-    /* Re-enable interrupts */
-    sti
-
-    /* Setup illegal instruction exception and dispatch it */
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-    mov eax, STATUS_ILLEGAL_INSTRUCTION
-    jmp _DispatchNoParam
-
-LockCrash:
-
-    /* Undo SEH Frame */
-    pop PCR[KPCR_EXCEPTION_LIST]
-    add esp, 8
-
-    /* Setup invalid lock exception and dispatch it */
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-    mov eax, STATUS_INVALID_LOCK_SEQUENCE
-    jmp _DispatchNoParam
-
-IsVdmOpcode:
-
-    /* Unhandled yet */
-    UNHANDLED_V86_PATH
-
-    /* Return to caller */
-    jmp _Kei386EoiHelper@0
-
-OpcodeSEH:
-
-    /* Get SEH frame */
-    mov esp, [esp+8]
-    pop PCR[KPCR_EXCEPTION_LIST]
-    add esp, 4
-    pop ebp
-
-    /* Check if this was user mode */
-    test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jnz KmodeOpcode
-
-    /* Do a bugcheck */
-    push ebp
-    push 0
-    push 0
-    push 0
-    push 0
-    push KMODE_EXCEPTION_NOT_HANDLED
-    call _KeBugCheckWithTf@24
-.endfunc
+GENERATE_TRAP_HANDLER KiTrap6, 1
 
 .func KiTrap7
 TRAP_FIXUPS kit7_a, kit7_t, DoFixupV86, DoNotFixupAbios
@@ -1473,8 +1351,13 @@ InstLoop:
     pop PCR[KPCR_EXCEPTION_LIST]
     add esp, 8
 
-    /* Illegal instruction */
-    jmp KmodeOpcode
+    /* Re-enable interrupts */
+    sti
+
+    /* Setup illegal instruction exception and dispatch it */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov eax, STATUS_ILLEGAL_INSTRUCTION
+    jmp _DispatchNoParam
 
 NotPrefixByte:
     /* Check if it's a HLT */

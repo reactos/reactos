@@ -344,6 +344,51 @@ KiTrap5Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
+KiTrap6Handler(IN PKTRAP_FRAME TrapFrame)
+{
+    PUCHAR Instruction;
+    ULONG i;
+    
+    /* Save trap frame */
+    KiEnterTrap(TrapFrame);
+    
+    /* Check for VDM trap */
+    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    
+    /* Enable interrupts */
+    Instruction = (PUCHAR)TrapFrame->Eip;
+    _enable();
+        
+    /* Check for user trap */
+    if (KiUserTrap(TrapFrame))
+    {
+        /* FIXME: Use SEH */
+        
+        /* Scan next 4 opcodes */
+        for (i = 0; i < 4; i++)
+        {
+            /* Check for LOCK instruction */
+            if (Instruction[i] == 0xF0)
+            {
+                /* Send invalid lock sequence exception */
+                KiDispatchException0Args(STATUS_INVALID_LOCK_SEQUENCE,
+                                         TrapFrame->Eip,
+                                         TrapFrame);
+            }
+        }
+        
+        /* FIXME: SEH ends here */
+    }
+    
+    /* Kernel-mode or user-mode fault (but not LOCK) */
+    KiDispatchException0Args(STATUS_ILLEGAL_INSTRUCTION,
+                             TrapFrame->Eip,
+                             TrapFrame);
+    
+}
+
+VOID
+FASTCALL
 KiTrap8Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* FIXME: Not handled */
