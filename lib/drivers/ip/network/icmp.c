@@ -159,6 +159,7 @@ NTSTATUS ICMPSendDatagram(
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
+    KIRQL OldIrql;
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -178,6 +179,8 @@ NTSTATUS ICMPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
 
+    LockObject(AddrFile, &OldIrql);
+
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
     {
@@ -186,14 +189,20 @@ NTSTATUS ICMPSendDatagram(
          * interface we're sending over
          */
         if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+        {
+             UnlockObject(AddrFile, OldIrql);
 	     return STATUS_NETWORK_UNREACHABLE;
+        }
 
         LocalAddress = NCE->Interface->Unicast;
     }
     else
     {
         if(!(NCE = NBLocateNeighbor( &LocalAddress )))
+        {
+             UnlockObject(AddrFile, OldIrql);
 	     return STATUS_INVALID_PARAMETER;
+        }
     }
 
     Status = PrepareICMPPacket( NCE->Interface,
@@ -203,17 +212,23 @@ NTSTATUS ICMPSendDatagram(
                                 DataSize );
 
     if( !NT_SUCCESS(Status) )
+    {
+        UnlockObject(AddrFile, OldIrql);
 	return Status;
+    }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
     if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, ICMPSendPacketComplete, NULL )))
     {
+        UnlockObject(AddrFile, OldIrql);
         FreeNdisPacket(Packet.NdisPacket);
         return Status;
     }
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
+
+    UnlockObject(AddrFile, OldIrql);
 
     return STATUS_SUCCESS;
 }
