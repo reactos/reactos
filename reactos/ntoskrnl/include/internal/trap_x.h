@@ -194,19 +194,18 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
             Thread->Alerted[KernelMode] = FALSE;
 
             /* Are there pending user APCs? */
-            if (Thread->ApcState.UserApcPending)
-            {
-                /* Raise to APC level and enable interrupts */
-                OldIrql = KfRaiseIrql(APC_LEVEL);
-                _enable();
+            if (!Thread->ApcState.UserApcPending) break;
 
-                /* Deliver APCs */
-                KiDeliverApc(UserMode, NULL, TrapFrame);
+            /* Raise to APC level and enable interrupts */
+            OldIrql = KfRaiseIrql(APC_LEVEL);
+            _enable();
 
-                /* Restore IRQL and disable interrupts once again */
-                KfLowerIrql(OldIrql);
-                _disable();
-            }
+            /* Deliver APCs */
+            KiDeliverApc(UserMode, NULL, TrapFrame);
+
+            /* Restore IRQL and disable interrupts once again */
+            KfLowerIrql(OldIrql);
+            _disable();
         }
     }
 }

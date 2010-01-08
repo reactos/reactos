@@ -53,6 +53,11 @@ idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
 GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
+/* Trap handlers referenced from C code                                     */
+.globl _KiTrap2
+.globl _KiTrap8
+.globl _KiTrap19
+
 /* System call entrypoints:                                                 */
 .globl _KiFastCallEntry
 .globl _KiSystemService
@@ -464,50 +469,8 @@ AbiosExit:
     /* FIXME: TODO */
     UNHANDLED_PATH "ABIOS Exit"
 
-.func KiRaiseAssertion
-TRAP_FIXUPS kira_a, kira_t, DoFixupV86, DoFixupAbios
-_KiRaiseAssertion:
-
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kira_a, kira_t
-
-    /*
-     * Modify EIP so it points to the faulting instruction and set it as the
-     * exception address. Note that the 'int 2C' instruction used for this call
-     * is 2 bytes long as opposed to 1 byte 'int 3'.
-     */
-    sub dword ptr [ebp+KTRAP_FRAME_EIP], 2
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-
-    /* Raise an assertion failure */
-    mov eax, STATUS_ASSERTION_FAILURE
-    jmp _DispatchNoParam
-.endfunc
-
-.func KiDebugService
-TRAP_FIXUPS kids_a, kids_t, DoFixupV86, DoFixupAbios
-_KiDebugService:
-
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kids_a, kids_t
-
-    /* Increase EIP so we skip the INT3 */
-    inc dword ptr [ebp+KTRAP_FRAME_EIP]
-
-    /* Call debug service dispatcher */
-    mov eax, [ebp+KTRAP_FRAME_EAX]
-    mov ecx, [ebp+KTRAP_FRAME_ECX]
-    mov edx, [ebp+KTRAP_FRAME_EDX]
-
-    /* Jump to INT3 handler */
-    jmp PrepareInt3
-.endfunc
+GENERATE_TRAP_HANDLER KiRaiseAssertion, 1
+GENERATE_TRAP_HANDLER KiDebugService, 1
 
 .func NtRaiseException@12
 _NtRaiseException@12:
@@ -704,91 +667,9 @@ _KiFixupFrame:
     UNHANDLED_PATH "Trap Frame Fixup"
 .endfunc
 
-.func KiTrap0
-TRAP_FIXUPS kit0_a, kit0_t, DoFixupV86, DoNotFixupAbios
-_KiTrap0:
-    /* Push error code */
-    push 0
+GENERATE_TRAP_HANDLER KiTrap0, 1
+GENERATE_TRAP_HANDLER KiTrap1, 1
 
-    /* Enter trap */
-    TRAP_PROLOG kit0_a, kit0_t
-
-    /* Check for V86 */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86Int0
-
-    /* Check if the frame was from kernelmode */
-    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz SendException
-
-    /* Check the old mode */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jne VdmCheck
-
-SendException:
-    /* Re-enable interrupts for user-mode and send the exception */
-    sti
-    mov eax, STATUS_INTEGER_DIVIDE_BY_ZERO
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-    jmp _DispatchNoParam
-
-VdmCheck:
-    /* Check if this is a VDM process */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
-    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
-    jz SendException
-
-    /* We don't support this yet! */
-V86Int0:
-    /* FIXME: TODO */
-    UNHANDLED_V86_PATH
-.endfunc
-
-.func KiTrap1
-TRAP_FIXUPS kit1_a, kit1_t, DoFixupV86, DoNotFixupAbios
-_KiTrap1:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kit1_a, kit1_t
-
-    /* Check for V86 */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86Int1
-
-    /* Check if the frame was from kernelmode */
-    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz PrepInt1
-
-    /* Check the old mode */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jne V86Int1
-
-EnableInterrupts:
-    /* Enable interrupts for user-mode */
-    sti
-
-PrepInt1:
-    /* Prepare the exception */
-    and dword ptr [ebp+KTRAP_FRAME_EFLAGS], ~EFLAGS_TF
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-    mov eax, STATUS_SINGLE_STEP
-    jmp _DispatchNoParam
-
-V86Int1:
-    /* Check if this is a VDM process */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
-    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
-    jz EnableInterrupts
-
-    /* We don't support VDM! */
-    UNHANDLED_V86_PATH
-.endfunc
-
-.globl _KiTrap2
 .func KiTrap2
 _KiTrap2:
     //
@@ -811,148 +692,9 @@ _KiTrap2:
     jmp _KiSystemFatalException                     // Bugcheck helper
 .endfunc
 
-.func KiTrap3
-TRAP_FIXUPS kit3_a, kit3_t, DoFixupV86, DoNotFixupAbios
-_KiTrap3:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kit3_a, kit3_t
-
-    /*
-     * Set the special code to indicate that this is a software breakpoint
-     * and not a debug service call
-     */
-    mov eax, BREAKPOINT_BREAK
-
-    /* Check for V86 */
-PrepareInt3:
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86Int3
-
-    /* Check if the frame was from kernelmode */
-    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz PrepInt3
-
-    /* Check the old mode */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jne V86Int3
-
-EnableInterrupts3:
-    /* Enable interrupts for user-mode */
-    sti
-
-PrepInt3:
-
-    /* Prepare the exception */
-    mov esi, ecx
-    mov edi, edx
-    mov edx, eax
-
-    /* Setup EIP, NTSTATUS and parameter count, then dispatch */
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-    dec ebx
-    mov ecx, 3
-    mov eax, STATUS_BREAKPOINT
-    call _CommonDispatchException
-
-V86Int3:
-    /* Check if this is a VDM process */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
-    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
-    jz EnableInterrupts3
-
-    /* We don't support VDM! */
-    UNHANDLED_V86_PATH
-.endfunc
-
-.func KiTrap4
-TRAP_FIXUPS kit4_a, kit4_t, DoFixupV86, DoNotFixupAbios
-_KiTrap4:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kit4_a, kit4_t
-
-    /* Check for V86 */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86Int4
-
-    /* Check if the frame was from kernelmode */
-    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz SendException4
-
-    /* Check the old mode */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jne VdmCheck4
-
-SendException4:
-    /* Re-enable interrupts for user-mode and send the exception */
-    sti
-    mov eax, STATUS_INTEGER_OVERFLOW
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-    dec ebx
-    jmp _DispatchNoParam
-
-VdmCheck4:
-    /* Check if this is a VDM process */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
-    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
-    jz SendException4
-
-    /* We don't support this yet! */
-V86Int4:
-    UNHANDLED_V86_PATH
-.endfunc
-
-.func KiTrap5
-TRAP_FIXUPS kit5_a, kit5_t, DoFixupV86, DoNotFixupAbios
-_KiTrap5:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kit5_a, kit5_t
-
-    /* Check for V86 */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86Int5
-
-    /* Check if the frame was from kernelmode */
-    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jnz CheckMode
-
-    /* It did, and this should never happen */
-    mov eax, 5
-    jmp _KiSystemFatalException
-
-    /* Check the old mode */
-CheckMode:
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    jne VdmCheck5
-
-    /* Re-enable interrupts for user-mode and send the exception */
-SendException5:
-    sti
-    mov eax, STATUS_ARRAY_BOUNDS_EXCEEDED
-    mov ebx, [ebp+KTRAP_FRAME_EIP]
-    jmp _DispatchNoParam
-
-VdmCheck5:
-    /* Check if this is a VDM process */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
-    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
-    jz SendException5
-
-    /* We don't support this yet! */
-V86Int5:
-    UNHANDLED_V86_PATH
-.endfunc
+GENERATE_TRAP_HANDLER KiTrap3, 1
+GENERATE_TRAP_HANDLER KiTrap4, 1
+GENERATE_TRAP_HANDLER KiTrap5, 1
 
 .func KiTrap6
 TRAP_FIXUPS kit6_a, kit6_t, DoFixupV86, DoNotFixupAbios
@@ -1380,80 +1122,11 @@ BogusTrap:
     call _KeBugCheckEx@20
 .endfunc
 
-.globl _KiTrap8
-.func KiTrap8
-_KiTrap8:
-    /* Can't really do too much */
-    mov eax, 8
-    jmp _KiSystemFatalException
-.endfunc
-
-.func KiTrap9
-TRAP_FIXUPS kit9_a, kit9_t, DoFixupV86, DoNotFixupAbios
-_KiTrap9:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kit9_a, kit9_t
-
-    /* Enable interrupts and bugcheck */
-    sti
-    mov eax, 9
-    jmp _KiSystemFatalException
-.endfunc
-
-.func KiTrap10
-TRAP_FIXUPS kita_a, kita_t, DoFixupV86, DoNotFixupAbios
-_KiTrap10:
-    /* Enter trap */
-    TRAP_PROLOG kita_a, kita_t
-
-    /* Check for V86 */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86IntA
-
-    /* Check if the frame was from kernelmode */
-    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz Fatal
-
-V86IntA:
-    /* Check if OF was set during iretd */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAG_ZERO
-    sti
-    jz Fatal
-
-    /* It was, just mask it out */
-    and dword ptr [ebp+KTRAP_FRAME_EFLAGS], ~EFLAG_ZERO
-    jmp _Kei386EoiHelper@0
-
-Fatal:
-    /* TSS failure for some other reason: crash */
-    mov eax, 10
-    jmp _KiSystemFatalException
-.endfunc
-
-.func KiTrap11
-TRAP_FIXUPS kitb_a, kitb_t, DoFixupV86, DoNotFixupAbios
-_KiTrap11:
-    /* Enter trap */
-    TRAP_PROLOG kitb_a, kitb_t
-
-    /* FIXME: ROS Doesn't handle segment faults yet */
-    mov eax, 11
-    jmp _KiSystemFatalException
-.endfunc
-
-.func KiTrap12
-TRAP_FIXUPS kitc_a, kitc_t, DoFixupV86, DoNotFixupAbios
-_KiTrap12:
-    /* Enter trap */
-    TRAP_PROLOG kitc_a, kitc_t
-
-    /* FIXME: ROS Doesn't handle stack faults yet */
-    mov eax, 12
-    jmp _KiSystemFatalException
-.endfunc
+GENERATE_TRAP_HANDLER KiTrap8, 0
+GENERATE_TRAP_HANDLER KiTrap9, 1
+GENERATE_TRAP_HANDLER KiTrap10, 0
+GENERATE_TRAP_HANDLER KiTrap11, 0
+GENERATE_TRAP_HANDLER KiTrap12, 0
 
 .func KiTrapExceptHandler
 _KiTrapExceptHandler:
@@ -2131,20 +1804,7 @@ HandleLockErrata:
     jmp DispatchLockErrata
 .endfunc
 
-.func KiTrap0F
-TRAP_FIXUPS kitf_a, kitf_t, DoFixupV86, DoNotFixupAbios
-_KiTrap0F:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG kitf_a, kitf_t
-    sti
-
-    /* Raise a fatal exception */
-    mov eax, 15
-    jmp _KiSystemFatalException
-.endfunc
+GENERATE_TRAP_HANDLER KiTrap0F, 1
 
 .func KiTrap16
 TRAP_FIXUPS kit10_a, kit10_t, DoFixupV86, DoNotFixupAbios
@@ -2172,21 +1832,8 @@ _KiTrap16:
     jmp _Kei386EoiHelper@0
 .endfunc
 
-.func KiTrap17
-TRAP_FIXUPS kit11_a, kit11_t, DoFixupV86, DoNotFixupAbios
-_KiTrap17:
-    /* Push error code */
-    push 0
+GENERATE_TRAP_HANDLER KiTrap17, 1
 
-    /* Enter trap */
-    TRAP_PROLOG kit11_a, kit11_t
-
-    /* FIXME: ROS Doesn't handle alignment faults yet */
-    mov eax, 17
-    jmp _KiSystemFatalException
-.endfunc
-
-.globl _KiTrap19
 .func KiTrap19
 TRAP_FIXUPS kit19_a, kit19_t, DoFixupV86, DoNotFixupAbios
 _KiTrap19:
@@ -2358,7 +2005,6 @@ KernelXmmi:
     push TRAP_CAUSE_UNKNOWN
     call _KeBugCheckWithTf@24
 .endfunc
-
 
 .func KiSystemFatalException
 _KiSystemFatalException:
