@@ -55,13 +55,11 @@ FlsGetValue(DWORD dwFlsIndex)
     PVOID *ppFlsSlots;
     PVOID pRetVal;
 
-    if (dwFlsIndex >= 128)
-        goto l_InvalidParam;
+    if(dwFlsIndex >= 128) goto l_InvalidParam;
 
     ppFlsSlots = NtCurrentTeb()->FlsData;
 
-    if (ppFlsSlots == NULL)
-        goto l_InvalidParam;
+    if(ppFlsSlots == NULL) goto l_InvalidParam;
 
     SetLastError(0);
     pRetVal = ppFlsSlots[dwFlsIndex + 2];
@@ -84,8 +82,7 @@ FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
     PVOID *ppFlsSlots;
     TEB *pTeb = NtCurrentTeb();
 
-    if (dwFlsIndex >= 128)
-        goto l_InvalidParam;
+    if(dwFlsIndex >= 128) goto l_InvalidParam;
 
     ppFlsSlots = pTeb->FlsData;
 
@@ -96,8 +93,7 @@ FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
         ppFlsSlots = RtlAllocateHeap(pPeb->ProcessHeap,
                                      HEAP_ZERO_MEMORY,
                                      (128 + 2) * sizeof(PVOID));
-        if (ppFlsSlots == NULL)
-            goto l_OutOfMemory;
+        if(ppFlsSlots == NULL) goto l_OutOfMemory;
 
         pTeb->FlsData = ppFlsSlots;
 

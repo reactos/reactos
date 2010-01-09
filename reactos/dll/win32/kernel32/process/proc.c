@@ -848,16 +848,16 @@ GetProcessVersion(DWORD ProcessId)
                                                &ProcessBasicInfo,
                                                sizeof(ProcessBasicInfo),
                                                NULL);
-            if (!NT_SUCCESS(Status))
-                goto Error;
+
+            if (!NT_SUCCESS(Status)) goto Error;
 
             Status = NtReadVirtualMemory(ProcessHandle,
                                          ProcessBasicInfo.PebBaseAddress,
                                          &Peb,
                                          sizeof(Peb),
                                          &Count);
-            if (!NT_SUCCESS(Status) || Count != sizeof(Peb))
-                goto Error;
+
+            if (!NT_SUCCESS(Status) || Count != sizeof(Peb)) goto Error;
 
             memset(&DosHeader, 0, sizeof(DosHeader));
             Status = NtReadVirtualMemory(ProcessHandle,
@@ -866,11 +866,8 @@ GetProcessVersion(DWORD ProcessId)
                                          sizeof(DosHeader),
                                          &Count);
 
-            if (!NT_SUCCESS(Status) || Count != sizeof(DosHeader))
-                goto Error;
-
-            if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
-                goto Error;
+            if (!NT_SUCCESS(Status) || Count != sizeof(DosHeader)) goto Error;
+            if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE) goto Error;
 
             memset(&NtHeaders, 0, sizeof(NtHeaders));
             Status = NtReadVirtualMemory(ProcessHandle,
@@ -879,11 +876,8 @@ GetProcessVersion(DWORD ProcessId)
                                          sizeof(NtHeaders),
                                          &Count);
 
-            if (!NT_SUCCESS(Status) || Count != sizeof(NtHeaders))
-                goto Error;
-
-            if (NtHeaders.Signature != IMAGE_NT_SIGNATURE)
-                goto Error;
+            if (!NT_SUCCESS(Status) || Count != sizeof(NtHeaders)) goto Error;
+            if (NtHeaders.Signature != IMAGE_NT_SIGNATURE) goto Error;
 
             Version = MAKELONG(NtHeaders.OptionalHeader.MinorSubsystemVersion,
                                NtHeaders.OptionalHeader.MajorSubsystemVersion);
@@ -897,8 +891,7 @@ Error:
     }
     _SEH2_FINALLY
     {
-        if (ProcessHandle)
-            CloseHandle(ProcessHandle);
+        if (ProcessHandle) CloseHandle(ProcessHandle);
     }
     _SEH2_END;
 
@@ -1075,11 +1068,9 @@ QueryFullProcessImageNameW(HANDLE hProcess,
                                            &Needed);
         Result = DynamicBuffer;
     }
-    else
-        Result = (PUNICODE_STRING)Buffer;
+    else Result = (PUNICODE_STRING)Buffer;
 
-    if (!NT_SUCCESS(Status))
-        goto Cleanup;
+    if (!NT_SUCCESS(Status)) goto Cleanup;
 
     if (Result->Length / sizeof(WCHAR) + 1 > *pdwSize)
     {

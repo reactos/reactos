@@ -69,8 +69,7 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
     DPRINT1("Converting Thread to Fiber\n");
 
     /* the current thread is already a fiber */
-    if (pTeb->HasFiberData && pTeb->Tib.FiberData)
-        return pTeb->Tib.FiberData;
+    if(pTeb->HasFiberData && pTeb->Tib.FiberData) return pTeb->Tib.FiberData;
 
     /* allocate the fiber */
     pfCurFiber = (PFIBER)RtlAllocateHeap(GetProcessHeap(), 
@@ -228,8 +227,7 @@ DeleteFiber(LPVOID lpFiber)
     RtlFreeHeap(GetProcessHeap(), 0, lpFiber);
 
     /* the fiber is deleting itself: let the system deallocate the stack */
-    if (NtCurrentTeb()->Tib.FiberData == lpFiber)
-        ExitThread(1);
+    if(NtCurrentTeb()->Tib.FiberData == lpFiber) ExitThread(1);
 
     /* deallocate the stack */
     NtFreeVirtualMemory(NtCurrentProcess(),

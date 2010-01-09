@@ -75,8 +75,7 @@ CreateWaitableTimerExW(IN LPSECURITY_ATTRIBUTES lpTimerAttributes  OPTIONAL,
     TIMER_TYPE TimerType;
 
     /* Now check if we got a name */
-    if (lpTimerName)
-        RtlInitUnicodeString(&ObjectName, lpTimerName);
+    if (lpTimerName) RtlInitUnicodeString(&ObjectName, lpTimerName);
 
     if (dwFlags & ~(CREATE_WAITABLE_TIMER_MANUAL_RESET))
     {
@@ -269,8 +268,7 @@ SetWaitableTimer(IN HANDLE hTimer,
                         (BOOLEAN)fResume,
                         lPeriod,
                         NULL);
-    if (NT_SUCCESS(Status))
-        return TRUE;
+    if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
     SetLastErrorByStatus(Status);
@@ -288,8 +286,7 @@ CancelWaitableTimer(IN HANDLE hTimer)
 
     /* Cancel the timer */
     Status = NtCancelTimer(hTimer, NULL);
-    if (NT_SUCCESS(Status))
-        return TRUE;
+    if (NT_SUCCESS(Status)) return TRUE;
 
     /* If we got here, then we failed */
     SetLastErrorByStatus(Status);

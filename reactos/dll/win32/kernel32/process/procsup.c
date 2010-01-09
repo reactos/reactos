@@ -294,8 +294,7 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
            "Address: %p\n", ProcessHandle, StandardHandle, Address);
 
     /* Don't touch Console Handles */
-    if (IsConsoleHandle(StandardHandle))
-        return;
+    if (IsConsoleHandle(StandardHandle)) return;
 
     /* Duplicate the handle */
     Status = NtDuplicateObject(NtCurrentProcess(),
@@ -1018,8 +1017,7 @@ GetAppName:
             CmdLineLength = wcslen(CMD_STRING) + wcslen(lpCommandLine) + 1;
 
             /* If we found quotes, then add them into the length size */
-            if (CmdLineIsAppName || FoundQuotes)
-                CmdLineLength += 2;
+            if (CmdLineIsAppName || FoundQuotes) CmdLineLength += 2;
             CmdLineLength *= sizeof(WCHAR);
 
             /* Allocate space for the new command line */
@@ -1313,8 +1311,7 @@ GetAppName:
     if(lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
     {
         lpEnvironment = BasepConvertUnicodeEnvironment(&EnvSize, lpEnvironment);
-        if (!lpEnvironment)
-            goto Cleanup;
+        if (!lpEnvironment) goto Cleanup;
     }
 
     /* Create Process Environment */
@@ -1422,31 +1419,21 @@ GetAppName:
 
 Cleanup:
     /* De-allocate heap strings */
-    if (NameBuffer)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
-
+    if (NameBuffer) RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
     if (ApplicationName.Buffer)
         RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
-
-    if (CurrentDirectory)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDirectory);
-
-    if (QuotedCmdLine)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, QuotedCmdLine);
+    if (CurrentDirectory) RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDirectory);
+    if (QuotedCmdLine) RtlFreeHeap(RtlGetProcessHeap(), 0, QuotedCmdLine);
 
     /* Kill any handles still alive */
-    if (hSection)
-        NtClose(hSection);
-
+    if (hSection) NtClose(hSection);
     if (hThread)
     {
         /* We don't know any more details then this */
         NtTerminateProcess(hProcess, STATUS_UNSUCCESSFUL);
         NtClose(hThread);
     }
-
-    if (hProcess)
-        NtClose(hProcess);
+    if (hProcess) NtClose(hProcess);
 
     /* Return Success */
     return Ret;
