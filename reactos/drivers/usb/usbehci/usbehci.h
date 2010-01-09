@@ -53,6 +53,205 @@
 #define	EHCI_STS_ASS			0x8000
 #define	EHCI_ERROR_INT ( EHCI_STS_FATAL | EHCI_STS_ERR )
 
+
+/* Last bit in QUEUE ELEMENT TRANSFER DESCRIPTOR Next Pointer */
+/* Used for Queue Element Transfer Descriptor Pointers
+   and Queue Head Horizontal Link Pointers */
+#define TERMINATE_POINTER 		0x01
+
+/* QUEUE ELEMENT TRANSFER DESCRIPTOR, Token defines and structs */
+
+/* PIDCodes for QETD_TOKEN
+OR with QUEUE_TRANSFER_DESCRIPTOR Token.PIDCode*/
+#define PID_CODE_OUT_TOKEN		0x00
+#define PID_CODE_IN_TOKEN		0x01
+#define PID_CODE_SETUP_TOKEN		0x02
+
+/* Split Transaction States
+OR with QUEUE_TRANSFER_DESCRIPTOR Token.SplitTransactionState */
+#define DO_START_SPLIT			0x00
+#define DO_COMPLETE_SPLIT		0x01
+
+/* Ping States, OR with QUEUE_TRANSFER_DESCRIPTOR Token. */
+#define PING_STATE_DO_OUT		0x00
+#define PING_STATE_DO_PING		0x01
+
+/* QUEUE ELEMENT TRANSFER DESCRIPTOR TOKEN */
+typedef struct _QETD_TOKEN_BITS
+{
+    ULONG PingState:1;
+    ULONG SplitTransactionState:1;
+    ULONG MissedMicroFrame:1;
+    ULONG TransactionError:1;
+    ULONG BabbelDetected:1;
+    ULONG DataBufferError:1;
+    ULONG Halted:1;
+    ULONG Active:1;
+    ULONG PIDCode:2;
+    ULONG ErrorCounter:2;
+    ULONG CurrentPage:3;
+    ULONG InterruptOnComplete:1;
+    ULONG TotalBytesToTransfer:15;
+    ULONG DataToggle:1;
+} QETD_TOKEN_BITS, *PQETD_TOKEN_BITS;
+
+
+/* QUEUE ELEMENT TRANSFER DESCRIPTOR */
+typedef struct _QUEUE_TRANSFER_DESCRIPTOR
+{
+    ULONG NextPointer;
+    ULONG AlternateNextPointer;
+    union
+    {
+        QETD_TOKEN_BITS Bits;
+        ULONG DWord;
+    } Token;
+    ULONG BufferPointer[5];
+} QUEUE_TRANSFER_DESCRIPTOR, *PQUEUE_TRANSFER_DESCRIPTOR;
+
+/* EndPointSpeeds of END_POINT_CAPABILITIES */
+#define QH_ENDPOINT_FULLSPEED		0x00
+#define QH_ENDPOINT_LOWSPEED		0x01
+#define QH_ENDPOINT_HIGHSPEED		0x02
+
+typedef struct _END_POINT_CAPABILITIES1
+{
+    ULONG DeviceAddress:7;
+    ULONG InactiveOnNextTransaction:1;
+    ULONG EndPointNumber:4;
+    ULONG EndPointSpeed:2;
+    ULONG QEDTDataToggleControl:1;
+    ULONG HeadOfReclamation:1;
+    ULONG MaximumPacketLength:11;
+    ULONG ControlEndPointFlag:1;
+    ULONG NakCountReload:4;
+} END_POINT_CAPABILITIES1, *PEND_POINT_CAPABILITIES1;
+
+typedef struct _END_POINT_CAPABILITIES2
+{
+    ULONG InterruptScheduleMask:8;
+    ULONG SplitCompletionMask:8;
+    ULONG HubAddr:6;
+    ULONG PortNumber:6;
+    /* Multi */
+    ULONG NumberOfTransactionPerFrame:2;
+} END_POINT_CAPABILITIES2, *PEND_POINT_CAPABILITIES2;
+
+
+/* QUEUE HEAD defines and structs */
+
+/* QUEUE HEAD Select Types, OR with QUEUE_HEAD HorizontalLinkPointer */
+#define QH_TYPE_IDT			0x00
+#define QH_TYPE_QH			0x02
+#define QH_TYPE_SITD			0x04
+#define QH_TYPE_FSTN			0x06
+
+/* QUEUE HEAD */
+typedef struct _QUEUE_HEAD
+{
+    ULONG HorizontalLinkPointer;
+    END_POINT_CAPABILITIES1 EndPointCapabilities1;
+    END_POINT_CAPABILITIES2 EndPointCapabilities2;
+    /* TERMINATE_POINTER not valid for this member */
+    ULONG CurrentLinkPointer;
+    /* TERMINATE_POINTER valid */
+    ULONG QETDPointer;
+    /* TERMINATE_POINTER valid, bits 1:4 is NAK_COUNTER */
+    ULONG AlternateNextPointer;
+    /* Only DataToggle, InterruptOnComplete, ErrorCounter, PingState valid */
+    union
+    {
+        QETD_TOKEN_BITS Bits;
+        ULONG DWord;
+    } Token;
+    ULONG BufferPointer[5];
+} QUEUE_HEAD, *PQUEUE_HEAD;
+
+typedef struct _EHCI_SETUP_FORMAT
+{
+    UCHAR bmRequestType;
+    UCHAR bRequest;
+    USHORT wValue;
+    USHORT wIndex;
+    USHORT wLength;
+} EHCI_SETUP_FORMAT, *PEHCI_SETUP_FORMAT;
+
+typedef struct _STANDARD_DEVICE_DESC
+{
+	UCHAR bLength;
+	UCHAR bDescriptorType;
+	USHORT bcdUSB;
+	UCHAR bDeviceClass; 
+	UCHAR bDeviceSubClass; 
+	UCHAR bDeviceProtocal; 
+	UCHAR bMaxPacketSize; 
+	USHORT idVendor; 
+	USHORT idProduct; 
+	USHORT bcdDevice; 
+	UCHAR iManufacturer; 
+	UCHAR iProduct; 
+	UCHAR iSerialNumber; 
+	UCHAR bNumConfigurations;
+} STANDARD_DEVICE_DESC, *PSTANDARD_DEVICE_DESC;
+
+typedef struct _STRING_DESCRIPTOR
+{
+  UCHAR bLength;		/* Size of this descriptor in bytes */
+  UCHAR bDescriptorType;	/* STRING Descriptor Type */
+  UCHAR bString[0];		/* UNICODE encoded string */
+} STRING_DESCRIPTOR, *PSTRING_DESCRIPTOR;
+
+/* USBCMD register 32 bits */
+typedef struct _EHCI_USBCMD_CONTENT
+{
+    ULONG Run : 1;
+    ULONG HCReset : 1;
+    ULONG FrameListSize : 2;
+    ULONG PeriodicEnable : 1;
+    ULONG AsyncEnable : 1;
+    ULONG DoorBell : 1;
+    ULONG LightReset : 1;
+    ULONG AsyncParkCount : 2;
+    ULONG Reserved : 1;
+    ULONG AsyncParkEnable : 1;
+    ULONG Reserved1 : 4;
+    ULONG IntThreshold : 8;
+    ULONG Reserved2 : 8;
+
+} EHCI_USBCMD_CONTENT, *PEHCI_USBCMD_CONTENT;
+
+typedef struct _EHCI_USBSTS_CONTENT
+{
+    ULONG USBInterrupt:1;
+    ULONG ErrorInterrupt:1;
+    ULONG DetectChangeInterrupt:1;
+    ULONG FrameListRolloverInterrupt:1;
+    ULONG HostSystemErrorInterrupt:1;
+    ULONG AsyncAdvanceInterrupt:1;
+    ULONG Reserved:6;
+    ULONG HCHalted:1;
+    ULONG Reclamation:1;
+    ULONG PeriodicScheduleStatus:1;
+    ULONG AsynchronousScheduleStatus:1;
+} EHCI_USBSTS_CONTEXT, *PEHCI_USBSTS_CONTEXT;
+
+typedef struct _EHCI_USBPORTSC_CONTENT
+{
+    ULONG CurrentConnectStatus:1;
+    ULONG ConnectStatusChange:1;
+    ULONG PortEnabled:1;
+    ULONG PortEnableChanged:1;
+    ULONG OverCurrentActive:1;
+    ULONG OverCurrentChange:1;
+    ULONG ForcePortResume:1;
+    ULONG Suspend:1;
+    ULONG PortReset:1;
+    ULONG Reserved:1;
+    ULONG LineStatus:2;
+    ULONG PortPower:1;
+    ULONG PortOwner:1;
+} EHCI_USBPORTSC_CONTENT, *PEHCI_USBPORTSC_CONTENT;
+
 typedef struct _EHCI_HCS_CONTENT
 {
     ULONG PortCount : 4;
@@ -167,57 +366,6 @@ typedef struct _PDO_DEVICE_EXTENSION
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 
-/* USBCMD register 32 bits */
-typedef struct _EHCI_USBCMD_CONTENT
-{
-    ULONG Run : 1;
-    ULONG HCReset : 1;
-    ULONG FrameListSize : 2;
-    ULONG PeriodicEnable : 1;
-    ULONG AsyncEnable : 1;
-    ULONG DoorBell : 1;
-    ULONG LightReset : 1;
-    ULONG AsyncParkCount : 2;
-    ULONG Reserved : 1;
-    ULONG AsyncParkEnable : 1;
-    ULONG Reserved1 : 4;
-    ULONG IntThreshold : 8;
-    ULONG Reserved2 : 8;
-
-} EHCI_USBCMD_CONTENT, *PEHCI_USBCMD_CONTENT;
-
-typedef struct _EHCI_USBSTS_CONTENT
-{
-    ULONG USBInterrupt:1;
-    ULONG ErrorInterrupt:1;
-    ULONG DetectChangeInterrupt:1;
-    ULONG FrameListRolloverInterrupt:1;
-    ULONG HostSystemErrorInterrupt:1;
-    ULONG AsyncAdvanceInterrupt:1;
-    ULONG Reserved:6;
-    ULONG HCHalted:1;
-    ULONG Reclamation:1;
-    ULONG PeriodicScheduleStatus:1;
-    ULONG AsynchronousScheduleStatus:1;
-} EHCI_USBSTS_CONTEXT, *PEHCI_USBSTS_CONTEXT;
-
-typedef struct _EHCI_USBPORTSC_CONTENT
-{
-    ULONG CurrentConnectStatus:1;
-    ULONG ConnectStatusChange:1;
-    ULONG PortEnabled:1;
-    ULONG PortEnableChanged:1;
-    ULONG OverCurrentActive:1;
-    ULONG OverCurrentChange:1;
-    ULONG ForcePortResume:1;
-    ULONG Suspend:1;
-    ULONG PortReset:1;
-    ULONG Reserved:1;
-    ULONG LineStatus:2;
-    ULONG PortPower:1;
-    ULONG PortOwner:1;
-} EHCI_USBPORTSC_CONTENT, *PEHCI_USBPORTSC_CONTENT;
-
 NTSTATUS NTAPI
 GetBusInterface(PDEVICE_OBJECT pcifido, PBUS_INTERFACE_STANDARD busInterface);
 
@@ -252,13 +400,10 @@ NTSTATUS NTAPI
 PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 BOOLEAN
-GetDeviceDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, USHORT Port);
+GetDeviceDescriptor (PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index);
 
 BOOLEAN
-GetDeviceDescriptor2(PFDO_DEVICE_EXTENSION DeviceExtension, USHORT Port);
-
-BOOLEAN
-GetStringDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, ULONG DecriptorStringNumber);
+GetDeviceStringDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index);
 
 VOID
 CompletePendingRequest(PFDO_DEVICE_EXTENSION DeviceExtension);
@@ -274,5 +419,8 @@ CompletePendingRequest(PFDO_DEVICE_EXTENSION DeviceExtension);
 
 VOID
 DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context);
+
+VOID
+RequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 #endif

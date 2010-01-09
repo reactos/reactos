@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/usb/usbehci/fdo.c
+ * PURPOSE:     USB EHCI device driver.
+ * PROGRAMMERS:
+ *              Michael Martin
+ */
 
 /* INCLUDES *******************************************************************/
 #include "usbehci.h"
@@ -73,7 +81,7 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     tmp = READ_REGISTER_ULONG((PULONG)((Base + EHCI_PORTSC) + (4 * i)));
 
                     DPRINT("port tmp %x\n", tmp);
-
+                    GetDeviceDescriptor(FdoDeviceExtension, 0);
                     FdoDeviceExtension->ChildDeviceCount++;
                     CompletePendingRequest(FdoDeviceExtension);
 
@@ -145,7 +153,7 @@ InterruptService(PKINTERRUPT Interrupt, PVOID ServiceContext)
 
     if (CStatus & EHCI_STS_HALT)
     {
-        DPRINT("EHCI: Host Controller unexpected halt.\n");
+        DPRINT1("EHCI: Host Controller unexpected halt.\n");
         /* FIXME: Reset the controller */
     }
 

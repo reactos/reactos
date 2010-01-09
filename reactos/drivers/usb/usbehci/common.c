@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/usb/usbehci/common.c
+ * PURPOSE:     Common operations in FDO/PDO.
+ * PROGRAMMERS:
+ *              Michael Martin
+ */
 
 #define INITGUID
 #include "usbehci.h"

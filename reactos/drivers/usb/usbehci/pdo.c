@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/usb/usbehci/pdo.c
+ * PURPOSE:     USB EHCI device driver.
+ * PROGRAMMERS:
+ *              Michael Martin
+ */
 
 /* INCLUDES *******************************************************************/
 #define INITGUID
@@ -55,24 +63,14 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                     Urb = (PURB) Stack->Parameters.Others.Argument1;
                     Urb->UrbHeader.Status = 0;
 
-                    /* Check for ChildDevices */
-                    if (!FdoDeviceExtension->ChildDeviceCount)
-                    {
-                        /* No device has been plugged in yet. So just queue
-                           the irp and complete it when a device is connected */
-                        if (FdoDeviceExtension->DeviceState)
-                            QueueRequest(FdoDeviceExtension, Irp);
+                    DPRINT1("Irp->CancelRoutine %x\n",Irp->CancelRoutine);
+                    QueueRequest(FdoDeviceExtension, Irp);
+  
+                    Information = 0;
 
-                        Information = 0;
+                    IoMarkIrpPending(Irp);
+                    Status = STATUS_PENDING;
 
-                        IoMarkIrpPending(Irp);
-                        Status = STATUS_PENDING;
-                    }
-                    else
-                    {
-                        DPRINT1("Reporting of device connects not implemented yet.\n");
-                        Status = STATUS_SUCCESS;
-                    }
                     break;
                 }
                 /* FIXME: Handle all other Functions */
@@ -158,7 +156,7 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         default:
         {
-            DPRINT("Unhandled IoControlCode %x\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+            DPRINT1("Unhandled IoControlCode %x\n", Stack->Parameters.DeviceIoControl.IoControlCode);
             break;
         }
     }
