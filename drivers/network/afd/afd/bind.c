@@ -101,6 +101,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if (NT_SUCCESS(Status))
         FCB->State = SOCKET_STATE_BOUND;
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
+    /* MSAFD relies on us returning the address file handle in the IOSB */
+    return UnlockAndMaybeComplete( FCB, Status, Irp, (ULONG_PTR)FCB->AddressFile.Handle );
 }
 
