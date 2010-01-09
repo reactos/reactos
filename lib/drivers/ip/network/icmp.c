@@ -48,6 +48,7 @@ VOID SendICMPComplete(
 
 
 BOOLEAN PrepareICMPPacket(
+    PADDRESS_FILE AddrFile,
     PIP_INTERFACE Interface,
     PIP_PACKET IPPacket,
     PIP_ADDRESS Destination,
@@ -114,8 +115,11 @@ BOOLEAN PrepareICMPPacket(
     IPHeader->Id = (USHORT)Random();
     /* One fragment at offset 0 */
     IPHeader->FlagsFragOfs = 0;
-    /* Time-to-Live is 128 */
-    IPHeader->Ttl = 128;
+    /* Set TTL */
+    if (AddrFile)
+        IPHeader->Ttl = AddrFile->TTL;
+    else
+        IPHeader->Ttl = 128;
     /* Internet Control Message Protocol */
     IPHeader->Protocol = IPPROTO_ICMP;
     /* Checksum is 0 (for later calculation of this) */
@@ -205,30 +209,27 @@ NTSTATUS ICMPSendDatagram(
         }
     }
 
-    Status = PrepareICMPPacket( NCE->Interface,
+    Status = PrepareICMPPacket( AddrFile,
+                                NCE->Interface,
                                 &Packet,
                                 &RemoteAddress,
                                 BufferData,
                                 DataSize );
 
+    UnlockObject(AddrFile, OldIrql);
+
     if( !NT_SUCCESS(Status) )
-    {
-        UnlockObject(AddrFile, OldIrql);
 	return Status;
-    }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
     if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, ICMPSendPacketComplete, NULL )))
     {
-        UnlockObject(AddrFile, OldIrql);
         FreeNdisPacket(Packet.NdisPacket);
         return Status;
     }
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
-
-    UnlockObject(AddrFile, OldIrql);
 
     return STATUS_SUCCESS;
 }
@@ -352,7 +353,7 @@ VOID ICMPReply(
 
     DataSize = IPPacket->TotalSize - IPPacket->HeaderSize;
 
-    if( !PrepareICMPPacket(Interface, &NewPacket, &IPPacket->SrcAddr,
+    if( !PrepareICMPPacket(NULL, Interface, &NewPacket, &IPPacket->SrcAddr,
 			   IPPacket->Data, DataSize) ) return;
 
     ((PICMP_HEADER)NewPacket.Data)->Type     = Type;

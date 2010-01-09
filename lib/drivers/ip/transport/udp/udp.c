@@ -224,20 +224,16 @@ NTSTATUS UDPSendDatagram(
 							 BufferData,
 							 DataSize );
 
+    UnlockObject(AddrFile, OldIrql);
+
     if( !NT_SUCCESS(Status) )
-    {
-		UnlockObject(AddrFile, OldIrql);
 		return Status;
-    }
 
     if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL )))
     {
-	UnlockObject(AddrFile, OldIrql);
         FreeNdisPacket(Packet.NdisPacket);
         return Status;
     }
-
-    UnlockObject(AddrFile, OldIrql);
 
     return STATUS_SUCCESS;
 }

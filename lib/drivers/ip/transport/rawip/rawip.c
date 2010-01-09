@@ -249,24 +249,20 @@ NTSTATUS RawIPSendDatagram(
                                BufferData,
                                DataSize );
 
+    UnlockObject(AddrFile, OldIrql);
+
     if( !NT_SUCCESS(Status) )
-    {
-	UnlockObject(AddrFile, OldIrql);
 	return Status;
-    }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
     if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, RawIpSendPacketComplete, NULL )))
     {
-	UnlockObject(AddrFile, OldIrql);
         FreeNdisPacket(Packet.NdisPacket);
         return Status;
     }
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
-
-    UnlockObject(AddrFile, OldIrql);
 
     return STATUS_SUCCESS;
 }
