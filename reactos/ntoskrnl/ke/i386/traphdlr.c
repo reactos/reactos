@@ -253,6 +253,163 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 FASTCALL
+KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
+             IN PKTHREAD Thread,
+             IN PFX_SAVE_AREA SaveArea)
+{
+    ULONG Cr0, Mask, Error, ErrorOffset, DataOffset;
+    extern VOID FrRestore(VOID);
+    
+    /* Check for VDM trap */
+    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+
+    /* Check for kernel trap */
+    if (!KiUserTrap(TrapFrame))
+    {
+        /* Kernel might've tripped a delayed error */
+        SaveArea->Cr0NpxState |= CR0_TS;
+        
+        /* Only valid if it happened during a restore */
+        if ((PVOID)TrapFrame->Eip == FrRestore)
+        {
+            /* It did, so just skip the instruction */
+            TrapFrame->Eip += 3; /* sizeof(FRSTOR) */
+            KiEoiHelper(TrapFrame);
+        }
+    }
+
+    /* User or kernel trap -- get ready to issue an exception */
+    if (Thread->NpxState == NPX_STATE_NOT_LOADED)
+    {
+        /* Update CR0 */
+        Cr0 = __readcr0();
+        Cr0 &= ~(CR0_MP | CR0_EM | CR0_TS);
+        __writecr0(Cr0);
+
+        /* Save FPU state */
+        Ke386SaveFpuState(SaveArea);
+
+        /* Mark CR0 state dirty */
+        Cr0 |= NPX_STATE_NOT_LOADED;
+        Cr0 |= SaveArea->Cr0NpxState;
+        __writecr0(Cr0);
+
+        /* Update NPX state */
+        Thread->NpxState = NPX_STATE_NOT_LOADED;
+        KeGetCurrentPrcb()->NpxThread = NULL;
+    }
+
+    /* Clear the TS bit and re-enable interrupts */
+    SaveArea->Cr0NpxState &= ~CR0_TS;
+    _enable();
+    
+    /* Check if we should get the FN or FX error */
+    if (KeI386FxsrPresent)
+    {
+        /* Get it from FX */
+        Mask = SaveArea->U.FxArea.ControlWord;
+        Error = SaveArea->U.FxArea.StatusWord;
+        
+        /* Get the FPU exception address too */
+        ErrorOffset = SaveArea->U.FxArea.ErrorOffset;
+        DataOffset = SaveArea->U.FxArea.DataOffset;
+    }
+    else
+    {
+        /* Get it from FN */
+        Mask = SaveArea->U.FnArea.ControlWord;
+        Error = SaveArea->U.FnArea.StatusWord;
+        
+        /* Get the FPU exception address too */
+        ErrorOffset = SaveArea->U.FnArea.ErrorOffset;
+        DataOffset = SaveArea->U.FnArea.DataOffset;
+    }
+
+    /* Get legal exceptions that software should handle */
+    Error &= (FSW_INVALID_OPERATION |
+              FSW_DENORMAL |
+              FSW_ZERO_DIVIDE |
+              FSW_OVERFLOW |
+              FSW_UNDERFLOW |
+              FSW_PRECISION);
+    Error &= ~Mask;
+    
+    if (Error & FSW_STACK_FAULT)
+    {
+        /* Issue stack check fault */
+        KiDispatchException2Args(STATUS_FLOAT_STACK_CHECK,
+                                 ErrorOffset,
+                                 0,
+                                 DataOffset,
+                                 TrapFrame);
+    }
+    
+    /* Check for invalid operation */
+    if (Error & FSW_INVALID_OPERATION)
+    {
+        /* Issue fault */
+        KiDispatchException1Args(STATUS_FLOAT_INVALID_OPERATION,
+                                 ErrorOffset,
+                                 0,
+                                 TrapFrame);
+    }
+    
+    /* Check for divide by zero */
+    if (Error & FSW_ZERO_DIVIDE)
+    {
+        /* Issue fault */
+        KiDispatchException1Args(STATUS_FLOAT_DIVIDE_BY_ZERO,
+                                 ErrorOffset,
+                                 0,
+                                 TrapFrame);
+    }
+    
+    /* Check for denormal */
+    if (Error & FSW_DENORMAL)
+    {
+        /* Issue fault */
+        KiDispatchException1Args(STATUS_FLOAT_INVALID_OPERATION,
+                                 ErrorOffset,
+                                 0,
+                                 TrapFrame);
+    }
+    
+    /* Check for overflow */
+    if (Error & FSW_OVERFLOW)
+    {
+        /* Issue fault */
+        KiDispatchException1Args(STATUS_FLOAT_OVERFLOW,
+                                 ErrorOffset,
+                                 0,
+                                 TrapFrame);
+    }
+    
+    /* Check for underflow */
+    if (Error & FSW_UNDERFLOW)
+    {
+        /* Issue fault */
+        KiDispatchException1Args(STATUS_FLOAT_UNDERFLOW,
+                                 ErrorOffset,
+                                 0,
+                                 TrapFrame);
+    }
+
+    /* Check for precision fault */
+    if (Error & FSW_PRECISION)
+    {
+        /* Issue fault */
+        KiDispatchException1Args(STATUS_FLOAT_INEXACT_RESULT,
+                                 ErrorOffset,
+                                 0,
+                                 TrapFrame);
+    }
+    
+    /* Unknown FPU fault */
+    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 1, Error, 0, 0, TrapFrame);
+}
+
+VOID
+FASTCALL
 KiTrap0Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -385,6 +542,115 @@ KiTrap6Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame->Eip,
                              TrapFrame);
     
+}
+
+VOID
+FASTCALL
+KiTrap7Handler(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread, NpxThread;
+    PFX_SAVE_AREA SaveArea, NpxSaveArea;
+    ULONG Cr0;
+    
+    /* Save trap frame */
+    KiEnterTrap(TrapFrame);
+
+    /* Try to handle NPX delay load */
+    while (TRUE)
+    {
+        /* Get the current thread */
+        Thread = KeGetCurrentThread();
+
+        /* Get the NPX frame */
+        SaveArea = KiGetThreadNpxArea(Thread);
+
+        /* Check if emulation is enabled */
+        if (SaveArea->Cr0NpxState & CR0_EM)
+        {
+            /* Not implemented */
+            UNIMPLEMENTED;
+            while (TRUE);
+        }
+    
+        /* Save CR0 and check NPX state */
+        Cr0 = __readcr0();
+        if (Thread->NpxState != NPX_STATE_LOADED)
+        {
+            /* Update CR0 */
+            Cr0 &= ~(CR0_MP | CR0_EM | CR0_TS);
+            __writecr0(Cr0);
+        
+            /* Get the NPX thread */
+            NpxThread = KeGetCurrentPrcb()->NpxThread;
+            if (NpxThread)
+            {
+                /* Get the NPX frame */
+                NpxSaveArea = KiGetThreadNpxArea(NpxThread);
+                
+                /* Save FPU state */
+                Ke386SaveFpuState(NpxSaveArea);
+
+                /* Update NPX state */
+                Thread->NpxState = NPX_STATE_NOT_LOADED;
+           }
+       
+            /* Load FPU state */
+            Ke386LoadFpuState(SaveArea);
+        
+            /* Update NPX state */
+            Thread->NpxState = NPX_STATE_LOADED;
+            KeGetCurrentPrcb()->NpxThread = Thread;
+        
+            /* Enable interrupts */
+            _enable();
+        
+            /* Check if CR0 needs to be reloaded due to context switch */
+            if (!SaveArea->Cr0NpxState) KiEoiHelper(TrapFrame);
+        
+            /* Otherwise, we need to reload CR0, disable interrupts */
+            _disable();
+        
+            /* Reload CR0 */
+            Cr0 = __readcr0();
+            Cr0 |= SaveArea->Cr0NpxState;
+            __writecr0(Cr0);
+        
+            /* Now restore interrupts and check for TS */
+            _enable();
+            if (Cr0 & CR0_TS) KiEoiHelper(TrapFrame);
+        
+            /* We're still here -- clear TS and try again */
+            __writecr0(__readcr0() &~ CR0_TS);
+            _disable();
+        }
+        else
+        {
+            /* This is an actual fault, not a lack of FPU state */
+            break;
+        }
+    }
+    
+    /* TS should not be set */
+    if (Cr0 & CR0_TS)
+    {
+        /*
+         * If it's incorrectly set, then maybe the state is actually still valid
+         * but we could've lock track of that due to a BIOS call.
+         * Make sure MP is still set, which should verify the theory.
+         */
+        if (Cr0 & CR0_MP)
+        {
+            /* Indeed, the state is actually still valid, so clear TS */
+            __writecr0(__readcr0() &~ CR0_TS);
+            KiEoiHelper(TrapFrame);
+        }
+        
+        /* Otherwise, something strange is going on */
+        KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 2, Cr0, 0, 0, TrapFrame);
+    }
+    
+    /* It's not a delayed load, so process this trap as an NPX fault */
+    KiNpxHandler(TrapFrame, Thread, SaveArea);
 }
 
 VOID
@@ -581,6 +847,34 @@ KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_RESERVED_TRAP, TrapFrame);
 }
 
+
+VOID
+FASTCALL
+KiTrap16Handler(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    PFX_SAVE_AREA SaveArea;
+    
+    /* Save trap frame */
+    KiEnterTrap(TrapFrame);
+
+    /* Check if this is the NPX thrad */
+    Thread = KeGetCurrentThread();
+    SaveArea = KiGetThreadNpxArea(Thread);
+    if (Thread != KeGetCurrentPrcb()->NpxThread)
+    {
+        /* It isn't, enable interrupts and set delayed error */
+        _enable();
+        SaveArea->Cr0NpxState |= CR0_TS;
+        
+        /* End trap */
+        KiEoiHelper(TrapFrame);
+    }
+    
+    /* Otherwise, proceed with NPX fault handling */
+    KiNpxHandler(TrapFrame, Thread, SaveArea);
+}
+
 VOID
 FASTCALL
 KiTrap17Handler(IN PKTRAP_FRAME TrapFrame)
@@ -613,7 +907,7 @@ KiTrap19Handler(IN PKTRAP_FRAME TrapFrame)
     }
 
     /* Get the NPX frame */
-    SaveArea = (PFX_SAVE_AREA)((ULONG_PTR)Thread->InitialStack - sizeof(FX_SAVE_AREA));
+    SaveArea = KiGetThreadNpxArea(Thread);
 
     /* Check for VDM trap */
     ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
@@ -636,6 +930,7 @@ KiTrap19Handler(IN PKTRAP_FRAME TrapFrame)
     /* Mark CR0 state dirty */
     Cr0 |= NPX_STATE_NOT_LOADED;
     Cr0 |= SaveArea->Cr0NpxState;
+     __writecr0(Cr0);
     
     /* Update NPX state */
     Thread->NpxState = NPX_STATE_NOT_LOADED;

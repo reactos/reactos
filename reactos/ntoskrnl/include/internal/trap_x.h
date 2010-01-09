@@ -137,6 +137,13 @@ KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
             ((KiUserTrap(TrapFrame)) && (PsGetCurrentProcess()->VdmObjects)));
 }
 
+PFX_SAVE_AREA
+FORCEINLINE
+KiGetThreadNpxArea(IN PKTHREAD Thread)
+{
+    return (PFX_SAVE_AREA)((ULONG_PTR)Thread->InitialStack - sizeof(FX_SAVE_AREA));
+}
+
 VOID
 FORCEINLINE
 KiTrapFrameFromPushaStack(IN PKTRAP_FRAME TrapFrame)
