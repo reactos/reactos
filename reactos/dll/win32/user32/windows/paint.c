@@ -149,7 +149,13 @@ SetWindowRgn(
    Hook = BeginIfHookedUserApiHook();
 
    /* Bypass SEH and go direct. */
-   if (!Hook) return (int)NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
+   if (!Hook)
+   {
+      Ret = NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
+      if (hRgn && Ret)
+          DeleteObject(hRgn);
+      return Ret;
+   }
 
    _SEH2_TRY
    {
