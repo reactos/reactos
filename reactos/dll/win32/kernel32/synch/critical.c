@@ -26,8 +26,9 @@ InitializeCriticalSection(OUT LPCRITICAL_SECTION lpCriticalSection)
 
     /* Initialize the critical section and raise an exception if we failed */
     Status = RtlInitializeCriticalSection(
-        (PRTL_CRITICAL_SECTION)lpCriticalSection);
-    if (!NT_SUCCESS(Status)) RtlRaiseStatus(Status);
+       (PRTL_CRITICAL_SECTION)lpCriticalSection);
+    if (!NT_SUCCESS(Status))
+        RtlRaiseStatus(Status);
 }
 
 /*

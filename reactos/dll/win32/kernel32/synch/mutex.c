@@ -75,7 +75,8 @@ CreateMutexExW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
     BOOLEAN InitialOwner;
 
     /* Now check if we got a name */
-    if (lpName) RtlInitUnicodeString(&ObjectName, lpName);
+    if (lpName)
+        RtlInitUnicodeString(&ObjectName, lpName);
 
     if (dwFlags & ~(CREATE_MUTEX_INITIAL_OWNER))
     {
@@ -257,7 +258,8 @@ ReleaseMutex(IN HANDLE hMutex)
 
     /* Release the mutant */
     Status = NtReleaseMutant(hMutex, NULL);
-    if (NT_SUCCESS(Status)) return TRUE;
+    if (NT_SUCCESS(Status))
+        return TRUE;
 
     /* If we got here, then we failed */
     SetLastErrorByStatus(Status);

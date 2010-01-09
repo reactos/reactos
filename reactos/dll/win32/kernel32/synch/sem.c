@@ -80,7 +80,8 @@ CreateSemaphoreExW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
     UNICODE_STRING ObjectName;
 
     /* Now check if we got a name */
-    if (lpName) RtlInitUnicodeString(&ObjectName, lpName);
+    if (lpName)
+        RtlInitUnicodeString(&ObjectName, lpName);
 
     if (dwFlags != 0)
     {
@@ -260,7 +261,8 @@ ReleaseSemaphore(IN HANDLE hSemaphore,
 
     /* Release the semaphore */
     Status = NtReleaseSemaphore(hSemaphore, lReleaseCount, lpPreviousCount);
-    if (NT_SUCCESS(Status)) return TRUE;
+    if (NT_SUCCESS(Status))
+        return TRUE;
 
     /* If we got here, then we failed */
     SetLastErrorByStatus(Status);

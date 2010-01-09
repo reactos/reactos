@@ -82,7 +82,7 @@ WINAPI
 TlsFree(DWORD Index)
 {
     BOOL BitSet;
-   
+
     if (Index >= TLS_EXPANSION_SLOTS + TLS_MINIMUM_AVAILABLE)
     {
         SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
