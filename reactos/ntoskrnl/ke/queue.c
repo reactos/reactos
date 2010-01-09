@@ -5,7 +5,7 @@
  * PURPOSE:         Implements kernel queues
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gunnar Dalsnes
- *                  Eric Kohl (ekohl@rz-online.de)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/

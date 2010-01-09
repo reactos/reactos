@@ -6,7 +6,6 @@
  *
  * ElTorito-Support
  * by Eric Kohl
- * ekohl@rz-online.de
  *
  * Linux port
  * by Casper S. Hornstrup

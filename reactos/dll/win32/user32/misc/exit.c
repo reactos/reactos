@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/exit.c
  * PURPOSE:         Shutdown related functions
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMER:      Eric Kohl
  */
 
 #include <user32.h>

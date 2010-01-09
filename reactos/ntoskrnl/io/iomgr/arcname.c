@@ -4,7 +4,7 @@
 * FILE:            ntoskrnl/io/iomgr/arcname.c
 * PURPOSE:         ARC Path Initialization Functions
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  Eric Kohl (ekohl@rz-online.de)
+*                  Eric Kohl
 */
 
 /* INCLUDES ******************************************************************/

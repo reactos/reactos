@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/hal/x86/spinlock.c
  * PURPOSE:         Implements spinlocks
  * PROGRAMMER:      David Welch (welch@cwcom.net)
- *                  Eric Kohl (ekohl@rz-online.de)
+ *                  Eric Kohl
  * UPDATE HISTORY:
  *                  09/06/2000 Created
  */

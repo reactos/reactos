@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/ex/init.c
  * PURPOSE:         Executive Initialization Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl (ekohl@rz-online.de)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
