@@ -668,7 +668,7 @@ DriveDlgProc(HWND hwndDlg,
              WPARAM wParam,
              LPARAM lParam)
 {
-#if 0
+#if 1
     HDEVINFO h;
     HWND hList;
     SP_DEVINFO_DATA DevInfoData;
@@ -692,7 +692,7 @@ DriveDlgProc(HWND hwndDlg,
                                  WM_SETFONT,
                                  (WPARAM)hTitleFont,
                                  (LPARAM)TRUE);*/
-#if 0
+#if 1
             h = SetupDiGetClassDevs(&GUID_DEVCLASS_DISKDRIVE, NULL, NULL, DIGCF_PRESENT);
             if (h != INVALID_HANDLE_VALUE)
             {
@@ -805,10 +805,6 @@ SummaryDlgProc(HWND hwndDlg,
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
             SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
-            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow(hwndControl, SW_HIDE);
-            EnableWindow(hwndControl, FALSE);
-
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
                                  IDC_STARTTITLE,
@@ -828,6 +824,14 @@ SummaryDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
                     break;
 
+                case PSN_QUERYCANCEL:
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_MSGRESULT,
+                                     MessageBox(GetParent(hwndDlg),
+                                             abort_msg,
+                                             abort_title,
+                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
+                    return TRUE;
                 default:
                     break;
             }
@@ -859,10 +863,6 @@ ProcessDlgProc(HWND hwndDlg,
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
             SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
-            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow(hwndControl, SW_HIDE);
-            EnableWindow(hwndControl, FALSE);
-
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
                                  IDC_STARTTITLE,
@@ -883,7 +883,14 @@ ProcessDlgProc(HWND hwndDlg,
                    // disable all buttons during installation process
                    // PropSheet_SetWizButtons(GetParent(hwndDlg), 0 );
                    break;
-
+                case PSN_QUERYCANCEL:
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_MSGRESULT,
+                                     MessageBox(GetParent(hwndDlg),
+                                             abort_msg,
+                                             abort_title,
+                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
+                    return TRUE;
                 default:
                    break;
             }
@@ -916,6 +923,10 @@ RestartDlgProc(HWND hwndDlg,
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
             SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
+            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
+            ShowWindow(hwndControl, SW_HIDE);
+            EnableWindow(hwndControl, FALSE);
+
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
                                  IDC_STARTTITLE,
@@ -1194,10 +1205,10 @@ _tWinMain(HINSTANCE hInst,
     hInstance = hInst;
     isUnattend = isUnattendSetup();
 
+    LoadString(hInst,IDS_ABORTSETUP, abort_msg, sizeof(abort_msg)/sizeof(TCHAR));
+    LoadString(hInst,IDS_ABORTSETUP2, abort_title,sizeof(abort_title)/sizeof(TCHAR));
     if (!isUnattend)
     {
-        LoadString(hInst,IDS_ABORTSETUP, abort_msg, sizeof(abort_msg)/sizeof(TCHAR));
-        LoadString(hInst,IDS_ABORTSETUP2, abort_title,sizeof(abort_title)/sizeof(TCHAR));
 
         LoadSetupData();
 
@@ -1277,19 +1288,16 @@ _tWinMain(HINSTANCE hInst,
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-    if (!isUnattend)
-    {
-        /* Create finish to reboot page */
-        psp.dwSize = sizeof(PROPSHEETPAGE);
-        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_RESTARTTITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_RESTARTSUBTITLE);
-        psp.hInstance = hInst;
-        psp.lParam = 0;
-        psp.pfnDlgProc = RestartDlgProc;
-        psp.pszTemplate = MAKEINTRESOURCE(IDD_RESTARTPAGE);
-        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-    }
+    /* Create finish to reboot page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_RESTARTTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_RESTARTSUBTITLE);
+    psp.hInstance = hInst;
+    psp.lParam = 0;
+    psp.pfnDlgProc = RestartDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_RESTARTPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
