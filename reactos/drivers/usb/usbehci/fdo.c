@@ -40,6 +40,7 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
             if (tmp & 0x02)
             {
                 PIO_WORKITEM WorkItem = NULL;
+                PWORKITEM_DATA WorkItemData = NULL;
 
                 /* Connect or Disconnect? */
                 if (tmp & 0x01)
@@ -86,16 +87,23 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     CompletePendingRequest(FdoDeviceExtension);
 
                     WorkItem = IoAllocateWorkItem(FdoDeviceExtension->Pdo);
-
                     if (!WorkItem)
                     {
                         DPRINT1("WorkItem allocation failed!\n");
+                        break;
+                    }
+
+                    WorkItemData = ExAllocatePool(NonPagedPool, sizeof(WORKITEM_DATA));
+                    if (!WorkItemData)
+                    {
+                        DPRINT1("No memory\n");
+                        break;
                     }
 
                     IoQueueWorkItem(WorkItem,
                                     (PIO_WORKITEM_ROUTINE)DeviceArrivalWorkItem,
                                     DelayedWorkQueue,
-                                    FdoDeviceExtension);
+                                    WorkItemData);
                 }
                 else
                 {

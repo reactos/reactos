@@ -107,25 +107,26 @@ ArrivalNotificationCompletion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID PCont
 VOID
 DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context)
 {
-    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+    PWORKITEM_DATA WorkItemData;
     PIO_STACK_LOCATION IrpStack = NULL;
     PDEVICE_OBJECT PortDeviceObject = NULL;
     PIRP Irp = NULL;
 
-    FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)Context;
+    WorkItemData = (PWORKITEM_DATA)Context;
 
-    PortDeviceObject = IoGetAttachedDeviceReference(FdoDeviceExtension->Pdo);
+    PortDeviceObject = IoGetAttachedDeviceReference(WorkItemData->FdoDeviceExtension->Pdo);
 
     if (!PortDeviceObject)
     {
         DPRINT1("Unable to notify Pdos parent of device arrival.\n");
-        return;
+        goto Cleanup;
     }
 
     if (PortDeviceObject == DeviceObject)
     {
         /* Piontless to send query relations to ourself */
         ObDereferenceObject(PortDeviceObject);
+        goto Cleanup;
     }
 
     Irp = IoAllocateIrp(PortDeviceObject->StackSize, FALSE);
@@ -148,5 +149,9 @@ DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context)
     IrpStack->MinorFunction = IRP_MN_QUERY_DEVICE_RELATIONS;
 
     IoCallDriver(PortDeviceObject, Irp);
+
+Cleanup:
+    IoFreeWorkItem(WorkItemData->IoWorkItem);
+    ExFreePool(WorkItemData);
 }
 
