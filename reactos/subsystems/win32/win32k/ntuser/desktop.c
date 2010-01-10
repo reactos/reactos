@@ -650,7 +650,7 @@ UserRedrawDesktop()
     Window = UserGetDesktopWindow();
 
     IntInvalidateWindows( Window,
-            Window->UpdateRegion,
+              Window->hrgnUpdate,
                        RDW_FRAME |
                        RDW_ERASE |
                   RDW_INVALIDATE |

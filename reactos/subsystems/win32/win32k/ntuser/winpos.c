@@ -1097,9 +1097,9 @@ co_WinPosSetWindowPos(
       Window->Wnd->style |= WS_VISIBLE;
    }
 
-   if (Window->UpdateRegion != NULL && Window->UpdateRegion != (HRGN)1)
+   if (Window->hrgnUpdate != NULL && Window->hrgnUpdate != (HRGN)1)
    {
-      NtGdiOffsetRgn(Window->UpdateRegion,
+      NtGdiOffsetRgn(Window->hrgnUpdate,
                      NewWindowRect.left - OldWindowRect.left,
                      NewWindowRect.top - OldWindowRect.top);
    }
@@ -1162,10 +1162,10 @@ co_WinPosSetWindowPos(
          }
 
          /* No use in copying bits which are in the update region. */
-         if (Window->UpdateRegion != NULL)
+         if (Window->hrgnUpdate != NULL)
          {
             NtGdiOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
-            NtGdiCombineRgn(CopyRgn, CopyRgn, Window->UpdateRegion, RGN_DIFF);
+            NtGdiCombineRgn(CopyRgn, CopyRgn, Window->hrgnUpdate, RGN_DIFF);
             NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
          }
 

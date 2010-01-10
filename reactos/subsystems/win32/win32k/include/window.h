@@ -32,13 +32,13 @@ typedef struct _WINDOW_OBJECT
   /* Entry in the thread's list of windows. */
   LIST_ENTRY ListEntry;
   /* Handle for the window. */
-  HWND hSelf;
+  HWND hSelf; // Use Wnd->head.h
   /* Window flags. */
   ULONG state;
   /* Handle of region of the window to be updated. */
-  HANDLE UpdateRegion;
+  HANDLE hrgnUpdate;
   /* Handle of the window region. */
-  HANDLE WindowRegion;
+  HANDLE hrgnClip;
   /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
   struct _WINDOW_OBJECT* spwndChild;
@@ -53,13 +53,12 @@ typedef struct _WINDOW_OBJECT
   /* DC Entries (DCE) */
   PDCE Dce;
   /* Scrollbar info */
-  PWINDOW_SCROLLINFO Scroll;
+  PSBINFOEX pSBInfo; // convert to PSBINFO
   PETHREAD OwnerThread; // Use Wnd->head.pti
-  HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
   /* counter for tiled child windows */
   ULONG TiledCounter;
   /* WNDOBJ list */
-  LIST_ENTRY WndObjListHead;
+  LIST_ENTRY WndObjListHead; // Use Props
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */
@@ -93,13 +92,15 @@ typedef struct _WINDOW_OBJECT
 #define IntWndBelongsToThread(WndObj, W32Thread) \
   (((WndObj->OwnerThread && WndObj->OwnerThread->Tcb.Win32Thread)) && \
    (WndObj->OwnerThread->Tcb.Win32Thread == W32Thread))
+//  ((WndObj->head.pti) && (WndObj->head.pti == W32Thread))
 
 #define IntGetWndThreadId(WndObj) \
   WndObj->OwnerThread->Cid.UniqueThread
+//  WndObj->head.pti->pEThread->Cid.UniqueThread
 
 #define IntGetWndProcessId(WndObj) \
   WndObj->OwnerThread->ThreadsProcess->UniqueProcessId
-
+//  WndObj->head.pti->pEThread->ThreadsProcess->UniqueProcessId
 
 BOOL FASTCALL
 IntIsWindow(HWND hWnd);

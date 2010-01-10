@@ -536,7 +536,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       Flags |= DCX_INTERSECTRGN | DCX_KEEPCLIPRGN;
       Dce->DCXFlags |= DCX_INTERSECTRGN | DCX_KEEPCLIPRGN;
-      ClipRegion = Window->UpdateRegion;
+      ClipRegion = Window->hrgnUpdate;
    }
 
    if (ClipRegion == (HRGN) 1)

@@ -498,9 +498,9 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
                        Window->pti->ppi);
    Wnd->pcls = NULL;
 
-   if(Window->WindowRegion)
+   if(Window->hrgnClip)
    {
-      GreDeleteObject(Window->WindowRegion);
+      GreDeleteObject(Window->hrgnClip);
    }
 
    ASSERT(Window->Wnd != NULL);
@@ -2312,7 +2312,6 @@ AllocErr:
          }
 
          IntLinkWindow(Window, ParentWindow, InsertAfter /* prev sibling */);
-
       }
    }
 
@@ -4552,8 +4551,8 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
    NtGdiOffsetRgn(VisRgn, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
    /* if there's a region assigned to the window, combine them both */
-   if(Window->WindowRegion && !(Wnd->style & WS_MINIMIZE))
-      NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
+   if(Window->hrgnClip && !(Wnd->style & WS_MINIMIZE))
+      NtGdiCombineRgn(VisRgn, VisRgn, Window->hrgnClip, RGN_AND);
    /* Copy the region into hRgn */
    NtGdiCombineRgn(hRgn, VisRgn, NULL, RGN_COPY);
 
@@ -4593,8 +4592,8 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
    VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
    NtGdiOffsetRgn(VisRgn, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
    /* if there's a region assigned to the window, combine them both */
-   if(Window->WindowRegion && !(Wnd->style & WS_MINIMIZE))
-      NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
+   if(Window->hrgnClip && !(Wnd->style & WS_MINIMIZE))
+      NtGdiCombineRgn(VisRgn, VisRgn, Window->hrgnClip, RGN_AND);
 
    if((pRgn = RGNOBJAPI_Lock(VisRgn, NULL)))
    {
@@ -4634,12 +4633,12 @@ NtUserSetWindowRgn(
    /* FIXME - Verify if hRgn is a valid handle!!!!
               Propably make this operation thread-safe, but maybe it's not necessary */
 
-   if(Window->WindowRegion)
+   if(Window->hrgnClip)
    {
       /* Delete no longer needed region handle */
-      GreDeleteObject(Window->WindowRegion);
+      GreDeleteObject(Window->hrgnClip);
    }
-   Window->WindowRegion = hRgn;
+   Window->hrgnClip = hRgn;
 
    /* FIXME - send WM_WINDOWPOSCHANGING and WM_WINDOWPOSCHANGED messages to the window */
 

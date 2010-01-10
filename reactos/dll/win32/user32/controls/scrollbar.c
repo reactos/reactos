@@ -573,7 +573,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
     {
       SCROLLINFO Info;
 
-      NtUserGetScrollInfo(Wnd, Bar, &Info);
+      NtUserSBGetParms(Wnd, Bar, NULL, &Info);
       *ArrowSize = GetSystemMetrics(SM_CXVSCROLL);
       Pixels -= (2 * GetSystemMetrics(SM_CXVSCROLL));
 
@@ -637,7 +637,7 @@ IntScrollGetThumbVal(HWND Wnd, INT SBType, PSCROLLBARINFO ScrollBarInfo,
 
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_RANGE | SIF_PAGE;
-  NtUserGetScrollInfo(Wnd, SBType, &si);
+  NtUserSBGetParms(Wnd, SBType, NULL, &si);
   if ((Pixels -= 2 * ScrollBarInfo->dxyLineButton) <= 0)
     {
       return si.nMin;
@@ -1139,7 +1139,7 @@ IntScrollGetScrollPos(HWND Wnd, INT Bar)
 
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_POS;
-  if (! NtUserGetScrollInfo(Wnd, Bar, &ScrollInfo))
+  if (! NtUserSBGetParms(Wnd, Bar, NULL, &ScrollInfo))
     {
       return 0;
     }
@@ -1161,7 +1161,7 @@ IntScrollGetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_RANGE;
-  Result = NtUserGetScrollInfo(Wnd, Bar, &ScrollInfo);
+  Result = NtUserSBGetParms(Wnd, Bar, NULL, &ScrollInfo);
   if (Result)
     {
       *MinPos = ScrollInfo.nMin;
@@ -1431,7 +1431,7 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
         return NtUserSetScrollInfo(Wnd, SB_CTL, (SCROLLINFO *) lParam, wParam);
 
       case SBM_GETSCROLLINFO:
-        return NtUserGetScrollInfo(Wnd, SB_CTL, (SCROLLINFO *) lParam);
+        return NtUserSBGetParms(Wnd, SB_CTL, NULL, (SCROLLINFO *) lParam);
 
       case 0x00e5:
       case 0x00e7:
@@ -1502,14 +1502,24 @@ BOOL WINAPI EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
 BOOL WINAPI
 RealGetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 {
-  if (SB_CTL == SBType)
-    {
-      return SendMessageW(Wnd, SBM_GETSCROLLINFO, 0, (LPARAM) Info);
-    }
-  else
-    {
-      return NtUserGetScrollInfo(Wnd, SBType, Info);
-    }
+  PWND pWnd;
+  PSBDATA pSBData = NULL;
+
+   if (SB_CTL == SBType)
+   {
+     return SendMessageW(Wnd, SBM_GETSCROLLINFO, 0, (LPARAM) Info);
+  }
+
+  pWnd = ValidateHwnd(Wnd);
+  if (!pWnd) return FALSE;
+
+  if (SBType < SB_HORZ || SBType > SB_VERT)
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+  // FIXME add support to set pSBData from pWnd->pSBInfo
+  return NtUserSBGetParms(Wnd, SBType, pSBData, Info);
 }
 
 /*
@@ -1636,10 +1646,10 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
   ScrollInfo.fMask = SIF_POS;
 
   /*
-   * Call NtUserGetScrollInfo() to get the previous position that
+   * Call NtUserSBGetParms() to get the previous position that
    * we will later return.
    */
-  if (NtUserGetScrollInfo(hWnd, nBar, &ScrollInfo))
+  if (NtUserSBGetParms(hWnd, nBar, NULL, &ScrollInfo))
     {
       Result = ScrollInfo.nPos;
       if (Result != nPos)

@@ -1,17 +1,17 @@
 #ifndef _WIN32K_SCROLL_H
 #define _WIN32K_SCROLL_H
 
-typedef struct _WINDOW_SCROLLINFO
+typedef struct _SBINFOEX
 {
   SCROLLBARINFO ScrollBarInfo;
   SCROLLINFO ScrollInfo;
-} WINDOW_SCROLLINFO, *PWINDOW_SCROLLINFO;
+} SBINFOEX, *PSBINFOEX;
 
 #define IntGetScrollbarInfoFromWindow(Window, i) \
-  ((PSCROLLBARINFO)(&((Window)->Scroll + i)->ScrollBarInfo))
+  ((PSCROLLBARINFO)(&((Window)->pSBInfo + i)->ScrollBarInfo))
 
 #define IntGetScrollInfoFromWindow(Window, i) \
-  ((LPSCROLLINFO)(&((Window)->Scroll + i)->ScrollInfo))
+  ((LPSCROLLINFO)(&((Window)->pSBInfo + i)->ScrollInfo))
 
 #define SBOBJ_TO_SBID(Obj)	((Obj) - OBJID_HSCROLL)
 #define SBID_IS_VALID(id)	(id == SB_HORZ || id == SB_VERT || id == SB_CTL)
