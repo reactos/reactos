@@ -103,7 +103,7 @@ TCHAR abort_msg[512], abort_title[64];
 HINSTANCE hInstance;
 BOOL isUnattend;
 
-LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY gen,PINFCONTEXT context);
+LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -1084,15 +1084,15 @@ void LoadSetupData()
         }
 
         // get computers list
-        SetupData.CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),SetupData.pComputers,&InfContext);
+        SetupData.CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),&SetupData.pComputers,&InfContext);
 
         // get display list
-        SetupData.DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),SetupData.pDisplays,&InfContext);
+        SetupData.DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),&SetupData.pDisplays,&InfContext);
 
         // get keyboard list
-        SetupData.KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),SetupData.pKeyboards,&InfContext);
+        SetupData.KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),&SetupData.pKeyboards,&InfContext);
 
-        // get install directory
+	// get install directory
         if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
         {
             SetupGetStringField(&InfContext,
@@ -1105,15 +1105,16 @@ void LoadSetupData()
     }
 }
 
-LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY gen,PINFCONTEXT context)
+LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
 {
     LONG TotalCount;
+    DWORD LineLength;
 
     TotalCount = SetupGetLineCount(hinf, name);
     if (TotalCount > 0)
     {
-        gen = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GENENTRY) * TotalCount);
-        if (gen != NULL)
+        *gen = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GENENTRY) * TotalCount);
+        if (*gen != NULL)
         {
             if (SetupFindFirstLine(hinf, name, NULL, context))
             {
@@ -1122,22 +1123,22 @@ LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY gen,PINFCONTEXT context)
                 {
                     SetupGetStringField(context,
                                         0,
-                                        gen[Count].Id,
-                                        sizeof(gen[Count].Id) / sizeof(TCHAR),
-                                        NULL);
+                                        (*gen)[Count].Id,
+                                        sizeof((*gen)[Count].Id) / sizeof(TCHAR),
+                                        &LineLength);
 
                     SetupGetStringField(context,
                                         1,
-                                        gen[Count].Value,
-                                        sizeof(gen[Count].Value) / sizeof(TCHAR),
-                                        NULL);
-                    Count++;
+                                        (*gen)[Count].Value,
+                                        sizeof((*gen)[Count].Value) / sizeof(TCHAR),
+                                        &LineLength);
+                    ++Count;
                 }
                 while (SetupFindNextLine(context, context) && Count < TotalCount);
             }
         }
+	else return 0;
     }
-
     return TotalCount;
 }
 
