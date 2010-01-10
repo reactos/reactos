@@ -98,7 +98,9 @@ NTSTATUS
 NTAPI
 ArrivalNotificationCompletion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID PContext)
 {
+    PDEVICE_OBJECT PortDeviceObject = (PDEVICE_OBJECT) PContext;
     IoFreeIrp(Irp);
+    ObDereferenceObject(PortDeviceObject);
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -120,6 +122,12 @@ DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context)
         return;
     }
 
+    if (PortDeviceObject == DeviceObject)
+    {
+        /* Piontless to send query relations to ourself */
+        ObDereferenceObject(PortDeviceObject);
+    }
+
     Irp = IoAllocateIrp(PortDeviceObject->StackSize, FALSE);
 
     if (!Irp)
@@ -129,7 +137,7 @@ DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context)
 
     IoSetCompletionRoutine(Irp,
                            (PIO_COMPLETION_ROUTINE)ArrivalNotificationCompletion,
-                           NULL,
+                           (PVOID) PortDeviceObject,
                            TRUE,
                            TRUE,
                            TRUE);
