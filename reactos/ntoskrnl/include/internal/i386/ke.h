@@ -65,7 +65,26 @@ extern ULONG Ke386CacheAlignment;
 //
 #define KeGetTrapFrameInterruptState(TrapFrame) \
         BooleanFlagOn((TrapFrame)->EFlags, EFLAGS_INTERRUPT_MASK)
-        
+
+//
+// Flags for exiting a trap
+//
+#define KTE_SKIP_PM_BIT  (((KTRAP_EXIT_SKIP_BITS) { { .SkipPreviousMode = TRUE } }).Bits)
+#define KTE_SKIP_SEG_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SkipSegments  = TRUE } }).Bits)
+#define KTE_SKIP_VOL_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SkipVolatiles = TRUE } }).Bits)
+ 
+typedef union _KTRAP_EXIT_SKIP_BITS
+{
+    struct
+    {
+        UCHAR SkipPreviousMode:1;
+        UCHAR SkipSegments:1;
+        UCHAR SkipVolatiles:1;
+        UCHAR Reserved:5;
+    };
+    UCHAR Bits;
+} KTRAP_EXIT_SKIP_BITS, *PKTRAP_EXIT_SKIP_BITS;
+              
 //
 // Registers an interrupt handler with an IDT vector
 //
@@ -289,6 +308,25 @@ Ki386EnableXMMIExceptions(
     IN ULONG_PTR Context
 );
 
+BOOLEAN
+NTAPI
+VdmDispatchBop(
+    IN PKTRAP_FRAME TrapFrame
+);
+ 
+BOOLEAN
+FASTCALL
+KiVdmOpcodePrefix(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Flags
+);
+
+BOOLEAN
+FASTCALL
+Ki386HandleOpcodeV86(
+    IN PKTRAP_FRAME TrapFrame
+);
+
 //
 // Global x86 only Kernel data
 //
@@ -312,6 +350,10 @@ extern VOID __cdecl KiTrap2(VOID);
 extern VOID __cdecl KiTrap8(VOID);
 extern VOID __cdecl KiTrap19(VOID);
 extern VOID __cdecl KiFastCallEntry(VOID);
+extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
+extern VOID __cdecl CopyParams(VOID);
+extern VOID __cdecl ReadBatch(VOID);
+extern VOID __cdecl FrRestore(VOID);
 
 //
 // Sanitizes a selector

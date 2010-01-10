@@ -72,20 +72,6 @@ typedef struct _KNMI_HANDLER_CALLBACK
     PVOID Handle;
 } KNMI_HANDLER_CALLBACK, *PKNMI_HANDLER_CALLBACK;
 
-typedef union _KTRAP_STATE_BITS
-{
-    struct
-    {
-        UCHAR SystemCall:1;
-        UCHAR PreviousMode:1;
-        UCHAR Segments:1;
-        UCHAR Volatiles:1;
-        UCHAR Full:1;
-        UCHAR Reserved:3;
-    };
-    UCHAR Bits;
-} KTRAP_STATE_BITS, *PKTRAP_STATE_BITS;
-
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
     IN PUNICODE_STRING Unicode,

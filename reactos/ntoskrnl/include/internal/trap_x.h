@@ -66,7 +66,7 @@ KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
 FORCEINLINE
 VOID
 KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
-                      IN KTRAP_STATE_BITS StateBits)
+                      IN KTRAP_STATE_BITS SkipBits)
 {
     /* Make sure interrupts are disabled */
     if (__readeflags() & EFLAGS_INTERRUPT_MASK)
@@ -105,7 +105,7 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
     }
     
     /* If we're ignoring previous mode, make sure caller doesn't actually want it */
-    if (!(StateBits.PreviousMode) && (TrapFrame->PreviousPreviousMode != -1))
+    if ((SkipBits.SkipPreviousMode) && (TrapFrame->PreviousPreviousMode != -1))
     {
         DPRINT1("Exiting a trap witout restoring previous mode, yet previous mode seems valid: %lx", TrapFrame->PreviousPreviousMode);
         while (TRUE);

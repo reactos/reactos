@@ -18,16 +18,19 @@
 VOID
 FASTCALL
 KiExitTrap(IN PKTRAP_FRAME TrapFrame,
-           IN UCHAR State)
+           IN UCHAR Skip)
 {
-    KTRAP_STATE_BITS StateBits = { .Bits = State };
-    KiExitTrapDebugChecks(TrapFrame, StateBits);
+    KTRAP_EXIT_SKIP_BITS SkipBits = { .Bits = Skip };
+    KiExitTrapDebugChecks(TrapFrame, SkipBits);
+
+    /* If you skip volatile reload, you must skip segment reload */
+    ASSERT((SkipBits.SkipVolatiles == FALSE) || (SkipBits.SkipSegments == TRUE));
 
     /* Restore the SEH handler chain */
     KeGetPcr()->Tib.ExceptionList = TrapFrame->ExceptionList;
     
     /* Check if the previous mode must be restored */
-    if (StateBits.PreviousMode)
+    if (!SkipBits.SkipPreviousMode)
     {
         /* Not handled yet */
         UNIMPLEMENTED;
@@ -53,33 +56,30 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
         while (TRUE);
     }
     
-    /* Check if all registers must be restored */
-    if (StateBits.Full)
+    /* Check if segments should be restored */
+    if (!SkipBits.SkipSegments)
     {
-        /* Only do the restore if we made a transition from user-mode */
-        if (KiUserTrap(TrapFrame))
-        {
-            /* Restore segments */
-            Ke386SetGs(TrapFrame->SegGs);
-            Ke386SetEs(TrapFrame->SegEs);
-            Ke386SetDs(TrapFrame->SegDs);
-        }
+        /* Restore segments */
+        Ke386SetGs(TrapFrame->SegGs);
+        Ke386SetEs(TrapFrame->SegEs);
+        Ke386SetDs(TrapFrame->SegDs);
+        Ke386SetFs(TrapFrame->SegFs);
     }
-    
-    /* Check if we came from user-mode */
-    if (KiUserTrap(TrapFrame))
+    else if (KiUserTrap(TrapFrame))
     {
-        /* Check if the caller wants segments restored */
-        if (StateBits.Segments)
-        {
-            /* Restore them */
-            Ke386SetGs(TrapFrame->SegGs);
-            Ke386SetEs(TrapFrame->SegEs);
-            Ke386SetDs(TrapFrame->SegDs);
-        }
-        
         /* Always restore FS since it goes from KPCR to TEB */
         Ke386SetFs(TrapFrame->SegFs);
+    }
+    
+    /* Check if the caller wants to skip volatiles */
+    if (SkipBits.SkipVolatiles)
+    {
+        /* 
+         * When we do the system call handler through this path, we need
+         * to have some sort to restore the kernel EAX instead of pushing
+         * back the user EAX. We'll figure it out...
+         */
+        DPRINT1("Warning: caller doesn't want volatiles restored\n"); 
     }
 
     /* Check for ABIOS code segment */
@@ -90,8 +90,8 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
         while (TRUE);
     }
     
-    /* Check for system call */
-    if (StateBits.SystemCall)
+    /* Check for system call -- a system call skips volatiles! */
+    if (SkipBits.SkipVolatiles)
     {
         /* Not handled yet */
         UNIMPLEMENTED;
@@ -106,6 +106,50 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 FASTCALL
+KiExitV86Trap(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    KIRQL OldIrql;
+    
+    /* Get the thread */
+    Thread = KeGetCurrentThread();
+    while (TRUE)
+    {
+        /* Turn off the alerted state for kernel mode */
+        Thread->Alerted[KernelMode] = FALSE;
+
+        /* Are there pending user APCs? */
+        if (!Thread->ApcState.UserApcPending) break;
+
+        /* Raise to APC level and enable interrupts */
+        OldIrql = KfRaiseIrql(APC_LEVEL);
+        _enable();
+
+        /* Deliver APCs */
+        KiDeliverApc(UserMode, NULL, TrapFrame);
+
+        /* Restore IRQL and disable interrupts once again */
+        KfLowerIrql(OldIrql);
+        _disable();
+        
+        /* Return if this isn't V86 mode anymore */
+        if (TrapFrame->EFlags & EFLAGS_V86_MASK) return;
+    }
+     
+    /* If we got here, we're still in a valid V8086 context, so quit it */
+    if (TrapFrame->Dr7 & ~DR7_RESERVED_MASK)
+    {
+        /* Not handled yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+     
+    /* Return from interrupt */
+    KiTrapReturn(TrapFrame);
+}
+
+VOID
+FASTCALL
 KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 {
     /* Disable interrupts until we return */
@@ -115,10 +159,38 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
     KiCheckForApcDelivery(TrapFrame);
     
     /* Now exit the trap for real */
-    KiExitTrap(TrapFrame, KTS_SEG_BIT | KTS_VOL_BIT);
+    KiExitTrap(TrapFrame, KTE_SKIP_PM_BIT);
 }
 
 /* TRAP ENTRY CODE ************************************************************/
+
+VOID
+FASTCALL
+KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Save registers */
+    KiTrapFrameFromPushaStack(TrapFrame);
+    
+    /* Load correct registers */
+    Ke386SetFs(KGDT_R0_PCR);
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    
+    /* Save exception list and bogus previous mode */
+    TrapFrame->PreviousPreviousMode = -1;
+    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
+
+    /* Clear direction flag */
+    Ke386ClearDirectionFlag();
+    
+    /* Save DR7 and check for debugging */
+    TrapFrame->Dr7 = __readdr(7);
+    if (TrapFrame->Dr7 & ~DR7_RESERVED_MASK)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+}
 
 VOID
 FASTCALL
@@ -258,7 +330,6 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
              IN PFX_SAVE_AREA SaveArea)
 {
     ULONG Cr0, Mask, Error, ErrorOffset, DataOffset;
-    extern VOID FrRestore(VOID);
     
     /* Check for VDM trap */
     ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
@@ -718,9 +789,6 @@ KiTrap14Handler(IN PKTRAP_FRAME TrapFrame)
     PKTHREAD Thread;
     ULONG_PTR Cr2;
     NTSTATUS Status;
-    extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
-    extern VOID CopyParams(VOID);
-    extern VOID ReadBatch(VOID);
 
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
