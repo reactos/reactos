@@ -807,41 +807,6 @@ NoNextThread:
 #endif
 .endfunc
 
-.globl _Ki386AdjustEsp0@4
-.func Ki386AdjustEsp0@4
-_Ki386AdjustEsp0@4:
-
-    /* Get the current thread */
-    mov eax, [fs:KPCR_CURRENT_THREAD]
-
-    /* Get trap frame and stack */
-    mov edx, [esp+4]
-    mov eax, [eax+KTHREAD_INITIAL_STACK]
-
-    /* Check if V86 */
-    test dword ptr [edx+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz 1f
-
-    /* Bias the stack */
-    sub eax, KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
-
-1:
-    /* Skip FX Save Area */
-    sub eax, SIZEOF_FX_SAVE_AREA
-
-    /* Disable interrupts */
-    pushf
-    cli
-
-    /* Adjust ESP0 */
-    mov edx, [fs:KPCR_TSS]
-    mov ss:[edx+KTSS_ESP0], eax
-
-    /* Enable interrupts and return */
-    popf
-    ret 4
-.endfunc
-
 .globl _KiSwapProcess@8
 .func KiSwapProcess@8
 _KiSwapProcess@8:
