@@ -136,6 +136,7 @@ typedef union _KTRAP_EXIT_SKIP_BITS
         /* Not yet handled */                       \
         UNIMPLEMENTED;                              \
         while (TRUE);                               \
+        return TRUE;                                \
     }
 
               
