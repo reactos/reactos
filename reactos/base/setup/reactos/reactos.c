@@ -1092,7 +1092,7 @@ void LoadSetupData()
         // get keyboard list
         SetupData.KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),&SetupData.pKeyboards,&InfContext);
 
-	// get install directory
+        // get install directory
         if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
         {
             SetupGetStringField(&InfContext,
