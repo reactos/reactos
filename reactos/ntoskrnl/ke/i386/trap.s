@@ -755,7 +755,8 @@ RaiseIrql:
     sti
 
     /* Handle the opcode */
-    call _Ki386HandleOpcodeV86@0
+    mov ecx, ebp
+    call @Ki386HandleOpcodeV86@4
 
     /* Check if this was VDM */
     test al, 0xFF

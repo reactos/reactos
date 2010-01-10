@@ -84,6 +84,60 @@ typedef union _KTRAP_EXIT_SKIP_BITS
     };
     UCHAR Bits;
 } KTRAP_EXIT_SKIP_BITS, *PKTRAP_EXIT_SKIP_BITS;
+
+
+//
+// Flags used by the VDM/V8086 emulation engine for determining instruction prefixes
+//
+#define PFX_FLAG_ES                0x00000100
+#define PFX_FLAG_CS                0x00000200
+#define PFX_FLAG_SS                0x00000400
+#define PFX_FLAG_DS                0x00000800
+#define PFX_FLAG_FS                0x00001000
+#define PFX_FLAG_GS                0x00002000
+#define PFX_FLAG_OPER32            0x00004000
+#define PFX_FLAG_ADDR32            0x00008000
+#define PFX_FLAG_LOCK              0x00010000
+#define PFX_FLAG_REPNE             0x00020000
+#define PFX_FLAG_REP               0x00040000
+
+//
+// VDM Helper Macros
+//
+// All VDM/V8086 opcode emulators have the same FASTCALL function definition.
+// We need to keep 2 parameters while the original ASM implementation uses 4:
+// TrapFrame, PrefixFlags, Eip, InstructionSize;
+//
+// We pass the trap frame, and prefix flags, in our two parameters.
+//
+// We then realize that since the smallest prefix flag is 0x100, this gives us
+// a count of up to 0xFF. So we OR in the instruction size with the prefix flags
+//
+// We further realize that we always have access to EIP from the trap frame, and
+// that if we want the *current instruction* EIP, we simply have to add the
+// instruction size *MINUS ONE*, and that gives us the EIP we should be looking
+// at now, so we don't need to use the stack to push this parameter.
+//
+// We actually only care about the *current instruction* EIP in one location,
+// so although it may be slightly more expensive to re-calculate the EIP one
+// more time, this way we don't redefine ALL opcode handlers to have 3 parameters,
+// which would be forcing stack usage in all other scenarios.
+//
+#define KiVdmSetVdmEFlags(x)        InterlockedOr((PLONG)KiNtVdmState, (x));
+#define KiVdmClearVdmEFlags(x)      InterlockedAnd((PLONG)KiNtVdmState, ~(x))
+#define KiCallVdmHandler(x)         KiVdmOpcode##x(TrapFrame, Flags)
+#define KiCallVdmPrefixHandler(x)   KiVdmOpcodePrefix(TrapFrame, Flags | x)
+#define KiVdmUnhandledOpcode(x)                     \
+    BOOLEAN                                         \
+    FASTCALL                                        \
+    KiVdmOpcode##x(IN PKTRAP_FRAME TrapFrame,       \
+                   IN ULONG Flags)                  \
+    {                                               \
+        /* Not yet handled */                       \
+        UNIMPLEMENTED;                              \
+        while (TRUE);                               \
+    }
+
               
 //
 // Registers an interrupt handler with an IDT vector
