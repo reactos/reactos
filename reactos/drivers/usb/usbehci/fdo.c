@@ -520,10 +520,15 @@ StartDevice(PDEVICE_OBJECT DeviceObject, PCM_PARTIAL_RESOURCE_LIST raw, PCM_PART
                 DPRINT("Dma Port: %d\n", resource->u.Dma.Port);
                 break;
             }
+            case CmResourceTypeDevicePrivate:
+            {
+                /* Windows does this. */
+                DPRINT1("CmResourceTypeDevicePrivate not handled\n");
+                break;
+            }
             default:
             {
-                DPRINT1("PNP Manager gave invalid resource type!! Notify Developers!\n");
-                ASSERT(FALSE);
+                DPRINT1("PNP Manager gave resource type not handled!! Notify Developers!\n");
                 break;
             }
         }
