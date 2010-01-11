@@ -623,7 +623,9 @@ Ke386CallBios(IN ULONG Int,
     Tss->IoMapBase = (USHORT)IOPM_OFFSET;
 
     /* Switch stacks and work the magic */
+    DPRINT1("Entering V86 mode\n");
     Ki386SetupAndExitToV86Mode(VdmTeb);
+    DPRINT1("Left V86 mode\n");
 
     /* Restore IOPM */
     RtlCopyMemory(&Tss->IoMaps[0].IoMap, Ki386IopmSaveArea, PAGE_SIZE * 2);

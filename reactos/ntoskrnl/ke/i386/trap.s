@@ -585,7 +585,110 @@ GENERATE_TRAP_HANDLER KiTrap9, 1
 GENERATE_TRAP_HANDLER KiTrap10, 0
 GENERATE_TRAP_HANDLER KiTrap11, 0
 GENERATE_TRAP_HANDLER KiTrap12, 0
-GENERATE_TRAP_HANDLER KiTrap13, 0
+
+//GENERATE_TRAP_HANDLER KiTrap13, 0
+
+.func KiTrap13
+TRAP_FIXUPS kitd_a, kitd_t, DoFixupV86, DoNotFixupAbios
+_KiTrap13:
+
+    /* It this a V86 GPF? */
+    test dword ptr [esp+12], EFLAGS_V86_MASK
+    jz NotV86
+
+    /* Enter V86 Trap */
+    V86_TRAP_PROLOG kitd_a, kitd_v
+
+    /* Make sure that this is a V86 process */
+    mov ecx, PCR[KPCR_CURRENT_THREAD]
+    mov ecx, [ecx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ecx+EPROCESS_VDM_OBJECTS], 0
+    jz ShouldNotGetHere
+
+RaiseIrql:
+
+    /* Go to APC level */
+    mov ecx, APC_LEVEL
+    call @KfRaiseIrql@4
+
+    /* Save old IRQL and enable interrupts */
+    push eax
+    sti
+
+    /* Handle the opcode */
+    mov ecx, ebp
+    call @Ki386HandleOpcodeV86@4
+
+    /* Check if this was VDM */
+    test al, 0xFF
+    jz ShouldNotGetHere
+
+NoReflect:
+
+    /* Lower IRQL and disable interrupts */
+    pop ecx
+    call @KfLowerIrql@4
+    cli
+
+    /* Check if this was a V86 trap */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jz NotV86Trap
+
+    /* Exit the V86 Trap */
+    V86_TRAP_EPILOG
+
+NotV86Trap:
+
+    /* Either this wasn't V86, or it was, but an APC interrupted us */
+    jmp _Kei386EoiHelper@0
+
+NotV86:
+    /* Enter trap */
+    TRAP_PROLOG kitd_a, kitd_t
+    
+    /* Check if this was from kernel-mode */
+    test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jnz ShouldNotGetHere
+
+    /* Get the opcode and trap frame */
+KmodeGpf:
+    mov eax, [ebp+KTRAP_FRAME_EIP]
+    mov eax, [eax]
+    mov edx, [ebp+KTRAP_FRAME_EBP]
+
+    /* Was it IRETD? */
+    cmp al, 0xCF
+    jne ShouldNotGetHere
+
+    /* Get error code */
+    lea edx, [ebp+KTRAP_FRAME_ESP]
+    mov ax, [ebp+KTRAP_FRAME_ERROR_CODE]
+    and ax, ~RPL_MASK
+
+    /* Get CS */
+    mov cx, word ptr [edx+4]
+    and cx, ~RPL_MASK
+    cmp cx, ax
+    jnz ShouldNotGetHere
+
+    /* This should be a Ki386CallBios return */
+    mov eax, offset @Ki386BiosCallReturnAddress@4
+    cmp eax, [edx]
+    jne ShouldNotGetHere
+    mov eax, [edx+4]
+    cmp ax, KGDT_R0_CODE + RPL_MASK
+    jne ShouldNotGetHere
+
+    /* Jump to return address */
+    mov ecx, ebp
+    jmp @Ki386BiosCallReturnAddress@4
+
+_Ki16BitStackException:
+ShouldNotGetHere:
+    /* FIXME */
+    UNHANDLED_PATH "Other GPF stuff"
+.endfunc
+
 GENERATE_TRAP_HANDLER KiTrap14, 0
 GENERATE_TRAP_HANDLER KiTrap0F, 1
 GENERATE_TRAP_HANDLER KiTrap16, 1

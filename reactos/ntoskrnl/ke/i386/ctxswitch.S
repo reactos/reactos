@@ -885,5 +885,5 @@ _Ki386SetupAndExitToV86Mode@4:
     mov esp, eax
     add esp, (12 + KTRAP_FRAME_LENGTH + NPX_FRAME_LENGTH)
     popad
-    ret
+    ret 4
 
