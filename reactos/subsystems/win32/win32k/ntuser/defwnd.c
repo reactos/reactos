@@ -67,7 +67,7 @@ IntClientShutdown(
              co_IntSendMessage(WndChild->hSelf, WM_ENDSESSION, KillTimers, lParams);
              if (KillTimers)
              {
-                MsqRemoveTimersWindow(WndChild->MessageQueue, WndChild->hSelf);
+                MsqRemoveTimersWindow(WndChild->pti->MessageQueue, WndChild->hSelf);
              }
              lResult = MCSR_SHUTDOWNFINISHED;
           }
@@ -90,7 +90,7 @@ IntClientShutdown(
       co_IntSendMessage(pWindow->hSelf, WM_ENDSESSION, KillTimers, lParams);
       if (KillTimers)
       {
-         MsqRemoveTimersWindow(pWindow->MessageQueue, pWindow->hSelf);
+         MsqRemoveTimersWindow(pWindow->pti->MessageQueue, pWindow->hSelf);
       }
       lResult = MCSR_SHUTDOWNFINISHED;
    }

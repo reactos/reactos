@@ -1612,7 +1612,7 @@ co_WinPosSearchChildren(
 
          UserRefObjectCo(Current, &Ref);
 
-         if (OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
+         if (OnlyHitTests && (Current->pti->MessageQueue == OnlyHitTests))
          {
             *HitTest = co_IntSendMessage(Current->hSelf, WM_NCHITTEST, 0,
                                          MAKELONG(Point->x, Point->y));

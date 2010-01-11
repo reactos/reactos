@@ -235,26 +235,26 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
       return TRUE;
    }
 
-   hWndFocusPrev = (PrevForegroundQueue == FocusWindow->MessageQueue
-                    ? FocusWindow->MessageQueue->FocusWindow : NULL);
+   hWndFocusPrev = (PrevForegroundQueue == FocusWindow->pti->MessageQueue
+                    ? FocusWindow->pti->MessageQueue->FocusWindow : NULL);
 
    /* FIXME: Call hooks. */
 
    co_IntSendDeactivateMessages(hWndPrev, hWnd);
    co_IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
 
-   IntSetFocusMessageQueue(Window->MessageQueue);
-   if (Window->MessageQueue)
+   IntSetFocusMessageQueue(Window->pti->MessageQueue);
+   if (Window->pti->MessageQueue)
    {
-      Window->MessageQueue->ActiveWindow = hWnd;
+      Window->pti->MessageQueue->ActiveWindow = hWnd;
    }
 
-   if (FocusWindow->MessageQueue)
+   if (FocusWindow->pti->MessageQueue)
    {
-      FocusWindow->MessageQueue->FocusWindow = hWndFocus;
+      FocusWindow->pti->MessageQueue->FocusWindow = hWndFocus;
    }
 
-   if (PrevForegroundQueue != Window->MessageQueue)
+   if (PrevForegroundQueue != Window->pti->MessageQueue)
    {
       /* FIXME: Send WM_ACTIVATEAPP to all thread windows. */
    }
@@ -482,7 +482,7 @@ NtUserSetActiveWindow(HWND hWnd)
       pti = PsGetCurrentThreadWin32Thread();
       ThreadQueue = pti->MessageQueue;
 
-      if (Window->MessageQueue != ThreadQueue)
+      if (Window->pti->MessageQueue != ThreadQueue)
       {
          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( 0);
@@ -546,7 +546,7 @@ NtUserSetCapture(HWND hWnd)
 
    if((Window = UserGetWindowObject(hWnd)))
    {
-      if(Window->MessageQueue != ThreadQueue)
+      if(Window->pti->MessageQueue != ThreadQueue)
       {
          RETURN(NULL);
       }
@@ -596,7 +596,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
          return( (ThreadQueue ? ThreadQueue->FocusWindow : 0));
       }
 
-      if (Window->MessageQueue != ThreadQueue)
+      if (Window->pti->MessageQueue != ThreadQueue)
       {
          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          return( 0);

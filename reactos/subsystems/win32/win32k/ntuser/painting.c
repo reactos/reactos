@@ -196,7 +196,7 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
             GreDeleteObject(Window->hrgnUpdate);
             Window->hrgnUpdate = NULL;
             if (!(Window->state & WINDOWOBJECT_NEED_INTERNALPAINT))
-               MsqDecPaintCountQueue(Window->MessageQueue);
+               MsqDecPaintCountQueue(Window->pti->MessageQueue);
          }
       }
 
@@ -248,7 +248,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
          {
             TempRegion = IntGetNCUpdateRgn(Window, TRUE);
             Window->state &= ~WINDOWOBJECT_NEED_NCPAINT;
-            MsqDecPaintCountQueue(Window->MessageQueue);
+            MsqDecPaintCountQueue(Window->pti->MessageQueue);
             co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
             if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
             {
@@ -465,17 +465,17 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    if (HasPaintMessage != HadPaintMessage)
    {
       if (HadPaintMessage)
-         MsqDecPaintCountQueue(Window->MessageQueue);
+         MsqDecPaintCountQueue(Window->pti->MessageQueue);
       else
-         MsqIncPaintCountQueue(Window->MessageQueue);
+         MsqIncPaintCountQueue(Window->pti->MessageQueue);
    }
 
    if (HasNCPaintMessage != HadNCPaintMessage)
    {
       if (HadNCPaintMessage)
-         MsqDecPaintCountQueue(Window->MessageQueue);
+         MsqDecPaintCountQueue(Window->pti->MessageQueue);
       else
-         MsqIncPaintCountQueue(Window->MessageQueue);
+         MsqIncPaintCountQueue(Window->pti->MessageQueue);
    }
 
 }
@@ -776,7 +776,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
       hRgn = IntGetNCUpdateRgn(Window, FALSE);
       Window->state &= ~WINDOWOBJECT_NEED_NCPAINT;
-      MsqDecPaintCountQueue(Window->MessageQueue);
+      MsqDecPaintCountQueue(Window->pti->MessageQueue);
       co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
       if (hRgn != (HANDLE)1 && hRgn != NULL)
       {
@@ -795,7 +795,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
    if (Window->hrgnUpdate != NULL)
    {
-      MsqDecPaintCountQueue(Window->MessageQueue);
+      MsqDecPaintCountQueue(Window->pti->MessageQueue);
       GdiGetClipBox(Ps.hdc, &Ps.rcPaint);
       GDIOBJ_SetOwnership(Window->hrgnUpdate, PsGetCurrentProcess());
       /* The region is part of the dc now and belongs to the process! */
@@ -804,7 +804,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    else
    {
       if (Window->state & WINDOWOBJECT_NEED_INTERNALPAINT)
-         MsqDecPaintCountQueue(Window->MessageQueue);
+         MsqDecPaintCountQueue(Window->pti->MessageQueue);
 
       IntGetClientRect(Window, &Ps.rcPaint);
    }

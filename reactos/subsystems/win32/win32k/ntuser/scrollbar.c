@@ -230,6 +230,53 @@ co_IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
    return TRUE;
 }
 
+BOOL FASTCALL
+NEWco_IntGetScrollInfo(
+  PWND pWnd,
+  INT nBar,
+  PSBDATA pSBData,
+  LPSCROLLINFO lpsi)
+{
+  UINT Mask;
+  PSBTRACK pSBTrack = pWnd->head.pti->pSBTrack;
+
+  if (!SBID_IS_VALID(nBar))
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d\n", nBar);
+     return FALSE;
+  }
+
+  Mask = lpsi->fMask;
+
+  if (0 != (Mask & SIF_PAGE))
+  {
+     lpsi->nPage = pSBData->page;
+  }
+
+  if (0 != (Mask & SIF_POS))
+  {
+     lpsi->nPos = pSBData->pos;
+  }
+
+  if (0 != (Mask & SIF_RANGE))
+  {
+     lpsi->nMin = pSBData->posMin;
+     lpsi->nMax = pSBData->posMax;
+  }
+
+  if (0 != (Mask & SIF_TRACKPOS))
+  {
+     if ( pSBTrack &&
+          pSBTrack->nBar == nBar &&
+          pSBTrack->spwndTrack == pWnd )
+        lpsi->nTrackPos = pSBTrack->posNew;
+     else
+        lpsi->nTrackPos = pSBData->pos;
+  }
+  return (Mask & SIF_ALL) !=0;
+}
+
 static DWORD FASTCALL
 co_IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 {

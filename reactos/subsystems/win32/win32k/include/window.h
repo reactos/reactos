@@ -39,8 +39,6 @@ typedef struct _WINDOW_OBJECT
   HANDLE hrgnUpdate;
   /* Handle of the window region. */
   HANDLE hrgnClip;
-  /* Pointer to the owning thread's message queue. */
-  PUSER_MESSAGE_QUEUE MessageQueue;
   struct _WINDOW_OBJECT* spwndChild;
   struct _WINDOW_OBJECT* spwndNext;
   struct _WINDOW_OBJECT* spwndPrev;
@@ -54,9 +52,7 @@ typedef struct _WINDOW_OBJECT
   PDCE Dce;
   /* Scrollbar info */
   PSBINFOEX pSBInfo; // convert to PSBINFO
-  PETHREAD OwnerThread; // Use Wnd->head.pti
-  /* counter for tiled child windows */
-  ULONG TiledCounter;
+  PETHREAD OwnerThread; // Use Wnd->head.pti->pEThread
   /* WNDOBJ list */
   LIST_ENTRY WndObjListHead; // Use Props
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */

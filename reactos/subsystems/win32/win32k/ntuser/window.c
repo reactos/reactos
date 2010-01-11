@@ -1608,28 +1608,31 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
  * calculates the default position of a window
  */
 BOOL FASTCALL
-IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Window, RECTL *rc, BOOL IncPos)
+IntCalcDefPosSize(PWINDOW_OBJECT Parent, RECTL *rc, BOOL IncPos)
 {
    SIZE Sz;
+   PMONITOR pMonitor;
    POINT Pos = {0, 0};
+   
+   pMonitor = IntGetPrimaryMonitor();
 
    if(Parent != NULL)
    {
-      RECTL_bIntersectRect(rc, rc, &Parent->Wnd->rcClient);
+      RECTL_bIntersectRect(rc, rc, &pMonitor->rcMonitor);
 
       if(IncPos)
       {
-         Pos.x = Parent->TiledCounter * (UserGetSystemMetrics(SM_CXSIZE) + UserGetSystemMetrics(SM_CXFRAME));
-         Pos.y = Parent->TiledCounter * (UserGetSystemMetrics(SM_CYSIZE) + UserGetSystemMetrics(SM_CYFRAME));
-         if(Pos.x > ((rc->right - rc->left) / 4) ||
-               Pos.y > ((rc->bottom - rc->top) / 4))
+         Pos.x = pMonitor->cWndStack * (UserGetSystemMetrics(SM_CXSIZE) + UserGetSystemMetrics(SM_CXFRAME));
+         Pos.y = pMonitor->cWndStack * (UserGetSystemMetrics(SM_CYSIZE) + UserGetSystemMetrics(SM_CYFRAME));
+         if (Pos.x > ((rc->right - rc->left) / 4) ||
+             Pos.y > ((rc->bottom - rc->top) / 4))
          {
             /* reset counter and position */
             Pos.x = 0;
             Pos.y = 0;
-            Parent->TiledCounter = 0;
+            pMonitor->cWndStack = 0;
          }
-         Parent->TiledCounter++;
+         pMonitor->cWndStack++;
       }
       Pos.x += rc->left;
       Pos.y += rc->top;
@@ -1857,8 +1860,7 @@ AllocErr:
    Wnd->hModule = hInstance;
    Window->hSelf = hWnd;
 
-   Window->MessageQueue = pti->MessageQueue;
-   IntReferenceMessageQueue(Window->MessageQueue);
+   IntReferenceMessageQueue(Window->pti->MessageQueue);
    Window->spwndParent = ParentWindow;
    Wnd->spwndParent = ParentWindow ? ParentWindow->Wnd : NULL;
    if (Wnd->spwndParent != NULL && hWndParent != 0)
@@ -2112,7 +2114,7 @@ AllocErr:
 
       if(x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
       {
-         CalculatedDefPosSize = IntCalcDefPosSize(ParentWindow, Window, &rc, TRUE);
+         CalculatedDefPosSize = IntCalcDefPosSize(ParentWindow, &rc, TRUE);
 
          if(ProcessParams->WindowFlags & STARTF_USEPOSITION)
          {
@@ -2156,7 +2158,7 @@ AllocErr:
       {
          if(!CalculatedDefPosSize)
          {
-            IntCalcDefPosSize(ParentWindow, Window, &rc, FALSE);
+            IntCalcDefPosSize(ParentWindow, &rc, FALSE);
          }
          if(ProcessParams->WindowFlags & STARTF_USESIZE)
          {
@@ -2646,14 +2648,14 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       }
    }
 
-   if (Window->MessageQueue->ActiveWindow == Window->hSelf)
-      Window->MessageQueue->ActiveWindow = NULL;
-   if (Window->MessageQueue->FocusWindow == Window->hSelf)
-      Window->MessageQueue->FocusWindow = NULL;
-   if (Window->MessageQueue->CaptureWindow == Window->hSelf)
-      Window->MessageQueue->CaptureWindow = NULL;
+   if (Window->pti->MessageQueue->ActiveWindow == Window->hSelf)
+      Window->pti->MessageQueue->ActiveWindow = NULL;
+   if (Window->pti->MessageQueue->FocusWindow == Window->hSelf)
+      Window->pti->MessageQueue->FocusWindow = NULL;
+   if (Window->pti->MessageQueue->CaptureWindow == Window->hSelf)
+      Window->pti->MessageQueue->CaptureWindow = NULL;
 
-   IntDereferenceMessageQueue(Window->MessageQueue);
+   IntDereferenceMessageQueue(Window->pti->MessageQueue);
 
    IntEngWindowChanged(Window, WOC_DELETE);
    isChild = (0 != (Wnd->style & WS_CHILD));
@@ -4197,7 +4199,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_ISHUNG:
-         Result = (DWORD)MsqIsHung(Window->MessageQueue);
+         Result = (DWORD)MsqIsHung(Window->pti->MessageQueue);
          break;
 
       case QUERY_WINDOW_REAL_ID:
@@ -5111,7 +5113,7 @@ NtUserValidateHandleSecure(
        }
        case otMonitor:
        {
-         PMONITOR_OBJECT Monitor;
+         PMONITOR Monitor;
          if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
          return FALSE;
        }

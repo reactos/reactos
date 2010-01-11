@@ -458,7 +458,7 @@ IntKeyboardSendWinKeyMsg()
    Mesg.lParam = 0;
 
    /* The QS_HOTKEY is just a guess */
-   MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
+   MsqPostMessage(Window->pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
 }
 
 static VOID APIENTRY
