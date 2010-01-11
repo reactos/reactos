@@ -114,6 +114,28 @@
 .endm
 
 //
+// @name UNHANDLED_V86_PATH
+//
+// This macro prints out that the current code path is for unhandled VDM support
+//
+// @param None
+//
+// @remark None.
+//
+.macro UNHANDLED_V86_PATH
+    /* Get EIP */
+    call $+5
+
+    /* Print debug message */
+    push offset _V86UnhandledMsg
+    call _DbgPrint
+    add esp, 8
+
+    /* Loop indefinitely */
+    jmp $
+.endm
+
+//
 // @name IDT
 //
 // This macro creates an IDT entry for the given handler
@@ -252,6 +274,58 @@ _HalpHardwareInterrupt&Number:
     GENERATE_HAL_INT_HANDLER %i
     .set i, i + 1
 .endr
+.endm
+
+//
+// @name INVALID_V86_OPCODE
+//
+// This macro creates one or more entries for unhandled V86 Opcodes
+// in the V86 Opcode Table.
+//
+// @param count.
+//        Number of entries to generate.
+//
+// @remark None.
+//
+.macro INVALID_V86_OPCODE count
+    .rept \count
+        .byte 0
+    .endr
+.endm
+
+//
+// @name GENERATE_PREFIX_HANDLER
+//
+// This macro creates a prefix opcode handler.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro GENERATE_PREFIX_HANDLER Name
+.func Opcode&Name&PrefixV86
+_Opcode&Name&PrefixV86:
+    or ebx, PREFIX_FLAG_&Name
+    jmp _OpcodeGenericPrefixV86
+.endfunc
+.endm
+
+//
+// @name INVALID_V86_OPCODE
+//
+// This macro prints out visible message and hangs the computer.
+//
+// @param None.
+//
+// @remark Temporary debugging use.
+//
+.macro UNHANDLED_V86_OPCODE
+    /* Print debug message, breakpoint and freeze */
+    push ecx
+    push offset V86DebugMsg
+    call _DbgPrint
+    add esp, 8
+    jmp $
 .endm
 
 //
@@ -448,6 +522,96 @@ V86_&Label:
     cli
     jmp 1b
 2:
+.endm
+
+//
+// @name TRAP_PROLOG
+// 
+// This macro creates a standard trap entry prologue.
+// It should be used for entry into any kernel trap (KiTrapXx), but not for
+// system calls, which require special handling.
+//
+// @param Label
+//        Identifying name of the caller function; will be used to append
+//        to the name V86 and DR helper functions, which must already exist.
+//
+// @remark Use as follows:
+//          _KiTrap00:
+//              /* Push fake error code */
+//              push 0
+//
+//              /* Enter common prologue */
+//              TRAP_PROLOG(0)
+//
+//              /* Handle trap */
+//              <Your Trap Code Here>
+//
+.macro TRAP_PROLOG Label EndLabel
+    /* Just to be safe, clear out the HIWORD, since it's reserved */
+    mov word ptr [esp+2], 0
+
+    /* Save the non-volatiles */
+    push ebp
+    push ebx
+    push esi
+    push edi
+
+    /* Save FS and set it to PCR */
+    push fs
+    mov ebx, KGDT_R0_PCR
+    .byte 0x66
+    mov fs, bx
+
+    /* Save exception list and bogus previous mode */
+    push fs:[KPCR_EXCEPTION_LIST]
+    push -1
+
+    /* Save volatiles and segment registers */
+    push eax
+    push ecx
+    push edx
+    push ds
+    push es
+    push gs
+
+    /* Set the R3 data segment */
+    mov ax, KGDT_R3_DATA + RPL_MASK
+
+    /* Skip debug registers and debug stuff */
+    sub esp, 0x30
+
+    /* Load the segment registers */
+    .byte 0x66
+    mov ds, ax
+    .byte 0x66
+    mov es, ax
+
+    /* Check if this interrupt happened in 16-bit mode */
+    cmp esp, 0x10000
+    jb _Ki16BitStackException
+
+    /* Set up frame */
+    mov ebp, esp
+
+    /* Check if this was from V86 Mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86_&Label
+
+V86_&EndLabel:
+    /* Get current thread */
+    mov ecx, fs:[KPCR_CURRENT_THREAD]
+    cld
+
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
+    jnz Dr_&Label
+
+    /* Set the Trap Frame Debug Header */
+Dr_&EndLabel:
+    SET_TF_DEBUG_HEADER
 .endm
 
 //
@@ -732,6 +896,164 @@ Dr_&EndLabel:
 
     /* Enable interrupts */
     sti
+.endm
+
+//
+// @name V86_TRAP_PROLOG
+// 
+// This macro creates a V86 Trap entry prologue.
+// It should be used for entry into any fast-system call (KiGetTickCount,
+// KiCallbackReturn, KiRaiseAssertion) and the generic system call handler
+// (KiSystemService)
+//
+// @param Label
+//        Unique label identifying the name of the caller function; will be
+//        used to append to the name of the DR helper function, which must
+//        already exist.
+//
+// @remark None.
+//
+.macro V86_TRAP_PROLOG Label EndLabel
+
+    /* Skip everything to the error code */
+    sub esp, KTRAP_FRAME_ERROR_CODE
+
+    /* Clear the error code */
+    mov word ptr [esp+KTRAP_FRAME_ERROR_CODE+2], 0
+
+    /* Save the registers we'll trample */
+    mov [esp+KTRAP_FRAME_EBX], ebx
+    mov [esp+KTRAP_FRAME_EAX], eax
+    mov [esp+KTRAP_FRAME_EBP], ebp
+    mov [esp+KTRAP_FRAME_ESI], esi
+    mov [esp+KTRAP_FRAME_EDI], edi
+
+    /* Save PCR and Ring 3 segments */
+    mov ebx, KGDT_R0_PCR
+    mov eax, KGDT_R3_DATA + RPL_MASK
+
+    /* Save ECX and EDX too */
+    mov [esp+KTRAP_FRAME_ECX], ecx
+    mov [esp+KTRAP_FRAME_EDX], edx
+
+    /* Set debugging markers */
+    mov dword ptr [esp+KTRAP_FRAME_PREVIOUS_MODE], -1
+    mov dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+
+    /* Now set segments (use OVERRIDE, 0x66) */
+    .byte 0x66
+    mov fs, bx
+    .byte 0x66
+    mov ds, ax
+    .byte 0x66
+    mov es, ax
+
+    /* Set the trap frame in the stack and clear the direction flag */
+    mov ebp, esp
+    cld
+
+    /* Save the exception list */
+    mov eax, fs:[KPCR_EXCEPTION_LIST]
+    mov [esp+KTRAP_FRAME_EXCEPTION_LIST], eax
+
+    /* Check if we need debugging */
+    mov eax, dr7
+    test eax, ~DR7_RESERVED_MASK
+    mov [esp+KTRAP_FRAME_DR7], eax
+    jnz Dr_&Label
+
+Dr_&EndLabel:
+.endm
+
+//
+// @name V86_TRAP_EPILOG
+// 
+// This macro creates an epilogue for leaving V86 traps
+//
+// @param None.
+//
+// @remark None.
+//
+.macro V86_TRAP_EPILOG
+
+    /* Get the current thread and make it unalerted */
+ExitBegin:
+    mov ebx, PCR[KPCR_CURRENT_THREAD]
+    mov byte ptr [ebx+KTHREAD_ALERTED], 0
+
+    /* Check if it has User-mode APCs pending */
+    cmp byte ptr [ebx+KTHREAD_PENDING_USER_APC], 0
+    jne PendingUserApc
+
+    /* It doesn't, pop the frame */
+    add esp, KTRAP_FRAME_EDX
+    pop edx
+    pop ecx
+    pop eax
+
+    /* Check if DR registers should be restored */
+    test dword ptr [ebp+KTRAP_FRAME_DR7], ~DR7_RESERVED_MASK
+    jnz V86DebugRestore
+
+    /* Finish popping the rest of the frame, and return to P-mode */
+V86DebugContinue:
+    add esp, 12
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+    add esp, 4
+    iretd
+
+V86DebugRestore:
+
+    /* Get DR0, 1 */
+    xor ebx, ebx
+    mov esi, [ebp+KTRAP_FRAME_DR0]
+    mov edi, [ebp+KTRAP_FRAME_DR1]
+
+    /* Clear DR 7 */
+    mov dr7, ebx
+
+    /* Get DR2 and load DR0-2 */
+    mov ebx, [ebp+KTRAP_FRAME_DR2]
+    mov dr0, esi
+    mov dr1, edi
+    mov dr2, ebx
+
+    /* Get DR3-7 */
+    mov esi, [ebp+KTRAP_FRAME_DR0]
+    mov edi, [ebp+KTRAP_FRAME_DR1]
+    mov ebx, [ebp+KTRAP_FRAME_DR7]
+
+    /* Load them */
+    mov dr3, esi
+    mov dr6, edi
+    mov dr7, ebx
+    jmp V86DebugContinue
+
+PendingUserApc:
+
+    /* Raise to APC level */
+    mov ecx, APC_LEVEL
+    call @KfRaiseIrql@4
+
+    /* Save KIRQL and deliver APCs */
+    push eax
+    sti
+    push ebp
+    push 0
+    push UserMode
+    call _KiDeliverApc@12
+
+    /* Restore IRQL */
+    pop ecx
+    call @KfLowerIrql@4
+    cli
+
+    /* Check if we're not in V86 anymore */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz ExitBegin
 .endm
 
 //
