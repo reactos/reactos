@@ -39,7 +39,6 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
             /* Check for port change on this port */
             if (tmp & 0x02)
             {
-                PIO_WORKITEM WorkItem = NULL;
                 PWORKITEM_DATA WorkItemData = NULL;
 
                 /* Connect or Disconnect? */
@@ -86,13 +85,6 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     FdoDeviceExtension->ChildDeviceCount++;
                     CompletePendingRequest(FdoDeviceExtension);
 
-                    WorkItem = IoAllocateWorkItem(FdoDeviceExtension->Pdo);
-                    if (!WorkItem)
-                    {
-                        DPRINT1("WorkItem allocation failed!\n");
-                        break;
-                    }
-
                     WorkItemData = ExAllocatePool(NonPagedPool, sizeof(WORKITEM_DATA));
                     if (!WorkItemData)
                     {
@@ -100,7 +92,17 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                         break;
                     }
 
-                    IoQueueWorkItem(WorkItem,
+                    WorkItemData->IoWorkItem = IoAllocateWorkItem(FdoDeviceExtension->Pdo);
+                    if (!WorkItemData->IoWorkItem)
+                    {
+                        DPRINT1("WorkItem allocation failed!\n");
+                        break;
+                    }
+
+
+                    WorkItemData->FdoDeviceExtension = FdoDeviceExtension;
+                    
+                    IoQueueWorkItem(WorkItemData->IoWorkItem,
                                     (PIO_WORKITEM_ROUTINE)DeviceArrivalWorkItem,
                                     DelayedWorkQueue,
                                     WorkItemData);
