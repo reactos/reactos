@@ -411,6 +411,12 @@ KiEoiHelper(
 
 VOID
 FASTCALL
+Ki386BiosCallReturnAddress(
+    IN PKTRAP_FRAME TrapFrame
+);
+
+ULONG_PTR
+FASTCALL
 KiExitV86Mode(
     IN PKTRAP_FRAME TrapFrame
 );
@@ -442,7 +448,6 @@ extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
 extern VOID __cdecl FrRestore(VOID);
-extern VOID Ki386BiosCallReturnAddress(VOID);
 
 PFX_SAVE_AREA
 FORCEINLINE

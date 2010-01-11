@@ -871,6 +871,19 @@ _Ki386SetupAndExitToV86Mode@4:
 
     /* Enter V8086 mode */
     pushad
-    call @KiEnterV86Mode@0
+    sub esp, (12 + KTRAP_FRAME_LENGTH + NPX_FRAME_LENGTH)
+    mov ecx, esp
+    call @KiEnterV86Mode@4
+    jmp $
 .endfunc
+
+.globl @Ki386BiosCallReturnAddress@4
+@Ki386BiosCallReturnAddress@4:
+
+    /* Exit V8086 mode */
+    call @KiExitV86Mode@4
+    mov esp, eax
+    add esp, (12 + KTRAP_FRAME_LENGTH + NPX_FRAME_LENGTH)
+    popad
+    ret
 

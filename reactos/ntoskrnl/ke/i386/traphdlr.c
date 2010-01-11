@@ -1255,11 +1255,11 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
           * Why? Because part of the trap frame actually corresponds to the IRET
           * stack during the trap exit!
           */
-          if ((TrapFrame->HardwareEsp == (ULONG)KiExitV86Mode) &&
+          if ((TrapFrame->HardwareEsp == (ULONG)Ki386BiosCallReturnAddress) &&
               (TrapFrame->HardwareSegSs == (KGDT_R0_CODE | RPL_MASK)))
           {
               /* Exit the V86 trap! */
-              KiExitV86Mode(TrapFrame);
+              Ki386BiosCallReturnAddress(TrapFrame);
           }
           else
           {
