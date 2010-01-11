@@ -19,8 +19,6 @@ ULONG KeI386EFlagsAndMaskV86 = EFLAGS_USER_SANITIZE;
 ULONG KeI386EFlagsOrMaskV86 = EFLAGS_INTERRUPT_MASK;
 PVOID Ki386IopmSaveArea;
 BOOLEAN KeI386VirtualIntExtensions = FALSE;
-
-#if 1
 const PULONG KiNtVdmState = (PULONG)FIXED_NTVDMSTATE_LINEAR_PC_AT;
 
 /* UNHANDLED OPCODES **********************************************************/
@@ -431,8 +429,128 @@ Ki386HandleOpcodeV86(IN PKTRAP_FRAME TrapFrame)
     return KiVdmHandleOpcode(TrapFrame, 1);
 }
 
+ULONG_PTR
+FASTCALL
+KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
+{
+    PKV8086_STACK_FRAME StackFrame;
+    PKGDTENTRY GdtEntry;
+    PKTHREAD Thread;
+    PKTRAP_FRAME PmTrapFrame;
+    PKV86_FRAME V86Frame;
+    PFX_SAVE_AREA NpxFrame;
+    
+    /* Get the stack frame back */
+    StackFrame = CONTAINING_RECORD(TrapFrame->Esi, KV8086_STACK_FRAME, V86Frame);
+    PmTrapFrame = &StackFrame->TrapFrame;
+    V86Frame = &StackFrame->V86Frame;
+    NpxFrame = &StackFrame->NpxArea;
+    
+    /* Copy the FPU frame back */
+    Thread = KeGetCurrentThread();
+    RtlCopyMemory(KiGetThreadNpxArea(Thread), NpxFrame, sizeof(FX_SAVE_AREA));
+
+    /* Set initial stack back */
+    Thread->InitialStack = (PVOID)((ULONG_PTR)V86Frame->ThreadStack + sizeof(FX_SAVE_AREA));
+    
+    /* Set ESP0 back in the KTSS */
+    KeGetPcr()->TSS->Esp0 = (ULONG_PTR)&PmTrapFrame->V86Es;
+
+    /* Restore TEB addresses */
+    Thread->Teb = V86Frame->ThreadTeb;
+    KeGetPcr()->Tib.Self = V86Frame->PcrTeb;
+    
+    /* Setup real TEB descriptor */
+    GdtEntry = &((PKIPCR)KeGetPcr())->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];
+    GdtEntry->BaseLow = (USHORT)((ULONG_PTR)Thread->Teb & 0xFFFF);
+    GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Thread->Teb >> 16);
+    GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Thread->Teb >> 24);
+
+    /* Enable interrupts and pop back non-volatiles */
+    _enable();
+    return TrapFrame->Edi;
+}
+
+VOID
+FASTCALL
+KiEnterV86Mode(VOID)
+{
+    PKTHREAD Thread;
+    PKGDTENTRY GdtEntry;
+    KV8086_STACK_FRAME StackFrameBuffer;
+    PKV8086_STACK_FRAME StackFrame = &StackFrameBuffer;
+    PKTRAP_FRAME TrapFrame = &StackFrame->TrapFrame;
+    PKV86_FRAME V86Frame = &StackFrame->V86Frame;
+    PFX_SAVE_AREA NpxFrame = &StackFrame->NpxArea;
+
+    /* Build fake user-mode trap frame */
+    TrapFrame->SegCs = KGDT_R0_CODE | RPL_MASK;
+    TrapFrame->SegEs = TrapFrame->SegDs = TrapFrame->SegFs = TrapFrame->SegGs = 0;
+    TrapFrame->ErrCode = 0;
+    
+    /* Get the current thread's initial stack */
+    Thread = KeGetCurrentThread();
+    V86Frame->ThreadStack = KiGetThreadNpxArea(Thread);
+    
+    /* Save TEB addresses */
+    V86Frame->ThreadTeb = Thread->Teb;
+    V86Frame->PcrTeb = KeGetPcr()->Tib.Self;
+    
+    /* Save return EIP */
+    TrapFrame->Eip = (ULONG_PTR)Ki386BiosCallReturnAddress;
+    
+    /* Save our stack (after the frames) */
+    TrapFrame->Esi = (ULONG_PTR)V86Frame;
+    TrapFrame->Edi = (ULONG_PTR)_AddressOfReturnAddress() + 4;
+    
+    /* Sanitize EFlags and enable interrupts */
+    TrapFrame->EFlags = __readeflags() & 0x60DD7;
+    TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
+    
+    /* Fill out the rest of the frame */
+    TrapFrame->HardwareSegSs = KGDT_R3_DATA | RPL_MASK;
+    TrapFrame->HardwareEsp = 0x11FFE;
+    TrapFrame->ExceptionList = EXCEPTION_CHAIN_END;
+    TrapFrame->Dr7 = 0;
+    //TrapFrame->DbgArgMark = 0xBADB0D00;
+    TrapFrame->PreviousPreviousMode = -1;
+    
+    /* Disable interrupts */
+    _disable();
+    
+    /* Copy the thread's NPX frame */
+    RtlCopyMemory(NpxFrame, V86Frame->ThreadStack, sizeof(FX_SAVE_AREA));
+    
+    /* Clear exception list */
+    KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
+    
+    /* Set new ESP0 */
+    KeGetPcr()->TSS->Esp0 = (ULONG_PTR)&TrapFrame->V86Es;
+                             
+    /* Set new initial stack */
+    Thread->InitialStack = V86Frame;
+        
+    /* Set VDM TEB */
+    Thread->Teb = (PTEB)TRAMPOLINE_TEB;
+    KeGetPcr()->Tib.Self = (PVOID)TRAMPOLINE_TEB;
+    
+    /* Setup VDM TEB descriptor */
+    GdtEntry = &((PKIPCR)KeGetPcr())->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];
+    GdtEntry->BaseLow = (USHORT)((ULONG_PTR)TRAMPOLINE_TEB & 0xFFFF);
+    GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)TRAMPOLINE_TEB >> 16);
+    GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)TRAMPOLINE_TEB >> 24);
+    
+    /* Enable interrupts */
+    _enable();
+ 
+    /* Start VDM execution */
+    NtVdmControl(VdmStartExecution, NULL);
+    
+    /* Exit to V86 mode */
+    KiEoiHelper(TrapFrame);
+}
+ 
 /* PUBLIC FUNCTIONS ***********************************************************/
-#endif
 
 /*
  * @implemented

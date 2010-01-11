@@ -139,6 +139,27 @@ typedef union _KTRAP_EXIT_SKIP_BITS
         return TRUE;                                \
     }
 
+C_ASSERT(NPX_FRAME_LENGTH == sizeof(FX_SAVE_AREA));
+
+//
+// Local parameters
+//
+typedef struct _KV86_FRAME
+{
+    PVOID ThreadStack;
+    PVOID ThreadTeb;
+    PVOID PcrTeb;
+} KV86_FRAME, *PKV86_FRAME;
+
+//
+// Virtual Stack Frame
+//
+typedef struct _KV8086_STACK_FRAME
+{
+    KTRAP_FRAME TrapFrame;
+    FX_SAVE_AREA NpxArea;
+    KV86_FRAME V86Frame;
+} KV8086_STACK_FRAME, *PKV8086_STACK_FRAME;
               
 //
 // Registers an interrupt handler with an IDT vector
@@ -382,6 +403,12 @@ Ki386HandleOpcodeV86(
     IN PKTRAP_FRAME TrapFrame
 );
 
+VOID
+FASTCALL
+KiEoiHelper(
+    IN PKTRAP_FRAME TrapFrame
+);
+
 //
 // Global x86 only Kernel data
 //
@@ -409,6 +436,14 @@ extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
 extern VOID __cdecl FrRestore(VOID);
+extern VOID Ki386BiosCallReturnAddress(VOID);
+
+PFX_SAVE_AREA
+FORCEINLINE
+KiGetThreadNpxArea(IN PKTHREAD Thread)
+{
+    return (PFX_SAVE_AREA)((ULONG_PTR)Thread->InitialStack - sizeof(FX_SAVE_AREA));
+}
 
 //
 // Sanitizes a selector
