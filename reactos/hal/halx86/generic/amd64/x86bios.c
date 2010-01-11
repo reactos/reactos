@@ -12,6 +12,8 @@
 //#define NDEBUG
 #include <debug.h>
 
+#include "x86emu.h"
+
 /* This page serves as fallback for pages used by Mm */
 #define DEFAULT_PAGE 0x21
 
@@ -20,6 +22,24 @@
 BOOLEAN x86BiosIsInitialized;
 LONG x86BiosBufferIsAllocated = 0;
 PUCHAR x86BiosMemoryMapping;
+
+
+VOID
+NTAPI
+DbgDumpPage(PUCHAR MemBuffer, USHORT Segment)
+{
+    ULONG x, y, Offset;
+
+    for (y = 0; y < 0x100; y++)
+    {
+        for (x = 0; x < 0x10; x++)
+        {
+            Offset = Segment * 16 + y * 16 + x;
+            DbgPrint("%02x ", MemBuffer[Offset]);
+        }
+        DbgPrint("\n");
+    }
+}
 
 VOID
 NTAPI
@@ -62,7 +82,7 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock)
         {
             /* Check if the memory type is firmware */
             if (Descriptor->MemoryType != LoaderFirmwarePermanent &&
-                Descriptor->MemoryType != LoaderFirmwarePermanent)
+                Descriptor->MemoryType != LoaderSpecialMemory)
             {
                 /* It's something else, so don't use it! */
                 Last = min(Descriptor->BasePage + Descriptor->PageCount, 0x100);
@@ -82,13 +102,16 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock)
     ASSERT(x86BiosMemoryMapping);
 
     DPRINT1("memory: %p, %p\n", *(PVOID*)x86BiosMemoryMapping, *(PVOID*)(x86BiosMemoryMapping + 8));
+    //DbgDumpPage(x86BiosMemoryMapping, 0xc351);
 
     x86BiosIsInitialized = TRUE;
+    
+    HalpBiosDisplayReset();
 }
 
 NTSTATUS
 NTAPI
-x86BiosAllocateBuffer (
+x86BiosAllocateBuffer(
     ULONG *Size,
     USHORT *Segment,
     USHORT *Offset)
@@ -117,7 +140,7 @@ x86BiosAllocateBuffer (
 
 NTSTATUS
 NTAPI
-x86BiosFreeBuffer (
+x86BiosFreeBuffer(
     USHORT Segment,
     USHORT Offset)
 {
@@ -141,7 +164,7 @@ x86BiosFreeBuffer (
 
 NTSTATUS
 NTAPI
-x86BiosReadMemory (
+x86BiosReadMemory(
     USHORT Segment,
     USHORT Offset,
     PVOID Buffer,
@@ -168,7 +191,7 @@ x86BiosReadMemory (
 
 NTSTATUS
 NTAPI
-x86BiosWriteMemory (
+x86BiosWriteMemory(
     USHORT Segment,
     USHORT Offset,
     PVOID Buffer,
@@ -193,97 +216,18 @@ x86BiosWriteMemory (
     return STATUS_SUCCESS;
 }
 
-typedef struct
-{
-    union
-    {
-        ULONG Eax;
-        USHORT Ax;
-        struct
-        {
-            UCHAR Al;
-            UCHAR Ah;
-        };
-    };
-    union
-    {
-        ULONG Ecx;
-        USHORT Cx;
-        struct
-        {
-            UCHAR Cl;
-            UCHAR Ch;
-        };
-    };
-    union
-    {
-        ULONG Edx;
-        USHORT Dx;
-        struct
-        {
-            UCHAR Dl;
-            UCHAR Dh;
-        };
-    };
-    union
-    {
-        ULONG Ebx;
-        USHORT Bx;
-        struct
-        {
-            UCHAR Bl;
-            UCHAR Bh;
-        };
-    };
-    ULONG Ebp;
-    ULONG Esi;
-    ULONG Edi;
-    USHORT SegDs;
-    USHORT SegEs;
-
-    /* Extended */
-    union
-    {
-        ULONG Eip;
-        USHORT Ip;
-    };
-
-    union
-    {
-        ULONG Esp;
-        USHORT Sp;
-    };
-
-} X86_REGISTERS, *PX86_REGISTERS;
-
-enum
-{
-    X86_VMFLAGS_RETURN_ON_IRET = 1,
-};
-
-typedef struct
-{
-    union
-    {
-        X86_BIOS_REGISTERS BiosRegisters;
-        X86_REGISTERS Registers;
-    };
-    
-    struct
-    {
-        ULONG ReturnOnIret:1;
-    } Flags;
-    
-    PVOID MemBuffer;
-} X86_VM_STATE, *PX86_VM_STATE;
-
 BOOLEAN
 NTAPI
-x86BiosCall (
+x86BiosCall(
     ULONG InterruptNumber,
     X86_BIOS_REGISTERS *Registers)
 {
     X86_VM_STATE VmState;
+    struct
+    {
+        USHORT Ip;
+        USHORT SegCs;
+    } *InterrupTable;
 
     /* Zero the VmState */
     RtlZeroMemory(&VmState, sizeof(VmState));
@@ -294,9 +238,18 @@ x86BiosCall (
     /* Set the physical memory buffer */
     VmState.MemBuffer = x86BiosMemoryMapping;
 
-    /* Initialize IP from the interrupt vector table */
-    VmState.Registers.Ip = ((PUSHORT)x86BiosMemoryMapping)[InterruptNumber];
+    /* Set Eflags */
+    VmState.Registers.Eflags.Long = 0; // FIXME
 
+    /* Setup stack */
+    VmState.Registers.SegSs = 0; // FIXME
+    VmState.Registers.Sp = 0x2000 - 2; // FIXME
+
+    /* Initialize IP from the interrupt vector table */
+    InterrupTable = (PVOID)x86BiosMemoryMapping;
+    VmState.Registers.SegCs = InterrupTable[InterruptNumber].SegCs;
+    VmState.Registers.Eip = InterrupTable[InterruptNumber].Ip;
+    
     /* Make the function return on IRET */
     VmState.Flags.ReturnOnIret = 1;
 
@@ -313,7 +266,24 @@ BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
 {
-    UNIMPLEMENTED;
+    X86_BIOS_REGISTERS Registers;
+    ULONG OldEflags;
+
+    /* Save flags and disable interrupts */
+    OldEflags = __readeflags();
+    _disable();
+
+    /* Set AH = 0 (Set video mode), AL = 0x12 (640x480x16 vga) */
+    Registers.Eax = 0x12;
+
+    /* Call INT 0x10 */
+    x86BiosCall(0x10, &Registers);
+
+    // FIXME: check result
+
+    /* Restore previous flags */
+    __writeeflags(OldEflags);
+
     return TRUE;
 }
 
