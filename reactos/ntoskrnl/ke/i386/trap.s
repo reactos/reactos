@@ -54,7 +54,6 @@ idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
 GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
 /* Trap handlers referenced from C code                                     */
-.globl _KiTrap2
 .globl _KiTrap8
 .globl _KiTrap19
 
@@ -69,7 +68,6 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 /* And special system-defined software traps:                               */
 .globl _NtRaiseException@12
 .globl _NtContinue@8
-.globl _KiCoprocessorError@0
 .globl _KiDispatchInterrupt@0
 
 /* Interrupt template entrypoints                                           */
@@ -77,10 +75,12 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 .globl _KiInterruptTemplateObject
 .globl _KiInterruptTemplateDispatch
 
+#ifndef HAL_INTERRUPT_SUPPORT_IN_C
 /* Chained and Normal generic interrupt handlers for 1st and 2nd level entry*/
 .globl _KiChainedDispatch2ndLvl@0
 .globl _KiInterruptDispatch@0
 .globl _KiChainedDispatch@0
+#endif
 
 /* We implement the following trap exit points:                             */
 .globl _KiServiceExit               /* Exit from syscall                    */
@@ -143,10 +143,6 @@ _KiTrapIoTable:
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 .text
 
-_KiGetTickCount:
-_KiCallbackReturn:
-    /* FIXME: TODO */
-    UNHANDLED_PATH "TickCount/Callback Interrupts\n"
 
 .func KiSystemService
 TRAP_FIXUPS kss_a, kss_t, DoNotFixupV86, DoNotFixupAbios
@@ -473,6 +469,8 @@ AbiosExit:
     /* FIXME: TODO */
     UNHANDLED_PATH "ABIOS Exit"
 
+GENERATE_TRAP_HANDLER KiGetTickCount, 1
+GENERATE_TRAP_HANDLER KiCallbackReturn, 1        
 GENERATE_TRAP_HANDLER KiRaiseAssertion, 1
 GENERATE_TRAP_HANDLER KiDebugService, 1
 
@@ -768,6 +766,52 @@ QuantumEnd:
     ret
 .endfunc
 
+/*
+ * This is how the new-style interrupt template will look like.
+ *
+ * We setup the stack for a trap frame in the KINTERRUPT DispatchCode itself and
+ * then mov the stack address in ECX, since the handlers are FASTCALL. We also
+ * need to know the address of the KINTERRUPT. To do this, we maintain the old
+ * dynamic patching technique (EDX instead of EDI, however) and let the C API
+ * up in KeInitializeInterrupt replace the 0 with the address. Since this is in
+ * EDX, it becomes the second parameter for our FASTCALL function.
+ *
+ * Finally, we jump directly to the C interrupt handler, which will choose the
+ * appropriate dispatcher (chained, single, flat, floating) that was setup. The
+ * dispatchers themselves are also C FASTCALL functions. This double-indirection
+ * maintains the NT model should anything depend on it.
+ *
+ * Note that since we always jump to the C handler which then jumps to the C
+ * dispatcher, the first JMP in the template object is NOT patched anymore since
+ * it's static. Also, keep in mind this code is dynamically copied into nonpaged
+ * pool! It runs off the KINTERRUPT directly, so you can't just JMP to the code
+ * since JMPs are relative, and the location of the JMP below is dynamic. So we
+ * use EDI to store the absolute offset, and jump to that instead.
+ *
+ */
+#ifdef HAL_INTERRUPT_SUPPORT_IN_C
+.func KiInterruptTemplate
+_KiInterruptTemplate:
+    push 0
+    pushad
+    sub esp, KTRAP_FRAME_LENGTH - KTRAP_FRAME_PREVIOUS_MODE
+    mov ecx, esp
+
+_KiInterruptTemplate2ndDispatch:
+    /* Dummy code, will be replaced by the address of the KINTERRUPT */
+    mov edx, 0
+
+_KiInterruptTemplateObject:
+    /* Jump to C code */
+    mov edi, offset @KiInterruptHandler@8
+    jmp edi
+
+_KiInterruptTemplateDispatch:
+    /* Marks the end of the template so that the jump above can be edited */
+.endfunc
+
+#else
+
 .func KiInterruptTemplate
 _KiInterruptTemplate:
 
@@ -982,74 +1026,4 @@ IsrTimeout:
     /* Cleanup verification */
     VERIFY_INT_END kid, 0
 .endfunc
-
-.globl _KeSynchronizeExecution@12
-.func KeSynchronizeExecution@12
-_KeSynchronizeExecution@12:
-
-    /* Save EBX and put the interrupt object in it */
-    push ebx
-    mov ebx, [esp+8]
-
-    /* Go to DIRQL */
-    mov cl, [ebx+KINTERRUPT_SYNCHRONIZE_IRQL]
-    call @KfRaiseIrql@4
-    push eax
-
-#ifdef CONFIG_SMP
-    /* Acquire the interrupt spinlock FIXME: Write this in assembly */
-    mov ecx, [ebx+KINTERRUPT_ACTUAL_LOCK]
-    call @KefAcquireSpinLockAtDpcLevel@4
 #endif
-
-    /* Call the routine */
-    push [esp+20]
-    call [esp+20]
-
-#ifdef CONFIG_SMP
-    /* Release the interrupt spinlock FIXME: Write this in assembly */
-    push eax
-    mov ecx, [ebx+KINTERRUPT_ACTUAL_LOCK]
-    call @KefReleaseSpinLockFromDpcLevel@4
-    pop eax
-#endif
-
-    /* Lower IRQL */
-    mov ebx, eax
-    pop ecx
-    call @KfLowerIrql@4
-
-    /* Return status */
-    mov eax, ebx
-    pop ebx
-    ret 12
-.endfunc
-
-/*++
- * Kii386SpinOnSpinLock 
- *
- *     FILLMEIN
- *
- * Params:
- *     SpinLock - FILLMEIN
- *
- *     Flags - FILLMEIN
- *
- * Returns:
- *     None.
- *
- * Remarks:
- *     FILLMEIN
- *
- *--*/
-.globl _Kii386SpinOnSpinLock@8
-.func Kii386SpinOnSpinLock@8
-_Kii386SpinOnSpinLock@8:
-
-#ifdef CONFIG_SMP
-    /* FIXME: TODO */
-    int 3
-#endif
-
-    ret 8
-.endfunc

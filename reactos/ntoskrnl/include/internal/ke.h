@@ -938,6 +938,7 @@ KiEndUnexpectedRange(
     VOID
 );
 
+#ifndef HAL_INTERRUPT_SUPPORT_IN_C
 VOID
 NTAPI
 KiInterruptDispatch(
@@ -949,6 +950,21 @@ NTAPI
 KiChainedDispatch(
     VOID
 );
+#else
+VOID
+FASTCALL
+KiInterruptDispatch(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
+);
+
+VOID
+FASTCALL
+KiChainedDispatch(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
+);
+#endif
 
 VOID
 NTAPI

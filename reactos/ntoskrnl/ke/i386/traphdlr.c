@@ -89,17 +89,19 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
         while (TRUE);
     }
     
-    /* Check if segments should be restored */
-    if (!SkipBits.SkipSegments)
+    /* Check if this is a user trap */
+    if (KiUserTrap(TrapFrame))
     {
-        /* Restore segments */
-        Ke386SetGs(TrapFrame->SegGs);
-        Ke386SetEs(TrapFrame->SegEs);
-        Ke386SetDs(TrapFrame->SegDs);
-        Ke386SetFs(TrapFrame->SegFs);
-    }
-    else if (KiUserTrap(TrapFrame))
-    {
+        /* Check if segments should be restored */
+        if (!SkipBits.SkipSegments)
+        {
+            /* Restore segments */
+            Ke386SetGs(TrapFrame->SegGs);
+            Ke386SetEs(TrapFrame->SegEs);
+            Ke386SetDs(TrapFrame->SegDs);
+            Ke386SetFs(TrapFrame->SegFs);
+        }
+        
         /* Always restore FS since it goes from KPCR to TEB */
         Ke386SetFs(TrapFrame->SegFs);
     }
@@ -223,6 +225,58 @@ KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
         UNIMPLEMENTED;
         while (TRUE);
     }
+}
+
+VOID
+FASTCALL
+KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Save registers */
+    KiTrapFrameFromPushaStack(TrapFrame);
+    
+    /* Set bogus previous mode */
+    TrapFrame->PreviousPreviousMode = -1;
+    
+    /* Check for V86 mode */
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Check if this wasn't kernel code */
+    if (TrapFrame->SegCs != KGDT_R0_CODE)
+    {
+        /* Save segments and then switch to correct ones */
+        TrapFrame->SegFs = Ke386GetFs();
+        TrapFrame->SegGs = Ke386GetGs();
+        TrapFrame->SegDs = Ke386GetDs();
+        TrapFrame->SegEs = Ke386GetEs();
+        Ke386SetFs(KGDT_R0_PCR);
+        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    }
+    
+    /* Save exception list and terminate it */
+    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
+    KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
+    
+    /* FIXME: This doesn't support 16-bit ABIOS interrupts */
+    TrapFrame->ErrCode = 0;
+    
+    /* Clear direction flag */
+    Ke386ClearDirectionFlag();
+    
+    /* Flush DR7 and check for debugging */
+    TrapFrame->Dr7 = 0;
+    if (KeGetCurrentThread()->DispatcherHeader.DebugActive & 0xFF)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Set debug header */
+    KiFillTrapFrameDebug(TrapFrame);
 }
 
 VOID
@@ -1499,6 +1553,24 @@ KiTrap19Handler(IN PKTRAP_FRAME TrapFrame)
     KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
 }
 
+/* SOFTWARE SERVICES **********************************************************/
+
+VOID
+FASTCALL
+KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+FASTCALL
+KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
 VOID
 FASTCALL
 KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
@@ -1528,5 +1600,105 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
     /* Continue with the common handler */
     KiDebugHandler(TrapFrame, TrapFrame->Eax, TrapFrame->Ecx, TrapFrame->Edx);
 }
+
+/* HARDWARE INTERRUPTS ********************************************************/
+
+/*
+ * This code can only be used once the HAL handles system interrupt code in C.
+ *
+ * This is because the HAL, when ending a system interrupt, might see pending
+ * DPC or APC interrupts, and attempt to piggyback on the interrupt context in
+ * order to deliver them. Once they have been devlivered, it will then "end" the
+ * interrupt context by doing a call to the ASM EOI Handler which naturally will
+ * throw up on our C-style KTRAP_FRAME.
+ *
+ * Once it works, expect a noticeable speed boost during hardware interrupts.
+ */
+#ifdef HAL_INTERRUPT_SUPPORT_IN_C
+
+typedef
+FASTCALL
+VOID
+(PKI_INTERRUPT_DISPATCH)(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
+);
+
+VOID
+FORCEINLINE
+KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
+                IN KIRQL OldIrql,
+                IN BOOLEAN Spurious)
+{
+    if (Spurious) KiEoiHelper(TrapFrame);
+    
+    _disable();
+    
+    DPRINT1("Calling HAL to restore IRQL to: %d\n", OldIrql);
+    HalEndSystemInterrupt(OldIrql, 0);
+    
+    DPRINT1("Exiting trap\n");
+    KiEoiHelper(TrapFrame);
+}
+
+VOID
+FASTCALL
+KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame,
+                    IN PKINTERRUPT Interrupt)
+{       
+    KIRQL OldIrql;
+
+    KeGetCurrentPrcb()->InterruptCount++;
+    
+    DPRINT1("Calling HAL with %lx %lx\n", Interrupt->SynchronizeIrql, Interrupt->Vector);
+    if (HalBeginSystemInterrupt(Interrupt->SynchronizeIrql,
+                                Interrupt->Vector,
+                                &OldIrql))
+    {
+        /* Acquire interrupt lock */
+        KxAcquireSpinLock(Interrupt->ActualLock);
+        
+        /* Call the ISR */
+        DPRINT1("Calling ISR: %p with context: %p\n", Interrupt->ServiceRoutine, Interrupt->ServiceContext);
+        Interrupt->ServiceRoutine(Interrupt, Interrupt->ServiceContext);
+        
+        /* Release interrupt lock */
+        KxReleaseSpinLock(Interrupt->ActualLock);
+        
+        /* Now call the epilogue code */
+        DPRINT1("Exiting interrupt\n");
+        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
+    }
+    else
+    {
+        /* Now call the epilogue code */
+        DPRINT1("Exiting Spurious interrupt\n");
+        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+    }
+}
+
+VOID
+FASTCALL
+KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
+                  IN PKINTERRUPT Interrupt)
+{   
+    KeGetCurrentPrcb()->InterruptCount++;
+    
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+FASTCALL
+KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
+                   IN PKINTERRUPT Interrupt)
+{   
+    /* Enter interrupt frame */
+    KiEnterInterruptTrap(TrapFrame);
+
+    /* Call the correct dispatcher */
+    ((PKI_INTERRUPT_DISPATCH*)Interrupt->DispatchAddress)(TrapFrame, Interrupt);
+}
+#endif
 
 /* EOF */

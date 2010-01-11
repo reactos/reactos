@@ -454,3 +454,17 @@ KeTestSpinLock(IN PKSPIN_LOCK SpinLock)
     /* Spinlock appears to be free */
     return TRUE;
 }
+
+#ifdef _M_IX86
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+Kii386SpinOnSpinLock(IN PKSPIN_LOCK SpinLock,
+                     IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+#endif

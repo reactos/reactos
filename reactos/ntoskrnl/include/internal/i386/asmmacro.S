@@ -238,7 +238,7 @@ _&Name:
     pushad
     sub esp, KTRAP_FRAME_LENGTH - KTRAP_FRAME_PREVIOUS_MODE
     mov ecx, esp
-    call @&Name&Handler@4
+    jmp @&Name&Handler@4
 .endfunc
 .endm
 
