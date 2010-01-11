@@ -577,29 +577,6 @@ Error:
 
 GENERATE_TRAP_HANDLER KiTrap0, 1
 GENERATE_TRAP_HANDLER KiTrap1, 1
-
-.func KiTrap2
-_KiTrap2:
-    //
-    // Call the C handler
-    //
-    stdCall _KiNmiFault, esp                        // Handle it in C
-    or al, al                                       // Check if it got handled
-    jne 1f                                          // Resume from NMI
-
-    //
-    // Return from NMI
-    //
-    iretd                                           // Interrupt return
-    jmp _KiTrap2                                    // Handle recursion
-1:
-    //
-    // Crash the system
-    //
-    mov eax, EXCEPTION_NMI                          // STOP fault code
-    jmp _KiSystemFatalException                     // Bugcheck helper
-.endfunc
-
 GENERATE_TRAP_HANDLER KiTrap3, 1
 GENERATE_TRAP_HANDLER KiTrap4, 1
 GENERATE_TRAP_HANDLER KiTrap5, 1
@@ -616,61 +593,6 @@ GENERATE_TRAP_HANDLER KiTrap0F, 1
 GENERATE_TRAP_HANDLER KiTrap16, 1
 GENERATE_TRAP_HANDLER KiTrap17, 1
 GENERATE_TRAP_HANDLER KiTrap19, 1
-
-.func KiSystemFatalException
-_KiSystemFatalException:
-
-    /* Push the trap frame */
-    push ebp
-
-    /* Push empty parameters */
-    push 0
-    push 0
-    push 0
-
-    /* Push trap number and bugcheck code */
-    push eax
-    push UNEXPECTED_KERNEL_MODE_TRAP
-    call _KeBugCheckWithTf@24
-    ret
-.endfunc
-
-.func KiCoprocessorError@0
-_KiCoprocessorError@0:
-
-    /* Get the NPX Thread's Initial stack */
-    mov eax, PCR[KPCR_NPX_THREAD]
-    mov eax, [eax+KTHREAD_INITIAL_STACK]
-
-    /* Make space for the FPU Save area */
-    sub eax, SIZEOF_FX_SAVE_AREA
-
-    /* Set the CR0 State */
-    mov dword ptr [eax+FN_CR0_NPX_STATE], 8
-
-    /* Update it */
-    mov eax, cr0
-    or eax, 8
-    mov cr0, eax
-
-    /* Return to caller */
-    ret
-.endfunc
-
-.func Ki16BitStackException
-_Ki16BitStackException:
-
-    /* Save stack */
-    push ss
-    push esp
-
-    /* Go to kernel mode thread stack */
-    mov eax, PCR[KPCR_CURRENT_THREAD]
-    add esp, [eax+KTHREAD_INITIAL_STACK]
-
-    /* Switch to good stack segment */
-    UNHANDLED_PATH "16-Bit Stack"
-.endfunc
 
 /* UNEXPECTED INTERRUPT HANDLERS **********************************************/
 

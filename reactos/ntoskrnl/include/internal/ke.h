@@ -1051,6 +1051,13 @@ KiSaveProcessorControlState(
 );
 
 VOID
+NTAPI
+KiSaveProcessorState(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame
+);
+
+VOID
 FASTCALL
 KiRetireDpcList(
     IN PKPRCB Prcb
