@@ -6,13 +6,46 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
 #include "internal/trap_x.h"
 
+/* GLOBALS ********************************************************************/
+
+UCHAR KiTrapPrefixTable[] =
+{
+    0xF2,                      /* REP                                  */
+    0xF3,                      /* REP INS/OUTS                         */
+    0x67,                      /* ADDR                                 */
+    0xF0,                      /* LOCK                                 */
+    0x66,                      /* OP                                   */
+    0x2E,                      /* SEG                                  */
+    0x3E,                      /* DS                                   */
+    0x26,                      /* ES                                   */
+    0x64,                      /* FS                                   */
+    0x65,                      /* GS                                   */
+    0x36,                      /* SS                                   */
+};
+
+UCHAR KiTrapIoTable[] =
+{
+    0xE4,                      /* IN                                   */
+    0xE5,                      /* IN                                   */
+    0xEC,                      /* IN                                   */
+    0xED,                      /* IN                                   */
+    0x6C,                      /* INS                                  */
+    0x6D,                      /* INS                                  */
+    0xE6,                      /* OUT                                  */
+    0xE7,                      /* OUT                                  */
+    0xEE,                      /* OUT                                  */
+    0xEF,                      /* OUT                                  */
+    0x6E,                      /* OUTS                                 */
+    0x6F,                      /* OUTS                                 */    
+};
+ 
 /* TRAP EXIT CODE *************************************************************/
 
 VOID
@@ -780,6 +813,288 @@ KiTrap12Handler(IN PKTRAP_FRAME TrapFrame)
     /* FIXME: Kill the system */
     UNIMPLEMENTED;
     KiSystemFatalException(EXCEPTION_STACK_FAULT, TrapFrame);
+}
+
+VOID
+FASTCALL
+KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
+{
+    ULONG i, j, Iopl;
+    BOOLEAN Privileged = FALSE;
+    PUCHAR Instructions;
+    UCHAR Instruction = 0;
+    KIRQL OldIrql;
+    
+    /* Check for V86 GPF */
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+        /* Enter V86 trap */
+        KiEnterV86Trap(TrapFrame);
+        
+        /* Must be a VDM process */
+        if (!PsGetCurrentProcess()->VdmObjects)
+        {
+            /* Enable interrupts */
+            _enable();
+            
+            /* Setup illegal instruction fault */
+            KiDispatchException0Args(STATUS_ILLEGAL_INSTRUCTION,
+                                     TrapFrame->Eip,
+                                     TrapFrame);
+        }
+        
+        /* Go to APC level */
+        OldIrql = KfRaiseIrql(APC_LEVEL);
+        _enable();
+        
+        /* Handle the V86 opcode */
+        if (Ki386HandleOpcodeV86(TrapFrame) == 0xFF)
+        {
+            /* Should only happen in VDM mode */
+            UNIMPLEMENTED;
+            while (TRUE);   
+        }
+        
+        /* Bring IRQL back */
+        KfLowerIrql(OldIrql);
+        _disable();
+        
+        /* Do a quick V86 exit if possible */
+        if (TrapFrame->EFlags & EFLAGS_V86_MASK) KiExitV86Trap(TrapFrame);
+        
+        /* Exit trap the slow way */
+        KiEoiHelper(TrapFrame);
+    }
+
+    /* Save trap frame */
+    KiEnterTrap(TrapFrame);
+
+    /* Check for user-mode GPF */
+    if (KiUserTrap(TrapFrame))
+    {
+        /* Must be user-mode! */
+        if (!KiUserTrap(TrapFrame)) KiSystemFatalException(EXCEPTION_GP_FAULT, TrapFrame);
+        
+        /* Should not be VDM */
+        ASSERT(KiVdmTrap(TrapFrame) == FALSE);
+        
+        /* Enable interrupts and check error code */
+        _enable();
+        if (!TrapFrame->ErrCode)
+        {            
+            /* FIXME: Use SEH */
+            Instructions = (PUCHAR)TrapFrame->Eip;
+            
+            /* Scan next 15 opcodes */
+            for (i = 0; i < 15; i++)
+            {
+                /* Skip prefix instructions */
+                for (j = 0; j < sizeof(KiTrapPrefixTable); j++)
+                {
+                    /* Is this NOT a prefix instruction? */
+                    if (Instructions[i] != KiTrapPrefixTable[j])
+                    {
+                        /* We can go ahead and handle the fault now */
+                        Instruction = Instructions[i];
+                        break;
+                    }
+                }
+                
+                /* Do we need to keep looking? */
+                if (Instruction) break;
+            }
+                
+            /* If all we found was prefixes, then this instruction is too long */
+            if (!Instruction)
+            {
+                /* Setup illegal instruction fault */
+                KiDispatchException0Args(STATUS_ILLEGAL_INSTRUCTION,
+                                         TrapFrame->Eip,
+                                         TrapFrame);
+            }
+            
+            /* Check for privileged instructions */
+            if (Instruction == 0xF4)                            // HLT
+            {
+                /* HLT is privileged */
+                Privileged = TRUE;
+            }
+            else if (Instruction == 0x0F)
+            {
+                /* Test if it's any of the privileged two-byte opcodes */
+                if (((Instructions[i + 1] == 0x00) &&              // LLDT or LTR
+                     (((Instructions[i + 2] & 0x38) == 0x10) ||        // LLDT
+                      (Instructions[i + 2] == 0x18))) ||               // LTR
+                    ((Instructions[i + 1] == 0x01) &&              // LGDT or LIDT or LMSW
+                     (((Instructions[i + 2] & 0x38) == 0x10) ||        // LLGT
+                      (Instructions[i + 2] == 0x18) ||                 // LIDT
+                      (Instructions[i + 2] == 0x30))) ||               // LMSW
+                    (Instructions[i + 1] == 0x08) ||               // INVD
+                    (Instructions[i + 1] == 0x09) ||               // WBINVD
+                    (Instructions[i + 1] == 0x35) ||               // SYSEXIT
+                    (Instructions[i + 1] == 0x26) ||               // MOV DR, XXX
+                    (Instructions[i + 1] == 0x06) ||               // CLTS
+                    (Instructions[i + 1] == 0x20) ||               // MOV CR, XXX
+                    (Instructions[i + 1] == 0x24) ||               // MOV YYY, DR
+                    (Instructions[i + 1] == 0x30) ||               // WRMSR
+                    (Instructions[i + 1] == 0x33))                 // RDPMC
+                {
+                    /* These are all privileged */
+                    Privileged = TRUE;
+                }
+            }
+            else
+            {
+                /* Get the IOPL and compare with the RPL mask */
+                Iopl = (TrapFrame->EFlags & EFLAGS_IOPL) >> 12;
+                if ((TrapFrame->SegCs & RPL_MASK) == Iopl)
+                {
+                    /* I/O privilege error -- check for known instructions */
+                    if ((Instruction == 0xFA) || (Instruction == 0xFB)) // CLI or STI
+                    {
+                        /* These are privileged */
+                        Privileged = TRUE;
+                    }
+                    else
+                    {
+                        /* Last hope: an IN/OUT instruction */
+                        for (j = 0; j < sizeof(KiTrapIoTable); j++)
+                        {
+                            /* Is this an I/O instruction? */
+                            if (Instruction == KiTrapIoTable[j])
+                            {
+                                /* Then it's privileged */
+                                Privileged = TRUE;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            /* So now... was the instruction privileged or not? */
+            if (Privileged)
+            {
+                /* Whew! We have a privileged instruction, so dispatch the fault */
+                KiDispatchException0Args(STATUS_PRIVILEGED_INSTRUCTION,
+                                         TrapFrame->Eip,
+                                         TrapFrame);
+            }
+        }
+            
+        /* If we got here, send an access violation */
+        KiDispatchException2Args(STATUS_ACCESS_VIOLATION,
+                                 TrapFrame->Eip,
+                                 0,
+                                 0xFFFFFFFF,
+                                 TrapFrame);
+    }
+
+    /* Check for custom VDM trap handler */
+    if (KeGetPcr()->VdmAlert)
+    {
+        /* Not implemented */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* 
+     * Check for a fault during checking of the user instruction.
+     *
+     * Note that the SEH handler will catch invalid EIP, but we could be dealing
+     * with an invalid CS, which will generate another GPF instead.
+     *
+     */
+    if (((PVOID)TrapFrame->Eip >= (PVOID)KiTrap13Handler) &&
+        ((PVOID)TrapFrame->Eip < (PVOID)KiTrap13Handler))
+    {
+        /* Not implemented */
+        UNIMPLEMENTED;
+        while (TRUE);   
+    }
+    
+    /*
+     * NOTE: The ASM trap exit code would restore segment registers by doing
+     * a POP <SEG>, which could cause an invalid segment if someone had messed
+     * with the segment values.
+     *
+     * Another case is a bogus SS, which would hit a GPF when doing the ired.
+     * This could only be done through a buggy or malicious driver, or perhaps
+     * the kernel debugger.
+     *
+     * The kernel normally restores the "true" segment if this happens.
+     *
+     * However, since we're restoring in C, not ASM, we can't detect
+     * POP <SEG> since the actual instructions will be different.
+     *
+     * A better technique would be to check the EIP and somehow edit the
+     * trap frame before restarting the instruction -- but we would need to
+     * know the extract instruction that was used first.
+     *
+     * We could force a special instrinsic to use stack instructions, or write
+     * a simple instruction length checker.
+     *
+     * Nevertheless, this is a lot of work for the purpose of avoiding a crash
+     * when the user is purposedly trying to create one from kernel-mode, so
+     * we should probably table this for now since it's not a "real" issue.
+     */
+     
+     /*
+      * NOTE2: Another scenario is the IRET during a V8086 restore (BIOS Call)
+      * which will cause a GPF since the trap frame is a total mess (on purpose)
+      * as built in KiEnterV86Mode.
+      *
+      * The idea is to scan for IRET, scan for the known EIP adress, validate CS
+      * and then manually issue a jump to the V8086 return EIP.
+      */
+     Instructions = (PUCHAR)TrapFrame->Eip;
+     if (Instructions[0] == 0xCF)
+     {
+         /*
+          * Some evil shit is going on here -- this is not the SS:ESP you're 
+          * looking for! Instead, this is actually CS:EIP you're looking at!
+          * Why? Because part of the trap frame actually corresponds to the IRET
+          * stack during the trap exit!
+          */
+          if ((TrapFrame->HardwareEsp == (ULONG)KiExitV86Mode) &&
+              (TrapFrame->HardwareSegSs == (KGDT_R0_CODE | RPL_MASK)))
+          {
+              /* Exit the V86 trap! */
+              KiExitV86Mode(TrapFrame);
+          }
+          else
+          {
+              /* Otherwise, this is another kind of IRET fault */
+              UNIMPLEMENTED;
+              while (TRUE);
+          }
+     }
+     
+     /* So since we're not dealing with the above case, check for RDMSR/WRMSR */
+     if ((Instructions[0] == 0xF) &&            // 2-byte opcode
+        (((Instructions[1] >> 8) == 0x30) ||        // RDMSR
+         ((Instructions[2] >> 8) == 0x32)))         // WRMSR
+     {
+        /* Unknown CPU MSR, so raise an access violation */
+        KiDispatchException0Args(STATUS_ACCESS_VIOLATION,
+                                 TrapFrame->Eip,
+                                 TrapFrame);
+     }
+
+     /* Check for lazy segment load */
+     if (TrapFrame->SegDs != (KGDT_R3_DATA | RPL_MASK))
+     {
+         /* Fix it */
+         TrapFrame->SegDs = (KGDT_R3_DATA | RPL_MASK);
+     }
+     else if (TrapFrame->SegEs != (KGDT_R3_DATA | RPL_MASK))
+     {
+        /* Fix it */
+        TrapFrame->SegEs = (KGDT_R3_DATA | RPL_MASK);
+     }
+     
+     /* Do a direct trap exit: restore volatiles only */
+     KiExitTrap(TrapFrame, KTE_SKIP_PM_BIT | KTE_SKIP_SEG_BIT);
 }
 
 VOID

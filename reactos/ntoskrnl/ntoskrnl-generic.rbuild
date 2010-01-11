@@ -55,7 +55,6 @@
 				<file>usercall_asm.S</file>
 				<file>usercall.c</file>
 				<file>v86vdm.c</file>
-				<file>v86m_sup.S</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="arm">

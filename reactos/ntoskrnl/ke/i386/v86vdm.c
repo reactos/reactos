@@ -429,7 +429,7 @@ Ki386HandleOpcodeV86(IN PKTRAP_FRAME TrapFrame)
     return KiVdmHandleOpcode(TrapFrame, 1);
 }
 
-ULONG_PTR
+VOID
 FASTCALL
 KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
 {
@@ -466,9 +466,9 @@ KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
     GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Thread->Teb >> 16);
     GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Thread->Teb >> 24);
 
-    /* Enable interrupts and pop back non-volatiles */
+    /* Enable interrupts and get back to protected mode */
     _enable();
-    return TrapFrame->Edi;
+    KiV86TrapReturn(TrapFrame->Edi);
 }
 
 VOID
@@ -497,7 +497,7 @@ KiEnterV86Mode(VOID)
     V86Frame->PcrTeb = KeGetPcr()->Tib.Self;
     
     /* Save return EIP */
-    TrapFrame->Eip = (ULONG_PTR)Ki386BiosCallReturnAddress;
+    TrapFrame->Eip = (ULONG_PTR)KiExitV86Mode;
     
     /* Save our stack (after the frames) */
     TrapFrame->Esi = (ULONG_PTR)V86Frame;

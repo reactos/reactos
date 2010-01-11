@@ -409,6 +409,12 @@ KiEoiHelper(
     IN PKTRAP_FRAME TrapFrame
 );
 
+VOID
+FASTCALL
+KiExitV86Mode(
+    IN PKTRAP_FRAME TrapFrame
+);
+
 //
 // Global x86 only Kernel data
 //
@@ -518,5 +524,20 @@ Ke386SanitizeDr(IN PVOID DrAddress,
             (DrAddress <= MM_HIGHEST_USER_ADDRESS) ? DrAddress : 0);
 }
 
+FORCEINLINE
+VOID
+KiV86TrapReturn(IN ULONG_PTR Stack)
+{
+    /* Restore volatiles and stack */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "popa\n"
+        "ret\n"
+        :
+        : "r"(Stack)
+        : "%esp"
+    );
+}
 #endif
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */

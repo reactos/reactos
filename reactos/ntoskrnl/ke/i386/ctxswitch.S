@@ -864,3 +864,13 @@ WrongCpu2:
     int 3
 #endif
 .endfunc
+
+.globl _Ki386SetupAndExitToV86Mode@4
+.func Ki386SetupAndExitToV86Mode@4
+_Ki386SetupAndExitToV86Mode@4:
+
+    /* Enter V8086 mode */
+    pushad
+    call @KiEnterV86Mode@0
+.endfunc
+
