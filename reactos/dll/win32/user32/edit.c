@@ -1088,19 +1088,7 @@ static inline void text_buffer_changed(EDITSTATE *es)
 }
 
 /*********************************************************************
- *
- *	EDIT_LockBuffer
- *
- *	This acts as a LocalLock16(), but it locks only once.  This way
- *	you can call it whenever you like, without unlocking.
- *
- *	Initially the edit control allocates a HLOCAL32 buffer 
- *	(32 bit linear memory handler).  However, 16 bit application
- *	might send an EM_GETHANDLE message and expect a HLOCAL16 (16 bit SEG:OFF
- *	handler).  From that moment on we have to keep using this 16 bit memory
- *	handler, because it is supposed to be valid at all times after EM_GETHANDLE.
- *	What we do is create a HLOCAL16 buffer, copy the text, and do pointer
- *	conversion.
+ * EDIT_LockBuffer
  *
  */
 static void EDIT_LockBuffer(EDITSTATE *es)
@@ -1649,7 +1637,7 @@ static LRESULT EDIT_EM_Scroll(EDITSTATE *es, INT action)
 	    if(dy)
 		EDIT_EM_LineScroll(es, 0, dy);
 	}
-	return MAKELONG((INT16)dy, (BOOL16)TRUE);
+	return MAKELONG(dy, TRUE);
 }
 
 
@@ -3193,14 +3181,14 @@ static BOOL EDIT_CheckCombo(EDITSTATE *es, UINT msg, INT key)
             nEUI = 2;
          }
 
-         SendMessageW(hLBox, WM_KEYDOWN, (WPARAM)key, 0);
+         SendMessageW(hLBox, WM_KEYDOWN, key, 0);
          break;
 
       case WM_SYSKEYDOWN: /* Handle Alt+up/down arrows */
          if (nEUI)
             SendMessageW(hCombo, CB_SHOWDROPDOWN, bDropped ? FALSE : TRUE, 0);
          else
-            SendMessageW(hLBox, WM_KEYDOWN, (WPARAM)VK_F4, 0);
+            SendMessageW(hLBox, WM_KEYDOWN, VK_F4, 0);
          break;
    }
 
@@ -3324,7 +3312,7 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
                     HWND hwDefCtrl = GetDlgItem(es->hwndParent, LOWORD(dw));
                     if (hwDefCtrl)
                     {
-                        SendMessageW(es->hwndParent, WM_NEXTDLGCTL, (WPARAM)hwDefCtrl, (LPARAM)TRUE);
+                        SendMessageW(es->hwndParent, WM_NEXTDLGCTL, (WPARAM)hwDefCtrl, TRUE);
                         PostMessageW(hwDefCtrl, WM_KEYDOWN, VK_RETURN, 0);
                     }
                 }
@@ -3795,7 +3783,7 @@ static LRESULT EDIT_WM_SysKeyDown(EDITSTATE *es, INT key, DWORD key_data)
 		if (EDIT_CheckCombo(es, WM_SYSKEYDOWN, key))
 			return 0;
 	}
-	return DefWindowProcW(es->hwndSelf, WM_SYSKEYDOWN, (WPARAM)key, (LPARAM)key_data);
+	return DefWindowProcW(es->hwndSelf, WM_SYSKEYDOWN, key, key_data);
 }
 
 
@@ -4540,8 +4528,8 @@ LRESULT EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, B
 		{
 		    LPSTR textA = (LPSTR)lParam;
 		    INT countW = MultiByteToWideChar(CP_ACP, 0, textA, -1, NULL, 0);
-		    if((textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR))))
-			MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
+		    if (!(textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR)))) break;
+                    MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
 		}
 
 		EDIT_EM_ReplaceSel(es, (BOOL)wParam, textW, TRUE, TRUE);
@@ -4983,7 +4971,7 @@ const struct builtin_class_descr EDIT_builtin_class =
     CS_DBLCLKS | CS_PARENTDC,   /* style */
     WINPROC_EDIT,         /* proc */
 #ifdef __i386__
-    sizeof(EDITSTATE *) + sizeof(HLOCAL16), /* extra */
+    sizeof(EDITSTATE *) + sizeof(WORD), /* extra */
 #else
     sizeof(EDITSTATE *),  /* extra */
 #endif

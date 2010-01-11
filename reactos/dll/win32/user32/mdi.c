@@ -282,7 +282,7 @@ void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT del
     if (total < 0) /* we are called from CreateWindow */
     {
         MDICLIENTINFO *ci = get_client_info(hwndClient);
-        total = ci ? ci->nTotalCreated : 0;
+        total = ci->nTotalCreated;
         *id = ci->idFirstChild + ci->nActiveChildren;
         TRACE("MDI child id %04x\n", *id);
     }
@@ -1583,7 +1583,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
     case WM_SYSCHAR:
         if (wParam == '-')
         {
-            SendMessageW( hwnd, WM_SYSCOMMAND, (WPARAM)SC_KEYMENU, (DWORD)VK_SPACE);
+            SendMessageW( hwnd, WM_SYSCOMMAND, SC_KEYMENU, VK_SPACE);
             return 0;
         }
         break;
@@ -1686,7 +1686,7 @@ BOOL WINAPI TranslateMDISysAccel( HWND hwndClient, LPMSG msg )
                 return 0;
             }
             TRACE("wParam = %04lx\n", wParam);
-            SendMessageW(ci->hwndActiveChild, WM_SYSCOMMAND, wParam, (LPARAM)msg->wParam);
+            SendMessageW(ci->hwndActiveChild, WM_SYSCOMMAND, wParam, msg->wParam);
             return 1;
         }
     }

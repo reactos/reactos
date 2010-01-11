@@ -1425,14 +1425,14 @@ BOOL WINAPI SubtractRect( LPRECT dest, const RECT *src1, const RECT *src2 )
  */
 INT WINAPI FillRect( HDC hdc, const RECT *rect, HBRUSH hbrush )
 {
-    HBRUSH prevBrush;
+    HBRUSH prev_brush;
 
     if (hbrush <= (HBRUSH) (COLOR_MAX + 1)) hbrush = GetSysColorBrush( (ULONG_PTR)(hbrush) - 1 );
 
-    if (!(prevBrush = SelectObject( hdc, hbrush ))) return 0;
+    prev_brush = SelectObject( hdc, hbrush );
     PatBlt( hdc, rect->left, rect->top,
               rect->right - rect->left, rect->bottom - rect->top, PATCOPY );
-    SelectObject( hdc, prevBrush );
+    if (prev_brush) SelectObject( hdc, prev_brush );
     return 1;
 }
 

@@ -256,23 +256,25 @@ static HANDLE STATIC_GetImage( HWND hwnd, WPARAM wParam, DWORD style )
  *
  * Load the icon for an SS_ICON control.
  */
-static HICON STATIC_LoadIconA( HWND hwnd, LPCSTR name, DWORD style )
+static HICON STATIC_LoadIconA( HINSTANCE hInstance, LPCSTR name, DWORD style )
 {
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE );
-    if ((style & SS_REALSIZEIMAGE) != 0)
+    HICON hicon = 0;
+
+    if (hInstance && ((ULONG_PTR)hInstance >> 16))
     {
-        return LoadImageA(hInstance, name, IMAGE_ICON, 0, 0, LR_SHARED);
+        if ((style & SS_REALSIZEIMAGE) != 0)
+            hicon = LoadImageA(hInstance, name, IMAGE_ICON, 0, 0, LR_SHARED);
+        else
+        {
+            hicon = LoadIconA( hInstance, name );
+            if (!hicon) hicon = LoadCursorA( hInstance, name );
+        }
     }
-    else
-    {
-        HICON hicon = LoadIconA( hInstance, name );
-        if (!hicon) hicon = LoadCursorA( hInstance, name );
-        if (!hicon) hicon = LoadIconA( 0, name );
-        /* Windows doesn't try to load a standard cursor,
-           probably because most IDs for standard cursors conflict
-           with the IDs for standard icons anyway */
-        return hicon;
-    }
+    if (!hicon) hicon = LoadIconA( 0, name );
+    /* Windows doesn't try to load a standard cursor,
+       probably because most IDs for standard cursors conflict
+       with the IDs for standard icons anyway */
+    return hicon;
 }
 
 /***********************************************************************
@@ -280,47 +282,25 @@ static HICON STATIC_LoadIconA( HWND hwnd, LPCSTR name, DWORD style )
  *
  * Load the icon for an SS_ICON control.
  */
-static HICON STATIC_LoadIconW( HWND hwnd, LPCWSTR name, DWORD style )
+static HICON STATIC_LoadIconW( HINSTANCE hInstance, LPCWSTR name, DWORD style )
 {
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE );
-    if ((style & SS_REALSIZEIMAGE) != 0)
-    {
-        return LoadImageW(hInstance, name, IMAGE_ICON, 0, 0, LR_SHARED);
-    }
-    else
-    {
-        HICON hicon = LoadIconW( hInstance, name );
-        if (!hicon) hicon = LoadCursorW( hInstance, name );
-        if (!hicon) hicon = LoadIconW( 0, name );
-        /* Windows doesn't try to load a standard cursor,
-           probably because most IDs for standard cursors conflict
-           with the IDs for standard icons anyway */
-        return hicon;
-    }
-}
+    HICON hicon = 0;
 
-/***********************************************************************
- *           STATIC_LoadBitmapA
- *
- * Load the bitmap for an SS_BITMAP control.
- */
-static HBITMAP STATIC_LoadBitmapA( HWND hwnd, LPCSTR name )
-{
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE );
-    /* Windows doesn't try to load OEM Bitmaps (hInstance == NULL) */
-    return LoadBitmapA( hInstance, name );
-}
-
-/***********************************************************************
- *           STATIC_LoadBitmapW
- *
- * Load the bitmap for an SS_BITMAP control.
- */
-static HBITMAP STATIC_LoadBitmapW( HWND hwnd, LPCWSTR name )
-{
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE );
-    /* Windows doesn't try to load OEM Bitmaps (hInstance == NULL) */
-    return LoadBitmapW( hInstance, name );
+    if (hInstance && ((ULONG_PTR)hInstance >> 16))
+    {
+        if ((style & SS_REALSIZEIMAGE) != 0)
+            hicon = LoadImageW(hInstance, name, IMAGE_ICON, 0, 0, LR_SHARED);
+        else
+        {
+            hicon = LoadIconW( hInstance, name );
+            if (!hicon) hicon = LoadCursorW( hInstance, name );
+        }
+    }
+    if (!hicon) hicon = LoadIconW( 0, name );
+    /* Windows doesn't try to load a standard cursor,
+       probably because most IDs for standard cursors conflict
+       with the IDs for standard icons anyway */
+    return hicon;
 }
 
 /***********************************************************************
@@ -471,42 +451,31 @@ LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
     case WM_NCCREATE:
         {
-            LPCSTR textA;
-            LPCWSTR textW;
-    
+            CREATESTRUCTW *cs = (CREATESTRUCTW *)lParam;
+
             if (full_style & SS_SUNKEN)
                 SetWindowLongW( hwnd, GWL_EXSTYLE,
                                 GetWindowLongW( hwnd, GWL_EXSTYLE ) | WS_EX_STATICEDGE );
-
-            if(unicode)
-            {
-                textA = NULL;
-                textW = ((LPCREATESTRUCTW)lParam)->lpszName;
-            }
-            else
-            {
-                textA = ((LPCREATESTRUCTA)lParam)->lpszName;
-                textW = NULL;
-            }
 
             switch (style) {
             case SS_ICON:
                 {
                     HICON hIcon;
-                    if(unicode)
-                       hIcon = STATIC_LoadIconW(hwnd, textW, full_style);
+                    if (unicode || IS_INTRESOURCE(cs->lpszName))
+                       hIcon = STATIC_LoadIconW(cs->hInstance, cs->lpszName, full_style);
                     else
-                       hIcon = STATIC_LoadIconA(hwnd, textA, full_style);
+                       hIcon = STATIC_LoadIconA(cs->hInstance, (LPCSTR)cs->lpszName, full_style);
                     STATIC_SetIcon(hwnd, hIcon, full_style);
                 }
                 break;
             case SS_BITMAP:
+                if ((ULONG_PTR)cs->hInstance >> 16)
                 {
                     HBITMAP hBitmap;
-                    if(unicode)
-                        hBitmap = STATIC_LoadBitmapW(hwnd, textW);
+                    if (unicode || IS_INTRESOURCE(cs->lpszName))
+                        hBitmap = LoadBitmapW(cs->hInstance, cs->lpszName);
                     else
-                        hBitmap = STATIC_LoadBitmapA(hwnd, textA);
+                        hBitmap = LoadBitmapA(cs->hInstance, (LPCSTR)cs->lpszName);
                     STATIC_SetBitmap(hwnd, hBitmap, full_style);
                 }
                 break;

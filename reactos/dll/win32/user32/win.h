@@ -26,7 +26,6 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include <wine/windef16.h>
 
 #include "user_private.h"
 
@@ -70,16 +69,14 @@ typedef struct tagWND
 #define WIN_NEED_SIZE             0x0002 /* Internal WM_SIZE is needed */
 #define WIN_NCACTIVATED           0x0004 /* last WM_NCACTIVATE was positive */
 #define WIN_ISMDICLIENT           0x0008 /* Window is an MDIClient */
-#define WIN_ISDIALOG              0x0010 /* Window is a dialog */
-#define WIN_ISWIN32               0x0020 /* Understands Win32 messages */
-#define WIN_ISUNICODE             0x0040 /* Window is Unicode */
-#define WIN_NEEDS_SHOW_OWNEDPOPUP 0x0080 /* WM_SHOWWINDOW:SC_SHOW must be sent in the next ShowOwnedPopup call */
+#define WIN_ISUNICODE             0x0010 /* Window is Unicode */
+#define WIN_NEEDS_SHOW_OWNEDPOPUP 0x0020 /* WM_SHOWWINDOW:SC_SHOW must be sent in the next ShowOwnedPopup call */
 
   /* Window functions */
 extern HWND get_hwnd_message_parent(void) DECLSPEC_HIDDEN;
 extern BOOL is_desktop_window( HWND hwnd ) DECLSPEC_HIDDEN;
 extern WND *WIN_GetPtr( HWND hwnd ) DECLSPEC_HIDDEN;
-extern HWND WIN_Handle32( HWND16 hwnd16 ) DECLSPEC_HIDDEN;
+extern HWND WIN_GetFullHandle( HWND hwnd ) DECLSPEC_HIDDEN;
 extern HWND WIN_IsCurrentProcess( HWND hwnd ) DECLSPEC_HIDDEN;
 extern HWND WIN_IsCurrentThread( HWND hwnd ) DECLSPEC_HIDDEN;
 extern HWND WIN_SetOwner( HWND hwnd, HWND owner ) DECLSPEC_HIDDEN;
@@ -87,7 +84,7 @@ extern ULONG WIN_SetStyle( HWND hwnd, ULONG set_bits, ULONG clear_bits ) DECLSPE
 extern BOOL WIN_GetRectangles( HWND hwnd, RECT *rectWindow, RECT *rectClient ) DECLSPEC_HIDDEN;
 extern LRESULT WIN_DestroyWindow( HWND hwnd ) DECLSPEC_HIDDEN;
 extern void WIN_DestroyThreadWindows( HWND hwnd ) DECLSPEC_HIDDEN;
-extern HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module, UINT flags ) DECLSPEC_HIDDEN;
+extern HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module, BOOL unicode ) DECLSPEC_HIDDEN;
 extern BOOL WIN_IsWindowDrawable( HWND hwnd, BOOL ) DECLSPEC_HIDDEN;
 extern HWND *WIN_ListChildren( HWND hwnd ) DECLSPEC_HIDDEN;
 extern LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, BOOL unicode ) DECLSPEC_HIDDEN;
@@ -97,12 +94,6 @@ extern HDESK open_winstation_desktop( HWINSTA hwinsta, LPCWSTR name, DWORD flags
 /* user lock */
 extern void USER_Lock(void) DECLSPEC_HIDDEN;
 extern void USER_Unlock(void) DECLSPEC_HIDDEN;
-
-static inline HWND WIN_GetFullHandle( HWND hwnd )
-{
-    if (!HIWORD(hwnd) && hwnd) hwnd = WIN_Handle32( LOWORD(hwnd) );
-    return hwnd;
-}
 
 /* to release pointers retrieved by WIN_GetPtr */
 static inline void WIN_ReleasePtr( WND *ptr )

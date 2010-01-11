@@ -1111,16 +1111,6 @@ BOOL WINAPI LockWindowUpdate( HWND hwnd )
 {
     static HWND lockedWnd;
 
-    /* This function is fully implemented by the following patch:
-     *
-     * http://www.winehq.org/hypermail/wine-patches/2004/01/0142.html
-     *
-     * but in order to work properly, it needs the ability to invalidate
-     * DCEs in other processes when the lock window is changed, which
-     * isn't possible yet.
-     * -mike
-     */
-
     FIXME("(%p), partial stub!\n",hwnd);
 
     USER_Lock();

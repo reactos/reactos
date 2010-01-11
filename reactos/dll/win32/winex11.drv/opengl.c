@@ -310,6 +310,7 @@ static BOOL X11DRV_WineGL_InitOpenglInfo(void)
 
     vis = pglXChooseVisual(gdi_display, screen, attribList);
     if (vis) {
+#ifdef __i386__
         WORD old_fs = wine_get_fs();
         /* Create a GLX Context. Without one we can't query GL information */
         ctx = pglXCreateContext(gdi_display, vis, None, GL_TRUE);
@@ -321,6 +322,9 @@ static BOOL X11DRV_WineGL_InitOpenglInfo(void)
             ERR( "You need to set the \"UseFastTls\" option to \"2\" in your X config file.\n" );
             return FALSE;
         }
+#else
+        ctx = pglXCreateContext(gdi_display, vis, None, GL_TRUE);
+#endif
     }
 
     if (ctx) {
@@ -1597,7 +1601,7 @@ static BOOL internal_SetPixelFormat(X11DRV_PDEVICE *physDev,
             return FALSE;
         }
 
-        if(!SendMessageW(hwnd, WM_X11DRV_SET_WIN_FORMAT, (WPARAM)fmt->fmt_id, 0)) {
+        if(!SendMessageW(hwnd, WM_X11DRV_SET_WIN_FORMAT, fmt->fmt_id, 0)) {
             ERR("Couldn't set format of the window, returning failure\n");
             return FALSE;
         }

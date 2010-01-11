@@ -3032,7 +3032,7 @@ HBRUSH WINAPI GetSysColorBrush( INT index )
 {
     if (0 <= index && index < NUM_SYS_COLORS) return SysColorBrushes[index];
     WARN("Unknown index(%d)\n", index );
-    return GetStockObject(LTGRAY_BRUSH);
+    return NULL;
 }
 
 

@@ -185,7 +185,7 @@ static LRESULT WINAPI tray_wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
     case WM_MBUTTONDBLCLK:
         /* notify the owner hwnd of the message */
         TRACE("relaying 0x%x\n", msg);
-        ret = PostMessageW(icon->owner, icon->callback_message, (WPARAM) icon->id, (LPARAM) msg);
+        ret = PostMessageW(icon->owner, icon->callback_message, icon->id, msg);
         if (!ret && (GetLastError() == ERROR_INVALID_WINDOW_HANDLE))
         {
             WARN( "application window was destroyed, removing icon %u\n", icon->id );

@@ -1468,6 +1468,11 @@ BOOL WINAPI DdeUnaccessData(HDDEDATA hData)
 BOOL WINAPI DdeFreeDataHandle(HDDEDATA hData)
 {
     TRACE("(%p)\n", hData);
+
+    /* 1 is the handle value returned by an asynchronous operation. */
+    if (hData == (HDDEDATA)1)
+        return TRUE;
+
     return GlobalFree(hData) == 0;
 }
 

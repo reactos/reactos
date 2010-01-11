@@ -234,12 +234,6 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             {
                 WND *wndPtr;
 
-                /* Free dialog heap (if created) */
-                if (dlgInfo->hDialogHeap)
-                {
-                    GlobalUnlock(dlgInfo->hDialogHeap);
-                    GlobalFree(dlgInfo->hDialogHeap);
-                }
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
@@ -347,9 +341,7 @@ DIALOGINFO *DIALOG_get_info( HWND hwnd, BOOL create )
         dlgInfo->yBaseUnit   = 0;
         dlgInfo->idResult    = 0;
         dlgInfo->flags       = 0;
-        dlgInfo->hDialogHeap = 0;
         wndPtr->dlgInfo = dlgInfo;
-        wndPtr->flags |= WIN_ISDIALOG;
     }
 
 out:

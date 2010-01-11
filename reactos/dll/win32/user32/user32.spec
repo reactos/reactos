@@ -773,11 +773,6 @@
 @ stdcall wvsprintfW(ptr wstr ptr)
 
 ################################################################
-# Wine extensions: Win16 functions that are needed by other dlls
-#
-@ stdcall DestroyIcon32(long long)
-
-################################################################
 # Wine dll separation hacks, these will go away, don't use them
 #
 @ cdecl HOOK_CallHooks(long long long long long)

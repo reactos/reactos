@@ -609,26 +609,6 @@ VOID WINAPI LoadLocalFonts(VOID)
 
 
 /***********************************************************************
- *		USER_489 (USER.489)
- */
-LONG WINAPI stub_USER_489(void) { FIXME("stub\n"); return 0; }
-
-/***********************************************************************
- *		USER_490 (USER.490)
- */
-LONG WINAPI stub_USER_490(void) { FIXME("stub\n"); return 0; }
-
-/***********************************************************************
- *		USER_492 (USER.492)
- */
-LONG WINAPI stub_USER_492(void) { FIXME("stub\n"); return 0; }
-
-/***********************************************************************
- *		USER_496 (USER.496)
- */
-LONG WINAPI stub_USER_496(void) { FIXME("stub\n"); return 0; }
-
-/***********************************************************************
  *		User32InitializeImmEntryTable
  */
 BOOL WINAPI User32InitializeImmEntryTable(LPVOID ptr)

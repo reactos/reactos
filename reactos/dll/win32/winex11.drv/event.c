@@ -309,8 +309,8 @@ static inline void call_event_handler( Display *display, XEvent *event )
         hwnd = 0;  /* not for a registered window */
     if (!hwnd && event->xany.window == root_window) hwnd = GetDesktopWindow();
 
-    TRACE( "%s for hwnd/window %p/%lx\n",
-           dbgstr_event( event->type ), hwnd, event->xany.window );
+    TRACE( "%lu %s for hwnd/window %p/%lx\n",
+           event->xany.serial, dbgstr_event( event->type ), hwnd, event->xany.window );
     wine_tsx11_unlock();
     thread_data = x11drv_thread_data();
     prev = thread_data->current_event;
@@ -830,6 +830,13 @@ void X11DRV_ConfigureNotify( HWND hwnd, XEvent *xev )
     if (!hwnd) return;
     if (!(data = X11DRV_get_win_data( hwnd ))) return;
     if (!data->mapped || data->iconic || !data->managed) return;
+    if (data->configure_serial && (long)(data->configure_serial - event->serial) > 0)
+    {
+        TRACE( "win %p/%lx event %d,%d,%dx%d ignoring old serial %lu/%lu\n",
+               hwnd, data->whole_window, event->x, event->y, event->width, event->height,
+               event->serial, data->configure_serial );
+        return;
+    }
 
     /* Get geometry */
 

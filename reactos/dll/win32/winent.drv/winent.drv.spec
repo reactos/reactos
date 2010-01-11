@@ -93,7 +93,7 @@
 @ cdecl EmptyClipboard(long) RosDrv_EmptyClipboard
 @ cdecl EndClipboardUpdate() RosDrv_EndClipboardUpdate
 @ cdecl EnumClipboardFormats(long) RosDrv_EnumClipboardFormats
-@ cdecl GetClipboardData(long ptr ptr) RosDrv_GetClipboardData
+@ cdecl GetClipboardData(long) RosDrv_GetClipboardData
 @ cdecl GetClipboardFormatName(long ptr long) RosDrv_GetClipboardFormatName
 @ cdecl GetDC(long long long ptr ptr long) RosDrv_GetDC
 @ cdecl IsClipboardFormatAvailable(long) RosDrv_IsClipboardFormatAvailable
@@ -101,7 +101,7 @@
 @ cdecl RegisterClipboardFormat(wstr) RosDrv_RegisterClipboardFormat
 @ cdecl ReleaseDC(long long) RosDrv_ReleaseDC
 @ cdecl ScrollDC(long long long ptr ptr long ptr) RosDrv_ScrollDC
-@ cdecl SetClipboardData(long long long long) RosDrv_SetClipboardData
+@ cdecl SetClipboardData(long long long) RosDrv_SetClipboardData
 @ cdecl SetCapture(long long) RosDrv_SetCapture
 @ cdecl SetFocus(long) RosDrv_SetFocus
 @ cdecl SetLayeredWindowAttributes(long long long long) RosDrv_SetLayeredWindowAttributes

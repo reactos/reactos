@@ -4346,6 +4346,9 @@ struct get_object_info_reply
     struct reply_header __header;
     unsigned int   access;
     unsigned int   ref_count;
+    data_size_t    total;
+    /* VARARG(name,unicode_str); */
+    char __pad_20[4];
 };
 
 
@@ -5391,6 +5394,6 @@ union generic_reply
     struct free_user_handle_reply free_user_handle_reply;
 };
 
-#define SERVER_PROTOCOL_VERSION 394
+#define SERVER_PROTOCOL_VERSION 395
 
 #endif /* __WINE_WINE_SERVER_PROTOCOL_H */

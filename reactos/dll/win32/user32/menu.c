@@ -657,7 +657,7 @@ static MENUITEM *MENU_FindItem( HMENU *hmenu, UINT *nPos, UINT wFlags )
  * *hmenu in case it is found in another sub-menu.
  * If the submenu cannot be found, NO_SELECTED_ITEM is returned.
  */
-UINT MENU_FindSubMenu( HMENU *hmenu, HMENU hSubTarget )
+static UINT MENU_FindSubMenu( HMENU *hmenu, HMENU hSubTarget )
 {
     POPUPMENU *menu;
     UINT i;

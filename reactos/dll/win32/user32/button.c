@@ -742,7 +742,7 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
          lpOutputProc = BUTTON_DrawTextCallback;
          if (!(text = get_button_text( hwnd ))) return;
          lp = (LPARAM)text;
-         wp = (WPARAM)dtFlags;
+         wp = dtFlags;
          break;
 
       case BS_ICON:

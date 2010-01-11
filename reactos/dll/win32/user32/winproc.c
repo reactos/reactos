@@ -1122,6 +1122,43 @@ static LRESULT WINAPI StaticWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     return wow_handlers.static_proc( hwnd, msg, wParam, lParam, TRUE );
 }
 
+static DWORD wait_message( DWORD count, CONST HANDLE *handles, DWORD timeout, DWORD mask, DWORD flags )
+{
+    DWORD ret = USER_Driver->pMsgWaitForMultipleObjectsEx( count, handles, timeout, mask, flags );
+    if (ret == WAIT_TIMEOUT && !count && !timeout) NtYieldExecution();
+    return ret;
+}
+
+static HICON alloc_icon_handle( unsigned int size )
+{
+    struct user_object *obj = HeapAlloc( GetProcessHeap(), 0, sizeof(*obj) + size );
+    if (!obj) return 0;
+    return alloc_user_handle( obj, USER_ICON );
+}
+
+static struct tagCURSORICONINFO *get_icon_ptr( HICON handle )
+{
+    struct user_object *obj = get_user_handle_ptr( handle, USER_ICON );
+    if (obj == OBJ_OTHER_PROCESS)
+    {
+        WARN( "cursor handle %p from other process\n", handle );
+        obj = NULL;
+    }
+    return obj ? (struct tagCURSORICONINFO *)(obj + 1) : NULL;
+}
+
+static void release_icon_ptr( HICON handle, struct tagCURSORICONINFO *ptr )
+{
+    release_user_handle_ptr( (struct user_object *)ptr - 1 );
+}
+
+static int free_icon_handle( HICON handle )
+{
+    struct user_object *obj = free_user_handle( handle, USER_ICON );
+    HeapFree( GetProcessHeap(), 0, obj );
+    return !obj;
+}
+
 
 /**********************************************************************
  *		UserRegisterWowHandlers (USER32.@)
@@ -1131,15 +1168,19 @@ static LRESULT WINAPI StaticWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
  */
 void WINAPI UserRegisterWowHandlers( const struct wow_handlers16 *new, struct wow_handlers32 *orig )
 {
-    orig->button_proc    = ButtonWndProc_common;
-    orig->combo_proc     = ComboWndProc_common;
-    orig->edit_proc      = EditWndProc_common;
-    orig->listbox_proc   = ListBoxWndProc_common;
-    orig->mdiclient_proc = MDIClientWndProc_common;
-    orig->scrollbar_proc = ScrollBarWndProc_common;
-    orig->static_proc    = StaticWndProc_common;
-    orig->create_window  = WIN_CreateWindowEx;
-    orig->alloc_winproc  = WINPROC_AllocProc;
+    orig->button_proc     = ButtonWndProc_common;
+    orig->combo_proc      = ComboWndProc_common;
+    orig->edit_proc       = EditWndProc_common;
+    orig->listbox_proc    = ListBoxWndProc_common;
+    orig->mdiclient_proc  = MDIClientWndProc_common;
+    orig->scrollbar_proc  = ScrollBarWndProc_common;
+    orig->static_proc     = StaticWndProc_common;
+    orig->wait_message    = wait_message;
+    orig->create_window   = WIN_CreateWindowEx;
+    orig->get_win_handle  = WIN_GetFullHandle;
+    orig->alloc_winproc   = WINPROC_AllocProc;
+    orig->get_dialog_info = DIALOG_get_info;
+    orig->dialog_box_loop = DIALOG_DoDialogBox;
 
     wow_handlers = *new;
 }
@@ -1153,6 +1194,12 @@ struct wow_handlers16 wow_handlers =
     MDIClientWndProc_common,
     ScrollBarWndProc_common,
     StaticWndProc_common,
+    wait_message,
+    WIN_CreateWindowEx,
     NULL,  /* call_window_proc */
-    NULL   /* call_dialog_proc */
+    NULL,  /* call_dialog_proc */
+    alloc_icon_handle,
+    get_icon_ptr,
+    release_icon_ptr,
+    free_icon_handle
 };

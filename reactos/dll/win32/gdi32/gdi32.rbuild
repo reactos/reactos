@@ -30,7 +30,6 @@
 	<file>enhmeta2.c</file>
 	<file>font.c</file>
 	<file>freetype.c</file>
-	<file>gdi_main.c</file>
 	<file>gdiobj.c</file>
 	<file>icm.c</file>
 	<file>mapping.c</file>

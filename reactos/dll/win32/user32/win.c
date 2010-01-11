@@ -525,18 +525,18 @@ HWND WIN_IsCurrentThread( HWND hwnd )
 
 
 /***********************************************************************
- *           WIN_Handle32
+ *           WIN_GetFullHandle
  *
- * Convert a 16-bit window handle to a full 32-bit handle.
+ * Convert a possibly truncated window handle to a full 32-bit handle.
  */
-HWND WIN_Handle32( HWND16 hwnd16 )
+HWND WIN_GetFullHandle( HWND hwnd )
 {
     WND *ptr;
-    HWND hwnd = (HWND)(ULONG_PTR)hwnd16;
 
-    if (hwnd16 <= 1 || hwnd16 == 0xffff) return hwnd;
+    if (!hwnd || (ULONG_PTR)hwnd >> 16) return hwnd;
+    if (LOWORD(hwnd) <= 1 || LOWORD(hwnd) == 0xffff) return hwnd;
     /* do sign extension for -2 and -3 */
-    if (hwnd16 >= (HWND16)-3) return (HWND)(LONG_PTR)(INT16)hwnd16;
+    if (LOWORD(hwnd) >= (WORD)-3) return (HWND)(LONG_PTR)(INT16)LOWORD(hwnd);
 
     if (!(ptr = WIN_GetPtr( hwnd ))) return hwnd;
 
@@ -1070,14 +1070,13 @@ static void dump_window_styles( DWORD style, DWORD exstyle )
  *
  * Implementation of CreateWindowEx().
  */
-HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module, UINT flags )
+HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module, BOOL unicode )
 {
     INT cx, cy, style, sw = SW_SHOW;
     LRESULT result;
     RECT rect;
     WND *wndPtr;
     HWND hwnd, parent, owner, top_child = 0;
-    BOOL unicode = (flags & WIN_ISUNICODE) != 0;
     MDICREATESTRUCTW mdi_cs;
     CBT_CREATEWNDW cbtc;
     CREATESTRUCTW cbcs;
@@ -1218,7 +1217,6 @@ HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module,
     wndPtr->hIcon          = 0;
     wndPtr->hIconSmall     = 0;
     wndPtr->hSysMenu       = 0;
-    wndPtr->flags         |= (flags & WIN_ISWIN32);
 
     wndPtr->min_pos.x = wndPtr->min_pos.y = -1;
     wndPtr->max_pos.x = wndPtr->max_pos.y = -1;
@@ -1466,11 +1464,11 @@ HWND WINAPI CreateWindowExA( DWORD exStyle, LPCSTR className,
         WCHAR bufferW[256];
         if (!MultiByteToWideChar( CP_ACP, 0, className, -1, bufferW, sizeof(bufferW)/sizeof(WCHAR) ))
             return 0;
-        return WIN_CreateWindowEx( (CREATESTRUCTW *)&cs, bufferW, instance, WIN_ISWIN32 );
+        return wow_handlers.create_window( (CREATESTRUCTW *)&cs, bufferW, instance, FALSE );
     }
     /* Note: we rely on the fact that CREATESTRUCTA and */
     /* CREATESTRUCTW have the same layout. */
-    return WIN_CreateWindowEx( (CREATESTRUCTW *)&cs, (LPCWSTR)className, instance, WIN_ISWIN32 );
+    return wow_handlers.create_window( (CREATESTRUCTW *)&cs, (LPCWSTR)className, instance, FALSE );
 }
 
 
@@ -1498,7 +1496,7 @@ HWND WINAPI CreateWindowExW( DWORD exStyle, LPCWSTR className,
     cs.lpszClass      = className;
     cs.dwExStyle      = exStyle;
 
-    return WIN_CreateWindowEx( &cs, className, instance, WIN_ISWIN32 | WIN_ISUNICODE );
+    return wow_handlers.create_window( &cs, className, instance, TRUE );
 }
 
 
@@ -1989,7 +1987,7 @@ static LONG_PTR WIN_GetWindowLong( HWND hwnd, INT offset, UINT size, BOOL unicod
         retvalue = get_win_data( (char *)wndPtr->wExtra + offset, size );
 
         /* Special case for dialog window procedure */
-        if ((offset == DWLP_DLGPROC) && (size == sizeof(LONG_PTR)) && (wndPtr->flags & WIN_ISDIALOG))
+        if ((offset == DWLP_DLGPROC) && (size == sizeof(LONG_PTR)) && wndPtr->dlgInfo)
             retvalue = (LONG_PTR)WINPROC_GetProc( (WNDPROC)retvalue, unicode );
         WIN_ReleasePtr( wndPtr );
         return retvalue;
@@ -2118,7 +2116,7 @@ LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, B
         break;
     case DWLP_DLGPROC:
         if ((wndPtr->cbWndExtra - sizeof(LONG_PTR) >= DWLP_DLGPROC) &&
-            (size == sizeof(LONG_PTR)) && (wndPtr->flags & WIN_ISDIALOG))
+            (size == sizeof(LONG_PTR)) && wndPtr->dlgInfo)
         {
             WNDPROC *ptr = (WNDPROC *)((char *)wndPtr->wExtra + DWLP_DLGPROC);
             retval = (ULONG_PTR)WINPROC_GetProc( *ptr, unicode );

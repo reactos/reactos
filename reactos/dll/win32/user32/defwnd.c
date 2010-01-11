@@ -33,7 +33,6 @@
 #include "user_private.h"
 #include "controls.h"
 #include "wine/unicode.h"
-#include "wine/winuser16.h"
 #include "wine/server.h"
 #include "wine/exception.h"
 #include "wine/debug.h"
@@ -43,6 +42,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(win);
   /* bits in the dwKeyData */
 #define KEYDATA_ALT             0x2000
 #define KEYDATA_PREVSTATE       0x4000
+
+#define DRAG_FILE  0x454C4946
 
 static short iF10Key = 0;
 static short iMenuSysKey = 0;

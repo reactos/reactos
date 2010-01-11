@@ -33,7 +33,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "wine/winuser16.h"
 #include "wine/unicode.h"
 #include "controls.h"
 #include "win.h"
@@ -109,7 +108,7 @@ const struct builtin_class_descr DIALOG_builtin_class =
  * Helper function for modal dialogs to enable again the
  * owner of the dialog box.
  */
-void DIALOG_EnableOwner( HWND hOwner )
+static void DIALOG_EnableOwner( HWND hOwner )
 {
     /* Owner must be a top-level window */
     if (hOwner)
@@ -125,7 +124,7 @@ void DIALOG_EnableOwner( HWND hOwner )
  * Helper function for modal dialogs to disable the
  * owner of the dialog box. Returns TRUE if owner was enabled.
  */
-BOOL DIALOG_DisableOwner( HWND hOwner )
+static BOOL DIALOG_DisableOwner( HWND hOwner )
 {
     /* Owner must be a top-level window */
     if (hOwner)
@@ -565,7 +564,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     size.cx = rect.right - rect.left;
     size.cy = rect.bottom - rect.top;
 
-    if (template.x == CW_USEDEFAULT16)
+    if (template.x == (SHORT)0x8000 /*CW_USEDEFAULT16*/)
     {
         pos.x = pos.y = CW_USEDEFAULT;
     }
@@ -674,7 +673,6 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     dlgInfo->yBaseUnit   = yBaseUnit;
     dlgInfo->idResult    = IDOK;
     dlgInfo->flags       = flags;
-    dlgInfo->hDialogHeap = 0;
 
     if (template.helpId) SetWindowContextHelpId( hwnd, template.helpId );
 
@@ -1028,7 +1026,7 @@ static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
         pParent = WIN_GetPtr(hParent);
         if (!pParent || pParent == WND_OTHER_PROCESS || pParent == WND_DESKTOP) break;
 
-        if (!(pParent->flags & WIN_ISDIALOG))
+        if (!pParent->dlgInfo)
         {
             WIN_ReleasePtr(pParent);
             break;
@@ -1136,7 +1134,7 @@ BOOL WINAPI IsDialogMessageW( HWND hwndDlg, LPMSG msg )
 
                 if (pWnd && pWnd != WND_OTHER_PROCESS)
                 {
-                    fIsDialog = (pWnd->flags & WIN_ISDIALOG) != 0;
+                    fIsDialog = (pWnd->dlgInfo != NULL);
                     WIN_ReleasePtr(pWnd);
                 }
 

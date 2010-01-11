@@ -2093,7 +2093,8 @@ void X11DRV_XRender_CopyBrush(X11DRV_PDEVICE *physDev, X_PHYSBITMAP *physBitmap,
     physDev->brush.pixmap = XCreatePixmap(gdi_display, root_window, width, height, depth);
 
     /* Use XCopyArea when the physBitmap and brush.pixmap have the same format. */
-    if(physBitmap->pixmap_depth == 1 || src_format->format == dst_format->format)
+    if( (physBitmap->pixmap_depth == 1) || (!X11DRV_XRender_Installed && physDev->depth == physBitmap->pixmap_depth) ||
+        (src_format->format == dst_format->format) )
     {
         XCopyArea( gdi_display, physBitmap->pixmap, physDev->brush.pixmap,
                    get_bitmap_gc(physBitmap->pixmap_depth), 0, 0, width, height, 0, 0 );

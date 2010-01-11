@@ -114,6 +114,7 @@ extern void *mem_alloc( size_t size );  /* malloc wrapper */
 extern void *memdup( const void *data, size_t len );
 extern void *alloc_object( const struct object_ops *ops );
 extern const WCHAR *get_object_name( struct object *obj, data_size_t *len );
+extern WCHAR *get_object_full_name( struct object *obj, data_size_t *ret_len );
 extern void dump_object_name( struct object *obj );
 extern void *create_object( struct namespace *namespace, const struct object_ops *ops,
                             const struct unicode_str *name, struct object *parent );

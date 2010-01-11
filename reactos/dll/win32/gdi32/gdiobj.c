@@ -67,7 +67,14 @@ static const LOGPEN DCPen     = { PS_SOLID, { 0, 0 }, RGB(0,0,0) };
 
 static HGDIOBJ stock_objects[NB_STOCK_OBJECTS];
 
-static CRITICAL_SECTION GDI_critsect;
+static CRITICAL_SECTION gdi_section;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &gdi_section,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": gdi_section") }
+};
+static CRITICAL_SECTION gdi_section = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 
 /****************************************************************************
@@ -560,19 +567,22 @@ BOOL GDI_dec_ref_count( HGDIOBJ handle )
 
 
 /***********************************************************************
- *           GDI_Init
+ *           DllMain
  *
  * GDI initialization.
  */
-BOOL GDI_Init(void)
+BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
 {
     LOGFONTW default_gui_font;
     const struct DefaultFontInfo* deffonts;
     int i;
 
-    /* Initialize GDI critical section */
-    InitializeCriticalSection(&GDI_critsect);
+    if (reason != DLL_PROCESS_ATTACH) return TRUE;
 
+    DisableThreadLibraryCalls( inst );
+#ifndef __REACTOS__
+    LoadLibraryA( "gdi.exe16" );
+#endif
     WineEngInit();
 
     /* create stock objects */
@@ -647,18 +657,18 @@ HGDIOBJ alloc_gdi_handle( GDIOBJHDR *obj, WORD type, const struct gdi_obj_funcs 
     obj->funcs    = funcs;
     obj->hdcs     = NULL;
 
-    EnterCriticalSection( &GDI_critsect );
+    EnterCriticalSection( &gdi_section );
     for (i = next_large_handle + 1; i < MAX_LARGE_HANDLES; i++)
         if (!large_handles[i]) goto found;
     for (i = 0; i <= next_large_handle; i++)
         if (!large_handles[i]) goto found;
-    LeaveCriticalSection( &GDI_critsect );
+    LeaveCriticalSection( &gdi_section );
     return 0;
 
  found:
     large_handles[i] = obj;
     next_large_handle = i;
-    LeaveCriticalSection( &GDI_critsect );
+    LeaveCriticalSection( &gdi_section );
     return (HGDIOBJ)(ULONG_PTR)((i + FIRST_LARGE_HANDLE) << 2);
 }
 
@@ -676,10 +686,10 @@ void *free_gdi_handle( HGDIOBJ handle )
     i = ((ULONG_PTR)handle >> 2) - FIRST_LARGE_HANDLE;
     if (i >= 0 && i < MAX_LARGE_HANDLES)
     {
-        EnterCriticalSection( &GDI_critsect );
+        EnterCriticalSection( &gdi_section );
         object = large_handles[i];
         large_handles[i] = NULL;
-        LeaveCriticalSection( &GDI_critsect );
+        LeaveCriticalSection( &gdi_section );
     }
     if (object)
     {
@@ -702,7 +712,7 @@ void *GDI_GetObjPtr( HGDIOBJ handle, WORD type )
     GDIOBJHDR *ptr = NULL;
     int i;
 
-    EnterCriticalSection( &GDI_critsect );
+    EnterCriticalSection( &gdi_section );
 
     i = ((UINT_PTR)handle >> 2) - FIRST_LARGE_HANDLE;
     if (i >= 0 && i < MAX_LARGE_HANDLES)
@@ -713,10 +723,10 @@ void *GDI_GetObjPtr( HGDIOBJ handle, WORD type )
 
     if (!ptr)
     {
-        LeaveCriticalSection( &GDI_critsect );
+        LeaveCriticalSection( &gdi_section );
         WARN( "Invalid handle %p\n", handle );
     }
-    //else TRACE("(%p): enter %d\n", handle, GDI_level.crst.RecursionCount);
+    else TRACE("(%p): enter %d\n", handle, gdi_section.RecursionCount);
 
     return ptr;
 }
@@ -728,8 +738,8 @@ void *GDI_GetObjPtr( HGDIOBJ handle, WORD type )
  */
 void GDI_ReleaseObj( HGDIOBJ handle )
 {
-    //TRACE("(%p): leave %d\n", handle, GDI_level.crst.RecursionCount);
-    LeaveCriticalSection( &GDI_critsect );
+    TRACE("(%p): leave %d\n", handle, gdi_section.RecursionCount);
+    LeaveCriticalSection( &gdi_section );
 }
 
 
@@ -738,7 +748,11 @@ void GDI_ReleaseObj( HGDIOBJ handle )
  */
 void GDI_CheckNotLock(void)
 {
-    //_CheckNotSysLevel( &GDI_level );
+    if (gdi_section.OwningThread == ULongToHandle(GetCurrentThreadId()) && gdi_section.RecursionCount)
+    {
+        ERR( "BUG: holding GDI lock\n" );
+        DebugBreak();
+    }
 }
 
 

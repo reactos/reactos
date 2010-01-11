@@ -741,6 +741,7 @@ struct x11drv_win_data
     BOOL        shaped : 1;     /* is window using a custom region shape? */
     int         wm_state;       /* current value of the WM_STATE property */
     DWORD       net_wm_state;   /* bit mask of active x11drv_net_wm_state values */
+    unsigned long configure_serial; /* serial number of last configure request */
     HBITMAP     hWMIconBitmap;
     HBITMAP     hWMIconMask;
 };
@@ -765,6 +766,7 @@ extern XContext winContext;
 
 extern void X11DRV_InitClipboard(void);
 extern int CDECL X11DRV_AcquireClipboard(HWND hWndClipWindow);
+extern void X11DRV_Clipboard_Cleanup(void);
 extern void X11DRV_ResetSelectionOwner(void);
 extern void CDECL X11DRV_SetFocus( HWND hwnd );
 extern Cursor X11DRV_GetCursor( Display *display, struct tagCURSORICONINFO *ptr );

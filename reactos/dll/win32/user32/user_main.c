@@ -38,7 +38,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(graphics);
 
 HMODULE user32_module = 0;
 
-static CRITICAL_SECTION USER_SysCrit;
+static CRITICAL_SECTION user_section;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &user_section,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": user_section") }
+};
+static CRITICAL_SECTION user_section = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 static HPALETTE (WINAPI *pfnGDISelectPalette)( HDC hdc, HPALETTE hpal, WORD bkgnd );
 static UINT (WINAPI *pfnGDIRealizePalette)( HDC hdc );
@@ -54,7 +61,7 @@ extern void WDML_NotifyThreadDetach(void);
  */
 void USER_Lock(void)
 {
-    EnterCriticalSection(&USER_SysCrit);
+    EnterCriticalSection( &user_section );
 }
 
 
@@ -63,7 +70,7 @@ void USER_Lock(void)
  */
 void USER_Unlock(void)
 {
-    LeaveCriticalSection(&USER_SysCrit);
+    LeaveCriticalSection( &user_section );
 }
 
 
@@ -74,8 +81,11 @@ void USER_Unlock(void)
  */
 void USER_CheckNotLock(void)
 {
-    //_CheckNotSysLevel( &USER_SysLevel );
-    //UNIMPLEMENTED;
+    if (user_section.OwningThread == ULongToHandle(GetCurrentThreadId()) && user_section.RecursionCount)
+    {
+        ERR( "BUG: holding USER lock\n" );
+        DebugBreak();
+    }
 }
 
 
@@ -269,12 +279,6 @@ static void winstation_init(void)
  */
 static BOOL process_attach(void)
 {
-#ifndef __REACTOS__
-    LoadLibrary16( "user.exe" );
-
-    /* some Win9x dlls expect keyboard to be loaded */
-    if (GetVersion() & 0x80000000) LoadLibrary16( "keyboard.drv" );
-#endif
     winstation_init();
 
     /* Initialize system colors and metrics */
@@ -282,6 +286,10 @@ static BOOL process_attach(void)
 
     /* Setup palette function pointers */
     palette_init();
+
+#ifndef __REACTOS__
+    LoadLibraryA( "user.exe16" );
+#endif
 
     /* Initialize built-in window classes */
     CLASS_RegisterBuiltinClasses();
@@ -334,7 +342,6 @@ BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
     {
     case DLL_PROCESS_ATTACH:
         user32_module = inst;
-        InitializeCriticalSection(&USER_SysCrit);
         ret = process_attach();
         break;
     case DLL_THREAD_DETACH:
@@ -346,6 +353,7 @@ BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
     }
     return ret;
 }
+
 
 /***********************************************************************
  *		LockWorkStation (USER32.@)

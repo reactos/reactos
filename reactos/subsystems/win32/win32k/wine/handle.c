@@ -595,11 +595,14 @@ DECL_HANDLER(dup_handle)
 DECL_HANDLER(get_object_info)
 {
     struct object *obj;
+    WCHAR *name;
 
     if (!(obj = get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle, 0, NULL ))) return;
 
     reply->access = get_handle_access( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle );
     reply->ref_count = obj->refcount;
+    if ((name = get_object_full_name( obj, &reply->total )))
+        set_reply_data_ptr( (void*)req, name, min( reply->total, get_reply_max_size((void*)req) ));
     release_object( obj );
 }
 

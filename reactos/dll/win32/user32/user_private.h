@@ -28,9 +28,6 @@
 #include "winuser.h"
 #include "winreg.h"
 #include "winternl.h"
-#include "wine/windef16.h"
-
-extern WORD USER_HeapSel DECLSPEC_HIDDEN;
 
 #define GET_WORD(ptr)  (*(const WORD *)(ptr))
 #define GET_DWORD(ptr) (*(const DWORD *)(ptr))
@@ -86,11 +83,11 @@ typedef struct tagUSER_DRIVER {
     void   (CDECL *pEmptyClipboard)(BOOL);                       /* Empty clipboard data */
     void   (CDECL *pEndClipboardUpdate)(void);                   /* End clipboard update */
     UINT   (CDECL *pEnumClipboardFormats)(UINT);                 /* Enumerate clipboard formats */
-    BOOL   (CDECL *pGetClipboardData)(UINT, HANDLE16*, HANDLE*); /* Get specified selection data */
+    HANDLE (CDECL *pGetClipboardData)(UINT);                     /* Get specified selection data */
     INT    (CDECL *pGetClipboardFormatName)(UINT, LPWSTR, UINT); /* Get a clipboard format name */
     BOOL   (CDECL *pIsClipboardFormatAvailable)(UINT);           /* Check if specified format is available */
     UINT   (CDECL *pRegisterClipboardFormat)(LPCWSTR);           /* Register a clipboard format */
-    BOOL   (CDECL *pSetClipboardData)(UINT, HANDLE16, HANDLE, BOOL);   /* Set specified selection data */
+    BOOL   (CDECL *pSetClipboardData)(UINT, HANDLE, BOOL);       /* Set specified selection data */
     /* display modes */
     LONG   (CDECL *pChangeDisplaySettingsEx)(LPCWSTR,LPDEVMODEW,HWND,DWORD,LPVOID);
     BOOL   (CDECL *pEnumDisplayMonitors)(HDC,LPRECT,MONITORENUMPROC,LPARAM);
@@ -124,13 +121,13 @@ extern const USER_DRIVER *USER_Driver DECLSPEC_HIDDEN;
 extern void USER_unload_driver(void) DECLSPEC_HIDDEN;
 
 struct received_message_info;
-struct hook16_queue_info;
 
 enum user_obj_type
 {
     USER_WINDOW = 1,  /* window */
     USER_MENU,        /* menu */
     USER_ACCEL,       /* accelerator */
+    USER_ICON,        /* icon or cursor */
     USER_DWP          /* DeferWindowPos structure */
 };
 
@@ -176,7 +173,6 @@ struct user_thread_info
     BOOL                          hook_unicode;           /* Is current hook unicode? */
     HHOOK                         hook;                   /* Current hook */
     struct received_message_info *receive_info;           /* Message being currently received */
-    struct hook16_queue_info     *hook16_info;            /* Opaque pointer for 16-bit hook support */
     struct wm_char_mapping_data  *wmchar_data;            /* Data for WM_CHAR mappings */
     DWORD                         GetMessageTimeVal;      /* Value for GetMessageTime */
     DWORD                         GetMessagePosVal;       /* Value for GetMessagePos */
@@ -208,14 +204,12 @@ static inline BOOL is_broadcast( HWND hwnd )
 }
 
 extern HMODULE user32_module DECLSPEC_HIDDEN;
-extern DWORD USER16_AlertableWait DECLSPEC_HIDDEN;
 extern HBRUSH SYSCOLOR_55AABrush DECLSPEC_HIDDEN;
 
 struct dce;
 
 extern BOOL CLIPBOARD_ReleaseOwner(void) DECLSPEC_HIDDEN;
 extern BOOL FOCUS_MouseActivate( HWND hwnd ) DECLSPEC_HIDDEN;
-extern BOOL HOOK_IsHooked( INT id ) DECLSPEC_HIDDEN;
 extern BOOL set_capture_window( HWND hwnd, UINT gui_flags, HWND *prev_ret );
 extern void free_dce( struct dce *dce, HWND hwnd ) DECLSPEC_HIDDEN;
 extern void invalidate_dce( HWND hwnd, const RECT *rect ) DECLSPEC_HIDDEN;
@@ -235,11 +229,7 @@ extern BOOL USER_SetWindowPos( WINDOWPOS * winpos ) DECLSPEC_HIDDEN;
 
 typedef LRESULT (*winproc_callback_t)( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                                        LRESULT *result, void *arg );
-typedef LRESULT (*winproc_callback16_t)( HWND16 hwnd, UINT16 msg, WPARAM16 wp, LPARAM lp,
-                                         LRESULT *result, void *arg );
 
-extern WNDPROC16 WINPROC_GetProc16( WNDPROC proc, BOOL unicode ) DECLSPEC_HIDDEN;
-extern WNDPROC WINPROC_AllocProc16( WNDPROC16 func ) DECLSPEC_HIDDEN;
 extern WNDPROC WINPROC_GetProc( WNDPROC proc, BOOL unicode ) DECLSPEC_HIDDEN;
 extern WNDPROC WINPROC_AllocProc( WNDPROC func, BOOL unicode ) DECLSPEC_HIDDEN;
 extern BOOL WINPROC_IsUnicode( WNDPROC proc, BOOL def_val ) DECLSPEC_HIDDEN;
@@ -247,10 +237,6 @@ extern BOOL WINPROC_IsUnicode( WNDPROC proc, BOOL def_val ) DECLSPEC_HIDDEN;
 extern LRESULT WINPROC_CallProcAtoW( winproc_callback_t callback, HWND hwnd, UINT msg,
                                      WPARAM wParam, LPARAM lParam, LRESULT *result, void *arg,
                                      enum wm_char_mapping mapping ) DECLSPEC_HIDDEN;
-extern LRESULT WINPROC_CallProc16To32A( winproc_callback_t callback, HWND16 hwnd, UINT16 msg,
-                                        WPARAM16 wParam, LPARAM lParam, LRESULT *result, void *arg ) DECLSPEC_HIDDEN;
-extern LRESULT WINPROC_CallProc32ATo16( winproc_callback16_t callback, HWND hwnd, UINT msg,
-                                        WPARAM wParam, LPARAM lParam, LRESULT *result, void *arg ) DECLSPEC_HIDDEN;
 
 extern INT_PTR WINPROC_CallDlgProcA( DLGPROC func, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam ) DECLSPEC_HIDDEN;
 extern INT_PTR WINPROC_CallDlgProcW( DLGPROC func, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam ) DECLSPEC_HIDDEN;
@@ -259,19 +245,12 @@ extern BOOL WINPROC_call_window( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 /* message spy definitions */
 
-#define SPY_DISPATCHMESSAGE16     0x0100
-#define SPY_DISPATCHMESSAGE       0x0101
-#define SPY_SENDMESSAGE16         0x0102
-#define SPY_SENDMESSAGE           0x0103
-#define SPY_DEFWNDPROC16          0x0104
-#define SPY_DEFWNDPROC            0x0105
+#define SPY_DISPATCHMESSAGE       0x0100
+#define SPY_SENDMESSAGE           0x0101
+#define SPY_DEFWNDPROC            0x0102
 
-#define SPY_RESULT_OK16           0x0000
 #define SPY_RESULT_OK             0x0001
-#define SPY_RESULT_INVALIDHWND16  0x0002
-#define SPY_RESULT_INVALIDHWND    0x0003
-#define SPY_RESULT_DEFWND16       0x0004
-#define SPY_RESULT_DEFWND         0x0005
+#define SPY_RESULT_DEFWND         0x0002
 
 extern const char *SPY_GetClassLongOffsetName( INT offset ) DECLSPEC_HIDDEN;
 extern const char *SPY_GetMsgName( UINT msg, HWND hWnd ) DECLSPEC_HIDDEN;
@@ -280,16 +259,6 @@ extern void SPY_EnterMessage( INT iFlag, HWND hwnd, UINT msg, WPARAM wParam, LPA
 extern void SPY_ExitMessage( INT iFlag, HWND hwnd, UINT msg,
                              LRESULT lReturn, WPARAM wParam, LPARAM lParam ) DECLSPEC_HIDDEN;
 extern int SPY_Init(void) DECLSPEC_HIDDEN;
-
-/* HANDLE16 <-> HANDLE conversions */
-#define HCURSOR_16(h32)    (LOWORD(h32))
-#define HICON_16(h32)      (LOWORD(h32))
-#define HINSTANCE_16(h32)  (LOWORD(h32))
-
-#define HCURSOR_32(h16)    ((HCURSOR)(ULONG_PTR)(h16))
-#define HICON_32(h16)      ((HICON)(ULONG_PTR)(h16))
-#define HINSTANCE_32(h16)  ((HINSTANCE)(ULONG_PTR)(h16))
-#define HMODULE_32(h16)    ((HMODULE)(ULONG_PTR)(h16))
 
 #include "pshpack1.h"
 
@@ -328,7 +297,6 @@ typedef struct
 
 #include "poppack.h"
 
-extern void CURSORICON_FreeModuleIcons( HMODULE16 hModule ) DECLSPEC_HIDDEN;
 extern BOOL get_icon_size( HICON handle, SIZE *size ) DECLSPEC_HIDDEN;
 
 NTSYSAPI

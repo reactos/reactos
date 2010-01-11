@@ -508,24 +508,6 @@ static void WINPOS_GetWinOffset( HWND hwndFrom, HWND hwndTo, POINT *offset )
 
 
 /*******************************************************************
- *		MapWindowPoints (USER.258)
- */
-void WINAPI MapWindowPoints16( HWND16 hwndFrom, HWND16 hwndTo,
-                               LPPOINT16 lppt, UINT16 count )
-{
-    POINT offset;
-
-    WINPOS_GetWinOffset( WIN_Handle32(hwndFrom), WIN_Handle32(hwndTo), &offset );
-    while (count--)
-    {
-	lppt->x += offset.x;
-	lppt->y += offset.y;
-        lppt++;
-    }
-}
-
-
-/*******************************************************************
  *		MapWindowPoints (USER32.@)
  */
 INT WINAPI MapWindowPoints( HWND hwndFrom, HWND hwndTo, LPPOINT lppt, UINT count )

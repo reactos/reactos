@@ -22,7 +22,6 @@
 #define __WINE_CONTROLS_H
 
 #include "winuser.h"
-#include "wine/winbase16.h"
 
 /* Built-in class names (see _Undocumented_Windows_ p.418) */
 #define POPUPMENU_CLASS_ATOM MAKEINTATOM(32768)  /* PopupMenu */
@@ -87,6 +86,7 @@ extern LRESULT WINAPI MessageWndProc(HWND,UINT,WPARAM,LPARAM) DECLSPEC_HIDDEN;
 
 /* Wow handlers */
 
+/* the structures must match the corresponding ones in user.exe */
 struct wow_handlers16
 {
     LRESULT (*button_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
@@ -96,8 +96,14 @@ struct wow_handlers16
     LRESULT (*mdiclient_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
     LRESULT (*scrollbar_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
     LRESULT (*static_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
+    DWORD   (*wait_message)(DWORD,const HANDLE*,DWORD,DWORD,DWORD);
+    HWND    (*create_window)(CREATESTRUCTW*,LPCWSTR,HINSTANCE,BOOL);
     LRESULT (*call_window_proc)(HWND,UINT,WPARAM,LPARAM,LRESULT*,void*);
     LRESULT (*call_dialog_proc)(HWND,UINT,WPARAM,LPARAM,LRESULT*,void*);
+    HICON   (*alloc_icon_handle)(UINT);
+    struct tagCURSORICONINFO *(*get_icon_ptr)(HICON);
+    void    (*release_icon_ptr)(HICON,struct tagCURSORICONINFO*);
+    int     (*free_icon_handle)(HICON);
 };
 
 struct wow_handlers32
@@ -109,8 +115,12 @@ struct wow_handlers32
     LRESULT (*mdiclient_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
     LRESULT (*scrollbar_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
     LRESULT (*static_proc)(HWND,UINT,WPARAM,LPARAM,BOOL);
-    HWND    (*create_window)(CREATESTRUCTW*,LPCWSTR,HINSTANCE,UINT);
+    DWORD   (*wait_message)(DWORD,const HANDLE*,DWORD,DWORD,DWORD);
+    HWND    (*create_window)(CREATESTRUCTW*,LPCWSTR,HINSTANCE,BOOL);
+    HWND    (*get_win_handle)(HWND);
     WNDPROC (*alloc_winproc)(WNDPROC,BOOL);
+    struct tagDIALOGINFO *(*get_dialog_info)(HWND,BOOL);
+    INT     (*dialog_box_loop)(HWND,HWND);
 };
 
 extern struct wow_handlers16 wow_handlers DECLSPEC_HIDDEN;
@@ -123,10 +133,6 @@ extern LRESULT MDIClientWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HI
 extern LRESULT ScrollBarWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
 extern LRESULT StaticWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
 
-extern void register_wow_handlers(void) DECLSPEC_HIDDEN;
-extern void WINAPI UserRegisterWowHandlers( const struct wow_handlers16 *new,
-                                            struct wow_handlers32 *orig );
-
 /* Class functions */
 struct tagCLASS;  /* opaque structure */
 struct tagWND;
@@ -135,7 +141,6 @@ extern void CLASS_RegisterBuiltinClasses(void) DECLSPEC_HIDDEN;
 extern WNDPROC get_class_winproc( struct tagCLASS *class ) DECLSPEC_HIDDEN;
 extern struct dce *get_class_dce( struct tagCLASS *class ) DECLSPEC_HIDDEN;
 extern struct dce *set_class_dce( struct tagCLASS *class, struct dce *dce ) DECLSPEC_HIDDEN;
-extern void CLASS_FreeModuleClasses( HMODULE16 hModule ) DECLSPEC_HIDDEN;
 
 /* defwnd proc */
 extern HBRUSH DEFWND_ControlColor( HDC hDC, UINT ctlType ) DECLSPEC_HIDDEN;
@@ -155,7 +160,6 @@ extern void MENU_TrackMouseMenuBar( HWND hwnd, INT ht, POINT pt ) DECLSPEC_HIDDE
 extern void MENU_TrackKbdMenuBar( HWND hwnd, UINT wParam, WCHAR wChar ) DECLSPEC_HIDDEN;
 extern UINT MENU_DrawMenuBar( HDC hDC, LPRECT lprect,
                                 HWND hwnd, BOOL suppress_draw ) DECLSPEC_HIDDEN;
-extern UINT MENU_FindSubMenu( HMENU *hmenu, HMENU hSubTarget ) DECLSPEC_HIDDEN;
 extern void MENU_EndMenu(HWND) DECLSPEC_HIDDEN;
 
 /* nonclient area */
@@ -218,7 +222,7 @@ typedef struct
 
 extern BOOL COMBO_FlipListbox( LPHEADCOMBO, BOOL, BOOL ) DECLSPEC_HIDDEN;
 
-/* Dialog info structure */
+/* Dialog info structure (note: shared with user.exe) */
 typedef struct tagDIALOGINFO
 {
     HWND      hwndFocus;   /* Current control with focus */
@@ -228,15 +232,12 @@ typedef struct tagDIALOGINFO
     UINT      yBaseUnit;
     INT       idResult;    /* EndDialog() result / default pushbutton ID */
     UINT      flags;       /* EndDialog() called for this dialog */
-    HGLOBAL   hDialogHeap;
 } DIALOGINFO;
 
 #define DF_END  0x0001
 #define DF_OWNERENABLED 0x0002
 
 extern DIALOGINFO *DIALOG_get_info( HWND hwnd, BOOL create ) DECLSPEC_HIDDEN;
-extern void DIALOG_EnableOwner( HWND hOwner ) DECLSPEC_HIDDEN;
-extern BOOL DIALOG_DisableOwner( HWND hOwner ) DECLSPEC_HIDDEN;
 extern INT DIALOG_DoDialogBox( HWND hwnd, HWND owner ) DECLSPEC_HIDDEN;
 
 #endif  /* __WINE_CONTROLS_H */

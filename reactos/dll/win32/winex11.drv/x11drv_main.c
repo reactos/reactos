@@ -584,6 +584,7 @@ static void thread_detach(void)
  */
 static void process_detach(void)
 {
+    X11DRV_Clipboard_Cleanup();
 #ifdef SONAME_LIBXXF86VM
     /* cleanup XVidMode */
     X11DRV_XF86VM_Cleanup();

@@ -1322,16 +1322,18 @@ static void sync_window_position( Display *display, struct x11drv_win_data *data
         /* and Above with a sibling doesn't work so well either, so we ignore it */
     }
 
-    TRACE( "setting win %p/%lx pos %d,%d,%dx%d after %lx changes=%x\n",
-           data->hwnd, data->whole_window, data->whole_rect.left, data->whole_rect.top,
-           data->whole_rect.right - data->whole_rect.left,
-           data->whole_rect.bottom - data->whole_rect.top, changes.sibling, mask );
-
     wine_tsx11_lock();
     set_size_hints( display, data, style );
+    data->configure_serial = NextRequest( display );
     XReconfigureWMWindow( display, data->whole_window,
                           DefaultScreen(display), mask, &changes );
     wine_tsx11_unlock();
+
+    TRACE( "win %p/%lx pos %d,%d,%dx%d after %lx changes=%x serial=%lu\n",
+           data->hwnd, data->whole_window, data->whole_rect.left, data->whole_rect.top,
+           data->whole_rect.right - data->whole_rect.left,
+           data->whole_rect.bottom - data->whole_rect.top,
+           changes.sibling, mask, data->configure_serial );
 }
 
 

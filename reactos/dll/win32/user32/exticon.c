@@ -233,81 +233,6 @@ static BYTE * ICO_GetIconDirectory( LPBYTE peimage, LPicoICONDIR* lplpiID, ULONG
 	return 0;
 }
 
-/******************************************************************************
- *  struct extract_icons_state [internal]
- *
- * Used to carry params and state through the iterations of EnumResourceNames in ICO_ExtractIconExW 
- */
-struct extract_icons_state {
-    INT     nBaseIndex; /* Zero based index or negated integer id of the first icon to extract. */
-    UINT    nIcons;     /* Number of icons to extract. */
-    UINT    cxDesired;  /* Desired horizontal size in pixels (Might be two sizes in HI/LOWORD). */
-    UINT    cyDesired;  /* Desired vertical size in pixels (Might be two sizes in HI/LOWORD). */
-    UINT    fuLoad;     /* Flags passed to LoadImage. */
-    INT     cIter;      /* Iteration counter. */
-    HICON   *pahIcon;   /* Pointer to an array where the icon handles will be stored. */
-    UINT    *paIconId;  /* Pointer to an array where the icon identifiers will be stored. */ 
-};
-
-/******************************************************************************
- *  extract_icons_callback [internal] 
- *
- * Callback function of type ENUMRESNAMEPROC for EnumResourceNames. Used in
- * ICO_ExtractIconsExW.
- */
-static BOOL CALLBACK extract_icons_callback(HMODULE hModule, LPCWSTR pwszType, LPWSTR pwszName,
-    LONG_PTR lParam) 
-{
-    struct extract_icons_state *pState = (struct extract_icons_state *)lParam;
-    INT idCurrent = LOWORD(pwszName);
-
-    /* If the handle array pointer is NULL, we just count the number of icons in the module. */
-    if (!pState->pahIcon) {
-        pState->cIter++;
-        return TRUE;
-    }
-   
-    /* If we didn't already start extracting icons (cIter == 0), we look if the current
-     * icon is the one we should start with. That's the case if nBaseIndex is negative and
-     * it's absolute value matches the current icon's identifier. Or if nBaseIndex is positive
-     * and we already omitted the first nBaseIndex icons. */
-    if (pState->cIter == 0) {
-        if (pState->nBaseIndex < 0) {
-            if (!IS_INTRESOURCE(pwszName) || idCurrent != -pState->nBaseIndex) {
-                return TRUE;
-            }
-        } else if (pState->nBaseIndex > 0) {
-            pState->nBaseIndex--;
-            return TRUE;
-        }
-    }
-
-    if (pState->cIter < pState->nIcons) {
-        /* Load the current icon with the size given in the LOWORD of cx/cyDesired */
-        pState->pahIcon[pState->cIter] = 
-            LoadImageW(hModule, pwszName, IMAGE_ICON, LOWORD(pState->cxDesired), 
-                       LOWORD(pState->cyDesired), pState->fuLoad);
-        /* FIXME: The resource's identifier (that is not idCurrent, which is the
-         * identifier of the icon directory) should be stored in paIconId, but I don't
-         * know how to query for it. */ 
-        if (pState->paIconId) pState->paIconId[pState->cIter] = 0;
-        pState->cIter++;
-
-        /* If there is a second desired size given in the HIWORDs of cx/cyDesired, load too. 
-         * There seems to be an off-by-one error here, since pState->cIter might now be equal
-         * to pState->nIcons, but this is in fact how it works on windows. */
-        if (HIWORD(pState->cxDesired) && HIWORD(pState->cyDesired)) {
-            pState->pahIcon[pState->cIter] = 
-                LoadImageW(hModule, pwszName, IMAGE_ICON, HIWORD(pState->cxDesired), 
-                           HIWORD(pState->cyDesired), pState->fuLoad);
-            if (pState->paIconId) pState->paIconId[pState->cIter] = 0;
-            pState->cIter++;
-        }
-    }
-
-    return pState->cIter < pState->nIcons;
-}
-
 /*************************************************************************
  *	ICO_ExtractIconExW		[internal]
  *
@@ -346,34 +271,8 @@ static UINT ICO_ExtractIconExW(
         dwSearchReturn = SearchPathW(NULL, lpszExeFileName, NULL, sizeof(szExePath) / sizeof(szExePath[0]), szExePath, NULL);
         if ((dwSearchReturn == 0) || (dwSearchReturn > sizeof(szExePath) / sizeof(szExePath[0])))
         {
-          /* This is very wine specific: If the user tries to extract icons from system dlls, 
-           * wine's builtin *.dll.so's will not be found (Even if they would be found it wouldn't 
-           * work, since they are not in PE-format). Thus, if the SearchPath call fails, we try
-           * to load the file with LoadLibrary and extract the icons with LoadImage (via
-           * EnumResourceNames).
-           */
-          struct extract_icons_state state;
-          HMODULE hDllSo = LoadLibraryW(lpszExeFileName);
-          
-          if (!hDllSo) {
             WARN("File %s not found or path too long\n", debugstr_w(lpszExeFileName));
             return -1;
-          }
-
-          state.nBaseIndex = nIconIndex;
-          state.nIcons = nIcons;
-          state.cxDesired = cxDesired;
-          state.cyDesired = cyDesired;
-          state.fuLoad = flags;
-          state.cIter = 0;
-          state.pahIcon = RetPtr;
-          state.paIconId = pIconId;
-          
-          EnumResourceNamesW(hDllSo, MAKEINTRESOURCEW(RT_GROUP_ICON), extract_icons_callback, 
-                             (LONG_PTR)&state);
-          FreeLibrary(hDllSo);
-  
-          return state.cIter;
         }
 
 	hFile = CreateFileW(szExePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);

@@ -160,13 +160,6 @@ const struct builtin_class_descr COMBOLBOX_builtin_class =
 };
 
 
-/* check whether app is a Win 3.1 app */
-static inline BOOL is_old_app( LB_DESCR *descr )
-{
-    return FALSE;
-}
-
-
 /***********************************************************************
  *           LISTBOX_GetCurrentPageSize
  *
@@ -393,14 +386,6 @@ static void LISTBOX_UpdateSize( LB_DESCR *descr )
             remaining = 0;
         if ((descr->height > descr->item_height) && remaining)
         {
-            if (is_old_app(descr))
-            { /* give a margin for error to 16 bits programs - if we need
-                 less than the height of the nonclient area, round to the
-                 *next* number of items */
-                int ncheight = rect.bottom - rect.top - descr->height;
-                if ((descr->item_height - remaining) <= ncheight)
-                    remaining = remaining - descr->item_height;
-            }
             TRACE("[%p]: changing height %d -> %d\n",
                   descr->self, descr->height, descr->height - remaining );
             SetWindowPos( descr->self, 0, 0, 0, rect.right - rect.left,
@@ -2515,16 +2500,6 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     descr->font          = 0;
     descr->locale        = GetUserDefaultLCID();
     descr->lphc		 = lphc;
-
-    if (is_old_app(descr) && ( descr->style & ( WS_VSCROLL | WS_HSCROLL ) ) )
-    {
-	/* Win95 document "List Box Differences" from MSDN:
-	   If a list box in a version 3.x application has either the
-	   WS_HSCROLL or WS_VSCROLL style, the list box receives both
-	   horizontal and vertical scroll bars.
-	*/
-	descr->style |= WS_VSCROLL | WS_HSCROLL;
-    }
 
     if( lphc )
     {

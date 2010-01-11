@@ -388,6 +388,19 @@ static LRESULT call_hook( struct hook_info *info, INT code, WPARAM wparam, LPARA
     return ret;
 }
 
+
+/***********************************************************************
+ *           HOOK_IsHooked
+ */
+static BOOL HOOK_IsHooked( INT id )
+{
+    struct user_thread_info *thread_info = get_user_thread_info();
+
+    if (!thread_info->active_hooks) return TRUE;
+    return (thread_info->active_hooks & (1 << (id - WH_MINHOOK))) != 0;
+}
+
+
 /***********************************************************************
  *		HOOK_CallHooks
  */
@@ -437,18 +450,6 @@ LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL uni
     }
     SERVER_END_REQ;
     return ret;
-}
-
-
-/***********************************************************************
- *           HOOK_IsHooked
- */
-BOOL HOOK_IsHooked( INT id )
-{
-    struct user_thread_info *thread_info = get_user_thread_info();
-
-    if (!thread_info->active_hooks) return TRUE;
-    return (thread_info->active_hooks & (1 << (id - WH_MINHOOK))) != 0;
 }
 
 

@@ -157,6 +157,35 @@ const WCHAR *get_object_name( struct object *obj, data_size_t *len )
     return ptr->name;
 }
 
+/* get the full path name of an existing object */
+WCHAR *get_object_full_name( struct object *obj, data_size_t *ret_len )
+{
+    static const WCHAR backslash = '\\';
+    struct object *ptr = obj;
+    data_size_t len = 0;
+    char *ret;
+
+    while (ptr && ptr->name)
+    {
+        struct object_name *name = ptr->name;
+        len += name->len + sizeof(WCHAR);
+        ptr = name->parent;
+    }
+    if (!len) return NULL;
+    if (!(ret = ExAllocatePool( PagedPool, len ))) return NULL;
+
+    *ret_len = len;
+    while (obj && obj->name)
+    {
+        struct object_name *name = obj->name;
+        memcpy( ret + len - name->len, name->name, name->len );
+        len -= name->len + sizeof(WCHAR);
+        memcpy( ret + len, &backslash, sizeof(WCHAR) );
+        obj = name->parent;
+    }
+    return (WCHAR *)ret;
+}
+
 /* allocate and initialize an object */
 void *alloc_object( const struct object_ops *ops )
 {

@@ -333,7 +333,7 @@ UINT CDECL RosDrv_EnumClipboardFormats( UINT format )
     return 0;
 }
 
-BOOL CDECL RosDrv_GetClipboardData( UINT format, HANDLE16 *h16, HANDLE *h32 )
+BOOL CDECL RosDrv_GetClipboardData( UINT format )
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -357,7 +357,7 @@ UINT CDECL RosDrv_RegisterClipboardFormat( LPCWSTR name )
     return 0;
 }
 
-BOOL CDECL RosDrv_SetClipboardData( UINT format, HANDLE16 h16, HANDLE h32, BOOL owner )
+BOOL CDECL RosDrv_SetClipboardData( UINT format )
 {
     UNIMPLEMENTED;
     return FALSE;

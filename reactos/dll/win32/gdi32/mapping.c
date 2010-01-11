@@ -424,7 +424,7 @@ BOOL WINAPI ScaleViewportExtEx( HDC hdc, INT xNum, INT xDenom,
     }
     if ((dc->MapMode != MM_ISOTROPIC) && (dc->MapMode != MM_ANISOTROPIC))
 	goto done;
-    if (!xNum || !xDenom || !xNum || !yDenom)
+    if (!xNum || !xDenom || !yNum || !yDenom)
     {
         ret = FALSE;
         goto done;

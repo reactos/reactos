@@ -717,7 +717,7 @@ static void CBPaintText(
         if( (pText = HeapAlloc( GetProcessHeap(), 0, (size + 1) * sizeof(WCHAR))) )
 	{
             /* size from LB_GETTEXTLEN may be too large, from LB_GETTEXT is accurate */
-	    size=SendMessageW(lphc->hWndLBox, LB_GETTEXT, (WPARAM)id, (LPARAM)pText);
+           size=SendMessageW(lphc->hWndLBox, LB_GETTEXT, id, (LPARAM)pText);
 	    pText[size] = '\0';	/* just in case */
 	} else return;
    }
@@ -730,7 +730,7 @@ static void CBPaintText(
         static const WCHAR empty_stringW[] = { 0 };
 	if( CB_HASSTRINGS(lphc) ) SetWindowTextW( lphc->hWndEdit, pText ? pText : empty_stringW );
 	if( lphc->wState & CBF_FOCUSED )
-	    SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, (LPARAM)(-1));
+           SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, -1);
    }
    else /* paint text field ourselves */
    {
@@ -776,8 +776,7 @@ static void CBPaintText(
        dis.itemState	= itemState;
        dis.hDC		= hdc;
        dis.rcItem	= rectEdit;
-       dis.itemData	= SendMessageW(lphc->hWndLBox, LB_GETITEMDATA,
-					(WPARAM)id, 0 );
+       dis.itemData     = SendMessageW(lphc->hWndLBox, LB_GETITEMDATA, id, 0);
 
        /*
 	* Clip the DC and have the parent draw the item.
@@ -975,16 +974,15 @@ static INT CBUpdateLBox( LPHEADCOMBO lphc, BOOL bSelect )
    if( pText )
    {
        GetWindowTextW( lphc->hWndEdit, pText, length + 1);
-       idx = SendMessageW(lphc->hWndLBox, LB_FINDSTRING,
-			     (WPARAM)(-1), (LPARAM)pText );
+       idx = SendMessageW(lphc->hWndLBox, LB_FINDSTRING, -1, (LPARAM)pText);
        HeapFree( GetProcessHeap(), 0, pText );
    }
 
-   SendMessageW(lphc->hWndLBox, LB_SETCURSEL, (WPARAM)(bSelect ? idx : -1), 0);
+   SendMessageW(lphc->hWndLBox, LB_SETCURSEL, bSelect ? idx : -1, 0);
 
    /* probably superfluous but Windows sends this too */
-   SendMessageW(lphc->hWndLBox, LB_SETCARETINDEX, (WPARAM)(idx < 0 ? 0 : idx), 0);
-   SendMessageW(lphc->hWndLBox, LB_SETTOPINDEX, (WPARAM)(idx < 0 ? 0 : idx), 0);
+   SendMessageW(lphc->hWndLBox, LB_SETCARETINDEX, idx < 0 ? 0 : idx, 0);
+   SendMessageW(lphc->hWndLBox, LB_SETTOPINDEX, idx < 0 ? 0 : idx, 0);
 
    return idx;
 }
@@ -1004,13 +1002,12 @@ static void CBUpdateEdit( LPHEADCOMBO lphc , INT index )
 
    if( index >= 0 ) /* got an entry */
    {
-       length = SendMessageW(lphc->hWndLBox, LB_GETTEXTLEN, (WPARAM)index, 0);
+       length = SendMessageW(lphc->hWndLBox, LB_GETTEXTLEN, index, 0);
        if( length != LB_ERR)
        {
 	   if( (pText = HeapAlloc( GetProcessHeap(), 0, (length + 1) * sizeof(WCHAR))) )
 	   {
-		SendMessageW(lphc->hWndLBox, LB_GETTEXT,
-				(WPARAM)index, (LPARAM)pText );
+               SendMessageW(lphc->hWndLBox, LB_GETTEXT, index, (LPARAM)pText);
 	   }
        }
    }
@@ -1023,7 +1020,7 @@ static void CBUpdateEdit( LPHEADCOMBO lphc , INT index )
    }
 
    if( lphc->wState & CBF_FOCUSED )
-      SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, (LPARAM)(-1));
+      SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, -1);
 
    HeapFree( GetProcessHeap(), 0, pText );
 }
@@ -1061,7 +1058,7 @@ static void CBDropDown( LPHEADCOMBO lphc )
        lphc->droppedIndex = SendMessageW(lphc->hWndLBox, LB_GETCURSEL, 0, 0);
 
        SendMessageW(lphc->hWndLBox, LB_SETTOPINDEX,
-                     (WPARAM)(lphc->droppedIndex == LB_ERR ? 0 : lphc->droppedIndex), 0 );
+                    lphc->droppedIndex == LB_ERR ? 0 : lphc->droppedIndex, 0);
        SendMessageW(lphc->hWndLBox, LB_CARETON, 0, 0);
    }
 
@@ -1356,7 +1353,7 @@ static LRESULT COMBO_Command( LPHEADCOMBO lphc, WPARAM wParam, HWND hWnd )
 		       lphc->wState |= CBF_NOLBSELECT;
 		       CBUpdateEdit( lphc, index );
 		       /* select text in edit, as Windows does */
-		       SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, (LPARAM)(-1));
+                      SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, -1);
 		   }
 		   else
                    {
@@ -1655,8 +1652,7 @@ static LRESULT COMBO_SetItemHeight( LPHEADCOMBO lphc, INT index, INT height )
        }
    }
    else if ( CB_OWNERDRAWN(lphc) )	/* set listbox item height */
-	lRet = SendMessageW(lphc->hWndLBox, LB_SETITEMHEIGHT,
-			      (WPARAM)index, (LPARAM)height );
+       lRet = SendMessageW(lphc->hWndLBox, LB_SETITEMHEIGHT, index, height);
    return lRet;
 }
 
@@ -1665,8 +1661,8 @@ static LRESULT COMBO_SetItemHeight( LPHEADCOMBO lphc, INT index, INT height )
  */
 static LRESULT COMBO_SelectString( LPHEADCOMBO lphc, INT start, LPARAM pText, BOOL unicode )
 {
-   INT index = unicode ? SendMessageW(lphc->hWndLBox, LB_SELECTSTRING, (WPARAM)start, pText) :
-                         SendMessageA(lphc->hWndLBox, LB_SELECTSTRING, (WPARAM)start, pText);
+   INT index = unicode ? SendMessageW(lphc->hWndLBox, LB_SELECTSTRING, start, pText) :
+                         SendMessageA(lphc->hWndLBox, LB_SELECTSTRING, start, pText);
    if( index >= 0 )
    {
      if( lphc->wState & CBF_EDIT )
@@ -1991,12 +1987,7 @@ LRESULT ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 			COMBO_FlipListbox( lphc, FALSE, FALSE );
                 return  0;
 
-	case WM_CHAR:
-	case WM_IME_CHAR:
 	case WM_KEYDOWN:
-	{
-		HWND hwndTarget;
-
 		if ((wParam == VK_RETURN || wParam == VK_ESCAPE) &&
 		     (lphc->wState & CBF_DROPPED))
 		{
@@ -2008,6 +1999,11 @@ LRESULT ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                   COMBO_FlipListbox( lphc, FALSE, FALSE );
                   return TRUE;
                }
+               /* fall through */
+	case WM_CHAR:
+	case WM_IME_CHAR:
+	{
+		HWND hwndTarget;
 
 		if( lphc->wState & CBF_EDIT )
 		    hwndTarget = lphc->hWndEdit;

@@ -91,7 +91,7 @@
 @ cdecl EmptyClipboard(long) X11DRV_EmptyClipboard
 @ cdecl EndClipboardUpdate() X11DRV_EndClipboardUpdate
 @ cdecl EnumClipboardFormats(long) X11DRV_EnumClipboardFormats
-@ cdecl GetClipboardData(long ptr ptr) X11DRV_GetClipboardData
+@ cdecl GetClipboardData(long) X11DRV_GetClipboardData
 @ cdecl GetClipboardFormatName(long ptr long) X11DRV_GetClipboardFormatName
 @ cdecl GetDC(long long long ptr ptr long) X11DRV_GetDC
 @ cdecl IsClipboardFormatAvailable(long) X11DRV_IsClipboardFormatAvailable
@@ -99,7 +99,7 @@
 @ cdecl RegisterClipboardFormat(wstr) X11DRV_RegisterClipboardFormat
 @ cdecl ReleaseDC(long long) X11DRV_ReleaseDC
 @ cdecl ScrollDC(long long long ptr ptr long ptr) X11DRV_ScrollDC
-@ cdecl SetClipboardData(long long long long) X11DRV_SetClipboardData
+@ cdecl SetClipboardData(long long long) X11DRV_SetClipboardData
 @ cdecl SetCapture(long long) X11DRV_SetCapture
 @ cdecl SetFocus(long) X11DRV_SetFocus
 @ cdecl SetLayeredWindowAttributes(long long long long) X11DRV_SetLayeredWindowAttributes

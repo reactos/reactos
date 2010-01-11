@@ -255,38 +255,6 @@ static void CLASS_FreeClass( CLASS *classPtr )
 
 
 /***********************************************************************
- *           CLASS_FreeModuleClasses
- */
-void CLASS_FreeModuleClasses( HMODULE16 hModule )
-{
-    struct list *ptr, *next;
-
-    TRACE("0x%08x\n", hModule);
-
-    USER_Lock();
-    for (ptr = list_head( &class_list ); ptr; ptr = next)
-    {
-        CLASS *class = LIST_ENTRY( ptr, CLASS, entry );
-        next = list_next( &class_list, ptr );
-        if (class->hInstance == HINSTANCE_32(hModule))
-        {
-            BOOL ret;
-
-            SERVER_START_REQ( destroy_class )
-            {
-                req->atom = class->atomName;
-                req->instance = wine_server_client_ptr( class->hInstance );
-                ret = !wine_server_call_err( req );
-            }
-            SERVER_END_REQ;
-            if (ret) CLASS_FreeClass( class );
-        }
-    }
-    USER_Unlock();
-}
-
-
-/***********************************************************************
  *           CLASS_FindClass
  *
  * Return a pointer to the class.

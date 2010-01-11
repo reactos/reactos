@@ -27,7 +27,6 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winreg.h"
-#include "wownt32.h"
 #include "wine/unicode.h"
 #include "win.h"
 #include "user_private.h"
@@ -1993,8 +1992,8 @@ static const SPY_NOTIFY *end_spnfy_array;     /* ptr to last good entry in array
 #undef SPNFY
 
 
-static BOOL16 SPY_Exclude[SPY_MAX_MSGNUM+1];
-static BOOL16 SPY_ExcludeDWP = 0;
+static unsigned char SPY_Exclude[SPY_MAX_MSGNUM+1];
+static unsigned char SPY_ExcludeDWP = 0;
 
 #define SPY_EXCLUDE(msg) \
     (SPY_Exclude[(msg) > SPY_MAX_MSGNUM ? SPY_MAX_MSGNUM : (msg)])
@@ -2574,19 +2573,12 @@ void SPY_EnterMessage( INT iFlag, HWND hWnd, UINT msg,
     /* each SPY_SENDMESSAGE must be complemented by call to SPY_ExitMessage */
     switch(iFlag)
     {
-    case SPY_DISPATCHMESSAGE16:
-        TRACE("%*s(%04x) %-16s message [%04x] %s dispatched  wp=%04lx lp=%08lx\n",
-              indent, "", HWND_16(hWnd),
-              debugstr_w(sp_e.wnd_name), msg, sp_e.msg_name, wParam, lParam);
-        break;
-
     case SPY_DISPATCHMESSAGE:
-        TRACE("%*s(%p) %-16s message [%04x] %s dispatched  wp=%08lx lp=%08lx\n",
+        TRACE("%*s(%p) %-16s [%04x] %s dispatched  wp=%08lx lp=%08lx\n",
                         indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
                         sp_e.msg_name, wParam, lParam);
         break;
 
-    case SPY_SENDMESSAGE16:
     case SPY_SENDMESSAGE:
         {
             char taskName[20];
@@ -2595,30 +2587,17 @@ void SPY_EnterMessage( INT iFlag, HWND hWnd, UINT msg,
             if (tid == GetCurrentThreadId()) strcpy( taskName, "self" );
             else sprintf( taskName, "tid %04x", GetCurrentThreadId() );
 
-            if (iFlag == SPY_SENDMESSAGE16)
-                TRACE("%*s(%04x) %-16s message [%04x] %s sent from %s wp=%04lx lp=%08lx\n",
-                      indent, "", HWND_16(hWnd), debugstr_w(sp_e.wnd_name), msg,
-                      sp_e.msg_name, taskName, wParam, lParam );
-            else
-            {   TRACE("%*s(%p) %-16s message [%04x] %s sent from %s wp=%08lx lp=%08lx\n",
-                             indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
-                             sp_e.msg_name, taskName, wParam, lParam );
-                SPY_DumpStructure(&sp_e, TRUE);
-            }
+            TRACE("%*s(%p) %-16s [%04x] %s sent from %s wp=%08lx lp=%08lx\n",
+                  indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
+                  sp_e.msg_name, taskName, wParam, lParam );
+            SPY_DumpStructure(&sp_e, TRUE);
         }
-        break;
-
-    case SPY_DEFWNDPROC16:
-        if( SPY_ExcludeDWP ) return;
-        TRACE("%*s(%04x)  DefWindowProc16: %s [%04x]  wp=%04lx lp=%08lx\n",
-              indent, "", HWND_16(hWnd), sp_e.msg_name, msg, wParam, lParam );
         break;
 
     case SPY_DEFWNDPROC:
         if( SPY_ExcludeDWP ) return;
-        TRACE("%*s(%p)  DefWindowProc32: %s [%04x]  wp=%08lx lp=%08lx\n",
-                        indent, "", hWnd, sp_e.msg_name,
-                        msg, wParam, lParam );
+        TRACE("%*s(%p)  DefWindowProc:[%04x] %s  wp=%08lx lp=%08lx\n",
+              indent, "", hWnd, msg, sp_e.msg_name, wParam, lParam );
         break;
     }
     set_indent_level( indent + SPY_INDENT_UNIT );
@@ -2637,7 +2616,7 @@ void SPY_ExitMessage( INT iFlag, HWND hWnd, UINT msg, LRESULT lReturn,
     DWORD save_error = GetLastError();
 
     if (!TRACE_ON(message) || SPY_EXCLUDE(msg) ||
-        (SPY_ExcludeDWP && (iFlag == SPY_RESULT_DEFWND16 || iFlag == SPY_RESULT_DEFWND)) )
+        (SPY_ExcludeDWP && iFlag == SPY_RESULT_DEFWND))
         return;
 
     sp_e.msgnum = msg;
@@ -2655,38 +2634,16 @@ void SPY_ExitMessage( INT iFlag, HWND hWnd, UINT msg, LRESULT lReturn,
 
     switch(iFlag)
     {
-    case SPY_RESULT_DEFWND16:
-        TRACE(" %*s(%04x)  DefWindowProc16: %s [%04x] returned %08lx\n",
-              indent, "", HWND_16(hWnd), sp_e.msg_name, msg, lReturn );
-        break;
-
     case SPY_RESULT_DEFWND:
-        TRACE(" %*s(%p)  DefWindowProc32: %s [%04x] returned %08lx\n",
-                        indent, "", hWnd, sp_e.msg_name, msg, lReturn );
-        break;
-
-    case SPY_RESULT_OK16:
-        TRACE(" %*s(%04x) %-16s message [%04x] %s returned %08lx\n",
-              indent, "", HWND_16(hWnd), debugstr_w(sp_e.wnd_name), msg,
-              sp_e.msg_name, lReturn );
+        TRACE(" %*s(%p)  DefWindowProc: [%04x] %s returned %08lx\n",
+              indent, "", hWnd, msg, sp_e.msg_name, lReturn );
         break;
 
     case SPY_RESULT_OK:
-        TRACE(" %*s(%p) %-16s message [%04x] %s returned %08lx\n",
+        TRACE(" %*s(%p) %-16s [%04x] %s returned %08lx\n",
                         indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
                         sp_e.msg_name, lReturn );
         SPY_DumpStructure(&sp_e, FALSE);
-        break;
-
-    case SPY_RESULT_INVALIDHWND16:
-        WARN(" %*s(%04x) %-16s message [%04x] %s HAS INVALID HWND\n",
-             indent, "", HWND_16(hWnd), debugstr_w(sp_e.wnd_name), msg, sp_e.msg_name );
-        break;
-
-    case SPY_RESULT_INVALIDHWND:
-        WARN(" %*s(%p) %-16s message [%04x] %s HAS INVALID HWND\n",
-                        indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
-                        sp_e.msg_name );
         break;
     }
     SetLastError( save_error );

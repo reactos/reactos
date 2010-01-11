@@ -8,9 +8,6 @@ IMPORTLIB = user32
 IMPORTS   = gdi32 advapi32 kernel32 ntdll
 DELAYIMPORTS = imm32
 
-SPEC_SRCS16 = \
-	user.exe.spec
-
 C_SRCS = \
 	button.c \
 	caret.c \
@@ -57,16 +54,6 @@ C_SRCS = \
 	winstation.c \
 	wsprintf.c
 
-C_SRCS16 = \
-	bidi16.c \
-	comm16.c \
-	dialog16.c \
-	hook16.c \
-	msg16.c \
-	network.c \
-	user16.c \
-	wnd16.c
-
 RC_SRCS = \
 	resources/user32_Bg.rc \
 	resources/user32_Ca.rc \
@@ -101,19 +88,8 @@ RC_SRCS = \
 
 SVG_SRCS = resources/oic_winlogo.svg
 
-RC_SRCS16 = \
-	resources/version16.rc
-
 EXTRASUBDIRS = resources
 
 @MAKE_DLL_RULES@
-
-# Special rules for 16-bit resource and spec files
-
-user.exe.spec.o: user.exe.spec resources/version16.res
-	$(WINEBUILD) $(WINEBUILDFLAGS) --dll -o $@ --heap 65520 --main-module $(MODULE) --res resources/version16.res --export $(SRCDIR)/user.exe.spec
-
-resources/version16.res: resources/version16.rc
-	$(LDPATH) $(RC16) $(RC16FLAGS) -fo$@ $(SRCDIR)/resources/version16.rc
 
 @DEPENDENCIES@  # everything below this line is overwritten by make depend

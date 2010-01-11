@@ -273,9 +273,9 @@ static UINT CDECL nulldrv_EnumClipboardFormats( UINT format )
     return 0;
 }
 
-static BOOL CDECL nulldrv_GetClipboardData( UINT format, HANDLE16 *h16, HANDLE *h32 )
+static HANDLE CDECL nulldrv_GetClipboardData( UINT format )
 {
-    return FALSE;
+    return 0;
 }
 
 static INT CDECL nulldrv_GetClipboardFormatName( UINT format, LPWSTR buffer, UINT len )
@@ -293,7 +293,7 @@ static UINT CDECL nulldrv_RegisterClipboardFormat( LPCWSTR name )
     return 0;
 }
 
-static BOOL CDECL nulldrv_SetClipboardData( UINT format, HANDLE16 h16, HANDLE h32, BOOL owner )
+static BOOL CDECL nulldrv_SetClipboardData( UINT format, HANDLE handle, BOOL owner )
 {
     return FALSE;
 }
@@ -620,9 +620,9 @@ static UINT CDECL loaderdrv_EnumClipboardFormats( UINT format )
     return load_driver()->pEnumClipboardFormats( format );
 }
 
-static BOOL CDECL loaderdrv_GetClipboardData( UINT format, HANDLE16 *h16, HANDLE *h32 )
+static HANDLE CDECL loaderdrv_GetClipboardData( UINT format )
 {
-    return load_driver()->pGetClipboardData( format, h16, h32 );
+    return load_driver()->pGetClipboardData( format );
 }
 
 static INT CDECL loaderdrv_GetClipboardFormatName( UINT format, LPWSTR buffer, UINT len )
@@ -640,9 +640,9 @@ static UINT CDECL loaderdrv_RegisterClipboardFormat( LPCWSTR name )
     return load_driver()->pRegisterClipboardFormat( name );
 }
 
-static BOOL CDECL loaderdrv_SetClipboardData( UINT format, HANDLE16 h16, HANDLE h32, BOOL owner )
+static BOOL CDECL loaderdrv_SetClipboardData( UINT format, HANDLE handle, BOOL owner )
 {
-    return load_driver()->pSetClipboardData( format, h16, h32, owner );
+    return load_driver()->pSetClipboardData( format, handle, owner );
 }
 
 static LONG CDECL loaderdrv_ChangeDisplaySettingsEx( LPCWSTR name, LPDEVMODEW mode, HWND hwnd,
