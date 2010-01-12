@@ -22,24 +22,24 @@
 .globl _KiIdt
 _KiIdt:
 /* This is the Software Interrupt Table that we handle in this file:        */
-idt _KiTrap0,          INT_32_DPL0  /* INT 00: Divide Error (#DE)           */
-idt _KiTrap1,          INT_32_DPL0  /* INT 01: Debug Exception (#DB)        */
-idt _KiTrap2,          INT_32_DPL0  /* INT 02: NMI Interrupt                */
-idt _KiTrap3,          INT_32_DPL3  /* INT 03: Breakpoint Exception (#BP)   */
-idt _KiTrap4,          INT_32_DPL3  /* INT 04: Overflow Exception (#OF)     */
-idt _KiTrap5,          INT_32_DPL0  /* INT 05: BOUND Range Exceeded (#BR)   */
-idt _KiTrap6,          INT_32_DPL0  /* INT 06: Invalid Opcode Code (#UD)    */
-idt _KiTrap7,          INT_32_DPL0  /* INT 07: Device Not Available (#NM)   */
-idt _KiTrap8,          INT_32_DPL0  /* INT 08: Double Fault Exception (#DF) */
-idt _KiTrap9,          INT_32_DPL0  /* INT 09: RESERVED                     */
-idt _KiTrap10,         INT_32_DPL0  /* INT 0A: Invalid TSS Exception (#TS)  */
-idt _KiTrap11,         INT_32_DPL0  /* INT 0B: Segment Not Present (#NP)    */
-idt _KiTrap12,         INT_32_DPL0  /* INT 0C: Stack Fault Exception (#SS)  */
-idt _KiTrap13,         INT_32_DPL0  /* INT 0D: General Protection (#GP)     */
-idt _KiTrap14,         INT_32_DPL0  /* INT 0E: Page-Fault Exception (#PF)   */
+idt _KiTrap00,         INT_32_DPL0  /* INT 00: Divide Error (#DE)           */
+idt _KiTrap01,         INT_32_DPL0  /* INT 01: Debug Exception (#DB)        */
+idt _KiTrap02,         INT_32_DPL0  /* INT 02: NMI Interrupt                */
+idt _KiTrap03,         INT_32_DPL3  /* INT 03: Breakpoint Exception (#BP)   */
+idt _KiTrap04,         INT_32_DPL3  /* INT 04: Overflow Exception (#OF)     */
+idt _KiTrap05,         INT_32_DPL0  /* INT 05: BOUND Range Exceeded (#BR)   */
+idt _KiTrap06,         INT_32_DPL0  /* INT 06: Invalid Opcode Code (#UD)    */
+idt _KiTrap07,         INT_32_DPL0  /* INT 07: Device Not Available (#NM)   */
+idt _KiTrap08,         INT_32_DPL0  /* INT 08: Double Fault Exception (#DF) */
+idt _KiTrap09,         INT_32_DPL0  /* INT 09: RESERVED                     */
+idt _KiTrap0A,         INT_32_DPL0  /* INT 0A: Invalid TSS Exception (#TS)  */
+idt _KiTrap0B,         INT_32_DPL0  /* INT 0B: Segment Not Present (#NP)    */
+idt _KiTrap0C,         INT_32_DPL0  /* INT 0C: Stack Fault Exception (#SS)  */
+idt _KiTrap0D,         INT_32_DPL0  /* INT 0D: General Protection (#GP)     */
+idt _KiTrap0E,         INT_32_DPL0  /* INT 0E: Page-Fault Exception (#PF)   */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 0F: RESERVED                     */
-idt _KiTrap16,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
-idt _KiTrap17,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
+idt _KiTrap10,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
+idt _KiTrap11,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
 idt _KiTrap0F,         INT_32_DPL0  /* INT 13: SIMD FPU Exception (#XF)     */
 .rept 22
@@ -54,8 +54,8 @@ idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
 GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
 /* Trap handlers referenced from C code                                     */
-.globl _KiTrap8
-.globl _KiTrap19
+.globl _KiTrap08
+.globl _KiTrap13
 
 /* System call code referenced from C code                                  */
 .globl _CopyParams
@@ -383,7 +383,7 @@ BadStack:
     push 0x20202
     push KGDT_R3_CODE + RPL_MASK
     push 0
-    jmp _KiTrap6
+    jmp _KiTrap06
 
 #if DBG
 InvalidIrql:
@@ -573,127 +573,24 @@ Error:
 
 /* HARDWARE TRAP HANDLERS ****************************************************/
 
-GENERATE_TRAP_HANDLER KiTrap0, 1
-GENERATE_TRAP_HANDLER KiTrap1, 1
-GENERATE_TRAP_HANDLER KiTrap3, 1
-GENERATE_TRAP_HANDLER KiTrap4, 1
-GENERATE_TRAP_HANDLER KiTrap5, 1
-GENERATE_TRAP_HANDLER KiTrap6, 1
-GENERATE_TRAP_HANDLER KiTrap7, 1
-GENERATE_TRAP_HANDLER KiTrap8, 0
-GENERATE_TRAP_HANDLER KiTrap9, 1
-GENERATE_TRAP_HANDLER KiTrap10, 0
-GENERATE_TRAP_HANDLER KiTrap11, 0
-GENERATE_TRAP_HANDLER KiTrap12, 0
-
-//GENERATE_TRAP_HANDLER KiTrap13, 0
-
-.func KiTrap13
-TRAP_FIXUPS kitd_a, kitd_t, DoFixupV86, DoNotFixupAbios
-_KiTrap13:
-
-    /* It this a V86 GPF? */
-    test dword ptr [esp+12], EFLAGS_V86_MASK
-    jz NotV86
-
-    /* Enter V86 Trap */
-    V86_TRAP_PROLOG kitd_a, kitd_v
-
-    /* Make sure that this is a V86 process */
-    mov ecx, PCR[KPCR_CURRENT_THREAD]
-    mov ecx, [ecx+KTHREAD_APCSTATE_PROCESS]
-    cmp dword ptr [ecx+EPROCESS_VDM_OBJECTS], 0
-    jz ShouldNotGetHere
-
-RaiseIrql:
-
-    /* Go to APC level */
-    mov ecx, APC_LEVEL
-    call @KfRaiseIrql@4
-
-    /* Save old IRQL and enable interrupts */
-    push eax
-    sti
-
-    /* Handle the opcode */
-    mov ecx, ebp
-    call @Ki386HandleOpcodeV86@4
-
-    /* Check if this was VDM */
-    test al, 0xFF
-    jz ShouldNotGetHere
-
-NoReflect:
-
-    /* Lower IRQL and disable interrupts */
-    pop ecx
-    call @KfLowerIrql@4
-    cli
-
-    /* Check if this was a V86 trap */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jz NotV86Trap
-
-    /* Exit the V86 Trap */
-    V86_TRAP_EPILOG
-
-NotV86Trap:
-
-    /* Either this wasn't V86, or it was, but an APC interrupted us */
-    jmp _Kei386EoiHelper@0
-
-NotV86:
-    /* Enter trap */
-    TRAP_PROLOG kitd_a, kitd_t
-    
-    /* Check if this was from kernel-mode */
-    test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jnz ShouldNotGetHere
-
-    /* Get the opcode and trap frame */
-KmodeGpf:
-    mov eax, [ebp+KTRAP_FRAME_EIP]
-    mov eax, [eax]
-    mov edx, [ebp+KTRAP_FRAME_EBP]
-
-    /* Was it IRETD? */
-    cmp al, 0xCF
-    jne ShouldNotGetHere
-
-    /* Get error code */
-    lea edx, [ebp+KTRAP_FRAME_ESP]
-    mov ax, [ebp+KTRAP_FRAME_ERROR_CODE]
-    and ax, ~RPL_MASK
-
-    /* Get CS */
-    mov cx, word ptr [edx+4]
-    and cx, ~RPL_MASK
-    cmp cx, ax
-    jnz ShouldNotGetHere
-
-    /* This should be a Ki386CallBios return */
-    mov eax, offset @Ki386BiosCallReturnAddress@4
-    cmp eax, [edx]
-    jne ShouldNotGetHere
-    mov eax, [edx+4]
-    cmp ax, KGDT_R0_CODE + RPL_MASK
-    jne ShouldNotGetHere
-
-    /* Jump to return address */
-    mov ecx, ebp
-    jmp @Ki386BiosCallReturnAddress@4
-
-_Ki16BitStackException:
-ShouldNotGetHere:
-    /* FIXME */
-    UNHANDLED_PATH "Other GPF stuff"
-.endfunc
-
-GENERATE_TRAP_HANDLER KiTrap14, 0
-GENERATE_TRAP_HANDLER KiTrap0F, 1
-GENERATE_TRAP_HANDLER KiTrap16, 1
-GENERATE_TRAP_HANDLER KiTrap17, 1
-GENERATE_TRAP_HANDLER KiTrap19, 1
+GENERATE_TRAP_HANDLER KiTrap00
+GENERATE_TRAP_HANDLER KiTrap01
+GENERATE_TRAP_HANDLER KiTrap03
+GENERATE_TRAP_HANDLER KiTrap04
+GENERATE_TRAP_HANDLER KiTrap05
+GENERATE_TRAP_HANDLER KiTrap06
+GENERATE_TRAP_HANDLER KiTrap07
+GENERATE_TRAP_HANDLER KiTrap08, 0
+GENERATE_TRAP_HANDLER KiTrap09
+GENERATE_TRAP_HANDLER KiTrap0A, 0
+GENERATE_TRAP_HANDLER KiTrap0B, 0
+GENERATE_TRAP_HANDLER KiTrap0C, 0
+GENERATE_TRAP_HANDLER KiTrap0D, 0, 1
+GENERATE_TRAP_HANDLER KiTrap0E, 0
+GENERATE_TRAP_HANDLER KiTrap0F
+GENERATE_TRAP_HANDLER KiTrap10
+GENERATE_TRAP_HANDLER KiTrap11
+GENERATE_TRAP_HANDLER KiTrap13
 
 /* UNEXPECTED INTERRUPT HANDLERS **********************************************/
 

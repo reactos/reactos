@@ -651,7 +651,7 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss->CR3 = __readcr3();
     Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
     Tss->Esp = PtrToUlong(KiDoubleFaultStack);
-    Tss->Eip = PtrToUlong(KiTrap8);
+    Tss->Eip = PtrToUlong(KiTrap08);
     Tss->Cs = KGDT_R0_CODE;
     Tss->Fs = KGDT_R0_PCR;
     Tss->Ss = Ke386GetSs();
@@ -681,7 +681,7 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss->CR3 = __readcr3();
     Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
     Tss->Esp = PtrToUlong(KiDoubleFaultStack);
-    Tss->Eip = PtrToUlong(KiTrap2);
+    Tss->Eip = PtrToUlong(KiTrap02);
     Tss->Cs = KGDT_R0_CODE;
     Tss->Fs = KGDT_R0_PCR;
     Tss->Ss = Ke386GetSs();
@@ -837,13 +837,13 @@ Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 {
     PKIDTENTRY IdtEntry;
 
-    /* Get the IDT Entry for Interrupt 19 */
-    IdtEntry = &((PKIPCR)KeGetPcr())->IDT[19];
+    /* Get the IDT Entry for Interrupt 0x13 */
+    IdtEntry = &((PKIPCR)KeGetPcr())->IDT[0x13];
 
     /* Set it up */
     IdtEntry->Selector = KGDT_R0_CODE;
-    IdtEntry->Offset = ((ULONG_PTR)KiTrap19 & 0xFFFF);
-    IdtEntry->ExtendedOffset = ((ULONG_PTR)KiTrap19 >> 16) & 0xFFFF;
+    IdtEntry->Offset = ((ULONG_PTR)KiTrap13 & 0xFFFF);
+    IdtEntry->ExtendedOffset = ((ULONG_PTR)KiTrap13 >> 16) & 0xFFFF;
     ((PKIDT_ACCESS)&IdtEntry->Access)->Dpl = 0;
     ((PKIDT_ACCESS)&IdtEntry->Access)->Present = 1;
     ((PKIDT_ACCESS)&IdtEntry->Access)->SegmentType = I386_INTERRUPT_GATE;

@@ -203,13 +203,13 @@ VOID
 FASTCALL
 KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Save registers */
-    KiTrapFrameFromPushaStack(TrapFrame);
-    
     /* Load correct registers */
     Ke386SetFs(KGDT_R0_PCR);
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    
+    /* Save registers */
+    KiTrapFrameFromPushaStack(TrapFrame);
     
     /* Save exception list and bogus previous mode */
     TrapFrame->PreviousPreviousMode = -1;
@@ -283,17 +283,32 @@ VOID
 FASTCALL
 KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Save registers */
-    KiTrapFrameFromPushaStack(TrapFrame);
+    ULONG Ds, Es;
     
-    /* Save segments and then switch to correct ones */
-    TrapFrame->SegFs = Ke386GetFs();
-    TrapFrame->SegGs = Ke386GetGs();
-    TrapFrame->SegDs = Ke386GetDs();
-    TrapFrame->SegEs = Ke386GetEs();
-    Ke386SetFs(KGDT_R0_PCR);
+    /*
+     * We really have to get a good DS/ES first before touching any data.
+     *
+     * These two reads will either go in a register (with optimizations ON) or
+     * a stack variable (which is on SS:ESP, guaranteed to be good/valid).
+     *
+     * Because the assembly is marked volatile, the order of instructions is
+     * as-is, otherwise the optimizer could simply get rid of our DS/ES.
+     *
+     */
+    Ds = Ke386GetDs();
+    Es = Ke386GetEs();
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    TrapFrame->SegDs = Ds;
+    TrapFrame->SegEs = Es;
+        
+    /* Now we can save the other segments and then switch to the correct FS */
+    TrapFrame->SegFs = Ke386GetFs();
+    TrapFrame->SegGs = Ke386GetGs();
+    Ke386SetFs(KGDT_R0_PCR);
+
+    /* Save registers */
+    KiTrapFrameFromPushaStack(TrapFrame);
     
     /* Save exception list and bogus previous mode */
     TrapFrame->PreviousPreviousMode = -1;
@@ -568,7 +583,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 FASTCALL
-KiTrap0Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -587,7 +602,7 @@ KiTrap0Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap1Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -606,7 +621,7 @@ KiTrap1Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-KiTrap2(VOID)
+KiTrap02(VOID)
 {
     PKTSS Tss, NmiTss;
     PKTHREAD Thread;
@@ -752,7 +767,7 @@ KiTrap2(VOID)
 
 VOID
 FASTCALL
-KiTrap3Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -763,7 +778,7 @@ KiTrap3Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap4Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -782,7 +797,7 @@ KiTrap4Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap5Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -804,7 +819,7 @@ KiTrap5Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap6Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PUCHAR Instruction;
     ULONG i;
@@ -849,7 +864,7 @@ KiTrap6Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap7Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread, NpxThread;
     PFX_SAVE_AREA SaveArea, NpxSaveArea;
@@ -958,7 +973,7 @@ KiTrap7Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap8Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* FIXME: Not handled */
     KiSystemFatalException(EXCEPTION_DOUBLE_FAULT, TrapFrame);
@@ -966,7 +981,7 @@ KiTrap8Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap9Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -978,7 +993,7 @@ KiTrap9Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -992,7 +1007,7 @@ KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -1004,7 +1019,7 @@ KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap12Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -1016,7 +1031,8 @@ KiTrap12Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG EFlags)
 {
     ULONG i, j, Iopl;
     BOOLEAN Privileged = FALSE;
@@ -1025,7 +1041,7 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
     KIRQL OldIrql;
     
     /* Check for V86 GPF */
-    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    if (EFlags & EFLAGS_V86_MASK)
     {
         /* Enter V86 trap */
         KiEnterV86Trap(TrapFrame);
@@ -1064,16 +1080,13 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
         /* Exit trap the slow way */
         KiEoiHelper(TrapFrame);
     }
-
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
     /* Check for user-mode GPF */
     if (KiUserTrap(TrapFrame))
-    {
-        /* Must be user-mode! */
-        if (!KiUserTrap(TrapFrame)) KiSystemFatalException(EXCEPTION_GP_FAULT, TrapFrame);
-        
+    {   
         /* Should not be VDM */
         ASSERT(KiVdmTrap(TrapFrame) == FALSE);
         
@@ -1204,8 +1217,8 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
      * with an invalid CS, which will generate another GPF instead.
      *
      */
-    if (((PVOID)TrapFrame->Eip >= (PVOID)KiTrap13Handler) &&
-        ((PVOID)TrapFrame->Eip < (PVOID)KiTrap13Handler))
+    if (((PVOID)TrapFrame->Eip >= (PVOID)KiTrap0DHandler) &&
+        ((PVOID)TrapFrame->Eip < (PVOID)KiTrap0DHandler))
     {
         /* Not implemented */
         UNIMPLEMENTED;
@@ -1298,7 +1311,7 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap14Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
     ULONG_PTR Cr2;
@@ -1432,7 +1445,7 @@ KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap16Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
     PFX_SAVE_AREA SaveArea;
@@ -1459,7 +1472,7 @@ KiTrap16Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap17Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -1471,7 +1484,7 @@ KiTrap17Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-KiTrap19Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
     PFX_SAVE_AREA SaveArea;

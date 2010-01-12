@@ -229,16 +229,61 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark None.
 //
-.macro GENERATE_TRAP_HANDLER Name, ErrorCode
+.macro GENERATE_TRAP_HANDLER Name, ErrorCode=1, FastV86=0
 .func Name
 _&Name:
+    /* Some traps generate an error code, some don't (thanks, Intel!) */
     .if \ErrorCode
         push 0
     .endif
+    
+    /* Save all register state before we touch it */
     pushad
+    
+    /*
+     * The GPF and Invalid Opcode handlers are performance critical when talking
+     * about V8086 traps, because they control the main flow of execution during
+     * that mode (GPFs will be issued for any privileged instruction we need to
+     * emulate, and invalid opcode might be generated for BOPs).
+     *
+     * Because of this, we employ a fast entry/exit macro into V8086 mode since
+     * we can make certain assumptions. We detect, and use, such scenarios when
+     * the V8086 flag is enabled in EFLAGS.
+     *
+     * However, because we can land in a GPF handler with an invalid DS/ES, as
+     * some V8086 code could trample this during BIOS calls for example, we must
+     * make sure that we are on a valid DS/ES before dereferencing any pointer.
+     *
+     * We fixup DS/ES either in KiEnterTrap (for normal entry/exit) or, for V86,
+     * in KiEnterV86Trap. Notice the problem: we need to detect which of these
+     * to use early on but we can't touch the EFLAGS in the frame because DS/ES
+     * could be invalid.
+     *
+     * Thankfully SS is always guaranteed valid, so stack dereferences are game!
+     *
+     * We therefore read the EFLAGS here, in assembly, where we can touch ESP as
+     * we please. We save this in EDX, which will be used as the second argument
+     * for the FASTCALL C trap entry.
+     *
+     * When we make the fast V86 check, we use the parameter instead of the trap
+     * frame, leading us to using the correct trap entry function, which fixes
+     * up DS/ES and lets us go on our merry way...
+     */
+    .if \FastV86
+        /* ESP+12 is EFLAGS on interrupt frame, add 8*4 for the PUSHAD frame */
+        mov edx, [esp+12+8*4]
+    .endif
+    
+    /* Now make space for the trap frame and store the pointer as first arg */
     sub esp, KTRAP_FRAME_LENGTH - KTRAP_FRAME_PREVIOUS_MODE
     mov ecx, esp
-    jmp @&Name&Handler@4
+    
+    /* Normally we just have one parameter, but fast V86 handlers need two */
+    .if \FastV86
+        jmp @&Name&Handler@8
+    .else
+        jmp @&Name&Handler@4
+    .endif
 .endfunc
 .endm
 
