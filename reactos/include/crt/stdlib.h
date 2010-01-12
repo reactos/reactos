@@ -152,7 +152,7 @@ extern "C" {
   _CRTIMP extern char *_sys_errlist[];
   _CRTIMP extern int _sys_nerr;
 
-#if !defined(__x86_64)
+//#if !defined(__x86_64)
   _CRTIMP int *__cdecl __p___argc(void);
   _CRTIMP char ***__cdecl __p___argv(void);
   _CRTIMP wchar_t ***__cdecl __p___wargv(void);
@@ -160,7 +160,7 @@ extern "C" {
   _CRTIMP wchar_t ***__cdecl __p__wenviron(void);
   _CRTIMP char **__cdecl __p__pgmptr(void);
   _CRTIMP wchar_t **__cdecl __p__wpgmptr(void);
-#endif
+//#endif
 #ifndef __argc
 #ifdef _MSVCRT_
   extern int __argc;
@@ -292,7 +292,8 @@ extern "C" {
 #define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
 #else
   extern "C++" {
-    template <typename _CountofType,size_t _SizeOfArray> char (*__countof_helper(UNALIGNED _CountofType (&_Array)[_SizeOfArray]))[_SizeOfArray];
+    template <typename _CountofType,size_t _SizeOfArray> 
+       char (*__countof_helper(/*UNALIGNED*/ _CountofType (&_Array)[_SizeOfArray]))[_SizeOfArray];
 #define _countof(_Array) sizeof(*__countof_helper(_Array))
   }
 #endif
