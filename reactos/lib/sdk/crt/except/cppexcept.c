@@ -39,6 +39,19 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
                                const cxx_function_descr *descr,
                                EXCEPTION_REGISTRATION_RECORD* nested_frame, int nested_trylevel );
 
+static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+{
+    frame->Next = (struct _EXCEPTION_REGISTRATION_RECORD *)__readfsdword(0);
+    __writefsdword(0, (unsigned long)frame);
+    return frame->Next;
+}
+
+static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+{
+    __writefsdword(0, (unsigned long)frame->Next);
+    return frame->Next;
+}
+
 /* call a function with a given ebp */
 static inline void *call_ebp_func( void *func, void *ebp )
 {
