@@ -217,7 +217,7 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
    }
 
    if (0 == (Wnd->style & WS_VISIBLE) &&
-       Window->OwnerThread->ThreadsProcess != CsrProcess)
+       Window->pti->pEThread->ThreadsProcess != CsrProcess)
    {
       DPRINT("Failed - Invisible\n");
       return FALSE;
@@ -339,7 +339,7 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
    {
       Wnd = Window->Wnd;
       if ((!(Wnd->style & WS_VISIBLE) &&
-           Window->OwnerThread->ThreadsProcess != CsrProcess) ||
+           Window->pti->pEThread->ThreadsProcess != CsrProcess) ||
           (Wnd->style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
          return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;

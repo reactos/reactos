@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Windows
@@ -120,7 +119,7 @@ BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
 	if (!Wnd->Wnd) return FALSE;
     style = Wnd->Wnd->style;
     if (!(style & WS_VISIBLE) &&
-        Wnd->OwnerThread->ThreadsProcess != CsrProcess) return FALSE;
+        Wnd->pti->pEThread->ThreadsProcess != CsrProcess) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
     return !(style & WS_DISABLED);
 }
@@ -905,7 +904,7 @@ co_WinPosSetWindowPos(
     * Only allow CSRSS to mess with the desktop window
     */
    if (Window->hSelf == IntGetDesktopWindow() &&
-         Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+         Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
    {
       return FALSE;
    }

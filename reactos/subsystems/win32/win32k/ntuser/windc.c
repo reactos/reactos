@@ -89,8 +89,13 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
   }
 
   pDce->hwndCurrent = (Window ? Window->hSelf : NULL);
-  pDce->hClipRgn = NULL;
-  pDce->pProcess = NULL;
+  pDce->pwndOrg  = Wnd;
+  pDce->pwndClip = Wnd;
+  pDce->hrgnClip = NULL;
+  pDce->hrgnClipPublic = NULL;
+  pDce->hrgnSavedVis = NULL;
+  pDce->ptiOwner = NULL;
+  pDce->ppiOwner = NULL;
 
   KeEnterCriticalRegion();
   if (FirstDce == NULL)
@@ -105,8 +110,9 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
   DCU_SetDcUndeletable(pDce->hDC);
 
   if (Type == DCE_WINDOW_DC || Type == DCE_CLASS_DC) //Window DCE have ownership.
-  { // Process should already own it.
-    pDce->pProcess = PsGetCurrentProcess();
+  {
+    pDce->ptiOwner = GetW32ThreadInfo();
+    pDce->ppiOwner = pDce->ptiOwner->ppi;
   }
   else
   {
@@ -174,12 +180,12 @@ DceDeleteClipRgn(DCE* Dce)
    {
       Dce->DCXFlags &= ~DCX_KEEPCLIPRGN;
    }
-   else if (Dce->hClipRgn != NULL)
+   else if (Dce->hrgnClip != NULL)
    {
-      GreDeleteObject(Dce->hClipRgn);
+      GreDeleteObject(Dce->hrgnClip);
    }
 
-   Dce->hClipRgn = NULL;
+   Dce->hrgnClip = NULL;
 
    /* make it dirty so that the vis rgn gets recomputed next time */
    Dce->DCXFlags |= DCX_DCEDIRTY;
@@ -225,7 +231,8 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
      DPRINT("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
      if (!IntGdiSetDCOwnerEx( dce->hDC, GDI_OBJ_HMGR_NONE, FALSE))
         return 0;
-     dce->pProcess = NULL;            // Reset ownership.
+     dce->ptiOwner = NULL; // Reset ownership.
+     dce->ppiOwner = NULL;
    }
    return 1; // Released!
 }
@@ -282,9 +289,9 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
 noparent:
    if (Flags & DCX_INTERSECTRGN)
    {
-      if(Dce->hClipRgn != NULL)
+      if(Dce->hrgnClip != NULL)
       {
-         NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
+         NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hrgnClip, RGN_AND);
       }
       else
       {
@@ -296,9 +303,9 @@ noparent:
       }
    }
 
-   if (Flags & DCX_EXCLUDERGN && Dce->hClipRgn != NULL)
+   if (Flags & DCX_EXCLUDERGN && Dce->hrgnClip != NULL)
    {
-      NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
+      NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hrgnClip, RGN_DIFF);
    }
 
    Dce->DCXFlags &= ~DCX_DCEDIRTY;
@@ -495,7 +502,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
           DPRINT("Owned/Class DCE\n");
       /* we should free dce->clip_rgn here, but Windows apparently doesn't */
           Dce->DCXFlags &= ~(DCX_EXCLUDERGN | DCX_INTERSECTRGN);
-          Dce->hClipRgn = NULL;
+          Dce->hrgnClip = NULL;
       }
 
 #if 1 /* FIXME */
@@ -524,7 +531,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    }
 
 #if 0
-   if (NULL != Dce->hClipRgn)
+   if (NULL != Dce->hrgnClip)
    {
       DceDeleteClipRgn(Dce);
    }
@@ -543,17 +550,17 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       if (!(Flags & DCX_WINDOW))
       {
-         Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcClient);
+         Dce->hrgnClip = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcClient);
       }
       else
       {
-         Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
+         Dce->hrgnClip = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
       }
       Dce->DCXFlags &= ~DCX_KEEPCLIPRGN;
    }
    else if (ClipRegion != NULL)
    {
-      Dce->hClipRgn = ClipRegion;
+      Dce->hrgnClip = ClipRegion;
    }
 
    DceSetDrawable(Window, Dce->hDC, Flags, UpdateClipOrigin);
@@ -568,7 +575,8 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       DPRINT("ENTER!!!!!! DCX_CACHE!!!!!!   hDC-> %x\n", Dce->hDC);
       // Need to set ownership so Sync dcattr will work.
       IntGdiSetDCOwnerEx( Dce->hDC, GDI_OBJ_HMGR_POWNED, FALSE);
-      Dce->pProcess = PsGetCurrentProcess(); // Set the temp owning process
+      Dce->ptiOwner = GetW32ThreadInfo(); // Set the temp owning
+      Dce->ppiOwner = Dce->ptiOwner->ppi;
    }
    return(Dce->hDC);
 }
@@ -607,9 +615,9 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   if (!Hit) IntGdiDeleteDC(pdce->hDC, TRUE);
 
-  if (pdce->hClipRgn && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
+  if (pdce->hrgnClip && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
   {
-      GreDeleteObject(pdce->hClipRgn);
+      GreDeleteObject(pdce->hrgnClip);
   }
 
   RemoveEntryList(&pdce->List);
@@ -624,73 +632,6 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   ExFreePoolWithTag(pdce, TAG_PDCE);
 
   return ret;
-}
-
-
-/***********************************************************************
- *           DceFreeWindowDCE
- *
- * Remove owned DCE and reset unreleased cache DCEs.
- */
-void FASTCALL
-DceFreeWindowDCE(PWINDOW_OBJECT Window)
-{
-  PDCE pDCE;
-
-  pDCE = FirstDce;
-  KeEnterCriticalRegion();
-  do
-  {
-      if (!pDCE) break;
-      if (pDCE->hwndCurrent == Window->hSelf)
-      {
-         if (!(pDCE->DCXFlags & DCX_CACHE)) /* owned or Class DCE*/
-         {
-            if (Window->Wnd->pcls->style & CS_CLASSDC ||
-                Window->Wnd->style & CS_CLASSDC) /* Test Class first */
-            {
-               if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) /* Class DCE*/
-                   DceDeleteClipRgn(pDCE);
-               // Update and reset Vis Rgn and clear the dirty bit.
-               // Should release VisRgn than reset it to default.
-               DceUpdateVisRgn(pDCE, Window, pDCE->DCXFlags);
-               pDCE->DCXFlags = DCX_DCEEMPTY;
-               pDCE->hwndCurrent = 0;
-            }
-            else if (Window->Wnd->pcls->style & CS_OWNDC ||
-                     Window->Wnd->style & CS_OWNDC) /* owned DCE*/
-            {
-               pDCE = DceFreeDCE(pDCE, FALSE);
-               if (!pDCE) break;
-               Window->Dce = NULL;
-               continue;
-            }
-            else
-            {
-               ASSERT(FALSE);
-            }
-         }
-         else
-         {
-            if (pDCE->DCXFlags & DCX_DCEBUSY) /* shared cache DCE */
-            {
-               /* FIXME: AFAICS we are doing the right thing here so
-                * this should be a DPRINT. But this is best left as an ERR
-                * because the 'application error' is likely to come from
-                * another part of Wine (i.e. it's our fault after all).
-                * We should change this to DPRINT when ReactOS is more stable
-                * (for 1.0?).
-                */
-               DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->hSelf);
-               DceReleaseDC(pDCE, FALSE);
-            }
-            pDCE->DCXFlags |= DCX_DCEEMPTY;
-            pDCE->hwndCurrent = 0;
-         }
-      }
-      pDCE = (PDCE) pDCE->List.Flink;
-  } while (pDCE != FirstDce);
-  KeLeaveCriticalRegion();
 }
 
 void FASTCALL
@@ -789,9 +730,9 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
                NtGdiOffsetRgn(dc->rosdc.hClipRgn, DeltaX, DeltaY);
                CLIPPING_UpdateGCRegion(dc);
             }
-            if (NULL != pDCE->hClipRgn)
+            if (NULL != pDCE->hrgnClip)
             {
-               NtGdiOffsetRgn(pDCE->hClipRgn, DeltaX, DeltaY);
+               NtGdiOffsetRgn(pDCE->hrgnClip, DeltaX, DeltaY);
             }
          }
          DC_UnlockDc(dc);
@@ -869,29 +810,20 @@ UserGetWindowDC(PWINDOW_OBJECT Wnd)
 HWND FASTCALL
 UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
 {
-  PWNDGDI pWndgdi = NULL;
-  PWINDOW_OBJECT Wnd = NULL;
+  PWNDGDI pWndgdi;
+  PWINDOW_OBJECT Wnd;
   HWND hWnd;
-  BOOL Hit = FALSE;
-  PLIST_ENTRY Entry;
+
   hWnd = IntWindowFromDC(hdc);
 
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
   {
-     KeEnterCriticalRegion();
-     Entry = Wnd->WndObjListHead.Flink;
-     while (Entry != &Wnd->WndObjListHead)
+     pWndgdi = (WNDGDI *)IntGetProp(Wnd, AtomWndObj);
+
+     if ( pWndgdi && pWndgdi->Hwnd == hWnd )
      {
-        pWndgdi = (PWNDGDI)Entry;
-        if (pWndgdi->Hwnd == hWnd)
-        {
-           Hit = TRUE;
-           break;
-        }
-        Entry = Entry->Flink;
+        if (pwndo) *pwndo = (PWNDOBJ)pWndgdi;
      }
-     if (pwndo && Hit) *pwndo = (PWNDOBJ)pWndgdi;
-     KeLeaveCriticalRegion();
   }
   return hWnd;
 }

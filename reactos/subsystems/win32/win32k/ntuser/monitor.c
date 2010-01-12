@@ -191,6 +191,14 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
    Monitor->rcWork = Monitor->rcMonitor;
    Monitor->cWndStack = 0;
 
+   Monitor->hrgnMonitor= NtGdiCreateRectRgn( Monitor->rcMonitor.left,
+                                             Monitor->rcMonitor.top, 
+                                             Monitor->rcMonitor.right,
+                                             Monitor->rcMonitor.bottom );
+
+   // Replace with IntGdiSetRegeionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
+   GDIOBJ_SetOwnership(Monitor->hrgnMonitor, NULL);
+
    if (gMonitorList == NULL)
    {
       DPRINT("Primary monitor is beeing attached\n");

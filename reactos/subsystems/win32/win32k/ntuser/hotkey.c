@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          HotKey support
@@ -182,7 +181,7 @@ NtUserRegisterHotKey(HWND hWnd,
       {
          RETURN( FALSE);
       }
-      HotKeyThread = Window->OwnerThread;
+      HotKeyThread = Window->pti->pEThread;
    }
 
    /* Check for existing hotkey */

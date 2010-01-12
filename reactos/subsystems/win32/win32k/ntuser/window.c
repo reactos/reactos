@@ -478,7 +478,6 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
       Window->SystemMenu = (HMENU)0;
    }
 
-   DceFreeWindowDCE(Window);    /* Always do this to catch orphaned DCs */
 #if 0 /* FIXME */
 
    WINPROC_FreeProc(Window->winproc, WIN_PROC_WINDOW);
@@ -1150,7 +1149,7 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 //      return NULL;
 
    /* Window must belong to current process */
-   if (Wnd->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+   if (Wnd->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
       return NULL;
 
    WndOldParent = Wnd->spwndParent;
@@ -1948,7 +1947,6 @@ AllocErr:
       }
    }
 
-   Window->OwnerThread = PsGetCurrentThread();
    Window->spwndChild = NULL;
    Window->spwndPrev = NULL;
    Window->spwndNext = NULL;
@@ -1960,7 +1958,6 @@ AllocErr:
    Wnd->cbwndExtra = Wnd->pcls->cbwndExtra;
 
    InitializeListHead(&Wnd->PropListHead);
-   InitializeListHead(&Window->WndObjListHead);
 
    if ( NULL != WindowName->Buffer && WindowName->Length > 0 )
    {
@@ -2052,11 +2049,16 @@ AllocErr:
    InsertTailList (&pti->WindowListHead, &Window->ThreadListEntry);
 
    /*  Handle "CS_CLASSDC", it is tested first. */
-   if ((Wnd->pcls->style & CS_CLASSDC) && !(Wnd->pcls->pdce)) // One DCE per class to have CLASS.
-      Wnd->pcls->pdce = DceAllocDCE(Window, DCE_CLASS_DC);
-   /* Allocate a DCE for this window. */
+   if ( (Wnd->pcls->style & CS_CLASSDC) && !(Wnd->pcls->pdce) )
+   {  /* One DCE per class to have CLASS. */
+      Wnd->pcls->pdce = DceAllocDCE( Window, DCE_CLASS_DC );
+   }
    else if ( Wnd->pcls->style & CS_OWNDC)
-      Window->Dce = DceAllocDCE(Window, DCE_WINDOW_DC);
+   {  /* Allocate a DCE for this window. */
+      PDCE pDce = DceAllocDCE(Window, DCE_WINDOW_DC);
+      if (!Wnd->pcls->pdce)
+         Wnd->pcls->pdce = pDce;
+   }
 
    Pos.x = x;
    Pos.y = y;
@@ -2107,7 +2109,7 @@ AllocErr:
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
       BOOL CalculatedDefPosSize = FALSE;
 
-      IntGetDesktopWorkArea(((PTHREADINFO)Window->OwnerThread->Tcb.Win32Thread)->Desktop, &WorkArea);
+      IntGetDesktopWorkArea(((PTHREADINFO)Window->pti->pEThread->Tcb.Win32Thread)->Desktop, &WorkArea);
 
       rc = WorkArea;
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
@@ -2624,7 +2626,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    DPRINT("co_UserDestroyWindow \n");
 
    /* Check for owner thread */
-   if ( (Window->OwnerThread != PsGetCurrentThread()) ||
+   if ( (Window->pti->pEThread != PsGetCurrentThread()) ||
         Wnd->head.pti != PsGetCurrentThreadWin32Thread() )
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
@@ -3765,7 +3767,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
     * WndProc is only available to the owner process
     */
    if (GWL_WNDPROC == Index
-         && Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+         && Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return 0;
@@ -3886,7 +3888,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
-            WindowStation = ((PTHREADINFO)Window->OwnerThread->Tcb.Win32Thread)->Desktop->WindowStation;
+            WindowStation = Window->pti->Desktop->WindowStation;
             if(WindowStation)
             {
                if (hWnd == WindowStation->ShellWindow || hWnd == WindowStation->ShellListView)

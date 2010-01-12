@@ -199,7 +199,7 @@ InternalSetTimer( PWINDOW_OBJECT Window,
      if (!pTmr) return 0;
 
     if (Window && (Type & TMRF_TIFROMWND))
-       pTmr->pti = Window->OwnerThread->Tcb.Win32Thread;
+       pTmr->pti = Window->pti->pEThread->Tcb.Win32Thread;
     else
     {
        if (Type & TMRF_RIT)
@@ -253,7 +253,7 @@ SetSystemTimer( PWINDOW_OBJECT Window,
                 UINT uElapse,
                 TIMERPROC lpTimerFunc) 
 {
-  if (Window && Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+  if (Window && Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
   {
      SetLastWin32Error(ERROR_ACCESS_DENIED);
      return 0;
@@ -419,7 +419,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
          return 0;
       }
 
-      if (Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+      if (Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
       {
          DPRINT1("Trying to set timer for window in another process (shatter attack?)\n");
          SetLastWin32Error(ERROR_ACCESS_DENIED);
