@@ -22,4 +22,3 @@ Description = Librerias Visual Studio 2005 SP1.
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Studio 2005 SP1.
-

@@ -40,4 +40,3 @@ Description = Один из самых популярных и лучших бе
 Size = 6.4M
 URLSite = http://www.mozilla-europe.org/ru/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.20/win32/ru/Firefox%20Setup%202.0.0.20.exe
-

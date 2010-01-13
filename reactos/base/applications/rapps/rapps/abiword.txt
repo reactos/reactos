@@ -19,4 +19,3 @@ Description = Procesador de textos.
 
 [Section.0415]
 Description = Edytor tekstu.
-

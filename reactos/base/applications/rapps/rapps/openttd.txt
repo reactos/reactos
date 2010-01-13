@@ -7,7 +7,7 @@ Licence = GPL v2
 Description = Open Source clone of the "Transport Tycoon Deluxe" game engine. You need a copy of Transport Tycoon.
 Size = 2.9MB
 Category = 4
-URLSite = http://www.openttd.org
+URLSite = http://www.openttd.org/
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.7.3-windows-win32.exe
 CDPath = none
 
@@ -19,4 +19,3 @@ Description = Clon del motor de juegos "Transport Tycoon Deluxe" de código abie
 
 [Section.0415]
 Description = Otwarty klon silnika gry "Transport Tycoon Deluxe". Do poprawnego działania potrzebna jest kopia gry Transport Tycoon.
-

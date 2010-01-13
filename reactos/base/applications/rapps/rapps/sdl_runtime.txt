@@ -22,4 +22,3 @@ Description = Necesario para ejecutar varios juegos de código abierto. Necesita
 [Section.0415]
 Name = Biblioteka uruchomieniowa Simple Direct Media Layer (SDL)
 Description = Wymagana przez wiele gier (głównie o otwartym źródle). Do jej rozpakowania potrzebny jest program 7-Zip lub podobny.
-

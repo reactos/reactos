@@ -7,7 +7,7 @@ Licence = Unknown
 Description = Visual Basic 6 Runtime.
 Size = 1.0MB
 Category = 14
-URLSite = http://support.microsoft.com/kb/192461
+URLSite = http://support.microsoft.com/kb/192461/
 URLDownload = http://download.microsoft.com/download/vb60pro/install/6/win98me/en-us/vbrun60.exe
 CDPath = none
 
@@ -22,4 +22,3 @@ Description = Librerias Visual Basic 6.
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Basic 6.
-

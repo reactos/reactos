@@ -16,4 +16,3 @@ Description = DosBlaster ist eine Shell Extension, die es ermöglicht jede DOS A
 
 [Section.040a]
 Description = DosBlaster en una extensión Shell que permite abrir cualquier ejecutable DOS en DOSBox desde el botón derecho del ratón. Esta versión contiene DOSBox 0.70, pero puede ser actualizado facilmente instalando una nueva versión de DOSBox en la carpeta de DosBlaster.
-

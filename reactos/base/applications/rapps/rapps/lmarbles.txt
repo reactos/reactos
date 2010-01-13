@@ -19,4 +19,3 @@ Description = Clon de Atomix usando las librerias SDL.
 
 [Section.0415]
 Description = Klon gry Atomix, używający biblioteki SDL.
-

@@ -19,4 +19,3 @@ Description = Clon de Breakout usando las librerias SDL.
 
 [Section.0415]
 Description = Klon Breakouta/Arkanoida napisany przy użyciu biblioteki SDL.
-

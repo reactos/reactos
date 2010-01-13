@@ -21,4 +21,3 @@ Description = Interfaz gráfico para Mplayer (reproductor multimedia).
 [Section.0415]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=pl
 Description = Graficzna nakładka na MPlayer, otwarty odtwarzacz filmów.
-

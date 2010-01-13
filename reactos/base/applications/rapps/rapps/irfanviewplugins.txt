@@ -7,7 +7,7 @@ Licence = Freeware (for personal use)
 Description = Additional Plugins for supporting more file types.
 Size = 7.7MB
 Category = 3
-URLSite = http://www.irfanview.com
+URLSite = http://www.irfanview.com/
 URLDownload = http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_425_setup.exe
 CDPath = none
 
@@ -22,4 +22,3 @@ Description = Complementos adicionales para soportar más formatos.
 [Section.0415]
 Licence = Freeware (dla użytku domowego)
 Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.
-
