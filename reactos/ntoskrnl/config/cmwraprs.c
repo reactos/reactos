@@ -51,7 +51,7 @@ CmpCreateEvent(IN EVENT_TYPE EventType,
 
 PVOID
 NTAPI
-CmpAllocate(IN ULONG Size,
+CmpAllocate(IN SIZE_T Size,
             IN BOOLEAN Paged,
             IN ULONG Tag)
 {

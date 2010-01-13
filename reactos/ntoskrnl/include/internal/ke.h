@@ -257,7 +257,7 @@ WRMSR(
 );
 
 /* Finds a new thread to run */
-NTSTATUS
+LONG_PTR
 FASTCALL
 KiSwapThread(
     IN PKTHREAD Thread,
@@ -641,7 +641,7 @@ VOID
 FASTCALL
 KiUnwaitThread(
     IN PKTHREAD Thread,
-    IN NTSTATUS WaitStatus,
+    IN LONG_PTR WaitStatus,
     IN KPRIORITY Increment
 );
 

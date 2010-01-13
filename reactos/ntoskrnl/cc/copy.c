@@ -615,7 +615,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	    {
 	      CurrentLength = Length;
 	    }
-          MmInitializeMdl(Mdl, (PVOID)WriteOffset.u.LowPart, CurrentLength);
+          MmInitializeMdl(Mdl, (PVOID)(ULONG_PTR)WriteOffset.QuadPart, CurrentLength);
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  for (i = 0; i < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); i++)
 	    {

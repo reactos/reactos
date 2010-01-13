@@ -1113,7 +1113,7 @@ QSI_DEF(SystemHandleInformation)
 
         for (Count = 0; HandleCount > 0 ; HandleCount--)
         {
-            Shi->Handles[i].UniqueProcessId = (USHORT)(ULONG)pr->UniqueProcessId;
+            Shi->Handles[i].UniqueProcessId = (USHORT)(ULONG_PTR)pr->UniqueProcessId;
             Count++;
             i++;
         }
@@ -2023,7 +2023,7 @@ NtFlushInstructionCache(IN HANDLE ProcessHandle,
 {
     PAGED_CODE();
 
-#if defined(_M_IX86)
+#if defined(_M_IX86) || defined(_M_AMD64)
     __wbinvd();
 #elif defined(_M_PPC)
     __asm__ __volatile__("tlbsync");

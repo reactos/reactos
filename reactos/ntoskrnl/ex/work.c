@@ -147,7 +147,7 @@ ProcessLoop:
                                    TimeoutPointer);
 
         /* Check if we timed out and quit this loop in that case */
-        if ((NTSTATUS)QueueEntry == STATUS_TIMEOUT) break;
+        if ((NTSTATUS)(ULONG_PTR)QueueEntry == STATUS_TIMEOUT) break;
 
         /* Increment Processed Work Items */
         InterlockedIncrement((PLONG)&WorkQueue->WorkItemsProcessed);
@@ -271,7 +271,7 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
                          NULL,
                          NULL,
                          ExpWorkerThreadEntryPoint,
-                         (PVOID)Context);
+                         UlongToPtr(Context));
 
     /* If the thread is dynamic */
     if (Dynamic)

@@ -1214,7 +1214,7 @@ IofCompleteRequest(IN PIRP Irp,
     if (LastStackPtr->Control & SL_ERROR_RETURNED)
     {
         /* Get the error code */
-        ErrorCode = (NTSTATUS)LastStackPtr->Parameters.Others.Argument4;
+        ErrorCode = PtrToUlong(LastStackPtr->Parameters.Others.Argument4);
     }
 
     /* Get the Current Stack and skip it */
@@ -1236,7 +1236,7 @@ IofCompleteRequest(IN PIRP Irp,
                 /* Update the error for the current stack */
                 ErrorCode = Irp->IoStatus.Status;
                 StackPtr->Control |= SL_ERROR_RETURNED;
-                LastStackPtr->Parameters.Others.Argument4 = (PVOID)ErrorCode;
+                LastStackPtr->Parameters.Others.Argument4 = UlongToPtr(ErrorCode);
                 LastStackPtr->Control |= SL_ERROR_RETURNED;
             }
         }
@@ -1610,7 +1610,7 @@ NTAPI
 IoGetRequestorProcessId(IN PIRP Irp)
 {
     /* Return the requestor process' id */
-    return (ULONG)(IoGetRequestorProcess(Irp)->UniqueProcessId);
+    return PtrToUlong(IoGetRequestorProcess(Irp)->UniqueProcessId);
 }
 
 /*
@@ -1782,5 +1782,5 @@ NTAPI
 IoSetTopLevelIrp(IN PIRP Irp)
 {
     /* Set the IRP */
-    PsGetCurrentThread()->TopLevelIrp = (ULONG)Irp;
+    PsGetCurrentThread()->TopLevelIrp = (ULONG_PTR)Irp;
 }

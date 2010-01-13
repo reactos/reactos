@@ -870,6 +870,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
                                          TokenInformation,
                                          TokenInformationLength,
                                          ReturnLength,
+                                         NULL,
                                          PreviousMode);
     
     if(!NT_SUCCESS(Status))

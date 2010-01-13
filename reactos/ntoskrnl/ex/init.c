@@ -68,7 +68,7 @@ PVOID ExpNlsTableBase;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 NLSTABLEINFO ExpNlsTableInfo;
-ULONG ExpNlsTableSize;
+SIZE_T ExpNlsTableSize;
 PVOID ExpNlsSectionPointer;
 
 /* CMOS Timer Sanity */
@@ -196,7 +196,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NTSTATUS Status;
     HANDLE NlsSection;
     PVOID SectionBase = NULL;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     LARGE_INTEGER SectionOffset = {{0, 0}};
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
@@ -369,7 +369,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                       OUT PCHAR *ProcessEnvironment)
 {
     NTSTATUS Status;
-    ULONG Size;
+    SIZE_T Size;
     PWSTR p;
     UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
     UNICODE_STRING SmssName, Environment, SystemDriveString, DebugString;
@@ -829,7 +829,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     PLDR_DATA_TABLE_ENTRY NtosEntry;
     PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
     ANSI_STRING CsdString;
-    ULONG Remaining = 0;
+    SIZE_T Remaining = 0;
     PCHAR RcEnd = NULL;
     CHAR VersionBuffer [65];
 
@@ -1245,7 +1245,8 @@ Phase1InitializationDiscard(IN PVOID Context)
     PCHAR StringBuffer, EndBuffer, BeginBuffer, MpString = "";
     PINIT_BUFFER InitBuffer;
     ANSI_STRING TempString;
-    ULONG LastTzBias, Size, Length, YearHack = 0, Disposition, MessageCode = 0;
+    ULONG LastTzBias, Length, YearHack = 0, Disposition, MessageCode = 0;
+    SIZE_T Size;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     KEY_VALUE_PARTIAL_INFORMATION KeyPartialInfo;
     UNICODE_STRING KeyName, DebugString;
@@ -1325,14 +1326,14 @@ Phase1InitializationDiscard(IN PVOID Context)
     StringBuffer = InitBuffer->VersionBuffer;
     BeginBuffer = StringBuffer;
     EndBuffer = StringBuffer;
-    Length = 256;
+    Size = 256;
     if (CmCSDVersionString.Length)
     {
         /* Print the version string */
         Status = RtlStringCbPrintfExA(StringBuffer,
                                       255,
                                       &EndBuffer,
-                                      &Length,
+                                      &Size,
                                       0,
                                       ": %wZ",
                                       &CmCSDVersionString);
@@ -1345,7 +1346,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* No version */
-        Length = 255;
+        Size = 255;
     }
 
     /* Null-terminate the string */
@@ -1369,7 +1370,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     {
         /* Create the banner message */
         Status = RtlStringCbPrintfA(EndBuffer,
-                                    Length,
+                                    Size,
                                     MsgEntry->Text,
                                     StringBuffer,
                                     NtBuildNumber & 0xFFFF,
@@ -1383,7 +1384,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* Use hard-coded banner message */
-        Status = RtlStringCbCopyA(EndBuffer, Length, "REACTOS (R)\n");
+        Status = RtlStringCbCopyA(EndBuffer, Size, "REACTOS (R)\n");
         if (!NT_SUCCESS(Status))
         {
             /* Bugcheck */
