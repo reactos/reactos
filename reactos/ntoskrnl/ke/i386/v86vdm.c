@@ -478,9 +478,9 @@ KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
     GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Thread->Teb >> 16);
     GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Thread->Teb >> 24);
 
-    /* Enable interrupts and get back to protected mode */
+    /* Enable interrupts and return a pointer to the trap frame */
     _enable();
-    return TrapFrame->Edi;
+    return (ULONG)PmTrapFrame;
 }
 
 VOID
