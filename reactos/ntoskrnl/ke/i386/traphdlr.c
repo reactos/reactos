@@ -1084,19 +1084,23 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
                 /* Skip prefix instructions */
                 for (j = 0; j < sizeof(KiTrapPrefixTable); j++)
                 {
-                    /* Is this NOT a prefix instruction? */
-                    if (Instructions[i] != KiTrapPrefixTable[j])
+                    /* Is this a prefix instruction? */
+                    if (Instructions[i] == KiTrapPrefixTable[j])
                     {
-                        /* We can go ahead and handle the fault now */
-                        Instruction = Instructions[i];
+                        /* Stop looking */
                         break;
                     }
                 }
                 
-                /* Do we need to keep looking? */
-                if (Instruction) break;
+                /* Is this NOT any prefix instruction? */
+                if (Instructions[i] != KiTrapPrefixTable[j])
+                {
+                    /* We can go ahead and handle the fault now */
+                    Instruction = Instructions[i];
+                    break;
+                }
             }
-                
+            
             /* If all we found was prefixes, then this instruction is too long */
             if (!Instruction)
             {
