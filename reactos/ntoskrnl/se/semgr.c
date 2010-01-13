@@ -350,14 +350,14 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
 
 BOOLEAN NTAPI
 SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-              IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-              IN BOOLEAN SubjectContextLocked,
-              IN ACCESS_MASK DesiredAccess,
-              IN ACCESS_MASK PreviouslyGrantedAccess,
-              OUT PPRIVILEGE_SET* Privileges,
-              IN PGENERIC_MAPPING GenericMapping,
-              IN KPROCESSOR_MODE AccessMode,
-              OUT PACCESS_MASK GrantedAccess,
+               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+               IN BOOLEAN SubjectContextLocked,
+               IN ACCESS_MASK DesiredAccess,
+               IN ACCESS_MASK PreviouslyGrantedAccess,
+               OUT PPRIVILEGE_SET* Privileges,
+               IN PGENERIC_MAPPING GenericMapping,
+               IN KPROCESSOR_MODE AccessMode,
+               OUT PACCESS_MASK GrantedAccess,
                OUT PNTSTATUS AccessStatus,
                SECURITY_IMPERSONATION_LEVEL LowestImpersonationLevel)
 {
@@ -721,14 +721,14 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     /* Now perform the access check */
     SepAccessCheck(SecurityDescriptor,
-                  &SubjectSecurityContext,
-                  TRUE,
-                  DesiredAccess,
-                  0,
-                  &PrivilegeSet, //FIXME
-                  GenericMapping,
-                  PreviousMode,
-                  GrantedAccess,
+                   &SubjectSecurityContext,
+                   TRUE,
+                   DesiredAccess,
+                   0,
+                   &PrivilegeSet, //FIXME
+                   GenericMapping,
+                   PreviousMode,
+                   GrantedAccess,
                    AccessStatus,
                    SecurityIdentification);
 
