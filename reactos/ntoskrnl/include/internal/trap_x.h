@@ -139,44 +139,6 @@ KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
-KiTrapFrameFromPushaStack(IN PKTRAP_FRAME TrapFrame)
-{
-    /*
-     * This sequence is Bavarian Alchemist Black Magic
-     *
-     * *** DO NOT MODIFY ***
-     */
-    TrapFrame->Edx = TrapFrame->Esi;
-    TrapFrame->Esi = TrapFrame->PreviousPreviousMode;
-    TrapFrame->Ecx = TrapFrame->Ebx;
-    TrapFrame->Ebx = TrapFrame->Edi;
-    TrapFrame->Edi = TrapFrame->Eax;
-    TrapFrame->Eax = TrapFrame->Ebp;
-    TrapFrame->Ebp = (ULONG)TrapFrame->ExceptionList;
-    TrapFrame->TempEsp = TrapFrame->SegFs;
-}
-
-VOID
-FORCEINLINE
-KiPushaStackFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
-{
-    /*
-     * This sequence is Bavarian Alchemist Black Magic
-     *
-     * *** DO NOT MODIFY ***
-     */
-    TrapFrame->SegFs = TrapFrame->TempEsp;
-    TrapFrame->ExceptionList = (PVOID)TrapFrame->Ebp;
-    TrapFrame->Ebp = TrapFrame->Eax;
-    TrapFrame->Eax = TrapFrame->Edi;
-    TrapFrame->Edi = TrapFrame->Ebx;
-    TrapFrame->Ebx = TrapFrame->Ecx;
-    TrapFrame->PreviousPreviousMode = TrapFrame->Esi;
-    TrapFrame->Esi = TrapFrame->Edx;
-}    
-
-VOID
-FORCEINLINE
 KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
@@ -247,19 +209,29 @@ FORCEINLINE
 VOID
 KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Restore registers */
-    KiPushaStackFromTrapFrame(TrapFrame);
-
     /* Regular interrupt exit */
     __asm__ __volatile__
     (
         "movl %0, %%esp\n"
-        "addl %1, %%esp\n"
-        "popa\n"
-        "addl $4, %%esp\n"
+        "movl %c[a](%%esp), %%eax\n"
+        "movl %c[b](%%esp), %%ebx\n"
+        "movl %c[c](%%esp), %%ecx\n"
+        "movl %c[d](%%esp), %%edx\n"
+        "movl %c[s](%%esp), %%esi\n"
+        "movl %c[i](%%esp), %%edi\n"
+        "movl %c[p](%%esp), %%ebp\n"
+        "addl $%c[e],%%esp\n"
         "iret\n"
         :
-        : "r"(TrapFrame), "i"(KTRAP_FRAME_LENGTH - KTRAP_FRAME_PREVIOUS_MODE)
+        : "r"(TrapFrame),
+          [a] "i"(KTRAP_FRAME_EAX),
+          [b] "i"(KTRAP_FRAME_EBX),
+          [c] "i"(KTRAP_FRAME_ECX),
+          [d] "i"(KTRAP_FRAME_EDX),
+          [s] "i"(KTRAP_FRAME_ESI),
+          [i] "i"(KTRAP_FRAME_EDI),
+          [p] "i"(KTRAP_FRAME_EBP),
+          [e] "i"(KTRAP_FRAME_EIP)
         : "%esp"
     );
 }
