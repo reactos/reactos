@@ -101,3 +101,4 @@
 @ stdcall -arch=i386,arm WRITE_PORT_UCHAR(ptr long)
 @ stdcall -arch=i386,arm WRITE_PORT_ULONG(ptr long)
 @ stdcall -arch=i386,arm WRITE_PORT_USHORT(ptr long)
+@ stdcall -arch=x86_64 HalInitializeBios(long ptr)
