@@ -109,6 +109,13 @@ extern ULONG KeI386CpuStep;
     (PKTRAP_FRAME)((ULONG_PTR)((Thread)->InitialStack) - \
                    sizeof(KTRAP_FRAME))
 
+//
+// Macro to get context switches from the PRCB
+// All architectures but x86 have it in the PRCB's KeContextSwitches
+//
+#define KeGetContextSwitches(Prcb)  \
+    (Prcb->KeContextSwitches)
+
 #define KeGetExceptionFrame(Thread) \
     (PKEXCEPTION_FRAME)((ULONG_PTR)KeGetTrapFrame(Thread) - \
                         sizeof(KEXCEPTION_FRAME))
