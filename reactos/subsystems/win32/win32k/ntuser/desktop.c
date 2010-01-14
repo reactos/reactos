@@ -144,10 +144,10 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     /* Initialize shell hook window list and set the parent */
     RtlZeroMemory(Desktop, sizeof(DESKTOP));
     InitializeListHead(&Desktop->ShellHookWindows);
-    Desktop->WindowStation = (PWINSTATION_OBJECT)ParseObject;
+    Desktop->rpwinstaParent = (PWINSTATION_OBJECT)ParseObject;
 
     /* Put the desktop on the window station's list of associated desktops */
-    InsertTailList(&Desktop->WindowStation->DesktopListHead,
+    InsertTailList(&Desktop->rpwinstaParent->DesktopListHead,
                    &Desktop->ListEntry);
 
     /* Set the desktop object and return success */
@@ -572,7 +572,7 @@ HWND FASTCALL IntGetMessageWindow(VOID)
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP pdo = pti->Desktop;
+   PDESKTOP pdo = pti->rpdesk;
    if (NULL == pdo)
    {
       DPRINT1("Thread doesn't have a desktop\n");
@@ -796,7 +796,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 BOOL IntRegisterShellHookWindow(HWND hWnd)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP Desktop = pti->Desktop;
+   PDESKTOP Desktop = pti->rpdesk;
    PSHELL_HOOK_WINDOW Entry;
 
    DPRINT("IntRegisterShellHookWindow\n");
@@ -828,7 +828,7 @@ BOOL IntRegisterShellHookWindow(HWND hWnd)
 BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP Desktop = pti->Desktop;
+   PDESKTOP Desktop = pti->rpdesk;
    PSHELL_HOOK_WINDOW Current;
 
    LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
@@ -1103,7 +1103,7 @@ NtUserCreateDesktop(
 
    W32Thread = PsGetCurrentThreadWin32Thread();
 
-   if (!W32Thread->Desktop) IntSetThreadDesktop(DesktopObject,FALSE);
+   if (!W32Thread->rpdesk) IntSetThreadDesktop(DesktopObject,FALSE);
 
   /*
      Based on wine/server/window.c in get_desktop_window.
@@ -1447,7 +1447,7 @@ NtUserPaintDesktop(HDC hDC)
    UINT align_old;
    int mode_old;
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PWINSTATION_OBJECT WinSta = pti->Desktop->WindowStation;
+   PWINSTATION_OBJECT WinSta = pti->rpdesk->rpwinstaParent;
    DECLARE_RETURN(BOOL);
 
    UserEnterExclusive();
@@ -1676,7 +1676,7 @@ NtUserSwitchDesktop(HDESK hDesktop)
     * Don't allow applications switch the desktop if it's locked, unless the caller
     * is the logon application itself
     */
-   if((DesktopObject->WindowStation->Flags & WSS_LOCKED) &&
+   if((DesktopObject->rpwinstaParent->Flags & WSS_LOCKED) &&
          LogonProcess != NULL && LogonProcess != PsGetCurrentProcessWin32Process())
    {
       ObDereferenceObject(DesktopObject);
@@ -1684,7 +1684,7 @@ NtUserSwitchDesktop(HDESK hDesktop)
       RETURN(FALSE);
    }
 
-   if(DesktopObject->WindowStation != InputWindowStation)
+   if(DesktopObject->rpwinstaParent != InputWindowStation)
    {
       ObDereferenceObject(DesktopObject);
       DPRINT1("Switching desktop 0x%x denied because desktop doesn't belong to the interactive winsta!\n", hDesktop);
@@ -1763,14 +1763,14 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
    {
       /* just return the handle, we queried the desktop handle of a thread running
          in the same context */
-      Ret = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hDesktop;
+      Ret = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk;
       ObDereferenceObject(Thread);
       RETURN(Ret);
    }
 
    /* get the desktop handle and the desktop of the thread */
-   if(!(hThreadDesktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hDesktop) ||
-         !(DesktopObject = ((PTHREADINFO)Thread->Tcb.Win32Thread)->Desktop))
+   if(!(hThreadDesktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk) ||
+         !(DesktopObject = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk))
    {
       ObDereferenceObject(Thread);
       DPRINT1("Desktop information of thread 0x%x broken!?\n", dwThreadId);
@@ -1954,9 +1954,9 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
     MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
     W32Thread = PsGetCurrentThreadWin32Thread();
 
-    if (W32Thread->Desktop != DesktopObject)
+    if (W32Thread->rpdesk != DesktopObject)
     {
-        OldDesktop = W32Thread->Desktop;
+        OldDesktop = W32Thread->rpdesk;
 
         if (!IsListEmpty(&W32Thread->WindowListHead))
         {
@@ -1965,7 +1965,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             return FALSE;
         }
 
-        W32Thread->Desktop = DesktopObject;
+        W32Thread->rpdesk = DesktopObject;
 
         if (MapHeap && DesktopObject != NULL)
         {

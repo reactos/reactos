@@ -257,7 +257,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, RECTL *RestoreRect)
    {
       RECTL WorkArea;
       PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-      PDESKTOP Desktop = pti->Desktop; /* Or rather get it from the window? */
+      PDESKTOP Desktop = pti->rpdesk; /* Or rather get it from the window? */
 
       Parent = Window->spwndParent;
       if(Parent)
@@ -405,7 +405,7 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
    UINT XInc, YInc;
    RECTL WorkArea;
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP Desktop = pti->Desktop; /* Or rather get it from the window? */
+   PDESKTOP Desktop = pti->rpdesk; /* Or rather get it from the window? */
 
    IntGetDesktopWorkArea(Desktop, &WorkArea);
 

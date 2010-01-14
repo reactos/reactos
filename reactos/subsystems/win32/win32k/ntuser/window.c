@@ -438,13 +438,13 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    /* don't remove the WINDOWSTATUS_DESTROYING bit */
 
    /* reset shell window handles */
-   if(ThreadData->Desktop)
+   if(ThreadData->rpdesk)
    {
-      if (Window->hSelf == ThreadData->Desktop->WindowStation->ShellWindow)
-         ThreadData->Desktop->WindowStation->ShellWindow = NULL;
+      if (Window->hSelf == ThreadData->rpdesk->rpwinstaParent->ShellWindow)
+         ThreadData->rpdesk->rpwinstaParent->ShellWindow = NULL;
 
-      if (Window->hSelf == ThreadData->Desktop->WindowStation->ShellListView)
-         ThreadData->Desktop->WindowStation->ShellListView = NULL;
+      if (Window->hSelf == ThreadData->rpdesk->rpwinstaParent->ShellListView)
+         ThreadData->rpdesk->rpwinstaParent->ShellListView = NULL;
    }
 
    /* Unregister hot keys */
@@ -861,7 +861,7 @@ IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
    {
       W32Thread = PsGetCurrentThreadWin32Thread();
 
-      if(!W32Thread->Desktop)
+      if(!W32Thread->rpdesk)
          return NULL;
 
       if(Window->SystemMenu)
@@ -874,10 +874,10 @@ IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
          }
       }
 
-      if(W32Thread->Desktop->WindowStation->SystemMenuTemplate)
+      if(W32Thread->rpdesk->rpwinstaParent->SystemMenuTemplate)
       {
          /* clone system menu */
-         Menu = UserGetMenuObject(W32Thread->Desktop->WindowStation->SystemMenuTemplate);
+         Menu = UserGetMenuObject(W32Thread->rpdesk->rpwinstaParent->SystemMenuTemplate);
          if(!Menu)
             return NULL;
 
@@ -1703,9 +1703,9 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    pti = PsGetCurrentThreadWin32Thread();
 
-   if (pti->Desktop)
+   if (pti->rpdesk)
    {
-       ParentWindowHandle = pti->Desktop->DesktopWindow;
+       ParentWindowHandle = pti->rpdesk->DesktopWindow;
    }
 
 
@@ -1759,7 +1759,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* Check the window station. */
    ti = GetW32ThreadInfo();
-   if (ti == NULL || pti->Desktop == NULL)
+   if (ti == NULL || pti->rpdesk == NULL)
    {
       DPRINT1("Thread is not attached to a desktop! Cannot create window!\n");
       RETURN( (PWND)0);
@@ -1792,14 +1792,14 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    DPRINT("ClassAtom %x\n", ClassAtom);
    Class = IntReferenceClass(Class,
                              ClassLink,
-                             pti->Desktop);
+                             pti->rpdesk);
    if (Class == NULL)
    {
        DPRINT1("Failed to reference window class!\n");
        RETURN(NULL);
    }
 
-   WinSta = pti->Desktop->WindowStation;
+   WinSta = pti->rpdesk->rpwinstaParent;
 
    //FIXME: Reference thread/desktop instead
    ObReferenceObjectByPointer(WinSta, KernelMode, ExWindowStationObjectType, 0);
@@ -1811,7 +1811,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                                                sizeof(WINDOW_OBJECT));
    if (Window)
    {
-       Window->Wnd = DesktopHeapAlloc(pti->Desktop,
+       Window->Wnd = DesktopHeapAlloc(pti->rpdesk,
                                       sizeof(WND) + Class->cbwndExtra);
        if (!Window->Wnd)
            goto AllocErr;
@@ -1822,7 +1822,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        Wnd->fnid = 0;
 
        Wnd->head.pti = ti;
-       Wnd->head.rpdesk = pti->Desktop;
+       Wnd->head.rpdesk = pti->rpdesk;
        Wnd->hWndLastActive = hWnd;
        Wnd->state2 |= WNDS2_WIN40COMPAT;
    }
@@ -1840,11 +1840,11 @@ AllocErr:
 
    ObDereferenceObject(WinSta);
 
-   if (NULL == pti->Desktop->DesktopWindow)
+   if (NULL == pti->rpdesk->DesktopWindow)
    {
       /* If there is no desktop window yet, we must be creating it */
-      pti->Desktop->DesktopWindow = hWnd;
-      pti->Desktop->pDeskInfo->spwnd = Wnd;
+      pti->rpdesk->DesktopWindow = hWnd;
+      pti->rpdesk->pDeskInfo->spwnd = Wnd;
    }
 
    /*
@@ -2109,7 +2109,7 @@ AllocErr:
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
       BOOL CalculatedDefPosSize = FALSE;
 
-      IntGetDesktopWorkArea(((PTHREADINFO)Window->pti->pEThread->Tcb.Win32Thread)->Desktop, &WorkArea);
+      IntGetDesktopWorkArea(Window->pti->rpdesk, &WorkArea);
 
       rc = WorkArea;
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
@@ -3888,7 +3888,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
-            WindowStation = Window->pti->Desktop->WindowStation;
+            WindowStation = Window->pti->rpdesk->rpwinstaParent;
             if(WindowStation)
             {
                if (hWnd == WindowStation->ShellWindow || hWnd == WindowStation->ShellListView)

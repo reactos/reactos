@@ -8,6 +8,8 @@ typedef struct _DESKTOP
 {
     PDESKTOPINFO pDeskInfo;
     LIST_ENTRY ListEntry;
+    /* Pointer to the associated window station. */
+    struct _WINSTATION_OBJECT *rpwinstaParent;
     PWND spwndForeground;
     PWND spwndTray;
     PWND spwndMessage;
@@ -23,12 +25,8 @@ typedef struct _DESKTOP
     DWORD dwMouseHoverTime;
 
     /* ReactOS */
-    CSHORT Type;
-    CSHORT Size;
     /* Rectangle of the work area */
     RECTL WorkArea;
-    /* Pointer to the associated window station. */
-    struct _WINSTATION_OBJECT *WindowStation;
     /* Pointer to the active queue. */
     PVOID ActiveMessageQueue;
     /* Handle of the desktop window. */
@@ -130,7 +128,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
 
 #define IntIsActiveDesktop(Desktop) \
-  ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
+  ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))
 
 #define GET_DESKTOP_NAME(d)                                             \
     OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d)) ?            \
@@ -210,10 +208,10 @@ DesktopHeapGetUserDelta(VOID)
     ULONG_PTR Delta = 0;
 
     pti = PsGetCurrentThreadWin32Thread();
-    if (!pti->Desktop)
+    if (!pti->rpdesk)
         return 0;
 
-    pheapDesktop = pti->Desktop->pheapDesktop;
+    pheapDesktop = pti->rpdesk->pheapDesktop;
 
     W32Process = PsGetCurrentProcessWin32Process();
     Mapping = W32Process->HeapMappings.Next;

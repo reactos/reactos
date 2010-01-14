@@ -240,7 +240,7 @@ MsqIsClkLck(LPMSG Msg, BOOL Remove)
    BOOL Res = FALSE;
 
    pti = PsGetCurrentThreadWin32Thread();
-   if (pti->Desktop == NULL)
+   if (pti->rpdesk == NULL)
    {
       return FALSE;
    }
@@ -281,7 +281,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
    BOOL Res;
 
    pti = PsGetCurrentThreadWin32Thread();
-   if (pti->Desktop == NULL)
+   if (pti->rpdesk == NULL)
    {
       return FALSE;
    }

@@ -121,7 +121,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
            W32Thread->pDeskInfo->fsHooks= W32Thread->fsHooks;
 
         Hook->head.pti = W32Thread;
-        Hook->head.rpdesk = W32Thread->Desktop;
+        Hook->head.rpdesk = W32Thread->rpdesk;
     }
 
     RtlInitUnicodeString(&Hook->ModuleName, NULL);
