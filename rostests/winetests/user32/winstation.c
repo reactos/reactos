@@ -76,7 +76,8 @@ static DWORD CALLBACK thread( LPVOID arg )
     ok( GetLastError() == ERROR_INVALID_HANDLE, "bad last error %d\n", GetLastError() );
     SetLastError( 0xdeadbeef );
     ok( !CloseDesktop( d1 ), "CloseDesktop succeeded\n" );
-    ok( GetLastError() == ERROR_BUSY, "bad last error %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_BUSY || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+        "bad last error %d\n", GetLastError() );
     print_object( d1 );
     d2 = CreateDesktop( "foobar2", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
     trace( "created desktop %p\n", d2 );
@@ -84,7 +85,8 @@ static DWORD CALLBACK thread( LPVOID arg )
 
     SetLastError( 0xdeadbeef );
     ok( !SetThreadDesktop( d2 ), "set thread desktop succeeded with existing window\n" );
-    ok( GetLastError() == ERROR_BUSY, "bad last error %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_BUSY || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+        "bad last error %d\n", GetLastError() );
 
     DestroyWindow( hwnd );
     ok( SetThreadDesktop( d2 ), "set thread desktop failed\n" );
@@ -139,7 +141,8 @@ static void test_handles(void)
     ok( w2 != w1, "CreateWindowStation returned default handle\n" );
     SetLastError( 0xdeadbeef );
     ok( !CloseDesktop( (HDESK)w2 ), "CloseDesktop succeeded on win station\n" );
-    ok( GetLastError() == ERROR_INVALID_HANDLE, "bad last error %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_INVALID_HANDLE || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+        "bad last error %d\n", GetLastError() );
     ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
 
     w2 = CreateWindowStation("WinSta0", 0, WINSTA_ALL_ACCESS, NULL );
@@ -200,7 +203,8 @@ static void test_handles(void)
 
     SetLastError( 0xdeadbeef );
     ok( !CloseDesktop(d1), "closing thread desktop succeeded\n" );
-    ok( GetLastError() == ERROR_BUSY, "bad last error %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_BUSY || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+        "bad last error %d\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     if (CloseHandle( d1 ))  /* succeeds on nt4 */
@@ -225,7 +229,8 @@ static void test_handles(void)
     ok( d2 != 0, "create foobar desktop failed\n" );
     SetLastError( 0xdeadbeef );
     ok( !CloseWindowStation( (HWINSTA)d2 ), "CloseWindowStation succeeded on desktop\n" );
-    ok( GetLastError() == ERROR_INVALID_HANDLE, "bad last error %d\n", GetLastError() );
+    ok( GetLastError() == ERROR_INVALID_HANDLE || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+        "bad last error %d\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     d3 = CreateDesktop( "foobar", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );

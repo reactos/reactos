@@ -2764,6 +2764,27 @@ static void test_EnumDisplaySettings(void)
     }
 }
 
+static void test_GetSysColorBrush(void)
+{
+    HBRUSH hbr;
+
+    SetLastError(0xdeadbeef);
+    hbr = GetSysColorBrush(-1);
+    ok(hbr == NULL, "Expected NULL brush\n");
+    ok(GetLastError() == 0xdeadbeef, "Expected last error not set, got %x\n", GetLastError());
+    /* greater than max index */
+    hbr = GetSysColorBrush(COLOR_MENUBAR);
+    if (hbr)
+    {
+        SetLastError(0xdeadbeef);
+        hbr = GetSysColorBrush(COLOR_MENUBAR + 1);
+        ok(hbr == NULL, "Expected NULL brush\n");
+        ok(GetLastError() == 0xdeadbeef, "Expected last error not set, got %x\n", GetLastError());
+    }
+    else
+        win_skip("COLOR_MENUBAR unsupported\n");
+}
+
 START_TEST(sysparams)
 {
     int argc;
@@ -2794,6 +2815,7 @@ START_TEST(sysparams)
     test_GetSystemMetrics( );
     trace("testing EnumDisplaySettings vs GetDeviceCaps\n");
     test_EnumDisplaySettings( );
+    test_GetSysColorBrush( );
 
     change_counter = 0;
     change_last_param = 0;

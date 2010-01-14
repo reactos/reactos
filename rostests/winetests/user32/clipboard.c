@@ -56,7 +56,8 @@ static void test_ClipboardOwner(void)
 
     SetLastError(0xdeadbeef);
     ok(!CloseClipboard(), "CloseClipboard should fail if clipboard wasn't open\n");
-    test_last_error(ERROR_CLIPBOARD_NOT_OPEN);
+    ok(GetLastError() == ERROR_CLIPBOARD_NOT_OPEN || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+       "wrong error %u\n", GetLastError());
 
     ok(OpenClipboard(0), "OpenClipboard failed\n");
     ok(!GetClipboardOwner(), "clipboard should still be not owned\n");
@@ -188,7 +189,8 @@ todo_wine
 
     SetLastError(0xdeadbeef);
     ok(!EmptyClipboard(), "EmptyClipboard should fail if clipboard wasn't open\n");
-    test_last_error(ERROR_CLIPBOARD_NOT_OPEN);
+    ok(GetLastError() == ERROR_CLIPBOARD_NOT_OPEN || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+       "Wrong error %u\n", GetLastError());
 }
 
 static HGLOBAL create_text(void)

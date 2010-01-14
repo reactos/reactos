@@ -26,6 +26,7 @@ extern void func_scroll(void);
 extern void func_static(void);
 extern void func_sysparams(void);
 extern void func_text(void);
+extern void func_uitools(void);
 extern void func_win(void);
 extern void func_winstation(void);
 extern void func_wsprintf(void);
@@ -52,6 +53,7 @@ const struct test winetest_testlist[] =
     { "static", func_static },
     { "sysparams", func_sysparams },
     { "text", func_text },
+    { "uitools", func_uitools },
     { "win", func_win },
     { "winstation", func_winstation },
     { "wsprintf", func_wsprintf },

@@ -146,7 +146,7 @@ check (const struct listbox_test test)
   listbox_query (hLB, &answer);
   listbox_ok (test, init, answer);
 
-  SendMessage (hLB, LB_GETITEMRECT, (WPARAM) 1, (LPARAM) &second_item);
+  SendMessage (hLB, LB_GETITEMRECT, 1, (LPARAM) &second_item);
   buttonpress(hLB, (WORD)second_item.left, (WORD)second_item.top);
 
   listbox_query (hLB, &answer);
@@ -354,7 +354,7 @@ static void test_selection(void)
     listbox_query(hLB, &answer);
     listbox_test_query(test_1, answer);
 
-    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    SendMessage(hLB, LB_SETSEL, FALSE, -1);
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
 
@@ -363,7 +363,7 @@ static void test_selection(void)
     listbox_query(hLB, &answer);
     listbox_test_query(test_3, answer);
 
-    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    SendMessage(hLB, LB_SETSEL, FALSE, -1);
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
 
@@ -372,7 +372,7 @@ static void test_selection(void)
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
 
-    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    SendMessage(hLB, LB_SETSEL, FALSE, -1);
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
 
@@ -381,7 +381,7 @@ static void test_selection(void)
     listbox_query(hLB, &answer);
     listbox_test_query(test_1, answer);
 
-    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    SendMessage(hLB, LB_SETSEL, FALSE, -1);
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
 
@@ -390,7 +390,7 @@ static void test_selection(void)
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
 
-    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    SendMessage(hLB, LB_SETSEL, FALSE, -1);
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
 
@@ -399,7 +399,7 @@ static void test_selection(void)
     listbox_query(hLB, &answer);
     listbox_test_query(test_2, answer);
 
-    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    SendMessage(hLB, LB_SETSEL, FALSE, -1);
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
 
@@ -1112,7 +1112,7 @@ static void test_listbox_dlgdir(void)
         "expected conversion to uppercase, got %s\n", pathBuffer);
 
     /* Loaded path should have overwritten the label text */
-    SendMessage(g_label, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)pathBuffer);
+    SendMessage(g_label, WM_GETTEXT, MAX_PATH, (LPARAM)pathBuffer);
     trace("Static control after DlgDirList: %s\n", pathBuffer);
     ok (strcmp("default contents", pathBuffer), "DlgDirList() did not modify static control!\n");
 

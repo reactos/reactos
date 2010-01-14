@@ -464,7 +464,6 @@ static BOOL OnTestDlgCreate (HWND hwnd, LPCREATESTRUCT lpcs)
 static LRESULT CALLBACK main_window_procA (HWND hwnd, UINT uiMsg, WPARAM wParam,
         LPARAM lParam)
 {
-    LRESULT result;
     switch (uiMsg)
     {
         /* Add blank case statements for these to ensure we don't use them
@@ -485,20 +484,19 @@ static LRESULT CALLBACK main_window_procA (HWND hwnd, UINT uiMsg, WPARAM wParam,
             break;
     }
 
-    result=DefWindowProcA (hwnd, uiMsg, wParam, lParam);
-    return result;
+    return DefWindowProcA (hwnd, uiMsg, wParam, lParam);
 }
 
 static LRESULT CALLBACK disabled_test_proc (HWND hwnd, UINT uiMsg,
         WPARAM wParam, LPARAM lParam)
 {
-    LRESULT result;
-    DWORD dw;
-    HWND hwndOk;
-
     switch (uiMsg)
     {
         case WM_INITDIALOG:
+        {
+            DWORD dw;
+            HWND hwndOk;
+
             dw = SendMessage(hwnd, DM_GETDEFID, 0, 0);
             assert(DC_HASDEFID == HIWORD(dw));
             hwndOk = GetDlgItem(hwnd, LOWORD(dw));
@@ -508,6 +506,7 @@ static LRESULT CALLBACK disabled_test_proc (HWND hwnd, UINT uiMsg,
             PostMessage(hwnd, WM_KEYDOWN, VK_RETURN, 0);
             PostMessage(hwnd, WM_COMMAND, IDCANCEL, 0);
             break;
+        }
         case WM_COMMAND:
             if (wParam == IDOK)
             {
@@ -523,14 +522,12 @@ static LRESULT CALLBACK disabled_test_proc (HWND hwnd, UINT uiMsg,
             break;
     }
 
-    result=DefWindowProcA (hwnd, uiMsg, wParam, lParam);
-    return result;
+    return DefWindowProcA (hwnd, uiMsg, wParam, lParam);
 }
 
 static LRESULT CALLBACK testDlgWinProc (HWND hwnd, UINT uiMsg, WPARAM wParam,
         LPARAM lParam)
 {
-    LRESULT result;
     switch (uiMsg)
     {
         /* Add blank case statements for these to ensure we don't use them
@@ -544,8 +541,7 @@ static LRESULT CALLBACK testDlgWinProc (HWND hwnd, UINT uiMsg, WPARAM wParam,
                     (LPCREATESTRUCTA) lParam) ? 0 : (LRESULT) -1);
     }
 
-    result=DefWindowProcA (hwnd, uiMsg, wParam, lParam);
-    return result;
+    return DefDlgProcA (hwnd, uiMsg, wParam, lParam);
 }
 
 static BOOL RegisterWindowClasses (void)

@@ -390,8 +390,9 @@ static void test_subpopup_locked_by_menu(void)
             ok( ret == itemid , "TrackPopupMenu returned %d error is %d\n", ret, gle);
         }
         ok( gle == 0 ||
-                broken( gle ==  ERROR_INVALID_PARAMETER), /* win2k0 */
-                "Last error is %d\n", gle);
+            broken(gle == 0xdeadbeef) || /* wow64 */
+            broken(gle == ERROR_INVALID_PARAMETER), /* win2k0 */
+            "Last error is %d\n", gle);
     }
     /* clean up */
     DestroyMenu( hmenu);

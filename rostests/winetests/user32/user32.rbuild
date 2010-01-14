@@ -28,6 +28,7 @@
 	<file>static.c</file>
 	<file>sysparams.c</file>
 	<file>text.c</file>
+	<file>uitools.c</file>
 	<file>win.c</file>
 	<file>winstation.c</file>
 	<file>wsprintf.c</file>

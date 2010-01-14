@@ -161,7 +161,7 @@ static const struct message WmSWP_ShowOverlappedSeq[] = {
     { WM_QUERYNEWPALETTE, sent|wparam|lparam|optional, 0, 0 },
     { WM_WINDOWPOSCHANGING, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE }, /* Win9x: SWP_NOSENDCHANGING */
     { WM_ACTIVATEAPP, sent|wparam, 1 },
-    { WM_NCACTIVATE, sent|wparam, 1 },
+    { WM_NCACTIVATE, sent },
     { WM_GETTEXT, sent|defwinproc|optional },
     { WM_ACTIVATE, sent|wparam, 1 },
     { HCBT_SETFOCUS, hook },
@@ -268,7 +268,7 @@ static const struct message WmSWP_ResizeNoZOrder[] = {
     { WM_NCPAINT, sent|optional },
     { WM_GETTEXT, sent|defwinproc|optional },
     { WM_ERASEBKGND, sent|optional },
-    { WM_WINDOWPOSCHANGED, sent|wparam, /*SWP_NOZORDER|*/SWP_NOACTIVATE, 0,
+    { WM_WINDOWPOSCHANGED, sent|wparam|optional, /*SWP_NOZORDER|*/SWP_NOACTIVATE, 0,
       SWP_NOMOVE|SWP_NOCLIENTMOVE|SWP_NOSIZE|SWP_NOCLIENTSIZE },
     { WM_MOVE, sent|defwinproc|optional },
     { WM_SIZE, sent|defwinproc|optional },
@@ -631,9 +631,10 @@ static const struct message WmHideOverlappedSeq[] = {
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_HIDEWINDOW|SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE },
     { WM_SIZE, sent|optional }, /* XP doesn't send it */
     { WM_MOVE, sent|optional }, /* XP doesn't send it */
-    { WM_NCACTIVATE, sent|wparam, 0 },
-    { WM_ACTIVATE, sent|wparam, 0 },
-    { WM_ACTIVATEAPP, sent|wparam, 0 },
+    { WM_NCACTIVATE, sent|wparam|optional, 0 },
+    { WM_ACTIVATE, sent|wparam|optional, 0 },
+    { WM_ACTIVATEAPP, sent|wparam|optional, 0 },
+    { HCBT_SETFOCUS, hook|optional },
     { WM_KILLFOCUS, sent|wparam, 0 },
     { WM_IME_SETCONTEXT, sent|wparam|optional, 0 },
     { WM_IME_NOTIFY, sent|wparam|optional|defwinproc, 1 },
@@ -1776,7 +1777,8 @@ static BOOL ignore_message( UINT message )
             message == WM_GETOBJECT ||
             message == WM_TIMECHANGE ||
             message == WM_DISPLAYCHANGE ||
-            message == WM_DEVICECHANGE);
+            message == WM_DEVICECHANGE ||
+            message == WM_DWMNCRENDERINGCHANGED);
 }
 
 
@@ -5384,6 +5386,7 @@ static void test_button_messages(void)
 	UpdateWindow(hwnd);
 	SetFocus(0);
 	flush_events();
+	SetFocus(0);
 	flush_sequence();
 
         log_all_parent_messages++;
@@ -6866,8 +6869,8 @@ static const struct message WmVkAppsSeq[] = {
     { HCBT_KEYSKIPPED, hook|wparam|lparam|optional, VK_APPS, 0xc0000001 }, /* XP */
     { WM_KEYUP, wparam|lparam, VK_APPS, 0xc0000001 },
     { WM_KEYUP, sent|wparam|lparam, VK_APPS, 0xc0000001 },
-    { WM_CONTEXTMENU, lparam, /*hwnd*/0, (LPARAM)-1 },
-    { WM_CONTEXTMENU, sent|lparam, /*hwnd*/0, (LPARAM)-1 },
+    { WM_CONTEXTMENU, lparam, /*hwnd*/0, -1 },
+    { WM_CONTEXTMENU, sent|lparam, /*hwnd*/0, -1 },
     { 0 }
 };
 static const struct message WmVkF10Seq[] = {
@@ -9324,17 +9327,21 @@ static void test_PeekMessage(void)
         skip( "queuing key events not supported\n" );
         goto done;
     }
-    ok(qstatus == MAKELONG(QS_KEY, QS_KEY),
+    ok(qstatus == MAKELONG(QS_KEY, QS_KEY) ||
+       /* keybd_event seems to trigger a sent message on NT4 */
+       qstatus == MAKELONG(QS_KEY|QS_SENDMESSAGE, QS_KEY|QS_SENDMESSAGE),
        "wrong qstatus %08x\n", qstatus);
 
     PostMessageA(info.hwnd, WM_CHAR, 'z', 0);
     qstatus = GetQueueStatus(qs_all_input);
-    ok(qstatus == MAKELONG(QS_POSTMESSAGE, QS_POSTMESSAGE|QS_KEY),
+    ok(qstatus == MAKELONG(QS_POSTMESSAGE, QS_POSTMESSAGE|QS_KEY) ||
+       qstatus == MAKELONG(QS_POSTMESSAGE, QS_POSTMESSAGE|QS_KEY|QS_SENDMESSAGE),
        "wrong qstatus %08x\n", qstatus);
 
     InvalidateRect(info.hwnd, NULL, FALSE);
     qstatus = GetQueueStatus(qs_all_input);
-    ok(qstatus == MAKELONG(QS_PAINT, QS_PAINT|QS_POSTMESSAGE|QS_KEY),
+    ok(qstatus == MAKELONG(QS_PAINT, QS_PAINT|QS_POSTMESSAGE|QS_KEY) ||
+       qstatus == MAKELONG(QS_PAINT, QS_PAINT|QS_POSTMESSAGE|QS_KEY|QS_SENDMESSAGE),
        "wrong qstatus %08x\n", qstatus);
 
     trace("signalling to send message\n");
@@ -9896,7 +9903,7 @@ static void pump_msg_loop_timeout(DWORD timeout, BOOL inject_mouse_move)
             /* Timer proc messages are not dispatched to the window proc,
              * and therefore not logged.
              */
-            if (msg.message == WM_TIMER || msg.message == WM_SYSTIMER)
+            if ((msg.message == WM_TIMER || msg.message == WM_SYSTIMER) && msg.hwnd)
             {
                 struct recvd_message s_msg;
 
@@ -10291,8 +10298,8 @@ static const struct message WmRestore_5[] = {
 };
 static const struct message WmHide_1[] = {
     { WM_SHOWWINDOW, sent|wparam, 0 },
-    { WM_WINDOWPOSCHANGING, sent|wparam, SWP_HIDEWINDOW|SWP_NOSIZE|SWP_NOMOVE },
-    { WM_WINDOWPOSCHANGED, sent|wparam, SWP_HIDEWINDOW|SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE },
+    { WM_WINDOWPOSCHANGING, sent|wparam, SWP_HIDEWINDOW|SWP_NOSIZE|SWP_NOMOVE, 0, SWP_NOACTIVATE },
+    { WM_WINDOWPOSCHANGED, sent|wparam, SWP_HIDEWINDOW|SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE, 0, SWP_NOACTIVATE },
     { HCBT_ACTIVATE, hook|optional },
     { HCBT_SETFOCUS, hook|optional }, /* win2000 sends it */
     { 0 }
@@ -10840,6 +10847,7 @@ static const struct message SetActiveWindowSeq4[] =
     { WM_WINDOWPOSCHANGING, sent|wparam, SWP_NOSIZE|SWP_NOMOVE },
     { WM_WINDOWPOSCHANGING, sent|wparam, SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE },
     { WM_WINDOWPOSCHANGED, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE|SWP_NOREDRAW|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE },
+    { WM_WINDOWPOSCHANGED, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOREDRAW|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE },
     { WM_NCACTIVATE, sent|wparam, 1 },
     { WM_GETTEXT, sent|defwinproc|optional },
     { WM_ACTIVATE, sent|wparam, 1 },
@@ -12014,10 +12022,271 @@ static void test_PostMessage(void)
     flush_events();
 }
 
+static const struct
+{
+    DWORD exp, broken;
+    BOOL todo;
+} wait_idle_expect[] =
+{
+/* 0 */  { WAIT_TIMEOUT, WAIT_TIMEOUT, FALSE },
+         { WAIT_TIMEOUT, 0,            FALSE },
+         { WAIT_TIMEOUT, 0,            FALSE },
+         { WAIT_TIMEOUT, WAIT_TIMEOUT, FALSE },
+         { WAIT_TIMEOUT, WAIT_TIMEOUT, FALSE },
+/* 5 */  { WAIT_TIMEOUT, 0,            FALSE },
+         { WAIT_TIMEOUT, 0,            FALSE },
+         { WAIT_TIMEOUT, WAIT_TIMEOUT, FALSE },
+         { 0,            0,            FALSE },
+         { 0,            0,            FALSE },
+/* 10 */ { 0,            0,            FALSE },
+         { 0,            0,            FALSE },
+         { 0,            WAIT_TIMEOUT, FALSE },
+         { 0,            0,            FALSE },
+};
+
+static DWORD CALLBACK do_wait_idle_child_thread( void *arg )
+{
+    MSG msg;
+
+    PeekMessage( &msg, 0, 0, 0, PM_NOREMOVE );
+    Sleep( 200 );
+    MsgWaitForMultipleObjects( 0, NULL, FALSE, 100, QS_ALLINPUT );
+    return 0;
+}
+
+static void do_wait_idle_child( int arg )
+{
+    WNDCLASS cls;
+    MSG msg;
+    HWND hwnd = 0;
+    HANDLE thread;
+    DWORD id;
+    HANDLE start_event = OpenEventA( EVENT_ALL_ACCESS, FALSE, "test_WaitForInputIdle_start" );
+    HANDLE end_event = OpenEventA( EVENT_ALL_ACCESS, FALSE, "test_WaitForInputIdle_end" );
+
+    memset( &cls, 0, sizeof(cls) );
+    cls.lpfnWndProc   = DefWindowProc;
+    cls.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    cls.hCursor       = LoadCursor(0, IDC_ARROW);
+    cls.lpszClassName = "TestClass";
+    RegisterClass( &cls );
+
+    PeekMessage( &msg, 0, 0, 0, PM_NOREMOVE );  /* create the msg queue */
+
+    ok( start_event != 0, "failed to create start event, error %u\n", GetLastError() );
+    ok( end_event != 0, "failed to create end event, error %u\n", GetLastError() );
+
+    switch (arg)
+    {
+    case 0:
+        SetEvent( start_event );
+        break;
+    case 1:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, 0, 0, 0, PM_REMOVE );
+        break;
+    case 2:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, 0, 0, 0, PM_NOREMOVE );
+        PostThreadMessage( GetCurrentThreadId(), WM_COMMAND, 0x1234, 0xabcd );
+        PeekMessage( &msg, 0, 0, 0, PM_REMOVE );
+        break;
+    case 3:
+        SetEvent( start_event );
+        Sleep( 200 );
+        SendMessage( HWND_BROADCAST, WM_WININICHANGE, 0, 0 );
+        break;
+    case 4:
+        SetEvent( start_event );
+        Sleep( 200 );
+        hwnd = CreateWindowExA(0, "TestClass", NULL, WS_POPUP|WS_VISIBLE, 0, 0, 10, 10, 0, 0, 0, NULL);
+        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE|PM_NOYIELD )) DispatchMessage( &msg );
+        break;
+    case 5:
+        SetEvent( start_event );
+        Sleep( 200 );
+        hwnd = CreateWindowExA(0, "TestClass", NULL, WS_POPUP|WS_VISIBLE, 0, 0, 10, 10, 0, 0, 0, NULL);
+        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessage( &msg );
+        break;
+    case 6:
+        SetEvent( start_event );
+        Sleep( 200 );
+        hwnd = CreateWindowExA(0, "TestClass", NULL, WS_POPUP|WS_VISIBLE, 0, 0, 10, 10, 0, 0, 0, NULL);
+        while (PeekMessage( &msg, 0, 0, 0, PM_NOREMOVE ))
+        {
+            GetMessage( &msg, 0, 0, 0 );
+            DispatchMessage( &msg );
+        }
+        break;
+    case 7:
+        SetEvent( start_event );
+        Sleep( 200 );
+        hwnd = CreateWindowExA(0, "TestClass", NULL, WS_POPUP|WS_VISIBLE, 0, 0, 10, 10, 0, 0, 0, NULL);
+        SetTimer( hwnd, 3, 1, NULL );
+        Sleep( 200 );
+        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE|PM_NOYIELD )) DispatchMessage( &msg );
+        break;
+    case 8:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, 0, 0, 0, PM_NOREMOVE );
+        MsgWaitForMultipleObjects( 0, NULL, FALSE, 100, QS_ALLINPUT );
+        break;
+    case 9:
+        SetEvent( start_event );
+        Sleep( 200 );
+        hwnd = CreateWindowExA(0, "TestClass", NULL, WS_POPUP|WS_VISIBLE, 0, 0, 10, 10, 0, 0, 0, NULL);
+        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessage( &msg );
+        for (;;) GetMessage( &msg, 0, 0, 0 );
+        break;
+    case 10:
+        SetEvent( start_event );
+        Sleep( 200 );
+        hwnd = CreateWindowExA(0, "TestClass", NULL, WS_POPUP|WS_VISIBLE, 0, 0, 10, 10, 0, 0, 0, NULL);
+        SetTimer( hwnd, 3, 1, NULL );
+        Sleep( 200 );
+        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessage( &msg );
+        break;
+    case 11:
+        SetEvent( start_event );
+        Sleep( 200 );
+        return;  /* exiting the process makes WaitForInputIdle return success too */
+    case 12:
+        PeekMessage( &msg, 0, 0, 0, PM_NOREMOVE );
+        Sleep( 200 );
+        MsgWaitForMultipleObjects( 0, NULL, FALSE, 100, QS_ALLINPUT );
+        SetEvent( start_event );
+        break;
+    case 13:
+        SetEvent( start_event );
+        PeekMessage( &msg, 0, 0, 0, PM_NOREMOVE );
+        Sleep( 200 );
+        thread = CreateThread( NULL, 0, do_wait_idle_child_thread, NULL, 0, &id );
+        WaitForSingleObject( thread, 10000 );
+        CloseHandle( thread );
+        break;
+    }
+    WaitForSingleObject( end_event, 2000 );
+    CloseHandle( start_event );
+    CloseHandle( end_event );
+    if (hwnd) DestroyWindow( hwnd );
+}
+
+static LRESULT CALLBACK wait_idle_proc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
+{
+    if (msg == WM_WININICHANGE) Sleep( 200 );  /* make sure the child waits */
+    return DefWindowProcA( hwnd, msg, wp, lp );
+}
+
+static DWORD CALLBACK wait_idle_thread( void *arg )
+{
+    WNDCLASS cls;
+    MSG msg;
+    HWND hwnd;
+
+    memset( &cls, 0, sizeof(cls) );
+    cls.lpfnWndProc   = wait_idle_proc;
+    cls.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    cls.hCursor       = LoadCursor(0, IDC_ARROW);
+    cls.lpszClassName = "TestClass";
+    RegisterClass( &cls );
+
+    hwnd = CreateWindowExA(0, "TestClass", NULL, WS_POPUP, 0, 0, 10, 10, 0, 0, 0, NULL);
+    while (GetMessage( &msg, 0, 0, 0 )) DispatchMessage( &msg );
+    return 0;
+}
+
+static void test_WaitForInputIdle( char *argv0 )
+{
+    char path[MAX_PATH];
+    PROCESS_INFORMATION pi;
+    STARTUPINFOA startup;
+    BOOL ret;
+    HANDLE start_event, end_event, thread;
+    unsigned int i;
+    DWORD id;
+    const IMAGE_DOS_HEADER *dos = (const IMAGE_DOS_HEADER *)GetModuleHandleA(0);
+    const IMAGE_NT_HEADERS *nt = (const IMAGE_NT_HEADERS *)((const char *)dos + dos->e_lfanew);
+    BOOL console_app = (nt->OptionalHeader.Subsystem != IMAGE_SUBSYSTEM_WINDOWS_GUI);
+
+    if (console_app)  /* build the test with -mwindows for better coverage */
+        trace( "not built as a GUI app, WaitForInputIdle may not be fully tested\n" );
+
+    start_event = CreateEventA(NULL, 0, 0, "test_WaitForInputIdle_start");
+    end_event = CreateEventA(NULL, 0, 0, "test_WaitForInputIdle_end");
+    ok(start_event != 0, "failed to create start event, error %u\n", GetLastError());
+    ok(end_event != 0, "failed to create end event, error %u\n", GetLastError());
+
+    memset( &startup, 0, sizeof(startup) );
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESHOWWINDOW;
+    startup.wShowWindow = SW_SHOWNORMAL;
+
+    thread = CreateThread( NULL, 0, wait_idle_thread, NULL, 0, &id );
+
+    for (i = 0; i < sizeof(wait_idle_expect)/sizeof(wait_idle_expect[0]); i++)
+    {
+        ResetEvent( start_event );
+        ResetEvent( end_event );
+        sprintf( path, "%s msg %u", argv0, i );
+        ret = CreateProcessA( NULL, path, NULL, NULL, TRUE, 0, NULL, NULL, &startup, &pi );
+        ok( ret, "CreateProcess '%s' failed err %u.\n", path, GetLastError() );
+        if (ret)
+        {
+            ret = WaitForSingleObject( start_event, 5000 );
+            ok( ret == WAIT_OBJECT_0, "%u: WaitForSingleObject failed\n", i );
+            if (ret == WAIT_OBJECT_0)
+            {
+                ret = WaitForInputIdle( pi.hProcess, 1000 );
+                if (ret == WAIT_FAILED)
+                    ok( console_app ||
+                        ret == wait_idle_expect[i].exp ||
+                        broken(ret == wait_idle_expect[i].broken),
+                        "%u: WaitForInputIdle error %08x expected %08x\n",
+                        i, ret, wait_idle_expect[i].exp );
+                else if (wait_idle_expect[i].todo)
+                    todo_wine
+                    ok( ret == wait_idle_expect[i].exp || broken(ret == wait_idle_expect[i].broken),
+                        "%u: WaitForInputIdle error %08x expected %08x\n",
+                        i, ret, wait_idle_expect[i].exp );
+                else
+                    ok( ret == wait_idle_expect[i].exp || broken(ret == wait_idle_expect[i].broken),
+                        "%u: WaitForInputIdle error %08x expected %08x\n",
+                        i, ret, wait_idle_expect[i].exp );
+                SetEvent( end_event );
+                WaitForSingleObject( pi.hProcess, 1000 );  /* give it a chance to exit on its own */
+            }
+            TerminateProcess( pi.hProcess, 0 );  /* just in case */
+            winetest_wait_child_process( pi.hProcess );
+            ret = WaitForInputIdle( pi.hProcess, 100 );
+            ok( ret == WAIT_FAILED, "%u: WaitForInputIdle after exit error %08x\n", i, ret );
+            CloseHandle( pi.hProcess );
+            CloseHandle( pi.hThread );
+        }
+    }
+    CloseHandle( start_event );
+    PostThreadMessage( id, WM_QUIT, 0, 0 );
+    WaitForSingleObject( thread, 10000 );
+    CloseHandle( thread );
+}
+
 START_TEST(msg)
 {
+    char **test_argv;
     BOOL ret;
     BOOL (WINAPI *pIsWinEventHookInstalled)(DWORD)= 0;/*GetProcAddress(user32, "IsWinEventHookInstalled");*/
+
+    int argc = winetest_get_mainargs( &test_argv );
+    if (argc >= 3)
+    {
+        unsigned int arg;
+        /* Child process. */
+        sscanf (test_argv[2], "%d", (unsigned int *) &arg);
+        do_wait_idle_child( arg );
+        return;
+    }
 
     init_procs();
 
@@ -12059,6 +12328,7 @@ START_TEST(msg)
     test_ShowWindow();
     test_PeekMessage();
     test_PeekMessage2();
+    test_WaitForInputIdle( test_argv[0] );
     test_scrollwindowex();
     test_messages();
     test_setwindowpos();
