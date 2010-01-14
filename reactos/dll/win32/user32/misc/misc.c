@@ -524,7 +524,7 @@ PWND
 FASTCALL
 GetThreadDesktopWnd(VOID)
 {
-    PWND Wnd = GetThreadDesktopInfo()->Wnd;
+    PWND Wnd = GetThreadDesktopInfo()->spwnd;
     if (Wnd != NULL)
         Wnd = DesktopPtrToUser(Wnd);
     return Wnd;

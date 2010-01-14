@@ -184,7 +184,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	MadCount++;
 
 	//
-	// Map it (don't map low 1Mb because it was already contigiously
+	// Map it (don't map low 1Mb because it was already contiguously
 	// mapped in WinLdrTurnOnPaging)
 	//
 	if (BasePage >= 0x100)
@@ -255,7 +255,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	DPRINTM(DPRINT_WINDOWS, "Got memory map with %d entries\n", NoEntries);
 
-	// Always contigiously map low 1Mb of memory
+	// Always contiguously map low 1Mb of memory
 	Status = MempSetupPaging(0, 0x100);
 	if (!Status)
 	{
@@ -270,7 +270,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	PagesCount = 1;
 	LastPageIndex = 0;
 	LastPageType = MemoryMap[0].PageAllocated;
-	for(i=1;i<NoEntries;i++)
+	for (i = 1; i < NoEntries; i++)
 	{
 		// Check if its memory map itself
 		if (i >= MemoryMapStartPage &&

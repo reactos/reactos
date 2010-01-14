@@ -22,7 +22,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/display.c
  * PURPOSE:         Blue screen display
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:
  *                  Created 08/10/99
  */

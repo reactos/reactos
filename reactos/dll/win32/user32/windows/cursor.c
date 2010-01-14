@@ -280,18 +280,7 @@ WINAPI
 SetCursorPos(int X,
              int Y)
 {
-    INPUT Input;
-
-    Input.type = INPUT_MOUSE;
-    Input.mi.dx = (LONG)X;
-    Input.mi.dy = (LONG)Y;
-    Input.mi.mouseData = 0;
-    Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
-    Input.mi.time = 0;
-    Input.mi.dwExtraInfo = 0;
-
-    NtUserSendInput(1, &Input, sizeof(INPUT));
-    return TRUE;
+    return NtUserSetCursorPos(X,Y);
 }
 
 

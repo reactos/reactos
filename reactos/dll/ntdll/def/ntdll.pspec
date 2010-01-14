@@ -562,7 +562,7 @@
 @ stdcall RtlDestroyQueryDebugBuffer(ptr)
 @ stdcall RtlDetermineDosPathNameType_U(wstr)
 @ stdcall RtlDllShutdownInProgress()
-//@ stdcall RtlDnsHostNameToComputerName
+@ stdcall RtlDnsHostNameToComputerName(ptr ptr long)
 @ stdcall RtlDoesFileExists_U(wstr)
 //@ stdcall RtlDosApplyFileIsolationRedirection_Ustr
 @ stdcall RtlDosPathNameToNtPathName_U(wstr ptr ptr ptr)

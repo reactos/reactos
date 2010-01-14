@@ -348,7 +348,8 @@ IDirect3DDeviceImpl_7_Release(IDirect3DDevice7 *iface)
              * vanish soon.
              */
             IWineD3DDevice_SetRenderTarget(This->wineD3DDevice, 0,
-                                           This->ddraw->d3d_target->WineD3DSurface);
+                                           This->ddraw->d3d_target->WineD3DSurface,
+                                           FALSE);
             /* This->target is the offscreen target.
              * This->ddraw->d3d_target is the target used by DDraw
              */
@@ -1984,7 +1985,8 @@ IDirect3DDeviceImpl_7_SetRenderTarget(IDirect3DDevice7 *iface,
 
     hr = IWineD3DDevice_SetRenderTarget(This->wineD3DDevice,
                                         0,
-                                        Target ? Target->WineD3DSurface : NULL);
+                                        Target ? Target->WineD3DSurface : NULL,
+                                        FALSE);
     if(hr != D3D_OK)
     {
         LeaveCriticalSection(&ddraw_cs);

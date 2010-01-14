@@ -14,7 +14,6 @@
 		<file>control.c</file>
 		<file>create.c</file>
 		<file>delete.c</file>
-		<file>dependencies.c</file>
 		<file>dependencies_tv1.c</file>
 		<file>dependencies_tv2.c</file>
 		<file>export.c</file>
@@ -29,6 +28,7 @@
 		<file>servman.c</file>
 		<file>start.c</file>
 		<file>stop.c</file>
+		<file>stop_dependencies.c</file>		
 	</compilationunit>
 	<file>servman.rc</file>
 	<pch>precomp.h</pch>

@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Windows
@@ -120,7 +119,7 @@ BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
 	if (!Wnd->Wnd) return FALSE;
     style = Wnd->Wnd->style;
     if (!(style & WS_VISIBLE) &&
-        Wnd->OwnerThread->ThreadsProcess != CsrProcess) return FALSE;
+        Wnd->pti->pEThread->ThreadsProcess != CsrProcess) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
     return !(style & WS_DISABLED);
 }
@@ -258,7 +257,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, RECTL *RestoreRect)
    {
       RECTL WorkArea;
       PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-      PDESKTOP Desktop = pti->Desktop; /* Or rather get it from the window? */
+      PDESKTOP Desktop = pti->rpdesk; /* Or rather get it from the window? */
 
       Parent = Window->spwndParent;
       if(Parent)
@@ -406,7 +405,7 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
    UINT XInc, YInc;
    RECTL WorkArea;
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP Desktop = pti->Desktop; /* Or rather get it from the window? */
+   PDESKTOP Desktop = pti->rpdesk; /* Or rather get it from the window? */
 
    IntGetDesktopWorkArea(Desktop, &WorkArea);
 
@@ -905,7 +904,7 @@ co_WinPosSetWindowPos(
     * Only allow CSRSS to mess with the desktop window
     */
    if (Window->hSelf == IntGetDesktopWindow() &&
-         Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+         Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
    {
       return FALSE;
    }
@@ -1097,9 +1096,9 @@ co_WinPosSetWindowPos(
       Window->Wnd->style |= WS_VISIBLE;
    }
 
-   if (Window->UpdateRegion != NULL && Window->UpdateRegion != (HRGN)1)
+   if (Window->hrgnUpdate != NULL && Window->hrgnUpdate != (HRGN)1)
    {
-      NtGdiOffsetRgn(Window->UpdateRegion,
+      NtGdiOffsetRgn(Window->hrgnUpdate,
                      NewWindowRect.left - OldWindowRect.left,
                      NewWindowRect.top - OldWindowRect.top);
    }
@@ -1162,10 +1161,10 @@ co_WinPosSetWindowPos(
          }
 
          /* No use in copying bits which are in the update region. */
-         if (Window->UpdateRegion != NULL)
+         if (Window->hrgnUpdate != NULL)
          {
             NtGdiOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
-            NtGdiCombineRgn(CopyRgn, CopyRgn, Window->UpdateRegion, RGN_DIFF);
+            NtGdiCombineRgn(CopyRgn, CopyRgn, Window->hrgnUpdate, RGN_DIFF);
             NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
          }
 
@@ -1612,7 +1611,7 @@ co_WinPosSearchChildren(
 
          UserRefObjectCo(Current, &Ref);
 
-         if (OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
+         if (OnlyHitTests && (Current->pti->MessageQueue == OnlyHitTests))
          {
             *HitTest = co_IntSendMessage(Current->hSelf, WM_NCHITTEST, 0,
                                          MAKELONG(Point->x, Point->y));

@@ -505,25 +505,10 @@ NtUserQueryUserCounters(
    return 0;
 }
 
-
 DWORD
 APIENTRY
 NtUserRegisterTasklist(
    DWORD Unknown0)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-DWORD
-APIENTRY
-NtUserSBGetParms(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
 {
    UNIMPLEMENTED
 

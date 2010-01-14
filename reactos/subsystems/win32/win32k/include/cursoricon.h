@@ -47,7 +47,7 @@ typedef struct _SYSTEM_CURSORINFO
   UINT ButtonsDown;
   CURSORCLIP_INFO CursorClipInfo;
   PCURICON_OBJECT CurrentCursorObject;
-  BYTE ShowingCursor;
+  INT ShowingCursor;
 /*
   UINT WheelScroLines;
   UINT WheelScroChars;
@@ -77,9 +77,9 @@ BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxW
    INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 
-BOOL FASTCALL UserSetCursorPos( INT x, INT y);
+BOOL UserSetCursorPos( INT x, INT y);
 
-int APIENTRY UserShowCursor(BOOL bShow);
+int UserShowCursor(BOOL bShow);
 
 PSYSTEM_CURSORINFO FASTCALL
 IntGetSysCursorInfo();

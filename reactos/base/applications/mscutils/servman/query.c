@@ -143,6 +143,7 @@ GetServiceDescription(LPTSTR lpServiceName)
     SERVICE_DESCRIPTION *pServiceDescription = NULL;
     LPTSTR lpDescription = NULL;
     DWORD BytesNeeded = 0;
+    DWORD dwSize;
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
@@ -180,12 +181,16 @@ GetServiceDescription(LPTSTR lpServiceName)
                 {
                     if (pServiceDescription->lpDescription)
                     {
+                        dwSize = _tcslen(pServiceDescription->lpDescription) + 1;
                         lpDescription = HeapAlloc(ProcessHeap,
                                                   0,
-                                                  (_tcslen(pServiceDescription->lpDescription) + 1) * sizeof(TCHAR));
+                                                  dwSize * sizeof(TCHAR));
                         if (lpDescription)
-                            _tcscpy(lpDescription,
-                                    pServiceDescription->lpDescription);
+                        {
+                            _tcscpy_s(lpDescription,
+                                      dwSize,
+                                      pServiceDescription->lpDescription);
+                        }
                     }
                 }
             }

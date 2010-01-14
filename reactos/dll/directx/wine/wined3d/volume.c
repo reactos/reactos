@@ -25,11 +25,12 @@
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_surface);
-#define GLINFO_LOCATION This->resource.wineD3DDevice->adapter->gl_info
+#define GLINFO_LOCATION This->resource.device->adapter->gl_info
 
 /* Context activation is done by the caller. */
 static void volume_bind_and_dirtify(IWineD3DVolume *iface) {
     IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
+    const struct wined3d_gl_info *gl_info = &This->resource.device->adapter->gl_info;
     IWineD3DVolumeTexture *texture;
     DWORD active_sampler;
 
@@ -44,19 +45,20 @@ static void volume_bind_and_dirtify(IWineD3DVolume *iface) {
      *
      * TODO: Track the current active texture per GL context instead of using glGet
      */
-    if (GL_SUPPORT(ARB_MULTITEXTURE)) {
+    if (gl_info->supported[ARB_MULTITEXTURE])
+    {
         GLint active_texture;
         ENTER_GL();
         glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
         LEAVE_GL();
-        active_sampler = This->resource.wineD3DDevice->rev_tex_unit_map[active_texture - GL_TEXTURE0_ARB];
+        active_sampler = This->resource.device->rev_tex_unit_map[active_texture - GL_TEXTURE0_ARB];
     } else {
         active_sampler = 0;
     }
 
     if (active_sampler != WINED3D_UNMAPPED_STAGE)
     {
-        IWineD3DDeviceImpl_MarkStateDirty(This->resource.wineD3DDevice, STATE_SAMPLER(active_sampler));
+        IWineD3DDeviceImpl_MarkStateDirty(This->resource.device, STATE_SAMPLER(active_sampler));
     }
 
     if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DVolumeTexture, (void **)&texture))) {
@@ -95,18 +97,23 @@ void volume_add_dirty_box(IWineD3DVolume *iface, const WINED3DBOX *dirty_box)
 /* *******************************************
    IWineD3DVolume IUnknown parts follow
    ******************************************* */
-static HRESULT WINAPI IWineD3DVolumeImpl_QueryInterface(IWineD3DVolume *iface, REFIID riid, LPVOID *ppobj)
+static HRESULT WINAPI IWineD3DVolumeImpl_QueryInterface(IWineD3DVolume *iface, REFIID riid, void **object)
 {
-    IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
-    TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IWineD3DBase)
-        || IsEqualGUID(riid, &IID_IWineD3DVolume)){
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), object);
+
+    if (IsEqualGUID(riid, &IID_IWineD3DVolume)
+            || IsEqualGUID(riid, &IID_IWineD3DResource)
+            || IsEqualGUID(riid, &IID_IWineD3DBase)
+            || IsEqualGUID(riid, &IID_IUnknown))
+    {
         IUnknown_AddRef(iface);
-        *ppobj = This;
+        *object = iface;
         return S_OK;
     }
-    *ppobj = NULL;
+
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+
+    *object = NULL;
     return E_NOINTERFACE;
 }
 
@@ -134,10 +141,6 @@ static ULONG WINAPI IWineD3DVolumeImpl_Release(IWineD3DVolume *iface) {
    **************************************************** */
 static HRESULT WINAPI IWineD3DVolumeImpl_GetParent(IWineD3DVolume *iface, IUnknown **pParent) {
     return resource_get_parent((IWineD3DResource *)iface, pParent);
-}
-
-static HRESULT WINAPI IWineD3DVolumeImpl_GetDevice(IWineD3DVolume *iface, IWineD3DDevice** ppDevice) {
-    return resource_get_device((IWineD3DResource *)iface, ppDevice);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_SetPrivateData(IWineD3DVolume *iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
@@ -185,11 +188,13 @@ static HRESULT WINAPI IWineD3DVolumeImpl_GetContainer(IWineD3DVolume *iface, REF
 
     if (!ppContainer) {
         ERR("Called without a valid ppContainer.\n");
+        return E_FAIL;
     }
 
     /* Although surfaces can be standalone, volumes can't */
     if (!This->container) {
         ERR("Volume without an container. Should not happen.\n");
+        return E_FAIL;
     }
 
     TRACE("Relaying to QueryInterface\n");
@@ -281,9 +286,10 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LockBox(IWineD3DVolume *iface, WINED3DL
 
 static HRESULT WINAPI IWineD3DVolumeImpl_UnlockBox(IWineD3DVolume *iface) {
     IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
-    if (!This->locked) {
-      ERR("trying to lock unlocked volume@%p\n", This);
-      return WINED3DERR_INVALIDCALL;
+    if (!This->locked)
+    {
+        WARN("Trying to unlock unlocked volume %p.\n", iface);
+        return WINED3DERR_INVALIDCALL;
     }
     TRACE("(%p) : unlocking volume\n", This);
     This->locked = FALSE;
@@ -357,7 +363,6 @@ static const IWineD3DVolumeVtbl IWineD3DVolume_Vtbl =
     IWineD3DVolumeImpl_Release,
     /* IWineD3DResource */
     IWineD3DVolumeImpl_GetParent,
-    IWineD3DVolumeImpl_GetDevice,
     IWineD3DVolumeImpl_SetPrivateData,
     IWineD3DVolumeImpl_GetPrivateData,
     IWineD3DVolumeImpl_FreePrivateData,

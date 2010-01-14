@@ -461,7 +461,7 @@ KdbpStepIntoInstruction(
     }
 
     /* Get the interrupt descriptor */
-    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(ULONG_PTR)((ULONG_PTR)Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
+    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(ULONG_PTR)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
     {
         /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
         return FALSE;

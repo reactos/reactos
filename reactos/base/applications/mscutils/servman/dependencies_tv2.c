@@ -51,55 +51,67 @@ TV2_HasDependantServices(LPWSTR lpServiceName)
 }
 
 
-static LPENUM_SERVICE_STATUS
-TV2_GetDependants(SC_HANDLE hService,
+LPENUM_SERVICE_STATUS
+TV2_GetDependants(LPWSTR lpServiceName,
                   LPDWORD lpdwCount)
 {
-    LPENUM_SERVICE_STATUS lpDependencies;
+    SC_HANDLE hSCManager;
+    SC_HANDLE hService;
+    LPENUM_SERVICE_STATUSW lpDependencies = NULL;
     DWORD dwBytesNeeded;
     DWORD dwCount;
 
-    /* Does this have any dependencies? */
-    if (EnumDependentServices(hService,
-                              SERVICE_STATE_ALL,
-                              NULL,
-                              0,
-                              &dwBytesNeeded,
-                              &dwCount))
+    /* Set the first items in each tree view */
+    hSCManager = OpenSCManagerW(NULL,
+                                NULL,
+                                SC_MANAGER_ALL_ACCESS);
+    if (hSCManager)
     {
-        /* There are no dependent services */
-         return NULL;
-    }
-    else
-    {
-        if (GetLastError() != ERROR_MORE_DATA)
-            return NULL; /* Unexpected error */
-
-        lpDependencies = (LPENUM_SERVICE_STATUS)HeapAlloc(GetProcessHeap(),
-                                                          0,
-                                                          dwBytesNeeded);
-        if (lpDependencies)
+        hService = OpenServiceW(hSCManager,
+                                lpServiceName,
+                                SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
+        if (hService)
         {
-            /* Get the list of dependents */
-            if (EnumDependentServices(hService,
-                                      SERVICE_STATE_ALL,
-                                      lpDependencies,
-                                      dwBytesNeeded,
-                                      &dwBytesNeeded,
-                                      &dwCount))
+            /* Does this have any dependencies? */
+            if (!EnumDependentServicesW(hService,
+                                        SERVICE_STATE_ALL,
+                                        NULL,
+                                        0,
+                                        &dwBytesNeeded,
+                                        &dwCount) &&
+                GetLastError() == ERROR_MORE_DATA)
             {
-                /* Set the count */
-                *lpdwCount = dwCount;
-            }
-            else
-            {
-                HeapFree(ProcessHeap,
-                         0,
-                         lpDependencies);
+                lpDependencies = (LPENUM_SERVICE_STATUSW)HeapAlloc(GetProcessHeap(),
+                                                                  0,
+                                                                  dwBytesNeeded);
+                if (lpDependencies)
+                {
+                    /* Get the list of dependents */
+                    if (EnumDependentServicesW(hService,
+                                               SERVICE_STATE_ALL,
+                                               lpDependencies,
+                                               dwBytesNeeded,
+                                               &dwBytesNeeded,
+                                               &dwCount))
+                    {
+                        /* Set the count */
+                        *lpdwCount = dwCount;
+                    }
+                    else
+                    {
+                        HeapFree(ProcessHeap,
+                                 0,
+                                 lpDependencies);
 
-                lpDependencies = NULL;
+                        lpDependencies = NULL;
+                    }
+                }
             }
+
+            CloseServiceHandle(hService);
         }
+
+        CloseServiceHandle(hSCManager);
     }
 
     return lpDependencies;
@@ -111,70 +123,56 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                         HTREEITEM hParent,
                         LPTSTR lpServiceName)
 {
-    SC_HANDLE hSCManager;
-    SC_HANDLE hService;
-    LPENUM_SERVICE_STATUS lpServiceStatus;
+
+    LPENUM_SERVICE_STATUSW lpServiceStatus;
     LPTSTR lpNoDepends;
     DWORD count, i;
     BOOL bHasChildren;
 
-    /* Set the first items in each tree view */
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ALL_ACCESS);
-    if (hSCManager)
+    /* Get a list of service dependents */
+    lpServiceStatus = TV2_GetDependants(lpServiceName, &count);
+    if (lpServiceStatus)
     {
-        hService = OpenService(hSCManager,
-                               lpServiceName,
-                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
-        if (hService)
+        for (i = 0; i < count; i++)
         {
-            /* Get a list of service dependents */
-            lpServiceStatus = TV2_GetDependants(hService, &count);
-            if (lpServiceStatus)
-            {
-                for (i = 0; i < count; i++)
-                {
-                    /* Does this item need a +/- box? */
-                    bHasChildren = TV2_HasDependantServices(lpServiceStatus[i].lpServiceName);
+            /* Does this item need a +/- box? */
+            bHasChildren = TV2_HasDependantServices(lpServiceStatus[i].lpServiceName);
 
-                    /* Add it */
-                    AddItemToTreeView(pDlgInfo->hDependsTreeView2,
-                                      hParent,
-                                      lpServiceStatus[i].lpDisplayName,
-                                      lpServiceStatus[i].lpServiceName,
-                                      lpServiceStatus[i].ServiceStatus.dwServiceType,
-                                      bHasChildren);
-                }
-            }
-            else
-            {
-                /* If there is no parent, set the tree to 'no dependencies' */
-                if (!hParent)
-                {
-                    /* Load the 'No dependencies' string */
-                    AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
-
-                    AddItemToTreeView(pDlgInfo->hDependsTreeView2,
-                                      NULL,
-                                      lpNoDepends,
-                                      NULL,
-                                      0,
-                                      FALSE);
-
-                    HeapFree(ProcessHeap,
-                             0,
-                             lpNoDepends);
-
-                    /* Disable the window */
-                    EnableWindow(pDlgInfo->hDependsTreeView2, FALSE);
-                }
-            }
-
-            CloseServiceHandle(hService);
+            /* Add it */
+            AddItemToTreeView(pDlgInfo->hDependsTreeView2,
+                              hParent,
+                              lpServiceStatus[i].lpDisplayName,
+                              lpServiceStatus[i].lpServiceName,
+                              lpServiceStatus[i].ServiceStatus.dwServiceType,
+                              bHasChildren);
         }
 
-        CloseServiceHandle(hSCManager);
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpServiceStatus);
+    }
+    else
+    {
+        /* If there is no parent, set the tree to 'no dependencies' */
+        if (!hParent)
+        {
+            /* Load the 'No dependencies' string */
+            AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
+
+            AddItemToTreeView(pDlgInfo->hDependsTreeView2,
+                              NULL,
+                              lpNoDepends,
+                              NULL,
+                              0,
+                              FALSE);
+
+            HeapFree(ProcessHeap,
+                     0,
+                     lpNoDepends);
+
+            /* Disable the window */
+            EnableWindow(pDlgInfo->hDependsTreeView2, FALSE);
+        }
     }
 }
 

@@ -89,7 +89,6 @@ typedef struct _PATHGDI {
 
 typedef struct _WNDGDI {
   WNDOBJ            WndObj;
-  LIST_ENTRY        ListEntry;
   HWND              Hwnd;
   CLIPOBJ           *ClientClipObj;
   WNDOBJCHANGEPROC  ChangeProc;

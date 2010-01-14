@@ -19,4 +19,3 @@ Description = Necesario para ejecutar varios juegos de código abierto. Necesita
 
 [Section.0415]
 Description = Biblioteka wymagana przez niektóre gry (zwłaszcza te o otwartym źródle). Do jej rozpakowania potrzebny jest 7-Zip lub podobny program.
-

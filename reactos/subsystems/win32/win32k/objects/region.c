@@ -2085,7 +2085,6 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
   PGDI_TABLE_ENTRY Entry;
   PROSRGNDATA pRgn;
   PRGN_ATTR pRgn_Attr;
-  BOOL Hit = FALSE;
 
   pRgn = REGION_LockRgn(hRgn);
 
@@ -2101,8 +2100,6 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
      {
         _SEH2_TRY
         {
-           ProbeForWrite(pRgn_Attr, sizeof(RGN_ATTR), 1);
-
            if ( !(pRgn_Attr->AttrFlags & ATTR_CACHED) &&
                  pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
            {
@@ -2125,7 +2122,6 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-           Hit = TRUE;
         }
         _SEH2_END;
 
@@ -2148,7 +2144,6 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
   INT Index;
   PGDI_TABLE_ENTRY Entry;
   PRGN_ATTR pRgn_Attr;
-  BOOL Hit = FALSE;
 
   if (pRgn)
   {
@@ -2162,8 +2157,6 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
      {
         _SEH2_TRY
         {
-           ProbeForWrite(pRgn_Attr, sizeof(RGN_ATTR), 1);
-
            if ( pRgn_Attr->AttrFlags & ATTR_RGN_VALID )
            {
               pRgn_Attr->Flags = REGION_Complexity( pRgn );
@@ -2175,7 +2168,6 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-           Hit = TRUE;
         }
         _SEH2_END;
      }
@@ -2525,7 +2517,6 @@ REGION_SetRectRgn(
     }
     else
     {
-        DPRINT("SetRectRgn NULL Count: %d \n", rgn->rdh.nCount);
         EMPTY_REGION(rgn);
     }
 }

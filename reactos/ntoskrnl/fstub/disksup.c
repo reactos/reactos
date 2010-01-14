@@ -4,7 +4,7 @@
 * FILE:            ntoskrnl/fstub/disksup.c
 * PURPOSE:         I/O HAL Routines for Disk Access
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  Eric Kohl (ekohl@rz-online.de)
+*                  Eric Kohl
 *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
 */
 

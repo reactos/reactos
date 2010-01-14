@@ -20,6 +20,7 @@ BOOL InitSysParams();
 
 ERESOURCE UserLock;
 ATOM AtomMessage; // Window Message atom.
+ATOM AtomWndObj;  // Window Object atom.
 BOOL gbInitialized;
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
@@ -44,6 +45,8 @@ InitUserAtoms(VOID)
 
   /* System Context Help Id Atom */
   gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
+
+  AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
 
   return STATUS_SUCCESS;
 }

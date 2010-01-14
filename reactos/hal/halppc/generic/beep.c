@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/beep.c
  * PURPOSE:         Speaker function (it's only one)
- * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:
  *                  Created 31/01/99
  */

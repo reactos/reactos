@@ -70,7 +70,7 @@ typedef struct _THREADINFO
     struct _USER_MESSAGE_QUEUE* MessageQueue;
     struct _KBL*        KeyboardLayout;
     PCLIENTTHREADINFO   pcti;
-    struct _DESKTOP*    Desktop;
+    struct _DESKTOP*    rpdesk;
     PDESKTOPINFO        pDeskInfo;
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
@@ -78,7 +78,7 @@ typedef struct _THREADINFO
     LONG                timeLast;
     ULONG_PTR           idLast;
     INT                 exitCode;
-    HANDLE              hDesktop;
+    HDESK               hdesk;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
     DWORD               dwExpWinVer;
@@ -88,6 +88,11 @@ typedef struct _THREADINFO
     PTHREADINFO         ptiSibling;
     ULONG               fsHooks;
     PHOOK               sphkCurrent;
+    LPARAM              lParamHkCurrent;
+    WPARAM              wParamHkCurrent;
+    struct tagSBTRACK*  pSBTrack;
+    HANDLE              hEventQueueClient;
+    PKEVENT             pEventQueueServer;
     LIST_ENTRY          PtiLink;
 
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
@@ -107,6 +112,23 @@ typedef struct _W32HEAP_USER_MAPPING
     ULONG_PTR Limit;
     ULONG Count;
 } W32HEAP_USER_MAPPING, *PW32HEAP_USER_MAPPING;
+
+
+/*
+ Information from STARTUPINFOW, psdk/winbase.h.
+ Set from PsGetCurrentProcess()->Peb->ProcessParameters.
+*/
+typedef struct tagUSERSTARTUPINFO
+{
+    ULONG cb;
+    DWORD dwX;        // STARTF_USEPOSITION StartupInfo->dwX/Y
+    DWORD dwY;
+    DWORD dwXSize;    // STARTF_USESIZE StartupInfo->dwX/YSize
+    DWORD dwYSize;
+    DWORD dwFlags;    // STARTF_ StartupInfo->dwFlags
+    WORD wShowWindow; // StartupInfo->wShowWindow
+    USHORT cbReserved2;
+} USERSTARTUPINFO, *PUSERSTARTUPINFO;
 
 typedef struct _W32PROCESS
 {
@@ -130,10 +152,17 @@ typedef struct _W32PROCESS
 typedef struct _PROCESSINFO
 {
   W32PROCESS;
-
+  PTHREADINFO ptiList;
+  PTHREADINFO ptiMainThread;
+  struct _DESKTOP* rpdeskStartup;
   PCLS pclsPrivateList;
   PCLS pclsPublicList;
 
+  HMONITOR hMonitor;
+
+  USERSTARTUPINFO usi;
+  ULONG Flags;
+  DWORD dwLayout;
   DWORD dwRegisteredClasses;
   /* ReactOS */
   LIST_ENTRY ClassList;

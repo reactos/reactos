@@ -73,6 +73,8 @@ typedef float           GLclampf;
 typedef double          GLdouble;
 typedef double          GLclampd;
 typedef void            GLvoid;
+typedef ptrdiff_t       GLintptr;
+typedef ptrdiff_t       GLsizeiptr;
 
 /* Booleans */
 #define GL_FALSE                                0x0
@@ -2500,9 +2502,9 @@ typedef void (WINE_GLAPI * PGLFNBINDBUFFERARBPROC) (GLenum target, GLuint buffer
 typedef void (WINE_GLAPI * PGLFNDELETEBUFFERSARBPROC) (GLsizei n, const GLuint *buffers);
 typedef void (WINE_GLAPI * PGLFNGENBUFFERSARBPROC) (GLsizei n, GLuint *buffers);
 typedef GLboolean (WINE_GLAPI * PGLFNISBUFFERARBPROC) (GLuint buffer);
-typedef void (WINE_GLAPI * PGLFNBUFFERDATAARBPROC) (GLenum target, ptrdiff_t size, const GLvoid *data, GLenum usage);
-typedef void (WINE_GLAPI * PGLFNBUFFERSUBDATAARBPROC) (GLenum target, ptrdiff_t offset, ptrdiff_t size, const GLvoid *data);
-typedef void (WINE_GLAPI * PGLFNGETBUFFERSUBDATAARBPROC) (GLenum target, ptrdiff_t offset, ptrdiff_t size, GLvoid *data);
+typedef void (WINE_GLAPI * PGLFNBUFFERDATAARBPROC) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
+typedef void (WINE_GLAPI * PGLFNBUFFERSUBDATAARBPROC) (GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data);
+typedef void (WINE_GLAPI * PGLFNGETBUFFERSUBDATAARBPROC) (GLenum target, GLintptr offset, GLsizeiptr size, GLvoid *data);
 typedef GLvoid* (WINE_GLAPI * PGLFNMAPBUFFERARBPROC) (GLenum target, GLenum access);
 typedef GLboolean (WINE_GLAPI * PGLFNUNMAPBUFFERARBPROC) (GLenum target);
 typedef void (WINE_GLAPI * PGLFNGETBUFFERPARAMETERIVARBPROC) (GLenum target, GLenum pname, GLint *params);
@@ -3261,6 +3263,15 @@ typedef void (WINE_GLAPI *PGLFNSETFRAGMENTSHADERCONSTANTATI) (GLuint dst, const 
 #define GL_MAX_PROGRAM_CALL_DEPTH_NV                      0x88F5
 #endif
 
+/* GL_APPLE_flush_buffer_range */
+#ifndef GL_APPLE_flush_buffer_range
+#define GL_APPLE_flush_buffer_range
+#define GL_BUFFER_SERIALIZED_MODIFY_APPLE                 0x8A12
+#define GL_BUFFER_FLUSHING_UNMAP_APPLE                    0x8A13
+typedef void (WINE_GLAPI *PGLFNBUFFERPARAMETERIAPPLE) (GLenum target, GLenum pname, GLint param);
+typedef void (WINE_GLAPI *PGLFNFLUSHMAPPEDBUFFERRANGEAPPLE) (GLenum target, GLintptr offset, GLsizeiptr size);
+#endif
+
 /* GL_VERSION_2_0 */
 #ifndef GL_VERSION_2_0
 #define GL_VERSION_2_0 1
@@ -3461,83 +3472,6 @@ typedef void (WINE_GLAPI * PGLFNVERTEXATTRIBPOINTERPROC) (GLuint index, GLint si
 /****************************************************
  * Enumerated types
  ****************************************************/
-typedef enum _GL_Vendors {
-  VENDOR_WINE   = 0x0,
-  VENDOR_MESA   = 0x1,
-  VENDOR_ATI    = 0x1002,
-  VENDOR_NVIDIA = 0x10de,
-  VENDOR_INTEL  = 0x8086
-} GL_Vendors;
-
-typedef enum _GL_Cards {
-  CARD_WINE                       =    0x0,
-
-  CARD_ATI_RAGE_128PRO            = 0x5246,
-  CARD_ATI_RADEON_7200            = 0x5144,
-  CARD_ATI_RADEON_8500            = 0x514c,
-  CARD_ATI_RADEON_9500            = 0x4144,
-  CARD_ATI_RADEON_XPRESS_200M     = 0x5955,
-  CARD_ATI_RADEON_X700            = 0x5e4c,
-  CARD_ATI_RADEON_X1600           = 0x71c2,
-  CARD_ATI_RADEON_HD2300          = 0x7210,
-  CARD_ATI_RADEON_HD2600          = 0x9581,
-  CARD_ATI_RADEON_HD2900          = 0x9400,
-  CARD_ATI_RADEON_HD3200          = 0x9620,
-  CARD_ATI_RADEON_HD4350          = 0x954f,
-  CARD_ATI_RADEON_HD4550          = 0x9540,
-  CARD_ATI_RADEON_HD4600          = 0x9495,
-  CARD_ATI_RADEON_HD4650          = 0x9498,
-  CARD_ATI_RADEON_HD4670          = 0x9490,
-  CARD_ATI_RADEON_HD4700          = 0x944e,
-  CARD_ATI_RADEON_HD4770          = 0x94b3,
-  CARD_ATI_RADEON_HD4800          = 0x944c, /* picked one value between 9440,944c,9442,9460 */
-  CARD_ATI_RADEON_HD4830          = 0x944c,
-  CARD_ATI_RADEON_HD4850          = 0x9442,
-  CARD_ATI_RADEON_HD4870          = 0x9440,
-  CARD_ATI_RADEON_HD4890          = 0x9460,
-
-  CARD_NVIDIA_RIVA_128            = 0x0018,
-  CARD_NVIDIA_RIVA_TNT            = 0x0020,
-  CARD_NVIDIA_RIVA_TNT2           = 0x0028,
-  CARD_NVIDIA_GEFORCE             = 0x0100,
-  CARD_NVIDIA_GEFORCE2_MX         = 0x0110,
-  CARD_NVIDIA_GEFORCE2            = 0x0150,
-  CARD_NVIDIA_GEFORCE3            = 0x0200,
-  CARD_NVIDIA_GEFORCE4_MX         = 0x0170,
-  CARD_NVIDIA_GEFORCE4_TI4200     = 0x0253,
-  CARD_NVIDIA_GEFORCEFX_5200      = 0x0320,
-  CARD_NVIDIA_GEFORCEFX_5600      = 0x0312,
-  CARD_NVIDIA_GEFORCEFX_5800      = 0x0302,
-  CARD_NVIDIA_GEFORCE_6200        = 0x014f,
-  CARD_NVIDIA_GEFORCE_6600GT      = 0x0140,
-  CARD_NVIDIA_GEFORCE_6800        = 0x0041,
-  CARD_NVIDIA_GEFORCE_7400        = 0x01d8,
-  CARD_NVIDIA_GEFORCE_7300        = 0x01d7, /* GeForce Go 7300 */
-  CARD_NVIDIA_GEFORCE_7600        = 0x0391,
-  CARD_NVIDIA_GEFORCE_7800GT      = 0x0092,
-  CARD_NVIDIA_GEFORCE_8300GS      = 0x0423,
-  CARD_NVIDIA_GEFORCE_8600GT      = 0x0402,
-  CARD_NVIDIA_GEFORCE_8600MGT     = 0x0407,
-  CARD_NVIDIA_GEFORCE_8800GTS     = 0x0193,
-  CARD_NVIDIA_GEFORCE_9200        = 0x086d,
-  CARD_NVIDIA_GEFORCE_9400GT      = 0x042c,
-  CARD_NVIDIA_GEFORCE_9500GT      = 0x0640,
-  CARD_NVIDIA_GEFORCE_9600GT      = 0x0622,
-  CARD_NVIDIA_GEFORCE_9800GT      = 0x0614,
-  CARD_NVIDIA_GEFORCE_GTX260      = 0x05e2,
-  CARD_NVIDIA_GEFORCE_GTX275      = 0x05e6,
-  CARD_NVIDIA_GEFORCE_GTX280      = 0x05e1,
-
-  CARD_INTEL_845G                 = 0x2562,
-  CARD_INTEL_I830G                = 0x3577,
-  CARD_INTEL_I855G                = 0x3582,
-  CARD_INTEL_I865G                = 0x2572,
-  CARD_INTEL_I915G                = 0x2582,
-  CARD_INTEL_I915GM               = 0x2592,
-  CARD_INTEL_I945GM               = 0x27a2, /* Same as GMA 950?? */
-  CARD_INTEL_X3100                = 0x2a02, /* found in macs. Same as GMA 965? */
-} GL_Cards;
-
 #define WINE_DEFAULT_VIDMEM 64*1024*1024
 
 #define MAKEDWORD_VERSION(maj, min)  ((maj & 0x0000FFFF) << 16) | (min & 0x0000FFFF)
@@ -3647,6 +3581,7 @@ typedef enum _GL_SupportedExt {
   APPLE_FLUSH_RENDER,
   APPLE_YCBCR_422,
   APPLE_FLOAT_PIXELS,
+  APPLE_FLUSH_BUFFER_RANGE,
   /* SGI */
   SGI_VIDEO_SYNC,
   SGIS_GENERATE_MIPMAP,
@@ -3995,7 +3930,11 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(PGLFNALPHAFRAGMENTOP1ATI,                           glAlphaFragmentOp1ATI,                      ATI_FRAGMENT_SHADER,    NULL )\
     USE_GL_FUNC(PGLFNALPHAFRAGMENTOP2ATI,                           glAlphaFragmentOp2ATI,                      ATI_FRAGMENT_SHADER,    NULL )\
     USE_GL_FUNC(PGLFNALPHAFRAGMENTOP3ATI,                           glAlphaFragmentOp3ATI,                      ATI_FRAGMENT_SHADER,    NULL )\
-    USE_GL_FUNC(PGLFNSETFRAGMENTSHADERCONSTANTATI,                  glSetFragmentShaderConstantATI,             ATI_FRAGMENT_SHADER,    NULL )
+    USE_GL_FUNC(PGLFNSETFRAGMENTSHADERCONSTANTATI,                  glSetFragmentShaderConstantATI,             ATI_FRAGMENT_SHADER,    NULL )\
+    /* GL_APPLE_flush_buffer_range */ \
+    USE_GL_FUNC(PGLFNBUFFERPARAMETERIAPPLE,                         glBufferParameteriAPPLE,                    APPLE_FLUSH_BUFFER_RANGE,NULL)\
+    USE_GL_FUNC(PGLFNFLUSHMAPPEDBUFFERRANGEAPPLE,                   glFlushMappedBufferRangeAPPLE,              APPLE_FLUSH_BUFFER_RANGE,NULL)
+
 
 /****************************************************
  * OpenGL WGL defines and functions pointer
@@ -4134,53 +4073,51 @@ struct wined3d_fbo_ops
     PGLFNGLGENERATEMIPMAPPROC                       glGenerateMipmap;
 };
 
+struct wined3d_gl_limits
+{
+    UINT buffers;
+    UINT lights;
+    UINT textures;
+    UINT texture_stages;
+    UINT fragment_samplers;
+    UINT vertex_samplers;
+    UINT combined_samplers;
+    UINT sampler_stages;
+    UINT clipplanes;
+    UINT texture_size;
+    UINT texture3d_size;
+    float pointsize_max;
+    float pointsize_min;
+    UINT point_sprite_units;
+    UINT blends;
+    UINT anisotropy;
+    float shininess;
+
+    UINT glsl_varyings;
+    UINT glsl_vs_float_constants;
+    UINT glsl_ps_float_constants;
+
+    UINT arb_vs_float_constants;
+    UINT arb_vs_native_constants;
+    UINT arb_vs_instructions;
+    UINT arb_vs_temps;
+    UINT arb_ps_float_constants;
+    UINT arb_ps_local_constants;
+    UINT arb_ps_native_constants;
+    UINT arb_ps_instructions;
+    UINT arb_ps_temps;
+};
+
 #define USE_GL_FUNC(type, pfn, ext, replace) type pfn;
 
 struct wined3d_gl_info
 {
-    GL_Vendors gl_vendor;
-    GL_Cards gl_card;
     UINT vidmem;
-    DWORD driver_version;
-    DWORD driver_version_hipart;
-    const char *driver_description;
-
-    UINT max_buffers;
-    UINT max_lights;
-    UINT max_textures;
-    UINT max_texture_stages;
-    UINT max_fragment_samplers;
-    UINT max_vertex_samplers;
-    UINT max_combined_samplers;
-    UINT max_sampler_stages;
-    UINT max_clipplanes;
-    UINT max_texture_size;
-    UINT max_texture3d_size;
-    float max_pointsize, max_pointsizemin;
-    UINT max_point_sprite_units;
-    UINT max_blends;
-    UINT max_anisotropy;
-    UINT max_glsl_varyings;
-    float max_shininess;
-
-    unsigned int max_vshader_constantsF;
-    unsigned int max_pshader_constantsF;
-
-    unsigned int vs_arb_constantsF;
-    unsigned int vs_arb_max_instructions;
-    unsigned int vs_arb_max_temps;
-    unsigned int ps_arb_constantsF;
-    unsigned int ps_arb_max_local_constants;
-    unsigned int ps_arb_max_instructions;
-    unsigned int ps_arb_max_temps;
-    unsigned int vs_glsl_constantsF;
-    unsigned int ps_glsl_constantsF;
-
+    struct wined3d_gl_limits limits;
     DWORD reserved_glsl_constants;
-
     DWORD quirks;
-
     BOOL supported[WINED3D_GL_EXT_COUNT];
+    GLint wrap_lookup[WINED3DTADDRESS_MIRRORONCE - WINED3DTADDRESS_WRAP + 1];
 
     struct wined3d_fbo_ops fbo_ops;
     /* GL function pointers */

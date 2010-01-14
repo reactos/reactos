@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS Storage Stack
  * FILE:            drivers/storage/scsiport/scsiport.c
  * PURPOSE:         SCSI port driver
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMER:      Eric Kohl
  *                  Aleksey Bragin (aleksey reactos org)
  */
 

@@ -40,13 +40,13 @@ typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
     PVOID pvDesktopLimit;
+    struct _WND *spwnd;
+    DWORD fsHooks;
+    struct tagHOOK * aphkStart[16];
 
-    HANDLE hKernelHeap;
-    ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
-    struct _WND *Wnd;
 
     union
     {
@@ -2459,13 +2459,13 @@ NTAPI
 NtUserResolveDesktopForWOW(
   DWORD Unknown0);
 
-DWORD
+BOOL
 NTAPI
 NtUserSBGetParms(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hwnd,
+  int fnBar,
+  PSBDATA pSBData,
+  LPSCROLLINFO lpsi);
 
 BOOL
 NTAPI
@@ -3129,12 +3129,6 @@ NtUserGetMonitorInfo(
   OUT LPMONITORINFO pMonitorInfo);
 
 /* Should be done in usermode */
-BOOL
-NTAPI
-NtUserGetScrollInfo(
-  HWND hwnd,
-  int fnBar,
-  LPSCROLLINFO lpsi);
 
 /* (other FocusedItem values give the position of the focused item) */
 #define NO_SELECTED_ITEM  0xffff

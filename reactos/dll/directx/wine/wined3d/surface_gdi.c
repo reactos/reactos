@@ -429,7 +429,7 @@ static HRESULT WINAPI IWineGDISurfaceImpl_GetDC(IWineD3DSurface *iface, HDC *pHD
         } else {
             IWineD3DSurfaceImpl *dds_primary;
             IWineD3DSwapChainImpl *swapchain;
-            swapchain = (IWineD3DSwapChainImpl *)This->resource.wineD3DDevice->swapchains[0];
+            swapchain = (IWineD3DSwapChainImpl *)This->resource.device->swapchains[0];
             dds_primary = (IWineD3DSurfaceImpl *)swapchain->frontBuffer;
             if (dds_primary && dds_primary->palette)
                 pal = dds_primary->palette->palents;
@@ -646,7 +646,6 @@ const IWineD3DSurfaceVtbl IWineGDISurface_Vtbl =
     IWineGDISurfaceImpl_Release,
     /* IWineD3DResource */
     IWineD3DBaseSurfaceImpl_GetParent,
-    IWineD3DBaseSurfaceImpl_GetDevice,
     IWineD3DBaseSurfaceImpl_SetPrivateData,
     IWineD3DBaseSurfaceImpl_GetPrivateData,
     IWineD3DBaseSurfaceImpl_FreePrivateData,

@@ -168,7 +168,7 @@ struct IDirectDrawImpl
 extern const IDirectDraw7Vtbl IDirectDraw7_Vtbl DECLSPEC_HIDDEN;
 extern const IDirectDraw4Vtbl IDirectDraw4_Vtbl DECLSPEC_HIDDEN;
 extern const IDirectDraw2Vtbl IDirectDraw2_Vtbl DECLSPEC_HIDDEN;
-extern const IDirectDrawVtbl  IDirectDraw1_Vtbl DECLSPEC_HIDDEN;
+extern const IDirectDrawVtbl IDirectDraw1_Vtbl DECLSPEC_HIDDEN;
 extern const IWineD3DDeviceParentVtbl ddraw_wined3d_device_parent_vtbl DECLSPEC_HIDDEN;
 
 /* Helper structures */

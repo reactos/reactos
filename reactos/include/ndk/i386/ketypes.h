@@ -106,6 +106,17 @@ Author:
 #define EFLAG_ZERO              0x4000
 
 //
+// Legacy floating status word bit masks.
+//
+#define FSW_INVALID_OPERATION   0x1
+#define FSW_DENORMAL            0x2
+#define FSW_ZERO_DIVIDE         0x4
+#define FSW_OVERFLOW            0x8
+#define FSW_UNDERFLOW           0x10
+#define FSW_PRECISION           0x20
+#define FSW_STACK_FAULT         0x40
+
+//
 // IPI Types
 //
 #define IPI_APC                 1

@@ -27,4 +27,3 @@ Description = Mały i szybki klient BitTorrent.
 [Section.0419]
 Licence = Бесплатная для некоммерческого использования
 Description = Маленький и быстрый клиент BitTorrent.
-

@@ -4,6 +4,7 @@
  * FILE:            halx86/generic/bios.c
  * PURPOSE:         BIOS Access Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
+ *                  Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/

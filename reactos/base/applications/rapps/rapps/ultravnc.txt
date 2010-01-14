@@ -2,15 +2,14 @@
 
 [Section]
 Name = UltraVNC
-Version = 1.0.8.0
+Version = 1.0.8.2
 Licence = GPL
 Description = Open-source VNC client/server.
 Size = 1.9MB
 Category = 5
-URLSite = http://www.uvnc.com
-URLDownload = http://support1.uvnc.com/download/1080/UltraVNC_1.0.8.0_Setup.exe
+URLSite = http://www.uvnc.com/
+URLDownload = http://support1.uvnc.com/download/1082/UltraVNC_1.0.8.2_Setup.exe
 CDPath = none
 
 [Section.040a]
 Description = Cliente/Servidor VNC de código abierto.
-

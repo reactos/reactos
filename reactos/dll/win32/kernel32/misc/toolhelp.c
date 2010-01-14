@@ -98,7 +98,7 @@ TH32FreeAllocatedResources(PRTL_DEBUG_INFORMATION HeapDebug,
   if(ProcThrdInfo != NULL)
   {
     NtFreeVirtualMemory(NtCurrentProcess(),
-                        ProcThrdInfo,
+                        &ProcThrdInfo,
                         &ProcThrdInfoSize,
                         MEM_RELEASE);
   }

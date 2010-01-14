@@ -10,8 +10,8 @@
    (x) < (WndObject)->Wnd->rcWindow.right && \
    (y) >= (WndObject)->Wnd->rcWindow.top && \
    (y) < (WndObject)->Wnd->rcWindow.bottom && \
-   (!(WndObject)->WindowRegion || ((WndObject)->Wnd->style & WS_MINIMIZE) || \
-    NtGdiPtInRegion((WndObject)->WindowRegion, (INT)((x) - (WndObject)->Wnd->rcWindow.left), \
+   (!(WndObject)->hrgnClip || ((WndObject)->Wnd->style & WS_MINIMIZE) || \
+    NtGdiPtInRegion((WndObject)->hrgnClip, (INT)((x) - (WndObject)->Wnd->rcWindow.left), \
                     (INT)((y) - (WndObject)->Wnd->rcWindow.top))))
 
 UINT

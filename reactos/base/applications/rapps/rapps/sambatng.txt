@@ -7,7 +7,7 @@ Licence = GPL
 Description = This tool allows you to access your Windows shared folders/printers with ReactOS.
 Size = 1MB
 Category = 5
-URLSite = http://samba-tng.org
+URLSite = http://samba-tng.org/
 URLDownload = http://svn.reactos.org/packages/samba-tng.exe
 CDPath = none
 
@@ -19,4 +19,3 @@ Description = Esta utilidad le permite acceder a sus carpetas e impresoras compa
 
 [Section.0415]
 Description = Narzędzie pozwalające na dostęp z poziomu ReactOSa do współdzielonych folderów/drukarek Windows.
-

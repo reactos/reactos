@@ -20,6 +20,8 @@ AddItemToTreeView(HWND hTreeView,
 {
     TV_ITEM tvi;
     TV_INSERTSTRUCT tvins;
+    LPTSTR lpName;
+    DWORD dwSize;
 
     ZeroMemory(&tvi, sizeof(tvi));
     ZeroMemory(&tvins, sizeof(tvins));
@@ -52,13 +54,15 @@ AddItemToTreeView(HWND hTreeView,
 
     if (lpServiceName)
     {
+        dwSize = _tcslen(lpServiceName) + 1;
         /* Attach the service name */
-        tvi.lParam = (LPARAM)(LPTSTR)HeapAlloc(GetProcessHeap(),
-                                               0,
-                                               (_tcslen(lpServiceName) + 1) * sizeof(TCHAR));
-        if (tvi.lParam)
+        lpName = (LPTSTR)HeapAlloc(GetProcessHeap(),
+                                   0,
+                                   dwSize * sizeof(TCHAR));
+        if (lpName)
         {
-            _tcscpy((LPTSTR)tvi.lParam, lpServiceName);
+            _tcscpy_s(lpName, dwSize, lpServiceName);
+            tvi.lParam = (LPARAM)lpName;
         }
     }
 
