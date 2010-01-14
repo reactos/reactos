@@ -82,6 +82,7 @@ FindTimer(PWINDOW_OBJECT Window,
           UINT flags,
           BOOL Distroy)
 {
+  PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
   KeEnterCriticalRegion();
   do
@@ -100,7 +101,8 @@ FindTimer(PWINDOW_OBJECT Window,
        break;
     }
 
-    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+    pLE = pTmr->ptmrList.Flink;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
@@ -111,6 +113,7 @@ PTIMER
 FASTCALL
 FindSystemTimer(PMSG pMsg)
 {
+  PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
   KeEnterCriticalRegion();
   do
@@ -121,7 +124,8 @@ FindSystemTimer(PMSG pMsg)
          (pTmr->flags & TMRF_SYSTEM) )
        break;
 
-    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+    pLE = pTmr->ptmrList.Flink;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);    
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
@@ -135,6 +139,7 @@ ValidateTimerCallback(PTHREADINFO pti,
                       WPARAM wParam,
                       LPARAM lParam)
 {
+  PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
 
   if (!pTmr) return FALSE;
@@ -144,11 +149,11 @@ ValidateTimerCallback(PTHREADINFO pti,
   {
     if ( (lParam == (LPARAM)pTmr->pfn) &&
          (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) &&
-//       (pTmr->head.pti->ppi == pti->ppi) )
          (pTmr->pti->ppi == pti->ppi) )
        break;
 
-    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+    pLE = pTmr->ptmrList.Flink;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
@@ -265,6 +270,7 @@ BOOL
 FASTCALL
 PostTimerMessages(PWINDOW_OBJECT Window)
 {
+  PLIST_ENTRY pLE;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
@@ -299,7 +305,8 @@ PostTimerMessages(PWINDOW_OBJECT Window)
            Hit = TRUE;
         }
 
-     pTmr = (PTIMER)pTmr->ptmrList.Flink;
+     pLE = pTmr->ptmrList.Flink;
+     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
@@ -312,6 +319,7 @@ ProcessTimers(VOID)
 {
   LARGE_INTEGER TickCount, DueTime;
   LONG Time;
+  PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
 
   if (!pTmr) return;
@@ -327,7 +335,8 @@ ProcessTimers(VOID)
   {
     if (pTmr->flags & TMRF_WAITING)
     {
-       pTmr = (PTIMER)pTmr->ptmrList.Flink;
+       pLE = pTmr->ptmrList.Flink;
+       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
        continue;
     }
 
@@ -363,7 +372,8 @@ ProcessTimers(VOID)
        else
           pTmr->cmsCountdown -= Time - TimeLast;
     }
-    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+    pLE = pTmr->ptmrList.Flink;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
 
   // Restart the timer thread!

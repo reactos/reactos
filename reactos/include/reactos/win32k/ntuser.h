@@ -94,12 +94,18 @@ typedef struct _THRDESKHEAD
 
 typedef struct _PROCDESKHEAD
 {
-  HANDLE h;
-  DWORD  cLockObj;  
+  HEAD;
   DWORD hTaskWow;
   struct _DESKTOP *rpdesk;
   PVOID       pSelf;
 } PROCDESKHEAD, *PPROCDESKHEAD;
+
+typedef struct _PROCMARKHEAD
+{
+  HEAD;
+  ULONG hTaskWow;
+  PPROCESSINFO ppi;
+} PROCMARKHEAD, *PPROCMARKHEAD;
 
 #define UserHMGetHandle(obj) ((obj)->head.h)
 

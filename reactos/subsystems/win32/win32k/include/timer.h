@@ -3,6 +3,7 @@
 
 typedef struct _TIMER
 {
+  HEAD           head;
   LIST_ENTRY     ptmrList;
   PTHREADINFO    pti;
   PWINDOW_OBJECT pWnd;         // hWnd

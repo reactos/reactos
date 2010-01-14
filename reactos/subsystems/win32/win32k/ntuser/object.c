@@ -151,6 +151,7 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    ret = entry->ptr;
    entry->ptr  = ht->freelist;
    entry->type = 0;
+   entry->flags = 0;
    entry->pi = NULL;
    ht->freelist  = entry;
 
@@ -198,6 +199,7 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
       return 0;
    entry->ptr  = object;
    entry->type = type;
+   entry->flags = 0;
    entry->pi = UserHandleOwnerByType(type);
    if (++entry->generation >= 0xffff)
       entry->generation = 1;
@@ -293,8 +295,6 @@ PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE 
    }
    return NULL;
 }
-
-
 
 PVOID FASTCALL
 UserCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size)
@@ -401,7 +401,6 @@ BOOL FASTCALL UserDereferenceObject(PVOID obj)
 }
 
 
-
 BOOL FASTCALL UserCreateHandleTable(VOID)
 {
 
@@ -428,4 +427,163 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
    UserInitHandleTable(gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
 
    return TRUE;
+}
+
+//
+// New
+//
+PVOID
+FASTCALL
+NewUserCreateObject( PUSER_HANDLE_TABLE ht,
+                     HANDLE* h,
+                     USER_OBJECT_TYPE type,
+                     ULONG size)
+{
+   HANDLE hi;
+   PVOID Object;
+   PTHREADINFO pti;
+   PPROCESSINFO ppi;
+   BOOL dt;
+
+   pti = GetW32ThreadInfo();
+   ppi = pti->ppi;
+
+   switch (type)
+   {
+      case otWindow:
+         Object = DesktopHeapAlloc(pti->rpdesk, size);
+         dt = TRUE;
+         break;
+
+      default:
+         Object = UserHeapAlloc(size);
+         dt = FALSE;
+         break;
+   }
+
+   if (!Object)
+      return NULL;
+
+
+   hi = UserAllocHandle(ht, Object, type );
+   if (!hi)
+   {
+      if (dt)
+         DesktopHeapFree(pti->rpdesk, Object);
+      else
+         UserHeapFree(Object);
+      return NULL;
+   }
+
+   RtlZeroMemory(Object, size);
+
+   switch (type)
+   {
+        case otWindow:
+        case otHook:
+            ((PTHRDESKHEAD)Object)->rpdesk = pti->rpdesk;
+            ((PTHRDESKHEAD)Object)->pSelf = Object;
+        case otEvent:
+            ((PTHROBJHEAD)Object)->pti = pti;
+            break;
+
+        case otMenu:
+        case otCallProc:
+            ((PPROCDESKHEAD)Object)->rpdesk = pti->rpdesk;
+            ((PPROCDESKHEAD)Object)->pSelf = Object;            
+            break;
+
+        case otCursorIcon:
+            ((PPROCMARKHEAD)Object)->ppi = ppi;
+            break;
+
+        default:
+            break;
+   }
+   /* Now set default headers. */
+   ((PHEAD)Object)->h = hi;
+   ((PHEAD)Object)->cLockObj = 2; // we need this, because we create 2 refs: handle and pointer!
+
+   if (h)
+      *h = hi;
+   return Object;
+}
+
+BOOL
+FASTCALL
+NewUserDereferenceObject(PVOID obj)
+{
+  ASSERT(((PHEAD)obj)->cLockObj >= 1);
+
+  if (--((PHEAD)obj)->cLockObj <= 0)
+  {
+     return TRUE;
+  }
+  return FALSE;
+}
+
+BOOL
+FASTCALL
+NewUserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
+{
+  PUSER_HANDLE_ENTRY entry;
+  PVOID object;
+  USER_OBJECT_TYPE type;
+
+  if (!(entry = handle_to_entry( ht, handle )))
+  {
+     SetLastNtError( STATUS_INVALID_HANDLE );
+     return FALSE;
+  }
+
+  entry->flags = HANDLEENTRY_INDESTROY;
+
+  if (NewUserDereferenceObject(entry->ptr))
+  {
+     type = entry->type;
+     object = free_user_entry(ht, entry );
+
+     if (type == otWindow) // If more, go switch.
+     {
+        return DesktopHeapFree(GetW32ThreadInfo()->rpdesk, object);
+     }
+     return UserHeapFree(object);
+  }
+  return FALSE;
+}
+
+BOOL
+FASTCALL
+NewUserDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
+{
+   PVOID body = UserGetObject(gHandleTable, h, type);
+   
+   if (!body) return FALSE;
+
+   ASSERT( ((PHEAD)body)->cLockObj >= 1);
+
+   return NewUserFreeHandle(gHandleTable, h);
+}
+
+VOID
+FASTCALL
+NewUserReferenceObject(PVOID obj)
+{
+   ASSERT(((PHEAD)obj)->cLockObj >= 0);
+
+   ((PHEAD)obj)->cLockObj++;
+}
+
+PVOID
+FASTCALL
+NewUserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
+{
+    PVOID object;
+
+    object = UserGetObject(gHandleTable, handle, type);
+    if (object)
+    {
+        NewUserReferenceObject(object);
+    }
+    return object;
 }
