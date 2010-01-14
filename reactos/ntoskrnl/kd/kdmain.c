@@ -191,14 +191,13 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
         /* Bump EIP to the instruction following the int 2C and return */
         Context->Eip += 2;
 #elif _AMD64_
-#else
         /* Warn about it */
         DbgPrint("\n!!! Assertion Failure at Address 0x%p !!!\n\n",
                  (PVOID)Context->Rip);
 
         /* Bump RIP to the instruction following the int 2C and return */
         Context->Rip += 2;
-
+#else
 #error Unknown Architecture
 #endif
         return TRUE;
