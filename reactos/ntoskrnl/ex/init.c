@@ -1726,7 +1726,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                          KeyValuePartialInformation,
                                          &KeyPartialInfo,
                                          sizeof(KeyPartialInfo),
-                                         &Size);
+                                         &Length);
                 if (!NT_SUCCESS(Status)) AlternateShell = FALSE;
             }
 
@@ -1878,17 +1878,17 @@ Phase1InitializationDiscard(IN PVOID Context)
     ZwClose(ProcessInfo->ProcessHandle);
 
     /* Free the initial process environment */
-    Length = 0;
+    Size = 0;
     ZwFreeVirtualMemory(NtCurrentProcess(),
                         (PVOID*)&Environment,
-                        &Length,
+                        &Size,
                         MEM_RELEASE);
 
     /* Free the initial process parameters */
-    Length = 0;
+    Size = 0;
     ZwFreeVirtualMemory(NtCurrentProcess(),
                         (PVOID*)&ProcessParameters,
-                        &Length,
+                        &Size,
                         MEM_RELEASE);
 
     /* Increase init phase */
