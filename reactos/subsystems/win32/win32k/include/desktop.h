@@ -6,29 +6,36 @@
 
 typedef struct _DESKTOP
 {
+    PDESKTOPINFO pDeskInfo;
+    LIST_ENTRY ListEntry;
+    PWND spwndForeground;
+    PWND spwndTray;
+    PWND spwndMessage;
+    PWND spwndTooltip;
+    PSECTION_OBJECT hsectionDesktop;
+    PWIN32HEAP pheapDesktop;
+    ULONG_PTR ulHeapSize;
+    LIST_ENTRY PtiList;
+    /* use for tracking mouse moves. */
+    PWND spwndTrack;
+    DWORD htEx;
+    RECT rcMouseHover;
+    DWORD dwMouseHoverTime;
+
+    /* ReactOS */
     CSHORT Type;
     CSHORT Size;
-    LIST_ENTRY ListEntry;
-
-    LIST_ENTRY PtiList;
-
+    /* Rectangle of the work area */
+    RECTL WorkArea;
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *WindowStation;
     /* Pointer to the active queue. */
     PVOID ActiveMessageQueue;
-    /* Rectangle of the work area */
-    RECTL WorkArea;
     /* Handle of the desktop window. */
     HANDLE DesktopWindow;
     /* Thread blocking input */
     PVOID BlockInputThread;
-
     LIST_ENTRY ShellHookWindows;
-
-    PWIN32HEAP pheapDesktop;
-    PSECTION_OBJECT DesktopHeapSection;
-    PDESKTOPINFO pDeskInfo;
-    PWND spwndMessage;
 } DESKTOP, *PDESKTOP;
 
 extern PDESKTOP InputDesktop;

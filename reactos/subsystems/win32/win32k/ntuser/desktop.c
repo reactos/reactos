@@ -847,10 +847,10 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 static VOID
 IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 {
-    if (Desktop->DesktopHeapSection != NULL)
+    if (Desktop->hsectionDesktop != NULL)
     {
-        ObDereferenceObject(Desktop->DesktopHeapSection);
-        Desktop->DesktopHeapSection = NULL;
+        ObDereferenceObject(Desktop->hsectionDesktop);
+        Desktop->hsectionDesktop = NULL;
     }
 }
 /* SYSCALLS *******************************************************************/
@@ -1018,8 +1018,8 @@ NtUserCreateDesktop(
                                       NULL);
    if (!NT_SUCCESS(Status)) RETURN(NULL);
 
-   DesktopObject->DesktopHeapSection = NULL;
-   DesktopObject->pheapDesktop = UserCreateHeap(&DesktopObject->DesktopHeapSection,
+   DesktopObject->hsectionDesktop = NULL;
+   DesktopObject->pheapDesktop = UserCreateHeap(&DesktopObject->hsectionDesktop,
                                                 &DesktopHeapSystemBase,
                                                 HeapSize);
    if (DesktopObject->pheapDesktop == NULL)
@@ -1890,7 +1890,7 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
     /* we're the first, map the heap */
     DPRINT("Noone mapped the desktop heap %p yet, so - map it!\n", DesktopObject->pheapDesktop);
     Offset.QuadPart = 0;
-    Status = MmMapViewOfSection(DesktopObject->DesktopHeapSection,
+    Status = MmMapViewOfSection(DesktopObject->hsectionDesktop,
                                 PsGetCurrentProcess(),
                                 &UserBase,
                                 0,

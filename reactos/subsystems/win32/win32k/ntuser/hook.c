@@ -117,6 +117,9 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         if (W32Thread->pClientInfo)
            W32Thread->pClientInfo->fsHooks = W32Thread->fsHooks;
 
+        if (W32Thread->pDeskInfo) // Do this for now.
+           W32Thread->pDeskInfo->fsHooks= W32Thread->fsHooks;
+
         Hook->head.pti = W32Thread;
         Hook->head.rpdesk = W32Thread->Desktop;
     }
@@ -237,6 +240,9 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
     W32Thread->fsHooks &= ~HOOKID_TO_FLAG(Hook->HookId);
 
     GetWin32ClientInfo()->fsHooks = W32Thread->fsHooks;
+
+    if (W32Thread->pDeskInfo) // Do this for now.
+       W32Thread->pDeskInfo->fsHooks= W32Thread->fsHooks;
 
     if (0 != Table->Counts[HOOKID_TO_INDEX(Hook->HookId)])
     {

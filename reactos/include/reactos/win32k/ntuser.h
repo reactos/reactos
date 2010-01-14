@@ -40,13 +40,13 @@ typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
     PVOID pvDesktopLimit;
+    struct _WND *spwnd;
+    DWORD fsHooks;
+    struct tagHOOK * aphkStart[16];
 
-    HANDLE hKernelHeap;
-    ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
-    struct _WND *Wnd;
 
     union
     {

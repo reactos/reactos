@@ -1844,7 +1844,7 @@ AllocErr:
    {
       /* If there is no desktop window yet, we must be creating it */
       pti->Desktop->DesktopWindow = hWnd;
-      pti->Desktop->pDeskInfo->Wnd = Wnd;
+      pti->Desktop->pDeskInfo->spwnd = Wnd;
    }
 
    /*
