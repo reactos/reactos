@@ -16,8 +16,10 @@
 		<define name="USE_MMX_ASM" />
 		<define name="USE_SSE_ASM" />
 	</if>
+	<ifnot property="ARCH" value="i386">
+		<define name="GL_NO_STDCALL" />
+	</ifnot>
 	<define name="USE_3DNOW_ASM" />
-	<define name="GL_NO_STDCALL" />
 	<include base="mesa32">include</include>
 	<include base="mesa32">src</include>
 	<include base="mesa32">src/main</include>
