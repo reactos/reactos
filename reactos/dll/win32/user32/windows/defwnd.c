@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/window.c
+ * FILE:            dll/win32/user32/windows/defwnd.c
  * PURPOSE:         Window management
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -1420,7 +1420,11 @@ User32DefWindowProc(HWND hWnd,
                 }
             }
             else if( wParam == VK_F10 )
+            {
+                if (GetKeyState(VK_SHIFT) & 0x8000)
+                    SendMessageW( hWnd, WM_CONTEXTMENU, (WPARAM)hWnd, MAKELPARAM(-1, -1) );
                 iF10Key = 1;
+            }
             else if( wParam == VK_ESCAPE && (GetKeyState(VK_SHIFT) & 0x8000))
                 SendMessageW( hWnd, WM_SYSCOMMAND, SC_KEYMENU, ' ' );
             break;
