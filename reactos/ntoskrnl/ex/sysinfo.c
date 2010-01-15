@@ -1004,9 +1004,9 @@ QSI_DEF(SystemModuleInformation)
     /* Call the generic handler with the system module list */
     Status = ExpQueryModuleInformation(&PsLoadedModuleList,
                                        &MmLoadedUserImageList,
-                                     (PRTL_PROCESS_MODULES)Buffer,
-                                     Size,
-                                     ReqSize);
+                                       (PRTL_PROCESS_MODULES)Buffer,
+                                       Size,
+                                       ReqSize);
 
     /* Release list lock and return status */
     ExReleaseResourceLite(&PsLoadedModuleResource);
@@ -1238,7 +1238,6 @@ QSI_DEF(SystemPoolTagInformation)
 QSI_DEF(SystemInterruptInformation)
 {
     PKPRCB Prcb;
-    PKPCR Pcr;
     LONG i;
     ULONG ti;
     PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
@@ -1253,16 +1252,7 @@ QSI_DEF(SystemInterruptInformation)
     for (i = 0; i < KeNumberProcessors; i++)
     {
         Prcb = KiProcessorBlock[i];
-#ifdef _M_AMD64
-        Pcr = CONTAINING_RECORD(Prcb, KPCR, CurrentPrcb);
-#else
-        Pcr = CONTAINING_RECORD(Prcb, KPCR, Prcb);
-#endif
-#ifdef _M_ARM // This code should probably be done differently
-        sii->ContextSwitches = Pcr->ContextSwitches;
-#else
-        sii->ContextSwitches = ((PKIPCR)Pcr)->ContextSwitches;
-#endif
+        sii->ContextSwitches = KeGetContextSwitches(Prcb);
         sii->DpcCount = Prcb->DpcData[0].DpcCount;
         sii->DpcRate = Prcb->DpcRequestRate;
         sii->TimeIncrement = ti;
@@ -1382,11 +1372,11 @@ SSI_DEF(SystemUnloadGdiDriverInformation)
     PVOID SectionPointer = Buffer;
 
     /* Validate size */
-    if(Size != sizeof(PVOID))
+    if (Size != sizeof(PVOID))
     {
         /* Incorrect length, fail */
         return STATUS_INFO_LENGTH_MISMATCH;
-        }
+    }
 
     /* Only kernel mode can call this function */
     if (ExGetPreviousMode() != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
@@ -1394,7 +1384,7 @@ SSI_DEF(SystemUnloadGdiDriverInformation)
     /* Unload the image */
     MmUnloadSystemImage(SectionPointer);
     return STATUS_SUCCESS;
-    }
+}
 
 /* Class 28 - Time Adjustment Information */
 QSI_DEF(SystemTimeAdjustmentInformation)
