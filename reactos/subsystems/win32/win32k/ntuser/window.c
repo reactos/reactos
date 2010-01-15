@@ -93,9 +93,9 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
    Window = UserGetWindowObject(hWnd);
    if (Window)
    {
-      ASSERT(USER_BODY_TO_HEADER(Window)->RefCount >= 0);
+      ASSERT(Window->head.cLockObj >= 0);
 
-      USER_BODY_TO_HEADER(Window)->RefCount++;
+      Window->head.cLockObj++;
    }
    return Window;
 }
@@ -129,7 +129,7 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
       return NULL;
    }
 
-   ASSERT(USER_BODY_TO_HEADER(Window)->RefCount >= 0);
+   ASSERT(Window->head.cLockObj >= 0);
    return Window;
 }
 
@@ -1806,6 +1806,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* Create the window object. */
    Window = (PWINDOW_OBJECT) UserCreateObject( gHandleTable,
+                                               pti->rpdesk,
                                                (PHANDLE)&hWnd,
                                                otWindow,
                                                sizeof(WINDOW_OBJECT));

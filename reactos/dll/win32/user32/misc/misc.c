@@ -322,13 +322,13 @@ GetUser32Handle(HANDLE handle)
 static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_EVENT + 1] =
 {
     FALSE, /* VALIDATE_TYPE_FREE (not used) */
-    TRUE, /* VALIDATE_TYPE_WIN */ /* FIXME: FALSE once WINDOW_OBJECT is deleted! */
-    TRUE, /* VALIDATE_TYPE_MENU */
+    TRUE, /* VALIDATE_TYPE_WIN  FALSE */
+    TRUE, /* VALIDATE_TYPE_MENU  FALSE */
     TRUE, /* VALIDATE_TYPE_CURSOR */
     TRUE, /* VALIDATE_TYPE_MWPOS */
-    TRUE, /* VALIDATE_TYPE_HOOK */
+    TRUE, /* VALIDATE_TYPE_HOOK  FALSE */
     FALSE, /* (not used) */
-    TRUE, /* VALIDATE_TYPE_CALLPROC */
+    TRUE, /* VALIDATE_TYPE_CALLPROC  FALSE */
     TRUE, /* VALIDATE_TYPE_ACCEL */
     FALSE, /* (not used) */
     FALSE, /* (not used) */
@@ -357,7 +357,10 @@ ValidateHandle(HANDLE handle, UINT uType)
       uType = pEntry->type;
 
 // Must have an entry and must be the same type!
-  if ( (!pEntry) || (pEntry->type != uType) || !pEntry->ptr )
+  if ( (!pEntry) ||
+        (pEntry->type != uType) ||
+        !pEntry->ptr ||
+        (pEntry->flags & HANDLEENTRY_INDESTROY) )
   {
      switch ( uType )
      {  // Test (with wine too) confirms these results!
@@ -442,6 +445,13 @@ ValidateCallProc(HANDLE hCallProc)
   return NULL;
 }
 
+// HACK HACK HACK!
+typedef struct _WNDX
+{
+    THRDESKHEAD head;
+    PWND pWnd;
+} WNDX, *PWNDX;
+
 //
 // Validate a window handle and return the pointer to the object.
 //
@@ -460,9 +470,6 @@ ValidateHwnd(HWND hwnd)
     Wnd = ValidateHandle((HANDLE)hwnd, VALIDATE_TYPE_WIN);
     if (Wnd != NULL)
     {
-        /* FIXME: Check if handle table entry is marked as deleting and
-                  return NULL in this case! */
-
 #if 0
         return Wnd;
 #else
@@ -473,8 +480,8 @@ ValidateHwnd(HWND hwnd)
            !!! REMOVE AS SOON AS WINDOW_OBJECT NO LONGER EXISTS !!!
          */
 
-        if (*((PVOID*)Wnd) != NULL)
-            return DesktopPtrToUser(*((PVOID*)Wnd));
+        if ( ((PWNDX)Wnd)->pWnd != NULL)
+            return DesktopPtrToUser( ((PWNDX)Wnd)->pWnd );
 #endif
     }
 
@@ -499,9 +506,6 @@ ValidateHwndNoErr(HWND hwnd)
     Wnd = ValidateHandleNoErr((HANDLE)hwnd, VALIDATE_TYPE_WIN);
     if (Wnd != NULL)
     {
-        /* FIXME: Check if handle table entry is marked as deleting and
-                  return NULL in this case! */
-
 #if 0
         return Wnd;
 #else
@@ -512,8 +516,8 @@ ValidateHwndNoErr(HWND hwnd)
            !!! REMOVE AS SOON AS WINDOW_OBJECT NO LONGER EXISTS !!!
          */
 
-        if (*((PVOID*)Wnd) != NULL)
-            return DesktopPtrToUser(*((PVOID*)Wnd));
+        if ( ((PWNDX)Wnd)->pWnd != NULL)
+            return DesktopPtrToUser( ((PWNDX)Wnd)->pWnd );
 #endif
     }
 

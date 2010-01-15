@@ -20,10 +20,7 @@ BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 
 typedef struct _WINDOW_OBJECT
 {
-  /* NOTE: Do *NOT* Move this pointer anywhere in this structure! This
-           is a pointer to the WINDOW structure that eventually replaces
-           the WINDOW_OBJECT structure! USER32 expects this pointer to
-           be here until WINDOW_OBJECT has completely been superseded! */
+  THRDESKHEAD head;
   PWND Wnd;
 
   /* Pointer to the thread information */

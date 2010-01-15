@@ -138,7 +138,7 @@ IntRemoveEvent(PEVENTHOOK pEH)
       RemoveEntryList(&pEH->Chain);
       GlobalEvents->Counts--;
       if (!GlobalEvents->Counts) gpsi->dwInstalledEventHooks = 0;
-      UserDeleteObject(pEH->head.h, otEvent);
+      UserDeleteObject(UserHMGetHandle(pEH), otEvent);
       KeLeaveCriticalRegion();
       return TRUE;
    }
@@ -160,14 +160,14 @@ co_EVENT_CallEvents( DWORD event,
 
    pEH = pEP->pEH;
    
-   Result = co_IntCallEventProc( pEH->head.h,
-                                       event,
-                                        hwnd,
-                               pEP->idObject,
-                                pEP->idChild,
- (DWORD_PTR)(NtCurrentTeb()->ClientId).UniqueThread,
-                    (DWORD)EngGetTickCount(),
-                                   pEH->Proc);
+   Result = co_IntCallEventProc( UserHMGetHandle(pEH),
+                                 event,
+                                 hwnd,
+                                 pEP->idObject,
+                                 pEP->idChild,
+                                (DWORD_PTR)(NtCurrentTeb()->ClientId).UniqueThread,
+                                (DWORD)EngGetTickCount(),
+                                 pEH->Proc);
    return Result;
 }
 
@@ -323,7 +323,7 @@ NtUserSetWinEventHook(
       }
    }
 
-   pEH = UserCreateObject(gHandleTable, &Handle, otEvent, sizeof(EVENTHOOK));
+   pEH = UserCreateObject(gHandleTable, NULL, &Handle, otEvent, sizeof(EVENTHOOK));
    if (pEH)
    {
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);

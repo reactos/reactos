@@ -49,13 +49,13 @@ CreateTimer(VOID)
 
   if (!FirstpTmr)
   {
-      FirstpTmr = UserCreateObject(gHandleTable, &Handle, otTimer, sizeof(TIMER));
+      FirstpTmr = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
       if (FirstpTmr) InitializeListHead(&FirstpTmr->ptmrList);
       Ret = FirstpTmr;
   }
   else
   {
-      Ret = UserCreateObject(gHandleTable, &Handle, otTimer, sizeof(TIMER));
+      Ret = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
       if (Ret) InsertTailList(&FirstpTmr->ptmrList, &Ret->ptmrList);
   } 
   return Ret;
@@ -69,7 +69,7 @@ RemoveTimer(PTIMER pTmr)
   if (pTmr)
   {
      RemoveEntryList(&pTmr->ptmrList);
-     UserDeleteObject( USER_BODY_TO_HEADER(pTmr)->hSelf, otTimer);
+     UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
      return TRUE;
   }
   return FALSE;

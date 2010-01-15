@@ -86,7 +86,7 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
       return NULL;
    }
 
-   ASSERT(USER_BODY_TO_HEADER(Accel)->RefCount >= 0);
+   ASSERT(Accel->head.cLockObj >= 0);
 
    return Accel;
 }
@@ -357,7 +357,7 @@ NtUserCreateAcceleratorTable(
       RETURN( (HACCEL) NULL );
    }
 
-   Accel = UserCreateObject(gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
+   Accel = UserCreateObject(gHandleTable, NULL, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
 
    if (Accel == NULL)
    {

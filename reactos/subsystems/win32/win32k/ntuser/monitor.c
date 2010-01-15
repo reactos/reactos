@@ -89,13 +89,12 @@ IntCreateMonitorObject()
    HANDLE Handle;
    PMONITOR Monitor;
 
-   Monitor = UserCreateObject(gHandleTable, &Handle, otMonitor, sizeof (MONITOR));
+   Monitor = UserCreateObject(gHandleTable, NULL, &Handle, otMonitor, sizeof (MONITOR));
    if (Monitor == NULL)
    {
       return NULL;
    }
 
-   Monitor->head.h = Handle;
    ExInitializeFastMutex(&Monitor->Lock);
 
    return Monitor;
@@ -139,7 +138,7 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
       return NULL;
    }
 
-   ASSERT(USER_BODY_TO_HEADER(Monitor)->RefCount >= 0);
+   ASSERT(Monitor->head.cLockObj >= 0);
 
    return Monitor;
 }
@@ -179,7 +178,7 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
    {
       DPRINT("Couldn't duplicate monitor name!\n");
       UserDereferenceObject(Monitor);
-      UserDeleteObject(Monitor->head.h, otMonitor);
+      UserDeleteObject(UserHMGetHandle(Monitor), otMonitor);
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
@@ -406,7 +405,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
       if (iCount < listSize)
       {
          if (hMonitorList != NULL)
-            hMonitorList[iCount] = Monitor->head.h;
+            hMonitorList[iCount] = UserHMGetHandle(Monitor);
          if (monitorRectList != NULL)
             monitorRectList[iCount] = IntersectionRect;
       }
@@ -418,7 +417,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
       if (iCount < listSize)
       {
          if (hMonitorList != NULL)
-            hMonitorList[iCount] = NearestMonitor->head.h;
+            hMonitorList[iCount] = UserHMGetHandle(NearestMonitor);
       }
       iCount++;
    }
@@ -427,7 +426,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
       if (iCount < listSize)
       {
          if (hMonitorList != NULL)
-            hMonitorList[iCount] = PrimaryMonitor->head.h;
+            hMonitorList[iCount] = UserHMGetHandle(PrimaryMonitor);
       }
       iCount++;
    }
@@ -763,7 +762,7 @@ NtUserMonitorFromPoint(
       {
          PMONITOR MonitorObj = IntGetPrimaryMonitor();
          if (MonitorObj)
-            hMonitor = MonitorObj->head.h;
+            hMonitor = UserHMGetHandle(MonitorObj);
       }
       else if (dwFlags == MONITOR_DEFAULTTONEAREST)
       {
@@ -828,7 +827,7 @@ NtUserMonitorFromRect(
       {
          PMONITOR monitorObj = IntGetPrimaryMonitor();
          if (monitorObj)
-            return monitorObj->head.h;
+            return UserHMGetHandle(monitorObj);
       }
       else if (dwFlags == MONITOR_DEFAULTTONEAREST)
       {
