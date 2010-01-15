@@ -28,10 +28,10 @@ _MsgBreakpointTrap:
 .ascii "BreakpointTrap at %p\n\0"
 
 _MsgUnexpectedInterrupt:
-.ascii "UnexpectedInterrupt\n\0"
+.ascii "UnexpectedInterrupt Vector=0x%02lx\n\0"
 
 _MsgInvalidOpcodeFault:
-.ascii "General protection fault at %p!\n\0"
+.ascii "Invalid opcode fault at %p!\n\0"
 
 _MsgDoubleFault:
 .ascii "Double fault at %p, rbp=%p!\n\0"
@@ -241,6 +241,17 @@ _MsgTrapInfo:
 
 .text
 .code64
+
+.align 8
+.global _InterruptDispatchTable
+_InterruptDispatchTable:
+.set Vector, 0
+.rept 256
+    push Vector
+    jmp _KiUnexpectedInterrupt
+    .align 8
+    .set Vector, Vector+1
+.endr
 
 // rbp = TrapFrame, eax = ExceptionCode, edx = NumParams, r9,r10,r11 = params
 _InternalDispatchException:
@@ -779,23 +790,20 @@ PageFaultReturn:
 
 .proc KiUnexpectedInterrupt
     .pushframe 0
-    /* Push pseudo error code */
-    push 0
-    .allocstack 0x8
+
+    /* The error code is the vector */
 
     cli
 
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    lea rcx, _MsgUnexpectedInterrupt[rip]
-    call _FrLdrDbgPrint[rip]
-
+    /* Set bugcheck parameters */
     mov ecx, TRAP_CAUSE_UNKNOWN
-//    mov rdx, // The unexpected interrupt 
-//    mov rdx, // The unknown floating-point exception
-//    mov r8, // The enabled and asserted status bits
-    xor r9, r9 // Reserved
-    mov [rbp + KTRAP_FRAME_P5], rbp // trap frame
+    mov rdx, [rbp + KTRAP_FRAME_ErrorCode] // the vector
+    mov r8, 0 // The unknown floating-point exception
+    mov r9, 0 // The enabled and asserted status bits
+    sub rsp, 8
+    mov [rbp + KTRAP_FRAME_P5 + 8], rbp // trap frame
     call _KeBugCheckWithTf
 
 .endproc
