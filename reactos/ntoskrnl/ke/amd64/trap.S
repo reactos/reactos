@@ -117,12 +117,12 @@ _MsgTrapInfo:
 
 .if (TRAPFLAGS & TRAPFLAG_XMM)
     /* Save xmm registers */
-//    movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
-//    movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
-//    movdqa [rbp + KTRAP_FRAME_Xmm2], xmm2
-//    movdqa [rbp + KTRAP_FRAME_Xmm3], xmm3
-//    movdqa [rbp + KTRAP_FRAME_Xmm4], xmm4
-//    movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
+    movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
+    movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
+    movdqa [rbp + KTRAP_FRAME_Xmm2], xmm2
+    movdqa [rbp + KTRAP_FRAME_Xmm3], xmm3
+    movdqa [rbp + KTRAP_FRAME_Xmm4], xmm4
+    movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
 .endif
 
 .if (TRAPFLAGS & TRAPFLAG_SEGMENTS)
@@ -221,12 +221,12 @@ _MsgTrapInfo:
 
 .if (TRAPFLAGS & TRAPFLAG_XMM)
     /* Restore xmm registers */
-//    movdqa xmm0, [rbp + KTRAP_FRAME_Xmm0]
-//    movdqa xmm1, [rbp + KTRAP_FRAME_Xmm1]
-//    movdqa xmm2, [rbp + KTRAP_FRAME_Xmm2]
-//    movdqa xmm3, [rbp + KTRAP_FRAME_Xmm3]
-//    movdqa xmm4, [rbp + KTRAP_FRAME_Xmm4]
-//    movdqa xmm5, [rbp + KTRAP_FRAME_Xmm5]
+    movdqa xmm0, [rbp + KTRAP_FRAME_Xmm0]
+    movdqa xmm1, [rbp + KTRAP_FRAME_Xmm1]
+    movdqa xmm2, [rbp + KTRAP_FRAME_Xmm2]
+    movdqa xmm3, [rbp + KTRAP_FRAME_Xmm3]
+    movdqa xmm4, [rbp + KTRAP_FRAME_Xmm4]
+    movdqa xmm5, [rbp + KTRAP_FRAME_Xmm5]
 .endif
 
     /* Restore rbp */

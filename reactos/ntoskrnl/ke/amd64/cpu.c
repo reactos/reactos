@@ -277,9 +277,6 @@ KiInitializeCpuFeatures()
     /* Disable fpu monitoring */
     __writecr0(__readcr0() & ~CR0_MP);
 
-    /* Enable fx save restore support */
-    __writecr4(__readcr4() | CR4_FXSR);
-
 }
 
 VOID

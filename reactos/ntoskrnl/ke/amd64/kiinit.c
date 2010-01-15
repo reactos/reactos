@@ -679,6 +679,9 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* LDT is unused */
 //    __lldt(0);
 
+    /* Enable fx save restore support */
+    __writecr4(__readcr4() | CR4_FXSR);
+
     /* Align stack to 16 bytes */
     LoaderBlock->KernelStack &= ~(16 - 1);
 
