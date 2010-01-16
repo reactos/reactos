@@ -6434,7 +6434,7 @@ TOOLBAR_StyleChanged (TOOLBAR_INFO *infoPtr, INT nType, const STYLESTRUCT *lpSty
 
 
 static LRESULT
-TOOLBAR_SysColorChange ()
+TOOLBAR_SysColorChange (void)
 {
     COMCTL32_RefreshSysColors();
 

@@ -7,6 +7,7 @@
  * Copyright 2001 CodeWeavers Inc.
  * Copyright 2002 Dimitrie O. Paun
  * Copyright 2009 Nikolay Sivov
+ * Copyright 2009 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -98,7 +99,6 @@
  *   -- LVN_BEGINSCROLL, LVN_ENDSCROLL
  *   -- LVN_GETINFOTIP
  *   -- LVN_HOTTRACK
- *   -- LVN_MARQUEEBEGIN
  *   -- LVN_SETDISPINFO
  *   -- NM_HOVER
  *   -- LVN_BEGINRDRAG
@@ -248,6 +248,8 @@ typedef struct tagLISTVIEW_INFO
   BOOL bLButtonDown;
   BOOL bRButtonDown;
   BOOL bDragging;
+  BOOL bMarqueeSelect;       /* marquee selection/highlight underway */
+  RECT marqueeRect;
   POINT ptClickPos;         /* point where the user clicked */ 
   BOOL bNoItemMetrics;		/* flags if item metrics are not yet computed */
   INT nItemHeight;
@@ -3605,16 +3607,106 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
         WORD wDragWidth = GetSystemMetrics(SM_CXDRAG);
         WORD wDragHeight= GetSystemMetrics(SM_CYDRAG);
 
-        rect.left = infoPtr->ptClickPos.x - wDragWidth;
-        rect.right = infoPtr->ptClickPos.x + wDragWidth;
-        rect.top = infoPtr->ptClickPos.y - wDragHeight;
-        rect.bottom = infoPtr->ptClickPos.y + wDragHeight;
+        /* Ensure coordinates are within client bounds */
+        if (x < 0)
+            x = 0;
+
+        if (y < 0)
+            y = 0;
+
+        if (x > infoPtr->rcList.right)
+            x = infoPtr->rcList.right;
+
+        if (y > infoPtr->rcList.bottom)
+            y = infoPtr->rcList.bottom;
 
         tmp.x = x;
         tmp.y = y;
 
         lvHitTestInfo.pt = tmp;
         LISTVIEW_HitTest(infoPtr, &lvHitTestInfo, TRUE, TRUE);
+
+        if (infoPtr->bMarqueeSelect)
+        {
+            LVITEMW item;
+            ITERATOR i;
+
+            if (x > infoPtr->ptClickPos.x)
+            {
+                rect.left = infoPtr->ptClickPos.x;
+                rect.right = x;
+            }
+            else
+            {
+                rect.left = x;
+                rect.right = infoPtr->ptClickPos.x;
+            }
+
+            if (y > infoPtr->ptClickPos.y)
+            {
+                rect.top = infoPtr->ptClickPos.y;
+                rect.bottom = y;
+            }
+            else
+            {
+                rect.top = y;
+                rect.bottom = infoPtr->ptClickPos.y;
+            }
+
+            /* Cancel out the old marquee rectangle and draw the new one */
+            LISTVIEW_InvalidateRect(infoPtr, &infoPtr->marqueeRect);
+
+            /* Invert the items in the old marquee rectangle */
+            iterator_frameditems(&i, infoPtr, &infoPtr->marqueeRect);
+
+            while (iterator_next(&i))
+            {
+                if (i.nItem > -1)
+                {
+                    if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED) == LVIS_SELECTED)
+                        item.state = 0;
+                    else
+                        item.state = LVIS_SELECTED;
+
+                    item.stateMask = LVIS_SELECTED;
+
+                    LISTVIEW_SetItemState(infoPtr, i.nItem, &item);
+                }
+            }
+
+            iterator_destroy(&i);
+
+            CopyRect(&infoPtr->marqueeRect, &rect);
+
+            /* Iterate over the items within our marquee rectangle */
+            iterator_frameditems(&i, infoPtr, &rect);
+
+            while (iterator_next(&i))
+            {
+                if (i.nItem > -1)
+                {
+                    /* If CTRL is pressed, invert. If not, always select the item. */
+                    if ((fwKeys & MK_CONTROL) && (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED)))
+                        item.state = 0;
+                    else
+                        item.state = LVIS_SELECTED;
+
+                    item.stateMask = LVIS_SELECTED;
+
+                    LISTVIEW_SetItemState(infoPtr, i.nItem, &item);
+                }
+            }
+
+            iterator_destroy(&i);
+
+            LISTVIEW_InvalidateRect(infoPtr, &rect);
+            return 0;
+        }
+
+        rect.left = infoPtr->ptClickPos.x - wDragWidth;
+        rect.right = infoPtr->ptClickPos.x + wDragWidth;
+        rect.top = infoPtr->ptClickPos.y - wDragHeight;
+        rect.bottom = infoPtr->ptClickPos.y + wDragHeight;
 
         /* reset item marker */
         if (infoPtr->nLButtonDownItem != lvHitTestInfo.iItem)
@@ -3640,17 +3732,34 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
 
             if (!infoPtr->bDragging)
             {
-                NMLISTVIEW nmlv;
-
                 lvHitTestInfo.pt = infoPtr->ptClickPos;
                 LISTVIEW_HitTest(infoPtr, &lvHitTestInfo, TRUE, TRUE);
 
-                ZeroMemory(&nmlv, sizeof(nmlv));
-                nmlv.iItem = lvHitTestInfo.iItem;
-                nmlv.ptAction = infoPtr->ptClickPos;
+                /* If the click is outside the range of an item, begin a
+                   highlight. If not, begin an item drag. */
+                if (lvHitTestInfo.iItem == -1)
+                {
+                    NMHDR hdr;
 
-                notify_listview(infoPtr, LVN_BEGINDRAG, &nmlv);
-                infoPtr->bDragging = TRUE;
+                    /* If we're allowing multiple selections, send notification.
+                       If return value is non-zero, cancel. */
+                    if (!(infoPtr->dwStyle & LVS_SINGLESEL) && (notify_hdr(infoPtr, LVN_MARQUEEBEGIN, &hdr) == 0))
+                    {
+                        infoPtr->bMarqueeSelect = TRUE;
+                        SetCapture(infoPtr->hwndSelf);
+                    }
+                }
+                else
+                {
+                    NMLISTVIEW nmlv;
+
+                    ZeroMemory(&nmlv, sizeof(nmlv));
+                    nmlv.iItem = lvHitTestInfo.iItem;
+                    nmlv.ptAction = infoPtr->ptClickPos;
+
+                    notify_listview(infoPtr, LVN_BEGINDRAG, &nmlv);
+                    infoPtr->bDragging = TRUE;
+                }
             }
 
             return 0;
@@ -4643,6 +4752,10 @@ enddraw:
     if ((infoPtr->uView == LV_VIEW_DETAILS) && infoPtr->dwLvExStyle & LVS_EX_GRIDLINES)
         LISTVIEW_RefreshReportGrid(infoPtr, hdc);
 
+    /* Draw marquee rectangle if appropriate */
+    if (infoPtr->bMarqueeSelect)
+        DrawFocusRect(hdc, &infoPtr->marqueeRect);
+
     if (cdmode & CDRF_NOTIFYPOSTPAINT)
 	notify_postpaint(infoPtr, &nmlvcd);
 
@@ -4744,10 +4857,46 @@ static DWORD LISTVIEW_ApproximateViewRect(const LISTVIEW_INFO *infoPtr, INT nIte
 
     dwViewRect = MAKELONG(wWidth, wHeight);
   }
+  else if (infoPtr->uView == LV_VIEW_ICON)
+  {
+    UINT rows,cols;
+    UINT nItemWidth;
+    UINT nItemHeight;
+
+    nItemWidth = infoPtr->iconSpacing.cx;
+    nItemHeight = infoPtr->iconSpacing.cy;
+
+    if (nItemCount == -1)
+      nItemCount = infoPtr->nItemCount;
+
+    if (wWidth == 0xffff)
+      wWidth = infoPtr->rcList.right - infoPtr->rcList.left;
+
+    if (wWidth < nItemWidth)
+      wWidth = nItemWidth;
+
+    cols = wWidth / nItemWidth;
+    if (cols > nItemCount)
+      cols = nItemCount;
+    if (cols < 1)
+        cols = 1;
+
+    if (nItemCount)
+    {
+      rows = nItemCount / cols;
+      if (nItemCount % cols)
+        rows++;
+    }
+    else
+      rows = 0;
+
+    wHeight = (nItemHeight * rows)+2;
+    wWidth = (nItemWidth * cols)+2;
+
+    dwViewRect = MAKELONG(wWidth, wHeight);
+  }
   else if (infoPtr->uView == LV_VIEW_SMALLICON)
     FIXME("uView == LV_VIEW_SMALLICON: not implemented\n");
-  else if (infoPtr->uView == LV_VIEW_ICON)
-    FIXME("uView == LV_VIEW_ICON: not implemented\n");
 
   return dwViewRect;
 }
@@ -9312,6 +9461,7 @@ static LRESULT LISTVIEW_LButtonDown(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, IN
   infoPtr->bLButtonDown = TRUE;
   infoPtr->ptClickPos = pt;
   infoPtr->bDragging = FALSE;
+  infoPtr->bMarqueeSelect = FALSE;
 
   lvHitTestInfo.pt.x = x;
   lvHitTestInfo.pt.y = y;
@@ -9433,9 +9583,19 @@ static LRESULT LISTVIEW_LButtonUp(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, INT 
         LISTVIEW_SetSelection(infoPtr, infoPtr->nLButtonDownItem);
     infoPtr->nLButtonDownItem = -1;
 
-    if (infoPtr->bDragging)
+    if (infoPtr->bDragging || infoPtr->bMarqueeSelect)
     {
+        /* Remove the marquee rectangle and release our mouse capture */
+        if (infoPtr->bMarqueeSelect)
+        {
+            LISTVIEW_InvalidateRect(infoPtr, &infoPtr->marqueeRect);
+            ReleaseCapture();
+        }
+
+        SetRect(&infoPtr->marqueeRect, 0, 0, 0, 0);
+
         infoPtr->bDragging = FALSE;
+        infoPtr->bMarqueeSelect = FALSE;
         return 0;
     }
 
@@ -11149,7 +11309,6 @@ static LRESULT CALLBACK EditLblWndProcA(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
  */
 static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style, BOOL isW)
 {
-    WCHAR editName[5] = { 'E', 'd', 'i', 't', '\0' };
     HWND hedit;
     HINSTANCE hinst = (HINSTANCE)GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_HINSTANCE);
 
@@ -11159,9 +11318,9 @@ static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style, 
 
     /* Window will be resized and positioned after LVN_BEGINLABELEDIT */
     if (isW)
-	hedit = CreateWindowW(editName, text, style, 0, 0, 0, 0, infoPtr->hwndSelf, 0, hinst, 0);
+	hedit = CreateWindowW(WC_EDITW, text, style, 0, 0, 0, 0, infoPtr->hwndSelf, 0, hinst, 0);
     else
-	hedit = CreateWindowA("Edit", (LPCSTR)text, style, 0, 0, 0, 0, infoPtr->hwndSelf, 0, hinst, 0);
+	hedit = CreateWindowA(WC_EDITA, (LPCSTR)text, style, 0, 0, 0, 0, infoPtr->hwndSelf, 0, hinst, 0);
 
     if (!hedit) return 0;
 

@@ -3674,7 +3674,6 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
     HDC hdc;
     HFONT hOldFont=0;
     TEXTMETRICW textMetric;
-    static const WCHAR EditW[] = {'E','d','i','t',0};
 
     TRACE("%p %p\n", hwnd, hItem);
     if (!TREEVIEW_ValidItem(infoPtr, hItem))
@@ -3721,7 +3720,7 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
     infoPtr->editItem = hItem;
 
     hwndEdit = CreateWindowExW(WS_EX_LEFT,
-			       EditW,
+			       WC_EDITW,
 			       0,
 			       WS_CHILD | WS_BORDER | ES_AUTOHSCROLL |
 			       WS_CLIPSIBLINGS | ES_WANTRETURN |

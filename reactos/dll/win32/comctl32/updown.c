@@ -557,8 +557,6 @@ UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
  */
 static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
 {
-    static const WCHAR editW[] = { 'E', 'd', 'i', 't', 0 };
-    static const WCHAR listboxW[] = { 'L', 'i', 's', 't', 'b', 'o', 'x', 0 };
     RECT  budRect;  /* new coord for the buddy */
     int   x, width;  /* new x position and width for the up-down */
     WNDPROC baseWndProc;
@@ -586,9 +584,9 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
         /* Store buddy window class type */
         infoPtr->BuddyType = BUDDY_TYPE_UNKNOWN;
         if (GetClassNameW(bud, buddyClass, COUNT_OF(buddyClass))) {
-            if (lstrcmpiW(buddyClass, editW) == 0)
+            if (lstrcmpiW(buddyClass, WC_EDITW) == 0)
                 infoPtr->BuddyType = BUDDY_TYPE_EDIT;
-            else if (lstrcmpiW(buddyClass, listboxW) == 0)
+            else if (lstrcmpiW(buddyClass, WC_LISTBOXW) == 0)
                 infoPtr->BuddyType = BUDDY_TYPE_LISTBOX;
         }
 
