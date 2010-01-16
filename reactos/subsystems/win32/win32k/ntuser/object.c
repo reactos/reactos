@@ -396,37 +396,26 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
 
 BOOL
 FASTCALL
-UserDereferenceObject(PVOID obj)
-{
-  ASSERT(((PHEAD)obj)->cLockObj >= 1);
-
-  if (--((PHEAD)obj)->cLockObj <= 0)
-  {
-     return TRUE;
-  }
-  return FALSE;
-}
-
-BOOL
-FASTCALL
-UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
+UserDereferenceObject(PVOID object)
 {
   PUSER_HANDLE_ENTRY entry;
-  PVOID object;
   USER_OBJECT_TYPE type;
 
-  if (!(entry = handle_to_entry( ht, handle )))
-  {
-     SetLastNtError( STATUS_INVALID_HANDLE );
-     return FALSE;
-  }
+  ASSERT(((PHEAD)object)->cLockObj >= 1);
 
-  entry->flags = HANDLEENTRY_INDESTROY;
-
-  if (UserDereferenceObject(entry->ptr))
+  if ((INT)--((PHEAD)object)->cLockObj <= 0)
   {
+     entry = handle_to_entry(gHandleTable, ((PHEAD)object)->h );
+
+     DPRINT("warning! Dereference to zero! Obj -> 0x%x\n", object);
+
+     ((PHEAD)object)->cLockObj = 0;
+
+     if (!(entry->flags & HANDLEENTRY_INDESTROY))
+        return TRUE;
+
      type = entry->type;
-     object = free_user_entry(ht, entry );
+     free_user_entry(gHandleTable, entry );
 
      switch (type)
      {
@@ -442,6 +431,23 @@ UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
      }
   }
   return FALSE;
+}
+
+BOOL
+FASTCALL
+UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
+{
+  PUSER_HANDLE_ENTRY entry;
+
+  if (!(entry = handle_to_entry( ht, handle )))
+  {
+     SetLastNtError( STATUS_INVALID_HANDLE );
+     return FALSE;
+  }
+
+  entry->flags = HANDLEENTRY_INDESTROY;
+
+  return UserDereferenceObject(entry->ptr);
 }
 
 BOOL
