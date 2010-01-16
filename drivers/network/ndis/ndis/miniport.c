@@ -963,13 +963,6 @@ MiniDoRequest(
             NdisRequest);
     }
 
-    if (Status != NDIS_STATUS_PENDING)
-    {
-        KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
-        Adapter->NdisMiniportBlock.PendingRequest = NULL;
-        KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
-    }
-
     return Status;
 }
 
