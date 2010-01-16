@@ -43,6 +43,7 @@ extern int rectSel_dest[4];
 extern HWND hSelection;
 extern HWND hImageArea;
 extern HBITMAP hSelBm;
+extern HBITMAP hSelMask;
 
 extern int palColors[28];
 

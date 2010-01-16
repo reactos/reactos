@@ -744,18 +744,15 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 case IDM_EDITDELETESELECTION:
                 {
-                    /* FIXME: deleting freeform selections unsupported */
-                    RECT selectionRect, areaRect;
-                    long x1, x2, y1, y2;
-
-                    GetWindowRect(hSelection, &selectionRect);
-                    GetWindowRect(hImageArea, &areaRect);
-                    x1 = ((selectionRect.left - areaRect.left) / (zoom / 1000)) + 1;
-                    y1 = ((selectionRect.top - areaRect.top) / (zoom / 1000)) + 1;
-                    x2 = (selectionRect.right - areaRect.left) / (zoom / 1000);
-                    y2 = (selectionRect.bottom - areaRect.top) / (zoom / 1000);
-                    Rect(hDrawingDC, x1, y1, x2, y2, bgColor, bgColor, 0, TRUE);
-                    ShowWindow(hSelection, SW_HIDE);
+                    /* remove selection window and already painted content using undo(),
+                    paint Rect for rectangular selections and nothing for freeform selections */
+                    undo();
+                    if (activeTool == 2)
+                    {
+                        newReversible();
+                        Rect(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2] + rectSel_dest[0],
+                             rectSel_dest[3] + rectSel_dest[1], bgColor, bgColor, 0, TRUE);
+                    }
                     break;
                 }
                 case IDM_EDITSELECTALL:
