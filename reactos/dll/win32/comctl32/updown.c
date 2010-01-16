@@ -71,7 +71,7 @@ typedef struct
 #define AUTOPRESS_DELAY	250    /* time to keep arrow pressed on KEY_DOWN */
 #define REPEAT_DELAY	50     /* delay between auto-increments */
 
-#define DEFAULT_WIDTH	    14 /* default width of the ctrl */
+#define DEFAULT_WIDTH	    16 /* default width of the ctrl */
 #define DEFAULT_XSEP         0 /* default separation between buddy and ctrl */
 #define DEFAULT_ADDTOP       0 /* amount to extend above the buddy window */
 #define DEFAULT_ADDBOT       0 /* amount to extend below the buddy window */
@@ -100,9 +100,9 @@ typedef struct
 #define UPDOWN_GetInfoPtr(hwnd) ((UPDOWN_INFO *)GetWindowLongPtrW (hwnd,0))
 #define COUNT_OF(a) (sizeof(a)/sizeof(a[0]))
 
-static const WCHAR BUDDY_UPDOWN_HWND[] = { 'b', 'u', 'd', 'd', 'y', 'U', 'p', 'D', 'o', 'w', 'n', 'H', 'W', 'N', 'D', 0 };
-static const WCHAR BUDDY_SUPERCLASS_WNDPROC[] = { 'b', 'u', 'd', 'd', 'y', 'S', 'u', 'p', 'p', 'e', 'r', 
-						  'C', 'l', 'a', 's', 's', 'W', 'n', 'd', 'P', 'r', 'o', 'c', 0 };
+/* id used for SetWindowSubclass */
+#define BUDDY_SUBCLASSID   1
+
 static void UPDOWN_DoAction (UPDOWN_INFO *infoPtr, int delta, int action);
 
 /***********************************************************************
@@ -200,7 +200,7 @@ static void UPDOWN_GetArrowRect (const UPDOWN_INFO* infoPtr, RECT *rect, int arr
     /* now figure out if we need a space away from the buddy */
     if (IsWindow(infoPtr->Buddy) ) {
 	if (infoPtr->dwStyle & UDS_ALIGNLEFT) rect->right -= spacer;
-	else rect->left += spacer;
+	else if (infoPtr->dwStyle & UDS_ALIGNRIGHT) rect->left += spacer;
     }
 
     /*
@@ -309,8 +309,10 @@ static BOOL UPDOWN_GetBuddyInt (UPDOWN_INFO *infoPtr)
  */
 static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
 {
-    WCHAR fmt[3] = { '%', 'd', '\0' };
-    WCHAR txt[20];
+    static const WCHAR fmt_hex[] = { '0', 'x', '%', '0', '4', 'X', 0 };
+    static const WCHAR fmt_dec_oct[] = { '%', 'd', '\0' };
+    const WCHAR *fmt;
+    WCHAR txt[20], txt_old[20] = { 0 };
     int len;
 
     if (!((infoPtr->Flags & FLAG_BUDDYINT) && IsWindow(infoPtr->Buddy)))
@@ -324,7 +326,7 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
     }
 
     /* Regular window, so set caption to the number */
-    if (infoPtr->Base == 16) fmt[1] = 'X';
+    fmt = (infoPtr->Base == 16) ? fmt_hex : fmt_dec_oct;
     len = wsprintfW(txt, fmt, infoPtr->CurVal);
 
 
@@ -344,6 +346,10 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
         }
         *dst = 0;
     }
+
+    /* if nothing changed exit earlier */
+    GetWindowTextW(infoPtr->Buddy, txt_old, sizeof(txt_old)/sizeof(WCHAR));
+    if (lstrcmpiW(txt_old, txt) == 0) return 0;
 
     return SetWindowTextW(infoPtr->Buddy, txt);
 }
@@ -518,14 +524,13 @@ static LRESULT UPDOWN_MouseWheel(UPDOWN_INFO *infoPtr, WPARAM wParam)
  *                           control.
  */
 static LRESULT CALLBACK
-UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+UPDOWN_Buddy_SubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                          UINT_PTR uId, DWORD_PTR ref_data)
 {
-    WNDPROC superClassWndProc = (WNDPROC)GetPropW(hwnd, BUDDY_SUPERCLASS_WNDPROC);
-    HWND upDownHwnd = GetPropW(hwnd, BUDDY_UPDOWN_HWND);
-    UPDOWN_INFO *infoPtr = UPDOWN_GetInfoPtr(upDownHwnd);
+    UPDOWN_INFO *infoPtr = UPDOWN_GetInfoPtr((HWND)ref_data);
 
-    TRACE("hwnd=%p, wndProc=%p, uMsg=%04x, wParam=%08lx, lParam=%08lx\n",
-          hwnd, superClassWndProc, uMsg, wParam, lParam);
+    TRACE("hwnd=%p, uMsg=%04x, wParam=%08lx, lParam=%08lx\n",
+          hwnd, uMsg, wParam, lParam);
 
     switch(uMsg)
     {
@@ -542,7 +547,7 @@ UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	break;
     }
 
-    return CallWindowProcW( superClassWndProc, hwnd, uMsg, wParam, lParam);
+    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 }
 
 /***********************************************************************
@@ -550,7 +555,7 @@ UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
  *
  * Sets bud as a new Buddy.
  * Then, it should subclass the buddy
- * If window has the UDS_ARROWKEYS, it subcalsses the buddy window to
+ * If window has the UDS_ARROWKEYS, it subclasses the buddy window to
  * process the UP/DOWN arrow keys.
  * If window has the UDS_ALIGNLEFT or UDS_ALIGNRIGHT style
  * the size/pos of the buddy and the control are adjusted accordingly.
@@ -559,7 +564,6 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
 {
     RECT  budRect;  /* new coord for the buddy */
     int   x, width;  /* new x position and width for the up-down */
-    WNDPROC baseWndProc;
     WCHAR buddyClass[40];
     HWND ret;
 
@@ -567,20 +571,15 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
 
     ret = infoPtr->Buddy;
 
-    /* there is already a body assigned */
-    if (infoPtr->Buddy)  RemovePropW(infoPtr->Buddy, BUDDY_UPDOWN_HWND);
-
-    if(!IsWindow(bud))
-        bud = 0;
+    /* there is already a buddy assigned */
+    if (infoPtr->Buddy) RemoveWindowSubclass(infoPtr->Buddy, UPDOWN_Buddy_SubclassProc,
+                                             BUDDY_SUBCLASSID);
+    if (!IsWindow(bud)) bud = NULL;
 
     /* Store buddy window handle */
     infoPtr->Buddy = bud;
 
     if(bud) {
-
-        /* keep upDown ctrl hwnd in a buddy property */
-        SetPropW( bud, BUDDY_UPDOWN_HWND, infoPtr->Self);
-
         /* Store buddy window class type */
         infoPtr->BuddyType = BUDDY_TYPE_UNKNOWN;
         if (GetClassNameW(bud, buddyClass, COUNT_OF(buddyClass))) {
@@ -590,15 +589,9 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
                 infoPtr->BuddyType = BUDDY_TYPE_LISTBOX;
         }
 
-        if (infoPtr->dwStyle & UDS_ARROWKEYS) {
-            /* Note that I don't clear the BUDDY_SUPERCLASS_WNDPROC property
-               when we reset the upDown ctrl buddy to another buddy because it is not
-               good to break the window proc chain. */
-            if (!GetPropW(bud, BUDDY_SUPERCLASS_WNDPROC)) {
-                baseWndProc = (WNDPROC)SetWindowLongPtrW(bud, GWLP_WNDPROC, (LPARAM)UPDOWN_Buddy_SubclassProc);
-                SetPropW(bud, BUDDY_SUPERCLASS_WNDPROC, baseWndProc);
-            }
-        }
+        if (infoPtr->dwStyle & UDS_ARROWKEYS)
+            SetWindowSubclass(bud, UPDOWN_Buddy_SubclassProc, BUDDY_SUBCLASSID,
+                              (DWORD_PTR)infoPtr->Self);
 
         /* Get the rect of the buddy relative to its parent */
         GetWindowRect(infoPtr->Buddy, &budRect);
@@ -659,7 +652,7 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
  * 'delta' amount according to the 'action' flag which can be a
  * combination of FLAG_INCR and FLAG_DECR
  * It notifies the parent as required.
- * It handles wraping and non-wraping correctly.
+ * It handles wrapping and non-wrapping correctly.
  * It is assumed that delta>0
  */
 static void UPDOWN_DoAction (UPDOWN_INFO *infoPtr, int delta, int action)
@@ -854,13 +847,16 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
     switch(message)
     {
         case WM_CREATE:
+	    {
+	    CREATESTRUCTW *pcs = (CREATESTRUCTW*)lParam;
+
             infoPtr = Alloc (sizeof(UPDOWN_INFO));
 	    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
 	    /* initialize the info struct */
 	    infoPtr->Self = hwnd;
-	    infoPtr->Notify = ((LPCREATESTRUCTW)lParam)->hwndParent;
-            infoPtr->dwStyle = ((LPCREATESTRUCTW)lParam)->style;
+	    infoPtr->Notify  = pcs->hwndParent;
+	    infoPtr->dwStyle = pcs->style;
 	    infoPtr->AccelCount = 0;
 	    infoPtr->AccelVect = 0;
 	    infoPtr->AccelIndex = -1;
@@ -872,21 +868,26 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    infoPtr->Flags = (infoPtr->dwStyle & UDS_SETBUDDYINT) ? FLAG_BUDDYINT : 0;
 
             SetWindowLongW (hwnd, GWL_STYLE, infoPtr->dwStyle & ~WS_BORDER);
+	    if (!(infoPtr->dwStyle & UDS_HORZ))
+	        SetWindowPos (hwnd, NULL, 0, 0, DEFAULT_WIDTH, pcs->cy,
+	                      SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOMOVE);
 
             /* Do we pick the buddy win ourselves? */
 	    if (infoPtr->dwStyle & UDS_AUTOBUDDY)
 		UPDOWN_SetBuddy (infoPtr, GetWindow (hwnd, GW_HWNDPREV));
 
-            OpenThemeData (hwnd, themeClass);
+	    OpenThemeData (hwnd, themeClass);
 
 	    TRACE("UpDown Ctrl creation, hwnd=%p\n", hwnd);
+	    }
 	    break;
 
 	case WM_DESTROY:
 	    Free (infoPtr->AccelVect);
 
-	    if(infoPtr->Buddy) RemovePropW(infoPtr->Buddy, BUDDY_UPDOWN_HWND);
-
+	    if (infoPtr->Buddy)
+	       RemoveWindowSubclass(infoPtr->Buddy, UPDOWN_Buddy_SubclassProc,
+	                            BUDDY_SUBCLASSID);
 	    Free (infoPtr);
 	    SetWindowLongPtrW (hwnd, 0, 0);
             theme = GetWindowTheme (hwnd);

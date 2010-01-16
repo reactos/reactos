@@ -374,8 +374,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	dis.rcItem     = phdi->rect;
 	dis.itemData   = phdi->lParam;
         oldBkMode = SetBkMode(hdc, TRANSPARENT);
-	SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM,
-			(WPARAM)dis.CtlID, (LPARAM)&dis);
+        SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
         if (oldBkMode != TRANSPARENT)
             SetBkMode(hdc, oldBkMode);
     }
@@ -1748,7 +1747,7 @@ HEADER_NotifyFormat (HEADER_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	case NF_REQUERY:
 	    infoPtr->nNotifyFormat =
 		SendMessageW ((HWND)wParam, WM_NOTIFYFORMAT,
-			      (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
+                             (WPARAM)infoPtr->hwndSelf, NF_QUERY);
 	    return infoPtr->nNotifyFormat;
     }
 

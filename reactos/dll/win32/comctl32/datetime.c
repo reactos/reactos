@@ -1360,8 +1360,31 @@ DATETIME_Destroy (DATETIME_INFO *infoPtr)
     if (infoPtr->hMonthCal) 
         DestroyWindow(infoPtr->hMonthCal);
     SetWindowLongPtrW( infoPtr->hwndSelf, 0, 0 ); /* clear infoPtr */
+    Free (infoPtr->buflen);
+    Free (infoPtr->fieldRect);
+    Free (infoPtr->fieldspec);
     Free (infoPtr);
     return 0;
+}
+
+
+static INT
+DATETIME_GetText (DATETIME_INFO *infoPtr, INT count, LPWSTR dst)
+{
+    WCHAR buf[80];
+    int i;
+
+    if (!dst || (count <= 0)) return 0;
+
+    dst[0] = 0;
+    for (i = 0; i < infoPtr->nrFields; i++)
+    {
+        DATETIME_ReturnTxt(infoPtr, i, buf, sizeof(buf)/sizeof(buf[0]));
+        if ((strlenW(dst) + strlenW(buf)) < count)
+            strcatW(dst, buf);
+        else break;
+    }
+    return strlenW(dst);
 }
 
 
@@ -1475,6 +1498,9 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_GETFONT:
         return (LRESULT) infoPtr->hFont;
+
+    case WM_GETTEXT:
+        return (LRESULT) DATETIME_GetText(infoPtr, wParam, (LPWSTR)lParam);
 
     case WM_SETTEXT:
         return CB_ERR;

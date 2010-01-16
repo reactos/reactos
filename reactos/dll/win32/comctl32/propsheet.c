@@ -1197,7 +1197,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
     }
 
     item.pszText = (LPWSTR) psInfo->proppage[i].pszText;
-    SendMessageW(hwndTabCtrl, TCM_INSERTITEMW, (WPARAM)i, (LPARAM)&item);
+    SendMessageW(hwndTabCtrl, TCM_INSERTITEMW, i, (LPARAM)&item);
   }
   SendMessageW(GetDlgItem(hwndTabCtrl, IDC_TABCONTROL), WM_SETREDRAW, 1, 0);
 

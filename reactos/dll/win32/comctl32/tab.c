@@ -247,16 +247,17 @@ static inline LRESULT TAB_SetCurSel (TAB_INFO *infoPtr, INT iItem)
   TRACE("(%p %d)\n", infoPtr, iItem);
 
   if (iItem < 0)
-      infoPtr->iSelected=-1;
+      infoPtr->iSelected = -1;
   else if (iItem >= infoPtr->uNumItem)
       return -1;
   else {
-      if (infoPtr->iSelected != iItem) {
-          TAB_GetItem(infoPtr, prevItem)->dwState &= ~TCIS_BUTTONPRESSED;
+      if (prevItem != iItem) {
+          if (prevItem != -1)
+              TAB_GetItem(infoPtr, prevItem)->dwState &= ~TCIS_BUTTONPRESSED;
           TAB_GetItem(infoPtr, iItem)->dwState |= TCIS_BUTTONPRESSED;
 
-          infoPtr->iSelected=iItem;
-          infoPtr->uFocus=iItem;
+          infoPtr->iSelected = iItem;
+          infoPtr->uFocus = iItem;
           TAB_EnsureSelectionVisible(infoPtr);
           TAB_InvalidateTabArea(infoPtr);
       }
@@ -268,8 +269,14 @@ static LRESULT TAB_SetCurFocus (TAB_INFO *infoPtr, INT iItem)
 {
   TRACE("(%p %d)\n", infoPtr, iItem);
 
-  if (iItem < 0)
+  if (iItem < 0) {
       infoPtr->uFocus = -1;
+      if (infoPtr->iSelected != -1) {
+          infoPtr->iSelected = -1;
+          TAB_SendSimpleNotify(infoPtr, TCN_SELCHANGE);
+          TAB_InvalidateTabArea(infoPtr);
+      }
+  }
   else if (iItem < infoPtr->uNumItem) {
     if (infoPtr->dwStyle & TCS_BUTTONS) {
       /* set focus to new item, leave selection as is */
@@ -1757,7 +1764,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
     /*
      * send the draw message
      */
-    SendMessageW( infoPtr->hwndNotify, WM_DRAWITEM, (WPARAM)id, (LPARAM)&dis );
+    SendMessageW( infoPtr->hwndNotify, WM_DRAWITEM, id, (LPARAM)&dis );
   }
   else
   {
@@ -2915,10 +2922,9 @@ static LRESULT TAB_DeleteItem (TAB_INFO *infoPtr, INT iItem)
 	Free(oldItems);
 
 	/* Readjust the selected index */
-	if ((iItem == infoPtr->iSelected) && (iItem > 0))
-	    infoPtr->iSelected--;
-
-	if (iItem < infoPtr->iSelected)
+	if (iItem == infoPtr->iSelected)
+	    infoPtr->iSelected = -1;
+	else if (iItem < infoPtr->iSelected)
 	    infoPtr->iSelected--;
 
 	if (infoPtr->uNumItem == 0)
@@ -3094,7 +3100,7 @@ static LRESULT TAB_Create (HWND hwnd, LPARAM lParam)
       nmttc.hwndToolTips = infoPtr->hwndToolTip;
 
       SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
-		    (WPARAM)GetWindowLongPtrW(hwnd, GWLP_ID), (LPARAM)&nmttc);
+                    GetWindowLongPtrW(hwnd, GWLP_ID), (LPARAM)&nmttc);
     }
   }
 

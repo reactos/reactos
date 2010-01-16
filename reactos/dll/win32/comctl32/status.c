@@ -233,7 +233,7 @@ STATUSBAR_DrawPart (const STATUS_INFO *infoPtr, HDC hdc, const STATUSWINDOWPART 
 	dis.hDC = hdc;
 	dis.rcItem = r;
 	dis.itemData = (ULONG_PTR)part->text;
-	SendMessageW (infoPtr->Notify, WM_DRAWITEM, (WPARAM)dis.CtlID, (LPARAM)&dis);
+       SendMessageW (infoPtr->Notify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
     } else {
 	if (part->hIcon) {
 	   INT cy = r.bottom - r.top;

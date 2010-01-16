@@ -1072,8 +1072,8 @@ TOOLTIPS_AddToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
 	TRACE("subclassing installed!\n");
     }
 
-    nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
-				  (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
+    nResult = SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
+                            (WPARAM)infoPtr->hwndSelf, NF_QUERY);
     if (nResult == NFR_ANSI) {
         toolPtr->bNotifyUnicode = FALSE;
 	TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
