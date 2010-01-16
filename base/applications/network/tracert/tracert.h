@@ -50,20 +50,11 @@ typedef struct ICMPHeader
     USHORT seq; // not used in time exceeded
 } ICMP_HEADER, *PICMP_HEADER;
 
-/* ICMP Echo Reply Header, 12 bytes */
+/* ICMP Echo Reply Header */
 typedef struct EchoReplyHeader
 {
-    struct timeval timestamp;
     struct ICMPHeader icmpheader;
 } ECHO_REPLY_HEADER, *PECHO_REPLY_HEADER;
-
-/* ICMP Echo Reply Header, 12 bytes */
-typedef struct TTLExceedHeader
-{
-    struct ICMPHeader icmpheader;
-    struct IPv4Header ipheader;
-    struct ICMPHeader OrigIcmpHeader;
-} TTL_EXCEED_HEADER, *PTTL_EXCEED_HEADER;
 
 #include <poppack.h>
 
