@@ -135,15 +135,18 @@ static inline int notify (const TRACKBAR_INFO *infoPtr, INT code)
     return notify_hdr(infoPtr, code, &nmh);
 }
 
-static void notify_with_scroll (const TRACKBAR_INFO *infoPtr, UINT code)
+static BOOL
+notify_with_scroll (const TRACKBAR_INFO *infoPtr, UINT code)
 {
-    UINT scroll = infoPtr->dwStyle & TBS_VERT ? WM_VSCROLL : WM_HSCROLL;
+    BOOL bVert = infoPtr->dwStyle & TBS_VERT;
 
     TRACE("%x\n", code);
 
-    SendMessageW (infoPtr->hwndNotify, scroll, code, (LPARAM)infoPtr->hwndSelf);
+    return (BOOL) SendMessageW (infoPtr->hwndNotify,
+                                bVert ? WM_VSCROLL : WM_HSCROLL,
+				(WPARAM)code, (LPARAM)infoPtr->hwndSelf);
 }
-
+    
 static void TRACKBAR_RecalculateTics (TRACKBAR_INFO *infoPtr)
 {
     int tic;

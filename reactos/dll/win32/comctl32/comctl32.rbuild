@@ -46,7 +46,6 @@
 	<file>updown.c</file>
 	<file>rsrc.rc</file>
 	<library>wine</library>
-	<library>uuid</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
