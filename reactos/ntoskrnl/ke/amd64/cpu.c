@@ -33,8 +33,6 @@ ULONG KeProcessorRevision;
 ULONG KeFeatureBits;
 ULONG KeI386MachineType;
 ULONG KeI386NpxPresent = 1;
-ULONG KeI386XMMIPresent = 0;
-ULONG KeI386FxsrPresent = 0;
 ULONG KeLargestCacheLine = 0x40;
 ULONG KiDmaIoCoherency = 0;
 CHAR KeNumberProcessors = 0;
@@ -127,26 +125,15 @@ KiGetCpuVendor(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     INT Vendor[5];
-    ULONG Temp;
-
-    /* Assume no Vendor ID and fail if no CPUID Support. */
-    Prcb->VendorString[0] = 0;
-    if (!Prcb->CpuID) return 0;
 
     /* Get the Vendor ID and null-terminate it */
     __cpuid(Vendor, 0);
-    Vendor[4] = 0;
 
-    /* Re-arrange vendor string */
-    Temp = Vendor[2];
-    Vendor[2] = Vendor[3];
-    Vendor[3] = Temp;
-
-    /* Copy it to the PRCB and null-terminate it again */
-    RtlCopyMemory(Prcb->VendorString,
-                  &Vendor[1],
-                  sizeof(Prcb->VendorString) - sizeof(CHAR));
-    Prcb->VendorString[sizeof(Prcb->VendorString) - sizeof(CHAR)] = ANSI_NULL;
+    /* Copy it to the PRCB and null-terminate it */
+    *(ULONG*)&Prcb->VendorString[0] = Vendor[1]; // ebx
+    *(ULONG*)&Prcb->VendorString[4] = Vendor[3]; // edx
+    *(ULONG*)&Prcb->VendorString[8] = Vendor[2]; // ecx
+    *(ULONG*)&Prcb->VendorString[12] = 0;
 
     /* Now check the CPU Type */
     if (!strcmp((PCHAR)Prcb->VendorString, CmpIntelID))
@@ -223,6 +210,15 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
     if (CpuFeatures & 0x04000000) FeatureBits |= KF_XMMI64;
 
+#if 0
+    if (Reg[2] & 0x00000001) FeatureBits |= KF_SSE3NEW;
+    if (Reg[2] & 0x00000008) FeatureBits |= KF_MONITOR;
+    if (Reg[2] & 0x00000200) FeatureBits |= KF_SSE3SUP;
+    if (Reg[2] & 0x00002000) FeatureBits |= KF_CMPXCHG16B;
+    if (Reg[2] & 0x00080000) FeatureBits |= KF_SSE41;
+    if (Reg[2] & 0x00800000) FeatureBits |= KF_POPCNT;
+#endif
+
     /* Check if the CPU has hyper-threading */
     if (CpuFeatures & 0x10000000)
     {
@@ -265,18 +261,6 @@ KiGetFeatureBits(VOID)
 
     /* Return the Feature Bits */
     return FeatureBits;
-}
-
-VOID
-NTAPI
-KiInitializeCpuFeatures()
-{
-    /* Enable Write-Protection */
-    __writecr0(__readcr0() | CR0_WP);
-
-    /* Disable fpu monitoring */
-    __writecr0(__readcr0() & ~CR0_MP);
-
 }
 
 VOID

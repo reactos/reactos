@@ -36,19 +36,6 @@ VOID
 NTAPI
 KiInitMachineDependent(VOID)
 {
-#if 0
-    ULONG Protect;
-    ULONG CpuCount;
-    BOOLEAN FbCaching = FALSE;
-    NTSTATUS Status;
-    ULONG ReturnLength;
-    ULONG i, Affinity, Sample = 0;
-    PFX_SAVE_AREA FxSaveArea;
-    ULONG MXCsrMask = 0xFFBF;
-    ULONG Dummy[4];
-    KI_SAMPLE_MAP Samples[4];
-    PKI_SAMPLE_MAP CurrentSample = Samples;
-
     /* Check for large page support */
     if (KeFeatureBits & KF_LARGE_PAGE)
     {
@@ -59,274 +46,25 @@ KiInitMachineDependent(VOID)
     /* Check for global page support */
     if (KeFeatureBits & KF_GLOBAL_PAGE)
     {
-        /* Do an IPI to enable it on all CPUs */
-        CpuCount = KeNumberProcessors;
-        KeIpiGenericCall(Ki386EnableGlobalPage, (ULONG_PTR)&CpuCount);
+        /* FIXME: Support this */
+        DPRINT1("Global Page support detected but not yet taken advantage of!\n");
+    }
+
+    /* Check if we have MTRR */
+    if (KeFeatureBits & KF_MTRR)
+    {
+        /* FIXME: Support this */
+        DPRINT1("MTRR support detected but not yet taken advantage of!\n");
     }
 
     /* Check for PAT and/or MTRR support */
-    if (KeFeatureBits & (KF_PAT | KF_MTRR))
+    if (KeFeatureBits & KF_PAT)
     {
-        /* Query the HAL to make sure we can use it */
-        Status = HalQuerySystemInformation(HalFrameBufferCachingInformation,
-                                           sizeof(BOOLEAN),
-                                           &FbCaching,
-                                           &ReturnLength);
-        if ((NT_SUCCESS(Status)) && (FbCaching))
-        {
-            /* We can't, disable it */
-            KeFeatureBits &= ~(KF_PAT | KF_MTRR);
-        }
+        /* FIXME: Support this */
+        DPRINT1("PAT support detected but not yet taken advantage of!\n");
     }
 
-    /* Check for PAT support and enable it */
-    if (KeFeatureBits & KF_PAT) KiInitializePAT();
 
-    /* Assume no errata for now */
-    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = 0;
-
-    /* Check if we have an NPX */
-    if (KeI386NpxPresent)
-    {
-        /* Loop every CPU */
-        i = KeActiveProcessors;
-        for (Affinity = 1; i; Affinity <<= 1)
-        {
-            /* Check if this is part of the set */
-            if (i & Affinity)
-            {
-                /* Run on this CPU */
-                i &= ~Affinity;
-                KeSetSystemAffinityThread(Affinity);
-
-                /* Detect FPU errata */
-                if (KiIsNpxErrataPresent())
-                {
-                    /* Disable NPX support */
-                    KeI386NpxPresent = FALSE;
-                    SharedUserData->
-                        ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] =
-                        TRUE;
-                    break;
-                }
-            }
-        }
-    }
-
-    /* If there's no NPX, then we're emulating the FPU */
-    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] =
-        !KeI386NpxPresent;
-
-    /* Check if there's no NPX, so that we can disable associated features */
-    if (!KeI386NpxPresent)
-    {
-        /* Remove NPX-related bits */
-        KeFeatureBits &= ~(KF_XMMI64 | KF_XMMI | KF_FXSR | KF_MMX);
-
-        /* Disable kernel flags */
-        KeI386FxsrPresent = KeI386XMMIPresent = FALSE;
-
-        /* Disable processor features that might've been set until now */
-        SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] =
-        SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE]   =
-        SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE]     =
-        SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE]    =
-        SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] = 0;
-    }
-
-    /* Check for CR4 support */
-    if (KeFeatureBits & KF_CR4)
-    {
-        /* Do an IPI call to enable the Debug Exceptions */
-        CpuCount = KeNumberProcessors;
-        KeIpiGenericCall(Ki386EnableDE, (ULONG_PTR)&CpuCount);
-    }
-
-    /* Check if FXSR was found */
-    if (KeFeatureBits & KF_FXSR)
-    {
-        /* Do an IPI call to enable the FXSR */
-        CpuCount = KeNumberProcessors;
-        KeIpiGenericCall(Ki386EnableFxsr, (ULONG_PTR)&CpuCount);
-
-        /* Check if XMM was found too */
-        if (KeFeatureBits & KF_XMMI)
-        {
-            /* Do an IPI call to enable XMMI exceptions */
-            CpuCount = KeNumberProcessors;
-            KeIpiGenericCall(Ki386EnableXMMIExceptions, (ULONG_PTR)&CpuCount);
-
-            /* FIXME: Implement and enable XMM Page Zeroing for Mm */
-
-            /* Patch the RtlPrefetchMemoryNonTemporal routine to enable it */
-            Protect = MmGetPageProtect(NULL, RtlPrefetchMemoryNonTemporal);
-            MmSetPageProtect(NULL,
-                             RtlPrefetchMemoryNonTemporal,
-                             Protect | PAGE_IS_WRITABLE);
-            *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
-            MmSetPageProtect(NULL, RtlPrefetchMemoryNonTemporal, Protect);
-        }
-    }
-
-    /* Check for, and enable SYSENTER support */
-    KiRestoreFastSyscallReturnState();
-
-    /* Loop every CPU */
-    i = KeActiveProcessors;
-    for (Affinity = 1; i; Affinity <<= 1)
-    {
-        /* Check if this is part of the set */
-        if (i & Affinity)
-        {
-            /* Run on this CPU */
-            i &= ~Affinity;
-            KeSetSystemAffinityThread(Affinity);
-
-            /* Reset MHz to 0 for this CPU */
-            KeGetCurrentPrcb()->MHz = 0;
-
-            /* Check if we can use RDTSC */
-            if (KeFeatureBits & KF_RDTSC)
-            {
-                /* Start sampling loop */
-                for (;;)
-                {
-                    /* Do a dummy CPUID to start the sample */
-                    CPUID(Dummy, 0);
-
-                    /* Fill out the starting data */
-                    CurrentSample->PerfStart = KeQueryPerformanceCounter(NULL);
-                    CurrentSample->TSCStart = __rdtsc();
-                    CurrentSample->PerfFreq.QuadPart = -50000;
-
-                    /* Sleep for this sample */
-                    KeDelayExecutionThread(KernelMode,
-                                           FALSE,
-                                           &CurrentSample->PerfFreq);
-
-                    /* Do another dummy CPUID */
-                    CPUID(Dummy, 0);
-
-                    /* Fill out the ending data */
-                    CurrentSample->PerfEnd =
-                        KeQueryPerformanceCounter(&CurrentSample->PerfFreq);
-                    CurrentSample->TSCEnd = __rdtsc();
-
-                    /* Calculate the differences */
-                    CurrentSample->PerfDelta = CurrentSample->PerfEnd.QuadPart -
-                                               CurrentSample->PerfStart.QuadPart;
-                    CurrentSample->TSCDelta = CurrentSample->TSCEnd -
-                                              CurrentSample->TSCStart;
-
-                    /* Compute CPU Speed */
-                    CurrentSample->MHz = (ULONG)((CurrentSample->TSCDelta *
-                                                  CurrentSample->
-                                                  PerfFreq.QuadPart + 500000) /
-                                                 (CurrentSample->PerfDelta *
-                                                  1000000));
-
-                    /* Check if this isn't the first sample */
-                    if (Sample)
-                    {
-                        /* Check if we got a good precision within 1MHz */
-                        if ((CurrentSample->MHz == CurrentSample[-1].MHz) ||
-                            (CurrentSample->MHz == CurrentSample[-1].MHz + 1) ||
-                            (CurrentSample->MHz == CurrentSample[-1].MHz - 1))
-                        {
-                            /* We did, stop sampling */
-                            break;
-                        }
-                    }
-
-                    /* Move on */
-                    CurrentSample++;
-                    Sample++;
-
-                    if (Sample == sizeof(Samples) / sizeof(Samples[0]))
-                    {
-                        /* Restart */
-                        CurrentSample = Samples;
-                        Sample = 0;
-                    }
-                }
-
-                /* Save the CPU Speed */
-                KeGetCurrentPrcb()->MHz = CurrentSample[-1].MHz;
-            }
-
-            /* Check if we have MTRR */
-            if (KeFeatureBits & KF_MTRR)
-            {
-                /* Then manually initialize MTRR for the CPU */
-                KiInitializeMTRR(i ? FALSE : TRUE);
-            }
-
-            /* Check if we have AMD MTRR and initialize it for the CPU */
-            if (KeFeatureBits & KF_AMDK6MTRR) KiAmdK6InitializeMTRR();
-
-            /* Check if this is a buggy Pentium and apply the fixup if so */
-            if (KiI386PentiumLockErrataPresent) KiI386PentiumLockErrataFixup();
-
-            /* Check if the CPU supports FXSR */
-            if (KeFeatureBits & KF_FXSR)
-            {
-                /* Get the current thread NPX state */
-                FxSaveArea = (PVOID)
-                             ((ULONG_PTR)KeGetCurrentThread()->InitialStack -
-                             NPX_FRAME_LENGTH);
-
-                /* Clear initial MXCsr mask */
-                FxSaveArea->U.FxArea.MXCsrMask = 0;
-
-                /* Save the current NPX State */
-#ifdef __GNUC__
-                asm volatile("fxsave %0\n\t" : "=m" (*FxSaveArea));
-#else
-                __asm fxsave [FxSaveArea]
-#endif
-                /* Check if the current mask doesn't match the reserved bits */
-                if (FxSaveArea->U.FxArea.MXCsrMask != 0)
-                {
-                    /* Then use whatever it's holding */
-                    MXCsrMask = FxSaveArea->U.FxArea.MXCsrMask;
-                }
-
-                /* Check if nobody set the kernel-wide mask */
-                if (!KiMXCsrMask)
-                {
-                    /* Then use the one we calculated above */
-                    KiMXCsrMask = MXCsrMask;
-                }
-                else
-                {
-                    /* Was it set to the same value we found now? */
-                    if (KiMXCsrMask != MXCsrMask)
-                    {
-                        /* No, something is definitely wrong */
-                        KEBUGCHECKEX(MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED,
-                                     KF_FXSR,
-                                     KiMXCsrMask,
-                                     MXCsrMask,
-                                     0);
-                    }
-                }
-
-                /* Now set the kernel mask */
-                KiMXCsrMask &= MXCsrMask;
-            }
-        }
-    }
-
-    /* Return affinity back to where it was */
-    KeRevertToUserAffinityThread();
-
-    /* NT allows limiting the duration of an ISR with a registry key */
-    if (KiTimeLimitIsrMicroseconds)
-    {
-        /* FIXME: TODO */
-        DPRINT1("ISR Time Limit not yet supported\n");
-    }
-#endif
 }
 
 VOID
@@ -407,6 +145,44 @@ KiInitializePcr(IN PKIPCR Pcr,
 
 VOID
 NTAPI
+KiInitializeCpuFeatures(ULONG Cpu)
+{
+    ULONG FeatureBits;
+
+    /* Get the processor features for this CPU */
+    FeatureBits = KiGetFeatureBits();
+
+    /* Check if we support all needed features */
+    if ((FeatureBits & REQUIRED_FEATURE_BITS) != REQUIRED_FEATURE_BITS)
+    {
+        /* If not, bugcheck system */
+        FrLdrDbgPrint("CPU doesn't have needed features! Has: 0x%x, required: 0x%x\n",
+                FeatureBits, REQUIRED_FEATURE_BITS);
+        KeBugCheck(0);
+    }
+
+    /* Set DEP to always on */
+    SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
+    FeatureBits |= KF_NX_ENABLED;
+
+    /* Save feature bits */
+    KeGetCurrentPrcb()->FeatureBits = FeatureBits;
+
+    /* Enable fx save restore support */
+    __writecr4(__readcr4() | CR4_FXSR);
+
+    /* Enable XMMI exceptions */
+    __writecr4(__readcr4() | CR4_XMMEXCPT);
+
+    /* Enable Write-Protection */
+    __writecr0(__readcr0() | CR0_WP);
+
+    /* Disable fpu monitoring */
+    __writecr0(__readcr0() & ~CR0_MP);
+}
+
+VOID
+NTAPI
 KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKTHREAD InitThread,
                    IN PVOID IdleStack,
@@ -414,7 +190,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN CCHAR Number,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG FeatureBits;
     ULONG PageDirectory[2];
     PVOID DpcStack;
 
@@ -423,54 +198,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Initialize the Power Management Support for this PRCB */
 //    PoInitializePrcb(Prcb);
-
-    /* Get the processor features for the CPU */
-    FeatureBits = KiGetFeatureBits();
-
-    /* Check if we support all needed features */
-    if ((FeatureBits & REQUIRED_FEATURE_BITS) != REQUIRED_FEATURE_BITS)
-    {
-        /* If not, bugcheck system */
-        DPRINT1("CPU doesn't have needed features! Has: 0x%x, required: 0x%x\n",
-                FeatureBits, REQUIRED_FEATURE_BITS);
-        KeBugCheck(0);
-    }
-
-    /* Set the default NX policy (opt-in) */
-    SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
-
-    /* Check if NPX is always on */
-    if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSON"))
-    {
-        /* Set it always on */
-        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
-        FeatureBits |= KF_NX_ENABLED;
-    }
-    else if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTOUT"))
-    {
-        /* Set it in opt-out mode */
-        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTOUT;
-        FeatureBits |= KF_NX_ENABLED;
-    }
-    else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTIN")) ||
-             (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE")))
-    {
-        /* Set the feature bits */
-        FeatureBits |= KF_NX_ENABLED;
-    }
-    else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSOFF")) ||
-             (strstr(KeLoaderBlock->LoadOptions, "EXECUTE")))
-    {
-        /* Set disabled mode */
-        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
-        FeatureBits |= KF_NX_DISABLED;
-    }
-
-    /* Save feature bits */
-    Prcb->FeatureBits = FeatureBits;
-
-    /* Initialize the CPU features */
-    KiInitializeCpuFeatures();
 
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
@@ -490,15 +217,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
 
         /* Set boot-level flags */
-        KeI386NpxPresent = TRUE;
-        KeI386CpuType = Prcb->CpuType;
-        KeI386CpuStep = Prcb->CpuStep;
-        KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
+        KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64;
         KeProcessorLevel = (USHORT)Prcb->CpuType;
         if (Prcb->CpuID) KeProcessorRevision = Prcb->CpuStep;
-        KeFeatureBits = FeatureBits;
-        KeI386FxsrPresent = (KeFeatureBits & KF_FXSR) ? TRUE : FALSE;
-        KeI386XMMIPresent = (KeFeatureBits & KF_XMMI) ? TRUE : FALSE;
 
         /* Set the current MP Master KPRCB to the Boot PRCB */
         Prcb->MultiThreadSetMaster = Prcb;
@@ -646,10 +367,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeLoaderBlock = LoaderBlock;
 
     /* Get the current CPU number */
-    Cpu = KeNumberProcessors++;
-
-    /* Set active processors */
-    KeActiveProcessors |= 1 << Cpu;
+    Cpu = KeNumberProcessors++; // FIXME
 
     /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)
@@ -677,10 +395,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
 
     /* LDT is unused */
-//    __lldt(0);
-
-    /* Enable fx save restore support */
-    __writecr4(__readcr4() | CR4_FXSR);
+    __lldt(0);
 
     /* Align stack to 16 bytes */
     LoaderBlock->KernelStack &= ~(16 - 1);
@@ -697,6 +412,9 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Initialize the PCR */
     KiInitializePcr(Pcr, Cpu, InitialThread, KiDoubleFaultStack);
+
+    /* Initialize the CPU features */
+    KiInitializeCpuFeatures(Cpu);
 
     /* Initial setup for the boot CPU */
     if (Cpu == 0)
@@ -721,21 +439,26 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         while (!KdPollBreakIn());
         DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 #endif
-
     }
 
     DPRINT("Pcr = %p, Gdt = %p, Idt = %p, Tss = %p\n",
            Pcr, Pcr->GdtBase, Pcr->IdtBase, Pcr->TssBase);
 
+    /* Acquire lock */
+    while (InterlockedBitTestAndSet64((PLONG64)&KiFreezeExecutionLock, 0))
+    {
+        /* Loop until lock is free */
+        while ((*(volatile KSPIN_LOCK*)&KiFreezeExecutionLock) & 1);
+    } 
+
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
 
-    /* Loop until we can release the freeze lock */
-    do
-    {
-        /* Loop until execution can continue */
-        while (*(volatile PKSPIN_LOCK*)&KiFreezeExecutionLock == (PVOID)1);
-    } while(InterlockedBitTestAndSet64((PLONG64)&KiFreezeExecutionLock, 0));
+    /* Set processor as active */
+    KeActiveProcessors |= 1 << Cpu;
+
+    /* Release lock */
+    InterlockedAnd64((PLONG64)&KiFreezeExecutionLock, 0);
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);

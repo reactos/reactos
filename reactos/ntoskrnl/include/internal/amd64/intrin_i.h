@@ -72,9 +72,9 @@ static __inline__ __attribute__((always_inline)) void __sgdt(void *Destination)
 	__asm__ __volatile__("sgdt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __lldt(void *Source)
+static __inline__ __attribute__((always_inline)) void __lldt(unsigned short Value)
 {
-	__asm__ __volatile__("lldt %0" : : "m"(*(short*)Source));
+	__asm__ __volatile__("lldt %0" : : "rm"(Value));
 }
 
 static __inline__ __attribute__((always_inline)) void __sldt(void *Destination)
