@@ -302,7 +302,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
 	AFD_DbgPrint(MID_TRACE,("Completing connect %x\n", NextIrp));
 	NextIrp->IoStatus.Status = Status;
-	NextIrp->IoStatus.Information = 0;
+	NextIrp->IoStatus.Information = NT_SUCCESS(Status) ? ((ULONG_PTR)FCB->Connection.Handle) : 0;
 	if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
         (void)IoSetCancelRoutine(NextIrp, NULL);
 	IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );

@@ -426,6 +426,22 @@ WSPCloseSocket(IN SOCKET Handle,
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
 
+    if (Socket->HelperEvents & WSH_NOTIFY_CLOSE)
+    {
+        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                               Socket->Handle,
+                                               Socket->TdiAddressHandle,
+                                               Socket->TdiConnectionHandle,
+                                               WSH_NOTIFY_CLOSE);
+
+        if (Status)
+        {
+            if (lpErrno) *lpErrno = Status;
+            NtClose(SockEvent);
+            return SOCKET_ERROR;
+        }
+    }
+
     /* If a Close is already in Process, give up */
     if (Socket->SharedData.State == SocketClosed)
     {
@@ -517,11 +533,10 @@ WSPCloseSocket(IN SOCKET Handle,
             if (Status == STATUS_PENDING)
             {
                 WaitForSingleObject(SockEvent, INFINITE);
+                Status = IoStatusBlock.Status;
             }
         }
     }
-
-    /* FIXME: We should notify the Helper DLL of WSH_NOTIFY_CLOSE */
 
     /* Cleanup Time! */
     Socket->HelperContext = NULL;
@@ -635,6 +650,21 @@ WSPBind(SOCKET Handle,
 
     NtClose( SockEvent );
 
+    if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_BIND))
+    {
+        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                               Socket->Handle,
+                                               Socket->TdiAddressHandle,
+                                               Socket->TdiConnectionHandle,
+                                               WSH_NOTIFY_BIND);
+
+        if (Status)
+        {
+            if (lpErrno) *lpErrno = Status;
+            return SOCKET_ERROR;
+        }
+    }
+
     return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 }
 
@@ -693,6 +723,21 @@ WSPListen(SOCKET Handle,
     Socket->SharedData.Listening = TRUE;
 
     NtClose( SockEvent );
+
+    if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_LISTEN))
+    {
+        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                               Socket->Handle,
+                                               Socket->TdiAddressHandle,
+                                               Socket->TdiConnectionHandle,
+                                               WSH_NOTIFY_LISTEN);
+
+        if (Status)
+        {
+           if (lpErrno) *lpErrno = Status;
+           return SOCKET_ERROR;
+        }
+    }
 
     return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 }
@@ -1277,6 +1322,21 @@ WSPAccept(SOCKET Handle,
 
     AFD_DbgPrint(MID_TRACE,("Socket %x\n", AcceptSocket));
 
+    if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_ACCEPT))
+    {
+        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                               Socket->Handle,
+                                               Socket->TdiAddressHandle,
+                                               Socket->TdiConnectionHandle,
+                                               WSH_NOTIFY_ACCEPT);
+
+        if (Status)
+        {
+            if (lpErrno) *lpErrno = Status;
+            return INVALID_SOCKET;
+        }
+    }
+
     *lpErrno = 0;
 
     /* Return Socket */
@@ -1433,6 +1493,8 @@ WSPConnect(SOCKET Handle,
         Status = IOSB.Status;
     }
 
+    Socket->TdiConnectionHandle = (HANDLE)IOSB.Information;
+
     /* Get any pending connect data */
     if (lpCalleeData != NULL)
     {
@@ -1463,6 +1525,35 @@ WSPConnect(SOCKET Handle,
     AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
     NtClose( SockEvent );
+
+    if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_CONNECT))
+    {
+        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                               Socket->Handle,
+                                               Socket->TdiAddressHandle,
+                                               Socket->TdiConnectionHandle,
+                                               WSH_NOTIFY_CONNECT);
+
+        if (Status)
+        {
+            if (lpErrno) *lpErrno = Status;
+            return SOCKET_ERROR;
+        }
+    }
+    else if (Status != STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_CONNECT_ERROR))
+    {
+        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                               Socket->Handle,
+                                               Socket->TdiAddressHandle,
+                                               Socket->TdiConnectionHandle,
+                                               WSH_NOTIFY_CONNECT_ERROR);
+
+        if (Status)
+        {
+            if (lpErrno) *lpErrno = Status;
+            return SOCKET_ERROR;
+        }
+    }
 
     return MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
 }
@@ -1850,11 +1941,52 @@ WSPGetSockOpt(IN SOCKET Handle,
 
         case IPPROTO_TCP: /* FIXME */
         default:
-            *lpErrno = WSAEINVAL;
-            return SOCKET_ERROR;
+            *lpErrno = Socket->HelperData->WSHGetSocketInformation(Socket->HelperContext,
+                                                                   Handle,
+                                                                   Socket->TdiAddressHandle,
+                                                                   Socket->TdiConnectionHandle,
+                                                                   Level,
+                                                                   OptionName,
+                                                                   OptionValue,
+                                                                   (LPINT)OptionLength);
+            return (*lpErrno == 0) ? 0 : SOCKET_ERROR;
     }
 }
 
+INT
+WSPAPI
+WSPSetSockOpt(
+    IN  SOCKET s,
+    IN  INT level,
+    IN  INT optname,
+    IN  CONST CHAR FAR* optval,
+    IN  INT optlen,
+    OUT LPINT lpErrno)
+{
+    PSOCKET_INFORMATION Socket;
+
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(s);
+    if (Socket == NULL)
+    {
+        *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+
+
+    /* FIXME: We should handle some cases here */
+
+
+    *lpErrno = Socket->HelperData->WSHSetSocketInformation(Socket->HelperContext,
+                                                           s,
+                                                           Socket->TdiAddressHandle,
+                                                           Socket->TdiConnectionHandle,
+                                                           level,
+                                                           optname,
+                                                           (PCHAR)optval,
+                                                           optlen);
+    return (*lpErrno == 0) ? 0 : SOCKET_ERROR;
+}
 
 /*
  * FUNCTION: Initialize service provider for a client

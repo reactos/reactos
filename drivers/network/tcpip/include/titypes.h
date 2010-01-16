@@ -136,6 +136,9 @@ typedef struct _ADDRESS_FILE {
     USHORT Protocol;                      /* Protocol number */
     USHORT Port;                          /* Network port (network byte order) */
     UCHAR TTL;                            /* Time to live stored in packets sent from this address file */
+    UINT DF;                              /* Don't fragment */
+    UINT BCast;                           /* Receive broadcast packets */
+    UINT HeaderIncl;                      /* Include header in RawIP packets */
     WORK_QUEUE_ITEM WorkItem;             /* Work queue item handle */
     DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine for delete request */
     PVOID Context;                        /* Delete request context */

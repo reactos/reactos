@@ -244,15 +244,16 @@ NTSTATUS FileOpenAddress(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
-  TI_DbgPrint(DEBUG_ADDRFILE, ("Address file object allocated at (0x%X).\n", AddrFile));
-
   RtlZeroMemory(AddrFile, sizeof(ADDRESS_FILE));
 
   AddrFile->RefCount = 1;
   AddrFile->Free = AddrFileFree;
 
-  /* Set our default TTL */
+  /* Set our default options */
   AddrFile->TTL = 128;
+  AddrFile->DF = 0;
+  AddrFile->BCast = 1;
+  AddrFile->HeaderIncl = 1;
 
   /* Make sure address is a local unicast address or 0 */
   /* FIXME: IPv4 only */

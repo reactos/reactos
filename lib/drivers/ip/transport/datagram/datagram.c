@@ -91,8 +91,13 @@ VOID DGDeliverData(
     }
   else
     {
-      /* Give client the IP header too if it is a raw IP file object */
-      DataBuffer = IPPacket->Header;
+      if (AddrFile->HeaderIncl)
+          DataBuffer = IPPacket->Header;
+      else
+      {
+          DataBuffer = IPPacket->Data;
+          DataSize -= IPPacket->HeaderSize;
+      }
     }
 
   if (!IsListEmpty(&AddrFile->ReceiveQueue))
