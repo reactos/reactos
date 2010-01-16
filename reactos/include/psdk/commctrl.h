@@ -2809,7 +2809,7 @@ typedef struct tagTVKEYDOWN
 (LPARAM)(HTREEITEM)(hitem))
 
 #define TreeView_EnsureVisible(hwnd, hitem) \
-    (BOOL)SNDMSG((hwnd), TVM_ENSUREVISIBLE, 0, (LPARAM)(hitem))
+    (BOOL)SNDMSG((hwnd), TVM_ENSUREVISIBLE, 0, (LPARAM)(UINT)(hitem))
 
 #define TreeView_SortChildrenCB(hwnd, psort, recurse) \
     (BOOL)SNDMSG((hwnd), TVM_SORTCHILDRENCB, (WPARAM)recurse, \
@@ -2993,6 +2993,7 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVSIL_NORMAL            0
 #define LVSIL_SMALL             1
 #define LVSIL_STATE             2
+#define LVSIL_GROUPHEADER       3
 
 /* following 2 flags only for LVS_OWNERDATA listviews */
 /* and only in report or list mode */
@@ -3000,11 +3001,12 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVSICF_NOSCROLL         0x0002
 
 
-#define LVFI_PARAM              0X0001
-#define LVFI_STRING             0X0002
-#define LVFI_PARTIAL            0X0008
-#define LVFI_WRAP               0X0020
-#define LVFI_NEARESTXY          0X0040
+#define LVFI_PARAM              0x0001
+#define LVFI_STRING             0x0002
+#define LVFI_SUBSTRING          0x0004
+#define LVFI_PARTIAL            0x0008
+#define LVFI_WRAP               0x0020
+#define LVFI_NEARESTXY          0x0040
 
 #define LVIF_TEXT               0x0001
 #define LVIF_IMAGE              0x0002
@@ -5135,7 +5137,7 @@ static const WCHAR WC_EDITW[] = { 'E','d','i','t',0 };
 #define WC_EDIT                   WINELIB_NAME_AW(WC_EDIT)
 
 /**************************************************************************
- * List box control
+ * Listbox control
  */
 
 #define WC_LISTBOXA               "ListBox"
@@ -5149,7 +5151,7 @@ static const WCHAR WC_LISTBOXW[] = { 'L','i','s','t','B','o','x',0 };
 #define WC_LISTBOX                WINELIB_NAME_AW(WC_LISTBOX)
 
 /**************************************************************************
- * Scroll bar control
+ * Scrollbar control
  */
 
 #define WC_SCROLLBARA             "ScrollBar"
