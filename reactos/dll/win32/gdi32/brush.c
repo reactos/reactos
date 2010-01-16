@@ -153,10 +153,8 @@ HBRUSH WINAPI CreateBrushIndirect( const LOGBRUSH * brush )
     {
         if (ptr->logbrush.lbStyle == BS_PATTERN)
             DeleteObject( (HGDIOBJ)ptr->logbrush.lbHatch );
-#ifndef __REACTOS__
         else if (ptr->logbrush.lbStyle == BS_DIBPATTERN)
             GlobalFree( (HGLOBAL)ptr->logbrush.lbHatch );
-#endif
     }
     HeapFree( GetProcessHeap(), 0, ptr );
     return 0;
