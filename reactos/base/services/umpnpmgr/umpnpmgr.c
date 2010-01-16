@@ -1527,8 +1527,70 @@ DWORD PNP_HwProfFlags(
     DWORD ulNameLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
+    WCHAR szKeyName[MAX_PATH];
+    HKEY hKey;
+    HKEY hDeviceKey;
+    DWORD dwSize;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_HwProfFlags() called\n");
+
+    if (ulConfig == 0)
+    {
+        wcscpy(szKeyName,
+               L"System\\CurrentControlSet\\HardwareProfiles\\Current\\System\\CurrentControlSet\\Enum");
+    }
+    else
+    {
+        swprintf(szKeyName,
+                 L"System\\CurrentControlSet\\HardwareProfiles\\%04u\\System\\CurrentControlSet\\Enum",
+                 ulConfig);
+    }
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      szKeyName,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey) != ERROR_SUCCESS)
+        return CR_REGISTRY_ERROR;
+
+    if (ulAction == PNP_GET_HWPROFFLAGS)
+    {
+         if (RegOpenKeyExW(hKey,
+                           pDeviceID,
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hDeviceKey) != ERROR_SUCCESS)
+         {
+            *pulValue = 0;
+         }
+         else
+         {
+             dwSize = sizeof(DWORD);
+             if (!RegQueryValueExW(hDeviceKey,
+                                   L"CSConfigFlags",
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)pulValue,
+                                   &dwSize) != ERROR_SUCCESS)
+             {
+                 *pulValue = 0;
+             }
+
+             RegCloseKey(hDeviceKey);
+         }
+    }
+    else if (ulAction == PNP_SET_HWPROFFLAGS)
+    {
+        /* FIXME: not implemented yet */
+        ret = CR_CALL_NOT_IMPLEMENTED;
+    }
+
+    RegCloseKey(hKey);
+
+    return ret;
 }
 
 
