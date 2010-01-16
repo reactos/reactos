@@ -1809,7 +1809,9 @@ DWORD PNP_QueryResConfList(
 
 /* Function 55 */
 DWORD PNP_SetHwProf(
-    handle_t hBinding)
+    handle_t hBinding,
+    DWORD ulHardwareProfile,
+    DWORD ulFlags)
 {
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;

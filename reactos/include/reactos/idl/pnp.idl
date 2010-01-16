@@ -724,7 +724,9 @@ interface pnp
 
     /* Function 55 */
     DWORD PNP_SetHwProf(
-        [in] handle_t hBinding);
+        [in] handle_t hBinding,
+        [in] DWORD ulHardwareProfile,
+        [in] DWORD ulFlags);
 
     /* Function 56 */
     DWORD PNP_QueryArbitratorFreeData(
