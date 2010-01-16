@@ -139,7 +139,7 @@ _MsgTrapInfo:
 
     /* Save previous mode and swap gs when it was UserMode */
     mov ax, [rbp + KTRAP_FRAME_SegCs]
-    and ax, 1
+    and al, 1
     mov [rbp + KTRAP_FRAME_PreviousMode], al
     jz 1f
     swapgs
@@ -282,6 +282,16 @@ _InternalDispatchException:
     mov [rsp + KEXCEPTION_FRAME_R13], r13
     mov [rsp + KEXCEPTION_FRAME_R14], r14
     mov [rsp + KEXCEPTION_FRAME_R15], r15
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm6], xmm6
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm7], xmm7
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm8], xmm8
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm9], xmm9
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm10], xmm10
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm11], xmm11
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm12], xmm12
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm13], xmm13
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm14], xmm14
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm15], xmm15
     mov qword ptr [rsp + KEXCEPTION_FRAME_Return], 0
 
     /* Call KiDispatchException */
@@ -291,6 +301,22 @@ _InternalDispatchException:
     mov r9b, [r8 + KTRAP_FRAME_PreviousMode]    // PreviousMode
     mov byte ptr [rsp + KEXCEPTION_FRAME_P5], 1 // FirstChance
     call _KiDispatchException
+
+    /* Restore registers */
+    mov r12, [rsp + KEXCEPTION_FRAME_R12]
+    mov r13, [rsp + KEXCEPTION_FRAME_R13]
+    mov r14, [rsp + KEXCEPTION_FRAME_R14]
+    mov r15, [rsp + KEXCEPTION_FRAME_R15]
+    movdqa xmm6, [rsp + KEXCEPTION_FRAME_Xmm6]
+    movdqa xmm7, [rsp + KEXCEPTION_FRAME_Xmm7]
+    movdqa xmm8, [rsp + KEXCEPTION_FRAME_Xmm8]
+    movdqa xmm9, [rsp + KEXCEPTION_FRAME_Xmm9]
+    movdqa xmm10, [rsp + KEXCEPTION_FRAME_Xmm10]
+    movdqa xmm11, [rsp + KEXCEPTION_FRAME_Xmm11]
+    movdqa xmm12, [rsp + KEXCEPTION_FRAME_Xmm12]
+    movdqa xmm13, [rsp + KEXCEPTION_FRAME_Xmm13]
+    movdqa xmm14, [rsp + KEXCEPTION_FRAME_Xmm14]
+    movdqa xmm15, [rsp + KEXCEPTION_FRAME_Xmm15]
 
     add rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
     ret
