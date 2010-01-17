@@ -102,7 +102,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             /* Set valid selectors */
             TrapFrame->SegDs = KGDT_64_DATA | RPL_MASK;
             TrapFrame->SegEs = KGDT_64_DATA | RPL_MASK;
-            TrapFrame->SegFs = KGDT_32_R3_TEB;
+            TrapFrame->SegFs = KGDT_32_R3_TEB | RPL_MASK;
             TrapFrame->SegGs = KGDT_64_DATA | RPL_MASK;
         }
         else
@@ -218,7 +218,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
             /* Set valid selectors */
             Context->SegDs = KGDT_64_DATA | RPL_MASK;
             Context->SegEs = KGDT_64_DATA | RPL_MASK;
-            Context->SegFs = KGDT_32_R3_TEB;
+            Context->SegFs = KGDT_32_R3_TEB | RPL_MASK;
             Context->SegGs = KGDT_64_DATA | RPL_MASK;
         }
         else

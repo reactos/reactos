@@ -577,10 +577,11 @@ KiDebugTrapOrFaultKMode:
     jne KiGpfPopSegDs
     cmp [rbp + KTRAP_FRAME_SegEs], dx
     jne KiGpfPopSegEs
-    cmp [rbp + KTRAP_FRAME_SegFs], dx
-    jne KiGpfPopSegFs
     cmp [rbp + KTRAP_FRAME_SegGs], dx
     jne KiGpfPopSegGs
+    mov dx, 0x0053 // KGDT64_R3_CMTEB | RPL_MASK
+    cmp [rbp + KTRAP_FRAME_SegFs], dx
+    jne KiGpfPopSegFs
 
 KiGpfFatal:
 
