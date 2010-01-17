@@ -841,11 +841,15 @@ KdbpCmdBackTrace(
     }
     else
     {
+#ifdef _M_AMD64
+        KdbpPrint("Rip:\n");
+#else
         KdbpPrint("Eip:\n");
+#endif
 
         /* Try printing the function at EIP */
         if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip))
-            KdbpPrint("<%x>\n", KdbCurrentTrapFrame->Tf.Eip);
+            KdbpPrint("<%p>\n", KdbCurrentTrapFrame->Tf.Eip);
         else
             KdbpPrint("\n");
     }
