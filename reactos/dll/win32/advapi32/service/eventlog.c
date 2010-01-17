@@ -673,6 +673,12 @@ ReadEventLogA(IN HANDLE hEventLog,
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
+    if(!pnBytesRead || !pnMinNumberOfBytesNeeded)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     /* If buffer is NULL set nNumberOfBytesToRead to 0 to prevent rpcrt4 from
        trying to access a null pointer */
     if (!lpBuffer)
@@ -736,6 +742,12 @@ ReadEventLogW(IN HANDLE hEventLog,
     TRACE("%p, %lu, %lu, %p, %lu, %p, %p\n",
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
+
+    if(!pnBytesRead || !pnMinNumberOfBytesNeeded)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* If buffer is NULL set nNumberOfBytesToRead to 0 to prevent rpcrt4 from
        trying to access a null pointer */
