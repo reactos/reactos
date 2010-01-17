@@ -290,11 +290,11 @@ EXPORTS
   _fstat64 @284
   _fstati64 @285
   _ftime @286
-;  _ftime64 @287 ???
+  _ftime64 @287
 ;  _ftol @288 ???
   _fullpath @289
   _futime @290
-;  _futime64 @291
+  _futime64 @291
   _gcvt @292
 ;  _get_heap_handle @293
   _get_osfhandle @294
@@ -848,3 +848,13 @@ EXPORTS
   wctomb @840
   wprintf @841
   wscanf @842
+
+  _mbsnbcpy_s
+  wcscpy_s
+  wcsncpy_s
+  ;_ftol2=_ftol
+  ;_ftol2_sse=_ftol
+  strcat_s
+  strcpy_s
+  _swprintf=swprintf
+  
