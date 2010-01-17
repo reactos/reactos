@@ -2881,7 +2881,7 @@ BOOL
 NTAPI
 NtUserTranslateMessage(
   LPMSG lpMsg,
-  HKL dwhkl );
+  UINT flags );
 
 BOOL
 NTAPI

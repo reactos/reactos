@@ -59,21 +59,21 @@ GetClipboardData(UINT uFormat)
     /* dealing with bitmap object */
     if (uFormat != CF_BITMAP)
     {
-        size = NtUserGetClipboardData(uFormat, NULL);
+        size = (DWORD_PTR)NtUserGetClipboardData(uFormat, NULL);
 
         if (size)
         {
             hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, size);
             pGlobal = GlobalLock(hGlobal);
 
-            size = NtUserGetClipboardData(uFormat, pGlobal);
+            size = (DWORD_PTR)NtUserGetClipboardData(uFormat, pGlobal);
 
             GlobalUnlock(hGlobal);
         }
     }
     else
     {
-        hGlobal = (HANDLE)NtUserGetClipboardData(CF_BITMAP, NULL);
+        hGlobal = NtUserGetClipboardData(CF_BITMAP, NULL);
     }
 
     return hGlobal;
