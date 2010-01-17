@@ -279,13 +279,13 @@ HRESULT WINAPI AdvInstallFileW(HWND hwnd, LPCWSTR lpszSourceDir, LPCWSTR lpszSou
     if (lpszDestFile)
     {
         dwLen = lstrlenW(lpszDestFile);
-        szDestFilename = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
+        szDestFilename = HeapAlloc(GetProcessHeap(), 0, (dwLen+1) * sizeof(WCHAR));
         lstrcpyW(szDestFilename, lpszDestFile);
     }
     else
     {
         dwLen = lstrlenW(lpszSourceFile);
-        szDestFilename = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
+        szDestFilename = HeapAlloc(GetProcessHeap(), 0, (dwLen+1) * sizeof(WCHAR));
         lstrcpyW(szDestFilename, lpszSourceFile);
     }
 
@@ -648,6 +648,18 @@ static DWORD fill_file_list(SESSION *session, LPCSTR szCabName, LPCSTR szFileLis
     return dwNumFound;
 }
 
+static void free_file_list(SESSION* session)
+{
+    struct FILELIST *next, *curr = session->FileList;
+
+    while (curr)
+    {
+        next = curr->next;
+        free_file_node(curr);
+        curr = next;
+    }
+}
+
 /***********************************************************************
  *             ExtractFilesA    (ADVPACK.@)
  *
@@ -728,20 +740,8 @@ HRESULT WINAPI ExtractFilesA(LPCSTR CabName, LPCSTR ExpandDir, DWORD Flags,
     session.Operation |= EXTRACT_EXTRACTFILES;
     res = pExtract(&session, CabName);
 
-    if (session.FileList)
-    {
-        struct FILELIST *curr = session.FileList;
-        struct FILELIST *next;
-
-        while (curr)
-        {
-            next = curr->next;
-            free_file_node(curr);
-            curr = next;
-        }
-    }
-
 done:
+    free_file_list(&session);
     FreeLibrary(hCabinet);
     HeapFree(GetProcessHeap(), 0, szConvertedList);
 
