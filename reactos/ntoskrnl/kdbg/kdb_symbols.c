@@ -142,12 +142,12 @@ KdbSymPrintAddress(
                                          FunctionName);
     if (NT_SUCCESS(Status))
     {
-        DbgPrint("<%wZ:%x (%s:%d (%s))>",
+        DbgPrint("<%wZ:%p (%s:%d (%s))>",
             &LdrEntry->BaseDllName, RelativeAddress, FileName, LineNumber, FunctionName);
     }
     else
     {
-        DbgPrint("<%wZ:%x>", &LdrEntry->BaseDllName, RelativeAddress);
+        DbgPrint("<%wZ:%p>", &LdrEntry->BaseDllName, RelativeAddress);
     }
 
     return TRUE;

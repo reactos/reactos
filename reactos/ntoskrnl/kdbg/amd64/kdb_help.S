@@ -30,12 +30,12 @@ _KdbEnter:
     mov [rsp + KTRAP_FRAME_R11], r11
 
     /* Save xmm registers */
-//    movdqa [rsp + KTRAP_FRAME_Xmm0], xmm0
-//    movdqa [rsp + KTRAP_FRAME_Xmm1], xmm1
-//    movdqa [rsp + KTRAP_FRAME_Xmm2], xmm2
-//    movdqa [rsp + KTRAP_FRAME_Xmm3], xmm3
-//    movdqa [rsp + KTRAP_FRAME_Xmm4], xmm4
-//    movdqa [rsp + KTRAP_FRAME_Xmm5], xmm5
+    movdqa [rsp + KTRAP_FRAME_Xmm0], xmm0
+    movdqa [rsp + KTRAP_FRAME_Xmm1], xmm1
+    movdqa [rsp + KTRAP_FRAME_Xmm2], xmm2
+    movdqa [rsp + KTRAP_FRAME_Xmm3], xmm3
+    movdqa [rsp + KTRAP_FRAME_Xmm4], xmm4
+    movdqa [rsp + KTRAP_FRAME_Xmm5], xmm5
 
     /* Save cs and previous mode */
     mov ax, cs

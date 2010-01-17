@@ -26,7 +26,7 @@ typedef ULONG_PTR bfd_vma;
 typedef unsigned char bfd_byte;
 enum bfd_endian { BFD_ENDIAN_BIG, BIG_ENDIAN_LITTLE, BFD_ENDIAN_UNKNOWN };
 typedef void* bfd;
-typedef signed int bfd_signed_vma;
+typedef LONG_PTR bfd_signed_vma;
 #define bfd_mach_x86_64_intel_syntax 0
 #define bfd_mach_x86_64 1
 #define bfd_mach_i386_i386_intel_syntax 2
@@ -36,7 +36,7 @@ typedef signed int bfd_signed_vma;
 #define _(X) X
 #define ATTRIBUTE_UNUSED
 extern int sprintf(char *str, const char *format, ...);
-#define sprintf_vma(BUF, VMA) sprintf(BUF, "0x%X", VMA)
+#define sprintf_vma(BUF, VMA) sprintf(BUF, "%p", VMA)
 #define _setjmp setjmp
 #define _INC_SETJMPEX
 struct disassemble_info;
@@ -82,7 +82,7 @@ KdbpPrintAddressInCode(ULONG_PTR Addr, struct disassemble_info * Ignored)
 {
   if (!KdbSymPrintAddress((void*)Addr))
     {
-      DbgPrint("<%08x>", Addr);
+      DbgPrint("<%p>", Addr);
     }
 }
 
@@ -2102,9 +2102,9 @@ print_insn (pc, info)
 	p++;
     }
 #else
-  mode_64bit = 0;
+  mode_64bit = 1;
   priv.orig_sizeflag = AFLAG | DFLAG;
-  /*intel_syntax = 0;*/
+  intel_syntax = 1;
 #endif
 
   if (intel_syntax)
