@@ -38,7 +38,7 @@
 			<if property="ARCH" value="amd64">
 				<directory name="amd64">
 					<file>halinit.c</file>
-					<file>irq.s</file>
+					<file>irq.S</file>
 					<file>misc.c</file>
 					<file>pic.c</file>
 					<file>systimer.S</file>

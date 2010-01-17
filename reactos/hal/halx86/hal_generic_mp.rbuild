@@ -10,9 +10,13 @@
 			<file>spinlock.c</file>
 		</directory>
 		<directory name="mp">
-			<if property="ARCH" value="i386">
-				<file>irq.S</file>
-			</if>
+			<file>apic.c</file>
+			<file>halinit_mp.c</file>
+			<file>ioapic.c</file>
+			<file>ipi_mp.c</file>
+			<file>mpconfig.c</file>
+			<file>processor_mp.c</file>
+			<file>halmp.rc</file>
 		</directory>
 	</module>
 </group>

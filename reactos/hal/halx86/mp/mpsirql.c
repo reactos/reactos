@@ -143,30 +143,6 @@ KfLowerIrql (KIRQL	NewIrql)
   HalpLowerIrql (NewIrql, FALSE);
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	KeLowerIrql
- *
- * DESCRIPTION
- *	Restores the irq level on the current processor
- *
- * ARGUMENTS
- *	NewIrql = Irql to lower to
- *
- * RETURN VALUE
- *	None
- *
- * NOTES
- */
-#undef KeLowerIrql
-VOID NTAPI
-KeLowerIrql (KIRQL NewIrql)
-{
-  KfLowerIrql (NewIrql);
-}
-
-
 /**********************************************************************
  * NAME							EXPORTED
  *	KfRaiseIrql
@@ -213,32 +189,6 @@ KfRaiseIrql (KIRQL	NewIrql)
     }
 
   return OldIrql;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	KeRaiseIrql
- *
- * DESCRIPTION
- *	Raises the hardware priority (irql)
- *
- * ARGUMENTS
- *	NewIrql = Irql to raise to
- *	OldIrql (OUT) = Caller supplied storage for the previous irql
- *
- * RETURN VALUE
- *	None
- *
- * NOTES
- *	Calls KfRaiseIrql
- */
-#undef KeRaiseIrql
-VOID NTAPI
-KeRaiseIrql (KIRQL	NewIrql,
-	PKIRQL	OldIrql)
-{
-  *OldIrql = KfRaiseIrql (NewIrql);
 }
 
 
