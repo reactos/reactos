@@ -2283,7 +2283,7 @@ NtUserDispatchMessage(PMSG UnsafeMsgInfo)
 
 BOOL APIENTRY
 NtUserTranslateMessage(LPMSG lpMsg,
-                       HKL dwhkl)
+                       UINT flags)
 {
    NTSTATUS Status;
    MSG SafeMsg;
@@ -2299,7 +2299,7 @@ NtUserTranslateMessage(LPMSG lpMsg,
       RETURN( FALSE);
    }
 
-   RETURN( IntTranslateKbdMessage(&SafeMsg, dwhkl));
+   RETURN( IntTranslateKbdMessage(&SafeMsg, flags));
 
 CLEANUP:
    DPRINT("Leave NtUserTranslateMessage: ret=%i\n",_ret_);
