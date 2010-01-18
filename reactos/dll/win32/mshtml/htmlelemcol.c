@@ -205,6 +205,26 @@ static HRESULT WINAPI HTMLElementCollection_get__newEnum(IHTMLElementCollection 
     return E_NOTIMPL;
 }
 
+static BOOL is_elem_id(HTMLElement *elem, LPCWSTR name)
+{
+    BSTR elem_id;
+    HRESULT hres;
+
+    hres = IHTMLElement_get_id(HTMLELEM(elem), &elem_id);
+    if(FAILED(hres)){
+        WARN("IHTMLElement_get_id failed: 0x%08x\n", hres);
+        return FALSE;
+    }
+
+    if(elem_id && !strcmpW(elem_id, name)) {
+        SysFreeString(elem_id);
+        return TRUE;
+    }
+
+    SysFreeString(elem_id);
+    return FALSE;
+}
+
 static BOOL is_elem_name(HTMLElement *elem, LPCWSTR name)
 {
     const PRUnichar *str;
@@ -376,7 +396,16 @@ static HRESULT HTMLElementCollection_get_dispid(IUnknown *iface, BSTR name, DWOR
     for(ptr = name; *ptr && isdigitW(*ptr); ptr++)
         idx = idx*10 + (*ptr-'0');
 
-    if(*ptr || idx >= This->len)
+    if(*ptr) {
+        /* the name contains alpha characters, so search by name & id */
+        for(idx = 0; idx < This->len; ++idx) {
+            if(is_elem_id(This->elems[idx], name) ||
+                    is_elem_name(This->elems[idx], name))
+                break;
+        }
+    }
+
+    if(idx >= This->len)
         return DISP_E_UNKNOWNNAME;
 
     *dispid = DISPID_ELEMCOL_0 + idx;

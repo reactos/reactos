@@ -31,18 +31,18 @@ STRINGTABLE DISCARDABLE
     IDS_INSTALLING      "Установка..."
 }
 
-ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 261, 95
+ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 261, 110
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Установка Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML " \
-          "to work correctly. Wine can automatically download and install it for you.\n\n" \
-          "Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
+    LTEXT "Wine не может найти пакет Gecko который нужен для приложений со встроенным HTML " \
+          "для корректной работы. Wine может автоматически загрузить и установить его для Вас.\n\n" \
+          "Примечание: Рекомендовано использовать пакет из Вашего дистрибутива. Посетите http://wiki.winehq.org/Gecko для деталей.",
           ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
-    CONTROL "Прогресс", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 46, 240, 12
-    DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Отмена", IDCANCEL, 140, 63, 70, 15, WS_GROUP | WS_TABSTOP
+    CONTROL "Прогресс", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 65, 240, 12
+    DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 180, 85, 70, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Отмена", IDCANCEL, 100, 85, 70, 15, WS_GROUP | WS_TABSTOP
 }
 
 IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65
@@ -57,4 +57,15 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT IDC_URL, 35, 40, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 200, 10, 45, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Отмена", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
+}
+
+ID_PROMPT_DIALOG DIALOG 0, 0, 200, 90
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "", ID_PROMPT_PROMPT, 10, 10, 180, 30
+    EDITTEXT ID_PROMPT_EDIT, 10, 45, 180, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 40, 65, 45, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Отмена", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
 }

@@ -154,12 +154,12 @@ static HRESULT WINAPI HTMLLocation_put_href(IHTMLLocation *iface, BSTR v)
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
-    if(!This->window || !This->window->doc) {
-        FIXME("No document available\n");
+    if(!This->window) {
+        FIXME("No window available\n");
         return E_FAIL;
     }
 
-    return navigate_url(This->window->doc, v);
+    return navigate_url(This->window, v, This->window->url);
 }
 
 static HRESULT WINAPI HTMLLocation_get_href(IHTMLLocation *iface, BSTR *p)

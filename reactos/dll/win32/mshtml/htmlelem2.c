@@ -451,7 +451,7 @@ static HRESULT WINAPI HTMLElement2_focus(IHTMLElement2 *iface)
 
     nsres = nsIDOMHTMLElement_QueryInterface(This->nselem, &IID_nsIDOMNSHTMLElement, (void**)&nselem);
     if(NS_SUCCEEDED(nsres)) {
-        nsIDOMNSHTMLElement_focus(nselem);
+        nsIDOMNSHTMLElement_Focus(nselem);
         nsIDOMNSHTMLElement_Release(nselem);
     }else {
         ERR("Could not get nsIDOMHTMLNSElement: %08x\n", nsres);
@@ -662,15 +662,34 @@ static HRESULT WINAPI HTMLElement2_detachEvent(IHTMLElement2 *iface, BSTR event,
 static HRESULT WINAPI HTMLElement2_get_readyState(IHTMLElement2 *iface, VARIANT *p)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    BSTR str;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(This->node.vtbl->get_readystate) {
+        HRESULT hres;
+
+        hres = This->node.vtbl->get_readystate(&This->node, &str);
+        if(FAILED(hres))
+            return hres;
+    }else {
+        static const WCHAR completeW[] = {'c','o','m','p','l','e','t','e',0};
+
+        str = SysAllocString(completeW);
+        if(!str)
+            return E_OUTOFMEMORY;
+    }
+
+    V_VT(p) = VT_BSTR;
+    V_BSTR(p) = str;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement2_put_onreadystatechange(IHTMLElement2 *iface, VARIANT v)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
 
-    FIXME("(%p)->(%s): semi-stub\n", This, debugstr_variant(&v));
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
 
     return set_node_event(&This->node, EVENTID_READYSTATECHANGE, &v);
 }
