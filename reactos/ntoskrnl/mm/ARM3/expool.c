@@ -520,7 +520,7 @@ ExFreePoolWithTag(IN PVOID P,
     // for this pool type
     //
     BlockSize = Entry->BlockSize;
-    PoolType = (Entry->PoolType & 3) - 1;
+    PoolType = (Entry->PoolType - 1) & BASE_POOL_TYPE_MASK;
     PoolDesc = PoolVector[PoolType];
 
     //
