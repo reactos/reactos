@@ -901,56 +901,6 @@ static struct regsvr_coclass const coclass_list[] = {
  */
 
 static struct regsvr_interface const interface_list[] = {
-    {   &IID_IFilterGraph,
-	"IFilterGraph",
-	NULL,
-	11,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IFilterGraph2,
-	"IFilterGraph2",
-	NULL,
-	21,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IFilterMapper,
-	"IFilterMapper",
-	NULL,
-	11,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IFilterMapper2,
-	"IFilterMapper2",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    /* FIXME:
-    {   &IID_SeekingPassThru,
-	"ISeekingPassThru",
-	NULL,
-	4,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_AsyncReader,
-	"IAsyncReader",
-	NULL,
-	11,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_WAVEParser,
-	"IWAVEParser",
-	NULL,
-	11,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },*/
     { NULL }			/* list terminator */
 };
 
@@ -1213,6 +1163,9 @@ static struct regsvr_filter const filter_list[] = {
     { NULL }		/* list terminator */
 };
 
+extern HRESULT WINAPI QUARTZ_DllRegisterServer(void) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI QUARTZ_DllUnregisterServer(void) DECLSPEC_HIDDEN;
+
 /***********************************************************************
  *		DllRegisterServer (QUARTZ.@)
  */
@@ -1222,7 +1175,9 @@ HRESULT WINAPI DllRegisterServer(void)
 
     TRACE("\n");
 
-    hr = register_coclasses(coclass_list);
+    hr = QUARTZ_DllRegisterServer();
+    if (SUCCEEDED(hr))
+        hr = register_coclasses(coclass_list);
     if (SUCCEEDED(hr))
 	hr = register_interfaces(interface_list);
     if (SUCCEEDED(hr))
@@ -1252,5 +1207,7 @@ HRESULT WINAPI DllUnregisterServer(void)
 	hr = unregister_mediatypes_parsing(mediatype_parsing_list);
     if (SUCCEEDED(hr))
 	hr = unregister_mediatypes_extension(mediatype_extension_list);
+    if (SUCCEEDED(hr))
+        hr = QUARTZ_DllUnregisterServer();
     return hr;
 }

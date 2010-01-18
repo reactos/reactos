@@ -202,20 +202,20 @@ static HRESULT FillBuffer(MPEGSplitterImpl *This, IMediaSample *pCurrentSample)
             LONGLONG rtSampleStart = pin->rtNext - MEDIATIME_FROM_BYTES(4);
             LONGLONG rtSampleStop = rtSampleStart + MEDIATIME_FROM_BYTES(length + 4);
 
-            hr = IMemAllocator_GetBuffer(pin->pAlloc, &sample, NULL, NULL, 0);
-
             if (rtSampleStop > pin->rtStop)
                 rtSampleStop = MEDIATIME_FROM_BYTES(ALIGNUP(BYTES_FROM_MEDIATIME(pin->rtStop), pin->cbAlign));
 
-            IMediaSample_SetTime(sample, &rtSampleStart, &rtSampleStop);
-            IMediaSample_SetPreroll(sample, 0);
-            IMediaSample_SetDiscontinuity(sample, 0);
-            IMediaSample_SetSyncPoint(sample, 1);
-            pin->rtCurrent = rtSampleStart;
-            pin->rtNext = rtSampleStop;
-
+            hr = IMemAllocator_GetBuffer(pin->pAlloc, &sample, NULL, NULL, 0);
             if (SUCCEEDED(hr))
+            {
+                IMediaSample_SetTime(sample, &rtSampleStart, &rtSampleStop);
+                IMediaSample_SetPreroll(sample, 0);
+                IMediaSample_SetDiscontinuity(sample, 0);
+                IMediaSample_SetSyncPoint(sample, 1);
+                pin->rtCurrent = rtSampleStart;
+                pin->rtNext = rtSampleStop;
                 hr = IAsyncReader_Request(pin->pReader, sample, 0);
+            }
             if (FAILED(hr))
                 FIXME("o_Ox%08x\n", hr);
         }
