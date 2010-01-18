@@ -7,16 +7,20 @@
 	<file>dom.c</file>
 	<file>events.c</file>
 	<file>htmldoc.c</file>
+	<file>htmllocation.c</file>
 	<file>misc.c</file>
 	<file>protocol.c</file>
 	<file>script.c</file>
 	<file>testlist.c</file>
+	<file>rsrc.rc</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>strmiids</library>
+	<library>wininet</library>
 	<library>ole32</library>
 	<library>oleaut32</library>
 	<library>user32</library>
+	<library>gdi32</library>
 	<library>urlmon</library>
 	<library>advapi32</library>
 	<library>ntdll</library>
