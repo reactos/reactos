@@ -1078,7 +1078,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
             /* FIXME: Use SEH */
             Instructions = (PUCHAR)TrapFrame->Eip;
             
-            /* Scan next 15 opcodes */
+            /* Scan next 15 bytes */
             for (i = 0; i < 15; i++)
             {
                 /* Skip prefix instructions */
@@ -1093,7 +1093,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
                 }
                 
                 /* Is this NOT any prefix instruction? */
-                if (Instructions[i] != KiTrapPrefixTable[j])
+                if (j == sizeof(KiTrapPrefixTable))
                 {
                     /* We can go ahead and handle the fault now */
                     Instruction = Instructions[i];
@@ -1102,7 +1102,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
             }
             
             /* If all we found was prefixes, then this instruction is too long */
-            if (!Instruction)
+            if (i == 15)
             {
                 /* Setup illegal instruction fault */
                 KiDispatchException0Args(STATUS_ILLEGAL_INSTRUCTION,
