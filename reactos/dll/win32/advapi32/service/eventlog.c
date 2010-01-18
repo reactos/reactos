@@ -28,6 +28,18 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 static RPC_UNICODE_STRING EmptyString = { 0, 0, L"" };
 
+static inline LPWSTR SERV_dup( LPCSTR str )
+{
+    UINT len;
+    LPWSTR wstr;
+
+    if( !str )
+        return NULL;
+    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+    wstr = HeapAlloc( GetProcessHeap(), 0, len*sizeof (WCHAR) );
+    MultiByteToWideChar( CP_ACP, 0, str, -1, wstr, len );
+    return wstr;
+}
 
 handle_t __RPC_USER
 EVENTLOG_HANDLE_A_bind(EVENTLOG_HANDLE_A UNCServerName)
@@ -575,35 +587,32 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
 
 /******************************************************************************
  * OpenEventLogA [ADVAPI32.@]
+ *
+ * Opens a handle to the specified event log.
+ *
+ * PARAMS
+ *  lpUNCServerName [I] UNC name of the server on which the event log is
+ *                      opened.
+ *  lpSourceName    [I] Name of the log.
+ *
+ * RETURNS
+ *  Success: Handle to an event log.
+ *  Failure: NULL
  */
 HANDLE WINAPI
-OpenEventLogA(IN LPCSTR lpUNCServerName,
-              IN LPCSTR lpSourceName)
+OpenEventLogA(IN LPCSTR uncname,
+              IN LPCSTR source)
 {
-    UNICODE_STRING UNCServerName;
-    UNICODE_STRING SourceName;
-    HANDLE Handle;
+    LPWSTR uncnameW, sourceW;
+    HANDLE handle;
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&UNCServerName, lpUNCServerName))
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return NULL;
-    }
+    uncnameW = SERV_dup(uncname);
+    sourceW = SERV_dup(source);
+    handle = OpenEventLogW(uncnameW, sourceW);
+    HeapFree(GetProcessHeap(), 0, uncnameW);
+    HeapFree(GetProcessHeap(), 0, sourceW);
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&SourceName, lpSourceName))
-    {
-        RtlFreeUnicodeString(&UNCServerName);
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return NULL;
-    }
-
-    Handle = OpenEventLogW(UNCServerName.Buffer,
-                           SourceName.Buffer);
-
-    RtlFreeUnicodeString(&UNCServerName);
-    RtlFreeUnicodeString(&SourceName);
-
-    return Handle;
+    return handle;
 }
 
 
