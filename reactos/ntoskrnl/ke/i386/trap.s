@@ -83,8 +83,6 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 #endif
 
 /* We implement the following trap exit points:                             */
-.globl _KiServiceExit               /* Exit from syscall                    */
-.globl _KiServiceExit2              /* Exit from syscall with complete frame*/
 .globl _Kei386EoiHelper@0           /* Exit from interrupt or H/W trap      */
 .globl _Kei386EoiHelper2ndEntry     /* Exit from unexpected interrupt       */
 
@@ -113,36 +111,8 @@ _IsrTimeoutMsg:
 _IsrOverflowMsg:
     .asciz "\n*** ISR at %lx appears to have an interrupt storm\n"
 
-_KiTrapPrefixTable:
-    .byte 0xF2                      /* REP                                  */
-    .byte 0xF3                      /* REP INS/OUTS                         */
-    .byte 0x67                      /* ADDR                                 */
-    .byte 0xF0                      /* LOCK                                 */
-    .byte 0x66                      /* OP                                   */
-    .byte 0x2E                      /* SEG                                  */
-    .byte 0x3E                      /* DS                                   */
-    .byte 0x26                      /* ES                                   */
-    .byte 0x64                      /* FS                                   */
-    .byte 0x65                      /* GS                                   */
-    .byte 0x36                      /* SS                                   */
-
-_KiTrapIoTable:
-    .byte 0xE4                      /* IN                                   */
-    .byte 0xE5                      /* IN                                   */
-    .byte 0xEC                      /* IN                                   */
-    .byte 0xED                      /* IN                                   */
-    .byte 0x6C                      /* INS                                  */
-    .byte 0x6D                      /* INS                                  */
-    .byte 0xE6                      /* OUT                                  */
-    .byte 0xE7                      /* OUT                                  */
-    .byte 0xEE                      /* OUT                                  */
-    .byte 0xEF                      /* OUT                                  */
-    .byte 0x6E                      /* OUTS                                 */
-    .byte 0x6F                      /* OUTS                                 */
-
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 .text
-
 
 .func KiSystemService
 TRAP_FIXUPS kss_a, kss_t, DoNotFixupV86, DoNotFixupAbios
@@ -282,18 +252,11 @@ KeReturnFromSystemCall:
     /* Restore the old trap frame pointer */
     mov edx, [ebp+KTRAP_FRAME_EDX]
     mov [ecx+KTHREAD_TRAP_FRAME], edx
-.endfunc
-
-.func KiServiceExit
-_KiServiceExit:
-    /* Disable interrupts */
-    cli
-
-    /* Check for, and deliver, User-Mode APCs if needed */
-    CHECK_FOR_APC_DELIVER 1
-
-    /* Exit and cleanup */
-    TRAP_EPILOG FromSystemCall, DoRestorePreviousMode, DoNotRestoreSegments, DoNotRestoreVolatiles, DoRestoreEverything
+    
+    /* Exit the system call */
+    mov ecx, ebp
+    mov edx, eax
+    jmp @KiServiceExit@8
 .endfunc
 
 KiBBTUnexpectedRange:
@@ -418,56 +381,12 @@ InvalidIndex:
     ret
 #endif
 
-.func KiServiceExit2
-_KiServiceExit2:
-
-    /* Disable interrupts */
-    cli
-
-    /* Check for, and deliver, User-Mode APCs if needed */
-    CHECK_FOR_APC_DELIVER 0
-
-    /* Exit and cleanup */
-    TRAP_EPILOG NotFromSystemCall, DoRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
-.endfunc
-
 .func Kei386EoiHelper@0
 _Kei386EoiHelper@0:
-
-    /* Disable interrupts */
-    cli
-
-    /* Check for, and deliver, User-Mode APCs if needed */
-    CHECK_FOR_APC_DELIVER 0
-
-    /* Exit and cleanup */
-_Kei386EoiHelper2ndEntry:
-    TRAP_EPILOG NotFromSystemCall, DoNotRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
+    /* Call the C EOI Helper */
+    mov ecx, esp
+    jmp @KiEoiHelper@4
 .endfunc
-
-V86_Exit:
-    /* Move to EDX position */
-    add esp, KTRAP_FRAME_EDX
-
-    /* Restore volatiles */
-    pop edx
-    pop ecx
-    pop eax
-
-    /* Move to non-volatiles */
-    lea esp, [ebp+KTRAP_FRAME_EDI]
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-
-    /* Skip error code and return */
-    add esp, 4
-    iret
-
-AbiosExit:
-    /* FIXME: TODO */
-    UNHANDLED_PATH "ABIOS Exit"
 
 GENERATE_TRAP_HANDLER KiGetTickCount, 1
 GENERATE_TRAP_HANDLER KiCallbackReturn, 1        
@@ -549,7 +468,7 @@ _KiUnexpectedInterruptTail:
 
     /* Spurious, ignore it */
     add esp, 8
-    jmp _Kei386EoiHelper2ndEntry
+    jmp _Kei386EoiHelper@0
 
 Handled:
     /* Unexpected interrupt, print a message on debug builds */
