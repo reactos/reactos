@@ -54,6 +54,9 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
            IN UCHAR Skip)
 {
     KTRAP_EXIT_SKIP_BITS SkipBits = { .Bits = Skip };
+    PULONG ReturnStack;
+    
+    /* Debugging checks */
     KiExitTrapDebugChecks(TrapFrame, SkipBits);
 
     /* Restore the SEH handler chain */
@@ -81,12 +84,42 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
 
     /* Check if the trap frame was edited */
     if (__builtin_expect(!(TrapFrame->SegCs & FRAME_EDITED), 0))
-    {
-        /* Not handled yet */
-        UNIMPLEMENTED;
-        KiDumpTrapFrame(TrapFrame);
-        DbgBreakPoint();
-        while (TRUE);
+    {   
+        /*
+         * An edited trap frame happens when we need to modify CS and/or ESP but
+         * don't actually have a ring transition. This happens when a kernelmode
+         * caller wants to perform an NtContinue to another kernel address, such
+         * as in the case of SEH (basically, a longjmp), or to a user address.
+         *
+         * Therefore, the CPU never saved CS/ESP on the stack because we did not
+         * get a trap frame due to a ring transition (there was no interrupt).
+         * Even if we didn't want to restore CS to a new value, a problem occurs
+         * due to the fact a normal RET would not work if we restored ESP since
+         * RET would then try to read the result off the stack.
+         *
+         * The NT kernel solves this by adding 12 bytes of stack to the exiting
+         * trap frame, in which EFLAGS, CS, and EIP are stored, and then saving
+         * the ESP that's being requested into the ErrorCode field. It will then
+         * exit with an IRET. This fixes both issues, because it gives the stack
+         * some space where to hold the return address and then end up with the
+         * wanted stack, and it uses IRET which allows a new CS to be inputted.
+         *
+         */
+         
+        /* Set CS that is requested */
+        TrapFrame->SegCs = TrapFrame->TempSegCs;
+         
+        /* First make space on requested stack */
+        ReturnStack = (PULONG)(TrapFrame->TempEsp - 12);
+        TrapFrame->ErrCode = (ULONG_PTR)ReturnStack;
+         
+        /* Now copy IRET frame */
+        ReturnStack[0] = TrapFrame->Eip;
+        ReturnStack[1] = TrapFrame->SegCs;
+        ReturnStack[2] = TrapFrame->EFlags;
+        
+        /* Do special edited return */
+        KiEditedTrapReturn(TrapFrame);
     }
     
     /* Check if this is a user trap */
@@ -212,6 +245,24 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
     
     /* Now exit the trap for real */
     KiExitTrap(TrapFrame, KTE_SKIP_PM_BIT);
+}
+
+VOID
+FASTCALL
+KiServiceExit(IN PKTRAP_FRAME TrapFrame,
+              IN NTSTATUS Status)
+{
+    /* Disable interrupts until we return */
+    _disable();
+    
+    /* Check for APC delivery */
+    KiCheckForApcDelivery(TrapFrame);
+    
+    /* Copy the status into EAX */
+    TrapFrame->Eax = Status;
+    
+    /* Now exit the trap for real */
+    KiExitTrap(TrapFrame, KTE_SKIP_SEG_BIT | KTE_SKIP_VOL_BIT);
 }
 
 VOID
@@ -1638,6 +1689,37 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
     
     /* Continue with the common handler */
     KiDebugHandler(TrapFrame, TrapFrame->Eax, TrapFrame->Ecx, TrapFrame->Edx);
+}
+
+VOID
+FASTCALL
+NtContinueHandler(IN PCONTEXT Context,
+                  IN BOOLEAN TestAlert)
+{
+    PKTHREAD Thread;
+    NTSTATUS Status;
+    PKTRAP_FRAME TrapFrame;
+    
+    /* Get trap frame and link previous one*/
+    Thread = KeGetCurrentThread();
+    TrapFrame = Thread->TrapFrame;
+    Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+    
+    /* Continue from this point on */
+    Status = KiContinue(Context, NULL, TrapFrame);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if alert was requested */
+        if (TestAlert) KeTestAlertThread(Thread->PreviousMode);
+        
+        /* Exit to new trap frame */
+        KiServiceExit2(TrapFrame);
+    }
+    else
+    {
+        /* Exit with an error */
+        KiServiceExit(TrapFrame, Status);
+    }
 }
 
 /* HARDWARE INTERRUPTS ********************************************************/

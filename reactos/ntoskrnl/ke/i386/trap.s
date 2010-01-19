@@ -523,52 +523,10 @@ _NtRaiseException@12:
 
 .func NtContinue@8
 _NtContinue@8:
-
-    /* NOTE: We -must- be called by Zw* to have the right frame! */
-    /* Push the stack frame */
-    push ebp
-
-    /* Get the current thread and restore its trap frame */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov edx, [ebp+KTRAP_FRAME_EDX]
-    mov [ebx+KTHREAD_TRAP_FRAME], edx
-
-    /* Set up stack frame */
-    mov ebp, esp
-
-    /* Save the parameters */
-    mov eax, [ebp+0]
-    mov ecx, [ebp+8]
-
-    /* Call KiContinue */
-    push eax
-    push 0
-    push ecx
-    call _KiContinue@12
-
-    /* Check if we failed (bad context record) */
-    or eax, eax
-    jnz Error
-
-    /* Check if test alert was requested */
-    cmp dword ptr [ebp+12], 0
-    je DontTest
-
-    /* Test alert for the thread */
-    mov al, [ebx+KTHREAD_PREVIOUS_MODE]
-    push eax
-    call _KeTestAlertThread@4
-
-DontTest:
-    /* Return to previous context */
-    pop ebp
-    mov esp, ebp
-    jmp _KiServiceExit2
-
-Error:
-    pop ebp
-    mov esp, ebp
-    jmp _KiServiceExit
+    /* Call C code */
+    mov ecx, [esp+4]
+    mov edx, [esp+8]
+    jmp @NtContinueHandler@8
 .endfunc
 
 /* HARDWARE TRAP HANDLERS ****************************************************/

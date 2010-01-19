@@ -932,6 +932,14 @@ KiEndUnexpectedRange(
     VOID
 );
 
+NTSTATUS
+NTAPI
+KiContinue(
+    IN PCONTEXT Context,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
+    IN PKTRAP_FRAME TrapFrame
+);
+
 VOID
 FASTCALL
 KiServiceExit2(

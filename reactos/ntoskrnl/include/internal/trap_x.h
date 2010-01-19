@@ -322,3 +322,35 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
         : "%esp"
     );
 }
+
+FORCEINLINE
+VOID
+KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Regular interrupt exit */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "movl %c[a](%%esp), %%eax\n"
+        "movl %c[b](%%esp), %%ebx\n"
+        "movl %c[c](%%esp), %%ecx\n"
+        "movl %c[d](%%esp), %%edx\n"
+        "movl %c[s](%%esp), %%esi\n"
+        "movl %c[i](%%esp), %%edi\n"
+        "movl %c[p](%%esp), %%ebp\n"
+        "addl $%c[e],%%esp\n"
+        "movl (%%esp), %%esp\n"
+        "iret\n"
+        :
+        : "r"(TrapFrame),
+          [a] "i"(KTRAP_FRAME_EAX),
+          [b] "i"(KTRAP_FRAME_EBX),
+          [c] "i"(KTRAP_FRAME_ECX),
+          [d] "i"(KTRAP_FRAME_EDX),
+          [s] "i"(KTRAP_FRAME_ESI),
+          [i] "i"(KTRAP_FRAME_EDI),
+          [p] "i"(KTRAP_FRAME_EBP),
+          [e] "i"(KTRAP_FRAME_ERROR_CODE) /* We *WANT* the error code since ESP is there! */
+        : "%esp"
+    );
+}
