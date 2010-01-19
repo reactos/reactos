@@ -972,6 +972,13 @@ KiCheckAlertability(IN PKTHREAD Thread,
     return STATUS_WAIT_0;
 }
 
+ULONG
+FORCEINLINE
+KiComputeTimerTableIndex(IN ULONGLONG DueTime)
+{
+    return (DueTime / KeMaximumIncrement) & (TIMER_TABLE_SIZE - 1);
+}
+
 //
 // Called from KiCompleteTimer, KiInsertTreeTimer, KeSetSystemTime
 // to remove timer entries

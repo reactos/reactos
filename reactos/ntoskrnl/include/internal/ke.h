@@ -730,12 +730,6 @@ KiTimerExpiration(
 
 ULONG
 NTAPI
-KiComputeTimerTableIndex(
-    IN LONGLONG TimeValue
-);
-
-ULONG
-NTAPI
 KeSetProcess(
     struct _KPROCESS* Process,
     KPRIORITY Increment,
