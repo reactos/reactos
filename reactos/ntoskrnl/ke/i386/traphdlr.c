@@ -1691,6 +1691,165 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
     KiDebugHandler(TrapFrame, TrapFrame->Eax, TrapFrame->Ecx, TrapFrame->Edx);
 }
 
+VOID
+FASTCALL
+KiSystemCall(IN ULONG SystemCallNumber,
+             IN PVOID Arguments)
+{
+    PKTHREAD Thread;
+    PKTRAP_FRAME TrapFrame;
+    PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
+    ULONG Id, Offset, StackBytes, Result;
+    PVOID Handler;
+    
+    /* Loop because we might need to try this twice in case of a GUI call */
+    while (TRUE)
+    {
+        /* Decode the system call number */
+        Offset = (SystemCallNumber >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK;
+        Id = SystemCallNumber & SERVICE_NUMBER_MASK;
+    
+        /* Get current thread, trap frame, and descriptor table */
+        Thread = KeGetCurrentThread();
+        TrapFrame = Thread->TrapFrame;
+        DescriptorTable = (PVOID)((ULONG_PTR)Thread->ServiceTable + Offset);
+
+        /* Validate the system call number */
+        if (__builtin_expect(Id > DescriptorTable->Limit, 0))
+        {
+            /* Check if this is a GUI call */
+            if (__builtin_expect(!(Offset & SERVICE_TABLE_TEST), 0))
+            {
+                /* Fail the call */
+                Result = STATUS_INVALID_SYSTEM_SERVICE;
+                goto ExitCall;
+            }
+
+            /* GUI calls are not yet supported */
+            UNIMPLEMENTED;
+            while (TRUE);
+            
+            /* Try the call again */
+            continue;
+        }
+        
+        /* If we made it here, the call is good */
+        break;
+    }
+    
+    /* Check if this is a GUI call */
+    if (__builtin_expect(Offset & SERVICE_TABLE_TEST, 0))
+    {
+        /* Get the batch count and flush if necessary */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Increase system call count */
+    KeGetCurrentPrcb()->KeSystemCalls++;
+    
+    /* FIXME: Increase individual counts on debug systems */
+    //KiIncreaseSystemCallCount(DescriptorTable, Id);
+    
+    /* Get stack bytes */
+    StackBytes = DescriptorTable->Number[Id];
+    
+    /* Probe caller stack */
+    if (__builtin_expect((Arguments < (PVOID)MmUserProbeAddress) && !(KiUserTrap(TrapFrame)), 0))
+    {
+        /* Access violation */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Get the handler and make the system call */
+    Handler = (PVOID)DescriptorTable->Base[Id];
+    Result = KiSystemCallTrampoline(Handler, Arguments, StackBytes);
+    
+    /* Make sure we're exiting correctly */
+    KiExitSystemCallDebugChecks(Id, TrapFrame);
+    
+    /* Restore the old trap frame */
+ExitCall:
+    Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+
+    /* Exit from system call */
+    KiServiceExit(TrapFrame, Result);
+}
+
+VOID
+FORCEINLINE
+KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
+                    IN ULONG ServiceNumber,
+                    IN PVOID Arguments,
+                    IN PKTHREAD Thread,
+                    IN KPROCESSOR_MODE PreviousMode,
+                    IN KPROCESSOR_MODE PreviousPreviousMode,
+                    IN USHORT SegFs)
+{
+    /* No error code */
+    TrapFrame->ErrCode = 0;
+    
+    /* Save previous mode and FS segment */
+    TrapFrame->PreviousPreviousMode = PreviousPreviousMode;
+    TrapFrame->SegFs = SegFs;
+        
+    /* Save the SEH chain and terminate it for now */    
+    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
+    KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
+        
+    /* Clear DR7 and check for debugging */
+    TrapFrame->Dr7 = 0;
+    if (__builtin_expect(Thread->DispatcherHeader.DebugActive & 0xFF, 0))
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Set thread fields */
+    Thread->TrapFrame = TrapFrame;
+    Thread->PreviousMode = PreviousMode;
+    
+    /* Set debug header */
+    KiFillTrapFrameDebug(TrapFrame);
+    
+    /* Enable interrupts and make the call */
+    _enable();
+    KiSystemCall(ServiceNumber, Arguments);   
+}
+
+VOID
+__attribute__((regparm(3)))
+KiSystemServiceHandler(IN ULONG ServiceNumber,
+                       IN PVOID Arguments,
+                       IN PKTRAP_FRAME TrapFrame)
+{
+    USHORT SegFs;
+    PKTHREAD Thread;
+
+    /* Save and fixup FS */
+    SegFs = Ke386GetFs();
+    Ke386SetFs(KGDT_R0_PCR);
+        
+    /* Get the current thread */
+    Thread = KeGetCurrentThread();
+    
+    /* Chain trap frames */
+    TrapFrame->Edx = (ULONG_PTR)Thread->TrapFrame;
+    
+    /* Clear direction flag */
+    Ke386ClearDirectionFlag();
+    
+    /* Call the shared handler (inline) */
+    KiSystemCallHandler(TrapFrame,
+                        ServiceNumber,
+                        Arguments,
+                        Thread,
+                        KiUserTrap(TrapFrame),
+                        Thread->PreviousMode,
+                        SegFs);
+}
+
 /* HARDWARE INTERRUPTS ********************************************************/
 
 /*

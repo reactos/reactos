@@ -66,8 +66,6 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 .globl _KiSystemService
 
 /* And special system-defined software traps:                               */
-.globl _NtRaiseException@12
-.globl _NtContinue@8
 .globl _KiDispatchInterrupt@0
 
 /* Interrupt template entrypoints                                           */
@@ -84,7 +82,6 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
 /* We implement the following trap exit points:                             */
 .globl _Kei386EoiHelper@0           /* Exit from interrupt or H/W trap      */
-.globl _Kei386EoiHelper2ndEntry     /* Exit from unexpected interrupt       */
 
 .globl _KiIdtDescriptor
 _KiIdtDescriptor:
@@ -115,14 +112,20 @@ _IsrOverflowMsg:
 .text
 
 .func KiSystemService
-TRAP_FIXUPS kss_a, kss_t, DoNotFixupV86, DoNotFixupAbios
 _KiSystemService:
 
-    /* Enter the shared system call prolog */
-    SYSCALL_PROLOG kss_a, kss_t
+    /* Make space for trap frame on the stack */
+    sub esp, KTRAP_FRAME_EIP
 
-    /* Jump to the actual handler */
-    jmp SharedCode
+    /* Save EBP, EBX, ESI, EDI only! */
+    mov [esp+KTRAP_FRAME_EBX], ebx
+    mov [esp+KTRAP_FRAME_ESI], esi
+    mov [esp+KTRAP_FRAME_EDI], edi
+    mov [esp+KTRAP_FRAME_EBP], ebp
+
+    /* Call C handler -- note that EDX is the caller stack, EAX is the ID */
+    mov ecx, esp
+    jmp _KiSystemServiceHandler
 .endfunc
 
 .func KiFastCallEntry

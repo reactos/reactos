@@ -111,15 +111,55 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
         while (TRUE);
     }
 }
+
+FORCEINLINE
+VOID
+KiExitSystemCallDebugChecks(IN ULONG SystemCall,
+                            IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL OldIrql;
+    
+    /* Check if this was a user call */
+    if (KiUserMode(TrapFrame))
+    {
+        /* Make sure we are not returning with elevated IRQL */
+        OldIrql = KeGetCurrentIrql();
+        if (OldIrql != PASSIVE_LEVEL)
+        {
+            /* Forcibly put us in a sane state */
+            KeGetPcr()->CurrentIrql = PASSIVE_LEVEL;
+            _disable();
+            
+            /* Fail */
+            KeBugCheckEx(IRQL_GT_ZERO_AT_SYSTEM_SERVICE,
+                         SystemCall,
+                         OldIrql,
+                         0,
+                         0);
+        }
+        
+        /* Make sure we're not attached and that APCs are not disabled */
+        if ((KeGetCurrentThread()->ApcStateIndex != CurrentApcEnvironment) ||
+            (KeGetCurrentThread()->CombinedApcDisable != 0))
+        {
+            /* Fail */
+            KeBugCheckEx(APC_INDEX_MISMATCH,
+                         SystemCall,
+                         KeGetCurrentThread()->ApcStateIndex,
+                         KeGetCurrentThread()->CombinedApcDisable,
+                         0);
+        }
+    }
+}
 #else
 #define KiExitTrapDebugChecks(x, y)
 #define KiFillTrapFrameDebug(x)
+#define KiExitSystemCallDebugChecks(x, y)
 #endif
 
 //
 // Helper Code
 //
-
 BOOLEAN
 FORCEINLINE
 KiUserTrap(IN PKTRAP_FRAME TrapFrame)
@@ -353,4 +393,46 @@ KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_ERROR_CODE) /* We *WANT* the error code since ESP is there! */
         : "%esp"
     );
+}
+
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
+    NTSTATUS Result;
+    
+    /*
+     * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
+     * and then calls the function associated with the system call.
+     *
+     * It's done in assembly for two reasons: we need to muck with the stack,
+     * and the call itself restores the stack back for us. The only way to do
+     * this in C is to do manual C handlers for every possible number of args on
+     * the stack, and then have the handler issue a call by pointer. This is
+     * wasteful since it'll basically push the values twice and require another
+     * level of call indirection.
+     *
+     * The ARM kernel currently does this, but it should probably be changed
+     * later to function like this as well.
+     *
+     */
+    __asm__ __volatile__
+    (
+        "subl %1, %%esp\n"
+        "movl %%esp, %%edi\n"
+        "movl %2, %%esi\n"
+        "shrl $2, %1\n"
+        "rep movsd\n"
+        "call *%3\n"
+        "movl %%eax, %0\n"
+        : "=r"(Result)
+        : "c"(StackBytes),
+          "d"(Arguments),
+          "r"(Handler)
+        : "%esp", "%esi", "%edi"
+    );
+    
+    return Result;
 }
