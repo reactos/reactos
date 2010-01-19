@@ -156,10 +156,41 @@ _KiFastCallEntry:
 
 .func Kei386EoiHelper@0
 _Kei386EoiHelper@0:
-    /* Call the C EOI Helper */
-    mov ecx, esp
-    jmp @KiEoiHelper@4
+
+    /* Disable interrupts */
+    cli
+
+    /* Check for, and deliver, User-Mode APCs if needed */
+    CHECK_FOR_APC_DELIVER 0
+
+    /* Exit and cleanup */
+_Kei386EoiHelper2ndEntry:
+    TRAP_EPILOG NotFromSystemCall, DoNotRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
 .endfunc
+
+V86_Exit:
+    /* Move to EDX position */
+    add esp, KTRAP_FRAME_EDX
+
+    /* Restore volatiles */
+    pop edx
+    pop ecx
+    pop eax
+
+    /* Move to non-volatiles */
+    lea esp, [ebp+KTRAP_FRAME_EDI]
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+
+    /* Skip error code and return */
+    add esp, 4
+    iret
+
+AbiosExit:
+    /* FIXME: TODO */
+    UNHANDLED_PATH
 
 GENERATE_TRAP_HANDLER KiGetTickCount, 1
 GENERATE_TRAP_HANDLER KiCallbackReturn, 1        
