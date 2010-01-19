@@ -1465,6 +1465,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     }
     
     /* Check for syscall fault */
+#if 0
     if ((TrapFrame->Eip == (ULONG_PTR)CopyParams) ||
         (TrapFrame->Eip == (ULONG_PTR)ReadBatch))
     {
@@ -1472,7 +1473,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         UNIMPLEMENTED;
         while (TRUE);
     }
-
+#endif
     /* Check for VDM trap */
     ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
     
@@ -1725,9 +1726,14 @@ KiSystemCall(IN ULONG SystemCallNumber,
                 goto ExitCall;
             }
 
-            /* GUI calls are not yet supported */
-            UNIMPLEMENTED;
-            while (TRUE);
+            /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */        
+            Result = KiConvertToGuiThread();
+            if (__builtin_expect(!NT_SUCCESS(Result), 0))
+            {
+                /* Figure out how we should fail to the user */
+                UNIMPLEMENTED;
+                while (TRUE);
+            }
             
             /* Try the call again */
             continue;
@@ -1741,8 +1747,7 @@ KiSystemCall(IN ULONG SystemCallNumber,
     if (__builtin_expect(Offset & SERVICE_TABLE_TEST, 0))
     {
         /* Get the batch count and flush if necessary */
-        UNIMPLEMENTED;
-        while (TRUE);
+        if (NtCurrentTeb()->GdiBatchCount) KeGdiFlushUserBatch();
     }
     
     /* Increase system call count */
@@ -1816,6 +1821,39 @@ KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
     /* Enable interrupts and make the call */
     _enable();
     KiSystemCall(ServiceNumber, Arguments);   
+}
+
+VOID
+__attribute__((regparm(3)))
+KiFastCallEntryHandler(IN ULONG ServiceNumber,
+                       IN PVOID Arguments,
+                       IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+        
+    /* Fixup segments */
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    
+    /* Set up a fake INT Stack and enable interrupts */
+    TrapFrame->HardwareSegSs = KGDT_R3_DATA | RPL_MASK;
+    TrapFrame->HardwareEsp = (ULONG_PTR)Arguments - 8; // Stack is 2 frames down
+    TrapFrame->EFlags = __readeflags() | EFLAGS_INTERRUPT_MASK;
+    TrapFrame->SegCs = KGDT_R3_CODE | RPL_MASK;
+    TrapFrame->Eip = SharedUserData->SystemCallReturn;
+    __writeeflags(0x2);
+    
+    /* Get the current thread */
+    Thread = KeGetCurrentThread();
+
+    /* Call the shared handler (inline) */
+    KiSystemCallHandler(TrapFrame,
+                        ServiceNumber,
+                        Arguments,
+                        Thread,
+                        UserMode,
+                        Thread->PreviousMode,
+                        KGDT_R3_TEB | RPL_MASK);
 }
 
 VOID

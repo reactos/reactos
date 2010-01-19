@@ -129,260 +129,30 @@ _KiSystemService:
 .endfunc
 
 .func KiFastCallEntry
-TRAP_FIXUPS FastCallDrSave, FastCallDrReturn, DoNotFixupV86, DoNotFixupAbios
 _KiFastCallEntry:
 
-    /* Enter the fast system call prolog */
-    FASTCALL_PROLOG FastCallDrSave, FastCallDrReturn
-
-SharedCode:
-
-    /*
-     * Find out which table offset to use. Converts 0x1124 into 0x10.
-     * The offset is related to the Table Index as such: Offset = TableIndex x 10
-     */
-    mov edi, eax
-    shr edi, SERVICE_TABLE_SHIFT
-    and edi, SERVICE_TABLE_MASK
-    mov ecx, edi
-
-    /* Now add the thread's base system table to the offset */
-    add edi, [esi+KTHREAD_SERVICE_TABLE]
-
-    /* Get the true syscall ID and check it */
-    mov ebx, eax
-    and eax, SERVICE_NUMBER_MASK
-    cmp eax, [edi+SERVICE_DESCRIPTOR_LIMIT]
-
-    /* Invalid ID, try to load Win32K Table */
-    jnb KiBBTUnexpectedRange
-
-    /* Check if this was Win32K */
-    cmp ecx, SERVICE_TABLE_TEST
-    jnz NotWin32K
-
-    /* Get the TEB */
-    mov ecx, PCR[KPCR_TEB]
-
-    /* Check if we should flush the User Batch */
-    xor ebx, ebx
-_ReadBatch:
-    or ebx, [ecx+TEB_GDI_BATCH_COUNT]
-    jz NotWin32K
-
-    /* Flush it */
-    push edx
-    push eax
-    call [_KeGdiFlushUserBatch]
-    pop eax
-    pop edx
-
-NotWin32K:
-    /* Increase total syscall count */
-    inc dword ptr PCR[KPCR_SYSTEM_CALLS]
-
-#if DBG
-    /* Increase per-syscall count */
-    mov ecx, [edi+SERVICE_DESCRIPTOR_COUNT]
-    jecxz NoCountTable
-    inc dword ptr [ecx+eax*4]
-#endif
-
-    /* Users's current stack frame pointer is source */
-NoCountTable:
-    mov esi, edx
-
-    /* Allocate room for argument list from kernel stack */
-    mov ebx, [edi+SERVICE_DESCRIPTOR_NUMBER]
-    xor ecx, ecx
-    mov cl, [eax+ebx]
-
-    /* Get pointer to function */
-    mov edi, [edi+SERVICE_DESCRIPTOR_BASE]
-    mov ebx, [edi+eax*4]
-
-    /* Allocate space on our stack */
-    sub esp, ecx
-
-    /* Set the size of the arguments and the destination */
-    shr ecx, 2
-    mov edi, esp
-
-    /* Make sure we're within the User Probe Address */
-    cmp esi, _MmUserProbeAddress
-    jnb AccessViolation
-
-_CopyParams:
-    /* Copy the parameters */
-    rep movsd
-
-    /* Do the System Call */
-    call ebx
-
-AfterSysCall:
-#if DBG
-    /* Make sure the user-mode call didn't return at elevated IRQL */
-    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz SkipCheck
-    mov esi, eax                /* We need to save the syscall's return val */
-    call _KeGetCurrentIrql@0
-    or al, al
-    jnz InvalidIrql
-    mov eax, esi                /* Restore it */
-
-    /* Get our temporary current thread pointer for sanity check */
-    mov ecx, PCR[KPCR_CURRENT_THREAD]
-
-    /* Make sure that we are not attached and that APCs are not disabled */
-    mov dl, [ecx+KTHREAD_APC_STATE_INDEX]
-    or dl, dl
-    jnz InvalidIndex
-    mov edx, [ecx+KTHREAD_COMBINED_APC_DISABLE]
-    or edx, edx
-    jnz InvalidIndex
-#endif
-
-SkipCheck:
-
-    /* Deallocate the kernel stack frame  */
-    mov esp, ebp
-
-KeReturnFromSystemCall:
-
-    /* Get the Current Thread */
-    mov ecx, PCR[KPCR_CURRENT_THREAD]
-
-    /* Restore the old trap frame pointer */
-    mov edx, [ebp+KTRAP_FRAME_EDX]
-    mov [ecx+KTHREAD_TRAP_FRAME], edx
+    /* Sane FS segment */
+    mov ecx, KGDT_R0_PCR
+    mov fs, cx
     
-    /* Exit the system call */
-    mov ecx, ebp
-    mov edx, eax
-    jmp @KiServiceExit@8
+    /* Sane stack and frame */
+    mov esp, PCR[KPCR_TSS]
+    mov esp, [esp+KTSS_ESP0]
+    
+    /* Make space for trap frame on the stack */
+    sub esp, KTRAP_FRAME_V86_ES
+    
+    /* Save EBP, EBX, ESI, EDI only! */
+    mov [esp+KTRAP_FRAME_EBX], ebx
+    mov [esp+KTRAP_FRAME_ESI], esi
+    mov [esp+KTRAP_FRAME_EDI], edi
+    mov [esp+KTRAP_FRAME_EBP], ebp
+    
+    /* Call C handler -- note that EDX is the user stack, and EAX the syscall */
+    mov ecx, esp
+    add edx, 8
+    jmp _KiFastCallEntryHandler
 .endfunc
-
-KiBBTUnexpectedRange:
-
-    /* If this isn't a Win32K call, fail */
-    cmp ecx, SERVICE_TABLE_TEST
-    jne InvalidCall
-
-    /* Set up Win32K Table */
-    push edx
-    push ebx
-    call _PsConvertToGuiThread@0
-
-    /* Check return code */
-    or eax, eax
-
-    /* Restore registers */
-    pop eax
-    pop edx
-
-    /* Reset trap frame address */
-    mov ebp, esp
-    mov [esi+KTHREAD_TRAP_FRAME], ebp
-
-    /* Try the Call again, if we suceeded */
-    jz SharedCode
-
-    /*
-     * The Shadow Table should have a special byte table which tells us
-     * whether we should return FALSE, -1 or STATUS_INVALID_SYSTEM_SERVICE.
-     */
-
-    /* Get the table limit and base */
-    lea edx, _KeServiceDescriptorTableShadow + SERVICE_TABLE_TEST
-    mov ecx, [edx+SERVICE_DESCRIPTOR_LIMIT]
-    mov edx, [edx+SERVICE_DESCRIPTOR_BASE]
-
-    /* Get the table address and add our index into the array */
-    lea edx, [edx+ecx*4]
-    and eax, SERVICE_NUMBER_MASK
-    add edx, eax
-
-    /* Find out what we should return */
-    movsx eax, byte ptr [edx]
-    or eax, eax
-
-    /* Return either 0 or -1, we've set it in EAX */
-    jle KeReturnFromSystemCall
-
-    /* Set STATUS_INVALID_SYSTEM_SERVICE */
-    mov eax, STATUS_INVALID_SYSTEM_SERVICE
-    jmp KeReturnFromSystemCall
-
-InvalidCall:
-
-    /* Invalid System Call */
-    mov eax, STATUS_INVALID_SYSTEM_SERVICE
-    jmp KeReturnFromSystemCall
-
-AccessViolation:
-
-    /* Check if this came from kernel-mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-
-    /* It's fine, go ahead with it */
-    jz _CopyParams
-
-    /* Caller sent invalid parameters, fail here */
-    mov eax, STATUS_ACCESS_VIOLATION
-    jmp AfterSysCall
-
-BadStack:
-
-    /* Restore ESP0 stack */
-    mov ecx, PCR[KPCR_TSS]
-    mov esp, ss:[ecx+KTSS_ESP0]
-
-    /* Generate V86M Stack for Trap 6 */
-    push 0
-    push 0
-    push 0
-    push 0
-
-    /* Generate interrupt stack for Trap 6 */
-    push KGDT_R3_DATA + RPL_MASK
-    push 0
-    push 0x20202
-    push KGDT_R3_CODE + RPL_MASK
-    push 0
-    jmp _KiTrap06
-
-#if DBG
-InvalidIrql:
-    /* Save current IRQL */
-    push PCR[KPCR_IRQL]
-
-    /* Set us at passive */
-    mov dword ptr PCR[KPCR_IRQL], 0
-    cli
-
-    /* Bugcheck */
-    push 0
-    push 0
-    push eax
-    push ebx
-    push IRQL_GT_ZERO_AT_SYSTEM_SERVICE
-    call _KeBugCheckEx@20
-
-InvalidIndex:
-
-    /* Get the index and APC state */
-    movzx eax, byte ptr [ecx+KTHREAD_APC_STATE_INDEX]
-    mov edx, [ecx+KTHREAD_COMBINED_APC_DISABLE]
-
-    /* Bugcheck */
-    push 0
-    push edx
-    push eax
-    push ebx
-    push APC_INDEX_MISMATCH
-    call _KeBugCheckEx@20
-    ret
-#endif
 
 .func Kei386EoiHelper@0
 _Kei386EoiHelper@0:
