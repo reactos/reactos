@@ -393,23 +393,6 @@ GENERATE_TRAP_HANDLER KiCallbackReturn, 1
 GENERATE_TRAP_HANDLER KiRaiseAssertion, 1
 GENERATE_TRAP_HANDLER KiDebugService, 1
 
-.func NtRaiseException@12
-_NtRaiseException@12:
-    /* Call C code */
-    mov ecx, [esp+4]
-    mov edx, [esp+8]
-    or edx, [esp+12]
-    jmp @NtRaiseExceptionHandler@8
-.endfunc
-
-.func NtContinue@8
-_NtContinue@8:
-    /* Call C code */
-    mov ecx, [esp+4]
-    mov edx, [esp+8]
-    jmp @NtContinueHandler@8
-.endfunc
-
 /* HARDWARE TRAP HANDLERS ****************************************************/
 
 GENERATE_TRAP_HANDLER KiTrap00

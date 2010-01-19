@@ -952,6 +952,12 @@ KiContinue(
 
 VOID
 FASTCALL
+KiServiceExit(
+    IN PKTRAP_FRAME TrapFrame
+);
+
+VOID
+FASTCALL
 KiServiceExit2(
     IN PKTRAP_FRAME TrapFrame
 );
