@@ -1693,6 +1693,46 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
+NtRaiseExceptionHandler(IN PEXCEPTION_RECORD ExceptionRecord,
+                        IN PCONTEXT Context)
+{
+    BOOLEAN FirstChance;
+    NTSTATUS Status;
+    PKTHREAD Thread;
+    PKTRAP_FRAME TrapFrame;
+    
+    /* Fixup parameters */
+    FirstChance = (ULONG_PTR)Context & 1;
+    Context = (PVOID)((ULONG_PTR)Context & ~1);
+    
+    /* Get trap frame and link previous one*/
+    Thread = KeGetCurrentThread();
+    TrapFrame = Thread->TrapFrame;
+    Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+    
+    /* Set exception list */
+    KeGetPcr()->Tib.ExceptionList = TrapFrame->ExceptionList;
+    
+    /* Raise the exception */
+    Status = KiRaiseException(ExceptionRecord,
+                              Context,
+                              NULL,
+                              TrapFrame,
+                              FirstChance);
+    if (NT_SUCCESS(Status))
+    {
+        /* It was handled, so exit restoring all state */
+        KiServiceExit2(TrapFrame);
+    }
+    else
+    {
+        /* Exit with error */
+        KiServiceExit(TrapFrame, Status);
+    }
+}
+
+VOID
+FASTCALL
 NtContinueHandler(IN PCONTEXT Context,
                   IN BOOLEAN TestAlert)
 {

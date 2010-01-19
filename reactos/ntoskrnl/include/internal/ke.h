@@ -934,6 +934,16 @@ KiEndUnexpectedRange(
 
 NTSTATUS
 NTAPI
+KiRaiseException(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
+    IN PKTRAP_FRAME TrapFrame,
+    IN BOOLEAN SearchFrames
+);
+
+NTSTATUS
+NTAPI
 KiContinue(
     IN PCONTEXT Context,
     IN PKEXCEPTION_FRAME ExceptionFrame,

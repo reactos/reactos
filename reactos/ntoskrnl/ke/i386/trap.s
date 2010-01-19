@@ -476,49 +476,11 @@ GENERATE_TRAP_HANDLER KiDebugService, 1
 
 .func NtRaiseException@12
 _NtRaiseException@12:
-
-    /* NOTE: We -must- be called by Zw* to have the right frame! */
-    /* Push the stack frame */
-    push ebp
-
-    /* Get the current thread and restore its trap frame */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov edx, [ebp+KTRAP_FRAME_EDX]
-    mov [ebx+KTHREAD_TRAP_FRAME], edx
-
-    /* Set up stack frame */
-    mov ebp, esp
-
-    /* Get the Trap Frame in EBX */
-    mov ebx, [ebp+0]
-
-    /* Get the exception list and restore */
-    mov eax, [ebx+KTRAP_FRAME_EXCEPTION_LIST]
-    mov PCR[KPCR_EXCEPTION_LIST], eax
-
-    /* Get the parameters */
-    mov edx, [ebp+16] /* Search frames */
-    mov ecx, [ebp+12] /* Context */
-    mov eax, [ebp+8]  /* Exception Record */
-
-    /* Raise the exception */
-    push edx
-    push ebx
-    push 0
-    push ecx
-    push eax
-    call _KiRaiseException@20
-
-    /* Restore trap frame in EBP */
-    pop ebp
-    mov esp, ebp
-
-    /* Check the result */
-    or eax, eax
-    jz _KiServiceExit2
-
-    /* Restore debug registers too */
-    jmp _KiServiceExit
+    /* Call C code */
+    mov ecx, [esp+4]
+    mov edx, [esp+8]
+    or edx, [esp+12]
+    jmp @NtRaiseExceptionHandler@8
 .endfunc
 
 .func NtContinue@8
