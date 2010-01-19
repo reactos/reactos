@@ -16,8 +16,8 @@
 /* GLOBALS *******************************************************************/
 
 /* Boot and double-fault/NMI/DPC stack */
-UCHAR P0BootStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16)));
-UCHAR KiDoubleFaultStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16)));
+UCHAR P0BootStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16))) = {0};
+UCHAR KiDoubleFaultStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16))) = {0};
 ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
 ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
 
