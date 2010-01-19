@@ -38,7 +38,6 @@
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file first="true">boot.S</file>
 				<file>abios.c</file>
 				<file>cpu.c</file>
 				<file>ctxswitch.S</file>

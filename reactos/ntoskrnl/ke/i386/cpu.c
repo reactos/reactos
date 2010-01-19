@@ -649,8 +649,8 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss = (PKTSS)KiDoubleFaultTSS;
     KiInitializeTSS(Tss);
     Tss->CR3 = __readcr3();
-    Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
-    Tss->Esp = PtrToUlong(KiDoubleFaultStack);
+    Tss->Esp0 = KiDoubleFaultStack;
+    Tss->Esp = KiDoubleFaultStack;
     Tss->Eip = PtrToUlong(KiTrap08);
     Tss->Cs = KGDT_R0_CODE;
     Tss->Fs = KGDT_R0_PCR;
@@ -679,8 +679,8 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss = (PKTSS)KiNMITSS;
     KiInitializeTSS(Tss);
     Tss->CR3 = __readcr3();
-    Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
-    Tss->Esp = PtrToUlong(KiDoubleFaultStack);
+    Tss->Esp0 = KiDoubleFaultStack;
+    Tss->Esp = KiDoubleFaultStack;
     Tss->Eip = PtrToUlong(KiTrap02);
     Tss->Cs = KGDT_R0_CODE;
     Tss->Fs = KGDT_R0_PCR;

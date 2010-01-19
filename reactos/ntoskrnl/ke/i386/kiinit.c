@@ -11,8 +11,15 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "internal/trap_x.h"
 
 /* GLOBALS *******************************************************************/
+
+/* Boot and double-fault/NMI/DPC stack */
+UCHAR P0BootStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16)));
+UCHAR KiDoubleFaultStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16)));
+ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
+ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
 
 /* Spinlocks used only on X86 */
 KSPIN_LOCK KiFreezeExecutionLock;
@@ -642,7 +649,36 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
 
 VOID
 NTAPI
-KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+KiSystemStartupBootStack(VOID)
+{
+    PKTHREAD Thread;
+    
+    /* Initialize the kernel for the current CPU */
+    KiInitializeKernel(&KiInitialProcess.Pcb,
+                       (PKTHREAD)KeLoaderBlock->Thread,
+                       (PVOID)(KeLoaderBlock->KernelStack & ~3),
+                       (PKPRCB)__readfsdword(KPCR_PRCB),
+                       KeNumberProcessors - 1,
+                       KeLoaderBlock);
+   
+    /* Set the priority of this thread to 0 */
+    Thread = KeGetCurrentThread();
+    Thread->Priority = 0;
+    
+    /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
+    _enable();
+    KfLowerIrql(DISPATCH_LEVEL);
+    
+    /* Set the right wait IRQL */
+    Thread->WaitIrql = DISPATCH_LEVEL;
+
+    /* Jump into the idle loop */
+    KiIdleLoop();
+}
+
+VOID
+NTAPI
+KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
     PKTHREAD InitialThread;
@@ -652,6 +688,9 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KIDTENTRY NmiEntry, DoubleFaultEntry;
     PKTSS Tss;
     PKIPCR Pcr;
+    
+    /* Check if we are being booted from FreeLDR */
+    if (!((ULONG_PTR)LoaderBlock & 0x80000000)) KiRosPrepareForSystemStartup((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
 
     /* Save the loader block and get the current CPU */
     KeLoaderBlock = LoaderBlock;
@@ -694,7 +733,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                     Gdt,
                     Tss,
                     InitialThread,
-                    KiDoubleFaultStack);
+                    (PVOID)KiDoubleFaultStack);
 
     /* Set us as the current process */
     InitialThread->ApcState.Process = &KiInitialProcess.Pcb;
@@ -758,14 +797,6 @@ AppCpuInit:
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
 
-    /* Align stack and make space for the trap frame and NPX frame */
-    InitialStack &= ~(KTRAP_FRAME_ALIGN - 1);
-
     /* Switch to new kernel stack and start kernel bootstrapping */
-    KiSetupStackAndInitializeKernel(&KiInitialProcess.Pcb,
-                                    InitialThread,
-                                    (PVOID)InitialStack,
-                                    (PKPRCB)__readfsdword(KPCR_PRCB),
-                                    (CCHAR)Cpu,
-                                    KeLoaderBlock);
+    KiSwitchToBootStack(InitialStack & ~3);
 }

@@ -10,7 +10,7 @@
 // Debug Macros
 //
 VOID
-NTAPI
+FORCEINLINE
 KiDumpTrapFrame(IN PKTRAP_FRAME TrapFrame)
 {
     /* Dump the whole thing */
@@ -474,4 +474,23 @@ KiConvertToGuiThread(VOID)
     );
         
     return Result;
+}
+
+VOID
+FORCEINLINE
+KiSwitchToBootStack(IN ULONG_PTR InitialStack)
+{
+    /* We have to switch to a new stack before continuing kernel initialization */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "subl %1, %%esp\n"
+        "pushl %2\n"
+        "jmp _KiSystemStartupBootStack@0\n"
+        : 
+        : "c"(InitialStack),
+          "i"(NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH),
+          "i"(CR0_EM | CR0_TS | CR0_MP)
+        : "%esp"
+    );
 }

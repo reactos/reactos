@@ -32,6 +32,7 @@ extern PAGE_DIRECTORY_X86 kpcr_pagetable;
 extern PAGE_DIRECTORY_X86 kuser_pagetable;
 extern ULONG_PTR KernelBase;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -97,7 +98,7 @@ FrLdrSetupPae(ULONG Magic)
     __writecr0(__readcr0() | CR0_PG | CR0_WP);
 
     /* Jump to Kernel */
-    (*KernelEntryPoint)(Magic, &LoaderBlock);
+    (*KernelEntryPoint)(&LoaderBlock);
 }
 
 /*++
