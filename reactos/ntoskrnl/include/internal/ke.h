@@ -953,7 +953,8 @@ KiContinue(
 VOID
 FASTCALL
 KiServiceExit(
-    IN PKTRAP_FRAME TrapFrame
+    IN PKTRAP_FRAME TrapFrame,
+    IN NTSTATUS Status
 );
 
 VOID
