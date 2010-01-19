@@ -20,10 +20,12 @@
 
 #include "config.h"
 #include "wine/port.h"
-#include "wine/debug.h"
+
+#define NONAMELESSUNION
 #include "windef.h"
 #include "wingdi.h"
 #include "d3dx9.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -260,22 +262,22 @@ BOOL WINAPI D3DXIntersectTri(CONST D3DXVECTOR3 *p0, CONST D3DXVECTOR3 *p1, CONST
     D3DXMATRIX m;
     D3DXVECTOR4 vec;
 
-    m.m[0][0] = p1->x - p0->x;
-    m.m[1][0] = p2->x - p0->x;
-    m.m[2][0] = -praydir->x;
-    m.m[3][0] = 0.0f;
-    m.m[0][1] = p1->y - p0->z;
-    m.m[1][1] = p2->y - p0->z;
-    m.m[2][1] = -praydir->y;
-    m.m[3][1] = 0.0f;
-    m.m[0][2] = p1->z - p0->z;
-    m.m[1][2] = p2->z - p0->z;
-    m.m[2][2] = -praydir->z;
-    m.m[3][2] = 0.0f;
-    m.m[0][3] = 0.0f;
-    m.m[1][3] = 0.0f;
-    m.m[2][3] = 0.0f;
-    m.m[3][3] = 1.0f;
+    m.u.m[0][0] = p1->x - p0->x;
+    m.u.m[1][0] = p2->x - p0->x;
+    m.u.m[2][0] = -praydir->x;
+    m.u.m[3][0] = 0.0f;
+    m.u.m[0][1] = p1->y - p0->z;
+    m.u.m[1][1] = p2->y - p0->z;
+    m.u.m[2][1] = -praydir->y;
+    m.u.m[3][1] = 0.0f;
+    m.u.m[0][2] = p1->z - p0->z;
+    m.u.m[1][2] = p2->z - p0->z;
+    m.u.m[2][2] = -praydir->z;
+    m.u.m[3][2] = 0.0f;
+    m.u.m[0][3] = 0.0f;
+    m.u.m[1][3] = 0.0f;
+    m.u.m[2][3] = 0.0f;
+    m.u.m[3][3] = 1.0f;
 
     vec.x = praypos->x - p0->x;
     vec.y = praypos->y - p0->y;
