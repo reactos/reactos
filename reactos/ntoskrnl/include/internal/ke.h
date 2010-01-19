@@ -932,6 +932,12 @@ KiEndUnexpectedRange(
     VOID
 );
 
+VOID
+FASTCALL
+KiServiceExit2(
+    IN PKTRAP_FRAME TrapFrame
+);
+
 #ifndef HAL_INTERRUPT_SUPPORT_IN_C
 VOID
 NTAPI

@@ -62,9 +62,8 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     /* Check if the previous mode must be restored */
     if (__builtin_expect(!SkipBits.SkipPreviousMode, 0)) /* More INTS than SYSCALLs */
     {
-        /* Not handled yet */
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Restore it */
+        KeGetCurrentThread()->PreviousMode = TrapFrame->PreviousPreviousMode;
     }
 
     /* Check if there are active debug registers */
@@ -72,6 +71,8 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     {
         /* Not handled yet */
         UNIMPLEMENTED;
+        DbgBreakPoint();
+        KiDumpTrapFrame(TrapFrame);
         while (TRUE);
     }
     
@@ -83,6 +84,8 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     {
         /* Not handled yet */
         UNIMPLEMENTED;
+        KiDumpTrapFrame(TrapFrame);
+        DbgBreakPoint();
         while (TRUE);
     }
     
@@ -114,13 +117,37 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     /* Check for system call -- a system call skips volatiles! */
     if (__builtin_expect(SkipBits.SkipVolatiles, 0)) /* More INTs than SYSCALLs */
     {
-        /* Not handled yet */
-        /* 
-         * When we do the system call handler through this path, we need
-         * to have some sort to restore the kernel EAX instead of pushing
-         * back the user EAX. We'll figure it out...
-         */
-        DPRINT1("Warning: caller doesn't want volatiles restored\n");
+        /* Kernel call or user call? */
+        if (__builtin_expect(KiUserTrap(TrapFrame), 1)) /* More Ring 3 than 0 */
+        {
+            /* Is SYSENTER supported and/or enabled, or are we stepping code? */
+            if (__builtin_expect((KiFastSystemCallDisable) ||
+                                 (TrapFrame->EFlags & EFLAGS_TF), 0))
+            {
+                /* Exit normally */
+                KiSystemCallTrapReturn(TrapFrame);
+            }
+            else
+            {
+                /* Restore user FS */
+                Ke386SetFs(KGDT_R3_TEB | RPL_MASK);
+                
+                /* Remove interrupt flag */
+                TrapFrame->EFlags &= ~EFLAGS_INTERRUPT_MASK;
+                __writeeflags(TrapFrame->EFlags);
+                
+                /* Exit through SYSEXIT */
+                KiSystemCallSysExitReturn(TrapFrame);
+            }
+        }
+        else
+        {
+            /* Restore EFLags */
+            __writeeflags(TrapFrame->EFlags);
+            
+            /* Call is kernel, so do a jump back since this wasn't a real INT */
+            KiSystemCallReturn(TrapFrame);
+        }  
     }
     else
     {
@@ -185,6 +212,20 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
     
     /* Now exit the trap for real */
     KiExitTrap(TrapFrame, KTE_SKIP_PM_BIT);
+}
+
+VOID
+FASTCALL
+KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Disable interrupts until we return */
+    _disable();
+    
+    /* Check for APC delivery */
+    KiCheckForApcDelivery(TrapFrame);
+    
+    /* Now exit the trap for real */
+    KiExitTrap(TrapFrame, 0);
 }
 
 /* TRAP ENTRY CODE ************************************************************/

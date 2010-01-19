@@ -207,6 +207,93 @@ KiDispatchException2Args(IN NTSTATUS Code,
 
 FORCEINLINE
 VOID
+KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "movl %c[b](%%esp), %%ebx\n"
+        "movl %c[s](%%esp), %%esi\n"
+        "movl %c[i](%%esp), %%edi\n"
+        "movl %c[p](%%esp), %%ebp\n"
+        "movl %c[a](%%esp), %%eax\n"
+        "movl %c[e](%%esp), %%edx\n"
+        "addl $%c[v],%%esp\n" /* A WHOLE *KERNEL* frame since we're not IRET'ing */
+        "jmp *%%edx\n"
+        :
+        : "r"(TrapFrame),
+          [b] "i"(KTRAP_FRAME_EBX),
+          [s] "i"(KTRAP_FRAME_ESI),
+          [i] "i"(KTRAP_FRAME_EDI),
+          [p] "i"(KTRAP_FRAME_EBP),
+          [a] "i"(KTRAP_FRAME_EAX),
+          [e] "i"(KTRAP_FRAME_EIP),
+          [v] "i"(KTRAP_FRAME_ESP)
+        : "%esp"
+    );
+}
+
+FORCEINLINE
+VOID
+KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Regular interrupt exit, but we only restore EAX as a volatile */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "movl %c[b](%%esp), %%ebx\n"
+        "movl %c[s](%%esp), %%esi\n"
+        "movl %c[i](%%esp), %%edi\n"
+        "movl %c[p](%%esp), %%ebp\n"
+        "movl %c[a](%%esp), %%eax\n"
+        "addl $%c[e],%%esp\n"
+        "iret\n"
+        :
+        : "r"(TrapFrame),
+          [b] "i"(KTRAP_FRAME_EBX),
+          [s] "i"(KTRAP_FRAME_ESI),
+          [i] "i"(KTRAP_FRAME_EDI),
+          [p] "i"(KTRAP_FRAME_EBP),
+          [a] "i"(KTRAP_FRAME_EAX),         
+          [e] "i"(KTRAP_FRAME_EIP)
+        : "%esp"
+    );
+}
+
+FORCEINLINE
+VOID
+KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Restore nonvolatiles, EAX, and do a SYSEXIT back to the user caller */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "movl %c[s](%%esp), %%esi\n"
+        "movl %c[b](%%esp), %%ebx\n"
+        "movl %c[i](%%esp), %%edi\n"
+        "movl %c[p](%%esp), %%ebp\n"
+        "movl %c[a](%%esp), %%eax\n"
+        "movl %c[e](%%esp), %%edx\n" /* SYSEXIT says EIP in EDX */
+        "movl %c[x](%%esp), %%ecx\n" /* SYSEXIT says ESP in ECX */
+        "addl $%c[v],%%esp\n" /* A WHOLE *USER* frame since we're not IRET'ing */
+        "sti\nsysexit\n"
+        :
+        : "r"(TrapFrame),
+          [b] "i"(KTRAP_FRAME_EBX),
+          [s] "i"(KTRAP_FRAME_ESI),
+          [i] "i"(KTRAP_FRAME_EDI),
+          [p] "i"(KTRAP_FRAME_EBP),
+          [a] "i"(KTRAP_FRAME_EAX),
+          [e] "i"(KTRAP_FRAME_EIP),
+          [x] "i"(KTRAP_FRAME_ESP),
+          [v] "i"(KTRAP_FRAME_V86_ES)
+        : "%esp"
+    );
+}
+
+FORCEINLINE
+VOID
 KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
