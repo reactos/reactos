@@ -1113,7 +1113,8 @@ Module::GetDefaultModuleEntrypoint () const
 	switch ( type )
 	{
 		case Kernel:
-			return "KiSystemStartup";
+			if (Environment::GetArch() == "arm") return "KiSystemStartup";
+            return "KiSystemStartup@4";
 		case KeyboardLayout:
 		case KernelModeDLL:
 		case KernelModeDriver:
