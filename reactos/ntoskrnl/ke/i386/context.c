@@ -23,12 +23,12 @@ KiSwapProcess(IN PKPROCESS NewProcess,
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
 #ifdef CONFIG_SMP
-    ULONG SetMember;
+    LONG SetMember;
     
     /* Update active processor mask */
-    SetMember = Pcr->SetMember;
-    InterlockedXor(&NewProcess->ActiveProcessors, SetMember);
-    InterlockedXor(&OldProcess->ActiveProcessors, SetMember);
+    SetMember = (LONG)Pcr->SetMember;
+    InterlockedXor((PLONG)&NewProcess->ActiveProcessors, SetMember);
+    InterlockedXor((PLONG)&OldProcess->ActiveProcessors, SetMember);
 #endif
 
     /* Check for new LDT */
