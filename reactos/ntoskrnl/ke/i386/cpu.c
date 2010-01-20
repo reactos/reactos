@@ -944,6 +944,155 @@ KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
     KiSaveProcessorControlState(&Prcb->ProcessorState);
 }
 
+BOOLEAN
+NTAPI
+KiIsNpxPresent(VOID)
+{
+    ULONG Cr0;
+    USHORT Magic;
+    
+    /* Set magic */
+    Magic = 0xFFFF;
+    
+    /* Read CR0 and mask out FPU flags */
+    Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
+    
+    /* Store on FPU stack */
+    asm volatile ("fninit;" "fnstsw %0" : "+m"(Magic));
+    
+    /* Magic should now be cleared */
+    if (Magic & 0xFF)
+    {
+        /* You don't have an FPU -- enable emulation for now */
+        __writecr0(Cr0 | CR0_EM | CR0_TS);
+        return FALSE;
+    }
+    
+    /* You have an FPU, enable it */
+    Cr0 |= CR0_ET;
+    
+    /* Enable INT 16 on 486 and higher */
+    if (KeGetCurrentPrcb()->CpuType >= 3) Cr0 |= CR0_NE;
+    
+    /* Set FPU state */
+    __writecr0(Cr0 | CR0_EM | CR0_TS);
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+KiIsNpxErrataPresent(VOID)
+{
+    BOOLEAN ErrataPresent;
+    ULONG Cr0;
+    volatile double Value1, Value2;
+    
+    /* Disable interrupts */
+    _disable();
+    
+    /* Read CR0 and remove FPU flags */
+    Cr0 = __readcr0();
+    __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
+    
+    /* Initialize FPU state */
+    asm volatile ("fninit");
+    
+    /* Multiply the magic values and divide, we should get the result back */
+    Value1 = 4195835.0;
+    Value2 = 3145727.0;
+    ErrataPresent = (Value1 * Value2 / 3145727.0) != 4195835.0;
+    
+    /* Restore CR0 */
+    __writecr0(Cr0);
+    
+    /* Enable interrupts */
+    _enable();
+    
+    /* Return if there's an errata */
+    return ErrataPresent;
+}
+
+NTAPI
+VOID
+KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
+{
+    ULONG EFlags, Cr0;
+    PKTHREAD Thread, NpxThread;
+    PFX_SAVE_AREA FxSaveArea;
+    
+    /* Save volatiles and disable interrupts */
+    EFlags = __readeflags();
+    _disable();
+    
+    /* Save the PCR and get the current thread */
+    Thread = KeGetCurrentThread();
+    
+    /* Check if we're already loaded */
+    if (Thread->NpxState != NPX_STATE_LOADED)
+    {
+        /* If there's nothing to load, quit */
+        if (!SaveArea) return;
+        
+        /* Need FXSR support for this */
+        ASSERT(KeI386FxsrPresent == TRUE);
+        
+        /* Check for sane CR0 */
+        Cr0 = __readcr0();
+        if (Cr0 & (CR0_MP | CR0_TS | CR0_EM))
+        {
+            /* Mask out FPU flags */
+            __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
+        }
+        
+        /* Get the NPX thread and check its FPU state */
+        NpxThread = KeGetCurrentPrcb()->NpxThread;
+        if ((NpxThread) && (NpxThread->NpxState == NPX_STATE_LOADED))
+        {
+            /* Get the FX frame and store the state there */
+            FxSaveArea = KiGetThreadNpxArea(NpxThread);
+            Ke386FxSave(FxSaveArea);
+            
+            /* NPX thread has lost its state */
+            NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+        }
+        
+        /* Now load NPX state from the NPX area */
+        FxSaveArea = KiGetThreadNpxArea(Thread);
+        Ke386FxStore(FxSaveArea);    
+    }
+    else
+    {
+        /* Check for sane CR0 */
+        Cr0 = __readcr0();
+        if (Cr0 & (CR0_MP | CR0_TS | CR0_EM))
+        {
+            /* Mask out FPU flags */
+            __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
+        }
+        
+        /* Get FX frame */
+        FxSaveArea = KiGetThreadNpxArea(Thread);
+        Thread->NpxState = NPX_STATE_NOT_LOADED;
+        
+        /* Save state if supported by CPU */
+        if (KeI386FxsrPresent) Ke386FxSave(FxSaveArea);
+    }
+
+    /* Now save the FN state wherever it was requested */
+    if (SaveArea) Ke386FnSave(SaveArea);
+
+    /* Clear NPX thread */
+    KeGetCurrentPrcb()->NpxThread = NULL;
+    
+    /* Add the CR0 from the NPX frame */
+    Cr0 |= NPX_STATE_NOT_LOADED;
+    Cr0 |= FxSaveArea->Cr0NpxState;
+    __writecr0(Cr0);
+    
+    /* Restore interrupt state */
+    __writeeflags(EFlags);
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*

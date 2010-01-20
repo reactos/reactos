@@ -16,6 +16,28 @@
 
 FORCEINLINE
 VOID
+Ke386FxStore(IN PFX_SAVE_AREA SaveArea)
+{
+    asm volatile ("fxrstor (%0)" : : "r"(SaveArea));
+}
+
+FORCEINLINE
+VOID
+Ke386FxSave(IN PFX_SAVE_AREA SaveArea)
+{
+    asm volatile ("fxsave (%0)" : : "r"(SaveArea));
+}
+
+
+FORCEINLINE
+VOID
+Ke386FnSave(IN PFLOATING_SAVE_AREA SaveArea)
+{
+    asm volatile ("fnsave (%0); wait" : : "r"(SaveArea));
+}
+
+FORCEINLINE
+VOID
 Ke386SaveFpuState(IN PFX_SAVE_AREA SaveArea)
 {
     extern ULONG KeI386FxsrPresent;

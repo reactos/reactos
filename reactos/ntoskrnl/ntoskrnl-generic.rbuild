@@ -40,6 +40,7 @@
 			<directory name="i386">
 				<file>abios.c</file>
 				<file>cpu.c</file>
+				<file>context.c</file>
 				<file>ctxswitch.S</file>
 				<file>exp.c</file>
 				<file>irqobj.c</file>
