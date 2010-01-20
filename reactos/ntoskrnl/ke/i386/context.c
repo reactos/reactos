@@ -27,8 +27,8 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     
     /* Update active processor mask */
     SetMember = Pcr->SetMember;
-    InterlockedXor(NewProcess->ActiveProcessors, SetMember);
-    InterlockedXor(OldProcess->ActiveProcessors, SetMember);
+    InterlockedXor(&NewProcess->ActiveProcessors, SetMember);
+    InterlockedXor(&OldProcess->ActiveProcessors, SetMember);
 #endif
 
     /* Check for new LDT */
