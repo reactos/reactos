@@ -13,6 +13,14 @@ typedef struct _DC *PDC;
 /* Get/SetBounds/Rect support. */
 #define DCB_WINDOWMGR 0x8000 /* Queries the Windows bounding rectangle instead of the application's */
 
+/* flFontState */
+#define DC_DIRTYFONT_XFORM 1
+#define DC_DIRTYFONT_LFONT 2
+#define DC_UFI_MAPPING 4
+
+/* fl */
+#define DC_FL_PAL_BACK 1
+
 /* Type definitions ***********************************************************/
 
 typedef struct _ROS_DC_INFO
